@@ -1,6 +1,10 @@
 import { act, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { contactCopy } from '@/content/contact-copy';
+import { SITE_LOCALE } from '@/content/site-locale';
 import { ContactTimezoneLazy } from './ContactTimezoneLazy';
+
+const copy = contactCopy[SITE_LOCALE.en].timezone;
 
 type ObserverCallback = (entries: Array<{ isIntersecting: boolean }>) => void;
 
@@ -37,21 +41,21 @@ afterEach(() => {
 
 describe('ContactTimezoneLazy', () => {
   it('shows the server-rendered panel and loads nothing until the panel nears the viewport', () => {
-    render(<ContactTimezoneLazy>{STATIC_PANEL}</ContactTimezoneLazy>);
+    render(<ContactTimezoneLazy copy={copy}>{STATIC_PANEL}</ContactTimezoneLazy>);
 
     expect(screen.getByTestId('static-panel')).toBeTruthy();
     expect(screen.queryByTestId('contact-timezone')).toBeNull();
   });
 
   it('starts loading ahead of the viewport, not at its edge', () => {
-    render(<ContactTimezoneLazy>{STATIC_PANEL}</ContactTimezoneLazy>);
+    render(<ContactTimezoneLazy copy={copy}>{STATIC_PANEL}</ContactTimezoneLazy>);
 
     expect(loader().options?.rootMargin).toMatch(/^\d+px$/);
     expect(Number.parseInt(loader().options?.rootMargin ?? '0', 10)).toBeGreaterThan(0);
   });
 
   it('swaps in the live panel once it nears the viewport and stops observing', async () => {
-    render(<ContactTimezoneLazy>{STATIC_PANEL}</ContactTimezoneLazy>);
+    render(<ContactTimezoneLazy copy={copy}>{STATIC_PANEL}</ContactTimezoneLazy>);
 
     await act(async () => loader().callback([{ isIntersecting: true }]));
 
@@ -61,7 +65,7 @@ describe('ContactTimezoneLazy', () => {
   });
 
   it('keeps the static panel while the live one has not loaded', async () => {
-    render(<ContactTimezoneLazy>{STATIC_PANEL}</ContactTimezoneLazy>);
+    render(<ContactTimezoneLazy copy={copy}>{STATIC_PANEL}</ContactTimezoneLazy>);
 
     await act(async () => loader().callback([{ isIntersecting: false }]));
 
@@ -71,7 +75,7 @@ describe('ContactTimezoneLazy', () => {
   it('loads at once when the browser has no IntersectionObserver', async () => {
     vi.stubGlobal('IntersectionObserver', undefined);
 
-    render(<ContactTimezoneLazy>{STATIC_PANEL}</ContactTimezoneLazy>);
+    render(<ContactTimezoneLazy copy={copy}>{STATIC_PANEL}</ContactTimezoneLazy>);
 
     expect(await screen.findByTestId('contact-timezone')).toBeTruthy();
   });

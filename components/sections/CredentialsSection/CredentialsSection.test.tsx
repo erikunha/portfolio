@@ -10,21 +10,21 @@ describe('career tag groups', () => {
   it('keeps certifications and education in separate named groups', () => {
     render(<CredentialsSection locale={SITE_LOCALE.en} />);
     const certifications = within(screen.getByRole('group', { name: 'Certifications' }));
-    const education = within(screen.getByRole('group', { name: 'Education' }));
+    const educationGroup = within(screen.getByRole('group', { name: 'Education' }));
     expect(certifications.getAllByRole('listitem')).toHaveLength(3);
     expect(certifications.getByText('cert/ANGULAR_DEV')).toBeTruthy();
     expect(certifications.getByText('IELTS_GENERAL_TRAINING')).toBeTruthy();
     expect(certifications.getByText('WES_VERIFIED')).toBeTruthy();
     expect(certifications.queryByText('edu/MBA_AI_ENG')).toBeNull();
-    expect(education.getAllByRole('listitem')).toHaveLength(3);
-    expect(education.getByText('edu/MBA_AI_ENG')).toBeTruthy();
-    expect(education.getByText('Instituto Infnet (online)')).toBeTruthy();
-    expect(education.getByText('expected Dec 2027')).toBeTruthy();
-    expect(education.getByText('CICCC, Vancouver')).toBeTruthy();
-    expect(education.getByText('2023-2024')).toBeTruthy();
-    expect(education.getByText('UNISAL, Campinas')).toBeTruthy();
-    expect(education.getByText('2015-2020')).toBeTruthy();
-    expect(education.queryByText('WES_VERIFIED')).toBeNull();
+    expect(educationGroup.getAllByRole('listitem')).toHaveLength(3);
+    expect(educationGroup.getByText('edu/MBA_AI_ENG')).toBeTruthy();
+    expect(educationGroup.getByText('Instituto Infnet (online)')).toBeTruthy();
+    expect(educationGroup.getByText('expected Dec 2027')).toBeTruthy();
+    expect(educationGroup.getByText('CICCC, Vancouver')).toBeTruthy();
+    expect(educationGroup.getByText('2023-2024')).toBeTruthy();
+    expect(educationGroup.getByText('UNISAL, Campinas')).toBeTruthy();
+    expect(educationGroup.getByText('2015-2020')).toBeTruthy();
+    expect(educationGroup.queryByText('WES_VERIFIED')).toBeNull();
   });
 
   it('renders community separately with canonical talk count and CFP status', () => {
@@ -79,7 +79,7 @@ describe('career tag groups', () => {
   });
 
   it('names the resume degrees and keeps the home badges short', () => {
-    expect(education.map((entry) => entry.degree)).toEqual([
+    expect(education[SITE_LOCALE.en].map((entry) => entry.degree)).toEqual([
       'MBA (Lato Sensu), AI Engineering, Machine Learning and Deep Learning',
       'Web Development Co-op Diploma',
       'B.S. Information Systems',

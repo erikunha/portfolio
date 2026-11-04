@@ -14,11 +14,13 @@ describe('ContactSection', () => {
     host.innerHTML = renderToStaticMarkup(<ContactSection locale={SITE_LOCALE.en} />);
     const block = host.querySelector('.contact-main .contact-channels');
     expect(block, 'the channels block sits in the left column').not.toBeNull();
-    expect(block?.querySelector('h3')?.textContent).toBe(contactCopy.channels.title);
+    expect(block?.querySelector('h3')?.textContent).toBe(
+      contactCopy[SITE_LOCALE.en].channels.title,
+    );
     expect(block?.getAttribute('aria-labelledby')).toBe(block?.querySelector('h3')?.id);
     expect(block?.querySelector('a[href^="mailto:"]')?.textContent).toBe(social.email);
     expect(block?.querySelector('a[href$="/in/erikunha/"]')?.textContent).toContain(
-      contactCopy.channels.linkedinCta,
+      contactCopy[SITE_LOCALE.en].channels.linkedinCta,
     );
     expect(block?.querySelector('a[href="https://github.com/erikunha"]')?.textContent).toContain(
       social.githubLabel,
@@ -36,13 +38,15 @@ describe('ContactSection', () => {
 
   it('keeps a copy control next to the address', () => {
     render(<ContactSection locale={SITE_LOCALE.en} />);
-    const copy = screen.getByRole('button', { name: contactCopy.section.copyEmail });
+    const copy = screen.getByRole('button', {
+      name: contactCopy[SITE_LOCALE.en].section.copyEmail,
+    });
     expect(copy).toBeTruthy();
   });
 });
 
 describe('ContactSection timezone panel first paint', () => {
-  const { facts } = contactCopy.timezone;
+  const { facts } = contactCopy[SITE_LOCALE.en].timezone;
 
   function serverPanel(): HTMLElement {
     const host = document.createElement('div');
@@ -70,8 +74,8 @@ describe('ContactSection timezone panel first paint', () => {
     const panel = serverPanel().querySelector('.contact-layout > .contact-timezone');
     const heading = panel?.querySelector('h3');
 
-    expect(heading?.textContent).toBe(contactCopy.timezone.title);
-    expect(heading?.textContent).not.toBe(contactCopy.channels.title);
+    expect(heading?.textContent).toBe(contactCopy[SITE_LOCALE.en].timezone.title);
+    expect(heading?.textContent).not.toBe(contactCopy[SITE_LOCALE.en].channels.title);
     expect(panel?.getAttribute('aria-labelledby')).toBe(heading?.id);
   });
 
@@ -96,7 +100,9 @@ describe('ContactSection timezone panel first paint', () => {
     expect(factValue(host, facts.relocationLabel)).toBe(facts.relocationValue);
     expect(factValue(host, facts.engagementLabel)).toBe(facts.engagementValue);
     expect(factValue(host, facts.replyLabel)).toBe(facts.replyValue);
-    expect(factValue(host, contactCopy.channels.languagesLabel)).toBe(contactLanguages);
+    expect(factValue(host, contactCopy[SITE_LOCALE.en].channels.languagesLabel)).toBe(
+      contactLanguages,
+    );
     expect(host.textContent).not.toMatch(/NaN|undefined|\{\w+\}/);
   });
 
@@ -111,7 +117,7 @@ describe('ContactSection timezone panel first paint', () => {
       facts.relocationLabel,
       facts.engagementLabel,
       facts.replyLabel,
-      contactCopy.channels.languagesLabel,
+      contactCopy[SITE_LOCALE.en].channels.languagesLabel,
     ]);
     expect(serverPanel().textContent).not.toContain(profile.timezone);
   });

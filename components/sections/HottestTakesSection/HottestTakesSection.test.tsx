@@ -82,7 +82,7 @@ describe('home opinions', () => {
   });
 
   it('retains the canonical DS opinion for documentation and closes the home list with a link to it', () => {
-    const opinion = hottestTakes.find((take) => take.category === 'DS');
+    const opinion = hottestTakes[SITE_LOCALE.en].find((take) => take.category === 'DS');
     expect(opinion).toMatchObject({
       num: '07.',
       placement: 'docs',

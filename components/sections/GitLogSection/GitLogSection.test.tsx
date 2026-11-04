@@ -15,7 +15,7 @@ vi.mock('next/headers', () => ({
 describe('career git log', () => {
   it('renders nine jobs in one ordered log with complete resume facts', () => {
     const host = document.createElement('div');
-    host.innerHTML = renderToStaticMarkup(GitLogContent());
+    host.innerHTML = renderToStaticMarkup(GitLogContent({ locale: SITE_LOCALE.en }));
     expect(host.querySelectorAll('[data-testid="career-log"]')).toHaveLength(1);
     const log = host.querySelector('ol');
     expect(log).not.toBeNull();
@@ -53,7 +53,7 @@ describe('career git log', () => {
 
   it('links every company to its own site with an accessible name that holds the company', () => {
     const host = document.createElement('div');
-    host.innerHTML = renderToStaticMarkup(GitLogContent());
+    host.innerHTML = renderToStaticMarkup(GitLogContent({ locale: SITE_LOCALE.en }));
     const rows = Array.from(host.querySelectorAll('ol > li'));
     expect(rows).toHaveLength(gitLog[SITE_LOCALE.en].length);
     gitLog[SITE_LOCALE.en].forEach((job, index) => {

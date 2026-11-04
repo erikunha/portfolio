@@ -23,7 +23,7 @@ vi.mock('@/lib/ask-metrics', () => ({
 
 async function renderData(): Promise<string> {
   const { AiMetricsData } = await import('./AiMetricsSection');
-  const element = await AiMetricsData();
+  const element = await AiMetricsData({ locale: SITE_LOCALE.en });
   return renderToStaticMarkup(element);
 }
 

@@ -18,10 +18,11 @@ import { GitLogContent } from '@/components/sections/GitLogSection';
 import { GuitarContent } from '@/components/sections/GuitarSection';
 import { ProjectsContent } from '@/components/sections/ProjectsSection';
 import { projects } from '@/content/projects';
+import { SITE_LOCALE } from '@/content/site-locale';
 
 describe('responsive section mobile variants', () => {
   it('GuitarContent renders one responsive tree for mobile and desktop UAs', async () => {
-    const el = await GuitarContent();
+    const el = await GuitarContent({ locale: SITE_LOCALE.en });
     const html = renderToStaticMarkup(el);
     const doc = new DOMParser().parseFromString(html, 'text/html');
     expect(doc.querySelectorAll('.guitar-presentation')).toHaveLength(1);
@@ -34,27 +35,27 @@ describe('responsive section mobile variants', () => {
     await vi.mocked(headers).withImplementation(
       async () => new Headers({ 'user-agent': 'Desktop' }),
       async () => {
-        const desktopHtml = renderToStaticMarkup(await GuitarContent());
+        const desktopHtml = renderToStaticMarkup(await GuitarContent({ locale: SITE_LOCALE.en }));
         expect(html).toBe(desktopHtml);
       },
     );
   });
 
   it('ProjectsContent emits the shared cards and canonical copy when UA is mobile', async () => {
-    const el = await ProjectsContent();
+    const el = await ProjectsContent({ locale: SITE_LOCALE.en });
     const html = renderToStaticMarkup(el);
     const doc = new DOMParser().parseFromString(html, 'text/html');
-    expect(doc.querySelectorAll('.projects-grid')).toHaveLength(1);
+    expect(doc.querySelectorAll('.projects[SITE_LOCALE.en]-grid')).toHaveLength(1);
     const cards = Array.from(doc.querySelectorAll('.project-card'));
     expect(cards).toHaveLength(9);
-    for (const [index, project] of projects.entries()) {
+    for (const [index, project] of projects[SITE_LOCALE.en].entries()) {
       expect(cards[index]?.querySelector('.project-name')?.textContent).toContain(project.name);
       expect(cards[index]?.querySelector('.project-desc')?.textContent).toBe(project.description);
     }
   });
 
   it('GitLogContent renders one responsive log regardless of UA', () => {
-    const html = renderToStaticMarkup(GitLogContent());
+    const html = renderToStaticMarkup(GitLogContent({ locale: SITE_LOCALE.en }));
     expect(html).toContain('data-testid="career-log"');
     expect(html).not.toContain('career-mobile');
     expect(html).not.toContain('career-desktop');

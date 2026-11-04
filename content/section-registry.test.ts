@@ -15,6 +15,7 @@ import { dockKeyForSection, HOME_SECTION_ID, NAVIGATION } from './navigation';
 import { createNavigationSchema, SectionRegistrySchema } from './schemas';
 import { SECTION_LABELS } from './section-labels';
 import { getSectionByAlias, getSectionById, SECTION_REGISTRY } from './section-registry';
+import { SITE_LOCALE } from './site-locale';
 
 vi.mock('@/lib/ua', () => ({ getIsMobile: async () => false }));
 vi.mock('@/lib/lighthouse-scores', () => {
@@ -76,7 +77,9 @@ describe('section registry', () => {
     expect(getSectionByAlias('sec-about')?.id).toBe('sec-readme');
     expect(getSectionByAlias('sec-live-perf')?.id).toBe('sec-live-metrics');
     for (const { id, srLabel } of SECTION_REGISTRY) {
-      expect(SECTION_LABELS[id]).toBe(srLabel);
+      for (const locale of Object.values(SITE_LOCALE)) {
+        expect(SECTION_LABELS[locale][id]).toBe(srLabel[locale]);
+      }
     }
   });
 
@@ -157,7 +160,9 @@ describe('navigation content', () => {
 
   it('is derived from the registry and validates against it', () => {
     expect(schema.safeParse(NAVIGATION).success).toBe(true);
-    expect(NAVIGATION.groups.flatMap(({ sectionIds: ids }) => ids)).toEqual(sectionIds);
+    expect(NAVIGATION[SITE_LOCALE.en].groups.flatMap(({ sectionIds: ids }) => ids)).toEqual(
+      sectionIds,
+    );
     expect(HOME_SECTION_ID).toBe(SECTION_REGISTRY[0].id);
   });
 
@@ -192,8 +197,8 @@ describe('navigation content', () => {
   });
 
   it('names the menu trigger by its action and keeps the removed label out of the copy', () => {
-    expect(NAVIGATION.copy.openMenu).toBe('Open menu');
-    expect(Object.keys(NAVIGATION.copy)).not.toContain('indexLabel');
+    expect(NAVIGATION[SITE_LOCALE.en].copy.openMenu).toBe('Open menu');
+    expect(Object.keys(NAVIGATION[SITE_LOCALE.en].copy)).not.toContain('indexLabel');
   });
 
   it('rejects groups that drop, reorder or invent sections', () => {

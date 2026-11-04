@@ -10,9 +10,12 @@ import {
   SectionNavigationProvider,
 } from '@/components/responsive/SectionNavigation';
 import { Hero } from '@/components/sections/Hero/Hero';
+import { siteNavChrome } from '@/content/navigation';
+import { SITE_LOCALE, type SiteLocale } from '@/content/site-locale';
 import { social } from '@/content/social';
 import { type MountedClient, mountClient } from './helpers/render';
 
+const LOCALE: SiteLocale = SITE_LOCALE.en;
 const PRIMARY_LABEL = 'HIRE_ON_LINKEDIN ↗';
 const DOCK_LABEL = 'HIRE ↗';
 const RAIL_LABEL = 'LinkedIn';
@@ -117,7 +120,7 @@ describe('the LinkedIn hire action reads the same on every surface', () => {
 
   it('keeps the dock action short and gives it the shared accessible name', () => {
     render(
-      <SectionNavigationProvider>
+      <SectionNavigationProvider chrome={siteNavChrome(LOCALE)} locale={LOCALE}>
         <SectionNavigation />
         <Dock />
       </SectionNavigationProvider>,
@@ -135,7 +138,7 @@ describe('the LinkedIn hire action reads the same on every surface', () => {
 
   it('keeps the rail row reading LinkedIn and gives it the shared accessible name', () => {
     render(
-      <SectionNavigationProvider>
+      <SectionNavigationProvider chrome={siteNavChrome(LOCALE)} locale={LOCALE}>
         <SectionNavigation />
         <Dock />
       </SectionNavigationProvider>,

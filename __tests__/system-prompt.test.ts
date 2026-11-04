@@ -4,6 +4,7 @@ import { perfReceipts } from '@/content/perf-receipts';
 import { profile } from '@/content/profile';
 import { projects } from '@/content/projects';
 import { personSchema } from '@/content/seo';
+import { SITE_LOCALE } from '@/content/site-locale';
 import { unknowns } from '@/content/unknowns';
 import { SYSTEM, SYSTEM_TEXT } from '@/lib/ask/system-prompt';
 
@@ -48,7 +49,7 @@ describe('lib/ask/system-prompt', () => {
 
   describe('content drift detection (single source of truth)', () => {
     it('contains every perf-receipt metric and delta', () => {
-      for (const r of perfReceipts) {
+      for (const r of perfReceipts[SITE_LOCALE.en]) {
         expect(
           SYSTEM_TEXT,
           `perf-receipts.ts entry "${r.metric}" missing from SYSTEM — drift detected`,
@@ -62,34 +63,34 @@ describe('lib/ask/system-prompt', () => {
 
     it('keeps the newest git-log entry on the profile current employer', () => {
       expect(
-        gitLog[0]?.company,
-        'gitLog[0] and profile.currentEmployer drifted: the Current role section would name two employers',
+        gitLog[SITE_LOCALE.en][0]?.company,
+        'gitLog[SITE_LOCALE.en][0] and profile.currentEmployer drifted: the Current role section would name two employers',
       ).toBe(profile.currentEmployer.name);
     });
 
     it('contains every project name', () => {
-      for (const p of projects) {
+      for (const p of projects[SITE_LOCALE.en]) {
         expect(
           SYSTEM_TEXT,
-          `projects.ts entry "${p.name}" missing from SYSTEM — drift detected`,
+          `projects[SITE_LOCALE.en].ts entry "${p.name}" missing from SYSTEM — drift detected`,
         ).toContain(p.name);
       }
     });
 
-    it('contains every unknowns.learning claim', () => {
-      for (const u of unknowns.learning) {
+    it('contains every unknowns[SITE_LOCALE.en].learning claim', () => {
+      for (const u of unknowns[SITE_LOCALE.en].learning) {
         expect(
           SYSTEM_TEXT,
-          `unknowns.ts learning claim "${u.claim.slice(0, 40)}" missing from SYSTEM`,
+          `unknowns[SITE_LOCALE.en].ts learning claim "${u.claim.slice(0, 40)}" missing from SYSTEM`,
         ).toContain(u.claim);
       }
     });
 
-    it('contains every unknowns.notSpecializing claim', () => {
-      for (const u of unknowns.notSpecializing) {
+    it('contains every unknowns[SITE_LOCALE.en].notSpecializing claim', () => {
+      for (const u of unknowns[SITE_LOCALE.en].notSpecializing) {
         expect(
           SYSTEM_TEXT,
-          `unknowns.ts notSpecializing claim "${u.claim.slice(0, 40)}" missing from SYSTEM`,
+          `unknowns[SITE_LOCALE.en].ts notSpecializing claim "${u.claim.slice(0, 40)}" missing from SYSTEM`,
         ).toContain(u.claim);
       }
     });
@@ -121,7 +122,7 @@ describe('lib/ask/system-prompt', () => {
       expect(narrative).not.toMatch(/deal[- ]origination/i);
       expect(
         narrative,
-        'the fund-assets framing must sit in the Current role section, not only in the projects dump below',
+        'the fund-assets framing must sit in the Current role section, not only in the projects[SITE_LOCALE.en] dump below',
       ).toMatch(/## Current role[\s\S]{0,200}\$500B\+/);
     });
 

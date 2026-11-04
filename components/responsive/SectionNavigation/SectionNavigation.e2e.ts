@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { NAVIGATION } from '@/content/navigation';
+import { SITE_LOCALE } from '@/content/site-locale';
 
 const PHONE = { width: 390, height: 844 };
 const DESKTOP = { width: 1280, height: 720 };
@@ -57,8 +58,8 @@ test.describe('SectionNavigation', () => {
     expect(
       html,
       'the shortcut must be in the server HTML, an empty slot pops in after hydration',
-    ).toContain(NAVIGATION.copy.searchShortcutApple);
-    expect(html).toContain(NAVIGATION.copy.searchShortcutOther);
+    ).toContain(NAVIGATION[SITE_LOCALE.en].copy.searchShortcutApple);
+    expect(html).toContain(NAVIGATION[SITE_LOCALE.en].copy.searchShortcutOther);
 
     await page.setViewportSize(DESKTOP);
     await page.goto('/');
@@ -113,7 +114,9 @@ test.describe('SectionNavigation', () => {
     test('the drawer reads MOTION: REDUCED', async ({ page }) => {
       await page.goto('/');
       await openDrawer(page);
-      await expect(page.locator('.menu-motion')).toContainText(NAVIGATION.copy.motionReduced);
+      await expect(page.locator('.menu-motion')).toContainText(
+        NAVIGATION[SITE_LOCALE.en].copy.motionReduced,
+      );
     });
   });
 
@@ -123,7 +126,9 @@ test.describe('SectionNavigation', () => {
     test('the drawer reads MOTION: ON', async ({ page }) => {
       await page.goto('/');
       await openDrawer(page);
-      await expect(page.locator('.menu-motion')).toContainText(NAVIGATION.copy.motionOn);
+      await expect(page.locator('.menu-motion')).toContainText(
+        NAVIGATION[SITE_LOCALE.en].copy.motionOn,
+      );
     });
   });
 });

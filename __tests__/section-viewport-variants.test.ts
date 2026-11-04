@@ -16,6 +16,7 @@ import { GuitarSection } from '@/components/sections/GuitarSection';
 import { ProjectsSection } from '@/components/sections/ProjectsSection';
 import { careerScrollLabel } from '@/content/git-log';
 import { SECTION_LABELS } from '@/content/section-labels';
+import { SITE_LOCALE } from '@/content/site-locale';
 
 describe('responsive section viewport variants', () => {
   it('ProjectsSection emits exactly the desktop variant (no mobile markup)', () => {
@@ -38,7 +39,7 @@ describe('responsive section viewport variants', () => {
     expect(scroller?.getAttribute('role')).toBe('group');
     expect(scroller?.getAttribute('tabindex')).toBe('0');
     expect(scroller?.getAttribute('aria-label')).toBe(careerScrollLabel);
-    expect(careerScrollLabel).not.toBe(SECTION_LABELS['sec-git-log']);
+    expect(careerScrollLabel).not.toBe(SECTION_LABELS[SITE_LOCALE.en]['sec-git-log']);
   });
 
   it('GuitarSection static render does not emit mobile markup', () => {

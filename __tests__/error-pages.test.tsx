@@ -19,7 +19,7 @@ function makeError(digest?: string): Error & { digest?: string } {
 
 describe('errors content', () => {
   it('rejects a protocol-relative suggestion href', () => {
-    const bad = structuredClone(errorsContent);
+    const bad = structuredClone(errorsContent[SITE_LOCALE.en]);
     bad.notFound.suggestions[0] = { label: 'x', href: '//evil.example' };
     expect(ErrorsContentSchema.safeParse(bad).success).toBe(false);
   });

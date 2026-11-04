@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { SECTION_LABELS } from '@/content/section-labels';
+import { SITE_LOCALE } from '@/content/site-locale';
 
 const MODULE_IDS = [
   'sec-shell',
@@ -23,7 +24,7 @@ for (const width of VIEWPORTS) {
         await heading.scrollIntoViewIfNeeded();
         const name = heading.locator('.module-name');
         await expect(name).toBeVisible();
-        await expect(name).toHaveText(SECTION_LABELS[id]);
+        await expect(name).toHaveText(SECTION_LABELS[SITE_LOCALE.en][id]);
         const gap = await heading.evaluate((h2) => {
           const label = h2.querySelector('.module-name')?.getBoundingClientRect();
           const icon = h2.children[1]?.getBoundingClientRect();

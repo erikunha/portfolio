@@ -7,7 +7,7 @@ import { SITE_LOCALE } from '@/content/site-locale';
 import { GuitarContent, GuitarSection } from './GuitarSection';
 
 async function renderContent(): Promise<Document> {
-  const html = renderToStaticMarkup(await GuitarContent());
+  const html = renderToStaticMarkup(await GuitarContent({ locale: SITE_LOCALE.en }));
   return new DOMParser().parseFromString(html, 'text/html');
 }
 
@@ -148,7 +148,7 @@ describe('GuitarSection presentation', () => {
     const doc = new DOMParser().parseFromString(html, 'text/html');
     const section = doc.querySelector('section');
     const heading = doc.getElementById(section?.getAttribute('aria-labelledby') ?? '');
-    expect(heading?.textContent).toContain(SECTION_LABELS['sec-guitar']);
+    expect(heading?.textContent).toContain(SECTION_LABELS[SITE_LOCALE.en]['sec-guitar']);
     expect(doc.querySelector('#sec-guitar .guitar-presentation h3')).toBeNull();
   });
 
@@ -157,7 +157,9 @@ describe('GuitarSection presentation', () => {
     const doc = new DOMParser().parseFromString(html, 'text/html');
     const heading = doc.querySelector('h2');
     expect(heading?.textContent).toContain(GUITAR_MODULE_HEADER);
-    expect(heading?.querySelector('.module-name')?.textContent).toBe(SECTION_LABELS['sec-guitar']);
+    expect(heading?.querySelector('.module-name')?.textContent).toBe(
+      SECTION_LABELS[SITE_LOCALE.en]['sec-guitar'],
+    );
   });
 
   it('renders the live signal chain strip above the EQ strip', async () => {

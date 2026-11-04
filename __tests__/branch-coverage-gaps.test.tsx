@@ -3,6 +3,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { MEASURED_FORMAT, measured } from '@/content/measured';
 import { MeasuredSchema } from '@/content/schemas';
+import { SITE_LOCALE } from '@/content/site-locale';
 import { readComponentsCss } from './helpers/components-css';
 import { type MountedClient, mountClient } from './helpers/render';
 
@@ -27,7 +28,7 @@ describe('LivePerfSection — PerfBody with real scores (non-fallback branches)'
 
   async function renderPerfData(): Promise<string> {
     const { PerfData } = await import('@/components/sections/LivePerfSection/LivePerfSection');
-    const element = await PerfData({ strategy: 'desktop' });
+    const element = await PerfData({ locale: SITE_LOCALE.en, strategy: 'desktop' });
     return renderToStaticMarkup(element);
   }
 
@@ -42,7 +43,7 @@ describe('LivePerfSection — PerfBody with real scores (non-fallback branches)'
     const html = await renderPerfData();
     expect(html).toContain('98');
     expect(html).toContain('100');
-    expect(html).toContain(measured.psi.url);
+    expect(html).toContain(measured[SITE_LOCALE.en].psi.url);
     expect(html).toContain('aria-valuenow="98"');
   });
 
@@ -70,11 +71,11 @@ describe('LivePerfSection — PerfBody with real scores (non-fallback branches)'
     });
     const html = await renderPerfData();
     const doc = new DOMParser().parseFromString(html, 'text/html');
-    expect(doc.body.textContent).toContain(measured.unavailable);
+    expect(doc.body.textContent).toContain(measured[SITE_LOCALE.en].unavailable);
     expect(doc.querySelector('time')).toBeNull();
     expect(doc.querySelectorAll('[aria-valuenow]')).toHaveLength(0);
-    expect(doc.querySelectorAll('.measured-value')).toHaveLength(4);
-    for (const value of doc.querySelectorAll('.measured-value')) {
+    expect(doc.querySelectorAll('.measured[SITE_LOCALE.en]-value')).toHaveLength(4);
+    for (const value of doc.querySelectorAll('.measured[SITE_LOCALE.en]-value')) {
       expect(value.textContent).toBe('—/100');
     }
   });
@@ -106,10 +107,10 @@ describe('AiMetricsSection — lastRunLabel NaN guard branch', () => {
     const { AiMetricsData } = await import(
       '@/components/sections/AiMetricsSection/AiMetricsSection'
     );
-    const element = await AiMetricsData();
+    const element = await AiMetricsData({ locale: SITE_LOCALE.en });
     const html = renderToStaticMarkup(element);
     expect(html).toContain('not-a-date');
-    expect(html).toContain(measured.unknownTimestamp);
+    expect(html).toContain(measured[SITE_LOCALE.en].unknownTimestamp);
     expect(html).toContain('95%');
     expect(html).not.toContain('<time');
   });
@@ -240,7 +241,7 @@ describe('Measured content validation', () => {
   it.each(['empty', 'locale'])('rejects empty format copy for %s', (field) => {
     expect(
       MeasuredSchema.safeParse({
-        ...measured,
+        ...measured[SITE_LOCALE.en],
         format: { ...MEASURED_FORMAT, [field]: '' },
       }).success,
     ).toBe(false);

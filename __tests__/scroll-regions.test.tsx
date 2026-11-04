@@ -6,6 +6,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import { About } from '@/components/sections/About';
 import { SCROLL_REGION_LABELS, SECTION_LABELS } from '@/content/section-labels';
+import { SITE_LOCALE } from '@/content/site-locale';
 
 const SCROLL_REGION_DOC = 'docs/08-performance-and-accessibility.md';
 
@@ -47,8 +48,8 @@ describe('Text scroll regions', () => {
   it('makes responsibilities a named keyboard scroll region', () => {
     expectKeyboardScrollRegion(
       createElement(About),
-      SCROLL_REGION_LABELS['sec-responsibilities'],
-      SECTION_LABELS['sec-readme'],
+      SCROLL_REGION_LABELS[SITE_LOCALE.en]['sec-responsibilities'],
+      SECTION_LABELS[SITE_LOCALE.en]['sec-readme'],
       '.ab-resp .overflow-x-auto',
     );
   });
@@ -56,8 +57,8 @@ describe('Text scroll regions', () => {
   it('makes the README code sample a named keyboard scroll region', () => {
     expectKeyboardScrollRegion(
       createElement(About),
-      SCROLL_REGION_LABELS['sec-readme'],
-      SECTION_LABELS['sec-readme'],
+      SCROLL_REGION_LABELS[SITE_LOCALE.en]['sec-readme'],
+      SECTION_LABELS[SITE_LOCALE.en]['sec-readme'],
       '.ab-code-scroll',
     );
   });

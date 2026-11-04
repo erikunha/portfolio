@@ -2,6 +2,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { DesignSystemOpinion } from '@/app/design-system/_components/DesignSystemOpinion';
 import { hottestTakes } from '@/content/hottest-takes';
+import { SITE_LOCALE } from '@/content/site-locale';
 
 describe('design-system opinion', () => {
   afterEach(() => {
@@ -42,7 +43,7 @@ describe('design-system opinion', () => {
   });
 
   it('keeps no docs-placement take without a render path', () => {
-    const docs = hottestTakes.filter((take) => take.placement === 'docs');
+    const docs = hottestTakes[SITE_LOCALE.en].filter((take) => take.placement === 'docs');
     expect(docs.map((take) => take.category)).toEqual(['DS']);
   });
 });

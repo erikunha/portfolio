@@ -1,5 +1,6 @@
 import { expect, type Page, test } from '@playwright/test';
 import { contactCopy } from '@/content/contact-copy';
+import { SITE_LOCALE } from '@/content/site-locale';
 
 const PHONE = { width: 390, height: 844 };
 const DESKTOP = { width: 1280, height: 900 };
@@ -72,17 +73,21 @@ test.describe('ContactSection', () => {
     const main = page.locator('.contact-main');
     await scrollToSelector(page, '.contact-channels');
     const channels = main.locator('.contact-channels');
-    await expect(channels.getByRole('heading', { name: contactCopy.channels.title })).toBeVisible();
+    await expect(
+      channels.getByRole('heading', { name: contactCopy[SITE_LOCALE.en].channels.title }),
+    ).toBeVisible();
     await expect(channels.locator('a[href^="mailto:"]')).toBeVisible();
     await expect(
-      channels.getByRole('button', { name: contactCopy.section.copyEmail }),
+      channels.getByRole('button', { name: contactCopy[SITE_LOCALE.en].section.copyEmail }),
     ).toBeVisible();
     await expect(channels.getByRole('link', { name: /MESSAGE_ON_LINKEDIN/ })).toHaveAttribute(
       'href',
-      contactCopy.section.linkedinHref,
+      contactCopy[SITE_LOCALE.en].section.linkedinHref,
     );
     await expect(
-      channels.getByRole('link', { name: contactCopy.channels.githubAccessibleLabel }),
+      channels.getByRole('link', {
+        name: contactCopy[SITE_LOCALE.en].channels.githubAccessibleLabel,
+      }),
     ).toBeVisible();
     await expect(main.locator('.contact-reach .contact-fact')).toHaveCount(FACT_COUNT);
     await expect(main.locator('.contact-fact dt', { hasText: /^tz$/ })).toHaveCount(0);
@@ -94,7 +99,9 @@ test.describe('ContactSection', () => {
     await page.goto('/');
     const panel = page.locator('.contact-timezone');
     await scrollToSelector(page, '.contact-timezone');
-    await expect(panel.getByRole('heading', { name: contactCopy.timezone.title })).toBeVisible();
+    await expect(
+      panel.getByRole('heading', { name: contactCopy[SITE_LOCALE.en].timezone.title }),
+    ).toBeVisible();
     await expect(panel.getByTestId('contact-timezone')).toBeVisible();
     await expect(panel.locator('a[href^="mailto:"]')).toHaveCount(0);
     await expect(panel.locator('.contact-fact')).toHaveCount(0);
@@ -161,9 +168,11 @@ test.describe('ContactSection', () => {
     const channels = page.locator('.contact-channels');
     const targets = [
       channels.locator('a[href^="mailto:"]'),
-      channels.getByRole('button', { name: contactCopy.section.copyEmail }),
+      channels.getByRole('button', { name: contactCopy[SITE_LOCALE.en].section.copyEmail }),
       channels.getByRole('link', { name: /MESSAGE_ON_LINKEDIN/ }),
-      channels.getByRole('link', { name: contactCopy.channels.githubAccessibleLabel }),
+      channels.getByRole('link', {
+        name: contactCopy[SITE_LOCALE.en].channels.githubAccessibleLabel,
+      }),
     ];
 
     for (const target of targets) {
@@ -251,7 +260,7 @@ test.describe('ContactSection', () => {
     await page.goto('/');
     const row = page.locator('.contact-channels-body > div').first();
     const address = row.locator('a[href^="mailto:"]');
-    const copy = row.getByRole('button', { name: contactCopy.section.copyEmail });
+    const copy = row.getByRole('button', { name: contactCopy[SITE_LOCALE.en].section.copyEmail });
     await expect(address).toBeVisible();
     await expect(copy).toBeVisible();
     const boxes = await row.evaluate((element) => {

@@ -5,6 +5,7 @@ import { gitLog } from '@/content/git-log';
 import { profile } from '@/content/profile';
 import { cvJsonLd } from '@/content/reading-views';
 import { personSchema } from '@/content/seo';
+import { SITE_LOCALE } from '@/content/site-locale';
 import { SYSTEM_TEXT } from '@/lib/ask/system-prompt';
 import { HIRING_PROFILE } from '@/lib/hiring-profile';
 
@@ -13,7 +14,7 @@ const llmsTxt = readFileSync(path.resolve(__dirname, '../public/llms.txt'), 'utf
 const companyName = (company: string) => company.split(' (')[0] ?? company;
 
 describe('every machine-readable surface links employers to their company site', () => {
-  const [current] = gitLog;
+  const [current] = gitLog[SITE_LOCALE.en];
 
   it('keeps profile.currentEmployer on the first career entry, name and URL', () => {
     expect(current?.company).toBe(profile.currentEmployer.name);
@@ -34,12 +35,12 @@ describe('every machine-readable surface links employers to their company site',
 
   it('adds the company URL to every employer in the hiring profile', () => {
     expect(HIRING_PROFILE.employers.map((employer) => employer.url)).toEqual(
-      gitLog.map((entry) => entry.companyUrl),
+      gitLog[SITE_LOCALE.en].map((entry) => entry.companyUrl),
     );
   });
 
   it('links every employer in the llms.txt experience table', () => {
-    for (const entry of gitLog) {
+    for (const entry of gitLog[SITE_LOCALE.en]) {
       expect(
         llmsTxt,
         `public/llms.txt must link ${entry.company} to ${entry.companyUrl} in the Professional Experience table`,
@@ -48,7 +49,7 @@ describe('every machine-readable surface links employers to their company site',
   });
 
   it('hands the ask prompt each company URL so answers cite the real site', () => {
-    for (const entry of gitLog) {
+    for (const entry of gitLog[SITE_LOCALE.en]) {
       expect(SYSTEM_TEXT).toContain(`- ${entry.company} (${entry.companyUrl}):`);
     }
   });
@@ -56,8 +57,12 @@ describe('every machine-readable surface links employers to their company site',
   it('keeps every project company resolvable to an employer URL', async () => {
     const { projects } = await import('@/content/projects');
     const { companyUrlFor } = await import('@/content/git-log');
-    for (const project of projects.filter((entry) => entry.kind === 'professional')) {
-      const employer = gitLog.find((entry) => companyName(entry.company) === project.company);
+    for (const project of projects[SITE_LOCALE.en].filter(
+      (entry) => entry.kind === 'professional',
+    )) {
+      const employer = gitLog[SITE_LOCALE.en].find(
+        (entry) => companyName(entry.company) === project.company,
+      );
       expect(employer, project.company).toBeDefined();
       expect(companyUrlFor(project.company)).toBe(employer?.companyUrl);
     }

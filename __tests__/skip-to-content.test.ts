@@ -1,5 +1,7 @@
 import { createElement } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { siteNavChrome } from '@/content/navigation';
+import { SITE_LOCALE } from '@/content/site-locale';
 import { type MountedClient, mountClient } from './helpers/render';
 
 vi.mock('@/lib/use-breakpoint.client', () => ({
@@ -29,6 +31,9 @@ describe('skip-to-content link', () => {
     const { AppShell } = await import('@/components/AppShell');
     mounted = await mountClient(
       createElement(AppShell, {
+        chrome: siteNavChrome(SITE_LOCALE.en),
+        locale: SITE_LOCALE.en,
+        skipLabel: 'Skip to main content',
         brand: null,
         // biome-ignore lint/correctness/noChildrenProp: AppShell requires brand, and createElement types a required prop together with children only when children sit in the props object
         children: createElement('main', { id: 'main-content' }, 'content'),
@@ -58,6 +63,9 @@ describe('skip-to-content link', () => {
     const { PageMain } = await import('@/components/PageMain');
     mounted = await mountClient(
       createElement(AppShell, {
+        chrome: siteNavChrome(SITE_LOCALE.en),
+        locale: SITE_LOCALE.en,
+        skipLabel: 'Skip to main content',
         brand: null,
         // biome-ignore lint/correctness/noChildrenProp: AppShell requires brand, and createElement types a required prop together with children only when children sit in the props object
         children: createElement(PageMain, null, 'content'),

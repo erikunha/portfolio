@@ -1,6 +1,7 @@
 import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { NAVIGATION } from '@/content/navigation';
+import { NAVIGATION, siteNavChrome } from '@/content/navigation';
+import { SITE_LOCALE } from '@/content/site-locale';
 import { LINKEDIN_URL } from '@/content/social-urls';
 import { DRAWER_ID, SectionNavigation, SectionNavigationProvider } from '../SectionNavigation';
 import { Dock } from './Dock.client';
@@ -28,7 +29,7 @@ function reveal(id: string) {
 
 function mount() {
   return render(
-    <SectionNavigationProvider>
+    <SectionNavigationProvider chrome={siteNavChrome(SITE_LOCALE.en)} locale={SITE_LOCALE.en}>
       <SectionNavigation />
       <Dock />
       <main id="main-content" tabIndex={-1}>
@@ -133,7 +134,7 @@ describe('Dock', () => {
     expect(controls).not.toBeNull();
     const drawer = document.getElementById(controls as string);
     expect(drawer).not.toBeNull();
-    expect(drawer?.getAttribute('aria-label')).toBe(NAVIGATION.copy.drawerLabel);
+    expect(drawer?.getAttribute('aria-label')).toBe(NAVIGATION[SITE_LOCALE.en].copy.drawerLabel);
   });
 
   it('opens the drawer from Menu and gives focus back to it on Escape', () => {
@@ -170,6 +171,6 @@ describe('Dock', () => {
     mount();
     expect(dock().hasAttribute('data-position-target')).toBe(true);
     expect(dock().classList.contains('dock')).toBe(true);
-    expect(NAVIGATION.dock).toHaveLength(5);
+    expect(NAVIGATION[SITE_LOCALE.en].dock).toHaveLength(5);
   });
 });
