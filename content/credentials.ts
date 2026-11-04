@@ -1,7 +1,10 @@
 import { z } from 'zod';
 import { communityEvent } from './community';
 import { CareerCredentialsSchema, type Credential, CredentialSchema } from './schemas';
+import { SITE_LOCALE, type SiteLocale } from './site-locale';
 
+// Credential tags are tokens and evidence facts (issuer · year); they stay
+// identical across locales.
 export const credentials: Credential[] = z.array(CredentialSchema).parse([
   {
     label: 'ANGULAR_DEV',
@@ -20,24 +23,33 @@ export const credentials: Credential[] = z.array(CredentialSchema).parse([
   },
 ]);
 
-export const careerCredentials = CareerCredentialsSchema.parse({
-  prompt: '$',
-  statusMarker: '>',
-  certifications: {
-    label: 'Certifications',
-    command: "git tag --list 'cert/*'",
-    prefix: 'cert/',
-  },
-  education: {
-    label: 'Education',
-    command: "git tag --list 'edu/*'",
-    prefix: 'edu/',
-  },
-  community: {
-    label: 'Community',
-    command: "git tag --list 'community/*'",
-    heading: `community/${communityEvent.name} · ${communityEvent.year} · ${communityEvent.role}`,
-    bullets: communityEvent.bullets,
-    status: `status: ${communityEvent.statusLine}`,
-  },
-});
+const careerCredentialsFor = (locale: SiteLocale) => {
+  const pt = locale === SITE_LOCALE.pt;
+  const event = communityEvent[locale];
+  return CareerCredentialsSchema.parse({
+    prompt: '$',
+    statusMarker: '>',
+    certifications: {
+      label: pt ? 'Certificações' : 'Certifications',
+      command: "git tag --list 'cert/*'",
+      prefix: 'cert/',
+    },
+    education: {
+      label: pt ? 'Formação' : 'Education',
+      command: "git tag --list 'edu/*'",
+      prefix: 'edu/',
+    },
+    community: {
+      label: pt ? 'Comunidade' : 'Community',
+      command: "git tag --list 'community/*'",
+      heading: `community/${event.name} · ${event.year} · ${event.role}`,
+      bullets: event.bullets,
+      status: `status: ${event.statusLine}`,
+    },
+  });
+};
+
+export const careerCredentials: Record<SiteLocale, ReturnType<typeof careerCredentialsFor>> = {
+  [SITE_LOCALE.en]: careerCredentialsFor(SITE_LOCALE.en),
+  [SITE_LOCALE.pt]: careerCredentialsFor(SITE_LOCALE.pt),
+};

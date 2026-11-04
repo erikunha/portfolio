@@ -1,6 +1,7 @@
 'use client';
 
 import { lazy, type ReactNode, Suspense, useEffect, useRef, useState } from 'react';
+import type { ContactContent } from '@/content/contact';
 import { ErrorBoundary } from '../../ErrorBoundary';
 
 const PRELOAD_MARGIN_PX = 400;
@@ -9,7 +10,13 @@ const ContactTimezone = lazy(() =>
   import('./ContactTimezone.client').then((module) => ({ default: module.ContactTimezone })),
 );
 
-export function ContactTimezoneLazy({ children }: { children: ReactNode }) {
+export function ContactTimezoneLazy({
+  children,
+  copy,
+}: {
+  children: ReactNode;
+  copy: ContactContent['timezone'];
+}) {
   const hostRef = useRef<HTMLDivElement>(null);
   const [near, setNear] = useState(false);
 
@@ -37,7 +44,7 @@ export function ContactTimezoneLazy({ children }: { children: ReactNode }) {
       {near ? (
         <ErrorBoundary fallback={children}>
           <Suspense fallback={children}>
-            <ContactTimezone />
+            <ContactTimezone copy={copy} />
           </Suspense>
         </ErrorBoundary>
       ) : (

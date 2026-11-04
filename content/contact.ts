@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { contactCopy } from './contact-copy';
 import { formatLanguages, profile } from './profile';
+import { SITE_LOCALE, type SiteLocale } from './site-locale';
 
 const CopySchema = z.string().min(1);
 const AXIS_LABEL_COUNT = 5;
@@ -125,6 +126,9 @@ export const ContactContentSchema = z.object({
 
 export type ContactContent = z.infer<typeof ContactContentSchema>;
 
-export const contactContent: ContactContent = ContactContentSchema.parse(contactCopy);
+export const contactContent: Record<SiteLocale, ContactContent> = {
+  [SITE_LOCALE.en]: ContactContentSchema.parse(contactCopy[SITE_LOCALE.en]),
+  [SITE_LOCALE.pt]: ContactContentSchema.parse(contactCopy[SITE_LOCALE.pt]),
+};
 
 export const contactLanguages = formatLanguages(profile.languages);

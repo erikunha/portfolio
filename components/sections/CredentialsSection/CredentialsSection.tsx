@@ -2,23 +2,26 @@ import { useId } from 'react';
 import { communityEvent } from '@/content/community';
 import { careerCredentials, credentials } from '@/content/credentials';
 import { educationTags } from '@/content/education';
+import type { SiteLocale } from '@/content/site-locale';
 
 const EXTERNAL_REL = 'noopener noreferrer';
 const EXTERNAL_TARGET = '_blank';
 
 export function CredentialsSection({
+  locale,
   id,
   communityId,
 }: {
+  locale: SiteLocale;
   id?: string;
   communityId?: string;
 } = {}) {
   const groupId = useId();
-  const { link: eventLink } = communityEvent;
-  const { certifications, education, community, prompt, statusMarker } = careerCredentials;
+  const { link: eventLink } = communityEvent[locale];
+  const { certifications, education, community, prompt, statusMarker } = careerCredentials[locale];
   const groups = [
     { ...certifications, entries: credentials },
-    { ...education, entries: educationTags },
+    { ...education, entries: educationTags(locale) },
   ];
   return (
     <div id={id} className="career-tags">

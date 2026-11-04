@@ -6,6 +6,7 @@ import {
   guitarRig,
 } from '@/content/guitar-rig';
 import { SECTION_LABELS } from '@/content/section-labels';
+import type { SiteLocale } from '@/content/site-locale';
 import { IconGuitar } from '../../Icons';
 import { Module } from '../../responsive/Module';
 import { EqSpectrumStrip } from './EqSpectrumStrip';
@@ -13,9 +14,10 @@ import { EqSpectrumStrip } from './EqSpectrumStrip';
 const SECTION_ID = 'sec-guitar';
 const PHOTO_SIZES = '(min-width: 1024px) 38vw, 100vw';
 
-export function GuitarContent() {
-  const { signalStrip, eqSpectrum, influences, nowPlaying, stats, photo } = guitarPresentation;
-  const { liveCam } = guitarRig;
+export function GuitarContent({ locale }: { locale: SiteLocale }) {
+  const { signalStrip, eqSpectrum, influences, nowPlaying, stats, photo } =
+    guitarPresentation[locale];
+  const { liveCam } = guitarRig[locale];
   return (
     <div className="guitar-presentation">
       <div className="guitar-signal-strip">
@@ -64,18 +66,18 @@ export function GuitarContent() {
   );
 }
 
-export function GuitarSection({ defer }: { defer?: boolean } = {}) {
+export function GuitarSection({ locale, defer }: { locale: SiteLocale; defer?: boolean } = {}) {
   return (
     <Module
       id={SECTION_ID}
       header={GUITAR_MODULE_HEADER}
       mobileHeader={GUITAR_MODULE_MOBILE_HEADER}
-      name={SECTION_LABELS[SECTION_ID]}
+      name={SECTION_LABELS[locale][SECTION_ID]}
       icon={<IconGuitar />}
       defer={defer}
       variant="green"
     >
-      <GuitarContent />
+      <GuitarContent locale={locale} />
     </Module>
   );
 }

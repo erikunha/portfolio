@@ -5,6 +5,7 @@ import { reportClientError } from '@/components/ErrorBoundary/ErrorBoundary.clie
 import { brand } from '@/content/brand';
 import { errorsClientContent as errorsContent } from '@/content/errors-client';
 import type { ErrorsContent } from '@/content/schemas';
+import { SITE_LOCALE } from '@/content/site-locale';
 
 const COPIED_RESET_MS = 2000;
 
@@ -134,8 +135,12 @@ export function RouteErrorPage({ error, reset }: RouteErrorProps) {
 
   return (
     <>
-      <ErrorChrome chrome={errorsContent.chrome} brand={<ClientBrandLink />} />
-      <ServerErrorMain error={error} reset={reset} content={errorsContent.serverError} />
+      <ErrorChrome chrome={errorsContent[SITE_LOCALE.en].chrome} brand={<ClientBrandLink />} />
+      <ServerErrorMain
+        error={error}
+        reset={reset}
+        content={errorsContent[SITE_LOCALE.en].serverError}
+      />
     </>
   );
 }

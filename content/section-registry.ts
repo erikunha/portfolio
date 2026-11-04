@@ -1,4 +1,4 @@
-import type { Section } from './schemas';
+import type { SiteLocale } from './site-locale';
 
 export const SECTION_ICONS = {
   home: 'home',
@@ -13,84 +13,96 @@ export const SECTION_ICONS = {
   contact: 'contact',
 } as const;
 
+// Labels are per-locale records: the drawer, dock and module headings pick the
+// active locale at render. This module stays zod-free (client islands import
+// it), so the shape is held by SectionRegistrySchema in ./schemas instead.
 export const SECTION_NAV = [
-  { id: 'bio', label: 'Home', order: 1 },
-  { id: 'sec-readme', label: 'About', order: 2 },
-  { id: 'sec-projects', label: 'Projects', order: 3 },
-  { id: 'sec-git-log', label: 'Career', order: 4 },
-  { id: 'sec-shell', label: 'Interactive shell', order: 5 },
-  { id: 'sec-live-metrics', label: 'Measured', order: 6 },
-  { id: 'sec-hottest-takes', label: 'Opinions', order: 7 },
-  { id: 'sec-guitar', label: 'Guitar rig', order: 8 },
-  { id: 'sec-daw-mixer', label: 'DAW mixer', order: 9 },
-  { id: 'sec-contact', label: 'Contact', order: 10 },
+  { id: 'bio', label: { en: 'Home', pt: 'Início' }, order: 1 },
+  { id: 'sec-readme', label: { en: 'About', pt: 'Sobre' }, order: 2 },
+  { id: 'sec-projects', label: { en: 'Projects', pt: 'Projetos' }, order: 3 },
+  { id: 'sec-git-log', label: { en: 'Career', pt: 'Carreira' }, order: 4 },
+  { id: 'sec-shell', label: { en: 'Interactive shell', pt: 'Shell interativo' }, order: 5 },
+  { id: 'sec-live-metrics', label: { en: 'Measured', pt: 'Medições' }, order: 6 },
+  { id: 'sec-hottest-takes', label: { en: 'Opinions', pt: 'Opiniões' }, order: 7 },
+  { id: 'sec-guitar', label: { en: 'Guitar rig', pt: 'Rig de guitarra' }, order: 8 },
+  { id: 'sec-daw-mixer', label: { en: 'DAW mixer', pt: 'Mixer DAW' }, order: 9 },
+  { id: 'sec-contact', label: { en: 'Contact', pt: 'Contato' }, order: 10 },
 ] as const;
 
 export const SECTION_REGISTRY = [
   {
     ...SECTION_NAV[0],
-    srLabel: 'Home',
+    srLabel: { en: 'Home', pt: 'Início' },
     aliases: ['home', 'bio', 'hero', 'whoami'],
     icon: SECTION_ICONS.home,
   },
   {
     ...SECTION_NAV[1],
-    srLabel: 'About',
-    aliases: ['about', 'readme', 'sec-about', 'principles', 'stack', 'now'],
+    srLabel: { en: 'About', pt: 'Sobre' },
+    aliases: ['about', 'readme', 'sec-about', 'principles', 'stack', 'now', 'sobre'],
     icon: SECTION_ICONS.about,
   },
   {
     ...SECTION_NAV[2],
-    srLabel: 'Projects',
-    aliases: ['projects', 'work', 'portfolio', 'receipts'],
+    srLabel: { en: 'Projects', pt: 'Projetos' },
+    aliases: ['projects', 'work', 'portfolio', 'receipts', 'projetos', 'trabalho'],
     icon: SECTION_ICONS.projects,
   },
   {
     ...SECTION_NAV[3],
-    srLabel: 'Career history',
-    aliases: ['career', 'experience', 'git log', 'education', 'certifications', 'community'],
+    srLabel: { en: 'Career history', pt: 'Histórico profissional' },
+    aliases: [
+      'career',
+      'experience',
+      'git log',
+      'education',
+      'certifications',
+      'community',
+      'carreira',
+    ],
     icon: SECTION_ICONS.career,
   },
   {
     ...SECTION_NAV[4],
-    srLabel: 'Interactive shell',
+    srLabel: { en: 'Interactive shell', pt: 'Shell interativo' },
     aliases: ['interactive shell', 'shell', 'terminal', 'ask'],
     icon: SECTION_ICONS.shell,
   },
   {
     ...SECTION_NAV[5],
-    srLabel: 'Measured',
+    srLabel: { en: 'Measured', pt: 'Medições' },
     aliases: ['measured', 'sec-live-perf', 'performance', 'metrics', 'lighthouse', 'evals'],
     icon: SECTION_ICONS.measured,
   },
   {
     ...SECTION_NAV[6],
-    srLabel: 'Opinions',
-    aliases: ['opinions', 'hottest takes', 'takes', 'unknowns'],
+    srLabel: { en: 'Opinions', pt: 'Opiniões' },
+    aliases: ['opinions', 'hottest takes', 'takes', 'unknowns', 'opinioes'],
     icon: SECTION_ICONS.opinions,
   },
   {
     ...SECTION_NAV[7],
-    srLabel: 'Guitar rig',
-    aliases: ['guitar and mixer', 'guitar', 'guitar rig', 'music'],
+    srLabel: { en: 'Guitar rig', pt: 'Rig de guitarra' },
+    aliases: ['guitar and mixer', 'guitar', 'guitar rig', 'music', 'guitarra'],
     icon: SECTION_ICONS.guitar,
   },
   {
     ...SECTION_NAV[8],
-    srLabel: 'DAW mixer',
+    srLabel: { en: 'DAW mixer', pt: 'Mixer DAW' },
     aliases: ['mixer', 'daw', 'mix', 'daw mixer'],
     icon: SECTION_ICONS.mixer,
   },
   {
     ...SECTION_NAV[9],
-    srLabel: 'Contact',
-    aliases: ['contact', 'email', 'message'],
+    srLabel: { en: 'Contact', pt: 'Contato' },
+    aliases: ['contact', 'email', 'message', 'contato'],
     icon: SECTION_ICONS.contact,
   },
-] as const satisfies readonly Section[];
+] as const;
 
 export type SectionRegistryEntry = (typeof SECTION_REGISTRY)[number];
 export type SectionId = SectionRegistryEntry['id'];
+export type LocalizedLabel = Record<SiteLocale, string>;
 
 export function getSectionById(id: string): SectionRegistryEntry | undefined {
   return SECTION_REGISTRY.find((section) => section.id === id);
@@ -102,3 +114,6 @@ export function getSectionByAlias(alias: string): SectionRegistryEntry | undefin
     section.aliases.some((candidate) => candidate === normalizedAlias),
   );
 }
+
+export const localizedSectionLabel = (locale: SiteLocale, id: SectionId): string =>
+  SECTION_NAV.find((section) => section.id === id)?.label[locale] ?? id;

@@ -2,6 +2,7 @@ import { companyUrlFor } from '@/content/git-log';
 import { projectPresentation, projects } from '@/content/projects';
 import type { Project } from '@/content/schemas';
 import { SECTION_LABELS } from '@/content/section-labels';
+import type { SiteLocale } from '@/content/site-locale';
 import { CompanyLink } from '../../CompanyLink';
 import { IconProjects } from '../../Icons';
 import { Module } from '../../responsive/Module';
@@ -21,10 +22,11 @@ function CompanyLabel({ kind, company }: Pick<Project, 'kind' | 'company'>) {
   );
 }
 
-export function ProjectsContent() {
+export function ProjectsContent({ locale }: { locale: SiteLocale }) {
+  const presentation = projectPresentation[locale];
   return (
     <ul className="projects-grid" data-testid="proj-desktop">
-      {projects.map((project) => (
+      {projects[locale].map((project) => (
         <li key={project.name} className="project-card">
           <div className="project-meta">
             <svg className="project-folder" viewBox="0 0 24 18" aria-hidden="true">
@@ -34,16 +36,14 @@ export function ProjectsContent() {
               <span className="project-co">
                 <CompanyLabel kind={project.kind} company={project.company} />
               </span>
-              <span className="project-perm">
-                {project.perm ?? projectPresentation.permissions}
-              </span>
+              <span className="project-perm">{project.perm ?? presentation.permissions}</span>
             </span>
           </div>
           <h3 className="project-name">
             {project.url ? (
               <a href={project.url} target="_blank" rel="noopener noreferrer">
                 {project.name}
-                <span className="sr-only"> {projectPresentation.externalDisclosure}</span>
+                <span className="sr-only"> {presentation.externalDisclosure}</span>
               </a>
             ) : (
               project.name
@@ -64,19 +64,20 @@ export function ProjectsContent() {
   );
 }
 
-export function ProjectsSection({ defer }: { defer?: boolean } = {}) {
+export function ProjectsSection({ locale, defer }: { locale: SiteLocale; defer?: boolean } = {}) {
+  const presentation = projectPresentation[locale];
   return (
     <Module
       id="sec-projects"
-      header={projectPresentation.command}
+      header={presentation.command}
       variant="green"
-      mobileHeader={projectPresentation.mobileCommand}
-      name={SECTION_LABELS['sec-projects']}
+      mobileHeader={presentation.mobileCommand}
+      name={SECTION_LABELS[locale]['sec-projects']}
       icon={<IconProjects />}
       defer={defer}
     >
-      <ProjectsContent />
-      <PerfReceiptsSection />
+      <ProjectsContent locale={locale} />
+      <PerfReceiptsSection locale={locale} />
     </Module>
   );
 }

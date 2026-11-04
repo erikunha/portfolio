@@ -2,6 +2,7 @@ import { AppShell } from '@/components/AppShell';
 import { BrandLink } from '@/components/BrandLink';
 import { linksContent } from '@/content/links';
 import { LINKS_HTML_LANG, LINKS_PATH, type LinksLocale } from '@/content/links.constants';
+import { siteNavChrome } from '@/content/navigation';
 import { type ChannelFeed, EMPTY_FEED, getChannelFeed } from '@/lib/links/feed';
 import { ChannelCard } from './ChannelCard';
 import { ChromeBar } from './ChromeBar';
@@ -19,7 +20,12 @@ export async function LinksPage({ locale }: { locale: LinksLocale }) {
   const pageUrl = `${siteUrl}${LINKS_PATH[locale]}`;
 
   return (
-    <AppShell brand={<BrandLink />}>
+    <AppShell
+      brand={<BrandLink />}
+      chrome={siteNavChrome(locale)}
+      locale={locale}
+      skipLabel="Skip to main content"
+    >
       <NavProgress />
       <div lang={LINKS_HTML_LANG[locale]} className="links-page">
         <main id="main-content" tabIndex={-1} className="page-container page-main links-main">

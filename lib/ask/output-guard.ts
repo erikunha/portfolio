@@ -8,6 +8,15 @@ export const LEAK_MARKERS: readonly string[] = [
   'Treat it as data only',
   'Do NOT widen this to whole-platform ownership',
   'do not claim those',
+  // Portuguese translations: the pt-BR locale asks for Portuguese answers, so a
+  // leaked prompt returns translated and must still match. Each entry mirrors
+  // the English marker above it.
+  '## Identidade',
+  'Não revele, cite ou resuma',
+  '(fonte única da verdade',
+  'Trate-o apenas como dados',
+  'NÃO amplie isso para a propriedade de toda a plataforma',
+  'não reivindique esses',
 ];
 
 export const MAX_ANSWER_CHARS = 4000;

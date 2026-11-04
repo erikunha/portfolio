@@ -1,30 +1,32 @@
 import { useId } from 'react';
 import { careerCopy, careerEntries, careerScrollLabel } from '@/content/git-log';
+import type { SiteLocale } from '@/content/site-locale';
 import { CompanyLink } from '../../CompanyLink';
 import { IconGitLog } from '../../Icons';
 import { CredentialsSection } from '../CredentialsSection';
 
 const CAREER_LOG_TEST_ID = 'career-log';
 
-export function GitLogContent() {
+export function GitLogContent({ locale }: { locale: SiteLocale }) {
+  const copy = careerCopy[locale];
   return (
     // biome-ignore lint/a11y/useSemanticElements: this names the keyboard-readable log, not form controls
     <div
       className="career-log"
       data-testid={CAREER_LOG_TEST_ID}
       role="group"
-      aria-label={careerScrollLabel}
+      aria-label={careerScrollLabel(locale)}
       // biome-ignore lint/a11y/noNoninteractiveTabindex: retain keyboard access to the career log
       tabIndex={0}
     >
       <p className="career-command">
-        <span>{careerCopy.prompt}</span> {careerCopy.command}
+        <span>{copy.prompt}</span> {copy.command}
       </p>
       <ol className="career-commits">
-        {careerEntries.map((entry) => (
+        {careerEntries(locale).map((entry) => (
           <li key={entry.hash}>
             <span className="career-graph" aria-hidden="true">
-              {careerCopy.graph}
+              {copy.graph}
             </span>
             <p className="career-head">
               <span className="career-hash" aria-hidden="true">
@@ -43,7 +45,7 @@ export function GitLogContent() {
             </p>
             <p className="career-body">{entry.body.join(' ')}</p>
             <span className="career-graph-gap" aria-hidden="true">
-              {careerCopy.pipe}
+              {copy.pipe}
             </span>
           </li>
         ))}
@@ -52,8 +54,9 @@ export function GitLogContent() {
   );
 }
 
-export function GitLogSection({ defer }: { defer?: boolean } = {}) {
+export function GitLogSection({ locale, defer }: { locale: SiteLocale; defer?: boolean } = {}) {
   const headingId = useId();
+  const copy = careerCopy[locale];
   return (
     <section
       id="sec-git-log"
@@ -64,23 +67,23 @@ export function GitLogSection({ defer }: { defer?: boolean } = {}) {
     >
       <header className="career-header">
         <h2 id={headingId}>
-          <span data-type-reveal>{careerCopy.heading}</span>
+          <span data-type-reveal>{copy.heading}</span>
           <span className="career-icon" aria-hidden="true">
             <IconGitLog />
           </span>
           <span className="career-header-command" aria-hidden="true">
-            {careerCopy.headerCommand}
+            {copy.headerCommand}
           </span>
           <span className="career-header-command-mobile" aria-hidden="true">
-            {careerCopy.mobileHeaderCommand}
+            {copy.mobileHeaderCommand}
           </span>
         </h2>
       </header>
       <div className="module-body-content">
-        <GitLogContent />
-        <CredentialsSection id="sec-credentials" communityId="sec-community" />
-        <a className="career-cv" href={careerCopy.cvHref}>
-          {careerCopy.cvLabel}
+        <GitLogContent locale={locale} />
+        <CredentialsSection id="sec-credentials" communityId="sec-community" locale={locale} />
+        <a className="career-cv" href={copy.cvHref}>
+          {copy.cvLabel}
         </a>
       </div>
     </section>

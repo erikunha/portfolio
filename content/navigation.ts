@@ -1,6 +1,12 @@
-import { HIRE_ACCESSIBLE_NAME, HIRE_SHORT_LABEL, NAV_VOCABULARY } from './nav';
+import {
+  HIRE_ACCESSIBLE_NAME,
+  HIRE_SHORT_LABEL,
+  NAV_VOCABULARY,
+  type TopbarNavLink,
+} from './nav';
 import { CV_LINK_LABEL, READING_PATHS } from './reading-paths';
 import { SECTION_NAV, type SectionId } from './section-registry';
+import { SITE_LOCALE, localizedPath, type SiteLocale } from './site-locale';
 import { LINKEDIN_URL } from './social-urls';
 
 export type DockKey = 'home' | 'work' | 'shell' | 'hire' | 'menu';
@@ -42,6 +48,7 @@ export type NavigationCopy = {
   motionOn: string;
   motionOff: string;
   motionReduced: string;
+  langSwitchLabel: string;
 };
 
 export type Navigation = {
@@ -51,67 +58,115 @@ export type Navigation = {
   siteLinks: readonly SiteLink[];
 };
 
-export const NAVIGATION: Navigation = {
-  copy: {
-    drawerLabel: 'Section menu',
-    navLabel: 'Page sections',
-    title: '~/index',
-    openMenu: 'Open menu',
-    closeDrawer: '[ X ] CLOSE',
-    dockLabel: 'primary',
-    positionLabel: 'Page position',
-    searchLabel: 'SEARCH',
-    searchShortcutApple: '⌘K',
-    searchShortcutOther: 'Ctrl K',
-    motionOn: 'MOTION: ON',
-    motionOff: 'MOTION: OFF',
-    motionReduced: 'MOTION: REDUCED',
-  },
-  groups: [
-    { id: 'whoami', title: 'WHOAMI', dock: 'home', sectionIds: ['bio', 'sec-readme'] },
-    { id: 'work', title: 'WORK', dock: 'work', sectionIds: ['sec-projects', 'sec-git-log'] },
-    { id: 'live', title: 'MEASURED', dock: 'shell', sectionIds: ['sec-shell', 'sec-live-metrics'] },
-    {
-      id: 'off-hours',
-      title: 'OFF_HOURS',
-      dock: 'menu',
-      sectionIds: ['sec-hottest-takes', 'sec-guitar', 'sec-daw-mixer'],
+// Client islands (drawer, dock, topbar, position meter) receive the picked
+// locale's Navigation as props, so both languages never enter one chunk. This
+// module stays zod-free for the same reason; createNavigationSchema in
+// ./schemas validates each locale copy.
+const navigationFor = (locale: SiteLocale): Navigation => {
+  const pt = locale === SITE_LOCALE.pt;
+  return {
+    copy: {
+      drawerLabel: pt ? 'Menu de seções' : 'Section menu',
+      navLabel: pt ? 'Seções da página' : 'Page sections',
+      title: '~/index',
+      openMenu: pt ? 'Abrir menu' : 'Open menu',
+      closeDrawer: pt ? '[ X ] FECHAR' : '[ X ] CLOSE',
+      dockLabel: pt ? 'principal' : 'primary',
+      positionLabel: pt ? 'Posição na página' : 'Page position',
+      searchLabel: pt ? 'BUSCAR' : 'SEARCH',
+      searchShortcutApple: '⌘K',
+      searchShortcutOther: 'Ctrl K',
+      motionOn: 'MOTION: ON',
+      motionOff: 'MOTION: OFF',
+      motionReduced: 'MOTION: REDUCED',
+      langSwitchLabel: pt ? 'Idioma' : 'Language',
     },
-    { id: 'contact', title: 'CONTACT', dock: 'menu', sectionIds: ['sec-contact'] },
-  ],
-  dock: [
-    { key: 'home', label: 'HOME', sectionId: 'bio' },
-    { key: 'work', label: NAV_VOCABULARY.work, sectionId: 'sec-projects' },
-    { key: 'shell', label: 'SHELL', sectionId: 'sec-shell' },
-    {
-      key: 'hire',
-      label: HIRE_SHORT_LABEL,
-      href: LINKEDIN_URL,
-      accessibleName: HIRE_ACCESSIBLE_NAME,
-    },
-    { key: 'menu', label: 'MENU' },
-  ],
-  siteLinks: [
-    { label: CV_LINK_LABEL, index: 'CV', href: READING_PATHS.cv, external: false },
-    { label: NAV_VOCABULARY.summary, index: '30', href: READING_PATHS.summary, external: false },
-    { label: NAV_VOCABULARY.links, index: 'LK', href: '/links', external: false },
-    { label: NAV_VOCABULARY.designSystem, index: 'DS', href: '/design-system', external: false },
-    {
-      label: NAV_VOCABULARY.linkedin,
-      index: '↗',
-      href: LINKEDIN_URL,
-      external: true,
-      accessibleName: HIRE_ACCESSIBLE_NAME,
-    },
-  ],
+    groups: [
+      {
+        id: 'whoami',
+        title: pt ? 'QUEM SOU' : 'WHOAMI',
+        dock: 'home',
+        sectionIds: ['bio', 'sec-readme'],
+      },
+      {
+        id: 'work',
+        title: pt ? 'PROJETOS' : 'WORK',
+        dock: 'work',
+        sectionIds: ['sec-projects', 'sec-git-log'],
+      },
+      {
+        id: 'live',
+        title: pt ? 'MEDIÇÕES' : 'MEASURED',
+        dock: 'shell',
+        sectionIds: ['sec-shell', 'sec-live-metrics'],
+      },
+      {
+        id: 'off-hours',
+        title: pt ? 'HOBBIES' : 'OFF_HOURS',
+        dock: 'menu',
+        sectionIds: ['sec-hottest-takes', 'sec-guitar', 'sec-daw-mixer'],
+      },
+      {
+        id: 'contact',
+        title: pt ? 'CONTATO' : 'CONTACT',
+        dock: 'menu',
+        sectionIds: ['sec-contact'],
+      },
+    ],
+    dock: [
+      { key: 'home', label: pt ? 'INÍCIO' : 'HOME', sectionId: 'bio' },
+      { key: 'work', label: NAV_VOCABULARY[locale].work, sectionId: 'sec-projects' },
+      { key: 'shell', label: 'SHELL', sectionId: 'sec-shell' },
+      {
+        key: 'hire',
+        label: HIRE_SHORT_LABEL[locale],
+        href: LINKEDIN_URL,
+        accessibleName: HIRE_ACCESSIBLE_NAME[locale],
+      },
+      { key: 'menu', label: 'MENU' },
+    ],
+    siteLinks: [
+      {
+        label: CV_LINK_LABEL[locale],
+        index: 'CV',
+        href: localizedPath(locale, READING_PATHS.cv),
+        external: false,
+      },
+      {
+        label: NAV_VOCABULARY[locale].summary,
+        index: '30',
+        href: localizedPath(locale, READING_PATHS.summary),
+        external: false,
+      },
+      { label: NAV_VOCABULARY[locale].links, index: 'LK', href: '/links', external: false },
+      {
+        label: NAV_VOCABULARY[locale].designSystem,
+        index: 'DS',
+        href: '/design-system',
+        external: false,
+      },
+      {
+        label: NAV_VOCABULARY[locale].linkedin,
+        index: '↗',
+        href: LINKEDIN_URL,
+        external: true,
+        accessibleName: HIRE_ACCESSIBLE_NAME[locale],
+      },
+    ],
+  };
+};
+
+export const NAVIGATION: Record<SiteLocale, Navigation> = {
+  [SITE_LOCALE.en]: navigationFor(SITE_LOCALE.en),
+  [SITE_LOCALE.pt]: navigationFor(SITE_LOCALE.pt),
 };
 
 const POSITION_DIGITS = 2;
 
 export const HOME_SECTION_ID: SectionId = SECTION_NAV[0].id;
 
-export function sectionHref(id: string): string {
-  return `/#${id}`;
+export function sectionHref(locale: SiteLocale, id: string): string {
+  return locale === SITE_LOCALE.pt ? `/pt#${id}` : `/#${id}`;
 }
 
 export function formatSectionNumber(order: number): string {
@@ -119,5 +174,57 @@ export function formatSectionNumber(order: number): string {
 }
 
 export function dockKeyForSection(id: string): DockKey | undefined {
-  return NAVIGATION.groups.find((group) => group.sectionIds.some((member) => member === id))?.dock;
+  return NAVIGATION[SITE_LOCALE.en].groups.find((group) =>
+    group.sectionIds.some((member) => member === id),
+  )?.dock;
+}
+
+export type DrawerSection = {
+  id: SectionId;
+  label: string;
+  order: number;
+  href: string;
+};
+
+export type DrawerGroup = {
+  id: string;
+  title: string;
+  sections: readonly DrawerSection[];
+};
+
+// Pre-resolved drawer rows for one locale: labels and hash hrefs are baked in
+// on the server so the client islands never read the bilingual navigation.
+export function drawerGroups(locale: SiteLocale): readonly DrawerGroup[] {
+  return NAVIGATION[locale].groups.map((group) => ({
+    id: group.id,
+    title: group.title,
+    sections: group.sectionIds.map((id) => {
+      const section = SECTION_NAV.find((candidate) => candidate.id === id);
+      if (!section) throw new Error(`navigation: unknown section "${id}"`);
+      return {
+        id,
+        label: section.label[locale],
+        order: section.order,
+        href: sectionHref(locale, id),
+      };
+    }),
+  }));
+}
+
+export type SiteNavChrome = {
+  navigation: Navigation;
+  drawerGroups: readonly DrawerGroup[];
+  topbarNav: readonly TopbarNavLink[];
+  topbarReading: TopbarNavLink;
+  topbarHire: TopbarNavLink & { accessibleName: string };
+};
+
+export function siteNavChrome(locale: SiteLocale): SiteNavChrome {
+  return {
+    navigation: NAVIGATION[locale],
+    drawerGroups: drawerGroups(locale),
+    topbarNav: TOPBAR_NAV[locale],
+    topbarReading: TOPBAR_READING_LINK[locale],
+    topbarHire: TOPBAR_HIRE_LINK(locale),
+  };
 }

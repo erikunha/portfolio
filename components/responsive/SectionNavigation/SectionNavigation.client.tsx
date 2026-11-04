@@ -1,5 +1,6 @@
 'use client';
 
+import { usePathname } from 'next/navigation';
 import {
   createContext,
   type MouseEvent,
@@ -14,10 +15,16 @@ import {
 import {
   formatSectionNumber,
   HOME_SECTION_ID,
-  NAVIGATION,
-  sectionHref,
+  type NavigationCopy,
+  type SiteNavChrome,
 } from '@/content/navigation';
 import { SECTION_NAV } from '@/content/section-registry';
+import {
+  LANGUAGE_SWITCH_NAME,
+  languageSwitchPaths,
+  SITE_LOCALES,
+  type SiteLocale,
+} from '@/content/site-locale';
 import { NavItem } from '@/design-system';
 import { cn } from '@/lib/cn';
 import { isolate } from '@/lib/dom/isolate';
@@ -55,6 +62,9 @@ type NavigationState = {
   motionOn: boolean;
   motionLabel: string;
   toggleMotion: () => void;
+  locale: SiteLocale;
+  copy: NavigationCopy;
+  chrome: SiteNavChrome;
 };
 
 const NavigationContext = createContext<NavigationState | null>(null);
@@ -111,8 +121,17 @@ function isRendered(element: HTMLElement): boolean {
   return true;
 }
 
-export function SectionNavigationProvider({ children }: { children: ReactNode }) {
+export function SectionNavigationProvider({
+  children,
+  chrome,
+  locale,
+}: {
+  children: ReactNode;
+  chrome: SiteNavChrome;
+  locale: SiteLocale;
+}) {
   const [currentId, setCurrentId] = useState<string>(HOME_SECTION_ID);
+  const copy = chrome.navigation.copy;
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [motionOn, setMotionOn] = useState(true);
   const [systemReduced, setSystemReduced] = useState(false);
@@ -240,12 +259,11 @@ export function SectionNavigationProvider({ children }: { children: ReactNode })
         settleDrawer,
         jump,
         motionOn,
-        motionLabel: motionOn
-          ? NAVIGATION.copy.motionOn
-          : systemReduced
-            ? NAVIGATION.copy.motionReduced
-            : NAVIGATION.copy.motionOff,
+        motionLabel: motionOn ? copy.motionOn : systemReduced ? copy.motionReduced : copy.motionOff,
         toggleMotion,
+        locale,
+        copy,
+        chrome,
       }}
     >
       {children}
@@ -253,10 +271,31 @@ export function SectionNavigationProvider({ children }: { children: ReactNode })
   );
 }
 
-const GROUP_SECTIONS = NAVIGATION.groups.map((group) => ({
-  group,
-  sections: SECTION_NAV.filter(({ id }) => group.sectionIds.some((member) => member === id)),
-}));
+// Language switch (DECISIONS 2026-08-30, extending the /links decision to the
+// site): links carrying hrefLang + aria-current, never a toggle. Renders only
+// where the current address exists in both languages.
+function LanguageSwitch({ locale, copy }: { locale: SiteLocale; copy: NavigationCopy }) {
+  const pathname = usePathname();
+  const paths = pathname ? languageSwitchPaths(pathname) : null;
+  if (!paths) return null;
+  return (
+    <li>
+      <nav aria-label={copy.langSwitchLabel} className="menu-lang">
+        {SITE_LOCALES.map((candidate) => (
+          <a
+            key={candidate}
+            href={paths[candidate]}
+            hrefLang={candidate}
+            {...(candidate === locale ? { 'aria-current': 'page' as const } : {})}
+          >
+            {candidate.toUpperCase()}
+            <span className="sr-only">&nbsp;{LANGUAGE_SWITCH_NAME[candidate]}</span>
+          </a>
+        ))}
+      </nav>
+    </li>
+  );
+}
 
 export function SectionNavigation({ extra }: { extra?: ReactNode }) {
   const {
@@ -268,8 +307,10 @@ export function SectionNavigation({ extra }: { extra?: ReactNode }) {
     motionOn,
     motionLabel,
     toggleMotion,
+    copy,
+    chrome,
+    locale,
   } = useSectionNavigation();
-  const { copy } = NAVIGATION;
   const rootRef = useRef<HTMLDivElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
@@ -334,7 +375,7 @@ export function SectionNavigation({ extra }: { extra?: ReactNode }) {
         </div>
         <SearchTrigger className="menu-search" />
         <nav id="section-nav" aria-label={copy.navLabel}>
-          {GROUP_SECTIONS.map(({ group, sections }) => {
+          {chrome.drawerGroups.map((group) => {
             const titleId = `menu-group-${group.id}`;
             return (
               <div key={group.id} className="menu-group">
@@ -342,10 +383,10 @@ export function SectionNavigation({ extra }: { extra?: ReactNode }) {
                   {group.title}
                 </span>
                 <ul aria-labelledby={titleId}>
-                  {sections.map(({ id, label, order }) => (
+                  {group.sections.map(({ id, label, order, href }) => (
                     <li key={id}>
                       <NavItem
-                        href={sectionHref(id)}
+                        href={href}
                         label={label}
                         index={formatSectionNumber(order)}
                         current={id === currentId}
@@ -360,7 +401,7 @@ export function SectionNavigation({ extra }: { extra?: ReactNode }) {
         </nav>
         {extra ? <div className="menu-extra">{extra}</div> : null}
         <ul className="menu-foot">
-          {NAVIGATION.siteLinks.map(({ label, index, href, external, accessibleName }) => (
+          {chrome.navigation.siteLinks.map(({ label, index, href, external, accessibleName }) => (
             <li key={href}>
               <NavItem
                 href={href}
@@ -371,6 +412,7 @@ export function SectionNavigation({ extra }: { extra?: ReactNode }) {
               />
             </li>
           ))}
+          <LanguageSwitch locale={locale} copy={copy} />
           <li>
             <button
               type="button"
@@ -395,8 +437,7 @@ export function SectionNavigation({ extra }: { extra?: ReactNode }) {
 }
 
 export function MenuTrigger({ className }: { className?: string }) {
-  const { drawerOpen, openDrawer } = useSectionNavigation();
-  const { copy } = NAVIGATION;
+  const { drawerOpen, openDrawer, copy } = useSectionNavigation();
   return (
     <button
       type="button"
@@ -415,8 +456,7 @@ export function MenuTrigger({ className }: { className?: string }) {
 }
 
 export function SearchTrigger({ className }: { className?: string }) {
-  const { drawerOpen, openDrawer, closeDrawer } = useSectionNavigation();
-  const { copy } = NAVIGATION;
+  const { drawerOpen, openDrawer, closeDrawer, copy } = useSectionNavigation();
   const [keyboard, setKeyboard] = useState<KeyboardPlatform>(KEYBOARD_PLATFORM.APPLE);
 
   useEffect(() => {

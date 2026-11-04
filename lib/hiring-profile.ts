@@ -3,6 +3,7 @@ import { credentials } from '@/content/credentials';
 import { education } from '@/content/education';
 import { gitLog } from '@/content/git-log';
 import { profile, profileLocation } from '@/content/profile';
+import { SITE_LOCALE } from '@/content/site-locale';
 import { social } from '@/content/social';
 
 const EmployerSchema = z.object({
@@ -93,7 +94,7 @@ export const HIRING_PROFILE: HiringProfile = HiringProfileSchema.parse({
     'highway-ops',
   ],
 
-  employers: gitLog.map((entry) => ({
+  employers: gitLog[SITE_LOCALE.en].map((entry) => ({
     name: entry.company,
     url: entry.companyUrl,
     role: entry.role,
@@ -119,7 +120,7 @@ export const HIRING_PROFILE: HiringProfile = HiringProfileSchema.parse({
   },
 
   work_auth: {},
-  education: education.map((entry) => ({
+  education: education[SITE_LOCALE.en].map((entry) => ({
     institution: entry.institution,
     degree: entry.degree,
     location: entry.studyMode ? `${entry.location} (${entry.studyMode})` : entry.location,
