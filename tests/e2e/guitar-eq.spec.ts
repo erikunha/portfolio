@@ -3,7 +3,7 @@ import { expect, type Page, test } from '@playwright/test';
 const STRIP = '[data-testid="eq-spectrum"]';
 const BAR = `${STRIP} .eq-bar`;
 const AXIS_TICK = `${STRIP} .eq-axis-tick`;
-const LABEL = `${STRIP} .eq-label`;
+const LABEL = '#sec-guitar .guitar-chain-label';
 const VIEWPORTS = [
   { width: 320, height: 700, visibleBars: 36 },
   { width: 390, height: 844, visibleBars: 36 },

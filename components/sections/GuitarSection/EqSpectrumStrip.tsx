@@ -23,7 +23,6 @@ export function EqSpectrumStrip({ spectrum }: { spectrum: EqSpectrum }) {
         { '--eq-beat': `${beatSeconds.toFixed(3)}s`, '--eq-inset': `${insetPct}%` } as CSSProperties
       }
     >
-      <p className="eq-label">{spectrum.label}</p>
       <div className="eq-plot" role="img" aria-label={ariaLabel}>
         <svg
           className="eq-grid"
