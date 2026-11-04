@@ -52,7 +52,7 @@ flowchart TB
     api -->|bespoke handlers| libcore
     sections -->|Measured reads| libcore
     links["/links · /links/en"] --> feed["lib/links/feed.ts: use cache"]
-    feed --> yt["YouTube RSS, Data API uploads fallback"]
+    feed --> yt["YouTube Data API uploads paging, RSS fallback"]
     libcore --> redis
     libcore --> gw
     libcore --> resend

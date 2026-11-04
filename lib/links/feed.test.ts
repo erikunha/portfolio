@@ -213,3 +213,172 @@ describe('getChannelFeed excludes Shorts in the data layer', () => {
     expect(feed.history).toEqual([]);
   });
 });
+
+describe('getChannelFeed pages the uploads playlist with a key', () => {
+  type PageSpec = {
+    items?: string[];
+    shorts?: string[];
+    nextPageToken?: string;
+    fail?: boolean;
+  };
+
+  async function loadPaged(options: {
+    apiKey?: string;
+    rssBody?: string;
+    pages: PageSpec[];
+    durations?: Record<string, string>;
+  }) {
+    vi.resetModules();
+    vi.stubEnv('E2E_LINKS_FEED_FIXTURE', '');
+    vi.doMock('@/lib/env', () => ({ env: { YOUTUBE_API_KEY: options.apiKey } }));
+    const requested: string[] = [];
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (input: string) => {
+        requested.push(input);
+        if (input.includes('/feeds/videos.xml')) {
+          return options.rssBody
+            ? new Response(options.rssBody)
+            : new Response('', { status: 404 });
+        }
+        if (input.includes('/playlistItems')) {
+          const token = /[?&]pageToken=([^&]+)/.exec(input)?.[1];
+          const index =
+            token === undefined
+              ? 0
+              : options.pages.findIndex(
+                  (page) => page.nextPageToken === decodeURIComponent(token),
+                ) + 1;
+          const page = options.pages[index];
+          if (!page || page.fail) return new Response('', { status: 500 });
+          const ids = [...(page.items ?? []), ...(page.shorts ?? [])];
+          return Response.json({
+            items: ids.map((id, i) => ({
+              snippet: {
+                title: `Upload ${id}`,
+                publishedAt: `2026-09-${String(i + 1).padStart(2, '0')}T00:00:00Z`,
+                resourceId: { videoId: id },
+              },
+              status: { privacyStatus: 'public' },
+            })),
+            ...(page.nextPageToken ? { nextPageToken: page.nextPageToken } : {}),
+          });
+        }
+        if (input.includes('/videos?')) {
+          return Response.json({
+            items: Object.entries(options.durations ?? {}).map(([id, duration]) => ({
+              id,
+              contentDetails: { duration },
+            })),
+          });
+        }
+        return Response.json({ items: [] });
+      }),
+    );
+    const { getChannelFeed, HISTORY_LENGTH } = await import('@/lib/links/feed');
+    const feed = await getChannelFeed();
+    vi.unstubAllGlobals();
+    vi.unstubAllEnvs();
+    return { feed, requested, historyLength: HISTORY_LENGTH };
+  }
+
+  const shortDurations = (ids: string[]) => Object.fromEntries(ids.map((id) => [id, 'PT30S']));
+
+  it('collects regular videos across pages until the history is full', async () => {
+    const shorts = Array.from({ length: 47 }, (_, i) => `s${i}`);
+    const { feed, requested } = await loadPaged({
+      apiKey: 'test-key',
+      pages: [
+        { items: ['r1', 'r2', 'r3'], shorts, nextPageToken: 'p2' },
+        { items: ['r4', 'r5', 'r6'] },
+      ],
+      durations: shortDurations(shorts),
+    });
+    expect(feed.history.map((video) => video.id)).toEqual(['r1', 'r2', 'r3', 'r4', 'r5']);
+    expect(requested.some((url) => url.includes('pageToken=p2'))).toBe(true);
+  });
+
+  it('stops paging once five regular videos are collected', async () => {
+    const { feed, requested } = await loadPaged({
+      apiKey: 'test-key',
+      pages: [{ items: ['r1', 'r2', 'r3', 'r4', 'r5'], nextPageToken: 'p2' }, { items: ['r6'] }],
+    });
+    expect(feed.history).toHaveLength(5);
+    const playlistCalls = requested.filter((url) => url.includes('/playlistItems'));
+    expect(playlistCalls).toHaveLength(1);
+  });
+
+  it('drops a sub-minute upload inside the paged read', async () => {
+    const { feed } = await loadPaged({
+      apiKey: 'test-key',
+      pages: [
+        { items: ['r1', 'r2', 'r3', 'r4'], shorts: ['clip'], nextPageToken: 'p2' },
+        { items: ['r5'] },
+      ],
+      durations: { clip: 'PT45S' },
+    });
+    expect(feed.history.map((video) => video.id)).toEqual(['r1', 'r2', 'r3', 'r4', 'r5']);
+  });
+
+  it('gives up at the page cap and returns the regular videos it found', async () => {
+    const { feed, requested } = await loadPaged({
+      apiKey: 'test-key',
+      pages: [
+        { items: ['r1'], nextPageToken: 'p2' },
+        { items: ['r2'], nextPageToken: 'p3' },
+        { items: ['r3'], nextPageToken: 'p4' },
+        { items: ['r4'], nextPageToken: 'p5' },
+        { items: ['r5'] },
+      ],
+    });
+    expect(feed.history.map((video) => video.id)).toEqual(['r1', 'r2', 'r3', 'r4']);
+    expect(requested.filter((url) => url.includes('/playlistItems'))).toHaveLength(4);
+  });
+
+  it('keeps the regular videos already collected when a later page fails', async () => {
+    const { feed } = await loadPaged({
+      apiKey: 'test-key',
+      pages: [{ items: ['r1', 'r2'], nextPageToken: 'p2' }, { fail: true }],
+    });
+    expect(feed.history.map((video) => video.id)).toEqual(['r1', 'r2']);
+  });
+
+  it('falls back to the RSS feed with the duration filter when the playlist cannot be read', async () => {
+    const rssEntry = (id: string, path: 'watch?v=' | 'shorts/', n: number) => `
+      <entry>
+        <yt:videoId>${id}</yt:videoId>
+        <title>Title ${id}</title>
+        <link rel="alternate" href="https://www.youtube.com/${path}${id}"/>
+        <published>2026-10-0${n}T00:00:00+00:00</published>
+      </entry>`;
+    const body = `<feed xmlns:yt="y">${[
+      rssEntry('s1', 'shorts/', 2),
+      rssEntry('clip', 'watch?v=', 3),
+      rssEntry('v1', 'watch?v=', 1),
+    ].join('')}</feed>`;
+    const { feed, requested } = await loadPaged({
+      apiKey: 'test-key',
+      rssBody: body,
+      pages: [{ fail: true }],
+      durations: { clip: 'PT20S' },
+    });
+    expect(feed.history.map((video) => video.id)).toEqual(['v1']);
+    expect(requested.some((url) => url.includes('/playlistItems'))).toBe(true);
+  });
+
+  it('never reads the Data API without a key', async () => {
+    const rssEntry = (id: string, n: number) => `
+      <entry>
+        <yt:videoId>${id}</yt:videoId>
+        <title>Title ${id}</title>
+        <link rel="alternate" href="https://www.youtube.com/watch?v=${id}"/>
+        <published>2026-10-0${n}T00:00:00+00:00</published>
+      </entry>`;
+    const { feed, requested } = await loadPaged({
+      rssBody: `<feed xmlns:yt="y">${[rssEntry('v1', 2), rssEntry('v2', 1)].join('')}</feed>`,
+      pages: [],
+    });
+    expect(feed.history.map((video) => video.id)).toEqual(['v1', 'v2']);
+    expect(requested.some((url) => url.includes('googleapis'))).toBe(false);
+  });
+});
