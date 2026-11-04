@@ -55,6 +55,7 @@ export const guitarRig: GuitarRig = GuitarRigSchema.parse({
     caption: './GIGS --LIVE · SACRED + SWORN · FEEL OVER NOISE',
     status: '▶ REC · LIVE',
     cameraLabel: 'CAM/01 · STAGE',
+    telemetry: 'YELLOW_TAKE_03 · 87 BPM · STD E',
   },
 });
 

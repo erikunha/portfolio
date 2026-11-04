@@ -117,6 +117,20 @@ describe('GuitarSection presentation', () => {
     expect(doc.body.textContent).toContain(guitarRig.liveCam.caption);
   });
 
+  it('pins the telemetry line at the photo bottom bar left and REC LIVE at its right', async () => {
+    const doc = await renderContent();
+    const bar = doc.querySelector('.guitar-photo-telemetry');
+    expect(bar?.textContent).toContain(guitarRig.liveCam.telemetry);
+    expect(bar?.textContent).toContain(guitarRig.liveCam.status);
+    expect(bar?.querySelector('.guitar-photo-telemetry-status')?.textContent).toBe(
+      guitarRig.liveCam.status,
+    );
+    expect(doc.querySelector('.guitar-camera-labels')?.textContent).toContain(
+      guitarRig.liveCam.cameraLabel,
+    );
+    expect(doc.querySelector('.guitar-camera-labels')?.textContent).not.toContain('REC');
+  });
+
   it('exposes a readable section heading and no per-node headings', () => {
     const html = renderToStaticMarkup(createElement(GuitarSection));
     const doc = new DOMParser().parseFromString(html, 'text/html');
