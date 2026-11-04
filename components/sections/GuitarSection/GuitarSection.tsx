@@ -8,13 +8,10 @@ import {
 import { SECTION_LABELS } from '@/content/section-labels';
 import { IconGuitar } from '../../Icons';
 import { Module } from '../../responsive/Module';
-import { DawMixerContent } from '../DawMixerSection';
 import { EqSpectrumStrip } from './EqSpectrumStrip';
 
 const SECTION_ID = 'sec-guitar';
-const STACKED_MAX_WIDTH_PX = 1023;
-const PHOTO_VIEWPORT_SHARE_VW = 38;
-const PHOTO_SIZES = `(max-width: ${STACKED_MAX_WIDTH_PX}px) 100vw, ${PHOTO_VIEWPORT_SHARE_VW}vw`;
+const PHOTO_SIZES = '(min-width: 1024px) 38vw, 100vw';
 
 export function GuitarContent() {
   const { signalStrip, eqSpectrum, influences, nowPlaying, stats, photo } = guitarPresentation;
@@ -28,27 +25,22 @@ export function GuitarContent() {
         </div>
         <EqSpectrumStrip spectrum={eqSpectrum} />
       </div>
-      <div className="guitar-pair">
-        <div className="guitar-mixer">
-          <DawMixerContent />
+      <figure className="guitar-photo">
+        <div className="guitar-camera-labels">
+          <span>{liveCam.status}</span>
+          <span>{liveCam.cameraLabel}</span>
         </div>
-        <figure className="guitar-photo">
-          <div className="guitar-camera-labels">
-            <span>{liveCam.status}</span>
-            <span>{liveCam.cameraLabel}</span>
+        <div className="guitar-photo-frame">
+          <Image {...photo} className="guitar-photo-image" sizes={PHOTO_SIZES} />
+          <div className="guitar-photo-tint" aria-hidden="true" />
+          <div className="guitar-photo-scanlines" aria-hidden="true" />
+          <div className="guitar-scan-beam" aria-hidden="true" />
+          <div className="cam-corners" aria-hidden="true">
+            <i />
           </div>
-          <div className="guitar-photo-frame">
-            <Image {...photo} className="guitar-photo-image" sizes={PHOTO_SIZES} />
-            <div className="guitar-photo-tint" aria-hidden="true" />
-            <div className="guitar-photo-scanlines" aria-hidden="true" />
-            <div className="guitar-scan-beam" aria-hidden="true" />
-            <div className="cam-corners" aria-hidden="true">
-              <i />
-            </div>
-          </div>
-          <figcaption className="guitar-camera-caption">{liveCam.caption}</figcaption>
-        </figure>
-      </div>
+        </div>
+        <figcaption className="guitar-camera-caption">{liveCam.caption}</figcaption>
+      </figure>
       <div className="guitar-facts">
         {stats.map((stat) => (
           <div className="guitar-stat" key={stat.label} data-testid={`stat-${stat.label}`}>

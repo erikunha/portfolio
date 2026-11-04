@@ -67,7 +67,7 @@ describe('GuitarSection presentation', () => {
     expect(doc.querySelector('[data-testid="eq-spectrum"] [id]')).toBeNull();
   });
 
-  it('reads the strip, then the mixer beside the photo, then the facts row', async () => {
+  it('reads the strip, then the photo, then the facts row', async () => {
     const doc = await renderContent();
     const influences = doc.querySelector('[data-testid="influences"]');
     expect(influences?.textContent).toContain(guitarPresentation.influences.label);
@@ -83,27 +83,26 @@ describe('GuitarSection presentation', () => {
     }
     const ordered = Array.from(
       doc.querySelectorAll(
-        '[data-testid="eq-spectrum"], [data-testid="daw-mixer-desktop"], img, [data-testid^="stat-"], [data-testid="influences"]',
+        '[data-testid="eq-spectrum"], img, [data-testid^="stat-"], [data-testid="influences"]',
       ),
     );
     expect(ordered).toEqual([
       doc.querySelector('[data-testid="eq-spectrum"]'),
-      doc.querySelector('[data-testid="daw-mixer-desktop"]'),
       doc.querySelector('img'),
       ...stats,
       influences,
     ]);
   });
 
-  it('puts the mixer and the photo in one pair and the facts after it', async () => {
+  it('puts the photo directly in the presentation and the facts after it', async () => {
     const doc = await renderContent();
-    const pair = doc.querySelector('.guitar-pair');
-    expect(Array.from(pair?.children ?? [], (child) => child.className)).toEqual([
-      'guitar-mixer',
-      'guitar-photo',
-    ]);
-    expect(pair?.querySelector('[data-testid="daw-mixer-desktop"]')).not.toBeNull();
-    expect(pair?.nextElementSibling?.className).toBe('guitar-facts');
+    const presentation = doc.querySelector('.guitar-presentation');
+    expect(doc.querySelector('.guitar-pair')).toBeNull();
+    expect(doc.querySelector('.guitar-mixer')).toBeNull();
+    expect(doc.querySelector('[data-testid="daw-mixer-desktop"]')).toBeNull();
+    const photo = presentation?.querySelector(':scope > .guitar-photo');
+    expect(photo).not.toBeNull();
+    expect(photo?.nextElementSibling?.className).toBe('guitar-facts');
   });
 
   it('delivers the photo through Next Image with meaningful alt and reserved dimensions', async () => {
@@ -144,18 +143,17 @@ describe('GuitarSection presentation', () => {
     expect(strip?.compareDocumentPosition(eq as Node)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
   });
 
-  it('keeps the mixer inside the guitar and mixer module', () => {
+  it('renders no mixer markup: the DAW mixer is its own section below', () => {
     const html = renderToStaticMarkup(createElement(GuitarSection));
     const doc = new DOMParser().parseFromString(html, 'text/html');
     const section = doc.querySelector('section#sec-guitar');
     expect(section).not.toBeNull();
-    expect(section?.querySelectorAll('[data-testid="daw-mixer-desktop"]')).toHaveLength(1);
-    expect(section?.querySelectorAll('[data-testid^="channel-"]')).toHaveLength(6);
-    expect(doc.querySelectorAll('section#sec-daw-mixer')).toHaveLength(0);
+    expect(section?.querySelectorAll('[data-testid="daw-mixer-desktop"]')).toHaveLength(0);
+    expect(section?.querySelectorAll('[data-testid^="channel-"]')).toHaveLength(0);
   });
 
-  it('sizes the photo for full width up to 1023px and the 1:1.618 share above it', async () => {
+  it('sizes the photo for the right-hand pair from 1024px and full width below', async () => {
     const doc = await renderContent();
-    expect(doc.querySelector('img')?.getAttribute('sizes')).toBe('(max-width: 1023px) 100vw, 38vw');
+    expect(doc.querySelector('img')?.getAttribute('sizes')).toBe('(min-width: 1024px) 38vw, 100vw');
   });
 });

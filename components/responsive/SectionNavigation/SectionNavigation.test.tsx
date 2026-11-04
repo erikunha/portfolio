@@ -297,7 +297,7 @@ describe('SectionNavigation', () => {
   it('leaves the browser default alone when the target is missing or the click is modified', () => {
     render(<Page />);
     document.getElementById('sec-guitar')?.remove();
-    expect(fireEvent.click(navLink('Guitar and mixer'))).toBe(true);
+    expect(fireEvent.click(navLink('Guitar rig'))).toBe(true);
     expect(fireEvent.click(navLink('About'), { metaKey: true })).toBe(true);
     expect(scrollIntoView).not.toHaveBeenCalled();
   });

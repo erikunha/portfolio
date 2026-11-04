@@ -5,8 +5,8 @@ import {
   GuitarRigSchema,
 } from './schemas';
 
-export const GUITAR_MODULE_HEADER = 'CAT ~/.GUITAR_RIG + ./MIX --LIVE';
-export const GUITAR_MODULE_MOBILE_HEADER = 'GUITAR_RIG + MIX';
+export const GUITAR_MODULE_HEADER = 'CAT ~/.GUITAR_RIG';
+export const GUITAR_MODULE_MOBILE_HEADER = 'GUITAR_RIG';
 
 export const guitarRig: GuitarRig = GuitarRigSchema.parse({
   eqSpectrum: {

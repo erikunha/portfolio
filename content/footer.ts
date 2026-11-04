@@ -79,7 +79,8 @@ export const footerContent = FooterContentSchema.parse({
       directory: './off_hours/',
       links: [
         { label: 'Opinions', href: '#sec-hottest-takes' },
-        { label: 'Guitar and mixer', href: '#sec-guitar' },
+        { label: 'Guitar rig', href: '#sec-guitar' },
+        { label: 'DAW mixer', href: '#sec-daw-mixer' },
       ],
     },
     { directory: './contact/', links: [{ label: 'Contact', href: '#sec-contact' }] },

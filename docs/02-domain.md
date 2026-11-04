@@ -32,21 +32,21 @@ There is **no authentication, no accounts, no multi-tenancy**. The "user" is ano
 
 Every section of the page is driven by a typed module in `content/`, and those types _are_ the domain entities. The terminal metaphor maps real professional data onto filesystem/Unix concepts:
 
-| Terminal surface               | Real-world meaning                                       | Content module        | Entity                                 |
-| ------------------------------ | -------------------------------------------------------- | --------------------- | -------------------------------------- |
-| About panels                   | Positioning, Now rows, stack and retry code              | `about.ts`            | `AboutContent`                         |
-| `git log ~/career`             | Career timeline with nested tag groups                   | `git-log.ts`          | `GitCommit[]` (`companyUrl`, `type`)   |
-| `LS -LA ./PROJECTS`            | Nine projects with shared desktop/mobile content         | `projects.ts`         | `Project[]`                            |
-| `PERF_RECEIPTS --HARD-NUMBERS` | Six impact receipts nested under Projects                | `perf-receipts.ts`    | `projectReceipts` from `PerfReceipt[]` |
-| `MEASURED.JSON`                | ASK evaluation and desktop/mobile PSI                    | `measured.ts`         | `Measured` presentation metadata       |
-| About responsibilities panel   | Scope, as Unix permission bits                           | `responsibilities.ts` | `Responsibility[]` (`perms` regex)     |
-| `git tag --list 'cert/*'`      | Certifications inside Career                             | `credentials.ts`      | `Credential[]`                         |
-| `git tag --list 'edu/*'`       | Education inside Career                                  | `education.ts`        | `Credential[]`                         |
-| `git tag --list 'community/*'` | Community and speaking inside Career                     | `community.ts`        | `CommunityEvent`                       |
-| `cat ~/HOTTEST_TAKES.md`       | Opinions/theses                                          | `hottest-takes.ts`    | `HottestTake[]`                        |
-| `cat ~/.guitar_rig`            | Hobby (guitar EQ strip)                                  | `guitar-rig.ts`       | `GuitarRig`                            |
-| `./mix --live`                 | Hobby (DAW mixer, interactive, inside the guitar module) | `daw-mixer.ts`        | `DawMixer`                             |
-| `cat ~/.unknowns`              | Learning and specialization lists inside Opinions        | `unknowns.ts`         | `Unknowns`                             |
+| Terminal surface               | Real-world meaning                                                  | Content module        | Entity                                 |
+| ------------------------------ | ------------------------------------------------------------------- | --------------------- | -------------------------------------- |
+| About panels                   | Positioning, Now rows, stack and retry code                         | `about.ts`            | `AboutContent`                         |
+| `git log ~/career`             | Career timeline with nested tag groups                              | `git-log.ts`          | `GitCommit[]` (`companyUrl`, `type`)   |
+| `LS -LA ./PROJECTS`            | Nine projects with shared desktop/mobile content                    | `projects.ts`         | `Project[]`                            |
+| `PERF_RECEIPTS --HARD-NUMBERS` | Six impact receipts nested under Projects                           | `perf-receipts.ts`    | `projectReceipts` from `PerfReceipt[]` |
+| `MEASURED.JSON`                | ASK evaluation and desktop/mobile PSI                               | `measured.ts`         | `Measured` presentation metadata       |
+| About responsibilities panel   | Scope, as Unix permission bits                                      | `responsibilities.ts` | `Responsibility[]` (`perms` regex)     |
+| `git tag --list 'cert/*'`      | Certifications inside Career                                        | `credentials.ts`      | `Credential[]`                         |
+| `git tag --list 'edu/*'`       | Education inside Career                                             | `education.ts`        | `Credential[]`                         |
+| `git tag --list 'community/*'` | Community and speaking inside Career                                | `community.ts`        | `CommunityEvent`                       |
+| `cat ~/HOTTEST_TAKES.md`       | Opinions/theses                                                     | `hottest-takes.ts`    | `HottestTake[]`                        |
+| `cat ~/.guitar_rig`            | Hobby (guitar EQ strip)                                             | `guitar-rig.ts`       | `GuitarRig`                            |
+| `./mix --live`                 | Hobby (DAW mixer, interactive, its own module below the guitar rig) | `daw-mixer.ts`        | `DawMixer`                             |
+| `cat ~/.unknowns`              | Learning and specialization lists inside Opinions                   | `unknowns.ts`         | `Unknowns`                             |
 
 Opinions renders four ordered home takes and both Unknowns lists in one deferred module.
 The design-system take renders at `/design-system#opinion-07`; `placement` selects its surface.
