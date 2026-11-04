@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { companyLinkCopy } from '@/content/company-link';
 import { gitLog } from '@/content/git-log';
 import { READING_PATHS } from '@/content/reading-views';
+import { SITE_LOCALE } from '@/content/site-locale';
 import { GitLogContent, GitLogSection } from './GitLogSection';
 
 vi.mock('next/headers', () => ({
@@ -20,7 +21,7 @@ describe('career git log', () => {
     expect(log).not.toBeNull();
     const jobs = Array.from(log?.children ?? []);
     expect(jobs).toHaveLength(9);
-    gitLog.forEach((job, index) => {
+    gitLog[SITE_LOCALE.en].forEach((job, index) => {
       const row = jobs[index];
       expect(row?.textContent).toContain(job.role.toUpperCase());
       expect(row?.textContent).toContain(job.location.replace(', Brazil', ', BR'));
@@ -39,7 +40,7 @@ describe('career git log', () => {
 
   it('includes credentials once inside Career and retains a usable CV action', () => {
     const host = document.createElement('div');
-    host.innerHTML = renderToStaticMarkup(<GitLogSection />);
+    host.innerHTML = renderToStaticMarkup(<GitLogSection locale={SITE_LOCALE.en} />);
     const career = host.querySelector('#sec-git-log');
     expect(career?.textContent).toContain("git tag --list 'cert/*'");
     expect(career?.textContent).toContain("git tag --list 'edu/*'");
@@ -54,8 +55,8 @@ describe('career git log', () => {
     const host = document.createElement('div');
     host.innerHTML = renderToStaticMarkup(GitLogContent());
     const rows = Array.from(host.querySelectorAll('ol > li'));
-    expect(rows).toHaveLength(gitLog.length);
-    gitLog.forEach((job, index) => {
+    expect(rows).toHaveLength(gitLog[SITE_LOCALE.en].length);
+    gitLog[SITE_LOCALE.en].forEach((job, index) => {
       const links = rows[index]?.querySelectorAll('a') ?? [];
       expect(links, `${job.company} must have exactly one company link`).toHaveLength(1);
       const link = links[0];

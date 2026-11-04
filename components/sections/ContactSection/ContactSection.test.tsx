@@ -4,13 +4,14 @@ import { describe, expect, it } from 'vitest';
 import { contactLanguages } from '@/content/contact';
 import { contactCopy } from '@/content/contact-copy';
 import { profile } from '@/content/profile';
+import { SITE_LOCALE } from '@/content/site-locale';
 import { social } from '@/content/social';
 import { ContactSection } from './ContactSection';
 
 describe('ContactSection', () => {
   it('renders a channels block with its own heading and every way to reach Erik', () => {
     const host = document.createElement('div');
-    host.innerHTML = renderToStaticMarkup(<ContactSection />);
+    host.innerHTML = renderToStaticMarkup(<ContactSection locale={SITE_LOCALE.en} />);
     const block = host.querySelector('.contact-main .contact-channels');
     expect(block, 'the channels block sits in the left column').not.toBeNull();
     expect(block?.querySelector('h3')?.textContent).toBe(contactCopy.channels.title);
@@ -26,7 +27,7 @@ describe('ContactSection', () => {
 
   it('gives the linkedin row a real outbound link', () => {
     const host = document.createElement('div');
-    host.innerHTML = renderToStaticMarkup(<ContactSection />);
+    host.innerHTML = renderToStaticMarkup(<ContactSection locale={SITE_LOCALE.en} />);
     const cta = host.querySelector('.contact-channel-cta');
     expect(cta?.getAttribute('href')).toBe(social.linkedin);
     expect(cta?.getAttribute('target')).toBe('_blank');
@@ -34,7 +35,7 @@ describe('ContactSection', () => {
   });
 
   it('keeps a copy control next to the address', () => {
-    render(<ContactSection />);
+    render(<ContactSection locale={SITE_LOCALE.en} />);
     const copy = screen.getByRole('button', { name: contactCopy.section.copyEmail });
     expect(copy).toBeTruthy();
   });
@@ -45,7 +46,7 @@ describe('ContactSection timezone panel first paint', () => {
 
   function serverPanel(): HTMLElement {
     const host = document.createElement('div');
-    host.innerHTML = renderToStaticMarkup(<ContactSection />);
+    host.innerHTML = renderToStaticMarkup(<ContactSection locale={SITE_LOCALE.en} />);
     return host;
   }
 

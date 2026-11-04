@@ -12,7 +12,7 @@ import { ErrorBoundary } from '../../ErrorBoundary';
 import { IconContact } from '../../Icons';
 import { Module } from '../../responsive/Module';
 
-export function ContactSection({ locale, defer }: { locale: SiteLocale; defer?: boolean } = {}) {
+export function ContactSection({ locale, defer }: { locale: SiteLocale; defer?: boolean }) {
   const { section, channels, timezone } = contactContent[locale];
   const presentation = profilePresentation[locale];
   const { facts } = timezone;

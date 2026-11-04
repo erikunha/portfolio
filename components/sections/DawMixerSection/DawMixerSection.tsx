@@ -354,7 +354,7 @@ export async function DawMixerContent({ locale }: { locale: SiteLocale }) {
   return isMobile ? <DawMixerMobile mixer={mixer} /> : <DawMixerDesktopDynamic mixer={mixer} />;
 }
 
-export function DawMixerSection({ locale, defer }: { locale: SiteLocale; defer?: boolean } = {}) {
+export function DawMixerSection({ locale, defer }: { locale: SiteLocale; defer?: boolean }) {
   return (
     <Module
       id="sec-daw-mixer"

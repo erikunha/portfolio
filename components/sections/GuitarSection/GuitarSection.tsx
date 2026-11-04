@@ -66,7 +66,7 @@ export function GuitarContent({ locale }: { locale: SiteLocale }) {
   );
 }
 
-export function GuitarSection({ locale, defer }: { locale: SiteLocale; defer?: boolean } = {}) {
+export function GuitarSection({ locale, defer }: { locale: SiteLocale; defer?: boolean }) {
   return (
     <Module
       id={SECTION_ID}

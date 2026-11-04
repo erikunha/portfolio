@@ -6,6 +6,9 @@ import {
   type MountedClient,
   mountClient,
 } from '@/__tests__/helpers/render';
+import { shellUi } from '@/content/shell-ui';
+import { SITE_LOCALE } from '@/content/site-locale';
+import { shellChrome } from '@/content/terminal-chrome';
 
 const mobileViewport = vi.hoisted(() => ({ value: false }));
 vi.mock('@/lib/use-breakpoint.client', () => ({
@@ -88,7 +91,13 @@ describe('InteractiveShell streaming behavior', () => {
     );
     vi.stubGlobal('fetch', fetchMock);
 
-    mounted = await mountClient(createElement(InteractiveShell));
+    mounted = await mountClient(
+      createElement(InteractiveShell, {
+        locale: SITE_LOCALE.en,
+        ui: shellUi[SITE_LOCALE.en],
+        chrome: shellChrome[SITE_LOCALE.en],
+      }),
+    );
     const { container } = mounted;
 
     await submitQuestion(container, 'what are your strengths?');
@@ -113,7 +122,13 @@ describe('InteractiveShell streaming behavior', () => {
     const fetchMock = vi.fn(async () => streamingResponse(['Hello ', 'from ', 'Claude']));
     vi.stubGlobal('fetch', fetchMock);
 
-    mounted = await mountClient(createElement(InteractiveShell));
+    mounted = await mountClient(
+      createElement(InteractiveShell, {
+        locale: SITE_LOCALE.en,
+        ui: shellUi[SITE_LOCALE.en],
+        chrome: shellChrome[SITE_LOCALE.en],
+      }),
+    );
     const { container } = mounted;
 
     await submitQuestion(container, 'who are you');
@@ -149,7 +164,13 @@ describe('InteractiveShell streaming behavior', () => {
 
     const warnSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
 
-    mounted = await mountClient(createElement(InteractiveShell));
+    mounted = await mountClient(
+      createElement(InteractiveShell, {
+        locale: SITE_LOCALE.en,
+        ui: shellUi[SITE_LOCALE.en],
+        chrome: shellChrome[SITE_LOCALE.en],
+      }),
+    );
     const { container } = mounted;
 
     await submitQuestion(container, 'a question');
@@ -183,7 +204,13 @@ describe('shell feed accessibility', () => {
 
   async function renderShell(): Promise<HTMLElement> {
     const { InteractiveShell } = await import('./InteractiveShell');
-    mounted = await mountClient(createElement(InteractiveShell));
+    mounted = await mountClient(
+      createElement(InteractiveShell, {
+        locale: SITE_LOCALE.en,
+        ui: shellUi[SITE_LOCALE.en],
+        chrome: shellChrome[SITE_LOCALE.en],
+      }),
+    );
     return mounted.container;
   }
 
@@ -270,7 +297,13 @@ describe('InteractiveShell multi-turn history', () => {
     );
 
     const { InteractiveShell } = await import('./InteractiveShell');
-    mounted = await mountClient(createElement(InteractiveShell));
+    mounted = await mountClient(
+      createElement(InteractiveShell, {
+        locale: SITE_LOCALE.en,
+        ui: shellUi[SITE_LOCALE.en],
+        chrome: shellChrome[SITE_LOCALE.en],
+      }),
+    );
     const { container } = mounted;
 
     await submitQuestion(container, 'first question');
@@ -337,7 +370,13 @@ describe('InteractiveShell r106 controls', () => {
 
   async function renderShell() {
     const { InteractiveShell } = await import('./InteractiveShell');
-    mounted = await mountClient(createElement(InteractiveShell));
+    mounted = await mountClient(
+      createElement(InteractiveShell, {
+        locale: SITE_LOCALE.en,
+        ui: shellUi[SITE_LOCALE.en],
+        chrome: shellChrome[SITE_LOCALE.en],
+      }),
+    );
     return mounted.container;
   }
 
@@ -924,7 +963,13 @@ describe('shell input hint states', () => {
 
   async function renderShell(): Promise<HTMLElement> {
     const { InteractiveShell } = await import('./InteractiveShell');
-    mounted = await mountClient(createElement(InteractiveShell));
+    mounted = await mountClient(
+      createElement(InteractiveShell, {
+        locale: SITE_LOCALE.en,
+        ui: shellUi[SITE_LOCALE.en],
+        chrome: shellChrome[SITE_LOCALE.en],
+      }),
+    );
     return mounted.container;
   }
 
@@ -946,7 +991,7 @@ describe('shell input hint states', () => {
 
     const focusedHint = container.querySelector('[data-testid="shell-placeholder"]');
     expect(focusedHint, 'a focused empty input must keep a visible hint').not.toBeNull();
-    expect(focusedHint?.textContent).toBe(shellUi.placeholder);
+    expect(focusedHint?.textContent).toBe(shellUi[SITE_LOCALE.en].placeholder);
     expect(
       focusedHint?.querySelector('[data-testid="shell-cursor"]'),
       'the typing animation must not run while the input holds focus',
@@ -973,7 +1018,7 @@ describe('shell input hint states', () => {
 
     const hint = container.querySelector('[data-testid="shell-placeholder"]');
     expect(hint, 'the empty input must keep a visible hint while an answer streams').not.toBeNull();
-    expect(hint?.textContent).toBe(shellUi.placeholder);
+    expect(hint?.textContent).toBe(shellUi[SITE_LOCALE.en].placeholder);
     expect(
       hint?.querySelector('[data-testid="shell-cursor"]'),
       'the typing animation must not run while an answer streams',

@@ -73,6 +73,7 @@ export const ContactContentSchema = z.object({
     linkedinHref: z.url(),
     copyEmail: z.string().min(1),
     copyEmailCopied: z.string().min(1),
+    loadingLabel: z.string().min(1),
   }),
   channels: z.object({
     title: z.string().min(1),

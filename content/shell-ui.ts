@@ -1,4 +1,7 @@
 import type { ShellUi } from './schemas';
+
+export type { ShellUi };
+
 import { SITE_LOCALE, type SiteLocale } from './site-locale';
 
 export const ShellCommand = {
@@ -148,8 +151,10 @@ export const shellUi: Record<SiteLocale, ShellUi> = {
     errorPrefix: 'erro:',
     httpErrorPrefix: 'HTTP',
     bodyUnavailable: 'corpo da resposta indisponível',
-    offline: 'offline: reconecte para perguntar ao Claude. Os comandos internos continuam funcionando.',
-    networkError: 'Falha de conexão. Reconecte e tente de novo. Os comandos internos continuam funcionando.',
+    offline:
+      'offline: reconecte para perguntar ao Claude. Os comandos internos continuam funcionando.',
+    networkError:
+      'Falha de conexão. Reconecte e tente de novo. Os comandos internos continuam funcionando.',
     timeout: 'A requisição expirou. Tente de novo ou use um comando interno.',
     localAvailable: 'Os comandos internos continuam funcionando.',
     referencePrefix: 'ref',

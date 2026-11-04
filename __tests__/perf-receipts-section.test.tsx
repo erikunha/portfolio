@@ -1,6 +1,7 @@
 import { createElement } from 'react';
 import { afterEach, describe, expect, it } from 'vitest';
 import { projectReceipts, receiptsHeading } from '@/content/perf-receipts';
+import { SITE_LOCALE } from '@/content/site-locale';
 import { type MountedClient, mountClient } from './helpers/render';
 
 describe('Projects nested performance receipts', () => {
@@ -30,7 +31,7 @@ describe('Projects nested performance receipts', () => {
     const items = Array.from(container.querySelectorAll('.project-receipts li'));
     expect(items).toHaveLength(6);
     expect(items.map((item) => item.querySelector('[data-receipt-metric]')?.textContent)).toEqual(
-      projectReceipts.map((receipt) => receipt.metric),
+      projectReceipts(SITE_LOCALE.en).map((receipt) => receipt.metric),
     );
   });
 
@@ -38,9 +39,11 @@ describe('Projects nested performance receipts', () => {
     const container = await render();
     const featured = container.querySelectorAll('[data-featured]');
     expect(featured).toHaveLength(1);
-    expect(featured[0]?.closest('li')?.textContent).toContain(projectReceipts[0]?.metric);
+    expect(featured[0]?.closest('li')?.textContent).toContain(
+      projectReceipts(SITE_LOCALE.en)[0]?.metric,
+    );
     expect(featured[0]?.textContent).toBe(
-      projectReceipts[0]?.displayValue ?? projectReceipts[0]?.delta,
+      projectReceipts(SITE_LOCALE.en)[0]?.displayValue ?? projectReceipts(SITE_LOCALE.en)[0]?.delta,
     );
   });
 
@@ -48,7 +51,7 @@ describe('Projects nested performance receipts', () => {
     const container = await render();
     const values = Array.from(container.querySelectorAll('.project-receipts [data-delta]'));
     expect(values.map((value) => value.textContent)).toEqual(
-      projectReceipts.map((receipt) => receipt.displayValue ?? receipt.delta),
+      projectReceipts(SITE_LOCALE.en).map((receipt) => receipt.displayValue ?? receipt.delta),
     );
   });
 
@@ -56,10 +59,10 @@ describe('Projects nested performance receipts', () => {
     const container = await render();
     const items = Array.from(container.querySelectorAll('.project-receipts li'));
     expect(items.map((item) => item.querySelector('.receipt-company')?.textContent)).toEqual(
-      projectReceipts.map((receipt) => receipt.company),
+      projectReceipts(SITE_LOCALE.en).map((receipt) => receipt.company),
     );
     expect(items.map((item) => item.querySelector('.receipt-context')?.textContent)).toEqual(
-      projectReceipts.map((receipt) => receipt.note),
+      projectReceipts(SITE_LOCALE.en).map((receipt) => receipt.note),
     );
   });
 

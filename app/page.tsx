@@ -1,8 +1,8 @@
 import type { Metadata } from 'next';
+import { localizedPageMetadata } from '@/app/_lib/locale-metadata';
 import { SiteHome } from '@/components/SiteHome';
 import { profilePresentation } from '@/content/profile';
 import { SITE_LOCALE } from '@/content/site-locale';
-import { localizedPageMetadata } from './_lib/locale-metadata';
 
 const locale = SITE_LOCALE.en;
 

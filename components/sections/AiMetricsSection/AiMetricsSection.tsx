@@ -92,7 +92,7 @@ export async function AiMetricsData({ locale }: { locale: SiteLocale }) {
   }
 }
 
-export function AiMetricsSection({ locale, defer }: { locale: SiteLocale; defer?: boolean } = {}) {
+export function AiMetricsSection({ locale, defer }: { locale: SiteLocale; defer?: boolean }) {
   const content = measuredContent[locale];
   return (
     <Module

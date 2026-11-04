@@ -2,6 +2,7 @@ import { type ComponentType, createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { SectionNavigationProvider } from '@/components/responsive/SectionNavigation';
+import { SITE_LOCALE, type SiteLocale } from '@/content/site-locale';
 import { type MountedClient, mountClient } from './helpers/render';
 
 function firstOf<T>(arr: readonly T[]): T {
@@ -32,18 +33,18 @@ describe('About', () => {
   it('renders the merged panels without standalone section wrappers', async () => {
     const { About } = await import('@/components/sections/About');
     const { aboutContent } = await import('@/content/about');
-    mounted = await mountClient(createElement(About));
+    mounted = await mountClient(createElement(About, { locale: SITE_LOCALE.en }));
     const container = mounted.container;
 
     expect(container.querySelector('#sec-readme')).not.toBeNull();
     expect(
       [...container.querySelectorAll('.ab-panel > header h3')].map((title) => title.textContent),
     ).toEqual([
-      aboutContent.whoami.title,
-      aboutContent.now.title,
-      aboutContent.responsibilities.title,
-      aboutContent.stack.title,
-      aboutContent.code.title,
+      aboutContent[SITE_LOCALE.en].whoami.title,
+      aboutContent[SITE_LOCALE.en].now.title,
+      aboutContent[SITE_LOCALE.en].responsibilities.title,
+      aboutContent[SITE_LOCALE.en].stack.title,
+      aboutContent[SITE_LOCALE.en].code.title,
     ]);
     expect(container.querySelector('#sec-now, #sec-npm-stack, #sec-responsibilities')).toBeNull();
     expect(container.querySelector('[data-role-pill]')?.getAttribute('aria-hidden')).toBe('true');
@@ -56,7 +57,7 @@ describe('About', () => {
   it('server-renders the role pill from content, without brackets', async () => {
     const { ROLES } = await import('@/components/client/RoleTyper/RoleTyper');
     const { aboutContent } = await import('@/content/about');
-    expect(ROLES[0]).toBe(aboutContent.whoami.role.replace(/^\[|\]$/g, ''));
+    expect(ROLES[0]).toBe(aboutContent[SITE_LOCALE.en].whoami.role.replace(/^\[|\]$/g, ''));
   });
 });
 
@@ -129,7 +130,10 @@ describe('ContactSection', () => {
   async function render(props: { defer?: boolean } = {}) {
     const { ContactSection } = await import('@/components/sections/ContactSection/ContactSection');
     mounted = await mountClient(
-      createElement(ContactSection as ComponentType<{ defer?: boolean }>, props),
+      createElement(ContactSection as ComponentType<{ locale: SiteLocale; defer?: boolean }>, {
+        locale: SITE_LOCALE.en,
+        ...props,
+      }),
     );
     return mounted.container;
   }
@@ -167,9 +171,9 @@ describe('CredentialsSection', () => {
     const groups = [...container.querySelectorAll('[role="group"]')];
     const headings = [...container.querySelectorAll('h3')];
     const expectedGroups = [
-      careerCredentials.certifications,
-      careerCredentials.education,
-      careerCredentials.community,
+      careerCredentials[SITE_LOCALE.en].certifications,
+      careerCredentials[SITE_LOCALE.en].education,
+      careerCredentials[SITE_LOCALE.en].community,
     ];
     expect(groups).toHaveLength(expectedGroups.length);
     expectedGroups.forEach((group, index) => {
@@ -190,7 +194,7 @@ describe('CredentialsSection', () => {
   it('inherits deferral from Career while retaining credential and community anchors', async () => {
     const { GitLogSection } = await import('@/components/sections/GitLogSection');
     const container = document.createElement('div');
-    container.innerHTML = renderToStaticMarkup(<GitLogSection defer />);
+    container.innerHTML = renderToStaticMarkup(<GitLogSection locale={SITE_LOCALE.en} defer />);
     const career = container.querySelector('#sec-git-log');
     expect(career?.querySelector('h2')?.textContent).toContain('Career');
     expect(career?.classList.contains('module-deferred')).toBe(true);
@@ -215,7 +219,10 @@ describe('HottestTakesSection', () => {
       '@/components/sections/HottestTakesSection/HottestTakesSection'
     );
     mounted = await mountClient(
-      createElement(HottestTakesSection as ComponentType<{ defer?: boolean }>, props),
+      createElement(HottestTakesSection as ComponentType<{ locale: SiteLocale; defer?: boolean }>, {
+        locale: SITE_LOCALE.en,
+        ...props,
+      }),
     );
     return mounted.container;
   }
@@ -236,7 +243,7 @@ describe('HottestTakesSection', () => {
     const container = await render();
     const { homeTakes } = await import('@/content/hottest-takes');
     expect(container.querySelectorAll('[data-testid="hottest-takes-list"] > li')).toHaveLength(4);
-    expect(container.textContent).toContain(firstOf(homeTakes).thesis);
+    expect(container.textContent).toContain(firstOf(homeTakes(SITE_LOCALE.en)).thesis);
   });
 
   it('renders without error with defer prop', async () => {
@@ -280,10 +287,12 @@ describe('UnknownsSection', () => {
   it('renders learning items under nested headings without a separate module', async () => {
     const { UnknownsSection } = await import('@/components/sections/UnknownsSection');
     const { unknowns } = await import('@/content/unknowns');
-    mounted = await mountClient(createElement(UnknownsSection));
+    mounted = await mountClient(createElement(UnknownsSection, { locale: SITE_LOCALE.en }));
     const { container } = mounted;
-    expect(container.querySelector('h3')?.textContent).toContain(unknowns.learningHeading);
-    expect(container.textContent).toContain(firstOf(unknowns.learning).claim);
+    expect(container.querySelector('h3')?.textContent).toContain(
+      unknowns[SITE_LOCALE.en].learningHeading,
+    );
+    expect(container.textContent).toContain(firstOf(unknowns[SITE_LOCALE.en].learning).claim);
     expect(container.querySelector('section')).toBeNull();
   });
 });

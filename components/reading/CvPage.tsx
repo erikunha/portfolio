@@ -139,12 +139,12 @@ export function CvPage({ locale }: { locale: SiteLocale }) {
           <article className="reading-entry">
             <h3>
               {document_.community.href ? (
-                <a href={cvDocument.community.href} target="_blank" rel={shared.newTabRel}>
+                <a href={document_.community.href} target="_blank" rel={shared.newTabRel}>
                   {document_.community.heading}
                   <span className="sr-only"> {shared.newTabHint}</span>
                 </a>
               ) : (
-                cvDocument.community.heading
+                document_.community.heading
               )}
             </h3>
             <ul>

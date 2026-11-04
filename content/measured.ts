@@ -1,4 +1,7 @@
 import { type Measured, MeasuredSchema } from './schemas';
+
+export type { Measured };
+
 import { SITE_LOCALE, type SiteLocale } from './site-locale';
 
 const WEEK_MS = 7 * 24 * 60 * 60 * 1000;

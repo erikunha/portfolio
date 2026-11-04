@@ -1,8 +1,8 @@
 import type { Metadata } from 'next';
+import { localizedPageMetadata } from '@/app/_lib/locale-metadata';
 import { SummaryPage } from '@/components/reading/SummaryPage';
 import { readingViews } from '@/content/reading-views';
 import { SITE_HTML_LANG, SITE_LOCALE } from '@/content/site-locale';
-import { localizedPageMetadata } from '../../../_lib/locale-metadata';
 
 const locale = SITE_LOCALE.pt;
 const { summary } = readingViews[locale];

@@ -7,7 +7,7 @@ import { declValue, rulesInMedia, rulesWithSelector } from '@/__tests__/helpers/
 
 async function renderSection(): Promise<Document> {
   const { PerfReceiptsSection } = await import('./PerfReceiptsSection');
-  const html = renderToStaticMarkup(createElement(PerfReceiptsSection));
+  const html = renderToStaticMarkup(createElement(PerfReceiptsSection, { locale: SITE_LOCALE.en }));
   return new DOMParser().parseFromString(html, 'text/html');
 }
 

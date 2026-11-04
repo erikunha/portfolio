@@ -16,8 +16,10 @@ export const SECTION_LABELS: Record<SiteLocale, Record<SectionId, string>> = {
 z.record(z.string(), z.string().min(1)).parse(SECTION_LABELS[SITE_LOCALE.en]);
 z.record(z.string(), z.string().min(1)).parse(SECTION_LABELS[SITE_LOCALE.pt]);
 
-const scrollRegionLabelsFor = (locale: SiteLocale) =>
-  (locale === SITE_LOCALE.pt
+const scrollRegionLabelsFor = (
+  locale: SiteLocale,
+): Record<'sec-responsibilities' | 'sec-readme', string> =>
+  locale === SITE_LOCALE.pt
     ? {
         'sec-responsibilities': 'Responsabilidades (rolável)',
         'sec-readme': 'Código README',
@@ -25,7 +27,7 @@ const scrollRegionLabelsFor = (locale: SiteLocale) =>
     : {
         'sec-responsibilities': 'Responsibilities (scrollable)',
         'sec-readme': 'README code',
-      }) as const;
+      };
 
 export const SCROLL_REGION_LABELS: Record<
   SiteLocale,

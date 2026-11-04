@@ -6,7 +6,10 @@ import { act, createElement } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
 import { flushMicrotasks, type MountedClient, mountClient } from '@/__tests__/helpers/render';
+import { contactCopy } from '@/content/contact-copy';
 import { linksContent } from '@/content/links';
+import { SITE_LOCALE } from '@/content/site-locale';
+import { contactChrome } from '@/content/terminal-chrome';
 import { ContactForm } from './ContactForm';
 import { messageStore } from './messageStore';
 
@@ -35,7 +38,12 @@ describe('ContactForm accessibility', () => {
   });
 
   async function renderForm(): Promise<HTMLElement> {
-    mounted = await mountClient(createElement(ContactForm));
+    mounted = await mountClient(
+      createElement(ContactForm, {
+        copy: contactCopy[SITE_LOCALE.en],
+        chrome: contactChrome[SITE_LOCALE.en],
+      }),
+    );
     return mounted.container;
   }
 
@@ -147,7 +155,12 @@ describe('contact form error region', () => {
       ),
     );
 
-    mounted = await mountClient(createElement(ContactForm));
+    mounted = await mountClient(
+      createElement(ContactForm, {
+        copy: contactCopy[SITE_LOCALE.en],
+        chrome: contactChrome[SITE_LOCALE.en],
+      }),
+    );
     const { container } = mounted;
 
     expect(container.querySelector('[role="alert"]')).toBeNull();
@@ -179,7 +192,12 @@ describe('contact form delivery states', () => {
       'fetch',
       vi.fn(async () => Response.json(body, { status })),
     );
-    mounted = await mountClient(createElement(ContactForm));
+    mounted = await mountClient(
+      createElement(ContactForm, {
+        copy: contactCopy[SITE_LOCALE.en],
+        chrome: contactChrome[SITE_LOCALE.en],
+      }),
+    );
     const container = mounted.container;
     const form = container.querySelector('form');
     fillValidForm(container);
@@ -455,7 +473,12 @@ describe('contact form — submitting state', () => {
       ),
     );
 
-    mounted = await mountClient(createElement(ContactForm));
+    mounted = await mountClient(
+      createElement(ContactForm, {
+        copy: contactCopy[SITE_LOCALE.en],
+        chrome: contactChrome[SITE_LOCALE.en],
+      }),
+    );
     const { container } = mounted;
 
     const form = container.querySelector<HTMLFormElement>('form');
@@ -495,7 +518,9 @@ describe('contact validation and retention', () => {
   it('focuses a linked summary, wires inline errors, and corrects them as inputs change', () => {
     const fetchMock = vi.fn();
     vi.stubGlobal('fetch', fetchMock);
-    const { container } = render(<ContactForm />);
+    const { container } = render(
+      <ContactForm copy={contactCopy[SITE_LOCALE.en]} chrome={contactChrome[SITE_LOCALE.en]} />,
+    );
     const form = container.querySelector('form') as HTMLFormElement;
     fireEvent.submit(form);
     const summary = screen.getByRole('alert');
@@ -525,7 +550,9 @@ describe('contact validation and retention', () => {
   });
 
   it('counts message characters and keeps the counter described alongside a validation error', () => {
-    render(<ContactForm />);
+    render(
+      <ContactForm copy={contactCopy[SITE_LOCALE.en]} chrome={contactChrome[SITE_LOCALE.en]} />,
+    );
     const message = screen.getByLabelText('$ message:') as HTMLTextAreaElement;
     fireEvent.change(message, { target: { value: 'short' } });
     fireEvent.submit(message.form as HTMLFormElement);
@@ -546,7 +573,9 @@ describe('contact validation and retention', () => {
         'fetch',
         vi.fn(async () => Response.json({ ok: true })),
       );
-      const { container } = render(<ContactForm />);
+      const { container } = render(
+        <ContactForm copy={contactCopy[SITE_LOCALE.en]} chrome={contactChrome[SITE_LOCALE.en]} />,
+      );
       fillValidForm(container);
       const nameInput = screen.getByLabelText('$ name:') as HTMLInputElement;
       fireEvent.change(nameInput, { target: { value: name } });
@@ -566,7 +595,9 @@ describe('contact validation and retention', () => {
 
   it('rejects whitespace-only names and values beyond API limits without sending', () => {
     vi.stubGlobal('fetch', vi.fn());
-    const { container } = render(<ContactForm />);
+    const { container } = render(
+      <ContactForm copy={contactCopy[SITE_LOCALE.en]} chrome={contactChrome[SITE_LOCALE.en]} />,
+    );
     fillValidForm(container);
     const name = screen.getByLabelText('$ name:') as HTMLInputElement;
     for (const value of ['   ', 'A'.repeat(121)]) {
@@ -584,7 +615,9 @@ describe('contact validation and retention', () => {
         'fetch',
         vi.fn(async () => Response.json({ ok: true })),
       );
-      const { container } = render(<ContactForm />);
+      const { container } = render(
+        <ContactForm copy={contactCopy[SITE_LOCALE.en]} chrome={contactChrome[SITE_LOCALE.en]} />,
+      );
       fillValidForm(container);
       const input = screen.getByLabelText('$ message:') as HTMLTextAreaElement;
       fireEvent.change(input, { target: { value: message } });
@@ -599,7 +632,9 @@ describe('contact validation and retention', () => {
     'rejects messages outside the trimmed API limits (%#)',
     (message) => {
       vi.stubGlobal('fetch', vi.fn());
-      const { container } = render(<ContactForm />);
+      const { container } = render(
+        <ContactForm copy={contactCopy[SITE_LOCALE.en]} chrome={contactChrome[SITE_LOCALE.en]} />,
+      );
       fillValidForm(container);
       const input = screen.getByLabelText('$ message:') as HTMLTextAreaElement;
       fireEvent.change(input, { target: { value: message } });
@@ -614,7 +649,9 @@ describe('contact validation and retention', () => {
     'rejects invalid email before sending (%s)',
     (email) => {
       vi.stubGlobal('fetch', vi.fn());
-      const { container } = render(<ContactForm />);
+      const { container } = render(
+        <ContactForm copy={contactCopy[SITE_LOCALE.en]} chrome={contactChrome[SITE_LOCALE.en]} />,
+      );
       fillValidForm(container);
       const input = screen.getByLabelText('$ email:') as HTMLInputElement;
       fireEvent.change(input, { target: { value: email } });
@@ -640,7 +677,9 @@ describe('contact validation and retention', () => {
         )
         .mockResolvedValueOnce(Response.json({ ok: true })),
     );
-    const { container } = render(<ContactForm />);
+    const { container } = render(
+      <ContactForm copy={contactCopy[SITE_LOCALE.en]} chrome={contactChrome[SITE_LOCALE.en]} />,
+    );
     fillValidForm(container);
     const form = container.querySelector('form') as HTMLFormElement;
     fireEvent.submit(form);
@@ -664,8 +703,8 @@ describe('contact validation and retention', () => {
   it('gives separate forms unique field and description targets', () => {
     const { container } = render(
       <>
-        <ContactForm />
-        <ContactForm />
+        <ContactForm copy={contactCopy[SITE_LOCALE.en]} chrome={contactChrome[SITE_LOCALE.en]} />
+        <ContactForm copy={contactCopy[SITE_LOCALE.en]} chrome={contactChrome[SITE_LOCALE.en]} />
       </>,
     );
     const ids = [...container.querySelectorAll('[id]')].map((node) => node.id);
@@ -697,7 +736,9 @@ describe('contact cross-review fixes', () => {
   }
 
   it('counts the trimmed message length the validator and the API use', () => {
-    const { container } = render(<ContactForm />);
+    const { container } = render(
+      <ContactForm copy={contactCopy[SITE_LOCALE.en]} chrome={contactChrome[SITE_LOCALE.en]} />,
+    );
     setField(container, 'textarea', `   ${'a'.repeat(4)}   `);
     expect(container.querySelector('.contact-count')?.textContent).toBe('4/2000');
   });
@@ -715,7 +756,9 @@ describe('contact cross-review fixes', () => {
   ])('client email check agrees with the server schema for %s', (email) => {
     const fetchMock = vi.fn(async () => Response.json({ ok: true }));
     vi.stubGlobal('fetch', fetchMock);
-    const { container } = render(<ContactForm />);
+    const { container } = render(
+      <ContactForm copy={contactCopy[SITE_LOCALE.en]} chrome={contactChrome[SITE_LOCALE.en]} />,
+    );
     setField(container, 'input[name="name"]', 'Ada');
     setField(container, 'input[name="email"]', email);
     setField(container, 'textarea', 'A platform engineering opportunity.');
@@ -725,7 +768,9 @@ describe('contact cross-review fixes', () => {
   });
 
   it('names the focused error summary through its heading', () => {
-    const { container } = render(<ContactForm />);
+    const { container } = render(
+      <ContactForm copy={contactCopy[SITE_LOCALE.en]} chrome={contactChrome[SITE_LOCALE.en]} />,
+    );
     fireEvent.submit(container.querySelector('form') as HTMLFormElement);
     const summary = screen.getByRole('alert');
     const labelId = summary.getAttribute('aria-labelledby') as string;
@@ -735,7 +780,9 @@ describe('contact cross-review fixes', () => {
   });
 
   it('summarises the invalid fields on one line with a link per field', () => {
-    const { container } = render(<ContactForm />);
+    const { container } = render(
+      <ContactForm copy={contactCopy[SITE_LOCALE.en]} chrome={contactChrome[SITE_LOCALE.en]} />,
+    );
     fireEvent.submit(container.querySelector('form') as HTMLFormElement);
     const summary = screen.getByRole('alert');
     expect(
@@ -756,7 +803,9 @@ describe('contact cross-review fixes', () => {
       'fetch',
       vi.fn(async () => Response.json({ ok: false, error: { message: 'boom' } }, { status: 500 })),
     );
-    const { container } = render(<ContactForm />);
+    const { container } = render(
+      <ContactForm copy={contactCopy[SITE_LOCALE.en]} chrome={contactChrome[SITE_LOCALE.en]} />,
+    );
     fillValidForm(container);
     await act(async () => {
       fireEvent.submit(container.querySelector('form') as HTMLFormElement);
@@ -771,7 +820,9 @@ describe('contact cross-review fixes', () => {
   it('sends one request when the busy submit button is clicked repeatedly', async () => {
     const fetchMock = vi.fn(() => new Promise<Response>(vi.fn()));
     vi.stubGlobal('fetch', fetchMock);
-    const { container } = render(<ContactForm />);
+    const { container } = render(
+      <ContactForm copy={contactCopy[SITE_LOCALE.en]} chrome={contactChrome[SITE_LOCALE.en]} />,
+    );
     fillValidForm(container);
     const button = container.querySelector('button[type="submit"]') as HTMLButtonElement;
     await act(async () => {
@@ -789,7 +840,9 @@ describe('contact form message store', () => {
   afterEach(() => vi.unstubAllGlobals());
 
   it('shows a line appended from outside the form in the message field', () => {
-    render(<ContactForm />);
+    render(
+      <ContactForm copy={contactCopy[SITE_LOCALE.en]} chrome={contactChrome[SITE_LOCALE.en]} />,
+    );
     const message = screen.getByLabelText('$ message:') as HTMLTextAreaElement;
     fireEvent.change(message, { target: { value: 'Hello Erik' } });
 
@@ -804,7 +857,9 @@ describe('contact form message store', () => {
   it('keeps a line appended before the form mounted', () => {
     messageStore.append('Proposed call: 13:30');
 
-    render(<ContactForm />);
+    render(
+      <ContactForm copy={contactCopy[SITE_LOCALE.en]} chrome={contactChrome[SITE_LOCALE.en]} />,
+    );
 
     expect((screen.getByLabelText('$ message:') as HTMLTextAreaElement).value).toBe(
       'Proposed call: 13:30',
@@ -812,7 +867,9 @@ describe('contact form message store', () => {
   });
 
   it('writes typing back to the store so an append never drops typed text', () => {
-    render(<ContactForm />);
+    render(
+      <ContactForm copy={contactCopy[SITE_LOCALE.en]} chrome={contactChrome[SITE_LOCALE.en]} />,
+    );
     fireEvent.change(screen.getByLabelText('$ message:'), { target: { value: 'typed text' } });
 
     expect(messageStore.getSnapshot()).toBe('typed text');
@@ -821,7 +878,9 @@ describe('contact form message store', () => {
   it('sends the appended line with the submitted message', async () => {
     const fetchMock = vi.fn(async () => Response.json({ ok: true }));
     vi.stubGlobal('fetch', fetchMock);
-    const { container } = render(<ContactForm />);
+    const { container } = render(
+      <ContactForm copy={contactCopy[SITE_LOCALE.en]} chrome={contactChrome[SITE_LOCALE.en]} />,
+    );
     fillValidForm(container);
     act(() => {
       messageStore.append('Proposed call: 13:30');
@@ -839,7 +898,9 @@ describe('contact form message store', () => {
   });
 
   it('clears the message error when an appended line makes the message valid', () => {
-    const { container } = render(<ContactForm />);
+    const { container } = render(
+      <ContactForm copy={contactCopy[SITE_LOCALE.en]} chrome={contactChrome[SITE_LOCALE.en]} />,
+    );
     fireEvent.submit(container.querySelector('form') as HTMLFormElement);
     const message = screen.getByLabelText('$ message:');
     expect(message.getAttribute('aria-invalid')).toBe('true');
@@ -852,7 +913,9 @@ describe('contact form message store', () => {
   });
 
   it('tells the store which field holds the message while the field is on screen', () => {
-    const { unmount } = render(<ContactForm />);
+    const { unmount } = render(
+      <ContactForm copy={contactCopy[SITE_LOCALE.en]} chrome={contactChrome[SITE_LOCALE.en]} />,
+    );
     const message = screen.getByLabelText('$ message:');
 
     expect(messageStore.getFieldId()).toBe(message.id);
@@ -866,7 +929,9 @@ describe('contact form message store', () => {
       'fetch',
       vi.fn(async () => Response.json({ ok: true })),
     );
-    const { container } = render(<ContactForm />);
+    const { container } = render(
+      <ContactForm copy={contactCopy[SITE_LOCALE.en]} chrome={contactChrome[SITE_LOCALE.en]} />,
+    );
     expect(messageStore.getFieldId()).not.toBeNull();
     fillValidForm(container);
 
@@ -889,7 +954,9 @@ describe('contact form message store', () => {
         'fetch',
         vi.fn(async () => reply),
       );
-      const first = render(<ContactForm />);
+      const first = render(
+        <ContactForm copy={contactCopy[SITE_LOCALE.en]} chrome={contactChrome[SITE_LOCALE.en]} />,
+      );
       fillValidForm(first.container);
       expect(messageStore.getSnapshot()).not.toBe('');
 
@@ -900,7 +967,9 @@ describe('contact form message store', () => {
 
       expect(messageStore.getSnapshot(), 'the sent text must not outlive the send').toBe('');
       first.unmount();
-      render(<ContactForm />);
+      render(
+        <ContactForm copy={contactCopy[SITE_LOCALE.en]} chrome={contactChrome[SITE_LOCALE.en]} />,
+      );
       expect((screen.getByLabelText('$ message:') as HTMLTextAreaElement).value).toBe('');
     },
   );

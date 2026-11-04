@@ -2,11 +2,14 @@ import {
   HIRE_ACCESSIBLE_NAME,
   HIRE_SHORT_LABEL,
   NAV_VOCABULARY,
+  TOPBAR_HIRE_LINK,
+  TOPBAR_NAV,
+  TOPBAR_READING_LINK,
   type TopbarNavLink,
 } from './nav';
 import { CV_LINK_LABEL, READING_PATHS } from './reading-paths';
 import { SECTION_NAV, type SectionId } from './section-registry';
-import { SITE_LOCALE, localizedPath, type SiteLocale } from './site-locale';
+import { localizedPath, SITE_LOCALE, type SiteLocale } from './site-locale';
 import { LINKEDIN_URL } from './social-urls';
 
 export type DockKey = 'home' | 'work' | 'shell' | 'hire' | 'menu';

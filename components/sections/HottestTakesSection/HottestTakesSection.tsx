@@ -8,13 +8,7 @@ import { UnknownsSection } from '../UnknownsSection';
 const TAKE_NUMBER_WIDTH = 2;
 const TAKE_NUMBER_PAD = '0';
 
-export function HottestTakesSection({
-  locale,
-  defer,
-}: {
-  locale: SiteLocale;
-  defer?: boolean;
-} = {}) {
+export function HottestTakesSection({ locale, defer }: { locale: SiteLocale; defer?: boolean }) {
   const { docsLink } = hottestTakesConfig[locale];
   return (
     <Module

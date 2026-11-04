@@ -64,7 +64,7 @@ export function ProjectsContent({ locale }: { locale: SiteLocale }) {
   );
 }
 
-export function ProjectsSection({ locale, defer }: { locale: SiteLocale; defer?: boolean } = {}) {
+export function ProjectsSection({ locale, defer }: { locale: SiteLocale; defer?: boolean }) {
   const presentation = projectPresentation[locale];
   return (
     <Module

@@ -126,7 +126,7 @@ export function SectionNavigationProvider({
   chrome,
   locale,
 }: {
-  children: ReactNode;
+  children?: ReactNode;
   chrome: SiteNavChrome;
   locale: SiteLocale;
 }) {

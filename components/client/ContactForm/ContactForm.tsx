@@ -219,7 +219,7 @@ export function ContactForm({ copy, chrome }: { copy: ContactContent; chrome: Te
           >
             {invalidFields.length > 0 && (
               <p>
-                <span id={summaryId}>{contactErrorSummary(invalidFields.length)}</span>
+                <span id={summaryId}>{contactErrorSummary(copy, invalidFields.length)}</span>
                 {invalidFields.map((field, index) => (
                   <Fragment key={field}>
                     {index === 0 ? ' ' : copy.form.errorSummary.separator}

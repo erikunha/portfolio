@@ -15,9 +15,10 @@ export function CredentialsSection({
   locale: SiteLocale;
   id?: string;
   communityId?: string;
-} = {}) {
+}) {
   const groupId = useId();
-  const { link: eventLink } = communityEvent[locale];
+  const event = communityEvent[locale];
+  const { link: eventLink } = event;
   const { certifications, education, community, prompt, statusMarker } = careerCredentials[locale];
   const groups = [
     { ...certifications, entries: credentials },
@@ -60,7 +61,7 @@ export function CredentialsSection({
           <p className="career-tag-key">
             <a href={eventLink.href} target={EXTERNAL_TARGET} rel={EXTERNAL_REL}>
               <span>{community.heading}</span>
-              <span className="sr-only"> {communityEvent.newTabLabel}</span>
+              <span className="sr-only"> {event.newTabLabel}</span>
             </a>
           </p>
           <ul>

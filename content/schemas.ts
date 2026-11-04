@@ -238,6 +238,8 @@ export const AboutContentSchema = z.object({
       .min(1),
   }),
 });
+export type AboutContent = z.infer<typeof AboutContentSchema>;
+
 export const ProjectKind = z.enum(['professional', 'oss']);
 
 export const ProjectSchema = z

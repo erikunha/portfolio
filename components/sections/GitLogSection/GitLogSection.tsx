@@ -54,7 +54,7 @@ export function GitLogContent({ locale }: { locale: SiteLocale }) {
   );
 }
 
-export function GitLogSection({ locale, defer }: { locale: SiteLocale; defer?: boolean } = {}) {
+export function GitLogSection({ locale, defer }: { locale: SiteLocale; defer?: boolean }) {
   const headingId = useId();
   const copy = careerCopy[locale];
   return (
