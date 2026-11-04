@@ -6,7 +6,7 @@ const SHELL_RESPONSES: ShellResponse[] = [
   {
     commands: [ShellCommand.Help],
     kind: ShellLineKind.Output,
-    text: 'commands: help · whois · whois --recursive · ls · cat skills.md · cat ~/.now · contact · face · hire · clear\nanything else → sent to Claude',
+    text: 'commands: help · whois · whois --recursive · cat skills.md · cat ~/.now · contact · clear\nanything else → sent to Claude',
   },
   {
     commands: [ShellCommand.WhoIs, ShellCommand.WhoAmI],
@@ -19,14 +19,9 @@ const SHELL_RESPONSES: ShellResponse[] = [
     text: 'erik → engineer → builder → student → curious → 9yo with a guitar',
   },
   {
-    commands: [ShellCommand.List],
-    kind: ShellLineKind.Output,
-    text: 'README.md  ~/.now  ~/.guitar_rig  ~/.unknowns  ~/.community  ~/.credentials  hottest_takes.md  contact',
-  },
-  {
     commands: [ShellCommand.Skills],
     kind: ShellLineKind.Output,
-    text: 'angular, react, next.js, typescript, node, rxjs, ngrx, web components, spec-driven ai tooling',
+    text: 'react, next.js, typescript, angular, node, fastify, web components, design systems, vercel ai sdk, agent orchestration, eval harnesses, spec-driven ai tooling',
   },
   {
     commands: [ShellCommand.Now],
@@ -34,14 +29,9 @@ const SHELL_RESPONSES: ShellResponse[] = [
     text: NOW_CURRENTLY,
   },
   {
-    commands: [ShellCommand.Contact, ShellCommand.Hire],
+    commands: [ShellCommand.Contact],
     kind: ShellLineKind.Output,
     text: 'mailto: erikhenriquealvescunha@gmail.com',
-  },
-  {
-    commands: [ShellCommand.Face],
-    kind: ShellLineKind.Output,
-    text: '(•_•) ( •_•)>⌐■-■ (⌐■_■)',
   },
 ];
 

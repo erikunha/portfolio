@@ -162,15 +162,6 @@
     letter-spacing: 0.1em;
   }
 
-  .menu-badge {
-    flex: none;
-    border: var(--border-width) solid var(--color-primary-subtle);
-    color: var(--color-primary-500);
-    font-size: var(--text-xs);
-    line-height: 1;
-    padding: var(--spacing-1) var(--spacing-2);
-  }
-
   .search-trigger {
     display: inline-flex;
     align-items: center;
@@ -270,12 +261,15 @@
     order: 2;
     min-height: var(--spacing-target);
     padding: 0 var(--spacing-3);
+    font-family: var(--font-mono);
     font-size: var(--text-xs);
-    font-weight: 700;
+    font-weight: 400;
     letter-spacing: 0.1em;
     color: var(--color-primary-500);
+    background: transparent;
     border: var(--border-width) solid var(--color-primary-subtle);
     border-radius: var(--radius-none);
+    cursor: pointer;
   }
 
   .menu-close:hover {

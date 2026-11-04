@@ -109,6 +109,47 @@ test.describe('ask / interactive shell', () => {
   });
 });
 
+test('toolbar chips fill the prompt instead of submitting', async ({ page }) => {
+  await setupAskPage(page, { ask: 'happy', log: 'accept' });
+
+  const toolbar = page.locator('[data-testid="shell-commands"]');
+  await expect(toolbar.getByRole('button')).toHaveText([
+    'help',
+    'whois',
+    'cat skills.md',
+    'cat ~/.now',
+    'contact',
+    'clear',
+  ]);
+
+  await toolbar.getByRole('button', { name: 'help' }).click();
+
+  const shellInput = getShellInput(page);
+  await expect(shellInput).toHaveValue('help');
+  await expect(shellInput).toBeFocused();
+  const feed = page.locator('[role="log"]');
+  await expect(feed).not.toContainText('commands:');
+
+  await shellInput.press('Enter');
+  await expect(feed).toContainText('commands:');
+});
+
+test('the clear chip still runs immediately', async ({ page }) => {
+  await setupAskPage(page, { ask: 'happy', log: 'accept' });
+  await ask(page, 'Who is Erik?');
+  await expect(page.locator('[role="log"]')).toContainText('Erik is a Senior Full-Stack Engineer', {
+    timeout: 10_000,
+  });
+
+  await page
+    .locator('[data-testid="shell-commands"]')
+    .getByRole('button', { name: 'clear' })
+    .click();
+
+  await expect(page.locator('[role="log"]')).toContainText('Connected. Type help');
+  await expect(getShellInput(page)).toHaveValue('');
+});
+
 test('quick commands read as inert while an answer is pending', async ({ page }) => {
   await setupAskPage(page, { ask: 'happy', log: 'accept' });
   const neverSettles = () => new Promise<void>(() => undefined);

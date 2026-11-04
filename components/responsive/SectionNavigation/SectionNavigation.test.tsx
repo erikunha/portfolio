@@ -330,14 +330,10 @@ describe('SectionNavigation', () => {
     ).toEqual(['VIEW_CV', '30S_SUMMARY', 'LINKS', 'DESIGN_SYSTEM', 'LinkedIn']);
   });
 
-  it('counts the destinations in the drawer head', () => {
+  it('renders no section-count badge in the drawer head', () => {
     render(<Page />);
-    const badge = document.querySelector('.menu-badge');
-
-    expect(badge?.querySelector('[aria-hidden="true"]')?.textContent).toBe(
-      String(SECTION_REGISTRY.length),
-    );
-    expect(badge?.textContent).toContain(`${SECTION_REGISTRY.length} sections`);
+    expect(document.querySelector('.menu-badge')).toBeNull();
+    expect(document.querySelector('[data-section-count]')).toBeNull();
   });
 
   it('offers a search row that reports the drawer it controls', () => {

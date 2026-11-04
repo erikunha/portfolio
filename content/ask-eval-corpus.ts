@@ -78,7 +78,14 @@ export const ASK_EVAL_CORPUS: AskEvalItem[] = AskEvalCorpusSchema.parse([
     id: 'fact-primary-stack',
     question: "What is Erik's primary frontend stack?",
     expect:
-      'React, Next.js, and TypeScript as the primary stack, with enterprise depth in Angular, RxJS, NgRx, StencilJS and Web Components / micro-frontends.',
+      'React, Next.js, TypeScript, Angular, TanStack, Plate, Tailwind, Radix, Stencil web components, with SSR/SSG/ISR rendering.',
+    kind: 'factual',
+  },
+  {
+    id: 'fact-skills',
+    question: 'What are Erik’s strongest skills?',
+    expect:
+      'Frontend: React, Next.js, TypeScript, Angular, TanStack, Plate, Tailwind, Radix, Stencil web components, SSR/SSG/ISR. Testing: Playwright, Jest, Vitest, MSW, WireMock, Stryker. AI-native: Vercel AI SDK + AI Gateway, Anthropic API, OpenAI, Google GenAI/Vertex, MCP servers, Zod structured output, eval harnesses with LLM judge calibrated on human labels, per-job cost caps, prompt-injection defense, agent and sub-agent orchestration, Claude Code/Codex skills, spec-driven development, model routing with cost ceilings.',
     kind: 'factual',
   },
   {
@@ -92,7 +99,7 @@ export const ASK_EVAL_CORPUS: AskEvalItem[] = AskEvalCorpusSchema.parse([
     id: 'fact-testing-tools',
     question: 'What testing tools does Erik use?',
     expect:
-      'Jest, Playwright, React Testing Library, Karma, Jasmine, and API mocking with MSW / WireMock.',
+      'Playwright, Jest, Vitest, MSW / WireMock for API mocking, and Stryker for mutation testing.',
     kind: 'factual',
   },
   {

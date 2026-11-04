@@ -32,7 +32,7 @@ flowchart TD
     page["app/page.tsx (RSC)"] --> bp["BreakpointProvider (client)"]
     bp --> shell["AppShell.client"]
     shell --> navigation["SectionNavigationProvider (client): current section and drawer state"]
-    navigation --> rail["SectionNavigation (client): menu trigger, drawer focus trap and focus return<br/>Header: section count and drawer close control"]
+    navigation --> rail["SectionNavigation (client): menu trigger, drawer focus trap and focus return<br/>Header: drawer title and close control"]
     navigation --> position["PositionMeter (client): scroll progress line, top from 1024px and right edge below"]
     navigation --> chrome["Chrome: MatrixRainLazy (client-only) · CRTOverlay(6 layers) · DesktopTopbar · StatusBar · MobileTitleBar · Dock · ToTopButton"]
     shell --> main["PageMain (RSC): main#main-content"]

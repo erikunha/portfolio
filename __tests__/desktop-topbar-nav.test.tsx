@@ -88,14 +88,14 @@ describe('DesktopTopbar', () => {
     );
 
     expect(labels).toEqual([
+      'VIEW_CV',
+      HIRE_SHORT_LABEL,
       NAV_VOCABULARY.about,
       NAV_VOCABULARY.work,
       NAV_VOCABULARY.career,
       NAV_VOCABULARY.contact,
       NAV_VOCABULARY.links,
       NAV_VOCABULARY.designSystem,
-      'VIEW_CV',
-      HIRE_SHORT_LABEL,
     ]);
   });
 
@@ -105,14 +105,14 @@ describe('DesktopTopbar', () => {
     const hrefs = [...(nav?.querySelectorAll('a') ?? [])].map((link) => link.getAttribute('href'));
 
     expect(hrefs).toEqual([
+      '/cv',
+      'https://www.linkedin.com/in/erikunha/',
       '/#sec-readme',
       '/#sec-projects',
       '/#sec-git-log',
       '/#sec-contact',
       '/links',
       '/design-system',
-      '/cv',
-      'https://www.linkedin.com/in/erikunha/',
     ]);
   });
 
@@ -164,7 +164,7 @@ describe('DesktopTopbar', () => {
     expect(hire?.getAttribute('aria-label')).toBe(HIRE_ACCESSIBLE_NAME);
   });
 
-  it('puts the brand first and the menu trigger last, in DOM order and so in focus order', async () => {
+  it('puts the menu trigger first and the brand last, in DOM order and so in focus order', async () => {
     mounted = await renderTopbar();
     const focusable = [...mounted.container.querySelectorAll<HTMLElement>('a[href], button')];
     const brandLink = focusable.find((element) => element.getAttribute('data-test-brand') === '1');
@@ -173,13 +173,13 @@ describe('DesktopTopbar', () => {
       element.getAttribute('href')?.startsWith('https://www.linkedin.com'),
     );
 
-    expect(brandLink, 'the brand slot must render at the left of the topbar').toBeDefined();
+    expect(brandLink, 'the brand slot must render at the right of the topbar').toBeDefined();
     expect(trigger, 'the menu trigger must be part of the topbar').not.toBeNull();
-    expect(focusable[0], 'the brand is the first focus stop').toBe(brandLink);
-    expect(focusable.at(-1), 'the menu trigger is the last focus stop').toBe(trigger);
+    expect(focusable[0], 'the menu trigger is the first focus stop').toBe(trigger);
+    expect(focusable.at(-1), 'the brand is the last focus stop').toBe(brandLink);
     expect(
-      hire && trigger && hire.compareDocumentPosition(trigger) & Node.DOCUMENT_POSITION_FOLLOWING,
-      'the menu trigger must follow the HIRE link',
+      hire && trigger && trigger.compareDocumentPosition(hire) & Node.DOCUMENT_POSITION_FOLLOWING,
+      'the HIRE link must follow the menu trigger',
     ).toBeTruthy();
   });
 
@@ -262,7 +262,7 @@ describe('DesktopTopbar', () => {
       NAV_VOCABULARY.links,
       NAV_VOCABULARY.designSystem,
     ]);
-    expect(links.slice(0, TOPBAR_NAV.length).map((link) => link.textContent)).toEqual(
+    expect(links.slice(-TOPBAR_NAV.length).map((link) => link.textContent)).toEqual(
       TOPBAR_NAV.map(({ label }) => label),
     );
   });
