@@ -54,6 +54,39 @@ test.describe('axe-core a11y scan', () => {
     expect(results.violations).toEqual([]);
   });
 
+  test('pt-BR home has no automatically detectable accessibility violations', async ({ page }) => {
+    await page.goto('/pt');
+    await page.waitForSelector('[role="log"]');
+    await revealDeferredContent(page);
+
+    const lang = await page.evaluate(() => {
+      const wrapper = document.querySelector('[lang="pt-BR"]');
+      return wrapper?.getAttribute('lang') ?? document.documentElement.lang;
+    });
+    expect(lang).toBe('pt-BR');
+
+    const results = await new AxeBuilder({ page })
+      .withTags(['wcag2a', 'wcag2aa', 'wcag21aa', 'wcag22aa'])
+      .exclude(
+        '[data-testid="crt-vignette"], [data-testid="crt-overlay"], [data-testid="crt-mask"], [data-testid="crt-noise"], [data-testid="crt-flicker"], [data-testid="crt-scan-beam"]',
+      )
+      .analyze();
+
+    expect(results.violations).toEqual([]);
+  });
+
+  test('pt-BR CV and summary have no automatically detectable accessibility violations', async ({
+    page,
+  }) => {
+    for (const route of ['/pt/cv', '/pt/summary']) {
+      await page.goto(route);
+      const results = await new AxeBuilder({ page })
+        .withTags(['wcag2a', 'wcag2aa', 'wcag21aa', 'wcag22aa'])
+        .analyze();
+      expect(results.violations, route).toEqual([]);
+    }
+  });
+
   test('contact form error state has no violations', async ({ page }) => {
     await page.goto('/');
     await page.waitForSelector('[data-testid="contact-form"]');
