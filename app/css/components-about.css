@@ -370,7 +370,7 @@
       min-height: 0;
     }
     .hero-context {
-      font-size: calc(var(--text-sm) - var(--border-width));
+      font-size: var(--text-xs);
       line-height: 1.5;
       letter-spacing: 0.04em;
       column-gap: var(--spacing-2);
