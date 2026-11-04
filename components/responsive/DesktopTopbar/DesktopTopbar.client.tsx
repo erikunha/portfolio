@@ -27,16 +27,18 @@ export function DesktopTopbar({ brand }: { brand: ReactNode }) {
       <div className="max-w-[var(--measure-page)] mx-auto px-[var(--space-gutter)] flex items-center gap-3 min-h-11">
         <MenuTrigger />
         <nav className="flex gap-2 items-center flex-nowrap" aria-label="Site navigation">
-          {TOPBAR_NAV.map(({ label, href }) => (
-            <a
-              key={href}
-              className="text-primary-500 text-[length:var(--text-min)] tracking-wider whitespace-nowrap py-3 leading-5 hover:text-shadow-[0_0_8px_var(--color-primary-500)] aria-[current=page]:underline aria-[current=page]:underline-offset-8 hidden xl:inline"
-              href={href}
-              aria-current={isCurrentPath(pathname, href) ? 'page' : undefined}
-            >
-              {label}
-            </a>
-          ))}
+          <a
+            className={cn(
+              'border border-primary-500 text-primary-500 px-3 py-1.5 tracking-wider text-[length:var(--text-min)] items-center min-h-11 whitespace-nowrap',
+              'transition-[box-shadow,background] duration-200 ease-out',
+              'hover:shadow-[0_0_12px_var(--color-primary-500)] hover:bg-primary-quiet hover:no-underline',
+              'hidden lg:inline-flex',
+              'motion-reduce:transition-none [body[data-motion=reduce]_&]:transition-none',
+            )}
+            href={TOPBAR_READING_LINK.href}
+          >
+            {TOPBAR_READING_LINK.label}
+          </a>
           <SearchTrigger className="topbar-search" />
           <button
             type="button"
@@ -63,18 +65,6 @@ export function DesktopTopbar({ brand }: { brand: ReactNode }) {
           </button>
           <a
             className={cn(
-              'border border-primary-500 text-primary-500 px-3 py-1.5 tracking-wider text-[length:var(--text-min)] items-center min-h-11 whitespace-nowrap',
-              'transition-[box-shadow,background] duration-200 ease-out',
-              'hover:shadow-[0_0_12px_var(--color-primary-500)] hover:bg-primary-quiet hover:no-underline',
-              'hidden lg:inline-flex',
-              'motion-reduce:transition-none [body[data-motion=reduce]_&]:transition-none',
-            )}
-            href={TOPBAR_READING_LINK.href}
-          >
-            {TOPBAR_READING_LINK.label}
-          </a>
-          <a
-            className={cn(
               'bg-primary-500 text-black font-bold tracking-wider px-3 py-1.5 text-[length:var(--text-min)] border border-primary-500',
               'transition-[box-shadow] duration-200 ease-out',
               'hover:shadow-[0_0_12px_var(--color-primary-500)] hover:no-underline',
@@ -89,6 +79,16 @@ export function DesktopTopbar({ brand }: { brand: ReactNode }) {
           >
             {TOPBAR_HIRE_LINK.label}
           </a>
+          {TOPBAR_NAV.map(({ label, href }) => (
+            <a
+              key={href}
+              className="text-primary-500 text-[length:var(--text-min)] tracking-wider whitespace-nowrap py-3 leading-5 hover:text-shadow-[0_0_8px_var(--color-primary-500)] aria-[current=page]:underline aria-[current=page]:underline-offset-8 hidden xl:inline"
+              href={href}
+              aria-current={isCurrentPath(pathname, href) ? 'page' : undefined}
+            >
+              {label}
+            </a>
+          ))}
         </nav>
         <div className="ml-auto flex items-center">{brand}</div>
       </div>

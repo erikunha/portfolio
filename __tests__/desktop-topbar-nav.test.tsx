@@ -88,14 +88,14 @@ describe('DesktopTopbar', () => {
     );
 
     expect(labels).toEqual([
+      'VIEW_CV',
+      HIRE_SHORT_LABEL,
       NAV_VOCABULARY.about,
       NAV_VOCABULARY.work,
       NAV_VOCABULARY.career,
       NAV_VOCABULARY.contact,
       NAV_VOCABULARY.links,
       NAV_VOCABULARY.designSystem,
-      'VIEW_CV',
-      HIRE_SHORT_LABEL,
     ]);
   });
 
@@ -105,14 +105,14 @@ describe('DesktopTopbar', () => {
     const hrefs = [...(nav?.querySelectorAll('a') ?? [])].map((link) => link.getAttribute('href'));
 
     expect(hrefs).toEqual([
+      '/cv',
+      'https://www.linkedin.com/in/erikunha/',
       '/#sec-readme',
       '/#sec-projects',
       '/#sec-git-log',
       '/#sec-contact',
       '/links',
       '/design-system',
-      '/cv',
-      'https://www.linkedin.com/in/erikunha/',
     ]);
   });
 
@@ -262,7 +262,7 @@ describe('DesktopTopbar', () => {
       NAV_VOCABULARY.links,
       NAV_VOCABULARY.designSystem,
     ]);
-    expect(links.slice(0, TOPBAR_NAV.length).map((link) => link.textContent)).toEqual(
+    expect(links.slice(-TOPBAR_NAV.length).map((link) => link.textContent)).toEqual(
       TOPBAR_NAV.map(({ label }) => label),
     );
   });
