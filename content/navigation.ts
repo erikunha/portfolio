@@ -220,14 +220,25 @@ export type SiteNavChrome = {
   topbarNav: readonly TopbarNavLink[];
   topbarReading: TopbarNavLink;
   topbarHire: TopbarNavLink & { accessibleName: string };
+  // Structural, locale-free section maps, pre-resolved on the server so the
+  // dock never reads the bilingual navigation module at runtime.
+  sectionHrefs: Readonly<Record<string, string>>;
+  dockKeyBySection: Readonly<Record<string, DockKey>>;
 };
 
 export function siteNavChrome(locale: SiteLocale): SiteNavChrome {
+  const groups = NAVIGATION[locale].groups;
   return {
     navigation: NAVIGATION[locale],
     drawerGroups: drawerGroups(locale),
     topbarNav: TOPBAR_NAV[locale],
     topbarReading: TOPBAR_READING_LINK[locale],
     topbarHire: TOPBAR_HIRE_LINK(locale),
+    sectionHrefs: Object.fromEntries(
+      drawerGroups(locale).flatMap((group) => group.sections.map(({ id, href }) => [id, href])),
+    ),
+    dockKeyBySection: Object.fromEntries(
+      groups.flatMap((group) => group.sectionIds.map((id) => [id, group.dock])),
+    ),
   };
 }

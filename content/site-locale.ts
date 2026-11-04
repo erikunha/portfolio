@@ -22,11 +22,15 @@ export const SITE_OG_LOCALE = {
   [SITE_LOCALE.pt]: 'pt_BR',
 } as const satisfies Record<SiteLocale, string>;
 
-// The pt-BR variant of an internal path: '' stays put, '/pt' prefixes.
-// Hash sections are identical in both locales, so only the page path moves.
+// The pt-BR variant of an internal path: the English path stays put, '/pt'
+// prefixes the page path. Hash fragments ride along ('/#x' -> '/pt#x'): the
+// section ids are identical in both locales, and '/pt/' would eat a trailing-
+// slash redirect before the fragment resolves.
 export function localizedPath(locale: SiteLocale, path: string): string {
   if (locale === SITE_LOCALE.en) return path;
-  return path === '/' ? '/pt' : `/pt${path}`;
+  if (path === '/') return '/pt';
+  if (path.startsWith('/#')) return `/pt${path.slice(1)}`;
+  return `/pt${path}`;
 }
 
 export function stripLocalePrefix(pathname: string): string {
@@ -34,15 +38,19 @@ export function stripLocalePrefix(pathname: string): string {
 }
 
 // Reciprocal hreflang pair for an internal page path, plus x-default. The bare
-// English address is the default for languages the site does not serve.
+// English address is the default for languages the site does not serve. The
+// canonical is the page's own address; consumers serving a specific locale
+// localize it themselves (see app/_lib/locale-metadata.ts).
 export function localeAlternates(path: string): {
-  canonical: string;
+  en: string;
+  pt: string;
   languages: Record<string, string>;
 } {
   const enPath = localizedPath(SITE_LOCALE.en, path);
   const ptPath = localizedPath(SITE_LOCALE.pt, path);
   return {
-    canonical: enPath,
+    en: enPath,
+    pt: ptPath,
     languages: {
       'pt-BR': ptPath,
       'en-US': enPath,

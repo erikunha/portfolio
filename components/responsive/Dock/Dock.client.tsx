@@ -1,6 +1,6 @@
 'use client';
 
-import { type DockKey, dockKeyForSection, sectionHref } from '@/content/navigation';
+import type { DockKey } from '@/content/navigation';
 import { DRAWER_ID, MENU_ICON_PATH, useSectionNavigation } from '../SectionNavigation';
 
 const ICON_PATHS: Record<DockKey, string> = {
@@ -20,9 +20,9 @@ function DockIcon({ control }: { control: DockKey }) {
 }
 
 export function Dock() {
-  const { currentId, drawerOpen, openDrawer, closeDrawer, jump, copy, chrome, locale } =
+  const { currentId, drawerOpen, openDrawer, closeDrawer, jump, copy, chrome } =
     useSectionNavigation();
-  const active = dockKeyForSection(currentId);
+  const active = chrome.dockKeyBySection[currentId];
   const navigation = chrome.navigation;
 
   return (
@@ -65,7 +65,7 @@ export function Dock() {
         return (
           <a
             key={key}
-            href={sectionId ? sectionHref(locale, sectionId) : '/'}
+            href={sectionId ? (chrome.sectionHrefs[sectionId] ?? '/') : '/'}
             aria-current={current}
             onClick={(event) => sectionId && jump(event, sectionId)}
           >

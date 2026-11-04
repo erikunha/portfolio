@@ -5,12 +5,18 @@ import { social } from '@/content/social';
 
 const LANGUAGE_KEY = { pt: 'pt-BR', en: 'en-US', default: 'x-default' } as const;
 
+// Next renders the root canonical without a trailing slash; the hreflang self
+// reference must match the URL the page actually canonicalizes to.
+function absoluteUrl(path: string): string {
+  return `${social.site}${path === '/' ? '' : path}`;
+}
+
 function languageLinks(path: string): Record<string, string> {
   const alternates = localeAlternates(path);
   return {
-    [LANGUAGE_KEY.pt]: `${social.site}${alternates.languages[LANGUAGE_KEY.pt]}`,
-    [LANGUAGE_KEY.en]: `${social.site}${alternates.languages[LANGUAGE_KEY.en]}`,
-    [LANGUAGE_KEY.default]: `${social.site}${alternates.languages[LANGUAGE_KEY.default]}`,
+    [LANGUAGE_KEY.pt]: absoluteUrl(alternates.pt),
+    [LANGUAGE_KEY.en]: absoluteUrl(alternates.en),
+    [LANGUAGE_KEY.default]: absoluteUrl(alternates.en),
   };
 }
 
@@ -76,6 +82,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
         languages: {
           [LANGUAGE_KEY.pt]: `${base}/links`,
           [LANGUAGE_KEY.en]: `${base}/links/en`,
+          // /links keeps its 2026-08-30 decision: pt at the bare address is
+          // the pair's x-default, unlike the site-wide English default.
           [LANGUAGE_KEY.default]: `${base}/links`,
         },
       },

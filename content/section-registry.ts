@@ -71,7 +71,15 @@ export const SECTION_REGISTRY = [
   {
     ...SECTION_NAV[5],
     srLabel: { en: 'Measured', pt: 'Medições' },
-    aliases: ['measured', 'sec-live-perf', 'performance', 'metrics', 'lighthouse', 'evals'],
+    aliases: [
+      'measured',
+      'sec-live-perf',
+      'performance',
+      'metrics',
+      'lighthouse',
+      'evals',
+      'medicoes',
+    ],
     icon: SECTION_ICONS.measured,
   },
   {

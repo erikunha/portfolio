@@ -12,13 +12,7 @@ import {
   useRef,
   useState,
 } from 'react';
-import {
-  formatSectionNumber,
-  HOME_SECTION_ID,
-  type NavigationCopy,
-  type SiteNavChrome,
-} from '@/content/navigation';
-import { SECTION_NAV } from '@/content/section-registry';
+import type { NavigationCopy, SiteNavChrome } from '@/content/navigation';
 import {
   LANGUAGE_SWITCH_NAME,
   languageSwitchPaths,
@@ -31,6 +25,11 @@ import { isolate } from '@/lib/dom/isolate';
 import { applyMotion, readMotion, readSystemReducedMotion } from '@/lib/motion';
 
 const MAIN_ID = 'main-content';
+// The hero section id is structural (the first registry destination); keeping
+// the literal here avoids importing the bilingual navigation module runtime.
+const HOME_SECTION_ID = 'bio';
+const POSITION_DIGITS = 2;
+const formatSectionNumber = (order: number) => String(order).padStart(POSITION_DIGITS, '0');
 export const DRAWER_ID = 'section-drawer';
 const MOBILE_HERO_SELECTOR = '[data-testid="hero-mobile"]';
 const REDUCED_MOTION_QUERY = '(prefers-reduced-motion: reduce)';
@@ -152,7 +151,8 @@ export function SectionNavigationProvider({
   useEffect(() => {
     if (typeof IntersectionObserver === 'undefined') return;
     const sections = new Map<Element, string>();
-    for (const { id } of SECTION_NAV) {
+    const sectionIds = chrome.drawerGroups.flatMap((group) => group.sections.map(({ id }) => id));
+    for (const id of sectionIds) {
       const element = document.getElementById(id);
       if (element) sections.set(element, id);
     }
@@ -177,7 +177,7 @@ export function SectionNavigationProvider({
     );
     for (const element of sections.keys()) observer.observe(element);
     return () => observer.disconnect();
-  }, []);
+  }, [chrome]);
 
   const openDrawer = useCallback((trigger: HTMLElement | null) => {
     triggerRef.current = trigger;
@@ -280,18 +280,22 @@ function LanguageSwitch({ locale, copy }: { locale: SiteLocale; copy: Navigation
   if (!paths) return null;
   return (
     <li>
-      <nav aria-label={copy.langSwitchLabel} className="menu-lang">
-        {SITE_LOCALES.map((candidate) => (
-          <a
-            key={candidate}
-            href={paths[candidate]}
-            hrefLang={candidate}
-            {...(candidate === locale ? { 'aria-current': 'page' as const } : {})}
-          >
-            {candidate.toUpperCase()}
-            <span className="sr-only">&nbsp;{LANGUAGE_SWITCH_NAME[candidate]}</span>
-          </a>
-        ))}
+      <nav aria-label={copy.langSwitchLabel} className="menu-lang" data-lang-switch="">
+        {SITE_LOCALES.map((candidate) => {
+          const href = paths[candidate];
+          if (!href) return null;
+          return (
+            <a
+              key={candidate}
+              href={href}
+              hrefLang={candidate}
+              {...(candidate === locale ? { 'aria-current': 'page' as const } : {})}
+            >
+              {candidate.toUpperCase()}
+              <span className="sr-only">&nbsp;{LANGUAGE_SWITCH_NAME[candidate]}</span>
+            </a>
+          );
+        })}
       </nav>
     </li>
   );
