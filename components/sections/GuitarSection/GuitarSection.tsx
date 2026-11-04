@@ -18,17 +18,14 @@ export function GuitarContent() {
   const { liveCam } = guitarRig;
   return (
     <div className="guitar-presentation">
+      <div className="guitar-signal-strip">
+        <span className="guitar-signal-strip-live">{signalStrip.live}</span>
+        <span className="guitar-signal-strip-tail">{signalStrip.tail}</span>
+      </div>
       <div className="guitar-signal-panel">
-        <div className="guitar-signal-strip">
-          <span className="guitar-signal-strip-live">{signalStrip.live}</span>
-          <span className="guitar-signal-strip-tail">{signalStrip.tail}</span>
-        </div>
         <EqSpectrumStrip spectrum={eqSpectrum} />
       </div>
       <figure className="guitar-photo">
-        <div className="guitar-camera-labels">
-          <span>{liveCam.cameraLabel}</span>
-        </div>
         <div className="guitar-photo-frame">
           <Image {...photo} className="guitar-photo-image" sizes={PHOTO_SIZES} />
           <div className="guitar-photo-tint" aria-hidden="true" />
@@ -37,9 +34,10 @@ export function GuitarContent() {
           <div className="cam-corners" aria-hidden="true">
             <i />
           </div>
+          <div className="guitar-photo-rec">{liveCam.status}</div>
           <div className="guitar-photo-telemetry">
             <span className="guitar-photo-telemetry-line">{liveCam.telemetry}</span>
-            <span className="guitar-photo-telemetry-status">{liveCam.status}</span>
+            <span className="guitar-photo-telemetry-camera">{liveCam.cameraLabel}</span>
           </div>
         </div>
         <figcaption className="guitar-camera-caption">{liveCam.caption}</figcaption>

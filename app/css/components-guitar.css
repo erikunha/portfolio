@@ -18,6 +18,7 @@
 
   .guitar-signal-strip {
     display: flex;
+    grid-column: 1 / -1;
     flex-wrap: wrap;
     align-items: center;
     justify-content: space-between;
@@ -175,20 +176,12 @@
     overflow-wrap: anywhere;
   }
 
-  .guitar-camera-labels,
   .guitar-camera-caption {
     padding: var(--spacing-1) var(--spacing-2);
     color: var(--color-primary-400);
     font-size: var(--text-xs);
     letter-spacing: var(--guitar-camera-tracking);
     overflow-wrap: anywhere;
-  }
-
-  .guitar-camera-labels {
-    display: flex;
-    justify-content: space-between;
-    gap: var(--spacing-2);
-    border-bottom: var(--border-width) solid var(--color-primary-quiet);
   }
 
   .guitar-photo-telemetry {
@@ -199,6 +192,19 @@
     display: flex;
     justify-content: space-between;
     gap: var(--spacing-2);
+    padding: var(--spacing-1) var(--spacing-2);
+    color: var(--color-primary-400);
+    font-size: var(--text-xs);
+    letter-spacing: var(--guitar-camera-tracking);
+    background: color-mix(in srgb, var(--color-bg) 78%, transparent);
+    overflow-wrap: anywhere;
+  }
+
+  .guitar-photo-rec {
+    position: absolute;
+    inset-block-start: 0;
+    inset-inline-end: 0;
+    z-index: 1;
     padding: var(--spacing-1) var(--spacing-2);
     color: var(--color-primary-400);
     font-size: var(--text-xs);
@@ -306,12 +312,6 @@
 
     .guitar-stat,
     .guitar-camera-caption {
-      text-align: center;
-    }
-
-    .guitar-camera-labels {
-      flex-direction: column;
-      align-items: center;
       text-align: center;
     }
 
