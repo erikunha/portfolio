@@ -166,6 +166,8 @@ function SessionHeaderMobile() {
         {'SESSION: '}
         {dawMixer.sessionName}
         {' · '}
+        {dawMixer.channels.length - 1}
+        {' GTR TRACKS + MASTER · '}
         <span className="text-primary-500">{dawMixer.status}</span>
       </div>
       <div>
