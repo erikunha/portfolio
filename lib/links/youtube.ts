@@ -130,6 +130,7 @@ export type PlaylistItemsPayload = {
     };
     status?: { privacyStatus?: string };
   }>;
+  nextPageToken?: string;
 };
 
 const PUBLIC_PRIVACY_STATUS = 'public';

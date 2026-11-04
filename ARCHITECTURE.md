@@ -167,7 +167,7 @@ Client boundaries use `.client.ts`/`.client.tsx`, a `/client/` directory, or Nex
 
 Pages inside the shell use `.page-container.page-main`, so the topbar clearance, gutter and page top come from the same tokens as the home page. Rhythm inside the design-system prose, `/links` and the guitar module steps through `--phi-space-1` to `--phi-space-4`, and two-column splits use `--phi-pair-columns` (1.618 : 1) from 1024px; below that every level is one column.
 
-`/links` video covers sit in a 16:9 `links-thumb` frame with the image filling it, so no edge is cropped, and render as one monochrome signal-green set from the `--links-thumb-*` tokens; the feed loader drops Shorts before anything renders (`lib/links/feed.ts`).
+`/links` video covers sit in a 16:9 `links-thumb` frame with the image filling it, so no edge is cropped, and render as one monochrome signal-green set from the `--links-thumb-*` tokens; the feed loader drops Shorts before anything renders and, when `YOUTUBE_API_KEY` is set, pages the channel uploads playlist until the five-row history fills (RSS alone when the key is absent) (`lib/links/feed.ts`).
 
 ### Partial Prerendering (PPR)
 

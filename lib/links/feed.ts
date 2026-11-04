@@ -19,6 +19,8 @@ import { log } from '@/lib/log';
 export const HISTORY_LENGTH = 5;
 export const FEED_LIMIT = HISTORY_LENGTH + 1;
 const FEED_CANDIDATES = 15;
+const UPLOADS_PAGE_SIZE = 50;
+const UPLOADS_MAX_PAGES = 4;
 
 const FEED_TIMEOUT_MS = 6_000;
 const API_TIMEOUT_MS = 6_000;
@@ -135,12 +137,34 @@ function uploadsPlaylistId(channelId: string): string {
     : channelId;
 }
 
-async function fetchUploads(channelId: string, apiKey: string): Promise<EnrichedVideo[]> {
-  const url = `${PLAYLIST_ITEMS_ENDPOINT}?part=snippet,status&maxResults=${FEED_CANDIDATES}&playlistId=${encodeURIComponent(uploadsPlaylistId(channelId))}&key=${encodeURIComponent(apiKey)}`;
-  const payload = await fetchJson<PlaylistItemsPayload>(url, API_TIMEOUT_MS);
-  if (!payload) return [];
-  log.info('links feed read the uploads playlist after the RSS feed returned nothing');
-  return parsePlaylistItems(payload, FEED_CANDIDATES);
+async function fetchUploadsPage(
+  uploadsId: string,
+  apiKey: string,
+  pageToken?: string,
+): Promise<PlaylistItemsPayload | null> {
+  const token = pageToken === undefined ? '' : `&pageToken=${encodeURIComponent(pageToken)}`;
+  const url = `${PLAYLIST_ITEMS_ENDPOINT}?part=snippet,status&maxResults=${UPLOADS_PAGE_SIZE}&playlistId=${encodeURIComponent(uploadsId)}${token}&key=${encodeURIComponent(apiKey)}`;
+  return fetchJson<PlaylistItemsPayload>(url, API_TIMEOUT_MS);
+}
+
+async function fetchDeepUploads(channelId: string, apiKey: string): Promise<EnrichedVideo[]> {
+  const uploadsId = uploadsPlaylistId(channelId);
+  const regular: EnrichedVideo[] = [];
+  let pageToken: string | undefined;
+  for (let page = 0; page < UPLOADS_MAX_PAGES && regular.length < HISTORY_LENGTH; page += 1) {
+    const payload = await fetchUploadsPage(uploadsId, apiKey, pageToken);
+    if (!payload) break;
+    const pageVideos = parsePlaylistItems(payload, UPLOADS_PAGE_SIZE).filter(
+      (video) => !isShortUrl(video),
+    );
+    for (const video of await enrich(pageVideos, apiKey)) {
+      if (!isShort(video)) regular.push(video);
+    }
+    const next = payload.nextPageToken;
+    if (typeof next !== 'string' || next.length === 0) break;
+    pageToken = next;
+  }
+  return regular;
 }
 
 export const FEED_FIXTURE_ENV = 'E2E_LINKS_FEED_FIXTURE';
@@ -172,21 +196,23 @@ export async function getChannelFeed(): Promise<ChannelFeed> {
 
   const channelId = linksContent.channel.id;
   const apiKey = env.YOUTUBE_API_KEY;
-
-  const xml = await fetchText(
-    `${RSS_ENDPOINT}?channel_id=${encodeURIComponent(channelId)}`,
-    FEED_TIMEOUT_MS,
-  );
-  const rssVideos: EnrichedVideo[] = xml === null ? [] : parseFeed(xml, FEED_CANDIDATES);
-  const uploads =
-    rssVideos.length === 0 && apiKey ? await fetchUploads(channelId, apiKey) : rssVideos;
-  const videos = uploads.filter((video) => !isShortUrl(video));
   const stats = apiKey ? await fetchStats(channelId, apiKey) : {};
 
-  if (videos.length === 0) return { ...EMPTY_FEED, stats, fetchedAt: new Date().toISOString() };
+  let videos = apiKey ? await fetchDeepUploads(channelId, apiKey) : [];
+  if (videos.length === 0) {
+    if (apiKey) {
+      log.info('links feed fell back to the RSS feed after the uploads playlist returned nothing');
+    }
+    const xml = await fetchText(
+      `${RSS_ENDPOINT}?channel_id=${encodeURIComponent(channelId)}`,
+      FEED_TIMEOUT_MS,
+    );
+    const rssVideos: EnrichedVideo[] = xml === null ? [] : parseFeed(xml, FEED_CANDIDATES);
+    const urlFiltered = rssVideos.filter((video) => !isShortUrl(video));
+    videos = apiKey && urlFiltered.length > 0 ? await enrich(urlFiltered, apiKey) : urlFiltered;
+  }
 
-  const enriched = apiKey ? await enrich(videos, apiKey) : videos;
-  const resolved = enriched.filter((video) => !isShort(video)).slice(0, FEED_LIMIT);
+  const resolved = videos.filter((video) => !isShort(video)).slice(0, FEED_LIMIT);
 
   if (resolved.length === 0) return { ...EMPTY_FEED, stats, fetchedAt: new Date().toISOString() };
 

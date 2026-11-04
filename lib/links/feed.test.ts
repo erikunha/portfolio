@@ -216,7 +216,7 @@ describe('getChannelFeed excludes Shorts in the data layer', () => {
 
 describe('getChannelFeed pages the uploads playlist with a key', () => {
   type PageSpec = {
-    items: string[];
+    items?: string[];
     shorts?: string[];
     nextPageToken?: string;
     fail?: boolean;
@@ -246,10 +246,12 @@ describe('getChannelFeed pages the uploads playlist with a key', () => {
           const index =
             token === undefined
               ? 0
-              : options.pages.findIndex((page) => page.nextPageToken === decodeURIComponent(token));
+              : options.pages.findIndex(
+                  (page) => page.nextPageToken === decodeURIComponent(token),
+                ) + 1;
           const page = options.pages[index];
           if (!page || page.fail) return new Response('', { status: 500 });
-          const ids = [...page.items, ...(page.shorts ?? [])];
+          const ids = [...(page.items ?? []), ...(page.shorts ?? [])];
           return Response.json({
             items: ids.map((id, i) => ({
               snippet: {
