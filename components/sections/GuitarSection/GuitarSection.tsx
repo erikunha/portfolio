@@ -27,7 +27,6 @@ export function GuitarContent() {
       </div>
       <figure className="guitar-photo">
         <div className="guitar-camera-labels">
-          <span>{liveCam.status}</span>
           <span>{liveCam.cameraLabel}</span>
         </div>
         <div className="guitar-photo-frame">
@@ -37,6 +36,10 @@ export function GuitarContent() {
           <div className="guitar-scan-beam" aria-hidden="true" />
           <div className="cam-corners" aria-hidden="true">
             <i />
+          </div>
+          <div className="guitar-photo-telemetry">
+            <span className="guitar-photo-telemetry-line">{liveCam.telemetry}</span>
+            <span className="guitar-photo-telemetry-status">{liveCam.status}</span>
           </div>
         </div>
         <figcaption className="guitar-camera-caption">{liveCam.caption}</figcaption>
