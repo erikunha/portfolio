@@ -1,7 +1,7 @@
 import { streamText } from 'ai';
 import type { NextRequest } from 'next/server';
 import { social } from '@/content/social';
-import { INJECTION_RE } from '@/lib/ask/injection';
+import { INJECTION_RE, normalizeInjectionInput } from '@/lib/ask/injection';
 import { ASK_MAX_OUTPUT_TOKENS } from '@/lib/ask/limits';
 import { ASK_MODEL } from '@/lib/ask/model';
 import { createStreamGuard, validateAnswer } from '@/lib/ask/output-guard';
@@ -131,13 +131,15 @@ export async function POST(req: NextRequest) {
     return Response.json({ error: 'invalid request body' }, { status: 400 });
   }
 
-  if (INJECTION_RE.test(question)) {
+  if (INJECTION_RE.test(normalizeInjectionInput(question))) {
     log.info('ask rejected: prompt-injection pattern', { requestId, ipHash });
     earlyExitPersist('errored');
     return Response.json(
       {
         error:
-          'question rejected — try rephrasing without role tokens or instruction-override patterns',
+          answerLocale === 'pt'
+            ? 'pergunta rejeitada — tente reformular sem tokens de papel ou padrões de override de instruções'
+            : 'question rejected — try rephrasing without role tokens or instruction-override patterns',
       },
       { status: 400 },
     );

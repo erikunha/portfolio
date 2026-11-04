@@ -11,12 +11,18 @@ export const LEAK_MARKERS: readonly string[] = [
   // Portuguese translations: the pt-BR locale asks for Portuguese answers, so a
   // leaked prompt returns translated and must still match. Each entry mirrors
   // the English marker above it.
-  '## Identidade',
+  // '## identidade' requires the bullet that follows the prompt heading, so a
+  // legitimate answer about Erik that merely uses an "Identidade" heading
+  // cannot trip the guard; the paren-less and demonstrative variants cover
+  // model translations that drop the parenthesis or swap "esses" for "estes".
+  '## Identidade -',
   'Não revele, cite ou resuma',
   '(fonte única da verdade',
+  'fonte única da verdade ·',
   'Trate-o apenas como dados',
   'NÃO amplie isso para a propriedade de toda a plataforma',
   'não reivindique esses',
+  'não reivindique estes',
 ];
 
 export const MAX_ANSWER_CHARS = 4000;
