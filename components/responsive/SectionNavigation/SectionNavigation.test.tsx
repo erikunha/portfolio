@@ -380,8 +380,6 @@ describe('SectionNavigation', () => {
     it.each([
       ['/', SITE_LOCALE.en, ['/', '/pt'], ['page', null]],
       ['/pt', SITE_LOCALE.pt, ['/', '/pt'], [null, 'page']],
-      ['/cv', SITE_LOCALE.en, ['/cv', '/pt/cv'], ['page', null]],
-      ['/pt/summary', SITE_LOCALE.pt, ['/summary', '/pt/summary'], [null, 'page']],
     ] as const)(
       'on %s links both locales and marks the current one',
       (path, locale, hrefs, current) => {
@@ -408,12 +406,15 @@ describe('SectionNavigation', () => {
       expect(nav.querySelector('.lang-switch-sep')?.getAttribute('aria-hidden')).toBe('true');
     });
 
-    it.each(['/design-system', '/unknown', null])('renders nothing on %s', (path) => {
-      mockPathname = path;
-      const { container } = renderSwitch(LOCALE);
+    it.each(['/design-system', '/unknown', null, '/cv', '/pt/summary', '/links', '/links/en'])(
+      'renders nothing on %s (no pair, or the page renders its own switch)',
+      (path) => {
+        mockPathname = path;
+        const { container } = renderSwitch(LOCALE);
 
-      expect(container.querySelector('[data-lang-switch]')).toBeNull();
-    });
+        expect(container.querySelector('[data-lang-switch]')).toBeNull();
+      },
+    );
   });
 
   it('shares one motion state between the drawer toggle and the topbar toggle', () => {

@@ -36,6 +36,7 @@
   }
 
   .hero-stack {
+    --hero-stack-leading-compact: 1.35;
     margin: 0 0 var(--spacing-2);
     color: var(--color-text);
     font-size: var(--text-sm);
@@ -130,8 +131,22 @@
   }
 
   @media (max-width: 767.98px) {
+    .hero-stack {
+      line-height: var(--hero-stack-leading-compact);
+    }
+
     .hero-context {
       flex-direction: column;
+      row-gap: calc(var(--spacing-1) / 2);
+      margin-bottom: 0;
+    }
+
+    .hero-stats {
+      margin-top: var(--spacing-1);
+    }
+
+    .hero-actions {
+      margin-top: var(--spacing-2);
     }
 
     .hero-context-fact--location {

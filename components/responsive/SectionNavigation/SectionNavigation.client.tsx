@@ -15,8 +15,8 @@ import {
 } from 'react';
 import type { NavigationCopy, SiteNavChrome } from '@/content/navigation';
 import {
+  headerLanguageSwitchPaths,
   LANGUAGE_SWITCH_NAME,
-  languageSwitchPaths,
   SITE_LOCALES,
   type SiteLocale,
 } from '@/content/site-locale';
@@ -253,7 +253,7 @@ export function SectionNavigationProvider({
 export function LanguageSwitch({ className }: { className?: string }) {
   const { locale, copy } = useSectionNavigation();
   const pathname = usePathname();
-  const paths = pathname ? languageSwitchPaths(pathname) : null;
+  const paths = pathname ? headerLanguageSwitchPaths(pathname) : null;
   if (!paths) return null;
   return (
     <nav
