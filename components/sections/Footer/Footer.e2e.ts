@@ -116,7 +116,7 @@ test.describe('Footer', () => {
     expect(size.height).toBeGreaterThanOrEqual(44);
   });
 
-  test('mobile footer keeps its measured height with a one-column site map and netstat on one line', async ({
+  test('mobile footer keeps its measured height with a two-column site map and netstat on one line', async ({
     browser,
   }) => {
     for (const width of [390, 1280]) {
@@ -131,8 +131,8 @@ test.describe('Footer', () => {
       await page.evaluate(() => document.fonts.ready);
       if (width === 390) {
         const footer = await page.locator('footer').boundingBox();
-        expect(footer?.height).toBeGreaterThanOrEqual(2130);
-        expect(footer?.height).toBeLessThanOrEqual(2230);
+        expect(footer?.height).toBeGreaterThanOrEqual(1780);
+        expect(footer?.height).toBeLessThanOrEqual(1880);
       }
       const cells = page.locator('.footer-netstat :is(th, td)');
       for (const cell of await cells.all()) {
@@ -180,10 +180,10 @@ test.describe('Footer', () => {
     }
   });
 
-  test('site map follows the type scale and the phi grid: three columns at desktop and tablet, one centered below', async ({
+  test('site map follows the type scale and the phi grid: three columns at desktop and tablet, two on phones, one at 320', async ({
     page,
   }) => {
-    const expectedColumns: Record<number, number> = { 1280: 3, 768: 3, 390: 1, 320: 1 };
+    const expectedColumns: Record<number, number> = { 1280: 3, 768: 3, 390: 2, 320: 1 };
     for (const width of [1280, 768, 390, 320]) {
       await page.setViewportSize({ width, height: 812 });
       await loadFooter(page);
@@ -256,16 +256,22 @@ test.describe('Footer', () => {
     }
   });
 
-  test('the single mobile column is centered in its card', async ({ page }) => {
+  test('the mobile site map starts at the card text edge in two columns', async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 812 });
     await loadFooter(page);
-    const offsets = await page.evaluate(() => {
-      const card = document.querySelector('.footer-tree')?.getBoundingClientRect();
-      const list = document.querySelector('.sm-groups > li')?.getBoundingClientRect();
-      if (!card || !list) throw new Error('site map missing');
-      return { left: list.left - card.left, right: card.right - list.right };
+    const edges = await page.evaluate(() => {
+      const title = document.querySelector('#footer-tree-title')?.getBoundingClientRect();
+      const groups = [...document.querySelectorAll('.sm-groups > li')].map((group) =>
+        Math.round(group.getBoundingClientRect().left),
+      );
+      if (!title || groups.length === 0) throw new Error('site map missing');
+      return { title: Math.round(title.left), first: groups[0], lefts: new Set(groups).size };
     });
-    expect(Math.abs(offsets.left - offsets.right)).toBeLessThan(2);
+    expect(
+      Math.abs((edges.first ?? 0) - edges.title),
+      'the tree aligns with the card title instead of floating in the middle',
+    ).toBeLessThan(2);
+    expect(edges.lefts, 'groups sit in two columns').toBe(2);
   });
 
   test('tree links keep 44px touch targets under a coarse pointer', async ({ browser }) => {

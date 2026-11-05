@@ -2,6 +2,7 @@
   .site-footer {
     --footer-max-width: 75rem;
     --footer-tree-indent: 4ch;
+    --footer-tree-indent-compact: 2.5ch;
     --footer-line-height: 1.5;
     --footer-session-leading: 1.95;
     --footer-dmesg-leading: calc(var(--spacing-4) + var(--spacing-1));
@@ -304,17 +305,20 @@
 
   .sitemap .sm-groups {
     display: grid;
-    grid-template-columns: minmax(0, max-content);
-    justify-content: center;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     column-gap: var(--footer-tree-column-gap);
-    row-gap: var(--footer-tree-column-gap);
+    row-gap: var(--footer-tree-row-gap);
   }
 
-  @container sitemap (min-width: 26rem) {
+  @container sitemap (max-width: 25.99rem) {
+    .sitemap {
+      --footer-tree-indent: var(--footer-tree-indent-compact);
+    }
+  }
+
+  @container sitemap (max-width: 17.49rem) {
     .sitemap .sm-groups {
-      row-gap: var(--footer-tree-row-gap);
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      justify-content: normal;
+      grid-template-columns: minmax(0, 1fr);
     }
   }
 
