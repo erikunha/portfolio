@@ -10,6 +10,7 @@ import {
   profileCityLine,
   profileLocation,
   profilePresentation,
+  profileStack,
 } from './profile';
 import { projects } from './projects';
 import { READING_PATHS } from './reading-paths';
@@ -31,6 +32,7 @@ const TRAILING_PERIOD_PATTERN = /\.$/;
 const TERMINAL_PUNCTUATION_PATTERN = /[.!?]$/;
 const FRAGMENT_SEPARATOR_PATTERN = /;\s+/;
 const STACK_SEPARATOR = ' · ';
+const SUMMARY_PROJECT_COUNT = 3;
 const WORD_SEPARATOR = '_';
 
 const readingViewsFor = (locale: SiteLocale): ReadingViews => {
@@ -130,19 +132,8 @@ const readingViewsFor = (locale: SiteLocale): ReadingViews => {
       cvLinkLabel: pt ? 'VER_CV' : 'VIEW_CV',
       statsLabel: pt ? 'Números-chave' : 'Key numbers',
       experienceLabel: pt ? 'mais de 8 anos' : '8+ years',
-      projectNames: ['PAYMENT_ORCHESTRA', 'SERVICE_OPS_CONSOLE', 'AI_AGENT_MESH'],
-      stack: [
-        'REACT',
-        'NEXT.JS',
-        'TS',
-        'NODE',
-        'ANGULAR',
-        'AWS',
-        'POSTGRES',
-        'PLAYWRIGHT',
-        'A11Y',
-        'CLAUDE',
-      ],
+      projectNames: projects[locale].slice(0, SUMMARY_PROJECT_COUNT).map((project) => project.name),
+      stack: profileStack.all,
       headings: {
         projects: pt ? 'Projetos' : 'Projects',
         stack: pt ? 'Stack' : 'Tech stack',

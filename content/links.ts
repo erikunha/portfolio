@@ -1,5 +1,8 @@
+import { profileStack } from './profile';
 import { type LinksContent, LinksContentSchema } from './schemas';
 import { social } from './social';
+
+const LINKS_STACK_SEPARATOR = ' · ';
 
 export const linksContent: LinksContent = LinksContentSchema.parse({
   shellTitle: 'erik@gringa · bash',
@@ -21,7 +24,7 @@ export const linksContent: LinksContent = LinksContentSchema.parse({
       ],
     },
     host: { pt: 'Brasil · remoto (Raylu, Nova York)', en: 'Brazil · remote (Raylu, New York)' },
-    stack: 'React · Next · Node · Claude/Codex',
+    stack: profileStack.short.join(LINKS_STACK_SEPARATOR),
     status: { pt: 'primeiros vídeos chegando', en: 'first videos landing soon' },
   },
   channel: {
