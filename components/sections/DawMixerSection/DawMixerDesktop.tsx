@@ -149,7 +149,7 @@ function SessionHeaderDesktop({ mixer }: { mixer: DawMixer }) {
   return (
     <div
       className={cn(
-        'grid gap-[18px] items-center px-[18px] py-3',
+        'daw-mixer-row-min grid gap-[18px] items-center px-[18px] py-3',
         'border-b border-[var(--color-primary-border)]',
         'bg-[color-mix(in_srgb,var(--color-primary-500)_5%,transparent)]',
         'text-xs text-primary-400 tracking-[0.14em]',
@@ -205,7 +205,7 @@ function TableHeader() {
 export function DawMixerDesktop({ mixer }: { mixer: DawMixer }) {
   return (
     <div
-      className="font-mono text-sm text-tertiary-50 border border-[var(--color-primary-border)] bg-black/50 overflow-hidden min-h-[520px]"
+      className="daw-mixer-desktop font-mono text-sm text-tertiary-50 border border-[var(--color-primary-border)] bg-black/50 overflow-x-auto md:overflow-x-hidden min-h-[520px]"
       data-testid="daw-mixer-desktop"
     >
       <SessionHeaderDesktop mixer={mixer} />

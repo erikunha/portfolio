@@ -52,6 +52,8 @@ export type NavigationCopy = {
   motionOff: string;
   motionReduced: string;
   langSwitchLabel: string;
+  siteNavLabel: string;
+  backToTopLabel: string;
 };
 
 export type Navigation = {
@@ -83,6 +85,8 @@ const navigationFor = (locale: SiteLocale): Navigation => {
       motionOff: 'MOTION: OFF',
       motionReduced: 'MOTION: REDUCED',
       langSwitchLabel: pt ? 'Idioma' : 'Language',
+      siteNavLabel: pt ? 'Navegação do site' : 'Site navigation',
+      backToTopLabel: pt ? 'Voltar ao topo' : 'back to top',
     },
     groups: [
       {

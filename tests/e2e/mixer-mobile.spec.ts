@@ -144,3 +144,36 @@ test('no two cells of a desktop channel row overlap at 1280px', async ({ page },
 
   expect(overlaps, 'grid cells of a channel row must not share the same grid area').toEqual([]);
 });
+
+test('narrow desktop windows scroll the console instead of shrinking fader targets', async ({
+  page,
+}, testInfo) => {
+  test.skip(
+    MOBILE_PROJECTS.includes(testInfo.project.name),
+    'the desktop table only ships to desktop user agents',
+  );
+  await installMockBackend(page, { log: 'accept', forget: 'happy' });
+  await page.setViewportSize({ width: 375, height: VIEWPORT_HEIGHT });
+  await page.goto('/');
+  const mixer = page.locator(DESKTOP_SELECTOR);
+  await mixer.scrollIntoViewIfNeeded();
+
+  const metrics = await page.evaluate((selector) => {
+    const root = document.querySelector(selector);
+    const fader = root?.querySelector('.fader-track');
+    const meter = root?.querySelector('.vu-meter');
+    return {
+      clientWidth: root?.clientWidth ?? 0,
+      scrollWidth: root?.scrollWidth ?? 0,
+      faderWidth: fader?.getBoundingClientRect().width ?? 0,
+      meterWidth: meter?.getBoundingClientRect().width ?? 0,
+    };
+  }, DESKTOP_SELECTOR);
+
+  expect(metrics.faderWidth, 'a channel fader must keep a 24px target').toBeGreaterThanOrEqual(24);
+  expect(metrics.meterWidth, 'a VU meter must keep a 24px target').toBeGreaterThanOrEqual(24);
+  expect(
+    metrics.scrollWidth,
+    'below the md breakpoint the console scrolls locally so targets never collapse',
+  ).toBeGreaterThan(metrics.clientWidth);
+});
