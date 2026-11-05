@@ -8,15 +8,15 @@ export const projects: Project[] = z.array(ProjectSchema).parse([
     description:
       'Shared UI systems and state architecture for Raylu’s AI deal-origination product — built from zero, co-developed with a second engineer, behind the market maps, target lists, and diligence surfaces private-markets funds work in.',
     mobileDescription:
-      'Shared UI systems and state architecture at Raylu.ai — built from zero, co-developed with a second engineer. Market maps, target lists, diligence surfaces. Versioned ViewState, URL-backed state. React 19, Next 15, TypeScript.',
+      'Shared UI systems and state architecture at Raylu.ai — built from zero, co-developed with a second engineer. Market maps, target lists, diligence surfaces. Versioned ViewState, URL-backed state. React, Next.js 14, TypeScript.',
     stats: [
       { label: 'SURFACES', value: 'MAPS / LISTS / DILIGENCE' },
       { label: 'STATE', value: 'VERSIONED + URL-BACKED' },
-      { label: 'STACK', value: 'REACT 19 / NEXT 15 / TS' },
+      { label: 'STACK', value: 'REACT / NEXT 14 / TS' },
     ],
     mobileMeta: [
-      { label: 'stack', value: 'react 19 · next 15 · ts' },
-      { label: 'scale', value: '45+ funds · $500B+ AUM' },
+      { label: 'stack', value: 'react · next 14 · ts' },
+      { label: 'scale', value: '50+ funds · $500B+ AUM' },
       { label: 'status', value: 'production' },
     ],
   },
@@ -29,12 +29,12 @@ export const projects: Project[] = z.array(ProjectSchema).parse([
       'PCI-DSS cashier that handled 40M+ transactions/yr at Betsson. Multi-currency settlement, regulator-grade audit trail, micro-frontends across Angular / React / Ember via Stencil.',
     stats: [
       { label: 'VOLUME', value: '40M+ TX / YR' },
-      { label: 'REVENUE', value: '€1B+ / YR' },
+      { label: 'GROUP REVENUE', value: '€1.2B / YR' },
       { label: 'STACK', value: 'ANGULAR / REACT / STENCIL / NGRX' },
     ],
     mobileMeta: [
       { label: 'stack', value: 'stencil · angular · rxjs' },
-      { label: 'scale', value: '€1B+ ARR' },
+      { label: 'scale', value: '€1.2B group revenue' },
       { label: 'status', value: 'production' },
     ],
   },

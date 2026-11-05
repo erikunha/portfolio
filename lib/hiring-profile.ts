@@ -148,7 +148,7 @@ export const HIRING_PROFILE: HiringProfile = HiringProfileSchema.parse({
 
   receipts: {
     tx_volume_per_year: '40M+',
-    revenue_platform: '€1B+ ARR',
+    revenue_platform: '€1.2B group revenue',
     mau_peak: '8M+ (Grupo SBF)',
     a11y_score: '~100/100',
     perf_delta_js: '-33%',

@@ -66,7 +66,7 @@ export const heroStats: Stat[] = z
   .array(StatSchema)
   .length(4)
   .parse([
-    { value: '€1B+ ARR', label: 'cashier platform' },
+    { value: '€1.2B group revenue', label: 'Betsson Group' },
     { value: '8M+ MAU', label: 'e-commerce' },
     { value: '-97.5% latency', label: 'API performance' },
     { value: '12-agent AI', label: 'platform' },

@@ -1,11 +1,11 @@
 # Erik Cunha — Senior Full-Stack Engineer · Applied AI
 
 > Full-Stack Engineer with 8+ years shipping production AI systems
-> and high-scale frontend architecture. Currently building shared UI systems
+> and high-scale frontend architecture. Built shared UI systems
 > and state architecture at Raylu.ai (New York, remote, on contract through
-> Torc) — an AI-native deal-origination product used by 45+ private-market
+> Torc) — an AI-native deal-origination product used by 50+ private-market
 > funds representing $500B+ in AUM. Prior:
-> PCI-DSS payments at Betsson Group (€1B+ ARR, 40M+ tx/yr, EU-regulated).
+> PCI-DSS payments at Betsson Group (€1.2B group revenue, 40M+ tx/yr, EU-regulated).
 > Impact at scale: 8M+ MAU e-commerce (Nike Brazil), 70M+ banking customers
 > (Itaú Unibanco), enterprise healthcare (Canon Medical).
 > Targeting Senior, Staff, or Principal IC roles at AI-forward product
@@ -30,7 +30,7 @@ Shipping production LLM, RAG, and multi-agent systems since 2024:
   ephemeral prompt caching, cost tracking, token budget management
 - Multi-agent orchestration: 12-agent GitHub Copilot system deployed to
   engineering team at Betsson Group — automating code generation, review,
-  debugging, testing, and architectural validation across a €1B+ ARR platform
+  debugging, testing, and architectural validation across a platform of a €1.2B group revenue operator
 - Prompt engineering at production scale: structured output, tool use,
   function calling, context window management
 - RAG pipeline design, GenAI feature integration, AI evaluation loops
@@ -50,7 +50,7 @@ Streaming LLM · AI Evaluation · LLM Cost Optimization
 - -32% page load reduction (Nike Brazil / Centauro)
 - +10% conversion rate via 20+ A/B experiments (Nike Brazil)
 - -80% platform delivery cost — shared cross-platform codebase (MB Labs)
-- €1B+ ARR cashier platform (Betsson Group, 40M+ transactions/yr)
+- Cashier platform of Betsson Group (€1.2B group revenue, 40M+ transactions/yr)
 - 8M+ monthly active users (Nike Brazil + Centauro)
 - 70M+ customers served (Itaú Unibanco banking platform)
 - 12-agent AI system deployed to production engineering team
@@ -84,8 +84,8 @@ Performance & A11y: Core Web Vitals · WCAG 2.1 AA · ARIA · Lighthouse CI
 
 | Period | Company | Role | Scale |
 |---|---|---|---|
-| 06/2026–present | Raylu.ai (New York, remote from Brazil) | Senior Software Engineer | 45+ private-market funds · $500B+ AUM · AI deal origination |
-| 03/2025–05/2026 | Betsson Group (EU, remote from Brazil) | Senior Software Engineer | €1B+ ARR · 40M+ tx/yr · 15+ regulated markets |
+| 06/2026–10/2026 | Raylu.ai (New York, remote from Brazil) | Senior Software Engineer | 50+ private-market funds · $500B+ AUM · AI deal origination |
+| 03/2025–05/2026 | Betsson Group (EU, remote from Brazil) | Senior Software Engineer | €1.2B group revenue · 40M+ tx/yr · 15+ regulated markets |
 | 04/2023–02/2025 | Canon Medical Systems (remote) | Senior SE Consulting | Enterprise healthcare · multi-site hospital ops |
 | 12/2021–04/2023 | Grupo SBF — Nike Brazil / Centauro | React Engineer | 8M+ MAU · LATAM's largest sports retailer |
 | 01/2021–12/2021 | Encora — VMware Pathfinder | Frontend Engineer | 2.1M+ labs · multi-region |
@@ -98,7 +98,7 @@ Performance & A11y: Core Web Vitals · WCAG 2.1 AA · ARIA · Lighthouse CI
 
 ## Industries
 
-- iGaming / Regulated Markets — PCI-DSS, 15+ jurisdictions, €1B+ ARR
+- iGaming / Regulated Markets — PCI-DSS, 15+ jurisdictions, €1.2B group revenue
 - E-commerce — 8M+ MAU, multi-brand, LATAM
 - Banking / Fintech — 70M+ customers, digital banking
 - Healthcare — enterprise hospital operations, WCAG 2.1 AA
