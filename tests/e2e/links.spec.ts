@@ -1,25 +1,32 @@
-import { expect, test } from '@playwright/test';
+import { expect, type Page, test } from '@playwright/test';
+
+const LANGUAGE_NAV_NAME = /^(Idioma|Language)$/;
+const LANGUAGE_LINK_COUNT = 2;
+
+const languageSwitch = (page: Page) => page.getByRole('navigation', { name: LANGUAGE_NAV_NAME });
 
 test.describe('/links link-in-bio', () => {
   test('the language switch is real routing, not a client-side toggle', async ({ page }) => {
     await page.goto('/links');
     await expect(page.locator('h1')).toHaveText(/links, canal e contato/);
 
-    await page.getByRole('link', { name: 'English' }).click();
+    await languageSwitch(page).getByRole('link', { name: 'English' }).click();
     await page.waitForURL('**/links/en');
     await expect(page.locator('h1')).toHaveText(/links, channel and contact/);
 
-    await page.getByRole('link', { name: 'Português' }).click();
+    await languageSwitch(page).getByRole('link', { name: 'Português' }).click();
     await page.waitForURL(/\/links$/);
   });
 
   test('marks the active language for assistive tech', async ({ page }) => {
     await page.goto('/links/en');
-    await expect(page.getByRole('link', { name: 'English' })).toHaveAttribute(
+    const switcher = languageSwitch(page);
+    await expect(switcher.getByRole('link')).toHaveCount(LANGUAGE_LINK_COUNT);
+    await expect(switcher.getByRole('link', { name: 'English' })).toHaveAttribute(
       'aria-current',
       'page',
     );
-    await expect(page.getByRole('link', { name: 'Português' })).not.toHaveAttribute(
+    await expect(switcher.getByRole('link', { name: 'Português' })).not.toHaveAttribute(
       'aria-current',
       'page',
     );
