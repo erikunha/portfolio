@@ -160,15 +160,14 @@ describe('identity is consistent across every gated surface', () => {
     }
   });
 
-  it('lists every education institution in the Person JSON-LD alumniOf', () => {
+  it('lists every finished education institution, and only those, in the Person JSON-LD alumniOf', () => {
     const names = personSchema.alumniOf.map((entry) => entry.name);
-    for (const entry of education[SITE_LOCALE.en]) {
+    const finished = education[SITE_LOCALE.en].filter((entry) => !entry.expectedCompletion);
+    for (const entry of finished) {
       expect(names.some((name) => name.includes(entry.institution))).toBe(true);
     }
     for (const name of names) {
-      expect(education[SITE_LOCALE.en].some((entry) => name.includes(entry.institution))).toBe(
-        true,
-      );
+      expect(finished.some((entry) => name.includes(entry.institution))).toBe(true);
     }
   });
 

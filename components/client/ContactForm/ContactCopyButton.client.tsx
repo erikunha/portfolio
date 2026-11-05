@@ -1,18 +1,17 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import type { ContactContent } from '@/content/contact';
 import type { CopyFeedback } from '@/content/schemas';
 
 const COPY_FEEDBACK_DURATION_MS = 1500;
 
 export function ContactCopyButton({
   email,
-  copy,
+  labels,
   feedback,
 }: {
   email: string;
-  copy: ContactContent;
+  labels: { readonly copy: string; readonly copied: string };
   feedback: {
     readonly idle: CopyFeedback;
     readonly success: CopyFeedback;
@@ -21,7 +20,7 @@ export function ContactCopyButton({
   };
 }) {
   const [state, setState] = useState<CopyFeedback>({
-    label: copy.section.copyEmail,
+    label: labels.copy,
     message: '',
   });
   const [attempt, setAttempt] = useState(0);
@@ -37,9 +36,9 @@ export function ContactCopyButton({
   }, []);
 
   const runCopy = useCallback(async () => {
-    const idle: CopyFeedback = { label: copy.section.copyEmail, message: '' };
+    const idle: CopyFeedback = { label: labels.copy, message: '' };
     const success: CopyFeedback = {
-      label: copy.section.copyEmailCopied,
+      label: labels.copied,
       message: feedback.success.message,
     };
     if (timerRef.current !== null) clearTimeout(timerRef.current);
@@ -59,7 +58,7 @@ export function ContactCopyButton({
     } catch {
       if (mountedRef.current) setState(feedback.failure);
     }
-  }, [email, copy.section.copyEmail, copy.section.copyEmailCopied, feedback]);
+  }, [email, labels.copy, labels.copied, feedback]);
 
   return (
     <>

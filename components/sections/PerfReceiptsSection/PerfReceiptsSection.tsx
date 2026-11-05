@@ -1,16 +1,14 @@
 import { projectReceipts, receiptsHeading } from '@/content/perf-receipts';
 import type { SiteLocale } from '@/content/site-locale';
 
-const DOCK_TARGET_ID = 'sec-perf-receipts';
+const RECEIPTS_ANCHOR_ID = 'sec-perf-receipts';
 
 export function PerfReceiptsSection({ locale }: { locale: SiteLocale }) {
   const receipts = projectReceipts(locale);
   const [featured] = receipts;
   return (
     <div className="project-receipts">
-      <h3 id={DOCK_TARGET_ID} tabIndex={-1}>
-        {receiptsHeading}
-      </h3>
+      <h3 id={RECEIPTS_ANCHOR_ID}>{receiptsHeading}</h3>
       <ul>
         {receipts.map((receipt) => (
           <li key={receipt.metric}>

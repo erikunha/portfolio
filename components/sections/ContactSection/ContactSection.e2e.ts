@@ -94,6 +94,34 @@ test.describe('ContactSection', () => {
     await expect(main.locator('footer')).toHaveCount(0);
   });
 
+  for (const path of ['/', '/pt']) {
+    test(`every fact label fits its column and the values share one edge on ${path}`, async ({
+      page,
+    }) => {
+      await page.setViewportSize(DESKTOP);
+      await page.goto(path);
+      const facts = page.locator('#sec-contact .contact-fact');
+      await facts.first().scrollIntoViewIfNeeded();
+      const layout = await facts.evaluateAll((rows) =>
+        rows.map((row) => {
+          const dt = row.querySelector('dt') as HTMLElement;
+          const dd = row.querySelector('dd') as HTMLElement;
+          const range = document.createRange();
+          range.selectNodeContents(dt);
+          return {
+            labelRight: range.getBoundingClientRect().right,
+            valueLeft: dd.getBoundingClientRect().left,
+          };
+        }),
+      );
+      expect(layout.length).toBeGreaterThan(0);
+      for (const { labelRight, valueLeft } of layout) {
+        expect(labelRight).toBeLessThanOrEqual(valueLeft);
+      }
+      expect(new Set(layout.map(({ valueLeft }) => Math.round(valueLeft))).size).toBe(1);
+    });
+  }
+
   test('the timezone panel holds the clocks and no channel at 1280', async ({ page }) => {
     await page.setViewportSize(DESKTOP);
     await page.goto('/');

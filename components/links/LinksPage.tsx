@@ -2,7 +2,7 @@ import { AppShell } from '@/components/AppShell';
 import { BrandLink } from '@/components/BrandLink';
 import { linksContent } from '@/content/links';
 import { LINKS_HTML_LANG, LINKS_PATH, type LinksLocale } from '@/content/links.constants';
-import { siteNavChrome } from '@/content/navigation';
+import { NAVIGATION, siteNavChrome } from '@/content/navigation';
 import { SITE_LOCALE } from '@/content/site-locale';
 import { type ChannelFeed, EMPTY_FEED, getChannelFeed } from '@/lib/links/feed';
 import { ChannelCard } from './ChannelCard';
@@ -25,7 +25,7 @@ export async function LinksPage({ locale }: { locale: LinksLocale }) {
       brand={<BrandLink />}
       chrome={siteNavChrome(SITE_LOCALE.en)}
       locale={SITE_LOCALE.en}
-      skipLabel="Skip to main content"
+      skipLabel={NAVIGATION[SITE_LOCALE.en].copy.skipLabel}
     >
       <NavProgress />
       <div lang={LINKS_HTML_LANG[locale]} className="links-page">

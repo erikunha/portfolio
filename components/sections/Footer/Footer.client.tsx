@@ -102,7 +102,9 @@ export function SessionCounters({
             (entries) => {
               for (const entry of entries) {
                 if (entry.isIntersecting) {
-                  const sectionId = entry.target.id || HOME_SECTION_ID;
+                  const sectionId = entry.target.matches(MOBILE_HERO_SELECTOR)
+                    ? HOME_SECTION_ID
+                    : entry.target.id || HOME_SECTION_ID;
                   seen.add(sectionId);
                 }
               }

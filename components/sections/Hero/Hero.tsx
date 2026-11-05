@@ -106,12 +106,7 @@ export function Hero({ locale }: { locale: SiteLocale }) {
         </aside>
         <HeroSystemFailure />
       </section>
-      <section
-        id="bio-mobile"
-        tabIndex={-1}
-        className="hero-mobile hero-frame"
-        data-testid="hero-mobile"
-      >
+      <section tabIndex={-1} className="hero-mobile hero-frame" data-testid="hero-mobile">
         <div className="hero-mobile-content">
           <HeroBootAnimation variant="mobile" />
           <HeroIdentity locale={locale} primary={false} />

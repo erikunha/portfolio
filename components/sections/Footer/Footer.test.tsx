@@ -333,7 +333,7 @@ describe('Footer reboot controls', () => {
           {sectionIds.map((id) => (
             <section key={id} id={id} />
           ))}
-          <section data-testid="hero-mobile" />
+          <section id="bio-mobile" data-testid="hero-mobile" />
           <section id="unrelated" />
         </main>
         <Footer locale={SITE_LOCALE.en} />

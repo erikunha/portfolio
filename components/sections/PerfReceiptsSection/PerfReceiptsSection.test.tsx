@@ -12,7 +12,7 @@ async function renderSection(): Promise<Document> {
   return new DOMParser().parseFromString(html, 'text/html');
 }
 
-describe('PerfReceiptsSection — hero data-featured variant', () => {
+describe('PerfReceiptsSection hero data-featured variant', () => {
   it('renders the six approved non-repeated metrics with company and context', async () => {
     const doc = await renderSection();
     const rows = Array.from(doc.querySelectorAll('li'));
@@ -51,12 +51,11 @@ describe('PerfReceiptsSection — hero data-featured variant', () => {
   });
 });
 
-describe('PerfReceiptsSection — Dock focus target', () => {
-  it('lands focus on the receipts heading, which names itself', async () => {
+describe('PerfReceiptsSection receipts anchor', () => {
+  it('puts the nested receipts anchor on the heading, which names itself', async () => {
     const doc = await renderSection();
     const target = doc.getElementById('sec-perf-receipts');
     expect(target?.tagName).toBe('H3');
-    expect(target?.getAttribute('tabindex')).toBe('-1');
     expect(target?.textContent?.length).toBeGreaterThan(0);
   });
 });

@@ -12,7 +12,7 @@ import { Hero } from '@/components/sections/Hero';
 import { HottestTakesSection } from '@/components/sections/HottestTakesSection';
 import { ProjectsSection } from '@/components/sections/ProjectsSection';
 import { ShellSection } from '@/components/sections/ShellSection';
-import { siteNavChrome } from '@/content/navigation';
+import { NAVIGATION, siteNavChrome } from '@/content/navigation';
 import type { SiteLocale } from '@/content/site-locale';
 import { BreakpointProvider } from '@/lib/use-breakpoint.client';
 
@@ -23,7 +23,7 @@ export function SiteHome({ locale }: { locale: SiteLocale }) {
         brand={<BrandLink />}
         chrome={siteNavChrome(locale)}
         locale={locale}
-        skipLabel={locale === 'pt' ? 'Pular para o conteúdo' : 'Skip to main content'}
+        skipLabel={NAVIGATION[locale].copy.skipLabel}
       >
         <PageMain>
           <ErrorBoundary>

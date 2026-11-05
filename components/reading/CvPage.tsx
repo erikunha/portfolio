@@ -1,6 +1,7 @@
 import { BrandLink } from '@/components/BrandLink';
 import { CompanyLink } from '@/components/CompanyLink';
 import { PrintButton } from '@/components/client/PrintButton';
+import { NAVIGATION } from '@/content/navigation';
 import { cvDocument, cvJsonLd, readingViews } from '@/content/reading-views';
 import type { SiteLocale } from '@/content/site-locale';
 import { Button } from '@/design-system';
@@ -71,7 +72,7 @@ export function CvPage({ locale }: { locale: SiteLocale }) {
           </nav>
           <ReadingLanguageSwitch
             locale={locale}
-            label={locale === 'pt' ? 'Idioma' : 'Language'}
+            label={NAVIGATION[locale].copy.langSwitchLabel}
             path="/cv"
           />
         </div>

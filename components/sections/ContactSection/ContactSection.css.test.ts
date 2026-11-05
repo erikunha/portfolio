@@ -95,13 +95,20 @@ describe('contact layout stylesheet', () => {
     expect(declValue(labels, 'flex-direction')).toBe(FLEX_COLUMN);
   });
 
-  it('lays each fact out as a label column and a value column so labels never wrap away', () => {
-    const rule = rulesWithSelector(stylesheet, '.contact-fact').find(
-      (candidate) => candidate.parent?.type === 'atrule' && candidate.parent.name === 'layer',
-    );
+  it('sizes one shared label column to the longest label in any language', () => {
+    const inLayer = (selector: string) =>
+      rulesWithSelector(stylesheet, selector).find(
+        (candidate) => candidate.parent?.type === 'atrule' && candidate.parent.name === 'layer',
+      );
+    const list = inLayer('.contact-facts');
+    const row = inLayer('.contact-fact');
 
-    expect(declValue(rule, 'display')).toBe('grid');
-    expect(declValue(rule, 'grid-template-columns')).toBe('6ch minmax(0, 1fr)');
+    expect(declValue(list, 'grid-template-columns')).toBe(
+      'minmax(6ch, max-content) minmax(0, 1fr)',
+    );
+    expect(declValue(row, 'display')).toBe('grid');
+    expect(declValue(row, 'grid-template-columns')).toBe('subgrid');
+    expect(declValue(row, 'grid-column')).toBe('1 / -1');
   });
 
   it('keeps the two clocks on one row from 900px up', () => {

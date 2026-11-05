@@ -1,6 +1,7 @@
 import { BrandLink } from '@/components/BrandLink';
 import { CompanyMention } from '@/components/CompanyLink';
 import { PrintButton } from '@/components/client/PrintButton';
+import { NAVIGATION } from '@/content/navigation';
 import { readingViews, summaryDocument } from '@/content/reading-views';
 import type { SiteLocale } from '@/content/site-locale';
 import { Button, StatTile, TerminalPanel } from '@/design-system';
@@ -31,7 +32,7 @@ export function SummaryPage({ locale }: { locale: SiteLocale }) {
           </nav>
           <ReadingLanguageSwitch
             locale={locale}
-            label={locale === 'pt' ? 'Idioma' : 'Language'}
+            label={NAVIGATION[locale].copy.langSwitchLabel}
             path="/summary"
           />
         </div>

@@ -681,6 +681,7 @@
 
   .contact-facts {
     display: grid;
+    grid-template-columns: minmax(6ch, max-content) minmax(0, 1fr);
     gap: var(--spacing-1);
     margin: 0;
     font-family: var(--font-mono);
@@ -689,7 +690,8 @@
 
   .contact-fact {
     display: grid;
-    grid-template-columns: 6ch minmax(0, 1fr);
+    grid-column: 1 / -1;
+    grid-template-columns: subgrid;
     align-items: baseline;
     gap: var(--spacing-1) var(--spacing-2);
   }
