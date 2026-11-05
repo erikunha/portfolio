@@ -652,7 +652,7 @@ jq -s '(.[0].permissions.allow + (.[1].permissions.allow // [])) | unique' \
   .claude/settings.json .claude/settings.local.json 2>/dev/null
 ```
 
-Configuration history and rationale: see `DECISIONS.md` 2026-05-18 (permissions lockdown bullet).
+Configuration history and rationale: see `DECISIONS.md` 2026-10-29 (global permission mode) and 2026-05-18 (permissions lockdown).
 
 ---
 

@@ -52,7 +52,7 @@ function at(doc: unknown, path: readonly string[]): string {
 // whole property: containment would pass while the group was broadened by an
 // extra disjunct or inverted outright.
 const groupFor = (predicate: string) =>
-  `\${{ (${predicate}) && format('claude-review-{0}', github.event.pull_request.number || github.event.issue.number) || format('claude-review-noop-{0}', github.run_id) }}`;
+  `\${{ (${predicate}) && format('claude-review-{0}', github.event.issue.number) || format('claude-review-noop-{0}', github.run_id) }}`;
 
 describe('claude-review concurrency group mirrors the review job condition', () => {
   const doc = workflow();
@@ -75,68 +75,45 @@ describe('claude-review concurrency group mirrors the review job condition', () 
   });
 });
 
-// Splits a GHA `if:` on its TOP-LEVEL `||` only, so a fence can be asserted
-// against the branch that needs it rather than against the whole expression.
-// Nested `||` inside a parenthesised sub-expression stays with its branch.
-function splitTopLevelOr(expr: string): string[] {
-  const out: string[] = [];
-  let depth = 0;
-  let start = 0;
-  for (let i = 0; i < expr.length; i++) {
-    const c = expr[i];
-    if (c === '(') depth++;
-    else if (c === ')') depth--;
-    else if (depth === 0 && c === '|' && expr[i + 1] === '|') {
-      out.push(expr.slice(start, i).trim());
-      start = i + 2;
-      i++;
-    }
-  }
-  out.push(expr.slice(start).trim());
-  return out.filter(Boolean);
-}
-
-describe('the auto path is fenced, and the workspace root holds base content', () => {
+describe('the review is opt-in, fenced, and the workspace root holds default-branch content', () => {
   const doc = workflow();
 
-  it('the auto path admits only OWNER, MEMBER or COLLABORATOR', () => {
-    // Kept after the trigger reverted to `pull_request`, where forks get no
-    // secrets and the fence is no longer load-bearing. It is retained because it
-    // costs nothing, and because `pull_request_target` was tried once and may be
-    // tried again if upstream starts accepting its OIDC token — at which point
-    // the fence becomes the only thing between a fork PR and the repo token.
-    // The event is DERIVED from `on:`, never hardcoded and never inferred as
-    // "the branch that isn't issue_comment". Selecting by exclusion let `on:` and
-    // the `if:` drift apart: flip one to pull_request_target without the other
-    // and this file stays green while the auto job's `if:` never evaluates true
-    // and every PR silently goes unreviewed. The 2026-07-27 ADR records that the
-    // trigger may be revisited, so that edit is reachable, not hypothetical.
-    const triggers = Object.keys((doc.on ?? doc.true ?? {}) as Record<string, unknown>);
-    const autoEvent = triggers.find((t) => t !== 'issue_comment');
-    expect(autoEvent, 'claude-review.yml declares no non-comment trigger').toBeTruthy();
-
-    const jobIf = collapse(String(at(doc, ['jobs', 'review', 'if'])));
-    const auto = splitTopLevelOr(jobIf).find((b) => b.includes(`'${autoEvent}'`));
+  it('the only trigger is a created comment, so no open or push starts a review', () => {
+    const triggers = (doc.on ?? doc.true ?? {}) as Record<string, { types?: string[] }>;
     expect(
-      auto,
-      `No disjunct of the review job's \`if:\` names the trigger \`on:\` declares (${autoEvent}). The two have drifted, so the auto job never runs and every PR goes unreviewed with no error.\n\nif: ${jobIf}`,
-    ).toBeTruthy();
-    expect(
-      auto,
-      `The auto branch does not fence on github.event.pull_request.author_association.\n\nbranch: ${auto}`,
-    ).toContain('github.event.pull_request.author_association');
-    expect(
-      auto,
-      `The auto branch's allow-list is not exactly OWNER/MEMBER/COLLABORATOR.\n\nbranch: ${auto}`,
-    ).toContain(`fromJSON('["OWNER","MEMBER","COLLABORATOR"]')`);
+      Object.keys(triggers),
+      'claude-review.yml declares a trigger besides issue_comment. A review must start only when someone comments `/claude-review`; any other event makes it automatic.',
+    ).toEqual(['issue_comment']);
+    expect(triggers.issue_comment?.types).toEqual(['created']);
   });
 
-  it('the workspace root holds BASE content, and the PR head is confined to a subdirectory', () => {
-    // The whole trust model, and it is trigger-sensitive in a way that bites.
-    // Under `pull_request_target` the DEFAULT ref is the base, so omitting `ref:`
-    // was correct. Under `pull_request` the default is `refs/pull/N/merge` — PR
-    // code — so the root MUST pin the base explicitly or the model silently
-    // inverts and every convention file read from the root becomes the PR's.
+  it('the job admits only an OWNER, MEMBER or COLLABORATOR comment carrying the phrase on a PR', () => {
+    const jobIf = collapse(String(at(doc, ['jobs', 'review', 'if'])));
+    expect(jobIf, 'the job no longer requires the issue_comment event').toContain(
+      "github.event_name == 'issue_comment'",
+    );
+    expect(jobIf, 'the job no longer requires the comment to be on a PR').toContain(
+      'github.event.issue.pull_request',
+    );
+    expect(jobIf, 'the job no longer requires the trigger phrase').toContain(
+      "contains(github.event.comment.body, '/claude-review')",
+    );
+    expect(
+      jobIf,
+      `The allow-list is not exactly OWNER/MEMBER/COLLABORATOR on the commenter.\n\nif: ${jobIf}`,
+    ).toContain(
+      `contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.comment.author_association)`,
+    );
+    expect(
+      /pull_request\./.test(jobIf.replace(/github\.event\.issue\.pull_request/g, '')),
+      'The job predicate reads a pull_request event field. No such event reaches this workflow, so the clause is dead or the trigger drifted.',
+    ).toBe(false);
+  });
+
+  it('the workspace root holds DEFAULT-BRANCH content, and the PR head is confined to a subdirectory', () => {
+    // The comment event carries no PR base, and `github.sha` is the default
+    // branch tip there. The PR head must never reach the workspace root, or the
+    // reviewer's conventions and prompt would be authored by the PR under review.
     const steps = (
       doc.jobs as { review?: { steps?: Array<{ uses?: string; with?: Record<string, unknown> }> } }
     )?.review?.steps;
@@ -146,15 +123,16 @@ describe('the auto path is fenced, and the workspace root holds base content', (
     const checkouts = steps.filter((st) => String(st.uses ?? '').includes('actions/checkout'));
     expect(
       checkouts.length,
-      'expected two checkouts: base at root, PR head in a subdirectory',
+      'expected two checkouts: default branch at root, PR head in a subdirectory',
     ).toBe(2);
     const [root, head] = checkouts;
 
     const rootRef = String(root?.with?.ref ?? '');
     expect(
-      /base/.test(rootRef),
-      `The root checkout does not resolve to the PR base (ref: ${rootRef || '(none)'}). Under \`pull_request\` the default ref is the MERGE ref, which is PR-authored content — the root must name the base explicitly.`,
-    ).toBe(true);
+      rootRef,
+      `The root checkout does not pin the default-branch tip (ref: ${rootRef || '(none)'}). Omitting it would default to the PR merge ref on some events, which is PR-authored content.`,
+      // biome-ignore lint/suspicious/noTemplateCurlyInString: a GitHub Actions expression the workflow file spells literally, not a JS template.
+    ).toBe('${{ github.sha }}');
     expect(
       /head\.sha|\/head/.test(rootRef),
       `The root checkout resolves to the PR HEAD (${rootRef}). That puts untrusted content at the workspace root, which the action documents as unsafe and which makes the reviewer prompt PR-authored.`,

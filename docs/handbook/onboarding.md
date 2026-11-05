@@ -28,7 +28,7 @@ flowchart LR
     tdd["write a failing behavior test"] --> edit["implement"] --> commit["commit (scope!)"]
     commit --> selfreview["self-review the diff"] --> push["push (passes pre-push)"]
     push --> pr["ci:local; non-docs bundle + route-JS + runtime; open PR"]
-    pr --> conv["resolve every thread"] --> ready["claude-gate + pr:gate"] --> owner["owner merges"]
+    pr --> conv["resolve every thread"] --> ready["pr:gate"] --> owner["owner merges"]
     owner --> deploy["deploy; document architectural decisions with the change"]
 ```
 
@@ -38,7 +38,7 @@ This exercises the ordinary contribution path. Runtime checks depend on the affe
 
 1. **Scope every commit.** `type(scope): subject`, scope mandatory, scope is the feature area. commitlint will reject you otherwise.
 2. **Branch as `<type>/<description>`.** The pre-push hook enforces it; never commit on `main`.
-3. **Review your diff before opening the PR.** It is a human diff read; the `pr-review-orchestrator` skill runs only when the owner asks. No stamp or ledger gates the push; claude-review reviews the PR once it is open.
+3. **Review your diff before opening the PR.** It is a human diff read; the `pr-review-orchestrator` skill runs only when the owner asks. No stamp or ledger gates the push; claude-review reviews the PR only when an owner, member or collaborator comments `/claude-review`.
 4. **A red gate is fixed by fixing the property**, never by disabling the gate.
 5. **Record architectural decisions** in `DECISIONS.md` with a reversibility note.
 

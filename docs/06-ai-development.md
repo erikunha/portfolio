@@ -21,7 +21,7 @@ flowchart TB
     ctx -. guides work .-> checks
     commit --> msg
     msg --> push --> ci
-    review["claude-review.yml: PR review<br/>independent pull_request + issue_comment triggers,<br/>not gated on the CI workflow"]
+    review["claude-review.yml: PR review<br/>runs only on a /claude-review comment,<br/>not gated on the CI workflow"]
 ```
 
 ## Context
@@ -43,7 +43,7 @@ Git hooks enforce separate stages:
 
 ## Pull-request review
 
-`.github/workflows/claude-review.yml` configures the automated reviewer with `.github/claude-review-prompt.md`. `pnpm claude-gate` checks its approval against the current head. `pnpm pr:gate` checks review thread resolution and replies. These commands do not prove a local pre-PR review ran.
+`.github/workflows/claude-review.yml` configures the automated reviewer with `.github/claude-review-prompt.md`. It runs only when an owner, member or collaborator comments `/claude-review` on a PR and is never a merge requirement. `pnpm claude-gate` is an optional check of its approval against the current head. `pnpm pr:gate` checks review thread resolution and replies. These commands do not prove a local pre-PR review ran.
 
 The pre-PR review procedure and the merge restriction are documented in `CLAUDE.md`. Repository hooks do not prevent an agent from invoking `gh pr merge`.
 

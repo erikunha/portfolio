@@ -23,6 +23,17 @@ describe('detect-changes manifest', () => {
     expect(UI_PATHS).toContain(':(exclude)lib/__tests__/**');
   });
 
+  it('arms the browser jobs when only a Playwright spec or baseline changes', () => {
+    expect(
+      APP_PATHS,
+      'a tests/ change must arm e2e-functional, or a spec-only PR merges with its own spec never run',
+    ).toContain('tests/');
+    expect(
+      UI_PATHS,
+      'a tests/visual/ change must arm e2e-visual, or a baseline-only PR merges unchecked',
+    ).toContain('tests/visual/');
+  });
+
   it('keeps ui a subset of app for the literal (non-exclude, non-pkg) entries', () => {
     const literal = (xs: readonly string[]) =>
       xs.filter((p) => !p.startsWith(':(exclude)') && p !== 'package.json');

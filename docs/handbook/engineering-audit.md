@@ -4,14 +4,14 @@ This audit separates repository checks from workflow conventions. See [engineeri
 
 ## Enforcement boundaries
 
-| Area              | Current mechanism                                                                     | Limit                                                                   |
-| ----------------- | ------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
-| Commit safety     | `.husky/pre-commit` runs Biome and staged gitleaks; `commit-msg` runs commitlint      | Hooks can be bypassed; CI supplies independent checks                   |
-| Push safety       | `.husky/pre-push` checks the remote main ref, branch name and `pnpm verify`           | Runtime browser gates are a manual pre-PR step                          |
-| Documentation     | `check:doc-drift` checks the `ARCHITECTURE.md` tree; component-docs checks headings   | Neither validates every prose claim                                     |
-| Review            | `claude-gate` checks the latest verdict against HEAD; `pr:gate` checks review threads | Pre-PR review and architect/security dispatch are conventions           |
-| Product AI        | `ask:eval` runs calibration and corpus checks                                         | CI execution depends on the AI change filter and credentials            |
-| Security analysis | gitleaks blocks on secrets; Semgrep uploads findings                                  | The Semgrep scan is report-only; its report and fixture checks can fail |
+| Area              | Current mechanism                                                                                        | Limit                                                                   |
+| ----------------- | -------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| Commit safety     | `.husky/pre-commit` runs Biome and staged gitleaks; `commit-msg` runs commitlint                         | Hooks can be bypassed; CI supplies independent checks                   |
+| Push safety       | `.husky/pre-push` checks the remote main ref, branch name and `pnpm verify`                              | Runtime browser gates are a manual pre-PR step                          |
+| Documentation     | `check:doc-drift` checks the `ARCHITECTURE.md` tree; component-docs checks headings                      | Neither validates every prose claim                                     |
+| Review            | `pr:gate` checks review threads; optional `claude-gate` checks a requested review's verdict against HEAD | Pre-PR review and architect/security dispatch are conventions           |
+| Product AI        | `ask:eval` runs calibration and corpus checks                                                            | CI execution depends on the AI change filter and credentials            |
+| Security analysis | gitleaks blocks on secrets; Semgrep uploads findings                                                     | The Semgrep scan is report-only; its report and fixture checks can fail |
 
 ## Gaps to consider
 

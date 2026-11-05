@@ -24,6 +24,7 @@ sequenceDiagram
     A-->>C: findings
     C->>G: git push (pre-push: main guard, branch name, pnpm verify)
     C->>CI: open eligible PR; CI runs checks and filtered runtime jobs
+    H->>CI: optional: owner, member or collaborator comments /claude-review
     CI->>C: claude-review posts inline findings + Verdict
     CI-->>C: review threads
     C->>C: drive threads to resolved -> green
@@ -63,19 +64,19 @@ flowchart TD
 
 The project instructions define this loop. The table distinguishes conventions from mechanical checks:
 
-| Step               | Mechanism                                                   | Enforced by                                                                                                  |
-| ------------------ | ----------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
-| Explore + plan     | brainstorming, writing-plans                                | architect-reviewer PASS (convention)                                                                         |
-| Anticipate failure | thinking-risk-premortem, pre-mortem                         | convention + plan tasks                                                                                      |
-| Implement          | test-first project rule                                     | convention                                                                                                   |
-| Self-verify        | project verification rule                                   | convention + `pnpm verify`                                                                                   |
-| Review             | human self-review of the diff, then claude-review on the PR | `pnpm claude-gate` (carries an Approve across baseline-only commits; fails other stale or SHA-less Approves) |
-| Resolve            | reply in each review thread, then resolve it                | `pnpm pr:gate` (fails `silent_resolve`)                                                                      |
-| Record             | DECISIONS.md ADR                                            | PR template checklist (author confirmation)                                                                  |
+| Step               | Mechanism                                                    | Enforced by                                                                                  |
+| ------------------ | ------------------------------------------------------------ | -------------------------------------------------------------------------------------------- |
+| Explore + plan     | brainstorming, writing-plans                                 | architect-reviewer PASS (convention)                                                         |
+| Anticipate failure | thinking-risk-premortem, pre-mortem                          | convention + plan tasks                                                                      |
+| Implement          | test-first project rule                                      | convention                                                                                   |
+| Self-verify        | project verification rule                                    | convention + `pnpm verify`                                                                   |
+| Review             | human self-review of the diff; claude-review only on request | `pnpm pr:gate` (every thread resolved); optional `pnpm claude-gate` after a requested review |
+| Resolve            | reply in each review thread, then resolve it                 | `pnpm pr:gate` (fails `silent_resolve`)                                                      |
+| Record             | DECISIONS.md ADR                                             | PR template checklist (author confirmation)                                                  |
 
-## 3. Review. claude-review on the PR, self-review before it
+## 3. Review. self-review before the PR, claude-review on request
 
-**claude-review (claude[bot]) runs automatically** on eligible PR open and push events, posting findings as inline review comments anchored to changed lines and closing with a `Verdict:` line that `pnpm claude-gate` reads fail-closed.
+**claude-review (claude[bot]) is opt-in.** It runs only when an owner, member or collaborator comments `/claude-review` on a PR, posting findings as inline review comments anchored to changed lines and closing with a `Verdict:` line that the optional `pnpm claude-gate` reads fail-closed. It is not a merge requirement.
 
 Pre-PR review is a convention: read the diff and run the project review procedure. It is a human diff read; the `pr-review-orchestrator` skill runs only when the owner asks. `pnpm pr:gate` checks thread resolution on the PR.
 
@@ -87,7 +88,7 @@ CI runs separate quality, typecheck, unit-test and build jobs. Runtime and AI jo
 
 ## 5. CI-side AI workflows
 
-`.github/workflows/claude-review.yml` handles automatic PR review. `.github/workflows/claude.yml` handles human `@claude` mentions. They have different triggers and permissions.
+`.github/workflows/claude-review.yml` handles PR review requested by a `/claude-review` comment. `.github/workflows/claude.yml` handles human `@claude` mentions. They have different triggers and permissions.
 
 ## Prompt architecture (the shapes of AI work)
 

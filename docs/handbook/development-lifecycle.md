@@ -19,8 +19,8 @@ flowchart TD
     selfreview --> push["git push (pre-push gate chain)"]
     push --> readypr["ci:local; non-docs bundle + route-JS + runtime"]
     readypr --> pr["gh pr create (fill template)"]
-    pr --> conv["Review convergence loop (rebase, push, resolve threads)"]
-    conv --> readymerge["pnpm claude-gate + pr:gate"]
+    pr --> conv["resolve review threads (rebase before every push)"]
+    conv --> readymerge["CI green + pr:gate"]
     readymerge --> merge["owner squash-merges (#NNN)"]
     merge --> deploy["Vercel deploy"]
     deploy --> smoke["post-deploy smoke test"]
@@ -63,13 +63,13 @@ Before opening the PR, read the diff; the `pr-review-orchestrator` skill runs on
 
 Run `pnpm ci:local`, then `pnpm bundle-check` and `pnpm route-js-check`, then `pnpm gates:runtime` (build, server, LHCI desktop/mobile, axe, E2E). Docs-only changes skip bundle, route-JS and runtime gates under the project workflow. Then `gh pr create` fills the PR template; every section must be non-empty, which is a convention checked by the author and the reviewer, not a gate.
 
-### 9. Review convergence loop
+### 9. Review threads
 
-On eligible open PRs, claude-review posts inline findings on open and push events. Drive it to green: rebase before every push, verify the pushed SHA landed, poll the run to completion rather than trusting a green job, and reply citing the fix SHA before resolving a thread.
+On the open PR, answer every review thread: rebase before every push, verify the pushed SHA landed, and reply citing the fix SHA before resolving a thread. claude-review runs only when an owner, member or collaborator comments `/claude-review`; its findings are fixed in one commit, answered in each thread and resolved, with no automatic follow-up round.
 
 ### 10. Pre-merge gates -> merge
 
-`pnpm claude-gate` (`scripts/check-claude-approval.ts`) requires the latest claude-review verdict to be Approve on the current head; an Approve on an ancestor SHA carries across a nonempty diff containing only visual baseline PNGs, and other stale or SHA-less Approves fail closed. `pnpm pr:gate` (`scripts/check-pr-comments.ts`) requires the returned review threads (the first 100; the query does not paginate) to be resolved and flags `suspicious_self_resolve`. Run `pnpm ci:local` alongside both.
+`pnpm pr:gate` (`scripts/check-pr-comments.ts`) requires the returned review threads (the first 100; the query does not paginate) to be resolved and flags `suspicious_self_resolve`. Run `pnpm ci:local` alongside it, with CI green and the base contained. `pnpm claude-gate` (`scripts/check-claude-approval.ts`) is an optional check on a requested claude-review verdict, not a merge requirement; it requires the latest verdict to be Approve on the current head, an Approve on an ancestor SHA carries across a nonempty diff containing only visual baseline PNGs, and other stale or SHA-less Approves fail closed.
 
 ### 11. Deploy -> smoke -> record
 
@@ -111,10 +111,10 @@ flowchart LR
         g8["ci:local"] --> g9["bundle-check + route-js-check (non-docs)"] --> g11["gates:runtime (LHCI+axe+E2E)"] --> g12["human diff read (extra model review on owner request)"]
     end
     subgraph open["post-open"]
-        g13["Review convergence"]
+        g13["Resolve review threads"]
     end
     subgraph premerge["pre-merge"]
-        g15["ci:local"] --> g17["claude-gate: Approve"] --> g18["pr:gate: resolved threads"]
+        g15["ci:local"] --> g18["pr:gate: resolved threads"]
     end
     commit --> prepush --> prepr --> open --> premerge --> merge["owner squash-merge"]
 ```

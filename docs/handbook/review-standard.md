@@ -1,6 +1,6 @@
 # Review Standard
 
-Every rule below was extracted from real review findings on this repository. Apply the rule before you write the code, run the check before you push. An agent or person reviewing a diff by hand uses this file as the prompt (the automated claude-review bot runs `.github/claude-review-prompt.md` instead): read the diff, check it against every rule whose file type it touches and against `docs/handbook/lessons.md`, and report each finding with file, line, rule number, severity (blocker, major, minor, nit) and the fix.
+Every rule below was extracted from real review findings on this repository. Apply the rule before you write the code, run the check before you push. An agent or person reviewing a diff by hand uses this file as the prompt (the claude-review bot, when requested, runs `.github/claude-review-prompt.md` instead): read the diff, check it against every rule whose file type it touches and against `docs/handbook/lessons.md`, and report each finding with file, line, rule number, severity (blocker, major, minor, nit) and the fix.
 
 ## Where findings cluster
 

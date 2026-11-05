@@ -1,8 +1,8 @@
 # CI profile (claude-review workflow)
 
-`.github/workflows/claude-review.yml` runs this procedure on every PR push, inside
-`anthropics/claude-code-action`. The local procedure assumes capabilities CI does not have, so
-each step maps to its CI substitute. The merge gate and output contract live in
+`.github/workflows/claude-review.yml` runs this procedure when an owner, member or
+collaborator comments `/claude-review` on a PR, inside `anthropics/claude-code-action`. The local procedure assumes capabilities CI does not have, so
+each step maps to its CI substitute. The output contract lives in
 `.github/claude-review-prompt.md`; this file only changes how the evidence is gathered.
 
 ## What CI has

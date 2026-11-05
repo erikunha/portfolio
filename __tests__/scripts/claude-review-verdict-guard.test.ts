@@ -8,15 +8,9 @@ import { CLAUDE_LOGIN, parseClaudeVerdict } from '@/scripts/check-claude-approva
 
 const WORKFLOW = join(process.cwd(), '.github', 'workflows', 'claude-review.yml');
 
-const GUARD_STEP = 'Assert this run posted a verdict the merge gate can read';
+const GUARD_STEP = 'Assert this run posted a verdict the gate can read';
 
-type Step = {
-  name?: string;
-  run?: string;
-  if?: unknown;
-  env?: Record<string, string>;
-  'continue-on-error'?: unknown;
-};
+type Step = { name?: string; run?: string; if?: unknown; 'continue-on-error'?: unknown };
 
 function guardStep(): Step {
   const doc = parse(readFileSync(WORKFLOW, 'utf8')) as {
@@ -25,7 +19,7 @@ function guardStep(): Step {
   const step = doc.jobs?.review?.steps?.find((s) => s.name === GUARD_STEP);
   if (typeof step?.run !== 'string') {
     throw new Error(
-      `claude-review.yml has no step named "${GUARD_STEP}" carrying a run: script. That step is the only thing standing between "the action exited 0" and "a review actually happened": the pull_request path posted a track_progress checklist with no verdict on every auto-run and the check still read green. If it was renamed, rename GUARD_STEP with it; do not delete this test.`,
+      `claude-review.yml has no step named "${GUARD_STEP}" carrying a run: script. That step is the only thing standing between "the action exited 0" and "a review actually happened": a review that posts no verdict still exits 0 and the check reads green. If it was renamed, rename GUARD_STEP with it; do not delete this test.`,
     );
   }
   return step;
@@ -44,9 +38,8 @@ function block(open: RegExp, what: string): string {
 
 // Matches the fetch PIPED INTO jq, not gh's --jq. gh refuses `--slurp` with
 // `--jq` and prints usage, so the old shape could never have run; this regex
-// failing is the signal that someone reintroduced it. Stop at a closing
-// substitution so an earlier API capture cannot borrow the verdict pipe.
-const FETCH = /(\w+)=\$\(gh api[^)]*?\|\s*jq -r "((?:[^"\\]|\\.)*)"\s*\)/;
+// failing is the signal that someone reintroduced it.
+const FETCH = /(\w+)=\$\(gh api[\s\S]*?\|\s*jq -r "((?:[^"\\]|\\.)*)"\s*\)/;
 const GREP = /\n\s*if printf '%s' "\$(\w+)"\s*\|\s*grep -qiE '([^']+)'; then/;
 
 describe('the guard fetches, filters and tests the same thing the merge gate reads', () => {
@@ -132,11 +125,11 @@ describe('the guard verdict pattern is never looser than the gate it protects', 
     });
   });
 
-  it('never matches the track_progress checklist the gate reads as no verdict', () => {
+  it('never matches a progress checklist with no verdict', () => {
     const checklist = '### Review\n- [x] Gather context\n- [x] Check schema compatibility';
     expect(
       { guard: guardMatches(checklist), parser: parseClaudeVerdict(checklist) },
-      'That body is exactly what the pull_request path posted on every auto-run while the check read green and the merge gate read none. If the guard ever accepts it, the guard has become the bug it was written to catch.',
+      'That body is a progress checklist with no verdict, which the gate reads as none. If the guard ever accepts it, the guard has become the bug it was written to catch.',
     ).toEqual({ guard: false, parser: 'none' });
   });
 
@@ -149,40 +142,18 @@ describe('the guard verdict pattern is never looser than the gate it protects', 
   });
 });
 
-describe('the guard reds the job, and skips only what it provably cannot review', () => {
-  type Run = {
-    body: string;
-    since?: string;
-    event?: string;
-    changed?: string;
-    headBlob?: string;
-    defaultBlob?: string;
-    lookupFails?: 'default' | 'head-blob' | 'default-blob';
-    headSha?: string;
-    diffFails?: boolean;
-  };
+describe('the guard reds the job when this run posted no verdict', () => {
+  type Run = { body: string; since?: string };
 
-  function runGuard({
-    body,
-    since = '2026-01-01T00:00:00Z',
-    event = 'pull_request',
-    changed = 'README.md',
-    headBlob = 'workflow-blob',
-    defaultBlob = 'workflow-blob',
-    lookupFails,
-    headSha = 'pr-head-sha',
-    diffFails = false,
-  }: Run) {
+  function runGuard({ body, since = '2026-01-01T00:00:00Z' }: Run) {
     const bin = mkdtempSync(join(tmpdir(), 'guard-gh-'));
     writeFileSync(
       join(bin, 'gh'),
       // The stub REJECTS `--slurp` together with ANY filter flag, which is gh's
       // real predicate: --jq, its shorthand -q, and --template all trip it
-      // ("the --slurp option is not supported with --jq or --template"). Without
-      // this the stub answers any argument list, so the guard's fetch could be
-      // malformed and every row still passed — which is how a broken `gh api`
-      // shipped and red every unskipped run. A stub that accepts what the real
-      // binary refuses pins its own behaviour, not the command under test.
+      // ("the --slurp option is not supported with --jq or --template"). A stub
+      // that accepts what the real binary refuses pins its own behaviour, not
+      // the command under test.
       [
         '#!/usr/bin/env bash',
         'if [ "$1" = "api" ]; then',
@@ -193,31 +164,7 @@ describe('the guard reds the job, and skips only what it provably cannot review'
         '      exit 1',
         '      ;;',
         '  esac',
-        '  if [ "$2" = "--paginate" ]; then',
-        '    printf \'%s\' "$GUARD_STUB_PAGES"',
-        '    exit 0',
-        '  fi',
-        '  case "$2" in',
-        '    repos/o/r) lookup=default; value=trunk ;;',
-        '    repos/o/r/contents/.github/workflows/claude-review.yml?ref=pr-head-sha) lookup=head-blob; value="$GUARD_STUB_HEAD_BLOB" ;;',
-        '    repos/o/r/contents/.github/workflows/claude-review.yml?ref=trunk) lookup=default-blob; value="$GUARD_STUB_DEFAULT_BLOB" ;;',
-        '    *) echo "unexpected gh api call: $*" >&2; exit 1 ;;',
-        '  esac',
-        '  if [ "$lookup" = "$GUARD_STUB_LOOKUP_FAILS" ]; then',
-        '    echo "gh: API rate limit exceeded" >&2',
-        '    exit 1',
-        '  fi',
-        '  printf \'%s\' "$value"',
-        'else',
-        '  # The diff read can FAIL. Its failure path is what stops a transient gh',
-        '  # error reading as "this PR does not edit the workflow", which would make',
-        '  # the guard assert a verdict that provably cannot exist.',
-        // biome-ignore lint/suspicious/noTemplateCurlyInString: bash parameter expansion inside a shell script being written to disk, not a JS template. Interpolating it would bake the value in at test-authoring time and the stub could never vary per case.
-        '  if [ -n "${GUARD_STUB_DIFF_FAILS:-}" ]; then',
-        '    echo "gh: API rate limit exceeded" >&2',
-        '    exit 1',
-        '  fi',
-        '  printf \'%s\\n\' "$GUARD_STUB_CHANGED"',
+        '  printf \'%s\' "$GUARD_STUB_PAGES"',
         'fi',
         '',
       ].join('\n'),
@@ -232,19 +179,12 @@ describe('the guard reds the job, and skips only what it provably cannot review'
           PR: '227',
           REPO: 'o/r',
           SINCE: since,
-          GITHUB_EVENT_NAME: event,
-          HEAD_SHA: headSha,
           // gh --paginate --slurp emits an array of pages; the guard pipes that
           // into jq, so the stub must speak the same shape the real API does
           // rather than a bare markdown body.
           GUARD_STUB_PAGES: JSON.stringify([
             [{ user: { login: 'claude[bot]' }, created_at: '2030-01-01T00:00:00Z', body }],
           ]),
-          GUARD_STUB_CHANGED: changed,
-          GUARD_STUB_HEAD_BLOB: headBlob,
-          GUARD_STUB_DEFAULT_BLOB: defaultBlob,
-          GUARD_STUB_LOOKUP_FAILS: lookupFails ?? '',
-          ...(diffFails ? { GUARD_STUB_DIFF_FAILS: '1' } : {}),
           VERDICT_RETRY_SLEEP: '0',
         },
       });
@@ -263,44 +203,8 @@ describe('the guard reds the job, and skips only what it provably cannot review'
     ['no review-start timestamp', { body: '**Approve**', since: '' }, 1],
     ['a body with no verdict reds', { body: 'nothing' }, 1],
     [
-      'an inherited workflow difference skips even when the PR diff lists only README.md',
-      { body: 'nothing', headBlob: 'inherited-workflow-blob' },
-      0,
-    ],
-    [
-      'equal workflow blobs still require a verdict even when the PR diff lists the workflow',
-      { body: 'nothing', changed: '.github/workflows/claude-review.yml' },
-      1,
-    ],
-    [
       'a verdict wrapped across a newline, which the line-oriented grep must reject',
       { body: '**Approve\nwith minor changes**' },
-      1,
-    ],
-    [
-      'a comment-event run must still be asserted, never skipped',
-      {
-        body: 'nothing',
-        event: 'issue_comment',
-        changed: '.github/workflows/claude-review.yml',
-        headBlob: 'different',
-      },
-      1,
-    ],
-    [
-      'a comment-event run bypasses comparison lookups and still accepts a verdict',
-      {
-        body: '**Approve**',
-        event: 'issue_comment',
-        headBlob: 'different',
-        lookupFails: 'default',
-        diffFails: true,
-      },
-      0,
-    ],
-    [
-      'a missing run head SHA fails closed even with a verdict',
-      { body: '**Approve**', headSha: '' },
       1,
     ],
   ];
@@ -308,15 +212,15 @@ describe('the guard reds the job, and skips only what it provably cannot review'
   it('keeps every executed row, since it.each([]) registers nothing and still reports PASS', () => {
     expect(
       EXECUTED_CASES.length,
-      'Emptying this table removes every execution-based assertion while vitest reports PASS over zero registered tests — the silent green the corpus check above exists to prevent.',
-    ).toBeGreaterThanOrEqual(6);
+      'Emptying this table removes every execution-based assertion while vitest reports PASS over zero registered tests, the silent green the corpus check above exists to prevent.',
+    ).toBeGreaterThanOrEqual(5);
   });
 
   it.each(EXECUTED_CASES)('runs the WHOLE guard under bash: %s', (_label, run, expected) => {
     const { status, stderr } = runGuard(run);
     expect(
       { status, unbound: /unbound variable/.test(stderr) },
-      `The ENTIRE run: script is executed here with gh stubbed on PATH, not a trailing slice of it.\n\nSlicing from the grep left everything before it unexecuted, so an \`exit 0\` placed after the fetch bypassed every assertion — the same class one level up. Executing the whole script is what removes it rather than moving it.\n\nEvery variable the script reads is stubbed, because an earlier version stubbed only \`fresh\` and \`set -u\` aborted on \`$PR\` three lines before the guard's own exit, making the row pass for the wrong reason. The unbound check is what keeps that visible.\n\nstderr: ${stderr.trim()}`,
+      `The ENTIRE run: script is executed here with gh stubbed on PATH, not a trailing slice of it.\n\nSlicing from the grep left everything before it unexecuted, so an \`exit 0\` placed after the fetch bypassed every assertion.\n\nEvery variable the script reads is stubbed, because \`set -u\` aborts on an unset one before the guard's own exit and the row would pass for the wrong reason. The unbound check keeps that visible.\n\nstderr: ${stderr.trim()}`,
     ).toEqual({ status: expected, unbound: false });
   });
 
@@ -327,11 +231,11 @@ describe('the guard reds the job, and skips only what it provably cannot review'
     ).toBe(false);
     expect(
       guardStep().if,
-      "The step must run unconditionally. Replacing `if: always()` with any falsy expression — `github.event_name == 'issue_comment'` is the plausible edit for silencing it on the auto path — skips the step on the exact pull_request path that has never once posted a verdict, the job reports success, and every assertion in this file still passes. Same silent-green consequence as continue-on-error, one field over.",
+      'The step must run unconditionally. Replacing `if: always()` with any falsy expression skips it, the job reports success, and every assertion in this file still passes.',
     ).toBe('always()');
     expect(
       guardStep()['continue-on-error'] ?? false,
-      'continue-on-error makes the step exit non-blocking, so the job goes green over a run that posted no verdict while every assertion here — including the executed one above, which measures the script in isolation and cannot see the step wrapper — still passes.',
+      'continue-on-error makes the step exit non-blocking, so the job goes green over a run that posted no verdict while every assertion here, including the executed rows, which measure the script in isolation and cannot see the step wrapper, still passes.',
     ).toBe(false);
   });
 
@@ -342,72 +246,11 @@ describe('the guard reds the job, and skips only what it provably cannot review'
     ).toContain('exit 1');
   });
 
-  it.each(['default', 'head-blob', 'default-blob'] as const)(
-    'fails closed with an explicit unknown-comparison diagnostic when %s lookup fails',
-    (lookupFails) => {
-      const { status, stderr } = runGuard({ body: '**Approve**', lookupFails });
-      expect({ status, explained: /workflow comparison is unknown/.test(stderr) }).toEqual({
-        status: 1,
-        explained: true,
-      });
-    },
-  );
-
-  const comparisonBlock = (): string => {
-    const script = guardScript();
-    return script.slice(
-      script.indexOf('if [ "$GITHUB_EVENT_NAME"'),
-      // biome-ignore lint/suspicious/noTemplateCurlyInString: match literal Bash parameter expansion.
-      script.indexOf('if [ -z "${SINCE:-}"'),
-    );
-  };
-
-  it('uses the event head that loaded this run and gates comparison lookups on pull_request', () => {
-    expect({
-      head: guardStep().env?.HEAD_SHA,
-      gated:
-        /if \[ "\$GITHUB_EVENT_NAME" = "pull_request" \]; then[\s\S]*default_branch=\$\(gh api/.test(
-          comparisonBlock(),
-        ),
-      // biome-ignore lint/suspicious/noTemplateCurlyInString: match the literal GitHub Actions expression.
-    }).toEqual({ head: '${{ github.event.pull_request.head.sha }}', gated: true });
-  });
-
-  // Positive patterns bind captures to API sources. The executed cases cannot
-  // establish which GitHub endpoint supplies a stubbed value.
-  it.each([
-    [
-      'repository default branch capture',
-      /default_branch=\$\(gh api "repos\/\$REPO" --jq '\.default_branch'\)/,
-    ],
-    [
-      'workflow blob at PR head',
-      /head_blob=\$\(gh api "repos\/\$REPO\/contents\/\.github\/workflows\/claude-review\.yml\?ref=\$HEAD_SHA" --jq '\.sha'\)/,
-    ],
-    [
-      'workflow blob at repository default branch',
-      /default_blob=\$\(gh api "repos\/\$REPO\/contents\/\.github\/workflows\/claude-review\.yml\?ref=\$default_branch" --jq '\.sha'\)/,
-    ],
-    [
-      'skip only for differing blobs',
-      /if \[ "\$head_blob" != "\$default_blob" \]; then[\s\S]*SKIP/,
-    ],
-    [
-      'explicit comparison lookup failure',
-      /if ![\s\S]*default_branch=[\s\S]*then[\s\S]*workflow comparison is unknown[\s\S]*exit 1/,
-    ],
-  ] as const)('pins the comparison contract: %s', (_label, pattern) => {
-    expect(comparisonBlock()).toMatch(pattern);
-  });
-
-  it('has exactly one successful exit in the blob-comparison skip block', () => {
-    const skip = comparisonBlock();
-    // Counting alone accepts the file-list predicate too, so require the blob
-    // predicate in the same assertion.
-    expect({
-      comparesBlobs: /if \[ "\$head_blob" != "\$default_blob" \]/.test(skip),
-      successfulExits: skip.match(/\bexit 0\b/g)?.length,
-    }).toEqual({ comparesBlobs: true, successfulExits: 1 });
+  it('asserts every comment-triggered run, with no event or diff carve-out', () => {
+    expect(
+      /GITHUB_EVENT_NAME|gh pr diff/.test(guardScript()),
+      'The guard now branches on the event or the diff. Every run is comment-triggered and runs the default-branch workflow, so it can always post a verdict; any skip is a silent green.',
+    ).toBe(false);
   });
 });
 

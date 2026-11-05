@@ -119,7 +119,7 @@ flowchart TD
 
 `ci-gate` runs with `if: always()`, includes gitleaks and all build/test jobs above, and excludes semgrep, and is the terminal required status check. `__tests__/scripts/ci-gate-job.test.ts` asserts its `needs` list equals the full job set minus the self-reporting jobs, so adding a conditional job without fanning it in fails `pnpm test`.
 
-Other workflows: `codeql.yml` (SAST, weekly + PR), `mutation.yml` (Stryker, weekly), `smoke.yml` (post-deploy: healthz + 7 security headers + apex→www + `/api/ask`,`/api/contact` liveness), `claude-review.yml` (pull-request review), `claude.yml` (`@claude` interaction), and `agent-eval.yml` (advisory prompt evaluation).
+Other workflows: `codeql.yml` (SAST, weekly + PR), `mutation.yml` (Stryker, weekly), `smoke.yml` (post-deploy: healthz + 7 security headers + apex→www + `/api/ask`,`/api/contact` liveness), `claude-review.yml` (pull-request review, on a `/claude-review` comment), `claude.yml` (`@claude` interaction), and `agent-eval.yml` (advisory prompt evaluation).
 
 **Lighthouse budgets (LHCI, hard gates):** desktop perf ≥95 / a11y =100 / BP ≥95 / SEO =100, LCP ≤1800ms, CLS ≤0.05, TBT ≤200ms; mobile perf ≥90, LCP ≤3500ms. Never disable a gate to merge - fix the property (doc 08).
 
@@ -130,8 +130,7 @@ Both desktop and mobile collect `/`, `/cv`, `/summary`, `/links`, `/links/en` an
 ```
 commit (scope blocks) -> (self-review the diff before opening the PR)
   -> pnpm ci:local + gates:runtime -> gh pr create (fill the template)
-  -> resolve every review thread (rebase before each push) -> pnpm claude-gate
-  -> pnpm pr:gate
+  -> resolve every review thread (rebase before each push) -> pnpm pr:gate
   -> repo owner runs gh pr merge (project policy; no agent hook enforces it)
 ```
 
