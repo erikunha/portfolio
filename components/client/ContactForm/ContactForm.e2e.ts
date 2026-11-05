@@ -74,7 +74,7 @@ test.describe('contact form', () => {
     await expect(page.locator('[data-testid="contact-success"]')).toHaveCount(0);
     const errorEl = page.locator('[data-testid="contact-form"]').getByRole('alert');
     await expect(errorEl).toBeVisible({ timeout: 5_000 });
-    await expect(errorEl).toContainText('storage unavailable');
+    await expect(errorEl).toContainText('could not send right now');
 
     await expect(
       page.locator('[data-testid="contact-form"] button[type="submit"]'),
