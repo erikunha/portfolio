@@ -205,7 +205,7 @@ function TableHeader() {
 export function DawMixerDesktop({ mixer }: { mixer: DawMixer }) {
   return (
     <div
-      className="daw-mixer-desktop font-mono text-sm text-tertiary-50 border border-[var(--color-primary-border)] bg-black/50 overflow-x-auto md:overflow-x-hidden min-h-[520px]"
+      className="daw-mixer-desktop font-mono text-sm text-tertiary-50 border border-[var(--color-primary-border)] bg-black/50 overflow-x-auto md:overflow-x-hidden"
       data-testid="daw-mixer-desktop"
     >
       <SessionHeaderDesktop mixer={mixer} />
