@@ -34,7 +34,6 @@ export function ErrorChrome({
         {chrome.skipLabel}
       </a>
       <header className="err-bar">
-        {brand}
         <nav aria-label={chrome.navLabel}>
           {chrome.nav.map((item) => (
             <a key={item.href} className="err-bar-link" href={item.href}>
@@ -42,6 +41,7 @@ export function ErrorChrome({
             </a>
           ))}
         </nav>
+        {brand}
       </header>
     </>
   );
