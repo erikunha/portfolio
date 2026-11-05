@@ -63,4 +63,4 @@ This exercises the ordinary contribution path. Runtime checks depend on the affe
 
 ## When you can independently contribute
 
-You are ready when you can, without help: take a requirement through a spec and the architect gate, implement it test-first, get a clean self-review, pass the gate chain, open and converge a PR, and record the ADR. The [workflow-playbook](./workflow-playbook.md) is your reference until that is muscle memory.
+You are ready when you can, without help: take a requirement through a spec and the architect gate, implement it test-first, get a clean self-review, pass the gate chain, open a PR and take it to merge readiness, and record the ADR. The [workflow-playbook](./workflow-playbook.md) is your reference until that is muscle memory.

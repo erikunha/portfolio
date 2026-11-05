@@ -4,7 +4,7 @@
 
 ## Project
 
-**erikunha.dev** — personal portfolio and reference web system. Matrix/brutalist terminal aesthetic. Homepage composition of terminal-module sections plus a footer; `/summary`, `/cv`, `/links`, `/links/en`, and `/design-system/*` are separate routes.
+**erikunha.dev** — personal portfolio and reference web system. Matrix/brutalist terminal aesthetic. Homepage composition of terminal-module sections plus a footer; `/summary`, `/cv`, `/links`, `/links/en`, the pt-BR twins `/pt`, `/pt/cv` and `/pt/summary`, and `/design-system/*` are separate routes.
 
 ## Commands
 
@@ -77,7 +77,7 @@ Invoke the named skill inline (not as a subagent) before the described action. P
 | Before implementing any component (in `components/` or `design-system/`) | Run DS component pre-mortem: (1) which attrs does the consumer control? (`id`, `className`, `aria-*`) — passthrough, never override; (2) any `outline: none` on `:focus` must be `:focus-visible`; (3) `querySelector` returns `null` not `undefined` — use `.not.toBeNull()`; (4) can this component be rendered twice? hardcoded `id` breaks the second instance |
 | After creating a new component or adding significant client-side state/effects | `react-best-practices` |
 | After editing `next.config.ts`, `.env.example`, or Vercel config | `vercel:nextjs` |
-| Reviewing any PR: your own before `gh pr create`, a sub-PR before merge, anyone else's | `pr-review-orchestrator` (project skill; claude-review, when requested, runs its CI profile) |
+| Reviewing a PR, only when the owner asks: your own, a sub-PR before merge, anyone else's | `pr-review-orchestrator` (project skill; claude-review, when requested, runs its CI profile) |
 | Before any UI code review (the Playwright MCP visual check) | `web-design-guidelines` — NOT mechanically enforced: the hook that gated the Playwright `browser_*` namespace on it was removed 2026-07-27 |
 | After `speckit-plan` produces output for tasks with >5 steps | `thinking-risk-premortem` — run on the plan tasks themselves, not the feature |
 
@@ -192,7 +192,7 @@ Full rationale in `STANDARDS.md`. Load that file when a chapter is directly rele
 - **Process feedback mid-workflow is a hard stop.** Pause immediately, incorporate into CLAUDE.md and/or memory, confirm with the user, then resume.
 - **Commit in scope blocks; merge by milestone.** Work accumulates in commits grouped by concern — one logical unit per commit (a component, a fix, a config change). Open a PR when a block is a natural milestone, judged by whether the change tells one reviewable story, not by a line count.
 - **Large multi-part feature? Integration branch + sub-PRs.** When a feature is too big for one reasonable PR (the failure mode that bloated PR #81), branch an integration branch off main (`feat/<feature>`), then open small sub-PRs from `feat/<feature>-<part>` branches **into the integration branch** — each a reviewable milestone. When the feature is complete, open the `feat/<feature>` → main PR; it will be large by design, so note in the body that it was reviewed incrementally via the sub-PRs. For a standalone change, skip the integration branch and open a normal small PR straight to main per the milestone rule above.
-- **claude-review is opt-in and never a merge gate.** It runs only when an owner, member or collaborator comments `/claude-review` on the PR; no open or push starts it. When it posts findings, fix them all in one commit, reply in each thread citing the fix SHA, then resolve. No automatic follow-up round. Merge readiness is CI green, the base contained, and `pnpm pr:gate` passing. `pnpm claude-gate` is an optional check. Rationale: `docs/handbook/review-merge-release.md`.
+- **claude-review is opt-in and never a merge gate.** It runs only when an owner, member or collaborator comments `/claude-review` on the PR; no open or push starts it. When it posts findings, fix them all in one commit, reply in each thread citing the fix SHA, then resolve. No automatic follow-up round. No model review runs unless the owner asks, `pr-review-orchestrator` included; before opening a PR you read your own diff. Merge readiness is CI green, the base contained, and `pnpm pr:gate` passing. `pnpm claude-gate` is an optional check. Rationale: `docs/handbook/review-merge-release.md`.
 - **Runtime gates before opening a PR — manual, not enforced by pre-push.**
   Run `pnpm ci:local`, `pnpm bundle-check`, `pnpm route-js-check` and `pnpm gates:runtime`
   for non-docs changes. CI remains the authoritative gate. The pre-push hook no longer runs
@@ -216,7 +216,7 @@ Full rationale in `STANDARDS.md`. Load that file when a chapter is directly rele
 
 ## Out of scope (unless asked)
 
-i18n · light theme · blog/MDX engine · analytics beyond Vercel Web Analytics + Speed Insights · auth/accounts/comments · CMS
+locales beyond pt-BR and EN · light theme · blog/MDX engine · analytics beyond Vercel Web Analytics + Speed Insights · auth/accounts/comments · CMS
 
 ## Emergency Rollback
 
