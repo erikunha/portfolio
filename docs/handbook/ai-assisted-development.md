@@ -23,7 +23,7 @@ sequenceDiagram
     A-->>C: findings
     C->>G: git push (pre-push gate chain blocks if not stamped)
     C->>CI: open PR; CI runs lint/type/test/build/perf/a11y/security
-    H->>CI: optional: owner or collaborator comments /claude-review
+    H->>CI: optional: owner, member or collaborator comments /claude-review
     CI->>C: claude-review posts inline findings + Verdict
     CI-->>C: review threads
     C->>C: drive threads to resolved -> green

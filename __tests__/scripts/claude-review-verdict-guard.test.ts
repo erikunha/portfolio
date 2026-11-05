@@ -123,7 +123,7 @@ describe('the guard verdict pattern is never looser than the gate it protects', 
     });
   });
 
-  it('never matches the track_progress checklist the gate reads as no verdict', () => {
+  it('never matches a progress checklist with no verdict', () => {
     const checklist = '### Review\n- [x] Gather context\n- [x] Check schema compatibility';
     expect(
       { guard: guardMatches(checklist), parser: parseClaudeVerdict(checklist) },
