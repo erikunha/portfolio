@@ -32,12 +32,20 @@ test.describe('footer netstat table', () => {
             .filter((node) => {
               const range = document.createRange();
               range.selectNodeContents(node);
-              const lineTops = new Set(
-                [...range.getClientRects()]
-                  .filter((rect) => rect.width > 0)
-                  .map((rect) => Math.round(rect.top)),
-              );
-              return lineTops.size > 1;
+              const rects = [...range.getClientRects()]
+                .filter((rect) => rect.width > 0)
+                .sort((a, b) => a.top - b.top);
+              let lines = 0;
+              let lineBottom = Number.NEGATIVE_INFINITY;
+              for (const rect of rects) {
+                if (rect.top >= lineBottom - 1) {
+                  lines += 1;
+                  lineBottom = rect.bottom;
+                } else {
+                  lineBottom = Math.max(lineBottom, rect.bottom);
+                }
+              }
+              return lines > 1;
             })
             .map((node) => node.textContent),
         );

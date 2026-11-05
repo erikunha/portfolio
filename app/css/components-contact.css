@@ -682,7 +682,7 @@
   .contact-facts {
     display: grid;
     grid-template-columns: minmax(6ch, max-content) minmax(0, 1fr);
-    gap: var(--spacing-1);
+    gap: var(--spacing-1) var(--spacing-2);
     margin: 0;
     font-family: var(--font-mono);
     font-size: var(--text-sm);
