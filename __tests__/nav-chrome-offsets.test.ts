@@ -12,12 +12,6 @@ function ruleBodies(selectorPattern: RegExp): string[] {
     .map((match) => match[2] ?? '');
 }
 
-function ruleSelectors(selectorPattern: RegExp): string[] {
-  return Array.from(componentsCss.matchAll(/([^{}]+)\{([^{}]*)\}/g))
-    .filter((match) => selectorPattern.test(match[1] ?? ''))
-    .map((match) => match[1]?.trim() ?? '');
-}
-
 function baseRuleBody(selector: string): string | undefined {
   const match = baseCss.match(new RegExp(`(?:^|\\})\\s*${selector}\\s*\\{([^{}]*)\\}`));
   return match?.[1];
@@ -72,32 +66,6 @@ describe('noscript notice', () => {
           'offset, because the collapsed rail it cleared is gone and the notice would sit ' +
           'offset from the topbar and the page content.',
       ).not.toMatch(/margin-(left|right|inline)/);
-    }
-  });
-});
-
-describe('topbar search trigger', () => {
-  it('clips the word instead of removing it, and keeps the word scoped to the topbar row', () => {
-    const selectors = ruleSelectors(/\.search-trigger-label/);
-    expect(
-      selectors.length,
-      'app/css/components-nav.css: expected a rule for the search trigger label.',
-    ).toBeGreaterThan(0);
-    for (const selector of selectors) {
-      expect(
-        selector,
-        'app/css/components-nav.css: the search label may only be clipped inside the topbar ' +
-          'row; a rule that also matches the drawer row would hide the word there, where it ' +
-          'has the width for it.',
-      ).toContain('.topbar-search');
-    }
-    for (const body of ruleBodies(/\.search-trigger-label/)) {
-      expect(
-        body,
-        'app/css/components-nav.css: the clipped search label must stay in the accessibility ' +
-          'tree, so it may not be hidden with display or visibility.',
-      ).not.toMatch(/display:\s*none|visibility:\s*hidden/);
-      expect(body).toMatch(/width:\s*1px/);
     }
   });
 });

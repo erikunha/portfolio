@@ -117,39 +117,12 @@ describe('DesktopTopbar', () => {
     ]);
   });
 
-  it('carries a search trigger that opens the section drawer until the palette ships', async () => {
+  it('carries no search trigger', async () => {
     mounted = await renderTopbar();
-    const trigger = mounted.container.querySelector('.topbar-search') as HTMLButtonElement;
 
-    expect(trigger).not.toBeNull();
-    expect(trigger.getAttribute('aria-keyshortcuts')).toBe('Control+K Meta+K');
-    expect(trigger.getAttribute('aria-controls')).toBe('section-drawer');
-    expect(trigger.getAttribute('aria-expanded')).toBe('false');
-    expect(trigger.textContent).toContain(NAVIGATION[SITE_LOCALE.en].copy.searchLabel);
-
-    await act(async () => {
-      trigger.dispatchEvent(new MouseEvent('click', { bubbles: true }));
-    });
-
-    expect(trigger.getAttribute('aria-expanded')).toBe('true');
-  });
-
-  it('offers the search shortcut the platform uses', async () => {
-    mounted = await renderTopbar();
-    const shortcut = mounted.container.querySelector('.search-trigger-shortcut');
-    const expected = /mac/i.test(navigator.platform) ? 'apple' : 'other';
-
-    expect(shortcut?.getAttribute('data-keyboard')).toBe(expected);
-    expect(shortcut?.querySelector(`[data-platform="${expected}"]`)?.textContent).toBe(
-      expected === 'apple'
-        ? NAVIGATION[SITE_LOCALE.en].copy.searchShortcutApple
-        : NAVIGATION[SITE_LOCALE.en].copy.searchShortcutOther,
-    );
-    expect(
-      shortcut?.textContent,
-      'the server HTML carries both labels, so the slot reserves its width before hydration',
-    ).toContain(NAVIGATION[SITE_LOCALE.en].copy.searchShortcutApple);
-    expect(shortcut?.textContent).toContain(NAVIGATION[SITE_LOCALE.en].copy.searchShortcutOther);
+    expect(mounted.container.querySelector('.topbar-search')).toBeNull();
+    expect(mounted.container.querySelector('.search-trigger')).toBeNull();
+    expect(mounted.container.querySelector('[aria-keyshortcuts]')).toBeNull();
   });
 
   it('keeps the hire CTA on LinkedIn and names the new tab for assistive tech', async () => {
@@ -165,13 +138,14 @@ describe('DesktopTopbar', () => {
     expect(hire?.getAttribute('aria-label')).toBe(HIRE_ACCESSIBLE_NAME[SITE_LOCALE.en]);
   });
 
-  it('orders focus stops menu, search, links, motion, VIEW_CV, HIRE, brand', async () => {
+  it('orders focus stops menu, links, motion, VIEW_CV, HIRE, language switch, brand', async () => {
+    mockPathname = '/';
     mounted = await renderTopbar();
     const focusable = [...mounted.container.querySelectorAll<HTMLElement>('a[href], button')];
     const stops = focusable.map((element) => {
       if (element.getAttribute('data-test-brand') === '1') return 'brand';
       if (element.classList.contains('menu-trigger')) return 'menu';
-      if (element.classList.contains('topbar-search')) return 'search';
+      if (element.closest('[data-lang-switch]')) return 'lang';
       if (element.hasAttribute('aria-pressed')) return 'motion';
       const href = element.getAttribute('href') ?? '';
       if (href === '/cv') return 'cv';
@@ -184,7 +158,6 @@ describe('DesktopTopbar', () => {
       'DOM order is the visual order and the tab order; no CSS order may reshuffle it',
     ).toEqual([
       'menu',
-      'search',
       'link',
       'link',
       'link',
@@ -194,8 +167,54 @@ describe('DesktopTopbar', () => {
       'motion',
       'cv',
       'hire',
+      'lang',
+      'lang',
       'brand',
     ]);
+  });
+
+  it('keeps the language switch on the row at every desktop width, beside the brand group', async () => {
+    mockPathname = '/';
+    mounted = await renderTopbar();
+    const switchNav = mounted.container.querySelector('nav[data-lang-switch]');
+    const links = [...(switchNav?.querySelectorAll('a') ?? [])];
+
+    expect(switchNav?.getAttribute('aria-label')).toBe(
+      NAVIGATION[SITE_LOCALE.en].copy.langSwitchLabel,
+    );
+    expect(links.map((link) => link.getAttribute('hreflang'))).toEqual(['en', 'pt']);
+    expect(links.map((link) => link.getAttribute('href'))).toEqual(['/', '/pt']);
+    expect(links.map((link) => link.getAttribute('aria-current'))).toEqual(['page', null]);
+
+    const ancestors = [];
+    for (let node = switchNav as HTMLElement | null; node; node = node.parentElement) {
+      ancestors.push(node);
+    }
+    for (const width of DESKTOP_WIDTHS) {
+      const hiddenAt = ancestors.filter((element) =>
+        isHiddenAtWidth(element.getAttribute('class') ?? '', width),
+      );
+      expect(
+        hiddenAt.map((element) => element.getAttribute('class') ?? ''),
+        `the language switch must be visible at ${width}px`,
+      ).toEqual([]);
+    }
+  });
+
+  it('marks the Portuguese link current and points back at English on /pt', async () => {
+    mockPathname = '/pt';
+    mounted = await renderTopbar(SITE_LOCALE.pt);
+    const links = [...mounted.container.querySelectorAll('nav[data-lang-switch] a')];
+
+    expect(links.map((link) => link.getAttribute('href'))).toEqual(['/', '/pt']);
+    expect(links.map((link) => link.getAttribute('aria-current'))).toEqual([null, 'page']);
+  });
+
+  it('renders no language switch where the page has no counterpart', async () => {
+    mockPathname = '/design-system';
+    mounted = await renderTopbar();
+
+    expect(mounted.container.querySelector('[data-lang-switch]')).toBeNull();
   });
 
   it('draws no window dots in the topbar', async () => {

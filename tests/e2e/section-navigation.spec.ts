@@ -6,7 +6,6 @@ import { SITE_LOCALE } from '../../content/site-locale';
 const SCROLL_PROBE_PX = 400;
 const TOPBAR_WIDTHS = [768, 1024, 1280, 1440];
 const SECTION_SHORTCUT_WIDTH = 1280;
-const SEARCH_TRIGGER_WIDTH = 1024;
 const ACTION_TIER_WIDTH = 1024;
 const MOTION_TIER_WIDTH = 1280;
 const FOOT_GAP_LIMIT_PX = 32;
@@ -169,9 +168,7 @@ for (const width of TOPBAR_WIDTHS) {
       expect(fit.triggerHeight, 'menu hit target is at least 44px').toBeGreaterThanOrEqual(44);
     });
 
-    test('the topbar shows one vocabulary and the search trigger opens the drawer', async ({
-      page,
-    }) => {
+    test('the topbar shows one vocabulary and carries no search trigger', async ({ page }) => {
       await page.goto('/');
       const nav = page.getByRole('navigation', { name: 'Site navigation' });
       const cv = nav.getByRole('link', { name: 'VIEW_CV' });
@@ -195,17 +192,10 @@ for (const width of TOPBAR_WIDTHS) {
         }
       }
 
-      const search = page.locator('.desktop-topbar .topbar-search');
-      if (width >= SEARCH_TRIGGER_WIDTH) {
-        await expect(search, 'the search trigger joins the row from 1024px').toBeVisible();
-        await search.click();
-        await expect(page.getByRole('dialog', { name: 'Section menu' })).toBeVisible();
-      } else {
-        await expect(
-          search,
-          'below 1024px the row has no room for the search trigger, so it stays off the row',
-        ).toBeHidden();
-      }
+      await expect(
+        page.locator('.desktop-topbar').getByRole('button', { name: /^(SEARCH|BUSCAR)/ }),
+        'the search trigger is gone at every width',
+      ).toHaveCount(0);
     });
   });
 }
@@ -301,7 +291,7 @@ test.describe('section navigation: motion control tiers', () => {
 test.describe('section navigation: drawer rows', () => {
   test.use({ viewport: { width: 390, height: 844 } });
 
-  test('the drawer lists the search row, the reading views and the motion toggle', async ({
+  test('the drawer lists the reading views and the motion toggle, with no search row', async ({
     page,
   }) => {
     await page.goto('/');
@@ -313,7 +303,12 @@ test.describe('section navigation: drawer rows', () => {
 
     await expect(drawer.locator('.menu-badge')).toHaveCount(0);
     await expect(drawer.locator('[data-section-count]')).toHaveCount(0);
-    await expect(drawer.locator('.menu-search')).toBeVisible();
+    await expect(drawer.getByRole('button', { name: /^(SEARCH|BUSCAR)/ })).toHaveCount(0);
+    await expect(drawer.locator('.menu-search')).toHaveCount(0);
+    await expect(
+      drawer.locator('[data-lang-switch], a[hreflang]'),
+      'the language switch lives in the header, not the drawer',
+    ).toHaveCount(0);
     await expect(drawer.getByRole('link', { name: 'VIEW_CV' })).toHaveAttribute('href', '/cv');
     await expect(drawer.getByRole('link', { name: '30S_SUMMARY' })).toHaveAttribute(
       'href',
@@ -327,39 +322,6 @@ test.describe('section navigation: drawer rows', () => {
       drawer.getByRole('link', { name: HIRE_ACCESSIBLE_NAME[SITE_LOCALE.en] }),
     ).toHaveAttribute('href', /linkedin\.com\/in\/erikunha/);
     await expect(drawer.locator('.menu-motion')).toBeVisible();
-  });
-
-  test('the language switch spaces its links with 44px targets', async ({ page }) => {
-    await page.goto('/');
-    await page
-      .getByRole('navigation', { name: 'primary' })
-      .getByRole('button', { name: /^MENU/ })
-      .click();
-    const drawer = page.getByRole('dialog', { name: 'Section menu' });
-
-    const langSwitch = drawer.locator('[data-lang-switch]');
-    await expect(langSwitch).toBeVisible();
-    const geometry = await langSwitch.evaluate((node) => {
-      const links = Array.from(node.querySelectorAll('a'));
-      const boxes = links.map((link) => link.getBoundingClientRect());
-      const [first, second] = boxes;
-      return {
-        count: links.length,
-        gapPx: first && second ? second.left - first.right : 0,
-        minHeightPx: boxes.length ? Math.min(...boxes.map((box) => box.height)) : 0,
-        minWidthPx: boxes.length ? Math.min(...boxes.map((box) => box.width)) : 0,
-      };
-    });
-    expect(geometry.count).toBe(2);
-    expect(geometry.gapPx, 'the language links must not render glued together').toBeGreaterThan(0);
-    expect(
-      geometry.minHeightPx,
-      'each language link keeps a 44px minimum tap target',
-    ).toBeGreaterThanOrEqual(44);
-    expect(
-      geometry.minWidthPx,
-      'each language link keeps a 44px minimum tap target',
-    ).toBeGreaterThanOrEqual(44);
   });
 
   test('the drawer foot follows the section list instead of floating at the bottom', async ({
@@ -551,4 +513,127 @@ test('a section reached from the menu takes focus without the browser outline', 
     await career.evaluate((element) => getComputedStyle(element).outlineStyle),
     'a non-interactive focus target paints no off-palette browser outline',
   ).toBe('none');
+});
+
+const LANGUAGE_LABEL = { en: 'Language', pt: 'Idioma' } as const;
+const FINE_POINTER_TARGET_PX = 36;
+const COARSE_POINTER_TARGET_PX = 44;
+const HEADER_VIEWPORTS = [
+  { name: 'desktop topbar', selector: '.desktop-topbar', width: 1280, height: 720 },
+  { name: 'mobile title bar', selector: '.mobile-title-bar', width: 390, height: 844 },
+] as const;
+
+for (const { name, selector, width, height } of HEADER_VIEWPORTS) {
+  test.describe(`language switch in the ${name}`, () => {
+    test.use({ viewport: { width, height } });
+
+    test('sits in the header with compact targets, left of the brand icon', async ({ page }) => {
+      await page.goto('/');
+      const header = page.locator(selector);
+      const langSwitch = header.getByRole('navigation', { name: LANGUAGE_LABEL.en });
+      await expect(langSwitch).toBeVisible();
+      await expect(page.locator('#section-drawer [data-lang-switch]')).toHaveCount(0);
+
+      const geometry = await header.evaluate((element) => {
+        const barBox = element.getBoundingClientRect();
+        const switchNode = element.querySelector('[data-lang-switch]');
+        const switchBox = switchNode?.getBoundingClientRect();
+        const brandBox = element.querySelector('.brand-link')?.getBoundingClientRect();
+        const siteNavBox = element
+          .querySelector('nav[aria-label="Site navigation"]')
+          ?.getBoundingClientRect();
+        const boxes = Array.from(switchNode?.querySelectorAll('a') ?? []).map((link) =>
+          link.getBoundingClientRect(),
+        );
+        return {
+          count: boxes.length,
+          coarse: window.matchMedia('(pointer: coarse)').matches,
+          minHeight: Math.min(...boxes.map((box) => box.height)),
+          minWidth: Math.min(...boxes.map((box) => box.width)),
+          switchLeft: switchBox?.left ?? Number.NaN,
+          switchRight: switchBox?.right ?? Number.NaN,
+          brandLeft: brandBox?.left ?? Number.NaN,
+          siteNavRight: siteNavBox?.right ?? Number.NaN,
+          barRight: barBox.right,
+          barBottom: barBox.bottom,
+          switchBottom: switchBox?.bottom ?? Number.NaN,
+        };
+      });
+      const target = geometry.coarse ? COARSE_POINTER_TARGET_PX : FINE_POINTER_TARGET_PX;
+      expect(geometry.count).toBe(2);
+      expect(
+        geometry.minHeight,
+        'each language link keeps its pointer-tier target',
+      ).toBeGreaterThanOrEqual(target);
+      expect(
+        geometry.minWidth,
+        'each language link keeps its pointer-tier target',
+      ).toBeGreaterThanOrEqual(target);
+      expect(geometry.switchRight, 'the switch stays left of the brand icon').toBeLessThanOrEqual(
+        geometry.brandLeft,
+      );
+      expect(geometry.switchRight, 'the switch stays inside the bar').toBeLessThanOrEqual(
+        geometry.barRight,
+      );
+      expect(geometry.switchBottom, 'the switch stays inside the bar').toBeLessThanOrEqual(
+        geometry.barBottom + 1,
+      );
+      if (!Number.isNaN(geometry.siteNavRight)) {
+        expect(
+          geometry.switchLeft,
+          'the switch follows the site navigation',
+        ).toBeGreaterThanOrEqual(geometry.siteNavRight - 1);
+      }
+    });
+
+    test('marks the current language and switches to Portuguese and back', async ({ page }) => {
+      await page.goto('/');
+      const header = page.locator(selector);
+      const english = header.getByRole('navigation', { name: LANGUAGE_LABEL.en });
+      await expect(english.getByRole('link', { name: /^EN/ })).toHaveAttribute(
+        'aria-current',
+        'page',
+      );
+      await expect(english.getByRole('link', { name: /^PT/ })).not.toHaveAttribute(
+        'aria-current',
+        /.+/,
+      );
+
+      await english.getByRole('link', { name: /^PT/ }).click();
+      await expect(page).toHaveURL(/\/pt$/);
+
+      const portuguese = header.getByRole('navigation', { name: LANGUAGE_LABEL.pt });
+      await expect(portuguese.getByRole('link', { name: /^PT/ })).toHaveAttribute(
+        'aria-current',
+        'page',
+      );
+
+      await portuguese.getByRole('link', { name: /^EN/ }).click();
+      await expect(page).toHaveURL(/\/$/);
+      await expect(header.getByRole('navigation', { name: LANGUAGE_LABEL.en })).toBeVisible();
+    });
+  });
+}
+
+test.describe('language switch order in the desktop topbar', () => {
+  test.use({ viewport: { width: 1280, height: 720 } });
+
+  test('follows HIRE and precedes the brand icon in tab order', async ({ page }) => {
+    await page.goto('/');
+    const stops = await page.locator('.desktop-topbar').evaluate((element) =>
+      [...element.querySelectorAll<HTMLElement>('a[href], button')]
+        .filter((node) => node.getClientRects().length > 0)
+        .map((node) => {
+          if (node.classList.contains('brand-link')) return 'brand';
+          if (node.classList.contains('menu-trigger')) return 'menu';
+          if (node.closest('[data-lang-switch]')) return 'lang';
+          if (node.hasAttribute('aria-pressed')) return 'motion';
+          if (node.getAttribute('href') === '/cv') return 'cv';
+          if (node.getAttribute('href')?.includes('linkedin.com')) return 'hire';
+          return 'link';
+        }),
+    );
+    expect(stops.slice(-5)).toEqual(['cv', 'hire', 'lang', 'lang', 'brand']);
+    expect(stops[0]).toBe('menu');
+  });
 });

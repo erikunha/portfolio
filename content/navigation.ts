@@ -45,9 +45,6 @@ export type NavigationCopy = {
   closeDrawer: string;
   dockLabel: string;
   positionLabel: string;
-  searchLabel: string;
-  searchShortcutApple: string;
-  searchShortcutOther: string;
   motionOn: string;
   motionOff: string;
   motionReduced: string;
@@ -78,9 +75,6 @@ const navigationFor = (locale: SiteLocale): Navigation => {
       closeDrawer: pt ? '[ X ] FECHAR' : '[ X ] CLOSE',
       dockLabel: pt ? 'principal' : 'primary',
       positionLabel: pt ? 'Posição na página' : 'Page position',
-      searchLabel: pt ? 'BUSCAR' : 'SEARCH',
-      searchShortcutApple: '⌘K',
-      searchShortcutOther: 'Ctrl K',
       motionOn: 'MOTION: ON',
       motionOff: 'MOTION: OFF',
       motionReduced: 'MOTION: REDUCED',

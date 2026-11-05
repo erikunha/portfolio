@@ -4,7 +4,7 @@ import { usePathname } from 'next/navigation';
 import type { ReactNode } from 'react';
 import { TOPBAR_MOTION_LABEL } from '@/content/nav';
 import { cn } from '@/lib/cn';
-import { MenuTrigger, SearchTrigger, useSectionNavigation } from '../SectionNavigation';
+import { LanguageSwitch, MenuTrigger, useSectionNavigation } from '../SectionNavigation';
 
 const SECTION_PATH_SEPARATOR = '/';
 
@@ -21,8 +21,7 @@ export function DesktopTopbar({ brand }: { brand: ReactNode }) {
     <div className="desktop-topbar fixed top-0 left-0 right-0 z-[110] bg-secondary-950 border-b border-primary-subtle hidden md:block">
       <div className="max-w-[var(--measure-page)] mx-auto px-[var(--space-gutter)] flex items-center gap-3 min-h-11">
         <MenuTrigger />
-        <SearchTrigger className="topbar-search" />
-        <nav className="flex flex-1 gap-2 items-center flex-nowrap" aria-label={copy.siteNavLabel}>
+        <nav className="flex gap-2 items-center flex-nowrap" aria-label={copy.siteNavLabel}>
           {chrome.topbarNav.map(({ label, href }) => (
             <a
               key={href}
@@ -87,7 +86,8 @@ export function DesktopTopbar({ brand }: { brand: ReactNode }) {
             </a>
           </div>
         </nav>
-        <div className="flex items-center ml-6">{brand}</div>
+        <LanguageSwitch />
+        <div className="flex items-center ml-auto pl-6">{brand}</div>
       </div>
     </div>
   );

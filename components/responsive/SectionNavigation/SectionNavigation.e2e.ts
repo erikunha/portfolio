@@ -36,41 +36,31 @@ async function openDrawer(page: import('@playwright/test').Page) {
 }
 
 test.describe('SectionNavigation', () => {
-  test('the search shortcut ships in the server HTML and never shifts the trigger', async ({
-    browser,
-    baseURL,
+  test('the drawer carries no language links, the header does', async ({ page }) => {
+    await page.setViewportSize(DESKTOP);
+    await page.goto('/');
+    await openDrawer(page);
+
+    await expect(page.locator('#section-drawer [data-lang-switch]')).toHaveCount(0);
+    await expect(page.locator('#section-drawer a[hreflang]')).toHaveCount(0);
+    await expect(
+      page.locator('.desktop-topbar').getByRole('navigation', { name: 'Language' }),
+    ).toBeVisible();
+  });
+
+  test('the page offers no search trigger and Cmd or Ctrl K does not open the drawer', async ({
     page,
   }) => {
-    if (!baseURL) throw new Error('SectionNavigation e2e requires the configured baseURL.');
-    const serverContext = await browser.newContext({
-      javaScriptEnabled: false,
-      baseURL,
-      viewport: DESKTOP,
-    });
-    const serverPage = await serverContext.newPage();
-    await serverPage.goto('/');
-    const serverTrigger = serverPage.locator('.topbar-search');
-    const serverBox = await serverTrigger.boundingBox();
-    await serverContext.close();
-
-    const response = await page.request.get('/');
-    const html = await response.text();
-    expect(
-      html,
-      'the shortcut must be in the server HTML, an empty slot pops in after hydration',
-    ).toContain(NAVIGATION[SITE_LOCALE.en].copy.searchShortcutApple);
-    expect(html).toContain(NAVIGATION[SITE_LOCALE.en].copy.searchShortcutOther);
-
     await page.setViewportSize(DESKTOP);
     await page.goto('/');
     await page.waitForFunction(() =>
       document.documentElement.classList.contains('type-reveal-ready'),
     );
-    const hydratedBox = await page.locator('.topbar-search').boundingBox();
-    expect(
-      hydratedBox?.width,
-      'the shortcut slot must reserve its width, so the label swap cannot move the trigger',
-    ).toBeCloseTo(serverBox?.width ?? 0, 1);
+    await expect(page.getByRole('button', { name: /^(SEARCH|BUSCAR)/ })).toHaveCount(0);
+
+    await page.keyboard.press('Control+k');
+    await page.keyboard.press('Meta+k');
+    await expect(page.locator('#section-drawer')).not.toHaveClass(/is-open/);
   });
 
   test.describe('anchor jumps clear the fixed bars', () => {
