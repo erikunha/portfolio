@@ -150,6 +150,7 @@
     }
 
     .hero-actions > a:not(:first-child) {
+      font-size: var(--text-xs);
       padding-inline: var(--spacing-1);
       letter-spacing: 0;
     }

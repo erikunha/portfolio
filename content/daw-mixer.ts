@@ -81,7 +81,7 @@ const dawMixerFor = (locale: SiteLocale): DawMixer => {
         terminalLines: [
           '> headroom -3.2 · lufs -14 · pk -0.3 · mastered for streaming.',
           '> same philosophy as code: **fewer plugins, more space**.',
-          'two tracks doing one job each beats fifteen tracks competing.',
+          'two tracks doing one job each beats six tracks competing.',
         ],
       },
     ],

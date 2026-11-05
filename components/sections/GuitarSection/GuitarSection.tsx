@@ -52,7 +52,7 @@ export function GuitarContent({ locale }: { locale: SiteLocale }) {
             <Fragment key={node.role}>
               {index > FIRST_NODE_INDEX && (
                 <span
-                  className="signal-chain-arrow guitar-arrow min-guitar:max-md:rotate-90"
+                  className="signal-chain-arrow guitar-arrow guitar:max-md:rotate-90"
                   aria-hidden="true"
                 />
               )}
@@ -73,6 +73,7 @@ export function GuitarContent({ locale }: { locale: SiteLocale }) {
                     <span
                       key={position}
                       className="guitar-bar"
+                      aria-hidden="true"
                       data-filled={position < node.strengthDots}
                     />
                   ))}

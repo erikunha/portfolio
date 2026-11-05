@@ -264,7 +264,7 @@
     align-items: center;
   }
 
-  @media (pointer: fine) {
+  @media (min-width: 1024px) and (pointer: fine) {
     .lang-switch {
       --lang-target: var(--spacing-target-pointer);
     }

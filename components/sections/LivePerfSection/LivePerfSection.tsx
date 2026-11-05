@@ -43,9 +43,11 @@ function PerfBody({
   const format = measured.format;
   const { psi } = measured;
   const available = scores ? Object.values(scores).filter(isAvailable) : [];
+  const dated = available.filter((entry) => !Number.isNaN(Date.parse(entry.fetchedAt)));
   const unavailable = available.length === 0;
+  const datedSource = dated.length > 0 ? dated : available;
   const timestamp = metricTimestamp(
-    available.length > 0 ? oldestFetchedAt(available) : undefined,
+    datedSource.length > 0 ? oldestFetchedAt(datedSource) : undefined,
     LIGHTHOUSE_TTL_S * format.millisecondsPerSecond,
     locale,
   );
@@ -63,7 +65,7 @@ function PerfBody({
           <>
             {' · '}
             {psi.timestampLabel}{' '}
-            <time dateTime={oldestFetchedAt(available)}>{timestamp.label}</time>
+            <time dateTime={oldestFetchedAt(datedSource)}>{timestamp.label}</time>
           </>
         ) : null}
         {showTimestamp && timestamp.stale ? (

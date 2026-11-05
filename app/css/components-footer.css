@@ -372,14 +372,14 @@
   }
 
   .sitemap .sm-fold-head::after {
-    content: "+";
+    content: "+" / "";
     color: var(--color-tertiary-300);
     font-weight: 400;
     text-align: center;
   }
 
   .sitemap .sm-fold[open] > .sm-fold-head::after {
-    content: "-";
+    content: "-" / "";
   }
 
   .sitemap .sm-fold-head:focus-visible {

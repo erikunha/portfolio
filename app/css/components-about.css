@@ -290,9 +290,6 @@
       border-top: var(--border-width) dashed var(--color-primary-quiet);
       font-size: var(--text-3xl);
     }
-    .hero-actions > a:not(:first-child) {
-      font-size: var(--text-xs);
-    }
     .hero-stats {
       grid-template-columns: repeat(2, minmax(0, 1fr));
     }

@@ -1,6 +1,7 @@
 import { createElement, isValidElement, type ReactNode } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
+import { dawMixer } from '@/content/daw-mixer';
 import { GUITAR_MODULE_HEADER, guitarPresentation, guitarRig } from '@/content/guitar-rig';
 import { SECTION_LABELS } from '@/content/section-labels';
 import { SITE_LOCALE } from '@/content/site-locale';
@@ -229,7 +230,7 @@ describe('GuitarSection module', () => {
     );
   });
 
-  it('holds the mixer in the same module and no standalone mixer section', () => {
+  it('holds the mixer slot in the same module and no standalone mixer section', () => {
     const doc = renderSection();
     const section = doc.querySelector('section#sec-guitar');
     expect(section).not.toBeNull();
@@ -238,12 +239,16 @@ describe('GuitarSection module', () => {
     expect(GUITAR_MODULE_HEADER).toContain('./MIX --LIVE');
   });
 
-  it('renders the mixer content below the photo pair for the active locale', () => {
+  it('places the mixer below the photo pair and hands it the mixer for the active locale', async () => {
     for (const locale of [EN, PT]) {
       const tree = GuitarContent({ locale });
-      const mixers = findElements(tree, DawMixerContent) as { props: { locale: string } }[];
+      const mixers = findElements(tree, DawMixerContent) as {
+        props: { locale: typeof EN | typeof PT };
+      }[];
       expect(mixers).toHaveLength(1);
       expect(mixers[0]?.props.locale).toBe(locale);
+      const resolved = await DawMixerContent({ locale });
+      expect((resolved.props as { mixer: unknown }).mixer).toBe(dawMixer[locale]);
     }
     const doc = renderContent();
     const pair = doc.querySelector('.guitar-pair');

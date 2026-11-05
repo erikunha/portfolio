@@ -154,6 +154,21 @@ describe('LivePerfSection: tile content', () => {
     expect(valuesOf(html)).toEqual(['— / —', '— / —', '— / —', '— / —']);
   });
 
+  it('dates the block by the parseable side when the other side has a corrupt fetchedAt', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-10-28T12:00:00Z'));
+    getScoresMock.mockImplementation((strategy: string) =>
+      Promise.resolve(
+        strategyScores({
+          fetchedAt: strategy === 'desktop' ? 'not-a-date' : '2026-10-27T12:00:00Z',
+        }),
+      ),
+    );
+    const doc = new DOMParser().parseFromString(await renderPerfData(), 'text/html');
+    expect(doc.querySelector('time')?.getAttribute('datetime')).toBe('2026-10-27T12:00:00Z');
+    expect(doc.body.textContent).not.toContain('timestamp unavailable');
+  });
+
   it('shows scores without the unavailable label when fetchedAt does not parse', async () => {
     getScoresMock.mockResolvedValue(strategyScores({ fetchedAt: 'not-a-date' }));
     const html = await renderPerfData();
