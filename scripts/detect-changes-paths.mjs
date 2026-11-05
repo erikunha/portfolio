@@ -31,6 +31,8 @@ export const APP_PATHS = [
   'lighthouserc.mobile.json',
   'scripts/check-bundle-size.mjs',
   'playwright.config.ts',
+  'tests/',
+  'tests/visual/',
   'package.json',
   'pnpm-lock.yaml',
 ];
@@ -44,6 +46,7 @@ export const UI_PATHS = [
   'public/',
   'next.config.ts',
   'playwright.config.ts',
+  'tests/visual/',
   'pnpm-lock.yaml',
   ':(exclude)lib/eval/**',
   ':(exclude)lib/__tests__/**',

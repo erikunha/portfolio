@@ -2,6 +2,10 @@
 
 ADR-lite running log. One bullet per decision · date · reversibility note.
 
+## 2026-11-05: a Playwright-only change arms the browser jobs
+
+- **2026-11-05** · **`tests/` is an `app` pathspec and `tests/visual/` a `ui` one in `scripts/detect-changes-paths.mjs`.** Neither list named `tests/`, so a PR touching only Playwright specs or baselines set `app=false` and `ui=false`, and e2e-functional and e2e-visual skipped, which GitHub counts as passing. The PR that fixed the red `/links` spec merged its own spec unrun. Held by `scripts/__tests__/detect-changes-paths.test.ts`. _Reversible: drop the two entries; spec-only PRs then skip the browser jobs again._
+
 ## 2026-11-01 — the /links relative label is anchored to the feed's fetchedAt
 
 - **2026-11-01** · **`formatRelative` requires `now`, and the feed stamps `fetchedAt` inside the cached function after its network reads.** Main broke with no new commit: the YouTube channel published its first video, so `getChannelFeed` stopped returning the empty feed and `ChannelCard` began calling `formatRelative`, whose `now = new Date()` default Next 16 prerender rejects (`next-prerender-current-time`) because it runs before any uncached read. The label is now deterministic per cache entry. _Reversible: restore the `now` default and drop `fetchedAt`._
