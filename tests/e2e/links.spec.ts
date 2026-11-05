@@ -58,9 +58,15 @@ test.describe('/links link-in-bio', () => {
   test('drops the QR panel on a phone, where the visitor is already holding the page', async ({
     page,
   }) => {
-    await page.setViewportSize({ width: 390, height: 844 });
+    const qr = page.getByRole('img', { name: /QR code/ });
+    await page.setViewportSize({ width: 1280, height: 800 });
     await page.goto('/links');
-    await expect(page.getByRole('img', { name: /QR code/ })).toBeHidden();
+    await expect(
+      qr,
+      'the QR panel shows on a desktop, so the locator is the real one',
+    ).toBeVisible();
+    await page.setViewportSize({ width: 390, height: 844 });
+    await expect(qr).toBeHidden();
   });
 
   test('paints the hatch through the frame when the portrait fails to load', async ({ page }) => {
@@ -140,11 +146,12 @@ test.describe('/links link-in-bio', () => {
     const title = 'Engenheiro de Software Sênior · Full Stack';
     const identity = page.locator('.links-identity-box');
 
+    await page.clock.install();
     await page.emulateMedia({ reducedMotion: 'reduce' });
     await page.goto('/links');
     await expect(identity).toContainText(title);
     const first = await identity.textContent();
-    await page.waitForTimeout(600);
+    await page.clock.runFor(600);
     expect(await identity.textContent(), 'reduced motion must not type').toBe(first);
 
     await page.emulateMedia({ reducedMotion: 'no-preference' });
@@ -152,7 +159,7 @@ test.describe('/links link-in-bio', () => {
     const samples = new Set<string | null>();
     for (let i = 0; i < 6; i++) {
       samples.add(await identity.textContent());
-      await page.waitForTimeout(150);
+      await page.clock.runFor(150);
     }
     expect(samples.size, 'the tagline must type when motion is allowed').toBeGreaterThan(1);
   });
@@ -287,5 +294,6 @@ test('reduced motion shows the ticker text once, not its loop copy', async ({ pa
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.goto('/links');
   const copy = page.locator('.links-ticker-track > [aria-hidden="true"]');
+  await expect(copy, 'the loop copy is in the page, so hiding it is a real check').toHaveCount(1);
   await expect(copy, 'the marquee loop copy must hide when the marquee stops').toBeHidden();
 });

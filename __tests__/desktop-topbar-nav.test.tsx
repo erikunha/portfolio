@@ -11,6 +11,7 @@ import {
 import { NAVIGATION, siteNavChrome } from '@/content/navigation';
 import { SITE_LOCALE, type SiteLocale } from '@/content/site-locale';
 import { type MountedClient, mountClient } from './helpers/render';
+import { isHiddenAtWidth } from './helpers/tailwind-visibility';
 
 let mockPathname: string | null = null;
 
@@ -19,27 +20,6 @@ vi.mock('next/navigation', () => ({
 }));
 
 const DESKTOP_WIDTHS = [768, 1024, 1280, 1440];
-const BREAKPOINT_MIN_WIDTH: Record<string, number> = {
-  sm: 640,
-  md: 768,
-  lg: 1024,
-  xl: 1280,
-  '2xl': 1536,
-};
-const DISPLAY_UTILITIES = new Set([
-  'block',
-  'contents',
-  'flow-root',
-  'flex',
-  'grid',
-  'inline',
-  'inline-block',
-  'inline-flex',
-  'inline-grid',
-  'inline-table',
-  'list-item',
-  'table',
-]);
 
 async function renderTopbar(locale: SiteLocale = SITE_LOCALE.en): Promise<MountedClient> {
   const { DesktopTopbar } = await import(
@@ -54,23 +34,6 @@ async function renderTopbar(locale: SiteLocale = SITE_LOCALE.en): Promise<Mounte
       }),
     ),
   );
-}
-
-function isHiddenAtWidth(className: string, width: number): boolean {
-  const classes = className.split(/\s+/).filter(Boolean);
-  let hidden = classes.includes('hidden');
-  for (const [breakpoint, minWidth] of Object.entries(BREAKPOINT_MIN_WIDTH).sort(
-    (a, b) => a[1] - b[1],
-  )) {
-    if (minWidth > width) continue;
-    for (const token of classes) {
-      if (!token.startsWith(`${breakpoint}:`)) continue;
-      const utility = token.slice(breakpoint.length + 1);
-      if (utility === 'hidden') hidden = true;
-      else if (DISPLAY_UTILITIES.has(utility)) hidden = false;
-    }
-  }
-  return hidden;
 }
 
 describe('DesktopTopbar', () => {
@@ -153,10 +116,12 @@ describe('DesktopTopbar', () => {
       return 'link';
     });
 
-    expect(
-      stops,
-      'DOM order is the visual order and the tab order; no CSS order may reshuffle it',
-    ).toEqual([
+    const reordered = [...mounted.container.querySelectorAll<HTMLElement>('*')].filter(
+      (element) =>
+        /(^|\s|:)-?order-/.test(element.getAttribute('class') ?? '') || element.style.order !== '',
+    );
+    expect(reordered, 'no CSS order may reshuffle the topbar').toEqual([]);
+    expect(stops, 'DOM order is the visual order and the tab order').toEqual([
       'menu',
       'link',
       'link',
@@ -251,8 +216,8 @@ describe('DesktopTopbar', () => {
       link.getAttribute('href')?.startsWith('https://www.linkedin.com'),
     );
 
-    expect(cv, 'VIEW_CV must stay on the topbar, hidden or visible').not.toBeNull();
-    expect(hire, 'the hire link must stay on the topbar, hidden or visible').not.toBeNull();
+    expect(cv, 'VIEW_CV must stay on the topbar, hidden or visible').toBeDefined();
+    expect(hire, 'the hire link must stay on the topbar, hidden or visible').toBeDefined();
 
     for (const width of DESKTOP_WIDTHS) {
       const expectedHidden = width < 1024;

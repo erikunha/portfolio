@@ -141,11 +141,21 @@ describe('/api/ask behavioral: finishReason length handling', () => {
 
     const { POST } = await import('@/app/api/ask/route');
     const res = await POST(makeRequest('Anything'));
-    const startedAt = Date.now();
-    const body = await readBody(res);
-
-    expect(body).toBe('hung finish reason');
-    expect(Date.now() - startedAt).toBeLessThan(3_000);
+    vi.useFakeTimers();
+    try {
+      let settled = false;
+      const pending = readBody(res).then((body) => {
+        settled = true;
+        return body;
+      });
+      await vi.advanceTimersByTimeAsync(999);
+      expect(settled, 'the stream waits for the full usage deadline').toBe(false);
+      await vi.advanceTimersByTimeAsync(1);
+      expect(await pending).toBe('hung finish reason');
+      expect(settled).toBe(true);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('streams cleanly when finishReason rejects', async () => {

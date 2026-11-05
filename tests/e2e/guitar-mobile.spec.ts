@@ -162,11 +162,12 @@ for (const viewport of [PHONE, JUST_BELOW_DESKTOP]) {
 }
 
 for (const width of [834, 1024, 1280]) {
-  test(`every mixer plugin name is readable in full at ${width}px`, async ({ page }) => {
+  test(`every mixer plugin name is readable in full at ${width}px`, async ({ page, isMobile }) => {
+    test.skip(isMobile, 'a phone user agent renders the mobile mixer instead');
     await page.setViewportSize({ width, height: 900 });
     await page.goto('/');
     const mixer = page.locator('[data-testid="daw-mixer-desktop"]');
-    if ((await mixer.count()) === 0) return;
+    await expect(mixer, 'a desktop user agent always gets the desktop mixer').toHaveCount(1);
     await mixer.scrollIntoViewIfNeeded();
     const clipped = await mixer
       .locator('[data-testid^="plugin-"] > span:first-child')
@@ -186,11 +187,13 @@ for (const width of [834, 1024, 1280]) {
 for (const width of [320, 375, 600]) {
   test(`the desktop mixer stacks its channels without a sideways scroll at ${width}px`, async ({
     page,
+    isMobile,
   }) => {
+    test.skip(isMobile, 'a phone user agent renders the mobile mixer instead');
     await page.setViewportSize({ width, height: 900 });
     await page.goto('/');
     const mixer = page.locator('[data-testid="daw-mixer-desktop"]');
-    if ((await mixer.count()) === 0) return;
+    await expect(mixer, 'a desktop user agent always gets the desktop mixer').toHaveCount(1);
     await mixer.scrollIntoViewIfNeeded();
     const fit = await mixer.evaluate((element) => ({
       scroll: element.scrollWidth,

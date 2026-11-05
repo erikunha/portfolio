@@ -72,7 +72,7 @@ describe('lib/ask/system-prompt', () => {
       for (const p of projects[SITE_LOCALE.en]) {
         expect(
           SYSTEM_TEXT,
-          `projects[SITE_LOCALE.en].ts entry "${p.name}" missing from SYSTEM — drift detected`,
+          `content/projects.ts entry "${p.name}" is missing from SYSTEM: the prompt drifted from the content`,
         ).toContain(p.name);
       }
     });
@@ -81,7 +81,7 @@ describe('lib/ask/system-prompt', () => {
       for (const u of unknowns[SITE_LOCALE.en].learning) {
         expect(
           SYSTEM_TEXT,
-          `unknowns[SITE_LOCALE.en].ts learning claim "${u.claim.slice(0, 40)}" missing from SYSTEM`,
+          `content/unknowns.ts learning claim "${u.claim.slice(0, 40)}" missing from SYSTEM`,
         ).toContain(u.claim);
       }
     });
@@ -90,7 +90,7 @@ describe('lib/ask/system-prompt', () => {
       for (const u of unknowns[SITE_LOCALE.en].notSpecializing) {
         expect(
           SYSTEM_TEXT,
-          `unknowns[SITE_LOCALE.en].ts notSpecializing claim "${u.claim.slice(0, 40)}" missing from SYSTEM`,
+          `content/unknowns.ts notSpecializing claim "${u.claim.slice(0, 40)}" missing from SYSTEM`,
         ).toContain(u.claim);
       }
     });
@@ -118,11 +118,10 @@ describe('lib/ask/system-prompt', () => {
     });
 
     it('frames Raylu with the resume wording in the current-role header', () => {
-      expect(narrative).toMatch(/## Current role[\s\S]{0,200}\$500B\+/);
       expect(narrative).not.toMatch(/deal[- ]origination/i);
       expect(
         narrative,
-        'the fund-assets framing must sit in the Current role section, not only in the projects[SITE_LOCALE.en] dump below',
+        'the fund-assets framing must sit in the Current role section, not only in the projects list below',
       ).toMatch(/## Current role[\s\S]{0,200}\$500B\+/);
     });
 

@@ -127,14 +127,25 @@ function PassThroughStub({ children }: { children: React.ReactNode }) {
   return children;
 }
 
-describe('GlobalMotion — mobile Matrix Rain settings', () => {
+describe('GlobalMotion: Matrix Rain settings per viewport', () => {
   let mounted: MountedClient;
+  let viewportWidth = 0;
+  const queried: string[] = [];
 
   beforeEach(() => {
     vi.resetModules();
+    queried.length = 0;
     vi.stubGlobal(
       'matchMedia',
-      vi.fn(() => ({ matches: true, addEventListener: vi.fn(), removeEventListener: vi.fn() })),
+      vi.fn((query: string) => {
+        queried.push(query);
+        const max = /max-width:\s*([\d.]+)px/.exec(query);
+        return {
+          matches: max ? viewportWidth <= Number(max[1]) : false,
+          addEventListener: vi.fn(),
+          removeEventListener: vi.fn(),
+        };
+      }),
     );
     vi.doMock('@/components/responsive/MatrixRain', () => ({
       MatrixRainLazy: MatrixRainStub,
@@ -153,6 +164,7 @@ describe('GlobalMotion — mobile Matrix Rain settings', () => {
   });
 
   it('uses the mobile rain size and speed below 768px', async () => {
+    viewportWidth = 767;
     const { flushMicrotasks } = await import('./helpers/render');
     const { GlobalMotion } = await import('@/components/client/GlobalMotion/GlobalMotion.client');
     mounted = await mountClient(createElement(GlobalMotion, null));
@@ -160,6 +172,18 @@ describe('GlobalMotion — mobile Matrix Rain settings', () => {
     const matrixEl = mounted.container.querySelector('[data-font-size]');
     expect(matrixEl?.getAttribute('data-font-size')).toBe('14');
     expect(matrixEl?.getAttribute('data-speed')).toBe('0.6');
+    expect(queried).toContain('(max-width: 767.98px)');
+  });
+
+  it('uses the desktop rain size and speed from 768px', async () => {
+    viewportWidth = 768;
+    const { flushMicrotasks } = await import('./helpers/render');
+    const { GlobalMotion } = await import('@/components/client/GlobalMotion/GlobalMotion.client');
+    mounted = await mountClient(createElement(GlobalMotion, null));
+    await flushMicrotasks();
+    const matrixEl = mounted.container.querySelector('[data-font-size]');
+    expect(matrixEl?.getAttribute('data-font-size')).toBe('16');
+    expect(matrixEl?.getAttribute('data-speed')).toBe('0.7');
   });
 });
 

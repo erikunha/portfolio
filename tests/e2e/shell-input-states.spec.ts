@@ -109,7 +109,10 @@ test.describe('shell input states', () => {
     const insideBefore = await page.screenshot({ clip: inside });
 
     await input.click();
-    await page.waitForTimeout(120);
+    await expect(input).toBeFocused();
+    await input.evaluate((node) =>
+      Promise.all(node.getAnimations().map((animation) => animation.finished)),
+    );
 
     const bandAfter = await page.screenshot({ clip: bandAbove });
     const insideAfter = await page.screenshot({ clip: inside });
@@ -139,9 +142,14 @@ test.describe('shell input states', () => {
         outlineWidth: Number.parseFloat(computed.outlineWidth),
         outlineOffset: Number.parseFloat(computed.outlineOffset),
         boxShadow: computed.boxShadow,
-        focusColor: getComputedStyle(document.documentElement)
-          .getPropertyValue('--color-primary-500')
-          .trim(),
+        focusColor: (() => {
+          const probe = document.createElement('span');
+          probe.style.color = 'var(--color-primary-500)';
+          document.body.append(probe);
+          const resolved = getComputedStyle(probe).color;
+          probe.remove();
+          return resolved;
+        })(),
         panelBackground: panel.backgroundColor,
       };
     });
@@ -161,6 +169,9 @@ test.describe('shell input states', () => {
       'the shell input must paint a focus indicator that does not change its box',
     ).not.toBeNull();
     if (!shadowColor) return;
+    expect(parseRgb(shadowColor), 'the focus indicator paints the site focus color').toEqual(
+      parseRgb(indicator.focusColor),
+    );
 
     const ratio = contrastRatio(parseRgb(shadowColor), parseRgb(indicator.panelBackground));
     expect(

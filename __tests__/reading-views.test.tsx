@@ -232,11 +232,13 @@ describe('summary reading view', () => {
   });
 
   it('shows the stack chips and no work-authorization row', () => {
-    expect(host.querySelectorAll('.reading-rows li')).toHaveLength(0);
-    expect(host.textContent).not.toContain('Work authorization');
-    expect(host.querySelectorAll('.reading-chips li')).toHaveLength(
-      readingViewsEn.summary.stack.length,
-    );
+    expect(host.textContent).not.toMatch(/work authori[sz]ation/i);
+    const chips = host.querySelectorAll('.reading-chips li');
+    expect(
+      chips.length,
+      'the stack chips render, so the row check above sees the page',
+    ).toBeGreaterThan(0);
+    expect(chips).toHaveLength(readingViewsEn.summary.stack.length);
   });
 
   it('links to the full CV, LinkedIn and email, and has a print button', () => {

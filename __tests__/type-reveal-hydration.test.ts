@@ -3,7 +3,7 @@ import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 const ROOTS = ['components', 'app', 'design-system'];
-const MARKER = /data-type-reveal(?![\w\]=-])/g;
+const MARKER = /(?<![\w[-])data-type-reveal(?![\w\]-])/g;
 const SUPPRESS = 'suppressHydrationWarning';
 
 function sourceFiles(dir: string): string[] {
@@ -24,9 +24,10 @@ describe('type reveal elements tolerate the pre-hydration mutation', () => {
       const source = readFileSync(file, 'utf8');
       for (const match of source.matchAll(MARKER)) {
         seen += 1;
+        const tagStart = source.lastIndexOf('<', match.index);
         const tagEnd = source.indexOf('>', match.index);
-        const rest = source.slice(match.index, tagEnd);
-        if (!rest.includes(SUPPRESS)) missing.push(`${file}:${match.index}`);
+        const openingTag = source.slice(tagStart, tagEnd);
+        if (!openingTag.includes(SUPPRESS)) missing.push(`${file}:${match.index}`);
       }
     }
     expect(seen, 'the scan must find the marked headings').toBeGreaterThan(0);

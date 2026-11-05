@@ -34,9 +34,14 @@ function scrollTo(y: number) {
   window.dispatchEvent(new Event('scroll'));
 }
 
+const pendingFrames = new Map<number, FrameRequestCallback>();
+let nextFrameId = 0;
+
 async function frame() {
   await act(async () => {
-    await new Promise<void>((resolve) => setTimeout(resolve, 32));
+    const callbacks = [...pendingFrames.values()];
+    pendingFrames.clear();
+    for (const callback of callbacks) callback(performance.now());
   });
 }
 
@@ -55,6 +60,15 @@ function mount() {
 describe('PositionMeter', () => {
   beforeEach(() => {
     FakeResizeObserver.instances = [];
+    pendingFrames.clear();
+    vi.stubGlobal('requestAnimationFrame', (callback: FrameRequestCallback) => {
+      nextFrameId += 1;
+      pendingFrames.set(nextFrameId, callback);
+      return nextFrameId;
+    });
+    vi.stubGlobal('cancelAnimationFrame', (id: number) => {
+      pendingFrames.delete(id);
+    });
     vi.stubGlobal('IntersectionObserver', FakeObserver);
     vi.stubGlobal('ResizeObserver', FakeResizeObserver);
     Object.defineProperty(document.documentElement, 'scrollHeight', {

@@ -39,7 +39,9 @@ describe('responsive section viewport variants', () => {
     expect(scroller?.getAttribute('role')).toBe('group');
     expect(scroller?.getAttribute('tabindex')).toBe('0');
     expect(scroller?.getAttribute('aria-label')).toBe(careerScrollLabel(SITE_LOCALE.en));
-    expect(careerScrollLabel).not.toBe(SECTION_LABELS[SITE_LOCALE.en]['sec-git-log']);
+    expect(careerScrollLabel(SITE_LOCALE.en)).not.toBe(
+      SECTION_LABELS[SITE_LOCALE.en]['sec-git-log'],
+    );
   });
 
   it('GuitarSection static render does not emit mobile markup', () => {

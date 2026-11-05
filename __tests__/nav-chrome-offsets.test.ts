@@ -65,7 +65,13 @@ describe('noscript notice', () => {
         'app/css/components-error-pages.css: the noscript notice must carry no horizontal ' +
           'offset, because the collapsed rail it cleared is gone and the notice would sit ' +
           'offset from the topbar and the page content.',
-      ).not.toMatch(/margin-(left|right|inline)/);
+      ).not.toMatch(
+        /(margin|padding)-(left|right|inline)|(^|[;\s])(left|right|inset|inset-inline)\s*:|translate(X)?\(|translate\s*:/,
+      );
     }
+    expect(
+      bodies.some((body) => /margin-top:\s*var\(--topbar-height\)/.test(body)),
+      'app/css/components-error-pages.css: the noscript notice must clear the fixed topbar with margin-top: var(--topbar-height).',
+    ).toBe(true);
   });
 });

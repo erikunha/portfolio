@@ -28,7 +28,18 @@ test.describe('footer netstat table', () => {
       const wrapped = await page
         .locator('.footer-netstat tbody .footer-link')
         .evaluateAll((nodes) =>
-          nodes.filter((node) => node.getClientRects().length > 1).map((node) => node.textContent),
+          nodes
+            .filter((node) => {
+              const range = document.createRange();
+              range.selectNodeContents(node);
+              const lineTops = new Set(
+                [...range.getClientRects()]
+                  .filter((rect) => rect.width > 0)
+                  .map((rect) => Math.round(rect.top)),
+              );
+              return lineTops.size > 1;
+            })
+            .map((node) => node.textContent),
         );
       expect(wrapped).toEqual([]);
     });

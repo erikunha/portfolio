@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { DS_ROUTES } from '@/app/design-system/_components/ds-nav';
 import sitemap from '@/app/sitemap';
@@ -8,6 +8,17 @@ import mobile from '../lighthouserc.mobile.json';
 const LHCI_ORIGIN = 'http://localhost:3000';
 
 describe('design-system routes reach every route list', () => {
+  it('lists every design-system page on disk in the sidebar', () => {
+    // behavioral-test-allow: the App Router derives routes from the page files on disk; the directory listing is the route table
+    const pages = readdirSync('app/design-system', { recursive: true, encoding: 'utf8' })
+      .filter((path) => /(^|\/)page\.(mdx|tsx)$/.test(path))
+      .map((path) =>
+        `/design-system/${path.replace(/\/?page\.(mdx|tsx)$/, '')}`.replace(/\/$/, ''),
+      );
+    expect(pages.length).toBeGreaterThan(0);
+    expect([...pages].sort()).toEqual([...DS_ROUTES].sort());
+  });
+
   it('lists every sidebar route in the sitemap', () => {
     const paths = sitemap().map((entry) => new URL(entry.url).pathname);
     for (const route of DS_ROUTES) expect(paths, route).toContain(route);

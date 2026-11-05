@@ -15,6 +15,7 @@ import { siteNavChrome } from '@/content/navigation';
 import { SITE_LOCALE, type SiteLocale } from '@/content/site-locale';
 import { social } from '@/content/social';
 import { type MountedClient, mountClient } from './helpers/render';
+import { isHiddenAtWidth } from './helpers/tailwind-visibility';
 
 const LOCALE: SiteLocale = SITE_LOCALE.en;
 const PRIMARY_LABEL = 'HIRE_ON_LINKEDIN ↗';
@@ -101,8 +102,10 @@ describe('the LinkedIn hire action reads the same on every surface', () => {
       expect(link.getAttribute('aria-label')).toBe(ACCESSIBLE_NAME);
       expectLabelInName(link);
       const className = link.getAttribute('class') ?? '';
-      expect(className, 'the topbar action stays hidden below 1024px').toContain('hidden');
-      expect(className, 'the topbar action shows from 1024px').toContain('lg:inline-flex');
+      expect(isHiddenAtWidth(className, 1023), 'the topbar action stays hidden below 1024px').toBe(
+        true,
+      );
+      expect(isHiddenAtWidth(className, 1024), 'the topbar action shows from 1024px').toBe(false);
     }
   });
 

@@ -32,10 +32,11 @@ describe('NotFound', () => {
     const children = [...(header?.children ?? [])];
 
     expect(children[0]?.tagName, 'the page links lead the bar').toBe('NAV');
+    const last = children.at(-1);
     expect(
-      children.at(-1)?.querySelector('a[href="/"]') ?? children.at(-1),
-      'the brand icon sits at the far right, like the site header',
-    ).toBeTruthy();
+      Boolean(last && (last.matches('a[href="/"]') || last.querySelector('a[href="/"]'))),
+      'the brand icon home link sits at the far right, like the site header',
+    ).toBe(true);
     expect(children.at(-1)?.tagName).not.toBe('NAV');
   });
 

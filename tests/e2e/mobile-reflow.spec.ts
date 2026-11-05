@@ -11,8 +11,8 @@ interface Group {
 }
 
 const GROUPS: Group[] = [
-  { name: 'links CTA buttons', path: '/links', container: 'section .grid.gap-2.mt-\\[13px\\]' },
-  { name: 'links footer list', path: '/links', container: 'ul.list-none.grid.gap-2' },
+  { name: 'links CTA buttons', path: '/links', container: '[data-testid="links-channel-actions"]' },
+  { name: 'links footer list', path: '/links', container: '[data-testid="links-footer-list"]' },
   { name: 'cv actions', path: '/cv', container: '.reading-actions' },
   {
     name: 'cv row',

@@ -330,7 +330,17 @@ test.describe('cross-cutting', () => {
 
 test('footer is server-rendered and boot output is decorative under reduced motion', async ({
   page,
+  browser,
 }) => {
+  const noScript = await browser.newContext({ javaScriptEnabled: false });
+  const staticPage = await noScript.newPage();
+  await staticPage.goto('/');
+  await expect(
+    staticPage.locator('footer').getByRole('navigation', { name: 'Site map' }),
+    'the footer site map is in the server HTML, before any script runs',
+  ).toHaveCount(1);
+  await noScript.close();
+
   await installMockBackend(page, { log: 'accept', forget: 'happy' });
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.goto('/');

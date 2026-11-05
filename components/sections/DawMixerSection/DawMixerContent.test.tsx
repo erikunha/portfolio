@@ -50,7 +50,7 @@ async function renderMobile(): Promise<Document> {
   return new DOMParser().parseFromString(html, 'text/html');
 }
 
-describe('DawMixerContent — desktop', () => {
+describe('DawMixerContent: desktop', () => {
   it('renders 3 channel rows', async () => {
     const doc = await renderDesktop();
     expect(doc.querySelectorAll('[data-testid^="channel-"]').length).toBe(3);
@@ -104,7 +104,7 @@ describe('DawMixerContent — desktop', () => {
   });
 });
 
-describe('DawMixerContent — mobile', () => {
+describe('DawMixerContent: mobile', () => {
   it('renders 3 channel cards', async () => {
     const doc = await renderMobile();
     expect(doc.querySelectorAll('[data-testid^="channel-mobile-"]').length).toBe(3);
@@ -143,7 +143,7 @@ describe('DawMixerContent — mobile', () => {
   });
 });
 
-describe('DawMixerContent — XSS safety (behavioral)', () => {
+describe('DawMixerContent: XSS safety (behavioral)', () => {
   it('ParsedText renders bold markers as <strong>, not raw HTML', async () => {
     const doc = await renderDesktop();
     const ch02 = doc.querySelector('[data-testid="channel-CH 02"]');

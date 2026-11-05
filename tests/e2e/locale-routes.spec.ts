@@ -24,8 +24,10 @@ for (const { en, pt, enTitle } of PAIRS) {
       await page.setViewportSize(viewport);
       const response = await page.goto(en);
       expect(response?.status(), 'the bare address must return a page, never a redirect').toBe(200);
-      expect(response?.headers().location ?? null).toBeNull();
+      expect(response?.request().redirectedFrom() ?? null).toBeNull();
       await expect(page).toHaveTitle(enTitle);
+      await expect(page.locator('html')).toHaveAttribute('lang', 'en');
+      await expect(page.locator('[lang="pt-BR"]')).toHaveCount(0);
 
       const canonical = page.locator('link[rel="canonical"]');
       await expect(canonical).toHaveAttribute('href', absolute(en));
@@ -42,13 +44,8 @@ for (const { en, pt, enTitle } of PAIRS) {
       const response = await page.goto(pt);
       expect(response?.status()).toBe(200);
 
-      // the pt subtree declares its language on the wrapper (root html stays
-      // en-US, the same shape /links ships)
-      const lang = await page.evaluate(() => {
-        const wrapper = document.querySelector('[lang="pt-BR"]');
-        return wrapper?.getAttribute('lang') ?? document.documentElement.lang;
-      });
-      expect(lang).toBe('pt-BR');
+      expect(response?.request().redirectedFrom() ?? null).toBeNull();
+      await expect(page.locator('[lang="pt-BR"] #main-content')).toHaveCount(1);
 
       const canonical = page.locator('link[rel="canonical"]');
       await expect(canonical).toHaveAttribute('href', `https://www.erikunha.dev${pt}`);
