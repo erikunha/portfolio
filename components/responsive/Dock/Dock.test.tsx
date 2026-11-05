@@ -73,7 +73,7 @@ describe('Dock', () => {
       'HOME',
       'WORK',
       'SHELL',
-      'HIRE ↗',
+      'HIRE',
       'MENU',
     ]);
   });

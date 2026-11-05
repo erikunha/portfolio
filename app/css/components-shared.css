@@ -218,7 +218,25 @@
   }
 
   #sec-daw-mixer {
-    --module-estimate: 880px;
+    --module-estimate: 1594px;
+  }
+
+  @media (min-width: 412px) {
+    #sec-daw-mixer {
+      --module-estimate: 1521px;
+    }
+  }
+
+  @media (min-width: 480px) {
+    #sec-daw-mixer {
+      --module-estimate: 1509px;
+    }
+  }
+
+  @media (min-width: 600px) {
+    #sec-daw-mixer {
+      --module-estimate: 1496px;
+    }
   }
 
   #sec-contact {

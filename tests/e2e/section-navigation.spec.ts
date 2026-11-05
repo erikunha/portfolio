@@ -327,6 +327,39 @@ test.describe('section navigation: drawer rows', () => {
     await expect(drawer.locator('.menu-motion')).toBeVisible();
   });
 
+  test('the language switch spaces its links with 44px targets', async ({ page }) => {
+    await page.goto('/');
+    await page
+      .getByRole('navigation', { name: 'primary' })
+      .getByRole('button', { name: /^MENU/ })
+      .click();
+    const drawer = page.getByRole('dialog', { name: 'Section menu' });
+
+    const langSwitch = drawer.locator('[data-lang-switch]');
+    await expect(langSwitch).toBeVisible();
+    const geometry = await langSwitch.evaluate((node) => {
+      const links = Array.from(node.querySelectorAll('a'));
+      const boxes = links.map((link) => link.getBoundingClientRect());
+      const [first, second] = boxes;
+      return {
+        count: links.length,
+        gapPx: first && second ? second.left - first.right : 0,
+        minHeightPx: boxes.length ? Math.min(...boxes.map((box) => box.height)) : 0,
+        minWidthPx: boxes.length ? Math.min(...boxes.map((box) => box.width)) : 0,
+      };
+    });
+    expect(geometry.count).toBe(2);
+    expect(geometry.gapPx, 'the language links must not render glued together').toBeGreaterThan(0);
+    expect(
+      geometry.minHeightPx,
+      'each language link keeps a 44px minimum tap target',
+    ).toBeGreaterThanOrEqual(44);
+    expect(
+      geometry.minWidthPx,
+      'each language link keeps a 44px minimum tap target',
+    ).toBeGreaterThanOrEqual(44);
+  });
+
   test('the drawer foot follows the section list instead of floating at the bottom', async ({
     page,
   }) => {

@@ -10,6 +10,7 @@ import {
   SectionNavigationProvider,
 } from '@/components/responsive/SectionNavigation';
 import { Hero } from '@/components/sections/Hero/Hero';
+import { DOCK_HIRE_LABEL, HIRE_SHORT_LABEL } from '@/content/nav';
 import { siteNavChrome } from '@/content/navigation';
 import { SITE_LOCALE, type SiteLocale } from '@/content/site-locale';
 import { social } from '@/content/social';
@@ -17,7 +18,8 @@ import { type MountedClient, mountClient } from './helpers/render';
 
 const LOCALE: SiteLocale = SITE_LOCALE.en;
 const PRIMARY_LABEL = 'HIRE_ON_LINKEDIN ↗';
-const DOCK_LABEL = 'HIRE ↗';
+const TOPBAR_LABEL = HIRE_SHORT_LABEL[LOCALE];
+const DOCK_LABEL = DOCK_HIRE_LABEL[LOCALE];
 const RAIL_LABEL = 'LinkedIn';
 const ACCESSIBLE_NAME = 'Hire on LinkedIn (opens in a new tab)';
 const ARROW_GLYPH = '↗';
@@ -95,7 +97,7 @@ describe('the LinkedIn hire action reads the same on every surface', () => {
 
     expect(links.length, 'the topbar carries one hire action').toBeGreaterThan(0);
     for (const link of links) {
-      expect(link.textContent?.trim()).toBe(DOCK_LABEL);
+      expect(link.textContent?.trim()).toBe(TOPBAR_LABEL);
       expect(link.getAttribute('aria-label')).toBe(ACCESSIBLE_NAME);
       expectLabelInName(link);
       const className = link.getAttribute('class') ?? '';
