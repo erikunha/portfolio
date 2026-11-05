@@ -36,7 +36,7 @@ export function AppShell({
       </a>
       <SectionNavigationProvider chrome={chrome} locale={locale}>
         <SectionNavigation extra={drawerExtra} />
-        <ErrorBoundary>
+        <ErrorBoundary locale={locale}>
           <CRTOverlay />
         </ErrorBoundary>
         <div className="desktop-only">

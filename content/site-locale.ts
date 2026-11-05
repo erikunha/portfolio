@@ -23,6 +23,13 @@ export function localizedPath(locale: SiteLocale, path: string): string {
   return `/pt${path}`;
 }
 
+const PT_PREFIX = '/pt';
+
+export function localeOfPath(pathname: string | null): SiteLocale {
+  if (pathname === PT_PREFIX || pathname?.startsWith(`${PT_PREFIX}/`)) return SITE_LOCALE.pt;
+  return SITE_LOCALE.en;
+}
+
 export function stripLocalePrefix(pathname: string): string {
   return pathname === '/pt' ? '/' : pathname.startsWith('/pt/') ? pathname.slice(3) : pathname;
 }

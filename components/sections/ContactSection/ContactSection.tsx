@@ -36,7 +36,7 @@ export function ContactSection({ locale, defer }: { locale: SiteLocale; defer?: 
     >
       <div className="contact-layout">
         <div className="contact-main">
-          <ErrorBoundary>
+          <ErrorBoundary locale={locale}>
             <ContactFormLazy
               copy={contactContent[locale]}
               chrome={contactChrome[locale]}

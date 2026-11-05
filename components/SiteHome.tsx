@@ -26,35 +26,35 @@ export function SiteHome({ locale }: { locale: SiteLocale }) {
         skipLabel={NAVIGATION[locale].copy.skipLabel}
       >
         <PageMain>
-          <ErrorBoundary>
+          <ErrorBoundary locale={locale}>
             <Hero locale={locale} />
           </ErrorBoundary>
-          <ErrorBoundary>
+          <ErrorBoundary locale={locale}>
             <About locale={locale} />
           </ErrorBoundary>
-          <ErrorBoundary>
+          <ErrorBoundary locale={locale}>
             <ShellSection locale={locale} />
           </ErrorBoundary>
-          <ErrorBoundary>
+          <ErrorBoundary locale={locale}>
             <AiMetricsSection locale={locale} />
           </ErrorBoundary>
-          <ErrorBoundary>
+          <ErrorBoundary locale={locale}>
             <ProjectsSection locale={locale} />
           </ErrorBoundary>
-          <ErrorBoundary>
+          <ErrorBoundary locale={locale}>
             <GitLogSection locale={locale} defer />
           </ErrorBoundary>
-          <ErrorBoundary>
+          <ErrorBoundary locale={locale}>
             <HottestTakesSection locale={locale} defer />
           </ErrorBoundary>
-          <ErrorBoundary>
+          <ErrorBoundary locale={locale}>
             <GuitarSection locale={locale} defer />
           </ErrorBoundary>
-          <ErrorBoundary>
+          <ErrorBoundary locale={locale}>
             <ContactSection locale={locale} defer />
           </ErrorBoundary>
         </PageMain>
-        <ErrorBoundary>
+        <ErrorBoundary locale={locale}>
           <Footer locale={locale} />
         </ErrorBoundary>
       </AppShell>

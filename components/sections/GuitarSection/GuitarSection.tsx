@@ -1,5 +1,6 @@
 import Image from 'next/image';
 import { Fragment, Suspense } from 'react';
+import { dawMixer } from '@/content/daw-mixer';
 import {
   GUITAR_MODULE_HEADER,
   GUITAR_MODULE_MOBILE_HEADER,
@@ -117,7 +118,7 @@ export function GuitarContent({ locale }: { locale: SiteLocale }) {
         </figure>
       </div>
       <div className="guitar-mixer">
-        <Suspense fallback={null}>
+        <Suspense fallback={<MixerLoading locale={locale} />}>
           <DawMixerContent locale={locale} />
         </Suspense>
       </div>
@@ -138,5 +139,13 @@ export function GuitarSection({ locale, defer }: { locale: SiteLocale; defer?: b
     >
       <GuitarContent locale={locale} />
     </Module>
+  );
+}
+
+export function MixerLoading({ locale }: { locale: SiteLocale }) {
+  return (
+    <p className="daw-mixer-loading" role="status">
+      {dawMixer[locale].loadingLabel}
+    </p>
   );
 }

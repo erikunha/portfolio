@@ -110,3 +110,17 @@ test('/pt chrome controls speak pt-BR', async ({ page }) => {
   // hidden until scroll on this viewport; the i18n contract is the attribute
   await expect(page.locator('.to-top-btn')).toHaveAttribute('aria-label', 'Voltar ao topo');
 });
+
+test('an unknown /pt address answers 404 in Portuguese', async ({ page }) => {
+  const response = await page.goto('/pt/pagina-que-nao-existe');
+  expect(response?.status()).toBe(404);
+  await expect(page.locator('[lang="pt-BR"] #main-content')).toHaveCount(1);
+  await expect(page.getByText('[ NÃO ENCONTRADO ]')).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Ir para o início' })).toHaveAttribute('href', '/pt');
+});
+
+test('an unknown English address answers 404 in English', async ({ page }) => {
+  const response = await page.goto('/page-that-does-not-exist');
+  expect(response?.status()).toBe(404);
+  await expect(page.getByText('[ NOT FOUND ]')).toBeVisible();
+});

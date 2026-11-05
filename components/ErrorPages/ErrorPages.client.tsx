@@ -1,11 +1,12 @@
 'use client';
 
+import { usePathname } from 'next/navigation';
 import { type ReactNode, useEffect, useRef, useState } from 'react';
 import { reportClientError } from '@/components/ErrorBoundary/ErrorBoundary.client';
 import { brand } from '@/content/brand';
 import { errorsClientContent as errorsContent } from '@/content/errors-client';
 import type { ErrorsContent } from '@/content/schemas';
-import { SITE_LOCALE } from '@/content/site-locale';
+import { localeOfPath } from '@/content/site-locale';
 
 const COPIED_RESET_MS = 2000;
 
@@ -129,18 +130,15 @@ function ServerErrorMain({
 }
 
 export function RouteErrorPage({ error, reset }: RouteErrorProps) {
+  const content = errorsContent[localeOfPath(usePathname())];
   useEffect(() => {
     reportClientError('[RouteError]', error);
   }, [error]);
 
   return (
     <>
-      <ErrorChrome chrome={errorsContent[SITE_LOCALE.en].chrome} brand={<ClientBrandLink />} />
-      <ServerErrorMain
-        error={error}
-        reset={reset}
-        content={errorsContent[SITE_LOCALE.en].serverError}
-      />
+      <ErrorChrome chrome={content.chrome} brand={<ClientBrandLink />} />
+      <ServerErrorMain error={error} reset={reset} content={content.serverError} />
     </>
   );
 }

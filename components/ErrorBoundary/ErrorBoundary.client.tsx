@@ -2,11 +2,14 @@
 
 import { Component, type ReactNode } from 'react';
 
+import { errorsClientContent } from '@/content/errors-client';
+import { DEFAULT_SITE_LOCALE, type SiteLocale } from '@/content/site-locale';
 import { buildLogPayload } from '@/lib/error-bridge.client';
 
 interface Props {
   children: ReactNode;
   fallback?: ReactNode;
+  locale?: SiteLocale;
 }
 
 interface State {
@@ -46,8 +49,8 @@ export class ErrorBoundary extends Component<Props, State> {
       return (
         this.props.fallback ?? (
           <div className="eb-fallback" role="alert" aria-live="polite">
-            <span className="gt">!</span>
-            {' component unavailable'}
+            <span className="gt">!</span>{' '}
+            {errorsClientContent[this.props.locale ?? DEFAULT_SITE_LOCALE].componentUnavailable}
           </div>
         )
       );

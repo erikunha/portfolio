@@ -255,3 +255,15 @@ describe('GuitarSection module', () => {
     expect(pair?.nextElementSibling?.className).toBe('guitar-mixer');
   });
 });
+
+describe('mixer loading state', () => {
+  it.each(Object.values(SITE_LOCALE))(
+    'announces the mixer while it streams in (%s)',
+    async (locale) => {
+      const { MixerLoading } = await import('./GuitarSection');
+      const html = renderToStaticMarkup(createElement(MixerLoading, { locale }));
+      expect(html).toContain('role="status"');
+      expect(html).toContain(dawMixer[locale].loadingLabel);
+    },
+  );
+});

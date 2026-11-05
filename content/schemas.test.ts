@@ -234,6 +234,7 @@ describe('DawMixerSchema', () => {
     expect(() =>
       DawMixerSchema.parse({
         sessionName: 'TEST.ALS',
+        loadingLabel: 'loading',
         bpm: 87,
         timeSignature: '4/4',
         status: 'MIXING',
@@ -248,6 +249,7 @@ describe('DawMixerSchema', () => {
     expect(() =>
       DawMixerSchema.parse({
         sessionName: 'TEST.ALS',
+        loadingLabel: 'loading',
         bpm: 87,
         timeSignature: '4/4',
         status: 'MIXING',
@@ -266,6 +268,7 @@ describe('DawMixerSchema', () => {
     expect(() =>
       DawMixerSchema.parse({
         sessionName: 'TEST.ALS',
+        loadingLabel: 'loading',
         bpm: 87,
         timeSignature: '4/4',
         status: 'MIXING',

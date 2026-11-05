@@ -15,6 +15,7 @@ const errorsClientContentFor = (locale: SiteLocale): ErrorsClientContent => {
         { label: 'DESIGN_SYSTEM', href: '/design-system' },
       ],
     },
+    componentUnavailable: pt ? 'componente indisponível' : 'component unavailable',
     serverError: {
       code: '500',
       message: pt

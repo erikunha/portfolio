@@ -5,6 +5,7 @@ const dawMixerFor = (locale: SiteLocale): DawMixer => {
   const pt = locale === SITE_LOCALE.pt;
   return DawMixerSchema.parse({
     sessionName: 'YELLOW_TAKE_03.ALS',
+    loadingLabel: pt ? 'carregando o mixer...' : 'loading the mixer...',
     bpm: 87,
     timeSignature: '4/4',
     status: 'MIXING',

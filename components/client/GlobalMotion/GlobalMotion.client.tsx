@@ -26,7 +26,7 @@ export function GlobalMotion() {
 
   return (
     <>
-      <ErrorBoundary>
+      <ErrorBoundary fallback={null}>
         <MatrixRainLazy
           fontSize={rain.fontSize}
           speed={rain.speed}

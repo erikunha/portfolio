@@ -396,4 +396,17 @@
       align-items: center;
     }
   }
+
+  .daw-mixer-loading {
+    margin: 0;
+    padding: var(--spacing-4);
+    border: var(--border-width) dashed var(--color-primary-subtle);
+    color: var(--color-text-secondary);
+    font-size: var(--text-sm);
+  }
+
+  .daw-mixer-loading::before {
+    content: "> " / "";
+    color: var(--color-primary-500);
+  }
 }

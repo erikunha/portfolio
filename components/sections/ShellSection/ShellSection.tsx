@@ -16,7 +16,7 @@ export function ShellSection({ locale }: { locale: SiteLocale }) {
       name={SECTION_LABELS[locale]['sec-shell']}
       icon={<IconShell />}
     >
-      <ErrorBoundary>
+      <ErrorBoundary locale={locale}>
         <InteractiveShellLazy
           locale={locale}
           ui={shellUi[locale]}

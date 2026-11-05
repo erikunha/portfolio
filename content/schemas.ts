@@ -802,11 +802,13 @@ export const ErrorsContentSchema = z.object({
     copiedAnnouncement: z.string().min(1),
   }),
   noscript: z.object({ text: z.string().min(1), contact: ErrorLinkSchema }),
+  componentUnavailable: z.string().min(1),
 });
 export type ErrorsContent = z.infer<typeof ErrorsContentSchema>;
 export const ErrorsClientContentSchema = ErrorsContentSchema.pick({
   chrome: true,
   serverError: true,
+  componentUnavailable: true,
 });
 export type ErrorsClientContent = z.infer<typeof ErrorsClientContentSchema>;
 
@@ -854,6 +856,7 @@ const DawMixerChannelSchema = z.object({
 
 export const DawMixerSchema = z.object({
   sessionName: z.string().min(1),
+  loadingLabel: z.string().min(1),
   bpm: z.number().int(),
   timeSignature: z.string().min(1),
   status: z.string().min(1),

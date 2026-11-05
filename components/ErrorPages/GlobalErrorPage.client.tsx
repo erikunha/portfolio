@@ -1,22 +1,23 @@
 'use client';
 
+import { usePathname } from 'next/navigation';
 import { useEffect } from 'react';
-
 import { reportClientError } from '@/components/ErrorBoundary/ErrorBoundary.client';
 import { errorsClientContent as errorsContent } from '@/content/errors-client';
-import { SITE_LOCALE } from '@/content/site-locale';
+import { localeOfPath, SITE_HTML_LANG } from '@/content/site-locale';
 import { ErrorHeading, type RouteErrorProps } from './ErrorPages.client';
 
 const FALLBACK_MONO_FONT = 'ui-monospace, SFMono-Regular, Menlo, Consolas, monospace';
 
 export function GlobalErrorPage({ error, reset }: RouteErrorProps) {
-  const content = errorsContent[SITE_LOCALE.en].serverError;
+  const locale = localeOfPath(usePathname());
+  const content = errorsContent[locale].serverError;
   useEffect(() => {
     reportClientError('[GlobalError]', error);
   }, [error]);
 
   return (
-    <html lang="en">
+    <html lang={SITE_HTML_LANG[locale]}>
       <body style={{ fontFamily: FALLBACK_MONO_FONT }}>
         <main className="err-main" id="main-content" tabIndex={-1}>
           <ErrorHeading>{content.code}</ErrorHeading>
