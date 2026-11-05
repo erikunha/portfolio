@@ -8,7 +8,7 @@ import { z } from 'zod';
 import { flushMicrotasks, type MountedClient, mountClient } from '@/__tests__/helpers/render';
 import { contactCopy } from '@/content/contact-copy';
 import { linksContent } from '@/content/links';
-import { SITE_LOCALE } from '@/content/site-locale';
+import { SITE_LOCALE, type SiteLocale } from '@/content/site-locale';
 import { contactChrome } from '@/content/terminal-chrome';
 import { ContactForm } from './ContactForm';
 import { messageStore } from './messageStore';
@@ -131,7 +131,7 @@ describe('ContactForm accessibility', () => {
 
     const alert = container.querySelector('[role="alert"]');
     expect(alert).not.toBeNull();
-    expect(alert?.textContent).toContain('server boom');
+    expect(alert?.textContent).toContain('could not send right now');
   });
 });
 
@@ -175,7 +175,7 @@ describe('contact form error region', () => {
 
     const alert = container.querySelector('[role="alert"]');
     expect(alert).not.toBeNull();
-    expect(alert?.textContent).toContain('boom');
+    expect(alert?.textContent).toContain('could not send right now');
   });
 });
 
@@ -187,15 +187,19 @@ describe('contact form delivery states', () => {
     vi.unstubAllGlobals();
   });
 
-  async function submitResponse(body: unknown, status: number) {
+  async function submitResponse(
+    body: unknown,
+    status: number,
+    locale: SiteLocale = SITE_LOCALE.en,
+  ) {
     vi.stubGlobal(
       'fetch',
       vi.fn(async () => Response.json(body, { status })),
     );
     mounted = await mountClient(
       createElement(ContactForm, {
-        copy: contactCopy[SITE_LOCALE.en],
-        chrome: contactChrome[SITE_LOCALE.en],
+        copy: contactCopy[locale],
+        chrome: contactChrome[locale],
       }),
     );
     const container = mounted.container;
@@ -256,18 +260,36 @@ describe('contact form delivery states', () => {
   });
 
   it.each([
-    [400, 'validation_failed', 'request validation failed'],
-    [429, 'rate_limited', 'too many requests, try again in 10 minutes'],
-    [502, 'storage_unavailable', 'storage unavailable, try again'],
+    [SITE_LOCALE.en, 400, 'validation_failed', 'error: could not send right now. Your text'],
+    [
+      SITE_LOCALE.en,
+      429,
+      'rate_limited',
+      'error: too many requests, try again in 10 minutes. Your',
+    ],
+    [SITE_LOCALE.en, 502, 'storage_unavailable', 'error: could not send right now. Your text'],
+    [SITE_LOCALE.pt, 502, 'storage_unavailable', 'erro: não foi possível enviar agora. Seu texto'],
+    [
+      SITE_LOCALE.pt,
+      429,
+      'rate_limited',
+      'erro: muitas requisições, tente novamente em 10 minutos. Seu',
+    ],
   ])(
-    'displays the server message from an object error envelope (%s)',
-    async (status, code, message) => {
+    'shows localized copy for the error code, never the server message (%s %s)',
+    async (locale, status, code, expected) => {
       const container = await submitResponse(
-        { ok: false, requestId: 'request-id', error: { code, message } },
+        {
+          ok: false,
+          requestId: 'request-id',
+          error: { code, message: 'storage unavailable, try again' },
+        },
         status,
+        locale,
       );
       const alert = container.querySelector('[role="alert"]');
-      expect(alert?.textContent).toContain(message);
+      expect(alert?.textContent).toContain(expected);
+      expect(alert?.textContent).not.toContain('storage unavailable');
       expect(alert?.textContent).not.toContain('[object Object]');
       expect(container.querySelector('form')).not.toBeNull();
     },
@@ -685,7 +707,7 @@ describe('contact validation and retention', () => {
     fireEvent.submit(form);
     const alert = await screen.findByRole('alert');
     await waitFor(() => expect(document.activeElement).toBe(alert));
-    expect(alert.textContent).toContain('storage unavailable, try again');
+    expect(alert.textContent).toContain('could not send right now');
     expect(alert.textContent).not.toContain('[object Object]');
     expect(within(alert).getByRole('link').getAttribute('href')).toBe(
       'mailto:erikhenriquealvescunha@gmail.com',

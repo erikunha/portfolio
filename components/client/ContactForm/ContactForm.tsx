@@ -7,6 +7,7 @@ import {
   CONTACT_FIELD,
   CONTACT_LIMITS,
   type ContactField,
+  contactErrorMessage,
   contactErrorSummary,
 } from '@/content/contact-copy';
 import type { TerminalChrome } from '@/content/schemas';
@@ -153,14 +154,14 @@ export function ContactForm({ copy, chrome }: { copy: ContactContent; chrome: Te
         return;
       }
       if (!res.ok || data?.ok !== true || res.status === QUEUED_STATUS) {
-        throw new Error(
-          typeof apiError?.message === 'string' ? apiError.message : copy.errors.requestFailed,
-        );
+        throw new Error(CONTACT_ENDPOINT, { cause: apiError?.code });
       }
       messageStore.reset();
       setStatus(STATUS.SUCCESS);
     } catch (error) {
-      setErrorMsg(error instanceof Error ? error.message : copy.errors.requestFailed);
+      const code =
+        error instanceof Error && typeof error.cause === 'string' ? error.cause : undefined;
+      setErrorMsg(contactErrorMessage(copy, code));
       setStatus(STATUS.ERROR);
       setFailureCount((count) => count + 1);
     } finally {
@@ -240,7 +241,7 @@ export function ContactForm({ copy, chrome }: { copy: ContactContent; chrome: Te
             )}
             {errorMsg && (
               <p id={requestErrorId}>
-                {copy.form.errorPrefix} {errorMsg} {copy.form.retained} {copy.form.retryEmail}{' '}
+                {copy.form.errorPrefix} {errorMsg}. {copy.form.retained} {copy.form.retryEmail}{' '}
                 <a href={`mailto:${copy.section.email}`}>{copy.section.email}</a>
               </p>
             )}

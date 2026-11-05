@@ -20,6 +20,8 @@ export type ContactField = (typeof CONTACT_FIELD)[keyof typeof CONTACT_FIELD];
 
 export const CONTACT_DELIVERY_CODE = { QUEUED: 'queued' } as const;
 
+export const CONTACT_ERROR_CODE = { RATE_LIMITED: 'rate_limited' } as const;
+
 const REPLY_WINDOW: Record<SiteLocale, string> = {
   [SITE_LOCALE.en]: 'within 48h',
   [SITE_LOCALE.pt]: 'em até 48h',
@@ -191,9 +193,7 @@ const contactCopyFor = (locale: SiteLocale): ContactContent => {
       rateLimited: pt
         ? 'muitas requisições, tente novamente em 10 minutos'
         : 'too many requests, try again in 10 minutes',
-      requestFailed: pt
-        ? 'mensagem não pôde ser enviada, tente novamente'
-        : 'message could not be sent, try again',
+      requestFailed: pt ? 'não foi possível enviar agora' : 'could not send right now',
     },
   };
 };
@@ -229,4 +229,10 @@ export function contactHoursPhrase(
   return fillCopy(hours === SINGULAR_HOURS ? hoursCopy.one : hoursCopy.other, {
     count: Number(hours.toFixed(HOURS_DECIMALS)),
   });
+}
+
+export function contactErrorMessage(copy: ContactContent, code: string | undefined): string {
+  return code === CONTACT_ERROR_CODE.RATE_LIMITED
+    ? copy.errors.rateLimited
+    : copy.errors.requestFailed;
 }
