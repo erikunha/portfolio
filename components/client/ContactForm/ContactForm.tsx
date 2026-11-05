@@ -26,6 +26,7 @@ const CONTACT_ENDPOINT = '/api/contact';
 const QUEUED_STATUS = 202;
 const MESSAGE_ROWS = 5;
 const INITIAL_FAILURE_COUNT = 0;
+const FIELD_BORDER = '[&:not([aria-invalid=true])]:border-primary-500';
 type TypedField = Exclude<ContactField, typeof CONTACT_FIELD.MESSAGE>;
 const INITIAL_TYPED: Record<TypedField, string> = { name: '', email: '' };
 const CONTACT_FIELDS = Object.values(CONTACT_FIELD);
@@ -257,6 +258,7 @@ export function ContactForm({ copy, chrome }: { copy: ContactContent; chrome: Te
           className="contact-honeypot"
         />
         <Field
+          className={FIELD_BORDER}
           id={fieldId(CONTACT_FIELD.NAME)}
           name={CONTACT_FIELD.NAME}
           label={copy.form.nameLabel}
@@ -270,6 +272,7 @@ export function ContactForm({ copy, chrome }: { copy: ContactContent; chrome: Te
           placeholder={copy.form.namePlaceholder}
         />
         <Field
+          className={FIELD_BORDER}
           id={fieldId(CONTACT_FIELD.EMAIL)}
           name={CONTACT_FIELD.EMAIL}
           label={copy.form.emailLabel}
@@ -282,6 +285,7 @@ export function ContactForm({ copy, chrome }: { copy: ContactContent; chrome: Te
           placeholder={copy.form.emailPlaceholder}
         />
         <Field
+          className={FIELD_BORDER}
           id={messageFieldId}
           name={CONTACT_FIELD.MESSAGE}
           label={copy.form.messageLabel}

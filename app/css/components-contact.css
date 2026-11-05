@@ -21,6 +21,8 @@
   }
 
   .contact-shell {
+    border: var(--border-width) solid var(--color-primary-500);
+    border-radius: var(--radius-control);
     background: var(--color-secondary-900);
     font-family: var(--font-mono);
   }
@@ -31,7 +33,7 @@
     align-items: center;
     gap: var(--spacing-2);
     padding: var(--spacing-2) var(--spacing-4);
-    border-bottom: var(--border-width) solid var(--color-primary-subtle);
+    border-bottom: var(--border-width) solid var(--color-primary-500);
     color: var(--color-text-secondary);
     font-size: var(--text-xs);
   }
