@@ -77,15 +77,15 @@ Performance & A11y: Core Web Vitals · WCAG 2.2 AA · ARIA · Lighthouse CI
 
 | Period | Company | Role | Location |
 |---|---|---|---|
-| Jun 2026 - Present | [Raylu](https://raylu.ai) | Senior Software Engineer, Frontend & Product (contract via Torc) | New York, US (remote) |
-| Mar 2025 - May 2026 | [Betsson Group](https://betssongroup.com) | Senior Software Engineer, Frontend | Malta (hybrid) |
-| Mar 2023 - Mar 2025 | [Canon Medical Systems Brazil](https://br.medical.canon) | Senior Software Engineer, Frontend (independent consultant) | Canada (remote) |
-| Dec 2021 - Mar 2023 | [Grupo SBF (Nike / Centauro)](https://www.gruposbf.com.br) | Software Engineer, Frontend | São Paulo, Brazil (remote) |
-| Jan 2021 - Dec 2021 | [Encora (formerly Daitan)](https://www.linkedin.com/company/encorainc/) | Software Engineer, Frontend · assigned to VMware | Campinas, Brazil |
-| Apr 2020 - Jan 2021 | [Zup Innovation (Itaú Unibanco)](https://zup.com.br) | Software Engineer, Frontend | Campinas, Brazil |
-| Feb 2019 - Apr 2020 | [Venturus](https://www.venturus.org.br) | Full-Stack Software Engineer → Software Engineer, Frontend | Campinas, Brazil |
-| Jul 2018 - Feb 2019 | [MB Labs](https://mblabs.com.br) | Full-Stack Software Engineer → Software Engineer, Cross-Platform | Campinas, Brazil |
-| Oct 2017 - May 2018 | [Monde Sistemas](https://monde.com.br) | Software Engineer Intern, Frontend | Americana, Brazil |
+| Jun 2026 - Present | [Raylu](https://raylu.ai) | Senior Software Engineer (contract via Torc) | New York, US (remote) |
+| Mar 2025 - May 2026 | [Betsson Group](https://betssongroup.com) | Senior Software Engineer | Malta (hybrid) |
+| Mar 2023 - Mar 2025 | [Canon Medical Systems Brazil](https://br.medical.canon) | Senior Software Engineer (independent consultant) | Canada (remote) |
+| Dec 2021 - Mar 2023 | [Grupo SBF (Nike / Centauro)](https://www.gruposbf.com.br) | Software Engineer | São Paulo, Brazil (remote) |
+| Jan 2021 - Dec 2021 | [Encora (formerly Daitan)](https://www.linkedin.com/company/encorainc/) | Frontend Developer · assigned to VMware | Campinas, Brazil |
+| Apr 2020 - Jan 2021 | [Zup Innovation (Itaú Unibanco)](https://zup.com.br) | Frontend Developer | Campinas, Brazil |
+| Feb 2019 - Apr 2020 | [Venturus](https://www.venturus.org.br) | Full Stack Engineer → Frontend Developer | Campinas, Brazil |
+| Jul 2018 - Feb 2019 | [MB Labs](https://mblabs.com.br) | Full Stack Engineer → Software Engineer | Campinas, Brazil |
+| Oct 2017 - May 2018 | [Monde Sistemas](https://monde.com.br) | Intern | Americana, Brazil |
 
 ## Industries
 

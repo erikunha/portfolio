@@ -355,23 +355,16 @@ describe('terminal redesign canonical facts', () => {
     ).toEqual([
       [
         'Raylu',
-        'Senior Software Engineer, Frontend & Product (contract via Torc)',
+        'Senior Software Engineer (contract via Torc)',
         '2026-06',
         null,
         'New York, US',
         'remote',
       ],
-      [
-        'Betsson Group',
-        'Senior Software Engineer, Frontend',
-        '2025-03',
-        '2026-05',
-        'Malta',
-        'hybrid',
-      ],
+      ['Betsson Group', 'Senior Software Engineer', '2025-03', '2026-05', 'Malta', 'hybrid'],
       [
         'Canon Medical Systems Brazil',
-        'Senior Software Engineer, Frontend (independent consultant)',
+        'Senior Software Engineer (independent consultant)',
         '2023-03',
         '2025-03',
         'Canada',
@@ -379,7 +372,7 @@ describe('terminal redesign canonical facts', () => {
       ],
       [
         'Grupo SBF (Nike / Centauro)',
-        'Software Engineer, Frontend',
+        'Software Engineer',
         '2021-12',
         '2023-03',
         'São Paulo, Brazil',
@@ -387,7 +380,7 @@ describe('terminal redesign canonical facts', () => {
       ],
       [
         'Encora (formerly Daitan)',
-        'Software Engineer, Frontend · assigned to VMware',
+        'Frontend Developer · assigned to VMware',
         '2021-01',
         '2021-12',
         'Campinas, Brazil',
@@ -395,7 +388,7 @@ describe('terminal redesign canonical facts', () => {
       ],
       [
         'Zup Innovation (Itaú Unibanco)',
-        'Software Engineer, Frontend',
+        'Frontend Developer',
         '2020-04',
         '2021-01',
         'Campinas, Brazil',
@@ -403,7 +396,7 @@ describe('terminal redesign canonical facts', () => {
       ],
       [
         'Venturus',
-        'Full-Stack Software Engineer → Software Engineer, Frontend',
+        'Full Stack Engineer → Frontend Developer',
         '2019-02',
         '2020-04',
         'Campinas, Brazil',
@@ -411,20 +404,13 @@ describe('terminal redesign canonical facts', () => {
       ],
       [
         'MB Labs',
-        'Full-Stack Software Engineer → Software Engineer, Cross-Platform',
+        'Full Stack Engineer → Software Engineer',
         '2018-07',
         '2019-02',
         'Campinas, Brazil',
         null,
       ],
-      [
-        'Monde Sistemas',
-        'Software Engineer Intern, Frontend',
-        '2017-10',
-        '2018-05',
-        'Americana, Brazil',
-        null,
-      ],
+      ['Monde Sistemas', 'Intern', '2017-10', '2018-05', 'Americana, Brazil', null],
     ]);
     expect(gitLog[SITE_LOCALE.en].every((entry) => entry.type === 'career')).toBe(true);
     expect(
