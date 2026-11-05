@@ -27,7 +27,8 @@
       "!.specify",
       "!.claude/skills/speckit-*",
       "!pnpm-lock.yaml",
-      "!CLAUDE.md"
+      "!CLAUDE.md",
+      "!DECISIONS.md"
     ]
   },
   "formatter": {
