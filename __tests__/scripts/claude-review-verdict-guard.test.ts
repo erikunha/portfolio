@@ -251,3 +251,25 @@ describe('the guard reds the job when this run posted no verdict', () => {
     ).toBe(false);
   });
 });
+
+describe('the workflow grants the API scopes its own guard needs', () => {
+  const permissions = (): Record<string, unknown> => {
+    const doc = parse(readFileSync(WORKFLOW, 'utf8')) as {
+      permissions?: Record<string, unknown>;
+      jobs?: { review?: { permissions?: Record<string, unknown> } };
+    };
+    // A job-level block REPLACES the workflow-level set rather than merging, so
+    // reading only the top level would report `issues: read` from a block the
+    // runner ignores. ci.yml already scopes at job level in eight places.
+    return doc.jobs?.review?.permissions ?? doc.permissions ?? {};
+  };
+
+  it('declares issues when the guard reads the Issues API', () => {
+    const usesIssuesApi = /gh api[\s\S]*?\/issues\//.test(guardScript());
+    if (!usesIssuesApi) return;
+    expect(
+      permissions().issues,
+      '`none` is a valid GitHub Actions permission value meaning NO access, so asserting the key is merely present passes on the broken state — the level is the property. The guard fetches PR conversation comments from repos/:owner/:repo/issues/:number/comments. That endpoint is gated by the `issues` permission, NOT by `pull-requests` — the sibling claude.yml declares `issues: write` for equivalent access.\n\nWithout it the call 403s, `set -e` aborts the assignment before any diagnostic prints, and the step reds on EVERY run: a permanent false red on the gate this workflow exists to add, indistinguishable in the log from a real missing verdict.\n\nThe executed rows cannot catch this. They stub `gh` on PATH, so no row ever exercises a real API permission — which is exactly why this assertion is structural and lives here.',
+    ).toMatch(/^(read|write)$/);
+  });
+});

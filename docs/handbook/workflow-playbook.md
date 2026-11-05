@@ -116,6 +116,6 @@ Every runbook lists: **entry point** (what starts it), **steps**, **AI participa
 - **Entry:** a ready branch.
 - **Steps:**
   1. `pnpm ci:local` + `pnpm gates:runtime`; `gh pr create` filling the template (every section non-empty).
-  2. Rebase before every push, verify the pushed SHA, reply citing the fix SHA before resolving a thread. claude-review runs only when the owner comments `/claude-review`; fix its findings in one commit, reply, resolve.
+  2. Rebase before every push, verify the pushed SHA, reply citing the fix SHA before resolving a thread. claude-review runs only when an owner, member or collaborator comments `/claude-review`; fix its findings in one commit, reply, resolve.
   3. CI is green and `pnpm pr:gate` passes; the owner squash-merges.
 - **Output:** a merged PR. See [review-merge-release](./review-merge-release.md).

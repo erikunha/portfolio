@@ -56,7 +56,7 @@ Before opening the PR, read the diff and run `pr-review-toolkit:code-reviewer` o
 Run `pnpm ci:local`, then `pnpm bundle-check` and `pnpm route-js-check`, then `pnpm gates:runtime` (build, server, LHCI desktop/mobile, axe, E2E). Then `gh pr create` fills the PR template; every section must be non-empty, which is a convention checked by the author and the reviewer, not a gate.
 
 ### 9. Review threads
-On the open PR, answer every review thread: rebase before every push, verify the pushed SHA landed, and reply citing the fix SHA before resolving a thread. claude-review runs only when the owner comments `/claude-review`; its findings are fixed in one commit, answered in each thread and resolved, with no automatic follow-up round.
+On the open PR, answer every review thread: rebase before every push, verify the pushed SHA landed, and reply citing the fix SHA before resolving a thread. claude-review runs only when an owner, member or collaborator comments `/claude-review`; its findings are fixed in one commit, answered in each thread and resolved, with no automatic follow-up round.
 
 ### 10. Pre-merge gates -> merge
 `pnpm pr:gate` (`scripts/check-pr-comments.ts`) requires every review thread to be resolved and flags `suspicious_self_resolve`. Run `pnpm ci:local` alongside it, with CI green and the base contained. `pnpm claude-gate` (`scripts/check-claude-approval.ts`) is an optional check on a requested claude-review verdict, not a merge requirement.

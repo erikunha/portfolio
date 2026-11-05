@@ -29,7 +29,7 @@ flowchart TD
 
 ## Code review
 
-**claude-review (claude[bot]) is the AI reviewer.** It is opt-in: it runs only when the owner comments `/claude-review` on the PR. It posts one inline comment per finding anchored to a changed line and closes with a `Verdict:` line that the optional `pnpm claude-gate` parses fail-closed. It is never a merge requirement. When it posts findings, fix them all in one commit, reply in each thread citing the fix SHA, then resolve; no automatic follow-up round runs.
+**claude-review (claude[bot]) is the AI reviewer.** It is opt-in: it runs only when an owner, member or collaborator comments `/claude-review` on the PR. It posts one inline comment per finding anchored to a changed line and closes with a `Verdict:` line that the optional `pnpm claude-gate` parses fail-closed. It is never a merge requirement. When it posts findings, fix them all in one commit, reply in each thread citing the fix SHA, then resolve; no automatic follow-up round runs.
 
 **The local 4-agent battery is not restored** — it, its findings ledger and `review:stamp` were removed on 2026-07-27 and stay removed. Pre-PR review is a discipline: read `git diff origin/main...HEAD` end to end, invoke `pr-review-toolkit:code-reviewer` against it, and fix every Critical/Important finding before `gh pr create`. Nothing gates that pre-PR pass, so nothing will tell you it was skipped.
 
@@ -39,7 +39,7 @@ On the open PR, the habits that were learned from real failures still apply and 
 
 In order: `ci:local` -> `check-pr-comments` (`pnpm pr:gate`, also run in CI: GraphQL, all threads `isResolved`, flags `suspicious_self_resolve`). The base branch must be contained and CI green. Branch protection is enforced by GitHub itself.
 
-`pnpm claude-gate` (`scripts/check-claude-approval.ts`) is an optional check: after an owner-requested review it passes only when the latest claude-review verdict is Approve and names the current head SHA. It is not part of merge readiness.
+`pnpm claude-gate` (`scripts/check-claude-approval.ts`) is an optional check: after a requested review it passes only when the latest claude-review verdict is Approve and names the current head SHA. It is not part of merge readiness.
 
 **AI agents must not run `gh pr merge`.** This is a convention now: the `bash-guard.sh` hook that blocked it with `exit 2` was removed on 2026-07-27. The repo owner runs the final squash-merge once all gates pass. The branch-protection invariant means all changes go through a PR; direct pushes to `main` are blocked at the pre-push hook.
 
