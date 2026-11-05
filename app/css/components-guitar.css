@@ -218,6 +218,7 @@
 
   .guitar-influences {
     margin: 0;
+    padding-inline: var(--spacing-3);
     max-width: var(--guitar-prose-width);
     font-size: var(--text-xs);
     overflow-wrap: anywhere;
@@ -232,6 +233,8 @@
   .guitar-stats {
     display: grid;
     grid-template-columns: var(--guitar-stat-columns);
+    grid-auto-rows: 1fr;
+    flex: 1;
     gap: var(--border-width);
     border: var(--border-width) solid var(--color-primary-quiet);
     background: var(--color-primary-quiet);
