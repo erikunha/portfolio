@@ -3,6 +3,7 @@
     "collect": {
       "url": [
         "http://localhost:3000",
+        "http://localhost:3000/pt",
         "http://localhost:3000/cv",
         "http://localhost:3000/summary",
         "http://localhost:3000/links",
