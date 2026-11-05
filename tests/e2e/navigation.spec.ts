@@ -1,13 +1,15 @@
 import { expect, test } from '@playwright/test';
 
-const SECTION_COUNT = 10;
+const SECTION_COUNT = 9;
 const SCRIM_CLICK_X = 350;
 const SCRIM_CLICK_Y = 400;
 
 test.describe('navigation: drawer at 390px', () => {
   test.use({ viewport: { width: 390, height: 844 } });
 
-  test('the drawer is closed, opens from Menu and lists the ten destinations', async ({ page }) => {
+  test('the drawer is closed, opens from Menu and lists the nine destinations', async ({
+    page,
+  }) => {
     await page.goto('/');
     await expect(page.locator('#section-drawer')).toBeHidden();
     await page

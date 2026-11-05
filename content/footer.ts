@@ -86,8 +86,7 @@ const footerContentFor = (locale: SiteLocale) => {
         directory: './off_hours/',
         links: [
           { label: pt ? 'Opiniões' : 'Opinions', href: '#sec-hottest-takes' },
-          { label: pt ? 'Rig de guitarra' : 'Guitar rig', href: '#sec-guitar' },
-          { label: pt ? 'Mixer DAW' : 'DAW mixer', href: '#sec-daw-mixer' },
+          { label: pt ? 'Guitarra e mixer' : 'Guitar and mixer', href: '#sec-guitar' },
         ],
       },
       {

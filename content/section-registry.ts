@@ -9,7 +9,6 @@ export const SECTION_ICONS = {
   measured: 'live-perf',
   opinions: 'hottest-takes',
   guitar: 'guitar',
-  mixer: 'mixer',
   contact: 'contact',
 } as const;
 
@@ -24,9 +23,8 @@ export const SECTION_NAV = [
   { id: 'sec-shell', label: { en: 'Interactive shell', pt: 'Shell interativo' }, order: 5 },
   { id: 'sec-live-metrics', label: { en: 'Measured', pt: 'Medições' }, order: 6 },
   { id: 'sec-hottest-takes', label: { en: 'Opinions', pt: 'Opiniões' }, order: 7 },
-  { id: 'sec-guitar', label: { en: 'Guitar rig', pt: 'Rig de guitarra' }, order: 8 },
-  { id: 'sec-daw-mixer', label: { en: 'DAW mixer', pt: 'Mixer DAW' }, order: 9 },
-  { id: 'sec-contact', label: { en: 'Contact', pt: 'Contato' }, order: 10 },
+  { id: 'sec-guitar', label: { en: 'Guitar and mixer', pt: 'Guitarra e mixer' }, order: 8 },
+  { id: 'sec-contact', label: { en: 'Contact', pt: 'Contato' }, order: 9 },
 ] as const;
 
 export const SECTION_REGISTRY = [
@@ -91,17 +89,21 @@ export const SECTION_REGISTRY = [
   {
     ...SECTION_NAV[7],
     srLabel: { en: 'Guitar rig', pt: 'Rig de guitarra' },
-    aliases: ['guitar and mixer', 'guitar', 'guitar rig', 'music', 'guitarra'],
+    aliases: [
+      'guitar and mixer',
+      'guitar',
+      'guitar rig',
+      'music',
+      'guitarra',
+      'mixer',
+      'daw',
+      'mix',
+      'daw mixer',
+    ],
     icon: SECTION_ICONS.guitar,
   },
   {
     ...SECTION_NAV[8],
-    srLabel: { en: 'DAW mixer', pt: 'Mixer DAW' },
-    aliases: ['mixer', 'daw', 'mix', 'daw mixer'],
-    icon: SECTION_ICONS.mixer,
-  },
-  {
-    ...SECTION_NAV[9],
     srLabel: { en: 'Contact', pt: 'Contato' },
     aliases: ['contact', 'email', 'message', 'contato'],
     icon: SECTION_ICONS.contact,

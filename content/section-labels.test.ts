@@ -7,7 +7,7 @@ import { SECTION_LABELS } from './section-labels';
 import { SECTION_REGISTRY } from './section-registry';
 import { SITE_LOCALE } from './site-locale';
 
-const EXPECTED_SECTION_COUNT = 9;
+const EXPECTED_SECTION_COUNT = 8;
 
 describe('SECTION_LABELS', () => {
   it('uses registry region names while preserving the existing screen reader copy', () => {
@@ -23,7 +23,6 @@ describe('SECTION_LABELS', () => {
       'sec-live-metrics': 'Measured',
       'sec-hottest-takes': 'Opinions',
       'sec-guitar': 'Guitar rig',
-      'sec-daw-mixer': 'DAW mixer',
       'sec-contact': 'Contact',
     });
     for (const { id, srLabel } of SECTION_REGISTRY) {

@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { SECTION_ICONS } from './section-registry';
 
 export { SECTION_ICONS };
-export const SECTION_DESTINATION_COUNT = 10;
+export const SECTION_DESTINATION_COUNT = 9;
 const FIRST_SECTION_ORDER = 1;
 const MIN_SECTION_TEXT_LENGTH = 1;
 const MIN_ALIAS_COUNT = 1;
@@ -360,6 +360,27 @@ export const ResponsibilitySchema = z.object({
   highlight: z.boolean().default(false),
 });
 
+export const GUITAR_SIGNAL_BAR_COUNT = 8;
+export const GUITAR_SIGNAL_LABEL_TOKENS = { strength: '{n}', total: '{total}' } as const;
+
+const _signalNodeBase = { name: z.string().min(1), subtitle: z.string().min(1) };
+const _dotsNode = (role: 'INPUT' | 'AMP' | 'OUT') =>
+  z.object({
+    ..._signalNodeBase,
+    role: z.literal(role),
+    strengthDots: z.number().int().min(0).max(GUITAR_SIGNAL_BAR_COUNT),
+  });
+const _fxNode = z.object({
+  ..._signalNodeBase,
+  role: z.literal('FX'),
+});
+export const SignalChainNodeSchema = z.discriminatedUnion('role', [
+  _dotsNode('INPUT'),
+  _fxNode,
+  _dotsNode('AMP'),
+  _dotsNode('OUT'),
+]);
+
 export const EQ_TEMPLATE_TOKENS = { freq: '{freq}', gain: '{gain}' } as const;
 export const EQ_DEFAULT_PEAK_Q = 0.8;
 export const EQ_MIN_BAR_COUNT = 8;
@@ -432,6 +453,7 @@ export const StatCellSchema = z.object({
 
 export const GuitarRigSchema = z.object({
   eqSpectrum: EqSpectrumSchema,
+  signalChain: z.tuple([_dotsNode('INPUT'), _fxNode, _dotsNode('AMP'), _dotsNode('OUT')]),
   influences: z.array(InfluenceSchema).length(5),
   stats: z.array(StatCellSchema).length(4),
   liveCam: z.object({
@@ -439,22 +461,31 @@ export const GuitarRigSchema = z.object({
     caption: z.string().min(1),
     status: z.string().min(1),
     cameraLabel: z.string().min(1),
-    telemetry: z.string().min(1),
-    hudTopLeft: z.string().min(1),
   }),
 });
 
+const [guitarInputSchema, , guitarAmpSchema, guitarOutputSchema] =
+  GuitarRigSchema.shape.signalChain.def.items;
 const GuitarPresentationCopySchema = z.object({
   label: z.string().trim().nonempty(),
   text: z.string().trim().nonempty(),
 });
 
 export const GuitarPresentationSchema = z.object({
+  signalStrengthLabelTemplate: z
+    .string()
+    .includes(GUITAR_SIGNAL_LABEL_TOKENS.strength)
+    .includes(GUITAR_SIGNAL_LABEL_TOKENS.total),
   signalStrip: z.object({
     live: z.string().trim().nonempty(),
     tail: z.string().trim().nonempty(),
   }),
   eqSpectrum: EqSpectrumSchema,
+  signalChain: z.tuple([
+    guitarInputSchema.extend({ label: z.string().trim().nonempty() }),
+    guitarAmpSchema.extend({ label: z.string().trim().nonempty() }),
+    guitarOutputSchema.extend({ label: z.string().trim().nonempty() }),
+  ]),
   influences: GuitarPresentationCopySchema,
   nowPlaying: GuitarPresentationCopySchema,
   stats: GuitarRigSchema.shape.stats,
@@ -822,7 +853,7 @@ export const DawMixerSchema = z.object({
   transportTime: z.string().min(1),
   channels: z
     .array(DawMixerChannelSchema)
-    .length(6)
+    .length(3)
     .refine((chs) => chs[chs.length - 1]?.id === 'MASTER', {
       message: 'Last channel must be MASTER',
     }),

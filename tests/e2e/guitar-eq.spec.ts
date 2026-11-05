@@ -12,15 +12,6 @@ const VIEWPORTS = [
 ];
 const SUBPIXEL_TOLERANCE = 1;
 const NO_ANIMATION = 'none';
-const OLD_CARD_TEXT = [
-  'MODELED CAB',
-  'FOH / IEM',
-  'LINE 6 HX STOMP XL',
-  '// INPUT',
-  '// FX',
-  '// AMP',
-  '// OUT',
-];
 
 async function openStrip(page: Page, width: number, height: number) {
   await page.setViewportSize({ width, height });
@@ -76,13 +67,12 @@ for (const { width, height, visibleBars } of VIEWPORTS) {
       expect(brokenWords).toEqual([]);
     });
 
-    test('shows none of the old signal chain cards', async ({ page }) => {
-      await openStrip(page, width, height);
-      const section = page.locator('#sec-guitar');
-      for (const old of OLD_CARD_TEXT) {
-        await expect(section.getByText(old, { exact: false })).toHaveCount(0);
-      }
-      await expect(section.locator('[data-testid^="signal-node-"], .guitar-chain')).toHaveCount(0);
+    test('sits above the signal chain cards at the top of the module', async ({ page }) => {
+      const strip = await openStrip(page, width, height);
+      const chain = page.locator('#sec-guitar .guitar-chain');
+      const stripBox = await strip.boundingBox();
+      const chainBox = await chain.boundingBox();
+      expect(stripBox?.y ?? Number.POSITIVE_INFINITY).toBeLessThan(chainBox?.y ?? 0);
     });
 
     test('shows the bars the viewport has room for', async ({ page }) => {
@@ -168,12 +158,12 @@ test('puts each axis label on its frequency', async ({ page }) => {
 test.describe('EQ strip without JavaScript', () => {
   test.use({ javaScriptEnabled: false, viewport: { width: 1280, height: 720 } });
 
-  test('renders the strip from the server HTML with no old cards', async ({ page }) => {
+  test('renders the strip and the signal chain from the server HTML', async ({ page }) => {
     await page.goto('/');
     const strip = page.locator(STRIP);
     await expect(strip).toHaveCount(1);
     await expect(strip.locator('.eq-bar')).toHaveCount(72);
     await expect(page.locator(LABEL)).toHaveText(/LEAD · Gretsch G5655TG/);
-    await expect(page.locator('#sec-guitar').getByText('MODELED CAB')).toHaveCount(0);
+    await expect(page.locator('#sec-guitar [data-testid^="signal-node-"]')).toHaveCount(3);
   });
 });

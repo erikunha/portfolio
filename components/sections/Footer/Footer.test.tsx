@@ -5,7 +5,6 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { About } from '@/components/sections/About';
 import { AiMetricsSection } from '@/components/sections/AiMetricsSection';
 import { ContactSection } from '@/components/sections/ContactSection';
-import { DawMixerSection } from '@/components/sections/DawMixerSection';
 import { GitLogSection } from '@/components/sections/GitLogSection';
 import { GuitarSection } from '@/components/sections/GuitarSection';
 import { HottestTakesSection } from '@/components/sections/HottestTakesSection';
@@ -45,8 +44,7 @@ describe('Footer server output', () => {
       { label: 'Interactive shell', href: '#sec-shell' },
       { label: 'Measured', href: '#sec-live-metrics' },
       { label: 'Opinions', href: '#sec-hottest-takes' },
-      { label: 'Guitar rig', href: '#sec-guitar' },
-      { label: 'DAW mixer', href: '#sec-daw-mixer' },
+      { label: 'Guitar and mixer', href: '#sec-guitar' },
       { label: 'Contact', href: '#sec-contact' },
       { label: '30S_SUMMARY', href: '/summary' },
       { label: 'DESIGN_SYSTEM', href: '/design-system' },
@@ -76,7 +74,6 @@ describe('Footer server output', () => {
           <GitLogSection locale={SITE_LOCALE.en} />
           <HottestTakesSection locale={SITE_LOCALE.en} defer />
           <GuitarSection locale={SITE_LOCALE.en} defer />
-          <DawMixerSection locale={SITE_LOCALE.en} defer />
           <ContactSection locale={SITE_LOCALE.en} defer />
         </main>
         <Footer locale={SITE_LOCALE.en} />

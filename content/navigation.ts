@@ -111,7 +111,7 @@ const navigationFor = (locale: SiteLocale): Navigation => {
         id: 'off-hours',
         title: pt ? 'HOBBIES' : 'OFF_HOURS',
         dock: 'menu',
-        sectionIds: ['sec-hottest-takes', 'sec-guitar', 'sec-daw-mixer'],
+        sectionIds: ['sec-hottest-takes', 'sec-guitar'],
       },
       {
         id: 'contact',
