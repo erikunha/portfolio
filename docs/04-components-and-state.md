@@ -56,7 +56,7 @@ flowchart TD
 
 ### The section drawer
 
-The section menu is a modal drawer at every width. It opens from the icon-only menu trigger (`Open menu`), the dock `MENU` control or the `Ctrl` / `Cmd` + `K` shortcut, keeps Tab inside the panel, and closes on Escape, the close control or the scrim. Closing it returns focus to the control that opened it. A viewport change can stop that control from being rendered (the dock is `display: none` from 1024px), and focusing an element in a `display: none` subtree is a no-op; the keyboard shortcut opens the drawer with no control of its own, because nothing was focused when it fired. In both cases the drawer falls back to the first rendered menu trigger. Focus always lands on a control the visitor can see.
+The section menu is a modal drawer at every width. It opens from the icon-only menu trigger (`Open menu`) or the dock `MENU` control, keeps Tab inside the panel, and closes on Escape, the close control or the scrim. Closing it returns focus to the control that opened it. A viewport change can stop that control from being rendered (the dock is `display: none` from 1024px), and focusing an element in a `display: none` subtree is a no-op. In that case the drawer falls back to the first rendered menu trigger. Focus always lands on a control the visitor can see.
 
 ### The `Module` wrapper
 
