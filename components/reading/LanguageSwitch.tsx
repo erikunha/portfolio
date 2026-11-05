@@ -1,9 +1,5 @@
-import {
-  LANGUAGE_SWITCH_NAME,
-  languageSwitchPaths,
-  SITE_LOCALES,
-  type SiteLocale,
-} from '@/content/site-locale';
+import { LocaleSwitch } from '@/components/LocaleSwitch/LocaleSwitch';
+import { LANGUAGE_SWITCH_NAME, languageSwitchPaths, type SiteLocale } from '@/content/site-locale';
 
 export function ReadingLanguageSwitch({
   locale,
@@ -16,19 +12,5 @@ export function ReadingLanguageSwitch({
 }) {
   const paths = languageSwitchPaths(path);
   if (!paths) return null;
-  return (
-    <nav aria-label={label} className="reading-lang">
-      {SITE_LOCALES.map((candidate) => (
-        <a
-          key={candidate}
-          href={paths[candidate]}
-          hrefLang={candidate}
-          {...(candidate === locale ? { 'aria-current': 'page' as const } : {})}
-        >
-          {candidate.toUpperCase()}
-          <span className="sr-only">&nbsp;{LANGUAGE_SWITCH_NAME[candidate]}</span>
-        </a>
-      ))}
-    </nav>
-  );
+  return <LocaleSwitch label={label} current={locale} hrefs={paths} names={LANGUAGE_SWITCH_NAME} />;
 }

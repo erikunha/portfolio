@@ -257,57 +257,6 @@
     padding: var(--spacing-2);
   }
 
-  .lang-switch {
-    --lang-target: var(--spacing-target);
-    display: flex;
-    flex: none;
-    align-items: center;
-  }
-
-  @media (min-width: 1024px) and (pointer: fine) {
-    .lang-switch {
-      --lang-target: var(--spacing-target-pointer);
-    }
-  }
-
-  .lang-switch a {
-    box-sizing: border-box;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-width: var(--lang-target);
-    min-height: var(--lang-target);
-    padding: 0 var(--spacing-1);
-    font-family: var(--font-mono);
-    font-size: var(--text-min);
-    letter-spacing: 0.1em;
-    color: var(--color-text);
-    text-decoration: none;
-  }
-
-  .lang-switch a:hover {
-    color: var(--color-primary-500);
-    text-shadow: 0 0 8px var(--color-primary-500);
-    text-decoration: none;
-  }
-
-  .lang-switch a:focus-visible {
-    outline: 2px solid var(--color-primary-500);
-    outline-offset: 2px;
-  }
-
-  .lang-switch a[aria-current] {
-    color: var(--color-primary-500);
-    text-decoration: underline;
-    text-underline-offset: 0.5em;
-  }
-
-  .lang-switch-sep {
-    color: var(--color-tertiary-300);
-    font-family: var(--font-mono);
-    font-size: var(--text-min);
-  }
-
   .section-menu .nav-item {
     min-height: var(--menu-row);
     padding: 0 0 0 var(--spacing-3);

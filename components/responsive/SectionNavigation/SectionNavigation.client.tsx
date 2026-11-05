@@ -3,7 +3,6 @@
 import { usePathname } from 'next/navigation';
 import {
   createContext,
-  Fragment,
   type MouseEvent,
   type ReactNode,
   useCallback,
@@ -13,11 +12,11 @@ import {
   useRef,
   useState,
 } from 'react';
+import { LocaleSwitch } from '@/components/LocaleSwitch/LocaleSwitch';
 import type { NavigationCopy, SiteNavChrome } from '@/content/navigation';
 import {
   headerLanguageSwitchPaths,
   LANGUAGE_SWITCH_NAME,
-  SITE_LOCALES,
   type SiteLocale,
 } from '@/content/site-locale';
 import { NavItem } from '@/design-system';
@@ -43,7 +42,6 @@ const MENU_TRIGGER_CLASS = 'menu-trigger';
 const MENU_TRIGGER_SELECTOR = `.${MENU_TRIGGER_CLASS}`;
 export const MENU_ICON_PATH = 'M4 7h16M4 12h16M4 17h16';
 const ICON_VIEWBOX = '0 0 24 24';
-const LANGUAGE_SEPARATOR = '\u00b7';
 type NavigationState = {
   currentId: string;
   drawerOpen: boolean;
@@ -263,29 +261,14 @@ export function LanguageSwitch({ className }: { className?: string }) {
   const paths = pathname ? headerLanguageSwitchPaths(pathname) : null;
   if (!paths) return null;
   return (
-    <nav
-      aria-label={copy.langSwitchLabel}
-      className={cn('lang-switch', className)}
+    <LocaleSwitch
+      label={copy.langSwitchLabel}
+      current={locale}
+      hrefs={paths}
+      names={LANGUAGE_SWITCH_NAME}
+      className={cn('flex-none', className)}
       data-lang-switch=""
-    >
-      {SITE_LOCALES.map((candidate, position) => (
-        <Fragment key={candidate}>
-          {position > 0 ? (
-            <span className="lang-switch-sep" aria-hidden="true">
-              {LANGUAGE_SEPARATOR}
-            </span>
-          ) : null}
-          <a
-            href={paths[candidate]}
-            hrefLang={candidate}
-            {...(candidate === locale ? { 'aria-current': 'page' as const } : {})}
-          >
-            {candidate.toUpperCase()}
-            <span className="sr-only">&nbsp;{LANGUAGE_SWITCH_NAME[candidate]}</span>
-          </a>
-        </Fragment>
-      ))}
-    </nav>
+    />
   );
 }
 

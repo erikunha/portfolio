@@ -404,7 +404,7 @@ describe('SectionNavigation', () => {
 
     expect(panel().querySelector('[data-lang-switch]')).toBeNull();
     expect(panel().querySelector('a[hreflang]')).toBeNull();
-    expect(panel().querySelector('.menu-lang, .lang-switch')).toBeNull();
+    expect(panel().querySelector('.menu-lang, [data-lang-switch]')).toBeNull();
   });
 
   describe('LanguageSwitch', () => {
@@ -435,14 +435,14 @@ describe('SectionNavigation', () => {
       },
     );
 
-    it('names each language for assistive tech and hides the visual separator', () => {
+    it('names each language for assistive tech and renders no text separator', () => {
       mockPathname = '/';
       renderSwitch(LOCALE);
       const nav = screen.getByRole('navigation', { name: NAVIGATION[LOCALE].copy.langSwitchLabel });
 
       expect(within(nav).getByRole('link', { name: /EN\s*English/ })).toBeTruthy();
       expect(within(nav).getByRole('link', { name: /PT\s*Portugu/ })).toBeTruthy();
-      expect(nav.querySelector('.lang-switch-sep')?.getAttribute('aria-hidden')).toBe('true');
+      expect(nav.textContent).not.toContain('\u00b7');
     });
 
     it.each(['/design-system', '/unknown', null, '/cv', '/pt/summary', '/links', '/links/en'])(
