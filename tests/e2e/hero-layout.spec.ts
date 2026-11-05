@@ -66,9 +66,14 @@ test.describe('hero mobile layout', () => {
     ).toBeLessThanOrEqual(MOBILE_HERO_MAX_PX);
   });
 
-  for (const path of ['/', '/pt']) {
-    test(`stat tile text stays inside its tile at 320 (${path})`, async ({ page }) => {
-      await page.setViewportSize({ width: 320, height: 640 });
+  for (const [path, width] of [
+    ['/', 320],
+    ['/pt', 320],
+    ['/', 1280],
+    ['/pt', 1280],
+  ] as const) {
+    test(`stat tile text stays inside its tile at ${width} (${path})`, async ({ page }) => {
+      await page.setViewportSize({ width, height: 720 });
       await page.goto(path);
       const stats = page.locator('[data-testid="hero-stats"]').filter({ visible: true }).first();
       await expect(stats).toBeVisible();
@@ -90,7 +95,7 @@ test.describe('hero mobile layout', () => {
         }
         return found;
       });
-      expect(overflow, 'no stat tile text may overflow its tile at 320px').toEqual([]);
+      expect(overflow, `no stat tile text may overflow its tile at ${width}px`).toEqual([]);
     });
   }
 

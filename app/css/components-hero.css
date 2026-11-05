@@ -95,13 +95,7 @@
   }
 
   .hero-stats .stat-tile-label {
-    white-space: nowrap;
-  }
-
-  @media (max-width: 479.98px) {
-    .hero-stats .stat-tile-label {
-      white-space: normal;
-    }
+    overflow-wrap: anywhere;
   }
 
   .hero-actions {
