@@ -1,7 +1,6 @@
 @layer components {
   .site-footer {
     --footer-max-width: 75rem;
-    --footer-card-ratio: 1.15fr;
     --footer-tree-indent: 4ch;
     --footer-line-height: 1.5;
     --footer-session-leading: 1.95;
@@ -511,7 +510,7 @@
 
   @media (min-width: 900px) {
     .footer-cards {
-      grid-template-columns: 1fr var(--footer-card-ratio);
+      grid-template-columns: var(--phi-pair-columns-minor-first);
     }
   }
 }
