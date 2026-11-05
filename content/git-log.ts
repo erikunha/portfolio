@@ -18,8 +18,8 @@ const gitLogFor = (locale: SiteLocale): GitCommit[] => {
       company: 'Raylu',
       companyUrl: 'https://raylu.ai',
       role: pt
-        ? 'Engenheiro de Software Sênior, Frontend e Produto (contrato via Torc)'
-        : 'Senior Software Engineer, Frontend & Product (contract via Torc)',
+        ? 'Engenheiro de Software Sênior (contrato via Torc)'
+        : 'Senior Software Engineer (contract via Torc)',
       startMonth: '2026-06',
       endMonth: null,
       location: pt ? 'Nova York, EUA' : 'New York, US',
@@ -39,7 +39,7 @@ const gitLogFor = (locale: SiteLocale): GitCommit[] => {
       type: 'career',
       company: 'Betsson Group',
       companyUrl: 'https://betssongroup.com',
-      role: pt ? 'Engenheiro de Software Sênior, Frontend' : 'Senior Software Engineer, Frontend',
+      role: pt ? 'Engenheiro de Software Sênior' : 'Senior Software Engineer',
       startMonth: '2025-03',
       endMonth: '2026-05',
       location: 'Malta',
@@ -60,8 +60,8 @@ const gitLogFor = (locale: SiteLocale): GitCommit[] => {
       company: 'Canon Medical Systems Brazil',
       companyUrl: 'https://br.medical.canon',
       role: pt
-        ? 'Engenheiro de Software Sênior, Frontend (consultor independente)'
-        : 'Senior Software Engineer, Frontend (independent consultant)',
+        ? 'Engenheiro de Software Sênior (consultor independente)'
+        : 'Senior Software Engineer (independent consultant)',
       startMonth: '2023-03',
       endMonth: '2025-03',
       location: pt ? 'Canadá' : 'Canada',
@@ -81,7 +81,7 @@ const gitLogFor = (locale: SiteLocale): GitCommit[] => {
       type: 'career',
       company: 'Grupo SBF (Nike / Centauro)',
       companyUrl: 'https://www.gruposbf.com.br',
-      role: pt ? 'Engenheiro de Software, Frontend' : 'Software Engineer, Frontend',
+      role: pt ? 'Engenheiro de Software' : 'Software Engineer',
       startMonth: '2021-12',
       endMonth: '2023-03',
       location: pt ? 'São Paulo, Brasil' : 'São Paulo, Brazil',
@@ -102,8 +102,8 @@ const gitLogFor = (locale: SiteLocale): GitCommit[] => {
       company: 'Encora (formerly Daitan)',
       companyUrl: 'https://www.linkedin.com/company/encorainc/',
       role: pt
-        ? 'Engenheiro de Software, Frontend · alocado na VMware'
-        : 'Software Engineer, Frontend · assigned to VMware',
+        ? 'Desenvolvedor Frontend · alocado na VMware'
+        : 'Frontend Developer · assigned to VMware',
       startMonth: '2021-01',
       endMonth: '2021-12',
       location: pt ? 'Campinas, Brasil' : 'Campinas, Brazil',
@@ -123,7 +123,7 @@ const gitLogFor = (locale: SiteLocale): GitCommit[] => {
       type: 'career',
       company: 'Zup Innovation (Itaú Unibanco)',
       companyUrl: 'https://zup.com.br',
-      role: pt ? 'Engenheiro de Software, Frontend' : 'Software Engineer, Frontend',
+      role: pt ? 'Desenvolvedor Frontend' : 'Frontend Developer',
       startMonth: '2020-04',
       endMonth: '2021-01',
       location: pt ? 'Campinas, Brasil' : 'Campinas, Brazil',
@@ -144,8 +144,8 @@ const gitLogFor = (locale: SiteLocale): GitCommit[] => {
       company: 'Venturus',
       companyUrl: 'https://www.venturus.org.br',
       role: pt
-        ? 'Engenheiro de Software Full-Stack → Engenheiro de Software, Frontend'
-        : 'Full-Stack Software Engineer → Software Engineer, Frontend',
+        ? 'Engenheiro Full Stack → Desenvolvedor Frontend'
+        : 'Full Stack Engineer → Frontend Developer',
       startMonth: '2019-02',
       endMonth: '2020-04',
       location: pt ? 'Campinas, Brasil' : 'Campinas, Brazil',
@@ -166,8 +166,8 @@ const gitLogFor = (locale: SiteLocale): GitCommit[] => {
       company: 'MB Labs',
       companyUrl: 'https://mblabs.com.br',
       role: pt
-        ? 'Engenheiro de Software Full-Stack → Engenheiro de Software, Multiplataforma'
-        : 'Full-Stack Software Engineer → Software Engineer, Cross-Platform',
+        ? 'Engenheiro Full Stack → Engenheiro de Software'
+        : 'Full Stack Engineer → Software Engineer',
       startMonth: '2018-07',
       endMonth: '2019-02',
       location: pt ? 'Campinas, Brasil' : 'Campinas, Brazil',
@@ -187,9 +187,7 @@ const gitLogFor = (locale: SiteLocale): GitCommit[] => {
       type: 'career',
       company: 'Monde Sistemas',
       companyUrl: 'https://monde.com.br',
-      role: pt
-        ? 'Estagiário de Engenharia de Software, Frontend'
-        : 'Software Engineer Intern, Frontend',
+      role: pt ? 'Estagiário' : 'Intern',
       startMonth: '2017-10',
       endMonth: '2018-05',
       location: pt ? 'Americana, Brasil' : 'Americana, Brazil',
