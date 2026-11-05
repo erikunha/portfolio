@@ -59,6 +59,7 @@ const footerContentFor = (locale: SiteLocale) => {
       },
     ],
     treeTitle: 'LS -R ~/',
+    treeOpenDirectory: './work/',
     treeLabel: pt ? 'Mapa do site' : 'Site map',
     fileCount: { one: pt ? 'arquivo' : 'file', other: pt ? 'arquivos' : 'files' },
     groups: [

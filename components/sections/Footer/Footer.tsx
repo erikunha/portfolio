@@ -18,17 +18,34 @@ const CONNECTION_STATE = { listening: 'LISTEN' } as const;
 const SITEMAP_ACCORDION = 'footer-sitemap';
 const SINGLE_FILE = 1;
 
-type SitemapLink = (typeof footerContent)[SiteLocale]['groups'][number]['links'][number];
+type FooterContent = (typeof footerContent)[SiteLocale];
+type SitemapGroup = FooterContent['groups'][number];
+type SitemapLink = SitemapGroup['links'][number];
+
+function SitemapRowLabel({
+  group,
+  fileCount,
+}: {
+  group: SitemapGroup;
+  fileCount: FooterContent['fileCount'];
+}) {
+  const count = group.links.length;
+  return (
+    <>
+      <span className="sm-dir">{group.directory}</span>
+      <span className="sm-count">
+        {count} {count === SINGLE_FILE ? fileCount.one : fileCount.other}
+      </span>
+    </>
+  );
+}
 
 function SitemapLinks({ links }: { links: readonly SitemapLink[] }) {
   return (
     <ul className="sm-list">
       {links.map((link) => (
         <li key={link.href}>
-          <a href={link.href}>
-            <span className="tr" aria-hidden="true" />
-            <span className="tl">{link.label}</span>
-          </a>
+          <a href={link.href}>{link.label}</a>
         </li>
       ))}
     </ul>
@@ -164,23 +181,24 @@ export function Footer({ locale }: { locale: SiteLocale }) {
           <nav className="sitemap" aria-label={content.treeLabel}>
             <ul className="sm-groups">
               {content.groups.map((group) => (
-                <li key={group.directory}>
-                  <h4 className="sm-title">{group.directory}</h4>
+                <li key={group.directory} className="sm-group">
+                  <h4 className="sm-title sm-row">
+                    <SitemapRowLabel group={group} fileCount={content.fileCount} />
+                  </h4>
                   <SitemapLinks links={group.links} />
                 </li>
               ))}
             </ul>
             <div className="sm-folds">
               {content.groups.map((group) => (
-                <details key={group.directory} className="sm-fold" name={SITEMAP_ACCORDION}>
-                  <summary className="sm-fold-head">
-                    <span className="sm-fold-dir">{group.directory}</span>
-                    <span className="sm-fold-count">
-                      {group.links.length}{' '}
-                      {group.links.length === SINGLE_FILE
-                        ? content.fileCount.one
-                        : content.fileCount.other}
-                    </span>
+                <details
+                  key={group.directory}
+                  className="sm-fold"
+                  name={SITEMAP_ACCORDION}
+                  open={group.directory === content.treeOpenDirectory}
+                >
+                  <summary className="sm-fold-head sm-row">
+                    <SitemapRowLabel group={group} fileCount={content.fileCount} />
                   </summary>
                   <SitemapLinks links={group.links} />
                 </details>

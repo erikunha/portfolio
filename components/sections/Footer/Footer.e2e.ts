@@ -133,8 +133,8 @@ test.describe('Footer', () => {
       await page.evaluate(() => document.fonts.ready);
       if (width === 390) {
         const footer = await page.locator('footer').boundingBox();
-        expect(footer?.height).toBeGreaterThanOrEqual(1540);
-        expect(footer?.height).toBeLessThanOrEqual(1630);
+        expect(footer?.height).toBeGreaterThanOrEqual(1640);
+        expect(footer?.height).toBeLessThanOrEqual(1730);
       }
       const cells = page.locator('.footer-netstat :is(th, td)');
       for (const cell of await cells.all()) {
@@ -182,7 +182,7 @@ test.describe('Footer', () => {
     }
   });
 
-  test('site map follows the type scale: six columns at desktop, three at tablet, and the same rhythm on phones', async ({
+  test('site map follows the type scale: six columns at desktop, three at tablet, folder rows on phones', async ({
     page,
   }) => {
     const expectedColumns: Record<number, number> = { 1280: 6, 768: 3 };
@@ -216,11 +216,12 @@ test.describe('Footer', () => {
         ? tree.locator('.sm-fold-head').first()
         : tree.locator('.sm-title').first();
       await expect(heading).toBeVisible();
-      await expect(heading).toHaveCSS('font-size', `${scale.base}px`);
+      await expect(heading).toHaveCSS('font-size', `${scale.body}px`);
       await expect(heading).toHaveCSS('font-weight', '700');
       if (phone) {
         await expect(tree.locator('.sm-groups')).toBeHidden();
         await tree.locator('.sm-fold-head', { hasText: './measured/' }).click();
+        await page.mouse.move(0, 0);
       } else {
         await expect(tree.locator('.sm-folds')).toBeHidden();
         const columns = await tree
@@ -234,23 +235,29 @@ test.describe('Footer', () => {
         await expect(link).toHaveCSS('font-size', `${scale.body}px`);
         await expect(link).toHaveCSS('color', 'rgb(230, 255, 230)');
         const box = await link.boundingBox();
-        expect(box?.height).toBeGreaterThanOrEqual(24);
+        expect(box?.height).toBeGreaterThanOrEqual(44);
         expect(
           box?.height,
           `${await link.textContent()} stays on one line at ${width}`,
-        ).toBeLessThan(44);
+        ).toBeLessThanOrEqual(44);
         const fits = await link.evaluate((element) => element.scrollWidth <= element.clientWidth);
         expect(fits, `${await link.textContent()} must not overflow at ${width}`).toBe(true);
       }
       const edges = await page.evaluate(() => {
-        const left = (selector: string) =>
-          document.querySelector(selector)?.getBoundingClientRect().left ?? Number.NaN;
+        const left = (selector: string) => {
+          const element = document.querySelector(selector);
+          if (!element) return Number.NaN;
+          return (
+            element.getBoundingClientRect().left +
+            Number.parseFloat(getComputedStyle(element).paddingLeft)
+          );
+        };
         return {
           tree: left('#footer-tree-title'),
           netstat: left('#footer-netstat-title'),
           session: left('#footer-session-title'),
           content: Math.min(
-            ...[...document.querySelectorAll('.sm-groups > li, .sm-fold')]
+            ...[...document.querySelectorAll('.sm-dir')]
               .map((element) => element.getBoundingClientRect())
               .filter((rect) => rect.width > 0)
               .map((rect) => rect.left),
@@ -266,9 +273,7 @@ test.describe('Footer', () => {
     }
   });
 
-  test('the phone site map is an exclusive accordion: one folder open at a time', async ({
-    page,
-  }) => {
+  test('the phone site map is an exclusive accordion that opens on ./work/', async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 812 });
     await loadFooter(page);
     const tree = page.getByRole('navigation', { name: 'Site map' });
@@ -281,8 +286,6 @@ test.describe('Footer', () => {
       /\.\/contact\/\s*1 file/,
       /\.\/pages\/\s*4 files/,
     ]);
-    await expect(tree.getByRole('link')).toHaveCount(0);
-    await heads.filter({ hasText: './work/' }).click();
     await expect(tree.getByRole('link')).toHaveText(['Projects', 'Career']);
     await heads.filter({ hasText: './pages/' }).click();
     await expect(tree.getByRole('link')).toHaveText([
@@ -313,7 +316,10 @@ test.describe('Footer', () => {
     for (const head of await tree.locator('.sm-fold-head').all()) {
       const headBox = await head.boundingBox();
       expect(headBox?.height).toBeGreaterThanOrEqual(44);
-      await head.tap();
+      const open = await head.evaluate(
+        (element) => element.parentElement?.hasAttribute('open') ?? false,
+      );
+      if (!open) await head.tap();
       for (const link of await tree.getByRole('link').all()) {
         const box = await link.boundingBox();
         expect(box?.height).toBeGreaterThanOrEqual(44);
