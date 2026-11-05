@@ -77,6 +77,9 @@ jobs:
       - name: Doc-drift gate (ARCHITECTURE.md tree vs disk)
         run: pnpm check:doc-drift
 
+      - name: Section-order gate (rendered sections vs registry)
+        run: pnpm check:section-order
+
       - name: Detect-changes pathspec gate (no orphaned filters)
         run: pnpm check:detect-changes-paths
 

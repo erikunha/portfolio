@@ -1,6 +1,7 @@
 #!/usr/bin/env tsx
 
 import { execFile } from 'node:child_process';
+import { realpathSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
 import { promisify } from 'node:util';
 
@@ -10,9 +11,14 @@ export const CLAUDE_LOGIN = 'claude[bot]';
 export type ClaudeVerdict = 'approve' | 'request-changes' | 'reject' | 'none';
 
 const BOLD_SPAN = /\*\*([^*]+)\*\*/g;
+const CODE_SPAN = /`[^`\n]*`/g;
+const LINE_BREAK = /\r?\n/;
 
 export function parseClaudeVerdict(body: string): ClaudeVerdict {
-  const spans = [...body.matchAll(BOLD_SPAN)].map((match) => match[1] ?? '');
+  const spans = body
+    .split(LINE_BREAK)
+    .flatMap((line) => [...line.replace(CODE_SPAN, '').matchAll(BOLD_SPAN)])
+    .map((match) => match[1] ?? '');
   const has = (word: RegExp) => spans.some((span) => word.test(span));
   if (has(/\breject\b/i)) return 'reject';
   if (has(/\brequest changes\b/i)) return 'request-changes';
@@ -21,6 +27,7 @@ export function parseClaudeVerdict(body: string): ClaudeVerdict {
 }
 
 export const HEAD_SHA_GAP_MAX = 24;
+export const COMPARE_FILES_CAP = 300;
 
 const REVIEWED_SHA = new RegExp(
   `\\bhead\\b[^\`\\n]{0,${HEAD_SHA_GAP_MAX}}\`([0-9a-f]{7,40})\``,
@@ -52,13 +59,13 @@ export function evaluateGate(
 ): GateResult {
   if (verdict === 'none') return { ok: false, reason: 'no verdict yet (review in progress?)' };
   if (verdict === 'reject' || verdict === 'request-changes') {
-    return { ok: false, reason: `verdict is "${verdict}" — address findings and re-review` };
+    return { ok: false, reason: `verdict is "${verdict}": address findings and re-review` };
   }
   if (!reviewedSha) {
     return {
       ok: false,
       reason:
-        'approved, but the overview states no head SHA — cannot confirm the review is on HEAD',
+        'approved, but the overview states no head SHA, so it cannot confirm the review is on HEAD',
     };
   }
   if (!headSha.startsWith(reviewedSha)) {
@@ -70,7 +77,7 @@ export function evaluateGate(
     }
     return {
       ok: false,
-      reason: `approved ${reviewedSha} but HEAD is ${headSha.slice(0, 12)} — STALE; re-run /claude-review`,
+      reason: `approved ${reviewedSha} but HEAD is ${headSha.slice(0, 12)}: STALE, re-run /claude-review`,
     };
   }
   return { ok: true, reason: `verdict=approve on ${reviewedSha.slice(0, 12)}` };
@@ -119,16 +126,18 @@ async function run() {
     ).catch(() => {
       fail(
         prNumber,
-        `could not compare ${reviewedSha.slice(0, 12)}...${headSha.slice(0, 12)} — treating the Approve as STALE`,
+        `could not compare ${reviewedSha.slice(0, 12)}...${headSha.slice(0, 12)}: treating the Approve as STALE`,
       );
     });
     const compare = JSON.parse(compareOut) as {
       merge_base_commit: { sha: string };
       files: { filename: string }[];
     };
-    changedFiles = compare.merge_base_commit.sha.startsWith(reviewedSha)
-      ? compare.files.map((file) => file.filename)
-      : [];
+    const listComplete = compare.files.length < COMPARE_FILES_CAP;
+    changedFiles =
+      listComplete && compare.merge_base_commit.sha.startsWith(reviewedSha)
+        ? compare.files.map((file) => file.filename)
+        : [];
   }
 
   const result = evaluateGate(parseClaudeVerdict(latest.body), reviewedSha, headSha, changedFiles);
@@ -155,7 +164,7 @@ async function resolvePrNumber(passed: string | undefined): Promise<number> {
 
 if (
   typeof process.argv[1] === 'string' &&
-  import.meta.url === pathToFileURL(process.argv[1]).href
+  import.meta.url === pathToFileURL(realpathSync(process.argv[1])).href
 ) {
   run().catch((err) => {
     process.stderr.write(`[claude-gate] ${err instanceof Error ? err.message : String(err)}\n`);

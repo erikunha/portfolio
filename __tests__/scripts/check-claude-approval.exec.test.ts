@@ -12,6 +12,7 @@ const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../
 const gateScript = path.join(repoRoot, 'scripts', 'check-claude-approval.ts');
 const tsxCli = path.join(repoRoot, 'node_modules', 'tsx', 'dist', 'cli.mjs');
 
+const COMPARE_FILES_CAP = 300;
 const HEAD = `f9a5d56${'a'.repeat(33)}`;
 const REVIEWED = `0563abe${'b'.repeat(33)}`;
 const OTHER = `c0ffee1${'c'.repeat(33)}`;
@@ -76,6 +77,17 @@ describe('check-claude-approval run() end to end (mocked gh)', () => {
     const r = await runGate({ FAKE_MERGE_BASE: REVIEWED, FAKE_FILES_JSON: BASELINES_ONLY });
     expect(r.code).toBe(0);
     expect(r.stdout).toMatch(/carried: baseline-only commits/);
+  });
+
+  it('fails STALE when the compare file list is at the API cap and may be truncated', async () => {
+    const capped = JSON.stringify(
+      Array.from({ length: COMPARE_FILES_CAP }, (_, index) => ({
+        filename: `tests/visual/visual.spec.ts-snapshots/shot-${index}-linux.png`,
+      })),
+    );
+    const r = await runGate({ FAKE_MERGE_BASE: REVIEWED, FAKE_FILES_JSON: capped });
+    expect(r.code).toBe(1);
+    expect(r.stderr).toMatch(/STALE/);
   });
 
   it('fails STALE when a non-baseline file changed since the reviewed SHA', async () => {

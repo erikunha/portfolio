@@ -33,6 +33,11 @@ permissions:
   # and the step reds on every run — a permanent false red on the gate itself.
   # Read-only: the guard never writes a comment.
   issues: read
+  # The evidence snapshot runs `gh pr checks`, which reads check runs and
+  # commit statuses; without these two it fails on every run and the reviewer
+  # sees no gate results.
+  checks: read
+  statuses: read
   id-token: write
   actions: read
 
@@ -135,6 +140,13 @@ jobs:
             rm -f "$OUT_DIR/pr.json"
           fi
           rm -f "$OUT_DIR/pr.err"
+
+          if [ -z "$head_sha" ]; then
+            head_sha=$(git -C pr-head rev-parse HEAD 2> /dev/null || true)
+            if [ -n "$head_sha" ]; then
+              printf '%s\n' "$head_sha" > "$OUT_DIR/head-sha.txt"
+            fi
+          fi
 
           if ! { gh pr diff "$PR" --repo "$REPO" > "$OUT_DIR/diff.patch" \
             && gh pr diff "$PR" --repo "$REPO" --name-only > "$OUT_DIR/files.txt"; } 2> "$OUT_DIR/diff.err"; then
@@ -270,11 +282,12 @@ jobs:
       #
       # It filters on created_at against a timestamp taken before the action, so
       # an earlier run's verdict cannot satisfy it. Its regex mirrors
-      # parseClaudeVerdict in scripts/check-claude-approval.ts: it pairs ** spans
-      # from the start of the line, so prose between two bold spans never counts.
-      # It is applied PER LINE: a bolded verdict wrapped across a line break reds
-      # this guard while the parser reads it, so the guard is strictly NARROWER
-      # than the parser.
+      # parseClaudeVerdict in scripts/check-claude-approval.ts: both pair ** spans
+      # per line, so prose between two bold spans never counts and a bolded
+      # verdict wrapped across a line break is read by neither. The parser also
+      # strips backtick code spans before pairing, so a quoted glob such as
+      # `app/api/**` cannot swallow the verdict's opening **; the grep does not,
+      # which makes the guard NARROWER than the parser on such a line, never wider.
       # The parser reads only the LATEST claude[bot] comment, so the filter sorts
       # and takes `last`. `--slurp` is load-bearing: it makes gh emit ONE array of
       # pages, the shape `.[][]` destructures; without it `last` yields one body

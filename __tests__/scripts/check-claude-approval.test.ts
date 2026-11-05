@@ -114,6 +114,20 @@ describe('parseClaudeVerdict', () => {
     expect(parseClaudeVerdict(body)).toBe('approve');
   });
 
+  it('reads the verdict when the overview quotes a glob in a code span', () => {
+    const body = 'Touches `app/api/**` and `lib/**` only.\n\n**Verdict: Approve.**';
+    expect(parseClaudeVerdict(body)).toBe('approve');
+  });
+
+  it('reads the verdict when an unquoted glob sits on a line of its own', () => {
+    const body = 'Routes under app/api/** were reviewed.\n\n**Verdict: Request changes.**';
+    expect(parseClaudeVerdict(body)).toBe('request-changes');
+  });
+
+  it('does not read a verdict word inside a code span', () => {
+    expect(parseClaudeVerdict('Run `**Approve.**` to see the format.')).toBe('none');
+  });
+
   it('returns none for an in-progress comment with no verdict yet', () => {
     expect(parseClaudeVerdict('**Claude is working…**\n- [ ] Post overview')).toBe('none');
   });
