@@ -130,7 +130,7 @@ test.describe('/links link-in-bio', () => {
   test('types the tagline, and holds the full first phrase under reduced motion', async ({
     page,
   }) => {
-    const title = 'Engenheiro de Software Sênior, Frontend e Produto';
+    const title = 'Engenheiro de Software Sênior · Full Stack';
     const identity = page.locator('.links-identity-box');
 
     await page.emulateMedia({ reducedMotion: 'reduce' });
@@ -153,7 +153,7 @@ test.describe('/links link-in-bio', () => {
   test('renders the English title on the English route', async ({ page }) => {
     await page.goto('/links/en');
     await expect(page.locator('.links-identity-box')).toContainText(
-      'Senior Software Engineer, Frontend & Product',
+      'Senior Software Engineer · Full Stack',
     );
   });
 

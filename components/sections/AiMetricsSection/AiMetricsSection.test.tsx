@@ -34,6 +34,34 @@ afterEach(() => {
   vi.useRealTimers();
 });
 
+describe('AiMetricsSection: stacked blocks', () => {
+  it('renders ASK_EVAL before LIVE_PERF, each over its own tile grid', async () => {
+    getAskMetricsMock.mockResolvedValue(null);
+    getScoresMock.mockResolvedValue(null);
+    const { AiMetricsSection } = await import('./AiMetricsSection');
+    const stream = new PassThrough();
+    let html = '';
+    stream.on('data', (chunk) => {
+      html += chunk.toString();
+    });
+    const ended = new Promise<void>((resolve) => stream.on('end', resolve));
+    const pipe = renderToPipeableStream(<AiMetricsSection locale={SITE_LOCALE.en} />, {
+      onAllReady() {
+        pipe.pipe(stream);
+      },
+    });
+    await ended;
+    const doc = new DOMParser().parseFromString(html, 'text/html');
+    const headings = Array.from(
+      doc.querySelectorAll('.measured-grid .measured-heading'),
+      (h) => h.textContent?.trim().split(' ')[0],
+    );
+    expect(headings).toEqual(['ASK_EVAL.JSON', 'LIVE_PERF.JSON']);
+    expect(doc.querySelectorAll('.measured-grid .measured-tiles')).toHaveLength(2);
+    expect(doc.querySelectorAll('.measured-grid .measured-tile')).toHaveLength(8);
+  });
+});
+
 describe('AiMetricsSection — on-page AI eval/cost metrics (RSC)', () => {
   it('explains p95 and links the source without replacing real values', async () => {
     getAskMetricsMock.mockResolvedValue({
@@ -66,28 +94,33 @@ describe('AiMetricsSection — on-page AI eval/cost metrics (RSC)', () => {
     expect(html).toContain('2026-10-01T12:00:00Z');
   });
 
-  it('streams mobile PSI while ASK and desktop PSI are still pending in one Measured section', async () => {
+  it('streams the PSI tiles once both strategies resolve while ASK is still pending in one Measured section', async () => {
     const ask = Promise.withResolvers<null>();
-    const desktop = Promise.withResolvers<null>();
+    const desktop = Promise.withResolvers<{
+      performance: number;
+      accessibility: number;
+      bestPractices: number;
+      seo: number;
+      fetchedAt: string;
+    }>();
+    const psiScores = {
+      performance: 88,
+      accessibility: 100,
+      bestPractices: 95,
+      seo: 100,
+      fetchedAt: new Date().toISOString(),
+    };
     getAskMetricsMock.mockReturnValue(ask.promise);
     getScoresMock.mockImplementation((strategy: string) =>
-      strategy === 'desktop'
-        ? desktop.promise
-        : Promise.resolve({
-            performance: 88,
-            accessibility: 100,
-            bestPractices: 95,
-            seo: 100,
-            fetchedAt: new Date().toISOString(),
-          }),
+      strategy === 'desktop' ? desktop.promise : Promise.resolve(psiScores),
     );
     const { AiMetricsSection } = await import('./AiMetricsSection');
     const output = new PassThrough();
     let html = '';
-    const mobileArrived = new Promise<void>((resolve) => {
+    const psiArrived = new Promise<void>((resolve) => {
       output.on('data', (chunk) => {
         html += chunk.toString();
-        if (html.includes('>88<')) resolve();
+        if (html.includes('88 / 88')) resolve();
       });
     });
     const ended = new Promise<void>((resolve) => output.on('end', resolve));
@@ -96,13 +129,13 @@ describe('AiMetricsSection — on-page AI eval/cost metrics (RSC)', () => {
         stream.pipe(output);
       },
     });
-    await mobileArrived;
+    desktop.resolve(psiScores);
+    await psiArrived;
     expect(html).toContain('Measured');
     expect(html).toContain('sec-live-metrics');
     expect(html.match(/<section\b/g) ?? []).toHaveLength(1);
     expect(html).toContain('aria-busy="true"');
     ask.resolve(null);
-    desktop.resolve(null);
     await ended;
   });
   it('renders all four metric tiles when metrics are present', async () => {

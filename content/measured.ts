@@ -73,11 +73,10 @@ const measuredFor = (locale: SiteLocale): Measured => {
       source: 'PSI',
       url: 'https://pagespeed.web.dev/analysis?url=https%3A%2F%2Fwww.erikunha.dev%2F',
       timestampLabel: 'psi',
-      strategyParameter: 'form_factor',
-      outOf: '/100',
+      pairSeparator: ' / ',
       strategies: [
-        { key: 'desktop', label: 'DESKTOP' },
-        { key: 'mobile', label: 'MOBILE' },
+        { key: 'desktop', label: 'desktop' },
+        { key: 'mobile', label: pt ? 'celular' : 'mobile' },
       ],
       metrics: [
         { key: 'performance', label: pt ? 'DESEMPENHO' : 'PERFORMANCE' },

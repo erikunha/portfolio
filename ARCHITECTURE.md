@@ -8,7 +8,7 @@
 
 ## 0. The meta-frame
 
-This portfolio is itself a hiring artifact for Senior Software Engineer, Frontend & Product roles (open to Senior and Tech Lead). The architecture has to **demonstrate the engineering it claims**. A site that says "performance-first" but ships a 400KB JS bundle is self-disqualifying. The architecture below treats the page as a small production service with the same rigor I'd apply to a payment platform, minus the multi-region overkill.
+This portfolio is itself a hiring artifact for Senior Software Engineer, Full Stack roles (open to Senior and Tech Lead). The architecture has to **demonstrate the engineering it claims**. A site that says "performance-first" but ships a 400KB JS bundle is self-disqualifying. The architecture below treats the page as a small production service with the same rigor I'd apply to a payment platform, minus the multi-region overkill.
 
 The Principal-level moves here are mostly **what we don't build**:
 - No CMS (single-author, content fits in typed TS files)
@@ -163,7 +163,7 @@ Client boundaries use `.client.ts`/`.client.tsx`, a `/client/` directory, or Nex
 
 ### One shell on every page
 
-`/`, `/links`, `/links/en` and `/design-system/*` render inside `AppShell`: the same topbar (desktop) or status bar and title bar (phone), the same dock, the same single site menu, the same position line and CRT overlay. The brand icon (`BrandLink`, passed to `AppShell` as `brand`) is the way home on every page. The desktop topbar reads, left to right and in DOM and tab order: menu trigger, search button with the shortcut, section links, MOTION toggle (xl), VIEW_CV, HIRE, then a gap and the brand icon at the right end. `AppShell` takes a `drawerExtra` slot: the design system puts its page tree there (`DsDrawerNav`), so there is one menu, not a second drawer. From 1024px the design system also shows its page tree as a side rail (`.ds-sidebar`); below 1024px the rail is hidden and a `<noscript>` copy keeps the page tree reachable without JavaScript. The dock marks no item as current off the home page, because no home section is in view. `/cv` and `/summary` stay on their own print-first reading layout.
+`/`, `/links`, `/links/en` and `/design-system/*` render inside `AppShell`: the same topbar (desktop) or status bar and title bar (phone), the same dock, the same single site menu, the same position line and CRT overlay. The brand icon (`BrandLink`, passed to `AppShell` as `brand`) is the way home on every page. The desktop topbar reads, left to right and in DOM and tab order: menu trigger, section links, MOTION toggle (xl), VIEW_CV, HIRE, the compact `EN · PT` language switch, then a gap and the brand icon alone at the right end. The phone title bar carries the same switch right before the brand icon; the drawer holds no language links. `AppShell` takes a `drawerExtra` slot: the design system puts its page tree there (`DsDrawerNav`), so there is one menu, not a second drawer. From 1024px the design system also shows its page tree as a side rail (`.ds-sidebar`); below 1024px the rail is hidden and a `<noscript>` copy keeps the page tree reachable without JavaScript. The dock marks no item as current off the home page, because no home section is in view. `/cv` and `/summary` stay on their own print-first reading layout.
 
 Pages inside the shell use `.page-container.page-main`, so the topbar clearance, gutter and page top come from the same tokens as the home page. Rhythm inside the design-system prose, `/links` and the guitar module's EQ strip step through `--phi-space-1` to `--phi-space-4`, and two-column splits use `--phi-pair-columns` (1.618 : 1) from 1024px; below that every level is one column.
 
@@ -175,7 +175,7 @@ Only the DAW mixer selects a UA-specific variant: `DawMixerContent` awaits `getI
 
 Projects renders one static RSC tree at every viewport. Its nine cards share descriptions and stats from `content/projects.ts`; CSS selects one, two or three columns. Six project receipts from `content/perf-receipts.ts` sit beneath the cards inside the Projects module. `sec-perf-receipts` remains a nested anchor.
 
-Measured is one module at `sec-live-metrics`, composed by `AiMetricsSection`. ASK evaluation data and desktop/mobile PSI scores stream through three independent Suspense boundaries. `content/measured.ts` supplies labels, sources, units and timestamp formatting. The data adapters remain `lib/ask-metrics.ts` and `lib/lighthouse-scores.ts`. The nested `sec-ai-metrics` and `sec-live-perf` anchors preserve existing links.
+Measured is one module at `sec-live-metrics`, composed by `AiMetricsSection`. ASK evaluation data and the PSI scores stream through two independent Suspense boundaries; the PSI block resolves once both desktop and mobile runs return. Both blocks stack as tile grids, four across on wide containers and two by two below 40rem, and each Lighthouse tile reads `desktop / mobile`. `content/measured.ts` supplies labels, sources, units and timestamp formatting. The data adapters remain `lib/ask-metrics.ts` and `lib/lighthouse-scores.ts`. The nested `sec-ai-metrics` and `sec-live-perf` anchors preserve existing links.
 
 `GuitarSection` renders one responsive RSC presentation across viewports. CSS adjusts its layout without UA detection, a variant swap or a section Suspense fallback.
 

@@ -104,9 +104,6 @@ const NavigationCopySchema = z.object({
   closeDrawer: NavTextSchema,
   dockLabel: NavTextSchema,
   positionLabel: NavTextSchema,
-  searchLabel: NavTextSchema,
-  searchShortcutApple: NavTextSchema,
-  searchShortcutOther: NavTextSchema,
   motionOn: NavTextSchema,
   motionOff: NavTextSchema,
   langSwitchLabel: NavTextSchema,
@@ -318,8 +315,7 @@ export const MeasuredSchema = z.object({
     source: z.string().min(1),
     url: z.string().url(),
     timestampLabel: z.string().min(1),
-    strategyParameter: z.string().min(1),
-    outOf: z.string().min(1),
+    pairSeparator: z.string().min(1),
     strategies: z
       .array(
         z.object({
@@ -566,7 +562,8 @@ export const ProfileSchema = z.object({
   fullName: z.string().min(1),
   displayName: z.string().min(1),
   title: z.string().min(1),
-  technologyLine: z.string().min(1),
+  stackLine: z.string().min(1),
+  aiLine: z.string().min(1),
   country: z.string().min(1),
   city: z.string().min(1),
   timezone: z.string().min(1),
@@ -577,7 +574,14 @@ export const ProfileSchema = z.object({
     context: z.string().min(1),
   }),
   languages: z
-    .array(z.object({ code: z.string().min(1), name: z.string().min(1), level: z.string().min(1) }))
+    .array(
+      z.object({
+        code: z.string().min(1),
+        label: z.string().min(1),
+        name: z.string().min(1),
+        level: z.string().min(1),
+      }),
+    )
     .min(1),
   actions: z
     .array(
@@ -985,7 +989,7 @@ export type LinksPill = z.infer<typeof LinksPillSchema>;
 export type LinksCopy = z.infer<typeof LinksCopySchema>;
 export type LinksContent = z.infer<typeof LinksContentSchema>;
 
-export type Profile = z.infer<typeof ProfileSchema>;
+export type Profile = z.infer<typeof ProfileSchema> & { technologyLine: string };
 export type Education = z.infer<typeof EducationSchema>;
 
 const ReadingTextSchema = z.string().min(1);

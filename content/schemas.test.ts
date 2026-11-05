@@ -285,8 +285,9 @@ describe('DawMixerSchema', () => {
 const profileFixture = {
   fullName: 'Erik Henrique Alves Cunha',
   displayName: 'Erik Cunha',
-  title: 'Senior Software Engineer, Frontend & Product',
-  technologyLine: 'React · Next.js · TypeScript · Angular · Node.js · AWS',
+  title: 'Senior Software Engineer · Full Stack',
+  stackLine: 'React, Next.js, Angular, TypeScript, JavaScript, Node.js, Python, AWS',
+  aiLine: 'LLM Apps, Evals, RAG, LangGraph, LangChain, Agents',
   country: 'Brazil',
   city: 'Paulínia',
   timezone: 'UTC-3',
@@ -297,10 +298,10 @@ const profileFixture = {
     context: 'private-markets fintech · B2B SaaS',
   },
   languages: [
-    { code: 'pt', name: 'Portuguese', level: 'native' },
-    { code: 'en', name: 'English', level: 'C1' },
-    { code: 'es', name: 'Spanish', level: 'B1' },
-    { code: 'fr', name: 'French', level: 'A2' },
+    { code: 'pt', label: 'PT-BR', name: 'Portuguese', level: 'native' },
+    { code: 'en', label: 'EN', name: 'English', level: 'C1' },
+    { code: 'es', label: 'ES', name: 'Spanish', level: 'B1' },
+    { code: 'fr', label: 'FR', name: 'French', level: 'A2' },
   ],
   actions: [{ label: 'GitHub ↗', href: 'https://github.com/erikunha' }],
 };
@@ -348,7 +349,10 @@ describe('canonical profile and education', () => {
     const { ProfileSchema } = await import('./schemas');
     const { profile } = await import('./profile');
     expect(ProfileSchema.parse(profileFixture)).toEqual(profileFixture);
-    expect(profile).toEqual(profileFixture);
+    expect(profile).toEqual({
+      ...profileFixture,
+      technologyLine: `${profileFixture.stackLine} · ${profileFixture.aiLine}`,
+    });
   });
 
   it('rejects missing identity, invalid actions and missing language levels', async () => {
