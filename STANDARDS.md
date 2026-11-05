@@ -42,7 +42,7 @@ never announced. Streaming through React state — coalesced one update per
 animation frame — keeps the DOM React-owned and INP frame-bounded.
 
 **How it is held.** Mechanical gate: `scripts/check-client-naming.mjs`
-(`pnpm check:client-naming`) runs in the `build-and-gate` CI job and in the
+(`pnpm check:client-naming`) runs in the `quality-fast` CI job and in the
 `pre-push` hook — it fails the build if any `'use client'` file outside those
 Next convention files is misnamed or exports `async function`. The streaming-through-React contract is held by the
 behavioral test `components/client/InteractiveShell/InteractiveShell.test.tsx`, which asserts
@@ -133,7 +133,7 @@ printed number is not the ceiling that binds. The gate asserts one quantity it
 can measure truthfully (per-route first-load total) and reports the app-owned
 split beside it without dressing the report up as a gate.
 
-**How it is held.** Mechanical gates: Lighthouse CI runs in `build-and-gate`
+**How it is held.** Mechanical gates: Lighthouse CI runs in `performance`
 for both desktop (`pnpm lhci`) and mobile (`pnpm lhci:mobile`) and fails the
 build on any category dropping below threshold. `scripts/check-bundle-size.mjs`
 (`pnpm bundle-check`) gates the gzipped client-chunk total in CI; its header
@@ -208,7 +208,7 @@ and trip that guard on an otherwise-clean install.
 **How it is held.** Mechanical gate: `scripts/check-dep-pinning.mjs`
 (`pnpm check:dep-pinning`) rejects any `latest`, `*`, wildcard, or otherwise
 unbounded spec. It runs inside `pnpm verify`, in the `pre-push` hook, and as the
-`Dependency-pinning gate` step in the `build-and-gate` CI job. Reproducibility
+`Dependency-pinning gate` step in the `quality-fast` CI job. Reproducibility
 of the install itself is held by `pnpm install --frozen-lockfile` in CI.
 
 ---
@@ -236,7 +236,7 @@ and exits non-zero on any violation. A module a client component imports stays
 Zod-free, so its schema is parsed in `content/_validate-client-content.ts`, the
 single build-time parse site for client-consumed content. It runs inside
 `pnpm verify`, in the `pre-push` hook, and as the `Validate content` step in the
-`build-and-gate` CI job. The "no copy in `.tsx`" rule is held by PR review
+`quality-fast` CI job. The "no copy in `.tsx`" rule is held by PR review
 against this chapter.
 
 ---
@@ -269,7 +269,7 @@ constraint — a shared mutated node makes the `aria-live` region announce
 unpredictably; discrete React-owned nodes announce cleanly.
 
 **How it is held.** Mechanical gates: the axe-core scan (`tests/a11y/axe.spec.ts`,
-the `axe-core a11y scan` step in `build-and-gate`) fails the build on any axe
+the `axe-core a11y scan` step in `performance`) fails the build on any axe
 violation; Lighthouse CI gates the Accessibility category at 100 (Chapter 3).
 Per-component behavioral a11y tests, for example
 `components/client/ContactForm/ContactForm.test.tsx` (tab order, `role`/`aria-live` error

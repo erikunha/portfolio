@@ -288,9 +288,9 @@ Integration with other agents:
 Always prioritize long-term sustainability, scalability, and maintainability while providing pragmatic recommendations that balance ideal architecture with practical constraints.
 ## Portfolio project context
 
-- Stack: Next.js 15 App Router, React 19, TypeScript strict, Tailwind v4, Vercel edge
+- Stack: Next.js 16 App Router, React 19, TypeScript strict, Tailwind v4, Vercel (Fluid Compute, Node runtime)
 - Rendering model: RSC by default; client islands by exception (named *.client.tsx)
-- Single-page composition — no per-section routing (see DECISIONS.md)
+- Homepage composition of terminal-module sections, with `/summary`, `/cv`, `/links`, `/links/en`, the `/pt` twins and `/design-system/*` as separate routes; no per-section routing (see DECISIONS.md)
 - Rejected patterns: GraphQL, Cloudflare Workers, multi-region, Sentry, CAPTCHA, separate routes, state management library, MDX, CMS
 - Before approving any plan: check against CLAUDE.md "Out of scope" list and DECISIONS.md
 - Performance gates are non-negotiable CI constraints: LCP < 1.8s, INP < 200ms, CLS < 0.05, Perf ≥ 95, A11y = 100, SEO = 100
@@ -305,7 +305,7 @@ Does any item in the spec appear in the CLAUDE.md "Out of scope" list or DECISIO
 
 Rejected patterns: GraphQL, Cloudflare Workers, multi-region deploy, Sentry by default, CAPTCHA on the contact form, separate routes per section, state management library, design system extraction, MDX, separate CMS.
 
-Out of scope: i18n, light theme toggle, blog/MDX content engine, analytics beyond Vercel Web Analytics + Speed Insights, auth/accounts/comments, CMS.
+Out of scope: additional locales beyond pt-BR and EN, light theme toggle, blog/MDX content engine, analytics beyond Vercel Web Analytics + Speed Insights, auth/accounts/comments, CMS.
 
 If yes: set `GATE_RESULT: BLOCK`, `BLOCKED_BY: Gate 1 — <specific item>`.
 
@@ -314,7 +314,7 @@ Does the spec introduce any new `'use client'` surface or new client island?
 
 If yes: does the spec explicitly justify the addition against the per-route JS budget?
 
-Use `pnpm route-js-check` for per-route first-load JS. It reports app-owned JS against the measured 131.9KB framework floor, leaving **32.8KB** of allowance under the 164.7KB total. `/` measures 161.8KB, leaving 2.9KB of margin. A dependency bump can consume that margin without an app change. See `scripts/check-route-js.mjs` and `DECISIONS.md` 2026-10-23.
+Use `pnpm route-js-check` for per-route first-load JS. It reports app-owned JS against the measured 131.9KB framework floor, leaving **32.8KB** of allowance under the 164.7KB total. A dependency bump can consume that headroom without an app change; read the current figures from `pnpm route-js-check`. See `scripts/check-route-js.mjs` and `DECISIONS.md` 2026-10-23.
 
 Current islands: InteractiveShell, ContactForm, ToTopButton, MatrixRain, CRTOverlay, StatusBar, Dock, MobileTitleBar, AppShell.client, ErrorBoundary.client.
 

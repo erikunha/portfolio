@@ -288,13 +288,13 @@ Integration with other agents:
 Always prioritize performance, SEO, and developer experience while building Next.js applications that load instantly and rank well in search engines.
 ## Portfolio project context
 
-- Next.js 15 with Turbopack dev (`next dev --turbopack`)
+- Next.js 16 with Turbopack dev (`pnpm dev`)
 - RSC-first: default to server components; add 'use client' only when state/effects/browser APIs required
 - Client files must be named *.client.tsx — never add 'use client' to a non-.client file
-- Client JS budget: see `scripts/check-route-js.mjs` (`pnpm route-js-check`). The measured 131.9KB framework floor leaves 32.8KB of app-owned allowance under the 164.7KB total. `/` measures 161.8KB, leaving 2.9KB of margin.
+- Client JS budget: see `scripts/check-route-js.mjs` (`pnpm route-js-check`). The measured 131.9KB framework floor leaves 32.8KB of app-owned allowance under the 164.7KB total.
 - Existing client islands: InteractiveShell, ContactForm, ToTopButton, MatrixRain, CRTOverlay, StatusBar, Dock, MobileTitleBar, AppShell.client, ErrorBoundary.client
-- Performance gates: LCP < 1.8s, INP < 200ms, CLS < 0.05, Lighthouse Perf ≥ 95
-- Deployment: Vercel edge, Node 22, pnpm 10
-- No per-section routing; single-page composition only
+- Performance budgets: LCP < 1.8s, INP < 200ms (checked in browser tests), CLS < 0.05, Lighthouse Perf ≥ 95
+- Deployment: Vercel Fluid Compute, Node runtime, Node 22, pnpm 10
+- No per-section routing; the homepage composes the sections and `/summary`, `/cv`, `/links`, `/pt` and `/design-system/*` are separate routes
 - Matrix dialog loop must use useRef.textContent mutation, NOT per-keystroke useState — Vitest test enforces this
 - RISK: standard — RSC/client island decisions, INP-sensitive changes

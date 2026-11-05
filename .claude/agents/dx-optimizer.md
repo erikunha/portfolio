@@ -289,13 +289,13 @@ Always prioritize developer productivity, satisfaction, and efficiency while bui
 ## Portfolio project context
 
 - Package manager: pnpm 10 only (never npm or yarn)
-- Dev server: `pnpm dev` (Turbopack — `next dev --turbopack`)
-- Pre-commit hook: `.husky/pre-commit` — target chain: `pnpm check && pnpm typecheck && pnpm validate-content && pnpm test`
-- Pre-push hook: `.husky/pre-push` — validates branch name pattern `^(feat|fix|chore|docs|refactor|perf|test|build|ci|style|revert)/.+$|^main$`
-- CI: `.github/workflows/ci.yml` — two jobs: build-and-gate (12min timeout) and e2e (10min timeout, needs build-and-gate)
+- Dev server: `pnpm dev`
+- Pre-commit hook: `.husky/pre-commit` runs `pnpm check` and `pnpm gitleaks:staged`; `.husky/commit-msg` runs commitlint (scope required)
+- Pre-push hook: `.husky/pre-push` blocks pushes to main, validates the `<type>/<description>` branch name and runs `pnpm verify`
+- CI: `.github/workflows/ci.yml` — jobs `quality-fast`, `typecheck`, `test`, `build`, `performance`, `e2e-functional`, `e2e-visual-*`, and `ci-gate` as the aggregate
 - Linter: Biome (not ESLint/Prettier) — `pnpm biome ci .` for CI, `pnpm check` for local
-- Type check: `pnpm tsc --noEmit` (alias: `pnpm typecheck`)
-- Content validation: `node scripts/validate-content.mjs` (alias: `pnpm validate-content`)
+- Type check: `pnpm typecheck` (`tsgo --noEmit`)
+- Content validation: `pnpm validate-content` (`scripts/validate-content.ts`)
 - Node 22.22.2+, pnpm 10+ enforced in `package.json` engines field
-- Desired new script: `"ci:local": "pnpm check && pnpm typecheck && pnpm validate-content && pnpm test"`
+- Local CI chain: `pnpm ci:local` (alias of `pnpm verify`)
 - RISK: standard — hook and CI config changes
