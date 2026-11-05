@@ -78,9 +78,9 @@ describe('LivePerfSection: fetch-error fallback', () => {
     );
     const html = await renderPerfData();
     expect(valuesOf(html)).toEqual(['99 / —', '100 / —', '95 / —', '100 / —']);
-    expect(new DOMParser().parseFromString(html, 'text/html').body.textContent).toContain(
-      'unavailable',
-    );
+    const doc = new DOMParser().parseFromString(html, 'text/html');
+    expect(Array.from(doc.querySelectorAll('p.measured-status'), (p) => p.textContent)).toEqual([]);
+    expect(doc.querySelector('time')?.getAttribute('datetime')).toBe(REAL_SCORES.fetchedAt);
   });
 });
 

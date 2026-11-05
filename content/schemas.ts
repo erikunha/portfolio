@@ -366,13 +366,8 @@ const _dotsNode = (role: 'INPUT' | 'AMP' | 'OUT') =>
     role: z.literal(role),
     strengthDots: z.number().int().min(0).max(GUITAR_SIGNAL_BAR_COUNT),
   });
-const _fxNode = z.object({
-  ..._signalNodeBase,
-  role: z.literal('FX'),
-});
 export const SignalChainNodeSchema = z.discriminatedUnion('role', [
   _dotsNode('INPUT'),
-  _fxNode,
   _dotsNode('AMP'),
   _dotsNode('OUT'),
 ]);
@@ -449,7 +444,7 @@ export const StatCellSchema = z.object({
 
 export const GuitarRigSchema = z.object({
   eqSpectrum: EqSpectrumSchema,
-  signalChain: z.tuple([_dotsNode('INPUT'), _fxNode, _dotsNode('AMP'), _dotsNode('OUT')]),
+  signalChain: z.tuple([_dotsNode('INPUT'), _dotsNode('AMP'), _dotsNode('OUT')]),
   influences: z.array(InfluenceSchema).length(5),
   stats: z.array(StatCellSchema).length(4),
   liveCam: z.object({
@@ -460,7 +455,7 @@ export const GuitarRigSchema = z.object({
   }),
 });
 
-const [guitarInputSchema, , guitarAmpSchema, guitarOutputSchema] =
+const [guitarInputSchema, guitarAmpSchema, guitarOutputSchema] =
   GuitarRigSchema.shape.signalChain.def.items;
 const GuitarPresentationCopySchema = z.object({
   label: z.string().trim().nonempty(),

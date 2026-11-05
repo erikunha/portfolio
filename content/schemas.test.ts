@@ -90,12 +90,7 @@ describe('GuitarPresentationSchema', () => {
       guitarPresentationFixture,
     );
     expect(guitarRig[EN].eqSpectrum).toEqual(guitarEqSpectrumFixture);
-    expect(guitarRig[EN].signalChain.map((node) => node.role)).toEqual([
-      'INPUT',
-      'FX',
-      'AMP',
-      'OUT',
-    ]);
+    expect(guitarRig[EN].signalChain.map((node) => node.role)).toEqual(['INPUT', 'AMP', 'OUT']);
   });
 
   it.each([
@@ -192,7 +187,6 @@ describe('GuitarRigSchema v2', () => {
         eqSpectrum: guitarEqSpectrumFixture,
         signalChain: [
           { role: 'INPUT', name: 'TEST', subtitle: 'sub', strengthDots: 4 },
-          { role: 'FX', name: 'FX', subtitle: 'sub' },
           { role: 'AMP', name: 'AMP', subtitle: 'sub', strengthDots: 3 },
           { role: 'OUT', name: 'OUT', subtitle: 'sub', strengthDots: 5 },
         ],

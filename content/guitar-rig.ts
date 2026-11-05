@@ -50,11 +50,6 @@ const guitarRigFor = (locale: SiteLocale): GuitarRig => {
         strengthDots: 4,
       },
       {
-        role: 'FX',
-        name: 'LINE 6 HX STOMP XL',
-        subtitle: pt ? '8 blocos carregados' : '8 blocks loaded',
-      },
-      {
         role: 'AMP',
         name: 'MODELED CAB',
         subtitle: pt ? 'sem válvula · simulação de IR' : 'no tube · IR sim',
@@ -113,7 +108,7 @@ export const guitarRig: Record<SiteLocale, GuitarRig> = {
 const guitarPresentationFor = (locale: SiteLocale): GuitarPresentation => {
   const pt = locale === SITE_LOCALE.pt;
   const rig = guitarRig[locale];
-  const [input, , amp, output] = rig.signalChain;
+  const [input, amp, output] = rig.signalChain;
   return GuitarPresentationSchema.parse({
     signalStrengthLabelTemplate: pt ? '{n} de {total}' : '{n} of {total}',
     signalStrip: {

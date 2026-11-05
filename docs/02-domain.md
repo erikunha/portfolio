@@ -64,7 +64,7 @@ Supporting content (not sections): `social.ts` (links), `seo.ts` (JSON-LD `Perso
 
 Projects uses one set of descriptions and stats across viewport sizes. Each card names its company; OSS cards include a public URL. The canonical receipt collection retains signed percentage deltas for consistency checks. Its six project receipts may display before/after values while keeping those deltas available to other consumers. `heroContent` validates Hero metrics, labels and actions on the server. `hero-client.ts` holds boot and system-failure copy with a type-only schema import. `heroContent.stats` supplies the Hero metrics and the summary reading-view metrics.
 
-Measured groups ASK and PSI presentation metadata without storing live values. The ASK adapter reads the eval aggregate; the PSI adapter supplies separate desktop and mobile scores. Each group keeps its own loading, unavailable and stale states.
+Measured groups ASK and PSI presentation metadata without storing live values. The ASK adapter reads the eval aggregate; the PSI adapter supplies separate desktop and mobile scores. Each group keeps its own loading, unavailable and stale states. PSI shows the unavailable note only when neither strategy has scores; a single failed strategy shows `—` in its half of each tile.
 
 ContactForm imports Zod-free `content/contact-copy.ts`; `content/contact.ts` validates that copy with Zod for server consumers. Both share the LinkedIn URL from `content/social-urls.ts`. The timezone panel reads its copy from the same module and its land grid, Erik's pin and curated zone coordinates from the Zod-free `content/world-map.ts`; `content/_validate-client-content.ts` parses both at build time.
 
@@ -103,7 +103,7 @@ erDiagram
 
 **Two notable invariants the schema enforces** (because they are silent-corruption risks):
 - The guitar **EQ spectrum is one Zod object** (`EqSpectrumSchema` in `content/schemas.ts`). It rejects a band or axis tick outside the frequency range, an inverted range, a non-positive BPM and an accessible-name template that lost its `{freq}` or `{gain}` token. The curve and bars are derived from the bands by `lib/eq-spectrum.ts`, so the values live in one place.
-- The guitar **presentation signal chain is a three-node Zod `tuple`** (`GuitarPresentationSchema`). It fixes the rendered order to INPUT → AMP → OUT and rejects reordered, duplicate or missing roles. The source rig retains FX metadata outside the presentation tuple.
+- The guitar **presentation signal chain is a three-node Zod `tuple`** (`GuitarPresentationSchema`). It fixes the rendered order to INPUT → AMP → OUT and rejects reordered, duplicate or missing roles. The source rig (`GuitarRigSchema`) carries the same three nodes, so no authored node goes unrendered.
 - The DAW mixer is `.length(3)` with `.refine(last.id === 'MASTER')` - CH 01, CH 02 and the master channel, which must be last.
 
 ## The AI sub-domain (`/api/ask` and its evaluation)

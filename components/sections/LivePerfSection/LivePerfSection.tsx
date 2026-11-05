@@ -43,7 +43,7 @@ function PerfBody({
   const format = measured.format;
   const { psi } = measured;
   const available = scores ? Object.values(scores).filter(isAvailable) : [];
-  const unavailable = !scores || available.length < psi.strategies.length;
+  const unavailable = available.length === 0;
   const timestamp = metricTimestamp(
     available.length > 0 ? oldestFetchedAt(available) : undefined,
     LIGHTHOUSE_TTL_S * format.millisecondsPerSecond,

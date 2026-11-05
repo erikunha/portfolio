@@ -98,7 +98,7 @@ describe('GuitarSection EQ strip', () => {
 });
 
 describe('GuitarSection signal chain and details', () => {
-  it('renders exactly INPUT, AMP and OUT in signal order without the FX tuple', () => {
+  it('renders exactly INPUT, AMP and OUT in signal order', () => {
     const doc = renderContent();
     const nodes = Array.from(doc.querySelectorAll('[data-testid^="signal-node-"]'));
     expect(nodes.map((node) => node.getAttribute('data-testid'))).toEqual([
@@ -111,8 +111,9 @@ describe('GuitarSection signal chain and details', () => {
       expect(displayed?.textContent).toContain(node.name);
       expect(displayed?.textContent).toContain(node.subtitle);
     }
-    expect(doc.body.textContent).not.toContain(guitarRig[EN].signalChain[1].name);
-    expect(doc.querySelector('[data-testid="signal-node-FX"]')).toBeNull();
+    expect(guitarRig[EN].signalChain.map((node) => node.name)).toEqual(
+      guitarPresentation[EN].signalChain.map((node) => node.name),
+    );
   });
 
   it('exposes each node signal strength as a named image matching the visible bars', () => {
