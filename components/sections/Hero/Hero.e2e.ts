@@ -1,6 +1,7 @@
 import { expect, type Locator, type Page, test } from '@playwright/test';
 import { heroContent } from '@/content/hero';
 import { profile } from '@/content/profile';
+import { SITE_LOCALE } from '@/content/site-locale';
 
 const viewports = [
   { width: 1280, height: 720 },
@@ -20,10 +21,12 @@ for (const viewport of viewports) {
         hero.getByRole('heading', { level: 1, name: profile.displayName }),
       ).toBeVisible();
       await expect(hero.getByText(profile.title, { exact: false })).toBeVisible();
-      const hire = hero.getByRole('link', { name: heroContent.hire.accessibleLabel });
+      const hire = hero.getByRole('link', {
+        name: heroContent[SITE_LOCALE.en].hire.accessibleLabel,
+      });
       await expect(hire).toBeVisible();
-      await expect(hire).toHaveAttribute('href', heroContent.hire.href);
-      for (const action of heroContent.actions) {
+      await expect(hire).toHaveAttribute('href', heroContent[SITE_LOCALE.en].hire.href);
+      for (const action of heroContent[SITE_LOCALE.en].actions) {
         if (action.hiddenOnWide && viewport.width >= WIDE_BREAKPOINT) continue;
         const link = hero.getByRole('link', { name: action.accessibleLabel, exact: true });
         await expect(link).toHaveAttribute('href', action.href);
@@ -215,17 +218,19 @@ test.describe('Hero metadata facts', () => {
       await page.goto('/');
 
       const availabilityTop = await topOf(metadataItem(page, profile.availability));
-      const employerTop = await topOf(metadataFact(page, heroContent.employerLabel));
+      const employerTop = await topOf(
+        metadataFact(page, heroContent[SITE_LOCALE.en].employerLabel),
+      );
       expect(
         employerTop,
         'the NOW fact starts on its own line, below the availability fact',
       ).toBeGreaterThan(availabilityTop);
 
       const facts: [string, string][] = [
-        ['location', heroContent.locationLabel],
-        ['employer', heroContent.employerLabel],
+        ['location', heroContent[SITE_LOCALE.en].locationLabel],
+        ['employer', heroContent[SITE_LOCALE.en].employerLabel],
         ['domain', profile.currentEmployer.context],
-        ['language', heroContent.languageLabel],
+        ['language', heroContent[SITE_LOCALE.en].languageLabel],
       ];
       for (const [name, text] of facts) {
         const lines = await renderedLines(metadataFact(page, text));
@@ -246,11 +251,11 @@ test.describe('Hero metadata facts', () => {
 
       const rows = new Map<number, string[]>();
       const facts: [string, Locator][] = [
-        ['location', metadataFact(page, heroContent.locationLabel)],
+        ['location', metadataFact(page, heroContent[SITE_LOCALE.en].locationLabel)],
         ['availability', metadataItem(page, profile.availability)],
-        ['employer', metadataFact(page, heroContent.employerLabel)],
+        ['employer', metadataFact(page, heroContent[SITE_LOCALE.en].employerLabel)],
         ['domain', metadataFact(page, profile.currentEmployer.context)],
-        ['language', metadataFact(page, heroContent.languageLabel)],
+        ['language', metadataFact(page, heroContent[SITE_LOCALE.en].languageLabel)],
       ];
       for (const [name, locator] of facts) {
         const top = await topOf(locator);

@@ -1,15 +1,15 @@
 'use client';
 
 import { Fragment, useEffect, useId, useRef, useState, useSyncExternalStore } from 'react';
+import type { ContactContent } from '@/content/contact';
 import {
   CONTACT_DELIVERY_CODE,
   CONTACT_FIELD,
   CONTACT_LIMITS,
   type ContactField,
-  contactCopy,
   contactErrorSummary,
 } from '@/content/contact-copy';
-import { contactChrome } from '@/content/terminal-chrome';
+import type { TerminalChrome } from '@/content/schemas';
 import { WindowChrome } from '@/design-system';
 import { Field } from '@/design-system/components/Field';
 import { messageStore } from './messageStore';
@@ -49,20 +49,20 @@ interface ContactResponse {
   error?: { code?: string; message?: string };
 }
 
-function ContactShell({ children }: { children: React.ReactNode }) {
+function ContactShell({ chrome, children }: { chrome: TerminalChrome; children: React.ReactNode }) {
   return (
     <div className="contact-shell">
       <div className="contact-chrome">
         <WindowChrome />
-        <span>{contactChrome.promptLabel}</span>
-        <span className="contact-channel">{contactChrome.rightTag}</span>
+        <span>{chrome.promptLabel}</span>
+        <span className="contact-channel">{chrome.rightTag}</span>
       </div>
       <div className="contact-body">{children}</div>
     </div>
   );
 }
 
-export function ContactForm() {
+export function ContactForm({ copy, chrome }: { copy: ContactContent; chrome: TerminalChrome }) {
   const [typed, setTyped] = useState(INITIAL_TYPED);
   const message = useSyncExternalStore(
     messageStore.subscribe,
@@ -111,7 +111,7 @@ export function ContactForm() {
       const valid = FIELD_CHECKS[field](value);
       setErrors((current) => {
         const { [field]: _cleared, ...rest } = current;
-        return valid ? rest : { ...current, [field]: contactCopy.errors[field] };
+        return valid ? rest : { ...current, [field]: copy.errors[field] };
       });
     }
     if (!pendingRef.current) {
@@ -126,7 +126,7 @@ export function ContactForm() {
     const fieldErrors: Partial<Record<ContactField, string>> = {};
     for (const field of CONTACT_FIELDS) {
       if (!FIELD_CHECKS[field](values[field])) {
-        fieldErrors[field] = contactCopy.errors[field];
+        fieldErrors[field] = copy.errors[field];
       }
     }
     setErrors(fieldErrors);
@@ -153,15 +153,13 @@ export function ContactForm() {
       }
       if (!res.ok || data?.ok !== true || res.status === QUEUED_STATUS) {
         throw new Error(
-          typeof apiError?.message === 'string'
-            ? apiError.message
-            : contactCopy.errors.requestFailed,
+          typeof apiError?.message === 'string' ? apiError.message : copy.errors.requestFailed,
         );
       }
       messageStore.reset();
       setStatus(STATUS.SUCCESS);
     } catch (error) {
-      setErrorMsg(error instanceof Error ? error.message : contactCopy.errors.requestFailed);
+      setErrorMsg(error instanceof Error ? error.message : copy.errors.requestFailed);
       setStatus(STATUS.ERROR);
       setFailureCount((count) => count + 1);
     } finally {
@@ -171,7 +169,7 @@ export function ContactForm() {
 
   if (status === STATUS.SUCCESS || status === STATUS.QUEUED) {
     return (
-      <ContactShell>
+      <ContactShell chrome={chrome}>
         {status === STATUS.SUCCESS && (
           <div
             className="contact-success"
@@ -180,8 +178,8 @@ export function ContactForm() {
             tabIndex={-1}
             ref={focusResult}
           >
-            <p>{contactCopy.success.title}</p>
-            <p>{contactCopy.success.message}</p>
+            <p>{copy.success.title}</p>
+            <p>{copy.success.message}</p>
           </div>
         )}
         {status === STATUS.QUEUED && (
@@ -192,10 +190,9 @@ export function ContactForm() {
             tabIndex={-1}
             ref={focusResult}
           >
-            <p>{contactCopy.queued.title}</p>
+            <p>{copy.queued.title}</p>
             <p>
-              {contactCopy.queued.message}{' '}
-              <a href={contactCopy.queued.linkHref}>{contactCopy.queued.linkLabel}</a>
+              {copy.queued.message} <a href={copy.queued.linkHref}>{copy.queued.linkLabel}</a>
             </p>
           </div>
         )}
@@ -204,7 +201,7 @@ export function ContactForm() {
   }
 
   return (
-    <ContactShell>
+    <ContactShell chrome={chrome}>
       <form
         onSubmit={submit}
         noValidate
@@ -222,10 +219,10 @@ export function ContactForm() {
           >
             {invalidFields.length > 0 && (
               <p>
-                <span id={summaryId}>{contactErrorSummary(invalidFields.length)}</span>
+                <span id={summaryId}>{contactErrorSummary(copy, invalidFields.length)}</span>
                 {invalidFields.map((field, index) => (
                   <Fragment key={field}>
-                    {index === 0 ? ' ' : contactCopy.form.errorSummary.separator}
+                    {index === 0 ? ' ' : copy.form.errorSummary.separator}
                     <a
                       className="contact-summary-link"
                       href={`#${fieldId(field)}`}
@@ -234,7 +231,7 @@ export function ContactForm() {
                         document.getElementById(fieldId(field))?.focus();
                       }}
                     >
-                      {contactCopy.form.fieldLabels[field]}
+                      {copy.form.fieldLabels[field]}
                     </a>
                   </Fragment>
                 ))}
@@ -242,9 +239,8 @@ export function ContactForm() {
             )}
             {errorMsg && (
               <p id={requestErrorId}>
-                {contactCopy.form.errorPrefix} {errorMsg} {contactCopy.form.retained}{' '}
-                {contactCopy.form.retryEmail}{' '}
-                <a href={`mailto:${contactCopy.section.email}`}>{contactCopy.section.email}</a>
+                {copy.form.errorPrefix} {errorMsg} {copy.form.retained} {copy.form.retryEmail}{' '}
+                <a href={`mailto:${copy.section.email}`}>{copy.section.email}</a>
               </p>
             )}
           </div>
@@ -263,7 +259,7 @@ export function ContactForm() {
         <Field
           id={fieldId(CONTACT_FIELD.NAME)}
           name={CONTACT_FIELD.NAME}
-          label={contactCopy.form.nameLabel}
+          label={copy.form.nameLabel}
           value={values.name}
           onChange={(event) => change(CONTACT_FIELD.NAME, event.target.value)}
           error={errors.name ?? ''}
@@ -271,24 +267,24 @@ export function ContactForm() {
           minLength={CONTACT_LIMITS.nameMin}
           maxLength={CONTACT_LIMITS.nameMax}
           autoComplete="name"
-          placeholder={contactCopy.form.namePlaceholder}
+          placeholder={copy.form.namePlaceholder}
         />
         <Field
           id={fieldId(CONTACT_FIELD.EMAIL)}
           name={CONTACT_FIELD.EMAIL}
-          label={contactCopy.form.emailLabel}
+          label={copy.form.emailLabel}
           type="email"
           value={values.email}
           onChange={(event) => change(CONTACT_FIELD.EMAIL, event.target.value)}
           error={errors.email ?? ''}
           required
           autoComplete="email"
-          placeholder={contactCopy.form.emailPlaceholder}
+          placeholder={copy.form.emailPlaceholder}
         />
         <Field
           id={messageFieldId}
           name={CONTACT_FIELD.MESSAGE}
-          label={contactCopy.form.messageLabel}
+          label={copy.form.messageLabel}
           multiline
           value={values.message}
           onChange={(event) => change(CONTACT_FIELD.MESSAGE, event.target.value)}
@@ -298,20 +294,20 @@ export function ContactForm() {
           minLength={CONTACT_LIMITS.messageMin}
           maxLength={CONTACT_LIMITS.messageMax}
           rows={MESSAGE_ROWS}
-          placeholder={contactCopy.form.messagePlaceholder}
+          placeholder={copy.form.messagePlaceholder}
         />
         <p id={counterId} className="contact-count">
           {values.message.trim().length}
-          {contactCopy.form.counterSeparator}
+          {copy.form.counterSeparator}
           {CONTACT_LIMITS.messageMax}
         </p>
         <div className="contact-submit-row" aria-live="polite">
           <button type="submit" aria-disabled={busy} aria-busy={busy} className="contact-send">
-            {busy ? contactCopy.form.submitting : contactCopy.form.submit}
+            {busy ? copy.form.submitting : copy.form.submit}
           </button>
-          <p className="contact-waiting">{contactCopy.form.waiting}</p>
+          <p className="contact-waiting">{copy.form.waiting}</p>
         </div>
-        <p className="contact-privacy">{contactCopy.form.privacy}</p>
+        <p className="contact-privacy">{copy.form.privacy}</p>
       </form>
     </ContactShell>
   );

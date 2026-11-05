@@ -2,6 +2,7 @@ import { PassThrough } from 'node:stream';
 import { renderToPipeableStream, renderToStaticMarkup } from 'react-dom/server';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { measured } from '@/content/measured';
+import { SITE_LOCALE } from '@/content/site-locale';
 
 const getAskMetricsMock = vi.fn();
 const getScoresMock = vi.fn();
@@ -22,7 +23,7 @@ vi.mock('@/lib/ask-metrics', () => ({
 
 async function renderData(): Promise<string> {
   const { AiMetricsData } = await import('./AiMetricsSection');
-  const element = await AiMetricsData();
+  const element = await AiMetricsData({ locale: SITE_LOCALE.en });
   return renderToStaticMarkup(element);
 }
 
@@ -90,7 +91,7 @@ describe('AiMetricsSection — on-page AI eval/cost metrics (RSC)', () => {
       });
     });
     const ended = new Promise<void>((resolve) => output.on('end', resolve));
-    const stream = renderToPipeableStream(<AiMetricsSection />, {
+    const stream = renderToPipeableStream(<AiMetricsSection locale={SITE_LOCALE.en} />, {
       onShellReady() {
         stream.pipe(output);
       },
@@ -145,7 +146,7 @@ describe('AiMetricsSection — on-page AI eval/cost metrics (RSC)', () => {
     expect(doc.querySelector('.measured-status')?.textContent).toBe(
       'Eval unavailable. The aggregate could not be loaded.',
     );
-    expect(doc.body.textContent).not.toContain(measured.ask.pending);
+    expect(doc.body.textContent).not.toContain(measured[SITE_LOCALE.en].ask.pending);
     expect(doc.querySelector('time')).toBeNull();
     expect(doc.querySelector('[aria-busy]')).toBeNull();
     expect(Array.from(doc.querySelectorAll('.measured-value'), (tile) => tile.textContent)).toEqual(
@@ -166,7 +167,7 @@ describe('AiMetricsSection — on-page AI eval/cost metrics (RSC)', () => {
     expect(html).toContain('95% of answers finish within this time');
     expect(html).not.toContain('>100%<');
     expect(html).not.toContain('>0%<');
-    expect(html).toContain(measured.ask.pending);
+    expect(html).toContain(measured[SITE_LOCALE.en].ask.pending);
     expect(html).not.toContain('Eval unavailable');
   });
 });

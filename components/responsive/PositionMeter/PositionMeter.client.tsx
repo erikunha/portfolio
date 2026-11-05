@@ -1,12 +1,13 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
-import { NAVIGATION } from '@/content/navigation';
+import { useSectionNavigation } from '../SectionNavigation';
 
 const POSITION_TARGETS = '[data-position-target]';
 const PERCENT = 100;
 
 export function PositionMeter() {
+  const { copy } = useSectionNavigation();
   const barRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -52,7 +53,7 @@ export function PositionMeter() {
         ref={barRef}
         className="pos-line"
         role="progressbar"
-        aria-label={NAVIGATION.copy.positionLabel}
+        aria-label={copy.positionLabel}
         aria-valuemin={0}
         aria-valuemax={PERCENT}
         aria-valuenow={0}

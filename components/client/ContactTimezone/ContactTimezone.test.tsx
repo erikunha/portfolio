@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { readComponentsCss } from '@/__tests__/helpers/components-css';
 import { declValue, rulesInMedia, rulesWithSelector } from '@/__tests__/helpers/css-rules';
 import { contactCopy, contactHoursPhrase, fillCopy } from '@/content/contact-copy';
+import { SITE_LOCALE } from '@/content/site-locale';
 import { messageStore } from '../ContactForm/messageStore';
 import { ContactTimezone } from './ContactTimezone.client';
 
@@ -14,7 +15,7 @@ vi.mock('@/lib/timezone/zones', async (importOriginal) => ({
   detectTimeZone: () => detected.zone,
 }));
 
-const { timezone: copy } = contactCopy;
+const { timezone: copy } = contactCopy[SITE_LOCALE.en];
 const MAP_NAME_PATTERN = new RegExp(copy.map.ariaLabel.slice(0, copy.map.ariaLabel.indexOf('.')));
 const ONLINE_INSTANT = new Date('2026-01-15T15:00:00Z');
 const OFF_HOURS_INSTANT = new Date('2026-01-15T22:00:00Z');
@@ -42,7 +43,7 @@ function restoreVisibility() {
 function renderAt(instant: Date, zone = 'Europe/Berlin') {
   detected.zone = zone;
   vi.setSystemTime(instant);
-  return render(<ContactTimezone />);
+  return render(<ContactTimezone copy={contactCopy[SITE_LOCALE.en].timezone} />);
 }
 
 beforeEach(() => {
@@ -144,7 +145,7 @@ describe('ContactTimezone location and overlap', () => {
     renderAt(ONLINE_INSTANT);
 
     expect(testId('ctz-overlap').textContent).toBe(
-      `${fillCopy(copy.overlap.summary, { hours: contactHoursPhrase(4) })}${copy.overlap.separator}${fillCopy(copy.overlap.range, { range: '14:00 to 18:00' })}`,
+      `${fillCopy(copy.overlap.summary, { hours: contactHoursPhrase(copy.hours, 4) })}${copy.overlap.separator}${fillCopy(copy.overlap.range, { range: '14:00 to 18:00' })}`,
     );
   });
 
@@ -376,8 +377,8 @@ describe('ContactTimezone combobox', () => {
     vi.setSystemTime(ONLINE_INSTANT);
     const { container } = render(
       <>
-        <ContactTimezone />
-        <ContactTimezone />
+        <ContactTimezone copy={copy} />
+        <ContactTimezone copy={copy} />
       </>,
     );
 

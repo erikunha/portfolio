@@ -1,60 +1,22 @@
-import { AppShell } from '@/components/AppShell';
-import { BrandLink } from '@/components/BrandLink';
-import { ErrorBoundary } from '@/components/ErrorBoundary';
-import { PageMain } from '@/components/PageMain';
-import { About } from '@/components/sections/About';
-import { AiMetricsSection } from '@/components/sections/AiMetricsSection';
-import { ContactSection } from '@/components/sections/ContactSection';
-import { DawMixerSection } from '@/components/sections/DawMixerSection';
-import { Footer } from '@/components/sections/Footer';
-import { GitLogSection } from '@/components/sections/GitLogSection';
-import { GuitarSection } from '@/components/sections/GuitarSection';
-import { Hero } from '@/components/sections/Hero';
-import { HottestTakesSection } from '@/components/sections/HottestTakesSection';
-import { ProjectsSection } from '@/components/sections/ProjectsSection';
-import { ShellSection } from '@/components/sections/ShellSection';
-import { BreakpointProvider } from '@/lib/use-breakpoint.client';
+import type { Metadata } from 'next';
+import { localizedPageMetadata } from '@/app/_lib/locale-metadata';
+import { SiteHome } from '@/components/SiteHome';
+import { profilePresentation } from '@/content/profile';
+import { SITE_LOCALE } from '@/content/site-locale';
+
+const locale = SITE_LOCALE.en;
+
+export const metadata: Metadata = {
+  ...localizedPageMetadata({
+    locale,
+    path: '/',
+    title: profilePresentation[locale].pageTitle,
+    description: profilePresentation[locale].metaDescription,
+  }),
+  // The root layout already carries the shared metadata (icons, robots,
+  // JSON-LD, keywords); this page overrides only what is language-specific.
+};
 
 export default function Home() {
-  return (
-    <BreakpointProvider initialIsMobile={false}>
-      <AppShell brand={<BrandLink />}>
-        <PageMain>
-          <ErrorBoundary>
-            <Hero />
-          </ErrorBoundary>
-          <ErrorBoundary>
-            <About />
-          </ErrorBoundary>
-          <ErrorBoundary>
-            <ShellSection />
-          </ErrorBoundary>
-          <ErrorBoundary>
-            <AiMetricsSection />
-          </ErrorBoundary>
-          <ErrorBoundary>
-            <ProjectsSection />
-          </ErrorBoundary>
-          <ErrorBoundary>
-            <GitLogSection defer />
-          </ErrorBoundary>
-          <ErrorBoundary>
-            <HottestTakesSection defer />
-          </ErrorBoundary>
-          <ErrorBoundary>
-            <GuitarSection defer />
-          </ErrorBoundary>
-          <ErrorBoundary>
-            <DawMixerSection defer />
-          </ErrorBoundary>
-          <ErrorBoundary>
-            <ContactSection defer />
-          </ErrorBoundary>
-        </PageMain>
-        <ErrorBoundary>
-          <Footer />
-        </ErrorBoundary>
-      </AppShell>
-    </BreakpointProvider>
-  );
+  return <SiteHome locale={locale} />;
 }

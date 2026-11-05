@@ -16,33 +16,34 @@ import { GuitarSection } from '@/components/sections/GuitarSection';
 import { ProjectsSection } from '@/components/sections/ProjectsSection';
 import { careerScrollLabel } from '@/content/git-log';
 import { SECTION_LABELS } from '@/content/section-labels';
+import { SITE_LOCALE } from '@/content/site-locale';
 
 describe('responsive section viewport variants', () => {
   it('ProjectsSection emits exactly the desktop variant (no mobile markup)', () => {
-    const html = renderToStaticMarkup(createElement(ProjectsSection));
+    const html = renderToStaticMarkup(createElement(ProjectsSection, { locale: SITE_LOCALE.en }));
     expect(html).toContain('data-testid="proj-desktop"');
     expect(html).not.toContain('data-testid="proj-mobile"');
   });
 
   it('GitLogSection emits exactly the desktop variant (no mobile markup)', () => {
-    const html = renderToStaticMarkup(createElement(GitLogSection));
+    const html = renderToStaticMarkup(createElement(GitLogSection, { locale: SITE_LOCALE.en }));
     expect(html).toContain('career-log');
     expect(html).not.toContain('career-mobile');
   });
 
   it('GitLogSection scroll container is not a second region named like its module', () => {
     const host = document.createElement('div');
-    host.innerHTML = renderToStaticMarkup(createElement(GitLogSection));
+    host.innerHTML = renderToStaticMarkup(createElement(GitLogSection, { locale: SITE_LOCALE.en }));
     const scroller = host.querySelector('[data-testid="career-log"]');
     expect(scroller?.tagName).toBe('DIV');
     expect(scroller?.getAttribute('role')).toBe('group');
     expect(scroller?.getAttribute('tabindex')).toBe('0');
-    expect(scroller?.getAttribute('aria-label')).toBe(careerScrollLabel);
-    expect(careerScrollLabel).not.toBe(SECTION_LABELS['sec-git-log']);
+    expect(scroller?.getAttribute('aria-label')).toBe(careerScrollLabel(SITE_LOCALE.en));
+    expect(careerScrollLabel).not.toBe(SECTION_LABELS[SITE_LOCALE.en]['sec-git-log']);
   });
 
   it('GuitarSection static render does not emit mobile markup', () => {
-    const html = renderToStaticMarkup(createElement(GuitarSection));
+    const html = renderToStaticMarkup(createElement(GuitarSection, { locale: SITE_LOCALE.en }));
     expect(html).not.toContain('data-testid="guitar-mobile"');
   });
 });

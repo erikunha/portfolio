@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { ContactContentSchema } from './contact';
 import { contactCopy, contactHoursPhrase, fillCopy } from './contact-copy';
+import { SITE_LOCALE } from './site-locale';
 
 const EM_DASH = '—';
 const EN_DASH = '–';
@@ -36,15 +37,15 @@ describe('contactHoursPhrase', () => {
     [0.25, '0.25 hours'],
     [0, '0 hours'],
   ])('phrases %s as %s', (hours, expected) => {
-    expect(contactHoursPhrase(hours)).toBe(expected);
+    expect(contactHoursPhrase(contactCopy[SITE_LOCALE.en].timezone.hours, hours)).toBe(expected);
   });
 });
 
 describe('timezone panel copy', () => {
-  const { timezone } = contactCopy;
+  const { timezone } = contactCopy[SITE_LOCALE.en];
 
   it('passes the contact schema', () => {
-    expect(ContactContentSchema.safeParse(contactCopy).success).toBe(true);
+    expect(ContactContentSchema.safeParse(contactCopy[SITE_LOCALE.en]).success).toBe(true);
   });
 
   it('states the facts the spec lists', () => {
@@ -58,7 +59,7 @@ describe('timezone panel copy', () => {
   });
 
   it('keeps the reply window in one place', () => {
-    expect(Object.keys(contactCopy.channels)).not.toContain('replyValue');
+    expect(Object.keys(contactCopy[SITE_LOCALE.en].channels)).not.toContain('replyValue');
     expect(timezone.overlap.none).toContain(timezone.facts.replyValue);
   });
 
@@ -71,7 +72,9 @@ describe('timezone panel copy', () => {
 
   it('composes the footer overlap line', () => {
     const line = [
-      fillCopy(timezone.overlap.summary, { hours: contactHoursPhrase(9) }),
+      fillCopy(timezone.overlap.summary, {
+        hours: contactHoursPhrase(contactCopy[SITE_LOCALE.en].timezone.hours, 9),
+      }),
       fillCopy(timezone.overlap.range, { range: '09:00 to 18:00' }),
     ].join(timezone.overlap.separator);
 
@@ -88,12 +91,12 @@ describe('timezone panel copy', () => {
 
   it('gives the panel its own heading, apart from the channels heading', () => {
     expect(timezone.title.length).toBeGreaterThan(0);
-    expect(timezone.title).not.toBe(contactCopy.channels.title);
+    expect(timezone.title).not.toBe(contactCopy[SITE_LOCALE.en].channels.title);
     expect(timezone.marker.length).toBeGreaterThan(0);
   });
 
   it('drops the timezone fact the clocks already state', () => {
-    expect(Object.keys(contactCopy.channels)).not.toContain('timezoneLabel');
+    expect(Object.keys(contactCopy[SITE_LOCALE.en].channels)).not.toContain('timezoneLabel');
   });
 
   it('has a 00/06/12/18/24 axis', () => {

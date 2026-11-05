@@ -1,26 +1,45 @@
 import { errorsClientContent } from './errors-client';
 import type { ErrorsContent } from './schemas';
+import { SITE_LOCALE, type SiteLocale } from './site-locale';
 
-export const errorsContent: ErrorsContent = {
-  ...errorsClientContent,
-  notFound: {
-    metaTitle: '404 · erikunha.dev',
-    code: '404',
-    panelHeader: '[ NOT FOUND ]',
-    prompt: '$',
-    command: 'cd /route',
-    output: 'bash: /route: no such file or directory',
-    suggestionsLabel: 'TRY INSTEAD',
-    suggestionsNavLabel: 'Suggested pages',
-    suggestions: [
-      { label: 'Projects', href: '/#sec-projects' },
-      { label: 'Contact', href: '/#sec-contact' },
-      { label: 'Links', href: '/links' },
-    ],
-    home: { label: 'Go home', href: '/' },
-  },
-  noscript: {
-    text: 'This site works best with JavaScript. Content below is complete; the shell and the contact form need it.',
-    contact: { label: 'Contact', href: '/#sec-contact' },
-  },
+// The 404 page renders in the default locale (English): an unmatched address
+// carries no locale, and a single prerendered not-found cannot know one. The
+// pt-BR variant still exists for client error surfaces rendered under /pt.
+const errorsContentFor = (locale: SiteLocale): ErrorsContent => {
+  const pt = locale === SITE_LOCALE.pt;
+  return {
+    ...errorsClientContent[locale],
+    notFound: {
+      metaTitle: pt ? '404 · erikunha.dev/pt' : '404 · erikunha.dev',
+      code: '404',
+      panelHeader: pt ? '[ NÃO ENCONTRADO ]' : '[ NOT FOUND ]',
+      prompt: '$',
+      command: pt ? 'cd /rota' : 'cd /route',
+      output: pt
+        ? 'bash: /rota: arquivo ou diretório inexistente'
+        : 'bash: /route: no such file or directory',
+      suggestionsLabel: pt ? 'TENTE EM VEZ' : 'TRY INSTEAD',
+      suggestionsNavLabel: pt ? 'Páginas sugeridas' : 'Suggested pages',
+      suggestions: [
+        { label: pt ? 'Projetos' : 'Projects', href: pt ? '/pt#sec-projects' : '/#sec-projects' },
+        { label: pt ? 'Contato' : 'Contact', href: pt ? '/pt#sec-contact' : '/#sec-contact' },
+        { label: 'Links', href: '/links' },
+      ],
+      home: { label: pt ? 'Ir para o início' : 'Go home', href: pt ? '/pt' : '/' },
+    },
+    noscript: {
+      text: pt
+        ? 'Este site funciona melhor com JavaScript. O conteúdo abaixo está completo; o shell e o formulário de contato precisam dele.'
+        : 'This site works best with JavaScript. Content below is complete; the shell and the contact form need it.',
+      contact: {
+        label: pt ? 'Contato' : 'Contact',
+        href: pt ? '/pt#sec-contact' : '/#sec-contact',
+      },
+    },
+  };
+};
+
+export const errorsContent: Record<SiteLocale, ErrorsContent> = {
+  [SITE_LOCALE.en]: errorsContentFor(SITE_LOCALE.en),
+  [SITE_LOCALE.pt]: errorsContentFor(SITE_LOCALE.pt),
 };

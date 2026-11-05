@@ -8,7 +8,8 @@ import {
   TOPBAR_MOTION_LABEL,
   TOPBAR_NAV,
 } from '@/content/nav';
-import { NAVIGATION } from '@/content/navigation';
+import { NAVIGATION, siteNavChrome } from '@/content/navigation';
+import { SITE_LOCALE, type SiteLocale } from '@/content/site-locale';
 import { type MountedClient, mountClient } from './helpers/render';
 
 let mockPathname: string | null = null;
@@ -40,14 +41,14 @@ const DISPLAY_UTILITIES = new Set([
   'table',
 ]);
 
-async function renderTopbar(): Promise<MountedClient> {
+async function renderTopbar(locale: SiteLocale = SITE_LOCALE.en): Promise<MountedClient> {
   const { DesktopTopbar } = await import(
     '@/components/responsive/DesktopTopbar/DesktopTopbar.client'
   );
   return mountClient(
     createElement(
       SectionNavigationProvider,
-      null,
+      { chrome: siteNavChrome(locale), locale },
       createElement(DesktopTopbar, {
         brand: createElement('a', { href: '/', 'data-test-brand': '1' }, 'brand'),
       }),
@@ -89,13 +90,13 @@ describe('DesktopTopbar', () => {
 
     expect(labels).toEqual([
       'VIEW_CV',
-      HIRE_SHORT_LABEL,
-      NAV_VOCABULARY.about,
-      NAV_VOCABULARY.work,
-      NAV_VOCABULARY.career,
-      NAV_VOCABULARY.contact,
-      NAV_VOCABULARY.links,
-      NAV_VOCABULARY.designSystem,
+      HIRE_SHORT_LABEL[SITE_LOCALE.en],
+      NAV_VOCABULARY[SITE_LOCALE.en].about,
+      NAV_VOCABULARY[SITE_LOCALE.en].work,
+      NAV_VOCABULARY[SITE_LOCALE.en].career,
+      NAV_VOCABULARY[SITE_LOCALE.en].contact,
+      NAV_VOCABULARY[SITE_LOCALE.en].links,
+      NAV_VOCABULARY[SITE_LOCALE.en].designSystem,
     ]);
   });
 
@@ -124,7 +125,7 @@ describe('DesktopTopbar', () => {
     expect(trigger.getAttribute('aria-keyshortcuts')).toBe('Control+K Meta+K');
     expect(trigger.getAttribute('aria-controls')).toBe('section-drawer');
     expect(trigger.getAttribute('aria-expanded')).toBe('false');
-    expect(trigger.textContent).toContain(NAVIGATION.copy.searchLabel);
+    expect(trigger.textContent).toContain(NAVIGATION[SITE_LOCALE.en].copy.searchLabel);
 
     await act(async () => {
       trigger.dispatchEvent(new MouseEvent('click', { bubbles: true }));
@@ -141,27 +142,27 @@ describe('DesktopTopbar', () => {
     expect(shortcut?.getAttribute('data-keyboard')).toBe(expected);
     expect(shortcut?.querySelector(`[data-platform="${expected}"]`)?.textContent).toBe(
       expected === 'apple'
-        ? NAVIGATION.copy.searchShortcutApple
-        : NAVIGATION.copy.searchShortcutOther,
+        ? NAVIGATION[SITE_LOCALE.en].copy.searchShortcutApple
+        : NAVIGATION[SITE_LOCALE.en].copy.searchShortcutOther,
     );
     expect(
       shortcut?.textContent,
       'the server HTML carries both labels, so the slot reserves its width before hydration',
-    ).toContain(NAVIGATION.copy.searchShortcutApple);
-    expect(shortcut?.textContent).toContain(NAVIGATION.copy.searchShortcutOther);
+    ).toContain(NAVIGATION[SITE_LOCALE.en].copy.searchShortcutApple);
+    expect(shortcut?.textContent).toContain(NAVIGATION[SITE_LOCALE.en].copy.searchShortcutOther);
   });
 
   it('keeps the hire CTA on LinkedIn and names the new tab for assistive tech', async () => {
     mounted = await renderTopbar();
     const hire = [...mounted.container.querySelectorAll('a')].find((link) =>
-      link.textContent?.startsWith(HIRE_SHORT_LABEL),
+      link.textContent?.startsWith(HIRE_SHORT_LABEL[SITE_LOCALE.en]),
     );
 
     expect(hire?.getAttribute('href')).toBe('https://www.linkedin.com/in/erikunha/');
     expect(hire?.getAttribute('target')).toBe('_blank');
     expect(hire?.getAttribute('rel')).toContain('noopener');
-    expect(hire?.textContent?.trim()).toBe(HIRE_SHORT_LABEL);
-    expect(hire?.getAttribute('aria-label')).toBe(HIRE_ACCESSIBLE_NAME);
+    expect(hire?.textContent?.trim()).toBe(HIRE_SHORT_LABEL[SITE_LOCALE.en]);
+    expect(hire?.getAttribute('aria-label')).toBe(HIRE_ACCESSIBLE_NAME[SITE_LOCALE.en]);
   });
 
   it('puts the menu trigger first and the brand last, in DOM order and so in focus order', async () => {
@@ -239,7 +240,7 @@ describe('DesktopTopbar', () => {
 
     expect(button).not.toBeNull();
     expect(button.textContent).toContain(TOPBAR_MOTION_LABEL);
-    expect(button.textContent).not.toContain(NAVIGATION.copy.motionOn);
+    expect(button.textContent).not.toContain(NAVIGATION[SITE_LOCALE.en].copy.motionOn);
     expect(button.getAttribute('aria-pressed'), 'the state rides on aria-pressed').toBe('true');
 
     await act(async () => {
@@ -254,16 +255,16 @@ describe('DesktopTopbar', () => {
     const nav = mounted.container.querySelector('nav[aria-label="Site navigation"]');
     const links = [...(nav?.querySelectorAll('a') ?? [])];
 
-    expect(TOPBAR_NAV.map(({ label }) => label)).toEqual([
-      NAV_VOCABULARY.about,
-      NAV_VOCABULARY.work,
-      NAV_VOCABULARY.career,
-      NAV_VOCABULARY.contact,
-      NAV_VOCABULARY.links,
-      NAV_VOCABULARY.designSystem,
+    expect(TOPBAR_NAV[SITE_LOCALE.en].map(({ label }) => label)).toEqual([
+      NAV_VOCABULARY[SITE_LOCALE.en].about,
+      NAV_VOCABULARY[SITE_LOCALE.en].work,
+      NAV_VOCABULARY[SITE_LOCALE.en].career,
+      NAV_VOCABULARY[SITE_LOCALE.en].contact,
+      NAV_VOCABULARY[SITE_LOCALE.en].links,
+      NAV_VOCABULARY[SITE_LOCALE.en].designSystem,
     ]);
-    expect(links.slice(-TOPBAR_NAV.length).map((link) => link.textContent)).toEqual(
-      TOPBAR_NAV.map(({ label }) => label),
+    expect(links.slice(-TOPBAR_NAV[SITE_LOCALE.en].length).map((link) => link.textContent)).toEqual(
+      TOPBAR_NAV[SITE_LOCALE.en].map(({ label }) => label),
     );
   });
 
@@ -275,10 +276,10 @@ describe('DesktopTopbar', () => {
     ].map((link) => (link.textContent ?? '').trim());
 
   it.each([
-    ['/design-system', NAV_VOCABULARY.designSystem],
-    ['/design-system/tokens', NAV_VOCABULARY.designSystem],
-    ['/links', NAV_VOCABULARY.links],
-    ['/links/en', NAV_VOCABULARY.links],
+    ['/design-system', NAV_VOCABULARY[SITE_LOCALE.en].designSystem],
+    ['/design-system/tokens', NAV_VOCABULARY[SITE_LOCALE.en].designSystem],
+    ['/links', NAV_VOCABULARY[SITE_LOCALE.en].links],
+    ['/links/en', NAV_VOCABULARY[SITE_LOCALE.en].links],
   ])('marks only the page link current on %s', async (path, label) => {
     mockPathname = path;
     mounted = await renderTopbar();

@@ -19,22 +19,29 @@ import {
 import { SECTION_REGISTRY } from './section-registry';
 import SHELL_RESPONSES from './shell-commands';
 import { shellUi } from './shell-ui';
+import { SITE_LOCALE, type SiteLocale } from './site-locale';
 import { EMAIL_ADDRESS, LINKEDIN_URL } from './social-urls';
 import { contactChrome, shellChrome } from './terminal-chrome';
 import { worldMap } from './world-map';
 
+const LOCALES = Object.values(SITE_LOCALE) as SiteLocale[];
+
 z.array(DmesgLineSchema).parse(dmesgLines);
 ShellCommandsSchema.parse(SHELL_RESPONSES);
-ShellUiSchema.parse(shellUi);
-TerminalChromeSchema.parse(shellChrome);
-TerminalChromeSchema.parse(contactChrome);
+for (const locale of LOCALES) {
+  // Client islands receive the picked locale copy as props; both must parse so
+  // neither language can ship malformed strings into a chunk or the RSC payload.
+  ShellUiSchema.parse(shellUi[locale]);
+  TerminalChromeSchema.parse(shellChrome[locale]);
+  TerminalChromeSchema.parse(contactChrome[locale]);
+  createNavigationSchema(SECTION_REGISTRY.map(({ id }) => id)).parse(NAVIGATION[locale]);
+  ContactContentSchema.parse(contactCopy[locale]);
+  ErrorsContentSchema.parse(errorsContent[locale]);
+}
 BrandSchema.parse(brand);
 SectionRegistrySchema.parse(SECTION_REGISTRY);
-createNavigationSchema(SECTION_REGISTRY.map(({ id }) => id)).parse(NAVIGATION);
-ContactContentSchema.parse(contactCopy);
 z.object({ email: z.email(), linkedin: z.url() }).parse({
   email: EMAIL_ADDRESS,
   linkedin: LINKEDIN_URL,
 });
-ErrorsContentSchema.parse(errorsContent);
 WorldMapSchema.parse(worldMap);

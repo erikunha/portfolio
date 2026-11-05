@@ -1,39 +1,58 @@
 import { z } from 'zod';
-import { SECTION_REGISTRY, type SectionRegistryEntry } from './section-registry';
+import { SECTION_REGISTRY, type SectionId } from './section-registry';
+import { SITE_LOCALE, type SiteLocale } from './site-locale';
 
-const registrySectionLabels = Object.fromEntries(
-  SECTION_REGISTRY.map(({ id, srLabel }) => [id, srLabel]),
-) as {
-  readonly [Entry in SectionRegistryEntry as Entry['id']]: Entry['srLabel'];
+const sectionLabelsFor = (locale: SiteLocale) =>
+  Object.fromEntries(SECTION_REGISTRY.map(({ id, srLabel }) => [id, srLabel[locale]])) as Record<
+    SectionId,
+    string
+  >;
+
+export const SECTION_LABELS: Record<SiteLocale, Record<SectionId, string>> = {
+  [SITE_LOCALE.en]: sectionLabelsFor(SITE_LOCALE.en),
+  [SITE_LOCALE.pt]: sectionLabelsFor(SITE_LOCALE.pt),
 };
 
-export const SECTION_LABELS = {
-  ...registrySectionLabels,
-} as const;
+z.record(z.string(), z.string().min(1)).parse(SECTION_LABELS[SITE_LOCALE.en]);
+z.record(z.string(), z.string().min(1)).parse(SECTION_LABELS[SITE_LOCALE.pt]);
 
-z.record(z.string(), z.string().min(1)).parse(SECTION_LABELS);
+const scrollRegionLabelsFor = (
+  locale: SiteLocale,
+): Record<'sec-responsibilities' | 'sec-readme', string> =>
+  locale === SITE_LOCALE.pt
+    ? {
+        'sec-responsibilities': 'Responsabilidades (rolável)',
+        'sec-readme': 'Código README',
+      }
+    : {
+        'sec-responsibilities': 'Responsibilities (scrollable)',
+        'sec-readme': 'README code',
+      };
 
-export const SCROLL_REGION_LABELS = {
-  'sec-responsibilities': 'Responsibilities (scrollable)',
-  'sec-readme': 'README code',
-} as const;
-
-z.record(z.string(), z.string().min(1)).parse(SCROLL_REGION_LABELS);
+export const SCROLL_REGION_LABELS: Record<
+  SiteLocale,
+  Record<'sec-responsibilities' | 'sec-readme', string>
+> = {
+  [SITE_LOCALE.en]: scrollRegionLabelsFor(SITE_LOCALE.en),
+  [SITE_LOCALE.pt]: scrollRegionLabelsFor(SITE_LOCALE.pt),
+};
 
 const SCROLL_REGION_PARENTS = {
   'sec-responsibilities': 'sec-readme',
   'sec-readme': 'sec-readme',
-} as const satisfies Record<keyof typeof SCROLL_REGION_LABELS, keyof typeof SECTION_LABELS>;
+} as const satisfies Record<keyof typeof SCROLL_REGION_LABELS.en, SectionId>;
 
-for (const [regionId, label] of Object.entries(SCROLL_REGION_LABELS)) {
-  const sectionId = SCROLL_REGION_PARENTS[regionId as keyof typeof SCROLL_REGION_PARENTS];
-  const sectionLabel: string | undefined = SECTION_LABELS[sectionId];
-  if (sectionLabel === undefined) {
-    throw new Error(`scroll region label for ${sectionId} has no matching section label`);
-  }
-  if (sectionLabel === label) {
-    throw new Error(
-      `scroll region label for ${sectionId} must differ from the parent section label`,
-    );
+for (const locale of Object.values(SITE_LOCALE)) {
+  for (const [regionId, label] of Object.entries(SCROLL_REGION_LABELS[locale])) {
+    const sectionId = SCROLL_REGION_PARENTS[regionId as keyof typeof SCROLL_REGION_PARENTS];
+    const sectionLabel: string | undefined = SECTION_LABELS[locale][sectionId];
+    if (sectionLabel === undefined) {
+      throw new Error(`scroll region label for ${sectionId} has no matching section label`);
+    }
+    if (sectionLabel === label) {
+      throw new Error(
+        `scroll region label for ${sectionId} must differ from the parent section label`,
+      );
+    }
   }
 }

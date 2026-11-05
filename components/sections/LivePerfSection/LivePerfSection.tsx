@@ -1,5 +1,6 @@
 import { Suspense } from 'react';
-import { MEASURED_FORMAT, measured, metricTimestamp } from '@/content/measured';
+import { measured as measuredContent, metricTimestamp } from '@/content/measured';
+import type { SiteLocale } from '@/content/site-locale';
 import {
   getScores,
   LIGHTHOUSE_FALLBACK,
@@ -8,24 +9,29 @@ import {
   type Strategy,
 } from '@/lib/lighthouse-scores';
 
-export async function PerfData({ strategy }: { strategy: Strategy }) {
+export async function PerfData({ locale, strategy }: { locale: SiteLocale; strategy: Strategy }) {
   const scores = await getScores(strategy).catch(() => null);
-  return <PerfBody scores={scores} strategy={strategy} />;
+  return <PerfBody locale={locale} scores={scores} strategy={strategy} />;
 }
 
 function PerfBody({
+  locale,
   scores,
   strategy,
   loading = false,
 }: {
+  locale: SiteLocale;
   scores: LighthouseScores | null;
   strategy: Strategy;
   loading?: boolean;
 }) {
+  const measured = measuredContent[locale];
+  const format = measured.format;
   const unavailable = !scores || scores.fetchedAt === LIGHTHOUSE_FALLBACK.fetchedAt;
   const timestamp = metricTimestamp(
     unavailable ? undefined : scores.fetchedAt,
-    LIGHTHOUSE_TTL_S * MEASURED_FORMAT.millisecondsPerSecond,
+    LIGHTHOUSE_TTL_S * format.millisecondsPerSecond,
+    locale,
   );
   return (
     <div className="measured-perf" aria-busy={loading || undefined}>
@@ -57,7 +63,7 @@ function PerfBody({
           <div className="measured-score" key={metric.key}>
             <div className="measured-label">{metric.label}</div>
             <div className="measured-value">
-              {unavailable ? MEASURED_FORMAT.empty : scores[metric.key]}
+              {unavailable ? format.empty : scores[metric.key]}
               <span className="measured-out-of">{measured.psi.outOf}</span>
             </div>
             <div
@@ -66,7 +72,7 @@ function PerfBody({
               aria-label={`${metric.label}: ${loading ? measured.loading : unavailable ? measured.unavailable : scores[metric.key]}`}
               aria-valuenow={unavailable ? undefined : scores[metric.key]}
               aria-valuemin={0}
-              aria-valuemax={MEASURED_FORMAT.percentScale}
+              aria-valuemax={format.percentScale}
             >
               <i style={{ width: unavailable ? '0%' : `${scores[metric.key]}%` }} />
             </div>
@@ -77,7 +83,8 @@ function PerfBody({
   );
 }
 
-export function LivePerfSection() {
+export function LivePerfSection({ locale }: { locale: SiteLocale }) {
+  const measured = measuredContent[locale];
   return (
     <div id="sec-live-perf" className="measured-lighthouse grid-cols-1 md:grid-cols-2">
       <h3 className="measured-heading" data-type-reveal>
@@ -86,9 +93,9 @@ export function LivePerfSection() {
       {measured.psi.strategies.map((strategy) => (
         <Suspense
           key={strategy.key}
-          fallback={<PerfBody scores={null} strategy={strategy.key} loading />}
+          fallback={<PerfBody locale={locale} scores={null} strategy={strategy.key} loading />}
         >
-          <PerfData strategy={strategy.key} />
+          <PerfData locale={locale} strategy={strategy.key} />
         </Suspense>
       ))}
     </div>

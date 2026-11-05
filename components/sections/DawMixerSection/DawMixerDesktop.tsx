@@ -2,7 +2,6 @@ import { FaderDbIsland } from '@/components/client/DawMixer/FaderIsland/FaderDbI
 import { KnobIsland } from '@/components/client/DawMixer/KnobIsland/KnobIsland.client';
 import { RmsButtons } from '@/components/client/DawMixer/RmsButtons/RmsButtons.client';
 import { VuMeter } from '@/components/client/DawMixer/VuMeter/VuMeter.client';
-import { dawMixer } from '@/content/daw-mixer';
 import type { DawMixer, DawMixerChannel } from '@/content/schemas';
 import { cn } from '@/lib/cn';
 
@@ -203,15 +202,15 @@ function TableHeader() {
   );
 }
 
-export function DawMixerDesktop() {
+export function DawMixerDesktop({ mixer }: { mixer: DawMixer }) {
   return (
     <div
       className="font-mono text-sm text-tertiary-50 border border-[var(--color-primary-border)] bg-black/50 overflow-hidden min-h-[520px]"
       data-testid="daw-mixer-desktop"
     >
-      <SessionHeaderDesktop mixer={dawMixer} />
+      <SessionHeaderDesktop mixer={mixer} />
       <TableHeader />
-      {dawMixer.channels.map((ch) => (
+      {mixer.channels.map((ch) => (
         <ChannelDesktop key={ch.id} ch={ch} />
       ))}
     </div>

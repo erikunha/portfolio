@@ -8,7 +8,7 @@ A request hits Vercel's edge, passes through `proxy.ts` (which stamps CSP + repo
 
 ## System purpose
 
-The site presents a professional profile through the terminal home page, printable `/summary` and `/cv` views, and Portuguese and English link pages. The API supplies contact delivery, grounded answers, machine-readable hiring data and operational probes.
+The site presents a professional profile through the terminal home page, printable `/summary` and `/cv` views, and Portuguese and English link pages. Since 2026-11-04 the whole site is bilingual pt-BR/EN: the bare address serves English and `/pt` serves pt-BR, the address alone determines the language (no framework, negotiation or middleware), and each language names itself canonical with `alternates.languages` plus `x-default`. The API supplies contact delivery, grounded answers, machine-readable hiring data and operational probes.
 
 ## Architectural layers
 

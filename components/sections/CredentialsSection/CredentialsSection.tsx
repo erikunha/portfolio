@@ -2,23 +2,27 @@ import { useId } from 'react';
 import { communityEvent } from '@/content/community';
 import { careerCredentials, credentials } from '@/content/credentials';
 import { educationTags } from '@/content/education';
+import type { SiteLocale } from '@/content/site-locale';
 
 const EXTERNAL_REL = 'noopener noreferrer';
 const EXTERNAL_TARGET = '_blank';
 
 export function CredentialsSection({
+  locale,
   id,
   communityId,
 }: {
+  locale: SiteLocale;
   id?: string;
   communityId?: string;
-} = {}) {
+}) {
   const groupId = useId();
-  const { link: eventLink } = communityEvent;
-  const { certifications, education, community, prompt, statusMarker } = careerCredentials;
+  const event = communityEvent[locale];
+  const { link: eventLink } = event;
+  const { certifications, education, community, prompt, statusMarker } = careerCredentials[locale];
   const groups = [
     { ...certifications, entries: credentials },
-    { ...education, entries: educationTags },
+    { ...education, entries: educationTags(locale) },
   ];
   return (
     <div id={id} className="career-tags">
@@ -57,7 +61,7 @@ export function CredentialsSection({
           <p className="career-tag-key">
             <a href={eventLink.href} target={EXTERNAL_TARGET} rel={EXTERNAL_REL}>
               <span>{community.heading}</span>
-              <span className="sr-only"> {communityEvent.newTabLabel}</span>
+              <span className="sr-only"> {event.newTabLabel}</span>
             </a>
           </p>
           <ul>

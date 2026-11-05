@@ -1,5 +1,6 @@
 import { type KeyboardEvent, useId, useMemo, useState } from 'react';
-import { contactCopy, fillCopy } from '@/content/contact-copy';
+import type { ContactContent } from '@/content/contact';
+import { fillCopy } from '@/content/contact-copy';
 import {
   filterZones,
   formatUtcOffset,
@@ -20,8 +21,16 @@ const KEY = {
   ESCAPE: 'Escape',
 } as const;
 
-export function ZoneCombobox({ now, onSelect }: { now: Date; onSelect: (zone: string) => void }) {
-  const { search } = contactCopy.timezone;
+export function ZoneCombobox({
+  copy,
+  now,
+  onSelect,
+}: {
+  copy: ContactContent['timezone'];
+  now: Date;
+  onSelect: (zone: string) => void;
+}) {
+  const { search } = copy;
   const id = useId();
   const listId = `${id}-list`;
   const optionId = (index: number) => `${id}-option-${index}`;

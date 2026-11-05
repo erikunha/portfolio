@@ -1,9 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { guitarRig } from '@/content/guitar-rig';
+import { SITE_LOCALE } from '@/content/site-locale';
 import { buildEqSpectrum, eqGainDb } from '../eq-spectrum';
 
-const spectrum = buildEqSpectrum(guitarRig.eqSpectrum);
-const { bands, freqRange } = guitarRig.eqSpectrum;
+const spectrum = buildEqSpectrum(guitarRig[SITE_LOCALE.en].eqSpectrum);
+const { bands, freqRange } = guitarRig[SITE_LOCALE.en].eqSpectrum;
 const FLAT_TOLERANCE_DB = 0.05;
 const POINT_PATTERN = /[ML]\s*[\d.]+\s+[\d.]+/g;
 
@@ -25,7 +26,7 @@ describe('eqGainDb', () => {
 
 describe('buildEqSpectrum', () => {
   it('builds one bar per configured spectrum bin', () => {
-    expect(spectrum.bars).toHaveLength(guitarRig.eqSpectrum.barCount);
+    expect(spectrum.bars).toHaveLength(guitarRig[SITE_LOCALE.en].eqSpectrum.barCount);
     for (const bar of spectrum.bars) {
       expect(bar.heightPct).toBeGreaterThan(0);
       expect(bar.heightPct).toBeLessThanOrEqual(100);
@@ -47,7 +48,7 @@ describe('buildEqSpectrum', () => {
   });
 
   it('derives the groove from the BPM and desynchronises the bars', () => {
-    expect(spectrum.beatSeconds).toBeCloseTo(60 / guitarRig.eqSpectrum.bpm, 5);
+    expect(spectrum.beatSeconds).toBeCloseTo(60 / guitarRig[SITE_LOCALE.en].eqSpectrum.bpm, 5);
     expect(new Set(spectrum.bars.map((bar) => bar.delaySeconds)).size).toBeGreaterThan(3);
   });
 
@@ -66,7 +67,7 @@ describe('buildEqSpectrum', () => {
     expect(lefts[0]).toBeCloseTo(spectrum.insetPct, 5);
     expect(lefts.at(-1)).toBeCloseTo(100 - spectrum.insetPct, 5);
     expect(spectrum.axis.map((tick) => tick.label)).toEqual(
-      guitarRig.eqSpectrum.axis.map((tick) => tick.label),
+      guitarRig[SITE_LOCALE.en].eqSpectrum.axis.map((tick) => tick.label),
     );
   });
 
@@ -83,7 +84,7 @@ describe('buildEqSpectrum', () => {
   });
 
   it('describes every band in the accessible name', () => {
-    expect(spectrum.ariaLabel).toContain(guitarRig.eqSpectrum.ariaLabel.prefix);
+    expect(spectrum.ariaLabel).toContain(guitarRig[SITE_LOCALE.en].eqSpectrum.ariaLabel.prefix);
     expect(spectrum.ariaLabel).toContain('140 Hz');
     expect(spectrum.ariaLabel).toContain('400 Hz');
     expect(spectrum.ariaLabel).toContain('2.8 kHz');

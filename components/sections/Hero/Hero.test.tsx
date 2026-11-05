@@ -2,10 +2,14 @@ import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import { profile } from '@/content/profile';
+import { SITE_LOCALE } from '@/content/site-locale';
 import { Hero } from './Hero';
 
 const getDOM = () =>
-  new DOMParser().parseFromString(renderToStaticMarkup(createElement(Hero)), 'text/html');
+  new DOMParser().parseFromString(
+    renderToStaticMarkup(createElement(Hero, { locale: SITE_LOCALE.en })),
+    'text/html',
+  );
 
 describe('Hero identity and static actions', () => {
   it('exposes visible identity headings and approved title in each CSS variant', () => {
@@ -125,7 +129,7 @@ describe('Hero identity and static actions', () => {
 
 describe('Hero owner decisions', () => {
   it('shows no relocation or sponsorship chip', () => {
-    const html = renderToStaticMarkup(createElement(Hero));
+    const html = renderToStaticMarkup(createElement(Hero, { locale: SITE_LOCALE.en }));
     expect(html, 'owner decision 2026-10-30: no visa or relocation chip in the hero').not.toMatch(
       /SPONSORSHIP|RELOCATION|hero-availability/,
     );
@@ -159,11 +163,11 @@ describe('Hero copy discipline', () => {
 
   it('renders CTA labels and meta prefixes from content/hero', async () => {
     const { heroContent } = await import('@/content/hero');
-    const html = renderToStaticMarkup(createElement(Hero));
-    expect(html).toContain(heroContent.hire.label);
-    for (const action of heroContent.actions) expect(html).toContain(action.label);
-    expect(html).toContain(heroContent.locationLabel);
-    expect(html).toContain(heroContent.employerLabel);
+    const html = renderToStaticMarkup(createElement(Hero, { locale: SITE_LOCALE.en }));
+    expect(html).toContain(heroContent[SITE_LOCALE.en].hire.label);
+    for (const action of heroContent[SITE_LOCALE.en].actions) expect(html).toContain(action.label);
+    expect(html).toContain(heroContent[SITE_LOCALE.en].locationLabel);
+    expect(html).toContain(heroContent[SITE_LOCALE.en].employerLabel);
   });
 
   it('validates the isolated client hero copy', async () => {

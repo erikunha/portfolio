@@ -47,6 +47,22 @@
     text-decoration: none;
   }
 
+  .reading-lang {
+    display: flex;
+    gap: 0 var(--spacing-3);
+  }
+
+  .reading-lang a {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--spacing-target);
+    min-width: var(--spacing-target-compact);
+    justify-content: center;
+    font-size: var(--text-xs);
+    letter-spacing: 0.1em;
+    text-decoration: none;
+  }
+
   .page-container {
     width: 100%;
     max-width: var(--measure-page);
@@ -330,7 +346,8 @@
 
     .reading-links a,
     .reading-actions-inline a,
-    .reading-nav a {
+    .reading-nav a,
+    .reading-lang a {
       min-height: 0;
     }
 

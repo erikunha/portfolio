@@ -1,6 +1,6 @@
 'use client';
 
-import { type DockKey, dockKeyForSection, NAVIGATION, sectionHref } from '@/content/navigation';
+import type { DockKey } from '@/content/navigation';
 import { DRAWER_ID, MENU_ICON_PATH, useSectionNavigation } from '../SectionNavigation';
 
 const ICON_PATHS: Record<DockKey, string> = {
@@ -20,12 +20,14 @@ function DockIcon({ control }: { control: DockKey }) {
 }
 
 export function Dock() {
-  const { currentId, drawerOpen, openDrawer, closeDrawer, jump } = useSectionNavigation();
-  const active = dockKeyForSection(currentId);
+  const { currentId, drawerOpen, openDrawer, closeDrawer, jump, copy, chrome } =
+    useSectionNavigation();
+  const active = chrome.dockKeyBySection[currentId];
+  const navigation = chrome.navigation;
 
   return (
-    <nav className="dock" aria-label={NAVIGATION.copy.dockLabel} data-position-target="">
-      {NAVIGATION.dock.map(({ key, label, sectionId, href, accessibleName }) => {
+    <nav className="dock" aria-label={copy.dockLabel} data-position-target="">
+      {navigation.dock.map(({ key, label, sectionId, href, accessibleName }) => {
         const current = active === key ? 'location' : undefined;
         if (key === 'menu') {
           return (
@@ -63,7 +65,7 @@ export function Dock() {
         return (
           <a
             key={key}
-            href={sectionId ? sectionHref(sectionId) : '/'}
+            href={sectionId ? (chrome.sectionHrefs[sectionId] ?? '/') : '/'}
             aria-current={current}
             onClick={(event) => sectionId && jump(event, sectionId)}
           >

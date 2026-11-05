@@ -1,9 +1,11 @@
 'use client';
 import { type ButtonHTMLAttributes, useEffect, useRef, useState } from 'react';
-import { copyFeedback as COPY_FEEDBACK } from '@/content/copy-button';
+import { copyFeedback } from '@/content/copy-button';
 import type { CopyFeedback } from '@/content/schemas';
+import { SITE_LOCALE } from '@/content/site-locale';
 import { cn } from '@/lib/cn';
 
+const COPY_FEEDBACK = copyFeedback[SITE_LOCALE.en];
 const COPY_FEEDBACK_DURATION_MS = 1500;
 
 type CopyButtonProps = Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'children'> & { text: string };

@@ -4,10 +4,11 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import { readComponentsCss } from '@/__tests__/helpers/components-css';
 import { declValue, rulesInMedia, rulesWithSelector } from '@/__tests__/helpers/css-rules';
+import { SITE_LOCALE } from '@/content/site-locale';
 
 async function renderSection(): Promise<Document> {
   const { PerfReceiptsSection } = await import('./PerfReceiptsSection');
-  const html = renderToStaticMarkup(createElement(PerfReceiptsSection));
+  const html = renderToStaticMarkup(createElement(PerfReceiptsSection, { locale: SITE_LOCALE.en }));
   return new DOMParser().parseFromString(html, 'text/html');
 }
 

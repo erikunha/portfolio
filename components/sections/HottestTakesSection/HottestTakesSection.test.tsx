@@ -6,17 +6,18 @@ import { describe, expect, it } from 'vitest';
 import { readComponentsCss } from '@/__tests__/helpers/components-css';
 import { declValue, rulesWithSelector } from '@/__tests__/helpers/css-rules';
 import { hottestTakes } from '@/content/hottest-takes';
+import { SITE_LOCALE } from '@/content/site-locale';
 import { HottestTakesSection } from './HottestTakesSection';
 
 function renderOpinions() {
   const container = document.createElement('div');
-  container.innerHTML = renderToStaticMarkup(<HottestTakesSection defer />);
+  container.innerHTML = renderToStaticMarkup(<HottestTakesSection locale={SITE_LOCALE.en} defer />);
   return container;
 }
 
 describe('home opinions', () => {
   it('shows a visible Opinions name outside the decorative icon box', () => {
-    const { container } = render(<HottestTakesSection defer />);
+    const { container } = render(<HottestTakesSection locale={SITE_LOCALE.en} defer />);
     const heading = getByRole(container, 'heading', { level: 2 });
     expect(heading.textContent).toContain('Opinions');
     expect(heading.textContent).toContain('CAT ~/HOTTEST_TAKES.MD');
@@ -81,7 +82,7 @@ describe('home opinions', () => {
   });
 
   it('retains the canonical DS opinion for documentation and closes the home list with a link to it', () => {
-    const opinion = hottestTakes.find((take) => take.category === 'DS');
+    const opinion = hottestTakes[SITE_LOCALE.en].find((take) => take.category === 'DS');
     expect(opinion).toMatchObject({
       num: '07.',
       placement: 'docs',
@@ -91,7 +92,7 @@ describe('home opinions', () => {
     expect(opinion?.body).toContain('Stencil at Betsson worked because Angular, React, and Ember');
     const container = renderOpinions();
     expect(container.textContent).not.toContain(opinion?.thesis);
-    expect(hottestTakes).toHaveLength(5);
+    expect(hottestTakes[SITE_LOCALE.en]).toHaveLength(5);
     const link = container.querySelector('a.opinions-more');
     expect(link?.getAttribute('href')).toBe('/design-system#opinion-07');
     expect(link?.textContent).toContain(
@@ -100,7 +101,7 @@ describe('home opinions', () => {
   });
 
   it('announces the closing link without the decorative arrow, and keeps the arrow on screen', () => {
-    const { container } = render(<HottestTakesSection defer />);
+    const { container } = render(<HottestTakesSection locale={SITE_LOCALE.en} defer />);
     const link = getByRole(container, 'link', {
       name: 'the design-system opinion lives in the design system docs',
     });

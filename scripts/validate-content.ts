@@ -5,7 +5,9 @@ import { listContentFiles } from './content-files.mjs';
 
 const MIN_EXPECTED_CONTENT_FILES = 20;
 
-ContactContentSchema.parse(contactContent);
+for (const locale of Object.keys(contactContent) as Array<keyof typeof contactContent>) {
+  ContactContentSchema.parse(contactContent[locale]);
+}
 
 const files = listContentFiles();
 

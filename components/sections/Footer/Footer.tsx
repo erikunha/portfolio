@@ -1,5 +1,6 @@
 import { dmesgLines, dmesgStatus } from '@/content/dmesg';
-import { footerContent as content, footerSectionIds } from '@/content/footer';
+import { footerContent, footerSectionIds } from '@/content/footer';
+import type { SiteLocale } from '@/content/site-locale';
 import { HaltClock, RebootControl, FooterLazy as SessionCounters } from './FooterLazy.client';
 
 const INITIAL_UPTIME = '00:00:00';
@@ -15,7 +16,8 @@ const TABLE_ROLES = {
 } as const;
 const CONNECTION_STATE = { listening: 'LISTEN' } as const;
 
-export function Footer() {
+export function Footer({ locale }: { locale: SiteLocale }) {
+  const content = footerContent[locale];
   return (
     <footer className="site-footer" id="shutdown">
       <div className="footer-inner">

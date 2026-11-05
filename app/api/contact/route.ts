@@ -1,5 +1,6 @@
 import { contactContent } from '@/content/contact';
 import { CONTACT_DELIVERY_CODE } from '@/content/contact-copy';
+import { SITE_LOCALE } from '@/content/site-locale';
 import { sendContactMessage } from '@/lib/contact-delivery';
 import {
   CONTACT_MESSAGE_TTL_SECONDS,
@@ -21,7 +22,7 @@ const STORAGE_UNAVAILABLE_CODE = 'storage_unavailable';
 export const POST = defineHandler({
   schema: ContactSchema,
   rateLimit: getContactLimit,
-  rateLimitErrorMessage: contactContent.errors.rateLimited,
+  rateLimitErrorMessage: contactContent[SITE_LOCALE.en].errors.rateLimited,
   async handler({ body, ipHash, requestId }) {
     if (isHoneypotTripped(body)) {
       log.info('contact honeypot tripped', { requestId });
@@ -47,7 +48,7 @@ export const POST = defineHandler({
         requestId,
         status: STORAGE_UNAVAILABLE_STATUS,
         code: STORAGE_UNAVAILABLE_CODE,
-        message: contactContent.errors.storageUnavailable,
+        message: contactContent[SITE_LOCALE.en].errors.storageUnavailable,
       });
     }
 
@@ -61,7 +62,7 @@ export const POST = defineHandler({
         requestId,
         status: STORAGE_UNAVAILABLE_STATUS,
         code: STORAGE_UNAVAILABLE_CODE,
-        message: contactContent.errors.retryUnavailable,
+        message: contactContent[SITE_LOCALE.en].errors.retryUnavailable,
       });
     }
 
@@ -69,7 +70,7 @@ export const POST = defineHandler({
       requestId,
       status: QUEUED_STATUS,
       code: CONTACT_DELIVERY_CODE.QUEUED,
-      message: `${contactContent.queued.message} ${contactContent.queued.linkLabel}`,
+      message: `${contactContent[SITE_LOCALE.en].queued.message} ${contactContent[SITE_LOCALE.en].queued.linkLabel}`,
     });
   },
 });

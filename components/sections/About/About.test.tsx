@@ -3,6 +3,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { aboutContent } from '@/content/about';
 import { profile } from '@/content/profile';
+import { SITE_LOCALE } from '@/content/site-locale';
 import { About } from './About';
 
 const CODE_FONT_PX = 12;
@@ -16,7 +17,7 @@ afterEach(() => {
 
 describe('About r106 composition', () => {
   it('renders five framed panels with titles in their top bands', () => {
-    const { container } = render(<About />);
+    const { container } = render(<About locale={SITE_LOCALE.en} />);
     const panels = container.querySelectorAll('.ab-panel');
     expect(panels).toHaveLength(5);
     expect(
@@ -32,7 +33,7 @@ describe('About r106 composition', () => {
   });
 
   it('server-renders the Senior status in the role typer, approved principles and all seven responsibilities', () => {
-    render(<About />);
+    render(<About locale={SITE_LOCALE.en} />);
     expect(screen.getAllByRole('status').map((n) => n.textContent)).toContain('Senior');
     expect(screen.getByText(/LCP, INP, CLS and bundle size/)).toBeTruthy();
     expect(screen.getByText(/WCAG 2.2 AA, WAI-ARIA/)).toBeTruthy();
@@ -45,9 +46,12 @@ describe('About r106 composition', () => {
   });
 
   it('keeps the full Open to line in the server HTML with the pill in a width-reserving slot', () => {
-    const doc = new DOMParser().parseFromString(renderToStaticMarkup(<About />), 'text/html');
+    const doc = new DOMParser().parseFromString(
+      renderToStaticMarkup(<About locale={SITE_LOCALE.en} />),
+      'text/html',
+    );
     const line = doc.querySelector('.ab-prose p:has(.ab-role)');
-    const { role, statusPrefix, statusSuffix } = aboutContent.whoami;
+    const { role, statusPrefix, statusSuffix } = aboutContent[SITE_LOCALE.en].whoami;
     const visible = line?.querySelector('[data-role-pill]');
     expect(visible?.textContent).toBe(role);
     expect(line?.querySelector('.role-typer-sizer')?.getAttribute('data-role-text')).toBe(role);
@@ -62,7 +66,7 @@ describe('About r106 composition', () => {
   });
 
   it('links the current employer in the Currently row', () => {
-    const { container } = render(<About />);
+    const { container } = render(<About locale={SITE_LOCALE.en} />);
     const row = [...container.querySelectorAll('.ab-now dl > div')].find(
       (node) => node.querySelector('dt')?.textContent === 'Currently',
     );
@@ -76,7 +80,7 @@ describe('About r106 composition', () => {
   });
 
   it('lists seven r106 ls -la rows with no extra legend lines', () => {
-    render(<About />);
+    render(<About locale={SITE_LOCALE.en} />);
     const responsibilities = screen
       .getByRole('heading', { name: 'LS -LA ~/RESPONSIBILITIES' })
       .closest('.ab-panel');
@@ -88,12 +92,12 @@ describe('About r106 composition', () => {
   });
 
   it('offers the full repo link in the code panel header and no copy control', () => {
-    render(<About />);
+    render(<About locale={SITE_LOCALE.en} />);
     const panel = screen
       .getByRole('heading', { name: '$ cat src/lib/with-retry.ts' })
       .closest('.ab-panel');
     const link = screen.getByRole('link', {
-      name: `${aboutContent.code.repoLabel} ${aboutContent.code.repoNewTabNote}`,
+      name: `${aboutContent[SITE_LOCALE.en].code.repoLabel} ${aboutContent[SITE_LOCALE.en].code.repoNewTabNote}`,
     });
     expect(
       link.getAttribute('aria-label'),
@@ -110,7 +114,7 @@ describe('About r106 composition', () => {
   });
 
   it('groups the stack and keeps retry code keyboard accessible on mobile', () => {
-    render(<About />);
+    render(<About locale={SITE_LOCALE.en} />);
     for (const group of ['CORE', 'ANGULAR', 'LANG_DATA', 'QUALITY', 'TOOLING']) {
       expect(screen.getAllByText(group).length).toBeGreaterThan(0);
     }
@@ -123,7 +127,7 @@ describe('About r106 composition', () => {
   });
 
   it('wraps every retry code line to fit the narrowest 320px panel', () => {
-    const code = aboutContent.code.tokens.map((token) => token.text).join('');
+    const code = aboutContent[SITE_LOCALE.en].code.tokens.map((token) => token.text).join('');
     const longestLine = Math.max(...code.split('\n').map((line) => line.length));
     expect(
       longestLine,
@@ -132,12 +136,12 @@ describe('About r106 composition', () => {
   });
 
   it('marks the About section as a dock jump target so HOME can move focus to it', () => {
-    render(<About />);
+    render(<About locale={SITE_LOCALE.en} />);
     expect(document.getElementById('sec-readme')?.getAttribute('tabindex')).toBe('-1');
   });
 
   it('excludes community tags and evidence links reserved for Career', () => {
-    render(<About />);
+    render(<About locale={SITE_LOCALE.en} />);
     expect(screen.queryByText("$ git tag --list 'community/*'")).toBeNull();
     expect(screen.queryByRole('link', { name: /community\/DEVOPSDAYS_CAMPINAS/ })).toBeNull();
     expect(screen.queryByText(/curated \d+(\+)? talks/)).toBeNull();

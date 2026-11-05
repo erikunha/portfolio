@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test';
 import { brand as brandContent } from '@/content/brand';
 import { HIRE_ACCESSIBLE_NAME } from '@/content/nav';
+import { SITE_LOCALE } from '../../content/site-locale';
 
 const SCROLL_PROBE_PX = 400;
 const TOPBAR_WIDTHS = [768, 1024, 1280, 1440];
@@ -172,7 +173,7 @@ for (const width of TOPBAR_WIDTHS) {
       await page.goto('/');
       const nav = page.getByRole('navigation', { name: 'Site navigation' });
       const cv = nav.getByRole('link', { name: 'VIEW_CV' });
-      const hire = nav.getByRole('link', { name: HIRE_ACCESSIBLE_NAME });
+      const hire = nav.getByRole('link', { name: HIRE_ACCESSIBLE_NAME[SITE_LOCALE.en] });
       if (width >= ACTION_TIER_WIDTH) {
         await expect(cv, 'from 1024px the topbar keeps its own VIEW_CV action').toBeVisible();
         await expect(hire, 'from 1024px the topbar keeps its own hire action').toBeVisible();
@@ -217,7 +218,7 @@ test.describe('desktop topbar: one hire action per viewport', () => {
         const bar = page.locator('.desktop-topbar');
         const nav = bar.getByRole('navigation', { name: 'Site navigation' });
         const cv = nav.getByRole('link', { name: 'VIEW_CV' });
-        const hire = nav.getByRole('link', { name: HIRE_ACCESSIBLE_NAME });
+        const hire = nav.getByRole('link', { name: HIRE_ACCESSIBLE_NAME[SITE_LOCALE.en] });
 
         await expect(
           page.getByRole('button', { name: 'Open menu', exact: true }),
@@ -320,10 +321,9 @@ test.describe('section navigation: drawer rows', () => {
       'href',
       '/design-system',
     );
-    await expect(drawer.getByRole('link', { name: HIRE_ACCESSIBLE_NAME })).toHaveAttribute(
-      'href',
-      /linkedin\.com\/in\/erikunha/,
-    );
+    await expect(
+      drawer.getByRole('link', { name: HIRE_ACCESSIBLE_NAME[SITE_LOCALE.en] }),
+    ).toHaveAttribute('href', /linkedin\.com\/in\/erikunha/);
     await expect(drawer.locator('.menu-motion')).toBeVisible();
   });
 
