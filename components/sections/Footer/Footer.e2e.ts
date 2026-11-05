@@ -302,6 +302,33 @@ test.describe('Footer', () => {
     }
   });
 
+  test('sections seen reaches every section after scrolling the page, even sections taller than the screen', async ({
+    browser,
+  }) => {
+    for (const [width, height, isMobile] of [
+      [390, 844, true],
+      [1280, 800, false],
+    ] as const) {
+      const context = await browser.newContext({
+        viewport: { width, height },
+        isMobile,
+        hasTouch: isMobile,
+      });
+      const page = await context.newPage();
+      await page.goto('/');
+      const total = await page.evaluate(() => document.documentElement.scrollHeight);
+      for (let y = 0; y < total; y += height / 2) {
+        await page.mouse.wheel(0, height / 2);
+        await page.waitForTimeout(50);
+      }
+      await expect(
+        page.locator('[data-sess="seen"]'),
+        `a section taller than four screens never reaches a 25% visible ratio at ${width}`,
+      ).toHaveText('9');
+      await context.close();
+    }
+  });
+
   test('tree links keep 44px touch targets under a coarse pointer', async ({ browser }) => {
     const context = await browser.newContext({
       viewport: { width: 390, height: 844 },
