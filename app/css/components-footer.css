@@ -319,6 +319,7 @@
   @container sitemap (max-width: 17.49rem) {
     .sitemap .sm-groups {
       grid-template-columns: minmax(0, 1fr);
+      row-gap: var(--footer-tree-column-gap);
     }
   }
 
