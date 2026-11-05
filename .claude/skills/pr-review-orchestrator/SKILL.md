@@ -1,7 +1,7 @@
 ---
 
 name: pr-review-orchestrator
-description: Evidence-first engineering review of a pull request or branch in this repo. Orchestrates bounded investigations across providers (Codex, MiMo, Claude subagents), deterministic gates, a local production run with real browser input, exact-version research, refutation and challenge, then returns a short review draft. Use when asked to review a PR, a sub-PR before merge, or "is this ready to merge". Do not use for a one-line change (read it and run its test) or for writing code.
+description: Evidence-first engineering review of a pull request or branch in this repo. Orchestrates bounded subagent investigations, deterministic gates, a local production run with real browser input, exact-version research, refutation and challenge, then returns a short review draft. Use when asked to review a PR, a sub-PR before merge, or "is this ready to merge". Do not use for a one-line change (read it and run its test) or for writing code.
 ---
 
 # PR review orchestrator
@@ -13,9 +13,9 @@ Workers investigate. Gates and the running product provide evidence. Nobody else
 An approval with zero findings is a valid outcome; manufacturing findings is not.
 
 ```
-CALIBRATE -> RESOLVE TARGET -> MAP CHANGE -> DOMAIN MATRIX -> FAN OUT (wave 1)
--> GATES + LOCAL RUN + BROWSER (wave 3, main thread) -> DEPTH (wave 2, from triggers)
--> REFUTE + CHALLENGE (wave 4) -> COMPLETION MATRIX -> DRAFT
+CALIBRATE -> RESOLVE TARGET -> MAP CHANGE -> DOMAIN MATRIX -> FAN OUT (stage 1)
+-> GATES + LOCAL RUN + BROWSER (stage 3, main thread) -> DEPTH (stage 2, from triggers)
+-> REFUTE + CHALLENGE (stage 4) -> COMPLETION MATRIX -> DRAFT
 ```
 
 The diff is the entry point. The repository and the running site are the subject.
@@ -23,10 +23,8 @@ The diff is the entry point. The repository and the running site are the subject
 ## 1. Calibrate (minutes, not a report)
 
 Confirm, do not assume, what this session has. Build a private capability map:
-- **Providers:** `cross-runtime.py quota --runtime registered` (Codex state), `model-delegate.py providers` (MiMo, GLM, agy).
-- **Agents:** read the Agent tool's listed types; do not assume them. The `routing-*` specialists come from the user-level runtime, not this repo's `.claude/agents/`, so they exist only where that runtime is installed. When one is missing, use `general-purpose` (or `Explore` for read-only discovery) with the same contract, and say so in the completion matrix. In CI those built-ins are denied; dispatch `review-worker` instead (ci.md).
-- **Browser:** Playwright MCP, chrome-devtools MCP, claude-in-chrome. Whichever is connected.
-- **Code intelligence:** codebase-memory-mcp, serena, graphify. Run `check_index_coverage` before trusting an empty answer.
+- **Agents:** read the Agent tool's listed types; do not assume them. When a specialist type is missing, use `general-purpose` (or `Explore` for read-only discovery) with the same contract, and say so in the completion matrix. In CI those built-ins are denied; dispatch `review-worker` instead (ci.md).
+- **Browser:** Playwright MCP or chrome-devtools MCP, whichever is connected.
 - **GitHub:** `gh` for PR, checks, threads.
 
 Missing capability means that track is `BLOCKED`, never silently skipped.
@@ -38,12 +36,10 @@ commit range, changed files, lockfile and generated-file changes, unrelated loca
 `git diff <base>...<head> --stat` and `gh pr view <n> --json baseRefName,headRefOid,files`.
 
 Then build a compact REVIEW-CONTEXT (verified facts only): objective, acceptance criteria
-(spec-kit `specs/<feature>/spec.md` when it exists, else the PR body), relevant DECISIONS.md
-entries, exact versions from the lockfile, the CLAUDE.md gates the change touches. Search the
-Hindsight knowledge pages (`hindsight_search_knowledge_pages`) for prior decisions on the touched
-area; treat them as past records to check against the code. Mechanics of waves, fan-out and
-context are in `references/orchestration.md`; worked shapes in `references/examples.md`; in CI,
-follow `references/ci.md`; every v20 section is mapped in `references/coverage.md`.
+(the PR body), relevant DECISIONS.md entries, exact versions from the lockfile, the CLAUDE.md
+gates the change touches. Mechanics of stages, fan-out and context are in
+`references/orchestration.md`; worked shapes in `references/examples.md`; in CI, follow
+`references/ci.md`.
 
 ## 3. Domain matrix
 
@@ -53,18 +49,14 @@ with one falsifiable question ("does the outbox ever send twice inside the retry
 not "review the API").
 
 Size calibrates fan-out, it is not a quota: trivial 0 to 1 track, narrow 2 to 4, substantial
-5 to 8, cross-system 10 or more across waves. Never spawn filler.
+5 to 8, cross-system 10 or more across stages. Never spawn filler.
 
 ## 4. Route each track (`references/routing.md`)
 
-- **The maker never reviews its own work.** Codex-written code goes to a Claude or MiMo reviewer;
-  Claude-written code goes to Codex or MiMo. Two Claude passes are one provider, not two.
-- **Codex** (`cross-runtime.py run`, `kind: analyze`, `access: read-only`, `write_ownership: []`):
-  deep read-only tracks, adversarial passes, version research inside `node_modules`.
-- **MiMo** (`model-delegate.py run --mode review --model xiaomi-mimo-v2.6-flash`): narrow
-  file-scoped second opinions. Pro times out on wide inputs; keep `--file` to three or four files.
-- **Claude subagents** with a `ROUTING-CONTRACT-V1`: `routing-reviewer` per domain,
-  `routing-validator` per gate group, `routing-challenger` per consequential finding.
+- **Independence.** A reviewer is a fresh subagent that did not write the change. Two passes by
+  the same agent are one opinion, not two.
+- **Subagents** with a contract (`references/routing.md`): a reviewer per domain, a validator per
+  gate group, a challenger per consequential finding.
 - Workers return compressed evidence (`references/output.md`, worker return), never a full review.
 
 Launch every independent track in one message. Keep the browser, product authority and
@@ -88,8 +80,8 @@ guarantee and the base behaviour that would make it false. Reproduce on head and
 before calling it a regression. Send each consequential surviving finding to one challenger
 with the conclusion, the evidence and the weakest assumption. The challenger informs; you decide.
 
-For an important regression test, run a negative control in a scratch worktree
-(`~/Desktop/Projects/claude-skills/runtime/bin/scratch-worktree.py`): break the behaviour, watch the test fail, restore.
+For an important regression test, run a negative control in a scratch worktree: break the
+behaviour, watch the test fail, restore.
 
 ## 7. Completion gate, then write
 
@@ -102,7 +94,7 @@ comments anchored to file:line or a runtime flow, material verification, materia
 Then run the `humanizer` skill in embedded mode on the prose.
 
 Posting: on this repo's own PRs, findings become review **threads** on file:line (never
-timeline comments) or direct fixes; see CLAUDE.md for the convergence loop. On anyone else's
+timeline comments) or direct fixes. On anyone else's
 PR, return the draft and post nothing unless asked.
 
 ## Hard rules

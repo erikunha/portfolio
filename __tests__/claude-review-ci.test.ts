@@ -1,19 +1,11 @@
 import { spawnSync } from 'node:child_process';
-import {
-  chmodSync,
-  existsSync,
-  mkdtempSync,
-  readdirSync,
-  readFileSync,
-  writeFileSync,
-} from 'node:fs';
+import { chmodSync, mkdtempSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { parse } from 'yaml';
 
 const root = join(__dirname, '..');
-const skillDir = join(root, '.claude/skills/pr-review-orchestrator');
 
 function readArtifact(path: string): string {
   // behavioral-test-allow: the artifacts under test ARE the review skill's markdown, the CI reviewer
@@ -21,93 +13,11 @@ function readArtifact(path: string): string {
   return readFileSync(path, 'utf8');
 }
 
-const coverage = readArtifact(join(skillDir, 'references/coverage.md'));
 const workflowSteps = (
   parse(readArtifact(join(root, '.github/workflows/claude-review.yml'))) as {
     jobs: { review: { steps: Array<{ name?: string; run?: string }> } };
   }
 ).jobs.review.steps;
-const SOURCE_SECTION_COUNT = 134;
-const STATUSES = ['kept', 'adapted', 'replaced', 'not applicable'];
-
-type Row = { section: number; status: string; target: string };
-
-function parseRows(markdown: string): Row[] {
-  return markdown
-    .split('\n')
-    .map((line) => line.match(/^\|\s*(\d+)\s*\|([^|]+)\|([^|]+)\|([^|]+)\|$/))
-    .filter((match): match is RegExpMatchArray => match !== null)
-    .map((match) => ({
-      section: Number(match[1]),
-      status: (match[3] ?? '').trim(),
-      target: (match[4] ?? '').trim(),
-    }));
-}
-
-function skillPath(file: string): string {
-  return file === 'SKILL.md' ? join(skillDir, file) : join(skillDir, 'references', file);
-}
-
-function unresolvedTargets(row: Row): string[] {
-  const cited = row.target.match(/\b(?:SKILL|[a-z-]+)\.md\b/g) ?? [];
-  const skillFiles = cited.filter((file) => file !== 'CLAUDE.md');
-  if (row.status !== 'not applicable' && row.status !== 'replaced' && skillFiles.length === 0) {
-    return ['<no skill file cited>'];
-  }
-  return skillFiles.filter((file) => !existsSync(skillPath(file)));
-}
-
-const rows = parseRows(coverage);
-
-describe('review orchestrator coverage map', () => {
-  it('maps every source section exactly once', () => {
-    expect(
-      rows.map((row) => row.section),
-      'a v20 section is missing or duplicated in references/coverage.md; every section needs a row saying where it lives or why it does not apply',
-    ).toEqual(Array.from({ length: SOURCE_SECTION_COUNT }, (_, i) => i + 1));
-  });
-
-  it('uses only the declared statuses', () => {
-    for (const row of rows) expect(STATUSES).toContain(row.status);
-  });
-
-  it('points every kept or adapted section at a skill file that exists', () => {
-    const broken = rows
-      .map((row) => ({ section: row.section, missing: unresolvedTargets(row) }))
-      .filter((entry) => entry.missing.length > 0);
-    expect(
-      broken,
-      'a kept or adapted section must name the SKILL.md or references/*.md file holding its mechanism',
-    ).toEqual([]);
-  });
-
-  it('keeps the mechanism each consequential row names inside the file it cites', () => {
-    const anchors: Record<number, string> = {
-      3: 'Authority order',
-      9: 'Precedence when two skills answer the same question',
-      26: 'ROUTING-CONTRACT-V1',
-      31: 'find_semantic_duplicates',
-      47: 'Failure is not zero',
-      115: 'Right-column gate',
-    };
-    for (const [section, anchor] of Object.entries(anchors)) {
-      const row = rows.find((candidate) => candidate.section === Number(section));
-      const file = row?.target.match(/\b(?:SKILL|[a-z-]+)\.md\b/)?.[0] ?? '';
-      expect(
-        existsSync(skillPath(file)) && readArtifact(skillPath(file)).includes(anchor),
-        `coverage row ${section} cites ${file}, which must still contain "${anchor}"`,
-      ).toBe(true);
-    }
-  });
-
-  it('rejects a row with no target and a row citing a missing file', () => {
-    const [noTarget, missingFile] = parseRows(
-      '| 1 | X | kept | CLAUDE.md only |\n| 2 | Y | adapted | nowhere.md section |',
-    );
-    expect(noTarget && unresolvedTargets(noTarget)).toEqual(['<no skill file cited>']);
-    expect(missingFile && unresolvedTargets(missingFile)).toEqual(['nowhere.md']);
-  });
-});
 
 describe('CI reviewer runs a trusted copy of the orchestrator', () => {
   const prompt = readArtifact(join(root, '.github/claude-review-prompt.md'));

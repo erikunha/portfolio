@@ -5,7 +5,7 @@
 ```bash
 fnm exec --using="$(cat .nvmrc)" -- pnpm <command>   # or put the pinned Node bin first on PATH
 pnpm build
-DEPLOY_SALT=test pnpm start          # port 3000; playwright.config.ts hard-codes this baseURL
+DEPLOY_SALT=test pnpm start          # port 3000; playwright.config.ts reads this baseURL from E2E_BASE_URL, defaulting to DEFAULT_BASE_URL
 ```
 
 - No real Upstash, Resend or AI Gateway credentials for review runs. E2E specs mock the backend
@@ -65,7 +65,7 @@ PID=$(lsof -tiTCP:3000 -sTCP:LISTEN); for t in $(seq 0 15 600); do ps -o pcpu=,r
 
 ## Negative control
 
-For an important regression test: `~/Desktop/Projects/claude-skills/runtime/bin/scratch-worktree.py` makes a scratch checkout,
+For an important regression test: make a scratch worktree,
 reintroduce the defect there, run the test, confirm it fails, discard the scratch tree.
 
 ## Regression attribution

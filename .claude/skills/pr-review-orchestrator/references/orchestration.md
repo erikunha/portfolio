@@ -1,17 +1,17 @@
-# Orchestration: waves, fan-out, context
+# Orchestration: stages, fan-out, context
 
-## Waves
+## Stages
 
-| Wave                   | Who                                                                                                    | What                                                                                                                                                                 |
+| Stage                  | Who                                                                                                    | What                                                                                                                                                                 |
 | ---------------------- | ------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 0 Bootstrap            | main thread                                                                                            | repo rules, exact target and base, objective, acceptance criteria, changed files, stack fingerprint from the lockfile, risk, capability map. Output: REVIEW-CONTEXT. |
 | 1 Breadth              | parallel tracks                                                                                        | one track per MATERIAL domain, launched together in one message                                                                                                      |
-| 2 Depth                | parallel tracks                                                                                        | launched only from concrete wave 1 triggers (FOLLOW-UP items): exact-version research, idempotency, base comparison, a performance hypothesis, a security path       |
+| 2 Depth                | parallel tracks                                                                                        | launched only from concrete stage 1 triggers (FOLLOW-UP items): exact-version research, idempotency, base comparison, a performance hypothesis, a security path      |
 | 3 Validation + product | validators in parallel; main thread for the browser, design comparison and cross-source reconciliation | gates, local production run, journeys                                                                                                                                |
 | 4 Challenge            | one challenger per consequential surviving finding                                                     | strongest counterexample, weakest assumption, cheapest discriminating check                                                                                          |
 | 5 Synthesis            | main thread                                                                                            | dedupe, attribute, rank, completion matrix, write                                                                                                                    |
 
-Waves 1 and 3 can overlap: start the build and the gates while wave 1 tracks run.
+Stages 1 and 3 can overlap: start the build and the gates while stage 1 tracks run.
 
 ## Fan-out rules
 
@@ -22,7 +22,7 @@ Waves 1 and 3 can overlap: start the build and the gates while wave 1 tracks run
 3. If a cross-system PR produced only two or three broad tracks, recheck whether unrelated
    questions were merged. If several tracks answer the same question, merge them unless an
    independent challenge is the point.
-4. Never spawn filler to reach a count. Stay inside the harness's concurrency and slot limits.
+4. Never spawn filler to reach a count. Stay inside the session's concurrency limits.
 5. Never invent tool arguments to parallelize; keep dependent steps sequential.
 
 ## REVIEW-CONTEXT (what every track receives)
@@ -36,7 +36,7 @@ gets REVIEW-CONTEXT plus its own domain inputs.
 
 - Workers do not inherit loaded skills or context. Name 0 to 2 skills in `SKILLS:`; do not paste
   skill bodies.
-- Workers may lack a capability (browser, GitHub, a provider). Then the main thread retrieves the
+- Workers may lack a capability (browser, GitHub). Then the main thread retrieves the
   source and hands the worker a compact evidence packet. One worker lacking access never means
   the information is unavailable.
 - A worker that finds a material question outside its scope returns FOLLOW-UP (question,
@@ -54,7 +54,7 @@ journey must be driven. Do not pre-load the catalogue.
 
 The lead does not redo each worker's exploration. It inspects the decisive evidence, the proof
 anchor, conflicts between workers and runtime observations. Large search surfaces stay in workers.
-Under context pressure, finish the current wave, keep the accepted evidence compact, and continue
+Under context pressure, finish the current stage, keep the accepted evidence compact, and continue
 from it (use `handoff-compiler` if the session must move). Never silently drop breadth.
 
 ## Orchestration completeness gate
