@@ -2,6 +2,10 @@
 
 ADR-lite running log. One bullet per decision · date · reversibility note.
 
+## 2026-11-05: claude-review is opt-in and no longer a merge requirement
+
+- **2026-11-05** · **`claude-review.yml` triggers only on an `issue_comment` carrying `/claude-review`, and merge readiness is CI green, base contained and `pnpm pr:gate`; `pnpm claude-gate` stays as an optional command.** Owner decision: the review must be requested, not run on every push, and must not block a PR. The check was never a required status check (the ruleset requires `quality-fast`, `typecheck`, `test`, `build`, `detect-changes`, `ci-gate`), so it blocked only through the documented `claude-gate` step. On large diffs each push produced a new round that surfaced a few more findings, and every push cost a run. The `pull_request` event is gone from the workflow, so its event-specific paths went with it: the skip for PRs that edit the workflow, the `track_progress` and `prompt` inputs, and the base-ref checkout (the root is now the default branch). The comment path, the author fence, the concurrency group, the prompt materialisation and the verdict assertion are unchanged. Reversibility: restore the `pull_request` trigger and its event branches in the workflow and the predicate and guard tests, and put `pnpm claude-gate` back in the merge-readiness lines of `CLAUDE.md` and `docs/handbook/review-merge-release.md`.
+
 ## 2026-11-01 — the /links relative label is anchored to the feed's fetchedAt
 
 - **2026-11-01** · **`formatRelative` requires `now`, and the feed stamps `fetchedAt` inside the cached function after its network reads.** Main broke with no new commit: the YouTube channel published its first video, so `getChannelFeed` stopped returning the empty feed and `ChannelCard` began calling `formatRelative`, whose `now = new Date()` default Next 16 prerender rejects (`next-prerender-current-time`) because it runs before any uncached read. The label is now deterministic per cache entry. _Reversible: restore the `now` default and drop `fetchedAt`._

@@ -79,7 +79,7 @@ Note the asymmetry: the repo *consumes* MCP servers as a dev tool, and also *exp
 
 ## The review toolchain
 
-**claude-review is the AI reviewer on pull requests** (restored 2026-07-27 after being removed earlier the same day). `.github/workflows/claude-review.yml` runs `claude-code-action` on every PR open and push with `.github/claude-review-prompt.md` appended as a system prompt; that prompt requires one `create_inline_comment` per finding, anchored to a changed line, and a complete pass rather than only the most salient issue.
+**claude-review is the AI reviewer on pull requests** (restored 2026-07-27 after being removed earlier the same day). `.github/workflows/claude-review.yml` runs `claude-code-action` only when the owner comments `/claude-review` on a PR, with `.github/claude-review-prompt.md` appended as a system prompt; that prompt requires one `create_inline_comment` per finding, anchored to a changed line, and a complete pass rather than only the most salient issue.
 
 **The local dispatch chain stayed removed** and is not coming back with it: `review-battery` -> `battery-synthesis` -> `review-findings.ts` -> `review-stamp.ts` -> `.review-passed`, the shared `lib/transcript.mjs` primitives it rode on, `transcript-doctor.ts` and `check-gate-health.ts`. Those constrained the agent mid-turn or gated the push; the reviewer reviews the diff on a PR.
 
@@ -87,6 +87,6 @@ Pre-PR self-review is a discipline, not a gate. What remains mechanical on a PR:
 
 | Script | Purpose |
 |---|---|
-| `check-claude-approval.ts` | `pnpm claude-gate`: the latest claude-review verdict must be Approve on the current head; fail-closed on a stale or SHA-less Approve |
+| `check-claude-approval.ts` | optional `pnpm claude-gate`: after a requested review, the latest claude-review verdict must be Approve on the current head; not a merge requirement |
 | `check-pr-comments.ts` | `pnpm pr:gate`: every review thread resolved; flags `suspicious_self_resolve` |
 | `lint-css-tokens.ts` | bans raw hex outside `theme.css` (CI gate `pnpm lint:css-tokens`) |

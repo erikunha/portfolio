@@ -23,6 +23,7 @@ sequenceDiagram
     A-->>C: findings
     C->>G: git push (pre-push gate chain blocks if not stamped)
     C->>CI: open PR; CI runs lint/type/test/build/perf/a11y/security
+    H->>CI: optional: owner comments /claude-review
     CI->>C: claude-review posts inline findings + Verdict
     CI-->>C: review threads
     C->>C: drive threads to resolved -> green
@@ -68,13 +69,13 @@ Every substantive change runs the same disciplined loop, enforced by mandated sk
 | Anticipate failure | thinking-risk-premortem, pre-mortem | convention + plan tasks |
 | Implement | test-driven-development | convention |
 | Self-verify | verification-before-completion | convention + `pnpm verify` |
-| Review | pre-PR self-review, then claude-review on the PR | `pnpm claude-gate` (fail-closed on a stale or SHA-less Approve) |
+| Review | pre-PR self-review; claude-review only when the owner requests it | `pnpm pr:gate` (every thread resolved) |
 | Resolve | findings ledger | stamp refuses while findings open |
 | Record | DECISIONS.md ADR | PR template checklist |
 
-## 3. Review — claude-review on the PR, self-review before it
+## 3. Review — self-review before the PR, claude-review on request
 
-**claude-review (claude[bot]) runs automatically** on every PR open and push, posting findings as inline review comments anchored to changed lines and closing with a `Verdict:` line that `pnpm claude-gate` reads fail-closed.
+**claude-review (claude[bot]) is opt-in.** It runs only when the owner comments `/claude-review` on a PR, posting findings as inline review comments anchored to changed lines and closing with a `Verdict:` line that the optional `pnpm claude-gate` reads fail-closed. It is not a merge requirement.
 
 **The local battery is not restored.** The 4-agent battery, `battery-synthesis`, the findings ledger and the transcript-verified stamp were removed on 2026-07-27 and stay removed. Pre-PR review is discipline: read the diff, run `pr-review-toolkit:code-reviewer` over it. `pnpm pr:gate` checks thread resolution.
 
