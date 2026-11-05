@@ -3,6 +3,7 @@
 import { usePathname } from 'next/navigation';
 import {
   createContext,
+  Fragment,
   type MouseEvent,
   type ReactNode,
   useCallback,
@@ -14,8 +15,8 @@ import {
 } from 'react';
 import type { NavigationCopy, SiteNavChrome } from '@/content/navigation';
 import {
+  headerLanguageSwitchPaths,
   LANGUAGE_SWITCH_NAME,
-  languageSwitchPaths,
   SITE_LOCALES,
   type SiteLocale,
 } from '@/content/site-locale';
@@ -38,19 +39,12 @@ const SETTLED_TOP_LIMIT_PX = 150;
 const TRAPPED_CONTROLS = 'a[href], button';
 const CURRENT_ITEM = '[aria-current]';
 const SCROLL_LOCK_ATTRIBUTE = 'data-scroll-locked';
-const SEARCH_KEY = 'k';
 const NO_CURRENT_SECTION = '';
 const MENU_TRIGGER_CLASS = 'menu-trigger';
 const MENU_TRIGGER_SELECTOR = `.${MENU_TRIGGER_CLASS}`;
 export const MENU_ICON_PATH = 'M4 7h16M4 12h16M4 17h16';
 const ICON_VIEWBOX = '0 0 24 24';
-const KEYBOARD_PLATFORM = {
-  APPLE: 'apple',
-  OTHER: 'other',
-} as const;
-
-type KeyboardPlatform = (typeof KEYBOARD_PLATFORM)[keyof typeof KEYBOARD_PLATFORM];
-
+const LANGUAGE_SEPARATOR = '\u00b7';
 type NavigationState = {
   currentId: string;
   drawerOpen: boolean;
@@ -234,21 +228,6 @@ export function SectionNavigationProvider({
     applyMotion(next);
   }, []);
 
-  useEffect(() => {
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.defaultPrevented || event.altKey || event.shiftKey) return;
-      if (!event.metaKey && !event.ctrlKey) return;
-      if (event.key.toLowerCase() !== SEARCH_KEY) return;
-      if (drawerOpenRef.current) return;
-      event.preventDefault();
-      const active = document.activeElement;
-      const opener = active instanceof HTMLElement && active !== document.body ? active : null;
-      openDrawer(opener);
-    };
-    document.addEventListener('keydown', onKeyDown);
-    return () => document.removeEventListener('keydown', onKeyDown);
-  }, [openDrawer]);
-
   return (
     <NavigationContext.Provider
       value={{
@@ -271,33 +250,35 @@ export function SectionNavigationProvider({
   );
 }
 
-// Language switch (DECISIONS 2026-08-30, extending the /links decision to the
-// site): links carrying hrefLang + aria-current, never a toggle. Renders only
-// where the current address exists in both languages.
-function LanguageSwitch({ locale, copy }: { locale: SiteLocale; copy: NavigationCopy }) {
+export function LanguageSwitch({ className }: { className?: string }) {
+  const { locale, copy } = useSectionNavigation();
   const pathname = usePathname();
-  const paths = pathname ? languageSwitchPaths(pathname) : null;
+  const paths = pathname ? headerLanguageSwitchPaths(pathname) : null;
   if (!paths) return null;
   return (
-    <li>
-      <nav aria-label={copy.langSwitchLabel} className="menu-lang" data-lang-switch="">
-        {SITE_LOCALES.map((candidate) => {
-          const href = paths[candidate];
-          if (!href) return null;
-          return (
-            <a
-              key={candidate}
-              href={href}
-              hrefLang={candidate}
-              {...(candidate === locale ? { 'aria-current': 'page' as const } : {})}
-            >
-              {candidate.toUpperCase()}
-              <span className="sr-only">&nbsp;{LANGUAGE_SWITCH_NAME[candidate]}</span>
-            </a>
-          );
-        })}
-      </nav>
-    </li>
+    <nav
+      aria-label={copy.langSwitchLabel}
+      className={cn('lang-switch', className)}
+      data-lang-switch=""
+    >
+      {SITE_LOCALES.map((candidate, position) => (
+        <Fragment key={candidate}>
+          {position > 0 ? (
+            <span className="lang-switch-sep" aria-hidden="true">
+              {LANGUAGE_SEPARATOR}
+            </span>
+          ) : null}
+          <a
+            href={paths[candidate]}
+            hrefLang={candidate}
+            {...(candidate === locale ? { 'aria-current': 'page' as const } : {})}
+          >
+            {candidate.toUpperCase()}
+            <span className="sr-only">&nbsp;{LANGUAGE_SWITCH_NAME[candidate]}</span>
+          </a>
+        </Fragment>
+      ))}
+    </nav>
   );
 }
 
@@ -313,7 +294,6 @@ export function SectionNavigation({ extra }: { extra?: ReactNode }) {
     toggleMotion,
     copy,
     chrome,
-    locale,
   } = useSectionNavigation();
   const rootRef = useRef<HTMLDivElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
@@ -377,7 +357,6 @@ export function SectionNavigation({ extra }: { extra?: ReactNode }) {
             {copy.closeDrawer}
           </button>
         </div>
-        <SearchTrigger className="menu-search" />
         <nav id="section-nav" aria-label={copy.navLabel}>
           {chrome.drawerGroups.map((group) => {
             const titleId = `menu-group-${group.id}`;
@@ -416,7 +395,6 @@ export function SectionNavigation({ extra }: { extra?: ReactNode }) {
               />
             </li>
           ))}
-          <LanguageSwitch locale={locale} copy={copy} />
           <li>
             <button
               type="button"
@@ -457,43 +435,4 @@ export function MenuTrigger({ className }: { className?: string }) {
       </svg>
     </button>
   );
-}
-
-export function SearchTrigger({ className }: { className?: string }) {
-  const { drawerOpen, openDrawer, closeDrawer, copy } = useSectionNavigation();
-  const [keyboard, setKeyboard] = useState<KeyboardPlatform>(KEYBOARD_PLATFORM.APPLE);
-
-  useEffect(() => {
-    if (!isAppleKeyboard()) setKeyboard(KEYBOARD_PLATFORM.OTHER);
-  }, []);
-
-  return (
-    <button
-      type="button"
-      className={cn('search-trigger', className)}
-      aria-expanded={drawerOpen}
-      aria-controls={DRAWER_ID}
-      aria-haspopup="dialog"
-      aria-keyshortcuts="Control+K Meta+K"
-      onClick={(event) => {
-        if (drawerOpen) closeDrawer(true);
-        else openDrawer(event.currentTarget);
-      }}
-    >
-      <span className="search-trigger-label">{copy.searchLabel}</span>
-      <span className="search-trigger-shortcut" data-keyboard={keyboard}>
-        <span data-platform={KEYBOARD_PLATFORM.APPLE}>{copy.searchShortcutApple}</span>
-        <span data-platform={KEYBOARD_PLATFORM.OTHER}>{copy.searchShortcutOther}</span>
-      </span>
-    </button>
-  );
-}
-
-type PlatformNavigator = Navigator & { userAgentData?: { platform?: string } };
-
-function isAppleKeyboard(): boolean {
-  if (typeof navigator === 'undefined') return false;
-  const platform =
-    (navigator as PlatformNavigator).userAgentData?.platform ?? navigator.platform ?? '';
-  return /mac/i.test(platform);
 }

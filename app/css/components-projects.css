@@ -193,7 +193,8 @@
   .measured-grid {
     display: grid;
     grid-template-columns: minmax(0, 1fr);
-    gap: var(--spacing-2);
+    gap: var(--spacing-4);
+    container-type: inline-size;
   }
 
   .measured-grid > *,
@@ -214,8 +215,7 @@
     font-weight: 400;
   }
 
-  .measured-tiles,
-  .measured-scores {
+  .measured-tiles {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: var(--spacing-2);
@@ -242,6 +242,7 @@
     font-size: var(--text-xl);
     font-weight: 700;
     line-height: 1.1;
+    overflow-wrap: anywhere;
   }
 
   .measured-description {
@@ -250,56 +251,14 @@
     line-height: 1.5;
   }
 
-  .measured-lighthouse {
-    display: grid;
-    align-content: start;
-    gap: var(--spacing-4);
+  .measured-tiles + .measured-status {
+    margin: var(--spacing-2) 0 0;
   }
 
-  .measured-lighthouse > .measured-heading {
-    grid-column: 1 / -1;
-    margin-bottom: 0;
-  }
-
-  .measured-score {
-    min-width: 0;
-  }
-
-  .measured-subheading {
-    margin: 0 0 var(--spacing-2);
-    color: var(--color-text-secondary);
-    font-size: var(--text-xs);
-    font-weight: 400;
-  }
-
-  .measured-perf > .measured-status {
-    margin: 0 0 var(--spacing-2);
-  }
-
-  .measured-perf {
-    --measured-tile-min: 7rem;
-  }
-
-  .measured-perf .measured-scores {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .measured-out-of {
-    margin-left: var(--spacing-1);
-    color: var(--color-text-secondary);
-    font-size: var(--text-xs);
-    font-weight: 400;
-  }
-
-  .measured-bar {
-    height: calc(var(--spacing-1) - var(--border-width));
-    background: var(--color-primary-quiet);
-  }
-
-  .measured-bar > i {
-    display: block;
-    height: 100%;
-    background: var(--color-primary-500);
+  @container (min-width: 40rem) {
+    .measured-tiles {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
   }
 
   @media (min-width: 768px) {
@@ -359,10 +318,6 @@
       font-size: var(--text-xl);
     }
 
-    .measured-grid {
-      gap: var(--spacing-4);
-    }
-
     .measured-source {
       margin-bottom: var(--spacing-3);
     }
@@ -373,17 +328,6 @@
 
     .measured-description {
       font-size: var(--text-sm);
-    }
-
-    .measured-perf .measured-scores {
-      grid-template-columns: repeat(auto-fit, minmax(var(--measured-tile-min), 1fr));
-    }
-  }
-
-  @media (min-width: 1024px) {
-    .measured-grid {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: var(--spacing-8);
     }
   }
 

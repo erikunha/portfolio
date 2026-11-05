@@ -43,24 +43,34 @@ async function renderDesktop(): Promise<Document> {
 }
 
 async function renderMobile(): Promise<Document> {
-  const { DawMixerMobile } = await import('./DawMixerSection');
+  const { DawMixerMobile } = await import('./DawMixerContent');
   const html = renderToStaticMarkup(
     createElement(DawMixerMobile, { mixer: dawMixer[SITE_LOCALE.en] }),
   );
   return new DOMParser().parseFromString(html, 'text/html');
 }
 
-describe('DawMixerSection — desktop', () => {
-  it('renders 6 channel rows', async () => {
+describe('DawMixerContent — desktop', () => {
+  it('renders 3 channel rows', async () => {
     const doc = await renderDesktop();
-    expect(doc.querySelectorAll('[data-testid^="channel-"]').length).toBe(6);
+    expect(doc.querySelectorAll('[data-testid^="channel-"]').length).toBe(3);
   });
 
-  it('renders CH 01 through CH 05 and MASTER', async () => {
+  it('renders CH 01, CH 02 and MASTER', async () => {
     const doc = await renderDesktop();
-    for (const id of ['CH 01', 'CH 02', 'CH 03', 'CH 04', 'CH 05', 'MASTER']) {
+    for (const id of ['CH 01', 'CH 02', 'MASTER']) {
       expect(doc.querySelector(`[data-testid="channel-${id}"]`)).not.toBeNull();
     }
+    for (const id of ['CH 03', 'CH 04', 'CH 05']) {
+      expect(doc.querySelector(`[data-testid="channel-${id}"]`)).toBeNull();
+    }
+  });
+
+  it('counts the guitar tracks in the session header', async () => {
+    const doc = await renderDesktop();
+    expect(doc.querySelector('[data-testid="session-header"]')?.textContent).toContain(
+      '2 GTR TRACKS + MASTER',
+    );
   });
 
   it('renders the session header with session name', async () => {
@@ -94,10 +104,20 @@ describe('DawMixerSection — desktop', () => {
   });
 });
 
-describe('DawMixerSection — mobile', () => {
-  it('renders 2 channel cards', async () => {
+describe('DawMixerContent — mobile', () => {
+  it('renders 3 channel cards', async () => {
     const doc = await renderMobile();
-    expect(doc.querySelectorAll('[data-testid^="channel-mobile-"]').length).toBe(2);
+    expect(doc.querySelectorAll('[data-testid^="channel-mobile-"]').length).toBe(3);
+  });
+
+  it('counts the guitar tracks in the session header and the legend', async () => {
+    const doc = await renderMobile();
+    expect(doc.querySelector('[data-testid="session-header-mobile"]')?.textContent).toContain(
+      '2 GTR + MASTER',
+    );
+    expect(doc.querySelector('[data-testid="daw-mixer-mobile"]')?.textContent).toContain(
+      '2 GTR + MASTER',
+    );
   });
 
   it('renders mobile session header', async () => {
@@ -105,15 +125,13 @@ describe('DawMixerSection — mobile', () => {
     expect(doc.querySelector('[data-testid="session-header-mobile"]')).not.toBeNull();
   });
 
-  it('MASTER channel is not rendered on mobile', async () => {
-    const doc = await renderMobile();
-    expect(doc.querySelector('[data-testid="channel-mobile-MASTER"]')).toBeNull();
-  });
-
-  it('renders CH 01 and CH 02 specifically (first 2 non-MASTER channels)', async () => {
+  it('renders CH 01, CH 02 and MASTER with its terminal lines', async () => {
     const doc = await renderMobile();
     expect(doc.querySelector('[data-testid="channel-mobile-CH 01"]')).not.toBeNull();
     expect(doc.querySelector('[data-testid="channel-mobile-CH 02"]')).not.toBeNull();
+    const master = doc.querySelector('[data-testid="channel-mobile-MASTER"]');
+    expect(master?.getAttribute('data-channel')).toBe('master');
+    expect(master?.textContent).toContain('fewer plugins, more space');
   });
 
   it('bold text from **markers** renders as <strong> in channel desc', async () => {
@@ -125,7 +143,7 @@ describe('DawMixerSection — mobile', () => {
   });
 });
 
-describe('DawMixerSection — XSS safety (behavioral)', () => {
+describe('DawMixerContent — XSS safety (behavioral)', () => {
   it('ParsedText renders bold markers as <strong>, not raw HTML', async () => {
     const doc = await renderDesktop();
     const ch02 = doc.querySelector('[data-testid="channel-CH 02"]');
@@ -143,20 +161,17 @@ describe('DawMixerSection — XSS safety (behavioral)', () => {
   });
 });
 
-vi.mock('@/lib/ua', () => ({ getIsMobile: async () => false }));
+vi.mock('@/lib/ua', () => ({ getIsMobile: async () => true }));
 
-describe('DawMixerSection module wrapper', () => {
-  it('renders as its own section anchored at sec-daw-mixer', async () => {
-    const { DawMixerSection } = await import('./DawMixerSection');
-    const html = renderToStaticMarkup(createElement(DawMixerSection, { locale: SITE_LOCALE.en }));
-    const doc = new DOMParser().parseFromString(html, 'text/html');
-    const section = doc.querySelector('section#sec-daw-mixer');
-    expect(
-      section,
-      'the DAW mixer must be restored as its own section with the sec-daw-mixer anchor',
-    ).not.toBeNull();
-    expect(section?.getAttribute('aria-labelledby')).toBe('sec-daw-mixer-header');
-    expect(doc.body.textContent).toContain('./MIX --LIVE');
-    expect(doc.querySelector('section#sec-guitar [data-testid="daw-mixer-desktop"]')).toBeNull();
+describe('DawMixerContent variant selection', () => {
+  it('serves the mobile mixer to mobile user agents, in the requested locale', async () => {
+    const { DawMixerContent } = await import('./DawMixerContent');
+    for (const locale of [SITE_LOCALE.en, SITE_LOCALE.pt]) {
+      const html = renderToStaticMarkup(await DawMixerContent({ locale }));
+      const doc = new DOMParser().parseFromString(html, 'text/html');
+      expect(doc.querySelector('[data-testid="daw-mixer-mobile"]')).not.toBeNull();
+      expect(doc.querySelectorAll('[data-testid^="channel-mobile-"]')).toHaveLength(3);
+      expect(doc.body.textContent).toContain(dawMixer[locale].channels[0]?.desc.split(' · ')[0]);
+    }
   });
 });

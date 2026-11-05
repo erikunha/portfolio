@@ -214,28 +214,30 @@
   }
 
   #sec-guitar {
-    --module-estimate: 1400px;
+    --module-estimate: 3320px;
   }
 
-  #sec-daw-mixer {
-    --module-estimate: 1594px;
-  }
-
-  @media (min-width: 412px) {
-    #sec-daw-mixer {
-      --module-estimate: 1521px;
+  @media (min-width: 340px) {
+    #sec-guitar {
+      --module-estimate: 3250px;
     }
   }
 
-  @media (min-width: 480px) {
-    #sec-daw-mixer {
-      --module-estimate: 1509px;
+  @media (min-width: 360px) {
+    #sec-guitar {
+      --module-estimate: 3220px;
+    }
+  }
+
+  @media (min-width: 412px) {
+    #sec-guitar {
+      --module-estimate: 3200px;
     }
   }
 
   @media (min-width: 600px) {
-    #sec-daw-mixer {
-      --module-estimate: 1496px;
+    #sec-guitar {
+      --module-estimate: 3360px;
     }
   }
 
@@ -283,11 +285,7 @@
     }
 
     #sec-guitar {
-      --module-estimate: 1280px;
-    }
-
-    #sec-daw-mixer {
-      --module-estimate: 880px;
+      --module-estimate: 2520px;
     }
 
     #sec-contact {
@@ -301,11 +299,7 @@
     }
 
     #sec-guitar {
-      --module-estimate: 1200px;
-    }
-
-    #sec-daw-mixer {
-      --module-estimate: 880px;
+      --module-estimate: 2480px;
     }
 
     #sec-contact {

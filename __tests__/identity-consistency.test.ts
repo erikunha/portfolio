@@ -26,7 +26,7 @@ vi.mock('next/font/local', () => ({
   default: () => ({ variable: '--font-mock', className: 'mock' }),
 }));
 
-const CANONICAL_TITLE = 'Senior Software Engineer, Frontend & Product';
+const CANONICAL_TITLE = 'Senior Software Engineer · Full Stack';
 const RETIRED_TITLE = 'Senior Full-Stack Engineer';
 
 const REPO_ROOT = path.resolve(__dirname, '..');
@@ -129,8 +129,8 @@ describe('identity is consistent across every gated surface', () => {
       'es:B1',
       'fr:A2',
     ]);
-    expect(profileLanguageLine).toBe('PT native · EN C1 · ES B1 · FR A2');
-    expect(profileWorkingLanguageLine).toBe('PT native · EN C1');
+    expect(profileLanguageLine).toBe('PT-BR native · EN C1 · ES B1 · FR A2');
+    expect(profileWorkingLanguageLine).toBe('PT-BR native · EN C1');
     expect(
       contactLanguages,
       'the contact section and the CV must render the same language line, or the two surfaces drift apart',

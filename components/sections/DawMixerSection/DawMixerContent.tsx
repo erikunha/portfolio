@@ -1,14 +1,11 @@
 import dynamic from 'next/dynamic';
-import { type CSSProperties, Suspense } from 'react';
+import type { CSSProperties } from 'react';
 import { pctToDb } from '@/components/client/DawMixer/FaderIsland/pct-to-db';
 import { dawMixer } from '@/content/daw-mixer';
 import type { DawMixer, DawMixerChannel } from '@/content/schemas';
-import { SECTION_LABELS } from '@/content/section-labels';
 import type { SiteLocale } from '@/content/site-locale';
 import { cn } from '@/lib/cn';
 import { getIsMobile } from '@/lib/ua';
-import { IconMixer } from '../../Icons';
-import { Module } from '../../responsive/Module';
 
 const DawMixerDesktopDynamic = dynamic(() =>
   import('./DawMixerDesktop').then((m) => m.DawMixerDesktop),
@@ -299,9 +296,9 @@ function ChannelMobile({ ch }: { ch: DawMixerChannel }) {
             ))}
           </div>
         </div>
-        <div className="flex items-center justify-between gap-3">
+        <div className="flex flex-col gap-1">
           <div
-            className="flex-1 h-[6px] bg-[var(--color-primary-quiet)] border border-[var(--color-primary-quiet)] relative overflow-hidden"
+            className="h-[6px] bg-[var(--color-primary-quiet)] border border-[var(--color-primary-quiet)] relative overflow-hidden"
             aria-hidden="true"
           >
             <div
@@ -310,7 +307,7 @@ function ChannelMobile({ ch }: { ch: DawMixerChannel }) {
             />
           </div>
           {ch.footer && (
-            <span className="text-xs text-primary-400 block tracking-[0.08em] mt-[2px] opacity-80">
+            <span className="text-xs text-primary-400 block text-center tracking-[0.08em] opacity-80">
               LUFS {ch.footer.lufs} · PK {ch.footer.pk}
             </span>
           )}
@@ -338,12 +335,9 @@ export function DawMixerMobile({ mixer }: { mixer: DawMixer }) {
     >
       <SessionHeaderMobile mixer={mixer} />
       <MixLegendMobile mixer={mixer} />
-      {mixer.channels
-        .filter((ch) => ch.id !== 'MASTER')
-        .slice(0, 2)
-        .map((ch) => (
-          <ChannelMobile key={ch.id} ch={ch} />
-        ))}
+      {mixer.channels.map((ch) => (
+        <ChannelMobile key={ch.id} ch={ch} />
+      ))}
     </div>
   );
 }
@@ -352,21 +346,4 @@ export async function DawMixerContent({ locale }: { locale: SiteLocale }) {
   const isMobile = await getIsMobile();
   const mixer = dawMixer[locale];
   return isMobile ? <DawMixerMobile mixer={mixer} /> : <DawMixerDesktopDynamic mixer={mixer} />;
-}
-
-export function DawMixerSection({ locale, defer }: { locale: SiteLocale; defer?: boolean }) {
-  return (
-    <Module
-      id="sec-daw-mixer"
-      header="./MIX --LIVE — DAW MIXER"
-      srLabel={SECTION_LABELS[locale]['sec-daw-mixer']}
-      icon={<IconMixer />}
-      defer={defer}
-      variant="green"
-    >
-      <Suspense fallback={null}>
-        <DawMixerContent locale={locale} />
-      </Suspense>
-    </Module>
-  );
 }

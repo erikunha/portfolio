@@ -1,15 +1,110 @@
 @layer components {
+  .daw-mixer-row-min {
+    grid-template-columns: 1fr auto;
+  }
+
+  .mixer-transport {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--mixer-transport-gap);
+  }
+
+  .plugin-chain {
+    display: flex;
+    align-items: stretch;
+    gap: var(--spacing-1);
+  }
+
+  .plugin-chip {
+    flex: 1 1 0;
+    min-width: 0;
+    padding-inline: var(--spacing-1);
+  }
+
   .daw-channel-row {
     display: grid;
-    grid-template-columns: 64px 1.4fr 86px 80px 2.4fr 1.5fr 1fr 64px;
+    grid-template-columns: 64px 1.2fr 86px 80px 3.4fr 1fr 0.9fr 64px;
     gap: 14px;
     align-items: center;
   }
 
-  @media (max-width: 767px) {
-    .daw-mixer-row-min,
+  @media (max-width: 1279.98px) {
     .daw-channel-row {
-      min-width: 720px;
+      grid-template-columns: 64px 1.2fr 86px 80px 1fr 0.9fr 64px;
+    }
+
+    .daw-channel-row > :nth-child(5) {
+      grid-column: 2 / -1;
+      grid-row: 2;
+    }
+
+    .daw-mixer-labels > :nth-child(5) {
+      display: none;
+    }
+  }
+
+  @media (max-width: 767.98px) {
+    .daw-mixer-row-min {
+      grid-template-columns: minmax(0, 1fr);
+      justify-items: center;
+      text-align: center;
+    }
+
+    .daw-mixer-labels {
+      display: none;
+    }
+
+    .daw-channel-row {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      row-gap: var(--spacing-3);
+    }
+
+    .daw-channel-row > * {
+      grid-column: 1 / -1;
+    }
+
+    .daw-channel-row > :nth-child(1) {
+      grid-column: 1;
+      grid-row: 1;
+    }
+
+    .daw-channel-row > :nth-child(8) {
+      grid-column: 2;
+      grid-row: 1;
+      justify-self: end;
+    }
+
+    .daw-channel-row > :nth-child(3) {
+      grid-column: 1;
+    }
+
+    .daw-channel-row > :nth-child(4) {
+      grid-column: 2;
+    }
+
+    .daw-channel-row > :nth-child(5) {
+      grid-column: 1 / -1;
+      grid-row: auto;
+    }
+
+    .mixer-transport {
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: var(--spacing-2);
+    }
+
+    .plugin-chain {
+      display: grid;
+      grid-template-rows: repeat(var(--mixer-chain-rows), auto);
+      grid-auto-flow: column;
+      grid-auto-columns: max-content;
+      gap: var(--spacing-2) var(--spacing-3);
+      justify-content: start;
+    }
+
+    .plugin-chip {
+      min-width: var(--mixer-chip-min);
+      padding-inline: var(--spacing-3);
     }
   }
 

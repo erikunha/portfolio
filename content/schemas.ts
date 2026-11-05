@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { SECTION_ICONS } from './section-registry';
 
 export { SECTION_ICONS };
-export const SECTION_DESTINATION_COUNT = 10;
+export const SECTION_DESTINATION_COUNT = 9;
 const FIRST_SECTION_ORDER = 1;
 const MIN_SECTION_TEXT_LENGTH = 1;
 const MIN_ALIAS_COUNT = 1;
@@ -104,9 +104,6 @@ const NavigationCopySchema = z.object({
   closeDrawer: NavTextSchema,
   dockLabel: NavTextSchema,
   positionLabel: NavTextSchema,
-  searchLabel: NavTextSchema,
-  searchShortcutApple: NavTextSchema,
-  searchShortcutOther: NavTextSchema,
   motionOn: NavTextSchema,
   motionOff: NavTextSchema,
   langSwitchLabel: NavTextSchema,
@@ -318,8 +315,7 @@ export const MeasuredSchema = z.object({
     source: z.string().min(1),
     url: z.string().url(),
     timestampLabel: z.string().min(1),
-    strategyParameter: z.string().min(1),
-    outOf: z.string().min(1),
+    pairSeparator: z.string().min(1),
     strategies: z
       .array(
         z.object({
@@ -359,6 +355,22 @@ export const ResponsibilitySchema = z.object({
   name: z.string().min(1),
   highlight: z.boolean().default(false),
 });
+
+export const GUITAR_SIGNAL_BAR_COUNT = 8;
+export const GUITAR_SIGNAL_LABEL_TOKENS = { strength: '{n}', total: '{total}' } as const;
+
+const _signalNodeBase = { name: z.string().min(1), subtitle: z.string().min(1) };
+const _dotsNode = (role: 'INPUT' | 'AMP' | 'OUT') =>
+  z.object({
+    ..._signalNodeBase,
+    role: z.literal(role),
+    strengthDots: z.number().int().min(0).max(GUITAR_SIGNAL_BAR_COUNT),
+  });
+export const SignalChainNodeSchema = z.discriminatedUnion('role', [
+  _dotsNode('INPUT'),
+  _dotsNode('AMP'),
+  _dotsNode('OUT'),
+]);
 
 export const EQ_TEMPLATE_TOKENS = { freq: '{freq}', gain: '{gain}' } as const;
 export const EQ_DEFAULT_PEAK_Q = 0.8;
@@ -432,6 +444,7 @@ export const StatCellSchema = z.object({
 
 export const GuitarRigSchema = z.object({
   eqSpectrum: EqSpectrumSchema,
+  signalChain: z.tuple([_dotsNode('INPUT'), _dotsNode('AMP'), _dotsNode('OUT')]),
   influences: z.array(InfluenceSchema).length(5),
   stats: z.array(StatCellSchema).length(4),
   liveCam: z.object({
@@ -439,22 +452,31 @@ export const GuitarRigSchema = z.object({
     caption: z.string().min(1),
     status: z.string().min(1),
     cameraLabel: z.string().min(1),
-    telemetry: z.string().min(1),
-    hudTopLeft: z.string().min(1),
   }),
 });
 
+const [guitarInputSchema, guitarAmpSchema, guitarOutputSchema] =
+  GuitarRigSchema.shape.signalChain.def.items;
 const GuitarPresentationCopySchema = z.object({
   label: z.string().trim().nonempty(),
   text: z.string().trim().nonempty(),
 });
 
 export const GuitarPresentationSchema = z.object({
+  signalStrengthLabelTemplate: z
+    .string()
+    .includes(GUITAR_SIGNAL_LABEL_TOKENS.strength)
+    .includes(GUITAR_SIGNAL_LABEL_TOKENS.total),
   signalStrip: z.object({
     live: z.string().trim().nonempty(),
     tail: z.string().trim().nonempty(),
   }),
   eqSpectrum: EqSpectrumSchema,
+  signalChain: z.tuple([
+    guitarInputSchema.extend({ label: z.string().trim().nonempty() }),
+    guitarAmpSchema.extend({ label: z.string().trim().nonempty() }),
+    guitarOutputSchema.extend({ label: z.string().trim().nonempty() }),
+  ]),
   influences: GuitarPresentationCopySchema,
   nowPlaying: GuitarPresentationCopySchema,
   stats: GuitarRigSchema.shape.stats,
@@ -535,7 +557,8 @@ export const ProfileSchema = z.object({
   fullName: z.string().min(1),
   displayName: z.string().min(1),
   title: z.string().min(1),
-  technologyLine: z.string().min(1),
+  stackLine: z.string().min(1),
+  aiLine: z.string().min(1),
   country: z.string().min(1),
   city: z.string().min(1),
   timezone: z.string().min(1),
@@ -546,7 +569,14 @@ export const ProfileSchema = z.object({
     context: z.string().min(1),
   }),
   languages: z
-    .array(z.object({ code: z.string().min(1), name: z.string().min(1), level: z.string().min(1) }))
+    .array(
+      z.object({
+        code: z.string().min(1),
+        label: z.string().min(1),
+        name: z.string().min(1),
+        level: z.string().min(1),
+      }),
+    )
     .min(1),
   actions: z
     .array(
@@ -680,56 +710,63 @@ export type HeroClientContent = z.infer<typeof HeroClientContentSchema>;
 const FooterHrefSchema = z.string().regex(/^(?:#[\w-]+|\/(?!\/)[\w/-]*|https:\/\/[^\s]+)$/);
 const FooterLinkSchema = z.object({ label: z.string().min(1), href: FooterHrefSchema });
 
-export const FooterContentSchema = z.object({
-  shutdownTitle: z.string().min(1),
-  prompt: z.string().min(1),
-  shutdownCommand: z.string().min(1),
-  sessionTitle: z.string().min(1),
-  sessionLabels: z.object({
+export const FooterContentSchema = z
+  .object({
+    shutdownTitle: z.string().min(1),
+    prompt: z.string().min(1),
+    shutdownCommand: z.string().min(1),
+    sessionTitle: z.string().min(1),
+    sessionLabels: z.object({
+      user: z.string().min(1),
+      uptime: z.string().min(1),
+      depth: z.string().min(1),
+      seen: z.string().min(1),
+      commands: z.string().min(1),
+    }),
     user: z.string().min(1),
-    uptime: z.string().min(1),
-    depth: z.string().min(1),
-    seen: z.string().min(1),
-    commands: z.string().min(1),
-  }),
-  user: z.string().min(1),
-  netstatTitle: z.string().min(1),
-  externalGlyph: z.string().min(1),
-  connectionLabels: z.object({
-    protocol: z.string().min(1),
-    state: z.string().min(1),
-    endpoint: z.string().min(1),
-  }),
-  connections: z
-    .array(
-      FooterLinkSchema.extend({
-        protocol: z.literal('tcp'),
-        state: z.enum(['ESTABLISHED', 'LISTEN']),
-        external: z.boolean(),
-      }),
-    )
-    .min(1),
-  treeTitle: z.string().min(1),
-  treeLabel: z.string().min(1),
-  groups: z
-    .array(
-      z.object({
-        directory: z.string().regex(/^\.\/[a-z_]+\/$/),
-        links: z.array(FooterLinkSchema).min(1),
-      }),
-    )
-    .length(6),
-  halted: z.string().min(1),
-  haltedAt: z.string().min(1),
-  reboot: z.object({
-    label: z.string().min(1),
-    before: z.string().min(1),
-    key: z.string().length(1),
-    after: z.string().min(1),
-    announcement: z.string().min(1),
-  }),
-  copyright: z.string().min(1),
-});
+    netstatTitle: z.string().min(1),
+    externalGlyph: z.string().min(1),
+    connectionLabels: z.object({
+      protocol: z.string().min(1),
+      state: z.string().min(1),
+      endpoint: z.string().min(1),
+    }),
+    connections: z
+      .array(
+        FooterLinkSchema.extend({
+          protocol: z.literal('tcp'),
+          state: z.enum(['ESTABLISHED', 'LISTEN']),
+          external: z.boolean(),
+        }),
+      )
+      .min(1),
+    treeTitle: z.string().min(1),
+    treeLabel: z.string().min(1),
+    fileCount: z.object({ one: z.string().min(1), other: z.string().min(1) }),
+    treeOpenDirectory: z.string().min(1),
+    groups: z
+      .array(
+        z.object({
+          directory: z.string().regex(/^\.\/[a-z_]+\/$/),
+          links: z.array(FooterLinkSchema).min(1),
+        }),
+      )
+      .length(6),
+    halted: z.string().min(1),
+    haltedAt: z.string().min(1),
+    reboot: z.object({
+      label: z.string().min(1),
+      before: z.string().min(1),
+      key: z.string().length(1),
+      after: z.string().min(1),
+      announcement: z.string().min(1),
+    }),
+    copyright: z.string().min(1),
+  })
+  .refine((footer) => footer.groups.some((group) => group.directory === footer.treeOpenDirectory), {
+    message: 'treeOpenDirectory must name one of the site map groups',
+    path: ['treeOpenDirectory'],
+  });
 export type FooterContent = z.infer<typeof FooterContentSchema>;
 
 const ErrorHrefSchema = z.string().regex(/^\/(?!\/)[\w/#-]*$/);
@@ -822,7 +859,7 @@ export const DawMixerSchema = z.object({
   transportTime: z.string().min(1),
   channels: z
     .array(DawMixerChannelSchema)
-    .length(6)
+    .length(3)
     .refine((chs) => chs[chs.length - 1]?.id === 'MASTER', {
       message: 'Last channel must be MASTER',
     }),
@@ -947,7 +984,7 @@ export type LinksPill = z.infer<typeof LinksPillSchema>;
 export type LinksCopy = z.infer<typeof LinksCopySchema>;
 export type LinksContent = z.infer<typeof LinksContentSchema>;
 
-export type Profile = z.infer<typeof ProfileSchema>;
+export type Profile = z.infer<typeof ProfileSchema> & { technologyLine: string };
 export type Education = z.infer<typeof EducationSchema>;
 
 const ReadingTextSchema = z.string().min(1);

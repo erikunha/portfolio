@@ -8,7 +8,7 @@ It is a **hiring and reference artifact** for one user (Erik Cunha, a software e
 1. **For human visitors (recruiters, hiring managers, engineers):** present credentials, projects, and opinions in a terminal interface, with automated performance and accessibility checks.
 2. **For AI agents (and curious engineers):** answer questions about Erik via `/api/ask` (an LLM grounded in the site's own content) and expose a machine-readable hiring profile via `/api/erik.json` and a read-only MCP server (`/api/mcp`).
 
-The terminal page has ten navigation entries in `content/section-registry.ts`, including the standalone DAW mixer. `app/page.tsx` also renders supporting modules outside that registry. `/summary` and `/cv` reuse professional content through `content/reading-views.ts`; `/links` and `/links/en` share localized link content.
+The terminal page has nine navigation entries in `content/section-registry.ts`; the DAW mixer lives inside the guitar entry. `app/page.tsx` also renders supporting modules outside that registry. `/summary` and `/cv` reuse professional content through `content/reading-views.ts`; `/links` and `/links/en` share localized link content.
 
 ## Users and how they move through the system
 
@@ -32,21 +32,21 @@ There is **no authentication, no accounts, no multi-tenancy**. The "user" is ano
 
 Every section of the page is driven by a typed module in `content/`, and those types _are_ the domain entities. The terminal metaphor maps real professional data onto filesystem/Unix concepts:
 
-| Terminal surface               | Real-world meaning                                                  | Content module        | Entity                                 |
-| ------------------------------ | ------------------------------------------------------------------- | --------------------- | -------------------------------------- |
-| About panels                   | Positioning, Now rows, stack and retry code                         | `about.ts`            | `AboutContent`                         |
-| `git log ~/career`             | Career timeline with nested tag groups                              | `git-log.ts`          | `GitCommit[]` (`companyUrl`, `type`)   |
-| `LS -LA ./PROJECTS`            | Nine projects with shared desktop/mobile content                    | `projects.ts`         | `Project[]`                            |
-| `PERF_RECEIPTS --HARD-NUMBERS` | Six impact receipts nested under Projects                           | `perf-receipts.ts`    | `projectReceipts` from `PerfReceipt[]` |
-| `MEASURED.JSON`                | ASK evaluation and desktop/mobile PSI                               | `measured.ts`         | `Measured` presentation metadata       |
-| About responsibilities panel   | Scope, as Unix permission bits                                      | `responsibilities.ts` | `Responsibility[]` (`perms` regex)     |
-| `git tag --list 'cert/*'`      | Certifications inside Career                                        | `credentials.ts`      | `Credential[]`                         |
-| `git tag --list 'edu/*'`       | Education inside Career                                             | `education.ts`        | `Credential[]`                         |
-| `git tag --list 'community/*'` | Community and speaking inside Career                                | `community.ts`        | `CommunityEvent`                       |
-| `cat ~/HOTTEST_TAKES.md`       | Opinions/theses                                                     | `hottest-takes.ts`    | `HottestTake[]`                        |
-| `cat ~/.guitar_rig`            | Hobby (guitar EQ strip)                                             | `guitar-rig.ts`       | `GuitarRig`                            |
-| `./mix --live`                 | Hobby (DAW mixer, interactive, its own module below the guitar rig) | `daw-mixer.ts`        | `DawMixer`                             |
-| `cat ~/.unknowns`              | Learning and specialization lists inside Opinions                   | `unknowns.ts`         | `Unknowns`                             |
+| Terminal surface               | Real-world meaning                                       | Content module        | Entity                                 |
+| ------------------------------ | -------------------------------------------------------- | --------------------- | -------------------------------------- |
+| About panels                   | Positioning, Now rows, stack and retry code              | `about.ts`            | `AboutContent`                         |
+| `git log ~/career`             | Career timeline with nested tag groups                   | `git-log.ts`          | `GitCommit[]` (`companyUrl`, `type`)   |
+| `LS -LA ./PROJECTS`            | Nine projects with shared desktop/mobile content         | `projects.ts`         | `Project[]`                            |
+| `PERF_RECEIPTS --HARD-NUMBERS` | Six impact receipts nested under Projects                | `perf-receipts.ts`    | `projectReceipts` from `PerfReceipt[]` |
+| `MEASURED.JSON`                | ASK evaluation and desktop/mobile PSI                    | `measured.ts`         | `Measured` presentation metadata       |
+| About responsibilities panel   | Scope, as Unix permission bits                           | `responsibilities.ts` | `Responsibility[]` (`perms` regex)     |
+| `git tag --list 'cert/*'`      | Certifications inside Career                             | `credentials.ts`      | `Credential[]`                         |
+| `git tag --list 'edu/*'`       | Education inside Career                                  | `education.ts`        | `Credential[]`                         |
+| `git tag --list 'community/*'` | Community and speaking inside Career                     | `community.ts`        | `CommunityEvent`                       |
+| `cat ~/HOTTEST_TAKES.md`       | Opinions/theses                                          | `hottest-takes.ts`    | `HottestTake[]`                        |
+| `cat ~/.guitar_rig`            | Hobby (guitar EQ strip and signal chain)                 | `guitar-rig.ts`       | `GuitarRig`                            |
+| `./mix --live`                 | Hobby (DAW mixer, interactive, inside the guitar module) | `daw-mixer.ts`        | `DawMixer`                             |
+| `cat ~/.unknowns`              | Learning and specialization lists inside Opinions        | `unknowns.ts`         | `Unknowns`                             |
 
 Opinions renders four ordered home takes and both Unknowns lists in one deferred module.
 The design-system take renders at `/design-system#opinion-07`; `placement` selects its surface.
@@ -64,7 +64,7 @@ Supporting content (not sections): `social.ts` (links), `seo.ts` (JSON-LD `Perso
 
 Projects uses one set of descriptions and stats across viewport sizes. Each card names its company; OSS cards include a public URL. The canonical receipt collection retains signed percentage deltas for consistency checks. Its six project receipts may display before/after values while keeping those deltas available to other consumers. `heroContent` validates Hero metrics, labels and actions on the server. `hero-client.ts` holds boot and system-failure copy with a type-only schema import. `heroContent.stats` supplies the Hero metrics and the summary reading-view metrics.
 
-Measured groups ASK and PSI presentation metadata without storing live values. The ASK adapter reads the eval aggregate; the PSI adapter supplies separate desktop and mobile scores. Each group keeps its own loading, unavailable and stale states.
+Measured groups ASK and PSI presentation metadata without storing live values. The ASK adapter reads the eval aggregate; the PSI adapter supplies separate desktop and mobile scores. Each group keeps its own loading, unavailable and stale states. PSI shows the unavailable note only when neither strategy has scores; a single failed strategy shows `—` in its half of each tile.
 
 ContactForm imports Zod-free `content/contact-copy.ts`; `content/contact.ts` validates that copy with Zod for server consumers. Both share the LinkedIn URL from `content/social-urls.ts`. The timezone panel reads its copy from the same module and its land grid, Erik's pin and curated zone coordinates from the Zod-free `content/world-map.ts`; `content/_validate-client-content.ts` parses both at build time.
 
@@ -94,15 +94,17 @@ erDiagram
     PERSON ||--|| GUITAR_RIG : plays
     GUITAR_RIG ||--|| GUITAR_PRESENTATION : "projects content"
     GUITAR_PRESENTATION ||--|| EQ_SPECTRUM : "one strip: bands, axis, groove"
+    GUITAR_PRESENTATION ||--|| SIGNAL_CHAIN : "INPUT->AMP->OUT (3-node tuple)"
     PERSON ||--|| DAW_MIXER : mixes
-    DAW_MIXER ||--o{ CHANNEL : "6, last=MASTER"
+    DAW_MIXER ||--o{ CHANNEL : "3, last=MASTER"
     PERSON ||--|| UNKNOWNS : "is-learning"
     ASK_EVAL_ITEM }o--|| PERSON : "grounds-truth-in"
 ```
 
 **Two notable invariants the schema enforces** (because they are silent-corruption risks):
 - The guitar **EQ spectrum is one Zod object** (`EqSpectrumSchema` in `content/schemas.ts`). It rejects a band or axis tick outside the frequency range, an inverted range, a non-positive BPM and an accessible-name template that lost its `{freq}` or `{gain}` token. The curve and bars are derived from the bands by `lib/eq-spectrum.ts`, so the values live in one place.
-- The DAW mixer is `.length(6)` with `.refine(last.id === 'MASTER')` - the master channel must be last.
+- The guitar **presentation signal chain is a three-node Zod `tuple`** (`GuitarPresentationSchema`). It fixes the rendered order to INPUT → AMP → OUT and rejects reordered, duplicate or missing roles. The source rig (`GuitarRigSchema`) carries the same three nodes, so no authored node goes unrendered.
+- The DAW mixer is `.length(3)` with `.refine(last.id === 'MASTER')` - CH 01, CH 02 and the master channel, which must be last.
 
 ## The AI sub-domain (`/api/ask` and its evaluation)
 
@@ -111,7 +113,7 @@ The AI feature has its own domain:
 - **`AskEvalItem`** (`content/ask-eval-corpus.ts`): an evaluation case `{ id, question, expect, kind }`, `kind ∈ {factual, edge, jailbreak, output-validation}`. The `expect` is a natural-language criterion an LLM judge scores. Ground truth is pulled from the _live_ content modules, so content/persona drift becomes a failing eval.
 - **`AskEvalCalibrationItem`** (`content/ask-eval-calibration.ts`): a gold case with a `canonicalAnswer` + a human `humanVerdict`, used to **gate the judge itself** (judge-human agreement must clear 0.85 before any corpus tokens are spent).
 
-`AiMetricsSection` composes the Measured module. Its `AiMetricsData` child reads the latest eval aggregate through `lib/ask-metrics.ts`; `LivePerfSection` renders desktop and mobile PSI alongside it. The three data reads have independent Suspense boundaries, so one pending source does not hold the others.
+`AiMetricsSection` composes the Measured module. Its `AiMetricsData` child reads the latest eval aggregate through `lib/ask-metrics.ts`; `LivePerfSection` renders desktop and mobile PSI alongside it. ASK and PSI have independent Suspense boundaries, so one pending source does not hold the other; PSI reads desktop and mobile together inside its boundary.
 
 ## The 60-second introduction
 

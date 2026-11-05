@@ -1,9 +1,9 @@
 export {
   DRAWER_ID,
   jumpToSection,
+  LanguageSwitch,
   MENU_ICON_PATH,
   MenuTrigger,
-  SearchTrigger,
   SectionNavigation,
   SectionNavigationProvider,
   useSectionNavigation,

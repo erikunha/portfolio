@@ -31,12 +31,38 @@ const guitarEqSpectrumFixture = {
   ],
 };
 
+const guitarSignalChainFixture = [
+  {
+    role: 'INPUT',
+    label: '// INPUT',
+    name: 'GRETSCH G5655TG',
+    subtitle: 'Bigsby · hollow body',
+    strengthDots: 4,
+  },
+  {
+    role: 'AMP',
+    label: '// AMP',
+    name: 'MODELED CAB',
+    subtitle: 'no tube · IR sim',
+    strengthDots: 3,
+  },
+  {
+    role: 'OUT',
+    label: '// OUT',
+    name: 'FOH / IEM',
+    subtitle: 'XLR stereo · in-ear',
+    strengthDots: 5,
+  },
+];
+
 const guitarPresentationFixture = {
+  signalStrengthLabelTemplate: '{n} of {total}',
   signalStrip: {
     live: '● SIGNAL_CHAIN.LIVE · SIGNAL OK',
     tail: 'TAIL -F ~/.RIG',
   },
   eqSpectrum: guitarEqSpectrumFixture,
+  signalChain: guitarSignalChainFixture,
   influences: {
     label: 'INFLUENCES',
     text: "John Mayer · Mateus Asato · Jimmy Page · John Frusciante · Iron Maiden's three",
@@ -64,6 +90,21 @@ describe('GuitarPresentationSchema', () => {
       guitarPresentationFixture,
     );
     expect(guitarRig[EN].eqSpectrum).toEqual(guitarEqSpectrumFixture);
+    expect(guitarRig[EN].signalChain.map((node) => node.role)).toEqual(['INPUT', 'AMP', 'OUT']);
+  });
+
+  it.each([
+    ['reordered', [1, 0, 2]],
+    ['missing', [0, 2]],
+    ['extra', [0, 1, 1, 2]],
+  ])('rejects %s display nodes', async (_, indices) => {
+    const { GuitarPresentationSchema } = await import('./schemas');
+    expect(
+      GuitarPresentationSchema.safeParse({
+        ...guitarPresentationFixture,
+        signalChain: indices.map((index) => guitarSignalChainFixture[index]),
+      }).success,
+    ).toBe(false);
   });
 
   it.each([
@@ -139,11 +180,16 @@ describe('GuitarRigSchema v2', () => {
     ).toThrow();
   });
 
-  it('accepts the eqSpectrum + influences + stats shape', async () => {
+  it('accepts the eqSpectrum + signalChain + influences + stats shape', async () => {
     const { GuitarRigSchema } = await import('./schemas');
     expect(() =>
       GuitarRigSchema.parse({
         eqSpectrum: guitarEqSpectrumFixture,
+        signalChain: [
+          { role: 'INPUT', name: 'TEST', subtitle: 'sub', strengthDots: 4 },
+          { role: 'AMP', name: 'AMP', subtitle: 'sub', strengthDots: 3 },
+          { role: 'OUT', name: 'OUT', subtitle: 'sub', strengthDots: 5 },
+        ],
         influences: [{ name: 'A' }, { name: 'B' }, { name: 'C' }, { name: 'D' }, { name: 'E' }],
         stats: [
           { label: 'STYLE', value: 'feel', sub: 'lots' },
@@ -156,8 +202,6 @@ describe('GuitarRigSchema v2', () => {
           caption: './GIGS',
           status: '▶ REC',
           cameraLabel: 'CAM/01',
-          telemetry: 'TAKE_03 · 87 BPM',
-          hudTopLeft: 'HP140 · -3dB@400',
         },
       }),
     ).not.toThrow();
@@ -178,17 +222,14 @@ const baseChannel = (id: string) => ({
   activeButtons: [],
 });
 
-const validSixChannels = [
+const validThreeChannels = [
   baseChannel('CH 01'),
   baseChannel('CH 02'),
-  baseChannel('CH 03'),
-  baseChannel('CH 04'),
-  baseChannel('CH 05'),
   { ...baseChannel('MASTER'), buttons: ['FX', 'EQ'] },
 ];
 
 describe('DawMixerSchema', () => {
-  it('accepts a valid 6-channel config with MASTER last', async () => {
+  it('accepts a valid 3-channel config with MASTER last', async () => {
     const { DawMixerSchema } = await import('./schemas');
     expect(() =>
       DawMixerSchema.parse({
@@ -197,12 +238,12 @@ describe('DawMixerSchema', () => {
         timeSignature: '4/4',
         status: 'MIXING',
         transportTime: '00:01:24:08',
-        channels: validSixChannels,
+        channels: validThreeChannels,
       }),
     ).not.toThrow();
   });
 
-  it('rejects fewer than 6 channels', async () => {
+  it('rejects fewer than 3 channels', async () => {
     const { DawMixerSchema } = await import('./schemas');
     expect(() =>
       DawMixerSchema.parse({
@@ -211,16 +252,16 @@ describe('DawMixerSchema', () => {
         timeSignature: '4/4',
         status: 'MIXING',
         transportTime: '00:01:24:08',
-        channels: validSixChannels.slice(0, 5),
+        channels: validThreeChannels.slice(0, 2),
       }),
     ).toThrow();
   });
 
-  it('rejects 6 channels when last is not MASTER', async () => {
+  it('rejects 3 channels when last is not MASTER', async () => {
     const { DawMixerSchema } = await import('./schemas');
-    const noMaster = validSixChannels.map((c) => ({
+    const noMaster = validThreeChannels.map((c) => ({
       ...c,
-      id: c.id === 'MASTER' ? 'CH 06' : c.id,
+      id: c.id === 'MASTER' ? 'CH 03' : c.id,
     }));
     expect(() =>
       DawMixerSchema.parse({
@@ -238,8 +279,9 @@ describe('DawMixerSchema', () => {
 const profileFixture = {
   fullName: 'Erik Henrique Alves Cunha',
   displayName: 'Erik Cunha',
-  title: 'Senior Software Engineer, Frontend & Product',
-  technologyLine: 'React · Next.js · TypeScript · Angular · Node.js · AWS',
+  title: 'Senior Software Engineer · Full Stack',
+  stackLine: 'React, Next.js, Angular, TypeScript, JavaScript, Node.js, Python, AWS',
+  aiLine: 'LLM Apps, Evals, RAG, LangGraph, LangChain, Agents',
   country: 'Brazil',
   city: 'Paulínia',
   timezone: 'UTC-3',
@@ -250,10 +292,10 @@ const profileFixture = {
     context: 'private-markets fintech · B2B SaaS',
   },
   languages: [
-    { code: 'pt', name: 'Portuguese', level: 'native' },
-    { code: 'en', name: 'English', level: 'C1' },
-    { code: 'es', name: 'Spanish', level: 'B1' },
-    { code: 'fr', name: 'French', level: 'A2' },
+    { code: 'pt', label: 'PT-BR', name: 'Portuguese', level: 'native' },
+    { code: 'en', label: 'EN', name: 'English', level: 'C1' },
+    { code: 'es', label: 'ES', name: 'Spanish', level: 'B1' },
+    { code: 'fr', label: 'FR', name: 'French', level: 'A2' },
   ],
   actions: [{ label: 'GitHub ↗', href: 'https://github.com/erikunha' }],
 };
@@ -301,7 +343,10 @@ describe('canonical profile and education', () => {
     const { ProfileSchema } = await import('./schemas');
     const { profile } = await import('./profile');
     expect(ProfileSchema.parse(profileFixture)).toEqual(profileFixture);
-    expect(profile).toEqual(profileFixture);
+    expect(profile).toEqual({
+      ...profileFixture,
+      technologyLine: `${profileFixture.stackLine} · ${profileFixture.aiLine}`,
+    });
   });
 
   it('rejects missing identity, invalid actions and missing language levels', async () => {

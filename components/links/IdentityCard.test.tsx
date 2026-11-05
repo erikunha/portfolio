@@ -56,9 +56,9 @@ describe('IdentityCard', () => {
 
   it('puts the full first tagline in the server HTML, so typing is only an enhancement', () => {
     const html = renderToString(<IdentityCard locale={LINKS_LOCALE.en} />);
-    expect(html).toContain('Senior Software Engineer, Frontend &amp; Product');
+    expect(html).toContain('Senior Software Engineer · Full Stack');
     const pt = renderToString(<IdentityCard locale={LINKS_LOCALE.pt} />);
-    expect(pt).toContain('Engenheiro de Software Sênior, Frontend e Produto');
+    expect(pt).toContain('Engenheiro de Software Sênior · Full Stack');
   });
 
   it('shows the first tagline at once when reduced motion is preferred', () => {
@@ -74,7 +74,7 @@ describe('IdentityCard', () => {
     const { container } = render(<IdentityCard locale={LINKS_LOCALE.en} />);
     vi.advanceTimersByTime(5_000);
     const typed = container.querySelector('.tagline-live [aria-hidden="true"]:not(.boot-cursor)');
-    expect(typed?.textContent).toBe('Senior Software Engineer, Frontend & Product');
+    expect(typed?.textContent).toBe('Senior Software Engineer · Full Stack');
     vi.useRealTimers();
     vi.unstubAllGlobals();
   });

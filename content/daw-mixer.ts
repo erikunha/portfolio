@@ -57,72 +57,12 @@ const dawMixerFor = (locale: SiteLocale): DawMixer => {
         activeButtons: ['R'],
       },
       {
-        id: 'CH 03',
-        name: 'ACOUSTIC DBL',
-        desc: pt
-          ? 'Martin · fingerpick · dobrado uma 8vb abaixo · intro + ponte'
-          : 'Martin · fingerpick · doubled 8va below · intro + bridge',
-        plugins: [
-          { name: 'PREAMP', active: true, strength: 2 },
-          { name: 'EQ', active: true, strength: 3 },
-          { name: 'COMP', active: true, strength: 2 },
-          { name: 'CHORUS', active: true, strength: 2 },
-          { name: 'PLATE', active: true, strength: 3 },
-        ],
-        faderPct: 40,
-        meterPct: 50,
-        knob1: { label: 'GAIN', angleDeg: -40 },
-        knob2: { label: 'PAN', angleDeg: -25 },
-        buttons: ['R', 'M', 'S'],
-        activeButtons: [],
-      },
-      {
-        id: 'CH 04',
-        name: 'PAD GTR',
-        desc: pt
-          ? 'Gretsch · volume swells · espaço amplo · fica atrás de tudo'
-          : 'Gretsch · volume swells · big space · sits behind everything',
-        plugins: [
-          { name: 'VOL', active: true, strength: 3 },
-          { name: 'CHORUS', active: true, strength: 4 },
-          { name: 'SHIMMER', active: true, strength: 5 },
-          { name: 'BIG REV', active: true, strength: 4 },
-          { name: 'LP FILT', active: true, strength: 2 },
-        ],
-        faderPct: 30,
-        meterPct: 34,
-        knob1: { label: 'GAIN', angleDeg: -60 },
-        knob2: { label: 'WIDTH', angleDeg: -10 },
-        buttons: ['R', 'M', 'S'],
-        activeButtons: [],
-      },
-      {
-        id: 'CH 05',
-        name: 'HARMONY DBL',
-        desc: pt
-          ? 'Gretsch · terça acima · overdub de twin-lead · só refrão'
-          : 'Gretsch · third up · twin-lead overdub · chorus only',
-        plugins: [
-          { name: 'COMP', active: true, strength: 2 },
-          { name: 'HARM+3', active: true, strength: 5 },
-          { name: 'EQ', active: true, strength: 2 },
-          { name: 'DLY', active: true, strength: 2 },
-          { name: 'FUZZ', active: false, strength: 0 },
-        ],
-        faderPct: 35,
-        meterPct: 43,
-        knob1: { label: 'GAIN', angleDeg: -50 },
-        knob2: { label: 'PAN', angleDeg: -60 },
-        buttons: ['R', 'M', 'S'],
-        activeButtons: ['M'],
-      },
-      {
         id: 'MASTER',
         name: '2-BUSS',
         desktopName: '2-BUSS — STEREO OUT',
         desc: pt
-          ? 'soma de **5 faixas de gtr** · cadeia de masterização · feel over noise'
-          : 'sum of **5 gtr tracks** · mastering chain · feel over noise',
+          ? 'soma de **2 faixas de gtr** · cadeia de masterização · feel over noise'
+          : 'sum of **2 gtr tracks** · mastering chain · feel over noise',
         plugins: [
           { name: 'SSL BUSS', active: true, strength: 3 },
           { name: 'PULTEC', active: true, strength: 2 },
@@ -141,7 +81,7 @@ const dawMixerFor = (locale: SiteLocale): DawMixer => {
         terminalLines: [
           '> headroom -3.2 · lufs -14 · pk -0.3 · mastered for streaming.',
           '> same philosophy as code: **fewer plugins, more space**.',
-          'five tracks doing one job each beats fifteen tracks competing.',
+          'two tracks doing one job each beats six tracks competing.',
         ],
       },
     ],

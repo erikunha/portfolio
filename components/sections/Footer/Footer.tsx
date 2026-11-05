@@ -15,6 +15,42 @@ const TABLE_ROLES = {
   cell: { role: 'cell' },
 } as const;
 const CONNECTION_STATE = { listening: 'LISTEN' } as const;
+const SITEMAP_ACCORDION = 'footer-sitemap';
+const SINGLE_FILE = 1;
+
+type FooterContent = (typeof footerContent)[SiteLocale];
+type SitemapGroup = FooterContent['groups'][number];
+type SitemapLink = SitemapGroup['links'][number];
+
+function SitemapRowLabel({
+  group,
+  fileCount,
+}: {
+  group: SitemapGroup;
+  fileCount: FooterContent['fileCount'];
+}) {
+  const count = group.links.length;
+  return (
+    <>
+      <span className="sm-dir">{group.directory}</span>
+      <span className="sm-count">
+        {count} {count === SINGLE_FILE ? fileCount.one : fileCount.other}
+      </span>
+    </>
+  );
+}
+
+function SitemapLinks({ links }: { links: readonly SitemapLink[] }) {
+  return (
+    <ul className="sm-list">
+      {links.map((link) => (
+        <li key={link.href}>
+          <a href={link.href}>{link.label}</a>
+        </li>
+      ))}
+    </ul>
+  );
+}
 
 export function Footer({ locale }: { locale: SiteLocale }) {
   const content = footerContent[locale];
@@ -22,7 +58,7 @@ export function Footer({ locale }: { locale: SiteLocale }) {
     <footer className="site-footer" id="shutdown">
       <div className="footer-inner">
         <div className="footer-shutdown-header">
-          <h2 className="footer-shutdown-title" data-type-reveal>
+          <h2 className="footer-shutdown-title" data-type-reveal suppressHydrationWarning>
             {content.shutdownTitle}
           </h2>
           <HaltClock label={content.haltedAt} />
@@ -33,7 +69,9 @@ export function Footer({ locale }: { locale: SiteLocale }) {
         <div className="footer-cards">
           <section className="footer-card" aria-labelledby="footer-session-title">
             <h3 className="footer-card-title" id="footer-session-title">
-              <span data-type-reveal>{content.sessionTitle}</span>
+              <span data-type-reveal suppressHydrationWarning>
+                {content.sessionTitle}
+              </span>
             </h3>
             <SessionCounters sectionIds={footerSectionIds}>
               <dl className="footer-session-grid">
@@ -73,7 +111,9 @@ export function Footer({ locale }: { locale: SiteLocale }) {
           <section className="footer-card" aria-labelledby="footer-netstat-title">
             <div className="footer-card-header">
               <h3 className="footer-card-title" id="footer-netstat-title">
-                <span data-type-reveal>{content.netstatTitle}</span>
+                <span data-type-reveal suppressHydrationWarning>
+                  {content.netstatTitle}
+                </span>
               </h3>
             </div>
             <div className="footer-netstat-scroll">
@@ -134,26 +174,36 @@ export function Footer({ locale }: { locale: SiteLocale }) {
         </div>
         <section className="footer-card footer-tree" aria-labelledby="footer-tree-title">
           <h3 className="footer-card-title" id="footer-tree-title">
-            <span data-type-reveal>{content.treeTitle}</span>
+            <span data-type-reveal suppressHydrationWarning>
+              {content.treeTitle}
+            </span>
           </h3>
           <nav className="sitemap" aria-label={content.treeLabel}>
             <ul className="sm-groups">
               {content.groups.map((group) => (
-                <li key={group.directory}>
-                  <h4 className="sm-title">{group.directory}</h4>
-                  <ul>
-                    {group.links.map((link) => (
-                      <li key={link.href}>
-                        <a href={link.href}>
-                          <span className="tr" aria-hidden="true" />
-                          <span className="tl">{link.label}</span>
-                        </a>
-                      </li>
-                    ))}
-                  </ul>
+                <li key={group.directory} className="sm-group">
+                  <h4 className="sm-title sm-row">
+                    <SitemapRowLabel group={group} fileCount={content.fileCount} />
+                  </h4>
+                  <SitemapLinks links={group.links} />
                 </li>
               ))}
             </ul>
+            <div className="sm-folds">
+              {content.groups.map((group) => (
+                <details
+                  key={group.directory}
+                  className="sm-fold"
+                  name={SITEMAP_ACCORDION}
+                  open={group.directory === content.treeOpenDirectory}
+                >
+                  <summary className="sm-fold-head sm-row">
+                    <SitemapRowLabel group={group} fileCount={content.fileCount} />
+                  </summary>
+                  <SitemapLinks links={group.links} />
+                </details>
+              ))}
+            </div>
           </nav>
         </section>
         <ul className="footer-dmesg" aria-hidden="true">

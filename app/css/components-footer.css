@@ -1,23 +1,17 @@
 @layer components {
   .site-footer {
     --footer-max-width: 75rem;
-    --footer-tree-indent: 4ch;
     --footer-line-height: 1.5;
     --footer-session-leading: 1.95;
     --footer-dmesg-leading: calc(var(--spacing-4) + var(--spacing-1));
     --footer-marker-width: 0.5ch;
     --footer-title-tracking: 0.18em;
     --footer-shutdown-tracking: 0.06em;
-    --footer-tree-stroke: var(--border-width);
-    --footer-tree-inset: 0.5ch;
     --footer-session-label-width: 13ch;
     --footer-meter-width: 7ch;
     --footer-timestamp-width: 9ch;
     --footer-tracking: 0.1em;
-    --footer-tree-title-gap: var(--phi-space-3);
-    --footer-tree-heading-gap: var(--phi-space-1);
-    --footer-tree-column-gap: var(--phi-space-3);
-    --footer-tree-row-gap: var(--phi-space-4);
+    --footer-fold-sign-width: 1ch;
     position: relative;
     color: var(--color-text);
     font-family: var(--font-mono);
@@ -265,7 +259,6 @@
   }
 
   .footer-link:hover,
-  .sitemap a:hover .tl,
   .footer-reboot:hover {
     text-decoration: underline;
     text-underline-offset: var(--spacing-1);
@@ -285,11 +278,8 @@
   }
 
   .footer-tree {
+    --footer-tree-link-inset: calc(var(--spacing-3) + var(--spacing-1) / 2);
     margin-bottom: var(--spacing-6);
-  }
-
-  .footer-tree .footer-card-title {
-    margin-bottom: var(--footer-tree-title-gap);
   }
 
   .sitemap ul {
@@ -304,89 +294,121 @@
 
   .sitemap .sm-groups {
     display: grid;
-    grid-template-columns: minmax(0, max-content);
-    justify-content: center;
-    column-gap: var(--footer-tree-column-gap);
-    row-gap: var(--footer-tree-column-gap);
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--spacing-6);
+    align-items: start;
   }
 
-  @container sitemap (min-width: 26rem) {
+  .sitemap .sm-folds {
+    display: none;
+  }
+
+  @container sitemap (min-width: 68rem) {
     .sitemap .sm-groups {
-      row-gap: var(--footer-tree-row-gap);
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      justify-content: normal;
+      grid-template-columns: repeat(6, minmax(0, 1fr));
     }
   }
 
-  @container sitemap (min-width: 38rem) {
+  @container sitemap (max-width: 37.99rem) {
     .sitemap .sm-groups {
-      grid-template-columns: repeat(3, minmax(0, 1fr));
+      display: none;
+    }
+
+    .sitemap .sm-folds {
+      display: flex;
+      flex-direction: column;
+      border-top: var(--border-width) solid var(--color-primary-faint);
     }
   }
 
-  .sitemap .sm-title {
-    margin: 0 0 var(--footer-tree-heading-gap);
+  .sitemap .sm-fold {
+    border-bottom: var(--border-width) solid var(--color-primary-faint);
+  }
+
+  .sitemap .sm-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    column-gap: var(--spacing-3);
+    min-height: var(--spacing-12);
+    margin: 0;
     color: var(--color-green);
-    font-size: var(--text-base);
+    font-size: var(--text-body);
     font-weight: 700;
-    letter-spacing: var(--footer-shutdown-tracking);
     line-height: var(--footer-line-height);
+  }
+
+  .sitemap .sm-dir {
+    min-width: 0;
     overflow-wrap: normal;
   }
 
-  .sitemap :where(.sm-groups > li > ul > li) {
-    position: relative;
+  .sitemap .sm-count {
+    color: var(--color-tertiary-300);
+    font-size: var(--text-xs);
+    font-weight: 400;
+    white-space: nowrap;
   }
 
-  .sitemap :where(.sm-groups > li > ul > li)::before {
-    content: "";
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    left: var(--footer-tree-inset);
-    border-left: var(--footer-tree-stroke) solid var(--color-primary-subtle);
-    pointer-events: none;
+  .sitemap .sm-group .sm-row {
+    grid-template-columns: auto auto;
+    justify-content: start;
+    align-items: baseline;
+    column-gap: var(--spacing-2);
+    min-height: 0;
+    margin-bottom: var(--spacing-1);
+    padding-bottom: var(--spacing-2);
+    border-bottom: var(--border-width) solid var(--color-primary-faint);
   }
 
-  .sitemap :where(.sm-groups > li > ul > li:last-child)::before {
-    bottom: 50%;
+  .sitemap .sm-fold-head {
+    grid-template-columns: minmax(0, 1fr) auto var(--footer-fold-sign-width);
+    list-style: none;
+    cursor: pointer;
   }
 
-  .sitemap a {
-    position: relative;
+  .sitemap .sm-fold-head::-webkit-details-marker {
+    display: none;
+  }
+
+  .sitemap .sm-fold-head::after {
+    content: "+" / "";
+    color: var(--color-tertiary-300);
+    font-weight: 400;
+    text-align: center;
+  }
+
+  .sitemap .sm-fold[open] > .sm-fold-head::after {
+    content: "-" / "";
+  }
+
+  .sitemap .sm-fold-head:focus-visible {
+    outline: var(--border-width) solid var(--color-green);
+    outline-offset: calc(-1 * var(--border-width));
+  }
+
+  .sitemap .sm-list {
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+  }
+
+  .sitemap .sm-fold > .sm-list {
+    padding-bottom: var(--spacing-2);
+  }
+
+  .sitemap .sm-list a {
+    min-height: var(--spacing-target);
+    padding-left: var(--footer-tree-link-inset);
+    border-left: var(--border-width) solid var(--color-primary-subtle);
     font-size: var(--text-body);
     line-height: var(--footer-line-height);
-    color: var(--color-text);
     overflow-wrap: normal;
     word-break: normal;
   }
 
-  .sitemap a:hover {
+  .sitemap .sm-list a:hover {
     color: var(--color-green);
-  }
-
-  @media (pointer: fine) {
-    .sitemap a {
-      min-height: var(--spacing-target-compact);
-    }
-  }
-
-  .sitemap .tr {
-    position: relative;
-    flex: none;
-    width: var(--footer-tree-indent);
-    align-self: stretch;
-    color: var(--color-primary-subtle);
-    pointer-events: none;
-  }
-
-  .sitemap .tr::before {
-    content: "";
-    position: absolute;
-    top: 50%;
-    left: var(--footer-tree-inset);
-    right: 1ch;
-    border-top: var(--footer-tree-stroke) solid currentColor;
   }
 
   .footer-dmesg {
@@ -498,12 +520,17 @@
   }
 
   @media print {
+    .sitemap .sm-folds {
+      display: none;
+    }
+
     .sitemap .sm-groups {
+      display: grid;
       grid-template-columns: repeat(3, minmax(0, 1fr));
       justify-content: normal;
     }
 
-    .sitemap .sm-groups > li {
+    .sitemap .sm-group {
       break-inside: avoid;
     }
   }

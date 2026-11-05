@@ -7,8 +7,13 @@ for (const state of ['queued', 'happy'] as const) {
     await installMockBackend(page, { contact: state, log: 'accept' });
     await page.goto('/');
     await page
-      .getByRole('link', { name: /contact/i })
+      .getByRole('button', { name: 'Open menu', exact: true })
       .filter({ visible: true })
+      .first()
+      .click();
+    await page
+      .getByRole('dialog')
+      .getByRole('link', { name: /contact/i })
       .first()
       .click();
     const form = page.getByTestId('contact-form');

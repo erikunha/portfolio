@@ -1,38 +1,42 @@
 import { expect, test } from '@playwright/test';
 import { installMockBackend } from './_helpers/mock-backend';
 
-const SECTION_SELECTOR = '#sec-daw-mixer';
-const DESKTOP_SELECTOR = '#sec-daw-mixer [data-testid="daw-mixer-desktop"]';
-const MOBILE_SELECTOR = '#sec-daw-mixer [data-testid="daw-mixer-mobile"]';
+const SECTION_SELECTOR = '#sec-guitar';
+const DESKTOP_SELECTOR = '#sec-guitar [data-testid="daw-mixer-desktop"]';
+const MOBILE_SELECTOR = '#sec-guitar [data-testid="daw-mixer-mobile"]';
 const VIEWPORT_HEIGHT = 800;
 const SUBPIXEL_TOLERANCE_PX = 1;
 const CROSSING_TOLERANCE_PX = 4;
 const LINE_LEADING_TOLERANCE_PX = 4;
 const MOBILE_PROJECTS = ['chromium-mobile', 'webkit-mobile'];
-const CHANNEL_IDS = ['CH 01', 'CH 02', 'CH 03', 'CH 04', 'CH 05', 'MASTER'];
+const CHANNEL_IDS = ['CH 01', 'CH 02', 'MASTER'];
 
-test('the DAW mixer is its own section directly below the guitar module', async ({ page }) => {
+test('the DAW mixer shares the guitar module and has no section of its own', async ({ page }) => {
   await installMockBackend(page, { log: 'accept', forget: 'happy' });
   await page.goto('/');
   const section = page.locator(SECTION_SELECTOR);
   await section.scrollIntoViewIfNeeded();
   await expect(section).toBeVisible();
   await expect(section.locator('h2').first()).toContainText('./MIX --LIVE');
+  await expect(page.locator('#sec-daw-mixer')).toHaveCount(0);
+  const mixerBelowPair = await page.evaluate(() => {
+    const pair = document.querySelector('#sec-guitar .guitar-pair');
+    return pair?.nextElementSibling?.classList.contains('guitar-mixer') ?? false;
+  });
+  expect(mixerBelowPair, 'the mixer must follow the photo pair inside the module').toBe(true);
   const order = await page.evaluate(() =>
     Array.from(document.querySelectorAll('main section[id]')).map((el) => el.id),
   );
-  const guitarIndex = order.indexOf('sec-guitar');
-  expect(guitarIndex, 'the guitar module must render on the page').toBeGreaterThanOrEqual(0);
-  expect(
-    order[guitarIndex + 1],
-    'the restored mixer section must render directly below the guitar module',
-  ).toBe('sec-daw-mixer');
+  expect(order.indexOf('sec-guitar')).toBeGreaterThanOrEqual(0);
+  expect(order[order.indexOf('sec-guitar') + 1]).toBe('sec-contact');
 });
 
 const OVERFLOW_WIDTHS = [320, 390, 768, 1280];
 
 for (const width of OVERFLOW_WIDTHS) {
-  test(`the restored mixer keeps the page inside the viewport at ${width}px`, async ({ page }) => {
+  test(`the guitar and mixer module keeps the page inside the viewport at ${width}px`, async ({
+    page,
+  }) => {
     await installMockBackend(page, { log: 'accept', forget: 'happy' });
     await page.setViewportSize({ width, height: VIEWPORT_HEIGHT });
     await page.goto('/');
@@ -43,12 +47,12 @@ for (const width of OVERFLOW_WIDTHS) {
     }));
     expect(
       result.scrollWidth,
-      'the restored mixer must not push the page into horizontal scroll',
+      'the guitar and mixer module must not push the page into horizontal scroll',
     ).toBeLessThanOrEqual(result.viewport + SUBPIXEL_TOLERANCE_PX);
   });
 }
 
-test('mobile UAs render the two-card mobile mixer with its own session header', async ({
+test('mobile UAs render the three-card mobile mixer with its own session header', async ({
   page,
 }, testInfo) => {
   test.skip(
@@ -64,9 +68,12 @@ test('mobile UAs render the two-card mobile mixer with its own session header', 
   await expect(mixer.locator('[data-testid="session-header-mobile"]')).toContainText(
     'YELLOW_TAKE_03.ALS',
   );
+  await expect(mixer.locator('[data-testid="session-header-mobile"]')).toContainText(
+    '2 GTR + MASTER',
+  );
   const cards = mixer.locator('[data-testid^="channel-mobile-"]');
-  await expect(cards).toHaveCount(2);
-  await expect(mixer.locator('[data-testid="channel-mobile-MASTER"]')).toHaveCount(0);
+  await expect(cards).toHaveCount(CHANNEL_IDS.length);
+  await expect(mixer.locator('[data-testid="channel-mobile-MASTER"]')).toBeVisible();
 });
 
 test('the cells of a mobile channel card share one left edge', async ({ page }, testInfo) => {
@@ -77,7 +84,7 @@ test('the cells of a mobile channel card share one left edge', async ({ page }, 
   await installMockBackend(page, { log: 'accept', forget: 'happy' });
   await page.setViewportSize({ width: 390, height: VIEWPORT_HEIGHT });
   await page.goto('/');
-  const card = page.locator('#sec-daw-mixer [data-testid="channel-mobile-CH 01"]');
+  const card = page.locator('#sec-guitar [data-testid="channel-mobile-CH 01"]');
   await card.scrollIntoViewIfNeeded();
   const lefts = await card.evaluate((node) =>
     Array.from(node.children)
@@ -88,7 +95,7 @@ test('the cells of a mobile channel card share one left edge', async ({ page }, 
   expect(new Set(lefts).size).toBe(1);
 });
 
-test('desktop UAs render the six-channel table with session and column headers', async ({
+test('desktop UAs render the three-channel table with session and column headers', async ({
   page,
 }, testInfo) => {
   test.skip(
@@ -159,8 +166,10 @@ for (const width of [1280, 320]) {
             const cellBox = cell.getBoundingClientRect();
             const prevCell = cellIndex > 0 ? cells[cellIndex - 1] : undefined;
             const nextCell = cellIndex < cells.length - 1 ? cells[cellIndex + 1] : undefined;
-            const prevBox = prevCell ? prevCell.getBoundingClientRect() : null;
-            const nextBox = nextCell ? nextCell.getBoundingClientRect() : null;
+            const sameLine = (box: DOMRect | undefined) =>
+              box && box.bottom > cellBox.top + 1 && box.top < cellBox.bottom - 1 ? box : null;
+            const prevBox = sameLine(prevCell?.getBoundingClientRect());
+            const nextBox = sameLine(nextCell?.getBoundingClientRect());
             const leftLimit = prevBox ? prevBox.right : cellBox.left - crossingTolerance;
             const rightLimit = nextBox ? nextBox.left : cellBox.right + crossingTolerance;
             const walker = document.createTreeWalker(cell, NodeFilter.SHOW_TEXT);
@@ -227,7 +236,7 @@ for (const width of [1280, 320]) {
   });
 }
 
-test('narrow desktop windows scroll the console instead of shrinking fader targets', async ({
+test('narrow desktop windows stack the console instead of scrolling or shrinking targets', async ({
   page,
 }, testInfo) => {
   test.skip(
@@ -256,6 +265,6 @@ test('narrow desktop windows scroll the console instead of shrinking fader targe
   expect(metrics.meterWidth, 'a VU meter must keep a 24px target').toBeGreaterThanOrEqual(24);
   expect(
     metrics.scrollWidth,
-    'below the md breakpoint the console scrolls locally so targets never collapse',
-  ).toBeGreaterThan(metrics.clientWidth);
+    'below the md breakpoint each channel stacks into rows, so nothing scrolls sideways',
+  ).toBeLessThanOrEqual(metrics.clientWidth);
 });

@@ -5,7 +5,6 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { About } from '@/components/sections/About';
 import { AiMetricsSection } from '@/components/sections/AiMetricsSection';
 import { ContactSection } from '@/components/sections/ContactSection';
-import { DawMixerSection } from '@/components/sections/DawMixerSection';
 import { GitLogSection } from '@/components/sections/GitLogSection';
 import { GuitarSection } from '@/components/sections/GuitarSection';
 import { HottestTakesSection } from '@/components/sections/HottestTakesSection';
@@ -45,8 +44,7 @@ describe('Footer server output', () => {
       { label: 'Interactive shell', href: '#sec-shell' },
       { label: 'Measured', href: '#sec-live-metrics' },
       { label: 'Opinions', href: '#sec-hottest-takes' },
-      { label: 'Guitar rig', href: '#sec-guitar' },
-      { label: 'DAW mixer', href: '#sec-daw-mixer' },
+      { label: 'Guitar and mixer', href: '#sec-guitar' },
       { label: 'Contact', href: '#sec-contact' },
       { label: '30S_SUMMARY', href: '/summary' },
       { label: 'DESIGN_SYSTEM', href: '/design-system' },
@@ -76,7 +74,6 @@ describe('Footer server output', () => {
           <GitLogSection locale={SITE_LOCALE.en} />
           <HottestTakesSection locale={SITE_LOCALE.en} defer />
           <GuitarSection locale={SITE_LOCALE.en} defer />
-          <DawMixerSection locale={SITE_LOCALE.en} defer />
           <ContactSection locale={SITE_LOCALE.en} defer />
         </main>
         <Footer locale={SITE_LOCALE.en} />
@@ -99,10 +96,10 @@ describe('Footer server output', () => {
     }
   });
 
-  it('renders six directory groups with nested link lists and hidden tree connectors', () => {
+  it('renders six directory groups, each a folder row with its file count over a link list', () => {
     const host = serverFooter();
     const groups = host.querySelectorAll('.sm-groups > li');
-    expect([...groups].map((group) => group.querySelector('.sm-title')?.textContent)).toEqual([
+    expect([...groups].map((group) => group.querySelector('.sm-dir')?.textContent)).toEqual([
       './whoami/',
       './work/',
       './measured/',
@@ -113,11 +110,9 @@ describe('Footer server output', () => {
     for (const group of groups) {
       const links = group.querySelectorAll('ul > li > a');
       expect(links.length).toBeGreaterThan(0);
-      links.forEach((link) => {
-        const connector = link.querySelector('.tr');
-        expect(connector?.getAttribute('aria-hidden')).toBe('true');
-        expect(connector?.textContent).toBe('');
-      });
+      expect(group.querySelector('.sm-count')?.textContent).toBe(
+        `${links.length} ${links.length === 1 ? 'file' : 'files'}`,
+      );
     }
     expect(host.querySelector('.footer-dmesg')?.getAttribute('aria-hidden')).toBe('true');
     expect(
@@ -125,13 +120,40 @@ describe('Footer server output', () => {
     ).toBe('#main-content');
   });
 
+  it('renders the phone site map as one exclusive accordion with a file count per folder', () => {
+    const host = serverFooter();
+    const folds = [...host.querySelectorAll('.sm-folds > details.sm-fold')];
+    expect(folds.map((fold) => fold.getAttribute('name'))).toEqual(Array(6).fill('footer-sitemap'));
+    expect(folds.map((fold) => fold.hasAttribute('open'))).toEqual([
+      false,
+      true,
+      false,
+      false,
+      false,
+      false,
+    ]);
+    expect(folds.map((fold) => fold.querySelector('summary')?.textContent)).toEqual([
+      './whoami/2 files',
+      './work/2 files',
+      './measured/2 files',
+      './off_hours/2 files',
+      './contact/1 file',
+      './pages/4 files',
+    ]);
+    const columnLinks = [...host.querySelectorAll('.sm-groups a')].map((a) =>
+      a.getAttribute('href'),
+    );
+    const foldLinks = [...host.querySelectorAll('.sm-folds a')].map((a) => a.getAttribute('href'));
+    expect(foldLinks).toEqual(columnLinks);
+  });
+
   it('lists the four page destinations under ./pages/', () => {
     const host = serverFooter();
     const pages = [...host.querySelectorAll('.sm-groups > li')].find(
-      (group) => group.querySelector('.sm-title')?.textContent === './pages/',
+      (group) => group.querySelector('.sm-dir')?.textContent === './pages/',
     );
     const links = [...(pages?.querySelectorAll('ul > li > a') ?? [])].map((link) => [
-      link.querySelector('.tl')?.textContent,
+      link.textContent,
       link.getAttribute('href'),
     ]);
     expect(links).toEqual([
@@ -260,7 +282,8 @@ describe('Footer reboot controls', () => {
     fireEvent.keyDown(rebootLink, { key: 'r' });
     expect(document.activeElement).toBe(heading);
     expect(scrollTo).toHaveBeenCalledTimes(2);
-    const treeLink = mounted.getByRole('link', { name: 'Projects' });
+    const [treeLink] = mounted.getAllByRole('link', { name: 'Projects' });
+    if (!treeLink) throw new Error('site map link missing');
     treeLink.focus();
     fireEvent.keyDown(treeLink, { key: 'r' });
     expect(document.activeElement).toBe(heading);

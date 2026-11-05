@@ -4,7 +4,7 @@ import { usePathname } from 'next/navigation';
 import type { ReactNode } from 'react';
 import { TOPBAR_MOTION_LABEL } from '@/content/nav';
 import { cn } from '@/lib/cn';
-import { MenuTrigger, SearchTrigger, useSectionNavigation } from '../SectionNavigation';
+import { LanguageSwitch, MenuTrigger, useSectionNavigation } from '../SectionNavigation';
 
 const SECTION_PATH_SEPARATOR = '/';
 
@@ -22,58 +22,6 @@ export function DesktopTopbar({ brand }: { brand: ReactNode }) {
       <div className="max-w-[var(--measure-page)] mx-auto px-[var(--space-gutter)] flex items-center gap-3 min-h-11">
         <MenuTrigger />
         <nav className="flex gap-2 items-center flex-nowrap" aria-label={copy.siteNavLabel}>
-          <a
-            className={cn(
-              'border border-primary-500 text-primary-500 px-3 py-1.5 tracking-wider text-[length:var(--text-min)] items-center min-h-11 whitespace-nowrap',
-              'transition-[box-shadow,background] duration-200 ease-out',
-              'hover:shadow-[0_0_12px_var(--color-primary-500)] hover:bg-primary-quiet hover:no-underline',
-              'hidden lg:inline-flex',
-              'motion-reduce:transition-none [body[data-motion=reduce]_&]:transition-none',
-            )}
-            href={chrome.topbarReading.href}
-          >
-            {chrome.topbarReading.label}
-          </a>
-          <SearchTrigger className="topbar-search" />
-          <button
-            type="button"
-            className={cn(
-              'items-center gap-1.5 text-primary-400 text-[length:var(--text-min)] tracking-wider',
-              'border border-primary-subtle px-3 py-1.5 min-h-11 cursor-pointer bg-transparent whitespace-nowrap',
-              'transition-[box-shadow,background,border-color] duration-200 ease-out',
-              'hover:shadow-[0_0_12px_var(--color-primary-500)] hover:bg-primary-quiet hover:border-primary-500',
-              'hidden xl:inline-flex',
-              'motion-reduce:transition-none [body[data-motion=reduce]_&]:transition-none',
-            )}
-            onClick={toggleMotion}
-            data-motion={motionOn ? 'on' : 'off'}
-            aria-pressed={motionOn}
-          >
-            <span
-              className={cn(
-                'w-1.5 h-1.5 rounded-full bg-primary-500 block',
-                !motionOn && 'bg-primary-400 opacity-40',
-              )}
-              aria-hidden="true"
-            />
-            <span>{TOPBAR_MOTION_LABEL}</span>
-          </button>
-          <a
-            className={cn(
-              'bg-primary-500 text-black font-bold tracking-wider px-3 py-1.5 text-[length:var(--text-min)] border border-primary-500',
-              'transition-[box-shadow] duration-200 ease-out',
-              'hover:shadow-[0_0_12px_var(--color-primary-500)] hover:no-underline',
-              'items-center min-h-11 whitespace-nowrap',
-              'hidden lg:inline-flex',
-              'motion-reduce:transition-none [body[data-motion=reduce]_&]:transition-none',
-            )}
-            href={chrome.topbarHire.href}
-            target="_blank"
-            rel="noreferrer noopener"
-            aria-label={chrome.topbarHire.accessibleName}
-          >
-            {chrome.topbarHire.label}
-          </a>
           {chrome.topbarNav.map(({ label, href }) => (
             <a
               key={href}
@@ -84,8 +32,62 @@ export function DesktopTopbar({ brand }: { brand: ReactNode }) {
               {label}
             </a>
           ))}
+          <div className="flex gap-2 items-center flex-nowrap xl:ml-2">
+            <button
+              type="button"
+              className={cn(
+                'items-center gap-1.5 text-primary-400 text-[length:var(--text-min)] tracking-wider',
+                'border border-primary-subtle px-3 py-1.5 min-h-11 cursor-pointer bg-transparent whitespace-nowrap',
+                'transition-[box-shadow,background,border-color] duration-200 ease-out',
+                'hover:shadow-[0_0_12px_var(--color-primary-500)] hover:bg-primary-quiet hover:border-primary-500',
+                'hidden xl:inline-flex',
+                'motion-reduce:transition-none [body[data-motion=reduce]_&]:transition-none',
+              )}
+              onClick={toggleMotion}
+              data-motion={motionOn ? 'on' : 'off'}
+              aria-pressed={motionOn}
+            >
+              <span
+                className={cn(
+                  'w-1.5 h-1.5 rounded-full bg-primary-500 block',
+                  !motionOn && 'bg-primary-400 opacity-40',
+                )}
+                aria-hidden="true"
+              />
+              <span>{TOPBAR_MOTION_LABEL}</span>
+            </button>
+            <a
+              className={cn(
+                'border border-primary-500 text-primary-500 px-3 py-1.5 tracking-wider text-[length:var(--text-min)] items-center min-h-11 whitespace-nowrap',
+                'transition-[box-shadow,background] duration-200 ease-out',
+                'hover:shadow-[0_0_12px_var(--color-primary-500)] hover:bg-primary-quiet hover:no-underline',
+                'hidden lg:inline-flex',
+                'motion-reduce:transition-none [body[data-motion=reduce]_&]:transition-none',
+              )}
+              href={chrome.topbarReading.href}
+            >
+              {chrome.topbarReading.label}
+            </a>
+            <a
+              className={cn(
+                'bg-primary-500 text-black font-bold tracking-wider px-3 py-1.5 text-[length:var(--text-min)] border border-primary-500',
+                'transition-[box-shadow] duration-200 ease-out',
+                'hover:shadow-[0_0_12px_var(--color-primary-500)] hover:no-underline',
+                'items-center min-h-11 whitespace-nowrap',
+                'hidden lg:inline-flex',
+                'motion-reduce:transition-none [body[data-motion=reduce]_&]:transition-none',
+              )}
+              href={chrome.topbarHire.href}
+              target="_blank"
+              rel="noreferrer noopener"
+              aria-label={chrome.topbarHire.accessibleName}
+            >
+              {chrome.topbarHire.label}
+            </a>
+          </div>
         </nav>
-        <div className="ml-auto flex items-center">{brand}</div>
+        <LanguageSwitch />
+        <div className="flex items-center ml-auto pl-6">{brand}</div>
       </div>
     </div>
   );

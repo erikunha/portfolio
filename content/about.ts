@@ -143,7 +143,7 @@ const aboutFor = (locale: SiteLocale): AboutContent => {
           ? '- Domínios: plataformas frontend, pagamentos, saúde, produtos AI-native'
           : '- Domains: frontend platforms, payments, healthcare, AI-native products',
       ],
-      gutterLines: 13,
+      gutterLines: 64,
     },
     now: {
       title: 'CAT ~/.NOW',

@@ -28,7 +28,7 @@ describe('LivePerfSection — PerfBody with real scores (non-fallback branches)'
 
   async function renderPerfData(): Promise<string> {
     const { PerfData } = await import('@/components/sections/LivePerfSection/LivePerfSection');
-    const element = await PerfData({ locale: SITE_LOCALE.en, strategy: 'desktop' });
+    const element = await PerfData({ locale: SITE_LOCALE.en });
     return renderToStaticMarkup(element);
   }
 
@@ -44,7 +44,7 @@ describe('LivePerfSection — PerfBody with real scores (non-fallback branches)'
     expect(html).toContain('98');
     expect(html).toContain('100');
     expect(html).toContain(measured[SITE_LOCALE.en].psi.url);
-    expect(html).toContain('aria-valuenow="98"');
+    expect(html).toContain('98 / 98');
   });
 
   it('renders the PSI timestamp as a semantic time when fetchedAt is valid', async () => {
@@ -73,10 +73,9 @@ describe('LivePerfSection — PerfBody with real scores (non-fallback branches)'
     const doc = new DOMParser().parseFromString(html, 'text/html');
     expect(doc.body.textContent).toContain(measured[SITE_LOCALE.en].unavailable);
     expect(doc.querySelector('time')).toBeNull();
-    expect(doc.querySelectorAll('[aria-valuenow]')).toHaveLength(0);
     expect(doc.querySelectorAll('.measured-value')).toHaveLength(4);
     for (const value of doc.querySelectorAll('.measured-value')) {
-      expect(value.textContent).toBe('—/100');
+      expect(value.textContent).toBe('— / —');
     }
   });
 });

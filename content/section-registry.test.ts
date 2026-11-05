@@ -4,7 +4,6 @@ import { describe, expect, it, vi } from 'vitest';
 import { About } from '@/components/sections/About';
 import { AiMetricsSection } from '@/components/sections/AiMetricsSection';
 import { ContactSection } from '@/components/sections/ContactSection';
-import { DawMixerSection } from '@/components/sections/DawMixerSection';
 import { GitLogSection } from '@/components/sections/GitLogSection';
 import { GuitarSection } from '@/components/sections/GuitarSection';
 import { Hero } from '@/components/sections/Hero';
@@ -32,7 +31,7 @@ vi.mock('@/components/client/ContactForm', () => ({ ContactFormLazy: () => null 
 vi.mock('@/components/client/InteractiveShell', () => ({ InteractiveShellLazy: () => null }));
 
 describe('section registry', () => {
-  it('contains the ten destinations in rail and position-meter order', () => {
+  it('contains the nine destinations in rail and position-meter order', () => {
     expect(
       SECTION_REGISTRY.map(({ id, label, order }) => ({ id, label: label.en, order })),
     ).toEqual([
@@ -43,9 +42,8 @@ describe('section registry', () => {
       { id: 'sec-shell', label: 'Interactive shell', order: 5 },
       { id: 'sec-live-metrics', label: 'Measured', order: 6 },
       { id: 'sec-hottest-takes', label: 'Opinions', order: 7 },
-      { id: 'sec-guitar', label: 'Guitar rig', order: 8 },
-      { id: 'sec-daw-mixer', label: 'DAW mixer', order: 9 },
-      { id: 'sec-contact', label: 'Contact', order: 10 },
+      { id: 'sec-guitar', label: 'Guitar and mixer', order: 8 },
+      { id: 'sec-contact', label: 'Contact', order: 9 },
     ]);
     // pt-BR labels exist for every destination and keep the same ids and order.
     expect(
@@ -58,9 +56,8 @@ describe('section registry', () => {
       { id: 'sec-shell', label: 'Shell interativo', order: 5 },
       { id: 'sec-live-metrics', label: 'Medições', order: 6 },
       { id: 'sec-hottest-takes', label: 'Opiniões', order: 7 },
-      { id: 'sec-guitar', label: 'Rig de guitarra', order: 8 },
-      { id: 'sec-daw-mixer', label: 'Mixer DAW', order: 9 },
-      { id: 'sec-contact', label: 'Contato', order: 10 },
+      { id: 'sec-guitar', label: 'Guitarra e mixer', order: 8 },
+      { id: 'sec-contact', label: 'Contato', order: 9 },
     ]);
     expect(SectionRegistrySchema.safeParse(SECTION_REGISTRY).success).toBe(true);
   });
@@ -69,8 +66,8 @@ describe('section registry', () => {
     const ids = SECTION_REGISTRY.map(({ id }) => id);
     const orders = SECTION_REGISTRY.map(({ order }) => order);
     const aliases = SECTION_REGISTRY.flatMap<string>(({ aliases }) => [...aliases]);
-    expect(new Set(ids).size).toBe(10);
-    expect(new Set(orders).size).toBe(10);
+    expect(new Set(ids).size).toBe(9);
+    expect(new Set(orders).size).toBe(9);
     expect(new Set(aliases).size).toBe(aliases.length);
     for (const entry of SECTION_REGISTRY) {
       expect(entry.aliases.length).toBeGreaterThan(0);
@@ -110,7 +107,6 @@ describe('section registry', () => {
       AiMetricsSection,
       HottestTakesSection,
       GuitarSection,
-      DawMixerSection,
       ContactSection,
     ];
     const html = sections
@@ -209,7 +205,6 @@ describe('navigation content', () => {
       'work',
       'shell',
       'shell',
-      'menu',
       'menu',
       'menu',
       'menu',

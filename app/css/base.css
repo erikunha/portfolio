@@ -111,6 +111,10 @@
     outline-offset: 2px;
   }
 
+  [tabindex="-1"]:focus {
+    outline: none;
+  }
+
   .skip-to-content {
     position: absolute;
     left: 0;
@@ -244,9 +248,6 @@
     }
     #sec-guitar {
       order: 12;
-    }
-    #sec-daw-mixer {
-      order: 13;
     }
     #sec-hottest-takes {
       order: 17;

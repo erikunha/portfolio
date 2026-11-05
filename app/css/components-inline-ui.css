@@ -19,7 +19,7 @@
     padding: 1px 6px 2px;
     margin: 0 4px;
     font-family: inherit;
-    font-size: 10px;
+    font-size: var(--text-min);
     letter-spacing: 0;
     border-radius: 2px;
     cursor: pointer;
@@ -114,5 +114,9 @@
     border-left: 0;
     border-top: 0;
     top: auto;
+  }
+
+  .signal-chain-arrow::before {
+    content: "\2500\2500\25b6";
   }
 }

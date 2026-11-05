@@ -26,6 +26,19 @@ describe('errors content', () => {
 });
 
 describe('NotFound', () => {
+  it('leads the header with the page links and closes it with the brand icon', () => {
+    render(<NotFound />);
+    const header = document.querySelector('header.err-bar');
+    const children = [...(header?.children ?? [])];
+
+    expect(children[0]?.tagName, 'the page links lead the bar').toBe('NAV');
+    expect(
+      children.at(-1)?.querySelector('a[href="/"]') ?? children.at(-1),
+      'the brand icon sits at the far right, like the site header',
+    ).toBeTruthy();
+    expect(children.at(-1)?.tagName).not.toBe('NAV');
+  });
+
   it('renders the 404 heading, the command line and every suggestion as a link', () => {
     render(<NotFound />);
     expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('404');

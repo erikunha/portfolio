@@ -49,14 +49,10 @@ test.describe('DesktopTopbar — navigation', () => {
     await expect(motionBtn).toBeVisible();
   });
 
-  test('the search trigger opens the section drawer until the palette ships', async ({ page }) => {
+  test('the topbar has no search trigger', async ({ page }) => {
     await page.goto('/');
-    const search = page.locator('.topbar-search');
-    await expect(search).toBeVisible();
-    await expect(search).toHaveAttribute('aria-keyshortcuts', 'Control+K Meta+K');
-
-    await search.click();
-    await expect(page.getByRole('dialog', { name: 'Section menu' })).toBeVisible();
+    await expect(page.getByRole('button', { name: /^(SEARCH|BUSCAR)/ })).toHaveCount(0);
+    await expect(page.locator('.topbar-search')).toHaveCount(0);
   });
 
   test('the hire CTA points at LinkedIn in a new tab', async ({ page }) => {
@@ -67,5 +63,26 @@ test.describe('DesktopTopbar — navigation', () => {
 
     await expect(hire).toHaveAttribute('href', /linkedin\.com\/in\/erikunha/);
     await expect(hire).toHaveAttribute('target', '_blank');
+  });
+
+  test('the language switch sits right after HIRE and links to the Portuguese home', async ({
+    page,
+  }) => {
+    await page.goto('/');
+    const topbar = page.locator('.desktop-topbar');
+    const hire = topbar
+      .getByRole('navigation', { name: 'Site navigation' })
+      .getByRole('link', { name: HIRE_ACCESSIBLE_NAME[SITE_LOCALE.en] });
+    const langSwitch = topbar.getByRole('navigation', { name: 'Language' });
+
+    await expect(langSwitch.getByRole('link', { name: /^EN/ })).toHaveAttribute(
+      'aria-current',
+      'page',
+    );
+    await expect(langSwitch.getByRole('link', { name: /^PT/ })).toHaveAttribute('href', '/pt');
+
+    const hireBox = await hire.boundingBox();
+    const switchBox = await langSwitch.boundingBox();
+    expect(switchBox?.x ?? 0).toBeGreaterThanOrEqual(hireBox?.x ?? Number.POSITIVE_INFINITY);
   });
 });

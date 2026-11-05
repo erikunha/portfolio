@@ -67,7 +67,9 @@ export function GitLogSection({ locale, defer }: { locale: SiteLocale; defer?: b
     >
       <header className="career-header">
         <h2 id={headingId}>
-          <span data-type-reveal>{copy.heading}</span>
+          <span data-type-reveal suppressHydrationWarning>
+            {copy.heading}
+          </span>
           <span className="career-icon" aria-hidden="true">
             <IconGitLog />
           </span>

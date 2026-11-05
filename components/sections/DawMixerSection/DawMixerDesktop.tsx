@@ -25,13 +25,13 @@ function PluginChain({
   channelId: string;
 }) {
   return (
-    <div className="flex items-stretch gap-1">
+    <div className="plugin-chain">
       {plugins.map((p) => (
         <div
           key={p.name}
           className={cn(
-            'flex-1 min-w-0 border flex flex-col items-center gap-1',
-            'px-1 pt-[5px] pb-[6px] text-primary-400 relative',
+            'plugin-chip border flex flex-col items-center gap-1',
+            'pt-[5px] pb-[6px] text-primary-400 relative',
             p.active
               ? [
                   'plugin-card-on',
@@ -42,7 +42,7 @@ function PluginChain({
           )}
           data-testid={`plugin-${channelId}-${p.name}`}
         >
-          <span className="text-xs font-bold tracking-[0.06em] whitespace-nowrap overflow-hidden text-ellipsis max-w-full uppercase">
+          <span className="text-xs font-bold text-center leading-tight overflow-hidden text-ellipsis max-w-full uppercase">
             {p.name}
           </span>
           <span className="flex gap-px items-end" aria-hidden="true">
@@ -154,7 +154,6 @@ function SessionHeaderDesktop({ mixer }: { mixer: DawMixer }) {
         'bg-[color-mix(in_srgb,var(--color-primary-500)_5%,transparent)]',
         'text-xs text-primary-400 tracking-[0.14em]',
       )}
-      style={{ gridTemplateColumns: '1fr auto' }}
       data-testid="session-header"
     >
       <span>
@@ -165,7 +164,7 @@ function SessionHeaderDesktop({ mixer }: { mixer: DawMixer }) {
         {' GTR TRACKS + MASTER · '}
         <span className="text-primary-500">{mixer.status}</span>
       </span>
-      <span className="inline-flex items-center gap-[14px] tabular-nums">
+      <span className="mixer-transport tabular-nums">
         <span className="transport-play" aria-hidden="true" />
         <span className="text-primary-500 font-bold text-sm tracking-[0.06em]">
           {mixer.transportTime}
@@ -183,8 +182,8 @@ function TableHeader() {
   return (
     <div
       className={cn(
-        'daw-channel-row',
-        'text-xs max-md:text-[10px] text-primary-400 tracking-[0.18em] uppercase',
+        'daw-channel-row daw-mixer-labels',
+        'text-xs text-primary-400 tracking-[0.18em] uppercase',
         'border-b border-[var(--color-primary-quiet)] px-[18px] py-[7px]',
         'bg-black/50',
       )}
@@ -205,7 +204,7 @@ function TableHeader() {
 export function DawMixerDesktop({ mixer }: { mixer: DawMixer }) {
   return (
     <div
-      className="daw-mixer-desktop font-mono text-sm text-tertiary-50 border border-[var(--color-primary-border)] bg-black/50 overflow-x-auto md:overflow-x-hidden min-h-[520px]"
+      className="daw-mixer-desktop font-mono text-sm text-tertiary-50 border border-[var(--color-primary-border)] bg-black/50 overflow-x-auto md:overflow-x-hidden"
       data-testid="daw-mixer-desktop"
     >
       <SessionHeaderDesktop mixer={mixer} />

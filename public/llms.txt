@@ -1,8 +1,8 @@
-# Erik Cunha · Senior Software Engineer, Frontend & Product
+# Erik Cunha · Senior Software Engineer · Full Stack
 
-> Senior Software Engineer, Frontend & Product. 8+ years building frontend and product platforms.
+> Senior Software Engineer · Full Stack. 8+ years building frontend and product platforms.
 > Brazil · UTC-3 · available now. Currently at Raylu: private-markets fintech · B2B SaaS,
-> on contract via Torc. React · Next.js · TypeScript · Angular · Node.js · AWS.
+> on contract via Torc. React, Next.js, Angular, TypeScript, JavaScript, Node.js, Python, AWS · LLM Apps, Evals, RAG, LangGraph, LangChain, Agents.
 > Investor workflow screens for 50+ funds holding $500B+ in assets.
 
 ## Availability
@@ -11,7 +11,7 @@
 - Location: Paulínia, Brazil (UTC-3)
 - Remote: working remotely for Raylu (New York, US)
 - Relocation: open with sponsorship
-- Target role: Senior Software Engineer, Frontend & Product
+- Target role: Senior Software Engineer · Full Stack
 - Contact: erikhenriquealvescunha@gmail.com | +5519997049125
 
 ## AI Engineering

@@ -6,12 +6,9 @@ import {
 } from './schemas';
 import { SITE_LOCALE, type SiteLocale } from './site-locale';
 
-export const GUITAR_MODULE_HEADER = 'CAT ~/.GUITAR_RIG';
-export const GUITAR_MODULE_MOBILE_HEADER = 'GUITAR_RIG';
+export const GUITAR_MODULE_HEADER = 'CAT ~/.GUITAR_RIG + ./MIX --LIVE';
+export const GUITAR_MODULE_MOBILE_HEADER = 'GUITAR_RIG + MIX';
 
-// Machine-voice surfaces (signal strip, camera HUD, telemetry, EQ chain
-// labels) stay English on both locales, matching the /links precedent for
-// shell chrome; aria-labels and rendered copy carry the translation.
 const guitarRigFor = (locale: SiteLocale): GuitarRig => {
   const pt = locale === SITE_LOCALE.pt;
   return GuitarRigSchema.parse({
@@ -45,6 +42,26 @@ const guitarRigFor = (locale: SiteLocale): GuitarRig => {
         { freqHz: 16000, label: '16k' },
       ],
     },
+    signalChain: [
+      {
+        role: 'INPUT',
+        name: 'GRETSCH G5655TG',
+        subtitle: pt ? 'Bigsby · corpo oco' : 'Bigsby · hollow body',
+        strengthDots: 4,
+      },
+      {
+        role: 'AMP',
+        name: 'MODELED CAB',
+        subtitle: pt ? 'sem válvula · simulação de IR' : 'no tube · IR sim',
+        strengthDots: 3,
+      },
+      {
+        role: 'OUT',
+        name: 'FOH / IEM',
+        subtitle: pt ? 'XLR estéreo · in-ear' : 'XLR stereo · in-ear',
+        strengthDots: 5,
+      },
+    ],
     influences: [
       { name: 'John Mayer' },
       { name: 'Mateus Asato' },
@@ -79,8 +96,6 @@ const guitarRigFor = (locale: SiteLocale): GuitarRig => {
       caption: './GIGS --LIVE · SACRED + SWORN · FEEL OVER NOISE',
       status: '▶ REC · LIVE',
       cameraLabel: 'CAM/01 · STAGE',
-      telemetry: 'YELLOW_TAKE_03 · 87 BPM · STD E',
-      hudTopLeft: 'HP140 · -3dB@400 · +5dB@2.8k · LP9k',
     },
   });
 };
@@ -93,12 +108,19 @@ export const guitarRig: Record<SiteLocale, GuitarRig> = {
 const guitarPresentationFor = (locale: SiteLocale): GuitarPresentation => {
   const pt = locale === SITE_LOCALE.pt;
   const rig = guitarRig[locale];
+  const [input, amp, output] = rig.signalChain;
   return GuitarPresentationSchema.parse({
+    signalStrengthLabelTemplate: pt ? '{n} de {total}' : '{n} of {total}',
     signalStrip: {
       live: '● SIGNAL_CHAIN.LIVE · SIGNAL OK',
       tail: 'TAIL -F ~/.RIG',
     },
     eqSpectrum: rig.eqSpectrum,
+    signalChain: [
+      { ...input, label: '// INPUT' },
+      { ...amp, label: '// AMP' },
+      { ...output, label: '// OUT' },
+    ],
     influences: {
       label: pt ? 'INFLUÊNCIAS' : 'INFLUENCES',
       text: rig.influences.map(({ name }) => name).join(' · '),

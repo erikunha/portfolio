@@ -1,66 +1,125 @@
 import Image from 'next/image';
+import { Fragment, Suspense } from 'react';
 import {
   GUITAR_MODULE_HEADER,
   GUITAR_MODULE_MOBILE_HEADER,
   guitarPresentation,
   guitarRig,
 } from '@/content/guitar-rig';
+import { GUITAR_SIGNAL_BAR_COUNT, GUITAR_SIGNAL_LABEL_TOKENS } from '@/content/schemas';
 import { SECTION_LABELS } from '@/content/section-labels';
 import type { SiteLocale } from '@/content/site-locale';
 import { IconGuitar } from '../../Icons';
 import { Module } from '../../responsive/Module';
+import { DawMixerContent } from '../DawMixerSection';
 import { EqSpectrumStrip } from './EqSpectrumStrip';
 
+const SIGNAL_BARS = Array.from({ length: GUITAR_SIGNAL_BAR_COUNT }, (_, position) => ({
+  position,
+}));
+const FIRST_NODE_INDEX = 0;
 const SECTION_ID = 'sec-guitar';
-const PHOTO_SIZES = '(min-width: 1024px) 38vw, 100vw';
+const STACKED_MAX_WIDTH_PX = 767;
+const PHOTO_SIZES = `(max-width: ${STACKED_MAX_WIDTH_PX}px) 100vw, 320px`;
 
 export function GuitarContent({ locale }: { locale: SiteLocale }) {
-  const { signalStrip, eqSpectrum, influences, nowPlaying, stats, photo } =
-    guitarPresentation[locale];
+  const {
+    eqSpectrum,
+    signalChain,
+    signalStrip,
+    signalStrengthLabelTemplate,
+    influences,
+    nowPlaying,
+    stats,
+    photo,
+  } = guitarPresentation[locale];
   const { liveCam } = guitarRig[locale];
   return (
     <div className="guitar-presentation">
-      <div className="guitar-signal-strip">
-        <span className="guitar-signal-strip-live">{signalStrip.live}</span>
-        <span className="guitar-signal-strip-tail">{signalStrip.tail}</span>
+      <div>
+        <p className="guitar-chain-label">{eqSpectrum.label}</p>
+        <div className="guitar-eq-panel">
+          <EqSpectrumStrip spectrum={eqSpectrum} />
+        </div>
       </div>
-      <p className="guitar-chain-label">{eqSpectrum.label}</p>
       <div className="guitar-signal-panel">
-        <EqSpectrumStrip spectrum={eqSpectrum} />
+        <div className="guitar-signal-strip">
+          <span className="guitar-signal-strip-live">{signalStrip.live}</span>
+          <span className="guitar-signal-strip-tail">{signalStrip.tail}</span>
+        </div>
+        <div className="guitar-chain max-md:grid-cols-1">
+          {signalChain.map((node, index) => (
+            <Fragment key={node.role}>
+              {index > FIRST_NODE_INDEX && (
+                <span
+                  className="signal-chain-arrow guitar-arrow guitar:max-md:rotate-90"
+                  aria-hidden="true"
+                />
+              )}
+              <div className="guitar-node" data-testid={`signal-node-${node.role}`}>
+                <div className="guitar-label">{node.label}</div>
+                <h3 className="guitar-node-heading" data-type-reveal suppressHydrationWarning>
+                  {node.name}
+                </h3>
+                <div className="guitar-node-subtitle">{node.subtitle}</div>
+                <div
+                  className="guitar-bars"
+                  role="img"
+                  aria-label={signalStrengthLabelTemplate
+                    .replace(GUITAR_SIGNAL_LABEL_TOKENS.strength, String(node.strengthDots))
+                    .replace(GUITAR_SIGNAL_LABEL_TOKENS.total, String(GUITAR_SIGNAL_BAR_COUNT))}
+                >
+                  {SIGNAL_BARS.map(({ position }) => (
+                    <span
+                      key={position}
+                      className="guitar-bar"
+                      aria-hidden="true"
+                      data-filled={position < node.strengthDots}
+                    />
+                  ))}
+                </div>
+              </div>
+            </Fragment>
+          ))}
+        </div>
       </div>
-      <figure className="guitar-photo">
-        <div className="guitar-photo-frame">
-          <Image {...photo} className="guitar-photo-image" sizes={PHOTO_SIZES} />
-          <div className="guitar-photo-tint" aria-hidden="true" />
-          <div className="guitar-photo-scanlines" aria-hidden="true" />
-          <div className="guitar-scan-beam" aria-hidden="true" />
-          <div className="cam-corners" aria-hidden="true">
-            <i />
-          </div>
-          <div className="guitar-photo-hud-topleft">{liveCam.hudTopLeft}</div>
-          <div className="guitar-photo-rec">{liveCam.status}</div>
-          <div className="guitar-photo-telemetry">
-            <span className="guitar-photo-telemetry-line">{liveCam.telemetry}</span>
-            <span className="guitar-photo-telemetry-camera">{liveCam.cameraLabel}</span>
-          </div>
-        </div>
-        <figcaption className="guitar-camera-caption">{liveCam.caption}</figcaption>
-      </figure>
-      <div className="guitar-facts">
-        {stats.map((stat) => (
-          <div className="guitar-stat" key={stat.label} data-testid={`stat-${stat.label}`}>
-            <div className="guitar-label">{stat.label}</div>
-            <div className="guitar-stat-value">{stat.value}</div>
-            <div>{stat.sub}</div>
-          </div>
-        ))}
-        <div className="guitar-stat guitar-influences" data-testid="influences">
-          <div className="guitar-label">{influences.label}</div>
-          <div>{influences.text}</div>
-          <div>
+      <div className="guitar-pair max-md:grid-cols-1">
+        <div className="guitar-details">
+          <p className="guitar-influences">
+            <strong>{influences.label}</strong> {influences.text}{' '}
             <strong>{nowPlaying.label}</strong> {nowPlaying.text}
+          </p>
+          <div className="guitar-stats max-md:grid-cols-1">
+            {stats.map((stat) => (
+              <div className="guitar-stat" key={stat.label} data-testid={`stat-${stat.label}`}>
+                <div className="guitar-label">{stat.label}</div>
+                <div className="guitar-stat-value">{stat.value}</div>
+                <div>{stat.sub}</div>
+              </div>
+            ))}
           </div>
         </div>
+        <figure className="guitar-photo">
+          <div className="guitar-camera-labels">
+            <span>{liveCam.status}</span>
+            <span>{liveCam.cameraLabel}</span>
+          </div>
+          <div className="guitar-photo-frame">
+            <Image {...photo} className="guitar-photo-image" sizes={PHOTO_SIZES} />
+            <div className="guitar-photo-tint" aria-hidden="true" />
+            <div className="guitar-photo-scanlines" aria-hidden="true" />
+            <div className="guitar-scan-beam" aria-hidden="true" />
+            <div className="cam-corners" aria-hidden="true">
+              <i />
+            </div>
+          </div>
+          <figcaption className="guitar-camera-caption">{liveCam.caption}</figcaption>
+        </figure>
+      </div>
+      <div className="guitar-mixer">
+        <Suspense fallback={null}>
+          <DawMixerContent locale={locale} />
+        </Suspense>
       </div>
     </div>
   );

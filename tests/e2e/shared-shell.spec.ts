@@ -38,9 +38,9 @@ test.describe('one shell on every page', () => {
       await expect(menu).toBeVisible();
       const [iconBox, menuBox] = await Promise.all([homeLink.boundingBox(), menu.boundingBox()]);
       expect(
-        menuBox?.x ?? Number.POSITIVE_INFINITY,
-        'the menu trigger sits left of the brand icon',
-      ).toBeLessThan(iconBox?.x ?? 0);
+        iconBox?.x ?? Number.NEGATIVE_INFINITY,
+        'the brand icon sits right of the menu trigger, at the far end of the bar',
+      ).toBeGreaterThan(menuBox?.x ?? 0);
       await expect(topbar.getByRole('link', { name: /hire/i })).toBeVisible();
       await expect(page.locator('.site-bar')).toHaveCount(0);
     });

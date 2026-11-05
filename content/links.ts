@@ -10,12 +10,12 @@ export const linksContent: LinksContent = LinksContentSchema.parse({
     avatar: '/images/erik-avatar.jpg',
     taglines: {
       pt: [
-        'Engenheiro de Software Sênior, Frontend e Produto',
+        'Engenheiro de Software Sênior · Full Stack',
         'AI Engineering na prática',
         'Carreira internacional para devs',
       ],
       en: [
-        'Senior Software Engineer, Frontend & Product',
+        'Senior Software Engineer · Full Stack',
         'AI engineering, hands-on',
         'Going global as a dev',
       ],
@@ -134,8 +134,8 @@ export const linksContent: LinksContent = LinksContentSchema.parse({
       en: 'Erik Cunha — AI engineering and going global as a dev',
     },
     description: {
-      pt: 'Senior Software Engineer, Frontend & Product, no Brasil e remoto. Um vídeo novo toda semana no canal Erik na Gringa.',
-      en: 'Senior Software Engineer, Frontend & Product, Brazil-based and remote. A new video every week on the Erik na Gringa channel.',
+      pt: 'Senior Software Engineer · Full Stack, no Brasil e remoto. Um vídeo novo toda semana no canal Erik na Gringa.',
+      en: 'Senior Software Engineer · Full Stack, Brazil-based and remote. A new video every week on the Erik na Gringa channel.',
     },
   },
 });

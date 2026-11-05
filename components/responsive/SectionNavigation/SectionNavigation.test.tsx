@@ -6,11 +6,18 @@ import { SECTION_REGISTRY } from '@/content/section-registry';
 import { SITE_LOCALE, type SiteLocale } from '@/content/site-locale';
 import {
   DRAWER_ID,
+  LanguageSwitch,
   MenuTrigger,
   SectionNavigation,
   SectionNavigationProvider,
   useSectionNavigation,
 } from './SectionNavigation.client';
+
+let mockPathname: string | null = null;
+
+vi.mock('next/navigation', () => ({
+  usePathname: () => mockPathname,
+}));
 
 class FakeObserver {
   static instances: FakeObserver[] = [];
@@ -149,6 +156,7 @@ describe('SectionNavigation', () => {
 
   afterEach(() => {
     vi.unstubAllGlobals();
+    mockPathname = null;
   });
 
   it('lists the nine registry destinations in order, each linking to its section', () => {
@@ -299,7 +307,7 @@ describe('SectionNavigation', () => {
   it('leaves the browser default alone when the target is missing or the click is modified', () => {
     render(<Page />);
     document.getElementById('sec-guitar')?.remove();
-    expect(fireEvent.click(navLink('Guitar rig'))).toBe(true);
+    expect(fireEvent.click(navLink('Guitar and mixer'))).toBe(true);
     expect(fireEvent.click(navLink('About'), { metaKey: true })).toBe(true);
     expect(scrollIntoView).not.toHaveBeenCalled();
   });
@@ -338,34 +346,75 @@ describe('SectionNavigation', () => {
     expect(document.querySelector('[data-section-count]')).toBeNull();
   });
 
-  it('offers a search row that reports the drawer it controls', () => {
+  it('offers no search row and ignores the Cmd or Ctrl K shortcut', () => {
     render(<Page />);
-    const search = document.querySelector('.menu-search') as HTMLButtonElement;
 
-    expect(search).not.toBeNull();
-    expect(search.getAttribute('aria-controls')).toBe(DRAWER_ID);
-    expect(search.getAttribute('aria-keyshortcuts')).toBe('Control+K Meta+K');
-    expect(search.getAttribute('aria-expanded')).toBe('false');
-    expect(search.textContent).toContain(NAVIGATION[LOCALE].copy.searchLabel);
-  });
+    expect(document.querySelector('.menu-search')).toBeNull();
+    expect(document.querySelector('.search-trigger')).toBeNull();
+    expect(document.querySelector('[aria-keyshortcuts]')).toBeNull();
 
-  it('toggles the drawer from the search row', () => {
-    render(<Page />);
-    const search = document.querySelector('.menu-search') as HTMLButtonElement;
+    fireEvent.keyDown(document, { key: 'k', metaKey: true });
+    fireEvent.keyDown(document, { key: 'k', ctrlKey: true });
 
-    fireEvent.click(search);
-    expect(panel().classList.contains('is-open')).toBe(true);
-    expect(search.getAttribute('aria-expanded')).toBe('true');
-
-    fireEvent.click(search);
     expect(panel().classList.contains('is-open')).toBe(false);
   });
 
-  it('opens the drawer on the search shortcut', () => {
+  it('keeps the language switch out of the drawer', () => {
+    mockPathname = '/';
     render(<Page />);
-    fireEvent.keyDown(document, { key: 'k', metaKey: true });
 
-    expect(panel().classList.contains('is-open')).toBe(true);
+    expect(panel().querySelector('[data-lang-switch]')).toBeNull();
+    expect(panel().querySelector('a[hreflang]')).toBeNull();
+    expect(panel().querySelector('.menu-lang, .lang-switch')).toBeNull();
+  });
+
+  describe('LanguageSwitch', () => {
+    function renderSwitch(locale: SiteLocale) {
+      return render(
+        <SectionNavigationProvider chrome={siteNavChrome(locale)} locale={locale}>
+          <LanguageSwitch />
+        </SectionNavigationProvider>,
+      );
+    }
+
+    it.each([
+      ['/', SITE_LOCALE.en, ['/', '/pt'], ['page', null]],
+      ['/pt', SITE_LOCALE.pt, ['/', '/pt'], [null, 'page']],
+    ] as const)(
+      'on %s links both locales and marks the current one',
+      (path, locale, hrefs, current) => {
+        mockPathname = path;
+        renderSwitch(locale);
+        const nav = screen.getByRole('navigation', {
+          name: NAVIGATION[locale].copy.langSwitchLabel,
+        });
+        const links = within(nav).getAllByRole('link');
+
+        expect(links.map((link) => link.getAttribute('hreflang'))).toEqual(['en', 'pt']);
+        expect(links.map((link) => link.getAttribute('href'))).toEqual(hrefs);
+        expect(links.map((link) => link.getAttribute('aria-current'))).toEqual(current);
+      },
+    );
+
+    it('names each language for assistive tech and hides the visual separator', () => {
+      mockPathname = '/';
+      renderSwitch(LOCALE);
+      const nav = screen.getByRole('navigation', { name: NAVIGATION[LOCALE].copy.langSwitchLabel });
+
+      expect(within(nav).getByRole('link', { name: /EN\s*English/ })).toBeTruthy();
+      expect(within(nav).getByRole('link', { name: /PT\s*Portugu/ })).toBeTruthy();
+      expect(nav.querySelector('.lang-switch-sep')?.getAttribute('aria-hidden')).toBe('true');
+    });
+
+    it.each(['/design-system', '/unknown', null, '/cv', '/pt/summary', '/links', '/links/en'])(
+      'renders nothing on %s (no pair, or the page renders its own switch)',
+      (path) => {
+        mockPathname = path;
+        const { container } = renderSwitch(LOCALE);
+
+        expect(container.querySelector('[data-lang-switch]')).toBeNull();
+      },
+    );
   });
 
   it('shares one motion state between the drawer toggle and the topbar toggle', () => {
@@ -433,20 +482,6 @@ describe('SectionNavigation', () => {
       expect(
         document.activeElement,
         'focus must land on a rendered menu trigger when the element that opened the drawer is not rendered',
-      ).toBe(screen.getByRole('button', { name: NAVIGATION[LOCALE].copy.openMenu }));
-    });
-
-    it('returns focus to the menu trigger when the drawer was opened from the keyboard shortcut', () => {
-      render(<Page withMenuTrigger />);
-      fireEvent.keyDown(document, { key: 'k', metaKey: true });
-      expect(panel().classList.contains('is-open')).toBe(true);
-
-      fireEvent.keyDown(document, { key: 'Escape' });
-
-      expect(
-        document.activeElement,
-        'focus must land on a control the visitor can see, not on the document body, because the ' +
-          'shortcut has no element of its own to return focus to',
       ).toBe(screen.getByRole('button', { name: NAVIGATION[LOCALE].copy.openMenu }));
     });
 

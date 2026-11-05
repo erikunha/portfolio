@@ -5,7 +5,6 @@ import { PageMain } from '@/components/PageMain';
 import { About } from '@/components/sections/About';
 import { AiMetricsSection } from '@/components/sections/AiMetricsSection';
 import { ContactSection } from '@/components/sections/ContactSection';
-import { DawMixerSection } from '@/components/sections/DawMixerSection';
 import { Footer } from '@/components/sections/Footer';
 import { GitLogSection } from '@/components/sections/GitLogSection';
 import { GuitarSection } from '@/components/sections/GuitarSection';
@@ -53,9 +52,6 @@ export function SiteHome({ locale }: { locale: SiteLocale }) {
           </ErrorBoundary>
           <ErrorBoundary>
             <GuitarSection locale={locale} defer />
-          </ErrorBoundary>
-          <ErrorBoundary>
-            <DawMixerSection locale={locale} defer />
           </ErrorBoundary>
           <ErrorBoundary>
             <ContactSection locale={locale} defer />

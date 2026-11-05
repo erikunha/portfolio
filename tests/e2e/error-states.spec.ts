@@ -34,3 +34,16 @@ test.describe('404 route', () => {
     }
   });
 });
+
+test('the 404 heading takes focus for the announcement without painting a ring', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 375, height: 812 });
+  await page.goto('/route-that-does-not-exist');
+  const heading = page.getByRole('heading', { level: 1 });
+  await expect(heading).toBeFocused();
+  expect(
+    await heading.evaluate((element) => getComputedStyle(element).outlineStyle),
+    'a programmatic focus target with tabindex=-1 is not keyboard reachable, so no ring',
+  ).toBe('none');
+});

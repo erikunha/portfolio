@@ -62,9 +62,11 @@ for (const { en, pt, enTitle } of PAIRS) {
     });
   }
 
-  test(`the drawer language switch on ${en} links to ${pt} with aria-current`, async ({ page }) => {
+  test(`the language switch on ${en} links to ${pt} with aria-current`, async ({ page }) => {
     await page.goto(en);
-    const switch_nav = page.locator('nav[aria-label="Language"], nav[aria-label="Idioma"]');
+    const switch_nav = page
+      .locator('nav[aria-label="Language"], nav[aria-label="Idioma"]')
+      .locator('visible=true');
     await expect(switch_nav).toHaveCount(1);
     const current = switch_nav.locator('a[aria-current="page"]');
     await expect(current).toHaveAttribute('href', en);
@@ -73,11 +75,11 @@ for (const { en, pt, enTitle } of PAIRS) {
     await expect(target).toHaveCount(1);
   });
 
-  test(`the drawer language switch on ${pt} links back to ${en} with aria-current`, async ({
-    page,
-  }) => {
+  test(`the language switch on ${pt} links back to ${en} with aria-current`, async ({ page }) => {
     await page.goto(pt);
-    const switch_nav = page.locator('nav[aria-label="Idioma"], nav[aria-label="Language"]');
+    const switch_nav = page
+      .locator('nav[aria-label="Idioma"], nav[aria-label="Language"]')
+      .locator('visible=true');
     await expect(switch_nav).toHaveCount(1);
     const current = switch_nav.locator('a[aria-current="page"]');
     await expect(current).toHaveAttribute('href', pt);

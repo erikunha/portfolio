@@ -10,7 +10,7 @@ const SECONDS_PER_HOUR = SECONDS_PER_MINUTE * SECONDS_PER_MINUTE;
 const CLOCK_DIGITS = 2;
 const CLOCK_ZERO = '0';
 const PERCENT = 100;
-const SECTION_THRESHOLD = 0.25;
+const SECTION_READING_BAND = '-40% 0px -40% 0px';
 const COMMAND_EVENT = 'shell-cmd-run';
 const SCROLL_EVENT = 'scroll';
 const VISIBILITY_EVENT = 'visibilitychange';
@@ -108,7 +108,7 @@ export function SessionCounters({
               }
               if (fields.seen) fields.seen.textContent = String(seen.size);
             },
-            { threshold: SECTION_THRESHOLD },
+            { rootMargin: SECTION_READING_BAND },
           );
     for (const id of sectionIds) {
       const section = document.getElementById(id);

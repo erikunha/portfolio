@@ -127,12 +127,12 @@
   }
 
   .dbUnit {
-    font-size: 10px;
+    font-size: var(--text-min);
     color: var(--color-primary-400);
   }
 
   .lufs {
-    font-size: 10px;
+    font-size: var(--text-min);
     color: var(--color-primary-400);
     display: block;
     letter-spacing: 0.08em;

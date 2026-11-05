@@ -3,8 +3,11 @@ import { expect, test } from '@playwright/test';
 const MOBILE = { width: 390, height: 844 };
 const DESKTOP = { width: 1280, height: 720 };
 const FACT_ROW = '#sec-projects .project-stats > div';
-const PERF_PANEL = '#sec-live-perf .measured-perf';
+const ASK_BLOCK = '.measured-ask';
+const PERF_BLOCK = '#sec-live-perf';
+const PERF_TILE = '#sec-live-perf .measured-tile';
 const PERF_LABEL = '#sec-live-perf .measured-label';
+const PHONE_MIN = { width: 320, height: 700 };
 const RECEIPT_VALUE = '.project-receipts .receipt-value';
 const EDGE_TOLERANCE_PX = 1;
 
@@ -48,19 +51,30 @@ test.describe('projects section below 768px', () => {
     }
   });
 
-  test('live-perf device panels share one left edge', async ({ page }) => {
+  test('live-perf tiles stack 2x2', async ({ page }) => {
     await page.setViewportSize(MOBILE);
     await page.goto('/');
-    const panels = page.locator(PERF_PANEL);
-    await panels.first().scrollIntoViewIfNeeded();
-    const count = await panels.count();
-    expect(count).toBeGreaterThan(1);
-    const first = await panels.first().boundingBox();
-    for (let i = 1; i < count; i++) {
-      const box = await panels.nth(i).boundingBox();
-      if (!first || !box) throw new Error('perf panel has no layout box');
-      expect(Math.abs(box.x - first.x)).toBeLessThanOrEqual(EDGE_TOLERANCE_PX);
-    }
+    const tiles = page.locator(PERF_TILE);
+    await tiles.first().scrollIntoViewIfNeeded();
+    expect(await tiles.count()).toBe(4);
+    const boxes = await tiles.evaluateAll((nodes) =>
+      nodes.map((node) => {
+        const { x, y } = node.getBoundingClientRect();
+        return { x, y };
+      }),
+    );
+    expect(new Set(boxes.map((box) => Math.round(box.x))).size).toBe(2);
+    expect(new Set(boxes.map((box) => Math.round(box.y))).size).toBe(2);
+  });
+
+  test('the measured section does not scroll horizontally at 320', async ({ page }) => {
+    await page.setViewportSize(PHONE_MIN);
+    await page.goto('/');
+    await page.locator(PERF_TILE).first().scrollIntoViewIfNeeded();
+    const overflow = await page.evaluate(
+      () => document.documentElement.scrollWidth > document.documentElement.clientWidth,
+    );
+    expect(overflow).toBe(false);
   });
 });
 
@@ -76,17 +90,20 @@ test.describe('projects section at 1280px', () => {
     expect(value.x).toBeGreaterThan(label.x + label.width - EDGE_TOLERANCE_PX);
   });
 
-  test('live-perf device panels sit side by side', async ({ page }) => {
+  test('live-perf tiles sit four across, below the ask block', async ({ page }) => {
     await page.setViewportSize(DESKTOP);
     await page.goto('/');
-    const panels = page.locator(PERF_PANEL);
-    await panels.first().scrollIntoViewIfNeeded();
-    expect(await panels.count()).toBeGreaterThan(1);
-    const first = await panels.nth(0).boundingBox();
-    const second = await panels.nth(1).boundingBox();
-    if (!first || !second) throw new Error('perf panel has no layout box');
-    expect(second.x).toBeGreaterThan(first.x + first.width - EDGE_TOLERANCE_PX);
-    expect(Math.abs(second.y - first.y)).toBeLessThanOrEqual(EDGE_TOLERANCE_PX);
+    const tiles = page.locator(PERF_TILE);
+    await tiles.first().scrollIntoViewIfNeeded();
+    expect(await tiles.count()).toBe(4);
+    const rows = await tiles.evaluateAll((nodes) =>
+      nodes.map((node) => Math.round(node.getBoundingClientRect().y)),
+    );
+    expect(new Set(rows).size).toBe(1);
+    const ask = await page.locator(ASK_BLOCK).boundingBox();
+    const perf = await page.locator(PERF_BLOCK).boundingBox();
+    if (!ask || !perf) throw new Error('measured blocks have no layout box');
+    expect(perf.y).toBeGreaterThanOrEqual(ask.y + ask.height - EDGE_TOLERANCE_PX);
   });
 });
 

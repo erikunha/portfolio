@@ -23,7 +23,12 @@ function Section({
 }) {
   return (
     <section aria-labelledby={sectionId(name)} className="reading-section">
-      <h2 id={sectionId(name)} className="reading-heading" data-type-reveal>
+      <h2
+        id={sectionId(name)}
+        className="reading-heading"
+        data-type-reveal
+        suppressHydrationWarning
+      >
         {heading}
       </h2>
       {children}
@@ -118,7 +123,7 @@ export function CvPage({ locale }: { locale: SiteLocale }) {
           </span>
           {document_.experience.map((job) => (
             <article key={job.key} className="reading-entry">
-              <h3 data-type-reveal>
+              <h3 data-type-reveal suppressHydrationWarning>
                 <CompanyLink href={job.companyUrl} describedBy={NEW_TAB_NOTE_ID}>
                   {job.company}
                 </CompanyLink>
