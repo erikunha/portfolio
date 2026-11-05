@@ -23,11 +23,6 @@ export const personSchema = {
     addressCountry: 'BR',
   },
   sameAs: ['https://linkedin.com/in/erikunha', 'https://github.com/erikunha'],
-  worksFor: {
-    '@type': 'Organization',
-    name: 'Raylu.ai',
-    url: 'https://raylu.ai',
-  },
   description:
     'Full-Stack Engineer with 8+ years specializing in Applied AI systems and high-scale production architecture. Built shared UI systems and state architecture at Raylu.ai — the AI deal-origination product for private markets — on contract through Torc. Prior: PCI-DSS payments at Betsson Group (€1.2B group revenue, 40M+ transactions/yr). Impact across e-commerce (8M+ MAU), banking (70M+ customers), and healthcare. Track record: -97.5% API latency, -98% CSS bundle, -52% TTI. Staff/Principal-track, targeting AI-forward product companies worldwide.',
   knowsAbout: [
@@ -151,7 +146,7 @@ export const personSchema = {
       employmentType: 'FULL_TIME',
       jobLocationType: 'TELECOMMUTE',
       description:
-        'Targeting Applied AI engineering roles (Senior, Staff, or Principal IC) at AI-forward product companies. Currently based in Brazil (UTC-3), working remotely for a New York AI startup company. Open to fully remote worldwide or relocation with visa sponsorship. 8+ years across regulated industries. WES-verified credentials, English C1.',
+        'Targeting Applied AI engineering roles (Senior, Staff, or Principal IC) at AI-forward product companies. Based in Brazil (UTC-3), most recently remote for a New York AI startup. Open to fully remote worldwide or relocation with visa sponsorship. 8+ years across regulated industries. WES-verified credentials, English C1.',
     },
   },
 } as const;

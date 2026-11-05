@@ -1,5 +1,5 @@
 import { HeroStats } from '@/components/HeroStats';
-import { heroCurrentEmployer, heroPlatformChip, heroTagline } from '@/content/hero';
+import { heroNowStatus, heroPlatformChip, heroTagline } from '@/content/hero';
 import { Badge, Button } from '@/design-system';
 import { HeroBootAnimation } from '../../client/HeroBootAnimation';
 import { HeroSystemFailure } from '../../client/HeroSystemFailure';
@@ -33,7 +33,7 @@ export function Hero() {
               </b>
             </span>
             <span>
-              NOW: <b className="text-primary-500 font-bold">{heroCurrentEmployer}</b>
+              NOW: <b className="text-primary-500 font-bold">{heroNowStatus}</b>
             </span>
             <span>{heroPlatformChip}</span>
             <span>EN/PT/FR/ES</span>
@@ -89,7 +89,7 @@ export function Hero() {
               </b>
             </span>
             <span>
-              NOW: <b className="text-primary-500 font-bold">{heroCurrentEmployer}</b>
+              NOW: <b className="text-primary-500 font-bold">{heroNowStatus}</b>
             </span>
             <span>{heroPlatformChip}</span>
             <span>EN/PT/FR/ES</span>

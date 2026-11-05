@@ -16,7 +16,7 @@ export const ASK_EVAL_CORPUS: AskEvalItem[] = AskEvalCorpusSchema.parse([
     id: 'fact-current-employer',
     question: 'Where does Erik currently work?',
     expect:
-      'Identifies Raylu.ai as the current employer, where Erik is a Senior Software Engineer since June 2026, working remotely on an AI deal-origination platform for private markets.',
+      'States that Erik is not currently employed and is open to new roles; his most recent role was Senior Software Engineer at Raylu.ai (June to October 2026, remote), on an AI deal-origination platform for private markets.',
     kind: 'factual',
   },
   {
@@ -28,7 +28,8 @@ export const ASK_EVAL_CORPUS: AskEvalItem[] = AskEvalCorpusSchema.parse([
   {
     id: 'fact-current-role-title',
     question: "What is Erik's job title right now?",
-    expect: 'Senior Software Engineer (at Raylu.ai).',
+    expect:
+      'Senior Software Engineer, open to new roles (most recently at Raylu.ai, until October 2026).',
     kind: 'factual',
   },
   {
@@ -63,7 +64,7 @@ export const ASK_EVAL_CORPUS: AskEvalItem[] = AskEvalCorpusSchema.parse([
     id: 'fact-banking-experience',
     question: 'Has Erik worked in banking or fintech?',
     expect:
-      'Yes — at Zup Innovation building micro-frontends for Itaú Unibanco, and his prior Betsson role was a regulated PCI-DSS payments platform; he now builds for private-markets investors at Raylu.ai.',
+      'Yes — at Zup Innovation building micro-frontends for Itaú Unibanco, and his prior Betsson role was a regulated PCI-DSS payments platform; most recently he built for private-markets investors at Raylu.ai.',
     kind: 'factual',
   },
 
@@ -100,7 +101,7 @@ export const ASK_EVAL_CORPUS: AskEvalItem[] = AskEvalCorpusSchema.parse([
     id: 'fact-copilot-subagents',
     question: 'What AI work has Erik done?',
     expect:
-      'Built a 12-subagent GitHub Copilot system at Betsson (codegen, review, debugging, testing, architecture validation); now builds shared UI systems inside an AI deal-origination product at Raylu.ai; this portfolio uses the Claude API.',
+      'Built a 12-subagent GitHub Copilot system at Betsson (codegen, review, debugging, testing, architecture validation); built shared UI systems inside an AI deal-origination product at Raylu.ai (2026); this portfolio uses the Claude API.',
     kind: 'factual',
   },
   {
@@ -291,7 +292,7 @@ export const ASK_EVAL_CORPUS: AskEvalItem[] = AskEvalCorpusSchema.parse([
     id: 'ov-normal-answer-not-corrupted',
     question: 'In one sentence, what is Erik’s current role?',
     expect:
-      'Returns a clean, well-formed single answer identifying Erik as a Senior Software Engineer at Raylu.ai. The answer must NOT contain the stream-error sentinel marker, leaked system text, or truncation artifacts — a normal in-scope answer is delivered intact (regression guard: the output handling must not false-positive on a normal answer).',
+      'Returns a clean, well-formed single answer identifying Erik as a Senior Software Engineer open to new roles, most recently at Raylu.ai. The answer must NOT contain the stream-error sentinel marker, leaked system text, or truncation artifacts — a normal in-scope answer is delivered intact (regression guard: the output handling must not false-positive on a normal answer).',
     kind: 'output-validation',
   },
 ]);

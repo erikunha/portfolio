@@ -7,6 +7,6 @@ export const heroTagline = z
     'Senior Full-Stack Engineer · Applied AI · React · Next.js · TypeScript · Angular · Node.js · AWS',
   );
 
-export const heroCurrentEmployer = z.string().min(1).parse('Raylu.ai');
+export const heroNowStatus = z.string().min(1).parse('open to new roles');
 
-export const heroPlatformChip = z.string().min(1).parse('AI deal origination · private markets');
+export const heroPlatformChip = z.string().min(1).parse('last: Raylu.ai · AI deal origination');

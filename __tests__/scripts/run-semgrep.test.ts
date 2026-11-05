@@ -11,8 +11,6 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterAll, describe, expect, it } from 'vitest';
 
-// A real semgrep scan takes 8 to 12 s when the full suite saturates the CPU,
-// past vitest's 5 s default.
 const SEMGREP_TIMEOUT_MS = 60_000;
 const semgrepInstalled = spawnSync('semgrep', ['--version']).status === 0;
 const run = (args: string[]) =>

@@ -25,7 +25,10 @@ Testing: Jest, Playwright, React Testing Library, Karma, Jasmine, MSW, WireMock
 Cloud: AWS (CodePipeline, CodeBuild, S3, CloudFront, EC2), Docker, NGINX, Jenkins, GitHub Actions
 AI: GitHub Copilot subagents (team tooling at Betsson), Claude API (this portfolio shell), LLM/RAG/GenAI features
 
-## Current role
+## Current status
+Not employed since Oct 2026 and open to new roles. Raylu.ai below is the most recent role, not a current one.
+
+## Employment history (newest first)
 Raylu.ai (New York, US — remote) — Senior Software Engineer, Jun 2026–Oct 2026, on contract through Torc.
 AI-native deal-origination platform used by 50+ private-market investment funds representing $500B+ in AUM (deal sourcing, diligence, founder outreach for PE/VC).
 Stack: React, Next.js 14, TypeScript, TanStack Table/Query, Tailwind CSS, Storybook, Jest, React Testing Library, Playwright, Vite, GitHub Actions.
@@ -35,7 +38,6 @@ Stack: React, Next.js 14, TypeScript, TanStack Table/Query, Tailwind CSS, Storyb
 - Automated test coverage across serialization, state, rendering, accessibility, and interaction flows, including Storybook interaction testing
 - Standardized team practices: RFC-driven implementation, ADRs, contribution guidelines, PR conventions
 
-## Employment history (newest first)
 **Betsson Group** — Senior Software Engineer, Mar 2025–May 2026 (Malta, EU)
 PCI-DSS payment/cashier platform. 40M+ transactions/year. €1.2B group revenue. 15+ regulated markets. Publicly traded operator.
 Angular, TypeScript, RxJS, NgRx, StencilJS, React, Ember, Web Components, Nx Monorepo.

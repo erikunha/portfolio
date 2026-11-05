@@ -86,8 +86,7 @@ export const HIRING_PROFILE: HiringProfile = HiringProfileSchema.parse({
       name: 'Raylu.ai',
       role: 'Senior Software Engineer (contract, via Torc)',
       domain: 'AI deal origination / private markets',
-      current: true,
-      dates: '2026–present',
+      dates: '2026',
     },
     {
       name: 'Betsson Group',
@@ -202,5 +201,5 @@ export const HIRING_PROFILE: HiringProfile = HiringProfileSchema.parse({
     { code: 'es', level: 'B1' },
     { code: 'fr', level: 'A2' },
   ],
-  last_updated: '2026-07-11',
+  last_updated: '2026-11-05',
 });

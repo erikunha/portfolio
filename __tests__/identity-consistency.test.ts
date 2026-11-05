@@ -87,3 +87,32 @@ describe('identity is consistent across every gated surface', () => {
     ).toBe(true);
   });
 });
+
+describe('employment status agrees across every surface', () => {
+  const currentEmployers = HIRING_PROFILE.employers.filter((employer) => employer.current);
+  const pastEmployerNames = HIRING_PROFILE.employers
+    .filter((employer) => !employer.current)
+    .map((employer) => employer.name);
+
+  it('no surface names a past employer as the current one', async () => {
+    const { heroNowStatus } = await import('@/content/hero');
+    const { NOW_CURRENTLY } = await import('@/content/now-currently');
+    const { manPage } = await import('@/content/man-page');
+    for (const name of pastEmployerNames) {
+      expect(heroNowStatus).not.toContain(name);
+      expect(NOW_CURRENTLY.startsWith(name)).toBe(false);
+      expect(manPage.description).not.toMatch(new RegExp(`Now:[^.]*${name.replace('.', '\\.')}`));
+    }
+  });
+
+  it('JSON-LD worksFor, the ask prompt and llms.txt match the hiring profile', () => {
+    const worksFor = (personSchema as { worksFor?: { name: string } }).worksFor;
+    if (currentEmployers.length === 0) {
+      expect(worksFor).toBeUndefined();
+      expect(SYSTEM_TEXT).not.toContain('## Current role');
+      expect(llmsTxt).not.toMatch(/currently working/i);
+    } else {
+      expect(worksFor?.name).toBe(currentEmployers[0]?.name);
+    }
+  });
+});
