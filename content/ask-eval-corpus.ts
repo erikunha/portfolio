@@ -28,7 +28,7 @@ export const ASK_EVAL_CORPUS: AskEvalItem[] = AskEvalCorpusSchema.parse([
   {
     id: 'fact-current-role-title',
     question: "What is Erik's job title right now?",
-    expect: 'Senior Software Engineer, Frontend & Product (at Raylu).',
+    expect: 'Senior Software Engineer at Raylu, a contract via Torc.',
     kind: 'factual',
   },
   {

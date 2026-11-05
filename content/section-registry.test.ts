@@ -183,6 +183,15 @@ describe('navigation content', () => {
     expect(HOME_SECTION_ID).toBe(SECTION_REGISTRY[0].id);
   });
 
+  it('rejects a protocol-relative site link and a missing reduced-motion label', () => {
+    const offsite = clone();
+    at(offsite.siteLinks, 0).href = '//evil.example';
+    expect(schema.safeParse(offsite).success).toBe(false);
+    const unlabeled = clone() as unknown as { copy: Record<string, string> };
+    unlabeled.copy.motionReduced = '';
+    expect(schema.safeParse(unlabeled).success).toBe(false);
+  });
+
   it('keeps registry and navigation free of zod so client islands can import them', async () => {
     vi.resetModules();
     vi.doMock('zod', () => {

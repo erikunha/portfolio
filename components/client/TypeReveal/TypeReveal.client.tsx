@@ -28,42 +28,62 @@ export function TypeReveal() {
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: a route change renders new marked elements that the DOM query must pick up
   useEffect(() => {
-    const elements = Array.from(document.querySelectorAll<HTMLElement>(SELECTOR)).filter(
-      (el) => !el.classList.contains(TYPED_CLASS),
-    );
-    for (const el of elements) {
-      el.style.setProperty(
-        CHARS_PROPERTY,
-        String(Math.max(1, (el.textContent ?? '').trim().length)),
-      );
-    }
-
-    if (!readMotion() || typeof IntersectionObserver === 'undefined') {
-      revealAll(elements);
-      document.documentElement.classList.add(READY_CLASS);
-      return;
-    }
-
-    const observer = new IntersectionObserver((entries) => {
-      for (const entry of entries) {
-        if (!entry.isIntersecting) continue;
-        entry.target.classList.add(TYPED_CLASS);
-        observer.unobserve(entry.target);
+    const elements: HTMLElement[] = [];
+    const track = (candidates: Iterable<HTMLElement>) => {
+      const fresh: HTMLElement[] = [];
+      for (const el of candidates) {
+        if (el.classList.contains(TYPED_CLASS) || elements.includes(el)) continue;
+        el.style.setProperty(
+          CHARS_PROPERTY,
+          String(Math.max(1, (el.textContent ?? '').trim().length)),
+        );
+        elements.push(el);
+        fresh.push(el);
       }
-    }, OBSERVER_OPTIONS);
-    for (const el of elements) observer.observe(el);
+      return fresh;
+    };
+    const marked = (node: Node): HTMLElement[] => {
+      if (!(node instanceof HTMLElement)) return [];
+      const inside = Array.from(node.querySelectorAll<HTMLElement>(SELECTOR));
+      return node.matches(SELECTOR) ? [node, ...inside] : inside;
+    };
+
+    track(document.querySelectorAll<HTMLElement>(SELECTOR));
+    const animate = readMotion() && typeof IntersectionObserver !== 'undefined';
+    const observer = animate
+      ? new IntersectionObserver((entries) => {
+          for (const entry of entries) {
+            if (!entry.isIntersecting) continue;
+            entry.target.classList.add(TYPED_CLASS);
+            observer?.unobserve(entry.target);
+          }
+        }, OBSERVER_OPTIONS)
+      : null;
+    const handle = (fresh: HTMLElement[]) => {
+      if (observer) for (const el of fresh) observer.observe(el);
+      else revealAll(fresh);
+    };
+    handle(elements);
     document.documentElement.classList.add(READY_CLASS);
+
+    const mutations = new MutationObserver((records) => {
+      const added = records.flatMap((record) => Array.from(record.addedNodes).flatMap(marked));
+      if (added.length > 0) handle(track(added));
+    });
+    mutations.observe(document.body, { childList: true, subtree: true });
 
     const onMotionChange = (event: Event) => {
       if ((event as CustomEvent<MotionChangeDetail>).detail?.on) return;
       revealAll(elements);
-      observer.disconnect();
+      observer?.disconnect();
+      mutations.disconnect();
     };
     window.addEventListener(MOTION_CHANGE_EVENT, onMotionChange);
 
     return () => {
       window.removeEventListener(MOTION_CHANGE_EVENT, onMotionChange);
-      observer.disconnect();
+      observer?.disconnect();
+      mutations.disconnect();
     };
   }, [pathname]);
 

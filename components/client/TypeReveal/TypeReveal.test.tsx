@@ -124,6 +124,33 @@ describe('TypeReveal', () => {
     expect(document.getElementById('a')?.classList.contains('is-typed')).toBe(true);
   });
 
+  it('observes a heading streamed in after hydration', async () => {
+    setMotion(true);
+    mount('<h2 data-type-reveal id="a">About</h2>');
+    const late = document.createElement('h2');
+    late.dataset.typeReveal = '';
+    late.textContent = 'LIVE_PERF.JSON';
+    await act(async () => {
+      document.body.appendChild(late);
+      await Promise.resolve();
+    });
+    expect(observers[0]?.observed.has(late)).toBe(true);
+    expect(late.style.getPropertyValue('--type-chars')).toBe('14');
+  });
+
+  it('reveals a late heading at once when motion is off', async () => {
+    setMotion(false);
+    mount('<h2 data-type-reveal id="a">About</h2>');
+    const late = document.createElement('h2');
+    late.dataset.typeReveal = '';
+    late.textContent = 'ASK_EVAL.JSON';
+    await act(async () => {
+      document.body.appendChild(late);
+      await Promise.resolve();
+    });
+    expect(late.classList.contains('is-typed')).toBe(true);
+  });
+
   it('disconnects on unmount', () => {
     setMotion(true);
     const { unmount } = mount('<h2 data-type-reveal>About</h2>');

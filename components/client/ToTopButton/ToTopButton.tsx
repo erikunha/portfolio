@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { readMotion } from '@/lib/motion';
+import { motionInEffect } from '@/lib/motion';
 import { useSectionNavigation } from '../../responsive/SectionNavigation';
 
 export function ToTopButton() {
@@ -23,7 +23,7 @@ export function ToTopButton() {
     <button
       className={visible ? 'to-top-btn to-top-show' : 'to-top-btn'}
       aria-label={copy.backToTopLabel}
-      onClick={() => window.scrollTo({ top: 0, behavior: readMotion() ? 'smooth' : 'auto' })}
+      onClick={() => window.scrollTo({ top: 0, behavior: motionInEffect() ? 'smooth' : 'auto' })}
       type="button"
     >
       <svg

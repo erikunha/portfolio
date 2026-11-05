@@ -278,6 +278,36 @@ describe('SectionNavigation', () => {
     expect(scrollIntoView).toHaveBeenCalledTimes(1);
   });
 
+  it.each([
+    ['wheel', () => window.dispatchEvent(new Event('wheel'))],
+    ['touchstart', () => window.dispatchEvent(new Event('touchstart'))],
+    ['keydown', () => window.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown' }))],
+    ['pointerdown', () => window.dispatchEvent(new Event('pointerdown'))],
+  ])('drops the pending correction once the visitor scrolls by %s', (_, userInput) => {
+    render(<Page />);
+    const target = document.getElementById('sec-contact') as HTMLElement;
+    vi.spyOn(target, 'getBoundingClientRect').mockReturnValue({ top: 2800 } as DOMRect);
+    fireEvent.click(navLink('Contact'));
+    userInput();
+    window.dispatchEvent(new Event('scrollend'));
+    expect(scrollIntoView).toHaveBeenCalledTimes(1);
+  });
+
+  it('drops a correction that never saw its own scroll end', () => {
+    vi.useFakeTimers();
+    try {
+      render(<Page />);
+      const target = document.getElementById('sec-contact') as HTMLElement;
+      vi.spyOn(target, 'getBoundingClientRect').mockReturnValue({ top: 2800 } as DOMRect);
+      fireEvent.click(navLink('Contact'));
+      vi.advanceTimersByTime(5000);
+      window.dispatchEvent(new Event('scrollend'));
+      expect(scrollIntoView).toHaveBeenCalledTimes(1);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it('leaves a settled jump alone', () => {
     render(<Page />);
     const target = document.getElementById('sec-contact') as HTMLElement;
@@ -295,6 +325,15 @@ describe('SectionNavigation', () => {
     enable();
     fireEvent.click(navLink('Career'));
     expect(scrollIntoView).toHaveBeenCalledWith({ behavior: 'auto', block: 'start' });
+  });
+
+  it('smooth-scrolls when the visitor switched motion on over a reduced-motion system', () => {
+    localStorage.setItem('erik.motion', 'on');
+    reducedMotion = true;
+    render(<Page />);
+    fireEvent.click(navLink('Career'));
+    expect(scrollIntoView).toHaveBeenCalledWith({ behavior: 'smooth', block: 'start' });
+    localStorage.removeItem('erik.motion');
   });
 
   it('sends Home to the top of the page and focuses the main landmark', () => {

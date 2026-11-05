@@ -23,19 +23,18 @@ import {
 import { NavItem } from '@/design-system';
 import { cn } from '@/lib/cn';
 import { isolate } from '@/lib/dom/isolate';
-import { applyMotion, readMotion, readSystemReducedMotion } from '@/lib/motion';
+import { applyMotion, motionInEffect, readMotion, readSystemReducedMotion } from '@/lib/motion';
 
 const MAIN_ID = 'main-content';
-// The hero section id is structural (the first registry destination); keeping
-// the literal here avoids importing the bilingual navigation module runtime.
 const HOME_SECTION_ID = 'bio';
 const POSITION_DIGITS = 2;
 const formatSectionNumber = (order: number) => String(order).padStart(POSITION_DIGITS, '0');
 export const DRAWER_ID = 'section-drawer';
 const MOBILE_HERO_SELECTOR = '[data-testid="hero-mobile"]';
-const REDUCED_MOTION_QUERY = '(prefers-reduced-motion: reduce)';
 const CURRENT_LINE_MARGIN = '-45% 0px -54% 0px';
 const SETTLED_TOP_LIMIT_PX = 150;
+const PENDING_CORRECTION_TIMEOUT_MS = 3000;
+const USER_SCROLL_EVENTS = ['wheel', 'touchstart', 'keydown', 'pointerdown'] as const;
 const TRAPPED_CONTROLS = 'a[href], button';
 const CURRENT_ITEM = '[aria-current]';
 const SCROLL_LOCK_ATTRIBUTE = 'data-scroll-locked';
@@ -70,8 +69,7 @@ export function useSectionNavigation(): NavigationState {
 }
 
 function scrollBehavior(): ScrollBehavior {
-  const reduced = window.matchMedia(REDUCED_MOTION_QUERY).matches;
-  return reduced || document.body.dataset.motion === 'reduce' ? 'auto' : 'smooth';
+  return motionInEffect() ? 'smooth' : 'auto';
 }
 
 function jumpTarget(id: string): HTMLElement | null {
@@ -89,15 +87,24 @@ export function jumpToSection(id: string): boolean {
   if (id === HOME_SECTION_ID) window.scrollTo({ top: 0, behavior });
   else {
     target.scrollIntoView({ behavior, block: 'start' });
-    pendingCorrection = new AbortController();
+    const correction = new AbortController();
+    pendingCorrection = correction;
+    const { signal } = correction;
+    const cancel = () => correction.abort();
     window.addEventListener(
       'scrollend',
       () => {
+        cancel();
         const { top } = target.getBoundingClientRect();
         if (top < 0 || top > SETTLED_TOP_LIMIT_PX) target.scrollIntoView({ block: 'start' });
       },
-      { once: true, signal: pendingCorrection.signal },
+      { once: true, signal },
     );
+    for (const type of USER_SCROLL_EVENTS) {
+      window.addEventListener(type, cancel, { once: true, passive: true, signal });
+    }
+    const timeout = window.setTimeout(cancel, PENDING_CORRECTION_TIMEOUT_MS);
+    signal.addEventListener('abort', () => window.clearTimeout(timeout), { once: true });
   }
   target.focus({ preventScroll: true });
   return true;

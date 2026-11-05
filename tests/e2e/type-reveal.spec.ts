@@ -36,6 +36,38 @@ test.describe('type reveal', () => {
     );
   });
 
+  test('turning motion off and on again never replays the typing animation', async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 720 });
+    await page.emulateMedia({ reducedMotion: 'no-preference' });
+    await page.goto('/');
+    await page.waitForFunction(() =>
+      document.documentElement.classList.contains('type-reveal-ready'),
+    );
+    const motion = page.getByRole('button', { name: /motion/i }).first();
+    await motion.click();
+    await expect(page.locator('body')).toHaveAttribute('data-motion', 'reduce');
+    await motion.click();
+    await expect(page.locator('body')).not.toHaveAttribute('data-motion', 'reduce');
+
+    const statics = page.locator(`${MARKED}.is-static`);
+    expect(
+      await statics.count(),
+      'turning motion off must mark every untyped element static',
+    ).toBeGreaterThan(0);
+    const styles = await statics.evaluateAll((els) =>
+      els.map((el) => {
+        const style = getComputedStyle(el);
+        return { animation: style.animationName, clip: style.clipPath };
+      }),
+    );
+    for (const style of styles) {
+      expect(
+        style,
+        'a static element must not type in again when motion returns; if this fails, a typing rule matches .is-static',
+      ).toEqual({ animation: 'none', clip: 'none' });
+    }
+  });
+
   test('with reduced motion every marked element is fully visible at load', async ({ page }) => {
     await page.emulateMedia({ reducedMotion: 'reduce' });
     await page.goto('/');

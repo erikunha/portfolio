@@ -454,7 +454,9 @@
       );
     }
 
-    html.type-reveal-ready body:not([data-motion="reduce"]) [data-type-reveal].is-typed {
+    html.type-reveal-ready
+      body:not([data-motion="reduce"])
+      [data-type-reveal].is-typed:not(.is-static) {
       --type-progress: 1;
       animation: type-reveal-progress
         min(
@@ -479,11 +481,13 @@
 
     html.type-reveal-ready
       body:not([data-motion="reduce"])
-      [data-type-reveal]:not(.is-typed)::after {
+      [data-type-reveal]:not(.is-typed, .is-static)::after {
       opacity: 1;
     }
 
-    html.type-reveal-ready body:not([data-motion="reduce"]) [data-type-reveal].is-typed::after {
+    html.type-reveal-ready
+      body:not([data-motion="reduce"])
+      [data-type-reveal].is-typed:not(.is-static)::after {
       animation: type-reveal-caret var(--type-reveal-caret-blink) step-end
         var(--type-reveal-caret-blinks) both;
     }

@@ -2,14 +2,18 @@ import { z } from 'zod';
 import { brand } from './brand';
 import { ContactContentSchema } from './contact';
 import { contactCopy } from './contact-copy';
+import { copyFeedback } from './copy-button';
 import { dmesgLines } from './dmesg';
 import { errorsContent } from './errors';
+import { heroClientContent } from './hero-client';
 import { NAVIGATION } from './navigation';
 import {
   BrandSchema,
+  CopyFeedbackSchema,
   createNavigationSchema,
   DmesgLineSchema,
   ErrorsContentSchema,
+  HeroClientContentSchema,
   SectionRegistrySchema,
   ShellCommandsSchema,
   ShellUiSchema,
@@ -37,7 +41,9 @@ for (const locale of LOCALES) {
   createNavigationSchema(SECTION_REGISTRY.map(({ id }) => id)).parse(NAVIGATION[locale]);
   ContactContentSchema.parse(contactCopy[locale]);
   ErrorsContentSchema.parse(errorsContent[locale]);
+  for (const feedback of Object.values(copyFeedback[locale])) CopyFeedbackSchema.parse(feedback);
 }
+HeroClientContentSchema.parse(heroClientContent);
 BrandSchema.parse(brand);
 SectionRegistrySchema.parse(SECTION_REGISTRY);
 z.object({ email: z.email(), linkedin: z.url() }).parse({

@@ -91,7 +91,7 @@ const DockControlSchema = z
 const SiteLinkSchema = z.object({
   label: NavTextSchema,
   index: NavTextSchema,
-  href: z.string().regex(/^(\/|https:\/\/)\S+$/),
+  href: z.string().regex(/^(\/(?!\/)\S*|https:\/\/\S+)$/),
   external: z.boolean(),
   accessibleName: NavTextSchema.optional(),
 });
@@ -106,6 +106,7 @@ const NavigationCopySchema = z.object({
   positionLabel: NavTextSchema,
   motionOn: NavTextSchema,
   motionOff: NavTextSchema,
+  motionReduced: NavTextSchema,
   langSwitchLabel: NavTextSchema,
   siteNavLabel: NavTextSchema,
   backToTopLabel: NavTextSchema,

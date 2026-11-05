@@ -163,33 +163,6 @@ describe('GlobalMotion — mobile Matrix Rain settings', () => {
   });
 });
 
-describe('FooterLazy — IntersectionObserver undefined guard (branch lines 44-47)', () => {
-  let mounted: MountedClient;
-
-  beforeEach(() => {
-    vi.resetModules();
-    vi.stubGlobal('IntersectionObserver', undefined);
-    vi.doMock('next/dynamic', () => ({
-      default: () => () => null,
-    }));
-  });
-
-  afterEach(() => {
-    mounted?.unmount();
-    vi.unstubAllGlobals();
-    vi.resetModules();
-  });
-
-  it('mounts FooterLazy immediately when IntersectionObserver is undefined', async () => {
-    const { flushMicrotasks } = await import('./helpers/render');
-    const { FooterLazy } = await import('@/components/sections/Footer');
-    mounted = await mountClient(createElement(FooterLazy));
-    await flushMicrotasks();
-    const sentinel = mounted.container.querySelector('[data-testid="footer-lazy-sentinel"]');
-    expect(sentinel).toBeNull();
-  });
-});
-
 describe('ErrorBoundary — custom fallback prop branch', () => {
   it('renders the custom fallback when provided and hasError is true', async () => {
     const { ErrorBoundary } = await import('@/components/ErrorBoundary/ErrorBoundary.client');

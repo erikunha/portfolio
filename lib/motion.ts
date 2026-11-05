@@ -27,3 +27,8 @@ export function applyMotion(on: boolean, persist = true): void {
   }
   window.dispatchEvent(new CustomEvent('motionchange', { detail: { on } }));
 }
+
+export function motionInEffect(): boolean {
+  if (typeof document !== 'undefined' && document.body.dataset.motion === 'reduce') return false;
+  return readMotion();
+}
