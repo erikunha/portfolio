@@ -165,7 +165,7 @@ describe('DesktopTopbar', () => {
     expect(hire?.getAttribute('aria-label')).toBe(HIRE_ACCESSIBLE_NAME[SITE_LOCALE.en]);
   });
 
-  it('orders focus stops brand, menu, search, links, motion, VIEW_CV, HIRE', async () => {
+  it('orders focus stops menu, search, links, motion, VIEW_CV, HIRE, brand', async () => {
     mounted = await renderTopbar();
     const focusable = [...mounted.container.querySelectorAll<HTMLElement>('a[href], button')];
     const stops = focusable.map((element) => {
@@ -183,7 +183,6 @@ describe('DesktopTopbar', () => {
       stops,
       'DOM order is the visual order and the tab order; no CSS order may reshuffle it',
     ).toEqual([
-      'brand',
       'menu',
       'search',
       'link',
@@ -195,6 +194,7 @@ describe('DesktopTopbar', () => {
       'motion',
       'cv',
       'hire',
+      'brand',
     ]);
   });
 

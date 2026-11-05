@@ -20,7 +20,6 @@ export function DesktopTopbar({ brand }: { brand: ReactNode }) {
   return (
     <div className="desktop-topbar fixed top-0 left-0 right-0 z-[110] bg-secondary-950 border-b border-primary-subtle hidden md:block">
       <div className="max-w-[var(--measure-page)] mx-auto px-[var(--space-gutter)] flex items-center gap-3 min-h-11">
-        <div className="flex items-center">{brand}</div>
         <MenuTrigger />
         <SearchTrigger className="topbar-search" />
         <nav className="flex flex-1 gap-2 items-center flex-nowrap" aria-label={copy.siteNavLabel}>
@@ -34,7 +33,7 @@ export function DesktopTopbar({ brand }: { brand: ReactNode }) {
               {label}
             </a>
           ))}
-          <div className="ml-auto flex gap-2 items-center flex-nowrap">
+          <div className="flex gap-2 items-center flex-nowrap xl:ml-2">
             <button
               type="button"
               className={cn(
@@ -88,6 +87,7 @@ export function DesktopTopbar({ brand }: { brand: ReactNode }) {
             </a>
           </div>
         </nav>
+        <div className="flex items-center ml-6">{brand}</div>
       </div>
     </div>
   );

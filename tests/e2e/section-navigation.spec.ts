@@ -37,7 +37,7 @@ for (const width of [390, 768, 1024, 1280, 1536]) {
       await expect(trigger, 'focus returns to the menu trigger').toBeFocused();
     });
 
-    test('keyboard focus reaches the brand first and the menu trigger second, then opens and restores', async ({
+    test('keyboard focus reaches the menu trigger first and the brand last, then opens and restores', async ({
       page,
     }) => {
       await page.goto('/');
@@ -47,12 +47,12 @@ for (const width of [390, 768, 1024, 1280, 1536]) {
           (node) => node.getClientRects().length > 0,
         );
         return {
-          first: tabbables[0]?.classList.contains('brand-link') ?? false,
-          second: tabbables[1]?.classList.contains('menu-trigger') ?? false,
+          first: tabbables[0]?.classList.contains('menu-trigger') ?? false,
+          last: tabbables.at(-1)?.classList.contains('brand-link') ?? false,
         };
       });
-      expect(order.first, 'the brand link is the first tab stop in the header').toBe(true);
-      expect(order.second, 'the menu trigger is the second tab stop in the header').toBe(true);
+      expect(order.first, 'the menu trigger is the first tab stop in the header').toBe(true);
+      expect(order.last, 'the brand link is the last tab stop in the header').toBe(true);
 
       const trigger = header.locator('.menu-trigger');
       await trigger.focus();
@@ -74,7 +74,7 @@ for (const width of [390, 768, 1024, 1280, 1536]) {
       expect(box?.height ?? 0, 'target height').toBeGreaterThanOrEqual(44);
       expect(
         box?.x ?? Number.POSITIVE_INFINITY,
-        'the trigger sits in the left half, right after the brand icon',
+        'the trigger sits in the left half, leading the header',
       ).toBeLessThan(width / 2);
       expect(
         (box?.x ?? 0) + (box?.width ?? 0),
@@ -115,7 +115,7 @@ for (const width of TOPBAR_WIDTHS) {
       expect(clipped, 'no topbar control may reach past the bar').toEqual([]);
     });
 
-    test('the brand icon sits at the far left with the menu trigger beside it, unclipped', async ({
+    test('the menu trigger leads the bar and the brand icon closes it at the far right, unclipped', async ({
       page,
     }) => {
       await page.goto('/');
@@ -147,13 +147,17 @@ for (const width of TOPBAR_WIDTHS) {
         };
       });
 
-      expect(fit.brandLeft, 'the brand icon must not start before the bar').toBeGreaterThanOrEqual(
-        -1,
-      );
       expect(
         fit.triggerLeft,
-        'the menu trigger sits right of the brand icon',
-      ).toBeGreaterThanOrEqual(fit.brandRight - 1);
+        'the menu trigger must not start before the bar',
+      ).toBeGreaterThanOrEqual(-1);
+      expect(
+        fit.brandLeft,
+        'the brand icon sits right of the navigation, separated by a gap',
+      ).toBeGreaterThan(fit.navRight);
+      expect(fit.brandRight, 'the brand icon must not reach past the bar').toBeLessThanOrEqual(
+        fit.barRight + 1,
+      );
       expect(
         fit.navLeft,
         'the navigation must sit to the right of the menu trigger',

@@ -26,12 +26,12 @@ describe('MobileTitleBar', () => {
     return mounted.container;
   }
 
-  it('puts the brand first and the menu trigger second, matching focus order', async () => {
+  it('puts the menu trigger first and the brand last, matching focus order', async () => {
     const container = await render();
     const focusable = [...container.querySelectorAll<HTMLElement>('a[href], button')];
 
-    expect(focusable[0]?.getAttribute('data-test-brand')).toBe('1');
-    expect(focusable[1]?.classList.contains('menu-trigger')).toBe(true);
+    expect(focusable[0]?.classList.contains('menu-trigger')).toBe(true);
+    expect(focusable[1]?.getAttribute('data-test-brand')).toBe('1');
   });
 
   it('draws no window dots', async () => {
