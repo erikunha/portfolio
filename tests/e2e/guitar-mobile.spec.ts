@@ -86,6 +86,26 @@ test.describe('#sec-guitar at 1280px', () => {
     });
     expect(order).toBe('true');
   });
+
+  test('the mixer sits at the same gap as every block above it', async ({ page }) => {
+    await page.goto('/#sec-guitar');
+    await page.locator('#sec-guitar .guitar-mixer').scrollIntoViewIfNeeded();
+    const gaps = await page.evaluate(() => {
+      const blocks = [
+        ...(document.querySelector('#sec-guitar .guitar-presentation')?.children ?? []),
+      ];
+      return blocks
+        .slice(1)
+        .map((block, index) =>
+          Math.round(
+            block.getBoundingClientRect().top -
+              (blocks[index] as Element).getBoundingClientRect().bottom,
+          ),
+        );
+    });
+    expect(gaps.length).toBeGreaterThan(2);
+    expect(new Set(gaps).size, `block gaps ${gaps.join(', ')} must all match`).toBe(1);
+  });
 });
 
 test.describe('#sec-guitar facts keep their emphasis', () => {
