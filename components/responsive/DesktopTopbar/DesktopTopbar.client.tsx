@@ -14,14 +14,14 @@ function isCurrentPath(pathname: string | null, href: string): boolean {
 }
 
 export function DesktopTopbar({ brand }: { brand: ReactNode }) {
-  const { motionOn, toggleMotion, chrome } = useSectionNavigation();
+  const { motionOn, toggleMotion, chrome, copy } = useSectionNavigation();
   const pathname = usePathname();
 
   return (
     <div className="desktop-topbar fixed top-0 left-0 right-0 z-[110] bg-secondary-950 border-b border-primary-subtle hidden md:block">
       <div className="max-w-[var(--measure-page)] mx-auto px-[var(--space-gutter)] flex items-center gap-3 min-h-11">
         <MenuTrigger />
-        <nav className="flex gap-2 items-center flex-nowrap" aria-label="Site navigation">
+        <nav className="flex gap-2 items-center flex-nowrap" aria-label={copy.siteNavLabel}>
           <a
             className={cn(
               'border border-primary-500 text-primary-500 px-3 py-1.5 tracking-wider text-[length:var(--text-min)] items-center min-h-11 whitespace-nowrap',

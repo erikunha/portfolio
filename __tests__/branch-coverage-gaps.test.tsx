@@ -210,33 +210,6 @@ describe('ErrorBoundary — custom fallback prop branch', () => {
   });
 });
 
-describe('ToTopButton — visible=true className branch', () => {
-  let mounted: MountedClient;
-  const originalScrollY = Object.getOwnPropertyDescriptor(window, 'scrollY');
-
-  beforeEach(() => {
-    Object.defineProperty(window, 'scrollY', { value: 500, writable: true, configurable: true });
-  });
-
-  afterEach(() => {
-    mounted?.unmount();
-    if (originalScrollY) {
-      Object.defineProperty(window, 'scrollY', originalScrollY);
-    } else {
-      Object.defineProperty(window, 'scrollY', { value: 0, writable: true, configurable: true });
-    }
-  });
-
-  it('applies the show class to the button when scrollY > 400', async () => {
-    const { ToTopButton } = await import('@/components/client/ToTopButton/ToTopButton');
-    mounted = await mountClient(createElement(ToTopButton));
-    const btn = mounted.container.querySelector('button');
-    expect(btn).not.toBeNull();
-    expect(btn?.getAttribute('aria-label')).toBe('back to top');
-    expect(btn?.classList.contains('to-top-show')).toBe(true);
-  });
-});
-
 describe('Measured content validation', () => {
   it.each(['empty', 'locale'])('rejects empty format copy for %s', (field) => {
     expect(

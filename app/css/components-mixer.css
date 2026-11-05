@@ -6,6 +6,13 @@
     align-items: center;
   }
 
+  @media (max-width: 767px) {
+    .daw-mixer-row-min,
+    .daw-channel-row {
+      min-width: 720px;
+    }
+  }
+
   .transport-play {
     width: 0;
     height: 0;
