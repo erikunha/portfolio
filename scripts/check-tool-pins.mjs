@@ -83,7 +83,7 @@ export const PINS = [
   },
 ];
 
-import { readFileSync } from 'node:fs';
+import { readFileSync, realpathSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
 
 async function statusOf(pin) {
@@ -126,7 +126,7 @@ const oneLine = (text) => String(text).replace(/[\r\n]+/g, ' ');
 
 if (
   typeof process.argv[1] === 'string' &&
-  import.meta.url === pathToFileURL(process.argv[1]).href
+  import.meta.url === pathToFileURL(realpathSync(process.argv[1])).href
 ) {
   main().catch((error) => {
     console.error(`::error::${oneLine(error.message)}`);

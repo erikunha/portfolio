@@ -1,6 +1,6 @@
 #!/usr/bin/env tsx
 
-import { writeFileSync } from 'node:fs';
+import { realpathSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { AGENT_EVAL_CALIBRATION } from '@/evals/agents/calibration';
@@ -322,7 +322,8 @@ async function main(): Promise<void> {
 }
 
 const invokedDirectly =
-  typeof process.argv[1] === 'string' && import.meta.url === pathToFileURL(process.argv[1]).href;
+  typeof process.argv[1] === 'string' &&
+  import.meta.url === pathToFileURL(realpathSync(process.argv[1])).href;
 
 if (invokedDirectly) {
   main().catch((err) => {

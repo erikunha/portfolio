@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs';
+import { readFileSync, realpathSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
@@ -109,7 +109,7 @@ async function main() {
 
 if (
   typeof process.argv[1] === 'string' &&
-  import.meta.url === pathToFileURL(process.argv[1]).href
+  import.meta.url === pathToFileURL(realpathSync(process.argv[1])).href
 ) {
   main().catch((err) => {
     console.error(`[pkg-age] ${err instanceof Error ? err.message : String(err)}`);

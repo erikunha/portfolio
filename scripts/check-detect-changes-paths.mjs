@@ -1,4 +1,4 @@
-import { existsSync as fsExistsSync, readdirSync as fsReaddirSync } from 'node:fs';
+import { existsSync as fsExistsSync, readdirSync as fsReaddirSync, realpathSync } from 'node:fs';
 import { basename, dirname } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { AI_PATHS, APP_PATHS, UI_PATHS } from './detect-changes-paths.mjs';
@@ -56,7 +56,7 @@ function main() {
 
 if (
   typeof process.argv[1] === 'string' &&
-  import.meta.url === pathToFileURL(process.argv[1]).href
+  import.meta.url === pathToFileURL(realpathSync(process.argv[1])).href
 ) {
   try {
     main();

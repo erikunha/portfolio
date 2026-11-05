@@ -55,6 +55,7 @@ export function decideStagedExit(res) {
 }
 
 import { spawnSync } from 'node:child_process';
+import { realpathSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
 
 const GITLEAKS_BIN = process.env.GITLEAKS_BIN ?? 'gitleaks';
@@ -75,7 +76,7 @@ function main() {
 
 if (
   typeof process.argv[1] === 'string' &&
-  import.meta.url === pathToFileURL(process.argv[1]).href
+  import.meta.url === pathToFileURL(realpathSync(process.argv[1])).href
 ) {
   main();
 }

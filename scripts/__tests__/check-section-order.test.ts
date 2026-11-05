@@ -1,3 +1,7 @@
+import { execFileSync } from 'node:child_process';
+import { mkdtempSync, rmSync, symlinkSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import {
   collectCssSectionIds,
@@ -82,5 +86,19 @@ describe('findOrphanedCssIds', () => {
     const orphaned = findOrphanedCssIds(new Set(['sec-readme']), new Set(['sec-readme']));
 
     expect(orphaned).toEqual([]);
+  });
+});
+
+describe('running the script through a symlinked path', () => {
+  it('still runs main and reports, instead of exiting silently', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'section-order-link-'));
+    const link = join(dir, 'check-section-order.mjs');
+    symlinkSync(join(process.cwd(), 'scripts', 'check-section-order.mjs'), link);
+    try {
+      const out = execFileSync(process.execPath, [link], { cwd: process.cwd(), encoding: 'utf8' });
+      expect(out).toMatch(/\[check-section-order\] OK/);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
   });
 });
