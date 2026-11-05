@@ -39,7 +39,7 @@ flowchart TD
     layout -.serves.-> api
 ```
 
-The user-facing routes are `/`, `/summary`, `/cv`, `/links` and `/links/en`, alongside the design-system docs, metadata routes and API cluster. Home sections use the client `ErrorBoundary` component. App Router failures also have `app/error.tsx` and `app/global-error.tsx`; there is no `loading.tsx`/`template.tsx`.
+The user-facing routes are `/`, `/summary`, `/cv`, `/links`, `/links/en` and the pt-BR twins `/pt`, `/pt/cv` and `/pt/summary`, alongside the design-system docs, metadata routes and API cluster. Home sections use the client `ErrorBoundary` component. App Router failures also have `app/error.tsx` and `app/global-error.tsx`; there is no `loading.tsx`/`template.tsx`.
 
 ## Terminal sections and navigation
 
@@ -86,7 +86,7 @@ flowchart LR
 ```
 
 **Static vs dynamic, concretely:**
-- **Static (prerendered):** `AppShell` chrome except the client-only MatrixRain canvas, `Hero` (outside Suspense so LCP never waits), `About`, `Shell`, the responsive `Guitar` presentation (EQ strip, signal chain and photo), Projects with its attached receipts, Contact, and section fallbacks. Projects uses one RSC tree with CSS controlling the responsive grid. The mixer selects its variant by user agent: desktop UAs get the three-channel table, mobile UAs get the three-card static mix, and only its islands hydrate. Contact renders on the server as two columns: the channels block (the email, a `[COPY EMAIL]` control, the LinkedIn call to action and GitHub) and six facts under the form, and the timezone panel's static first paint (dim land map and Erik's pin, no clock) beside it; the work-authorization table is gone.
+- **Static (prerendered):** `AppShell` chrome except the client-only MatrixRain canvas, `Hero` (outside Suspense so LCP never waits), `About`, `Shell`, the responsive `Guitar` presentation (EQ strip, signal chain and photo), Projects with its attached receipts, Contact, and section fallbacks. Projects uses one RSC tree with CSS controlling the responsive grid. The mixer selects its variant by user agent: desktop UAs get the three-channel table, mobile UAs get the three-card static mix, and only its islands hydrate. Contact renders on the server as two columns: the channels block (the email, a `[COPY EMAIL]` control, the LinkedIn call to action and GitHub) and six facts under the form, and the timezone panel's static first paint (dim land map and Erik's pin, no clock) beside it.
 - **UA-selected variants:** only the DAW mixer on `/`. `DawMixerContent` awaits `getIsMobile()` (`lib/ua.ts`, which reads `headers()`) and renders the mobile or desktop variant behind a Suspense boundary inside the guitar module.
 - **Measured data:** `AiMetricsSection` renders the `sec-live-metrics` module. It composes `AiMetricsData` and `LivePerfSection`, with two independent Suspense boundaries: one for ASK and one for PSI, which resolves desktop and mobile together. Each fallback retains its metric layout and shows a loading state. Receipts remain inside Projects rather than a separate module.
 - **The dual-variant pattern** (used on `/` by the DAW mixer):

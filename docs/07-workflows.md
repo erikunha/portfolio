@@ -123,7 +123,7 @@ Other workflows: `codeql.yml` (SAST, weekly + PR), `mutation.yml` (Stryker, week
 
 **Lighthouse budgets (LHCI, hard gates):** desktop perf ≥95 / a11y =100 / BP ≥95 / SEO =100, LCP ≤1800ms, CLS ≤0.05, TBT ≤200ms; mobile perf ≥90, LCP ≤3500ms. Never disable a gate to merge - fix the property (doc 08).
 
-Both desktop and mobile collect `/`, `/cv`, `/summary`, `/links`, `/links/en` and the 17 design-system URLs listed in their configs. Run `pnpm lhci` and `pnpm lhci:mobile` against a production server.
+Both desktop and mobile collect `/`, `/pt`, `/cv`, `/summary`, `/links`, `/links/en` and every design-system route listed in their configs. Run `pnpm lhci` and `pnpm lhci:mobile` against a production server.
 
 ## The PR lifecycle
 

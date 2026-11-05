@@ -30,7 +30,7 @@ Git hooks and CI run deterministic checks. The project does not wire agent-runti
 
 ## Performance coverage differs by surface
 
-The per-route JS checker evaluates every route in the build's route manifest. Both Lighthouse configurations collect the home page, `/cv`, `/summary`, `/links`, `/links/en` and all eighteen design-system pages. Both disable the INP assertion.
+The per-route JS checker evaluates every route in the build's route manifest. Both Lighthouse configurations collect the home page, `/pt`, `/cv`, `/summary`, `/links`, `/links/en` and every design-system page. Both disable the INP assertion.
 
 The home and design-system performance gates therefore do not establish latency or visual performance on every route. Use the relevant functional tests and route-specific measurements before making those claims.
 

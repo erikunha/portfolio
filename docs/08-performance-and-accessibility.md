@@ -81,6 +81,6 @@ Responsibilities and retry code belong to the About section; the label validatio
 
 ## Verification scope
 
-Both Lighthouse configs collect `/`, `/cv`, `/summary`, `/links`, `/links/en` and all 17 listed design-system routes. Every URL uses its config's shared assertions. The INP assertion is disabled in both configs. These automated checks do not establish complete WCAG conformance or real-user INP. The route-JS checker separately evaluates every route emitted in the build manifest.
+Both Lighthouse configs collect `/`, `/pt`, `/cv`, `/summary`, `/links`, `/links/en` and every listed design-system route. Every URL uses its config's shared assertions. The INP assertion is disabled in both configs. These automated checks do not establish complete WCAG conformance or real-user INP. The route-JS checker separately evaluates every route emitted in the build manifest.
 
 Mobile reflow, reading views, error states and no-JavaScript recovery run in desktop and mobile Chromium and WebKit.
