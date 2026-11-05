@@ -34,10 +34,27 @@ describe('detect-changes manifest', () => {
     ).toContain('tests/visual/');
   });
 
-  it('keeps ui a subset of app for the literal (non-exclude, non-pkg) entries', () => {
+  it('keeps ui inside app: every literal ui entry sits under an app entry', () => {
     const literal = (xs: readonly string[]) =>
       xs.filter((p) => !p.startsWith(':(exclude)') && p !== 'package.json');
-    for (const p of literal(UI_PATHS)) expect(APP_PATHS).toContain(p);
+    for (const p of literal(UI_PATHS)) {
+      expect(
+        APP_PATHS.some((appPath) => p.startsWith(appPath)),
+        `${p} arms ui but no app entry covers it`,
+      ).toBe(true);
+    }
+  });
+
+  it.each([
+    ['AI_PATHS', AI_PATHS],
+    ['APP_PATHS', APP_PATHS],
+    ['UI_PATHS', UI_PATHS],
+  ])('lists no pathspec twice in %s', (_name, paths) => {
+    expect(paths.filter((p, index) => paths.indexOf(p) !== index)).toEqual([]);
+  });
+
+  it('arms the ui gates for a Playwright e2e spec through its own entry', () => {
+    expect(UI_PATHS).toContain('tests/e2e/');
   });
 });
 
