@@ -295,6 +295,6 @@ Always prioritize maintainability, reliability, and efficiency while building te
 - Matrix dialog loop must NOT use per-keystroke useState — existing Vitest test `__tests__/matrix-rain.test.ts` enforces this; do not break it
 - Test environment: jsdom for unit tests; Playwright runs Chromium and WebKit projects
 - Playwright config: `playwright.config.ts` at project root
-- Pre-commit runs Biome and the staged secret scan; the full vitest suite runs in `pnpm verify` on pre-push; Playwright stays CI-only — do not add Playwright to a hook
+- Pre-commit runs Biome and the staged secret scan; the full vitest suite runs in `pnpm verify` on pre-push; Playwright stays CI-only, so do not add it to a hook
 - Vitest config: `vitest.config.ts` at project root
 - RISK: standard — test coverage quality, assertion correctness

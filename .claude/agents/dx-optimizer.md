@@ -292,7 +292,7 @@ Always prioritize developer productivity, satisfaction, and efficiency while bui
 - Dev server: `pnpm dev`
 - Pre-commit hook: `.husky/pre-commit` runs `pnpm check` and `pnpm gitleaks:staged`; `.husky/commit-msg` runs commitlint (scope required)
 - Pre-push hook: `.husky/pre-push` blocks pushes to main, validates the `<type>/<description>` branch name and runs `pnpm verify`
-- CI: `.github/workflows/ci.yml` — jobs `quality-fast`, `typecheck`, `test`, `build`, `performance`, `e2e-functional`, `e2e-visual-*`, and `ci-gate` as the aggregate
+- CI: `.github/workflows/ci.yml` has the jobs `quality-fast`, `typecheck`, `test`, `build`, `performance`, `e2e-functional`, `e2e-visual-*`, and `ci-gate` as the aggregate
 - Linter: Biome (not ESLint/Prettier) — `pnpm biome ci .` for CI, `pnpm check` for local
 - Type check: `pnpm typecheck` (`tsgo --noEmit`)
 - Content validation: `pnpm validate-content` (`scripts/validate-content.ts`)

@@ -187,7 +187,7 @@ Always prioritize sustainable, white-hat SEO strategies that improve user experi
 
 - Lighthouse SEO gate: must = 100 — this is a non-negotiable CI gate; never regress it
 - OG image: the static `public/og.png`, referenced from `app/layout.tsx` metadata
-- Sitemap: `app/sitemap.ts` — lists the home page, the `/pt` twins, `/summary`, `/cv`, `/links` and the design-system routes, with pt-BR and EN language alternates
+- Sitemap: `app/sitemap.ts` lists the home page, the `/pt` twins, `/summary`, `/cv`, `/links` and the design-system routes, with pt-BR and EN language alternates
 - robots.txt: `public/robots.txt`
 - llms.txt: `public/llms.txt` — AI agent / LLM recruiter discovery format; keep up to date
 - /api/erik.json: `app/api/erik.json/route.ts` — structured HiringProfile for AI parsers; 24h edge cache (`Cache-Control: public, max-age=86400`)
