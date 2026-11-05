@@ -100,7 +100,8 @@ describe('employment status agrees across every surface', () => {
     const { manPage } = await import('@/content/man-page');
     for (const name of pastEmployerNames) {
       expect(heroNowStatus).not.toContain(name);
-      expect(NOW_CURRENTLY.startsWith(name)).toBe(false);
+      const at = NOW_CURRENTLY.indexOf(name);
+      if (at !== -1) expect(NOW_CURRENTLY.slice(0, at)).toMatch(/\blast\b/i);
       expect(manPage.description).not.toMatch(new RegExp(`Now:[^.]*${name.replace('.', '\\.')}`));
     }
   });
