@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { HIRE_ACCESSIBLE_NAME, HIRE_SHORT_LABEL } from '@/content/nav';
+import { SITE_LOCALE } from '@/content/site-locale';
 
 test.use({ viewport: { width: 1280, height: 720 } });
 
@@ -18,9 +19,9 @@ test.describe('DesktopTopbar — navigation', () => {
       await expect(nav.getByRole('link', { name: label })).toBeVisible();
     }
 
-    const hire = nav.getByRole('link', { name: HIRE_ACCESSIBLE_NAME });
+    const hire = nav.getByRole('link', { name: HIRE_ACCESSIBLE_NAME[SITE_LOCALE.en] });
     await expect(hire).toBeVisible();
-    await expect(hire).toHaveText(HIRE_SHORT_LABEL);
+    await expect(hire).toHaveText(HIRE_SHORT_LABEL[SITE_LOCALE.en]);
   });
 
   test('design system link navigates to /design-system', async ({ page }) => {
@@ -62,7 +63,7 @@ test.describe('DesktopTopbar — navigation', () => {
     await page.goto('/');
     const hire = page
       .getByRole('navigation', { name: 'Site navigation' })
-      .getByRole('link', { name: HIRE_ACCESSIBLE_NAME });
+      .getByRole('link', { name: HIRE_ACCESSIBLE_NAME[SITE_LOCALE.en] });
 
     await expect(hire).toHaveAttribute('href', /linkedin\.com\/in\/erikunha/);
     await expect(hire).toHaveAttribute('target', '_blank');

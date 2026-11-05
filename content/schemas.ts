@@ -9,6 +9,12 @@ const MIN_ALIAS_COUNT = 1;
 
 export const CompanyUrlSchema = z.url({ protocol: /^https$/ });
 
+export const LocalizedTextSchema = z.object({
+  pt: z.string().min(1),
+  en: z.string().min(1),
+});
+export type LocalizedText = z.infer<typeof LocalizedTextSchema>;
+
 const SectionTextSchema = z
   .string()
   .min(MIN_SECTION_TEXT_LENGTH)
@@ -22,8 +28,8 @@ const SectionAliasSchema = SectionTextSchema.refine((alias) => alias === alias.t
 
 export const SectionSchema = z.object({
   id: SectionTextSchema,
-  label: SectionTextSchema,
-  srLabel: SectionTextSchema,
+  label: LocalizedTextSchema,
+  srLabel: LocalizedTextSchema,
   aliases: z.array(SectionAliasSchema).min(MIN_ALIAS_COUNT).readonly(),
   order: z.number().int().min(FIRST_SECTION_ORDER).max(SECTION_DESTINATION_COUNT),
   icon: z.enum(SECTION_ICONS),
@@ -103,6 +109,7 @@ const NavigationCopySchema = z.object({
   searchShortcutOther: NavTextSchema,
   motionOn: NavTextSchema,
   motionOff: NavTextSchema,
+  langSwitchLabel: NavTextSchema,
 });
 
 export function createNavigationSchema(sectionIds: readonly string[]) {
@@ -231,6 +238,8 @@ export const AboutContentSchema = z.object({
       .min(1),
   }),
 });
+export type AboutContent = z.infer<typeof AboutContentSchema>;
+
 export const ProjectKind = z.enum(['professional', 'oss']);
 
 export const ProjectSchema = z
@@ -327,6 +336,8 @@ export const MeasuredSchema = z.object({
       .length(4),
   }),
 });
+
+export type Measured = z.infer<typeof MeasuredSchema>;
 
 export const TAKE_PLACEMENT = { home: 'home', docs: 'docs' } as const;
 
@@ -815,11 +826,6 @@ export const DawMixerSchema = z.object({
     }),
 });
 
-export const LocalizedTextSchema = z.object({
-  pt: z.string().min(1),
-  en: z.string().min(1),
-});
-
 export const LinksProfileSchema = z.object({
   name: z.string().min(1),
   avatar: z.string().min(1),
@@ -932,7 +938,6 @@ export type ShellResponse = z.infer<typeof ShellResponseSchema>;
 export type DawMixer = z.infer<typeof DawMixerSchema>;
 export type DawMixerChannel = z.infer<typeof DawMixerChannelSchema>;
 export type DawMixerPlugin = z.infer<typeof DawMixerPluginSchema>;
-export type LocalizedText = z.infer<typeof LocalizedTextSchema>;
 export type LinksProfile = z.infer<typeof LinksProfileSchema>;
 export type LinksChannel = z.infer<typeof LinksChannelSchema>;
 export type LinksPlaylist = z.infer<typeof LinksPlaylistSchema>;

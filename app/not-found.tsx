@@ -2,9 +2,10 @@ import type { Metadata } from 'next';
 import { BrandLink } from '@/components/BrandLink';
 import { ErrorChrome, ErrorHeading } from '@/components/ErrorPages/ErrorPages.client';
 import { errorsContent } from '@/content/errors';
+import { SITE_LOCALE } from '@/content/site-locale';
 import { Button, CmdLine, TerminalPanel } from '@/design-system';
 
-const { chrome, notFound } = errorsContent;
+const { chrome, notFound } = errorsContent[SITE_LOCALE.en];
 
 export const metadata: Metadata = { title: notFound.metaTitle };
 

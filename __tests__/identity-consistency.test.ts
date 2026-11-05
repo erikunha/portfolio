@@ -16,6 +16,7 @@ import { projects } from '@/content/projects';
 import { cvDocument } from '@/content/reading-views';
 import { PerfReceiptSchema, ProjectSchema } from '@/content/schemas';
 import { personSchema } from '@/content/seo';
+import { SITE_LOCALE } from '@/content/site-locale';
 import { social } from '@/content/social';
 import { SYSTEM_TEXT } from '@/lib/ask/system-prompt';
 import { HIRING_PROFILE } from '@/lib/hiring-profile';
@@ -50,7 +51,7 @@ beforeAll(async () => {
 
 describe('identity is consistent across every gated surface', () => {
   it('points every LinkedIn link at the canonical social.linkedin', () => {
-    expect(contactCopy.queued.linkHref).toBe(social.linkedin);
+    expect(contactCopy[SITE_LOCALE.en].queued.linkHref).toBe(social.linkedin);
     const linkedinRows = JSON.stringify(footerContent).match(/https?:[^"]*linkedin[^"]*/g) ?? [];
     expect(linkedinRows.length).toBeGreaterThan(0);
     for (const href of linkedinRows) expect(href).toBe(social.linkedin);
@@ -68,20 +69,20 @@ describe('identity is consistent across every gated surface', () => {
     const rawStatusToken = /CITIZEN|NEEDS_SPONSORSHIP|OPEN_WITH_SPONSORSHIP/;
     const rendered = [
       ...descriptions,
-      aboutContent.whoami.intro,
-      aboutContent.whoami.statusSuffix,
-      JSON.stringify(aboutContent.now.rows),
+      aboutContent[SITE_LOCALE.en].whoami.intro,
+      aboutContent[SITE_LOCALE.en].whoami.statusSuffix,
+      JSON.stringify(aboutContent[SITE_LOCALE.en].now.rows),
     ];
     for (const text of rendered) expect(text).not.toMatch(rawStatusToken);
     for (const text of descriptions) expect(text).not.toMatch(/citizen|sponsorship/i);
   });
 
   it('states the cross-platform code reuse the resume gives, on both surfaces', () => {
-    const edtech = projects.find((project) => project.name === 'EDTECH_OMNI');
+    const edtech = projects[SITE_LOCALE.en].find((project) => project.name === 'EDTECH_OMNI');
     expect(edtech).toBeDefined();
     expect(edtech?.stats?.find((stat) => stat.label === 'SHARED')?.value).toContain('80%');
-    expect(JSON.stringify(gitLog)).toContain('80% shared code');
-    expect(JSON.stringify(gitLog)).not.toContain('90%');
+    expect(JSON.stringify(gitLog[SITE_LOCALE.en])).toContain('80% shared code');
+    expect(JSON.stringify(gitLog[SITE_LOCALE.en])).not.toContain('90%');
   });
 
   it('hands the ask prompt and the hiring profile the canonical contact links', () => {
@@ -97,18 +98,18 @@ describe('identity is consistent across every gated surface', () => {
   });
 
   it('feeds every project company and expected completion to a consumer', () => {
-    for (const project of projects) expect(SYSTEM_TEXT).toContain(project.company);
+    for (const project of projects[SITE_LOCALE.en]) expect(SYSTEM_TEXT).toContain(project.company);
     expect(HIRING_PROFILE.education.map((entry) => entry.expected_completion)).toEqual(
-      education.map((entry) => entry.expectedCompletion),
+      education[SITE_LOCALE.en].map((entry) => entry.expectedCompletion),
     );
   });
 
   it('points JSON-LD and llms.txt at the same community event and facts', () => {
     const talksSentence = communityTalksSentence;
     const capitalizedTalks = `${talksSentence.charAt(0).toUpperCase()}${talksSentence.slice(1)}`;
-    expect(communityEvent.bullets).toContain(talksSentence);
-    expect(personSchema.memberOf.url).toBe(communityEvent.link.href);
-    expect(llmsTxt).toContain(communityEvent.link.href);
+    expect(communityEvent[SITE_LOCALE.en].bullets).toContain(talksSentence);
+    expect(personSchema.memberOf.url).toBe(communityEvent[SITE_LOCALE.en].link.href);
+    expect(llmsTxt).toContain(communityEvent[SITE_LOCALE.en].link.href);
     expect(
       personSchema.memberOf.description,
       'the JSON-LD organization description must state the same talks sentence as content/community.ts, or a crawler reads a different conference than the page shows',
@@ -133,7 +134,7 @@ describe('identity is consistent across every gated surface', () => {
     expect(
       contactLanguages,
       'the contact section and the CV must render the same language line, or the two surfaces drift apart',
-    ).toBe(cvDocument.languages);
+    ).toBe(cvDocument[SITE_LOCALE.en].languages);
   });
 
   it('expects the eval to answer with exactly the profile languages', () => {
@@ -147,7 +148,7 @@ describe('identity is consistent across every gated surface', () => {
   });
 
   it('publishes every resume degree in llms.txt with the wording content/education.ts uses', () => {
-    for (const entry of education) {
+    for (const entry of education[SITE_LOCALE.en]) {
       expect(
         llmsTxt,
         `public/llms.txt must state the degree as content/education.ts spells it ("${entry.degree}"), or an agent reads a different degree than the site renders.`,
@@ -161,11 +162,13 @@ describe('identity is consistent across every gated surface', () => {
 
   it('lists every education institution in the Person JSON-LD alumniOf', () => {
     const names = personSchema.alumniOf.map((entry) => entry.name);
-    for (const entry of education) {
+    for (const entry of education[SITE_LOCALE.en]) {
       expect(names.some((name) => name.includes(entry.institution))).toBe(true);
     }
     for (const name of names) {
-      expect(education.some((entry) => name.includes(entry.institution))).toBe(true);
+      expect(education[SITE_LOCALE.en].some((entry) => name.includes(entry.institution))).toBe(
+        true,
+      );
     }
   });
 
@@ -190,7 +193,7 @@ describe('identity is consistent across every gated surface', () => {
 
   it('every title surface states the canonical title', () => {
     const surfaces: Array<[string, string]> = [
-      ['content/hero.ts (heroTagline)', heroTagline],
+      ['content/hero.ts (heroTagline)', heroTagline(SITE_LOCALE.en)],
       ['content/seo.ts (jobTitle)', personSchema.jobTitle],
       ['app/layout.tsx (metadata.title)', String(JSON.parse(layoutMetadataText).title)],
       ['public/llms.txt', llmsTxt],
@@ -341,7 +344,7 @@ describe('terminal redesign canonical facts', () => {
 
   it('keeps nine employers with exact titles, month ranges and locations, and no education', () => {
     expect(
-      gitLog.map((entry) => [
+      gitLog[SITE_LOCALE.en].map((entry) => [
         entry.company,
         entry.role,
         entry.startMonth,
@@ -423,14 +426,14 @@ describe('terminal redesign canonical facts', () => {
         null,
       ],
     ]);
-    expect(gitLog.every((entry) => entry.type === 'career')).toBe(true);
-    expect(gitLog.filter((entry) => entry.isRoot).map((entry) => entry.company)).toEqual([
-      'Monde Sistemas',
-    ]);
+    expect(gitLog[SITE_LOCALE.en].every((entry) => entry.type === 'career')).toBe(true);
+    expect(
+      gitLog[SITE_LOCALE.en].filter((entry) => entry.isRoot).map((entry) => entry.company),
+    ).toEqual(['Monde Sistemas']);
     expect(HIRING_PROFILE.employers.map((entry) => entry.role)).toEqual(
-      gitLog.map((entry) => entry.role),
+      gitLog[SITE_LOCALE.en].map((entry) => entry.role),
     );
-    for (const entry of gitLog) {
+    for (const entry of gitLog[SITE_LOCALE.en]) {
       expect(SYSTEM_TEXT).toContain(entry.role);
       expect(SYSTEM_TEXT).toContain(entry.date);
       expect(llmsTxt).toContain(entry.role);
@@ -439,12 +442,14 @@ describe('terminal redesign canonical facts', () => {
   });
 
   it('publishes the service project and the resume-backed Raylu stack on desktop and mobile', () => {
-    expect(projects.every((project) => project.company.length > 0)).toBe(true);
-    const raylu = projects.find((project) => project.company === 'Raylu');
+    expect(projects[SITE_LOCALE.en].every((project) => project.company.length > 0)).toBe(true);
+    const raylu = projects[SITE_LOCALE.en].find((project) => project.company === 'Raylu');
     expect(JSON.stringify(raylu)).toContain('NEXT 14');
     expect(JSON.stringify(raylu)).toContain('TS 5');
     expect(JSON.stringify(raylu)).not.toMatch(/Next(?:\.js)? 15|React 19/i);
-    const service = projects.find((project) => project.name === 'SERVICE_OPS_CONSOLE');
+    const service = projects[SITE_LOCALE.en].find(
+      (project) => project.name === 'SERVICE_OPS_CONSOLE',
+    );
     expect(service?.company).toBe('Canon Medical Systems Brazil');
     expect(service?.description).toContain('service orders');
     expect(service?.description).toContain('specialist scheduling');
@@ -460,7 +465,9 @@ describe('terminal redesign canonical facts', () => {
   });
 
   it('keeps the canonical project name when parsing retired mobile overrides', () => {
-    const service = projects.find((project) => project.name === 'SERVICE_OPS_CONSOLE');
+    const service = projects[SITE_LOCALE.en].find(
+      (project) => project.name === 'SERVICE_OPS_CONSOLE',
+    );
     expect(service).toBeDefined();
     const parsed = ProjectSchema.parse({ ...service, mobileName: 'service_ops/' });
     expect(parsed).toEqual(service);
@@ -469,7 +476,7 @@ describe('terminal redesign canonical facts', () => {
   });
 
   it('preserves receipt data while discarding retired mobile presentation fields', () => {
-    const onboarding = perfReceipts.find((receipt) => receipt.metric === 'LCP');
+    const onboarding = perfReceipts[SITE_LOCALE.en].find((receipt) => receipt.metric === 'LCP');
     expect(onboarding).toBeDefined();
     const parsed = PerfReceiptSchema.parse({
       ...onboarding,

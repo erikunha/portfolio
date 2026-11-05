@@ -4,6 +4,7 @@ import { beforeAll, describe, expect, it, vi } from 'vitest';
 import { perfReceipts } from '@/content/perf-receipts';
 import { projects } from '@/content/projects';
 import { PerfReceiptSchema } from '@/content/schemas';
+import { SITE_LOCALE } from '@/content/site-locale';
 import { SYSTEM_TEXT } from '@/lib/ask/system-prompt';
 import { HIRING_PROFILE } from '@/lib/hiring-profile';
 import { isPublishedSurface, readContentSurfaces } from './helpers/content-surfaces';
@@ -15,8 +16,9 @@ vi.mock('next/font/local', () => ({
 const REPO_ROOT = path.resolve(__dirname, '..');
 const read = (relativePath: string) => readFileSync(path.join(REPO_ROOT, relativePath), 'utf-8');
 
+const EN = SITE_LOCALE.en;
 const receiptFor = (metric: string) => {
-  const receipt = perfReceipts.find((r) => r.metric === metric);
+  const receipt = perfReceipts[EN].find((r) => r.metric === metric);
   if (!receipt) throw new Error(`no perf receipt for ${metric}`);
   return receipt.delta;
 };
@@ -25,15 +27,17 @@ const flipSign = (delta: string) =>
   delta.startsWith('-') ? `+${delta.slice(1)}` : `-${delta.slice(1)}`;
 
 const METRIC_KEYWORDS: Record<string, RegExp> = {
-  API_LATENCY: /latency/i,
+  // Portuguese alternatives: the pt-BR locale ships pt content surfaces, and an
+  // English-only keyword list would sweep none of them (DECISIONS 2026-08-30).
+  API_LATENCY: /latency|lat[êe]ncia/i,
   LCP: /\bLCP\b|largest.contentful.paint/i,
   BUNDLE_CSS: /css/i,
   TTI: /\bTTI\b|time.to.interactive/i,
   BUNDLE_JS: /\bJS\b|javascript/i,
-  PAGE_LOAD: /page[\s-]*load|load[\s-]*time/i,
-  INITIAL_LOAD: /initial[\s-]*(page[\s-]*)?load/i,
-  CONVERSION: /conversion/i,
-  DESKTOP_BUILD: /desktop[\s-]*build|build[\s-]*time/i,
+  PAGE_LOAD: /page[\s-]*load|load[\s-]*time|carregamento/i,
+  INITIAL_LOAD: /initial[\s-]*(page[\s-]*)?load|carregamento\s+inicial/i,
+  CONVERSION: /conversion|convers[ãa]o/i,
+  DESKTOP_BUILD: /desktop[\s-]*build|build[\s-]*time|build\s+desktop/i,
   CLS: /\bCLS\b|layout.shift/i,
   LIGHTHOUSE: /lighthouse/i,
   RELEASE_TIME: /release/i,
@@ -95,8 +99,11 @@ const HIRING_PROFILE_BUSINESS_RECEIPTS = new Set([
 const PROJECT_STAT_METRICS: Record<string, string> = {
   TTI: 'TTI',
   'JS BUNDLE': 'BUNDLE_JS',
+  'BUNDLE JS': 'BUNDLE_JS',
   'LOAD TIME': 'PAGE_LOAD',
+  'TEMPO DE CARREGAMENTO': 'PAGE_LOAD',
   'DESKTOP BUILD': 'DESKTOP_BUILD',
+  'BUILD DESKTOP': 'DESKTOP_BUILD',
 };
 
 beforeAll(async () => {
@@ -169,7 +176,7 @@ describe('performance metrics agree with the authoritative receipts', () => {
     expect(receiptFor('API_LATENCY')).toBe('-97.5%');
     expect(receiptFor('BUNDLE_CSS')).toBe('-98%');
     expect(receiptFor('DESKTOP_BUILD')).toBe('-40%');
-    const lcp = perfReceipts.find((receipt) => receipt.metric === 'LCP');
+    const lcp = perfReceipts[EN].find((receipt) => receipt.metric === 'LCP');
     expect(lcp).toMatchObject({
       before: 2544,
       after: 1308,
@@ -191,7 +198,7 @@ describe('performance metrics agree with the authoritative receipts', () => {
   });
 
   it('every receipt has a keyword, so no metric can be added and left unswept', () => {
-    const unmapped = perfReceipts
+    const unmapped = perfReceipts[EN]
       .map((receipt) => receipt.metric)
       .filter((metric) => METRIC_KEYWORDS[metric] === undefined);
 
@@ -203,7 +210,7 @@ describe('performance metrics agree with the authoritative receipts', () => {
 
   it('no surface states the OPPOSITE sign of a receipt', () => {
     const contradictions = METRIC_SURFACES().flatMap(([surface, text]) =>
-      perfReceipts
+      perfReceipts[EN]
         .filter((receipt) => {
           const keyword = METRIC_KEYWORDS[receipt.metric];
           return keyword !== undefined && nearKeyword(text, flipSign(receipt.delta), keyword);
@@ -251,7 +258,10 @@ IF THIS FIRED ON A TRUE SENTENCE: it fires when the flipped number sits within $
 
   it('no PROJECT_STAT_METRICS key is orphaned, so a rename cannot drop a tile from the gate', () => {
     const orphaned = Object.keys(PROJECT_STAT_METRICS).filter(
-      (label) => !projects.some((project) => project.stats.some((stat) => stat.label === label)),
+      (label) =>
+        !Object.values(SITE_LOCALE).some((locale) =>
+          projects[locale].some((project) => project.stats.some((stat) => stat.label === label)),
+        ),
     );
 
     expect(
@@ -260,18 +270,20 @@ IF THIS FIRED ON A TRUE SENTENCE: it fires when the flipped number sits within $
     ).toEqual([]);
   });
 
-  it('content/projects.ts stat tiles match the receipts', () => {
-    const drifted = projects.flatMap((project) =>
-      project.stats
-        .filter((stat) => {
-          const metric = PROJECT_STAT_METRICS[stat.label];
-          return metric !== undefined && stat.value !== receiptFor(metric);
-        })
-        .map(
-          (stat) =>
-            `${project.name}: "${stat.label}" = ${stat.value} but ${PROJECT_STAT_METRICS[stat.label]} is ${receiptFor(PROJECT_STAT_METRICS[stat.label] as string)}`,
-        ),
-    );
+  it('content/projects.ts stat tiles match the receipts in both locales', () => {
+    const drifted = Object.values(SITE_LOCALE)
+      .flatMap((locale) => projects[locale])
+      .flatMap((project) =>
+        project.stats
+          .filter((stat) => {
+            const metric = PROJECT_STAT_METRICS[stat.label];
+            return metric !== undefined && stat.value !== receiptFor(metric);
+          })
+          .map(
+            (stat) =>
+              `${project.name}: "${stat.label}" = ${stat.value} but ${PROJECT_STAT_METRICS[stat.label]} is ${receiptFor(PROJECT_STAT_METRICS[stat.label] as string)}`,
+          ),
+      );
 
     expect(
       drifted,

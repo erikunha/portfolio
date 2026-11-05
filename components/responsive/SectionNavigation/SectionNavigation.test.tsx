@@ -1,8 +1,9 @@
 import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { HIRE_ACCESSIBLE_NAME } from '@/content/nav';
-import { NAVIGATION } from '@/content/navigation';
+import { NAVIGATION, siteNavChrome } from '@/content/navigation';
 import { SECTION_REGISTRY } from '@/content/section-registry';
+import { SITE_LOCALE, type SiteLocale } from '@/content/site-locale';
 import {
   DRAWER_ID,
   MenuTrigger,
@@ -82,6 +83,8 @@ function Trigger() {
   );
 }
 
+const LOCALE: SiteLocale = SITE_LOCALE.en;
+
 function Page({
   withHome = true,
   withMenuTrigger = false,
@@ -90,7 +93,7 @@ function Page({
   withMenuTrigger?: boolean;
 }) {
   return (
-    <SectionNavigationProvider>
+    <SectionNavigationProvider chrome={siteNavChrome(LOCALE)} locale={LOCALE}>
       {withMenuTrigger ? <MenuTrigger /> : null}
       <Trigger />
       <SectionNavigation />
@@ -106,7 +109,7 @@ function Page({
 
 function MenuPage() {
   return (
-    <SectionNavigationProvider>
+    <SectionNavigationProvider chrome={siteNavChrome(LOCALE)} locale={LOCALE}>
       <MenuTrigger />
       <SectionNavigation />
       <main id="main-content" tabIndex={-1}>
@@ -123,10 +126,9 @@ function panel() {
 }
 
 function navLink(name: string) {
-  return within(screen.getByRole('navigation', { name: NAVIGATION.copy.navLabel })).getByRole(
-    'link',
-    { name },
-  );
+  return within(
+    screen.getByRole('navigation', { name: NAVIGATION[LOCALE].copy.navLabel }),
+  ).getByRole('link', { name });
 }
 
 describe('SectionNavigation', () => {
@@ -158,13 +160,13 @@ describe('SectionNavigation', () => {
       SECTION_REGISTRY.map(({ id }) => `/#${id}`),
     );
     expect(links.map((link) => link.querySelector('.nav-label')?.textContent)).toEqual(
-      SECTION_REGISTRY.map(({ label }) => label),
+      SECTION_REGISTRY.map(({ label }) => label[LOCALE]),
     );
   });
 
   it('groups the destinations under labelled headings', () => {
     render(<Page />);
-    for (const group of NAVIGATION.groups) {
+    for (const group of NAVIGATION[LOCALE].groups) {
       const region = screen.getByRole('list', { name: group.title });
       expect(within(region).getAllByRole('link')).toHaveLength(group.sectionIds.length);
     }
@@ -307,10 +309,10 @@ describe('SectionNavigation', () => {
     const foot = document.querySelector('.menu-foot') as HTMLElement;
     const ds = within(foot).getByRole('link', { name: 'DESIGN_SYSTEM' });
     expect(ds.getAttribute('href')).toBe('/design-system');
-    const linkedin = within(foot).getByRole('link', { name: HIRE_ACCESSIBLE_NAME });
+    const linkedin = within(foot).getByRole('link', { name: HIRE_ACCESSIBLE_NAME[LOCALE] });
     expect(linkedin.getAttribute('target')).toBe('_blank');
     expect(linkedin.getAttribute('rel')).toContain('noopener');
-    expect(linkedin.getAttribute('aria-label')).toBe(HIRE_ACCESSIBLE_NAME);
+    expect(linkedin.getAttribute('aria-label')).toBe(HIRE_ACCESSIBLE_NAME[LOCALE]);
   });
 
   it('lists the reading views and the design system in the drawer foot', () => {
@@ -344,7 +346,7 @@ describe('SectionNavigation', () => {
     expect(search.getAttribute('aria-controls')).toBe(DRAWER_ID);
     expect(search.getAttribute('aria-keyshortcuts')).toBe('Control+K Meta+K');
     expect(search.getAttribute('aria-expanded')).toBe('false');
-    expect(search.textContent).toContain(NAVIGATION.copy.searchLabel);
+    expect(search.textContent).toContain(NAVIGATION[LOCALE].copy.searchLabel);
   });
 
   it('toggles the drawer from the search row', () => {
@@ -371,12 +373,12 @@ describe('SectionNavigation', () => {
     const toggle = document.querySelector('.menu-motion') as HTMLButtonElement;
 
     expect(toggle.getAttribute('aria-pressed')).toBe('true');
-    expect(toggle.textContent).toContain(NAVIGATION.copy.motionOn);
+    expect(toggle.textContent).toContain(NAVIGATION[LOCALE].copy.motionOn);
 
     fireEvent.click(toggle);
 
     expect(toggle.getAttribute('aria-pressed')).toBe('false');
-    expect(toggle.textContent).toContain(NAVIGATION.copy.motionOff);
+    expect(toggle.textContent).toContain(NAVIGATION[LOCALE].copy.motionOff);
   });
 
   describe('drawer', () => {
@@ -431,7 +433,7 @@ describe('SectionNavigation', () => {
       expect(
         document.activeElement,
         'focus must land on a rendered menu trigger when the element that opened the drawer is not rendered',
-      ).toBe(screen.getByRole('button', { name: NAVIGATION.copy.openMenu }));
+      ).toBe(screen.getByRole('button', { name: NAVIGATION[LOCALE].copy.openMenu }));
     });
 
     it('returns focus to the menu trigger when the drawer was opened from the keyboard shortcut', () => {
@@ -445,7 +447,7 @@ describe('SectionNavigation', () => {
         document.activeElement,
         'focus must land on a control the visitor can see, not on the document body, because the ' +
           'shortcut has no element of its own to return focus to',
-      ).toBe(screen.getByRole('button', { name: NAVIGATION.copy.openMenu }));
+      ).toBe(screen.getByRole('button', { name: NAVIGATION[LOCALE].copy.openMenu }));
     });
 
     it('closes from the close control and from the scrim', () => {
@@ -539,7 +541,7 @@ describe('SectionNavigation', () => {
 
   describe('menu trigger', () => {
     function menuButton() {
-      return screen.getByRole('button', { name: NAVIGATION.copy.openMenu });
+      return screen.getByRole('button', { name: NAVIGATION[LOCALE].copy.openMenu });
     }
 
     it('names the drawer it controls and reports it closed', () => {
@@ -563,9 +565,9 @@ describe('SectionNavigation', () => {
     it('keeps one accessible name while the drawer is open and closed', () => {
       render(<MenuPage />);
       const button = menuButton();
-      expect(button.getAttribute('aria-label')).toBe(NAVIGATION.copy.openMenu);
+      expect(button.getAttribute('aria-label')).toBe(NAVIGATION[LOCALE].copy.openMenu);
       fireEvent.click(button);
-      expect(button.getAttribute('aria-label')).toBe(NAVIGATION.copy.openMenu);
+      expect(button.getAttribute('aria-label')).toBe(NAVIGATION[LOCALE].copy.openMenu);
       expect(button.getAttribute('aria-expanded')).toBe('true');
     });
 

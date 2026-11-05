@@ -1,7 +1,8 @@
 'use client';
 
 import { useMemo, useRef, useState, useSyncExternalStore } from 'react';
-import { contactCopy, contactHoursPhrase, fillCopy } from '@/content/contact-copy';
+import type { ContactContent } from '@/content/contact';
+import { contactHoursPhrase, fillCopy } from '@/content/contact-copy';
 import { ERIK_PIN, WORLD_MAP_GRID, WORLD_MAP_LAND } from '@/content/world-map';
 import { buildLandPaths } from '@/lib/timezone/land-paths';
 import {
@@ -18,13 +19,13 @@ import { ContactTimezoneMap } from './ContactTimezoneMap';
 import { useNow, usePanelActive } from './useClock';
 import { ZoneCombobox } from './ZoneCombobox';
 
-const { timezone: copy } = contactCopy;
+type TimezoneCopy = ContactContent['timezone'];
 const MS_PER_SECOND = 1000;
 const MS_PER_MINUTE = 60_000;
 const ROW_KEYS = ['erik', 'you', 'both'] as const;
 const HOURS = Array.from({ length: HOURS_PER_DAY }, (_, hour) => hour);
 
-function ClockPair({ active, zone }: { active: boolean; zone: string }) {
+function ClockPair({ copy, active, zone }: { copy: TimezoneCopy; active: boolean; zone: string }) {
   const now = useNow(active, MS_PER_SECOND);
   return (
     <p className="ctz-clocks">
@@ -47,7 +48,7 @@ function ClockPair({ active, zone }: { active: boolean; zone: string }) {
   );
 }
 
-export function ContactTimezone() {
+export function ContactTimezone({ copy }: { copy: TimezoneCopy }) {
   const rootRef = useRef<HTMLDivElement>(null);
   const active = usePanelActive(rootRef);
   const clockNow = useNow(active, MS_PER_MINUTE);
@@ -74,7 +75,7 @@ export function ContactTimezone() {
 
   const erikTime = formatClock(ERIK_TIME_ZONE, at, false);
   const youTime = formatClock(zone, at, false);
-  const overlapPhrase = contactHoursPhrase(overlap.hours);
+  const overlapPhrase = contactHoursPhrase(copy.hours, overlap.hours);
   const slotLine = overlap.bestSlot
     ? fillCopy(copy.propose.line, {
         you: overlap.bestSlot.you,
@@ -106,7 +107,7 @@ export function ContactTimezone() {
             ? copy.status.online
             : fillCopy(copy.status.offHours, { hours: availability.hoursUntilBack })}
         </p>
-        <ClockPair active={active} zone={zone} />
+        <ClockPair copy={copy} active={active} zone={zone} />
       </div>
 
       <ContactTimezoneMap
@@ -140,6 +141,7 @@ export function ContactTimezone() {
           })}
         </p>
         <ZoneCombobox
+          copy={copy}
           now={at}
           onSelect={(picked) => {
             setZone(picked);

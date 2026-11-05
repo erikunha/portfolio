@@ -7,6 +7,7 @@ import { GlobalMotion } from '@/components/client/GlobalMotion';
 import { errorsContent } from '@/content/errors';
 import { profile, profileMetaDescription, profilePageTitle } from '@/content/profile';
 import { personSchema } from '@/content/seo';
+import { SITE_LOCALE } from '@/content/site-locale';
 
 const mono = localFont({
   src: [
@@ -106,8 +107,10 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       <body suppressHydrationWarning>
         <noscript>
           <div className="nojs-bar">
-            {errorsContent.noscript.text}{' '}
-            <a href={errorsContent.noscript.contact.href}>{errorsContent.noscript.contact.label}</a>
+            {errorsContent[SITE_LOCALE.en].noscript.text}{' '}
+            <a href={errorsContent[SITE_LOCALE.en].noscript.contact.href}>
+              {errorsContent[SITE_LOCALE.en].noscript.contact.label}
+            </a>
           </div>
         </noscript>
         {/* biome-ignore lint/security/noDangerouslySetInnerHtml: initScript is a hardcoded build-time constant, no user input */}

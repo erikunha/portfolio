@@ -2,8 +2,9 @@ import dynamic from 'next/dynamic';
 import { type CSSProperties, Suspense } from 'react';
 import { pctToDb } from '@/components/client/DawMixer/FaderIsland/pct-to-db';
 import { dawMixer } from '@/content/daw-mixer';
-import type { DawMixerChannel } from '@/content/schemas';
+import type { DawMixer, DawMixerChannel } from '@/content/schemas';
 import { SECTION_LABELS } from '@/content/section-labels';
+import type { SiteLocale } from '@/content/site-locale';
 import { cn } from '@/lib/cn';
 import { getIsMobile } from '@/lib/ua';
 import { IconMixer } from '../../Icons';
@@ -156,7 +157,7 @@ function PluginChainMobile({
   );
 }
 
-function SessionHeaderMobile() {
+function SessionHeaderMobile({ mixer }: { mixer: DawMixer }) {
   return (
     <div
       className="text-[10px] text-primary-400 leading-[1.8] border-b border-[var(--color-primary-border)] px-[14px] py-[10px] tracking-[0.14em] bg-[color-mix(in_srgb,var(--color-primary-500)_5%,transparent)]"
@@ -164,30 +165,30 @@ function SessionHeaderMobile() {
     >
       <div>
         {'SESSION: '}
-        {dawMixer.sessionName}
+        {mixer.sessionName}
         {' · '}
-        {dawMixer.channels.length - 1}
+        {mixer.channels.length - 1}
         {' GTR TRACKS + MASTER · '}
-        <span className="text-primary-500">{dawMixer.status}</span>
+        <span className="text-primary-500">{mixer.status}</span>
       </div>
       <div>
         {'▶ '}
-        {dawMixer.transportTime}
+        {mixer.transportTime}
         {' | '}
-        {dawMixer.bpm}
+        {mixer.bpm}
         {' BPM | '}
-        {dawMixer.timeSignature}
+        {mixer.timeSignature}
       </div>
       <div>
-        <span className="text-primary-500">{dawMixer.channels.length - 1}</span>
+        <span className="text-primary-500">{mixer.channels.length - 1}</span>
         {' GTR + MASTER'}
       </div>
     </div>
   );
 }
 
-function MixLegendMobile() {
-  const lead = dawMixer.channels.find((ch) => ch.focused && ch.id !== 'MASTER');
+function MixLegendMobile({ mixer }: { mixer: DawMixer }) {
+  const lead = mixer.channels.find((ch) => ch.focused && ch.id !== 'MASTER');
   return (
     <div
       className="flex flex-col gap-[3px] px-[14px] py-2 border-b border-[var(--color-primary-quiet)] bg-black/60 text-xs tracking-[0.16em] text-primary-400 uppercase"
@@ -195,7 +196,7 @@ function MixLegendMobile() {
     >
       <span>
         <span className="inline-block w-[5px] h-[5px] rounded-full bg-primary-500 shadow-[0_0_5px_var(--color-primary-500)] mr-[6px] align-[1px]" />
-        {dawMixer.channels.length - 1}
+        {mixer.channels.length - 1}
         {' GTR + MASTER'}
       </span>
       {lead && (
@@ -329,15 +330,15 @@ function ChannelMobile({ ch }: { ch: DawMixerChannel }) {
   );
 }
 
-export function DawMixerMobile() {
+export function DawMixerMobile({ mixer }: { mixer: DawMixer }) {
   return (
     <div
       className="font-mono text-xs text-tertiary-50 flex flex-col"
       data-testid="daw-mixer-mobile"
     >
-      <SessionHeaderMobile />
-      <MixLegendMobile />
-      {dawMixer.channels
+      <SessionHeaderMobile mixer={mixer} />
+      <MixLegendMobile mixer={mixer} />
+      {mixer.channels
         .filter((ch) => ch.id !== 'MASTER')
         .slice(0, 2)
         .map((ch) => (
@@ -347,23 +348,24 @@ export function DawMixerMobile() {
   );
 }
 
-export async function DawMixerContent() {
+export async function DawMixerContent({ locale }: { locale: SiteLocale }) {
   const isMobile = await getIsMobile();
-  return isMobile ? <DawMixerMobile /> : <DawMixerDesktopDynamic />;
+  const mixer = dawMixer[locale];
+  return isMobile ? <DawMixerMobile mixer={mixer} /> : <DawMixerDesktopDynamic mixer={mixer} />;
 }
 
-export function DawMixerSection({ defer }: { defer?: boolean } = {}) {
+export function DawMixerSection({ locale, defer }: { locale: SiteLocale; defer?: boolean }) {
   return (
     <Module
       id="sec-daw-mixer"
       header="./MIX --LIVE — DAW MIXER"
-      srLabel={SECTION_LABELS['sec-daw-mixer']}
+      srLabel={SECTION_LABELS[locale]['sec-daw-mixer']}
       icon={<IconMixer />}
       defer={defer}
       variant="green"
     >
       <Suspense fallback={null}>
-        <DawMixerContent />
+        <DawMixerContent locale={locale} />
       </Suspense>
     </Module>
   );

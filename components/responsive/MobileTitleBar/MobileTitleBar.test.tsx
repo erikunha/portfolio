@@ -1,6 +1,8 @@
 import { createElement } from 'react';
 import { afterEach, describe, expect, it } from 'vitest';
 import { type MountedClient, mountClient } from '@/__tests__/helpers/render';
+import { siteNavChrome } from '@/content/navigation';
+import { SITE_LOCALE } from '@/content/site-locale';
 import { SectionNavigationProvider } from '../SectionNavigation';
 import { MobileTitleBar } from './MobileTitleBar.client';
 
@@ -15,7 +17,7 @@ describe('MobileTitleBar', () => {
     mounted = await mountClient(
       createElement(
         SectionNavigationProvider,
-        null,
+        { chrome: siteNavChrome(SITE_LOCALE.en), locale: SITE_LOCALE.en },
         createElement(MobileTitleBar, {
           brand: createElement('a', { href: '/', 'data-test-brand': '1' }, 'brand'),
         }),

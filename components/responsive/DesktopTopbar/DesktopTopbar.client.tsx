@@ -2,12 +2,7 @@
 
 import { usePathname } from 'next/navigation';
 import type { ReactNode } from 'react';
-import {
-  TOPBAR_HIRE_LINK,
-  TOPBAR_MOTION_LABEL,
-  TOPBAR_NAV,
-  TOPBAR_READING_LINK,
-} from '@/content/nav';
+import { TOPBAR_MOTION_LABEL } from '@/content/nav';
 import { cn } from '@/lib/cn';
 import { MenuTrigger, SearchTrigger, useSectionNavigation } from '../SectionNavigation';
 
@@ -19,7 +14,7 @@ function isCurrentPath(pathname: string | null, href: string): boolean {
 }
 
 export function DesktopTopbar({ brand }: { brand: ReactNode }) {
-  const { motionOn, toggleMotion } = useSectionNavigation();
+  const { motionOn, toggleMotion, chrome } = useSectionNavigation();
   const pathname = usePathname();
 
   return (
@@ -35,9 +30,9 @@ export function DesktopTopbar({ brand }: { brand: ReactNode }) {
               'hidden lg:inline-flex',
               'motion-reduce:transition-none [body[data-motion=reduce]_&]:transition-none',
             )}
-            href={TOPBAR_READING_LINK.href}
+            href={chrome.topbarReading.href}
           >
-            {TOPBAR_READING_LINK.label}
+            {chrome.topbarReading.label}
           </a>
           <SearchTrigger className="topbar-search" />
           <button
@@ -72,14 +67,14 @@ export function DesktopTopbar({ brand }: { brand: ReactNode }) {
               'hidden lg:inline-flex',
               'motion-reduce:transition-none [body[data-motion=reduce]_&]:transition-none',
             )}
-            href={TOPBAR_HIRE_LINK.href}
+            href={chrome.topbarHire.href}
             target="_blank"
             rel="noreferrer noopener"
-            aria-label={TOPBAR_HIRE_LINK.accessibleName}
+            aria-label={chrome.topbarHire.accessibleName}
           >
-            {TOPBAR_HIRE_LINK.label}
+            {chrome.topbarHire.label}
           </a>
-          {TOPBAR_NAV.map(({ label, href }) => (
+          {chrome.topbarNav.map(({ label, href }) => (
             <a
               key={href}
               className="text-primary-500 text-[length:var(--text-min)] tracking-wider whitespace-nowrap py-3 leading-5 hover:text-shadow-[0_0_8px_var(--color-primary-500)] aria-[current=page]:underline aria-[current=page]:underline-offset-8 hidden xl:inline"

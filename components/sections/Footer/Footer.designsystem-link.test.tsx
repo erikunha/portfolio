@@ -1,11 +1,12 @@
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
+import { SITE_LOCALE } from '@/content/site-locale';
 import { Footer } from './Footer';
 
 describe('Footer destinations', () => {
   it('keeps design-system links internal and uses the canonical www self-link', () => {
     const host = document.createElement('div');
-    host.innerHTML = renderToStaticMarkup(<Footer />);
+    host.innerHTML = renderToStaticMarkup(<Footer locale={SITE_LOCALE.en} />);
     const links = [...host.querySelectorAll('a[href="/design-system"]')];
     expect(links.length).toBeGreaterThan(0);
     for (const link of links) expect(link.getAttribute('target')).not.toBe('_blank');
@@ -15,7 +16,7 @@ describe('Footer destinations', () => {
 
   it('marks only external netstat endpoints with the opens-externally glyph', () => {
     const host = document.createElement('div');
-    host.innerHTML = renderToStaticMarkup(<Footer />);
+    host.innerHTML = renderToStaticMarkup(<Footer locale={SITE_LOCALE.en} />);
     const links = [...host.querySelectorAll('a.footer-link')];
     expect(links.length).toBeGreaterThan(0);
     for (const link of links) {

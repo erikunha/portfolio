@@ -11,6 +11,7 @@ import { CompanyLink } from '../../../components/CompanyLink';
 import { MenuTrigger } from '../../../components/responsive/SectionNavigation';
 import { EqSpectrumStrip } from '../../../components/sections/GuitarSection/EqSpectrumStrip';
 import { guitarPresentation } from '../../../content/guitar-rig';
+import { SITE_LOCALE } from '../../../content/site-locale';
 import { Field } from '../../../design-system/components/Field';
 import { BrandIcon } from '../../../design-system/components/BrandIcon/BrandIcon';
 import { WindowChrome } from '../../../design-system/components/WindowChrome/WindowChrome';
@@ -219,7 +220,7 @@ A live spectrum under an EQ curve: log-frequency bars, one curve and an axis. La
 
 <Preview id="eq-spectrum-strip">
   <div style={{ width: '100%' }}>
-    <EqSpectrumStrip spectrum={guitarPresentation.eqSpectrum} />
+    <EqSpectrumStrip spectrum={guitarPresentation[SITE_LOCALE.en].eqSpectrum} />
   </div>
 </Preview>
 

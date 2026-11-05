@@ -1,9 +1,11 @@
+import type { SiteLocale } from '@/content/site-locale';
 import { unknowns } from '@/content/unknowns';
 
-export function UnknownsSection() {
+export function UnknownsSection({ locale }: { locale: SiteLocale }) {
+  const content = unknowns[locale];
   const groups = [
-    { heading: unknowns.learningHeading, items: unknowns.learning },
-    { heading: unknowns.notSpecializingHeading, items: unknowns.notSpecializing },
+    { heading: content.learningHeading, items: content.learning },
+    { heading: content.notSpecializingHeading, items: content.notSpecializing },
   ];
 
   return (
@@ -25,7 +27,7 @@ export function UnknownsSection() {
           </div>
         ))}
       </div>
-      <p className="opinions-unknowns-end">{unknowns.footer}</p>
+      <p className="opinions-unknowns-end">{content.footer}</p>
     </>
   );
 }

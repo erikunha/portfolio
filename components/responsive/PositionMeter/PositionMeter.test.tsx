@@ -1,6 +1,8 @@
 import { act, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { siteNavChrome } from '@/content/navigation';
 import { SECTION_REGISTRY } from '@/content/section-registry';
+import { SITE_LOCALE } from '@/content/site-locale';
 import { SectionNavigationProvider } from '../SectionNavigation';
 import { PositionMeter } from './PositionMeter.client';
 
@@ -40,7 +42,7 @@ async function frame() {
 
 function mount() {
   return render(
-    <SectionNavigationProvider>
+    <SectionNavigationProvider chrome={siteNavChrome(SITE_LOCALE.en)} locale={SITE_LOCALE.en}>
       <nav className="dock" data-position-target="" />
       <PositionMeter />
       {SECTION_REGISTRY.map(({ id }) => (

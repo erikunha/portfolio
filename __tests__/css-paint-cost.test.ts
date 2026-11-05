@@ -2,6 +2,9 @@ import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { createElement } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { shellUi } from '@/content/shell-ui';
+import { SITE_LOCALE } from '@/content/site-locale';
+import { shellChrome } from '@/content/terminal-chrome';
 import { type MountedClient, mountClient } from './helpers/render';
 
 vi.mock('@/lib/use-breakpoint.client', () => ({
@@ -33,7 +36,13 @@ describe('shell command hint', () => {
       '@/components/client/InteractiveShell/InteractiveShell'
     );
 
-    mounted = await mountClient(createElement(InteractiveShell));
+    mounted = await mountClient(
+      createElement(InteractiveShell, {
+        locale: SITE_LOCALE.en,
+        ui: shellUi[SITE_LOCALE.en],
+        chrome: shellChrome[SITE_LOCALE.en],
+      }),
+    );
     const { container } = mounted;
 
     const hint = container.querySelector('[data-testid="shell-commands"]');

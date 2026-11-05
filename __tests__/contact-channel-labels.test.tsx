@@ -2,6 +2,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import { ContactSection } from '@/components/sections/ContactSection/ContactSection';
 import { contactCopy } from '@/content/contact-copy';
+import { SITE_LOCALE } from '@/content/site-locale';
 import { social } from '@/content/social';
 
 const ARROW_GLYPH = '↗';
@@ -22,7 +23,7 @@ function expectLabelInName(link: HTMLAnchorElement): void {
 
 function renderChannels(): HTMLElement {
   const host = document.createElement('div');
-  host.innerHTML = renderToStaticMarkup(<ContactSection />);
+  host.innerHTML = renderToStaticMarkup(<ContactSection locale={SITE_LOCALE.en} />);
   const card = host.querySelector('.contact-channels');
   expect(card, 'the contact section carries a channels block').not.toBeNull();
   return card as HTMLElement;
@@ -47,9 +48,9 @@ describe('the contact channel actions name what they show', () => {
         .replace(/\s+/g, ' ')
         .trim();
       expect(link.getAttribute('aria-label'), 'the name comes from the content').toBeNull();
-      expect(visible).toBe(contactCopy.channels.linkedinCta);
+      expect(visible).toBe(contactCopy[SITE_LOCALE.en].channels.linkedinCta);
       expect(name, 'WCAG 2.5.3: the name starts with the literal visible text').toBe(
-        `${contactCopy.channels.linkedinCta} ${contactCopy.channels.linkedinNewTabNote}`,
+        `${contactCopy[SITE_LOCALE.en].channels.linkedinCta} ${contactCopy[SITE_LOCALE.en].channels.linkedinNewTabNote}`,
       );
     }
   });

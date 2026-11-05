@@ -1,18 +1,21 @@
 import type { ReactNode } from 'react';
-import { aboutContent as c } from '@/content/about';
+import { aboutContent } from '@/content/about';
 import { responsibilities } from '@/content/responsibilities';
 import { SCROLL_REGION_LABELS } from '@/content/section-labels';
+import type { SiteLocale } from '@/content/site-locale';
 import { CompanyMention } from '../../CompanyLink';
 import { RoleTyper } from '../../client/RoleTyper';
 import { IconReadme } from '../../Icons';
 
 function Panel({
   title,
+  marker,
   className,
   children,
   action,
 }: {
   title: string;
+  marker: string;
   className?: string;
   children: ReactNode;
   action?: ReactNode;
@@ -21,7 +24,7 @@ function Panel({
     <div className={`ab-panel ${className ?? ''}`}>
       <header className="ab-ph">
         <span className="ab-mk" aria-hidden="true">
-          {c.marker}
+          {marker}
         </span>
         <h3 className="ab-h" data-type-reveal>
           {title}
@@ -34,12 +37,13 @@ function Panel({
 }
 
 const FIRST_LINE_NUMBER = 1;
-const lineNumbers = Array.from(
-  { length: c.whoami.gutterLines },
-  (_, index) => index + FIRST_LINE_NUMBER,
-);
 
-export function About() {
+export function About({ locale }: { locale: SiteLocale }) {
+  const c = aboutContent[locale];
+  const lineNumbers = Array.from(
+    { length: c.whoami.gutterLines },
+    (_, index) => index + FIRST_LINE_NUMBER,
+  );
   return (
     <section id="sec-readme" tabIndex={-1} aria-labelledby="about-header" className="about-section">
       <header className="about-section-header">
@@ -54,7 +58,7 @@ export function About() {
       <div className="module-body-content">
         <div className="about-grid">
           <div className="about-col">
-            <Panel title={c.whoami.title}>
+            <Panel title={c.whoami.title} marker={c.marker}>
               <div className="ab-body ab-text">
                 <div className="ab-gutter" aria-hidden="true">
                   {lineNumbers.map((lineNumber) => (
@@ -79,7 +83,7 @@ export function About() {
                 </div>
               </div>
             </Panel>
-            <Panel title={c.now.title} className="ab-now">
+            <Panel title={c.now.title} marker={c.marker} className="ab-now">
               <dl className="ab-body">
                 {c.now.rows.map((row) => (
                   <div key={row.k}>
@@ -99,10 +103,10 @@ export function About() {
                 ))}
               </dl>
             </Panel>
-            <Panel title={c.responsibilities.title} className="ab-resp">
+            <Panel title={c.responsibilities.title} marker={c.marker} className="ab-resp">
               <section
                 className="ab-body overflow-x-auto"
-                aria-label={SCROLL_REGION_LABELS['sec-responsibilities']}
+                aria-label={SCROLL_REGION_LABELS[locale]['sec-responsibilities']}
                 // biome-ignore lint/a11y/noNoninteractiveTabindex: allow keyboard scrolling of responsibilities
                 tabIndex={0}
               >
@@ -123,7 +127,7 @@ export function About() {
             </Panel>
           </div>
           <div className="about-col">
-            <Panel title={c.stack.title} className="ab-stack">
+            <Panel title={c.stack.title} marker={c.marker} className="ab-stack">
               <dl className="ab-body">
                 {c.stack.groups.map((group) => (
                   <div key={group.label}>
@@ -141,6 +145,7 @@ export function About() {
             </Panel>
             <Panel
               title={c.code.title}
+              marker={c.marker}
               className="ab-code"
               action={
                 <a

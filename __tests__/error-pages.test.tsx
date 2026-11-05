@@ -6,6 +6,7 @@ import { RouteErrorPage } from '@/components/ErrorPages/ErrorPages.client';
 import { GlobalErrorPage } from '@/components/ErrorPages/GlobalErrorPage.client';
 import { errorsContent } from '@/content/errors';
 import { ErrorsContentSchema } from '@/content/schemas';
+import { SITE_LOCALE } from '@/content/site-locale';
 
 const SECRET_STACK = 'at secretInternalFrame (/srv/app/internal.ts:1:1)';
 
@@ -18,7 +19,7 @@ function makeError(digest?: string): Error & { digest?: string } {
 
 describe('errors content', () => {
   it('rejects a protocol-relative suggestion href', () => {
-    const bad = structuredClone(errorsContent);
+    const bad = structuredClone(errorsContent[SITE_LOCALE.en]);
     bad.notFound.suggestions[0] = { label: 'x', href: '//evil.example' };
     expect(ErrorsContentSchema.safeParse(bad).success).toBe(false);
   });
@@ -28,12 +29,14 @@ describe('NotFound', () => {
   it('renders the 404 heading, the command line and every suggestion as a link', () => {
     render(<NotFound />);
     expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('404');
-    expect(screen.getByText(errorsContent.notFound.output)).not.toBeNull();
-    for (const item of errorsContent.notFound.suggestions) {
+    expect(screen.getByText(errorsContent[SITE_LOCALE.en].notFound.output)).not.toBeNull();
+    for (const item of errorsContent[SITE_LOCALE.en].notFound.suggestions) {
       expect(screen.getByRole('link', { name: item.label }).getAttribute('href')).toBe(item.href);
     }
     expect(
-      screen.getByRole('link', { name: errorsContent.notFound.home.label }).getAttribute('href'),
+      screen
+        .getByRole('link', { name: errorsContent[SITE_LOCALE.en].notFound.home.label })
+        .getAttribute('href'),
     ).toBe('/');
   });
 
@@ -45,7 +48,7 @@ describe('NotFound', () => {
   });
 
   it('titles the document from content', () => {
-    expect(metadata.title).toBe(errorsContent.notFound.metaTitle);
+    expect(metadata.title).toBe(errorsContent[SITE_LOCALE.en].notFound.metaTitle);
   });
 });
 
@@ -60,7 +63,9 @@ describe('RouteErrorPage', () => {
   it('calls reset when Try again is pressed', () => {
     const reset = vi.fn();
     render(<RouteErrorPage error={makeError()} reset={reset} />);
-    fireEvent.click(screen.getByRole('button', { name: errorsContent.serverError.retryLabel }));
+    fireEvent.click(
+      screen.getByRole('button', { name: errorsContent[SITE_LOCALE.en].serverError.retryLabel }),
+    );
     expect(reset).toHaveBeenCalledTimes(1);
   });
 
@@ -79,16 +84,20 @@ describe('RouteErrorPage', () => {
     vi.stubGlobal('navigator', { ...navigator, clipboard: { writeText } });
     const { unmount } = render(<RouteErrorPage error={makeError()} reset={vi.fn()} />);
     expect(
-      screen.queryByRole('button', { name: errorsContent.serverError.copyAriaLabel }),
+      screen.queryByRole('button', {
+        name: errorsContent[SITE_LOCALE.en].serverError.copyAriaLabel,
+      }),
     ).toBeNull();
     unmount();
 
     render(<RouteErrorPage error={makeError('7F3A9C')} reset={vi.fn()} />);
-    fireEvent.click(screen.getByRole('button', { name: errorsContent.serverError.copyAriaLabel }));
+    fireEvent.click(
+      screen.getByRole('button', { name: errorsContent[SITE_LOCALE.en].serverError.copyAriaLabel }),
+    );
     await waitFor(() => expect(writeText).toHaveBeenCalledWith('7F3A9C'));
     await waitFor(() =>
       expect(screen.getByRole('status').textContent).toBe(
-        errorsContent.serverError.copiedAnnouncement,
+        errorsContent[SITE_LOCALE.en].serverError.copiedAnnouncement,
       ),
     );
   });
@@ -99,8 +108,8 @@ describe('GlobalErrorPage', () => {
     const markup = renderToStaticMarkup(<GlobalErrorPage error={makeError()} reset={vi.fn()} />);
     expect(markup.startsWith('<html')).toBe(true);
     expect(markup).toContain('<body');
-    expect(markup).toContain(errorsContent.serverError.retryLabel);
-    expect(markup).toContain(`href="${errorsContent.serverError.home.href}"`);
+    expect(markup).toContain(errorsContent[SITE_LOCALE.en].serverError.retryLabel);
+    expect(markup).toContain(`href="${errorsContent[SITE_LOCALE.en].serverError.home.href}"`);
     expect(markup).not.toContain('secretInternalFrame');
   });
 });

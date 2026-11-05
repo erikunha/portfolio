@@ -1,6 +1,7 @@
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import { DEFERRED_SECTION_COUNT } from '@/components/responsive/Module/module.constants';
+import { SITE_LOCALE } from '@/content/site-locale';
 import { readComponentsCss } from './helpers/components-css';
 
 function countDeferredSections(node: unknown): number {
@@ -37,10 +38,10 @@ describe('content-visibility deferral', () => {
   });
 
   it(
-    'app/page.tsx defers exactly the below-fold section set',
+    'the home tree defers exactly the below-fold section set',
     async () => {
-      const { default: Home } = await import('@/app/page');
-      const tree = Home();
+      const { SiteHome } = await import('@/components/SiteHome');
+      const tree = SiteHome({ locale: SITE_LOCALE.en });
       const deferredCount = countDeferredSections(tree);
       expect(
         deferredCount,

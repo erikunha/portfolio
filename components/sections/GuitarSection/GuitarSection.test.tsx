@@ -3,10 +3,11 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import { GUITAR_MODULE_HEADER, guitarPresentation, guitarRig } from '@/content/guitar-rig';
 import { SECTION_LABELS } from '@/content/section-labels';
+import { SITE_LOCALE } from '@/content/site-locale';
 import { GuitarContent, GuitarSection } from './GuitarSection';
 
 async function renderContent(): Promise<Document> {
-  const html = renderToStaticMarkup(await GuitarContent());
+  const html = renderToStaticMarkup(await GuitarContent({ locale: SITE_LOCALE.en }));
   return new DOMParser().parseFromString(html, 'text/html');
 }
 
@@ -22,7 +23,7 @@ describe('GuitarSection presentation', () => {
   it('shows the gear chain label as visible text full width above the EQ strip', async () => {
     const doc = await renderContent();
     const label = doc.querySelector('.guitar-chain-label');
-    expect(label?.textContent).toBe(guitarRig.eqSpectrum.label);
+    expect(label?.textContent).toBe(guitarRig[SITE_LOCALE.en].eqSpectrum.label);
     expect(doc.querySelector('[data-testid="eq-spectrum"] .eq-label')).toBeNull();
   });
 
@@ -31,7 +32,7 @@ describe('GuitarSection presentation', () => {
     const plot = doc.querySelector('[data-testid="eq-spectrum"] [role="img"]');
     expect(plot).not.toBeNull();
     const name = plot?.getAttribute('aria-label') ?? '';
-    expect(name).toContain(guitarRig.eqSpectrum.ariaLabel.prefix);
+    expect(name).toContain(guitarRig[SITE_LOCALE.en].eqSpectrum.ariaLabel.prefix);
     expect(name).toContain('140 Hz');
     expect(name).toContain('2.8 kHz');
     expect(plot?.getAttribute('aria-hidden')).toBeNull();
@@ -40,13 +41,15 @@ describe('GuitarSection presentation', () => {
   it('draws every bar, the grid, the curve and the axis without scripts', async () => {
     const doc = await renderContent();
     const strip = doc.querySelector('[data-testid="eq-spectrum"]');
-    expect(strip?.querySelectorAll('.eq-bar')).toHaveLength(guitarRig.eqSpectrum.barCount);
+    expect(strip?.querySelectorAll('.eq-bar')).toHaveLength(
+      guitarRig[SITE_LOCALE.en].eqSpectrum.barCount,
+    );
     expect(strip?.querySelector('.eq-bars')?.getAttribute('aria-hidden')).toBe('true');
     expect(strip?.querySelector('.eq-curve path')?.getAttribute('d')).toMatch(/^M/);
     expect(strip?.querySelector('.eq-grid path')?.getAttribute('d')).toMatch(/^M/);
     expect(
       Array.from(strip?.querySelectorAll('.eq-axis-tick') ?? [], (tick) => tick.textContent),
-    ).toEqual(guitarRig.eqSpectrum.axis.map((tick) => tick.label));
+    ).toEqual(guitarRig[SITE_LOCALE.en].eqSpectrum.axis.map((tick) => tick.label));
     expect(strip?.querySelector('.eq-axis')?.getAttribute('aria-hidden')).toBe('true');
     expect(strip?.querySelector('script')).toBeNull();
   });
@@ -71,13 +74,13 @@ describe('GuitarSection presentation', () => {
   it('reads the strip, then the photo, then the facts row', async () => {
     const doc = await renderContent();
     const influences = doc.querySelector('[data-testid="influences"]');
-    expect(influences?.textContent).toContain(guitarPresentation.influences.label);
-    expect(influences?.textContent).toContain(guitarPresentation.influences.text);
-    expect(influences?.textContent).toContain(guitarPresentation.nowPlaying.label);
-    expect(influences?.textContent).toContain(guitarPresentation.nowPlaying.text);
+    expect(influences?.textContent).toContain(guitarPresentation[SITE_LOCALE.en].influences.label);
+    expect(influences?.textContent).toContain(guitarPresentation[SITE_LOCALE.en].influences.text);
+    expect(influences?.textContent).toContain(guitarPresentation[SITE_LOCALE.en].nowPlaying.label);
+    expect(influences?.textContent).toContain(guitarPresentation[SITE_LOCALE.en].nowPlaying.text);
     const stats = Array.from(doc.querySelectorAll('[data-testid^="stat-"]'));
-    expect(stats).toHaveLength(guitarPresentation.stats.length);
-    for (const [index, stat] of guitarPresentation.stats.entries()) {
+    expect(stats).toHaveLength(guitarPresentation[SITE_LOCALE.en].stats.length);
+    for (const [index, stat] of guitarPresentation[SITE_LOCALE.en].stats.entries()) {
       expect(stats[index]?.textContent).toContain(stat.label);
       expect(stats[index]?.textContent).toContain(stat.value);
       expect(stats[index]?.textContent).toContain(stat.sub);
@@ -109,57 +112,67 @@ describe('GuitarSection presentation', () => {
   it('delivers the photo through Next Image with meaningful alt and reserved dimensions', async () => {
     const doc = await renderContent();
     const photo = doc.querySelector('img');
-    expect(photo?.getAttribute('alt')).toBe(guitarPresentation.photo.alt);
+    expect(photo?.getAttribute('alt')).toBe(guitarPresentation[SITE_LOCALE.en].photo.alt);
     expect(photo?.getAttribute('alt')).toContain('Erik playing guitar');
-    expect(photo?.getAttribute('width')).toBe(String(guitarPresentation.photo.width));
-    expect(photo?.getAttribute('height')).toBe(String(guitarPresentation.photo.height));
-    expect(photo?.getAttribute('src')).toContain(encodeURIComponent(guitarPresentation.photo.src));
+    expect(photo?.getAttribute('width')).toBe(
+      String(guitarPresentation[SITE_LOCALE.en].photo.width),
+    );
+    expect(photo?.getAttribute('height')).toBe(
+      String(guitarPresentation[SITE_LOCALE.en].photo.height),
+    );
+    expect(photo?.getAttribute('src')).toContain(
+      encodeURIComponent(guitarPresentation[SITE_LOCALE.en].photo.src),
+    );
     expect(photo?.getAttribute('srcset')).toBeTruthy();
-    expect(doc.body.textContent).toContain(guitarRig.liveCam.caption);
+    expect(doc.body.textContent).toContain(guitarRig[SITE_LOCALE.en].liveCam.caption);
   });
 
   it('pins the camera HUD corners: EQ curve top left, REC top right, session bottom left, CAM bottom right', async () => {
     const doc = await renderContent();
     expect(doc.querySelector('.guitar-photo-hud-topleft')?.textContent).toBe(
-      guitarRig.liveCam.hudTopLeft,
+      guitarRig[SITE_LOCALE.en].liveCam.hudTopLeft,
     );
-    expect(doc.querySelector('.guitar-photo-rec')?.textContent).toBe(guitarRig.liveCam.status);
+    expect(doc.querySelector('.guitar-photo-rec')?.textContent).toBe(
+      guitarRig[SITE_LOCALE.en].liveCam.status,
+    );
     const bar = doc.querySelector('.guitar-photo-telemetry');
-    expect(bar?.textContent).toContain(guitarRig.liveCam.telemetry);
+    expect(bar?.textContent).toContain(guitarRig[SITE_LOCALE.en].liveCam.telemetry);
     expect(bar?.querySelector('.guitar-photo-telemetry-camera')?.textContent).toBe(
-      guitarRig.liveCam.cameraLabel,
+      guitarRig[SITE_LOCALE.en].liveCam.cameraLabel,
     );
     expect(doc.querySelector('.guitar-camera-labels')).toBeNull();
   });
 
   it('exposes a readable section heading and no per-node headings', () => {
-    const html = renderToStaticMarkup(createElement(GuitarSection));
+    const html = renderToStaticMarkup(createElement(GuitarSection, { locale: SITE_LOCALE.en }));
     const doc = new DOMParser().parseFromString(html, 'text/html');
     const section = doc.querySelector('section');
     const heading = doc.getElementById(section?.getAttribute('aria-labelledby') ?? '');
-    expect(heading?.textContent).toContain(SECTION_LABELS['sec-guitar']);
+    expect(heading?.textContent).toContain(SECTION_LABELS[SITE_LOCALE.en]['sec-guitar']);
     expect(doc.querySelector('#sec-guitar .guitar-presentation h3')).toBeNull();
   });
 
   it('shows the section name and the terminal command in the header', () => {
-    const html = renderToStaticMarkup(createElement(GuitarSection));
+    const html = renderToStaticMarkup(createElement(GuitarSection, { locale: SITE_LOCALE.en }));
     const doc = new DOMParser().parseFromString(html, 'text/html');
     const heading = doc.querySelector('h2');
     expect(heading?.textContent).toContain(GUITAR_MODULE_HEADER);
-    expect(heading?.querySelector('.module-name')?.textContent).toBe(SECTION_LABELS['sec-guitar']);
+    expect(heading?.querySelector('.module-name')?.textContent).toBe(
+      SECTION_LABELS[SITE_LOCALE.en]['sec-guitar'],
+    );
   });
 
   it('renders the live signal chain strip above the EQ strip', async () => {
     const doc = await renderContent();
     const strip = doc.querySelector('.guitar-signal-strip');
-    expect(strip?.textContent).toContain(guitarPresentation.signalStrip.live);
-    expect(strip?.textContent).toContain(guitarPresentation.signalStrip.tail);
+    expect(strip?.textContent).toContain(guitarPresentation[SITE_LOCALE.en].signalStrip.live);
+    expect(strip?.textContent).toContain(guitarPresentation[SITE_LOCALE.en].signalStrip.tail);
     const eq = doc.querySelector('[data-testid="eq-spectrum"]');
     expect(strip?.compareDocumentPosition(eq as Node)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
   });
 
   it('renders no mixer markup: the DAW mixer is its own section below', () => {
-    const html = renderToStaticMarkup(createElement(GuitarSection));
+    const html = renderToStaticMarkup(createElement(GuitarSection, { locale: SITE_LOCALE.en }));
     const doc = new DOMParser().parseFromString(html, 'text/html');
     const section = doc.querySelector('section#sec-guitar');
     expect(section).not.toBeNull();

@@ -2,6 +2,8 @@
 
 import '@/lib/error-bridge.client';
 import type { ReactNode } from 'react';
+import type { SiteNavChrome } from '@/content/navigation';
+import type { SiteLocale } from '@/content/site-locale';
 import { ToTopButton } from '../client/ToTopButton';
 import { ErrorBoundary } from '../ErrorBoundary';
 import { CRTOverlay } from '../responsive/CRTOverlay';
@@ -16,17 +18,23 @@ export function AppShell({
   brand,
   children,
   drawerExtra,
+  chrome,
+  locale,
+  skipLabel,
 }: {
   brand: ReactNode;
   children: ReactNode;
   drawerExtra?: ReactNode;
+  chrome: SiteNavChrome;
+  locale: SiteLocale;
+  skipLabel: string;
 }) {
   return (
     <>
       <a href="#main-content" className="skip-to-content">
-        Skip to main content
+        {skipLabel}
       </a>
-      <SectionNavigationProvider>
+      <SectionNavigationProvider chrome={chrome} locale={locale}>
         <SectionNavigation extra={drawerExtra} />
         <ErrorBoundary>
           <CRTOverlay />

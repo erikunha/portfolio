@@ -12,8 +12,9 @@ import {
   READING_PATHS,
   readingViews,
   summaryDocument,
-  toSentence,
+  toSentence as toSentenceBase,
 } from '@/content/reading-views';
+import { SITE_LOCALE } from '@/content/site-locale';
 import { social } from '@/content/social';
 
 function render(page: () => React.ReactElement) {
@@ -21,6 +22,13 @@ function render(page: () => React.ReactElement) {
   host.innerHTML = renderToStaticMarkup(page());
   return host;
 }
+
+const toSentence = toSentenceBase(SITE_LOCALE.en);
+const readingViewsEn = readingViews[SITE_LOCALE.en];
+const cvDocumentEn = cvDocument[SITE_LOCALE.en];
+const summaryDocumentEn = summaryDocument[SITE_LOCALE.en];
+const heroContentEn = heroContent[SITE_LOCALE.en];
+const gitLogEn = gitLog[SITE_LOCALE.en];
 
 describe('toSentence', () => {
   it('capitalises a fragment and closes it with a period', () => {
@@ -46,7 +54,7 @@ describe('CV reading view', () => {
   });
 
   it('names every section with a heading that labels its section', () => {
-    const headings = Object.values(readingViews.cv.headings);
+    const headings = Object.values(readingViewsEn.cv.headings);
     for (const heading of headings) {
       const h2 = Array.from(host.querySelectorAll('h2')).find(
         (node) => node.textContent === heading,
@@ -58,8 +66,8 @@ describe('CV reading view', () => {
 
   it('lists every job once, as full sentences with no leftover semicolons', () => {
     const experience = host.querySelectorAll('section[aria-labelledby="cv-experience"] article');
-    expect(experience).toHaveLength(gitLog.length);
-    for (const job of cvDocument.experience) {
+    expect(experience).toHaveLength(gitLogEn.length);
+    for (const job of cvDocumentEn.experience) {
       expect(host.textContent).toContain(job.company);
       for (const bullet of job.bullets) {
         expect(bullet).toMatch(/^[A-Z0-9]/);
@@ -71,12 +79,12 @@ describe('CV reading view', () => {
 
   it('links every employer heading to its company site', () => {
     const headings = host.querySelectorAll('section[aria-labelledby="cv-experience"] article h3');
-    expect(headings).toHaveLength(gitLog.length);
-    gitLog.forEach((job, index) => {
+    expect(headings).toHaveLength(gitLogEn.length);
+    gitLogEn.forEach((job, index) => {
       const link = headings[index]?.querySelector('a');
       expect(link?.getAttribute('href'), job.company).toBe(job.companyUrl);
       expect(link?.getAttribute('target')).toBe('_blank');
-      expect(link?.getAttribute('rel')).toBe(readingViews.shared.newTabRel);
+      expect(link?.getAttribute('rel')).toBe(readingViewsEn.shared.newTabRel);
       expect(link?.textContent).toBe(job.company);
       const heading = headings[index];
       expect(
@@ -84,26 +92,26 @@ describe('CV reading view', () => {
         'a type-reveal heading holds only typed text: extra nodes inflate --type-chars past the visible name',
       ).toBeNull();
       const description = host.querySelector(`#${link?.getAttribute('aria-describedby')}`);
-      expect(description?.textContent).toBe(readingViews.shared.newTabHint);
+      expect(description?.textContent).toBe(readingViewsEn.shared.newTabHint);
       expect(description?.closest('[data-type-reveal]')).toBeNull();
     });
   });
 
   it('shows every certification and degree row', () => {
     for (const entry of credentials) expect(host.textContent).toContain(entry.evidence);
-    for (const entry of education) expect(host.textContent).toContain(entry.degree);
+    for (const entry of education[SITE_LOCALE.en]) expect(host.textContent).toContain(entry.degree);
   });
 
   it('keeps the summary free of the header facts', () => {
-    expect(cvDocument.summary.length).toBeGreaterThan(40);
-    expect(cvDocument.summary).not.toContain(profile.title);
-    expect(cvDocument.summary).not.toContain(cvDocument.location);
+    expect(cvDocumentEn.summary.length).toBeGreaterThan(40);
+    expect(cvDocumentEn.summary).not.toContain(profile.title);
+    expect(cvDocumentEn.summary).not.toContain(cvDocumentEn.location);
   });
 
   it('states the resume SUMMARY as the CV summary', () => {
-    expect(cvDocument.summary).toContain('micro-frontend topologies');
-    expect(cvDocument.summary).toContain('backend-for-frontend (BFF)');
-    expect(cvDocument.summary).not.toContain('8+ years building frontend systems');
+    expect(cvDocumentEn.summary).toContain('micro-frontend topologies');
+    expect(cvDocumentEn.summary).toContain('backend-for-frontend (BFF)');
+    expect(cvDocumentEn.summary).not.toContain('8+ years building frontend systems');
   });
 
   it('states the resume location in the header and publishes no phone number', () => {
@@ -113,7 +121,7 @@ describe('CV reading view', () => {
   });
 
   it('lists the resume core expertise as the CV skills', () => {
-    const skills = cvDocument.skills.join(' · ');
+    const skills = cvDocumentEn.skills.join(' · ');
     expect(skills).toContain('Frontend & Product Architecture');
     expect(skills).toContain('Testing, Quality & Release Engineering');
     expect(skills).toContain('BFF, APIs & Data');
@@ -137,7 +145,7 @@ describe('CV reading view', () => {
   it('opens external links in a new tab with a hint for screen readers', () => {
     const linkedin = host.querySelector(`a[href="${social.linkedin}"]`);
     expect(linkedin?.getAttribute('target')).toBe('_blank');
-    expect(linkedin?.getAttribute('rel')).toBe(readingViews.shared.newTabRel);
+    expect(linkedin?.getAttribute('rel')).toBe(readingViewsEn.shared.newTabRel);
     const external = Array.from(host.querySelectorAll('a[target="_blank"]'));
     expect(external.length).toBeGreaterThan(0);
     for (const link of external) {
@@ -152,7 +160,7 @@ describe('CV reading view', () => {
     expect(host.querySelector(`a[href="mailto:${social.email}"]`)).not.toBeNull();
     expect(host.querySelector(`a[href="${READING_PATHS.summary}"]`)).not.toBeNull();
     const print = Array.from(host.querySelectorAll('button')).find(
-      (button) => button.textContent === readingViews.shared.printLabel,
+      (button) => button.textContent === readingViewsEn.shared.printLabel,
     );
     expect(print).toBeDefined();
   });
@@ -174,7 +182,7 @@ describe('CV reading view', () => {
 
   it('declares its canonical URL and social card', () => {
     expect(cvMetadata.alternates?.canonical).toBe(`${social.site}${READING_PATHS.cv}`);
-    expect(cvMetadata.title).toBe(readingViews.cv.title);
+    expect(cvMetadata.title).toBe(readingViewsEn.cv.title);
     expect(cvMetadata.twitter).toMatchObject({ card: 'summary_large_image' });
   });
 });
@@ -189,10 +197,10 @@ describe('summary reading view', () => {
 
   it('shows every hero number with their labels', () => {
     const tiles = host.querySelectorAll(
-      `[aria-label="${readingViews.summary.statsLabel}"] .stat-tile`,
+      `[aria-label="${readingViewsEn.summary.statsLabel}"] .stat-tile`,
     );
-    expect(tiles).toHaveLength(heroContent.stats.length);
-    heroContent.stats.forEach((stat, index) => {
+    expect(tiles).toHaveLength(heroContentEn.stats.length);
+    heroContentEn.stats.forEach((stat, index) => {
       expect(tiles[index]?.textContent).toContain(stat.value);
       expect(tiles[index]?.textContent).toContain(stat.label);
     });
@@ -204,9 +212,9 @@ describe('summary reading view', () => {
     expect(links).toHaveLength(1);
     expect(links[0]?.getAttribute('href')).toBe(profile.currentEmployer.url);
     expect(links[0]?.getAttribute('target')).toBe('_blank');
-    expect(links[0]?.getAttribute('rel')).toBe(readingViews.shared.newTabRel);
+    expect(links[0]?.getAttribute('rel')).toBe(readingViewsEn.shared.newTabRel);
     expect(links[0]?.textContent).toContain(profile.currentEmployer.name);
-    expect(links[0]?.textContent).toContain(readingViews.shared.newTabHint);
+    expect(links[0]?.textContent).toContain(readingViewsEn.shared.newTabHint);
   });
 
   it('publishes no relocation or work-authorization chip', () => {
@@ -216,8 +224,8 @@ describe('summary reading view', () => {
 
   it('shows the chosen projects with a headline stat each', () => {
     const panels = host.querySelectorAll('.reading-projects .terminal-panel');
-    expect(panels).toHaveLength(readingViews.summary.projectNames.length);
-    for (const project of summaryDocument.projects) {
+    expect(panels).toHaveLength(readingViewsEn.summary.projectNames.length);
+    for (const project of summaryDocumentEn.projects) {
       expect(host.textContent).toContain(project.name);
       expect(host.textContent).toContain(project.value);
     }
@@ -227,41 +235,41 @@ describe('summary reading view', () => {
     expect(host.querySelectorAll('.reading-rows li')).toHaveLength(0);
     expect(host.textContent).not.toContain('Work authorization');
     expect(host.querySelectorAll('.reading-chips li')).toHaveLength(
-      readingViews.summary.stack.length,
+      readingViewsEn.summary.stack.length,
     );
   });
 
   it('links to the full CV, LinkedIn and email, and has a print button', () => {
     expect(host.querySelector(`a[href="${READING_PATHS.cv}"]`)?.textContent).toBe(
-      readingViews.summary.cvLinkLabel,
+      readingViewsEn.summary.cvLinkLabel,
     );
     expect(host.querySelector(`a[href="${social.linkedin}"]`)?.getAttribute('aria-label')).toBe(
-      readingViews.shared.hire.ariaLabel,
+      readingViewsEn.shared.hire.ariaLabel,
     );
     expect(host.querySelector(`a[href="mailto:${social.email}"]`)).not.toBeNull();
     expect(
       Array.from(host.querySelectorAll('button')).some(
-        (button) => button.textContent === readingViews.shared.printLabel,
+        (button) => button.textContent === readingViewsEn.shared.printLabel,
       ),
     ).toBe(true);
   });
 
   it('declares its canonical URL', () => {
     expect(summaryMetadata.alternates?.canonical).toBe(`${social.site}${READING_PATHS.summary}`);
-    expect(summaryMetadata.title).toBe(readingViews.summary.title);
+    expect(summaryMetadata.title).toBe(readingViewsEn.summary.title);
   });
 });
 
 describe('reading view content', () => {
   it('renders the community heading as plain text when it has no link', () => {
-    const { href: _omit, ...community } = cvDocument.community;
-    const original = cvDocument.community;
-    Object.assign(cvDocument, { community });
+    const { href: _omit, ...community } = cvDocumentEn.community;
+    const original = cvDocumentEn.community;
+    Object.assign(cvDocumentEn, { community });
     let host: HTMLElement;
     try {
       host = render(CvPage);
     } finally {
-      Object.assign(cvDocument, { community: original });
+      Object.assign(cvDocumentEn, { community: original });
     }
     const heading = Array.from(host.querySelectorAll('h3')).find(
       (node) => node.textContent === community.heading,
@@ -276,7 +284,7 @@ describe('reading view content', () => {
 
   it('has a CV label for every credential', () => {
     for (const entry of credentials) {
-      expect(readingViews.cv.credentialLabels[entry.label], entry.label).toBeDefined();
+      expect(readingViewsEn.cv.credentialLabels[entry.label], entry.label).toBeDefined();
     }
   });
 });

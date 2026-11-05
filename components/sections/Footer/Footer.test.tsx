@@ -11,6 +11,7 @@ import { GuitarSection } from '@/components/sections/GuitarSection';
 import { HottestTakesSection } from '@/components/sections/HottestTakesSection';
 import { ProjectsSection } from '@/components/sections/ProjectsSection';
 import { ShellSection } from '@/components/sections/ShellSection';
+import { SITE_LOCALE } from '@/content/site-locale';
 import { Footer } from './index';
 
 afterEach(() => {
@@ -21,7 +22,7 @@ afterEach(() => {
 
 function serverFooter() {
   const host = document.createElement('div');
-  host.innerHTML = renderToStaticMarkup(<Footer />);
+  host.innerHTML = renderToStaticMarkup(<Footer locale={SITE_LOCALE.en} />);
   return host;
 }
 
@@ -68,17 +69,17 @@ describe('Footer server output', () => {
     host.innerHTML = renderToStaticMarkup(
       <>
         <main id="main-content">
-          <About />
-          <ShellSection />
-          <AiMetricsSection />
-          <ProjectsSection />
-          <GitLogSection />
-          <HottestTakesSection defer />
-          <GuitarSection defer />
-          <DawMixerSection defer />
-          <ContactSection defer />
+          <About locale={SITE_LOCALE.en} />
+          <ShellSection locale={SITE_LOCALE.en} />
+          <AiMetricsSection locale={SITE_LOCALE.en} />
+          <ProjectsSection locale={SITE_LOCALE.en} />
+          <GitLogSection locale={SITE_LOCALE.en} />
+          <HottestTakesSection locale={SITE_LOCALE.en} defer />
+          <GuitarSection locale={SITE_LOCALE.en} defer />
+          <DawMixerSection locale={SITE_LOCALE.en} defer />
+          <ContactSection locale={SITE_LOCALE.en} defer />
         </main>
-        <Footer />
+        <Footer locale={SITE_LOCALE.en} />
       </>,
     );
     const main = host.querySelector('main');
@@ -142,7 +143,7 @@ describe('Footer server output', () => {
   });
 
   it('keeps the visible reboot text inside the accessible name (WCAG 2.5.3 label in name)', () => {
-    const host = render(<Footer />).container;
+    const host = render(<Footer locale={SITE_LOCALE.en} />).container;
     const link = host.querySelector('.footer-reboot');
     const visible = (link?.textContent ?? '').replace(/\s+/g, ' ').trim().toLowerCase();
     const name = (link?.getAttribute('aria-label') ?? '').toLowerCase();
@@ -156,12 +157,12 @@ describe('Footer live session', () => {
     expect(serverFooter().querySelector('[data-sess="halt"]')?.textContent).toBe('');
     vi.useFakeTimers();
     vi.setSystemTime(new Date(2026, 9, 23, 14, 5, 9));
-    const mounted = render(<Footer />);
+    const mounted = render(<Footer locale={SITE_LOCALE.en} />);
     expect(mounted.container.querySelector('[data-sess="halt"]')?.textContent).toBe('14:05:09');
   });
 
   it('offers every netstat endpoint as a link and no copy control', () => {
-    const mounted = render(<Footer />);
+    const mounted = render(<Footer locale={SITE_LOCALE.en} />);
     const endpoints = [...mounted.container.querySelectorAll('.footer-netstat tbody a')];
     expect(endpoints.map((link) => link.getAttribute('href'))).toEqual([
       'https://github.com/erikunha',
@@ -183,7 +184,7 @@ describe('Footer live session', () => {
     vi.useFakeTimers();
     vi.spyOn(performance, 'now').mockReturnValue(65_000);
     vi.stubGlobal('IntersectionObserver', undefined);
-    const mounted = render(<Footer />);
+    const mounted = render(<Footer locale={SITE_LOCALE.en} />);
     expect(mounted.container.querySelector('[data-sess="uptime"]')?.textContent).toBe('00:01:05');
     fireEvent(window, new CustomEvent('shell-cmd-run'));
     fireEvent(window, new CustomEvent('shell-cmd-run'));
@@ -219,7 +220,7 @@ describe('Footer reboot controls', () => {
             custom editor
           </div>
         </main>
-        <Footer />
+        <Footer locale={SITE_LOCALE.en} />
       </>,
     );
     const heading = mounted.getByRole('heading', { level: 1 });
@@ -268,7 +269,7 @@ describe('Footer reboot controls', () => {
 
   it('lets the reboot link navigate natively when the page has no heading to focus', () => {
     vi.stubGlobal('IntersectionObserver', undefined);
-    const mounted = render(<Footer />);
+    const mounted = render(<Footer locale={SITE_LOCALE.en} />);
     const rebootLink = mounted.getByRole('link', { name: 'press R to reboot, back to top' });
     const click = new MouseEvent('click', { bubbles: true, cancelable: true });
     rebootLink.dispatchEvent(click);
@@ -312,7 +313,7 @@ describe('Footer reboot controls', () => {
           <section data-testid="hero-mobile" />
           <section id="unrelated" />
         </main>
-        <Footer />
+        <Footer locale={SITE_LOCALE.en} />
       </>,
     );
     expect(observe).toHaveBeenCalledTimes(10);

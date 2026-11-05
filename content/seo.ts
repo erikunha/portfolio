@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { communityEvent, communityTalksSentence } from './community';
 import { profile, profileSummary } from './profile';
+import { SITE_LOCALE } from './site-locale';
 import { social } from './social';
 
 export const personSchema = {
@@ -143,8 +144,8 @@ export const personSchema = {
   memberOf: {
     '@type': 'Organization',
     name: 'DevOpsDays Campinas',
-    url: communityEvent.link.href,
-    description: `Conference organizer, ${communityEvent.year}: ${communityTalksSentence}`,
+    url: communityEvent[SITE_LOCALE.en].link.href,
+    description: `Conference organizer, ${communityEvent[SITE_LOCALE.en].year}: ${communityTalksSentence}`,
   },
   seeks: {
     '@type': 'Demand',

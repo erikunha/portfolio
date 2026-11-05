@@ -3,6 +3,7 @@ import { careerCopy } from '../../content/git-log';
 import { heroContent } from '../../content/hero';
 import { profile } from '../../content/profile';
 import { READING_PATHS, readingViews } from '../../content/reading-views';
+import { SITE_LOCALE } from '../../content/site-locale';
 import { installMockBackend } from './_helpers/mock-backend';
 
 test.describe('reading views', () => {
@@ -17,9 +18,14 @@ test.describe('reading views', () => {
     await page.goto(READING_PATHS.cv);
     await expect(page.getByRole('heading', { level: 1 })).toHaveText(profile.displayName);
     await expect(
-      page.getByRole('heading', { level: 2, name: readingViews.cv.headings.experience }),
+      page.getByRole('heading', {
+        level: 2,
+        name: readingViews[SITE_LOCALE.en].cv.headings.experience,
+      }),
     ).toBeVisible();
-    const print = page.getByRole('button', { name: readingViews.shared.printLabel });
+    const print = page.getByRole('button', {
+      name: readingViews[SITE_LOCALE.en].shared.printLabel,
+    });
     await expect(print).toBeVisible();
     await print.click();
     expect(
@@ -41,12 +47,18 @@ test.describe('reading views', () => {
   test('/summary renders stats, projects and a print button', async ({ page }) => {
     await page.goto(READING_PATHS.summary);
     await expect(page.getByRole('heading', { level: 1 })).toHaveText(profile.displayName);
-    await expect(page.locator('.reading-stats .stat-tile')).toHaveCount(heroContent.stats.length);
-    await expect(page.locator('.reading-projects > li')).toHaveCount(
-      readingViews.summary.projectNames.length,
+    await expect(page.locator('.reading-stats .stat-tile')).toHaveCount(
+      heroContent[SITE_LOCALE.en].stats.length,
     );
-    await expect(page.getByRole('button', { name: readingViews.shared.printLabel })).toBeVisible();
-    await page.getByRole('link', { name: readingViews.summary.cvLinkLabel }).click();
+    await expect(page.locator('.reading-projects > li')).toHaveCount(
+      readingViews[SITE_LOCALE.en].summary.projectNames.length,
+    );
+    await expect(
+      page.getByRole('button', { name: readingViews[SITE_LOCALE.en].shared.printLabel }),
+    ).toBeVisible();
+    await page
+      .getByRole('link', { name: readingViews[SITE_LOCALE.en].summary.cvLinkLabel })
+      .click();
     await page.waitForURL(`**${READING_PATHS.cv}`);
   });
 
@@ -55,7 +67,7 @@ test.describe('reading views', () => {
     await page.goto('/');
     const link = page.locator('a.career-cv');
     await link.scrollIntoViewIfNeeded();
-    await expect(link).toHaveText(careerCopy.cvLabel);
+    await expect(link).toHaveText(careerCopy[SITE_LOCALE.en].cvLabel);
     await link.click();
     await page.waitForURL(`**${READING_PATHS.cv}`);
     await expect(page.getByRole('heading', { level: 1 })).toHaveText(profile.displayName);

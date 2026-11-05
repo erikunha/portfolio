@@ -3,6 +3,7 @@ import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { PageMain } from '@/components/PageMain';
 import { DEFERRED_SECTION_COUNT } from '@/components/responsive/Module/module.constants';
+import { SITE_LOCALE } from '@/content/site-locale';
 
 const REPO_ROOT = path.resolve(__dirname, '..');
 const read = (relativePath: string) => readFileSync(path.join(REPO_ROOT, relativePath), 'utf-8');
@@ -52,8 +53,8 @@ describe('documented counts match the code they describe', () => {
   it(
     'docs/README.md states how many section components the home page renders',
     async () => {
-      const { default: Home } = await import('@/app/page');
-      const sectionCount = countHomeSections(Home());
+      const { SiteHome } = await import('@/components/SiteHome');
+      const sectionCount = countHomeSections(SiteHome({ locale: SITE_LOCALE.en }));
       expect(sectionCount).toBeGreaterThan(0);
       const readme = read('docs/README.md');
       expect(

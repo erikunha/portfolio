@@ -3,6 +3,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { readComponentsCss } from '@/__tests__/helpers/components-css';
 import { declValue, rulesInMedia, rulesWithSelector } from '@/__tests__/helpers/css-rules';
+import { SITE_LOCALE } from '@/content/site-locale';
 
 const getScoresMock = vi.fn();
 vi.mock('@/lib/lighthouse-scores', () => ({
@@ -19,7 +20,7 @@ vi.mock('@/lib/lighthouse-scores', () => ({
 
 async function renderPerfData(strategy: 'desktop' | 'mobile'): Promise<string> {
   const { PerfData } = await import('./LivePerfSection');
-  const element = await PerfData({ strategy });
+  const element = await PerfData({ locale: SITE_LOCALE.en, strategy });
   return renderToStaticMarkup(element);
 }
 

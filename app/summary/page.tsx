@@ -1,145 +1,19 @@
 import type { Metadata } from 'next';
-import { BrandLink } from '@/components/BrandLink';
-import { CompanyMention } from '@/components/CompanyLink';
-import { PrintButton } from '@/components/client/PrintButton';
-import { READING_PATHS, readingViews, summaryDocument } from '@/content/reading-views';
-import { social } from '@/content/social';
-import { Button, StatTile, TerminalPanel } from '@/design-system';
+import { localizedPageMetadata } from '@/app/_lib/locale-metadata';
+import { SummaryPage } from '@/components/reading/SummaryPage';
+import { readingViews } from '@/content/reading-views';
+import { SITE_LOCALE } from '@/content/site-locale';
 
-const { shared, summary } = readingViews;
-const MAIN_ID = 'main-content';
-const SOCIAL_IMAGE = `${social.site}${shared.ogImage.path}`;
-const CANONICAL = `${social.site}${summary.path}`;
-const CARD_TYPE = 'summary_large_image';
-const OG_WEBSITE_TYPE = 'website';
+const locale = SITE_LOCALE.en;
+const { summary } = readingViews[locale];
 
-export const metadata: Metadata = {
+export const metadata: Metadata = localizedPageMetadata({
+  locale,
+  path: '/summary',
   title: summary.title,
   description: summary.description,
-  alternates: { canonical: CANONICAL },
-  openGraph: {
-    type: OG_WEBSITE_TYPE,
-    url: CANONICAL,
-    title: summary.title,
-    description: summary.description,
-    images: [
-      {
-        url: SOCIAL_IMAGE,
-        width: shared.ogImage.width,
-        height: shared.ogImage.height,
-        alt: summaryDocument.name,
-      },
-    ],
-  },
-  twitter: {
-    card: CARD_TYPE,
-    title: summary.title,
-    description: summary.description,
-    images: [SOCIAL_IMAGE],
-  },
-};
+});
 
-const sectionId = (key: string) => `summary-${key}`;
-
-export default function SummaryPage() {
-  return (
-    <div className="reading-view">
-      <a href={`#${MAIN_ID}`} className="skip-to-content">
-        {shared.skipLabel}
-      </a>
-      <header className="reading-bar">
-        <div className="reading-bar-in">
-          <BrandLink />
-          <nav aria-label={shared.navLabel} className="reading-nav">
-            {shared.nav.map((item) => (
-              <a key={item.href} href={item.href}>
-                {item.label}
-              </a>
-            ))}
-          </nav>
-        </div>
-      </header>
-      <main id={MAIN_ID} tabIndex={-1} className="reading-doc reading-doc--wide">
-        <section aria-labelledby={sectionId('who')}>
-          <h1 id={sectionId('who')} className="reading-name">
-            {summaryDocument.name}
-          </h1>
-          <p className="reading-role">{summaryDocument.tagline}</p>
-          <p className="reading-meta">{summaryDocument.technologyLine}</p>
-          <p className="reading-meta">
-            <CompanyMention
-              text={summaryDocument.context}
-              company={summaryDocument.employer.name}
-              href={summaryDocument.employer.url}
-            />
-          </p>
-        </section>
-
-        <section className="reading-stats mt-6" aria-label={summary.statsLabel}>
-          {summaryDocument.stats.map((stat) => (
-            <StatTile key={stat.label} value={stat.value} label={stat.label} variant="display" />
-          ))}
-        </section>
-
-        <div className="reading-actions mt-6">
-          <Button
-            as="a"
-            variant="primary"
-            href={shared.hire.href}
-            target="_blank"
-            rel={shared.newTabRel}
-            aria-label={shared.hire.ariaLabel}
-          >
-            {shared.hire.label}
-          </Button>
-          <Button as="a" variant="secondary" href={READING_PATHS.cv}>
-            {summary.cvLinkLabel}
-          </Button>
-          <PrintButton label={shared.printLabel} />
-        </div>
-
-        <section aria-labelledby={sectionId('projects')} className="reading-section">
-          <h2 id={sectionId('projects')} className="reading-heading" data-type-reveal>
-            {summary.headings.projects}
-          </h2>
-          <ul className="reading-projects">
-            {summaryDocument.projects.map((project) => (
-              <li key={project.name}>
-                <TerminalPanel header={project.name}>
-                  <div className="px-3.5 py-3">
-                    <p className="reading-meta">{project.label}</p>
-                    <p className="font-bold">{project.value}</p>
-                    <p className="reading-meta">{project.description}</p>
-                  </div>
-                </TerminalPanel>
-              </li>
-            ))}
-          </ul>
-        </section>
-
-        <div className="reading-grid">
-          <section aria-labelledby={sectionId('stack')} className="reading-section">
-            <h2 id={sectionId('stack')} className="reading-heading" data-type-reveal>
-              {summary.headings.stack}
-            </h2>
-            <ul className="reading-chips">
-              {summary.stack.map((item) => (
-                <li key={item}>{item}</li>
-              ))}
-            </ul>
-          </section>
-        </div>
-
-        <section aria-labelledby={sectionId('contact')} className="reading-section">
-          <h2 id={sectionId('contact')} className="reading-heading" data-type-reveal>
-            {summary.headings.contact}
-          </h2>
-          <p className="reading-actions-inline">
-            <a href={`mailto:${summaryDocument.email}`}>{summaryDocument.email}</a>
-          </p>
-          <p className="reading-meta">{summaryDocument.languages}</p>
-        </section>
-      </main>
-    </div>
-  );
+export default function SummaryRoute() {
+  return <SummaryPage locale={locale} />;
 }

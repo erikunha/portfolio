@@ -4,12 +4,13 @@ import { useEffect } from 'react';
 
 import { reportClientError } from '@/components/ErrorBoundary/ErrorBoundary.client';
 import { errorsClientContent as errorsContent } from '@/content/errors-client';
+import { SITE_LOCALE } from '@/content/site-locale';
 import { ErrorHeading, type RouteErrorProps } from './ErrorPages.client';
 
 const FALLBACK_MONO_FONT = 'ui-monospace, SFMono-Regular, Menlo, Consolas, monospace';
 
 export function GlobalErrorPage({ error, reset }: RouteErrorProps) {
-  const content = errorsContent.serverError;
+  const content = errorsContent[SITE_LOCALE.en].serverError;
   useEffect(() => {
     reportClientError('[GlobalError]', error);
   }, [error]);

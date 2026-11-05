@@ -1,7 +1,8 @@
 import { CompanyLink } from '@/components/CompanyLink';
 import { HeroStats } from '@/components/HeroStats';
-import { heroContent as c, heroTagline } from '@/content/hero';
-import { profile, profileWorkingLanguageLine } from '@/content/profile';
+import { heroContent, heroTagline } from '@/content/hero';
+import { profile, profilePresentation } from '@/content/profile';
+import type { SiteLocale } from '@/content/site-locale';
 import { Button } from '@/design-system';
 import { HeroBootAnimation } from '../../client/HeroBootAnimation';
 import { HeroSystemFailure } from '../../client/HeroSystemFailure';
@@ -11,7 +12,9 @@ const EXTERNAL_REL = 'noopener noreferrer';
 
 const HEADING_LEVEL = 1;
 
-function HeroIdentity({ primary }: { primary: boolean }) {
+function HeroIdentity({ locale, primary }: { locale: SiteLocale; primary: boolean }) {
+  const c = heroContent[locale];
+  const p = profilePresentation[locale];
   return (
     <>
       {primary ? (
@@ -29,17 +32,17 @@ function HeroIdentity({ primary }: { primary: boolean }) {
           {profile.displayName}
         </p>
       )}
-      <p className="hero-stack">{heroTagline}</p>
+      <p className="hero-stack">{heroTagline(locale)}</p>
       <p className="hero-context">
         <span className="hero-context-fact hero-context-fact--location">
           <span className="hero-context-item">
-            {c.locationLabel} <b className="hero-location">{profile.country}</b>
+            {c.locationLabel} <b className="hero-location">{p.country}</b>
           </span>
           <span className="hero-context-separator" aria-hidden="true">
             {' · '}
           </span>
           <span className="hero-context-item">
-            {profile.timezone} · {profile.availability}
+            {profile.timezone} · {p.availability}
           </span>
         </span>
         <span className="hero-context-fact hero-context-fact--employer">
@@ -50,11 +53,9 @@ function HeroIdentity({ primary }: { primary: boolean }) {
             </CompanyLink>
           </b>
         </span>
-        <span className="hero-context-fact hero-context-fact--domain">
-          {profile.currentEmployer.context}
-        </span>
+        <span className="hero-context-fact hero-context-fact--domain">{p.employerContext}</span>
         <span className="hero-context-fact hero-context-fact--language">
-          {c.languageLabel} {profileWorkingLanguageLine}
+          {c.languageLabel} {p.workingLanguageLine}
         </span>
       </p>
       <HeroStats stats={c.stats} label={c.statsLabel} />
@@ -88,7 +89,7 @@ function HeroIdentity({ primary }: { primary: boolean }) {
   );
 }
 
-export function Hero() {
+export function Hero({ locale }: { locale: SiteLocale }) {
   return (
     <>
       <section
@@ -101,7 +102,7 @@ export function Hero() {
           <HeroBootAnimation variant="desktop" />
         </div>
         <aside className="hero-bio">
-          <HeroIdentity primary />
+          <HeroIdentity locale={locale} primary />
         </aside>
         <HeroSystemFailure />
       </section>
@@ -113,7 +114,7 @@ export function Hero() {
       >
         <div className="hero-mobile-content">
           <HeroBootAnimation variant="mobile" />
-          <HeroIdentity primary={false} />
+          <HeroIdentity locale={locale} primary={false} />
         </div>
       </section>
     </>

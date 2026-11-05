@@ -2,6 +2,7 @@ import { expect, type Page, test } from '@playwright/test';
 import { gitLog } from '../../content/git-log';
 import { profile } from '../../content/profile';
 import { READING_PATHS } from '../../content/reading-views';
+import { SITE_LOCALE } from '../../content/site-locale';
 
 const TOUCH_TARGET_PX = 28;
 const NEIGHBOUR_CLEARANCE_PX = 14;
@@ -41,8 +42,8 @@ test.describe('career company links', () => {
       await page.emulateMedia({ reducedMotion: 'reduce' });
       await page.goto('/');
       const links = page.locator('[data-testid="career-log"] a.company-link');
-      await expect(links).toHaveCount(gitLog.length);
-      for (const [index, job] of gitLog.entries()) {
+      await expect(links).toHaveCount(gitLog[SITE_LOCALE.en].length);
+      for (const [index, job] of gitLog[SITE_LOCALE.en].entries()) {
         const link = links.nth(index);
         await expect(link).toHaveAttribute('href', job.companyUrl);
         await expect(link).toHaveAttribute('target', '_blank');
@@ -88,13 +89,13 @@ test.describe('career company links', () => {
   test('/cv links every employer and prints the company URL', async ({ page }) => {
     await page.goto(READING_PATHS.cv);
     const links = page.locator('section[aria-labelledby="cv-experience"] article h3 a');
-    await expect(links).toHaveCount(gitLog.length);
-    for (const [index, job] of gitLog.entries()) {
+    await expect(links).toHaveCount(gitLog[SITE_LOCALE.en].length);
+    for (const [index, job] of gitLog[SITE_LOCALE.en].entries()) {
       await expect(links.nth(index)).toHaveAttribute('href', job.companyUrl);
     }
     await page.emulateMedia({ media: 'print' });
     const printed = await links.first().evaluate((el) => getComputedStyle(el, '::after').content);
-    expect(printed).toContain(gitLog[0]?.companyUrl);
+    expect(printed).toContain(gitLog[SITE_LOCALE.en][0]?.companyUrl);
   });
 
   test('/summary links the current employer', async ({ page }) => {

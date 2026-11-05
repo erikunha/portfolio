@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
+import { SITE_LOCALE } from './site-locale';
 
+const EN = SITE_LOCALE.en;
 const guitarEqSpectrumFixture = {
   label: 'LEAD · Gretsch G5655TG → HX Stomp XL → IR cab → FOH',
   ariaLabel: {
@@ -58,8 +60,10 @@ describe('GuitarPresentationSchema', () => {
   it('publishes the prototype presentation beside the rig', async () => {
     const { guitarPresentation, guitarRig } = await import('./guitar-rig');
     const { GuitarPresentationSchema } = await import('./schemas');
-    expect(GuitarPresentationSchema.parse(guitarPresentation)).toEqual(guitarPresentationFixture);
-    expect(guitarRig.eqSpectrum).toEqual(guitarEqSpectrumFixture);
+    expect(GuitarPresentationSchema.parse(guitarPresentation[EN])).toEqual(
+      guitarPresentationFixture,
+    );
+    expect(guitarRig[EN].eqSpectrum).toEqual(guitarEqSpectrumFixture);
   });
 
   it.each([
@@ -315,7 +319,7 @@ describe('canonical profile and education', () => {
     const { EducationSchema } = await import('./schemas');
     const { education } = await import('./education');
     expect(EducationSchema.array().parse(educationFixtures)).toEqual(educationFixtures);
-    expect(education).toEqual(educationFixtures);
+    expect(education[SITE_LOCALE.en]).toEqual(educationFixtures);
     const { credentials } = await import('./credentials');
     expect(credentials).toEqual([
       { label: 'ANGULAR_DEV', badge: 'CERTIFIED', evidence: 'certificates.dev · 2024' },
@@ -323,7 +327,7 @@ describe('canonical profile and education', () => {
       { label: 'INTL_DEGREE', badge: 'WES_VERIFIED', evidence: 'World Education Services · 2022' },
     ]);
     const { communityEvent } = await import('./community');
-    expect(communityEvent.statusLine).toBe(
+    expect(communityEvent[EN].statusLine).toBe(
       'open to CFP submissions for 2027 · open to volunteer / organizer roles.',
     );
   });
@@ -331,8 +335,11 @@ describe('canonical profile and education', () => {
   it('publishes one community event link and rejects one that is not an absolute URL', async () => {
     const { CommunityEventSchema } = await import('./schemas');
     const { communityEvent } = await import('./community');
-    expect(CommunityEventSchema.parse(communityEvent)).toEqual(communityEvent);
-    const invalid = { ...communityEvent, link: { ...communityEvent.link, href: 'devopsdays.org' } };
+    expect(CommunityEventSchema.parse(communityEvent[EN])).toEqual(communityEvent[EN]);
+    const invalid = {
+      ...communityEvent[EN],
+      link: { ...communityEvent[EN].link, href: 'devopsdays.org' },
+    };
     expect(
       CommunityEventSchema.safeParse(invalid).success,
       'the community link must be an absolute URL: Career renders it as an href and the JSON-LD publishes it as the organization url, so a relative value would ship a broken link',
@@ -353,9 +360,9 @@ describe('canonical profile and education', () => {
     const { GitCommitSchema } = await import('./schemas');
     const { gitLog } = await import('./git-log');
     for (const invalid of [
-      { ...gitLog[0], startMonth: '2026-13' },
-      { ...gitLog[0], startMonth: '2026-06', endMonth: '2025-06' },
-      { ...gitLog[0], location: '' },
+      { ...gitLog[EN][0], startMonth: '2026-13' },
+      { ...gitLog[EN][0], startMonth: '2026-06', endMonth: '2025-06' },
+      { ...gitLog[EN][0], location: '' },
     ])
       expect(GitCommitSchema.safeParse(invalid).success).toBe(false);
   });
@@ -363,21 +370,22 @@ describe('canonical profile and education', () => {
   it('requires every career entry to link to its company over https', async () => {
     const { GitCommitSchema } = await import('./schemas');
     const { gitLog } = await import('./git-log');
-    const { companyUrl: _omitted, ...withoutUrl } = gitLog[0] ?? ({} as Record<string, unknown>);
+    const { companyUrl: _omitted, ...withoutUrl } =
+      gitLog[EN][0] ?? ({} as Record<string, unknown>);
     for (const invalid of [
       withoutUrl,
-      { ...gitLog[0], companyUrl: '' },
-      { ...gitLog[0], companyUrl: 'raylu.ai' },
-      { ...gitLog[0], companyUrl: 'http://raylu.ai' },
-      { ...gitLog[0], companyUrl: 'javascript:alert(1)' },
-      { ...gitLog[0], companyUrl: 'mailto:hello@raylu.ai' },
+      { ...gitLog[EN][0], companyUrl: '' },
+      { ...gitLog[EN][0], companyUrl: 'raylu.ai' },
+      { ...gitLog[EN][0], companyUrl: 'http://raylu.ai' },
+      { ...gitLog[EN][0], companyUrl: 'javascript:alert(1)' },
+      { ...gitLog[EN][0], companyUrl: 'mailto:hello@raylu.ai' },
     ]) {
       expect(
         GitCommitSchema.safeParse(invalid).success,
         'a career entry without an https company URL renders an unlinked employer, or a link a visitor cannot trust',
       ).toBe(false);
     }
-    for (const entry of gitLog) {
+    for (const entry of gitLog[EN]) {
       expect(GitCommitSchema.safeParse(entry).success).toBe(true);
       expect(new URL(entry.companyUrl).protocol).toBe('https:');
     }
@@ -400,27 +408,27 @@ describe('canonical profile and education', () => {
       [
         'CvDocumentSchema.experience[].companyUrl',
         schemas.CvDocumentSchema,
-        cvDocument,
+        cvDocument[EN],
         (url) => ({
-          ...cvDocument,
-          experience: [{ ...cvDocument.experience[0], companyUrl: url }],
+          ...cvDocument[EN],
+          experience: [{ ...cvDocument[EN].experience[0], companyUrl: url }],
         }),
       ],
       [
         'SummaryDocumentSchema.employer.url',
         schemas.SummaryDocumentSchema,
-        summaryDocument,
-        (url) => ({ ...summaryDocument, employer: { ...summaryDocument.employer, url } }),
+        summaryDocument[EN],
+        (url) => ({ ...summaryDocument[EN], employer: { ...summaryDocument[EN].employer, url } }),
       ],
       [
         'AboutContentSchema.now.rows[].company.url',
         schemas.AboutContentSchema,
-        aboutContent,
+        aboutContent[EN],
         (url) => ({
-          ...aboutContent,
+          ...aboutContent[EN],
           now: {
-            ...aboutContent.now,
-            rows: aboutContent.now.rows.map((row) =>
+            ...aboutContent[EN].now,
+            rows: aboutContent[EN].now.rows.map((row) =>
               row.company ? { ...row, company: { ...row.company, url } } : row,
             ),
           },
@@ -454,7 +462,7 @@ describe('canonical profile and education', () => {
 
   it('gives each employer its own company URL', async () => {
     const { gitLog } = await import('./git-log');
-    const origins = gitLog.map((entry) => new URL(entry.companyUrl).origin);
+    const origins = gitLog[EN].map((entry) => new URL(entry.companyUrl).origin);
     expect(new Set(origins).size).toBe(origins.length);
   });
 });
@@ -464,7 +472,7 @@ describe('FooterContentSchema and shutdown content', () => {
     const { FooterContentSchema, DmesgLineSchema } = await import('./schemas');
     const { footerContent } = await import('./footer');
     const { dmesgLines } = await import('./dmesg');
-    expect(FooterContentSchema.safeParse(footerContent).success).toBe(true);
+    expect(FooterContentSchema.safeParse(footerContent[EN]).success).toBe(true);
     for (const line of dmesgLines) expect(DmesgLineSchema.safeParse(line).success).toBe(true);
   });
 
@@ -472,14 +480,17 @@ describe('FooterContentSchema and shutdown content', () => {
     const { FooterContentSchema } = await import('./schemas');
     const { footerContent } = await import('./footer');
     const invalid = [
-      { ...footerContent, groups: [] },
-      { ...footerContent, sessionTitle: '' },
-      { ...footerContent, externalGlyph: '' },
-      { ...footerContent, haltedAt: '' },
-      { ...footerContent, connections: [{ ...footerContent.connections[0], state: 'FAKE' }] },
+      { ...footerContent[EN], groups: [] },
+      { ...footerContent[EN], sessionTitle: '' },
+      { ...footerContent[EN], externalGlyph: '' },
+      { ...footerContent[EN], haltedAt: '' },
       {
-        ...footerContent,
-        groups: footerContent.groups.map((group, index) =>
+        ...footerContent[EN],
+        connections: [{ ...footerContent[EN].connections[0], state: 'FAKE' }],
+      },
+      {
+        ...footerContent[EN],
+        groups: footerContent[EN].groups.map((group, index) =>
           index === 0
             ? { ...group, links: [{ label: 'unsafe', href: 'javascript:alert(1)' }] }
             : group,
@@ -495,7 +506,7 @@ describe('HeroContentSchema and hero content', () => {
     const { HeroContentSchema, HeroClientContentSchema } = await import('./schemas');
     const { heroContent } = await import('./hero');
     const { heroClientContent } = await import('./hero-client');
-    expect(HeroContentSchema.safeParse(heroContent).success).toBe(true);
+    expect(HeroContentSchema.safeParse(heroContent[EN]).success).toBe(true);
     expect(HeroClientContentSchema.safeParse(heroClientContent).success).toBe(true);
   });
 
@@ -504,7 +515,7 @@ describe('HeroContentSchema and hero content', () => {
     async (field) => {
       const { HeroContentSchema } = await import('./schemas');
       const { heroContent } = await import('./hero');
-      expect(HeroContentSchema.safeParse({ ...heroContent, [field]: '' }).success).toBe(false);
+      expect(HeroContentSchema.safeParse({ ...heroContent[EN], [field]: '' }).success).toBe(false);
     },
   );
 
