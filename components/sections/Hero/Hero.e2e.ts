@@ -283,3 +283,34 @@ for (const width of [320, 375]) {
     expect(overflowing, 'a CTA label wider than its box paints over the border').toEqual([]);
   });
 }
+
+for (const width of [375, 1280]) {
+  test(`the WHOAMI gutter numbers every visual line at ${width}px`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 800 });
+    await page.goto('/');
+    const fit = await page
+      .locator('.ab-text')
+      .first()
+      .evaluate((body) => {
+        const gutter = body.querySelector<HTMLElement>('.ab-gutter');
+        const prose = body.querySelector<HTMLElement>('.ab-prose');
+        const first = gutter?.firstElementChild?.getBoundingClientRect();
+        if (!gutter || !prose || !first) return null;
+        const rows = prose.getBoundingClientRect().height / first.height;
+        const gutterBottom = gutter.getBoundingClientRect().bottom;
+        const shown = [...gutter.children].filter(
+          (span) => span.getBoundingClientRect().bottom <= gutterBottom + 1,
+        ).length;
+        return { rows, shown, total: gutter.children.length };
+      });
+    expect(fit).not.toBeNull();
+    expect(
+      Math.abs((fit?.rows ?? 0) - Math.round(fit?.rows ?? 0)),
+      'prose lines sit on the gutter rhythm',
+    ).toBeLessThan(0.15);
+    expect(fit?.shown, 'one number per visual line of prose').toBe(Math.round(fit?.rows ?? 0));
+    expect(fit?.total, 'the gutter holds more numbers than any width shows').toBeGreaterThan(
+      fit?.shown ?? 0,
+    );
+  });
+}

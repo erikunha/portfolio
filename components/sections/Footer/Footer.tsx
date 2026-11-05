@@ -22,7 +22,7 @@ export function Footer({ locale }: { locale: SiteLocale }) {
     <footer className="site-footer" id="shutdown">
       <div className="footer-inner">
         <div className="footer-shutdown-header">
-          <h2 className="footer-shutdown-title" data-type-reveal>
+          <h2 className="footer-shutdown-title" data-type-reveal suppressHydrationWarning>
             {content.shutdownTitle}
           </h2>
           <HaltClock label={content.haltedAt} />
@@ -33,7 +33,9 @@ export function Footer({ locale }: { locale: SiteLocale }) {
         <div className="footer-cards">
           <section className="footer-card" aria-labelledby="footer-session-title">
             <h3 className="footer-card-title" id="footer-session-title">
-              <span data-type-reveal>{content.sessionTitle}</span>
+              <span data-type-reveal suppressHydrationWarning>
+                {content.sessionTitle}
+              </span>
             </h3>
             <SessionCounters sectionIds={footerSectionIds}>
               <dl className="footer-session-grid">
@@ -73,7 +75,9 @@ export function Footer({ locale }: { locale: SiteLocale }) {
           <section className="footer-card" aria-labelledby="footer-netstat-title">
             <div className="footer-card-header">
               <h3 className="footer-card-title" id="footer-netstat-title">
-                <span data-type-reveal>{content.netstatTitle}</span>
+                <span data-type-reveal suppressHydrationWarning>
+                  {content.netstatTitle}
+                </span>
               </h3>
             </div>
             <div className="footer-netstat-scroll">
@@ -134,7 +138,9 @@ export function Footer({ locale }: { locale: SiteLocale }) {
         </div>
         <section className="footer-card footer-tree" aria-labelledby="footer-tree-title">
           <h3 className="footer-card-title" id="footer-tree-title">
-            <span data-type-reveal>{content.treeTitle}</span>
+            <span data-type-reveal suppressHydrationWarning>
+              {content.treeTitle}
+            </span>
           </h3>
           <nav className="sitemap" aria-label={content.treeLabel}>
             <ul className="sm-groups">

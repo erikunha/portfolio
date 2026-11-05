@@ -12,7 +12,9 @@ export function SectionHeading({ id, children, trailing }: SectionHeadingProps) 
       id={id}
       className="flex items-center gap-2 text-primary-500 text-xs font-normal tracking-[0.14em] uppercase m-0 mb-2"
     >
-      <span data-type-reveal>{children}</span>
+      <span data-type-reveal suppressHydrationWarning>
+        {children}
+      </span>
       <span aria-hidden="true" className="flex-1 h-px bg-primary-border" />
       {trailing != null && (
         <span className="text-tertiary-400 text-xs tracking-[0.04em] normal-case">{trailing}</span>

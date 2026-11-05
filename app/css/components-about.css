@@ -87,6 +87,9 @@
   }
 
   .ab-gutter {
+    height: 0;
+    min-height: 100%;
+    overflow: hidden;
     padding-right: var(--spacing-4);
     border-right: var(--border-width) solid var(--color-primary-quiet);
     color: var(--color-text-secondary);
@@ -107,7 +110,7 @@
   }
 
   .ab-prose h4 {
-    margin: var(--spacing-1) 0 0;
+    margin: 0;
     color: var(--color-primary-500);
     font-weight: 700;
   }

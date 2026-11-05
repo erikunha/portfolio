@@ -58,7 +58,7 @@ export function GuitarContent({ locale }: { locale: SiteLocale }) {
               )}
               <div className="guitar-node" data-testid={`signal-node-${node.role}`}>
                 <div className="guitar-label">{node.label}</div>
-                <h3 className="guitar-node-heading" data-type-reveal>
+                <h3 className="guitar-node-heading" data-type-reveal suppressHydrationWarning>
                   {node.name}
                 </h3>
                 <div className="guitar-node-subtitle">{node.subtitle}</div>

@@ -76,7 +76,12 @@ export function SummaryPage({ locale }: { locale: SiteLocale }) {
         </div>
 
         <section aria-labelledby={sectionId('projects')} className="reading-section">
-          <h2 id={sectionId('projects')} className="reading-heading" data-type-reveal>
+          <h2
+            id={sectionId('projects')}
+            className="reading-heading"
+            data-type-reveal
+            suppressHydrationWarning
+          >
             {summary.headings.projects}
           </h2>
           <ul className="reading-projects">
@@ -96,7 +101,12 @@ export function SummaryPage({ locale }: { locale: SiteLocale }) {
 
         <div className="reading-grid">
           <section aria-labelledby={sectionId('stack')} className="reading-section">
-            <h2 id={sectionId('stack')} className="reading-heading" data-type-reveal>
+            <h2
+              id={sectionId('stack')}
+              className="reading-heading"
+              data-type-reveal
+              suppressHydrationWarning
+            >
               {summary.headings.stack}
             </h2>
             <ul className="reading-chips">
@@ -108,7 +118,12 @@ export function SummaryPage({ locale }: { locale: SiteLocale }) {
         </div>
 
         <section aria-labelledby={sectionId('contact')} className="reading-section">
-          <h2 id={sectionId('contact')} className="reading-heading" data-type-reveal>
+          <h2
+            id={sectionId('contact')}
+            className="reading-heading"
+            data-type-reveal
+            suppressHydrationWarning
+          >
             {summary.headings.contact}
           </h2>
           <p className="reading-actions-inline">

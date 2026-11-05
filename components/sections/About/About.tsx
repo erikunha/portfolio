@@ -26,7 +26,7 @@ function Panel({
         <span className="ab-mk" aria-hidden="true">
           {marker}
         </span>
-        <h3 className="ab-h" data-type-reveal>
+        <h3 className="ab-h" data-type-reveal suppressHydrationWarning>
           {title}
         </h3>
         {action}
@@ -48,7 +48,9 @@ export function About({ locale }: { locale: SiteLocale }) {
     <section id="sec-readme" tabIndex={-1} aria-labelledby="about-header" className="about-section">
       <header className="about-section-header">
         <h2 id="about-header">
-          <span data-type-reveal>{c.title}</span>
+          <span data-type-reveal suppressHydrationWarning>
+            {c.title}
+          </span>
           <IconReadme />
           <span className="about-section-command" aria-hidden="true">
             {c.command}
