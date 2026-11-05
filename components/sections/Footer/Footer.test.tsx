@@ -122,6 +122,26 @@ describe('Footer server output', () => {
     ).toBe('#main-content');
   });
 
+  it('renders the phone site map as one exclusive accordion with a file count per folder', () => {
+    const host = serverFooter();
+    const folds = [...host.querySelectorAll('.sm-folds > details.sm-fold')];
+    expect(folds.map((fold) => fold.getAttribute('name'))).toEqual(Array(6).fill('footer-sitemap'));
+    expect(folds.every((fold) => !fold.hasAttribute('open'))).toBe(true);
+    expect(folds.map((fold) => fold.querySelector('summary')?.textContent)).toEqual([
+      './whoami/2 files',
+      './work/2 files',
+      './measured/2 files',
+      './off_hours/2 files',
+      './contact/1 file',
+      './pages/4 files',
+    ]);
+    const columnLinks = [...host.querySelectorAll('.sm-groups a')].map((a) =>
+      a.getAttribute('href'),
+    );
+    const foldLinks = [...host.querySelectorAll('.sm-folds a')].map((a) => a.getAttribute('href'));
+    expect(foldLinks).toEqual(columnLinks);
+  });
+
   it('lists the four page destinations under ./pages/', () => {
     const host = serverFooter();
     const pages = [...host.querySelectorAll('.sm-groups > li')].find(
@@ -257,7 +277,8 @@ describe('Footer reboot controls', () => {
     fireEvent.keyDown(rebootLink, { key: 'r' });
     expect(document.activeElement).toBe(heading);
     expect(scrollTo).toHaveBeenCalledTimes(2);
-    const treeLink = mounted.getByRole('link', { name: 'Projects' });
+    const [treeLink] = mounted.getAllByRole('link', { name: 'Projects' });
+    if (!treeLink) throw new Error('site map link missing');
     treeLink.focus();
     fireEvent.keyDown(treeLink, { key: 'r' });
     expect(document.activeElement).toBe(heading);

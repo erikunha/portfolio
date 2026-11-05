@@ -60,6 +60,7 @@ const footerContentFor = (locale: SiteLocale) => {
     ],
     treeTitle: 'LS -R ~/',
     treeLabel: pt ? 'Mapa do site' : 'Site map',
+    fileCount: { one: pt ? 'arquivo' : 'file', other: pt ? 'arquivos' : 'files' },
     groups: [
       {
         directory: './whoami/',

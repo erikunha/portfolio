@@ -73,6 +73,10 @@ const DISCLOSURE_SCAN_ROOT_DIRS = ['components', 'app', 'lib', 'design-system'];
 const DISCLOSURE_SCAN_EXTENSIONS = new Set(['.ts', '.tsx', '.css', '.mdx']);
 const DISCLOSURE_SCAN_SKIP_DIRS = new Set(['node_modules', '.next', '__tests__']);
 const TEST_FILE = /\.test\.[cm]?[jt]sx?$/;
+const DISCLOSURE_ALLOWED_FILES = new Set([
+  'components/sections/Footer/Footer.tsx',
+  'app/css/components-footer.css',
+]);
 
 function collectDisclosureScanFiles(dir: string): string[] {
   return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
@@ -106,6 +110,7 @@ describe('disclosure machinery: <details>/<summary> never returns to shipped sou
     );
     const violations: string[] = [];
     for (const file of files) {
+      if (DISCLOSURE_ALLOWED_FILES.has(path.relative(repoRoot, file))) continue;
       // behavioral-test-allow: no compiler or lint rule bans a deleted HTML element from
       // silently returning to shipped source
       const contents = readFileSync(file, 'utf-8');
@@ -126,5 +131,29 @@ describe('disclosure machinery: <details>/<summary> never returns to shipped sou
         "how the whole site's content once got blanked with no build error and no console " +
         `warning. Offending files:\n${violations.join('\n')}`,
     ).toEqual([]);
+  });
+
+  it('allows disclosure only where the phone site map uses it, and every exemption is still live', () => {
+    const repoRoot = path.resolve(__dirname, '..');
+    for (const file of DISCLOSURE_ALLOWED_FILES) {
+      // behavioral-test-allow: an exemption list for a token ban rots silently unless each entry is proven still needed
+      const contents = readFileSync(path.join(repoRoot, file), 'utf-8');
+      const disclosureLines = contents
+        .split('\n')
+        .filter((line) => DISCLOSURE_PATTERNS.some(({ pattern }) => pattern.test(line)));
+      expect(
+        disclosureLines.length,
+        `${file} is exempt from the disclosure ban but no longer uses <details>/<summary>/[open]; ` +
+          'drop it from DISCLOSURE_ALLOWED_FILES so the ban covers it again.',
+      ).toBeGreaterThan(0);
+      const outsideSiteMap = disclosureLines.filter(
+        (line) => !/sm-fold|^\s*<\/(details|summary)>\s*$/.test(line),
+      );
+      expect(
+        outsideSiteMap,
+        `${file}: the only collapsible allowed in shipped source is the footer site map on phones ` +
+          '(the sm-fold accordion, owner decision 2026-11-05). Page sections still never collapse.',
+      ).toEqual([]);
+    }
   });
 });

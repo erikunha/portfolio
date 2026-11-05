@@ -742,6 +742,7 @@ export const FooterContentSchema = z.object({
     .min(1),
   treeTitle: z.string().min(1),
   treeLabel: z.string().min(1),
+  fileCount: z.object({ one: z.string().min(1), other: z.string().min(1) }),
   groups: z
     .array(
       z.object({
