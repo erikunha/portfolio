@@ -104,3 +104,10 @@ test('/pt links to the pt CV and summary from the hero actions', async ({ page }
   await expect(ctas.locator('a[href="/pt/cv"]')).toHaveCount(1);
   await expect(ctas.locator('a[href="/pt/summary"]')).toHaveCount(1);
 });
+
+test('/pt chrome controls speak pt-BR', async ({ page }) => {
+  await page.goto('/pt');
+  await expect(page.getByRole('navigation', { name: 'Navegação do site' })).toBeVisible();
+  // hidden until scroll on this viewport; the i18n contract is the attribute
+  await expect(page.locator('.to-top-btn')).toHaveAttribute('aria-label', 'Voltar ao topo');
+});

@@ -110,6 +110,8 @@ const NavigationCopySchema = z.object({
   motionOn: NavTextSchema,
   motionOff: NavTextSchema,
   langSwitchLabel: NavTextSchema,
+  siteNavLabel: NavTextSchema,
+  backToTopLabel: NavTextSchema,
 });
 
 export function createNavigationSchema(sectionIds: readonly string[]) {
