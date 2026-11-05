@@ -50,6 +50,11 @@ export const HIRE_SHORT_LABEL: Record<SiteLocale, string> = {
   [SITE_LOCALE.pt]: 'CONTRATE ↗',
 };
 
+export const DOCK_HIRE_LABEL: Record<SiteLocale, string> = {
+  [SITE_LOCALE.en]: 'HIRE',
+  [SITE_LOCALE.pt]: 'CONTRATE',
+};
+
 export const HIRE_ACCESSIBLE_NAME: Record<SiteLocale, string> = {
   [SITE_LOCALE.en]: 'Hire on LinkedIn (opens in a new tab)',
   [SITE_LOCALE.pt]: 'Contrate no LinkedIn (abre em uma nova guia)',

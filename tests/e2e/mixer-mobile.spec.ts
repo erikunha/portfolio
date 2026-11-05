@@ -6,6 +6,8 @@ const DESKTOP_SELECTOR = '#sec-daw-mixer [data-testid="daw-mixer-desktop"]';
 const MOBILE_SELECTOR = '#sec-daw-mixer [data-testid="daw-mixer-mobile"]';
 const VIEWPORT_HEIGHT = 800;
 const SUBPIXEL_TOLERANCE_PX = 1;
+const CROSSING_TOLERANCE_PX = 4;
+const LINE_LEADING_TOLERANCE_PX = 4;
 const MOBILE_PROJECTS = ['chromium-mobile', 'webkit-mobile'];
 const CHANNEL_IDS = ['CH 01', 'CH 02', 'CH 03', 'CH 04', 'CH 05', 'MASTER'];
 
@@ -109,41 +111,121 @@ test('desktop UAs render the six-channel table with session and column headers',
   }
 });
 
-test('no two cells of a desktop channel row overlap at 1280px', async ({ page }, testInfo) => {
-  test.skip(
-    MOBILE_PROJECTS.includes(testInfo.project.name),
-    'the desktop table only ships to desktop user agents',
-  );
-  await installMockBackend(page, { log: 'accept', forget: 'happy' });
-  await page.setViewportSize({ width: 1280, height: VIEWPORT_HEIGHT });
-  await page.goto('/');
-  const mixer = page.locator(DESKTOP_SELECTOR);
-  await mixer.scrollIntoViewIfNeeded();
-  await expect(mixer.locator('[data-testid^="channel-"]').first()).toBeVisible();
+for (const width of [1280, 320]) {
+  test(`no two cells of a desktop channel row overlap at ${width}px`, async ({
+    page,
+  }, testInfo) => {
+    test.skip(
+      MOBILE_PROJECTS.includes(testInfo.project.name),
+      'the desktop table only ships to desktop user agents',
+    );
+    await installMockBackend(page, { log: 'accept', forget: 'happy' });
+    await page.setViewportSize({ width, height: VIEWPORT_HEIGHT });
+    await page.goto('/');
+    const mixer = page.locator(DESKTOP_SELECTOR);
+    await mixer.scrollIntoViewIfNeeded();
+    await expect(mixer.locator('[data-testid^="channel-"]').first()).toBeVisible();
 
-  const overlaps = await page.evaluate((selector) => {
-    const found: string[] = [];
-    for (const row of document.querySelectorAll(`${selector} .daw-channel-row`)) {
-      const cells = Array.from(row.children).filter(
-        (child) => child.getBoundingClientRect().width > 0,
-      );
-      for (const [index, first] of cells.entries()) {
-        for (const second of cells.slice(index + 1)) {
-          const a = first.getBoundingClientRect();
-          const b = second.getBoundingClientRect();
-          const overlapX = Math.min(a.right, b.right) - Math.max(a.left, b.left);
-          const overlapY = Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top);
-          if (overlapX > 1 && overlapY > 1) {
-            found.push(`${row.getAttribute('data-testid')}: cell overlap`);
+    const overlaps = await page.evaluate(
+      ({ selector, crossingTolerance, lineLeadingTolerance }) => {
+        for (const el of document.querySelectorAll('[data-cv-defer]')) {
+          (el as HTMLElement).style.contentVisibility = 'visible';
+        }
+        const found: string[] = [];
+        const range = document.createRange();
+        const intersect = (
+          a: { left: number; top: number; right: number; bottom: number },
+          b: { left: number; top: number; right: number; bottom: number },
+        ) => ({
+          left: Math.max(a.left, b.left),
+          top: Math.max(a.top, b.top),
+          right: Math.min(a.right, b.right),
+          bottom: Math.min(a.bottom, b.bottom),
+        });
+        for (const row of document.querySelectorAll(`${selector} .daw-channel-row`)) {
+          const cells = Array.from(row.children);
+          for (const [index, first] of cells.entries()) {
+            for (const second of cells.slice(index + 1)) {
+              const a = first.getBoundingClientRect();
+              const b = second.getBoundingClientRect();
+              const overlapX = Math.min(a.right, b.right) - Math.max(a.left, b.left);
+              const overlapY = Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top);
+              if (overlapX > 1 && overlapY > 1) {
+                found.push(`${row.getAttribute('data-testid')}: cell overlap`);
+              }
+            }
+          }
+          for (const [cellIndex, cell] of cells.entries()) {
+            const cellBox = cell.getBoundingClientRect();
+            const prevCell = cellIndex > 0 ? cells[cellIndex - 1] : undefined;
+            const nextCell = cellIndex < cells.length - 1 ? cells[cellIndex + 1] : undefined;
+            const prevBox = prevCell ? prevCell.getBoundingClientRect() : null;
+            const nextBox = nextCell ? nextCell.getBoundingClientRect() : null;
+            const leftLimit = prevBox ? prevBox.right : cellBox.left - crossingTolerance;
+            const rightLimit = nextBox ? nextBox.left : cellBox.right + crossingTolerance;
+            const walker = document.createTreeWalker(cell, NodeFilter.SHOW_TEXT);
+            let textNode = walker.nextNode();
+            while (textNode) {
+              if ((textNode.textContent ?? '').trim()) {
+                const chain: Element[] = [];
+                for (
+                  let el: Element | null = textNode.parentElement;
+                  el && el !== cell;
+                  el = el.parentElement
+                ) {
+                  const style = getComputedStyle(el);
+                  if (style.overflowX !== 'visible' || style.overflowY !== 'visible') {
+                    chain.push(el);
+                  }
+                }
+                const tracking = Number.parseFloat(
+                  getComputedStyle(textNode.parentElement ?? cell).letterSpacing,
+                );
+                range.selectNodeContents(textNode);
+                for (const rect of Array.from(range.getClientRects())) {
+                  let visible = {
+                    left: rect.left,
+                    top: rect.top,
+                    right: rect.right - (Number.isFinite(tracking) ? tracking : 0),
+                    bottom: rect.bottom,
+                  };
+                  for (const clipper of chain) {
+                    visible = intersect(visible, clipper.getBoundingClientRect());
+                  }
+                  if (visible.right - visible.left <= 1 || visible.bottom - visible.top <= 1) {
+                    continue;
+                  }
+                  const overTop = cellBox.top - visible.top;
+                  const overBottom = visible.bottom - cellBox.bottom;
+                  if (
+                    visible.left < leftLimit - crossingTolerance ||
+                    visible.right > rightLimit + crossingTolerance ||
+                    overTop > lineLeadingTolerance ||
+                    overBottom > lineLeadingTolerance
+                  ) {
+                    found.push(
+                      `${row.getAttribute('data-testid')}: text paints into a neighboring cell`,
+                    );
+                  }
+                }
+              }
+              textNode = walker.nextNode();
+            }
           }
         }
-      }
-    }
-    return found;
-  }, DESKTOP_SELECTOR);
+        range.detach();
+        return found;
+      },
+      {
+        selector: DESKTOP_SELECTOR,
+        crossingTolerance: CROSSING_TOLERANCE_PX,
+        lineLeadingTolerance: LINE_LEADING_TOLERANCE_PX,
+      },
+    );
 
-  expect(overlaps, 'grid cells of a channel row must not share the same grid area').toEqual([]);
-});
+    expect(overlaps, 'grid cells of a channel row must not share the same grid area').toEqual([]);
+  });
+}
 
 test('narrow desktop windows scroll the console instead of shrinking fader targets', async ({
   page,

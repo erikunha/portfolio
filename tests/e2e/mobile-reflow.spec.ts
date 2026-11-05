@@ -76,15 +76,39 @@ test.describe('mobile reflow: side-by-side groups stack below the tablet breakpo
   }
 });
 
-test('dock items keep one height at 320 so no label wraps', async ({ page }) => {
-  await page.setViewportSize({ width: 320, height: 640 });
-  await page.goto('/');
-  const heights = await page
-    .locator('.dock > a, .dock > button')
-    .evaluateAll((items) => items.map((item) => Math.round(item.getBoundingClientRect().height)));
-  expect(heights.length).toBeGreaterThan(1);
-  expect(new Set(heights).size, `dock item heights ${heights.join(',')}`).toBe(1);
-});
+for (const path of ['/', '/pt']) {
+  test(`dock items keep one height and one-line labels at 320 (${path})`, async ({ page }) => {
+    await page.setViewportSize({ width: 320, height: 640 });
+    await page.goto(path);
+    const items = page.locator('.dock > a, .dock > button');
+    const heights = await items.evaluateAll((nodes) =>
+      nodes.map((item) => Math.round(item.getBoundingClientRect().height)),
+    );
+    expect(heights.length).toBeGreaterThan(1);
+    expect(new Set(heights).size, `dock item heights ${heights.join(',')}`).toBe(1);
+    const lineCounts = await items.evaluateAll((nodes) =>
+      nodes.map((node) => {
+        const walker = document.createTreeWalker(node, NodeFilter.SHOW_TEXT);
+        const range = document.createRange();
+        let lines = 0;
+        let textNode = walker.nextNode();
+        while (textNode) {
+          if ((textNode.textContent ?? '').trim()) {
+            range.selectNodeContents(textNode);
+            lines += Array.from(range.getClientRects()).length;
+          }
+          textNode = walker.nextNode();
+        }
+        range.detach();
+        return lines;
+      }),
+    );
+    expect(
+      lineCounts,
+      `dock labels must render on one line, got line counts ${lineCounts.join(',')}`,
+    ).toEqual(lineCounts.map(() => 1));
+  });
+}
 
 test('the contact submit button spans its row below 768 and keeps its size at 1280', async ({
   page,

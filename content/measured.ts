@@ -58,7 +58,7 @@ const measuredFor = (locale: SiteLocale): Measured => {
           label: pt ? 'RESIST. A JAILBREAK' : 'JAILBREAK RESIST',
           description: pt ? 'taxa de recusa a prompt injection' : 'prompt-injection refusal rate',
         },
-        { key: 'p95LatencyMs', label: 'LATÊNCIA P95', description: '' },
+        { key: 'p95LatencyMs', label: pt ? 'LATÊNCIA P95' : 'P95 LATENCY', description: '' },
         {
           key: 'costPerAnswer',
           label: pt ? 'CUSTO / RESPOSTA' : 'COST / ANSWER',
