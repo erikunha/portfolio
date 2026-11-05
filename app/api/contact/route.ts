@@ -10,6 +10,7 @@ import {
 import { ContactSchema, isHoneypotTripped } from '@/lib/contact-validation';
 import { log } from '@/lib/log';
 import { getContactLimit, getRedis } from '@/lib/rate-limit';
+import { withBodyLimit } from '@/lib/server/body-limit';
 import { defineHandler, err, ok } from '@/lib/server/route';
 
 const HONEYPOT_JITTER_MIN_MS = 50;
@@ -18,8 +19,9 @@ const HONEYPOT_JITTER_MAX_MS = 150;
 const STORAGE_UNAVAILABLE_STATUS = 502;
 const QUEUED_STATUS = 202;
 const STORAGE_UNAVAILABLE_CODE = 'storage_unavailable';
+const MAX_CONTACT_BODY_BYTES = 16_384;
 
-export const POST = defineHandler({
+const handleContact = defineHandler({
   schema: ContactSchema,
   rateLimit: getContactLimit,
   rateLimitErrorMessage: contactContent[SITE_LOCALE.en].errors.rateLimited,
@@ -54,10 +56,14 @@ export const POST = defineHandler({
 
     if (await sendContactMessage(msgId, payload, requestId)) return ok({ requestId });
 
+    let queued = false;
     try {
-      await enqueueContact(msgId, payload.receivedAt);
+      queued = await enqueueContact(msgId, payload.receivedAt);
+      if (!queued) log.warn('contact outbox full', { requestId, msgId });
     } catch {
       log.error('contact outbox write failed', { requestId, msgId });
+    }
+    if (!queued) {
       return err({
         requestId,
         status: STORAGE_UNAVAILABLE_STATUS,
@@ -74,3 +80,5 @@ export const POST = defineHandler({
     });
   },
 });
+
+export const POST = withBodyLimit(handleContact, MAX_CONTACT_BODY_BYTES);

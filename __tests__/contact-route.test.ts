@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const redisSet = vi.fn();
+const zcard = vi.fn();
 const transaction = { hset: vi.fn(), zadd: vi.fn(), exec: vi.fn() };
 const send = vi.fn();
 const limit = vi.fn();
@@ -10,7 +11,7 @@ const logger = { info: vi.fn(), error: vi.fn(), warn: vi.fn() };
 vi.mock('@/lib/rate-limit', () => ({
   getClientIp: () => '127.0.0.1',
   getContactLimit: () => ({ limit }),
-  getRedis: () => ({ set: redisSet, multi: () => transaction }),
+  getRedis: () => ({ set: redisSet, zcard, multi: () => transaction }),
 }));
 vi.mock('@/lib/ip-hash', () => ({ hashIp: async () => 'hashed-ip' }));
 vi.mock('@/lib/log', () => ({ log: logger }));
@@ -38,6 +39,7 @@ describe('contact delivery outcome', () => {
     vi.clearAllMocks();
     vi.stubEnv('RESEND_API_KEY', 'test-key');
     redisSet.mockResolvedValue('OK');
+    zcard.mockResolvedValue(0);
     transaction.exec.mockResolvedValue([1, 1]);
     send.mockResolvedValue({ data: { id: 'accepted' }, error: null });
     limit.mockResolvedValue({ success: true });
@@ -150,6 +152,21 @@ describe('contact delivery outcome', () => {
     expect(redisSet).toHaveBeenCalledOnce();
     expect(transaction.exec).toHaveBeenCalledOnce();
     expect(vi.getTimerCount()).toBe(0);
+  });
+
+  it('refuses to queue past the outbox cap instead of growing it without bound', async () => {
+    const { CONTACT_OUTBOX_MAX } = await import('@/lib/contact-outbox');
+    send.mockResolvedValueOnce({ error: { message: 'unavailable' } });
+    zcard.mockResolvedValueOnce(CONTACT_OUTBOX_MAX);
+    const { POST } = await import('@/app/api/contact/route');
+    const res = await POST(request());
+    expect(res.status).toBe(502);
+    expect(await res.json()).toMatchObject({ error: { code: 'storage_unavailable' } });
+    expect(transaction.zadd).not.toHaveBeenCalled();
+    expect(logger.warn).toHaveBeenCalledWith(
+      'contact outbox full',
+      expect.objectContaining({ msgId: expect.any(String) }),
+    );
   });
 
   it('does not promise automatic retry when adding to the outbox fails', async () => {

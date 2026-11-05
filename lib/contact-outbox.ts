@@ -12,6 +12,7 @@ const ATTEMPT_INCREMENT = 1;
 export const CONTACT_MESSAGE_TTL_SECONDS = 60 * 60 * 24 * 90;
 export const CONTACT_MAX_RETRY_ATTEMPTS = 3;
 export const CONTACT_MAX_RETRY_AGE_MS = 7 * 24 * 60 * 60 * 1_000;
+export const CONTACT_OUTBOX_MAX = 200;
 
 export interface ContactMessage {
   name: string;
@@ -23,11 +24,13 @@ export interface ContactMessage {
 
 export const contactMessageKey = (msgId: string) => `contact:msg:${msgId}`;
 
-export async function enqueueContact(msgId: string, receivedAt: string): Promise<void> {
+export async function enqueueContact(msgId: string, receivedAt: string): Promise<boolean> {
+  if ((await getRedis().zcard(OUTBOX_KEY)) >= CONTACT_OUTBOX_MAX) return false;
   const transaction = getRedis().multi();
   transaction.hset(ATTEMPTS_KEY, { [msgId]: INITIAL_ATTEMPTS });
   transaction.zadd(OUTBOX_KEY, { member: msgId, score: Date.parse(receivedAt) });
   await transaction.exec();
+  return true;
 }
 
 export function getPendingContactIds(): Promise<string[]> {

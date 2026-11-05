@@ -1,4 +1,5 @@
 import 'server-only';
+import { NextRequest } from 'next/server';
 import { z } from 'zod';
 import { err } from '@/lib/server/route';
 
@@ -10,7 +11,9 @@ const ContentLengthSchema = z
   .regex(/^\d+$/)
   .transform((value) => Number(value));
 
-type Handler = (req: Request) => Promise<Response>;
+type Handler = (req: NextRequest) => Promise<Response>;
+
+const asNextRequest = (req: Request) => (req instanceof NextRequest ? req : new NextRequest(req));
 
 function bodyTooLarge(maxBytes: number): Response {
   return err({
@@ -21,11 +24,14 @@ function bodyTooLarge(maxBytes: number): Response {
   });
 }
 
-export function withBodyLimit(handler: Handler, maxBytes: number): Handler {
+export function withBodyLimit(
+  handler: Handler,
+  maxBytes: number,
+): (req: Request) => Promise<Response> {
   return async (req) => {
     const contentLength = ContentLengthSchema.safeParse(req.headers.get(CONTENT_LENGTH_HEADER));
     if (contentLength.success && contentLength.data > maxBytes) return bodyTooLarge(maxBytes);
-    if (!req.body) return handler(req);
+    if (!req.body) return handler(asNextRequest(req));
 
     const reader = req.body.getReader();
     const bytes = new Uint8Array(maxBytes);
@@ -54,6 +60,6 @@ export function withBodyLimit(handler: Handler, maxBytes: number): Handler {
 
     const headers = new Headers(req.headers);
     headers.set(CONTENT_LENGTH_HEADER, String(byteLength));
-    return handler(new Request(req, { headers, body: bytes.subarray(0, byteLength) }));
+    return handler(new NextRequest(req, { headers, body: bytes.subarray(0, byteLength) }));
   };
 }

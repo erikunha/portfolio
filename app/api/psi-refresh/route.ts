@@ -4,6 +4,7 @@ import { env } from '@/lib/env';
 import { refreshScores, type Strategy } from '@/lib/lighthouse-scores';
 import { log } from '@/lib/log';
 import { getRedis } from '@/lib/rate-limit';
+import { isCronAuthorized } from '@/lib/server/cron-auth';
 
 const PSI_CONSEC_KEY = (s: Strategy) => `meta:psi-consec-failures:${s}`;
 const PSI_CONSEC_TTL_S = 604_800;
@@ -13,7 +14,7 @@ export const maxDuration = 60;
 
 export async function GET(req: NextRequest): Promise<Response> {
   const cronSecret = env.CRON_SECRET;
-  if (!cronSecret || req.headers.get('authorization') !== `Bearer ${cronSecret}`) {
+  if (!isCronAuthorized(req, cronSecret)) {
     return new Response('Unauthorized', { status: 401 });
   }
 

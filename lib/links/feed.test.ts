@@ -56,6 +56,12 @@ describe('loadFixtureFeed', () => {
     expect(await loadFixtureFeed({ [FEED_FIXTURE_ENV]: FIXTURE })).toEqual(EMPTY_FEED);
   });
 
+  it('rejects a fixture that is not a channel feed', async () => {
+    const { loadFixtureFeed, FEED_FIXTURE_ENV } = await import('@/lib/links/feed');
+    vi.mocked(fs.readFile).mockResolvedValueOnce(JSON.stringify({ latest: 'x', history: 3 }));
+    await expect(loadFixtureFeed({ [FEED_FIXTURE_ENV]: FIXTURE })).rejects.toThrow();
+  });
+
   it('is inert on a Vercel deployment even when the flag is set', async () => {
     const { loadFixtureFeed, FEED_FIXTURE_ENV } = await import('@/lib/links/feed');
     expect(await loadFixtureFeed({ [FEED_FIXTURE_ENV]: FIXTURE, VERCEL: '1' })).toBeNull();
@@ -296,6 +302,30 @@ describe('getChannelFeed pages the uploads playlist with a key', () => {
     expect(feed.history.map((video) => video.id)).not.toContain('s1');
     expect(feed.history.map((video) => video.id)).not.toContain('s2');
     expect(feed.latest).toBeNull();
+  });
+
+  it('sends the API key in a header, never in a logged URL', async () => {
+    const seen: { url: string; key: string | null }[] = [];
+    vi.resetModules();
+    vi.stubEnv('E2E_LINKS_FEED_FIXTURE', '');
+    vi.doMock('@/lib/env', () => ({ env: { YOUTUBE_API_KEY: 'secret-key' } }));
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (input: string, init?: RequestInit) => {
+        seen.push({ url: input, key: new Headers(init?.headers).get('x-goog-api-key') });
+        return Response.json({ items: [] });
+      }),
+    );
+    const { getChannelFeed } = await import('@/lib/links/feed');
+    await getChannelFeed();
+    vi.unstubAllGlobals();
+    vi.unstubAllEnvs();
+    const api = seen.filter(({ url }) => url.includes('googleapis.com'));
+    expect(api.length).toBeGreaterThan(0);
+    for (const { url, key } of api) {
+      expect(url).not.toContain('secret-key');
+      expect(key).toBe('secret-key');
+    }
   });
 
   it('collects regular videos across pages until the history is full', async () => {

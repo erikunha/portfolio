@@ -2,6 +2,7 @@ import 'server-only';
 
 import { readFile } from 'node:fs/promises';
 import { cacheLife } from 'next/cache';
+import { z } from 'zod';
 import { linksContent } from '@/content/links';
 import { env } from '@/lib/env';
 import {
@@ -29,6 +30,7 @@ const CACHE_REVALIDATE_S = 3_600;
 const CACHE_EXPIRE_S = 86_400;
 
 const RSS_ENDPOINT = 'https://www.youtube.com/feeds/videos.xml';
+const API_KEY_HEADER = 'x-goog-api-key';
 const VIDEOS_ENDPOINT = 'https://www.googleapis.com/youtube/v3/videos';
 const CHANNELS_ENDPOINT = 'https://www.googleapis.com/youtube/v3/channels';
 const PLAYLIST_ITEMS_ENDPOINT = 'https://www.googleapis.com/youtube/v3/playlistItems';
@@ -47,6 +49,28 @@ export type ChannelFeed = {
   stats: ChannelStats;
   channelUrl: string;
 };
+
+const VideoSchema = z.object({
+  id: z.string(),
+  title: z.string(),
+  url: z.string(),
+  thumbnailUrl: z.string(),
+  publishedAt: z.string(),
+  description: z.string().optional(),
+  duration: z.string().optional(),
+  viewCount: z.number().optional(),
+});
+
+const ChannelFeedSchema = z.object({
+  fetchedAt: z.string().nullable(),
+  latest: VideoSchema.nullable(),
+  history: z.array(VideoSchema),
+  stats: z.object({
+    subscriberCount: z.number().optional(),
+    videoCount: z.number().optional(),
+  }),
+  channelUrl: z.string(),
+});
 
 export const CHANNEL_URL = `https://www.youtube.com/${linksContent.channel.handle}`;
 
@@ -68,11 +92,14 @@ type ApiChannelItem = {
   statistics?: { subscriberCount?: string; videoCount?: string };
 };
 
-async function fetchText(url: string, timeoutMs: number): Promise<string | null> {
+async function fetchText(url: string, timeoutMs: number, apiKey?: string): Promise<string | null> {
   try {
     const response = await fetch(url, {
       signal: AbortSignal.timeout(timeoutMs),
-      headers: { accept: 'application/xml, application/json' },
+      headers: {
+        accept: 'application/xml, application/json',
+        ...(apiKey ? { [API_KEY_HEADER]: apiKey } : {}),
+      },
     });
     if (!response.ok) {
       log.warn('links feed upstream returned non-ok', { status: response.status });
@@ -85,8 +112,8 @@ async function fetchText(url: string, timeoutMs: number): Promise<string | null>
   }
 }
 
-async function fetchJson<T>(url: string, timeoutMs: number): Promise<T | null> {
-  const body = await fetchText(url, timeoutMs);
+async function fetchJson<T>(url: string, timeoutMs: number, apiKey: string): Promise<T | null> {
+  const body = await fetchText(url, timeoutMs, apiKey);
   if (body === null) return null;
   try {
     return JSON.parse(body) as T;
@@ -98,8 +125,8 @@ async function fetchJson<T>(url: string, timeoutMs: number): Promise<T | null> {
 
 async function enrich(videos: EnrichedVideo[], apiKey: string): Promise<EnrichedVideo[] | null> {
   const ids = videos.map((v) => v.id).join(',');
-  const url = `${VIDEOS_ENDPOINT}?part=contentDetails,statistics&id=${encodeURIComponent(ids)}&key=${encodeURIComponent(apiKey)}`;
-  const payload = await fetchJson<{ items?: ApiVideoItem[] }>(url, API_TIMEOUT_MS);
+  const url = `${VIDEOS_ENDPOINT}?part=contentDetails,statistics&id=${encodeURIComponent(ids)}`;
+  const payload = await fetchJson<{ items?: ApiVideoItem[] }>(url, API_TIMEOUT_MS, apiKey);
   if (!payload?.items) return null;
 
   const byId = new Map(payload.items.map((item) => [item.id, item]));
@@ -118,8 +145,8 @@ async function enrich(videos: EnrichedVideo[], apiKey: string): Promise<Enriched
 }
 
 async function fetchStats(channelId: string, apiKey: string): Promise<ChannelStats> {
-  const url = `${CHANNELS_ENDPOINT}?part=statistics&id=${encodeURIComponent(channelId)}&key=${encodeURIComponent(apiKey)}`;
-  const payload = await fetchJson<{ items?: ApiChannelItem[] }>(url, API_TIMEOUT_MS);
+  const url = `${CHANNELS_ENDPOINT}?part=statistics&id=${encodeURIComponent(channelId)}`;
+  const payload = await fetchJson<{ items?: ApiChannelItem[] }>(url, API_TIMEOUT_MS, apiKey);
   const statistics = payload?.items?.[0]?.statistics;
   if (!statistics) return {};
 
@@ -143,8 +170,8 @@ async function fetchUploadsPage(
   pageToken?: string,
 ): Promise<PlaylistItemsPayload | null> {
   const token = pageToken === undefined ? '' : `&pageToken=${encodeURIComponent(pageToken)}`;
-  const url = `${PLAYLIST_ITEMS_ENDPOINT}?part=snippet,status&maxResults=${UPLOADS_PAGE_SIZE}&playlistId=${encodeURIComponent(uploadsId)}${token}&key=${encodeURIComponent(apiKey)}`;
-  return fetchJson<PlaylistItemsPayload>(url, API_TIMEOUT_MS);
+  const url = `${PLAYLIST_ITEMS_ENDPOINT}?part=snippet,status&maxResults=${UPLOADS_PAGE_SIZE}&playlistId=${encodeURIComponent(uploadsId)}${token}`;
+  return fetchJson<PlaylistItemsPayload>(url, API_TIMEOUT_MS, apiKey);
 }
 
 async function fetchDeepUploads(channelId: string, apiKey: string): Promise<EnrichedVideo[]> {
@@ -179,7 +206,9 @@ export async function loadFixtureFeed(
 ): Promise<ChannelFeed | null> {
   const path = vars[FEED_FIXTURE_ENV];
   if (!path || vars.VERCEL) return null;
-  const fixture = JSON.parse(await readFile(path, 'utf8')) as ChannelFeed;
+  const fixture: ChannelFeed = ChannelFeedSchema.parse(
+    JSON.parse(await readFile(path, 'utf8')),
+  ) as ChannelFeed;
   return {
     ...fixture,
     latest: fixture.latest

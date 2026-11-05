@@ -2,9 +2,11 @@ import { z } from 'zod';
 
 import { log } from '@/lib/log';
 import { getErrorLogLimit, getRedis } from '@/lib/rate-limit';
+import { withBodyLimit } from '@/lib/server/body-limit';
 import { defineHandler, err, ok } from '@/lib/server/route';
 
 const SMOKE_PREFIX = '[smoke]';
+const MAX_LOG_BODY_BYTES = 32_768;
 
 const ERR_KV_TTL_S = 30 * 24 * 60 * 60;
 
@@ -17,7 +19,7 @@ const ErrorPayload = z.object({
   ts: z.string().optional(),
 });
 
-export const POST = defineHandler({
+const handleLog = defineHandler({
   schema: ErrorPayload,
   rateLimit: getErrorLogLimit,
   rateLimitErrorMessage: 'too many error reports',
@@ -51,3 +53,5 @@ export const POST = defineHandler({
     return ok({ requestId });
   },
 });
+
+export const POST = withBodyLimit(handleLog, MAX_LOG_BODY_BYTES);

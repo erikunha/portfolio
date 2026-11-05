@@ -18,6 +18,7 @@ import {
   reserveBudget,
   settleBudget,
 } from '@/lib/rate-limit';
+import { withBodyLimit } from '@/lib/server/body-limit';
 import { ASK_LOCALE_HEADER, STREAM_ERR_SENTINEL } from '@/lib/stream-protocol';
 
 const REQUEST_TIMEOUT_MS = 30_000;
@@ -72,7 +73,9 @@ function siteLocaleOf(value: unknown): SiteLocale | null {
   return value === SITE_LOCALE.pt || value === SITE_LOCALE.en ? value : null;
 }
 
-export async function POST(req: NextRequest) {
+const MAX_ASK_BODY_BYTES = 8_192;
+
+async function handleAsk(req: NextRequest): Promise<Response> {
   const pageLocale = siteLocaleOf(req.headers.get(ASK_LOCALE_HEADER)) ?? SITE_LOCALE.en;
   const askFlag = (env.ASK_ENABLED ?? '').trim().toLowerCase();
   if (OFF_KEYWORDS.has(askFlag)) {
@@ -305,3 +308,5 @@ export async function POST(req: NextRequest) {
     },
   });
 }
+
+export const POST = withBodyLimit(handleAsk, MAX_ASK_BODY_BYTES);

@@ -7,6 +7,7 @@ const redis = {
   get: vi.fn(),
   hget: vi.fn(),
   hincrby: vi.fn(),
+  zcard: vi.fn(),
 };
 vi.mock('@/lib/rate-limit', () => ({ getRedis: () => redis }));
 
@@ -14,17 +15,25 @@ describe('contact outbox', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     transaction.exec.mockResolvedValue([1, 1]);
+    redis.zcard.mockResolvedValue(0);
   });
 
   it('atomically queues an id ordered by receivedAt with zero retry attempts', async () => {
     const { enqueueContact } = await import('@/lib/contact-outbox');
-    await enqueueContact('message-id', '2026-10-24T02:00:00.000Z');
+    expect(await enqueueContact('message-id', '2026-10-24T02:00:00.000Z')).toBe(true);
     expect(transaction.zadd).toHaveBeenCalledWith('contact:outbox', {
       score: Date.parse('2026-10-24T02:00:00.000Z'),
       member: 'message-id',
     });
     expect(transaction.hset).toHaveBeenCalledWith('contact:outbox:attempts', { 'message-id': 0 });
     expect(transaction.exec).toHaveBeenCalledOnce();
+  });
+
+  it('refuses a new id once the outbox holds its cap', async () => {
+    const { CONTACT_OUTBOX_MAX, enqueueContact } = await import('@/lib/contact-outbox');
+    redis.zcard.mockResolvedValueOnce(CONTACT_OUTBOX_MAX);
+    expect(await enqueueContact('message-id', '2026-10-24T02:00:00.000Z')).toBe(false);
+    expect(transaction.exec).not.toHaveBeenCalled();
   });
 
   it('reads all pending ids from the sorted set in ascending receivedAt order', async () => {

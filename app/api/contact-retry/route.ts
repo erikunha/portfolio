@@ -11,9 +11,9 @@ import {
 } from '@/lib/contact-outbox';
 import { env } from '@/lib/env';
 import { log } from '@/lib/log';
+import { isCronAuthorized } from '@/lib/server/cron-auth';
 import { ok } from '@/lib/server/route';
 
-const AUTHORIZATION_HEADER = 'authorization';
 const UNAUTHORIZED_STATUS = 401;
 const DROP_REASON = { expired: 'expired', exhausted: 'exhausted' } as const;
 type DropReason = (typeof DROP_REASON)[keyof typeof DROP_REASON];
@@ -27,7 +27,7 @@ export const maxDuration = 60;
 
 export async function GET(req: NextRequest): Promise<Response> {
   const cronSecret = env.CRON_SECRET;
-  if (!cronSecret || req.headers.get(AUTHORIZATION_HEADER) !== `Bearer ${cronSecret}`) {
+  if (!isCronAuthorized(req, cronSecret)) {
     return new Response('Unauthorized', { status: UNAUTHORIZED_STATUS });
   }
 
