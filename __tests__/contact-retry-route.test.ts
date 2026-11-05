@@ -67,6 +67,29 @@ describe('daily contact delivery retry', () => {
     expect((await GET(request('Bearer '))).status).toBe(401);
   });
 
+  it('drops a message whose receivedAt cannot be parsed instead of retrying it forever', async () => {
+    redis.get.mockResolvedValueOnce({ ...stored, receivedAt: 'not-a-date' });
+    const { GET } = await import('@/app/api/contact-retry/route');
+    const body = await (await GET(request())).json();
+    expect(body.data).toEqual({ sent: 0, failed: 0, expired: 1, exhausted: 0 });
+    expect(send).not.toHaveBeenCalled();
+    expect(logger.warn).toHaveBeenCalledWith(
+      'contact retry dropped',
+      expect.objectContaining({ msgId: 'message-id', reason: 'expired' }),
+    );
+  });
+
+  it('logs a message dropped after its last attempt', async () => {
+    redis.hget.mockResolvedValueOnce(99);
+    const { GET } = await import('@/app/api/contact-retry/route');
+    const body = await (await GET(request())).json();
+    expect(body.data.exhausted).toBe(1);
+    expect(logger.warn).toHaveBeenCalledWith(
+      'contact retry dropped',
+      expect.objectContaining({ msgId: 'message-id', reason: 'exhausted' }),
+    );
+  });
+
   it('returns zero counts for an empty outbox', async () => {
     redis.zrange.mockResolvedValueOnce([]);
     const { GET } = await import('@/app/api/contact-retry/route');

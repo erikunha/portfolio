@@ -83,6 +83,8 @@ const readingViewsFor = (locale: SiteLocale): ReadingViews => {
             'buscava escala de produto ai-native': 'Entrou para escalar um produto AI-native.',
             'buscava escala regulada em múltiplos mercados':
               'Entrou para atuar em escala regulada e multi-mercado.',
+            'obteve 40m+ transações/ano em mais de 15 jurisdições e 31,1m clientes em uma plataforma de pagamentos pci-dss':
+              'Entregou uma plataforma de pagamentos PCI-DSS com 40M+ transações por ano em mais de 15 jurisdições e 31,1M clientes.',
             'reconstruiu uma plataforma de serviço de equipamentos hospitalares: ordens de serviço, agendamento de especialistas, visitas de campo':
               'Reconstruiu uma plataforma de serviço de equipamentos hospitalares.',
             'angular 17 para 19': 'Atualizou a plataforma de Angular 17 para 19.',
@@ -99,8 +101,8 @@ const readingViewsFor = (locale: SiteLocale): ReadingViews => {
             'wanted ai-native product scale': 'Joined to scale an AI-native product.',
             'wanted regulated multi-market scale':
               'Joined to work at regulated, multi-market scale.',
-            'got 40m+ tx/yr across 15+ jurisdictions on a pci-dss payment platform':
-              'Shipped a PCI-DSS payment platform handling 40M+ transactions a year across 15+ jurisdictions.',
+            'got 40m+ tx/yr across 15+ jurisdictions and 31.1m customers on a pci-dss payment platform':
+              'Shipped a PCI-DSS payment platform handling 40M+ transactions a year across 15+ jurisdictions and 31.1M customers.',
             'angular 17 to 19': 'Upgraded the platform from Angular 17 to 19.',
             'next.js storefronts for nike brazil and centauro (8m+ mau)':
               'Shipped Next.js storefronts for Nike Brazil and Centauro (8M+ MAU).',
@@ -290,8 +292,6 @@ export const summaryDocument: Record<SiteLocale, ReturnType<typeof summaryDocume
 
 const PROFILE_PAGE_TYPE = 'ProfilePage';
 
-// Machine-readable: the JSON-LD stays English on both locales (DECISIONS
-// 2026-10-30: machine-readable surfaces speak the resume).
 export const cvJsonLd = CvJsonLdSchema.parse({
   '@context': 'https://schema.org',
   '@type': PROFILE_PAGE_TYPE,

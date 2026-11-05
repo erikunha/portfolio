@@ -15,6 +15,13 @@ import { ok } from '@/lib/server/route';
 
 const AUTHORIZATION_HEADER = 'authorization';
 const UNAUTHORIZED_STATUS = 401;
+const DROP_REASON = { expired: 'expired', exhausted: 'exhausted' } as const;
+type DropReason = (typeof DROP_REASON)[keyof typeof DROP_REASON];
+
+function isStale(receivedAt: string): boolean {
+  const age = Date.now() - Date.parse(receivedAt);
+  return !Number.isFinite(age) || age > CONTACT_MAX_RETRY_AGE_MS;
+}
 
 export const maxDuration = 60;
 
@@ -28,23 +35,24 @@ export async function GET(req: NextRequest): Promise<Response> {
   const counts = { sent: 0, failed: 0, expired: 0, exhausted: 0 };
   const pendingIds = await getPendingContactIds();
 
+  const drop = async (msgId: string, reason: DropReason) => {
+    await removePendingContact(msgId);
+    counts[reason]++;
+    log.warn('contact retry dropped', { requestId, msgId, reason });
+  };
+
   for (const msgId of pendingIds) {
     try {
       const message = await getContactMessage(msgId);
-      if (!message || Date.now() - Date.parse(message.receivedAt) > CONTACT_MAX_RETRY_AGE_MS) {
-        await removePendingContact(msgId);
-        counts.expired++;
+      if (!message || isStale(message.receivedAt)) {
+        await drop(msgId, DROP_REASON.expired);
         continue;
       }
-      if ((await getContactAttempts(msgId)) >= CONTACT_MAX_RETRY_ATTEMPTS) {
-        await removePendingContact(msgId);
-        counts.exhausted++;
-        continue;
-      }
-      const attempts = await incrementContactAttempts(msgId);
-      if (attempts > CONTACT_MAX_RETRY_ATTEMPTS) {
-        await removePendingContact(msgId);
-        counts.exhausted++;
+      if (
+        (await getContactAttempts(msgId)) >= CONTACT_MAX_RETRY_ATTEMPTS ||
+        (await incrementContactAttempts(msgId)) > CONTACT_MAX_RETRY_ATTEMPTS
+      ) {
+        await drop(msgId, DROP_REASON.exhausted);
         continue;
       }
       if (await sendContactMessage(msgId, message, requestId)) {

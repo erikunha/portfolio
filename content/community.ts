@@ -1,9 +1,6 @@
 import { type CommunityEvent, CommunityEventSchema } from './schemas';
 import { SITE_LOCALE, type SiteLocale } from './site-locale';
 
-// The English copy is canonical: the identity gate holds the JSON-LD and
-// llms.txt to these sentences, and the ask prompt cites them. pt-BR is the
-// rendered variant for the locale routes.
 const communityEventFor = (locale: SiteLocale): CommunityEvent => {
   const pt = locale === SITE_LOCALE.pt;
   return CommunityEventSchema.parse({

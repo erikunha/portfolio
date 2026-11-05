@@ -51,7 +51,7 @@ const hottestTakesFor = (locale: SiteLocale): HottestTake[] => {
         : 'Framework-agnostic design systems lose unless the contract is shipping, not theory.',
       body: pt
         ? 'Web Components só se pagam quando você tem mais de 1 framework consumindo-os em produção. Caso contrário, você comprou overhead de distribuição para resolver um problema que não tem. Stencil na Betsson funcionou porque Angular, React e Ember estavam de fato downstream, não porque alguém leu um blog post.'
-        : "Web Components only pay off when you have >1 framework consuming them in production. Otherwise you bought distribution overhead to solve a problem you don't have. Stencil at Betsson worked because Angular, React, and Ember were all actually downstream — not because someone read a blog post.",
+        : "Web Components only pay off when you have >1 framework consuming them in production. Otherwise you bought distribution overhead to solve a problem you don't have. Stencil at Betsson worked because Angular, React, and Ember were all actually downstream, not because someone read a blog post.",
     },
     {
       num: '09.',

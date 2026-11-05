@@ -7,7 +7,7 @@ import { SHELL_LIMITS, ShellCommand, ShellLineKind, type ShellUi } from '@/conte
 import type { SiteLocale } from '@/content/site-locale';
 import { WindowChrome } from '@/design-system';
 import { readMotion } from '@/lib/motion';
-import { parseStreamChunk } from '@/lib/stream-protocol';
+import { ASK_LOCALE_HEADER, parseStreamChunk } from '@/lib/stream-protocol';
 import { useBreakpoint } from '@/lib/use-breakpoint.client';
 
 type LineKind = (typeof ShellLineKind)[keyof typeof ShellLineKind];
@@ -308,7 +308,7 @@ export function InteractiveShell({
       try {
         const response = await fetch(ASK_ENDPOINT, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', [ASK_LOCALE_HEADER]: locale },
           body: JSON.stringify({ question, locale }),
           signal: controller.signal,
         });

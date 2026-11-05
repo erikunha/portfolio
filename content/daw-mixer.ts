@@ -1,10 +1,6 @@
 import { type DawMixer, DawMixerSchema } from './schemas';
 import { SITE_LOCALE, type SiteLocale } from './site-locale';
 
-// DAW voice (track names, plugins, knobs, transport, terminal lines) stays
-// English on both locales: a DAW speaks English everywhere, including in
-// Brazil. Channel descriptions are visitor-facing prose and carry the
-// translation.
 const dawMixerFor = (locale: SiteLocale): DawMixer => {
   const pt = locale === SITE_LOCALE.pt;
   return DawMixerSchema.parse({
@@ -59,7 +55,7 @@ const dawMixerFor = (locale: SiteLocale): DawMixer => {
       {
         id: 'MASTER',
         name: '2-BUSS',
-        desktopName: '2-BUSS — STEREO OUT',
+        desktopName: '2-BUSS · STEREO OUT',
         desc: pt
           ? 'soma de **2 faixas de gtr** · cadeia de masterização · feel over noise'
           : 'sum of **2 gtr tracks** · mastering chain · feel over noise',

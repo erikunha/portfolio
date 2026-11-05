@@ -60,10 +60,6 @@ export type Navigation = {
   siteLinks: readonly SiteLink[];
 };
 
-// Client islands (drawer, dock, topbar, position meter) receive the picked
-// locale's Navigation as props, so both languages never enter one chunk. This
-// module stays zod-free for the same reason; createNavigationSchema in
-// ./schemas validates each locale copy.
 const navigationFor = (locale: SiteLocale): Navigation => {
   const pt = locale === SITE_LOCALE.pt;
   return {
@@ -193,8 +189,6 @@ export type DrawerGroup = {
   sections: readonly DrawerSection[];
 };
 
-// Pre-resolved drawer rows for one locale: labels and hash hrefs are baked in
-// on the server so the client islands never read the bilingual navigation.
 export function drawerGroups(locale: SiteLocale): readonly DrawerGroup[] {
   return NAVIGATION[locale].groups.map((group) => ({
     id: group.id,
@@ -218,8 +212,6 @@ export type SiteNavChrome = {
   topbarNav: readonly TopbarNavLink[];
   topbarReading: TopbarNavLink;
   topbarHire: TopbarNavLink & { accessibleName: string };
-  // Structural, locale-free section maps, pre-resolved on the server so the
-  // dock never reads the bilingual navigation module at runtime.
   sectionHrefs: Readonly<Record<string, string>>;
   dockKeyBySection: Readonly<Record<string, DockKey>>;
 };

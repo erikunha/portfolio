@@ -20,9 +20,6 @@ export const projectPresentation: Record<
   },
 };
 
-// Project names and stat values are facts (tokens and numbers stay identical
-// across locales, held to the perf receipts by __tests__/metric-consistency);
-// descriptions and stat labels carry the translation.
 const projectsFor = (locale: SiteLocale): Project[] => {
   const pt = locale === SITE_LOCALE.pt;
   return z

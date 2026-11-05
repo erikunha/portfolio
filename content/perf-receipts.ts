@@ -2,9 +2,6 @@ import { z } from 'zod';
 import { type PerfReceipt, PerfReceiptSchema } from './schemas';
 import { SITE_LOCALE, type SiteLocale } from './site-locale';
 
-// Deltas, metrics and companies are facts held to every public surface by
-// __tests__/metric-consistency.test.ts; only the note gloss translates. The
-// English copy stays canonical for the ask prompt and /api/erik.json.
 const perfReceiptsFor = (locale: SiteLocale): PerfReceipt[] => {
   const pt = locale === SITE_LOCALE.pt;
   return z.array(PerfReceiptSchema).parse([

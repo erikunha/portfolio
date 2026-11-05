@@ -5,10 +5,6 @@ import {
   type SiteLocale,
 } from '@/content/site-locale';
 
-// Language switch for the reading views, which render without the site shell
-// and its drawer (DECISIONS 2026-11-03: the reading layout stays print-first).
-// Same contract as the drawer switch: links with hrefLang + aria-current,
-// rendered only where the page exists in both languages.
 export function ReadingLanguageSwitch({
   locale,
   label,

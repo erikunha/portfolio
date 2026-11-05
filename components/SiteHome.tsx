@@ -16,9 +16,6 @@ import { siteNavChrome } from '@/content/navigation';
 import type { SiteLocale } from '@/content/site-locale';
 import { BreakpointProvider } from '@/lib/use-breakpoint.client';
 
-// The one home tree, rendered once per locale. The address alone determines
-// the language (DECISIONS 2026-08-30): `/` renders English, `/pt` pt-BR, with
-// no framework, negotiation or middleware anywhere in the path.
 export function SiteHome({ locale }: { locale: SiteLocale }) {
   return (
     <BreakpointProvider initialIsMobile={false}>

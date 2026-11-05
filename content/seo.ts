@@ -110,11 +110,6 @@ export const personSchema = {
   alumniOf: [
     {
       '@type': 'CollegeOrUniversity',
-      name: 'Instituto Infnet',
-      address: { '@type': 'PostalAddress', addressCountry: 'BR' },
-    },
-    {
-      '@type': 'CollegeOrUniversity',
       name: 'Cornerstone International Community College of Canada (CICCC)',
       address: { '@type': 'PostalAddress', addressLocality: 'Vancouver', addressCountry: 'CA' },
     },

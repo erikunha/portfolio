@@ -124,14 +124,14 @@ export const linksContent: LinksContent = LinksContentSchema.parse({
       en: "No videos here yet. Subscribe so you don't miss the first one.",
     },
     pageHeading: {
-      pt: 'Erik Cunha — links, canal e contato',
-      en: 'Erik Cunha — links, channel and contact',
+      pt: 'Erik Cunha · links, canal e contato',
+      en: 'Erik Cunha · links, channel and contact',
     },
   },
   meta: {
     title: {
-      pt: 'Erik Cunha — AI Engineering e carreira internacional para devs',
-      en: 'Erik Cunha — AI engineering and going global as a dev',
+      pt: 'Erik Cunha · AI Engineering e carreira internacional para devs',
+      en: 'Erik Cunha · AI engineering and going global as a dev',
     },
     description: {
       pt: 'Senior Software Engineer · Full Stack, no Brasil e remoto. Um vídeo novo toda semana no canal Erik na Gringa.',

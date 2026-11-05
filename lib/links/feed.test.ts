@@ -227,6 +227,7 @@ describe('getChannelFeed pages the uploads playlist with a key', () => {
     rssBody?: string;
     pages: PageSpec[];
     durations?: Record<string, string>;
+    failVideos?: boolean;
   }) {
     vi.resetModules();
     vi.stubEnv('E2E_LINKS_FEED_FIXTURE', '');
@@ -265,6 +266,7 @@ describe('getChannelFeed pages the uploads playlist with a key', () => {
           });
         }
         if (input.includes('/videos?')) {
+          if (options.failVideos) return new Response('', { status: 503 });
           return Response.json({
             items: Object.entries(options.durations ?? {}).map(([id, duration]) => ({
               id,
@@ -283,6 +285,18 @@ describe('getChannelFeed pages the uploads playlist with a key', () => {
   }
 
   const shortDurations = (ids: string[]) => Object.fromEntries(ids.map((id) => [id, 'PT30S']));
+
+  it('never shows an upload whose length could not be checked when the videos lookup fails', async () => {
+    const { feed, requested } = await loadPaged({
+      apiKey: 'test-key',
+      pages: [{ items: ['r1'], shorts: ['s1', 's2'] }],
+      failVideos: true,
+    });
+    console.log('DBG', JSON.stringify(requested));
+    expect(feed.history.map((video) => video.id)).not.toContain('s1');
+    expect(feed.history.map((video) => video.id)).not.toContain('s2');
+    expect(feed.latest).toBeNull();
+  });
 
   it('collects regular videos across pages until the history is full', async () => {
     const shorts = Array.from({ length: 47 }, (_, i) => `s${i}`);

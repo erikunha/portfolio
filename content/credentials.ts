@@ -3,8 +3,6 @@ import { communityEvent } from './community';
 import { CareerCredentialsSchema, type Credential, CredentialSchema } from './schemas';
 import { SITE_LOCALE, type SiteLocale } from './site-locale';
 
-// Credential tags are tokens and evidence facts (issuer · year); they stay
-// identical across locales.
 export const credentials: Credential[] = z.array(CredentialSchema).parse([
   {
     label: 'ANGULAR_DEV',

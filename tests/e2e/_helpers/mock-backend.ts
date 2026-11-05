@@ -23,7 +23,7 @@ export async function installMockBackend(page: Page, state: MockState = {}): Pro
         status: 503,
         contentType: 'application/json',
         body: JSON.stringify({
-          error: 'temporarily unavailable — email erikhenriquealvescunha@gmail.com directly',
+          error: 'temporarily unavailable: email erikhenriquealvescunha@gmail.com directly',
         }),
       });
       return;
@@ -33,7 +33,7 @@ export async function installMockBackend(page: Page, state: MockState = {}): Pro
       await route.fulfill({
         status: 429,
         contentType: 'application/json',
-        body: JSON.stringify({ error: 'rate limit exceeded — try again in an hour' }),
+        body: JSON.stringify({ error: 'rate limit exceeded: try again in an hour' }),
       });
       return;
     }
@@ -43,7 +43,7 @@ export async function installMockBackend(page: Page, state: MockState = {}): Pro
         status: 503,
         contentType: 'application/json',
         body: JSON.stringify({
-          error: 'monthly budget exhausted — email erikhenriquealvescunha@gmail.com directly',
+          error: 'monthly budget exhausted: email erikhenriquealvescunha@gmail.com directly',
         }),
       });
       return;

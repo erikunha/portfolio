@@ -1,9 +1,6 @@
 import { CredentialSchema, type Education, EducationSchema } from './schemas';
 import { SITE_LOCALE, type SiteLocale } from './site-locale';
 
-// Degree and institution names are canonical facts held to llms.txt by the
-// identity gate; only display glosses (location, study mode, period, focus)
-// carry the translation.
 const educationFor = (locale: SiteLocale): Education[] => {
   const pt = locale === SITE_LOCALE.pt;
   return EducationSchema.array().parse([

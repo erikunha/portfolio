@@ -2,10 +2,6 @@ import { CV_LINK_LABEL, READING_PATHS } from './reading-paths';
 import { CareerCopySchema, type GitCommit, GitCommitSchema } from './schemas';
 import { localizedPath, SITE_LOCALE, type SiteLocale } from './site-locale';
 
-// Career entries in both locales. Facts (companies, hashes, branches, urls)
-// stay identical; dates, roles, domains and bodies carry the translation. The
-// ask system prompt and /api/erik.json read the English copy, which stays the
-// canonical resume wording.
 const gitLogFor = (locale: SiteLocale): GitCommit[] => {
   const pt = locale === SITE_LOCALE.pt;
   return GitCommitSchema.array().parse([

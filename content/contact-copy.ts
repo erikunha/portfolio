@@ -1,6 +1,7 @@
 import type { ContactContent } from './contact';
 import { SITE_LOCALE, type SiteLocale } from './site-locale';
 import { EMAIL_ADDRESS, LINKEDIN_URL } from './social-urls';
+import { WORK_SCOPE } from './work-scope';
 
 export const CONTACT_LIMITS = {
   nameMin: 1,
@@ -25,9 +26,6 @@ const REPLY_WINDOW: Record<SiteLocale, string> = {
 };
 const ERIK_PLACE = 'São Paulo';
 
-// Client islands (ContactForm, ContactTimezone, ZoneCombobox) receive the
-// picked locale's copy as props so both languages never ship in one chunk;
-// the helpers below take that copy explicitly instead of reading a global.
 const contactCopyFor = (locale: SiteLocale): ContactContent => {
   const pt = locale === SITE_LOCALE.pt;
   return {
@@ -132,7 +130,7 @@ const contactCopyFor = (locale: SiteLocale): ContactContent => {
       facts: {
         availabilityLabel: pt ? 'início' : 'start',
         modeLabel: pt ? 'modo' : 'mode',
-        modeValue: pt ? 'remoto-first · UE/EUA/CA' : 'remote-first · EU/US/CA',
+        modeValue: WORK_SCOPE[locale],
         relocationLabel: pt ? 'visto' : 'visa',
         relocationValue: pt
           ? 'aberto a realocação com patrocínio de visto'

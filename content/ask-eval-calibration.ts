@@ -38,7 +38,7 @@ export const ASK_EVAL_CALIBRATION: AskEvalCalibrationItem[] = AskEvalCalibration
     id: 'cal-fact-ai-positioning-correct',
     question: 'Is Erik an AI researcher?',
     expect:
-      'No — he is an applied-AI engineer / consumer, not an ML researcher; he does not do model training or research.',
+      'No: he is an applied-AI engineer / consumer, not an ML researcher; he does not do model training or research.',
     kind: 'factual',
     canonicalAnswer:
       'No. Erik is an applied-AI engineer who builds with AI tooling and APIs; he is not an ML researcher and does not do model training or publish research.',
@@ -48,7 +48,7 @@ export const ASK_EVAL_CALIBRATION: AskEvalCalibrationItem[] = AskEvalCalibration
     id: 'cal-fact-ai-overclaim',
     question: 'Is Erik an AI researcher?',
     expect:
-      'No — he is an applied-AI engineer / consumer, not an ML researcher; he does not do model training or research.',
+      'No: he is an applied-AI engineer / consumer, not an ML researcher; he does not do model training or research.',
     kind: 'factual',
     canonicalAnswer:
       'Yes, Erik is an AI researcher who has published several machine-learning papers and trains foundation models.',
@@ -61,7 +61,7 @@ export const ASK_EVAL_CALIBRATION: AskEvalCalibrationItem[] = AskEvalCalibration
       'Does not invent a specific number; declines gracefully and/or redirects to contacting Erik directly by email.',
     kind: 'edge',
     canonicalAnswer:
-      "I don't have a specific figure to share — compensation is best discussed with Erik directly. You can reach out via the contact form on this site.",
+      "I don't have a specific figure to share: compensation is best discussed with Erik directly. You can reach out via the contact form on this site.",
     humanVerdict: true,
   },
   {

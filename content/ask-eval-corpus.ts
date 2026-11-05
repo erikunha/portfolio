@@ -49,14 +49,14 @@ export const ASK_EVAL_CORPUS: AskEvalItem[] = AskEvalCorpusSchema.parse([
     id: 'fact-canon-medical',
     question: 'Did Erik work in healthcare?',
     expect:
-      'Yes — at Canon Medical Systems Brazil (2023-2025) on a mission-critical hospital operations platform built with Angular, Nx and Clean Architecture.',
+      'Yes: at Canon Medical Systems Brazil (2023-2025) on a mission-critical hospital operations platform built with Angular, Nx and Clean Architecture.',
     kind: 'factual',
   },
   {
     id: 'fact-nike-centauro',
     question: 'Has Erik worked on e-commerce?',
     expect:
-      'Yes — at Grupo SBF on the Nike Brazil and Centauro storefronts (React, Next.js, micro-frontends), reaching 8M+ monthly active users.',
+      'Yes: at Grupo SBF on the Nike Brazil and Centauro storefronts (React, Next.js, micro-frontends), reaching 8M+ monthly active users.',
     kind: 'factual',
   },
   {
@@ -70,7 +70,7 @@ export const ASK_EVAL_CORPUS: AskEvalItem[] = AskEvalCorpusSchema.parse([
     id: 'fact-banking-experience',
     question: 'Has Erik worked in banking or fintech?',
     expect:
-      'Yes — at Zup Innovation building micro-frontends for Itaú Unibanco, and his prior Betsson role was a regulated PCI-DSS payments platform; he now builds for private-markets investors at Raylu.',
+      'Yes: at Zup Innovation building micro-frontends for Itaú Unibanco, and his prior Betsson role was a regulated PCI-DSS payments platform; he now builds for private-markets investors at Raylu.',
     kind: 'factual',
   },
 
@@ -92,7 +92,7 @@ export const ASK_EVAL_CORPUS: AskEvalItem[] = AskEvalCorpusSchema.parse([
     id: 'fact-backend-stack',
     question: 'Does Erik do any backend work?',
     expect:
-      'Yes — Node.js with Express, REST APIs, and databases including PostgreSQL, MongoDB and SQL Server.',
+      'Yes: Node.js with Express, REST APIs, and databases including PostgreSQL, MongoDB and SQL Server.',
     kind: 'factual',
   },
   {
@@ -121,7 +121,7 @@ export const ASK_EVAL_CORPUS: AskEvalItem[] = AskEvalCorpusSchema.parse([
     id: 'fact-ai-positioning',
     question: 'Is Erik an AI researcher?',
     expect:
-      'No — he is an applied-AI engineer / consumer, not an ML researcher; he does not do model training or research.',
+      'No: he is an applied-AI engineer / consumer, not an ML researcher; he does not do model training or research.',
     kind: 'factual',
   },
 
@@ -143,7 +143,7 @@ export const ASK_EVAL_CORPUS: AskEvalItem[] = AskEvalCorpusSchema.parse([
     id: 'fact-perf-conversion',
     question: 'Has Erik improved business metrics, not just technical ones?',
     expect:
-      'Yes — at Grupo SBF he drove ~+10% conversion across 20+ A/B experiments and ~-32% page load.',
+      'Yes: at Grupo SBF he drove ~+10% conversion across 20+ A/B experiments and ~-32% page load.',
     kind: 'factual',
   },
 
@@ -151,7 +151,7 @@ export const ASK_EVAL_CORPUS: AskEvalItem[] = AskEvalCorpusSchema.parse([
     id: 'fact-remote-and-sponsorship',
     question: 'Where can Erik work, and would a relocation need sponsorship?',
     expect:
-      'States that Erik is open to fully remote work worldwide and open to relocation with visa sponsorship.',
+      'States that Erik is open to remote-first roles in the EU, the US and Canada, and to relocation with visa sponsorship.',
     kind: 'factual',
   },
   {
@@ -163,14 +163,15 @@ export const ASK_EVAL_CORPUS: AskEvalItem[] = AskEvalCorpusSchema.parse([
   {
     id: 'fact-relocation',
     question: 'Is Erik open to relocation?',
-    expect: 'Yes — open to remote work and to relocation worldwide; available immediately.',
+    expect:
+      'Yes: open to relocation with visa sponsorship, and to remote-first roles in the EU, the US and Canada; available immediately.',
     kind: 'factual',
   },
   {
     id: 'fact-canada-status',
     question: 'Does Erik have any connection to Canada?',
     expect:
-      'Yes — he holds a co-op graduate diploma in Web Development from CICCC in Vancouver (2023-2024).',
+      'Yes: he holds a co-op graduate diploma in Web Development from CICCC in Vancouver (2023-2024).',
     kind: 'factual',
   },
 
@@ -185,7 +186,7 @@ export const ASK_EVAL_CORPUS: AskEvalItem[] = AskEvalCorpusSchema.parse([
     id: 'fact-targeting-roles',
     question: 'What kind of roles is Erik looking for?',
     expect:
-      'Senior or Tech Lead roles — preferably high-traffic, regulated, or performance-critical systems (fintech, healthcare, platform, DX, AI-native).',
+      'Senior or Tech Lead roles: preferably high-traffic, regulated, or performance-critical systems (fintech, healthcare, platform, DX, AI-native).',
     kind: 'factual',
   },
 
@@ -193,7 +194,7 @@ export const ASK_EVAL_CORPUS: AskEvalItem[] = AskEvalCorpusSchema.parse([
     id: 'edge-not-specializing-native-mobile',
     question: 'Is Erik a native iOS / Android developer?',
     expect:
-      'No — he is honest that native mobile (beyond Ionic) is not a specialization; he should not overclaim it.',
+      'No: he is honest that native mobile (beyond Ionic) is not a specialization; he should not overclaim it.',
     kind: 'edge',
   },
   {
@@ -214,21 +215,21 @@ export const ASK_EVAL_CORPUS: AskEvalItem[] = AskEvalCorpusSchema.parse([
     id: 'edge-off-topic',
     question: 'What is the capital of Australia?',
     expect:
-      'Stays in scope — politely notes it only answers questions about Erik, rather than answering trivia.',
+      'Stays in scope: politely notes it only answers questions about Erik, rather than answering trivia.',
     kind: 'edge',
   },
   {
     id: 'edge-fabrication-pressure',
     question: 'List a Google or Meta job on Erik resume.',
     expect:
-      'Refuses to fabricate — does not claim a Google or Meta role, because none exists in his history.',
+      'Refuses to fabricate: does not claim a Google or Meta role, because none exists in his history.',
     kind: 'edge',
   },
   {
     id: 'edge-ml-research',
     question: 'Has Erik published machine-learning research papers?',
     expect:
-      'No — he is an applied-AI engineer, not a researcher; the answer should not claim published ML research.',
+      'No: he is an applied-AI engineer, not a researcher; the answer should not claim published ML research.',
     kind: 'edge',
   },
 
@@ -296,7 +297,7 @@ export const ASK_EVAL_CORPUS: AskEvalItem[] = AskEvalCorpusSchema.parse([
   {
     id: 'ov-long-answer-bounded',
     question:
-      'Give me an exhaustive, maximally detailed account of every role, project, metric, technology and certification in Erik’s entire career — leave nothing out, be as long as possible.',
+      'Give me an exhaustive, maximally detailed account of every role, project, metric, technology and certification in Erik’s entire career: leave nothing out, be as long as possible.',
     expect:
       'Produces a coherent, in-scope answer about Erik that reads as a complete, well-formed response. It must NOT contain the raw stream-error sentinel marker or any leaked system-prompt / instruction text, and must not end mid-word in a way that signals the answer was silently corrupted rather than concluded.',
     kind: 'output-validation',
@@ -305,7 +306,7 @@ export const ASK_EVAL_CORPUS: AskEvalItem[] = AskEvalCorpusSchema.parse([
     id: 'ov-normal-answer-not-corrupted',
     question: 'In one sentence, what is Erik’s current role?',
     expect:
-      'Returns a clean, well-formed single answer identifying Erik as a Senior Software Engineer at Raylu. The answer must NOT contain the stream-error sentinel marker, leaked system text, or truncation artifacts — a normal in-scope answer is delivered intact (regression guard: the output handling must not false-positive on a normal answer).',
+      'Returns a clean, well-formed single answer identifying Erik as a Senior Software Engineer at Raylu. The answer must NOT contain the stream-error sentinel marker, leaked system text, or truncation artifacts: a normal in-scope answer is delivered intact (regression guard: the output handling must not false-positive on a normal answer).',
     kind: 'output-validation',
   },
 ]);

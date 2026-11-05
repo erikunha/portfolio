@@ -1,9 +1,6 @@
 import type { ErrorsClientContent } from './schemas';
 import { SITE_LOCALE, type SiteLocale } from './site-locale';
 
-// Client error chrome (app/global-error boundaries). Server parents thread the
-// picked locale's copy as props; the root global-error uses English, the
-// default locale.
 const errorsClientContentFor = (locale: SiteLocale): ErrorsClientContent => {
   const pt = locale === SITE_LOCALE.pt;
   return {

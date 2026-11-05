@@ -36,18 +36,11 @@ export const SHELL_LIMITS = {
   placeholderPauseMs: 300,
 } as const;
 
-// ARIA label for the Suspense fallback while the shell chunk loads; threaded
-// as a prop from the server section so the client never reads content.
 export const shellLoadingLabel: Record<SiteLocale, string> = {
   [SITE_LOCALE.en]: 'Loading interactive shell',
   [SITE_LOCALE.pt]: 'Carregando shell interativo',
 };
 
-// Commands, suggestion chips and local command outputs are the shell's own
-// voice: they stay English on both locales (the /links page makes the same
-// call for its shell chrome). Labels, hints, errors and privacy copy carry
-// the translation. InteractiveShell receives the picked copy as props so both
-// languages never ship in one chunk.
 export const shellUi: Record<SiteLocale, ShellUi> = {
   [SITE_LOCALE.en]: {
     welcome: 'Connected. Type help to list commands, or ask me anything about Erik.',

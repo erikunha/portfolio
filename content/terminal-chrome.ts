@@ -1,8 +1,6 @@
 import type { TerminalChrome } from './schemas';
 import { SITE_LOCALE, type SiteLocale } from './site-locale';
 
-// Window chrome is machine voice and stays identical in both locales; the
-// module prompts are terminal facts (host, shell, session id).
 export const shellChrome: Record<SiteLocale, TerminalChrome> = {
   [SITE_LOCALE.en]: {
     promptLabel: 'erik@portfolio · /bin/sh',

@@ -2,9 +2,6 @@ import { errorsClientContent } from './errors-client';
 import type { ErrorsContent } from './schemas';
 import { SITE_LOCALE, type SiteLocale } from './site-locale';
 
-// The 404 page renders in the default locale (English): an unmatched address
-// carries no locale, and a single prerendered not-found cannot know one. The
-// pt-BR variant still exists for client error surfaces rendered under /pt.
 const errorsContentFor = (locale: SiteLocale): ErrorsContent => {
   const pt = locale === SITE_LOCALE.pt;
   return {

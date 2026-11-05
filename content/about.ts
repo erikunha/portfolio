@@ -1,10 +1,8 @@
 import { type AboutContent, AboutContentSchema } from './schemas';
 import { SITE_LOCALE, type SiteLocale } from './site-locale';
 import { social } from './social';
+import { WORK_SCOPE } from './work-scope';
 
-// The with-retry sample is code: its comments stay English on both locales
-// (DECISIONS 2026-10-30 fixed its 32-char-per-line wrap budget at 320px, and a
-// code sample reads as code in either language).
 const codeTokens = [
   { text: '// retry an RxJS stream with', className: 'text-primary-400 italic' },
   { text: '\n', className: '' },
@@ -129,8 +127,8 @@ const aboutFor = (locale: SiteLocale): AboutContent => {
       statusPrefix: pt ? 'Aberto a ' : 'Open to ',
       role: pt ? '[Sênior]' : '[Senior]',
       statusSuffix: pt
-        ? ' cargos ou contratos de impacto · remoto-first · UE/EUA/CA · Inglês C1.'
-        : ' roles or impactful contract roles · remote-first · EU/US/CA · English C1.',
+        ? ` cargos ou contratos de impacto · ${WORK_SCOPE[locale]} · Inglês C1.`
+        : ` roles or impactful contract roles · ${WORK_SCOPE[locale]} · English C1.`,
       details: [
         pt ? '- Nível: Sênior' : '- Level: Senior',
         pt
@@ -195,7 +193,6 @@ const aboutFor = (locale: SiteLocale): AboutContent => {
     },
     code: {
       title: '$ cat src/lib/with-retry.ts',
-      label: pt ? 'código README' : 'README code',
       repoLabel: 'github',
       repoGlyph: '↗',
       repoHref: social.github,

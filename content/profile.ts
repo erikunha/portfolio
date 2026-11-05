@@ -2,9 +2,6 @@ import { type Profile, ProfileSchema } from './schemas';
 import { SITE_LOCALE, type SiteLocale } from './site-locale';
 import { social } from './social';
 
-// Canonical facts in English. Machine-readable surfaces (ask system prompt,
-// JSON-LD, llms.txt, /api/erik.json) read this object and stay English per
-// DECISIONS 2026-10-30; visitor-facing rendering reads profilePresentation.
 const TECHNOLOGY_SEPARATOR = ' · ';
 
 const profileFields = ProfileSchema.parse({

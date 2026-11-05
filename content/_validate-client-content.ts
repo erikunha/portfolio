@@ -33,8 +33,6 @@ const LOCALES = Object.values(SITE_LOCALE) as SiteLocale[];
 z.array(DmesgLineSchema).parse(dmesgLines);
 ShellCommandsSchema.parse(SHELL_RESPONSES);
 for (const locale of LOCALES) {
-  // Client islands receive the picked locale copy as props; both must parse so
-  // neither language can ship malformed strings into a chunk or the RSC payload.
   ShellUiSchema.parse(shellUi[locale]);
   TerminalChromeSchema.parse(shellChrome[locale]);
   TerminalChromeSchema.parse(contactChrome[locale]);

@@ -11,7 +11,7 @@ const SHELL_RESPONSES: ShellResponse[] = [
   {
     commands: [ShellCommand.WhoIs, ShellCommand.WhoAmI],
     kind: ShellLineKind.Output,
-    text: `erik — ${WHOIS_TITLE}`,
+    text: `erik · ${WHOIS_TITLE}`,
   },
   {
     commands: [ShellCommand.WhoIsRecursive, ShellCommand.WhoAmIRecursive],

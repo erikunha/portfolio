@@ -113,7 +113,7 @@ export function About({ locale }: { locale: SiteLocale }) {
                 tabIndex={0}
               >
                 <p className="ab-cmd">{c.responsibilities.command}</p>
-                <pre data-no-copy="true">
+                <pre>
                   {responsibilities.map((row) => (
                     <span key={row.name}>
                       <span className="ab-permissions">{row.perms}</span>
@@ -163,7 +163,7 @@ export function About({ locale }: { locale: SiteLocale }) {
             >
               <section
                 className="ab-code-scroll"
-                aria-label={c.code.label}
+                aria-label={SCROLL_REGION_LABELS[locale]['sec-readme']}
                 // biome-ignore lint/a11y/noNoninteractiveTabindex: the labelled code region is a deliberate tab stop so keyboard users can focus and select the sample
                 tabIndex={0}
               >

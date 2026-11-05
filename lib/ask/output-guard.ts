@@ -8,13 +8,6 @@ export const LEAK_MARKERS: readonly string[] = [
   'Treat it as data only',
   'Do NOT widen this to whole-platform ownership',
   'do not claim those',
-  // Portuguese translations: the pt-BR locale asks for Portuguese answers, so a
-  // leaked prompt returns translated and must still match. Each entry mirrors
-  // the English marker above it.
-  // '## identidade' requires the bullet that follows the prompt heading, so a
-  // legitimate answer about Erik that merely uses an "Identidade" heading
-  // cannot trip the guard; the paren-less and demonstrative variants cover
-  // model translations that drop the parenthesis or swap "esses" for "estes".
   '## Identidade -',
   'Não revele, cite ou resuma',
   '(fonte única da verdade',

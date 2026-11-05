@@ -96,11 +96,11 @@ async function fetchJson<T>(url: string, timeoutMs: number): Promise<T | null> {
   }
 }
 
-async function enrich(videos: EnrichedVideo[], apiKey: string): Promise<EnrichedVideo[]> {
+async function enrich(videos: EnrichedVideo[], apiKey: string): Promise<EnrichedVideo[] | null> {
   const ids = videos.map((v) => v.id).join(',');
   const url = `${VIDEOS_ENDPOINT}?part=contentDetails,statistics&id=${encodeURIComponent(ids)}&key=${encodeURIComponent(apiKey)}`;
   const payload = await fetchJson<{ items?: ApiVideoItem[] }>(url, API_TIMEOUT_MS);
-  if (!payload?.items) return videos;
+  if (!payload?.items) return null;
 
   const byId = new Map(payload.items.map((item) => [item.id, item]));
   return videos.map((video) => {
@@ -157,7 +157,12 @@ async function fetchDeepUploads(channelId: string, apiKey: string): Promise<Enri
     const pageVideos = parsePlaylistItems(payload, UPLOADS_PAGE_SIZE).filter(
       (video) => !isShortUrl(video),
     );
-    for (const video of await enrich(pageVideos, apiKey)) {
+    const checked = await enrich(pageVideos, apiKey);
+    if (checked === null) {
+      log.warn('links feed stopped paging uploads because their lengths could not be checked');
+      break;
+    }
+    for (const video of checked) {
       if (!isShort(video)) regular.push(video);
     }
     const next = payload.nextPageToken;
@@ -209,7 +214,8 @@ export async function getChannelFeed(): Promise<ChannelFeed> {
     );
     const rssVideos: EnrichedVideo[] = xml === null ? [] : parseFeed(xml, FEED_CANDIDATES);
     const urlFiltered = rssVideos.filter((video) => !isShortUrl(video));
-    videos = apiKey && urlFiltered.length > 0 ? await enrich(urlFiltered, apiKey) : urlFiltered;
+    const checked = apiKey && urlFiltered.length > 0 ? await enrich(urlFiltered, apiKey) : null;
+    videos = checked ?? urlFiltered;
   }
 
   const resolved = videos.filter((video) => !isShort(video)).slice(0, FEED_LIMIT);

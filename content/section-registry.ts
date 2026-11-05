@@ -12,9 +12,6 @@ export const SECTION_ICONS = {
   contact: 'contact',
 } as const;
 
-// Labels are per-locale records: the drawer, dock and module headings pick the
-// active locale at render. This module stays zod-free (client islands import
-// it), so the shape is held by SectionRegistrySchema in ./schemas instead.
 export const SECTION_NAV = [
   { id: 'bio', label: { en: 'Home', pt: 'Início' }, order: 1 },
   { id: 'sec-readme', label: { en: 'About', pt: 'Sobre' }, order: 2 },
