@@ -113,7 +113,7 @@ The AI feature has its own domain:
 - **`AskEvalItem`** (`content/ask-eval-corpus.ts`): an evaluation case `{ id, question, expect, kind }`, `kind ∈ {factual, edge, jailbreak, output-validation}`. The `expect` is a natural-language criterion an LLM judge scores. Ground truth is pulled from the _live_ content modules, so content/persona drift becomes a failing eval.
 - **`AskEvalCalibrationItem`** (`content/ask-eval-calibration.ts`): a gold case with a `canonicalAnswer` + a human `humanVerdict`, used to **gate the judge itself** (judge-human agreement must clear 0.85 before any corpus tokens are spent).
 
-`AiMetricsSection` composes the Measured module. Its `AiMetricsData` child reads the latest eval aggregate through `lib/ask-metrics.ts`; `LivePerfSection` renders desktop and mobile PSI alongside it. The three data reads have independent Suspense boundaries, so one pending source does not hold the others.
+`AiMetricsSection` composes the Measured module. Its `AiMetricsData` child reads the latest eval aggregate through `lib/ask-metrics.ts`; `LivePerfSection` renders desktop and mobile PSI alongside it. ASK and PSI have independent Suspense boundaries, so one pending source does not hold the other; PSI reads desktop and mobile together inside its boundary.
 
 ## The 60-second introduction
 

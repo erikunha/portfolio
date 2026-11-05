@@ -88,7 +88,7 @@ export const SECTION_REGISTRY = [
   },
   {
     ...SECTION_NAV[7],
-    srLabel: { en: 'Guitar rig', pt: 'Rig de guitarra' },
+    srLabel: { en: 'Guitar and mixer', pt: 'Guitarra e mixer' },
     aliases: [
       'guitar and mixer',
       'guitar',

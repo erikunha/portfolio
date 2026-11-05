@@ -45,7 +45,7 @@ Key levers (all verifiable in code):
 
 The dynamic (per-request) sections are the CLS risk, because their `<Suspense>` fallback is what's prerendered. Mitigations:
 - **Per-section fallback choice.** The DAW mixer, the one UA-selected part of the page (inside the guitar module), streams behind a null Suspense fallback; Measured retains its metric loading placeholders. No dynamic section prerenders a desktop variant as the fallback.
-- **Measured fallbacks.** ASK and each PSI strategy have independent Suspense boundaries. Their loading states retain the metric tiles or score rows. One slow source does not block the other groups.
+- **Measured fallbacks.** ASK and PSI have independent Suspense boundaries; PSI fetches desktop and mobile together inside its one boundary. Their loading states retain the metric tiles. A slow PSI source does not block ASK, and the reverse.
 - **Responsive guitar presentation.** `GuitarSection` renders one RSC tree across viewports for the EQ strip, signal chain and photo. CSS changes its layout without a desktop/mobile swap or the associated layout shift; only the mixer below them swaps by user agent.
 - **Mobile section ordering** uses CSS flex `order` (the `#sec-*` map in `base.css`). `check:section-order` requires order rules for top-level sections and exempts the declared nested anchors. An unordered top-level section defaults to `order:0` and can jump to the top. The same script also fails when a `#sec-*` selector in `app/css` matches an id no source renders, so a deleted section cannot leave dead rules behind.
 - **Both nav variants in the DOM**, toggled by CSS at 768px, to avoid a hydration-driven reflow.

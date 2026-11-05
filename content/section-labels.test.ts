@@ -22,7 +22,7 @@ describe('SECTION_LABELS', () => {
       'sec-shell': 'Interactive shell',
       'sec-live-metrics': 'Measured',
       'sec-hottest-takes': 'Opinions',
-      'sec-guitar': 'Guitar rig',
+      'sec-guitar': 'Guitar and mixer',
       'sec-contact': 'Contact',
     });
     for (const { id, srLabel } of SECTION_REGISTRY) {

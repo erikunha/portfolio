@@ -332,7 +332,10 @@ scheme-prefixed self-referential URL (`metadataBase`, `robots.txt` `Sitemap`,
 308-redirects to it; the bare string `erikunha.dev` remains the brand/identity
 label (OG `siteName`, the page-`<title>` suffix, the MCP server `name`,
 `@erikunha.dev` emails). Historical dated ADR text and superseded specs keep
-their original wording (they record history, and history is not edited).
+their original wording (they record history, and history is not edited). The
+one exception is a state that never reached `main`: a feature or variant added
+and dropped on the same branch is deleted from the docs and ADR log before the
+branch merges, not superseded, because `main` never had it.
 
 **Rationale.** Documentation that drifts from code is worse than no
 documentation — a reader trusts it and is misled. A portfolio that is a hiring
