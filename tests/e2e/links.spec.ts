@@ -5,21 +5,21 @@ test.describe('/links link-in-bio', () => {
     await page.goto('/links');
     await expect(page.locator('h1')).toHaveText(/links, canal e contato/);
 
-    await page.getByRole('link', { name: 'English' }).click();
+    await page.getByRole('link', { name: 'EN English', exact: true }).click();
     await page.waitForURL('**/links/en');
     await expect(page.locator('h1')).toHaveText(/links, channel and contact/);
 
-    await page.getByRole('link', { name: 'Português' }).click();
+    await page.getByRole('link', { name: 'PT Português', exact: true }).click();
     await page.waitForURL(/\/links$/);
   });
 
   test('marks the active language for assistive tech', async ({ page }) => {
     await page.goto('/links/en');
-    await expect(page.getByRole('link', { name: 'English' })).toHaveAttribute(
+    await expect(page.getByRole('link', { name: 'EN English', exact: true })).toHaveAttribute(
       'aria-current',
       'page',
     );
-    await expect(page.getByRole('link', { name: 'Português' })).not.toHaveAttribute(
+    await expect(page.getByRole('link', { name: 'PT Português', exact: true })).not.toHaveAttribute(
       'aria-current',
       'page',
     );
