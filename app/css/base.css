@@ -111,6 +111,10 @@
     outline-offset: 2px;
   }
 
+  [tabindex="-1"]:focus {
+    outline: none;
+  }
+
   .skip-to-content {
     position: absolute;
     left: 0;

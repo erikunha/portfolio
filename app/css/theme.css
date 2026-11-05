@@ -79,6 +79,7 @@
   --guitar-photo-ratio: 16 / 9;
   --guitar-photo-min-height: 12.5rem;
   --guitar-arrow-rotation: 90deg;
+  --guitar-arrow-length: 4.5ch;
   --guitar-scanline: repeating-linear-gradient(
     to bottom,
     rgba(0, 0, 0, 0.3) 0 1px,

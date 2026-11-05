@@ -322,7 +322,6 @@
   }
 
   .section-menu .menu-foot {
-    margin-top: auto;
     border-top: var(--border-width) solid var(--color-primary-border);
     padding: var(--spacing-2);
   }

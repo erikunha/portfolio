@@ -98,6 +98,13 @@
     font-size: var(--text-xs);
   }
 
+  @media (max-width: 767.98px) {
+    .guitar-arrow {
+      line-height: var(--guitar-arrow-length);
+      height: var(--guitar-arrow-length);
+    }
+  }
+
   .eq-strip {
     display: grid;
     grid-template-columns: minmax(0, 1fr);
@@ -321,7 +328,8 @@
 
     .guitar-arrow {
       transform: rotate(var(--guitar-arrow-rotation));
-      line-height: var(--spacing-3);
+      line-height: var(--guitar-arrow-length);
+      height: var(--guitar-arrow-length);
     }
 
     .guitar-node {

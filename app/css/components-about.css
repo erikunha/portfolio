@@ -289,8 +289,6 @@
     }
     .hero-actions > a:not(:first-child) {
       font-size: var(--text-xs);
-      letter-spacing: 0.04em;
-      padding-inline: 0;
     }
     .hero-stats {
       grid-template-columns: repeat(2, minmax(0, 1fr));

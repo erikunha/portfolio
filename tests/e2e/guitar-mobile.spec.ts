@@ -117,3 +117,26 @@ test.describe('#sec-guitar facts keep their emphasis', () => {
     expect(styles.obsession?.weight).toBeGreaterThanOrEqual(700);
   });
 });
+
+for (const viewport of [PHONE, JUST_BELOW_DESKTOP]) {
+  test(`stacked signal arrows stay between the nodes at ${viewport.width}px`, async ({ page }) => {
+    await page.setViewportSize(viewport);
+    await page.goto('/');
+    const chain = page.locator('#sec-guitar .guitar-chain');
+    await chain.scrollIntoViewIfNeeded();
+    const overlaps = await chain.evaluate((element) => {
+      const children = [...element.children];
+      const found: string[] = [];
+      children.forEach((child, index) => {
+        if (!child.classList.contains('guitar-arrow')) return;
+        const { top, bottom } = child.getBoundingClientRect();
+        const above = children[index - 1]?.getBoundingClientRect();
+        const below = children[index + 1]?.getBoundingClientRect();
+        if (above && top < above.bottom - 1) found.push(`arrow ${index} enters the node above`);
+        if (below && bottom > below.top + 1) found.push(`arrow ${index} enters the node below`);
+      });
+      return found;
+    });
+    expect(overlaps, 'a rotated arrow longer than its row paints over the node text').toEqual([]);
+  });
+}

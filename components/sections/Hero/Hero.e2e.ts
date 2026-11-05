@@ -268,3 +268,18 @@ test.describe('Hero metadata facts', () => {
     });
   }
 });
+
+for (const width of [320, 375]) {
+  test(`every hero CTA label fits inside its box at ${width}px`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 700 });
+    await page.goto('/');
+    const overflowing = await page
+      .locator('.hero-frame:visible [data-testid="hero-ctas"] > a')
+      .evaluateAll((links) =>
+        links
+          .filter((link) => link.scrollWidth > link.clientWidth)
+          .map((link) => `${link.textContent?.trim()} ${link.scrollWidth}/${link.clientWidth}`),
+      );
+    expect(overflowing, 'a CTA label wider than its box paints over the border').toEqual([]);
+  });
+}

@@ -534,3 +534,21 @@ test.describe('section navigation: top position line at 1280px', () => {
     expect(box?.y ?? Number.POSITIVE_INFINITY).toBeLessThanOrEqual(1);
   });
 });
+
+test('a section reached from the menu takes focus without the browser outline', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1280, height: 720 });
+  await page.goto('/');
+  await page.locator('.desktop-topbar .menu-trigger').click();
+  await page
+    .locator('#section-drawer')
+    .getByRole('link', { name: /Career/ })
+    .click();
+  const career = page.locator('#sec-git-log');
+  await expect(career, 'the jump moves focus to the section').toBeFocused();
+  expect(
+    await career.evaluate((element) => getComputedStyle(element).outlineStyle),
+    'a non-interactive focus target paints no off-palette browser outline',
+  ).toBe('none');
+});
