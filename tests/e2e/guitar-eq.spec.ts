@@ -1,4 +1,6 @@
 import { expect, type Page, test } from '@playwright/test';
+import { guitarRig } from '../../content/guitar-rig';
+import { SITE_LOCALE } from '../../content/site-locale';
 
 const STRIP = '[data-testid="eq-spectrum"]';
 const BAR = `${STRIP} .eq-bar`;
@@ -105,12 +107,21 @@ test.describe('EQ strip motion', () => {
   test('holds one static frame under prefers-reduced-motion', async ({ page }) => {
     await page.emulateMedia({ reducedMotion: 'reduce' });
     const bar = await firstBar(page);
+    await page.evaluate(() => document.body.removeAttribute('data-motion'));
     const style = await bar.evaluate((node) => {
       const computed = getComputedStyle(node);
       return { name: computed.animationName, transform: computed.transform };
     });
     expect(style.name).toBe(NO_ANIMATION);
     expect(style.transform).toBe(NO_ANIMATION);
+  });
+
+  test('holds one static frame in print', async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: 'no-preference' });
+    const bar = await firstBar(page);
+    await page.emulateMedia({ media: 'print' });
+    const name = await bar.evaluate((node) => getComputedStyle(node).animationName);
+    expect(name).toBe(NO_ANIMATION);
   });
 
   test('holds one static frame when the MOTION switch is off', async ({ page }) => {
@@ -150,9 +161,17 @@ test('puts each axis label on its frequency', async ({ page }) => {
       return (box.left + box.width / 2 - (axis?.left ?? 0)) / (axis?.width ?? 1);
     });
   });
-  expect(offsets).toEqual([...offsets].sort((a, b) => a - b));
-  expect(offsets[0]).toBeCloseTo(0.05, 1);
-  expect(offsets.at(-1)).toBeCloseTo(0.95, 1);
+  const { axis, freqRange } = guitarRig[SITE_LOCALE.en].eqSpectrum;
+  const inset = 0.05;
+  const span = Math.log(freqRange.maxHz / freqRange.minHz);
+  expect(offsets).toHaveLength(axis.length);
+  axis.forEach((tick, index) => {
+    const expected = inset + (1 - 2 * inset) * (Math.log(tick.freqHz / freqRange.minHz) / span);
+    expect(offsets[index], `${tick.label} Hz tick sits at its log-frequency position`).toBeCloseTo(
+      expected,
+      2,
+    );
+  });
 });
 
 test.describe('EQ strip without JavaScript', () => {

@@ -10,6 +10,10 @@
     font-size: var(--text-xs);
   }
 
+  body:has(.nojs-bar:not([data-locale="en"])) .nojs-bar[data-locale="en"] {
+    display: none;
+  }
+
   .nojs-bar a {
     color: var(--color-primary-500);
     text-decoration: underline;

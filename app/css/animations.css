@@ -401,16 +401,6 @@
       transform: scaleY(var(--eq-level-high));
     }
   }
-
-  @media (prefers-reduced-motion: reduce), print {
-    .eq-bar {
-      animation: none;
-    }
-  }
-
-  body[data-motion="reduce"] .eq-bar {
-    animation: none;
-  }
 }
 
 @property --type-progress {
@@ -446,7 +436,7 @@
     max-inline-size: 100%;
   }
 
-  @media (prefers-reduced-motion: no-preference) {
+  @media screen and (prefers-reduced-motion: no-preference) {
     html.type-reveal-ready body:not([data-motion="reduce"]) [data-type-reveal] {
       --type-progress: 0;
       clip-path: inset(

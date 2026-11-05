@@ -120,4 +120,21 @@ test.describe('type reveal', () => {
       expect(offenders).toEqual([]);
     });
   }
+
+  test('a printed reading page shows every marked heading in full', async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: 'no-preference' });
+    await page.goto('/cv');
+    await page.waitForFunction(() =>
+      document.documentElement.classList.contains('type-reveal-ready'),
+    );
+    await page.emulateMedia({ media: 'print', reducedMotion: 'no-preference' });
+    const clipped = await page
+      .locator(MARKED)
+      .evaluateAll((els) =>
+        els
+          .filter((el) => getComputedStyle(el).clipPath !== 'none')
+          .map((el) => el.textContent?.trim() ?? ''),
+      );
+    expect(clipped, 'print must never inherit the screen typing clip').toEqual([]);
+  });
 });

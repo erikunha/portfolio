@@ -30,16 +30,16 @@
 
 ## Naming map (decode the filesystem)
 
-| Pattern                        | Meaning                                                                               |
-| ------------------------------ | ------------------------------------------------------------------------------------- |
-| `Foo/Foo.tsx` + `Foo/index.ts` | one component per folder, barrel-exported                                             |
-| `*.client.tsx`                 | client island/chrome (ships JS)                                                       |
-| `*Lazy.{tsx,client.tsx}`       | inspect the module: Contact/Shell use dynamic imports; FooterLazy directly re-exports |
-| `*Desktop.tsx` / `*Mobile.tsx` | dual-variant inner RSC selected by `getIsMobile()`                                    |
-| `_components/` `_lib/`         | route-private (underscore = not public API)                                           |
-| `sec-*` (id)                   | section or nested anchor; nested anchors may be exempt from ordering                  |
-| `*.e2e.ts` / `*.test.tsx`      | Playwright / Vitest, co-located                                                       |
-| `lib/*.client.tsx`             | the rare client-side lib (breakpoint, error-bridge)                                   |
+| Pattern                        | Meaning                                                              |
+| ------------------------------ | -------------------------------------------------------------------- |
+| `Foo/Foo.tsx` + `Foo/index.ts` | one component per folder, barrel-exported                            |
+| `*.client.tsx`                 | client island/chrome (ships JS)                                      |
+| `*Lazy.{tsx,client.tsx}`       | inspect the module: Contact/Shell use dynamic imports                |
+| `*Desktop.tsx` / `*Mobile.tsx` | dual-variant inner RSC selected by `getIsMobile()`                   |
+| `_components/` `_lib/`         | route-private (underscore = not public API)                          |
+| `sec-*` (id)                   | section or nested anchor; nested anchors may be exempt from ordering |
+| `*.e2e.ts` / `*.test.tsx`      | Playwright / Vitest, co-located                                      |
+| `lib/*.client.tsx`             | the rare client-side lib (breakpoint, error-bridge)                  |
 
 ## Things that look wrong but are intentional
 
@@ -52,7 +52,7 @@
 
 | Looking for...             | It's in...                                                |
 | -------------------------- | --------------------------------------------------------- |
-| the page composition       | `app/page.tsx`                                            |
+| the page composition       | `components/SiteHome.tsx`                                 |
 | a section's copy           | `content/<section>.ts`                                    |
 | the API contract           | `lib/server/route.ts` (`defineHandler`)                   |
 | rate limits / token budget | `lib/rate-limit.ts`                                       |

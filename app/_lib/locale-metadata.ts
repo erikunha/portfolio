@@ -9,9 +9,6 @@ import {
 } from '@/content/site-locale';
 import { social } from '@/content/social';
 
-// Per-locale page metadata for the bilingual routes (DECISIONS 2026-08-30):
-// each language names itself canonical, the pair is joined by
-// alternates.languages plus x-default, and the OG locale follows the page.
 export function localizedPageMetadata({
   locale,
   path,

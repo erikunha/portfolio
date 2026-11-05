@@ -257,7 +257,7 @@
     }
   }
 
-  @media (min-width: 768px) and (max-width: 1279px) {
+  @media (min-width: 768px) and (max-width: 1279.98px) {
     .toc ul {
       flex-direction: row;
       flex-wrap: wrap;
@@ -291,7 +291,7 @@
     border-right: 0;
   }
 
-  @media (max-width: 1023px) {
+  @media (max-width: 1023.98px) {
     .ds-stat-row {
       grid-template-columns: repeat(2, minmax(0, 1fr));
     }
@@ -305,7 +305,7 @@
     }
   }
 
-  @media (max-width: 359px) {
+  @media (max-width: 359.98px) {
     .ds-stat-row {
       grid-template-columns: minmax(0, 1fr);
     }

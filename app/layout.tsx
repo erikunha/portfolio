@@ -4,7 +4,7 @@ import { SpeedInsights } from '@vercel/speed-insights/next';
 import type { Metadata } from 'next';
 import localFont from 'next/font/local';
 import { GlobalMotion } from '@/components/client/GlobalMotion';
-import { errorsContent } from '@/content/errors';
+import { NoscriptBar } from '@/components/NoscriptBar';
 import { profile, profileMetaDescription, profilePageTitle } from '@/content/profile';
 import { personSchema } from '@/content/seo';
 import { SITE_LOCALE } from '@/content/site-locale';
@@ -105,14 +105,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <script type="application/ld+json">{personJsonLd}</script>
       </head>
       <body suppressHydrationWarning>
-        <noscript>
-          <div className="nojs-bar">
-            {errorsContent[SITE_LOCALE.en].noscript.text}{' '}
-            <a href={errorsContent[SITE_LOCALE.en].noscript.contact.href}>
-              {errorsContent[SITE_LOCALE.en].noscript.contact.label}
-            </a>
-          </div>
-        </noscript>
+        <NoscriptBar locale={SITE_LOCALE.en} />
         {/* biome-ignore lint/security/noDangerouslySetInnerHtml: initScript is a hardcoded build-time constant, no user input */}
         <script dangerouslySetInnerHTML={{ __html: initScript }} />
         <GlobalMotion />

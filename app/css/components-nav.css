@@ -55,7 +55,7 @@
   }
 
   .nav-item[aria-current]::before {
-    content: "> ";
+    content: "> " / "";
     white-space: pre;
   }
 
@@ -441,7 +441,7 @@
     }
   }
 
-  @media (max-width: 1023px) {
+  @media (max-width: 1023.98px) {
     .pos-line {
       top: 0;
       bottom: 0;
@@ -474,7 +474,9 @@
 
   @media (prefers-reduced-motion: reduce) {
     .section-menu,
-    .menu-scrim {
+    .section-menu.is-open,
+    .menu-scrim,
+    .menu-scrim.is-open {
       transition: none;
     }
   }

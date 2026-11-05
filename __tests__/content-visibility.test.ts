@@ -45,7 +45,7 @@ describe('content-visibility deferral', () => {
       const deferredCount = countDeferredSections(tree);
       expect(
         deferredCount,
-        `app/page.tsx must pass \`defer\` to exactly ${DEFERRED_SECTION_COUNT} sections. Credentials and community share Career's deferred section. Update DEFERRED_SECTION_COUNT only when the deferred section set intentionally changes.`,
+        `components/SiteHome.tsx must pass \`defer\` to exactly ${DEFERRED_SECTION_COUNT} sections. Credentials and community share Career's deferred section. Update DEFERRED_SECTION_COUNT only when the deferred section set intentionally changes.`,
       ).toBe(DEFERRED_SECTION_COUNT);
     },
     PAGE_GRAPH_IMPORT_TIMEOUT_MS,

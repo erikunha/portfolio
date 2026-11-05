@@ -13,8 +13,6 @@ export const metadata: Metadata = {
     title: profilePresentation[locale].pageTitle,
     description: profilePresentation[locale].metaDescription,
   }),
-  // The root layout already carries the shared metadata (icons, robots,
-  // JSON-LD, keywords); this page overrides only what is language-specific.
 };
 
 export default function Home() {

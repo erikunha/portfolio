@@ -10,7 +10,7 @@ describe('Pager', () => {
 
   it('renders only the next link on the overview page', () => {
     render(<Pager slug="" />);
-    expect(screen.queryByRole('link', { name: 'Previous: Overview' })).toBeNull();
+    expect(screen.queryByRole('link', { name: /^Previous:/ })).toBeNull();
     expect(screen.getByRole('link', { name: 'Next: Tokens' })).not.toBeNull();
   });
 
@@ -44,7 +44,7 @@ describe('Pager', () => {
   it('renders only the previous link on the changelog page', () => {
     render(<Pager slug="changelog" />);
     expect(screen.getByRole('link', { name: 'Previous: Enforcement' })).not.toBeNull();
-    expect(screen.queryByRole('link', { name: 'Next: Changelog' })).toBeNull();
+    expect(screen.queryByRole('link', { name: /^Next:/ })).toBeNull();
   });
 
   it('renders nothing for a route outside the pager chain', () => {

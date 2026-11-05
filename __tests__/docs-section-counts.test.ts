@@ -59,7 +59,7 @@ describe('documented counts match the code they describe', () => {
       const readme = read('docs/README.md');
       expect(
         readme,
-        'docs/README.md must state the number of section components app/page.tsx renders',
+        'docs/README.md must state the number of section components components/SiteHome.tsx renders',
       ).toContain(`${sectionCount} section components`);
       expect(readme).toContain(`${sectionCount} terminal-themed section components`);
     },

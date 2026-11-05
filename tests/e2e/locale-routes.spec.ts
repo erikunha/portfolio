@@ -24,7 +24,7 @@ for (const { en, pt, enTitle } of PAIRS) {
       await page.setViewportSize(viewport);
       const response = await page.goto(en);
       expect(response?.status(), 'the bare address must return a page, never a redirect').toBe(200);
-      expect(response?.headers()['location'] ?? null).toBeNull();
+      expect(response?.headers().location ?? null).toBeNull();
       await expect(page).toHaveTitle(enTitle);
 
       const canonical = page.locator('link[rel="canonical"]');

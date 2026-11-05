@@ -100,7 +100,7 @@
     display: none;
   }
 
-  @media (max-width: 767px) {
+  @media (max-width: 767.98px) {
     .ds-prose table[data-labelled-table] thead {
       display: none;
     }
@@ -193,7 +193,7 @@
     white-space: nowrap;
   }
 
-  @media (max-width: 1024px) {
+  @media (max-width: 1023.98px) {
     .sysfail-plate {
       padding: 5px 14px 6px;
     }

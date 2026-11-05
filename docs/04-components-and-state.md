@@ -13,7 +13,7 @@ Four directories, four roles. The directory tells you the layer:
 | `components/responsive/**`    | Viewport chrome                 | Yes (except `Module`)                     | `MatrixRain`, `Dock`, `CRTOverlay`                                 |
 | `design-system/components/**` | Reusable primitives             | Mostly No (RSC)                           | `Badge`, `Button`, `TerminalPanel`                                 |
 
-`check-client-naming.mjs` accepts `*.client.tsx`/`*.client.ts`, files inside a `/client/` directory, and App Router error convention files. Inspect the client directive and imports when tracing a boundary. Components commonly use a `Foo/` directory and `index.ts` barrel. Vitest tests use `*.test.tsx`; component Playwright specs use `*.e2e.ts`. `*Lazy` files are `next/dynamic` wrappers (`ContactFormLazy`, `InteractiveShellLazy`, `MatrixRainLazy` in `responsive/MatrixRain/`, consumed by `GlobalMotion` from the root layout), except `FooterLazy.client.tsx`, a plain re-export of the footer's session-counter and halt/reboot islands (no dynamic import is used there).
+`check-client-naming.mjs` accepts `*.client.tsx`/`*.client.ts`, files inside a `/client/` directory, and App Router error convention files. Inspect the client directive and imports when tracing a boundary. Components commonly use a `Foo/` directory and `index.ts` barrel. Vitest tests use `*.test.tsx`; component Playwright specs use `*.e2e.ts`. `*Lazy` files are `next/dynamic` wrappers (`ContactFormLazy`, `InteractiveShellLazy`, `MatrixRainLazy` in `responsive/MatrixRain/`, consumed by `GlobalMotion` from the root layout).
 
 The naming gate scans `app`, `components` and `lib`; `/client/` is an explicit directory-based exception.
 
@@ -29,7 +29,7 @@ Barrels beside `ContactFormLazy`, `InteractiveShellLazy` and `MatrixRainLazy` ex
 
 ```mermaid
 flowchart TD
-    page["app/page.tsx (RSC)"] --> bp["BreakpointProvider (client)"]
+    page["components/SiteHome.tsx (RSC)"] --> bp["BreakpointProvider (client)"]
     bp --> shell["AppShell.client"]
     shell --> navigation["SectionNavigationProvider (client): current section and drawer state"]
     navigation --> rail["SectionNavigation (client): menu trigger, drawer focus trap and focus return<br/>Header: title and drawer close control"]
@@ -49,7 +49,7 @@ flowchart TD
     eb --> about["About (RSC with RoleTyper island, owns its section)"]
     about --> scroll["Responsibilities + retry code: named keyboard scroll regions"]
     shell --> fl["ErrorBoundary-wrapped Footer (RSC): cards, sitemap, shutdown log"]
-    fl --> fi["FooterLazy: direct re-exports from Footer.client: session counters + halt/reboot island"]
+    fl --> fi["Footer.client: session counters + halt/reboot island"]
     fl --> fc["Netstat endpoint cells: outbound links with a glyph"]
     links["/links and /links/en"] --> tagline["TaglineTyper: localized tagline cycle"]
 ```

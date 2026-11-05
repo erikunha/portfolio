@@ -476,7 +476,7 @@
     outline-offset: var(--spacing-1);
   }
 
-  @media (max-width: 767px) {
+  @media (max-width: 767.98px) {
     .site-footer {
       --footer-session-leading: var(--footer-line-height);
       --footer-title-tracking: 0.16em;

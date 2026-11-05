@@ -155,7 +155,7 @@ The section menu is a modal drawer at every width, opened by the menu icon trigg
 | `/links` client components                        | Tagline cycle, navigation progress, copy and subscribe actions                                        |
 | Design-system Sidebar, DsDrawerNav and CopyButton | Documentation page tree (side rail from 1024px, inside the site menu below it) and clipboard feedback |
 
-`InteractiveShellLazy` and `ContactFormLazy` use `next/dynamic` with `ssr: false` and loading status placeholders. `ContactTimezoneLazy` uses `React.lazy` and mounts `ContactTimezone` once its host is within 400px of the viewport, so the island's chunk, the land grid and the timezone logic stay out of first load; the server-rendered `ContactTimezoneStatic` is the Suspense and error fallback. `FooterLazy.client.tsx` is a direct re-export of footer controls, not a dynamic import. `DawMixerDesktop` is dynamically imported by `DawMixerContent` and embeds smaller client islands.
+`InteractiveShellLazy` and `ContactFormLazy` use `next/dynamic` with `ssr: false` and loading status placeholders. `ContactTimezoneLazy` uses `React.lazy` and mounts `ContactTimezone` once its host is within 400px of the viewport, so the island's chunk, the land grid and the timezone logic stay out of first load; the server-rendered `ContactTimezoneStatic` is the Suspense and error fallback. `DawMixerDesktop` is dynamically imported by `DawMixerContent` and embeds smaller client islands.
 
 `pnpm route-js-check` fails a route above **164.7 KB gzipped total first-load JS**. It reports app-owned JS by subtracting the configured **131.9 KB** framework floor, leaving **32.8 KB** of headroom. App-owned JS has no separate assertion. The floor check fails when the lightest route is more than 2 KB below that baseline. `pnpm bundle-check` independently gates the global client-chunk sum at **220 KB**.
 
@@ -177,7 +177,7 @@ Projects renders one static RSC tree at every viewport. Its nine cards share des
 
 Measured is one module at `sec-live-metrics`, composed by `AiMetricsSection`. ASK evaluation data and the PSI scores stream through two independent Suspense boundaries; the PSI block resolves once both desktop and mobile runs return. Both blocks stack as tile grids, four across on wide containers and two by two below 40rem, and each Lighthouse tile reads `desktop / mobile`. `content/measured.ts` supplies labels, sources, units and timestamp formatting. The data adapters remain `lib/ask-metrics.ts` and `lib/lighthouse-scores.ts`. The nested `sec-ai-metrics` and `sec-live-perf` anchors preserve existing links.
 
-`GuitarSection` renders one responsive RSC presentation across viewports. CSS adjusts its layout without UA detection, a variant swap or a section Suspense fallback.
+`GuitarSection` renders the guitar rig as one responsive RSC presentation across viewports: CSS adjusts its layout without UA detection or a variant swap. The DAW mixer below the rig streams inside a `Suspense` boundary with no fallback, and `DawMixerContent` selects the mixer's device variant.
 
 The top of `GuitarSection` is one EQ spectrum strip (`EqSpectrumStrip.tsx`). It is a static RSC with no client JavaScript: `lib/eq-spectrum.ts` turns the bands, range and BPM in `content/guitar-rig.ts` into bar heights, an SVG curve path, grid lines and axis positions. The 72 bars are DOM elements that bounce through a CSS `scaleY` keyframe timed to the BPM (`--eq-beat`), the curve is an SVG path with a non-scaling stroke, and the plot is a single `role="img"` whose accessible name lists every band. The animation stops under `prefers-reduced-motion` and the MOTION switch, leaving one static frame. The strip is laid out with grid only: the label, plot and axis share one grid, the grid lines, bars and curve stack in one cell, and axis labels sit on tracks sized from their log-frequency positions. Below 768px every second bar is hidden, the gear label moves above the plot, and the signal strip, stats and camera labels stack in centered columns.
 
@@ -191,7 +191,7 @@ Its timeline and `cert/*`, `edu/*`, and `community/*` tag groups share one stati
 `sec-credentials` and `sec-community` are nested in-page anchors, excluded from mobile section ordering.
 The community event link uses the validated label and URL in `content/community.ts`.
 
-Git log through Contact receive `defer` in `app/page.tsx`. Their shells set `module-deferred` and `data-cv-defer`; CSS `content-visibility: auto` defers offscreen rendering, not data fetching or hydration. A deferred module reserves an estimated placeholder height while its content is laid out at full height: 520px is only the default, and per-section and per-breakpoint overrides set Career to 3340px, Opinions to 3180px, Guitar and mixer to 3320px and Contact to 2322px, with `contain-intrinsic-size: auto var(--module-estimate)` remembering the rendered height once painted, so the axe gate reveals the deferred modules before the scan and audits the painted page, the same state the visual baselines capture. The nine entries in `content/section-registry.ts` define navigation order independently of DOM order. Their labels are Home, About, Projects, Career, Interactive shell, Measured, Opinions, Guitar and mixer, Contact. The registry supplies primary labels to `content/section-labels.ts`; the latter adds labels for auxiliary sections.
+Git log through Contact receive `defer` in `components/SiteHome.tsx`. Their shells set `module-deferred` and `data-cv-defer`; CSS `content-visibility: auto` defers offscreen rendering, not data fetching or hydration. A deferred module reserves an estimated placeholder height while its content is laid out at full height: 520px is only the default, and per-section and per-breakpoint overrides set Career to 3340px, Opinions to 3180px, Guitar and mixer to 3320px and Contact to 2322px, with `contain-intrinsic-size: auto var(--module-estimate)` remembering the rendered height once painted, so the axe gate reveals the deferred modules before the scan and audits the painted page, the same state the visual baselines capture. The nine entries in `content/section-registry.ts` define navigation order independently of DOM order. Their labels are Home, About, Projects, Career, Interactive shell, Measured, Opinions, Guitar and mixer, Contact. The registry supplies primary labels to `content/section-labels.ts`; the latter adds labels for auxiliary sections.
 
 ### Trade-off
 
@@ -209,7 +209,9 @@ build fails until this tree is corrected. The block is bounded by the
 <!-- doc-drift:start -->
 ```
 app/layout.tsx                       # fonts, JSON-LD, metadata, motion bootstrap, Vercel RUM
-app/page.tsx                         # section composition, client shell boundaries, footer
+app/page.tsx                         # English home route, renders SiteHome
+app/pt/page.tsx                      # pt-BR home route, renders SiteHome
+components/SiteHome.tsx              # section composition, client shell boundaries, footer
 app/summary/page.tsx                 # concise reading view
 app/cv/page.tsx                      # full CV reading view and print control
 app/links/page.tsx                   # pt-BR links page
@@ -698,7 +700,7 @@ The principal-level discipline: **none of this is built today.** YAGNI is the de
 
 | Route                                                                        | Implementation                                                                 |
 | ---------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
-| `/`                                                                          | `app/page.tsx`, terminal homepage                                              |
+| `/`                                                                          | `app/page.tsx` renders `components/SiteHome.tsx`, terminal homepage            |
 | `/summary`, `/cv`                                                            | RSC reading views with a PrintButton island                                    |
 | `/links`, `/links/en`                                                        | Localized link pages                                                           |
 | `/design-system`, `/design-system/{tokens,components,enforcement,changelog}` | MDX documentation and component gallery                                        |

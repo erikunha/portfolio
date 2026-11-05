@@ -1,7 +1,7 @@
 import { dmesgLines, dmesgStatus } from '@/content/dmesg';
 import { footerContent, footerSectionIds } from '@/content/footer';
 import type { SiteLocale } from '@/content/site-locale';
-import { HaltClock, RebootControl, FooterLazy as SessionCounters } from './FooterLazy.client';
+import { HaltClock, RebootControl, SessionCounters } from './Footer.client';
 
 const INITIAL_UPTIME = '00:00:00';
 const INITIAL_COUNT = '0';

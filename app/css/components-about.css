@@ -257,7 +257,7 @@
     }
   }
 
-  @media (min-width: 1024px) and (max-width: 1279px) {
+  @media (min-width: 1024px) and (max-width: 1279.98px) {
     .about-grid {
       grid-template-columns: var(--phi-pair-columns);
     }
@@ -301,7 +301,7 @@
     }
   }
 
-  @media (max-width: 767px) {
+  @media (max-width: 767.98px) {
     .about-section {
       border: var(--border-width) solid var(--color-primary-subtle);
     }

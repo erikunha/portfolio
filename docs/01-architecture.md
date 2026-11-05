@@ -19,7 +19,7 @@ flowchart TB
         cfg["next.config.ts<br/>static security headers, PPR, MDX"]
     end
     subgraph present["Presentation (RSC-first)"]
-        page["app/page.tsx<br/>composition root"]
+        page["components/SiteHome.tsx<br/>composition root"]
         sections["components/sections/**<br/>RSC sections and nested groups"]
         islands["client islands<br/>/client/ directories and *.client.*"]
         ds["design-system/**<br/>reusable primitives"]
@@ -99,7 +99,7 @@ flowchart LR
 
 ```mermaid
 flowchart TD
-    page["app/page.tsx (RSC)"] --> bp["BreakpointProvider: initialIsMobile=false"]
+    page["components/SiteHome.tsx (RSC)"] --> bp["BreakpointProvider: initialIsMobile=false"]
     bp --> shell["AppShell.client"]
     shell --> main["PageMain (RSC)"]
     main --> sectionN["sections/* (RSC)"]
@@ -144,7 +144,7 @@ Contact submission persists a 90-day KV audit record before calling the shared d
 
 | File                                      | Why it matters                                                                     |
 | ----------------------------------------- | ---------------------------------------------------------------------------------- |
-| `app/page.tsx`                            | The composition root; shows the RSC/PPR posture for the whole site                 |
+| `components/SiteHome.tsx`                 | The composition root; shows the RSC/PPR posture for the whole site                 |
 | `app/layout.tsx`                          | Fonts, JSON-LD, the pre-paint motion bootstrap, Vercel RUM gating                  |
 | `next.config.ts` + `proxy.ts`             | The two-place header split (static vs per-request CSP), PPR, MDX                   |
 | `lib/server/route.ts`                     | The `defineHandler` envelope - the API contract                                    |

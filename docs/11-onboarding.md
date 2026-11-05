@@ -12,7 +12,7 @@
 
 1. `pnpm install && pnpm dev`. Open `/`. Toggle the `MOTION` switch (the top bar at 1280px and up, or the `MOTION: ON`, `MOTION: OFF` or `MOTION: REDUCED` row in the section drawer at any width). Open `/design-system`. Hit `/api/healthz` and `/api/erik.json`.
 2. Read these five files in order - they are the load-bearing spine:
-   - `app/page.tsx` - the terminal home composition; then inspect `/summary`, `/cv`, `/links` and `/links/en`.
+   - `components/SiteHome.tsx` - the terminal home composition (rendered by `app/page.tsx` and `app/pt/page.tsx`); then inspect `/summary`, `/cv`, `/links` and `/links/en`.
    - `components/responsive/Module/Module.tsx` - the section wrapper.
    - `content/schemas.ts` + one content module (e.g. `content/projects.ts`) - how data is typed and validated.
    - `lib/server/route.ts` - the `defineHandler` API contract.
@@ -44,7 +44,7 @@ For `app/api/**`, `lib/rate-limit.ts` or `proxy.ts` changes, follow the security
 | --------------------- | ------------------------------------------------------------------------------------ | ----------------------------------------------------------- |
 | Sections / UI         | [04-components-and-state.md](./04-components-and-state.md)                           | `components/sections/**`, `design-system/**`                |
 | The AI feature        | [05-api-and-integrations.md](./05-api-and-integrations.md) §AI subsystem             | `app/api/ask/route.ts`, `lib/ask/**`, `scripts/ask-eval.ts` |
-| Performance           | [08-performance-and-accessibility.md](./08-performance-and-accessibility.md)         | `app/page.tsx` (PPR), `Module.tsx`, the islands             |
+| Performance           | [08-performance-and-accessibility.md](./08-performance-and-accessibility.md)         | `components/SiteHome.tsx` (PPR), `Module.tsx`, the islands  |
 | The dev platform / CI | [06-ai-development.md](./06-ai-development.md), [07-workflows.md](./07-workflows.md) | `.claude/**`, `scripts/check-*`, `.github/workflows/ci.yml` |
 | Anything risky        | [10-findings-and-debt.md](./10-findings-and-debt.md)                                 | the relevant `DECISIONS.md` entry                           |
 
@@ -59,11 +59,11 @@ For `app/api/**`, `lib/rate-limit.ts` or `proxy.ts` changes, follow the security
 
 Single-author repo, so "ownership" is by subsystem boundary, not by person:
 
-| Subsystem        | Boundary                                   | Entry point                    |
-| ---------------- | ------------------------------------------ | ------------------------------ |
-| Page composition | `app/page.tsx` + `components/sections/**`  | the section list in `page.tsx` |
-| Content/domain   | `content/**`                               | `content/schemas.ts`           |
-| Design system    | `design-system/**`                         | `design-system/index.ts`       |
-| BFF / API        | `app/api/**` + `lib/**`                    | `lib/server/route.ts`          |
-| AI feature       | `app/api/ask` + `lib/ask/**` + eval        | `lib/ask/model.ts`             |
-| Dev platform     | `.claude/**` + `scripts/**` + `.github/**` | `CLAUDE.md`                    |
+| Subsystem        | Boundary                                             | Entry point                        |
+| ---------------- | ---------------------------------------------------- | ---------------------------------- |
+| Page composition | `components/SiteHome.tsx` + `components/sections/**` | the section list in `SiteHome.tsx` |
+| Content/domain   | `content/**`                                         | `content/schemas.ts`               |
+| Design system    | `design-system/**`                                   | `design-system/index.ts`           |
+| BFF / API        | `app/api/**` + `lib/**`                              | `lib/server/route.ts`              |
+| AI feature       | `app/api/ask` + `lib/ask/**` + eval                  | `lib/ask/model.ts`                 |
+| Dev platform     | `.claude/**` + `scripts/**` + `.github/**`           | `CLAUDE.md`                        |

@@ -225,7 +225,7 @@
     }
   }
 
-  @media (max-width: 479px) {
+  @media (max-width: 479.98px) {
     .shell-input-wrap {
       flex-basis: 100%;
     }

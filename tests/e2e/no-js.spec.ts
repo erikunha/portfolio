@@ -10,6 +10,16 @@ test.describe('home with JavaScript off', () => {
     await expect(page.getByRole('heading', { level: 1 }).first()).toBeVisible();
   });
 
+  test('the Portuguese pages show the notice in Portuguese only', async ({ page }) => {
+    for (const path of ['/pt', '/pt/cv', '/pt/summary']) {
+      await page.goto(path);
+      await expect(page.locator('.nojs-bar:visible')).toHaveCount(1);
+      await expect(page.getByText(/Este site funciona melhor com JavaScript/)).toBeVisible();
+      await expect(page.getByText(/This site works best with JavaScript/)).toBeHidden();
+      await expect(page.locator('.nojs-bar:visible a')).toHaveAttribute('href', '/pt#sec-contact');
+    }
+  });
+
   test('the site navigation still moves to its section', async ({ page }) => {
     await page.goto('/');
     // The noscript bar link is the one contact route at every breakpoint; the dock HIRE leaves the site.
