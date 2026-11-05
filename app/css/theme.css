@@ -81,6 +81,7 @@
   --guitar-arrow-rotation: 90deg;
   --guitar-arrow-length: 4.5ch;
   --mixer-chip-min: 5.5rem;
+  --mixer-chain-rows: 3;
   --mixer-transport-gap: 14px;
   --guitar-scanline: repeating-linear-gradient(
     to bottom,

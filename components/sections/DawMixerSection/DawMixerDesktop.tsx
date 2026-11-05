@@ -30,8 +30,8 @@ function PluginChain({
         <div
           key={p.name}
           className={cn(
-            'flex-1 min-w-0 border flex flex-col items-center gap-1',
-            'px-1 pt-[5px] pb-[6px] text-primary-400 relative',
+            'plugin-chip border flex flex-col items-center gap-1',
+            'pt-[5px] pb-[6px] text-primary-400 relative',
             p.active
               ? [
                   'plugin-card-on',
