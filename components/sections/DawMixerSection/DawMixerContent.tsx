@@ -296,9 +296,9 @@ function ChannelMobile({ ch }: { ch: DawMixerChannel }) {
             ))}
           </div>
         </div>
-        <div className="flex items-center justify-between gap-3">
+        <div className="flex flex-col gap-1">
           <div
-            className="flex-1 h-[6px] bg-[var(--color-primary-quiet)] border border-[var(--color-primary-quiet)] relative overflow-hidden"
+            className="h-[6px] bg-[var(--color-primary-quiet)] border border-[var(--color-primary-quiet)] relative overflow-hidden"
             aria-hidden="true"
           >
             <div
@@ -307,7 +307,7 @@ function ChannelMobile({ ch }: { ch: DawMixerChannel }) {
             />
           </div>
           {ch.footer && (
-            <span className="text-xs text-primary-400 block tracking-[0.08em] mt-[2px] opacity-80">
+            <span className="text-xs text-primary-400 block text-center tracking-[0.08em] opacity-80">
               LUFS {ch.footer.lufs} · PK {ch.footer.pk}
             </span>
           )}

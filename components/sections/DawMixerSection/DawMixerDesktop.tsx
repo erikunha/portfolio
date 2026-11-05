@@ -25,7 +25,7 @@ function PluginChain({
   channelId: string;
 }) {
   return (
-    <div className="flex items-stretch gap-1">
+    <div className="plugin-chain">
       {plugins.map((p) => (
         <div
           key={p.name}
@@ -154,7 +154,6 @@ function SessionHeaderDesktop({ mixer }: { mixer: DawMixer }) {
         'bg-[color-mix(in_srgb,var(--color-primary-500)_5%,transparent)]',
         'text-xs text-primary-400 tracking-[0.14em]',
       )}
-      style={{ gridTemplateColumns: '1fr auto' }}
       data-testid="session-header"
     >
       <span>
@@ -165,7 +164,7 @@ function SessionHeaderDesktop({ mixer }: { mixer: DawMixer }) {
         {' GTR TRACKS + MASTER · '}
         <span className="text-primary-500">{mixer.status}</span>
       </span>
-      <span className="inline-flex items-center gap-[14px] tabular-nums">
+      <span className="mixer-transport tabular-nums">
         <span className="transport-play" aria-hidden="true" />
         <span className="text-primary-500 font-bold text-sm tracking-[0.06em]">
           {mixer.transportTime}

@@ -166,8 +166,10 @@ for (const width of [1280, 320]) {
             const cellBox = cell.getBoundingClientRect();
             const prevCell = cellIndex > 0 ? cells[cellIndex - 1] : undefined;
             const nextCell = cellIndex < cells.length - 1 ? cells[cellIndex + 1] : undefined;
-            const prevBox = prevCell ? prevCell.getBoundingClientRect() : null;
-            const nextBox = nextCell ? nextCell.getBoundingClientRect() : null;
+            const sameLine = (box: DOMRect | undefined) =>
+              box && box.bottom > cellBox.top + 1 && box.top < cellBox.bottom - 1 ? box : null;
+            const prevBox = sameLine(prevCell?.getBoundingClientRect());
+            const nextBox = sameLine(nextCell?.getBoundingClientRect());
             const leftLimit = prevBox ? prevBox.right : cellBox.left - crossingTolerance;
             const rightLimit = nextBox ? nextBox.left : cellBox.right + crossingTolerance;
             const walker = document.createTreeWalker(cell, NodeFilter.SHOW_TEXT);
@@ -234,7 +236,7 @@ for (const width of [1280, 320]) {
   });
 }
 
-test('narrow desktop windows scroll the console instead of shrinking fader targets', async ({
+test('narrow desktop windows stack the console instead of scrolling or shrinking targets', async ({
   page,
 }, testInfo) => {
   test.skip(
@@ -263,6 +265,6 @@ test('narrow desktop windows scroll the console instead of shrinking fader targe
   expect(metrics.meterWidth, 'a VU meter must keep a 24px target').toBeGreaterThanOrEqual(24);
   expect(
     metrics.scrollWidth,
-    'below the md breakpoint the console scrolls locally so targets never collapse',
-  ).toBeGreaterThan(metrics.clientWidth);
+    'below the md breakpoint each channel stacks into rows, so nothing scrolls sideways',
+  ).toBeLessThanOrEqual(metrics.clientWidth);
 });

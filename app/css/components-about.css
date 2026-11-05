@@ -385,4 +385,15 @@
       padding-bottom: calc(var(--spacing-3) + var(--spacing-1) / 2);
     }
   }
+
+  @media (max-width: 479.98px) {
+    .ab-ph:has(.repo-link) {
+      flex-direction: column;
+      text-align: center;
+    }
+
+    .ab-ph:has(.repo-link) .repo-link {
+      margin-left: 0;
+    }
+  }
 }

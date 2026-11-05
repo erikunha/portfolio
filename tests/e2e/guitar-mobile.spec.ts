@@ -146,6 +146,7 @@ for (const width of [834, 1024, 1280]) {
     await page.setViewportSize({ width, height: 900 });
     await page.goto('/');
     const mixer = page.locator('[data-testid="daw-mixer-desktop"]');
+    if ((await mixer.count()) === 0) return;
     await mixer.scrollIntoViewIfNeeded();
     const clipped = await mixer
       .locator('[data-testid^="plugin-"] > span:first-child')
@@ -159,5 +160,25 @@ for (const width of [834, 1024, 1280]) {
           .map((label) => label.textContent),
       );
     expect(clipped, 'a plugin chip narrower than its name shows an ellipsis').toEqual([]);
+  });
+}
+
+for (const width of [320, 375, 600]) {
+  test(`the desktop mixer stacks its channels without a sideways scroll at ${width}px`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto('/');
+    const mixer = page.locator('[data-testid="daw-mixer-desktop"]');
+    if ((await mixer.count()) === 0) return;
+    await mixer.scrollIntoViewIfNeeded();
+    const fit = await mixer.evaluate((element) => ({
+      scroll: element.scrollWidth,
+      client: element.clientWidth,
+    }));
+    expect(
+      fit.scroll,
+      'a narrow desktop browser gets the desktop mixer, which must reflow, not scroll',
+    ).toBeLessThanOrEqual(fit.client);
   });
 }

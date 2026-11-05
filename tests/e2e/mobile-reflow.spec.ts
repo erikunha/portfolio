@@ -128,3 +128,26 @@ test('the contact submit button spans its row below 768 and keeps its size at 12
     EDGE_TOLERANCE_PX,
   );
 });
+
+for (const bar of ['.shell-chrome', '.contact-chrome']) {
+  test(`${bar} keeps the window dots left and centres its labels at 375`, async ({ page }) => {
+    await page.setViewportSize({ width: 375, height: 812 });
+    await page.goto('/');
+    const chrome = page.locator(bar).first();
+    await chrome.scrollIntoViewIfNeeded();
+    const layout = await chrome.evaluate((element) => {
+      const box = element.getBoundingClientRect();
+      const padding = Number.parseFloat(getComputedStyle(element).paddingLeft);
+      const [dots, ...labels] = [...element.children].map((child) => child.getBoundingClientRect());
+      const centre = (box.left + box.right) / 2;
+      return {
+        dotsOffset: (dots?.left ?? 0) - (box.left + padding),
+        labelOffsets: labels.map((label) => Math.abs((label.left + label.right) / 2 - centre)),
+      };
+    });
+    expect(layout.dotsOffset, 'the close/minimise/zoom dots stay at the left edge').toBeLessThan(2);
+    for (const offset of layout.labelOffsets) {
+      expect(offset, 'a wrapped label sits on the centre axis, not stranded right').toBeLessThan(3);
+    }
+  });
+}
