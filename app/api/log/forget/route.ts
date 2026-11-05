@@ -2,12 +2,14 @@ import { z } from 'zod';
 
 import { log } from '@/lib/log';
 import { getForgetLimit, getRedis } from '@/lib/rate-limit';
+import { withBodyLimit } from '@/lib/server/body-limit';
 import { defineHandler, err, ok } from '@/lib/server/route';
 
 const ForgetPayload = z.object({
   requestId: z.string().uuid(),
 });
 
+const MAX_FORGET_BODY_BYTES = 1024;
 const SMOKE_UUID = '00000000-0000-4000-8000-000000000000';
 
 function lastNDates(n: number): string[] {
@@ -21,7 +23,7 @@ function lastNDates(n: number): string[] {
   return out;
 }
 
-export const POST = defineHandler({
+const handleForget = defineHandler({
   schema: ForgetPayload,
   rateLimit: getForgetLimit,
   rateLimitErrorMessage: 'too many forget requests',
@@ -51,3 +53,5 @@ export const POST = defineHandler({
     return ok({ requestId });
   },
 });
+
+export const POST = withBodyLimit(handleForget, MAX_FORGET_BODY_BYTES);

@@ -138,6 +138,15 @@ describe('/api/log/forget endpoint', () => {
     );
   });
 
+  it('answers 413 payload_too_large for a body past the cap, before any delete', async () => {
+    const { POST } = await import('@/app/api/log/forget/route');
+    const res = await POST(makeRequest({ requestId: REAL_UUID, padding: 'x'.repeat(4096) }));
+    expect(res.status).toBe(413);
+    const body = (await res.json()) as { ok: false; error: { code: string } };
+    expect(body.error.code).toBe('payload_too_large');
+    expect(redisDelMock).not.toHaveBeenCalled();
+  });
+
   it('rejects a non-UUID requestId with a 400 validation error', async () => {
     const { POST } = await import('@/app/api/log/forget/route');
     const res = await POST(makeRequest({ requestId: 'not-a-uuid' }));

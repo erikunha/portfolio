@@ -43,7 +43,7 @@ Contact delivery also uses `202 { ok: false, requestId, error: { code: 'queued',
 
 `/api/contact-retry` returns `{ ok: true, requestId, data: { sent, failed, expired, exhausted } }` with a matching `X-Request-Id` header.
 
-Every POST route reads its body through `withBodyLimit` (`lib/server/body-limit.ts`) and answers `413 payload_too_large` past its cap: 8192 bytes for `/api/ask`, 16384 for `/api/contact`, 32768 for `/api/log` and 4096 for `/api/mcp`. Both cron routes check the `CRON_SECRET` bearer through `isCronAuthorized` (`lib/server/cron-auth.ts`), a constant-time digest comparison. The links feed sends the YouTube key in the `x-goog-api-key` header, never in the URL.
+Every body-reading POST route reads its body through `withBodyLimit` (`lib/server/body-limit.ts`) and answers `413 payload_too_large` past its cap: 8192 bytes for `/api/ask`, 16384 for `/api/contact`, 32768 for `/api/log`, 1024 for `/api/log/forget` and 4096 for `/api/mcp`. `/api/csp-report` never reads its body, so it has no cap. Both cron routes check the `CRON_SECRET` bearer through `isCronAuthorized` (`lib/server/cron-auth.ts`), a constant-time digest comparison. The links feed sends the YouTube key in the `x-goog-api-key` header, never in the URL.
 
 `/api/mcp` delegates GET and POST to `createMcpHandler`. POST has a 4096-byte body limit, and `maxSubscriptions: 0` configures stateless operation. The tools use application rate limiting and token budgets.
 
