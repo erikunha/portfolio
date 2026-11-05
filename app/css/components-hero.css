@@ -97,6 +97,12 @@
     white-space: nowrap;
   }
 
+  @media (max-width: 479.98px) {
+    .hero-stats .stat-tile-label {
+      white-space: normal;
+    }
+  }
+
   .hero-actions {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));

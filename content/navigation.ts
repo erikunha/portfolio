@@ -1,6 +1,6 @@
 import {
+  DOCK_HIRE_LABEL,
   HIRE_ACCESSIBLE_NAME,
-  HIRE_SHORT_LABEL,
   NAV_VOCABULARY,
   TOPBAR_HIRE_LINK,
   TOPBAR_NAV,
@@ -126,7 +126,7 @@ const navigationFor = (locale: SiteLocale): Navigation => {
       { key: 'shell', label: 'SHELL', sectionId: 'sec-shell' },
       {
         key: 'hire',
-        label: HIRE_SHORT_LABEL[locale],
+        label: DOCK_HIRE_LABEL[locale],
         href: LINKEDIN_URL,
         accessibleName: HIRE_ACCESSIBLE_NAME[locale],
       },

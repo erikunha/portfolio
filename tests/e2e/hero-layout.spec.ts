@@ -66,6 +66,34 @@ test.describe('hero mobile layout', () => {
     ).toBeLessThanOrEqual(MOBILE_HERO_MAX_PX);
   });
 
+  for (const path of ['/', '/pt']) {
+    test(`stat tile text stays inside its tile at 320 (${path})`, async ({ page }) => {
+      await page.setViewportSize({ width: 320, height: 640 });
+      await page.goto(path);
+      const stats = page.locator('[data-testid="hero-stats"]').filter({ visible: true }).first();
+      await expect(stats).toBeVisible();
+      const overflow = await stats.evaluate((node) => {
+        const found: string[] = [];
+        for (const tile of node.querySelectorAll('.stat-tile')) {
+          const tileBox = tile.getBoundingClientRect();
+          for (const text of tile.querySelectorAll('.stat-tile-label, .stat-tile-value')) {
+            const range = document.createRange();
+            range.selectNodeContents(text);
+            for (const rect of Array.from(range.getClientRects())) {
+              if (rect.right > tileBox.right + 1 || rect.left < tileBox.left - 1) {
+                found.push(`${text.textContent}: paints past its stat tile`);
+                break;
+              }
+            }
+            range.detach();
+          }
+        }
+        return found;
+      });
+      expect(overflow, 'no stat tile text may overflow its tile at 320px').toEqual([]);
+    });
+  }
+
   test('the impact stats render as a 2x2 grid at 390', async ({ page }) => {
     await page.setViewportSize(MOBILE);
     await page.goto('/');
