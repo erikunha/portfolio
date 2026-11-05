@@ -121,3 +121,22 @@ test.describe('one shell on every page', () => {
     }
   }
 });
+
+for (const path of ['/', '/pt']) {
+  for (const width of [320, 390]) {
+    test(`${path} centers the EN/PT switch in the mobile title bar at ${width}px`, async ({
+      page,
+    }) => {
+      await page.setViewportSize({ width, height: 844 });
+      await page.goto(path);
+      const bar = page.locator('.mobile-title-bar');
+      const toggle = bar.locator('[data-lang-switch]');
+      await expect(toggle).toBeVisible();
+      const [barBox, switchBox] = await Promise.all([bar.boundingBox(), toggle.boundingBox()]);
+      if (!barBox || !switchBox) throw new Error('the bar and the switch must both render a box');
+      const barCenter = barBox.x + barBox.width / 2;
+      const switchCenter = switchBox.x + switchBox.width / 2;
+      expect(Math.abs(switchCenter - barCenter)).toBeLessThanOrEqual(1);
+    });
+  }
+}
