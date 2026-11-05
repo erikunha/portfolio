@@ -140,3 +140,24 @@ for (const viewport of [PHONE, JUST_BELOW_DESKTOP]) {
     expect(overlaps, 'a rotated arrow longer than its row paints over the node text').toEqual([]);
   });
 }
+
+for (const width of [834, 1024, 1280]) {
+  test(`every mixer plugin name is readable in full at ${width}px`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto('/');
+    const mixer = page.locator('[data-testid="daw-mixer-desktop"]');
+    await mixer.scrollIntoViewIfNeeded();
+    const clipped = await mixer
+      .locator('[data-testid^="plugin-"] > span:first-child')
+      .evaluateAll((labels) =>
+        labels
+          .filter(
+            (label) =>
+              label.scrollWidth > label.clientWidth + 1 ||
+              label.scrollHeight > label.clientHeight + 1,
+          )
+          .map((label) => label.textContent),
+      );
+    expect(clipped, 'a plugin chip narrower than its name shows an ellipsis').toEqual([]);
+  });
+}

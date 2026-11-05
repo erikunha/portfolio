@@ -42,7 +42,7 @@ function PluginChain({
           )}
           data-testid={`plugin-${channelId}-${p.name}`}
         >
-          <span className="text-xs font-bold tracking-[0.06em] whitespace-nowrap overflow-hidden text-ellipsis max-w-full uppercase">
+          <span className="text-xs font-bold text-center leading-tight overflow-hidden text-ellipsis max-w-full uppercase">
             {p.name}
           </span>
           <span className="flex gap-px items-end" aria-hidden="true">
@@ -183,8 +183,8 @@ function TableHeader() {
   return (
     <div
       className={cn(
-        'daw-channel-row',
-        'text-xs max-md:text-[10px] text-primary-400 tracking-[0.18em] uppercase',
+        'daw-channel-row daw-mixer-labels',
+        'text-xs text-primary-400 tracking-[0.18em] uppercase',
         'border-b border-[var(--color-primary-quiet)] px-[18px] py-[7px]',
         'bg-black/50',
       )}

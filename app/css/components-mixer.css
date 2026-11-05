@@ -1,9 +1,24 @@
 @layer components {
   .daw-channel-row {
     display: grid;
-    grid-template-columns: 64px 1.4fr 86px 80px 2.4fr 1.5fr 1fr 64px;
+    grid-template-columns: 64px 1.2fr 86px 80px 3.4fr 1fr 0.9fr 64px;
     gap: 14px;
     align-items: center;
+  }
+
+  @media (max-width: 1279.98px) {
+    .daw-channel-row {
+      grid-template-columns: 64px 1.2fr 86px 80px 1fr 0.9fr 64px;
+    }
+
+    .daw-channel-row > :nth-child(5) {
+      grid-column: 2 / -1;
+      grid-row: 2;
+    }
+
+    .daw-mixer-labels > :nth-child(5) {
+      display: none;
+    }
   }
 
   @media (max-width: 767px) {
