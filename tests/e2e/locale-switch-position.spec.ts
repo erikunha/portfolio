@@ -89,9 +89,10 @@ test.describe('language switch on pages that own their switch', () => {
   test('the CV switch is never given a section hash', async ({ page }) => {
     await page.goto('/cv');
 
-    await expect(page.locator('nav[aria-label="Language"] a[hreflang="pt"]')).toHaveAttribute(
-      'href',
-      '/pt/cv',
-    );
+    const links = page.locator('nav[aria-label="Language"] a[hreflang="pt"]');
+    await expect(links.first()).toBeAttached();
+    for (const link of await links.all()) {
+      await expect(link).toHaveAttribute('href', '/pt/cv');
+    }
   });
 });
