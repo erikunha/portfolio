@@ -1,15 +1,22 @@
 'use client';
 
-import { Component, type ReactNode } from 'react';
+import { Component, type CSSProperties, type ReactNode } from 'react';
 
 import { errorsClientContent } from '@/content/errors-client';
 import { DEFAULT_SITE_LOCALE, type SiteLocale } from '@/content/site-locale';
 import { buildLogPayload } from '@/lib/error-bridge.client';
 
+const MIN_HEIGHT_VAR = '--eb-min-height';
+
+function reloadPage() {
+  window.location.reload();
+}
+
 interface Props {
   children: ReactNode;
   fallback?: ReactNode;
   locale?: SiteLocale;
+  minHeight?: string;
 }
 
 interface State {
@@ -40,21 +47,26 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   override componentDidCatch(error: Error, info: { componentStack?: string | null }) {
-    console.error('[ErrorBoundary] client island crashed:', error, info.componentStack);
     reportClientError('[ErrorBoundary]', error, info.componentStack);
   }
 
   override render() {
-    if (this.state.hasError) {
-      return (
-        this.props.fallback ?? (
-          <div className="eb-fallback" role="alert" aria-live="polite">
-            <span className="gt">!</span>{' '}
-            {errorsClientContent[this.props.locale ?? DEFAULT_SITE_LOCALE].componentUnavailable}
-          </div>
-        )
-      );
-    }
-    return this.props.children;
+    if (!this.state.hasError) return this.props.children;
+    const { fallback, locale = DEFAULT_SITE_LOCALE, minHeight } = this.props;
+    if (fallback !== undefined) return fallback;
+    const copy = errorsClientContent[locale];
+    return (
+      <div
+        className="eb-fallback"
+        role="alert"
+        style={minHeight ? ({ [MIN_HEIGHT_VAR]: minHeight } as CSSProperties) : undefined}
+      >
+        <p className="eb-title">! {copy.componentUnavailable}</p>
+        <p className="eb-text">{copy.componentExplanation}</p>
+        <button type="button" className="eb-reload" onClick={reloadPage}>
+          {copy.reloadLabel}
+        </button>
+      </div>
+    );
   }
 }

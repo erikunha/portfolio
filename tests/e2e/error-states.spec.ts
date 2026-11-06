@@ -50,3 +50,27 @@ test('the 404 heading takes focus for the announcement without painting a ring',
     'a programmatic focus target with tabindex=-1 is not keyboard reachable, so no ring',
   ).toBe('none');
 });
+
+const CONTACT_CHUNK_MARKER = 'contact-send';
+const CONTACT_SECTION = '#sec-contact';
+const TAP_TARGET_PX = 44;
+
+test.describe('crashed island', () => {
+  test('keeps a dashed box, explains itself and offers a 44px reload', async ({ page }) => {
+    await page.route('**/_next/static/chunks/**/*.js', async (route) => {
+      const response = await route.fetch();
+      const body = await response.text();
+      if (body.includes(CONTACT_CHUNK_MARKER)) return route.abort();
+      return route.fulfill({ response, body });
+    });
+    await page.goto('/');
+    await page.locator(CONTACT_SECTION).scrollIntoViewIfNeeded();
+    const fallback = page.locator('.eb-fallback');
+    await expect(fallback).toBeVisible();
+    await expect(fallback).toHaveAttribute('role', 'alert');
+    await expect(fallback).toContainText('! component unavailable');
+    expect(await fallback.evaluate((el) => getComputedStyle(el).borderTopStyle)).toBe('dashed');
+    const reload = fallback.getByRole('button', { name: '[ RELOAD ]' });
+    expect((await reload.boundingBox())?.height).toBeGreaterThanOrEqual(TAP_TARGET_PX);
+  });
+});
