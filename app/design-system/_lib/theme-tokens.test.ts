@@ -27,6 +27,18 @@ describe('parseThemeColors', () => {
   it('returns an empty map when no colors are present', () => {
     expect(parseThemeColors(':root {}')).toEqual({});
   });
+
+  it('resolves a var(--color-x) alias to the value it points at, so swatches print the hex', () => {
+    expect(
+      parseThemeColors('--color-text: var(--color-tertiary-50); --color-tertiary-50: #e6ffe6;'),
+    ).toEqual({ text: '#e6ffe6', 'tertiary-50': '#e6ffe6' });
+  });
+
+  it('keeps an alias whose target is missing, so the contrast check fails loudly on it', () => {
+    expect(parseThemeColors('--color-text: var(--color-missing);')).toEqual({
+      text: 'var(--color-missing)',
+    });
+  });
 });
 
 describe('terminal theme contract', () => {

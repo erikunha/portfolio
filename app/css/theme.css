@@ -1,7 +1,7 @@
 @theme {
-  --color-text: #e6ffe6;
+  --color-text: var(--color-tertiary-50);
   --color-text-secondary: #a1b3a1;
-  --color-green: #00ff41;
+  --color-green: var(--color-primary-500);
 
   --text-min: 0.75rem;
   --text-xs: var(--text-min);
