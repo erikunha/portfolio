@@ -56,7 +56,7 @@ test.describe('projects section below 768px', () => {
     await page.goto('/');
     const tiles = page.locator(PERF_TILE);
     await tiles.first().scrollIntoViewIfNeeded();
-    expect(await tiles.count()).toBe(4);
+    await expect(tiles).toHaveCount(4);
     const boxes = await tiles.evaluateAll((nodes) =>
       nodes.map((node) => {
         const { x, y } = node.getBoundingClientRect();
@@ -95,7 +95,7 @@ test.describe('projects section at 1280px', () => {
     await page.goto('/');
     const tiles = page.locator(PERF_TILE);
     await tiles.first().scrollIntoViewIfNeeded();
-    expect(await tiles.count()).toBe(4);
+    await expect(tiles).toHaveCount(4);
     const rows = await tiles.evaluateAll((nodes) =>
       nodes.map((node) => Math.round(node.getBoundingClientRect().y)),
     );
