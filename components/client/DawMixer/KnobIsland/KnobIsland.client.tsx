@@ -1,12 +1,14 @@
 'use client';
 
 import { useCallback, useRef, useState } from 'react';
+import { sliderValueForKey } from '@/lib/slider';
 
 const MIN_ANGLE = -150;
 const MAX_ANGLE = 150;
 const KNOB_SIZE = 26;
 const KNOB_CENTER = 13;
 const NEEDLE_LENGTH = 9;
+const KEY_STEP_DEGREES = 5;
 
 function clamp(v: number) {
   return Math.max(MIN_ANGLE, Math.min(MAX_ANGLE, v));
@@ -101,20 +103,17 @@ export function KnobIsland({ initialAngle, label, channelName }: KnobProps) {
       onPointerCancel={onPointerCancel}
       onKeyDown={(e) => {
         if (isDragging.current) return;
-        if (e.key === 'ArrowUp') {
-          e.preventDefault();
-          const next = clamp(liveAngle.current + 5);
-          liveAngle.current = next;
-          updateNeedle(next);
-          setAngle(next);
-        }
-        if (e.key === 'ArrowDown') {
-          e.preventDefault();
-          const next = clamp(liveAngle.current - 5);
-          liveAngle.current = next;
-          updateNeedle(next);
-          setAngle(next);
-        }
+        const next = sliderValueForKey(e.key, {
+          value: liveAngle.current,
+          min: MIN_ANGLE,
+          max: MAX_ANGLE,
+          step: KEY_STEP_DEGREES,
+        });
+        if (next === null) return;
+        e.preventDefault();
+        const rounded = Math.round(next);
+        updateNeedle(rounded);
+        setAngle(rounded);
       }}
     >
       <svg

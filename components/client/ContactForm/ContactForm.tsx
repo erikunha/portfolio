@@ -26,6 +26,7 @@ import type { TerminalChrome } from '@/content/schemas';
 import { localeOfPath } from '@/content/site-locale';
 import { Field } from '@/design-system/components/Field';
 import { longestCopy } from '@/lib/longest-copy';
+import { postJson } from '@/lib/post-json';
 import { ASK_LOCALE_HEADER } from '@/lib/stream-protocol';
 import { TerminalChromeBar } from '../TerminalChromeBar';
 import { ContactCopyButton } from './ContactCopyButton.client';
@@ -41,6 +42,7 @@ const STATUS = {
 type Status = (typeof STATUS)[keyof typeof STATUS];
 const CONTACT_ENDPOINT = '/api/contact';
 const QUEUED_STATUS = 202;
+const REQUEST_TIMEOUT_MS = 20_000;
 const STORAGE_UNAVAILABLE_CODE = 'storage_unavailable';
 const SERVER_LOCALIZED_CODES: readonly string[] = [STORAGE_UNAVAILABLE_CODE];
 const MESSAGE_ROWS = 5;
@@ -114,12 +116,12 @@ function ContactReceipt({
     forgetPending.current = true;
     setForget(FORGET.PENDING);
     try {
-      const res = await fetch(FORGET_ENDPOINT, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ requestId: receipt.ref }),
-      });
-      setForget(res.ok ? FORGET.DONE : FORGET.FAILED);
+      const { response } = await postJson(
+        FORGET_ENDPOINT,
+        { requestId: receipt.ref },
+        { timeoutMs: REQUEST_TIMEOUT_MS },
+      );
+      setForget(response.ok ? FORGET.DONE : FORGET.FAILED);
     } catch {
       setForget(FORGET.FAILED);
     } finally {
@@ -266,12 +268,11 @@ export function ContactForm({ copy, chrome }: { copy: ContactContent; chrome: Te
     let serverMessage = '';
     setStatus(STATUS.SUBMITTING);
     try {
-      const res = await fetch(CONTACT_ENDPOINT, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', [ASK_LOCALE_HEADER]: pageLocale },
-        body: JSON.stringify({ ...values, field_company: honeypot }),
-      });
-      const data = (await res.json().catch(() => null)) as ContactResponse | null;
+      const { response: res, data } = await postJson<ContactResponse>(
+        CONTACT_ENDPOINT,
+        { ...values, field_company: honeypot },
+        { headers: { [ASK_LOCALE_HEADER]: pageLocale }, timeoutMs: REQUEST_TIMEOUT_MS },
+      );
       const apiError = data?.error;
       if (res.status === QUEUED_STATUS && apiError?.code === CONTACT_DELIVERY_CODE.QUEUED) {
         messageStore.reset();

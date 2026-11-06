@@ -4,6 +4,7 @@ import { useEffect, useRef } from 'react';
 import { ROLE } from '@/content/role';
 import { cn } from '@/lib/cn';
 import { readMotion } from '@/lib/motion';
+import { subscribeMotion } from '@/lib/motion-change';
 import { typeOut } from '@/lib/typewriter';
 
 const TYPE_MS = 80;
@@ -36,23 +37,19 @@ export function RoleTyper({ className }: { className?: string | undefined }) {
 
     if (!cancelled) start();
 
-    const onMotionChange = (e: Event) => {
-      const detail = (e as CustomEvent).detail as unknown;
-      if (!detail || typeof (detail as { on?: unknown }).on !== 'boolean') return;
-      const on = (detail as { on: boolean }).on;
+    const unsubscribe = subscribeMotion((on) => {
       if (!on) {
         cancelled = true;
         stopTyping?.();
       } else if (cancelled) {
         start();
       }
-    };
-    window.addEventListener('motionchange', onMotionChange);
+    });
 
     return () => {
       cancelled = true;
       stopTyping?.();
-      window.removeEventListener('motionchange', onMotionChange);
+      unsubscribe();
     };
   }, []);
 

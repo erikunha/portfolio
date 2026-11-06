@@ -3,19 +3,17 @@
 import { usePathname } from 'next/navigation';
 import { useEffect } from 'react';
 import { readMotion } from '@/lib/motion';
+import { subscribeMotion } from '@/lib/motion-change';
 
 const SELECTOR = '[data-type-reveal]';
 const TYPED_CLASS = 'is-typed';
 const STATIC_CLASS = 'is-static';
 const READY_CLASS = 'type-reveal-ready';
 const CHARS_PROPERTY = '--type-chars';
-const MOTION_CHANGE_EVENT = 'motionchange';
 const OBSERVER_OPTIONS: IntersectionObserverInit = {
   threshold: 0,
   rootMargin: '0px 0px -12% 0px',
 };
-
-type MotionChangeDetail = { on: boolean };
 
 function revealAll(elements: Iterable<HTMLElement>) {
   for (const el of elements) {
@@ -72,16 +70,15 @@ export function TypeReveal() {
     });
     mutations.observe(document.body, { childList: true, subtree: true });
 
-    const onMotionChange = (event: Event) => {
-      if ((event as CustomEvent<MotionChangeDetail>).detail?.on) return;
+    const unsubscribe = subscribeMotion((on) => {
+      if (on) return;
       revealAll(elements);
       observer?.disconnect();
       mutations.disconnect();
-    };
-    window.addEventListener(MOTION_CHANGE_EVENT, onMotionChange);
+    });
 
     return () => {
-      window.removeEventListener(MOTION_CHANGE_EVENT, onMotionChange);
+      unsubscribe();
       observer?.disconnect();
       mutations.disconnect();
     };

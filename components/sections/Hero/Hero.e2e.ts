@@ -2,6 +2,7 @@ import { expect, type Locator, type Page, test } from '@playwright/test';
 import { heroContent } from '@/content/hero';
 import { profile } from '@/content/profile';
 import { SITE_LOCALE } from '@/content/site-locale';
+import { waitForHydration } from '../../../tests/e2e/_helpers/hydration';
 
 const viewports = [
   { width: 1280, height: 720 },
@@ -314,3 +315,74 @@ for (const width of [375, 1280]) {
     );
   });
 }
+
+const BOOT_HOST = '.hero-boot-desktop';
+const BOOT_QUIET_WINDOW_MS = 1500;
+const BOOT_SETTLE_MS = 400;
+const BOOT_DIALOG_HOLD_MS = 2500;
+const BOOT_DIALOG_START_TIMEOUT_MS = 15_000;
+const WHEEL_STEP_PX = 1200;
+const WHEEL_STEPS = 12;
+
+async function countBootMutations(page: Page, windowMs: number): Promise<number> {
+  return page.evaluate(
+    ([selector, ms]) =>
+      new Promise<number>((resolve) => {
+        const host = document.querySelector(selector as string);
+        let count = 0;
+        const observer = new MutationObserver((records) => {
+          count += records.length;
+        });
+        if (host) observer.observe(host, { childList: true, characterData: true, subtree: true });
+        setTimeout(() => {
+          observer.disconnect();
+          resolve(count);
+        }, ms as number);
+      }),
+    [BOOT_HOST, windowMs] as const,
+  );
+}
+
+test.describe('Hero boot loop follows the motion switch and the viewport', () => {
+  test.use({ viewport: { width: 1280, height: 720 } });
+
+  test('the MOTION control stops the typing loop and shows the static boot', async ({ page }) => {
+    await page.goto('/');
+    await waitForHydration(page, BOOT_HOST);
+    await expect(page.locator(`${BOOT_HOST} .hero-boot-matrix-out`)).not.toBeEmpty({
+      timeout: BOOT_DIALOG_START_TIMEOUT_MS,
+    });
+    expect(
+      await countBootMutations(page, BOOT_QUIET_WINDOW_MS),
+      'the boot dialog types while motion is on',
+    ).toBeGreaterThan(0);
+
+    await page.locator('.topbar-action-toggle').click();
+    await expect(page.locator('.topbar-action-toggle')).toHaveAttribute('aria-pressed', 'false');
+    await page.waitForTimeout(BOOT_SETTLE_MS);
+
+    expect(
+      await countBootMutations(page, BOOT_QUIET_WINDOW_MS),
+      'with motion off the boot log must not change',
+    ).toBe(0);
+    await expect(page.locator(`${BOOT_HOST} .hero-boot-cmd`)).toHaveText('run bio.exe --verbose');
+  });
+
+  test('the boot dialog stops typing while the hero is scrolled out of view', async ({ page }) => {
+    await page.goto('/');
+    await waitForHydration(page, BOOT_HOST);
+    await expect(page.locator(`${BOOT_HOST} .hero-boot-matrix-out`)).not.toBeEmpty({
+      timeout: BOOT_DIALOG_START_TIMEOUT_MS,
+    });
+    for (let step = 0; step < WHEEL_STEPS; step += 1) {
+      await page.mouse.wheel(0, WHEEL_STEP_PX);
+    }
+    await expect(page.locator(BOOT_HOST)).not.toBeInViewport();
+    await page.waitForTimeout(BOOT_DIALOG_HOLD_MS);
+
+    expect(
+      await countBootMutations(page, BOOT_QUIET_WINDOW_MS),
+      'an off-screen hero must not keep typing',
+    ).toBe(0);
+  });
+});

@@ -25,6 +25,29 @@ export type PhraseLoop = {
   resume: () => void;
 };
 
+export const DEFAULT_PAUSE_REASON = 'default';
+
+export type PauseControl = {
+  pause: (reason?: string) => void;
+  resume: (reason?: string) => void;
+  isPaused: () => boolean;
+};
+
+export function createPauseControl(apply: (paused: boolean) => void): PauseControl {
+  const reasons = new Set<string>();
+  return {
+    pause: (reason = DEFAULT_PAUSE_REASON) => {
+      reasons.add(reason);
+      apply(true);
+    },
+    resume: (reason = DEFAULT_PAUSE_REASON) => {
+      reasons.delete(reason);
+      if (reasons.size === 0) apply(false);
+    },
+    isPaused: () => reasons.size > 0,
+  };
+}
+
 const PHRASE_PHASE = { Type: 'type', Hold: 'hold', Back: 'back' } as const;
 
 type PhrasePhase = (typeof PHRASE_PHASE)[keyof typeof PHRASE_PHASE];

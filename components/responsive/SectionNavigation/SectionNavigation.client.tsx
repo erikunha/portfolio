@@ -27,6 +27,7 @@ import {
 } from '@/content/site-locale';
 import { NavItem } from '@/design-system';
 import { cn } from '@/lib/cn';
+import { isRendered } from '@/lib/dom/is-rendered';
 import { isolate } from '@/lib/dom/isolate';
 import { applyMotion, motionInEffect, readMotion, readSystemReducedMotion } from '@/lib/motion';
 import {
@@ -143,17 +144,6 @@ export function jumpToSection(id: string): boolean {
     signal.addEventListener('abort', () => window.clearTimeout(timeout), { once: true });
   }
   target.focus({ preventScroll: true });
-  return true;
-}
-
-function isRendered(element: HTMLElement): boolean {
-  if (!element.isConnected) return false;
-  if (element.hasAttribute('inert')) return false;
-  if (element.hidden) return false;
-  for (let node: HTMLElement | null = element; node; node = node.parentElement) {
-    const style = window.getComputedStyle(node);
-    if (style.display === 'none' || style.visibility === 'hidden') return false;
-  }
   return true;
 }
 
