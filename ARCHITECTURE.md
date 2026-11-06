@@ -8,7 +8,7 @@
 
 ## 0. The meta-frame
 
-This portfolio is itself a hiring artifact for Senior Software Engineer, Full Stack roles (open to Senior and Tech Lead). The architecture has to **demonstrate the engineering it claims**. A site that says "performance-first" but ships a 400KB JS bundle is self-disqualifying. The architecture below treats the page as a small production service with the same rigor I'd apply to a payment platform, minus the multi-region overkill.
+This portfolio is itself a hiring artifact for Senior Software Engineer, Applied AI roles (open to Senior and Tech Lead). The architecture has to **demonstrate the engineering it claims**. A site that says "performance-first" but ships a 400KB JS bundle is self-disqualifying. The architecture below treats the page as a small production service with the same rigor I'd apply to a payment platform, minus the multi-region overkill.
 
 The Principal-level moves here are mostly **what we don't build**:
 - No CMS (single-author, content fits in typed TS files)
