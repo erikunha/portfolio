@@ -67,7 +67,7 @@ Module headers use CSS scroll-driven typing with a stepped text reveal and caret
 
 ### CRT overlay layering
 
-`CRTOverlay.client.tsx` renders 6 fixed, `aria-hidden`, `pointer-events:none` overlay divs, z-stacked in `crt.css`: vignette (1) · scanlines (2) · RGB sub-pixel mask (3) · noise (4) · flicker (5) · scan beam (6). `MatrixRain` sits at z-0, `<main>` at z-10. All of it disables under `prefers-reduced-motion: reduce` **and** `body[data-motion="reduce"]`, and freezes during the system-failure overlay (`html.sysfail-on`).
+`CRTOverlay.client.tsx` renders 6 fixed, `aria-hidden`, `pointer-events:none` overlay divs, z-stacked in `crt.css`: vignette (1) · scanlines (2) · RGB sub-pixel mask (3) · noise (4) · flicker (5) · scan beam (6). `MatrixRain` sits at z-0, `<main>` at z-10. All of it disables under `prefers-reduced-motion: reduce` **and** `body[data-motion="reduce"]`, and freezes during the system-failure overlay (`html.sysfail-on`). `CRTOverlay` also runs the frame governor (`lib/frame-governor.ts`): while `html[data-crt-level]` is above 0, `crt.css` pauses the noise, flicker and beam and the governor steps their clocks (`lib/crt-effect-stepper.ts`); `MatrixRain` reads the same level for its tick interval.
 
 ## The design system
 
@@ -96,7 +96,7 @@ Import order (`app/globals.css`): `tailwindcss` → `theme.css` → `base.css` �
 | ------------------ | ------------ | ---------------------------------------------------------------------------------------------------------------------------------- |
 | `theme.css`        | `@theme`     | The token system (below)                                                                                                           |
 | `base.css`         | `base`       | resets, focus-visible rings, skip-link, `.sr-only`, the `#sec-*` mobile-order map, `.mobile-only`/`.desktop-only`                  |
-| `crt.css`          | `components` | the 6 CRT classes + keyframes + reduced-motion disables                                                                            |
+| `crt.css`          | `components` | the 6 CRT classes + keyframes + reduced-motion disables + the `html[data-crt-level]` pause rule                                    |
 | `animations.css`   | -            | section keyframes (`boot-blink`, `dmesg-reveal`, `guitar-scan-beam`, `hero-shake-*`, ...)                                          |
 | `components-*.css` | `components` | named layout and effect classes (`.module-*`, `.signal-glow`, DawMixer `.mx-fader`/`.mx-dial`, `.contact-*`, `.shell-cursor`, ...) |
 

@@ -318,6 +318,8 @@ lib/contact-outbox.ts                 # ordered pending ids and retry attempt co
 lib/timezone/                         # Intl-only zone, clock and overlap math, land-grid path builder
 lib/error-bridge.client.ts            # window error → /api/log bridge
 lib/events.ts                         # typed WindowEventMap: sysfail:start|end, shell-cmd-run, hero:sysfail:show|hide
+lib/crt-effect-stepper.ts              # moves the paused CRT animation clocks forward at the governed tick rate
+lib/frame-governor.ts                 # rolling frame-time governor: publishes html[data-crt-level], steps the CRT effects, sets the MatrixRain tick multiplier
 lib/hiring-profile.ts                 # HiringProfile reader for /api/erik.json
 lib/ip-hash.ts                        # salted IP hash for persisted interaction logs
 lib/lighthouse-scores.ts              # PSI API fetcher (cached daily)
