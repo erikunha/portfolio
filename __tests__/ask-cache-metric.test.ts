@@ -116,9 +116,10 @@ function makeStreamTextResult(opts: {
       },
     },
     usage: Promise.resolve({
-      inputTokens: opts.inputTokens,
+      inputTokens: opts.inputTokens + opts.cacheReadInputTokens + opts.cacheCreationInputTokens,
       outputTokens: opts.outputTokens,
       inputTokenDetails: {
+        noCacheTokens: opts.inputTokens,
         cacheReadTokens: opts.cacheReadInputTokens,
         cacheWriteTokens: opts.cacheCreationInputTokens,
       },

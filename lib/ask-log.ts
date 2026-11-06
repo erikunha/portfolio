@@ -9,6 +9,7 @@ const ASK_KV_TTL_S = 90 * 24 * 60 * 60;
 export type AskInteractionStatus =
   | 'completed'
   | 'errored'
+  | 'aborted'
   | 'rate-limited'
   | 'dedup-rejected'
   | 'budget-exhausted';

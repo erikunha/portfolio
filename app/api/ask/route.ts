@@ -7,6 +7,7 @@ import { ASK_MAX_OUTPUT_TOKENS } from '@/lib/ask/limits';
 import { ASK_MODEL } from '@/lib/ask/model';
 import { createStreamGuard, validateAnswer } from '@/lib/ask/output-guard';
 import { PROMPT_VERSION, SYSTEM_TEXT } from '@/lib/ask/system-prompt';
+import { countAskTokens } from '@/lib/ask/usage';
 import { type AskInteractionStatus, persistAskInteraction } from '@/lib/ask-log';
 import { env } from '@/lib/env';
 import { hashIp } from '@/lib/ip-hash';
@@ -61,6 +62,10 @@ const USAGE_RESOLVE_TIMEOUT_MS = 1_000;
 
 const USAGE_TIMED_OUT = Symbol('usage-timeout');
 
+const CLIENT_GONE = Symbol('client-gone');
+
+const UNHASHED_IP_LABEL = 'unhashed';
+
 async function withinDeadline<T>(p: Promise<T>): Promise<T | typeof USAGE_TIMED_OUT> {
   let timer: ReturnType<typeof setTimeout> | undefined;
   try {
@@ -91,7 +96,10 @@ async function handleAsk(req: NextRequest): Promise<Response> {
   const requestId = crypto.randomUUID();
   const startedAt = Date.now();
   const ip = getClientIp(req);
-  const ipHash = await hashIp(ip);
+  const ipHash = await hashIp(ip).catch((hashErr: unknown) => {
+    log.error('ask ip hash unavailable, continuing unhashed', { requestId, err: hashErr });
+    return UNHASHED_IP_LABEL;
+  });
   log.info('ask request received', { requestId, ipHash, promptVersion: PROMPT_VERSION });
 
   const earlyExitPersist = (status: AskInteractionStatus): void =>
@@ -169,10 +177,12 @@ async function handleAsk(req: NextRequest): Promise<Response> {
 
   const questionSentinel = mintQuestionSentinel();
 
+  const upstream = new AbortController();
+
   const result = streamText({
     model: ASK_MODEL,
     maxOutputTokens: MAX_OUTPUT_TOKENS,
-    abortSignal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+    abortSignal: AbortSignal.any([AbortSignal.timeout(REQUEST_TIMEOUT_MS), upstream.signal]),
     experimental_telemetry: { isEnabled: true, recordInputs: false, recordOutputs: false },
     allowSystemInMessages: true,
     messages: [
@@ -192,7 +202,7 @@ async function handleAsk(req: NextRequest): Promise<Response> {
     (): typeof USAGE_TIMED_OUT => USAGE_TIMED_OUT,
   );
   const enc = new TextEncoder();
-  let inputTokens = 0;
+  let totalBilledInput = 0;
   let outputTokens = 0;
   let cacheReadTokens = 0;
   let cacheCreationTokens = 0;
@@ -202,16 +212,31 @@ async function handleAsk(req: NextRequest): Promise<Response> {
 
   const guard = createStreamGuard();
 
+  let clientGone = false;
+  let notifyClientGone: () => void = () => undefined;
+  const clientGoneSignal = new Promise<typeof CLIENT_GONE>((resolve) => {
+    notifyClientGone = () => resolve(CLIENT_GONE);
+  });
+
   const readable = new ReadableStream<Uint8Array>({
     async start(controller) {
+      const send = (chunk: Uint8Array): void => {
+        if (clientGone) return;
+        try {
+          controller.enqueue(chunk);
+        } catch {
+          clientGone = true;
+        }
+      };
       const iterator = result.textStream[Symbol.asyncIterator]();
       try {
-        while (true) {
+        while (!clientGone) {
           let watchdog: ReturnType<typeof setTimeout> | undefined;
-          let next: IteratorResult<string>;
+          let next: IteratorResult<string> | typeof CLIENT_GONE;
           try {
             next = await Promise.race([
               iterator.next(),
+              clientGoneSignal,
               new Promise<never>((_, reject) => {
                 watchdog = setTimeout(
                   () => reject(new Error('mid-stream timeout')),
@@ -222,13 +247,14 @@ async function handleAsk(req: NextRequest): Promise<Response> {
           } finally {
             if (watchdog !== undefined) clearTimeout(watchdog);
           }
+          if (next === CLIENT_GONE) break;
           if (next.done) {
             const finishReason: unknown = await withinDeadline(
               Promise.resolve(result.finishReason).catch(() => undefined),
             );
             if (finishReason === FINISH_REASON_LENGTH) {
               truncated = true;
-              controller.enqueue(enc.encode(askErrors[answerLocale].truncation));
+              send(enc.encode(askErrors[answerLocale].truncation));
             }
             break;
           }
@@ -241,21 +267,24 @@ async function handleAsk(req: NextRequest): Promise<Response> {
               reason: verdict.reason,
               promptVersion: PROMPT_VERSION,
             });
-            controller.enqueue(enc.encode(`${STREAM_ERR_SENTINEL}output guard: ${verdict.reason}`));
+            send(enc.encode(`${STREAM_ERR_SENTINEL}output guard: ${verdict.reason}`));
             break;
           }
-          controller.enqueue(enc.encode(text));
+          send(enc.encode(text));
           if (collectedAnswerText.length < 1000) {
             const remaining = 1000 - collectedAnswerText.length;
             collectedAnswerText += text.slice(0, remaining);
           }
         }
       } catch (err) {
-        status = 'errored';
-        const msg = err instanceof Error ? err.message : 'upstream error';
-        controller.enqueue(enc.encode(`${STREAM_ERR_SENTINEL}${msg}`));
+        if (!clientGone) {
+          status = 'errored';
+          const msg = err instanceof Error ? err.message : 'upstream error';
+          send(enc.encode(`${STREAM_ERR_SENTINEL}${msg}`));
+        }
       } finally {
-        controller.close();
+        if (clientGone && status === 'completed') status = 'aborted';
+        if (!clientGone) controller.close();
         void Promise.resolve(iterator.return?.()).catch(() => undefined);
         try {
           await settleAndPersist();
@@ -264,6 +293,11 @@ async function handleAsk(req: NextRequest): Promise<Response> {
         }
       }
     },
+    cancel() {
+      clientGone = true;
+      notifyClientGone();
+      upstream.abort();
+    },
   });
 
   async function settleAndPersist(): Promise<void> {
@@ -271,13 +305,13 @@ async function handleAsk(req: NextRequest): Promise<Response> {
     const usageResolved = usage !== USAGE_TIMED_OUT;
 
     if (usage !== USAGE_TIMED_OUT) {
-      inputTokens = usage?.inputTokens ?? 0;
-      outputTokens = usage?.outputTokens ?? 0;
-      cacheReadTokens = usage?.inputTokenDetails?.cacheReadTokens ?? 0;
-      cacheCreationTokens = usage?.inputTokenDetails?.cacheWriteTokens ?? 0;
+      const counts = countAskTokens(usage);
+      totalBilledInput = counts.billedInputTokens;
+      outputTokens = counts.outputTokens;
+      cacheReadTokens = counts.cacheReadTokens;
+      cacheCreationTokens = counts.cacheWriteTokens;
     }
 
-    const totalBilledInput = inputTokens + cacheReadTokens + cacheCreationTokens;
     const guardVerdict = validateAnswer(collectedAnswerText, status);
     log.info('ask output-guard', {
       requestId,
@@ -287,7 +321,7 @@ async function handleAsk(req: NextRequest): Promise<Response> {
     });
     log.info('ask completed', {
       requestId,
-      inputTokens,
+      inputTokens: totalBilledInput,
       cacheReadTokens,
       cacheCreationTokens,
       outputTokens,
