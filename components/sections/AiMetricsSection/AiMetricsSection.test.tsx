@@ -235,7 +235,22 @@ describe('AiMetricsSection: on-page AI eval/cost metrics (RSC)', () => {
     expect(doc.body.textContent).not.toContain(measured[locale].ask.pending);
     expect(doc.querySelector('time')).toBeNull();
     expect(doc.querySelector('[aria-busy]')).toBeNull();
-    expect(doc.querySelectorAll('.measured-tile')).toHaveLength(0);
+    expect(
+      doc.querySelectorAll('.measured-ask-reserve:not([aria-hidden="true"]) .measured-tile'),
+    ).toHaveLength(0);
+  });
+
+  it('reserves the tile block under the error box so the box fills the height the data fills', async () => {
+    getAskMetricsMock.mockRejectedValue(new Error('adapter offline'));
+    const doc = new DOMParser().parseFromString(await renderData(), 'text/html');
+    const reserve = doc.querySelector('.measured-ask-body > .measured-ask-reserve');
+
+    expect(reserve?.getAttribute('aria-hidden')).toBe('true');
+    expect(reserve?.querySelectorAll('.measured-tile')).toHaveLength(
+      measured[SITE_LOCALE.en].ask.metrics.length,
+    );
+    expect(reserve?.querySelector('[role="status"]')).toBeNull();
+    expect(doc.querySelector('.measured-ask-body > .measured-error')).not.toBeNull();
   });
 
   it('renders the pending state without throwing when metrics are null', async () => {

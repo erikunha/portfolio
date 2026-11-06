@@ -270,8 +270,22 @@
     margin: 0;
   }
 
+  .measured-ask-body {
+    display: grid;
+  }
+
+  .measured-ask-body > * {
+    grid-area: 1 / 1;
+    min-width: 0;
+  }
+
+  .measured-ask-body > .measured-ask-reserve[aria-hidden="true"] {
+    visibility: hidden;
+  }
+
   .measured-error {
     display: grid;
+    align-content: start;
     gap: var(--spacing-2);
     justify-items: start;
     padding: var(--spacing-3);
@@ -323,9 +337,13 @@
     display: grid;
   }
 
+  .measured-label[data-reserve] > span,
+  .measured-label[data-reserve]::after {
+    grid-area: 1 / 1;
+  }
+
   .measured-label[data-reserve]::after {
     content: attr(data-reserve);
-    grid-area: 1 / 1;
     visibility: hidden;
   }
 

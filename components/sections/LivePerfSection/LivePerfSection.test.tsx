@@ -254,6 +254,18 @@ describe('LivePerfSection: lighthouse loading state', () => {
     expect(reserved).toEqual(['PERFORMANCE', 'ACCESSIBILITY', 'BEST PRACTICES', 'SEO']);
   });
 
+  it('puts a reserved label in the same grid cell as its reserve, so the label is one line tall', async () => {
+    const doc = await renderLoading(SITE_LOCALE.en);
+    const label = doc.querySelector('.measured-label[data-reserve]');
+    const stylesheet = parse(readComponentsCss());
+    const spanRule = rulesWithSelector(stylesheet, '.measured-label[data-reserve] > span');
+    const reserveRule = rulesWithSelector(stylesheet, '.measured-label[data-reserve]::after');
+
+    expect(Array.from(label?.childNodes ?? [], (node) => node.nodeName)).toEqual(['SPAN']);
+    expect(spanRule.map((rule) => declValue(rule, 'grid-area'))).toContain('1 / 1');
+    expect(reserveRule.map((rule) => declValue(rule, 'grid-area'))).toContain('1 / 1');
+  });
+
   it('speaks Portuguese on the pt site', async () => {
     const doc = await renderLoading(SITE_LOCALE.pt);
     expect(doc.querySelector('.measured-heading')?.textContent).toBe('MEDIDO · LIGHTHOUSE');
