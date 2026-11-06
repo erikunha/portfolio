@@ -56,9 +56,9 @@ describe('About', () => {
   });
 
   it('server-renders the role pill from content, without brackets', async () => {
-    const { ROLES } = await import('@/components/client/RoleTyper/RoleTyper');
+    const { ROLE } = await import('@/content/role');
     const { aboutContent } = await import('@/content/about');
-    expect(ROLES[0]).toBe(aboutContent[SITE_LOCALE.en].whoami.role.replace(/^\[|\]$/g, ''));
+    expect(ROLE).toBe(aboutContent[SITE_LOCALE.en].whoami.role.replace(/^\[|\]$/g, ''));
   });
 });
 

@@ -1,3 +1,5 @@
+import { type PhraseLoop, runPhraseLoop, typeOut } from './typewriter';
+
 export type BootClassKey =
   | 'bootOk'
   | 'bootEnc'
@@ -104,7 +106,8 @@ export function runBoot(
 ): BootCtrl {
   let cancelled = false;
   let dialogPaused = false;
-  let dialogResumeFn: (() => void) | null = null;
+  let dialogLoop: PhraseLoop | undefined;
+  let cancelTyping: (() => void) | undefined;
   const timers: ReturnType<typeof setTimeout>[] = [];
 
   function later(fn: () => void, ms: number) {
@@ -145,19 +148,17 @@ export function runBoot(
     line.appendChild(cursor);
     container.appendChild(line);
 
-    let i = 0;
-    function step() {
-      if (cancelled) return;
-      if (i >= cmdText.length) {
+    cancelTyping = typeOut(cmdText, {
+      stepMs: () => opts.cmdMs + Math.random() * opts.cmdJitter,
+      onText: (text) => {
+        cmdEl.textContent = text;
+      },
+      onDone: () => {
         cursor.remove();
-        container.appendChild(buildLine([' '], cls));
+        container.appendChild(buildLine([' '], cls));
         later(startDialog, 350);
-        return;
-      }
-      cmdEl.textContent += cmdText[i++];
-      later(step, opts.cmdMs + Math.random() * opts.cmdJitter);
-    }
-    step();
+      },
+    });
   }
 
   function startDialog() {
@@ -179,44 +180,25 @@ export function runBoot(
     line.appendChild(cur);
     container.appendChild(line);
 
-    let phraseIdx = 0;
-    let charIdx = 0;
-    let phase: 'type' | 'hold' | 'back' = 'type';
     let firedOnce = false;
-
-    function tick() {
-      if (cancelled) return;
-      if (dialogPaused) {
-        dialogResumeFn = tick;
-        return;
-      }
-      const phrase = dialog[phraseIdx];
-      if (!phrase) return;
-      if (phase === 'type') {
-        out.textContent = phrase.slice(0, ++charIdx);
-        if (charIdx >= phrase.length) {
-          phase = 'hold';
-          later(tick, opts.holdMs);
-        } else later(tick, opts.typeMs);
-      } else if (phase === 'hold') {
-        phase = 'back';
-        later(tick, opts.backMs);
-      } else {
-        out.textContent = phrase.slice(0, --charIdx);
-        if (charIdx <= 0) {
-          phraseIdx = (phraseIdx + 1) % dialog.length;
-          if (phraseIdx === 0 && !firedOnce) {
-            firedOnce = true;
-            opts.onFirstLoop?.();
-          }
-          phase = 'type';
-          later(tick, opts.interMs);
-        } else {
-          later(tick, opts.backMs);
-        }
-      }
-    }
-    tick();
+    dialogLoop = runPhraseLoop({
+      phrases: dialog,
+      timing: {
+        typeMs: opts.typeMs,
+        holdMs: opts.holdMs,
+        backMs: opts.backMs,
+        pauseMs: opts.interMs,
+      },
+      onText: (text) => {
+        out.textContent = text;
+      },
+      startPaused: dialogPaused,
+      onWrap: () => {
+        if (firedOnce) return;
+        firedOnce = true;
+        opts.onFirstLoop?.();
+      },
+    });
   }
 
   later(() => revealLines(0), opts.startMs);
@@ -225,18 +207,16 @@ export function runBoot(
     cancel: () => {
       cancelled = true;
       timers.forEach(clearTimeout);
-      dialogResumeFn = null;
+      cancelTyping?.();
+      dialogLoop?.cancel();
     },
     pauseDialog: () => {
       dialogPaused = true;
+      dialogLoop?.pause();
     },
     resumeDialog: () => {
       dialogPaused = false;
-      if (dialogResumeFn) {
-        const fn = dialogResumeFn;
-        dialogResumeFn = null;
-        fn();
-      }
+      dialogLoop?.resume();
     },
   };
 }

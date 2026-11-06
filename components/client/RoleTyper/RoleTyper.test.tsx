@@ -2,7 +2,8 @@ import { act, createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { mountClient } from '@/__tests__/helpers/render';
-import { ROLES, RoleTyper } from './RoleTyper';
+import { ROLE } from '@/content/role';
+import { RoleTyper } from './RoleTyper';
 
 vi.mock('@/lib/motion', () => ({
   readMotion: vi.fn(() => true),
@@ -21,23 +22,22 @@ function getLiveRegion() {
   return getDOM().querySelector('span.sr-only[role="status"]');
 }
 
-describe('RoleTyper: ROLES length budget', () => {
+describe('RoleTyper: role length budget', () => {
   it('no role exceeds 9 chars (so [role] stays ≤ 11 chars, within the 9em CSS budget)', () => {
-    const longest = Math.max(...ROLES.map((r) => r.length));
-    expect(longest).toBeLessThanOrEqual(9);
+    expect(ROLE.length).toBeLessThanOrEqual(9);
   });
 });
 
 describe('RoleTyper: role vocabulary', () => {
   it('never names a Staff or Principal role', () => {
     expect(
-      ROLES.some((role) => /staff|principal/i.test(role)),
+      /staff|principal/i.test(ROLE),
       'owner decision 2026-10-30: no Staff or Principal wording on the hiring surface',
     ).toBe(false);
   });
 
   it('offers Senior, the level the resume and the copy state', () => {
-    expect(ROLES).toContain('Senior');
+    expect(ROLE).toBe('Senior');
   });
 });
 
@@ -47,7 +47,7 @@ describe('RoleTyper: slot sizing', () => {
     const slot = doc.querySelector('.role-typer');
     expect(slot, 'the pill sits in a slot that owns the reserved width').not.toBeNull();
     const sizer = slot?.querySelector('.role-typer-sizer');
-    expect(sizer?.getAttribute('data-role-text')).toBe(`[${ROLES[0]}]`);
+    expect(sizer?.getAttribute('data-role-text')).toBe(`[${ROLE}]`);
     expect(
       doc.querySelector('.min-w-\\[9em\\]'),
       'the fixed 9em slot left a gap after the badge',
@@ -73,13 +73,13 @@ describe('RoleTyper: typing', () => {
     await act(async () => {
       await vi.advanceTimersByTimeAsync(5000);
     });
-    expect(pill?.textContent, 'the role is fully typed').toBe(`[${ROLES[0]}]`);
+    expect(pill?.textContent, 'the role is fully typed').toBe(`[${ROLE}]`);
 
     await act(async () => {
       await vi.advanceTimersByTimeAsync(10000);
     });
     expect(pill?.textContent, 'the role stays typed instead of erasing and retyping').toBe(
-      `[${ROLES[0]}]`,
+      `[${ROLE}]`,
     );
 
     mounted.unmount();

@@ -1,16 +1,16 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
+import { ROLE } from '@/content/role';
 import { cn } from '@/lib/cn';
 import { readMotion } from '@/lib/motion';
+import { typeOut } from '@/lib/typewriter';
 
-export const ROLES = ['Senior'];
 const TYPE_MS = 80;
 
 export function RoleTyper({ className }: { className?: string | undefined }) {
   const pillRef = useRef<HTMLSpanElement>(null);
   const liveRef = useRef<HTMLSpanElement>(null);
-  const role = ROLES[0] ?? '';
 
   useEffect(() => {
     const pill = pillRef.current;
@@ -18,25 +18,20 @@ export function RoleTyper({ className }: { className?: string | undefined }) {
     const node: HTMLSpanElement = pill;
 
     let cancelled = !readMotion();
-    let timerId: ReturnType<typeof setTimeout> | undefined;
-    let charIdx = 0;
-
-    function type() {
-      if (cancelled) return;
-      charIdx++;
-      node.textContent = `[${role.slice(0, charIdx)}]`;
-      if (charIdx >= role.length) {
-        if (liveRef.current) liveRef.current.textContent = role;
-        return;
-      }
-      timerId = setTimeout(type, TYPE_MS);
-    }
+    let stopTyping: (() => void) | undefined;
 
     function start() {
       cancelled = false;
-      charIdx = 0;
       node.textContent = '[]';
-      type();
+      stopTyping = typeOut(ROLE, {
+        stepMs: TYPE_MS,
+        onText: (text) => {
+          node.textContent = `[${text}]`;
+        },
+        onDone: () => {
+          if (liveRef.current) liveRef.current.textContent = ROLE;
+        },
+      });
     }
 
     if (!cancelled) start();
@@ -47,7 +42,7 @@ export function RoleTyper({ className }: { className?: string | undefined }) {
       const on = (detail as { on: boolean }).on;
       if (!on) {
         cancelled = true;
-        clearTimeout(timerId);
+        stopTyping?.();
       } else if (cancelled) {
         start();
       }
@@ -56,24 +51,24 @@ export function RoleTyper({ className }: { className?: string | undefined }) {
 
     return () => {
       cancelled = true;
-      clearTimeout(timerId);
+      stopTyping?.();
       window.removeEventListener('motionchange', onMotionChange);
     };
-  }, [role]);
+  }, []);
 
   return (
     <>
       <span className="role-typer" aria-hidden="true">
-        <span className={cn(className, 'role-typer-sizer')} data-role-text={`[${role}]`} />
+        <span className={cn(className, 'role-typer-sizer')} data-role-text={`[${ROLE}]`} />
         <span
           className={className}
           data-role-pill="true"
           ref={pillRef}
           aria-hidden="true"
-        >{`[${role}]`}</span>
+        >{`[${ROLE}]`}</span>
       </span>
       <span className="sr-only" ref={liveRef} role="status" aria-live="polite">
-        {role}
+        {ROLE}
       </span>
     </>
   );

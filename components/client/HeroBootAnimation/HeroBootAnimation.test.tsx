@@ -189,3 +189,46 @@ describe('decorative boot output', () => {
     vi.unstubAllGlobals();
   });
 });
+
+describe('runMobileBoot: timers', () => {
+  const timing = {
+    cmdMs: 5,
+    cmdJitter: 0,
+    typeMs: 5,
+    holdMs: 20,
+    backMs: 5,
+    interMs: 10,
+  };
+
+  beforeEach(() => vi.useFakeTimers());
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it('keeps one pending timer however many phrases it cycles through', async () => {
+    const { runMobileBoot } = await import('./mobile-boot');
+    const cmdEl = document.createElement('span');
+    const outEl = document.createElement('span');
+    const stop = runMobileBoot(cmdEl, outEl, 'run', ['ab', 'cd', 'ef'], timing);
+    for (let step = 0; step < 400; step++) {
+      await vi.advanceTimersByTimeAsync(5);
+      expect(vi.getTimerCount()).toBeLessThanOrEqual(1);
+    }
+    expect(cmdEl.textContent).toBe('run');
+    expect(outEl.textContent).not.toBe('');
+    stop();
+    expect(vi.getTimerCount()).toBe(0);
+  });
+
+  it('stops typing the command when cancelled mid-way', async () => {
+    const { runMobileBoot } = await import('./mobile-boot');
+    const cmdEl = document.createElement('span');
+    const outEl = document.createElement('span');
+    const stop = runMobileBoot(cmdEl, outEl, 'run', ['ab'], timing);
+    stop();
+    await vi.advanceTimersByTimeAsync(1000);
+    expect(cmdEl.textContent).toBe('r');
+    expect(outEl.textContent).toBe('');
+  });
+});
