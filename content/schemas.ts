@@ -802,12 +802,16 @@ export const ErrorsContentSchema = z.object({
   }),
   noscript: z.object({ text: z.string().min(1), contact: ErrorLinkSchema }),
   componentUnavailable: z.string().min(1),
+  componentExplanation: z.string().min(1),
+  reloadLabel: z.string().min(1),
 });
 export type ErrorsContent = z.infer<typeof ErrorsContentSchema>;
 export const ErrorsClientContentSchema = ErrorsContentSchema.pick({
   chrome: true,
   serverError: true,
   componentUnavailable: true,
+  componentExplanation: true,
+  reloadLabel: true,
 });
 export type ErrorsClientContent = z.infer<typeof ErrorsClientContentSchema>;
 

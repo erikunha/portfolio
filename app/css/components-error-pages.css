@@ -154,4 +154,48 @@
     color: var(--color-text-secondary);
     font-size: var(--text-xs);
   }
+
+  .eb-fallback {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start;
+    gap: var(--spacing-3);
+    min-width: 0;
+    min-height: var(--eb-min-height, var(--spacing-target));
+    padding: var(--spacing-4);
+    border: var(--border-width) dashed var(--color-primary-subtle);
+    color: var(--color-text);
+    font-family: var(--font-mono);
+  }
+
+  .eb-title {
+    margin: 0;
+    color: var(--color-primary-500);
+    font-size: var(--text-sm);
+    font-weight: 700;
+  }
+
+  .eb-text {
+    margin: 0;
+    font-size: var(--text-xs);
+    line-height: 1.6;
+    overflow-wrap: anywhere;
+  }
+
+  .eb-reload {
+    min-height: var(--spacing-target);
+    padding: 0 var(--spacing-4);
+    border: var(--border-width) solid var(--color-primary-500);
+    background: transparent;
+    color: var(--color-primary-500);
+    font: inherit;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  .eb-reload:focus-visible {
+    outline: calc(var(--border-width) * 2) solid var(--color-primary-500);
+    outline-offset: var(--spacing-1);
+  }
 }

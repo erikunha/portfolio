@@ -19,6 +19,10 @@ const errorsClientContentFor = (locale: SiteLocale): ErrorsClientContent => {
       ],
     },
     componentUnavailable: pt ? 'componente indisponível' : 'component unavailable',
+    componentExplanation: pt
+      ? 'O resto da página segue funcionando. Recarregar costuma resolver.'
+      : 'The rest of the page keeps working. Reloading usually fixes it.',
+    reloadLabel: pt ? '[ RECARREGAR ]' : '[ RELOAD ]',
     serverError: {
       code: '500',
       message: pt
