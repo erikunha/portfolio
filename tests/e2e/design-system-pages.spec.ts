@@ -19,7 +19,7 @@ const REFERENCE_ROUTES = DS_NAV_GROUPS.filter(
 ).flatMap((group) => group.links.map(toRoute));
 
 for (const { path, heading } of ALL_ROUTES) {
-  test(`${path} — renders heading and the page tree`, async ({ page }) => {
+  test(`${path}: renders heading and the page tree`, async ({ page }) => {
     await page.goto(path);
     await expect(page.getByRole('heading', { name: heading, exact: true, level: 1 })).toBeVisible();
     const sidebar = page.locator(`#${DS_NAV_ID}`);
@@ -31,7 +31,7 @@ for (const { path, heading } of ALL_ROUTES) {
 }
 
 for (const { path } of REFERENCE_ROUTES) {
-  test(`${path} — marks itself current and offers on-this-page links`, async ({ page }) => {
+  test(`${path}: marks itself current and offers on-this-page links`, async ({ page }) => {
     await page.goto(path);
     const sidebar = page.locator(`#${DS_NAV_ID}`);
     await expect(sidebar.locator('a[aria-current="page"]')).toHaveAttribute('href', path);
@@ -193,7 +193,7 @@ const TABLET_VIEWPORT = { width: 768, height: 1024 };
 const WIDE_TABLE_ROUTES = DS_NAV_GROUPS.flatMap((group) => group.links.map((link) => link.href));
 
 for (const path of WIDE_TABLE_ROUTES) {
-  test(`${path} — nothing overflows the page horizontally at 768`, async ({ page }) => {
+  test(`${path}: nothing overflows the page horizontally at 768`, async ({ page }) => {
     await page.setViewportSize(TABLET_VIEWPORT);
     await page.goto(path);
     const overflow = await page.evaluate(() => {
@@ -264,7 +264,7 @@ test('the design system paints the matrix rain behind its content', async ({ pag
 });
 
 for (const { path } of ALL_ROUTES) {
-  test(`${path} — every id is unique, so each in-page jump link has one target`, async ({
+  test(`${path}: every id is unique, so each in-page jump link has one target`, async ({
     page,
   }) => {
     await page.goto(path);
@@ -280,7 +280,7 @@ for (const { path } of ALL_ROUTES) {
 }
 
 for (const { path } of ALL_ROUTES) {
-  test(`${path} — hydrates without a React error`, async ({ page }) => {
+  test(`${path}: hydrates without a React error`, async ({ page }) => {
     const errors: string[] = [];
     page.on('pageerror', (error) => errors.push(error.message));
     await page.goto(path);

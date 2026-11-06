@@ -7,6 +7,7 @@ import { SITE_LOCALE } from '@/content/site-locale';
 import { readComponentsCss } from './helpers/components-css';
 import { type MountedClient, mountClient } from './helpers/render';
 
+const EMPTY = MEASURED_FORMAT.empty;
 const getScoresMock = vi.fn();
 vi.mock('@/lib/lighthouse-scores', () => ({
   getScores: getScoresMock,
@@ -20,7 +21,7 @@ vi.mock('@/lib/lighthouse-scores', () => ({
   },
 }));
 
-describe('LivePerfSection — PerfBody with real scores (non-fallback branches)', () => {
+describe('LivePerfSection: PerfBody with real scores (non-fallback branches)', () => {
   afterEach(() => {
     vi.resetModules();
     getScoresMock.mockReset();
@@ -75,12 +76,12 @@ describe('LivePerfSection — PerfBody with real scores (non-fallback branches)'
     expect(doc.querySelector('time')).toBeNull();
     expect(doc.querySelectorAll('.measured-value')).toHaveLength(4);
     for (const value of doc.querySelectorAll('.measured-value')) {
-      expect(value.textContent).toBe('— / —');
+      expect(value.textContent).toBe(`${EMPTY} / ${EMPTY}`);
     }
   });
 });
 
-describe('AiMetricsSection — lastRunLabel NaN guard branch', () => {
+describe('AiMetricsSection: lastRunLabel NaN guard branch', () => {
   const getAskMetricsMock = vi.fn();
 
   beforeEach(() => {
@@ -187,7 +188,7 @@ describe('GlobalMotion: Matrix Rain settings per viewport', () => {
   });
 });
 
-describe('ErrorBoundary — custom fallback prop branch', () => {
+describe('ErrorBoundary: custom fallback prop branch', () => {
   it('renders the custom fallback when provided and hasError is true', async () => {
     const { ErrorBoundary } = await import('@/components/ErrorBoundary/ErrorBoundary.client');
 

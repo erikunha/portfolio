@@ -171,7 +171,7 @@ test.describe('/links link-in-bio', () => {
     );
   });
 
-  test('loads both locales with every feed thumbnail rendered and zero console errors — a thumbnail host the image allowlist rejects 400s in /_next/image and fails errors-in-console', async ({
+  test('loads both locales with every feed thumbnail rendered and zero console errors: a thumbnail host the image allowlist rejects 400s in /_next/image and fails errors-in-console', async ({
     page,
   }) => {
     const consoleErrors: string[] = [];
