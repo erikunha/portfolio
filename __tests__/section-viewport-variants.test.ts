@@ -21,7 +21,7 @@ import { SITE_LOCALE } from '@/content/site-locale';
 describe('responsive section viewport variants', () => {
   it('ProjectsSection emits exactly the desktop variant (no mobile markup)', () => {
     const html = renderToStaticMarkup(createElement(ProjectsSection, { locale: SITE_LOCALE.en }));
-    expect(html).toContain('data-testid="proj-desktop"');
+    expect(html).toContain('data-testid="projects-grid"');
     expect(html).not.toContain('data-testid="proj-mobile"');
   });
 

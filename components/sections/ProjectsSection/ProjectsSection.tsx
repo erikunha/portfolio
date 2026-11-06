@@ -32,7 +32,7 @@ function CompanyLabel({
 export function ProjectsContent({ locale }: { locale: SiteLocale }) {
   const presentation = projectPresentation[locale];
   return (
-    <ul className="projects-grid" data-testid="proj-desktop">
+    <ul className="projects-grid" data-testid="projects-grid">
       {projects[locale].map((project) => (
         <li key={project.name} className="project-card">
           <div className="project-meta">
