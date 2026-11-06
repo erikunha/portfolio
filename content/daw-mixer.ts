@@ -4,8 +4,6 @@ import { SITE_LOCALE, type SiteLocale } from './site-locale';
 
 export const MASTER_CHANNEL_ID = 'MASTER';
 export const METER_SEGMENTS = 12;
-export const METER_CLIP_THRESHOLD_PCT = 85;
-export const METER_CLIP_SEGMENTS = 2;
 export const PLUGIN_STRENGTH_STEPS = 5;
 
 export type { DawMixerCopy };
