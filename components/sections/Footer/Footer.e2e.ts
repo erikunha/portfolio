@@ -316,6 +316,10 @@ test.describe('Footer', () => {
       });
       const page = await context.newPage();
       await page.goto('/');
+      await expect(
+        page.locator('[data-sess="seen"]'),
+        'the counter observes the hero before the first scroll, so it must be live',
+      ).not.toHaveText('0');
       const total = await page.evaluate(() => document.documentElement.scrollHeight);
       for (let y = 0; y < total; y += height / 2) {
         await page.mouse.wheel(0, height / 2);

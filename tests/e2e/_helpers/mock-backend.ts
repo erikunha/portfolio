@@ -147,7 +147,7 @@ export async function installMockBackend(page: Page, state: MockState = {}): Pro
         body: JSON.stringify({
           ok: false,
           requestId: 'contact-test-request-id',
-          error: { code: 'storage_unavailable', message: 'storage unavailable, try again' },
+          error: { code: 'internal_error', message: 'internal server error' },
         }),
       });
       return;

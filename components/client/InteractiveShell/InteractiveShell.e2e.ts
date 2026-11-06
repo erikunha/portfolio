@@ -1,10 +1,14 @@
 import { expect, type Locator, type Page, test } from '@playwright/test';
+import { waitForHydration } from '../../../tests/e2e/_helpers/hydration';
 import { installMockBackend, type MockState } from '../../../tests/e2e/_helpers/mock-backend';
+
+const SHELL_FORM = '[data-testid="shell-form"]';
 
 async function setupAskPage(page: Page, state: MockState): Promise<void> {
   await installMockBackend(page, state);
   await page.goto('/');
-  await page.waitForSelector('[data-testid="shell-form"]', { state: 'visible' });
+  await page.waitForSelector(SHELL_FORM, { state: 'visible' });
+  await waitForHydration(page, SHELL_FORM);
 }
 
 function getShellInput(page: Page): Locator {

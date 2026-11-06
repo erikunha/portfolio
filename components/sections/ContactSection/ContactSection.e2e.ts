@@ -1,6 +1,7 @@
 import { expect, type Page, test } from '@playwright/test';
 import { contactCopy } from '@/content/contact-copy';
 import { SITE_LOCALE } from '@/content/site-locale';
+import { waitForHydration } from '../../../tests/e2e/_helpers/hydration';
 
 const PHONE = { width: 390, height: 844 };
 const DESKTOP = { width: 1280, height: 900 };
@@ -12,6 +13,7 @@ const SAME_LINE_PX = 4;
 const GOLDEN_RATIO = 1.618;
 const GOLDEN_PRECISION = 1;
 const MAX_HEIGHT_RATIO = 1.3;
+const CONTACT_FORM_SELECTOR = '[data-testid="contact-form"]';
 
 async function scrollToSelector(page: Page, selector: string): Promise<void> {
   await page.evaluate(
@@ -263,6 +265,8 @@ test.describe('ContactSection', () => {
   test('the error summary reads as one line and draws no focus ring', async ({ page }) => {
     await page.setViewportSize(DESKTOP);
     await page.goto('/');
+    await page.locator(CONTACT_FORM_SELECTOR).scrollIntoViewIfNeeded();
+    await waitForHydration(page, CONTACT_FORM_SELECTOR);
     await page
       .locator('#sec-contact form')
       .getByRole('button', { name: /EXECUTE_SEND/ })

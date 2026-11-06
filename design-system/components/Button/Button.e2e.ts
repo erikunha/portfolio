@@ -1,5 +1,8 @@
 import { expect, test } from '@playwright/test';
 
+const TABBABLE_SELECTOR =
+  'a[href], button:not([disabled]), input:not([disabled]), select, textarea, summary, [tabindex]:not([tabindex="-1"])';
+
 test.describe('Button behavioral E2E', () => {
   test('primary button is visible and keyboard-focusable', async ({ page }) => {
     await page.goto('/design-system/components');
@@ -7,7 +10,8 @@ test.describe('Button behavioral E2E', () => {
     await expect(preview).toBeVisible();
     const primary = preview.getByRole('link', { name: 'EXEC_HIRE' });
     await expect(primary).toBeVisible();
-    for (let step = 0; step < 40; step++) {
+    const tabStops = await page.locator(TABBABLE_SELECTOR).count();
+    for (let step = 0; step < tabStops; step++) {
       await page.keyboard.press('Tab');
       if (await primary.evaluate((element) => element === document.activeElement)) break;
     }

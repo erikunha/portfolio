@@ -1,11 +1,15 @@
 import { expect, type Page, test } from '@playwright/test';
+import { waitForHydration } from '../../../tests/e2e/_helpers/hydration';
 import { installMockBackend, type MockState } from '../../../tests/e2e/_helpers/mock-backend';
+
+const FORM_SELECTOR = '[data-testid="contact-form"]';
 
 async function setupContactPage(page: Page, state: MockState): Promise<void> {
   await installMockBackend(page, state);
   await page.goto('/');
   await page.locator('#sec-contact').scrollIntoViewIfNeeded();
-  await page.waitForSelector('[data-testid="contact-form"]', { state: 'visible' });
+  await page.waitForSelector(FORM_SELECTOR, { state: 'visible' });
+  await waitForHydration(page, FORM_SELECTOR);
 }
 
 async function fillValidForm(page: Page): Promise<void> {
@@ -75,6 +79,7 @@ test.describe('contact form', () => {
     const errorEl = page.locator('[data-testid="contact-form"]').getByRole('alert');
     await expect(errorEl).toBeVisible({ timeout: 5_000 });
     await expect(errorEl).toContainText('could not send right now');
+    await expect(errorEl).not.toContainText('internal server error');
 
     await expect(
       page.locator('[data-testid="contact-form"] button[type="submit"]'),
