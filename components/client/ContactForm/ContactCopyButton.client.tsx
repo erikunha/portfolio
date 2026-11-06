@@ -6,11 +6,11 @@ import type { CopyFeedback } from '@/content/schemas';
 const COPY_FEEDBACK_DURATION_MS = 1500;
 
 export function ContactCopyButton({
-  email,
+  value,
   labels,
   feedback,
 }: {
-  email: string;
+  value: string;
   labels: { readonly copy: string; readonly copied: string };
   feedback: {
     readonly idle: CopyFeedback;
@@ -49,7 +49,7 @@ export function ContactCopyButton({
         setState(feedback.unavailable);
         return;
       }
-      await navigator.clipboard.writeText(email);
+      await navigator.clipboard.writeText(value);
       if (!mountedRef.current) return;
       setState(success);
       timerRef.current = setTimeout(() => {
@@ -58,7 +58,7 @@ export function ContactCopyButton({
     } catch {
       if (mountedRef.current) setState(feedback.failure);
     }
-  }, [email, labels.copy, labels.copied, feedback]);
+  }, [value, labels.copy, labels.copied, feedback]);
 
   return (
     <>

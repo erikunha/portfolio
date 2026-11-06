@@ -60,7 +60,7 @@ export function ContactSection({ locale, defer }: { locale: SiteLocale; defer?: 
                     <dd>
                       <a href={`mailto:${section.email}`}>{section.email}</a>
                       <ContactCopyButton
-                        email={section.email}
+                        value={section.email}
                         labels={{ copy: section.copyEmail, copied: section.copyEmailCopied }}
                         feedback={copyFeedback[locale]}
                       />

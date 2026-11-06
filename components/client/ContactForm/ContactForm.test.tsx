@@ -220,6 +220,35 @@ describe('contact form delivery states', () => {
     expect(success?.textContent).toContain('handshake initiated · expect reply within 48h');
   });
 
+  it('shows a receipt with the request id, a copy control and a prefilled deletion email', async () => {
+    const ref = '7f3a9c2e-41b0-4d8e-9a77-3c51d0b2e8aa';
+    const container = await submitResponse({ ok: true, requestId: ref }, 200);
+    const receipt = container.querySelector('[data-testid="contact-receipt"]');
+    expect(receipt?.textContent).toContain('ref');
+    expect(receipt?.textContent).toContain(ref);
+    expect(within(receipt as HTMLElement).getByRole('button', { name: /copy ref/i })).toBeTruthy();
+    const forget = within(receipt as HTMLElement).getByRole('link', { name: /request deletion/i });
+    expect(decodeURIComponent(forget.getAttribute('href') ?? '')).toContain(ref);
+    expect(forget.getAttribute('href')).toMatch(/^mailto:/);
+  });
+
+  it('shows the receipt in Portuguese on pt', async () => {
+    const container = await submitResponse({ ok: true, requestId: 'abc-123' }, 200, SITE_LOCALE.pt);
+    const receipt = container.querySelector('[data-testid="contact-receipt"]');
+    expect(
+      within(receipt as HTMLElement).getByRole('button', { name: /copiar ref/i }),
+    ).toBeTruthy();
+    expect(
+      within(receipt as HTMLElement).getByRole('link', { name: /pedir exclusão/i }),
+    ).toBeTruthy();
+  });
+
+  it('omits the receipt when the response carries no request id', async () => {
+    const container = await submitResponse({ ok: true }, 200);
+    expect(container.querySelector('[data-testid="contact-success"]')).not.toBeNull();
+    expect(container.querySelector('[data-testid="contact-receipt"]')).toBeNull();
+  });
+
   it.each([
     [{ ok: true, requestId: 'request-id' }, 200, 'contact-success'],
     [

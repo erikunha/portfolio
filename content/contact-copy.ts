@@ -1,4 +1,5 @@
 import type { ContactContent } from './contact';
+import { copyFeedback } from './copy-button';
 import { SITE_LOCALE, type SiteLocale } from './site-locale';
 import { EMAIL_ADDRESS, LINKEDIN_URL } from './social-urls';
 import { WORK_SCOPE } from './work-scope';
@@ -36,6 +37,16 @@ const contactCopyFor = (locale: SiteLocale): ContactContent => {
       message: pt
         ? 'handshake iniciado · espere resposta em até 48h'
         : 'handshake initiated · expect reply within 48h',
+      receipt: {
+        refLabel: 'ref',
+        atLabel: pt ? 'enviado' : 'sent',
+        dateLocale: pt ? 'pt-BR' : 'en-US',
+        copy: pt ? '[COPIAR REF]' : '[COPY REF]',
+        copied: pt ? '[REF COPIADA]' : '[REF COPIED]',
+        forgetLabel: pt ? 'pedir exclusão da mensagem' : 'request deletion of this message',
+        forgetSubject: pt ? 'Excluir minha mensagem, ref' : 'Delete my message, ref',
+        feedback: copyFeedback[locale],
+      },
     },
     queued: {
       title: pt ? 'EXECUTAR_ENVIO :: NA FILA' : 'EXECUTE_SEND :: QUEUED',

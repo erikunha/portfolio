@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { contactCopy } from './contact-copy';
 import { formatLanguages, profile } from './profile';
+import { CopyFeedbackSchema } from './schemas';
 import { SITE_LOCALE, type SiteLocale } from './site-locale';
 
 const CopySchema = z.string().min(1);
@@ -59,7 +60,20 @@ const TimezonePanelSchema = z.object({
 });
 
 export const ContactContentSchema = z.object({
-  success: z.object({ title: z.string().min(1), message: z.string().min(1) }),
+  success: z.object({
+    title: z.string().min(1),
+    message: z.string().min(1),
+    receipt: z.object({
+      refLabel: z.string().min(1),
+      atLabel: z.string().min(1),
+      dateLocale: z.string().min(1),
+      copy: z.string().min(1),
+      copied: z.string().min(1),
+      forgetLabel: z.string().min(1),
+      forgetSubject: z.string().min(1),
+      feedback: z.record(z.enum(['idle', 'success', 'failure', 'unavailable']), CopyFeedbackSchema),
+    }),
+  }),
   queued: z.object({
     title: z.string().min(1),
     message: z.string().min(1),

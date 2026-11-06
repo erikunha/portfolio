@@ -13,6 +13,7 @@ import {
 import type { TerminalChrome } from '@/content/schemas';
 import { WindowChrome } from '@/design-system';
 import { Field } from '@/design-system/components/Field';
+import { ContactCopyButton } from './ContactCopyButton.client';
 import { messageStore } from './messageStore';
 
 const STATUS = {
@@ -48,6 +49,7 @@ const focusResult = (node: HTMLDivElement | null) => node?.focus();
 
 interface ContactResponse {
   ok?: boolean;
+  requestId?: string;
   error?: { code?: string; message?: string };
 }
 
@@ -64,6 +66,41 @@ function ContactShell({ chrome, children }: { chrome: TerminalChrome; children: 
   );
 }
 
+function ContactReceipt({
+  copy,
+  receipt,
+}: {
+  copy: ContactContent;
+  receipt: { ref: string; at: Date };
+}) {
+  const text = copy.success.receipt;
+  const at = new Intl.DateTimeFormat(text.dateLocale, {
+    dateStyle: 'short',
+    timeStyle: 'short',
+  }).format(receipt.at);
+  const subject = encodeURIComponent(`${text.forgetSubject} ${receipt.ref}`);
+  return (
+    <div className="contact-receipt" data-testid="contact-receipt">
+      <dl>
+        <dt>{text.refLabel}</dt>
+        <dd title={receipt.ref}>{receipt.ref}</dd>
+        <dt>{text.atLabel}</dt>
+        <dd>
+          <time dateTime={receipt.at.toISOString()}>{at}</time>
+        </dd>
+      </dl>
+      <div className="contact-receipt-actions">
+        <ContactCopyButton
+          value={receipt.ref}
+          labels={{ copy: text.copy, copied: text.copied }}
+          feedback={text.feedback}
+        />
+        <a href={`mailto:${copy.section.email}?subject=${subject}`}>{text.forgetLabel}</a>
+      </div>
+    </div>
+  );
+}
+
 export function ContactForm({ copy, chrome }: { copy: ContactContent; chrome: TerminalChrome }) {
   const [typed, setTyped] = useState(INITIAL_TYPED);
   const message = useSyncExternalStore(
@@ -76,6 +113,7 @@ export function ContactForm({ copy, chrome }: { copy: ContactContent; chrome: Te
   const [status, setStatus] = useState<Status>(STATUS.IDLE);
   const [errors, setErrors] = useState<Partial<Record<ContactField, string>>>({});
   const [errorMsg, setErrorMsg] = useState('');
+  const [receipt, setReceipt] = useState<{ ref: string; at: Date } | null>(null);
   const [failureCount, setFailureCount] = useState(INITIAL_FAILURE_COUNT);
   const summaryRef = useRef<HTMLDivElement>(null);
   const pendingRef = useRef(false);
@@ -157,6 +195,11 @@ export function ContactForm({ copy, chrome }: { copy: ContactContent; chrome: Te
         throw new Error(CONTACT_ENDPOINT, { cause: apiError?.code });
       }
       messageStore.reset();
+      setReceipt(
+        typeof data?.requestId === 'string' && data.requestId
+          ? { ref: data.requestId, at: new Date() }
+          : null,
+      );
       setStatus(STATUS.SUCCESS);
     } catch (error) {
       const code =
@@ -182,6 +225,7 @@ export function ContactForm({ copy, chrome }: { copy: ContactContent; chrome: Te
           >
             <p>{copy.success.title}</p>
             <p>{copy.success.message}</p>
+            {receipt && <ContactReceipt copy={copy} receipt={receipt} />}
           </div>
         )}
         {status === STATUS.QUEUED && (
