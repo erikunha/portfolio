@@ -176,22 +176,31 @@ describe('ellipsizeRef', () => {
 });
 
 describe('GlobalErrorPage', () => {
-  it('carries the same reference block as the route error page', () => {
-    const markup = renderToStaticMarkup(
-      <GlobalErrorPage error={makeError(LONG_DIGEST)} reset={vi.fn()} />,
-    );
+  beforeEach(() => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(null, { status: 204 })));
+  });
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it('carries the same reference block as the route error page once its body loads', async () => {
+    render(<GlobalErrorPage error={makeError(LONG_DIGEST)} reset={vi.fn()} />, {
+      container: document,
+    });
     const copy = errorsContent[SITE_LOCALE.en].serverError;
-    expect(markup).toContain('4d2c...e8aa');
-    expect(markup).toContain(`title="${LONG_DIGEST}"`);
-    expect(markup).toContain(copy.copyLabel);
+    const code = await screen.findByText('4d2c...e8aa');
+    expect(code.getAttribute('title')).toBe(LONG_DIGEST);
+    expect(screen.getByRole('button', { name: copy.copyAriaLabel })).not.toBeNull();
   });
 
-  it('omits the reference block when there is no digest', () => {
-    const markup = renderToStaticMarkup(<GlobalErrorPage error={makeError()} reset={vi.fn()} />);
-    expect(markup).not.toContain(errorsContent[SITE_LOCALE.en].serverError.copyLabel);
+  it('omits the reference block when there is no digest', async () => {
+    render(<GlobalErrorPage error={makeError()} reset={vi.fn()} />, { container: document });
+    const copy = errorsContent[SITE_LOCALE.en].serverError;
+    await screen.findByText(copy.bootRender, { exact: false });
+    expect(screen.queryByRole('button', { name: copy.copyAriaLabel })).toBeNull();
   });
 
-  it('renders its own html and body with a retry control and a way home', () => {
+  it('renders its own html and body with a retry control and a way home before the body loads', () => {
     const markup = renderToStaticMarkup(<GlobalErrorPage error={makeError()} reset={vi.fn()} />);
     expect(markup.startsWith('<html')).toBe(true);
     expect(markup).toContain('<body');

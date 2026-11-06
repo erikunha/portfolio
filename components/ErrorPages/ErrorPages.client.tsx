@@ -1,12 +1,11 @@
 'use client';
 
 import { type ReactNode, useEffect, useRef, useState } from 'react';
-import { reportClientError } from '@/components/ErrorBoundary/ErrorBoundary.client';
 import { PageMain } from '@/components/PageMain';
 import type { ErrorsContent } from '@/content/schemas';
+import { reportClientError } from '@/lib/report-client-error.client';
 import { COPY_STATUS, useCopyFeedback } from '@/lib/use-copy-feedback.client';
-
-export const ERROR_MAIN_CLASS = 'err-main';
+import { ERROR_MAIN_CLASS } from './error-main';
 
 const COPIED_RESET_MS = 2000;
 

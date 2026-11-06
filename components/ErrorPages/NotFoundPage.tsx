@@ -4,7 +4,8 @@ import { errorsContent } from '@/content/errors';
 import type { SiteLocale } from '@/content/site-locale';
 import { Button, CmdLine, TerminalPanel } from '@/design-system';
 import { ErrorChrome } from './ErrorChrome.client';
-import { ERROR_MAIN_CLASS, ErrorHeading } from './ErrorPages.client';
+import { ErrorHeading } from './ErrorPages.client';
+import { ERROR_MAIN_CLASS } from './error-main';
 
 export function NotFoundPage({ locale }: { locale: SiteLocale }) {
   const { chrome, notFound } = errorsContent[locale];

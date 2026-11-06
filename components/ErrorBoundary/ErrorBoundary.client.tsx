@@ -4,7 +4,7 @@ import { Component, type CSSProperties, type ReactNode } from 'react';
 
 import { errorsClientContent } from '@/content/errors-client';
 import { DEFAULT_SITE_LOCALE, type SiteLocale } from '@/content/site-locale';
-import { buildLogPayload } from '@/lib/error-bridge.client';
+import { reportClientError } from '@/lib/report-client-error.client';
 
 const MIN_HEIGHT_VAR = '--eb-min-height';
 
@@ -21,22 +21,6 @@ interface Props {
 
 interface State {
   hasError: boolean;
-}
-
-export function reportClientError(
-  prefix: string,
-  error: Error,
-  fallbackStack?: string | null,
-): void {
-  if (typeof window === 'undefined') return;
-  void fetch('/api/log', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(
-      buildLogPayload(`${prefix} ${error.message}`, error.stack ?? fallbackStack ?? undefined),
-    ),
-    keepalive: true,
-  }).catch(() => undefined);
 }
 
 export class ErrorBoundary extends Component<Props, State> {

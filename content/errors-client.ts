@@ -2,7 +2,8 @@ import { LINKS_PATH } from './links.constants';
 import { NAV_VOCABULARY } from './nav';
 import type { ErrorsClientContent } from './schemas';
 import { SECTION_ID, sectionPath } from './section-registry';
-import { localizedPath, SITE_LOCALE, type SiteLocale } from './site-locale';
+import { serverErrorContent } from './server-error-detail';
+import { SITE_LOCALE, type SiteLocale } from './site-locale';
 
 const errorsClientContentFor = (locale: SiteLocale): ErrorsClientContent => {
   const pt = locale === SITE_LOCALE.pt;
@@ -23,22 +24,7 @@ const errorsClientContentFor = (locale: SiteLocale): ErrorsClientContent => {
       ? 'O resto da página segue funcionando. Recarregar costuma resolver.'
       : 'The rest of the page keeps working. Reloading usually fixes it.',
     reloadLabel: pt ? '[ RECARREGAR ]' : '[ RELOAD ]',
-    serverError: {
-      code: '500',
-      message: pt
-        ? 'Algo quebrou do nosso lado. Tente de novo em um minuto.'
-        : 'Something broke on our side. Try again in a minute.',
-      bootRender: pt ? 'render: exceção não tratada' : 'render: unhandled exception',
-      bootReport: pt
-        ? 'relatório enviado · stack mantida no servidor'
-        : 'report sent · stack kept server-side',
-      retryLabel: pt ? 'TENTAR NOVAMENTE' : 'TRY AGAIN',
-      home: { label: pt ? 'IR PARA O INÍCIO' : 'GO HOME', href: localizedPath(locale, '/') },
-      refLabel: 'ref',
-      copyLabel: pt ? 'COPIAR' : 'COPY',
-      copyAriaLabel: pt ? 'Copiar id de referência' : 'Copy reference id',
-      copiedAnnouncement: pt ? 'Id de referência copiado' : 'Reference id copied',
-    },
+    serverError: serverErrorContent[locale],
   };
 };
 
