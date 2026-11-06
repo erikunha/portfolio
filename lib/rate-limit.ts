@@ -94,6 +94,21 @@ export function getErrorLogLimit(): Ratelimit {
   return _errorLogLimit;
 }
 
+const ERROR_LOG_DAILY_CAP = 500;
+
+let _errorLogDailyLimit: Ratelimit | undefined;
+
+export function getErrorLogDailyLimit(): Ratelimit {
+  if (!_errorLogDailyLimit) {
+    _errorLogDailyLimit = new Ratelimit({
+      redis: getRedis(),
+      limiter: Ratelimit.fixedWindow(ERROR_LOG_DAILY_CAP, '1 d'),
+      prefix: 'rl:errlog:day',
+    });
+  }
+  return _errorLogDailyLimit;
+}
+
 let _forgetLimit: Ratelimit | undefined;
 
 export function getForgetLimit(): Ratelimit {

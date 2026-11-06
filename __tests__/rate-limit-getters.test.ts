@@ -30,6 +30,7 @@ vi.mock('@upstash/ratelimit', () => {
     Object.assign(this, opts);
   }
   Ratelimit.slidingWindow = vi.fn(() => ({}));
+  Ratelimit.fixedWindow = vi.fn(() => ({}));
   return { Ratelimit };
 });
 
@@ -98,6 +99,15 @@ describe('rate-limit factory getters — configured correctly', () => {
     expect(
       (Ratelimit as unknown as { slidingWindow: ReturnType<typeof vi.fn> }).slidingWindow,
     ).toHaveBeenCalledWith(8, '1 h');
+  });
+
+  it('getErrorLogDailyLimit configures fixedWindow(500, "1 d")', async () => {
+    const { Ratelimit } = await import('@upstash/ratelimit');
+    const { getErrorLogDailyLimit } = await import('@/lib/rate-limit');
+    getErrorLogDailyLimit();
+    expect(
+      (Ratelimit as unknown as { fixedWindow: ReturnType<typeof vi.fn> }).fixedWindow,
+    ).toHaveBeenCalledWith(500, '1 d');
   });
 
   it('getContactLimit configures slidingWindow(3, "10 m")', async () => {
