@@ -8,6 +8,7 @@ import { NoscriptBar } from '@/components/NoscriptBar';
 import { profile, profileMetaDescription, profilePageTitle } from '@/content/profile';
 import { personSchema } from '@/content/seo';
 import { SITE_LOCALE } from '@/content/site-locale';
+import { serializeJsonLd } from '@/lib/json-ld';
 
 const mono = localFont({
   src: [
@@ -94,7 +95,7 @@ export const metadata: Metadata = {
   },
 };
 
-const personJsonLd = JSON.stringify(personSchema);
+const personJsonLd = serializeJsonLd(personSchema);
 
 const initScript = `history.scrollRestoration="manual";window.scrollTo(0,0);(function(){try{var m=localStorage.getItem("erik.motion");var on=m==="on"?true:m==="off"?false:!window.matchMedia("(prefers-reduced-motion:reduce)").matches;document.body.dataset.motion=on?"full":"reduce"}catch(e){}})();`;
 
