@@ -324,7 +324,7 @@
       z-index: calc(110 + 5);
       width: var(--to-top-size);
       height: var(--to-top-size);
-      background: rgba(0, 0, 0, 0.85);
+      background: color-mix(in srgb, var(--color-secondary-950) 85%, transparent);
       border: 1px solid var(--color-primary-subtle);
       color: var(--color-primary-500);
       opacity: 0;

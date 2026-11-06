@@ -56,7 +56,7 @@
     transition: none;
   }
 
-  @media (max-width: 560px) {
+  @media (max-width: 559.98px) {
     .sp-bar {
       width: 64px;
     }

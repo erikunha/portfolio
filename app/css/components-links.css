@@ -170,10 +170,7 @@
   }
 
   .links-stack {
-    display: flex;
-    flex-direction: column;
     gap: var(--phi-space-3);
-    min-width: 0;
   }
 
   .links-main :is(p, dd) {

@@ -209,7 +209,7 @@
     }
   }
 
-  @media (min-width: 901px) {
+  @media (min-width: 900px) {
     .opinions-list > li {
       grid-template-columns: var(--spacing-target) minmax(0, 1fr);
       gap: calc(var(--spacing-2) + var(--spacing-1) / 2);

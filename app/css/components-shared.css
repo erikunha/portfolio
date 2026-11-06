@@ -141,10 +141,11 @@
     }
   }
 
-  .ds-prose pre {
-    background: var(--color-primary-quiet);
-    border: 1px solid var(--color-primary-border);
-    padding: 0.75rem 1rem;
+  :is(.about-col, .reading-side, .links-stack) {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-8);
+    min-width: 0;
   }
 
   .role-typer {

@@ -36,13 +36,6 @@
     gap: var(--spacing-8);
   }
 
-  .about-col {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-8);
-    min-width: 0;
-  }
-
   .ab-panel {
     min-width: 0;
     border: var(--border-width) solid var(--color-primary-subtle);
@@ -271,7 +264,7 @@
     }
   }
 
-  @media (max-width: 1199px) {
+  @media (max-width: 1199.98px) {
     .hero-bio .hero-stats {
       grid-template-columns: repeat(2, minmax(0, 1fr));
     }
@@ -362,7 +355,7 @@
     }
   }
 
-  @media (max-width: 389px) {
+  @media (max-width: 389.98px) {
     .hero-mobile .hero-boot-mobile {
       display: none;
       min-height: 0;

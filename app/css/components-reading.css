@@ -166,13 +166,6 @@
     margin-top: 0;
   }
 
-  .reading-side {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-8);
-    min-width: 0;
-  }
-
   .reading-stats {
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
