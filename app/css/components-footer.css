@@ -477,6 +477,15 @@
   }
 
   @media (max-width: 767.98px) {
+    .footer-inner {
+      padding-inline-end: var(--to-top-reach);
+    }
+
+    .footer-shutdown-title,
+    .footer-card-title {
+      overflow-wrap: anywhere;
+    }
+
     .site-footer {
       --footer-session-leading: var(--footer-line-height);
       --footer-title-tracking: 0.16em;
