@@ -4,7 +4,7 @@ import { SITE_LOCALE } from '@/content/site-locale';
 
 test.use({ viewport: { width: 1280, height: 720 } });
 
-test.describe('DesktopTopbar — navigation', () => {
+test.describe('DesktopTopbar: navigation', () => {
   test('topbar nav is visible on desktop viewport', async ({ page }) => {
     await page.goto('/');
     const nav = page.getByRole('navigation', { name: 'Site navigation' });

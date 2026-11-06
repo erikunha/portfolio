@@ -8,7 +8,7 @@ test.describe('Dock: mobile navigation', () => {
     const dock = page.getByRole('navigation', { name: 'primary' });
     await expect(dock).toBeVisible();
     await expect(dock.getByRole('link', { name: 'HOME' })).toBeVisible();
-    await expect(dock.getByRole('link', { name: 'WORK' })).toBeVisible();
+    await expect(dock.getByRole('link', { name: 'PROJECTS' })).toBeVisible();
     await expect(dock.getByRole('link', { name: 'SHELL' })).toBeVisible();
     await expect(dock.getByRole('link', { name: /Hire on LinkedIn/ })).toBeVisible();
     await expect(dock.getByRole('button', { name: /^MENU/ })).toBeVisible();
@@ -18,9 +18,9 @@ test.describe('Dock: mobile navigation', () => {
   test('Work scrolls to Projects and becomes current', async ({ page }) => {
     await page.goto('/');
     const dock = page.getByRole('navigation', { name: 'primary' });
-    await dock.getByRole('link', { name: 'WORK' }).click();
+    await dock.getByRole('link', { name: 'PROJECTS' }).click();
     await expect(page.locator('#sec-projects')).toBeInViewport();
-    await expect(dock.getByRole('link', { name: 'WORK' })).toHaveAttribute(
+    await expect(dock.getByRole('link', { name: 'PROJECTS' })).toHaveAttribute(
       'aria-current',
       'location',
     );
