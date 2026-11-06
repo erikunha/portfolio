@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   PREVIEW_SOURCE_ARIA_LABEL_FALLBACK,
   previewSourceAriaLabel,
-} from '../app/design-system/_components/preview.constants';
+} from '../app/(en)/design-system/_components/preview.constants';
 
 describe('previewSourceAriaLabel: unique per-component aria-label builder', () => {
   it('generates a label derived from the id', () => {

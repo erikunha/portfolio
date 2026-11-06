@@ -10,7 +10,7 @@ import {
 } from './lib/changelog-merge';
 
 const ROOT = join(import.meta.dirname, '..');
-const CHANGELOG_PATH = join(ROOT, 'app/design-system/changelog/page.mdx');
+const CHANGELOG_PATH = join(ROOT, 'app/(en)/design-system/changelog/page.mdx');
 
 const HEADER = `import { dsPageMetadata } from '../_lib/page-metadata';
 

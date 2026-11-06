@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { DS_PAGER } from '@/app/design-system/_components/ds-nav';
+import { DS_PAGER } from '@/app/(en)/design-system/_components/ds-nav';
 import { horizontalOverflow } from './_helpers/geometry';
 
 const MIN_TARGET_PX = 24;

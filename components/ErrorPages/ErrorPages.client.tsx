@@ -1,57 +1,14 @@
 'use client';
 
-import { usePathname } from 'next/navigation';
 import { type ReactNode, useEffect, useRef, useState } from 'react';
 import { reportClientError } from '@/components/ErrorBoundary/ErrorBoundary.client';
-import { MAIN_CONTENT_ID, PageMain } from '@/components/PageMain';
-import { brandByLocale } from '@/content/brand';
-import { errorsClientContent as errorsContent } from '@/content/errors-client';
+import { PageMain } from '@/components/PageMain';
 import type { ErrorsContent } from '@/content/schemas';
-import { localeOfPath, type SiteLocale } from '@/content/site-locale';
 import { COPY_STATUS, useCopyFeedback } from '@/lib/use-copy-feedback.client';
 
 export const ERROR_MAIN_CLASS = 'err-main';
 
 const COPIED_RESET_MS = 2000;
-
-const BRAND_IMAGE_SRC = '/icon.svg';
-const BRAND_IMAGE_SIZE_PX = 28;
-
-function ClientBrandLink({ locale }: { locale: SiteLocale }) {
-  const brand = brandByLocale[locale];
-  return (
-    <a className="brand-link" href={brand.homeHref} aria-label={brand.accessibleName}>
-      {/* biome-ignore lint/performance/noImgElement: a client boundary cannot import the inline SVG without shipping its path to every route; the static icon file carries the same mark */}
-      <img src={BRAND_IMAGE_SRC} width={BRAND_IMAGE_SIZE_PX} height={BRAND_IMAGE_SIZE_PX} alt="" />
-    </a>
-  );
-}
-
-export function ErrorChrome({
-  chrome,
-  brand,
-}: {
-  chrome: ErrorsContent['chrome'];
-  brand: ReactNode;
-}) {
-  return (
-    <>
-      <a href={`#${MAIN_CONTENT_ID}`} className="skip-to-content">
-        {chrome.skipLabel}
-      </a>
-      <header className="err-bar">
-        <nav aria-label={chrome.navLabel}>
-          {chrome.nav.map((item) => (
-            <a key={item.href} className="err-bar-link" href={item.href}>
-              {item.label}
-            </a>
-          ))}
-        </nav>
-        {brand}
-      </header>
-    </>
-  );
-}
 
 export function ErrorHeading({ children }: { children: ReactNode }) {
   const ref = useRef<HTMLHeadingElement>(null);
@@ -161,23 +118,5 @@ export function ServerErrorMain({
       </div>
       {digest ? <ErrorReference digest={digest} content={content} /> : null}
     </PageMain>
-  );
-}
-
-export function RouteErrorPage({ error, reset }: RouteErrorProps) {
-  const locale = localeOfPath(usePathname());
-  const content = errorsContent[locale];
-  const stamps = useErrorReport('[RouteError]', error);
-
-  return (
-    <>
-      <ErrorChrome chrome={content.chrome} brand={<ClientBrandLink locale={locale} />} />
-      <ServerErrorMain
-        reset={reset}
-        content={content.serverError}
-        stamps={stamps}
-        digest={error.digest}
-      />
-    </>
   );
 }

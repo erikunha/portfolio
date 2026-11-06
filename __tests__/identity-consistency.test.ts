@@ -45,7 +45,7 @@ const digitsOf = (value: string) => value.replace(/\D/g, '');
 let layoutMetadataText = '';
 
 beforeAll(async () => {
-  const { metadata } = await import('@/app/layout');
+  const { metadata } = await import('@/app/(en)/layout');
   layoutMetadataText = JSON.stringify(metadata);
 });
 
@@ -194,7 +194,7 @@ describe('identity is consistent across every gated surface', () => {
     const surfaces: Array<[string, string]> = [
       ['content/hero.ts (heroTagline)', heroTagline(SITE_LOCALE.en)],
       ['content/seo.ts (jobTitle)', personSchema.jobTitle],
-      ['app/layout.tsx (metadata.title)', String(JSON.parse(layoutMetadataText).title)],
+      ['app/(en)/layout.tsx (metadata.title)', String(JSON.parse(layoutMetadataText).title)],
       ['public/llms.txt', llmsTxt],
       ['lib/hiring-profile.ts', JSON.stringify(HIRING_PROFILE)],
       ['lib/ask/system-prompt.ts', SYSTEM_TEXT],
@@ -212,7 +212,7 @@ describe('identity is consistent across every gated surface', () => {
   it('no surface still carries the retired title', () => {
     const surfaces: Array<[string, string]> = [
       ...contentSurfaces,
-      ['app/layout.tsx (og + twitter + alt + description)', layoutMetadataText],
+      ['app/(en)/layout.tsx (og + twitter + alt + description)', layoutMetadataText],
       ['lib/hiring-profile.ts (served at /api/erik.json)', JSON.stringify(HIRING_PROFILE)],
       ['lib/ask/system-prompt.ts', SYSTEM_TEXT],
       ['public/llms.txt', llmsTxt],
@@ -259,7 +259,7 @@ describe('terminal redesign canonical facts', () => {
       ['lib/ask/system-prompt.ts', SYSTEM_TEXT],
       ['public/llms.txt', llmsTxt],
       ['public/.well-known/agent.json', read('public/.well-known/agent.json')],
-      ['app/layout.tsx (metadata)', layoutMetadataText],
+      ['app/(en)/layout.tsx (metadata)', layoutMetadataText],
     ];
     const stale = surfaces
       .filter(([, text]) => /\bStaff\b|\bPrincipal\b/.test(text))

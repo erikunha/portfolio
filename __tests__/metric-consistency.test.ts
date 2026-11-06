@@ -74,7 +74,7 @@ const METRIC_SURFACES = (): Array<[string, string]> => [
   ['public/llms.txt', read('public/llms.txt')],
   ['public/.well-known/agent.json', read('public/.well-known/agent.json')],
   ['scripts/generate-og-image.ts (social preview card)', ogImageScript],
-  ['app/layout.tsx (metadata)', layoutMetadataText],
+  ['app/(en)/layout.tsx (metadata)', layoutMetadataText],
 ];
 
 const HIRING_PROFILE_RECEIPT_FIELDS: Array<[string, string]> = [
@@ -107,7 +107,7 @@ const PROJECT_STAT_METRICS: Record<string, string> = {
 };
 
 beforeAll(async () => {
-  const { metadata } = await import('@/app/layout');
+  const { metadata } = await import('@/app/(en)/layout');
   layoutMetadataText = JSON.stringify(metadata);
 });
 
@@ -120,7 +120,7 @@ describe('performance metrics agree with the authoritative receipts', () => {
 
     expect(
       empty,
-      'a surface swept for contradictions is EMPTY, so the sweep over it finds nothing and passes — a silent no-op, not a pass. `app/layout.tsx (metadata)` is the live risk: layoutMetadataText starts as "" and is filled in beforeAll. An empty OBJECT is the likelier regression than an empty string — a refactor to generateMetadata() leaving a stub makes JSON.stringify(metadata) return "{}", which is 2 chars, not 0 — so the check is against a set of empty SERIALISATIONS, not against length. Fix the surface, not this assertion.',
+      'a surface swept for contradictions is EMPTY, so the sweep over it finds nothing and passes — a silent no-op, not a pass. `app/(en)/layout.tsx (metadata)` is the live risk: layoutMetadataText starts as "" and is filled in beforeAll. An empty OBJECT is the likelier regression than an empty string — a refactor to generateMetadata() leaving a stub makes JSON.stringify(metadata) return "{}", which is 2 chars, not 0 — so the check is against a set of empty SERIALISATIONS, not against length. Fix the surface, not this assertion.',
     ).toEqual([]);
   });
 

@@ -12,7 +12,7 @@
 
 1. `pnpm install && pnpm dev`. Open `/`. Toggle the `MOTION` switch (the top bar at 1280px and up, or the `MOTION: ON`, `MOTION: OFF` or `MOTION: REDUCED` row in the section drawer at any width). Open `/design-system`. Hit `/api/healthz` and `/api/erik.json`.
 2. Read these five files in order - they are the load-bearing spine:
-   - `components/SiteHome.tsx` - the terminal home composition (rendered by `app/page.tsx` and `app/pt/page.tsx`); then inspect `/summary`, `/cv`, `/links` and `/links/en`.
+   - `components/SiteHome.tsx` - the terminal home composition (rendered by `app/(en)/page.tsx` and `app/(pt)/pt/page.tsx`); then inspect `/summary`, `/cv`, `/links` and `/links/en`.
    - `components/responsive/Module/Module.tsx` - the section wrapper.
    - `content/schemas.ts` + one content module (e.g. `content/projects.ts`) - how data is typed and validated.
    - `lib/server/route.ts` - the `defineHandler` API contract.

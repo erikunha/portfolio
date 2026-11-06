@@ -2,8 +2,8 @@ import { render, screen } from '@testing-library/react';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import CvPage from '@/app/cv/page';
-import SummaryPage from '@/app/summary/page';
+import CvPage from '@/app/(en)/cv/page';
+import SummaryPage from '@/app/(en)/summary/page';
 import { Dock } from '@/components/responsive/Dock/Dock.client';
 import {
   SectionNavigation,

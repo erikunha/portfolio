@@ -13,7 +13,7 @@ vi.mock('@/components/NoscriptBar', () => ({ NoscriptBar: () => null }));
 
 describe('root layout person JSON-LD', () => {
   it('escapes a closing script tag inside a value so the block cannot be ended early', async () => {
-    const { default: RootLayout } = await import('@/app/layout');
+    const { default: RootLayout } = await import('@/app/(en)/layout');
     const html = renderToStaticMarkup(<RootLayout>body</RootLayout>);
     const block = /<script type="application\/ld\+json">([\s\S]*?)<\/script>/.exec(html);
     expect(block).not.toBeNull();

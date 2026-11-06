@@ -142,13 +142,13 @@ Contact submission persists a 90-day KV audit record before calling the shared d
 
 ## Key load-bearing files (read these first)
 
-| File                                      | Why it matters                                                                     |
-| ----------------------------------------- | ---------------------------------------------------------------------------------- |
-| `components/SiteHome.tsx`                 | The composition root; shows the RSC/PPR posture for the whole site                 |
-| `app/layout.tsx`                          | Fonts, JSON-LD, the pre-paint motion bootstrap, Vercel RUM gating                  |
-| `next.config.ts` + `proxy.ts`             | The two-place header split (static vs per-request CSP), PPR, MDX                   |
-| `lib/server/route.ts`                     | The `defineHandler` envelope - the API contract                                    |
-| `lib/rate-limit.ts`                       | Redis access, the sliding-window + token-budget + dedup primitives                 |
-| `lib/ask/system-prompt.ts`                | How the AI persona imports shared content                                          |
-| `content/schemas.ts`                      | The domain schema registry                                                         |
-| `components/responsive/Module/Module.tsx` | RSC wrapper for terminal modules; Hero, About, Career and Footer render separately |
+| File                                      | Why it matters                                                                                                               |
+| ----------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| `components/SiteHome.tsx`                 | The composition root; shows the RSC/PPR posture for the whole site                                                           |
+| `components/RootShell.tsx`                | Fonts, JSON-LD, the pre-paint motion bootstrap, Vercel RUM gating, shared by `app/(en)/layout.tsx` and `app/(pt)/layout.tsx` |
+| `next.config.ts` + `proxy.ts`             | The two-place header split (static vs per-request CSP), PPR, MDX                                                             |
+| `lib/server/route.ts`                     | The `defineHandler` envelope - the API contract                                                                              |
+| `lib/rate-limit.ts`                       | Redis access, the sliding-window + token-budget + dedup primitives                                                           |
+| `lib/ask/system-prompt.ts`                | How the AI persona imports shared content                                                                                    |
+| `content/schemas.ts`                      | The domain schema registry                                                                                                   |
+| `components/responsive/Module/Module.tsx` | RSC wrapper for terminal modules; Hero, About, Career and Footer render separately                                           |

@@ -3,7 +3,8 @@ import { PageMain } from '@/components/PageMain';
 import { errorsContent } from '@/content/errors';
 import type { SiteLocale } from '@/content/site-locale';
 import { Button, CmdLine, TerminalPanel } from '@/design-system';
-import { ERROR_MAIN_CLASS, ErrorChrome, ErrorHeading } from './ErrorPages.client';
+import { ErrorChrome } from './ErrorChrome.client';
+import { ERROR_MAIN_CLASS, ErrorHeading } from './ErrorPages.client';
 
 export function NotFoundPage({ locale }: { locale: SiteLocale }) {
   const { chrome, notFound } = errorsContent[locale];

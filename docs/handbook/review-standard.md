@@ -157,7 +157,7 @@ Before writing: when a style change removes an implicit role or a visible label,
 Check: `pnpm test:e2e` after any layout change (the axe scan and the visual baselines both run there).
 Examples:
 - PR284 `app/css/components.css`: `display: block` on the table elements stripped the implicit `table` and `rowgroup` roles; the fix added explicit roles.
-- PR284 `app/design-system/_components/LabelledTable.tsx`: `aria-hidden` on the per cell label removed the only column context on mobile; the fix restored it.
+- PR284 `app/(en)/design-system/_components/LabelledTable.tsx`: `aria-hidden` on the per cell label removed the only column context on mobile; the fix restored it.
 
 **Rule 18. A value used in two places lives in one named place.**
 Before writing: when you type a URL, a number, a label or a token twice, extract it to a constant on the first repetition.
@@ -231,7 +231,7 @@ Before writing: decide the visual baseline impact before the push, not after CI 
 Check: `pnpm test:e2e` with regenerated baselines on both platforms.
 Examples:
 - PR271 `components/sections/HottestTakesSection/HottestTakesSection.tsx`: nesting another section inside the capturable element changed the captured size; the fix regenerated the baseline.
-- PR284 `app/design-system/primitives/button/page.mdx`: a wrong statement about the native button default misled every reader; the fix corrected it.
+- PR284 `app/(en)/design-system/primitives/button/page.mdx`: a wrong statement about the native button default misled every reader; the fix corrected it.
 
 ---
 

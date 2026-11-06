@@ -3,7 +3,7 @@
 import { readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { parseThemeColors } from '../app/design-system/_lib/theme-tokens.ts';
+import { parseThemeColors } from '../app/(en)/design-system/_lib/theme-tokens.ts';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const themeCss = readFileSync(

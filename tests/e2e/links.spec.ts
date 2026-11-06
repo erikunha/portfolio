@@ -1,4 +1,5 @@
 import { expect, type Page, test } from '@playwright/test';
+import { SITE_HTML_LANG, SITE_LOCALE } from '@/content/site-locale';
 
 const LANGUAGE_NAV_NAME = /^(Idioma|Language)$/;
 const LANGUAGE_LINK_COUNT = 2;
@@ -34,10 +35,10 @@ test.describe('/links link-in-bio', () => {
 
   test('declares the document language of each route to screen readers', async ({ page }) => {
     await page.goto('/links');
-    await expect(page.locator('[lang="pt-BR"]').first()).toBeVisible();
+    await expect(page.locator('html')).toHaveAttribute('lang', SITE_HTML_LANG[SITE_LOCALE.pt]);
 
     await page.goto('/links/en');
-    await expect(page.locator('[lang="en-US"]').first()).toBeVisible();
+    await expect(page.locator('html')).toHaveAttribute('lang', SITE_HTML_LANG[SITE_LOCALE.en]);
   });
 
   test('serves a scannable QR from the server with no client-side canvas work', async ({

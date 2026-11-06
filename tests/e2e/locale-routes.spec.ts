@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { SITE_HTML_LANG, SITE_LOCALE } from '@/content/site-locale';
 
 // Address-based locales (DECISIONS 2026-08-30/2026-11-04): the bare address
 // serves English and never redirects; pt-BR lives under /pt. Each language
@@ -26,15 +27,11 @@ for (const { en, pt, enTitle } of PAIRS) {
       expect(response?.status(), 'the bare address must return a page, never a redirect').toBe(200);
       expect(response?.request().redirectedFrom() ?? null).toBeNull();
       await expect(page).toHaveTitle(enTitle);
-      await expect(page.locator('html')).toHaveAttribute('lang', 'en');
+      await expect(page.locator('html')).toHaveAttribute('lang', SITE_HTML_LANG[SITE_LOCALE.en]);
       await expect(page.locator('[lang="pt-BR"]')).toHaveCount(0);
 
       const canonical = page.locator('link[rel="canonical"]');
       await expect(canonical).toHaveAttribute('href', absolute(en));
-
-      const langAttr =
-        en === '/' ? await page.evaluate(() => document.documentElement.lang) : 'en-US';
-      if (en === '/') expect(langAttr).toBe('en');
     });
 
     test(`${pt} at ${viewport.width} renders pt-BR with lang, canonical and alternates`, async ({
@@ -45,7 +42,8 @@ for (const { en, pt, enTitle } of PAIRS) {
       expect(response?.status()).toBe(200);
 
       expect(response?.request().redirectedFrom() ?? null).toBeNull();
-      await expect(page.locator('[lang="pt-BR"] #main-content')).toHaveCount(1);
+      await expect(page.locator('html')).toHaveAttribute('lang', SITE_HTML_LANG[SITE_LOCALE.pt]);
+      await expect(page.locator('#main-content')).toHaveCount(1);
 
       const canonical = page.locator('link[rel="canonical"]');
       await expect(canonical).toHaveAttribute('href', `https://www.erikunha.dev${pt}`);
@@ -114,7 +112,8 @@ test('/pt chrome controls speak pt-BR', async ({ page }) => {
 test('an unknown /pt address answers 404 in Portuguese', async ({ page }) => {
   const response = await page.goto('/pt/pagina-que-nao-existe');
   expect(response?.status()).toBe(404);
-  await expect(page.locator('[lang="pt-BR"] #main-content')).toHaveCount(1);
+  await expect(page.locator('html')).toHaveAttribute('lang', SITE_HTML_LANG[SITE_LOCALE.pt]);
+  await expect(page.locator('#main-content')).toHaveCount(1);
   await expect(page.getByText('[ NÃO ENCONTRADO ]')).toBeVisible();
   await expect(page.getByRole('link', { name: 'Ir para o início' })).toHaveAttribute('href', '/pt');
 });

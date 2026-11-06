@@ -1,5 +1,5 @@
 import type { MetadataRoute } from 'next';
-import { DS_ROUTES } from '@/app/design-system/_components/ds-nav';
+import { DS_ROUTES } from '@/app/(en)/design-system/_components/ds-nav';
 import { localeAlternates } from '@/content/site-locale';
 import { social } from '@/content/social';
 

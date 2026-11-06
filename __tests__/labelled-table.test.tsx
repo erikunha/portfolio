@@ -1,7 +1,7 @@
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
-import { LabelledTable } from '@/app/design-system/_components/LabelledTable';
+import { LabelledTable } from '@/app/(en)/design-system/_components/LabelledTable';
 
 function table(headers: string[], rows: string[][], props?: { caption?: string }) {
   return createElement(

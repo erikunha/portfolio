@@ -20,7 +20,7 @@ vi.mock('@/components/client/InteractiveShell', () => ({
   InteractiveShellLazy: () => null,
 }));
 
-// The first test to import `@/app/page` pays the whole home-page module
+// The first test to import `@/app/(en)/page` pays the whole home-page module
 // transform; the default 5s budget loses the race on a loaded machine.
 const HOME_PAGE_IMPORT_TIMEOUT_MS = 20_000;
 
@@ -75,7 +75,7 @@ describe('Home page', () => {
         addEventListener: () => undefined,
         removeEventListener: () => undefined,
       }));
-      const { default: Home } = await import('@/app/page');
+      const { default: Home } = await import('@/app/(en)/page');
       const doc = new DOMParser().parseFromString(
         renderToStaticMarkup(createElement(Home)),
         'text/html',
@@ -91,7 +91,7 @@ describe('Home page', () => {
       addEventListener: () => undefined,
       removeEventListener: () => undefined,
     }));
-    const { default: Home } = await import('@/app/page');
+    const { default: Home } = await import('@/app/(en)/page');
     const { DesktopTopbar } = await import(
       '@/components/responsive/DesktopTopbar/DesktopTopbar.client'
     );
