@@ -2,6 +2,7 @@
 
 import '@/lib/error-bridge.client';
 import type { ReactNode } from 'react';
+import { MAIN_CONTENT_ID } from '@/components/PageMain';
 import type { SiteNavChrome } from '@/content/navigation';
 import type { SiteLocale } from '@/content/site-locale';
 import { ToTopButton } from '../client/ToTopButton';
@@ -31,7 +32,7 @@ export function AppShell({
 }) {
   return (
     <>
-      <a href="#main-content" className="skip-to-content">
+      <a href={`#${MAIN_CONTENT_ID}`} className="skip-to-content">
         {skipLabel}
       </a>
       <SectionNavigationProvider chrome={chrome} locale={locale}>

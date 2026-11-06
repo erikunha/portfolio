@@ -15,6 +15,7 @@ import {
 } from 'react';
 import { externalLinkProps } from '@/components/ExternalLink';
 import { LocaleSwitch } from '@/components/LocaleSwitch/LocaleSwitch';
+import { MAIN_CONTENT_ID } from '@/components/PageMain';
 import { StatusDot } from '@/components/StatusDot';
 import type { NavigationCopy, SiteNavChrome } from '@/content/navigation';
 import {
@@ -28,7 +29,6 @@ import { cn } from '@/lib/cn';
 import { isolate } from '@/lib/dom/isolate';
 import { applyMotion, motionInEffect, readMotion, readSystemReducedMotion } from '@/lib/motion';
 
-const MAIN_ID = 'main-content';
 const HOME_SECTION_ID = 'bio';
 const POSITION_DIGITS = 2;
 const formatSectionNumber = (order: number) => String(order).padStart(POSITION_DIGITS, '0');
@@ -75,7 +75,7 @@ function scrollBehavior(): ScrollBehavior {
 }
 
 function jumpTarget(id: string): HTMLElement | null {
-  return document.getElementById(id === HOME_SECTION_ID ? MAIN_ID : id);
+  return document.getElementById(id === HOME_SECTION_ID ? MAIN_CONTENT_ID : id);
 }
 
 let pendingCorrection: AbortController | null = null;

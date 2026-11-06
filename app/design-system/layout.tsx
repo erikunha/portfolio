@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { AppShell } from '@/components/AppShell';
 import { BrandLink } from '@/components/BrandLink';
+import { PageMain } from '@/components/PageMain';
 import { siteNavChrome } from '@/content/navigation';
 import { SITE_LOCALE } from '@/content/site-locale';
 import { DS_NAV_ID, DS_SKIP_NAV_LABEL } from './_components/ds-nav';
@@ -20,10 +21,10 @@ export default function DesignSystemLayout({ children }: { children: ReactNode }
       </a>
       <div className="page-container page-main ds-layout">
         <Sidebar />
-        <main id="main-content" tabIndex={-1} className="ds-main ds-prose">
+        <PageMain className="ds-main ds-prose">
           {children}
           <PagerNav />
-        </main>
+        </PageMain>
         <DsNavNoScript />
       </div>
     </AppShell>

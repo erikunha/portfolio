@@ -1,5 +1,6 @@
 import { AppShell } from '@/components/AppShell';
 import { BrandLink } from '@/components/BrandLink';
+import { PageMain } from '@/components/PageMain';
 import { linksContent } from '@/content/links';
 import { LINKS_HTML_LANG, LINKS_PATH, type LinksLocale } from '@/content/links.constants';
 import { NAVIGATION, siteNavChrome } from '@/content/navigation';
@@ -29,7 +30,7 @@ export async function LinksPage({ locale }: { locale: LinksLocale }) {
     >
       <NavProgress />
       <div lang={LINKS_HTML_LANG[locale]} className="links-page">
-        <main id="main-content" tabIndex={-1} className="page-container page-main links-main">
+        <PageMain className="page-container page-main links-main">
           <h1 className="sr-only">{copy.pageHeading[locale]}</h1>
           {feed.latest === null && <Ticker locale={locale} />}
           <ChromeBar locale={locale} />
@@ -46,7 +47,7 @@ export async function LinksPage({ locale }: { locale: LinksLocale }) {
             </div>
           </div>
           <LinksFooter />
-        </main>
+        </PageMain>
       </div>
     </AppShell>
   );
