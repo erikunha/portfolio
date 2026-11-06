@@ -14,12 +14,14 @@ describe('ask budget error', () => {
   });
 });
 
-describe('ask upstream error', () => {
+describe('ask interrupted error', () => {
   it('offers a retry and the email in both locales without naming a provider', () => {
     for (const locale of [SITE_LOCALE.en, SITE_LOCALE.pt]) {
-      const message = askErrors[locale].upstream;
-      expect(message, `${locale} upstream error must point to the email`).toContain(social.email);
-      expect(message, `${locale} upstream error must not name a provider`).not.toMatch(
+      const message = askErrors[locale].interrupted;
+      expect(message, `${locale} interrupted error must point to the email`).toContain(
+        social.email,
+      );
+      expect(message, `${locale} interrupted error must not name a provider`).not.toMatch(
         /anthropic|claude|gateway|haiku/i,
       );
     }

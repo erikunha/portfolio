@@ -75,7 +75,7 @@ describe('/api/ask when the model provider fails', () => {
     expect(
       body,
       'the AI SDK reports a provider failure through onError and ends textStream with no text, so an unhandled failure reaches the shell as "(empty response)"',
-    ).toBe(`${STREAM_ERR_SENTINEL}${askErrors[SITE_LOCALE.en].upstream}`);
+    ).toBe(`${STREAM_ERR_SENTINEL}${askErrors[SITE_LOCALE.en].interrupted}`);
     await vi.waitFor(() => expect(persistMock).toHaveBeenCalledOnce());
     expect(persistMock.mock.calls[0]?.[0].status).toBe('errored');
   });

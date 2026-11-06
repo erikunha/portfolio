@@ -1190,14 +1190,16 @@ describe('InteractiveShell stream states', () => {
       expect(container.querySelector('[data-kind="hint"] code')?.textContent).toBe('cat skills.md');
     });
 
-    it('falls back to the HTTP label when the body has no message', async () => {
+    it('says what to do when the body has no message, never a bare status label', async () => {
       vi.stubGlobal(
         'fetch',
         vi.fn(async () => new Response('', { status: 502 })),
       );
       const container = await renderShell();
       await submitQuestion(container, 'x');
-      expect(container.querySelector('[data-kind="error"]')?.textContent).toBe('ask: 502 HTTP');
+      expect(container.querySelector('[data-kind="error"]')?.textContent).toBe(
+        `ask: 502 ${shellUi[SITE_LOCALE.en].serverError}`,
+      );
     });
   });
 
@@ -1517,5 +1519,102 @@ describe('InteractiveShell stream states', () => {
       await press(document.body, 'Escape');
       expect(signal?.aborted).toBe(false);
     });
+  });
+});
+
+describe('InteractiveShell failure copy', () => {
+  let mounted: MountedClient;
+
+  beforeEach(() => {
+    vi.resetModules();
+  });
+
+  afterEach(() => {
+    mounted?.unmount();
+    vi.restoreAllMocks();
+    vi.unstubAllGlobals();
+  });
+
+  async function failWith(locale: SiteLocale, response: () => Response | Promise<Response>) {
+    const { InteractiveShell } = await import('./InteractiveShell');
+    vi.stubGlobal('fetch', vi.fn(response));
+    mounted = await mountClient(
+      createElement(InteractiveShell, {
+        locale,
+        ui: shellUi[locale],
+        chrome: shellChrome[locale],
+      }),
+    );
+    await submitQuestion(mounted.container, 'a question');
+    return mounted.container.querySelector('[data-kind="error"]')?.textContent ?? '';
+  }
+
+  it.each([SITE_LOCALE.en, SITE_LOCALE.pt])(
+    'words a guard abort as a withheld answer, never as the guard reason (%s)',
+    async (locale) => {
+      const { GUARD_ABORT_PREFIX, STREAM_ERR_SENTINEL } = await import('@/lib/stream-protocol');
+      const line = await failWith(locale, () =>
+        streamingResponse([`Partial${STREAM_ERR_SENTINEL}${GUARD_ABORT_PREFIX}leak`]),
+      );
+      expect(line).toContain(shellUi[locale].answerWithheld);
+      expect(line, 'the guard reason is internal detail').not.toContain('leak');
+      expect(line).not.toContain(GUARD_ABORT_PREFIX);
+    },
+  );
+
+  it.each([SITE_LOCALE.en, SITE_LOCALE.pt])(
+    'words an HTTP failure with no readable detail in the page language (%s)',
+    async (locale) => {
+      const line = await failWith(locale, () => new Response('', { status: 504, statusText: '' }));
+      expect(line, 'a bare status name tells the visitor nothing to do').toContain(
+        shellUi[locale].serverError,
+      );
+      expect(line).not.toMatch(/HTTP|Internal Server Error|Gateway Time-out/);
+    },
+  );
+
+  it.each([SITE_LOCALE.en, SITE_LOCALE.pt])(
+    'ignores an English envelope message and words an oversized request itself (%s)',
+    async (locale) => {
+      const line = await failWith(
+        locale,
+        () =>
+          new Response(
+            JSON.stringify({
+              ok: false,
+              error: {
+                code: 'payload_too_large',
+                message: 'request body exceeds the 8192-byte limit',
+              },
+            }),
+            { status: 413, headers: { 'Content-Type': 'application/json' } },
+          ),
+      );
+      expect(line).toContain(shellUi[locale].requestTooLarge);
+      expect(line, 'the byte limit is an internal detail').not.toContain('8192');
+    },
+  );
+
+  it.each([SITE_LOCALE.en, SITE_LOCALE.pt])(
+    'does not print the text of an unexpected exception (%s)',
+    async (locale) => {
+      const line = await failWith(locale, () => {
+        throw new RangeError('Invalid array length at fetchInternals');
+      });
+      expect(line).toContain(shellUi[locale].networkError);
+      expect(line).not.toContain('fetchInternals');
+    },
+  );
+
+  it('keeps a localized server detail on a plain-string error body', async () => {
+    const line = await failWith(
+      SITE_LOCALE.pt,
+      () =>
+        new Response(JSON.stringify({ error: 'pergunta identica: espere' }), {
+          status: 429,
+          headers: { 'Content-Type': 'application/json' },
+        }),
+    );
+    expect(line).toContain('pergunta identica: espere');
   });
 });

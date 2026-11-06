@@ -71,7 +71,10 @@ describe('LivePerfSection: fetch-error fallback', () => {
     getScoresMock.mockRejectedValue(new Error('PSI API unavailable'));
     const doc = new DOMParser().parseFromString(await renderPerfData(), 'text/html');
     const statuses = Array.from(doc.querySelectorAll('p.measured-status'), (p) => p.textContent);
-    expect(statuses).toEqual(['unavailable']);
+    expect(statuses).toHaveLength(1);
+    expect(statuses[0], 'a bare "unavailable" gives no cause and no next step').toMatch(
+      /^unavailable .*The site works; next run at \d{2}:\d{2} UTC\.$/,
+    );
     expect(doc.querySelector('time')).toBeNull();
   });
 

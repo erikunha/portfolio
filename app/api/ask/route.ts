@@ -259,7 +259,7 @@ async function handleAsk(req: NextRequest): Promise<Response> {
           if (next.done) {
             if (upstreamFailed) {
               status = 'errored';
-              send(enc.encode(`${STREAM_ERR_SENTINEL}${askErrors[answerLocale].upstream}`));
+              send(enc.encode(`${STREAM_ERR_SENTINEL}${askErrors[answerLocale].interrupted}`));
               break;
             }
             const finishReason: unknown = await withinDeadline(
@@ -292,10 +292,8 @@ async function handleAsk(req: NextRequest): Promise<Response> {
       } catch (err) {
         if (!clientGone) {
           status = 'errored';
-          const timedOut = err instanceof Error && err.message === MID_STREAM_TIMEOUT_MESSAGE;
-          if (!timedOut) log.error('ask stream failed', { requestId, err });
-          const msg = timedOut ? MID_STREAM_TIMEOUT_MESSAGE : askErrors[answerLocale].upstream;
-          send(enc.encode(`${STREAM_ERR_SENTINEL}${msg}`));
+          log.error('ask stream failed', { requestId, err });
+          send(enc.encode(`${STREAM_ERR_SENTINEL}${askErrors[answerLocale].interrupted}`));
         }
       } finally {
         if (clientGone && status === 'completed') status = 'aborted';

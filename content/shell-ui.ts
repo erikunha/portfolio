@@ -135,7 +135,9 @@ export const shellUi: Record<SiteLocale, ShellUi> = {
     busy: 'An answer is in progress. Stop it before submitting another command. Your draft is kept.',
     empty: '(empty response)',
     errorPrefix: 'error:',
-    httpErrorPrefix: 'HTTP',
+    serverError: 'The server could not answer. Try again in a minute.',
+    requestTooLarge: 'That question is too long. Shorten it and try again.',
+    answerWithheld: 'The answer was stopped by a safety check. Try rephrasing the question.',
     bodyUnavailable: 'response body unavailable',
     offline: 'offline: reconnect to ask Claude. Built-in commands still work.',
     networkError: 'Connection failed. Reconnect and retry. Built-in commands still work.',
@@ -196,7 +198,10 @@ export const shellUi: Record<SiteLocale, ShellUi> = {
     busy: 'Uma resposta está em andamento. Pare-a antes de enviar outro comando. Seu rascunho fica guardado.',
     empty: '(resposta vazia)',
     errorPrefix: 'erro:',
-    httpErrorPrefix: 'HTTP',
+    serverError: 'O servidor não conseguiu responder. Tente de novo em um minuto.',
+    requestTooLarge: 'Essa pergunta é longa demais. Encurte e tente de novo.',
+    answerWithheld:
+      'A resposta foi interrompida por uma checagem de segurança. Reformule a pergunta.',
     bodyUnavailable: 'corpo da resposta indisponível',
     offline:
       'offline: reconecte para perguntar ao Claude. Os comandos internos continuam funcionando.',

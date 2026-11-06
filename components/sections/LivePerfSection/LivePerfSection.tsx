@@ -87,6 +87,9 @@ function staleNote(locale: SiteLocale, fetchedAt: string): string {
   return perfStale.note.replace(STALE_AGE_TOKEN, age).replace(STALE_TIME_TOKEN, refreshTimeUtc());
 }
 
+const unavailableNote = (locale: SiteLocale) =>
+  measuredStates[locale].perfUnavailable.note.replace(STALE_TIME_TOKEN, refreshTimeUtc());
+
 const staleReserve = (locale: SiteLocale) => {
   const { perfStale } = measuredStates[locale];
   return perfStale.note
@@ -126,7 +129,7 @@ function perfStatusMessage(
     timestamp: ReturnType<typeof metricTimestamp>;
   },
 ) {
-  if (state.unavailable) return measured.unavailable;
+  if (state.unavailable) return unavailableNote(state.locale);
   if (state.staleSince) return staleNote(state.locale, state.staleSince);
   return state.showTimestamp && !state.timestamp.valid ? measured.unknownTimestamp : null;
 }
@@ -177,7 +180,7 @@ function PerfLoading({ locale }: { locale: SiteLocale }) {
           </>
         }
         live
-        reserve={[loadingLine(locale), measured.unavailable, measured.unknownTimestamp]}
+        reserve={[loadingLine(locale), unavailableNote(locale), measured.unknownTimestamp]}
       />
     </div>
   );
@@ -247,7 +250,7 @@ function PerfBody({ locale, scores }: { locale: SiteLocale; scores: ScoresByStra
         live
         reserve={[
           loadingLine(locale),
-          measured.unavailable,
+          unavailableNote(locale),
           measured.unknownTimestamp,
           staleReserve(locale),
         ]}

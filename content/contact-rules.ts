@@ -24,7 +24,12 @@ const EMAIL_DOMAIN_PATTERN = /\.[A-Za-z]{2,}$/;
 
 export const CONTACT_DELIVERY_CODE = { QUEUED: 'queued' } as const;
 
-export const CONTACT_ERROR_CODE = { RATE_LIMITED: 'rate_limited' } as const;
+export const CONTACT_ERROR_CODE = {
+  RATE_LIMITED: 'rate_limited',
+  STORAGE_UNAVAILABLE: 'storage_unavailable',
+  DELIVERY_UNAVAILABLE: 'delivery_unavailable',
+  FORBIDDEN_ORIGIN: 'forbidden_origin',
+} as const;
 
 export function contactErrorSummary(copy: ContactContent, count: number): string {
   const { one, many } = copy.form.errorSummary;
@@ -55,9 +60,18 @@ export function contactHoursPhrase(
 }
 
 export function contactErrorMessage(copy: ContactContent, code: string | undefined): string {
-  return code === CONTACT_ERROR_CODE.RATE_LIMITED
-    ? copy.errors.rateLimited
-    : copy.errors.requestFailed;
+  switch (code) {
+    case CONTACT_ERROR_CODE.RATE_LIMITED:
+      return copy.errors.rateLimited;
+    case CONTACT_ERROR_CODE.STORAGE_UNAVAILABLE:
+      return copy.errors.storageUnavailable;
+    case CONTACT_ERROR_CODE.DELIVERY_UNAVAILABLE:
+      return copy.errors.retryUnavailable;
+    case CONTACT_ERROR_CODE.FORBIDDEN_ORIGIN:
+      return copy.errors.forbiddenOrigin;
+    default:
+      return copy.errors.requestFailed;
+  }
 }
 
 export function contactFieldError(

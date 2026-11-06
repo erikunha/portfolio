@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { NextRequest } from 'next/server';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { contactContent } from '@/content/contact';
 
 const redisSet = vi.fn();
 const zcard = vi.fn();
@@ -76,7 +77,7 @@ describe('contact delivery outcome', () => {
     expect(res.status).toBe(502);
     expect(await res.json()).toMatchObject({
       ok: false,
-      error: { code: 'storage_unavailable', message: expect.stringMatching(/try again/) },
+      error: { code: 'storage_unavailable', message: contactContent.en.errors.storageUnavailable },
     });
     expect(send).not.toHaveBeenCalled();
     expect(transaction.exec).not.toHaveBeenCalled();
@@ -164,7 +165,7 @@ describe('contact delivery outcome', () => {
     const { POST } = await import('@/app/api/contact/route');
     const res = await POST(request());
     expect(res.status).toBe(502);
-    expect(await res.json()).toMatchObject({ error: { code: 'storage_unavailable' } });
+    expect(await res.json()).toMatchObject({ error: { code: 'delivery_unavailable' } });
     expect(transaction.zadd).not.toHaveBeenCalled();
     expect(logger.warn).toHaveBeenCalledWith(
       'contact outbox full',
@@ -178,7 +179,7 @@ describe('contact delivery outcome', () => {
     const { POST } = await import('@/app/api/contact/route');
     const res = await POST(request());
     expect(res.status).toBe(502);
-    expect(await res.json()).toMatchObject({ error: { code: 'storage_unavailable' } });
+    expect(await res.json()).toMatchObject({ error: { code: 'delivery_unavailable' } });
   });
 
   it.each([

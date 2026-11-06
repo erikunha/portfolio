@@ -1,4 +1,6 @@
 import type { Page } from '@playwright/test';
+import { askErrors } from '../../../content/ask-errors';
+import { SITE_LOCALE } from '../../../content/site-locale';
 import { STREAM_ERR_SENTINEL } from '../../../lib/stream-protocol';
 
 export type MockState = {
@@ -51,7 +53,7 @@ export async function installMockBackend(page: Page, state: MockState = {}): Pro
     }
 
     if (s === 'stream-error') {
-      const body = `${STREAM_ERR_SENTINEL}upstream error`;
+      const body = `${STREAM_ERR_SENTINEL}${askErrors[SITE_LOCALE.en].interrupted}`;
       await route.fulfill({
         status: 200,
         contentType: 'text/plain; charset=utf-8',
@@ -62,7 +64,7 @@ export async function installMockBackend(page: Page, state: MockState = {}): Pro
     }
 
     if (s === 'pre-stream-timeout') {
-      const body = `${STREAM_ERR_SENTINEL}Request Timeout`;
+      const body = `${STREAM_ERR_SENTINEL}${askErrors[SITE_LOCALE.en].interrupted}`;
       await route.fulfill({
         status: 200,
         contentType: 'text/plain; charset=utf-8',

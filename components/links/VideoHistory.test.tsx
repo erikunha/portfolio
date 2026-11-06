@@ -46,21 +46,31 @@ describe('VideoHistory', () => {
     expect(container.textContent).toContain('4 days ago');
   });
 
-  it('keeps its section and heading when the channel has no videos yet', () => {
+  it('keeps its section and heading when the feed returns no videos', () => {
     const { container } = render(<VideoHistory locale={LINKS_LOCALE.pt} feed={empty} />);
     expect(container.querySelector('[data-col="history"]')).not.toBeNull();
     expect(container.querySelector('h2')?.textContent).toContain('últimos vídeos');
   });
 
-  it('states there are no entries rather than showing placeholder rows', () => {
-    const { container } = render(<VideoHistory locale={LINKS_LOCALE.pt} feed={empty} />);
-    expect(container.querySelectorAll('li')).toHaveLength(0);
-    expect(container.textContent).toContain('nenhuma entrada ainda');
-  });
+  it.each([
+    [LINKS_LOCALE.pt, 'a lista não carregou'],
+    [LINKS_LOCALE.en, 'the list did not load'],
+  ] as const)(
+    'says the list did not load, never that the channel is empty (%s)',
+    (locale, expected) => {
+      const { container } = render(<VideoHistory locale={locale} feed={empty} />);
+      expect(container.querySelectorAll('li')).toHaveLength(0);
+      expect(container.textContent).toContain(expected);
+      expect(container.textContent, 'the channel has published videos').not.toMatch(
+        /nenhuma entrada|no entries|primeiro vídeo|first video/,
+      );
+    },
+  );
 
-  it('hides the see-all link while there is nothing to see all of', () => {
+  it('keeps the way to the channel when the list did not load', () => {
     const { container } = render(<VideoHistory locale={LINKS_LOCALE.pt} feed={empty} />);
-    expect(container.querySelector('a[data-outbound="todos-videos"]')).toBeNull();
+    const link = container.querySelector('a[data-outbound="todos-videos"]');
+    expect(link?.getAttribute('href')).toContain(`${CHANNEL_URL}/videos`);
   });
 
   it('renders one row per video once the feed returns some', () => {

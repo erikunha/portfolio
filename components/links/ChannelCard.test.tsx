@@ -52,10 +52,13 @@ describe('ChannelCard', () => {
     expect(container.textContent).toContain('4 days ago');
   });
 
-  it('keeps the 16:9 block before the first video exists, so the card holds its shape', () => {
+  it('keeps the 16:9 block while the latest video is missing, so the card holds its shape', () => {
     const { container } = render(<ChannelCard locale={LINKS_LOCALE.pt} feed={emptyFeed} />);
     expect(container.querySelector('.links-thumb-placeholder')).not.toBeNull();
-    expect(container.textContent).toContain('Sem vídeos por aqui ainda');
+    expect(container.textContent).toContain('O último vídeo não carregou');
+    expect(container.textContent, 'the channel has published videos').not.toContain(
+      'Sem vídeos por aqui ainda',
+    );
   });
 
   it('offers subscribing even with nothing to watch yet, and does not offer watching', () => {

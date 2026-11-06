@@ -218,11 +218,14 @@ const contactCopyFor = (locale: SiteLocale): ContactContent => {
           : 'use at most {max} characters, you have {count}',
       },
       storageUnavailable: pt
-        ? 'armazenamento indisponível, tente novamente'
-        : 'storage unavailable, try again',
+        ? 'não foi possível salvar sua mensagem'
+        : 'could not save your message',
       retryUnavailable: pt
-        ? 'nova tentativa de entrega indisponível, tente novamente ou use o LinkedIn'
-        : 'delivery retry unavailable, try again or use LinkedIn',
+        ? 'sua mensagem ainda não pôde ser entregue'
+        : 'your message could not be delivered yet',
+      forbiddenOrigin: pt
+        ? 'este formulário só funciona no próprio site'
+        : 'this form only works on the site itself',
       rateLimited: pt
         ? 'muitas requisições, tente novamente em 10 minutos'
         : 'too many requests, try again in 10 minutes',

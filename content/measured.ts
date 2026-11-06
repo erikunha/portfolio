@@ -116,6 +116,11 @@ const measuredStatesFor = (locale: SiteLocale): MeasuredStates => {
       hourUnit: 'h',
       dayUnit: 'd',
     },
+    perfUnavailable: {
+      note: pt
+        ? 'indisponível · não foi possível ler a medição do Lighthouse. O site funciona; próxima medição às {time} UTC.'
+        : 'unavailable · the Lighthouse run could not be read. The site works; next run at {time} UTC.',
+    },
     perfLoading: {
       label: pt ? 'MEDIDO · LIGHTHOUSE' : 'MEASURED · LIGHTHOUSE',
       fetching: pt

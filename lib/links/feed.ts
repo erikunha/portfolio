@@ -30,6 +30,9 @@ const API_TIMEOUT_MS = 6_000;
 const CACHE_STALE_S = 900;
 const CACHE_REVALIDATE_S = 3_600;
 const CACHE_EXPIRE_S = 86_400;
+const EMPTY_CACHE_STALE_S = 30;
+const EMPTY_CACHE_REVALIDATE_S = 60;
+const EMPTY_CACHE_EXPIRE_S = 300;
 
 const RSS_ENDPOINT = 'https://www.youtube.com/feeds/videos.xml';
 const VIDEOS_ENDPOINT = 'https://www.googleapis.com/youtube/v3/videos';
@@ -302,7 +305,14 @@ async function loadChannelFeed(
 
   const resolved = videos.filter((video) => !isShort(video)).slice(0, FEED_LIMIT);
 
-  if (resolved.length === 0) return { ...EMPTY_FEED, stats, fetchedAt: new Date().toISOString() };
+  if (resolved.length === 0) {
+    cacheLife({
+      stale: EMPTY_CACHE_STALE_S,
+      revalidate: EMPTY_CACHE_REVALIDATE_S,
+      expire: EMPTY_CACHE_EXPIRE_S,
+    });
+    return { ...EMPTY_FEED, stats, fetchedAt: new Date().toISOString() };
+  }
 
   return {
     fetchedAt: new Date().toISOString(),

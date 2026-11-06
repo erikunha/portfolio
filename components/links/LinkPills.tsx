@@ -39,8 +39,9 @@ export function LinkPills({ locale, url }: { locale: LinksLocale; url: string })
         <CopyLinkButton
           url={url}
           idleLabel={copy.copyLink[locale]}
-          doneLabel={copy.copyDone}
-          failedLabel={copy.copyFailed}
+          doneLabel={copy.copyDone[locale]}
+          failedLabel={copy.copyFailed[locale]}
+          failedMessage={copy.copyFailedMessage[locale]}
         />
       </li>
     </ul>

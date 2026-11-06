@@ -21,6 +21,9 @@ export const MeasuredStatesSchema = z.object({
     hourUnit: text,
     dayUnit: text,
   }),
+  perfUnavailable: z.object({
+    note: text.refine((value) => value.includes(STALE_TIME_TOKEN)),
+  }),
   perfLoading: z.object({
     label: text,
     fetching: text,

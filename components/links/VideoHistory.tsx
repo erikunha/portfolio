@@ -92,16 +92,14 @@ export function VideoHistory({ locale, feed }: { locale: LinksLocale; feed: Chan
         </ol>
       )}
 
-      {!isEmpty && (
-        <ExternalLink
-          href={withUtm(`${feed.channelUrl}/videos`, 'todos-videos')}
-          data-outbound="todos-videos"
-          className="links-history-all"
-        >
-          {copy.seeAllVideos[locale]}
-          <NewTabHint text={copy.opensInNewTab[locale]} />
-        </ExternalLink>
-      )}
+      <ExternalLink
+        href={withUtm(`${feed.channelUrl}/videos`, 'todos-videos')}
+        data-outbound="todos-videos"
+        className="links-history-all"
+      >
+        {copy.seeAllVideos[locale]}
+        <NewTabHint text={copy.opensInNewTab[locale]} />
+      </ExternalLink>
     </section>
   );
 }

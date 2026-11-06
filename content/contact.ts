@@ -161,6 +161,7 @@ export const ContactContentSchema = z.object({
     storageUnavailable: z.string().min(1),
     retryUnavailable: z.string().min(1),
     rateLimited: z.string().min(1),
+    forbiddenOrigin: z.string().min(1),
     requestFailed: z.string().min(1),
   }),
 });
