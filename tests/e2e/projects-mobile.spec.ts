@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, type Page, test } from '@playwright/test';
 import { horizontalOverflow, VIEWPORTS } from './_helpers/geometry';
 
 const { PHONE: MOBILE, DESKTOP, PHONE_NARROW: PHONE_MIN } = VIEWPORTS;
@@ -10,6 +10,12 @@ const PERF_TILE = '#sec-live-perf .measured-tile';
 const PERF_LABEL = '#sec-live-perf .measured-label';
 const RECEIPT_VALUE = '.project-receipts .receipt-value';
 const EDGE_TOLERANCE_PX = 1;
+
+async function gotoSettled(page: Page): Promise<void> {
+  await page.goto('/');
+  await expect(page.locator(PENDING_DATA)).toHaveCount(0);
+  await expect(page.locator(ASK_BLOCK)).toHaveCount(1);
+}
 
 async function wrappedTexts(
   page: import('@playwright/test').Page,
@@ -71,7 +77,7 @@ test.describe('projects section below 768px', () => {
 
   test('the measured section does not scroll horizontally at 320', async ({ page }) => {
     await page.setViewportSize(PHONE_MIN);
-    await page.goto('/');
+    await gotoSettled(page);
     await page.locator(PERF_TILE).first().scrollIntoViewIfNeeded();
     expect(await horizontalOverflow(page)).toBeLessThanOrEqual(0);
   });
@@ -91,7 +97,7 @@ test.describe('projects section at 1280px', () => {
 
   test('live-perf tiles sit four across, below the ask block', async ({ page }) => {
     await page.setViewportSize(DESKTOP);
-    await page.goto('/');
+    await gotoSettled(page);
     const tiles = page.locator(PERF_TILE);
     await tiles.first().scrollIntoViewIfNeeded();
     await expect(tiles).toHaveCount(4);
@@ -110,7 +116,7 @@ test.describe('live perf score labels', () => {
   for (const width of [1024, 1280]) {
     test(`at ${width} a score label stays on one line`, async ({ page }) => {
       await page.setViewportSize({ width, height: 900 });
-      await page.goto('/');
+      await gotoSettled(page);
       const labels = page.locator(PERF_LABEL);
       await labels.first().scrollIntoViewIfNeeded();
       expect(await labels.count()).toBeGreaterThan(0);
@@ -143,24 +149,36 @@ test.describe('perf receipt values', () => {
 test.describe('project names at the narrowest phone', () => {
   test.use({ viewport: PHONE_MIN, hasTouch: true, isMobile: true });
 
-  test('every project name stays on one line at 16px, never breaking mid-word', async ({
+  test('a project name at 16px wraps only after an underscore, never inside a word', async ({
     page,
   }) => {
     await page.goto('/');
     await page.locator('.project-name').first().scrollIntoViewIfNeeded();
     const broken = await page.locator('.project-name').evaluateAll((nodes) =>
       nodes.flatMap((node) => {
-        const label = node.firstElementChild?.firstChild ?? node.firstChild;
-        if (!label) return [];
-        const range = document.createRange();
-        range.selectNodeContents(label);
-        const tops = new Set([...range.getClientRects()].map((rect) => Math.round(rect.top)));
-        return tops.size > 1 ? [label.textContent ?? ''] : [];
+        const label = node.querySelector('a') ?? node;
+        const walker = document.createTreeWalker(label, NodeFilter.SHOW_TEXT);
+        const chars: { ch: string; top: number }[] = [];
+        for (let text = walker.nextNode(); text; text = walker.nextNode()) {
+          if (text.parentElement?.closest('.sr-only')) continue;
+          const value = text.textContent ?? '';
+          for (let i = 0; i < value.length; i += 1) {
+            const range = document.createRange();
+            range.setStart(text, i);
+            range.setEnd(text, i + 1);
+            const rect = range.getClientRects()[0];
+            if (rect) chars.push({ ch: value[i] ?? '', top: Math.round(rect.top) });
+          }
+        }
+        const midWord = chars.some(
+          (c, i) => i > 0 && c.top !== chars[i - 1]?.top && chars[i - 1]?.ch !== '_',
+        );
+        return midWord ? [chars.map((c) => c.ch).join('')] : [];
       }),
     );
     expect(
       broken,
-      'a project name wrapped inside a word at 320px (ORIGINATION_PLATFORM_U / I): the card padding leaves too little room',
+      'a project name wrapped inside a word at 320px (ORIGINATION_PLATFORM_U / I): break opportunities exist only after "_"',
     ).toEqual([]);
   });
 });

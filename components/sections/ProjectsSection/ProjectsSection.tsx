@@ -1,3 +1,4 @@
+import { Fragment } from 'react';
 import { ExternalLink } from '@/components/ExternalLink';
 import { companyUrlFor } from '@/content/git-log';
 import { projectPresentation, projects } from '@/content/projects';
@@ -29,6 +30,29 @@ function CompanyLabel({
   );
 }
 
+const NAME_SEPARATOR = '_';
+
+function BreakAfterUnderscores({ text }: { text: string }) {
+  const segments: { offset: number; part: string; last: boolean }[] = [];
+  let offset = 0;
+  const parts = text.split(NAME_SEPARATOR);
+  for (const [position, part] of parts.entries()) {
+    segments.push({ offset, part, last: position === parts.length - 1 });
+    offset += part.length + NAME_SEPARATOR.length;
+  }
+  return segments.map(({ offset: start, part, last }) => (
+    <Fragment key={start}>
+      {part}
+      {last ? null : (
+        <>
+          {NAME_SEPARATOR}
+          <wbr />
+        </>
+      )}
+    </Fragment>
+  ));
+}
+
 export function ProjectsContent({ locale }: { locale: SiteLocale }) {
   const presentation = projectPresentation[locale];
   return (
@@ -49,11 +73,11 @@ export function ProjectsContent({ locale }: { locale: SiteLocale }) {
           <h3 className="project-name">
             {project.url ? (
               <ExternalLink href={project.url}>
-                {project.name}
+                <BreakAfterUnderscores text={project.name} />
                 <span className="sr-only"> {presentation.externalDisclosure}</span>
               </ExternalLink>
             ) : (
-              project.name
+              <BreakAfterUnderscores text={project.name} />
             )}
           </h3>
           <p className="project-desc">{project.description}</p>
