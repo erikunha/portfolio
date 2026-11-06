@@ -1,7 +1,27 @@
 @layer components {
-  .interactive-shell {
+  .interactive-shell,
+  .shell-loading {
     margin: calc(-1 * (var(--spacing-3) + var(--spacing-1) / 2));
     background: var(--color-secondary-900);
+  }
+
+  .shell-loading {
+    min-height: 42rem;
+  }
+
+  @media (min-width: 480px) {
+    .shell-loading {
+      min-height: 33rem;
+    }
+  }
+
+  @media (scripting: none) {
+    .shell-loading {
+      display: none;
+    }
+  }
+
+  .interactive-shell {
     color: var(--color-tertiary-50);
     font-family: var(--font-mono);
     font-size: var(--text-xs);

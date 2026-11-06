@@ -25,7 +25,13 @@ export function InteractiveShellLazy({ loadingLabel, ...props }: InteractiveShel
       locale={props.locale}
       minHeight={SHELL_MIN_HEIGHT}
       loading={
-        <div role="status" aria-busy="true" aria-label={loadingLabel} data-testid="shell-loading" />
+        <div
+          className="shell-loading"
+          role="status"
+          aria-busy="true"
+          aria-label={loadingLabel}
+          data-testid="shell-loading"
+        />
       }
     >
       <ShellComponent {...props} />

@@ -19,7 +19,14 @@ export function ContactFormLazy({ loadingLabel, ...props }: ContactFormProps) {
   return (
     <LazyIsland
       minHeight={CONTACT_FORM_MIN_HEIGHT}
-      loading={<div className="contact" role="status" aria-busy="true" aria-label={loadingLabel} />}
+      loading={
+        <div
+          className="contact-shell contact-loading"
+          role="status"
+          aria-busy="true"
+          aria-label={loadingLabel}
+        />
+      }
     >
       <FormComponent {...props} />
     </LazyIsland>
