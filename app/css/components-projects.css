@@ -105,9 +105,15 @@
   @media (pointer: coarse) {
     .project-co a,
     .measured-heading a {
-      display: inline-flex;
-      align-items: center;
-      min-height: var(--spacing-target);
+      position: relative;
+    }
+
+    .project-co a::after,
+    .measured-heading a::after {
+      content: "";
+      position: absolute;
+      inset-block: min(0px, calc((100% - var(--spacing-target)) / 2));
+      inset-inline: 0;
     }
   }
 

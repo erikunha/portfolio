@@ -222,13 +222,6 @@
     color: var(--color-primary-400);
   }
 
-  @media (pointer: coarse) {
-    p.career-tag-key a {
-      display: inline-flex;
-      align-items: center;
-      min-height: var(--spacing-target);
-    }
-  }
 
   .career-cv {
     display: inline-flex;
