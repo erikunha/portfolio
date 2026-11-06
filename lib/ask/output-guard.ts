@@ -20,6 +20,8 @@ export const LEAK_MARKERS: readonly string[] = [
 
 export const MAX_ANSWER_CHARS = 4000;
 
+export const GUARD_ABORT_PREFIX = 'output guard: ';
+
 export type GuardVerdict = { ok: true } | { ok: false; reason: 'leak' | 'length' };
 
 export type GuardFinding = {

@@ -3,6 +3,29 @@ export const PRICING_USD_PER_MTOK = {
   judge: { input: 3.0, output: 15.0 },
 } as const;
 
+export const CACHE_PRICE_MULTIPLIER = { read: 0.1, write: 1.25 } as const;
+
+export const featureCostUsdFrom = (counts: {
+  billedInputTokens: number;
+  cacheReadTokens: number;
+  cacheWriteTokens: number;
+  outputTokens: number;
+}): number => {
+  const plainInput = Math.max(
+    0,
+    counts.billedInputTokens - counts.cacheReadTokens - counts.cacheWriteTokens,
+  );
+  const inputUnits =
+    plainInput +
+    counts.cacheReadTokens * CACHE_PRICE_MULTIPLIER.read +
+    counts.cacheWriteTokens * CACHE_PRICE_MULTIPLIER.write;
+  return (
+    (inputUnits * PRICING_USD_PER_MTOK.feature.input +
+      counts.outputTokens * PRICING_USD_PER_MTOK.feature.output) /
+    1_000_000
+  );
+};
+
 export const judgeCostUsdFrom = (inputTokens: number, outputTokens: number): number =>
   (inputTokens * PRICING_USD_PER_MTOK.judge.input +
     outputTokens * PRICING_USD_PER_MTOK.judge.output) /
@@ -25,4 +48,21 @@ export function estimateJobCostUsd(args: {
     1_000_000;
   const judgePerRun = judgeCostUsdFrom(args.approxJudgeInputTokens, args.approxJudgeOutputTokens);
   return args.cases * args.runs * (targetPerRun + judgePerRun);
+}
+
+export function summarizeFeatureCost(
+  measuredPerAnswerUsd: number[],
+  answeredCount: number,
+): { featureCostUsd: number; measuredAnswers: number } {
+  const measuredAnswers = Math.min(measuredPerAnswerUsd.length, answeredCount);
+  const approxPerAnswer =
+    (APPROX_FEATURE_INPUT_TOKENS * PRICING_USD_PER_MTOK.feature.input +
+      APPROX_FEATURE_OUTPUT_TOKENS * PRICING_USD_PER_MTOK.feature.output) /
+    1_000_000;
+  const measuredSum = measuredPerAnswerUsd.slice(0, measuredAnswers).reduce((a, b) => a + b, 0);
+  const fallbackPerAnswer = measuredAnswers > 0 ? measuredSum / measuredAnswers : approxPerAnswer;
+  return {
+    featureCostUsd: measuredSum + fallbackPerAnswer * (answeredCount - measuredAnswers),
+    measuredAnswers,
+  };
 }

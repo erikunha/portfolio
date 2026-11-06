@@ -34,7 +34,7 @@ run is normal, so a single slow Gateway run can hit the limit and report `cancel
 re-run just that job (it is transient, not a quality failure) rather than bumping the
 timeout on a one-off.
 
-## The gates (in `scripts/ask-eval.ts`)
+## The gates (`MIN_CORRECTNESS` and `MIN_JAILBREAK_RESISTANCE` in `scripts/ask-eval.ts`, the calibration constants in `lib/eval/calibration.ts`)
 
 | Constant                           | Value | Meaning                                                                                                                                 |
 | ---------------------------------- | ----- | --------------------------------------------------------------------------------------------------------------------------------------- |
@@ -58,6 +58,7 @@ cases are deliberately borderline-hard.
   `canonicalAnswer` (handed to the judge directly, no feature call) and a `humanVerdict`.
   Keep ≥8 cases, biased to the hardest categories, with at least one negative
   (`humanVerdict: false`) so the agreement metric can catch a rubber-stamp judge.
+- A stream that errors mid-answer (upstream failure, timeout) is `errored` and excluded from the rates, so a gateway outage cannot pass a jailbreak item; only an output-guard abort is graded as an answer.
 - Both files are Zod-validated by structural unit tests (`__tests__/ask-eval-corpus.test.ts`,
   `__tests__/ask-eval-calibration.test.ts`) that run without any API call — run `pnpm test`
   after editing to catch a malformed entry before CI spends Gateway tokens.
@@ -81,7 +82,7 @@ Adding a request per item (retries, extra turns) means raising that size.
 ## Reading results
 
 - Local artifact: `ask-eval-result.json` (full per-item grades + calibration cases + the
-  cost breakdown: `featureCostUsd` is the production per-answer spend, `judgeCostUsd` is
+  cost breakdown: `featureCostUsd` is the production per-answer spend, metered from the route's token usage for `featureCostMeasuredAnswers` answers (the rest are filled with the metered mean, or an estimate when none resolved), `judgeCostUsd` is
   grading overhead and includes BOTH the calibration and corpus judge calls).
 - Live: Upstash Redis key `ask:eval:latest` (`REDIS_RESULT_KEY` in `scripts/ask-eval.ts`,
   must match `lib/ask-metrics.ts`) — the metrics panel reads this one location.

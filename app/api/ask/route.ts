@@ -5,9 +5,9 @@ import { SITE_LOCALE, type SiteLocale } from '@/content/site-locale';
 import { INJECTION_RE, normalizeInjectionInput } from '@/lib/ask/injection';
 import { ASK_MAX_OUTPUT_TOKENS } from '@/lib/ask/limits';
 import { ASK_MODEL } from '@/lib/ask/model';
-import { createStreamGuard, validateAnswer } from '@/lib/ask/output-guard';
+import { createStreamGuard, GUARD_ABORT_PREFIX, validateAnswer } from '@/lib/ask/output-guard';
 import { PROMPT_VERSION, SYSTEM_TEXT } from '@/lib/ask/system-prompt';
-import { countAskTokens } from '@/lib/ask/usage';
+import { countAskTokens, emitAskUsage } from '@/lib/ask/usage';
 import { type AskInteractionStatus, persistAskInteraction } from '@/lib/ask-log';
 import { env } from '@/lib/env';
 import { hashIp } from '@/lib/ip-hash';
@@ -267,7 +267,7 @@ async function handleAsk(req: NextRequest): Promise<Response> {
               reason: verdict.reason,
               promptVersion: PROMPT_VERSION,
             });
-            send(enc.encode(`${STREAM_ERR_SENTINEL}output guard: ${verdict.reason}`));
+            send(enc.encode(`${STREAM_ERR_SENTINEL}${GUARD_ABORT_PREFIX}${verdict.reason}`));
             break;
           }
           send(enc.encode(text));
@@ -344,6 +344,14 @@ async function handleAsk(req: NextRequest): Promise<Response> {
       durationMs: Date.now() - startedAt,
       status,
       guard: guardVerdict,
+    });
+    emitAskUsage({
+      requestId,
+      usageResolved,
+      billedInputTokens: totalBilledInput,
+      cacheReadTokens,
+      cacheWriteTokens: cacheCreationTokens,
+      outputTokens,
     });
   }
 

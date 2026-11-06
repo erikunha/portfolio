@@ -11,6 +11,7 @@ function isJudgeError(reason: string): boolean {
 
 export type CalibrationGoldCase = {
   id: string;
+  kind?: string;
   prompt: string;
   expect: string;
   canonicalAnswer: string;
@@ -27,7 +28,7 @@ export async function runCalibration(
 
   for (const item of goldSet) {
     const verdict = await judge(
-      { id: item.id, question: item.prompt, kind: 'calibration', expect: item.expect },
+      { id: item.id, question: item.prompt, kind: item.kind ?? 'calibration', expect: item.expect },
       item.canonicalAnswer,
       { model: opts.model },
     );
@@ -38,6 +39,7 @@ export async function runCalibration(
     const agreed = !errored && verdict.pass === item.humanVerdict;
     cases.push({
       id: item.id,
+      ...(item.kind === undefined ? {} : { kind: item.kind }),
       humanVerdict: item.humanVerdict,
       judgeVerdict: verdict.pass,
       agreed,

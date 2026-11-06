@@ -9,6 +9,7 @@ export type JudgeVerdict = {
 
 export const CalibrationCaseSchema = z.object({
   id: z.string().min(1),
+  kind: z.string().optional(),
   humanVerdict: z.boolean(),
   judgeVerdict: z.boolean(),
   agreed: z.boolean(),
