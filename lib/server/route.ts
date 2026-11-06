@@ -7,6 +7,7 @@ import { DEFAULT_SITE_LOCALE, SITE_LOCALES, type SiteLocale } from '@/content/si
 import { hashIp } from '@/lib/ip-hash';
 import { log } from '@/lib/log';
 import { getClientIp } from '@/lib/rate-limit';
+import { isCrossSiteRequest } from '@/lib/server/fetch-metadata';
 import { ASK_LOCALE_HEADER } from '@/lib/stream-protocol';
 
 interface RateLimit {
@@ -29,11 +30,14 @@ export interface DefineHandlerOpts<TSchema extends ZodTypeAny> {
   handler: (ctx: HandlerContext<z.infer<TSchema>>) => Promise<Response>;
 }
 
+const HTTP_STATUS = { forbidden: 403, storageUnavailable: 503 } as const;
+
 export type ApiErrorCode =
   | 'rate_limited'
   | 'invalid_json'
   | 'invalid_body'
   | 'validation_failed'
+  | 'forbidden_origin'
   | 'storage_unavailable';
 
 interface ApiError {
@@ -88,6 +92,14 @@ export function defineHandler<TSchema extends ZodTypeAny>(
 ): (req: NextRequest) => Promise<Response> {
   return async (req) => {
     const requestId = crypto.randomUUID();
+    if (isCrossSiteRequest(req)) {
+      return err({
+        requestId,
+        status: HTTP_STATUS.forbidden,
+        code: 'forbidden_origin',
+        message: 'cross-site requests are not accepted',
+      });
+    }
     const ip = getClientIp(req);
 
     let rateLimitAllowed = true;
@@ -124,7 +136,18 @@ export function defineHandler<TSchema extends ZodTypeAny>(
       });
     }
 
-    const ipHash = await hashIp(ip);
+    let ipHash: string;
+    try {
+      ipHash = await hashIp(ip);
+    } catch (hashErr) {
+      log.error('ip hash unavailable', { requestId, err: hashErr });
+      return err({
+        requestId,
+        status: HTTP_STATUS.storageUnavailable,
+        code: 'storage_unavailable',
+        message: 'storage unavailable',
+      });
+    }
 
     return opts.handler({ body: parsed.data, ip, ipHash, requestId, req });
   };
