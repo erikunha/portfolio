@@ -141,7 +141,7 @@
     }
   }
 
-  :is(.about-col, .reading-side, .links-stack) {
+  :is(.about-col, .reading-side, .links-stack, .contact-main) {
     display: flex;
     flex-direction: column;
     gap: var(--spacing-8);

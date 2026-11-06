@@ -28,6 +28,20 @@ function containerRules(root: Root, params: RegExp, selector: string) {
   return found;
 }
 
+function mergedDeclarations(root: Root, className: string): Record<string, string> {
+  const token = new RegExp(`\\.${className}(?![\\w-])`);
+  const merged: Record<string, string> = {};
+  root.walkRules((rule) => {
+    if (rule.parent?.type !== 'atrule' || (rule.parent as { name?: string }).name !== 'layer')
+      return;
+    if (!token.test(rule.selector)) return;
+    rule.walkDecls((decl) => {
+      merged[decl.prop] = decl.value;
+    });
+  });
+  return merged;
+}
+
 describe('contact layout stylesheet', () => {
   it('splits the row at the golden ratio, form column first, from 1024px', () => {
     const [rule] = rulesInMedia(stylesheet, TWO_COLUMNS, '.contact-layout');
@@ -46,6 +60,22 @@ describe('contact layout stylesheet', () => {
       const [rule] = rulesWithSelector(stylesheet, selector);
       expect(declValue(rule, 'gap'), `${selector} gap`).toMatch(PHI_SPACING);
     }
+  });
+
+  it('stacks the contact main column through the shared column rule, keeping the phi gap', () => {
+    const merged = mergedDeclarations(stylesheet, 'contact-main');
+
+    expect(merged).toMatchObject({
+      display: 'flex',
+      'flex-direction': FLEX_COLUMN,
+      'min-width': '0',
+    });
+    expect(merged.gap).toMatch(PHI_SPACING);
+    const [own] = rulesWithSelector(stylesheet, '.contact-main');
+    const ownProps = own?.nodes.flatMap((node) => (node.type === 'decl' ? [node.prop] : []));
+    expect(ownProps, 'the column stack lives in the shared rule, only the gap is local').toEqual([
+      'gap',
+    ]);
   });
 
   it('makes the channel links and the copy button touch targets on phones', () => {

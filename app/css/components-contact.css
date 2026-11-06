@@ -14,10 +14,7 @@
   }
 
   .contact-main {
-    display: flex;
-    flex-direction: column;
     gap: var(--phi-space-3);
-    min-width: 0;
   }
 
   .contact-shell {
