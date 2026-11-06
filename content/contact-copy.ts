@@ -328,3 +328,16 @@ export function contactFieldError(
   })();
   return `${FIELD_ERROR_PREFIX}${text}`;
 }
+
+const UNKNOWN_TIME = '--:--';
+const UNKNOWN_ZONE_CODE = '---';
+
+export function timezonePlaceholderRows(
+  labels: { erikLabel: string; youLabel: string },
+  erikCode: string,
+): readonly string[] {
+  return [
+    `${fillCopy(labels.erikLabel, { code: erikCode })} ${UNKNOWN_TIME}`,
+    `${fillCopy(labels.youLabel, { code: UNKNOWN_ZONE_CODE })} ${UNKNOWN_TIME}`,
+  ];
+}

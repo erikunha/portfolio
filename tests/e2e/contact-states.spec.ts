@@ -186,7 +186,7 @@ const SHOT_VIEWPORTS = [
   { name: '1280', size: DESKTOP },
 ] as const;
 
-async function shot(page: Page, name: string, locator: ReturnType<Page['locator']>) {
+async function shot(name: string, locator: ReturnType<Page['locator']>) {
   if (SHOT_DIR) await locator.screenshot({ path: `${SHOT_DIR}/${name}.png` });
 }
 
@@ -201,9 +201,15 @@ test.describe('contact state boards', () => {
         await page.setViewportSize(viewport.size);
         await page.addInitScript(() => {
           window.IntersectionObserver = class {
-            observe() {}
-            unobserve() {}
-            disconnect() {}
+            observe() {
+              return undefined;
+            }
+            unobserve() {
+              return undefined;
+            }
+            disconnect() {
+              return undefined;
+            }
             takeRecords() {
               return [];
             }
@@ -216,7 +222,7 @@ test.describe('contact state boards', () => {
         await expect(page.getByTestId('ctz-loading')).toHaveText(
           contactCopy[locale].timezone.loading,
         );
-        await shot(page, `L4-${tag}`, host);
+        await shot(`L4-${tag}`, host);
       });
 
       test(`${tag}: L6 the busy button keeps its width and the fields lock`, async ({ page }) => {
@@ -249,7 +255,7 @@ test.describe('contact state boards', () => {
         await expect(page.locator(FIELD_SELECTORS.message)).toHaveValue(
           'A message long enough to be accepted.',
         );
-        await shot(page, `L6-${tag}`, form);
+        await shot(`L6-${tag}`, form);
         release();
         await expect(page.getByTestId('contact-success')).toBeVisible();
       });
@@ -277,7 +283,7 @@ test.describe('contact state boards', () => {
             ? '> falta o domínio, por exemplo voce@empresa.com'
             : '> missing the domain, for example you@company.com',
         );
-        await shot(page, `E5-${tag}`, form);
+        await shot(`E5-${tag}`, form);
       });
 
       test(`${tag}: E6 queued is a status with the ref and no success copy`, async ({ page }) => {
@@ -295,7 +301,7 @@ test.describe('contact state boards', () => {
           'ref contact-test-request-id',
         );
         await expect(page.getByTestId('contact-success')).toHaveCount(0);
-        await shot(page, `E6-${tag}`, queued);
+        await shot(`E6-${tag}`, queued);
       });
 
       test(`${tag}: R7 the receipt forgets the message and reports a failure`, async ({ page }) => {
@@ -321,15 +327,15 @@ test.describe('contact state boards', () => {
 
         const receipt = page.getByTestId('contact-receipt');
         await expect(receipt).toBeVisible();
-        await shot(page, `R7-${tag}`, page.getByTestId('contact-success'));
+        await shot(`R7-${tag}`, page.getByTestId('contact-success'));
         await receipt.getByRole('button', { name: forget.label }).click();
         const status = page.getByTestId('contact-forget-status');
         await expect(status).toContainText(forget.failed);
-        await shot(page, `R7-failed-${tag}`, page.getByTestId('contact-success'));
+        await shot(`R7-failed-${tag}`, page.getByTestId('contact-success'));
         await receipt.getByRole('button', { name: forget.label }).click();
         await expect(status).toHaveText(forget.done);
         await expect(receipt.getByRole('button', { name: forget.label })).toHaveCount(0);
-        await shot(page, `R7-done-${tag}`, page.getByTestId('contact-success'));
+        await shot(`R7-done-${tag}`, page.getByTestId('contact-success'));
       });
     }
   }

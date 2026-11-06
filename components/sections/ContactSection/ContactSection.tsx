@@ -1,12 +1,14 @@
 import { ExternalLink } from '@/components/ExternalLink';
 import { Panel } from '@/components/Panel';
 import { contactContent } from '@/content/contact';
+import { timezonePlaceholderRows } from '@/content/contact-copy';
 import { copyFeedback } from '@/content/copy-button';
 import { profilePresentation } from '@/content/profile';
 import { SECTION_LABELS } from '@/content/section-labels';
 import type { SiteLocale } from '@/content/site-locale';
 import { social } from '@/content/social';
 import { contactChrome, EXTERNAL_LINK_GLYPH } from '@/content/terminal-chrome';
+import { ERIK_PIN } from '@/content/world-map';
 import { ContactFormLazy } from '../../client/ContactForm';
 import { ContactCopyButton } from '../../client/ContactForm/ContactCopyButton.client';
 import { ContactTimezoneLazy, ContactTimezoneStatic } from '../../client/ContactTimezone';
@@ -119,7 +121,10 @@ export function ContactSection({ locale, defer }: { locale: SiteLocale; defer?: 
         >
           <div className="ab-body">
             <ContactTimezoneLazy copy={timezone}>
-              <ContactTimezoneStatic loadingLabel={timezone.loading} />
+              <ContactTimezoneStatic
+                loadingLabel={timezone.loading}
+                placeholderRows={timezonePlaceholderRows(timezone.map, ERIK_PIN.code)}
+              />
             </ContactTimezoneLazy>
           </div>
         </Panel>

@@ -269,7 +269,7 @@ test.describe('ContactSection', () => {
       .click();
     const summary = page.locator('.contact-alert');
     await expect(summary).toBeVisible();
-    await expect(summary).toContainText('3 fields need attention:');
+    await expect(summary).toContainText('! 3 fields need fixing:');
     await expect(summary.locator('ul')).toHaveCount(0);
     await expect(summary.locator('a')).toHaveCount(3);
 
