@@ -210,14 +210,14 @@ describe('runMobileBoot: timers', () => {
     const { runMobileBoot } = await import('./mobile-boot');
     const cmdEl = document.createElement('span');
     const outEl = document.createElement('span');
-    const stop = runMobileBoot(cmdEl, outEl, 'run', ['ab', 'cd', 'ef'], timing);
+    const boot = runMobileBoot(cmdEl, outEl, 'run', ['ab', 'cd', 'ef'], timing);
     for (let step = 0; step < 400; step++) {
       await vi.advanceTimersByTimeAsync(5);
       expect(vi.getTimerCount()).toBeLessThanOrEqual(1);
     }
     expect(cmdEl.textContent).toBe('run');
     expect(outEl.textContent).not.toBe('');
-    stop();
+    boot.cancel();
     expect(vi.getTimerCount()).toBe(0);
   });
 
@@ -225,10 +225,121 @@ describe('runMobileBoot: timers', () => {
     const { runMobileBoot } = await import('./mobile-boot');
     const cmdEl = document.createElement('span');
     const outEl = document.createElement('span');
-    const stop = runMobileBoot(cmdEl, outEl, 'run', ['ab'], timing);
-    stop();
+    const boot = runMobileBoot(cmdEl, outEl, 'run', ['ab'], timing);
+    boot.cancel();
     await vi.advanceTimersByTimeAsync(1000);
     expect(cmdEl.textContent).toBe('r');
     expect(outEl.textContent).toBe('');
   });
+});
+
+describe('hero boot follows the motion switch and the viewport', () => {
+  type ObserverCallback = (entries: { isIntersecting: boolean }[]) => void;
+  let reportIntersection: ObserverCallback = () => undefined;
+
+  class ObserverStub {
+    constructor(callback: ObserverCallback) {
+      reportIntersection = callback;
+    }
+    observe = vi.fn();
+    disconnect = vi.fn();
+  }
+
+  function stubViewport(isMobile: boolean) {
+    vi.stubGlobal(
+      'matchMedia',
+      vi.fn(() => ({
+        matches: isMobile,
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+      })),
+    );
+  }
+
+  function announceMotion(on: boolean) {
+    window.dispatchEvent(new CustomEvent('motionchange', { detail: { on } }));
+  }
+
+  beforeEach(() => {
+    vi.resetModules();
+    vi.useFakeTimers();
+    vi.stubGlobal('IntersectionObserver', ObserverStub);
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.unstubAllGlobals();
+  });
+
+  it.each([
+    ['desktop', false, '.hero-boot-desktop'],
+    ['mobile', true, '.hero-boot-mobile'],
+  ] as const)(
+    'stops the %s typing loop and shows the static boot when motion is switched off',
+    async (variant, isMobile, hostSelector) => {
+      const { readMotion } = await import('@/lib/motion');
+      vi.mocked(readMotion).mockReturnValue(true);
+      stubViewport(isMobile);
+      const { HeroBootAnimation } = await import('./HeroBootAnimation');
+      const mounted = await mountClient(<HeroBootAnimation variant={variant} />);
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(3000);
+      });
+      expect(vi.getTimerCount(), 'the loop is running before the switch').toBeGreaterThan(0);
+
+      vi.mocked(readMotion).mockReturnValue(false);
+      await act(async () => {
+        announceMotion(false);
+        await vi.advanceTimersByTimeAsync(0);
+      });
+
+      const host = mounted.container.querySelector(hostSelector);
+      expect(vi.getTimerCount(), 'switching motion off must stop every boot timer').toBe(0);
+      expect(host?.textContent, 'the static boot shows the full command').toContain(
+        'run bio.exe --verbose',
+      );
+      const frozen = host?.textContent;
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(10_000);
+      });
+      expect(host?.textContent).toBe(frozen);
+      mounted.unmount();
+    },
+  );
+
+  it.each([
+    ['desktop', false, '.hero-boot-matrix-out'],
+    ['mobile', true, '.hero-boot-matrix-out'],
+  ] as const)(
+    'pauses the %s dialog while the hero is off screen and resumes it in view',
+    async (variant, isMobile, outSelector) => {
+      const { readMotion } = await import('@/lib/motion');
+      vi.mocked(readMotion).mockReturnValue(true);
+      stubViewport(isMobile);
+      const { HeroBootAnimation } = await import('./HeroBootAnimation');
+      const mounted = await mountClient(<HeroBootAnimation variant={variant} />);
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(6000);
+      });
+      const out = mounted.container.querySelector(outSelector);
+
+      await act(async () => {
+        reportIntersection([{ isIntersecting: false }]);
+        await vi.advanceTimersByTimeAsync(2500);
+      });
+      const frozen = out?.textContent;
+      expect(vi.getTimerCount(), 'an off-screen hero keeps no typing timer').toBe(0);
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(10_000);
+      });
+      expect(out?.textContent).toBe(frozen);
+
+      await act(async () => {
+        reportIntersection([{ isIntersecting: true }]);
+        await vi.advanceTimersByTimeAsync(2000);
+      });
+      expect(vi.getTimerCount(), 'back in view the dialog types again').toBeGreaterThan(0);
+      mounted.unmount();
+    },
+  );
 });

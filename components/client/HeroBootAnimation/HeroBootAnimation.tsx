@@ -13,9 +13,11 @@ import {
   DESKTOP_LINE_SPECS,
   MOBILE_DIALOG,
   runBoot,
+  type SysfailBeat,
 } from '@/lib/boot-animation';
 import { MOBILE_QUERY } from '@/lib/media-queries';
 import { readMotion } from '@/lib/motion';
+import { subscribeMotion } from '@/lib/motion-change';
 import { runMobileBoot } from './mobile-boot';
 
 type Props = {
@@ -57,59 +59,91 @@ const timingMobile = {
   interMs: 300,
 };
 
+const PAUSE_REASON = { Tab: 'tab', Viewport: 'viewport' } as const;
+
+function pauseWhileHidden(host: Element, getCtrl: () => BootCtrl | null): () => void {
+  const apply = (reason: string, hidden: boolean) => {
+    const ctrl = getCtrl();
+    if (hidden) ctrl?.pauseDialog(reason);
+    else ctrl?.resumeDialog(reason);
+  };
+  const onVisibility = () => apply(PAUSE_REASON.Tab, document.hidden);
+  document.addEventListener('visibilitychange', onVisibility);
+  const observer =
+    typeof IntersectionObserver === 'undefined'
+      ? null
+      : new IntersectionObserver((entries) => {
+          for (const entry of entries) apply(PAUSE_REASON.Viewport, !entry.isIntersecting);
+        });
+  observer?.observe(host);
+  return () => {
+    document.removeEventListener('visibilitychange', onVisibility);
+    observer?.disconnect();
+  };
+}
+
 function DesktopBoot() {
   const bootRef = useRef<HTMLDivElement>(null);
-  const ctrlRef = useRef<BootCtrl | null>(null);
 
   useEffect(() => {
-    if (typeof window === 'undefined') return;
+    const el = bootRef.current;
+    if (!el) return;
+    const host: HTMLDivElement = el;
 
     const mql = window.matchMedia(MOBILE_QUERY);
-    const isMobileVP = mql.matches;
-
+    const ctrlRef: { current: BootCtrl | null } = { current: null };
+    let beat: SysfailBeat | null = null;
+    let unwatch: (() => void) | undefined;
     let started = false;
 
-    const onVisibility = () => {
-      if (document.hidden) ctrlRef.current?.pauseDialog();
-      else ctrlRef.current?.resumeDialog();
-    };
+    function render() {
+      if (!readMotion()) {
+        for (const s of DESKTOP_LINE_SPECS) host.appendChild(buildLine(s, bootCls));
+        host.appendChild(buildStaticCmdLine(bootCls));
+        host.appendChild(buildLine([' '], bootCls));
+        host.appendChild(buildStaticDialogLine(heroClientContent.bootStaticDialogLine, bootCls));
+        return;
+      }
+      beat = buildDesktopOnFirstLoop(host, ctrlRef, bootCls);
+      ctrlRef.current = runBoot(host, DESKTOP_LINE_SPECS, DESKTOP_DIALOG, bootCls, {
+        ...timingDesktop,
+        onFirstLoop: beat,
+      });
+      unwatch = pauseWhileHidden(host, () => ctrlRef.current);
+    }
+
+    function clear() {
+      unwatch?.();
+      unwatch = undefined;
+      beat?.settle();
+      beat = null;
+      ctrlRef.current?.cancel();
+      ctrlRef.current = null;
+      host.replaceChildren();
+    }
 
     function startAnimation() {
       if (started) return;
       started = true;
-
-      const el = bootRef.current;
-      if (!el) return;
-
-      if (!readMotion()) {
-        for (const s of DESKTOP_LINE_SPECS) el.appendChild(buildLine(s, bootCls));
-        el.appendChild(buildStaticCmdLine(bootCls));
-        el.appendChild(buildLine([' '], bootCls));
-        el.appendChild(buildStaticDialogLine(heroClientContent.bootStaticDialogLine, bootCls));
-        return;
-      }
-
-      const onFirstLoop = buildDesktopOnFirstLoop(el, ctrlRef, bootCls);
-
-      ctrlRef.current = runBoot(el, DESKTOP_LINE_SPECS, DESKTOP_DIALOG, bootCls, {
-        ...timingDesktop,
-        onFirstLoop,
-      });
-
-      document.addEventListener('visibilitychange', onVisibility);
+      render();
     }
 
-    if (!isMobileVP) startAnimation();
+    if (!mql.matches) startAnimation();
 
     const onBreakpointChange = (e: MediaQueryListEvent) => {
       if (!e.matches) startAnimation();
     };
     mql.addEventListener('change', onBreakpointChange);
+    const unsubscribeMotion = subscribeMotion(() => {
+      if (!started) return;
+      clear();
+      render();
+    });
 
     return () => {
-      ctrlRef.current?.cancel();
+      unsubscribeMotion();
       mql.removeEventListener('change', onBreakpointChange);
-      document.removeEventListener('visibilitychange', onVisibility);
+      clear();
     };
   }, []);
 
@@ -119,53 +153,72 @@ function DesktopBoot() {
 function MobileBoot() {
   const cmdRef = useRef<HTMLSpanElement>(null);
   const outRef = useRef<HTMLSpanElement>(null);
+  const hostRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (typeof window === 'undefined') return;
+    const host = hostRef.current;
+    const cmdEl = cmdRef.current;
+    const outEl = outRef.current;
+    if (!host || !cmdEl || !outEl) return;
 
     const mql = window.matchMedia(MOBILE_QUERY);
-    let stop: (() => void) | undefined;
+    let ctrl: BootCtrl | null = null;
+    let unwatch: (() => void) | undefined;
 
     function start() {
-      const cmdEl = cmdRef.current;
-      const outEl = outRef.current;
       if (!cmdEl || !outEl) return;
-
       if (!readMotion()) {
         cmdEl.textContent = heroClientContent.bootCommand;
         outEl.textContent = heroClientContent.bootStaticDialogLine;
         return;
       }
-
-      stop = runMobileBoot(
+      ctrl = runMobileBoot(
         cmdEl,
         outEl,
         heroClientContent.bootCommand,
         MOBILE_DIALOG,
         timingMobile,
       );
+      unwatch = pauseWhileHidden(host as HTMLDivElement, () => ctrl);
+    }
+
+    function stop() {
+      unwatch?.();
+      unwatch = undefined;
+      ctrl?.cancel();
+      ctrl = null;
+    }
+
+    function restart() {
+      stop();
+      if (cmdEl) cmdEl.textContent = '';
+      if (outEl) outEl.textContent = '';
+      start();
     }
 
     if (mql.matches) start();
 
     const onBreakpointChange = (e: MediaQueryListEvent) => {
       if (!e.matches) {
-        stop?.();
-        stop = undefined;
+        stop();
         return;
       }
-      if (!stop) start();
+      if (!ctrl) start();
     };
     mql.addEventListener('change', onBreakpointChange);
+    const unsubscribeMotion = subscribeMotion(() => {
+      if (mql.matches) restart();
+    });
 
     return () => {
-      stop?.();
+      unsubscribeMotion();
+      stop();
       mql.removeEventListener('change', onBreakpointChange);
     };
   }, []);
 
   return (
-    <div aria-hidden="true" className="hero-boot-mobile">
+    <div ref={hostRef} aria-hidden="true" className="hero-boot-mobile">
       <span className="hero-boot-line" data-testid="boot-line">
         {heroClientContent.bootSequenceLine}
       </span>

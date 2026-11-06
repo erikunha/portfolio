@@ -1,4 +1,5 @@
-import { type PhraseLoop, runPhraseLoop, typeOut } from '@/lib/typewriter';
+import type { BootCtrl } from '@/lib/boot-animation';
+import { createPauseControl, type PhraseLoop, runPhraseLoop, typeOut } from '@/lib/typewriter';
 
 export type MobileBootTiming = {
   cmdMs: number;
@@ -15,10 +16,14 @@ export function runMobileBoot(
   command: string,
   dialog: readonly string[],
   timing: MobileBootTiming,
-): () => void {
+): BootCtrl {
   let cancelled = false;
   let handoff: ReturnType<typeof setTimeout> | undefined;
   let loop: PhraseLoop | undefined;
+  const dialogPause = createPauseControl((paused) => {
+    if (paused) loop?.pause();
+    else loop?.resume();
+  });
 
   const cancelTyping = typeOut(command, {
     stepMs: () => timing.cmdMs + Math.random() * timing.cmdJitter,
@@ -39,15 +44,20 @@ export function runMobileBoot(
           onText: (text) => {
             outEl.textContent = text;
           },
+          startPaused: dialogPause.isPaused(),
         });
       }, timing.interMs);
     },
   });
 
-  return () => {
-    cancelled = true;
-    cancelTyping();
-    clearTimeout(handoff);
-    loop?.cancel();
+  return {
+    cancel: () => {
+      cancelled = true;
+      cancelTyping();
+      clearTimeout(handoff);
+      loop?.cancel();
+    },
+    pauseDialog: dialogPause.pause,
+    resumeDialog: dialogPause.resume,
   };
 }
