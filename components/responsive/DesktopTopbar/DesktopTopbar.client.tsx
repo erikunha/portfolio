@@ -9,26 +9,47 @@ import { LanguageSwitch, MenuTrigger, useSectionNavigation } from '../SectionNav
 
 const SECTION_PATH_SEPARATOR = '/';
 
+const HASH_MARK = '#';
+
 function isCurrentPath(pathname: string | null, href: string): boolean {
-  if (pathname === null || href.includes('#')) return false;
+  if (pathname === null || href.includes(HASH_MARK)) return false;
   return pathname === href || pathname.startsWith(`${href}${SECTION_PATH_SEPARATOR}`);
 }
 
+function hashTarget(href: string): string | null {
+  const at = href.indexOf(HASH_MARK);
+  return at < 0 ? null : href.slice(at + HASH_MARK.length);
+}
+
+function currentState(
+  pathname: string | null,
+  currentId: string,
+  href: string,
+): 'page' | 'location' | undefined {
+  const target = hashTarget(href);
+  if (target !== null) return target === currentId ? 'location' : undefined;
+  return isCurrentPath(pathname, href) ? 'page' : undefined;
+}
+
 export function DesktopTopbar({ brand }: { brand: ReactNode }) {
-  const { motionOn, toggleMotion, chrome, copy } = useSectionNavigation();
+  const { motionOn, toggleMotion, chrome, copy, currentId, jump } = useSectionNavigation();
   const pathname = usePathname();
 
   return (
-    <div className="desktop-topbar fixed top-0 left-0 right-0 z-[110] bg-secondary-950 border-b border-primary-subtle hidden md:block">
+    <div className="desktop-topbar fixed top-0 left-0 right-0 bg-secondary-950 border-b border-primary-subtle hidden md:block">
       <div className="max-w-[var(--measure-page)] mx-auto px-[var(--space-gutter)] flex items-center gap-3 min-h-11">
         <MenuTrigger />
         <nav className="flex gap-2 items-center flex-nowrap" aria-label={copy.siteNavLabel}>
           {chrome.topbarNav.map(({ label, href }) => (
             <a
               key={href}
-              className="text-primary-500 text-[length:var(--text-min)] tracking-wider whitespace-nowrap py-3 leading-5 hover:text-shadow-[0_0_8px_var(--color-primary-500)] aria-[current=page]:underline aria-[current=page]:underline-offset-8 hidden xl:inline"
+              className="topbar-link hidden xl:inline"
               href={href}
-              aria-current={isCurrentPath(pathname, href) ? 'page' : undefined}
+              aria-current={currentState(pathname, currentId, href)}
+              onClick={(event) => {
+                const target = hashTarget(href);
+                if (target !== null) jump(event, target);
+              }}
             >
               {label}
             </a>
@@ -36,14 +57,7 @@ export function DesktopTopbar({ brand }: { brand: ReactNode }) {
           <div className="flex gap-2 items-center flex-nowrap xl:ml-2">
             <button
               type="button"
-              className={cn(
-                'items-center gap-1.5 text-primary-400 text-[length:var(--text-min)] tracking-wider',
-                'border border-primary-subtle px-3 py-1.5 min-h-11 cursor-pointer bg-transparent whitespace-nowrap',
-                'transition-[box-shadow,background,border-color] duration-200 ease-out',
-                'hover:shadow-[0_0_12px_var(--color-primary-500)] hover:bg-primary-quiet hover:border-primary-500',
-                'hidden xl:inline-flex',
-                'motion-reduce:transition-none [body[data-motion=reduce]_&]:transition-none',
-              )}
+              className="topbar-action topbar-action-toggle hidden xl:inline-flex"
               onClick={toggleMotion}
               data-motion={motionOn ? 'on' : 'off'}
               aria-pressed={motionOn}
@@ -52,26 +66,13 @@ export function DesktopTopbar({ brand }: { brand: ReactNode }) {
               <span>{TOPBAR_MOTION_LABEL}</span>
             </button>
             <a
-              className={cn(
-                'border border-primary-500 text-primary-500 px-3 py-1.5 tracking-wider text-[length:var(--text-min)] items-center min-h-11 whitespace-nowrap',
-                'transition-[box-shadow,background] duration-200 ease-out',
-                'hover:shadow-[0_0_12px_var(--color-primary-500)] hover:bg-primary-quiet hover:no-underline',
-                'hidden lg:inline-flex',
-                'motion-reduce:transition-none [body[data-motion=reduce]_&]:transition-none',
-              )}
+              className="topbar-action topbar-action-outline hidden lg:inline-flex"
               href={chrome.topbarReading.href}
             >
               {chrome.topbarReading.label}
             </a>
             <a
-              className={cn(
-                'bg-primary-500 text-black font-bold tracking-wider px-3 py-1.5 text-[length:var(--text-min)] border border-primary-500',
-                'transition-[box-shadow] duration-200 ease-out',
-                'hover:shadow-[0_0_12px_var(--color-primary-500)] hover:no-underline',
-                'items-center min-h-11 whitespace-nowrap',
-                'hidden lg:inline-flex',
-                'motion-reduce:transition-none [body[data-motion=reduce]_&]:transition-none',
-              )}
+              className="topbar-action topbar-action-solid hidden lg:inline-flex"
               href={chrome.topbarHire.href}
               target="_blank"
               rel="noreferrer noopener"

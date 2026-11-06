@@ -1,7 +1,7 @@
 'use client';
 
 import type { DockKey } from '@/content/navigation';
-import { DRAWER_ID, MENU_ICON_PATH, useSectionNavigation } from '../SectionNavigation';
+import { DRAWER_ID, MENU_ICON_PATH, NavIcon, useSectionNavigation } from '../SectionNavigation';
 
 const ICON_PATHS: Record<DockKey, string> = {
   home: 'M3 11l9-8 9 8v10H3zM9 21V12h6v9',
@@ -12,11 +12,7 @@ const ICON_PATHS: Record<DockKey, string> = {
 };
 
 function DockIcon({ control }: { control: DockKey }) {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d={ICON_PATHS[control]} />
-    </svg>
-  );
+  return <NavIcon path={ICON_PATHS[control]} />;
 }
 
 export function Dock() {

@@ -1,5 +1,6 @@
 import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { DesktopTopbar } from '@/components/responsive/DesktopTopbar/DesktopTopbar.client';
 import { HIRE_ACCESSIBLE_NAME } from '@/content/nav';
 import { NAVIGATION, siteNavChrome } from '@/content/navigation';
 import { SECTION_REGISTRY } from '@/content/section-registry';
@@ -91,6 +92,12 @@ function Trigger() {
 }
 
 const LOCALE: SiteLocale = SITE_LOCALE.en;
+const contextSnapshots: unknown[] = [];
+
+function Probe() {
+  contextSnapshots.push(useSectionNavigation());
+  return null;
+}
 
 function Page({
   withHome = true,
@@ -189,6 +196,45 @@ describe('SectionNavigation', () => {
       document.querySelectorAll('#section-nav [aria-current]'),
       'exactly one destination is current',
     ).toHaveLength(1);
+  });
+
+  it('shows the current section in the desktop topbar and jumps to it on click', () => {
+    render(
+      <SectionNavigationProvider chrome={siteNavChrome(LOCALE)} locale={LOCALE}>
+        <DesktopTopbar brand={null} />
+        <main id="main-content" tabIndex={-1}>
+          {SECTION_REGISTRY.map(({ id }) => (
+            <section key={id} id={id} tabIndex={-1} />
+          ))}
+        </main>
+      </SectionNavigationProvider>,
+    );
+    const projects = screen.getByRole('link', { name: /^work$/i });
+    expect(projects.getAttribute('aria-current')).toBeNull();
+    reveal(document.getElementById('sec-projects'));
+    expect(projects.getAttribute('aria-current')).toBe('location');
+
+    const contact = screen.getByRole('link', { name: /^contact$/i });
+    expect(fireEvent.click(contact)).toBe(false);
+    expect(scrollIntoView).toHaveBeenCalled();
+    expect(document.activeElement).toBe(document.getElementById('sec-contact'));
+  });
+
+  it('keeps the context value stable across renders that change nothing', () => {
+    contextSnapshots.length = 0;
+    const chrome = siteNavChrome(LOCALE);
+    const { rerender } = render(
+      <SectionNavigationProvider chrome={chrome} locale={LOCALE}>
+        <Probe />
+      </SectionNavigationProvider>,
+    );
+    rerender(
+      <SectionNavigationProvider chrome={chrome} locale={LOCALE}>
+        <Probe />
+      </SectionNavigationProvider>,
+    );
+    expect(contextSnapshots.length).toBeGreaterThanOrEqual(2);
+    expect(contextSnapshots.at(-1)).toBe(contextSnapshots.at(-2));
   });
 
   it('observes every registry section with one observer and maps the mobile hero to Home', () => {

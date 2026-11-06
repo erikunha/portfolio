@@ -9,6 +9,7 @@ import {
   useContext,
   useEffect,
   useLayoutEffect,
+  useMemo,
   useRef,
   useState,
 } from 'react';
@@ -43,7 +44,7 @@ const NO_CURRENT_SECTION = '';
 const MENU_TRIGGER_CLASS = 'menu-trigger';
 const MENU_TRIGGER_SELECTOR = `.${MENU_TRIGGER_CLASS}`;
 export const MENU_ICON_PATH = 'M4 7h16M4 12h16M4 17h16';
-const ICON_VIEWBOX = '0 0 24 24';
+export const ICON_VIEWBOX = '0 0 24 24';
 type NavigationState = {
   currentId: string;
   drawerOpen: boolean;
@@ -235,26 +236,43 @@ export function SectionNavigationProvider({
     applyMotion(next);
   }, []);
 
-  return (
-    <NavigationContext.Provider
-      value={{
-        currentId,
-        drawerOpen,
-        openDrawer,
-        closeDrawer,
-        settleDrawer,
-        jump,
-        motionOn,
-        motionLabel: motionOn ? copy.motionOn : systemReduced ? copy.motionReduced : copy.motionOff,
-        toggleMotion,
-        locale,
-        copy,
-        chrome,
-      }}
-    >
-      {children}
-    </NavigationContext.Provider>
+  const motionLabel = motionOn
+    ? copy.motionOn
+    : systemReduced
+      ? copy.motionReduced
+      : copy.motionOff;
+  const value = useMemo<NavigationState>(
+    () => ({
+      currentId,
+      drawerOpen,
+      openDrawer,
+      closeDrawer,
+      settleDrawer,
+      jump,
+      motionOn,
+      motionLabel,
+      toggleMotion,
+      locale,
+      copy,
+      chrome,
+    }),
+    [
+      currentId,
+      drawerOpen,
+      openDrawer,
+      closeDrawer,
+      settleDrawer,
+      jump,
+      motionOn,
+      motionLabel,
+      toggleMotion,
+      locale,
+      copy,
+      chrome,
+    ],
   );
+
+  return <NavigationContext.Provider value={value}>{children}</NavigationContext.Provider>;
 }
 
 export function LanguageSwitch({ className }: { className?: string }) {
@@ -411,6 +429,14 @@ export function SectionNavigation({ extra }: { extra?: ReactNode }) {
   );
 }
 
+export function NavIcon({ path, focusable }: { path: string; focusable?: boolean }) {
+  return (
+    <svg viewBox={ICON_VIEWBOX} aria-hidden="true" focusable={focusable}>
+      <path d={path} />
+    </svg>
+  );
+}
+
 export function MenuTrigger({ className }: { className?: string }) {
   const { drawerOpen, openDrawer, copy } = useSectionNavigation();
   return (
@@ -423,9 +449,7 @@ export function MenuTrigger({ className }: { className?: string }) {
       aria-haspopup="dialog"
       onClick={(event) => openDrawer(event.currentTarget)}
     >
-      <svg viewBox={ICON_VIEWBOX} aria-hidden="true" focusable="false">
-        <path d={MENU_ICON_PATH} />
-      </svg>
+      <NavIcon path={MENU_ICON_PATH} focusable={false} />
     </button>
   );
 }
