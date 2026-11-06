@@ -1,13 +1,12 @@
 import { expect, test } from '@playwright/test';
+import { horizontalOverflow, VIEWPORTS } from './_helpers/geometry';
 
-const MOBILE = { width: 390, height: 844 };
-const DESKTOP = { width: 1280, height: 720 };
+const { PHONE: MOBILE, DESKTOP, PHONE_NARROW: PHONE_MIN } = VIEWPORTS;
 const FACT_ROW = '#sec-projects .project-stats > div';
 const ASK_BLOCK = '.measured-ask';
 const PERF_BLOCK = '#sec-live-perf';
 const PERF_TILE = '#sec-live-perf .measured-tile';
 const PERF_LABEL = '#sec-live-perf .measured-label';
-const PHONE_MIN = { width: 320, height: 700 };
 const RECEIPT_VALUE = '.project-receipts .receipt-value';
 const EDGE_TOLERANCE_PX = 1;
 
@@ -71,10 +70,7 @@ test.describe('projects section below 768px', () => {
     await page.setViewportSize(PHONE_MIN);
     await page.goto('/');
     await page.locator(PERF_TILE).first().scrollIntoViewIfNeeded();
-    const overflow = await page.evaluate(
-      () => document.documentElement.scrollWidth > document.documentElement.clientWidth,
-    );
-    expect(overflow).toBe(false);
+    expect(await horizontalOverflow(page)).toBeLessThanOrEqual(0);
   });
 });
 
