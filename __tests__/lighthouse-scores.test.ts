@@ -52,7 +52,7 @@ describe('getScores — cache hit', () => {
     async (strategy) => {
       vi.useFakeTimers();
       process.env.PSI_API_KEY = 'test-key';
-      mockGet.mockReturnValue(new Promise(() => {}));
+      mockGet.mockReturnValue(new Promise(() => undefined));
       const { getScores, LIGHTHOUSE_FALLBACK } = await import('@/lib/lighthouse-scores');
       const settled = vi.fn();
       const result = getScores(strategy).then(settled);

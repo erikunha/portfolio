@@ -12,7 +12,7 @@ afterEach(() => {
 describe('getAskMetrics Redis deadline', () => {
   it('rejects within 3s so the section can show unavailable when Redis hangs', async () => {
     vi.useFakeTimers();
-    mockGet.mockReturnValue(new Promise(() => {}));
+    mockGet.mockReturnValue(new Promise(() => undefined));
     const settled = vi.fn();
     const result = getAskMetrics().catch(settled);
 

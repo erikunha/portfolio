@@ -306,7 +306,7 @@ lib/server/                           # server-only utilities (route-handler fac
 lib/env.ts                            # typed, format-validating env accessor
 lib/ask-log.ts                        # KV interaction log per /api/ask request
 lib/boot-animation.ts                 # boot sequence data
-lib/typewriter.ts                     # one type, hold and erase loop (runPhraseLoop, typeOut)
+lib/typewriter.ts                     # one type, hold and erase loop (runPhraseLoop, typeOut) and createPauseControl
 lib/use-copy-feedback.client.ts       # clipboard state for every copy button
 lib/media-queries.ts                  # MOBILE_QUERY shared by every matchMedia call
 lib/json-ld.ts                        # serializeJsonLd, the only JSON-LD serializer
@@ -323,6 +323,12 @@ lib/ip-hash.ts                        # salted IP hash for persisted interaction
 lib/lighthouse-scores.ts              # PSI API fetcher (cached daily)
 lib/log.ts                            # pino wrapper (text dev / JSON prod)
 lib/motion.ts                         # readMotion / applyMotion (body data-attr)
+lib/motion-change.ts                  # MOTION_CHANGE_EVENT and subscribeMotion, the one motionchange listener
+lib/pause-when-hidden.ts              # pause a typewriter loop while the tab is hidden or the element is off screen
+lib/slider.ts                         # sliderValueForKey and percentAlong for the DAW sliders
+lib/meter.ts                          # meterSegmentState, the VU clip rule shared by the live and static meters
+lib/post-json.ts                      # postJson, a JSON POST with an abort deadline
+lib/dom/is-rendered.ts                # isRendered, shared by the drawer and the footer reboot
 lib/rate-limit.ts                     # Upstash sliding-window + budget reserve/settle; client bucket is the IPv4 or IPv6 /64; rl:lighthouse and the rl:errlog:day global cap
 lib/stream-protocol.ts                # NUL-byte error sentinel + parseStreamChunk
 lib/telemetry/                        # Langfuse tracing helpers
