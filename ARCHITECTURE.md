@@ -415,8 +415,9 @@ Redis holds `ask:tokens:YYYY-MM` with a 32-day TTL set only when absent. `reserv
 - Redis failure during reservation fails closed. Rate limiting and identical-question dedup fail open, but the budget rejection prevents the model call.
 - `BudgetStore` exposes `reserve`, `release` and `capacity`. The eval harness installs an in-memory store sized for one full reservation per corpus item; no request parameter selects it.
 - `ASK_ENABLED` is checked before rate limiting and reservation.
-- Prompt caching uses `providerOptions.anthropic.cacheControl` on the system message. Settlement counts uncached input, cache reads and cache creation tokens. Cache usage is logged; `persistAskInteraction` stores total input and output tokens, not the cache breakdown.
+- Prompt caching uses `providerOptions.anthropic.cacheControl` on the system message. The AI SDK reports `inputTokens` as the total prompt size with the cache split under `inputTokenDetails`; settlement and the ask-log use `countAskTokens`, which counts each cached token once. Cache usage is logged; `persistAskInteraction` stores total input and output tokens, not the cache breakdown. Haiku 4.5 caches only prefixes of 4096 tokens or more, so a shorter system prompt records zero cache tokens.
 - A 30-second request deadline and a 15-second mid-stream watchdog bound streaming. A usage-resolution timeout preserves the reservation when actual usage cannot be read.
+- A reader that cancels mid-answer aborts the upstream call; settlement and the ask-log write still run, with status `aborted`.
 
 ### MCP request boundary
 
