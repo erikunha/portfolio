@@ -1,5 +1,4 @@
 'use client';
-import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
   DS_DRAWER_NAV_LABEL,
@@ -28,9 +27,9 @@ function DsNavLinks({ currentPath, groupIdPrefix, withHome = true }: DsNavLinksP
       {withHome ? (
         <ul className="ds-nav-home">
           <li>
-            <Link href={DS_HOME_LINK.href} className="ds-nav-item">
+            <a href={DS_HOME_LINK.href} className="ds-nav-item">
               {DS_HOME_LINK.label}
-            </Link>
+            </a>
           </li>
         </ul>
       ) : null}
@@ -47,13 +46,13 @@ function DsNavLinks({ currentPath, groupIdPrefix, withHome = true }: DsNavLinksP
           >
             {links.map(({ href, label }) => (
               <li key={href}>
-                <Link
+                <a
                   href={href}
                   className="ds-nav-item"
                   aria-current={isCurrentPage(currentPath, href) ? 'page' : undefined}
                 >
                   {label}
-                </Link>
+                </a>
               </li>
             ))}
           </ul>
