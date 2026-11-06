@@ -1,8 +1,11 @@
 'use client';
 
 import { useEffect, useLayoutEffect, useRef } from 'react';
+import { CRT_BASE_TICK_MS } from '@/lib/crt-effect-stepper';
+import { getFrameGovernorTickMultiplier } from '@/lib/frame-governor';
 import { readMotion } from '@/lib/motion';
 import { subscribeMotion } from '@/lib/motion-change';
+import { scaleTailFade } from './tail-fade';
 
 type RainTunables = {
   fontSize: number;
@@ -13,7 +16,6 @@ type RainTunables = {
 };
 
 const DIGITS = '0123456789'.split('');
-const FRAME_MS = 1000 / 22;
 const RESIZE_DEBOUNCE_MS = 100;
 const IDLE_TIMEOUT_MS = 2000;
 const IDLE_FALLBACK_MS = 1000;
@@ -114,7 +116,8 @@ export function MatrixRain({
 
     function frame(ts: number) {
       if (!running) return;
-      if (ts - last >= FRAME_MS) {
+      const rate = getFrameGovernorTickMultiplier();
+      if (ts - last >= CRT_BASE_TICK_MS * rate) {
         last = ts;
         const {
           fontSize: fs,
@@ -123,7 +126,7 @@ export function MatrixRain({
           bodyColor: body,
           tailFade: tail,
         } = tunablesRef.current;
-        ctxEl.fillStyle = tail;
+        ctxEl.fillStyle = scaleTailFade(tail, rate);
         ctxEl.fillRect(0, 0, w, h);
         for (let i = 0; i < columns; i++) {
           const y = (drops[i] ?? 0) * fs;
@@ -133,7 +136,7 @@ export function MatrixRain({
           ctxEl.fillStyle = body;
           ctxEl.fillText(ch, i * fs, y - fs);
           if (y > h && Math.random() > RESPAWN_THRESHOLD) drops[i] = -Math.random() * RESPAWN_RANGE;
-          drops[i] = (drops[i] ?? 0) + spd;
+          drops[i] = (drops[i] ?? 0) + spd * rate;
         }
       }
       raf = requestAnimationFrame(frame);
