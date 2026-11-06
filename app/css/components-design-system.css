@@ -46,7 +46,10 @@
 
   .ds-prose pre {
     margin: 0 0 var(--phi-space-2);
+    padding: var(--spacing-3) var(--spacing-4);
     overflow-x: auto;
+    border: var(--border-width) solid var(--color-primary-border);
+    background: var(--color-primary-quiet);
   }
 
   .ds-prose :is(ul, ol):not(nav ul) {
@@ -97,6 +100,12 @@
 
   .ds-skip-nav {
     left: var(--spacing-3);
+  }
+
+  @media (max-width: 1023.98px) {
+    .ds-skip-nav {
+      display: none;
+    }
   }
 
   .ds-sidebar {

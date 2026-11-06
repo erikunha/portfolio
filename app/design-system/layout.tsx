@@ -19,11 +19,11 @@ export default function DesignSystemLayout({ children }: { children: ReactNode }
         {DS_SKIP_NAV_LABEL}
       </a>
       <div className="page-container page-main ds-layout">
+        <Sidebar />
         <main id="main-content" tabIndex={-1} className="ds-main ds-prose">
           {children}
           <PagerNav />
         </main>
-        <Sidebar />
         <DsNavNoScript />
       </div>
     </AppShell>

@@ -57,13 +57,19 @@ export const DS_PAGES_LIST_LABEL = 'Design system pages';
 
 export type DsPagerPage = { slug: string; href: string; label: string };
 
-export const DS_PAGER: readonly DsPagerPage[] = [
-  { slug: '', href: ROOT, label: 'Overview' },
-  { slug: 'tokens', href: `${ROOT}/tokens`, label: 'Tokens' },
-  { slug: 'components', href: `${ROOT}/components`, label: 'Components' },
-  { slug: 'enforcement', href: `${ROOT}/enforcement`, label: 'Enforcement' },
-  { slug: 'changelog', href: `${ROOT}/changelog`, label: 'Changelog' },
-];
+const PAGER_GROUP_ID = 'pages';
+
+function titleCase(label: string): string {
+  return `${label.charAt(0)}${label.slice(1).toLowerCase()}`;
+}
+
+export const DS_PAGER: readonly DsPagerPage[] = (
+  DS_NAV_GROUPS.find((group) => group.id === PAGER_GROUP_ID)?.links ?? []
+).map(({ href, label }) => ({
+  slug: href === ROOT ? '' : href.slice(`${ROOT}/`.length),
+  href,
+  label: titleCase(label),
+}));
 
 export const DS_PAGER_PREV_LABEL = 'Previous: ';
 export const DS_PAGER_NEXT_LABEL = 'Next: ';

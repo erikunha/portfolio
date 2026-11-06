@@ -59,3 +59,37 @@ test.describe('design system without JavaScript', () => {
     }
   });
 });
+
+test.describe('design-system skip navigation link', () => {
+  test('is offered only where its target is displayed', async ({ page }) => {
+    await page.setViewportSize({ width: 800, height: DESKTOP_HEIGHT });
+    await page.goto('/design-system');
+    await expect(
+      page.locator('.ds-skip-nav'),
+      'below 1024px the sidebar target is display:none, so the link must not exist for keyboards',
+    ).toBeHidden();
+    await page.setViewportSize({ width: 1280, height: DESKTOP_HEIGHT });
+    await expect(page.locator('.ds-skip-nav')).toBeAttached();
+    await expect(page.locator('#ds-nav')).toBeVisible();
+  });
+
+  test('puts the sidebar before main in the DOM and on the left at wide desktop', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1280, height: DESKTOP_HEIGHT });
+    await page.goto('/design-system');
+    const sidebar = await page.locator('#ds-nav').boundingBox();
+    const main = await page.locator('#main-content').boundingBox();
+    expect(sidebar).not.toBeNull();
+    expect(main).not.toBeNull();
+    expect(sidebar?.x).toBeLessThan(main?.x ?? 0);
+    const sidebarFirst = await page.evaluate(() =>
+      Boolean(
+        (document.querySelector('#ds-nav') as Element).compareDocumentPosition(
+          document.querySelector('#main-content') as Element,
+        ) & Node.DOCUMENT_POSITION_FOLLOWING,
+      ),
+    );
+    expect(sidebarFirst, 'reading order must match the visual order').toBe(true);
+  });
+});
