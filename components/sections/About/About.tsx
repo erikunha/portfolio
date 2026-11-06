@@ -1,4 +1,5 @@
-import type { ReactNode } from 'react';
+import { ExternalLink } from '@/components/ExternalLink';
+import { Panel } from '@/components/Panel';
 import { aboutContent } from '@/content/about';
 import { responsibilities } from '@/content/responsibilities';
 import { SCROLL_REGION_LABELS } from '@/content/section-labels';
@@ -6,35 +7,6 @@ import type { SiteLocale } from '@/content/site-locale';
 import { CompanyMention } from '../../CompanyLink';
 import { RoleTyper } from '../../client/RoleTyper';
 import { IconReadme } from '../../Icons';
-
-function Panel({
-  title,
-  marker,
-  className,
-  children,
-  action,
-}: {
-  title: string;
-  marker: string;
-  className?: string;
-  children: ReactNode;
-  action?: ReactNode;
-}) {
-  return (
-    <div className={`ab-panel ${className ?? ''}`}>
-      <header className="ab-ph">
-        <span className="ab-mk" aria-hidden="true">
-          {marker}
-        </span>
-        <h3 className="ab-h" data-type-reveal suppressHydrationWarning>
-          {title}
-        </h3>
-        {action}
-      </header>
-      {children}
-    </div>
-  );
-}
 
 const FIRST_LINE_NUMBER = 1;
 
@@ -60,7 +32,7 @@ export function About({ locale }: { locale: SiteLocale }) {
       <div className="module-body-content">
         <div className="about-grid">
           <div className="about-col">
-            <Panel title={c.whoami.title} marker={c.marker}>
+            <Panel reveal title={c.whoami.title} marker={c.marker}>
               <div className="ab-body ab-text">
                 <div className="ab-gutter" aria-hidden="true">
                   {lineNumbers.map((lineNumber) => (
@@ -85,7 +57,7 @@ export function About({ locale }: { locale: SiteLocale }) {
                 </div>
               </div>
             </Panel>
-            <Panel title={c.now.title} marker={c.marker} className="ab-now">
+            <Panel reveal title={c.now.title} marker={c.marker} className="ab-now">
               <dl className="ab-body">
                 {c.now.rows.map((row) => (
                   <div key={row.k}>
@@ -106,7 +78,7 @@ export function About({ locale }: { locale: SiteLocale }) {
                 ))}
               </dl>
             </Panel>
-            <Panel title={c.responsibilities.title} marker={c.marker} className="ab-resp">
+            <Panel reveal title={c.responsibilities.title} marker={c.marker} className="ab-resp">
               <section
                 className="ab-body overflow-x-auto"
                 aria-label={SCROLL_REGION_LABELS[locale]['sec-responsibilities']}
@@ -130,7 +102,7 @@ export function About({ locale }: { locale: SiteLocale }) {
             </Panel>
           </div>
           <div className="about-col">
-            <Panel title={c.stack.title} marker={c.marker} className="ab-stack">
+            <Panel reveal title={c.stack.title} marker={c.marker} className="ab-stack">
               <dl className="ab-body">
                 {c.stack.groups.map((group) => (
                   <div key={group.label}>
@@ -147,19 +119,15 @@ export function About({ locale }: { locale: SiteLocale }) {
               </dl>
             </Panel>
             <Panel
+              reveal
               title={c.code.title}
               marker={c.marker}
               className="ab-code"
               action={
-                <a
-                  className="repo-link"
-                  href={c.code.repoHref}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
+                <ExternalLink className="repo-link" href={c.code.repoHref}>
                   {c.code.repoLabel} <span aria-hidden="true">{c.code.repoGlyph}</span>
                   <span className="sr-only"> {c.code.repoNewTabNote}</span>
-                </a>
+                </ExternalLink>
               }
             >
               <section

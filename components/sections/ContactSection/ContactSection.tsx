@@ -1,3 +1,5 @@
+import { ExternalLink } from '@/components/ExternalLink';
+import { Panel } from '@/components/Panel';
 import { contactContent } from '@/content/contact';
 import { copyFeedback } from '@/content/copy-button';
 import { profilePresentation } from '@/content/profile';
@@ -49,15 +51,13 @@ export function ContactSection({ locale, defer }: { locale: SiteLocale; defer?: 
             </p>
           </noscript>
           <div className="contact-reach">
-            <section className="contact-channels ab-panel" aria-labelledby="contact-channels-title">
-              <header className="ab-ph">
-                <span className="ab-mk" aria-hidden="true">
-                  {channels.marker}
-                </span>
-                <h3 className="ab-h" id="contact-channels-title">
-                  {channels.title}
-                </h3>
-              </header>
+            <Panel
+              as="section"
+              className="contact-channels"
+              title={channels.title}
+              marker={channels.marker}
+              titleId="contact-channels-title"
+            >
               <div className="ab-body">
                 <dl className="contact-channels-body">
                   <div className="contact-channel-row">
@@ -74,38 +74,31 @@ export function ContactSection({ locale, defer }: { locale: SiteLocale; defer?: 
                   <div className="contact-channel-row">
                     <dt>{channels.linkedinLabel}</dt>
                     <dd>
-                      <a
-                        className="contact-channel-cta"
-                        href={section.linkedinHref}
-                        target="_blank"
-                        rel="noreferrer noopener"
-                      >
+                      <ExternalLink className="contact-channel-cta" href={section.linkedinHref}>
                         {channels.linkedinCta}{' '}
                         <span aria-hidden="true">{channels.linkedinGlyph}</span>
                         <span className="sr-only"> {channels.linkedinNewTabNote}</span>
-                      </a>
+                      </ExternalLink>
                     </dd>
                   </div>
                   <div className="contact-channel-row">
                     <dt>{channels.githubLabel}</dt>
                     <dd>
-                      <a
+                      <ExternalLink
                         className="contact-channel-link"
                         href={social.github}
-                        target="_blank"
-                        rel="noreferrer noopener"
                         aria-label={channels.githubAccessibleLabel}
                       >
                         {social.githubLabel}
                         <span className="contact-channel-glyph" aria-hidden="true">
                           {EXTERNAL_LINK_GLYPH}
                         </span>
-                      </a>
+                      </ExternalLink>
                     </dd>
                   </div>
                 </dl>
               </div>
-            </section>
+            </Panel>
             <dl className="contact-facts">
               {factRows.map(([label, value]) => (
                 <div className="contact-fact" key={label}>
@@ -116,25 +109,20 @@ export function ContactSection({ locale, defer }: { locale: SiteLocale; defer?: 
             </dl>
           </div>
         </div>
-        <aside
-          className="contact-timezone ab-panel"
-          aria-labelledby="contact-timezone-title"
+        <Panel
+          as="aside"
+          className="contact-timezone"
+          title={timezone.title}
+          marker={timezone.marker}
+          titleId="contact-timezone-title"
           data-locale={locale}
         >
-          <header className="ab-ph">
-            <span className="ab-mk" aria-hidden="true">
-              {timezone.marker}
-            </span>
-            <h3 className="ab-h" id="contact-timezone-title">
-              {timezone.title}
-            </h3>
-          </header>
           <div className="ab-body">
             <ContactTimezoneLazy copy={timezone}>
               <ContactTimezoneStatic loadingLabel={timezone.loading} />
             </ContactTimezoneLazy>
           </div>
-        </aside>
+        </Panel>
       </div>
     </Module>
   );
