@@ -8,11 +8,6 @@ import { LINKS_LOCALE } from '@/content/links.constants';
 import type { ChannelFeed } from '@/lib/links/feed';
 import { LatestVideoSkeleton } from './LatestVideoSkeleton';
 
-vi.mock('next/image', () => ({
-  // biome-ignore lint/performance/noImgElement: this IS the jsdom stand-in for next/image, so there is no image pipeline to prefer and no LCP to guard.
-  default: ({ src, alt }: { src: string; alt: string }) => <img src={src} alt={alt} />,
-}));
-
 const feedPending = Promise.withResolvers<ChannelFeed>();
 vi.mock('@/lib/links/feed', () => ({
   getChannelFeed: () => feedPending.promise,

@@ -1,5 +1,5 @@
-import Image from 'next/image';
 import { ExternalLink } from '@/components/ExternalLink';
+import { OptimizedImage } from '@/components/OptimizedImage';
 import { linksContent } from '@/content/links';
 import type { LinksLocale } from '@/content/links.constants';
 import { linksUi } from '@/content/links-ui';
@@ -67,7 +67,7 @@ export function VideoHistory({ locale, feed }: { locale: LinksLocale; feed: Chan
                   {String(index + 1).padStart(INDEX_PAD, '0')}
                 </span>
                 <span className="links-thumb links-history-thumb">
-                  <Image
+                  <OptimizedImage
                     src={video.thumbnailUrl}
                     alt=""
                     width={THUMB_WIDTH}

@@ -1,5 +1,5 @@
-import Image from 'next/image';
 import { Fragment, Suspense } from 'react';
+import { OptimizedImage } from '@/components/OptimizedImage';
 import { dawMixer, mixerBoot } from '@/content/daw-mixer';
 import {
   GUITAR_MODULE_HEADER,
@@ -107,7 +107,7 @@ export function GuitarContent({ locale }: { locale: SiteLocale }) {
             <span>{liveCam.cameraLabel}</span>
           </div>
           <div className="guitar-photo-frame">
-            <Image {...photo} className="guitar-photo-image" sizes={PHOTO_SIZES} />
+            <OptimizedImage {...photo} className="guitar-photo-image" sizes={PHOTO_SIZES} />
             <div className="guitar-photo-tint" aria-hidden="true" />
             <div className="guitar-photo-scanlines" aria-hidden="true" />
             <div className="guitar-scan-beam" aria-hidden="true" />

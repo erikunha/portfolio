@@ -1,5 +1,5 @@
-import Image from 'next/image';
 import { CompanyMention } from '@/components/CompanyLink';
+import { OptimizedImage } from '@/components/OptimizedImage';
 import { linksContent } from '@/content/links';
 import type { LinksLocale } from '@/content/links.constants';
 import { profile as siteProfile } from '@/content/profile';
@@ -33,7 +33,7 @@ export function IdentityCard({ locale }: { locale: LinksLocale }) {
       <div className="links-identity-box">
         <div className="links-identity-head">
           <span className="links-avatar links-identity-avatar">
-            <Image
+            <OptimizedImage
               src={profile.avatar}
               alt=""
               width={AVATAR_PX}

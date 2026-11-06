@@ -6,7 +6,7 @@ export const metadata = dsPageMetadata({
   description: '10 design-system components and a docs clipboard helper for erikunha.dev',
 });
 
-import Image from 'next/image';
+import { OptimizedImage } from '../../../../components/OptimizedImage';
 import { CompanyLink } from '../../../../components/CompanyLink';
 import { MenuTrigger } from '../../../../components/responsive/SectionNavigation';
 import { EqSpectrumStrip } from '../../../../components/sections/GuitarSection/EqSpectrumStrip';
@@ -232,7 +232,7 @@ The `links-thumb` class frames a video cover. The frame is always 16:9 and the `
 
 <Preview id="cover-frame">
   <span className="links-thumb" style={{ width: '16rem' }}>
-    <Image src="/images/guitar-live.jpg" alt="" fill sizes="256px" className="object-cover" />
+    <OptimizedImage src="/images/guitar-live.jpg" alt="" fill sizes="256px" className="object-cover" />
   </span>
 </Preview>
 

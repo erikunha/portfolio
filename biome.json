@@ -62,7 +62,18 @@
         "noUnusedTemplateLiteral": "error",
         "useImportType": "error",
         "useExportType": "error",
-        "noNonNullAssertion": "warn"
+        "noNonNullAssertion": "warn",
+        "noRestrictedImports": {
+          "level": "error",
+          "options": {
+            "paths": {
+              "next/image": {
+                "importNames": ["default"],
+                "message": "The default next/image export is a client component that ships its runtime to every route that renders it. Use components/OptimizedImage (getImageProps on the server)."
+              }
+            }
+          }
+        }
       },
       "suspicious": {
         "noConsole": {
