@@ -1,9 +1,11 @@
 import Image from 'next/image';
 import { linksContent } from '@/content/links';
-import { LINKS_INTL_LOCALE, type LinksLocale } from '@/content/links.constants';
+import type { LinksLocale } from '@/content/links.constants';
+import { linksUi } from '@/content/links-ui';
 import { Badge, Button } from '@/design-system';
 import { cn } from '@/lib/cn';
 import type { ChannelFeed } from '@/lib/links/feed';
+import { formatCompact } from '@/lib/links/format';
 import { formatRelative } from '@/lib/links/relative-time';
 import { withUtm } from '@/lib/links/utm';
 import { SubscribeCta } from './client/SubscribeCta.client';
@@ -13,22 +15,15 @@ import { SectionHeading } from './SectionHeading';
 const HEADING_ID = 'links-channel-heading';
 const THUMB_SIZES = '(min-width: 1024px) 62vw, (min-width: 768px) 50vw, 100vw';
 
-function compact(value: number, locale: LinksLocale): string {
-  return new Intl.NumberFormat(LINKS_INTL_LOCALE[locale], {
-    notation: 'compact',
-    maximumFractionDigits: 1,
-  }).format(value);
-}
-
 export function ChannelCard({ locale, feed }: { locale: LinksLocale; feed: ChannelFeed }) {
   const { channel, copy } = linksContent;
   const { latest, stats, channelUrl, fetchedAt } = feed;
 
   const counts = [
-    stats.subscriberCount === undefined ? null : compact(stats.subscriberCount, locale),
+    stats.subscriberCount === undefined ? null : formatCompact(stats.subscriberCount, locale),
     stats.videoCount === undefined
       ? null
-      : `${compact(stats.videoCount, locale)} ${copy.videosWord[locale]}`,
+      : `${formatCompact(stats.videoCount, locale)} ${copy.videosWord[locale]}`,
   ].filter((part): part is string => part !== null);
 
   const publishedAgo =
@@ -95,7 +90,7 @@ export function ChannelCard({ locale, feed }: { locale: LinksLocale; feed: Chann
                 </span>
               )}
             </span>
-            <span className="block text-tertiary-50 font-bold text-[15px] mt-2 text-pretty">
+            <span className="block text-tertiary-50 font-bold text-base mt-2 text-pretty">
               {latest.title}
             </span>
             {latest.description && (
@@ -127,7 +122,7 @@ export function ChannelCard({ locale, feed }: { locale: LinksLocale; feed: Chann
               variant="secondary"
               data-outbound="assistir"
             >
-              {copy.watch[locale]} →
+              {copy.watch[locale]} <span aria-hidden="true">{linksUi.arrow}</span>
             </Button>
           )}
         </div>

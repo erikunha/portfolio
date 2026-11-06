@@ -5,9 +5,6 @@ import { withUtm } from '@/lib/links/utm';
 import { CopyLinkButton } from './client/CopyLinkButton.client';
 import { PillGlyph } from './LinkIcons';
 
-const PILL_CLASS =
-  'inline-flex items-center gap-2 w-full min-w-0 border border-primary-subtle px-3 min-h-12 bg-transparent text-primary-500 font-bold text-xs tracking-[0.1em] uppercase no-underline transition-[box-shadow,background] duration-200 ease-out hover:shadow-[0_0_12px_var(--color-primary-500)] hover:bg-primary-quiet focus-visible:outline-2 focus-visible:outline-primary-500 focus-visible:outline-offset-2';
-
 function isMail(href: string): boolean {
   return href.startsWith('mailto:');
 }
@@ -28,9 +25,9 @@ export function LinkPills({ locale, url }: { locale: LinksLocale; url: string })
             {...(isMail(pill.href)
               ? {}
               : { target: '_blank', rel: 'noopener noreferrer', 'data-outbound': pill.id })}
-            className={PILL_CLASS}
+            className="links-pill"
           >
-            <span className="text-primary-400">
+            <span className="links-pill-glyph">
               <PillGlyph icon={pill.icon} />
             </span>
             {pill.label[locale]}

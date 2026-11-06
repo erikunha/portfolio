@@ -1,7 +1,9 @@
 import Image from 'next/image';
 import { linksContent } from '@/content/links';
-import { LINKS_INTL_LOCALE, type LinksLocale } from '@/content/links.constants';
+import type { LinksLocale } from '@/content/links.constants';
+import { linksUi } from '@/content/links-ui';
 import type { ChannelFeed } from '@/lib/links/feed';
+import { formatCompact } from '@/lib/links/format';
 import { formatRelative } from '@/lib/links/relative-time';
 import { withUtm } from '@/lib/links/utm';
 import { SectionHeading } from './SectionHeading';
@@ -25,7 +27,7 @@ function meta(
     video.duration,
     video.viewCount === undefined
       ? undefined
-      : `${new Intl.NumberFormat(LINKS_INTL_LOCALE[locale], { notation: 'compact', maximumFractionDigits: 1 }).format(video.viewCount)} ${viewsWord}`,
+      : `${formatCompact(video.viewCount, locale)} ${viewsWord}`,
     relative ?? undefined,
   ];
   return parts.filter((part): part is string => part !== undefined).join(' · ');
@@ -42,8 +44,8 @@ export function VideoHistory({ locale, feed }: { locale: LinksLocale; feed: Chan
       </SectionHeading>
 
       {isEmpty && (
-        <p className="m-0 border border-primary-border bg-[var(--color-glow-03)] p-3 text-tertiary-400 text-xs leading-body">
-          <span aria-hidden="true" className="text-primary-400">
+        <p className="links-history-empty">
+          <span aria-hidden="true" className="links-history-empty-prompt">
             ${' '}
           </span>
           {copy.historyEmpty[locale]}
@@ -51,20 +53,20 @@ export function VideoHistory({ locale, feed }: { locale: LinksLocale; feed: Chan
       )}
 
       {!isEmpty && (
-        <ol className="list-none m-0 p-0 border border-primary-border bg-[var(--color-glow-03)]">
+        <ol className="links-history-list">
           {feed.history.map((video, index) => (
-            <li key={video.id} className="border-b border-primary-quiet last:border-b-0">
+            <li key={video.id} className="links-history-item">
               <a
                 href={withUtm(video.url, `video-${index + 1}`)}
                 target="_blank"
                 rel="noopener noreferrer"
                 data-outbound={`video-${index + 1}`}
-                className="grid grid-cols-[20px_64px_1fr_auto] gap-3 items-center py-3 px-3 no-underline transition-colors duration-150 hover:bg-[var(--color-glow-06)] focus-visible:outline-2 focus-visible:outline-primary-500 focus-visible:-outline-offset-2"
+                className="links-history-row"
               >
-                <span className="text-primary-400 text-xs">
+                <span className="links-history-index">
                   {String(index + 1).padStart(INDEX_PAD, '0')}
                 </span>
-                <span className="links-thumb w-16">
+                <span className="links-thumb links-history-thumb">
                   <Image
                     src={video.thumbnailUrl}
                     alt=""
@@ -75,15 +77,13 @@ export function VideoHistory({ locale, feed }: { locale: LinksLocale; feed: Chan
                   />
                 </span>
                 <span>
-                  <span className="block text-tertiary-50 text-[12.5px] leading-[1.45] text-pretty">
-                    {video.title}
-                  </span>
-                  <span className="block text-tertiary-400 text-xs mt-0.5">
+                  <span className="links-history-title">{video.title}</span>
+                  <span className="links-history-meta">
                     {meta(video, locale, copy.viewsWord[locale], feed.fetchedAt)}
                   </span>
                 </span>
-                <span aria-hidden="true" className="text-primary-subtle text-xs">
-                  →
+                <span aria-hidden="true" className="links-history-arrow">
+                  {linksUi.arrow}
                 </span>
               </a>
             </li>
@@ -97,7 +97,7 @@ export function VideoHistory({ locale, feed }: { locale: LinksLocale; feed: Chan
           target="_blank"
           rel="noopener noreferrer"
           data-outbound="todos-videos"
-          className="flex items-center justify-center gap-2 p-3 border border-t-0 border-primary-border bg-[var(--color-glow-04)] text-primary-500 font-bold text-xs tracking-[0.1em] uppercase no-underline transition-colors duration-150 hover:bg-primary-quiet focus-visible:outline-2 focus-visible:outline-primary-500 focus-visible:-outline-offset-2"
+          className="links-history-all"
         >
           {copy.seeAllVideos[locale]}
         </a>

@@ -1,5 +1,6 @@
 import { linksContent } from '@/content/links';
 import type { LinksLocale, PlaylistAccent } from '@/content/links.constants';
+import { linksUi } from '@/content/links-ui';
 import type { LinksPlaylist } from '@/content/schemas';
 import { cn } from '@/lib/cn';
 import { withUtm } from '@/lib/links/utm';
@@ -64,13 +65,10 @@ export function PlaylistCards({ locale, channelUrl }: { locale: LinksLocale; cha
                   >
                     {playlist.tag}
                   </span>
-                  <span className="text-tertiary-50 text-[14.5px]">{playlist.title[locale]}</span>
+                  <span className="text-tertiary-50 text-sm">{playlist.title[locale]}</span>
                 </span>
-                <span
-                  aria-hidden="true"
-                  className={cn('text-[13px]', ACCENT_ARROW[playlist.accent])}
-                >
-                  →
+                <span aria-hidden="true" className={cn('text-sm', ACCENT_ARROW[playlist.accent])}>
+                  {linksUi.arrow}
                 </span>
               </span>
               <span className="block mt-2 text-tertiary-400 text-xs text-pretty">

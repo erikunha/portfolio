@@ -14,6 +14,13 @@ const VIEWPORT = {
   desktop: { width: 1280, height: 800 },
 };
 
+const FONT_FLOOR_PX = 12;
+
+const ROUTE_COPY: Record<string, { qrLabel: RegExp; skipLabel: string }> = {
+  '/links': { qrLabel: /^Código QR:/, skipLabel: 'Pular para o conteúdo' },
+  '/links/en': { qrLabel: /^QR code:/, skipLabel: 'Skip to main content' },
+};
+
 const PRIMARY = '[data-stack="primary"]';
 const SECONDARY = '[data-stack="secondary"]';
 const PILLS = '[data-testid="links-pills"]';
@@ -136,6 +143,36 @@ for (const path of ['/links', '/links/en']) {
         (el) => el.scrollWidth <= el.clientWidth + 1 && el.getBoundingClientRect().height > 0,
       );
       expect(fits).toBe(true);
+    });
+
+    test('renders no text below the 12px floor', async ({ page }) => {
+      await page.setViewportSize(VIEWPORT.desktop);
+      await page.goto(path);
+
+      const small = await page.evaluate((floor) => {
+        const found: string[] = [];
+        for (const el of document.querySelectorAll<HTMLElement>('.links-main *')) {
+          const ownText = Array.from(el.childNodes).some(
+            (node) => node.nodeType === Node.TEXT_NODE && (node.textContent ?? '').trim() !== '',
+          );
+          if (!ownText) continue;
+          const size = Number.parseFloat(getComputedStyle(el).fontSize);
+          if (size < floor) found.push(`${el.tagName.toLowerCase()}.${el.className}: ${size}px`);
+        }
+        return found;
+      }, FONT_FLOOR_PX);
+      expect(small).toEqual([]);
+    });
+
+    test('labels the QR code and the shell chrome in the page language', async ({ page }) => {
+      await page.setViewportSize(VIEWPORT.desktop);
+      await page.goto(path);
+
+      const copy = ROUTE_COPY[path];
+      if (!copy) throw new Error(`no expected copy for ${path}`);
+      const qr = page.locator('[data-col="qr"] svg[role="img"]');
+      await expect(qr).toHaveAttribute('aria-label', copy.qrLabel);
+      await expect(page.locator('.skip-to-content')).toHaveText(copy.skipLabel);
     });
   });
 }

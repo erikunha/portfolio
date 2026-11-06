@@ -89,4 +89,12 @@ describe('ChannelCard', () => {
     expect(href).toContain('sub_confirmation=1');
     expect(new URL(href).searchParams.get('utm_source')).toBe('bio');
   });
+
+  it('hides the arrow glyph from screen readers so the watch button reads as its label', () => {
+    const { container } = render(<ChannelCard locale={LINKS_LOCALE.en} feed={populatedFeed} />);
+    const watch = container.querySelector('[data-outbound="assistir"]');
+    const arrow = watch?.querySelector('[aria-hidden="true"]');
+    expect(arrow?.textContent).toBe('→');
+    expect(watch?.textContent?.replace('→', '').trim()).toBe('watch');
+  });
 });

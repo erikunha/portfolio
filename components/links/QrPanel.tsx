@@ -1,5 +1,6 @@
 import { linksContent } from '@/content/links';
 import type { LinksLocale } from '@/content/links.constants';
+import { linksUi } from '@/content/links-ui';
 import { qrMatrix, qrSvgPath } from '@/lib/links/qr';
 import { SectionHeading } from './SectionHeading';
 
@@ -22,7 +23,7 @@ export function QrPanel({ locale, url }: { locale: LinksLocale; url: string }) {
           width={RENDER_PX}
           height={RENDER_PX}
           role="img"
-          aria-label={`QR code: ${url}`}
+          aria-label={`${linksUi.qrLabel[locale]} ${url}`}
           className="block flex-none border border-primary-border"
           shapeRendering="crispEdges"
         >

@@ -3,7 +3,6 @@ import { BrandLink } from '@/components/BrandLink';
 import { linksContent } from '@/content/links';
 import { LINKS_HTML_LANG, LINKS_PATH, type LinksLocale } from '@/content/links.constants';
 import { NAVIGATION, siteNavChrome } from '@/content/navigation';
-import { SITE_LOCALE } from '@/content/site-locale';
 import { type ChannelFeed, EMPTY_FEED, getChannelFeed } from '@/lib/links/feed';
 import { ChannelCard } from './ChannelCard';
 import { ChromeBar } from './ChromeBar';
@@ -23,10 +22,10 @@ export async function LinksPage({ locale }: { locale: LinksLocale }) {
 
   return (
     <AppShell
-      brand={<BrandLink locale={SITE_LOCALE.en} />}
-      chrome={siteNavChrome(SITE_LOCALE.en)}
-      locale={SITE_LOCALE.en}
-      skipLabel={NAVIGATION[SITE_LOCALE.en].copy.skipLabel}
+      brand={<BrandLink locale={locale} />}
+      chrome={siteNavChrome(locale)}
+      locale={locale}
+      skipLabel={NAVIGATION[locale].copy.skipLabel}
     >
       <NavProgress />
       <div lang={LINKS_HTML_LANG[locale]} className="links-page">
