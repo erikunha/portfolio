@@ -3,7 +3,7 @@
 import { useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { StatusDot } from '@/components/StatusDot';
 import type { ContactContent } from '@/content/contact';
-import { contactHoursPhrase, fillCopy } from '@/content/contact-copy';
+import { contactHoursPhrase, fillCopy } from '@/content/contact-rules';
 import { ERIK_PIN, WORLD_MAP_GRID, WORLD_MAP_LAND } from '@/content/world-map';
 import { buildLandPaths } from '@/lib/timezone/land-paths';
 import {

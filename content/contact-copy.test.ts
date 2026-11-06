@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { ContactContentSchema } from './contact';
-import { contactCopy, contactHoursPhrase, fillCopy } from './contact-copy';
+import { contactCopy } from './contact-copy';
+import { contactHoursPhrase, fillCopy } from './contact-rules';
 import { SITE_LOCALE } from './site-locale';
 
 const EM_DASH = '—';

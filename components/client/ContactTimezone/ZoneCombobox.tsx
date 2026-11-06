@@ -1,6 +1,6 @@
 import { type KeyboardEvent, useId, useMemo, useState } from 'react';
 import type { ContactContent } from '@/content/contact';
-import { fillCopy } from '@/content/contact-copy';
+import { fillCopy } from '@/content/contact-rules';
 import {
   filterZones,
   formatUtcOffset,

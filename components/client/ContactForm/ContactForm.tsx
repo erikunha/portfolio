@@ -13,7 +13,7 @@ import {
   contactErrorMessage,
   contactErrorSummary,
   contactFieldError,
-} from '@/content/contact-copy';
+} from '@/content/contact-rules';
 import type { TerminalChrome } from '@/content/schemas';
 import { localeOfPath } from '@/content/site-locale';
 import { Field } from '@/design-system/components/Field';
