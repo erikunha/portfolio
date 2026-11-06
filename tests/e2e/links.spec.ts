@@ -45,7 +45,7 @@ test.describe('/links link-in-bio', () => {
   }) => {
     await page.setViewportSize({ width: 1280, height: 720 });
     await page.goto('/links');
-    const qr = page.getByRole('img', { name: /QR code/ });
+    const qr = page.getByRole('img', { name: /QR code|Código QR/ });
     await expect(qr).toBeVisible();
     expect(await qr.evaluate((el) => el.tagName.toLowerCase())).not.toBe('canvas');
     await expect(qr.locator('canvas')).toHaveCount(0);
@@ -58,7 +58,7 @@ test.describe('/links link-in-bio', () => {
   test('drops the QR panel on a phone, where the visitor is already holding the page', async ({
     page,
   }) => {
-    const qr = page.getByRole('img', { name: /QR code/ });
+    const qr = page.getByRole('img', { name: /QR code|Código QR/ });
     await page.setViewportSize({ width: 1280, height: 800 });
     await page.goto('/links');
     await expect(
