@@ -71,6 +71,11 @@ const readingViewsFor = (locale: SiteLocale): ReadingViews => {
         ENGLISH: pt ? 'Inglês' : 'English',
         INTL_DEGREE: pt ? 'Diploma internacional' : 'International degree',
       },
+      credentialBadges: {
+        ANGULAR_DEV: pt ? 'Certificado' : 'Certified',
+        ENGLISH: 'IELTS General Training',
+        INTL_DEGREE: pt ? 'Verificado pela WES' : 'WES verified',
+      },
       proseOverrides: pt
         ? {
             'buscava escala de produto ai-native': 'Entrou para escalar um produto AI-native.',
@@ -166,6 +171,12 @@ const labelOf = (locale: SiteLocale, key: string): string => {
   return label;
 };
 
+const badgeOf = (locale: SiteLocale, key: string): string => {
+  const badge = readingViews[locale].cv.credentialBadges[key];
+  if (!badge) throw new Error(`reading views: no CV badge for credential "${key}"`);
+  return badge;
+};
+
 const RESUME_SUMMARY: Record<SiteLocale, string> = {
   [SITE_LOCALE.en]:
     'I build frontend and product platforms: design systems, micro-frontend topologies, versioned state contracts, rendering and state architecture, and the backend-for-frontend (BFF) layers underneath them. I name the boundary, write the contract, and design the error path before the happy path, on web platforms, design systems and AI product surfaces where divergence is a regulated, financial, or clinical consequence.',
@@ -220,7 +231,7 @@ const cvDocumentFor = (locale: SiteLocale) => {
     certifications: credentials.map((entry) => ({
       key: entry.label,
       label: labelOf(locale, entry.label),
-      value: [entry.badge, entry.evidence].join(STACK_SEPARATOR),
+      value: [badgeOf(locale, entry.label), entry.evidence].join(STACK_SEPARATOR),
     })),
     community: {
       heading: [spaced(event.name), event.year, event.role].join(STACK_SEPARATOR),

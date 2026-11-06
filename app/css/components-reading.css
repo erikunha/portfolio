@@ -122,30 +122,37 @@
   }
 
   .reading-rows {
+    --reading-key-width: 24ch;
     margin: 0;
     padding: 0;
     list-style: none;
   }
 
   .reading-rows li {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0 var(--spacing-3);
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
     padding: 2px 0;
   }
 
   .reading-row-key {
-    min-width: 16ch;
+    min-width: 0;
     color: var(--color-primary-500);
     font-size: var(--text-xs);
     font-weight: 700;
     letter-spacing: 0.06em;
+    overflow-wrap: anywhere;
   }
 
   .reading-row-value {
-    flex: 1 1 20ch;
     min-width: 0;
     overflow-wrap: anywhere;
+  }
+
+  @media (min-width: 768px) {
+    .reading-rows li {
+      grid-template-columns: var(--reading-key-width) minmax(0, 1fr);
+      gap: 0 var(--spacing-3);
+    }
   }
 
   .reading-split {
@@ -268,19 +275,6 @@
     .reading-stats > :nth-child(n + 3) {
       border-top: var(--border-width) solid var(--color-primary-border);
     }
-
-    .reading-rows li {
-      flex-direction: column;
-      gap: 0;
-    }
-
-    .reading-row-key {
-      min-width: 0;
-    }
-
-    .reading-row-value {
-      flex: 0 0 auto;
-    }
   }
 
   @media print {
@@ -325,7 +319,8 @@
         .crt-flicker,
         .crt-scan-beam
       ),
-    .reading-actions {
+    .reading-actions,
+    .reading-actions-inline .reading-cta {
       display: none;
     }
 
@@ -336,6 +331,11 @@
     .reading-view .page-container.page-main {
       max-width: none;
       padding: 0;
+    }
+
+    .reading-rows li {
+      grid-template-columns: var(--reading-key-width) minmax(0, 1fr);
+      gap: 0 10pt;
     }
 
     .reading-doc,

@@ -152,6 +152,7 @@ export function CvPage({ locale }: { locale: SiteLocale }) {
         <p className="reading-meta">{document_.languages}</p>
         <p className="reading-actions-inline">
           <a
+            className="reading-cta"
             href={shared.hire.href}
             target="_blank"
             rel={shared.newTabRel}

@@ -1017,6 +1017,7 @@ export const ReadingViewsSchema = z.object({
       contact: ReadingTextSchema,
     }),
     credentialLabels: z.record(z.string(), ReadingTextSchema),
+    credentialBadges: z.record(z.string(), ReadingTextSchema),
     proseOverrides: z.record(z.string(), ReadingTextSchema),
   }),
   summary: z.object({

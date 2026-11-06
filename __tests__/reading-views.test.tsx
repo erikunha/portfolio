@@ -1,5 +1,8 @@
+import { parse } from 'postcss';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
+import { readComponentsCss } from '@/__tests__/helpers/components-css';
+import { declValue, rulesInMedia } from '@/__tests__/helpers/css-rules';
 import CvPage, { metadata as cvMetadata } from '@/app/cv/page';
 import SummaryPage, { metadata as summaryMetadata } from '@/app/summary/page';
 import { credentials } from '@/content/credentials';
@@ -354,5 +357,39 @@ describe('reading view content', () => {
     for (const entry of credentials) {
       expect(readingViewsEn.cv.credentialLabels[entry.label], entry.label).toBeDefined();
     }
+  });
+
+  it.each(Object.values(SITE_LOCALE))(
+    'prints the %s certifications as plain words, never as snake_case tokens',
+    (locale) => {
+      const SNAKE_CASE = /[A-Za-z]+_[A-Za-z_]+/;
+      for (const entry of credentials) {
+        expect(readingViews[locale].cv.credentialBadges[entry.label], entry.label).toBeDefined();
+      }
+      for (const row of cvDocument[locale].certifications) {
+        expect(row.value, row.key).not.toMatch(SNAKE_CASE);
+      }
+    },
+  );
+
+  it('hides the hire call to action and aligns the two row lists in print', () => {
+    const stylesheet = parse(readComponentsCss());
+    const PRINT = /^print$/;
+    const [hidden] = rulesInMedia(stylesheet, PRINT, '.reading-view .skip-to-content');
+    expect(hidden?.selector).toContain('.reading-cta');
+    expect(declValue(hidden, 'display')).toBe('none');
+
+    const [rows] = rulesInMedia(stylesheet, PRINT, '.reading-rows li');
+    expect(declValue(rows, 'grid-template-columns')).toBe(
+      'var(--reading-key-width) minmax(0, 1fr)',
+    );
+  });
+
+  it('marks the contact hire link so print can drop it', () => {
+    const host = render(CvPage);
+    const links = host.querySelectorAll('.reading-actions-inline a.reading-cta');
+
+    expect(links).toHaveLength(1);
+    expect(links[0]?.getAttribute('href')).toBe(readingViewsEn.shared.hire.href);
   });
 });
