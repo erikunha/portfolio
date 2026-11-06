@@ -175,7 +175,7 @@ const contactCopyFor = (locale: SiteLocale): ContactContent => {
       emailPlaceholder: 'you@company.com',
       messagePlaceholder: pt ? '[PRONTO PARA RECEBER DADOS...]' : '[READY FOR DATA INPUT...]',
       submit: pt ? 'EXECUTAR_ENVIO' : 'EXECUTE_SEND',
-      submitting: pt ? 'TRANSMITINDO...' : 'TRANSMITTING...',
+      submitting: pt ? 'ENVIANDO...' : 'SENDING...',
       sending: pt ? 'enviando…' : 'sending…',
       waiting: pt ? 'aguardando override manual... _' : 'waiting for manual override... _',
       statusInvalid: pt ? 'corrija os campos marcados... _' : 'fix the marked fields... _',

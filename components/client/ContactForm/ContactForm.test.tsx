@@ -1207,3 +1207,80 @@ describe('contact form locale header and server message', () => {
     );
   });
 });
+
+describe.each(Object.values(SITE_LOCALE))('contact form submitting lock (%s)', (locale) => {
+  let mounted: MountedClient;
+  const copy = contactCopy[locale];
+
+  afterEach(() => {
+    mounted?.unmount();
+    vi.unstubAllGlobals();
+  });
+
+  async function submitPending() {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(() => new Promise<Response>(() => undefined)),
+    );
+    mounted = await mountClient(
+      createElement(ContactForm, { copy, chrome: contactChrome[locale] }),
+    );
+    const { container } = mounted;
+    fillValidForm(container);
+    await act(async () => {
+      container
+        .querySelector('form')
+        ?.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    });
+    await flushMicrotasks();
+    return container;
+  }
+
+  it('labels the busy button with the sending verb and keeps it as wide as the longest label', async () => {
+    const container = await submitPending();
+    const button = container.querySelector<HTMLButtonElement>('button[type="submit"]');
+    const expected = locale === SITE_LOCALE.pt ? 'ENVIANDO...' : 'SENDING...';
+
+    expect(button?.textContent).toBe(expected);
+    expect(copy.form.submitting).toBe(expected);
+    const reserve = button?.getAttribute('data-reserve') ?? '';
+    expect(reserve.length).toBeGreaterThanOrEqual(copy.form.submit.length);
+    expect(reserve.length).toBeGreaterThanOrEqual(copy.form.submitting.length);
+    expect([copy.form.submit, copy.form.submitting]).toContain(reserve);
+  });
+
+  it('locks the fields read-only while the request is pending and keeps the typed text', async () => {
+    const container = await submitPending();
+    const fields = container.querySelectorAll<HTMLInputElement | HTMLTextAreaElement>(
+      'input[name="name"], input[name="email"], textarea',
+    );
+
+    expect(fields).toHaveLength(3);
+    for (const field of fields) {
+      expect(field.readOnly).toBe(true);
+      expect(field.value).not.toBe('');
+    }
+  });
+
+  it('unlocks the fields once the send fails', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => Response.json({ ok: false }, { status: 500 })),
+    );
+    mounted = await mountClient(
+      createElement(ContactForm, { copy, chrome: contactChrome[locale] }),
+    );
+    const { container } = mounted;
+    fillValidForm(container);
+    await act(async () => {
+      container
+        .querySelector('form')
+        ?.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    });
+    await flushMicrotasks();
+
+    const name = container.querySelector<HTMLInputElement>('input[name="name"]');
+    expect(name?.readOnly).toBe(false);
+    expect(name?.value).toBe('Ada');
+  });
+});

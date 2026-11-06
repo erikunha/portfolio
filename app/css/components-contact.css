@@ -298,6 +298,7 @@
   }
 
   .contact-send {
+    display: inline-grid;
     min-height: var(--spacing-target);
     padding: var(--spacing-2) var(--spacing-4);
     border: var(--border-width) solid var(--color-green);
@@ -309,6 +310,19 @@
     font-weight: bold;
     cursor: pointer;
     transition: box-shadow 200ms ease;
+  }
+
+  .contact-send::after {
+    content: attr(data-reserve);
+    grid-area: 1 / 1;
+    visibility: hidden;
+    height: 0;
+    overflow: hidden;
+  }
+
+  .contact-send > span {
+    grid-area: 1 / 1;
+    justify-self: center;
   }
 
   @media (max-width: 767.98px) {

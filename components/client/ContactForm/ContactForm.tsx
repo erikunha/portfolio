@@ -326,6 +326,7 @@ export function ContactForm({ copy, chrome }: { copy: ContactContent; chrome: Te
           value={values.name}
           onChange={(event) => change(CONTACT_FIELD.NAME, event.target.value)}
           error={errors.name ?? ''}
+          readOnly={busy}
           required
           minLength={CONTACT_LIMITS.nameMin}
           maxLength={CONTACT_LIMITS.nameMax}
@@ -341,6 +342,7 @@ export function ContactForm({ copy, chrome }: { copy: ContactContent; chrome: Te
           value={values.email}
           onChange={(event) => change(CONTACT_FIELD.EMAIL, event.target.value)}
           error={errors.email ?? ''}
+          readOnly={busy}
           required
           autoComplete="email"
           placeholder={copy.form.emailPlaceholder}
@@ -355,6 +357,7 @@ export function ContactForm({ copy, chrome }: { copy: ContactContent; chrome: Te
           onChange={(event) => change(CONTACT_FIELD.MESSAGE, event.target.value)}
           error={errors.message ?? ''}
           aria-describedby={counterId}
+          readOnly={busy}
           required
           minLength={CONTACT_LIMITS.messageMin}
           maxLength={CONTACT_LIMITS.messageMax}
@@ -367,8 +370,14 @@ export function ContactForm({ copy, chrome }: { copy: ContactContent; chrome: Te
           {CONTACT_LIMITS.messageMax}
         </p>
         <div className="contact-submit-row">
-          <button type="submit" aria-disabled={busy} aria-busy={busy} className="contact-send">
-            {busy ? copy.form.submitting : copy.form.submit}
+          <button
+            type="submit"
+            aria-disabled={busy}
+            aria-busy={busy}
+            className="contact-send"
+            data-reserve={longestCopy([copy.form.submit, copy.form.submitting])}
+          >
+            <span>{busy ? copy.form.submitting : copy.form.submit}</span>
           </button>
           <p
             className="contact-waiting"
