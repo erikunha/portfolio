@@ -1,6 +1,6 @@
 import { contactContent } from '@/content/contact';
 import { CONTACT_DELIVERY_CODE } from '@/content/contact-copy';
-import { SITE_LOCALE } from '@/content/site-locale';
+import { DEFAULT_SITE_LOCALE, SITE_LOCALES, type SiteLocale } from '@/content/site-locale';
 import { sendContactMessage } from '@/lib/contact-delivery';
 import {
   CONTACT_MESSAGE_TTL_SECONDS,
@@ -12,6 +12,7 @@ import { log } from '@/lib/log';
 import { getContactLimit, getRedis } from '@/lib/rate-limit';
 import { withBodyLimit } from '@/lib/server/body-limit';
 import { defineHandler, err, ok } from '@/lib/server/route';
+import { ASK_LOCALE_HEADER } from '@/lib/stream-protocol';
 
 const HONEYPOT_JITTER_MIN_MS = 50;
 const HONEYPOT_JITTER_MAX_MS = 150;
@@ -21,11 +22,17 @@ const QUEUED_STATUS = 202;
 const STORAGE_UNAVAILABLE_CODE = 'storage_unavailable';
 const MAX_CONTACT_BODY_BYTES = 16_384;
 
+function requestLocale(req: Request): SiteLocale {
+  const header = req.headers.get(ASK_LOCALE_HEADER);
+  return SITE_LOCALES.find((locale) => locale === header) ?? DEFAULT_SITE_LOCALE;
+}
+
 const handleContact = defineHandler({
   schema: ContactSchema,
   rateLimit: getContactLimit,
-  rateLimitErrorMessage: contactContent[SITE_LOCALE.en].errors.rateLimited,
-  async handler({ body, ipHash, requestId }) {
+  rateLimitErrorMessage: contactContent[DEFAULT_SITE_LOCALE].errors.rateLimited,
+  async handler({ body, ipHash, requestId, req }) {
+    const copy = contactContent[requestLocale(req)];
     if (isHoneypotTripped(body)) {
       log.info('contact honeypot tripped', { requestId });
       const jitterMs =
@@ -50,7 +57,7 @@ const handleContact = defineHandler({
         requestId,
         status: STORAGE_UNAVAILABLE_STATUS,
         code: STORAGE_UNAVAILABLE_CODE,
-        message: contactContent[SITE_LOCALE.en].errors.storageUnavailable,
+        message: copy.errors.storageUnavailable,
       });
     }
 
@@ -68,7 +75,7 @@ const handleContact = defineHandler({
         requestId,
         status: STORAGE_UNAVAILABLE_STATUS,
         code: STORAGE_UNAVAILABLE_CODE,
-        message: contactContent[SITE_LOCALE.en].errors.retryUnavailable,
+        message: copy.errors.retryUnavailable,
       });
     }
 
@@ -76,7 +83,7 @@ const handleContact = defineHandler({
       requestId,
       status: QUEUED_STATUS,
       code: CONTACT_DELIVERY_CODE.QUEUED,
-      message: `${contactContent[SITE_LOCALE.en].queued.message} ${contactContent[SITE_LOCALE.en].queued.linkLabel}`,
+      message: `${copy.queued.message} ${copy.queued.linkLabel}`,
     });
   },
 });

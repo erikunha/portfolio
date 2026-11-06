@@ -23,6 +23,11 @@ function isStale(receivedAt: string): boolean {
   return !Number.isFinite(age) || age > CONTACT_MAX_RETRY_AGE_MS;
 }
 
+const MAX_DURATION_MS = 60_000;
+const SEND_TIMEOUT_MS = 10_000;
+const SAFETY_MARGIN_MS = 10_000;
+const RETRY_START_DEADLINE_MS = MAX_DURATION_MS - SEND_TIMEOUT_MS - SAFETY_MARGIN_MS;
+
 export const maxDuration = 60;
 
 export async function GET(req: NextRequest): Promise<Response> {
@@ -31,6 +36,7 @@ export async function GET(req: NextRequest): Promise<Response> {
     return new Response('Unauthorized', { status: UNAUTHORIZED_STATUS });
   }
 
+  const startedAt = Date.now();
   const requestId = crypto.randomUUID();
   const counts = { sent: 0, failed: 0, expired: 0, exhausted: 0 };
   const pendingIds = await getPendingContactIds();
@@ -41,7 +47,14 @@ export async function GET(req: NextRequest): Promise<Response> {
     log.warn('contact retry dropped', { requestId, msgId, reason });
   };
 
-  for (const msgId of pendingIds) {
+  for (const [index, msgId] of pendingIds.entries()) {
+    if (Date.now() - startedAt >= RETRY_START_DEADLINE_MS) {
+      log.warn('contact retry deadline reached', {
+        requestId,
+        remaining: pendingIds.length - index,
+      });
+      break;
+    }
     try {
       const message = await getContactMessage(msgId);
       if (!message || isStale(message.receivedAt)) {
