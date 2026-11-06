@@ -3,13 +3,14 @@ import { gitLog } from '../../content/git-log';
 import { profile } from '../../content/profile';
 import { READING_PATHS } from '../../content/reading-views';
 import { SITE_LOCALE } from '../../content/site-locale';
+import { VIEWPORTS } from './_helpers/geometry';
 
 const TOUCH_TARGET_PX = 28;
 const NEIGHBOUR_CLEARANCE_PX = 14;
-const VIEWPORTS = [
-  { name: 'mobile', width: 375, height: 812 },
-  { name: 'tablet', width: 768, height: 1024 },
-  { name: 'desktop', width: 1280, height: 720 },
+const COMPANY_VIEWPORTS = [
+  { name: 'mobile', ...VIEWPORTS.PHONE },
+  { name: 'tablet', ...VIEWPORTS.TABLET },
+  { name: 'desktop', ...VIEWPORTS.DESKTOP },
 ];
 
 async function probeHitArea(page: Page, selector: string, index: number) {
@@ -36,7 +37,7 @@ async function probeHitArea(page: Page, selector: string, index: number) {
 }
 
 test.describe('career company links', () => {
-  for (const viewport of VIEWPORTS) {
+  for (const viewport of COMPANY_VIEWPORTS) {
     test(`home career log links every company at ${viewport.name}`, async ({ page }) => {
       await page.setViewportSize({ width: viewport.width, height: viewport.height });
       await page.emulateMedia({ reducedMotion: 'reduce' });

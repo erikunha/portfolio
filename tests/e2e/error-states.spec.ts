@@ -1,7 +1,10 @@
 import { expect, test } from '@playwright/test';
+import { errorsContent } from '../../content/errors';
+import { SITE_LOCALE } from '../../content/site-locale';
 
 const MISSING_ROUTE = '/this-route-does-not-exist';
 const NOT_FOUND_STATUS = 404;
+const SUGGESTION_COUNT = errorsContent[SITE_LOCALE.en].notFound.suggestions.length;
 
 test.describe('404 route', () => {
   test('answers with status 404 and the r106 content', async ({ page }) => {
@@ -27,7 +30,7 @@ test.describe('404 route', () => {
   test('suggested pages read as links, not plain text', async ({ page }) => {
     await page.goto(MISSING_ROUTE);
     const links = page.getByRole('navigation', { name: 'Suggested pages' }).getByRole('link');
-    expect(await links.count()).toBeGreaterThan(0);
+    await expect(links).toHaveCount(SUGGESTION_COUNT);
     for (const link of await links.all()) {
       const decoration = await link.evaluate((el) => getComputedStyle(el).textDecorationLine);
       expect(decoration, 'suggested link is underlined').toContain('underline');

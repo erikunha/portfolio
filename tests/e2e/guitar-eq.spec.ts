@@ -1,6 +1,7 @@
 import { expect, type Page, test } from '@playwright/test';
 import { guitarRig } from '../../content/guitar-rig';
 import { SITE_LOCALE } from '../../content/site-locale';
+import { horizontalOverflow, VIEWPORTS as SHARED_VIEWPORTS } from './_helpers/geometry';
 
 const STRIP = '[data-testid="eq-spectrum"]';
 const BAR = `${STRIP} .eq-bar`;
@@ -43,8 +44,7 @@ for (const { width, height, visibleBars } of VIEWPORTS) {
           (stripBox?.x ?? 0) + (stripBox?.width ?? 0) + SUBPIXEL_TOLERANCE,
         );
       }
-      const scrollWidth = await page.evaluate(() => document.documentElement.scrollWidth);
-      expect(scrollWidth).toBeLessThanOrEqual(width + SUBPIXEL_TOLERANCE);
+      expect(await horizontalOverflow(page)).toBeLessThanOrEqual(SUBPIXEL_TOLERANCE);
     });
 
     test('keeps the gear label whole across lines', async ({ page }) => {
@@ -90,7 +90,7 @@ for (const { width, height, visibleBars } of VIEWPORTS) {
 }
 
 test.describe('EQ strip motion', () => {
-  const DESKTOP = { width: 1280, height: 720 };
+  const { DESKTOP } = SHARED_VIEWPORTS;
 
   async function firstBar(page: Page) {
     await openStrip(page, DESKTOP.width, DESKTOP.height);
@@ -175,7 +175,7 @@ test('puts each axis label on its frequency', async ({ page }) => {
 });
 
 test.describe('EQ strip without JavaScript', () => {
-  test.use({ javaScriptEnabled: false, viewport: { width: 1280, height: 720 } });
+  test.use({ javaScriptEnabled: false, viewport: SHARED_VIEWPORTS.DESKTOP });
 
   test('renders the strip and the signal chain from the server HTML', async ({ page }) => {
     await page.goto('/');

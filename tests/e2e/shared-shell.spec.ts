@@ -1,5 +1,6 @@
-import { expect, type Page, test } from '@playwright/test';
+import { expect, test } from '@playwright/test';
 import { brandByLocale } from '@/content/brand';
+import { horizontalOverflow, VIEWPORTS } from './_helpers/geometry';
 
 const SHELL_PATHS = ['/', '/design-system', '/design-system/tokens', '/links', '/links/en'];
 const OVERFLOW_PATHS = [
@@ -10,19 +11,12 @@ const OVERFLOW_PATHS = [
   '/links',
   '/links/en',
 ];
-const DESKTOP = { width: 1280, height: 800 };
-const PHONE = { width: 390, height: 844 };
+const { DESKTOP, PHONE } = VIEWPORTS;
 const WIDTHS = [320, 390, 768, 1024, 1280, 1536];
 const PHONE_MAX_WIDTH = 767;
 const MENU_NAME = 'Open menu';
 const DRAWER = '#section-drawer';
 const DS_DRAWER_NAV = 'Design system menu';
-
-async function overflow(page: Page) {
-  return page.evaluate(
-    () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
-  );
-}
 
 test.describe('one shell on every page', () => {
   for (const path of SHELL_PATHS) {
@@ -116,7 +110,7 @@ test.describe('one shell on every page', () => {
           height: width <= PHONE_MAX_WIDTH ? PHONE.height : DESKTOP.height,
         });
         await page.goto(path);
-        expect(await overflow(page)).toBeLessThanOrEqual(0);
+        expect(await horizontalOverflow(page)).toBeLessThanOrEqual(0);
       });
     }
   }

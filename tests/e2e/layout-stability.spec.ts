@@ -5,13 +5,12 @@ import {
   type Page,
   test,
 } from '@playwright/test';
+import { heightOf, settleFrames, VIEWPORTS } from './_helpers/geometry';
 
-const PHONE = { width: 390, height: 844 };
-const TABLET = { width: 768, height: 1024 };
-const DESKTOP = { width: 1280, height: 720 };
+const { PHONE, TABLET, DESKTOP } = VIEWPORTS;
 const SUBPIXEL_PX = 1;
 const SCROLL_MARGIN_PX = 100;
-const SETTLE_MS = 600;
+const PENDING_DATA = '#sec-live-metrics [aria-busy="true"]';
 const ASK_REPLY = 'Short answer.';
 const SHELL_INPUT = '[aria-label="shell command"]';
 const SHELL_LOADING = '[data-testid="shell-line-loading"]';
@@ -23,13 +22,6 @@ const FIXED_NOW = new Date('2026-11-02T15:00:00Z');
 
 function contextFor(browser: Browser, baseURL: string | undefined, options: BrowserContextOptions) {
   return browser.newContext({ ...options, ...(baseURL ? { baseURL } : {}) });
-}
-
-async function heightOf(page: Page, selector: string): Promise<number> {
-  return page
-    .locator(selector)
-    .first()
-    .evaluate((node) => node.getBoundingClientRect().height);
 }
 
 async function scrollToPanel(page: Page): Promise<void> {
@@ -67,7 +59,7 @@ test.describe('the interactive shell keeps its height while an answer is pending
       });
       await page.goto('/');
       await page.getByTestId('shell-form').scrollIntoViewIfNeeded();
-      await page.waitForTimeout(SETTLE_MS);
+      await settleFrames(page);
       const idle = await heightOf(page, '#sec-shell');
 
       await page.locator(SHELL_INPUT).fill('who is erik?');
@@ -105,7 +97,8 @@ test.describe('the measured section keeps its height when its data resolves', ()
       const live = await contextFor(browser, baseURL, { viewport, reducedMotion: 'reduce' });
       const livePage = await live.newPage();
       await livePage.goto('/');
-      await livePage.waitForTimeout(SETTLE_MS * 2);
+      await expect(livePage.locator(PENDING_DATA)).toHaveCount(0);
+      await settleFrames(livePage);
       const resolved = await heightOf(livePage, '#sec-live-metrics');
       await live.close();
 
@@ -145,7 +138,7 @@ test.describe('the timezone panel keeps its height when the live panel mounts', 
         await livePage.goto(path);
         await scrollToPanel(livePage);
         await expect(livePage.getByTestId('contact-timezone')).toBeVisible();
-        await livePage.waitForTimeout(SETTLE_MS);
+        await settleFrames(livePage);
         const after = await heightOf(livePage, '.ctz-host');
         await live.close();
 

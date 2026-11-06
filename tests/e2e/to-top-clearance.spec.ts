@@ -1,12 +1,9 @@
 import { expect, test } from '@playwright/test';
+import { VIEWPORTS } from './_helpers/geometry';
 
-const PHONES = [
-  { width: 320, height: 640 },
-  { width: 390, height: 844 },
-] as const;
+const PHONES = [VIEWPORTS.PHONE_NARROW, VIEWPORTS.PHONE] as const;
 const PATHS = ['/', '/pt'] as const;
 const SCROLL_STEP_PX = 80;
-const SETTLE_MS = 100;
 
 test.describe('the back-to-top button never sits on footer text', () => {
   for (const viewport of PHONES) {
@@ -19,7 +16,7 @@ test.describe('the back-to-top button never sits on footer text', () => {
         await page.goto(path);
 
         const covered = await page.evaluate(
-          async ({ step, settle }) => {
+          async ({ step }) => {
             const button = document.querySelector('.to-top-btn') as HTMLElement;
             const footer = document.querySelector('.site-footer') as HTMLElement;
             const first = footer.getBoundingClientRect().top + window.scrollY - window.innerHeight;
@@ -27,7 +24,9 @@ test.describe('the back-to-top button never sits on footer text', () => {
             const found: string[] = [];
             for (let y = Math.max(first, 0); y <= last + step; y += step) {
               window.scrollTo(0, Math.min(y, last));
-              await new Promise((resolve) => setTimeout(resolve, settle));
+              await new Promise<void>((resolve) =>
+                requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
+              );
               const zone = button.getBoundingClientRect();
               const walker = document.createTreeWalker(footer, NodeFilter.SHOW_TEXT);
               for (let node = walker.nextNode(); node; node = walker.nextNode()) {
@@ -50,7 +49,7 @@ test.describe('the back-to-top button never sits on footer text', () => {
             }
             return found;
           },
-          { step: SCROLL_STEP_PX, settle: SETTLE_MS },
+          { step: SCROLL_STEP_PX },
         );
 
         expect(covered, 'footer text under the floating button').toEqual([]);

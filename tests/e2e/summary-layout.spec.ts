@@ -1,11 +1,11 @@
 import { expect, type Page, test } from '@playwright/test';
 import { readingViews } from '../../content/reading-views';
 import { SITE_LOCALE } from '../../content/site-locale';
+import { horizontalOverflow, VIEWPORTS } from './_helpers/geometry';
 
 const SUMMARY_PATHS = ['/summary', '/pt/summary'];
 const OVERFLOW_WIDTHS = [320, 390, 820, 1280];
-const DESKTOP = { width: 1280, height: 800 };
-const PHONE = { width: 390, height: 844 };
+const { DESKTOP, PHONE } = VIEWPORTS;
 const GOLDEN_RATIO = 1.618;
 const RATIO_TOLERANCE = 0.1;
 const TARGET_MIN = 44;
@@ -98,10 +98,7 @@ test.describe('/summary layout', () => {
         await page.setViewportSize({ width, height: 900 });
         await page.goto(path);
         await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
-        const overflow = await page.evaluate(
-          () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
-        );
-        expect(overflow).toBeLessThanOrEqual(0);
+        expect(await horizontalOverflow(page)).toBeLessThanOrEqual(0);
       });
     }
   }

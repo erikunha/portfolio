@@ -1,11 +1,11 @@
-import { test } from '@playwright/test';
+import { expect, test } from '@playwright/test';
 import { stripVolatileChrome } from './_helpers/mask-volatile';
 import { snapshotLocator } from './_helpers/snapshot';
 
 test.describe('design-system components (visual baselines)', () => {
   test.beforeEach(async ({ request }) => {
     const res = await request.get('/design-system/components');
-    test.skip(res.status() !== 200, 'components route not yet available');
+    expect(res.status(), 'the components route must be served').toBe(200);
   });
 
   test('Button variants', async ({ page }) => {
