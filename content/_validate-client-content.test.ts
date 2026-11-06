@@ -2,13 +2,14 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 describe('BrandSchema', () => {
   it('accepts the shipped brand', async () => {
-    const { brand } = await import('./brand');
+    const { brandByLocale } = await import('./brand');
     const { BrandSchema } = await import('./schemas');
 
-    expect(BrandSchema.parse(brand)).toEqual({
+    expect(BrandSchema.parse(brandByLocale.en)).toEqual({
       homeHref: '/',
       accessibleName: 'erikunha.dev, home',
     });
+    expect(BrandSchema.parse(brandByLocale.pt).accessibleName).toBe('erikunha.dev, início');
   });
 
   it.each(['homeHref', 'accessibleName'])('rejects an empty %s', async (field) => {
@@ -27,8 +28,13 @@ describe('build-time content gate', () => {
     vi.resetModules();
   });
 
-  it('rejects a brand with an empty accessible name', async () => {
-    vi.doMock('./brand', () => ({ brand: { homeHref: '/', accessibleName: '' } }));
+  it('rejects a brand with an empty accessible name in any locale', async () => {
+    vi.doMock('./brand', () => ({
+      brandByLocale: {
+        en: { homeHref: '/', accessibleName: 'erikunha.dev, home' },
+        pt: { homeHref: '/', accessibleName: '' },
+      },
+    }));
 
     await expect(
       import('./_validate-client-content'),

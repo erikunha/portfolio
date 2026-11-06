@@ -17,7 +17,7 @@ Four directories, four roles. The directory tells you the layer:
 
 The naming gate scans `app`, `components` and `lib`; `/client/` is an explicit directory-based exception.
 
-`components/CompanyLink` renders every employer link: `target="_blank"`, `rel="noopener noreferrer"`, a new-tab disclosure from `content/company-link.ts` (an `sr-only` suffix, or `aria-describedby` to one shared note where the link sits inside a `data-type-reveal` heading, whose clip is sized from its text), a persistent underline and a 28px (`--spacing-target-compact`) hit area drawn by the `.company-link::before` pseudo-element. The hit area stays that small because the links sit inside dense inline text, where a 44px zone would cover the neighbouring lines and take their taps. `CompanyMention` links the company name inside an existing sentence and throws when the sentence stops naming it.
+`components/CompanyLink` renders every employer link: `target="_blank"`, `rel="noopener noreferrer"`, a new-tab disclosure from `content/company-link.ts`, chosen by the required `locale` prop (an `sr-only` suffix, or `aria-describedby` to one shared note where the link sits inside a `data-type-reveal` heading, whose clip is sized from its text), a persistent underline and a 28px (`--spacing-target-compact`) hit area drawn by the `.company-link::before` pseudo-element. The hit area stays that small because the links sit inside dense inline text, where a 44px zone would cover the neighbouring lines and take their taps. `CompanyMention` links the company name inside an existing sentence and throws when the sentence stops naming it.
 
 `links-thumb` frames every `/links` video cover at 16:9 with the image filling the frame (no crop). The cover is grayscale under a multiplied signal-green layer from the `--links-thumb-*` tokens; hover or focus on the parent link restores the cover colour, and reduced motion removes the transition. Documented with a live example in the design system components page.
 
@@ -33,7 +33,7 @@ flowchart TD
     bp --> shell["AppShell.client"]
     shell --> navigation["SectionNavigationProvider (client): current section and drawer state"]
     navigation --> rail["SectionNavigation (client): menu trigger, drawer focus trap and focus return<br/>Header: title and drawer close control"]
-    navigation --> position["PositionMeter (client): scroll progress line, top from 1024px and right edge below"]
+    navigation --> position["PositionMeter (client): decorative scroll progress line, aria-hidden, top from 1024px and right edge below"]
     navigation --> chrome["Chrome: CRTOverlay(6 layers) · DesktopTopbar · StatusBar · MobileTitleBar · Dock · ToTopButton"]
     page --> gm["GlobalMotion (mounted by the root layout): MatrixRainLazy (client-only) + TypeReveal"]
     shell --> main["PageMain (RSC): main#main-content"]

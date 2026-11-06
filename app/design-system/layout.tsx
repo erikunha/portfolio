@@ -9,7 +9,7 @@ import { DsDrawerNav, DsNavNoScript, PagerNav, Sidebar } from './_components/Sid
 export default function DesignSystemLayout({ children }: { children: ReactNode }) {
   return (
     <AppShell
-      brand={<BrandLink />}
+      brand={<BrandLink locale={SITE_LOCALE.en} />}
       drawerExtra={<DsDrawerNav />}
       chrome={siteNavChrome(SITE_LOCALE.en)}
       locale={SITE_LOCALE.en}

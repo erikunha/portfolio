@@ -7,7 +7,7 @@ const errorsContentFor = (locale: SiteLocale): ErrorsContent => {
   return {
     ...errorsClientContent[locale],
     notFound: {
-      metaTitle: pt ? '404 · erikunha.dev/pt' : '404 · erikunha.dev',
+      metaTitle: '404 · erikunha.dev',
       code: '404',
       panelHeader: pt ? '[ NÃO ENCONTRADO ]' : '[ NOT FOUND ]',
       prompt: '$',
@@ -15,7 +15,7 @@ const errorsContentFor = (locale: SiteLocale): ErrorsContent => {
       output: pt
         ? 'bash: /rota: arquivo ou diretório inexistente'
         : 'bash: /route: no such file or directory',
-      suggestionsLabel: pt ? 'TENTE EM VEZ' : 'TRY INSTEAD',
+      suggestionsLabel: pt ? 'TENTE ISTO' : 'TRY INSTEAD',
       suggestionsNavLabel: pt ? 'Páginas sugeridas' : 'Suggested pages',
       suggestions: [
         { label: pt ? 'Projetos' : 'Projects', href: pt ? '/pt#sec-projects' : '/#sec-projects' },

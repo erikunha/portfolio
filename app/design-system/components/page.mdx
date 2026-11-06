@@ -101,7 +101,7 @@ The `design-system/components` directory contains ten components. Nine have no c
   <BrandIcon size={40} />
 </Preview>
 
-The brand mark as one inline SVG path. `size` is the width in px; the height follows the cropped viewBox. It fills with `currentColor`, so the surrounding text colour (`--color-primary-500` in the header) paints it, and a static `drop-shadow` gives the phosphor glow of the CRT headings. It is `aria-hidden`: the link that wraps it carries the name. The `BrandLink` component in `components/BrandLink` pairs the two, with a 44px minimum target and the accessible name `erikunha.dev, home` from `content/brand.ts`.
+The brand mark as one inline SVG path. `size` is the width in px; the height follows the cropped viewBox. It fills with `currentColor`, so the surrounding text colour (`--color-primary-500` in the header) paints it, and a static `drop-shadow` gives the phosphor glow of the CRT headings. It is `aria-hidden`: the link that wraps it carries the name. The `BrandLink` component in `components/BrandLink` pairs the two, with a 44px minimum target and the accessible name from `content/brand.ts` (`erikunha.dev, home` or `erikunha.dev, início`, chosen by its `locale` prop).
 
 ## WindowChrome
 
@@ -205,7 +205,7 @@ The one control that opens the site menu. It is an icon-only 44px square button 
 
 <h3 id="position-line">Position line</h3>
 
-Scroll progress is one `role="progressbar"` element named `Page position`, restyled by width and fed by `--posf` (0 to 1).
+Scroll progress is one decorative element, hidden from assistive technology with `aria-hidden="true"` (the browser scrollbar already conveys the position), restyled by width and fed by `--posf` (0 to 1).
 
 | Viewport | Shape | Placement |
 |---|---|---|
@@ -242,10 +242,10 @@ The `links-thumb` class frames a video cover. The frame is always 16:9 and the `
 
 ### CompanyLink
 
-An external link to a company named in the text. It always opens in a new tab with `rel="noopener noreferrer"` and announces `(opens in a new tab)` to screen readers. When a page already announces the behaviour once, pass `describedBy` to point at that note instead.
+An external link to a company named in the text. It always opens in a new tab with `rel="noopener noreferrer"` and announces the new tab to screen readers in the page language (`(opens in a new tab)` or `(abre em uma nova guia)`, chosen by the required `locale` prop). When a page already announces the behaviour once, pass `describedBy` to point at that note instead.
 
 <Preview id="company-link">
-  <CompanyLink href="https://www.erikunha.dev">erikunha.dev</CompanyLink>
+  <CompanyLink href="https://www.erikunha.dev" locale={SITE_LOCALE.en}>erikunha.dev</CompanyLink>
 </Preview>
 
 **Accessibility:** The hit area grows to `--spacing-target-compact` without changing the line height.

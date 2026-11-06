@@ -96,6 +96,7 @@ export function About({ locale }: { locale: SiteLocale }) {
                           text={row.v}
                           company={row.company.name}
                           href={row.company.url}
+                          locale={locale}
                         />
                       ) : (
                         row.v

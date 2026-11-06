@@ -67,7 +67,7 @@ describe('career git log', () => {
       expect(link?.textContent?.toUpperCase()).toContain(
         job.company.split(' (')[0]?.replaceAll(' ', '_').toUpperCase(),
       );
-      expect(link?.textContent).toContain(companyLinkCopy.disclosure);
+      expect(link?.textContent).toContain(companyLinkCopy[SITE_LOCALE.en].disclosure);
       const detail = job.company.includes(' (') ? job.company.slice(job.company.indexOf(' (')) : '';
       expect(
         rows[index]?.querySelector('.career-company')?.textContent?.toUpperCase(),

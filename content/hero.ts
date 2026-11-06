@@ -10,7 +10,7 @@ const heroContentFor = (locale: SiteLocale): HeroContent => {
   const pt = locale === SITE_LOCALE.pt;
   return HeroContentSchema.parse({
     locationLabel: pt ? 'LOCAL:' : 'LOC:',
-    employerLabel: 'NOW:',
+    employerLabel: pt ? 'AGORA:' : 'NOW:',
     languageLabel: pt ? 'IDIOMA:' : 'LANG:',
     statsLabel: pt ? 'Impacto em escala' : 'Impact at scale',
     hire: {

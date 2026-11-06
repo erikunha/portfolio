@@ -19,6 +19,7 @@ export function IdentityCard({ locale }: { locale: LinksLocale }) {
           text={profile.host[locale]}
           company={siteProfile.currentEmployer.name}
           href={siteProfile.currentEmployer.url}
+          locale={locale}
         />
       ),
     },

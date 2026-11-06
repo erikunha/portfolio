@@ -1,5 +1,5 @@
 import { expect, type Page, test } from '@playwright/test';
-import { brand } from '@/content/brand';
+import { brandByLocale } from '@/content/brand';
 
 const SHELL_PATHS = ['/', '/design-system', '/design-system/tokens', '/links', '/links/en'];
 const OVERFLOW_PATHS = [
@@ -31,7 +31,7 @@ test.describe('one shell on every page', () => {
       await page.goto(path);
       const topbar = page.locator('.desktop-topbar');
       await expect(topbar).toBeVisible();
-      const homeLink = topbar.getByRole('link', { name: brand.accessibleName });
+      const homeLink = topbar.getByRole('link', { name: brandByLocale.en.accessibleName });
       await expect(homeLink).toBeVisible();
       await expect(topbar.locator('.window-chrome, [class*="window-chrome"]')).toHaveCount(0);
       const menu = topbar.getByRole('button', { name: MENU_NAME });
@@ -50,7 +50,7 @@ test.describe('one shell on every page', () => {
       await page.goto(path);
       const bar = page.locator('.mobile-title-bar');
       await expect(bar).toBeVisible();
-      await expect(bar.getByRole('link', { name: brand.accessibleName })).toBeVisible();
+      await expect(bar.getByRole('link', { name: brandByLocale.en.accessibleName })).toBeVisible();
       await expect(bar.getByRole('button', { name: MENU_NAME })).toBeVisible();
       await expect(page.getByRole('navigation', { name: 'primary' })).toBeVisible();
       await expect(page.locator('main#main-content')).toHaveCount(1);

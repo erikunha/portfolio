@@ -8,7 +8,7 @@ export function NotFoundPage({ locale }: { locale: SiteLocale }) {
   const { chrome, notFound } = errorsContent[locale];
   return (
     <>
-      <ErrorChrome chrome={chrome} brand={<BrandLink />} />
+      <ErrorChrome chrome={chrome} brand={<BrandLink locale={locale} />} />
       <main className="err-main" id="main-content" tabIndex={-1}>
         <ErrorHeading>{notFound.code}</ErrorHeading>
         <TerminalPanel header={notFound.panelHeader}>

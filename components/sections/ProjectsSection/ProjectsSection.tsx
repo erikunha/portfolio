@@ -11,13 +11,19 @@ import { PerfReceiptsSection } from '../PerfReceiptsSection';
 const COMPANY_LABEL_PREFIX = '@ ';
 const COMPANY_WORD_SEPARATOR = '_';
 
-function CompanyLabel({ kind, company }: Pick<Project, 'kind' | 'company'>) {
+function CompanyLabel({
+  kind,
+  company,
+  locale,
+}: Pick<Project, 'kind' | 'company'> & { locale: SiteLocale }) {
   if (kind === 'oss') return null;
   const label = company.toUpperCase().replaceAll(' ', COMPANY_WORD_SEPARATOR);
   return (
     <>
       {COMPANY_LABEL_PREFIX}
-      <CompanyLink href={companyUrlFor(company)}>{label}</CompanyLink>
+      <CompanyLink href={companyUrlFor(company)} locale={locale}>
+        {label}
+      </CompanyLink>
     </>
   );
 }
@@ -34,7 +40,7 @@ export function ProjectsContent({ locale }: { locale: SiteLocale }) {
             </svg>
             <span className="project-attribution">
               <span className="project-co">
-                <CompanyLabel kind={project.kind} company={project.company} />
+                <CompanyLabel kind={project.kind} company={project.company} locale={locale} />
               </span>
               <span className="project-perm">{project.perm ?? presentation.permissions}</span>
             </span>

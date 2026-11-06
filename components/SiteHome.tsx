@@ -20,7 +20,7 @@ export function SiteHome({ locale }: { locale: SiteLocale }) {
   return (
     <BreakpointProvider initialIsMobile={false}>
       <AppShell
-        brand={<BrandLink />}
+        brand={<BrandLink locale={locale} />}
         chrome={siteNavChrome(locale)}
         locale={locale}
         skipLabel={NAVIGATION[locale].copy.skipLabel}

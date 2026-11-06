@@ -36,7 +36,9 @@ export function GitLogContent({ locale }: { locale: SiteLocale }) {
                 {entry.deco}
               </span>{' '}
               <strong className="career-company">
-                <CompanyLink href={entry.companyUrl}>{entry.displayBrand}</CompanyLink>
+                <CompanyLink href={entry.companyUrl} locale={locale}>
+                  {entry.displayBrand}
+                </CompanyLink>
                 {entry.displayDetail}
               </strong>{' '}
               <strong>{entry.displayRole}</strong>{' '}

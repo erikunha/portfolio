@@ -48,7 +48,7 @@ function HeroIdentity({ locale, primary }: { locale: SiteLocale; primary: boolea
         <span className="hero-context-fact hero-context-fact--employer">
           {c.employerLabel}{' '}
           <b>
-            <CompanyLink href={profile.currentEmployer.url}>
+            <CompanyLink href={profile.currentEmployer.url} locale={locale}>
               {profile.currentEmployer.name}
             </CompanyLink>
           </b>

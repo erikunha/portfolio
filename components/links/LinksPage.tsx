@@ -23,7 +23,7 @@ export async function LinksPage({ locale }: { locale: LinksLocale }) {
 
   return (
     <AppShell
-      brand={<BrandLink />}
+      brand={<BrandLink locale={SITE_LOCALE.en} />}
       chrome={siteNavChrome(SITE_LOCALE.en)}
       locale={SITE_LOCALE.en}
       skipLabel={NAVIGATION[SITE_LOCALE.en].copy.skipLabel}

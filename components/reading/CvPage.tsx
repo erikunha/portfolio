@@ -62,7 +62,7 @@ export function CvPage({ locale }: { locale: SiteLocale }) {
       </a>
       <header className="reading-bar">
         <div className="reading-bar-in">
-          <BrandLink />
+          <BrandLink locale={locale} />
           <nav aria-label={shared.navLabel} className="reading-nav">
             {shared.nav.map((item) => (
               <a key={item.href} href={item.href}>
@@ -125,7 +125,7 @@ export function CvPage({ locale }: { locale: SiteLocale }) {
           {document_.experience.map((job) => (
             <article key={job.key} className="reading-entry">
               <h3 data-type-reveal suppressHydrationWarning>
-                <CompanyLink href={job.companyUrl} describedBy={NEW_TAB_NOTE_ID}>
+                <CompanyLink href={job.companyUrl} locale={locale} describedBy={NEW_TAB_NOTE_ID}>
                   {job.company}
                 </CompanyLink>
               </h3>

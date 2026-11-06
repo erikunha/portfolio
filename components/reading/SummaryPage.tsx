@@ -22,7 +22,7 @@ export function SummaryPage({ locale }: { locale: SiteLocale }) {
       </a>
       <header className="reading-bar">
         <div className="reading-bar-in">
-          <BrandLink />
+          <BrandLink locale={locale} />
           <nav aria-label={shared.navLabel} className="reading-nav">
             {shared.nav.map((item) => (
               <a key={item.href} href={item.href}>
@@ -49,6 +49,7 @@ export function SummaryPage({ locale }: { locale: SiteLocale }) {
               text={doc.context}
               company={doc.employer.name}
               href={doc.employer.url}
+              locale={locale}
             />
           </p>
         </section>

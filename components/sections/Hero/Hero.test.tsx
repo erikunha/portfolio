@@ -129,6 +129,27 @@ describe('Hero identity and static actions', () => {
   });
 });
 
+describe('Hero on the Portuguese page', () => {
+  const ptDoc = () =>
+    new DOMParser().parseFromString(
+      renderToStaticMarkup(createElement(Hero, { locale: SITE_LOCALE.pt })),
+      'text/html',
+    );
+
+  it('discloses the employer link in Portuguese, never English', () => {
+    for (const link of ptDoc().querySelectorAll('.hero-context-fact--employer a')) {
+      expect(link.textContent).toContain('(abre em uma nova guia)');
+      expect(link.textContent).not.toContain('opens in a new tab');
+    }
+  });
+
+  it('labels the employer AGORA:', async () => {
+    const { heroContent } = await import('@/content/hero');
+    expect(heroContent[SITE_LOCALE.pt].employerLabel).toBe('AGORA:');
+    expect(heroContent[SITE_LOCALE.en].employerLabel).toBe('NOW:');
+  });
+});
+
 describe('Hero owner decisions', () => {
   it('shows no relocation or sponsorship chip', () => {
     const html = renderToStaticMarkup(createElement(Hero, { locale: SITE_LOCALE.en }));

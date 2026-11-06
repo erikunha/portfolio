@@ -79,6 +79,19 @@ describe('Projects', () => {
     });
   });
 
+  it('discloses every external link in Portuguese on the Portuguese page', async () => {
+    const doc = new DOMParser().parseFromString(
+      renderToStaticMarkup(await ProjectsContent({ locale: SITE_LOCALE.pt })),
+      'text/html',
+    );
+    const links = Array.from(doc.querySelectorAll('a[target="_blank"]'));
+    expect(links.length).toBeGreaterThan(0);
+    for (const link of links) {
+      expect(link.textContent).toContain('(abre em uma nova guia)');
+      expect(link.textContent).not.toContain('opens in a new tab');
+    }
+  });
+
   it('renders one set of canonical card content for the responsive layout', () => {
     const doc = new DOMParser().parseFromString(
       renderToStaticMarkup(<ProjectsSection locale={SITE_LOCALE.en} />),

@@ -3,17 +3,18 @@
 import { usePathname } from 'next/navigation';
 import { type ReactNode, useEffect, useRef, useState } from 'react';
 import { reportClientError } from '@/components/ErrorBoundary/ErrorBoundary.client';
-import { brand } from '@/content/brand';
+import { brandByLocale } from '@/content/brand';
 import { errorsClientContent as errorsContent } from '@/content/errors-client';
 import type { ErrorsContent } from '@/content/schemas';
-import { localeOfPath } from '@/content/site-locale';
+import { localeOfPath, type SiteLocale } from '@/content/site-locale';
 
 const COPIED_RESET_MS = 2000;
 
 const BRAND_IMAGE_SRC = '/icon.svg';
 const BRAND_IMAGE_SIZE_PX = 28;
 
-function ClientBrandLink() {
+function ClientBrandLink({ locale }: { locale: SiteLocale }) {
+  const brand = brandByLocale[locale];
   return (
     <a className="brand-link" href={brand.homeHref} aria-label={brand.accessibleName}>
       {/* biome-ignore lint/performance/noImgElement: a client boundary cannot import the inline SVG without shipping its path to every route; the static icon file carries the same mark */}
@@ -130,14 +131,15 @@ function ServerErrorMain({
 }
 
 export function RouteErrorPage({ error, reset }: RouteErrorProps) {
-  const content = errorsContent[localeOfPath(usePathname())];
+  const locale = localeOfPath(usePathname());
+  const content = errorsContent[locale];
   useEffect(() => {
     reportClientError('[RouteError]', error);
   }, [error]);
 
   return (
     <>
-      <ErrorChrome chrome={content.chrome} brand={<ClientBrandLink />} />
+      <ErrorChrome chrome={content.chrome} brand={<ClientBrandLink locale={locale} />} />
       <ServerErrorMain error={error} reset={reset} content={content.serverError} />
     </>
   );
