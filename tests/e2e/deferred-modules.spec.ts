@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 
-const WIDTHS = [320, 390, 412, 767, 768, 1023, 1024, 1280];
+const WIDTHS = [320, 340, 360, 390, 412, 480, 600, 767, 768, 1023, 1024, 1280];
 const VIEWPORT_HEIGHT = 800;
 const SUBPIXEL_TOLERANCE_PX = 1;
 
