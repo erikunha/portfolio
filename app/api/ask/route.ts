@@ -202,7 +202,7 @@ async function handleAsk(req: NextRequest): Promise<Response> {
     ],
     onError({ error }) {
       upstreamFailed = true;
-      console.error('[ask] streamText error', error);
+      log.error('ask upstream error', { requestId, err: error });
     },
   });
 
