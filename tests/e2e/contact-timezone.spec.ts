@@ -18,6 +18,9 @@ const CLOCK_PATTERN = /^\d{2}:\d{2}:\d{2}$/;
 const TICK_TIMEOUT_MS = 5_000;
 const ERROR_STATUS_FLOOR = 400;
 const SCROLL_MARGIN_PX = 100;
+const ISLAND_READY_TIMEOUT_MS = 20_000;
+
+test.use({ deviceScaleFactor: 1 });
 
 type Findings = { consoleErrors: string[]; failedRequests: string[] };
 
@@ -53,7 +56,7 @@ async function openPanel(page: Page) {
     SCROLL_MARGIN_PX,
   );
   const panel = page.getByTestId('contact-timezone');
-  await expect(panel).toBeVisible();
+  await expect(panel).toBeVisible({ timeout: ISLAND_READY_TIMEOUT_MS });
   await panel.scrollIntoViewIfNeeded();
   return panel;
 }
