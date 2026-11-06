@@ -13,6 +13,8 @@ type RainTunables = {
 
 const DIGITS = '0123456789'.split('');
 const FRAME_MS = 1000 / 22;
+const MAX_BACKING_DPR = 2;
+const RAIN_CONTEXT_OPTIONS: CanvasRenderingContext2DSettings = { willReadFrequently: true };
 
 type RainCfg = {
   fontSize?: number;
@@ -53,13 +55,13 @@ export function MatrixRain({
 
     const canvas = canvasRef.current;
     if (!canvas) return;
-    const ctx = canvas.getContext('2d');
+    const ctx = canvas.getContext('2d', RAIN_CONTEXT_OPTIONS);
     if (!ctx) return;
 
     const canvasEl = canvas;
     const ctxEl = ctx;
 
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const dpr = Math.min(window.devicePixelRatio || 1, MAX_BACKING_DPR);
     let columns = 0;
     let drops: number[] = [];
     let running = true;
