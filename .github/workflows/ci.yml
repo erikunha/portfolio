@@ -17,6 +17,9 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: false
 
+permissions:
+  contents: read
+
 jobs:
   quality-fast:
     runs-on: ubuntu-24.04
@@ -187,7 +190,7 @@ jobs:
           script: |
             const fs = require('fs');
             if (!fs.existsSync('coverage/coverage-summary.json')) {
-              core.warning('coverage/coverage-summary.json not found — skipping coverage comment. Did pnpm test:coverage complete?');
+              core.warning('coverage/coverage-summary.json not found, skipping coverage comment. Did pnpm test:coverage complete?');
               return;
             }
             let summary;
