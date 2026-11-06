@@ -42,7 +42,7 @@ function isReactOwned(node: Element): boolean {
 }
 
 async function submitQuestion(container: HTMLElement, question: string): Promise<void> {
-  const input = container.querySelector<HTMLInputElement>('input[aria-label="shell command"]');
+  const input = container.querySelector<HTMLInputElement>('input[name="command"]');
   const form = container.querySelector<HTMLFormElement>('form');
   expect(input).not.toBeNull();
   expect(form).not.toBeNull();
@@ -1124,6 +1124,81 @@ describe('InteractiveShell stream states', () => {
         expect(Object.values(copy).join(' ')).not.toMatch(/[\u2013\u2014]/);
       },
     );
+  });
+
+  describe('E3 stderr', () => {
+    const address = 'erikhenriquealvescunha@gmail.com';
+
+    it.each([
+      [SITE_LOCALE.en, 'temporarily unavailable', 'try: cat skills.md (works offline) or write to'],
+      [
+        SITE_LOCALE.pt,
+        'temporariamente indisponível',
+        'tente: cat skills.md (funciona offline) ou escreva para',
+      ],
+    ] as const)(
+      'prints the status command, a local fallback and the request id in %s',
+      async (locale, message, tryText) => {
+        vi.stubGlobal(
+          'fetch',
+          vi.fn(async () =>
+            Response.json(
+              { error: message },
+              { status: 503, headers: { 'X-Request-Id': 'req-503' } },
+            ),
+          ),
+        );
+        const container = await renderShell(locale);
+        await submitQuestion(container, 'qual a stack dele?');
+        const lines = Array.from(container.querySelectorAll('[role="log"] > .shell-line'));
+        const errorIndex = lines.findIndex((line) => line.getAttribute('data-kind') === 'error');
+        const error = lines[errorIndex];
+        expect(error?.textContent).toBe(`ask: 503 ${message}`);
+        expect(error?.querySelector('strong')?.textContent).toBe('ask: 503');
+        const hint = lines[errorIndex + 1];
+        expect(hint?.getAttribute('data-kind')).toBe('hint');
+        expect(hint?.textContent).toBe(`${tryText} ${address}`);
+        expect(hint?.querySelector('code')?.textContent).toBe('cat skills.md');
+        expect(hint?.querySelector('a')?.getAttribute('href')).toBe(`mailto:${address}`);
+        expect(lines[errorIndex + 2]?.textContent).toContain('req-503');
+        expect(lines[errorIndex + 2]?.querySelector('button')).not.toBeNull();
+      },
+    );
+
+    it('keeps 4xx errors to the status line without a fallback suggestion', async () => {
+      vi.stubGlobal(
+        'fetch',
+        vi.fn(async () => Response.json({ error: 'question is required' }, { status: 400 })),
+      );
+      const container = await renderShell();
+      await submitQuestion(container, 'x');
+      expect(container.querySelector('[data-kind="error"]')?.textContent).toBe(
+        'ask: 400 question is required',
+      );
+      expect(container.querySelector('[data-kind="hint"]')).toBeNull();
+    });
+
+    it('does not repeat the address when the server message already carries it', async () => {
+      vi.stubGlobal(
+        'fetch',
+        vi.fn(async () =>
+          Response.json({ error: `paused. Email ${address} instead.` }, { status: 503 }),
+        ),
+      );
+      const container = await renderShell();
+      await submitQuestion(container, 'x');
+      expect(container.querySelector('[data-kind="hint"]')).toBeNull();
+    });
+
+    it('falls back to the HTTP label when the body has no message', async () => {
+      vi.stubGlobal(
+        'fetch',
+        vi.fn(async () => new Response('', { status: 502 })),
+      );
+      const container = await renderShell();
+      await submitQuestion(container, 'x');
+      expect(container.querySelector('[data-kind="error"]')?.textContent).toBe('ask: 502 HTTP');
+    });
   });
 
   describe('L5 streaming', () => {

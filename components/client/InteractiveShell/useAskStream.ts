@@ -8,16 +8,24 @@ import {
   useRef,
   useState,
 } from 'react';
-import { SHELL_LIMITS, ShellLineKind, type ShellUi } from '@/content/shell-ui';
+import { SHELL_LIMITS, ShellLineKind, type ShellUi, shellStates } from '@/content/shell-ui';
 import type { SiteLocale } from '@/content/site-locale';
 import { ASK_LOCALE_HEADER, parseStreamChunk } from '@/lib/stream-protocol';
 
 export type LineKind = (typeof ShellLineKind)[keyof typeof ShellLineKind];
-export type Line = { id: number; kind: LineKind; text: string; ai?: boolean };
+export type Line = {
+  id: number;
+  kind: LineKind;
+  text: string;
+  ai?: boolean;
+  prefix?: string;
+};
+type FailureDetail = { prefix?: string; hint?: boolean };
 type ActiveRequest = { stop: () => void; dispose: () => void };
 
 const ASK_ENDPOINT = '/api/ask';
 const RATE_LIMIT_STATUS = 429;
+const SERVER_ERROR_STATUS = 500;
 
 export function bounded(lines: Line[]): Line[] {
   return lines.slice(-SHELL_LIMITS.logEntries);
@@ -42,6 +50,7 @@ export function useAskStream({
   setInput,
   onSettled,
 }: AskStreamOptions) {
+  const states = shellStates[locale];
   const [busy, setBusy] = useState(false);
   const [streamingText, setStreamingText] = useState<string | null>(null);
   const activeRequest = useRef<ActiveRequest | null>(null);
@@ -89,7 +98,7 @@ export function useAskStream({
         controller.abort();
         void reader?.cancel().catch(() => undefined);
       }
-      function finish(text: string, message?: string, error = false) {
+      function finish(text: string, message?: string, error = false, detail: FailureDetail = {}) {
         if (settled) return;
         settled = true;
         clearTimeout(timer);
@@ -102,8 +111,10 @@ export function useAskStream({
           lines.push({
             id: nextId(),
             kind: error ? ShellLineKind.Error : ShellLineKind.Info,
-            text: error ? `${ui.errorPrefix} ${message}` : message,
+            text: error && !detail.prefix ? `${ui.errorPrefix} ${message}` : message,
+            prefix: detail.prefix,
           });
+          if (detail.hint) lines.push({ id: nextId(), kind: ShellLineKind.Hint, text: '' });
         }
         if (!text && !message) {
           lines.push({ id: nextId(), kind: ShellLineKind.Output, text: ui.empty });
@@ -115,7 +126,7 @@ export function useAskStream({
         setStreamingText(null);
         setBusy(false);
         if (message) setInput((value) => value || command);
-        announce(message ?? ui.complete);
+        announce(message ? [detail.prefix, message].filter(Boolean).join(' ') : ui.complete);
         onSettled();
       }
       function interrupt(message: string, error = false) {
@@ -153,11 +164,15 @@ export function useAskStream({
             error?: string | { message?: string };
           } | null;
           const detail = typeof data?.error === 'string' ? data.error : data?.error?.message;
-          const message = detail || `${ui.httpErrorPrefix} ${response.status}`;
+          const message = detail || response.statusText || ui.httpErrorPrefix;
           finish(
             '',
             response.status === RATE_LIMIT_STATUS ? `${message}. ${ui.localAvailable}` : message,
             true,
+            {
+              prefix: `${states.stderrCommand} ${response.status}`,
+              hint: response.status >= SERVER_ERROR_STATUS && !message.includes(ui.email),
+            },
           );
           return;
         }
@@ -207,7 +222,7 @@ export function useAskStream({
         reader?.releaseLock();
       }
     },
-    [announce, clearFrame, nextId, onSettled, setHistory, setInput, ui, locale],
+    [announce, clearFrame, nextId, onSettled, setHistory, setInput, states, ui, locale],
   );
 
   const stop = useCallback(() => activeRequest.current?.stop(), []);

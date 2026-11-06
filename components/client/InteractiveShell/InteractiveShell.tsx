@@ -25,6 +25,7 @@ const KIND_CLASS: Record<LineKind, string> = {
   [ShellLineKind.Info]: 'shell-line-info',
   [ShellLineKind.Loading]: 'shell-line-loading',
   [ShellLineKind.Reference]: 'shell-line-reference',
+  [ShellLineKind.Hint]: 'shell-line-hint',
 };
 const Key = {
   Up: 'ArrowUp',
@@ -239,9 +240,16 @@ export function InteractiveShell({
             >
               {line.kind === ShellLineKind.Reference ? (
                 <ResponseReference ui={ui} requestId={line.text} announce={announce} />
+              ) : line.kind === ShellLineKind.Hint ? (
+                <>
+                  {states.tryPrefix} <code>{states.tryCommand}</code> {states.trySuffix}{' '}
+                  <a href={ui.emailHref}>{ui.email}</a>
+                </>
               ) : (
                 <>
                   {line.ai && <span className="shell-ai-label">{ui.aiLabel}: </span>}
+                  {line.prefix && <strong className="shell-stderr-command">{line.prefix}</strong>}
+                  {line.prefix && ' '}
                   <LineText text={line.text} ui={ui} />
                 </>
               )}

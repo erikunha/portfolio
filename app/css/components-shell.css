@@ -58,6 +58,25 @@
     color: var(--color-senary-300);
   }
 
+  .shell-stderr-command {
+    color: var(--color-primary-500);
+    font-weight: 700;
+  }
+
+  .shell-line-hint {
+    color: var(--color-primary-400);
+  }
+
+  .shell-line-hint code {
+    color: var(--color-primary-500);
+    font: inherit;
+  }
+
+  .shell-line-hint a {
+    text-decoration: underline;
+    text-underline-offset: var(--spacing-1);
+  }
+
   .shell-ai-label {
     color: var(--color-primary-500);
   }
