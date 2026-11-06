@@ -37,6 +37,32 @@ afterEach(() => {
   vi.doUnmock('@/lib/env');
 });
 
+describe('getChannelFeed failure caching', () => {
+  const SHORT_REVALIDATE_S = 120;
+
+  it('shortens the cache life of an empty result so a transient outage does not stick for an hour', async () => {
+    hangingFetch();
+    const { getChannelFeed } = await loadFeed('key');
+    const { cacheLife } = await import('next/cache');
+    vi.mocked(cacheLife).mockClear();
+    vi.useFakeTimers();
+    const pending = getChannelFeed();
+    await vi.advanceTimersByTimeAsync(DEADLINE_MS);
+    const feed = await pending;
+
+    expect(feed.latest).toBeNull();
+    const profiles = vi.mocked(cacheLife).mock.calls.map(([profile]) => profile) as Array<{
+      revalidate?: number;
+    }>;
+    expect(
+      profiles.some(
+        (profile) => (profile.revalidate ?? Number.POSITIVE_INFINITY) <= SHORT_REVALIDATE_S,
+      ),
+      'an empty feed must be retried within minutes, not after the one-hour revalidate',
+    ).toBe(true);
+  });
+});
+
 describe('getChannelFeed cold path', () => {
   it('asks for the channel stats and the uploads at the same time', async () => {
     const started = hangingFetch();

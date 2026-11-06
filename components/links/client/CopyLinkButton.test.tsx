@@ -11,6 +11,7 @@ function renderButton() {
       idleLabel="copiar link"
       doneLabel="copied ✓"
       failedLabel="copy failed"
+      failedMessage="Copy failed. Copy the address from the browser bar."
     />,
   );
 }
@@ -94,7 +95,8 @@ describe('CopyLinkButton', () => {
 
     const { container } = renderButton();
     await click(container);
-    expect(statusText(container)).toBe('copy failed');
+    expect(statusText(container)).toBe('Copy failed. Copy the address from the browser bar.');
+    expect(container.querySelector('button')?.textContent).toContain('copy failed');
 
     await act(async () => {
       await vi.advanceTimersByTimeAsync(2_000);
@@ -106,6 +108,6 @@ describe('CopyLinkButton', () => {
 
     const { container } = renderButton();
     await click(container);
-    expect(statusText(container)).toBe('copy failed');
+    expect(statusText(container)).toBe('Copy failed. Copy the address from the browser bar.');
   });
 });

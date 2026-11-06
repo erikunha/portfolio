@@ -1,5 +1,5 @@
-import { render } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { act, render } from '@testing-library/react';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { LINKS_LOCALE } from '@/content/links.constants';
 import { LinkPills } from './LinkPills';
 
@@ -70,5 +70,33 @@ describe('LinkPills', () => {
   it('announces the new tab in Portuguese on the Portuguese route', () => {
     const { container } = render(<LinkPills locale={LINKS_LOCALE.pt} url={PAGE_URL} />);
     expect(byLabel(container, /github/i)?.textContent).toMatch(/abre em uma nova guia/i);
+  });
+});
+
+describe('LinkPills copy-link outcome', () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  it.each([
+    [LINKS_LOCALE.pt, 'copiado', 'Falha ao copiar'],
+    [LINKS_LOCALE.en, 'copied', 'Copy failed'],
+  ] as const)('words the copy outcome in the page language (%s)', async (locale, done, failed) => {
+    const writeText = vi
+      .fn()
+      .mockResolvedValueOnce(undefined)
+      .mockRejectedValueOnce(new DOMException('denied', 'NotAllowedError'));
+    vi.stubGlobal('navigator', { clipboard: { writeText } });
+    const { container } = render(<LinkPills locale={locale} url={PAGE_URL} />);
+    const button = container.querySelector('button') as HTMLButtonElement;
+    const status = () => container.querySelector('[role="status"]')?.textContent ?? '';
+
+    await act(async () => button.click());
+    expect(status()).toContain(done);
+
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 2_100));
+    });
+    await act(async () => button.click());
+    expect(status(), 'a failed copy says what to do next, in the page language').toContain(failed);
+    expect(status()).toMatch(/endereço|address/);
   });
 });

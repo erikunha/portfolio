@@ -8,11 +8,13 @@ export function CopyLinkButton({
   idleLabel,
   doneLabel,
   failedLabel,
+  failedMessage,
 }: {
   url: string;
   idleLabel: string;
   doneLabel: string;
   failedLabel: string;
+  failedMessage: string;
 }) {
   const { status, copy } = useCopyFeedback({ resetOnFailure: true });
   const labelByStatus: Record<CopyStatus, string> = {
@@ -42,7 +44,9 @@ export function CopyLinkButton({
         <span aria-hidden="true">{showingOutcome ? `$ ${label}` : label}</span>
       </button>
       <span className="sr-only" role="status">
-        {label}
+        {status === COPY_STATUS.Failed || status === COPY_STATUS.Unavailable
+          ? failedMessage
+          : label}
       </span>
     </>
   );
