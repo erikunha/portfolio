@@ -7,6 +7,7 @@ import { getAskMetrics } from '@/lib/ask-metrics';
 import { IconAiMetrics } from '../../Icons';
 import { Module } from '../../responsive/Module';
 import { LivePerfSection } from '../LivePerfSection';
+import { MeasuredStatus } from '../MeasuredStatus';
 
 const percent = (content: Measured) => (rate: number) =>
   `${Math.round(rate * content.format.percentScale)}${content.ask.percentUnit}`;
@@ -73,14 +74,26 @@ function AiMetricsBody({
           </div>
         ))}
       </div>
-      {!metrics ? (
-        <p className="measured-status" role="status">
-          {loading ? content.loading : unavailable ? content.ask.unavailable : content.ask.pending}
-        </p>
-      ) : null}
-      {metrics && !timestamp.valid ? (
-        <p className="measured-status">{content.unknownTimestamp}</p>
-      ) : null}
+      <MeasuredStatus
+        message={
+          metrics
+            ? timestamp.valid
+              ? null
+              : content.unknownTimestamp
+            : loading
+              ? content.loading
+              : unavailable
+                ? content.ask.unavailable
+                : content.ask.pending
+        }
+        live={!metrics}
+        reserve={[
+          content.loading,
+          content.ask.unavailable,
+          content.ask.pending,
+          content.unknownTimestamp,
+        ]}
+      />
     </div>
   );
 }

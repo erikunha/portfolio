@@ -201,7 +201,10 @@ describe('AiMetricsSection — on-page AI eval/cost metrics (RSC)', () => {
     expect(html).not.toContain('>100%<');
     expect(html).not.toContain('>0%<');
     expect(html).toContain(measured[SITE_LOCALE.en].ask.pending);
-    expect(html).not.toContain('Eval results are unavailable');
+    const doc = new DOMParser().parseFromString(html, 'text/html');
+    expect(doc.querySelector('.measured-status')?.textContent).toBe(
+      measured[SITE_LOCALE.en].ask.pending,
+    );
   });
 
   it('announces the unavailable state through a polite live region', async () => {
@@ -214,5 +217,32 @@ describe('AiMetricsSection — on-page AI eval/cost metrics (RSC)', () => {
     getAskMetricsMock.mockResolvedValue(null);
     const doc = new DOMParser().parseFromString(await renderData(), 'text/html');
     expect(doc.querySelector('.measured-status')?.getAttribute('role')).toBe('status');
+  });
+
+  it('keeps the same status room whether the block shows data, the pending copy or the loading copy', async () => {
+    const content = measured[SITE_LOCALE.en];
+    const longest = [
+      content.loading,
+      content.ask.unavailable,
+      content.ask.pending,
+      content.unknownTimestamp,
+    ].reduce((winner, candidate) => (candidate.length > winner.length ? candidate : winner));
+    getAskMetricsMock.mockResolvedValueOnce({
+      evalPassRate: 0.9,
+      jailbreakResistance: 1,
+      p95LatencyMs: 3100,
+      costPerAnswer: 0.0018,
+      lastRun: new Date().toISOString(),
+    });
+    const withData = new DOMParser().parseFromString(await renderData(), 'text/html');
+    getAskMetricsMock.mockResolvedValueOnce(null);
+    const pending = new DOMParser().parseFromString(await renderData(), 'text/html');
+
+    for (const doc of [withData, pending]) {
+      expect(doc.querySelector('.measured-status-slot')?.getAttribute('data-reserve')).toBe(
+        longest,
+      );
+    }
+    expect(withData.querySelector('.measured-status-slot p')).toBeNull();
   });
 });

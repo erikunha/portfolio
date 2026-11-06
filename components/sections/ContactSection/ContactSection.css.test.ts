@@ -2,6 +2,7 @@ import { parse, type Root } from 'postcss';
 import { describe, expect, it } from 'vitest';
 import { readComponentsCss } from '@/__tests__/helpers/components-css';
 import { declValue, rulesInMedia, rulesWithSelector } from '@/__tests__/helpers/css-rules';
+import { SITE_LOCALE } from '@/content/site-locale';
 
 const stylesheet = parse(readComponentsCss());
 const TOUCH_TARGET = 'var(--spacing-target)';
@@ -115,5 +116,27 @@ describe('contact layout stylesheet', () => {
     const [rule] = rulesInMedia(stylesheet, CLOCKS_ONE_ROW, '.ctz-clocks');
 
     expect(declValue(rule, 'flex-wrap')).toBe('nowrap');
+  });
+
+  it('hides the loading label when the panel failed to load or scripting is off', () => {
+    const [failed] = rulesWithSelector(stylesheet, '.ctz-failed .ctz-loading');
+    const [scriptless] = rulesInMedia(stylesheet, /scripting:\s*none/, '.ctz-loading');
+
+    expect(declValue(failed, 'display')).toBe('none');
+    expect(declValue(scriptless, 'display')).toBe('none');
+  });
+
+  it('reserves a minimum height for the panel host at every width band, per locale', () => {
+    const [host] = rulesWithSelector(stylesheet, '.ctz-host');
+    const WIDTH_BANDS = 9;
+
+    expect(declValue(host, 'min-height')).toBe('var(--ctz-host-min, 0)');
+    for (const locale of Object.values(SITE_LOCALE)) {
+      const tokens = rulesWithSelector(stylesheet, `.contact-timezone[data-locale="${locale}"]`);
+      expect(tokens, `${locale} needs a token for each width band`).toHaveLength(WIDTH_BANDS);
+      for (const token of tokens) {
+        expect(declValue(token, '--ctz-host-min'), locale).toMatch(/^\d+(\.\d+)?rem$/);
+      }
+    }
   });
 });

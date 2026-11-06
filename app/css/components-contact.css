@@ -74,10 +74,44 @@
     margin: 0;
   }
 
+  .contact-waiting {
+    display: grid;
+    margin: 0;
+  }
+
+  .contact-waiting::after {
+    content: attr(data-reserve);
+    grid-area: 1 / 1;
+    visibility: hidden;
+  }
+
+  .contact-waiting > span {
+    grid-area: 1 / 1;
+  }
+
   .contact-count {
     margin: 0;
     text-align: right;
     font-variant-numeric: tabular-nums;
+  }
+
+  .contact-nojs {
+    margin: 0;
+    padding: var(--spacing-3);
+    border: var(--border-width) solid var(--color-primary-subtle);
+    color: var(--color-text);
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    overflow-wrap: anywhere;
+  }
+
+  .contact-nojs a {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--spacing-target);
+    color: var(--color-primary-500);
+    text-decoration: underline;
+    text-underline-offset: var(--spacing-1);
   }
 
   .contact-alert {
@@ -309,7 +343,6 @@
     flex-direction: column;
     gap: var(--phi-space-2);
     min-width: 0;
-    min-height: var(--ctz-min-height, 0);
     font-family: var(--font-mono);
     font-size: var(--text-xs);
   }
@@ -318,25 +351,113 @@
     margin: 0;
   }
 
-  .ctz-static {
-    --ctz-min-height: 51rem;
+  .ctz-loading {
+    color: var(--color-text-secondary);
   }
 
-  @media (min-width: 412px) {
-    .ctz-static {
-      --ctz-min-height: 50rem;
+  .ctz-failed {
+    display: contents;
+  }
+
+  .ctz-failed .ctz-loading {
+    display: none;
+  }
+
+  @media (scripting: none) {
+    .ctz-loading {
+      display: none;
+    }
+  }
+
+  .ctz-host {
+    min-height: var(--ctz-host-min, 0);
+  }
+
+  .contact-timezone[data-locale="en"] {
+    --ctz-host-min: 53.2rem;
+  }
+
+  .contact-timezone[data-locale="pt"] {
+    --ctz-host-min: 55.4rem;
+  }
+
+  @media (min-width: 360px) {
+    .contact-timezone[data-locale="en"] {
+      --ctz-host-min: 51.75rem;
+    }
+
+    .contact-timezone[data-locale="pt"] {
+      --ctz-host-min: 54rem;
+    }
+  }
+
+  @media (min-width: 480px) {
+    .contact-timezone[data-locale="en"] {
+      --ctz-host-min: 52.4rem;
+    }
+
+    .contact-timezone[data-locale="pt"] {
+      --ctz-host-min: 53.6rem;
+    }
+  }
+
+  @media (min-width: 512px) {
+    .contact-timezone[data-locale="en"] {
+      --ctz-host-min: 48.2rem;
+    }
+
+    .contact-timezone[data-locale="pt"] {
+      --ctz-host-min: 48.2rem;
+    }
+  }
+
+  @media (min-width: 640px) {
+    .contact-timezone[data-locale="en"] {
+      --ctz-host-min: 51.4rem;
+    }
+
+    .contact-timezone[data-locale="pt"] {
+      --ctz-host-min: 51.4rem;
     }
   }
 
   @media (min-width: 768px) {
-    .ctz-static {
-      --ctz-min-height: 49rem;
+    .contact-timezone[data-locale="en"] {
+      --ctz-host-min: 51.7rem;
+    }
+
+    .contact-timezone[data-locale="pt"] {
+      --ctz-host-min: 51.7rem;
+    }
+  }
+
+  @media (min-width: 900px) {
+    .contact-timezone[data-locale="en"] {
+      --ctz-host-min: 50.5rem;
+    }
+
+    .contact-timezone[data-locale="pt"] {
+      --ctz-host-min: 50.5rem;
     }
   }
 
   @media (min-width: 1024px) {
-    .ctz-static {
-      --ctz-min-height: 50rem;
+    .contact-timezone[data-locale="en"] {
+      --ctz-host-min: 52rem;
+    }
+
+    .contact-timezone[data-locale="pt"] {
+      --ctz-host-min: 54.1rem;
+    }
+  }
+
+  @media (min-width: 1280px) {
+    .contact-timezone[data-locale="en"] {
+      --ctz-host-min: 49.4rem;
+    }
+
+    .contact-timezone[data-locale="pt"] {
+      --ctz-host-min: 52rem;
     }
   }
 

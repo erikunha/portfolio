@@ -158,3 +158,42 @@ describe('ContactSection timezone panel first paint', () => {
     expect(new Set(ids).size).toBe(ids.length);
   });
 });
+
+describe.each(Object.values(SITE_LOCALE))('ContactSection without JavaScript (%s)', (locale) => {
+  const { section, timezone } = contactCopy[locale];
+  const markup = renderToStaticMarkup(<ContactSection locale={locale} />);
+
+  it('says the form needs JavaScript and offers a mailto, inside a noscript element', () => {
+    const [, inside = ''] = /<noscript>([\s\S]*?)<\/noscript>/.exec(markup) ?? [];
+
+    expect(inside).toContain(section.noscript);
+    expect(inside).toContain(`href="mailto:${section.email}"`);
+  });
+
+  it('puts that hint in the form column, right after the form', () => {
+    const host = document.createElement('div');
+    host.innerHTML = markup;
+    const main = host.querySelector('.contact-main');
+
+    expect(main?.querySelector('noscript')).not.toBeNull();
+    expect(main?.children[0]?.tagName).not.toBe('NOSCRIPT');
+  });
+
+  it('labels the timezone panel as loading before the live panel mounts', () => {
+    const host = document.createElement('div');
+    host.innerHTML = markup;
+    const label = host.querySelector(
+      '[data-testid="contact-timezone-static"] [data-testid="ctz-loading"]',
+    );
+
+    expect(label?.textContent).toBe(timezone.loading);
+    expect(label?.getAttribute('role')).toBe('status');
+  });
+
+  it('marks the panel with its locale so the reserved height follows the copy', () => {
+    const host = document.createElement('div');
+    host.innerHTML = markup;
+
+    expect(host.querySelector('.contact-timezone')?.getAttribute('data-locale')).toBe(locale);
+  });
+});

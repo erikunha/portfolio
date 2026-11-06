@@ -64,6 +64,9 @@ const contactCopyFor = (locale: SiteLocale): ContactContent => {
       copyEmail: pt ? '[COPIAR EMAIL]' : '[COPY EMAIL]',
       copyEmailCopied: pt ? '[COPIADO]' : '[COPIED]',
       loadingLabel: pt ? 'Carregando formulário de contato' : 'Loading contact form',
+      noscript: pt
+        ? 'O formulário de contato precisa de JavaScript. Envie um email para'
+        : 'The contact form needs JavaScript. Email me at',
     },
     channels: {
       title: 'LS -L ~/CHANNELS',
@@ -82,6 +85,7 @@ const contactCopyFor = (locale: SiteLocale): ContactContent => {
     timezone: {
       title: 'DATE --TZ ~/OVERLAP',
       marker: '▌',
+      loading: pt ? 'carregando horário local…' : 'loading local time…',
       status: {
         online: pt ? 'ONLINE AGORA · deve responder hoje' : 'ONLINE NOW · likely to reply today',
         offHours: pt
@@ -166,7 +170,10 @@ const contactCopyFor = (locale: SiteLocale): ContactContent => {
       messagePlaceholder: pt ? '[PRONTO PARA RECEBER DADOS...]' : '[READY FOR DATA INPUT...]',
       submit: pt ? 'EXECUTAR_ENVIO' : 'EXECUTE_SEND',
       submitting: pt ? 'TRANSMITINDO...' : 'TRANSMITTING...',
+      sending: pt ? 'enviando…' : 'sending…',
       waiting: pt ? 'aguardando override manual... _' : 'waiting for manual override... _',
+      statusInvalid: pt ? 'corrija os campos marcados... _' : 'fix the marked fields... _',
+      statusFailed: pt ? 'envio falhou, tente de novo... _' : 'send failed, retry when ready... _',
       errorPrefix: pt ? 'erro:' : 'error:',
       errorSummary: {
         one: pt ? '1 campo precisa de atenção:' : '1 field needs attention:',

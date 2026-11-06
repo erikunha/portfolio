@@ -43,6 +43,11 @@ export function ContactSection({ locale, defer }: { locale: SiteLocale; defer?: 
               loadingLabel={contactContent[locale].section.loadingLabel}
             />
           </ErrorBoundary>
+          <noscript>
+            <p className="contact-nojs" data-testid="contact-nojs">
+              {section.noscript} <a href={`mailto:${section.email}`}>{section.email}</a>
+            </p>
+          </noscript>
           <div className="contact-reach">
             <section className="contact-channels ab-panel" aria-labelledby="contact-channels-title">
               <header className="ab-ph">
@@ -111,7 +116,11 @@ export function ContactSection({ locale, defer }: { locale: SiteLocale; defer?: 
             </dl>
           </div>
         </div>
-        <aside className="contact-timezone ab-panel" aria-labelledby="contact-timezone-title">
+        <aside
+          className="contact-timezone ab-panel"
+          aria-labelledby="contact-timezone-title"
+          data-locale={locale}
+        >
           <header className="ab-ph">
             <span className="ab-mk" aria-hidden="true">
               {timezone.marker}
@@ -122,7 +131,7 @@ export function ContactSection({ locale, defer }: { locale: SiteLocale; defer?: 
           </header>
           <div className="ab-body">
             <ContactTimezoneLazy copy={timezone}>
-              <ContactTimezoneStatic />
+              <ContactTimezoneStatic loadingLabel={timezone.loading} />
             </ContactTimezoneLazy>
           </div>
         </aside>

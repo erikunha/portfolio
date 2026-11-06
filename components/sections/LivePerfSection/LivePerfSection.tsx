@@ -8,6 +8,7 @@ import {
   type LighthouseScores,
   type Strategy,
 } from '@/lib/lighthouse-scores';
+import { MeasuredStatus } from '../MeasuredStatus';
 
 type ScoresByStrategy = Record<Strategy, LighthouseScores | null>;
 
@@ -90,15 +91,19 @@ function PerfBody({
           </div>
         ))}
       </div>
-      {loading || unavailable || (showTimestamp && !timestamp.valid) ? (
-        <p className="measured-status" role="status">
-          {loading
+      <MeasuredStatus
+        message={
+          loading
             ? measured.loading
             : unavailable
               ? measured.unavailable
-              : measured.unknownTimestamp}
-        </p>
-      ) : null}
+              : showTimestamp && !timestamp.valid
+                ? measured.unknownTimestamp
+                : null
+        }
+        live
+        reserve={[measured.loading, measured.unavailable, measured.unknownTimestamp]}
+      />
     </div>
   );
 }

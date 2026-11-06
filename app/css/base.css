@@ -6,6 +6,10 @@
     --mobile-bars-height: 94px;
     --drawer-max-width: 320px;
     --dock-clearance: 72px;
+    --to-top-size: 40px;
+    --to-top-inset: 14px;
+    --to-top-dock-offset: 64px;
+    --to-top-reach: calc(var(--to-top-inset) + var(--to-top-size) + var(--spacing-2));
     --z-dock: 120;
     --z-scrim: 125;
     --z-position-line: 126;

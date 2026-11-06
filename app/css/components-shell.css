@@ -11,7 +11,6 @@
 
   .shell-chrome,
   .shell-form,
-  .shell-progress,
   .shell-toolbar {
     display: flex;
     align-items: center;
@@ -45,8 +44,7 @@
 
   .shell-line-prompt,
   .shell-line-reference,
-  .shell-prompt,
-  .shell-progress {
+  .shell-prompt {
     color: var(--color-primary-500);
   }
 
@@ -68,10 +66,6 @@
   .shell-line-loading,
   .shell-command-hint {
     color: var(--color-primary-400);
-  }
-
-  .shell-progress {
-    justify-content: space-between;
   }
 
   .shell-form {
@@ -117,6 +111,20 @@
     white-space: nowrap;
     pointer-events: none;
     color: var(--color-primary-400);
+  }
+
+  .shell-stop {
+    position: absolute;
+    inset-block: 0;
+    inset-inline-end: 0;
+  }
+
+  .shell-input-wrap[data-busy] .shell-input {
+    padding-inline-end: calc(var(--spacing-target) * 2);
+  }
+
+  .shell-input-wrap[data-busy] .shell-placeholder {
+    inset-inline-end: calc(var(--spacing-target) * 2);
   }
 
   .shell-ai-notice,
@@ -307,11 +315,15 @@
       align-items: center;
       justify-content: center;
       position: fixed;
-      right: 14px;
-      bottom: calc(64px + env(safe-area-inset-bottom, 0px) + 14px);
+      right: var(--to-top-inset);
+      bottom: calc(
+        var(--to-top-dock-offset) +
+        env(safe-area-inset-bottom, 0px) +
+        var(--to-top-inset)
+      );
       z-index: calc(110 + 5);
-      width: 40px;
-      height: 40px;
+      width: var(--to-top-size);
+      height: var(--to-top-size);
       background: rgba(0, 0, 0, 0.85);
       border: 1px solid var(--color-primary-subtle);
       color: var(--color-primary-500);

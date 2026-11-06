@@ -251,8 +251,23 @@
     line-height: 1.5;
   }
 
-  .measured-tiles + .measured-status {
+  .measured-status-slot {
+    display: grid;
     margin: var(--spacing-2) 0 0;
+    font-size: var(--text-xs);
+    line-height: 1.6;
+    overflow-wrap: anywhere;
+  }
+
+  .measured-status-slot::after {
+    content: attr(data-reserve);
+    grid-area: 1 / 1;
+    visibility: hidden;
+  }
+
+  .measured-status-slot > .measured-status {
+    grid-area: 1 / 1;
+    margin: 0;
   }
 
   @container (min-width: 40rem) {

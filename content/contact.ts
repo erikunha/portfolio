@@ -10,6 +10,7 @@ const AXIS_LABEL_COUNT = 5;
 const TimezonePanelSchema = z.object({
   title: CopySchema,
   marker: CopySchema,
+  loading: CopySchema,
   status: z.object({ online: CopySchema, offHours: CopySchema }),
   clocks: z.object({ erik: CopySchema, you: CopySchema, link: CopySchema }),
   map: z.object({
@@ -88,6 +89,7 @@ export const ContactContentSchema = z.object({
     copyEmail: z.string().min(1),
     copyEmailCopied: z.string().min(1),
     loadingLabel: z.string().min(1),
+    noscript: z.string().min(1),
   }),
   channels: z.object({
     title: z.string().min(1),
@@ -111,7 +113,10 @@ export const ContactContentSchema = z.object({
     messagePlaceholder: z.string().min(1),
     submit: z.string().min(1),
     submitting: z.string().min(1),
+    sending: z.string().min(1),
     waiting: z.string().min(1),
+    statusInvalid: z.string().min(1),
+    statusFailed: z.string().min(1),
     errorPrefix: z.string().min(1),
     errorSummary: z.object({
       one: z.string().min(1),

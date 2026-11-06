@@ -33,6 +33,9 @@ describe('ContactTimezoneLazy when the island chunk fails', () => {
     await waitFor(() => expect(console.error).toHaveBeenCalled());
 
     expect(screen.getByTestId('static-panel')).toBeTruthy();
+    expect(screen.getByTestId('ctz-failed').contains(screen.getByTestId('static-panel'))).toBe(
+      true,
+    );
     expect(screen.queryByRole('alert')).toBeNull();
   });
 });

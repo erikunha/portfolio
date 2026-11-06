@@ -84,10 +84,13 @@ describe('ContactForm accessibility', () => {
     expect(submit?.getAttribute('tabindex')).not.toBe('-1');
   });
 
-  it('the submit row is an aria-live region', async () => {
+  it('announces the send state through one polite status line, not through the button', async () => {
     const container = await renderForm();
-    const submitRow = container.querySelector('[aria-live="polite"]');
-    expect(submitRow?.getAttribute('aria-live')).toBe('polite');
+    const status = container.querySelector('[data-testid="contact-status"]');
+    expect(status?.getAttribute('role')).toBe('status');
+    expect(status?.textContent).toBe(contactCopy[SITE_LOCALE.en].form.waiting);
+    expect(container.querySelector('.contact-submit-row')?.hasAttribute('aria-live')).toBe(false);
+    expect(container.querySelectorAll('[aria-live]')).toHaveLength(0);
   });
 
   it('states how long a message is kept before it is deleted', async () => {
@@ -560,6 +563,72 @@ describe('contact form — submitting state', () => {
 
     expect(container.querySelector('[data-testid="contact-success"]')).not.toBeNull();
     expect(container.querySelector('form')).toBeNull();
+  });
+});
+
+describe.each(Object.values(SITE_LOCALE))('contact form status line (%s)', (locale) => {
+  let mounted: MountedClient;
+  let resolveFetch: (response: Response) => void;
+  const copy = contactCopy[locale].form;
+
+  afterEach(() => {
+    mounted?.unmount();
+    vi.restoreAllMocks();
+  });
+
+  async function renderForm() {
+    mounted = await mountClient(
+      createElement(ContactForm, { copy: contactCopy[locale], chrome: contactChrome[locale] }),
+    );
+    return mounted.container;
+  }
+
+  const statusOf = (container: HTMLElement) =>
+    container.querySelector('[data-testid="contact-status"]')?.textContent;
+
+  it('says it is sending while the request is pending, then reports the failed send', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(
+        () =>
+          new Promise<Response>((resolve) => {
+            resolveFetch = resolve;
+          }),
+      ),
+    );
+    const container = await renderForm();
+    const form = container.querySelector<HTMLFormElement>('form');
+    fillValidForm(container);
+    await act(async () => {
+      form?.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    });
+    await flushMicrotasks();
+
+    expect(statusOf(container)).toBe(copy.sending);
+
+    await act(async () => {
+      resolveFetch(
+        Response.json({ ok: false, error: { code: 'storage_unavailable' } }, { status: 500 }),
+      );
+    });
+    await flushMicrotasks();
+
+    expect(statusOf(container)).toBe(copy.statusFailed);
+    expect(statusOf(container)).not.toBe(copy.waiting);
+  });
+
+  it('points at the marked fields after a rejected submit and resets once the text changes', async () => {
+    vi.stubGlobal('fetch', vi.fn());
+    const container = await renderForm();
+    fireEvent.submit(container.querySelector('form') as HTMLFormElement);
+
+    expect(statusOf(container)).toBe(copy.statusInvalid);
+
+    fireEvent.change(container.querySelector('input[name="name"]') as HTMLInputElement, {
+      target: { value: 'Ada' },
+    });
+
+    expect(statusOf(container)).toBe(copy.waiting);
   });
 });
 

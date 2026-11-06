@@ -499,23 +499,6 @@ export function InteractiveShell({
           </span>
         )}
       </div>
-      {busy && (
-        <div className="shell-progress">
-          <span aria-hidden="true">
-            {ui.aiLabel}
-            <span className="shell-cursor" />
-          </span>
-          <button
-            ref={stopRef}
-            className="shell-control"
-            type="button"
-            aria-label={ui.stopLabel}
-            onClick={() => activeRequest.current?.stop()}
-          >
-            {ui.stop}
-          </button>
-        </div>
-      )}
       <form
         className="shell-form"
         data-testid="shell-form"
@@ -525,7 +508,7 @@ export function InteractiveShell({
         }}
       >
         <span className="shell-prompt">{ui.prompt}</span>
-        <div className="shell-input-wrap">
+        <div className="shell-input-wrap" data-busy={busy || undefined}>
           <input
             ref={inputRef}
             className="shell-input"
@@ -581,6 +564,17 @@ export function InteractiveShell({
             ) : (
               <AnimatedPlaceholder ui={ui} />
             ))}
+          {busy && (
+            <button
+              ref={stopRef}
+              className="shell-control shell-stop"
+              type="button"
+              aria-label={ui.stopLabel}
+              onClick={() => activeRequest.current?.stop()}
+            >
+              {ui.stop}
+            </button>
+          )}
         </div>
       </form>
       <p id={accuracyId} className="shell-ai-notice">

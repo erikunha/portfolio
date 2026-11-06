@@ -414,6 +414,24 @@ describe('InteractiveShell r106 controls', () => {
     expect(container.textContent).not.toContain('late answer');
   });
 
+  it('puts the stop control in the input row, so no extra row appears while thinking', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(() => new Promise<Response>(() => undefined)),
+    );
+    const container = await renderShell();
+    expect(container.querySelector('.shell-stop')).toBeNull();
+    const rowCount = () => container.querySelector('.interactive-shell')?.children.length;
+    const rowsIdle = rowCount();
+
+    await submitQuestion(container, 'question in flight');
+
+    const stop = buttonWithText(container, '[STOP]');
+    expect(stop.closest('.shell-form .shell-input-wrap')).not.toBeNull();
+    expect(stop.closest('.shell-input-wrap')?.hasAttribute('data-busy')).toBe(true);
+    expect(rowCount()).toBe(rowsIdle);
+  });
+
   it('stops a live stream, keeps partial text and the real reference, and ignores queued frames', async () => {
     let signal: AbortSignal | undefined;
     const cancel = vi.fn();

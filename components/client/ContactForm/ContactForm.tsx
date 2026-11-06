@@ -13,6 +13,7 @@ import {
 import type { TerminalChrome } from '@/content/schemas';
 import { WindowChrome } from '@/design-system';
 import { Field } from '@/design-system/components/Field';
+import { longestCopy } from '@/lib/longest-copy';
 import { ContactCopyButton } from './ContactCopyButton.client';
 import { messageStore } from './messageStore';
 
@@ -124,6 +125,12 @@ export function ContactForm({ copy, chrome }: { copy: ContactContent; chrome: Te
   const fieldId = (field: ContactField) => `${formId}-${field}`;
   const invalidFields = CONTACT_FIELDS.filter((field) => errors[field]);
   const busy = status === STATUS.SUBMITTING;
+  const failedLine = errorMsg ? copy.form.statusFailed : copy.form.statusInvalid;
+  const statusLine = busy
+    ? copy.form.sending
+    : status === STATUS.ERROR
+      ? failedLine
+      : copy.form.waiting;
 
   const messageFieldId = fieldId(CONTACT_FIELD.MESSAGE);
   const fieldShown = status !== STATUS.SUCCESS && status !== STATUS.QUEUED;
@@ -350,11 +357,23 @@ export function ContactForm({ copy, chrome }: { copy: ContactContent; chrome: Te
           {copy.form.counterSeparator}
           {CONTACT_LIMITS.messageMax}
         </p>
-        <div className="contact-submit-row" aria-live="polite">
+        <div className="contact-submit-row">
           <button type="submit" aria-disabled={busy} aria-busy={busy} className="contact-send">
             {busy ? copy.form.submitting : copy.form.submit}
           </button>
-          <p className="contact-waiting">{copy.form.waiting}</p>
+          <p
+            className="contact-waiting"
+            role="status"
+            data-testid="contact-status"
+            data-reserve={longestCopy([
+              copy.form.waiting,
+              copy.form.sending,
+              copy.form.statusInvalid,
+              copy.form.statusFailed,
+            ])}
+          >
+            <span>{statusLine}</span>
+          </p>
         </div>
         <p className="contact-privacy">{copy.form.privacy}</p>
       </form>

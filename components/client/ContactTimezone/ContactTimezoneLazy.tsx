@@ -42,7 +42,13 @@ export function ContactTimezoneLazy({
   return (
     <div className="ctz-host" ref={hostRef}>
       {near ? (
-        <ErrorBoundary fallback={children}>
+        <ErrorBoundary
+          fallback={
+            <div className="ctz-failed" data-testid="ctz-failed">
+              {children}
+            </div>
+          }
+        >
           <Suspense fallback={children}>
             <ContactTimezone copy={copy} />
           </Suspense>
