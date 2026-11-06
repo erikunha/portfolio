@@ -101,6 +101,14 @@
     font-weight: 700;
   }
 
+  @media (pointer: coarse) {
+    .reading-entry h3 a {
+      display: inline-flex;
+      align-items: center;
+      min-height: var(--spacing-target);
+    }
+  }
+
   .reading-entry h3[data-type-reveal] {
     --reading-entry-title-scale: 4.6vw;
     --reading-entry-title-size: clamp(
