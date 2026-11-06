@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { DS_PAGER } from '@/app/design-system/_components/ds-nav';
+import { horizontalOverflow } from './_helpers/geometry';
 
 const MIN_TARGET_PX = 24;
 const WIDTHS = [320, 390, 768, 1024, 1280];
@@ -14,9 +15,7 @@ for (const width of WIDTHS) {
     });
     for (const { href } of DS_PAGER) {
       await page.goto(href);
-      const overflow = await page.evaluate(
-        () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
-      );
+      const overflow = await horizontalOverflow(page);
       expect(overflow, `${href} scrolls sideways at ${width}`).toBeLessThanOrEqual(0);
       const small = await page
         .locator(

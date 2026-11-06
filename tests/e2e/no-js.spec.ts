@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { horizontalOverflow } from './_helpers/geometry';
 
 test.use({ javaScriptEnabled: false });
 
@@ -92,9 +93,7 @@ test.describe('home with JavaScript off', () => {
       );
     });
     expect(inOrder, 'form, channels, facts, panel').toBe(true);
-    const overflow = await page.evaluate(
-      () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
-    );
+    const overflow = await horizontalOverflow(page);
     expect(overflow, 'the page does not scroll sideways').toBeLessThanOrEqual(0);
   });
 

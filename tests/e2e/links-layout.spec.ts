@@ -1,4 +1,5 @@
 import { expect, type Page, test } from '@playwright/test';
+import { horizontalOverflow } from './_helpers/geometry';
 
 const GOLDEN_RATIO = 1.618;
 const RATIO_TOLERANCE = 0.1;
@@ -120,16 +121,15 @@ for (const path of ['/links', '/links/en']) {
         await page.setViewportSize(viewport);
         await page.goto(path);
 
-        const overflow = await page.evaluate(() => {
+        const offenders = await page.evaluate(() => {
           const root = document.documentElement;
-          const offenders = Array.from(document.querySelectorAll<HTMLElement>('main *'))
+          return Array.from(document.querySelectorAll<HTMLElement>('main *'))
             .filter((el) => el.getBoundingClientRect().right > root.clientWidth + 1)
             .filter((el) => getComputedStyle(el).position !== 'fixed')
             .map((el) => `${el.tagName.toLowerCase()}.${el.className}`.slice(0, 80));
-          return { scroll: root.scrollWidth, client: root.clientWidth, offenders };
         });
-        expect(overflow.scroll).toBeLessThanOrEqual(overflow.client + OVERFLOW_TOLERANCE_PX);
-        expect(overflow.offenders).toEqual([]);
+        expect(await horizontalOverflow(page)).toBeLessThanOrEqual(OVERFLOW_TOLERANCE_PX);
+        expect(offenders).toEqual([]);
       });
     }
 

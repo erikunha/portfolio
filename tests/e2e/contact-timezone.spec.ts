@@ -1,4 +1,5 @@
 import { expect, type Page, test } from '@playwright/test';
+import { horizontalOverflow as pageOverflowOf } from './_helpers/geometry';
 
 const FIXED_NOW = new Date('2026-11-02T15:00:00Z');
 const VIEWPORTS = [
@@ -58,16 +59,13 @@ async function openPanel(page: Page) {
 }
 
 async function horizontalOverflow(page: Page) {
-  return page.evaluate(() => {
+  const panelEdges = await page.evaluate(() => {
     const viewport = document.documentElement.clientWidth;
     const panel = document.querySelector('[data-testid="contact-timezone"]');
     const box = panel?.getBoundingClientRect();
-    return {
-      pageOverflow: document.documentElement.scrollWidth - viewport,
-      panelLeft: box?.left ?? 0,
-      panelRight: (box?.right ?? 0) - viewport,
-    };
+    return { panelLeft: box?.left ?? 0, panelRight: (box?.right ?? 0) - viewport };
   });
+  return { pageOverflow: await pageOverflowOf(page), ...panelEdges };
 }
 
 test.describe('contact timezone panel, visitor in Berlin', () => {
@@ -315,13 +313,12 @@ test.describe('contact section in print', () => {
       return {
         columns: getComputedStyle(layout).gridTemplateColumns.split(' ').length,
         panelBelowMain: panel.top >= main.bottom - 1,
-        overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
       };
     });
 
     expect(box.columns, 'one column at page width').toBe(1);
     expect(box.panelBelowMain, 'the panel follows the form column').toBe(true);
-    expect(box.overflow).toBeLessThanOrEqual(0);
+    expect(await pageOverflowOf(page)).toBeLessThanOrEqual(0);
   });
 });
 

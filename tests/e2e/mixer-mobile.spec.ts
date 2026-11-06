@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { horizontalOverflow } from './_helpers/geometry';
 import { installMockBackend } from './_helpers/mock-backend';
 
 const SECTION_SELECTOR = '#sec-guitar';
@@ -42,14 +43,10 @@ for (const width of OVERFLOW_WIDTHS) {
     await page.setViewportSize({ width, height: VIEWPORT_HEIGHT });
     await page.goto('/');
     await page.locator(SECTION_SELECTOR).scrollIntoViewIfNeeded();
-    const result = await page.evaluate(() => ({
-      scrollWidth: document.documentElement.scrollWidth,
-      viewport: window.innerWidth,
-    }));
     expect(
-      result.scrollWidth,
+      await horizontalOverflow(page),
       'the guitar and mixer module must not push the page into horizontal scroll',
-    ).toBeLessThanOrEqual(result.viewport + SUBPIXEL_TOLERANCE_PX);
+    ).toBeLessThanOrEqual(SUBPIXEL_TOLERANCE_PX);
   });
 }
 
