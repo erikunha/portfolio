@@ -4,7 +4,7 @@
   --color-green: #00ff41;
 
   --text-min: 0.75rem;
-  --text-xs: max(0.75rem, var(--text-min));
+  --text-xs: var(--text-min);
   --text-sm: 0.875rem;
   --text-body: var(--text-sm);
   --text-base: 1rem;

@@ -57,7 +57,7 @@ describe('terminal theme contract', () => {
     expect(tokens).toMatchObject({
       '--font-display': 'var(--font-display-src), sans-serif',
       '--font-mono': 'var(--font-mono-src), monospace',
-      '--text-xs': 'max(0.75rem, var(--text-min))',
+      '--text-xs': 'var(--text-min)',
       '--text-sm': '0.875rem',
       '--text-base': '1rem',
       '--text-lg': '1.125rem',
