@@ -1,3 +1,5 @@
+import { MOTION_CHANGE_EVENT } from './motion-change';
+
 export function readMotion(): boolean {
   try {
     const stored = localStorage.getItem('erik.motion');
@@ -25,7 +27,7 @@ export function applyMotion(on: boolean, persist = true): void {
       console.warn('[motion] Failed to persist motion preference:', err);
     }
   }
-  window.dispatchEvent(new CustomEvent('motionchange', { detail: { on } }));
+  window.dispatchEvent(new CustomEvent(MOTION_CHANGE_EVENT, { detail: { on } }));
 }
 
 export function motionInEffect(): boolean {
