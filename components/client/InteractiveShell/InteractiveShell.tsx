@@ -240,7 +240,6 @@ export function InteractiveShell({
         className="shell-chrome"
         tagClassName="shell-chrome-tag"
         dotSize={WINDOW_DOT_SIZE}
-        compact={isMobile}
       />
       <div
         ref={feedRef}
