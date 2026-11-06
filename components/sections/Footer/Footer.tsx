@@ -1,3 +1,4 @@
+import { externalLinkProps } from '@/components/ExternalLink';
 import { dmesgLines, dmesgStatus } from '@/content/dmesg';
 import { footerContent, footerSectionIds } from '@/content/footer';
 import type { SiteLocale } from '@/content/site-locale';
@@ -14,13 +15,19 @@ const TABLE_ROLES = {
   columnheader: { role: 'columnheader' },
   cell: { role: 'cell' },
 } as const;
-const CONNECTION_STATE = { listening: 'LISTEN' } as const;
+const SEEN_TOTAL_SEPARATOR = ' / ';
 const SITEMAP_ACCORDION = 'footer-sitemap';
 const SINGLE_FILE = 1;
 
 type FooterContent = (typeof footerContent)[SiteLocale];
 type SitemapGroup = FooterContent['groups'][number];
 type SitemapLink = SitemapGroup['links'][number];
+type ConnectionState = FooterContent['connections'][number]['state'];
+
+const CONNECTION_STATE_CLASS: Record<ConnectionState, string> = {
+  LISTEN: 'footer-listening',
+  ESTABLISHED: 'footer-established',
+};
 
 function SitemapRowLabel({
   group,
@@ -98,8 +105,9 @@ export function Footer({ locale }: { locale: SiteLocale }) {
                 <dd>
                   <span data-sess="seen" data-volatile>
                     {INITIAL_COUNT}
-                  </span>{' '}
-                  / {footerSectionIds.length}
+                  </span>
+                  {SEEN_TOTAL_SEPARATOR}
+                  {footerSectionIds.length}
                 </dd>
                 <dt>{content.sessionLabels.commands}</dt>
                 <dd data-sess="commands" data-volatile>
@@ -141,11 +149,7 @@ export function Footer({ locale }: { locale: SiteLocale }) {
                       <td {...TABLE_ROLES.cell}>{connection.protocol}</td>
                       <td
                         {...TABLE_ROLES.cell}
-                        className={
-                          connection.state === CONNECTION_STATE.listening
-                            ? 'footer-listening'
-                            : 'footer-established'
-                        }
+                        className={CONNECTION_STATE_CLASS[connection.state]}
                       >
                         {connection.state}
                       </td>
@@ -153,9 +157,7 @@ export function Footer({ locale }: { locale: SiteLocale }) {
                         <a
                           className="footer-link"
                           href={connection.href}
-                          {...(connection.external
-                            ? { target: '_blank', rel: 'noopener noreferrer' }
-                            : {})}
+                          {...externalLinkProps(connection.external)}
                         >
                           {connection.label}
                           {connection.external ? (

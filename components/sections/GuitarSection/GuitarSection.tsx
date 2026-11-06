@@ -10,6 +10,7 @@ import {
 import { GUITAR_SIGNAL_BAR_COUNT, GUITAR_SIGNAL_LABEL_TOKENS } from '@/content/schemas';
 import { SECTION_LABELS } from '@/content/section-labels';
 import type { SiteLocale } from '@/content/site-locale';
+import { MOBILE_BREAKPOINT_PX } from '@/lib/breakpoint';
 import { IconGuitar } from '../../Icons';
 import { Module } from '../../responsive/Module';
 import { DawMixerContent } from '../DawMixerSection';
@@ -20,7 +21,7 @@ const SIGNAL_BARS = Array.from({ length: GUITAR_SIGNAL_BAR_COUNT }, (_, position
 }));
 const FIRST_NODE_INDEX = 0;
 const SECTION_ID = 'sec-guitar';
-const STACKED_MAX_WIDTH_PX = 767;
+const STACKED_MAX_WIDTH_PX = MOBILE_BREAKPOINT_PX - 1;
 const PHOTO_SIZES = `(max-width: ${STACKED_MAX_WIDTH_PX}px) 100vw, 320px`;
 
 export function GuitarContent({ locale }: { locale: SiteLocale }) {

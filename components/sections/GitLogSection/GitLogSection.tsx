@@ -1,6 +1,7 @@
 import { useId } from 'react';
 import { careerCopy, careerEntries, careerScrollLabel } from '@/content/git-log';
 import type { SiteLocale } from '@/content/site-locale';
+import { deferProps } from '@/lib/defer-props';
 import { CompanyLink } from '../../CompanyLink';
 import { IconGitLog } from '../../Icons';
 import { CredentialsSection } from '../CredentialsSection';
@@ -64,8 +65,7 @@ export function GitLogSection({ locale, defer }: { locale: SiteLocale; defer?: b
       id="sec-git-log"
       tabIndex={-1}
       aria-labelledby={headingId}
-      className={`career-section${defer ? ' module-deferred' : ''}`}
-      {...(defer ? { 'data-cv-defer': 'true' } : {})}
+      {...deferProps(defer, 'career-section')}
     >
       <header className="career-header">
         <h2 id={headingId}>
