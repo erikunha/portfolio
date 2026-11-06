@@ -230,7 +230,7 @@ export function createEvalBudgetStore(requests: number): BudgetStore {
     async release(budgetKey, tokens) {
       used.set(budgetKey, (used.get(budgetKey) ?? 0) - tokens);
     },
-    async chargeOverage() {},
+    chargeOverage: async () => undefined,
   };
 }
 
