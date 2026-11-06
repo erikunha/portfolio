@@ -336,10 +336,20 @@ test.describe('contact timezone panel clocks', () => {
     await expect.poll(async () => erik.textContent(), { timeout: TICK_TIMEOUT_MS }).not.toBe(first);
   });
 
-  test('the live region announces minutes and never seconds', async ({ page }) => {
+  test('the live region stays silent until the zone changes, then announces minutes only', async ({
+    page,
+  }) => {
     const panel = await openPanel(page);
+    await expect(panel.getByTestId('ctz-announce')).toHaveText('');
+
+    const combobox = panel.getByRole('combobox', { name: SEARCH_LABEL });
+    await combobox.click();
+    await combobox.pressSequentially('tokyo');
+    await page.keyboard.press('ArrowDown');
+    await page.keyboard.press('Enter');
+
     await expect(panel.getByTestId('ctz-announce')).toHaveText(
-      /^Erik local time \d{2}:\d{2}\. Your local time \d{2}:\d{2}\.$/,
+      /^Time zone set to Japan\. Erik local time \d{2}:\d{2}\. Your local time \d{2}:\d{2}\.$/,
     );
   });
 });

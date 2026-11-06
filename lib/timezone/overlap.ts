@@ -1,5 +1,5 @@
 import { ERIK_PIN, WORLD_MAP_GRID } from '@/content/world-map';
-import { ERIK_TIME_ZONE, zoneOffsetMinutes } from './zones';
+import { ERIK_TIME_ZONE, MS_PER_MINUTE, zoneOffsetMinutes } from './zones';
 
 export const MINUTES_PER_HOUR = 60;
 export const HOURS_PER_DAY = 24;
@@ -14,7 +14,6 @@ const ERIK_WORK_END_MINUTE = ERIK_WORK_END_HOUR * MINUTES_PER_HOUR;
 const VISITOR_WORK_START_MINUTE = VISITOR_WORK_START_HOUR * MINUTES_PER_HOUR;
 const VISITOR_WORK_END_MINUTE = VISITOR_WORK_END_HOUR * MINUTES_PER_HOUR;
 const HALF_HOUR_MINUTES = MINUTES_PER_HOUR / 2;
-const MS_PER_MINUTE = 60_000;
 const DAY_SHIFTS = [-MINUTES_PER_DAY, 0, MINUTES_PER_DAY] as const;
 const RANGE_JOINER = ' to ';
 const CLOCK_SEPARATOR = ':';

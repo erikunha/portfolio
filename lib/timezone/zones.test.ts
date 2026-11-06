@@ -61,6 +61,16 @@ describe('zoneOffsetMinutes', () => {
   });
 });
 
+describe('Erik zone', () => {
+  it('formats to the offset the profile states', async () => {
+    const { profile } = await import('@/content/profile');
+    const { ERIK_TIME_ZONE } = await import('./zones');
+    expect(
+      formatUtcOffset(zoneOffsetMinutes(ERIK_TIME_ZONE, new Date('2026-01-15T12:00:00Z'))),
+    ).toBe(profile.timezone);
+  });
+});
+
 describe('formatUtcOffset', () => {
   it.each([
     [-180, 'UTC-3'],

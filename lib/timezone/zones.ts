@@ -4,7 +4,7 @@ export const ERIK_TIME_ZONE = 'America/Sao_Paulo';
 export const FALLBACK_TIME_ZONE = 'UTC';
 
 const FORMAT_LOCALE = 'en-US';
-const MS_PER_MINUTE = 60_000;
+export const MS_PER_MINUTE = 60_000;
 const MINUTES_PER_HOUR = 60;
 const DEGREES_PER_HOUR = 15;
 const FALLBACK_LATITUDE = 20;

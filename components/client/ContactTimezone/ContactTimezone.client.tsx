@@ -18,6 +18,7 @@ import {
   detectTimeZone,
   ERIK_TIME_ZONE,
   formatClock,
+  MS_PER_MINUTE,
   zoneCity,
   zonePlace,
 } from '@/lib/timezone/zones';
@@ -28,7 +29,6 @@ import { ZoneCombobox } from './ZoneCombobox';
 
 type TimezoneCopy = ContactContent['timezone'];
 const MS_PER_SECOND = 1000;
-const MS_PER_MINUTE = 60_000;
 const ROW_KEYS = ['erik', 'you', 'both'] as const;
 const HOURS = Array.from({ length: HOURS_PER_DAY }, (_, hour) => hour);
 
@@ -62,6 +62,7 @@ export function ContactTimezone({ copy }: { copy: TimezoneCopy }) {
   const [autoZone] = useState(detectTimeZone);
   const [zone, setZone] = useState(autoZone);
   const [proposedLine, setProposedLine] = useState<string | null>(null);
+  const [announcement, setAnnouncement] = useState({ id: 0, text: '' });
 
   const minute = Math.floor(clockNow.getTime() / MS_PER_MINUTE);
   const at = useMemo(() => new Date(minute * MS_PER_MINUTE), [minute]);
@@ -154,6 +155,14 @@ export function ContactTimezone({ copy }: { copy: TimezoneCopy }) {
           onSelect={(picked) => {
             setZone(picked);
             setProposedLine(null);
+            setAnnouncement((previous) => ({
+              id: previous.id + 1,
+              text: fillCopy(copy.announce, {
+                place: zonePlace(picked, at).name,
+                erik: erikTime,
+                you: formatClock(picked, at, false),
+              }),
+            }));
           }}
         />
       </div>
@@ -189,7 +198,7 @@ export function ContactTimezone({ copy }: { copy: TimezoneCopy }) {
             <p className="ctz-slot-times">
               <span data-testid="ctz-slot-you">{overlap.bestSlot.you}</span>{' '}
               <span className="ctz-slot-who">{copy.slot.you}</span>
-              {' · '}
+              {copy.slot.separator}
               <span className="ctz-slot-erik" data-testid="ctz-slot-erik">
                 {overlap.bestSlot.erik}
               </span>{' '}
@@ -238,7 +247,7 @@ export function ContactTimezone({ copy }: { copy: TimezoneCopy }) {
       </p>
 
       <p className="sr-only" role="status" data-testid="ctz-announce">
-        {fillCopy(copy.announce, { erik: erikTime, you: youTime })}
+        <span key={announcement.id}>{announcement.text}</span>
       </p>
     </div>
   );

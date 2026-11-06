@@ -123,6 +123,7 @@ const contactCopyFor = (locale: SiteLocale): ContactContent => {
         you: pt ? 'você' : 'you',
         erik: 'erik',
         none: pt ? 'sem janela ao vivo, só assíncrono' : 'no live window, async only',
+        separator: ' · ',
       },
       propose: {
         label: pt ? 'PROPOR_NA_MENSAGEM ↙' : 'PROPOSE_IN_MESSAGE ↙',
@@ -161,8 +162,8 @@ const contactCopyFor = (locale: SiteLocale): ContactContent => {
         replyValue: REPLY_WINDOW[locale],
       },
       announce: pt
-        ? 'Horário local de Erik {erik}. Seu horário local {you}.'
-        : 'Erik local time {erik}. Your local time {you}.',
+        ? 'Fuso definido para {place}. Horário local de Erik {erik}. Seu horário local {you}.'
+        : 'Time zone set to {place}. Erik local time {erik}. Your local time {you}.',
     },
     form: {
       nameLabel: pt ? '$ nome:' : '$ name:',

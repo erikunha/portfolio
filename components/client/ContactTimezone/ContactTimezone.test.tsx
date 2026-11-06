@@ -24,6 +24,7 @@ const MINUTE = 60_000;
 const HOURS_PER_ROW = 24;
 
 const testId = (id: string) => screen.getByTestId(id);
+const input = () => screen.getByRole('combobox', { name: copy.search.label });
 
 function setVisibility(state: DocumentVisibilityState) {
   Object.defineProperty(document, 'visibilityState', { configurable: true, value: state });
@@ -105,22 +106,49 @@ describe('ContactTimezone status and clocks', () => {
     expect(testId('ctz-clock-erik').textContent).toBe('12:00:30');
   });
 
-  it('announces minutes only, and only when the minute changes', () => {
+  it('keeps the live region silent on load and while the minute ticks over', () => {
     renderAt(ONLINE_INSTANT);
     const announce = testId('ctz-announce');
     expect(announce.getAttribute('role')).toBe('status');
-    expect(announce.textContent).toBe(fillCopy(copy.announce, { erik: '12:00', you: '16:00' }));
+    expect(announce.textContent).toBe('');
 
     act(() => {
-      vi.advanceTimersByTime(30 * SECOND);
+      vi.advanceTimersByTime(MINUTE * 3);
     });
-    expect(announce.textContent).toBe(fillCopy(copy.announce, { erik: '12:00', you: '16:00' }));
+    expect(announce.textContent).toBe('');
+  });
 
-    act(() => {
-      vi.advanceTimersByTime(MINUTE);
-    });
-    expect(announce.textContent).toBe(fillCopy(copy.announce, { erik: '12:01', you: '16:01' }));
+  it('announces the new zone and both local times, minutes only, when the zone changes', () => {
+    renderAt(ONLINE_INSTANT);
+    const field = input();
+    fireEvent.change(field, { target: { value: 'tokyo' } });
+    fireEvent.keyDown(field, { key: 'Enter' });
+
+    const announce = testId('ctz-announce');
+    expect(announce.textContent).toBe(
+      fillCopy(copy.announce, { place: 'Japan', erik: '12:00', you: '00:00' }),
+    );
     expect(announce.textContent).not.toMatch(/\d\d:\d\d:\d\d/);
+
+    act(() => {
+      vi.advanceTimersByTime(MINUTE * 2);
+    });
+    expect(announce.textContent).toBe(
+      fillCopy(copy.announce, { place: 'Japan', erik: '12:00', you: '00:00' }),
+    );
+  });
+
+  it('announces again when the same zone is picked a second time', () => {
+    renderAt(ONLINE_INSTANT);
+    const field = input();
+    fireEvent.change(field, { target: { value: 'tokyo' } });
+    fireEvent.keyDown(field, { key: 'Enter' });
+    const first = testId('ctz-announce').firstChild;
+
+    fireEvent.change(field, { target: { value: 'tokyo' } });
+    fireEvent.keyDown(field, { key: 'Enter' });
+
+    expect(testId('ctz-announce').firstChild).not.toBe(first);
   });
 });
 
@@ -262,8 +290,6 @@ describe('ContactTimezone map', () => {
 });
 
 describe('ContactTimezone combobox', () => {
-  const input = () => screen.getByRole('combobox', { name: copy.search.label });
-
   it('wires the WAI-ARIA combobox attributes and starts closed', () => {
     renderAt(ONLINE_INSTANT);
 
@@ -362,6 +388,29 @@ describe('ContactTimezone combobox', () => {
     expect(testId('ctz-count').textContent).toMatch(/^1 of \d+ timezones/);
   });
 
+  it('announces the match count through a live region that is always rendered', () => {
+    renderAt(ONLINE_INSTANT);
+    const live = testId('ctz-count-live');
+    expect(live.getAttribute('role')).toBe('status');
+    expect(live.closest('[hidden]')).toBeNull();
+    expect(live.textContent).toBe('');
+
+    fireEvent.change(input(), { target: { value: 'tokyo' } });
+    expect(live.textContent).toMatch(/^1 of \d+ timezones/);
+
+    fireEvent.change(input(), { target: { value: 'zzzzzz' } });
+    expect(live.textContent).toMatch(/^0 of \d+ timezones/);
+  });
+
+  it('clears the count announcement when the list closes', () => {
+    renderAt(ONLINE_INSTANT);
+    const field = input();
+    fireEvent.change(field, { target: { value: 'tokyo' } });
+    fireEvent.keyDown(field, { key: 'Escape' });
+
+    expect(testId('ctz-count-live').textContent).toBe('');
+  });
+
   it('shows an empty result without a selected option', () => {
     renderAt(ONLINE_INSTANT);
     const field = input();
@@ -388,6 +437,13 @@ describe('ContactTimezone combobox', () => {
 });
 
 describe('ContactTimezone best slot and propose', () => {
+  it('joins the two slot times with the separator from content', () => {
+    renderAt(ONLINE_INSTANT);
+
+    const times = testId('ctz-slot-you').parentElement as HTMLElement;
+    expect(times.textContent).toContain(`${copy.slot.you}${copy.slot.separator}`);
+  });
+
   const expectedLine =
     'Would a call at 14:00 my time (Berlin) work for you? That is 10:00 for you in São Paulo.';
 

@@ -91,6 +91,7 @@ export function ZoneCombobox({
     }
   }
 
+  const countText = fillCopy(search.count, { matches: result.total, total: zones.length });
   const activeId =
     open && active >= FIRST_OPTION && result.zones[active] ? optionId(active) : undefined;
 
@@ -142,10 +143,13 @@ export function ZoneCombobox({
             </div>
           ))}
         </div>
-        <p className="ctz-count" data-testid="ctz-count">
-          {fillCopy(search.count, { matches: result.total, total: zones.length })}
+        <p className="ctz-count" data-testid="ctz-count" aria-hidden="true">
+          {countText}
         </p>
       </div>
+      <p className="sr-only" role="status" data-testid="ctz-count-live">
+        {open ? countText : ''}
+      </p>
     </div>
   );
 }

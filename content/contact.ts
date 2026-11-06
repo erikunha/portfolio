@@ -32,7 +32,13 @@ const TimezonePanelSchema = z.object({
   }),
   rows: z.object({ erik: CopySchema, you: CopySchema, both: CopySchema }),
   axis: z.array(CopySchema).length(AXIS_LABEL_COUNT),
-  slot: z.object({ title: CopySchema, you: CopySchema, erik: CopySchema, none: CopySchema }),
+  slot: z.object({
+    title: CopySchema,
+    you: CopySchema,
+    erik: CopySchema,
+    none: CopySchema,
+    separator: CopySchema,
+  }),
   propose: z.object({
     label: CopySchema,
     line: CopySchema,
