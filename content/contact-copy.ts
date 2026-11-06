@@ -11,6 +11,9 @@ export const CONTACT_LIMITS = {
   messageMax: 2_000,
 } as const;
 
+export const CONTACT_EMAIL_PATTERN =
+  /^(?:[A-Za-z0-9_'+-]+\.)*[A-Za-z0-9_'+-]*[A-Za-z0-9_+-]@(?:[A-Za-z0-9][A-Za-z0-9-]*\.)+[A-Za-z]{2,}$/;
+
 export const CONTACT_FIELD = {
   NAME: 'name',
   EMAIL: 'email',

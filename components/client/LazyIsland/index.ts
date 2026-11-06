@@ -1,0 +1,1 @@
+export { LazyIsland } from './LazyIsland';

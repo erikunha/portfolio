@@ -1,9 +1,10 @@
 'use client';
 
-import { lazy, Suspense } from 'react';
+import { lazy } from 'react';
 import type { TerminalChrome } from '@/content/schemas';
 import type { ShellUi } from '@/content/shell-ui';
 import type { SiteLocale } from '@/content/site-locale';
+import { LazyIsland } from '../LazyIsland';
 
 export type InteractiveShellProps = {
   locale: SiteLocale;
@@ -18,12 +19,13 @@ const ShellComponent = lazy(() =>
 
 export function InteractiveShellLazy({ loadingLabel, ...props }: InteractiveShellProps) {
   return (
-    <Suspense
-      fallback={
+    <LazyIsland
+      locale={props.locale}
+      loading={
         <div role="status" aria-busy="true" aria-label={loadingLabel} data-testid="shell-loading" />
       }
     >
       <ShellComponent {...props} />
-    </Suspense>
+    </LazyIsland>
   );
 }

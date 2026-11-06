@@ -5,8 +5,8 @@ import type { TerminalChrome } from '@/content/schemas';
 import SHELL_RESPONSES from '@/content/shell-commands';
 import { SHELL_LIMITS, ShellCommand, ShellLineKind, type ShellUi } from '@/content/shell-ui';
 import type { SiteLocale } from '@/content/site-locale';
-import { WindowChrome } from '@/design-system';
 import { useBreakpoint } from '@/lib/use-breakpoint.client';
+import { TerminalChromeBar } from '../TerminalChromeBar';
 import { AnimatedPlaceholder, StaticPlaceholder } from './AnimatedPlaceholder.client';
 import { ResponseReference } from './ResponseReference.client';
 import { bounded, type Line, type LineKind, useAskStream } from './useAskStream';
@@ -165,17 +165,13 @@ export function InteractiveShell({
 
   return (
     <div className="interactive-shell">
-      <div className="shell-chrome">
-        <WindowChrome size={WINDOW_DOT_SIZE} />
-        {isMobile ? (
-          <span className="shell-chrome-tag">{chrome.mobileLabel ?? chrome.rightTag}</span>
-        ) : (
-          <>
-            <span>{chrome.promptLabel}</span>
-            <span className="shell-chrome-tag">{chrome.rightTag}</span>
-          </>
-        )}
-      </div>
+      <TerminalChromeBar
+        chrome={chrome}
+        className="shell-chrome"
+        tagClassName="shell-chrome-tag"
+        dotSize={WINDOW_DOT_SIZE}
+        compact={isMobile}
+      />
       <div
         ref={feedRef}
         onScroll={(event) => {

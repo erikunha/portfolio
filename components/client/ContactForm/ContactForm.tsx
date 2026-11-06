@@ -4,6 +4,7 @@ import { Fragment, useEffect, useId, useRef, useState, useSyncExternalStore } fr
 import type { ContactContent } from '@/content/contact';
 import {
   CONTACT_DELIVERY_CODE,
+  CONTACT_EMAIL_PATTERN,
   CONTACT_FIELD,
   CONTACT_LIMITS,
   type ContactField,
@@ -11,9 +12,9 @@ import {
   contactErrorSummary,
 } from '@/content/contact-copy';
 import type { TerminalChrome } from '@/content/schemas';
-import { WindowChrome } from '@/design-system';
 import { Field } from '@/design-system/components/Field';
 import { longestCopy } from '@/lib/longest-copy';
+import { TerminalChromeBar } from '../TerminalChromeBar';
 import { ContactCopyButton } from './ContactCopyButton.client';
 import { messageStore } from './messageStore';
 
@@ -33,14 +34,12 @@ const FIELD_BORDER = '[&:not([aria-invalid=true])]:border-primary-500';
 type TypedField = Exclude<ContactField, typeof CONTACT_FIELD.MESSAGE>;
 const INITIAL_TYPED: Record<TypedField, string> = { name: '', email: '' };
 const CONTACT_FIELDS = Object.values(CONTACT_FIELD);
-const EMAIL_PATTERN =
-  /^(?:[A-Za-z0-9_'+-]+\.)*[A-Za-z0-9_'+-]*[A-Za-z0-9_+-]@(?:[A-Za-z0-9][A-Za-z0-9-]*\.)+[A-Za-z]{2,}$/;
 const FIELD_CHECKS: Record<ContactField, (value: string) => boolean> = {
   [CONTACT_FIELD.NAME]: (value) => {
     const length = value.trim().length;
     return length >= CONTACT_LIMITS.nameMin && length <= CONTACT_LIMITS.nameMax;
   },
-  [CONTACT_FIELD.EMAIL]: (value) => EMAIL_PATTERN.test(value.trim()),
+  [CONTACT_FIELD.EMAIL]: (value) => CONTACT_EMAIL_PATTERN.test(value.trim()),
   [CONTACT_FIELD.MESSAGE]: (value) => {
     const length = value.trim().length;
     return length >= CONTACT_LIMITS.messageMin && length <= CONTACT_LIMITS.messageMax;
@@ -57,11 +56,11 @@ interface ContactResponse {
 function ContactShell({ chrome, children }: { chrome: TerminalChrome; children: React.ReactNode }) {
   return (
     <div className="contact-shell">
-      <div className="contact-chrome">
-        <WindowChrome />
-        <span>{chrome.promptLabel}</span>
-        <span className="contact-channel">{chrome.rightTag}</span>
-      </div>
+      <TerminalChromeBar
+        chrome={chrome}
+        className="contact-chrome"
+        tagClassName="contact-channel"
+      />
       <div className="contact-body">{children}</div>
     </div>
   );

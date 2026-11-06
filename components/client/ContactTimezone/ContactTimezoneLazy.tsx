@@ -1,8 +1,8 @@
 'use client';
 
-import { lazy, type ReactNode, Suspense, useEffect, useRef, useState } from 'react';
+import { lazy, type ReactNode, useEffect, useRef, useState } from 'react';
 import type { ContactContent } from '@/content/contact';
-import { ErrorBoundary } from '../../ErrorBoundary';
+import { LazyIsland } from '../LazyIsland';
 
 const PRELOAD_MARGIN_PX = 400;
 
@@ -42,17 +42,16 @@ export function ContactTimezoneLazy({
   return (
     <div className="ctz-host" ref={hostRef}>
       {near ? (
-        <ErrorBoundary
-          fallback={
+        <LazyIsland
+          loading={children}
+          failed={
             <div className="ctz-failed" data-testid="ctz-failed">
               {children}
             </div>
           }
         >
-          <Suspense fallback={children}>
-            <ContactTimezone copy={copy} />
-          </Suspense>
-        </ErrorBoundary>
+          <ContactTimezone copy={copy} />
+        </LazyIsland>
       ) : (
         children
       )}

@@ -442,6 +442,53 @@ describe('/api/contact honeypot', () => {
   });
 });
 
+describe('LazyIsland', () => {
+  it('shows the loading state while the island suspends and an alert when it fails', async () => {
+    const { LazyIsland } = await import('@/components/client/LazyIsland');
+    const { lazy } = await import('react');
+    const Broken = lazy(() => Promise.reject(new Error('chunk failed')));
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => new Response(null, { status: 204 })),
+    );
+    const errors = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    render(
+      <LazyIsland loading={<span data-testid="loading">loading</span>}>
+        <Broken />
+      </LazyIsland>,
+    );
+    expect(screen.getByTestId('loading')).toBeTruthy();
+    await waitFor(() => expect(screen.getByRole('alert')).toBeTruthy());
+    errors.mockRestore();
+    vi.unstubAllGlobals();
+  });
+});
+
+describe('contact email rule', () => {
+  const ADDRESSES = [
+    ['visitor@example.com', true],
+    ['first.last+tag@sub.example.co', true],
+    ['no-at-sign.example.com', false],
+    ['two@@example.com', false],
+    ['space @example.com', false],
+    ['nodomain@', false],
+    ['trailing.dot.@example.com', false],
+    ['a@b', false],
+  ] as const;
+
+  it.each(ADDRESSES)('client and server agree on %s', async (address, valid) => {
+    const { ContactSchema } = await import('@/lib/contact-validation');
+    const { CONTACT_EMAIL_PATTERN } = await import('@/content/contact-copy');
+    expect(CONTACT_EMAIL_PATTERN.test(address)).toBe(valid);
+    const parsed = ContactSchema.safeParse({
+      name: 'Visitor',
+      email: address,
+      message: 'A long enough message',
+    });
+    expect(parsed.success).toBe(valid);
+  });
+});
+
 const VALID_BODY = {
   name: 'Real Name',
   email: 'real@example.com',
