@@ -1,8 +1,5 @@
 name: CI
 
-# Pinned to ubuntu-24.04: the ubuntu-latest rollout to 26.04 renders visual
-# baselines off by ~1px and breaks cache digests. See DECISIONS.md 2026-11-04.
-
 on:
   pull_request:
   push:

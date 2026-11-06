@@ -198,7 +198,7 @@ case "$1 $2" in
   "pr view") if [[ -n "$PR_VIEW_FAIL" ]]; then echo "HTTP 429" >&2; exit 1; fi; echo '{"headRefOid":"abc123"}' ;;
   "pr diff") if [[ -n "$PR_DIFF_FAIL" ]] || { [[ "$*" == *--name-only* ]] && [[ -n "$PR_NAMES_FAIL" ]]; }; then echo "HTTP 406" >&2; exit 1; fi; if [[ "$*" == *--name-only* ]]; then echo app/page.tsx; else echo "+line"; fi ;;
   "pr checks") printf '%s' "$CHECKS_OUT"; echo "$CHECKS_ERR" >&2; exit "$CHECKS_EXIT" ;;
-  "run list") if [[ -n "$RUN_LIST_FAIL" ]]; then echo "HTTP 502" >&2; exit 1; fi; [[ "$*" == *"--commit abc123"* ]] || exit 3; echo 42 ;;
+  "run list") if [[ -n "$RUN_LIST_FAIL" ]]; then echo "HTTP 502" >&2; exit 1; fi; [[ "$*" == *"--commit abc123"* ]] || exit 3; [[ "$*" == *"--limit 5 "* ]] || exit 4; echo 42 ;;
   "run view") head -c "$LOG_BYTES" /dev/zero | tr '\\0' 'x' ;;
   *) if [[ "$*" != "api repos/o/r/pulls/1/files --paginate" ]]; then exit 3; fi; if [[ -n "$FILES_API_FAIL" ]]; then echo "HTTP 503" >&2; exit 1; fi; printf '%s' "$FILES_API_OUT" ;;
 esac

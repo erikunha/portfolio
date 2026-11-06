@@ -48,7 +48,7 @@ jobs:
       github.event.issue.pull_request &&
       contains(github.event.comment.body, '/claude-review') &&
       contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.comment.author_association)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 35
     steps:
       # Two checkouts, in this order, per the action's own docs/security.md:
@@ -120,6 +120,7 @@ jobs:
           : "${PR:?PR is required}"
           : "${OUT_DIR:?OUT_DIR is required}"
           MAX_LOG_BYTES="${MAX_LOG_BYTES:-60000}"
+          MAX_FAILED_RUNS="${MAX_FAILED_RUNS:-5}"
           GH_PR_CHECKS_FAILED=1
           GH_PR_CHECKS_PENDING=8
 
@@ -187,7 +188,7 @@ jobs:
           if [ -z "$head_sha" ]; then
             echo "UNAVAILABLE: no head SHA, so failed-run logs were not looked up." \
               > "$OUT_DIR/failed-runs-unavailable.txt"
-          elif ! run_ids=$(gh run list --repo "$REPO" --commit "$head_sha" --status failure --limit 100 \
+          elif ! run_ids=$(gh run list --repo "$REPO" --commit "$head_sha" --status failure --limit "$MAX_FAILED_RUNS" \
             --json databaseId --jq '.[].databaseId' 2> "$OUT_DIR/runs.err"); then
             {
               echo "UNAVAILABLE: gh run list failed; failed-run logs could not be read."
