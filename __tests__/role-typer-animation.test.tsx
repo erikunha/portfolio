@@ -22,7 +22,7 @@ describe('RoleTyper — animation loop', () => {
 
   async function render() {
     const { RoleTyper } = await import('@/components/client/RoleTyper/RoleTyper');
-    mounted = await mountClient(createElement(RoleTyper));
+    mounted = await mountClient(createElement(RoleTyper, { role: 'Senior' }));
     return mounted.container;
   }
 
@@ -133,7 +133,7 @@ describe('RoleTyper — motion off (no animation)', () => {
   it('does not start the tick loop when readMotion returns false', async () => {
     vi.doMock('@/lib/motion', () => ({ readMotion: () => false }));
     const { RoleTyper } = await import('@/components/client/RoleTyper/RoleTyper');
-    mounted = await mountClient(createElement(RoleTyper));
+    mounted = await mountClient(createElement(RoleTyper, { role: 'Senior' }));
     const container = mounted.container;
     const pill = container.querySelector('[aria-hidden="true"]');
     expect(pill?.textContent).toBe('[Senior]');
@@ -143,7 +143,7 @@ describe('RoleTyper — motion off (no animation)', () => {
     vi.useFakeTimers();
     vi.doMock('@/lib/motion', () => ({ readMotion: () => false }));
     const { RoleTyper } = await import('@/components/client/RoleTyper/RoleTyper');
-    mounted = await mountClient(createElement(RoleTyper));
+    mounted = await mountClient(createElement(RoleTyper, { role: 'Senior' }));
     const pill = mounted.container.querySelector('[aria-hidden="true"]');
     expect(pill?.textContent).toBe('[Senior]');
     window.dispatchEvent(new CustomEvent('motionchange', { detail: { on: true } }));
