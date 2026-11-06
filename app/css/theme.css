@@ -33,6 +33,7 @@
   --receipt-metric-width: 10.5rem;
   --receipt-value-width: 9rem;
   --receipt-company-width: 9.375rem;
+  --breakpoint-guitar: 700px;
   --phi: 1.618;
   --phi-inv: 0.618;
   --phi-root: 1.272;
