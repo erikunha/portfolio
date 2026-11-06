@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const componentsDir = path.join(ROOT, 'design-system/components');
-const docsPage = path.join(ROOT, 'app/design-system/components/page.mdx');
+const docsPage = path.join(ROOT, 'app/(en)/design-system/components/page.mdx');
 
 const componentNames = readdirSync(componentsDir, { withFileTypes: true })
   .filter((e) => e.isDirectory())

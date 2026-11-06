@@ -47,7 +47,7 @@ describe('brand icon assets', () => {
   });
 
   it('the root layout links the manifest', async () => {
-    const { metadata } = await import('@/app/layout');
+    const { metadata } = await import('@/app/(en)/layout');
     expect(metadata.manifest).toBe('/site.webmanifest');
   });
 });

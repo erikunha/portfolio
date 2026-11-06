@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { linksPageMetadata } from '@/app/links/_lib/metadata';
+import { linksPageMetadata } from '@/app/_lib/links-metadata';
 import { LINKS_LOCALE } from '@/content/links.constants';
 import { readingViews } from '@/content/reading-views';
 import {

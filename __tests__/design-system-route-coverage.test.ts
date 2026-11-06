@@ -1,6 +1,6 @@
 import { readdirSync, readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { DS_ROUTES } from '@/app/design-system/_components/ds-nav';
+import { DS_ROUTES } from '@/app/(en)/design-system/_components/ds-nav';
 import sitemap from '@/app/sitemap';
 import desktop from '../lighthouserc.json';
 import mobile from '../lighthouserc.mobile.json';
@@ -10,7 +10,7 @@ const LHCI_ORIGIN = 'http://localhost:3000';
 describe('design-system routes reach every route list', () => {
   it('lists every design-system page on disk in the sidebar', () => {
     // behavioral-test-allow: the App Router derives routes from the page files on disk; the directory listing is the route table
-    const pages = readdirSync('app/design-system', { recursive: true, encoding: 'utf8' })
+    const pages = readdirSync('app/(en)/design-system', { recursive: true, encoding: 'utf8' })
       .filter((path) => /(^|\/)page\.(mdx|tsx)$/.test(path))
       .map((path) =>
         `/design-system/${path.replace(/\/?page\.(mdx|tsx)$/, '')}`.replace(/\/$/, ''),
@@ -35,7 +35,9 @@ describe('design-system routes reach every route list', () => {
   it('derives the axe spec routes from the sidebar list', () => {
     // behavioral-test-allow: the Playwright spec cannot be imported under vitest; its route source is the assertion
     const spec = readFileSync('tests/a11y/axe.spec.ts', 'utf8');
-    expect(spec).toContain("import { DS_ROUTES } from '@/app/design-system/_components/ds-nav'");
+    expect(spec).toContain(
+      "import { DS_ROUTES } from '@/app/(en)/design-system/_components/ds-nav'",
+    );
     expect(spec).not.toMatch(/const DS_ROUTES\s*=/);
   });
 
@@ -43,7 +45,7 @@ describe('design-system routes reach every route list', () => {
     // behavioral-test-allow: the Playwright spec cannot be imported under vitest; its route source is the assertion
     const spec = readFileSync('tests/e2e/design-system-pages.spec.ts', 'utf8');
     expect(spec).toMatch(
-      /import \{[^}]*\bDS_NAV_GROUPS\b[^}]*\} from '@\/app\/design-system\/_components\/ds-nav'/,
+      /import \{[^}]*\bDS_NAV_GROUPS\b[^}]*\} from '@\/app\/\(en\)\/design-system\/_components\/ds-nav'/,
     );
     expect(spec).not.toMatch(/const (DS|REFERENCE)_ROUTES\s*=\s*\[/);
   });

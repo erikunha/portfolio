@@ -11,11 +11,6 @@ export const LINKS_PATH = {
   [LINKS_LOCALE.en]: '/links/en',
 } as const satisfies Record<LinksLocale, string>;
 
-export const LINKS_HTML_LANG = {
-  [LINKS_LOCALE.pt]: 'pt-BR',
-  [LINKS_LOCALE.en]: 'en-US',
-} as const satisfies Record<LinksLocale, string>;
-
 export const LINKS_OG_LOCALE = {
   [LINKS_LOCALE.pt]: 'pt_BR',
   [LINKS_LOCALE.en]: 'en_US',

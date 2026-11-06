@@ -36,7 +36,7 @@ describe('error states follow the page language', () => {
   });
 
   it('shows the route error page in Portuguese under /pt', async () => {
-    const { RouteErrorPage } = await import('@/components/ErrorPages/ErrorPages.client');
+    const { RouteErrorPage } = await import('@/components/ErrorPages/RouteErrorPage.client');
     render(<RouteErrorPage error={new Error('boom')} reset={vi.fn()} />);
     const pt = errorsContent[SITE_LOCALE.pt].serverError;
     expect(screen.getByText(pt.message)).not.toBeNull();

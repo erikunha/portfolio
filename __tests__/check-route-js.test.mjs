@@ -102,7 +102,7 @@ describe('check-route-js.mjs', () => {
     const res = run();
     expect(
       res.status,
-      'a client island moved into app/layout.tsx lands on every route. Classifying "on every route" as framework would exempt it from the budget — the exact code the budget exists to constrain.',
+      'a client island moved into the root shell lands on every route. Classifying "on every route" as framework would exempt it from the budget — the exact code the budget exists to constrain.',
     ).not.toBe(0);
     expect(res.stderr).toMatch(/over the 164\.7 KB budget/i);
   });

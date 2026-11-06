@@ -224,7 +224,7 @@ if (globalsCss) {
     '- The `next/font/local`-style asset emission pattern is for fonts, not arbitrary CSS — not applicable.',
   );
   out.push(
-    `- **Recommended approach**: a post-build script that reads the manifest, identifies the App Router's CSS chunk(s), and rewrites \`app/layout.tsx\`'s emitted HTML to use \`<link rel="preload" as="style" onload="this.rel='stylesheet'">\` for those chunks. The PR-1 writing-plans pass will validate this against Next 15's actual asset manifest shape.\n`,
+    `- **Recommended approach**: a post-build script that reads the manifest, identifies the App Router's CSS chunk(s), and rewrites the root shell's emitted HTML to use \`<link rel="preload" as="style" onload="this.rel='stylesheet'">\` for those chunks. The PR-1 writing-plans pass will validate this against Next 15's actual asset manifest shape.\n`,
   );
 } else {
   out.push(

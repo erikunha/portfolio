@@ -2,7 +2,7 @@ import { AppShell } from '@/components/AppShell';
 import { BrandLink } from '@/components/BrandLink';
 import { PageMain } from '@/components/PageMain';
 import { linksContent } from '@/content/links';
-import { LINKS_HTML_LANG, LINKS_PATH, type LinksLocale } from '@/content/links.constants';
+import { LINKS_PATH, type LinksLocale } from '@/content/links.constants';
 import { NAVIGATION, siteNavChrome } from '@/content/navigation';
 import { type ChannelFeed, EMPTY_FEED, getChannelFeed } from '@/lib/links/feed';
 import { ChannelCard } from './ChannelCard';
@@ -29,7 +29,7 @@ export async function LinksPage({ locale }: { locale: LinksLocale }) {
       skipLabel={NAVIGATION[locale].copy.skipLabel}
     >
       <NavProgress />
-      <div lang={LINKS_HTML_LANG[locale]} className="links-page">
+      <div className="links-page">
         <PageMain className="page-container page-main links-main">
           <h1 className="sr-only">{copy.pageHeading[locale]}</h1>
           {feed.latest === null && <Ticker locale={locale} />}

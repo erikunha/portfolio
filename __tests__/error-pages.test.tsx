@@ -1,9 +1,10 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import NotFound, { metadata } from '@/app/not-found';
-import { ellipsizeRef, RouteErrorPage } from '@/components/ErrorPages/ErrorPages.client';
+import NotFound, { metadata } from '@/app/(en)/[...missing]/not-found';
+import { ellipsizeRef } from '@/components/ErrorPages/ErrorPages.client';
 import { GlobalErrorPage } from '@/components/ErrorPages/GlobalErrorPage.client';
+import { RouteErrorPage } from '@/components/ErrorPages/RouteErrorPage.client';
 import { errorsContent } from '@/content/errors';
 import { ErrorsContentSchema } from '@/content/schemas';
 import { SITE_LOCALE } from '@/content/site-locale';
@@ -200,9 +201,12 @@ describe('GlobalErrorPage', () => {
   });
 });
 
-describe('app/error.tsx', () => {
+describe.each([
+  ['app/(en)/error.tsx', () => import('@/app/(en)/error')],
+  ['app/(pt)/error.tsx', () => import('@/app/(pt)/error')],
+])('%s', (_name, load) => {
   it('loads the 500 page on demand and still renders it for a route error', async () => {
-    const { default: RouteError } = await import('@/app/error');
+    const { default: RouteError } = await load();
     render(<RouteError error={makeError()} reset={() => undefined} />);
     expect(
       await screen.findByText(errorsContent[SITE_LOCALE.en].serverError.message),

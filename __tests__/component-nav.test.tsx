@@ -11,7 +11,7 @@ describe('ComponentNav', () => {
 
   async function render() {
     const { ComponentNav } = await import(
-      '@/app/design-system/_components/ComponentNav/ComponentNav'
+      '@/app/(en)/design-system/_components/ComponentNav/ComponentNav'
     );
     mounted = await mountClient(createElement(ComponentNav));
     return mounted.container;

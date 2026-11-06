@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { NextRequest } from 'next/server';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { SITE_LOCALE } from '@/content/site-locale';
 
 vi.mock('@vercel/analytics/next', () => ({
   Analytics: () => null,
@@ -50,8 +51,8 @@ describe('browser RUM (Vercel Analytics + Speed Insights)', () => {
   it('mounts Analytics + SpeedInsights when VERCEL=1', async () => {
     vi.stubEnv('VERCEL', '1');
     vi.resetModules();
-    const { default: RootLayout } = await import('@/app/layout');
-    const tree = RootLayout({ children: null });
+    const { RootShell } = await import('@/components/RootShell');
+    const tree = RootShell({ locale: SITE_LOCALE.en, children: null });
     const names = componentNames(tree);
     expect(names).toContain('Analytics');
     expect(names).toContain('SpeedInsights');
@@ -60,8 +61,8 @@ describe('browser RUM (Vercel Analytics + Speed Insights)', () => {
   it('omits the RUM components when VERCEL is unset', async () => {
     vi.stubEnv('VERCEL', '');
     vi.resetModules();
-    const { default: RootLayout } = await import('@/app/layout');
-    const tree = RootLayout({ children: null });
+    const { RootShell } = await import('@/components/RootShell');
+    const tree = RootShell({ locale: SITE_LOCALE.en, children: null });
     const names = componentNames(tree);
     expect(names).not.toContain('Analytics');
     expect(names).not.toContain('SpeedInsights');

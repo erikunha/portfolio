@@ -1,6 +1,6 @@
 import { renderToStaticMarkup } from 'react-dom/server';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { DesignSystemOpinion } from '@/app/design-system/_components/DesignSystemOpinion';
+import { DesignSystemOpinion } from '@/app/(en)/design-system/_components/DesignSystemOpinion';
 import { hottestTakes } from '@/content/hottest-takes';
 import { SITE_LOCALE } from '@/content/site-locale';
 
@@ -36,7 +36,7 @@ describe('design-system opinion', () => {
       };
     });
     const { DesignSystemOpinion: Renumbered } = await import(
-      '@/app/design-system/_components/DesignSystemOpinion'
+      '@/app/(en)/design-system/_components/DesignSystemOpinion'
     );
     const container = document.createElement('div');
     container.innerHTML = renderToStaticMarkup(<Renumbered />);

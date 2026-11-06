@@ -18,7 +18,7 @@ describe('Sidebar', () => {
 
   async function render(pathname = '/design-system') {
     mockPathname = pathname;
-    const { Sidebar } = await import('@/app/design-system/_components/Sidebar.client');
+    const { Sidebar } = await import('@/app/(en)/design-system/_components/Sidebar.client');
     mounted = await mountClient(createElement(Sidebar));
     return mounted.container;
   }

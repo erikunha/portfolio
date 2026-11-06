@@ -1,6 +1,7 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
-import { DS_ROUTES } from '@/app/design-system/_components/ds-nav';
+import { DS_ROUTES } from '@/app/(en)/design-system/_components/ds-nav';
+import { SITE_HTML_LANG, SITE_LOCALE } from '@/content/site-locale';
 import { revealDeferredContent } from '../e2e/_helpers/snapshot';
 
 const NARROW_VIEWPORT = { width: 390, height: 844 };
@@ -61,11 +62,8 @@ test.describe('axe-core a11y scan', () => {
     await page.waitForSelector('[role="log"]');
     await revealDeferredContent(page);
 
-    const lang = await page.evaluate(() => {
-      const wrapper = document.querySelector('[lang="pt-BR"]');
-      return wrapper?.getAttribute('lang') ?? document.documentElement.lang;
-    });
-    expect(lang).toBe('pt-BR');
+    const lang = await page.evaluate(() => document.documentElement.lang);
+    expect(lang).toBe(SITE_HTML_LANG[SITE_LOCALE.pt]);
 
     const results = await new AxeBuilder({ page })
       .withTags(['wcag2a', 'wcag2aa', 'wcag21aa', 'wcag22aa'])
