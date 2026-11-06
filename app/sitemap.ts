@@ -20,60 +20,45 @@ function languageLinks(path: string): Record<string, string> {
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const base = social.site;
-  const dsDate = new Date('2026-05-23');
-  const linksDate = new Date('2026-08-30');
-  const readingDate = new Date('2026-10-28');
-  const i18nDate = new Date('2026-11-04');
-  const homeModified = process.env.CONTENT_UPDATED_AT
-    ? new Date(process.env.CONTENT_UPDATED_AT)
-    : new Date('2026-05-22');
-
   return [
     {
       url: base,
-      lastModified: homeModified,
       changeFrequency: 'monthly',
       priority: 1,
       alternates: { languages: languageLinks('/') },
     },
     {
       url: `${base}/pt`,
-      lastModified: i18nDate,
       changeFrequency: 'monthly',
       priority: 1,
       alternates: { languages: languageLinks('/') },
     },
     {
       url: `${base}/cv`,
-      lastModified: readingDate,
       changeFrequency: 'monthly',
       priority: 0.9,
       alternates: { languages: languageLinks('/cv') },
     },
     {
       url: `${base}/pt/cv`,
-      lastModified: i18nDate,
       changeFrequency: 'monthly',
       priority: 0.9,
       alternates: { languages: languageLinks('/cv') },
     },
     {
       url: `${base}/summary`,
-      lastModified: readingDate,
       changeFrequency: 'monthly',
       priority: 0.8,
       alternates: { languages: languageLinks('/summary') },
     },
     {
       url: `${base}/pt/summary`,
-      lastModified: i18nDate,
       changeFrequency: 'monthly',
       priority: 0.8,
       alternates: { languages: languageLinks('/summary') },
     },
     {
       url: `${base}/links`,
-      lastModified: linksDate,
       changeFrequency: 'weekly',
       priority: 0.8,
       alternates: {
@@ -86,7 +71,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
     },
     {
       url: `${base}/links/en`,
-      lastModified: linksDate,
       changeFrequency: 'weekly',
       priority: 0.7,
       alternates: {
@@ -99,7 +83,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
     },
     ...DS_ROUTES.map((route) => ({
       url: `${base}${route}`,
-      lastModified: dsDate,
       changeFrequency: 'monthly' as const,
       priority: 0.5,
     })),
