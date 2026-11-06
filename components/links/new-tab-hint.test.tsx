@@ -1,16 +1,11 @@
 import { render } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { linksContent } from '@/content/links';
 import { LINKS_LOCALE } from '@/content/links.constants';
 import type { ChannelFeed } from '@/lib/links/feed';
 import { ChannelCard } from './ChannelCard';
 import { PlaylistCards } from './PlaylistCards';
 import { VideoHistory } from './VideoHistory';
-
-vi.mock('next/image', () => ({
-  // biome-ignore lint/performance/noImgElement: jsdom stand-in for next/image; there is no image pipeline here.
-  default: ({ src, alt }: { src: string; alt: string }) => <img src={src} alt={alt} />,
-}));
 
 const CHANNEL_URL = 'https://www.youtube.com/@eriknagringa';
 const video = (id: string) => ({

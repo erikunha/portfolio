@@ -185,7 +185,7 @@ describe('GuitarSection signal chain and details', () => {
     ]);
   });
 
-  it('delivers the photo through Next Image with meaningful alt and reserved dimensions', () => {
+  it('delivers the photo through the image optimizer with meaningful alt and reserved dimensions', () => {
     const doc = renderContent();
     const photo = doc.querySelector('img');
     expect(photo?.getAttribute('alt')).toBe(guitarPresentation[EN].photo.alt);

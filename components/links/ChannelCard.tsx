@@ -1,5 +1,5 @@
-import Image from 'next/image';
 import { EXTERNAL_LINK_PROPS, ExternalLink } from '@/components/ExternalLink';
+import { OptimizedImage } from '@/components/OptimizedImage';
 import { linksContent } from '@/content/links';
 import type { LinksLocale } from '@/content/links.constants';
 import { linksUi } from '@/content/links-ui';
@@ -70,7 +70,7 @@ export function ChannelCard({ locale, feed }: { locale: LinksLocale; feed: Chann
             className="block no-underline mt-3 focus-visible:outline-2 focus-visible:outline-primary-500 focus-visible:outline-offset-2 hover:opacity-92"
           >
             <span className="links-thumb w-full">
-              <Image
+              <OptimizedImage
                 src={latest.thumbnailUrl}
                 alt=""
                 fill
