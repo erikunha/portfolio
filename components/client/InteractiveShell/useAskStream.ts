@@ -227,7 +227,7 @@ export function useAskStream({
             true,
             {
               prefix: `${states.stderrCommand} ${response.status}`,
-              hint: response.status >= SERVER_ERROR_STATUS && !message.includes(ui.email),
+              hint: response.status >= SERVER_ERROR_STATUS,
             },
           );
           return;

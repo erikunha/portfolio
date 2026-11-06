@@ -15,7 +15,9 @@ export type AskErrors = {
 const askErrorsFor = (locale: SiteLocale): AskErrors => {
   const pt = locale === SITE_LOCALE.pt;
   return {
-    unavailable: pt ? 'temporariamente indisponível' : 'temporarily unavailable',
+    unavailable: pt
+      ? `temporariamente indisponível: escreva para ${social.email}`
+      : `temporarily unavailable: email ${social.email} directly`,
     rateLimited: pt
       ? 'limite de perguntas atingido: tente de novo em uma hora'
       : 'rate limit exceeded: try again in an hour',

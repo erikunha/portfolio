@@ -1178,7 +1178,7 @@ describe('InteractiveShell stream states', () => {
       expect(container.querySelector('[data-kind="hint"]')).toBeNull();
     });
 
-    it('does not repeat the address when the server message already carries it', async () => {
+    it('still offers the offline fallback when the server message names the address', async () => {
       vi.stubGlobal(
         'fetch',
         vi.fn(async () =>
@@ -1187,7 +1187,7 @@ describe('InteractiveShell stream states', () => {
       );
       const container = await renderShell();
       await submitQuestion(container, 'x');
-      expect(container.querySelector('[data-kind="hint"]')).toBeNull();
+      expect(container.querySelector('[data-kind="hint"] code')?.textContent).toBe('cat skills.md');
     });
 
     it('falls back to the HTTP label when the body has no message', async () => {
