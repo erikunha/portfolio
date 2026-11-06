@@ -389,7 +389,9 @@ Content-Type: application/json
   streamed answer tokens (AI SDK stream, not SSE JSON deltas).
   A mid-stream failure is signalled in-band by the \x00ERR: sentinel
   (lib/stream-protocol.ts), not by a status code, the 200 has already begun.
-  The text after the sentinel is the page-language `interrupted` line from
+  A provider failure ends `textStream` with no text and no throw, so the route
+  reads it from `onError` and sends the sentinel too. The text after the
+  sentinel is always the page-language `interrupted` line from
   content/ask-errors.ts; the exception stays in the server log. A guard abort
   carries GUARD_ABORT_PREFIX and the shell words it as a withheld answer.
 

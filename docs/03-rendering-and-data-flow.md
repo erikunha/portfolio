@@ -147,6 +147,8 @@ sequenceDiagram
         R->>G: Layer-1 egress scan (leak markers / 4000-char runaway)
         alt leak/runaway
             G-->>R: abort -> append STREAM_ERR_SENTINEL
+        else provider failure (onError)
+            R-->>U: append STREAM_ERR_SENTINEL with the interrupted message
         else clean
             R-->>U: enqueue chunk
         end
