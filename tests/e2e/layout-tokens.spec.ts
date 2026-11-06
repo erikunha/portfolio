@@ -26,8 +26,8 @@ const paddingTop = (page: Page, selector: string) =>
 
 const PAGES = [
   { path: '/', container: '#main-content' },
-  { path: '/summary', container: 'main.reading-doc' },
-  { path: '/cv', container: 'main.reading-doc' },
+  { path: '/summary', container: '#main-content' },
+  { path: '/cv', container: '#main-content' },
   { path: '/links', container: '.page-container' },
   { path: '/design-system', container: '.page-container' },
   { path: '/this-route-does-not-exist', container: 'main.err-main' },
@@ -45,7 +45,7 @@ const tokenPx = (page: Page, expression: string) =>
     return resolved;
   }, expression);
 
-const CLEARS_TOPBAR_PATHS = ['/', '/links', '/design-system'];
+const CLEARS_TOPBAR_PATHS = ['/', '/summary', '/cv', '/links', '/design-system'];
 const HOME_TOP_EXPRESSION = 'calc(var(--topbar-height) + var(--spacing-6))';
 
 test.describe('layout tokens', () => {

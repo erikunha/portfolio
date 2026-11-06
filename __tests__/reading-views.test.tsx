@@ -23,6 +23,12 @@ function render(page: () => React.ReactElement) {
   return host;
 }
 
+function page(host: HTMLElement): HTMLElement {
+  const main = host.querySelector<HTMLElement>('main#main-content');
+  if (!main) throw new Error('the reading view renders no main landmark');
+  return main;
+}
+
 const toSentence = toSentenceBase(SITE_LOCALE.en);
 const readingViewsEn = readingViews[SITE_LOCALE.en];
 const cvDocumentEn = cvDocument[SITE_LOCALE.en];
@@ -143,10 +149,10 @@ describe('CV reading view', () => {
   });
 
   it('opens external links in a new tab with a hint for screen readers', () => {
-    const linkedin = host.querySelector(`a[href="${social.linkedin}"]`);
+    const linkedin = page(host).querySelector(`a[href="${social.linkedin}"]`);
     expect(linkedin?.getAttribute('target')).toBe('_blank');
     expect(linkedin?.getAttribute('rel')).toBe(readingViewsEn.shared.newTabRel);
-    const external = Array.from(host.querySelectorAll('a[target="_blank"]'));
+    const external = Array.from(page(host).querySelectorAll('a[target="_blank"]'));
     expect(external.length).toBeGreaterThan(0);
     for (const link of external) {
       const named = link.getAttribute('aria-label') ?? link.textContent;
@@ -157,20 +163,29 @@ describe('CV reading view', () => {
   });
 
   it('links to the email, the summary view and a print button', () => {
-    expect(host.querySelector(`a[href="mailto:${social.email}"]`)).not.toBeNull();
-    expect(host.querySelector(`a[href="${READING_PATHS.summary}"]`)).not.toBeNull();
+    expect(page(host).querySelector(`a[href="mailto:${social.email}"]`)).not.toBeNull();
+    expect(page(host).querySelector(`a[href="${READING_PATHS.summary}"]`)).not.toBeNull();
     const print = Array.from(host.querySelectorAll('button')).find(
       (button) => button.textContent === readingViewsEn.shared.printLabel,
     );
     expect(print).toBeDefined();
   });
 
-  it('marks the chrome so print can hide it, and gives the skip link a target', () => {
-    expect(host.querySelector('.reading-bar')).not.toBeNull();
+  it('marks the actions so print can hide them, and gives the shell skip link a target', () => {
     expect(host.querySelector('.reading-actions')).not.toBeNull();
-    const skip = host.querySelector('a.skip-to-content');
-    expect(skip?.getAttribute('href')).toBe('#main-content');
-    expect(host.querySelector('main#main-content')).not.toBeNull();
+    const skips = host.querySelectorAll('a.skip-to-content');
+    expect(skips).toHaveLength(1);
+    expect(skips[0]?.getAttribute('href')).toBe('#main-content');
+    expect(host.querySelectorAll('main#main-content')).toHaveLength(1);
+  });
+
+  it('renders inside the shared shell and owns no header of its own', () => {
+    expect(host.querySelector('.desktop-topbar')).not.toBeNull();
+    expect(host.querySelector('.mobile-title-bar')).not.toBeNull();
+    expect(host.querySelector('.reading-bar')).toBeNull();
+    expect(host.querySelector('main#main-content')?.classList.contains('page-container')).toBe(
+      true,
+    );
   });
 
   it('describes itself as a profile page for search engines', () => {
@@ -189,6 +204,25 @@ describe('CV reading view', () => {
 
 describe('summary reading view', () => {
   const host = render(SummaryPage);
+
+  it('renders inside the shared shell with one skip link and one main landmark', () => {
+    expect(host.querySelector('.desktop-topbar')).not.toBeNull();
+    expect(host.querySelector('.mobile-title-bar')).not.toBeNull();
+    expect(host.querySelector('.reading-bar')).toBeNull();
+    expect(host.querySelectorAll('a.skip-to-content')).toHaveLength(1);
+    expect(host.querySelectorAll('main#main-content')).toHaveLength(1);
+    expect(host.querySelector('main#main-content')?.classList.contains('page-container')).toBe(
+      true,
+    );
+  });
+
+  it('keeps the print action in the call to action row', () => {
+    const row = host.querySelector('.reading-actions');
+    const print = Array.from(row?.querySelectorAll('button') ?? []).find(
+      (button) => button.textContent === readingViewsEn.shared.printLabel,
+    );
+    expect(print).toBeDefined();
+  });
 
   it('has one h1 with the name', () => {
     expect(host.querySelectorAll('h1')).toHaveLength(1);
@@ -274,13 +308,13 @@ describe('summary reading view', () => {
   });
 
   it('links to the full CV, LinkedIn and email, and has a print button', () => {
-    expect(host.querySelector(`a[href="${READING_PATHS.cv}"]`)?.textContent).toBe(
+    expect(page(host).querySelector(`a[href="${READING_PATHS.cv}"]`)?.textContent).toBe(
       readingViewsEn.summary.cvLinkLabel,
     );
-    expect(host.querySelector(`a[href="${social.linkedin}"]`)?.getAttribute('aria-label')).toBe(
-      readingViewsEn.shared.hire.ariaLabel,
-    );
-    expect(host.querySelector(`a[href="mailto:${social.email}"]`)).not.toBeNull();
+    expect(
+      page(host).querySelector(`a[href="${social.linkedin}"]`)?.getAttribute('aria-label'),
+    ).toBe(readingViewsEn.shared.hire.ariaLabel);
+    expect(page(host).querySelector(`a[href="mailto:${social.email}"]`)).not.toBeNull();
     expect(
       Array.from(host.querySelectorAll('button')).some(
         (button) => button.textContent === readingViewsEn.shared.printLabel,

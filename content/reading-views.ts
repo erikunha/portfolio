@@ -40,15 +40,6 @@ const readingViewsFor = (locale: SiteLocale): ReadingViews => {
   const presentation = profilePresentation[locale];
   return ReadingViewsSchema.parse({
     shared: {
-      skipLabel: pt ? 'Pular para o conteúdo' : 'Skip to main content',
-      navLabel: pt ? 'Navegação do site' : 'Site navigation',
-      nav: [
-        { label: NAV_VOCABULARY[locale].about, href: localizedPath(locale, '/#sec-readme') },
-        { label: NAV_VOCABULARY[locale].work, href: localizedPath(locale, '/#sec-projects') },
-        { label: NAV_VOCABULARY[locale].career, href: localizedPath(locale, '/#sec-git-log') },
-        { label: NAV_VOCABULARY[locale].contact, href: localizedPath(locale, '/#sec-contact') },
-        { label: NAV_VOCABULARY[locale].designSystem, href: '/design-system' },
-      ],
       hire: {
         label: NAV_VOCABULARY[locale].hire,
         ariaLabel: HIRE_ACCESSIBLE_NAME[locale],

@@ -217,6 +217,7 @@ app/pt/page.tsx                      # pt-BR home route, renders SiteHome
 components/SiteHome.tsx              # section composition, client shell boundaries, footer
 app/summary/page.tsx                 # one-screen reading view: stats, CTAs, projects | stack + contact
 app/cv/page.tsx                      # full CV reading view and print control
+components/reading/ReadingShell.tsx    # AppShell wrapper shared by both reading views
 app/links/page.tsx                   # pt-BR links page
 app/links/en/page.tsx                # English links page
 app/not-found.tsx                    # Matrix-themed 404
@@ -704,7 +705,7 @@ The principal-level discipline: **none of this is built today.** YAGNI is the de
 | Route                                                                        | Implementation                                                                 |
 | ---------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
 | `/`                                                                          | `app/page.tsx` renders `components/SiteHome.tsx`, terminal homepage            |
-| `/summary`, `/cv`                                                            | RSC reading views with a PrintButton island                                    |
+| `/summary`, `/cv`                                                            | RSC reading views inside `AppShell` (home header); print hides the shell       |
 | `/pt`, `/pt/cv`, `/pt/summary`                                               | pt-BR twins of the home page and the reading views                             |
 | `/links`, `/links/en`                                                        | Localized link pages                                                           |
 | `/design-system`, `/design-system/{tokens,components,enforcement,changelog}` | MDX documentation and component gallery                                        |

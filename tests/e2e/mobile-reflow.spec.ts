@@ -19,7 +19,6 @@ const GROUPS: Group[] = [
     container: '.reading-rows li',
   },
   { name: 'summary actions', path: '/summary', container: '.reading-actions' },
-  { name: 'summary stats', path: '/summary', container: '.reading-stats' },
 ];
 
 interface Box {

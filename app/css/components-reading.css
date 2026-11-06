@@ -17,36 +17,6 @@
     color: var(--color-text);
   }
 
-  .reading-bar {
-    border-bottom: var(--border-width) solid var(--color-primary-border);
-  }
-
-  .reading-bar-in {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: var(--spacing-2) var(--spacing-4);
-    max-width: var(--measure-page);
-    margin: 0 auto;
-    padding: var(--spacing-2) var(--space-gutter);
-  }
-
-  .reading-nav {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0 var(--spacing-4);
-    margin-left: auto;
-  }
-
-  .reading-nav a {
-    display: inline-flex;
-    align-items: center;
-    min-height: var(--spacing-target);
-    font-size: var(--text-xs);
-    letter-spacing: 0.1em;
-    text-decoration: none;
-  }
-
   .page-container {
     width: 100%;
     max-width: var(--measure-page);
@@ -58,7 +28,7 @@
   .reading-doc {
     max-width: var(--measure-read);
     margin: 0 auto;
-    padding: var(--space-page-top) var(--space-gutter) var(--spacing-6);
+    padding-block-end: var(--spacing-6);
   }
 
   .reading-doc--wide {
@@ -335,10 +305,37 @@
       line-height: 1.4;
     }
 
-    .reading-view .skip-to-content,
-    .reading-bar,
+    body:has(.reading-view) {
+      padding-bottom: 0;
+    }
+
+    body:has(.reading-view)
+      :is(
+        .skip-to-content,
+        .desktop-only,
+        .mobile-only,
+        .section-nav-root,
+        .dock,
+        .pos-meter,
+        .to-top-btn,
+        .crt-vignette,
+        .crt-scanlines,
+        .crt-mask,
+        .crt-noise,
+        .crt-flicker,
+        .crt-scan-beam
+      ),
     .reading-actions {
       display: none;
+    }
+
+    body:has(.reading-view) > canvas {
+      visibility: hidden;
+    }
+
+    .reading-view .page-container.page-main {
+      max-width: none;
+      padding: 0;
     }
 
     .reading-doc,
@@ -374,8 +371,7 @@
     }
 
     .reading-links a,
-    .reading-actions-inline a,
-    .reading-nav a {
+    .reading-actions-inline a {
       min-height: 0;
     }
 

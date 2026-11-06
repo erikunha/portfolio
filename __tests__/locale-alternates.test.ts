@@ -4,6 +4,7 @@ import { LINKS_LOCALE } from '@/content/links.constants';
 import { readingViews } from '@/content/reading-views';
 import {
   DEFAULT_SITE_LOCALE,
+  headerLanguageSwitchPaths,
   languageSwitchPaths,
   localeAlternates,
   localizedPath,
@@ -63,5 +64,17 @@ describe('locale alternates', () => {
     expect(languageSwitchPaths('/links')).toEqual({ en: '/links/en', pt: '/links' });
     expect(languageSwitchPaths('/design-system')).toBeNull();
     expect(languageSwitchPaths('/unknown')).toBeNull();
+  });
+
+  it('the header switch serves the reading views and leaves /links to its own bar', () => {
+    expect(headerLanguageSwitchPaths('/cv')).toEqual({ en: '/cv', pt: '/pt/cv' });
+    expect(headerLanguageSwitchPaths('/pt/cv')).toEqual({ en: '/cv', pt: '/pt/cv' });
+    expect(headerLanguageSwitchPaths('/summary')).toEqual({ en: '/summary', pt: '/pt/summary' });
+    expect(headerLanguageSwitchPaths('/pt/summary')).toEqual({
+      en: '/summary',
+      pt: '/pt/summary',
+    });
+    expect(headerLanguageSwitchPaths('/links')).toBeNull();
+    expect(headerLanguageSwitchPaths('/links/en')).toBeNull();
   });
 });

@@ -36,7 +36,8 @@ test.describe('reading views', () => {
   test('/cv print layout drops the site chrome and shows link URLs', async ({ page }) => {
     await page.goto(READING_PATHS.cv);
     await page.emulateMedia({ media: 'print' });
-    await expect(page.locator('.reading-bar')).toBeHidden();
+    await expect(page.locator('.desktop-topbar')).toBeHidden();
+    await expect(page.locator('.mobile-title-bar')).toBeHidden();
     await expect(page.locator('.reading-actions')).toBeHidden();
     await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
     const linkedin = page.locator('.reading-links a', { hasText: 'LinkedIn' });
@@ -57,6 +58,7 @@ test.describe('reading views', () => {
       page.getByRole('button', { name: readingViews[SITE_LOCALE.en].shared.printLabel }),
     ).toBeVisible();
     await page
+      .locator('main#main-content')
       .getByRole('link', { name: readingViews[SITE_LOCALE.en].summary.cvLinkLabel })
       .click();
     await page.waitForURL(`**${READING_PATHS.cv}`);

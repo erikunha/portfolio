@@ -68,14 +68,7 @@ export const LANGUAGE_SWITCH_NAME: Record<SiteLocale, string> = {
   [SITE_LOCALE.pt]: 'Português',
 };
 
-const PAGE_OWNED_LANGUAGE_SWITCH = new Set([
-  '/cv',
-  '/pt/cv',
-  '/summary',
-  '/pt/summary',
-  '/links',
-  '/links/en',
-]);
+const PAGE_OWNED_LANGUAGE_SWITCH = new Set(['/links', '/links/en']);
 
 export function headerLanguageSwitchPaths(pathname: string): Record<SiteLocale, string> | null {
   return PAGE_OWNED_LANGUAGE_SWITCH.has(pathname) ? null : languageSwitchPaths(pathname);

@@ -4,8 +4,10 @@ import { DS_ROUTES } from '@/app/design-system/_components/ds-nav';
 import { revealDeferredContent } from '../e2e/_helpers/snapshot';
 
 const NARROW_VIEWPORT = { width: 390, height: 844 };
-const EXTRA_ROUTES = ['/links', '/links/en'];
+const READING_ROUTES = ['/cv', '/summary', '/pt/cv', '/pt/summary'];
+const EXTRA_ROUTES = ['/links', '/links/en', ...READING_ROUTES];
 const SCANNED_ROUTES = [...DS_ROUTES, ...EXTRA_ROUTES];
+const NARROW_ROUTES = [...DS_ROUTES, ...READING_ROUTES];
 
 test.describe('axe-core a11y scan', () => {
   for (const route of SCANNED_ROUTES) {
@@ -18,7 +20,7 @@ test.describe('axe-core a11y scan', () => {
     });
   }
 
-  for (const route of DS_ROUTES) {
+  for (const route of NARROW_ROUTES) {
     test(`${route} has no violations at 390`, async ({ page }) => {
       await page.setViewportSize(NARROW_VIEWPORT);
       await page.goto(route);

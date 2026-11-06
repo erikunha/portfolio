@@ -419,6 +419,10 @@ describe('SectionNavigation', () => {
     it.each([
       ['/', SITE_LOCALE.en, ['/', '/pt'], ['page', null]],
       ['/pt', SITE_LOCALE.pt, ['/', '/pt'], [null, 'page']],
+      ['/cv', SITE_LOCALE.en, ['/cv', '/pt/cv'], ['page', null]],
+      ['/pt/cv', SITE_LOCALE.pt, ['/cv', '/pt/cv'], [null, 'page']],
+      ['/summary', SITE_LOCALE.en, ['/summary', '/pt/summary'], ['page', null]],
+      ['/pt/summary', SITE_LOCALE.pt, ['/summary', '/pt/summary'], [null, 'page']],
     ] as const)(
       'on %s links both locales and marks the current one',
       (path, locale, hrefs, current) => {
@@ -445,7 +449,7 @@ describe('SectionNavigation', () => {
       expect(nav.textContent).not.toContain('\u00b7');
     });
 
-    it.each(['/design-system', '/unknown', null, '/cv', '/pt/summary', '/links', '/links/en'])(
+    it.each(['/design-system', '/unknown', null, '/links', '/links/en'])(
       'renders nothing on %s (no pair, or the page renders its own switch)',
       (path) => {
         mockPathname = path;

@@ -989,13 +989,9 @@ export type Profile = z.infer<typeof ProfileSchema> & { technologyLine: string }
 export type Education = z.infer<typeof EducationSchema>;
 
 const ReadingTextSchema = z.string().min(1);
-const ReadingLinkSchema = z.object({ label: ReadingTextSchema, href: ReadingTextSchema });
 
 export const ReadingViewsSchema = z.object({
   shared: z.object({
-    skipLabel: ReadingTextSchema,
-    navLabel: ReadingTextSchema,
-    nav: z.array(ReadingLinkSchema).min(1),
     hire: z.object({
       label: ReadingTextSchema,
       ariaLabel: ReadingTextSchema,
