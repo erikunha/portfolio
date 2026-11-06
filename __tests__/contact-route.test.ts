@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import { NextRequest } from 'next/server';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -284,4 +285,22 @@ describe('/api/log/forget for a contact message', () => {
     expect(res.status).toBe(503);
     expect(multiTx.exec).not.toHaveBeenCalled();
   });
+});
+
+describe('queued copy states the real retry schedule', () => {
+  it.each(['en', 'pt'] as const)(
+    'names the daily cron and the attempt cap (%s)',
+    async (locale) => {
+      const { CONTACT_MAX_RETRY_ATTEMPTS } = await import('@/lib/contact-outbox');
+      const { contactContent } = await import('@/content/contact');
+      // behavioral-test-allow: configuration-invariant, the copy must match the cron in vercel.json
+      const { crons } = JSON.parse(readFileSync('vercel.json', 'utf8')) as {
+        crons: Array<{ path: string; schedule: string }>;
+      };
+      const retry = crons.find((cron) => cron.path === '/api/contact-retry');
+
+      expect(retry?.schedule).toMatch(/^\d+ \d+ \* \* \*$/);
+      expect(contactContent[locale].queued.message).toContain(String(CONTACT_MAX_RETRY_ATTEMPTS));
+    },
+  );
 });
