@@ -10,6 +10,7 @@ import { contactCopy } from '@/content/contact-copy';
 import { linksContent } from '@/content/links';
 import { SITE_LOCALE, type SiteLocale } from '@/content/site-locale';
 import { contactChrome } from '@/content/terminal-chrome';
+import { ASK_LOCALE_HEADER } from '@/lib/stream-protocol';
 import { ContactForm } from './ContactForm';
 import { messageStore } from './messageStore';
 
@@ -107,7 +108,7 @@ describe('ContactForm accessibility', () => {
         new Response(
           JSON.stringify({
             ok: false,
-            error: { code: 'storage_unavailable', message: 'server boom' },
+            error: { code: 'internal_error', message: 'server boom' },
           }),
           { status: 500 },
         ),
@@ -152,7 +153,7 @@ describe('contact form error region', () => {
       vi.fn(
         async () =>
           new Response(
-            JSON.stringify({ ok: false, error: { code: 'storage_unavailable', message: 'boom' } }),
+            JSON.stringify({ ok: false, error: { code: 'internal_error', message: 'boom' } }),
             { status: 500 },
           ),
       ),
@@ -299,8 +300,8 @@ describe('contact form delivery states', () => {
       'rate_limited',
       'error: too many requests, try again in 10 minutes. Your',
     ],
-    [SITE_LOCALE.en, 502, 'storage_unavailable', 'error: could not send right now. Your text'],
-    [SITE_LOCALE.pt, 502, 'storage_unavailable', 'erro: não foi possível enviar agora. Seu texto'],
+    [SITE_LOCALE.en, 502, 'internal_error', 'error: could not send right now. Your text'],
+    [SITE_LOCALE.pt, 502, 'internal_error', 'erro: não foi possível enviar agora. Seu texto'],
     [
       SITE_LOCALE.pt,
       429,
@@ -837,7 +838,7 @@ describe('contact validation and retention', () => {
           Response.json(
             {
               ok: false,
-              error: { code: 'storage_unavailable', message: 'storage unavailable, try again' },
+              error: { code: 'internal_error', message: 'storage unavailable, try again' },
             },
             { status: 502 },
           ),
@@ -1140,4 +1141,69 @@ describe('contact form message store', () => {
       expect((screen.getByLabelText('$ message:') as HTMLTextAreaElement).value).toBe('');
     },
   );
+});
+
+describe('contact form locale header and server message', () => {
+  let mounted: MountedClient;
+
+  afterEach(() => {
+    mounted?.unmount();
+    vi.unstubAllGlobals();
+    vi.doUnmock('next/navigation');
+    vi.resetModules();
+  });
+
+  async function submitAt(pathname: string, response: Response) {
+    vi.resetModules();
+    vi.doMock('next/navigation', () => ({ usePathname: () => pathname }));
+    const fetchMock = vi.fn(async () => response);
+    vi.stubGlobal('fetch', fetchMock);
+    const { ContactForm: Form } = await import('./ContactForm');
+    mounted = await mountClient(
+      createElement(Form, {
+        copy: contactCopy[SITE_LOCALE.pt],
+        chrome: contactChrome[SITE_LOCALE.pt],
+      }),
+    );
+    const form = mounted.container.querySelector('form');
+    fillValidForm(mounted.container);
+    await act(async () => {
+      form?.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    });
+    await flushMicrotasks();
+    return { fetchMock, container: mounted.container };
+  }
+
+  it.each([
+    ['/pt', SITE_LOCALE.pt],
+    ['/pt/links', SITE_LOCALE.pt],
+    ['/', SITE_LOCALE.en],
+  ])('sends the page locale for %s as %s', async (pathname, expected) => {
+    const { fetchMock } = await submitAt(pathname, Response.json({ ok: true }, { status: 200 }));
+    const init = (fetchMock.mock.calls[0] as unknown as [string, RequestInit])[1];
+    expect((init.headers as Record<string, string>)[ASK_LOCALE_HEADER]).toBe(expected);
+  });
+
+  it('shows the server message for a code the server localizes', async () => {
+    const { container } = await submitAt(
+      '/pt',
+      Response.json(
+        { ok: false, error: { code: 'storage_unavailable', message: 'mensagem do servidor' } },
+        { status: 502 },
+      ),
+    );
+    expect(container.querySelector('[role="alert"]')?.textContent).toContain(
+      'mensagem do servidor',
+    );
+  });
+
+  it('falls back to its own copy when the server sends no message', async () => {
+    const { container } = await submitAt(
+      '/pt',
+      Response.json({ ok: false, error: { code: 'storage_unavailable' } }, { status: 502 }),
+    );
+    expect(container.querySelector('[role="alert"]')?.textContent).toContain(
+      contactCopy[SITE_LOCALE.pt].errors.requestFailed,
+    );
+  });
 });

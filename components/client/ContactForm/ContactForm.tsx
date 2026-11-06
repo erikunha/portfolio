@@ -1,5 +1,6 @@
 'use client';
 
+import { usePathname } from 'next/navigation';
 import { Fragment, useEffect, useId, useRef, useState, useSyncExternalStore } from 'react';
 import type { ContactContent } from '@/content/contact';
 import {
@@ -12,8 +13,10 @@ import {
   contactErrorSummary,
 } from '@/content/contact-copy';
 import type { TerminalChrome } from '@/content/schemas';
+import { localeOfPath } from '@/content/site-locale';
 import { Field } from '@/design-system/components/Field';
 import { longestCopy } from '@/lib/longest-copy';
+import { ASK_LOCALE_HEADER } from '@/lib/stream-protocol';
 import { TerminalChromeBar } from '../TerminalChromeBar';
 import { ContactCopyButton } from './ContactCopyButton.client';
 import { messageStore } from './messageStore';
@@ -28,6 +31,8 @@ const STATUS = {
 type Status = (typeof STATUS)[keyof typeof STATUS];
 const CONTACT_ENDPOINT = '/api/contact';
 const QUEUED_STATUS = 202;
+const STORAGE_UNAVAILABLE_CODE = 'storage_unavailable';
+const SERVER_LOCALIZED_CODES: readonly string[] = [STORAGE_UNAVAILABLE_CODE];
 const MESSAGE_ROWS = 5;
 const INITIAL_FAILURE_COUNT = 0;
 const FIELD_BORDER = '[&:not([aria-invalid=true])]:border-primary-500';
@@ -102,6 +107,7 @@ function ContactReceipt({
 }
 
 export function ContactForm({ copy, chrome }: { copy: ContactContent; chrome: TerminalChrome }) {
+  const pageLocale = localeOfPath(usePathname());
   const [typed, setTyped] = useState(INITIAL_TYPED);
   const message = useSyncExternalStore(
     messageStore.subscribe,
@@ -183,11 +189,12 @@ export function ContactForm({ copy, chrome }: { copy: ContactContent; chrome: Te
       return;
     }
     pendingRef.current = true;
+    let serverMessage = '';
     setStatus(STATUS.SUBMITTING);
     try {
       const res = await fetch(CONTACT_ENDPOINT, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', [ASK_LOCALE_HEADER]: pageLocale },
         body: JSON.stringify({ ...values, field_company: honeypot }),
       });
       const data = (await res.json().catch(() => null)) as ContactResponse | null;
@@ -198,6 +205,9 @@ export function ContactForm({ copy, chrome }: { copy: ContactContent; chrome: Te
         return;
       }
       if (!res.ok || data?.ok !== true || res.status === QUEUED_STATUS) {
+        if (apiError?.code && SERVER_LOCALIZED_CODES.includes(apiError.code)) {
+          serverMessage = apiError.message ?? '';
+        }
         throw new Error(CONTACT_ENDPOINT, { cause: apiError?.code });
       }
       messageStore.reset();
@@ -210,7 +220,7 @@ export function ContactForm({ copy, chrome }: { copy: ContactContent; chrome: Te
     } catch (error) {
       const code =
         error instanceof Error && typeof error.cause === 'string' ? error.cause : undefined;
-      setErrorMsg(contactErrorMessage(copy, code));
+      setErrorMsg(serverMessage || contactErrorMessage(copy, code));
       setStatus(STATUS.ERROR);
       setFailureCount((count) => count + 1);
     } finally {
