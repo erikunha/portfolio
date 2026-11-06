@@ -23,6 +23,7 @@ const FEED_CANDIDATES = 15;
 const UPLOADS_PAGE_SIZE = 50;
 const UPLOADS_MAX_PAGES = 4;
 
+const FEED_DEADLINE_MS = 12_000;
 const FEED_TIMEOUT_MS = 6_000;
 const API_TIMEOUT_MS = 6_000;
 const CACHE_STALE_S = 900;
@@ -92,10 +93,15 @@ type ApiChannelItem = {
   statistics?: { subscriberCount?: string; videoCount?: string };
 };
 
-async function fetchText(url: string, timeoutMs: number, apiKey?: string): Promise<string | null> {
+async function fetchText(
+  url: string,
+  timeoutMs: number,
+  deadline: AbortSignal,
+  apiKey?: string,
+): Promise<string | null> {
   try {
     const response = await fetch(url, {
-      signal: AbortSignal.timeout(timeoutMs),
+      signal: AbortSignal.any([AbortSignal.timeout(timeoutMs), deadline]),
       headers: {
         accept: 'application/xml, application/json',
         ...(apiKey ? { [API_KEY_HEADER]: apiKey } : {}),
@@ -112,8 +118,13 @@ async function fetchText(url: string, timeoutMs: number, apiKey?: string): Promi
   }
 }
 
-async function fetchJson<T>(url: string, timeoutMs: number, apiKey: string): Promise<T | null> {
-  const body = await fetchText(url, timeoutMs, apiKey);
+async function fetchJson<T>(
+  url: string,
+  timeoutMs: number,
+  deadline: AbortSignal,
+  apiKey: string,
+): Promise<T | null> {
+  const body = await fetchText(url, timeoutMs, deadline, apiKey);
   if (body === null) return null;
   try {
     return JSON.parse(body) as T;
@@ -123,10 +134,19 @@ async function fetchJson<T>(url: string, timeoutMs: number, apiKey: string): Pro
   }
 }
 
-async function enrich(videos: EnrichedVideo[], apiKey: string): Promise<EnrichedVideo[] | null> {
+async function enrich(
+  videos: EnrichedVideo[],
+  apiKey: string,
+  deadline: AbortSignal,
+): Promise<EnrichedVideo[] | null> {
   const ids = videos.map((v) => v.id).join(',');
   const url = `${VIDEOS_ENDPOINT}?part=contentDetails,statistics&id=${encodeURIComponent(ids)}`;
-  const payload = await fetchJson<{ items?: ApiVideoItem[] }>(url, API_TIMEOUT_MS, apiKey);
+  const payload = await fetchJson<{ items?: ApiVideoItem[] }>(
+    url,
+    API_TIMEOUT_MS,
+    deadline,
+    apiKey,
+  );
   if (!payload?.items) return null;
 
   const byId = new Map(payload.items.map((item) => [item.id, item]));
@@ -144,9 +164,18 @@ async function enrich(videos: EnrichedVideo[], apiKey: string): Promise<Enriched
   });
 }
 
-async function fetchStats(channelId: string, apiKey: string): Promise<ChannelStats> {
+async function fetchStats(
+  channelId: string,
+  apiKey: string,
+  deadline: AbortSignal,
+): Promise<ChannelStats> {
   const url = `${CHANNELS_ENDPOINT}?part=statistics&id=${encodeURIComponent(channelId)}`;
-  const payload = await fetchJson<{ items?: ApiChannelItem[] }>(url, API_TIMEOUT_MS, apiKey);
+  const payload = await fetchJson<{ items?: ApiChannelItem[] }>(
+    url,
+    API_TIMEOUT_MS,
+    deadline,
+    apiKey,
+  );
   const statistics = payload?.items?.[0]?.statistics;
   if (!statistics) return {};
 
@@ -167,24 +196,29 @@ function uploadsPlaylistId(channelId: string): string {
 async function fetchUploadsPage(
   uploadsId: string,
   apiKey: string,
+  deadline: AbortSignal,
   pageToken?: string,
 ): Promise<PlaylistItemsPayload | null> {
   const token = pageToken === undefined ? '' : `&pageToken=${encodeURIComponent(pageToken)}`;
   const url = `${PLAYLIST_ITEMS_ENDPOINT}?part=snippet,status&maxResults=${UPLOADS_PAGE_SIZE}&playlistId=${encodeURIComponent(uploadsId)}${token}`;
-  return fetchJson<PlaylistItemsPayload>(url, API_TIMEOUT_MS, apiKey);
+  return fetchJson<PlaylistItemsPayload>(url, API_TIMEOUT_MS, deadline, apiKey);
 }
 
-async function fetchDeepUploads(channelId: string, apiKey: string): Promise<EnrichedVideo[]> {
+async function fetchDeepUploads(
+  channelId: string,
+  apiKey: string,
+  deadline: AbortSignal,
+): Promise<EnrichedVideo[]> {
   const uploadsId = uploadsPlaylistId(channelId);
   const regular: EnrichedVideo[] = [];
   let pageToken: string | undefined;
   for (let page = 0; page < UPLOADS_MAX_PAGES && regular.length < HISTORY_LENGTH; page += 1) {
-    const payload = await fetchUploadsPage(uploadsId, apiKey, pageToken);
+    const payload = await fetchUploadsPage(uploadsId, apiKey, deadline, pageToken);
     if (!payload) break;
     const pageVideos = parsePlaylistItems(payload, UPLOADS_PAGE_SIZE).filter(
       (video) => !isShortUrl(video),
     );
-    const checked = await enrich(pageVideos, apiKey);
+    const checked = await enrich(pageVideos, apiKey, deadline);
     if (checked === null) {
       log.warn('links feed stopped paging uploads because their lengths could not be checked');
       break;
@@ -230,9 +264,26 @@ export async function getChannelFeed(): Promise<ChannelFeed> {
 
   const channelId = linksContent.channel.id;
   const apiKey = env.YOUTUBE_API_KEY;
-  const stats = apiKey ? await fetchStats(channelId, apiKey) : {};
+  const controller = new AbortController();
+  const deadlineTimer = setTimeout(() => controller.abort(), FEED_DEADLINE_MS);
+  try {
+    return await loadChannelFeed(channelId, apiKey, controller.signal);
+  } finally {
+    clearTimeout(deadlineTimer);
+  }
+}
 
-  let videos = apiKey ? await fetchDeepUploads(channelId, apiKey) : [];
+async function loadChannelFeed(
+  channelId: string,
+  apiKey: string | undefined,
+  deadline: AbortSignal,
+): Promise<ChannelFeed> {
+  const [stats, deepVideos] = await Promise.all([
+    apiKey ? fetchStats(channelId, apiKey, deadline) : ({} as ChannelStats),
+    apiKey ? fetchDeepUploads(channelId, apiKey, deadline) : ([] as EnrichedVideo[]),
+  ]);
+
+  let videos = deepVideos;
   if (videos.length === 0) {
     if (apiKey) {
       log.info('links feed fell back to the RSS feed after the uploads playlist returned nothing');
@@ -240,10 +291,12 @@ export async function getChannelFeed(): Promise<ChannelFeed> {
     const xml = await fetchText(
       `${RSS_ENDPOINT}?channel_id=${encodeURIComponent(channelId)}`,
       FEED_TIMEOUT_MS,
+      deadline,
     );
     const rssVideos: EnrichedVideo[] = xml === null ? [] : parseFeed(xml, FEED_CANDIDATES);
     const urlFiltered = rssVideos.filter((video) => !isShortUrl(video));
-    const checked = apiKey && urlFiltered.length > 0 ? await enrich(urlFiltered, apiKey) : null;
+    const checked =
+      apiKey && urlFiltered.length > 0 ? await enrich(urlFiltered, apiKey, deadline) : null;
     videos = checked ?? urlFiltered;
   }
 
