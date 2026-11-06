@@ -121,7 +121,7 @@ test.describe('/links link-in-bio', () => {
   test('sizes every block tap target at 44px or more', async ({ page }) => {
     await page.goto('/links');
     const targets = page.locator(
-      'nav a:visible, footer li a:visible, footer li button:visible, [data-outbound="inscrever"]:visible',
+      'nav a:visible, [data-testid="links-pills"] a:visible, [data-testid="links-pills"] button:visible, [data-outbound="inscrever"]:visible',
     );
     const count = await targets.count();
     expect(count).toBeGreaterThan(5);
@@ -130,7 +130,7 @@ test.describe('/links link-in-bio', () => {
       const box = await targets.nth(i).boundingBox();
       expect(
         box?.height ?? 0,
-        `standalone tap target ${i} is under 44px. This selector deliberately covers the nav, footer pills and the subscribe CTA only: a link sitting inline inside a sentence is exempt from target-size minimums, so widening this to every anchor would fail on the footer's inline erikunha.dev link for no accessibility gain.`,
+        `standalone tap target ${i} is under 44px. This selector deliberately covers the nav, the link pills and the subscribe CTA only: a link sitting inline inside a sentence is exempt from target-size minimums, so widening this to every anchor would fail on the footer's inline erikunha.dev link for no accessibility gain.`,
       ).toBeGreaterThanOrEqual(44);
     }
   });
@@ -169,25 +169,6 @@ test.describe('/links link-in-bio', () => {
     await expect(page.locator('.links-identity-box')).toContainText(
       'Senior Software Engineer · Full Stack',
     );
-  });
-
-  test('lays the social pills out in one column on mobile, two from 768px and three from 900px', async ({
-    page,
-  }) => {
-    const columns = () =>
-      page
-        .locator('footer ul')
-        .evaluate((el) => getComputedStyle(el).gridTemplateColumns.split(' ').length);
-
-    await page.setViewportSize({ width: 390, height: 844 });
-    await page.goto('/links');
-    expect(await columns()).toBe(1);
-
-    await page.setViewportSize({ width: 800, height: 800 });
-    expect(await columns()).toBe(2);
-
-    await page.setViewportSize({ width: 1000, height: 800 });
-    expect(await columns()).toBe(3);
   });
 
   test('loads both locales with every feed thumbnail rendered and zero console errors — a thumbnail host the image allowlist rejects 400s in /_next/image and fails errors-in-console', async ({
@@ -290,10 +271,15 @@ test.describe('/links link-in-bio', () => {
   });
 });
 
-test('reduced motion shows the ticker text once, not its loop copy', async ({ page }) => {
-  await page.emulateMedia({ reducedMotion: 'reduce' });
+test('shows no next-video teaser or launch status once the channel has a latest video', async ({
+  page,
+}) => {
   await page.goto('/links');
-  const copy = page.locator('.links-ticker-track > [aria-hidden="true"]');
-  await expect(copy, 'the loop copy is in the page, so hiding it is a real check').toHaveCount(1);
-  await expect(copy, 'the marquee loop copy must hide when the marquee stops').toBeHidden();
+  await expect(page.locator('a[data-outbound="ultimo-video"]')).toHaveCount(1);
+  await expect(page.locator('.links-ticker-track')).toHaveCount(0);
+  await expect(page.locator('main')).not.toContainText(/primeiros v\u00eddeos|em breve/);
+
+  await page.goto('/links/en');
+  await expect(page.locator('.links-ticker-track')).toHaveCount(0);
+  await expect(page.locator('main')).not.toContainText(/first videos|\bsoon\b/);
 });

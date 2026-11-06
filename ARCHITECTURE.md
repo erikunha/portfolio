@@ -168,6 +168,8 @@ Client boundaries use `.client.ts`/`.client.tsx`, a `/client/` directory, or Nex
 
 Pages inside the shell use `.page-container.page-main`, so the topbar clearance, gutter and page top come from the same tokens as the home page. Rhythm inside the design-system prose, `/links` and the guitar module's EQ strip step through `--phi-space-1` to `--phi-space-4`, and two-column splits use `--phi-pair-columns` (1.618 : 1) from 1024px; below that every level is one column.
 
+`/links` and `/links/en` lay out in `.links-grid`: one column below 768px (identity, the 2-column pill grid, latest video, history, playlists, QR from 600px, footer), two even columns from 768 to 1023.98px (the golden ratio would leave the left column at 258px at 768, under the 280px readable floor), and `--phi-pair-columns-minor-first` (1fr to 1.618fr) from 1024px. The left column holds identity, the stack line, the pills (the copy-link control is the last cell) and the QR panel; the right holds the latest video, history and playlists. The stack line is the full `profileStack.all`. The next-video ticker renders only while the feed has no latest video. `tests/e2e/links-layout.spec.ts` holds the layout.
+
 `/links` video covers sit in a 16:9 `links-thumb` frame with the image filling it, so no edge is cropped, and render as one monochrome signal-green set from the `--links-thumb-*` tokens; the feed loader drops Shorts before anything renders and, when `YOUTUBE_API_KEY` is set, pages the channel uploads playlist through up to four pages until the five-row history fills, falling back to the 15-candidate RSS feed when the key is absent or the playlist returns nothing (`lib/links/feed.ts`).
 
 ### Partial Prerendering (PPR)

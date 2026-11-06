@@ -9,6 +9,7 @@ import { ChannelCard } from './ChannelCard';
 import { ChromeBar } from './ChromeBar';
 import { NavProgress } from './client/NavProgress.client';
 import { IdentityCard } from './IdentityCard';
+import { LinkPills } from './LinkPills';
 import { LinksFooter } from './LinksFooter';
 import { PlaylistCards } from './PlaylistCards';
 import { QrPanel } from './QrPanel';
@@ -31,20 +32,21 @@ export async function LinksPage({ locale }: { locale: LinksLocale }) {
       <div lang={LINKS_HTML_LANG[locale]} className="links-page">
         <main id="main-content" tabIndex={-1} className="page-container page-main links-main">
           <h1 className="sr-only">{copy.pageHeading[locale]}</h1>
-          <Ticker locale={locale} />
+          {feed.latest === null && <Ticker locale={locale} />}
           <ChromeBar locale={locale} />
-          <IdentityCard locale={locale} />
           <div className="links-grid">
             <div className="links-stack" data-stack="primary">
-              <ChannelCard locale={locale} feed={feed} />
+              <IdentityCard locale={locale} />
+              <LinkPills locale={locale} url={pageUrl} />
               <QrPanel locale={locale} url={pageUrl} />
             </div>
             <div className="links-stack" data-stack="secondary">
+              <ChannelCard locale={locale} feed={feed} />
               <VideoHistory locale={locale} feed={feed} />
               <PlaylistCards locale={locale} channelUrl={feed.channelUrl} />
             </div>
           </div>
-          <LinksFooter locale={locale} url={pageUrl} />
+          <LinksFooter />
         </main>
       </div>
     </AppShell>

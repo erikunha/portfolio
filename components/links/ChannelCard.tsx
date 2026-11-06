@@ -11,7 +11,7 @@ import { IconYouTube } from './LinkIcons';
 import { SectionHeading } from './SectionHeading';
 
 const HEADING_ID = 'links-channel-heading';
-const THUMB_SIZES = '(min-width: 1100px) 480px, (min-width: 900px) 560px, 100vw';
+const THUMB_SIZES = '(min-width: 1024px) 62vw, (min-width: 768px) 50vw, 100vw';
 
 function compact(value: number, locale: LinksLocale): string {
   return new Intl.NumberFormat(LINKS_INTL_LOCALE[locale], {
