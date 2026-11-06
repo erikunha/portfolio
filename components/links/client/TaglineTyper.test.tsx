@@ -60,23 +60,24 @@ describe('TaglineTyper', () => {
     expect(visible?.textContent).toBe('Senior Full-Stack Engineer');
   });
 
-  it('keeps one stable phrase for screen readers instead of announcing every keystroke', () => {
+  it('gives screen readers every phrase as static text, which never changes while typing', () => {
     mockMotion(false);
     const { container } = render(<TaglineTyper phrases={PHRASES} />);
-    const announced = container.querySelector('.sr-only');
-
-    vi.advanceTimersByTime(2_000);
-    expect(announced?.textContent).toBe('Senior Full-Stack Engineer');
-  });
-
-  it('announces each completed phrase through a polite live region', () => {
-    mockMotion(false);
-    const { container } = render(<TaglineTyper phrases={PHRASES} />);
-    const live = container.querySelector('[role="status"]');
-    expect(live?.getAttribute('aria-live')).toBe('polite');
+    const staticText = container.querySelector('.sr-only');
+    const before = staticText?.textContent;
+    expect(before).toContain(PHRASES[0]);
+    expect(before).toContain(PHRASES[1]);
 
     vi.advanceTimersByTime(7_000);
-    expect(live?.textContent).toBe('AI Engineering na prática');
+    expect(staticText?.textContent).toBe(before);
+  });
+
+  it('holds no live region, so the typing cycle never announces itself every few seconds', () => {
+    mockMotion(false);
+    const { container } = render(<TaglineTyper phrases={PHRASES} />);
+
+    expect(container.querySelector('[role="status"]')).toBeNull();
+    expect(container.querySelector('[aria-live]')).toBeNull();
   });
 
   it('stops its timers on unmount', () => {
