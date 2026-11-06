@@ -12,11 +12,25 @@ const pkg = JSON.parse(readFileSync(resolve(root, 'package.json'), 'utf8')) as {
   pnpm?: { auditConfig?: { ignoreGhsas?: string[] } };
 };
 const lock = parse(readFileSync(resolve(root, 'pnpm-lock.yaml'), 'utf8')) as {
-  importers?: Record<string, { dependencies?: Record<string, unknown> }>;
+  importers?: Record<string, { dependencies?: Record<string, { version: string }> }>;
   snapshots?: Record<string, { dependencies?: Record<string, string> }>;
 };
 
-const EXTRACT_ZIP_GHSA = 'GHSA-jmr9-qjv8-65gv';
+const IGNORED: Record<string, { pkg: string; vulnerable: (version: string) => boolean }> = {
+  'GHSA-jmr9-qjv8-65gv': { pkg: 'extract-zip', vulnerable: () => true },
+  'GHSA-7pqw-9j4j-h8q3': { pkg: 'extract-zip', vulnerable: () => true },
+  'GHSA-mrhx-c7xc-m3w5': { pkg: 'zod', vulnerable: (v) => compareVersions(v, '4.6.6') < 0 },
+};
+
+function compareVersions(a: string, b: string): number {
+  const pa = a.split('.').map(Number);
+  const pb = b.split('.').map(Number);
+  for (let i = 0; i < 3; i++) {
+    const diff = (pa[i] ?? 0) - (pb[i] ?? 0);
+    if (diff !== 0) return diff;
+  }
+  return 0;
+}
 
 function packageNameFromSnapshotKey(key: string): string {
   // A snapshot key is `name@version(peer@version)(...)`. Cutting at the last '@' lands
@@ -29,32 +43,31 @@ function packageNameFromSnapshotKey(key: string): string {
 function productionClosure(): Set<string> {
   const seen = new Set<string>();
   const rootProd = lock.importers?.['.']?.dependencies ?? {};
-  const queue = Object.keys(rootProd).map((name) => name);
-
+  const queue = Object.entries(rootProd).map(([name, dep]) => `${name}@${dep.version}`);
   const snapshots = lock.snapshots ?? {};
-  const byName = new Map<string, string[]>();
-  for (const key of Object.keys(snapshots)) {
-    const name = packageNameFromSnapshotKey(key);
-    byName.set(name, [...(byName.get(name) ?? []), key]);
-  }
-  const keyFor = (name: string) => byName.get(name) ?? [];
-
   while (queue.length > 0) {
-    const name = queue.pop();
-    if (name === undefined || seen.has(name)) continue;
-    seen.add(name);
-    for (const key of keyFor(name)) {
-      for (const dep of Object.keys(snapshots[key]?.dependencies ?? {})) {
-        if (!seen.has(dep)) queue.push(dep);
-      }
+    const key = queue.pop();
+    if (key === undefined || seen.has(key)) continue;
+    seen.add(key);
+    for (const [dep, version] of Object.entries(snapshots[key]?.dependencies ?? {})) {
+      const next = `${dep}@${version}`;
+      if (!seen.has(next)) queue.push(next);
     }
   }
   return seen;
 }
 
+function productionVersions(name: string): string[] {
+  return [...productionClosure()]
+    .filter((key) => packageNameFromSnapshotKey(key) === name)
+    .map((key) => (key.split('(')[0] ?? key).slice(name.length + 1));
+}
+
 describe('audit ignore list stays scoped and justified', () => {
-  it('ignores exactly one advisory — a list that grows silently is how a real finding hides', () => {
-    expect(pkg.pnpm?.auditConfig?.ignoreGhsas).toEqual([EXTRACT_ZIP_GHSA]);
+  it('ignores only the advisories argued below — a list that grows silently is how a real finding hides', () => {
+    expect([...(pkg.pnpm?.auditConfig?.ignoreGhsas ?? [])].sort()).toEqual(
+      Object.keys(IGNORED).sort(),
+    );
   });
 
   it('ignores by advisory id, never by severity or package wildcard', () => {
@@ -80,20 +93,25 @@ describe('audit ignore list stays scoped and justified', () => {
     // carries a peer suffix, so its absence means the traversal stopped early and a
     // "not reachable" result would be fail-open rather than true.
     expect(
-      productionClosure().has('@ai-sdk/gateway'),
+      productionVersions('@ai-sdk/gateway').length > 0,
       'the production closure is truncated: a package reachable only through a peer-suffixed key is missing, so any "extract-zip is absent" result from it is meaningless',
     ).toBe(true);
   });
 
-  it('keeps extract-zip out of the production dependency closure', () => {
-    // The whole justification for ignoring GHSA-jmr9-qjv8-65gv is that extract-zip is
-    // dev-only: it arrives via @lhci/cli -> lighthouse -> puppeteer-core ->
-    // @puppeteer/browsers and unpacks browser archives at test time. If it ever becomes
-    // reachable from `dependencies`, the advisory reaches shipped code and the ignore is
-    // no longer defensible.
-    expect(
-      productionClosure().has('extract-zip'),
-      'extract-zip is now reachable from production dependencies. GHSA-jmr9-qjv8-65gv is ignored in package.json ONLY because the package is dev-only and has no patched release. Delete the ignore and re-argue it, or remove the production path — do not widen the ignore.',
-    ).toBe(false);
+  it.each(Object.entries(IGNORED))(
+    'keeps every version %s covers out of the production dependency closure',
+    (ghsa, { pkg: name, vulnerable }) => {
+      const reachable = productionVersions(name).filter(vulnerable);
+      expect(
+        reachable,
+        `${name}@${reachable.join(', ')} is reachable from production dependencies. ${ghsa} is ignored in package.json ONLY because every vulnerable copy is dev-only. Delete the ignore and re-argue it, or remove the production path — do not widen the ignore.`,
+      ).toEqual([]);
+    },
+  );
+
+  it('the negative control: a vulnerable copy in the closure would be caught', () => {
+    expect(IGNORED['GHSA-mrhx-c7xc-m3w5']?.vulnerable('3.25.76')).toBe(true);
+    expect(IGNORED['GHSA-mrhx-c7xc-m3w5']?.vulnerable('4.6.7')).toBe(false);
+    expect(productionVersions('zod').length).toBeGreaterThan(0);
   });
 });
