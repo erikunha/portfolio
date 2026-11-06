@@ -73,8 +73,12 @@ export function main(argv, { log = console.log, err = console.error } = {}) {
   if (arg === '--canary') {
     result = runCanary();
   } else if (arg) {
-    const verdict = assessReport(JSON.parse(readFileSync(arg, 'utf8')));
-    result = { code: verdict.ok ? EXIT_OK : EXIT_BLIND, message: verdict.reason };
+    try {
+      const verdict = assessReport(JSON.parse(readFileSync(arg, 'utf8')));
+      result = { code: verdict.ok ? EXIT_OK : EXIT_BLIND, message: verdict.reason };
+    } catch (error) {
+      result = { code: EXIT_INFRA, message: `cannot read report ${arg}: ${error.message}` };
+    }
   } else {
     result = {
       code: EXIT_INFRA,

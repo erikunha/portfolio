@@ -1,9 +1,10 @@
 import { readFileSync } from 'node:fs';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import {
   assessReport,
   type MutationReport,
   type MutationReportMutant,
+  main,
 } from '@/scripts/check-mutation-kills.mjs';
 
 const root = process.cwd();
@@ -77,6 +78,14 @@ describe('assessReport', () => {
   it('fails a report with no scoreable mutant', () => {
     expect(assessReport(report({ status: 'CompileError' })).ok).toBe(false);
     expect(assessReport({ files: {} }).ok).toBe(false);
+  });
+});
+
+describe('main with a report path', () => {
+  it('fails as an infra error, not a crash, on a missing or unreadable report', () => {
+    const err = vi.fn();
+    expect(main(['/nonexistent/mutation.json'], { log: vi.fn(), err })).toBe(2);
+    expect(err).toHaveBeenCalledWith(expect.stringContaining('INFRA'));
   });
 });
 

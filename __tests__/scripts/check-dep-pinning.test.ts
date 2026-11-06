@@ -58,4 +58,15 @@ describe('check-dep-pinning', () => {
     expect(r.code).toBe(1);
     expect(r.out).toContain('zod');
   });
+  it('fails a range with trailing junk that npm cannot resolve', () => {
+    const r = runOn({ dependencies: { clsx: '^2.1.1.4', zod: '~4.6.7 || 3' } });
+    expect(r.code).toBe(1);
+    expect(r.out).toContain('clsx');
+    expect(r.out).toContain('zod');
+  });
+
+  it('accepts a prerelease range', () => {
+    const r = runOn({ dependencies: { clsx: '^2.1.1-beta.2' } });
+    expect(r.code).toBe(0);
+  });
 });

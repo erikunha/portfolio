@@ -6,7 +6,7 @@ const pkgPath = process.argv[2] ?? 'package.json';
 const pkg = JSON.parse(readFileSync(pkgPath, 'utf8'));
 
 const BANNED = /^(latest|\*|x|next|canary|beta|alpha)$/i;
-const RANGED = /^(\^|~)\d+\.\d+\.\d+/;
+const RANGED = /^(\^|~)\d+\.\d+\.\d+(-[0-9A-Za-z.-]+)?$/;
 const PRERELEASE_EXACT = /^\d+\.\d+\.\d+-[0-9A-Za-z.-]+$/;
 const TILDE = '~';
 
