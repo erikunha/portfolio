@@ -218,6 +218,8 @@ components/SiteHome.tsx              # section composition, client shell boundar
 app/summary/page.tsx                 # one-screen reading view: stats, CTAs, projects | stack + contact
 app/cv/page.tsx                      # full CV reading view and print control
 components/reading/ReadingShell.tsx    # AppShell wrapper shared by both reading views
+components/reading/ReadingSection.tsx  # titled section block shared by /cv and /summary
+components/reading/ReadingActions.tsx  # hire, cross-view and print action row shared by both reading views
 app/links/page.tsx                   # pt-BR links page
 app/links/en/page.tsx                # English links page
 app/not-found.tsx                    # Matrix-themed 404
@@ -240,6 +242,9 @@ app/api/mcp/route.ts                 # MCP Streamable HTTP; POST bounded to 4096
 components/sections/                  # RSC sections: Hero, HottestTakes, GuitarSection, …
 components/client/                    # co-located islands, ONLY interactivity
 components/client/InteractiveShell/   # streaming shell island
+components/client/InteractiveShell/useAskStream.ts  # shell request, idle timeout and rAF-coalesced stream state
+components/client/LazyIsland/         # ErrorBoundary around Suspense for every React.lazy island
+components/client/TerminalChromeBar/  # window chrome header shared by the shell and the contact form
 components/client/ContactForm/        # contact form island and the messageStore it shares with the timezone panel
 components/client/ContactTimezone/    # timezone overlap panel island: clocks, map, zone combobox
 components/client/HeroBootAnimation/  # boot typewriter island
@@ -247,6 +252,9 @@ components/client/RoleTyper/          # About status role typewriter island
 components/client/TypeReveal/         # Scroll type reveal observer island
 components/AppShell/                   # shell chrome slots and shared section navigation
 components/BrandLink/                  # server component: brand icon link home, named from content/brand.ts
+components/ExternalLink/               # the one new-tab anchor (target and rel pair)
+components/Panel/                      # the .ab-panel frame shared by About and Contact
+components/PageMain/                   # main landmark and MAIN_CONTENT_ID for every route
 components/ErrorBoundary/              # client error boundary
 components/ErrorPages/                 # 404/500 chrome, focused heading, error reference
 components/HeroStats/                  # hero stat tiles
@@ -288,6 +296,11 @@ lib/server/                           # server-only utilities (route-handler fac
 lib/env.ts                            # typed, format-validating env accessor
 lib/ask-log.ts                        # KV interaction log per /api/ask request
 lib/boot-animation.ts                 # boot sequence data
+lib/typewriter.ts                     # one type, hold and erase loop (runPhraseLoop, typeOut)
+lib/use-copy-feedback.client.ts       # clipboard state for every copy button
+lib/media-queries.ts                  # MOBILE_QUERY shared by every matchMedia call
+lib/json-ld.ts                        # serializeJsonLd, the only JSON-LD serializer
+lib/defer-props.ts                    # deferred-section class and marker
 lib/breakpoint.ts                     # viewport breakpoint constants
 lib/contact-validation.ts             # server-only ContactSchema, shared limits export, honeypot check
 lib/contact-delivery.ts               # shared Resend configuration and 10s send timeout
