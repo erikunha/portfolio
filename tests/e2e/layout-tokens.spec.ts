@@ -1,4 +1,5 @@
 import { expect, type Page, test } from '@playwright/test';
+import { waitForHydration } from './_helpers/hydration';
 
 const GUTTER_AT_390 = 16;
 const GUTTER_AT_1280 = 24;
@@ -53,6 +54,7 @@ test.describe('layout tokens', () => {
     test(`${path} uses the shared gutter and page-top at 390 and 768`, async ({ page }) => {
       await page.setViewportSize({ width: 390, height: 844 });
       await page.goto(path);
+      await waitForHydration(page, container);
       expect(await contentLeft(page, container)).toBeCloseTo(GUTTER_AT_390, 0);
       expect(await paddingTop(page, container)).toBe(PAGE_TOP_PHONE);
 

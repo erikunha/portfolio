@@ -97,6 +97,9 @@ test.describe('/links thumbnail theme overlay', () => {
     test(`every cover frame is 16:9 and the image fills it at ${width}`, async ({ page }) => {
       await page.setViewportSize({ width, height: VIEWPORTS.DESKTOP.height });
       await page.goto('/links');
+      await page.waitForLoadState('load');
+      await page.evaluate(() => document.fonts.ready);
+      await expect(page.locator(FIRST_THUMB).first()).toBeVisible();
       const frames = await page.locator(FIRST_THUMB).evaluateAll((nodes) =>
         nodes.map((node) => {
           const frame = node.getBoundingClientRect();
