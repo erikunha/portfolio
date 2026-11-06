@@ -4,6 +4,7 @@ import { mkdtempSync, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { askErrors } from '@/content/ask-errors';
 import { ASK_EVAL_CALIBRATION } from '@/content/ask-eval-calibration';
 import { ASK_EVAL_CORPUS } from '@/content/ask-eval-corpus';
 import { INJECTION_RE, normalizeInjectionInput } from '@/lib/ask/injection';
@@ -111,7 +112,15 @@ describe('pnpm ask:eval harness without Redis', () => {
     expect(result.errored).toBe(1);
     const broken = result.items.find((i) => i.errored);
     expect(broken?.id).toBe(BROKEN_STREAM_QUESTION?.id);
-    expect(broken?.answer).toContain('gateway 503');
+    expect(broken?.answer).toContain(askErrors.en.interrupted);
+    const { log } = await import('@/lib/log');
+    expect(
+      vi.mocked(log.error),
+      'the upstream cause stays in the server log for the operator',
+    ).toHaveBeenCalledWith(
+      'ask stream failed',
+      expect.objectContaining({ err: expect.objectContaining({ message: 'gateway 503' }) }),
+    );
     expect(result.jailbreakResistance.total).toBe(
       ASK_EVAL_CORPUS.filter((i) => i.kind === 'jailbreak').length - 1,
     );

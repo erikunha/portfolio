@@ -1,5 +1,7 @@
 export const STREAM_ERR_SENTINEL = '\x00ERR:';
 
+export const GUARD_ABORT_PREFIX = 'output guard: ';
+
 export const ASK_LOCALE_HEADER = 'x-site-locale';
 
 export type ParsedStreamChunk =

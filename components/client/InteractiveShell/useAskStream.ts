@@ -18,6 +18,7 @@ import {
 import type { SiteLocale } from '@/content/site-locale';
 import {
   ASK_LOCALE_HEADER,
+  GUARD_ABORT_PREFIX,
   parseRetryAfter,
   parseStreamChunk,
   RETRY_AFTER_HEADER,
@@ -39,6 +40,7 @@ type ActiveRequest = { stop: () => void; dispose: () => void };
 const ASK_ENDPOINT = '/api/ask';
 const RATE_LIMIT_STATUS = 429;
 const SERVER_ERROR_STATUS = 500;
+const PAYLOAD_TOO_LARGE_STATUS = 413;
 const SECONDS_PER_MINUTE = 60;
 const MS_PER_SECOND = 1000;
 
@@ -49,6 +51,10 @@ export function formatRemaining(
   return seconds >= SECONDS_PER_MINUTE
     ? `${Math.ceil(seconds / SECONDS_PER_MINUTE)} ${states.minutesUnit}`
     : `${seconds} ${states.secondsUnit}`;
+}
+
+function streamFailureMessage(errorMessage: string, ui: ShellUi): string {
+  return errorMessage.startsWith(GUARD_ABORT_PREFIX) ? ui.answerWithheld : errorMessage;
 }
 
 export function bounded(lines: Line[]): Line[] {
@@ -203,9 +209,9 @@ export function useAskStream({
         requestId = response.headers.get(ui.requestIdHeader);
         if (!response.ok) {
           const data = (await response.json().catch(() => null)) as {
-            error?: string | { message?: string };
+            error?: unknown;
           } | null;
-          const detail = typeof data?.error === 'string' ? data.error : data?.error?.message;
+          const detail = typeof data?.error === 'string' ? data.error : '';
           const retryAfter =
             response.status === RATE_LIMIT_STATUS
               ? parseRetryAfter(response.headers.get(RETRY_AFTER_HEADER))
@@ -220,7 +226,9 @@ export function useAskStream({
             );
             return;
           }
-          const message = detail || response.statusText || ui.httpErrorPrefix;
+          const message =
+            detail ||
+            (response.status === PAYLOAD_TOO_LARGE_STATUS ? ui.requestTooLarge : ui.serverError);
           finish(
             '',
             response.status === RATE_LIMIT_STATUS ? `${message}. ${ui.localAvailable}` : message,
@@ -245,7 +253,11 @@ export function useAskStream({
           accumulated += done ? decoder.decode() : decoder.decode(value, { stream: true });
           const parsed = parseStreamChunk(accumulated);
           if (done) {
-            finish(parsed.displayText, parsed.ok ? undefined : parsed.errorMessage, !parsed.ok);
+            finish(
+              parsed.displayText,
+              parsed.ok ? undefined : streamFailureMessage(parsed.errorMessage, ui),
+              !parsed.ok,
+            );
             return;
           }
           if (parsed.displayText) {
@@ -264,15 +276,9 @@ export function useAskStream({
             }
           }
         }
-      } catch (error) {
+      } catch {
         if (settled) return;
-        const message = !navigator.onLine
-          ? ui.offline
-          : error instanceof TypeError
-            ? ui.networkError
-            : error instanceof Error
-              ? error.message
-              : String(error);
+        const message = navigator.onLine ? ui.networkError : ui.offline;
         finish(parseStreamChunk(accumulated).displayText, message, true);
       } finally {
         reader?.releaseLock();

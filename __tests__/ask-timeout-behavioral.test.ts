@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { askErrors } from '@/content/ask-errors';
 
 const mockStreamText = vi.fn();
 
@@ -124,8 +125,42 @@ describe('/api/ask behavioral — stream-initiation failure handling', () => {
     const body = await readBody(res);
     const { STREAM_ERR_SENTINEL } = await import('@/lib/stream-protocol');
     expect(body.startsWith(STREAM_ERR_SENTINEL)).toBe(true);
-    expect(body).toContain('timed out');
+    expect(body, 'a raw upstream message must never reach the visitor').not.toContain('timed out');
+    expect(body).toBe(`${STREAM_ERR_SENTINEL}${askErrors.en.interrupted}`);
   });
+
+  it.each([
+    ['en', askErrors.en.interrupted],
+    ['pt', askErrors.pt.interrupted],
+  ] as const)(
+    'words a failed stream in the visitor language (%s) and keeps the cause in the server log',
+    async (locale, interrupted) => {
+      const cause = 'Gateway request failed: 402 at https://ai-gateway.example/v1';
+      mockStreamText.mockReturnValueOnce(makeFailingResult(cause));
+
+      const { POST } = await import('@/app/api/ask/route');
+      const { log } = await import('@/lib/log');
+      const { STREAM_ERR_SENTINEL } = await import('@/lib/stream-protocol');
+
+      const res = await POST(
+        new NextRequest('http://localhost/api/ask', {
+          method: 'POST',
+          body: JSON.stringify({ question: 'Who is Erik?', locale }),
+          headers: { 'Content-Type': 'application/json', 'x-site-locale': locale },
+        }),
+      );
+      const body = await readBody(res);
+
+      expect(body, 'the stream error line is the localized copy, not the exception text').toBe(
+        `${STREAM_ERR_SENTINEL}${interrupted}`,
+      );
+      expect(body).not.toContain('ai-gateway');
+      expect(vi.mocked(log.error)).toHaveBeenCalledWith(
+        'ask stream failed',
+        expect.objectContaining({ err: expect.objectContaining({ message: cause }) }),
+      );
+    },
+  );
 });
 
 describe('/api/ask behavioral — mid-stream timeout watchdog', () => {
@@ -167,7 +202,10 @@ describe('/api/ask behavioral — mid-stream timeout watchdog', () => {
 
     expect(out).toContain('partial answer');
     expect(out).toContain(STREAM_ERR_SENTINEL);
-    expect(out).toContain('mid-stream timeout');
+    expect(out, 'the watchdog reason is internal and must not reach the visitor').not.toContain(
+      'mid-stream timeout',
+    );
+    expect(out).toContain(askErrors.en.interrupted);
   });
 });
 

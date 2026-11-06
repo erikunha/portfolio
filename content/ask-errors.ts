@@ -11,6 +11,7 @@ export type AskErrors = {
   budget: string;
   truncation: string;
   forbiddenOrigin: string;
+  interrupted: string;
 };
 
 const askErrorsFor = (locale: SiteLocale): AskErrors => {
@@ -39,6 +40,9 @@ const askErrorsFor = (locale: SiteLocale): AskErrors => {
     forbiddenOrigin: pt
       ? 'pedido recusado: pergunte pela própria página do site'
       : 'request refused: ask from the site itself',
+    interrupted: pt
+      ? `a resposta foi interrompida: pergunte de novo em instantes ou escreva para ${social.email}`
+      : `the answer was interrupted: ask again in a moment or email ${social.email}`,
   };
 };
 

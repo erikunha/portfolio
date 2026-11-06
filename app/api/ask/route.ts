@@ -283,8 +283,8 @@ async function handleAsk(req: NextRequest): Promise<Response> {
       } catch (err) {
         if (!clientGone) {
           status = 'errored';
-          const msg = err instanceof Error ? err.message : 'upstream error';
-          send(enc.encode(`${STREAM_ERR_SENTINEL}${msg}`));
+          log.error('ask stream failed', { requestId, err });
+          send(enc.encode(`${STREAM_ERR_SENTINEL}${askErrors[answerLocale].interrupted}`));
         }
       } finally {
         if (clientGone && status === 'completed') status = 'aborted';

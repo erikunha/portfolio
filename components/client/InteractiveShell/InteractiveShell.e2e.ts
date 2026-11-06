@@ -1,4 +1,6 @@
 import { expect, type Locator, type Page, test } from '@playwright/test';
+import { askErrors } from '../../../content/ask-errors';
+import { SITE_LOCALE } from '../../../content/site-locale';
 import { waitForHydration } from '../../../tests/e2e/_helpers/hydration';
 import { installMockBackend, type MockState } from '../../../tests/e2e/_helpers/mock-backend';
 
@@ -65,7 +67,7 @@ test.describe('ask / interactive shell', () => {
 
     const errorLine = page.locator('[role="log"] [data-kind="error"]');
     await expect(errorLine).toBeVisible({ timeout: 10_000 });
-    await expect(errorLine).toContainText('upstream error');
+    await expect(errorLine).toContainText(askErrors[SITE_LOCALE.en].interrupted);
   });
 
   test('6: pre-stream timeout: SDK rejects before SSE starts → error line, no crash', async ({
@@ -76,7 +78,7 @@ test.describe('ask / interactive shell', () => {
 
     const errorLine = page.locator('[role="log"] [data-kind="error"]');
     await expect(errorLine).toBeVisible({ timeout: 10_000 });
-    await expect(errorLine).toContainText('Request Timeout');
+    await expect(errorLine).toContainText(askErrors[SITE_LOCALE.en].interrupted);
 
     await expect(getShellInput(page)).toBeEnabled();
   });
