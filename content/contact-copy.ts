@@ -129,8 +129,11 @@ const contactCopyFor = (locale: SiteLocale): ContactContent => {
         added: pt ? 'adicionado à sua mensagem' : 'added to your message',
         focusLink: pt ? 'editar mensagem ↑' : 'edit message ↑',
         line: pt
-          ? `Chamada proposta: {you} seu horário ({zone}), {erik} horário de Erik (${ERIK_PLACE})`
-          : `Proposed call: {you} your time ({zone}), {erik} Erik time (${ERIK_PLACE})`,
+          ? `Uma chamada às {you} no meu horário ({city}) funciona para você? Para você seriam {erik} em ${ERIK_PLACE}.`
+          : `Would a call at {you} my time ({city}) work for you? That is {erik} for you in ${ERIK_PLACE}.`,
+        sameZoneLine: pt
+          ? 'Uma chamada às {you} funciona para você? Estamos no mesmo fuso horário.'
+          : 'Would a call at {you} work for you? We are on the same clock.',
       },
       overlap: {
         summary: pt ? '{hours} de sobreposição' : '{hours} overlap',

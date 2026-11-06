@@ -36,6 +36,7 @@ const TimezonePanelSchema = z.object({
   propose: z.object({
     label: CopySchema,
     line: CopySchema,
+    sameZoneLine: CopySchema,
     added: CopySchema,
     focusLink: CopySchema,
   }),

@@ -156,15 +156,15 @@ test.describe('contact timezone panel, visitor in Berlin', () => {
 
     await expect(panel.getByTestId('ctz-proposed')).toBeVisible();
     await expect(message).toHaveValue(
-      /Hello Erik, I would like to talk about a role\.\nProposed call: /,
+      /Hello Erik, I would like to talk about a role\.\nWould a call at /,
     );
-    await expect(message).toHaveValue(/\(Europe\/Berlin\)/);
-    await expect(message).toHaveValue(/Erik time \(São Paulo\)/);
+    await expect(message).toHaveValue(/\(Berlin\)/);
+    await expect(message).toHaveValue(/for you in São Paulo\./);
 
     await panel.getByRole('button', { name: PROPOSE_LABEL }).click();
     const value = await message.inputValue();
     expect(
-      value.match(/Proposed call:/g),
+      value.match(/Would a call at/g),
       'proposing the same slot twice adds one line',
     ).toHaveLength(1);
 
@@ -186,7 +186,7 @@ test.describe('contact timezone panel, visitor in Berlin', () => {
     await expect(message).not.toBeFocused();
     await link.click();
     await expect(message).toBeFocused();
-    await expect(message).toHaveValue(/Proposed call: /);
+    await expect(message).toHaveValue(/Would a call at /);
     expect(page.url(), 'the link does not leave a hash behind').not.toContain('#');
 
     expect(findings.consoleErrors).toEqual([]);

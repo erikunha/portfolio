@@ -13,7 +13,13 @@ import {
   MINUTES_PER_HOUR,
   projectToMap,
 } from '@/lib/timezone/overlap';
-import { detectTimeZone, ERIK_TIME_ZONE, formatClock, zonePlace } from '@/lib/timezone/zones';
+import {
+  detectTimeZone,
+  ERIK_TIME_ZONE,
+  formatClock,
+  zoneCity,
+  zonePlace,
+} from '@/lib/timezone/zones';
 import { messageStore } from '../ContactForm/messageStore';
 import { ContactTimezoneMap } from './ContactTimezoneMap';
 import { useNow, usePanelActive } from './useClock';
@@ -76,11 +82,12 @@ export function ContactTimezone({ copy }: { copy: TimezoneCopy }) {
   const erikTime = formatClock(ERIK_TIME_ZONE, at, false);
   const youTime = formatClock(zone, at, false);
   const overlapPhrase = contactHoursPhrase(copy.hours, overlap.hours);
-  const slotLine = overlap.bestSlot
-    ? fillCopy(copy.propose.line, {
-        you: overlap.bestSlot.you,
-        zone,
-        erik: overlap.bestSlot.erik,
+  const slot = overlap.bestSlot;
+  const slotLine = slot
+    ? fillCopy(slot.you === slot.erik ? copy.propose.sameZoneLine : copy.propose.line, {
+        you: slot.you,
+        city: zoneCity(zone),
+        erik: slot.erik,
       })
     : null;
 

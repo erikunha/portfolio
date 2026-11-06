@@ -388,10 +388,18 @@ describe('ContactTimezone combobox', () => {
 });
 
 describe('ContactTimezone best slot and propose', () => {
-  const expectedLine = fillCopy(copy.propose.line, {
-    you: '14:00',
-    zone: 'Europe/Berlin',
-    erik: '10:00',
+  const expectedLine =
+    'Would a call at 14:00 my time (Berlin) work for you? That is 10:00 for you in São Paulo.';
+
+  it('asks for one time when the visitor shares the clock with Erik', () => {
+    renderAt(ONLINE_INSTANT, 'America/Sao_Paulo');
+    messageStore.set('');
+
+    fireEvent.click(screen.getByRole('button', { name: copy.propose.label }));
+
+    expect(messageStore.getSnapshot()).toBe(
+      'Would a call at 10:00 work for you? We are on the same clock.',
+    );
   });
 
   it('shows the earliest shared half hour in both zones', () => {
