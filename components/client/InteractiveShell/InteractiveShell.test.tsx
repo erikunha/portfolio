@@ -7,7 +7,7 @@ import {
   mountClient,
 } from '@/__tests__/helpers/render';
 import { shellUi } from '@/content/shell-ui';
-import { SITE_LOCALE } from '@/content/site-locale';
+import { SITE_LOCALE, type SiteLocale } from '@/content/site-locale';
 import { shellChrome } from '@/content/terminal-chrome';
 
 const mobileViewport = vi.hoisted(() => ({ value: false }));
@@ -42,7 +42,7 @@ function isReactOwned(node: Element): boolean {
 }
 
 async function submitQuestion(container: HTMLElement, question: string): Promise<void> {
-  const input = container.querySelector<HTMLInputElement>('input[aria-label="shell command"]');
+  const input = container.querySelector<HTMLInputElement>('input[name="command"]');
   const form = container.querySelector<HTMLFormElement>('form');
   expect(input).not.toBeNull();
   expect(form).not.toBeNull();
@@ -576,8 +576,8 @@ describe('InteractiveShell r106 controls', () => {
       await vi.advanceTimersByTimeAsync(SHELL_LIMITS.requestTimeoutMs);
     });
     expect(signal?.aborted).toBe(true);
-    expect(container.querySelector('[data-kind="error"]')?.textContent).toContain('timed out');
-    expect(container.querySelector('[role="status"]')?.textContent).toContain('timed out');
+    expect(container.querySelector('[data-kind="error"]')?.textContent).toContain('went quiet');
+    expect(container.querySelector('[role="status"]')?.textContent).toContain('went quiet');
     expect(shellInput(container).value).toBe('slow question');
     expect(container.querySelector('[role="log"]')?.getAttribute('aria-busy')).toBe('false');
     vi.stubGlobal(
@@ -618,7 +618,7 @@ describe('InteractiveShell r106 controls', () => {
     await act(async () => {
       await vi.advanceTimersByTimeAsync(SHELL_LIMITS.requestTimeoutMs);
     });
-    expect(container.querySelector('[data-kind="error"]')?.textContent).toContain('timed out');
+    expect(container.querySelector('[data-kind="error"]')?.textContent).toContain('went quiet');
   });
 
   it('restores the question when a stream with partial text is stopped', async () => {
@@ -1077,5 +1077,445 @@ describe('shell input hint states', () => {
 
     release();
     await flushMicrotasks();
+  });
+});
+
+describe('InteractiveShell stream states', () => {
+  let mounted: MountedClient;
+
+  beforeEach(() => {
+    vi.resetModules();
+    mobileViewport.value = false;
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+    mounted?.unmount();
+    vi.restoreAllMocks();
+    vi.unstubAllGlobals();
+  });
+
+  async function renderShell(locale: SiteLocale = SITE_LOCALE.en): Promise<HTMLElement> {
+    const { InteractiveShell } = await import('./InteractiveShell');
+    mounted = await mountClient(
+      createElement(InteractiveShell, {
+        locale,
+        ui: shellUi[locale],
+        chrome: shellChrome[locale],
+      }),
+    );
+    return mounted.container;
+  }
+
+  function loadingLine(container: HTMLElement): Element | null {
+    return container.querySelector('[data-testid="shell-line-loading"]');
+  }
+
+  describe('copy', () => {
+    it.each(Object.values(SITE_LOCALE))(
+      'parses and keeps its placeholders in %s',
+      async (locale) => {
+        const { ShellStatesSchema } = await import('@/content/shell-states.schema');
+        const { shellStates, SHELL_STATE_TOKEN } = await import('@/content/shell-ui');
+        const copy = ShellStatesSchema.parse(shellStates[locale]);
+        expect(copy.thinkingElapsed).toContain(SHELL_STATE_TOKEN.seconds);
+        expect(copy.timeoutBody).toContain(SHELL_STATE_TOKEN.seconds);
+        expect(copy.slowDown).toContain(SHELL_STATE_TOKEN.left);
+        expect(Object.values(copy).join(' ')).not.toMatch(/[\u2013\u2014]/);
+      },
+    );
+  });
+
+  describe('E3 stderr', () => {
+    const address = 'erikhenriquealvescunha@gmail.com';
+
+    it.each([
+      [SITE_LOCALE.en, 'temporarily unavailable', 'try: cat skills.md (works offline) or write to'],
+      [
+        SITE_LOCALE.pt,
+        'temporariamente indisponível',
+        'tente: cat skills.md (funciona offline) ou escreva para',
+      ],
+    ] as const)(
+      'prints the status command, a local fallback and the request id in %s',
+      async (locale, message, tryText) => {
+        vi.stubGlobal(
+          'fetch',
+          vi.fn(async () =>
+            Response.json(
+              { error: message },
+              { status: 503, headers: { 'X-Request-Id': 'req-503' } },
+            ),
+          ),
+        );
+        const container = await renderShell(locale);
+        await submitQuestion(container, 'qual a stack dele?');
+        const lines = Array.from(container.querySelectorAll('[role="log"] > .shell-line'));
+        const errorIndex = lines.findIndex((line) => line.getAttribute('data-kind') === 'error');
+        const error = lines[errorIndex];
+        expect(error?.textContent).toBe(`ask: 503 ${message}`);
+        expect(error?.querySelector('strong')?.textContent).toBe('ask: 503');
+        const hint = lines[errorIndex + 1];
+        expect(hint?.getAttribute('data-kind')).toBe('hint');
+        expect(hint?.textContent).toBe(`${tryText} ${address}`);
+        expect(hint?.querySelector('code')?.textContent).toBe('cat skills.md');
+        expect(hint?.querySelector('a')?.getAttribute('href')).toBe(`mailto:${address}`);
+        expect(lines[errorIndex + 2]?.textContent).toContain('req-503');
+        expect(lines[errorIndex + 2]?.querySelector('button')).not.toBeNull();
+      },
+    );
+
+    it('keeps 4xx errors to the status line without a fallback suggestion', async () => {
+      vi.stubGlobal(
+        'fetch',
+        vi.fn(async () => Response.json({ error: 'question is required' }, { status: 400 })),
+      );
+      const container = await renderShell();
+      await submitQuestion(container, 'x');
+      expect(container.querySelector('[data-kind="error"]')?.textContent).toBe(
+        'ask: 400 question is required',
+      );
+      expect(container.querySelector('[data-kind="hint"]')).toBeNull();
+    });
+
+    it('still offers the offline fallback when the server message names the address', async () => {
+      vi.stubGlobal(
+        'fetch',
+        vi.fn(async () =>
+          Response.json({ error: `paused. Email ${address} instead.` }, { status: 503 }),
+        ),
+      );
+      const container = await renderShell();
+      await submitQuestion(container, 'x');
+      expect(container.querySelector('[data-kind="hint"] code')?.textContent).toBe('cat skills.md');
+    });
+
+    it('falls back to the HTTP label when the body has no message', async () => {
+      vi.stubGlobal(
+        'fetch',
+        vi.fn(async () => new Response('', { status: 502 })),
+      );
+      const container = await renderShell();
+      await submitQuestion(container, 'x');
+      expect(container.querySelector('[data-kind="error"]')?.textContent).toBe('ask: 502 HTTP');
+    });
+  });
+
+  describe('E4 rate limit', () => {
+    const TOTAL_SECONDS = 2280;
+    const COUNTDOWN_BAR = /^\[([#.]{20})\]$/;
+
+    function limitedResponse(retryAfter?: string): Response {
+      return Response.json(
+        { error: 'rate limit exceeded: try again in an hour' },
+        {
+          status: 429,
+          headers: {
+            'X-Request-Id': 'limited-request',
+            ...(retryAfter === undefined ? {} : { 'Retry-After': retryAfter }),
+          },
+        },
+      );
+    }
+
+    async function askLimited(retryAfter?: string, locale?: SiteLocale): Promise<HTMLElement> {
+      vi.stubGlobal(
+        'fetch',
+        vi.fn(async () => limitedResponse(retryAfter)),
+      );
+      const container = await renderShell(locale);
+      vi.useFakeTimers();
+      await submitQuestion(container, 'limited question');
+      return container;
+    }
+
+    function visible(container: HTMLElement): HTMLElement {
+      const node = container.querySelector<HTMLElement>('[data-kind="ratelimit"] [aria-hidden]');
+      expect(node).not.toBeNull();
+      return node as HTMLElement;
+    }
+
+    function bar(container: HTMLElement): string {
+      const text = visible(container).querySelector('.shell-ratelimit-bar')?.textContent ?? '';
+      const match = COUNTDOWN_BAR.exec(text);
+      expect(match, `bar text ${text}`).not.toBeNull();
+      return match?.[1] ?? '';
+    }
+
+    it('turns Retry-After into a visible countdown that keeps the local commands in reach', async () => {
+      const container = await askLimited(String(TOTAL_SECONDS));
+      const headline = visible(container).querySelector('strong');
+      expect(headline?.textContent).toBe('! slow down: 38 min until the next question');
+      expect(bar(container)).toBe('.'.repeat(20));
+      expect(visible(container).textContent).toContain(
+        'Local commands keep working meanwhile: help, cat skills.md, whoami.',
+      );
+      expect(container.querySelector('[data-kind="error"]')).toBeNull();
+      expect(container.querySelector('[data-testid="shell-reference"]')?.textContent).toContain(
+        'limited-request',
+      );
+      expect((container.querySelector('input[name="command"]') as HTMLInputElement).value).toBe(
+        'limited question',
+      );
+    });
+
+    it('fills the bar and lowers the minutes as time passes', async () => {
+      const container = await askLimited(String(TOTAL_SECONDS));
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync((TOTAL_SECONDS / 2) * 1000);
+      });
+      expect(visible(container).querySelector('strong')?.textContent).toBe(
+        '! slow down: 19 min until the next question',
+      );
+      expect(bar(container)).toBe(`${'#'.repeat(10)}${'.'.repeat(10)}`);
+    });
+
+    it('counts the last minute in seconds and says when asking works again', async () => {
+      const container = await askLimited('45');
+      expect(visible(container).querySelector('strong')?.textContent).toBe(
+        '! slow down: 45 s until the next question',
+      );
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(45_000);
+      });
+      expect(visible(container).querySelector('strong')?.textContent).toBe(
+        '> ready: you can ask again',
+      );
+      expect(bar(container)).toBe('#'.repeat(20));
+    });
+
+    it('announces the wait once and keeps the ticking text out of assistive tech', async () => {
+      const container = await askLimited(String(TOTAL_SECONDS));
+      const announced = container.querySelector('[role="status"]')?.textContent;
+      expect(announced).toContain('! slow down: 38 min until the next question');
+      const staticText = container.querySelector('[data-kind="ratelimit"] .sr-only')?.textContent;
+      expect(staticText).toContain('! slow down: 38 min until the next question');
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(600_000);
+      });
+      expect(container.querySelector('[data-kind="ratelimit"] .sr-only')?.textContent).toBe(
+        staticText,
+      );
+      expect(container.querySelector('[role="status"]')?.textContent).toBe(announced);
+      expect(visible(container).getAttribute('aria-hidden')).toBe('true');
+      expect(container.querySelector('[data-kind="ratelimit"]')?.getAttribute('role')).toBeNull();
+    });
+
+    it('speaks Portuguese', async () => {
+      const container = await askLimited(String(TOTAL_SECONDS), SITE_LOCALE.pt);
+      expect(visible(container).querySelector('strong')?.textContent).toBe(
+        '! vá com calma: 38 min até a próxima pergunta',
+      );
+    });
+
+    it('stops ticking when the shell unmounts', async () => {
+      const container = await askLimited(String(TOTAL_SECONDS));
+      expect(container.querySelector('[data-kind="ratelimit"]')).not.toBeNull();
+      const pending = vi.getTimerCount();
+      mounted.unmount();
+      expect(vi.getTimerCount()).toBeLessThan(pending);
+    });
+
+    it.each([
+      ['absent', undefined],
+      ['zero', '0'],
+      ['negative', '-5'],
+      ['a date', 'Wed, 21 Oct 2026 07:28:00 GMT'],
+      ['fractional', '12.5'],
+      ['text', 'soon'],
+    ])('invents no duration when Retry-After is %s', async (_name, header) => {
+      const container = await askLimited(header);
+      expect(container.querySelector('[data-kind="ratelimit"]')).toBeNull();
+      expect(container.querySelector('[data-kind="error"]')?.textContent).toBe(
+        'ask: 429 rate limit exceeded: try again in an hour. Built-in commands still work.',
+      );
+    });
+  });
+
+  describe('E9 timeout', () => {
+    const IDLE_MS = 15_000;
+
+    function hangingFetch(chunk?: string, asked: string[] = []) {
+      const enc = new TextEncoder();
+      return vi.fn(async (_url: string, init: RequestInit) => {
+        asked.push(JSON.parse(init.body as string).question);
+        if (chunk === undefined) return new Promise<Response>(() => undefined);
+        return new Response(
+          new ReadableStream<Uint8Array>({
+            start(controller) {
+              controller.enqueue(enc.encode(chunk));
+            },
+          }),
+        );
+      });
+    }
+
+    it('gives the model exactly fifteen seconds of silence', async () => {
+      vi.stubGlobal('fetch', hangingFetch());
+      const container = await renderShell();
+      vi.useFakeTimers();
+      await submitQuestion(container, 'slow question');
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(IDLE_MS - 1);
+      });
+      expect(container.querySelector('[data-kind="error"]')).toBeNull();
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(1);
+      });
+      const error = container.querySelector('[data-kind="error"]');
+      expect(error?.querySelector('strong')?.textContent).toBe('ask: timeout');
+      expect(error?.textContent).toContain(
+        'the model went quiet for 15s. The partial answer above is kept.',
+      );
+    });
+
+    it('keeps the partial answer above the timeout line', async () => {
+      vi.stubGlobal('fetch', hangingFetch('Partial answer'));
+      const container = await renderShell();
+      vi.useFakeTimers();
+      await submitQuestion(container, 'slow question');
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(IDLE_MS);
+      });
+      const lines = Array.from(container.querySelectorAll('[role="log"] > .shell-line'));
+      const answer = lines.findIndex((line) => line.textContent?.includes('Partial answer'));
+      const error = lines.findIndex((line) => line.getAttribute('data-kind') === 'error');
+      expect(answer).toBeGreaterThan(-1);
+      expect(error).toBeGreaterThan(answer);
+    });
+
+    it('retries the same question from the timeout line', async () => {
+      const asked: string[] = [];
+      vi.stubGlobal('fetch', hangingFetch(undefined, asked));
+      const container = await renderShell();
+      vi.useFakeTimers();
+      await submitQuestion(container, 'slow question');
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(IDLE_MS);
+      });
+      const retry = container.querySelector<HTMLButtonElement>('[data-kind="error"] button');
+      expect(retry?.textContent).toBe('[ RETRY ]');
+      expect(retry?.getAttribute('aria-label')).toBe('Retry the last question');
+      await act(async () => {
+        retry?.click();
+      });
+      expect(asked).toEqual(['slow question', 'slow question']);
+      expect(container.querySelector('[role="log"]')?.getAttribute('aria-busy')).toBe('true');
+    });
+
+    it('speaks Portuguese', async () => {
+      vi.stubGlobal('fetch', hangingFetch());
+      const container = await renderShell(SITE_LOCALE.pt);
+      vi.useFakeTimers();
+      await submitQuestion(container, 'pergunta lenta');
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(IDLE_MS);
+      });
+      const error = container.querySelector('[data-kind="error"]');
+      expect(error?.textContent).toContain(
+        'o modelo ficou em silêncio por 15s. A resposta parcial acima foi mantida.',
+      );
+      expect(error?.querySelector('button')?.textContent).toBe('[ TENTAR DE NOVO ]');
+    });
+  });
+
+  describe('L5 streaming', () => {
+    it('ticks the elapsed time before the first token and hides it from assistive tech', async () => {
+      vi.stubGlobal(
+        'fetch',
+        vi.fn(() => new Promise<Response>(() => undefined)),
+      );
+      const container = await renderShell();
+      vi.useFakeTimers();
+      await submitQuestion(container, 'slow question');
+      expect(loadingLine(container)?.textContent).toContain('[ thinking 0.0s ]');
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(1200);
+      });
+      expect(loadingLine(container)?.textContent).toContain('[ thinking 1.2s ]');
+      expect(loadingLine(container)?.getAttribute('aria-hidden')).toBe('true');
+    });
+
+    it('says how to stop while an answer is pending and drops the hint once it settles', async () => {
+      let release: () => void = () => undefined;
+      const gate = new Promise<void>((resolve) => {
+        release = resolve;
+      });
+      vi.stubGlobal(
+        'fetch',
+        vi.fn(async () => {
+          await gate;
+          return streamingResponse(['done']);
+        }),
+      );
+      const container = await renderShell();
+      await submitQuestion(container, 'a question');
+      expect(loadingLine(container)?.textContent).toContain('[ Esc ] stop');
+      release();
+      await flushMicrotasks();
+      await flushFrames();
+      expect(container.querySelector('[role="log"]')?.textContent).not.toContain('[ Esc ] stop');
+    });
+
+    it('shows a block caret after the streamed text and removes it when the answer ends', async () => {
+      const enc = new TextEncoder();
+      let controllerRef: ReadableStreamDefaultController<Uint8Array> | undefined;
+      const body = new ReadableStream<Uint8Array>({
+        start(controller) {
+          controllerRef = controller;
+          controller.enqueue(enc.encode('Partial'));
+        },
+      });
+      vi.stubGlobal(
+        'fetch',
+        vi.fn(async () => new Response(body)),
+      );
+      const container = await renderShell();
+      await submitQuestion(container, 'a question');
+      await flushMicrotasks();
+      await flushFrames();
+      const caret = container.querySelector('.shell-caret');
+      expect(caret?.textContent).toBe('█');
+      expect(caret?.getAttribute('aria-hidden')).toBe('true');
+      expect(container.querySelector('[role="log"]')?.textContent).toContain('[ Esc ] stop');
+      await act(async () => {
+        controllerRef?.close();
+      });
+      await flushMicrotasks();
+      await flushFrames();
+      expect(container.querySelector('.shell-caret')).toBeNull();
+      expect(container.querySelector('[role="log"]')?.textContent).toContain('Partial');
+    });
+
+    it('stops the answer on Escape pressed inside the shell', async () => {
+      let signal: AbortSignal | undefined;
+      vi.stubGlobal(
+        'fetch',
+        vi.fn((_url, init: RequestInit) => {
+          signal = init.signal as AbortSignal;
+          return new Promise<Response>(() => undefined);
+        }),
+      );
+      const container = await renderShell();
+      await submitQuestion(container, 'a question');
+      await press(shellInput(container), 'Escape');
+      expect(signal?.aborted).toBe(true);
+      expect(container.querySelector('[role="status"]')?.textContent).toContain('stopped before');
+    });
+
+    it('ignores Escape pressed outside the shell', async () => {
+      let signal: AbortSignal | undefined;
+      vi.stubGlobal(
+        'fetch',
+        vi.fn((_url, init: RequestInit) => {
+          signal = init.signal as AbortSignal;
+          return new Promise<Response>(() => undefined);
+        }),
+      );
+      const container = await renderShell();
+      await submitQuestion(container, 'a question');
+      await press(document.body, 'Escape');
+      expect(signal?.aborted).toBe(false);
+    });
   });
 });

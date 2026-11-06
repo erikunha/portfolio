@@ -3,13 +3,22 @@
 import { useCallback, useEffect, useId, useRef, useState } from 'react';
 import type { TerminalChrome } from '@/content/schemas';
 import SHELL_RESPONSES from '@/content/shell-commands';
-import { SHELL_LIMITS, ShellCommand, ShellLineKind, type ShellUi } from '@/content/shell-ui';
+import type { ShellStates } from '@/content/shell-states.schema';
+import {
+  fillShellState,
+  SHELL_LIMITS,
+  ShellCommand,
+  ShellLineKind,
+  type ShellUi,
+  shellStates,
+} from '@/content/shell-ui';
 import type { SiteLocale } from '@/content/site-locale';
+import { asciiBar } from '@/lib/ascii-bar';
 import { useBreakpoint } from '@/lib/use-breakpoint.client';
 import { TerminalChromeBar } from '../TerminalChromeBar';
 import { AnimatedPlaceholder, StaticPlaceholder } from './AnimatedPlaceholder.client';
 import { ResponseReference } from './ResponseReference.client';
-import { bounded, type Line, type LineKind, useAskStream } from './useAskStream';
+import { bounded, formatRemaining, type Line, type LineKind, useAskStream } from './useAskStream';
 
 const KIND_CLASS: Record<LineKind, string> = {
   [ShellLineKind.Prompt]: 'shell-line-prompt',
@@ -18,6 +27,8 @@ const KIND_CLASS: Record<LineKind, string> = {
   [ShellLineKind.Info]: 'shell-line-info',
   [ShellLineKind.Loading]: 'shell-line-loading',
   [ShellLineKind.Reference]: 'shell-line-reference',
+  [ShellLineKind.Hint]: 'shell-line-hint',
+  [ShellLineKind.RateLimit]: 'shell-line-ratelimit',
 };
 const Key = {
   Up: 'ArrowUp',
@@ -27,10 +38,25 @@ const Key = {
   Home: 'Home',
   End: 'End',
   Enter: 'Enter',
+  Escape: 'Escape',
 } as const;
 const SHELL_COMMAND_EVENT = 'shell-cmd-run';
 const COMPOSITION_KEYCODE = 229;
 const WINDOW_DOT_SIZE = 10;
+const THINKING_TICK_MS = 100;
+const MS_PER_SECOND = 1000;
+const STREAM_CARET = '█';
+const COUNTDOWN_TICK_MS = 1000;
+
+function ThinkingLine({ template }: { template: string }) {
+  const [elapsedMs, setElapsedMs] = useState(0);
+  useEffect(() => {
+    const startedAt = Date.now();
+    const id = setInterval(() => setElapsedMs(Date.now() - startedAt), THINKING_TICK_MS);
+    return () => clearInterval(id);
+  }, []);
+  return fillShellState(template, { seconds: (elapsedMs / MS_PER_SECOND).toFixed(1) });
+}
 
 function LineText({ text, ui }: { text: string; ui: ShellUi }) {
   const at = text.indexOf(ui.email);
@@ -40,6 +66,41 @@ function LineText({ text, ui }: { text: string; ui: ShellUi }) {
       {text.slice(0, at)}
       <a href={ui.emailHref}>{ui.email}</a>
       {text.slice(at + ui.email.length)}
+    </>
+  );
+}
+
+function RateLimitCountdown({
+  seconds,
+  announcement,
+  states,
+}: {
+  seconds: number;
+  announcement: string;
+  states: ShellStates;
+}) {
+  const [remaining, setRemaining] = useState(seconds);
+  useEffect(() => {
+    const deadline = Date.now() + seconds * MS_PER_SECOND;
+    const id = setInterval(() => {
+      const left = Math.max(0, Math.ceil((deadline - Date.now()) / MS_PER_SECOND));
+      setRemaining(left);
+      if (left === 0) clearInterval(id);
+    }, COUNTDOWN_TICK_MS);
+    return () => clearInterval(id);
+  }, [seconds]);
+  const headline =
+    remaining === 0
+      ? states.rateLimitReady
+      : fillShellState(states.slowDown, { left: formatRemaining(remaining, states) });
+  return (
+    <>
+      <span className="sr-only">{announcement}</span>
+      <span aria-hidden="true">
+        <strong className="shell-ratelimit-headline">{headline}</strong>
+        <span className="shell-ratelimit-bar">[{asciiBar(1 - remaining / seconds)}]</span>
+        <span>{states.localCommands}</span>
+      </span>
     </>
   );
 }
@@ -54,6 +115,7 @@ export function InteractiveShell({
   chrome: TerminalChrome;
 }) {
   const { isMobile } = useBreakpoint();
+  const states = shellStates[locale];
   const accuracyId = useId();
   const lineId = useRef(0);
   const nextId = useCallback(() => ++lineId.current, []);
@@ -164,7 +226,15 @@ export function InteractiveShell({
   );
 
   return (
-    <div className="interactive-shell">
+    // biome-ignore lint/a11y/noStaticElementInteractions: Escape bubbles from the focusable controls inside; the wrapper has no role, and scoping the stop key here keeps it out of a global keydown listener
+    <div
+      className="interactive-shell"
+      onKeyDown={(event) => {
+        if (event.key !== Key.Escape || event.nativeEvent.isComposing || !isActive()) return;
+        event.preventDefault();
+        stopStream();
+      }}
+    >
       <TerminalChromeBar
         chrome={chrome}
         className="shell-chrome"
@@ -196,7 +266,10 @@ export function InteractiveShell({
               aria-hidden="true"
               data-testid="shell-line-loading"
             >
-              {ui.aiLabel}: {ui.thinking}
+              <span className="shell-stream-meta">
+                <ThinkingLine template={states.thinkingElapsed} />
+              </span>
+              <span className="shell-stream-meta shell-esc-hint">{states.escStop}</span>
             </span>
           ) : (
             <span
@@ -206,10 +279,36 @@ export function InteractiveShell({
             >
               {line.kind === ShellLineKind.Reference ? (
                 <ResponseReference ui={ui} requestId={line.text} announce={announce} />
+              ) : line.kind === ShellLineKind.RateLimit && line.retryAfter ? (
+                <RateLimitCountdown
+                  seconds={line.retryAfter}
+                  announcement={line.text}
+                  states={states}
+                />
+              ) : line.kind === ShellLineKind.Hint ? (
+                <>
+                  {states.tryPrefix} <code>{states.tryCommand}</code> {states.trySuffix}{' '}
+                  <a href={ui.emailHref}>{ui.email}</a>
+                </>
               ) : (
                 <>
                   {line.ai && <span className="shell-ai-label">{ui.aiLabel}: </span>}
+                  {line.prefix && <strong className="shell-stderr-command">{line.prefix}</strong>}
+                  {line.prefix && ' '}
                   <LineText text={line.text} ui={ui} />
+                  {line.retry && (
+                    <>
+                      {' '}
+                      <button
+                        type="button"
+                        className="shell-control"
+                        aria-label={states.retryLabel}
+                        onClick={() => runCommand(line.retry ?? '')}
+                      >
+                        {states.retry}
+                      </button>
+                    </>
+                  )}
                 </>
               )}
             </span>
@@ -219,6 +318,14 @@ export function InteractiveShell({
           <span className="shell-line shell-line-output" data-kind={ShellLineKind.Output}>
             <span className="shell-ai-label">{ui.aiLabel}: </span>
             {streamingText}
+            <span className="shell-caret" aria-hidden="true">
+              {STREAM_CARET}
+            </span>
+          </span>
+        )}
+        {streamingText !== null && (
+          <span className="shell-line shell-stream-meta shell-esc-hint" aria-hidden="true">
+            {states.escStop}
           </span>
         )}
       </div>

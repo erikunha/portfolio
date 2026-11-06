@@ -5,6 +5,7 @@ import type { ReactNode } from 'react';
 import { MAIN_CONTENT_ID } from '@/components/PageMain';
 import type { SiteNavChrome } from '@/content/navigation';
 import type { SiteLocale } from '@/content/site-locale';
+import { OfflineNotice } from '../client/OfflineNotice';
 import { ToTopButton } from '../client/ToTopButton';
 import { ErrorBoundary } from '../ErrorBoundary';
 import { CRTOverlay } from '../responsive/CRTOverlay';
@@ -35,6 +36,7 @@ export function AppShell({
       <a href={`#${MAIN_CONTENT_ID}`} className="skip-to-content">
         {skipLabel}
       </a>
+      <OfflineNotice locale={locale} />
       <SectionNavigationProvider chrome={chrome} locale={locale}>
         <SectionNavigation extra={drawerExtra} />
         <ErrorBoundary locale={locale}>

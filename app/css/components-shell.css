@@ -58,6 +58,49 @@
     color: var(--color-senary-300);
   }
 
+  .shell-stderr-command {
+    color: var(--color-primary-500);
+    font-weight: 700;
+  }
+
+  .shell-line-ratelimit {
+    padding: var(--spacing-3);
+    border: var(--border-width) solid var(--color-primary-500);
+    color: var(--color-tertiary-50);
+  }
+
+  .shell-line-ratelimit [aria-hidden] {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-2);
+    min-width: 0;
+    white-space: normal;
+  }
+
+  .shell-ratelimit-headline,
+  .shell-ratelimit-bar {
+    color: var(--color-primary-500);
+  }
+
+  .shell-ratelimit-bar {
+    overflow: hidden;
+    white-space: nowrap;
+  }
+
+  .shell-line-hint {
+    color: var(--color-primary-400);
+  }
+
+  .shell-line-hint code {
+    color: var(--color-primary-500);
+    font: inherit;
+  }
+
+  .shell-line-hint a {
+    text-decoration: underline;
+    text-underline-offset: var(--spacing-1);
+  }
+
   .shell-ai-label {
     color: var(--color-primary-500);
   }
@@ -66,6 +109,25 @@
   .shell-line-loading,
   .shell-command-hint {
     color: var(--color-primary-400);
+  }
+
+  .shell-stream-meta {
+    display: block;
+    color: var(--color-primary-400);
+  }
+
+  .shell-esc-hint {
+    color: var(--color-tertiary-400);
+  }
+
+  .shell-caret {
+    color: var(--color-primary-500);
+  }
+
+  @media (hover: none) {
+    .shell-esc-hint {
+      display: none;
+    }
   }
 
   .shell-form {

@@ -8,16 +8,48 @@ import {
   useRef,
   useState,
 } from 'react';
-import { SHELL_LIMITS, ShellLineKind, type ShellUi } from '@/content/shell-ui';
+import {
+  fillShellState,
+  SHELL_LIMITS,
+  ShellLineKind,
+  type ShellUi,
+  shellStates,
+} from '@/content/shell-ui';
 import type { SiteLocale } from '@/content/site-locale';
-import { ASK_LOCALE_HEADER, parseStreamChunk } from '@/lib/stream-protocol';
+import {
+  ASK_LOCALE_HEADER,
+  parseRetryAfter,
+  parseStreamChunk,
+  RETRY_AFTER_HEADER,
+} from '@/lib/stream-protocol';
 
 export type LineKind = (typeof ShellLineKind)[keyof typeof ShellLineKind];
-export type Line = { id: number; kind: LineKind; text: string; ai?: boolean };
+export type Line = {
+  id: number;
+  kind: LineKind;
+  text: string;
+  ai?: boolean;
+  prefix?: string;
+  retryAfter?: number;
+  retry?: string;
+};
+type FailureDetail = { prefix?: string; hint?: boolean; retryAfter?: number; retry?: string };
 type ActiveRequest = { stop: () => void; dispose: () => void };
 
 const ASK_ENDPOINT = '/api/ask';
 const RATE_LIMIT_STATUS = 429;
+const SERVER_ERROR_STATUS = 500;
+const SECONDS_PER_MINUTE = 60;
+const MS_PER_SECOND = 1000;
+
+export function formatRemaining(
+  seconds: number,
+  states: Pick<(typeof shellStates)['en'], 'minutesUnit' | 'secondsUnit'>,
+): string {
+  return seconds >= SECONDS_PER_MINUTE
+    ? `${Math.ceil(seconds / SECONDS_PER_MINUTE)} ${states.minutesUnit}`
+    : `${seconds} ${states.secondsUnit}`;
+}
 
 export function bounded(lines: Line[]): Line[] {
   return lines.slice(-SHELL_LIMITS.logEntries);
@@ -42,6 +74,7 @@ export function useAskStream({
   setInput,
   onSettled,
 }: AskStreamOptions) {
+  const states = shellStates[locale];
   const [busy, setBusy] = useState(false);
   const [streamingText, setStreamingText] = useState<string | null>(null);
   const activeRequest = useRef<ActiveRequest | null>(null);
@@ -83,13 +116,23 @@ export function useAskStream({
 
       function armIdleTimer() {
         clearTimeout(timer);
-        timer = setTimeout(() => interrupt(ui.timeout, true), SHELL_LIMITS.requestTimeoutMs);
+        timer = setTimeout(
+          () =>
+            interrupt(
+              fillShellState(states.timeoutBody, {
+                seconds: String(SHELL_LIMITS.requestTimeoutMs / MS_PER_SECOND),
+              }),
+              true,
+              { prefix: `${states.stderrCommand} ${states.timeoutName}`, retry: command },
+            ),
+          SHELL_LIMITS.requestTimeoutMs,
+        );
       }
       function releaseTransport() {
         controller.abort();
         void reader?.cancel().catch(() => undefined);
       }
-      function finish(text: string, message?: string, error = false) {
+      function finish(text: string, message?: string, error = false, detail: FailureDetail = {}) {
         if (settled) return;
         settled = true;
         clearTimeout(timer);
@@ -98,12 +141,22 @@ export function useAskStream({
         activeRequest.current = null;
         const lines: Line[] = [];
         if (text) lines.push({ id: nextId(), kind: ShellLineKind.Output, text, ai: true });
-        if (message) {
+        if (message && detail.retryAfter) {
+          lines.push({
+            id: nextId(),
+            kind: ShellLineKind.RateLimit,
+            text: message,
+            retryAfter: detail.retryAfter,
+          });
+        } else if (message) {
           lines.push({
             id: nextId(),
             kind: error ? ShellLineKind.Error : ShellLineKind.Info,
-            text: error ? `${ui.errorPrefix} ${message}` : message,
+            text: error && !detail.prefix ? `${ui.errorPrefix} ${message}` : message,
+            ...(detail.prefix ? { prefix: detail.prefix } : {}),
+            ...(detail.retry ? { retry: detail.retry } : {}),
           });
+          if (detail.hint) lines.push({ id: nextId(), kind: ShellLineKind.Hint, text: '' });
         }
         if (!text && !message) {
           lines.push({ id: nextId(), kind: ShellLineKind.Output, text: ui.empty });
@@ -115,12 +168,12 @@ export function useAskStream({
         setStreamingText(null);
         setBusy(false);
         if (message) setInput((value) => value || command);
-        announce(message ?? ui.complete);
+        announce(message ? [detail.prefix, message].filter(Boolean).join(' ') : ui.complete);
         onSettled();
       }
-      function interrupt(message: string, error = false) {
+      function interrupt(message: string, error = false, detail?: FailureDetail) {
         const text = parseStreamChunk(accumulated).displayText;
-        finish(text, message, error);
+        finish(text, message, error, detail);
         releaseTransport();
       }
       activeRequest.current = {
@@ -153,11 +206,29 @@ export function useAskStream({
             error?: string | { message?: string };
           } | null;
           const detail = typeof data?.error === 'string' ? data.error : data?.error?.message;
-          const message = detail || `${ui.httpErrorPrefix} ${response.status}`;
+          const retryAfter =
+            response.status === RATE_LIMIT_STATUS
+              ? parseRetryAfter(response.headers.get(RETRY_AFTER_HEADER))
+              : null;
+          if (retryAfter) {
+            const left = formatRemaining(retryAfter, states);
+            finish(
+              '',
+              `${fillShellState(states.slowDown, { left })}. ${states.localCommands}`,
+              true,
+              { retryAfter },
+            );
+            return;
+          }
+          const message = detail || response.statusText || ui.httpErrorPrefix;
           finish(
             '',
             response.status === RATE_LIMIT_STATUS ? `${message}. ${ui.localAvailable}` : message,
             true,
+            {
+              prefix: `${states.stderrCommand} ${response.status}`,
+              hint: response.status >= SERVER_ERROR_STATUS,
+            },
           );
           return;
         }
@@ -207,7 +278,7 @@ export function useAskStream({
         reader?.releaseLock();
       }
     },
-    [announce, clearFrame, nextId, onSettled, setHistory, setInput, ui, locale],
+    [announce, clearFrame, nextId, onSettled, setHistory, setInput, states, ui, locale],
   );
 
   const stop = useCallback(() => activeRequest.current?.stop(), []);

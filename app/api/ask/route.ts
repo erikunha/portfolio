@@ -19,7 +19,12 @@ import {
   settleBudget,
 } from '@/lib/rate-limit';
 import { withBodyLimit } from '@/lib/server/body-limit';
-import { ASK_LOCALE_HEADER, STREAM_ERR_SENTINEL } from '@/lib/stream-protocol';
+import {
+  ASK_LOCALE_HEADER,
+  RETRY_AFTER_HEADER,
+  retryAfterSeconds,
+  STREAM_ERR_SENTINEL,
+} from '@/lib/stream-protocol';
 
 const REQUEST_TIMEOUT_MS = 30_000;
 
@@ -102,9 +107,11 @@ async function handleAsk(req: NextRequest): Promise<Response> {
     });
 
   let rateLimited = false;
+  let retryAfter: number | null = null;
   try {
-    const { success } = await getAskLimit().limit(ip);
+    const { success, reset } = await getAskLimit().limit(ip);
     rateLimited = !success;
+    if (rateLimited) retryAfter = retryAfterSeconds(reset, Date.now());
   } catch (err) {
     if (env.UPSTASH_REDIS_REST_URL && env.UPSTASH_REDIS_REST_TOKEN) {
       log.error('ask rate-limit check failed, allowing through', { err });
@@ -112,7 +119,13 @@ async function handleAsk(req: NextRequest): Promise<Response> {
   }
   if (rateLimited) {
     earlyExitPersist('rate-limited');
-    return Response.json({ error: askErrors[pageLocale].rateLimited }, { status: 429 });
+    return Response.json(
+      { error: askErrors[pageLocale].rateLimited },
+      {
+        status: 429,
+        ...(retryAfter === null ? {} : { headers: { [RETRY_AFTER_HEADER]: String(retryAfter) } }),
+      },
+    );
   }
 
   let question: string;
