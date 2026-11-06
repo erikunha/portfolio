@@ -5,6 +5,7 @@ const { PHONE: MOBILE, DESKTOP, PHONE_NARROW: PHONE_MIN } = VIEWPORTS;
 const FACT_ROW = '#sec-projects .project-stats > div';
 const ASK_BLOCK = '.measured-ask';
 const PERF_BLOCK = '#sec-live-perf';
+const PENDING_DATA = '#sec-live-metrics [aria-busy="true"], #sec-live-perf [aria-busy="true"]';
 const PERF_TILE = '#sec-live-perf .measured-tile';
 const PERF_LABEL = '#sec-live-perf .measured-label';
 const RECEIPT_VALUE = '.project-receipts .receipt-value';
@@ -53,6 +54,8 @@ test.describe('projects section below 768px', () => {
   test('live-perf tiles stack 2x2', async ({ page }) => {
     await page.setViewportSize(MOBILE);
     await page.goto('/');
+    await expect(page.locator(PENDING_DATA)).toHaveCount(0);
+    await expect(page.locator(ASK_BLOCK)).toHaveCount(1);
     const tiles = page.locator(PERF_TILE);
     await tiles.first().scrollIntoViewIfNeeded();
     await expect(tiles).toHaveCount(4);

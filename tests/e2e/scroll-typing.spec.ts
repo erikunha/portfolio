@@ -1,5 +1,7 @@
 import { expect, type Locator, test } from '@playwright/test';
+import { waitForHydration } from './_helpers/hydration';
 
+const MOTION_TOGGLE = '.desktop-topbar button[aria-pressed]';
 const BELOW_FOLD_HEADER = '#sec-contact-header .module-scroll-type-text:visible';
 const BELOW_FOLD_GAP_PX = 100;
 const BELOW_FOLD_TOLERANCE_PX = 60;
@@ -106,9 +108,11 @@ test.describe('scroll typing', () => {
 
     const header = page.locator(BELOW_FOLD_HEADER);
     await header.waitFor({ state: 'attached' });
-    await page.evaluate(() => {
-      document.body.dataset.motion = 'reduce';
-    });
+    await waitForHydration(page, MOTION_TOGGLE);
+    const toggle = page.locator(MOTION_TOGGLE);
+    await expect(toggle).toHaveAttribute('aria-pressed', 'true');
+    await toggle.click();
+    await expect(toggle).toHaveAttribute('aria-pressed', 'false');
     await header.scrollIntoViewIfNeeded();
 
     const clipPath = await header.evaluate((el) => getComputedStyle(el).clipPath);
