@@ -71,7 +71,7 @@ describe('Dock', () => {
     const controls = [...dock().querySelectorAll('a, button')];
     expect(controls.map((control) => control.textContent?.trim())).toEqual([
       'HOME',
-      'WORK',
+      'PROJECTS',
       'SHELL',
       'HIRE',
       'MENU',
@@ -81,7 +81,7 @@ describe('Dock', () => {
   it('links Home, Work and Shell to their sections from any route', () => {
     mount();
     expect(within(dock()).getByRole('link', { name: 'HOME' }).getAttribute('href')).toBe('/#bio');
-    expect(within(dock()).getByRole('link', { name: 'WORK' }).getAttribute('href')).toBe(
+    expect(within(dock()).getByRole('link', { name: 'PROJECTS' }).getAttribute('href')).toBe(
       '/#sec-projects',
     );
     expect(within(dock()).getByRole('link', { name: 'SHELL' }).getAttribute('href')).toBe(
@@ -105,7 +105,7 @@ describe('Dock', () => {
       [...dock().querySelectorAll('[aria-current]')].map((el) => el.textContent?.trim());
     expect(current()).toEqual(['HOME']);
     reveal('sec-projects');
-    expect(current()).toEqual(['WORK']);
+    expect(current()).toEqual(['PROJECTS']);
     reveal('sec-shell');
     expect(current()).toEqual(['SHELL']);
     reveal('sec-contact');
@@ -151,7 +151,7 @@ describe('Dock', () => {
 
   it('scrolls to the chosen section and focuses it', () => {
     mount();
-    fireEvent.click(within(dock()).getByRole('link', { name: 'WORK' }));
+    fireEvent.click(within(dock()).getByRole('link', { name: 'PROJECTS' }));
     expect(scrollIntoView).toHaveBeenCalledWith({ behavior: 'smooth', block: 'start' });
     expect(document.activeElement).toBe(document.getElementById('sec-projects'));
   });

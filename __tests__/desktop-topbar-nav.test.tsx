@@ -9,6 +9,7 @@ import {
   TOPBAR_NAV,
 } from '@/content/nav';
 import { NAVIGATION, siteNavChrome } from '@/content/navigation';
+import { localizedSectionLabel, SECTION_ID } from '@/content/section-registry';
 import { SITE_LOCALE, type SiteLocale } from '@/content/site-locale';
 import { type MountedClient, mountClient } from './helpers/render';
 import { isHiddenAtWidth } from './helpers/tailwind-visibility';
@@ -292,4 +293,24 @@ describe('DesktopTopbar', () => {
       expect(currentLabels()).toEqual([]);
     },
   );
+});
+
+describe('one name per section', () => {
+  it.each([
+    [SITE_LOCALE.en, 'about', SECTION_ID.about],
+    [SITE_LOCALE.en, 'work', SECTION_ID.projects],
+    [SITE_LOCALE.en, 'career', SECTION_ID.career],
+    [SITE_LOCALE.en, 'contact', SECTION_ID.contact],
+    [SITE_LOCALE.pt, 'about', SECTION_ID.about],
+    [SITE_LOCALE.pt, 'work', SECTION_ID.projects],
+    [SITE_LOCALE.pt, 'career', SECTION_ID.career],
+    [SITE_LOCALE.pt, 'contact', SECTION_ID.contact],
+  ] as const)('the %s %s nav label is the registry name in capitals', (locale, key, id) => {
+    expect(NAV_VOCABULARY[locale][key]).toBe(localizedSectionLabel(locale, id).toUpperCase());
+  });
+
+  it('writes the back to top label in sentence case in both languages', () => {
+    expect(NAVIGATION[SITE_LOCALE.en].copy.backToTopLabel).toBe('Back to top');
+    expect(NAVIGATION[SITE_LOCALE.pt].copy.backToTopLabel).toBe('Voltar ao topo');
+  });
 });

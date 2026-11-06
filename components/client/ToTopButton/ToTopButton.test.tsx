@@ -21,7 +21,7 @@ describe('ToTopButton', () => {
 
   it('names the button with the locale copy', () => {
     renderButton(SITE_LOCALE.en);
-    expect(screen.getByRole('button', { name: 'back to top' })).toBeDefined();
+    expect(screen.getByRole('button', { name: 'Back to top' })).toBeDefined();
   });
 
   it('uses the pt-BR label on the pt locale', () => {
@@ -32,14 +32,14 @@ describe('ToTopButton', () => {
   it('scrolls smoothly while motion is on', () => {
     localStorage.setItem('erik.motion', 'on');
     renderButton(SITE_LOCALE.en);
-    fireEvent.click(screen.getByRole('button', { name: 'back to top' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Back to top' }));
     expect(window.scrollTo).toHaveBeenCalledWith({ top: 0, behavior: 'smooth' });
   });
 
   it('scrolls without animation when the visitor turned motion off', () => {
     localStorage.setItem('erik.motion', 'off');
     renderButton(SITE_LOCALE.en);
-    fireEvent.click(screen.getByRole('button', { name: 'back to top' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Back to top' }));
     expect(window.scrollTo).toHaveBeenCalledWith({ top: 0, behavior: 'auto' });
   });
 
@@ -48,7 +48,7 @@ describe('ToTopButton', () => {
     Object.defineProperty(window, 'scrollY', { value: 500, writable: true, configurable: true });
     try {
       renderButton(SITE_LOCALE.en);
-      const button = screen.getByRole('button', { name: 'back to top' });
+      const button = screen.getByRole('button', { name: 'Back to top' });
       expect(button.classList.contains('to-top-show')).toBe(true);
     } finally {
       if (originalScrollY) Object.defineProperty(window, 'scrollY', originalScrollY);

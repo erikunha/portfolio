@@ -209,7 +209,7 @@ describe('SectionNavigation', () => {
         </main>
       </SectionNavigationProvider>,
     );
-    const projects = screen.getByRole('link', { name: /^work$/i });
+    const projects = screen.getByRole('link', { name: /^projects$/i });
     expect(projects.getAttribute('aria-current')).toBeNull();
     reveal(document.getElementById('sec-projects'));
     expect(projects.getAttribute('aria-current')).toBe('location');

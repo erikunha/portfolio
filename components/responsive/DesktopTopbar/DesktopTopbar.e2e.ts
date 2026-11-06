@@ -15,7 +15,7 @@ test.describe('DesktopTopbar — navigation', () => {
     await page.goto('/');
     const nav = page.getByRole('navigation', { name: 'Site navigation' });
 
-    for (const label of ['ABOUT', 'WORK', 'CAREER', 'CONTACT', 'DESIGN_SYSTEM', 'VIEW_CV']) {
+    for (const label of ['ABOUT', 'PROJECTS', 'CAREER', 'CONTACT', 'DESIGN_SYSTEM', 'VIEW_CV']) {
       await expect(nav.getByRole('link', { name: label })).toBeVisible();
     }
 

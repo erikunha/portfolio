@@ -1,7 +1,7 @@
 import { companyLinkCopy } from './company-link';
 import { LINKS_PATH } from './links.constants';
 import { CV_LINK_LABEL, READING_PATHS } from './reading-paths';
-import { SECTION_ID, sectionPath } from './section-registry';
+import { localizedSectionLabel, SECTION_ID, sectionPath } from './section-registry';
 import { localizedPath, SITE_LOCALE, type SiteLocale } from './site-locale';
 import { LINKEDIN_URL } from './social-urls';
 
@@ -9,6 +9,9 @@ export type TopbarNavLink = {
   label: string;
   href: string;
 };
+
+const sectionName = (locale: SiteLocale, id: Parameters<typeof localizedSectionLabel>[1]) =>
+  localizedSectionLabel(locale, id).toUpperCase();
 
 export const NAV_VOCABULARY: Record<
   SiteLocale,
@@ -25,10 +28,10 @@ export const NAV_VOCABULARY: Record<
   }
 > = {
   [SITE_LOCALE.en]: {
-    about: 'ABOUT',
-    work: 'WORK',
-    career: 'CAREER',
-    contact: 'CONTACT',
+    about: sectionName(SITE_LOCALE.en, SECTION_ID.about),
+    work: sectionName(SITE_LOCALE.en, SECTION_ID.projects),
+    career: sectionName(SITE_LOCALE.en, SECTION_ID.career),
+    contact: sectionName(SITE_LOCALE.en, SECTION_ID.contact),
     designSystem: 'DESIGN_SYSTEM',
     summary: '30S_SUMMARY',
     links: 'LINKS',
@@ -36,10 +39,10 @@ export const NAV_VOCABULARY: Record<
     linkedin: 'LinkedIn',
   },
   [SITE_LOCALE.pt]: {
-    about: 'SOBRE',
-    work: 'PROJETOS',
-    career: 'CARREIRA',
-    contact: 'CONTATO',
+    about: sectionName(SITE_LOCALE.pt, SECTION_ID.about),
+    work: sectionName(SITE_LOCALE.pt, SECTION_ID.projects),
+    career: sectionName(SITE_LOCALE.pt, SECTION_ID.career),
+    contact: sectionName(SITE_LOCALE.pt, SECTION_ID.contact),
     designSystem: 'DESIGN_SYSTEM',
     summary: 'RESUMO_30S',
     links: 'LINKS',

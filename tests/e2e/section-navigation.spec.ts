@@ -187,7 +187,7 @@ for (const width of TOPBAR_WIDTHS) {
         ).toBeHidden();
       }
       if (width >= SECTION_SHORTCUT_WIDTH) {
-        for (const label of ['ABOUT', 'WORK', 'CAREER', 'CONTACT', 'DESIGN_SYSTEM']) {
+        for (const label of ['ABOUT', 'PROJECTS', 'CAREER', 'CONTACT', 'DESIGN_SYSTEM']) {
           await expect(nav.getByRole('link', { name: label })).toBeVisible();
         }
       }
