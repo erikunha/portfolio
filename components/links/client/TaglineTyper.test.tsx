@@ -1,4 +1,4 @@
-import { render } from '@testing-library/react';
+import { act, render } from '@testing-library/react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { TaglineTyper } from './TaglineTyper.client';
@@ -49,6 +49,26 @@ describe('TaglineTyper', () => {
 
     vi.advanceTimersByTime(140);
     expect(visible?.textContent).toBe('Senior');
+  });
+
+  it('stops on the first phrase when MOTION turns off and types again when it turns on', () => {
+    mockMotion(false);
+    const { container } = render(<TaglineTyper phrases={PHRASES} />);
+    const visible = container.querySelector('[aria-hidden="true"]');
+    vi.advanceTimersByTime(210);
+    expect(visible?.textContent).toBe('Seni');
+
+    act(() => {
+      window.dispatchEvent(new CustomEvent('motionchange', { detail: { on: false } }));
+    });
+    vi.advanceTimersByTime(2_000);
+    expect(visible?.textContent).toBe(PHRASES[0]);
+
+    act(() => {
+      window.dispatchEvent(new CustomEvent('motionchange', { detail: { on: true } }));
+    });
+    vi.advanceTimersByTime(210);
+    expect(visible?.textContent).not.toBe(PHRASES[0]);
   });
 
   it('holds the full phrase still when the visitor prefers reduced motion', () => {
