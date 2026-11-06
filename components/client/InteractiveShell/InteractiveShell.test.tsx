@@ -7,7 +7,7 @@ import {
   mountClient,
 } from '@/__tests__/helpers/render';
 import { shellUi } from '@/content/shell-ui';
-import { SITE_LOCALE } from '@/content/site-locale';
+import { SITE_LOCALE, type SiteLocale } from '@/content/site-locale';
 import { shellChrome } from '@/content/terminal-chrome';
 
 const mobileViewport = vi.hoisted(() => ({ value: false }));
@@ -1077,5 +1077,152 @@ describe('shell input hint states', () => {
 
     release();
     await flushMicrotasks();
+  });
+});
+
+describe('InteractiveShell stream states', () => {
+  let mounted: MountedClient;
+
+  beforeEach(() => {
+    vi.resetModules();
+    mobileViewport.value = false;
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+    mounted?.unmount();
+    vi.restoreAllMocks();
+    vi.unstubAllGlobals();
+  });
+
+  async function renderShell(locale: SiteLocale = SITE_LOCALE.en): Promise<HTMLElement> {
+    const { InteractiveShell } = await import('./InteractiveShell');
+    mounted = await mountClient(
+      createElement(InteractiveShell, {
+        locale,
+        ui: shellUi[locale],
+        chrome: shellChrome[locale],
+      }),
+    );
+    return mounted.container;
+  }
+
+  function loadingLine(container: HTMLElement): Element | null {
+    return container.querySelector('[data-testid="shell-line-loading"]');
+  }
+
+  describe('copy', () => {
+    it.each(Object.values(SITE_LOCALE))(
+      'parses and keeps its placeholders in %s',
+      async (locale) => {
+        const { ShellStatesSchema } = await import('@/content/shell-states.schema');
+        const { shellStates, SHELL_STATE_TOKEN } = await import('@/content/shell-ui');
+        const copy = ShellStatesSchema.parse(shellStates[locale]);
+        expect(copy.thinkingElapsed).toContain(SHELL_STATE_TOKEN.seconds);
+        expect(copy.timeoutBody).toContain(SHELL_STATE_TOKEN.seconds);
+        expect(copy.slowDown).toContain(SHELL_STATE_TOKEN.left);
+        expect(Object.values(copy).join(' ')).not.toMatch(/[\u2013\u2014]/);
+      },
+    );
+  });
+
+  describe('L5 streaming', () => {
+    it('ticks the elapsed time before the first token and hides it from assistive tech', async () => {
+      vi.stubGlobal(
+        'fetch',
+        vi.fn(() => new Promise<Response>(() => undefined)),
+      );
+      const container = await renderShell();
+      vi.useFakeTimers();
+      await submitQuestion(container, 'slow question');
+      expect(loadingLine(container)?.textContent).toContain('[ thinking 0.0s ]');
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(1200);
+      });
+      expect(loadingLine(container)?.textContent).toContain('[ thinking 1.2s ]');
+      expect(loadingLine(container)?.getAttribute('aria-hidden')).toBe('true');
+    });
+
+    it('says how to stop while an answer is pending and drops the hint once it settles', async () => {
+      let release: () => void = () => undefined;
+      const gate = new Promise<void>((resolve) => {
+        release = resolve;
+      });
+      vi.stubGlobal(
+        'fetch',
+        vi.fn(async () => {
+          await gate;
+          return streamingResponse(['done']);
+        }),
+      );
+      const container = await renderShell();
+      await submitQuestion(container, 'a question');
+      expect(loadingLine(container)?.textContent).toContain('[ Esc ] stop');
+      release();
+      await flushMicrotasks();
+      await flushFrames();
+      expect(container.querySelector('[role="log"]')?.textContent).not.toContain('[ Esc ] stop');
+    });
+
+    it('shows a block caret after the streamed text and removes it when the answer ends', async () => {
+      const enc = new TextEncoder();
+      let controllerRef: ReadableStreamDefaultController<Uint8Array> | undefined;
+      const body = new ReadableStream<Uint8Array>({
+        start(controller) {
+          controllerRef = controller;
+          controller.enqueue(enc.encode('Partial'));
+        },
+      });
+      vi.stubGlobal(
+        'fetch',
+        vi.fn(async () => new Response(body)),
+      );
+      const container = await renderShell();
+      await submitQuestion(container, 'a question');
+      await flushMicrotasks();
+      await flushFrames();
+      const caret = container.querySelector('.shell-caret');
+      expect(caret?.textContent).toBe('█');
+      expect(caret?.getAttribute('aria-hidden')).toBe('true');
+      expect(container.querySelector('[role="log"]')?.textContent).toContain('[ Esc ] stop');
+      await act(async () => {
+        controllerRef?.close();
+      });
+      await flushMicrotasks();
+      await flushFrames();
+      expect(container.querySelector('.shell-caret')).toBeNull();
+      expect(container.querySelector('[role="log"]')?.textContent).toContain('Partial');
+    });
+
+    it('stops the answer on Escape pressed inside the shell', async () => {
+      let signal: AbortSignal | undefined;
+      vi.stubGlobal(
+        'fetch',
+        vi.fn((_url, init: RequestInit) => {
+          signal = init.signal as AbortSignal;
+          return new Promise<Response>(() => undefined);
+        }),
+      );
+      const container = await renderShell();
+      await submitQuestion(container, 'a question');
+      await press(shellInput(container), 'Escape');
+      expect(signal?.aborted).toBe(true);
+      expect(container.querySelector('[role="status"]')?.textContent).toContain('stopped before');
+    });
+
+    it('ignores Escape pressed outside the shell', async () => {
+      let signal: AbortSignal | undefined;
+      vi.stubGlobal(
+        'fetch',
+        vi.fn((_url, init: RequestInit) => {
+          signal = init.signal as AbortSignal;
+          return new Promise<Response>(() => undefined);
+        }),
+      );
+      const container = await renderShell();
+      await submitQuestion(container, 'a question');
+      await press(document.body, 'Escape');
+      expect(signal?.aborted).toBe(false);
+    });
   });
 });

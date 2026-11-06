@@ -2,6 +2,7 @@ import type { ShellUi } from './schemas';
 
 export type { ShellUi };
 
+import type { ShellStates } from './shell-states.schema';
 import { SITE_LOCALE, type SiteLocale } from './site-locale';
 import { EMAIL_ADDRESS } from './social-urls';
 
@@ -36,6 +37,57 @@ export const SHELL_LIMITS = {
   placeholderBackMs: 30,
   placeholderPauseMs: 300,
 } as const;
+
+export const SHELL_STATE_TOKEN = { seconds: '{seconds}', left: '{left}' } as const;
+
+export function fillShellState(
+  template: string,
+  values: Partial<Record<keyof typeof SHELL_STATE_TOKEN, string>>,
+): string {
+  let filled = template;
+  for (const key of Object.keys(values) as (keyof typeof SHELL_STATE_TOKEN)[]) {
+    filled = filled.replace(SHELL_STATE_TOKEN[key], values[key] ?? '');
+  }
+  return filled;
+}
+
+export const shellStates: Record<SiteLocale, ShellStates> = {
+  [SITE_LOCALE.en]: {
+    thinkingElapsed: '[ thinking {seconds}s ]',
+    escStop: '[ Esc ] stop',
+    stderrCommand: 'ask:',
+    timeoutName: 'timeout',
+    timeoutBody: 'the model went quiet for {seconds}s. The partial answer above is kept.',
+    retry: '[ RETRY ]',
+    retryLabel: 'Retry the last question',
+    tryPrefix: 'try:',
+    tryCommand: ShellCommand.Skills,
+    trySuffix: '(works offline) or write to',
+    slowDown: '! slow down: {left} until the next question',
+    minutesUnit: 'min',
+    secondsUnit: 's',
+    localCommands: 'Local commands keep working meanwhile: help, cat skills.md, whoami.',
+    rateLimitReady: '> ready: you can ask again',
+  },
+  [SITE_LOCALE.pt]: {
+    thinkingElapsed: '[ pensando {seconds}s ]',
+    escStop: '[ Esc ] parar',
+    stderrCommand: 'ask:',
+    timeoutName: 'timeout',
+    timeoutBody: 'o modelo ficou em silêncio por {seconds}s. A resposta parcial acima foi mantida.',
+    retry: '[ TENTAR DE NOVO ]',
+    retryLabel: 'Tentar de novo a última pergunta',
+    tryPrefix: 'tente:',
+    tryCommand: ShellCommand.Skills,
+    trySuffix: '(funciona offline) ou escreva para',
+    slowDown: '! vá com calma: {left} até a próxima pergunta',
+    minutesUnit: 'min',
+    secondsUnit: 's',
+    localCommands:
+      'Os comandos locais continuam funcionando enquanto isso: help, cat skills.md, whoami.',
+    rateLimitReady: '> pronto: você já pode perguntar de novo',
+  },
+};
 
 export const shellLoadingLabel: Record<SiteLocale, string> = {
   [SITE_LOCALE.en]: 'Loading interactive shell',

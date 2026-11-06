@@ -68,6 +68,25 @@
     color: var(--color-primary-400);
   }
 
+  .shell-stream-meta {
+    display: block;
+    color: var(--color-primary-400);
+  }
+
+  .shell-esc-hint {
+    color: var(--color-tertiary-400);
+  }
+
+  .shell-caret {
+    color: var(--color-primary-500);
+  }
+
+  @media (hover: none) {
+    .shell-esc-hint {
+      display: none;
+    }
+  }
+
   .shell-form {
     border-top: var(--border-width) solid var(--color-primary-quiet);
     flex-wrap: wrap;

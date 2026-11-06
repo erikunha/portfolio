@@ -3,7 +3,14 @@
 import { useCallback, useEffect, useId, useRef, useState } from 'react';
 import type { TerminalChrome } from '@/content/schemas';
 import SHELL_RESPONSES from '@/content/shell-commands';
-import { SHELL_LIMITS, ShellCommand, ShellLineKind, type ShellUi } from '@/content/shell-ui';
+import {
+  fillShellState,
+  SHELL_LIMITS,
+  ShellCommand,
+  ShellLineKind,
+  type ShellUi,
+  shellStates,
+} from '@/content/shell-ui';
 import type { SiteLocale } from '@/content/site-locale';
 import { useBreakpoint } from '@/lib/use-breakpoint.client';
 import { TerminalChromeBar } from '../TerminalChromeBar';
@@ -27,10 +34,24 @@ const Key = {
   Home: 'Home',
   End: 'End',
   Enter: 'Enter',
+  Escape: 'Escape',
 } as const;
 const SHELL_COMMAND_EVENT = 'shell-cmd-run';
 const COMPOSITION_KEYCODE = 229;
 const WINDOW_DOT_SIZE = 10;
+const THINKING_TICK_MS = 100;
+const MS_PER_SECOND = 1000;
+const STREAM_CARET = '█';
+
+function ThinkingLine({ template }: { template: string }) {
+  const [elapsedMs, setElapsedMs] = useState(0);
+  useEffect(() => {
+    const startedAt = Date.now();
+    const id = setInterval(() => setElapsedMs(Date.now() - startedAt), THINKING_TICK_MS);
+    return () => clearInterval(id);
+  }, []);
+  return fillShellState(template, { seconds: (elapsedMs / MS_PER_SECOND).toFixed(1) });
+}
 
 function LineText({ text, ui }: { text: string; ui: ShellUi }) {
   const at = text.indexOf(ui.email);
@@ -54,6 +75,7 @@ export function InteractiveShell({
   chrome: TerminalChrome;
 }) {
   const { isMobile } = useBreakpoint();
+  const states = shellStates[locale];
   const accuracyId = useId();
   const lineId = useRef(0);
   const nextId = useCallback(() => ++lineId.current, []);
@@ -164,7 +186,15 @@ export function InteractiveShell({
   );
 
   return (
-    <div className="interactive-shell">
+    // biome-ignore lint/a11y/noStaticElementInteractions: Escape bubbles from the focusable controls inside; the wrapper has no role, and scoping the stop key here keeps it out of a global keydown listener
+    <div
+      className="interactive-shell"
+      onKeyDown={(event) => {
+        if (event.key !== Key.Escape || event.nativeEvent.isComposing || !isActive()) return;
+        event.preventDefault();
+        stopStream();
+      }}
+    >
       <TerminalChromeBar
         chrome={chrome}
         className="shell-chrome"
@@ -196,7 +226,10 @@ export function InteractiveShell({
               aria-hidden="true"
               data-testid="shell-line-loading"
             >
-              {ui.aiLabel}: {ui.thinking}
+              <span className="shell-stream-meta">
+                <ThinkingLine template={states.thinkingElapsed} />
+              </span>
+              <span className="shell-stream-meta shell-esc-hint">{states.escStop}</span>
             </span>
           ) : (
             <span
@@ -219,6 +252,14 @@ export function InteractiveShell({
           <span className="shell-line shell-line-output" data-kind={ShellLineKind.Output}>
             <span className="shell-ai-label">{ui.aiLabel}: </span>
             {streamingText}
+            <span className="shell-caret" aria-hidden="true">
+              {STREAM_CARET}
+            </span>
+          </span>
+        )}
+        {streamingText !== null && (
+          <span className="shell-line shell-stream-meta shell-esc-hint" aria-hidden="true">
+            {states.escStop}
           </span>
         )}
       </div>
