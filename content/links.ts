@@ -1,5 +1,7 @@
-import { profileStack } from './profile';
+import { OPENS_IN_NEW_TAB } from './company-link';
+import { profile, profilePresentation, profileStack } from './profile';
 import { type LinksContent, LinksContentSchema } from './schemas';
+import { SITE_LOCALE } from './site-locale';
 import { social } from './social';
 
 const LINKS_STACK_SEPARATOR = ' · ';
@@ -9,21 +11,24 @@ export const linksContent: LinksContent = LinksContentSchema.parse({
   siteUrl: social.site,
   siteLabel: 'erikunha.dev',
   profile: {
-    name: 'Erik Cunha',
+    name: profile.displayName,
     avatar: '/images/erik-avatar.jpg',
     taglines: {
       pt: [
-        'Engenheiro de Software Sênior · Full Stack',
+        profilePresentation[SITE_LOCALE.pt].title,
         'AI Engineering na prática',
         'Carreira internacional para devs',
       ],
       en: [
-        'Senior Software Engineer · Full Stack',
+        profilePresentation[SITE_LOCALE.en].title,
         'AI engineering, hands-on',
         'Going global as a dev',
       ],
     },
-    host: { pt: 'Brasil · remoto (Raylu, Nova York)', en: 'Brazil · remote (Raylu, New York)' },
+    host: {
+      pt: `${profilePresentation[SITE_LOCALE.pt].country} · remoto (${profile.currentEmployer.name}, Nova York)`,
+      en: `${profilePresentation[SITE_LOCALE.en].country} · remote (${profile.currentEmployer.name}, New York)`,
+    },
     stack: profileStack.all.join(LINKS_STACK_SEPARATOR),
   },
   channel: {
@@ -117,7 +122,7 @@ export const linksContent: LinksContent = LinksContentSchema.parse({
     copyLink: { pt: 'copiar link', en: 'copy link' },
     copyDone: 'copied ✓',
     copyFailed: 'copy failed',
-    opensInNewTab: { pt: 'abre em nova aba', en: 'opens in a new tab' },
+    opensInNewTab: OPENS_IN_NEW_TAB,
     newBadge: { pt: 'novo', en: 'new' },
     langSwitchLabel: { pt: 'Idioma', en: 'Language' },
     feedUnavailable: {

@@ -1,11 +1,12 @@
 import { readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { describe, expect, it, vi } from 'vitest';
-import { companyLinkCopy } from '@/content/company-link';
+import { companyLinkCopy, OPENS_IN_NEW_TAB } from '@/content/company-link';
 import { errorsContent } from '@/content/errors';
 import { errorsClientContent } from '@/content/errors-client';
 import { footerContent } from '@/content/footer';
 import { gitLog } from '@/content/git-log';
+import { linksContent } from '@/content/links';
 import { LINKS_PATH } from '@/content/links.constants';
 import { measured } from '@/content/measured';
 import { HIRE_ACCESSIBLE_NAME, TOPBAR_NAV } from '@/content/nav';
@@ -22,6 +23,7 @@ import {
   YEARS_OF_EXPERIENCE,
 } from '@/content/profile';
 import { projectPresentation } from '@/content/projects';
+import { CompanyLinkCopySchema } from '@/content/schemas';
 import { SECTION_REGISTRY } from '@/content/section-registry';
 import { personSchema } from '@/content/seo';
 import SHELL_RESPONSES from '@/content/shell-commands';
@@ -125,6 +127,15 @@ describe('derived strings render exactly what they rendered before', () => {
     expect(gitLog[SITE_LOCALE.pt][0]?.body.join(' ')).toContain(
       'mais de 50 fundos com US$ 500B+ em ativos',
     );
+  });
+
+  it('phrases the new-tab notice once per locale on the links page too', () => {
+    for (const locale of LOCALES) {
+      expect(linksContent.copy.opensInNewTab[locale]).toBe(OPENS_IN_NEW_TAB[locale]);
+      expect(CompanyLinkCopySchema.parse(companyLinkCopy[locale]).disclosure).toBe(
+        `(${OPENS_IN_NEW_TAB[locale]})`,
+      );
+    }
   });
 
   it('keeps the disclosure wording', () => {
