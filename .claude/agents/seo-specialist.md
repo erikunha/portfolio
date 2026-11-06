@@ -186,7 +186,7 @@ Always prioritize sustainable, white-hat SEO strategies that improve user experi
 ## Portfolio project context
 
 - Lighthouse SEO gate: must = 100 — this is a non-negotiable CI gate; never regress it
-- OG image: the static `public/og.png`, referenced from `app/layout.tsx` metadata
+- OG image: the static `public/og.png`, referenced from the root metadata in `components/RootShell.tsx`
 - Sitemap: `app/sitemap.ts` lists the home page, the `/pt` twins, `/summary`, `/cv`, `/links` and the design-system routes, with pt-BR and EN language alternates
 - robots.txt: `public/robots.txt`
 - llms.txt: `public/llms.txt` — AI agent / LLM recruiter discovery format; keep up to date

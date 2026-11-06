@@ -87,7 +87,7 @@ flowchart LR
     retry --> resend
     psicron["/api/psi-refresh"] --> psi["Google PageSpeed Insights"]
     instr["instrumentation.ts"] -.flag-gated.-> lf["Langfuse (OTel)"]
-    layout["app/layout.tsx"] -.VERCEL=1.-> rum["Vercel Analytics + Speed Insights"]
+    layout["components/RootShell.tsx"] -.VERCEL=1.-> rum["Vercel Analytics + Speed Insights"]
 ```
 
 | Service                                          | Env vars                                           | Role                                                                                                                                                                                        | Failure mode                                                                                                                                                                                                                                                                                                                                                                                                            |

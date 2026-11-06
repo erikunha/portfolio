@@ -49,12 +49,12 @@ These live at the repo root and remain authoritative. This knowledge base **rout
 ```
 portfolio/
 ├── app/                  Next.js App Router: routes, layouts, API handlers, design-system MDX
-│   ├── page.tsx          the single-page composition root (RSC)
-│   ├── layout.tsx        root layout: fonts, JSON-LD, motion bootstrap, Vercel RUM
+│   ├── (en)/             English routes and their root layout (html lang en-US); page.tsx is the composition root (RSC)
+│   │   └── design-system/   MDX docs site for the design system
+│   ├── (pt)/             pt-BR routes and their root layout (html lang pt-BR)
 │   ├── api/              11 route handlers (ask, contact, healthz, psi-refresh, mcp, ...)
-│   ├── css/              Tailwind v4 entry + @theme tokens + base/crt/animations/components layers
-│   └── design-system/    MDX docs site for the design system
-├── components/           sections/ (RSC sections and nested content) · client/ (islands) · responsive/ (chrome) · AppShell · ErrorBoundary
+│   └── css/              Tailwind v4 entry + @theme tokens + base/crt/animations/components layers
+├── components/           sections/ (RSC sections and nested content) · client/ (islands) · responsive/ (chrome) · AppShell · ErrorBoundary · RootShell (fonts, JSON-LD, motion bootstrap, Vercel RUM shared by both root layouts)
 ├── design-system/        8 reusable primitives (Badge, Button, ...) + cx util
 ├── content/              typed content modules + central Zod schema registry + eval corpus
 ├── lib/                  BFF/server core: env, defineHandler, rate-limit, ask/*, telemetry, integrations

@@ -6,16 +6,25 @@
 
 ```mermaid
 flowchart TD
-    layout["app/layout.tsx (RootLayout, RSC)<br/>fonts · JSON-LD · motion bootstrap · Vercel RUM"]
-    layout --> home["/ and /pt -> components/SiteHome.tsx (RSC, SSG+PPR)"]
-    layout --> cv["/cv -> app/cv/page.tsx"]
-    layout --> summary["/summary -> app/summary/page.tsx"]
-    layout --> links["/links · /links/en -> localized RSC + cached YouTube feed"]
+    shell["components/RootShell.tsx (RSC)<br/>fonts · JSON-LD · motion bootstrap · Vercel RUM"]
+    layout["app/(en)/layout.tsx · html lang en-US"]
+    layoutPt["app/(pt)/layout.tsx · html lang pt-BR"]
+    shell --> layout
+    shell --> layoutPt
+    layout --> home["/ -> components/SiteHome.tsx (RSC, SSG+PPR)"]
+    layoutPt --> homePt["/pt -> components/SiteHome.tsx (RSC, SSG+PPR)"]
+    layout --> cv["/cv -> app/(en)/cv/page.tsx"]
+    layout --> summary["/summary -> app/(en)/summary/page.tsx"]
+    layoutPt --> ptReading["/pt/cv · /pt/summary -> app/(pt)/pt/"]
+    layout --> linksEn["/links/en -> localized RSC + cached YouTube feed"]
+    layoutPt --> linksPt["/links -> localized RSC + cached YouTube feed"]
     layout --> errors["error.tsx -> route error recovery"]
-    globalError["global-error.tsx -> replaces RootLayout on root failure"]
-    layout --> ds["/design-system -> design-system/layout.tsx"]
-    layout --> nf["/* (404) -> app/not-found.tsx"]
-    layout --> sm["/sitemap.xml -> app/sitemap.ts"]
+    layoutPt --> errorsPt["error.tsx -> route error recovery"]
+    globalError["global-error.tsx -> replaces the root layout on root failure"]
+    layout --> ds["/design-system -> app/(en)/design-system/layout.tsx"]
+    layout --> nf["unmatched address (404) -> app/(en)/[...missing]/not-found.tsx"]
+    layoutPt --> nfPt["unmatched /pt address (404) -> app/(pt)/pt/[...missing]/not-found.tsx"]
+    app["app/sitemap.ts"] --> sm["/sitemap.xml"]
     ds --> ds1["/design-system (page.mdx)"]
     ds1 --> toc["OnThisPage: sections and principles links"]
     ds1 --> opinion["DesignSystemOpinion: docs-placement DS take"]
@@ -36,10 +45,10 @@ flowchart TD
       api9["POST /api/mcp (stateless handler; POST body limit 4096 bytes)"]
       api10["GET /api/contact-retry (daily cron)"]
     end
-    layout -.serves.-> api
+    shell -.serves.-> api
 ```
 
-The user-facing routes are `/`, `/summary`, `/cv`, `/links`, `/links/en` and the pt-BR twins `/pt`, `/pt/cv` and `/pt/summary`, alongside the design-system docs, metadata routes and API cluster. Home sections use the client `ErrorBoundary` component. App Router failures also have `app/error.tsx` and `app/global-error.tsx`; there is no `loading.tsx`/`template.tsx`.
+The user-facing routes are `/`, `/summary`, `/cv`, `/links`, `/links/en` and the pt-BR twins `/pt`, `/pt/cv` and `/pt/summary`, alongside the design-system docs, metadata routes and API cluster. Home sections use the client `ErrorBoundary` component. The English and pt-BR routes live in two route groups, `app/(en)` and `app/(pt)`, each with its own root layout that sets `<html lang>` and renders `components/RootShell.tsx`. A navigation between the groups, such as the language switch, is a full document load. App Router failures also have `app/(en)/error.tsx`, `app/(pt)/error.tsx` and `app/global-error.tsx`; there is no `loading.tsx`/`template.tsx`.
 
 ## Terminal sections and navigation
 

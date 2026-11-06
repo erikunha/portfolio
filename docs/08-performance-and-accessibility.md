@@ -31,7 +31,7 @@ flowchart LR
 ```
 
 Key levers (all verifiable in code):
-- **Static-first.** `components/SiteHome.tsx` composes RSC sections for `app/page.tsx` and `app/pt/page.tsx`; their code/data never ship. Only `AppShell` chrome + named islands hydrate.
+- **Static-first.** `components/SiteHome.tsx` composes RSC sections for `app/(en)/page.tsx` and `app/(pt)/pt/page.tsx`; their code/data never ship. Only `AppShell` chrome + named islands hydrate.
 - **Shared Projects rendering.** Nine cards and six attached receipts render as one static RSC tree. Desktop and mobile use the same copy and stats; CSS controls the column count. Projects has no user-agent read or variant swap.
 - **Hero outside Suspense.** The LCP element is in the prerendered shell, never gated on a dynamic boundary.
 - **Pre-paint motion bootstrap.** An inline `<script>` in `layout.tsx` sets `body[data-motion]` from `localStorage`/OS pref before first paint, so the initial motion preference does not wait for hydration.
