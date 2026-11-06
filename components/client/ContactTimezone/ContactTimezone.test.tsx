@@ -7,6 +7,7 @@ import { contactCopy, contactHoursPhrase, fillCopy } from '@/content/contact-cop
 import { SITE_LOCALE } from '@/content/site-locale';
 import { messageStore } from '../ContactForm/messageStore';
 import { ContactTimezone } from './ContactTimezone.client';
+import { ContactTimezoneStatic } from './ContactTimezoneStatic';
 
 const detected = vi.hoisted(() => ({ zone: 'Europe/Berlin' }));
 
@@ -673,5 +674,64 @@ describe('ContactTimezone reduced motion', () => {
       );
       expect(declValue(rules[0], 'animation')).toBe('none');
     }
+  });
+});
+
+describe.each(Object.values(SITE_LOCALE))('ascii spinner on the static panel (%s)', (locale) => {
+  const { timezone } = contactCopy[locale];
+  const stylesheet = parse(readComponentsCss());
+
+  function renderStatic(rows: readonly string[] = []) {
+    return render(<ContactTimezoneStatic loadingLabel={timezone.loading} placeholderRows={rows} />);
+  }
+
+  it('says it is syncing clocks, in one status line, with the four glyphs hidden from readers', () => {
+    const { container } = renderStatic();
+
+    const spin = container.querySelector('[data-testid="ctz-spin"]') as HTMLElement;
+    expect(spin.getAttribute('aria-hidden')).toBe('true');
+    const frames = Array.from(spin.querySelectorAll('.ctz-spin-frame')).map(
+      (frame) => frame.textContent,
+    );
+    expect(frames).toEqual(['|', '/', '-', '\\']);
+    expect(spin.textContent?.startsWith('[ ')).toBe(true);
+    expect(spin.textContent?.endsWith(' ]')).toBe(true);
+    const status = screen.getByRole('status');
+    expect(status.textContent).toBe(timezone.loading);
+    expect(timezone.loading).toBe(
+      locale === SITE_LOCALE.pt
+        ? 'sincronizando relógios com seu fuso horário'
+        : 'syncing clocks with your timezone',
+    );
+  });
+
+  it('keeps Erik and the visitor as dashed placeholder rows under the line', () => {
+    const rows = [
+      fillCopy(timezone.map.erikLabel, { code: 'SAO' }).concat(' --:--'),
+      fillCopy(timezone.map.youLabel, { code: '---' }).concat(' --:--'),
+    ];
+    const { container } = renderStatic(rows);
+
+    const shown = Array.from(container.querySelectorAll('.ctz-sync-row')).map(
+      (row) => row.textContent,
+    );
+    expect(shown).toEqual(rows);
+    expect(shown[1]).toContain('---');
+  });
+
+  it('freezes on the first glyph under reduced motion and the motion toggle', () => {
+    // behavioral-test-allow: motion is stylesheet-only and jsdom cannot evaluate a media query
+    const media = rulesInMedia(stylesheet, /prefers-reduced-motion: reduce/, '.ctz-spin-frame');
+    const toggle = rulesWithSelector(stylesheet, 'body[data-motion="reduce"] .ctz-spin-frame');
+
+    expect(declValue(media[0], 'animation')).toBe('none');
+    expect(declValue(toggle[0], 'animation')).toBe('none');
+  });
+
+  it('steps through the glyphs instead of fading between them', () => {
+    // behavioral-test-allow: motion is stylesheet-only and jsdom cannot evaluate keyframes
+    const [frame] = rulesWithSelector(stylesheet, '.ctz-spin-frame');
+
+    expect(declValue(frame, 'animation')).toMatch(/steps\(1/);
   });
 });

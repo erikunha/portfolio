@@ -102,7 +102,9 @@ const contactCopyFor = (locale: SiteLocale): ContactContent => {
     timezone: {
       title: 'DATE --TZ ~/OVERLAP',
       marker: '▌',
-      loading: pt ? 'carregando horário local…' : 'loading local time…',
+      loading: pt
+        ? 'sincronizando relógios com seu fuso horário'
+        : 'syncing clocks with your timezone',
       status: {
         online: pt ? 'ONLINE AGORA · deve responder hoje' : 'ONLINE NOW · likely to reply today',
         offHours: pt
