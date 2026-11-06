@@ -24,8 +24,7 @@ export const linksContent: LinksContent = LinksContentSchema.parse({
       ],
     },
     host: { pt: 'Brasil · remoto (Raylu, Nova York)', en: 'Brazil · remote (Raylu, New York)' },
-    stack: profileStack.short.join(LINKS_STACK_SEPARATOR),
-    status: { pt: 'primeiros vídeos chegando', en: 'first videos landing soon' },
+    stack: profileStack.all.join(LINKS_STACK_SEPARATOR),
   },
   channel: {
     id: 'UCZ1P4Pqpo-j_uAHaIc_pGrA',
@@ -94,7 +93,6 @@ export const linksContent: LinksContent = LinksContentSchema.parse({
     whoami: 'whoami',
     hostLabel: { pt: 'host', en: 'host' },
     stackLabel: { pt: 'stack', en: 'stack' },
-    statusLabel: { pt: 'status', en: 'status' },
     channelHeading: { pt: 'o canal', en: 'the channel' },
     videosWord: { pt: 'vídeos', en: 'videos' },
     viewsWord: { pt: 'visualizações', en: 'views' },

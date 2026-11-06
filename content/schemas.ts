@@ -878,7 +878,6 @@ export const LinksProfileSchema = z.object({
   }),
   host: LocalizedTextSchema,
   stack: z.string().min(1),
-  status: LocalizedTextSchema,
 });
 
 export const LinksChannelSchema = z.object({
@@ -924,7 +923,6 @@ export const LinksCopySchema = z.object({
   whoami: z.string().min(1),
   hostLabel: LocalizedTextSchema,
   stackLabel: LocalizedTextSchema,
-  statusLabel: LocalizedTextSchema,
   channelHeading: LocalizedTextSchema,
   videosWord: LocalizedTextSchema,
   viewsWord: LocalizedTextSchema,

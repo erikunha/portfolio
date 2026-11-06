@@ -2,7 +2,7 @@ import { render } from '@testing-library/react';
 import { renderToString } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
 import { LINKS_LOCALE } from '@/content/links.constants';
-import { profile } from '@/content/profile';
+import { profile, profileStack } from '@/content/profile';
 import { IdentityCard } from './IdentityCard';
 
 vi.mock('next/image', () => ({
@@ -27,11 +27,28 @@ describe('IdentityCard', () => {
     expect(container.querySelector('.links-avatar img')?.getAttribute('alt')).toBe('');
   });
 
-  it('renders the name and the three identity rows', () => {
+  it('renders the name and the two identity rows, host and stack', () => {
     const { container } = render(<IdentityCard locale={LINKS_LOCALE.pt} />);
     expect(container.textContent).toContain('Erik Cunha');
-    expect(container.querySelectorAll('dt')).toHaveLength(3);
-    expect(container.querySelectorAll('dd')).toHaveLength(3);
+    expect([...container.querySelectorAll('dt')].map((dt) => dt.textContent)).toEqual([
+      'host',
+      'stack',
+    ]);
+    expect(container.querySelectorAll('dd')).toHaveLength(2);
+  });
+
+  it('lists the full profile stack, every item, in profile order', () => {
+    const { container } = render(<IdentityCard locale={LINKS_LOCALE.en} />);
+    const stack = container.querySelectorAll('dd')[1]?.textContent;
+    expect(stack).toBe(profileStack.all.join(' · '));
+  });
+
+  it('drops the launch status now that the channel has uploads', () => {
+    for (const locale of [LINKS_LOCALE.pt, LINKS_LOCALE.en]) {
+      const { container } = render(<IdentityCard locale={locale} />);
+      expect(container.textContent).not.toMatch(/chegando|landing soon/);
+      expect(container.querySelector('.badge-dot')).toBeNull();
+    }
   });
 
   it('links the current employer in the host row for both locales', () => {

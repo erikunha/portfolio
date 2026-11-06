@@ -14,10 +14,8 @@ describe('stack and featured projects have one source', () => {
     for (const item of profileStack.all) expect(profile.technologyLine).toContain(item);
   });
 
-  it('the /links stack line is built from the profile stack', () => {
-    for (const item of linksContent.profile.stack.split(' · ')) {
-      expect(profileStack.all, `${item} must come from the profile`).toContain(item);
-    }
+  it('the /links stack line is the full profile stack, in profile order', () => {
+    expect(linksContent.profile.stack.split(' · ')).toEqual(profileStack.all);
   });
 
   it.each(SITE_LOCALES)(

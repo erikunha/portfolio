@@ -54,14 +54,11 @@ const profileFields = ProfileSchema.parse({
 });
 
 const STACK_ITEM_SEPARATOR = ', ';
-const LINKS_STACK_CORE = 4;
-const LINKS_STACK_AI = 1;
 const stackItems = profileFields.stackLine.split(STACK_ITEM_SEPARATOR);
 const aiItems = profileFields.aiLine.split(STACK_ITEM_SEPARATOR);
 
 export const profileStack = {
   all: [...stackItems, ...aiItems],
-  short: [...stackItems.slice(0, LINKS_STACK_CORE), ...aiItems.slice(0, LINKS_STACK_AI)],
 };
 
 export const profile: Profile = {
