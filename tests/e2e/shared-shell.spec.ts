@@ -1,8 +1,17 @@
 import { expect, test } from '@playwright/test';
 import { brandByLocale } from '@/content/brand';
+import { LINKS_PATH } from '@/content/links.constants';
+import { siteNavChrome } from '@/content/navigation';
+import { SITE_LOCALE, type SiteLocale } from '@/content/site-locale';
 import { horizontalOverflow, VIEWPORTS } from './_helpers/geometry';
 
-const SHELL_PATHS = ['/', '/design-system', '/design-system/tokens', '/links', '/links/en'];
+const SHELL_PATHS: readonly { path: string; locale: SiteLocale }[] = [
+  { path: '/', locale: SITE_LOCALE.en },
+  { path: '/design-system', locale: SITE_LOCALE.en },
+  { path: '/design-system/tokens', locale: SITE_LOCALE.en },
+  { path: LINKS_PATH.pt, locale: SITE_LOCALE.pt },
+  { path: LINKS_PATH.en, locale: SITE_LOCALE.en },
+];
 const OVERFLOW_PATHS = [
   '/',
   '/design-system',
@@ -19,23 +28,28 @@ const DRAWER = '#section-drawer';
 const DS_DRAWER_NAV = 'Design system menu';
 
 test.describe('one shell on every page', () => {
-  for (const path of SHELL_PATHS) {
+  for (const { path, locale } of SHELL_PATHS) {
+    const chrome = siteNavChrome(locale);
+    const menuName = chrome.navigation.copy.openMenu;
+    const homeName = brandByLocale[locale].accessibleName;
     test(`${path} carries the home topbar at desktop`, async ({ page }) => {
       await page.setViewportSize(DESKTOP);
       await page.goto(path);
       const topbar = page.locator('.desktop-topbar');
       await expect(topbar).toBeVisible();
-      const homeLink = topbar.getByRole('link', { name: brandByLocale.en.accessibleName });
+      const homeLink = topbar.getByRole('link', { name: homeName });
       await expect(homeLink).toBeVisible();
       await expect(topbar.locator('.window-chrome, [class*="window-chrome"]')).toHaveCount(0);
-      const menu = topbar.getByRole('button', { name: MENU_NAME });
+      const menu = topbar.getByRole('button', { name: menuName });
       await expect(menu).toBeVisible();
       const [iconBox, menuBox] = await Promise.all([homeLink.boundingBox(), menu.boundingBox()]);
       expect(
         iconBox?.x ?? Number.NEGATIVE_INFINITY,
         'the brand icon sits right of the menu trigger, at the far end of the bar',
       ).toBeGreaterThan(menuBox?.x ?? 0);
-      await expect(topbar.getByRole('link', { name: /hire/i })).toBeVisible();
+      await expect(
+        topbar.getByRole('link', { name: chrome.topbarHire.accessibleName }),
+      ).toBeVisible();
       await expect(page.locator('.site-bar')).toHaveCount(0);
     });
 
@@ -44,9 +58,11 @@ test.describe('one shell on every page', () => {
       await page.goto(path);
       const bar = page.locator('.mobile-title-bar');
       await expect(bar).toBeVisible();
-      await expect(bar.getByRole('link', { name: brandByLocale.en.accessibleName })).toBeVisible();
-      await expect(bar.getByRole('button', { name: MENU_NAME })).toBeVisible();
-      await expect(page.getByRole('navigation', { name: 'primary' })).toBeVisible();
+      await expect(bar.getByRole('link', { name: homeName })).toBeVisible();
+      await expect(bar.getByRole('button', { name: menuName })).toBeVisible();
+      await expect(
+        page.getByRole('navigation', { name: chrome.navigation.copy.dockLabel }),
+      ).toBeVisible();
       await expect(page.locator('main#main-content')).toHaveCount(1);
     });
   }
@@ -55,7 +71,7 @@ test.describe('one shell on every page', () => {
     page,
   }) => {
     await page.setViewportSize(DESKTOP);
-    await page.goto('/links');
+    await page.goto(LINKS_PATH.en);
     await page.locator('.desktop-topbar').getByRole('button', { name: MENU_NAME }).click();
     const drawer = page.locator(DRAWER);
     await expect(drawer).toHaveClass(/is-open/);
