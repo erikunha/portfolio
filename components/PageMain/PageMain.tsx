@@ -1,6 +1,8 @@
 import type { ReactNode } from 'react';
 
-export const MAIN_CONTENT_ID = 'main-content';
+import { MAIN_CONTENT_ID } from '@/content/landmarks';
+
+export { MAIN_CONTENT_ID };
 
 const DEFAULT_CLASS = 'page-container page-main flex flex-col';
 

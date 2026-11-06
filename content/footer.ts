@@ -1,3 +1,4 @@
+import { MAIN_CONTENT_ID } from './landmarks';
 import { LINKS_PATH } from './links.constants';
 import { FooterContentSchema } from './schemas';
 import { localizedSectionLabel, SECTION_ID, type SectionId } from './section-registry';
@@ -5,7 +6,7 @@ import { localizedPath, SITE_LOCALE, type SiteLocale } from './site-locale';
 import { social } from './social';
 import { EXTERNAL_LINK_GLYPH } from './terminal-chrome';
 
-const HOME_HREF = '#main-content';
+const HOME_HREF = `#${MAIN_CONTENT_ID}`;
 const SECTION_HREF_PREFIX = '#';
 
 const sectionLink = (locale: SiteLocale, id: SectionId, href = `${SECTION_HREF_PREFIX}${id}`) => ({
