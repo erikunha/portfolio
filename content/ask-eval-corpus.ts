@@ -49,7 +49,7 @@ export const ASK_EVAL_CORPUS: AskEvalItem[] = AskEvalCorpusSchema.parse([
     id: 'fact-canon-medical',
     question: 'Did Erik work in healthcare?',
     expect:
-      'Yes: at Canon Medical Systems Brazil (2023-2025) on a mission-critical hospital operations platform built with Angular, Nx and Clean Architecture.',
+      'Yes: at Canon Medical Systems Brazil (2023-2025) on a mission-critical hospital operations platform built with Angular and Nx.',
     kind: 'factual',
   },
   {

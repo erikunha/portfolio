@@ -77,7 +77,6 @@ export const personSchema = {
     'SQL',
     'Rate Limiting Architecture',
     'Backend for Frontend (BFF)',
-    'Clean Architecture',
     'Nx Monorepo',
     'Component-Driven Architecture',
     'PCI-DSS Systems',

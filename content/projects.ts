@@ -60,8 +60,8 @@ const projectsFor = (locale: SiteLocale): Project[] => {
         company: 'Canon Medical Systems Brazil',
         kind: 'professional',
         description: pt
-          ? 'Plataforma de serviço de equipamentos hospitalares: ordens de serviço, agendamento de especialistas, visitas de campo, atualizações ao vivo. Clean Architecture.'
-          : 'Hospital equipment service platform: service orders, specialist scheduling, field visits, live updates. Clean Architecture.',
+          ? 'Plataforma de serviço de equipamentos hospitalares: ordens de serviço, agendamento de especialistas, visitas de campo, atualizações ao vivo.'
+          : 'Hospital equipment service platform: service orders, specialist scheduling, field visits, live updates.',
         stats: [
           { label: pt ? 'BUNDLE JS' : 'JS BUNDLE', value: '-33%' },
           { label: 'TTI', value: '-52%' },

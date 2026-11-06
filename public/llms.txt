@@ -61,7 +61,7 @@ Web Components · Vue.js · Ionic · SSR/SSG · Micro-Frontend Architecture
 Backend & APIs: Node.js · Express.js · REST APIs · WebSocket (STOMP/SockJS) ·
 Python · Backend for Frontend (BFF)
 
-Architecture: Clean Architecture · Nx Monorepo ·
+Architecture: Nx Monorepo ·
 Component-Driven Architecture · Reactive Architecture
 
 Cloud & DevOps: AWS (S3 · CloudFront · EC2 · CodePipeline · CodeBuild) ·
