@@ -85,7 +85,10 @@ describe('/api/log/forget endpoint', () => {
     vi.doMock('@/lib/rate-limit', () => ({
       getClientIp: vi.fn(() => '127.0.0.1'),
       getForgetLimit: vi.fn(() => ({ limit: vi.fn(async () => ({ success: true })) })),
-      getRedis: vi.fn(() => ({ del: redisDelMock })),
+      getRedis: vi.fn(() => ({
+        del: redisDelMock,
+        multi: () => ({ zrem: vi.fn(), hdel: vi.fn(), exec: vi.fn(async () => []) }),
+      })),
     }));
     vi.doMock('@/lib/ip-hash', () => ({ hashIp: vi.fn(async () => 'hashed-ip-test') }));
     vi.doMock('@/lib/log', () => ({
@@ -120,7 +123,7 @@ describe('/api/log/forget endpoint', () => {
     expect(deletedKeys.length).toBeGreaterThan(0);
     for (const key of deletedKeys) {
       expect(String(key)).toMatch(
-        /^ask:log:\d{4}-\d{2}-\d{2}:11111111-2222-4333-8444-555555555555$/,
+        /^(ask:log:\d{4}-\d{2}-\d{2}|contact:msg):11111111-2222-4333-8444-555555555555$/,
       );
     }
   });

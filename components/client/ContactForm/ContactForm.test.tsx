@@ -220,20 +220,23 @@ describe('contact form delivery states', () => {
     const container = await submitResponse({ ok: true, requestId: 'request-id' }, 200);
     const success = container.querySelector('[data-testid="contact-success"]');
     expect(success?.getAttribute('role')).toBe('status');
-    expect(success?.textContent).toContain('EXECUTE_SEND :: SUCCESS');
-    expect(success?.textContent).toContain('handshake initiated · expect reply within 48h');
+    expect(success?.textContent).toContain('✓ message delivered');
+    expect(success?.textContent).toContain(
+      'Reply within 48h. Keep this receipt if you want your message deleted later.',
+    );
   });
 
-  it('shows a receipt with the request id, a copy control and a prefilled deletion email', async () => {
+  it('shows a receipt with the full ref, the time, a copy control and a forget button', async () => {
     const ref = '7f3a9c2e-41b0-4d8e-9a77-3c51d0b2e8aa';
     const container = await submitResponse({ ok: true, requestId: ref }, 200);
-    const receipt = container.querySelector('[data-testid="contact-receipt"]');
-    expect(receipt?.textContent).toContain('ref');
-    expect(receipt?.textContent).toContain(ref);
-    expect(within(receipt as HTMLElement).getByRole('button', { name: /copy ref/i })).toBeTruthy();
-    const forget = within(receipt as HTMLElement).getByRole('link', { name: /request deletion/i });
-    expect(decodeURIComponent(forget.getAttribute('href') ?? '')).toContain(ref);
-    expect(forget.getAttribute('href')).toMatch(/^mailto:/);
+    const receipt = container.querySelector('[data-testid="contact-receipt"]') as HTMLElement;
+    expect(receipt.textContent).toContain('ref');
+    expect(receipt.querySelector('dd')?.textContent).toBe(ref);
+    expect(receipt.querySelector('dd')?.getAttribute('title')).toBe(ref);
+    expect(receipt.querySelector('time')?.textContent).toMatch(/\d{4}.*\d{2}:\d{2}/);
+    expect(within(receipt).getByRole('button', { name: /copy ref/i })).toBeTruthy();
+    expect(within(receipt).getByRole('button', { name: '[FORGET MESSAGE]' })).toBeTruthy();
+    expect(receipt.querySelector('a[href^="mailto:"]')).toBeNull();
   });
 
   it('shows the receipt in Portuguese on pt', async () => {
@@ -243,8 +246,11 @@ describe('contact form delivery states', () => {
       within(receipt as HTMLElement).getByRole('button', { name: /copiar ref/i }),
     ).toBeTruthy();
     expect(
-      within(receipt as HTMLElement).getByRole('link', { name: /pedir exclusão/i }),
+      within(receipt as HTMLElement).getByRole('button', { name: '[EXCLUIR MENSAGEM]' }),
     ).toBeTruthy();
+    expect(container.querySelector('[data-testid="contact-success"]')?.textContent).toContain(
+      '✓ mensagem entregue',
+    );
   });
 
   it('omits the receipt when the response carries no request id', async () => {
@@ -273,23 +279,56 @@ describe('contact form delivery states', () => {
     },
   );
 
-  it('announces queued without success and offers the canonical LinkedIn link', async () => {
+  it.each([
+    [
+      SITE_LOCALE.en,
+      '~ saved, delivery pending',
+      'Your message is stored. Email delivery failed and is retried once a day, up to 3 times.',
+      'Faster: message on LinkedIn ↗',
+    ],
+    [
+      SITE_LOCALE.pt,
+      '~ salvo, entrega pendente',
+      'Sua mensagem foi salva. A entrega por email falhou e é tentada de novo uma vez por dia, até 3 vezes.',
+      'Mais rápido: mensagem no LinkedIn ↗',
+    ],
+  ])(
+    'announces queued without success, with the real retry schedule, LinkedIn and the ref (%s)',
+    async (locale, title, message, faster) => {
+      const ref = '7f3a9c2e-41b0-4d8e-9a77-3c51d0b2e8aa';
+      const container = await submitResponse(
+        { ok: false, requestId: ref, error: { code: 'queued', message: 'Saved for retry' } },
+        202,
+        locale,
+      );
+      expect(container.querySelector('[data-testid="contact-success"]')).toBeNull();
+      const queued = container.querySelector('[data-testid="contact-queued"]') as HTMLElement;
+      expect(queued.getAttribute('role')).toBe('status');
+      expect(queued.querySelector('[role="alert"]')).toBeNull();
+      expect(queued.textContent).toContain(title);
+      expect(queued.textContent).toContain(message);
+      expect(queued.textContent).toContain(faster);
+      expect(queued.textContent).not.toContain('✓');
+      const link = queued.querySelector('a') as HTMLAnchorElement;
+      expect(link.getAttribute('href')).toBe(
+        linksContent.pills.find((pill) => pill.id === 'linkedin')?.href,
+      );
+      expect(link.getAttribute('target')).toBe('_blank');
+      expect(link.getAttribute('rel')).toContain('noopener');
+      const refLine = queued.querySelector('[data-testid="contact-queued-ref"]');
+      expect(refLine?.textContent).toBe(`ref ${ref}`);
+      expect(refLine?.getAttribute('title')).toBe(ref);
+      expect(container.querySelector('form')).toBeNull();
+    },
+  );
+
+  it('omits the ref line when the queued response carries no request id', async () => {
     const container = await submitResponse(
-      { ok: false, requestId: 'request-id', error: { code: 'queued', message: 'Saved for retry' } },
+      { ok: false, error: { code: 'queued', message: 'Saved for retry' } },
       202,
     );
-    expect(container.querySelector('[data-testid="contact-success"]')).toBeNull();
-    const queued = container.querySelector('[data-testid="contact-queued"]');
-    expect(queued?.getAttribute('role')).toBe('status');
-    expect(queued?.textContent).toContain('saved, not delivered yet');
-    expect(queued?.textContent).toContain('delivery is retried automatically');
-    expect(queued?.textContent).toContain('for a faster reply use LinkedIn');
-    const link = queued?.querySelector('a');
-    expect(link?.textContent).toBe('LinkedIn');
-    expect(link?.getAttribute('href')).toBe(
-      linksContent.pills.find((pill) => pill.id === 'linkedin')?.href,
-    );
-    expect(container.querySelector('form')).toBeNull();
+    expect(container.querySelector('[data-testid="contact-queued"]')).not.toBeNull();
+    expect(container.querySelector('[data-testid="contact-queued-ref"]')).toBeNull();
   });
 
   it.each([
@@ -702,7 +741,7 @@ describe('contact validation and retention', () => {
       const descriptions = input.getAttribute('aria-describedby')?.split(' ') ?? [];
       expect(
         descriptions.some((description) =>
-          document.getElementById(description)?.textContent?.includes('error:'),
+          document.getElementById(description)?.textContent?.startsWith('> '),
         ),
       ).toBe(true);
       fireEvent.click(link);
@@ -943,8 +982,8 @@ describe('contact cross-review fixes', () => {
     const summary = screen.getByRole('alert');
     const labelId = summary.getAttribute('aria-labelledby') as string;
     expect(labelId).toBeTruthy();
-    expect(document.getElementById(labelId)?.textContent).toBe('3 fields need attention:');
-    expect(screen.getByRole('alert', { name: '3 fields need attention:' })).toBe(summary);
+    expect(document.getElementById(labelId)?.textContent).toBe('! 3 fields need fixing:');
+    expect(screen.getByRole('alert', { name: '! 3 fields need fixing:' })).toBe(summary);
   });
 
   it('summarises the invalid fields on one line with a link per field', () => {
@@ -963,7 +1002,7 @@ describe('contact cross-review fixes', () => {
       'email',
       'message',
     ]);
-    expect(summary.textContent).toContain('3 fields need attention:');
+    expect(summary.textContent).toContain('! 3 fields need fixing:');
   });
 
   it('names the summary when only a request error shows', async () => {
@@ -1204,6 +1243,320 @@ describe('contact form locale header and server message', () => {
     );
     expect(container.querySelector('[role="alert"]')?.textContent).toContain(
       contactCopy[SITE_LOCALE.pt].errors.requestFailed,
+    );
+  });
+});
+
+describe.each(Object.values(SITE_LOCALE))('contact form submitting lock (%s)', (locale) => {
+  let mounted: MountedClient;
+  const copy = contactCopy[locale];
+
+  afterEach(() => {
+    mounted?.unmount();
+    vi.unstubAllGlobals();
+  });
+
+  async function submitPending() {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(() => new Promise<Response>(() => undefined)),
+    );
+    mounted = await mountClient(
+      createElement(ContactForm, { copy, chrome: contactChrome[locale] }),
+    );
+    const { container } = mounted;
+    fillValidForm(container);
+    await act(async () => {
+      container
+        .querySelector('form')
+        ?.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    });
+    await flushMicrotasks();
+    return container;
+  }
+
+  it('labels the busy button with the sending verb and keeps it as wide as the longest label', async () => {
+    const container = await submitPending();
+    const button = container.querySelector<HTMLButtonElement>('button[type="submit"]');
+    const expected = locale === SITE_LOCALE.pt ? 'ENVIANDO...' : 'SENDING...';
+
+    expect(button?.textContent).toBe(expected);
+    expect(copy.form.submitting).toBe(expected);
+    const reserve = button?.getAttribute('data-reserve') ?? '';
+    expect(reserve.length).toBeGreaterThanOrEqual(copy.form.submit.length);
+    expect(reserve.length).toBeGreaterThanOrEqual(copy.form.submitting.length);
+    expect([copy.form.submit, copy.form.submitting]).toContain(reserve);
+  });
+
+  it('locks the fields read-only while the request is pending and keeps the typed text', async () => {
+    const container = await submitPending();
+    const fields = container.querySelectorAll<HTMLInputElement | HTMLTextAreaElement>(
+      'input[name="name"], input[name="email"], textarea',
+    );
+
+    expect(fields).toHaveLength(3);
+    for (const field of fields) {
+      expect(field.readOnly).toBe(true);
+      expect(field.value).not.toBe('');
+    }
+  });
+
+  it('unlocks the fields once the send fails', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => Response.json({ ok: false }, { status: 500 })),
+    );
+    mounted = await mountClient(
+      createElement(ContactForm, { copy, chrome: contactChrome[locale] }),
+    );
+    const { container } = mounted;
+    fillValidForm(container);
+    await act(async () => {
+      container
+        .querySelector('form')
+        ?.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    });
+    await flushMicrotasks();
+
+    const name = container.querySelector<HTMLInputElement>('input[name="name"]');
+    expect(name?.readOnly).toBe(false);
+    expect(name?.value).toBe('Ada');
+  });
+});
+
+describe.each([
+  [SITE_LOCALE.en, 'fields need fixing', 'you@company.com'],
+  [SITE_LOCALE.pt, 'campos precisam de ajuste', 'voce@empresa.com'],
+])('contact field errors (%s)', (locale, summaryTail, example) => {
+  const copy = contactCopy[locale];
+
+  function errorOf(input: HTMLElement) {
+    const id = input
+      .getAttribute('aria-describedby')
+      ?.split(' ')
+      .find((part) => part.endsWith('-error'));
+    return document.getElementById(id ?? '')?.textContent;
+  }
+
+  function submitWithEmail(email: string) {
+    vi.stubGlobal('fetch', vi.fn());
+    const { container } = render(<ContactForm copy={copy} chrome={contactChrome[locale]} />);
+    fillValidForm(container);
+    const input = container.querySelector('input[name="email"]') as HTMLInputElement;
+    fireEvent.change(input, { target: { value: email } });
+    fireEvent.submit(input.form as HTMLFormElement);
+    return input;
+  }
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it('opens the summary with a bang and the count, in the page language', () => {
+    const { container } = render(<ContactForm copy={copy} chrome={contactChrome[locale]} />);
+    fireEvent.submit(container.querySelector('form') as HTMLFormElement);
+
+    const summary = screen.getByRole('alert');
+    expect(summary.textContent?.startsWith('! 3 ')).toBe(true);
+    expect(summary.textContent).toContain(summaryTail);
+    expect(document.activeElement).toBe(summary);
+  });
+
+  it('says what is missing from an email that has an @ but no domain', () => {
+    const input = submitWithEmail('erik@');
+
+    expect(input.getAttribute('aria-invalid')).toBe('true');
+    expect(input.value).toBe('erik@');
+    expect(errorOf(input)).toBe(
+      locale === SITE_LOCALE.pt
+        ? `> falta o domínio, por exemplo ${example}`
+        : `> missing the domain, for example ${example}`,
+    );
+  });
+
+  it('says the @ is missing when an email has none', () => {
+    const input = submitWithEmail('erik.example.com');
+
+    expect(errorOf(input)).toBe(
+      locale === SITE_LOCALE.pt
+        ? `> falta o @, por exemplo ${example}`
+        : `> missing the @, for example ${example}`,
+    );
+  });
+
+  it('asks for an email when the field is empty', () => {
+    const input = submitWithEmail('');
+
+    expect(errorOf(input)).toBe(
+      locale === SITE_LOCALE.pt
+        ? `> informe seu email, por exemplo ${example}`
+        : `> add your email, for example ${example}`,
+    );
+  });
+
+  it('falls back to a format hint for any other bad email', () => {
+    const input = submitWithEmail('name @site.com');
+
+    expect(errorOf(input)).toBe(
+      locale === SITE_LOCALE.pt
+        ? `> confira o formato, por exemplo ${example}`
+        : `> check the format, for example ${example}`,
+    );
+  });
+
+  it('tells a short message how many characters it has and needs, and keeps the text', () => {
+    vi.stubGlobal('fetch', vi.fn());
+    const { container } = render(<ContactForm copy={copy} chrome={contactChrome[locale]} />);
+    fillValidForm(container);
+    const message = container.querySelector('textarea') as HTMLTextAreaElement;
+    fireEvent.change(message, { target: { value: '  oi  ' } });
+    fireEvent.submit(message.form as HTMLFormElement);
+
+    expect(errorOf(message)).toBe(
+      locale === SITE_LOCALE.pt
+        ? '> escreva ao menos 10 caracteres, você tem 2'
+        : '> write at least 10 characters, you have 2',
+    );
+    expect(message.value).toBe('  oi  ');
+  });
+
+  it('asks for a name when it is blank and caps a long one', () => {
+    vi.stubGlobal('fetch', vi.fn());
+    const { container } = render(<ContactForm copy={copy} chrome={contactChrome[locale]} />);
+    fillValidForm(container);
+    const name = container.querySelector('input[name="name"]') as HTMLInputElement;
+    fireEvent.change(name, { target: { value: '   ' } });
+    fireEvent.submit(name.form as HTMLFormElement);
+    expect(errorOf(name)).toBe(
+      locale === SITE_LOCALE.pt ? '> informe seu nome' : '> add your name',
+    );
+
+    fireEvent.change(name, { target: { value: 'A'.repeat(121) } });
+    expect(errorOf(name)).toBe(
+      locale === SITE_LOCALE.pt
+        ? '> use no máximo 120 caracteres, você tem 121'
+        : '> use at most 120 characters, you have 121',
+    );
+  });
+});
+
+describe.each(Object.values(SITE_LOCALE))('contact receipt forget (%s)', (locale) => {
+  const REF = '7f3a9c2e-41b0-4d8e-9a77-3c51d0b2e8aa';
+  const text = contactCopy[locale].success.receipt.forget;
+  let mounted: MountedClient;
+  let forgetResponses: Array<() => Promise<Response>>;
+  let forgetCalls: Array<{ url: string; body: unknown }>;
+
+  afterEach(() => {
+    mounted?.unmount();
+    vi.unstubAllGlobals();
+  });
+
+  async function deliver() {
+    forgetResponses = [];
+    forgetCalls = [];
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (url: string, init?: RequestInit) => {
+        if (url === '/api/contact') return Response.json({ ok: true, requestId: REF });
+        forgetCalls.push({ url, body: JSON.parse(String(init?.body)) });
+        const next = forgetResponses.shift();
+        return next ? next() : Response.json({ ok: true });
+      }),
+    );
+    mounted = await mountClient(
+      createElement(ContactForm, {
+        copy: contactCopy[locale],
+        chrome: contactChrome[locale],
+      }),
+    );
+    fillValidForm(mounted.container);
+    await act(async () => {
+      mounted.container
+        .querySelector('form')
+        ?.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    });
+    await flushMicrotasks();
+    return mounted.container;
+  }
+
+  const forgetButton = (container: HTMLElement) =>
+    within(container).queryByRole('button', { name: text.label });
+
+  it('posts the ref to the forget endpoint and confirms the deletion', async () => {
+    const container = await deliver();
+    await act(async () => {
+      fireEvent.click(forgetButton(container) as HTMLElement);
+    });
+    await flushMicrotasks();
+
+    expect(forgetCalls).toEqual([{ url: '/api/log/forget', body: { requestId: REF } }]);
+    expect(forgetButton(container)).toBeNull();
+    expect(container.querySelector('[data-testid="contact-forget-status"]')?.textContent).toBe(
+      text.done,
+    );
+  });
+
+  it('shows the busy label once and sends a single request on repeated clicks', async () => {
+    const container = await deliver();
+    let release: (response: Response) => void = () => undefined;
+    forgetResponses.push(() => new Promise<Response>((resolve) => (release = resolve)));
+    const button = forgetButton(container) as HTMLElement;
+    await act(async () => {
+      fireEvent.click(button);
+      fireEvent.click(button);
+    });
+
+    expect(button.textContent).toBe(text.pending);
+    expect(button.getAttribute('aria-disabled')).toBe('true');
+    expect(forgetCalls).toHaveLength(1);
+    await act(async () => {
+      release(Response.json({ ok: true }));
+    });
+    await flushMicrotasks();
+  });
+
+  it('reports a failed deletion with the email fallback and lets the visitor retry', async () => {
+    const container = await deliver();
+    forgetResponses.push(async () =>
+      Response.json({ ok: false, error: { code: 'storage_unavailable' } }, { status: 503 }),
+    );
+    await act(async () => {
+      fireEvent.click(forgetButton(container) as HTMLElement);
+    });
+    await flushMicrotasks();
+
+    const status = container.querySelector('[data-testid="contact-forget-status"]') as HTMLElement;
+    expect(status.textContent).toContain(text.failed);
+    expect(status.querySelector('a')?.getAttribute('href')).toMatch(/^mailto:/);
+    expect(decodeURIComponent(status.querySelector('a')?.getAttribute('href') ?? '')).toContain(
+      REF,
+    );
+    const retry = forgetButton(container) as HTMLElement;
+    expect(retry.getAttribute('aria-disabled')).not.toBe('true');
+
+    await act(async () => {
+      fireEvent.click(retry);
+    });
+    await flushMicrotasks();
+    expect(forgetCalls).toHaveLength(2);
+    expect(container.querySelector('[data-testid="contact-forget-status"]')?.textContent).toBe(
+      text.done,
+    );
+  });
+
+  it('treats a network error like a failed deletion', async () => {
+    const container = await deliver();
+    forgetResponses.push(async () => {
+      throw new Error('offline');
+    });
+    await act(async () => {
+      fireEvent.click(forgetButton(container) as HTMLElement);
+    });
+    await flushMicrotasks();
+
+    expect(container.querySelector('[data-testid="contact-forget-status"]')?.textContent).toContain(
+      text.failed,
     );
   });
 });

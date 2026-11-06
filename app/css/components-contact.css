@@ -2,9 +2,38 @@
   .contact-success {
     border: var(--border-width) solid var(--color-primary-500);
     padding: var(--spacing-6);
-    color: var(--color-primary-500);
-    text-align: center;
+    color: var(--color-text);
     background: linear-gradient(180deg, var(--color-glow-04), transparent);
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-2);
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .contact-success p {
+    margin: 0;
+    line-height: 1.6;
+  }
+
+  .contact-queued {
+    border-color: var(--color-primary-subtle);
+    background: none;
+  }
+
+  .contact-state-title {
+    color: var(--color-primary-500);
+    font-weight: bold;
+  }
+
+  .contact-state-ref {
+    color: var(--color-text-secondary);
+    font-size: var(--text-xs);
+  }
+
+  .contact-forget-status {
+    min-height: 1lh;
+    color: var(--color-text-secondary);
   }
 
   .contact-layout {
@@ -128,6 +157,16 @@
     scroll-margin-block: calc(var(--spacing-target) + var(--spacing-8));
   }
 
+  .contact-summary-lead {
+    color: var(--color-primary-500);
+    font-weight: bold;
+  }
+
+  .contact-form .field-error {
+    color: var(--color-text);
+    overflow-wrap: anywhere;
+  }
+
   .contact-alert:focus {
     outline: none;
   }
@@ -156,6 +195,11 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+  }
+
+  .contact-receipt dd:has(> time) {
+    overflow: visible;
+    white-space: normal;
   }
 
   .contact-receipt-actions {
@@ -298,6 +342,7 @@
   }
 
   .contact-send {
+    display: inline-grid;
     min-height: var(--spacing-target);
     padding: var(--spacing-2) var(--spacing-4);
     border: var(--border-width) solid var(--color-green);
@@ -309,6 +354,19 @@
     font-weight: bold;
     cursor: pointer;
     transition: box-shadow 200ms ease;
+  }
+
+  .contact-send::after {
+    content: attr(data-reserve);
+    grid-area: 1 / 1;
+    visibility: hidden;
+    height: 0;
+    overflow: hidden;
+  }
+
+  .contact-send > span {
+    grid-area: 1 / 1;
+    justify-self: center;
   }
 
   @media (max-width: 767.98px) {
@@ -352,8 +410,81 @@
     color: var(--color-text-secondary);
   }
 
+  .ctz-sync {
+    display: flex;
+    align-items: baseline;
+    gap: var(--spacing-2);
+    color: var(--color-primary-500);
+    overflow-wrap: anywhere;
+  }
+
+  .ctz-sync .ctz-loading {
+    color: var(--color-primary-500);
+    min-width: 0;
+  }
+
+  .ctz-sync-row {
+    color: var(--color-text-secondary);
+    overflow-wrap: anywhere;
+  }
+
+  .ctz-spin {
+    flex: none;
+    white-space: pre;
+  }
+
+  .ctz-spin-frames {
+    display: inline-grid;
+  }
+
+  .ctz-spin-frame {
+    grid-area: 1 / 1;
+    opacity: 0;
+    animation: ctz-spin-frame 800ms steps(1, end) infinite;
+  }
+
+  .ctz-spin-frame:nth-child(1) {
+    opacity: 1;
+  }
+
+  .ctz-spin-frame:nth-child(2) {
+    animation-delay: 200ms;
+  }
+
+  .ctz-spin-frame:nth-child(3) {
+    animation-delay: 400ms;
+  }
+
+  .ctz-spin-frame:nth-child(4) {
+    animation-delay: 600ms;
+  }
+
+  @keyframes ctz-spin-frame {
+    0% {
+      opacity: 1;
+    }
+    25%,
+    100% {
+      opacity: 0;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .ctz-spin-frame {
+      animation: none;
+    }
+  }
+
+  body[data-motion="reduce"] .ctz-spin-frame {
+    animation: none;
+  }
+
   .ctz-failed {
     display: contents;
+  }
+
+  .ctz-failed .ctz-sync {
+    display: none;
   }
 
   .ctz-failed .ctz-loading {
@@ -361,7 +492,8 @@
   }
 
   @media (scripting: none) {
-    .ctz-loading {
+    .ctz-loading,
+    .ctz-spin {
       display: none;
     }
   }

@@ -25,7 +25,7 @@ test.describe('contact form', () => {
 
     const successEl = page.locator('[data-testid="contact-success"]');
     await expect(successEl).toBeVisible({ timeout: 5_000 });
-    await expect(successEl).toContainText('EXECUTE_SEND :: SUCCESS');
+    await expect(successEl).toContainText('✓ message delivered');
   });
 
   test('2: validation: blank submit shows an error summary with field links', async ({ page }) => {
@@ -35,7 +35,7 @@ test.describe('contact form', () => {
     await expect(page.locator('[data-testid="contact-form"]')).toBeVisible();
     const summary = page
       .locator('[data-testid="contact-form"]')
-      .getByRole('alert', { name: 'Fields need attention:' });
+      .getByRole('alert', { name: '! 3 fields need fixing:' });
     await expect(summary).toBeVisible();
     await expect(summary.getByRole('link')).toHaveText(['name', 'email', 'message']);
     for (const field of ['name', 'email', 'message']) {

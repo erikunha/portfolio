@@ -2,6 +2,7 @@
 
 import { usePathname } from 'next/navigation';
 import { Fragment, useEffect, useId, useRef, useState, useSyncExternalStore } from 'react';
+import { ExternalLink } from '@/components/ExternalLink';
 import type { ContactContent } from '@/content/contact';
 import {
   CONTACT_DELIVERY_CODE,
@@ -11,6 +12,7 @@ import {
   type ContactField,
   contactErrorMessage,
   contactErrorSummary,
+  contactFieldError,
 } from '@/content/contact-copy';
 import type { TerminalChrome } from '@/content/schemas';
 import { localeOfPath } from '@/content/site-locale';
@@ -71,6 +73,19 @@ function ContactShell({ chrome, children }: { chrome: TerminalChrome; children: 
   );
 }
 
+const FORGET = { IDLE: 'idle', PENDING: 'pending', DONE: 'done', FAILED: 'failed' } as const;
+type ForgetState = (typeof FORGET)[keyof typeof FORGET];
+const FORGET_ENDPOINT = '/api/log/forget';
+const RECEIPT_TIME_FORMAT: Intl.DateTimeFormatOptions = {
+  year: 'numeric',
+  month: '2-digit',
+  day: '2-digit',
+  hour: '2-digit',
+  minute: '2-digit',
+  hourCycle: 'h23',
+  timeZoneName: 'short',
+};
+
 function ContactReceipt({
   copy,
   receipt,
@@ -79,11 +94,31 @@ function ContactReceipt({
   receipt: { ref: string; at: Date };
 }) {
   const text = copy.success.receipt;
-  const at = new Intl.DateTimeFormat(text.dateLocale, {
-    dateStyle: 'short',
-    timeStyle: 'short',
-  }).format(receipt.at);
+  const [forget, setForget] = useState<ForgetState>(FORGET.IDLE);
+  const forgetPending = useRef(false);
+  const at = new Intl.DateTimeFormat(text.dateLocale, RECEIPT_TIME_FORMAT)
+    .format(receipt.at)
+    .replace(',', '');
   const subject = encodeURIComponent(`${text.forgetSubject} ${receipt.ref}`);
+
+  async function forgetMessage() {
+    if (forgetPending.current) return;
+    forgetPending.current = true;
+    setForget(FORGET.PENDING);
+    try {
+      const res = await fetch(FORGET_ENDPOINT, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ requestId: receipt.ref }),
+      });
+      setForget(res.ok ? FORGET.DONE : FORGET.FAILED);
+    } catch {
+      setForget(FORGET.FAILED);
+    } finally {
+      forgetPending.current = false;
+    }
+  }
+
   return (
     <div className="contact-receipt" data-testid="contact-receipt">
       <dl>
@@ -100,8 +135,26 @@ function ContactReceipt({
           labels={{ copy: text.copy, copied: text.copied }}
           feedback={text.feedback}
         />
-        <a href={`mailto:${copy.section.email}?subject=${subject}`}>{text.forgetLabel}</a>
+        {forget !== FORGET.DONE && (
+          <button
+            type="button"
+            className="copy-btn contact-copy-btn"
+            aria-disabled={forget === FORGET.PENDING}
+            onClick={() => void forgetMessage()}
+          >
+            {forget === FORGET.PENDING ? text.forget.pending : text.forget.label}
+          </button>
+        )}
       </div>
+      <p className="contact-forget-status" role="status" data-testid="contact-forget-status">
+        {forget === FORGET.DONE && text.forget.done}
+        {forget === FORGET.FAILED && (
+          <>
+            {text.forget.failed}{' '}
+            <a href={`mailto:${copy.section.email}?subject=${subject}`}>{copy.section.email}</a>
+          </>
+        )}
+      </p>
     </div>
   );
 }
@@ -120,6 +173,7 @@ export function ContactForm({ copy, chrome }: { copy: ContactContent; chrome: Te
   const [errors, setErrors] = useState<Partial<Record<ContactField, string>>>({});
   const [errorMsg, setErrorMsg] = useState('');
   const [receipt, setReceipt] = useState<{ ref: string; at: Date } | null>(null);
+  const [queuedRef, setQueuedRef] = useState('');
   const [failureCount, setFailureCount] = useState(INITIAL_FAILURE_COUNT);
   const summaryRef = useRef<HTMLDivElement>(null);
   const pendingRef = useRef(false);
@@ -163,7 +217,7 @@ export function ContactForm({ copy, chrome }: { copy: ContactContent; chrome: Te
       const valid = FIELD_CHECKS[field](value);
       setErrors((current) => {
         const { [field]: _cleared, ...rest } = current;
-        return valid ? rest : { ...current, [field]: copy.errors[field] };
+        return valid ? rest : { ...current, [field]: contactFieldError(copy, field, value) };
       });
     }
     if (!pendingRef.current) {
@@ -178,7 +232,7 @@ export function ContactForm({ copy, chrome }: { copy: ContactContent; chrome: Te
     const fieldErrors: Partial<Record<ContactField, string>> = {};
     for (const field of CONTACT_FIELDS) {
       if (!FIELD_CHECKS[field](values[field])) {
-        fieldErrors[field] = copy.errors[field];
+        fieldErrors[field] = contactFieldError(copy, field, values[field]);
       }
     }
     setErrors(fieldErrors);
@@ -201,6 +255,7 @@ export function ContactForm({ copy, chrome }: { copy: ContactContent; chrome: Te
       const apiError = data?.error;
       if (res.status === QUEUED_STATUS && apiError?.code === CONTACT_DELIVERY_CODE.QUEUED) {
         messageStore.reset();
+        setQueuedRef(typeof data?.requestId === 'string' ? data.requestId : '');
         setStatus(STATUS.QUEUED);
         return;
       }
@@ -239,23 +294,32 @@ export function ContactForm({ copy, chrome }: { copy: ContactContent; chrome: Te
             tabIndex={-1}
             ref={focusResult}
           >
-            <p>{copy.success.title}</p>
+            <p className="contact-state-title">{copy.success.title}</p>
             <p>{copy.success.message}</p>
             {receipt && <ContactReceipt copy={copy} receipt={receipt} />}
           </div>
         )}
         {status === STATUS.QUEUED && (
           <div
-            className="contact-success"
+            className="contact-success contact-queued"
             role="status"
             data-testid="contact-queued"
             tabIndex={-1}
             ref={focusResult}
           >
-            <p>{copy.queued.title}</p>
+            <p className="contact-state-title">{copy.queued.title}</p>
+            <p>{copy.queued.message}</p>
             <p>
-              {copy.queued.message} <a href={copy.queued.linkHref}>{copy.queued.linkLabel}</a>
+              {copy.queued.fasterLabel}{' '}
+              <ExternalLink href={copy.queued.linkHref}>
+                {copy.queued.linkLabel} {copy.queued.linkGlyph}
+              </ExternalLink>
             </p>
+            {queuedRef && (
+              <p className="contact-state-ref" data-testid="contact-queued-ref" title={queuedRef}>
+                {copy.queued.refLabel} {queuedRef}
+              </p>
+            )}
           </div>
         )}
       </ContactShell>
@@ -281,7 +345,9 @@ export function ContactForm({ copy, chrome }: { copy: ContactContent; chrome: Te
           >
             {invalidFields.length > 0 && (
               <p>
-                <span id={summaryId}>{contactErrorSummary(copy, invalidFields.length)}</span>
+                <span id={summaryId} className="contact-summary-lead">
+                  {contactErrorSummary(copy, invalidFields.length)}
+                </span>
                 {invalidFields.map((field, index) => (
                   <Fragment key={field}>
                     {index === 0 ? ' ' : copy.form.errorSummary.separator}
@@ -326,6 +392,7 @@ export function ContactForm({ copy, chrome }: { copy: ContactContent; chrome: Te
           value={values.name}
           onChange={(event) => change(CONTACT_FIELD.NAME, event.target.value)}
           error={errors.name ?? ''}
+          readOnly={busy}
           required
           minLength={CONTACT_LIMITS.nameMin}
           maxLength={CONTACT_LIMITS.nameMax}
@@ -341,6 +408,7 @@ export function ContactForm({ copy, chrome }: { copy: ContactContent; chrome: Te
           value={values.email}
           onChange={(event) => change(CONTACT_FIELD.EMAIL, event.target.value)}
           error={errors.email ?? ''}
+          readOnly={busy}
           required
           autoComplete="email"
           placeholder={copy.form.emailPlaceholder}
@@ -355,6 +423,7 @@ export function ContactForm({ copy, chrome }: { copy: ContactContent; chrome: Te
           onChange={(event) => change(CONTACT_FIELD.MESSAGE, event.target.value)}
           error={errors.message ?? ''}
           aria-describedby={counterId}
+          readOnly={busy}
           required
           minLength={CONTACT_LIMITS.messageMin}
           maxLength={CONTACT_LIMITS.messageMax}
@@ -367,8 +436,14 @@ export function ContactForm({ copy, chrome }: { copy: ContactContent; chrome: Te
           {CONTACT_LIMITS.messageMax}
         </p>
         <div className="contact-submit-row">
-          <button type="submit" aria-disabled={busy} aria-busy={busy} className="contact-send">
-            {busy ? copy.form.submitting : copy.form.submit}
+          <button
+            type="submit"
+            aria-disabled={busy}
+            aria-busy={busy}
+            className="contact-send"
+            data-reserve={longestCopy([copy.form.submit, copy.form.submitting])}
+          >
+            <span>{busy ? copy.form.submitting : copy.form.submit}</span>
           </button>
           <p
             className="contact-waiting"
