@@ -1,4 +1,4 @@
-import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import type { McpServer } from '@modelcontextprotocol/server';
 import { z } from 'zod';
 import { POST as askPost } from '@/app/api/ask/route';
 import { HIRING_PROFILE } from '@/lib/hiring-profile';
@@ -44,7 +44,7 @@ export function registerAgentTools(server: McpServer): void {
       title: 'Get hiring profile',
       description:
         "Return Erik Cunha's structured HiringProfile: employers, primary/secondary stack, quantified receipts, work authorization, education, and availability. Read-only; same data as /api/erik.json.",
-      inputSchema: {},
+      inputSchema: z.object({}),
     },
     async () => textResult(JSON.stringify(HIRING_PROFILE)),
   );
@@ -55,9 +55,9 @@ export function registerAgentTools(server: McpServer): void {
       title: 'Ask Erik',
       description:
         "Ask a natural-language question about Erik Cunha's experience, stack, projects, or availability. Answered by Claude Haiku 4.5 grounded only in the site's CV context. Rate limit: MCP calls carry no client IP, so all callers worldwide share ONE global bucket of ~8 requests/hour total (not per-caller); a shared monthly token budget is the hard cost cap.",
-      inputSchema: {
+      inputSchema: z.object({
         question: z.string().min(1).max(500).describe('A natural-language question about Erik.'),
-      },
+      }),
     },
     async ({ question }) => textResult(await runAsk(question)),
   );

@@ -25,7 +25,7 @@ flowchart TD
       api6["GET /api/erik.json"]
       api7["GET /api/lighthouse"]
       api8["POST /api/log · POST /api/log/forget"]
-      api9["GET+POST /api/[transport] -> /api/mcp, /api/sse"]
+      api9["GET+POST /api/[transport] -> /api/mcp"]
     end
     layout -.serves.-> api
 ```

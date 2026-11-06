@@ -37,7 +37,7 @@ export function defineHandler<TSchema extends ZodTypeAny>(
 | `/api/lighthouse` | GET | bespoke | stored PSI metrics | `PSI_API_KEY` (in lib) | falls back to all-zero `LIGHTHOUSE_FALLBACK` |
 | `/api/log` | POST | `defineHandler` | client error capture → KV (30d TTL) | none | KV fail → 503; **no IP stored** (forget-exempt) |
 | `/api/log/forget` | POST | `defineHandler` | GDPR/LGPD erasure of ask logs by `requestId` | none | deletes across 90 days; **never returns count** (existence-oracle prevention) |
-| `/api/[transport]` | GET+POST | `mcp-handler` | read-only MCP server | none | `→ /api/mcp` (streamable-HTTP), `/api/sse`; `maxDuration=60`, Node runtime |
+| `/api/[transport]` | GET+POST | `mcp-handler` | read-only MCP server | none | `→ /api/mcp` (Streamable HTTP, MCP SDK v2; the legacy SSE transport is gone); `maxDuration=60`, Node runtime |
 
 ## Rate limits & token budget (`lib/rate-limit.ts`)
 
