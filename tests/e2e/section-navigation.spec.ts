@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { brand as brandContent } from '@/content/brand';
+import { brandByLocale } from '@/content/brand';
 import { HIRE_ACCESSIBLE_NAME } from '@/content/nav';
 import { SITE_LOCALE } from '../../content/site-locale';
 
@@ -119,7 +119,7 @@ for (const width of TOPBAR_WIDTHS) {
     }) => {
       await page.goto('/');
       const bar = page.locator('.desktop-topbar');
-      const brand = bar.getByRole('link', { name: brandContent.accessibleName });
+      const brand = bar.getByRole('link', { name: brandByLocale.en.accessibleName });
 
       await expect(
         brand,
@@ -217,7 +217,7 @@ test.describe('desktop topbar: one hire action per viewport', () => {
           'the menu trigger stays on the row at every topbar width',
         ).toBeVisible();
         await expect(
-          bar.getByRole('link', { name: brandContent.accessibleName }),
+          bar.getByRole('link', { name: brandByLocale.en.accessibleName }),
           'the brand icon stays on the row at every topbar width',
         ).toBeVisible();
 
@@ -438,7 +438,7 @@ test.describe('section navigation: position line at 1280px', () => {
 
   test('the line never intercepts pointer events', async ({ page }) => {
     await page.goto('/');
-    const bar = page.getByRole('progressbar', { name: 'Page position' });
+    const bar = page.locator('.pos-line');
     await expect(bar).toHaveCSS('pointer-events', 'none');
   });
 });
@@ -455,7 +455,7 @@ for (const { width, height } of [
 
     test('the position line runs down the right edge and follows the scroll', async ({ page }) => {
       await page.goto('/');
-      const bar = page.getByRole('progressbar', { name: 'Page position' });
+      const bar = page.locator('.pos-line');
       await expect(bar, 'the line is present below 1024px, not hidden').toBeVisible();
       const box = await bar.boundingBox();
       expect(box?.width ?? Number.POSITIVE_INFINITY, 'a thin vertical line').toBeLessThanOrEqual(
@@ -466,16 +466,16 @@ for (const { width, height } of [
         (box?.x ?? 0) + (box?.width ?? 0),
         'it sits on the right edge, left of any classic scrollbar',
       ).toBeGreaterThanOrEqual(width * RIGHT_EDGE_RATIO);
-      await expect(bar).toHaveAttribute('aria-valuenow', '0');
+      await expect(bar).toHaveCSS('--posf', '0');
       await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
-      await expect(bar).toHaveAttribute('aria-valuenow', '100');
+      await expect(bar).toHaveCSS('--posf', '1');
       await expect(bar).toHaveCSS('pointer-events', 'none');
     });
 
     test('the position line does not print', async ({ page }) => {
       await page.goto('/');
       await page.emulateMedia({ media: 'print' });
-      await expect(page.getByRole('progressbar', { name: 'Page position' })).toBeHidden();
+      await expect(page.locator('.pos-line')).toBeHidden();
     });
 
     test('the trigger carries no position counter', async ({ page }) => {
@@ -490,7 +490,7 @@ test.describe('section navigation: top position line at 1280px', () => {
 
   test('the desktop line stays a thin horizontal line across the top', async ({ page }) => {
     await page.goto('/');
-    const box = await page.getByRole('progressbar', { name: 'Page position' }).boundingBox();
+    const box = await page.locator('.pos-line').boundingBox();
     expect(box?.height ?? Number.POSITIVE_INFINITY).toBeLessThanOrEqual(SIDE_LINE_MAX_THICKNESS_PX);
     expect(box?.width ?? 0).toBeGreaterThanOrEqual(1280 * 0.9);
     expect(box?.y ?? Number.POSITIVE_INFINITY).toBeLessThanOrEqual(1);

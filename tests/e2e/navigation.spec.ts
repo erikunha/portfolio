@@ -48,21 +48,25 @@ test.describe('navigation: drawer at 390px', () => {
     await expect(page.getByRole('dialog')).toHaveCount(0);
   });
 
-  test('the side position line is the one named progress control', async ({ page }) => {
+  test('the side position line is one decorative element hidden from assistive technology', async ({
+    page,
+  }) => {
     await page.goto('/');
-    await expect(page.getByRole('progressbar', { name: 'Page position' })).toHaveCount(1);
+    await expect(page.locator('.pos-meter')).toHaveCount(1);
+    await expect(page.locator('.pos-meter')).toHaveAttribute('aria-hidden', 'true');
+    await expect(page.getByRole('progressbar', { includeHidden: true })).toHaveCount(0);
   });
 });
 
 test.describe('navigation: menu trigger at 1280px', () => {
   test.use({ viewport: { width: 1280, height: 720 } });
 
-  test('the position progressbar is named and follows the scroll', async ({ page }) => {
+  test('the position line follows the scroll', async ({ page }) => {
     await page.goto('/');
-    const bar = page.getByRole('progressbar', { name: 'Page position' });
-    await expect(bar).toHaveAttribute('aria-valuenow', '0');
+    const bar = page.locator('.pos-line');
+    await expect(bar).toHaveCSS('--posf', '0');
     await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
-    await expect(bar).toHaveAttribute('aria-valuenow', '100');
+    await expect(bar).toHaveCSS('--posf', '1');
   });
 
   test('the menu trigger is the icon alone and no rail reserves width', async ({ page }) => {

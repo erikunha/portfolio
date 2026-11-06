@@ -45,6 +45,14 @@ async function frame() {
   });
 }
 
+function line(): HTMLElement {
+  const node = document.querySelector<HTMLElement>('.pos-line');
+  if (!node) throw new Error('the position line is not rendered');
+  return node;
+}
+
+const fraction = (node: HTMLElement) => node.style.getPropertyValue('--posf');
+
 function mount() {
   return render(
     <SectionNavigationProvider chrome={siteNavChrome(SITE_LOCALE.en)} locale={SITE_LOCALE.en}>
@@ -83,26 +91,31 @@ describe('PositionMeter', () => {
     vi.unstubAllGlobals();
   });
 
-  it('is a named progressbar from 0 to 100 that starts at the top', () => {
+  it('is decorative: hidden from assistive technology so it sits in no landmark and announces nothing', () => {
+    const { container } = mount();
+    const meter = container.querySelector('.pos-meter');
+    expect(meter?.getAttribute('aria-hidden')).toBe('true');
+    expect(container.querySelector('[role="progressbar"]')).toBeNull();
+    expect(line().hasAttribute('aria-valuenow')).toBe(false);
+  });
+
+  it('starts at the top', () => {
     mount();
-    const bar = screen.getByRole('progressbar', { name: 'Page position' });
-    expect(bar.getAttribute('aria-valuemin')).toBe('0');
-    expect(bar.getAttribute('aria-valuemax')).toBe('100');
-    expect(bar.getAttribute('aria-valuenow')).toBe('0');
+    expect(fraction(line())).toBe('0');
   });
 
   it('follows the scroll position and reaches 100 at the end of the page', async () => {
     mount();
-    const bar = screen.getByRole('progressbar');
+    const bar = line();
     scrollTo(2000);
     await frame();
-    expect(bar.getAttribute('aria-valuenow')).toBe('50');
+    expect(fraction(bar)).toBe('0.5');
     scrollTo(PAGE_HEIGHT - VIEWPORT_HEIGHT);
     await frame();
-    expect(bar.getAttribute('aria-valuenow')).toBe('100');
+    expect(fraction(bar)).toBe('1');
     scrollTo(PAGE_HEIGHT * 2);
     await frame();
-    expect(bar.getAttribute('aria-valuenow')).toBe('100');
+    expect(fraction(bar)).toBe('1');
   });
 
   it('reports 0 when the page does not scroll', async () => {
@@ -113,7 +126,7 @@ describe('PositionMeter', () => {
     mount();
     scrollTo(300);
     await frame();
-    expect(screen.getByRole('progressbar').getAttribute('aria-valuenow')).toBe('0');
+    expect(fraction(line())).toBe('0');
   });
 
   it('writes the fraction to every position target, including the dock strip', async () => {
@@ -131,7 +144,7 @@ describe('PositionMeter', () => {
     scrollTo(1000);
     scrollTo(3000);
     await frame();
-    expect(screen.getByRole('progressbar').getAttribute('aria-valuenow')).toBe('75');
+    expect(fraction(line())).toBe('0.75');
   });
 
   it('renders only the progress line and no NN/9 readout', () => {
@@ -142,10 +155,10 @@ describe('PositionMeter', () => {
 
   it('recomputes when the document height changes without a scroll or resize', async () => {
     mount();
-    const bar = screen.getByRole('progressbar');
+    const bar = line();
     scrollTo(1000);
     await frame();
-    expect(bar.getAttribute('aria-valuenow')).toBe('25');
+    expect(fraction(bar)).toBe('0.25');
     const watcher = FakeResizeObserver.instances[0];
     expect(watcher?.observed).toEqual([document.body]);
     Object.defineProperty(document.documentElement, 'scrollHeight', {
@@ -154,13 +167,13 @@ describe('PositionMeter', () => {
     });
     act(() => watcher?.callback([], watcher as unknown as ResizeObserver));
     await frame();
-    expect(bar.getAttribute('aria-valuenow')).toBe('100');
+    expect(fraction(bar)).toBe('1');
   });
 
   it('works without ResizeObserver', () => {
     vi.stubGlobal('ResizeObserver', undefined);
     mount();
-    expect(screen.getByRole('progressbar').getAttribute('aria-valuenow')).toBe('0');
+    expect(fraction(line())).toBe('0');
   });
 
   it('removes what it wrote on the position targets and disconnects when unmounted', async () => {

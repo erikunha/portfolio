@@ -141,7 +141,7 @@ The section menu is a modal drawer at every width, opened by the menu icon trigg
 | AppShell and breakpoint provider                  | Responsive chrome, error bridge and viewport state                                                    |
 | DesktopTopbar, StatusBar, MobileTitleBar, Dock    | Navigation, motion controls and device chrome                                                         |
 | SectionNavigation, SectionNavigationProvider      | menu trigger, drawer focus trap, focus return and shared current-section state                        |
-| PositionMeter                                     | Scroll-position tracking and page-position progress: a top line from 1024px, a right-edge line below  |
+| PositionMeter                                     | Scroll-position tracking and a hidden page-position line: top from 1024px, right edge below           |
 | MatrixRain, CRTOverlay, ToTopButton               | Canvas animation, CRT effects and scroll control                                                      |
 | HeroBootAnimation, HeroSystemFailure              | Boot/dialog animation and failure interaction                                                         |
 | RoleTyper                                         | Role typewriter inside About                                                                          |

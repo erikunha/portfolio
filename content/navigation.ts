@@ -44,7 +44,6 @@ export type NavigationCopy = {
   openMenu: string;
   closeDrawer: string;
   dockLabel: string;
-  positionLabel: string;
   motionOn: string;
   motionOff: string;
   motionReduced: string;
@@ -71,7 +70,6 @@ const navigationFor = (locale: SiteLocale): Navigation => {
       openMenu: pt ? 'Abrir menu' : 'Open menu',
       closeDrawer: pt ? '[ X ] FECHAR' : '[ X ] CLOSE',
       dockLabel: pt ? 'principal' : 'primary',
-      positionLabel: pt ? 'Posição na página' : 'Page position',
       motionOn: 'MOTION: ON',
       motionOff: 'MOTION: OFF',
       motionReduced: 'MOTION: REDUCED',
