@@ -69,6 +69,6 @@ describe('LinkPills', () => {
 
   it('announces the new tab in Portuguese on the Portuguese route', () => {
     const { container } = render(<LinkPills locale={LINKS_LOCALE.pt} url={PAGE_URL} />);
-    expect(byLabel(container, /github/i)?.textContent).toMatch(/abre em nova aba/i);
+    expect(byLabel(container, /github/i)?.textContent).toMatch(/abre em uma nova guia/i);
   });
 });

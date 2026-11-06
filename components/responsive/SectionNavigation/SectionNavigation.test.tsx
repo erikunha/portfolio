@@ -416,7 +416,7 @@ describe('SectionNavigation', () => {
     expect(hrefs).toEqual([
       '/cv',
       '/summary',
-      '/links',
+      '/links/en',
       '/design-system',
       'https://www.linkedin.com/in/erikunha/',
     ]);

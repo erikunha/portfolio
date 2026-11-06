@@ -48,7 +48,7 @@ describe('Footer server output', () => {
       { label: 'Contact', href: '#sec-contact' },
       { label: '30S_SUMMARY', href: '/summary' },
       { label: 'DESIGN_SYSTEM', href: '/design-system' },
-      { label: 'LINK_IN_BIO', href: '/links' },
+      { label: 'LINK_IN_BIO', href: '/links/en' },
       { label: 'VIEW_CV', href: '/cv' },
       { label: 'github.com/erikunha', href: 'https://github.com/erikunha' },
       { label: 'linkedin.com/in/erikunha', href: 'https://www.linkedin.com/in/erikunha/' },
@@ -159,7 +159,7 @@ describe('Footer server output', () => {
     expect(links).toEqual([
       ['30S_SUMMARY', '/summary'],
       ['DESIGN_SYSTEM', '/design-system'],
-      ['LINK_IN_BIO', '/links'],
+      ['LINK_IN_BIO', '/links/en'],
       ['VIEW_CV', '/cv'],
     ]);
   });

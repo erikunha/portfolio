@@ -3,6 +3,7 @@
 import { usePathname } from 'next/navigation';
 import type { ReactNode } from 'react';
 import { StatusDot } from '@/components/StatusDot';
+import { LINKS_PATH } from '@/content/links.constants';
 import { TOPBAR_MOTION_LABEL } from '@/content/nav';
 import { cn } from '@/lib/cn';
 import { LanguageSwitch, MenuTrigger, useSectionNavigation } from '../SectionNavigation';
@@ -11,8 +12,11 @@ const SECTION_PATH_SEPARATOR = '/';
 
 const HASH_MARK = '#';
 
+const LINKS_PAGE_PATHS: readonly string[] = Object.values(LINKS_PATH);
+
 function isCurrentPath(pathname: string | null, href: string): boolean {
   if (pathname === null || href.includes(HASH_MARK)) return false;
+  if (LINKS_PAGE_PATHS.includes(href)) return LINKS_PAGE_PATHS.includes(pathname);
   return pathname === href || pathname.startsWith(`${href}${SECTION_PATH_SEPARATOR}`);
 }
 

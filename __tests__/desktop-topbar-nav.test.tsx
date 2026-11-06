@@ -73,7 +73,7 @@ describe('DesktopTopbar', () => {
       '/#sec-projects',
       '/#sec-git-log',
       '/#sec-contact',
-      '/links',
+      '/links/en',
       '/design-system',
       '/cv',
       'https://www.linkedin.com/in/erikunha/',
