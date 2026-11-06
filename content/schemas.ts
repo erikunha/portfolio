@@ -662,7 +662,6 @@ export const ShellUiSchema = z.object({
   bodyUnavailable: z.string().min(1),
   offline: z.string().min(1),
   networkError: z.string().min(1),
-  timeout: z.string().min(1),
   localAvailable: z.string().min(1),
   referencePrefix: z.string().min(1),
   copy: z.string().min(1),
