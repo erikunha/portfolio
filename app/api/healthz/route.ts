@@ -1,4 +1,4 @@
-import type { NextRequest } from 'next/server';
+import { connection, type NextRequest } from 'next/server';
 import { log } from '@/lib/log';
 import { getClientIp, getHealthzLimit, getRedis } from '@/lib/rate-limit';
 
@@ -8,6 +8,7 @@ const PSI_CACHE_TTL_MS = 5_000;
 let _psiCache: { psiLastRun: string | null; cachedAt: number } | null = null;
 
 export async function GET(req: NextRequest): Promise<Response> {
+  await connection();
   const sha = process.env.VERCEL_GIT_COMMIT_SHA || 'local';
 
   try {
