@@ -17,7 +17,7 @@ const measuredFor = (locale: SiteLocale): Measured => {
       dateLength: 10,
       millisecondsPerSecond: 1000,
       askStaleAfterMs: WEEK_MS,
-      empty: '—',
+      empty: '-',
     },
     title: pt ? 'Medições' : 'Measured',
     command: 'MEASURED.JSON',

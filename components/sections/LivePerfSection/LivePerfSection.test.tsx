@@ -14,7 +14,7 @@ vi.mock('@/lib/lighthouse-scores', () => ({
     accessibility: 0,
     bestPractices: 0,
     seo: 0,
-    fetchedAt: '—',
+    fetchedAt: '-',
   },
 }));
 
@@ -59,7 +59,7 @@ describe('LivePerfSection: fetch-error fallback', () => {
     getScoresMock.mockRejectedValue(new Error('PSI API unavailable'));
     const html = await renderPerfData();
     expect(html).not.toContain('100');
-    expect(valuesOf(html)).toEqual(['— / —', '— / —', '— / —', '— / —']);
+    expect(valuesOf(html)).toEqual(['- / -', '- / -', '- / -', '- / -']);
   });
 
   it('shows the unavailable status once for the block, not per tile', async () => {
@@ -83,7 +83,7 @@ describe('LivePerfSection: fetch-error fallback', () => {
         : Promise.reject(new Error('mobile down')),
     );
     const html = await renderPerfData();
-    expect(valuesOf(html)).toEqual(['99 / —', '100 / —', '95 / —', '100 / —']);
+    expect(valuesOf(html)).toEqual(['99 / -', '100 / -', '95 / -', '100 / -']);
     const doc = new DOMParser().parseFromString(html, 'text/html');
     expect(Array.from(doc.querySelectorAll('p.measured-status'), (p) => p.textContent)).toEqual([]);
     expect(doc.querySelector('time')?.getAttribute('datetime')).toBe(REAL_SCORES.fetchedAt);
@@ -157,7 +157,7 @@ describe('LivePerfSection: tile content', () => {
     const doc = new DOMParser().parseFromString(html, 'text/html');
     expect(doc.body.textContent).toContain('unavailable');
     expect(doc.querySelector('time')).toBeNull();
-    expect(valuesOf(html)).toEqual(['— / —', '— / —', '— / —', '— / —']);
+    expect(valuesOf(html)).toEqual(['- / -', '- / -', '- / -', '- / -']);
   });
 
   it('dates the block by the parseable side when the other side has a corrupt fetchedAt', async () => {

@@ -17,7 +17,7 @@ vi.mock('@/lib/lighthouse-scores', () => ({
     accessibility: 0,
     bestPractices: 0,
     seo: 0,
-    fetchedAt: '—',
+    fetchedAt: '-',
   },
 }));
 
@@ -68,7 +68,7 @@ describe('LivePerfSection: PerfBody with real scores (non-fallback branches)', (
       accessibility: 0,
       bestPractices: 0,
       seo: 0,
-      fetchedAt: '—',
+      fetchedAt: '-',
     });
     const html = await renderPerfData();
     const doc = new DOMParser().parseFromString(html, 'text/html');

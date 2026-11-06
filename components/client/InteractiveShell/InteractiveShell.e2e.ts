@@ -18,9 +18,7 @@ async function ask(page: Page, question: string): Promise<void> {
 }
 
 test.describe('ask / interactive shell', () => {
-  test('1 — happy path: type a question → canned answer renders in shell feed', async ({
-    page,
-  }) => {
+  test('1: happy path: type a question → canned answer renders in shell feed', async ({ page }) => {
     await setupAskPage(page, { ask: 'happy', log: 'accept' });
     await ask(page, 'Who is Erik?');
 
@@ -28,7 +26,7 @@ test.describe('ask / interactive shell', () => {
     await expect(feed).toContainText('Erik is a Senior Full-Stack Engineer', { timeout: 10_000 });
   });
 
-  test('2 — kill switch on: 503 surfaces "temporarily unavailable" message', async ({ page }) => {
+  test('2: kill switch on: 503 surfaces "temporarily unavailable" message', async ({ page }) => {
     await setupAskPage(page, { ask: 'kill-switch', log: 'accept' });
     await ask(page, 'are you available?');
 
@@ -37,7 +35,7 @@ test.describe('ask / interactive shell', () => {
     await expect(errorLine).toContainText('temporarily unavailable');
   });
 
-  test('3 — rate-limit hit: 429 surfaces "try again in an hour"', async ({ page }) => {
+  test('3: rate-limit hit: 429 surfaces "try again in an hour"', async ({ page }) => {
     await setupAskPage(page, { ask: 'rate-limit', log: 'accept' });
     await ask(page, 'spammy question');
 
@@ -46,7 +44,7 @@ test.describe('ask / interactive shell', () => {
     await expect(errorLine).toContainText('try again in an hour');
   });
 
-  test('4 — budget exhausted: 503 surfaces budget message', async ({ page }) => {
+  test('4: budget exhausted: 503 surfaces budget message', async ({ page }) => {
     await setupAskPage(page, { ask: 'budget-exhausted', log: 'accept' });
     await ask(page, 'what is your stack?');
 
@@ -55,7 +53,7 @@ test.describe('ask / interactive shell', () => {
     await expect(errorLine).toContainText('AI answers are paused for this month');
   });
 
-  test('5 — stream error: STREAM_ERR_SENTINEL mid-stream renders an error line', async ({
+  test('5: stream error: STREAM_ERR_SENTINEL mid-stream renders an error line', async ({
     page,
   }) => {
     await setupAskPage(page, { ask: 'stream-error', log: 'accept' });
@@ -66,7 +64,7 @@ test.describe('ask / interactive shell', () => {
     await expect(errorLine).toContainText('upstream error');
   });
 
-  test('6 — pre-stream timeout: SDK rejects before SSE starts → error line, no crash', async ({
+  test('6: pre-stream timeout: SDK rejects before SSE starts → error line, no crash', async ({
     page,
   }) => {
     await setupAskPage(page, { ask: 'pre-stream-timeout', log: 'accept' });
@@ -79,7 +77,7 @@ test.describe('ask / interactive shell', () => {
     await expect(getShellInput(page)).toBeEnabled();
   });
 
-  test('7 — X-Request-Id header is the deterministic value from the happy mock', async ({
+  test('7: X-Request-Id header is the deterministic value from the happy mock', async ({
     page,
   }) => {
     await setupAskPage(page, { ask: 'happy', log: 'accept' });
@@ -92,7 +90,7 @@ test.describe('ask / interactive shell', () => {
     expect(requestId).toBe('test-request-id-abc123');
   });
 
-  test('8 — privacy notice is visible with a working mailto: link to the canonical email', async ({
+  test('8: privacy notice is visible with a working mailto: link to the canonical email', async ({
     page,
   }) => {
     await setupAskPage(page, { log: 'accept' });

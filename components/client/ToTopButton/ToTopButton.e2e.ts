@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test';
 
 test.use({ viewport: { width: 375, height: 812 } });
 
-test.describe('ToTopButton — scroll-to-top affordance', () => {
+test.describe('ToTopButton: scroll-to-top affordance', () => {
   test('button is hidden on initial load (page top)', async ({ page }) => {
     await page.goto('/');
     const btn = page.getByRole('button', { name: /top/i });

@@ -17,7 +17,7 @@ async function fillValidForm(page: Page): Promise<void> {
 }
 
 test.describe('contact form', () => {
-  test('1 — happy path: fill all fields and submit → success state', async ({ page }) => {
+  test('1: happy path: fill all fields and submit → success state', async ({ page }) => {
     await setupContactPage(page, { contact: 'happy', log: 'accept' });
     await fillValidForm(page);
 
@@ -49,7 +49,7 @@ test.describe('contact form', () => {
     }
   });
 
-  test('3 — rate-limited: 429 response surfaces "try again" message to the user', async ({
+  test('3: rate-limited: 429 response surfaces "try again" message to the user', async ({
     page,
   }) => {
     await setupContactPage(page, { contact: 'rate-limit', log: 'accept' });
@@ -64,7 +64,7 @@ test.describe('contact form', () => {
     await expect(errorEl).toContainText('10 minutes');
   });
 
-  test('4 — server-error: 502 response renders graceful error UI, no crash', async ({ page }) => {
+  test('4: server-error: 502 response renders graceful error UI, no crash', async ({ page }) => {
     await setupContactPage(page, { contact: 'server-error', log: 'accept' });
     await fillValidForm(page);
 

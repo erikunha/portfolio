@@ -62,7 +62,7 @@ describe('AiMetricsSection: stacked blocks', () => {
   });
 });
 
-describe('AiMetricsSection — on-page AI eval/cost metrics (RSC)', () => {
+describe('AiMetricsSection: on-page AI eval/cost metrics (RSC)', () => {
   it('explains p95 and links the source without replacing real values', async () => {
     getAskMetricsMock.mockResolvedValue({
       evalPassRate: 0.95,
@@ -183,7 +183,7 @@ describe('AiMetricsSection — on-page AI eval/cost metrics (RSC)', () => {
     expect(doc.querySelector('time')).toBeNull();
     expect(doc.querySelector('[aria-busy]')).toBeNull();
     expect(Array.from(doc.querySelectorAll('.measured-value'), (tile) => tile.textContent)).toEqual(
-      ['—', '—', '—', '—'],
+      Array(4).fill(measured.en.format.empty),
     );
   });
 

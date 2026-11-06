@@ -39,7 +39,7 @@ export async function judge(
         temperature: 0,
       });
       if (!usage) {
-        console.warn(`  warn: judge returned no usage for item "${item.id}" — cost underestimated`);
+        console.warn(`  warn: judge returned no usage for item "${item.id}"; cost underestimated`);
       }
       const inputTokens = usage?.inputTokens ?? 0;
       const outputTokens = usage?.outputTokens ?? 0;

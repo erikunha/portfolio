@@ -78,7 +78,7 @@ describe('getScores — cache miss', () => {
     const { getScores } = await import('@/lib/lighthouse-scores');
     const result = await getScores('desktop');
     expect(result.performance).toBe(99);
-    expect(result.fetchedAt).not.toBe('—');
+    expect(result.fetchedAt).not.toBe('-');
   });
 
   it('writes result to Redis with TTL', async () => {

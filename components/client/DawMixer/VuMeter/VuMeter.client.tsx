@@ -113,7 +113,7 @@ export function VuMeter({ segments, initialLevel, clipping = false, channelName 
         const setRef = (el: HTMLSpanElement | null) => {
           segmentRefs.current[i] = el;
         };
-        // biome-ignore lint/suspicious/noArrayIndexKey: positional segments — no stable id exists
+        // biome-ignore lint/suspicious/noArrayIndexKey: positional segments, no stable id exists
         return <span key={i} ref={setRef} className={cls} />;
       })}
     </div>

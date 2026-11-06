@@ -22,7 +22,7 @@ export type LighthouseScores = {
   fetchedAt: string;
 };
 
-const SCORES_UNAVAILABLE = '—';
+const SCORES_UNAVAILABLE = '-';
 
 export const LIGHTHOUSE_FALLBACK: LighthouseScores = {
   performance: 0,

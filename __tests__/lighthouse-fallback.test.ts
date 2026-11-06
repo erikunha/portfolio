@@ -19,7 +19,7 @@ describe('LIGHTHOUSE_FALLBACK', () => {
   });
 
   it('marks the fallback as unavailable via the fetchedAt sentinel', () => {
-    expect(LIGHTHOUSE_FALLBACK.fetchedAt).toBe('—');
+    expect(LIGHTHOUSE_FALLBACK.fetchedAt).toBe('-');
   });
 
   it('all numeric fallback scores are zeroed (unambiguously "no data")', () => {

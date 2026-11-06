@@ -73,7 +73,7 @@ export async function GET(req: NextRequest): Promise<Response> {
       }
     } catch (counterErr) {
       log.error(
-        'psi-refresh: consecutive-failure counter update failed for a strategy — that strategy skipped this run',
+        'psi-refresh: consecutive-failure counter update failed for a strategy; that strategy skipped this run',
         { strategy: name, err: counterErr },
       );
     }
@@ -87,7 +87,7 @@ export async function GET(req: NextRequest): Promise<Response> {
       try {
         const resend = new Resend(apiKey);
         const alertText = overThreshold
-          .map((o) => `${o.strategy}: ${o.count} consecutive failures — ${o.error}`)
+          .map((o) => `${o.strategy}: ${o.count} consecutive failures: ${o.error}`)
           .join('\n');
         const sendPromise = resend.emails.send({
           from: 'alerts@erikunha.dev',
@@ -117,7 +117,7 @@ export async function GET(req: NextRequest): Promise<Response> {
     try {
       await getRedis().set('meta:psi-last-run', new Date().toISOString());
     } catch (redisErr) {
-      log.error('psi-refresh: failed to write meta:psi-last-run — healthz will report degraded', {
+      log.error('psi-refresh: failed to write meta:psi-last-run; healthz will report degraded', {
         err: redisErr,
       });
     }

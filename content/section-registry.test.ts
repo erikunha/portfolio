@@ -23,7 +23,7 @@ vi.mock('@/lib/lighthouse-scores', () => {
     accessibility: 0,
     bestPractices: 0,
     seo: 0,
-    fetchedAt: '—',
+    fetchedAt: '-',
   };
   return { getScores: async () => scores, LIGHTHOUSE_FALLBACK: scores, LIGHTHOUSE_TTL_S: 90_000 };
 });

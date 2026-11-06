@@ -15,7 +15,7 @@ vi.mock('@/lib/lighthouse-scores', () => ({
     accessibility: 0,
     bestPractices: 0,
     seo: 0,
-    fetchedAt: '—',
+    fetchedAt: '-',
   },
   LIGHTHOUSE_TTL_S: 86400,
 }));
@@ -67,7 +67,7 @@ describe('GET /api/lighthouse', () => {
     const res = await GET(req);
 
     const body = await res.json();
-    expect(body.fetchedAt).toBe('—');
+    expect(body.fetchedAt).toBe('-');
     expect(res.headers.get('Cache-Control')).toBe('no-store');
   });
 
@@ -80,7 +80,7 @@ describe('GET /api/lighthouse', () => {
     const res = await GET(req);
 
     const body = await res.json();
-    expect(body.fetchedAt).toBe('—');
+    expect(body.fetchedAt).toBe('-');
     expect(res.headers.get('Cache-Control')).toBe('no-store');
   });
 });
