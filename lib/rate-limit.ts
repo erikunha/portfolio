@@ -10,14 +10,17 @@ let _redis: Redis | undefined;
 let _askLimit: Ratelimit | undefined;
 let _contactLimit: Ratelimit | undefined;
 
-const REDIS_ENV_URL = 'UPSTASH_REDIS_REST_URL';
-const REDIS_ENV_TOKEN = 'UPSTASH_REDIS_REST_TOKEN';
+const REDIS_ENV_PAIRS = [
+  { url: 'UPSTASH_REDIS_REST_URL', token: 'UPSTASH_REDIS_REST_TOKEN' },
+  { url: 'KV_REST_API_URL', token: 'KV_REST_API_TOKEN' },
+] as const;
+const REDIS_ENV_NAMES = REDIS_ENV_PAIRS.map(({ url, token }) => `${url} and ${token}`).join(' or ');
 const PIPELINE_METHOD = 'pipeline';
 const PIPELINE_EXEC_METHOD = 'exec';
 
 export class RedisNotConfiguredError extends Error {
   constructor() {
-    super(`Redis is not configured: ${REDIS_ENV_URL} and ${REDIS_ENV_TOKEN} must be set`);
+    super(`Redis is not configured: ${REDIS_ENV_NAMES} must be set`);
     this.name = 'RedisNotConfiguredError';
   }
 }
@@ -43,9 +46,13 @@ function rejectedClient(): Redis {
   ) as Redis;
 }
 
+export function hasRedisCredentials(): boolean {
+  return REDIS_ENV_PAIRS.some(({ url, token }) => Boolean(process.env[url] && process.env[token]));
+}
+
 export function getRedis(): Redis {
   if (_redis) return _redis;
-  if (!process.env[REDIS_ENV_URL] || !process.env[REDIS_ENV_TOKEN]) return rejectedClient();
+  if (!hasRedisCredentials()) return rejectedClient();
   const instance = Redis.fromEnv({
     retry: { retries: REDIS_RETRIES, backoff: () => REDIS_RETRY_BACKOFF_MS },
   });

@@ -5,7 +5,11 @@ const { mockSet, mockGetRedis } = vi.hoisted(() => {
   return { mockSet, mockGetRedis: vi.fn(() => ({ set: mockSet })) };
 });
 
-vi.mock('@/lib/rate-limit', () => ({ getRedis: mockGetRedis }));
+vi.mock('@/lib/rate-limit', async (importOriginal) => ({
+  hasRedisCredentials: (await importOriginal<typeof import('@/lib/rate-limit')>())
+    .hasRedisCredentials,
+  getRedis: mockGetRedis,
+}));
 
 import { publishAggregate } from '@/lib/eval/redis-publish';
 

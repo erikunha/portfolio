@@ -1,10 +1,10 @@
-import { getRedis } from '@/lib/rate-limit';
+import { getRedis, hasRedisCredentials } from '@/lib/rate-limit';
 
 export async function publishAggregate(
   key: string,
   aggregate: unknown,
 ): Promise<{ published: boolean; error?: string }> {
-  if (!(process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN)) {
+  if (!hasRedisCredentials()) {
     return { published: false };
   }
   try {

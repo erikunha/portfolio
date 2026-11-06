@@ -62,3 +62,36 @@ describe('getRedis with one Upstash credential missing', () => {
     await expect(getRedis().get('any')).rejects.toThrow(/UPSTASH_REDIS_REST/);
   });
 });
+
+describe('hasRedisCredentials', () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  it.each([
+    [
+      'the Upstash pair',
+      { UPSTASH_REDIS_REST_URL: 'https://a.test', UPSTASH_REDIS_REST_TOKEN: 't' },
+      true,
+    ],
+    ['the Vercel KV pair', { KV_REST_API_URL: 'https://b.test', KV_REST_API_TOKEN: 't' }, true],
+    [
+      'a URL from one pair and a token from the other',
+      { UPSTASH_REDIS_REST_URL: 'https://a.test', KV_REST_API_TOKEN: 't' },
+      false,
+    ],
+    ['nothing', {}, false],
+  ])('is %s -> %s', async (_name, env, expected) => {
+    vi.resetModules();
+    for (const key of [
+      'UPSTASH_REDIS_REST_URL',
+      'UPSTASH_REDIS_REST_TOKEN',
+      'KV_REST_API_URL',
+      'KV_REST_API_TOKEN',
+    ]) {
+      vi.stubEnv(key, (env as Record<string, string>)[key] ?? '');
+    }
+    const { hasRedisCredentials } = await import('@/lib/rate-limit');
+    expect(hasRedisCredentials()).toBe(expected);
+  });
+});

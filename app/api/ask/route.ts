@@ -15,6 +15,7 @@ import {
   checkIdenticalQuestion,
   getAskLimit,
   getClientIp,
+  hasRedisCredentials,
   reserveBudget,
   settleBudget,
 } from '@/lib/rate-limit';
@@ -113,7 +114,7 @@ async function handleAsk(req: NextRequest): Promise<Response> {
     rateLimited = !success;
     if (rateLimited) retryAfter = retryAfterSeconds(reset, Date.now());
   } catch (err) {
-    if (env.UPSTASH_REDIS_REST_URL && env.UPSTASH_REDIS_REST_TOKEN) {
+    if (hasRedisCredentials()) {
       log.error('ask rate-limit check failed, allowing through', { err });
     }
   }
