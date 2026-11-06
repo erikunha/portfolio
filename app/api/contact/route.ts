@@ -30,7 +30,9 @@ function requestLocale(req: Request): SiteLocale {
 const handleContact = defineHandler({
   schema: ContactSchema,
   rateLimit: getContactLimit,
-  rateLimitErrorMessage: contactContent[DEFAULT_SITE_LOCALE].errors.rateLimited,
+  rateLimitErrorMessage: Object.fromEntries(
+    SITE_LOCALES.map((locale) => [locale, contactContent[locale].errors.rateLimited]),
+  ) as Record<SiteLocale, string>,
   async handler({ body, ipHash, requestId, req }) {
     const copy = contactContent[requestLocale(req)];
     if (isHoneypotTripped(body)) {

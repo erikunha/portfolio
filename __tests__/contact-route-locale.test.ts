@@ -54,6 +54,18 @@ describe('contact API error language', () => {
     expect(res.status).toBe(502);
     expect(body.error.message).toBe(contactContent[expected].errors.storageUnavailable);
   });
+
+  it.each([
+    [SITE_LOCALE.pt, SITE_LOCALE.pt],
+    [undefined, SITE_LOCALE.en],
+  ])('answers a rate limit for locale header %s in %s', async (header, expected) => {
+    limit.mockResolvedValue({ success: false });
+    const { POST } = await import('@/app/api/contact/route');
+    const res = await POST(request(header));
+    const body = await res.json();
+    expect(res.status).toBe(429);
+    expect(body.error.message).toBe(contactContent[expected].errors.rateLimited);
+  });
 });
 
 describe('defineHandler rate-limit message language', () => {
