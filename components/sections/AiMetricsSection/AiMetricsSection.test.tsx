@@ -6,7 +6,6 @@ import { readComponentsCss } from '@/__tests__/helpers/components-css';
 import { declValue, rulesWithSelector } from '@/__tests__/helpers/css-rules';
 import { measured } from '@/content/measured';
 import { SITE_LOCALE } from '@/content/site-locale';
-import { SSR_REDIS_TIMEOUT_MS } from '@/lib/with-timeout';
 
 const getAskMetricsMock = vi.fn();
 const getScoresMock = vi.fn();
@@ -183,16 +182,57 @@ describe('AiMetricsSection: on-page AI eval/cost metrics (RSC)', () => {
     expect(html).toContain('<time dateTime="2026-05-20T12:00:00.000Z"');
   });
 
-  it('renders the error box rather than pending when the metrics adapter rejects', async () => {
-    getAskMetricsMock.mockRejectedValue(new Error('adapter offline'));
+  it.each([
+    [
+      SITE_LOCALE.en,
+      'timeout',
+      'The store did not answer in 3s. The site works; this panel will try again on the next visit.',
+    ],
+    [
+      SITE_LOCALE.pt,
+      'timeout',
+      'O armazenamento não respondeu em 3s. O site funciona; este painel tenta de novo na próxima visita.',
+    ],
+    [
+      SITE_LOCALE.en,
+      'not configured',
+      'The store could not be read. The site works; this panel will try again on the next visit.',
+    ],
+    [
+      SITE_LOCALE.pt,
+      'not configured',
+      'Não foi possível ler o armazenamento. O site funciona; este painel tenta de novo na próxima visita.',
+    ],
+    [
+      SITE_LOCALE.en,
+      'other failure',
+      'The store could not be read. The site works; this panel will try again on the next visit.',
+    ],
+    [
+      SITE_LOCALE.pt,
+      'other failure',
+      'Não foi possível ler o armazenamento. O site funciona; este painel tenta de novo na próxima visita.',
+    ],
+  ] as const)('explains the %s %s cause in the error box', async (locale, cause, explanation) => {
+    const { ReadTimeoutError } = await import('@/lib/with-timeout');
+    const { RedisNotConfiguredError } = await import('@/lib/rate-limit');
+    const error =
+      cause === 'timeout'
+        ? new ReadTimeoutError()
+        : cause === 'not configured'
+          ? new RedisNotConfiguredError()
+          : new Error('adapter offline');
+    getAskMetricsMock.mockRejectedValue(error);
 
-    const doc = new DOMParser().parseFromString(await renderData(), 'text/html');
+    const doc = new DOMParser().parseFromString(await renderData(locale), 'text/html');
     const box = doc.querySelector('.measured-error');
-    expect(box?.querySelector('strong')?.textContent).toBe('! eval results unavailable');
-    expect(box?.querySelector('p')?.textContent).toBe(
-      `The store did not answer in ${SSR_REDIS_TIMEOUT_MS / 1000}s. The site works; this panel will try again on the next visit.`,
+    expect(box?.querySelector('strong')?.textContent).toBe(
+      locale === SITE_LOCALE.en
+        ? '! eval results unavailable'
+        : '! resultados do eval indisponíveis',
     );
-    expect(doc.body.textContent).not.toContain(measured[SITE_LOCALE.en].ask.pending);
+    expect(box?.querySelector('p')?.textContent).toBe(explanation);
+    expect(doc.body.textContent).not.toContain(measured[locale].ask.pending);
     expect(doc.querySelector('time')).toBeNull();
     expect(doc.querySelector('[aria-busy]')).toBeNull();
     expect(doc.querySelectorAll('.measured-tile')).toHaveLength(0);
@@ -298,9 +338,6 @@ describe('AiMetricsSection: error box', () => {
       '! resultados do eval indisponíveis',
     );
     expect(doc.querySelector('.measured-retry')?.textContent).toBe('[ TENTAR ]');
-    expect(doc.querySelector('.measured-error p')?.textContent).toContain(
-      `${SSR_REDIS_TIMEOUT_MS / 1000}s`,
-    );
   });
 
   it('draws the box in full lime and keeps the retry target at least 44px tall', () => {

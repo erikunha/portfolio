@@ -13,7 +13,7 @@ import { SECTION_LABELS } from '@/content/section-labels';
 import type { SiteLocale } from '@/content/site-locale';
 import type { AskMetrics } from '@/lib/ask-metrics';
 import { getAskMetrics } from '@/lib/ask-metrics';
-import { SSR_REDIS_TIMEOUT_MS } from '@/lib/with-timeout';
+import { ReadTimeoutError, SSR_REDIS_TIMEOUT_MS } from '@/lib/with-timeout';
 import { IconAiMetrics } from '../../Icons';
 import { Module } from '../../responsive/Module';
 import {
@@ -40,6 +40,12 @@ const REQUEST_REF_HEADER = 'x-vercel-id';
 const RETRY_HREF = '?retry=1#sec-live-metrics';
 const MS_PER_SECOND = 1000;
 
+const ASK_FAILURE = { timeout: 'timeout', unreadable: 'unreadable' } as const;
+type AskFailure = (typeof ASK_FAILURE)[keyof typeof ASK_FAILURE];
+
+const askFailureOf = (error: unknown): AskFailure =>
+  error instanceof ReadTimeoutError ? ASK_FAILURE.timeout : ASK_FAILURE.unreadable;
+
 async function readRequestRef(): Promise<string | undefined> {
   try {
     return (await headers()).get(REQUEST_REF_HEADER) ?? undefined;
@@ -49,13 +55,26 @@ async function readRequestRef(): Promise<string | undefined> {
   }
 }
 
-function AskError({ locale, requestRef }: { locale: SiteLocale; requestRef?: string | undefined }) {
+function AskError({
+  locale,
+  failure,
+  requestRef,
+}: {
+  locale: SiteLocale;
+  failure: AskFailure;
+  requestRef?: string | undefined;
+}) {
   const { askError } = measuredStates[locale];
   return (
     <div className="measured-error" role="alert">
       <strong>{askError.heading}</strong>
       <p>
-        {askError.body.replace(ERROR_SECONDS_TOKEN, String(SSR_REDIS_TIMEOUT_MS / MS_PER_SECOND))}
+        {failure === ASK_FAILURE.timeout
+          ? askError.timeoutBody.replace(
+              ERROR_SECONDS_TOKEN,
+              String(SSR_REDIS_TIMEOUT_MS / MS_PER_SECOND),
+            )
+          : askError.unreadableBody}
       </p>
       <a className="measured-retry" href={RETRY_HREF}>
         {askError.retry}
@@ -88,13 +107,13 @@ function AiMetricsBody({
   locale,
   metrics,
   loading = false,
-  failed = false,
+  failure,
   requestRef,
 }: {
   locale: SiteLocale;
   metrics: AskMetrics | null;
   loading?: boolean;
-  failed?: boolean;
+  failure?: AskFailure | undefined;
   requestRef?: string | undefined;
 }) {
   const content = measuredContent[locale];
@@ -127,8 +146,8 @@ function AiMetricsBody({
           </span>
         ) : null}
       </h3>
-      {failed ? (
-        <AskError locale={locale} requestRef={requestRef} />
+      {failure ? (
+        <AskError locale={locale} failure={failure} requestRef={requestRef} />
       ) : (
         <>
           <div className="measured-tiles">
@@ -167,9 +186,16 @@ export async function AiMetricsData({ locale }: { locale: SiteLocale }) {
   try {
     const metrics = await getAskMetrics();
     return <AiMetricsBody locale={locale} metrics={metrics} />;
-  } catch {
+  } catch (error) {
     const requestRef = await readRequestRef();
-    return <AiMetricsBody locale={locale} metrics={null} failed requestRef={requestRef} />;
+    return (
+      <AiMetricsBody
+        locale={locale}
+        metrics={null}
+        failure={askFailureOf(error)}
+        requestRef={requestRef}
+      />
+    );
   }
 }
 

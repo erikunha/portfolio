@@ -100,9 +100,12 @@ const measuredStatesFor = (locale: SiteLocale): MeasuredStates => {
   return MeasuredStatesSchema.parse({
     askError: {
       heading: pt ? '! resultados do eval indisponíveis' : '! eval results unavailable',
-      body: pt
+      timeoutBody: pt
         ? 'O armazenamento não respondeu em {seconds}s. O site funciona; este painel tenta de novo na próxima visita.'
         : 'The store did not answer in {seconds}s. The site works; this panel will try again on the next visit.',
+      unreadableBody: pt
+        ? 'Não foi possível ler o armazenamento. O site funciona; este painel tenta de novo na próxima visita.'
+        : 'The store could not be read. The site works; this panel will try again on the next visit.',
       retry: pt ? '[ TENTAR ]' : '[ RETRY ]',
       refLabel: 'ref',
     },

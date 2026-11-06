@@ -9,7 +9,8 @@ export const STALE_TIME_TOKEN = '{time}';
 export const MeasuredStatesSchema = z.object({
   askError: z.object({
     heading: text,
-    body: text.refine((value) => value.includes(ERROR_SECONDS_TOKEN)),
+    timeoutBody: text.refine((value) => value.includes(ERROR_SECONDS_TOKEN)),
+    unreadableBody: text,
     retry: text,
     refLabel: text,
   }),
