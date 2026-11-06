@@ -53,6 +53,22 @@
     font-family: var(--font-mono);
   }
 
+  .contact-loading {
+    min-height: 34.8rem;
+  }
+
+  @media (min-width: 480px) {
+    .contact-loading {
+      min-height: 31.5rem;
+    }
+  }
+
+  @media (scripting: none) {
+    .contact-loading {
+      display: none;
+    }
+  }
+
   .contact-chrome {
     display: flex;
     flex-wrap: wrap;

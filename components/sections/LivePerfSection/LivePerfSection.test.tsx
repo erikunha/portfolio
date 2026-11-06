@@ -269,6 +269,23 @@ describe('LivePerfSection: lighthouse loading state', () => {
     expect(reserveRule.map((rule) => declValue(rule, 'grid-area'))).toContain('1 / 1');
   });
 
+  it.each([SITE_LOCALE.en, SITE_LOCALE.pt])(
+    'reserves the same status room as the resolved block, so the block does not grow when the data lands (%s)',
+    async (locale) => {
+      const loading = await renderLoading(locale);
+      const { PerfData } = await import('./LivePerfSection');
+      getScoresMock.mockRejectedValue(new Error('PSI API unavailable'));
+      const resolved = new DOMParser().parseFromString(
+        renderToStaticMarkup(await PerfData({ locale })),
+        'text/html',
+      );
+      const reserveOf = (doc: Document) =>
+        doc.querySelector('.measured-status-slot')?.getAttribute('data-reserve');
+      expect(reserveOf(loading)).toBeTruthy();
+      expect(reserveOf(loading)).toBe(reserveOf(resolved));
+    },
+  );
+
   it('speaks Portuguese on the pt site', async () => {
     const doc = await renderLoading(SITE_LOCALE.pt);
     expect(doc.querySelector('.measured-heading')?.textContent).toBe('MEDIDO · LIGHTHOUSE');

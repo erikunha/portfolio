@@ -83,6 +83,10 @@ The prompt for a manual or agent review that applies these rules to a diff is `d
 28. A commit made with `--no-verify` skips commitlint, and CI's quality-fast job runs it on every
     commit in the push. Body lines over 100 characters then fail CI after the push. Check: commit
     through the hooks, or run `pnpm exec commitlint --from origin/<base>` before pushing.
+29. A loading fallback is measured against what replaces it, in both locales and at 320, 390, 768 and
+    1280px, with the stream held (scripts blocked, `$RC("B:` swaps removed from the document) so the
+    fallback is laid out with scripting on. A reserve list shared by two states is one function, never
+    two copies. Check: `tests/e2e/loading-states.spec.ts`.
 
 ## Pre-push judgement list
 

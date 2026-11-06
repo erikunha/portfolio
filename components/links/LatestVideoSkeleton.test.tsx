@@ -18,6 +18,7 @@ vi.mock('@/lib/links/feed', () => ({
   getChannelFeed: () => feedPending.promise,
   EMPTY_FEED: { fetchedAt: null, latest: null, history: [], stats: {}, channelUrl: '' },
   CHANNEL_URL: 'https://www.youtube.com/@eriknagringa',
+  HISTORY_LENGTH: 5,
 }));
 
 describe('LatestVideoSkeleton', () => {
@@ -49,6 +50,46 @@ describe('LatestVideoSkeleton', () => {
     expect(scanlines).toContain('repeating-linear-gradient');
     expect(scanlines).toContain('var(--color-');
     expect(scanlines).not.toMatch(/#[0-9a-f]{3,8}|rgba?\(/i);
+  });
+});
+
+describe('LatestVideoSkeleton: the two columns it stands in for', () => {
+  it.each([
+    [LINKS_LOCALE.en, 'THE CHANNEL', 'LATEST VIDEOS'],
+    [LINKS_LOCALE.pt, 'O CANAL', 'ÚLTIMOS VÍDEOS'],
+  ])(
+    'names both blocks with their real headings, untyped, so the swap does not retype them (%s)',
+    (locale, channel, latest) => {
+      const { container } = render(<LatestVideoSkeleton locale={locale} />);
+      const headings = Array.from(container.querySelectorAll('h2'), (heading) =>
+        heading.textContent?.toUpperCase(),
+      );
+      expect(headings[0]).toContain(channel);
+      expect(headings[1]).toContain(latest);
+      expect(container.querySelector('[data-type-reveal]')).toBeNull();
+    },
+  );
+
+  it('marks the channel block busy and keeps the history block out of the accessibility tree', () => {
+    const { container } = render(<LatestVideoSkeleton locale={LINKS_LOCALE.en} />);
+    expect(container.querySelector('[data-col="channel-loading"]')?.getAttribute('aria-busy')).toBe(
+      'true',
+    );
+    expect(
+      container.querySelector('[data-col="history-loading"]')?.getAttribute('aria-hidden'),
+    ).toBe('true');
+    expect(container.querySelectorAll('[role="status"]')).toHaveLength(1);
+  });
+
+  it('draws as many history rows as a full feed holds, so the list lands without a shift', () => {
+    const { container } = render(<LatestVideoSkeleton locale={LINKS_LOCALE.en} />);
+    expect(container.querySelectorAll('.links-history-item')).toHaveLength(5);
+  });
+
+  it('reserves the subscribe row and the see-all row the final blocks end with', () => {
+    const { container } = render(<LatestVideoSkeleton locale={LINKS_LOCALE.en} />);
+    expect(container.querySelector('.links-skeleton-action')).not.toBeNull();
+    expect(container.querySelector('.links-skeleton-all')).not.toBeNull();
   });
 });
 

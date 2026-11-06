@@ -398,7 +398,7 @@
   }
 
   .daw-mixer-loading {
-    --daw-mixer-loading-height: 108rem;
+    --daw-mixer-loading-height: 80.6rem;
     display: grid;
     align-content: start;
     min-height: var(--daw-mixer-loading-height);
@@ -410,13 +410,23 @@
 
   @media (min-width: 768px) {
     .daw-mixer-loading {
-      --daw-mixer-loading-height: 32rem;
+      --daw-mixer-loading-height: 33rem;
     }
   }
 
   @media (min-width: 1280px) {
     .daw-mixer-loading {
-      --daw-mixer-loading-height: 22.5rem;
+      --daw-mixer-loading-height: 22.7rem;
+    }
+  }
+
+  @media (scripting: none) {
+    .daw-mixer-loading {
+      min-height: 0;
+    }
+
+    .mixer-boot-current {
+      visibility: hidden;
     }
   }
 

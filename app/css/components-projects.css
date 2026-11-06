@@ -297,6 +297,12 @@
     margin: 0;
   }
 
+  @media (scripting: none) {
+    [aria-busy="true"] .measured-status {
+      visibility: hidden;
+    }
+  }
+
   .measured-ask-body {
     display: grid;
   }
