@@ -34,3 +34,15 @@ export const MeasuredStatesSchema = z.object({
 });
 
 export type MeasuredStates = z.infer<typeof MeasuredStatesSchema>;
+
+export const MixerBootSchema = z.object({
+  doneTag: text,
+  loadingTag: text,
+  queuedTag: text,
+  sessionLabel: text,
+  tempoUnit: text,
+  separator: text,
+  cursor: text,
+});
+
+export type MixerBoot = z.infer<typeof MixerBootSchema>;

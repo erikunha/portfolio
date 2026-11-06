@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import { Fragment, Suspense } from 'react';
-import { dawMixer } from '@/content/daw-mixer';
+import { dawMixer, mixerBoot } from '@/content/daw-mixer';
 import {
   GUITAR_MODULE_HEADER,
   GUITAR_MODULE_MOBILE_HEADER,
@@ -144,9 +144,27 @@ export function GuitarSection({ locale, defer }: { locale: SiteLocale; defer?: b
 }
 
 export function MixerLoading({ locale }: { locale: SiteLocale }) {
+  const mixer = dawMixer[locale];
+  const boot = mixerBoot[locale];
   return (
-    <p className="daw-mixer-loading" role="status">
-      {dawMixer[locale].loadingLabel}
-    </p>
+    <div className="daw-mixer-loading" aria-busy="true">
+      <p className="hero-boot-line" aria-hidden="true">
+        <span className="hero-boot-ok">{boot.doneTag}</span> {boot.sessionLabel} {mixer.sessionName}
+      </p>
+      <p className="hero-boot-line" aria-hidden="true">
+        <span className="hero-boot-ok">{boot.doneTag}</span> {mixer.bpm} {boot.tempoUnit}
+        {boot.separator}
+        {mixer.timeSignature}
+      </p>
+      <p className="hero-boot-line mixer-boot-current" role="status" aria-live="polite">
+        {boot.loadingTag} {mixer.loadingLabel}
+        <span className="mixer-boot-cursor" aria-hidden="true">
+          {boot.cursor}
+        </span>
+      </p>
+      <p className="hero-boot-line mixer-boot-queued" aria-hidden="true">
+        {boot.queuedTag} {mixer.channels.map((channel) => channel.name).join(boot.separator)}
+      </p>
+    </div>
   );
 }
