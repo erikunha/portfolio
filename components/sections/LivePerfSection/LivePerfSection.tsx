@@ -142,6 +142,13 @@ const loadBar = (fraction: number) =>
 const loadingLine = (locale: SiteLocale) =>
   `${measuredStates[locale].perfLoading.fetching} ${loadBar(0)}`;
 
+const perfStatusReserve = (locale: SiteLocale, measured: Measured) => [
+  loadingLine(locale),
+  measured.unavailable,
+  measured.unknownTimestamp,
+  staleReserve(locale),
+];
+
 function PerfLoading({ locale }: { locale: SiteLocale }) {
   const measured = measuredContent[locale];
   const { perfLoading } = measuredStates[locale];
@@ -177,7 +184,7 @@ function PerfLoading({ locale }: { locale: SiteLocale }) {
           </>
         }
         live
-        reserve={[loadingLine(locale), measured.unavailable, measured.unknownTimestamp]}
+        reserve={perfStatusReserve(locale, measured)}
       />
     </div>
   );
@@ -245,12 +252,7 @@ function PerfBody({ locale, scores }: { locale: SiteLocale; scores: ScoresByStra
           timestamp,
         })}
         live
-        reserve={[
-          loadingLine(locale),
-          measured.unavailable,
-          measured.unknownTimestamp,
-          staleReserve(locale),
-        ]}
+        reserve={perfStatusReserve(locale, measured)}
       />
     </div>
   );
