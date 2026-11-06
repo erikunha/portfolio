@@ -46,7 +46,7 @@ const handleContact = defineHandler({
 
     const { name, email, message } = body;
 
-    const msgId = crypto.randomUUID();
+    const msgId = requestId;
     const payload = { name, email, message, receivedAt: new Date().toISOString(), ipHash };
 
     try {
@@ -85,7 +85,7 @@ const handleContact = defineHandler({
       requestId,
       status: QUEUED_STATUS,
       code: CONTACT_DELIVERY_CODE.QUEUED,
-      message: `${copy.queued.message} ${copy.queued.linkLabel}`,
+      message: copy.queued.message,
     });
   },
 });

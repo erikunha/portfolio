@@ -1,5 +1,6 @@
 import { z } from 'zod';
 
+import { contactMessageKey, removePendingContact } from '@/lib/contact-outbox';
 import { log } from '@/lib/log';
 import { getForgetLimit, getRedis } from '@/lib/rate-limit';
 import { withBodyLimit } from '@/lib/server/body-limit';
@@ -34,11 +35,15 @@ const handleForget = defineHandler({
       return ok({ requestId });
     }
 
-    const candidateKeys = lastNDates(90).map((d) => `ask:log:${d}:${targetRequestId}`);
+    const candidateKeys = [
+      ...lastNDates(90).map((d) => `ask:log:${d}:${targetRequestId}`),
+      contactMessageKey(targetRequestId),
+    ];
 
     let deleted = 0;
     try {
       deleted = await getRedis().del(...candidateKeys);
+      await removePendingContact(targetRequestId);
     } catch (kvErr) {
       log.error('forget KV delete failed', { requestId, targetRequestId, err: kvErr });
       return err({

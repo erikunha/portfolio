@@ -90,7 +90,8 @@ describe('contact delivery outcome', () => {
     expect(body).toEqual({ ok: true, requestId: expect.any(String) });
     expect(res.headers.get('x-request-id')).toBe(body.requestId);
     const [key, stored, options] = redisSet.mock.calls[0] ?? [];
-    expect(key).toMatch(/^contact:msg:/);
+    expect(key).toBe(`contact:msg:${body.requestId}`);
+    expect(send.mock.calls[0]?.[0].text).toContain(`Ref: ${body.requestId}`);
     expect(JSON.parse(stored)).toMatchObject({
       ...validBody,
       receivedAt: expect.any(String),
@@ -121,6 +122,7 @@ describe('contact delivery outcome', () => {
       expect(redisSet).toHaveBeenCalledOnce();
       const [key, value] = redisSet.mock.calls[0] ?? [];
       const msgId = key.replace('contact:msg:', '');
+      expect(msgId).toBe(body.requestId);
       const stored = JSON.parse(value);
       expect(transaction.hset).toHaveBeenCalledWith('contact:outbox:attempts', { [msgId]: 0 });
       expect(transaction.zadd).toHaveBeenCalledWith('contact:outbox', {
@@ -194,5 +196,92 @@ describe('contact delivery outcome', () => {
     expect(await res.json()).toMatchObject({ error: { code, message: expect.any(String) } });
     expect(redisSet).not.toHaveBeenCalled();
     expect(send).not.toHaveBeenCalled();
+  });
+});
+
+describe('/api/log/forget for a contact message', () => {
+  const REF = '7f3a9c2e-41b0-4d8e-9a77-3c51d0b2e8aa';
+  const del = vi.fn();
+  const multiTx = { zrem: vi.fn(), hdel: vi.fn(), exec: vi.fn() };
+  const forgetLimit = vi.fn();
+
+  beforeEach(() => {
+    vi.resetModules();
+    vi.clearAllMocks();
+    del.mockResolvedValue(1);
+    multiTx.exec.mockResolvedValue([1, 1]);
+    forgetLimit.mockResolvedValue({ success: true });
+    vi.doMock('@/lib/rate-limit', () => ({
+      getClientIp: () => '127.0.0.1',
+      getForgetLimit: () => ({ limit: forgetLimit }),
+      getRedis: () => ({ del, multi: () => multiTx }),
+    }));
+  });
+  afterEach(() => {
+    vi.doUnmock('@/lib/rate-limit');
+  });
+
+  const forget = (body: unknown) =>
+    new NextRequest('http://localhost/api/log/forget', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+
+  it('deletes the stored message and its outbox entry for the ref', async () => {
+    const { POST } = await import('@/app/api/log/forget/route');
+    const res = await POST(forget({ requestId: REF }));
+
+    expect(res.status).toBe(200);
+    const deleted = del.mock.calls.flat().map(String);
+    expect(deleted).toContain(`contact:msg:${REF}`);
+    expect(multiTx.zrem).toHaveBeenCalledWith('contact:outbox', REF);
+    expect(multiTx.hdel).toHaveBeenCalledWith('contact:outbox:attempts', REF);
+    expect(multiTx.exec).toHaveBeenCalledOnce();
+  });
+
+  it('answers a known and an unknown ref the same and never echoes stored content', async () => {
+    const { POST } = await import('@/app/api/log/forget/route');
+    del.mockResolvedValueOnce(1).mockResolvedValueOnce(1);
+    const known = await POST(forget({ requestId: REF }));
+    del.mockReset();
+    del.mockResolvedValue(0);
+    const unknown = await POST(forget({ requestId: '11111111-2222-4333-8444-555555555555' }));
+
+    expect(unknown.status).toBe(known.status);
+    const knownBody = await known.json();
+    const unknownBody = await unknown.json();
+    expect(Object.keys(unknownBody).sort()).toEqual(Object.keys(knownBody).sort());
+    expect(JSON.stringify(knownBody)).not.toContain('Visitor');
+  });
+
+  it.each(['../contact:outbox', 'contact:outbox', `${REF}*`, 'x'.repeat(40)])(
+    'rejects a ref that is not a UUID before building any key (%s)',
+    async (requestId) => {
+      const { POST } = await import('@/app/api/log/forget/route');
+      const res = await POST(forget({ requestId }));
+
+      expect(res.status).toBe(400);
+      expect(del).not.toHaveBeenCalled();
+      expect(multiTx.exec).not.toHaveBeenCalled();
+    },
+  );
+
+  it('keeps the forget rate limit', async () => {
+    forgetLimit.mockResolvedValueOnce({ success: false });
+    const { POST } = await import('@/app/api/log/forget/route');
+    const res = await POST(forget({ requestId: REF }));
+
+    expect(res.status).toBe(429);
+    expect(del).not.toHaveBeenCalled();
+  });
+
+  it('answers 503 and keeps the outbox entry when the delete fails', async () => {
+    del.mockRejectedValueOnce(new Error('kv down'));
+    const { POST } = await import('@/app/api/log/forget/route');
+    const res = await POST(forget({ requestId: REF }));
+
+    expect(res.status).toBe(503);
+    expect(multiTx.exec).not.toHaveBeenCalled();
   });
 });
