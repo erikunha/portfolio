@@ -1,6 +1,7 @@
 import { expect, type Page, test } from '@playwright/test';
 import { contactCopy } from '@/content/contact-copy';
 import { SITE_LOCALE, type SiteLocale } from '@/content/site-locale';
+import { waitForHydration } from './_helpers/hydration';
 import { installMockBackend } from './_helpers/mock-backend';
 
 const PHONE = { width: 390, height: 844 };
@@ -10,6 +11,7 @@ const SHOT_DIR = process.env.CONTACT_SHOT_DIR;
 const SUBPIXEL_PX = 1;
 const SCROLL_MARGIN_PX = 100;
 const PATHS: Record<SiteLocale, string> = { en: '/', pt: '/pt' };
+const FORM_SELECTOR = '[data-testid="contact-form"]';
 const FIELD_SELECTORS = {
   name: 'input[name="name"]',
   email: 'input[name="email"]',
@@ -30,6 +32,7 @@ async function openForm(page: Page, locale: SiteLocale) {
   );
   const form = page.getByTestId('contact-form');
   await expect(form).toBeVisible();
+  await waitForHydration(page, FORM_SELECTOR);
   return form;
 }
 
