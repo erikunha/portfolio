@@ -101,7 +101,7 @@ See `ARCHITECTURE.md` for the full system design, `DECISIONS.md` for the running
 | INP | < 200ms | < 200ms |
 | CLS | < 0.05 | < 0.05 |
 | TBT | < 200ms | < 400ms |
-| JS gzipped per route, total first-load | < 175KB | < 175KB |
+| JS gzipped per route, total first-load | < 164.6KB | < 164.6KB |
 | JS gzipped, app-owned (total minus the measured framework floor) | < 32.8KB | < 32.8KB |
 | Lighthouse Performance | ≥ 95 | ≥ 90 |
 | Lighthouse Accessibility | = 100 | = 100 |
@@ -110,7 +110,7 @@ See `ARCHITECTURE.md` for the full system design, `DECISIONS.md` for the running
 
 CI enforces all of the above. **Never disable the gates to merge.** If a gate fails, fix the underlying issue.
 
-`pnpm route-js-check` (`scripts/check-route-js.mjs`) asserts the 175KB per-route total and REPORTS the app-owned split; `pnpm bundle-check` is a separate global chunk-sum, structurally blind to a per-route regression. The 175KB is the **framework floor plus headroom, not an aspiration**: a bare hello-world Next 16 + React 19 app on this toolchain measures 142.2KB gzipped before any app code exists, and `/_not-found` — a route with zero app code — measures 148.9KB here. Any per-route total under ~149KB is unreachable by any amount of engineering. **The app-owned row is the one your decisions move, and it is 175 − 142.2 = 32.8KB.** There is exactly ONE gate, because app-owned is total minus a constant: a separate app-owned threshold would be a second threshold on the same axis and could never fire on its own. See `DECISIONS.md` 2026-07-14.
+`pnpm route-js-check` (`scripts/check-route-js.mjs`) asserts the 164.6KB per-route total and REPORTS the app-owned split; `pnpm bundle-check` is a separate global chunk-sum, structurally blind to a per-route regression. The 164.6KB is the **framework floor plus headroom, not an aspiration**: a bare hello-world app on Next 16.4.4 + React 19.3.1 with the same polyfill strip measures 131.8KB gzipped before any app code exists, and `/_not-found` measures 137.6KB here. **The app-owned row is the one your decisions move, and it is 164.6 − 131.8 = 32.8KB.** There is exactly ONE gate, because app-owned is total minus a constant: a separate app-owned threshold would be a second threshold on the same axis and could never fire on its own. See `DECISIONS.md` 2026-07-14.
 
 ## Engineering standards
 
@@ -141,9 +141,9 @@ Full rationale in `STANDARDS.md`. Load that file when a chapter is directly rele
 
 - **pnpm only.** `packageManager: pnpm@latest`. Don't use npm or yarn.
 - Every dep installed `@latest` at scaffold; `pnpm up --latest` for bumps.
-- `zod` is exact-pinned (`-E`) — its minor bumps break inference. Upgrade deliberately.
+- No exact pins. `^x.y.z` by default; `~x.y.z` for the packages whose minors break this repo (`TILDE_REQUIRED` in `scripts/check-dep-pinning.mjs`: next, @next/mdx, react, react-dom, zod, typescript, biome, playwright, shiki, rehype-pretty-code). Only a prerelease build stays exact. `pnpm check:dep-pinning` holds it.
 - **Never `--latest` `typescript`** — held at 6.x because Stryker needs the TS JS API that TS7 removed (`--latest` rewrites an exact pin too, so pinning won't save you). Held by `__tests__/stryker-typescript-api.test.ts`. See DECISIONS.md 2026-07-12.
-- Caret semver in `package.json`; lockfile (`pnpm-lock.yaml`) is the source of truth.
+- The lockfile (`pnpm-lock.yaml`) is the source of truth for what is installed.
 - CI runs `pnpm install --frozen-lockfile`.
 - Node 22+, pnpm 10+.
 
