@@ -301,7 +301,7 @@ content/ask-eval-corpus.ts            # ask eval Q+A corpus (factual, edge, jail
 lib/agent/                            # agent-readiness helpers (MCP tools)
 lib/ask/                              # system prompt builder, model const, anti-abuse
 lib/mdx/                              # MDX remark/recma plugins for /design-system docs
-lib/server/                           # server-only utilities (route-handler factory)
+lib/server/                           # server-only utilities (route-handler factory; fetch-metadata.ts isCrossSiteRequest, the Sec-Fetch-Site gate defineHandler runs first)
 lib/env.ts                            # typed, format-validating env accessor
 lib/ask-log.ts                        # KV interaction log per /api/ask request
 lib/boot-animation.ts                 # boot sequence data
@@ -322,7 +322,7 @@ lib/ip-hash.ts                        # salted IP hash for persisted interaction
 lib/lighthouse-scores.ts              # PSI API fetcher (cached daily)
 lib/log.ts                            # pino wrapper (text dev / JSON prod)
 lib/motion.ts                         # readMotion / applyMotion (body data-attr)
-lib/rate-limit.ts                     # Upstash sliding-window + budget reserve/settle
+lib/rate-limit.ts                     # Upstash sliding-window + budget reserve/settle; client bucket is the IPv4 or IPv6 /64; rl:lighthouse and the rl:errlog:day global cap
 lib/stream-protocol.ts                # NUL-byte error sentinel + parseStreamChunk
 lib/telemetry/                        # Langfuse tracing helpers
 lib/ua.ts                             # UA-based device detection (headers())
@@ -725,22 +725,22 @@ The principal-level discipline: **none of this is built today.** YAGNI is the de
 
 ## 17. Routes and machine-readable surfaces
 
-| Route                                                                        | Implementation                                                                          |
-| ---------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
-| `/`                                                                          | `app/(en)/page.tsx` renders `components/SiteHome.tsx`, terminal homepage                |
-| `/summary`, `/cv`                                                            | RSC reading views inside `AppShell` (home header); print hides the shell                |
-| `/pt`, `/pt/cv`, `/pt/summary`                                               | pt-BR twins of the home page and the reading views, in the `app/(pt)` root layout       |
-| `/links`, `/links/en`                                                        | Localized link pages: `/links` in the `app/(pt)` root layout, `/links/en` in `app/(en)` |
-| `/design-system`, `/design-system/{tokens,components,enforcement,changelog}` | MDX documentation and component gallery                                                 |
-| `/api/ask`                                                                   | Streaming POST handler                                                                  |
-| `/api/contact`                                                               | Durable contact POST handler                                                            |
-| `/api/contact-retry`, `/api/psi-refresh`                                     | Authenticated daily cron GET handlers                                                   |
-| `/api/lighthouse`, `/api/healthz`, `/api/erik.json`                          | Scores, health and structured profile GET handlers                                      |
-| `/api/log`, `/api/log/forget`, `/api/csp-report`                             | Error ingestion, ASK erasure and CSP report POST handlers                               |
-| `/api/mcp`                                                                   | MCP transport with `ask_erik` and `get_profile` tools                                   |
-| `/sitemap.xml`                                                               | `app/sitemap.ts`, homepage, reading views, links pages and design-system pages          |
-| `/robots.txt`, `/llms.txt`, `/.well-known/agent.json`                        | Public static discovery files                                                           |
-| `/og.png`, `/erik-cunha-cv.pdf`                                              | Static social image and downloadable CV                                                 |
+| Route                                                                        | Implementation                                                                                                                 |
+| ---------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| `/`                                                                          | `app/(en)/page.tsx` renders `components/SiteHome.tsx`, terminal homepage                                                       |
+| `/summary`, `/cv`                                                            | RSC reading views inside `AppShell` (home header); print hides the shell                                                       |
+| `/pt`, `/pt/cv`, `/pt/summary`                                               | pt-BR twins of the home page and the reading views, in the `app/(pt)` root layout                                              |
+| `/links`, `/links/en`                                                        | Localized link pages: `/links` in the `app/(pt)` root layout, `/links/en` in `app/(en)`                                        |
+| `/design-system`, `/design-system/{tokens,components,enforcement,changelog}` | MDX documentation and component gallery                                                                                        |
+| `/api/ask`                                                                   | Streaming POST handler                                                                                                         |
+| `/api/contact`                                                               | Durable contact POST handler                                                                                                   |
+| `/api/contact-retry`, `/api/psi-refresh`                                     | Authenticated daily cron GET handlers                                                                                          |
+| `/api/lighthouse`, `/api/healthz`, `/api/erik.json`                          | Scores, health and structured profile GET handlers; `/api/lighthouse` and `/api/healthz` are per-IP rate limited and fail open |
+| `/api/log`, `/api/log/forget`, `/api/csp-report`                             | Error ingestion, ASK erasure and CSP report POST handlers                                                                      |
+| `/api/mcp`                                                                   | MCP transport with `ask_erik` and `get_profile` tools                                                                          |
+| `/sitemap.xml`                                                               | `app/sitemap.ts`, homepage, reading views, links pages and design-system pages                                                 |
+| `/robots.txt`, `/llms.txt`, `/.well-known/agent.json`                        | Public static discovery files                                                                                                  |
+| `/og.png`, `/erik-cunha-cv.pdf`                                              | Static social image and downloadable CV                                                                                        |
 
 `/api/mcp` exports GET and POST through the MCP handler.
 
