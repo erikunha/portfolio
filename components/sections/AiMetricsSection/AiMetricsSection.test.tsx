@@ -11,6 +11,10 @@ import { SSR_REDIS_TIMEOUT_MS } from '@/lib/with-timeout';
 const getAskMetricsMock = vi.fn();
 const getScoresMock = vi.fn();
 const headersMock = vi.fn();
+vi.mock('next/server', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('next/server')>()),
+  connection: vi.fn(async () => undefined),
+}));
 vi.mock('next/headers', () => ({ headers: headersMock }));
 vi.mock('@/lib/lighthouse-scores', () => ({
   getScores: getScoresMock,

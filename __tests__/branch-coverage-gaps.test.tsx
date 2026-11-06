@@ -9,6 +9,10 @@ import { type MountedClient, mountClient } from './helpers/render';
 
 const EMPTY = MEASURED_FORMAT.empty;
 const getScoresMock = vi.fn();
+vi.mock('next/server', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('next/server')>()),
+  connection: vi.fn(async () => undefined),
+}));
 vi.mock('@/lib/lighthouse-scores', () => ({
   getScores: getScoresMock,
   LIGHTHOUSE_TTL_S: 90_000,

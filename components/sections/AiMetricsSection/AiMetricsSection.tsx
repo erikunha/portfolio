@@ -1,5 +1,6 @@
 import { headers } from 'next/headers';
 import { unstable_rethrow } from 'next/navigation';
+import { connection } from 'next/server';
 import { Suspense } from 'react';
 import {
   type Measured,
@@ -162,6 +163,7 @@ function AiMetricsBody({
 }
 
 export async function AiMetricsData({ locale }: { locale: SiteLocale }) {
+  await connection();
   try {
     const metrics = await getAskMetrics();
     return <AiMetricsBody locale={locale} metrics={metrics} />;

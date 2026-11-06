@@ -1,3 +1,4 @@
+import { connection } from 'next/server';
 import { type ReactNode, Suspense } from 'react';
 import { ExternalLink } from '@/components/ExternalLink';
 import { measured as measuredContent, measuredStates, metricTimestamp } from '@/content/measured';
@@ -102,6 +103,7 @@ const oldestFetchedAt = (available: LighthouseScores[]) =>
     .reduce((a, b) => (Date.parse(b) < Date.parse(a) ? b : a));
 
 export async function PerfData({ locale }: { locale: SiteLocale }) {
+  await connection();
   const strategies = measuredContent[locale].psi.strategies;
   const results = await Promise.all(
     strategies.map((strategy) => getScores(strategy.key).catch(() => null)),
