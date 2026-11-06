@@ -61,13 +61,6 @@
       "sharp",
       "@biomejs/biome"
     ],
-    "auditConfig": {
-      "ignoreGhsas": [
-        "GHSA-jmr9-qjv8-65gv",
-        "GHSA-7pqw-9j4j-h8q3",
-        "GHSA-mrhx-c7xc-m3w5"
-      ]
-    },
     "overrides": {
       "@hono/node-server": "^2.0.5",
       "axios": "^1.18.0",
@@ -134,7 +127,7 @@
     "@biomejs/biome": "~2.6.6",
     "@commitlint/cli": "^21.2.4",
     "@commitlint/config-conventional": "^21.2.4",
-    "@lhci/cli": "^0.15.1",
+    "@lhci/cli": "^0.16.0",
     "@modelcontextprotocol/client": "^2.4.0",
     "@playwright/test": "~1.65.0",
     "@stryker-mutator/core": "^10.1.1",
