@@ -2,9 +2,9 @@ import 'server-only';
 
 import { z } from 'zod';
 
-import { CONTACT_EMAIL_PATTERN, CONTACT_LIMITS } from '@/content/contact-copy';
+import { CONTACT_EMAIL_PATTERN, CONTACT_LIMITS } from '@/content/contact-rules';
 
-export { CONTACT_FIELD, CONTACT_LIMITS, type ContactField } from '@/content/contact-copy';
+export { CONTACT_FIELD, CONTACT_LIMITS, type ContactField } from '@/content/contact-rules';
 
 export const ContactSchema = z.object({
   name: z.string().trim().min(CONTACT_LIMITS.nameMin).max(CONTACT_LIMITS.nameMax),

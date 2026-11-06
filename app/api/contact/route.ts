@@ -1,5 +1,5 @@
 import { contactContent } from '@/content/contact';
-import { CONTACT_DELIVERY_CODE } from '@/content/contact-copy';
+import { CONTACT_DELIVERY_CODE } from '@/content/contact-rules';
 import { DEFAULT_SITE_LOCALE, SITE_LOCALES, type SiteLocale } from '@/content/site-locale';
 import { sendContactMessage } from '@/lib/contact-delivery';
 import {

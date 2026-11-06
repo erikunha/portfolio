@@ -1,7 +1,7 @@
 import { ExternalLink } from '@/components/ExternalLink';
 import { Panel } from '@/components/Panel';
 import { contactContent } from '@/content/contact';
-import { timezonePlaceholderRows } from '@/content/contact-copy';
+import { timezonePlaceholderRows } from '@/content/contact-rules';
 import { copyFeedback } from '@/content/copy-button';
 import { profilePresentation } from '@/content/profile';
 import { SECTION_LABELS } from '@/content/section-labels';

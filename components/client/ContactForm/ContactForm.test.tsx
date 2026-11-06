@@ -518,7 +518,7 @@ describe('contact email rule', () => {
 
   it.each(ADDRESSES)('client and server agree on %s', async (address, valid) => {
     const { ContactSchema } = await import('@/lib/contact-validation');
-    const { CONTACT_EMAIL_PATTERN } = await import('@/content/contact-copy');
+    const { CONTACT_EMAIL_PATTERN } = await import('@/content/contact-rules');
     expect(CONTACT_EMAIL_PATTERN.test(address)).toBe(valid);
     const parsed = ContactSchema.safeParse({
       name: 'Visitor',

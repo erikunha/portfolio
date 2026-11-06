@@ -66,7 +66,7 @@ Projects uses one set of descriptions and stats across viewport sizes. Each card
 
 Measured groups ASK and PSI presentation metadata without storing live values. The ASK adapter reads the eval aggregate; the PSI adapter supplies separate desktop and mobile scores. Each group keeps its own loading, unavailable and stale states. PSI shows the unavailable note only when neither strategy has scores; a single failed strategy shows `—` in its half of each tile.
 
-ContactForm imports Zod-free `content/contact-copy.ts`; `content/contact.ts` validates that copy with Zod for server consumers. Both share the LinkedIn URL from `content/social-urls.ts`. The timezone panel reads its copy from the same module and its land grid, Erik's pin and curated zone coordinates from the Zod-free `content/world-map.ts`; `content/_validate-client-content.ts` parses both at build time.
+ContactForm imports the Zod-free helpers and limits in `content/contact-rules.ts`; the two-locale copy table in `content/contact-copy.ts` is read only on the server, so no client chunk carries it, and `content/contact.ts` validates that copy with Zod for server consumers. Both share the LinkedIn URL from `content/social-urls.ts`. The timezone panel receives its copy as props and reads its land grid, Erik's pin and curated zone coordinates from the Zod-free `content/world-map.ts`; `content/_validate-client-content.ts` parses both at build time.
 
 ## Contact delivery
 
