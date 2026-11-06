@@ -1,10 +1,17 @@
+import { LINKS_PATH } from './links.constants';
 import { FooterContentSchema } from './schemas';
+import { localizedSectionLabel, SECTION_ID, type SectionId } from './section-registry';
 import { localizedPath, SITE_LOCALE, type SiteLocale } from './site-locale';
 import { social } from './social';
 import { EXTERNAL_LINK_GLYPH } from './terminal-chrome';
 
 const HOME_HREF = '#main-content';
-const HOME_SECTION_ID = 'bio';
+const SECTION_HREF_PREFIX = '#';
+
+const sectionLink = (locale: SiteLocale, id: SectionId, href = `${SECTION_HREF_PREFIX}${id}`) => ({
+  label: localizedSectionLabel(locale, id),
+  href,
+});
 
 const footerContentFor = (locale: SiteLocale) => {
   const pt = locale === SITE_LOCALE.pt;
@@ -66,41 +73,32 @@ const footerContentFor = (locale: SiteLocale) => {
       {
         directory: './whoami/',
         links: [
-          { label: pt ? 'Início' : 'Home', href: HOME_HREF },
-          { label: pt ? 'Sobre' : 'About', href: '#sec-readme' },
+          sectionLink(locale, SECTION_ID.home, HOME_HREF),
+          sectionLink(locale, SECTION_ID.about),
         ],
       },
       {
         directory: './work/',
-        links: [
-          { label: pt ? 'Projetos' : 'Projects', href: '#sec-projects' },
-          { label: pt ? 'Carreira' : 'Career', href: '#sec-git-log' },
-        ],
+        links: [sectionLink(locale, SECTION_ID.projects), sectionLink(locale, SECTION_ID.career)],
       },
       {
         directory: './measured/',
-        links: [
-          { label: pt ? 'Shell interativo' : 'Interactive shell', href: '#sec-shell' },
-          { label: pt ? 'Medições' : 'Measured', href: '#sec-live-metrics' },
-        ],
+        links: [sectionLink(locale, SECTION_ID.shell), sectionLink(locale, SECTION_ID.measured)],
       },
       {
         directory: './off_hours/',
-        links: [
-          { label: pt ? 'Opiniões' : 'Opinions', href: '#sec-hottest-takes' },
-          { label: pt ? 'Guitarra e mixer' : 'Guitar and mixer', href: '#sec-guitar' },
-        ],
+        links: [sectionLink(locale, SECTION_ID.opinions), sectionLink(locale, SECTION_ID.guitar)],
       },
       {
         directory: './contact/',
-        links: [{ label: pt ? 'Contato' : 'Contact', href: '#sec-contact' }],
+        links: [sectionLink(locale, SECTION_ID.contact)],
       },
       {
         directory: './pages/',
         links: [
           { label: pt ? 'RESUMO_30S' : '30S_SUMMARY', href: localizedPath(locale, '/summary') },
           { label: 'DESIGN_SYSTEM', href: '/design-system' },
-          { label: 'LINK_IN_BIO', href: '/links' },
+          { label: 'LINK_IN_BIO', href: LINKS_PATH[locale] },
           { label: pt ? 'VER_CV' : 'VIEW_CV', href: localizedPath(locale, '/cv') },
         ],
       },
@@ -127,12 +125,10 @@ export const footerContent: Record<SiteLocale, ReturnType<typeof footerContentFo
   [SITE_LOCALE.pt]: footerContentFor(SITE_LOCALE.pt),
 };
 
-const SECTION_HREF_PREFIX = '#';
-
 export const footerSectionIds = footerContent[SITE_LOCALE.en].groups.flatMap((group) =>
   group.links
     .filter((link) => link.href.startsWith(SECTION_HREF_PREFIX))
     .map((link) =>
-      link.href === HOME_HREF ? HOME_SECTION_ID : link.href.slice(SECTION_HREF_PREFIX.length),
+      link.href === HOME_HREF ? SECTION_ID.home : link.href.slice(SECTION_HREF_PREFIX.length),
     ),
 );

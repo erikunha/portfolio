@@ -1,4 +1,7 @@
+import { companyLinkCopy } from './company-link';
+import { LINKS_PATH } from './links.constants';
 import { CV_LINK_LABEL, READING_PATHS } from './reading-paths';
+import { SECTION_ID, sectionPath } from './section-registry';
 import { localizedPath, SITE_LOCALE, type SiteLocale } from './site-locale';
 import { LINKEDIN_URL } from './social-urls';
 
@@ -56,16 +59,16 @@ export const DOCK_HIRE_LABEL: Record<SiteLocale, string> = {
 };
 
 export const HIRE_ACCESSIBLE_NAME: Record<SiteLocale, string> = {
-  [SITE_LOCALE.en]: 'Hire on LinkedIn (opens in a new tab)',
-  [SITE_LOCALE.pt]: 'Contrate no LinkedIn (abre em uma nova guia)',
+  [SITE_LOCALE.en]: `Hire on LinkedIn ${companyLinkCopy[SITE_LOCALE.en].disclosure}`,
+  [SITE_LOCALE.pt]: `Contrate no LinkedIn ${companyLinkCopy[SITE_LOCALE.pt].disclosure}`,
 };
 
 const topbarNav = (locale: SiteLocale): readonly TopbarNavLink[] => [
-  { label: NAV_VOCABULARY[locale].about, href: localizedPath(locale, '/#sec-readme') },
-  { label: NAV_VOCABULARY[locale].work, href: localizedPath(locale, '/#sec-projects') },
-  { label: NAV_VOCABULARY[locale].career, href: localizedPath(locale, '/#sec-git-log') },
-  { label: NAV_VOCABULARY[locale].contact, href: localizedPath(locale, '/#sec-contact') },
-  { label: NAV_VOCABULARY[locale].links, href: '/links' },
+  { label: NAV_VOCABULARY[locale].about, href: sectionPath(locale, SECTION_ID.about) },
+  { label: NAV_VOCABULARY[locale].work, href: sectionPath(locale, SECTION_ID.projects) },
+  { label: NAV_VOCABULARY[locale].career, href: sectionPath(locale, SECTION_ID.career) },
+  { label: NAV_VOCABULARY[locale].contact, href: sectionPath(locale, SECTION_ID.contact) },
+  { label: NAV_VOCABULARY[locale].links, href: LINKS_PATH[locale] },
   { label: NAV_VOCABULARY[locale].designSystem, href: '/design-system' },
 ];
 

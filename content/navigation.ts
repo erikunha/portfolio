@@ -1,3 +1,4 @@
+import { LINKS_PATH } from './links.constants';
 import {
   DOCK_HIRE_LABEL,
   HIRE_ACCESSIBLE_NAME,
@@ -8,7 +9,13 @@ import {
   type TopbarNavLink,
 } from './nav';
 import { CV_LINK_LABEL, READING_PATHS } from './reading-paths';
-import { SECTION_NAV, type SectionId } from './section-registry';
+import {
+  localizedSectionLabel,
+  SECTION_ID,
+  SECTION_NAV,
+  type SectionId,
+  sectionPath,
+} from './section-registry';
 import { localizedPath, SITE_LOCALE, type SiteLocale } from './site-locale';
 import { LINKEDIN_URL } from './social-urls';
 
@@ -62,6 +69,7 @@ export type Navigation = {
 
 const navigationFor = (locale: SiteLocale): Navigation => {
   const pt = locale === SITE_LOCALE.pt;
+  const homeLabel = localizedSectionLabel(locale, SECTION_ID.home).toUpperCase();
   return {
     copy: {
       drawerLabel: pt ? 'Menu de seções' : 'Section menu',
@@ -83,37 +91,37 @@ const navigationFor = (locale: SiteLocale): Navigation => {
         id: 'whoami',
         title: pt ? 'QUEM SOU' : 'WHOAMI',
         dock: 'home',
-        sectionIds: ['bio', 'sec-readme'],
+        sectionIds: [SECTION_ID.home, SECTION_ID.about],
       },
       {
         id: 'work',
         title: pt ? 'PROJETOS' : 'WORK',
         dock: 'work',
-        sectionIds: ['sec-projects', 'sec-git-log'],
+        sectionIds: [SECTION_ID.projects, SECTION_ID.career],
       },
       {
         id: 'live',
         title: pt ? 'MEDIÇÕES' : 'MEASURED',
         dock: 'shell',
-        sectionIds: ['sec-shell', 'sec-live-metrics'],
+        sectionIds: [SECTION_ID.shell, SECTION_ID.measured],
       },
       {
         id: 'off-hours',
         title: pt ? 'HOBBIES' : 'OFF_HOURS',
         dock: 'menu',
-        sectionIds: ['sec-hottest-takes', 'sec-guitar'],
+        sectionIds: [SECTION_ID.opinions, SECTION_ID.guitar],
       },
       {
         id: 'contact',
         title: pt ? 'CONTATO' : 'CONTACT',
         dock: 'menu',
-        sectionIds: ['sec-contact'],
+        sectionIds: [SECTION_ID.contact],
       },
     ],
     dock: [
-      { key: 'home', label: pt ? 'INÍCIO' : 'HOME', sectionId: 'bio' },
-      { key: 'work', label: NAV_VOCABULARY[locale].work, sectionId: 'sec-projects' },
-      { key: 'shell', label: 'SHELL', sectionId: 'sec-shell' },
+      { key: 'home', label: homeLabel, sectionId: SECTION_ID.home },
+      { key: 'work', label: NAV_VOCABULARY[locale].work, sectionId: SECTION_ID.projects },
+      { key: 'shell', label: 'SHELL', sectionId: SECTION_ID.shell },
       {
         key: 'hire',
         label: DOCK_HIRE_LABEL[locale],
@@ -135,7 +143,12 @@ const navigationFor = (locale: SiteLocale): Navigation => {
         href: localizedPath(locale, READING_PATHS.summary),
         external: false,
       },
-      { label: NAV_VOCABULARY[locale].links, index: 'LK', href: '/links', external: false },
+      {
+        label: NAV_VOCABULARY[locale].links,
+        index: 'LK',
+        href: LINKS_PATH[locale],
+        external: false,
+      },
       {
         label: NAV_VOCABULARY[locale].designSystem,
         index: 'DS',
@@ -161,10 +174,6 @@ export const NAVIGATION: Record<SiteLocale, Navigation> = {
 const POSITION_DIGITS = 2;
 
 export const HOME_SECTION_ID: SectionId = SECTION_NAV[0].id;
-
-export function sectionHref(locale: SiteLocale, id: string): string {
-  return locale === SITE_LOCALE.pt ? `/pt#${id}` : `/#${id}`;
-}
 
 export function formatSectionNumber(order: number): string {
   return String(order).padStart(POSITION_DIGITS, '0');
@@ -200,7 +209,7 @@ export function drawerGroups(locale: SiteLocale): readonly DrawerGroup[] {
         id,
         label: section.label[locale],
         order: section.order,
-        href: sectionHref(locale, id),
+        href: sectionPath(locale, id),
       };
     }),
   }));

@@ -1,6 +1,8 @@
 import { errorsClientContent } from './errors-client';
+import { LINKS_PATH } from './links.constants';
 import type { ErrorsContent } from './schemas';
-import { SITE_LOCALE, type SiteLocale } from './site-locale';
+import { localizedSectionLabel, SECTION_ID, sectionPath } from './section-registry';
+import { localizedPath, SITE_LOCALE, type SiteLocale } from './site-locale';
 
 const errorsContentFor = (locale: SiteLocale): ErrorsContent => {
   const pt = locale === SITE_LOCALE.pt;
@@ -18,19 +20,25 @@ const errorsContentFor = (locale: SiteLocale): ErrorsContent => {
       suggestionsLabel: pt ? 'TENTE ISTO' : 'TRY INSTEAD',
       suggestionsNavLabel: pt ? 'Páginas sugeridas' : 'Suggested pages',
       suggestions: [
-        { label: pt ? 'Projetos' : 'Projects', href: pt ? '/pt#sec-projects' : '/#sec-projects' },
-        { label: pt ? 'Contato' : 'Contact', href: pt ? '/pt#sec-contact' : '/#sec-contact' },
-        { label: 'Links', href: '/links' },
+        {
+          label: localizedSectionLabel(locale, SECTION_ID.projects),
+          href: sectionPath(locale, SECTION_ID.projects),
+        },
+        {
+          label: localizedSectionLabel(locale, SECTION_ID.contact),
+          href: sectionPath(locale, SECTION_ID.contact),
+        },
+        { label: 'Links', href: LINKS_PATH[locale] },
       ],
-      home: { label: pt ? 'Ir para o início' : 'Go home', href: pt ? '/pt' : '/' },
+      home: { label: pt ? 'Ir para o início' : 'Go home', href: localizedPath(locale, '/') },
     },
     noscript: {
       text: pt
         ? 'Este site funciona melhor com JavaScript. O conteúdo abaixo está completo; o shell e o formulário de contato precisam dele.'
         : 'This site works best with JavaScript. Content below is complete; the shell and the contact form need it.',
       contact: {
-        label: pt ? 'Contato' : 'Contact',
-        href: pt ? '/pt#sec-contact' : '/#sec-contact',
+        label: localizedSectionLabel(locale, SECTION_ID.contact),
+        href: sectionPath(locale, SECTION_ID.contact),
       },
     },
   };

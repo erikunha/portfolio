@@ -135,7 +135,7 @@ function main() {
   }
 
   console.log(
-    `[check-section-order] OK — ${renderedIds.size} sections checked (${KNOWN_UNORDERED.size} intentionally unordered), ${cssIds.size} live section ids in CSS.`,
+    `[check-section-order] OK: ${renderedIds.size} sections checked (${KNOWN_UNORDERED.size} intentionally unordered), ${cssIds.size} live section ids in CSS.`,
   );
 }
 

@@ -1,4 +1,4 @@
-import type { SiteLocale } from './site-locale';
+import { localizedPath, type SiteLocale } from './site-locale';
 
 export const SECTION_ICONS = {
   home: 'home',
@@ -12,16 +12,28 @@ export const SECTION_ICONS = {
   contact: 'contact',
 } as const;
 
+export const SECTION_ID = {
+  home: 'bio',
+  about: 'sec-readme',
+  projects: 'sec-projects',
+  career: 'sec-git-log',
+  shell: 'sec-shell',
+  measured: 'sec-live-metrics',
+  opinions: 'sec-hottest-takes',
+  guitar: 'sec-guitar',
+  contact: 'sec-contact',
+} as const;
+
 export const SECTION_NAV = [
-  { id: 'bio', label: { en: 'Home', pt: 'Início' }, order: 1 },
-  { id: 'sec-readme', label: { en: 'About', pt: 'Sobre' }, order: 2 },
-  { id: 'sec-projects', label: { en: 'Projects', pt: 'Projetos' }, order: 3 },
-  { id: 'sec-git-log', label: { en: 'Career', pt: 'Carreira' }, order: 4 },
-  { id: 'sec-shell', label: { en: 'Interactive shell', pt: 'Shell interativo' }, order: 5 },
-  { id: 'sec-live-metrics', label: { en: 'Measured', pt: 'Medições' }, order: 6 },
-  { id: 'sec-hottest-takes', label: { en: 'Opinions', pt: 'Opiniões' }, order: 7 },
-  { id: 'sec-guitar', label: { en: 'Guitar and mixer', pt: 'Guitarra e mixer' }, order: 8 },
-  { id: 'sec-contact', label: { en: 'Contact', pt: 'Contato' }, order: 9 },
+  { id: SECTION_ID.home, label: { en: 'Home', pt: 'Início' }, order: 1 },
+  { id: SECTION_ID.about, label: { en: 'About', pt: 'Sobre' }, order: 2 },
+  { id: SECTION_ID.projects, label: { en: 'Projects', pt: 'Projetos' }, order: 3 },
+  { id: SECTION_ID.career, label: { en: 'Career', pt: 'Carreira' }, order: 4 },
+  { id: SECTION_ID.shell, label: { en: 'Interactive shell', pt: 'Shell interativo' }, order: 5 },
+  { id: SECTION_ID.measured, label: { en: 'Measured', pt: 'Medições' }, order: 6 },
+  { id: SECTION_ID.opinions, label: { en: 'Opinions', pt: 'Opiniões' }, order: 7 },
+  { id: SECTION_ID.guitar, label: { en: 'Guitar and mixer', pt: 'Guitarra e mixer' }, order: 8 },
+  { id: SECTION_ID.contact, label: { en: 'Contact', pt: 'Contato' }, order: 9 },
 ] as const;
 
 export const SECTION_REGISTRY = [
@@ -124,3 +136,6 @@ export function getSectionByAlias(alias: string): SectionRegistryEntry | undefin
 
 export const localizedSectionLabel = (locale: SiteLocale, id: SectionId): string =>
   SECTION_NAV.find((section) => section.id === id)?.label[locale] ?? id;
+
+export const sectionPath = (locale: SiteLocale, id: SectionId): string =>
+  localizedPath(locale, `/#${id}`);
