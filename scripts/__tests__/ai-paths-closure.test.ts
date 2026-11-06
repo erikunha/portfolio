@@ -24,8 +24,8 @@ function importClosure(roots: readonly string[]): string[] {
     seen.add(file);
     // behavioral-test-allow: walks the import graph to prove the CI path filter covers it
     const source = readFileSync(file, 'utf8');
-    for (const [, spec] of source.matchAll(/from '(@\/[^']+)'/g)) {
-      const resolved = resolveAlias(spec);
+    for (const match of source.matchAll(/from '(@\/[^']+)'/g)) {
+      const resolved = resolveAlias(match[1] ?? '');
       if (resolved) stack.push(resolved);
     }
   }

@@ -30,6 +30,10 @@ vi.mock('@upstash/redis', () => ({
       get: vi.fn(async () => counter.value),
       set: vi.fn(async () => 'OK'),
       decrby: decrbyMock,
+      incrby: vi.fn(async (_key: string, n: number): Promise<number> => {
+        counter.value += n;
+        return counter.value;
+      }),
       pipeline: () => ({
         incrby: (_k: string, n: number) => {
           counter.value += n;
@@ -66,7 +70,21 @@ describe('budget reservation pattern', () => {
     vi.unstubAllEnvs();
   });
 
-  const INPUT_RESERVATION = 2200;
+  let INPUT_RESERVATION = 0;
+
+  beforeEach(async () => {
+    ({ ASK_RESERVED_INPUT_TOKENS: INPUT_RESERVATION } = await import(
+      '@/lib/ask/input-reservation'
+    ));
+  });
+
+  it('reserves at least the whole system prompt and a full question at 3 chars per token', async () => {
+    const { SYSTEM_TEXT } = await import('@/lib/ask/system-prompt');
+    const { ASK_MAX_QUESTION_CHARS } = await import('@/lib/ask/limits');
+    expect(INPUT_RESERVATION).toBeGreaterThanOrEqual(
+      Math.ceil((SYSTEM_TEXT.length + ASK_MAX_QUESTION_CHARS) / 3),
+    );
+  });
 
   it('rejects the reservation when Redis throws', async () => {
     pipelineExec.mockRejectedValueOnce(new Error('Redis unavailable'));
@@ -137,11 +155,23 @@ describe('budget reservation pattern', () => {
     expect(decrbyMock).toHaveBeenCalledWith(expect.stringMatching(/ask:tokens:/), reserved - 200);
   });
 
-  it('settleBudget is a no-op when actual >= reserved (defensive)', async () => {
+  it('settleBudget charges the overage when actual usage exceeds the reservation', async () => {
     const { settleBudget } = await import('@/lib/rate-limit');
     decrbyMock.mockClear();
-    await settleBudget(INPUT_RESERVATION + 512, 2500, 600, 'ask:tokens:test');
+    const reserved = INPUT_RESERVATION + 512;
+    counter.value = reserved;
+    await settleBudget(reserved, INPUT_RESERVATION + 300, 600, 'ask:tokens:test');
     expect(decrbyMock).not.toHaveBeenCalled();
+    expect(counter.value).toBe(INPUT_RESERVATION + 900);
+  });
+
+  it('settleBudget leaves the counter alone when actual equals the reservation', async () => {
+    const { settleBudget } = await import('@/lib/rate-limit');
+    decrbyMock.mockClear();
+    counter.value = 1000;
+    await settleBudget(1000, 600, 400, 'ask:tokens:test');
+    expect(decrbyMock).not.toHaveBeenCalled();
+    expect(counter.value).toBe(1000);
   });
 
   it('settleBudget skips when there is no positive reservation', async () => {

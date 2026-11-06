@@ -409,7 +409,7 @@ The same question text (SHA-256) from the same IP hash within 60 seconds is bloc
 
 ### Budget enforcement (the Principal-level move)
 
-Redis holds `ask:tokens:YYYY-MM` with a 32-day TTL set only when absent. `reserveBudget(MAX_OUTPUT_TOKENS)` reserves 2200 input tokens plus 512 output tokens before inference. The monthly capacity is 3,000,000 tokens. `settleBudget` refunds the unused reservation against reported usage; a failed refund remains conservatively charged.
+Redis holds `ask:tokens:YYYY-MM` with a 32-day TTL set only when absent. `reserveBudget(MAX_OUTPUT_TOKENS)` reserves `ASK_RESERVED_INPUT_TOKENS` plus 512 output tokens before inference; `lib/ask/input-reservation.ts` derives the input share from the system prompt and the 500-character question cap at 3 characters per token. The monthly capacity is 3,000,000 tokens. `settleBudget` refunds the unused reservation against reported usage and charges any usage above it; a failed refund remains conservatively charged.
 - At 80% capacity, reservation logs a warning and allows the request.
 - Above capacity, it refunds the rejected reservation and returns `allowed: false`; the route responds with HTTP 503.
 - Redis failure during reservation fails closed. Rate limiting and identical-question dedup fail open, but the budget rejection prevents the model call.

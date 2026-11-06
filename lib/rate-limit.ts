@@ -1,6 +1,7 @@
 import { isIP } from 'node:net';
 import { Ratelimit } from '@upstash/ratelimit';
 import { Redis, type Requester } from '@upstash/redis';
+import { ASK_RESERVED_INPUT_TOKENS } from '@/lib/ask/input-reservation';
 import { ASK_MAX_OUTPUT_TOKENS } from '@/lib/ask/limits';
 import { log } from '@/lib/log';
 
@@ -185,12 +186,13 @@ export function getClientIp(req: import('next/server').NextRequest): string {
 const MONTHLY_TOKEN_BUDGET = 3_000_000;
 const BUDGET_WINDOW_S = 60 * 60 * 24 * 32;
 
-const RESERVED_INPUT_TOKENS = 2200;
+const RESERVED_INPUT_TOKENS = ASK_RESERVED_INPUT_TOKENS;
 
 export type BudgetStore = {
   capacity: number;
   reserve(budgetKey: string, tokens: number): Promise<number>;
   release(budgetKey: string, tokens: number): Promise<void>;
+  chargeOverage(budgetKey: string, tokens: number): Promise<void>;
 };
 
 const redisBudgetStore: BudgetStore = {
@@ -204,6 +206,9 @@ const redisBudgetStore: BudgetStore = {
   },
   async release(budgetKey, tokens) {
     await getRedis().decrby(budgetKey, tokens);
+  },
+  async chargeOverage(budgetKey, tokens) {
+    await getRedis().incrby(budgetKey, tokens);
   },
 };
 
@@ -225,6 +230,7 @@ export function createEvalBudgetStore(requests: number): BudgetStore {
     async release(budgetKey, tokens) {
       used.set(budgetKey, (used.get(budgetKey) ?? 0) - tokens);
     },
+    async chargeOverage() {},
   };
 }
 
@@ -271,7 +277,15 @@ export async function settleBudget(
   }
   const actual = actualInputTokens + actualOutputTokens;
   const refund = reserved - actual;
-  if (refund <= 0) return;
+  if (refund === 0) return;
+  if (refund < 0) {
+    try {
+      await budgetStore.chargeOverage(budgetKey, -refund);
+    } catch (err) {
+      log.error('budget settlement overage charge failed', { err });
+    }
+    return;
+  }
   try {
     await budgetStore.release(budgetKey, refund);
   } catch (err) {
