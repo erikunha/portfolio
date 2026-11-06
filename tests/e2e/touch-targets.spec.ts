@@ -5,6 +5,7 @@ const MIN_TOUCH_TARGET_PX = 44;
 const STANDALONE_LINKS: Record<string, string> = {
   '/': '#sec-projects .project-co a, #sec-live-metrics .measured-heading a, .career-tag-key a',
   '/cv': '.reading-entry h3 a',
+  '/design-system/components': '.component-nav a',
 };
 
 test.describe('standalone links are 44px touch targets on a touch device', () => {

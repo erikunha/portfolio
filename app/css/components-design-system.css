@@ -340,4 +340,12 @@
     height: var(--spacing-3);
     background: var(--color-primary-500);
   }
+
+  @media (pointer: coarse) {
+    .component-nav-link {
+      display: inline-flex;
+      align-items: center;
+      min-height: var(--spacing-target);
+    }
+  }
 }
