@@ -1,6 +1,7 @@
 // @vitest-environment node
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { ASK_RESERVED_INPUT_TOKENS } from '@/lib/ask/input-reservation';
 
 const pipelineExec = vi.fn(async (): Promise<[number, number]> => {
   throw new Error('Failed to parse URL from /pipeline');
@@ -22,7 +23,7 @@ vi.mock('@/lib/log', () => ({
   log: { info: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn() },
 }));
 
-const RESERVATION = 2200 + 512;
+const RESERVATION = ASK_RESERVED_INPUT_TOKENS + 512;
 const RUN_REQUESTS = 3;
 
 describe('budget store seam', () => {
