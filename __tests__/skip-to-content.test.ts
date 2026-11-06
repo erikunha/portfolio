@@ -6,7 +6,6 @@ import { type MountedClient, mountClient } from './helpers/render';
 
 vi.mock('@/lib/use-breakpoint.client', () => ({
   useBreakpoint: () => ({ isMobile: false }),
-  BreakpointProvider: ({ children }: { children: unknown }) => children,
 }));
 
 vi.mock('@/lib/motion', () => ({

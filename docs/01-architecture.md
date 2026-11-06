@@ -99,8 +99,7 @@ flowchart LR
 
 ```mermaid
 flowchart TD
-    page["components/SiteHome.tsx (RSC)"] --> bp["BreakpointProvider: initialIsMobile=false"]
-    bp --> shell["AppShell.client"]
+    page["components/SiteHome.tsx (RSC)"] --> shell["AppShell.client"]
     shell --> main["PageMain (RSC)"]
     main --> sectionN["sections/* (RSC)"]
     shell --> footer["Footer (RSC), after PageMain"]
@@ -125,7 +124,7 @@ flowchart TD
     defh --> rl
     rl --> redis[("Upstash")]
     askmod --> gw["AI Gateway"]
-    shell --> media["useBreakpoint: matchMedia subscription"]
+    shellisland["InteractiveShell island"] --> media["useBreakpoint: matchMedia subscription, no context"]
     shell --> motion["lib/motion.ts (DOM state)"]
 ```
 

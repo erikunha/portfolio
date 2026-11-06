@@ -1,49 +1,21 @@
 'use client';
 
-import {
-  createContext,
-  type ReactNode,
-  useCallback,
-  useContext,
-  useRef,
-  useSyncExternalStore,
-} from 'react';
+import { useSyncExternalStore } from 'react';
 import { MOBILE_QUERY } from './media-queries';
 
-type BreakpointCtx = {
+type Breakpoint = {
   isMobile: boolean;
 };
 
-const Ctx = createContext<BreakpointCtx | null>(null);
-
-export function BreakpointProvider({
-  initialIsMobile,
-  children,
-}: {
-  initialIsMobile: boolean;
-  children: ReactNode;
-}) {
-  const mqRef = useRef<MediaQueryList | null>(null);
-  if (!mqRef.current && typeof window !== 'undefined') {
-    mqRef.current = window.matchMedia(MOBILE_QUERY);
-  }
-
-  const subscribe = useCallback((cb: () => void) => {
-    mqRef.current?.addEventListener('change', cb);
-    return () => mqRef.current?.removeEventListener('change', cb);
-  }, []);
-
-  const isMobileFromMedia = useSyncExternalStore(
-    subscribe,
-    () => mqRef.current?.matches ?? initialIsMobile,
-    () => initialIsMobile,
-  );
-
-  return <Ctx.Provider value={{ isMobile: isMobileFromMedia }}>{children}</Ctx.Provider>;
+function subscribe(onChange: () => void) {
+  const query = window.matchMedia(MOBILE_QUERY);
+  query.addEventListener('change', onChange);
+  return () => query.removeEventListener('change', onChange);
 }
 
-export function useBreakpoint(): BreakpointCtx {
-  const ctx = useContext(Ctx);
-  if (!ctx) throw new Error('useBreakpoint must be used inside <BreakpointProvider>');
-  return ctx;
+const readMobile = () => window.matchMedia(MOBILE_QUERY).matches;
+const readMobileOnServer = () => false;
+
+export function useBreakpoint(): Breakpoint {
+  return { isMobile: useSyncExternalStore(subscribe, readMobile, readMobileOnServer) };
 }

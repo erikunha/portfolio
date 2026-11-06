@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { DEFERRED_SECTION_COUNT } from '../../components/responsive/Module/module.constants';
+import { waitForHydration } from './_helpers/hydration';
 import { installMockBackend } from './_helpers/mock-backend';
 
 const BASE_URL = 'http://localhost:3000';
@@ -198,6 +199,7 @@ test.describe('cross-cutting', () => {
     await installMockBackend(page, { log: 'accept', forget: 'happy' });
     await page.goto('/');
     await page.waitForSelector('[aria-label="shell command"]', { state: 'visible' });
+    await waitForHydration(page, '[aria-label="shell command"]');
 
     await page.evaluate(() => {
       (window as unknown as { __longTasks: PerformanceEntry[] }).__longTasks = [];

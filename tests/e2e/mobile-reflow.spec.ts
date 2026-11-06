@@ -136,7 +136,9 @@ for (const bar of ['.shell-chrome', '.contact-chrome']) {
     const layout = await chrome.evaluate((element) => {
       const box = element.getBoundingClientRect();
       const padding = Number.parseFloat(getComputedStyle(element).paddingLeft);
-      const [dots, ...labels] = [...element.children].map((child) => child.getBoundingClientRect());
+      const [dots, ...labels] = [...element.children]
+        .map((child) => child.getBoundingClientRect())
+        .filter((rect) => rect.width > 0);
       const centre = (box.left + box.right) / 2;
       return {
         dotsOffset: (dots?.left ?? 0) - (box.left + padding),

@@ -1,7 +1,9 @@
 import { expect, type Page, test } from '@playwright/test';
+import { waitForHydration } from './_helpers/hydration';
 import { stripVolatileChrome } from './_helpers/mask-volatile';
 
 const INPUT = '[aria-label="shell command"]';
+const SHELL_FORM = '[data-testid="shell-form"]';
 
 type Rgb = [number, number, number];
 
@@ -56,6 +58,7 @@ async function openShell(page: Page): Promise<void> {
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.goto('/');
   await page.waitForSelector('[data-testid="shell-form"]', { state: 'visible' });
+  await waitForHydration(page, SHELL_FORM);
   await page.locator(INPUT).first().scrollIntoViewIfNeeded();
   await stripVolatileChrome(page);
 }
