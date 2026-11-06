@@ -1,7 +1,8 @@
 'use client';
 
+import { usePathname } from 'next/navigation';
 import { type ReactNode, Suspense } from 'react';
-import type { SiteLocale } from '@/content/site-locale';
+import { localeOfPath, type SiteLocale } from '@/content/site-locale';
 import { ErrorBoundary } from '../../ErrorBoundary';
 
 export function LazyIsland({
@@ -17,10 +18,11 @@ export function LazyIsland({
   minHeight?: string;
   children: ReactNode;
 }) {
+  const pathLocale = localeOfPath(usePathname());
   return (
     <ErrorBoundary
       fallback={failed}
-      {...(locale ? { locale } : {})}
+      locale={locale ?? pathLocale}
       {...(minHeight ? { minHeight } : {})}
     >
       <Suspense fallback={loading}>{children}</Suspense>
