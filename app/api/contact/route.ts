@@ -1,5 +1,5 @@
 import { contactContent } from '@/content/contact';
-import { CONTACT_DELIVERY_CODE } from '@/content/contact-rules';
+import { CONTACT_DELIVERY_CODE, CONTACT_ERROR_CODE } from '@/content/contact-rules';
 import { DEFAULT_SITE_LOCALE, SITE_LOCALES, type SiteLocale } from '@/content/site-locale';
 import { sendContactMessage } from '@/lib/contact-delivery';
 import {
@@ -19,7 +19,6 @@ const HONEYPOT_JITTER_MAX_MS = 150;
 
 const STORAGE_UNAVAILABLE_STATUS = 502;
 const QUEUED_STATUS = 202;
-const STORAGE_UNAVAILABLE_CODE = 'storage_unavailable';
 const MAX_CONTACT_BODY_BYTES = 16_384;
 
 function requestLocale(req: Request): SiteLocale {
@@ -58,7 +57,7 @@ const handleContact = defineHandler({
       return err({
         requestId,
         status: STORAGE_UNAVAILABLE_STATUS,
-        code: STORAGE_UNAVAILABLE_CODE,
+        code: CONTACT_ERROR_CODE.STORAGE_UNAVAILABLE,
         message: copy.errors.storageUnavailable,
       });
     }
@@ -76,7 +75,7 @@ const handleContact = defineHandler({
       return err({
         requestId,
         status: STORAGE_UNAVAILABLE_STATUS,
-        code: STORAGE_UNAVAILABLE_CODE,
+        code: CONTACT_ERROR_CODE.DELIVERY_UNAVAILABLE,
         message: copy.errors.retryUnavailable,
       });
     }

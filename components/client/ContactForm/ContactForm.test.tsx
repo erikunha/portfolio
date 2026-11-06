@@ -339,6 +339,23 @@ describe('contact form delivery states', () => {
       'rate_limited',
       'error: too many requests, try again in 10 minutes. Your',
     ],
+    [SITE_LOCALE.en, 502, 'storage_unavailable', 'error: could not save your message. Your text'],
+    [SITE_LOCALE.pt, 502, 'storage_unavailable', 'erro: não foi possível salvar sua mensagem. Seu'],
+    [SITE_LOCALE.en, 503, 'storage_unavailable', 'error: could not save your message. Your text'],
+    [
+      SITE_LOCALE.en,
+      502,
+      'delivery_unavailable',
+      'error: your message could not be delivered yet.',
+    ],
+    [
+      SITE_LOCALE.pt,
+      502,
+      'delivery_unavailable',
+      'erro: sua mensagem ainda não pôde ser entregue.',
+    ],
+    [SITE_LOCALE.en, 403, 'forbidden_origin', 'error: this form only works on the site itself.'],
+    [SITE_LOCALE.pt, 403, 'forbidden_origin', 'erro: este formulário só funciona no próprio site.'],
     [SITE_LOCALE.en, 502, 'internal_error', 'error: could not send right now. Your text'],
     [SITE_LOCALE.pt, 502, 'internal_error', 'erro: não foi possível enviar agora. Seu texto'],
     [
@@ -1223,26 +1240,18 @@ describe('contact form locale header and server message', () => {
     expect((init.headers as Record<string, string>)[ASK_LOCALE_HEADER]).toBe(expected);
   });
 
-  it('shows the server message for a code the server localizes', async () => {
+  it('words a storage failure from its own copy, not the server message', async () => {
     const { container } = await submitAt(
       '/pt',
       Response.json(
-        { ok: false, error: { code: 'storage_unavailable', message: 'mensagem do servidor' } },
-        { status: 502 },
+        { ok: false, error: { code: 'storage_unavailable', message: 'storage unavailable' } },
+        { status: 503 },
       ),
     );
-    expect(container.querySelector('[role="alert"]')?.textContent).toContain(
-      'mensagem do servidor',
-    );
-  });
-
-  it('falls back to its own copy when the server sends no message', async () => {
-    const { container } = await submitAt(
-      '/pt',
-      Response.json({ ok: false, error: { code: 'storage_unavailable' } }, { status: 502 }),
-    );
-    expect(container.querySelector('[role="alert"]')?.textContent).toContain(
-      contactCopy[SITE_LOCALE.pt].errors.requestFailed,
+    const text = container.querySelector('[role="alert"]')?.textContent ?? '';
+    expect(text).toContain(contactCopy[SITE_LOCALE.pt].errors.storageUnavailable);
+    expect(text, 'the server text of a generic handler is English and internal').not.toContain(
+      'storage unavailable',
     );
   });
 });

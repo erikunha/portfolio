@@ -43,8 +43,6 @@ type Status = (typeof STATUS)[keyof typeof STATUS];
 const CONTACT_ENDPOINT = '/api/contact';
 const QUEUED_STATUS = 202;
 const REQUEST_TIMEOUT_MS = 20_000;
-const STORAGE_UNAVAILABLE_CODE = 'storage_unavailable';
-const SERVER_LOCALIZED_CODES: readonly string[] = [STORAGE_UNAVAILABLE_CODE];
 const MESSAGE_ROWS = 5;
 const INITIAL_FAILURE_COUNT = 0;
 const FIELD_BORDER = '[&:not([aria-invalid=true])]:border-primary-500';
@@ -265,7 +263,6 @@ export function ContactForm({ copy, chrome }: { copy: ContactContent; chrome: Te
       return;
     }
     pendingRef.current = true;
-    let serverMessage = '';
     setStatus(STATUS.SUBMITTING);
     try {
       const { response: res, data } = await postJson<ContactResponse>(
@@ -281,9 +278,6 @@ export function ContactForm({ copy, chrome }: { copy: ContactContent; chrome: Te
         return;
       }
       if (!res.ok || data?.ok !== true || res.status === QUEUED_STATUS) {
-        if (apiError?.code && SERVER_LOCALIZED_CODES.includes(apiError.code)) {
-          serverMessage = apiError.message ?? '';
-        }
         throw new Error(CONTACT_ENDPOINT, { cause: apiError?.code });
       }
       messageStore.reset();
@@ -296,7 +290,7 @@ export function ContactForm({ copy, chrome }: { copy: ContactContent; chrome: Te
     } catch (error) {
       const code =
         error instanceof Error && typeof error.cause === 'string' ? error.cause : undefined;
-      setErrorMsg(serverMessage || contactErrorMessage(copy, code));
+      setErrorMsg(contactErrorMessage(copy, code));
       setStatus(STATUS.ERROR);
       setFailureCount((count) => count + 1);
     } finally {

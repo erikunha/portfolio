@@ -114,3 +114,31 @@ describe('defineHandler rate-limit message language', () => {
     expect((await res.json()).error.message).toBe('plain');
   });
 });
+
+describe('contact API delivery failure', () => {
+  beforeEach(() => {
+    vi.resetModules();
+    vi.clearAllMocks();
+    limit.mockResolvedValue({ success: true });
+    redisSet.mockResolvedValue('OK');
+  });
+
+  it('answers a saved but undeliverable message with its own code, not the storage code', async () => {
+    vi.doMock('@/lib/contact-delivery', () => ({ sendContactMessage: async () => false }));
+    vi.doMock('@/lib/contact-outbox', () => ({
+      CONTACT_MESSAGE_TTL_SECONDS: 60,
+      contactMessageKey: (id: string) => `contact:${id}`,
+      enqueueContact: async () => false,
+    }));
+    const { POST } = await import('@/app/api/contact/route');
+    const res = await POST(request(SITE_LOCALE.pt));
+    const body = await res.json();
+    expect(res.status).toBe(502);
+    expect(body.error.code, 'the form words each failure from its code, so the codes differ').toBe(
+      'delivery_unavailable',
+    );
+    expect(body.error.message).toBe(contactContent[SITE_LOCALE.pt].errors.retryUnavailable);
+    vi.doUnmock('@/lib/contact-delivery');
+    vi.doUnmock('@/lib/contact-outbox');
+  });
+});
