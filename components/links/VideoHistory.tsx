@@ -7,6 +7,7 @@ import type { ChannelFeed } from '@/lib/links/feed';
 import { formatCompact } from '@/lib/links/format';
 import { formatRelative } from '@/lib/links/relative-time';
 import { withUtm } from '@/lib/links/utm';
+import { NewTabHint } from './NewTabHint';
 import { SectionHeading } from './SectionHeading';
 
 const HEADING_ID = 'links-history-heading';
@@ -84,6 +85,7 @@ export function VideoHistory({ locale, feed }: { locale: LinksLocale; feed: Chan
                 <span aria-hidden="true" className="links-history-arrow">
                   {linksUi.arrow}
                 </span>
+                <NewTabHint text={copy.opensInNewTab[locale]} />
               </ExternalLink>
             </li>
           ))}
@@ -97,6 +99,7 @@ export function VideoHistory({ locale, feed }: { locale: LinksLocale; feed: Chan
           className="links-history-all"
         >
           {copy.seeAllVideos[locale]}
+          <NewTabHint text={copy.opensInNewTab[locale]} />
         </ExternalLink>
       )}
     </section>

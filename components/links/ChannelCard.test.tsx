@@ -95,6 +95,8 @@ describe('ChannelCard', () => {
     const watch = container.querySelector('[data-outbound="assistir"]');
     const arrow = watch?.querySelector('[aria-hidden="true"]');
     expect(arrow?.textContent).toBe('→');
-    expect(watch?.textContent?.replace('→', '').trim()).toBe('watch');
+    expect(watch?.textContent?.replace('→', '').replace(/\s+/g, ' ').trim()).toBe(
+      'watch (opens in a new tab)',
+    );
   });
 });

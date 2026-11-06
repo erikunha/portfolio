@@ -5,6 +5,7 @@ import { linksUi } from '@/content/links-ui';
 import type { LinksPlaylist } from '@/content/schemas';
 import { cn } from '@/lib/cn';
 import { withUtm } from '@/lib/links/utm';
+import { NewTabHint } from './NewTabHint';
 import { SectionHeading } from './SectionHeading';
 
 const HEADING_ID = 'links-playlists-heading';
@@ -73,6 +74,7 @@ export function PlaylistCards({ locale, channelUrl }: { locale: LinksLocale; cha
               <span className="block mt-2 text-tertiary-400 text-xs text-pretty">
                 {playlist.description[locale]}
               </span>
+              <NewTabHint text={copy.opensInNewTab[locale]} />
             </ExternalLink>
           </li>
         ))}

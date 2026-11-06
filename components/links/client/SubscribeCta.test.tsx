@@ -13,6 +13,7 @@ function renderCta() {
       subscribeLabel="inscrever-se no canal"
       subscribedLabel="ver os últimos vídeos"
       outboundId="inscrever"
+      newTabHint="abre em uma nova guia"
     />,
   );
 }

@@ -11,6 +11,7 @@ import { formatRelative } from '@/lib/links/relative-time';
 import { withUtm } from '@/lib/links/utm';
 import { SubscribeCta } from './client/SubscribeCta.client';
 import { IconYouTube } from './LinkIcons';
+import { NewTabHint } from './NewTabHint';
 import { SectionHeading } from './SectionHeading';
 
 const HEADING_ID = 'links-channel-heading';
@@ -97,6 +98,7 @@ export function ChannelCard({ locale, feed }: { locale: LinksLocale; feed: Chann
                 {latest.description}
               </span>
             )}
+            <NewTabHint text={copy.opensInNewTab[locale]} />
           </ExternalLink>
         )}
 
@@ -110,6 +112,7 @@ export function ChannelCard({ locale, feed }: { locale: LinksLocale; feed: Chann
             subscribeLabel={copy.subscribe[locale]}
             subscribedLabel={copy.subscribedCta[locale]}
             outboundId="inscrever"
+            newTabHint={copy.opensInNewTab[locale]}
           />
           {latest !== null && (
             <Button
@@ -121,6 +124,7 @@ export function ChannelCard({ locale, feed }: { locale: LinksLocale; feed: Chann
               data-outbound="assistir"
             >
               {copy.watch[locale]} <span aria-hidden="true">{linksUi.arrow}</span>
+              <NewTabHint text={copy.opensInNewTab[locale]} />
             </Button>
           )}
         </div>

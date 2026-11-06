@@ -5,6 +5,7 @@ import type { LinksPill } from '@/content/schemas';
 import { withUtm } from '@/lib/links/utm';
 import { CopyLinkButton } from './client/CopyLinkButton.client';
 import { PillGlyph } from './LinkIcons';
+import { NewTabHint } from './NewTabHint';
 
 function isMail(href: string): boolean {
   return href.startsWith('mailto:');
@@ -30,7 +31,7 @@ export function LinkPills({ locale, url }: { locale: LinksLocale; url: string })
               <PillGlyph icon={pill.icon} />
             </span>
             {pill.label[locale]}
-            {!isMail(pill.href) && <span className="sr-only"> ({copy.opensInNewTab[locale]})</span>}
+            {!isMail(pill.href) && <NewTabHint text={copy.opensInNewTab[locale]} />}
           </a>
         </li>
       ))}
