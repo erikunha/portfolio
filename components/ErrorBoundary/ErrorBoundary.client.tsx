@@ -47,7 +47,6 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   override componentDidCatch(error: Error, info: { componentStack?: string | null }) {
-    console.error('[ErrorBoundary] client island crashed:', error, info.componentStack);
     reportClientError('[ErrorBoundary]', error, info.componentStack);
   }
 
