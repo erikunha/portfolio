@@ -5,6 +5,7 @@ import { cacheLife } from 'next/cache';
 import { z } from 'zod';
 import { linksContent } from '@/content/links';
 import { env } from '@/lib/env';
+import { GOOGLE_API_KEY_HEADER } from '@/lib/google-api';
 import {
   canonicalThumbnailUrl,
   type EnrichedVideo,
@@ -31,7 +32,6 @@ const CACHE_REVALIDATE_S = 3_600;
 const CACHE_EXPIRE_S = 86_400;
 
 const RSS_ENDPOINT = 'https://www.youtube.com/feeds/videos.xml';
-const API_KEY_HEADER = 'x-goog-api-key';
 const VIDEOS_ENDPOINT = 'https://www.googleapis.com/youtube/v3/videos';
 const CHANNELS_ENDPOINT = 'https://www.googleapis.com/youtube/v3/channels';
 const PLAYLIST_ITEMS_ENDPOINT = 'https://www.googleapis.com/youtube/v3/playlistItems';
@@ -104,7 +104,7 @@ async function fetchText(
       signal: AbortSignal.any([AbortSignal.timeout(timeoutMs), deadline]),
       headers: {
         accept: 'application/xml, application/json',
-        ...(apiKey ? { [API_KEY_HEADER]: apiKey } : {}),
+        ...(apiKey ? { [GOOGLE_API_KEY_HEADER]: apiKey } : {}),
       },
     });
     if (!response.ok) {

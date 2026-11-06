@@ -160,6 +160,18 @@ describe('getScores — cache miss', () => {
     );
   });
 
+  it('sends the PSI key in a header, never in the request URL', async () => {
+    mockGet.mockResolvedValue(null);
+    process.env.PSI_API_KEY = 'test-key';
+    mockFetch.mockResolvedValue(makePsiResponse(0.99));
+    const { getScores } = await import('@/lib/lighthouse-scores');
+    await getScores('desktop');
+    const [url, init] = mockFetch.mock.calls[0] as [string, RequestInit];
+    expect(url).not.toContain('test-key');
+    expect(new URL(url).searchParams.has('key')).toBe(false);
+    expect(new Headers(init.headers).get('x-goog-api-key')).toBe('test-key');
+  });
+
   it('logs error when Redis GET fails', async () => {
     mockGet.mockRejectedValue(new Error('Redis connection refused'));
     mockSet.mockResolvedValue('OK');

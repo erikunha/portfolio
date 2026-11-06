@@ -1,4 +1,5 @@
 import { env } from '@/lib/env';
+import { GOOGLE_API_KEY_HEADER } from '@/lib/google-api';
 import { log } from '@/lib/log';
 import { ReadTimeoutError, withTimeout } from '@/lib/with-timeout';
 import { getRedis } from './rate-limit';
@@ -79,7 +80,6 @@ async function fetchScoresOnce(
     'https://www.googleapis.com/pagespeedonline/v5/runPagespeed' +
     `?url=${encodeURIComponent('https://www.erikunha.dev')}` +
     `&strategy=${strategy}` +
-    `&key=${apiKey}` +
     '&category=PERFORMANCE&category=ACCESSIBILITY&category=BEST_PRACTICES&category=SEO';
 
   const fetchCache: RequestInit = forceRefresh
@@ -89,7 +89,7 @@ async function fetchScoresOnce(
   const res = await fetch(psiUrl, {
     ...fetchCache,
     signal: AbortSignal.timeout(timeoutMs),
-    headers: { Referer: 'https://www.erikunha.dev/' },
+    headers: { Referer: 'https://www.erikunha.dev/', [GOOGLE_API_KEY_HEADER]: apiKey },
   });
   if (!res.ok) {
     let body = '(unreadable)';
