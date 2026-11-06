@@ -1,12 +1,19 @@
 'use client';
-import { type ButtonHTMLAttributes, useEffect, useRef, useState } from 'react';
+import type { ButtonHTMLAttributes } from 'react';
 import { copyFeedback } from '@/content/copy-button';
 import type { CopyFeedback } from '@/content/schemas';
 import { SITE_LOCALE } from '@/content/site-locale';
 import { cn } from '@/lib/cn';
+import { COPY_STATUS, type CopyStatus, useCopyFeedback } from '@/lib/use-copy-feedback.client';
 
 const COPY_FEEDBACK = copyFeedback[SITE_LOCALE.en];
-const COPY_FEEDBACK_DURATION_MS = 1500;
+const FEEDBACK_BY_STATUS: Record<CopyStatus, CopyFeedback> = {
+  [COPY_STATUS.Idle]: COPY_FEEDBACK.idle,
+  [COPY_STATUS.Pending]: COPY_FEEDBACK.idle,
+  [COPY_STATUS.Copied]: COPY_FEEDBACK.success,
+  [COPY_STATUS.Failed]: COPY_FEEDBACK.failure,
+  [COPY_STATUS.Unavailable]: COPY_FEEDBACK.unavailable,
+};
 
 type CopyButtonProps = Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'children'> & { text: string };
 
@@ -17,44 +24,8 @@ export function CopyButton({
   type = 'button',
   ...rest
 }: CopyButtonProps) {
-  const [feedback, setFeedback] = useState<CopyFeedback>(COPY_FEEDBACK.idle);
-  const [attempt, setAttempt] = useState(0);
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const copyingRef = useRef(false);
-  const mountedRef = useRef(true);
-
-  useEffect(() => {
-    mountedRef.current = true;
-    return () => {
-      mountedRef.current = false;
-      if (timerRef.current !== null) clearTimeout(timerRef.current);
-    };
-  }, []);
-
-  async function copy() {
-    if (copyingRef.current) return;
-    if (timerRef.current !== null) clearTimeout(timerRef.current);
-    setAttempt((current) => current + 1);
-    setFeedback(COPY_FEEDBACK.idle);
-    copyingRef.current = true;
-    try {
-      if (typeof navigator.clipboard?.writeText !== 'function') {
-        setFeedback(COPY_FEEDBACK.unavailable);
-        return;
-      }
-      await navigator.clipboard.writeText(text);
-      if (!mountedRef.current) return;
-      setFeedback(COPY_FEEDBACK.success);
-      timerRef.current = setTimeout(
-        () => setFeedback(COPY_FEEDBACK.idle),
-        COPY_FEEDBACK_DURATION_MS,
-      );
-    } catch {
-      if (mountedRef.current) setFeedback(COPY_FEEDBACK.failure);
-    } finally {
-      copyingRef.current = false;
-    }
-  }
+  const { status, attempt, copy } = useCopyFeedback();
+  const feedback = FEEDBACK_BY_STATUS[status];
 
   return (
     <>
@@ -64,7 +35,7 @@ export function CopyButton({
         className={cn('copy-btn', className)}
         onClick={(event) => {
           onClick?.(event);
-          if (!event.defaultPrevented) void copy();
+          if (!event.defaultPrevented) void copy(text);
         }}
       >
         {feedback.label}

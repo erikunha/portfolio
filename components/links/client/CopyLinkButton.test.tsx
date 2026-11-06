@@ -57,6 +57,16 @@ describe('CopyLinkButton', () => {
     expect(statusText(container)).toBe('copied ✓');
   });
 
+  it('keeps the status region outside the button and gives the button a stable name', () => {
+    vi.stubGlobal('navigator', { clipboard: { writeText: vi.fn().mockResolvedValue(undefined) } });
+
+    const { container } = renderButton();
+    const button = container.querySelector('button');
+    expect(button?.querySelector('[role="status"]')).toBeNull();
+    expect(container.querySelector('[role="status"]')).not.toBeNull();
+    expect(button?.getAttribute('aria-label')).toBe('copiar link');
+  });
+
   it('returns to the idle label so a second copy is discoverable', async () => {
     vi.stubGlobal('navigator', { clipboard: { writeText: vi.fn().mockResolvedValue(undefined) } });
 

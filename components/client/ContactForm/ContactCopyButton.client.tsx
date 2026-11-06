@@ -1,9 +1,8 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useMemo } from 'react';
 import type { CopyFeedback } from '@/content/schemas';
-
-const COPY_FEEDBACK_DURATION_MS = 1500;
+import { COPY_STATUS, type CopyStatus, useCopyFeedback } from '@/lib/use-copy-feedback.client';
 
 export function ContactCopyButton({
   value,
@@ -19,54 +18,26 @@ export function ContactCopyButton({
     readonly unavailable: CopyFeedback;
   };
 }) {
-  const [state, setState] = useState<CopyFeedback>({
-    label: labels.copy,
-    message: '',
-  });
-  const [attempt, setAttempt] = useState(0);
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const mountedRef = useRef(true);
-
-  useEffect(() => {
-    mountedRef.current = true;
-    return () => {
-      mountedRef.current = false;
-      if (timerRef.current !== null) clearTimeout(timerRef.current);
-    };
-  }, []);
-
-  const runCopy = useCallback(async () => {
+  const { status, attempt, copy } = useCopyFeedback();
+  const byStatus = useMemo<Record<CopyStatus, CopyFeedback>>(() => {
     const idle: CopyFeedback = { label: labels.copy, message: '' };
-    const success: CopyFeedback = {
-      label: labels.copied,
-      message: feedback.success.message,
+    return {
+      [COPY_STATUS.Idle]: idle,
+      [COPY_STATUS.Pending]: idle,
+      [COPY_STATUS.Copied]: { label: labels.copied, message: feedback.success.message },
+      [COPY_STATUS.Failed]: feedback.failure,
+      [COPY_STATUS.Unavailable]: feedback.unavailable,
     };
-    if (timerRef.current !== null) clearTimeout(timerRef.current);
-    setAttempt((current) => current + 1);
-    setState(idle);
-    try {
-      if (typeof navigator.clipboard?.writeText !== 'function') {
-        setState(feedback.unavailable);
-        return;
-      }
-      await navigator.clipboard.writeText(value);
-      if (!mountedRef.current) return;
-      setState(success);
-      timerRef.current = setTimeout(() => {
-        if (mountedRef.current) setState(idle);
-      }, COPY_FEEDBACK_DURATION_MS);
-    } catch {
-      if (mountedRef.current) setState(feedback.failure);
-    }
-  }, [value, labels.copy, labels.copied, feedback]);
+  }, [labels.copy, labels.copied, feedback]);
+  const current = byStatus[status];
 
   return (
     <>
-      <button type="button" className="copy-btn contact-copy-btn" onClick={() => void runCopy()}>
-        {state.label}
+      <button type="button" className="copy-btn contact-copy-btn" onClick={() => void copy(value)}>
+        {current.label}
       </button>
       <span role="status" aria-live="polite" aria-atomic="true" className="sr-only">
-        <span key={attempt}>{state.message}</span>
+        <span key={attempt}>{current.message}</span>
       </span>
     </>
   );
