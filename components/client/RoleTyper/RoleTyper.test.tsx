@@ -2,15 +2,18 @@ import { act, createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { mountClient } from '@/__tests__/helpers/render';
-import { ROLE } from '@/content/role';
+import { aboutContent } from '@/content/about';
+import { SITE_LOCALES } from '@/content/site-locale';
 import { RoleTyper } from './RoleTyper';
+
+const ROLE = 'Senior';
 
 vi.mock('@/lib/motion', () => ({
   readMotion: vi.fn(() => true),
 }));
 
 function getDOM() {
-  const html = renderToStaticMarkup(createElement(RoleTyper));
+  const html = renderToStaticMarkup(createElement(RoleTyper, { role: ROLE }));
   return new DOMParser().parseFromString(html, 'text/html');
 }
 
@@ -23,9 +26,12 @@ function getLiveRegion() {
 }
 
 describe('RoleTyper: role length budget', () => {
-  it('no role exceeds 9 chars (so [role] stays ≤ 11 chars, within the 9em CSS budget)', () => {
-    expect(ROLE.length).toBeLessThanOrEqual(9);
-  });
+  it.each(SITE_LOCALES)(
+    'the %s role is at most 9 chars (so [role] stays ≤ 11 chars, within the 9em CSS budget)',
+    (locale) => {
+      expect(aboutContent[locale].whoami.role.length).toBeLessThanOrEqual(9);
+    },
+  );
 });
 
 describe('RoleTyper: role vocabulary', () => {
@@ -66,7 +72,7 @@ describe('RoleTyper: typing', () => {
 
   it('types the role once and holds it, so the badge never empties itself', async () => {
     const { RoleTyper } = await import('./RoleTyper');
-    const mounted = await mountClient(<RoleTyper />);
+    const mounted = await mountClient(<RoleTyper role={ROLE} />);
     const pill = mounted.container.querySelector('[data-role-pill]');
     expect(pill).not.toBeNull();
 

@@ -45,6 +45,15 @@ describe('About r106 composition', () => {
     expect(screen.getByText('taste-and-judgment')).toBeTruthy();
   });
 
+  it('types the role in the page language', () => {
+    const doc = new DOMParser().parseFromString(
+      renderToStaticMarkup(<About locale={SITE_LOCALE.pt} />),
+      'text/html',
+    );
+    expect(doc.querySelector('[data-role-pill]')?.textContent).toBe('[Sênior]');
+    expect(doc.querySelector('.ab-prose [role="status"]')?.textContent).toBe('Sênior');
+  });
+
   it('keeps the full Open to line in the server HTML with the pill in a width-reserving slot', () => {
     const doc = new DOMParser().parseFromString(
       renderToStaticMarkup(<About locale={SITE_LOCALE.en} />),
@@ -53,9 +62,11 @@ describe('About r106 composition', () => {
     const line = doc.querySelector('.ab-prose p:has(.ab-role)');
     const { role, statusPrefix, statusSuffix } = aboutContent[SITE_LOCALE.en].whoami;
     const visible = line?.querySelector('[data-role-pill]');
-    expect(visible?.textContent).toBe(role);
-    expect(line?.querySelector('.role-typer-sizer')?.getAttribute('data-role-text')).toBe(role);
-    expect(line?.textContent).toContain(`${statusPrefix}${role}`);
+    expect(visible?.textContent).toBe(`[${role}]`);
+    expect(line?.querySelector('.role-typer-sizer')?.getAttribute('data-role-text')).toBe(
+      `[${role}]`,
+    );
+    expect(line?.textContent).toContain(`${statusPrefix}[${role}]`);
     expect(line?.textContent).toContain(statusSuffix);
     expect(visible?.getAttribute('aria-hidden')).toBe('true');
     expect(

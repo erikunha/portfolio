@@ -54,12 +54,6 @@ describe('About', () => {
       'the role line owns one live region, apart from the copy feedback region',
     ).toHaveLength(1);
   });
-
-  it('server-renders the role pill from content, without brackets', async () => {
-    const { ROLE } = await import('@/content/role');
-    const { aboutContent } = await import('@/content/about');
-    expect(ROLE).toBe(aboutContent[SITE_LOCALE.en].whoami.role.replace(/^\[|\]$/g, ''));
-  });
 });
 
 describe('Home page', () => {

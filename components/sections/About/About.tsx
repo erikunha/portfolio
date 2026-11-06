@@ -48,7 +48,7 @@ export function About({ locale }: { locale: SiteLocale }) {
                   <h4>{c.whoami.statusTitle}</h4>
                   <p>
                     {c.whoami.statusPrefix}
-                    <RoleTyper className="ab-role font-bold" />
+                    <RoleTyper role={c.whoami.role} className="ab-role font-bold" />
                     {c.whoami.statusSuffix}
                   </p>
                   {c.whoami.details.map((line) => (

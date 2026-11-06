@@ -126,7 +126,7 @@ const aboutFor = (locale: SiteLocale): AboutContent => {
       ],
       statusTitle: pt ? '## Status atual' : '## Current Status',
       statusPrefix: pt ? 'Aberto a vagas de nível ' : 'Open to ',
-      role: pt ? '[Sênior]' : '[Senior]',
+      role: pt ? 'Sênior' : 'Senior',
       statusSuffix: pt
         ? ` ou contratos de impacto · ${WORK_SCOPE[locale]} · Inglês C1.`
         : ` roles or impactful contract roles · ${WORK_SCOPE[locale]} · English C1.`,
