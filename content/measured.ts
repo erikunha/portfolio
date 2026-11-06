@@ -36,11 +36,11 @@ const measuredFor = (locale: SiteLocale): Measured => {
       latencyUnit: 'ms',
       currencyUnit: '$',
       pending: pt
-        ? 'Avaliação pendente. Nenhum agregado disponível ainda.'
-        : 'Eval pending. No aggregate is available yet.',
+        ? 'Avaliação pendente. Ainda não há resultados disponíveis.'
+        : 'Eval pending. No results are available yet.',
       unavailable: pt
-        ? 'Avaliação indisponível. O agregado não pôde ser carregado.'
-        : 'Eval unavailable. The aggregate could not be loaded.',
+        ? 'Os resultados da avaliação estão indisponíveis agora. Tente de novo mais tarde.'
+        : 'Eval results are unavailable right now. Try again later.',
       p95Prefix: pt ? '95% das respostas terminam em até' : '95% of answers finish within',
       p95Pending: pt
         ? '95% das respostas terminam em até este tempo'
@@ -55,7 +55,7 @@ const measuredFor = (locale: SiteLocale): Measured => {
         },
         {
           key: 'jailbreakResistance',
-          label: pt ? 'RESIST. A JAILBREAK' : 'JAILBREAK RESIST',
+          label: pt ? 'RESISTÊNCIA A JAILBREAK' : 'JAILBREAK RESIST',
           description: pt ? 'taxa de recusa a prompt injection' : 'prompt-injection refusal rate',
         },
         { key: 'p95LatencyMs', label: pt ? 'LATÊNCIA P95' : 'P95 LATENCY', description: '' },

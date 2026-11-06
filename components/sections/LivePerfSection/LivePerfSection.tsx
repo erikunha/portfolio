@@ -91,7 +91,7 @@ function PerfBody({
         ))}
       </div>
       {loading || unavailable || (showTimestamp && !timestamp.valid) ? (
-        <p className="measured-status">
+        <p className="measured-status" role="status">
           {loading
             ? measured.loading
             : unavailable

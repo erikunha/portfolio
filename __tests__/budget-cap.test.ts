@@ -81,7 +81,8 @@ describe('budget reservation pattern', () => {
     );
     expect(response.status).toBe(503);
     expect(await response.json()).toEqual({
-      error: 'monthly budget exhausted: email erikhenriquealvescunha@gmail.com directly',
+      error:
+        'AI answers are paused for this month. Email erikhenriquealvescunha@gmail.com instead.',
     });
     expect(streamTextMock).not.toHaveBeenCalled();
   });

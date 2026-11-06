@@ -43,7 +43,8 @@ export async function installMockBackend(page: Page, state: MockState = {}): Pro
         status: 503,
         contentType: 'application/json',
         body: JSON.stringify({
-          error: 'monthly budget exhausted: email erikhenriquealvescunha@gmail.com directly',
+          error:
+            'AI answers are paused for this month. Email erikhenriquealvescunha@gmail.com instead.',
         }),
       });
       return;

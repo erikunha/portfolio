@@ -70,6 +70,12 @@ describe('LivePerfSection: fetch-error fallback', () => {
     expect(doc.querySelector('time')).toBeNull();
   });
 
+  it('announces the unavailable status through a polite live region', async () => {
+    getScoresMock.mockRejectedValue(new Error('PSI API unavailable'));
+    const doc = new DOMParser().parseFromString(await renderPerfData(), 'text/html');
+    expect(doc.querySelector('p.measured-status')?.getAttribute('role')).toBe('status');
+  });
+
   it('keeps the healthy side and marks only the failed side with the empty marker', async () => {
     getScoresMock.mockImplementation((strategy: string) =>
       strategy === 'desktop'

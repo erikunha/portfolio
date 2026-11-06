@@ -74,7 +74,7 @@ function AiMetricsBody({
         ))}
       </div>
       {!metrics ? (
-        <p className="measured-status">
+        <p className="measured-status" role="status">
           {loading ? content.loading : unavailable ? content.ask.unavailable : content.ask.pending}
         </p>
       ) : null}

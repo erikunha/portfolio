@@ -177,7 +177,7 @@ describe('AiMetricsSection — on-page AI eval/cost metrics (RSC)', () => {
 
     const doc = new DOMParser().parseFromString(await renderData(), 'text/html');
     expect(doc.querySelector('.measured-status')?.textContent).toBe(
-      'Eval unavailable. The aggregate could not be loaded.',
+      'Eval results are unavailable right now. Try again later.',
     );
     expect(doc.body.textContent).not.toContain(measured[SITE_LOCALE.en].ask.pending);
     expect(doc.querySelector('time')).toBeNull();
@@ -201,6 +201,18 @@ describe('AiMetricsSection — on-page AI eval/cost metrics (RSC)', () => {
     expect(html).not.toContain('>100%<');
     expect(html).not.toContain('>0%<');
     expect(html).toContain(measured[SITE_LOCALE.en].ask.pending);
-    expect(html).not.toContain('Eval unavailable');
+    expect(html).not.toContain('Eval results are unavailable');
+  });
+
+  it('announces the unavailable state through a polite live region', async () => {
+    getAskMetricsMock.mockRejectedValue(new Error('adapter offline'));
+    const doc = new DOMParser().parseFromString(await renderData(), 'text/html');
+    expect(doc.querySelector('.measured-status')?.getAttribute('role')).toBe('status');
+  });
+
+  it('announces the pending state through a polite live region', async () => {
+    getAskMetricsMock.mockResolvedValue(null);
+    const doc = new DOMParser().parseFromString(await renderData(), 'text/html');
+    expect(doc.querySelector('.measured-status')?.getAttribute('role')).toBe('status');
   });
 });

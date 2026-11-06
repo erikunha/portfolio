@@ -43,6 +43,18 @@ function bounded(lines: Line[]): Line[] {
   return lines.slice(-SHELL_LIMITS.logEntries);
 }
 
+function LineText({ text, ui }: { text: string; ui: ShellUi }) {
+  const at = text.indexOf(ui.email);
+  if (at < 0) return text;
+  return (
+    <>
+      {text.slice(0, at)}
+      <a href={ui.emailHref}>{ui.email}</a>
+      {text.slice(at + ui.email.length)}
+    </>
+  );
+}
+
 function AnimatedPlaceholder({ ui }: { ui: ShellUi }) {
   const textRef = useRef<HTMLSpanElement>(null);
   useEffect(() => {
@@ -474,7 +486,7 @@ export function InteractiveShell({
               ) : (
                 <>
                   {line.ai && <span className="shell-ai-label">{ui.aiLabel}: </span>}
-                  {line.text}
+                  <LineText text={line.text} ui={ui} />
                 </>
               )}
             </span>

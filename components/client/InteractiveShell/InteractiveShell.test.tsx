@@ -495,6 +495,35 @@ describe('InteractiveShell r106 controls', () => {
     expect(container.querySelector('[role="log"]')?.textContent).toContain('commands:');
   });
 
+  it('renders the contact address in a shell error as a mailto link', async () => {
+    const address = 'erikhenriquealvescunha@gmail.com';
+    const fetchMock = vi.fn(async () =>
+      Response.json(
+        { error: `AI answers are paused for this month. Email ${address} instead.` },
+        { status: 503 },
+      ),
+    );
+    vi.stubGlobal('fetch', fetchMock);
+    const container = await renderShell();
+    await submitQuestion(container, 'budget question');
+    const line = container.querySelector('[data-kind="error"]');
+    const link = line?.querySelector('a');
+    expect(link?.getAttribute('href')).toBe(`mailto:${address}`);
+    expect(link?.textContent).toBe(address);
+    expect(line?.textContent).toContain('AI answers are paused for this month. Email');
+    expect(line?.textContent).toContain('instead.');
+  });
+
+  it('keeps shell error text without the address as plain text', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => Response.json({ error: 'rate limit exceeded' }, { status: 429 })),
+    );
+    const container = await renderShell();
+    await submitQuestion(container, 'limited question');
+    expect(container.querySelector('[data-kind="error"] a')).toBeNull();
+  });
+
   it('reports an offline failure, restores the question and leaves local commands usable', async () => {
     vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(false);
     const fetchMock = vi.fn().mockRejectedValue(new TypeError('Failed to fetch'));

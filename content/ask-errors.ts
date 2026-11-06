@@ -30,8 +30,8 @@ const askErrorsFor = (locale: SiteLocale): AskErrors => {
       ? 'pergunta idêntica: espere 60 segundos antes de perguntar de novo'
       : 'identical question: wait 60 seconds before asking again',
     budget: pt
-      ? `orçamento mensal esgotado: escreva para ${social.email}`
-      : `monthly budget exhausted: email ${social.email} directly`,
+      ? `As respostas de IA estão pausadas neste mês. Escreva para ${social.email}.`
+      : `AI answers are paused for this month. Email ${social.email} instead.`,
     truncation: pt
       ? `\n\n[resposta truncada: esta resposta atingiu o limite de tamanho. Escreva para ${social.email} para a resposta completa.]`
       : `\n\n[answer truncated: this response hit its length limit. Email ${social.email} for the full answer.]`,
