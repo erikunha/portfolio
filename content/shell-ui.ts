@@ -139,7 +139,6 @@ export const shellUi: Record<SiteLocale, ShellUi> = {
     bodyUnavailable: 'response body unavailable',
     offline: 'offline: reconnect to ask Claude. Built-in commands still work.',
     networkError: 'Connection failed. Reconnect and retry. Built-in commands still work.',
-    timeout: 'The request timed out. Retry, or use a built-in command.',
     localAvailable: 'Built-in commands still work.',
     referencePrefix: 'ref',
     copy: 'COPY',
@@ -203,7 +202,6 @@ export const shellUi: Record<SiteLocale, ShellUi> = {
       'offline: reconecte para perguntar ao Claude. Os comandos internos continuam funcionando.',
     networkError:
       'Falha de conexão. Reconecte e tente de novo. Os comandos internos continuam funcionando.',
-    timeout: 'A requisição expirou. Tente de novo ou use um comando interno.',
     localAvailable: 'Os comandos internos continuam funcionando.',
     referencePrefix: 'ref',
     copy: 'COPIAR',

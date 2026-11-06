@@ -1,7 +1,7 @@
 // @vitest-environment node
 
 import { NextRequest } from 'next/server';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const rateLimitMock = vi.fn(async () => ({ success: true }));
 const streamTextMock = vi.fn(() => ({
@@ -55,9 +55,15 @@ vi.mock('@/lib/log', () => ({
 
 describe('budget reservation pattern', () => {
   beforeEach(() => {
+    vi.stubEnv('UPSTASH_REDIS_REST_URL', 'https://redis.test');
+    vi.stubEnv('UPSTASH_REDIS_REST_TOKEN', 'test-token');
     counter.value = 0;
     vi.clearAllMocks();
     rateLimitMock.mockResolvedValue({ success: true });
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
   });
 
   const INPUT_RESERVATION = 2200;
