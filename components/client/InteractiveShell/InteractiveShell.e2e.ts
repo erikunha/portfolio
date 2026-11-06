@@ -52,7 +52,7 @@ test.describe('ask / interactive shell', () => {
 
     const errorLine = page.locator('[role="log"] [data-kind="error"]');
     await expect(errorLine).toBeVisible({ timeout: 10_000 });
-    await expect(errorLine).toContainText('budget exhausted');
+    await expect(errorLine).toContainText('AI answers are paused for this month');
   });
 
   test('5 — stream error: STREAM_ERR_SENTINEL mid-stream renders an error line', async ({
