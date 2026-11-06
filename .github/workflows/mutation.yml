@@ -5,6 +5,9 @@ on:
     - cron: "0 4 * * 0" # Weekly Sunday 04:00 UTC
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   mutation:
     name: Stryker mutation score
@@ -36,10 +39,10 @@ jobs:
         run: pnpm test:mutation
         continue-on-error: true
 
-      - name: Guard — fail loudly if the runner did not actually run
+      - name: Fail loudly if the runner did not actually run
         run: |
           if [ ! -f mutation-report.json ]; then
-            echo "::error::Stryker produced no mutation-report.json — the runner crashed (see the 'Run mutation tests' log). This is NOT a low score."
+            echo "::error::Stryker produced no mutation-report.json: the runner crashed (see the 'Run mutation tests' log). This is NOT a low score."
             exit 1
           fi
           node -e "
@@ -47,9 +50,9 @@ jobs:
             const m = Object.values(r.files || {}).flatMap(f => f.mutants || []);
             const scoreable = m.filter(x => ['Killed', 'Timeout', 'Survived', 'NoCoverage'].includes(x.status)).length;
             if (scoreable === 0) {
-              // ::error:: workflow commands must go to STDOUT — GitHub Actions
+              // ::error:: workflow commands must go to STDOUT, GitHub Actions
               // does not parse them from stderr, so console.log (not console.error).
-              console.log('::error::mutation-report.json has zero scoreable mutants — the runner did not execute any tests (infrastructure failure, not a low score).');
+              console.log('::error::mutation-report.json has zero scoreable mutants, the runner did not execute any tests (infrastructure failure, not a low score).');
               process.exit(1);
             }
             console.log('Runner healthy: ' + scoreable + ' scoreable mutant(s) produced.');
@@ -87,7 +90,7 @@ jobs:
               const high = (r.thresholds ?? {}).high ?? 80;
               const low = (r.thresholds ?? {}).low ?? 65;
               const infraNote = (runtimeError + compileError) > 0
-                ? '\n\n> ' + (runtimeError + compileError) + ' mutant(s) excluded from score (RuntimeError: ' + runtimeError + ', CompileError: ' + compileError + ') — infrastructure issues, not test-effectiveness signal.'
+                ? '\n\n> ' + (runtimeError + compileError) + ' mutant(s) excluded from score (RuntimeError: ' + runtimeError + ', CompileError: ' + compileError + ') are infrastructure issues, not test-effectiveness signal.'
                 : '';
               const lines = [
                 '## Stryker Mutation Score',

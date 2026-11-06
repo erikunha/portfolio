@@ -3,13 +3,17 @@ import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vite
 
 describe('/api/log endpoint', () => {
   const redisSetMock = vi.fn();
+  const dailyLimitMock = vi.fn();
 
   beforeEach(() => {
     vi.resetModules();
     redisSetMock.mockReset();
+    dailyLimitMock.mockReset();
+    dailyLimitMock.mockResolvedValue({ success: true });
     vi.doMock('@/lib/rate-limit', () => ({
       getClientIp: vi.fn(() => '127.0.0.1'),
       getErrorLogLimit: vi.fn(() => ({ limit: vi.fn(async () => ({ success: true })) })),
+      getErrorLogDailyLimit: vi.fn(() => ({ limit: dailyLimitMock })),
       getRedis: vi.fn(() => ({ set: redisSetMock })),
     }));
     vi.doMock('@/lib/ip-hash', () => ({ hashIp: vi.fn(async () => 'hashed-ip-test') }));
@@ -74,6 +78,30 @@ describe('/api/log endpoint', () => {
     const body = (await res.json()) as { ok: false; error: { code: string } };
     expect(body.ok).toBe(false);
     expect(body.error.code).toBe('validation_failed');
+  });
+
+  it('stops writing records once the daily cap is spent, still answering ok so a flood cannot fill the store', async () => {
+    dailyLimitMock.mockResolvedValueOnce({ success: false });
+    const { POST } = await import('@/app/api/log/route');
+    const res = await POST(makeRequest({ level: 'error', message: 'flood' }));
+    expect(res.status).toBe(200);
+    expect(redisSetMock).not.toHaveBeenCalled();
+  });
+
+  it('keeps recording when the daily cap check itself fails', async () => {
+    dailyLimitMock.mockRejectedValueOnce(new Error('Upstash down'));
+    redisSetMock.mockResolvedValueOnce('OK');
+    const { POST } = await import('@/app/api/log/route');
+    const res = await POST(makeRequest({ level: 'error', message: 'still wanted' }));
+    expect(res.status).toBe(200);
+    expect(redisSetMock).toHaveBeenCalledOnce();
+  });
+
+  it('rejects a ts longer than an ISO timestamp so the field cannot carry payload', async () => {
+    const { POST } = await import('@/app/api/log/route');
+    const res = await POST(makeRequest({ level: 'error', message: 'x', ts: 't'.repeat(200) }));
+    expect(res.status).toBe(400);
+    expect(redisSetMock).not.toHaveBeenCalled();
   });
 
   it('returns storage_unavailable (503) when the KV write throws', async () => {

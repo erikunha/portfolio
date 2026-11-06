@@ -7,7 +7,7 @@ import { withBodyLimit } from '@/lib/server/body-limit';
 import { defineHandler, err, ok } from '@/lib/server/route';
 
 const ForgetPayload = z.object({
-  requestId: z.string().uuid(),
+  requestId: z.string().uuid().toLowerCase(),
 });
 
 const MAX_FORGET_BODY_BYTES = 1024;

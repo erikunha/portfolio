@@ -52,6 +52,18 @@ describe('buildLogPayload', () => {
   });
 });
 
+describe('buildLogPayload page url', () => {
+  afterEach(() => {
+    window.history.replaceState(null, '', '/');
+  });
+
+  it('sends the origin and path only, never the query string or fragment', () => {
+    window.history.replaceState(null, '', '/cv?fbclid=abc123&email=visitor%40example.com#section');
+    const payload = buildLogPayload('err', undefined);
+    expect(payload.url).toBe(`${window.location.origin}/cv`);
+  });
+});
+
 describe('MAX_DEDUP_SIZE', () => {
   it('is exported and is a positive integer (FIFO eviction cap)', () => {
     expect(typeof MAX_DEDUP_SIZE).toBe('number');

@@ -241,6 +241,17 @@ describe('/api/log/forget for a contact message', () => {
     expect(multiTx.exec).toHaveBeenCalledOnce();
   });
 
+  it('erases the stored message when the ref is sent in upper case', async () => {
+    const { POST } = await import('@/app/api/log/forget/route');
+    const res = await POST(forget({ requestId: REF.toUpperCase() }));
+
+    expect(res.status).toBe(200);
+    const deleted = del.mock.calls.flat().map(String);
+    expect(deleted).toContain(`contact:msg:${REF}`);
+    expect(deleted.some((key) => key !== key.toLowerCase())).toBe(false);
+    expect(multiTx.zrem).toHaveBeenCalledWith('contact:outbox', REF);
+  });
+
   it('answers a known and an unknown ref the same and never echoes stored content', async () => {
     const { POST } = await import('@/app/api/log/forget/route');
     del.mockResolvedValueOnce(1).mockResolvedValueOnce(1);

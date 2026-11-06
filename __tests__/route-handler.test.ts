@@ -92,6 +92,41 @@ describe('lib/server/route — defineHandler', () => {
     expect(hashIpMock).not.toHaveBeenCalled();
   });
 
+  it('tells the client how long to wait: Retry-After in whole seconds from the limiter reset', async () => {
+    const nowMs = 1_700_000_000_000;
+    vi.spyOn(Date, 'now').mockReturnValue(nowMs);
+    rateLimitMock.mockImplementationOnce(
+      async () => ({ success: false, reset: nowMs + 90_500 }) as { success: boolean },
+    );
+    const { defineHandler, ok } = await import('@/lib/server/route');
+    const POST = defineHandler({
+      schema: TestSchema,
+      rateLimit: () => ({ limit: rateLimitMock }),
+      handler: async ({ requestId }) => ok({ requestId }),
+    });
+
+    const res = await POST(makeRequest({ name: 'erik', count: 1 }));
+
+    expect(res.status).toBe(429);
+    expect(res.headers.get('retry-after')).toBe('91');
+    vi.restoreAllMocks();
+  });
+
+  it('omits Retry-After when the limiter gives no usable reset', async () => {
+    rateLimitMock.mockImplementationOnce(async () => ({ success: false }));
+    const { defineHandler, ok } = await import('@/lib/server/route');
+    const POST = defineHandler({
+      schema: TestSchema,
+      rateLimit: () => ({ limit: rateLimitMock }),
+      handler: async ({ requestId }) => ok({ requestId }),
+    });
+
+    const res = await POST(makeRequest({ name: 'erik', count: 1 }));
+
+    expect(res.status).toBe(429);
+    expect(res.headers.has('retry-after')).toBe(false);
+  });
+
   it('fails open on Redis outage (rate-limit factory throws)', async () => {
     const flakyLimiter = () => ({
       limit: vi.fn(async () => {
@@ -229,5 +264,86 @@ describe('lib/server/route — ok/err helpers', () => {
     });
     expect(res.headers.get('Retry-After')).toBe('60');
     expect(res.headers.get('x-request-id')).toBe('rid');
+  });
+});
+
+describe('lib/server/route — cross-site requests', () => {
+  beforeEach(() => {
+    vi.resetModules();
+    rateLimitMock.mockReset();
+    rateLimitMock.mockImplementation(async () => ({ success: true }));
+  });
+
+  const post = (fetchSite?: string) =>
+    new NextRequest('http://localhost/api/test', {
+      method: 'POST',
+      body: JSON.stringify({ name: 'erik', count: 1 }),
+      headers: {
+        'Content-Type': 'text/plain',
+        ...(fetchSite === undefined ? {} : { 'Sec-Fetch-Site': fetchSite }),
+      },
+    });
+
+  async function build() {
+    const { defineHandler, ok } = await import('@/lib/server/route');
+    const handlerSpy = vi.fn(async ({ requestId }: { requestId: string }) => ok({ requestId }));
+    const POST = defineHandler({
+      schema: TestSchema,
+      rateLimit: () => ({ limit: rateLimitMock }),
+      handler: handlerSpy,
+    });
+    return { POST, handlerSpy };
+  }
+
+  it.each(['cross-site', 'same-site'])(
+    'rejects a browser request whose Sec-Fetch-Site is %s before it spends the visitor rate limit',
+    async (site) => {
+      const { POST, handlerSpy } = await build();
+      const res = await POST(post(site));
+      expect(res.status).toBe(403);
+      const body = (await res.json()) as { ok: false; error: { code: string } };
+      expect(body.error.code).toBe('forbidden_origin');
+      expect(res.headers.get('x-request-id')).toBeTruthy();
+      expect(rateLimitMock).not.toHaveBeenCalled();
+      expect(handlerSpy).not.toHaveBeenCalled();
+    },
+  );
+
+  it.each(['same-origin', 'none', undefined])(
+    'lets Sec-Fetch-Site %s through (own pages, address bar, non-browser clients)',
+    async (site) => {
+      const { POST, handlerSpy } = await build();
+      const res = await POST(post(site));
+      expect(res.status).toBe(200);
+      expect(handlerSpy).toHaveBeenCalledOnce();
+    },
+  );
+});
+
+describe('lib/server/route — ip hash outage', () => {
+  beforeEach(() => {
+    vi.resetModules();
+    hashIpMock.mockReset();
+    rateLimitMock.mockReset();
+    rateLimitMock.mockImplementation(async () => ({ success: true }));
+  });
+
+  it('answers 503 storage_unavailable in the envelope when the salt cannot be resolved', async () => {
+    hashIpMock.mockRejectedValueOnce(new Error('redis down'));
+    const { defineHandler, ok } = await import('@/lib/server/route');
+    const handlerSpy = vi.fn(async () => ok({ requestId: 'never' }));
+    const POST = defineHandler({
+      schema: TestSchema,
+      rateLimit: () => ({ limit: rateLimitMock }),
+      handler: handlerSpy,
+    });
+
+    const res = await POST(makeRequest({ name: 'erik', count: 1 }));
+
+    expect(res.status).toBe(503);
+    const body = (await res.json()) as { ok: false; requestId: string; error: { code: string } };
+    expect(body.error.code).toBe('storage_unavailable');
+    expect(res.headers.get('x-request-id')).toBe(body.requestId);
+    expect(handlerSpy).not.toHaveBeenCalled();
   });
 });

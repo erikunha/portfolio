@@ -30,7 +30,7 @@ permissions:
   # The verdict guard reads PR conversation comments via the Issues API
   # (repos/:o/:r/issues/:n/comments), which is gated by `issues`, NOT by
   # `pull-requests`. Without it the call 403s, `set -e` aborts the assignment,
-  # and the step reds on every run — a permanent false red on the gate itself.
+  # and the step reds on every run: a permanent false red on the gate itself.
   # Read-only: the guard never writes a comment.
   issues: read
   # The evidence snapshot runs `gh pr checks`, which reads check runs and
@@ -83,7 +83,7 @@ jobs:
           # that would silently run the reviewer on a fragment of its prompt.
           bytes=$(wc -c < /tmp/claude-review-prompt.md)
           if [ "$bytes" -lt 4000 ]; then
-            echo "prompt materialised at only ${bytes} bytes — expected the full reviewer prompt" >&2
+            echo "prompt materialised at only ${bytes} bytes, expected the full reviewer prompt" >&2
             exit 1
           fi
 
@@ -216,7 +216,7 @@ jobs:
           # Matched by NAME across the whole subtree, not at the root only. The
           # CLI discovers CLAUDE.md and AGENTS.md in SUBDIRECTORIES too, so a PR
           # adding `lib/CLAUDE.md` walked straight past a strip that listed seven
-          # fixed root paths — and past its own verification, which checked the
+          # fixed root paths, and past its own verification, which checked the
           # same seven and reported success.
           find pr-head \
             \( -name 'CLAUDE.md' -o -name 'AGENTS.md' -o -name 'copilot-instructions.md' \

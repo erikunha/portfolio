@@ -15,13 +15,13 @@ export function defineHandler<TSchema extends ZodTypeAny>(
 ```
 
 **Enforced pipeline order (this ordering is the security property):**
-1. `requestId = crypto.randomUUID()`, `ip = getClientIp(req)`.
+1. `requestId = crypto.randomUUID()`. A request whose `Sec-Fetch-Site` is neither `same-origin` nor `none` is refused with `403 forbidden_origin` before anything else runs (`isCrossSiteRequest` in `lib/server/fetch-metadata.ts`): the routes parse any body as JSON, so a cross-site `text/plain` form post would otherwise spend a visitor's rate limit and write records. A request with no `Sec-Fetch-Site` header (curl, server calls) passes. Then `ip = getClientIp(req)`.
 2. **Rate-limit BEFORE body parse** - `rateLimit().limit(ip)`. On Redis throw: log and **fail-open** (allow). On `!success`: `429` with `Retry-After` in whole seconds (rounded up, at least 1) taken from the limiter's `reset`; no header when the limiter returns no usable reset. The shell turns the header into a countdown and invents no duration without it.
 3. **Parse** `req.json()` → `400 invalid_json` on throw.
 4. **Validate** `schema.safeParse(raw)` → `400 validation_failed` (with `issues`).
-5. **Hash IP** only now (saves a SHA-256 + KV round-trip on rejected requests) → call `handler(ctx)`.
+5. **Hash IP** only now (saves a SHA-256 + KV round-trip on rejected requests) → call `handler(ctx)`. If the salt cannot be resolved (Redis down and no `DEPLOY_SALT`), the response is `503 storage_unavailable` in the envelope.
 
-**Envelope:** success `{ ok: true, requestId, data? }`; error `{ ok: false, requestId, error: { code, message, issues? } }`. Every response carries `X-Request-Id`. `ApiErrorCode ∈ { rate_limited, invalid_json, invalid_body, validation_failed, storage_unavailable }`; `withBodyLimit` also returns `payload_too_large` (HTTP 413) in the same envelope.
+**Envelope:** success `{ ok: true, requestId, data? }`; error `{ ok: false, requestId, error: { code, message, issues? } }`. Every response carries `X-Request-Id`. `ApiErrorCode ∈ { rate_limited, invalid_json, invalid_body, validation_failed, forbidden_origin, storage_unavailable }`; `withBodyLimit` also returns `payload_too_large` (HTTP 413) in the same envelope.
 
 Contact delivery also uses `202 { ok: false, requestId, error: { code: 'queued', message } }`. The message is saved under `contact:msg:<requestId>` for retry, but Resend has not accepted delivery; the daily `/api/contact-retry` cron tries it up to `CONTACT_MAX_RETRY_ATTEMPTS` times. `ContactForm` shows it as saved with delivery pending, its full ref, and LinkedIn for a faster reply. It never shows a server `error.message`: it maps `error.code` to locale copy (`contactErrorMessage` in `content/contact-rules.ts`, `rate_limited` to the rate-limit line, anything else to the generic retry line). A `200` carries the `requestId`, the same id stored as the message key and printed as `Ref:` in the email. The success state shows it as a receipt with `[COPY REF]` and `[FORGET MESSAGE]`, which POSTs it to `/api/log/forget`. ContactForm imports the Zod-free `content/contact-rules.ts`; `content/contact.ts` validates the copy table in `content/contact-copy.ts` with Zod for server consumers. Both share the LinkedIn URL from `content/social-urls.ts`.
 
@@ -36,7 +36,7 @@ Contact delivery also uses `202 { ok: false, requestId, error: { code: 'queued',
 | `/api/psi-refresh`   | GET (cron) | bespoke                         | daily PSI refresh, writes freshness key                                             | **`CRON_SECRET`** Bearer     | 401 on bad secret; partial-fail still writes key; forced refresh retries HTTP 429/5xx (2 attempts, 500ms backoff) within the remaining time budget (`0 3 * * *`)                                  |
 | `/api/csp-report`    | POST       | none                            | CSP violation sink                                                                  | none                         | returns 204, body unread                                                                                                                                                                          |
 | `/api/erik.json`     | GET        | exempt                          | machine-readable hiring profile                                                     | none                         | static-cached `public, max-age=86400`                                                                                                                                                             |
-| `/api/lighthouse`    | GET        | bespoke                         | stored PSI metrics                                                                  | `PSI_API_KEY` (in lib)       | falls back to all-zero `LIGHTHOUSE_FALLBACK`                                                                                                                                                      |
+| `/api/lighthouse`    | GET        | bespoke                         | stored PSI metrics                                                                  | `PSI_API_KEY` (in lib)       | per-IP rate limit (429, fail-open); falls back to all-zero `LIGHTHOUSE_FALLBACK`                                                                                                                  |
 | `/api/log`           | POST       | `defineHandler`                 | client error capture → KV (30d TTL)                                                 | none                         | KV fail → 503; **no IP stored** (forget-exempt)                                                                                                                                                   |
 | `/api/log/forget`    | POST       | `defineHandler`                 | GDPR/LGPD erasure by `requestId`: ask logs, `contact:msg:<id>` and its outbox entry | none                         | deletes across 90 days; **never returns count** (existence-oracle prevention)                                                                                                                     |
 | `/api/mcp`           | POST       | `withBodyLimit` + `mcp-handler` | read-only MCP server over stateless Streamable HTTP                                 | none                         | POST bodies over 4096 bytes return 413 before parsing; subscriptions disabled; GET returns 405; `maxDuration=60`                                                                                  |
@@ -61,15 +61,17 @@ before it is fully read returns `invalid_body`, HTTP 400.
 
 Upstash sliding-window factories (lazy singletons over `Redis.fromEnv()`):
 
-| Key          | Limit    | Used by           |
-| ------------ | -------- | ----------------- |
-| `rl:ask`     | 8 / 1h   | `/api/ask`        |
-| `rl:contact` | 3 / 10m  | `/api/contact`    |
-| `rl:healthz` | 120 / 1m | `/api/healthz`    |
-| `rl:errlog`  | 10 / 1m  | `/api/log`        |
-| `rl:forget`  | 5 / 1h   | `/api/log/forget` |
+| Key             | Limit                       | Used by                                                                                       |
+| --------------- | --------------------------- | --------------------------------------------------------------------------------------------- |
+| `rl:ask`        | 8 / 1h                      | `/api/ask`                                                                                    |
+| `rl:contact`    | 3 / 10m                     | `/api/contact`                                                                                |
+| `rl:healthz`    | 120 / 1m                    | `/api/healthz`                                                                                |
+| `rl:lighthouse` | 30 / 1m                     | `/api/lighthouse`                                                                             |
+| `rl:errlog`     | 10 / 1m                     | `/api/log`                                                                                    |
+| `rl:errlog:day` | 500 / 1d fixed, all clients | `/api/log` (past it the route answers ok and drops the record; a failed check records anyway) |
+| `rl:forget`     | 5 / 1h                      | `/api/log/forget`                                                                             |
 
-`getClientIp` precedence: `x-forwarded-for[0]` → `x-real-ip` → `'unknown'` (local dev keys everything to `'unknown'`).
+`getClientIp` precedence: `x-forwarded-for[0]` → `x-real-ip` → `'unknown'` (local dev keys everything to `'unknown'`). The value becomes the rate-limit bucket: an IPv4 address stays as is, an IPv6 address is reduced to its `/64` prefix (a client owns a whole `/64`, so a per-address bucket resets at will), an IPv4-mapped IPv6 address becomes the IPv4 address, and a value that is not an IP address goes to `'unknown'`.
 
 **Token budget (the `/api/ask` cost cap):** `MONTHLY_TOKEN_BUDGET = 3,000,000`, key `ask:tokens:{yyyy-mm}` (32-day window). `reserveBudget(maxOutput)` reserves `~2700` tokens up front (`INCRBY` + `EXPIRE NX`); rejects if over budget or Redis fails, and warns at ≥80%. Both rejection cases return the existing `/api/ask` HTTP 503 `{ error: "AI answers are paused for this month. Email … instead." }` response before any model call. `settleBudget(...)` refunds the unused reservation in `finally`; no positive reservation means no settlement. `checkIdenticalQuestion(ipHash, q)` is a 60s `SET NX EX` dedup and remains fail-open, like rate limiting.
 
