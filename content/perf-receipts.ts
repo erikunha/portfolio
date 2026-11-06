@@ -13,7 +13,7 @@ const perfReceiptsFor = (locale: SiteLocale): PerfReceipt[] => {
         ? 'API de relatórios em uma plataforma de cliente. Reescrita de query + índices PostgreSQL.'
         : 'reporting API at a client platform. Query rewrite + PostgreSQL indexes.',
       project: true,
-      displayValue: '40s→<1s',
+      displayValue: '40s → <1s',
       before: 40,
       after: 1,
     },
@@ -78,7 +78,7 @@ const perfReceiptsFor = (locale: SiteLocale): PerfReceipt[] => {
       note: pt
         ? 'layout shift de 0.166 para 0 na rota de empresa.'
         : 'layout shift 0.166 to 0 on the company route.',
-      displayValue: '0.166→0',
+      displayValue: '0.166 → 0',
       before: 0.166,
       after: 0,
     },
@@ -89,7 +89,7 @@ const perfReceiptsFor = (locale: SiteLocale): PerfReceipt[] => {
       note: pt
         ? 'pontuação de performance de 79 para 96 na rota de empresa.'
         : 'performance score 79 to 96 on the company route.',
-      displayValue: '79→96',
+      displayValue: '79 → 96',
       before: 79,
       after: 96,
     },
@@ -100,7 +100,7 @@ const perfReceiptsFor = (locale: SiteLocale): PerfReceipt[] => {
       note: pt
         ? 'pipeline de release de ~5 min para ~45 s.'
         : 'release pipeline about 5 min to about 45 s.',
-      displayValue: '~5min→~45s',
+      displayValue: '~5min → ~45s',
       before: 300,
       after: 45,
     },
@@ -112,7 +112,7 @@ const perfReceiptsFor = (locale: SiteLocale): PerfReceipt[] => {
         ? 'uma rota, migração de plataforma de dados atrás de um A/B em produção.'
         : 'one route, data-platform migration behind a production A/B.',
       project: true,
-      displayValue: '2,544→1,308ms',
+      displayValue: '2,544 → 1,308ms',
       before: 2544,
       after: 1308,
     },

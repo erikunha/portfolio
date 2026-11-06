@@ -34,7 +34,7 @@ const heroContentFor = (locale: SiteLocale): HeroContent => {
     stats: [
       { value: '$500B+', label: pt ? 'ativos em fundos' : 'fund assets' },
       { value: '8M+', label: pt ? 'MAU e-commerce' : 'e-com MAU' },
-      { value: '40s→<1s', label: pt ? 'API de relatórios' : 'reporting API' },
+      { value: '40s → <1s', label: pt ? 'API de relatórios' : 'reporting API' },
       { value: 'CLS → 0', label: pt ? 'deslocamento de layout' : 'layout shift' },
     ],
   });

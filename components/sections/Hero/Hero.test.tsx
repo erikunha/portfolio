@@ -89,7 +89,7 @@ describe('Hero identity and static actions', () => {
       expect([...group.querySelectorAll('dd')].map((value) => value.textContent)).toEqual([
         '$500B+',
         '8M+',
-        '40s→<1s',
+        '40s → <1s',
         'CLS → 0',
       ]);
       expect([...group.querySelectorAll('dt')].map((label) => label.textContent)).toEqual([

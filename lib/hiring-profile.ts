@@ -114,7 +114,7 @@ export const HIRING_PROFILE: HiringProfile = HiringProfileSchema.parse({
     tti_improvement: '-52%',
     page_load_reduction: '-32%',
     conversion_uplift: '+10% (20+ A/B experiments)',
-    api_latency_reduction: '-97.5% (40s→<1s, Venturus)',
+    api_latency_reduction: '-97.5% (40s → <1s, Venturus)',
     labs_delivered: '2.1M+ cumulative (VMware Pathfinder)',
     banking_customers: '24.2M digital clients (Itaú via Zup)',
     copilot_subagents: '12-agent system (Betsson)',

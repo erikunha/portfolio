@@ -25,8 +25,8 @@ describe('PerfReceiptsSection hero data-featured variant', () => {
       'DESKTOP_BUILD',
       'LCP',
     ]);
-    expect(doc.body.textContent).toContain('40s→<1s');
-    expect(doc.body.textContent).toContain('2,544→1,308ms');
+    expect(doc.body.textContent).toContain('40s → <1s');
+    expect(doc.body.textContent).toContain('2,544 → 1,308ms');
     for (const row of rows) {
       expect(row.querySelector('.receipt-company')?.textContent).toMatch(/@\s*\S/);
       expect(row.querySelector('.receipt-context')?.textContent?.length).toBeGreaterThan(15);
