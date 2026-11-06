@@ -68,4 +68,14 @@ describe('paint cost CSS (shipped build assets)', () => {
     const dur = flicker.match(/animation:\s*crt-flicker\s+([\d.]+)s/)?.[1];
     expect(Number(dur)).toBeGreaterThanOrEqual(3);
   });
+  it('the scanline layer carries no blend mode (black multiply equals source-over and costs a backdrop copy)', () => {
+    // behavioral-test-allow: reads the shipped stylesheet build asset; jsdom cannot composite blend modes
+    const crt = readFileSync(path.resolve(__dirname, '../app/css/crt.css'), 'utf-8');
+    const scanlines = crt.match(/\.crt-scanlines\s*\{[^}]+\}/)?.[0] ?? '';
+    expect(scanlines).not.toBe('');
+    expect(
+      scanlines,
+      'scanline gradient is pure black, so any blend mode only adds a full-viewport backdrop copy per frame',
+    ).not.toContain('mix-blend-mode');
+  });
 });

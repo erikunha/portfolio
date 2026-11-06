@@ -97,6 +97,38 @@ describe('MatrixRain canvas perf', () => {
     expect(instrument.fontSetCount()).toBe(fontSetsAfterInit);
   });
 
+  it('draws on a CPU-backed canvas context so a software compositor skips the GPU texture round trip', async () => {
+    const { MatrixRain } = await import('./MatrixRain.client');
+
+    vi.spyOn(HTMLCanvasElement.prototype, 'getBoundingClientRect').mockReturnValue(CANVAS_RECT);
+    const getContext = vi
+      .spyOn(HTMLCanvasElement.prototype, 'getContext')
+      .mockReturnValue(makeInstrumentedCtx().ctx as unknown as CanvasRenderingContext2D);
+
+    mounted = await mountClient(createElement(MatrixRain, { fontSize: 16, speed: 0.7 }));
+
+    expect(
+      getContext.mock.calls[0],
+      'rain must request willReadFrequently: the accelerated path pays a per-pixel texture round trip on every full-canvas fade when compositing is in software',
+    ).toEqual(['2d', { willReadFrequently: true }]);
+  });
+
+  it('caps the backing store at twice the CSS size however dense the display', async () => {
+    vi.stubGlobal('devicePixelRatio', 3);
+    const { MatrixRain } = await import('./MatrixRain.client');
+
+    vi.spyOn(HTMLCanvasElement.prototype, 'getBoundingClientRect').mockReturnValue(CANVAS_RECT);
+    vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(
+      makeInstrumentedCtx().ctx as unknown as CanvasRenderingContext2D,
+    );
+
+    mounted = await mountClient(createElement(MatrixRain, { fontSize: 16, speed: 0.7 }));
+
+    const canvas = mounted.container.querySelector('canvas');
+    expect(canvas?.width, 'backing store width must stay at 2x CSS pixels').toBe(800);
+    expect(canvas?.height, 'backing store height must stay at 2x CSS pixels').toBe(600);
+  });
+
   it('debounces the window resize handler', async () => {
     vi.useFakeTimers();
     const { MatrixRain } = await import('./MatrixRain.client');

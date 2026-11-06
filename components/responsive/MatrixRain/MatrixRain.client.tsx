@@ -26,6 +26,8 @@ type IdleWindow = Window & {
   requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => number;
   cancelIdleCallback?: (handle: number) => void;
 };
+const MAX_BACKING_DPR = 2;
+const RAIN_CONTEXT_OPTIONS: CanvasRenderingContext2DSettings = { willReadFrequently: true };
 
 type RainCfg = {
   fontSize?: number;
@@ -66,13 +68,13 @@ export function MatrixRain({
 
     const canvas = canvasRef.current;
     if (!canvas) return;
-    const ctx = canvas.getContext('2d');
+    const ctx = canvas.getContext('2d', RAIN_CONTEXT_OPTIONS);
     if (!ctx) return;
 
     const canvasEl = canvas;
     const ctxEl = ctx;
 
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const dpr = Math.min(window.devicePixelRatio || 1, MAX_BACKING_DPR);
     let columns = 0;
     let drops: number[] = [];
     let running = false;
