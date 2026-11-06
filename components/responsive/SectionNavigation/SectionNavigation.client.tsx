@@ -18,6 +18,7 @@ import {
   headerLanguageSwitchPaths,
   LANGUAGE_SWITCH_NAME,
   type SiteLocale,
+  withSectionHash,
 } from '@/content/site-locale';
 import { NavItem } from '@/design-system';
 import { cn } from '@/lib/cn';
@@ -256,15 +257,16 @@ export function SectionNavigationProvider({
 }
 
 export function LanguageSwitch({ className }: { className?: string }) {
-  const { locale, copy } = useSectionNavigation();
+  const { locale, copy, currentId } = useSectionNavigation();
   const pathname = usePathname();
   const paths = pathname ? headerLanguageSwitchPaths(pathname) : null;
-  if (!paths) return null;
+  if (!pathname || !paths) return null;
+  const sectionId = currentId && currentId !== HOME_SECTION_ID ? currentId : null;
   return (
     <LocaleSwitch
       label={copy.langSwitchLabel}
       current={locale}
-      hrefs={paths}
+      hrefs={withSectionHash(pathname, paths, sectionId)}
       names={LANGUAGE_SWITCH_NAME}
       className={cn('flex-none', className)}
       data-lang-switch=""

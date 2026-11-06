@@ -9,6 +9,7 @@ import {
   localeAlternates,
   localizedPath,
   SITE_LOCALE,
+  withSectionHash,
 } from '@/content/site-locale';
 
 // The hreflang contract the whole site ships (DECISIONS 2026-08-30): each
@@ -76,5 +77,23 @@ describe('locale alternates', () => {
     });
     expect(headerLanguageSwitchPaths('/links')).toBeNull();
     expect(headerLanguageSwitchPaths('/links/en')).toBeNull();
+  });
+
+  it('the language switch carries the current section between the two home pages only', () => {
+    const SECTION = 'sec-projects';
+    const home = languageSwitchPaths('/') ?? { en: '', pt: '' };
+    const ptHome = languageSwitchPaths('/pt') ?? { en: '', pt: '' };
+    const cv = languageSwitchPaths('/cv') ?? { en: '', pt: '' };
+
+    expect(withSectionHash('/', home, SECTION)).toEqual({
+      en: `/#${SECTION}`,
+      pt: `/pt#${SECTION}`,
+    });
+    expect(withSectionHash('/pt', ptHome, SECTION)).toEqual({
+      en: `/#${SECTION}`,
+      pt: `/pt#${SECTION}`,
+    });
+    expect(withSectionHash('/', home, null)).toEqual(home);
+    expect(withSectionHash('/cv', cv, SECTION)).toEqual(cv);
   });
 });

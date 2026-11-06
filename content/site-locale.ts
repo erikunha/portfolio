@@ -74,6 +74,20 @@ export function headerLanguageSwitchPaths(pathname: string): Record<SiteLocale, 
   return PAGE_OWNED_LANGUAGE_SWITCH.has(pathname) ? null : languageSwitchPaths(pathname);
 }
 
+const HOME_PATHS: ReadonlySet<string> = new Set(['/', PT_PREFIX]);
+
+export function withSectionHash(
+  pathname: string,
+  paths: Record<SiteLocale, string>,
+  sectionId: string | null,
+): Record<SiteLocale, string> {
+  if (!sectionId || !HOME_PATHS.has(pathname)) return paths;
+  return {
+    [SITE_LOCALE.en]: `${paths[SITE_LOCALE.en]}#${sectionId}`,
+    [SITE_LOCALE.pt]: `${paths[SITE_LOCALE.pt]}#${sectionId}`,
+  };
+}
+
 export function languageSwitchPaths(pathname: string): Record<SiteLocale, string> | null {
   return LANGUAGE_PAIRS[pathname] ?? null;
 }
