@@ -1,4 +1,5 @@
 import type { CSSProperties, ReactNode } from 'react';
+import { deferProps } from '@/lib/defer-props';
 import { type ModuleVariant, moduleHeaderId } from './module.constants';
 
 const TYPE_CHARS_PROPERTY = '--module-type-chars';
@@ -35,15 +36,10 @@ export function Module({
       id={id}
       tabIndex={-1}
       aria-labelledby={moduleHeaderId(id)}
-      className={[
-        'mb-[var(--space-section)]',
-        'border border-primary-subtle bg-[rgba(0,0,0,0.22)] md:bg-transparent overflow-hidden md:overflow-visible',
-        'md:border-0',
-        defer ? 'module-deferred' : '',
-      ]
-        .filter(Boolean)
-        .join(' ')}
-      {...(defer ? { 'data-cv-defer': 'true' } : {})}
+      {...deferProps(
+        defer,
+        'mb-[var(--space-section)] border border-primary-subtle bg-[rgba(0,0,0,0.22)] md:bg-transparent overflow-hidden md:overflow-visible md:border-0',
+      )}
     >
       <header
         className={[
