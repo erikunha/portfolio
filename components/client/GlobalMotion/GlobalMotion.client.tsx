@@ -1,11 +1,11 @@
 'use client';
 
 import { useSyncExternalStore } from 'react';
+import { MOBILE_QUERY } from '@/lib/media-queries';
 import { ErrorBoundary } from '../../ErrorBoundary';
 import { MatrixRainLazy } from '../../responsive/MatrixRain';
 import { TypeReveal } from '../TypeReveal';
 
-const MOBILE_QUERY = '(max-width: 767.98px)';
 const RAIN_MOBILE = { fontSize: 14, speed: 0.6, opacity: 0.22 } as const;
 const RAIN_DESKTOP = { fontSize: 16, speed: 0.7, opacity: 0.28 } as const;
 const RAIN_LAYER = 0;

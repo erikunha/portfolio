@@ -14,6 +14,7 @@ import {
   MOBILE_DIALOG,
   runBoot,
 } from '@/lib/boot-animation';
+import { MOBILE_QUERY } from '@/lib/media-queries';
 import { readMotion } from '@/lib/motion';
 import { runMobileBoot } from './mobile-boot';
 
@@ -63,7 +64,7 @@ function DesktopBoot() {
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
-    const mql = window.matchMedia('(max-width: 767.98px)');
+    const mql = window.matchMedia(MOBILE_QUERY);
     const isMobileVP = mql.matches;
 
     let started = false;
@@ -122,7 +123,7 @@ function MobileBoot() {
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
-    const mql = window.matchMedia('(max-width: 767.98px)');
+    const mql = window.matchMedia(MOBILE_QUERY);
     let stop: (() => void) | undefined;
 
     function start() {

@@ -8,7 +8,7 @@ import {
   useRef,
   useSyncExternalStore,
 } from 'react';
-import { MOBILE_BREAKPOINT_PX } from './breakpoint';
+import { MOBILE_QUERY } from './media-queries';
 
 type BreakpointCtx = {
   isMobile: boolean;
@@ -25,7 +25,7 @@ export function BreakpointProvider({
 }) {
   const mqRef = useRef<MediaQueryList | null>(null);
   if (!mqRef.current && typeof window !== 'undefined') {
-    mqRef.current = window.matchMedia(`(width < ${MOBILE_BREAKPOINT_PX}px)`);
+    mqRef.current = window.matchMedia(MOBILE_QUERY);
   }
 
   const subscribe = useCallback((cb: () => void) => {

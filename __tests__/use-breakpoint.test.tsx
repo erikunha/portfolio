@@ -1,6 +1,7 @@
 import { type ComponentType, createElement } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { flushMicrotasks, mountClient } from '@/__tests__/helpers/render';
+import { MOBILE_QUERY } from '@/lib/media-queries';
 import { BreakpointProvider, useBreakpoint } from '@/lib/use-breakpoint.client';
 
 function stubMatchMedia(matches: boolean) {
@@ -82,6 +83,26 @@ describe('BreakpointProvider', () => {
     await flushMicrotasks();
 
     expect(captured?.isMobile).toBe(true);
+    unmount();
+  });
+});
+
+describe('MOBILE_QUERY', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it('ends 0.02px below the mobile breakpoint, matching the CSS max-width queries', () => {
+    expect(MOBILE_QUERY).toBe('(max-width: 767.98px)');
+  });
+
+  it('is the one query the provider subscribes with', async () => {
+    stubMatchMedia(false);
+    type BP = ComponentType<{ initialIsMobile: boolean }>;
+    const { unmount } = await mountClient(
+      createElement(BreakpointProvider as BP, { initialIsMobile: false }, createElement(Consumer)),
+    );
+    expect(vi.mocked(window.matchMedia)).toHaveBeenCalledWith(MOBILE_QUERY);
     unmount();
   });
 });
