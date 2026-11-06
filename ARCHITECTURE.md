@@ -261,6 +261,8 @@ components/Panel/                      # the .ab-panel frame shared by About and
 components/PageMain/                   # main landmark and MAIN_CONTENT_ID for every route
 components/ErrorBoundary/              # client error boundary
 components/ErrorPages/                 # 404/500 chrome, focused heading, error reference
+components/ErrorPages/GlobalErrorPage.client.tsx  # global-error shell: locale, static 500 message, lazy body
+components/ErrorPages/GlobalErrorBody.client.tsx  # lazy global-error body: boot lines, reference block
 components/HeroStats/                  # hero stat tiles
 components/Icons/                      # inline SVG icon set
 components/responsive/                 # viewport-variant helpers
@@ -286,6 +288,9 @@ content/education.ts                  # edu/* tags inside Career
 content/social.ts                     # github / linkedin / email / site
 content/errors.ts                     # 404, 500 and no-JS copy
 content/errors-client.ts              # zod-free error copy for client islands
+content/server-error-core.ts          # 500 copy the global-error shell needs
+content/server-error-detail.ts        # full 500 copy, shared with errors-client
+lib/report-client-error.client.ts     # POST a caught error to /api/log
 content/terminal-chrome.ts           # zod-free shell and contact chrome copy
 content/brand.ts                      # zod-free home link href and accessible name of the brand icon
 content/world-map.ts                  # zod-free land grid, Erik pin and curated zone coordinates for the contact map
