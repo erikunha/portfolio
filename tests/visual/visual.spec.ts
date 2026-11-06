@@ -1,5 +1,6 @@
 import { argosScreenshot } from '@argos-ci/playwright';
 import { expect, test } from '../e2e/_helpers/fixtures';
+import { waitForHydration } from '../e2e/_helpers/hydration';
 import { stripVolatileChrome } from '../e2e/_helpers/mask-volatile';
 import { revealDeferredContent, snapshotLocator } from '../e2e/_helpers/snapshot';
 
@@ -107,6 +108,7 @@ test.describe('visual regression', () => {
     });
     await mockedPage.reload();
     await mockedPage.waitForSelector('[aria-label="shell command"]', { state: 'visible' });
+    await waitForHydration(mockedPage, '[data-testid="shell-form"]');
 
     const shellSection = mockedPage.locator('#sec-shell');
     await shellSection.scrollIntoViewIfNeeded();
