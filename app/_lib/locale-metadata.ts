@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { ogImage, SITE_NAME } from '@/content/seo';
+import { buildPageMetadata } from '@/app/_lib/build-metadata';
 import {
   localeAlternates,
   localizedPath,
@@ -26,29 +26,19 @@ export function localizedPageMetadata({
   const url = `${social.site}${canonicalPath}`;
   const alternates = localeAlternates(path);
 
-  return {
+  return buildPageMetadata({
     title,
     description,
-    alternates: {
-      canonical: url,
-      languages: Object.fromEntries(
-        Object.entries(alternates.languages).map(([lang, langPath]) => [
-          lang,
-          `${social.site}${langPath}`,
-        ]),
-      ),
-    },
-    openGraph: {
-      type: ogType,
-      locale: SITE_OG_LOCALE[locale],
-      url,
-      title,
-      description,
-      siteName: SITE_NAME,
-      images: [ogImage(title)],
-    },
-    twitter: { card: 'summary_large_image', title, description, images: [ogImage(title)] },
-  };
+    canonical: url,
+    ogLocale: SITE_OG_LOCALE[locale],
+    ogType,
+    languages: Object.fromEntries(
+      Object.entries(alternates.languages).map(([lang, langPath]) => [
+        lang,
+        `${social.site}${langPath}`,
+      ]),
+    ),
+  });
 }
 
 export { localizedPath, SITE_HTML_LANG };

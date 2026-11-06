@@ -6,14 +6,12 @@ import { SITE_LOCALE } from '@/content/site-locale';
 
 const locale = SITE_LOCALE.en;
 
-export const metadata: Metadata = {
-  ...localizedPageMetadata({
-    locale,
-    path: '/',
-    title: profilePresentation[locale].pageTitle,
-    description: profilePresentation[locale].metaDescription,
-  }),
-};
+export const metadata: Metadata = localizedPageMetadata({
+  locale,
+  path: '/',
+  title: profilePresentation[locale].pageTitle,
+  description: profilePresentation[locale].metaDescription,
+});
 
 export default function Home() {
   return <SiteHome locale={locale} />;
