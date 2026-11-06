@@ -270,6 +270,106 @@
     margin: 0;
   }
 
+  .measured-error {
+    display: grid;
+    gap: var(--spacing-2);
+    justify-items: start;
+    padding: var(--spacing-3);
+    border: var(--border-width) solid var(--color-primary-500);
+    background: var(--color-glow-03);
+    color: var(--color-tertiary-50);
+    font-size: var(--text-body);
+    line-height: 1.5;
+  }
+
+  .measured-error > p {
+    margin: 0;
+    color: var(--color-text-secondary);
+  }
+
+  .measured-error strong {
+    color: var(--color-primary-500);
+    font-weight: 700;
+  }
+
+  .measured-retry {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--spacing-target);
+    color: var(--color-primary-500);
+    font-weight: 700;
+    text-decoration: underline;
+    text-underline-offset: var(--spacing-1);
+  }
+
+  .measured-error-ref {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--color-text-secondary);
+    font-size: var(--text-xs);
+  }
+
+  .measured-tile[data-placeholder] {
+    border-style: dashed;
+  }
+
+  .measured-tile[data-placeholder] .measured-value {
+    color: var(--color-text-secondary);
+  }
+
+  .measured-label[data-reserve] {
+    display: grid;
+  }
+
+  .measured-label[data-reserve]::after {
+    content: attr(data-reserve);
+    grid-area: 1 / 1;
+    visibility: hidden;
+  }
+
+  .measured-load-bar {
+    position: relative;
+    display: inline-block;
+    white-space: pre;
+    color: var(--color-primary-500);
+  }
+
+  @keyframes measured-load-fill {
+    from {
+      width: 1ch;
+    }
+
+    to {
+      width: 13ch;
+    }
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    body:not([data-motion="reduce"]) .measured-load-bar {
+      color: transparent;
+    }
+
+    body:not([data-motion="reduce"]) .measured-load-bar::before,
+    body:not([data-motion="reduce"]) .measured-load-bar::after {
+      position: absolute;
+      inset: 0 auto 0 0;
+      overflow: hidden;
+    }
+
+    body:not([data-motion="reduce"]) .measured-load-bar::before {
+      content: attr(data-track);
+      color: var(--color-text-secondary);
+    }
+
+    body:not([data-motion="reduce"]) .measured-load-bar::after {
+      content: attr(data-fill);
+      color: var(--color-primary-500);
+      animation: measured-load-fill 1.8s steps(12, jump-none) infinite;
+    }
+  }
+
   @container (min-width: 40rem) {
     .measured-tiles {
       grid-template-columns: repeat(4, minmax(0, 1fr));

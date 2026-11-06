@@ -1,11 +1,17 @@
 import { PassThrough } from 'node:stream';
+import { parse } from 'postcss';
 import { renderToPipeableStream, renderToStaticMarkup } from 'react-dom/server';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { readComponentsCss } from '@/__tests__/helpers/components-css';
+import { declValue, rulesWithSelector } from '@/__tests__/helpers/css-rules';
 import { measured } from '@/content/measured';
 import { SITE_LOCALE } from '@/content/site-locale';
+import { SSR_REDIS_TIMEOUT_MS } from '@/lib/with-timeout';
 
 const getAskMetricsMock = vi.fn();
 const getScoresMock = vi.fn();
+const headersMock = vi.fn();
+vi.mock('next/headers', () => ({ headers: headersMock }));
 vi.mock('@/lib/lighthouse-scores', () => ({
   getScores: getScoresMock,
   LIGHTHOUSE_TTL_S: 90_000,
@@ -21,9 +27,9 @@ vi.mock('@/lib/ask-metrics', () => ({
   getAskMetrics: getAskMetricsMock,
 }));
 
-async function renderData(): Promise<string> {
+async function renderData(locale: typeof SITE_LOCALE.en | typeof SITE_LOCALE.pt = SITE_LOCALE.en) {
   const { AiMetricsData } = await import('./AiMetricsSection');
-  const element = await AiMetricsData({ locale: SITE_LOCALE.en });
+  const element = await AiMetricsData({ locale });
   return renderToStaticMarkup(element);
 }
 
@@ -31,6 +37,7 @@ afterEach(() => {
   vi.resetModules();
   getAskMetricsMock.mockReset();
   getScoresMock.mockReset();
+  headersMock.mockReset();
   vi.useRealTimers();
 });
 
@@ -172,19 +179,19 @@ describe('AiMetricsSection: on-page AI eval/cost metrics (RSC)', () => {
     expect(html).toContain('<time dateTime="2026-05-20T12:00:00.000Z"');
   });
 
-  it('renders unavailable rather than pending when the metrics adapter rejects', async () => {
+  it('renders the error box rather than pending when the metrics adapter rejects', async () => {
     getAskMetricsMock.mockRejectedValue(new Error('adapter offline'));
 
     const doc = new DOMParser().parseFromString(await renderData(), 'text/html');
-    expect(doc.querySelector('.measured-status')?.textContent).toBe(
-      'Eval results are unavailable right now. Try again later.',
+    const box = doc.querySelector('.measured-error');
+    expect(box?.querySelector('strong')?.textContent).toBe('! eval results unavailable');
+    expect(box?.querySelector('p')?.textContent).toBe(
+      `The store did not answer in ${SSR_REDIS_TIMEOUT_MS / 1000}s. The site works; this panel will try again on the next visit.`,
     );
     expect(doc.body.textContent).not.toContain(measured[SITE_LOCALE.en].ask.pending);
     expect(doc.querySelector('time')).toBeNull();
     expect(doc.querySelector('[aria-busy]')).toBeNull();
-    expect(Array.from(doc.querySelectorAll('.measured-value'), (tile) => tile.textContent)).toEqual(
-      Array(4).fill(measured.en.format.empty),
-    );
+    expect(doc.querySelectorAll('.measured-tile')).toHaveLength(0);
   });
 
   it('renders the pending state without throwing when metrics are null', async () => {
@@ -207,10 +214,11 @@ describe('AiMetricsSection: on-page AI eval/cost metrics (RSC)', () => {
     );
   });
 
-  it('announces the unavailable state through a polite live region', async () => {
+  it('announces the error as an alert, inside the block the data fills', async () => {
     getAskMetricsMock.mockRejectedValue(new Error('adapter offline'));
     const doc = new DOMParser().parseFromString(await renderData(), 'text/html');
-    expect(doc.querySelector('.measured-status')?.getAttribute('role')).toBe('status');
+    const box = doc.querySelector('.measured-ask .measured-error');
+    expect(box?.getAttribute('role')).toBe('alert');
   });
 
   it('announces the pending state through a polite live region', async () => {
@@ -244,5 +252,61 @@ describe('AiMetricsSection: on-page AI eval/cost metrics (RSC)', () => {
       );
     }
     expect(withData.querySelector('.measured-status-slot p')).toBeNull();
+  });
+});
+
+describe('AiMetricsSection: error box', () => {
+  const failed = async (locale?: typeof SITE_LOCALE.en | typeof SITE_LOCALE.pt) => {
+    getAskMetricsMock.mockRejectedValue(new Error('adapter offline'));
+    return new DOMParser().parseFromString(await renderData(locale), 'text/html');
+  };
+
+  it('offers RETRY as a plain link that reloads the section, with no script or button', async () => {
+    const doc = await failed();
+    const retry = doc.querySelector('.measured-error a.measured-retry');
+    expect(retry?.textContent).toBe('[ RETRY ]');
+    expect(retry?.getAttribute('href')).toMatch(/^\?.+#sec-live-metrics$/);
+    expect(doc.querySelector('.measured-error button')).toBeNull();
+    expect(doc.querySelector('script')).toBeNull();
+  });
+
+  it('shows the request id ellipsized, with the full id in the title', async () => {
+    headersMock.mockResolvedValue(new Headers({ 'x-vercel-id': 'gru1::iad1::abcde-1730000-xyz' }));
+    const doc = await failed();
+    const ref = doc.querySelector('.measured-error-ref');
+    expect(ref?.textContent).toBe('ref gru1::iad1::abcde-1730000-xyz');
+    expect(ref?.getAttribute('title')).toBe('gru1::iad1::abcde-1730000-xyz');
+  });
+
+  it.each([
+    ['the request carries no id', () => headersMock.mockResolvedValue(new Headers())],
+    ['there is no request scope', () => headersMock.mockRejectedValue(new Error('outside scope'))],
+  ])('omits the ref line when %s', async (_name, arrange) => {
+    arrange();
+    const doc = await failed();
+    expect(doc.querySelector('.measured-error-ref')).toBeNull();
+    expect(doc.querySelector('.measured-retry')).not.toBeNull();
+  });
+
+  it('speaks Portuguese on the pt site', async () => {
+    const doc = await failed(SITE_LOCALE.pt);
+    expect(doc.querySelector('.measured-error strong')?.textContent).toBe(
+      '! resultados do eval indisponíveis',
+    );
+    expect(doc.querySelector('.measured-retry')?.textContent).toBe('[ TENTAR ]');
+    expect(doc.querySelector('.measured-error p')?.textContent).toContain(
+      `${SSR_REDIS_TIMEOUT_MS / 1000}s`,
+    );
+  });
+
+  it('draws the box in full lime and keeps the retry target at least 44px tall', () => {
+    // behavioral-test-allow: border color and target size live in the shipped stylesheet; jsdom has no layout engine
+    const stylesheet = parse(readComponentsCss());
+    const box = rulesWithSelector(stylesheet, '.measured-error');
+    expect(box.map((rule) => declValue(rule, 'border'))).toContain(
+      'var(--border-width) solid var(--color-primary-500)',
+    );
+    const retry = rulesWithSelector(stylesheet, '.measured-retry');
+    expect(retry.map((rule) => declValue(rule, 'min-height'))).toContain('var(--spacing-target)');
   });
 });

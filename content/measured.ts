@@ -1,4 +1,5 @@
 import { companyLinkCopy } from './company-link';
+import { type MeasuredStates, MeasuredStatesSchema } from './measured-states.schema';
 import { type Measured, MeasuredSchema } from './schemas';
 
 export type { Measured };
@@ -92,6 +93,40 @@ const measuredFor = (locale: SiteLocale): Measured => {
 export const measured: Record<SiteLocale, Measured> = {
   [SITE_LOCALE.en]: measuredFor(SITE_LOCALE.en),
   [SITE_LOCALE.pt]: measuredFor(SITE_LOCALE.pt),
+};
+
+const measuredStatesFor = (locale: SiteLocale): MeasuredStates => {
+  const pt = locale === SITE_LOCALE.pt;
+  return MeasuredStatesSchema.parse({
+    askError: {
+      heading: pt ? '! resultados do eval indisponíveis' : '! eval results unavailable',
+      body: pt
+        ? 'O armazenamento não respondeu em {seconds}s. O site funciona; este painel tenta de novo na próxima visita.'
+        : 'The store did not answer in {seconds}s. The site works; this panel will try again on the next visit.',
+      retry: pt ? '[ TENTAR ]' : '[ RETRY ]',
+      refLabel: 'ref',
+    },
+    perfStale: {
+      note: pt
+        ? '~ desatualizado · última medição boa há {age} · a de hoje falhou, nova tentativa às {time} UTC'
+        : "~ stale · last good run {age} ago · today's run failed, retrying at {time} UTC",
+      hourUnit: 'h',
+      dayUnit: 'd',
+    },
+    perfLoading: {
+      label: pt ? 'MEDIDO · LIGHTHOUSE' : 'MEASURED · LIGHTHOUSE',
+      fetching: pt
+        ? '> buscando as medições de desktop e celular'
+        : '> fetching desktop and mobile runs',
+      placeholder: '--',
+      tiles: { performance: 'perf', accessibility: 'a11y', bestPractices: 'bp', seo: 'seo' },
+    },
+  });
+};
+
+export const measuredStates: Record<SiteLocale, MeasuredStates> = {
+  [SITE_LOCALE.en]: measuredStatesFor(SITE_LOCALE.en),
+  [SITE_LOCALE.pt]: measuredStatesFor(SITE_LOCALE.pt),
 };
 
 export const MEASURED_FORMAT = measured[SITE_LOCALE.en].format;

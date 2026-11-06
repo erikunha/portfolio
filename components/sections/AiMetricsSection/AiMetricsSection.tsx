@@ -1,9 +1,18 @@
+import { headers } from 'next/headers';
+import { unstable_rethrow } from 'next/navigation';
 import { Suspense } from 'react';
-import { type Measured, measured as measuredContent, metricTimestamp } from '@/content/measured';
+import {
+  type Measured,
+  measured as measuredContent,
+  measuredStates,
+  metricTimestamp,
+} from '@/content/measured';
+import { ERROR_SECONDS_TOKEN } from '@/content/measured-states.schema';
 import { SECTION_LABELS } from '@/content/section-labels';
 import type { SiteLocale } from '@/content/site-locale';
 import type { AskMetrics } from '@/lib/ask-metrics';
 import { getAskMetrics } from '@/lib/ask-metrics';
+import { SSR_REDIS_TIMEOUT_MS } from '@/lib/with-timeout';
 import { IconAiMetrics } from '../../Icons';
 import { Module } from '../../responsive/Module';
 import {
@@ -26,6 +35,39 @@ const formatMetricFor = (content: Measured) => ({
     `${content.ask.currencyUnit}${value.toFixed(content.format.costPrecision)}`,
 });
 
+const REQUEST_REF_HEADER = 'x-vercel-id';
+const RETRY_HREF = '?retry=1#sec-live-metrics';
+const MS_PER_SECOND = 1000;
+
+async function readRequestRef(): Promise<string | undefined> {
+  try {
+    return (await headers()).get(REQUEST_REF_HEADER) ?? undefined;
+  } catch (error) {
+    unstable_rethrow(error);
+    return undefined;
+  }
+}
+
+function AskError({ locale, requestRef }: { locale: SiteLocale; requestRef?: string | undefined }) {
+  const { askError } = measuredStates[locale];
+  return (
+    <div className="measured-error" role="alert">
+      <strong>{askError.heading}</strong>
+      <p>
+        {askError.body.replace(ERROR_SECONDS_TOKEN, String(SSR_REDIS_TIMEOUT_MS / MS_PER_SECOND))}
+      </p>
+      <a className="measured-retry" href={RETRY_HREF}>
+        {askError.retry}
+      </a>
+      {requestRef ? (
+        <span className="measured-error-ref" title={requestRef}>
+          {askError.refLabel} {requestRef}
+        </span>
+      ) : null}
+    </div>
+  );
+}
+
 const CACHE_KEY_OPEN = ' (';
 const CACHE_KEY_CLOSE = ')';
 
@@ -34,25 +76,25 @@ function askStatusMessage(
   state: {
     metrics: AskMetrics | null;
     loading: boolean;
-    unavailable: boolean;
     timestamp: ReturnType<typeof metricTimestamp>;
   },
 ) {
   if (state.metrics) return state.timestamp.valid ? null : content.unknownTimestamp;
-  if (state.loading) return content.loading;
-  return state.unavailable ? content.ask.unavailable : content.ask.pending;
+  return state.loading ? content.loading : content.ask.pending;
 }
 
 function AiMetricsBody({
   locale,
   metrics,
   loading = false,
-  unavailable = false,
+  failed = false,
+  requestRef,
 }: {
   locale: SiteLocale;
   metrics: AskMetrics | null;
   loading?: boolean;
-  unavailable?: boolean;
+  failed?: boolean;
+  requestRef?: string | undefined;
 }) {
   const content = measuredContent[locale];
   const format = content.format;
@@ -84,31 +126,37 @@ function AiMetricsBody({
           </span>
         ) : null}
       </h3>
-      <div className="measured-tiles">
-        {content.ask.metrics.map((metric) => (
-          <MeasuredTile
-            key={metric.key}
-            label={metric.label}
-            value={metrics ? formatMetric[metric.key](metrics[metric.key]) : format.empty}
-            description={
-              metric.description ||
-              (metrics
-                ? `${content.ask.p95Prefix} ${formatMetric.p95LatencyMs(metrics.p95LatencyMs)}`
-                : content.ask.p95Pending)
-            }
+      {failed ? (
+        <AskError locale={locale} requestRef={requestRef} />
+      ) : (
+        <>
+          <div className="measured-tiles">
+            {content.ask.metrics.map((metric) => (
+              <MeasuredTile
+                key={metric.key}
+                label={metric.label}
+                value={metrics ? formatMetric[metric.key](metrics[metric.key]) : format.empty}
+                description={
+                  metric.description ||
+                  (metrics
+                    ? `${content.ask.p95Prefix} ${formatMetric.p95LatencyMs(metrics.p95LatencyMs)}`
+                    : content.ask.p95Pending)
+                }
+              />
+            ))}
+          </div>
+          <MeasuredStatus
+            message={askStatusMessage(content, { metrics, loading, timestamp })}
+            live={!metrics}
+            reserve={[
+              content.loading,
+              content.ask.unavailable,
+              content.ask.pending,
+              content.unknownTimestamp,
+            ]}
           />
-        ))}
-      </div>
-      <MeasuredStatus
-        message={askStatusMessage(content, { metrics, loading, unavailable, timestamp })}
-        live={!metrics}
-        reserve={[
-          content.loading,
-          content.ask.unavailable,
-          content.ask.pending,
-          content.unknownTimestamp,
-        ]}
-      />
+        </>
+      )}
     </div>
   );
 }
@@ -118,7 +166,8 @@ export async function AiMetricsData({ locale }: { locale: SiteLocale }) {
     const metrics = await getAskMetrics();
     return <AiMetricsBody locale={locale} metrics={metrics} />;
   } catch {
-    return <AiMetricsBody locale={locale} metrics={null} unavailable />;
+    const requestRef = await readRequestRef();
+    return <AiMetricsBody locale={locale} metrics={null} failed requestRef={requestRef} />;
   }
 }
 

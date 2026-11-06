@@ -1,3 +1,4 @@
+import { type MixerBoot, MixerBootSchema } from './measured-states.schema';
 import { type DawMixer, type DawMixerCopy, DawMixerCopySchema, DawMixerSchema } from './schemas';
 import { SITE_LOCALE, type SiteLocale } from './site-locale';
 
@@ -39,7 +40,7 @@ const dawMixerFor = (locale: SiteLocale): DawMixer => {
   const pt = locale === SITE_LOCALE.pt;
   return DawMixerSchema.parse({
     sessionName: 'YELLOW_TAKE_03.ALS',
-    loadingLabel: pt ? 'carregando o mixer...' : 'loading the mixer...',
+    loadingLabel: pt ? 'carregando os canais do mixer' : 'loading the mixer channels',
     bpm: 87,
     timeSignature: '4/4',
     status: 'MIXING',
@@ -117,6 +118,22 @@ const dawMixerFor = (locale: SiteLocale): DawMixer => {
       },
     ],
   });
+};
+
+const mixerBootFor = (locale: SiteLocale): MixerBoot =>
+  MixerBootSchema.parse({
+    doneTag: '[ ok ]',
+    loadingTag: '[ .. ]',
+    queuedTag: '[    ]',
+    sessionLabel: locale === SITE_LOCALE.pt ? 'sessão' : 'session',
+    tempoUnit: 'bpm',
+    separator: ' · ',
+    cursor: '_',
+  });
+
+export const mixerBoot: Record<SiteLocale, MixerBoot> = {
+  [SITE_LOCALE.en]: mixerBootFor(SITE_LOCALE.en),
+  [SITE_LOCALE.pt]: mixerBootFor(SITE_LOCALE.pt),
 };
 
 export const dawMixer: Record<SiteLocale, DawMixer> = {

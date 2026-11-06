@@ -261,4 +261,43 @@
     outline: 2px solid var(--color-primary-500);
     outline-offset: 2px;
   }
+
+  .links-skeleton-block {
+    display: block;
+    outline: var(--border-width) solid var(--color-primary-border);
+    outline-offset: calc(var(--border-width) * -1);
+    background-color: var(--color-glow-03);
+    background-image: repeating-linear-gradient(
+      180deg,
+      var(--color-primary-quiet) 0 1px,
+      transparent 1px 3px
+    );
+  }
+
+  .links-skeleton-thumb {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+  }
+
+  .links-skeleton-bars {
+    display: grid;
+    gap: var(--spacing-2);
+    margin-top: var(--spacing-3);
+  }
+
+  .links-skeleton-bar {
+    height: var(--spacing-3);
+  }
+
+  .links-skeleton-bar:nth-child(1) {
+    width: 100%;
+  }
+
+  .links-skeleton-bar:nth-child(2) {
+    width: 82%;
+  }
+
+  .links-skeleton-bar:nth-child(3) {
+    width: 56%;
+  }
 }

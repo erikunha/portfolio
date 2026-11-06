@@ -4,6 +4,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { readComponentsCss } from '@/__tests__/helpers/components-css';
 import { declValue, rulesWithSelector } from '@/__tests__/helpers/css-rules';
 import { SITE_LOCALE } from '@/content/site-locale';
+import vercelConfig from '@/vercel.json';
 
 const getScoresMock = vi.fn();
 vi.mock('@/lib/lighthouse-scores', () => ({
@@ -26,7 +27,7 @@ const REAL_SCORES = {
   fetchedAt: '2026-05-29T03:00:00.000Z',
 };
 
-const strategyScores = (overrides: Partial<typeof REAL_SCORES>) => ({
+const strategyScores = (overrides: Partial<typeof REAL_SCORES> & { stale?: boolean }) => ({
   ...REAL_SCORES,
   ...overrides,
 });
@@ -194,9 +195,89 @@ describe('LivePerfSection: loading shell', () => {
     const doc = new DOMParser().parseFromString(html, 'text/html');
     expect(doc.getElementById('sec-live-perf')).not.toBeNull();
     expect(doc.querySelector('[aria-busy="true"]')).not.toBeNull();
-    expect(doc.querySelector('p.measured-status')?.textContent).toBe('loading…');
     expect(doc.querySelector('time')).toBeNull();
     pending.resolve(null);
+  });
+});
+
+const renderLoading = async (locale: typeof SITE_LOCALE.en | typeof SITE_LOCALE.pt) => {
+  const { LivePerfSection } = await import('./LivePerfSection');
+  const pending = Promise.withResolvers<null>();
+  getScoresMock.mockReturnValue(pending.promise);
+  const html = renderToStaticMarkup(<LivePerfSection locale={locale} />);
+  pending.resolve(null);
+  return new DOMParser().parseFromString(html, 'text/html');
+};
+
+describe('LivePerfSection: lighthouse loading state', () => {
+  it('names the block, says what is being fetched and announces it as a status', async () => {
+    const doc = await renderLoading(SITE_LOCALE.en);
+    expect(doc.querySelector('.measured-heading')?.textContent).toBe('MEASURED · LIGHTHOUSE');
+    const status = doc.querySelector('[role="status"]');
+    expect(status?.textContent).toContain('> fetching desktop and mobile runs');
+    expect(doc.querySelector('[aria-busy="true"]')).not.toBeNull();
+  });
+
+  it('shows an unfilled bar without printing a percent, hidden from assistive tech', async () => {
+    const doc = await renderLoading(SITE_LOCALE.en);
+    const bar = doc.querySelector('.measured-load-bar');
+    expect(bar?.textContent).toBe('[####........]');
+    expect(bar?.getAttribute('aria-hidden')).toBe('true');
+    expect(doc.body.textContent).not.toMatch(/\d\s*%/);
+  });
+
+  it('keeps the four tiles at their final shape with dashed placeholders', async () => {
+    const doc = await renderLoading(SITE_LOCALE.en);
+    const tiles = Array.from(doc.querySelectorAll('.measured-tile'), (tile) => ({
+      label: tile.querySelector('.measured-label')?.textContent,
+      value: tile.querySelector('.measured-value')?.textContent,
+      description: tile.querySelector('.measured-description')?.textContent,
+    }));
+    expect(tiles).toEqual(
+      ['perf', 'a11y', 'bp', 'seo'].map((label) => ({
+        label,
+        value: '-- / --',
+        description: 'desktop / mobile',
+      })),
+    );
+  });
+
+  it('reserves the room of the full metric labels so the scores land without a shift', async () => {
+    const doc = await renderLoading(SITE_LOCALE.en);
+    const reserved = Array.from(doc.querySelectorAll('.measured-label'), (label) =>
+      label.getAttribute('data-reserve'),
+    );
+    expect(reserved).toEqual(['PERFORMANCE', 'ACCESSIBILITY', 'BEST PRACTICES', 'SEO']);
+  });
+
+  it('speaks Portuguese on the pt site', async () => {
+    const doc = await renderLoading(SITE_LOCALE.pt);
+    expect(doc.querySelector('.measured-heading')?.textContent).toBe('MEDIDO · LIGHTHOUSE');
+    expect(doc.querySelector('[role="status"]')?.textContent).toContain(
+      '> buscando as medições de desktop e celular',
+    );
+    expect(doc.querySelector('.measured-description')?.textContent).toBe('desktop / celular');
+  });
+
+  it('steps the bar with CSS only, and only where motion is allowed', () => {
+    // behavioral-test-allow: animation and reduced-motion contracts live in the shipped stylesheet; jsdom runs no animations
+    const stylesheet = parse(readComponentsCss());
+    const motionSelector = 'body:not([data-motion="reduce"]) .measured-load-bar::after';
+    const animatedOutsideGuard: string[] = [];
+    let guarded: string | undefined;
+    stylesheet.walkRules((rule) => {
+      const animation = declValue(rule, 'animation');
+      if (!animation?.includes('measured-load-fill')) return;
+      const parent = rule.parent;
+      const inGuard =
+        parent?.type === 'atrule' &&
+        /prefers-reduced-motion:\s*no-preference/.test((parent as { params: string }).params);
+      if (inGuard && rule.selector === motionSelector) guarded = animation;
+      else animatedOutsideGuard.push(rule.selector);
+    });
+    expect(guarded).toMatch(/steps\(/);
+    expect(animatedOutsideGuard).toEqual([]);
+    expect(rulesWithSelector(stylesheet, motionSelector)).not.toHaveLength(0);
   });
 });
 
@@ -224,5 +305,70 @@ describe('LivePerfSection: tile grid layout', () => {
     expect(grid.map((rule) => declValue(rule, 'grid-template-columns'))).toEqual([
       'minmax(0, 1fr)',
     ]);
+  });
+});
+
+describe('LivePerfSection: last good scores', () => {
+  const NOW = '2026-05-29T09:00:00.000Z';
+  const refreshTime = () => {
+    const cron = vercelConfig.crons.find((entry) => entry.path === '/api/psi-refresh');
+    const [minute = '', hour = ''] = cron?.schedule.split(' ') ?? [];
+    return `${hour.padStart(2, '0')}:${minute.padStart(2, '0')}`;
+  };
+  const renderStale = async (
+    fetchedAt: string,
+    locale: typeof SITE_LOCALE.en | typeof SITE_LOCALE.pt = SITE_LOCALE.en,
+  ) => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(new Date(NOW));
+    getScoresMock.mockResolvedValue(strategyScores({ fetchedAt, stale: true }));
+    const { PerfData } = await import('./LivePerfSection');
+    const html = renderToStaticMarkup(await PerfData({ locale }));
+    return new DOMParser().parseFromString(html, 'text/html');
+  };
+
+  it('has a psi-refresh cron whose time the footnote can read', () => {
+    expect(refreshTime()).toMatch(/^\d{2}:\d{2}$/);
+  });
+
+  it('explains the stale scores in a status footnote with the age and the next retry', async () => {
+    const doc = await renderStale('2026-05-28T03:00:00.000Z');
+    const notes = Array.from(doc.querySelectorAll('p.measured-status'), (p) => p.textContent);
+    expect(notes).toEqual([
+      `~ stale · last good run 30h ago · today's run failed, retrying at ${refreshTime()} UTC`,
+    ]);
+    expect(doc.querySelector('p.measured-status')?.getAttribute('role')).toBe('status');
+  });
+
+  it('still shows the last good scores and leaves the heading free of a second stale marker', async () => {
+    const doc = await renderStale('2026-05-28T03:00:00.000Z');
+    expect(Array.from(doc.querySelectorAll('.measured-value'), (tile) => tile.textContent)).toEqual(
+      ['99 / 99', '100 / 100', '95 / 95', '100 / 100'],
+    );
+    expect(doc.querySelector('.measured-heading .measured-status')).toBeNull();
+  });
+
+  it('counts the age in days once it passes two days', async () => {
+    const doc = await renderStale('2026-05-26T09:00:00.000Z');
+    expect(doc.querySelector('p.measured-status')?.textContent).toContain('last good run 3d ago');
+  });
+
+  it('speaks Portuguese on the pt site', async () => {
+    const doc = await renderStale('2026-05-28T03:00:00.000Z', SITE_LOCALE.pt);
+    expect(doc.querySelector('p.measured-status')?.textContent).toBe(
+      `~ desatualizado · última medição boa há 30h · a de hoje falhou, nova tentativa às ${refreshTime()} UTC`,
+    );
+  });
+
+  it('shows no footnote for fresh scores', async () => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(new Date(NOW));
+    getScoresMock.mockResolvedValue(strategyScores({ fetchedAt: '2026-05-29T03:00:00.000Z' }));
+    const { PerfData } = await import('./LivePerfSection');
+    const doc = new DOMParser().parseFromString(
+      renderToStaticMarkup(await PerfData({ locale: SITE_LOCALE.en })),
+      'text/html',
+    );
+    expect(doc.querySelector('p.measured-status')).toBeNull();
   });
 });
