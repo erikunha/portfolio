@@ -13,7 +13,11 @@ const ContentLengthSchema = z
 
 type Handler = (req: NextRequest) => Promise<Response>;
 
-const asNextRequest = (req: Request) => (req instanceof NextRequest ? req : new NextRequest(req));
+const rebuild = (req: Request, init: Pick<RequestInit, 'headers' | 'body'>) =>
+  new NextRequest(req.url, { method: req.method, ...init });
+
+const asNextRequest = (req: Request) =>
+  req instanceof NextRequest ? req : rebuild(req, { headers: new Headers(req.headers) });
 
 function bodyTooLarge(maxBytes: number): Response {
   return err({
@@ -60,6 +64,6 @@ export function withBodyLimit(
 
     const headers = new Headers(req.headers);
     headers.set(CONTENT_LENGTH_HEADER, String(byteLength));
-    return handler(new NextRequest(req, { headers, body: bytes.subarray(0, byteLength) }));
+    return handler(rebuild(req, { headers, body: bytes.subarray(0, byteLength) }));
   };
 }
