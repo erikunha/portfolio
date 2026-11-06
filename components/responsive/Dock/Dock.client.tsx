@@ -2,7 +2,14 @@
 
 import { ExternalLink } from '@/components/ExternalLink';
 import type { DockKey } from '@/content/navigation';
-import { DRAWER_ID, MENU_ICON_PATH, NavIcon, useSectionNavigation } from '../SectionNavigation';
+import {
+  DRAWER_ID,
+  MENU_ICON_PATH,
+  NavIcon,
+  useCurrentSection,
+  useDrawerOpen,
+  useSectionNavigation,
+} from '../SectionNavigation';
 
 const ICON_PATHS: Record<DockKey, string> = {
   home: 'M3 11l9-8 9 8v10H3zM9 21V12h6v9',
@@ -17,8 +24,9 @@ function DockIcon({ control }: { control: DockKey }) {
 }
 
 export function Dock() {
-  const { currentId, drawerOpen, openDrawer, closeDrawer, jump, copy, chrome } =
-    useSectionNavigation();
+  const { openDrawer, closeDrawer, jump, copy, chrome } = useSectionNavigation();
+  const currentId = useCurrentSection();
+  const drawerOpen = useDrawerOpen();
   const active = chrome.dockKeyBySection[currentId];
   const navigation = chrome.navigation;
 

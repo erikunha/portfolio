@@ -124,6 +124,49 @@ test.describe('contact form before it hydrates', () => {
     expect(documents, 'the page loaded once and the submit did not reload it').toHaveLength(1);
     expect(new URL(page.url()).search, 'the typed message stays out of the URL').toBe('');
   });
+
+  test('text typed into every field while the scripts load survives hydration and is submitted', async ({
+    page,
+  }) => {
+    const typed = {
+      name: 'Ada Lovelace',
+      email: 'ada@example.com',
+      message: 'A message long enough to be accepted.',
+    };
+    await installMockBackend(page, { contact: 'happy', log: 'accept' });
+    await page.route('**/_next/static/chunks/**/*.js', async (route) => {
+      await new Promise((resolve) => setTimeout(resolve, HYDRATION_DELAY_MS));
+      await route.continue();
+    });
+    let sent: Record<string, string> | null = null;
+    page.on('request', (request) => {
+      if (request.url().endsWith('/api/contact') && request.method() === 'POST') {
+        sent = request.postDataJSON();
+      }
+    });
+    await page.goto('/', { waitUntil: 'commit' });
+    const form = page.getByTestId('contact-form');
+    await form.waitFor({ state: 'attached' });
+    await form.scrollIntoViewIfNeeded();
+    await page.locator(FIELD_SELECTORS.name).pressSequentially(typed.name);
+    await page.locator(FIELD_SELECTORS.email).pressSequentially(typed.email);
+    await page.locator(FIELD_SELECTORS.message).pressSequentially(typed.message);
+    await waitForHydration(page, FORM_SELECTOR);
+
+    for (const field of Object.keys(typed) as (keyof typeof typed)[]) {
+      await expect(
+        page.locator(FIELD_SELECTORS[field]),
+        `${field} typed before hydration is still in the field after it`,
+      ).toHaveValue(typed[field]);
+    }
+    await expect(page.getByTestId('contact-form').locator('.contact-count')).toContainText(
+      `${typed.message.length}`,
+    );
+
+    await form.getByRole('button', { name: contactCopy.en.form.submit, exact: true }).click();
+    await expect(page.getByTestId('contact-success')).toBeVisible();
+    expect(sent, 'the submit carries what was typed before hydration').toMatchObject(typed);
+  });
 });
 
 test.describe('contact submit status line', () => {

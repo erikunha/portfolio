@@ -1,7 +1,15 @@
 'use client';
 
 import { usePathname } from 'next/navigation';
-import { Fragment, useEffect, useId, useRef, useState, useSyncExternalStore } from 'react';
+import {
+  Fragment,
+  useEffect,
+  useId,
+  useLayoutEffect,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from 'react';
 import { ExternalLink } from '@/components/ExternalLink';
 import type { ContactContent } from '@/content/contact';
 import {
@@ -175,6 +183,7 @@ export function ContactForm({ copy, chrome }: { copy: ContactContent; chrome: Te
   const [receipt, setReceipt] = useState<{ ref: string; at: Date } | null>(null);
   const [queuedRef, setQueuedRef] = useState('');
   const [failureCount, setFailureCount] = useState(INITIAL_FAILURE_COUNT);
+  const formRef = useRef<HTMLFormElement>(null);
   const summaryRef = useRef<HTMLDivElement>(null);
   const pendingRef = useRef(false);
   const formId = useId();
@@ -197,6 +206,17 @@ export function ContactForm({ copy, chrome }: { copy: ContactContent; chrome: Te
     () => (fieldShown ? messageStore.bindField(messageFieldId) : undefined),
     [fieldShown, messageFieldId],
   );
+
+  useLayoutEffect(() => {
+    const fields = formRef.current?.elements;
+    const typedInDom = (field: ContactField) =>
+      (fields?.namedItem(field) as HTMLInputElement | HTMLTextAreaElement | null)?.value ?? '';
+    setTyped((current) => ({
+      name: typedInDom(CONTACT_FIELD.NAME) || current.name,
+      email: typedInDom(CONTACT_FIELD.EMAIL) || current.email,
+    }));
+    messageStore.seed(typedInDom(CONTACT_FIELD.MESSAGE));
+  }, []);
 
   useEffect(() => {
     if (failureCount > INITIAL_FAILURE_COUNT) summaryRef.current?.focus();
@@ -329,6 +349,7 @@ export function ContactForm({ copy, chrome }: { copy: ContactContent; chrome: Te
   return (
     <ContactShell chrome={chrome}>
       <form
+        ref={formRef}
         method="dialog"
         onSubmit={submit}
         noValidate

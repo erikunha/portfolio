@@ -36,3 +36,29 @@ export async function flushFrames(): Promise<void> {
     await new Promise<void>((r) => setTimeout(r, 32));
   });
 }
+
+export async function hydrateClient(
+  element: ReactElement,
+  typeIntoServerMarkup: (container: HTMLElement) => void,
+): Promise<MountedClient> {
+  const { renderToString } = await import('react-dom/server');
+  const { hydrateRoot } = await import('react-dom/client');
+
+  const container = document.createElement('div');
+  container.innerHTML = renderToString(element);
+  document.body.appendChild(container);
+  typeIntoServerMarkup(container);
+
+  let root: import('react-dom/client').Root | undefined;
+  await act(async () => {
+    root = hydrateRoot(container, element);
+  });
+  const mountedRoot = root as import('react-dom/client').Root;
+
+  const unmount = (): void => {
+    act(() => mountedRoot.unmount());
+    container.remove();
+  };
+
+  return { container, root: mountedRoot, unmount };
+}

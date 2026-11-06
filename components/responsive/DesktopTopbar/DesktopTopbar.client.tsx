@@ -7,7 +7,13 @@ import { StatusDot } from '@/components/StatusDot';
 import { LINKS_PATH } from '@/content/links.constants';
 import { TOPBAR_MOTION_LABEL } from '@/content/nav';
 import { cn } from '@/lib/cn';
-import { LanguageSwitch, MenuTrigger, useSectionNavigation } from '../SectionNavigation';
+import {
+  LanguageSwitch,
+  MenuTrigger,
+  useCurrentSection,
+  useMotionOn,
+  useSectionNavigation,
+} from '../SectionNavigation';
 
 const SECTION_PATH_SEPARATOR = '/';
 
@@ -37,7 +43,9 @@ function currentState(
 }
 
 export function DesktopTopbar({ brand }: { brand: ReactNode }) {
-  const { motionOn, toggleMotion, chrome, copy, currentId, jump } = useSectionNavigation();
+  const { toggleMotion, chrome, copy, jump } = useSectionNavigation();
+  const currentId = useCurrentSection();
+  const motionOn = useMotionOn();
   const pathname = usePathname();
 
   return (

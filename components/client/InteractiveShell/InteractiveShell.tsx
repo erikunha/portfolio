@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useId, useRef, useState } from 'react';
+import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
 import type { TerminalChrome } from '@/content/schemas';
 import SHELL_RESPONSES from '@/content/shell-commands';
 import type { ShellStates } from '@/content/shell-states.schema';
@@ -166,6 +166,13 @@ export function InteractiveShell({
     setInput,
     onSettled: refocusAfterStream,
   });
+
+  useLayoutEffect(() => {
+    const typed = inputRef.current?.value;
+    if (!typed) return;
+    setInput(typed);
+    draft.current = typed;
+  }, []);
 
   useEffect(() => {
     if (initializedRef.current) return;

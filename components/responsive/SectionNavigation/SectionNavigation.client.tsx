@@ -12,6 +12,7 @@ import {
   useMemo,
   useRef,
   useState,
+  useSyncExternalStore,
 } from 'react';
 import { externalLinkProps } from '@/components/ExternalLink';
 import { LocaleSwitch } from '@/components/LocaleSwitch/LocaleSwitch';
@@ -28,6 +29,11 @@ import { NavItem } from '@/design-system';
 import { cn } from '@/lib/cn';
 import { isolate } from '@/lib/dom/isolate';
 import { applyMotion, motionInEffect, readMotion, readSystemReducedMotion } from '@/lib/motion';
+import {
+  createNavigationStore,
+  type NavigationSnapshot,
+  type NavigationStore,
+} from './navigationStore';
 
 const HOME_SECTION_ID = 'bio';
 const POSITION_DIGITS = 2;
@@ -46,15 +52,19 @@ const MENU_TRIGGER_CLASS = 'menu-trigger';
 const MENU_TRIGGER_SELECTOR = `.${MENU_TRIGGER_CLASS}`;
 export const MENU_ICON_PATH = 'M4 7h16M4 12h16M4 17h16';
 export const ICON_VIEWBOX = '0 0 24 24';
+const INITIAL_SNAPSHOT: NavigationSnapshot = {
+  currentId: HOME_SECTION_ID,
+  drawerOpen: false,
+  motionOn: true,
+  systemReduced: false,
+};
+
 type NavigationState = {
-  currentId: string;
-  drawerOpen: boolean;
+  store: NavigationStore;
   openDrawer: (trigger: HTMLElement | null) => void;
   closeDrawer: (restoreFocus: boolean) => void;
   settleDrawer: () => void;
   jump: (event: MouseEvent<HTMLElement>, id: string) => void;
-  motionOn: boolean;
-  motionLabel: string;
   toggleMotion: () => void;
   locale: SiteLocale;
   copy: NavigationCopy;
@@ -68,6 +78,30 @@ export function useSectionNavigation(): NavigationState {
   if (!state)
     throw new Error('useSectionNavigation must be used inside <SectionNavigationProvider>');
   return state;
+}
+
+function useNavigationSelector<T>(select: (snapshot: NavigationSnapshot) => T): T {
+  const { store } = useSectionNavigation();
+  return useSyncExternalStore(
+    store.subscribe,
+    () => select(store.get()),
+    () => select(store.initial),
+  );
+}
+
+const selectCurrentId = (snapshot: NavigationSnapshot) => snapshot.currentId;
+const selectDrawerOpen = (snapshot: NavigationSnapshot) => snapshot.drawerOpen;
+const selectMotionOn = (snapshot: NavigationSnapshot) => snapshot.motionOn;
+
+export const useCurrentSection = () => useNavigationSelector(selectCurrentId);
+export const useDrawerOpen = () => useNavigationSelector(selectDrawerOpen);
+export const useMotionOn = () => useNavigationSelector(selectMotionOn);
+
+export function useMotionLabel(): string {
+  const { copy } = useSectionNavigation();
+  return useNavigationSelector(({ motionOn, systemReduced }) =>
+    motionOn ? copy.motionOn : systemReduced ? copy.motionReduced : copy.motionOff,
+  );
 }
 
 function scrollBehavior(): ScrollBehavior {
@@ -132,24 +166,17 @@ export function SectionNavigationProvider({
   chrome: SiteNavChrome;
   locale: SiteLocale;
 }) {
-  const [currentId, setCurrentId] = useState<string>(HOME_SECTION_ID);
+  const [store] = useState(() => createNavigationStore(INITIAL_SNAPSHOT));
   const copy = chrome.navigation.copy;
-  const [drawerOpen, setDrawerOpen] = useState(false);
-  const [motionOn, setMotionOn] = useState(true);
-  const [systemReduced, setSystemReduced] = useState(false);
-  const drawerOpenRef = useRef(false);
-  const motionOnRef = useRef(true);
   const triggerRef = useRef<HTMLElement | null>(null);
   const restoreFocusRef = useRef(true);
   const pendingRef = useRef<string | null>(null);
 
   useLayoutEffect(() => {
     const on = readMotion();
-    motionOnRef.current = on;
-    setMotionOn(on);
-    setSystemReduced(readSystemReducedMotion());
+    store.set({ motionOn: on, systemReduced: readSystemReducedMotion() });
     applyMotion(on, false);
-  }, []);
+  }, [store]);
 
   useEffect(() => {
     if (typeof IntersectionObserver === 'undefined') return;
@@ -162,7 +189,7 @@ export function SectionNavigationProvider({
     const mobileHero = document.querySelector(MOBILE_HERO_SELECTOR);
     if (mobileHero) sections.set(mobileHero, HOME_SECTION_ID);
     if (sections.size === 0) {
-      setCurrentId(NO_CURRENT_SECTION);
+      store.set({ currentId: NO_CURRENT_SECTION });
       return;
     }
     const observer = new IntersectionObserver(
@@ -174,26 +201,30 @@ export function SectionNavigationProvider({
             first = target;
         }
         const id = first && sections.get(first);
-        if (id) setCurrentId(id);
+        if (id) store.set({ currentId: id });
       },
       { rootMargin: CURRENT_LINE_MARGIN },
     );
     for (const element of sections.keys()) observer.observe(element);
     return () => observer.disconnect();
-  }, [chrome]);
+  }, [chrome, store]);
 
-  const openDrawer = useCallback((trigger: HTMLElement | null) => {
-    triggerRef.current = trigger;
-    restoreFocusRef.current = true;
-    drawerOpenRef.current = true;
-    setDrawerOpen(true);
-  }, []);
+  const openDrawer = useCallback(
+    (trigger: HTMLElement | null) => {
+      triggerRef.current = trigger;
+      restoreFocusRef.current = true;
+      store.set({ drawerOpen: true });
+    },
+    [store],
+  );
 
-  const closeDrawer = useCallback((restoreFocus: boolean) => {
-    restoreFocusRef.current = restoreFocus;
-    drawerOpenRef.current = false;
-    setDrawerOpen(false);
-  }, []);
+  const closeDrawer = useCallback(
+    (restoreFocus: boolean) => {
+      restoreFocusRef.current = restoreFocus;
+      store.set({ drawerOpen: false });
+    },
+    [store],
+  );
 
   const settleDrawer = useCallback(() => {
     const pending = pendingRef.current;
@@ -220,64 +251,43 @@ export function SectionNavigationProvider({
       if (defaultPrevented || button || metaKey || ctrlKey || shiftKey || altKey) return;
       if (!jumpTarget(id)) return;
       event.preventDefault();
-      if (drawerOpenRef.current) {
+      if (store.get().drawerOpen) {
         pendingRef.current = id;
         closeDrawer(false);
       } else {
         jumpToSection(id);
       }
     },
-    [closeDrawer],
+    [closeDrawer, store],
   );
 
   const toggleMotion = useCallback(() => {
-    const next = !motionOnRef.current;
-    motionOnRef.current = next;
-    setMotionOn(next);
+    const next = !store.get().motionOn;
+    store.set({ motionOn: next });
     applyMotion(next);
-  }, []);
+  }, [store]);
 
-  const motionLabel = motionOn
-    ? copy.motionOn
-    : systemReduced
-      ? copy.motionReduced
-      : copy.motionOff;
   const value = useMemo<NavigationState>(
     () => ({
-      currentId,
-      drawerOpen,
+      store,
       openDrawer,
       closeDrawer,
       settleDrawer,
       jump,
-      motionOn,
-      motionLabel,
       toggleMotion,
       locale,
       copy,
       chrome,
     }),
-    [
-      currentId,
-      drawerOpen,
-      openDrawer,
-      closeDrawer,
-      settleDrawer,
-      jump,
-      motionOn,
-      motionLabel,
-      toggleMotion,
-      locale,
-      copy,
-      chrome,
-    ],
+    [store, openDrawer, closeDrawer, settleDrawer, jump, toggleMotion, locale, copy, chrome],
   );
 
   return <NavigationContext.Provider value={value}>{children}</NavigationContext.Provider>;
 }
 
 export function LanguageSwitch({ className }: { className?: string }) {
-  const { locale, copy, currentId } = useSectionNavigation();
+  const { locale, copy } = useSectionNavigation();
+  const currentId = useCurrentSection();
   const pathname = usePathname();
   const paths = pathname ? headerLanguageSwitchPaths(pathname) : null;
   if (!pathname || !paths) return null;
@@ -295,18 +305,11 @@ export function LanguageSwitch({ className }: { className?: string }) {
 }
 
 export function SectionNavigation({ extra }: { extra?: ReactNode }) {
-  const {
-    currentId,
-    drawerOpen,
-    closeDrawer,
-    settleDrawer,
-    jump,
-    motionOn,
-    motionLabel,
-    toggleMotion,
-    copy,
-    chrome,
-  } = useSectionNavigation();
+  const { closeDrawer, settleDrawer, jump, toggleMotion, copy, chrome } = useSectionNavigation();
+  const currentId = useCurrentSection();
+  const drawerOpen = useDrawerOpen();
+  const motionOn = useMotionOn();
+  const motionLabel = useMotionLabel();
   const rootRef = useRef<HTMLDivElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
@@ -439,7 +442,8 @@ export function NavIcon({ path, focusable }: { path: string; focusable?: boolean
 }
 
 export function MenuTrigger({ className }: { className?: string }) {
-  const { drawerOpen, openDrawer, copy } = useSectionNavigation();
+  const { openDrawer, copy } = useSectionNavigation();
+  const drawerOpen = useDrawerOpen();
   return (
     <button
       type="button"

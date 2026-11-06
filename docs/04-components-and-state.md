@@ -32,7 +32,7 @@ Barrels beside `ContactFormLazy`, `InteractiveShellLazy` and `MatrixRainLazy` ex
 ```mermaid
 flowchart TD
     page["components/SiteHome.tsx (RSC)"] --> shell["AppShell.client"]
-    shell --> navigation["SectionNavigationProvider (client): current section and drawer state"]
+    shell --> navigation["SectionNavigationProvider (client): stable actions and copy, plus a store for current section, drawer and motion"]
     navigation --> rail["SectionNavigation (client): menu trigger, drawer focus trap and focus return<br/>Header: title and drawer close control"]
     navigation --> position["PositionMeter (client): decorative scroll progress line, aria-hidden, top from 1024px and right edge below"]
     navigation --> chrome["Chrome: CRTOverlay(6 layers) · DesktopTopbar · StatusBar · MobileTitleBar · Dock · ToTopButton"]
@@ -109,8 +109,8 @@ This is a near-static site; the state model is intentionally tiny. Four mechanis
 ```mermaid
 flowchart TD
     subgraph ctx["1. React contexts"]
-        navigation["SectionNavigationProvider / useSectionNavigation<br/>current section, drawer state and navigation actions"]
-        navigation --> consumers["SectionNavigation · Dock · PositionMeter"]
+        navigation["SectionNavigationProvider / useSectionNavigation<br/>stable actions, copy and chrome<br/>current section, drawer and motion live in a store read with useSyncExternalStore"]
+        navigation --> consumers["SectionNavigation · DesktopTopbar · Dock · MobileTitleBar · ToTopButton"]
     end
     subgraph dom["2. DOM-as-state (motion)"]
         motion["lib/motion.ts: body[data-motion] + localStorage('erik.motion')<br/>broadcast via 'motionchange' CustomEvent"]
@@ -126,7 +126,7 @@ flowchart TD
     end
 ```
 
-**There is no state-management library, no `useReducer`, and no URL/`searchParams` state.** The router reads in the app are `usePathname()` in the design-system `Sidebar.client.tsx`, in `DesktopTopbar` (which marks the current page in the site navigation) and in the global `TypeReveal` (mounted on every route by `GlobalMotion`). Section navigation shares React state through `SectionNavigationProvider`. The viewport is read with `useBreakpoint`, a `useSyncExternalStore` hook over `matchMedia` whose server snapshot is desktop; it has no provider, because a context value that changes after hydration forces every dehydrated Suspense boundary below it, the lazy shell included, to client-render and collapse to its loading fallback. Other cross-island coordination uses window `CustomEvent`s. For example, `InteractiveShell` dispatches `shell-cmd-run` and the `Footer.client` session counter listens to increment a counter, with no shared parent state.
+**There is no state-management library, no `useReducer`, and no URL/`searchParams` state.** The router reads in the app are `usePathname()` in the design-system `Sidebar.client.tsx`, in `DesktopTopbar` (which marks the current page in the site navigation) and in the global `TypeReveal` (mounted on every route by `GlobalMotion`). Section navigation shares state through `SectionNavigationProvider`: its context value (actions, copy, chrome, locale and the store) never changes after the first render, and the current section, the drawer and the motion state live in a small external store that `useCurrentSection`, `useDrawerOpen` and `useMotionOn` read with `useSyncExternalStore`, whose server snapshot is the initial state. The viewport is read with `useBreakpoint`, a `useSyncExternalStore` hook over `matchMedia` whose server snapshot is desktop; it has no provider, because a context value that changes after hydration forces every dehydrated Suspense boundary below it, the lazy shell and the contact form included, to discard their server DOM and client-render. The same rule is why the navigation provider keeps scroll, drawer and motion state out of its context value; text typed into the server-rendered fields before an island hydrates stays in the kept DOM, and the island adopts it into its state on mount. Other cross-island coordination uses window `CustomEvent`s. For example, `InteractiveShell` dispatches `shell-cmd-run` and the `Footer.client` session counter listens to increment a counter, with no shared parent state.
 
 ### Per-island state, and the two rendering disciplines
 

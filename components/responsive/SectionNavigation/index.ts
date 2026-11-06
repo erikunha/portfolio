@@ -7,5 +7,8 @@ export {
   NavIcon,
   SectionNavigation,
   SectionNavigationProvider,
+  useCurrentSection,
+  useDrawerOpen,
+  useMotionOn,
   useSectionNavigation,
 } from './SectionNavigation.client';

@@ -29,6 +29,10 @@ export const messageStore = {
     };
   },
   set: write,
+  seed(typed: string): void {
+    if (typed === '' || typed === message) return;
+    write(message === '' ? typed : `${typed}${LINE_BREAK}${message}`);
+  },
   append(line: string): boolean {
     if (message.includes(line)) return false;
     if (message.trim() === '') write(line);

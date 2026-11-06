@@ -100,3 +100,20 @@ describe('messageStore', () => {
     unbind();
   });
 });
+
+describe('messageStore.seed', () => {
+  it('sets the typed text when the store is empty and ignores an empty or equal one', () => {
+    messageStore.seed('');
+    expect(messageStore.getSnapshot()).toBe('');
+    messageStore.seed('typed');
+    expect(messageStore.getSnapshot()).toBe('typed');
+    messageStore.seed('typed');
+    expect(messageStore.getSnapshot()).toBe('typed');
+  });
+
+  it('keeps a line the store already holds below the typed text', () => {
+    messageStore.set('from the shell');
+    messageStore.seed('typed');
+    expect(messageStore.getSnapshot()).toBe('typed\nfrom the shell');
+  });
+});

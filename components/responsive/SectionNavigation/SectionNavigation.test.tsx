@@ -237,6 +237,35 @@ describe('SectionNavigation', () => {
     expect(contextSnapshots.at(-1)).toBe(contextSnapshots.at(-2));
   });
 
+  it('keeps the context value identical when the section, the drawer or the motion state change', () => {
+    contextSnapshots.length = 0;
+    render(
+      <SectionNavigationProvider chrome={siteNavChrome(LOCALE)} locale={LOCALE}>
+        <Probe />
+        <Trigger />
+        <SectionNavigation />
+        <main id="main-content" tabIndex={-1}>
+          {SECTION_REGISTRY.map(({ id }) => (
+            <section key={id} id={id} tabIndex={-1} />
+          ))}
+        </main>
+      </SectionNavigationProvider>,
+    );
+    reveal(document.getElementById('sec-projects'));
+    expect(navLink('Projects').getAttribute('aria-current'), 'the section changed').toBe(
+      'location',
+    );
+    fireEvent.click(screen.getByTestId('trigger'));
+    expect(panel().classList.contains('is-open'), 'the drawer opened').toBe(true);
+    const motion = document.querySelector<HTMLElement>('[data-motion-toggle]');
+    fireEvent.click(motion as HTMLElement);
+    expect(motion?.getAttribute('aria-pressed'), 'the motion state changed').toBe('false');
+    expect(
+      new Set(contextSnapshots).size,
+      'the navigation context value changed after the first render: a context value that changes after hydration forces every dehydrated Suspense boundary below the provider to client-render, so scroll, drawer and motion state belong in the external store',
+    ).toBe(1);
+  });
+
   it('observes every registry section with one observer and maps the mobile hero to Home', () => {
     render(<Page withHome={false} />);
     expect(FakeObserver.instances).toHaveLength(1);
