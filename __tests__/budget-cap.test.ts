@@ -2,6 +2,7 @@
 
 import { NextRequest } from 'next/server';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { ASK_RESERVED_INPUT_TOKENS } from '@/lib/ask/input-reservation';
 
 const rateLimitMock = vi.fn(async () => ({ success: true }));
 const streamTextMock = vi.fn(() => ({
@@ -70,13 +71,7 @@ describe('budget reservation pattern', () => {
     vi.unstubAllEnvs();
   });
 
-  let INPUT_RESERVATION = 0;
-
-  beforeEach(async () => {
-    ({ ASK_RESERVED_INPUT_TOKENS: INPUT_RESERVATION } = await import(
-      '@/lib/ask/input-reservation'
-    ));
-  });
+  const INPUT_RESERVATION = ASK_RESERVED_INPUT_TOKENS;
 
   it('reserves at least the whole system prompt and a full question at 3 chars per token', async () => {
     const { SYSTEM_TEXT } = await import('@/lib/ask/system-prompt');
