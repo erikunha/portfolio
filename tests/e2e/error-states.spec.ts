@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test';
 import { errorsContent } from '../../content/errors';
 import { SITE_LOCALE } from '../../content/site-locale';
+import { waitForHydration } from './_helpers/hydration';
 
 const MISSING_ROUTE = '/this-route-does-not-exist';
 const NOT_FOUND_STATUS = 404;
@@ -18,6 +19,7 @@ test.describe('404 route', () => {
 
   test('Go home returns to the portfolio', async ({ page }) => {
     await page.goto(MISSING_ROUTE);
+    await waitForHydration(page, 'h1');
     await page.getByRole('link', { name: 'Go home' }).click();
     await page.waitForURL('**/');
     await expect(page.locator('[data-testid="hero-name"]').first()).toBeAttached();
@@ -29,6 +31,7 @@ test.describe('404 route', () => {
   });
   test('suggested pages read as links, not plain text', async ({ page }) => {
     await page.goto(MISSING_ROUTE);
+    await waitForHydration(page, 'h1');
     const links = page.getByRole('navigation', { name: 'Suggested pages' }).getByRole('link');
     await expect(links).toHaveCount(SUGGESTION_COUNT);
     for (const link of await links.all()) {
