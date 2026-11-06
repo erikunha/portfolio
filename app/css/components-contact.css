@@ -197,6 +197,11 @@
     white-space: nowrap;
   }
 
+  .contact-receipt dd:has(> time) {
+    overflow: visible;
+    white-space: normal;
+  }
+
   .contact-receipt-actions {
     display: flex;
     flex-wrap: wrap;
