@@ -39,7 +39,7 @@ flowchart TD
     layout -.serves.-> api
 ```
 
-The user-facing routes are `/`, `/summary`, `/cv`, `/links`, `/links/en` and the pt-BR twins `/pt`, `/pt/cv` and `/pt/summary`, alongside the design-system docs, metadata routes and API cluster. Home sections use the client `ErrorBoundary` component. App Router failures also have `app/error.tsx` and `app/global-error.tsx`; there is no `loading.tsx`/`template.tsx`.
+The user-facing routes are `/`, `/summary`, `/cv`, `/links`, `/links/en` and the pt-BR twins `/pt`, `/pt/cv` and `/pt/summary`, alongside the design-system docs, metadata routes and API cluster. Home sections use the client `ErrorBoundary` component; its default fallback is a bordered box that keeps the island's `minHeight` (`--eb-min-height`), and decorative islands (CRT overlay, Matrix rain) pass `fallback={null}` and render nothing. App Router failures also have `app/error.tsx` and `app/global-error.tsx`; there is no `loading.tsx`/`template.tsx`.
 
 ## Terminal sections and navigation
 

@@ -13,6 +13,8 @@ export type InteractiveShellProps = {
   loadingLabel: string;
 };
 
+export const SHELL_MIN_HEIGHT = 'calc(5 * var(--spacing-target))';
+
 const ShellComponent = lazy(() =>
   import('./InteractiveShell').then((m) => ({ default: m.InteractiveShell })),
 );
@@ -21,6 +23,7 @@ export function InteractiveShellLazy({ loadingLabel, ...props }: InteractiveShel
   return (
     <LazyIsland
       locale={props.locale}
+      minHeight={SHELL_MIN_HEIGHT}
       loading={
         <div role="status" aria-busy="true" aria-label={loadingLabel} data-testid="shell-loading" />
       }
