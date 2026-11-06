@@ -1,7 +1,7 @@
 // @vitest-environment node
 
 import { NextRequest } from 'next/server';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const streamTextMock = vi.fn(() => ({
   textStream: (async function* () {
@@ -54,8 +54,14 @@ function askRequest(index: number): NextRequest {
 
 describe('ask route under the eval harness budget store', () => {
   beforeEach(() => {
+    vi.stubEnv('UPSTASH_REDIS_REST_URL', 'https://redis.test');
+    vi.stubEnv('UPSTASH_REDIS_REST_TOKEN', 'test-token');
     vi.resetModules();
     vi.clearAllMocks();
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
   });
 
   it('rejects every request with 503 when Redis is unreachable and no store is installed', async () => {

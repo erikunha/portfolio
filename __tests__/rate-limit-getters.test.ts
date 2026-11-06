@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('@upstash/redis', () => ({
   Redis: {
@@ -15,6 +15,15 @@ vi.mock('@upstash/redis', () => ({
     })),
   },
 }));
+
+beforeEach(() => {
+  vi.stubEnv('UPSTASH_REDIS_REST_URL', 'https://redis.test');
+  vi.stubEnv('UPSTASH_REDIS_REST_TOKEN', 'test-token');
+});
+
+afterEach(() => {
+  vi.unstubAllEnvs();
+});
 
 vi.mock('@upstash/ratelimit', () => {
   function Ratelimit(this: object, opts: unknown) {

@@ -1,6 +1,6 @@
 // @vitest-environment node
 
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const pipelineExec = vi.fn(async (): Promise<[number, number]> => {
   throw new Error('Failed to parse URL from /pipeline');
@@ -27,8 +27,14 @@ const RUN_REQUESTS = 3;
 
 describe('budget store seam', () => {
   beforeEach(() => {
+    vi.stubEnv('UPSTASH_REDIS_REST_URL', 'https://redis.test');
+    vi.stubEnv('UPSTASH_REDIS_REST_TOKEN', 'test-token');
     vi.resetModules();
     vi.clearAllMocks();
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
   });
 
   it('keeps the Redis-backed store fail-closed when no store is installed', async () => {

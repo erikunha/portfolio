@@ -26,6 +26,8 @@ vi.mock('@/lib/log', () => ({
 describe('hashIp — production Upstash salt resolution', () => {
   beforeEach(() => {
     vi.resetModules();
+    vi.stubEnv('UPSTASH_REDIS_REST_URL', 'https://redis.test');
+    vi.stubEnv('UPSTASH_REDIS_REST_TOKEN', 'test-token');
     delete process.env.DEPLOY_SALT;
     vi.stubEnv('NODE_ENV', 'production');
     mockGet.mockReset();

@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const fromEnv = vi.fn((_config?: unknown) => ({ get: vi.fn(async () => 'live') }));
 
@@ -18,8 +18,14 @@ const MAX_RETRY_BACKOFF_MS = 100;
 
 describe('getRedis client', () => {
   beforeEach(() => {
+    vi.stubEnv('UPSTASH_REDIS_REST_URL', 'https://redis.test');
+    vi.stubEnv('UPSTASH_REDIS_REST_TOKEN', 'test-token');
     vi.resetModules();
     fromEnv.mockClear();
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
   });
 
   it('bounds the client retry so an outage cannot stall a render', async () => {
