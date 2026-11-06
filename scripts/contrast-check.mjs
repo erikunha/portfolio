@@ -5,13 +5,21 @@ import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const themeCss = readFileSync(resolve(__dirname, '../app/css/theme.css'), 'utf8');
+const themeCss = readFileSync(
+  process.argv[2] ?? resolve(__dirname, '../app/css/theme.css'),
+  'utf8',
+);
 
 function parseThemeColors(css) {
   const colors = {};
   const re = /--color-([\w-]+):\s*([^;]+);/g;
   for (const [, name, value] of css.matchAll(re)) {
     colors[name.trim()] = value.trim();
+  }
+  const alias = /^var\(--color-([\w-]+)\)$/;
+  for (const [name, value] of Object.entries(colors)) {
+    const target = value.match(alias)?.[1];
+    if (target !== undefined && colors[target] !== undefined) colors[name] = colors[target];
   }
   return colors;
 }
