@@ -45,7 +45,7 @@ const perfReceiptsFor = (locale: SiteLocale): PerfReceipt[] => {
       metric: 'BUNDLE_JS',
       delta: '-33%',
       company: '@ CANON_MEDICAL',
-      note: 'code splitting + dynamic imports.',
+      note: pt ? 'code splitting + imports dinâmicos.' : 'code splitting + dynamic imports.',
     },
     {
       metric: 'PAGE_LOAD',
@@ -76,9 +76,9 @@ const perfReceiptsFor = (locale: SiteLocale): PerfReceipt[] => {
       delta: '-100%',
       company: '@ RAYLU',
       note: pt
-        ? 'layout shift de 0.166 para 0 na rota de empresa.'
+        ? 'layout shift de 0,166 para 0 na rota de empresa.'
         : 'layout shift 0.166 to 0 on the company route.',
-      displayValue: '0.166 → 0',
+      displayValue: pt ? '0,166 → 0' : '0.166 → 0',
       before: 0.166,
       after: 0,
     },
@@ -112,7 +112,7 @@ const perfReceiptsFor = (locale: SiteLocale): PerfReceipt[] => {
         ? 'uma rota, migração de plataforma de dados atrás de um A/B em produção.'
         : 'one route, data-platform migration behind a production A/B.',
       project: true,
-      displayValue: '2,544 → 1,308ms',
+      displayValue: pt ? '2.544 → 1.308ms' : '2,544 → 1,308ms',
       before: 2544,
       after: 1308,
     },

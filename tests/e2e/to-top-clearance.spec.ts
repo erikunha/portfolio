@@ -57,3 +57,25 @@ test.describe('the back-to-top button never sits on footer text', () => {
     }
   }
 });
+
+const MIN_TOUCH_TARGET_PX = 44;
+
+test.describe('the back-to-top button is a full touch target', () => {
+  for (const viewport of PHONES) {
+    test(`at ${viewport.width}px the button is at least ${MIN_TOUCH_TARGET_PX}px square`, async ({
+      page,
+    }) => {
+      await page.setViewportSize(viewport);
+      await page.emulateMedia({ reducedMotion: 'reduce' });
+      await page.goto('/');
+      await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+      const button = page.locator('.to-top-btn');
+      await expect(button).toBeVisible();
+      const box = await button.boundingBox();
+      expect(
+        Math.min(box?.width ?? 0, box?.height ?? 0),
+        'the back-to-top button must be a 44px touch target, not the 40px it was',
+      ).toBeGreaterThanOrEqual(MIN_TOUCH_TARGET_PX);
+    });
+  }
+});

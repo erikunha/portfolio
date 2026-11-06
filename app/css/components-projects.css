@@ -15,6 +15,7 @@
     padding: calc(var(--spacing-4) + var(--spacing-1));
     border: var(--border-width) solid var(--color-primary-subtle);
     background: transparent;
+    container-type: inline-size;
   }
 
   .project-meta {
@@ -59,7 +60,7 @@
   .project-name {
     margin: 0 0 var(--spacing-3);
     color: var(--color-primary-500);
-    font-size: var(--text-base);
+    font-size: min(var(--text-base), var(--project-name-fit));
     font-weight: 700;
     line-height: 1.5;
     overflow-wrap: anywhere;
@@ -93,6 +94,11 @@
     display: flex;
     justify-content: space-between;
     gap: var(--spacing-2);
+  }
+
+  .project-stats dt {
+    flex: none;
+    white-space: nowrap;
   }
 
   .project-stats dd {

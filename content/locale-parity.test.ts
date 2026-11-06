@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { aboutContent } from './about';
 import { gitLog } from './git-log';
+import { perfReceipts } from './perf-receipts';
 import { profilePresentation } from './profile';
 import { projects } from './projects';
 import { cvDocument, summaryDocument } from './reading-views';
@@ -73,5 +74,23 @@ describe.each(Object.values(SITE_LOCALE))('stack groups (%s)', (locale) => {
     for (const group of aboutContent[locale].stack.groups) {
       expect(group.items, `group ${group.label} lists itself as a chip`).not.toContain(group.label);
     }
+  });
+});
+
+describe('pt perf receipts', () => {
+  it('writes displayed numbers with pt separators and keeps notes in Portuguese', () => {
+    const lcp = perfReceipts[PT].find((receipt) => receipt.metric === 'LCP');
+    expect(lcp?.displayValue, 'pt LCP receipt must use the dot thousands separator').toBe(
+      '2.544 → 1.308ms',
+    );
+    const cls = perfReceipts[PT].find((receipt) => receipt.metric === 'CLS');
+    expect(cls?.displayValue, 'pt CLS receipt must use the decimal comma').toBe('0,166 → 0');
+    const sameNote = perfReceipts[PT].filter(
+      (receipt, index) => receipt.note === perfReceipts[SITE_LOCALE.en][index]?.note,
+    );
+    expect(
+      sameNote.map((receipt) => receipt.metric),
+      'a pt receipt note identical to the en one was never translated',
+    ).toEqual([]);
   });
 });
