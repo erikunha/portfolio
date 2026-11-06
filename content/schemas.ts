@@ -793,6 +793,8 @@ export const ErrorsContentSchema = z.object({
   serverError: z.object({
     code: z.literal('500'),
     message: z.string().min(1),
+    bootRender: z.string().min(1),
+    bootReport: z.string().min(1),
     retryLabel: z.string().min(1),
     home: ErrorLinkSchema,
     refLabel: z.string().min(1),

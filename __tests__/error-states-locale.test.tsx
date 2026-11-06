@@ -41,6 +41,8 @@ describe('error states follow the page language', () => {
     const pt = errorsContent[SITE_LOCALE.pt].serverError;
     expect(screen.getByText(pt.message)).not.toBeNull();
     expect(screen.getByRole('button', { name: pt.retryLabel })).not.toBeNull();
+    expect(screen.getByText(pt.bootRender, { exact: false })).not.toBeNull();
+    expect(screen.getByText(pt.bootReport, { exact: false })).not.toBeNull();
   });
 
   it('shows the global error page in Portuguese under /pt', async () => {

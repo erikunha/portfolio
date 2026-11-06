@@ -1,7 +1,7 @@
 'use client';
 
 import { usePathname } from 'next/navigation';
-import { type ReactNode, useEffect, useRef } from 'react';
+import { type ReactNode, useEffect, useRef, useState } from 'react';
 import { reportClientError } from '@/components/ErrorBoundary/ErrorBoundary.client';
 import { MAIN_CONTENT_ID, PageMain } from '@/components/PageMain';
 import { brandByLocale } from '@/content/brand';
@@ -65,6 +65,38 @@ export function ErrorHeading({ children }: { children: ReactNode }) {
   );
 }
 
+const REF_EDGE_CHARS = 4;
+const REF_ELLIPSIS = '...';
+const BOOT_STAMP_PENDING = '--.---';
+const BOOT_STAMP_DECIMALS = 3;
+const MS_PER_SECOND = 1000;
+
+export function ellipsizeRef(id: string): string {
+  if (id.length <= REF_EDGE_CHARS * 2 + REF_ELLIPSIS.length) return id;
+  return `${id.slice(0, REF_EDGE_CHARS)}${REF_ELLIPSIS}${id.slice(-REF_EDGE_CHARS)}`;
+}
+
+function bootStamp(elapsedMs: number): string {
+  return (elapsedMs / MS_PER_SECOND).toFixed(BOOT_STAMP_DECIMALS);
+}
+
+export interface BootStamps {
+  rendered: string;
+  reported: string;
+}
+
+const PENDING_STAMPS: BootStamps = { rendered: BOOT_STAMP_PENDING, reported: BOOT_STAMP_PENDING };
+
+export function useErrorReport(prefix: string, error: Error): BootStamps {
+  const [stamps, setStamps] = useState(PENDING_STAMPS);
+  useEffect(() => {
+    const rendered = bootStamp(performance.now());
+    reportClientError(prefix, error);
+    setStamps({ rendered, reported: bootStamp(performance.now()) });
+  }, [prefix, error]);
+  return stamps;
+}
+
 function ErrorReference({
   digest,
   content,
@@ -75,9 +107,9 @@ function ErrorReference({
   const { status, copy } = useCopyFeedback({ resetMs: COPIED_RESET_MS });
 
   return (
-    <div className="err-ref">
+    <p className="err-ref">
       <span>
-        {content.refLabel} <code>{digest}</code>
+        {content.refLabel} <code title={digest}>{ellipsizeRef(digest)}</code>
       </span>
       <button
         type="button"
@@ -90,7 +122,7 @@ function ErrorReference({
       <span className="sr-only" role="status">
         {status === COPY_STATUS.Copied ? content.copiedAnnouncement : ''}
       </span>
-    </div>
+    </p>
   );
 }
 
@@ -102,24 +134,32 @@ export interface RouteErrorProps {
 export function ServerErrorMain({
   reset,
   content,
-  children,
+  stamps,
+  digest,
 }: Pick<RouteErrorProps, 'reset'> & {
   content: ErrorsContent['serverError'];
-  children?: ReactNode;
+  stamps: BootStamps;
+  digest?: string | undefined;
 }) {
   return (
     <PageMain className={ERROR_MAIN_CLASS}>
       <ErrorHeading>{content.code}</ErrorHeading>
-      <p className="err-text">{content.message}</p>
+      <div className="err-log" role="alert">
+        <div className="err-log-boot" aria-hidden="true">
+          <p>{`[ ${stamps.rendered} ] ${content.bootRender}`}</p>
+          <p>{`[ ${stamps.reported} ] ${content.bootReport}`}</p>
+        </div>
+        <p className="err-text">{content.message}</p>
+      </div>
       <div className="err-actions">
-        <button type="button" className="err-action" onClick={reset}>
+        <button type="button" className="err-action err-action-primary" onClick={reset}>
           {content.retryLabel}
         </button>
         <a className="err-action" href={content.home.href}>
           {content.home.label}
         </a>
       </div>
-      {children}
+      {digest ? <ErrorReference digest={digest} content={content} /> : null}
     </PageMain>
   );
 }
@@ -127,18 +167,17 @@ export function ServerErrorMain({
 export function RouteErrorPage({ error, reset }: RouteErrorProps) {
   const locale = localeOfPath(usePathname());
   const content = errorsContent[locale];
-  useEffect(() => {
-    reportClientError('[RouteError]', error);
-  }, [error]);
+  const stamps = useErrorReport('[RouteError]', error);
 
   return (
     <>
       <ErrorChrome chrome={content.chrome} brand={<ClientBrandLink locale={locale} />} />
-      <ServerErrorMain reset={reset} content={content.serverError}>
-        {error.digest ? (
-          <ErrorReference digest={error.digest} content={content.serverError} />
-        ) : null}
-      </ServerErrorMain>
+      <ServerErrorMain
+        reset={reset}
+        content={content.serverError}
+        stamps={stamps}
+        digest={error.digest}
+      />
     </>
   );
 }
