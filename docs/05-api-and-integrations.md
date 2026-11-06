@@ -16,7 +16,7 @@ export function defineHandler<TSchema extends ZodTypeAny>(
 
 **Enforced pipeline order (this ordering is the security property):**
 1. `requestId = crypto.randomUUID()`, `ip = getClientIp(req)`.
-2. **Rate-limit BEFORE body parse** - `rateLimit().limit(ip)`. On Redis throw: log and **fail-open** (allow). On `!success`: `429 rate_limited`.
+2. **Rate-limit BEFORE body parse** - `rateLimit().limit(ip)`. On Redis throw: log and **fail-open** (allow). On `!success`: `429` with `Retry-After` in whole seconds (rounded up, at least 1) taken from the limiter's `reset`; no header when the limiter returns no usable reset. The shell turns the header into a countdown and invents no duration without it.
 3. **Parse** `req.json()` → `400 invalid_json` on throw.
 4. **Validate** `schema.safeParse(raw)` → `400 validation_failed` (with `issues`).
 5. **Hash IP** only now (saves a SHA-256 + KV round-trip on rejected requests) → call `handler(ctx)`.
@@ -29,7 +29,7 @@ Contact delivery also uses `202 { ok: false, requestId, error: { code: 'queued',
 
 | Route                | Method     | Built on                        | What it does                                        | Auth/secret                  | Failure mode                                                                                                                                                                                      |
 | -------------------- | ---------- | ------------------------------- | --------------------------------------------------- | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `/api/ask`           | POST       | bespoke (streaming)             | LLM "ask Erik", `text/plain` stream                 | AI Gateway key/OIDC; Upstash | rate-limit and dedup fail-open; mid-stream errors → `STREAM_ERR_SENTINEL`; 30s/15s/1s timeouts; budget fail-closed                                                                                |
+| `/api/ask`           | POST       | bespoke (streaming)             | LLM "ask Erik", `text/plain` stream                 | AI Gateway key/OIDC; Upstash | rate-limit and dedup fail-open (429 carries `Retry-After`); mid-stream errors → `STREAM_ERR_SENTINEL`; 30s/15s/1s timeouts; budget fail-closed                                                    |
 | `/api/contact`       | POST       | `defineHandler`                 | contact form → KV (90-day audit) → Resend           | `RESEND_API_KEY`             | honeypot → fake-200 with jitter; KV fail → 502 `storage_unavailable`; accepted → 200; provider error/10s timeout → outbox + 202 `queued`; outbox write failure or full outbox (200 pending) → 502 |
 | `/api/contact-retry` | GET (cron) | bespoke                         | retries pending contact messages, oldest first      | **`CRON_SECRET`** Bearer     | 401 for missing/wrong secret; counts in `data`; daily `0 4 * * *`; up to 3 retries within 7 days; each drop is logged with its reason                                                             |
 | `/api/healthz`       | GET        | bespoke                         | health probe: SHA + PSI freshness                   | none                         | 200 fresh, **503 degraded** if `meta:psi-last-run` missing/stale(>25h); `no-store`                                                                                                                |
