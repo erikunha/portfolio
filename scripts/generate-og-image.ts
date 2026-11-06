@@ -147,7 +147,6 @@ function buildHtml(): string {
   <div class="stack">
     <span class="tag">React</span>
     <span class="tag">Next.js</span>
-    <span class="tag">Angular</span>
     <span class="tag">TypeScript</span>
     <span class="tag">Python</span>
     <span class="tag">Node.js</span>

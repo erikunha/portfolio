@@ -5,7 +5,10 @@ import { SITE_LOCALE } from '../../content/site-locale';
 const DESKTOP = { width: 1280, height: 800 };
 const PHONE = { width: 390, height: 844 };
 const CENTER_TOLERANCE_PX = 1;
-const EXPECTED_PRINT_PAGES = { summary: 1, cv: 3 } as const;
+const EXPECTED_PRINT_PAGES = {
+  summary: { '': 1, '/pt': 1 },
+  cv: { '': 6, '/pt': 7 },
+} as const;
 const PDF_PAGE_PATTERN = /\/Type\s*\/Page[^s]/g;
 const MAIN = 'main#main-content';
 
@@ -181,8 +184,8 @@ test.describe('print hides the shell', () => {
     });
   }
 
-  for (const [name, expected] of Object.entries(EXPECTED_PRINT_PAGES)) {
-    for (const prefix of ['', '/pt']) {
+  for (const [name, byPrefix] of Object.entries(EXPECTED_PRINT_PAGES)) {
+    for (const [prefix, expected] of Object.entries(byPrefix)) {
       test(`${prefix}/${name} prints on ${expected} A4 page${expected === 1 ? '' : 's'}`, async ({
         page,
       }) => {
