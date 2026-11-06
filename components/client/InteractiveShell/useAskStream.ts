@@ -112,7 +112,7 @@ export function useAskStream({
             id: nextId(),
             kind: error ? ShellLineKind.Error : ShellLineKind.Info,
             text: error && !detail.prefix ? `${ui.errorPrefix} ${message}` : message,
-            prefix: detail.prefix,
+            ...(detail.prefix ? { prefix: detail.prefix } : {}),
           });
           if (detail.hint) lines.push({ id: nextId(), kind: ShellLineKind.Hint, text: '' });
         }
