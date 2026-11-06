@@ -263,6 +263,7 @@ components/ErrorBoundary/              # client error boundary
 components/ErrorPages/                 # 404/500 chrome, focused heading, error reference
 components/ErrorPages/GlobalErrorPage.client.tsx  # global-error shell: locale, static 500 message, lazy body
 components/ErrorPages/GlobalErrorBody.client.tsx  # lazy global-error body: boot lines, reference block
+components/ErrorPages/MissingRoute.tsx  # catch-all body: notFound() inside Suspense, fallback is the 404 page
 components/HeroStats/                  # hero stat tiles
 components/Icons/                      # inline SVG icon set
 components/responsive/                 # viewport-variant helpers

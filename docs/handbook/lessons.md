@@ -75,6 +75,12 @@ The prompt for a manual or agent review that applies these rules to a diff is `d
     forbids exact counts holds none itself. Check: grep the named consumer (for the review bot,
     `.github/claude-review-prompt.md`) for the path, and grep the doc for literal tallies.
 
+26. An e2e test that measures a streamed section (`#sec-live-metrics`, `#sec-live-perf`) waits until
+    the section has no `[aria-busy="true"]`. Until React swaps a Suspense boundary in, the DOM holds
+    both the fallback and a hidden staged copy, so a class locator matches two elements.
+27. A test that sets motion state clicks the MOTION toggle after `waitForHydration`. Writing
+    `body.dataset.motion` before hydration is reset by the navigation store's layout effect.
+
 ## Pre-push judgement list
 
 Ranked by how often review caught each class on this repository.
