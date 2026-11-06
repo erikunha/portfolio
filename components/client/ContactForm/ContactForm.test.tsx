@@ -702,7 +702,7 @@ describe('contact validation and retention', () => {
       const descriptions = input.getAttribute('aria-describedby')?.split(' ') ?? [];
       expect(
         descriptions.some((description) =>
-          document.getElementById(description)?.textContent?.includes('error:'),
+          document.getElementById(description)?.textContent?.startsWith('> '),
         ),
       ).toBe(true);
       fireEvent.click(link);
@@ -943,8 +943,8 @@ describe('contact cross-review fixes', () => {
     const summary = screen.getByRole('alert');
     const labelId = summary.getAttribute('aria-labelledby') as string;
     expect(labelId).toBeTruthy();
-    expect(document.getElementById(labelId)?.textContent).toBe('3 fields need attention:');
-    expect(screen.getByRole('alert', { name: '3 fields need attention:' })).toBe(summary);
+    expect(document.getElementById(labelId)?.textContent).toBe('! 3 fields need fixing:');
+    expect(screen.getByRole('alert', { name: '! 3 fields need fixing:' })).toBe(summary);
   });
 
   it('summarises the invalid fields on one line with a link per field', () => {
@@ -963,7 +963,7 @@ describe('contact cross-review fixes', () => {
       'email',
       'message',
     ]);
-    expect(summary.textContent).toContain('3 fields need attention:');
+    expect(summary.textContent).toContain('! 3 fields need fixing:');
   });
 
   it('names the summary when only a request error shows', async () => {
@@ -1282,5 +1282,121 @@ describe.each(Object.values(SITE_LOCALE))('contact form submitting lock (%s)', (
     const name = container.querySelector<HTMLInputElement>('input[name="name"]');
     expect(name?.readOnly).toBe(false);
     expect(name?.value).toBe('Ada');
+  });
+});
+
+describe.each([
+  [SITE_LOCALE.en, 'fields need fixing', 'you@company.com'],
+  [SITE_LOCALE.pt, 'campos precisam de ajuste', 'voce@empresa.com'],
+])('contact field errors (%s)', (locale, summaryTail, example) => {
+  const copy = contactCopy[locale];
+
+  function errorOf(input: HTMLElement) {
+    const id = input
+      .getAttribute('aria-describedby')
+      ?.split(' ')
+      .find((part) => part.endsWith('-error'));
+    return document.getElementById(id ?? '')?.textContent;
+  }
+
+  function submitWithEmail(email: string) {
+    vi.stubGlobal('fetch', vi.fn());
+    const { container } = render(<ContactForm copy={copy} chrome={contactChrome[locale]} />);
+    fillValidForm(container);
+    const input = container.querySelector('input[name="email"]') as HTMLInputElement;
+    fireEvent.change(input, { target: { value: email } });
+    fireEvent.submit(input.form as HTMLFormElement);
+    return input;
+  }
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it('opens the summary with a bang and the count, in the page language', () => {
+    const { container } = render(<ContactForm copy={copy} chrome={contactChrome[locale]} />);
+    fireEvent.submit(container.querySelector('form') as HTMLFormElement);
+
+    const summary = screen.getByRole('alert');
+    expect(summary.textContent?.startsWith('! 3 ')).toBe(true);
+    expect(summary.textContent).toContain(summaryTail);
+    expect(document.activeElement).toBe(summary);
+  });
+
+  it('says what is missing from an email that has an @ but no domain', () => {
+    const input = submitWithEmail('erik@');
+
+    expect(input.getAttribute('aria-invalid')).toBe('true');
+    expect(input.value).toBe('erik@');
+    expect(errorOf(input)).toBe(
+      locale === SITE_LOCALE.pt
+        ? `> falta o domínio, por exemplo ${example}`
+        : `> missing the domain, for example ${example}`,
+    );
+  });
+
+  it('says the @ is missing when an email has none', () => {
+    const input = submitWithEmail('erik.example.com');
+
+    expect(errorOf(input)).toBe(
+      locale === SITE_LOCALE.pt
+        ? `> falta o @, por exemplo ${example}`
+        : `> missing the @, for example ${example}`,
+    );
+  });
+
+  it('asks for an email when the field is empty', () => {
+    const input = submitWithEmail('');
+
+    expect(errorOf(input)).toBe(
+      locale === SITE_LOCALE.pt
+        ? `> informe seu email, por exemplo ${example}`
+        : `> add your email, for example ${example}`,
+    );
+  });
+
+  it('falls back to a format hint for any other bad email', () => {
+    const input = submitWithEmail('name @site.com');
+
+    expect(errorOf(input)).toBe(
+      locale === SITE_LOCALE.pt
+        ? `> confira o formato, por exemplo ${example}`
+        : `> check the format, for example ${example}`,
+    );
+  });
+
+  it('tells a short message how many characters it has and needs, and keeps the text', () => {
+    vi.stubGlobal('fetch', vi.fn());
+    const { container } = render(<ContactForm copy={copy} chrome={contactChrome[locale]} />);
+    fillValidForm(container);
+    const message = container.querySelector('textarea') as HTMLTextAreaElement;
+    fireEvent.change(message, { target: { value: '  oi  ' } });
+    fireEvent.submit(message.form as HTMLFormElement);
+
+    expect(errorOf(message)).toBe(
+      locale === SITE_LOCALE.pt
+        ? '> escreva ao menos 10 caracteres, você tem 2'
+        : '> write at least 10 characters, you have 2',
+    );
+    expect(message.value).toBe('  oi  ');
+  });
+
+  it('asks for a name when it is blank and caps a long one', () => {
+    vi.stubGlobal('fetch', vi.fn());
+    const { container } = render(<ContactForm copy={copy} chrome={contactChrome[locale]} />);
+    fillValidForm(container);
+    const name = container.querySelector('input[name="name"]') as HTMLInputElement;
+    fireEvent.change(name, { target: { value: '   ' } });
+    fireEvent.submit(name.form as HTMLFormElement);
+    expect(errorOf(name)).toBe(
+      locale === SITE_LOCALE.pt ? '> informe seu nome' : '> add your name',
+    );
+
+    fireEvent.change(name, { target: { value: 'A'.repeat(121) } });
+    expect(errorOf(name)).toBe(
+      locale === SITE_LOCALE.pt
+        ? '> use no máximo 120 caracteres, você tem 121'
+        : '> use at most 120 characters, you have 121',
+    );
   });
 });

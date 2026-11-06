@@ -128,6 +128,16 @@
     scroll-margin-block: calc(var(--spacing-target) + var(--spacing-8));
   }
 
+  .contact-summary-lead {
+    color: var(--color-primary-500);
+    font-weight: bold;
+  }
+
+  .contact-form .field-error {
+    color: var(--color-text);
+    overflow-wrap: anywhere;
+  }
+
   .contact-alert:focus {
     outline: none;
   }

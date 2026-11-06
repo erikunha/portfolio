@@ -11,6 +11,7 @@ import {
   type ContactField,
   contactErrorMessage,
   contactErrorSummary,
+  contactFieldError,
 } from '@/content/contact-copy';
 import type { TerminalChrome } from '@/content/schemas';
 import { localeOfPath } from '@/content/site-locale';
@@ -163,7 +164,7 @@ export function ContactForm({ copy, chrome }: { copy: ContactContent; chrome: Te
       const valid = FIELD_CHECKS[field](value);
       setErrors((current) => {
         const { [field]: _cleared, ...rest } = current;
-        return valid ? rest : { ...current, [field]: copy.errors[field] };
+        return valid ? rest : { ...current, [field]: contactFieldError(copy, field, value) };
       });
     }
     if (!pendingRef.current) {
@@ -178,7 +179,7 @@ export function ContactForm({ copy, chrome }: { copy: ContactContent; chrome: Te
     const fieldErrors: Partial<Record<ContactField, string>> = {};
     for (const field of CONTACT_FIELDS) {
       if (!FIELD_CHECKS[field](values[field])) {
-        fieldErrors[field] = copy.errors[field];
+        fieldErrors[field] = contactFieldError(copy, field, values[field]);
       }
     }
     setErrors(fieldErrors);
@@ -281,7 +282,9 @@ export function ContactForm({ copy, chrome }: { copy: ContactContent; chrome: Te
           >
             {invalidFields.length > 0 && (
               <p>
-                <span id={summaryId}>{contactErrorSummary(copy, invalidFields.length)}</span>
+                <span id={summaryId} className="contact-summary-lead">
+                  {contactErrorSummary(copy, invalidFields.length)}
+                </span>
                 {invalidFields.map((field, index) => (
                   <Fragment key={field}>
                     {index === 0 ? ' ' : copy.form.errorSummary.separator}

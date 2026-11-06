@@ -23,6 +23,10 @@ export const CONTACT_FIELD = {
 
 export type ContactField = (typeof CONTACT_FIELD)[keyof typeof CONTACT_FIELD];
 
+export const FIELD_ERROR_PREFIX = '> ';
+const EMAIL_AT = '@';
+const EMAIL_DOMAIN_PATTERN = /\.[A-Za-z]{2,}$/;
+
 export const CONTACT_DELIVERY_CODE = { QUEUED: 'queued' } as const;
 
 export const CONTACT_ERROR_CODE = { RATE_LIMITED: 'rate_limited' } as const;
@@ -182,8 +186,8 @@ const contactCopyFor = (locale: SiteLocale): ContactContent => {
       statusFailed: pt ? 'envio falhou, tente de novo... _' : 'send failed, retry when ready... _',
       errorPrefix: pt ? 'erro:' : 'error:',
       errorSummary: {
-        one: pt ? '1 campo precisa de atenção:' : '1 field needs attention:',
-        many: pt ? '{count} campos precisam de atenção:' : '{count} fields need attention:',
+        one: pt ? '! 1 campo precisa de ajuste:' : '! 1 field needs fixing:',
+        many: pt ? '! {count} campos precisam de ajuste:' : '! {count} fields need fixing:',
         separator: ' · ',
       },
       retained: pt ? 'Seu texto continua aqui.' : 'Your text is still here.',
@@ -199,15 +203,33 @@ const contactCopyFor = (locale: SiteLocale): ContactContent => {
       },
     },
     errors: {
-      name: pt
-        ? `erro: nome é obrigatório, de ${CONTACT_LIMITS.nameMin} a ${CONTACT_LIMITS.nameMax} caracteres`
-        : `error: name is required, ${CONTACT_LIMITS.nameMin} to ${CONTACT_LIMITS.nameMax} characters`,
-      email: pt
-        ? 'erro: email precisa de um @ e um domínio, como nome@site.com'
-        : 'error: email needs an @ and a domain, like name@site.com',
-      message: pt
-        ? `erro: mensagem precisa de ${CONTACT_LIMITS.messageMin} a ${CONTACT_LIMITS.messageMax} caracteres`
-        : `error: message needs ${CONTACT_LIMITS.messageMin} to ${CONTACT_LIMITS.messageMax} characters`,
+      name: {
+        required: pt ? 'informe seu nome' : 'add your name',
+        tooLong: pt
+          ? 'use no máximo {max} caracteres, você tem {count}'
+          : 'use at most {max} characters, you have {count}',
+      },
+      email: {
+        empty: pt
+          ? 'informe seu email, por exemplo {example}'
+          : 'add your email, for example {example}',
+        missingAt: pt ? 'falta o @, por exemplo {example}' : 'missing the @, for example {example}',
+        missingDomain: pt
+          ? 'falta o domínio, por exemplo {example}'
+          : 'missing the domain, for example {example}',
+        invalid: pt
+          ? 'confira o formato, por exemplo {example}'
+          : 'check the format, for example {example}',
+        example: pt ? 'voce@empresa.com' : 'you@company.com',
+      },
+      message: {
+        tooShort: pt
+          ? 'escreva ao menos {min} caracteres, você tem {count}'
+          : 'write at least {min} characters, you have {count}',
+        tooLong: pt
+          ? 'use no máximo {max} caracteres, você tem {count}'
+          : 'use at most {max} characters, you have {count}',
+      },
       storageUnavailable: pt
         ? 'armazenamento indisponível, tente novamente'
         : 'storage unavailable, try again',
@@ -259,4 +281,37 @@ export function contactErrorMessage(copy: ContactContent, code: string | undefin
   return code === CONTACT_ERROR_CODE.RATE_LIMITED
     ? copy.errors.rateLimited
     : copy.errors.requestFailed;
+}
+
+export function contactFieldError(
+  copy: ContactContent,
+  field: ContactField,
+  value: string,
+): string {
+  const trimmed = value.trim();
+  const count = trimmed.length;
+  const { errors } = copy;
+  const limits = { min: CONTACT_LIMITS.messageMin, max: CONTACT_LIMITS.messageMax, count };
+  const text = (() => {
+    if (field === CONTACT_FIELD.NAME) {
+      return count < CONTACT_LIMITS.nameMin
+        ? errors.name.required
+        : fillCopy(errors.name.tooLong, { max: CONTACT_LIMITS.nameMax, count });
+    }
+    if (field === CONTACT_FIELD.EMAIL) {
+      const example = { example: errors.email.example };
+      const at = trimmed.indexOf(EMAIL_AT);
+      if (count === 0) return fillCopy(errors.email.empty, example);
+      if (at < 0) return fillCopy(errors.email.missingAt, example);
+      if (!EMAIL_DOMAIN_PATTERN.test(trimmed.slice(at + 1))) {
+        return fillCopy(errors.email.missingDomain, example);
+      }
+      return fillCopy(errors.email.invalid, example);
+    }
+    return fillCopy(
+      count < CONTACT_LIMITS.messageMin ? errors.message.tooShort : errors.message.tooLong,
+      limits,
+    );
+  })();
+  return `${FIELD_ERROR_PREFIX}${text}`;
 }

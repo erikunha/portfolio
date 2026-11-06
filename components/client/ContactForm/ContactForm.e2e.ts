@@ -35,7 +35,7 @@ test.describe('contact form', () => {
     await expect(page.locator('[data-testid="contact-form"]')).toBeVisible();
     const summary = page
       .locator('[data-testid="contact-form"]')
-      .getByRole('alert', { name: 'Fields need attention:' });
+      .getByRole('alert', { name: '! 3 fields need fixing:' });
     await expect(summary).toBeVisible();
     await expect(summary.getByRole('link')).toHaveText(['name', 'email', 'message']);
     for (const field of ['name', 'email', 'message']) {

@@ -141,9 +141,15 @@ export const ContactContentSchema = z.object({
     }),
   }),
   errors: z.object({
-    name: z.string().min(1),
-    email: z.string().min(1),
-    message: z.string().min(1),
+    name: z.object({ required: z.string().min(1), tooLong: z.string().min(1) }),
+    email: z.object({
+      empty: z.string().min(1),
+      missingAt: z.string().min(1),
+      missingDomain: z.string().min(1),
+      invalid: z.string().min(1),
+      example: z.string().min(1),
+    }),
+    message: z.object({ tooShort: z.string().min(1), tooLong: z.string().min(1) }),
     storageUnavailable: z.string().min(1),
     retryUnavailable: z.string().min(1),
     rateLimited: z.string().min(1),
