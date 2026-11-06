@@ -5,16 +5,21 @@ import {
   dawMixer,
   dawMixerCopy,
   MASTER_CHANNEL_ID,
-  METER_CLIP_SEGMENTS,
-  METER_CLIP_THRESHOLD_PCT,
   METER_SEGMENTS,
 } from '@/content/daw-mixer';
 import type { DawMixer, DawMixerChannel } from '@/content/schemas';
 import type { SiteLocale } from '@/content/site-locale';
 import { cn } from '@/lib/cn';
+import { MeterSegment, meterSegmentState } from '@/lib/meter';
 import { getIsMobile } from '@/lib/ua';
 import { DawMixerDesktop } from './DawMixerDesktop';
 import { FaderBar, ParsedText, SessionSummary, StrengthDots } from './DawMixerShared';
+
+const STATIC_SEGMENT_CLASS = {
+  [MeterSegment.Red]: 'bg-senary-300',
+  [MeterSegment.Filled]: 'bg-primary-500',
+  [MeterSegment.Empty]: 'bg-primary-500 opacity-[0.22]',
+} as const;
 
 function StaticMeter({
   pct,
@@ -25,25 +30,15 @@ function StaticMeter({
   segments: number;
   clipping: boolean;
 }) {
-  const filledCount = Math.round((pct / 100) * segments);
   return (
     <div
       className="flex gap-px h-3 p-px border border-[var(--color-primary-quiet)] bg-black/70"
       aria-hidden="true"
     >
       {Array.from({ length: segments }, (_, i) => {
-        const isRed =
-          clipping &&
-          pct > METER_CLIP_THRESHOLD_PCT &&
-          i >= segments - METER_CLIP_SEGMENTS &&
-          i < filledCount;
         const cls = cn(
           'flex-1 h-full',
-          isRed
-            ? 'bg-senary-300'
-            : i < filledCount
-              ? 'bg-primary-500'
-              : 'bg-primary-500 opacity-[0.22]',
+          STATIC_SEGMENT_CLASS[meterSegmentState(i, pct, segments, clipping)],
         );
         return (
           // biome-ignore lint/suspicious/noArrayIndexKey: positional segments, no stable id exists

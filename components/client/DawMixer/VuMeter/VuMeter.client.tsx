@@ -1,6 +1,15 @@
 'use client';
 
 import { useCallback, useRef } from 'react';
+import { MeterSegment, meterSegmentState } from '@/lib/meter';
+import { PERCENT_RANGE, percentAlong, sliderValueForKey } from '@/lib/slider';
+
+const KEY_STEP_PCT = 5;
+const SEGMENT_CLASS = {
+  [MeterSegment.Red]: 'vuSegRed',
+  [MeterSegment.Filled]: 'vuSegFilled',
+  [MeterSegment.Empty]: 'vuSegEmpty',
+} as const;
 
 interface VuMeterProps {
   segments: number;
@@ -17,13 +26,8 @@ export function VuMeter({ segments, initialLevel, clipping = false, channelName 
   const dragStartLevel = useRef(initialLevel);
 
   const getSegmentClass = useCallback(
-    (i: number, currentLevel: number): string => {
-      const filledCount = Math.round((currentLevel / 100) * segments);
-      const isRed = clipping && currentLevel > 85 && i >= segments - 2 && i < filledCount;
-      if (isRed) return 'vuSegRed';
-      if (i < filledCount) return 'vuSegFilled';
-      return 'vuSegEmpty';
-    },
+    (index: number, level: number) =>
+      SEGMENT_CLASS[meterSegmentState(index, level, segments, clipping)],
     [segments, clipping],
   );
 
@@ -42,15 +46,9 @@ export function VuMeter({ segments, initialLevel, clipping = false, channelName 
     [getSegmentClass],
   );
 
-  const getLevelFromPointer = useCallback((clientX: number): number | null => {
-    const rect = containerRef.current?.getBoundingClientRect();
-    if (!rect || rect.width === 0) return null;
-    return Math.max(0, Math.min(100, Math.round(((clientX - rect.left) / rect.width) * 100)));
-  }, []);
-
   const onPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
     dragStartLevel.current = liveLevel.current;
-    const newLevel = getLevelFromPointer(e.clientX);
+    const newLevel = percentAlong(containerRef.current, e.clientX);
     try {
       e.currentTarget.setPointerCapture(e.pointerId);
       // biome-ignore lint/suspicious/noEmptyBlockStatements: intentional no-op
@@ -61,7 +59,7 @@ export function VuMeter({ segments, initialLevel, clipping = false, channelName 
 
   const onPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
     if (!isDragging.current) return;
-    const newLevel = getLevelFromPointer(e.clientX);
+    const newLevel = percentAlong(containerRef.current, e.clientX);
     if (newLevel !== null) applyLevel(newLevel);
   };
 
@@ -75,14 +73,10 @@ export function VuMeter({ segments, initialLevel, clipping = false, channelName 
     applyLevel(dragStartLevel.current);
   };
 
-  const filledCount = Math.round((initialLevel / 100) * segments);
-
   return (
     <div
       ref={containerRef}
       role="slider"
-      aria-live="polite"
-      aria-atomic="true"
       aria-label={`${channelName} VU meter demonstration, drag to adjust level`}
       aria-valuenow={initialLevel}
       aria-valuemin={0}
@@ -96,20 +90,18 @@ export function VuMeter({ segments, initialLevel, clipping = false, channelName 
       onPointerCancel={onPointerCancel}
       onKeyDown={(e) => {
         if (isDragging.current) return;
-        if (e.key === 'ArrowRight') {
-          e.preventDefault();
-          applyLevel(Math.min(100, liveLevel.current + 5));
-        }
-        if (e.key === 'ArrowLeft') {
-          e.preventDefault();
-          applyLevel(Math.max(0, liveLevel.current - 5));
-        }
+        const next = sliderValueForKey(e.key, {
+          value: liveLevel.current,
+          ...PERCENT_RANGE,
+          step: KEY_STEP_PCT,
+        });
+        if (next === null) return;
+        e.preventDefault();
+        applyLevel(next);
       }}
     >
       {Array.from({ length: segments }, (_, i) => {
-        const isRed = clipping && initialLevel > 85 && i >= segments - 2 && i < filledCount;
-        const isFilled = i < filledCount;
-        const cls = isRed ? 'vuSegRed' : isFilled ? 'vuSegFilled' : 'vuSegEmpty';
+        const cls = getSegmentClass(i, initialLevel);
         const setRef = (el: HTMLSpanElement | null) => {
           segmentRefs.current[i] = el;
         };

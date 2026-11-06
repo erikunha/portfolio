@@ -1,6 +1,9 @@
 'use client';
 
 import { useCallback, useRef, useState } from 'react';
+import { PERCENT_RANGE, percentAlong, sliderValueForKey } from '@/lib/slider';
+
+const KEY_STEP_PCT = 2;
 
 interface FaderProps {
   initialPct: number;
@@ -16,12 +19,6 @@ export function FaderIsland({ initialPct, channelName, onPctChange, onAriaValueT
   const isDragging = useRef(false);
   const livePct = useRef(initialPct);
   const dragStartPct = useRef(initialPct);
-
-  const getPctFromPointer = useCallback((clientX: number): number | null => {
-    const rect = trackRef.current?.getBoundingClientRect();
-    if (!rect || rect.width === 0) return null;
-    return Math.max(0, Math.min(100, Math.round(((clientX - rect.left) / rect.width) * 100)));
-  }, []);
 
   const applyPct = useCallback(
     (newPct: number) => {
@@ -43,7 +40,7 @@ export function FaderIsland({ initialPct, channelName, onPctChange, onAriaValueT
 
   const onPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
     dragStartPct.current = livePct.current;
-    const newPct = getPctFromPointer(e.clientX);
+    const newPct = percentAlong(trackRef.current, e.clientX);
     try {
       e.currentTarget.setPointerCapture(e.pointerId);
       // biome-ignore lint/suspicious/noEmptyBlockStatements: intentional no-op
@@ -54,14 +51,14 @@ export function FaderIsland({ initialPct, channelName, onPctChange, onAriaValueT
 
   const onPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
     if (!isDragging.current) return;
-    const newPct = getPctFromPointer(e.clientX);
+    const newPct = percentAlong(trackRef.current, e.clientX);
     if (newPct !== null) applyPct(newPct);
   };
 
   const onPointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
     if (!isDragging.current) return;
     isDragging.current = false;
-    const newPct = getPctFromPointer(e.clientX);
+    const newPct = percentAlong(trackRef.current, e.clientX);
     if (newPct !== null) {
       applyPct(newPct);
       setPct(newPct);
@@ -92,20 +89,15 @@ export function FaderIsland({ initialPct, channelName, onPctChange, onAriaValueT
       onPointerCancel={onPointerCancel}
       onKeyDown={(e) => {
         if (isDragging.current) return;
-        if (e.key === 'ArrowRight') {
-          e.preventDefault();
-          const next = Math.min(100, livePct.current + 2);
-          livePct.current = next;
-          applyPct(next);
-          setPct(next);
-        }
-        if (e.key === 'ArrowLeft') {
-          e.preventDefault();
-          const next = Math.max(0, livePct.current - 2);
-          livePct.current = next;
-          applyPct(next);
-          setPct(next);
-        }
+        const next = sliderValueForKey(e.key, {
+          value: livePct.current,
+          ...PERCENT_RANGE,
+          step: KEY_STEP_PCT,
+        });
+        if (next === null) return;
+        e.preventDefault();
+        applyPct(next);
+        setPct(next);
       }}
     >
       <div
