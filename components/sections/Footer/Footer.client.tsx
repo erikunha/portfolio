@@ -1,6 +1,7 @@
 'use client';
 
 import { type ReactNode, useCallback, useEffect, useRef } from 'react';
+import { MAIN_CONTENT_ID } from '@/components/PageMain';
 import type { FooterContent } from '@/content/schemas';
 
 const EMPTY_SECTION_IDS: string[] = [];
@@ -21,7 +22,7 @@ const HIDDEN_DISPLAY = 'none';
 const FOOTER_SELECTOR = 'footer';
 const KEYDOWN_EVENT = 'keydown';
 const SCROLL_BEHAVIOR = 'instant';
-const HOME_SELECTOR = '#main-content';
+const HOME_SELECTOR = `#${MAIN_CONTENT_ID}`;
 const MOBILE_HERO_SELECTOR = '[data-testid="hero-mobile"]';
 const HOME_SECTION_ID = 'bio';
 const SESSION_FIELDS = {
@@ -87,6 +88,14 @@ export function SessionCounters({
       if (fields.depth) fields.depth.textContent = `${depth}%`;
       if (fields.meter instanceof HTMLMeterElement) fields.meter.value = depth;
     };
+    let scrollFrame: number | undefined;
+    const onScrollFrame = () => {
+      if (scrollFrame !== undefined) return;
+      scrollFrame = requestAnimationFrame(() => {
+        scrollFrame = undefined;
+        onScroll();
+      });
+    };
     let interval: ReturnType<typeof setInterval> | undefined;
     const onVisibility = () => {
       clearInterval(interval);
@@ -122,13 +131,14 @@ export function SessionCounters({
     onScroll();
     onVisibility();
     window.addEventListener(COMMAND_EVENT, onCommand);
-    window.addEventListener(SCROLL_EVENT, onScroll, { passive: true });
+    window.addEventListener(SCROLL_EVENT, onScrollFrame, { passive: true });
     document.addEventListener(VISIBILITY_EVENT, onVisibility);
     return () => {
       clearInterval(interval);
+      if (scrollFrame !== undefined) cancelAnimationFrame(scrollFrame);
       observer?.disconnect();
       window.removeEventListener(COMMAND_EVENT, onCommand);
-      window.removeEventListener(SCROLL_EVENT, onScroll);
+      window.removeEventListener(SCROLL_EVENT, onScrollFrame);
       document.removeEventListener(VISIBILITY_EVENT, onVisibility);
     };
   }, [sectionIds]);

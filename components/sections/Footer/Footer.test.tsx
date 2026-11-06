@@ -215,6 +215,21 @@ describe('Footer live session', () => {
   });
 });
 
+function stubFrameQueue() {
+  const pending: FrameRequestCallback[] = [];
+  vi.stubGlobal('requestAnimationFrame', (callback: FrameRequestCallback) => {
+    pending.push(callback);
+    return pending.length;
+  });
+  vi.stubGlobal('cancelAnimationFrame', vi.fn());
+  return {
+    pending,
+    flush: () => {
+      for (const callback of pending.splice(0)) act(() => callback(0));
+    },
+  };
+}
+
 describe('Footer reboot controls', () => {
   it('ignores editors, modifier keys and repeats, then focuses the heading without resetting the session', () => {
     vi.stubGlobal('IntersectionObserver', undefined);
@@ -303,6 +318,8 @@ describe('Footer reboot controls', () => {
   });
 
   it('tracks the nine logical sections once and keeps maximum scroll depth', () => {
+    const frames = stubFrameQueue();
+    const flushFrames = frames.flush;
     let notify: IntersectionObserverCallback | undefined;
     const observe = vi.fn();
     const disconnect = vi.fn();
@@ -357,12 +374,46 @@ describe('Footer reboot controls', () => {
     vi.spyOn(document.documentElement, 'clientHeight', 'get').mockReturnValue(1000);
     vi.stubGlobal('scrollY', 500);
     fireEvent.scroll(window);
+    flushFrames();
     expect(mounted.container.querySelector('[data-sess="depth"]')?.textContent).toBe('50%');
     vi.stubGlobal('scrollY', 100);
     fireEvent.scroll(window);
+    flushFrames();
     expect(mounted.container.querySelector('[data-sess="depth"]')?.textContent).toBe('50%');
     expect(mounted.container.querySelector('meter')?.value).toBe(50);
     mounted.unmount();
     expect(disconnect).toHaveBeenCalledOnce();
+  });
+});
+
+describe('Footer scroll depth', () => {
+  it('coalesces a burst of scroll events into one measurement per frame', () => {
+    vi.stubGlobal('IntersectionObserver', undefined);
+    const frames = stubFrameQueue();
+    const mounted = render(<Footer locale={SITE_LOCALE.en} />);
+    const scrollHeight = vi.spyOn(document.documentElement, 'scrollHeight', 'get');
+    scrollHeight.mockReturnValue(2000);
+    vi.spyOn(document.documentElement, 'clientHeight', 'get').mockReturnValue(1000);
+    vi.stubGlobal('scrollY', 500);
+    scrollHeight.mockClear();
+    for (let event = 0; event < 5; event += 1) fireEvent.scroll(window);
+    expect(frames.pending).toHaveLength(1);
+    expect(scrollHeight).not.toHaveBeenCalled();
+    expect(mounted.container.querySelector('[data-sess="depth"]')?.textContent).toBe('0%');
+    frames.flush();
+    expect(scrollHeight).toHaveBeenCalledTimes(1);
+    expect(mounted.container.querySelector('[data-sess="depth"]')?.textContent).toBe('50%');
+    mounted.unmount();
+  });
+
+  it('cancels a pending frame on unmount', () => {
+    vi.stubGlobal('IntersectionObserver', undefined);
+    const cancel = vi.fn();
+    vi.stubGlobal('requestAnimationFrame', () => 42);
+    vi.stubGlobal('cancelAnimationFrame', cancel);
+    const mounted = render(<Footer locale={SITE_LOCALE.en} />);
+    fireEvent.scroll(window);
+    mounted.unmount();
+    expect(cancel).toHaveBeenCalledWith(42);
   });
 });
