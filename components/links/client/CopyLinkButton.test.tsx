@@ -37,6 +37,15 @@ describe('CopyLinkButton', () => {
     vi.unstubAllGlobals();
   });
 
+  it('wears the shared pill classes and keeps its status region outside the button', () => {
+    const { container } = renderButton();
+    const button = container.querySelector('button');
+    expect(button?.classList.contains('links-pill')).toBe(true);
+    expect(button?.querySelector('.links-pill-glyph')).not.toBeNull();
+    expect(button?.querySelector('[role="status"]')).toBeNull();
+    expect(container.querySelector('[role="status"]')).not.toBeNull();
+  });
+
   it('writes the page url to the clipboard on click', async () => {
     const writeText = vi.fn().mockResolvedValue(undefined);
     vi.stubGlobal('navigator', { clipboard: { writeText } });

@@ -34,9 +34,9 @@ export function CopyLinkButton({
         type="button"
         aria-label={idleLabel}
         onClick={() => void copy(url)}
-        className="inline-flex items-center gap-[7px] border border-primary-subtle px-3 min-h-11 w-full bg-transparent text-primary-500 font-mono font-bold text-xs tracking-[0.1em] uppercase cursor-pointer transition-[box-shadow,background] duration-200 ease-out hover:shadow-[0_0_12px_var(--color-primary-500)] hover:bg-primary-quiet focus-visible:outline-2 focus-visible:outline-primary-500 focus-visible:outline-offset-2"
+        className="links-pill"
       >
-        <span className="text-primary-400" aria-hidden="true">
+        <span className="links-pill-glyph" aria-hidden="true">
           <IconCopy />
         </span>
         <span aria-hidden="true">{showingOutcome ? `$ ${label}` : label}</span>
