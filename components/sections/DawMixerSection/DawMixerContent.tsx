@@ -122,7 +122,7 @@ function PluginChainMobile({
           >
             <span
               className={cn(
-                'w-[6px] h-[6px] rounded-full justify-self-center',
+                'w-[6px] h-[6px] justify-self-center',
                 p.active
                   ? 'bg-primary-500 shadow-[0_0_4px_var(--color-primary-500)]'
                   : 'bg-[var(--color-primary-quiet)]',
@@ -192,7 +192,7 @@ function MixLegendMobile({ mixer }: { mixer: DawMixer }) {
       aria-hidden="true"
     >
       <span>
-        <span className="inline-block w-[5px] h-[5px] rounded-full bg-primary-500 shadow-[0_0_5px_var(--color-primary-500)] mr-[6px] align-[1px]" />
+        <span className="inline-block w-[5px] h-[5px] bg-primary-500 shadow-[0_0_5px_var(--color-primary-500)] mr-[6px] align-[1px]" />
         {mixer.channels.length - 1}
         {' GTR + MASTER'}
       </span>

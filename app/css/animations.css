@@ -39,7 +39,6 @@
   .badge-dot {
     width: 7px;
     height: 7px;
-    border-radius: 50%;
     background: var(--color-primary-500);
     flex-shrink: 0;
     animation: badge-pulse 1.6s ease-in-out infinite;
@@ -345,6 +344,14 @@
   body[data-motion="reduce"] .live-dot {
     animation: none;
     opacity: 0;
+  }
+
+  .status-dot {
+    flex: none;
+    display: block;
+    width: var(--status-dot-size, 6px);
+    height: var(--status-dot-size, 6px);
+    background: var(--status-dot-color, var(--color-primary-500));
   }
 
   .status-dot-blink {

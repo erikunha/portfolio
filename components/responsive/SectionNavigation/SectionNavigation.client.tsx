@@ -13,6 +13,7 @@ import {
   useState,
 } from 'react';
 import { LocaleSwitch } from '@/components/LocaleSwitch/LocaleSwitch';
+import { StatusDot } from '@/components/StatusDot';
 import type { NavigationCopy, SiteNavChrome } from '@/content/navigation';
 import {
   headerLanguageSwitchPaths,
@@ -395,7 +396,7 @@ export function SectionNavigation({ extra }: { extra?: ReactNode }) {
               aria-pressed={motionOn}
               onClick={toggleMotion}
             >
-              <span className="menu-motion-dot status-dot-blink" aria-hidden="true" />
+              <StatusDot blink />
               <span>{motionLabel}</span>
             </button>
           </li>

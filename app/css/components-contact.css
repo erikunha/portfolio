@@ -483,10 +483,8 @@
   }
 
   .ctz-dot {
-    flex: none;
-    width: var(--spacing-2);
-    height: var(--spacing-2);
-    background: currentcolor;
+    --status-dot-size: var(--spacing-2);
+    --status-dot-color: currentcolor;
   }
 
   .ctz-clocks {

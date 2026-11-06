@@ -2,6 +2,7 @@
 
 import { usePathname } from 'next/navigation';
 import type { ReactNode } from 'react';
+import { StatusDot } from '@/components/StatusDot';
 import { TOPBAR_MOTION_LABEL } from '@/content/nav';
 import { cn } from '@/lib/cn';
 import { LanguageSwitch, MenuTrigger, useSectionNavigation } from '../SectionNavigation';
@@ -47,13 +48,7 @@ export function DesktopTopbar({ brand }: { brand: ReactNode }) {
               data-motion={motionOn ? 'on' : 'off'}
               aria-pressed={motionOn}
             >
-              <span
-                className={cn(
-                  'w-1.5 h-1.5 rounded-full bg-primary-500 block status-dot-blink',
-                  !motionOn && 'bg-primary-400 opacity-40',
-                )}
-                aria-hidden="true"
-              />
+              <StatusDot blink className={cn(!motionOn && 'opacity-40')} />
               <span>{TOPBAR_MOTION_LABEL}</span>
             </button>
             <a

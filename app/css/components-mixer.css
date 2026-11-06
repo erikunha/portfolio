@@ -170,7 +170,6 @@
     top: -2px;
     width: 5px;
     height: 5px;
-    border-radius: 50%;
     background: var(--color-primary-500);
     box-shadow: 0 0 4px var(--color-primary-500);
   }
@@ -218,7 +217,6 @@
     right: 3px;
     width: 4px;
     height: 4px;
-    border-radius: 50%;
     background: var(--color-primary-500);
   }
 

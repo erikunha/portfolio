@@ -200,13 +200,6 @@
     outline-offset: 2px;
   }
 
-  .menu-motion-dot {
-    flex: none;
-    width: 6px;
-    height: 6px;
-    background: var(--color-primary-500);
-  }
-
   .menu-close {
     order: 2;
     min-height: var(--menu-row);

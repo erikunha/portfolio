@@ -18,6 +18,15 @@ test.describe('status dots blink while motion is on', () => {
     expect(await animationName(page)).toBe('none');
   });
 
+  test('the MOTION dot is square like the menu dot', async ({ page }) => {
+    await page.goto('/');
+    await expect(dot(page)).toBeVisible();
+    expect(
+      await dot(page).evaluate((node) => getComputedStyle(node).borderTopLeftRadius),
+      'status dots follow the sharp-corner rule; drop rounded-full or border-radius: 50%',
+    ).toBe('0px');
+  });
+
   test('the MOTION dot stays solid under prefers-reduced-motion', async ({ page }) => {
     await page.emulateMedia({ reducedMotion: 'reduce' });
     await page.goto('/');

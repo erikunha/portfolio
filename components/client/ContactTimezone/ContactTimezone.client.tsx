@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo, useRef, useState, useSyncExternalStore } from 'react';
+import { StatusDot } from '@/components/StatusDot';
 import type { ContactContent } from '@/content/contact';
 import { contactHoursPhrase, fillCopy } from '@/content/contact-copy';
 import { ERIK_PIN, WORLD_MAP_GRID, WORLD_MAP_LAND } from '@/content/world-map';
@@ -109,10 +110,7 @@ export function ContactTimezone({ copy }: { copy: TimezoneCopy }) {
     <div className="ctz" ref={rootRef} data-testid="contact-timezone">
       <div className="ctz-status" data-online={availability.online} data-testid="ctz-status">
         <p className="ctz-banner">
-          <span
-            className={availability.online ? 'ctz-dot status-dot-blink' : 'ctz-dot'}
-            aria-hidden="true"
-          />
+          <StatusDot className="ctz-dot" blink={availability.online} />
           {availability.online
             ? copy.status.online
             : fillCopy(copy.status.offHours, { hours: availability.hoursUntilBack })}
