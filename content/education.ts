@@ -15,8 +15,8 @@ const educationFor = (locale: SiteLocale): Education[] => {
       expectedCompletion: '2027-12',
       period: pt ? 'previsto para dez/2027' : 'expected Dec 2027',
       focus: pt
-        ? 'Disciplinas: ML, deep learning, LLMs, RAG, sistemas multi-agente. Agora estudando orquestração de agentes (LangGraph) e observabilidade de LLMs (LangSmith, Langfuse).'
-        : 'Coursework: ML, deep learning, LLMs, RAG, multi-agent systems. Now studying agent orchestration (LangGraph) and LLM observability (LangSmith, Langfuse).',
+        ? 'Disciplinas: ML e deep learning, LLMs, RAG, sistemas multi-agente, Python'
+        : 'Coursework: ML and deep learning, LLMs, RAG, multi-agent systems, Python',
     },
     {
       id: 'CO_OP_DIPLOMA',

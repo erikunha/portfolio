@@ -113,8 +113,8 @@ const aboutFor = (locale: SiteLocale): AboutContent => {
     whoami: {
       title: '# Whoami',
       intro: pt
-        ? 'Mais de 8 anos construindo software web de produção para plataformas reguladas e de alto tráfego: fintech de mercados privados, pagamentos PCI-DSS, saúde, e-commerce de varejo e seguros bancários.'
-        : '8+ years building production web software for regulated, high-traffic platforms: private-markets fintech, PCI-DSS payments, healthcare, retail e-commerce and bank insurance.',
+        ? 'Mais de 8 anos de software em produção em SaaS AI-native, fintech, pagamentos, saúde e e-commerce: sistemas com LLMs e a avaliação que decide se é seguro colocá-los em produção, originação de negócios em mercados privados, pagamentos PCI-DSS, equipamentos hospitalares e seguros bancários.'
+        : '8+ years of production software across AI-native SaaS, fintech, payments, healthcare and e-commerce: LLM systems and the evaluation that decides whether they are safe to ship, private-markets deal origination, PCI-DSS payments, hospital equipment service and bank insurance.',
       principlesTitle: pt ? '## Princípios de operação' : '## Operating Principles',
       principles: [
         pt
@@ -123,6 +123,9 @@ const aboutFor = (locale: SiteLocale): AboutContent => {
         pt
           ? '- A11y e conformidade: WCAG 2.2 AA, WAI-ARIA, salvaguardas de nível PCI-DSS.'
           : '- A11y & compliance: WCAG 2.2 AA, WAI-ARIA, PCI-DSS-grade safeguards.',
+        pt
+          ? '- Avaliar antes de lançar: juiz LLM calibrado contra rótulos humanos, resistência a jailbreak travada em CI.'
+          : '- Evals before shipping: an LLM judge calibrated against human labels, jailbreak resistance gated in CI.',
       ],
       statusTitle: pt ? '## Status atual' : '## Current Status',
       statusPrefix: pt ? 'Aberto a vagas de nível ' : 'Open to ',
@@ -139,8 +142,8 @@ const aboutFor = (locale: SiteLocale): AboutContent => {
           ? '- Contratação: tempo integral ou contrato de prazo fixo'
           : '- Engagement: full-time or fixed-term contract',
         pt
-          ? '- Domínios: plataformas frontend, pagamentos, saúde, produtos AI-native'
-          : '- Domains: frontend platforms, payments, healthcare, AI-native products',
+          ? '- Domínios: produtos AI-native, avaliação de LLMs, plataformas de produto densas em dados, pagamentos, saúde'
+          : '- Domains: AI-native products, LLM evaluation, data-dense product platforms, payments, healthcare',
       ],
       gutterLines: 64,
     },
@@ -150,8 +153,8 @@ const aboutFor = (locale: SiteLocale): AboutContent => {
         {
           k: pt ? 'Atualmente' : 'Currently',
           v: pt
-            ? 'construindo o frontend do fluxo de trabalho do investidor na Raylu · fintech de mercados privados'
-            : 'building the investor workflow frontend at Raylu · private-markets fintech',
+            ? 'construindo o frontend do fluxo de trabalho do investidor na Raylu · originação de negócios com IA'
+            : 'building the investor workflow frontend at Raylu · AI deal origination',
           company: { name: 'Raylu', url: 'https://raylu.ai' },
         },
         {
@@ -178,7 +181,7 @@ const aboutFor = (locale: SiteLocale): AboutContent => {
       groups: [
         {
           label: pt ? 'NÚCLEO' : 'CORE',
-          items: ['REACT', 'NEXT.JS', 'NODE', 'EXPRESS', 'AWS', 'DOCKER'],
+          items: ['REACT', 'NEXT.JS', 'NODE', 'PYTHON', 'EXPRESS', 'AWS', 'DOCKER'],
         },
         {
           label: 'ANGULAR',
@@ -188,7 +191,7 @@ const aboutFor = (locale: SiteLocale): AboutContent => {
         { label: pt ? 'QUALIDADE' : 'QUALITY', items: ['JEST', 'VITEST', 'PLAYWRIGHT', 'A11Y'] },
         {
           label: pt ? 'FERRAMENTAS' : 'TOOLING',
-          items: ['COPILOT', 'CLAUDE', 'STORYBOOK', 'VERCEL', 'TANSTACK'],
+          items: ['COPILOT', 'CLAUDE', 'CODEX', 'MCP', 'STORYBOOK', 'VERCEL', 'TANSTACK'],
         },
       ],
     },

@@ -33,8 +33,8 @@ const projectsFor = (locale: SiteLocale): Project[] => {
         company: 'Raylu',
         kind: 'professional',
         description: pt
-          ? 'Telas de fluxo de trabalho do investidor na plataforma de mercados privados da Raylu: empresa, pipeline, comparação, prospecção. Motor de tabelas compartilhado e estado de visualização na URL para fundos com mais de US$ 500B em ativos.'
-          : "Investor workflow screens on Raylu's private-markets platform: company, pipeline, comparison, outreach. Shared table engine and URL-backed view state for funds holding $500B+ in assets.",
+          ? 'Telas de fluxo de trabalho do investidor na plataforma de originação de negócios com IA da Raylu para mercados privados: empresa, pipeline, comparação, prospecção. Motor de tabelas compartilhado e estado de visualização na URL para fundos com mais de US$ 500B em ativos.'
+          : "Investor workflow screens on Raylu's AI deal origination platform for private markets: company, pipeline, comparison, outreach. Shared table engine and URL-backed view state for funds holding $500B+ in assets.",
         stats: [
           {
             label: pt ? 'SUPERFÍCIES' : 'SURFACES',
@@ -68,8 +68,8 @@ const projectsFor = (locale: SiteLocale): Project[] => {
         company: 'Canon Medical Systems Brazil',
         kind: 'professional',
         description: pt
-          ? 'Plataforma de serviço de equipamentos hospitalares: ordens de serviço, agendamento de especialistas, visitas de campo, atualizações ao vivo.'
-          : 'Hospital equipment service platform: service orders, specialist scheduling, field visits, live updates.',
+          ? 'Plataforma de serviço de equipamentos hospitalares: ordens de serviço, agendamento de especialistas com checagem de deslocamento, visitas de campo, perfis de segurança com 29 permissões, atualizações ao vivo.'
+          : 'Hospital equipment service platform: service orders, specialist scheduling with travel-time checks, field visits, a 29-permission security-profile model, live updates.',
         stats: [
           { label: pt ? 'BUNDLE JS' : 'JS BUNDLE', value: '-33%' },
           { label: 'TTI', value: '-52%' },
@@ -95,8 +95,8 @@ const projectsFor = (locale: SiteLocale): Project[] => {
         kind: 'professional',
         perm: '-rwx------',
         description: pt
-          ? 'Sistema de engenharia GitHub Copilot cobrindo geração, revisão, depuração, testes e validação de arquitetura. Toda ação automatizada é revisável. Adotado por todo o time na Betsson.'
-          : 'GitHub Copilot engineering system across generation, review, debugging, testing and architecture validation. Every automated action reviewable. Adopted team-wide at Betsson.',
+          ? 'Sistema de engenharia com 12 agentes no GitHub Copilot, cobrindo geração, revisão, depuração, testes e validação de arquitetura. Toda ação automatizada é revisável. Adotado por todo o time na Betsson.'
+          : '12-agent GitHub Copilot engineering system across generation, review, debugging, testing and architecture validation. Every automated action reviewable. Adopted team-wide at Betsson.',
         stats: [
           { label: pt ? 'REVISÃO' : 'REVIEW', value: pt ? 'TODA AÇÃO' : 'EVERY ACTION' },
           { label: pt ? 'ESCOPO' : 'SCOPE', value: pt ? 'TODO O TIME' : 'TEAM-WIDE' },
@@ -144,15 +144,15 @@ const projectsFor = (locale: SiteLocale): Project[] => {
         kind: 'oss',
         url: 'https://github.com/erikunha/portfolio',
         description: pt
-          ? 'Este portfólio. Next.js 16 App Router, React 19, RSC-first, um endpoint Anthropic com streaming no Vercel AI SDK e um harness de avaliação em CI que decide se ele sobe.'
-          : 'This portfolio. Next.js 16 App Router, React 19, RSC-first, a streaming Anthropic endpoint on the Vercel AI SDK, and a CI eval harness that decides if it ships.',
+          ? 'Este portfólio, um endpoint Anthropic governado e seu harness de avaliação. Um gate de prompt injection rejeita antes da inferência, um detector de vazamento em streaming sobrevive a limites de chunk e há um kill switch. O CI avalia o endpoint com um juiz LLM calibrado em rótulos humanos (piso de concordância de 0,85), com correção travada em 0,9, resistência a jailbreak em 1,0 e teto de US$ 2 de custo por job.'
+          : 'This portfolio, a governed Anthropic endpoint and its eval harness. A prompt-injection gate rejects before inference, a streaming leak detector survives chunk boundaries, and a kill switch is in place. CI grades the endpoint with an LLM judge calibrated on human labels (0.85 agreement floor), with correctness gated at 0.9, jailbreak resistance at 1.0 and a $2 per-job cost cap.',
         stats: [
-          { label: pt ? 'ORÇAMENTO LCP' : 'LCP BUDGET', value: pt ? '< 1,8s' : '< 1.8s' },
-          { label: pt ? 'ORÇAMENTO INP' : 'INP BUDGET', value: '< 200ms' },
           {
-            label: pt ? 'REGISTRO DE DECISÕES' : 'DECISION LOG',
-            value: pt ? '130+ REGISTROS' : '130+ RECORDS',
+            label: pt ? 'JUIZ LLM' : 'LLM JUDGE',
+            value: pt ? 'CONCORDÂNCIA >= 0,85' : 'AGREEMENT >= 0.85',
           },
+          { label: pt ? 'GATE JAILBREAK' : 'JAILBREAK GATE', value: pt ? '1,0' : '1.0' },
+          { label: pt ? 'TETO POR JOB' : 'PER-JOB CAP', value: pt ? 'US$ 2' : '$2' },
         ],
       },
       {

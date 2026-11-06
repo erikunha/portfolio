@@ -70,6 +70,7 @@ export function CvPage({ locale }: { locale: SiteLocale }) {
               </CompanyLink>
             </h3>
             <p className="reading-meta">{job.meta}</p>
+            {job.context ? <p>{job.context}</p> : null}
             <ul>
               {job.bullets.map((bullet) => (
                 <li key={bullet}>{bullet}</li>

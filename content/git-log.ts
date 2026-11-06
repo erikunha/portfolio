@@ -1,3 +1,4 @@
+import { experienceDetail } from './experience-detail';
 import {
   ASSETS_UNDER_MANAGEMENT_BILLIONS,
   FUNDS_PHRASE,
@@ -13,7 +14,7 @@ import { localizedPath, SITE_LOCALE, type SiteLocale } from './site-locale';
 
 const gitLogFor = (locale: SiteLocale): GitCommit[] => {
   const pt = locale === SITE_LOCALE.pt;
-  return GitCommitSchema.array().parse([
+  const entries = [
     {
       hash: 'b2e6a19f4c8d3057e1a9b6c2d8f40e73a5c1908d',
       deco: '(HEAD -> main, tag: v9.0)',
@@ -22,9 +23,7 @@ const gitLogFor = (locale: SiteLocale): GitCommit[] => {
       type: 'career',
       company: profile.currentEmployer.name,
       companyUrl: profile.currentEmployer.url,
-      role: pt
-        ? 'Engenheiro de Software Sênior (contrato via Torc)'
-        : 'Senior Software Engineer (contract via Torc)',
+      role: pt ? 'Engenheiro de Software Sênior' : 'Senior Software Engineer',
       startMonth: '2026-06',
       endMonth: null,
       location: pt ? 'Nova York, EUA' : 'New York, US',
@@ -205,7 +204,10 @@ const gitLogFor = (locale: SiteLocale): GitCommit[] => {
       ],
       isRoot: true,
     },
-  ]);
+  ];
+  return GitCommitSchema.array().parse(
+    entries.map((entry) => ({ ...entry, ...experienceDetail[locale][entry.branch] })),
+  );
 };
 
 export const gitLog: Record<SiteLocale, GitCommit[]> = {

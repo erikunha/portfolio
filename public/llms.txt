@@ -1,8 +1,9 @@
-# Erik Cunha · Senior Software Engineer · Full Stack
+# Erik Cunha · Senior Software Engineer, Applied AI
 
-> Senior Software Engineer · Full Stack. 8+ years building frontend and product platforms.
-> Brazil · UTC-3 · available now. Currently at Raylu: private-markets fintech · B2B SaaS,
-> on contract via Torc. React, Next.js, Angular, TypeScript, JavaScript, Node.js, Python, AWS · LLM Apps, Evals, RAG, LangGraph, LangChain, Agents.
+> Senior Software Engineer, Applied AI. 8+ years of production software across AI-native SaaS,
+> fintech, payments, healthcare and e-commerce. Builds LLM systems and the evaluation that decides
+> whether they are safe to ship. Brazil · UTC-3 · available now. Currently at Raylu: AI deal
+> origination · private markets. TypeScript, Python, React, Next.js, Angular, Node.js, AWS · LLM Systems, Evals, Agents, MCP, Guardrails.
 > Investor workflow screens for 50+ funds holding $500B+ in assets.
 
 ## Availability
@@ -11,28 +12,32 @@
 - Location: Paulínia, Brazil (UTC-3)
 - Remote: working remotely for Raylu (New York, US)
 - Relocation: open with sponsorship
-- Target role: Senior Software Engineer · Full Stack
+- Target role: Senior Software Engineer, Applied AI
 - Contact: erikhenriquealvescunha@gmail.com | +5519997049125
 
 ## AI Engineering
 
-Shipping production LLM and multi-agent systems:
+Builds LLM systems and the evaluation that decides whether they are safe to ship:
 
-- Streaming LLM endpoint: Vercel AI Gateway + Anthropic Claude Haiku 4.5,
-  ephemeral prompt caching, cost tracking, token budget management
-- Multi-agent orchestration: 12-agent GitHub Copilot system deployed to
-  engineering team at Betsson Group: automating code generation, review,
-  debugging, testing, and architectural validation across a platform with
-  €1.197B group revenue and 31.1M customers
-- Prompt engineering at production scale: structured output, tool use,
-  function calling, context window management
-- GenAI feature integration, AI evaluation loops
-- AI cost optimization: prompt caching strategies, model selection for
-  latency/cost trade-offs
+- Governed LLM endpoint on this site (Vercel AI Gateway + Anthropic Claude Haiku 4.5): a
+  prompt-injection gate that rejects before inference, a streaming leak detector that survives
+  chunk boundaries, a kill switch, ephemeral prompt caching and per-job cost caps
+- Continuous integration (CI) eval harness: an LLM judge calibrated against human labels at a
+  0.85 agreement floor, correctness gated at 0.9, jailbreak resistance gated at 1.0 and a $2
+  per-job cost cap
+- Daily work in Claude Code and Codex, authoring the skills, guard policies and lifecycle hooks
+  they run under
+- Multi-agent orchestration: 12-agent AI-assisted engineering system on GitHub Copilot, adopted
+  across the team at Betsson Group: generation, review, debugging, testing and architecture
+  validation, with every automated action reviewable, on a PCI-DSS payment platform
+- LAIbemage (open source, MIT): TypeScript CLI classifying images across seven LLM vision
+  providers, escalating from a local model to cloud below a 0.70 confidence threshold, with
+  two-provider consensus voting and a benchmark gate that fails on a 5% regression
+  (github.com/erikunha/LAIbemage)
 
-Keywords: LLM Engineering · RAG · Generative AI · Multi-Agent Orchestration ·
-Anthropic Claude · Function Calling · Context Window Management · Prompt Caching ·
-Streaming LLM · AI Evaluation · LLM Cost Optimization
+Keywords: LLM Systems · LLM Evaluation · LLM-as-Judge · Agents · Multi-Agent Orchestration ·
+Model Context Protocol (MCP) · Guardrails · Prompt-Injection Defense · Anthropic Claude ·
+Structured Output · Prompt Caching · Streaming LLM · LLM Cost Optimization
 
 ## Impact at Scale
 
@@ -50,9 +55,15 @@ Streaming LLM · AI Evaluation · LLM Cost Optimization
 
 ## Technical Skills
 
-Applied AI: LLM Engineering · RAG · Generative AI · Multi-Agent Orchestration ·
-Anthropic Claude · Prompt Engineering · Prompt Caching · Streaming LLM ·
-Function Calling · Context Window Management · LLM Cost Optimization · AI Evaluation
+LLM systems & evaluation: Eval harness design · Corpora graded on end state ·
+LLM-as-judge calibrated against human labels · pass@k and all-runs-pass · Control-treatment A/B ·
+Failure taxonomies · Per-job cost caps · Model routing by task tier · Tracing (Langfuse, OpenTelemetry) ·
+Anthropic, OpenAI and Google APIs · Vercel AI SDK · Structured output validation with Zod
+
+Agents & guardrails: Agent and sub-agent orchestration · Tool-surface design ·
+Model Context Protocol (MCP) servers · Prompt-injection defense at the request boundary ·
+Streaming leak detection · Kill switches · Content-hashed prompt versioning ·
+Model-drift detection · Policy guards that fail closed
 
 Frontend: TypeScript (strict) · React 19 · React Server Components ·
 Next.js 16 (App Router) · Angular · RxJS · NgRx · Redux · StencilJS ·
@@ -77,7 +88,7 @@ Performance & A11y: Core Web Vitals · WCAG 2.2 AA · ARIA · Lighthouse CI
 
 | Period | Company | Role | Location |
 |---|---|---|---|
-| Jun 2026 - Present | [Raylu](https://raylu.ai) | Senior Software Engineer (contract via Torc) | New York, US (remote) |
+| Jun 2026 - Present | [Raylu](https://raylu.ai) | Senior Software Engineer | New York, US (remote) |
 | Mar 2025 - May 2026 | [Betsson Group](https://betssongroup.com) | Senior Software Engineer | Malta (hybrid) |
 | Mar 2023 - Mar 2025 | [Canon Medical Systems Brazil](https://br.medical.canon) | Senior Software Engineer (independent consultant) | Canada (remote) |
 | Dec 2021 - Mar 2023 | [Grupo SBF (Nike / Centauro)](https://www.gruposbf.com.br) | Software Engineer | São Paulo, Brazil (remote) |
@@ -92,6 +103,7 @@ Performance & A11y: Core Web Vitals · WCAG 2.2 AA · ARIA · Lighthouse CI
 - iGaming / Regulated Markets: PCI-DSS, 15+ jurisdictions, €1.197B group revenue
 - E-commerce: 8M+ MAU, multi-brand, LATAM
 - Banking / Fintech: 24.2M digital clients, business insurance
+- Private markets: AI deal origination for funds holding $500B+ in assets
 - Healthcare: enterprise hospital operations, WCAG 2.2 AA
 - EdTech: 5-OS offline-first educational platform
 - HR-tech / Corporate Training: enterprise chatbot (Cia Hering, 800+ stores)
@@ -120,14 +132,17 @@ Performance & A11y: Core Web Vitals · WCAG 2.2 AA · ARIA · Lighthouse CI
 ## Community
 
 - DevOpsDays Campinas 2024: organizer (https://devopsdays.org/events/2024-campinas/welcome/)
-  Curated 10+ talks across DevOps, cloud infra, platform engineering, and architecture.
+  Curated 10+ talks across DevOps, cloud and platform engineering.
   Program: https://devopsdays.org/events/2024-campinas/program/
   Organizers: https://devopsdays.org/events/2024-campinas/contact/
 - open to CFP submissions for 2027 · open to volunteer / organizer roles.
 
 ## Selected project context
 
-- ORIGINATION_PLATFORM_UI, Raylu: React, Next.js 14, TypeScript 5.
+- ORIGINATION_PLATFORM_UI, Raylu: React, Next.js 14, TypeScript 5. Investor workflow screens of an AI deal origination platform for private markets: versioned, URL-safe view state, a table engine on TanStack Table and React Query, and a production A/B migration across four Next.js routes (CLS 0.166 to zero, one route's LCP from 2,544 to 1,308 ms, Lighthouse performance 79 to 96).
+- ERIKUNHA.DEV, personal project: governed Anthropic endpoint with a prompt-injection gate, streaming leak detector, kill switch and a CI eval harness (LLM judge calibrated on human labels, 0.85 agreement floor).
+- LAIBEMAGE, personal project (open source, MIT): TypeScript CLI classifying images across seven LLM vision providers (github.com/erikunha/LAIbemage).
+- REACT_GOOGLE_MAPS_API, open-source contribution (PR #3266): diagnosed and fixed an infinite re-render loop in the Directions API example of a library with about 1.8M weekly npm downloads; reviewed and merged by the maintainer.
 - SERVICE_OPS_CONSOLE, Canon Medical Systems Brazil: hospital equipment service platform for service orders, specialist schedules and field visits.
 
 ## Links

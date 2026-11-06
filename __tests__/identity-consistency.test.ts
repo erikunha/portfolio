@@ -11,7 +11,12 @@ import { footerContent } from '@/content/footer';
 import { gitLog } from '@/content/git-log';
 import { heroTagline } from '@/content/hero';
 import { perfReceipts } from '@/content/perf-receipts';
-import { profile, profileLanguageLine, profileWorkingLanguageLine } from '@/content/profile';
+import {
+  profile,
+  profileLanguageLine,
+  profilePresentation,
+  profileWorkingLanguageLine,
+} from '@/content/profile';
 import { projects } from '@/content/projects';
 import { cvDocument } from '@/content/reading-views';
 import { PerfReceiptSchema, ProjectSchema } from '@/content/schemas';
@@ -26,8 +31,13 @@ vi.mock('next/font/local', () => ({
   default: () => ({ variable: '--font-mock', className: 'mock' }),
 }));
 
-const CANONICAL_TITLE = 'Senior Software Engineer · Full Stack';
-const RETIRED_TITLE = 'Senior Full-Stack Engineer';
+const CANONICAL_TITLE = 'Senior Software Engineer, Applied AI';
+const CANONICAL_TITLE_PT = 'Engenheiro de Software Sênior, IA Aplicada';
+const RETIRED_TITLES = [
+  'Senior Full-Stack Engineer',
+  'Senior Software Engineer · Full Stack',
+  'Engenheiro de Software Sênior · Full Stack',
+];
 
 const REPO_ROOT = path.resolve(__dirname, '..');
 
@@ -209,7 +219,7 @@ describe('identity is consistent across every gated surface', () => {
     ).toEqual([]);
   });
 
-  it('no surface still carries the retired title', () => {
+  it('no surface still carries a retired title', () => {
     const surfaces: Array<[string, string]> = [
       ...contentSurfaces,
       ['app/(en)/layout.tsx (og + twitter + alt + description)', layoutMetadataText],
@@ -219,14 +229,37 @@ describe('identity is consistent across every gated surface', () => {
       ['public/.well-known/agent.json', read('public/.well-known/agent.json')],
       ['scripts/generate-og-image.ts (social preview card)', ogImageScript],
     ];
-    const needle = RETIRED_TITLE.toLowerCase();
     const stale = surfaces
-      .filter(([, text]) => text.toLowerCase().includes(needle))
+      .filter(([, text]) =>
+        RETIRED_TITLES.some((title) => text.toLowerCase().includes(title.toLowerCase())),
+      )
       .map(([s]) => s);
 
     expect(
       stale,
-      `These surfaces still publish "${RETIRED_TITLE}". Use "${CANONICAL_TITLE}" for current identity. Regenerate public/og.png and public/erik-cunha-cv.pdf separately; their rendered text is not checked here.`,
+      `These surfaces still publish a retired title (${RETIRED_TITLES.join(' | ')}). Use "${CANONICAL_TITLE}" for current identity. Regenerate public/og.png and public/erik-cunha-cv.pdf separately; their rendered text is not checked here.`,
+    ).toEqual([]);
+  });
+
+  it('states the Portuguese canonical title wherever the profile is localized', () => {
+    expect(profilePresentation[SITE_LOCALE.pt].title).toBe(CANONICAL_TITLE_PT);
+    expect(profilePresentation[SITE_LOCALE.en].title).toBe(CANONICAL_TITLE);
+    expect(cvDocument[SITE_LOCALE.pt].role).toBe(CANONICAL_TITLE_PT);
+    expect(heroTagline(SITE_LOCALE.pt)).toContain(CANONICAL_TITLE_PT);
+  });
+
+  it('names no intermediary for the current role, which the resume gives as a direct role', () => {
+    const surfaces: Array<[string, string]> = [
+      ...contentSurfaces,
+      ['lib/hiring-profile.ts', JSON.stringify(HIRING_PROFILE)],
+      ['lib/ask/system-prompt.ts', SYSTEM_TEXT],
+      ['public/llms.txt', llmsTxt],
+      ['content/ask-eval-corpus.ts', JSON.stringify(ASK_EVAL_CORPUS)],
+    ];
+    const stale = surfaces.filter(([, text]) => /\bTorc\b/.test(text)).map(([s]) => s);
+    expect(
+      stale,
+      'the resume lists Raylu as a Senior Software Engineer role with no contract intermediary',
     ).toEqual([]);
   });
 
@@ -274,21 +307,19 @@ describe('terminal redesign canonical facts', () => {
     expect(HIRING_PROFILE.open_to).not.toContain('principal');
   });
 
-  it('describes Raylu with the resume wording, never a deal-origination platform', () => {
+  it('describes Raylu as the resume does: an AI deal origination platform for private markets', () => {
     const surfaces: Array<[string, string]> = [
-      ...contentSurfaces,
-      ['lib/hiring-profile.ts', JSON.stringify(HIRING_PROFILE)],
       ['lib/ask/system-prompt.ts', SYSTEM_TEXT],
       ['public/llms.txt', llmsTxt],
       ['content/ask-eval-corpus.ts', JSON.stringify(ASK_EVAL_CORPUS)],
     ];
-    const stale = surfaces
-      .filter(([, text]) => /deal[- ]origination/i.test(text))
+    const missing = surfaces
+      .filter(([, text]) => !/deal[- ]origination/i.test(text))
       .map(([surface]) => surface);
 
     expect(
-      stale,
-      'the resume describes Raylu as a private-markets fintech whose funds hold $500B+ in assets. The deal-origination framing is not in the resume.',
+      missing,
+      'the resume describes Raylu as an AI deal origination platform for private markets used by funds holding $500B+ in assets. A surface that omits the framing describes a different company.',
     ).toEqual([]);
     expect(SYSTEM_TEXT).toContain('$500B+');
   });
@@ -352,14 +383,7 @@ describe('terminal redesign canonical facts', () => {
         entry.workMode,
       ]),
     ).toEqual([
-      [
-        'Raylu',
-        'Senior Software Engineer (contract via Torc)',
-        '2026-06',
-        null,
-        'New York, US',
-        'remote',
-      ],
+      ['Raylu', 'Senior Software Engineer', '2026-06', null, 'New York, US', 'remote'],
       ['Betsson Group', 'Senior Software Engineer', '2025-03', '2026-05', 'Malta', 'hybrid'],
       [
         'Canon Medical Systems Brazil',

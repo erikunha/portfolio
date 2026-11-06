@@ -138,7 +138,7 @@ for (const path of ['/links', '/links/en']) {
       await page.goto(path);
 
       const stack = page.locator('.links-identity-meta dd').nth(1);
-      await expect(stack).toContainText('LangChain');
+      await expect(stack).toContainText('Guardrails');
       const fits = await stack.evaluate(
         (el) => el.scrollWidth <= el.clientWidth + 1 && el.getBoundingClientRect().height > 0,
       );

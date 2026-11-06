@@ -282,9 +282,9 @@ describe('DawMixerSchema', () => {
 const profileFixture = {
   fullName: 'Erik Henrique Alves Cunha',
   displayName: 'Erik Cunha',
-  title: 'Senior Software Engineer · Full Stack',
-  stackLine: 'React, Next.js, Angular, TypeScript, JavaScript, Node.js, Python, AWS',
-  aiLine: 'LLM Apps, Evals, RAG, LangGraph, LangChain, Agents',
+  title: 'Senior Software Engineer, Applied AI',
+  stackLine: 'TypeScript, Python, React, Next.js, Angular, Node.js, AWS',
+  aiLine: 'LLM Systems, Evals, Agents, MCP, Guardrails',
   country: 'Brazil',
   city: 'Paulínia',
   timezone: 'UTC-3',
@@ -292,7 +292,7 @@ const profileFixture = {
   currentEmployer: {
     name: 'Raylu',
     url: 'https://raylu.ai',
-    context: 'private-markets fintech · B2B SaaS',
+    context: 'AI deal origination · private markets',
   },
   languages: [
     { code: 'pt', label: 'PT-BR', name: 'Portuguese', level: 'native' },
@@ -314,8 +314,7 @@ const educationFixtures = [
     endYear: 2027,
     expectedCompletion: '2027-12',
     period: 'expected Dec 2027',
-    focus:
-      'Coursework: ML, deep learning, LLMs, RAG, multi-agent systems. Now studying agent orchestration (LangGraph) and LLM observability (LangSmith, Langfuse).',
+    focus: 'Coursework: ML and deep learning, LLMs, RAG, multi-agent systems, Python',
   },
   {
     id: 'CO_OP_DIPLOMA',

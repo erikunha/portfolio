@@ -24,16 +24,16 @@ describe('Hero identity and static actions', () => {
       expect(name?.getAttribute('role') ?? 'heading').toBe('heading');
       const title = hero.querySelector('.hero-stack');
       expect(title?.textContent).toBe(
-        'Senior Software Engineer · Full Stack · React, Next.js, Angular, TypeScript, JavaScript, Node.js, Python, AWS · LLM Apps, Evals, RAG, LangGraph, LangChain, Agents',
+        'Senior Software Engineer, Applied AI · TypeScript, Python, React, Next.js, Angular, Node.js, AWS · LLM Systems, Evals, Agents, MCP, Guardrails',
       );
       expect(title?.closest('[aria-hidden="true"], [aria-live], [role="status"]')).toBeNull();
       expect(hero.textContent).toContain(
-        'React, Next.js, Angular, TypeScript, JavaScript, Node.js, Python, AWS · LLM Apps, Evals, RAG, LangGraph, LangChain, Agents',
+        'TypeScript, Python, React, Next.js, Angular, Node.js, AWS · LLM Systems, Evals, Agents, MCP, Guardrails',
       );
       expect(hero.textContent).toContain('Brazil');
       expect(hero.textContent).toContain('UTC-3 · available now');
       expect(hero.textContent).toContain('Raylu');
-      expect(hero.textContent).toContain('private-markets fintech · B2B SaaS');
+      expect(hero.textContent).toContain('AI deal origination · private markets');
       expect(hero.textContent).toContain('LANG: PT-BR native · EN C1');
     }
     expect(doc.querySelectorAll('[data-testid="hero-name"]')).toHaveLength(2);

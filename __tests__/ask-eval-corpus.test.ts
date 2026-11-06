@@ -49,12 +49,12 @@ describe('content/ask-eval-corpus', () => {
     }
   });
 
-  it('grades no criterion against a Staff or Principal target, or a deal-origination framing', () => {
+  it('grades no criterion against a Staff or Principal target', () => {
     for (const item of ASK_EVAL_CORPUS) {
       expect(
         item.expect,
-        `item "${item.id}" grades a level or a company framing the owner decision removed`,
-      ).not.toMatch(/\bStaff\b|\bPrincipal\b|deal[- ]origination/i);
+        `item "${item.id}" grades a level the owner decision removed`,
+      ).not.toMatch(/\bStaff\b|\bPrincipal\b/i);
     }
   });
 

@@ -50,7 +50,9 @@ describe('toSentence', () => {
   });
 
   it('rewrites a known resume fragment into a full sentence', () => {
-    expect(toSentence('Angular 17 to 19')).toBe('Upgraded the platform from Angular 17 to 19.');
+    expect(
+      toSentence('First job. Vue.js 2 back-office screens for 1,600+ Brazilian travel agencies'),
+    ).toBe('First role: Vue.js 2 back-office screens for 1,600+ Brazilian travel agencies.');
   });
 });
 
@@ -87,6 +89,17 @@ describe('CV reading view', () => {
     }
   });
 
+  it('prints each job context line and the resume bullets under it', () => {
+    const articles = host.querySelectorAll('section[aria-labelledby="cv-experience"] article');
+    gitLogEn.forEach((job, index) => {
+      if (!job.context) return;
+      expect(articles[index]?.textContent, job.company).toContain(job.context);
+      expect(articles[index]?.querySelectorAll('li').length, job.company).toBe(
+        job.highlights.length,
+      );
+    });
+  });
+
   it('links every employer heading to its company site', () => {
     const headings = host.querySelectorAll('section[aria-labelledby="cv-experience"] article h3');
     expect(headings).toHaveLength(gitLogEn.length);
@@ -119,9 +132,10 @@ describe('CV reading view', () => {
   });
 
   it('states the resume SUMMARY as the CV summary', () => {
-    expect(cvDocumentEn.summary).toContain('micro-frontend topologies');
-    expect(cvDocumentEn.summary).toContain('backend-for-frontend (BFF)');
-    expect(cvDocumentEn.summary).not.toContain('8+ years building frontend systems');
+    expect(cvDocumentEn.summary).toContain('Senior Software Engineer with 8+ years');
+    expect(cvDocumentEn.summary).toContain('0.85 agreement floor');
+    expect(cvDocumentEn.summary).toContain('12-agent AI-assisted engineering system');
+    expect(cvDocumentEn.summary).not.toContain('micro-frontend topologies');
   });
 
   it('states the resume location in the header and publishes no phone number', () => {
@@ -132,11 +146,12 @@ describe('CV reading view', () => {
 
   it('lists the resume core expertise as the CV skills', () => {
     const skills = cvDocumentEn.skills.join(' · ');
-    expect(skills).toContain('Frontend & Product Architecture');
-    expect(skills).toContain('Testing, Quality & Release Engineering');
-    expect(skills).toContain('BFF, APIs & Data');
-    expect(skills).toContain('AI-Native Product & Agent Engineering');
-    expect(skills).toContain('TanStack Table and Query');
+    expect(skills).toContain('LLM Systems & Evaluation');
+    expect(skills).toContain('Agents & Guardrails');
+    expect(skills).toContain('Backend & Data');
+    expect(skills).toContain('Product Engineering');
+    expect(skills).toContain('Platform, Delivery & Quality');
+    expect(skills).toContain('Model Context Protocol (MCP) servers');
     expect(skills).toContain('Fastify');
     expect(skills).not.toContain('User Journeys');
   });

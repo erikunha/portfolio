@@ -10,7 +10,9 @@ describe.each(Object.values(SITE_LOCALE))('CV prose overrides (%s)', (locale) =>
   it('keys every override to a fragment the CV actually renders', () => {
     const fragments = new Set(
       [
-        ...gitLog[locale].flatMap((entry) => entry.body.flatMap((line) => line.split(/;\s+/))),
+        ...gitLog[locale]
+          .filter((entry) => entry.highlights.length === 0)
+          .flatMap((entry) => entry.body.flatMap((line) => line.split(/;\s+/))),
         ...communityEvent[locale].bullets,
       ].map(fragmentKey),
     );
@@ -19,7 +21,7 @@ describe.each(Object.values(SITE_LOCALE))('CV prose overrides (%s)', (locale) =>
     );
     expect(
       dead,
-      'An override whose key no longer matches a career or community fragment is dead: the CV ' +
+      'An override whose key no longer matches a fragment the CV renders is dead (a job with resume highlights renders those, not its body): the CV ' +
         'silently falls back to the raw fragment. Update the key when the source text changes.',
     ).toEqual([]);
   });
