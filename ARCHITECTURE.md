@@ -389,6 +389,9 @@ Content-Type: application/json
   streamed answer tokens (AI SDK stream, not SSE JSON deltas).
   A mid-stream failure is signalled in-band by the \x00ERR: sentinel
   (lib/stream-protocol.ts), not by a status code, the 200 has already begun.
+  The text after the sentinel is the page-language `interrupted` line from
+  content/ask-errors.ts; the exception stays in the server log. A guard abort
+  carries GUARD_ABORT_PREFIX and the shell words it as a withheld answer.
 
 → 400 application/json   { "error": "..." }  # missing question, invalid body, injection guard
 → 429 application/json   { "error": "..." }  # per-IP sliding window or identical question
@@ -500,7 +503,7 @@ The normalized off-keyword set is defined in `app/api/ask/route.ts`.
 
 ### Why KV before Resend
 
-If Resend is down, the message stays in KV and enters the pending outbox. The form reports saved but undelivered and links to LinkedIn for a faster reply. Only provider acceptance shows the existing success text. If KV is down, the route returns `502 storage_unavailable` and the form asks the visitor to try again. Structured API errors display `error.message`.
+If Resend is down, the message stays in KV and enters the pending outbox. The form reports saved but undelivered and links to LinkedIn for a faster reply. Only provider acceptance shows the existing success text. If KV is down, the route returns `502 storage_unavailable`; if the message is saved but neither Resend nor the outbox took it, `502 delivery_unavailable`. The form words each failure from its own page-language copy keyed by `error.code` (`contactErrorMessage`), never from `error.message`, and always offers the email address and keeps the text.
 
 ### Daily retry
 
