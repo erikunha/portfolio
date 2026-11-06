@@ -4,14 +4,7 @@ import { education } from './education';
 import { gitLog, workModeLabel } from './git-log';
 import { heroContent } from './hero';
 import { HIRE_ACCESSIBLE_NAME, NAV_VOCABULARY } from './nav';
-import {
-  formatLanguages,
-  profile,
-  profileCityLine,
-  profileLocation,
-  profilePresentation,
-  profileStack,
-} from './profile';
+import { formatLanguages, profile, profilePresentation, profileStack } from './profile';
 import { projects } from './projects';
 import { READING_PATHS } from './reading-paths';
 import {
@@ -83,7 +76,7 @@ const readingViewsFor = (locale: SiteLocale): ReadingViews => {
             'obteve 40m+ transações/ano em mais de 15 jurisdições e 31,1m clientes em uma plataforma de pagamentos pci-dss':
               'Entregou uma plataforma de pagamentos PCI-DSS com 40M+ transações por ano em mais de 15 jurisdições e 31,1M clientes.',
             'reconstruiu uma plataforma de serviço de equipamentos hospitalares: ordens de serviço, agendamento de especialistas, visitas de campo':
-              'Reconstruiu uma plataforma de serviço de equipamentos hospitalares.',
+              'Reconstruiu uma plataforma de serviço de equipamentos hospitalares: ordens de serviço, agendamento de especialistas, visitas de campo.',
             'angular 17 para 19': 'Atualizou a plataforma de Angular 17 para 19.',
             'primeiro trabalho regulado / bancário': 'Primeiro trabalho bancário regulado.',
             'começou no backend': 'Começou no backend.',
@@ -204,7 +197,7 @@ const cvDocumentFor = (locale: SiteLocale) => {
   return CvDocumentSchema.parse({
     name: profile.displayName,
     role: profilePresentation[locale].title,
-    location: profileCityLine,
+    location: `${profile.city}, ${profilePresentation[locale].country}`,
     links: [
       { label: social.email, href: `mailto:${social.email}`, external: false },
       { label: siteLabel, href: siteHref, external: true },
@@ -270,9 +263,11 @@ const summaryDocumentFor = (locale: SiteLocale) => {
     name: profile.displayName,
     tagline: profilePresentation[locale].title,
     technologyLine: profile.technologyLine,
-    context: [profileLocation, profile.currentEmployer.name, views.summary.experienceLabel].join(
-      STACK_SEPARATOR,
-    ),
+    context: [
+      profilePresentation[locale].location,
+      profile.currentEmployer.name,
+      views.summary.experienceLabel,
+    ].join(STACK_SEPARATOR),
     employer: { name: profile.currentEmployer.name, url: profile.currentEmployer.url },
     stats: heroContent[locale].stats,
     projects: summaryProjects,

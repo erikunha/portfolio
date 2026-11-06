@@ -125,10 +125,10 @@ const aboutFor = (locale: SiteLocale): AboutContent => {
           : '- A11y & compliance: WCAG 2.2 AA, WAI-ARIA, PCI-DSS-grade safeguards.',
       ],
       statusTitle: pt ? '## Status atual' : '## Current Status',
-      statusPrefix: pt ? 'Aberto a ' : 'Open to ',
+      statusPrefix: pt ? 'Aberto a vagas de nível ' : 'Open to ',
       role: pt ? '[Sênior]' : '[Senior]',
       statusSuffix: pt
-        ? ` cargos ou contratos de impacto · ${WORK_SCOPE[locale]} · Inglês C1.`
+        ? ` ou contratos de impacto · ${WORK_SCOPE[locale]} · Inglês C1.`
         : ` roles or impactful contract roles · ${WORK_SCOPE[locale]} · English C1.`,
       details: [
         pt ? '- Nível: Sênior' : '- Level: Senior',
@@ -182,7 +182,7 @@ const aboutFor = (locale: SiteLocale): AboutContent => {
         },
         {
           label: 'ANGULAR',
-          items: ['ANGULAR', 'NGRX', 'RXJS', 'NX', 'STENCIL', 'MICRO-FRONTENDS'],
+          items: ['NGRX', 'RXJS', 'NX', 'STENCIL', 'MICRO-FRONTENDS'],
         },
         { label: pt ? 'DADOS' : 'LANG_DATA', items: ['TS', 'CSS', 'POSTGRES', 'MONGO', 'REDIS'] },
         { label: pt ? 'QUALIDADE' : 'QUALITY', items: ['JEST', 'VITEST', 'PLAYWRIGHT', 'A11Y'] },
