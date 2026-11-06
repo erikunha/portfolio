@@ -104,7 +104,7 @@ export const shellUi: Record<SiteLocale, ShellUi> = {
     outputLabel: 'shell output',
     toolbarLabel: 'Shell shortcuts',
     prompt: 'erik@portfolio:~$',
-    placeholder: 'type a command or ask anything…',
+    placeholder: 'type a command or ask about Erik…',
     suggestions: [
       ShellCommand.Help,
       ShellCommand.WhoIs,
@@ -165,7 +165,7 @@ export const shellUi: Record<SiteLocale, ShellUi> = {
     outputLabel: 'saída do shell',
     toolbarLabel: 'Atalhos do shell',
     prompt: 'erik@portfolio:~$',
-    placeholder: 'digite um comando ou pergunte qualquer coisa…',
+    placeholder: 'digite um comando ou pergunte sobre o Erik…',
     suggestions: [
       ShellCommand.Help,
       ShellCommand.WhoIs,

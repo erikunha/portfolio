@@ -7,7 +7,7 @@ const SHELL_RESPONSES: ShellResponse[] = [
   {
     commands: [ShellCommand.Help],
     kind: ShellLineKind.Output,
-    text: 'commands: help · whois · whois --recursive · cat skills.md · cat ~/.now · contact · clear\nanything else → sent to Claude',
+    text: 'commands: help · whois · whois --recursive · cat skills.md · cat ~/.now · contact · clear\nanything else → sent to Claude, which only answers questions about Erik',
   },
   {
     commands: [ShellCommand.WhoIs, ShellCommand.WhoAmI],
