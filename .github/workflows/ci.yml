@@ -168,6 +168,23 @@ jobs:
         if: github.event_name != 'pull_request' || steps.lockfile-diff.outputs.changed == 'true'
         run: pnpm audit --audit-level=moderate
 
+      - name: Check if the mutation runner surface changed
+        id: mutation-surface-diff
+        if: github.event_name == 'pull_request'
+        env:
+          BASE: ${{ github.event.pull_request.base.sha }}
+          HEAD: ${{ github.event.pull_request.head.sha }}
+        run: |
+          changed=true
+          if git diff --quiet "$BASE...$HEAD" -- pnpm-lock.yaml stryker.config.mjs vitest.config.ts tests/mocks scripts/check-mutation-kills.mjs scripts/stryker-canary.config.mjs 2>/dev/null; then
+            changed=false
+          fi
+          echo "changed=${changed}" >> "$GITHUB_OUTPUT"
+
+      - name: Mutation runner canary (Stryker must kill mutants in a known file)
+        if: github.event_name != 'pull_request' || steps.mutation-surface-diff.outputs.changed == 'true'
+        run: node scripts/check-mutation-kills.mjs --canary
+
       - name: Unit tests
         run: pnpm test:coverage
 

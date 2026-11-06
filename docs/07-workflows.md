@@ -56,7 +56,7 @@ flowchart LR
     a11y["axe-core<br/>tests/a11y/axe.spec.ts (5 DS routes, wcag2aa)"] --> ci
     e2e["Playwright e2e<br/>tests/e2e/** (5-project matrix)"] --> ci
     visual["Visual regression<br/>tests/visual/visual.spec.ts via Argos"] --> ci
-    mut["Stryker mutation (weekly, advisory)"] -. trend .-> ci
+    mut["Stryker mutation (weekly, advisory; kill canary in CI)"] -. trend .-> ci
     ci["CI gates"]
 ```
 
@@ -99,7 +99,7 @@ flowchart TD
 
 `ci-gate` runs with `if: always()`, needs every job above (`semgrep` stays outside — report-only by design), and is the terminal required status check. `__tests__/scripts/ci-gate-job.test.ts` asserts its `needs` list equals the full job set minus the self-reporting jobs, so adding a conditional job without fanning it in fails `pnpm test`.
 
-Other workflows: `codeql.yml` (SAST, weekly + PR), `mutation.yml` (Stryker, weekly), `smoke.yml` (post-deploy: healthz + 7 security headers + apex→www + `/api/ask`,`/api/contact` liveness), `claude.yml` (the `@claude` AI-reviewer pilot, doc 06).
+Other workflows: `codeql.yml` (SAST, weekly + PR), `mutation.yml` (Stryker, weekly; fails when the runner cannot kill a mutant, judged by `scripts/check-mutation-kills.mjs`), `smoke.yml` (post-deploy: healthz + 7 security headers + apex→www + `/api/ask`,`/api/contact` liveness), `claude.yml` (the `@claude` AI-reviewer pilot, doc 06).
 
 **Lighthouse budgets (LHCI, hard gates):** desktop perf ≥95 / a11y =100 / BP ≥95 / SEO =100, LCP ≤1800ms, CLS ≤0.05, TBT ≤200ms; mobile perf ≥90, LCP ≤3500ms. Never disable a gate to merge - fix the property (doc 08).
 
