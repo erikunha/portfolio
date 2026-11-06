@@ -13,6 +13,7 @@ const mockLogError = vi.fn();
 vi.mock('@/lib/log', () => ({ log: { error: mockLogError, info: vi.fn() } }));
 
 afterEach(() => {
+  vi.useRealTimers();
   vi.resetModules();
   mockGet.mockReset();
   mockSet.mockReset();
@@ -46,6 +47,26 @@ function makePsiResponse(score = 0.99) {
 }
 
 describe('getScores — cache hit', () => {
+  it.each(['desktop', 'mobile'] as const)(
+    'returns unavailable within 3s when the %s Redis read hangs',
+    async (strategy) => {
+      vi.useFakeTimers();
+      process.env.PSI_API_KEY = 'test-key';
+      mockGet.mockReturnValue(new Promise(() => {}));
+      const { getScores, LIGHTHOUSE_FALLBACK } = await import('@/lib/lighthouse-scores');
+      const settled = vi.fn();
+      const result = getScores(strategy).then(settled);
+
+      await vi.advanceTimersByTimeAsync(2_999);
+      expect(settled).not.toHaveBeenCalled();
+      await vi.advanceTimersByTimeAsync(1);
+      expect(settled).toHaveBeenCalledWith(LIGHTHOUSE_FALLBACK);
+      await result;
+      expect(mockFetch).not.toHaveBeenCalled();
+      expect(vi.getTimerCount()).toBe(0);
+    },
+  );
+
   it('returns cached value without fetching PSI', async () => {
     mockGet.mockResolvedValue(CACHED_DESKTOP);
     const { getScores } = await import('@/lib/lighthouse-scores');

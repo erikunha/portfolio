@@ -1,5 +1,6 @@
 import { env } from '@/lib/env';
 import { log } from '@/lib/log';
+import { ReadTimeoutError, withTimeout } from '@/lib/with-timeout';
 import { getRedis } from './rate-limit';
 
 class PsiHttpError extends Error {
@@ -152,12 +153,12 @@ async function fetchAndCache(strategy: Strategy, forceRefresh = false): Promise<
 }
 
 export async function getScores(strategy: Strategy = 'desktop'): Promise<LighthouseScores> {
-  const cached = await getRedis()
-    .get<LighthouseScores>(CACHE_KEY(strategy))
-    .catch((err) => {
-      log.error('Redis cache GET failed', { err, strategy });
-      return null;
-    });
+  const cached = await withTimeout(() =>
+    getRedis().get<LighthouseScores>(CACHE_KEY(strategy)),
+  ).catch((err) => {
+    log.error('Redis cache GET failed', { err, strategy });
+    return err instanceof ReadTimeoutError ? LIGHTHOUSE_FALLBACK : null;
+  });
   if (cached) return cached;
 
   try {
