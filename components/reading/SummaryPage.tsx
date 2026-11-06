@@ -1,14 +1,15 @@
 import { CompanyMention } from '@/components/CompanyLink';
-import { PrintButton } from '@/components/client/PrintButton';
 import { readingViews, summaryDocument } from '@/content/reading-views';
 import type { SiteLocale } from '@/content/site-locale';
-import { Button, StatTile } from '@/design-system';
+import { StatTile } from '@/design-system';
+import { ReadingActions } from './ReadingActions';
+import { ReadingSection } from './ReadingSection';
 import { ReadingShell } from './ReadingShell';
 
 const sectionId = (key: string) => `summary-${key}`;
 
 export function SummaryPage({ locale }: { locale: SiteLocale }) {
-  const { shared, summary } = readingViews[locale];
+  const { summary } = readingViews[locale];
   const doc = summaryDocument[locale];
   const cvPath = readingViews[locale].cv.path;
   return (
@@ -35,33 +36,14 @@ export function SummaryPage({ locale }: { locale: SiteLocale }) {
         ))}
       </section>
 
-      <div className="reading-actions mt-6">
-        <Button
-          as="a"
-          variant="primary"
-          href={shared.hire.href}
-          target="_blank"
-          rel={shared.newTabRel}
-          aria-label={shared.hire.ariaLabel}
-        >
-          {shared.hire.label}
-        </Button>
-        <Button as="a" variant="secondary" href={cvPath}>
-          {summary.cvLinkLabel}
-        </Button>
-        <PrintButton label={shared.printLabel} />
-      </div>
+      <ReadingActions
+        locale={locale}
+        className="mt-6"
+        secondary={{ href: cvPath, label: summary.cvLinkLabel }}
+      />
 
       <div className="reading-split">
-        <section aria-labelledby={sectionId('projects')} className="reading-section">
-          <h2
-            id={sectionId('projects')}
-            className="reading-heading"
-            data-type-reveal
-            suppressHydrationWarning
-          >
-            {summary.headings.projects}
-          </h2>
+        <ReadingSection id={sectionId('projects')} heading={summary.headings.projects}>
           <ul className="reading-projects">
             {doc.projects.map((project) => (
               <li key={project.name} className="reading-project">
@@ -73,18 +55,10 @@ export function SummaryPage({ locale }: { locale: SiteLocale }) {
               </li>
             ))}
           </ul>
-        </section>
+        </ReadingSection>
 
         <div className="reading-side">
-          <section aria-labelledby={sectionId('stack')} className="reading-section">
-            <h2
-              id={sectionId('stack')}
-              className="reading-heading"
-              data-type-reveal
-              suppressHydrationWarning
-            >
-              {summary.headings.stack}
-            </h2>
+          <ReadingSection id={sectionId('stack')} heading={summary.headings.stack}>
             <ul className="reading-chips" aria-label={summary.stackLabels.core}>
               {summary.stack.core.map((item) => (
                 <li key={item}>{item}</li>
@@ -95,22 +69,14 @@ export function SummaryPage({ locale }: { locale: SiteLocale }) {
                 <li key={item}>{item}</li>
               ))}
             </ul>
-          </section>
+          </ReadingSection>
 
-          <section aria-labelledby={sectionId('contact')} className="reading-section">
-            <h2
-              id={sectionId('contact')}
-              className="reading-heading"
-              data-type-reveal
-              suppressHydrationWarning
-            >
-              {summary.headings.contact}
-            </h2>
+          <ReadingSection id={sectionId('contact')} heading={summary.headings.contact}>
             <p className="reading-actions-inline">
               <a href={`mailto:${doc.email}`}>{doc.email}</a>
             </p>
             <p className="reading-meta">{doc.languages}</p>
-          </section>
+          </ReadingSection>
         </div>
       </div>
     </ReadingShell>

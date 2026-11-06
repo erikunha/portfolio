@@ -1,15 +1,16 @@
 import { BrandLink } from '@/components/BrandLink';
+import { PageMain } from '@/components/PageMain';
 import { errorsContent } from '@/content/errors';
 import type { SiteLocale } from '@/content/site-locale';
 import { Button, CmdLine, TerminalPanel } from '@/design-system';
-import { ErrorChrome, ErrorHeading } from './ErrorPages.client';
+import { ERROR_MAIN_CLASS, ErrorChrome, ErrorHeading } from './ErrorPages.client';
 
 export function NotFoundPage({ locale }: { locale: SiteLocale }) {
   const { chrome, notFound } = errorsContent[locale];
   return (
     <>
       <ErrorChrome chrome={chrome} brand={<BrandLink locale={locale} />} />
-      <main className="err-main" id="main-content" tabIndex={-1}>
+      <PageMain className={ERROR_MAIN_CLASS}>
         <ErrorHeading>{notFound.code}</ErrorHeading>
         <TerminalPanel header={notFound.panelHeader}>
           <div className="p-[14px]">
@@ -38,7 +39,7 @@ export function NotFoundPage({ locale }: { locale: SiteLocale }) {
             {notFound.home.label}
           </Button>
         </div>
-      </main>
+      </PageMain>
     </>
   );
 }

@@ -5,7 +5,7 @@ import { useEffect } from 'react';
 import { reportClientError } from '@/components/ErrorBoundary/ErrorBoundary.client';
 import { errorsClientContent as errorsContent } from '@/content/errors-client';
 import { localeOfPath, SITE_HTML_LANG } from '@/content/site-locale';
-import { ErrorHeading, type RouteErrorProps } from './ErrorPages.client';
+import { type RouteErrorProps, ServerErrorMain } from './ErrorPages.client';
 
 const FALLBACK_MONO_FONT = 'ui-monospace, SFMono-Regular, Menlo, Consolas, monospace';
 
@@ -19,18 +19,7 @@ export function GlobalErrorPage({ error, reset }: RouteErrorProps) {
   return (
     <html lang={SITE_HTML_LANG[locale]}>
       <body style={{ fontFamily: FALLBACK_MONO_FONT }}>
-        <main className="err-main" id="main-content" tabIndex={-1}>
-          <ErrorHeading>{content.code}</ErrorHeading>
-          <p className="err-text">{content.message}</p>
-          <div className="err-actions">
-            <button type="button" className="err-action" onClick={reset}>
-              {content.retryLabel}
-            </button>
-            <a className="err-action" href={content.home.href}>
-              {content.home.label}
-            </a>
-          </div>
-        </main>
+        <ServerErrorMain reset={reset} content={content} />
       </body>
     </html>
   );

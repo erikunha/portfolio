@@ -3,10 +3,13 @@
 import { usePathname } from 'next/navigation';
 import { type ReactNode, useEffect, useRef, useState } from 'react';
 import { reportClientError } from '@/components/ErrorBoundary/ErrorBoundary.client';
+import { MAIN_CONTENT_ID, PageMain } from '@/components/PageMain';
 import { brandByLocale } from '@/content/brand';
 import { errorsClientContent as errorsContent } from '@/content/errors-client';
 import type { ErrorsContent } from '@/content/schemas';
 import { localeOfPath, type SiteLocale } from '@/content/site-locale';
+
+export const ERROR_MAIN_CLASS = 'err-main';
 
 const COPIED_RESET_MS = 2000;
 
@@ -32,7 +35,7 @@ export function ErrorChrome({
 }) {
   return (
     <>
-      <a href="#main-content" className="skip-to-content">
+      <a href={`#${MAIN_CONTENT_ID}`} className="skip-to-content">
         {chrome.skipLabel}
       </a>
       <header className="err-bar">
@@ -108,13 +111,16 @@ export interface RouteErrorProps {
   reset: () => void;
 }
 
-function ServerErrorMain({
-  error,
+export function ServerErrorMain({
   reset,
   content,
-}: RouteErrorProps & { content: ErrorsContent['serverError'] }) {
+  children,
+}: Pick<RouteErrorProps, 'reset'> & {
+  content: ErrorsContent['serverError'];
+  children?: ReactNode;
+}) {
   return (
-    <main className="err-main" id="main-content" tabIndex={-1}>
+    <PageMain className={ERROR_MAIN_CLASS}>
       <ErrorHeading>{content.code}</ErrorHeading>
       <p className="err-text">{content.message}</p>
       <div className="err-actions">
@@ -125,8 +131,8 @@ function ServerErrorMain({
           {content.home.label}
         </a>
       </div>
-      {error.digest ? <ErrorReference digest={error.digest} content={content} /> : null}
-    </main>
+      {children}
+    </PageMain>
   );
 }
 
@@ -140,7 +146,11 @@ export function RouteErrorPage({ error, reset }: RouteErrorProps) {
   return (
     <>
       <ErrorChrome chrome={content.chrome} brand={<ClientBrandLink locale={locale} />} />
-      <ServerErrorMain error={error} reset={reset} content={content.serverError} />
+      <ServerErrorMain reset={reset} content={content.serverError}>
+        {error.digest ? (
+          <ErrorReference digest={error.digest} content={content.serverError} />
+        ) : null}
+      </ServerErrorMain>
     </>
   );
 }
