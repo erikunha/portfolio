@@ -95,3 +95,29 @@ describe('hasRedisCredentials', () => {
     expect(hasRedisCredentials()).toBe(expected);
   });
 });
+
+describe('the unconfigured client under @upstash/ratelimit', () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  it('builds a limiter without an unhandled rejection and rejects the limit call', async () => {
+    vi.resetModules();
+    vi.stubEnv('UPSTASH_REDIS_REST_URL', '');
+    vi.stubEnv('UPSTASH_REDIS_REST_TOKEN', '');
+    vi.stubEnv('KV_REST_API_URL', '');
+    vi.stubEnv('KV_REST_API_TOKEN', '');
+    const unhandled: unknown[] = [];
+    const onUnhandled = (reason: unknown) => unhandled.push(reason);
+    process.on('unhandledRejection', onUnhandled);
+    try {
+      const { getAskLimit } = await import('@/lib/rate-limit');
+      const limit = getAskLimit();
+      await expect(limit.limit('127.0.0.1')).rejects.toThrow(/not configured/);
+      await new Promise((resolve) => setTimeout(resolve, 20));
+      expect(unhandled).toEqual([]);
+    } finally {
+      process.off('unhandledRejection', onUnhandled);
+    }
+  });
+});

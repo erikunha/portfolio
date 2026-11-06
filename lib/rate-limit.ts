@@ -1,5 +1,5 @@
 import { Ratelimit } from '@upstash/ratelimit';
-import { Redis } from '@upstash/redis';
+import { Redis, type Requester } from '@upstash/redis';
 import { ASK_MAX_OUTPUT_TOKENS } from '@/lib/ask/limits';
 import { log } from '@/lib/log';
 
@@ -15,8 +15,6 @@ const REDIS_ENV_PAIRS = [
   { url: 'KV_REST_API_URL', token: 'KV_REST_API_TOKEN' },
 ] as const;
 const REDIS_ENV_NAMES = REDIS_ENV_PAIRS.map(({ url, token }) => `${url} and ${token}`).join(' or ');
-const PIPELINE_METHOD = 'pipeline';
-const PIPELINE_EXEC_METHOD = 'exec';
 
 export class RedisNotConfiguredError extends Error {
   constructor() {
@@ -25,25 +23,12 @@ export class RedisNotConfiguredError extends Error {
   }
 }
 
+const notConfiguredRequester: Requester = {
+  request: () => Promise.reject(new RedisNotConfiguredError()),
+};
+
 function rejectedClient(): Redis {
-  const failingPipeline: object = new Proxy(
-    {},
-    {
-      get: (_target, method) =>
-        method === PIPELINE_EXEC_METHOD
-          ? () => Promise.reject(new RedisNotConfiguredError())
-          : () => failingPipeline,
-    },
-  );
-  return new Proxy(
-    {},
-    {
-      get: (_target, method) =>
-        method === PIPELINE_METHOD
-          ? () => failingPipeline
-          : () => Promise.reject(new RedisNotConfiguredError()),
-    },
-  ) as Redis;
+  return new Redis(notConfiguredRequester);
 }
 
 export function hasRedisCredentials(): boolean {
