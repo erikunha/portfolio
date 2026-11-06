@@ -1,6 +1,7 @@
 import { type ReactNode, Suspense } from 'react';
 import { ExternalLink } from '@/components/ExternalLink';
 import { measured as measuredContent, measuredStates, metricTimestamp } from '@/content/measured';
+import { STALE_AGE_TOKEN, STALE_TIME_TOKEN } from '@/content/measured-states.schema';
 import type { SiteLocale } from '@/content/site-locale';
 import { asciiBar } from '@/lib/ascii-bar';
 import {
@@ -10,6 +11,7 @@ import {
   type LighthouseScores,
   type Strategy,
 } from '@/lib/lighthouse-scores';
+import vercelConfig from '@/vercel.json';
 import { MeasuredStatus } from '../MeasuredStatus';
 
 type ScoresByStrategy = Record<Strategy, LighthouseScores | null>;
@@ -57,6 +59,40 @@ export function MeasuredTile({
   );
 }
 
+const PSI_REFRESH_PATH = '/api/psi-refresh';
+const MS_PER_HOUR = 3_600_000;
+const HOURS_PER_DAY = 24;
+const DAYS_SHOWN_FROM_HOURS = 48;
+const CLOCK_DIGITS = 2;
+const CLOCK_SEPARATOR = ':';
+
+function refreshTimeUtc(): string {
+  const cron = vercelConfig.crons.find((entry) => entry.path === PSI_REFRESH_PATH);
+  if (!cron) throw new Error(`vercel.json has no cron for ${PSI_REFRESH_PATH}`);
+  const [minute = '', hour = ''] = cron.schedule.split(' ');
+  return [hour, minute].map((part) => part.padStart(CLOCK_DIGITS, '0')).join(CLOCK_SEPARATOR);
+}
+
+const STALE_RESERVE_DAYS = 99;
+const STALE_RESERVE_TIME = '00:00';
+
+function staleNote(locale: SiteLocale, fetchedAt: string): string {
+  const { perfStale } = measuredStates[locale];
+  const hours = Math.max(0, Math.floor((Date.now() - Date.parse(fetchedAt)) / MS_PER_HOUR));
+  const age =
+    hours >= DAYS_SHOWN_FROM_HOURS
+      ? `${Math.floor(hours / HOURS_PER_DAY)}${perfStale.dayUnit}`
+      : `${hours}${perfStale.hourUnit}`;
+  return perfStale.note.replace(STALE_AGE_TOKEN, age).replace(STALE_TIME_TOKEN, refreshTimeUtc());
+}
+
+const staleReserve = (locale: SiteLocale) => {
+  const { perfStale } = measuredStates[locale];
+  return perfStale.note
+    .replace(STALE_AGE_TOKEN, `${STALE_RESERVE_DAYS}${perfStale.dayUnit}`)
+    .replace(STALE_TIME_TOKEN, STALE_RESERVE_TIME);
+};
+
 const isAvailable = (scores: LighthouseScores | null | undefined): scores is LighthouseScores =>
   Boolean(scores) && scores?.fetchedAt !== LIGHTHOUSE_FALLBACK.fetchedAt;
 
@@ -82,11 +118,14 @@ function perfStatusMessage(
   measured: Measured,
   state: {
     unavailable: boolean;
+    staleSince: string | null;
+    locale: SiteLocale;
     showTimestamp: boolean;
     timestamp: ReturnType<typeof metricTimestamp>;
   },
 ) {
   if (state.unavailable) return measured.unavailable;
+  if (state.staleSince) return staleNote(state.locale, state.staleSince);
   return state.showTimestamp && !state.timestamp.valid ? measured.unknownTimestamp : null;
 }
 
@@ -156,6 +195,8 @@ function PerfBody({ locale, scores }: { locale: SiteLocale; scores: ScoresByStra
     locale,
   );
   const showTimestamp = available.length > 0;
+  const lastGood = available.filter((entry) => entry.stale);
+  const staleSince = lastGood.length > 0 ? oldestFetchedAt(lastGood) : null;
   return (
     <div className="measured-perf">
       <h3 className="measured-heading">
@@ -171,7 +212,7 @@ function PerfBody({ locale, scores }: { locale: SiteLocale; scores: ScoresByStra
             <time dateTime={oldestFetchedAt(datedSource)}>{timestamp.label}</time>
           </>
         ) : null}
-        {showTimestamp && timestamp.stale ? (
+        {showTimestamp && timestamp.stale && !staleSince ? (
           <span className="measured-status">
             {MEASURED_FIELD_SEPARATOR}
             {measured.stale}
@@ -194,9 +235,20 @@ function PerfBody({ locale, scores }: { locale: SiteLocale; scores: ScoresByStra
         ))}
       </div>
       <MeasuredStatus
-        message={perfStatusMessage(measured, { unavailable, showTimestamp, timestamp })}
+        message={perfStatusMessage(measured, {
+          unavailable,
+          staleSince,
+          locale,
+          showTimestamp,
+          timestamp,
+        })}
         live
-        reserve={[loadingLine(locale), measured.unavailable, measured.unknownTimestamp]}
+        reserve={[
+          loadingLine(locale),
+          measured.unavailable,
+          measured.unknownTimestamp,
+          staleReserve(locale),
+        ]}
       />
     </div>
   );

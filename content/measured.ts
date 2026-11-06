@@ -106,6 +106,13 @@ const measuredStatesFor = (locale: SiteLocale): MeasuredStates => {
       retry: pt ? '[ TENTAR ]' : '[ RETRY ]',
       refLabel: 'ref',
     },
+    perfStale: {
+      note: pt
+        ? '~ desatualizado · última medição boa há {age} · a de hoje falhou, nova tentativa às {time} UTC'
+        : "~ stale · last good run {age} ago · today's run failed, retrying at {time} UTC",
+      hourUnit: 'h',
+      dayUnit: 'd',
+    },
     perfLoading: {
       label: pt ? 'MEDIDO · LIGHTHOUSE' : 'MEASURED · LIGHTHOUSE',
       fetching: pt

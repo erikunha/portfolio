@@ -4,6 +4,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { readComponentsCss } from '@/__tests__/helpers/components-css';
 import { declValue, rulesWithSelector } from '@/__tests__/helpers/css-rules';
 import { SITE_LOCALE } from '@/content/site-locale';
+import vercelConfig from '@/vercel.json';
 
 const getScoresMock = vi.fn();
 vi.mock('@/lib/lighthouse-scores', () => ({
@@ -26,7 +27,7 @@ const REAL_SCORES = {
   fetchedAt: '2026-05-29T03:00:00.000Z',
 };
 
-const strategyScores = (overrides: Partial<typeof REAL_SCORES>) => ({
+const strategyScores = (overrides: Partial<typeof REAL_SCORES> & { stale?: boolean }) => ({
   ...REAL_SCORES,
   ...overrides,
 });
@@ -304,5 +305,70 @@ describe('LivePerfSection: tile grid layout', () => {
     expect(grid.map((rule) => declValue(rule, 'grid-template-columns'))).toEqual([
       'minmax(0, 1fr)',
     ]);
+  });
+});
+
+describe('LivePerfSection: last good scores', () => {
+  const NOW = '2026-05-29T09:00:00.000Z';
+  const refreshTime = () => {
+    const cron = vercelConfig.crons.find((entry) => entry.path === '/api/psi-refresh');
+    const [minute = '', hour = ''] = cron?.schedule.split(' ') ?? [];
+    return `${hour.padStart(2, '0')}:${minute.padStart(2, '0')}`;
+  };
+  const renderStale = async (
+    fetchedAt: string,
+    locale: typeof SITE_LOCALE.en | typeof SITE_LOCALE.pt = SITE_LOCALE.en,
+  ) => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(new Date(NOW));
+    getScoresMock.mockResolvedValue(strategyScores({ fetchedAt, stale: true }));
+    const { PerfData } = await import('./LivePerfSection');
+    const html = renderToStaticMarkup(await PerfData({ locale }));
+    return new DOMParser().parseFromString(html, 'text/html');
+  };
+
+  it('has a psi-refresh cron whose time the footnote can read', () => {
+    expect(refreshTime()).toMatch(/^\d{2}:\d{2}$/);
+  });
+
+  it('explains the stale scores in a status footnote with the age and the next retry', async () => {
+    const doc = await renderStale('2026-05-28T03:00:00.000Z');
+    const notes = Array.from(doc.querySelectorAll('p.measured-status'), (p) => p.textContent);
+    expect(notes).toEqual([
+      `~ stale · last good run 30h ago · today's run failed, retrying at ${refreshTime()} UTC`,
+    ]);
+    expect(doc.querySelector('p.measured-status')?.getAttribute('role')).toBe('status');
+  });
+
+  it('still shows the last good scores and leaves the heading free of a second stale marker', async () => {
+    const doc = await renderStale('2026-05-28T03:00:00.000Z');
+    expect(Array.from(doc.querySelectorAll('.measured-value'), (tile) => tile.textContent)).toEqual(
+      ['99 / 99', '100 / 100', '95 / 95', '100 / 100'],
+    );
+    expect(doc.querySelector('.measured-heading .measured-status')).toBeNull();
+  });
+
+  it('counts the age in days once it passes two days', async () => {
+    const doc = await renderStale('2026-05-26T09:00:00.000Z');
+    expect(doc.querySelector('p.measured-status')?.textContent).toContain('last good run 3d ago');
+  });
+
+  it('speaks Portuguese on the pt site', async () => {
+    const doc = await renderStale('2026-05-28T03:00:00.000Z', SITE_LOCALE.pt);
+    expect(doc.querySelector('p.measured-status')?.textContent).toBe(
+      `~ desatualizado · última medição boa há 30h · a de hoje falhou, nova tentativa às ${refreshTime()} UTC`,
+    );
+  });
+
+  it('shows no footnote for fresh scores', async () => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(new Date(NOW));
+    getScoresMock.mockResolvedValue(strategyScores({ fetchedAt: '2026-05-29T03:00:00.000Z' }));
+    const { PerfData } = await import('./LivePerfSection');
+    const doc = new DOMParser().parseFromString(
+      renderToStaticMarkup(await PerfData({ locale: SITE_LOCALE.en })),
+      'text/html',
+    );
+    expect(doc.querySelector('p.measured-status')).toBeNull();
   });
 });

@@ -21,6 +21,7 @@ export type LighthouseScores = {
   bestPractices: number;
   seo: number;
   fetchedAt: string;
+  stale?: boolean;
 };
 
 const SCORES_UNAVAILABLE = '-';
@@ -34,6 +35,7 @@ export const LIGHTHOUSE_FALLBACK: LighthouseScores = {
 };
 
 const CACHE_KEY = (strategy: Strategy) => `lh:scores:${strategy}`;
+const LAST_GOOD_KEY = (strategy: Strategy) => `lh:scores:last-good:${strategy}`;
 export const LIGHTHOUSE_TTL_S = 90_000;
 
 export const PSI_REFRESH_TIMEOUT_MS = 45_000;
@@ -56,6 +58,14 @@ function isRetryablePsiError(err: unknown): err is PsiHttpError {
 }
 
 const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
+
+async function writeLastGood(strategy: Strategy, scores: LighthouseScores): Promise<void> {
+  try {
+    await getRedis().set(LAST_GOOD_KEY(strategy), scores);
+  } catch (err) {
+    log.error('Redis last-good set failed', { err, strategy });
+  }
+}
 
 async function fetchScoresOnce(
   strategy: Strategy,
@@ -119,10 +129,12 @@ async function fetchScoresOnce(
         log.error('Redis cache set failed during refresh', { err, strategy });
         throw err;
       });
+    await writeLastGood(strategy, scores);
   } else {
     getRedis()
       .set(CACHE_KEY(strategy), scores, { ex: LIGHTHOUSE_TTL_S })
       .catch((err) => log.error('Redis cache set failed', { err }));
+    void writeLastGood(strategy, scores);
   }
 
   return scores;
@@ -152,20 +164,33 @@ async function fetchAndCache(strategy: Strategy, forceRefresh = false): Promise<
   }
 }
 
-export async function getScores(strategy: Strategy = 'desktop'): Promise<LighthouseScores> {
-  const cached = await withTimeout(() =>
-    getRedis().get<LighthouseScores>(CACHE_KEY(strategy)),
+async function readLastGood(strategy: Strategy): Promise<LighthouseScores | null> {
+  const stored = await withTimeout(() =>
+    getRedis().get<LighthouseScores>(LAST_GOOD_KEY(strategy)),
   ).catch((err) => {
-    log.error('Redis cache GET failed', { err, strategy });
-    return err instanceof ReadTimeoutError ? LIGHTHOUSE_FALLBACK : null;
+    log.error('Redis last-good GET failed', { err, strategy });
+    return null;
   });
+  return stored ? { ...stored, stale: true } : null;
+}
+
+export async function getScores(strategy: Strategy = 'desktop'): Promise<LighthouseScores> {
+  const cachedRead = withTimeout(() => getRedis().get<LighthouseScores>(CACHE_KEY(strategy))).catch(
+    (err) => {
+      log.error('Redis cache GET failed', { err, strategy });
+      return err instanceof ReadTimeoutError ? LIGHTHOUSE_FALLBACK : null;
+    },
+  );
+  const lastGood = readLastGood(strategy);
+  const cached = await cachedRead;
+  if (cached === LIGHTHOUSE_FALLBACK) return (await lastGood) ?? LIGHTHOUSE_FALLBACK;
   if (cached) return cached;
 
   try {
     return await fetchAndCache(strategy);
   } catch (err) {
     log.error('PSI fetch failed', { err, strategy });
-    return LIGHTHOUSE_FALLBACK;
+    return (await lastGood) ?? LIGHTHOUSE_FALLBACK;
   }
 }
 
