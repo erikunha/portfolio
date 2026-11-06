@@ -87,6 +87,9 @@ The prompt for a manual or agent review that applies these rules to a diff is `d
     1280px, with the stream held (scripts blocked, `$RC("B:` swaps removed from the document) so the
     fallback is laid out with scripting on. A reserve list shared by two states is one function, never
     two copies. Check: `tests/e2e/loading-states.spec.ts`.
+30. After `pnpm update` or `pnpm add`, run `pnpm install --frozen-lockfile`. A direct dependency
+    that also has a `pnpm.overrides` entry records the override as its lockfile specifier; an
+    update rewrites it to the manifest range and CI's frozen install then refuses the lockfile.
 
 ## Pre-push judgement list
 
