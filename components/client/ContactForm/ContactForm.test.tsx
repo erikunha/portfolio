@@ -220,20 +220,23 @@ describe('contact form delivery states', () => {
     const container = await submitResponse({ ok: true, requestId: 'request-id' }, 200);
     const success = container.querySelector('[data-testid="contact-success"]');
     expect(success?.getAttribute('role')).toBe('status');
-    expect(success?.textContent).toContain('EXECUTE_SEND :: SUCCESS');
-    expect(success?.textContent).toContain('handshake initiated · expect reply within 48h');
+    expect(success?.textContent).toContain('✓ message delivered');
+    expect(success?.textContent).toContain(
+      'Reply within 48h. Keep this receipt if you want your message deleted later.',
+    );
   });
 
-  it('shows a receipt with the request id, a copy control and a prefilled deletion email', async () => {
+  it('shows a receipt with the full ref, the time, a copy control and a forget button', async () => {
     const ref = '7f3a9c2e-41b0-4d8e-9a77-3c51d0b2e8aa';
     const container = await submitResponse({ ok: true, requestId: ref }, 200);
-    const receipt = container.querySelector('[data-testid="contact-receipt"]');
-    expect(receipt?.textContent).toContain('ref');
-    expect(receipt?.textContent).toContain(ref);
-    expect(within(receipt as HTMLElement).getByRole('button', { name: /copy ref/i })).toBeTruthy();
-    const forget = within(receipt as HTMLElement).getByRole('link', { name: /request deletion/i });
-    expect(decodeURIComponent(forget.getAttribute('href') ?? '')).toContain(ref);
-    expect(forget.getAttribute('href')).toMatch(/^mailto:/);
+    const receipt = container.querySelector('[data-testid="contact-receipt"]') as HTMLElement;
+    expect(receipt.textContent).toContain('ref');
+    expect(receipt.querySelector('dd')?.textContent).toBe(ref);
+    expect(receipt.querySelector('dd')?.getAttribute('title')).toBe(ref);
+    expect(receipt.querySelector('time')?.textContent).toMatch(/\d{4}.*\d{2}:\d{2}/);
+    expect(within(receipt).getByRole('button', { name: /copy ref/i })).toBeTruthy();
+    expect(within(receipt).getByRole('button', { name: '[FORGET MESSAGE]' })).toBeTruthy();
+    expect(receipt.querySelector('a[href^="mailto:"]')).toBeNull();
   });
 
   it('shows the receipt in Portuguese on pt', async () => {
@@ -243,8 +246,11 @@ describe('contact form delivery states', () => {
       within(receipt as HTMLElement).getByRole('button', { name: /copiar ref/i }),
     ).toBeTruthy();
     expect(
-      within(receipt as HTMLElement).getByRole('link', { name: /pedir exclusão/i }),
+      within(receipt as HTMLElement).getByRole('button', { name: '[EXCLUIR MENSAGEM]' }),
     ).toBeTruthy();
+    expect(container.querySelector('[data-testid="contact-success"]')?.textContent).toContain(
+      '✓ mensagem entregue',
+    );
   });
 
   it('omits the receipt when the response carries no request id', async () => {
@@ -273,23 +279,56 @@ describe('contact form delivery states', () => {
     },
   );
 
-  it('announces queued without success and offers the canonical LinkedIn link', async () => {
+  it.each([
+    [
+      SITE_LOCALE.en,
+      '~ saved, delivery pending',
+      'Your message is stored. Email delivery failed and is retried once a day, up to 3 times.',
+      'Faster: message on LinkedIn ↗',
+    ],
+    [
+      SITE_LOCALE.pt,
+      '~ salvo, entrega pendente',
+      'Sua mensagem foi salva. A entrega por email falhou e é tentada de novo uma vez por dia, até 3 vezes.',
+      'Mais rápido: mensagem no LinkedIn ↗',
+    ],
+  ])(
+    'announces queued without success, with the real retry schedule, LinkedIn and the ref (%s)',
+    async (locale, title, message, faster) => {
+      const ref = '7f3a9c2e-41b0-4d8e-9a77-3c51d0b2e8aa';
+      const container = await submitResponse(
+        { ok: false, requestId: ref, error: { code: 'queued', message: 'Saved for retry' } },
+        202,
+        locale,
+      );
+      expect(container.querySelector('[data-testid="contact-success"]')).toBeNull();
+      const queued = container.querySelector('[data-testid="contact-queued"]') as HTMLElement;
+      expect(queued.getAttribute('role')).toBe('status');
+      expect(queued.querySelector('[role="alert"]')).toBeNull();
+      expect(queued.textContent).toContain(title);
+      expect(queued.textContent).toContain(message);
+      expect(queued.textContent).toContain(faster);
+      expect(queued.textContent).not.toContain('✓');
+      const link = queued.querySelector('a') as HTMLAnchorElement;
+      expect(link.getAttribute('href')).toBe(
+        linksContent.pills.find((pill) => pill.id === 'linkedin')?.href,
+      );
+      expect(link.getAttribute('target')).toBe('_blank');
+      expect(link.getAttribute('rel')).toContain('noopener');
+      const refLine = queued.querySelector('[data-testid="contact-queued-ref"]');
+      expect(refLine?.textContent).toBe(`ref ${ref}`);
+      expect(refLine?.getAttribute('title')).toBe(ref);
+      expect(container.querySelector('form')).toBeNull();
+    },
+  );
+
+  it('omits the ref line when the queued response carries no request id', async () => {
     const container = await submitResponse(
-      { ok: false, requestId: 'request-id', error: { code: 'queued', message: 'Saved for retry' } },
+      { ok: false, error: { code: 'queued', message: 'Saved for retry' } },
       202,
     );
-    expect(container.querySelector('[data-testid="contact-success"]')).toBeNull();
-    const queued = container.querySelector('[data-testid="contact-queued"]');
-    expect(queued?.getAttribute('role')).toBe('status');
-    expect(queued?.textContent).toContain('saved, not delivered yet');
-    expect(queued?.textContent).toContain('delivery is retried automatically');
-    expect(queued?.textContent).toContain('for a faster reply use LinkedIn');
-    const link = queued?.querySelector('a');
-    expect(link?.textContent).toBe('LinkedIn');
-    expect(link?.getAttribute('href')).toBe(
-      linksContent.pills.find((pill) => pill.id === 'linkedin')?.href,
-    );
-    expect(container.querySelector('form')).toBeNull();
+    expect(container.querySelector('[data-testid="contact-queued"]')).not.toBeNull();
+    expect(container.querySelector('[data-testid="contact-queued-ref"]')).toBeNull();
   });
 
   it.each([
@@ -1397,6 +1436,127 @@ describe.each([
       locale === SITE_LOCALE.pt
         ? '> use no máximo 120 caracteres, você tem 121'
         : '> use at most 120 characters, you have 121',
+    );
+  });
+});
+
+describe.each(Object.values(SITE_LOCALE))('contact receipt forget (%s)', (locale) => {
+  const REF = '7f3a9c2e-41b0-4d8e-9a77-3c51d0b2e8aa';
+  const text = contactCopy[locale].success.receipt.forget;
+  let mounted: MountedClient;
+  let forgetResponses: Array<() => Promise<Response>>;
+  let forgetCalls: Array<{ url: string; body: unknown }>;
+
+  afterEach(() => {
+    mounted?.unmount();
+    vi.unstubAllGlobals();
+  });
+
+  async function deliver() {
+    forgetResponses = [];
+    forgetCalls = [];
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (url: string, init?: RequestInit) => {
+        if (url === '/api/contact') return Response.json({ ok: true, requestId: REF });
+        forgetCalls.push({ url, body: JSON.parse(String(init?.body)) });
+        const next = forgetResponses.shift();
+        return next ? next() : Response.json({ ok: true });
+      }),
+    );
+    mounted = await mountClient(
+      createElement(ContactForm, {
+        copy: contactCopy[locale],
+        chrome: contactChrome[locale],
+      }),
+    );
+    fillValidForm(mounted.container);
+    await act(async () => {
+      mounted.container
+        .querySelector('form')
+        ?.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    });
+    await flushMicrotasks();
+    return mounted.container;
+  }
+
+  const forgetButton = (container: HTMLElement) =>
+    within(container).queryByRole('button', { name: text.label });
+
+  it('posts the ref to the forget endpoint and confirms the deletion', async () => {
+    const container = await deliver();
+    await act(async () => {
+      fireEvent.click(forgetButton(container) as HTMLElement);
+    });
+    await flushMicrotasks();
+
+    expect(forgetCalls).toEqual([{ url: '/api/log/forget', body: { requestId: REF } }]);
+    expect(forgetButton(container)).toBeNull();
+    expect(container.querySelector('[data-testid="contact-forget-status"]')?.textContent).toBe(
+      text.done,
+    );
+  });
+
+  it('shows the busy label once and sends a single request on repeated clicks', async () => {
+    const container = await deliver();
+    let release: (response: Response) => void = () => undefined;
+    forgetResponses.push(() => new Promise<Response>((resolve) => (release = resolve)));
+    const button = forgetButton(container) as HTMLElement;
+    await act(async () => {
+      fireEvent.click(button);
+      fireEvent.click(button);
+    });
+
+    expect(button.textContent).toBe(text.pending);
+    expect(button.getAttribute('aria-disabled')).toBe('true');
+    expect(forgetCalls).toHaveLength(1);
+    await act(async () => {
+      release(Response.json({ ok: true }));
+    });
+    await flushMicrotasks();
+  });
+
+  it('reports a failed deletion with the email fallback and lets the visitor retry', async () => {
+    const container = await deliver();
+    forgetResponses.push(async () =>
+      Response.json({ ok: false, error: { code: 'storage_unavailable' } }, { status: 503 }),
+    );
+    await act(async () => {
+      fireEvent.click(forgetButton(container) as HTMLElement);
+    });
+    await flushMicrotasks();
+
+    const status = container.querySelector('[data-testid="contact-forget-status"]') as HTMLElement;
+    expect(status.textContent).toContain(text.failed);
+    expect(status.querySelector('a')?.getAttribute('href')).toMatch(/^mailto:/);
+    expect(decodeURIComponent(status.querySelector('a')?.getAttribute('href') ?? '')).toContain(
+      REF,
+    );
+    const retry = forgetButton(container) as HTMLElement;
+    expect(retry.getAttribute('aria-disabled')).not.toBe('true');
+
+    await act(async () => {
+      fireEvent.click(retry);
+    });
+    await flushMicrotasks();
+    expect(forgetCalls).toHaveLength(2);
+    expect(container.querySelector('[data-testid="contact-forget-status"]')?.textContent).toBe(
+      text.done,
+    );
+  });
+
+  it('treats a network error like a failed deletion', async () => {
+    const container = await deliver();
+    forgetResponses.push(async () => {
+      throw new Error('offline');
+    });
+    await act(async () => {
+      fireEvent.click(forgetButton(container) as HTMLElement);
+    });
+    await flushMicrotasks();
+
+    expect(container.querySelector('[data-testid="contact-forget-status"]')?.textContent).toContain(
+      text.failed,
     );
   });
 });

@@ -27,19 +27,20 @@ for (const state of ['queued', 'happy'] as const) {
       const queued = page.getByTestId('contact-queued');
       await expect(queued).toBeVisible();
       await expect(queued).toHaveAttribute('role', 'status');
-      await expect(queued).toContainText('saved, not delivered yet');
-      await expect(queued).toContainText('delivery is retried automatically');
-      const linkedIn = queued.getByRole('link', { name: 'LinkedIn' });
+      await expect(queued).toContainText('~ saved, delivery pending');
+      await expect(queued).toContainText('retried once a day, up to 3 times');
+      await expect(queued.getByTestId('contact-queued-ref')).toHaveText(
+        'ref contact-test-request-id',
+      );
+      const linkedIn = queued.getByRole('link', { name: /message on LinkedIn/ });
       await expect(linkedIn).toHaveAttribute(
         'href',
         linksContent.pills.find((pill) => pill.id === 'linkedin')?.href ?? '',
       );
       await expect(page.getByTestId('contact-success')).toHaveCount(0);
     } else {
-      await expect(page.getByTestId('contact-success')).toContainText('EXECUTE_SEND :: SUCCESS');
-      await expect(page.getByTestId('contact-success')).toContainText(
-        'handshake initiated · expect reply within 48h',
-      );
+      await expect(page.getByTestId('contact-success')).toContainText('✓ message delivered');
+      await expect(page.getByTestId('contact-success')).toContainText('Reply within 48h');
       await expect(page.getByTestId('contact-queued')).toHaveCount(0);
     }
     await expect(form).toHaveCount(0);

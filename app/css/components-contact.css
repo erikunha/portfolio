@@ -2,9 +2,38 @@
   .contact-success {
     border: var(--border-width) solid var(--color-primary-500);
     padding: var(--spacing-6);
-    color: var(--color-primary-500);
-    text-align: center;
+    color: var(--color-text);
     background: linear-gradient(180deg, var(--color-glow-04), transparent);
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-2);
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .contact-success p {
+    margin: 0;
+    line-height: 1.6;
+  }
+
+  .contact-queued {
+    border-color: var(--color-primary-subtle);
+    background: none;
+  }
+
+  .contact-state-title {
+    color: var(--color-primary-500);
+    font-weight: bold;
+  }
+
+  .contact-state-ref {
+    color: var(--color-text-secondary);
+    font-size: var(--text-xs);
+  }
+
+  .contact-forget-status {
+    min-height: 1lh;
+    color: var(--color-text-secondary);
   }
 
   .contact-layout {

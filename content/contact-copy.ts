@@ -35,34 +35,45 @@ const REPLY_WINDOW: Record<SiteLocale, string> = {
   [SITE_LOCALE.en]: 'within 48h',
   [SITE_LOCALE.pt]: 'em até 48h',
 };
+const RETRY_ATTEMPTS = 3;
 const ERIK_PLACE = 'São Paulo';
 
 const contactCopyFor = (locale: SiteLocale): ContactContent => {
   const pt = locale === SITE_LOCALE.pt;
   return {
     success: {
-      title: pt ? 'EXECUTAR_ENVIO :: SUCESSO' : 'EXECUTE_SEND :: SUCCESS',
+      title: pt ? '✓ mensagem entregue' : '✓ message delivered',
       message: pt
-        ? 'handshake iniciado · espere resposta em até 48h'
-        : 'handshake initiated · expect reply within 48h',
+        ? `Resposta ${REPLY_WINDOW[locale]}. Guarde este recibo se quiser que sua mensagem seja excluída depois.`
+        : `Reply ${REPLY_WINDOW[locale]}. Keep this receipt if you want your message deleted later.`,
       receipt: {
         refLabel: 'ref',
-        atLabel: pt ? 'enviado' : 'sent',
-        dateLocale: pt ? 'pt-BR' : 'en-US',
+        atLabel: pt ? 'em' : 'at',
+        dateLocale: pt ? 'pt-BR' : 'en-CA',
         copy: pt ? '[COPIAR REF]' : '[COPY REF]',
         copied: pt ? '[REF COPIADA]' : '[REF COPIED]',
-        forgetLabel: pt ? 'pedir exclusão da mensagem' : 'request deletion of this message',
+        forget: {
+          label: pt ? '[EXCLUIR MENSAGEM]' : '[FORGET MESSAGE]',
+          pending: pt ? '[EXCLUINDO...]' : '[DELETING...]',
+          done: pt ? 'Mensagem excluída.' : 'Message deleted.',
+          failed: pt
+            ? 'Não foi possível excluir agora. Tente de novo, ou envie email para'
+            : 'Could not delete right now. Try again, or email',
+        },
         forgetSubject: pt ? 'Excluir minha mensagem, ref' : 'Delete my message, ref',
         feedback: copyFeedback[locale],
       },
     },
     queued: {
-      title: pt ? 'EXECUTAR_ENVIO :: NA FILA' : 'EXECUTE_SEND :: QUEUED',
+      title: pt ? '~ salvo, entrega pendente' : '~ saved, delivery pending',
       message: pt
-        ? 'salvo, ainda não entregue; a entrega é tentada de novo automaticamente; para resposta mais rápida use'
-        : 'saved, not delivered yet; delivery is retried automatically; for a faster reply use',
-      linkLabel: 'LinkedIn',
+        ? `Sua mensagem foi salva. A entrega por email falhou e é tentada de novo uma vez por dia, até ${RETRY_ATTEMPTS} vezes.`
+        : `Your message is stored. Email delivery failed and is retried once a day, up to ${RETRY_ATTEMPTS} times.`,
+      fasterLabel: pt ? 'Mais rápido:' : 'Faster:',
+      linkLabel: pt ? 'mensagem no LinkedIn' : 'message on LinkedIn',
+      linkGlyph: '↗',
       linkHref: LINKEDIN_URL,
+      refLabel: 'ref',
     },
     section: {
       command: 'SUDO CONTACT --INIT',
