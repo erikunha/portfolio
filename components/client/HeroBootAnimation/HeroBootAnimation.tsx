@@ -18,6 +18,7 @@ import {
 import { MOBILE_QUERY } from '@/lib/media-queries';
 import { readMotion } from '@/lib/motion';
 import { subscribeMotion } from '@/lib/motion-change';
+import { pauseWhileHidden } from '@/lib/pause-when-hidden';
 import { runMobileBoot } from './mobile-boot';
 
 type Props = {
@@ -59,29 +60,6 @@ const timingMobile = {
   interMs: 300,
 };
 
-const PAUSE_REASON = { Tab: 'tab', Viewport: 'viewport' } as const;
-
-function pauseWhileHidden(host: Element, getCtrl: () => BootCtrl | null): () => void {
-  const apply = (reason: string, hidden: boolean) => {
-    const ctrl = getCtrl();
-    if (hidden) ctrl?.pauseDialog(reason);
-    else ctrl?.resumeDialog(reason);
-  };
-  const onVisibility = () => apply(PAUSE_REASON.Tab, document.hidden);
-  document.addEventListener('visibilitychange', onVisibility);
-  const observer =
-    typeof IntersectionObserver === 'undefined'
-      ? null
-      : new IntersectionObserver((entries) => {
-          for (const entry of entries) apply(PAUSE_REASON.Viewport, !entry.isIntersecting);
-        });
-  observer?.observe(host);
-  return () => {
-    document.removeEventListener('visibilitychange', onVisibility);
-    observer?.disconnect();
-  };
-}
-
 function DesktopBoot() {
   const bootRef = useRef<HTMLDivElement>(null);
 
@@ -109,7 +87,10 @@ function DesktopBoot() {
         ...timingDesktop,
         onFirstLoop: beat,
       });
-      unwatch = pauseWhileHidden(host, () => ctrlRef.current);
+      unwatch = pauseWhileHidden(host, {
+        pause: (reason) => ctrlRef.current?.pauseDialog(reason),
+        resume: (reason) => ctrlRef.current?.resumeDialog(reason),
+      });
     }
 
     function clear() {
@@ -179,7 +160,10 @@ function MobileBoot() {
         MOBILE_DIALOG,
         timingMobile,
       );
-      unwatch = pauseWhileHidden(host as HTMLDivElement, () => ctrl);
+      unwatch = pauseWhileHidden(host as HTMLDivElement, {
+        pause: (reason) => ctrl?.pauseDialog(reason),
+        resume: (reason) => ctrl?.resumeDialog(reason),
+      });
     }
 
     function stop() {

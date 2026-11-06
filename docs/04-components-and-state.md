@@ -116,7 +116,7 @@ flowchart TD
         motion["lib/motion.ts: body[data-motion] + localStorage('erik.motion')<br/>broadcast via 'motionchange' CustomEvent"]
         w1["writers: DesktopTopbar (MOTION toggle, xl tier)<br/>SectionNavigation drawer (MOTION: ON / OFF / REDUCED row, every width)"] --> motion
         w2["writer: CRTOverlay (OS reduced-motion sync)"] --> motion
-        motion --> r1["readers: MatrixRain · RoleTyper · HeroBootAnimation · InteractiveShell"]
+        motion --> r1["subscribers via lib/motion-change.ts: MatrixRain · RoleTyper · TypeReveal · HeroBootAnimation<br/>readers on mount: InteractiveShell placeholder"]
     end
     subgraph bus["3. Window CustomEvent bus (lib/events.ts)"]
         ev["motionchange · shell-cmd-run · hero:sysfail:show|hide · sysfail:start|end"]
