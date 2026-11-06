@@ -1,8 +1,8 @@
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
-import { dawMixer } from '@/content/daw-mixer';
-import { SITE_LOCALE } from '@/content/site-locale';
+import { dawMixer, dawMixerCopy } from '@/content/daw-mixer';
+import { SITE_LOCALE, type SiteLocale } from '@/content/site-locale';
 
 vi.mock('@/components/client/DawMixer/VuMeter/VuMeter.client', () => ({
   VuMeter: ({ channelName, initialLevel }: { channelName: string; initialLevel: number }) =>
@@ -34,18 +34,18 @@ vi.mock('@/components/client/DawMixer/RmsButtons/RmsButtons.client', () => ({
     createElement('div', { 'data-testid': `rms-${buttons.join('-')}` }),
 }));
 
-async function renderDesktop(): Promise<Document> {
+async function renderDesktop(locale: SiteLocale = SITE_LOCALE.en): Promise<Document> {
   const { DawMixerDesktop } = await import('./DawMixerDesktop');
   const html = renderToStaticMarkup(
-    createElement(DawMixerDesktop, { mixer: dawMixer[SITE_LOCALE.en] }),
+    createElement(DawMixerDesktop, { mixer: dawMixer[locale], copy: dawMixerCopy[locale] }),
   );
   return new DOMParser().parseFromString(html, 'text/html');
 }
 
-async function renderMobile(): Promise<Document> {
+async function renderMobile(locale: SiteLocale = SITE_LOCALE.en): Promise<Document> {
   const { DawMixerMobile } = await import('./DawMixerContent');
   const html = renderToStaticMarkup(
-    createElement(DawMixerMobile, { mixer: dawMixer[SITE_LOCALE.en] }),
+    createElement(DawMixerMobile, { mixer: dawMixer[locale], copy: dawMixerCopy[locale] }),
   );
   return new DOMParser().parseFromString(html, 'text/html');
 }
@@ -110,14 +110,13 @@ describe('DawMixerContent: mobile', () => {
     expect(doc.querySelectorAll('[data-testid^="channel-mobile-"]').length).toBe(3);
   });
 
-  it('counts the guitar tracks in the session header and the legend', async () => {
+  it('counts the guitar tracks once, in the session header', async () => {
     const doc = await renderMobile();
     expect(doc.querySelector('[data-testid="session-header-mobile"]')?.textContent).toContain(
-      '2 GTR + MASTER',
+      '2 GTR TRACKS + MASTER',
     );
-    expect(doc.querySelector('[data-testid="daw-mixer-mobile"]')?.textContent).toContain(
-      '2 GTR + MASTER',
-    );
+    const whole = doc.querySelector('[data-testid="daw-mixer-mobile"]')?.textContent ?? '';
+    expect(whole.match(/GTR[^·]*MASTER/g)).toHaveLength(1);
   });
 
   it('renders mobile session header', async () => {
@@ -140,6 +139,35 @@ describe('DawMixerContent: mobile', () => {
     const strong = ch02?.querySelector('[data-testid="mx-ref"] strong');
     expect(strong).not.toBeNull();
     expect(strong?.textContent).toContain('the voice');
+  });
+});
+
+describe('DawMixerContent: copy per locale', () => {
+  it('speaks Portuguese in the desktop session header and column labels', async () => {
+    const doc = await renderDesktop(SITE_LOCALE.pt);
+    const header = doc.querySelector('[data-testid="session-header"]')?.textContent ?? '';
+    expect(header).toContain('SESSÃO:');
+    expect(header).toContain('2 FAIXAS DE GTR + MASTER');
+    const labels = doc.querySelector('.daw-mixer-labels')?.textContent ?? '';
+    expect(labels).toContain('CADEIA DE PLUGINS');
+    expect(labels).not.toContain('PLUGIN CHAIN');
+  });
+
+  it('speaks Portuguese in the mobile header, signal flow title and lead legend', async () => {
+    const doc = await renderMobile(SITE_LOCALE.pt);
+    const header = doc.querySelector('[data-testid="session-header-mobile"]')?.textContent ?? '';
+    expect(header).toContain('SESSÃO:');
+    const whole = doc.querySelector('[data-testid="daw-mixer-mobile"]')?.textContent ?? '';
+    expect(whole).toContain('// fluxo do sinal');
+    expect(whole).toContain('CH 02 = principal');
+    expect(whole).not.toContain('signal flow');
+  });
+
+  it('keeps English labels on the English locale', async () => {
+    const doc = await renderMobile(SITE_LOCALE.en);
+    const whole = doc.querySelector('[data-testid="daw-mixer-mobile"]')?.textContent ?? '';
+    expect(whole).toContain('// signal flow');
+    expect(whole).toContain('CH 02 = lead');
   });
 });
 

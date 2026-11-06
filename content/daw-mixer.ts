@@ -1,6 +1,61 @@
 import { type DawMixer, DawMixerSchema } from './schemas';
 import { SITE_LOCALE, type SiteLocale } from './site-locale';
 
+export const MASTER_CHANNEL_ID = 'MASTER';
+export const METER_SEGMENTS = 12;
+export const METER_CLIP_THRESHOLD_PCT = 85;
+export const METER_CLIP_SEGMENTS = 2;
+export const PLUGIN_STRENGTH_STEPS = 5;
+
+export type DawMixerCopy = {
+  sessionLabel: string;
+  tracksLabel: string;
+  separator: string;
+  transportSeparator: string;
+  playGlyph: string;
+  bpmUnit: string;
+  signalFlow: string;
+  leadSuffix: string;
+  loudnessLabel: string;
+  peakLabel: string;
+  decibelUnit: string;
+  columns: {
+    id: string;
+    track: string;
+    io: string;
+    toggles: string;
+    pluginChain: string;
+    meter: string;
+    fader: string;
+  };
+};
+
+const dawMixerCopyFor = (locale: SiteLocale): DawMixerCopy => {
+  const pt = locale === SITE_LOCALE.pt;
+  return {
+    sessionLabel: pt ? 'SESSÃO:' : 'SESSION:',
+    tracksLabel: pt ? 'FAIXAS DE GTR + MASTER' : 'GTR TRACKS + MASTER',
+    separator: '·',
+    transportSeparator: '|',
+    playGlyph: '▶',
+    bpmUnit: 'BPM',
+    signalFlow: pt ? '// fluxo do sinal' : '// signal flow',
+    leadSuffix: pt ? '= principal' : '= lead',
+    loudnessLabel: 'LUFS',
+    peakLabel: 'PK',
+    decibelUnit: 'dB',
+    columns: {
+      id: 'ID',
+      track: pt ? 'FAIXA' : 'TRACK',
+      io: pt ? 'E/S' : 'I/O',
+      toggles: 'R/M/S',
+      pluginChain: pt ? 'CADEIA DE PLUGINS' : 'PLUGIN CHAIN',
+      meter: pt ? 'MEDIDOR' : 'METER',
+      fader: 'FADER',
+    },
+  };
+};
+
 const dawMixerFor = (locale: SiteLocale): DawMixer => {
   const pt = locale === SITE_LOCALE.pt;
   return DawMixerSchema.parse({
@@ -54,7 +109,7 @@ const dawMixerFor = (locale: SiteLocale): DawMixer => {
         activeButtons: ['R'],
       },
       {
-        id: 'MASTER',
+        id: MASTER_CHANNEL_ID,
         name: '2-BUSS',
         desktopName: '2-BUSS · STEREO OUT',
         desc: pt
@@ -88,4 +143,9 @@ const dawMixerFor = (locale: SiteLocale): DawMixer => {
 export const dawMixer: Record<SiteLocale, DawMixer> = {
   [SITE_LOCALE.en]: dawMixerFor(SITE_LOCALE.en),
   [SITE_LOCALE.pt]: dawMixerFor(SITE_LOCALE.pt),
+};
+
+export const dawMixerCopy: Record<SiteLocale, DawMixerCopy> = {
+  [SITE_LOCALE.en]: dawMixerCopyFor(SITE_LOCALE.en),
+  [SITE_LOCALE.pt]: dawMixerCopyFor(SITE_LOCALE.pt),
 };

@@ -1,27 +1,25 @@
-import dynamic from 'next/dynamic';
 import type { CSSProperties } from 'react';
 import { pctToDb } from '@/components/client/DawMixer/FaderIsland/pct-to-db';
-import { dawMixer } from '@/content/daw-mixer';
+import {
+  type DawMixerCopy,
+  dawMixer,
+  dawMixerCopy,
+  MASTER_CHANNEL_ID,
+  METER_CLIP_SEGMENTS,
+  METER_CLIP_THRESHOLD_PCT,
+  METER_SEGMENTS,
+} from '@/content/daw-mixer';
 import type { DawMixer, DawMixerChannel } from '@/content/schemas';
 import type { SiteLocale } from '@/content/site-locale';
 import { cn } from '@/lib/cn';
 import { getIsMobile } from '@/lib/ua';
-
-const DawMixerDesktopDynamic = dynamic(() =>
-  import('./DawMixerDesktop').then((m) => m.DawMixerDesktop),
-);
-
-function ParsedText({ text }: { text: string }) {
-  const parts = text.split(/\*\*(.+?)\*\*/g);
-  return (
-    <>
-      {parts.map((part, i) =>
-        // biome-ignore lint/suspicious/noArrayIndexKey: split parts have no stable id
-        i % 2 === 1 ? <strong key={i}>{part}</strong> : part,
-      )}
-    </>
-  );
-}
+import {
+  DawMixerDesktop,
+  FaderBar,
+  ParsedText,
+  SessionSummary,
+  StrengthDots,
+} from './DawMixerDesktop';
 
 function StaticMeter({
   pct,
@@ -39,7 +37,11 @@ function StaticMeter({
       aria-hidden="true"
     >
       {Array.from({ length: segments }, (_, i) => {
-        const isRed = clipping && pct > 85 && i >= segments - 2 && i < filledCount;
+        const isRed =
+          clipping &&
+          pct > METER_CLIP_THRESHOLD_PCT &&
+          i >= segments - METER_CLIP_SEGMENTS &&
+          i < filledCount;
         const cls = cn(
           'flex-1 h-full',
           isRed
@@ -94,14 +96,16 @@ function StaticKnob({ angleDeg, label }: { angleDeg: number; label: string }) {
 function PluginChainMobile({
   plugins,
   channelId,
+  copy,
 }: {
   plugins: DawMixerChannel['plugins'];
   channelId: string;
+  copy: DawMixerCopy;
 }) {
   return (
     <div className="mx-chain-wrap mb-[2px]" aria-hidden="true">
       <div className="text-xs tracking-[0.18em] text-primary-400 uppercase mb-[5px] flex items-center gap-[6px] mx-chain-title">
-        {'// signal flow'}
+        {copy.signalFlow}
       </div>
       <div className="mx-chain mx-chain-mobile">
         {plugins.map((p) => (
@@ -136,16 +140,7 @@ function PluginChainMobile({
               className={cn('flex gap-[2px] items-end h-[7px]', !p.active && 'opacity-40')}
               aria-hidden="true"
             >
-              {Array.from({ length: 5 }, (_, i) => {
-                const cls = cn(
-                  'block w-1 h-[6px] bg-primary-500',
-                  i >= p.strength && 'opacity-[0.22]',
-                );
-                return (
-                  // biome-ignore lint/suspicious/noArrayIndexKey: positional strength dots
-                  <span key={i} className={cls} />
-                );
-              })}
+              <StrengthDots strength={p.strength} dotClassName="w-1 h-[6px]" />
             </span>
           </div>
         ))}
@@ -154,38 +149,26 @@ function PluginChainMobile({
   );
 }
 
-function SessionHeaderMobile({ mixer }: { mixer: DawMixer }) {
+function SessionHeaderMobile({ mixer, copy }: { mixer: DawMixer; copy: DawMixerCopy }) {
   return (
     <div
-      className="text-[10px] text-primary-400 leading-[1.8] border-b border-[var(--color-primary-border)] px-[14px] py-[10px] tracking-[0.14em] bg-[color-mix(in_srgb,var(--color-primary-500)_5%,transparent)]"
+      className="text-xs text-primary-400 leading-[1.8] border-b border-[var(--color-primary-border)] px-[14px] py-[10px] tracking-[0.14em] bg-[color-mix(in_srgb,var(--color-primary-500)_5%,transparent)]"
       data-testid="session-header-mobile"
     >
       <div>
-        {'SESSION: '}
-        {mixer.sessionName}
-        {' · '}
-        {mixer.channels.length - 1}
-        {' GTR TRACKS + MASTER · '}
-        <span className="text-primary-500">{mixer.status}</span>
+        <SessionSummary mixer={mixer} copy={copy} />
       </div>
       <div>
-        {'▶ '}
-        {mixer.transportTime}
-        {' | '}
-        {mixer.bpm}
-        {' BPM | '}
-        {mixer.timeSignature}
-      </div>
-      <div>
-        <span className="text-primary-500">{mixer.channels.length - 1}</span>
-        {' GTR + MASTER'}
+        {copy.playGlyph} {mixer.transportTime} {copy.transportSeparator} {mixer.bpm} {copy.bpmUnit}{' '}
+        {copy.transportSeparator} {mixer.timeSignature}
       </div>
     </div>
   );
 }
 
-function MixLegendMobile({ mixer }: { mixer: DawMixer }) {
-  const lead = mixer.channels.find((ch) => ch.focused && ch.id !== 'MASTER');
+function MixLegendMobile({ mixer, copy }: { mixer: DawMixer; copy: DawMixerCopy }) {
+  const lead = mixer.channels.find((ch) => ch.focused && ch.id !== MASTER_CHANNEL_ID);
+  if (!lead) return null;
   return (
     <div
       className="flex flex-col gap-[3px] px-[14px] py-2 border-b border-[var(--color-primary-quiet)] bg-black/60 text-xs tracking-[0.16em] text-primary-400 uppercase"
@@ -193,21 +176,14 @@ function MixLegendMobile({ mixer }: { mixer: DawMixer }) {
     >
       <span>
         <span className="inline-block w-[5px] h-[5px] bg-primary-500 shadow-[0_0_5px_var(--color-primary-500)] mr-[6px] align-[1px]" />
-        {mixer.channels.length - 1}
-        {' GTR + MASTER'}
+        {lead.id} {copy.leadSuffix}
       </span>
-      {lead && (
-        <span>
-          {lead.id}
-          {' = lead'}
-        </span>
-      )}
     </div>
   );
 }
 
-function ChannelMobile({ ch }: { ch: DawMixerChannel }) {
-  const isMaster = ch.id === 'MASTER';
+function ChannelMobile({ ch, copy }: { ch: DawMixerChannel; copy: DawMixerCopy }) {
+  const isMaster = ch.id === MASTER_CHANNEL_ID;
   return (
     <div
       className={cn(
@@ -235,7 +211,7 @@ function ChannelMobile({ ch }: { ch: DawMixerChannel }) {
               ? 'text-primary-500 border-primary-500 bg-[color-mix(in_srgb,var(--color-primary-500)_10%,transparent)]'
               : 'text-primary-400 border-[var(--color-primary-quiet)] bg-black/55',
             isMaster &&
-              'border-primary-500 px-2 py-[2px] text-[12px] tracking-[0.12em] font-bold text-primary-500 bg-transparent',
+              'border-primary-500 px-2 py-[2px] text-xs tracking-[0.12em] font-bold text-primary-500 bg-transparent',
           )}
           data-channel={isMaster ? 'master' : undefined}
         >
@@ -243,7 +219,7 @@ function ChannelMobile({ ch }: { ch: DawMixerChannel }) {
         </span>
         <span
           className={cn(
-            'text-[14px] font-bold tracking-[0.04em] leading-[1.15] min-w-0 overflow-hidden text-ellipsis whitespace-nowrap',
+            'text-sm font-bold tracking-[0.04em] leading-[1.15] min-w-0 overflow-hidden text-ellipsis whitespace-nowrap',
             ch.focused || isMaster ? 'text-primary-500' : 'text-tertiary-50',
           )}
         >
@@ -253,7 +229,7 @@ function ChannelMobile({ ch }: { ch: DawMixerChannel }) {
           <span className="font-bold text-primary-500 text-xs max-md:text-sm">
             {pctToDb(ch.faderPct)}
           </span>
-          <span className="text-xs max-md:text-sm text-primary-400">dB</span>
+          <span className="text-xs max-md:text-sm text-primary-400">{copy.decibelUnit}</span>
         </div>
       </div>
       <div
@@ -263,10 +239,14 @@ function ChannelMobile({ ch }: { ch: DawMixerChannel }) {
         <ParsedText text={ch.desc} />
       </div>
       <div className="flex flex-col gap-2">
-        <StaticMeter pct={ch.meterPct} segments={12} clipping={ch.meterClipping ?? false} />
+        <StaticMeter
+          pct={ch.meterPct}
+          segments={METER_SEGMENTS}
+          clipping={ch.meterClipping ?? false}
+        />
         <StaticFader pct={ch.faderPct} />
       </div>
-      <PluginChainMobile plugins={ch.plugins} channelId={ch.id} />
+      <PluginChainMobile plugins={ch.plugins} channelId={ch.id} copy={copy} />
       <div className="flex flex-col gap-[14px] pt-[14px] border-t border-dashed border-[var(--color-primary-quiet)]">
         <div className="flex items-center justify-between gap-3">
           <div className="flex gap-[18px]">
@@ -297,18 +277,10 @@ function ChannelMobile({ ch }: { ch: DawMixerChannel }) {
           </div>
         </div>
         <div className="flex flex-col gap-1">
-          <div
-            className="h-[6px] bg-[var(--color-primary-quiet)] border border-[var(--color-primary-quiet)] relative overflow-hidden"
-            aria-hidden="true"
-          >
-            <div
-              className="absolute left-0 top-0 bottom-0 bg-primary-500 opacity-85"
-              style={{ width: `${ch.faderPct}%` }}
-            />
-          </div>
+          <FaderBar pct={ch.faderPct} />
           {ch.footer && (
             <span className="text-xs text-primary-400 block text-center tracking-[0.08em] opacity-80">
-              LUFS {ch.footer.lufs} · PK {ch.footer.pk}
+              {copy.loudnessLabel} {ch.footer.lufs} {copy.separator} {copy.peakLabel} {ch.footer.pk}
             </span>
           )}
         </div>
@@ -327,16 +299,16 @@ function ChannelMobile({ ch }: { ch: DawMixerChannel }) {
   );
 }
 
-export function DawMixerMobile({ mixer }: { mixer: DawMixer }) {
+export function DawMixerMobile({ mixer, copy }: { mixer: DawMixer; copy: DawMixerCopy }) {
   return (
     <div
       className="font-mono text-xs text-tertiary-50 flex flex-col"
       data-testid="daw-mixer-mobile"
     >
-      <SessionHeaderMobile mixer={mixer} />
-      <MixLegendMobile mixer={mixer} />
+      <SessionHeaderMobile mixer={mixer} copy={copy} />
+      <MixLegendMobile mixer={mixer} copy={copy} />
       {mixer.channels.map((ch) => (
-        <ChannelMobile key={ch.id} ch={ch} />
+        <ChannelMobile key={ch.id} ch={ch} copy={copy} />
       ))}
     </div>
   );
@@ -345,5 +317,10 @@ export function DawMixerMobile({ mixer }: { mixer: DawMixer }) {
 export async function DawMixerContent({ locale }: { locale: SiteLocale }) {
   const isMobile = await getIsMobile();
   const mixer = dawMixer[locale];
-  return isMobile ? <DawMixerMobile mixer={mixer} /> : <DawMixerDesktopDynamic mixer={mixer} />;
+  const copy = dawMixerCopy[locale];
+  return isMobile ? (
+    <DawMixerMobile mixer={mixer} copy={copy} />
+  ) : (
+    <DawMixerDesktop mixer={mixer} copy={copy} />
+  );
 }

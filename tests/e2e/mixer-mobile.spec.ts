@@ -9,6 +9,7 @@ const SUBPIXEL_TOLERANCE_PX = 1;
 const CROSSING_TOLERANCE_PX = 4;
 const LINE_LEADING_TOLERANCE_PX = 4;
 const MOBILE_PROJECTS = ['chromium-mobile', 'webkit-mobile'];
+const FONT_FLOOR_PX = 12;
 const CHANNEL_IDS = ['CH 01', 'CH 02', 'MASTER'];
 
 test('the DAW mixer shares the guitar module and has no section of its own', async ({ page }) => {
@@ -69,7 +70,7 @@ test('mobile UAs render the three-card mobile mixer with its own session header'
     'YELLOW_TAKE_03.ALS',
   );
   await expect(mixer.locator('[data-testid="session-header-mobile"]')).toContainText(
-    '2 GTR + MASTER',
+    '2 GTR TRACKS + MASTER',
   );
   const cards = mixer.locator('[data-testid^="channel-mobile-"]');
   await expect(cards).toHaveCount(CHANNEL_IDS.length);
@@ -267,4 +268,30 @@ test('narrow desktop windows stack the console instead of scrolling or shrinking
     metrics.scrollWidth,
     'below the md breakpoint each channel stacks into rows, so nothing scrolls sideways',
   ).toBeLessThanOrEqual(metrics.clientWidth);
+});
+
+test('the mobile mixer renders no text below the 12px floor', async ({ page }, testInfo) => {
+  test.skip(
+    !MOBILE_PROJECTS.includes(testInfo.project.name),
+    'the mobile variant only ships to mobile user agents',
+  );
+  await installMockBackend(page, { log: 'accept', forget: 'happy' });
+  await page.setViewportSize({ width: 390, height: VIEWPORT_HEIGHT });
+  await page.goto('/');
+  const mixer = page.locator(MOBILE_SELECTOR);
+  await mixer.scrollIntoViewIfNeeded();
+  await expect(mixer).toBeVisible();
+  const small = await mixer.evaluate((root, floor) => {
+    const found: string[] = [];
+    for (const el of root.querySelectorAll<HTMLElement>('*')) {
+      const ownText = Array.from(el.childNodes).some(
+        (node) => node.nodeType === Node.TEXT_NODE && (node.textContent ?? '').trim() !== '',
+      );
+      if (!ownText) continue;
+      const size = Number.parseFloat(getComputedStyle(el).fontSize);
+      if (size < floor) found.push(`${el.tagName.toLowerCase()}: ${size}px`);
+    }
+    return found;
+  }, FONT_FLOOR_PX);
+  expect(small).toEqual([]);
 });
