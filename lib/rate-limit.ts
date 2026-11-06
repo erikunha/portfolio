@@ -81,6 +81,19 @@ export function getHealthzLimit(): Ratelimit {
   return _healthzLimit;
 }
 
+let _lighthouseLimit: Ratelimit | undefined;
+
+export function getLighthouseLimit(): Ratelimit {
+  if (!_lighthouseLimit) {
+    _lighthouseLimit = new Ratelimit({
+      redis: getRedis(),
+      limiter: Ratelimit.slidingWindow(30, '1 m'),
+      prefix: 'rl:lighthouse',
+    });
+  }
+  return _lighthouseLimit;
+}
+
 let _errorLogLimit: Ratelimit | undefined;
 
 export function getErrorLogLimit(): Ratelimit {
