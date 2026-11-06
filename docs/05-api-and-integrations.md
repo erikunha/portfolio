@@ -23,7 +23,7 @@ export function defineHandler<TSchema extends ZodTypeAny>(
 
 **Envelope:** success `{ ok: true, requestId, data? }`; error `{ ok: false, requestId, error: { code, message, issues? } }`. Every response carries `X-Request-Id`. `ApiErrorCode ∈ { rate_limited, invalid_json, invalid_body, validation_failed, storage_unavailable }`; `withBodyLimit` also returns `payload_too_large` (HTTP 413) in the same envelope.
 
-Contact delivery also uses `202 { ok: false, requestId, error: { code: 'queued', message } }`. The message is saved for retry, but Resend has not accepted delivery. `ContactForm` reads `error.message` and offers LinkedIn for a faster reply. ContactForm imports Zod-free `content/contact-copy.ts`; `content/contact.ts` validates that copy with Zod for server consumers. Both share the LinkedIn URL from `content/social-urls.ts`.
+Contact delivery also uses `202 { ok: false, requestId, error: { code: 'queued', message } }`. The message is saved for retry, but Resend has not accepted delivery. `ContactForm` offers LinkedIn for a faster reply. It never shows a server `error.message`: it maps `error.code` to locale copy (`contactErrorMessage` in `content/contact-copy.ts`, `rate_limited` to the rate-limit line, anything else to the generic retry line). A `200` carries the `requestId`, which the success state shows as a receipt with a copy control and a mailto deletion request; it does not call `/api/log/forget`, which erases ask logs only. ContactForm imports Zod-free `content/contact-copy.ts`; `content/contact.ts` validates that copy with Zod for server consumers. Both share the LinkedIn URL from `content/social-urls.ts`.
 
 ## API route table
 
