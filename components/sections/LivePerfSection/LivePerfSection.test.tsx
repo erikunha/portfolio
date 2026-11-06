@@ -194,9 +194,89 @@ describe('LivePerfSection: loading shell', () => {
     const doc = new DOMParser().parseFromString(html, 'text/html');
     expect(doc.getElementById('sec-live-perf')).not.toBeNull();
     expect(doc.querySelector('[aria-busy="true"]')).not.toBeNull();
-    expect(doc.querySelector('p.measured-status')?.textContent).toBe('loading…');
     expect(doc.querySelector('time')).toBeNull();
     pending.resolve(null);
+  });
+});
+
+const renderLoading = async (locale: typeof SITE_LOCALE.en | typeof SITE_LOCALE.pt) => {
+  const { LivePerfSection } = await import('./LivePerfSection');
+  const pending = Promise.withResolvers<null>();
+  getScoresMock.mockReturnValue(pending.promise);
+  const html = renderToStaticMarkup(<LivePerfSection locale={locale} />);
+  pending.resolve(null);
+  return new DOMParser().parseFromString(html, 'text/html');
+};
+
+describe('LivePerfSection: lighthouse loading state', () => {
+  it('names the block, says what is being fetched and announces it as a status', async () => {
+    const doc = await renderLoading(SITE_LOCALE.en);
+    expect(doc.querySelector('.measured-heading')?.textContent).toBe('MEASURED · LIGHTHOUSE');
+    const status = doc.querySelector('[role="status"]');
+    expect(status?.textContent).toContain('> fetching desktop and mobile runs');
+    expect(doc.querySelector('[aria-busy="true"]')).not.toBeNull();
+  });
+
+  it('shows an unfilled bar without printing a percent, hidden from assistive tech', async () => {
+    const doc = await renderLoading(SITE_LOCALE.en);
+    const bar = doc.querySelector('.measured-load-bar');
+    expect(bar?.textContent).toBe('[####........]');
+    expect(bar?.getAttribute('aria-hidden')).toBe('true');
+    expect(doc.body.textContent).not.toMatch(/\d\s*%/);
+  });
+
+  it('keeps the four tiles at their final shape with dashed placeholders', async () => {
+    const doc = await renderLoading(SITE_LOCALE.en);
+    const tiles = Array.from(doc.querySelectorAll('.measured-tile'), (tile) => ({
+      label: tile.querySelector('.measured-label')?.textContent,
+      value: tile.querySelector('.measured-value')?.textContent,
+      description: tile.querySelector('.measured-description')?.textContent,
+    }));
+    expect(tiles).toEqual(
+      ['perf', 'a11y', 'bp', 'seo'].map((label) => ({
+        label,
+        value: '-- / --',
+        description: 'desktop / mobile',
+      })),
+    );
+  });
+
+  it('reserves the room of the full metric labels so the scores land without a shift', async () => {
+    const doc = await renderLoading(SITE_LOCALE.en);
+    const reserved = Array.from(doc.querySelectorAll('.measured-label'), (label) =>
+      label.getAttribute('data-reserve'),
+    );
+    expect(reserved).toEqual(['PERFORMANCE', 'ACCESSIBILITY', 'BEST PRACTICES', 'SEO']);
+  });
+
+  it('speaks Portuguese on the pt site', async () => {
+    const doc = await renderLoading(SITE_LOCALE.pt);
+    expect(doc.querySelector('.measured-heading')?.textContent).toBe('MEDIDO · LIGHTHOUSE');
+    expect(doc.querySelector('[role="status"]')?.textContent).toContain(
+      '> buscando as medições de desktop e celular',
+    );
+    expect(doc.querySelector('.measured-description')?.textContent).toBe('desktop / celular');
+  });
+
+  it('steps the bar with CSS only, and only where motion is allowed', () => {
+    // behavioral-test-allow: animation and reduced-motion contracts live in the shipped stylesheet; jsdom runs no animations
+    const stylesheet = parse(readComponentsCss());
+    const motionSelector = 'body:not([data-motion="reduce"]) .measured-load-bar::after';
+    const animatedOutsideGuard: string[] = [];
+    let guarded: string | undefined;
+    stylesheet.walkRules((rule) => {
+      const animation = declValue(rule, 'animation');
+      if (!animation?.includes('measured-load-fill')) return;
+      const parent = rule.parent;
+      const inGuard =
+        parent?.type === 'atrule' &&
+        /prefers-reduced-motion:\s*no-preference/.test((parent as { params: string }).params);
+      if (inGuard && rule.selector === motionSelector) guarded = animation;
+      else animatedOutsideGuard.push(rule.selector);
+    });
+    expect(guarded).toMatch(/steps\(/);
+    expect(animatedOutsideGuard).toEqual([]);
+    expect(rulesWithSelector(stylesheet, motionSelector)).not.toHaveLength(0);
   });
 });
 

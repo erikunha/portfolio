@@ -1,7 +1,8 @@
 import { type ReactNode, Suspense } from 'react';
 import { ExternalLink } from '@/components/ExternalLink';
-import { measured as measuredContent, metricTimestamp } from '@/content/measured';
+import { measured as measuredContent, measuredStates, metricTimestamp } from '@/content/measured';
 import type { SiteLocale } from '@/content/site-locale';
+import { asciiBar } from '@/lib/ascii-bar';
 import {
   getScores,
   LIGHTHOUSE_FALLBACK,
@@ -36,14 +37,20 @@ export function MeasuredTile({
   label,
   value,
   description,
+  reserve,
+  placeholder,
 }: {
   label: string;
   value: ReactNode;
   description: ReactNode;
+  reserve?: string;
+  placeholder?: boolean;
 }) {
   return (
-    <div className="measured-tile" data-metric>
-      <div className="measured-label">{label}</div>
+    <div className="measured-tile" data-metric data-placeholder={placeholder || undefined}>
+      <div className="measured-label" data-reserve={reserve}>
+        {label}
+      </div>
       <div className="measured-value">{value}</div>
       <div className="measured-description">{description}</div>
     </div>
@@ -74,26 +81,68 @@ type Measured = (typeof measuredContent)[SiteLocale];
 function perfStatusMessage(
   measured: Measured,
   state: {
-    loading: boolean;
     unavailable: boolean;
     showTimestamp: boolean;
     timestamp: ReturnType<typeof metricTimestamp>;
   },
 ) {
-  if (state.loading) return measured.loading;
   if (state.unavailable) return measured.unavailable;
   return state.showTimestamp && !state.timestamp.valid ? measured.unknownTimestamp : null;
 }
 
-function PerfBody({
-  locale,
-  scores,
-  loading = false,
-}: {
-  locale: SiteLocale;
-  scores: ScoresByStrategy | null;
-  loading?: boolean;
-}) {
+const LOAD_BAR_CELLS = 12;
+const LOAD_BAR_HELD_CELLS = 4;
+const LOAD_BAR_OPEN = '[';
+const LOAD_BAR_CLOSE = ']';
+
+const loadBar = (fraction: number) =>
+  `${LOAD_BAR_OPEN}${asciiBar(fraction, LOAD_BAR_CELLS)}${LOAD_BAR_CLOSE}`;
+
+const loadingLine = (locale: SiteLocale) =>
+  `${measuredStates[locale].perfLoading.fetching} ${loadBar(0)}`;
+
+function PerfLoading({ locale }: { locale: SiteLocale }) {
+  const measured = measuredContent[locale];
+  const { perfLoading } = measuredStates[locale];
+  const { psi } = measured;
+  const placeholderPair = psi.strategies.map(() => perfLoading.placeholder).join(psi.pairSeparator);
+  return (
+    <div className="measured-perf" aria-busy="true">
+      <h3 className="measured-heading">{perfLoading.label}</h3>
+      <div className="measured-tiles">
+        {psi.metrics.map((metric) => (
+          <MeasuredTile
+            key={metric.key}
+            label={perfLoading.tiles[metric.key]}
+            reserve={metric.label}
+            value={placeholderPair}
+            description={psi.strategies.map((strategy) => strategy.label).join(psi.pairSeparator)}
+            placeholder
+          />
+        ))}
+      </div>
+      <MeasuredStatus
+        message={
+          <>
+            {perfLoading.fetching}{' '}
+            <span
+              className="measured-load-bar"
+              aria-hidden="true"
+              data-track={loadBar(0)}
+              data-fill={loadBar(1)}
+            >
+              {loadBar(LOAD_BAR_HELD_CELLS / LOAD_BAR_CELLS)}
+            </span>
+          </>
+        }
+        live
+        reserve={[loadingLine(locale), measured.unavailable, measured.unknownTimestamp]}
+      />
+    </div>
+  );
+}
+
+function PerfBody({ locale, scores }: { locale: SiteLocale; scores: ScoresByStrategy | null }) {
   const measured = measuredContent[locale];
   const format = measured.format;
   const { psi } = measured;
@@ -106,9 +155,9 @@ function PerfBody({
     LIGHTHOUSE_TTL_S * format.millisecondsPerSecond,
     locale,
   );
-  const showTimestamp = !loading && available.length > 0;
+  const showTimestamp = available.length > 0;
   return (
-    <div className="measured-perf" aria-busy={loading || undefined}>
+    <div className="measured-perf">
       <h3 className="measured-heading">
         <MeasuredLink href={psi.url} disclosure={measured.externalDisclosure}>
           <span data-type-reveal suppressHydrationWarning>
@@ -145,9 +194,9 @@ function PerfBody({
         ))}
       </div>
       <MeasuredStatus
-        message={perfStatusMessage(measured, { loading, unavailable, showTimestamp, timestamp })}
+        message={perfStatusMessage(measured, { unavailable, showTimestamp, timestamp })}
         live
-        reserve={[measured.loading, measured.unavailable, measured.unknownTimestamp]}
+        reserve={[loadingLine(locale), measured.unavailable, measured.unknownTimestamp]}
       />
     </div>
   );
@@ -156,7 +205,7 @@ function PerfBody({
 export function LivePerfSection({ locale }: { locale: SiteLocale }) {
   return (
     <div id="sec-live-perf">
-      <Suspense fallback={<PerfBody locale={locale} scores={null} loading />}>
+      <Suspense fallback={<PerfLoading locale={locale} />}>
         <PerfData locale={locale} />
       </Suspense>
     </div>

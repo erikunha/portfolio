@@ -1,7 +1,8 @@
+import type { ReactNode } from 'react';
 import { longestCopy } from '@/lib/longest-copy';
 
 interface MeasuredStatusProps {
-  message: string | null;
+  message: ReactNode;
   live: boolean;
   reserve: readonly string[];
 }

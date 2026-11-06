@@ -1,4 +1,5 @@
 import { companyLinkCopy } from './company-link';
+import { type MeasuredStates, MeasuredStatesSchema } from './measured-states.schema';
 import { type Measured, MeasuredSchema } from './schemas';
 
 export type { Measured };
@@ -92,6 +93,25 @@ const measuredFor = (locale: SiteLocale): Measured => {
 export const measured: Record<SiteLocale, Measured> = {
   [SITE_LOCALE.en]: measuredFor(SITE_LOCALE.en),
   [SITE_LOCALE.pt]: measuredFor(SITE_LOCALE.pt),
+};
+
+const measuredStatesFor = (locale: SiteLocale): MeasuredStates => {
+  const pt = locale === SITE_LOCALE.pt;
+  return MeasuredStatesSchema.parse({
+    perfLoading: {
+      label: pt ? 'MEDIDO · LIGHTHOUSE' : 'MEASURED · LIGHTHOUSE',
+      fetching: pt
+        ? '> buscando as medições de desktop e celular'
+        : '> fetching desktop and mobile runs',
+      placeholder: '--',
+      tiles: { performance: 'perf', accessibility: 'a11y', bestPractices: 'bp', seo: 'seo' },
+    },
+  });
+};
+
+export const measuredStates: Record<SiteLocale, MeasuredStates> = {
+  [SITE_LOCALE.en]: measuredStatesFor(SITE_LOCALE.en),
+  [SITE_LOCALE.pt]: measuredStatesFor(SITE_LOCALE.pt),
 };
 
 export const MEASURED_FORMAT = measured[SITE_LOCALE.en].format;
