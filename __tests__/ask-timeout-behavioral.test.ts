@@ -112,7 +112,7 @@ describe('/api/ask behavioral — stream-initiation failure handling', () => {
     mockStreamText.mockReset();
   });
 
-  it('returns HTTP 200 with STREAM_ERR_SENTINEL body when the stream fails to start', async () => {
+  it('returns HTTP 200 with the generic upstream error when the stream fails to start', async () => {
     mockStreamText.mockReturnValueOnce(makeFailingResult('Request timed out after 30000ms'));
 
     const { POST } = await import('@/app/api/ask/route');
@@ -123,8 +123,12 @@ describe('/api/ask behavioral — stream-initiation failure handling', () => {
 
     const body = await readBody(res);
     const { STREAM_ERR_SENTINEL } = await import('@/lib/stream-protocol');
+    const { askErrors } = await import('@/content/ask-errors');
     expect(body.startsWith(STREAM_ERR_SENTINEL)).toBe(true);
-    expect(body).toContain('timed out');
+    expect(body).toBe(`${STREAM_ERR_SENTINEL}${askErrors.en.upstream}`);
+    expect(body, 'an iterator error is provider detail and stays in the server log').not.toContain(
+      'timed out',
+    );
   });
 });
 

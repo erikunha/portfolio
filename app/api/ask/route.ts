@@ -59,6 +59,8 @@ const FINISH_REASON_LENGTH = 'length' as const;
 
 const MID_STREAM_TIMEOUT_MS = 15_000;
 
+const MID_STREAM_TIMEOUT_MESSAGE = 'mid-stream timeout';
+
 const USAGE_RESOLVE_TIMEOUT_MS = 1_000;
 
 const USAGE_TIMED_OUT = Symbol('usage-timeout');
@@ -182,6 +184,7 @@ async function handleAsk(req: NextRequest): Promise<Response> {
   const questionSentinel = mintQuestionSentinel();
 
   const upstream = new AbortController();
+  let upstreamFailed = false;
 
   const result = streamText({
     model: ASK_MODEL,
@@ -198,6 +201,7 @@ async function handleAsk(req: NextRequest): Promise<Response> {
       { role: 'user', content: wrapUserQuestion(question, questionSentinel, answerLocale) },
     ],
     onError({ error }) {
+      upstreamFailed = true;
       console.error('[ask] streamText error', error);
     },
   });
@@ -243,7 +247,7 @@ async function handleAsk(req: NextRequest): Promise<Response> {
               clientGoneSignal,
               new Promise<never>((_, reject) => {
                 watchdog = setTimeout(
-                  () => reject(new Error('mid-stream timeout')),
+                  () => reject(new Error(MID_STREAM_TIMEOUT_MESSAGE)),
                   MID_STREAM_TIMEOUT_MS,
                 );
               }),
@@ -253,6 +257,11 @@ async function handleAsk(req: NextRequest): Promise<Response> {
           }
           if (next === CLIENT_GONE) break;
           if (next.done) {
+            if (upstreamFailed) {
+              status = 'errored';
+              send(enc.encode(`${STREAM_ERR_SENTINEL}${askErrors[answerLocale].upstream}`));
+              break;
+            }
             const finishReason: unknown = await withinDeadline(
               Promise.resolve(result.finishReason).catch(() => undefined),
             );
@@ -283,7 +292,9 @@ async function handleAsk(req: NextRequest): Promise<Response> {
       } catch (err) {
         if (!clientGone) {
           status = 'errored';
-          const msg = err instanceof Error ? err.message : 'upstream error';
+          const timedOut = err instanceof Error && err.message === MID_STREAM_TIMEOUT_MESSAGE;
+          if (!timedOut) log.error('ask stream failed', { requestId, err });
+          const msg = timedOut ? MID_STREAM_TIMEOUT_MESSAGE : askErrors[answerLocale].upstream;
           send(enc.encode(`${STREAM_ERR_SENTINEL}${msg}`));
         }
       } finally {

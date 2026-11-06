@@ -389,6 +389,9 @@ Content-Type: application/json
   streamed answer tokens (AI SDK stream, not SSE JSON deltas).
   A mid-stream failure is signalled in-band by the \x00ERR: sentinel
   (lib/stream-protocol.ts), not by a status code, the 200 has already begun.
+  A provider failure ends `textStream` with no text and no throw, so the route
+  reads it from `onError` and sends the sentinel with a fixed localized message
+  (`askErrors[locale].upstream`); provider error text never reaches the client.
 
 → 400 application/json   { "error": "..." }  # missing question, invalid body, injection guard
 → 429 application/json   { "error": "..." }  # per-IP sliding window or identical question

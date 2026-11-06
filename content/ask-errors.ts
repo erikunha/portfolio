@@ -11,6 +11,7 @@ export type AskErrors = {
   budget: string;
   truncation: string;
   forbiddenOrigin: string;
+  upstream: string;
 };
 
 const askErrorsFor = (locale: SiteLocale): AskErrors => {
@@ -39,6 +40,9 @@ const askErrorsFor = (locale: SiteLocale): AskErrors => {
     forbiddenOrigin: pt
       ? 'pedido recusado: pergunte pela própria página do site'
       : 'request refused: ask from the site itself',
+    upstream: pt
+      ? `o modelo não conseguiu responder: tente de novo em instantes ou escreva para ${social.email}`
+      : `the model could not answer: try again in a moment or email ${social.email}`,
   };
 };
 
