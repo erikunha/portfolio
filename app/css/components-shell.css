@@ -63,6 +63,30 @@
     font-weight: 700;
   }
 
+  .shell-line-ratelimit {
+    padding: var(--spacing-3);
+    border: var(--border-width) solid var(--color-primary-500);
+    color: var(--color-tertiary-50);
+  }
+
+  .shell-line-ratelimit [aria-hidden] {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-2);
+    min-width: 0;
+    white-space: normal;
+  }
+
+  .shell-ratelimit-headline,
+  .shell-ratelimit-bar {
+    color: var(--color-primary-500);
+  }
+
+  .shell-ratelimit-bar {
+    overflow: hidden;
+    white-space: nowrap;
+  }
+
   .shell-line-hint {
     color: var(--color-primary-400);
   }

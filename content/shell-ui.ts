@@ -27,6 +27,7 @@ export const ShellLineKind = {
   Loading: 'loading',
   Reference: 'reference',
   Hint: 'hint',
+  RateLimit: 'ratelimit',
 } as const;
 
 export const SHELL_LIMITS = {

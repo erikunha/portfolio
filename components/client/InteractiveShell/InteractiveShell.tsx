@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useId, useRef, useState } from 'react';
 import type { TerminalChrome } from '@/content/schemas';
 import SHELL_RESPONSES from '@/content/shell-commands';
+import type { ShellStates } from '@/content/shell-states.schema';
 import {
   fillShellState,
   SHELL_LIMITS,
@@ -12,11 +13,12 @@ import {
   shellStates,
 } from '@/content/shell-ui';
 import type { SiteLocale } from '@/content/site-locale';
+import { asciiBar } from '@/lib/ascii-bar';
 import { useBreakpoint } from '@/lib/use-breakpoint.client';
 import { TerminalChromeBar } from '../TerminalChromeBar';
 import { AnimatedPlaceholder, StaticPlaceholder } from './AnimatedPlaceholder.client';
 import { ResponseReference } from './ResponseReference.client';
-import { bounded, type Line, type LineKind, useAskStream } from './useAskStream';
+import { bounded, formatRemaining, type Line, type LineKind, useAskStream } from './useAskStream';
 
 const KIND_CLASS: Record<LineKind, string> = {
   [ShellLineKind.Prompt]: 'shell-line-prompt',
@@ -26,6 +28,7 @@ const KIND_CLASS: Record<LineKind, string> = {
   [ShellLineKind.Loading]: 'shell-line-loading',
   [ShellLineKind.Reference]: 'shell-line-reference',
   [ShellLineKind.Hint]: 'shell-line-hint',
+  [ShellLineKind.RateLimit]: 'shell-line-ratelimit',
 };
 const Key = {
   Up: 'ArrowUp',
@@ -43,6 +46,7 @@ const WINDOW_DOT_SIZE = 10;
 const THINKING_TICK_MS = 100;
 const MS_PER_SECOND = 1000;
 const STREAM_CARET = '█';
+const COUNTDOWN_TICK_MS = 1000;
 
 function ThinkingLine({ template }: { template: string }) {
   const [elapsedMs, setElapsedMs] = useState(0);
@@ -62,6 +66,41 @@ function LineText({ text, ui }: { text: string; ui: ShellUi }) {
       {text.slice(0, at)}
       <a href={ui.emailHref}>{ui.email}</a>
       {text.slice(at + ui.email.length)}
+    </>
+  );
+}
+
+function RateLimitCountdown({
+  seconds,
+  announcement,
+  states,
+}: {
+  seconds: number;
+  announcement: string;
+  states: ShellStates;
+}) {
+  const [remaining, setRemaining] = useState(seconds);
+  useEffect(() => {
+    const deadline = Date.now() + seconds * MS_PER_SECOND;
+    const id = setInterval(() => {
+      const left = Math.max(0, Math.ceil((deadline - Date.now()) / MS_PER_SECOND));
+      setRemaining(left);
+      if (left === 0) clearInterval(id);
+    }, COUNTDOWN_TICK_MS);
+    return () => clearInterval(id);
+  }, [seconds]);
+  const headline =
+    remaining === 0
+      ? states.rateLimitReady
+      : fillShellState(states.slowDown, { left: formatRemaining(remaining, states) });
+  return (
+    <>
+      <span className="sr-only">{announcement}</span>
+      <span aria-hidden="true">
+        <strong className="shell-ratelimit-headline">{headline}</strong>
+        <span className="shell-ratelimit-bar">[{asciiBar(1 - remaining / seconds)}]</span>
+        <span>{states.localCommands}</span>
+      </span>
     </>
   );
 }
@@ -240,6 +279,12 @@ export function InteractiveShell({
             >
               {line.kind === ShellLineKind.Reference ? (
                 <ResponseReference ui={ui} requestId={line.text} announce={announce} />
+              ) : line.kind === ShellLineKind.RateLimit && line.retryAfter ? (
+                <RateLimitCountdown
+                  seconds={line.retryAfter}
+                  announcement={line.text}
+                  states={states}
+                />
               ) : line.kind === ShellLineKind.Hint ? (
                 <>
                   {states.tryPrefix} <code>{states.tryCommand}</code> {states.trySuffix}{' '}

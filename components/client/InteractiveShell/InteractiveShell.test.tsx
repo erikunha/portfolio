@@ -1201,6 +1201,137 @@ describe('InteractiveShell stream states', () => {
     });
   });
 
+  describe('E4 rate limit', () => {
+    const TOTAL_SECONDS = 2280;
+    const COUNTDOWN_BAR = /^\[([#.]{20})\]$/;
+
+    function limitedResponse(retryAfter?: string): Response {
+      return Response.json(
+        { error: 'rate limit exceeded: try again in an hour' },
+        {
+          status: 429,
+          headers: {
+            'X-Request-Id': 'limited-request',
+            ...(retryAfter === undefined ? {} : { 'Retry-After': retryAfter }),
+          },
+        },
+      );
+    }
+
+    async function askLimited(retryAfter?: string, locale?: SiteLocale): Promise<HTMLElement> {
+      vi.stubGlobal(
+        'fetch',
+        vi.fn(async () => limitedResponse(retryAfter)),
+      );
+      const container = await renderShell(locale);
+      vi.useFakeTimers();
+      await submitQuestion(container, 'limited question');
+      return container;
+    }
+
+    function visible(container: HTMLElement): HTMLElement {
+      const node = container.querySelector<HTMLElement>('[data-kind="ratelimit"] [aria-hidden]');
+      expect(node).not.toBeNull();
+      return node as HTMLElement;
+    }
+
+    function bar(container: HTMLElement): string {
+      const text = visible(container).querySelector('.shell-ratelimit-bar')?.textContent ?? '';
+      const match = COUNTDOWN_BAR.exec(text);
+      expect(match, `bar text ${text}`).not.toBeNull();
+      return match?.[1] ?? '';
+    }
+
+    it('turns Retry-After into a visible countdown that keeps the local commands in reach', async () => {
+      const container = await askLimited(String(TOTAL_SECONDS));
+      const headline = visible(container).querySelector('strong');
+      expect(headline?.textContent).toBe('! slow down: 38 min until the next question');
+      expect(bar(container)).toBe('.'.repeat(20));
+      expect(visible(container).textContent).toContain(
+        'Local commands keep working meanwhile: help, cat skills.md, whoami.',
+      );
+      expect(container.querySelector('[data-kind="error"]')).toBeNull();
+      expect(container.querySelector('[data-testid="shell-reference"]')?.textContent).toContain(
+        'limited-request',
+      );
+      expect((container.querySelector('input[name="command"]') as HTMLInputElement).value).toBe(
+        'limited question',
+      );
+    });
+
+    it('fills the bar and lowers the minutes as time passes', async () => {
+      const container = await askLimited(String(TOTAL_SECONDS));
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync((TOTAL_SECONDS / 2) * 1000);
+      });
+      expect(visible(container).querySelector('strong')?.textContent).toBe(
+        '! slow down: 19 min until the next question',
+      );
+      expect(bar(container)).toBe(`${'#'.repeat(10)}${'.'.repeat(10)}`);
+    });
+
+    it('counts the last minute in seconds and says when asking works again', async () => {
+      const container = await askLimited('45');
+      expect(visible(container).querySelector('strong')?.textContent).toBe(
+        '! slow down: 45 s until the next question',
+      );
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(45_000);
+      });
+      expect(visible(container).querySelector('strong')?.textContent).toBe(
+        '> ready: you can ask again',
+      );
+      expect(bar(container)).toBe('#'.repeat(20));
+    });
+
+    it('announces the wait once and keeps the ticking text out of assistive tech', async () => {
+      const container = await askLimited(String(TOTAL_SECONDS));
+      const announced = container.querySelector('[role="status"]')?.textContent;
+      expect(announced).toContain('! slow down: 38 min until the next question');
+      const staticText = container.querySelector('[data-kind="ratelimit"] .sr-only')?.textContent;
+      expect(staticText).toContain('! slow down: 38 min until the next question');
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(600_000);
+      });
+      expect(container.querySelector('[data-kind="ratelimit"] .sr-only')?.textContent).toBe(
+        staticText,
+      );
+      expect(container.querySelector('[role="status"]')?.textContent).toBe(announced);
+      expect(visible(container).getAttribute('aria-hidden')).toBe('true');
+      expect(container.querySelector('[data-kind="ratelimit"]')?.getAttribute('role')).toBeNull();
+    });
+
+    it('speaks Portuguese', async () => {
+      const container = await askLimited(String(TOTAL_SECONDS), SITE_LOCALE.pt);
+      expect(visible(container).querySelector('strong')?.textContent).toBe(
+        '! vá com calma: 38 min até a próxima pergunta',
+      );
+    });
+
+    it('stops ticking when the shell unmounts', async () => {
+      const container = await askLimited(String(TOTAL_SECONDS));
+      expect(container.querySelector('[data-kind="ratelimit"]')).not.toBeNull();
+      const pending = vi.getTimerCount();
+      mounted.unmount();
+      expect(vi.getTimerCount()).toBeLessThan(pending);
+    });
+
+    it.each([
+      ['absent', undefined],
+      ['zero', '0'],
+      ['negative', '-5'],
+      ['a date', 'Wed, 21 Oct 2026 07:28:00 GMT'],
+      ['fractional', '12.5'],
+      ['text', 'soon'],
+    ])('invents no duration when Retry-After is %s', async (_name, header) => {
+      const container = await askLimited(header);
+      expect(container.querySelector('[data-kind="ratelimit"]')).toBeNull();
+      expect(container.querySelector('[data-kind="error"]')?.textContent).toBe(
+        'ask: 429 rate limit exceeded: try again in an hour. Built-in commands still work.',
+      );
+    });
+  });
+
   describe('L5 streaming', () => {
     it('ticks the elapsed time before the first token and hides it from assistive tech', async () => {
       vi.stubGlobal(

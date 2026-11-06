@@ -8,9 +8,20 @@ import {
   useRef,
   useState,
 } from 'react';
-import { SHELL_LIMITS, ShellLineKind, type ShellUi, shellStates } from '@/content/shell-ui';
+import {
+  fillShellState,
+  SHELL_LIMITS,
+  ShellLineKind,
+  type ShellUi,
+  shellStates,
+} from '@/content/shell-ui';
 import type { SiteLocale } from '@/content/site-locale';
-import { ASK_LOCALE_HEADER, parseStreamChunk } from '@/lib/stream-protocol';
+import {
+  ASK_LOCALE_HEADER,
+  parseRetryAfter,
+  parseStreamChunk,
+  RETRY_AFTER_HEADER,
+} from '@/lib/stream-protocol';
 
 export type LineKind = (typeof ShellLineKind)[keyof typeof ShellLineKind];
 export type Line = {
@@ -19,13 +30,24 @@ export type Line = {
   text: string;
   ai?: boolean;
   prefix?: string;
+  retryAfter?: number;
 };
-type FailureDetail = { prefix?: string; hint?: boolean };
+type FailureDetail = { prefix?: string; hint?: boolean; retryAfter?: number };
 type ActiveRequest = { stop: () => void; dispose: () => void };
 
 const ASK_ENDPOINT = '/api/ask';
 const RATE_LIMIT_STATUS = 429;
 const SERVER_ERROR_STATUS = 500;
+const SECONDS_PER_MINUTE = 60;
+
+export function formatRemaining(
+  seconds: number,
+  states: Pick<(typeof shellStates)['en'], 'minutesUnit' | 'secondsUnit'>,
+): string {
+  return seconds >= SECONDS_PER_MINUTE
+    ? `${Math.ceil(seconds / SECONDS_PER_MINUTE)} ${states.minutesUnit}`
+    : `${seconds} ${states.secondsUnit}`;
+}
 
 export function bounded(lines: Line[]): Line[] {
   return lines.slice(-SHELL_LIMITS.logEntries);
@@ -107,7 +129,14 @@ export function useAskStream({
         activeRequest.current = null;
         const lines: Line[] = [];
         if (text) lines.push({ id: nextId(), kind: ShellLineKind.Output, text, ai: true });
-        if (message) {
+        if (message && detail.retryAfter) {
+          lines.push({
+            id: nextId(),
+            kind: ShellLineKind.RateLimit,
+            text: message,
+            retryAfter: detail.retryAfter,
+          });
+        } else if (message) {
           lines.push({
             id: nextId(),
             kind: error ? ShellLineKind.Error : ShellLineKind.Info,
@@ -164,6 +193,20 @@ export function useAskStream({
             error?: string | { message?: string };
           } | null;
           const detail = typeof data?.error === 'string' ? data.error : data?.error?.message;
+          const retryAfter =
+            response.status === RATE_LIMIT_STATUS
+              ? parseRetryAfter(response.headers.get(RETRY_AFTER_HEADER))
+              : null;
+          if (retryAfter) {
+            const left = formatRemaining(retryAfter, states);
+            finish(
+              '',
+              `${fillShellState(states.slowDown, { left })}. ${states.localCommands}`,
+              true,
+              { retryAfter },
+            );
+            return;
+          }
           const message = detail || response.statusText || ui.httpErrorPrefix;
           finish(
             '',
