@@ -279,6 +279,39 @@
     aspect-ratio: 16 / 9;
   }
 
+  .links-skeleton-title {
+    height: var(--spacing-6);
+    margin-block-end: var(--spacing-3);
+  }
+
+  .links-skeleton-action {
+    height: var(--spacing-target);
+    margin-block-start: var(--spacing-3);
+  }
+
+  .links-skeleton-index {
+    height: var(--spacing-3);
+  }
+
+  .links-skeleton-history-thumb {
+    width: var(--spacing-16);
+    aspect-ratio: 16 / 9;
+  }
+
+  .links-skeleton-lines {
+    display: grid;
+    gap: var(--spacing-2);
+  }
+
+  .links-skeleton-line {
+    height: var(--spacing-3);
+  }
+
+  .links-skeleton-all {
+    height: var(--spacing-target);
+    border-block-start: 0;
+  }
+
   .links-skeleton-bars {
     display: grid;
     gap: var(--spacing-2);
