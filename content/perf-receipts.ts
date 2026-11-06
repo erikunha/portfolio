@@ -45,7 +45,7 @@ const perfReceiptsFor = (locale: SiteLocale): PerfReceipt[] => {
       metric: 'BUNDLE_JS',
       delta: '-33%',
       company: '@ CANON_MEDICAL',
-      note: pt ? 'code splitting + dynamic imports.' : 'code splitting + dynamic imports.',
+      note: 'code splitting + dynamic imports.',
     },
     {
       metric: 'PAGE_LOAD',

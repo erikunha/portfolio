@@ -1,7 +1,7 @@
 import { Ratelimit } from '@upstash/ratelimit';
 import { Redis } from '@upstash/redis';
+import { ASK_MAX_OUTPUT_TOKENS } from '@/lib/ask/limits';
 import { log } from '@/lib/log';
-import { ASK_MAX_OUTPUT_TOKENS } from './ask/limits';
 
 let _redis: Redis | undefined;
 let _askLimit: Ratelimit | undefined;
