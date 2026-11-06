@@ -2,7 +2,14 @@ import { z } from 'zod';
 import { credentials } from '@/content/credentials';
 import { education } from '@/content/education';
 import { gitLog } from '@/content/git-log';
-import { profile, profileLocation } from '@/content/profile';
+import {
+  PROFILE_FACT,
+  profile,
+  profileLocation,
+  receiptDelta,
+  receiptDisplayValue,
+  YEARS_OF_EXPERIENCE,
+} from '@/content/profile';
 import { SITE_LOCALE } from '@/content/site-locale';
 import { social } from '@/content/social';
 
@@ -60,6 +67,9 @@ export const HiringProfileSchema = z.object({
 
 export type HiringProfile = z.infer<typeof HiringProfileSchema>;
 
+const ISO_DATE_TIME_SEPARATOR = 'T';
+const BUILD_DATE = new Date().toISOString().split(ISO_DATE_TIME_SEPARATOR)[0] ?? '';
+
 export const HIRING_PROFILE: HiringProfile = HiringProfileSchema.parse({
   '@type': 'HiringProfile',
   name: profile.fullName,
@@ -72,7 +82,7 @@ export const HIRING_PROFILE: HiringProfile = HiringProfileSchema.parse({
   linkedin: social.linkedin,
 
   seniority: ['senior'],
-  yoe: 8,
+  yoe: YEARS_OF_EXPERIENCE,
 
   stack_primary: ['React', 'Next.js', 'TypeScript', 'Angular', 'RxJS', 'NgRx'],
   stack_secondary: [
@@ -105,18 +115,18 @@ export const HIRING_PROFILE: HiringProfile = HiringProfileSchema.parse({
   })),
 
   receipts: {
-    tx_volume_per_year: '40M+',
-    revenue_platform: '€1.197B group revenue (Betsson)',
-    mau_peak: '8M+ (Grupo SBF)',
+    tx_volume_per_year: PROFILE_FACT.txPerYear,
+    revenue_platform: `${PROFILE_FACT.groupRevenue} group revenue (Betsson)`,
+    mau_peak: `${PROFILE_FACT.peakMau} (Grupo SBF)`,
     a11y_score: '~100/100',
-    perf_delta_js: '-33%',
-    perf_delta_css: '-98%',
-    tti_improvement: '-52%',
-    page_load_reduction: '-32%',
-    conversion_uplift: '+10% (20+ A/B experiments)',
-    api_latency_reduction: '-97.5% (40s → <1s, Venturus)',
-    labs_delivered: '2.1M+ cumulative (VMware Pathfinder)',
-    banking_customers: '24.2M digital clients (Itaú via Zup)',
+    perf_delta_js: receiptDelta('BUNDLE_JS'),
+    perf_delta_css: receiptDelta('BUNDLE_CSS'),
+    tti_improvement: receiptDelta('TTI'),
+    page_load_reduction: receiptDelta('PAGE_LOAD'),
+    conversion_uplift: `${receiptDelta('CONVERSION')} (20+ A/B experiments)`,
+    api_latency_reduction: `${receiptDelta('API_LATENCY')} (${receiptDisplayValue('API_LATENCY')}, Venturus)`,
+    labs_delivered: `${PROFILE_FACT.labsDelivered} cumulative (VMware Pathfinder)`,
+    banking_customers: `${PROFILE_FACT.bankingClients} digital clients (Itaú via Zup)`,
     copilot_subagents: '12-agent system (Betsson)',
   },
 
@@ -135,5 +145,5 @@ export const HIRING_PROFILE: HiringProfile = HiringProfileSchema.parse({
   location: profileLocation,
 
   languages: profile.languages,
-  last_updated: '2026-10-30',
+  last_updated: BUILD_DATE,
 });

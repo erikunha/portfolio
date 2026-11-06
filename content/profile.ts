@@ -1,8 +1,24 @@
+import { perfReceipts } from './perf-receipts';
 import { type Profile, ProfileSchema } from './schemas';
 import { SITE_LOCALE, type SiteLocale } from './site-locale';
 import { social } from './social';
 
 const TECHNOLOGY_SEPARATOR = ' · ';
+
+export const YEARS_OF_EXPERIENCE = 8;
+export const YEARS_OF_EXPERIENCE_LABEL = `${YEARS_OF_EXPERIENCE}+ years`;
+
+export const PROFILE_FACT = {
+  txPerYear: '40M+',
+  groupRevenue: '€1.197B',
+  peakMau: '8M+',
+  labsDelivered: '2.1M+',
+  bankingClients: '24.2M',
+} as const;
+
+export const FUNDS_SERVED = 50;
+export const ASSETS_UNDER_MANAGEMENT_BILLIONS = 500;
+export const FUNDS_PHRASE = `${FUNDS_SERVED}+ funds holding $${ASSETS_UNDER_MANAGEMENT_BILLIONS}B+ in assets`;
 
 const profileFields = ProfileSchema.parse({
   fullName: 'Erik Henrique Alves Cunha',
@@ -78,6 +94,7 @@ export type ProfilePresentation = {
   employerContext: string;
   workingLanguageLine: string;
   languagesLine: string;
+  languageLevelsLine: string;
   location: string;
   tagline: string;
   summary: string;
@@ -102,6 +119,9 @@ const presentation = (locale: SiteLocale): ProfilePresentation => {
   const languagesLine = profile.languages
     .map((language) => `${language.label} (${levelWord(language.level)})`)
     .join(LANGUAGE_SEPARATOR);
+  const languageLevelsLine = profile.languages
+    .map((language) => languageCell(language.label, language.level))
+    .join(LANGUAGE_SEPARATOR);
   const location = `${country} · ${profile.timezone} · ${availability}`;
   const tagline = `${title} · ${profile.technologyLine}`;
   const summary = `${title}. ${location}. ${profile.currentEmployer.name}: ${employerContext}.`;
@@ -112,6 +132,7 @@ const presentation = (locale: SiteLocale): ProfilePresentation => {
     employerContext,
     workingLanguageLine,
     languagesLine,
+    languageLevelsLine,
     location,
     tagline,
     summary,
@@ -125,20 +146,30 @@ export const profilePresentation: Record<SiteLocale, ProfilePresentation> = {
   [SITE_LOCALE.pt]: presentation(SITE_LOCALE.pt),
 };
 
-export const profileLocation = `${profile.country} · ${profile.timezone} · ${profile.availability}`;
+const englishPresentation = profilePresentation[SITE_LOCALE.en];
+
+export const profileLocation = englishPresentation.location;
 export const profileCityLine = `${profile.city}, ${profile.country}`;
-const languageLine = profile.languages
-  .map((language) => `${language.label} ${language.level}`)
-  .join(LANGUAGE_SEPARATOR);
 
 export const formatLanguages = (languages: typeof profile.languages) =>
   languages.map((language) => `${language.label} (${language.level})`).join(LANGUAGE_SEPARATOR);
 
-export const profileLanguageLine = languageLine;
-export const profileWorkingLanguageLine = profile.languages
-  .filter((language) => WORKING_LANGUAGE_LEVELS.includes(language.level))
-  .map((language) => `${language.label} ${language.level}`)
-  .join(LANGUAGE_SEPARATOR);
-export const profileSummary = `${profile.title}. ${profileLocation}. ${profile.currentEmployer.name}: ${profile.currentEmployer.context}.`;
-export const profilePageTitle = `${profile.displayName} · ${profile.title}`;
-export const profileMetaDescription = `${profile.title}. ${profileLocation}. ${profile.stackLine}.`;
+export const profileLanguageLine = englishPresentation.languageLevelsLine;
+export const profileWorkingLanguageLine = englishPresentation.workingLanguageLine;
+export const profileSummary = englishPresentation.summary;
+export const profilePageTitle = englishPresentation.pageTitle;
+export const profileMetaDescription = englishPresentation.metaDescription;
+
+const perfReceiptFor = (metric: string) => {
+  const receipt = perfReceipts[SITE_LOCALE.en].find((entry) => entry.metric === metric);
+  if (!receipt) throw new Error(`profile: unknown perf receipt "${metric}"`);
+  return receipt;
+};
+
+export const receiptDelta = (metric: string): string => perfReceiptFor(metric).delta;
+
+export const receiptDisplayValue = (metric: string): string => {
+  const { displayValue } = perfReceiptFor(metric);
+  if (!displayValue) throw new Error(`profile: perf receipt "${metric}" has no display value`);
+  return displayValue;
+};

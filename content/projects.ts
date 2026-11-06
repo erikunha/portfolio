@@ -1,4 +1,6 @@
 import { z } from 'zod';
+import { companyLinkCopy } from './company-link';
+import { PROFILE_FACT } from './profile';
 import { type Project, ProjectSchema } from './schemas';
 import { SITE_LOCALE, type SiteLocale } from './site-locale';
 
@@ -10,13 +12,13 @@ export const projectPresentation: Record<
     command: 'LS -LA ./PROJECTS',
     mobileCommand: 'LS -LA ~/PROJECTS',
     permissions: 'drwxr-xr-x',
-    externalDisclosure: '(opens in a new tab)',
+    externalDisclosure: companyLinkCopy[SITE_LOCALE.en].disclosure,
   },
   [SITE_LOCALE.pt]: {
     command: 'LS -LA ./PROJETOS',
     mobileCommand: 'LS -LA ~/PROJETOS',
     permissions: 'drwxr-xr-x',
-    externalDisclosure: '(abre em uma nova guia)',
+    externalDisclosure: companyLinkCopy[SITE_LOCALE.pt].disclosure,
   },
 };
 
@@ -50,8 +52,8 @@ const projectsFor = (locale: SiteLocale): Project[] => {
           ? 'Plataforma de cashier PCI-DSS: orquestração de depósitos e saques multi-marca em mais de 15 jurisdições reguladas.'
           : 'PCI-DSS cashier platform: multi-brand deposit/withdraw orchestration across 15+ regulated jurisdictions.',
         stats: [
-          { label: pt ? 'VOLUME' : 'VOLUME', value: '40M+ TX / YR' },
-          { label: pt ? 'RECEITA' : 'REVENUE', value: '€1.197B (GROUP)' },
+          { label: 'VOLUME', value: `${PROFILE_FACT.txPerYear} TX / YR` },
+          { label: pt ? 'RECEITA' : 'REVENUE', value: `${PROFILE_FACT.groupRevenue} (GROUP)` },
           { label: 'STACK', value: 'ANGULAR / STENCIL / NGRX / NX' },
         ],
       },
@@ -76,7 +78,7 @@ const projectsFor = (locale: SiteLocale): Project[] => {
           ? 'Storefronts da Nike Brasil e Centauro: SSR/SSG/ISR, gateway BFF, monorepo Nx compartilhado, mais de 20 experimentos A/B.'
           : 'Nike Brazil & Centauro storefronts: SSR/SSG/ISR, BFF gateway, shared Nx monorepo, 20+ A/B experiments.',
         stats: [
-          { label: pt ? 'ALCANCE' : 'REACH', value: '8M+ MAU' },
+          { label: pt ? 'ALCANCE' : 'REACH', value: `${PROFILE_FACT.peakMau} MAU` },
           { label: pt ? 'TEMPO DE CARREGAMENTO' : 'LOAD TIME', value: '-32%' },
           { label: 'STACK', value: 'NEXT.JS / REACT / TS' },
         ],
@@ -127,7 +129,7 @@ const projectsFor = (locale: SiteLocale): Project[] => {
               ? 'NOVA IDENTIDADE DE CALLBACK A CADA RENDER'
               : 'NEW CALLBACK IDENTITY EVERY RENDER',
           },
-          { label: pt ? 'STATUS' : 'STATUS', value: pt ? 'MERGEADA' : 'MERGED' },
+          { label: 'STATUS', value: pt ? 'MERGEADA' : 'MERGED' },
         ],
       },
       {
@@ -154,8 +156,8 @@ const projectsFor = (locale: SiteLocale): Project[] => {
           : 'Open-source TypeScript CLI (MIT) classifying images across seven LLM vision providers: self-elicited confidence, local-to-cloud escalation below 0.70, two-provider consensus, active-learning queue.',
         stats: [
           { label: pt ? 'PROVEDORES' : 'PROVIDERS', value: '7' },
-          { label: 'CI', value: pt ? '8 WORKFLOWS' : '8 WORKFLOWS' },
-          { label: pt ? 'GATE' : 'GATE', value: pt ? 'REGRESSÃO DE 5%' : '5% REGRESSION' },
+          { label: 'CI', value: '8 WORKFLOWS' },
+          { label: 'GATE', value: pt ? 'REGRESSÃO DE 5%' : '5% REGRESSION' },
         ],
       },
     ]);

@@ -1,6 +1,7 @@
 import { NOW_CURRENTLY, WHOIS_TITLE } from './now-currently';
 import type { ShellResponse } from './schemas';
 import { ShellCommand, ShellLineKind } from './shell-ui';
+import { EMAIL_ADDRESS } from './social-urls';
 
 const SHELL_RESPONSES: ShellResponse[] = [
   {
@@ -31,7 +32,7 @@ const SHELL_RESPONSES: ShellResponse[] = [
   {
     commands: [ShellCommand.Contact],
     kind: ShellLineKind.Output,
-    text: 'mailto: erikhenriquealvescunha@gmail.com',
+    text: `mailto: ${EMAIL_ADDRESS}`,
   },
 ];
 

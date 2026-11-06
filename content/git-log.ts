@@ -1,3 +1,11 @@
+import {
+  ASSETS_UNDER_MANAGEMENT_BILLIONS,
+  FUNDS_PHRASE,
+  FUNDS_SERVED,
+  PROFILE_FACT,
+  profile,
+  profilePresentation,
+} from './profile';
 import { CV_LINK_LABEL, READING_PATHS } from './reading-paths';
 import { CareerCopySchema, type GitCommit, GitCommitSchema } from './schemas';
 import { localizedPath, SITE_LOCALE, type SiteLocale } from './site-locale';
@@ -11,8 +19,8 @@ const gitLogFor = (locale: SiteLocale): GitCommit[] => {
       date: pt ? 'jun/2026 - atual' : 'Jun 2026 - Present',
       branch: 'career/raylu',
       type: 'career',
-      company: 'Raylu',
-      companyUrl: 'https://raylu.ai',
+      company: profile.currentEmployer.name,
+      companyUrl: profile.currentEmployer.url,
       role: pt
         ? 'Engenheiro de Software Sênior (contrato via Torc)'
         : 'Senior Software Engineer (contract via Torc)',
@@ -20,11 +28,11 @@ const gitLogFor = (locale: SiteLocale): GitCommit[] => {
       endMonth: null,
       location: pt ? 'Nova York, EUA' : 'New York, US',
       workMode: 'remote',
-      domain: pt ? 'fintech de mercados privados · B2B SaaS' : 'private-markets fintech · B2B SaaS',
+      domain: profilePresentation[locale].employerContext,
       body: [
         pt
-          ? 'buscava escala de produto AI-native; reconstruiu as telas de fluxo de trabalho do investidor de uma plataforma de mercados privados para mais de 50 fundos com US$ 500B+ em ativos.'
-          : 'wanted AI-native product scale; rebuilt the investor workflow screens of a private-markets platform for 50+ funds holding $500B+ in assets.',
+          ? `buscava escala de produto AI-native; reconstruiu as telas de fluxo de trabalho do investidor de uma plataforma de mercados privados para mais de ${FUNDS_SERVED} fundos com US$ ${ASSETS_UNDER_MANAGEMENT_BILLIONS}B+ em ativos.`
+          : `wanted AI-native product scale; rebuilt the investor workflow screens of a private-markets platform for ${FUNDS_PHRASE}.`,
       ],
     },
     {
@@ -43,8 +51,8 @@ const gitLogFor = (locale: SiteLocale): GitCommit[] => {
       domain: pt ? 'jogos online e pagamentos' : 'online gaming and payments',
       body: [
         pt
-          ? 'buscava escala regulada em múltiplos mercados; obteve 40M+ transações/ano em mais de 15 jurisdições e 31,1M clientes em uma plataforma de pagamentos PCI-DSS.'
-          : 'wanted regulated multi-market scale; got 40M+ tx/yr across 15+ jurisdictions and 31.1M customers on a PCI-DSS payment platform.',
+          ? `buscava escala regulada em múltiplos mercados; obteve ${PROFILE_FACT.txPerYear} transações/ano em mais de 15 jurisdições e 31,1M clientes em uma plataforma de pagamentos PCI-DSS.`
+          : `wanted regulated multi-market scale; got ${PROFILE_FACT.txPerYear} tx/yr across 15+ jurisdictions and 31.1M customers on a PCI-DSS payment platform.`,
       ],
     },
     {
@@ -85,8 +93,8 @@ const gitLogFor = (locale: SiteLocale): GitCommit[] => {
       domain: pt ? 'e-commerce de varejo esportivo' : 'sports retail e-commerce',
       body: [
         pt
-          ? 'storefronts Next.js para Nike Brasil e Centauro (8M+ MAU); elevou a conversão em ~10% com mais de 20 experimentos A/B e cortou o carregamento da página em -32%; R$ 7,9B de receita bruta, R$ 2,5B digital.'
-          : 'Next.js storefronts for Nike Brazil and Centauro (8M+ MAU); lifted conversion ~10% through 20+ A/B experiments and cut page load -32%; R$7.9B gross revenue, R$2.5B digital.',
+          ? `storefronts Next.js para Nike Brasil e Centauro (${PROFILE_FACT.peakMau} MAU); elevou a conversão em ~10% com mais de 20 experimentos A/B e cortou o carregamento da página em -32%; R$ 7,9B de receita bruta, R$ 2,5B digital.`
+          : `Next.js storefronts for Nike Brazil and Centauro (${PROFILE_FACT.peakMau} MAU); lifted conversion ~10% through 20+ A/B experiments and cut page load -32%; R$7.9B gross revenue, R$2.5B digital.`,
       ],
     },
     {
@@ -107,8 +115,8 @@ const gitLogFor = (locale: SiteLocale): GitCommit[] => {
       domain: pt ? 'software enterprise em nuvem' : 'enterprise cloud software',
       body: [
         pt
-          ? 'portal do laboratório VMware Pathfinder em Angular 11; efeitos NgRx, Reactive Forms, 2.1M+ labs.'
-          : 'VMware Pathfinder lab portal on Angular 11; NgRx effects, Reactive Forms, 2.1M+ labs.',
+          ? `portal do laboratório VMware Pathfinder em Angular 11; efeitos NgRx, Reactive Forms, ${PROFILE_FACT.labsDelivered} labs.`
+          : `VMware Pathfinder lab portal on Angular 11; NgRx effects, Reactive Forms, ${PROFILE_FACT.labsDelivered} labs.`,
       ],
     },
     {
@@ -128,7 +136,7 @@ const gitLogFor = (locale: SiteLocale): GitCommit[] => {
       body: [
         pt
           ? 'primeiro trabalho regulado / bancário; micro-frontends com Angular Elements para o seguro empresarial do Itaú (24,2M clientes digitais).'
-          : "first regulated / banking work; Angular Elements micro-frontends for Itaú's business insurance (24.2M digital clients).",
+          : `first regulated / banking work; Angular Elements micro-frontends for Itaú's business insurance (${PROFILE_FACT.bankingClients} digital clients).`,
       ],
     },
     {

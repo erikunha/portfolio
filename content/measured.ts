@@ -1,3 +1,4 @@
+import { companyLinkCopy } from './company-link';
 import { type Measured, MeasuredSchema } from './schemas';
 
 export type { Measured };
@@ -21,7 +22,7 @@ const measuredFor = (locale: SiteLocale): Measured => {
     title: pt ? 'Medições' : 'Measured',
     command: 'MEASURED.JSON',
     sourceLabel: pt ? 'fonte:' : 'source:',
-    externalDisclosure: pt ? '(abre em uma nova guia)' : '(opens in a new tab)',
+    externalDisclosure: companyLinkCopy[locale].disclosure,
     unavailable: pt ? 'indisponível' : 'unavailable',
     loading: pt ? 'carregando…' : 'loading…',
     stale: pt ? 'desatualizado' : 'stale',

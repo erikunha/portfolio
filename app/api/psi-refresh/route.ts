@@ -1,5 +1,6 @@
 import type { NextRequest } from 'next/server';
 import { Resend } from 'resend';
+import { EMAIL_ADDRESS } from '@/content/social-urls';
 import { env } from '@/lib/env';
 import { refreshScores, type Strategy } from '@/lib/lighthouse-scores';
 import { log } from '@/lib/log';
@@ -90,7 +91,7 @@ export async function GET(req: NextRequest): Promise<Response> {
           .join('\n');
         const sendPromise = resend.emails.send({
           from: 'alerts@erikunha.dev',
-          to: 'erikhenriquealvescunha@gmail.com',
+          to: EMAIL_ADDRESS,
           subject: '[portfolio] psi-refresh cron failed',
           text: `One or more PSI strategies have reached ${PSI_ALERT_THRESHOLD}+ consecutive failures.\n\n${alertText}\nTimestamp: ${new Date().toISOString()}`,
         });

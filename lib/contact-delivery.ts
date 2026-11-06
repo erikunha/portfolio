@@ -1,12 +1,13 @@
 import 'server-only';
 
 import { Resend } from 'resend';
+import { EMAIL_ADDRESS } from '@/content/social-urls';
 import type { ContactMessage } from '@/lib/contact-outbox';
 import { env } from '@/lib/env';
 import { log } from '@/lib/log';
 
 const CONTACT_FROM = 'contact@erikunha.dev';
-const CONTACT_TO = 'erikhenriquealvescunha@gmail.com';
+const CONTACT_TO = EMAIL_ADDRESS;
 const CONTACT_SUBJECT_PREFIX = '[portfolio] message from';
 const RESEND_TIMEOUT_MS = 10_000;
 const RESEND_TIMEOUT_ERROR = 'contact delivery timeout';

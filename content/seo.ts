@@ -1,8 +1,9 @@
 import { z } from 'zod';
 import { communityEvent, communityTalksSentence } from './community';
-import { profile, profileSummary } from './profile';
+import { profile, profileSummary, receiptDelta, YEARS_OF_EXPERIENCE_LABEL } from './profile';
 import { SITE_LOCALE } from './site-locale';
 import { social } from './social';
+import { PHONE_NUMBER } from './social-urls';
 
 export const personSchema = {
   '@context': 'https://schema.org',
@@ -11,14 +12,14 @@ export const personSchema = {
   alternateName: profile.displayName,
   jobTitle: profile.title,
   url: 'https://www.erikunha.dev',
-  email: 'erikhenriquealvescunha@gmail.com',
-  telephone: '+5519997049125',
+  email: social.email,
+  telephone: PHONE_NUMBER,
   knowsLanguage: profile.languages.map((language) => ({
     '@type': 'Language',
     name: language.name,
     alternateName: language.level,
   })),
-  nationality: { '@type': 'Country', name: 'Brazil' },
+  nationality: { '@type': 'Country', name: profile.country },
   address: {
     '@type': 'PostalAddress',
     addressLocality: profile.city,
@@ -31,7 +32,7 @@ export const personSchema = {
     name: profile.currentEmployer.name,
     url: profile.currentEmployer.url,
   },
-  description: `${profileSummary} 8+ years across regulated industries. Track record: -97.5% API latency, -98% CSS bundle, -52% TTI.`,
+  description: `${profileSummary} ${YEARS_OF_EXPERIENCE_LABEL} across regulated industries. Track record: ${receiptDelta('API_LATENCY')} API latency, ${receiptDelta('BUNDLE_CSS')} CSS bundle, ${receiptDelta('TTI')} TTI.`,
   knowsAbout: [
     'LLM Engineering',
     'Retrieval-Augmented Generation (RAG)',
@@ -104,7 +105,7 @@ export const personSchema = {
     occupationLocation: { '@type': 'Country', name: profile.country },
     skills:
       'TypeScript, React, Angular, Next.js, Node.js, Python, LLM Engineering, RAG, Multi-Agent Systems, PCI-DSS, AWS, Docker, Performance Engineering',
-    experienceRequirements: '8+ years',
+    experienceRequirements: YEARS_OF_EXPERIENCE_LABEL,
   },
   alumniOf: [
     {
