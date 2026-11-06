@@ -3,13 +3,18 @@ import { Redis } from '@upstash/redis';
 import { ASK_MAX_OUTPUT_TOKENS } from '@/lib/ask/limits';
 import { log } from '@/lib/log';
 
+const REDIS_RETRIES = 1;
+const REDIS_RETRY_BACKOFF_MS = 50;
+
 let _redis: Redis | undefined;
 let _askLimit: Ratelimit | undefined;
 let _contactLimit: Ratelimit | undefined;
 
 export function getRedis(): Redis {
   if (_redis) return _redis;
-  const instance = Redis.fromEnv();
+  const instance = Redis.fromEnv({
+    retry: { retries: REDIS_RETRIES, backoff: () => REDIS_RETRY_BACKOFF_MS },
+  });
   _redis = instance;
   return instance;
 }
