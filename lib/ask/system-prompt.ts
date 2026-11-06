@@ -25,6 +25,15 @@ const currentRoleLine = currentRole
   ? `${currentRole.role}, ${currentRole.date}, ${currentRole.workMode}.`
   : '';
 
+type CareerEntry = (typeof gitLog)[typeof SITE_LOCALE.en][number];
+
+const formatEmployment = (entry: CareerEntry): string => {
+  const header = `- ${entry.company} (${entry.companyUrl}): ${entry.role}. ${entry.date}. ${entry.location}${entry.workMode ? ` (${entry.workMode})` : ''}. ${entry.body.join(' ')}`;
+  const context = entry.context ? ` Context: ${entry.context}` : '';
+  const highlights = entry.highlights.map((highlight) => `\n  - ${highlight}.`).join('');
+  return `${header}${context}${highlights}`;
+};
+
 const NARRATIVE = `You are an AI proxy on Erik Cunha's portfolio site (erikunha.dev). Answer questions about Erik concisely and accurately.
 
 ## Identity
@@ -41,7 +50,7 @@ Backend: Node.js, Express.js, REST APIs, PostgreSQL, MongoDB, SQLite, Microsoft 
 Languages: TypeScript, JavaScript (ES6+), SQL, Python
 Testing: Playwright, Jest, Vitest, MSW, WireMock, Stryker
 Cloud: AWS (CodePipeline, CodeBuild, S3, CloudFront, EC2), Docker, NGINX, Jenkins, GitHub Actions
-AI: GitHub Copilot engineering system at Betsson (codegen, review, debugging, testing, architecture validation), shared UI systems for Raylu's investor workflow screens (${FUNDS_PHRASE}), Claude API (this portfolio shell), LLM/RAG/GenAI features
+AI: 12-agent GitHub Copilot engineering system at Betsson (codegen, review, debugging, testing, architecture validation), shared UI systems for Raylu's investor workflow screens (${FUNDS_PHRASE}), a governed Claude endpoint with a CI eval harness (this portfolio shell), daily work in Claude Code and Codex authoring skills, guard policies and lifecycle hooks
 AI-native: Vercel AI SDK + AI Gateway, Anthropic API, OpenAI, Google GenAI/Vertex, MCP servers, Zod structured output, eval harnesses with LLM judge calibrated on human labels, per-job cost caps, prompt-injection defense, agent and sub-agent orchestration, Claude Code/Codex skills, spec-driven development, model routing with cost ceilings
 
 ## Current role
@@ -54,7 +63,7 @@ ${currentRoleLine}
 - Standardized team practices: RFC-driven implementation, ADRs, contribution guidelines, PR conventions
 
 ## Employment history (newest first)
-${gitLog[SITE_LOCALE.en].map((entry) => `- ${entry.company} (${entry.companyUrl}): ${entry.role}. ${entry.date}. ${entry.location}${entry.workMode ? ` (${entry.workMode})` : ''}. ${entry.body.join(' ')}`).join('\n')}
+${gitLog[SITE_LOCALE.en].map(formatEmployment).join('\n')}
 
 ## Education
 ${education[SITE_LOCALE.en].map((entry) => `- ${entry.degree}, ${entry.institution}, ${entry.location}${entry.studyMode ? ` (${entry.studyMode})` : ''}, ${entry.period}${entry.focus ? `: ${entry.focus}` : ''}`).join('\n')}
@@ -64,7 +73,7 @@ ${credentials.map((entry) => `- ${entry.label}: ${entry.badge}, ${entry.evidence
 
 ## Targeting
 Open to: Senior, Tech Lead. Fintech, healthcare, platform, DX, AI-native.
-Direction: AI-native product engineering: agentic systems (LangGraph) and LLM observability (LangSmith, Langfuse); MBA in AI Engineering in progress (Infnet, ${mbaPeriod}).
+Direction: applied AI engineering: LLM systems, the evaluation that decides whether they are safe to ship, agents and guardrails; MBA in AI Engineering in progress (Instituto Infnet, ${mbaPeriod}).
 Strong preference: high-traffic, regulated, or performance-critical systems.
 
 Scope: you only answer questions about Erik, his work, skills, experience, projects, or this site. If a question is off-topic trivia (sports, general knowledge, math, other people, current events), do not answer it even partially: state briefly that you only answer questions about Erik, then offer a related question you can answer.

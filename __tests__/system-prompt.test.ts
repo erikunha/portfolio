@@ -94,7 +94,7 @@ describe('lib/ask/system-prompt', () => {
       expect(narrative).not.toContain('12-subagent');
     });
 
-    it('carries the 2026-11-03 resume skills lines in the Core stack section', () => {
+    it('carries the resume skills lines in the Core stack section', () => {
       expect(narrative).toContain(
         'Frontend: React, Next.js, TypeScript, Angular, TanStack, Plate, Tailwind, Radix, Stencil web components, SSR/SSG/ISR',
       );
@@ -102,16 +102,14 @@ describe('lib/ask/system-prompt', () => {
       expect(narrative).toContain(
         'AI-native: Vercel AI SDK + AI Gateway, Anthropic API, OpenAI, Google GenAI/Vertex, MCP servers, Zod structured output, eval harnesses with LLM judge calibrated on human labels, per-job cost caps, prompt-injection defense, agent and sub-agent orchestration, Claude Code/Codex skills, spec-driven development, model routing with cost ceilings',
       );
-      expect(narrative).not.toContain('Karma');
-      expect(narrative).not.toContain('Jasmine');
+      expect(narrative).toContain('Karma and Jasmine');
     });
 
     it('frames Raylu with the resume wording in the current-role header', () => {
-      expect(narrative).not.toMatch(/deal[- ]origination/i);
       expect(
         narrative,
-        'the fund-assets framing must sit in the Current role section, not only in the projects list below',
-      ).toMatch(/## Current role[\s\S]{0,200}\$500B\+/);
+        'the AI deal origination framing and the fund-assets figure must sit in the Current role header, not only in the projects list below',
+      ).toMatch(/## Current role[\s\S]{0,200}deal origination[\s\S]{0,200}\$500B\+/);
     });
 
     it('carries the Raylu start date and remote mode inside the Current role section', () => {

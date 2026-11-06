@@ -31,9 +31,9 @@ export const FUNDS_PHRASE = `${FUNDS_SERVED}+ funds holding $${ASSETS_UNDER_MANA
 const profileFields = ProfileSchema.parse({
   fullName: 'Erik Henrique Alves Cunha',
   displayName: 'Erik Cunha',
-  title: 'Senior Software Engineer · Full Stack',
-  stackLine: 'React, Next.js, Angular, TypeScript, JavaScript, Node.js, Python, AWS',
-  aiLine: 'LLM Apps, Evals, RAG, LangGraph, LangChain, Agents',
+  title: 'Senior Software Engineer, Applied AI',
+  stackLine: 'TypeScript, Python, React, Next.js, Angular, Node.js, AWS',
+  aiLine: 'LLM Systems, Evals, Agents, MCP, Guardrails',
   country: 'Brazil',
   city: 'Paulínia',
   timezone: 'UTC-3',
@@ -41,7 +41,7 @@ const profileFields = ProfileSchema.parse({
   currentEmployer: {
     name: 'Raylu',
     url: 'https://raylu.ai',
-    context: 'private-markets fintech · B2B SaaS',
+    context: 'AI deal origination · private markets',
   },
   languages: [
     {
@@ -112,11 +112,11 @@ export type ProfilePresentation = {
 
 const presentation = (locale: SiteLocale): ProfilePresentation => {
   const pt = locale === SITE_LOCALE.pt;
-  const title = pt ? 'Engenheiro de Software Sênior · Full Stack' : profile.title;
+  const title = pt ? 'Engenheiro de Software Sênior, IA Aplicada' : profile.title;
   const country = pt ? 'Brasil' : profile.country;
   const availability = pt ? 'disponível agora' : profile.availability;
   const employerContext = pt
-    ? 'fintech de mercados privados · B2B SaaS'
+    ? 'originação de negócios com IA · mercados privados'
     : profile.currentEmployer.context;
   const levelWord = (level: string) => (pt && level === 'native' ? 'nativo' : level);
   const languageCell = (label: string, level: string) => `${label} ${levelWord(level)}`;

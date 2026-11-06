@@ -91,7 +91,7 @@ test('/pt hero renders Portuguese copy', async ({ page }) => {
   const context = page.locator('[data-testid="hero-desktop"] .hero-context');
   await expect(context).toContainText('LOCAL:');
   await expect(context).toContainText('disponível agora');
-  await expect(context).toContainText('fintech de mercados privados');
+  await expect(context).toContainText('originação de negócios com IA');
 });
 
 test('/pt links to the pt CV and summary from the hero actions', async ({ page }) => {

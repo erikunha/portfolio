@@ -35,6 +35,12 @@ export const personSchema = {
   description: `${profileSummary} ${YEARS_OF_EXPERIENCE_LABEL} across regulated industries. Track record: ${receiptDelta('API_LATENCY')} API latency, ${receiptDelta('BUNDLE_CSS')} CSS bundle, ${receiptDelta('TTI')} TTI.`,
   knowsAbout: [
     'LLM Engineering',
+    'LLM Evaluation',
+    'LLM-as-Judge Calibration',
+    'Model Context Protocol (MCP)',
+    'Prompt-Injection Defense',
+    'AI Guardrails',
+    'Agent Orchestration',
     'Retrieval-Augmented Generation (RAG)',
     'Generative AI',
     'Multi-Agent Orchestration',
@@ -84,7 +90,7 @@ export const personSchema = {
     'Financial Technology',
     'Healthcare Technology',
     'Private Markets Technology',
-    'B2B SaaS',
+    'AI-native SaaS',
     'Banking Technology',
     'E-commerce Platforms',
     'EdTech',
@@ -104,7 +110,7 @@ export const personSchema = {
     name: profile.title,
     occupationLocation: { '@type': 'Country', name: profile.country },
     skills:
-      'TypeScript, React, Angular, Next.js, Node.js, Python, LLM Engineering, RAG, Multi-Agent Systems, PCI-DSS, AWS, Docker, Performance Engineering',
+      'TypeScript, Python, React, Next.js, Angular, Node.js, LLM Systems and Evaluation, Agents and Guardrails, PCI-DSS, AWS, Docker, Performance Engineering',
     experienceRequirements: YEARS_OF_EXPERIENCE_LABEL,
   },
   alumniOf: [

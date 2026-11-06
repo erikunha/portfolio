@@ -10,8 +10,8 @@ const communityEventFor = (locale: SiteLocale): CommunityEvent => {
     role: pt ? 'ORGANIZADOR' : 'ORGANIZER',
     bullets: [
       pt
-        ? 'selecionou mais de 10 palestras cobrindo DevOps, infra de nuvem, engenharia de plataforma e arquitetura.'
-        : 'curated 10+ talks across DevOps, cloud infra, platform engineering, and architecture.',
+        ? 'selecionou mais de 10 palestras sobre DevOps, nuvem e engenharia de plataforma.'
+        : 'curated 10+ talks across DevOps, cloud and platform engineering.',
       pt
         ? 'conduziu o ciclo completo de palestrantes: abertura do CFP → revisão → seleção → desenho do programa → dia do evento → encerramento.'
         : 'ran the full speaker cycle: CFP launch → review → selection → program design → day-of → wrap.',

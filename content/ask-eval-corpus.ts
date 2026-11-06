@@ -16,7 +16,7 @@ export const ASK_EVAL_CORPUS: AskEvalItem[] = AskEvalCorpusSchema.parse([
     id: 'fact-current-employer',
     question: 'Where does Erik currently work?',
     expect:
-      'Identifies Raylu as the current employer, where Erik is a Senior Software Engineer since June 2026, working remotely on investor workflow screens for a private-markets platform used by 50+ funds holding $500B+ in assets.',
+      'Identifies Raylu as the current employer, where Erik is a Senior Software Engineer since June 2026, working remotely on the investor workflow screens of an AI deal origination platform for private markets, used by 50+ funds holding $500B+ in assets.',
     kind: 'factual',
   },
   {
@@ -28,14 +28,15 @@ export const ASK_EVAL_CORPUS: AskEvalItem[] = AskEvalCorpusSchema.parse([
   {
     id: 'fact-current-role-title',
     question: "What is Erik's job title right now?",
-    expect: 'Senior Software Engineer at Raylu, a contract via Torc.',
+    expect:
+      'Senior Software Engineer at Raylu (title: Senior Software Engineer, Applied AI), a direct role with no contract intermediary.',
     kind: 'factual',
   },
   {
     id: 'fact-ai-direction',
     question: 'Where is Erik taking his career?',
     expect:
-      'Toward AI-native product engineering: agentic systems (LangGraph) and LLM observability (LangSmith, Langfuse), backed by an MBA in AI Engineering (Infnet, expected Dec 2027).',
+      'Toward applied AI engineering: LLM systems and the evaluation that decides whether they are safe to ship, agents and guardrails, backed by an MBA in AI Engineering (Instituto Infnet, expected Dec 2027).',
     kind: 'factual',
   },
   {
@@ -70,7 +71,7 @@ export const ASK_EVAL_CORPUS: AskEvalItem[] = AskEvalCorpusSchema.parse([
     id: 'fact-banking-experience',
     question: 'Has Erik worked in banking or fintech?',
     expect:
-      'Yes: at Zup Innovation building micro-frontends for Itaú Unibanco, and his prior Betsson role was a regulated PCI-DSS payments platform; he now builds for private-markets investors at Raylu.',
+      'Yes: at Zup Innovation building micro-frontends for Itaú Unibanco, and his prior Betsson role was a regulated PCI-DSS payments platform; he now builds for private-markets investors at Raylu, an AI deal origination platform.',
     kind: 'factual',
   },
 
@@ -114,7 +115,7 @@ export const ASK_EVAL_CORPUS: AskEvalItem[] = AskEvalCorpusSchema.parse([
     id: 'fact-copilot-subagents',
     question: 'What AI work has Erik done?',
     expect:
-      "Ran a GitHub Copilot engineering system at Betsson (codegen, review, debugging, testing, architecture validation); now builds shared UI systems for Raylu's investor workflow screens (50+ funds holding $500B+ in assets); this portfolio uses the Claude API.",
+      "Built a 12-agent GitHub Copilot engineering system at Betsson (codegen, review, debugging, testing, architecture validation); builds LLM systems and the evals that gate them, including this portfolio's governed Claude endpoint; now rebuilds the investor workflow screens of Raylu's platform (50+ funds holding $500B+ in assets).",
     kind: 'factual',
   },
   {

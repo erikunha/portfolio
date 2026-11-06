@@ -1,4 +1,4 @@
 export const NOW_CURRENTLY =
-  'Senior Software Engineer · Full Stack. Brazil · UTC-3 · available now. Raylu: private-markets fintech · B2B SaaS.';
+  'Senior Software Engineer, Applied AI. Brazil · UTC-3 · available now. Raylu: AI deal origination · private markets.';
 
-export const WHOIS_TITLE = 'Senior Software Engineer · Full Stack';
+export const WHOIS_TITLE = 'Senior Software Engineer, Applied AI';

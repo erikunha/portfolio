@@ -63,12 +63,12 @@ describe('derived strings render exactly what they rendered before', () => {
   it('keeps the hiring profile years, stack and receipts', () => {
     expect(HIRING_PROFILE.yoe).toBe(8);
     expect(HIRING_PROFILE.stack_primary).toEqual([
+      'TypeScript',
+      'Python',
       'React',
       'Next.js',
-      'TypeScript',
       'Angular',
-      'RxJS',
-      'NgRx',
+      'Node.js',
     ]);
     expect(HIRING_PROFILE.receipts).toEqual({
       tx_volume_per_year: '40M+',
@@ -90,12 +90,14 @@ describe('derived strings render exactly what they rendered before', () => {
   it('keeps the ask prompt identity, funds and education lines', () => {
     expect(SYSTEM_TEXT).toContain('- 8+ years in production systems');
     expect(SYSTEM_TEXT.split(FUNDS_PHRASE)).toHaveLength(4);
-    expect(SYSTEM_TEXT).toContain('MBA in AI Engineering in progress (Infnet, expected Dec 2027)');
+    expect(SYSTEM_TEXT).toContain(
+      'MBA in AI Engineering in progress (Instituto Infnet, expected Dec 2027)',
+    );
   });
 
   it('keeps the Person JSON-LD description, experience, email and phone', () => {
     expect(personSchema.description).toBe(
-      'Senior Software Engineer · Full Stack. Brazil · UTC-3 · available now. Raylu: private-markets fintech · B2B SaaS. 8+ years across regulated industries. Track record: -97.5% API latency, -98% CSS bundle, -52% TTI.',
+      'Senior Software Engineer, Applied AI. Brazil · UTC-3 · available now. Raylu: AI deal origination · private markets. 8+ years across regulated industries. Track record: -97.5% API latency, -98% CSS bundle, -52% TTI.',
     );
     expect(personSchema.hasOccupation.experienceRequirements).toBe('8+ years');
     expect(personSchema.email).toBe('erikhenriquealvescunha@gmail.com');
@@ -105,12 +107,12 @@ describe('derived strings render exactly what they rendered before', () => {
 
   it('keeps the English profile exports', () => {
     expect(profileSummary).toBe(
-      'Senior Software Engineer · Full Stack. Brazil · UTC-3 · available now. Raylu: private-markets fintech · B2B SaaS.',
+      'Senior Software Engineer, Applied AI. Brazil · UTC-3 · available now. Raylu: AI deal origination · private markets.',
     );
     expect(profileLocation).toBe('Brazil · UTC-3 · available now');
-    expect(profilePageTitle).toBe('Erik Cunha · Senior Software Engineer · Full Stack');
+    expect(profilePageTitle).toBe('Erik Cunha · Senior Software Engineer, Applied AI');
     expect(profileMetaDescription).toBe(
-      'Senior Software Engineer · Full Stack. Brazil · UTC-3 · available now. React, Next.js, Angular, TypeScript, JavaScript, Node.js, Python, AWS.',
+      'Senior Software Engineer, Applied AI. Brazil · UTC-3 · available now. TypeScript, Python, React, Next.js, Angular, Node.js, AWS.',
     );
     expect(profileLanguageLine).toBe('PT-BR native · EN C1 · ES B1 · FR A2');
     expect(profileWorkingLanguageLine).toBe('PT-BR native · EN C1');
@@ -127,8 +129,10 @@ describe('derived strings render exactly what they rendered before', () => {
   });
 
   it('keeps the career domain line per locale', () => {
-    expect(gitLog[SITE_LOCALE.en][0]?.domain).toBe('private-markets fintech · B2B SaaS');
-    expect(gitLog[SITE_LOCALE.pt][0]?.domain).toBe('fintech de mercados privados · B2B SaaS');
+    expect(gitLog[SITE_LOCALE.en][0]?.domain).toBe('AI deal origination · private markets');
+    expect(gitLog[SITE_LOCALE.pt][0]?.domain).toBe(
+      'originação de negócios com IA · mercados privados',
+    );
     expect(gitLog[SITE_LOCALE.en][0]?.body.join(' ')).toContain(FUNDS_PHRASE);
     expect(gitLog[SITE_LOCALE.pt][0]?.body.join(' ')).toContain(
       'mais de 50 fundos com US$ 500B+ em ativos',

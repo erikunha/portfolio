@@ -70,43 +70,10 @@ const readingViewsFor = (locale: SiteLocale): ReadingViews => {
       },
       proseOverrides: pt
         ? {
-            'buscava escala de produto ai-native': 'Entrou para escalar um produto AI-native.',
-            'buscava escala regulada em múltiplos mercados':
-              'Entrou para atuar em escala regulada e multi-mercado.',
-            'obteve 40m+ transações/ano em mais de 15 jurisdições e 31,1m clientes em uma plataforma de pagamentos pci-dss':
-              'Entregou uma plataforma de pagamentos PCI-DSS com 40M+ transações por ano em mais de 15 jurisdições e 31,1M clientes.',
-            'reconstruiu uma plataforma de serviço de equipamentos hospitalares: ordens de serviço, agendamento de especialistas, visitas de campo':
-              'Reconstruiu uma plataforma de serviço de equipamentos hospitalares: ordens de serviço, agendamento de especialistas, visitas de campo.',
-            'angular 17 para 19': 'Atualizou a plataforma de Angular 17 para 19.',
-            'primeiro trabalho regulado / bancário': 'Primeiro trabalho bancário regulado.',
-            'começou no backend': 'Começou no backend.',
-            'api de relatórios de 40s para <1s':
-              'Cortou uma API de relatórios de 40s para menos de 1s.',
-            'migração mongodb para postgresql com pipeline etl em node.js':
-              'Migrou MongoDB para PostgreSQL com um pipeline ETL em Node.js.',
             'primeiro emprego. telas de back-office em vue.js 2 para mais de 1.600 agências de turismo brasileiras':
               'Primeiro emprego: telas de back-office em Vue.js 2 para mais de 1.600 agências de turismo brasileiras.',
           }
         : {
-            'wanted ai-native product scale': 'Joined to scale an AI-native product.',
-            'wanted regulated multi-market scale':
-              'Joined to work at regulated, multi-market scale.',
-            'got 40m+ tx/yr across 15+ jurisdictions and 31.1m customers on a pci-dss payment platform':
-              'Shipped a PCI-DSS payment platform handling 40M+ transactions a year across 15+ jurisdictions and 31.1M customers.',
-            'angular 17 to 19': 'Upgraded the platform from Angular 17 to 19.',
-            'next.js storefronts for nike brazil and centauro (8m+ mau)':
-              'Shipped Next.js storefronts for Nike Brazil and Centauro (8M+ MAU).',
-            'vmware pathfinder lab portal on angular 11':
-              'Shipped the VMware Pathfinder lab portal on Angular 11.',
-            'ngrx effects, reactive forms, 2.1m+ labs':
-              'Used NgRx effects and Reactive Forms across 2.1M+ labs.',
-            'first regulated / banking work': 'First regulated banking work.',
-            "angular elements micro-frontends for itaú's business insurance (24.2m digital clients)":
-              "Shipped Angular Elements micro-frontends for Itaú's business insurance (24.2M digital clients).",
-            'cut teeth on backend': 'Started on the backend.',
-            'reporting api 40s → <1s': 'Cut a reporting API from 40s to under 1s.',
-            'mongodb → postgresql migration with a node.js etl pipeline':
-              'Migrated MongoDB to PostgreSQL with a Node.js ETL pipeline.',
             'first job. vue.js 2 back-office screens for 1,600+ brazilian travel agencies':
               'First role: Vue.js 2 back-office screens for 1,600+ Brazilian travel agencies.',
           },
@@ -171,23 +138,25 @@ const badgeOf = (locale: SiteLocale, key: string): string => {
 
 const RESUME_SUMMARY: Record<SiteLocale, string> = {
   [SITE_LOCALE.en]:
-    'I build frontend and product platforms: design systems, micro-frontend topologies, versioned state contracts, rendering and state architecture, and the backend-for-frontend (BFF) layers underneath them. I name the boundary, write the contract, and design the error path before the happy path, on web platforms, design systems and AI product surfaces where divergence is a regulated, financial, or clinical consequence.',
+    "Senior Software Engineer with 8+ years of production software across AI-native SaaS, fintech, payments, healthcare and e-commerce, on TypeScript, Python, React, Next.js, Angular and Node.js, with PostgreSQL, Docker and AWS. Payments, business insurance and hospital equipment service taught me audit trails, idempotent recovery and failure isolation, the same problems agent systems meet as guardrails. I build LLM systems and the evaluation that decides whether they are safe to ship: on my own site a live LLM endpoint runs behind a continuous integration (CI) harness, with an LLM judge calibrated against my own labels at a 0.85 agreement floor and jailbreak resistance gated at 1.0. I work daily in Claude Code and Codex, authoring the skills, guard policies and lifecycle hooks they run under. At Raylu I own the frontend platform behind a private-markets product's data-dense pages, and changes ship behind a production A/B, route by route. At Betsson I built a 12-agent AI-assisted engineering system a platform team adopted, on a PCI-DSS payment platform processing 40M+ transactions a year.",
   [SITE_LOCALE.pt]:
-    'Construo plataformas frontend e de produto: design systems, topologias de micro-frontend, contratos de estado versionados, arquitetura de renderização e estado, e as camadas de backend-for-frontend (BFF) por baixo delas. Nomeio o limite, escrevo o contrato e desenho o caminho de erro antes do caminho feliz, em plataformas web, design systems e superfícies de produto de IA onde a divergência é consequência regulada, financeira ou clínica.',
+    'Engenheiro de Software Sênior com mais de 8 anos de software em produção em SaaS AI-native, fintech, pagamentos, saúde e e-commerce, com TypeScript, Python, React, Next.js, Angular e Node.js, além de PostgreSQL, Docker e AWS. Pagamentos, seguro empresarial e serviço de equipamentos hospitalares me ensinaram trilhas de auditoria, recuperação idempotente e isolamento de falhas, os mesmos problemas que sistemas de agentes encontram como guardrails. Construo sistemas com LLMs e a avaliação que decide se é seguro colocá-los em produção: no meu próprio site, um endpoint de LLM no ar roda atrás de um harness de integração contínua (CI), com um juiz LLM calibrado contra os meus próprios rótulos em um piso de concordância de 0,85 e resistência a jailbreak travada em 1,0. Trabalho diariamente com Claude Code e Codex, escrevendo as skills, políticas de guarda e lifecycle hooks sob os quais eles rodam. Na Raylu, sou dono da plataforma frontend por trás das páginas densas em dados de um produto de mercados privados, e as mudanças vão ao ar atrás de um A/B em produção, rota por rota. Na Betsson, construí um sistema de engenharia assistido por IA com 12 agentes que um time de plataforma adotou, sobre uma plataforma de pagamentos PCI-DSS que processa mais de 40M de transações por ano.',
 };
 
 const CV_SKILLS: Record<SiteLocale, string[]> = {
   [SITE_LOCALE.en]: [
-    'Frontend & Product Architecture: React, Next.js, TypeScript, JavaScript (ES6+), TanStack Table and Query, Plate, Tailwind CSS, Radix UI, styled-components, design systems and Storybook, micro-frontend topologies, Web Components (StencilJS), SSR, SSG, ISR, rendering and state architecture, async state machines with RxJS, NgRx and Redux Toolkit, URL-synchronized and versioned view state, grid virtualization, Core Web Vitals (LCP, INP, CLS), time to interactive (TTI), Web Content Accessibility Guidelines (WCAG) 2.2 AA, WAI-ARIA, i18n, technical SEO',
-    'Testing, Quality & Release Engineering: Playwright, Jest, Vitest, React Testing Library, Storybook interaction testing, Chromatic visual regression, MSW, WireMock, mutation testing (Stryker), Nx monorepos, Husky, ESLint, continuous integration and delivery (CI/CD) on GitHub Actions, AWS CodePipeline and CodeBuild, Jenkins, Docker, NGINX, AWS (S3, CloudFront, EC2, RDS), Vercel, Sentry',
-    'BFF, APIs & Data: Node.js, Fastify, Express, Python, REST APIs, backend-for-frontend layers, JSON:API, webhooks, WebSocket streaming (STOMP/SockJS), PostgreSQL, TypeORM, Drizzle ORM, MongoDB, MS SQL Server, SQLite, Redis, query optimization, ETL pipelines',
-    'AI-Native Product & Agent Engineering: Vercel AI SDK and AI Gateway, streaming responses, Anthropic API, OpenAI, Google Generative AI and Vertex AI, Model Context Protocol (MCP) servers, structured output validation with Zod, eval harnesses with an LLM judge calibrated against human labels, per-job cost caps, prompt-injection defense, agent and sub-agent orchestration, Claude Code and Codex skills, lifecycle hooks, spec-driven development, model routing with cost ceilings, quality gates that fail closed',
+    'LLM Systems & Evaluation: eval harness design, corpora graded on end state, LLM-as-judge calibrated against human labels with an agreement floor, pass@k and all-runs-pass, control-treatment A/B, failure taxonomies, per-job cost caps, model routing by task tier, tracing (Langfuse, OpenTelemetry), Anthropic, OpenAI and Google APIs, Vercel AI SDK, structured output validation with Zod',
+    'Agents & Guardrails: agent and sub-agent orchestration, tool-surface design, Model Context Protocol (MCP) servers, prompt-injection defense at the request boundary, streaming leak detection, kill switches, content-hashed prompt versioning, model-drift detection, policy guards that fail closed',
+    'Backend & Data: Python, Node.js, Express, Fastify, REST APIs, backend-for-frontend layers, PostgreSQL, MongoDB, Redis, MS SQL Server, SQLite, ETL pipelines, WebSocket streaming (STOMP/SockJS)',
+    'Product Engineering: TypeScript, JavaScript (ES6+), React, Next.js, TanStack, Tailwind CSS, design systems, micro-frontends, Angular (RxJS, NgRx), Web Components (StencilJS), Vue.js',
+    'Platform, Delivery & Quality: Docker, NGINX, AWS (S3, CloudFront, EC2, RDS), Vercel, GitHub Actions, Jenkins, Nx monorepos, Sentry, Playwright, Vitest, Jest, React Testing Library, Storybook, MSW, WireMock, mutation testing',
   ],
   [SITE_LOCALE.pt]: [
-    'Arquitetura Frontend e de Produto: React, Next.js, TypeScript, JavaScript (ES6+), TanStack Table e Query, Plate, Tailwind CSS, Radix UI, styled-components, design systems e Storybook, topologias de micro-frontend, Web Components (StencilJS), SSR, SSG, ISR, arquitetura de renderização e estado, máquinas de estado assíncronas com RxJS, NgRx e Redux Toolkit, estado de visualização versionado e sincronizado com a URL, virtualização de grids, Core Web Vitals (LCP, INP, CLS), time to interactive (TTI), Web Content Accessibility Guidelines (WCAG) 2.2 AA, WAI-ARIA, i18n, SEO técnico',
-    'Engenharia de Testes, Qualidade e Release: Playwright, Jest, Vitest, React Testing Library, testes de interação no Storybook, regressão visual com Chromatic, MSW, WireMock, mutation testing (Stryker), monorepos Nx, Husky, ESLint, integração e entrega contínuas (CI/CD) com GitHub Actions, AWS CodePipeline e CodeBuild, Jenkins, Docker, NGINX, AWS (S3, CloudFront, EC2, RDS), Vercel, Sentry',
-    'BFF, APIs e Dados: Node.js, Fastify, Express, Python, REST APIs, camadas backend-for-frontend, JSON:API, webhooks, streaming WebSocket (STOMP/SockJS), PostgreSQL, TypeORM, Drizzle ORM, MongoDB, MS SQL Server, SQLite, Redis, otimização de queries, pipelines ETL',
-    'Engenharia de Produto AI-Native e Agentes: Vercel AI SDK e AI Gateway, respostas com streaming, Anthropic API, OpenAI, Google Generative AI e Vertex AI, servidores Model Context Protocol (MCP), validação de saída estruturada com Zod, harnesses de avaliação com juiz LLM calibrado contra labels humanas, limites de custo por job, defesa contra prompt injection, orquestração de agentes e sub-agentes, skills de Claude Code e Codex, lifecycle hooks, desenvolvimento spec-driven, roteamento de modelos com tetos de custo, gates de qualidade que falham fechados',
+    'Sistemas LLM e Avaliação: desenho de harness de avaliação, corpora avaliados pelo estado final, LLM-as-judge calibrado contra rótulos humanos com piso de concordância, pass@k e all-runs-pass, A/B controle-tratamento, taxonomias de falha, limites de custo por job, roteamento de modelos por nível de tarefa, tracing (Langfuse, OpenTelemetry), APIs da Anthropic, OpenAI e Google, Vercel AI SDK, validação de saída estruturada com Zod',
+    'Agentes e Guardrails: orquestração de agentes e sub-agentes, desenho da superfície de ferramentas, servidores Model Context Protocol (MCP), defesa contra prompt injection na borda da requisição, detecção de vazamento em streaming, kill switches, versionamento de prompts por hash de conteúdo, detecção de deriva de modelo, políticas de guarda que falham fechadas',
+    'Backend e Dados: Python, Node.js, Express, Fastify, REST APIs, camadas backend-for-frontend, PostgreSQL, MongoDB, Redis, MS SQL Server, SQLite, pipelines ETL, streaming WebSocket (STOMP/SockJS)',
+    'Engenharia de Produto: TypeScript, JavaScript (ES6+), React, Next.js, TanStack, Tailwind CSS, design systems, micro-frontends, Angular (RxJS, NgRx), Web Components (StencilJS), Vue.js',
+    'Plataforma, Entrega e Qualidade: Docker, NGINX, AWS (S3, CloudFront, EC2, RDS), Vercel, GitHub Actions, Jenkins, monorepos Nx, Sentry, Playwright, Vitest, Jest, React Testing Library, Storybook, MSW, WireMock, mutation testing',
   ],
 };
 
@@ -214,10 +183,13 @@ const cvDocumentFor = (locale: SiteLocale) => {
         `${entry.location}${entry.workMode ? ` (${workModeLabel(locale, entry.workMode)})` : ''}`,
         entry.date,
       ].join(STACK_SEPARATOR),
-      bullets: entry.body
-        .flatMap((line) => line.split(FRAGMENT_SEPARATOR_PATTERN))
-        .filter((fragment) => fragment.trim().length > 0)
-        .map(sentence),
+      context: entry.context,
+      bullets: (entry.highlights.length > 0
+        ? entry.highlights
+        : entry.body
+            .flatMap((line) => line.split(FRAGMENT_SEPARATOR_PATTERN))
+            .filter((fragment) => fragment.trim().length > 0)
+      ).map(sentence),
     })),
     skills: CV_SKILLS[locale],
     certifications: credentials.map((entry) => ({

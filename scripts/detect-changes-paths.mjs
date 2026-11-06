@@ -19,6 +19,7 @@ export const AI_PATHS = [
   'content/ask-errors.ts',
   'content/credentials.ts',
   'content/education.ts',
+  'content/experience-detail.ts',
   'content/git-log.ts',
   'content/profile.ts',
   'content/site-locale.ts',

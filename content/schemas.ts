@@ -623,6 +623,8 @@ export const GitCommitSchema = z
     companyUrl: CompanyUrlSchema,
     role: z.string().min(1),
     body: z.array(z.string().min(1)),
+    context: z.string().min(1).optional(),
+    highlights: z.array(z.string().min(1)).default([]),
     isRoot: z.boolean().optional(),
   })
   .refine((entry) => entry.endMonth === null || entry.startMonth <= entry.endMonth, {
@@ -1094,6 +1096,7 @@ export const CvDocumentSchema = z.object({
         company: ReadingTextSchema,
         companyUrl: CompanyUrlSchema,
         meta: ReadingTextSchema,
+        context: ReadingTextSchema.optional(),
         bullets: z.array(ReadingTextSchema).min(1),
       }),
     )
