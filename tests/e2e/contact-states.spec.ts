@@ -1,6 +1,7 @@
 import { expect, type Page, test } from '@playwright/test';
 import { contactCopy } from '@/content/contact-copy';
 import { SITE_LOCALE, type SiteLocale } from '@/content/site-locale';
+import { waitForHydration } from './_helpers/hydration';
 import { installMockBackend } from './_helpers/mock-backend';
 
 const PHONE = { width: 390, height: 844 };
@@ -9,7 +10,9 @@ const DESKTOP = { width: 1280, height: 800 };
 const SHOT_DIR = process.env.CONTACT_SHOT_DIR;
 const SUBPIXEL_PX = 1;
 const SCROLL_MARGIN_PX = 100;
+const HYDRATION_DELAY_MS = 2000;
 const PATHS: Record<SiteLocale, string> = { en: '/', pt: '/pt' };
+const FORM_SELECTOR = '[data-testid="contact-form"]';
 const FIELD_SELECTORS = {
   name: 'input[name="name"]',
   email: 'input[name="email"]',
@@ -30,6 +33,7 @@ async function openForm(page: Page, locale: SiteLocale) {
   );
   const form = page.getByTestId('contact-form');
   await expect(form).toBeVisible();
+  await waitForHydration(page, FORM_SELECTOR);
   return form;
 }
 
@@ -94,6 +98,32 @@ test.describe('contact section with JavaScript on', () => {
       await expect(label).toHaveText(contactCopy[locale].timezone.loading);
     });
   }
+});
+
+test.describe('contact form before it hydrates', () => {
+  test('a submit while the scripts are still loading neither navigates nor puts the message in the URL', async ({
+    page,
+  }) => {
+    await page.route('**/_next/static/chunks/**/*.js', async (route) => {
+      await new Promise((resolve) => setTimeout(resolve, HYDRATION_DELAY_MS));
+      await route.continue();
+    });
+    const documents: string[] = [];
+    page.on('request', (request) => {
+      if (request.resourceType() === 'document') documents.push(request.url());
+    });
+    await page.goto('/', { waitUntil: 'commit' });
+    const form = page.getByTestId('contact-form');
+    await form.waitFor({ state: 'attached' });
+    await form.scrollIntoViewIfNeeded();
+    await fillValid(page);
+
+    await form.getByRole('button', { name: contactCopy.en.form.submit, exact: true }).click();
+    await waitForHydration(page, FORM_SELECTOR);
+
+    expect(documents, 'the page loaded once and the submit did not reload it').toHaveLength(1);
+    expect(new URL(page.url()).search, 'the typed message stays out of the URL').toBe('');
+  });
 });
 
 test.describe('contact submit status line', () => {

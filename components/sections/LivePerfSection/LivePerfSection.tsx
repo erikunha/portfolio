@@ -52,7 +52,7 @@ export function MeasuredTile({
   return (
     <div className="measured-tile" data-metric data-placeholder={placeholder || undefined}>
       <div className="measured-label" data-reserve={reserve}>
-        {label}
+        {reserve ? <span>{label}</span> : label}
       </div>
       <div className="measured-value">{value}</div>
       <div className="measured-description">{description}</div>

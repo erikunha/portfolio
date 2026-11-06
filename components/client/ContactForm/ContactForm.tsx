@@ -329,6 +329,7 @@ export function ContactForm({ copy, chrome }: { copy: ContactContent; chrome: Te
   return (
     <ContactShell chrome={chrome}>
       <form
+        method="dialog"
         onSubmit={submit}
         noValidate
         className="contact-form"
