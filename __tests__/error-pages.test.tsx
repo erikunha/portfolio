@@ -199,3 +199,14 @@ describe('GlobalErrorPage', () => {
     expect(markup).not.toContain('secretInternalFrame');
   });
 });
+
+describe('app/error.tsx', () => {
+  it('loads the 500 page on demand and still renders it for a route error', async () => {
+    const { default: RouteError } = await import('@/app/error');
+    render(<RouteError error={makeError()} reset={() => undefined} />);
+    expect(
+      await screen.findByText(errorsContent[SITE_LOCALE.en].serverError.message),
+      'the lazy route error page must resolve to the full 500 page',
+    ).toBeTruthy();
+  });
+});
