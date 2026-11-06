@@ -1,5 +1,4 @@
 import 'server-only';
-import type Anthropic from '@anthropic-ai/sdk';
 import { credentials } from '@/content/credentials';
 import { education } from '@/content/education';
 import { gitLog } from '@/content/git-log';
@@ -111,11 +110,3 @@ ${formatUnknowns()}`;
 export const SYSTEM_TEXT: string = `${NARRATIVE}\n\n${LIVE_DATA}`;
 
 export const PROMPT_VERSION: string = sha256Hex(SYSTEM_TEXT).slice(0, 12);
-
-export const SYSTEM: Anthropic.Messages.TextBlockParam[] = [
-  {
-    type: 'text',
-    text: SYSTEM_TEXT,
-    cache_control: { type: 'ephemeral' },
-  },
-];

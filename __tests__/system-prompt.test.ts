@@ -6,7 +6,7 @@ import { projects } from '@/content/projects';
 import { personSchema } from '@/content/seo';
 import { SITE_LOCALE } from '@/content/site-locale';
 import { unknowns } from '@/content/unknowns';
-import { SYSTEM, SYSTEM_TEXT } from '@/lib/ask/system-prompt';
+import { SYSTEM_TEXT } from '@/lib/ask/system-prompt';
 
 const CACHE_ELIGIBILITY_MIN_CHARS = 3500;
 const COUNTRY_AND_AREA_CODE_LENGTH = 4;
@@ -18,17 +18,6 @@ describe('lib/ask/system-prompt', () => {
   describe('cache eligibility', () => {
     it('SYSTEM_TEXT is ≥ 3500 chars (proxy for ≥ 1024 tokens, Haiku ephemeral cache minimum)', () => {
       expect(SYSTEM_TEXT.length).toBeGreaterThanOrEqual(CACHE_ELIGIBILITY_MIN_CHARS);
-    });
-
-    it('the SYSTEM block declares cache_control: ephemeral', () => {
-      expect(SYSTEM).toHaveLength(1);
-      const block = SYSTEM[0];
-      expect(block?.type).toBe('text');
-      expect(block?.cache_control).toEqual({ type: 'ephemeral' });
-    });
-
-    it('SYSTEM block text matches SYSTEM_TEXT', () => {
-      expect(SYSTEM[0]?.text).toBe(SYSTEM_TEXT);
     });
   });
 
