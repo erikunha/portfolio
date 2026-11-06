@@ -211,23 +211,27 @@ build fails until this tree is corrected. The block is bounded by the
 
 <!-- doc-drift:start -->
 ```
-app/layout.tsx                       # fonts, JSON-LD, metadata, motion bootstrap, Vercel RUM
-app/page.tsx                         # English home route, renders SiteHome
-app/pt/page.tsx                      # pt-BR home route, renders SiteHome
+components/RootShell.tsx             # shared by both root layouts: fonts, JSON-LD, metadata, motion bootstrap, Vercel RUM
+app/(en)/layout.tsx                  # root layout of the English routes, <html lang="en-US">
+app/(pt)/layout.tsx                  # root layout of the pt-BR routes, <html lang="pt-BR">
+app/(en)/page.tsx                    # English home route, renders SiteHome
+app/(pt)/pt/page.tsx                 # pt-BR home route, renders SiteHome
 components/SiteHome.tsx              # section composition, client shell boundaries, footer
-app/summary/page.tsx                 # one-screen reading view: stats, CTAs, projects | stack + contact
-app/cv/page.tsx                      # full CV reading view and print control
+app/(en)/summary/page.tsx            # one-screen reading view: stats, CTAs, projects | stack + contact
+app/(en)/cv/page.tsx                 # full CV reading view and print control
 components/reading/ReadingShell.tsx    # AppShell wrapper shared by both reading views
 components/reading/ReadingSection.tsx  # titled section block shared by /cv and /summary
 components/reading/ReadingActions.tsx  # hire, cross-view and print action row shared by both reading views
-app/links/page.tsx                   # pt-BR links page
-app/links/en/page.tsx                # English links page
-app/not-found.tsx                    # Matrix-themed 404
-app/error.tsx                        # route error page (500), digest + retry
+app/(pt)/links/page.tsx              # pt-BR links page, in the pt-BR root layout
+app/(en)/links/en/page.tsx           # English links page, in the English root layout
+app/(en)/[...missing]/not-found.tsx  # Matrix-themed 404 for unmatched addresses, English root layout
+app/(pt)/pt/[...missing]/not-found.tsx  # Matrix-themed 404 for unknown /pt addresses, pt-BR root layout
+app/(en)/error.tsx                   # route error page (500) of the English routes, digest + retry
+app/(pt)/error.tsx                   # route error page (500) of the pt-BR routes
 app/global-error.tsx                 # root error page, renders its own html/body
 app/sitemap.ts                       # SEO sitemap (robots.txt is static, in public/)
 app/css/                             # global styles, Tailwind v4 via PostCSS
-app/design-system/                   # MDX docs inside the shared shell: token gallery, on-this-page navigation, page tree in the site menu and content-backed DS opinion
+app/(en)/design-system/            # MDX docs inside the shared shell: token gallery, on-this-page navigation, page tree in the site menu and content-backed DS opinion
 app/api/ask/route.ts                 # Fluid Compute: LLM streaming via AI Gateway
 app/api/contact/route.ts             # Node: durable contact submission, 200 accepted or 202 queued
 app/api/contact-retry/route.ts       # cron: retry undelivered contact messages daily
@@ -536,7 +540,7 @@ Observability spans real-user telemetry, structured logs and client error captur
 
 ### Real-user telemetry
 
-- **Vercel Web Analytics** + **Vercel Speed Insights** mounted in `app/layout.tsx`. Real-user pageview counts + LCP/INP/CLS land in the Vercel dashboards. They mount only when `VERCEL=1`; ad blockers and client settings can prevent collection.
+- **Vercel Web Analytics** + **Vercel Speed Insights** mounted in `components/RootShell.tsx`. Real-user pageview counts + LCP/INP/CLS land in the Vercel dashboards. They mount only when `VERCEL=1`; ad blockers and client settings can prevent collection.
 - **CSP** in `proxy.ts` allows `https://vitals.vercel-insights.com` (specific ingest origin, no wildcard) and `https://va.vercel-scripts.com`.
 
 ### Server-side structured logging
@@ -612,7 +616,7 @@ Run axe-core in CI; fail builds on any new violation. Manual screen-reader pass 
 Modest but professional:
 - CSP `connect-src 'self' https://vitals.vercel-insights.com https://va.vercel-scripts.com`: the browser only calls same-origin `/api/ask`; the model call is server→AI Gateway, so no provider host is in the CSP (`proxy.ts`)
 - HSTS, X-Content-Type-Options, X-Frame-Options DENY
-- Fonts are self-hosted. Vercel Analytics and Speed Insights mount conditionally in the root layout.
+- Fonts are self-hosted. Vercel Analytics and Speed Insights mount conditionally in `components/RootShell.tsx`, which both root layouts render.
 - `AI_GATEWAY_API_KEY` in Vercel env vars (OIDC token on Vercel), never client-side
 - IP hashing uses `DEPLOY_SALT` if supplied, a development fallback outside production, or a random production salt persisted in Redis (`meta:deploy-salt`, `SET NX`, no TTL)
 - Contact payloads and ASK questions, answers and salted IP hashes are persisted. ASK erasure uses `/api/log/forget`; retention is bounded by TTLs.
@@ -715,22 +719,22 @@ The principal-level discipline: **none of this is built today.** YAGNI is the de
 
 ## 17. Routes and machine-readable surfaces
 
-| Route                                                                        | Implementation                                                                 |
-| ---------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
-| `/`                                                                          | `app/page.tsx` renders `components/SiteHome.tsx`, terminal homepage            |
-| `/summary`, `/cv`                                                            | RSC reading views inside `AppShell` (home header); print hides the shell       |
-| `/pt`, `/pt/cv`, `/pt/summary`                                               | pt-BR twins of the home page and the reading views                             |
-| `/links`, `/links/en`                                                        | Localized link pages                                                           |
-| `/design-system`, `/design-system/{tokens,components,enforcement,changelog}` | MDX documentation and component gallery                                        |
-| `/api/ask`                                                                   | Streaming POST handler                                                         |
-| `/api/contact`                                                               | Durable contact POST handler                                                   |
-| `/api/contact-retry`, `/api/psi-refresh`                                     | Authenticated daily cron GET handlers                                          |
-| `/api/lighthouse`, `/api/healthz`, `/api/erik.json`                          | Scores, health and structured profile GET handlers                             |
-| `/api/log`, `/api/log/forget`, `/api/csp-report`                             | Error ingestion, ASK erasure and CSP report POST handlers                      |
-| `/api/mcp`                                                                   | MCP transport with `ask_erik` and `get_profile` tools                          |
-| `/sitemap.xml`                                                               | `app/sitemap.ts`, homepage, reading views, links pages and design-system pages |
-| `/robots.txt`, `/llms.txt`, `/.well-known/agent.json`                        | Public static discovery files                                                  |
-| `/og.png`, `/erik-cunha-cv.pdf`                                              | Static social image and downloadable CV                                        |
+| Route                                                                        | Implementation                                                                          |
+| ---------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| `/`                                                                          | `app/(en)/page.tsx` renders `components/SiteHome.tsx`, terminal homepage                |
+| `/summary`, `/cv`                                                            | RSC reading views inside `AppShell` (home header); print hides the shell                |
+| `/pt`, `/pt/cv`, `/pt/summary`                                               | pt-BR twins of the home page and the reading views, in the `app/(pt)` root layout       |
+| `/links`, `/links/en`                                                        | Localized link pages: `/links` in the `app/(pt)` root layout, `/links/en` in `app/(en)` |
+| `/design-system`, `/design-system/{tokens,components,enforcement,changelog}` | MDX documentation and component gallery                                                 |
+| `/api/ask`                                                                   | Streaming POST handler                                                                  |
+| `/api/contact`                                                               | Durable contact POST handler                                                            |
+| `/api/contact-retry`, `/api/psi-refresh`                                     | Authenticated daily cron GET handlers                                                   |
+| `/api/lighthouse`, `/api/healthz`, `/api/erik.json`                          | Scores, health and structured profile GET handlers                                      |
+| `/api/log`, `/api/log/forget`, `/api/csp-report`                             | Error ingestion, ASK erasure and CSP report POST handlers                               |
+| `/api/mcp`                                                                   | MCP transport with `ask_erik` and `get_profile` tools                                   |
+| `/sitemap.xml`                                                               | `app/sitemap.ts`, homepage, reading views, links pages and design-system pages          |
+| `/robots.txt`, `/llms.txt`, `/.well-known/agent.json`                        | Public static discovery files                                                           |
+| `/og.png`, `/erik-cunha-cv.pdf`                                              | Static social image and downloadable CV                                                 |
 
 `/api/mcp` exports GET and POST through the MCP handler.
 
