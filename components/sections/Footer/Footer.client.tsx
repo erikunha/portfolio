@@ -3,6 +3,7 @@
 import { type ReactNode, useCallback, useEffect, useRef } from 'react';
 import { MAIN_CONTENT_ID } from '@/components/PageMain';
 import type { FooterContent } from '@/content/schemas';
+import { isRendered } from '@/lib/dom/is-rendered';
 
 const EMPTY_SECTION_IDS: string[] = [];
 const SECOND_MS = 1000;
@@ -18,7 +19,6 @@ const VISIBILITY_EVENT = 'visibilitychange';
 const EDITABLE_SELECTOR =
   'input, textarea, select, [contenteditable]:not([contenteditable="false"]), [role="textbox"]';
 const HEADING_SELECTOR = 'main h1, main [role="heading"][aria-level="1"]';
-const HIDDEN_DISPLAY = 'none';
 const FOOTER_SELECTOR = 'footer';
 const KEYDOWN_EVENT = 'keydown';
 const SCROLL_BEHAVIOR = 'instant';
@@ -32,13 +32,6 @@ const SESSION_FIELDS = {
   commands: '[data-sess="commands"]',
   meter: 'meter',
 } as const;
-
-function isRendered(element: Element) {
-  for (let node: Element | null = element; node; node = node.parentElement) {
-    if (getComputedStyle(node).display === HIDDEN_DISPLAY) return false;
-  }
-  return true;
-}
 
 function formatUptime(seconds: number) {
   return [
