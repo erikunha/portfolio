@@ -270,6 +270,47 @@
     margin: 0;
   }
 
+  .measured-error {
+    display: grid;
+    gap: var(--spacing-2);
+    justify-items: start;
+    padding: var(--spacing-3);
+    border: var(--border-width) solid var(--color-primary-500);
+    background: var(--color-glow-03);
+    color: var(--color-tertiary-50);
+    font-size: var(--text-body);
+    line-height: 1.5;
+  }
+
+  .measured-error > p {
+    margin: 0;
+    color: var(--color-text-secondary);
+  }
+
+  .measured-error strong {
+    color: var(--color-primary-500);
+    font-weight: 700;
+  }
+
+  .measured-retry {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--spacing-target);
+    color: var(--color-primary-500);
+    font-weight: 700;
+    text-decoration: underline;
+    text-underline-offset: var(--spacing-1);
+  }
+
+  .measured-error-ref {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--color-text-secondary);
+    font-size: var(--text-xs);
+  }
+
   .measured-tile[data-placeholder] {
     border-style: dashed;
   }

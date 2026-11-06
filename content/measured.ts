@@ -98,6 +98,14 @@ export const measured: Record<SiteLocale, Measured> = {
 const measuredStatesFor = (locale: SiteLocale): MeasuredStates => {
   const pt = locale === SITE_LOCALE.pt;
   return MeasuredStatesSchema.parse({
+    askError: {
+      heading: pt ? '! resultados do eval indisponíveis' : '! eval results unavailable',
+      body: pt
+        ? 'O armazenamento não respondeu em {seconds}s. O site funciona; este painel tenta de novo na próxima visita.'
+        : 'The store did not answer in {seconds}s. The site works; this panel will try again on the next visit.',
+      retry: pt ? '[ TENTAR ]' : '[ RETRY ]',
+      refLabel: 'ref',
+    },
     perfLoading: {
       label: pt ? 'MEDIDO · LIGHTHOUSE' : 'MEASURED · LIGHTHOUSE',
       fetching: pt
