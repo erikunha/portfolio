@@ -1,4 +1,5 @@
 import { CompanyLink } from '@/components/CompanyLink';
+import { EXTERNAL_LINK_PROPS, externalLinkProps } from '@/components/ExternalLink';
 import { HeroStats } from '@/components/HeroStats';
 import { heroContent, heroTagline } from '@/content/hero';
 import { profile, profilePresentation } from '@/content/profile';
@@ -7,8 +8,7 @@ import { Button } from '@/design-system';
 import { HeroBootAnimation } from '../../client/HeroBootAnimation';
 import { HeroSystemFailure } from '../../client/HeroSystemFailure';
 
-const EXTERNAL_TARGET = '_blank';
-const EXTERNAL_REL = 'noopener noreferrer';
+const FIELD_SEPARATOR = ' · ';
 
 const HEADING_LEVEL = 1;
 
@@ -39,10 +39,12 @@ function HeroIdentity({ locale, primary }: { locale: SiteLocale; primary: boolea
             {c.locationLabel} <b className="hero-location">{p.country}</b>
           </span>
           <span className="hero-context-separator" aria-hidden="true">
-            {' · '}
+            {FIELD_SEPARATOR}
           </span>
           <span className="hero-context-item">
-            {profile.timezone} · {p.availability}
+            {profile.timezone}
+            {FIELD_SEPARATOR}
+            {p.availability}
           </span>
         </span>
         <span className="hero-context-fact hero-context-fact--employer">
@@ -64,8 +66,7 @@ function HeroIdentity({ locale, primary }: { locale: SiteLocale; primary: boolea
           as="a"
           variant="primary"
           href={c.hire.href}
-          target={EXTERNAL_TARGET}
-          rel={EXTERNAL_REL}
+          {...EXTERNAL_LINK_PROPS}
           aria-label={c.hire.accessibleLabel}
         >
           {c.hire.label}
@@ -76,8 +77,7 @@ function HeroIdentity({ locale, primary }: { locale: SiteLocale; primary: boolea
             as="a"
             variant="secondary"
             href={action.href}
-            target={action.external ? EXTERNAL_TARGET : undefined}
-            rel={action.external ? EXTERNAL_REL : undefined}
+            {...externalLinkProps(action.external)}
             aria-label={action.accessibleLabel}
             className={action.hiddenOnWide ? 'lg:hidden' : undefined}
           >

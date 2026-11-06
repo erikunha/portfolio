@@ -1,8 +1,8 @@
+import { ExternalLink } from '@/components/ExternalLink';
 import { companyLinkCopy } from '@/content/company-link';
 import type { SiteLocale } from '@/content/site-locale';
+import { cn } from '@/lib/cn';
 
-const EXTERNAL_TARGET = '_blank';
-const EXTERNAL_REL = 'noopener noreferrer';
 const BASE_CLASS = 'company-link';
 
 type CompanyLinkProps = {
@@ -15,16 +15,10 @@ type CompanyLinkProps = {
 
 export function CompanyLink({ href, locale, className, describedBy, children }: CompanyLinkProps) {
   return (
-    <a
-      className={className ? `${BASE_CLASS} ${className}` : BASE_CLASS}
-      href={href}
-      target={EXTERNAL_TARGET}
-      rel={EXTERNAL_REL}
-      aria-describedby={describedBy}
-    >
+    <ExternalLink className={cn(BASE_CLASS, className)} href={href} aria-describedby={describedBy}>
       {children}
       {describedBy ? null : <span className="sr-only"> {companyLinkCopy[locale].disclosure}</span>}
-    </a>
+    </ExternalLink>
   );
 }
 

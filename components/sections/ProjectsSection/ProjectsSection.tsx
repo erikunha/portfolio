@@ -1,3 +1,4 @@
+import { ExternalLink } from '@/components/ExternalLink';
 import { companyUrlFor } from '@/content/git-log';
 import { projectPresentation, projects } from '@/content/projects';
 import type { Project } from '@/content/schemas';
@@ -47,10 +48,10 @@ export function ProjectsContent({ locale }: { locale: SiteLocale }) {
           </div>
           <h3 className="project-name">
             {project.url ? (
-              <a href={project.url} target="_blank" rel="noopener noreferrer">
+              <ExternalLink href={project.url}>
                 {project.name}
                 <span className="sr-only"> {presentation.externalDisclosure}</span>
-              </a>
+              </ExternalLink>
             ) : (
               project.name
             )}

@@ -1,11 +1,9 @@
 import { useId } from 'react';
+import { ExternalLink } from '@/components/ExternalLink';
 import { communityEvent } from '@/content/community';
 import { careerCredentials, credentials } from '@/content/credentials';
 import { educationTags } from '@/content/education';
 import type { SiteLocale } from '@/content/site-locale';
-
-const EXTERNAL_REL = 'noopener noreferrer';
-const EXTERNAL_TARGET = '_blank';
 
 export function CredentialsSection({
   locale,
@@ -59,10 +57,10 @@ export function CredentialsSection({
         </h3>
         <div className="career-community">
           <p className="career-tag-key">
-            <a href={eventLink.href} target={EXTERNAL_TARGET} rel={EXTERNAL_REL}>
+            <ExternalLink href={eventLink.href}>
               <span>{community.heading}</span>
               <span className="sr-only"> {event.newTabLabel}</span>
-            </a>
+            </ExternalLink>
           </p>
           <ul>
             {community.bullets.map((bullet) => (
