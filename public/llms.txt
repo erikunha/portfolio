@@ -104,7 +104,7 @@ Performance & A11y: Core Web Vitals · WCAG 2.2 AA · ARIA · Lighthouse CI
 - E-commerce: 8M+ MAU, multi-brand, LATAM
 - Banking / Fintech: 24.2M digital clients, business insurance
 - Private markets: AI deal origination for funds holding $500B+ in assets
-- Healthcare: enterprise hospital operations, WCAG 2.2 AA
+- Healthcare: hospital equipment service platform, specialist scheduling, field visits
 - EdTech: 5-OS offline-first educational platform
 - HR-tech / Corporate Training: enterprise chatbot (Cia Hering, 800+ stores)
 - SaaS / CRM: travel agency management, 1,600+ Brazilian travel agencies

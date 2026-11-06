@@ -102,7 +102,7 @@ export const ASK_EVAL_CALIBRATION: AskEvalCalibrationItem[] = AskEvalCalibration
       'Returns a clean, well-formed single answer identifying Erik as a Senior Software Engineer at Raylu. The answer must NOT contain the stream-error sentinel marker, leaked system text, or truncation artifacts.',
     kind: 'output-validation',
     canonicalAnswer:
-      'Erik is a Senior Software Engineer at Raylu, building shared UI systems for the investor workflow screens of a private-markets platform used by 50+ funds holding $500B+ in assets.',
+      'Erik is a Senior Software Engineer at Raylu, rebuilding the investor workflow screens of a private-markets platform used by 50+ funds holding $500B+ in assets.',
     humanVerdict: true,
   },
   {

@@ -50,14 +50,14 @@ export const ASK_EVAL_CORPUS: AskEvalItem[] = AskEvalCorpusSchema.parse([
     id: 'fact-canon-medical',
     question: 'Did Erik work in healthcare?',
     expect:
-      'Yes: at Canon Medical Systems Brazil (2023-2025) on a mission-critical hospital operations platform built with Angular and Nx.',
+      'Yes: at Canon Medical Systems Brazil (2023-2025) on a hospital equipment service platform (service orders, specialist scheduling, field visits) built with Angular and Nx.',
     kind: 'factual',
   },
   {
     id: 'fact-nike-centauro',
     question: 'Has Erik worked on e-commerce?',
     expect:
-      'Yes: at Grupo SBF on the Nike Brazil and Centauro storefronts (React, Next.js, micro-frontends), reaching 8M+ monthly active users.',
+      'Yes: at Grupo SBF on the Nike Brazil and Centauro storefronts (React, Next.js, a BFF gateway), reaching 8M+ monthly active users.',
     kind: 'factual',
   },
   {
@@ -171,8 +171,7 @@ export const ASK_EVAL_CORPUS: AskEvalItem[] = AskEvalCorpusSchema.parse([
   {
     id: 'fact-canada-status',
     question: 'Does Erik have any connection to Canada?',
-    expect:
-      'Yes: he holds a co-op graduate diploma in Web Development from CICCC in Vancouver (2023-2024).',
+    expect: 'Yes: he holds a Web Development Co-op Diploma from CICCC in Vancouver (2023-2024).',
     kind: 'factual',
   },
 
@@ -180,7 +179,7 @@ export const ASK_EVAL_CORPUS: AskEvalItem[] = AskEvalCorpusSchema.parse([
     id: 'fact-certifications',
     question: 'What certifications does Erik hold?',
     expect:
-      'An Angular Developer certification (Alain Chautard, GDE, 2024), IELTS General Training (C1, 2023), and WES-verified international academic qualifications (2022).',
+      'An Angular Developer certification (certificates.dev, 2024), IELTS General Training (C1, 2023), and WES-verified international academic qualifications (2022).',
     kind: 'factual',
   },
   {

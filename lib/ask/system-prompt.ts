@@ -8,6 +8,7 @@ import {
   profile,
   profileLanguageLine,
   profileSummary,
+  RAYLU_OWNED_SCOPE,
   YEARS_OF_EXPERIENCE_LABEL,
 } from '@/content/profile';
 import { projects } from '@/content/projects';
@@ -50,17 +51,14 @@ Backend: Node.js, Express.js, REST APIs, PostgreSQL, MongoDB, SQLite, Microsoft 
 Languages: TypeScript, JavaScript (ES6+), SQL, Python
 Testing: Playwright, Jest, Vitest, MSW, WireMock, Stryker
 Cloud: AWS (CodePipeline, CodeBuild, S3, CloudFront, EC2), Docker, NGINX, Jenkins, GitHub Actions
-AI: 12-agent GitHub Copilot engineering system at Betsson (codegen, review, debugging, testing, architecture validation), shared UI systems for Raylu's investor workflow screens (${FUNDS_PHRASE}), a governed Claude endpoint with a CI eval harness (this portfolio shell), daily work in Claude Code and Codex authoring skills, guard policies and lifecycle hooks
+AI: 12-agent GitHub Copilot engineering system at Betsson (codegen, review, debugging, testing, architecture validation), the investor workflow screens of Raylu's AI deal origination platform (${FUNDS_PHRASE}), a governed Claude endpoint with a CI eval harness (this portfolio shell), daily work in Claude Code and Codex authoring skills, guard policies and lifecycle hooks
 AI-native: Vercel AI SDK + AI Gateway, Anthropic API, OpenAI, Google GenAI/Vertex, MCP servers, Zod structured output, eval harnesses with LLM judge calibrated on human labels, per-job cost caps, prompt-injection defense, agent and sub-agent orchestration, Claude Code/Codex skills, spec-driven development, model routing with cost ceilings
 
 ## Current role
 ${profile.currentEmployer.name}: ${profile.currentEmployer.context} · ${FUNDS_PHRASE}.
 ${currentRoleLine}
-- Built shared UI systems and state architecture from zero, co-developed with a second engineer, behind data-intensive investor workflows (market maps, target lists, diligence views). Do NOT widen this to whole-platform ownership: a second engineer co-develops it and has been primary since August, so describe the scope named here and no more.
-- Built a reusable headless DataTable feature on TanStack Table: versioned ViewState contract, URL-synced deterministic state with backward-compatible codecs, persistence separating immutable view identity from mutable runtime state; hierarchical grouping, expansion, pagination, filtering, sorting, column management; shareable, bookmarkable, refresh-safe views
-- Accessibility on the DataTable's shared components: row-header and column-header semantics, aria-sort, a live region announcing result count, keyboard navigation, accessible naming. (It does not implement role="grid", aria-rowcount or aria-colcount · do not claim those.)
-- Automated test coverage across serialization, state, rendering, accessibility, and interaction flows, including Storybook interaction testing
-- Standardized team practices: RFC-driven implementation, ADRs, contribution guidelines, PR conventions
+- Owns ${RAYLU_OWNED_SCOPE}. Do NOT widen this to whole-platform ownership: the scope is that frontend platform plus the backend changes listed under Raylu in the employment history below, not the whole product, its models or the company.
+- The table is a real table element, not an ARIA grid: it does not implement role="grid", aria-rowcount or aria-colcount · do not claim those.
 
 ## Employment history (newest first)
 ${gitLog[SITE_LOCALE.en].map(formatEmployment).join('\n')}
