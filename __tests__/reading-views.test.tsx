@@ -375,7 +375,7 @@ describe('reading view content', () => {
   it('hides the hire call to action and aligns the two row lists in print', () => {
     const stylesheet = parse(readComponentsCss());
     const PRINT = /^print$/;
-    const [hidden] = rulesInMedia(stylesheet, PRINT, '.reading-view .skip-to-content');
+    const [hidden] = rulesInMedia(stylesheet, PRINT, '.reading-actions-inline .reading-cta');
     expect(hidden?.selector).toContain('.reading-cta');
     expect(declValue(hidden, 'display')).toBe('none');
 
