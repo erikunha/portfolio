@@ -1,4 +1,5 @@
 import { expect, type Page, test } from '@playwright/test';
+import { waitForHydration } from './_helpers/hydration';
 
 const SHELL_INPUT = '[aria-label="shell command"]';
 const SHELL_FORM = '[data-testid="shell-form"]';
@@ -7,10 +8,7 @@ const WAIT_SECONDS = '2280';
 
 async function openShell(page: Page): Promise<void> {
   await page.goto('/');
-  await page.waitForFunction((selector) => {
-    const form = document.querySelector(selector);
-    return form !== null && Object.keys(form).some((key) => key.startsWith('__reactFiber$'));
-  }, SHELL_FORM);
+  await waitForHydration(page, SHELL_FORM);
 }
 
 async function ask(page: Page, question: string): Promise<void> {

@@ -6,6 +6,7 @@ import {
   test,
 } from '@playwright/test';
 import { heightOf, settleFrames, VIEWPORTS } from './_helpers/geometry';
+import { waitForHydration } from './_helpers/hydration';
 
 const { PHONE, TABLET, DESKTOP } = VIEWPORTS;
 const SUBPIXEL_PX = 1;
@@ -59,6 +60,7 @@ test.describe('the interactive shell keeps its height while an answer is pending
       });
       await page.goto('/');
       await page.getByTestId('shell-form').scrollIntoViewIfNeeded();
+      await waitForHydration(page, '[data-testid="shell-form"]');
       await settleFrames(page);
       const idle = await heightOf(page, '#sec-shell');
 
