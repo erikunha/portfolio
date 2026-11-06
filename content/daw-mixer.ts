@@ -1,4 +1,4 @@
-import { type DawMixer, DawMixerSchema } from './schemas';
+import { type DawMixer, type DawMixerCopy, DawMixerCopySchema, DawMixerSchema } from './schemas';
 import { SITE_LOCALE, type SiteLocale } from './site-locale';
 
 export const MASTER_CHANNEL_ID = 'MASTER';
@@ -7,32 +7,11 @@ export const METER_CLIP_THRESHOLD_PCT = 85;
 export const METER_CLIP_SEGMENTS = 2;
 export const PLUGIN_STRENGTH_STEPS = 5;
 
-export type DawMixerCopy = {
-  sessionLabel: string;
-  tracksLabel: string;
-  separator: string;
-  transportSeparator: string;
-  playGlyph: string;
-  bpmUnit: string;
-  signalFlow: string;
-  leadSuffix: string;
-  loudnessLabel: string;
-  peakLabel: string;
-  decibelUnit: string;
-  columns: {
-    id: string;
-    track: string;
-    io: string;
-    toggles: string;
-    pluginChain: string;
-    meter: string;
-    fader: string;
-  };
-};
+export type { DawMixerCopy };
 
 const dawMixerCopyFor = (locale: SiteLocale): DawMixerCopy => {
   const pt = locale === SITE_LOCALE.pt;
-  return {
+  return DawMixerCopySchema.parse({
     sessionLabel: pt ? 'SESSÃO:' : 'SESSION:',
     tracksLabel: pt ? 'FAIXAS DE GTR + MASTER' : 'GTR TRACKS + MASTER',
     separator: '·',
@@ -53,7 +32,7 @@ const dawMixerCopyFor = (locale: SiteLocale): DawMixerCopy => {
       meter: pt ? 'MEDIDOR' : 'METER',
       fader: 'FADER',
     },
-  };
+  });
 };
 
 const dawMixerFor = (locale: SiteLocale): DawMixer => {

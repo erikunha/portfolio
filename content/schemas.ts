@@ -868,6 +868,31 @@ export const DawMixerSchema = z.object({
     }),
 });
 
+const DawMixerCopyTextSchema = z.string().min(1);
+
+export const DawMixerCopySchema = z.object({
+  sessionLabel: DawMixerCopyTextSchema,
+  tracksLabel: DawMixerCopyTextSchema,
+  separator: DawMixerCopyTextSchema,
+  transportSeparator: DawMixerCopyTextSchema,
+  playGlyph: DawMixerCopyTextSchema,
+  bpmUnit: DawMixerCopyTextSchema,
+  signalFlow: DawMixerCopyTextSchema,
+  leadSuffix: DawMixerCopyTextSchema,
+  loudnessLabel: DawMixerCopyTextSchema,
+  peakLabel: DawMixerCopyTextSchema,
+  decibelUnit: DawMixerCopyTextSchema,
+  columns: z.object({
+    id: DawMixerCopyTextSchema,
+    track: DawMixerCopyTextSchema,
+    io: DawMixerCopyTextSchema,
+    toggles: DawMixerCopyTextSchema,
+    pluginChain: DawMixerCopyTextSchema,
+    meter: DawMixerCopyTextSchema,
+    fader: DawMixerCopyTextSchema,
+  }),
+});
+
 export const LinksProfileSchema = z.object({
   name: z.string().min(1),
   avatar: z.string().min(1),
@@ -976,6 +1001,7 @@ export type CommunityEvent = z.infer<typeof CommunityEventSchema>;
 export type GitCommit = z.infer<typeof GitCommitSchema>;
 export type ShellResponse = z.infer<typeof ShellResponseSchema>;
 export type DawMixer = z.infer<typeof DawMixerSchema>;
+export type DawMixerCopy = z.infer<typeof DawMixerCopySchema>;
 export type DawMixerChannel = z.infer<typeof DawMixerChannelSchema>;
 export type DawMixerPlugin = z.infer<typeof DawMixerPluginSchema>;
 export type LinksProfile = z.infer<typeof LinksProfileSchema>;

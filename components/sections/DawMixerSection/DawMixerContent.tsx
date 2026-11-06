@@ -13,13 +13,8 @@ import type { DawMixer, DawMixerChannel } from '@/content/schemas';
 import type { SiteLocale } from '@/content/site-locale';
 import { cn } from '@/lib/cn';
 import { getIsMobile } from '@/lib/ua';
-import {
-  DawMixerDesktop,
-  FaderBar,
-  ParsedText,
-  SessionSummary,
-  StrengthDots,
-} from './DawMixerDesktop';
+import { DawMixerDesktop } from './DawMixerDesktop';
+import { FaderBar, ParsedText, SessionSummary, StrengthDots } from './DawMixerShared';
 
 function StaticMeter({
   pct,

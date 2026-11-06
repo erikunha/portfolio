@@ -4,6 +4,8 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { mountClient } from '@/__tests__/helpers/render';
 import { FaderDbIsland, pctToDb } from './FaderDbIsland.client';
 
+const LABELS = { decibelUnit: 'dB', loudnessLabel: 'LUFS', peakLabel: 'PK' };
+
 describe('pctToDb — formula', () => {
   it('returns "-∞" for 0%', () => {
     expect(pctToDb(0)).toBe('-∞');
@@ -48,7 +50,7 @@ describe('pctToDb — formula', () => {
 describe('FaderDbIsland — initial render', () => {
   it('shows pctToDb(initialPct) as the dB value, not a raw content string', () => {
     const html = renderToStaticMarkup(
-      createElement(FaderDbIsland, { initialPct: 72, channelName: 'TEST' }),
+      createElement(FaderDbIsland, { ...LABELS, initialPct: 72, channelName: 'TEST' }),
     );
     const doc = new DOMParser().parseFromString(html, 'text/html');
     const dbSpan = doc.querySelector('[class*="dbValue"]');
@@ -58,6 +60,7 @@ describe('FaderDbIsland — initial render', () => {
   it('renders footer when provided', () => {
     const html = renderToStaticMarkup(
       createElement(FaderDbIsland, {
+        ...LABELS,
         initialPct: 62,
         channelName: 'MASTER',
         footer: { lufs: '-14', pk: '-0.3' },
@@ -69,10 +72,38 @@ describe('FaderDbIsland — initial render', () => {
 
   it('renders no footer element when footer is undefined', () => {
     const html = renderToStaticMarkup(
-      createElement(FaderDbIsland, { initialPct: 50, channelName: 'CH 01' }),
+      createElement(FaderDbIsland, { ...LABELS, initialPct: 50, channelName: 'CH 01' }),
     );
     const doc = new DOMParser().parseFromString(html, 'text/html');
     expect(doc.querySelector('[class*="lufs"]')).toBeNull();
+  });
+});
+
+describe('FaderDbIsland — labels come from props', () => {
+  const custom = { decibelUnit: 'unit-x', loudnessLabel: 'loud-x', peakLabel: 'peak-x' };
+
+  it('renders the unit and footer labels it is given', () => {
+    const html = renderToStaticMarkup(
+      createElement(FaderDbIsland, {
+        ...custom,
+        initialPct: 62,
+        channelName: 'MASTER',
+        footer: { lufs: '-14', pk: '-0.3' },
+      }),
+    );
+    const doc = new DOMParser().parseFromString(html, 'text/html');
+    expect(doc.querySelector('[class*="dbUnit"]')?.textContent).toBe('unit-x');
+    expect(doc.querySelector('[class*="lufs"]')?.textContent).toBe('loud-x -14 · peak-x -0.3');
+  });
+
+  it('uses the given unit in the slider value text', async () => {
+    const { container, unmount: done } = await mountClient(
+      createElement(FaderDbIsland, { ...custom, initialPct: 75, channelName: 'TEST' }),
+    );
+    expect(container.querySelector('[role="slider"]')?.getAttribute('aria-valuetext')).toBe(
+      '0.0 unit-x',
+    );
+    done();
   });
 });
 
@@ -85,7 +116,7 @@ describe('FaderDbIsland — dB updates on fader interaction', () => {
 
   it('dB text changes after ArrowRight keyboard press', async () => {
     const { container, unmount: u } = await mountClient(
-      createElement(FaderDbIsland, { initialPct: 50, channelName: 'TEST' }),
+      createElement(FaderDbIsland, { ...LABELS, initialPct: 50, channelName: 'TEST' }),
     );
     unmount = u;
     const initialDb = pctToDb(50);
@@ -101,7 +132,7 @@ describe('FaderDbIsland — dB updates on fader interaction', () => {
 
   it('dB text changes after ArrowLeft keyboard press', async () => {
     const { container, unmount: u } = await mountClient(
-      createElement(FaderDbIsland, { initialPct: 50, channelName: 'TEST' }),
+      createElement(FaderDbIsland, { ...LABELS, initialPct: 50, channelName: 'TEST' }),
     );
     unmount = u;
     const slider = container.querySelector('[role="slider"]') as HTMLElement;
@@ -113,7 +144,7 @@ describe('FaderDbIsland — dB updates on fader interaction', () => {
 
   it('aria-valuetext reflects dB on the slider element', async () => {
     const { container, unmount: u } = await mountClient(
-      createElement(FaderDbIsland, { initialPct: 75, channelName: 'TEST' }),
+      createElement(FaderDbIsland, { ...LABELS, initialPct: 75, channelName: 'TEST' }),
     );
     unmount = u;
     const slider = container.querySelector('[role="slider"]') as HTMLElement;
@@ -122,7 +153,7 @@ describe('FaderDbIsland — dB updates on fader interaction', () => {
 
   it('ArrowLeft from 0% shows -∞', async () => {
     const { container, unmount: u } = await mountClient(
-      createElement(FaderDbIsland, { initialPct: 0, channelName: 'TEST' }),
+      createElement(FaderDbIsland, { ...LABELS, initialPct: 0, channelName: 'TEST' }),
     );
     unmount = u;
     const dbSpan = container.querySelector('[class*="dbValue"]') as HTMLElement;
@@ -131,7 +162,7 @@ describe('FaderDbIsland — dB updates on fader interaction', () => {
 
   it('ArrowRight from 100% clamps and shows +6.0', async () => {
     const { container, unmount: u } = await mountClient(
-      createElement(FaderDbIsland, { initialPct: 100, channelName: 'TEST' }),
+      createElement(FaderDbIsland, { ...LABELS, initialPct: 100, channelName: 'TEST' }),
     );
     unmount = u;
     const slider = container.querySelector('[role="slider"]') as HTMLElement;
@@ -142,7 +173,7 @@ describe('FaderDbIsland — dB updates on fader interaction', () => {
 
   it('aria-valuetext updates after keyboard interaction', async () => {
     const { container, unmount: u } = await mountClient(
-      createElement(FaderDbIsland, { initialPct: 50, channelName: 'TEST' }),
+      createElement(FaderDbIsland, { ...LABELS, initialPct: 50, channelName: 'TEST' }),
     );
     unmount = u;
     const slider = container.querySelector('[role="slider"]') as HTMLElement;
@@ -153,7 +184,7 @@ describe('FaderDbIsland — dB updates on fader interaction', () => {
 
   it('aria-valuetext and dB span both update during pointer drag via ref mutation', async () => {
     const { container, unmount: u } = await mountClient(
-      createElement(FaderDbIsland, { initialPct: 50, channelName: 'TEST' }),
+      createElement(FaderDbIsland, { ...LABELS, initialPct: 50, channelName: 'TEST' }),
     );
     unmount = u;
     const slider = container.querySelector('[role="slider"]') as HTMLElement;
@@ -170,7 +201,7 @@ describe('FaderDbIsland — dB updates on fader interaction', () => {
 
   it('dB span and aria-valuetext sync on pointerup even when last move and up differ', async () => {
     const { container, unmount: u } = await mountClient(
-      createElement(FaderDbIsland, { initialPct: 50, channelName: 'TEST' }),
+      createElement(FaderDbIsland, { ...LABELS, initialPct: 50, channelName: 'TEST' }),
     );
     unmount = u;
     const slider = container.querySelector('[role="slider"]') as HTMLElement;
