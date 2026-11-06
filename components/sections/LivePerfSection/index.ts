@@ -1,1 +1,7 @@
-export { LivePerfSection, PerfData } from './LivePerfSection';
+export {
+  LivePerfSection,
+  MEASURED_FIELD_SEPARATOR,
+  MeasuredLink,
+  MeasuredTile,
+  PerfData,
+} from './LivePerfSection';

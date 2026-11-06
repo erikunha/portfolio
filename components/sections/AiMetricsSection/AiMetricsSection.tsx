@@ -6,7 +6,12 @@ import type { AskMetrics } from '@/lib/ask-metrics';
 import { getAskMetrics } from '@/lib/ask-metrics';
 import { IconAiMetrics } from '../../Icons';
 import { Module } from '../../responsive/Module';
-import { LivePerfSection } from '../LivePerfSection';
+import {
+  LivePerfSection,
+  MEASURED_FIELD_SEPARATOR,
+  MeasuredLink,
+  MeasuredTile,
+} from '../LivePerfSection';
 import { MeasuredStatus } from '../MeasuredStatus';
 
 const percent = (content: Measured) => (rate: number) =>
@@ -20,6 +25,23 @@ const formatMetricFor = (content: Measured) => ({
   costPerAnswer: (value: number) =>
     `${content.ask.currencyUnit}${value.toFixed(content.format.costPrecision)}`,
 });
+
+const CACHE_KEY_OPEN = ' (';
+const CACHE_KEY_CLOSE = ')';
+
+function askStatusMessage(
+  content: Measured,
+  state: {
+    metrics: AskMetrics | null;
+    loading: boolean;
+    unavailable: boolean;
+    timestamp: ReturnType<typeof metricTimestamp>;
+  },
+) {
+  if (state.metrics) return state.timestamp.valid ? null : content.unknownTimestamp;
+  if (state.loading) return content.loading;
+  return state.unavailable ? content.ask.unavailable : content.ask.pending;
+}
 
 function AiMetricsBody({
   locale,
@@ -39,15 +61,14 @@ function AiMetricsBody({
   return (
     <div className="measured-ask" aria-busy={loading || undefined}>
       <h3 className="measured-heading">
-        <a href={content.ask.url} target="_blank" rel="noopener noreferrer">
+        <MeasuredLink href={content.ask.url} disclosure={content.externalDisclosure}>
           <span data-type-reveal suppressHydrationWarning>
             {content.ask.title}
           </span>
-          <span className="sr-only"> {content.externalDisclosure}</span>
-        </a>
+        </MeasuredLink>
         {metrics ? (
           <>
-            {' · '}
+            {MEASURED_FIELD_SEPARATOR}
             {content.ask.timestampLabel}{' '}
             {timestamp.valid ? (
               <time dateTime={metrics.lastRun}>{timestamp.label}</time>
@@ -56,36 +77,30 @@ function AiMetricsBody({
             )}
           </>
         ) : null}
-        {timestamp.stale ? <span className="measured-status"> · {content.stale}</span> : null}
+        {timestamp.stale ? (
+          <span className="measured-status">
+            {MEASURED_FIELD_SEPARATOR}
+            {content.stale}
+          </span>
+        ) : null}
       </h3>
       <div className="measured-tiles">
         {content.ask.metrics.map((metric) => (
-          <div className="measured-tile" data-metric key={metric.key}>
-            <div className="measured-label">{metric.label}</div>
-            <div className="measured-value">
-              {metrics ? formatMetric[metric.key](metrics[metric.key]) : format.empty}
-            </div>
-            <div className="measured-description">
-              {metric.description ||
-                (metrics
-                  ? `${content.ask.p95Prefix} ${formatMetric.p95LatencyMs(metrics.p95LatencyMs)}`
-                  : content.ask.p95Pending)}
-            </div>
-          </div>
+          <MeasuredTile
+            key={metric.key}
+            label={metric.label}
+            value={metrics ? formatMetric[metric.key](metrics[metric.key]) : format.empty}
+            description={
+              metric.description ||
+              (metrics
+                ? `${content.ask.p95Prefix} ${formatMetric.p95LatencyMs(metrics.p95LatencyMs)}`
+                : content.ask.p95Pending)
+            }
+          />
         ))}
       </div>
       <MeasuredStatus
-        message={
-          metrics
-            ? timestamp.valid
-              ? null
-              : content.unknownTimestamp
-            : loading
-              ? content.loading
-              : unavailable
-                ? content.ask.unavailable
-                : content.ask.pending
-        }
+        message={askStatusMessage(content, { metrics, loading, unavailable, timestamp })}
         live={!metrics}
         reserve={[
           content.loading,
@@ -121,18 +136,16 @@ export function AiMetricsSection({ locale, defer }: { locale: SiteLocale; defer?
       <span id="sec-ai-metrics" />
       <p className="measured-source">
         {content.sourceLabel}{' '}
-        <a href={content.psi.url} target="_blank" rel="noopener noreferrer">
+        <MeasuredLink href={content.psi.url} disclosure={content.externalDisclosure}>
           {content.psi.source}
-          <span className="sr-only"> {content.externalDisclosure}</span>
-        </a>
-        {' · '}
-        <a href={content.ask.url} target="_blank" rel="noopener noreferrer">
+        </MeasuredLink>
+        {MEASURED_FIELD_SEPARATOR}
+        <MeasuredLink href={content.ask.url} disclosure={content.externalDisclosure}>
           {content.ask.source}
-          <span className="sr-only"> {content.externalDisclosure}</span>
-        </a>
-        {' ('}
+        </MeasuredLink>
+        {CACHE_KEY_OPEN}
         {content.ask.cacheKey}
-        {')'}
+        {CACHE_KEY_CLOSE}
       </p>
       <div className="measured-grid">
         <Suspense fallback={<AiMetricsBody locale={locale} metrics={null} loading />}>

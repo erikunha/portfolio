@@ -1,4 +1,5 @@
-import { Suspense } from 'react';
+import { type ReactNode, Suspense } from 'react';
+import { ExternalLink } from '@/components/ExternalLink';
 import { measured as measuredContent, metricTimestamp } from '@/content/measured';
 import type { SiteLocale } from '@/content/site-locale';
 import {
@@ -11,6 +12,43 @@ import {
 import { MeasuredStatus } from '../MeasuredStatus';
 
 type ScoresByStrategy = Record<Strategy, LighthouseScores | null>;
+
+export const MEASURED_FIELD_SEPARATOR = ' · ';
+
+export function MeasuredLink({
+  href,
+  disclosure,
+  children,
+}: {
+  href: string;
+  disclosure: string;
+  children: ReactNode;
+}) {
+  return (
+    <ExternalLink href={href}>
+      {children}
+      <span className="sr-only"> {disclosure}</span>
+    </ExternalLink>
+  );
+}
+
+export function MeasuredTile({
+  label,
+  value,
+  description,
+}: {
+  label: string;
+  value: ReactNode;
+  description: ReactNode;
+}) {
+  return (
+    <div className="measured-tile" data-metric>
+      <div className="measured-label">{label}</div>
+      <div className="measured-value">{value}</div>
+      <div className="measured-description">{description}</div>
+    </div>
+  );
+}
 
 const isAvailable = (scores: LighthouseScores | null | undefined): scores is LighthouseScores =>
   Boolean(scores) && scores?.fetchedAt !== LIGHTHOUSE_FALLBACK.fetchedAt;
@@ -29,6 +67,22 @@ export async function PerfData({ locale }: { locale: SiteLocale }) {
     strategies.map((strategy, index) => [strategy.key, results[index] ?? null]),
   ) as ScoresByStrategy;
   return <PerfBody locale={locale} scores={scores} />;
+}
+
+type Measured = (typeof measuredContent)[SiteLocale];
+
+function perfStatusMessage(
+  measured: Measured,
+  state: {
+    loading: boolean;
+    unavailable: boolean;
+    showTimestamp: boolean;
+    timestamp: ReturnType<typeof metricTimestamp>;
+  },
+) {
+  if (state.loading) return measured.loading;
+  if (state.unavailable) return measured.unavailable;
+  return state.showTimestamp && !state.timestamp.valid ? measured.unknownTimestamp : null;
 }
 
 function PerfBody({
@@ -56,51 +110,42 @@ function PerfBody({
   return (
     <div className="measured-perf" aria-busy={loading || undefined}>
       <h3 className="measured-heading">
-        <a href={psi.url} target="_blank" rel="noopener noreferrer">
+        <MeasuredLink href={psi.url} disclosure={measured.externalDisclosure}>
           <span data-type-reveal suppressHydrationWarning>
             {psi.title}
           </span>
-          <span className="sr-only"> {measured.externalDisclosure}</span>
-        </a>
+        </MeasuredLink>
         {showTimestamp && timestamp.valid ? (
           <>
-            {' · '}
+            {MEASURED_FIELD_SEPARATOR}
             {psi.timestampLabel}{' '}
             <time dateTime={oldestFetchedAt(datedSource)}>{timestamp.label}</time>
           </>
         ) : null}
         {showTimestamp && timestamp.stale ? (
-          <span className="measured-status"> · {measured.stale}</span>
+          <span className="measured-status">
+            {MEASURED_FIELD_SEPARATOR}
+            {measured.stale}
+          </span>
         ) : null}
       </h3>
       <div className="measured-tiles">
         {psi.metrics.map((metric) => (
-          <div className="measured-tile" data-metric key={metric.key}>
-            <div className="measured-label">{metric.label}</div>
-            <div className="measured-value">
-              {psi.strategies
-                .map((strategy) => {
-                  const strategyScores = scores?.[strategy.key];
-                  return isAvailable(strategyScores) ? strategyScores[metric.key] : format.empty;
-                })
-                .join(psi.pairSeparator)}
-            </div>
-            <div className="measured-description">
-              {psi.strategies.map((strategy) => strategy.label).join(psi.pairSeparator)}
-            </div>
-          </div>
+          <MeasuredTile
+            key={metric.key}
+            label={metric.label}
+            value={psi.strategies
+              .map((strategy) => {
+                const strategyScores = scores?.[strategy.key];
+                return isAvailable(strategyScores) ? strategyScores[metric.key] : format.empty;
+              })
+              .join(psi.pairSeparator)}
+            description={psi.strategies.map((strategy) => strategy.label).join(psi.pairSeparator)}
+          />
         ))}
       </div>
       <MeasuredStatus
-        message={
-          loading
-            ? measured.loading
-            : unavailable
-              ? measured.unavailable
-              : showTimestamp && !timestamp.valid
-                ? measured.unknownTimestamp
-                : null
-        }
+        message={perfStatusMessage(measured, { loading, unavailable, showTimestamp, timestamp })}
         live
         reserve={[measured.loading, measured.unavailable, measured.unknownTimestamp]}
       />
