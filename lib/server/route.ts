@@ -3,9 +3,11 @@ import 'server-only';
 import type { NextRequest } from 'next/server';
 import type { ZodTypeAny, z } from 'zod';
 
+import { DEFAULT_SITE_LOCALE, SITE_LOCALES, type SiteLocale } from '@/content/site-locale';
 import { hashIp } from '@/lib/ip-hash';
 import { log } from '@/lib/log';
 import { getClientIp } from '@/lib/rate-limit';
+import { ASK_LOCALE_HEADER } from '@/lib/stream-protocol';
 
 interface RateLimit {
   limit(ip: string): Promise<{ success: boolean }>;
@@ -23,7 +25,7 @@ export interface HandlerContext<TBody> {
 export interface DefineHandlerOpts<TSchema extends ZodTypeAny> {
   schema: TSchema;
   rateLimit: RateLimitFactory;
-  rateLimitErrorMessage?: string;
+  rateLimitErrorMessage?: string | Readonly<Record<SiteLocale, string>>;
   handler: (ctx: HandlerContext<z.infer<TSchema>>) => Promise<Response>;
 }
 
@@ -71,6 +73,16 @@ export function err(opts: {
   );
 }
 
+function rateLimitMessage(
+  message: DefineHandlerOpts<ZodTypeAny>['rateLimitErrorMessage'],
+  req: Request,
+): string {
+  if (message === undefined) return 'too many requests';
+  if (typeof message === 'string') return message;
+  const header = req.headers.get(ASK_LOCALE_HEADER);
+  return message[SITE_LOCALES.find((locale) => locale === header) ?? DEFAULT_SITE_LOCALE];
+}
+
 export function defineHandler<TSchema extends ZodTypeAny>(
   opts: DefineHandlerOpts<TSchema>,
 ): (req: NextRequest) => Promise<Response> {
@@ -90,7 +102,7 @@ export function defineHandler<TSchema extends ZodTypeAny>(
         requestId,
         status: 429,
         code: 'rate_limited',
-        message: opts.rateLimitErrorMessage ?? 'too many requests',
+        message: rateLimitMessage(opts.rateLimitErrorMessage, req),
       });
     }
 
