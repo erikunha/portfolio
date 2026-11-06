@@ -1,13 +1,14 @@
 'use client';
 
 import { usePathname } from 'next/navigation';
-import { type ReactNode, useEffect, useRef, useState } from 'react';
+import { type ReactNode, useEffect, useRef } from 'react';
 import { reportClientError } from '@/components/ErrorBoundary/ErrorBoundary.client';
 import { MAIN_CONTENT_ID, PageMain } from '@/components/PageMain';
 import { brandByLocale } from '@/content/brand';
 import { errorsClientContent as errorsContent } from '@/content/errors-client';
 import type { ErrorsContent } from '@/content/schemas';
 import { localeOfPath, type SiteLocale } from '@/content/site-locale';
+import { COPY_STATUS, useCopyFeedback } from '@/lib/use-copy-feedback.client';
 
 export const ERROR_MAIN_CLASS = 'err-main';
 
@@ -71,36 +72,23 @@ function ErrorReference({
   digest: string;
   content: ErrorsContent['serverError'];
 }) {
-  const [copied, setCopied] = useState(false);
-  const resetTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  useEffect(
-    () => () => {
-      if (resetTimer.current) clearTimeout(resetTimer.current);
-    },
-    [],
-  );
-
-  async function copy() {
-    try {
-      await navigator.clipboard.writeText(digest);
-    } catch {
-      return;
-    }
-    setCopied(true);
-    if (resetTimer.current) clearTimeout(resetTimer.current);
-    resetTimer.current = setTimeout(() => setCopied(false), COPIED_RESET_MS);
-  }
+  const { status, copy } = useCopyFeedback({ resetMs: COPIED_RESET_MS });
 
   return (
     <div className="err-ref">
       <span>
         {content.refLabel} <code>{digest}</code>
       </span>
-      <button type="button" className="copy-btn" aria-label={content.copyAriaLabel} onClick={copy}>
+      <button
+        type="button"
+        className="copy-btn"
+        aria-label={content.copyAriaLabel}
+        onClick={() => copy(digest)}
+      >
         {content.copyLabel}
       </button>
       <span className="sr-only" role="status">
-        {copied ? content.copiedAnnouncement : ''}
+        {status === COPY_STATUS.Copied ? content.copiedAnnouncement : ''}
       </span>
     </div>
   );
