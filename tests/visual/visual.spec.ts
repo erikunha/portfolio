@@ -48,6 +48,7 @@ test.describe('visual regression', () => {
     await shellSection.scrollIntoViewIfNeeded();
     await mockedPage.waitForSelector('[data-testid="shell-form"]', { state: 'visible' });
     await mockedPage.waitForSelector('[role="log"] [data-kind="info"]', { state: 'visible' });
+    await mockedPage.waitForSelector('[data-testid="shell-line-loading"]', { state: 'detached' });
     await mockedPage.evaluate(() => document.fonts.ready);
     await mockedPage.evaluate(() => {
       const ph = document.querySelector('[data-testid="shell-placeholder"]');
