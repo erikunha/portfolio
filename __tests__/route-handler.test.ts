@@ -92,6 +92,41 @@ describe('lib/server/route — defineHandler', () => {
     expect(hashIpMock).not.toHaveBeenCalled();
   });
 
+  it('tells the client how long to wait: Retry-After in whole seconds from the limiter reset', async () => {
+    const nowMs = 1_700_000_000_000;
+    vi.spyOn(Date, 'now').mockReturnValue(nowMs);
+    rateLimitMock.mockImplementationOnce(
+      async () => ({ success: false, reset: nowMs + 90_500 }) as { success: boolean },
+    );
+    const { defineHandler, ok } = await import('@/lib/server/route');
+    const POST = defineHandler({
+      schema: TestSchema,
+      rateLimit: () => ({ limit: rateLimitMock }),
+      handler: async ({ requestId }) => ok({ requestId }),
+    });
+
+    const res = await POST(makeRequest({ name: 'erik', count: 1 }));
+
+    expect(res.status).toBe(429);
+    expect(res.headers.get('retry-after')).toBe('91');
+    vi.restoreAllMocks();
+  });
+
+  it('omits Retry-After when the limiter gives no usable reset', async () => {
+    rateLimitMock.mockImplementationOnce(async () => ({ success: false }));
+    const { defineHandler, ok } = await import('@/lib/server/route');
+    const POST = defineHandler({
+      schema: TestSchema,
+      rateLimit: () => ({ limit: rateLimitMock }),
+      handler: async ({ requestId }) => ok({ requestId }),
+    });
+
+    const res = await POST(makeRequest({ name: 'erik', count: 1 }));
+
+    expect(res.status).toBe(429);
+    expect(res.headers.has('retry-after')).toBe(false);
+  });
+
   it('fails open on Redis outage (rate-limit factory throws)', async () => {
     const flakyLimiter = () => ({
       limit: vi.fn(async () => {

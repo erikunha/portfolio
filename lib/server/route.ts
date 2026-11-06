@@ -8,10 +8,10 @@ import { hashIp } from '@/lib/ip-hash';
 import { log } from '@/lib/log';
 import { getClientIp } from '@/lib/rate-limit';
 import { isCrossSiteRequest } from '@/lib/server/fetch-metadata';
-import { ASK_LOCALE_HEADER } from '@/lib/stream-protocol';
+import { ASK_LOCALE_HEADER, RETRY_AFTER_HEADER, retryAfterSeconds } from '@/lib/stream-protocol';
 
 interface RateLimit {
-  limit(ip: string): Promise<{ success: boolean }>;
+  limit(ip: string): Promise<{ success: boolean; reset?: number }>;
 }
 type RateLimitFactory = () => RateLimit;
 
@@ -103,18 +103,24 @@ export function defineHandler<TSchema extends ZodTypeAny>(
     const ip = getClientIp(req);
 
     let rateLimitAllowed = true;
+    let rateLimitReset: unknown;
     try {
-      const { success } = await opts.rateLimit().limit(ip);
+      const { success, reset } = await opts.rateLimit().limit(ip);
       rateLimitAllowed = success;
+      rateLimitReset = reset;
     } catch (rateLimitErr) {
       log.warn('rate-limit unavailable, allowing request', { requestId, err: rateLimitErr });
     }
     if (!rateLimitAllowed) {
+      const retryAfter = retryAfterSeconds(rateLimitReset, Date.now());
       return err({
         requestId,
         status: 429,
         code: 'rate_limited',
         message: rateLimitMessage(opts.rateLimitErrorMessage, req),
+        ...(retryAfter === null
+          ? {}
+          : { extraHeaders: { [RETRY_AFTER_HEADER]: String(retryAfter) } }),
       });
     }
 
