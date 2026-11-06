@@ -148,7 +148,7 @@ An icon only button needs an `aria-label`. A disabled control needs the native `
 Before writing: for each button, link and input, name the accessible name you are providing and where it comes from.
 Check: `pnpm test:e2e` (the axe scan lives in `tests/a11y/axe.spec.ts`) plus a manual tab through the section and listen to the order.
 Examples:
-- PR283 `components/links/client/TaglineTyper.client.tsx`: the screen reader mirror never updated past the first tagline; the fix keeps the mirror in step with the live text.
+- PR283 `components/links/client/TaglineTyper.client.tsx`: a polite live region re-announced the tagline every cycle; the fix removes the region and lists every phrase once as static text.
 - PR284 `components/sections/About/About.tsx`: the type reveal effect was placed on the whole heading, which also held an icon; the fix scoped the effect to the text.
 
 **Rule 17. Changing layout properties changes meaning.**
