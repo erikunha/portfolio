@@ -1,17 +1,22 @@
 import { readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { describe, expect, it, vi } from 'vitest';
+import { aboutContent } from '@/content/about';
+import { communityEvent } from '@/content/community';
 import { companyLinkCopy, OPENS_IN_NEW_TAB } from '@/content/company-link';
+import { contactCopy } from '@/content/contact-copy';
 import { errorsContent } from '@/content/errors';
 import { errorsClientContent } from '@/content/errors-client';
 import { footerContent } from '@/content/footer';
 import { gitLog } from '@/content/git-log';
+import { heroContent } from '@/content/hero';
 import { linksContent } from '@/content/links';
 import { LINKS_PATH } from '@/content/links.constants';
 import { measured } from '@/content/measured';
 import { HIRE_ACCESSIBLE_NAME, TOPBAR_NAV } from '@/content/nav';
 import { NAVIGATION } from '@/content/navigation';
 import {
+  PROFILE_FACT,
   profile,
   profileLanguageLine,
   profileLocation,
@@ -29,7 +34,8 @@ import { personSchema } from '@/content/seo';
 import SHELL_RESPONSES from '@/content/shell-commands';
 import { shellUi } from '@/content/shell-ui';
 import { SITE_LOCALE, type SiteLocale } from '@/content/site-locale';
-import { EMAIL_ADDRESS } from '@/content/social-urls';
+import { social } from '@/content/social';
+import { EMAIL_ADDRESS, WHATSAPP_URL } from '@/content/social-urls';
 import { SYSTEM_TEXT } from '@/lib/ask/system-prompt';
 import { HIRING_PROFILE } from '@/lib/hiring-profile';
 
@@ -254,5 +260,26 @@ describe('one source per fact', () => {
 
   it('shows the profile title once, from the presentation record', () => {
     expect(profilePresentation[SITE_LOCALE.en].title).toBe(profile.title);
+  });
+
+  it('reads the new-tab phrase, the peak MAU and the WhatsApp url from one source', () => {
+    expect(social.whatsapp).toBe(WHATSAPP_URL);
+    const phrases = {
+      [SITE_LOCALE.en]: 'opens in a new tab',
+      [SITE_LOCALE.pt]: 'abre em uma nova guia',
+    };
+    for (const locale of LOCALES) {
+      const phrase = phrases[locale];
+      expect(OPENS_IN_NEW_TAB[locale]).toBe(phrase);
+      const external = heroContent[locale].actions.find((action) => action.external);
+      expect(external?.accessibleLabel).toBe(`${external?.label}, ${phrase}`);
+      expect(heroContent[locale].stats[1]?.value).toBe(PROFILE_FACT.peakMau);
+      expect(communityEvent[locale].newTabLabel).toBe(`(${phrase})`);
+      expect(contactCopy[locale].channels.linkedinNewTabNote).toBe(`(${phrase})`);
+      expect(contactCopy[locale].channels.githubAccessibleLabel).toBe(
+        `github.com/erikunha (${phrase})`,
+      );
+      expect(aboutContent[locale].code.repoNewTabNote).toBe(`(${phrase})`);
+    }
   });
 });

@@ -1,3 +1,4 @@
+import { companyLinkCopy } from './company-link';
 import type { ContactContent } from './contact';
 import { copyFeedback } from './copy-button';
 import { SITE_LOCALE, type SiteLocale } from './site-locale';
@@ -78,11 +79,9 @@ const contactCopyFor = (locale: SiteLocale): ContactContent => {
       linkedinLabel: 'linkedin',
       linkedinCta: pt ? 'MENSAGEM_NO_LINKEDIN' : 'MESSAGE_ON_LINKEDIN',
       linkedinGlyph: '↗',
-      linkedinNewTabNote: pt ? '(abre em uma nova guia)' : '(opens in a new tab)',
+      linkedinNewTabNote: companyLinkCopy[locale].disclosure,
       githubLabel: 'github',
-      githubAccessibleLabel: pt
-        ? 'github.com/erikunha (abre em uma nova guia)'
-        : 'github.com/erikunha (opens in a new tab)',
+      githubAccessibleLabel: `github.com/erikunha ${companyLinkCopy[locale].disclosure}`,
       languagesLabel: pt ? 'idioma' : 'lang',
     },
     timezone: {

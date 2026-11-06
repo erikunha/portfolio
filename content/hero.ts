@@ -1,5 +1,6 @@
+import { OPENS_IN_NEW_TAB } from './company-link';
 import { HIRE_ACCESSIBLE_NAME, NAV_VOCABULARY } from './nav';
-import { profile, profilePresentation } from './profile';
+import { PROFILE_FACT, profile, profilePresentation } from './profile';
 import { type HeroContent, HeroContentSchema } from './schemas';
 import { localizedPath, SITE_LOCALE, type SiteLocale } from './site-locale';
 import { social } from './social';
@@ -25,15 +26,13 @@ const heroContentFor = (locale: SiteLocale): HeroContent => {
     ].map((action) => ({
       ...action,
       accessibleLabel: action.href.startsWith(EXTERNAL_PROTOCOL)
-        ? pt
-          ? `${action.label}, abre em uma nova guia`
-          : `${action.label}, opens in a new tab`
+        ? `${action.label}, ${OPENS_IN_NEW_TAB[locale]}`
         : action.label,
       external: action.href.startsWith(EXTERNAL_PROTOCOL),
     })),
     stats: [
       { value: '$500B+', label: pt ? 'ativos em fundos' : 'fund assets' },
-      { value: '8M+', label: pt ? 'MAU e-commerce' : 'e-com MAU' },
+      { value: PROFILE_FACT.peakMau, label: pt ? 'MAU e-commerce' : 'e-com MAU' },
       { value: '40s → <1s', label: pt ? 'API de relatórios' : 'reporting API' },
       { value: 'CLS → 0', label: pt ? 'deslocamento de layout' : 'layout shift' },
     ],

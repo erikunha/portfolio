@@ -1,3 +1,4 @@
+import { companyLinkCopy } from './company-link';
 import { type AboutContent, AboutContentSchema } from './schemas';
 import { SITE_LOCALE, type SiteLocale } from './site-locale';
 import { social } from './social';
@@ -196,7 +197,7 @@ const aboutFor = (locale: SiteLocale): AboutContent => {
       repoLabel: 'github',
       repoGlyph: '↗',
       repoHref: social.github,
-      repoNewTabNote: pt ? '(abre em uma nova guia)' : '(opens in a new tab)',
+      repoNewTabNote: companyLinkCopy[locale].disclosure,
       tokens: codeTokens,
     },
   });

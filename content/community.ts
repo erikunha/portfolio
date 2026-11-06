@@ -1,3 +1,4 @@
+import { companyLinkCopy } from './company-link';
 import { type CommunityEvent, CommunityEventSchema } from './schemas';
 import { SITE_LOCALE, type SiteLocale } from './site-locale';
 
@@ -22,7 +23,7 @@ const communityEventFor = (locale: SiteLocale): CommunityEvent => {
       label: 'devopsdays.org',
       href: 'https://devopsdays.org/events/2024-campinas/welcome/',
     },
-    newTabLabel: pt ? '(abre em uma nova guia)' : '(opens in a new tab)',
+    newTabLabel: companyLinkCopy[locale].disclosure,
     statusLine: pt
       ? 'aberto a submissões de CFP para 2027 · aberto a voluntariado / organização.'
       : 'open to CFP submissions for 2027 · open to volunteer / organizer roles.',
