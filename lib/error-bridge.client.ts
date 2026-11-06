@@ -28,7 +28,7 @@ export function buildLogPayload(message: string, stack: string | undefined): Log
     level: 'error',
     message,
     ...(stack !== undefined && { stack }),
-    url: typeof window !== 'undefined' ? window.location.href : '',
+    url: typeof window !== 'undefined' ? window.location.origin + window.location.pathname : '',
     userAgent: typeof window !== 'undefined' ? navigator.userAgent : '',
     ts: new Date().toISOString(),
   };
