@@ -130,31 +130,31 @@ What we build is small, opinionated, Vercel-deployed, and budget-enforced.
 
 ### Default: React Server Components, statically generated at build time
 
-Static section bodies are Server Components. `AppShell` is a client boundary that receives server-rendered children; viewport checks use the `useBreakpoint` hook, not a context provider. `SectionNavigationProvider` wraps the shell chrome so the menu trigger, the drawer, the dock and the position meter share one current-section state. `ErrorBoundary` wraps each section and the footer independently. Measured data and device-selected sections stream through Suspense.
+Static section bodies are Server Components. `AppShell` is a client boundary that receives server-rendered children; viewport checks use the `useBreakpoint` hook, not a context provider. `SectionNavigationProvider` wraps the shell chrome. Its context value (actions, copy, chrome, locale and a store) never changes after the first render. The current section, the drawer and the motion state live in the store and are read with `useSyncExternalStore`, so a scroll cannot force a not-yet-hydrated Suspense boundary to client-render. `ContactForm` and `InteractiveShell` adopt text typed before they hydrate from the kept server DOM. `ErrorBoundary` wraps each section and the footer independently. Measured data and device-selected sections stream through Suspense.
 
 The section menu is a modal drawer at every width, opened by the menu icon trigger named `Open menu` (the first item in the desktop topbar and the mobile title bar; the brand icon closes both bars at the right end) or the dock MENU. The drawer header contains the title and the close control. Closing the drawer returns focus to the control that opened it, or to the first rendered menu trigger when there is no such control or a viewport change left it unrendered.
 
 ### Client islands
 
-| Surface                                           | Client responsibilities                                                                               |
-| ------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
-| AppShell and breakpoint provider                  | Responsive chrome, error bridge and viewport state                                                    |
-| DesktopTopbar, StatusBar, MobileTitleBar, Dock    | Navigation, motion controls and device chrome                                                         |
-| SectionNavigation, SectionNavigationProvider      | menu trigger, drawer focus trap, focus return and shared current-section state                        |
-| PositionMeter                                     | Scroll-position tracking and a hidden page-position line: top from 1024px, right edge below           |
-| MatrixRain, CRTOverlay, ToTopButton               | Canvas animation, CRT effects and scroll control                                                      |
-| HeroBootAnimation, HeroSystemFailure              | Boot/dialog animation and failure interaction                                                         |
-| RoleTyper                                         | Role typewriter inside About                                                                          |
-| GlobalMotion → TypeReveal, MatrixRainLazy         | App-wide scroll type reveal and Matrix Rain from the root layout                                      |
-| InteractiveShellLazy → InteractiveShell           | Client-only shell input and streamed ASK output                                                       |
-| ContactFormLazy → ContactForm                     | Client-only form submission and feedback                                                              |
-| ContactTimezoneLazy → ContactTimezone             | Timezone overlap panel: clocks, map, zone search and the propose action                               |
-| DAW mixer islands                                 | Fader, dB readout, knob, RMS buttons and VU meter behavior                                            |
-| Footer client exports                             | Session counters, halt clock and reboot control                                                       |
-| ErrorBoundary and error pages                     | Failure capture, retry and recovery controls                                                          |
-| PrintButton                                       | Print action in `/summary` and `/cv`                                                                  |
-| `/links` client components                        | Tagline cycle, navigation progress, copy and subscribe actions                                        |
-| Design-system Sidebar, DsDrawerNav and CopyButton | Documentation page tree (side rail from 1024px, inside the site menu below it) and clipboard feedback |
+| Surface                                           | Client responsibilities                                                                                                                  |
+| ------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| AppShell and breakpoint provider                  | Responsive chrome, error bridge and viewport state                                                                                       |
+| DesktopTopbar, StatusBar, MobileTitleBar, Dock    | Navigation, motion controls and device chrome                                                                                            |
+| SectionNavigation, SectionNavigationProvider      | menu trigger, drawer focus trap, focus return, stable context and the `navigationStore` external state (current section, drawer, motion) |
+| PositionMeter                                     | Scroll-position tracking and a hidden page-position line: top from 1024px, right edge below                                              |
+| MatrixRain, CRTOverlay, ToTopButton               | Canvas animation, CRT effects and scroll control                                                                                         |
+| HeroBootAnimation, HeroSystemFailure              | Boot/dialog animation and failure interaction                                                                                            |
+| RoleTyper                                         | Role typewriter inside About                                                                                                             |
+| GlobalMotion → TypeReveal, MatrixRainLazy         | App-wide scroll type reveal and Matrix Rain from the root layout                                                                         |
+| InteractiveShellLazy → InteractiveShell           | Client-only shell input and streamed ASK output                                                                                          |
+| ContactFormLazy → ContactForm                     | Client-only form submission and feedback                                                                                                 |
+| ContactTimezoneLazy → ContactTimezone             | Timezone overlap panel: clocks, map, zone search and the propose action                                                                  |
+| DAW mixer islands                                 | Fader, dB readout, knob, RMS buttons and VU meter behavior                                                                               |
+| Footer client exports                             | Session counters, halt clock and reboot control                                                                                          |
+| ErrorBoundary and error pages                     | Failure capture, retry and recovery controls                                                                                             |
+| PrintButton                                       | Print action in `/summary` and `/cv`                                                                                                     |
+| `/links` client components                        | Tagline cycle, navigation progress, copy and subscribe actions                                                                           |
+| Design-system Sidebar, DsDrawerNav and CopyButton | Documentation page tree (side rail from 1024px, inside the site menu below it) and clipboard feedback                                    |
 
 `InteractiveShellLazy` and `ContactFormLazy` use `React.lazy` inside `LazyIsland` (an `ErrorBoundary` around `Suspense`): the server renders the island into the HTML, its chunk is split out of the route bundle, and a chunk that fails to load leaves the loading status placeholder instead of breaking the route. `ContactTimezoneLazy` uses `React.lazy` and mounts `ContactTimezone` once its host is within 400px of the viewport, so the island's chunk, the land grid and the timezone logic stay out of first load; the server-rendered `ContactTimezoneStatic` is the Suspense and error fallback, and `.ctz-host` reserves a per-locale minimum height so the live panel replaces it without a shift. With JavaScript off, `ContactSection` shows a `<noscript>` line beside the missing form that names the email address. `DawMixerContent` imports `DawMixerDesktop` statically and picks the variant from the user agent; both variants share their parts and copy (`content/daw-mixer.ts`) and embed smaller client islands.
 
