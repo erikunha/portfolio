@@ -96,6 +96,10 @@
     z-index: 4;
   }
 
+  html[data-crt-level]:not([data-crt-level="0"]) :is(.crt-noise, .crt-flicker, .crt-scan-beam) {
+    animation-play-state: paused;
+  }
+
   @keyframes crt-scan-beam {
     0% {
       transform: translateY(0);

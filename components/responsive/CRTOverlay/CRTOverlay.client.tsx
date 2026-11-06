@@ -11,6 +11,18 @@ export function CRTOverlay() {
     return () => mq.removeEventListener('change', handler);
   }, []);
 
+  useEffect(() => {
+    let release: (() => void) | undefined;
+    let unmounted = false;
+    import('@/lib/frame-governor').then(({ acquireFrameGovernor }) => {
+      if (!unmounted) release = acquireFrameGovernor();
+    });
+    return () => {
+      unmounted = true;
+      release?.();
+    };
+  }, []);
+
   return (
     <>
       <div className="crt-vignette" data-testid="crt-vignette" aria-hidden />

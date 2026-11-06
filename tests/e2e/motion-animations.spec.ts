@@ -1,12 +1,24 @@
 import { expect, type Page, test } from '@playwright/test';
 
+const GOVERNED_CRT_ANIMATION = /^crt-/;
+const FULL_RATE_LEVEL = '0';
+
 const runningAnimations = (page: Page) =>
-  page.evaluate(() =>
-    document
-      .getAnimations()
-      .filter((animation) => animation.playState === 'running')
-      .map((animation) => (animation as CSSAnimation).animationName)
-      .filter(Boolean),
+  page.evaluate(
+    ([pattern, fullRate]) => {
+      const level = document.documentElement.dataset.crtLevel;
+      const governed = level !== undefined && level !== fullRate;
+      return document
+        .getAnimations()
+        .filter((animation) => {
+          const name = (animation as CSSAnimation).animationName;
+          const steppedByGovernor = governed && new RegExp(pattern).test(name);
+          return animation.playState === 'running' || steppedByGovernor;
+        })
+        .map((animation) => (animation as CSSAnimation).animationName)
+        .filter(Boolean);
+    },
+    [GOVERNED_CRT_ANIMATION.source, FULL_RATE_LEVEL] as const,
   );
 
 const reach = async (page: Page, selector: string) => {
