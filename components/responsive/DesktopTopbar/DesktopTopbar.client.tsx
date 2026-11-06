@@ -49,7 +49,7 @@ export function DesktopTopbar({ brand }: { brand: ReactNode }) {
             >
               <span
                 className={cn(
-                  'w-1.5 h-1.5 rounded-full bg-primary-500 block',
+                  'w-1.5 h-1.5 rounded-full bg-primary-500 block status-dot-blink',
                   !motionOn && 'bg-primary-400 opacity-40',
                 )}
                 aria-hidden="true"

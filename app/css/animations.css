@@ -347,6 +347,20 @@
     opacity: 0;
   }
 
+  .status-dot-blink {
+    animation: live-blink 1.6s steps(2, start) infinite;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .status-dot-blink {
+      animation: none;
+    }
+  }
+
+  body[data-motion="reduce"] .status-dot-blink {
+    animation: none;
+  }
+
   @keyframes guitar-scan-beam {
     from {
       transform: translateY(0);

@@ -393,7 +393,7 @@ export function SectionNavigation({ extra }: { extra?: ReactNode }) {
               aria-pressed={motionOn}
               onClick={toggleMotion}
             >
-              <span className="menu-motion-dot" aria-hidden="true" />
+              <span className="menu-motion-dot status-dot-blink" aria-hidden="true" />
               <span>{motionLabel}</span>
             </button>
           </li>

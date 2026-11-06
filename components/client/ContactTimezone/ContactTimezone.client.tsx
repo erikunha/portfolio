@@ -102,7 +102,10 @@ export function ContactTimezone({ copy }: { copy: TimezoneCopy }) {
     <div className="ctz" ref={rootRef} data-testid="contact-timezone">
       <div className="ctz-status" data-online={availability.online} data-testid="ctz-status">
         <p className="ctz-banner">
-          <span className="ctz-dot" aria-hidden="true" />
+          <span
+            className={availability.online ? 'ctz-dot status-dot-blink' : 'ctz-dot'}
+            aria-hidden="true"
+          />
           {availability.online
             ? copy.status.online
             : fillCopy(copy.status.offHours, { hours: availability.hoursUntilBack })}
