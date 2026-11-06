@@ -31,14 +31,16 @@ export type Line = {
   ai?: boolean;
   prefix?: string;
   retryAfter?: number;
+  retry?: string;
 };
-type FailureDetail = { prefix?: string; hint?: boolean; retryAfter?: number };
+type FailureDetail = { prefix?: string; hint?: boolean; retryAfter?: number; retry?: string };
 type ActiveRequest = { stop: () => void; dispose: () => void };
 
 const ASK_ENDPOINT = '/api/ask';
 const RATE_LIMIT_STATUS = 429;
 const SERVER_ERROR_STATUS = 500;
 const SECONDS_PER_MINUTE = 60;
+const MS_PER_SECOND = 1000;
 
 export function formatRemaining(
   seconds: number,
@@ -114,7 +116,17 @@ export function useAskStream({
 
       function armIdleTimer() {
         clearTimeout(timer);
-        timer = setTimeout(() => interrupt(ui.timeout, true), SHELL_LIMITS.requestTimeoutMs);
+        timer = setTimeout(
+          () =>
+            interrupt(
+              fillShellState(states.timeoutBody, {
+                seconds: String(SHELL_LIMITS.requestTimeoutMs / MS_PER_SECOND),
+              }),
+              true,
+              { prefix: `${states.stderrCommand} ${states.timeoutName}`, retry: command },
+            ),
+          SHELL_LIMITS.requestTimeoutMs,
+        );
       }
       function releaseTransport() {
         controller.abort();
@@ -142,6 +154,7 @@ export function useAskStream({
             kind: error ? ShellLineKind.Error : ShellLineKind.Info,
             text: error && !detail.prefix ? `${ui.errorPrefix} ${message}` : message,
             ...(detail.prefix ? { prefix: detail.prefix } : {}),
+            ...(detail.retry ? { retry: detail.retry } : {}),
           });
           if (detail.hint) lines.push({ id: nextId(), kind: ShellLineKind.Hint, text: '' });
         }
@@ -158,9 +171,9 @@ export function useAskStream({
         announce(message ? [detail.prefix, message].filter(Boolean).join(' ') : ui.complete);
         onSettled();
       }
-      function interrupt(message: string, error = false) {
+      function interrupt(message: string, error = false, detail?: FailureDetail) {
         const text = parseStreamChunk(accumulated).displayText;
-        finish(text, message, error);
+        finish(text, message, error, detail);
         releaseTransport();
       }
       activeRequest.current = {

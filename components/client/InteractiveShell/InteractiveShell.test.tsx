@@ -576,8 +576,8 @@ describe('InteractiveShell r106 controls', () => {
       await vi.advanceTimersByTimeAsync(SHELL_LIMITS.requestTimeoutMs);
     });
     expect(signal?.aborted).toBe(true);
-    expect(container.querySelector('[data-kind="error"]')?.textContent).toContain('timed out');
-    expect(container.querySelector('[role="status"]')?.textContent).toContain('timed out');
+    expect(container.querySelector('[data-kind="error"]')?.textContent).toContain('went quiet');
+    expect(container.querySelector('[role="status"]')?.textContent).toContain('went quiet');
     expect(shellInput(container).value).toBe('slow question');
     expect(container.querySelector('[role="log"]')?.getAttribute('aria-busy')).toBe('false');
     vi.stubGlobal(
@@ -618,7 +618,7 @@ describe('InteractiveShell r106 controls', () => {
     await act(async () => {
       await vi.advanceTimersByTimeAsync(SHELL_LIMITS.requestTimeoutMs);
     });
-    expect(container.querySelector('[data-kind="error"]')?.textContent).toContain('timed out');
+    expect(container.querySelector('[data-kind="error"]')?.textContent).toContain('went quiet');
   });
 
   it('restores the question when a stream with partial text is stopped', async () => {
@@ -1329,6 +1329,93 @@ describe('InteractiveShell stream states', () => {
       expect(container.querySelector('[data-kind="error"]')?.textContent).toBe(
         'ask: 429 rate limit exceeded: try again in an hour. Built-in commands still work.',
       );
+    });
+  });
+
+  describe('E9 timeout', () => {
+    const IDLE_MS = 15_000;
+
+    function hangingFetch(chunk?: string, asked: string[] = []) {
+      const enc = new TextEncoder();
+      return vi.fn(async (_url: string, init: RequestInit) => {
+        asked.push(JSON.parse(init.body as string).question);
+        if (chunk === undefined) return new Promise<Response>(() => undefined);
+        return new Response(
+          new ReadableStream<Uint8Array>({
+            start(controller) {
+              controller.enqueue(enc.encode(chunk));
+            },
+          }),
+        );
+      });
+    }
+
+    it('gives the model exactly fifteen seconds of silence', async () => {
+      vi.stubGlobal('fetch', hangingFetch());
+      const container = await renderShell();
+      vi.useFakeTimers();
+      await submitQuestion(container, 'slow question');
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(IDLE_MS - 1);
+      });
+      expect(container.querySelector('[data-kind="error"]')).toBeNull();
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(1);
+      });
+      const error = container.querySelector('[data-kind="error"]');
+      expect(error?.querySelector('strong')?.textContent).toBe('ask: timeout');
+      expect(error?.textContent).toContain(
+        'the model went quiet for 15s. The partial answer above is kept.',
+      );
+    });
+
+    it('keeps the partial answer above the timeout line', async () => {
+      vi.stubGlobal('fetch', hangingFetch('Partial answer'));
+      const container = await renderShell();
+      vi.useFakeTimers();
+      await submitQuestion(container, 'slow question');
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(IDLE_MS);
+      });
+      const lines = Array.from(container.querySelectorAll('[role="log"] > .shell-line'));
+      const answer = lines.findIndex((line) => line.textContent?.includes('Partial answer'));
+      const error = lines.findIndex((line) => line.getAttribute('data-kind') === 'error');
+      expect(answer).toBeGreaterThan(-1);
+      expect(error).toBeGreaterThan(answer);
+    });
+
+    it('retries the same question from the timeout line', async () => {
+      const asked: string[] = [];
+      vi.stubGlobal('fetch', hangingFetch(undefined, asked));
+      const container = await renderShell();
+      vi.useFakeTimers();
+      await submitQuestion(container, 'slow question');
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(IDLE_MS);
+      });
+      const retry = container.querySelector<HTMLButtonElement>('[data-kind="error"] button');
+      expect(retry?.textContent).toBe('[ RETRY ]');
+      expect(retry?.getAttribute('aria-label')).toBe('Retry the last question');
+      await act(async () => {
+        retry?.click();
+      });
+      expect(asked).toEqual(['slow question', 'slow question']);
+      expect(container.querySelector('[role="log"]')?.getAttribute('aria-busy')).toBe('true');
+    });
+
+    it('speaks Portuguese', async () => {
+      vi.stubGlobal('fetch', hangingFetch());
+      const container = await renderShell(SITE_LOCALE.pt);
+      vi.useFakeTimers();
+      await submitQuestion(container, 'pergunta lenta');
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(IDLE_MS);
+      });
+      const error = container.querySelector('[data-kind="error"]');
+      expect(error?.textContent).toContain(
+        'o modelo ficou em silêncio por 15s. A resposta parcial acima foi mantida.',
+      );
+      expect(error?.querySelector('button')?.textContent).toBe('[ TENTAR DE NOVO ]');
     });
   });
 

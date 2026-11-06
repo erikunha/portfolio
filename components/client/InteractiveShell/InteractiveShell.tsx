@@ -296,6 +296,19 @@ export function InteractiveShell({
                   {line.prefix && <strong className="shell-stderr-command">{line.prefix}</strong>}
                   {line.prefix && ' '}
                   <LineText text={line.text} ui={ui} />
+                  {line.retry && (
+                    <>
+                      {' '}
+                      <button
+                        type="button"
+                        className="shell-control"
+                        aria-label={states.retryLabel}
+                        onClick={() => runCommand(line.retry ?? '')}
+                      >
+                        {states.retry}
+                      </button>
+                    </>
+                  )}
                 </>
               )}
             </span>

@@ -33,7 +33,7 @@ export const ShellLineKind = {
 export const SHELL_LIMITS = {
   logEntries: 50,
   commandHistory: 50,
-  requestTimeoutMs: 30_000,
+  requestTimeoutMs: 15_000,
   placeholderTypeMs: 60,
   placeholderHoldMs: 1800,
   placeholderBackMs: 30,
