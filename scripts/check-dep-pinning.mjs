@@ -32,9 +32,9 @@ for (const block of ['dependencies', 'devDependencies', 'optionalDependencies'])
     if (spec.startsWith('workspace:') || spec.startsWith('file:') || spec.startsWith('link:')) {
       continue;
     }
+    if (PRERELEASE_EXACT.test(spec)) continue;
     if (BANNED.test(spec)) {
       violations.push(`  ${block}.${name}: "${raw}" is unbounded`);
-    } else if (PRERELEASE_EXACT.test(spec)) {
     } else if (!RANGED.test(spec)) {
       violations.push(`  ${block}.${name}: "${raw}" is not a ^ or ~ range`);
     } else if (TILDE_REQUIRED.has(name) && !spec.startsWith(TILDE)) {
