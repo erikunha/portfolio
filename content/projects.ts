@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { companyLinkCopy } from './company-link';
-import { PROFILE_FACT } from './profile';
+import { localizeDecimals, PROFILE_FACT } from './profile';
 import { type Project, ProjectSchema } from './schemas';
 import { SITE_LOCALE, type SiteLocale } from './site-locale';
 
@@ -36,7 +36,10 @@ const projectsFor = (locale: SiteLocale): Project[] => {
           ? 'Telas de fluxo de trabalho do investidor na plataforma de mercados privados da Raylu: empresa, pipeline, comparação, prospecção. Motor de tabelas compartilhado e estado de visualização na URL para fundos com mais de US$ 500B em ativos.'
           : "Investor workflow screens on Raylu's private-markets platform: company, pipeline, comparison, outreach. Shared table engine and URL-backed view state for funds holding $500B+ in assets.",
         stats: [
-          { label: pt ? 'SUPERFÍCIES' : 'SURFACES', value: 'COMPANY / PIPELINE / OUTREACH' },
+          {
+            label: pt ? 'SUPERFÍCIES' : 'SURFACES',
+            value: pt ? 'EMPRESA / PIPELINE / PROSPECÇÃO' : 'COMPANY / PIPELINE / OUTREACH',
+          },
           {
             label: pt ? 'ESTADO' : 'STATE',
             value: pt ? 'VERSIONADO + NA URL' : 'VERSIONED + URL-BACKED',
@@ -52,8 +55,11 @@ const projectsFor = (locale: SiteLocale): Project[] => {
           ? 'Plataforma de cashier PCI-DSS: orquestração de depósitos e saques multi-marca em mais de 15 jurisdições reguladas.'
           : 'PCI-DSS cashier platform: multi-brand deposit/withdraw orchestration across 15+ regulated jurisdictions.',
         stats: [
-          { label: 'VOLUME', value: `${PROFILE_FACT.txPerYear} TX / YR` },
-          { label: pt ? 'RECEITA' : 'REVENUE', value: `${PROFILE_FACT.groupRevenue} (GROUP)` },
+          { label: 'VOLUME', value: `${PROFILE_FACT.txPerYear} ${pt ? 'TX / ANO' : 'TX / YR'}` },
+          {
+            label: pt ? 'RECEITA' : 'REVENUE',
+            value: `${localizeDecimals(PROFILE_FACT.groupRevenue, locale)} (${pt ? 'GRUPO' : 'GROUP'})`,
+          },
           { label: 'STACK', value: 'ANGULAR / STENCIL / NGRX / NX' },
         ],
       },
@@ -121,10 +127,10 @@ const projectsFor = (locale: SiteLocale): Project[] => {
         stats: [
           {
             label: pt ? 'BIBLIOTECA' : 'LIBRARY',
-            value: pt ? '~1.8M DOWNLOADS SEMANAIS NPM' : '~1.8M WEEKLY NPM DOWNLOADS',
+            value: pt ? '~1,8M DOWNLOADS SEMANAIS NPM' : '~1.8M WEEKLY NPM DOWNLOADS',
           },
           {
-            label: pt ? 'CAUSA RAIZ' : 'ROOT CAUSE',
+            label: pt ? 'CAUSA' : 'CAUSE',
             value: pt
               ? 'NOVA IDENTIDADE DE CALLBACK A CADA RENDER'
               : 'NEW CALLBACK IDENTITY EVERY RENDER',
@@ -141,9 +147,12 @@ const projectsFor = (locale: SiteLocale): Project[] => {
           ? 'Este portfólio. Next.js 16 App Router, React 19, RSC-first, um endpoint Anthropic com streaming no Vercel AI SDK e um harness de avaliação em CI que decide se ele sobe.'
           : 'This portfolio. Next.js 16 App Router, React 19, RSC-first, a streaming Anthropic endpoint on the Vercel AI SDK, and a CI eval harness that decides if it ships.',
         stats: [
-          { label: pt ? 'ORÇAMENTO LCP' : 'LCP BUDGET', value: '< 1.8s' },
+          { label: pt ? 'ORÇAMENTO LCP' : 'LCP BUDGET', value: pt ? '< 1,8s' : '< 1.8s' },
           { label: pt ? 'ORÇAMENTO INP' : 'INP BUDGET', value: '< 200ms' },
-          { label: pt ? 'REGISTRO DE DECISÕES' : 'DECISION LOG', value: '130+ RECORDS' },
+          {
+            label: pt ? 'REGISTRO DE DECISÕES' : 'DECISION LOG',
+            value: pt ? '130+ REGISTROS' : '130+ RECORDS',
+          },
         ],
       },
       {
@@ -152,7 +161,7 @@ const projectsFor = (locale: SiteLocale): Project[] => {
         kind: 'oss',
         url: 'https://github.com/erikunha/LAIbemage',
         description: pt
-          ? 'CLI open-source em TypeScript (MIT) que classifica imagens entre sete provedores de visão LLM: confiança auto-obtida, escalada local-para-nuvem abaixo de 0.70, consenso de dois provedores, fila de aprendizado ativo.'
+          ? 'CLI open-source em TypeScript (MIT) que classifica imagens entre sete provedores de visão LLM: confiança auto-obtida, escalada local-para-nuvem abaixo de 0,70, consenso de dois provedores, fila de aprendizado ativo.'
           : 'Open-source TypeScript CLI (MIT) classifying images across seven LLM vision providers: self-elicited confidence, local-to-cloud escalation below 0.70, two-provider consensus, active-learning queue.',
         stats: [
           { label: pt ? 'PROVEDORES' : 'PROVIDERS', value: '7' },

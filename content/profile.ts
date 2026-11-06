@@ -16,6 +16,14 @@ export const PROFILE_FACT = {
   bankingClients: '24.2M',
 } as const;
 
+const DECIMAL_POINT_PATTERN = /(\d)\.(\d)/g;
+const PT_DECIMAL_SEPARATOR = ',';
+
+export const localizeDecimals = (text: string, locale: SiteLocale): string =>
+  locale === SITE_LOCALE.pt
+    ? text.replace(DECIMAL_POINT_PATTERN, `$1${PT_DECIMAL_SEPARATOR}$2`)
+    : text;
+
 export const FUNDS_SERVED = 50;
 export const ASSETS_UNDER_MANAGEMENT_BILLIONS = 500;
 export const FUNDS_PHRASE = `${FUNDS_SERVED}+ funds holding $${ASSETS_UNDER_MANAGEMENT_BILLIONS}B+ in assets`;

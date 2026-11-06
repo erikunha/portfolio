@@ -2,6 +2,7 @@ import {
   ASSETS_UNDER_MANAGEMENT_BILLIONS,
   FUNDS_PHRASE,
   FUNDS_SERVED,
+  localizeDecimals,
   PROFILE_FACT,
   profile,
   profilePresentation,
@@ -103,7 +104,7 @@ const gitLogFor = (locale: SiteLocale): GitCommit[] => {
       date: pt ? 'jan/2021 - dez/2021' : 'Jan 2021 - Dec 2021',
       branch: 'career/encora',
       type: 'career',
-      company: 'Encora (formerly Daitan)',
+      company: pt ? 'Encora (antiga Daitan)' : 'Encora (formerly Daitan)',
       companyUrl: 'https://www.linkedin.com/company/encorainc/',
       role: pt
         ? 'Desenvolvedor Frontend · alocado na VMware'
@@ -115,7 +116,7 @@ const gitLogFor = (locale: SiteLocale): GitCommit[] => {
       domain: pt ? 'software enterprise em nuvem' : 'enterprise cloud software',
       body: [
         pt
-          ? `portal do laboratório VMware Pathfinder em Angular 11; efeitos NgRx, Reactive Forms, ${PROFILE_FACT.labsDelivered} labs.`
+          ? `portal do laboratório VMware Pathfinder em Angular 11; efeitos NgRx, Reactive Forms, ${localizeDecimals(PROFILE_FACT.labsDelivered, locale)} labs.`
           : `VMware Pathfinder lab portal on Angular 11; NgRx effects, Reactive Forms, ${PROFILE_FACT.labsDelivered} labs.`,
       ],
     },

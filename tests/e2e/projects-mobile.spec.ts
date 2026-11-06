@@ -139,3 +139,28 @@ test.describe('perf receipt values', () => {
     });
   }
 });
+
+test.describe('project names at the narrowest phone', () => {
+  test.use({ viewport: PHONE_MIN, hasTouch: true, isMobile: true });
+
+  test('every project name stays on one line at 16px, never breaking mid-word', async ({
+    page,
+  }) => {
+    await page.goto('/');
+    await page.locator('.project-name').first().scrollIntoViewIfNeeded();
+    const broken = await page.locator('.project-name').evaluateAll((nodes) =>
+      nodes.flatMap((node) => {
+        const label = node.firstElementChild?.firstChild ?? node.firstChild;
+        if (!label) return [];
+        const range = document.createRange();
+        range.selectNodeContents(label);
+        const tops = new Set([...range.getClientRects()].map((rect) => Math.round(rect.top)));
+        return tops.size > 1 ? [label.textContent ?? ''] : [];
+      }),
+    );
+    expect(
+      broken,
+      'a project name wrapped inside a word at 320px (ORIGINATION_PLATFORM_U / I): the card padding leaves too little room',
+    ).toEqual([]);
+  });
+});
