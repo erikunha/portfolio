@@ -29,6 +29,15 @@ test.describe('home with JavaScript off', () => {
     await expect(page.locator('#sec-contact')).toBeAttached();
   });
 
+  test('forms that need JavaScript are not offered, so a submit cannot put the message in the URL', async ({
+    page,
+  }) => {
+    await page.goto('/');
+    await expect(page.getByTestId('contact-form')).toBeHidden();
+    await expect(page.getByTestId('shell-form')).toBeHidden();
+    await expect(page.getByTestId('contact-nojs')).toBeVisible();
+  });
+
   test('the notice clears the fixed desktop chrome instead of covering it', async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 720 });
     await page.goto('/');
