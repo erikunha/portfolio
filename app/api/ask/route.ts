@@ -21,6 +21,7 @@ import {
   settleBudget,
 } from '@/lib/rate-limit';
 import { withBodyLimit } from '@/lib/server/body-limit';
+import { isCrossSiteRequest } from '@/lib/server/fetch-metadata';
 import {
   ASK_LOCALE_HEADER,
   RETRY_AFTER_HEADER,
@@ -91,6 +92,9 @@ async function handleAsk(req: NextRequest): Promise<Response> {
   const askFlag = (env.ASK_ENABLED ?? '').trim().toLowerCase();
   if (OFF_KEYWORDS.has(askFlag)) {
     return Response.json({ error: askErrors[pageLocale].unavailable }, { status: 503 });
+  }
+  if (isCrossSiteRequest(req)) {
+    return Response.json({ error: askErrors[pageLocale].forbiddenOrigin }, { status: 403 });
   }
 
   const requestId = crypto.randomUUID();

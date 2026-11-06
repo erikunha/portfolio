@@ -10,6 +10,7 @@ export type AskErrors = {
   duplicate: string;
   budget: string;
   truncation: string;
+  forbiddenOrigin: string;
 };
 
 const askErrorsFor = (locale: SiteLocale): AskErrors => {
@@ -35,6 +36,9 @@ const askErrorsFor = (locale: SiteLocale): AskErrors => {
     truncation: pt
       ? `\n\n[resposta truncada: esta resposta atingiu o limite de tamanho. Escreva para ${social.email} para a resposta completa.]`
       : `\n\n[answer truncated: this response hit its length limit. Email ${social.email} for the full answer.]`,
+    forbiddenOrigin: pt
+      ? 'pedido recusado: pergunte pela própria página do site'
+      : 'request refused: ask from the site itself',
   };
 };
 
