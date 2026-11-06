@@ -100,7 +100,7 @@ test.describe('type reveal', () => {
         content: '.module-deferred { content-visibility: visible !important; }',
       });
       const marked = page.locator('[data-type-reveal]');
-      expect(await marked.count()).toBeGreaterThan(0);
+      await expect(marked).not.toHaveCount(0);
       const offenders = await marked.evaluateAll((els) =>
         els
           .filter((el) => {

@@ -17,7 +17,7 @@ const OBSERVER_OPTIONS: IntersectionObserverInit = {
 
 type MotionChangeDetail = { on: boolean };
 
-function revealAll(elements: HTMLElement[]) {
+function revealAll(elements: Iterable<HTMLElement>) {
   for (const el of elements) {
     el.classList.add(TYPED_CLASS, STATIC_CLASS);
   }
@@ -28,16 +28,16 @@ export function TypeReveal() {
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: a route change renders new marked elements that the DOM query must pick up
   useEffect(() => {
-    const elements: HTMLElement[] = [];
+    const elements = new Set<HTMLElement>();
     const track = (candidates: Iterable<HTMLElement>) => {
       const fresh: HTMLElement[] = [];
       for (const el of candidates) {
-        if (el.classList.contains(TYPED_CLASS) || elements.includes(el)) continue;
+        if (el.classList.contains(TYPED_CLASS) || elements.has(el)) continue;
         el.style.setProperty(
           CHARS_PROPERTY,
           String(Math.max(1, (el.textContent ?? '').trim().length)),
         );
-        elements.push(el);
+        elements.add(el);
         fresh.push(el);
       }
       return fresh;
@@ -63,7 +63,7 @@ export function TypeReveal() {
       if (observer) for (const el of fresh) observer.observe(el);
       else revealAll(fresh);
     };
-    handle(elements);
+    handle(Array.from(elements));
     document.documentElement.classList.add(READY_CLASS);
 
     const mutations = new MutationObserver((records) => {

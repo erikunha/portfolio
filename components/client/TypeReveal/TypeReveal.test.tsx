@@ -52,6 +52,22 @@ afterEach(() => {
 });
 
 describe('TypeReveal', () => {
+  it('observes a marked element once however often it is re-inserted', async () => {
+    setMotion(true);
+    mount('<main id="host"><h2 data-type-reveal id="a">About</h2></main>');
+    const a = document.getElementById('a') as HTMLElement;
+    const host = document.getElementById('host') as HTMLElement;
+    const observe = vi.spyOn(observers[0] as MockObserver, 'observe');
+    for (let round = 0; round < 3; round++) {
+      host.removeChild(a);
+      host.appendChild(a);
+      await act(async () => {
+        await Promise.resolve();
+      });
+    }
+    expect(observe).not.toHaveBeenCalled();
+  });
+
   it('adds is-typed when the observer reports intersection', () => {
     setMotion(true);
     mount('<h2 data-type-reveal id="a">About</h2><h2 data-type-reveal id="b">Work</h2>');
