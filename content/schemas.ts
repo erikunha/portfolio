@@ -1032,7 +1032,11 @@ export const ReadingViewsSchema = z.object({
     statsLabel: ReadingTextSchema,
     experienceLabel: ReadingTextSchema,
     projectNames: z.array(ReadingTextSchema).min(1),
-    stack: z.array(ReadingTextSchema).min(1),
+    stack: z.object({
+      core: z.array(ReadingTextSchema).min(1),
+      ai: z.array(ReadingTextSchema).min(1),
+    }),
+    stackLabels: z.object({ core: ReadingTextSchema, ai: ReadingTextSchema }),
     headings: z.object({
       projects: ReadingTextSchema,
       stack: ReadingTextSchema,

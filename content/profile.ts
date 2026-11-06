@@ -59,6 +59,8 @@ const aiItems = profileFields.aiLine.split(STACK_ITEM_SEPARATOR);
 
 export const profileStack = {
   all: [...stackItems, ...aiItems],
+  core: stackItems,
+  ai: aiItems,
 };
 
 export const profile: Profile = {

@@ -133,7 +133,11 @@ const readingViewsFor = (locale: SiteLocale): ReadingViews => {
       statsLabel: pt ? 'Números-chave' : 'Key numbers',
       experienceLabel: pt ? 'mais de 8 anos' : '8+ years',
       projectNames: projects[locale].slice(0, SUMMARY_PROJECT_COUNT).map((project) => project.name),
-      stack: profileStack.all,
+      stack: { core: profileStack.core, ai: profileStack.ai },
+      stackLabels: {
+        core: pt ? 'Stack principal' : 'Core stack',
+        ai: pt ? 'Stack de IA' : 'AI stack',
+      },
       headings: {
         projects: pt ? 'Projetos' : 'Projects',
         stack: pt ? 'Stack' : 'Tech stack',

@@ -7,7 +7,10 @@ import { SITE_LOCALES } from './site-locale';
 
 describe('stack and featured projects have one source', () => {
   it.each(SITE_LOCALES)('the /summary stack is the profile stack (%s)', (locale) => {
-    expect(readingViews[locale].summary.stack).toEqual(profileStack.all);
+    const { core, ai } = readingViews[locale].summary.stack;
+    expect([...core, ...ai]).toEqual(profileStack.all);
+    expect(core).toEqual(profileStack.core);
+    expect(ai).toEqual(profileStack.ai);
   });
 
   it('every profile stack item appears in the profile technology line', () => {

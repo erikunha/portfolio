@@ -8,7 +8,7 @@ It is a **hiring and reference artifact** for one user (Erik Cunha, a software e
 1. **For human visitors (recruiters, hiring managers, engineers):** present credentials, projects, and opinions in a terminal interface, with automated performance and accessibility checks.
 2. **For AI agents (and curious engineers):** answer questions about Erik via `/api/ask` (an LLM grounded in the site's own content) and expose a machine-readable hiring profile via `/api/erik.json` and a read-only MCP server (`/api/mcp`).
 
-The terminal page has nine navigation entries in `content/section-registry.ts`; the DAW mixer lives inside the guitar entry. `components/SiteHome.tsx` also renders supporting modules outside that registry. `/summary` and `/cv` reuse professional content through `content/reading-views.ts`; `/links` and `/links/en` share localized link content.
+The terminal page has nine navigation entries in `content/section-registry.ts`; the DAW mixer lives inside the guitar entry. `components/SiteHome.tsx` also renders supporting modules outside that registry. `/summary` and `/cv` reuse professional content through `content/reading-views.ts` (the summary stack rows come from `profileStack.core` and `profileStack.ai`); `/links` and `/links/en` share localized link content.
 
 ## Users and how they move through the system
 

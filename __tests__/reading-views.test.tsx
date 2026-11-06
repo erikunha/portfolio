@@ -223,8 +223,10 @@ describe('summary reading view', () => {
   });
 
   it('shows the chosen projects with a headline stat each', () => {
-    const panels = host.querySelectorAll('.reading-projects .terminal-panel');
-    expect(panels).toHaveLength(readingViewsEn.summary.projectNames.length);
+    const entries = host.querySelectorAll('.reading-projects > li');
+    expect(entries).toHaveLength(readingViewsEn.summary.projectNames.length);
+    const names = Array.from(entries, (entry) => entry.querySelector('h3')?.textContent);
+    expect(names).toEqual(summaryDocumentEn.projects.map((project) => project.name));
     for (const project of summaryDocumentEn.projects) {
       expect(host.textContent).toContain(project.name);
       expect(host.textContent).toContain(project.value);
@@ -233,12 +235,42 @@ describe('summary reading view', () => {
 
   it('shows the stack chips and no work-authorization row', () => {
     expect(host.textContent).not.toMatch(/work authori[sz]ation/i);
-    const chips = host.querySelectorAll('.reading-chips li');
+    const { core, ai } = readingViewsEn.summary.stack;
+    const coreChips = host.querySelectorAll('.reading-chips:not(.reading-chips--ai) li');
+    const aiChips = host.querySelectorAll('.reading-chips--ai li');
     expect(
-      chips.length,
+      coreChips.length,
       'the stack chips render, so the row check above sees the page',
     ).toBeGreaterThan(0);
-    expect(chips).toHaveLength(readingViewsEn.summary.stack.length);
+    expect(Array.from(coreChips, (chip) => chip.textContent)).toEqual(core);
+    expect(Array.from(aiChips, (chip) => chip.textContent)).toEqual(ai);
+  });
+
+  it('orders the page header, stats, actions, then projects, stack and contact', () => {
+    const order = [
+      'h1',
+      `[aria-label="${readingViewsEn.summary.statsLabel}"]`,
+      '.reading-actions',
+      '.reading-projects',
+      '.reading-chips',
+      `a[href="mailto:${social.email}"]`,
+    ].map((selector) => host.querySelector(selector));
+    order.forEach((node, index) => {
+      expect(node, `element ${index} renders`).not.toBeNull();
+      const next = order[index + 1];
+      if (node && next) {
+        expect(node.compareDocumentPosition(next) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+      }
+    });
+  });
+
+  it('keeps the heading order h1, h2, h3 with no skipped level', () => {
+    const levels = Array.from(host.querySelectorAll('h1, h2, h3'), (heading) =>
+      Number(heading.tagName.slice(1)),
+    );
+    levels.forEach((level, index) => {
+      if (index > 0) expect(level - (levels[index - 1] ?? 0)).toBeLessThanOrEqual(1);
+    });
   });
 
   it('links to the full CV, LinkedIn and email, and has a print button', () => {

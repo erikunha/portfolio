@@ -4,7 +4,7 @@ import { PrintButton } from '@/components/client/PrintButton';
 import { NAVIGATION } from '@/content/navigation';
 import { readingViews, summaryDocument } from '@/content/reading-views';
 import type { SiteLocale } from '@/content/site-locale';
-import { Button, StatTile, TerminalPanel } from '@/design-system';
+import { Button, StatTile } from '@/design-system';
 import { ReadingLanguageSwitch } from './LanguageSwitch';
 
 const MAIN_ID = 'main-content';
@@ -76,62 +76,67 @@ export function SummaryPage({ locale }: { locale: SiteLocale }) {
           <PrintButton label={shared.printLabel} />
         </div>
 
-        <section aria-labelledby={sectionId('projects')} className="reading-section">
-          <h2
-            id={sectionId('projects')}
-            className="reading-heading"
-            data-type-reveal
-            suppressHydrationWarning
-          >
-            {summary.headings.projects}
-          </h2>
-          <ul className="reading-projects">
-            {doc.projects.map((project) => (
-              <li key={project.name}>
-                <TerminalPanel header={project.name}>
-                  <div className="px-3.5 py-3">
-                    <p className="reading-meta">{project.label}</p>
-                    <p className="font-bold">{project.value}</p>
-                    <p className="reading-meta">{project.description}</p>
-                  </div>
-                </TerminalPanel>
-              </li>
-            ))}
-          </ul>
-        </section>
-
-        <div className="reading-grid">
-          <section aria-labelledby={sectionId('stack')} className="reading-section">
+        <div className="reading-split">
+          <section aria-labelledby={sectionId('projects')} className="reading-section">
             <h2
-              id={sectionId('stack')}
+              id={sectionId('projects')}
               className="reading-heading"
               data-type-reveal
               suppressHydrationWarning
             >
-              {summary.headings.stack}
+              {summary.headings.projects}
             </h2>
-            <ul className="reading-chips">
-              {summary.stack.map((item) => (
-                <li key={item}>{item}</li>
+            <ul className="reading-projects">
+              {doc.projects.map((project) => (
+                <li key={project.name} className="reading-project">
+                  <h3 className="reading-project-name">{project.name}</h3>
+                  <p className="reading-project-metric">
+                    <span>{project.label}</span> <b>{project.value}</b>
+                  </p>
+                  <p className="reading-project-text">{project.description}</p>
+                </li>
               ))}
             </ul>
           </section>
-        </div>
 
-        <section aria-labelledby={sectionId('contact')} className="reading-section">
-          <h2
-            id={sectionId('contact')}
-            className="reading-heading"
-            data-type-reveal
-            suppressHydrationWarning
-          >
-            {summary.headings.contact}
-          </h2>
-          <p className="reading-actions-inline">
-            <a href={`mailto:${doc.email}`}>{doc.email}</a>
-          </p>
-          <p className="reading-meta">{doc.languages}</p>
-        </section>
+          <div className="reading-side">
+            <section aria-labelledby={sectionId('stack')} className="reading-section">
+              <h2
+                id={sectionId('stack')}
+                className="reading-heading"
+                data-type-reveal
+                suppressHydrationWarning
+              >
+                {summary.headings.stack}
+              </h2>
+              <ul className="reading-chips" aria-label={summary.stackLabels.core}>
+                {summary.stack.core.map((item) => (
+                  <li key={item}>{item}</li>
+                ))}
+              </ul>
+              <ul className="reading-chips reading-chips--ai" aria-label={summary.stackLabels.ai}>
+                {summary.stack.ai.map((item) => (
+                  <li key={item}>{item}</li>
+                ))}
+              </ul>
+            </section>
+
+            <section aria-labelledby={sectionId('contact')} className="reading-section">
+              <h2
+                id={sectionId('contact')}
+                className="reading-heading"
+                data-type-reveal
+                suppressHydrationWarning
+              >
+                {summary.headings.contact}
+              </h2>
+              <p className="reading-actions-inline">
+                <a href={`mailto:${doc.email}`}>{doc.email}</a>
+              </p>
+              <p className="reading-meta">{doc.languages}</p>
+            </section>
+          </div>
+        </div>
       </main>
     </div>
   );

@@ -215,7 +215,7 @@ app/layout.tsx                       # fonts, JSON-LD, metadata, motion bootstra
 app/page.tsx                         # English home route, renders SiteHome
 app/pt/page.tsx                      # pt-BR home route, renders SiteHome
 components/SiteHome.tsx              # section composition, client shell boundaries, footer
-app/summary/page.tsx                 # concise reading view
+app/summary/page.tsx                 # one-screen reading view: stats, CTAs, projects | stack + contact
 app/cv/page.tsx                      # full CV reading view and print control
 app/links/page.tsx                   # pt-BR links page
 app/links/en/page.tsx                # English links page
