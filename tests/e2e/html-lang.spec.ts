@@ -34,12 +34,35 @@ for (const { path, locale, status } of ROUTES) {
 test('the server-sent document carries the locale lang before any script runs', async ({
   request,
 }) => {
-  for (const { path, locale } of ROUTES.filter((route) => route.status === 200)) {
+  for (const { path, locale } of ROUTES) {
     const response = await request.get(path);
     const html = await response.text();
     expect(
       html.match(/<html[^>]*>/)?.[0],
       `${path} must send its lang in the first bytes of the document`,
     ).toContain(`lang="${SITE_HTML_LANG[locale]}"`);
+  }
+});
+
+test('an unknown URL sends the 404 page itself, not an empty shell the browser fills in later', async ({
+  request,
+}) => {
+  for (const { path } of ROUTES.filter((route) => route.status === NOT_FOUND_STATUS)) {
+    const response = await request.get(path);
+    const html = await response.text();
+    expect(response.status()).toBe(NOT_FOUND_STATUS);
+    expect(
+      html,
+      `${path} must carry its 404 heading in the first bytes, or a visitor without scripts, a link preview and a screen reader before hydration meet a blank page`,
+    ).toMatch(/<h1[^>]*>404<\/h1>/);
+    expect(html, `${path} must not ship Next's empty error shell`).not.toContain(
+      '<html id="__next_error__"',
+    );
+    expect(
+      html,
+      `${path} must not point its canonical at a page it is not, and must say noindex`,
+    ).not.toContain('rel="canonical"');
+    expect(html).toContain('name="robots" content="noindex"');
+    expect(html).not.toContain('content="index, follow"');
   }
 });

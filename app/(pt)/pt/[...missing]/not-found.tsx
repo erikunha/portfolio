@@ -5,7 +5,11 @@ import { SITE_LOCALE } from '@/content/site-locale';
 
 const locale = SITE_LOCALE.pt;
 
-export const metadata: Metadata = { title: errorsContent[locale].notFound.metaTitle };
+export const metadata: Metadata = {
+  title: errorsContent[locale].notFound.metaTitle,
+  robots: { index: false },
+  alternates: { canonical: null },
+};
 
 export default function PtNotFound() {
   return <NotFoundPage locale={locale} />;
