@@ -1,4 +1,5 @@
 import Image from 'next/image';
+import { ExternalLink } from '@/components/ExternalLink';
 import { linksContent } from '@/content/links';
 import type { LinksLocale } from '@/content/links.constants';
 import { linksUi } from '@/content/links-ui';
@@ -56,10 +57,8 @@ export function VideoHistory({ locale, feed }: { locale: LinksLocale; feed: Chan
         <ol className="links-history-list">
           {feed.history.map((video, index) => (
             <li key={video.id} className="links-history-item">
-              <a
+              <ExternalLink
                 href={withUtm(video.url, `video-${index + 1}`)}
-                target="_blank"
-                rel="noopener noreferrer"
                 data-outbound={`video-${index + 1}`}
                 className="links-history-row"
               >
@@ -85,22 +84,20 @@ export function VideoHistory({ locale, feed }: { locale: LinksLocale; feed: Chan
                 <span aria-hidden="true" className="links-history-arrow">
                   {linksUi.arrow}
                 </span>
-              </a>
+              </ExternalLink>
             </li>
           ))}
         </ol>
       )}
 
       {!isEmpty && (
-        <a
+        <ExternalLink
           href={withUtm(`${feed.channelUrl}/videos`, 'todos-videos')}
-          target="_blank"
-          rel="noopener noreferrer"
           data-outbound="todos-videos"
           className="links-history-all"
         >
           {copy.seeAllVideos[locale]}
-        </a>
+        </ExternalLink>
       )}
     </section>
   );

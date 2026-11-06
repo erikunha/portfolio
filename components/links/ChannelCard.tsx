@@ -1,4 +1,5 @@
 import Image from 'next/image';
+import { EXTERNAL_LINK_PROPS, ExternalLink } from '@/components/ExternalLink';
 import { linksContent } from '@/content/links';
 import type { LinksLocale } from '@/content/links.constants';
 import { linksUi } from '@/content/links-ui';
@@ -62,10 +63,8 @@ export function ChannelCard({ locale, feed }: { locale: LinksLocale; feed: Chann
             </p>
           </div>
         ) : (
-          <a
+          <ExternalLink
             href={withUtm(latest.url, 'ultimo-video')}
-            target="_blank"
-            rel="noopener noreferrer"
             data-outbound="ultimo-video"
             className="block no-underline mt-3 focus-visible:outline-2 focus-visible:outline-primary-500 focus-visible:outline-offset-2 hover:opacity-92"
           >
@@ -98,7 +97,7 @@ export function ChannelCard({ locale, feed }: { locale: LinksLocale; feed: Chann
                 {latest.description}
               </span>
             )}
-          </a>
+          </ExternalLink>
         )}
 
         <div
@@ -116,8 +115,7 @@ export function ChannelCard({ locale, feed }: { locale: LinksLocale; feed: Chann
             <Button
               as="a"
               href={withUtm(latest.url, 'assistir')}
-              target="_blank"
-              rel="noopener noreferrer"
+              {...EXTERNAL_LINK_PROPS}
               size="lg"
               variant="secondary"
               data-outbound="assistir"

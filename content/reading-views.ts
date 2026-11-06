@@ -46,7 +46,6 @@ const readingViewsFor = (locale: SiteLocale): ReadingViews => {
         href: social.linkedin,
       },
       printLabel: pt ? 'IMPRIMIR / SALVAR PDF' : 'PRINT / SAVE PDF',
-      newTabRel: 'noopener noreferrer',
       newTabHint: pt ? '(abre em uma nova guia)' : '(opens in a new tab)',
       ogImage: { path: '/og.png', width: 1200, height: 630 },
     },

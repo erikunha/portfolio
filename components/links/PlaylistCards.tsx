@@ -1,3 +1,4 @@
+import { ExternalLink } from '@/components/ExternalLink';
 import { linksContent } from '@/content/links';
 import type { LinksLocale, PlaylistAccent } from '@/content/links.constants';
 import { linksUi } from '@/content/links-ui';
@@ -45,10 +46,8 @@ export function PlaylistCards({ locale, channelUrl }: { locale: LinksLocale; cha
       <ul className="list-none m-0 p-0 grid gap-3">
         {linkable.map(({ playlist, href }) => (
           <li key={playlist.id}>
-            <a
+            <ExternalLink
               href={withUtm(href, `playlist-${playlist.id}`)}
-              target="_blank"
-              rel="noopener noreferrer"
               data-outbound={`playlist-${playlist.id}`}
               className={cn(
                 'block border border-primary-border p-4 no-underline bg-[var(--color-glow-03)] transition-[border-color,background] duration-150 focus-visible:outline-2 focus-visible:outline-primary-500 focus-visible:outline-offset-2',
@@ -74,7 +73,7 @@ export function PlaylistCards({ locale, channelUrl }: { locale: LinksLocale; cha
               <span className="block mt-2 text-tertiary-400 text-xs text-pretty">
                 {playlist.description[locale]}
               </span>
-            </a>
+            </ExternalLink>
           </li>
         ))}
       </ul>

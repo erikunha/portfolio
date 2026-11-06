@@ -5,6 +5,7 @@ import { readComponentsCss } from '@/__tests__/helpers/components-css';
 import { declValue, rulesInMedia } from '@/__tests__/helpers/css-rules';
 import CvPage, { metadata as cvMetadata } from '@/app/cv/page';
 import SummaryPage, { metadata as summaryMetadata } from '@/app/summary/page';
+import { EXTERNAL_LINK_PROPS } from '@/components/ExternalLink';
 import { credentials } from '@/content/credentials';
 import { education } from '@/content/education';
 import { gitLog } from '@/content/git-log';
@@ -93,7 +94,7 @@ describe('CV reading view', () => {
       const link = headings[index]?.querySelector('a');
       expect(link?.getAttribute('href'), job.company).toBe(job.companyUrl);
       expect(link?.getAttribute('target')).toBe('_blank');
-      expect(link?.getAttribute('rel')).toBe(readingViewsEn.shared.newTabRel);
+      expect(link?.getAttribute('rel')).toBe(EXTERNAL_LINK_PROPS.rel);
       expect(link?.textContent).toBe(job.company);
       const heading = headings[index];
       expect(
@@ -154,7 +155,7 @@ describe('CV reading view', () => {
   it('opens external links in a new tab with a hint for screen readers', () => {
     const linkedin = page(host).querySelector(`a[href="${social.linkedin}"]`);
     expect(linkedin?.getAttribute('target')).toBe('_blank');
-    expect(linkedin?.getAttribute('rel')).toBe(readingViewsEn.shared.newTabRel);
+    expect(linkedin?.getAttribute('rel')).toBe(EXTERNAL_LINK_PROPS.rel);
     const external = Array.from(page(host).querySelectorAll('a[target="_blank"]'));
     expect(external.length).toBeGreaterThan(0);
     for (const link of external) {
@@ -249,7 +250,7 @@ describe('summary reading view', () => {
     expect(links).toHaveLength(1);
     expect(links[0]?.getAttribute('href')).toBe(profile.currentEmployer.url);
     expect(links[0]?.getAttribute('target')).toBe('_blank');
-    expect(links[0]?.getAttribute('rel')).toBe(readingViewsEn.shared.newTabRel);
+    expect(links[0]?.getAttribute('rel')).toBe(EXTERNAL_LINK_PROPS.rel);
     expect(links[0]?.textContent).toContain(profile.currentEmployer.name);
     expect(links[0]?.textContent).toContain(readingViewsEn.shared.newTabHint);
   });

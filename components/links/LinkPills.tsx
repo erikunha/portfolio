@@ -1,3 +1,4 @@
+import { EXTERNAL_LINK_PROPS } from '@/components/ExternalLink';
 import { linksContent } from '@/content/links';
 import type { LinksLocale } from '@/content/links.constants';
 import type { LinksPill } from '@/content/schemas';
@@ -22,9 +23,7 @@ export function LinkPills({ locale, url }: { locale: LinksLocale; url: string })
         <li key={pill.id}>
           <a
             href={isMail(pill.href) ? pill.href : withUtm(pill.href, pill.id)}
-            {...(isMail(pill.href)
-              ? {}
-              : { target: '_blank', rel: 'noopener noreferrer', 'data-outbound': pill.id })}
+            {...(isMail(pill.href) ? {} : { ...EXTERNAL_LINK_PROPS, 'data-outbound': pill.id })}
             className="links-pill"
           >
             <span className="links-pill-glyph">

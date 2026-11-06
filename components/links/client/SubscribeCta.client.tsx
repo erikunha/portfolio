@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { EXTERNAL_LINK_PROPS } from '@/components/ExternalLink';
 import { Button } from '@/design-system';
 import { IconYouTube } from '../LinkIcons';
 
@@ -48,8 +49,7 @@ export function SubscribeCta({
     <Button
       as="a"
       href={subscribed ? subscribedHref : href}
-      target="_blank"
-      rel="noopener noreferrer"
+      {...EXTERNAL_LINK_PROPS}
       size="lg"
       variant="primary"
       className="gap-[9px]"

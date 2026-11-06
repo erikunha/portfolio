@@ -2,6 +2,7 @@
 
 import { usePathname } from 'next/navigation';
 import type { ReactNode } from 'react';
+import { ExternalLink } from '@/components/ExternalLink';
 import { StatusDot } from '@/components/StatusDot';
 import { LINKS_PATH } from '@/content/links.constants';
 import { TOPBAR_MOTION_LABEL } from '@/content/nav';
@@ -75,15 +76,13 @@ export function DesktopTopbar({ brand }: { brand: ReactNode }) {
             >
               {chrome.topbarReading.label}
             </a>
-            <a
+            <ExternalLink
               className="topbar-action topbar-action-solid hidden lg:inline-flex"
               href={chrome.topbarHire.href}
-              target="_blank"
-              rel="noreferrer noopener"
               aria-label={chrome.topbarHire.accessibleName}
             >
               {chrome.topbarHire.label}
-            </a>
+            </ExternalLink>
           </div>
         </nav>
         <LanguageSwitch />

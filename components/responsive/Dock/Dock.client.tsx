@@ -1,5 +1,6 @@
 'use client';
 
+import { ExternalLink } from '@/components/ExternalLink';
 import type { DockKey } from '@/content/navigation';
 import { DRAWER_ID, MENU_ICON_PATH, NavIcon, useSectionNavigation } from '../SectionNavigation';
 
@@ -45,17 +46,10 @@ export function Dock() {
         }
         if (href) {
           return (
-            <a
-              key={key}
-              href={href}
-              className="dock-hire"
-              target="_blank"
-              rel="noreferrer noopener"
-              aria-label={accessibleName}
-            >
+            <ExternalLink key={key} href={href} className="dock-hire" aria-label={accessibleName}>
               <DockIcon control={key} />
               {label}
-            </a>
+            </ExternalLink>
           );
         }
         return (

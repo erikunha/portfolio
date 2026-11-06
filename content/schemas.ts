@@ -998,7 +998,6 @@ export const ReadingViewsSchema = z.object({
       href: z.url(),
     }),
     printLabel: ReadingTextSchema,
-    newTabRel: ReadingTextSchema,
     newTabHint: ReadingTextSchema,
     ogImage: z.object({ path: z.string().startsWith('/'), width: z.number(), height: z.number() }),
   }),

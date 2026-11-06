@@ -13,6 +13,7 @@ import {
   useRef,
   useState,
 } from 'react';
+import { externalLinkProps } from '@/components/ExternalLink';
 import { LocaleSwitch } from '@/components/LocaleSwitch/LocaleSwitch';
 import { StatusDot } from '@/components/StatusDot';
 import type { NavigationCopy, SiteNavChrome } from '@/content/navigation';
@@ -402,7 +403,7 @@ export function SectionNavigation({ extra }: { extra?: ReactNode }) {
                 label={label}
                 index={index}
                 aria-label={accessibleName}
-                {...(external ? { target: '_blank', rel: 'noreferrer noopener' } : {})}
+                {...externalLinkProps(external)}
               />
             </li>
           ))}
