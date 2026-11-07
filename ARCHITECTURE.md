@@ -30,7 +30,7 @@ What we build is small, opinionated, Vercel-deployed, and budget-enforced.
 - Opinions renders four ordered home takes with nested learning and specialization lists, and closes with a link to the design-system opinion. The design-system opinion renders at `/design-system#opinion-07`; `TAKE_PLACEMENT` separates home and documentation content. Four below-fold modules use content-visibility deferral.
 - Hero: Matrix dialog loop + boot sequence (typewriter)
 - About "Open to [role] roles" mounts RoleTyper over server-rendered text; the Hero title is static. Module headers use CSS scroll-driven typing, with static text for unsupported browsers and reduced motion. Every other single-line heading and command prompt marked `data-type-reveal` (on a span around the text only, never around icons, `sr-only` or `aria-hidden` siblings, and never on an element that can wrap) types in when it enters the viewport: `TypeReveal` (mounted once in the root layout through `GlobalMotion`) runs one IntersectionObserver, sets `--type-chars` and adds `is-typed`; CSS reveals the text with a stepped `clip-path` and a blinking caret. The text stays in the HTML and keeps its box, so screen readers, search and layout see it whole. Hiding applies only after `html.type-reveal-ready`, so without JS, under reduced motion or with `data-motion="reduce"` everything shows at once. The h1 and the first hero viewport are never marked. MatrixRain loads through `MatrixRainLazy` (`next/dynamic`, `ssr: false`) from `GlobalMotion` in the root layout, so it runs on every route, then IntersectionObserver gates its animation. The footer is server-rendered, with client islands only for session counters and halt/reboot.
-- INTERACTIVE_SHELL with `ask` LLM command + `help`, `whois`, `whois --recursive`, `cat skills.md`, `cat ~/.now`, `contact`, `clear`; anything else routes to Claude
+- INTERACTIVE_SHELL with `ask` LLM command + `help`, `whois`, `whois --recursive`, `cat skills.md`, `cat ~/.now`, `contact`, `privacy`, `clear`; anything else routes to Claude. Every answer ends with a `-- req=<id>` line with copy and forget; `privacy` lists this tab's request ids and forgets by number, id or `--all`
 - Contact form: durable submission, explicit delivered or queued feedback, daily bounded retry
 - Live Lighthouse score (PSI API, cached daily)
 - `MOTION` indicator tied to `prefers-reduced-motion`
@@ -150,7 +150,7 @@ The section menu is a modal drawer at every width, opened by the menu icon trigg
 | ContactFormLazy → ContactForm                     | Client-only form submission and feedback                                                                                                 |
 | ContactTimezoneLazy → ContactTimezone             | Timezone overlap panel: clocks, map, zone search and the propose action                                                                  |
 | DAW mixer islands                                 | Fader, dB readout, knob, RMS buttons and VU meter behavior                                                                               |
-| Footer client exports                             | Session counters, halt clock and reboot control                                                                                          |
+| Footer client exports                             | Session counters, halt clock, reboot control and the last-request receipt                                                                |
 | ErrorBoundary and error pages                     | Failure capture, retry and recovery controls                                                                                             |
 | PrintButton                                       | Print action in `/summary` and `/cv`                                                                                                     |
 | `/links` client components                        | Tagline cycle, navigation progress, copy and subscribe actions                                                                           |
@@ -247,9 +247,14 @@ components/sections/                  # RSC sections: Hero, HottestTakes, Guitar
 components/client/                    # co-located islands, ONLY interactivity
 components/client/InteractiveShell/   # streaming shell island
 components/client/InteractiveShell/useAskStream.ts  # shell request, idle timeout and rAF-coalesced stream state
+components/client/InteractiveShell/ResponseReference.client.tsx  # req= trailer under an answer: copy and forget
+components/client/InteractiveShell/privacy-command.ts  # parser for the privacy shell command
+lib/request-refs.client.ts            # this tab's request ids: sessionStorage with an in-memory fallback
+lib/forget-request.client.ts          # /api/log/forget client: 200, 404, 429 and failure outcomes, sequential batches
 components/client/LazyIsland/         # ErrorBoundary around Suspense for every React.lazy island
 components/client/TerminalChromeBar/  # window chrome header shared by the shell and the contact form
 components/client/ContactForm/        # contact form island and the messageStore it shares with the timezone panel
+components/client/RefChip/            # request reference chip with copy, shared by the contact receipt and error and the footer receipt
 components/client/ContactTimezone/    # timezone overlap panel island: clocks, map, zone combobox
 components/client/HeroBootAnimation/  # boot typewriter island
 components/client/RoleTyper/          # About status role typewriter island
@@ -578,7 +583,7 @@ Observability spans real-user telemetry, structured logs and client error captur
 
 - **`lib/ask-log.ts`** persists every `/api/ask` interaction to Upstash KV `ask:log:{yyyy-mm-dd}:{requestId}` with 90-day TTL. Captures `{requestId, ts, ipHash, question (≤500c), answer (≤1000c), inputTokens, outputTokens, durationMs, status}`. Enables retrospective audit of what the LLM said about Erik + product learning on user questions.
 - **`X-Request-Id`** response header on `/api/ask` surfaces the requestId to the client for the GDPR/LGPD erasure flow.
-- **`app/api/log/forget/route.ts`** accepts POST `{requestId}` and idempotently DELETEs the matching record across the last 90 day-partitions. Rate-limited (5/IP/hour) via `getForgetLimit()`.
+- **`app/api/log/forget/route.ts`** accepts POST `{requestId}` and idempotently DELETEs the matching record across every day-partition a live record can carry (the 90-day TTL plus the current day, 91 dates, from `askLogDatesInTtl`). Rate-limited (5/IP/hour) via `getForgetLimit()`.
 
 ### Inspection surfaces
 
