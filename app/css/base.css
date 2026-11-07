@@ -198,6 +198,7 @@
   }
 
   .sr-only {
+    font-family: var(--font-mono);
     position: absolute;
     width: 1px;
     height: 1px;
