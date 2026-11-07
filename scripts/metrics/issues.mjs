@@ -1,7 +1,7 @@
 import { existsSync, readFileSync, realpathSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
-import { resolveMetricConfig } from './bands.mjs';
-import { createGithubClient, resolveRepo, resolveToken } from './github.mjs';
+import { DIRECTION, resolveMetricConfig, TIER } from './bands.mjs';
+import { createGithubClient, HTTP_METHOD, resolveRepo, resolveToken } from './github.mjs';
 
 export const ISSUE_LABEL = 'metrics-breach';
 const LABEL_COLOR = 'b60205';
@@ -15,13 +15,17 @@ const DEFAULT_CONFIG_PATH = 'metrics/bands.json';
 const DEFAULT_REPORT_PATH = 'metrics/breaches.json';
 
 const TIER_ACTION = {
-  log: 'Log only. Note it and watch the next week.',
-  diagnose: 'Diagnose. Find the cause before changing anything, and write it in this issue.',
-  propose:
+  [TIER.LOG]: 'Log only. Note it and watch the next week.',
+  [TIER.DIAGNOSE]: 'Diagnose. Find the cause before changing anything, and write it in this issue.',
+  [TIER.PROPOSE]:
     'Propose. Open a pull request that changes the code or process behind the number, and link it here.',
 };
 
 export const issueMarker = (metric) => `<!-- ${ISSUE_LABEL}:${metric} -->`;
+const firstLine = (body) =>
+  String(body ?? '')
+    .split('\n', 1)[0]
+    .trim();
 export const buildIssueTitle = (metric) => `Metric breach: ${metric}`;
 
 const fmt = (value) =>
@@ -45,7 +49,7 @@ function evidenceLines({ metric, report, config, history }) {
   const lines = [
     `Metric: \`${metric}\`${unit ? ` (${unit})` : ''}`,
     `Value: ${fmt(evaluation.value)}`,
-    `Band: mean ${fmt(evaluation.mean)}, std ${fmt(evaluation.std)}, over the previous ${resolved.window} weeks at most. z = ${fmt(evaluation.z)}. Worse is ${resolved.direction === 'higher-is-worse' ? 'higher' : 'lower'}.`,
+    `Band: mean ${fmt(evaluation.mean)}, std ${fmt(evaluation.std)}, over the previous ${resolved.window} weeks at most. z = ${fmt(evaluation.z)}. Worse is ${resolved.direction === DIRECTION.HIGHER_IS_WORSE ? 'higher' : 'lower'}.`,
     'Rules that fired:',
     ...evaluation.rules.map((rule) => `- ${rule.description}`),
     `Recent weeks, oldest first: ${evaluation.recent.map(fmt).join(', ')}`,
@@ -81,9 +85,7 @@ function buildComment({ metric, report, runUrl }) {
 
 export function planIssueActions({ report, config, history, openIssues, runUrl }) {
   return report.breaches.map((metric) => {
-    const existing = openIssues.find((issue) =>
-      String(issue.body ?? '').includes(issueMarker(metric)),
-    );
+    const existing = openIssues.find((issue) => firstLine(issue.body) === issueMarker(metric));
     if (existing !== undefined) {
       return {
         type: 'comment',
@@ -104,7 +106,7 @@ export function planIssueActions({ report, config, history, openIssues, runUrl }
 async function ensureLabel(client, repo) {
   try {
     await client.request(`/repos/${repo}/labels`, {
-      method: 'POST',
+      method: HTTP_METHOD.POST,
       body: { name: ISSUE_LABEL, color: LABEL_COLOR, description: LABEL_DESCRIPTION },
     });
   } catch (error) {
@@ -118,12 +120,12 @@ export async function applyPlan(client, repo, actions, { dryRun = false } = {}) 
   for (const action of actions) {
     if (action.type === 'create') {
       await client.request(`/repos/${repo}/issues`, {
-        method: 'POST',
+        method: HTTP_METHOD.POST,
         body: { title: action.title, body: action.body, labels: [ISSUE_LABEL] },
       });
     } else {
       await client.request(`/repos/${repo}/issues/${action.issueNumber}/comments`, {
-        method: 'POST',
+        method: HTTP_METHOD.POST,
         body: { body: action.body },
       });
     }

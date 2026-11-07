@@ -19,8 +19,10 @@ export interface RequestOptions {
   body?: unknown;
   accept?: string;
   redirect?: 'manual' | 'follow';
+  readOnly?: boolean;
 }
 
+export declare const HTTP_METHOD: Readonly<{ GET: 'GET'; HEAD: 'HEAD'; POST: 'POST' }>;
 export declare function parseNextLink(header: string | null | undefined): string | null;
 export declare function createGithubClient(options: {
   token: string;

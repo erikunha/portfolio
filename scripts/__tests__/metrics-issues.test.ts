@@ -156,6 +156,19 @@ describe('planIssueActions', () => {
     expect(actions[0]).toMatchObject({ type: 'create' });
   });
 
+  it('does not take an open issue for ours when it only quotes the marker further down', () => {
+    const quoted = `Please look at this.\n\n> ${issueMarker('ciMainFailureRate')}`;
+    expect(plan([{ number: 31, body: quoted }])[0]).toMatchObject({ type: 'create' });
+  });
+
+  it('finds the issue again when the body uses Windows line endings', () => {
+    const edited = `${issueMarker('ciMainFailureRate')}\r\nedited by hand`;
+    expect(plan([{ number: 32, body: edited }])[0]).toMatchObject({
+      type: 'comment',
+      issueNumber: 32,
+    });
+  });
+
   it('plans nothing when no metric breached', () => {
     const quiet = { ...REPORT, breaches: [] };
     expect(

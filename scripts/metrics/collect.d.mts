@@ -11,7 +11,6 @@ export interface PullRequest {
   number: number;
   createdAt: string;
   mergedAt: string | null;
-  baseRefName: string;
   authorIsBot: boolean;
   firstCommitAt: string | null;
 }
@@ -35,6 +34,7 @@ export interface WeekCounts {
   distinctFlakyTests: number;
   logsTruncated: boolean;
   logErrors: number;
+  logsExpired: number;
 }
 
 export interface CollectedWeek {
@@ -92,6 +92,7 @@ export declare function upsertWeeks<T extends { weekStart: string }>(
   existing: T[],
   fresh: T[],
 ): T[];
+export declare function collectionWarnings(weeks: CollectedWeek[]): string[];
 export declare function collectRange(
   client: GithubClient,
   options: {

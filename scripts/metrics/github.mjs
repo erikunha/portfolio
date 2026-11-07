@@ -7,9 +7,18 @@ const API_VERSION = '2022-11-28';
 const DEFAULT_RETRIES = 2;
 const RETRY_BASE_MS = 1000;
 const SERVER_ERROR_FLOOR = 500;
-const RATE_LIMIT_STATUSES = [403, 429];
+const FORBIDDEN_STATUS = 403;
+const TOO_MANY_REQUESTS_STATUS = 429;
+const RATE_LIMIT_STATUSES = [FORBIDDEN_STATUS, TOO_MANY_REQUESTS_STATUS];
+const MAX_RETRY_AFTER_SECONDS = 60;
 const REDIRECT_STATUSES = [301, 302, 303, 307, 308];
 const MS_PER_SECOND = 1000;
+export const HTTP_METHOD = Object.freeze({ GET: 'GET', HEAD: 'HEAD', POST: 'POST' });
+const REPLAYABLE_METHODS = [HTTP_METHOD.GET, HTTP_METHOD.HEAD];
+const ACCEPT_JSON = 'application/vnd.github+json';
+const ACCEPT_TEXT = 'text/plain';
+const GRAPHQL_PATH = '/graphql';
+const REMAINING_EXHAUSTED = '0';
 const REMOTE_PATTERN = /github\.com[:/]([\w.-]+\/[\w.-]+?)(?:\.git)?\/?$/;
 const NEXT_LINK = /<([^>]+)>;\s*rel="next"/;
 
@@ -39,6 +48,22 @@ function describeRateLimit(res) {
   return `GitHub API rate limit exhausted, resets at ${when}`;
 }
 
+function httpError(message, status) {
+  return Object.assign(new Error(message), { status });
+}
+
+function describeSecondaryLimit(res, retryAfter) {
+  const asked = retryAfter === null ? 'no retry-after header' : `retry-after ${retryAfter} seconds`;
+  return `GitHub API secondary rate limit hit (HTTP ${res.status}, ${asked}); waiting more than ${MAX_RETRY_AFTER_SECONDS} seconds is not attempted`;
+}
+
+function readRetryAfter(res) {
+  const raw = res.headers.get('retry-after');
+  if (raw === null) return null;
+  const seconds = Number(raw);
+  return Number.isFinite(seconds) && seconds >= 0 ? seconds : null;
+}
+
 export function createGithubClient({
   token,
   fetchImpl = globalThis.fetch,
@@ -55,7 +80,7 @@ export function createGithubClient({
     return headers;
   };
 
-  async function send(url, init, accept) {
+  async function send(url, init, accept, { replayable }) {
     for (let attempt = 0; ; attempt += 1) {
       let res;
       try {
@@ -64,17 +89,26 @@ export function createGithubClient({
           headers: { ...headersFor(url, accept), ...init.headers },
         });
       } catch (error) {
-        if (attempt >= retries) throw error;
+        if (!replayable || attempt >= retries) throw error;
         await sleep(RETRY_BASE_MS * 2 ** attempt);
         continue;
       }
-      if (
-        RATE_LIMIT_STATUSES.includes(res.status) &&
-        res.headers.get('x-ratelimit-remaining') === '0'
-      ) {
-        throw new Error(describeRateLimit(res));
+      const limited = RATE_LIMIT_STATUSES.includes(res.status);
+      if (limited && res.headers.get('x-ratelimit-remaining') === REMAINING_EXHAUSTED) {
+        throw httpError(describeRateLimit(res), res.status);
       }
-      if (res.status >= SERVER_ERROR_FLOOR && attempt < retries) {
+      const retryAfter = readRetryAfter(res);
+      const secondary =
+        res.status === TOO_MANY_REQUESTS_STATUS ||
+        (res.status === FORBIDDEN_STATUS && retryAfter !== null);
+      if (secondary) {
+        if (retryAfter === null || retryAfter > MAX_RETRY_AFTER_SECONDS || attempt >= retries) {
+          throw httpError(describeSecondaryLimit(res, retryAfter), res.status);
+        }
+        await sleep(retryAfter * MS_PER_SECOND);
+        continue;
+      }
+      if (res.status >= SERVER_ERROR_FLOOR && replayable && attempt < retries) {
         await sleep(RETRY_BASE_MS * 2 ** attempt);
         continue;
       }
@@ -84,7 +118,7 @@ export function createGithubClient({
 
   async function request(
     path,
-    { params, method = 'GET', body, accept = 'application/vnd.github+json', redirect } = {},
+    { params, method = HTTP_METHOD.GET, body, accept = ACCEPT_JSON, redirect, readOnly } = {},
   ) {
     const url = withParams(path, params);
     const init = { method, ...(redirect === undefined ? {} : { redirect }) };
@@ -92,10 +126,11 @@ export function createGithubClient({
       init.body = JSON.stringify(body);
       init.headers = { 'Content-Type': 'application/json' };
     }
-    const res = await send(url, init, accept);
+    const replayable = readOnly ?? REPLAYABLE_METHODS.includes(method);
+    const res = await send(url, init, accept, { replayable });
     const redirected = redirect === 'manual' && REDIRECT_STATUSES.includes(res.status);
     if (!res.ok && !redirected) {
-      throw new Error(`GitHub API ${method} ${path} returned HTTP ${res.status}`);
+      throw httpError(`GitHub API ${method} ${path} returned HTTP ${res.status}`, res.status);
     }
     return res;
   }
@@ -118,7 +153,11 @@ export function createGithubClient({
   }
 
   async function graphql(query, variables) {
-    const body = await json('/graphql', { method: 'POST', body: { query, variables } });
+    const body = await json(GRAPHQL_PATH, {
+      method: HTTP_METHOD.POST,
+      body: { query, variables },
+      readOnly: true,
+    });
     if (Array.isArray(body.errors) && body.errors.length > 0) {
       throw new Error(`GitHub GraphQL error: ${body.errors.map((e) => e.message).join('; ')}`);
     }
@@ -128,12 +167,14 @@ export function createGithubClient({
   async function text(path) {
     const first = await request(path, {
       redirect: 'manual',
-      accept: 'application/vnd.github+json',
+      accept: ACCEPT_JSON,
     });
     const location = first.headers.get('location');
     if (!REDIRECT_STATUSES.includes(first.status) || location === null) return first.text();
-    const res = await send(location, { method: 'GET' }, 'text/plain');
-    if (!res.ok) throw new Error(`log download returned HTTP ${res.status}`);
+    const res = await send(location, { method: HTTP_METHOD.GET }, ACCEPT_TEXT, {
+      replayable: true,
+    });
+    if (!res.ok) throw httpError(`log download returned HTTP ${res.status}`, res.status);
     return res.text();
   }
 

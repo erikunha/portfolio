@@ -27,7 +27,12 @@ export const STATUS = Object.freeze({
   NO_DATA: 'no-data',
 });
 
-const TIER_RANK = { none: 0, log: 1, diagnose: 2, propose: 3 };
+const TIER_RANK = Object.freeze({
+  [TIER.NONE]: 0,
+  [TIER.LOG]: 1,
+  [TIER.DIAGNOSE]: 2,
+  [TIER.PROPOSE]: 3,
+});
 const ISSUE_TIERS = [TIER.LOG, TIER.DIAGNOSE, TIER.PROPOSE];
 const SAME_SIDE_RUN = 8;
 const TWO_OF_THREE = { needed: 2, of: 3 };
@@ -63,17 +68,28 @@ export function tierAtLeast(tier, floor) {
   return (TIER_RANK[tier] ?? 0) >= (TIER_RANK[floor] ?? 0);
 }
 
+function baselineBefore(values, excluded, index, window) {
+  const baseline = [];
+  for (let back = index - 1; back >= 0 && baseline.length < window; back -= 1) {
+    if (!excluded.has(back)) baseline.push(values[back]);
+  }
+  return baseline.reverse();
+}
+
 export function rollingScores(values, config) {
-  const { window, minHistory, minStd, direction } = config;
+  const { window, minHistory, minStd, direction, tiers } = config;
   const sign = direction === DIRECTION.LOWER_IS_WORSE ? -1 : 1;
+  const excluded = new Set();
   const scores = [];
   for (let index = minHistory; index < values.length; index += 1) {
-    const baseline = values.slice(Math.max(0, index - window), index);
+    const baseline = baselineBefore(values, excluded, index, window);
     const m = mean(baseline);
     const spread = Math.max(sampleStd(baseline), minStd);
     const value = values[index];
     const z = (value - m) / spread;
-    scores.push({ index, value, mean: m, std: spread, z, badness: sign * z });
+    const badness = sign * z;
+    if (tiers !== undefined && badness >= tiers.diagnose) excluded.add(index);
+    scores.push({ index, value, mean: m, std: spread, z, badness });
   }
   return scores;
 }
@@ -110,7 +126,7 @@ export function applyWesternElectricRules(scores, tiers) {
   const lastThree = scores.slice(-TWO_OF_THREE.of);
   if (
     lastThree.length === TWO_OF_THREE.of &&
-    latest > 0 &&
+    latest >= tiers.diagnose &&
     countAtLeast(lastThree, tiers.diagnose) >= TWO_OF_THREE.needed
   ) {
     fired.push({
@@ -123,7 +139,7 @@ export function applyWesternElectricRules(scores, tiers) {
   const lastFive = scores.slice(-FOUR_OF_FIVE.of);
   if (
     lastFive.length === FOUR_OF_FIVE.of &&
-    latest > 0 &&
+    latest >= tiers.log &&
     countAtLeast(lastFive, tiers.log) >= FOUR_OF_FIVE.needed
   ) {
     fired.push({
@@ -137,7 +153,7 @@ export function applyWesternElectricRules(scores, tiers) {
   if (lastRun.length === SAME_SIDE_RUN && lastRun.every((s) => s > 0)) {
     fired.push({
       id: RULE_ID.EIGHT_ONE_SIDE,
-      tier: TIER.LOG,
+      tier: TIER.DIAGNOSE,
       description: `the last ${SAME_SIDE_RUN} points all sit on the bad side of the mean`,
     });
   }
@@ -244,6 +260,22 @@ function formatNumber(value) {
   return typeof value === 'number' ? String(Number(value.toFixed(FIXED_DIGITS))) : '-';
 }
 
+export function bandAnnotations(report) {
+  const notes = [];
+  for (const [name, evaluation] of Object.entries(report.evaluations)) {
+    if (evaluation.status === STATUS.NO_DATA) {
+      notes.push(
+        `::warning::${name} has no value for the week starting ${report.weekStart}, so it was not checked against its band`,
+      );
+    } else if (evaluation.status === STATUS.INSUFFICIENT_HISTORY) {
+      notes.push(
+        `::notice::${name} has too little history to build a band yet, so it was not checked`,
+      );
+    }
+  }
+  return notes;
+}
+
 export function renderTable(report) {
   const lines = [
     '| metric | value | mean | std | z | tier | status |',
@@ -288,6 +320,7 @@ function main() {
   console.log(
     `[bands] breaches: ${report.breaches.length === 0 ? 'none' : report.breaches.join(', ')}`,
   );
+  for (const note of bandAnnotations(report)) console.log(note);
   if (process.env.GITHUB_STEP_SUMMARY) {
     appendFileSync(
       process.env.GITHUB_STEP_SUMMARY,

@@ -35,8 +35,21 @@ const TOP_FLAKY_COUNT = 5;
 const MAX_TEST_NAME_LENGTH = 200;
 const ROUND_DIGITS = 4;
 const DEFAULT_HISTORY_PATH = 'metrics/weekly.json';
-const COMPLETED_CONCLUSIONS = ['success', 'failure'];
-const FAILED_DEPLOY_STATES = ['failure', 'error'];
+const CONCLUSION = Object.freeze({ SUCCESS: 'success', FAILURE: 'failure' });
+const COMPLETED_CONCLUSIONS = [CONCLUSION.SUCCESS, CONCLUSION.FAILURE];
+const DEPLOY_STATE = Object.freeze({ SUCCESS: 'success', FAILURE: 'failure', ERROR: 'error' });
+const FAILED_DEPLOY_STATES = [DEPLOY_STATE.FAILURE, DEPLOY_STATE.ERROR];
+const DEPLOY_OUTCOME = Object.freeze({
+  SUCCESS: 'success',
+  FAILURE: 'failure',
+  PENDING: 'pending',
+});
+const RUN_STATUS_COMPLETED = 'completed';
+const EVENT_PUSH = 'push';
+const ACTOR_TYPE_BOT = 'Bot';
+const WEEKS_AUTO = 'auto';
+const LOG_GONE_STATUSES = [404, 410];
+const RESULT_CAP = 1000;
 const ISO_DATE_LENGTH = 10;
 
 const ESCAPE_CODE = 27;
@@ -47,13 +60,15 @@ const TIMESTAMP_PATTERN = /^\d{4}-\d{2}-\d{2}T[\d:.]+Z ?/;
 const FLAKY_HEADER_PATTERN = /^\s+(\d+) flaky\s*$/;
 const SUMMARY_COUNT_PATTERN = /^\s+\d+ (?:flaky|skipped|passed|failed|did not run|interrupted)\b/;
 const WORKFLOW_COMMAND_PATTERN = /::/g;
+const MARKUP_CHARACTERS_PATTERN = /[<>@]/g;
 
 const PULL_REQUESTS_QUERY = `query($q: String!, $after: String) {
   search(query: $q, type: ISSUE, first: ${PAGE_SIZE}, after: $after) {
+    issueCount
     pageInfo { hasNextPage endCursor }
     nodes {
       ... on PullRequest {
-        number createdAt mergedAt baseRefName
+        number createdAt mergedAt
         author { __typename login }
         commits(first: 1) { nodes { commit { authoredDate } } }
       }
@@ -96,7 +111,7 @@ export function weeksToCollect({ weeks, now, explicit }) {
 }
 
 export function parseWeeksArg(raw) {
-  if (raw === 'auto') return undefined;
+  if (raw === WEEKS_AUTO) return undefined;
   const count = Number(raw);
   if (!Number.isInteger(count) || count < 1 || count > MAX_HISTORY_WEEKS) {
     throw new Error(
@@ -123,8 +138,7 @@ export function normalizePullRequest(node) {
     number: node.number,
     createdAt: node.createdAt,
     mergedAt: node.mergedAt,
-    baseRefName: node.baseRefName,
-    authorIsBot: node.author?.__typename === 'Bot',
+    authorIsBot: node.author?.__typename === ACTOR_TYPE_BOT,
     firstCommitAt: node.commits?.nodes?.[0]?.commit?.authoredDate ?? null,
   };
 }
@@ -143,15 +157,15 @@ export function summarizePullRequests(prs, window) {
 
 export function deploymentOutcome(statuses) {
   const states = statuses.map((s) => s.state);
-  if (states.includes('success')) return 'success';
-  if (states.some((state) => FAILED_DEPLOY_STATES.includes(state))) return 'failure';
-  return 'pending';
+  if (states.includes(DEPLOY_STATE.SUCCESS)) return DEPLOY_OUTCOME.SUCCESS;
+  if (states.some((state) => FAILED_DEPLOY_STATES.includes(state))) return DEPLOY_OUTCOME.FAILURE;
+  return DEPLOY_OUTCOME.PENDING;
 }
 
 export function summarizeDeployments(deployments, window) {
   const inRange = deployments.filter((d) => inWindow(d.createdAt, window));
-  const succeeded = inRange.filter((d) => d.outcome === 'success').length;
-  const failed = inRange.filter((d) => d.outcome === 'failure').length;
+  const succeeded = inRange.filter((d) => d.outcome === DEPLOY_OUTCOME.SUCCESS).length;
+  const failed = inRange.filter((d) => d.outcome === DEPLOY_OUTCOME.FAILURE).length;
   const decided = succeeded + failed;
   return {
     productionDeploys: succeeded,
@@ -165,7 +179,7 @@ export function summarizeCiRuns(runs, window) {
   const completed = runs.filter(
     (run) => inWindow(run.createdAt, window) && COMPLETED_CONCLUSIONS.includes(run.conclusion),
   );
-  const failed = completed.filter((run) => run.conclusion === 'failure').length;
+  const failed = completed.filter((run) => run.conclusion === CONCLUSION.FAILURE).length;
   return {
     ciMainRuns: completed.length,
     ciMainFailureRate: completed.length === 0 ? null : failed / completed.length,
@@ -183,10 +197,13 @@ export function sanitizeTestName(name) {
     .join('')
     .replace(/`/g, '')
     .replace(WORKFLOW_COMMAND_PATTERN, ': :')
+    .replace(MARKUP_CHARACTERS_PATTERN, '')
     .replace(/\s+/g, ' ')
     .trim()
     .slice(0, MAX_TEST_NAME_LENGTH);
 }
+
+const hasTotals = (lines) => lines.some((line) => SUMMARY_COUNT_PATTERN.test(line));
 
 export function parsePlaywrightFlaky(logText) {
   const lines = String(logText)
@@ -194,6 +211,9 @@ export function parsePlaywrightFlaky(logText) {
     .map((line) =>
       line.replace(ANSI_PATTERN, '').replace(TIMESTAMP_PATTERN, '').replace(/\r$/, ''),
     );
+  if (!hasTotals(lines)) {
+    throw new Error('the log has no Playwright totals line, so flaky tests cannot be read from it');
+  }
   const names = [];
   for (let i = 0; i < lines.length; i += 1) {
     const header = FLAKY_HEADER_PATTERN.exec(lines[i]);
@@ -251,17 +271,31 @@ async function mapPool(items, limit, task) {
   return results;
 }
 
-async function fetchPullRequests(client, repo, start, end) {
-  const q = `repo:${repo} is:pr is:merged merged:${toIso(start)}..${toIso(end)}`;
+function assertComplete({ what, window, fetched, reported }) {
+  if (typeof reported !== 'number') {
+    throw new Error(`${what} for the week starting ${window.weekStart} reported no total`);
+  }
+  if (reported > fetched || fetched >= RESULT_CAP) {
+    throw new Error(
+      `${what} for the week starting ${window.weekStart} is incomplete: ${fetched} fetched of ${reported} reported, and the API returns at most ${RESULT_CAP} results per query`,
+    );
+  }
+}
+
+async function fetchPullRequests(client, repo, window) {
+  const q = `repo:${repo} is:pr is:merged merged:${toIso(window.start)}..${toIso(window.end)}`;
   const prs = [];
+  let reported;
   let after = null;
   do {
     const data = await client.graphql(PULL_REQUESTS_QUERY, { q, after });
+    reported = data.search.issueCount;
     prs.push(
       ...data.search.nodes.filter((node) => node?.number !== undefined).map(normalizePullRequest),
     );
     after = data.search.pageInfo.hasNextPage ? data.search.pageInfo.endCursor : null;
   } while (after !== null);
+  assertComplete({ what: 'the merged pull request search', window, fetched: prs.length, reported });
   return prs;
 }
 
@@ -283,16 +317,21 @@ async function fetchDeployments(client, repo, start, end) {
   });
 }
 
-async function fetchCiRuns(client, repo, start, end, filters) {
+async function fetchCiRuns(client, repo, window, filters) {
+  let reported;
   const runs = await client.paginate(`/repos/${repo}/actions/workflows/${CI_WORKFLOW}/runs`, {
     params: {
-      status: 'completed',
+      status: RUN_STATUS_COMPLETED,
       per_page: PAGE_SIZE,
-      created: `${toIso(start)}..${toIso(end)}`,
+      created: `${toIso(window.start)}..${toIso(window.end)}`,
       ...filters,
     },
-    pick: (body) => body.workflow_runs,
+    pick: (body) => {
+      reported = body.total_count;
+      return body.workflow_runs;
+    },
   });
+  assertComplete({ what: 'the CI run list', window, fetched: runs.length, reported });
   return runs.map((run) => ({ id: run.id, createdAt: run.created_at, conclusion: run.conclusion }));
 }
 
@@ -323,18 +362,39 @@ async function inspectFlaky(client, repo, runs, window, cap) {
     candidates.length = cap;
     truncated = true;
   }
-  let logErrors = 0;
+  let fetchFailures = 0;
+  let parseFailures = 0;
+  let logsExpired = 0;
   const inspected = await mapPool(candidates, LOG_CONCURRENCY, async (job) => {
+    let text;
     try {
-      const text = await client.text(`/repos/${repo}/actions/jobs/${job.id}/logs`);
+      text = await client.text(`/repos/${repo}/actions/jobs/${job.id}/logs`);
+    } catch (error) {
+      if (!(error instanceof Error)) throw error;
+      if (LOG_GONE_STATUSES.includes(error.status)) logsExpired += 1;
+      else fetchFailures += 1;
+      return null;
+    }
+    try {
       return { flaky: parsePlaywrightFlaky(text) };
     } catch (error) {
       if (!(error instanceof Error)) throw error;
-      logErrors += 1;
+      parseFailures += 1;
       return null;
     }
   });
-  return { jobs: inspected.filter((job) => job !== null), truncated, logErrors };
+  const attempted = candidates.length - logsExpired;
+  if (attempted > 0 && fetchFailures === attempted) {
+    throw new Error(
+      `every e2e job log (${attempted}) for the week starting ${window.weekStart} failed to download, so flaky tests were not measured`,
+    );
+  }
+  return {
+    jobs: inspected.filter((job) => job !== null),
+    truncated,
+    logErrors: fetchFailures + parseFailures,
+    logsExpired,
+  };
 }
 
 function buildWeek({ window, prs, deployments, mainRuns, flaky, collectedAt }) {
@@ -366,6 +426,7 @@ function buildWeek({ window, prs, deployments, mainRuns, flaky, collectedAt }) {
       distinctFlakyTests: flakySummary?.distinctFlakyTests ?? 0,
       logsTruncated: flaky?.truncated ?? false,
       logErrors: flaky?.logErrors ?? 0,
+      logsExpired: flaky?.logsExpired ?? 0,
     },
     topFlaky: flakySummary?.topFlaky ?? [],
     skipped,
@@ -376,17 +437,15 @@ export async function collectRange(
   client,
   { repo, windows, maxLogsPerWeek = DEFAULT_MAX_LOGS_PER_WEEK, skipLogs = false, now = new Date() },
 ) {
-  const start = windows[0].start;
-  const end = windows.at(-1).end;
-  const [prs, deployments, mainRuns, allRuns] = await Promise.all([
-    fetchPullRequests(client, repo, start, end),
-    fetchDeployments(client, repo, start, end),
-    fetchCiRuns(client, repo, start, end, { branch: MAIN_BRANCH, event: 'push' }),
-    skipLogs ? Promise.resolve([]) : fetchCiRuns(client, repo, start, end, {}),
-  ]);
+  const deployments = await fetchDeployments(client, repo, windows[0].start, windows.at(-1).end);
   const collectedAt = toIso(now);
   const weeks = [];
   for (const window of windows) {
+    const [prs, mainRuns, allRuns] = await Promise.all([
+      fetchPullRequests(client, repo, window),
+      fetchCiRuns(client, repo, window, { branch: MAIN_BRANCH, event: EVENT_PUSH }),
+      skipLogs ? Promise.resolve([]) : fetchCiRuns(client, repo, window, {}),
+    ]);
     const flaky = skipLogs
       ? null
       : await inspectFlaky(client, repo, allRuns, window, maxLogsPerWeek);
@@ -395,9 +454,36 @@ export async function collectRange(
   return weeks;
 }
 
+export function collectionWarnings(weeks) {
+  const notes = [];
+  for (const week of weeks) {
+    const { logErrors, logsExpired, e2eJobsInspected } = week.counts;
+    if (logErrors > 0) {
+      notes.push(
+        `::warning::week ${week.weekStart}: ${logErrors} e2e job log(s) could not be downloaded or had no Playwright summary; flakyPerE2eJob covers the ${e2eJobsInspected} that could`,
+      );
+    }
+    if (logsExpired > 0) {
+      notes.push(
+        `::warning::week ${week.weekStart}: ${logsExpired} e2e job log(s) had expired and were not read`,
+      );
+    }
+  }
+  const finished = weeks.reduce(
+    (sum, week) => sum + week.counts.productionDeploys + week.counts.failedDeploys,
+    0,
+  );
+  if (weeks.length > 0 && finished === 0) {
+    notes.push(
+      `::warning::no finished ${PRODUCTION_ENVIRONMENT} deployment from ${weeks[0].weekStart} to ${weeks.at(-1).weekStart}; check that the environment name still matches before trusting the deployment metrics`,
+    );
+  }
+  return notes;
+}
+
 function parseArgs(argv) {
   const args = {
-    weeks: 'auto',
+    weeks: WEEKS_AUTO,
     history: DEFAULT_HISTORY_PATH,
     repo: undefined,
     maxLogsPerWeek: String(DEFAULT_MAX_LOGS_PER_WEEK),
@@ -471,6 +557,7 @@ async function main() {
   console.log(
     `[collect] ${repo}: collected ${weeks.length} week(s) into ${args.history}\n${table}`,
   );
+  for (const note of collectionWarnings(weeks)) console.log(note);
   if (process.env.GITHUB_STEP_SUMMARY) {
     appendFileSync(process.env.GITHUB_STEP_SUMMARY, `### Collected weeks\n\n${table}\n`);
   }

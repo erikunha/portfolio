@@ -3,6 +3,7 @@ import bandsConfig from '../../metrics/bands.json';
 import type { BandsConfig, MetricConfig } from '../metrics/bands.mjs';
 import {
   applyWesternElectricRules,
+  bandAnnotations,
   evaluateHistory,
   evaluateSeries,
   mean,
@@ -59,6 +60,24 @@ describe('rollingScores', () => {
     expect(rollingScores([1, 2, 3, 4, 5, 6], CONFIG)).toEqual([]);
   });
 
+  it('leaves a bad spike out of the baseline, so a second spike is scored against normal weeks', () => {
+    const scores = rollingScores([...FLAT_BASELINE, 14, 14], CONFIG);
+    expect(scores).toHaveLength(2);
+    expect(scores[1]?.mean).toBe(10);
+    expect(scores[1]?.z).toBeCloseTo(scores[0]?.z ?? Number.NaN, 6);
+  });
+
+  it('keeps a mildly bad point in the baseline: only diagnose and worse is left out', () => {
+    const mild = 10 + 1.5 * BASELINE_STD;
+    const scores = rollingScores([...FLAT_BASELINE, mild, 10], CONFIG);
+    expect(scores[1]?.mean).toBeCloseTo(mean([...FLAT_BASELINE.slice(1), mild]), 6);
+  });
+
+  it('keeps a good-side outlier in the baseline, since only breaches are excluded', () => {
+    const scores = rollingScores([...FLAT_BASELINE, 4, 10], CONFIG);
+    expect(scores[1]?.mean).toBeCloseTo(mean([...FLAT_BASELINE.slice(1), 4]), 6);
+  });
+
   it('uses only the last `window` points as the baseline', () => {
     const longRun = [100, 100, 100, ...FLAT_BASELINE, 14];
     const scores = rollingScores(longRun, CONFIG);
@@ -78,24 +97,32 @@ describe('applyWesternElectricRules', () => {
     expect(applyWesternElectricRules([0, 0.9], TIERS)).toEqual([]);
   });
 
-  it('rule 2: two of the last three beyond the diagnose sigma diagnose even when the latest has eased', () => {
-    const fired = applyWesternElectricRules([0, 2.5, 2.4, 0.7], TIERS);
+  it('rule 2: two of the last three beyond the diagnose sigma, the latest among them', () => {
+    const fired = applyWesternElectricRules([0, 0.5, 2.5, 2.4], TIERS);
     expect(fired.map((r) => r.id)).toContain('two-of-three-beyond-diagnose');
   });
 
-  it('rule 2 does not fire when the latest point is back on the good side', () => {
-    const fired = applyWesternElectricRules([0, 2.5, 2.4, -0.2], TIERS);
-    expect(fired).toEqual([]);
+  it('rule 2 stays quiet once the latest point is back inside the band', () => {
+    expect(applyWesternElectricRules([0, 2.5, 2.4, 0.7], TIERS)).toEqual([]);
+    expect(applyWesternElectricRules([0, 2.5, 2.4, 1.9], TIERS).map((r) => r.id)).toEqual([
+      'beyond-log',
+    ]);
+    expect(applyWesternElectricRules([0, 2.5, 2.4, -0.2], TIERS)).toEqual([]);
   });
 
-  it('rule 3: four of the last five beyond the log sigma log', () => {
-    const fired = applyWesternElectricRules([1.2, 1.3, 1.4, 1.1, 0.6], TIERS);
+  it('rule 3: four of the last five beyond the log sigma, the latest among them', () => {
+    const fired = applyWesternElectricRules([0.6, 1.2, 1.3, 1.4, 1.1], TIERS);
     expect(fired.map((r) => r.id)).toContain('four-of-five-beyond-log');
   });
 
-  it('rule 4: eight in a row on the bad side log even though each is small', () => {
+  it('rule 3 stays quiet once the latest point is back inside the band', () => {
+    expect(applyWesternElectricRules([1.2, 1.3, 1.4, 1.1, 0.6], TIERS)).toEqual([]);
+  });
+
+  it('rule 4: eight in a row on the bad side diagnose even though each is small', () => {
     const fired = applyWesternElectricRules([0.3, 0.4, 0.1, 0.5, 0.2, 0.6, 0.3, 0.4], TIERS);
     expect(fired.map((r) => r.id)).toEqual(['eight-on-bad-side']);
+    expect(fired[0]?.tier).toBe('diagnose');
   });
 
   it('rule 4 needs all eight: one point on the good side resets the run', () => {
@@ -132,6 +159,19 @@ describe('evaluateSeries', () => {
     expect(tierFor(10 + 1.3 * BASELINE_STD)).toBe('log');
     expect(tierFor(10 + 2.3 * BASELINE_STD)).toBe('diagnose');
     expect(tierFor(10 + 3.3 * BASELINE_STD)).toBe('propose');
+  });
+
+  it('keeps flagging a second spike instead of absorbing the first into the baseline', () => {
+    const result = evaluateSeries([...FLAT_BASELINE, 14, 14], CONFIG);
+    expect(result.tier).toBe('propose');
+    expect(result.mean).toBe(10);
+  });
+
+  it('flags eight bad weeks in a row at the tier that opens an issue', () => {
+    const drift = [...FLAT_BASELINE, ...Array.from({ length: 8 }, () => 10.3)];
+    const result = evaluateSeries(drift, { ...CONFIG, window: 20 });
+    expect(result.rules.map((r) => r.id)).toContain('eight-on-bad-side');
+    expect(tierAtLeast(result.tier, 'diagnose')).toBe(true);
   });
 
   it('does not alarm on a value that improves on the baseline', () => {
@@ -239,5 +279,32 @@ describe('evaluateHistory', () => {
       metrics: { ...config.metrics, brandNew: { direction: 'higher-is-worse', minStd: 1 } },
     });
     expect(report.evaluations.brandNew?.status).toBe('no-data');
+  });
+});
+
+describe('bandAnnotations', () => {
+  const report = (evaluations: Record<string, { status: string }>) =>
+    ({ weekStart: '2026-11-02', evaluations, breaches: [] }) as unknown as Parameters<
+      typeof bandAnnotations
+    >[0];
+
+  it('warns, naming the metric and week, when the latest week has no value', () => {
+    const notes = bandAnnotations(report({ leadTimeHoursMedian: { status: 'no-data' } }));
+    expect(notes).toHaveLength(1);
+    expect(notes[0]).toMatch(/^::warning::/);
+    expect(notes[0]).toContain('leadTimeHoursMedian');
+    expect(notes[0]).toContain('2026-11-02');
+  });
+
+  it('only notes, without warning, a metric that is still building its first history', () => {
+    const notes = bandAnnotations(
+      report({ ciMainFailureRate: { status: 'insufficient-history' } }),
+    );
+    expect(notes).toHaveLength(1);
+    expect(notes[0]).toMatch(/^::notice::/);
+  });
+
+  it('says nothing about a metric that was evaluated', () => {
+    expect(bandAnnotations(report({ ciMainFailureRate: { status: 'evaluated' } }))).toEqual([]);
   });
 });

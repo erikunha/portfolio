@@ -7,7 +7,15 @@ import { parse } from 'yaml';
 const WORKFLOW_PATH = join(process.cwd(), '.github', 'workflows', 'weekly-metrics.yml');
 const WORKFLOW_TEXT = readFileSync(WORKFLOW_PATH, 'utf8');
 
-type Step = { uses?: string; run?: string; env?: Record<string, string> };
+type Step = {
+  name?: string;
+  id?: string;
+  if?: string;
+  'continue-on-error'?: boolean;
+  uses?: string;
+  run?: string;
+  env?: Record<string, string>;
+};
 type Workflow = {
   on: Record<string, unknown>;
   permissions?: Record<string, string>;
@@ -72,5 +80,51 @@ describe('weekly-metrics workflow', () => {
     expect(upload).toMatchObject({
       with: { name: 'metrics-weekly', 'retention-days': 90, 'if-no-files-found': 'error' },
     });
+  });
+
+  it('has no trailing comment on the cron line, so the schedule reads as one value', () => {
+    expect(WORKFLOW_TEXT).toMatch(/- cron: "0 7 \* \* 1"\n/);
+    const schedule = workflow.on.schedule as { cron: string }[];
+    expect(schedule).toEqual([{ cron: '0 7 * * 1' }]);
+  });
+
+  it('fails closed on the previous history: the download may be skipped only when no earlier run exists', () => {
+    const download = steps.find((s) => s.uses?.startsWith('actions/download-artifact'));
+    expect(download).toBeDefined();
+    expect(download?.['continue-on-error']).toBeUndefined();
+    expect(download?.if).toBe("steps.previous.outputs.run_id != ''");
+    expect(download).toMatchObject({ with: { name: 'metrics-weekly' } });
+  });
+
+  it('checks the downloaded history file exists whenever an earlier run was found', () => {
+    const verify = steps.find((s) => s.name === 'Verify the previous history');
+    expect(verify?.if).toBe("steps.previous.outputs.run_id != ''");
+    expect(verify?.['continue-on-error']).toBeUndefined();
+    expect(verify?.run).toMatch(/test -s metrics\/weekly\.json/);
+  });
+
+  it('sets continue-on-error on no step, so no failure is swallowed', () => {
+    expect(steps.filter((s) => s['continue-on-error'] !== undefined)).toEqual([]);
+  });
+
+  it('runs find, download, verify, collect, bands, upload and issues in that order', () => {
+    const position = (match: (s: Step) => boolean) => steps.findIndex(match);
+    const order = [
+      position((s) => s.id === 'previous'),
+      position((s) => s.uses?.startsWith('actions/download-artifact') === true),
+      position((s) => s.name === 'Verify the previous history'),
+      position((s) => s.run?.includes('scripts/metrics/collect.mjs') === true),
+      position((s) => s.run?.includes('scripts/metrics/bands.mjs') === true),
+      position((s) => s.uses?.startsWith('actions/upload-artifact') === true),
+      position((s) => s.run?.includes('scripts/metrics/issues.mjs') === true),
+    ];
+    expect(order.every((index) => index >= 0)).toBe(true);
+    expect([...order].sort((a, b) => a - b)).toEqual(order);
+  });
+
+  it('looks up the previous run by the successful runs of this workflow only', () => {
+    const find = steps.find((s) => s.id === 'previous');
+    expect(find?.run).toMatch(/--workflow weekly-metrics\.yml/);
+    expect(find?.run).toMatch(/--status success/);
   });
 });

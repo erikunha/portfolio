@@ -92,7 +92,7 @@ export declare function sampleStd(values: number[]): number;
 export declare function tierAtLeast(tier: string, floor: string): boolean;
 export declare function rollingScores(
   values: number[],
-  config: Omit<MetricConfig, 'tiers'>,
+  config: Omit<MetricConfig, 'tiers'> & { tiers?: Tiers },
 ): Score[];
 export declare function applyWesternElectricRules(scores: number[], tiers: Tiers): FiredRule[];
 export declare function evaluateSeries(
@@ -102,4 +102,5 @@ export declare function evaluateSeries(
 export declare function resolveMetricConfig(config: BandsConfig, name: string): MetricConfig;
 export declare function validateBandsConfig(config: unknown): void;
 export declare function evaluateHistory(weeks: WeekRecord[], config: BandsConfig): BandsReport;
+export declare function bandAnnotations(report: BandsReport): string[];
 export declare function renderTable(report: BandsReport): string;

@@ -102,6 +102,93 @@ describe('createGithubClient', () => {
     expect(fetchImpl).toHaveBeenCalledTimes(1);
   });
 
+  it('does not replay a POST after a server error, since the first one may have been applied', async () => {
+    const fetchImpl = vi.fn(async () => new Response('bad gateway', { status: 502 }));
+    await expect(
+      clientWith(fetchImpl as unknown as typeof fetch).request('/issues', {
+        method: 'POST',
+        body: { title: 't' },
+      }),
+    ).rejects.toThrow(/502/);
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not replay a POST after a network failure', async () => {
+    const fetchImpl = vi.fn(async () => {
+      throw new Error('socket hang up');
+    });
+    await expect(
+      clientWith(fetchImpl as unknown as typeof fetch).request('/issues', { method: 'POST' }),
+    ).rejects.toThrow(/socket hang up/);
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
+  });
+
+  it('still retries a read-only GraphQL query, which is a POST that changes nothing', async () => {
+    const answers = [
+      new Response('bad gateway', { status: 502 }),
+      jsonResponse({ data: { viewer: 1 } }),
+    ];
+    const fetchImpl = vi.fn(async () => answers.shift() as Response);
+    expect(await clientWith(fetchImpl as unknown as typeof fetch).graphql('query{v}', {})).toEqual({
+      viewer: 1,
+    });
+    expect(fetchImpl).toHaveBeenCalledTimes(2);
+  });
+
+  it('waits the retry-after a secondary rate limit asks for, then replays even a POST', async () => {
+    const answers = [
+      new Response('{}', { status: 403, headers: { 'retry-after': '7' } }),
+      jsonResponse({ id: 1 }),
+    ];
+    const fetchImpl = vi.fn(async () => answers.shift() as Response);
+    const sleep = vi.fn(async () => undefined);
+    const client = clientWith(fetchImpl as unknown as typeof fetch, { sleep });
+    expect(await (await client.request('/issues', { method: 'POST' })).json()).toEqual({ id: 1 });
+    expect(sleep).toHaveBeenCalledWith(7000);
+    expect(fetchImpl).toHaveBeenCalledTimes(2);
+  });
+
+  it('treats a 429 as a secondary rate limit and honours its retry-after', async () => {
+    const answers = [
+      new Response('{}', { status: 429, headers: { 'retry-after': '2' } }),
+      jsonResponse({ ok: 1 }),
+    ];
+    const fetchImpl = vi.fn(async () => answers.shift() as Response);
+    const sleep = vi.fn(async () => undefined);
+    await clientWith(fetchImpl as unknown as typeof fetch, { sleep }).json('/x');
+    expect(sleep).toHaveBeenCalledWith(2000);
+  });
+
+  it('names the secondary limit instead of sleeping past the bound', async () => {
+    const fetchImpl = vi.fn(
+      async () => new Response('{}', { status: 403, headers: { 'retry-after': '3600' } }),
+    );
+    const sleep = vi.fn(async () => undefined);
+    await expect(
+      clientWith(fetchImpl as unknown as typeof fetch, { sleep }).json('/x'),
+    ).rejects.toThrow(/secondary rate limit.*3600/i);
+    expect(sleep).not.toHaveBeenCalled();
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
+  });
+
+  it('names the secondary limit when a 429 carries no retry-after', async () => {
+    const fetchImpl = vi.fn(async () => new Response('{}', { status: 429 }));
+    await expect(clientWith(fetchImpl as unknown as typeof fetch).json('/x')).rejects.toThrow(
+      /secondary rate limit/i,
+    );
+  });
+
+  it('leaves a plain 403 as an ordinary HTTP error with its status attached', async () => {
+    const fetchImpl = vi.fn(async () => new Response('{}', { status: 403 }));
+    const failure = await clientWith(fetchImpl as unknown as typeof fetch)
+      .json('/x')
+      .catch((error: unknown) => error);
+    expect(failure).toBeInstanceOf(Error);
+    expect((failure as Error).message).toMatch(/403/);
+    expect((failure as Error & { status: number }).status).toBe(403);
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
+  });
+
   it('throws a readable error on a 404', async () => {
     const fetchImpl = vi.fn(async () => new Response('{"message":"Not Found"}', { status: 404 }));
     await expect(clientWith(fetchImpl as unknown as typeof fetch).json('/missing')).rejects.toThrow(

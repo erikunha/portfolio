@@ -3,6 +3,7 @@ import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import type { CollectedWeek, WeekWindow } from '../metrics/collect.mjs';
 import {
+  collectionWarnings,
   collectRange,
   deploymentOutcome,
   LIGHTHOUSE_SKIP_REASON,
@@ -29,6 +30,8 @@ const fixtureJson = (name: string) => JSON.parse(fixture(name));
 const NOW = new Date('2026-11-09T08:00:00Z');
 const FLAKY_JOB_ID = 128400528112;
 const WEEK = weekWindows(NOW, 1)[0] as WeekWindow;
+const CLEAN_LOG = '2026-11-07T12:19:47.6Z   740 passed (5.2m)\n';
+const SEARCH_CAP = 1000;
 
 describe('weekWindows', () => {
   it('returns the latest complete Monday-to-Monday UTC weeks, oldest first', () => {
@@ -110,7 +113,6 @@ describe('summarizePullRequests', () => {
       number: 367,
       createdAt: '2026-11-07T09:07:31Z',
       mergedAt: '2026-11-07T10:18:19Z',
-      baseRefName: 'feat/terminal-redesign',
       authorIsBot: false,
       firstCommitAt: '2026-11-07T09:05:12Z',
     });
@@ -232,6 +234,17 @@ describe('parsePlaywrightFlaky', () => {
     expect(parsePlaywrightFlaky(log)).toEqual([]);
   });
 
+  it('refuses a log with no Playwright totals line instead of reading it as zero flaky', () => {
+    expect(() => parsePlaywrightFlaky('2026-11-07T12:00:00.0Z npm ERR! build failed\n')).toThrow(
+      /Playwright/,
+    );
+    expect(() => parsePlaywrightFlaky('')).toThrow(/Playwright/);
+  });
+
+  it('accepts a run whose only totals are failures', () => {
+    expect(parsePlaywrightFlaky('2026-11-07T12:00:00.0Z   2 failed\n')).toEqual([]);
+  });
+
   it('adds up every summary block when one job runs Playwright twice', () => {
     const block = (name: string) =>
       `2026-11-07T12:00:00.0Z   1 flaky\n2026-11-07T12:00:00.1Z     [chromium] › ${name}\n2026-11-07T12:00:00.2Z   9 passed (1m)\n`;
@@ -255,7 +268,13 @@ describe('parsePlaywrightFlaky', () => {
 
 describe('sanitizeTestName', () => {
   it('removes what could act as markup or a workflow command in a report', () => {
-    expect(sanitizeTestName('::error::boom `code` @someone')).toBe(': :error: :boom code @someone');
+    expect(sanitizeTestName('::error::boom `code` @someone')).toBe(': :error: :boom code someone');
+  });
+
+  it('drops angle brackets and at-signs so a name cannot render as HTML or mention anyone', () => {
+    const cleaned = sanitizeTestName('<img src=x onerror=1> @org/team <!-- metrics-breach:x -->');
+    expect(cleaned).not.toMatch(/[<>@]/);
+    expect(cleaned).toContain('org/team');
   });
 
   it('collapses control characters and caps the length', () => {
@@ -307,7 +326,15 @@ describe('upsertWeeks', () => {
   });
 });
 
-function fakeClient(options: { allRunsLimit?: number } = {}): {
+type FakeOptions = {
+  allRunsLimit?: number;
+  text?: (path: string) => Promise<string>;
+  graphql?: (query: string, vars: { after?: string | null }) => Promise<unknown>;
+  runs?: (isMainOnly: boolean) => { total_count: number; workflow_runs: unknown[] };
+  deployments?: unknown[];
+};
+
+function fakeClient(options: FakeOptions = {}): {
   client: GithubClient;
   logCalls: string[];
 } {
@@ -316,20 +343,32 @@ function fakeClient(options: { allRunsLimit?: number } = {}): {
   const jobsBody = fixtureJson('run-jobs.json');
   const prsPage = fixtureJson('prs-page.json').data;
   const client = {
-    graphql: async (_query: string, vars: { after?: string | null }) =>
-      vars.after
-        ? { search: { nodes: [], pageInfo: { hasNextPage: false, endCursor: null } } }
-        : prsPage,
+    graphql:
+      options.graphql ??
+      (async (_query: string, vars: { after?: string | null }) =>
+        vars.after
+          ? {
+              search: {
+                nodes: [],
+                issueCount: 4,
+                pageInfo: { hasNextPage: false, endCursor: null },
+              },
+            }
+          : { search: { ...prsPage.search, issueCount: prsPage.search.nodes.length } }),
     paginate: async (
       path: string,
       opts: { params?: Record<string, string | number>; pick?: (body: unknown) => unknown[] } = {},
     ) => {
       const pick = opts.pick ?? ((body: unknown) => body as unknown[]);
-      if (path === '/repos/o/r/deployments') return pick(fixtureJson('deployments.json'));
+      if (path === '/repos/o/r/deployments') {
+        return pick(options.deployments ?? fixtureJson('deployments.json'));
+      }
       if (path === '/repos/o/r/actions/workflows/ci.yml/runs') {
         const isMainOnly = opts.params?.branch === 'main';
-        const all = pick(runsBody);
-        return isMainOnly ? all : all.slice(0, options.allRunsLimit ?? 1);
+        if (options.runs) return pick(options.runs(isMainOnly));
+        const everything = runsBody.workflow_runs;
+        const listed = isMainOnly ? everything : everything.slice(0, options.allRunsLimit ?? 1);
+        return pick({ ...runsBody, workflow_runs: listed, total_count: listed.length });
       }
       if (/\/actions\/runs\/\d+\/jobs$/.test(path)) return pick(jobsBody);
       throw new Error(`unexpected paginate ${path}`);
@@ -341,7 +380,8 @@ function fakeClient(options: { allRunsLimit?: number } = {}): {
     },
     text: async (path: string) => {
       logCalls.push(path);
-      return path.endsWith(`/jobs/${FLAKY_JOB_ID}/logs`) ? fixture('e2e-flaky.log') : '';
+      if (options.text) return options.text(path);
+      return path.endsWith(`/jobs/${FLAKY_JOB_ID}/logs`) ? fixture('e2e-flaky.log') : CLEAN_LOG;
     },
     request: async () => {
       throw new Error('unused');
@@ -419,5 +459,180 @@ describe('collectRange', () => {
     expect(weeks[0]?.counts.prsMerged).toBe(0);
     expect(weeks[0]?.metrics.leadTimeHoursMedian).toBeNull();
     expect(weeks[1]?.counts.prsMerged).toBe(4);
+  });
+
+  it('queries each week on its own, so no single query can reach the result cap', async () => {
+    const queries: string[] = [];
+    const { client } = fakeClient({
+      graphql: async (_query, vars) => {
+        queries.push(String((vars as unknown as { q: string }).q));
+        return { search: { nodes: [], issueCount: 0, pageInfo: { hasNextPage: false } } };
+      },
+    });
+    await collectRange(client, { repo: 'o/r', windows: weekWindows(NOW, 3), skipLogs: true });
+    expect(queries).toHaveLength(3);
+    expect(queries[0]).toContain('2026-10-19T00:00:00Z..2026-10-26T00:00:00Z');
+    expect(queries[2]).toContain('2026-11-02T00:00:00Z..2026-11-09T00:00:00Z');
+  });
+
+  it('fails when the PR search reports more matches than were fetched', async () => {
+    const { client } = fakeClient({
+      graphql: async () => ({
+        search: { nodes: [], issueCount: 40, pageInfo: { hasNextPage: false, endCursor: null } },
+      }),
+    });
+    await expect(collectRange(client, { repo: 'o/r', windows, skipLogs: true })).rejects.toThrow(
+      /2026-11-02.*40/,
+    );
+  });
+
+  it('fails when a PR search window fills the 1000 result cap, even if the totals agree', async () => {
+    const nodes = Array.from({ length: SEARCH_CAP }, (_, number) => ({
+      number,
+      createdAt: '2026-11-03T00:00:00Z',
+      mergedAt: '2026-11-04T00:00:00Z',
+      author: { __typename: 'User' },
+      commits: { nodes: [] },
+    }));
+    const { client } = fakeClient({
+      graphql: async () => ({
+        search: { nodes, issueCount: SEARCH_CAP, pageInfo: { hasNextPage: false } },
+      }),
+    });
+    await expect(collectRange(client, { repo: 'o/r', windows, skipLogs: true })).rejects.toThrow(
+      /1000/,
+    );
+  });
+
+  it('fails when the CI run list reports more runs than were returned', async () => {
+    const { client } = fakeClient({
+      runs: () => ({
+        total_count: 250,
+        workflow_runs: fixtureJson('ci-runs-main.json').workflow_runs,
+      }),
+    });
+    await expect(collectRange(client, { repo: 'o/r', windows, skipLogs: true })).rejects.toThrow(
+      /250/,
+    );
+  });
+
+  it('fails when a CI run window fills the 1000 result cap', async () => {
+    const run = fixtureJson('ci-runs-main.json').workflow_runs[0];
+    const { client } = fakeClient({
+      runs: () => ({
+        total_count: SEARCH_CAP,
+        workflow_runs: Array.from({ length: SEARCH_CAP }, () => run),
+      }),
+    });
+    await expect(collectRange(client, { repo: 'o/r', windows, skipLogs: true })).rejects.toThrow(
+      /1000/,
+    );
+  });
+
+  it('fails the collection when every e2e job log failed to download', async () => {
+    const { client } = fakeClient({
+      text: async () => {
+        throw Object.assign(new Error('GitHub API GET logs returned HTTP 500'), { status: 500 });
+      },
+    });
+    await expect(
+      collectRange(client, { repo: 'o/r', windows, maxLogsPerWeek: 100 }),
+    ).rejects.toThrow(/every.*log/i);
+  });
+
+  it('keeps going, and counts the failures, when only some logs fail to download', async () => {
+    const { client } = fakeClient({
+      text: async (path) => {
+        if (path.endsWith(`/jobs/${FLAKY_JOB_ID}/logs`)) {
+          throw Object.assign(new Error('boom'), { status: 500 });
+        }
+        return CLEAN_LOG;
+      },
+    });
+    const week = (
+      await collectRange(client, { repo: 'o/r', windows, maxLogsPerWeek: 100 })
+    )[0] as CollectedWeek;
+    expect(week.counts.logErrors).toBe(1);
+    expect(week.counts.e2eJobsInspected).toBe(9);
+  });
+
+  it('treats a log that has expired as absent data, not as a failed download', async () => {
+    const { client } = fakeClient({
+      text: async () => {
+        throw Object.assign(new Error('gone'), { status: 410 });
+      },
+    });
+    const week = (
+      await collectRange(client, { repo: 'o/r', windows, maxLogsPerWeek: 100 })
+    )[0] as CollectedWeek;
+    expect(week.counts.logsExpired).toBe(10);
+    expect(week.counts.logErrors).toBe(0);
+    expect(week.metrics.flakyPerE2eJob).toBeNull();
+  });
+
+  it('counts a log with no Playwright summary as a log error and leaves it out of the rate', async () => {
+    const { client } = fakeClient({ text: async () => 'npm ERR! install failed\n' });
+    const week = (
+      await collectRange(client, { repo: 'o/r', windows, maxLogsPerWeek: 100 })
+    )[0] as CollectedWeek;
+    expect(week.counts.logErrors).toBe(10);
+    expect(week.counts.e2eJobsInspected).toBe(0);
+    expect(week.metrics.flakyPerE2eJob).toBeNull();
+  });
+
+  it('records zero deployments for a range with none, without failing', async () => {
+    const { client } = fakeClient({ deployments: [] });
+    const week = (
+      await collectRange(client, { repo: 'o/r', windows, skipLogs: true })
+    )[0] as CollectedWeek;
+    expect(week.counts.productionDeploys).toBe(0);
+    expect(week.counts.failedDeploys).toBe(0);
+  });
+});
+
+describe('collectionWarnings', () => {
+  const week = (counts: Partial<CollectedWeek['counts']>, weekStart = '2026-11-02') =>
+    ({
+      weekStart,
+      counts: {
+        productionDeploys: 3,
+        failedDeploys: 0,
+        e2eJobsInspected: 10,
+        logErrors: 0,
+        logsExpired: 0,
+        ...counts,
+      },
+    }) as unknown as CollectedWeek;
+
+  it('is quiet when every log was read and deployments exist', () => {
+    expect(collectionWarnings([week({})])).toEqual([]);
+  });
+
+  it('warns, naming the week and the count, when some logs could not be used', () => {
+    const notes = collectionWarnings([week({ logErrors: 3 })]);
+    expect(notes).toHaveLength(1);
+    expect(notes[0]).toMatch(/^::warning::/);
+    expect(notes[0]).toContain('2026-11-02');
+    expect(notes[0]).toContain('3');
+  });
+
+  it('warns when logs had expired', () => {
+    expect(collectionWarnings([week({ logsExpired: 4 })])[0]).toMatch(/^::warning::.*expired/);
+  });
+
+  it('warns loudly when no Production deployment was found anywhere in the range', () => {
+    const notes = collectionWarnings([
+      week({ productionDeploys: 0, failedDeploys: 0 }, '2026-10-26'),
+      week({ productionDeploys: 0, failedDeploys: 0 }),
+    ]);
+    expect(notes).toHaveLength(1);
+    expect(notes[0]).toMatch(/^::warning::.*Production/);
+    expect(notes[0]).toContain('2026-10-26');
+  });
+
+  it('does not warn about deployments when only some weeks had none', () => {
+    expect(collectionWarnings([week({ productionDeploys: 0 }, '2026-10-26'), week({})])).toEqual(
+      [],
+    );
   });
 });
