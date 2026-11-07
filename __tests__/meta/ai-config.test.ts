@@ -7,6 +7,7 @@ import {
   readlinkSync,
   realpathSync,
 } from 'node:fs';
+import { createRequire } from 'node:module';
 import { basename, join } from 'node:path';
 import { parse as parseToml } from 'smol-toml';
 import { describe, expect, it } from 'vitest';
@@ -264,6 +265,27 @@ describe('AI configuration guard', () => {
 
     const dangling = legacySkills().filter((skill) => !canonical.includes(skill));
     expect(dangling, 'a .claude skill without a canonical .agents skill').toEqual([]);
+  });
+
+  it('keeps the managed Next.js agent rules current so next dev leaves AGENTS.md untouched', () => {
+    const requireNext = createRequire(join(ROOT, 'package.json'));
+    const { hasCurrentAgentRules, hasCurrentAgentFeedback, AGENT_FEEDBACK_START_MARKER } =
+      requireNext('next/dist/server/lib/generate-agent-files') as {
+        hasCurrentAgentRules: (dir: string) => boolean;
+        hasCurrentAgentFeedback: (dir: string) => boolean;
+        AGENT_FEEDBACK_START_MARKER: string;
+      };
+    expect(
+      hasCurrentAgentRules(ROOT),
+      'The nextjs-agent-rules block in AGENTS.md no longer matches the installed Next.js, so next dev rewrites AGENTS.md. A Next upgrade changed the block: delete the old block (BEGIN:nextjs-agent-rules to END:nextjs-agent-rules) and run node -e "require(\'next/dist/server/lib/generate-agent-files\').writeAgentFiles(process.cwd())", then commit AGENTS.md.',
+    ).toBe(true);
+    expect(
+      hasCurrentAgentFeedback(ROOT),
+      'experimental.agentFeedback is false in next.config.ts, so next dev removes the feedback block: it must not be committed.',
+    ).toBe(false);
+    expect(readFileSync(join(ROOT, 'AGENTS.md'), 'utf8')).not.toContain(
+      AGENT_FEEDBACK_START_MARKER,
+    );
   });
 
   it('keeps AGENTS.md the single instruction source and CLAUDE.md a thin import', () => {
