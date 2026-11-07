@@ -1,0 +1,4 @@
+{
+  "AGENTS.md": { "maxLines": 200 },
+  "CLAUDE.md": { "maxLines": 40 }
+}

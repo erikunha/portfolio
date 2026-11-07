@@ -27,24 +27,15 @@ context; this is the implementation guidance, not the enforcement.
   **fail-open** (Redis down must not 500 the user). Keep that property. The
   `/api/ask` budget reservation is the exception: it fails closed with 503.
 
-## Security review (convention)
+## Security surface
 
-- Editing `app/api/**`, `lib/rate-limit.ts`, or `proxy.ts` means dispatching a
-  `security-auditor` agent as part of the change, not as an afterthought.
-  Nothing enforces this: the PostToolUse marker and the push guard that blocked
-  an unaudited push were both removed on 2026-07-27. The hard gates on this
-  surface are the API behavioural tests, semgrep, and CodeQL.
+- The hard gates on this surface are the API behavioural tests, static analysis (`pnpm lint:semgrep`), and
+  CodeQL. Editing `app/api/**`, `lib/rate-limit.ts`, or `proxy.ts` means
+  re-reading the diff for the abuse paths each of them closes.
 - CSP and `Reporting-Endpoints` headers come from **`proxy.ts`**, not
   `next.config.ts` (which sets the static headers: COOP, X-Frame-Options, HSTS,
   etc.). The CSP is asserted against the live host by the deploy smoke test, not
   a unit test.
-
-## Skill dispatch
-
-- After editing `app/api/`, `lib/server/route.ts`, `lib/rate-limit.ts`, or
-  `proxy.ts`, invoke the `vercel:vercel-functions` skill.
-- (`next.config.ts` / `.env.example` / Vercel config are not in this rule's
-  paths; the `vercel:nextjs` trigger for those stays in CLAUDE.md.)
 
 ## The `/api/ask` AI feature
 
@@ -53,5 +44,5 @@ context; this is the implementation guidance, not the enforcement.
   grades the shipped model. Do not hardcode a model string in the route.
 - Ephemeral prompt cache via `providerOptions.anthropic.cacheControl` on the
   system message; output capped (`MAX_OUTPUT_TOKENS`), request-timeout guarded.
-- Changes to the ask corpus/calibration/system-prompt trigger the
-  `ai-eval-update` skill and `pnpm ask:eval`.
+- Changes to the ask corpus, calibration or system prompt require
+  `pnpm ask:eval`.

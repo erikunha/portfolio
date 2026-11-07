@@ -32,7 +32,7 @@ flowchart TD
 
 ### 1. Idea -> Brainstorm
 
-Work starts with `/speckit.specify` (mandated before any feature). The output is a shared understanding of intent, requirements, and the chosen approach, with failure modes considered up front (`thinking-risk-premortem`).
+Work starts with `/speckit.specify` (mandated before any feature). The output is a shared understanding of intent, requirements, and the chosen approach, with failure modes considered up front.
 
 ### 2. Spec (the approved requirements)
 

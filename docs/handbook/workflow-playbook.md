@@ -15,7 +15,7 @@ Every runbook lists: **entry point** (what starts it), **steps**, **AI participa
   1. `/speckit.specify` to lock intent and approach.
   2. Write a spec in `specs/NNN-feature/` (local-only, gitignored; Context, Gaps to Close, Changes). Get it to `Status: Approved`.
   3. Dispatch `architect-reviewer`; it must return `GATE_RESULT: PASS` (workflow convention).
-  4. `speckit-plan` + `thinking-risk-premortem` to decompose into tasks (shard into sub-PRs if large).
+  4. `speckit-plan` with a failure-mode checklist to decompose into tasks (shard into sub-PRs if large).
   5. Branch `feat/<description>`. Implement test-first.
   6. Self-review the diff (a human read; the `pr-review-orchestrator` skill only when the owner asks), fix what it finds, push.
   7. `pnpm ci:local`, `pnpm bundle-check`, `pnpm route-js-check` and `pnpm gates:runtime`, open the PR, drive threads to resolved, `pnpm pr:gate`.
@@ -90,10 +90,10 @@ Every runbook lists: **entry point** (what starts it), **steps**, **AI participa
 
 - **Entry:** a change to the ask route, prompt, guards, or eval.
 - **Steps:**
-  1. Editing `app/api/**`/`rate-limit.ts`/`proxy.ts` means dispatching `security-auditor` as part of the change. This is a convention, not a project-hook check.
+  1. Editing `app/api/**`/`rate-limit.ts`/`proxy.ts` means re-reading the diff for the abuse paths each closes. No project hook checks this.
   2. If the prompt/corpus changed, run `pnpm ask:eval` (the `ai-eval-update` skill) - calibration then corpus must clear their thresholds.
   3. Read `.claude/rules/api-boundary.md` for the matching API/server paths. It is guidance; follow the skill dispatch in `CLAUDE.md`.
-- **Output:** a PR with a security-auditor pass and a green eval.
+- **Output:** a PR with green API behavioural tests and a green eval.
 
 ## Documentation
 

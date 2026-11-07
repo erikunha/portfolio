@@ -16,7 +16,7 @@ sequenceDiagram
     C->>C: /speckit.specify (intent + approach)
     C->>A: architect-reviewer (spec gate)
     A-->>C: GATE_RESULT: PASS (workflow convention)
-    C->>C: writing-plans + thinking-risk-premortem (failure modes -> tasks)
+    C->>C: plan with a failure-mode checklist (each failure mode -> a task)
     C->>C: TDD implement (tests first)
     C->>G: commit runs Biome, staged gitleaks and commitlint
     C->>C: self-review the diff (human review; extra model review only on owner request)
@@ -67,7 +67,7 @@ The project instructions define this loop. The table distinguishes conventions f
 | Step               | Mechanism                                                    | Enforced by                                                                                  |
 | ------------------ | ------------------------------------------------------------ | -------------------------------------------------------------------------------------------- |
 | Explore + plan     | brainstorming, writing-plans                                 | architect-reviewer PASS (convention)                                                         |
-| Anticipate failure | thinking-risk-premortem, pre-mortem                          | convention + plan tasks                                                                      |
+| Anticipate failure | pre-mortem                                                   | convention + plan tasks                                                                      |
 | Implement          | test-first project rule                                      | convention                                                                                   |
 | Self-verify        | project verification rule                                    | convention + `pnpm verify`                                                                   |
 | Review             | human self-review of the diff; claude-review only on request | `pnpm pr:gate` (every thread resolved); optional `pnpm claude-gate` after a requested review |
