@@ -16,6 +16,7 @@ import {
   shellStates,
 } from '@/content/shell-ui';
 import type { SiteLocale } from '@/content/site-locale';
+import { addRef } from '@/lib/request-refs.client';
 import {
   ASK_LOCALE_HEADER,
   GUARD_ABORT_PREFIX,
@@ -240,6 +241,7 @@ export function useAskStream({
           );
           return;
         }
+        if (requestId) addRef(requestId);
         if (!response.body) {
           finish('', ui.bodyUnavailable, true);
           return;

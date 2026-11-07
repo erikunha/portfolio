@@ -298,6 +298,12 @@
     overflow-wrap: anywhere;
   }
 
+  .shell-trailer-status {
+    min-width: 0;
+    color: var(--color-text-secondary);
+    overflow-wrap: anywhere;
+  }
+
   .shell-reference code,
   .shell-privacy-notice code {
     font: inherit;

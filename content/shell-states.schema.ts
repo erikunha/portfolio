@@ -18,6 +18,17 @@ export const ShellStatesSchema = z.object({
   secondsUnit: text,
   localCommands: text,
   rateLimitReady: text,
+  forgetting: text,
+  forgetDeleted: text,
+  forgetNotFound: text,
+  forgetFailed: text,
+  forgetRateLimited: text,
+  privacyEmpty: text,
+  privacyHeader: text,
+  privacyHint: text,
+  privacyUsage: text,
+  privacyUnknown: text,
+  privacyNotAttempted: text,
 });
 export type ShellStates = z.infer<typeof ShellStatesSchema>;
 

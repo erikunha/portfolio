@@ -17,7 +17,7 @@ export function RefCopyButton({
 }: {
   value: string;
   feedback: RefFeedback;
-  labels?: RefLabels;
+  labels?: RefLabels | undefined;
   className?: string;
 }) {
   const { status, attempt, copy } = useCopyFeedback({ resetMs: REF_COPY_RESET_MS });
