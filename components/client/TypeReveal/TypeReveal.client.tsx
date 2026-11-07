@@ -6,6 +6,7 @@ import { readMotion } from '@/lib/motion';
 import { subscribeMotion } from '@/lib/motion-change';
 
 const SELECTOR = '[data-type-reveal]';
+const MAIN_SELECTOR = 'main';
 const TYPED_CLASS = 'is-typed';
 const STATIC_CLASS = 'is-static';
 const READY_CLASS = 'type-reveal-ready';
@@ -68,7 +69,10 @@ export function TypeReveal() {
       const added = records.flatMap((record) => Array.from(record.addedNodes).flatMap(marked));
       if (added.length > 0) handle(track(added));
     });
-    mutations.observe(document.body, { childList: true, subtree: true });
+    mutations.observe(document.querySelector(MAIN_SELECTOR) ?? document.body, {
+      childList: true,
+      subtree: true,
+    });
 
     const unsubscribe = subscribeMotion((on) => {
       if (on) return;

@@ -207,7 +207,7 @@ and trip that guard on an otherwise-clean install.
 
 **How it is held.** Mechanical gate: `scripts/check-dep-pinning.mjs`
 (`pnpm check:dep-pinning`) rejects any `latest`, `*`, wildcard, or otherwise
-unbounded spec. It runs inside `pnpm verify`, in the `pre-push` hook, and as the
+unbounded spec, in dependencies and in `pnpm.overrides` alike (an override must be a `^` or `~` range). It runs inside `pnpm verify`, in the `pre-push` hook, and as the
 `Dependency-pinning gate` step in the `quality-fast` CI job. Reproducibility
 of the install itself is held by `pnpm install --frozen-lockfile` in CI.
 
@@ -288,8 +288,8 @@ switch has a _behavioral_ test, not a source-grep. PII is minimized — no
 personal phone number, no private contact channel, in any machine-fetchable
 surface. The `/api/ask` SYSTEM prompt and the public `erik.json` profile carry
 email only. Prompt-injection defense is layered: a per-request 128-bit sentinel
-wrapper is the primary guard, `INJECTION_RE` (covering role tokens, override
-phrases, and `<|...|>` ChatML-style delimiters) is defense-in-depth, and the
+wrapper is the primary guard, `isInjectionAttempt` (`INJECTION_RE` over role tokens, override
+phrases, and `<|...|>` ChatML-style delimiters, minus quoted mentions) is defense-in-depth, and the
 `<question>` delimiter wrapping tells the model the input is data. The Anthropic
 budget cap fails _closed_.
 

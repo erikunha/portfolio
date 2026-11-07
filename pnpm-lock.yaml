@@ -8,31 +8,31 @@ overrides:
   '@hono/node-server': ^2.0.5
   '@lhci/cli>chrome-launcher': ^1.2.2
   '@puppeteer/browsers': ^3.2.6
-  '@stryker-mutator/core>minimatch': '>=11.0.1'
+  '@stryker-mutator/core>minimatch': ^11.0.3
   axios: ^1.18.0
-  basic-ftp: '>=6.2.1'
+  basic-ftp: ^6.2.3
   body-parser@1: ^1.20.9
   body-parser@>=2: ^2.3.0
   brace-expansion: ^5.0.12
-  browserslist: '>=4.28.7'
+  browserslist: ^4.29.4
   chromium-bidi>zod: ^4.6.7
   compression: ^1.8.2
-  esbuild: '>=0.28.1'
+  esbuild: ^0.28.2
   fast-uri@3: ^3.1.9
-  follow-redirects: '>=1.16.2'
+  follow-redirects: ^1.16.2
   hono: ^4.12.34
-  ip-address: '>=10.7.4'
-  joi: '>=18.3.1'
+  ip-address: ^10.7.4
+  joi: ^18.3.1
   js-yaml: ^4.3.1
-  lodash: '>=4.18.0'
+  lodash: ^4.18.1
   minimatch@10: ^11.0.1
-  postcss: '>=8.5.23'
+  postcss: ^8.5.31
   proxy-addr: ^2.0.8
-  qs: '>=6.16.1'
+  qs: ^6.16.1
   sharp: ^0.35.0
   tmp: ^0.2.6
   undici@7: ^7.29.0
-  uuid: '>=11.1.1'
+  uuid: ^14.0.3
   vite: ^8.1.6
   proxy-agent: ^8.0.1
 
@@ -189,7 +189,7 @@ importers:
         specifier: ~1.65.0
         version: 1.65.0
       postcss:
-        specifier: '>=8.5.23'
+        specifier: ^8.5.31
         version: 8.5.31
       smol-toml:
         specifier: ^1.9.1
@@ -1119,9 +1119,6 @@ packages:
     peerDependenciesMeta:
       '@types/node':
         optional: true
-
-  '@isaacs/nonrecursive-glob-match@1.0.3':
-    resolution: {integrity: sha512-SI7kyKHq4XXDRozw+r9GlRZkia1ZkFrpLW98r2IC2Bpr8YkFGE3fvjzmxCG0x78A++69HmDNrDvSMYBZmHGpKA==}
 
   '@isaacs/nonrecursive-glob-match@1.1.0':
     resolution: {integrity: sha512-GPm/Dbvk5RLmhRnxXIa7nTpK0xtl4E0wj0MslsuNiJ1FIROU+2+9lgUC/dgF7Ey4QCWhfEsgxilMRMCdHPfDfw==}
@@ -3458,10 +3455,6 @@ packages:
   minimalistic-assert@1.0.1:
     resolution: {integrity: sha512-UtJcAD4yEaGtjPezWuO9wC4nwUnVH/8/Im3yEHQP4b67cXlD/Qr9hdITCU1xDbSEXg2XKNaP8jsReV7vQd00/A==}
 
-  minimatch@11.0.3:
-    resolution: {integrity: sha512-iny/40PEGkNJQ5/Pv6z3nm6FbRAby32GeZRjCUJk2WnNDbgPSTcdI+DDvLqsgBdD4cD5sMtMheqPPnehCCa8Nw==}
-    engines: {node: 18 || 20 || >=22}
-
   minimatch@11.0.5:
     resolution: {integrity: sha512-snPlVppFcYWfLLFQGhDxUyBcHNtMlWmn3jtj7pEaO+DP8pqL0IvAzXhMYmn1z9ASNtgmwLBdFxSf4tMUB0OTKA==}
     engines: {node: 20 || >=22}
@@ -4353,7 +4346,7 @@ packages:
     resolution: {integrity: sha512-t8wonIOdQyOjtPd2VktlBu6QjTVTks6v8bSi7kd0r2Vll8TK1JYDZtRRdbmCHOAMphkZgrzK+L+vXK4pyZ8t4A==}
     hasBin: true
     peerDependencies:
-      browserslist: '>=4.28.7'
+      browserslist: ^4.29.4
 
   util-deprecate@1.0.2:
     resolution: {integrity: sha512-EPD5q1uXyFxJpCrLnCc1nHnq3gOa6DZBocAIiI2TaSCA7VCJ1UJDMagCzIkXNsUYfD1daK//LTEQ8xiIbrHtcw==}
@@ -4390,7 +4383,7 @@ packages:
     peerDependencies:
       '@types/node': ^20.19.0 || >=22.12.0
       '@vitejs/devtools': ^0.7.1 || ^0.8.0
-      esbuild: '>=0.28.1'
+      esbuild: ^0.28.2
       jiti: '>=1.21.0'
       less: ^4.0.0
       sass: ^1.70.0
@@ -5444,8 +5437,6 @@ snapshots:
     optionalDependencies:
       '@types/node': 26.6.6
 
-  '@isaacs/nonrecursive-glob-match@1.0.3': {}
-
   '@isaacs/nonrecursive-glob-match@1.1.0': {}
 
   '@jridgewell/gen-mapping@0.3.13':
@@ -5923,7 +5914,7 @@ snapshots:
       execa: 9.6.1
       json-rpc-2.0: 1.7.1
       lodash.groupby: 4.6.0
-      minimatch: 11.0.3
+      minimatch: 11.0.5
       mutation-server-protocol: 0.4.1
       mutation-testing-elements: 3.8.4
       mutation-testing-metrics: 3.8.4
@@ -8019,11 +8010,6 @@ snapshots:
   mimic-fn@2.1.0: {}
 
   minimalistic-assert@1.0.1: {}
-
-  minimatch@11.0.3:
-    dependencies:
-      '@isaacs/nonrecursive-glob-match': 1.0.3
-      brace-expansion: 5.0.12
 
   minimatch@11.0.5:
     dependencies:
