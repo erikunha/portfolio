@@ -4,6 +4,7 @@ import { type ReactNode, useCallback, useEffect, useRef } from 'react';
 import { MAIN_CONTENT_ID } from '@/components/PageMain';
 import type { FooterContent } from '@/content/schemas';
 import { isRendered } from '@/lib/dom/is-rendered';
+import { SHELL_COMMAND_EVENT } from '@/lib/events';
 import { useLastRef } from '@/lib/request-refs.client';
 import { RefCopyButton } from '../../client/RefChip/RefChip.client';
 
@@ -15,7 +16,6 @@ const CLOCK_DIGITS = 2;
 const CLOCK_ZERO = '0';
 const PERCENT = 100;
 const SECTION_READING_BAND = '-40% 0px -40% 0px';
-const COMMAND_EVENT = 'shell-cmd-run';
 const SCROLL_EVENT = 'scroll';
 const VISIBILITY_EVENT = 'visibilitychange';
 const EDITABLE_SELECTOR =
@@ -125,14 +125,14 @@ export function SessionCounters({
     tick();
     onScroll();
     onVisibility();
-    window.addEventListener(COMMAND_EVENT, onCommand);
+    window.addEventListener(SHELL_COMMAND_EVENT, onCommand);
     window.addEventListener(SCROLL_EVENT, onScrollFrame, { passive: true });
     document.addEventListener(VISIBILITY_EVENT, onVisibility);
     return () => {
       clearInterval(interval);
       if (scrollFrame !== undefined) cancelAnimationFrame(scrollFrame);
       observer?.disconnect();
-      window.removeEventListener(COMMAND_EVENT, onCommand);
+      window.removeEventListener(SHELL_COMMAND_EVENT, onCommand);
       window.removeEventListener(SCROLL_EVENT, onScrollFrame);
       document.removeEventListener(VISIBILITY_EVENT, onVisibility);
     };
