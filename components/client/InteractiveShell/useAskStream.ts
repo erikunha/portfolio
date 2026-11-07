@@ -34,6 +34,7 @@ export type Line = {
   prefix?: string;
   retryAfter?: number;
   retry?: string;
+  welcome?: true;
 };
 type FailureDetail = { prefix?: string; hint?: boolean; retryAfter?: number; retry?: string };
 type ActiveRequest = { stop: () => void; dispose: () => void };
@@ -112,6 +113,7 @@ export function useAskStream({
       let reader: ReadableStreamDefaultReader<Uint8Array> | undefined;
       let requestId: string | null = null;
       let accumulated = '';
+      let displayText = '';
       let receivedText = false;
       let settled = false;
       let timer: ReturnType<typeof setTimeout> | undefined;
@@ -179,15 +181,11 @@ export function useAskStream({
         onSettled();
       }
       function interrupt(message: string, error = false, detail?: FailureDetail) {
-        const text = parseStreamChunk(accumulated).displayText;
-        finish(text, message, error, detail);
+        finish(displayText, message, error, detail);
         releaseTransport();
       }
       activeRequest.current = {
-        stop: () =>
-          interrupt(
-            parseStreamChunk(accumulated).displayText ? ui.stoppedPartial : ui.stoppedBefore,
-          ),
+        stop: () => interrupt(displayText ? ui.stoppedPartial : ui.stoppedBefore),
         dispose: () => {
           settled = true;
           clearTimeout(timer);
@@ -254,6 +252,7 @@ export function useAskStream({
           armIdleTimer();
           accumulated += done ? decoder.decode() : decoder.decode(value, { stream: true });
           const parsed = parseStreamChunk(accumulated);
+          displayText = parsed.displayText;
           if (done) {
             finish(
               parsed.displayText,
@@ -272,7 +271,7 @@ export function useAskStream({
               rafRef.current = requestAnimationFrame(() => {
                 rafRef.current = null;
                 if (!settled && mountedRef.current) {
-                  setStreamingText(parseStreamChunk(accumulated).displayText);
+                  setStreamingText(displayText);
                 }
               });
             }
@@ -281,7 +280,7 @@ export function useAskStream({
       } catch {
         if (settled) return;
         const message = navigator.onLine ? ui.networkError : ui.offline;
-        finish(parseStreamChunk(accumulated).displayText, message, true);
+        finish(displayText, message, true);
       } finally {
         reader?.releaseLock();
       }
