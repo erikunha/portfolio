@@ -4,6 +4,8 @@ import { contactContent } from '@/content/contact';
 import { SITE_LOCALE } from '@/content/site-locale';
 import { ASK_LOCALE_HEADER } from '@/lib/stream-protocol';
 
+const TEST_BODY_LIMIT = 4096;
+
 const redisSet = vi.fn();
 const limit = vi.fn();
 const logger = { info: vi.fn(), error: vi.fn(), warn: vi.fn() };
@@ -90,6 +92,7 @@ describe('defineHandler rate-limit message language', () => {
     const { ContactSchema } = await import('@/lib/contact-validation');
     const handler = defineHandler({
       schema: ContactSchema,
+      maxBodyBytes: TEST_BODY_LIMIT,
       rateLimit: () => ({ limit }),
       rateLimitErrorMessage: messages,
       handler: async () => new Response(null),
@@ -106,6 +109,7 @@ describe('defineHandler rate-limit message language', () => {
     const { ContactSchema } = await import('@/lib/contact-validation');
     const handler = defineHandler({
       schema: ContactSchema,
+      maxBodyBytes: TEST_BODY_LIMIT,
       rateLimit: () => ({ limit }),
       rateLimitErrorMessage: 'plain',
       handler: async () => new Response(null),

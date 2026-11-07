@@ -9,9 +9,16 @@ const persistMock = vi.hoisted(() =>
 const limitMock = vi.hoisted(() =>
   vi.fn(async () => ({ success: true, reset: Date.now() + 1000 })),
 );
+const countRefusalMock = vi.hoisted(() => vi.fn(async (_status: string) => undefined));
 const dedupMock = vi.hoisted(() => vi.fn(async () => ({ allowed: true })));
 const budgetMock = vi.hoisted(() =>
-  vi.fn(async () => ({ allowed: true, reserved: 1512, pct: 0, budgetKey: 'ask:tokens:test' })),
+  vi.fn(async () => ({
+    allowed: true,
+    reserved: 1512,
+    pct: 0,
+    budgetKey: 'ask:tokens:test',
+    dailyKey: 'ask:tokens:day:test',
+  })),
 );
 
 vi.mock('ai', () => ({ streamText: vi.fn() }));
@@ -24,6 +31,7 @@ vi.mock('@/lib/rate-limit', () => ({
   checkIdenticalQuestion: dedupMock,
 }));
 vi.mock('@/lib/ask-log', () => ({ persistAskInteraction: persistMock }));
+vi.mock('@/lib/ask/refusal-count', () => ({ countAskRefusal: countRefusalMock }));
 vi.mock('@/lib/ip-hash', () => ({ hashIp: vi.fn(async () => 'hashed-ip-test') }));
 vi.mock('@/lib/log', () => ({
   log: { info: vi.fn(), error: vi.fn(), warn: vi.fn(), debug: vi.fn() },
@@ -44,6 +52,7 @@ describe('/api/ask early exits carry X-Request-Id', () => {
     vi.resetModules();
     process.env.ASK_ENABLED = 'true';
     persistMock.mockClear();
+    countRefusalMock.mockClear();
     limitMock.mockResolvedValue({ success: true, reset: Date.now() + 1000 });
     dedupMock.mockResolvedValue({ allowed: true });
     budgetMock.mockResolvedValue({
@@ -51,6 +60,7 @@ describe('/api/ask early exits carry X-Request-Id', () => {
       reserved: 1512,
       pct: 0,
       budgetKey: 'ask:tokens:test',
+      dailyKey: 'ask:tokens:day:test',
     });
   });
 
@@ -81,27 +91,33 @@ describe('/api/ask early exits carry X-Request-Id', () => {
     expect(res.headers.get('X-Request-Id')).toMatch(UUID_V4);
   });
 
-  it('gives the id of the row it stored for a rate-limited request', async () => {
+  it('answers a rate-limited request with an id and stores no row', async () => {
     limitMock.mockResolvedValue({ success: false, reset: Date.now() + 1000 });
     const res = await respond(post(QUESTION));
     expect(res.status).toBe(429);
-    expect(persistMock.mock.calls[0]?.[0].status).toBe('rate-limited');
-    expect(res.headers.get('X-Request-Id')).toBe(persistMock.mock.calls[0]?.[0].requestId);
+    expect(persistMock).not.toHaveBeenCalled();
+    expect(res.headers.get('X-Request-Id')).toMatch(UUID_V4);
   });
 
-  it('gives the id of the row it stored for a duplicate question', async () => {
+  it('answers a duplicate question with an id and stores no row', async () => {
     dedupMock.mockResolvedValue({ allowed: false });
     const res = await respond(post(QUESTION));
     expect(res.status).toBe(429);
-    expect(persistMock.mock.calls[0]?.[0].status).toBe('dedup-rejected');
-    expect(res.headers.get('X-Request-Id')).toBe(persistMock.mock.calls[0]?.[0].requestId);
+    expect(persistMock).not.toHaveBeenCalled();
+    expect(res.headers.get('X-Request-Id')).toMatch(UUID_V4);
   });
 
-  it('gives the id of the row it stored for an exhausted budget', async () => {
-    budgetMock.mockResolvedValue({ allowed: false, reserved: 0, pct: 1, budgetKey: 'k' });
+  it('answers an exhausted budget with an id and stores no row', async () => {
+    budgetMock.mockResolvedValue({
+      allowed: false,
+      reserved: 0,
+      pct: 1,
+      budgetKey: 'k',
+      dailyKey: 'd',
+    });
     const res = await respond(post(QUESTION));
     expect(res.status).toBe(503);
-    expect(persistMock.mock.calls[0]?.[0].status).toBe('budget-exhausted');
-    expect(res.headers.get('X-Request-Id')).toBe(persistMock.mock.calls[0]?.[0].requestId);
+    expect(persistMock).not.toHaveBeenCalled();
+    expect(res.headers.get('X-Request-Id')).toMatch(UUID_V4);
   });
 });

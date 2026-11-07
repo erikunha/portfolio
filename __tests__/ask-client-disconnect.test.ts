@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { ASK_RESERVED_INPUT_TOKENS } from '@/lib/ask/input-reservation';
 
 const mockStreamText = vi.fn();
 vi.mock('ai', () => ({ streamText: mockStreamText }));
@@ -14,6 +15,7 @@ vi.mock('@/lib/rate-limit', () => ({
     reserved: 2712,
     pct: 0,
     budgetKey: 'ask:tokens:test',
+    dailyKey: 'ask:tokens:day:test',
   })),
   settleBudget: settleBudgetMock,
   checkIdenticalQuestion: vi.fn(async () => ({ allowed: true })),
@@ -91,6 +93,40 @@ describe('/api/ask client disconnect', () => {
     expect(persistMock).toHaveBeenCalledTimes(1);
     expect(persistMock.mock.calls[0]?.[0].status).toBe('aborted');
     expect(persistMock.mock.calls[0]?.[0].answer).toContain('first chunk');
+  });
+
+  it('keeps the input tokens and refunds the output reservation when the reader cancels before the first token', async () => {
+    let release: () => void = () => undefined;
+    const gate = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    mockStreamText.mockReturnValueOnce({
+      textStream: {
+        async *[Symbol.asyncIterator]() {
+          await gate;
+          yield 'never delivered';
+        },
+      },
+      usage: Promise.reject(new Error('aborted')),
+      finishReason: Promise.resolve('stop'),
+    });
+
+    const { POST } = await import('@/app/api/ask/route');
+    const res = await POST(makeRequest());
+    await res.body?.cancel();
+    release();
+    await flush();
+
+    expect(
+      settleBudgetMock,
+      'an abort before any token left the full worst-case reservation on the budget until the key expired',
+    ).toHaveBeenCalledWith(
+      2712,
+      ASK_RESERVED_INPUT_TOKENS,
+      0,
+      'ask:tokens:test',
+      'ask:tokens:day:test',
+    );
   });
 
   it('aborts the upstream model call when the reader cancels', async () => {

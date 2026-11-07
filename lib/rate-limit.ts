@@ -125,6 +125,7 @@ export function getErrorLogLimit(): Ratelimit {
 }
 
 const ERROR_LOG_DAILY_CAP = 500;
+const ERROR_LOG_IP_DAILY_CAP = 50;
 
 let _errorLogDailyLimit: Ratelimit | undefined;
 
@@ -137,6 +138,19 @@ export function getErrorLogDailyLimit(): Ratelimit {
     });
   }
   return _errorLogDailyLimit;
+}
+
+let _errorLogIpDailyLimit: Ratelimit | undefined;
+
+export function getErrorLogIpDailyLimit(): Ratelimit {
+  if (!_errorLogIpDailyLimit) {
+    _errorLogIpDailyLimit = new Ratelimit({
+      redis: getRedis(),
+      limiter: Ratelimit.fixedWindow(ERROR_LOG_IP_DAILY_CAP, '1 d'),
+      prefix: 'rl:errlog:ipday',
+    });
+  }
+  return _errorLogIpDailyLimit;
 }
 
 let _forgetLimit: Ratelimit | undefined;
@@ -200,23 +214,30 @@ export function getClientIp(req: { headers: Headers }): string {
 }
 
 const MONTHLY_TOKEN_BUDGET = 3_000_000;
+const DAILY_BUDGET_DIVISOR = 20;
+const DAILY_TOKEN_BUDGET = MONTHLY_TOKEN_BUDGET / DAILY_BUDGET_DIVISOR;
 const BUDGET_WINDOW_S = 60 * 60 * 24 * 32;
+const DAILY_BUDGET_WINDOW_S = 60 * 60 * 24 * 2;
 
 const RESERVED_INPUT_TOKENS = ASK_RESERVED_INPUT_TOKENS;
+const BUDGET_WARN_PCT = 0.8;
+const ISO_DATE_LENGTH = 10;
 
 export type BudgetStore = {
   capacity: number;
-  reserve(budgetKey: string, tokens: number): Promise<number>;
+  dailyCapacity: number;
+  reserve(budgetKey: string, tokens: number, windowSeconds?: number): Promise<number>;
   release(budgetKey: string, tokens: number): Promise<void>;
   chargeOverage(budgetKey: string, tokens: number): Promise<void>;
 };
 
 const redisBudgetStore: BudgetStore = {
   capacity: MONTHLY_TOKEN_BUDGET,
-  async reserve(budgetKey, tokens) {
+  dailyCapacity: DAILY_TOKEN_BUDGET,
+  async reserve(budgetKey, tokens, windowSeconds = BUDGET_WINDOW_S) {
     const pipe = getRedis().pipeline();
     pipe.incrby(budgetKey, tokens);
-    pipe.expire(budgetKey, BUDGET_WINDOW_S, 'NX');
+    pipe.expire(budgetKey, windowSeconds, 'NX');
     const [used] = await pipe.exec<[number, number]>();
     return used;
   },
@@ -236,8 +257,10 @@ export function setBudgetStore(store: BudgetStore): void {
 
 export function createEvalBudgetStore(requests: number): BudgetStore {
   const used = new Map<string, number>();
+  const capacity = requests * (RESERVED_INPUT_TOKENS + ASK_MAX_OUTPUT_TOKENS);
   return {
-    capacity: requests * (RESERVED_INPUT_TOKENS + ASK_MAX_OUTPUT_TOKENS),
+    capacity,
+    dailyCapacity: capacity,
     async reserve(budgetKey, tokens) {
       const total = (used.get(budgetKey) ?? 0) + tokens;
       used.set(budgetKey, total);
@@ -257,27 +280,65 @@ export function getBudgetKey(): string {
   return `ask:tokens:${yyyy}-${mm}`;
 }
 
-export async function reserveBudget(
-  maxOutputTokens: number,
-): Promise<{ allowed: boolean; reserved: number; pct: number; budgetKey: string }> {
+export function getDailyBudgetKey(): string {
+  return `ask:tokens:day:${new Date().toISOString().slice(0, ISO_DATE_LENGTH)}`;
+}
+
+export type BudgetReservation = {
+  allowed: boolean;
+  reserved: number;
+  pct: number;
+  budgetKey: string;
+  dailyKey: string;
+};
+
+async function refundReservation(keys: string[], tokens: number): Promise<void> {
+  for (const key of keys) {
+    try {
+      await budgetStore.release(key, tokens);
+    } catch (refundErr) {
+      log.error('budget reservation refund-on-reject failed', { key, err: refundErr });
+    }
+  }
+}
+
+export async function reserveBudget(maxOutputTokens: number): Promise<BudgetReservation> {
   const reserved = RESERVED_INPUT_TOKENS + maxOutputTokens;
   const budgetKey = getBudgetKey();
+  const dailyKey = getDailyBudgetKey();
+  const denied = (pct: number): BudgetReservation => ({
+    allowed: false,
+    reserved: 0,
+    pct,
+    budgetKey,
+    dailyKey,
+  });
   try {
-    const used = await budgetStore.reserve(budgetKey, reserved);
-    const pct = used / budgetStore.capacity;
-    if (pct > 1) {
-      try {
-        await budgetStore.release(budgetKey, reserved);
-      } catch (refundErr) {
-        log.error('budget reservation refund-on-reject failed', { err: refundErr });
-      }
-      return { allowed: false, reserved: 0, pct, budgetKey };
+    const monthlyPct = (await budgetStore.reserve(budgetKey, reserved)) / budgetStore.capacity;
+    if (monthlyPct > 1) {
+      await refundReservation([budgetKey], reserved);
+      return denied(monthlyPct);
     }
-    if (pct >= 0.8) log.warn('budget approaching cap', { pct });
-    return { allowed: true, reserved, pct, budgetKey };
+    let dailyPct: number;
+    try {
+      dailyPct =
+        (await budgetStore.reserve(dailyKey, reserved, DAILY_BUDGET_WINDOW_S)) /
+        budgetStore.dailyCapacity;
+    } catch (dailyErr) {
+      await refundReservation([budgetKey], reserved);
+      throw dailyErr;
+    }
+    if (dailyPct > 1) {
+      await refundReservation([budgetKey, dailyKey], reserved);
+      log.warn('daily budget slice exhausted', { dailyPct, monthlyPct });
+      return denied(Math.max(monthlyPct, dailyPct));
+    }
+    const pct = Math.max(monthlyPct, dailyPct);
+    if (pct >= BUDGET_WARN_PCT) log.warn('budget approaching cap', { monthlyPct, dailyPct });
+    return { allowed: true, reserved, pct, budgetKey, dailyKey };
   } catch (err) {
     log.error('budget reservation failed, rejecting request', { err });
-    return { allowed: false, reserved: 0, pct: 0, budgetKey };
+    return denied(0);
   }
 }
 
@@ -286,6 +347,7 @@ export async function settleBudget(
   actualInputTokens: number,
   actualOutputTokens: number,
   budgetKey: string,
+  dailyKey?: string,
 ): Promise<void> {
   if (reserved <= 0) {
     log.warn('budget settlement skipped: no positive reservation', { budgetKey });
@@ -294,18 +356,21 @@ export async function settleBudget(
   const actual = actualInputTokens + actualOutputTokens;
   const refund = reserved - actual;
   if (refund === 0) return;
-  if (refund < 0) {
-    try {
-      await budgetStore.chargeOverage(budgetKey, -refund);
-    } catch (err) {
-      log.error('budget settlement overage charge failed', { err });
+  const keys = dailyKey === undefined ? [budgetKey] : [budgetKey, dailyKey];
+  for (const key of keys) {
+    if (refund < 0) {
+      try {
+        await budgetStore.chargeOverage(key, -refund);
+      } catch (err) {
+        log.error('budget settlement overage charge failed', { key, err });
+      }
+    } else {
+      try {
+        await budgetStore.release(key, refund);
+      } catch (err) {
+        log.error('budget settlement refund failed', { key, err });
+      }
     }
-    return;
-  }
-  try {
-    await budgetStore.release(budgetKey, refund);
-  } catch (err) {
-    log.error('budget settlement refund failed', { err });
   }
 }
 

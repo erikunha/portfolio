@@ -4,16 +4,20 @@ import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vite
 describe('/api/log endpoint', () => {
   const redisSetMock = vi.fn();
   const dailyLimitMock = vi.fn();
+  const ipDailyLimitMock = vi.fn();
 
   beforeEach(() => {
     vi.resetModules();
     redisSetMock.mockReset();
     dailyLimitMock.mockReset();
     dailyLimitMock.mockResolvedValue({ success: true });
+    ipDailyLimitMock.mockReset();
+    ipDailyLimitMock.mockResolvedValue({ success: true });
     vi.doMock('@/lib/rate-limit', () => ({
       getClientIp: vi.fn(() => '127.0.0.1'),
       getErrorLogLimit: vi.fn(() => ({ limit: vi.fn(async () => ({ success: true })) })),
       getErrorLogDailyLimit: vi.fn(() => ({ limit: dailyLimitMock })),
+      getErrorLogIpDailyLimit: vi.fn(() => ({ limit: ipDailyLimitMock })),
       getRedis: vi.fn(() => ({ set: redisSetMock })),
     }));
     vi.doMock('@/lib/ip-hash', () => ({ hashIp: vi.fn(async () => 'hashed-ip-test') }));
@@ -36,7 +40,7 @@ describe('/api/log endpoint', () => {
     });
   }
 
-  it('persists a valid error to KV with the err: prefix and a 30-day TTL', async () => {
+  it('persists a valid error to KV with the err: prefix and a 7-day TTL', async () => {
     redisSetMock.mockResolvedValueOnce('OK');
     const { POST } = await import('@/app/api/log/route');
     const res = await POST(makeRequest({ level: 'error', message: 'boom in the browser' }));
@@ -50,7 +54,7 @@ describe('/api/log endpoint', () => {
     expect(redisSetMock).toHaveBeenCalledOnce();
     const [key, , opts] = redisSetMock.mock.calls[0] ?? [];
     expect(String(key)).toMatch(/^err:/);
-    expect(opts).toEqual({ ex: 2_592_000 });
+    expect(opts).toEqual({ ex: 604_800 });
   });
 
   it('stores no ipHash in the err: record (personal-data-free design)', async () => {
@@ -86,6 +90,34 @@ describe('/api/log endpoint', () => {
     const res = await POST(makeRequest({ level: 'error', message: 'flood' }));
     expect(res.status).toBe(200);
     expect(redisSetMock).not.toHaveBeenCalled();
+  });
+
+  it('stops one IP from spending the shared daily cap, still answering ok', async () => {
+    ipDailyLimitMock.mockResolvedValueOnce({ success: false });
+    const { POST } = await import('@/app/api/log/route');
+    const res = await POST(makeRequest({ level: 'error', message: 'one ip flood' }));
+    expect(res.status).toBe(200);
+    expect(redisSetMock).not.toHaveBeenCalled();
+    expect(
+      dailyLimitMock,
+      'a record dropped for one IP must not consume the shared daily budget',
+    ).not.toHaveBeenCalled();
+  });
+
+  it('keys the per-IP daily cap on the client ip', async () => {
+    redisSetMock.mockResolvedValueOnce('OK');
+    const { POST } = await import('@/app/api/log/route');
+    await POST(makeRequest({ level: 'error', message: 'who' }));
+    expect(ipDailyLimitMock).toHaveBeenCalledWith('127.0.0.1');
+  });
+
+  it('stores at most 4 KB of a stack trace', async () => {
+    redisSetMock.mockResolvedValueOnce('OK');
+    const { POST } = await import('@/app/api/log/route');
+    await POST(makeRequest({ level: 'error', message: 'deep', stack: 's'.repeat(16000) }));
+    const [, value] = redisSetMock.mock.calls[0] ?? [];
+    const record = JSON.parse(String(value)) as { stack: string };
+    expect(record.stack).toHaveLength(4096);
   });
 
   it('keeps recording when the daily cap check itself fails', async () => {

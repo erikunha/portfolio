@@ -53,7 +53,7 @@ proposing infrastructure changes, and if a request conflicts with a budget or ga
 - CSS: Tailwind v4 with tokens as custom properties in `app/css/theme.css`. No Style Dictionary, CSS modules, CSS-in-JS, or PostCSS plugin besides `@tailwindcss/postcss`.
 - Vercel (Fluid Compute, Node runtime), Upstash Redis (rate limit, KV log), Resend (contact mail).
 - `/api/ask`: AI SDK v7 (`streamText`) through the Vercel AI Gateway, model `anthropic/claude-haiku-4-5` from `lib/ask/model.ts`, ephemeral prompt cache via `providerOptions.anthropic.cacheControl` on a system message. Needs `AI_GATEWAY_API_KEY` (OIDC on Vercel).
-- Tests: Vitest (jsdom), Playwright (chromium, chromium-mobile, webkit-desktop, webkit-mobile, chromium-components), axe-core, Lighthouse CI.
+- Tests: Vitest (jsdom), Playwright (chromium, chromium-mobile, webkit-desktop, webkit-mobile, and their four `-components` projects, all gated in CI), axe-core, Lighthouse CI.
 - Packages: pnpm only, never npm or yarn. The lockfile is the source of truth; CI installs with `--frozen-lockfile`. Bump with `pnpm up --latest`, except `zod` (`~`-pinned, patch-only: its minor bumps break inference; `check-dep-pinning` rejects exact pins for stable versions) and `typescript` (held at 6.x because Stryker needs the TS JS API that TS7 removed; `--latest` rewrites a pin too; held by `__tests__/stryker-typescript-api.test.ts`).
 
 ## Budgets
