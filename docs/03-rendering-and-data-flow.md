@@ -127,7 +127,7 @@ Transport is **plain `fetch` reading a raw `ReadableStream` of `text/plain`** - 
 ```mermaid
 sequenceDiagram
     participant U as InteractiveShell (client island)
-    participant R as app/api/ask/route.ts
+    participant R as app/api/ask/route.ts (lib/ask/preflight.ts, lib/ask/stream.ts)
     participant RL as lib/rate-limit
     participant G as lib/ask/output-guard (Layer 1)
     participant AI as Vercel AI Gateway (Haiku)

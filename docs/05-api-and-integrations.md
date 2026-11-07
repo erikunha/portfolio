@@ -108,6 +108,8 @@ flowchart LR
 
 | File                | Purpose                                                                                                                                                                                        |
 | ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `preflight.ts`      | `preflightAsk`: kill switch, cross-site check, rate limit, bounded parse, injection gate, duplicate check and budget reservation; returns the rejection `Response` or an `AskContext`                       |
+| `stream.ts`         | `createAskStream`: the model call, the pump loop with its watchdog and guard, and budget settlement plus the log write; `app/api/ask/route.ts` only composes the two                           |
 | `model.ts`          | `ASK_MODEL` single source of truth (route + eval import it)                                                                                                                                    |
 | `system-prompt.ts`  | composes `SYSTEM_TEXT` from a hand-written narrative + **live `content/*` data**, to share source data with the page; exports `PROMPT_VERSION = sha256(SYSTEM_TEXT)[:12]` (prompt fingerprint) |
 | `prompt-version.ts` | sync `sha256Hex` (works in both the Node route and the tsx eval)                                                                                                                               |

@@ -306,7 +306,7 @@ content/schemas.ts                    # Zod validation schemas, build-time
 content/ask-eval-corpus.ts            # ask eval Q+A corpus (factual, edge, jailbreak, output-validation)
 
 lib/agent/                            # agent-readiness helpers (MCP tools)
-lib/ask/                              # system prompt builder, model const, anti-abuse
+lib/ask/                              # system prompt builder, model const, anti-abuse; preflight.ts (every check before a model call) and stream.ts (model call, pump, settlement) that app/api/ask/route.ts composes
 lib/mdx/                              # MDX remark/recma plugins for /design-system docs
 lib/server/                           # server-only utilities (route-handler factory; fetch-metadata.ts isCrossSiteRequest, the Sec-Fetch-Site gate defineHandler runs first; read-body.ts bounded body read after the limiter; after-response.ts after() wrapper for post-response work)
 lib/env.ts                            # typed, format-validating env accessor
@@ -481,7 +481,7 @@ The asymmetry is intentional: this is a kill switch, not a feature flag. During 
 
 A module-scope `log.info('kill-switch on cold start', { askEnabled: env.ASK_ENABLED ?? 'unset' })`, the structured logger reading the Zod `env` accessor, wrapped in a try/catch so a logger failure can't crash cold start, emits once per warm instance, providing deploy-time proof of the env-var value in Vercel runtime logs without inspecting the dashboard.
 
-The normalized off-keyword set is defined in `app/api/ask/route.ts`.
+The normalized off-keyword set is defined in `lib/ask/preflight.ts`.
 
 ---
 
