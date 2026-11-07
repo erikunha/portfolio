@@ -159,7 +159,6 @@ export const profilePresentation: Record<SiteLocale, ProfilePresentation> = {
 const englishPresentation = profilePresentation[SITE_LOCALE.en];
 
 export const profileLocation = englishPresentation.location;
-export const profileCityLine = `${profile.city}, ${profile.country}`;
 
 export const formatLanguages = (languages: typeof profile.languages) =>
   languages.map((language) => `${language.label} (${language.level})`).join(LANGUAGE_SEPARATOR);

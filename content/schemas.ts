@@ -5,7 +5,6 @@ export { SECTION_ICONS };
 export const SECTION_DESTINATION_COUNT = 9;
 const FIRST_SECTION_ORDER = 1;
 const MIN_SECTION_TEXT_LENGTH = 1;
-const MIN_ALIAS_COUNT = 1;
 
 export const CompanyUrlSchema = z.url({ protocol: /^https$/ });
 
@@ -22,15 +21,10 @@ const SectionTextSchema = z
     message: 'Section text must not have leading or trailing whitespace',
   });
 
-const SectionAliasSchema = SectionTextSchema.refine((alias) => alias === alias.toLowerCase(), {
-  message: 'Section aliases must be lowercase',
-});
-
 export const SectionSchema = z.object({
   id: SectionTextSchema,
   label: LocalizedTextSchema,
   srLabel: LocalizedTextSchema,
-  aliases: z.array(SectionAliasSchema).min(MIN_ALIAS_COUNT).readonly(),
   order: z.number().int().min(FIRST_SECTION_ORDER).max(SECTION_DESTINATION_COUNT),
   icon: z.enum(SECTION_ICONS),
 });
@@ -49,13 +43,6 @@ export const SectionRegistrySchema = z
   .refine((entries) => entries.every(({ order }, index) => order === FIRST_SECTION_ORDER + index), {
     message: 'Section orders must match array position and be contiguous from the first order',
   })
-  .refine(
-    (entries) => {
-      const aliases = entries.flatMap(({ aliases }) => aliases);
-      return new Set(aliases).size === aliases.length;
-    },
-    { message: 'Section aliases must be unique across all destinations' },
-  )
   .readonly();
 
 const DOCK_KEYS = ['home', 'work', 'shell', 'hire', 'menu'] as const;

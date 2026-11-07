@@ -281,7 +281,7 @@ content/nav.ts                        # zod-free nav vocabulary: labels, topbar 
 content/projects.ts                   # shared project cards
 content/perf-receipts.ts              # canonical deltas, attached receipts and reading-view stats
 content/measured.ts                   # ASK and PSI presentation metadata
-content/section-registry.ts           # nine navigation destinations and aliases
+content/section-registry.ts           # nine navigation destinations, icons and screen reader labels
 content/section-labels.ts             # section labels: the visible module name and the heading label
 content/reading-views.ts              # summary and CV presentation
 content/profile.ts                    # shared identity, hiring copy and language line formatting
@@ -323,7 +323,7 @@ lib/contact-delivery.ts               # shared Resend configuration and 10s send
 lib/contact-outbox.ts                 # ordered pending ids and retry attempt counters
 lib/timezone/                         # Intl-only zone, clock and overlap math, land-grid path builder
 lib/error-bridge.client.ts            # window error → /api/log bridge
-lib/events.ts                         # typed WindowEventMap: sysfail:start|end, shell-cmd-run, hero:sysfail:show|hide
+lib/events.ts                         # window event-name constants and the typed WindowEventMap: sysfail:start|end, shell-cmd-run, hero:sysfail:show|hide
 lib/crt-effect-stepper.ts              # moves the paused CRT animation clocks forward at the governed tick rate
 lib/frame-governor.ts                 # rolling frame-time governor: publishes html[data-crt-level], steps the CRT effects, sets the MatrixRain tick multiplier
 lib/hiring-profile.ts                 # HiringProfile reader for /api/erik.json
