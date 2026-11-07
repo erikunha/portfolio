@@ -1,11 +1,12 @@
 import { streamText } from 'ai';
-import type { NextRequest } from 'next/server';
 import { askErrors } from '@/content/ask-errors';
 import { SITE_LOCALE, type SiteLocale } from '@/content/site-locale';
 import { INJECTION_RE, normalizeInjectionInput } from '@/lib/ask/injection';
+import { ASK_RESERVED_INPUT_TOKENS } from '@/lib/ask/input-reservation';
 import { ASK_MAX_OUTPUT_TOKENS, ASK_MAX_QUESTION_CHARS } from '@/lib/ask/limits';
 import { ASK_MODEL } from '@/lib/ask/model';
 import { createStreamGuard, GUARD_ABORT_PREFIX, validateAnswer } from '@/lib/ask/output-guard';
+import { type AskRefusalStatus, countAskRefusal } from '@/lib/ask/refusal-count';
 import { PROMPT_VERSION, SYSTEM_TEXT } from '@/lib/ask/system-prompt';
 import { countAskTokens, emitAskUsage } from '@/lib/ask/usage';
 import { type AskInteractionStatus, persistAskInteraction } from '@/lib/ask-log';
@@ -21,8 +22,10 @@ import {
   reserveBudget,
   settleBudget,
 } from '@/lib/rate-limit';
-import { withBodyLimit } from '@/lib/server/body-limit';
+import { afterResponse } from '@/lib/server/after-response';
 import { isCrossSiteRequest } from '@/lib/server/fetch-metadata';
+import { readBoundedBody } from '@/lib/server/read-body';
+import { err } from '@/lib/server/route';
 import {
   ASK_LOCALE_HEADER,
   REQUEST_ID_HEADER,
@@ -103,7 +106,7 @@ function askError(
   );
 }
 
-async function handleAsk(req: NextRequest): Promise<Response> {
+async function handleAsk(req: Request): Promise<Response> {
   const pageLocale = siteLocaleOf(req.headers.get(ASK_LOCALE_HEADER)) ?? SITE_LOCALE.en;
   const requestId = crypto.randomUUID();
   const askFlag = (env.ASK_ENABLED ?? '').trim().toLowerCase();
@@ -125,18 +128,10 @@ async function handleAsk(req: NextRequest): Promise<Response> {
   });
   log.info('ask request received', { requestId, ipHash, promptVersion: PROMPT_VERSION });
 
-  const earlyExitPersist = (status: AskInteractionStatus): void =>
-    void persistAskInteraction({
-      requestId,
-      ts: new Date().toISOString(),
-      ipHash,
-      question: '',
-      answer: '',
-      inputTokens: 0,
-      outputTokens: 0,
-      durationMs: Date.now() - startedAt,
-      status,
-    });
+  const recordRefusal = (status: AskRefusalStatus): void => {
+    log.info('ask refused', { requestId, ipHash, status });
+    afterResponse(() => countAskRefusal(status));
+  };
 
   let rateLimited = false;
   let retryAfter: number | null = null;
@@ -150,7 +145,7 @@ async function handleAsk(req: NextRequest): Promise<Response> {
     }
   }
   if (rateLimited) {
-    earlyExitPersist('rate-limited');
+    recordRefusal('rate-limited');
     return askError(
       requestId,
       askErrors[pageLocale].rateLimited,
@@ -159,10 +154,22 @@ async function handleAsk(req: NextRequest): Promise<Response> {
     );
   }
 
+  const bounded = await readBoundedBody(req, MAX_ASK_BODY_BYTES);
+  if (!bounded.ok) {
+    return err({
+      requestId,
+      status: bounded.status,
+      code: bounded.code,
+      message: bounded.message,
+    });
+  }
+
   let question: string;
   let answerLocale: SiteLocale = pageLocale;
   try {
-    const rawBody: unknown = await req.json();
+    const rawBody: unknown = JSON.parse(
+      new TextDecoder().decode(bounded.bytes ?? new Uint8Array()),
+    );
     const body =
       typeof rawBody === 'object' && rawBody !== null && !Array.isArray(rawBody)
         ? (rawBody as Record<string, unknown>)
@@ -186,13 +193,13 @@ async function handleAsk(req: NextRequest): Promise<Response> {
 
   const { allowed: notDuplicate } = await checkIdenticalQuestion(ipHash, question);
   if (!notDuplicate) {
-    earlyExitPersist('dedup-rejected');
+    recordRefusal('dedup-rejected');
     return askError(requestId, askErrors[answerLocale].duplicate, 429);
   }
 
-  const { allowed, reserved, budgetKey } = await reserveBudget(MAX_OUTPUT_TOKENS);
+  const { allowed, reserved, budgetKey, dailyKey } = await reserveBudget(MAX_OUTPUT_TOKENS);
   if (!allowed) {
-    earlyExitPersist('budget-exhausted');
+    recordRefusal('budget-exhausted');
     return askError(requestId, askErrors[answerLocale].budget, 503);
   }
 
@@ -232,10 +239,16 @@ async function handleAsk(req: NextRequest): Promise<Response> {
   let cacheReadTokens = 0;
   let cacheCreationTokens = 0;
   let collectedAnswerText = '';
+  let firstChunkSeen = false;
   let status: AskInteractionStatus = 'completed';
   let truncated = false;
 
   const guard = createStreamGuard();
+
+  let finishStream: () => void = () => undefined;
+  const streamEnded = new Promise<void>((resolve) => {
+    finishStream = resolve;
+  });
 
   let clientGone = false;
   let notifyClientGone: () => void = () => undefined;
@@ -289,6 +302,7 @@ async function handleAsk(req: NextRequest): Promise<Response> {
             break;
           }
           const text = next.value;
+          firstChunkSeen = true;
           const verdict = guard.inspect(text);
           if (!verdict.ok) {
             status = 'errored';
@@ -316,11 +330,7 @@ async function handleAsk(req: NextRequest): Promise<Response> {
         if (clientGone && status === 'completed') status = 'aborted';
         if (!clientGone) controller.close();
         void Promise.resolve(iterator.return?.()).catch(() => undefined);
-        try {
-          await settleAndPersist();
-        } catch (settleErr) {
-          log.error('settle-and-persist failed', { requestId, error: describeError(settleErr) });
-        }
+        finishStream();
       }
     },
     cancel() {
@@ -328,6 +338,15 @@ async function handleAsk(req: NextRequest): Promise<Response> {
       notifyClientGone();
       upstream.abort();
     },
+  });
+
+  afterResponse(async () => {
+    await streamEnded;
+    try {
+      await settleAndPersist();
+    } catch (settleErr) {
+      log.error('settle-and-persist failed', { requestId, error: describeError(settleErr) });
+    }
   });
 
   async function settleAndPersist(): Promise<void> {
@@ -362,10 +381,13 @@ async function handleAsk(req: NextRequest): Promise<Response> {
     });
     const failedBeforeAnyOutput =
       upstreamFailed && usageRejected && collectedAnswerText.length === 0;
+    const endedBeforeFirstToken = !firstChunkSeen && !upstreamFailed;
     if (usageResolved) {
-      await settleBudget(reserved, totalBilledInput, outputTokens, budgetKey);
+      await settleBudget(reserved, totalBilledInput, outputTokens, budgetKey, dailyKey);
     } else if (failedBeforeAnyOutput) {
-      await settleBudget(reserved, 0, 0, budgetKey);
+      await settleBudget(reserved, 0, 0, budgetKey, dailyKey);
+    } else if (endedBeforeFirstToken) {
+      await settleBudget(reserved, ASK_RESERVED_INPUT_TOKENS, 0, budgetKey, dailyKey);
     }
     await persistAskInteraction({
       requestId,
@@ -399,4 +421,4 @@ async function handleAsk(req: NextRequest): Promise<Response> {
   });
 }
 
-export const POST = withBodyLimit(handleAsk, MAX_ASK_BODY_BYTES);
+export const POST = handleAsk;

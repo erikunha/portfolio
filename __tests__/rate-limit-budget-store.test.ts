@@ -82,10 +82,88 @@ describe('budget store seam', () => {
     const second = await reserveBudget(512);
     expect((await reserveBudget(512)).allowed).toBe(false);
 
-    await settleBudget(first.reserved, 100, 50, first.budgetKey);
-    await settleBudget(second.reserved, 100, 50, second.budgetKey);
+    await settleBudget(first.reserved, 100, 50, first.budgetKey, first.dailyKey);
+    await settleBudget(second.reserved, 100, 50, second.budgetKey, second.dailyKey);
 
     expect((await reserveBudget(512)).allowed).toBe(true);
     expect(decrbyMock).not.toHaveBeenCalled();
+  });
+
+  it('denies on the daily slice while the month has room, and returns both reservations', async () => {
+    const { reserveBudget, setBudgetStore, getBudgetKey, getDailyBudgetKey } = await import(
+      '@/lib/rate-limit'
+    );
+    const used = new Map<string, number>();
+    setBudgetStore({
+      capacity: RESERVATION * 100,
+      dailyCapacity: RESERVATION * 2,
+      reserve: async (key, tokens) => {
+        used.set(key, (used.get(key) ?? 0) + tokens);
+        return used.get(key) ?? 0;
+      },
+      release: async (key, tokens) => {
+        used.set(key, (used.get(key) ?? 0) - tokens);
+      },
+      chargeOverage: async () => undefined,
+    });
+
+    expect((await reserveBudget(512)).allowed).toBe(true);
+    expect((await reserveBudget(512)).allowed).toBe(true);
+    const third = await reserveBudget(512);
+
+    expect(
+      third,
+      'one actor spending the whole month in a few days would 503 every visitor until the key expires',
+    ).toMatchObject({ allowed: false, reserved: 0 });
+    expect(used.get(getBudgetKey())).toBe(RESERVATION * 2);
+    expect(used.get(getDailyBudgetKey())).toBe(RESERVATION * 2);
+  });
+
+  it('returns the monthly reservation when the daily reservation cannot be made', async () => {
+    const { reserveBudget, setBudgetStore, getBudgetKey } = await import('@/lib/rate-limit');
+    const used = new Map<string, number>();
+    setBudgetStore({
+      capacity: RESERVATION * 100,
+      dailyCapacity: RESERVATION * 100,
+      reserve: async (key, tokens) => {
+        if (key.includes(':day:')) throw new Error('Redis unavailable');
+        used.set(key, (used.get(key) ?? 0) + tokens);
+        return used.get(key) ?? 0;
+      },
+      release: async (key, tokens) => {
+        used.set(key, (used.get(key) ?? 0) - tokens);
+      },
+      chargeOverage: async () => undefined,
+    });
+
+    const result = await reserveBudget(512);
+
+    expect(result).toMatchObject({ allowed: false, reserved: 0 });
+    expect(used.get(getBudgetKey())).toBe(0);
+  });
+
+  it('settles both the monthly and the daily reservation', async () => {
+    const { reserveBudget, setBudgetStore, settleBudget } = await import('@/lib/rate-limit');
+    const used = new Map<string, number>();
+    setBudgetStore({
+      capacity: RESERVATION * 100,
+      dailyCapacity: RESERVATION * 100,
+      reserve: async (key, tokens) => {
+        used.set(key, (used.get(key) ?? 0) + tokens);
+        return used.get(key) ?? 0;
+      },
+      release: async (key, tokens) => {
+        used.set(key, (used.get(key) ?? 0) - tokens);
+      },
+      chargeOverage: async (key, tokens) => {
+        used.set(key, (used.get(key) ?? 0) + tokens);
+      },
+    });
+
+    const { reserved, budgetKey, dailyKey } = await reserveBudget(512);
+    await settleBudget(reserved, 100, 50, budgetKey, dailyKey);
+
+    expect(used.get(budgetKey)).toBe(150);
+    expect(used.get(dailyKey)).toBe(150);
   });
 });

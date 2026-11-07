@@ -8,6 +8,7 @@ import { hashIp } from '@/lib/ip-hash';
 import { log } from '@/lib/log';
 import { getClientIp } from '@/lib/rate-limit';
 import { isCrossSiteRequest } from '@/lib/server/fetch-metadata';
+import { readBoundedBody } from '@/lib/server/read-body';
 import { ASK_LOCALE_HEADER, RETRY_AFTER_HEADER, retryAfterSeconds } from '@/lib/stream-protocol';
 
 interface RateLimit {
@@ -26,6 +27,7 @@ export interface HandlerContext<TBody> {
 export interface DefineHandlerOpts<TSchema extends ZodTypeAny> {
   schema: TSchema;
   rateLimit: RateLimitFactory;
+  maxBodyBytes: number;
   rateLimitErrorMessage?: string | Readonly<Record<SiteLocale, string>>;
   handler: (ctx: HandlerContext<z.infer<TSchema>>) => Promise<Response>;
 }
@@ -125,9 +127,19 @@ export function defineHandler<TSchema extends ZodTypeAny>(
       });
     }
 
+    const bounded = await readBoundedBody(req, opts.maxBodyBytes);
+    if (!bounded.ok) {
+      return err({
+        requestId,
+        status: bounded.status,
+        code: bounded.code,
+        message: bounded.message,
+      });
+    }
+
     let raw: unknown;
     try {
-      raw = await req.json();
+      raw = JSON.parse(new TextDecoder().decode(bounded.bytes ?? new Uint8Array()));
     } catch {
       return err({ requestId, status: 400, code: 'invalid_json', message: 'invalid request body' });
     }
