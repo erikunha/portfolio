@@ -14,10 +14,10 @@ test.describe('ToTopButton: scroll-to-top affordance', () => {
     await page.locator('body').click({ position: { x: 1, y: 1 } });
     for (let step = 0; step < 60; step++) {
       await page.keyboard.press('Shift+Tab');
-      const focusedName = await page.evaluate(() =>
-        document.activeElement?.getAttribute('aria-label'),
+      const onToTop = await page.evaluate(() =>
+        document.activeElement?.classList.contains('to-top-btn'),
       );
-      expect(focusedName, 'the hidden to-top button took keyboard focus').not.toMatch(/top/i);
+      expect(onToTop, 'the hidden to-top button took keyboard focus').toBe(false);
     }
   });
 
@@ -25,7 +25,7 @@ test.describe('ToTopButton: scroll-to-top affordance', () => {
     await page.goto('/');
     await page.evaluate(() => window.scrollTo(0, 800));
     const btn = page.getByRole('button', { name: /top/i });
-    await expect(btn).toBeVisible();
+    await expect(btn).toHaveClass(/to-top-show/);
     await btn.focus();
     await expect(btn).toBeFocused();
   });
