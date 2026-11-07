@@ -6,10 +6,14 @@ let message = '';
 let fieldId: string | null = null;
 const listeners = new Set<Listener>();
 
+function notify(): void {
+  for (const listener of listeners) listener();
+}
+
 function write(next: string): void {
   if (next === message) return;
   message = next;
-  for (const listener of listeners) listener();
+  notify();
 }
 
 export const messageStore = {
@@ -24,8 +28,11 @@ export const messageStore = {
   getFieldId: (): string | null => fieldId,
   bindField(id: string): () => void {
     fieldId = id;
+    notify();
     return () => {
-      if (fieldId === id) fieldId = null;
+      if (fieldId !== id) return;
+      fieldId = null;
+      notify();
     };
   },
   set: write,
