@@ -2,7 +2,7 @@ import { externalLinkProps } from '@/components/ExternalLink';
 import { dmesgLines, dmesgStatus } from '@/content/dmesg';
 import { footerContent, footerSectionIds } from '@/content/footer';
 import type { SiteLocale } from '@/content/site-locale';
-import { HaltClock, RebootControl, SessionCounters } from './Footer.client';
+import { HaltClock, RebootControl, SessionCounters, SessionReceipt } from './Footer.client';
 
 const INITIAL_UPTIME = '00:00:00';
 const INITIAL_COUNT = '0';
@@ -226,6 +226,7 @@ export function Footer({ locale }: { locale: SiteLocale }) {
           <RebootControl copy={content.reboot} />
         </div>
         <p className="footer-copyright">{content.copyright}</p>
+        <SessionReceipt copy={content.receipt} />
       </div>
     </footer>
   );

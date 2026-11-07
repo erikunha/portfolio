@@ -715,6 +715,10 @@ export type HeroClientContent = z.infer<typeof HeroClientContentSchema>;
 const FooterHrefSchema = z.string().regex(/^(?:#[\w-]+|\/(?!\/)[\w/-]*|https:\/\/[^\s]+)$/);
 const FooterLinkSchema = z.object({ label: z.string().min(1), href: FooterHrefSchema });
 
+export const CopyFeedbackSchema = z.object({ label: z.string().min(1), message: z.string() });
+export type CopyFeedback = z.infer<typeof CopyFeedbackSchema>;
+export type CopyFeedbackState = 'idle' | 'success' | 'failure' | 'unavailable';
+
 export const FooterContentSchema = z
   .object({
     shutdownTitle: z.string().min(1),
@@ -765,6 +769,10 @@ export const FooterContentSchema = z
       key: z.string().length(1),
       after: z.string().min(1),
       announcement: z.string().min(1),
+    }),
+    receipt: z.object({
+      label: z.string().min(1),
+      feedback: z.record(z.enum(['idle', 'success', 'failure', 'unavailable']), CopyFeedbackSchema),
     }),
     copyright: z.string().min(1),
   })
@@ -830,10 +838,6 @@ export const DmesgLineSchema = z.object({
   ok: z.boolean(),
 });
 export type DmesgLine = z.infer<typeof DmesgLineSchema>;
-
-export const CopyFeedbackSchema = z.object({ label: z.string().min(1), message: z.string() });
-export type CopyFeedback = z.infer<typeof CopyFeedbackSchema>;
-export type CopyFeedbackState = 'idle' | 'success' | 'failure' | 'unavailable';
 
 const DawMixerPluginSchema = z.object({
   name: z.string().min(1),
