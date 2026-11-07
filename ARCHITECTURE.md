@@ -130,7 +130,7 @@ What we build is small, opinionated, Vercel-deployed, and budget-enforced.
 
 ### Default: React Server Components, statically generated at build time
 
-Static section bodies are Server Components. `AppShell` is a client boundary that receives server-rendered children; viewport checks use the `useBreakpoint` hook, not a context provider. `SectionNavigationProvider` wraps the shell chrome. Its context value (actions, copy, chrome, locale and a store) never changes after the first render. The current section, the drawer and the motion state live in the store and are read with `useSyncExternalStore`, so a scroll cannot force a not-yet-hydrated Suspense boundary to client-render. `ContactForm` and `InteractiveShell` adopt text typed before they hydrate from the kept server DOM. `ErrorBoundary` wraps each section and the footer independently. Measured data and device-selected sections stream through Suspense.
+Static section bodies are Server Components. `AppShell` is a client boundary that receives server-rendered children; viewport checks use the `useBreakpoint` hook, not a context provider. `SectionNavigationProvider` wraps the shell chrome. Its context value (actions, copy, chrome, locale and a store) never changes after the first render. The current section, the drawer and the motion state live in the store and are read with `useSyncExternalStore`, so a scroll cannot force a not-yet-hydrated Suspense boundary to client-render. `ContactForm` and `InteractiveShell` adopt text typed before they hydrate from the kept server DOM. The shell form also carries a React `action`, so an Enter pressed before hydration is queued by the server-rendered replay runtime and runs once after hydration instead of navigating to `/?command=...`; the welcome line follows `useBreakpoint` at render, so a phone gets the mobile line after hydration. `ErrorBoundary` wraps each section and the footer independently. Measured data and device-selected sections stream through Suspense.
 
 The section menu is a modal drawer at every width, opened by the menu icon trigger named `Open menu` (the first item in the desktop topbar and the mobile title bar; the brand icon closes both bars at the right end) or the dock MENU. The drawer header contains the title and the close control. Closing the drawer returns focus to the control that opened it, or to the first rendered menu trigger when there is no such control or a viewport change left it unrendered.
 
@@ -258,7 +258,7 @@ components/client/RefChip/            # request reference chip with copy, shared
 components/client/ContactTimezone/    # timezone overlap panel island: clocks, map, zone combobox
 components/client/HeroBootAnimation/  # boot typewriter island
 components/client/RoleTyper/          # About status role typewriter island
-components/client/TypeReveal/         # Scroll type reveal observer island
+components/client/TypeReveal/         # Scroll type reveal observer island (IntersectionObserver plus a MutationObserver on main)
 components/AppShell/                   # shell chrome slots and shared section navigation
 components/BrandLink/                  # server component: brand icon link home, named from content/brand.ts
 components/ExternalLink/               # the one new-tab anchor (target and rel pair)

@@ -6,6 +6,7 @@ const HYDRATION_DELAY_MS = 2000;
 const SHELL_FORM_SELECTOR = '[data-testid="shell-form"]';
 const SHELL_INPUT_SELECTOR = '[aria-label="shell command"]';
 const TYPED_COMMAND = 'help me';
+const NAVIGATION_SETTLE_MS = 500;
 
 test.describe('shell input before it hydrates', () => {
   test('a command typed while the scripts load survives hydration and runs', async ({ page }) => {
@@ -27,5 +28,36 @@ test.describe('shell input before it hydrates', () => {
     await input.press('Enter');
     await expect(page.getByRole('log').first()).toContainText(TYPED_COMMAND);
     await expect(input).toHaveValue('');
+  });
+
+  test('Enter pressed before hydration neither navigates nor leaks the command, and runs once after', async ({
+    page,
+  }) => {
+    await installMockBackend(page, { ask: 'happy', log: 'accept' });
+    await page.route('**/_next/static/chunks/**/*.js', async (route) => {
+      await new Promise((resolve) => setTimeout(resolve, HYDRATION_DELAY_MS));
+      await route.continue();
+    });
+    await page.goto('/', { waitUntil: 'commit' });
+    const input = page.locator(SHELL_INPUT_SELECTOR);
+    await input.waitFor({ state: 'attached' });
+    await input.scrollIntoViewIfNeeded();
+    const entryUrl = page.url();
+    await input.pressSequentially(TYPED_COMMAND);
+    await input.press('Enter');
+    await page.waitForTimeout(NAVIGATION_SETTLE_MS);
+    expect(
+      page.url(),
+      'a native form submit before hydration navigates to /?command=... and loses the command',
+    ).toBe(entryUrl);
+    await waitForHydration(page, SHELL_FORM_SELECTOR);
+
+    const log = page.getByRole('log').first();
+    await expect(log, 'the queued submit replays once the shell hydrates').toContainText(
+      TYPED_COMMAND,
+    );
+    await expect(input).toHaveValue('');
+    expect(page.url()).toBe(entryUrl);
+    expect(await log.locator('[data-kind="prompt"]').count()).toBe(1);
   });
 });
