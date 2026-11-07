@@ -1,6 +1,7 @@
 import type { McpServer } from '@modelcontextprotocol/server';
 import { z } from 'zod';
 import { POST as askPost } from '@/app/api/ask/route';
+import { social } from '@/content/social';
 import { HIRING_PROFILE } from '@/lib/hiring-profile';
 import { parseStreamChunk } from '@/lib/stream-protocol';
 
@@ -12,7 +13,7 @@ function textResult(text: string) {
 }
 
 async function runAsk(question: string): Promise<string> {
-  const req = new Request('https://www.erikunha.dev/api/ask', {
+  const req = new Request(`${social.site}/api/ask`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ question }),
