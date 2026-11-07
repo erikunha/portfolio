@@ -3,7 +3,7 @@ import { askErrors } from '@/content/ask-errors';
 import { SITE_LOCALE, type SiteLocale } from '@/content/site-locale';
 import { isInjectionAttempt } from '@/lib/ask/injection';
 import { ASK_RESERVED_INPUT_TOKENS } from '@/lib/ask/input-reservation';
-import { ASK_MAX_OUTPUT_TOKENS, ASK_MAX_QUESTION_CHARS } from '@/lib/ask/limits';
+import { ASK_MAX_OUTPUT_TOKENS, ASK_MAX_QUESTION_CHARS, ASK_TEMPERATURE } from '@/lib/ask/limits';
 import { ASK_MODEL } from '@/lib/ask/model';
 import { createStreamGuard, GUARD_ABORT_PREFIX, validateAnswer } from '@/lib/ask/output-guard';
 import { type AskRefusalStatus, countAskRefusal } from '@/lib/ask/refusal-count';
@@ -210,6 +210,7 @@ async function handleAsk(req: Request): Promise<Response> {
 
   const result = streamText({
     model: ASK_MODEL,
+    temperature: ASK_TEMPERATURE,
     maxOutputTokens: MAX_OUTPUT_TOKENS,
     abortSignal: AbortSignal.any([AbortSignal.timeout(REQUEST_TIMEOUT_MS), upstream.signal]),
     experimental_telemetry: { isEnabled: true, recordInputs: false, recordOutputs: false },
