@@ -84,8 +84,9 @@ describe('CRTOverlay owns the frame governor', () => {
     vi.doMock('@/lib/frame-governor', () => Promise.reject(new Error('chunk load failed')));
     const { CRTOverlay } = await import('./CRTOverlay.client');
     mounted = await mountClient(createElement(CRTOverlay));
-    await new Promise((resolve) => setTimeout(resolve, 20));
-    expect(report).toHaveBeenCalledWith(expect.any(String), expect.any(Error));
+    await vi.waitFor(() =>
+      expect(report).toHaveBeenCalledWith(expect.any(String), expect.any(Error)),
+    );
     vi.doUnmock('@/lib/frame-governor');
     vi.doUnmock('@/lib/report-client-error.client');
   });
