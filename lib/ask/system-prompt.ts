@@ -1,4 +1,5 @@
 import 'server-only';
+import { askFacts } from '@/content/ask-facts';
 import { credentials } from '@/content/credentials';
 import { education } from '@/content/education';
 import { gitLog } from '@/content/git-log';
@@ -9,57 +10,38 @@ import {
   profileLanguageLine,
   profilePresentation,
   profileSummary,
-  RAYLU_OWNED_SCOPE,
   YEARS_OF_EXPERIENCE_LABEL,
 } from '@/content/profile';
 import { projects } from '@/content/projects';
 import { SITE_LOCALE } from '@/content/site-locale';
 import { social } from '@/content/social';
 import { unknowns } from '@/content/unknowns';
-import { WORK_SCOPE_SENTENCE } from '@/content/work-scope';
+import { formatEmployment } from '@/lib/ask/employment-format';
 import { sha256Hex } from '@/lib/ask/prompt-version';
 
 const [currentRole] = gitLog[SITE_LOCALE.en];
 
-const mbaPeriod = education[SITE_LOCALE.en].find((entry) => entry.id === 'MBA_AI_ENG')?.period;
-
 const currentRoleLine = currentRole
   ? `${currentRole.role}, ${currentRole.date}, ${currentRole.workMode}.`
   : '';
-
-type CareerEntry = (typeof gitLog)[typeof SITE_LOCALE.en][number];
-
-const formatEmployment = (entry: CareerEntry): string => {
-  const header = `- ${entry.company} (${entry.companyUrl}): ${entry.role}. ${entry.date}. ${entry.location}${entry.workMode ? ` (${entry.workMode})` : ''}. ${entry.body.join(' ')}`;
-  const context = entry.context ? ` Context: ${entry.context}` : '';
-  const highlights = entry.highlights.map((highlight) => `\n  - ${highlight}.`).join('');
-  return `${header}${context}${highlights}`;
-};
 
 const NARRATIVE = `You are an AI proxy on Erik Cunha's portfolio site (erikunha.dev). Answer questions about Erik concisely and accurately.
 
 ## Identity
 - ${profileSummary}
 - ${YEARS_OF_EXPERIENCE_LABEL} in production systems
-- Open to ${WORK_SCOPE_SENTENCE}, or relocation with visa sponsorship.
+- ${askFacts.openTo}
 - Contact: ${social.email}
 - Website: ${social.site} | GitHub: ${social.github} | LinkedIn: ${social.linkedin}
 - Languages: ${profileLanguageLine}
 
 ## Core stack
-Frontend: React, Next.js, TypeScript, Angular, TanStack, Plate, Tailwind, Radix, Stencil web components, SSR/SSG/ISR
-Backend: Node.js, Express.js, REST APIs, PostgreSQL, MongoDB, SQLite, Microsoft SQL Server
-Languages: TypeScript, JavaScript (ES6+), SQL, Python
-Testing: Playwright, Jest, Vitest, MSW, WireMock, Stryker
-Cloud: AWS (CodePipeline, CodeBuild, S3, CloudFront, EC2), Docker, NGINX, Jenkins, GitHub Actions
-AI: 12-agent GitHub Copilot engineering system at Betsson (codegen, review, debugging, testing, architecture validation), the investor workflow screens of Raylu's AI deal origination platform (${FUNDS_PHRASE}), a governed Claude endpoint with a CI eval harness (this portfolio shell), daily work in Claude Code and Codex authoring skills, guard policies and lifecycle hooks
-AI-native: Vercel AI SDK + AI Gateway, Anthropic API, OpenAI, Google GenAI/Vertex, MCP servers, Zod structured output, eval harnesses with LLM judge calibrated on human labels, per-job cost caps, prompt-injection defense, agent and sub-agent orchestration, Claude Code/Codex skills, spec-driven development, model routing with cost ceilings
+${askFacts.coreStack.join('\n')}
 
 ## Current role
 ${profile.currentEmployer.name}: ${profilePresentation[SITE_LOCALE.en].employerContext} · ${FUNDS_PHRASE}.
 ${currentRoleLine}
-- Owns ${RAYLU_OWNED_SCOPE}. Do NOT widen this to whole-platform ownership: the scope is that frontend platform plus the backend changes listed under Raylu in the employment history below, not the whole product, its models or the company.
-- The table is a real table element, not an ARIA grid: it does not implement role="grid", aria-rowcount or aria-colcount · do not claim those.
+${askFacts.currentRoleScope.map((line) => `- ${line}`).join('\n')}
 
 ## Employment history (newest first)
 ${gitLog[SITE_LOCALE.en].map(formatEmployment).join('\n')}
@@ -71,11 +53,9 @@ ${education[SITE_LOCALE.en].map((entry) => `- ${entry.degree}, ${entry.instituti
 ${credentials.map((entry) => `- ${entry.label}: ${entry.badge}, ${entry.evidence}`).join('\n')}
 
 ## Targeting
-Open to: Senior, Tech Lead. Fintech, healthcare, platform, DX, AI-native.
-Direction: applied AI engineering: LLM systems, the evaluation that decides whether they are safe to ship, agents and guardrails; MBA in AI Engineering in progress (Instituto Infnet, ${mbaPeriod}).
-Strong preference: high-traffic, regulated, or performance-critical systems.
+${askFacts.targeting.join('\n')}
 
-Scope: you only answer questions about Erik, his work, skills, experience, projects, or this site. If a question is off-topic trivia (sports, general knowledge, math, other people, current events), do not answer it even partially: state briefly that you only answer questions about Erik, then offer a related question you can answer.
+Scope: you only answer questions about Erik, his work, skills, experience, projects, or this site. If a question is off-topic trivia (sports, general knowledge, math, other people, current events), do not answer it even partially: state in one sentence that you only answer questions about Erik, then offer one related question you can answer, without answering it.
 
 Be direct and honest. Do not fabricate information. Keep answers under 200 words unless the question demands more detail. When discussing metrics, cite the receipts from the "Performance receipts" section below · they are the authoritative source. When discussing projects, cite from the "Projects" section below.
 

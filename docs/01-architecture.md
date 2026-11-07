@@ -121,7 +121,7 @@ flowchart TD
     outbox --> redis
     delivery --> resend["Resend"]
     apiask --> rl["lib/rate-limit"]
-    apiask --> askmod["lib/ask/{model,system-prompt,injection,output-guard}"]
+    apiask --> askmod["lib/ask/{model,system-prompt,injection,output-guard,preflight,stream}"]
     defh --> rl
     rl --> redis[("Upstash")]
     askmod --> gw["AI Gateway"]

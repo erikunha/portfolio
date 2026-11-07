@@ -72,6 +72,22 @@ describe('lib/ask-log — persistAskInteraction', () => {
       expect.objectContaining({ requestId: 'req-abc-123' }),
     );
   });
+
+  it('logs a KV failure as name and message only, never the raw error object', async () => {
+    redisSetMock.mockRejectedValueOnce(
+      Object.assign(new Error('Upstash down'), { command: ['SET', 'canary-question-9d2c'] }),
+    );
+    const { persistAskInteraction } = await import('@/lib/ask-log');
+    await persistAskInteraction(interaction);
+
+    expect(
+      logErrorMock,
+      'a client error can carry the command it sent, which holds the stored question',
+    ).toHaveBeenCalledWith('ask-log KV write failed', {
+      requestId: 'req-abc-123',
+      error: { name: 'Error', message: 'Upstash down' },
+    });
+  });
 });
 
 describe('/api/log/forget endpoint', () => {
@@ -195,5 +211,71 @@ describe('/api/ask privacy notice on the shell', () => {
     expect(text).toContain('/api/log/forget');
 
     unmount();
+  });
+});
+
+describe('lib/ask-log: persistAskInteraction minimization', () => {
+  const redisSetMock = vi.fn();
+
+  beforeEach(() => {
+    vi.resetModules();
+    redisSetMock.mockReset();
+    vi.doMock('@/lib/rate-limit', () => ({ getRedis: vi.fn(() => ({ set: redisSetMock })) }));
+    vi.doMock('@/lib/log', () => ({
+      log: { info: vi.fn(), error: vi.fn(), warn: vi.fn(), debug: vi.fn() },
+    }));
+  });
+
+  afterEach(() => {
+    vi.doUnmock('@/lib/rate-limit');
+    vi.doUnmock('@/lib/log');
+  });
+
+  it('stores neither an email address nor a phone number from the question or the answer, and keeps the request id', async () => {
+    redisSetMock.mockResolvedValueOnce('OK');
+    const { persistAskInteraction } = await import('@/lib/ask-log');
+    await persistAskInteraction({
+      requestId: 'req-pii-1',
+      ts: '2026-11-07T12:00:00.000Z',
+      ipHash: 'hashed-ip',
+      question: 'Write to jane@example.com or call +55 11 99999-9999',
+      answer: 'I cannot contact jane@example.com',
+      inputTokens: 1,
+      outputTokens: 1,
+      durationMs: 1,
+      status: 'completed',
+    });
+
+    const [key, value] = redisSetMock.mock.calls[0] ?? [];
+    expect(String(key)).toBe('ask:log:2026-11-07:req-pii-1');
+    const stored = JSON.parse(String(value)) as {
+      requestId: string;
+      question: string;
+      answer: string;
+    };
+    expect(stored.requestId).toBe('req-pii-1');
+    expect(stored.question).not.toMatch(/jane@example\.com|99999-9999/);
+    expect(stored.answer).not.toContain('jane@example.com');
+  });
+
+  it('redacts before truncating, so a cut address never leaves a readable prefix', async () => {
+    redisSetMock.mockResolvedValueOnce('OK');
+    const { persistAskInteraction } = await import('@/lib/ask-log');
+    const padding = 'x'.repeat(490);
+    await persistAskInteraction({
+      requestId: 'req-pii-2',
+      ts: '2026-11-07T12:00:00.000Z',
+      ipHash: 'hashed-ip',
+      question: `${padding} jane.doe@example.com`,
+      answer: 'A',
+      inputTokens: 1,
+      outputTokens: 1,
+      durationMs: 1,
+      status: 'completed',
+    });
+
+    const [, value] = redisSetMock.mock.calls[0] ?? [];
+    const stored = JSON.parse(String(value)) as { question: string };
+    expect(stored.question).not.toContain('jane');
   });
 });

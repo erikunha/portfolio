@@ -86,6 +86,11 @@
     html {
       scroll-padding-top: calc(var(--mobile-bars-height) + var(--spacing-3));
     }
+
+    .mobile-title-bar :is(a, button),
+    .status-bar :is(a, button) {
+      scroll-margin-top: calc(-1 * var(--mobile-bars-height));
+    }
   }
 
   ::selection {

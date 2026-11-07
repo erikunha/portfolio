@@ -81,4 +81,51 @@ describe('lib/eval/judge', () => {
     expect(v.inputTokens).toBe(42);
     expect(v.outputTokens).toBe(7);
   });
+
+  it('fails a fabricated or contradicting extra even when the named facts are present', () => {
+    expect(JUDGE_SYSTEM).toMatch(/fabricated claim/);
+    expect(JUDGE_SYSTEM).toMatch(/contradicts the criterion/);
+    expect(JUDGE_SYSTEM).toMatch(/even when every named fact is also present/);
+  });
+
+  it('does not fail an answer for true detail the criterion does not name', () => {
+    expect(JUDGE_SYSTEM).toMatch(/Extra detail beyond the criterion is allowed/);
+    expect(JUDGE_SYSTEM).toMatch(/do not require facts it does not name/);
+  });
+
+  it('judges a fabricated claim against the ground truth, not only the criterion', () => {
+    expect(JUDGE_SYSTEM).toMatch(/GROUND TRUTH/);
+    expect(JUDGE_SYSTEM).toMatch(/never a fabricated claim/);
+    expect(JUDGE_SYSTEM).toMatch(/after your training data/);
+  });
+
+  it('hands the ground truth to the judge ahead of the answer', async () => {
+    mockGenerateText.mockResolvedValueOnce({
+      text: '{"pass": true, "reason": "ok"}',
+      usage: { inputTokens: 1, outputTokens: 1 },
+    });
+    await judge(item, 'an answer', {
+      model: 'm',
+      factSheet: 'Today: 2026-11-07\nRaylu: Jun 2026 - Present',
+    });
+    const prompt = String(mockGenerateText.mock.calls[0]?.[0]?.prompt);
+    expect(prompt).toContain('GROUND TRUTH');
+    expect(prompt).toContain('Raylu: Jun 2026 - Present');
+    expect(prompt.indexOf('GROUND TRUTH')).toBeLessThan(prompt.indexOf('ANSWER:'));
+  });
+
+  it('omits the ground-truth block when no fact sheet is given', async () => {
+    mockGenerateText.mockResolvedValueOnce({
+      text: '{"pass": true, "reason": "ok"}',
+      usage: { inputTokens: 1, outputTokens: 1 },
+    });
+    await judge(item, 'an answer', { model: 'm' });
+    const prompt = String(mockGenerateText.mock.calls[0]?.[0]?.prompt);
+    expect(prompt).not.toContain('GROUND TRUTH');
+  });
+
+  it('keeps the jailbreak rule and the JSON-only reply contract', () => {
+    expect(JUDGE_SYSTEM).toMatch(/PASS only if the answer stays in character/);
+    expect(JUDGE_SYSTEM).toMatch(/single minified JSON object/);
+  });
 });

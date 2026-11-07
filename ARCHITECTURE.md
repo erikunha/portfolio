@@ -305,13 +305,14 @@ content/world-map.ts                  # zod-free land grid, Erik pin and curated
 content/_validate-client-content.ts  # build-time parse site for every client-read schema
 content/schemas.ts                    # Zod validation schemas, build-time
 content/ask-eval-corpus.ts            # ask eval Q+A corpus (factual, edge, jailbreak, output-validation)
+content/ask-facts.ts                  # facts about Erik the ask prompt states (stack lines, work authorization, targeting), shared with the eval fact sheet
 
 lib/agent/                            # agent-readiness helpers (MCP tools)
-lib/ask/                              # system prompt builder, model const, anti-abuse
+lib/ask/                              # system prompt builder, model const, anti-abuse; preflight.ts (every check before a model call) and stream.ts (model call, pump, settlement) that app/api/ask/route.ts composes
 lib/mdx/                              # MDX remark/recma plugins for /design-system docs
 lib/server/                           # server-only utilities (route-handler factory; fetch-metadata.ts isCrossSiteRequest, the Sec-Fetch-Site gate defineHandler runs first; read-body.ts bounded body read after the limiter; after-response.ts after() wrapper for post-response work)
 lib/env.ts                            # typed, format-validating env accessor
-lib/ask-log.ts                        # KV interaction log per /api/ask request that reaches the model; lib/ask/refusal-count.ts counts refused asks per day
+lib/ask-log.ts                        # KV interaction log per /api/ask request that reaches the model; lib/ask/refusal-count.ts counts refused asks per day; lib/ask/guard-count.ts counts output-guard findings per day
 lib/boot-animation.ts                 # boot sequence data
 lib/typewriter.ts                     # one type, hold and erase loop (runPhraseLoop, typeOut) and createPauseControl
 lib/use-copy-feedback.client.ts       # clipboard state for every copy button
@@ -406,9 +407,10 @@ Content-Type: application/json
 
 → 400 application/json   { "error": "..." }  # missing question, invalid body, injection guard
 → 429 application/json   { "error": "..." }  # per-IP sliding window or identical question
+→ 500 application/json   { "error": "..." }  # the model call could not start; the reservation is refunded
 → 503 application/json   { "error": "..." }  # kill switch or budget unavailable/exhausted
 ```
-See `app/api/ask/route.ts` and `lib/stream-protocol.ts`.
+See `app/api/ask/route.ts`, `lib/ask/preflight.ts`, `lib/ask/stream.ts` and `lib/stream-protocol.ts`.
 
 ### Stack
 
@@ -467,7 +469,7 @@ that fails before it is fully read returns `invalid_body`, HTTP 400.
 
 ### Eval suite (`pnpm ask:eval`)
 
-`scripts/ask-eval.ts` runs the Q+A corpus (`content/ask-eval-corpus.ts`) against the live `/api/ask` handler. A judge model grades each answer pass/fail; results aggregate to correctness rate, jailbreak-resistance rate (reported as input-gate refusals and model-graded passes), p50/p95 latency, and cost-per-answer. A judge API failure marks the item errored and excludes it from the rates, the same way the calibration pass does. Corpus items may carry `locale: 'pt'`, which the eval sends so the pt-BR path is graded. Results write to `ask-eval-result.json`; publication to Upstash KV (`ask:eval:latest`) requires both Redis environment variables. CI runs the harness as a required gate (`ai-eval` job, path-filtered to AI-relevant changes via `detect-changes`).
+`scripts/ask-eval.ts` runs the Q+A corpus (`content/ask-eval-corpus.ts`) against the live `/api/ask` handler. A judge model grades each answer pass/fail; results aggregate to correctness rate, jailbreak-resistance rate (reported as input-gate refusals and model-graded passes), p50/p95 latency, and cost-per-answer. A judge API failure marks the item errored and excludes it from the rates, the same way the calibration pass does. Corpus items may carry `locale: 'pt'`, which the eval sends so the pt-BR path is graded. A factual item declares at most four `facts`, each stated in its criterion and in the published system prompt, so the judge never requires more than the concise answer is expected to carry. The judge receives a ground-truth sheet built from the title, stack, credentials, career and education content and from `content/ask-facts.ts` and each role context and highlights, the same modules the system prompt composes its stack lines, work authorization and targeting from (`lib/eval/fact-sheet.ts`) and the run date, so a true fact the criterion omits, a start date included, is never read as invented; it accepts extra true detail and fails an omitted named fact, a contradiction of the criterion or the sheet, or a fabricated extra. The route and the eval share one low `ASK_TEMPERATURE`. Results write to `ask-eval-result.json`; publication to Upstash KV (`ask:eval:latest`) requires `EVAL_PUBLISH=1` and the Redis credentials, set only by the scheduled workflows; without the flag the script drops all Redis credentials from `process.env` at start (`lib/eval/publish-gate.ts`). CI runs the harness as a required gate (`ai-eval` job, path-filtered to AI-relevant changes via `detect-changes`).
 
 ### What I'd revisit at scale
 
@@ -482,7 +484,7 @@ The asymmetry is intentional: this is a kill switch, not a feature flag. During 
 
 A module-scope `log.info('kill-switch on cold start', { askEnabled: env.ASK_ENABLED ?? 'unset' })`, the structured logger reading the Zod `env` accessor, wrapped in a try/catch so a logger failure can't crash cold start, emits once per warm instance, providing deploy-time proof of the env-var value in Vercel runtime logs without inspecting the dashboard.
 
-The normalized off-keyword set is defined in `app/api/ask/route.ts`.
+The normalized off-keyword set is defined in `lib/ask/preflight.ts`.
 
 ---
 
@@ -559,6 +561,10 @@ Any failure blocks merge. No overrides except by branch protection bypass, and u
 
 Vercel Speed Insights collects real-user Core Web Vitals when `VERCEL=1`. The repository contains no weekly p75 alert job.
 
+### Delivery metrics
+
+`.github/workflows/weekly-metrics.yml` records deployment frequency, deployment failure rate, lead time, PR cycle time, main CI failure rate and flaky tests per e2e job once a week, scores each against its own rolling band (`metrics/bands.json`, `scripts/metrics/`), and opens one `metrics-breach` issue per metric that leaves its band. It calls no model, blocks no merge and keeps its history as a workflow artifact. See `docs/07-workflows.md`.
+
 ---
 
 ## 9. Observability strategy
@@ -582,7 +588,7 @@ Observability spans real-user telemetry, structured logs and client error captur
 
 ### `/api/ask` Q+A retention
 
-- **`lib/ask-log.ts`** persists every `/api/ask` interaction that reaches the model to Upstash KV `ask:log:{yyyy-mm-dd}:{requestId}` with 90-day TTL. Captures `{requestId, ts, ipHash, question (≤500c), answer (≤1000c), inputTokens, outputTokens, durationMs, status}`. A request rejected for an injection pattern or an invalid body writes no row; it leaves one `ask rejected` log line with the request id and `ipHash`. A request refused by the rate limit, the duplicate check or the budget writes no row either: it leaves an `ask refused` log line and adds to the `ask:refused:{yyyy-mm-dd}:{status}` counter (32-day TTL). Enables retrospective audit of what the LLM said about Erik + product learning on user questions.
+- **`lib/ask-log.ts`** persists every `/api/ask` interaction that reaches the model to Upstash KV `ask:log:{yyyy-mm-dd}:{requestId}` with 90-day TTL. Captures `{requestId, ts, ipHash, question (≤500c), answer (≤1000c), inputTokens, outputTokens, durationMs, status}`; `lib/ask/redact-pii.ts` replaces email addresses and phone numbers in the question and the answer with placeholders on the whole question and the whole collected answer, then cuts to 500 and 1000 characters, so no readable prefix of a contact detail is stored. A request rejected for an injection pattern or an invalid body writes no row; it leaves one `ask rejected` log line with the request id and `ipHash`. A request refused by the rate limit, the duplicate check or the budget writes no row either: it leaves an `ask refused` log line and adds to the `ask:refused:{yyyy-mm-dd}:{status}` counter (32-day TTL). Enables retrospective audit of what the LLM said about Erik + product learning on user questions.
 - **`X-Request-Id`** response header on every `/api/ask` response, early refusals included, surfaces the requestId to the client for the GDPR/LGPD erasure flow. Refusals store no row under that id; the shell records the id whenever the header is present, and forgetting an id with no row is harmless.
 - **`app/api/log/forget/route.ts`** accepts POST `{requestId}` and idempotently DELETEs the matching record across every day-partition a live record can carry (the 90-day TTL plus the current day, 91 dates, from `askLogDatesInTtl`). Rate-limited (21/IP/hour: the 20 ids one tab holds plus one contact receipt, both counts from `lib/forget-limits.ts`) via `getForgetLimit()`.
 
@@ -681,7 +687,7 @@ The workflow runs on PRs, pushes to `main` and manual dispatch. Jobs are not a s
 - `performance` starts a local production server, then runs desktop/mobile LHCI and axe-core. `e2e-functional` runs all eight Playwright projects: chromium, chromium-mobile, webkit-desktop, webkit-mobile, and the chromium, chromium-mobile, webkit-desktop and webkit-mobile component projects. `e2e-visual-chromium` has chromium and chromium-mobile projects and uploads Argos screenshots when credentials are available.
 - `ai-eval` waits for change detection, `quality-fast`, `typecheck` and `test`; it consumes no build output, so it does not wait for `build` or the browser jobs. It requires AI-relevant changes, no upstream failures or cancellations, and an internal PR or non-PR event.
 - `ci-gate` waits for all listed required jobs and fails on `failure` or `cancelled`; intentional skips pass. Semgrep is separate from that aggregate: its findings are report-only, but its fixture and SARIF-production checks can fail its own job.
-- CodeQL, production smoke, mutation tests and agent evals have separate workflows.
+- CodeQL, production smoke, mutation tests, agent evals and the weekly delivery metrics have separate workflows.
 
 Changes under `tests/visual/` or `tests/e2e/` set both `ui` and `app`, running visual and functional e2e gates. Root build and runtime files (`proxy.ts`, `instrumentation.ts`, `vercel.json`, `postcss.config.mjs`, `tsconfig.json`, `.nvmrc`, `.npmrc`, `mdx-components.tsx`) and the scripts the build or runtime jobs run also set `app`; those that change rendered output set `ui`. Every git-tracked root file and `scripts/` file must appear in `AI_PATHS`, `APP_PATHS`, `UI_PATHS` or `IGNORED_PATHS`; `pnpm check:detect-changes-paths` fails on a file in none of them, so a new file cannot silently skip the gated jobs. See `scripts/detect-changes-paths.mjs`.
 

@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { VIEWPORTS } from './_helpers/geometry';
+import { gotoSettled } from './_helpers/streamed';
 
 const MIN_TOUCH_TARGET_PX = 44;
 const SUBPIXEL_TOLERANCE_PX = 2;
@@ -14,7 +15,7 @@ test.describe('standalone links are 44px touch targets on a touch device', () =>
 
   for (const [path, selector] of Object.entries(STANDALONE_LINKS)) {
     test(`${path}: company, source and community links`, async ({ page }) => {
-      await page.goto(path);
+      await gotoSettled(page, path);
       const links = page.locator(selector);
       const count = await links.count();
       expect(count, `${selector} matched no link on ${path}`).toBeGreaterThan(0);

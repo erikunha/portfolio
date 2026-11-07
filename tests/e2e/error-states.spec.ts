@@ -2,6 +2,7 @@ import { expect, test } from '@playwright/test';
 import { errorsContent } from '../../content/errors';
 import { SITE_LOCALE } from '../../content/site-locale';
 import { waitForHydration } from './_helpers/hydration';
+import { drainRoutes } from './_helpers/routes';
 
 const MISSING_ROUTE = '/this-route-does-not-exist';
 const NOT_FOUND_STATUS = 404;
@@ -85,6 +86,8 @@ const CONTACT_SECTION = '#sec-contact';
 const TAP_TARGET_PX = 44;
 
 test.describe('crashed island', () => {
+  test.afterEach(({ page }) => drainRoutes(page));
+
   test('keeps a dashed box, explains itself and offers a 44px reload', async ({ page }) => {
     await page.route('**/_next/static/chunks/**/*.js', async (route) => {
       const response = await route.fetch();
