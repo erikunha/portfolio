@@ -115,11 +115,46 @@ flowchart TD
 
 `ci-gate` runs with `if: always()`, includes gitleaks and all build/test jobs above, and excludes semgrep, and is the terminal required status check. `__tests__/scripts/ci-gate-job.test.ts` asserts its `needs` list equals the full job set minus the self-reporting jobs, so adding a conditional job without fanning it in fails `pnpm test`.
 
-Other workflows: `codeql.yml` (SAST, weekly + PR), `mutation.yml` (Stryker, weekly; fails when the runner cannot kill a mutant, judged by `scripts/check-mutation-kills.mjs`), `smoke.yml` (post-deploy: healthz + 7 security headers + apex→www + `/api/ask`,`/api/contact` liveness), `claude-review.yml` (pull-request review, on a `/claude-review` comment), `claude.yml` (`@claude` interaction), and `agent-eval.yml` (advisory prompt evaluation).
+Other workflows: `codeql.yml` (SAST, weekly + PR), `mutation.yml` (Stryker, weekly; fails when the runner cannot kill a mutant, judged by `scripts/check-mutation-kills.mjs`), `smoke.yml` (post-deploy: healthz + 7 security headers + apex→www + `/api/ask`,`/api/contact` liveness), `claude-review.yml` (pull-request review, on a `/claude-review` comment), `claude.yml` (`@claude` interaction), `agent-eval.yml` (advisory prompt evaluation), and `weekly-metrics.yml` (delivery metrics and band check, below).
 
 **Lighthouse budgets (LHCI, hard gates):** desktop perf ≥95 / a11y =100 / BP ≥95 / SEO =100, LCP ≤1800ms, CLS ≤0.05, TBT ≤200ms; mobile perf ≥90, LCP ≤3500ms. Never disable a gate to merge - fix the property (doc 08).
 
 Both desktop and mobile collect `/`, `/pt`, `/cv`, `/summary`, `/links`, `/links/en` and every design-system route listed in their configs. Run `pnpm lhci` and `pnpm lhci:mobile` against a production server.
+
+### Weekly delivery metrics
+
+`weekly-metrics.yml` runs Mondays 07:00 UTC and on manual dispatch. It measures how the delivery process behaved over the last complete week (Monday to Monday, UTC), compares each number with its own recent history, and opens a GitHub issue when a number leaves its band. No model is called. It is a signal for the owner, not a merge gate, and it blocks no PR.
+
+```mermaid
+flowchart LR
+    prev["previous run's artifact<br/>metrics-weekly (90 days)"] --> collect
+    api["GitHub API<br/>PRs, deployments, CI runs, job logs"] --> collect["collect.mjs<br/>one record per week"]
+    collect --> hist["metrics/weekly.json<br/>(append, upsert by week)"]
+    hist --> bands["bands.mjs<br/>rolling mean and std,<br/>Western Electric rules"]
+    cfg["metrics/bands.json<br/>direction, minStd, tiers"] --> bands
+    bands --> rep["metrics/breaches.json"]
+    hist --> art["upload artifact<br/>metrics-weekly"]
+    rep --> issues["issues.mjs<br/>one issue per breached metric<br/>label metrics-breach"]
+```
+
+| Metric | Source | Worse when |
+| --- | --- | --- |
+| `deploymentFrequency` | successful `Production` deployments (GitHub deployments API) | lower |
+| `deploymentFailureRate` | share of decided `Production` deployments that failed | higher |
+| `leadTimeHoursMedian` | first commit to merge, merged PRs by people | higher |
+| `prCycleTimeHoursMedian` | PR opened to merged, merged PRs by people | higher |
+| `ciMainFailureRate` | `ci.yml` runs on `main` pushes that ended `failure` over `success` plus `failure` | higher |
+| `flakyPerE2eJob` | Playwright `N flaky` summary lines in `e2e-*` job logs, per job inspected | higher |
+
+Lighthouse LCP per route is not collected: LHCI uploads to `temporary-public-storage` and keeps no file, so the weekly record carries a `skipped.lighthouseLcp` reason. Storing it needs a `ci.yml` step that uploads `.lighthouseci`.
+
+**Bands.** For each metric the latest week is scored against the mean and sample standard deviation of the up to 12 weeks before it (`minStd` floors the deviation so a flat history cannot turn a small move into an infinite score). Six weeks of history are needed first. The tiers follow the control-band loop: 1 sigma on the bad side is **log**, 2 sigma is **diagnose**, 3 sigma is **propose**. The Western Electric run rules lift a quiet-looking week: 2 of the last 3 points beyond 2 sigma, 4 of the last 5 beyond 1 sigma, or 8 in a row on the bad side. Only the bad side counts, so an improvement never opens an issue. Tiers, direction and floors live in `metrics/bands.json`; `validateBandsConfig` rejects a malformed file.
+
+**Issues.** `issueFromTier` (default `diagnose`) sets the lowest tier that opens an issue. A breached metric gets one open issue labelled `metrics-breach`, found again through a hidden marker in its body; a repeat breach adds a comment instead of a second issue. Closing is manual, with the pull request that fixes the cause. Do not turn a metric into a target.
+
+**History.** The record is kept as the `metrics-weekly` artifact (90 days) and passed from one run to the next, so the workflow never pushes a branch and needs no write access to contents. The first run, or a run after the artifact expired, backfills 13 weeks from the API. A run after a gap collects the missing weeks. Locally, `node scripts/metrics/collect.mjs`, `bands.mjs` and `issues.mjs --dry-run` use `gh auth token` and write to the git-ignored `metrics/weekly.json`.
+
+The token is read-only except `issues: write`. `__tests__/scripts/weekly-metrics-workflow.test.ts` fails if the permissions widen, a secret other than `GITHUB_TOKEN` appears, an action is not pinned to a SHA, or a `run:` script expands a context expression.
 
 ## The PR lifecycle
 

@@ -558,6 +558,10 @@ Any failure blocks merge. No overrides except by branch protection bypass, and u
 
 Vercel Speed Insights collects real-user Core Web Vitals when `VERCEL=1`. The repository contains no weekly p75 alert job.
 
+### Delivery metrics
+
+`.github/workflows/weekly-metrics.yml` records deployment frequency, deployment failure rate, lead time, PR cycle time, main CI failure rate and flaky tests per e2e job once a week, scores each against its own rolling band (`metrics/bands.json`, `scripts/metrics/`), and opens one `metrics-breach` issue per metric that leaves its band. It calls no model, blocks no merge and keeps its history as a workflow artifact. See `docs/07-workflows.md`.
+
 ---
 
 ## 9. Observability strategy
@@ -680,7 +684,7 @@ The workflow runs on PRs, pushes to `main` and manual dispatch. Jobs are not a s
 - `performance` starts a local production server, then runs desktop/mobile LHCI and axe-core. `e2e-functional` runs all eight Playwright projects: chromium, chromium-mobile, webkit-desktop, webkit-mobile, and the chromium, chromium-mobile, webkit-desktop and webkit-mobile component projects. `e2e-visual-chromium` has chromium and chromium-mobile projects and uploads Argos screenshots when credentials are available.
 - `ai-eval` waits for change detection, `quality-fast`, `typecheck` and `test`; it consumes no build output, so it does not wait for `build` or the browser jobs. It requires AI-relevant changes, no upstream failures or cancellations, and an internal PR or non-PR event.
 - `ci-gate` waits for all listed required jobs and fails on `failure` or `cancelled`; intentional skips pass. Semgrep is separate from that aggregate: its findings are report-only, but its fixture and SARIF-production checks can fail its own job.
-- CodeQL, production smoke, mutation tests and agent evals have separate workflows.
+- CodeQL, production smoke, mutation tests, agent evals and the weekly delivery metrics have separate workflows.
 
 Changes under `tests/visual/` or `tests/e2e/` set both `ui` and `app`, running visual and functional e2e gates. Root build and runtime files (`proxy.ts`, `instrumentation.ts`, `vercel.json`, `postcss.config.mjs`, `tsconfig.json`, `.nvmrc`, `.npmrc`, `mdx-components.tsx`) and the scripts the build or runtime jobs run also set `app`; those that change rendered output set `ui`. Every git-tracked root file and `scripts/` file must appear in `AI_PATHS`, `APP_PATHS`, `UI_PATHS` or `IGNORED_PATHS`; `pnpm check:detect-changes-paths` fails on a file in none of them, so a new file cannot silently skip the gated jobs. See `scripts/detect-changes-paths.mjs`.
 
