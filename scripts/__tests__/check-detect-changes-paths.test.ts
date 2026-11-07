@@ -1,5 +1,13 @@
+import { execFileSync } from 'node:child_process';
 import { describe, expect, it } from 'vitest';
-import { assertResolves, classifyPathspec, globMatches } from '../check-detect-changes-paths.mjs';
+import {
+  assertResolves,
+  classifyPathspec,
+  globMatches,
+  isGateScoped,
+  unclassifiedFiles,
+} from '../check-detect-changes-paths.mjs';
+import { AI_PATHS, APP_PATHS, IGNORED_PATHS, UI_PATHS } from '../detect-changes-paths.mjs';
 
 describe('classifyPathspec', () => {
   it('classifies literal, glob, and exclude pathspecs with the right base', () => {
@@ -52,5 +60,43 @@ describe('assertResolves', () => {
     const v = assertResolves(':(exclude)lib/eval/**', { existsSync: () => false });
     expect(v.ok).toBe(false);
     expect(v.ok === false && v.reason).toContain('exclude');
+  });
+});
+
+describe('unclassifiedFiles (fail closed for new root and scripts files)', () => {
+  it('flags a root file and a scripts file that no filter or ignore entry covers', () => {
+    expect(unclassifiedFiles(['brand-new.config.ts', 'scripts/brand-new.mjs'])).toEqual([
+      'brand-new.config.ts',
+      'scripts/brand-new.mjs',
+    ]);
+  });
+
+  it('ignores files outside the root and scripts scope', () => {
+    expect(isGateScoped('docs/readme.md')).toBe(false);
+    expect(unclassifiedFiles(['docs/readme.md'])).toEqual([]);
+  });
+
+  it.each([
+    'proxy.ts',
+    'instrumentation.ts',
+    'vercel.json',
+    'postcss.config.mjs',
+    'tsconfig.json',
+    '.nvmrc',
+    'scripts/strip-next-polyfills.mjs',
+  ])('arms the app filter for %s', (file) => {
+    expect(APP_PATHS).toContain(file);
+  });
+
+  it('classifies every git-tracked root and scripts file', () => {
+    const tracked = execFileSync('git', ['ls-files', '-z'], { encoding: 'utf8' })
+      .split('\0')
+      .filter(Boolean);
+    expect(unclassifiedFiles(tracked)).toEqual([]);
+  });
+
+  it('lists no ignore entry that also arms a filter', () => {
+    const armed = [...AI_PATHS, ...APP_PATHS, ...UI_PATHS];
+    expect(IGNORED_PATHS.filter((p) => armed.includes(p))).toEqual([]);
   });
 });
