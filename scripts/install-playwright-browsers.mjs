@@ -1,39 +1,41 @@
 #!/usr/bin/env node
-import { spawn as nodeSpawn } from 'node:child_process';
+import { spawnSync } from 'node:child_process';
 import { realpathSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
 
 export const INSTALL_ATTEMPTS = 3;
-export const INSTALL_ATTEMPT_TIMEOUT_MS = 4 * 60 * 1000;
+export const APT_CONFIG_PATH = '/etc/apt/apt.conf.d/99ci-mirror-resilience';
+export const APT_CONFIG = [
+  'DPkg::Lock::Timeout "600";',
+  'Acquire::Retries "5";',
+  'Acquire::http::Timeout "30";',
+  'Acquire::https::Timeout "30";',
+].join('\n');
 const SUCCESS = 0;
 const FAILURE = 1;
-const KILL_SIGNAL = 'SIGKILL';
+const LINUX = 'linux';
 
-export function runAttempt(args, { spawn = nodeSpawn, kill = process.kill } = {}) {
-  return new Promise((resolve) => {
-    const child = spawn('pnpm', args, { stdio: 'inherit', detached: true });
-    let timedOut = false;
-    const timer = setTimeout(() => {
-      timedOut = true;
-      kill(-child.pid, KILL_SIGNAL);
-    }, INSTALL_ATTEMPT_TIMEOUT_MS);
-    child.on('exit', (status) => {
-      clearTimeout(timer);
-      resolve({ status, timedOut });
-    });
+export function configureApt({
+  run = spawnSync,
+  platform = process.platform,
+  ci = process.env.CI,
+} = {}) {
+  if (platform !== LINUX || !ci) return false;
+  const result = run('sudo', ['tee', APT_CONFIG_PATH], {
+    input: `${APT_CONFIG}\n`,
+    stdio: ['pipe', 'ignore', 'inherit'],
   });
+  return result.status === SUCCESS;
 }
 
-export async function installWithRetry(
-  browsers,
-  { attempt = runAttempt, log = console.error } = {},
-) {
+export function installWithRetry(browsers, { run = spawnSync, log = console.error } = {}) {
   const args = ['playwright', 'install', '--with-deps', ...browsers];
-  for (let n = 1; n <= INSTALL_ATTEMPTS; n++) {
-    const result = await attempt(args);
-    if (result.status === SUCCESS && !result.timedOut) return SUCCESS;
-    const reason = result.timedOut ? 'timed out' : `exited ${result.status}`;
-    log(`[install-playwright-browsers] attempt ${n}/${INSTALL_ATTEMPTS} ${reason}`);
+  for (let attempt = 1; attempt <= INSTALL_ATTEMPTS; attempt++) {
+    const result = run('pnpm', args, { stdio: 'inherit' });
+    if (result.status === SUCCESS) return SUCCESS;
+    log(
+      `[install-playwright-browsers] attempt ${attempt}/${INSTALL_ATTEMPTS} exited ${result.status}`,
+    );
   }
   return FAILURE;
 }
@@ -47,5 +49,6 @@ if (
     console.error('usage: install-playwright-browsers.mjs <browser...>');
     process.exit(FAILURE);
   }
-  process.exit(await installWithRetry(browsers));
+  configureApt();
+  process.exit(installWithRetry(browsers));
 }
