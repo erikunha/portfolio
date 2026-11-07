@@ -32,7 +32,7 @@ flowchart TB
 
 ## Repository enforcement
 
-The repository registers two Claude Code hooks, a `Stop` hook running `scripts/stop-verify.mjs` (Biome on changed files and the typecheck; skipped in CI) and a `PreToolUse` hook running `scripts/guard-merge-main.mjs` (blocks `gh pr merge` when the PR base is `main` or unknown), and permission deny rules for broad `git add`, npm and yarn installs and local env reads. Plan review and API review are conventions in `AGENTS.md`, not hook gates. User-level runtime policies are configured outside this repository.
+The repository registers three Claude Code hooks, a `Stop` hook running `scripts/stop-verify.mjs` (Biome on changed files and the typecheck; skipped in CI), a `PreToolUse` hook running `scripts/guard-merge-main.mjs` (blocks `gh pr merge` when the PR base is `main` or unknown) and a `PreToolUse` hook running `scripts/guard-test-edits.mjs` (refuses edits to existing test files while `FIX_MODE=1` or `.claude/fix-mode` declares a fix task), and permission deny rules for broad `git add`, npm and yarn installs and local env reads. Plan review and API review are conventions in `AGENTS.md`, not hook gates. User-level runtime policies are configured outside this repository.
 
 Git hooks enforce separate stages:
 - `.husky/pre-commit` runs `pnpm check` and `pnpm gitleaks:staged`.

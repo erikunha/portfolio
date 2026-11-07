@@ -12,8 +12,8 @@ paths:
 
 Path-scoped: loads only when working on API/server files. Full rationale in
 `STANDARDS.md` Ch.2 (API & Server Boundary) and Ch.9 (Security & Privacy). The
-hard gates below are enforced by hooks regardless of whether this file is in
-context; this is the implementation guidance, not the enforcement.
+merge-blocking check on this surface is the behavioral test suite (the required
+`test` job); this file is the implementation guidance, not the enforcement.
 
 ## Handler contract
 
@@ -32,8 +32,8 @@ context; this is the implementation guidance, not the enforcement.
 
 ## Security surface
 
-- The hard gates on this surface are the API behavioural tests, static analysis (`pnpm lint:semgrep`), and
-  CodeQL. Editing `app/api/**`, `lib/rate-limit.ts`, or `proxy.ts` means
+- The behavioral tests are the only merge-blocking check on this surface. Semgrep (`pnpm lint:semgrep`,
+  report-only in CI) and CodeQL report to code scanning and block nothing. Editing `app/api/**`, `lib/rate-limit.ts`, or `proxy.ts` means
   re-reading the diff for the abuse paths each of them closes.
 - CSP and `Reporting-Endpoints` headers come from **`proxy.ts`**, not
   `next.config.ts` (which sets the static headers: COOP, X-Frame-Options, HSTS,

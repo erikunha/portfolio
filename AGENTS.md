@@ -46,6 +46,7 @@ proposing infrastructure changes, and if a request conflicts with a budget or ga
 - A gate measures a real property. Fix the property, never the gate: no audit set to `"off"`, lowered threshold, ignore-list entry, or code wrapped to hide it from the checker. The one acceptable gate edit corrects an assertion that fires on the ideal state. A gate you cannot fix in scope gets escalated with root cause, options and the minimum change, not merged suppressed.
 - A fix needs: the root cause in one sentence before code; the same pattern searched across the codebase; no deferred debt (inherent limits go in `DECISIONS.md`); the measured property re-checked, with the before and after in the commit body.
 - Tests come first for new files, functions and scripts: write the failing test, watch it fail, make it pass. Assertions observe behavior, never source text. A claim of the form "held by X" is honest only after you break the property and watch X fail.
+- While fixing a defect, never edit an existing test to make it pass: add a new test file for the regression and change the source. Claude Code enforces this with a hook (`scripts/guard-test-edits.mjs`) while `FIX_MODE=1` is set or `.claude/fix-mode` exists, and refuses with exit 2. Codex has no equivalent hook here, so for Codex this is a rule you follow. If an existing test is wrong, say so to the owner before touching it.
 
 ## Stack (locked)
 
@@ -58,7 +59,7 @@ proposing infrastructure changes, and if a request conflicts with a budget or ga
 
 ## Budgets
 
-Lighthouse (`lighthouserc.json`, `lighthouserc.mobile.json`), `pnpm route-js-check` and axe enforce the budgets; INP under 200ms is checked in browser tests. Never disable a gate to merge.
+Lighthouse (`lighthouserc.json`, `lighthouserc.mobile.json`), `pnpm route-js-check` and axe enforce the budgets. `__tests__/lighthouse-budgets.test.ts` fails when a Lighthouse assertion is lowered, warned or turned off. The Lighthouse INP audit is off; the only INP guard is the shell input keystroke check in `tests/e2e/cross-cutting.spec.ts` (Chromium). Never disable a gate to merge.
 
 `route-js-check` caps first-load JS per route at 164.7KB gzipped and reports the app-owned part (total minus the measured 131.9KB framework floor, so 32.8KB of headroom). `bundle-check` sums chunks globally and cannot see a per-route regression. A framework bump moves the floor: re-measure it and change floor and total together (`DECISIONS.md` 2026-10-23).
 
@@ -96,9 +97,9 @@ Lighthouse (`lighthouserc.json`, `lighthouserc.mobile.json`), `pnpm route-js-che
 - Before every push state YES or NO: does the change touch `tests/visual/visual.spec.ts` baselines (darwin and linux) or `tests/e2e/design-system-components.spec.ts` baselines (darwin only)? On YES follow the `visual-baseline-regen` skill. Any color, layout, typography or spacing change regenerates baselines before the PR.
 - Before implementing a plan that adds a client island or dependency, or touches the API surface, check it with the `plan-review` skill. When a performance gate fails or a client change may cost JS, use `perf-budget`; when routes, identity copy or metadata change, use `seo-discovery`.
 - After implementing a section or component, look at `pnpm dev` at 1280x720 and 375x812 in a real browser before writing or changing tests. Fix what looks wrong first.
-- Review is opt-in: `claude-review` runs only when an owner comments `/claude-review`, and it is never a merge gate. Read your own diff before opening the PR. Fix all findings in one commit, reply in each thread with what was done and the fix SHA, then resolve.
+- Review is opt-in: `claude-review` runs only when an owner comments `/claude-review`, and it is never a merge gate or an approver. Read your own diff before opening the PR. Only correctness, security, accessibility, performance budget, test validity and spec or plan compliance block (`REVIEW.md`); style and naming never do, and nits are capped at five. Fix the blocking findings in one commit, reply in each thread with what was done and the fix SHA, then resolve. The loop stops after three rounds: remaining non-blocking findings become follow-up issues named in the thread reply, and a blocking one still open goes to the owner.
 - Every PR comment is a review thread on a file and line, never a timeline comment: `pnpm pr:gate` reads `reviewThreads` and fails `silent_resolve`. Reply in the existing thread or create one with `commit_id`, `path` and `line`.
-- Merge readiness: CI green, base contained, `pnpm pr:gate` passes. Rebase onto the base before pushing and check that the pushed SHA is the PR head. Agents never merge into `main`; the owner runs that merge. Sub-PRs into an integration branch (`feat/*`) may be merged by an agent once CI is green (Argos excepted) and the review is done.
+- Merge readiness: CI green, base contained, `pnpm pr:gate` passes. Rebase onto the base before pushing and check that the pushed SHA is the PR head. Agents never merge into `main`; the owner runs that merge (a hook enforces it for `gh pr merge` in Claude Code only; the `DECISIONS.md` entry of 2026-11-07 lists what else holds it). Sub-PRs into an integration branch (`feat/*`) may be merged by an agent once CI is green (Argos excepted) and the review is done.
 - Emergency rollback: `vercel ls`, then `vercel promote <url>` (30s, no code change); or `git revert HEAD && git push --no-verify`. Verify with `curl https://erikunha.dev/api/healthz | jq .sha`.
 
 ## Subagents

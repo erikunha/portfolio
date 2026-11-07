@@ -333,6 +333,16 @@ describe('AI configuration guard', () => {
     );
     expect(guard?.matcher).toBe('Bash');
     expect(existsSync(join(ROOT, 'scripts/guard-merge-main.mjs'))).toBe(true);
+    const testGuard = (settings.hooks?.PreToolUse ?? []).find((entry) =>
+      entry.hooks.some((hook) => hook.command.includes('scripts/guard-test-edits.mjs')),
+    );
+    expect(testGuard?.matcher.split('|').sort()).toEqual([
+      'Edit',
+      'MultiEdit',
+      'NotebookEdit',
+      'Write',
+    ]);
+    expect(existsSync(join(ROOT, 'scripts/guard-test-edits.mjs'))).toBe(true);
     const commands = (settings.hooks?.Stop ?? []).flatMap((entry) =>
       entry.hooks.map((hook) => hook.command),
     );

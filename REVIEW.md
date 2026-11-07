@@ -15,6 +15,25 @@ branch; a human or agent review of a diff follows it too.
 - **MINOR**: optional polish that does not block the merge. Report at most five, and none when
   there is a CRITICAL or IMPORTANT finding in the same file.
 
+## What blocks
+
+Only a finding in one of these six categories blocks the merge:
+
+1. Correctness: wrong behavior on a reachable path, or a doc or diagram that now contradicts the code.
+2. Security.
+3. Accessibility.
+4. Performance budget.
+5. Test validity: a fix with no regression test, a test that passes for the wrong reason, an
+   assertion weakened to go green.
+6. Spec or plan compliance: the change does not do what the spec, plan or PR description says.
+
+Style, naming, formatting taste and refactors the change does not need never block, whatever the
+severity badge says. Report at most five nits (MINOR) in a review.
+
+The loop stops after three rounds. A round is one push followed by one review. Findings still open
+after round three that are not blocking become follow-up issues, named in the thread reply before the
+thread is resolved. A blocking finding still open after round three goes to the owner, who decides.
+
 Severity follows consequence, not the verdict you want. A finding without a `file:line` on the head
 commit and a statement of what breaks, and when, is dropped.
 

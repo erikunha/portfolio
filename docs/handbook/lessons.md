@@ -10,7 +10,7 @@ The prompt for a manual or agent review that applies these rules to a diff is `d
 
 ## Rules
 
-1. Fix every finding in the PR that received it. Never reply "fixed in #NNN" or cite a commit
+1. Fix every blocking finding in the PR that received it (`REVIEW.md` lists what blocks). Never reply "fixed in #NNN" or cite a commit
    that is not reachable from this PR's head. Check: `git merge-base --is-ancestor <sha> HEAD`.
 2. A commit body cites only SHAs reachable from the branch it lands on. Describe off-branch facts
    in words. Check: the same `merge-base --is-ancestor` test for every SHA in the body.

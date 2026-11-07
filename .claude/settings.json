@@ -26,6 +26,16 @@
             "timeout": 30
           }
         ]
+      },
+      {
+        "matcher": "Edit|Write|MultiEdit|NotebookEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR/scripts/guard-test-edits.mjs\"",
+            "timeout": 30
+          }
+        ]
       }
     ],
     "Stop": [
