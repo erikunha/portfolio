@@ -2,6 +2,9 @@
 
 ADR-lite running log. One bullet per decision · date · reversibility note.
 
+## 2026-11-07: Least-privilege workflow tokens
+
+- **2026-11-07** · **Every workflow declares a top-level `permissions` block no broader than `contents: read` (`{}` for `smoke.yml`, which uses no token); extra scopes live on the one job that needs them.** `codeql.yml` and `smoke.yml` had no top-level block, and `claude.yml` and `claude-review.yml` granted write scopes (`contents`, `pull-requests`, `issues`, `id-token`) to the whole workflow, which OpenSSF Scorecard Token-Permissions flags and which would widen silently when a job is added. Held by `__tests__/scripts/workflow-permissions.test.ts`. Reversible: revert the YAML move and the test; no scope was added or removed, only relocated (`smoke.yml` drops an unused `deployments: read`).
 ## 2026-11-07: Playwright flakes fixed at the root, then `failOnFlakyTests` on
 
 - **2026-11-07** · **A CI run fails when a test passes only on a retry (`failOnFlakyTests: !!process.env.CI`); retries stay at two so a failure still leaves a trace.** Recent green runs reported 1 to 6 flaky tests each because a retry turned a real race into a pass. Locally nothing retries, so a flake fails on first sight. Held by `__tests__/scripts/playwright-flaky-policy.test.ts`. Lands in c8ceb14. _Reversible: delete the config line and the test._

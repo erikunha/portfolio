@@ -8,7 +8,7 @@ const USES = /uses:\s*(?<repo>[\w.-]+\/[\w.-]+)(?:\/[^@\s]+)?@(?<sha>[0-9a-f]{40
 const ACTION_PATH = /_actions\/(?<repo>[\w.-]+\/[\w.-]+)\/(?<sha>[0-9a-f]{40})/g;
 
 const workflows = readdirSync(WORKFLOW_DIR)
-  .filter((file) => file.endsWith('.yml'))
+  .filter((file) => /\.ya?ml$/.test(file))
   .map((file) => ({ file, text: readFileSync(join(WORKFLOW_DIR, file), 'utf8') }));
 
 describe('action SHAs embedded in workflow text', () => {

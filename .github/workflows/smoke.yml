@@ -6,14 +6,14 @@ on:
 env:
   CANONICAL_HOST: https://www.erikunha.dev
 
+permissions: {}
+
 jobs:
   smoke:
     if: >
       github.event.deployment_status.state == 'success' &&
       github.event.deployment.environment == 'Production'
     runs-on: ubuntu-24.04
-    permissions:
-      deployments: read
     timeout-minutes: 5
 
     steps:
