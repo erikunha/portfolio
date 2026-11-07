@@ -101,3 +101,35 @@ export const PLAYWRIGHT_IMAGE = 'mcr.microsoft.com/playwright';
 export const PLAYWRIGHT_IMAGE_SUFFIX = 'noble';
 export const VERCEL_CLI_VERSION = '65.2.0';
 export const DEFAULT_REPEAT = 3;
+
+export const HOST_MOUNT = '/host';
+export const CONTAINER_ROOT = '/work';
+export const CONTAINER_PORT = 3000;
+export const SESSION_OWNER_LABEL = 'ci-predict.owner';
+export const SESSION_NAME_PREFIX = 'ci-predict-';
+export const SERVER_LOG_PATH = '/tmp/server.log';
+export const SERVER_PID_PATH = '/tmp/server.pid';
+export const DRY_SERVER_URL = 'http://localhost:0';
+export const LOCAL_REPOSITORY = 'local/repository';
+export const CI_ARCH = 'x64';
+export const MAIN_BASE = 'origin/main';
+export const INTEGRATION_BASE_PREFIX = 'origin/feat/';
+
+export const EXIT = { OK: 0, FAILED: 1, DRY_RUN: 2, NOT_VERIFIED: 3 } as const;
+
+export const serverKey = (env: Record<string, string>): string =>
+  JSON.stringify(Object.entries(env).sort(([a], [b]) => a.localeCompare(b)));
+
+export function chooseBase(candidates: { ref: string; ahead: number }[]): string | undefined {
+  let best: { ref: string; ahead: number } | undefined;
+  for (const candidate of candidates) {
+    if (best === undefined || candidate.ahead < best.ahead) best = candidate;
+  }
+  return best?.ref;
+}
+
+export function archCaveat(arch: string): string | undefined {
+  if (arch === CI_ARCH) return undefined;
+  return `this machine is ${arch} and CI runs ${CI_ARCH}: the Linux container runs ${arch} too, so font metrics, WebKit rendering and timing can differ from CI`;
+}
+export const BUILD_COMMAND = 'pnpm build';

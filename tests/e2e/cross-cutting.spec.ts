@@ -4,7 +4,6 @@ import { waitForHydration } from './_helpers/hydration';
 import { installMockBackend } from './_helpers/mock-backend';
 import { gotoSettled } from './_helpers/streamed';
 
-const BASE_URL = 'http://localhost:3000';
 const SHELL_INPUT = '[aria-label="shell command"]';
 const KEYSTROKE_COMMIT_BUDGET_MS = 50;
 const LONG_TASK_MS = 100;
@@ -139,13 +138,16 @@ test.describe('cross-cutting', () => {
     await expect(main).toHaveAttribute('tabindex', '-1');
   });
 
-  test('2 — CSP does not block any same-origin asset', async ({ page }, testInfo) => {
+  test('2 — CSP does not block any same-origin asset', async ({ page, baseURL }, testInfo) => {
+    if (baseURL === undefined)
+      throw new Error('the project has no baseURL to compare origins with');
+    const appOrigin = new URL(baseURL).origin;
     const sameOriginFailures: { url: string; reason: string }[] = [];
     page.on('requestfailed', (req) => {
       const url = req.url();
       let sameOrigin = false;
       try {
-        sameOrigin = new URL(url).origin === new URL(BASE_URL).origin;
+        sameOrigin = new URL(url).origin === appOrigin;
       } catch {
         sameOrigin = false;
       }
@@ -160,7 +162,7 @@ test.describe('cross-cutting', () => {
       const url = resp.url();
       let sameOrigin = false;
       try {
-        sameOrigin = new URL(url).origin === new URL(BASE_URL).origin;
+        sameOrigin = new URL(url).origin === appOrigin;
       } catch {
         sameOrigin = false;
       }

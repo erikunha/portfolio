@@ -6,12 +6,20 @@ export interface ExprObject {
 }
 export type ExprContext = ExprObject;
 
+export interface RunDefaults {
+  shell?: string;
+  workingDirectory?: string;
+}
+
 export interface WorkflowStep {
   id?: string;
   name?: string;
   if?: string;
   uses?: string;
   run?: string;
+  shell?: string;
+  workingDirectory?: string;
+  continueOnError: boolean;
   env: Record<string, string>;
 }
 
@@ -20,6 +28,7 @@ export interface WorkflowJob {
   needs: string[];
   if?: string;
   matrixProjects: string[];
+  defaults: RunDefaults;
   env: Record<string, string>;
   outputs: Record<string, string>;
   steps: WorkflowStep[];
@@ -28,6 +37,8 @@ export interface WorkflowJob {
 export interface Workflow {
   jobs: Record<string, WorkflowJob>;
   order: string[];
+  env: Record<string, string>;
+  defaults: RunDefaults;
 }
 
 export class UnsupportedExpressionError extends Error {}
@@ -40,6 +51,7 @@ const SNIPPET_CHARS = 20;
 const QUOTE = "'";
 const ESCAPED_QUOTE = "''";
 const WILDCARD = '*';
+const SECRETS_PREFIX = 'secrets.';
 const MATRIX_AXIS = 'project';
 
 type Token = { kind: 'string' | 'number' | 'op' | 'path'; text: string };
@@ -202,7 +214,13 @@ export function evaluate(
         return fn(args);
       }
       if (token.text in LITERALS) return LITERALS[token.text];
-      if (token.text.startsWith('secrets.')) return '';
+      if (token.text.startsWith(SECRETS_PREFIX)) return '';
+      const root = token.text.split('.')[0] ?? token.text;
+      if (!(root in ctx)) {
+        throw new UnsupportedExpressionError(
+          `context "${root}" is not available to the predictor (in ${token.text})`,
+        );
+      }
       return lookup(token.text, ctx);
     }
     throw new UnsupportedExpressionError(`unexpected token ${token.text}`);
@@ -237,20 +255,88 @@ interface RawStep {
   if?: string | boolean;
   uses?: string;
   run?: string;
+  shell?: string;
+  'working-directory'?: string;
+  'continue-on-error'?: unknown;
   env?: Record<string, unknown>;
+}
+
+interface RawDefaults {
+  run?: { shell?: string; 'working-directory'?: string };
 }
 
 interface RawJob {
   needs?: string | string[];
   if?: string | boolean;
   strategy?: { matrix?: Record<string, unknown> };
+  defaults?: RawDefaults;
   env?: Record<string, unknown>;
   outputs?: Record<string, unknown>;
   steps?: RawStep[];
 }
 
+const WORKFLOW_KEYS = ['name', 'on', 'concurrency', 'permissions', 'jobs', 'env', 'defaults'];
+const JOB_KEYS = [
+  'name',
+  'runs-on',
+  'permissions',
+  'timeout-minutes',
+  'concurrency',
+  'steps',
+  'if',
+  'needs',
+  'env',
+  'strategy',
+  'outputs',
+  'defaults',
+];
+const STRATEGY_KEYS = ['matrix', 'fail-fast'];
+const STEP_KEYS = [
+  'id',
+  'name',
+  'if',
+  'uses',
+  'with',
+  'run',
+  'shell',
+  'working-directory',
+  'continue-on-error',
+  'timeout-minutes',
+  'env',
+];
+const DEFAULTS_KEYS = ['run'];
+const DEFAULTS_RUN_KEYS = ['shell', 'working-directory'];
+
+function allowKeys(scope: string, value: object | undefined, allowed: string[]): void {
+  const unknown = Object.keys(value ?? {}).filter((key) => !allowed.includes(key));
+  if (unknown.length > 0) {
+    throw new UnsupportedExpressionError(
+      `${scope}: "${unknown.join('", "')}" is not executed by the predictor; teach it or the drift guard stays blind to it`,
+    );
+  }
+}
+
 const stringifyRecord = (record: Record<string, unknown> | undefined): Record<string, string> =>
   Object.fromEntries(Object.entries(record ?? {}).map(([key, value]) => [key, String(value)]));
+
+function runDefaults(scope: string, raw: RawDefaults | undefined): RunDefaults {
+  allowKeys(`${scope} defaults`, raw, DEFAULTS_KEYS);
+  allowKeys(`${scope} defaults.run`, raw?.run, DEFAULTS_RUN_KEYS);
+  return {
+    ...(raw?.run?.shell === undefined ? {} : { shell: raw.run.shell }),
+    ...(raw?.run?.['working-directory'] === undefined
+      ? {}
+      : { workingDirectory: raw.run['working-directory'] }),
+  };
+}
+
+function continueOnError(scope: string, value: unknown): boolean {
+  if (value === undefined || value === false) return false;
+  if (value === true) return true;
+  throw new UnsupportedExpressionError(
+    `${scope}: continue-on-error must be a literal true or false`,
+  );
+}
 
 function matrixProjects(id: string, matrix: Record<string, unknown> | undefined): string[] {
   if (matrix === undefined) return [];
@@ -284,25 +370,47 @@ function topologicalOrder(jobs: Record<string, WorkflowJob>): string[] {
 }
 
 export function parseWorkflow(text: string): Workflow {
-  const document = parse(text) as { jobs?: Record<string, RawJob> };
+  const document = parse(text) as {
+    jobs?: Record<string, RawJob>;
+    env?: Record<string, unknown>;
+    defaults?: RawDefaults;
+  };
+  allowKeys('workflow', document, WORKFLOW_KEYS);
   const jobs: Record<string, WorkflowJob> = {};
   for (const [id, raw] of Object.entries(document.jobs ?? {})) {
+    allowKeys(`job ${id}`, raw, JOB_KEYS);
+    allowKeys(`job ${id} strategy`, raw.strategy, STRATEGY_KEYS);
     jobs[id] = {
       id,
       needs: raw.needs === undefined ? [] : [raw.needs].flat(),
       ...(raw.if === undefined ? {} : { if: String(raw.if) }),
       matrixProjects: matrixProjects(id, raw.strategy?.matrix),
+      defaults: runDefaults(`job ${id}`, raw.defaults),
       env: stringifyRecord(raw.env),
       outputs: stringifyRecord(raw.outputs),
-      steps: (raw.steps ?? []).map((step) => ({
-        ...(step.id === undefined ? {} : { id: step.id }),
-        ...(step.name === undefined ? {} : { name: step.name }),
-        ...(step.if === undefined ? {} : { if: String(step.if) }),
-        ...(step.uses === undefined ? {} : { uses: step.uses }),
-        ...(step.run === undefined ? {} : { run: step.run }),
-        env: stringifyRecord(step.env),
-      })),
+      steps: (raw.steps ?? []).map((step, index) => {
+        const scope = `job ${id} step ${step.name ?? index + 1}`;
+        allowKeys(scope, step, STEP_KEYS);
+        return {
+          ...(step.id === undefined ? {} : { id: step.id }),
+          ...(step.name === undefined ? {} : { name: step.name }),
+          ...(step.if === undefined ? {} : { if: String(step.if) }),
+          ...(step.uses === undefined ? {} : { uses: step.uses }),
+          ...(step.run === undefined ? {} : { run: step.run }),
+          ...(step.shell === undefined ? {} : { shell: step.shell }),
+          ...(step['working-directory'] === undefined
+            ? {}
+            : { workingDirectory: step['working-directory'] }),
+          continueOnError: continueOnError(scope, step['continue-on-error']),
+          env: stringifyRecord(step.env),
+        };
+      }),
     };
   }
-  return { jobs, order: topologicalOrder(jobs) };
+  return {
+    jobs,
+    order: topologicalOrder(jobs),
+    env: stringifyRecord(document.env),
+    defaults: runDefaults('workflow', document.defaults),
+  };
 }

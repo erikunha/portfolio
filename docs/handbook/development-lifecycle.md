@@ -61,7 +61,7 @@ Before opening the PR, read the diff. The specialist self-review runs on the pus
 
 ### 8. Pre-PR -> open PR
 
-Run `pnpm ci:predict` (add `--linux` when the change touches layout, fonts or metrics): it runs every CI job the commits trigger, including the verify chain, the bundle and route-JS gates, the new or changed e2e specs and the visual spec, and it subsumes `pnpm ci:local`, `pnpm bundle-check` and `pnpm route-js-check`. Lighthouse is host-dependent and stays with `pnpm gates:runtime` (build, server, LHCI desktop/mobile, axe, E2E). Docs-only changes skip bundle, route-JS and runtime gates under the project workflow. Then `gh pr create` fills the PR template; every section must be non-empty, which is a convention checked by the author and the reviewer, not a gate.
+Run `pnpm ci:predict` (add `--linux` when the change touches layout, fonts or metrics): it runs every CI job the commits trigger and says which it could not verify (exit 0 only for a fully verified clean run, 3 when jobs are partial or not run, 2 for `--list`), including the verify chain, the bundle and route-JS gates, the new or changed e2e specs and the visual spec, and it subsumes `pnpm ci:local`, `pnpm bundle-check` and `pnpm route-js-check`. Lighthouse is host-dependent and stays with `pnpm gates:runtime` (build, server, LHCI desktop/mobile, axe, E2E). Docs-only changes skip bundle, route-JS and runtime gates under the project workflow. Then `gh pr create` fills the PR template; every section must be non-empty, which is a convention checked by the author and the reviewer, not a gate.
 
 ### 9. Review threads
 

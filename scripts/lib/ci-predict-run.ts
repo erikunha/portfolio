@@ -4,18 +4,25 @@ import { basename, dirname, join } from 'node:path';
 import {
   ACTION_CLASSES,
   actionName,
+  BUILD_COMMAND,
+  CONTAINER_ROOT,
+  EXIT,
+  HOST_MOUNT,
   JOB_POLICIES,
   PLAYWRIGHT_IMAGE,
   PLAYWRIGHT_IMAGE_SUFFIX,
   POLICY_REASONS,
+  SESSION_OWNER_LABEL,
   VERCEL_CLI_VERSION,
 } from './ci-predict-policy';
+import { shellCommand } from './ci-predict-process';
 import {
   conditionHolds,
   type ExprContext,
   type ExprFunctions,
   type ExprObject,
   interpolate,
+  UnsupportedExpressionError,
   type Workflow,
   type WorkflowJob,
   type WorkflowStep,
@@ -25,10 +32,13 @@ export interface ExecRequest {
   cmd: string;
   env: Record<string, string>;
   label: string;
+  shell?: string | undefined;
+  cwd?: string | undefined;
 }
 export interface ExecResult {
   code: number;
   output: string;
+  dry?: boolean;
 }
 export interface ServerUrls {
   hostUrl: string;
@@ -46,7 +56,7 @@ export interface Deps {
   playwright(request: PlaywrightRequest): Promise<ExecResult>;
   ensureServer(env: Record<string, string>): Promise<ServerUrls>;
   commandExists(name: string): boolean;
-  fileExists(path: string): boolean;
+  anyFileMatches(pattern: string): boolean;
   now(): number;
 }
 export interface RunContext {
@@ -59,13 +69,15 @@ export interface RunContext {
     evalLive: boolean;
     keepGoing: boolean;
     repeat: number;
+    dryRun: boolean;
+    stamp: { valid: boolean; reason: string };
   };
   changedFiles: string[];
   specProjects: Map<string, Set<string>>;
   specSources: Map<string, string>;
   evalRun: { linkedCheckout: string; workdir: string } | null;
 }
-export type Verdict = 'pass' | 'fail' | 'not-run' | 'skipped' | 'partial';
+export type Verdict = 'pass' | 'fail' | 'not-run' | 'skipped' | 'partial' | 'would-run';
 export interface Row {
   job: string;
   verdict: Verdict;
@@ -73,17 +85,21 @@ export interface Row {
   ms: number;
   detail?: string;
 }
+export interface Judgement {
+  code: number;
+  headline: string;
+}
 export interface Prediction {
   rows: Row[];
   notes: string[];
   failed: boolean;
+  outcome: Judgement;
 }
 
 const MS_PER_SECOND = 1000;
 const KEY_SEPARATOR = '\u0000';
 const EVENT_NAME = 'pull_request';
 const CI_ENV: Record<string, string> = { CI: 'true' };
-const BUILD_COMMAND = 'pnpm build';
 const SERVER_COMMAND = /^pnpm start\b/;
 const WAIT_COMMAND = /\bwait-on\b/;
 const PLAYWRIGHT_COMMAND = /^pnpm playwright test\b/;
@@ -92,6 +108,7 @@ const BROWSER_INSTALL_COMMAND = /install-playwright-browsers/;
 const ELEVATED_COMMAND = /\bsudo\b/;
 const EVAL_COMMAND = /\bask:eval\b/;
 const LOCAL_TOOLS = ['gitleaks'];
+const NEGATION = '!';
 const PROJECT_FLAG = '--project=';
 const RETRIES_FLAG = '--retries=0';
 const REPEAT_FLAG = '--repeat-each=';
@@ -102,10 +119,8 @@ const VISUAL_ROOT = 'tests/visual';
 const COMPONENT_ROOTS = /^(components|app|design-system)\//;
 const E2E_SUFFIX = '.e2e.ts';
 const PLAYWRIGHT_CONFIG = 'playwright.config.ts';
-const HOST_MOUNT = '/host';
 const PNPM_STORE_VOLUME = 'ci-predict-pnpm-store';
 const PNPM_STORE_PATH = '/pnpm-store';
-const CONTAINER_ROOT = '/work';
 
 export function selectSpecs(
   changed: string[],
@@ -145,12 +160,16 @@ export function dockerSessionArgs(options: {
   name: string;
   root: string;
   version: string;
+  owner: number;
 }): string[] {
   return [
     'run',
     '-d',
+    '--rm',
     '--name',
     options.name,
+    '--label',
+    `${SESSION_OWNER_LABEL}=${options.owner}`,
     '--init',
     '--ipc=host',
     '-v',
@@ -169,15 +188,14 @@ export function dockerExecPlaywrightArgs(options: {
   name: string;
   baseUrl: string;
   args: string[];
+  env: Record<string, string>;
 }): string[] {
+  const forwarded = { ...options.env, CI: 'true', E2E_BASE_URL: options.baseUrl };
   return [
     'exec',
     '-w',
     CONTAINER_ROOT,
-    '-e',
-    'CI=true',
-    '-e',
-    `E2E_BASE_URL=${options.baseUrl}`,
+    ...Object.entries(forwarded).flatMap(([key, value]) => ['-e', `${key}=${value}`]),
     options.name,
     'node',
     'node_modules/playwright/cli.js',
@@ -216,11 +234,34 @@ export function summaryTable(rows: Row[]): string {
 type StepAction =
   | { kind: 'skip'; reason: string }
   | { kind: 'publish' }
+  | { kind: 'substitute'; reason: string }
   | { kind: 'unreproducible'; reason: string }
   | { kind: 'server'; env: Record<string, string> }
   | { kind: 'playwright'; tokens: string[]; env: Record<string, string> }
   | { kind: 'eval'; command: string }
-  | { kind: 'run'; cmd: string; env: Record<string, string> };
+  | {
+      kind: 'run';
+      cmd: string;
+      env: Record<string, string>;
+      shell: string | undefined;
+      cwd: string | undefined;
+      note?: string;
+    };
+
+function resolveEnv(
+  layer: Record<string, string>,
+  ctx: ExprContext,
+  into: Record<string, string>,
+): Record<string, string> {
+  const resolved = { ...into };
+  for (const [key, value] of Object.entries(layer)) {
+    resolved[key] = interpolate(value, {
+      ...ctx,
+      env: { ...(ctx.env as ExprObject), ...resolved },
+    });
+  }
+  return resolved;
+}
 
 function classifyStep(
   step: WorkflowStep,
@@ -228,6 +269,7 @@ function classifyStep(
   ctx: ExprContext,
   context: RunContext,
   deps: Deps,
+  jobEnv: Record<string, string>,
 ): StepAction {
   if (step.uses !== undefined) {
     const kind = ACTION_CLASSES[actionName(step.uses)];
@@ -235,7 +277,7 @@ function classifyStep(
     if (kind === 'publish') return { kind: 'publish' };
     return { kind: 'unreproducible', reason: `${actionName(step.uses)} needs GitHub` };
   }
-  const label = step.name ?? step.run ?? 'step';
+  const label = step.name ?? step.run?.split('\n')[0] ?? 'step';
   if (step.run === undefined) return { kind: 'skip', reason: 'no command' };
   if (Object.values(step.env).some((value) => GITHUB_TOKEN_REFERENCE.test(value))) {
     return { kind: 'unreproducible', reason: `${label} needs the GitHub API` };
@@ -244,12 +286,7 @@ function classifyStep(
   let env: Record<string, string>;
   try {
     cmd = interpolate(step.run, ctx);
-    env = Object.fromEntries(
-      Object.entries({ ...job.env, ...step.env }).map(([key, value]) => [
-        key,
-        interpolate(value, ctx),
-      ]),
-    );
+    env = resolveEnv(step.env, ctx, jobEnv);
   } catch (error) {
     return { kind: 'unreproducible', reason: `${label}: ${(error as Error).message}` };
   }
@@ -263,12 +300,25 @@ function classifyStep(
       reason: 'Lighthouse scores depend on the host (pnpm gates:runtime)',
     };
   }
-  if (ELEVATED_COMMAND.test(trimmed)) return { kind: 'skip', reason: 'CI-only binary install' };
+  if (ELEVATED_COMMAND.test(trimmed)) {
+    const tool = LOCAL_TOOLS.find((name) => new RegExp(`\\b${name}\\b`).test(trimmed));
+    if (tool === undefined) {
+      return { kind: 'unreproducible', reason: `${label} needs elevated privileges` };
+    }
+    return deps.commandExists(tool)
+      ? { kind: 'substitute', reason: `local ${tool} used instead of the pinned install` }
+      : { kind: 'unreproducible', reason: `${tool} is not installed locally` };
+  }
   if (BROWSER_INSTALL_COMMAND.test(trimmed) && context.options.linux) {
     return { kind: 'skip', reason: 'browsers ship in the Linux image' };
   }
   if (trimmed === BUILD_COMMAND && context.options.skipBuild) {
-    return { kind: 'skip', reason: 'reusing the existing .next (--skip-build)' };
+    return context.options.stamp.valid
+      ? { kind: 'skip', reason: 'reusing the .next built for this exact tree (--skip-build)' }
+      : {
+          kind: 'unreproducible',
+          reason: `build reused unverified: ${context.options.stamp.reason}`,
+        };
   }
   if (PLAYWRIGHT_COMMAND.test(trimmed) && !SHELL_OPERATORS.test(trimmed)) {
     const tokens = trimmed.split(/\s+/).slice(3);
@@ -286,7 +336,20 @@ function classifyStep(
   if (missing !== undefined) {
     return { kind: 'unreproducible', reason: `${missing} is not installed locally` };
   }
-  return { kind: 'run', cmd, env };
+  const shell = step.shell ?? job.defaults.shell ?? context.workflow.defaults.shell;
+  if (shellCommand(shell, '') === undefined) {
+    return { kind: 'unreproducible', reason: `${label}: shell ${shell} is not reproducible` };
+  }
+  return {
+    kind: 'run',
+    cmd,
+    env,
+    shell,
+    cwd:
+      step.workingDirectory ??
+      job.defaults.workingDirectory ??
+      context.workflow.defaults.workingDirectory,
+  };
 }
 
 const touchesChanged = (positionals: string[], changed: string[]): boolean =>
@@ -314,6 +377,40 @@ function parseOutputs(path: string): Record<string, string> {
 interface JobOutcome {
   result: 'success' | 'failure' | 'skipped' | 'not-run' | 'blocked';
   outputs: Record<string, string>;
+}
+
+const LIST_SEPARATOR = ', ';
+
+export function judge(rows: Row[], dryRun: boolean): Judgement {
+  if (rows.some((row) => row.verdict === 'fail')) {
+    return { code: EXIT.FAILED, headline: 'PREDICTED CI: FAIL' };
+  }
+  if (dryRun || rows.some((row) => row.verdict === 'would-run')) {
+    return {
+      code: EXIT.DRY_RUN,
+      headline: 'DRY RUN: nothing was executed, so there is no prediction',
+    };
+  }
+  if (!rows.some((row) => row.verdict === 'pass')) {
+    return { code: EXIT.NOT_VERIFIED, headline: 'PREDICTED CI: NOT VERIFIED, nothing ran' };
+  }
+  const githubOnly = Object.entries(JOB_POLICIES)
+    .filter(([, policy]) => policy === 'github-only' || policy === 'report-only')
+    .map(([id]) => id);
+  const unrun = rows.filter((row) => row.verdict === 'partial' || row.verdict === 'not-run');
+  const unverified = unrun.filter((row) => !githubOnly.includes(row.job)).map((row) => row.job);
+  const elsewhere = unrun.filter((row) => githubOnly.includes(row.job)).map((row) => row.job);
+  const elsewhereNote =
+    elsewhere.length > 0
+      ? ` (GitHub only, not reproducible here: ${elsewhere.join(LIST_SEPARATOR)})`
+      : '';
+  if (unverified.length > 0) {
+    return {
+      code: EXIT.NOT_VERIFIED,
+      headline: `PREDICTED CI: no failure found in what ran. NOT VERIFIED: ${unverified.join(LIST_SEPARATOR)}${elsewhereNote}`,
+    };
+  }
+  return { code: EXIT.OK, headline: `PREDICTED CI: no failure found${elsewhereNote}` };
 }
 
 export async function predict(context: RunContext, deps: Deps): Promise<Prediction> {
@@ -359,8 +456,13 @@ export async function predict(context: RunContext, deps: Deps): Promise<Predicti
   });
 
   const functions: ExprFunctions = {
-    hashFiles: (patterns) =>
-      patterns.some((pattern) => deps.fileExists(String(pattern))) ? 'present' : '',
+    hashFiles: (patterns) => {
+      const negated = patterns.map(String).filter((pattern) => pattern.startsWith(NEGATION));
+      if (negated.length > 0) {
+        throw new UnsupportedExpressionError(`hashFiles(${negated.join(', ')}) negates a pattern`);
+      }
+      return patterns.some((pattern) => deps.anyFileMatches(String(pattern))) ? 'present' : '';
+    },
   };
 
   const selected = options.full
@@ -368,7 +470,12 @@ export async function predict(context: RunContext, deps: Deps): Promise<Predicti
     : new Set(selectSpecs(context.changedFiles, context.specProjects, context.specSources));
 
   const functionalScope = (job: WorkflowJob, project: string | undefined): string[] => {
-    const ctx = base(job, { matrix: { project: project ?? '' }, steps: {}, env: {} });
+    const ctx = base(job, {
+      matrix: { project: project ?? '' },
+      steps: {},
+      env: {},
+      strategy: { 'job-total': job.matrixProjects.length || 1, 'job-index': 0 },
+    });
     for (const step of job.steps) {
       if (step.run === undefined || !PLAYWRIGHT_COMMAND.test(step.run.trim())) continue;
       if (!conditionHolds(step.if, ctx, functions)) continue;
@@ -384,6 +491,7 @@ export async function predict(context: RunContext, deps: Deps): Promise<Predicti
   async function runUnit(
     job: WorkflowJob,
     project: string | undefined,
+    index: number,
   ): Promise<{ row: Row; steps: ExprObject }> {
     const name = project === undefined ? job.id : `${job.id} (${project})`;
     const started = deps.now();
@@ -417,11 +525,32 @@ export async function predict(context: RunContext, deps: Deps): Promise<Predicti
       }
     }
     const runEnv: Record<string, string> = {};
+    let jobEnv: Record<string, string>;
+    try {
+      const unitCtx = base(job, {
+        matrix: { project: project ?? '' },
+        steps: {},
+        env: {},
+        strategy: { 'job-total': job.matrixProjects.length || 1, 'job-index': index },
+      });
+      jobEnv = resolveEnv(job.env, unitCtx, resolveEnv(workflow.env, unitCtx, {}));
+    } catch (error) {
+      return finish('not-run', `env: ${(error as Error).message}`);
+    }
     const unreproducible: string[] = [];
+    const substituted: string[] = [];
+    const tolerated: string[] = [];
     let published = 0;
-    let executed = 0;
+    let ran = 0;
+    let dry = 0;
+    let partialSuite = false;
     for (const step of job.steps) {
-      const ctx = base(job, { matrix: { project: project ?? '' }, steps, env: runEnv });
+      const ctx = base(job, {
+        matrix: { project: project ?? '' },
+        steps,
+        env: { ...jobEnv, ...runEnv },
+        strategy: { 'job-total': job.matrixProjects.length || 1, 'job-index': index },
+      });
       let applies: boolean;
       try {
         applies = conditionHolds(step.if, ctx, functions);
@@ -430,11 +559,15 @@ export async function predict(context: RunContext, deps: Deps): Promise<Predicti
         continue;
       }
       if (!applies) continue;
-      const action = classifyStep(step, job, ctx, context, deps);
+      const action = classifyStep(step, job, ctx, context, deps, jobEnv);
       const label = `${name} > ${step.name ?? step.run?.split('\n')[0] ?? 'step'}`;
       if (action.kind === 'skip') continue;
       if (action.kind === 'publish') {
         published += 1;
+        continue;
+      }
+      if (action.kind === 'substitute') {
+        substituted.push(action.reason);
         continue;
       }
       if (action.kind === 'unreproducible') {
@@ -444,6 +577,9 @@ export async function predict(context: RunContext, deps: Deps): Promise<Predicti
       if (action.kind === 'eval') continue;
       const env = { ...CI_ENV, ...runEnv, ...action.env };
       if (action.kind === 'server') {
+        if (options.skipBuild && !options.stamp.valid) {
+          unreproducible.push(`the server runs an unverified build: ${options.stamp.reason}`);
+        }
         try {
           server = await deps.ensureServer(env);
         } catch (error) {
@@ -459,8 +595,15 @@ export async function predict(context: RunContext, deps: Deps): Promise<Predicti
         const projectFlag = flags.find((f) => f.startsWith(PROJECT_FLAG));
         const stepProject = projectFlag?.slice(PROJECT_FLAG.length);
         const kept = flags.filter((f) => !f.startsWith('--retries') && !f.startsWith(REPEAT_FLAG));
-        const targets =
-          policy === 'e2e-narrowed' && selected !== null ? narrowed(stepProject) : positionals;
+        const isNarrowed = policy === 'e2e-narrowed' && selected !== null;
+        const targets = isNarrowed ? narrowed(stepProject) : positionals;
+        if (isNarrowed && targets.length === 0) {
+          unreproducible.push(
+            `${step.name ?? 'playwright'}: no changed spec runs on ${stepProject ?? 'this project'}`,
+          );
+          continue;
+        }
+        if (isNarrowed) partialSuite = true;
         const repeated =
           policy === 'e2e-narrowed' || touchesChanged(positionals, context.changedFiles);
         const args = [
@@ -476,7 +619,8 @@ export async function predict(context: RunContext, deps: Deps): Promise<Predicti
           label,
           server,
         });
-        executed += 1;
+        if (result.dry === true) dry += 1;
+        else ran += 1;
         if (result.code !== 0)
           return finish(
             'fail',
@@ -492,7 +636,7 @@ export async function predict(context: RunContext, deps: Deps): Promise<Predicti
       writeFileSync(envFile, '');
       const dedupeKey =
         step.id === undefined
-          ? `${action.cmd}${KEY_SEPARATOR}${JSON.stringify(step.env)}`
+          ? `${action.cmd}${KEY_SEPARATOR}${JSON.stringify(step.env)}${KEY_SEPARATOR}${action.cwd ?? ''}${KEY_SEPARATOR}${action.shell ?? ''}`
           : undefined;
       let result = dedupeKey === undefined ? undefined : shared.get(dedupeKey);
       if (result === undefined) {
@@ -500,27 +644,41 @@ export async function predict(context: RunContext, deps: Deps): Promise<Predicti
           cmd: action.cmd,
           env: { ...env, GITHUB_OUTPUT: outputFile, GITHUB_ENV: envFile },
           label,
+          shell: action.shell,
+          cwd: action.cwd,
         });
         if (dedupeKey !== undefined) shared.set(dedupeKey, result);
-        executed += 1;
       }
+      if (result.dry === true) dry += 1;
+      else ran += 1;
       Object.assign(runEnv, parseOutputs(envFile));
       if (step.id !== undefined) steps[step.id] = { outputs: parseOutputs(outputFile) };
-      if (result.code !== 0)
+      if (result.code !== 0) {
+        if (step.continueOnError) {
+          tolerated.push(`${step.name ?? action.cmd.trim()} failed under continue-on-error`);
+          continue;
+        }
         return finish(
           'fail',
           `${step.name ?? action.cmd.trim()} exited ${result.code}`,
           result.output,
         );
+      }
     }
     const noted = [
       ...(unreproducible.length > 0
         ? [`not reproducible: ${[...new Set(unreproducible)].join('; ')}`]
         : []),
+      ...(partialSuite ? ['narrowed to the changed specs; CI runs the whole suite (--full)'] : []),
+      ...(substituted.length > 0 ? [[...new Set(substituted)].join('; ')] : []),
+      ...(tolerated.length > 0 ? [tolerated.join('; ')] : []),
       ...(published > 0 ? [`${published} GitHub-only publish step(s) skipped`] : []),
     ];
-    const why = `${executed} step(s) ran${noted.length > 0 ? `; ${noted.join('; ')}` : ''}`;
-    return finish(unreproducible.length > 0 ? 'partial' : 'pass', why);
+    const suffix = noted.length > 0 ? `; ${noted.join('; ')}` : '';
+    if (dry > 0) return finish('would-run', `${dry} step(s) would run (dry run)${suffix}`);
+    if (ran === 0) return finish('not-run', `no step executed${suffix}`);
+    const why = `${ran} step(s) ran${suffix}`;
+    return finish(unreproducible.length > 0 || partialSuite ? 'partial' : 'pass', why);
   }
 
   try {
@@ -556,14 +714,23 @@ export async function predict(context: RunContext, deps: Deps): Promise<Predicti
         const unrun = upstream
           .filter((row) => row.verdict === 'not-run' || row.verdict === 'partial')
           .map((row) => row.job);
+        const planned = upstream.filter((row) => row.verdict === 'would-run');
         const verdict: Verdict =
-          failedJobs.length > 0 ? 'fail' : unrun.length > 0 ? 'partial' : 'pass';
+          failedJobs.length > 0
+            ? 'fail'
+            : planned.length > 0
+              ? 'would-run'
+              : unrun.length > 0
+                ? 'partial'
+                : 'pass';
         const why =
           failedJobs.length > 0
             ? `blocked by ${failedJobs.join(', ')}`
-            : unrun.length > 0
-              ? `${unrun.length} job(s) not fully reproduced locally`
-              : 'every upstream job passed or was skipped by paths';
+            : planned.length > 0
+              ? `${planned.length} job(s) would run (dry run)`
+              : unrun.length > 0
+                ? `${unrun.length} job(s) not fully reproduced locally`
+                : 'every upstream job passed or was skipped by paths';
         rows.push({ job: id, verdict, why, ms: 0 });
         outcomes.set(id, { result: failedJobs.length > 0 ? 'failure' : 'success', outputs: {} });
         continue;
@@ -630,8 +797,8 @@ export async function predict(context: RunContext, deps: Deps): Promise<Predicti
         job.matrixProjects.length > 0 ? job.matrixProjects : [undefined];
       let jobFailed = false;
       let lastSteps: ExprObject = {};
-      for (const project of projects) {
-        const unit = await runUnit(job, project);
+      for (const [index, project] of projects.entries()) {
+        const unit = await runUnit(job, project, index);
         rows.push(unit.row);
         if (unit.row.verdict === 'fail') jobFailed = true;
         lastSteps = unit.steps;
@@ -647,5 +814,10 @@ export async function predict(context: RunContext, deps: Deps): Promise<Predicti
   } finally {
     rmSync(scratch, { recursive: true, force: true });
   }
-  return { rows, notes, failed: rows.some((row) => row.verdict === 'fail') };
+  return {
+    rows,
+    notes,
+    failed: rows.some((row) => row.verdict === 'fail'),
+    outcome: judge(rows, options.dryRun),
+  };
 }

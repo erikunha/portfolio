@@ -31,4 +31,4 @@ ships unguarded.
 - A gate that routine `--no-verify` or override bypasses are working around is miscalibrated.
   Narrow its predicate to what it protects instead of weakening it for everyone.
 - Never raise a threshold or add an ignore entry to turn a gate green. Fix the measured property.
-- A job or action added to `ci.yml` needs an entry in `scripts/lib/ci-predict-policy.ts` (`JOB_POLICIES`, `ACTION_CLASSES`); `scripts/__tests__/ci-predict.test.ts` fails until it has one, so `pnpm ci:predict` never skips a job it cannot see.
+- A job or action added to `ci.yml` needs an entry in `scripts/lib/ci-predict-policy.ts` (`JOB_POLICIES`, `ACTION_CLASSES`); `scripts/__tests__/ci-predict.test.ts` fails until it has one, so `pnpm ci:predict` never skips a job it cannot see. A new `ci.yml` construct the parser does not execute (a job or step key, an expression context, a shell) makes the predictor throw instead of skipping it; teach `scripts/lib/ci-workflow.ts` or the drift guard stays red. An e2e spec never names `localhost:3000`: read `baseURL`, because the predictor serves on a random port (`__tests__/meta/e2e-origin.test.ts`).
