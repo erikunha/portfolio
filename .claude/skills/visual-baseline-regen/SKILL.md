@@ -73,9 +73,10 @@ CI regen workflow, wait, then pull the artifacts:
     # wait for the run to finish, then download:
     # artifacts are named visual-baselines-<project>
 
-Download each `visual-baselines-<project>` artifact and copy **each project's OWN**
-`*-linux.png` into the repo. The CI workflow UPLOADS the baselines as artifacts — it does
-NOT commit them. You commit them.
+Download each `visual-baselines-<project>` artifact into
+`tests/visual/visual.spec.ts-snapshots/`. Each artifact holds only that project's
+`*-<project>-linux.png` files, so the artifacts cannot overwrite each other. The CI
+workflow uploads the baselines as artifacts and does not commit them; you commit them.
 
 ## Step 3 — commit both platforms together (for `visual.spec.ts` baselines)
 
