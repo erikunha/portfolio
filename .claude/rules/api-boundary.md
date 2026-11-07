@@ -55,6 +55,7 @@ context; this is the implementation guidance, not the enforcement.
   `anthropic/claude-haiku-4-5`); the eval harness imports the same const so it
   grades the shipped model. Do not hardcode a model string in the route.
 - Ephemeral prompt cache via `providerOptions.anthropic.cacheControl` on the
-  system message; output capped (`MAX_OUTPUT_TOKENS`), request-timeout guarded.
+  system message; output capped (`MAX_OUTPUT_TOKENS`), request-timeout guarded;
+  sampling uses the named `ASK_TEMPERATURE` from `lib/ask/limits.ts`.
 - Changes to the ask corpus/calibration/system-prompt trigger the
   `ai-eval-update` skill and `pnpm ask:eval`.
