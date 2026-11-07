@@ -377,7 +377,7 @@ runs the branch-name guard plus `pnpm verify`. `pnpm verify` is defined in
 check:client-naming + check:dep-pinning + test`). The "never disable a gate"
 rule is held by **culture** and by PR review — there is no meta-gate that can
 prevent a gate from being deleted, only the standard that says it must not be.
-The PR merge gate (`pnpm pr:gate`, GitHub `required_conversation_resolution`
+The PR merge gate (`pnpm pr:gate`: threads resolved with a reply and a self-review naming the head; GitHub `required_conversation_resolution`
 branch protection) is the human-in-the-loop backstop.
 
 ---

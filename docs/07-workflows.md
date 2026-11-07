@@ -124,7 +124,7 @@ Both desktop and mobile collect `/`, `/pt`, `/cv`, `/summary`, `/links`, `/links
 ## The PR lifecycle
 
 ```
-commit (scope blocks) -> (self-review the diff before opening the PR)
+commit (scope blocks) -> (read the diff before opening the PR; specialist self-review of the pushed head before any merge)
   -> pnpm ci:local + gates:runtime -> gh pr create (fill the template)
   -> resolve every review thread (rebase before each push) -> pnpm pr:gate
   -> sub-PR into feat/*: agent may merge after CI green; PR into main: repo owner runs gh pr merge

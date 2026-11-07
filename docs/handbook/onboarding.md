@@ -4,7 +4,7 @@
 
 ## The 30-second model
 
-You are joining a single-developer, AI-agent-assisted, spec-driven, gate-heavy platform. Work flows: brainstorm -> spec -> architect gate -> plan -> implement (test-first) -> self-review (human diff read; extra model review only on owner request) -> the gate chain -> squash-merge -> ADR. Git hooks and CI enforce checks. Architect review and pre-PR review are conventions.
+You are joining a single-developer, AI-agent-assisted, spec-driven, gate-heavy platform. Work flows: brainstorm -> spec -> architect gate -> plan -> implement (test-first) -> self-review (specialist reviewers on the pushed head) -> the gate chain -> squash-merge -> ADR. Git hooks and CI enforce checks. Architect review and pre-PR review are conventions.
 
 ## Day 1 - understand the flow before you touch it
 
@@ -38,7 +38,7 @@ This exercises the ordinary contribution path. Runtime checks depend on the affe
 
 1. **Scope every commit.** `type(scope): subject`, scope mandatory, scope is the feature area. commitlint will reject you otherwise.
 2. **Branch as `<type>/<description>`.** The pre-push hook enforces it; never commit on `main`.
-3. **Review your diff before opening the PR.** It is a human diff read; the `pr-review-orchestrator` skill runs only when the owner asks. No stamp or ledger gates the push; claude-review reviews the PR only when an owner, member or collaborator comments `/claude-review`.
+3. **Review your diff before opening the PR, and self-review the head before any merge.** The self-review uses reviewers that did not write the change and is posted as a COMMENT review naming the head SHA; `pnpm pr:gate` fails without it. No stamp gates the push; claude-review reviews the PR only when an owner, member or collaborator comments `/claude-review`.
 4. **A red gate is fixed by fixing the property**, never by disabling the gate.
 5. **Record architectural decisions** in `DECISIONS.md` with a reversibility note.
 

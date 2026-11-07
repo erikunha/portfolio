@@ -16,10 +16,10 @@ flowchart TD
     r2 --> r4["pre-PR: gates:runtime (LHCI+axe+E2E)"]
     r4 --> o1["open PR: fill every template section"]
     o1 --> o1b["CI green on the PR head"]
-    o1 --> o2["resolve every review thread (claude-review only on request)"]
+    o1 --> o2["self-review on the head, resolve every review thread (claude-review only on request)"]
     o1b --> m1["pre-merge: ci:local"]
     o2 --> m1
-    m1 --> m4["pre-merge: pr:gate (threads)"]
+    m1 --> m4["pre-merge: pr:gate (threads + self-review)"]
     m4 --> merge["owner: squash-merge (#NNN)"]
     merge --> deploy["Vercel deploy"]
     deploy --> smoke["smoke.yml: healthz + headers + liveness"]
@@ -29,7 +29,9 @@ flowchart TD
 
 **claude-review (claude[bot]) is the AI reviewer.** It is opt-in: it runs only when an owner, member or collaborator comments `/claude-review` on the PR, and it is never a merge requirement. It posts one inline comment per finding anchored to a changed line and closes with a `Verdict:` line that the optional `pnpm claude-gate` parses fail-closed. It gathers evidence with the CI profile of the `pr-review-orchestrator` skill (`.claude/skills/pr-review-orchestrator/references/ci.md`): one `Task` subagent per material domain, and PR metadata, the diff and CI check results snapshotted by a workflow step before the review starts. The reviewer gets no `gh` or other shell command, and `--disallowedTools` denies the edit, git and push tools the action's tag mode would otherwise add, plus reads of `.git/` and other credential locations. No PR code runs in that job, so dependencies are not installed: for a dependency change it reviews the manifest and lockfile diff and names what only installed source could settle as a limit, which the local orchestrator then answers.
 
-Review is requested, not automatic. `claude-review` is a model-judged sensor: it reports findings, it does not approve, and no merge waits on it. Only correctness, security, accessibility, performance budget, test validity and spec or plan compliance block (`REVIEW.md`); style and naming never do, and nits are capped at five. After a `/claude-review` comment: fix the blocking findings in one commit, reply in each thread with what was done and the fix SHA, then resolve; no automatic follow-up round runs. The loop stops after three rounds (a round is a push plus a review): remaining non-blocking findings become follow-up issues named in the thread reply, and a blocking finding still open goes to the owner. Any other model review (`pr-review-orchestrator`, a cross-provider review, a self-review) runs only when the owner asks. Deterministic validation (tests, typecheck, lint, build, bundle and route-JS gates, CI) is the quality bar, and the provider that made a change ships it.
+**Self-review is part of every merge.** Before any merge, sub-PRs into `feat/*` included, run a self-review by reviewers that did not write the change, one per relevant specialty: correctness, silent failures, tests, types, security (for `app/api/` and workflows), accessibility and visual (for UI). Each loads the matching repo skill. UI changes also get 1280x720 and 375x812 screenshots examined by a reviewer. Verify each finding against the code, then fix it or reject it with a reason. Post the result as a GitHub review of type COMMENT whose body contains `self-review: <full head SHA>`; any push that moves the head needs a new one. `pnpm pr:gate` fails `missing_self_review` without a COMMENTED or APPROVED review from the owner, a member or a collaborator naming the current head.
+
+`claude-review` is requested, not automatic. It is a model-judged sensor: it reports findings, it does not approve, and no merge waits on it. Only correctness, security, accessibility, performance budget, test validity and spec or plan compliance block (`REVIEW.md`); style and naming never do, and nits are capped at five. After a `/claude-review` comment: fix the blocking findings in one commit, reply in each thread with what was done and the fix SHA, then resolve; no automatic follow-up round runs. The loop stops after three rounds (a round is a push plus a review): remaining non-blocking findings become follow-up issues named in the thread reply, and a blocking finding still open goes to the owner. Deterministic validation (tests, typecheck, lint, build, bundle and route-JS gates, CI) is the quality bar, and the provider that made a change ships it.
 
 Answering threads follows the project review procedure: rebase before _every_ push; verify the pushed SHA actually landed on the remote before citing it; reply in a thread citing the fix SHA _before_ resolving it; never resolve silently (a thread with one comment is a process gap); and put every comment in a review THREAD rather than an unanchored timeline comment, which `reviewThreads` cannot see.
 
@@ -37,7 +39,7 @@ After findings are answered, every finding fixed and every CI red becomes a cand
 
 ## Pre-merge gates (`pnpm ci:local` + `pnpm pr:gate`)
 
-In order: `ci:local` -> `check-pr-comments` (`pnpm pr:gate`, also run in CI: GraphQL `reviewThreads(first:100)` without pagination, every returned thread `isResolved`, flags `suspicious_self_resolve`). The base branch must be contained and CI green. GitHub branch-protection settings are not in the repository; the settings read from GitHub and the controls that stand in for a second reviewer are listed in the 2026-11-07 review-model entry of `DECISIONS.md`.
+In order: `ci:local` -> `check-pr-comments` (`pnpm pr:gate`, also run in CI: GraphQL `reviewThreads(first:100)` without pagination, every returned thread `isResolved` with a reply, `reviews(last:100)` holding a COMMENTED or APPROVED review from the owner, a member or a collaborator whose body contains `self-review: <current head SHA>` or the gate fails `missing_self_review`, flags `suspicious_self_resolve`). The marker is attested text: it shows a review was posted for this head, not that it was good, so the review itself still has to follow the steps above. The base branch must be contained and CI green. GitHub branch-protection settings are not in the repository; the settings read from GitHub and the controls that stand in for a second reviewer are listed in the 2026-11-07 review-model entry of `DECISIONS.md`.
 
 `pnpm claude-gate` (`scripts/check-claude-approval.ts`) is an optional check: after a requested review it passes only when the latest claude-review verdict is Approve and names a head SHA that matches the current head. An Approve with no SHA, or a stale one, fails closed. When the head moved only through commits that touch visual baseline snapshots, `*-snapshots/*.png`, the Approve carries and the gate reports the carried SHA; any other file in the diff since the reviewed SHA, or a reviewed SHA that is not an ancestor of the head, fails closed as STALE. It is not part of merge readiness.
 
@@ -54,8 +56,8 @@ baselines, updated docs and diagrams, and any CI change the diff needs. Predict 
 diff (path filters, LHCI target size and contrast, bundle and route JS budgets, visual projects) and
 run the affected ones locally first. macOS green does not mean Linux green: run the affected specs in
 the Playwright Linux image (`mcr.microsoft.com/playwright:v<installed version>-noble`) against the local
-build before the push. The loop per milestone: finish, push once, request review, fix
-every finding with a thread reply, land into the integration branch, start the next milestone.
+build before the push. The loop per milestone: finish, push once, self-review the head, fix
+every blocking finding with a thread reply, land into the integration branch, start the next milestone.
 
 ## Release
 

@@ -11,15 +11,38 @@ function mkThread(overrides: Partial<Thread> = {}): Thread {
   };
 }
 
+const HEAD_SHA = 'a'.repeat(40);
+const STALE_SHA = 'b'.repeat(40);
+
+type Review = { state: string; body: string; authorAssociation: string };
+
+function mkReview(overrides: Partial<Review> = {}): Review {
+  return {
+    state: 'COMMENTED',
+    body: `Findings verified and fixed.\n\nself-review: ${HEAD_SHA}`,
+    authorAssociation: 'OWNER',
+    ...overrides,
+  };
+}
+
 // The GraphQL payload nests comments under `nodes`; the production parser reads
 // `t.comments.nodes`. A mock emitting a bare array is more permissive than the API.
-function mockGh(threads: Thread[], prAuthor = 'erikunha') {
+function mockGh(
+  threads: Thread[],
+  prAuthor = 'erikunha',
+  {
+    reviews = [mkReview()],
+    headRefOid = HEAD_SHA,
+  }: { reviews?: Review[]; headRefOid?: string } = {},
+) {
   return vi.fn(async (_args: string[]) =>
     JSON.stringify({
       data: {
         repository: {
           pullRequest: {
             author: { login: prAuthor },
+            headRefOid,
+            reviews: { nodes: reviews },
             reviewThreads: {
               nodes: threads.map((t) => ({ ...t, comments: { nodes: t.comments } })),
             },
@@ -29,6 +52,9 @@ function mockGh(threads: Thread[], prAuthor = 'erikunha') {
     }),
   );
 }
+
+const evaluate = (ghExec: ReturnType<typeof mockGh>) =>
+  evaluatePullRequest({ prNumber: 42, owner: 'erikunha', repo: 'portfolio', ghExec });
 
 describe('evaluatePullRequest', () => {
   it('asks the API for more than one comment per thread', async () => {
@@ -163,5 +189,88 @@ describe('evaluatePullRequest', () => {
     });
     expect(result.ok).toBe(false);
     if (!result.ok) expect(result.code).toBe('graphql_failure');
+  });
+
+  describe('self-review marker', () => {
+    it('asks the API for the head SHA and the reviews, which the marker check reads', async () => {
+      const ghExec = mockGh([mkThread()]);
+      await evaluate(ghExec);
+      const sent = ghExec.mock.calls.flat().join(' ');
+      expect(sent, 'without headRefOid the marker cannot be compared to the head').toContain(
+        'headRefOid',
+      );
+      expect(sent, 'without authorAssociation any commenter could post the marker').toContain(
+        'authorAssociation',
+      );
+      expect(sent).toMatch(/reviews\(last:\d+\)/);
+    });
+
+    it('FAILS with missing_self_review when the PR has no review at all', async () => {
+      const result = await evaluate(mockGh([mkThread()], 'erikunha', { reviews: [] }));
+      expect(result.ok).toBe(false);
+      if (!result.ok) expect(result.code).toBe('missing_self_review');
+    });
+
+    it('FAILS when the marker names an earlier head, which is what a push after the review leaves', async () => {
+      const stale = mkReview({ body: `self-review: ${STALE_SHA}` });
+      const result = await evaluate(mockGh([mkThread()], 'erikunha', { reviews: [stale] }));
+      expect(result.ok).toBe(false);
+      if (!result.ok) {
+        expect(result.code).toBe('missing_self_review');
+        expect(result.message).toContain(HEAD_SHA);
+      }
+    });
+
+    it('FAILS when the marker carries a short SHA', async () => {
+      const short = mkReview({ body: `self-review: ${HEAD_SHA.slice(0, 7)}` });
+      const result = await evaluate(mockGh([mkThread()], 'erikunha', { reviews: [short] }));
+      expect(result.ok).toBe(false);
+    });
+
+    it('FAILS when the review has no marker', async () => {
+      const bare = mkReview({ body: 'Looks fine to me.' });
+      const result = await evaluate(mockGh([mkThread()], 'erikunha', { reviews: [bare] }));
+      expect(result.ok).toBe(false);
+    });
+
+    it.each(['CHANGES_REQUESTED', 'DISMISSED', 'PENDING'])(
+      'FAILS when the matching review is %s',
+      async (state) => {
+        const result = await evaluate(
+          mockGh([mkThread()], 'erikunha', { reviews: [mkReview({ state })] }),
+        );
+        expect(result.ok).toBe(false);
+      },
+    );
+
+    it('FAILS when the marker comes from someone without write standing on the repo', async () => {
+      const stranger = mkReview({ authorAssociation: 'NONE' });
+      const result = await evaluate(mockGh([mkThread()], 'erikunha', { reviews: [stranger] }));
+      expect(result.ok).toBe(false);
+    });
+
+    it.each(['COMMENTED', 'APPROVED'])(
+      'passes a %s review whose marker names the head',
+      async (state) => {
+        const result = await evaluate(
+          mockGh([mkThread()], 'erikunha', { reviews: [mkReview({ state })] }),
+        );
+        expect(result.ok).toBe(true);
+      },
+    );
+
+    it('passes when an older review is stale but a newer one names the head', async () => {
+      const reviews = [mkReview({ body: `self-review: ${STALE_SHA}` }), mkReview()];
+      const result = await evaluate(mockGh([mkThread()], 'erikunha', { reviews }));
+      expect(result.ok).toBe(true);
+    });
+
+    it('reports unresolved threads before the missing review, so the first fix is the open thread', async () => {
+      const result = await evaluate(
+        mockGh([mkThread({ isResolved: false, resolvedBy: null })], 'erikunha', { reviews: [] }),
+      );
+      expect(result.ok).toBe(false);
+      if (!result.ok) expect(result.code).toBe('unresolved_threads');
+    });
   });
 });

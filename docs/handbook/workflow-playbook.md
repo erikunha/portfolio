@@ -4,7 +4,7 @@
 
 ## How to read a runbook
 
-Every runbook lists: **entry point** (what starts it), **steps**, **AI participation**, and **output**. The same spine recurs: brainstorm -> spec/plan (for non-trivial work) -> implement (TDD) -> review (human diff read; `pr-review-orchestrator` only when the owner asks) -> gates -> PR -> merge.
+Every runbook lists: **entry point** (what starts it), **steps**, **AI participation**, and **output**. The same spine recurs: brainstorm -> spec/plan (for non-trivial work) -> implement (TDD) -> review (specialist self-review on the pushed head) -> gates -> PR -> merge.
 
 ---
 
@@ -17,7 +17,7 @@ Every runbook lists: **entry point** (what starts it), **steps**, **AI participa
   3. Run the `plan-review` skill on the spec; it must return `GATE_RESULT: PASS` (workflow convention).
   4. `speckit-plan` with a failure-mode checklist to decompose into tasks (shard into sub-PRs if large).
   5. Branch `feat/<description>`. Implement test-first.
-  6. Self-review the diff (a human read; the `pr-review-orchestrator` skill only when the owner asks), fix what it finds, push.
+  6. Read the diff, push, then self-review the head with specialist reviewers, fix what verifies, and post the review naming the SHA.
   7. `pnpm ci:local`, `pnpm bundle-check`, `pnpm route-js-check` and `pnpm gates:runtime`, open the PR, drive threads to resolved, `pnpm pr:gate`.
   8. Record the ADR in `DECISIONS.md` in the same commit as the decision (a dated bullet with a reversibility note); the owner merges.
 - **AI:** brainstorming, plan review, planning, TDD implementation; the diff read before the PR is the owner's.
@@ -31,7 +31,7 @@ Every runbook lists: **entry point** (what starts it), **steps**, **AI participa
   2. State the root cause in one sentence (the four-conditions rule: root cause, pattern scan, no deferred debt, measured property verified).
   3. Write a failing test that reproduces it (TDD).
   4. Make the smallest change that passes. Pattern-scan the codebase for the same class of bug.
-  5. Review the diff (human read; the `pr-review-orchestrator` skill only when the owner asks) -> push -> PR. Cite the before/after measurement in the commit body.
+  5. Read the diff -> push -> PR -> specialist self-review of the head. Cite the before/after measurement in the commit body.
 - **AI:** systematic-debugging, TDD.
 - **Output:** a `fix(scope): ...` PR with a root-cause note.
 
@@ -53,7 +53,7 @@ Every runbook lists: **entry point** (what starts it), **steps**, **AI participa
   1. Confirm behavior is covered by tests first (refactor preserves behavior).
   2. `refactoring-specialist` agent if the change is large.
   3. Smallest reasonable change; never rewrite an implementation without explicit permission.
-  4. Review the diff for behavior drift (human read; the `pr-review-orchestrator` skill only when the owner asks) -> push.
+  4. Read the diff for behavior drift -> push -> specialist self-review of the head.
 - **Output:** a `refactor(scope): ...` PR (no behavior change).
 
 ## Performance optimization
@@ -117,5 +117,5 @@ Every runbook lists: **entry point** (what starts it), **steps**, **AI participa
 - **Steps:**
   1. `pnpm ci:local`, `pnpm bundle-check`, `pnpm route-js-check` and `pnpm gates:runtime`; `gh pr create` filling the template (every section non-empty).
   2. Rebase before every push, verify the pushed SHA, reply citing the fix SHA before resolving a thread. claude-review runs only when an owner, member or collaborator comments `/claude-review`; fix its findings in one commit, reply, resolve.
-  3. CI is green and `pnpm pr:gate` passes; the owner squash-merges.
+  3. CI is green and `pnpm pr:gate` passes (threads and the self-review of the head); the owner squash-merges.
 - **Output:** a merged PR. See [review-merge-release](./review-merge-release.md).
