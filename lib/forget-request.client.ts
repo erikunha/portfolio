@@ -7,18 +7,16 @@ import { parseRetryAfter, RETRY_AFTER_HEADER } from '@/lib/stream-protocol';
 export const FORGET_ENDPOINT = '/api/log/forget';
 export const FORGET_TIMEOUT_MS = 20_000;
 
-const STATUS = { ok: 200, notFound: 404, rateLimited: 429 } as const;
+const STATUS = { ok: 200, rateLimited: 429 } as const;
 
 export const FORGET_OUTCOME = {
   Deleted: 'deleted',
-  NotFound: 'not-found',
   RateLimited: 'rate-limited',
   Failed: 'failed',
 } as const;
 
 export type ForgetResult =
   | { outcome: typeof FORGET_OUTCOME.Deleted }
-  | { outcome: typeof FORGET_OUTCOME.NotFound }
   | { outcome: typeof FORGET_OUTCOME.RateLimited; retryAfter: number | null }
   | { outcome: typeof FORGET_OUTCOME.Failed };
 
@@ -28,7 +26,7 @@ export type ForgetBatch = {
 };
 
 export function wasForgotten(result: ForgetResult): boolean {
-  return result.outcome === FORGET_OUTCOME.Deleted || result.outcome === FORGET_OUTCOME.NotFound;
+  return result.outcome === FORGET_OUTCOME.Deleted;
 }
 
 export async function forgetRequest(id: string): Promise<ForgetResult> {
@@ -40,7 +38,6 @@ export async function forgetRequest(id: string): Promise<ForgetResult> {
       { timeoutMs: FORGET_TIMEOUT_MS },
     );
     if (response.status === STATUS.ok) result = { outcome: FORGET_OUTCOME.Deleted };
-    else if (response.status === STATUS.notFound) result = { outcome: FORGET_OUTCOME.NotFound };
     else if (response.status === STATUS.rateLimited) {
       result = {
         outcome: FORGET_OUTCOME.RateLimited,

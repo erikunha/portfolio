@@ -671,7 +671,6 @@ export const ShellUiSchema = z.object({
   trailerPrefix: z.string().min(1),
   forgetting: z.string().min(1),
   forgetDeleted: z.string().min(1),
-  forgetNotFound: z.string().min(1),
   forgetFailed: z.string().min(1),
   forgetRateLimited: z.string().min(1),
   privacyEmpty: z.string().min(1),

@@ -153,15 +153,18 @@ describe('shell trailer and privacy command', () => {
       expect(button(container, 'FORGET')).toBeDefined();
     });
 
-    it('reports a 404 as nothing to delete', async () => {
-      stubBackend({ asks: [A], forget: [{ status: 404 }] });
-      const container = await renderShell();
-      await submit(container, 'q');
-      await click(button(container, 'FORGET'));
-      expect(container.querySelector('[data-testid="shell-reference"]')?.textContent).toContain(
-        ui.forgetNotFound,
-      );
-    });
+    it.each([
+      [SITE_LOCALE.en, 'no record kept under this id'],
+      [SITE_LOCALE.pt, 'nenhum registro mantido com este id'],
+    ] as const)(
+      'confirms in %s without claiming a record existed, because the server answers a known and an unknown id alike',
+      (locale, phrase) => {
+        const copy = shellUi[locale];
+        expect(copy.forgetDeleted).toContain(phrase);
+        expect(copy.forgetDeleted).not.toMatch(/deleted|excluído/i);
+        expect('forgetNotFound' in copy).toBe(false);
+      },
+    );
 
     it('sends one request when forget is clicked twice while pending', async () => {
       let release: (response: Response) => void = () => undefined;

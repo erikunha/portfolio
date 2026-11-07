@@ -250,7 +250,7 @@ components/client/InteractiveShell/useAskStream.ts  # shell request, idle timeou
 components/client/InteractiveShell/ResponseReference.client.tsx  # req= trailer under an answer: copy and forget
 components/client/InteractiveShell/privacy-command.ts  # parser for the privacy shell command
 lib/request-refs.client.ts            # this tab's request ids: sessionStorage with an in-memory fallback
-lib/forget-request.client.ts          # /api/log/forget client: 200, 404, 429 and failure outcomes, sequential batches
+lib/forget-request.client.ts          # /api/log/forget client: 200, 429 and failure outcomes, sequential batches
 components/client/LazyIsland/         # ErrorBoundary around Suspense for every React.lazy island
 components/client/TerminalChromeBar/  # window chrome header shared by the shell and the contact form
 components/client/ContactForm/        # contact form island and the messageStore it shares with the timezone panel

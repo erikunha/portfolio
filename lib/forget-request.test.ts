@@ -37,12 +37,12 @@ describe('forgetRequest', () => {
     expect(refs.listRefs()).toEqual([]);
   });
 
-  it('reports not-found on 404 and drops the id from the list', async () => {
+  it('reports failed on 404, because the endpoint answers 200 for an unknown id and a 404 means a wrong route', async () => {
     const { refs, forget } = await load();
     refs.addRef(A);
     vi.stubGlobal('fetch', respond(404));
-    expect(await forget.forgetRequest(A)).toEqual({ outcome: forget.FORGET_OUTCOME.NotFound });
-    expect(refs.listRefs()).toEqual([]);
+    expect(await forget.forgetRequest(A)).toEqual({ outcome: forget.FORGET_OUTCOME.Failed });
+    expect(refs.listRefs()).toEqual([A]);
   });
 
   it('reports rate-limited with the Retry-After seconds on 429 and keeps the id', async () => {

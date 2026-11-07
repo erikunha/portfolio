@@ -29,7 +29,9 @@ const contactCopyFor = (locale: SiteLocale): ContactContent => {
         forget: {
           label: pt ? '[EXCLUIR MENSAGEM]' : '[FORGET MESSAGE]',
           pending: pt ? '[EXCLUINDO...]' : '[DELETING...]',
-          done: pt ? 'Mensagem excluída.' : 'Message deleted.',
+          done: pt
+            ? 'Pronto, nenhum registro desta mensagem é mantido.'
+            : 'Done, no record of this message is kept.',
           failed: pt
             ? 'Não foi possível excluir agora. Tente de novo, ou envie email para'
             : 'Could not delete right now. Try again, or email',

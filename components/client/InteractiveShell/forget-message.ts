@@ -5,7 +5,6 @@ import { formatRemaining } from './useAskStream';
 
 export function describeForget(result: ForgetResult, ui: ShellUi, states: ShellStates): string {
   if (result.outcome === FORGET_OUTCOME.Deleted) return ui.forgetDeleted;
-  if (result.outcome === FORGET_OUTCOME.NotFound) return ui.forgetNotFound;
   if (result.outcome === FORGET_OUTCOME.RateLimited && result.retryAfter !== null) {
     return fillShellState(ui.forgetRateLimited, {
       left: formatRemaining(result.retryAfter, states),
