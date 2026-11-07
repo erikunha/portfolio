@@ -2,7 +2,8 @@
 
 import { useCallback, useRef } from 'react';
 import { MeterSegment, meterSegmentState } from '@/lib/meter';
-import { PERCENT_RANGE, percentAlong, sliderValueForKey } from '@/lib/slider';
+import { PERCENT_RANGE, percentAlong } from '@/lib/slider';
+import { useDragSlider } from '../useDragSlider.client';
 
 const KEY_STEP_PCT = 5;
 const SEGMENT_CLASS = {
@@ -28,9 +29,7 @@ export function VuMeter({
 }: VuMeterProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const segmentRefs = useRef<(HTMLSpanElement | null)[]>([]);
-  const isDragging = useRef(false);
   const liveLevel = useRef(initialLevel);
-  const dragStartLevel = useRef(initialLevel);
 
   const getSegmentClass = useCallback(
     (index: number, level: number) =>
@@ -53,32 +52,14 @@ export function VuMeter({
     [getSegmentClass],
   );
 
-  const onPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
-    dragStartLevel.current = liveLevel.current;
-    const newLevel = percentAlong(containerRef.current, e.clientX);
-    try {
-      e.currentTarget.setPointerCapture(e.pointerId);
-      // biome-ignore lint/suspicious/noEmptyBlockStatements: intentional no-op
-    } catch {}
-    isDragging.current = true;
-    if (newLevel !== null) applyLevel(newLevel);
-  };
-
-  const onPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
-    if (!isDragging.current) return;
-    const newLevel = percentAlong(containerRef.current, e.clientX);
-    if (newLevel !== null) applyLevel(newLevel);
-  };
-
-  const onPointerUp = () => {
-    isDragging.current = false;
-  };
-
-  const onPointerCancel = () => {
-    if (!isDragging.current) return;
-    isDragging.current = false;
-    applyLevel(dragStartLevel.current);
-  };
+  const handlers = useDragSlider({
+    read: () => liveLevel.current,
+    apply: applyLevel,
+    valueAt: (event) => percentAlong(containerRef.current, event.clientX),
+    applyOnDown: true,
+    settleOn: 'live',
+    keys: { ...PERCENT_RANGE, step: KEY_STEP_PCT },
+  });
 
   return (
     <div
@@ -91,21 +72,7 @@ export function VuMeter({
       aria-valuetext={`${initialLevel}%`}
       tabIndex={0}
       className="vu-meter"
-      onPointerDown={onPointerDown}
-      onPointerMove={onPointerMove}
-      onPointerUp={onPointerUp}
-      onPointerCancel={onPointerCancel}
-      onKeyDown={(e) => {
-        if (isDragging.current) return;
-        const next = sliderValueForKey(e.key, {
-          value: liveLevel.current,
-          ...PERCENT_RANGE,
-          step: KEY_STEP_PCT,
-        });
-        if (next === null) return;
-        e.preventDefault();
-        applyLevel(next);
-      }}
+      {...handlers}
     >
       {Array.from({ length: segments }, (_, i) => {
         const cls = getSegmentClass(i, initialLevel);

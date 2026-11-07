@@ -1,7 +1,8 @@
 'use client';
 
 import { useCallback, useRef, useState } from 'react';
-import { PERCENT_RANGE, percentAlong, sliderValueForKey } from '@/lib/slider';
+import { PERCENT_RANGE, percentAlong } from '@/lib/slider';
+import { useDragSlider } from '../useDragSlider.client';
 
 const KEY_STEP_PCT = 2;
 
@@ -23,9 +24,7 @@ export function FaderIsland({
   const [pct, setPct] = useState(initialPct);
   const trackRef = useRef<HTMLDivElement>(null);
   const thumbRef = useRef<HTMLDivElement>(null);
-  const isDragging = useRef(false);
   const livePct = useRef(initialPct);
-  const dragStartPct = useRef(initialPct);
 
   const applyPct = useCallback(
     (newPct: number) => {
@@ -45,39 +44,15 @@ export function FaderIsland({
     [onPctChange, onAriaValueText],
   );
 
-  const onPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
-    dragStartPct.current = livePct.current;
-    const newPct = percentAlong(trackRef.current, e.clientX);
-    try {
-      e.currentTarget.setPointerCapture(e.pointerId);
-      // biome-ignore lint/suspicious/noEmptyBlockStatements: intentional no-op
-    } catch {}
-    isDragging.current = true;
-    if (newPct !== null) applyPct(newPct);
-  };
-
-  const onPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
-    if (!isDragging.current) return;
-    const newPct = percentAlong(trackRef.current, e.clientX);
-    if (newPct !== null) applyPct(newPct);
-  };
-
-  const onPointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
-    if (!isDragging.current) return;
-    isDragging.current = false;
-    const newPct = percentAlong(trackRef.current, e.clientX);
-    if (newPct !== null) {
-      applyPct(newPct);
-      setPct(newPct);
-    }
-  };
-
-  const onPointerCancel = () => {
-    if (!isDragging.current) return;
-    isDragging.current = false;
-    applyPct(dragStartPct.current);
-    setPct(dragStartPct.current);
-  };
+  const handlers = useDragSlider({
+    read: () => livePct.current,
+    apply: applyPct,
+    commit: setPct,
+    valueAt: (event) => percentAlong(trackRef.current, event.clientX),
+    applyOnDown: true,
+    settleOn: 'pointer',
+    keys: { ...PERCENT_RANGE, step: KEY_STEP_PCT },
+  });
 
   return (
     <div
@@ -90,22 +65,7 @@ export function FaderIsland({
       aria-valuetext={onAriaValueText ? onAriaValueText(pct) : `${pct}%`}
       tabIndex={0}
       className="fader-track"
-      onPointerDown={onPointerDown}
-      onPointerMove={onPointerMove}
-      onPointerUp={onPointerUp}
-      onPointerCancel={onPointerCancel}
-      onKeyDown={(e) => {
-        if (isDragging.current) return;
-        const next = sliderValueForKey(e.key, {
-          value: livePct.current,
-          ...PERCENT_RANGE,
-          step: KEY_STEP_PCT,
-        });
-        if (next === null) return;
-        e.preventDefault();
-        applyPct(next);
-        setPct(next);
-      }}
+      {...handlers}
     >
       <div
         ref={thumbRef}

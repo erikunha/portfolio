@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useRef, useState } from 'react';
-import { sliderValueForKey } from '@/lib/slider';
+import { useDragSlider } from '../useDragSlider.client';
 
 const MIN_ANGLE = -150;
 const MAX_ANGLE = 150;
@@ -9,6 +9,7 @@ const KNOB_SIZE = 26;
 const KNOB_CENTER = 13;
 const NEEDLE_LENGTH = 9;
 const KEY_STEP_DEGREES = 5;
+const DRAG_DEGREES_PER_PIXEL = 1.5;
 
 function clamp(v: number) {
   return Math.max(MIN_ANGLE, Math.min(MAX_ANGLE, v));
@@ -34,9 +35,6 @@ export function KnobIsland({ initialAngle, label, channelName, degreesUnit }: Kn
   const containerRef = useRef<HTMLDivElement>(null);
   const svgRef = useRef<SVGSVGElement>(null);
   const needleRef = useRef<SVGLineElement>(null);
-  const isDragging = useRef(false);
-  const dragStartY = useRef(0);
-  const dragStartAngle = useRef(initialAngle);
   const liveAngle = useRef(initialAngle);
 
   const updateNeedle = useCallback(
@@ -58,35 +56,17 @@ export function KnobIsland({ initialAngle, label, channelName, degreesUnit }: Kn
     [degreesUnit],
   );
 
-  const onPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
-    dragStartY.current = e.clientY;
-    dragStartAngle.current = liveAngle.current;
-    try {
-      e.currentTarget.setPointerCapture(e.pointerId);
-      // biome-ignore lint/suspicious/noEmptyBlockStatements: intentional no-op
-    } catch {}
-    isDragging.current = true;
-  };
-
-  const onPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
-    if (!isDragging.current) return;
-    const deltaY = dragStartY.current - e.clientY;
-    const newAngle = clamp(dragStartAngle.current + deltaY * 1.5);
-    updateNeedle(newAngle);
-  };
-
-  const onPointerUp = () => {
-    if (!isDragging.current) return;
-    isDragging.current = false;
-    setAngle(Math.round(liveAngle.current));
-  };
-
-  const onPointerCancel = () => {
-    if (!isDragging.current) return;
-    isDragging.current = false;
-    updateNeedle(dragStartAngle.current);
-    setAngle(Math.round(dragStartAngle.current));
-  };
+  const handlers = useDragSlider({
+    read: () => liveAngle.current,
+    apply: updateNeedle,
+    commit: (value) => setAngle(Math.round(value)),
+    valueAt: (event, origin) =>
+      clamp(origin.value + (origin.clientY - event.clientY) * DRAG_DEGREES_PER_PIXEL),
+    applyOnDown: false,
+    settleOn: 'live',
+    keys: { min: MIN_ANGLE, max: MAX_ANGLE, step: KEY_STEP_DEGREES },
+    normalizeKey: Math.round,
+  });
 
   const { x2, y2 } = angleToCoords(angle);
 
@@ -101,24 +81,7 @@ export function KnobIsland({ initialAngle, label, channelName, degreesUnit }: Kn
       aria-valuemax={MAX_ANGLE}
       aria-valuetext={`${angle > 0 ? '+' : ''}${angle} ${degreesUnit}`}
       tabIndex={0}
-      onPointerDown={onPointerDown}
-      onPointerMove={onPointerMove}
-      onPointerUp={onPointerUp}
-      onPointerCancel={onPointerCancel}
-      onKeyDown={(e) => {
-        if (isDragging.current) return;
-        const next = sliderValueForKey(e.key, {
-          value: liveAngle.current,
-          min: MIN_ANGLE,
-          max: MAX_ANGLE,
-          step: KEY_STEP_DEGREES,
-        });
-        if (next === null) return;
-        e.preventDefault();
-        const rounded = Math.round(next);
-        updateNeedle(rounded);
-        setAngle(rounded);
-      }}
+      {...handlers}
     >
       <svg
         ref={svgRef}
