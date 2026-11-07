@@ -1,3 +1,5 @@
+import { pad2, SECONDS_PER_MINUTE } from '@/lib/time';
+
 export type FeedVideo = {
   id: string;
   title: string;
@@ -28,8 +30,6 @@ const NAMED_ENTITIES: Record<string, string> = {
   quot: '"',
   apos: "'",
 };
-
-const PAD_WIDTH = 2;
 
 const YTIMG_SHARD_HOST_RE = /^https:\/\/i\d\.ytimg\.com\//;
 const YTIMG_CANONICAL_ORIGIN = 'https://i.ytimg.com/';
@@ -85,7 +85,6 @@ export function parseFeed(xml: string, limit = Number.POSITIVE_INFINITY): FeedVi
 
 const SHORTS_PATH = '/shorts/';
 const SHORT_MAX_SECONDS = 60;
-const SECONDS_PER_MINUTE = 60;
 
 export function durationSeconds(formatted: string): number | null {
   const parts = formatted.split(':').map(Number);
@@ -114,10 +113,9 @@ export function parseIsoDuration(iso: string): string | null {
   const h = Number(hours ?? 0);
   const m = Number(minutes ?? 0);
   const s = Number(seconds ?? 0);
-  const pad = (value: number) => String(value).padStart(PAD_WIDTH, '0');
 
-  if (h > 0) return `${h}:${pad(m)}:${pad(s)}`;
-  return `${m}:${pad(s)}`;
+  if (h > 0) return `${h}:${pad2(m)}:${pad2(s)}`;
+  return `${m}:${pad2(s)}`;
 }
 
 export type PlaylistItemsPayload = {

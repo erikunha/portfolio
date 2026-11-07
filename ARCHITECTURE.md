@@ -318,6 +318,7 @@ lib/media-queries.ts                  # MOBILE_QUERY shared by every matchMedia 
 lib/json-ld.ts                        # serializeJsonLd, the only JSON-LD serializer
 lib/defer-props.ts                    # deferred-section class and marker
 lib/breakpoint.ts                     # viewport breakpoint constants
+lib/time.ts                           # time-unit constants and the two-digit clock pad shared by lib and components
 lib/contact-validation.ts             # server-only ContactSchema, shared limits export, honeypot check
 lib/contact-delivery.ts               # shared Resend configuration and 10s send timeout
 lib/contact-outbox.ts                 # ordered pending ids and retry attempt counters
