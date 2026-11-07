@@ -69,7 +69,7 @@ Upstash sliding-window factories (lazy singletons over `Redis.fromEnv()`):
 | `rl:lighthouse` | 30 / 1m                     | `/api/lighthouse`                                                                             |
 | `rl:errlog`     | 10 / 1m                     | `/api/log`                                                                                    |
 | `rl:errlog:day` | 500 / 1d fixed, all clients | `/api/log` (past it the route answers ok and drops the record; a failed check records anyway) |
-| `rl:forget`     | 5 / 1h                      | `/api/log/forget` (the shell's `privacy forget --all` stops at the first 429 and prints the wait) |
+| `rl:forget`     | 21 / 1h                     | `/api/log/forget` (one tab's full id list plus a contact receipt fit one window; `privacy forget --all` stops at the first 429 and prints the wait) |
 
 `getClientIp` precedence: `x-forwarded-for[0]` → `x-real-ip` → `'unknown'` (local dev keys everything to `'unknown'`). The value becomes the rate-limit bucket: an IPv4 address stays as is, an IPv6 address is reduced to its `/64` prefix (a client owns a whole `/64`, so a per-address bucket resets at will), an IPv4-mapped IPv6 address becomes the IPv4 address, and a value that is not an IP address goes to `'unknown'`.
 

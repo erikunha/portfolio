@@ -1,11 +1,12 @@
 'use client';
 
 import { useSyncExternalStore } from 'react';
+import { SESSION_REF_CAP } from '@/lib/forget-limits';
 
 const STORAGE_KEY = 'request-refs';
 const MAX_REF_LENGTH = 128;
 
-export const REQUEST_REF_LIMITS = { maxRefs: 20 } as const;
+export const REQUEST_REF_LIMITS = { maxRefs: SESSION_REF_CAP } as const;
 
 const EMPTY: readonly string[] = [];
 const listeners = new Set<() => void>();

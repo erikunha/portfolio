@@ -583,7 +583,7 @@ Observability spans real-user telemetry, structured logs and client error captur
 
 - **`lib/ask-log.ts`** persists every `/api/ask` interaction that reaches the model or the rate, duplicate or budget gates to Upstash KV `ask:log:{yyyy-mm-dd}:{requestId}` with 90-day TTL. Captures `{requestId, ts, ipHash, question (≤500c), answer (≤1000c), inputTokens, outputTokens, durationMs, status}`. A request rejected for an injection pattern or an invalid body writes no row; it leaves one `ask rejected` log line with the request id and `ipHash`. Enables retrospective audit of what the LLM said about Erik + product learning on user questions.
 - **`X-Request-Id`** response header on `/api/ask` surfaces the requestId to the client for the GDPR/LGPD erasure flow.
-- **`app/api/log/forget/route.ts`** accepts POST `{requestId}` and idempotently DELETEs the matching record across every day-partition a live record can carry (the 90-day TTL plus the current day, 91 dates, from `askLogDatesInTtl`). Rate-limited (5/IP/hour) via `getForgetLimit()`.
+- **`app/api/log/forget/route.ts`** accepts POST `{requestId}` and idempotently DELETEs the matching record across every day-partition a live record can carry (the 90-day TTL plus the current day, 91 dates, from `askLogDatesInTtl`). Rate-limited (21/IP/hour: the 20 ids one tab holds plus one contact receipt, both counts from `lib/forget-limits.ts`) via `getForgetLimit()`.
 
 ### Inspection surfaces
 
