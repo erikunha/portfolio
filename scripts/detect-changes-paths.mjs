@@ -109,6 +109,7 @@ export const IGNORED_PATHS = [
   'vitest.config.ts',
   'scripts/__tests__/',
   'scripts/lib/',
+  'scripts/metrics/',
   'scripts/agent-eval.ts',
   'scripts/check-claude-approval.ts',
   'scripts/check-client-naming.mjs',

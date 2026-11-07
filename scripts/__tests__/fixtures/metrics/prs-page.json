@@ -1,0 +1,41 @@
+{
+  "data": {
+    "search": {
+      "pageInfo": { "hasNextPage": true, "endCursor": "Y3Vyc29yOjQ=" },
+      "nodes": [
+        {
+          "number": 367,
+          "createdAt": "2026-11-07T09:07:31Z",
+          "mergedAt": "2026-11-07T10:18:19Z",
+          "baseRefName": "feat/terminal-redesign",
+          "author": { "__typename": "User", "login": "erikunha" },
+          "commits": { "nodes": [{ "commit": { "authoredDate": "2026-11-07T09:05:12Z" } }] }
+        },
+        {
+          "number": 366,
+          "createdAt": "2026-11-07T09:03:02Z",
+          "mergedAt": "2026-11-07T11:26:51Z",
+          "baseRefName": "feat/terminal-redesign",
+          "author": { "__typename": "User", "login": "erikunha" },
+          "commits": { "nodes": [{ "commit": { "authoredDate": "2026-11-07T09:01:32Z" } }] }
+        },
+        {
+          "number": 365,
+          "createdAt": "2026-11-07T08:56:49Z",
+          "mergedAt": "2026-11-07T10:51:35Z",
+          "baseRefName": "feat/terminal-redesign",
+          "author": { "__typename": "User", "login": "erikunha" },
+          "commits": { "nodes": [{ "commit": { "authoredDate": "2026-11-07T08:54:54Z" } }] }
+        },
+        {
+          "number": 364,
+          "createdAt": "2026-11-07T08:55:01Z",
+          "mergedAt": "2026-11-07T09:20:59Z",
+          "baseRefName": "feat/terminal-redesign",
+          "author": { "__typename": "User", "login": "erikunha" },
+          "commits": { "nodes": [{ "commit": { "authoredDate": "2026-11-07T08:53:03Z" } }] }
+        }
+      ]
+    }
+  }
+}
