@@ -1,12 +1,8 @@
 import type { Metadata } from 'next';
 import { linksContent } from '@/content/links';
-import {
-  LINKS_LOCALE,
-  LINKS_OG_LOCALE,
-  LINKS_PATH,
-  type LinksLocale,
-} from '@/content/links.constants';
+import { LINKS_LOCALE, LINKS_PATH, type LinksLocale } from '@/content/links.constants';
 import { OG_IMAGE_PATH, ogImage, SITE_NAME } from '@/content/seo';
+import { SITE_OG_LOCALE } from '@/content/site-locale';
 
 export function linksPageMetadata(locale: LinksLocale): Metadata {
   const { meta } = linksContent;
@@ -27,7 +23,7 @@ export function linksPageMetadata(locale: LinksLocale): Metadata {
     },
     openGraph: {
       type: 'profile',
-      locale: LINKS_OG_LOCALE[locale],
+      locale: SITE_OG_LOCALE[locale],
       url: path,
       title,
       description,
