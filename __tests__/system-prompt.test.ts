@@ -6,9 +6,9 @@ import { projects } from '@/content/projects';
 import { personSchema } from '@/content/seo';
 import { SITE_LOCALE } from '@/content/site-locale';
 import { unknowns } from '@/content/unknowns';
+import { isCacheEligible } from '@/lib/ask/cache-eligibility';
 import { SYSTEM_TEXT } from '@/lib/ask/system-prompt';
 
-const CACHE_ELIGIBILITY_MIN_CHARS = 3500;
 const COUNTRY_AND_AREA_CODE_LENGTH = 4;
 const PHONE_LOCAL_DIGITS = personSchema.telephone
   .replace(/\D/g, '')
@@ -16,8 +16,8 @@ const PHONE_LOCAL_DIGITS = personSchema.telephone
 
 describe('lib/ask/system-prompt', () => {
   describe('cache eligibility', () => {
-    it('SYSTEM_TEXT is ≥ 3500 chars (proxy for ≥ 1024 tokens, Haiku ephemeral cache minimum)', () => {
-      expect(SYSTEM_TEXT.length).toBeGreaterThanOrEqual(CACHE_ELIGIBILITY_MIN_CHARS);
+    it('SYSTEM_TEXT clears the Haiku 4.5 minimum cacheable prefix by the conservative token bound', () => {
+      expect(isCacheEligible(SYSTEM_TEXT)).toBe(true);
     });
   });
 
