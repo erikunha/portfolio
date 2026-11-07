@@ -77,11 +77,11 @@ cases are deliberately borderline-hard.
   sheet or omit a named fact. Two more traps cover the fact sheet: `true-fact-absent` (a true fact
   the criterion does not name, must pass) and `false-date` (a wrong date, must fail).
 - **The judge sees a fact sheet.** `buildJudgeFactSheet` (`lib/eval/fact-sheet.ts`) renders the run
-  date, the current title, the core stack and AI focus, the credentials, the employment history
+  date, the current title, the core stack and AI focus, the stack, work authorization and targeting lines from `content/ask-facts.ts` (the module the system prompt composes them from), the credentials, the employment history
   and the education from content, and `scripts/ask-eval.ts` passes it
   to the calibration pass and to every corpus grade. A claim that matches the sheet is never
   fabricated, so a criterion may leave out a true fact without failing the answer that states it.
-  Add a field to the sheet when a criterion starts depending on a fact the sheet does not carry.
+  Add a field to the sheet when a criterion starts depending on a fact the sheet does not carry. A fact about Erik that the system prompt states belongs in `content/ask-facts.ts`, never as a literal in `lib/ask/system-prompt.ts`, so the sheet and the prompt cannot diverge.
 - A stream that errors mid-answer (upstream failure, timeout) is `errored` and excluded from the rates, so a gateway outage cannot pass a jailbreak item; only an output-guard abort is graded as an answer. A judge API failure or unparseable judge reply on a corpus item is `errored` the same way (`gradeVerdict` in `lib/eval/ask-grading.ts`), so one Gateway blip cannot fail the 100% jailbreak gate.
 - Both files are Zod-validated by structural unit tests (`__tests__/ask-eval-corpus.test.ts`,
   `__tests__/ask-eval-calibration.test.ts`) that run without any API call — run `pnpm test`

@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { askFacts } from '@/content/ask-facts';
 import { credentials } from '@/content/credentials';
 import { education } from '@/content/education';
 import { gitLog } from '@/content/git-log';
@@ -9,7 +10,7 @@ import { WORK_SCOPE_SENTENCE } from '@/content/work-scope';
 import { buildJudgeFactSheet } from '@/lib/eval/fact-sheet';
 
 const TODAY = new Date('2026-11-07T12:00:00Z');
-const MAX_SHEET_LENGTH = 5000;
+const MAX_SHEET_LENGTH = 18000;
 
 describe('lib/eval/fact-sheet', () => {
   it('states the run date so a recent start date is not read as a future date', () => {
@@ -66,8 +67,28 @@ describe('lib/eval/fact-sheet', () => {
     }
   });
 
+  it('carries each role context and highlights so a figure stated there is never judged invented', () => {
+    const sheet = buildJudgeFactSheet(TODAY);
+    for (const entry of gitLog[SITE_LOCALE.en]) {
+      if (entry.context) expect(sheet, entry.company).toContain(entry.context);
+      for (const highlight of entry.highlights) expect(sheet, entry.company).toContain(highlight);
+    }
+  });
+
   it('states the work scope Erik is open to', () => {
     expect(buildJudgeFactSheet(TODAY)).toContain(WORK_SCOPE_SENTENCE);
+  });
+
+  it('states every fact the system prompt states, so a true fact is never judged fabricated', () => {
+    const sheet = buildJudgeFactSheet(TODAY);
+    expect(sheet).toContain(askFacts.openTo);
+    for (const line of [
+      ...askFacts.coreStack,
+      ...askFacts.currentRoleScope,
+      ...askFacts.targeting,
+    ]) {
+      expect(sheet, line).toContain(line);
+    }
   });
 
   it('lists every credential with its badge and evidence', () => {

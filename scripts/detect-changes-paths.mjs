@@ -14,6 +14,7 @@ export const AI_PATHS = [
   'lib/hiring-profile.ts',
   'lib/eval/',
   'content/ask-eval-corpus.ts',
+  'content/ask-facts.ts',
   'content/ask-eval-calibration.ts',
   'content/perf-receipts.ts',
   'content/projects.ts',
