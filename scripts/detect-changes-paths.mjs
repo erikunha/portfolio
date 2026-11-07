@@ -7,6 +7,7 @@ export const AI_PATHS = [
   'lib/rate-limit.ts',
   'lib/env.ts',
   'lib/log.ts',
+  'lib/log-error.ts',
   'lib/server/',
   'lib/agent/',
   'lib/hiring-profile.ts',
