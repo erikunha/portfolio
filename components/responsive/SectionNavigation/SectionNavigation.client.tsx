@@ -5,6 +5,7 @@ import {
   createContext,
   type MouseEvent,
   type ReactNode,
+  Suspense,
   useCallback,
   useContext,
   useEffect,
@@ -18,10 +19,12 @@ import { externalLinkProps } from '@/components/ExternalLink';
 import { LocaleSwitch } from '@/components/LocaleSwitch/LocaleSwitch';
 import { MAIN_CONTENT_ID } from '@/components/PageMain';
 import { StatusDot } from '@/components/StatusDot';
+import { TOPBAR_MOTION_LABEL } from '@/content/nav';
 import type { NavigationCopy, SiteNavChrome } from '@/content/navigation';
 import {
   headerLanguageSwitchPaths,
   LANGUAGE_SWITCH_NAME,
+  LOCALE_HOME_PATH,
   type SiteLocale,
   withSectionHash,
 } from '@/content/site-locale';
@@ -275,22 +278,44 @@ export function SectionNavigationProvider({
   return <NavigationContext.Provider value={value}>{children}</NavigationContext.Provider>;
 }
 
-export function LanguageSwitch({ className }: { className?: string }) {
+function LanguageSwitchView({
+  className,
+  paths,
+}: {
+  className: string | undefined;
+  paths: Record<SiteLocale, string>;
+}) {
   const { locale, copy } = useSectionNavigation();
-  const currentId = useCurrentSection();
-  const pathname = usePathname();
-  const paths = pathname ? headerLanguageSwitchPaths(pathname) : null;
-  if (!pathname || !paths) return null;
-  const sectionId = currentId && currentId !== HOME_SECTION_ID ? currentId : null;
   return (
     <LocaleSwitch
       label={copy.langSwitchLabel}
       current={locale}
-      hrefs={withSectionHash(pathname, paths, sectionId)}
+      hrefs={paths}
       names={LANGUAGE_SWITCH_NAME}
       className={cn('flex-none', className)}
       data-lang-switch=""
     />
+  );
+}
+
+function CurrentLanguageSwitch({ className }: { className: string | undefined }) {
+  const currentId = useCurrentSection();
+  const pathname = usePathname();
+  if (!pathname) return null;
+  const sectionId = currentId && currentId !== HOME_SECTION_ID ? currentId : null;
+  return (
+    <LanguageSwitchView
+      className={className}
+      paths={withSectionHash(pathname, headerLanguageSwitchPaths(pathname), sectionId)}
+    />
+  );
+}
+
+export function LanguageSwitch({ className }: { className?: string }) {
+  return (
+    <Suspense fallback={<LanguageSwitchView className={className} paths={LOCALE_HOME_PATH} />}>
+      <CurrentLanguageSwitch className={className} />
+    </Suspense>
   );
 }
 
@@ -405,6 +430,7 @@ export function SectionNavigation({ extra }: { extra?: ReactNode }) {
               type="button"
               className="menu-motion"
               data-motion-toggle=""
+              aria-label={TOPBAR_MOTION_LABEL}
               aria-pressed={motionOn}
               onClick={toggleMotion}
             >

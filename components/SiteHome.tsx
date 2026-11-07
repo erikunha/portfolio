@@ -1,7 +1,6 @@
-import { AppShell } from '@/components/AppShell';
-import { BrandLink } from '@/components/BrandLink';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { PageMain } from '@/components/PageMain';
+import { SiteShell } from '@/components/SiteShell';
 import { About } from '@/components/sections/About';
 import { AiMetricsSection } from '@/components/sections/AiMetricsSection';
 import { ContactSection } from '@/components/sections/ContactSection';
@@ -12,17 +11,11 @@ import { Hero } from '@/components/sections/Hero';
 import { HottestTakesSection } from '@/components/sections/HottestTakesSection';
 import { ProjectsSection } from '@/components/sections/ProjectsSection';
 import { ShellSection } from '@/components/sections/ShellSection';
-import { NAVIGATION, siteNavChrome } from '@/content/navigation';
 import type { SiteLocale } from '@/content/site-locale';
 
 export function SiteHome({ locale }: { locale: SiteLocale }) {
   return (
-    <AppShell
-      brand={<BrandLink locale={locale} />}
-      chrome={siteNavChrome(locale)}
-      locale={locale}
-      skipLabel={NAVIGATION[locale].copy.skipLabel}
-    >
+    <SiteShell locale={locale}>
       <PageMain>
         <ErrorBoundary locale={locale}>
           <Hero locale={locale} />
@@ -55,6 +48,6 @@ export function SiteHome({ locale }: { locale: SiteLocale }) {
       <ErrorBoundary locale={locale}>
         <Footer locale={locale} />
       </ErrorBoundary>
-    </AppShell>
+    </SiteShell>
   );
 }

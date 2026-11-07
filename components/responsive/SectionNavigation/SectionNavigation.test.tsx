@@ -524,15 +524,47 @@ describe('SectionNavigation', () => {
       expect(nav.textContent).not.toContain('\u00b7');
     });
 
-    it.each(['/design-system', '/unknown', null, '/links', '/links/en'])(
-      'renders nothing on %s (no pair, or the page renders its own switch)',
-      (path) => {
-        mockPathname = path;
-        const { container } = renderSwitch(LOCALE);
+    it.each([
+      ['/links', SITE_LOCALE.pt, ['/links/en', '/links'], [null, 'page']],
+      ['/links/en', SITE_LOCALE.en, ['/links/en', '/links'], ['page', null]],
+    ] as const)('on %s serves the pair the links page owns', (path, locale, hrefs, current) => {
+      mockPathname = path;
+      renderSwitch(locale);
+      const nav = screen.getByRole('navigation', { name: NAVIGATION[locale].copy.langSwitchLabel });
+      const links = within(nav).getAllByRole('link');
 
-        expect(container.querySelector('[data-lang-switch]')).toBeNull();
+      expect(links.map((link) => link.getAttribute('href'))).toEqual(hrefs);
+      expect(links.map((link) => link.getAttribute('aria-current'))).toEqual(current);
+    });
+
+    it.each([
+      ['/design-system', SITE_LOCALE.en, ['/design-system', '/pt']],
+      ['/design-system/tokens', SITE_LOCALE.en, ['/design-system/tokens', '/pt']],
+      ['/no-such-page', SITE_LOCALE.en, ['/no-such-page', '/pt']],
+      ['/pt/no-such-page', SITE_LOCALE.pt, ['/', '/pt/no-such-page']],
+    ] as const)(
+      'on %s keeps the switch and sends the other language to its home',
+      (path, locale, hrefs) => {
+        mockPathname = path;
+        renderSwitch(locale);
+        const nav = screen.getByRole('navigation', {
+          name: NAVIGATION[locale].copy.langSwitchLabel,
+        });
+
+        expect(
+          within(nav)
+            .getAllByRole('link')
+            .map((link) => link.getAttribute('href')),
+        ).toEqual(hrefs);
       },
     );
+
+    it('renders nothing while the pathname is unknown', () => {
+      mockPathname = null;
+      const { container } = renderSwitch(LOCALE);
+
+      expect(container.querySelector('[data-lang-switch]')).toBeNull();
+    });
   });
 
   it('shares one motion state between the drawer toggle and the topbar toggle', () => {
@@ -546,6 +578,23 @@ describe('SectionNavigation', () => {
 
     expect(toggle.getAttribute('aria-pressed')).toBe('false');
     expect(toggle.textContent).toContain(NAVIGATION[LOCALE].copy.motionOff);
+  });
+
+  it('keeps one fixed accessible name on the drawer motion toggle and leaves the state to aria-pressed', () => {
+    render(<Page />);
+    const toggle = document.querySelector('.menu-motion') as HTMLButtonElement;
+
+    expect(
+      screen.getByRole('button', { name: 'MOTION', pressed: true }),
+      'a name that spells the state ("MOTION: ON") on top of aria-pressed is announced twice and contradicts itself after a toggle',
+    ).toBe(toggle);
+
+    fireEvent.click(toggle);
+
+    expect(screen.getByRole('button', { name: 'MOTION', pressed: false })).toBe(toggle);
+    expect(toggle.textContent, 'the visible text still spells the state').toContain(
+      NAVIGATION[LOCALE].copy.motionOff,
+    );
   });
 
   describe('drawer', () => {

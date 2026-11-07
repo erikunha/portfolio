@@ -97,12 +97,12 @@ test.describe('reading views share the home header', () => {
       }
     });
 
-    test(`${path} has one h1, one main, one skip link and no second banner`, async ({ page }) => {
+    test(`${path} has one h1, one main, one skip link and one banner`, async ({ page }) => {
       await page.goto(path);
       await expect(page.getByRole('heading', { level: 1 })).toHaveCount(1);
       await expect(page.locator(MAIN)).toHaveCount(1);
       await expect(page.locator('a.skip-to-content')).toHaveCount(1);
-      await expect(page.getByRole('banner')).toHaveCount(0);
+      await expect(page.getByRole('banner')).toHaveCount(1);
     });
   }
 

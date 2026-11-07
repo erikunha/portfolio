@@ -45,23 +45,35 @@
   }
 
   .hero-context {
+    --hero-context-gap: 3ch;
     display: flex;
     flex-wrap: wrap;
-    column-gap: var(--spacing-3);
+    column-gap: var(--hero-context-gap);
     row-gap: calc(var(--spacing-1) * 1.5);
     margin: 0 0 calc(var(--spacing-3) + var(--spacing-1) / 2);
     color: var(--color-text-secondary);
     font-size: var(--text-sm);
     letter-spacing: 0.08em;
+    clip-path: inset(-0.5em -100vw -0.5em 0);
   }
 
-  .hero-context-fact--location {
+  .hero-context-fact {
+    position: relative;
     display: flex;
-    column-gap: var(--spacing-3);
+    column-gap: var(--hero-context-gap);
   }
 
-  .hero-context-separator {
-    display: none;
+  .hero-context-item {
+    position: relative;
+    white-space: nowrap;
+  }
+
+  .hero-context-fact:not(:first-child)::before,
+  .hero-context-item:not(:first-child)::before {
+    content: "·" / "";
+    position: absolute;
+    left: calc(var(--hero-context-gap) / -2);
+    transform: translateX(-50%);
   }
 
   .hero-context b {
@@ -149,21 +161,8 @@
       letter-spacing: 0;
     }
 
-    .hero-context-fact--location {
-      display: block;
-      text-wrap: balance;
-    }
-
-    .hero-context-fact--location .hero-context-item {
-      white-space: nowrap;
-    }
-
-    .hero-context-separator {
-      display: inline;
-    }
-
-    .hero-context-fact--domain {
-      text-wrap: balance;
+    .hero-context-fact {
+      flex-wrap: wrap;
     }
   }
 

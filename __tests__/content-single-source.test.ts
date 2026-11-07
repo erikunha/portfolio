@@ -209,7 +209,6 @@ describe('one source per fact', () => {
           footerContent[locale].groups.flatMap((group) => group.links.map((link) => link.href)),
         ],
         ['404 suggestions', errorsContent[locale].notFound.suggestions.map((link) => link.href)],
-        ['error chrome', errorsClientContent[locale].chrome.nav.map((link) => link.href)],
       ];
       for (const [name, hrefs] of surfaces) {
         const linksHrefs = hrefs.filter((href) => href.startsWith('/links'));

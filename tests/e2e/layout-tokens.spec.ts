@@ -4,8 +4,7 @@ import { waitForHydration } from './_helpers/hydration';
 const GUTTER_AT_390 = 16;
 const GUTTER_AT_1280 = 24;
 const MEASURE_PAGE = 1200;
-const PAGE_TOP_PHONE = 24;
-const PAGE_TOP_TABLET = 48;
+const PAGE_TOP_PHONE = 32;
 const SPACE_SECTION_PHONE = 32;
 const SPACE_SECTION_TABLET = 48;
 const LEADING_TOKENS = ['1.1', '1.35', '1.6'];
@@ -46,8 +45,7 @@ const tokenPx = (page: Page, expression: string) =>
     return resolved;
   }, expression);
 
-const CLEARS_TOPBAR_PATHS = ['/', '/summary', '/cv', '/links', '/design-system'];
-const HOME_TOP_EXPRESSION = 'calc(var(--topbar-height) + var(--spacing-6))';
+const HOME_TOP_EXPRESSION = 'calc(var(--topbar-height) + var(--space-page-top))';
 
 test.describe('layout tokens', () => {
   for (const { path, container } of PAGES) {
@@ -59,9 +57,7 @@ test.describe('layout tokens', () => {
       expect(await paddingTop(page, container)).toBe(PAGE_TOP_PHONE);
 
       await page.setViewportSize({ width: 768, height: 1024 });
-      const expected = CLEARS_TOPBAR_PATHS.includes(path)
-        ? await tokenPx(page, HOME_TOP_EXPRESSION)
-        : PAGE_TOP_TABLET;
+      const expected = await tokenPx(page, HOME_TOP_EXPRESSION);
       expect(await paddingTop(page, container)).toBe(expected);
     });
   }
