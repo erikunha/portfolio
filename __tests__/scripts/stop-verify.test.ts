@@ -19,12 +19,19 @@ const stub = (name: string, exitCode: number) => {
 
 const git = (...args: string[]) => spawnSync('git', args, { cwd: project, encoding: 'utf8' });
 
+const hookEnv = (extra: Record<string, string>): NodeJS.ProcessEnv => {
+  const env: NodeJS.ProcessEnv = { ...process.env, CLAUDE_PROJECT_DIR: project };
+  delete env.CI;
+  delete env.GITHUB_ACTIONS;
+  return { ...env, ...extra };
+};
+
 const runHook = (input: object, env: Record<string, string> = {}) =>
   spawnSync('node', [SCRIPT], {
     cwd: project,
     input: JSON.stringify(input),
     encoding: 'utf8',
-    env: { PATH: process.env.PATH ?? '', CLAUDE_PROJECT_DIR: project, ...env },
+    env: hookEnv(env),
   });
 
 beforeEach(() => {
