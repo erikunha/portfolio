@@ -135,6 +135,16 @@ test('toolbar chips fill the prompt instead of submitting', async ({ page }) => 
   await expect(feed).toContainText('commands:');
 });
 
+test('the first line is the welcome for the viewport the visitor is on', async ({ page }) => {
+  await setupAskPage(page, { ask: 'happy', log: 'accept' });
+  const { welcome, mobileWelcome } = shellUi[SITE_LOCALE.en];
+  const isMobile = test.info().project.name.includes('mobile');
+  await expect(
+    page.locator('[role="log"]'),
+    'hydration must not freeze the desktop welcome the server rendered',
+  ).toContainText(isMobile ? mobileWelcome : welcome);
+});
+
 test('the clear chip still runs immediately', async ({ page }) => {
   await setupAskPage(page, { ask: 'happy', log: 'accept' });
   await ask(page, 'Who is Erik?');

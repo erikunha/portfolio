@@ -45,6 +45,7 @@ const Key = {
   Escape: 'Escape',
 } as const;
 const SHELL_COMMAND_EVENT = 'shell-cmd-run';
+const COMMAND_FIELD = 'command';
 const COMPOSITION_KEYCODE = 229;
 const WINDOW_DOT_SIZE = 10;
 const THINKING_TICK_MS = 100;
@@ -124,14 +125,8 @@ export function InteractiveShell({
   const lineId = useRef(0);
   const nextId = useCallback(() => ++lineId.current, []);
   const initialLines = useCallback(
-    (): Line[] => [
-      {
-        id: nextId(),
-        kind: ShellLineKind.Info,
-        text: isMobile ? ui.mobileWelcome : ui.welcome,
-      },
-    ],
-    [isMobile, nextId, ui],
+    (): Line[] => [{ id: nextId(), kind: ShellLineKind.Info, text: ui.welcome, welcome: true }],
+    [nextId, ui],
   );
   const [history, setHistory] = useState<Line[]>(initialLines);
   const [input, setInput] = useState('');
@@ -146,7 +141,6 @@ export function InteractiveShell({
   const commands = useRef<string[]>([]);
   const historyIndex = useRef(0);
   const draft = useRef('');
-  const initializedRef = useRef(false);
 
   const announce = useCallback((text: string) => {
     setAnnouncement((previous) => ({ id: previous.id + 1, text }));
@@ -177,12 +171,6 @@ export function InteractiveShell({
     setInput(typed);
     draft.current = typed;
   }, []);
-
-  useEffect(() => {
-    if (initializedRef.current) return;
-    initializedRef.current = true;
-    if (isMobile) setHistory(initialLines());
-  }, [isMobile, initialLines]);
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: history and streamingText trigger scroll on the stable feed ref
   useEffect(() => {
@@ -399,7 +387,10 @@ export function InteractiveShell({
                   {line.ai && <span className="shell-ai-label">{ui.aiLabel}: </span>}
                   {line.prefix && <strong className="shell-stderr-command">{line.prefix}</strong>}
                   {line.prefix && ' '}
-                  <LineText text={line.text} ui={ui} />
+                  <LineText
+                    text={line.welcome && isMobile ? ui.mobileWelcome : line.text}
+                    ui={ui}
+                  />
                   {line.retry && (
                     <>
                       {' '}
@@ -436,6 +427,10 @@ export function InteractiveShell({
       <form
         className="shell-form"
         data-testid="shell-form"
+        action={(data) => {
+          const queued = data.get(COMMAND_FIELD);
+          if (typeof queued === 'string') runCommand(queued);
+        }}
         onSubmit={(event) => {
           event.preventDefault();
           runCommand(input);
@@ -446,7 +441,7 @@ export function InteractiveShell({
           <input
             ref={inputRef}
             className="shell-input"
-            name="command"
+            name={COMMAND_FIELD}
             enterKeyHint="send"
             value={input}
             onChange={(event) => {
