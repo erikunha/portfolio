@@ -32,7 +32,7 @@ flowchart TB
 
 ## Repository enforcement
 
-The repository registers one Claude Code hook, a `Stop` hook running `scripts/stop-verify.mjs` (Biome on changed files and the typecheck; skipped in CI), and permission deny rules for broad `git add`, `gh pr merge`, npm and yarn installs and local env reads. Plan review and API review are conventions in `AGENTS.md`, not hook gates. User-level runtime policies are configured outside this repository.
+The repository registers two Claude Code hooks, a `Stop` hook running `scripts/stop-verify.mjs` (Biome on changed files and the typecheck; skipped in CI) and a `PreToolUse` hook running `scripts/guard-merge-main.mjs` (blocks `gh pr merge` when the PR base is `main` or unknown), and permission deny rules for broad `git add`, npm and yarn installs and local env reads. Plan review and API review are conventions in `AGENTS.md`, not hook gates. User-level runtime policies are configured outside this repository.
 
 Git hooks enforce separate stages:
 - `.husky/pre-commit` runs `pnpm check` and `pnpm gitleaks:staged`.
@@ -45,7 +45,7 @@ Git hooks enforce separate stages:
 
 `.github/workflows/claude-review.yml` configures the automated reviewer with `.github/claude-review-prompt.md` and `REVIEW.md`. It runs only when an owner, member or collaborator comments `/claude-review` on a PR and is never a merge requirement. `pnpm claude-gate` is an optional check of its approval against the current head. `pnpm pr:gate` checks review thread resolution and replies. These commands do not prove a local pre-PR review ran.
 
-The pre-PR review procedure and the merge restriction are documented in `AGENTS.md`. For Claude Code, a permission deny rule blocks `gh pr merge`; other tools rely on the written rule.
+The pre-PR review procedure and the merge restriction are documented in `AGENTS.md`. For Claude Code, the `guard-merge-main` hook blocks an agent merge into `main`; other tools rely on the written rule.
 
 ## Evaluation tools
 

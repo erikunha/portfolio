@@ -4,7 +4,6 @@
       "Bash(git add .:*)",
       "Bash(git add -A:*)",
       "Bash(git add --all:*)",
-      "Bash(gh pr merge:*)",
       "Bash(npm install:*)",
       "Bash(npm i:*)",
       "Bash(yarn:*)",
@@ -17,6 +16,18 @@
     ]
   },
   "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR/scripts/guard-merge-main.mjs\"",
+            "timeout": 30
+          }
+        ]
+      }
+    ],
     "Stop": [
       {
         "hooks": [

@@ -127,7 +127,8 @@ Both desktop and mobile collect `/`, `/pt`, `/cv`, `/summary`, `/links`, `/links
 commit (scope blocks) -> (self-review the diff before opening the PR)
   -> pnpm ci:local + gates:runtime -> gh pr create (fill the template)
   -> resolve every review thread (rebase before each push) -> pnpm pr:gate
-  -> repo owner runs gh pr merge (project policy; no agent hook enforces it)
+  -> sub-PR into feat/*: agent may merge after CI green; PR into main: repo owner runs gh pr merge
+     (Claude Code hook guard-merge-main blocks an agent merge into main)
 ```
 
 Large features use an **integration branch + sub-PRs** (`feat/<feature>` ← `feat/<feature>-<part>`) to group independently reviewable changes. See `AGENTS.md` "Git and pull requests".

@@ -82,7 +82,7 @@ Pre-PR review is a convention: read the diff and run the project review procedur
 
 ## 4. Enforcement boundaries
 
-`.claude/settings.json` denies broad `git add`, `gh pr merge`, npm and yarn installs and local env reads, and registers one Stop hook (Biome on changed files and the typecheck, skipped in CI). Git hooks run Biome and staged gitleaks at pre-commit, commitlint at commit-msg, and branch/main-ref checks plus `pnpm verify` at pre-push.
+`.claude/settings.json` denies broad `git add`, npm and yarn installs and local env reads, and registers a Stop hook (Biome on changed files and the typecheck, skipped in CI) and a PreToolUse hook that blocks `gh pr merge` into `main`. Git hooks run Biome and staged gitleaks at pre-commit, commitlint at commit-msg, and branch/main-ref checks plus `pnpm verify` at pre-push.
 
 CI runs separate quality, typecheck, unit-test and build jobs. Runtime and AI jobs use change filters. Semgrep findings are report-only; the fixture and report-existence checks can still fail. User-global runtime restrictions require separate inspection.
 

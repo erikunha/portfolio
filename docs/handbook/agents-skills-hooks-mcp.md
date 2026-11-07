@@ -13,7 +13,7 @@ This reference describes tracked project configuration. User-level tools and hoo
 | `.claude/skills/<name>`   | Relative symlink to `../../.agents/skills/<name>`                                                      | Claude Code         |
 | `.claude/rules/*.md`      | Path-scoped rules with `paths:` frontmatter                                                            | Claude Code         |
 | `.claude/agents/`         | One read-only agent for the CI review job                                                              | Claude Code         |
-| `.claude/settings.json`   | Team permissions (deny rules) and the Stop hook                                                        | Claude Code         |
+| `.claude/settings.json`   | Team permissions (deny rules) and the hooks                                                            | Claude Code         |
 | `.mcp.json`, `.codex/config.toml` | The same MCP servers, one file per tool (project layer, trusted projects only for Codex) | Claude Code, Codex  |
 | `.github/CODEOWNERS`      | Code owner for every path above                                                                        | GitHub              |
 
@@ -43,13 +43,13 @@ is `agents/openai.yaml` with `policy.allow_implicit_invocation: false`. A guard 
 `.claude/agents/review-worker.md` is the only project agent. It has `Read`, `Grep` and `Glob` only, and
 the CI review job dispatches it for bounded investigations. A test pins its tool list.
 
-`.claude/settings.json` registers one hook, a `Stop` hook running `scripts/stop-verify.mjs`: Biome on the
+`.claude/settings.json` registers two hooks. A `PreToolUse` hook on `Bash` runs `scripts/guard-merge-main.mjs`: for each `gh pr merge` it asks `gh pr view` for the PR base and exits 2 when the base is `main` or `master`, or cannot be read (gh missing, offline, no such PR), so an unknown base fails closed. It does not see `gh api` merges. A `Stop` hook runs `scripts/stop-verify.mjs`: Biome on the
 changed files, then the typecheck when TypeScript changed. It measured about half a second on a
 warm tree, exits 2 to keep the turn going when a check fails, and does nothing in CI or when it is
 already continuing a turn. Heavy checks stay in the pre-push hook and CI.
 
 The permission deny rules turn the rules with no exceptions into enforcement for Claude Code:
-broad `git add`, `gh pr merge`, npm and yarn installs, and reads of local env files. Codex has no
+broad `git add`, npm and yarn installs, and reads of local env files. Codex has no
 equivalent here, so the same rules are also written in `AGENTS.md`.
 
 No project hook proves that a pre-PR review or an API review took place; those are conventions.

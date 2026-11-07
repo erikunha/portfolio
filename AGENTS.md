@@ -98,7 +98,7 @@ Lighthouse (`lighthouserc.json`, `lighthouserc.mobile.json`), `pnpm route-js-che
 - After implementing a section or component, look at `pnpm dev` at 1280x720 and 375x812 in a real browser before writing or changing tests. Fix what looks wrong first.
 - Review is opt-in: `claude-review` runs only when an owner comments `/claude-review`, and it is never a merge gate. Read your own diff before opening the PR. Fix all findings in one commit, reply in each thread with what was done and the fix SHA, then resolve.
 - Every PR comment is a review thread on a file and line, never a timeline comment: `pnpm pr:gate` reads `reviewThreads` and fails `silent_resolve`. Reply in the existing thread or create one with `commit_id`, `path` and `line`.
-- Merge readiness: CI green, base contained, `pnpm pr:gate` passes. Rebase onto the base before pushing and check that the pushed SHA is the PR head. Agents never run `gh pr merge`; the owner merges.
+- Merge readiness: CI green, base contained, `pnpm pr:gate` passes. Rebase onto the base before pushing and check that the pushed SHA is the PR head. Agents never merge into `main`; the owner runs that merge. Sub-PRs into an integration branch (`feat/*`) may be merged by an agent once CI is green (Argos excepted) and the review is done.
 - Emergency rollback: `vercel ls`, then `vercel promote <url>` (30s, no code change); or `git revert HEAD && git push --no-verify`. Verify with `curl https://erikunha.dev/api/healthz | jq .sha`.
 
 ## Subagents

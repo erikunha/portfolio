@@ -40,7 +40,6 @@ const REQUIRED_DENY_RULES = [
   'Bash(git add .:*)',
   'Bash(git add -A:*)',
   'Bash(git add --all:*)',
-  'Bash(gh pr merge:*)',
   'Read(./.env)',
 ];
 const OWNED_AI_PATHS = [
@@ -294,12 +293,24 @@ describe('AI configuration guard', () => {
     ).toEqual([]);
   });
 
-  it('turns the zero-exception rules into permission denials and registers the Stop check', () => {
+  it('turns the zero-exception rules into permission denials and registers the hooks', () => {
     const settings = JSON.parse(readFileSync(join(ROOT, '.claude/settings.json'), 'utf8')) as {
       permissions?: { deny?: string[] };
-      hooks?: { Stop?: Array<{ hooks: Array<{ command: string }> }> };
+      hooks?: {
+        Stop?: Array<{ hooks: Array<{ command: string }> }>;
+        PreToolUse?: Array<{ matcher: string; hooks: Array<{ command: string }> }>;
+      };
     };
     expect(settings.permissions?.deny ?? []).toEqual(expect.arrayContaining(REQUIRED_DENY_RULES));
+    expect(
+      settings.permissions?.deny ?? [],
+      'a permission pattern cannot see the PR base, so the merge rule lives in the guard-merge-main hook',
+    ).not.toContain('Bash(gh pr merge:*)');
+    const guard = (settings.hooks?.PreToolUse ?? []).find((entry) =>
+      entry.hooks.some((hook) => hook.command.includes('scripts/guard-merge-main.mjs')),
+    );
+    expect(guard?.matcher).toBe('Bash');
+    expect(existsSync(join(ROOT, 'scripts/guard-merge-main.mjs'))).toBe(true);
     const commands = (settings.hooks?.Stop ?? []).flatMap((entry) =>
       entry.hooks.map((hook) => hook.command),
     );

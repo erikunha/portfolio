@@ -12,7 +12,8 @@
 - Plan before editing more than a few files; use plan mode for anything that touches the API
   boundary, the budgets or the CI workflows.
 - Personal settings belong in `CLAUDE.local.md` and `.claude/settings.local.json` (both gitignored).
-- `.claude/settings.json` denies broad `git add`, `gh pr merge`, npm and yarn installs and reads of
-  local env files, so those rules in AGENTS.md have no exceptions here. A Stop hook runs
+- `.claude/settings.json` denies broad `git add`, npm and yarn installs and reads of local env files,
+  so those rules in AGENTS.md have no exceptions here. A PreToolUse hook (`scripts/guard-merge-main.mjs`)
+  blocks `gh pr merge` when the PR base is `main` or cannot be determined. A Stop hook runs
   `scripts/stop-verify.mjs`: Biome on the changed files, then the typecheck if TypeScript changed
   (about half a second warm; skipped in CI and when it is already continuing a turn).

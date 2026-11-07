@@ -42,7 +42,7 @@ In order: `ci:local` -> `check-pr-comments` (`pnpm pr:gate`, also run in CI: Gra
 `pnpm claude-gate` (`scripts/check-claude-approval.ts`) is an optional check: after a requested review it passes only when the latest claude-review verdict is Approve and names a head SHA that matches the current head. An Approve with no SHA, or a stale one, fails closed. When the head moved only through commits that touch visual baseline snapshots, `*-snapshots/*.png`, the Approve carries and the gate reports the carried SHA; any other file in the diff since the reviewed SHA, or a reviewed SHA that is not an ancestor of the head, fails closed as STALE. It is not part of merge readiness.
 
 
-**AI agents must not run `gh pr merge`.** This is a project convention. The repo owner runs the final squash-merge once all gates pass. The pre-push hook rejects a remote main target. Live GitHub protection and bypass permissions require separate inspection.
+**AI agents never merge into `main`.** The repo owner runs the final squash-merge once all gates pass. Sub-PRs into an integration branch (`feat/*`) may be merged by an agent once CI is green (Argos excepted) and the review is done. For Claude Code, the `guard-merge-main` hook blocks `gh pr merge` when the PR base is `main` or cannot be determined; other tools rely on the written rule. The pre-push hook rejects a remote main target. Live GitHub protection and bypass permissions require separate inspection.
 
 ## PR sizing (avoid the bloated-PR failure mode)
 
