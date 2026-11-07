@@ -1,19 +1,38 @@
 #!/usr/bin/env node
-import { spawnSync } from 'node:child_process';
+import { spawn as nodeSpawn } from 'node:child_process';
 import { pathToFileURL } from 'node:url';
 
 export const INSTALL_ATTEMPTS = 3;
-export const INSTALL_ATTEMPT_TIMEOUT_MS = 3 * 60 * 1000;
+export const INSTALL_ATTEMPT_TIMEOUT_MS = 4 * 60 * 1000;
 const SUCCESS = 0;
 const FAILURE = 1;
+const KILL_SIGNAL = 'SIGKILL';
 
-export function installWithRetry(browsers, { spawn = spawnSync, log = console.error } = {}) {
+export function runAttempt(args, { spawn = nodeSpawn, kill = process.kill } = {}) {
+  return new Promise((resolve) => {
+    const child = spawn('pnpm', args, { stdio: 'inherit', detached: true });
+    let timedOut = false;
+    const timer = setTimeout(() => {
+      timedOut = true;
+      kill(-child.pid, KILL_SIGNAL);
+    }, INSTALL_ATTEMPT_TIMEOUT_MS);
+    child.on('exit', (status) => {
+      clearTimeout(timer);
+      resolve({ status, timedOut });
+    });
+  });
+}
+
+export async function installWithRetry(
+  browsers,
+  { attempt = runAttempt, log = console.error } = {},
+) {
   const args = ['playwright', 'install', '--with-deps', ...browsers];
-  for (let attempt = 1; attempt <= INSTALL_ATTEMPTS; attempt++) {
-    const result = spawn('pnpm', args, { stdio: 'inherit', timeout: INSTALL_ATTEMPT_TIMEOUT_MS });
-    if (result.status === SUCCESS) return SUCCESS;
-    const reason = result.error?.code === 'ETIMEDOUT' ? 'timed out' : `exited ${result.status}`;
-    log(`[install-playwright-browsers] attempt ${attempt}/${INSTALL_ATTEMPTS} ${reason}`);
+  for (let n = 1; n <= INSTALL_ATTEMPTS; n++) {
+    const result = await attempt(args);
+    if (result.status === SUCCESS && !result.timedOut) return SUCCESS;
+    const reason = result.timedOut ? 'timed out' : `exited ${result.status}`;
+    log(`[install-playwright-browsers] attempt ${n}/${INSTALL_ATTEMPTS} ${reason}`);
   }
   return FAILURE;
 }
@@ -24,5 +43,5 @@ if (import.meta.url === pathToFileURL(process.argv[1] ?? '').href) {
     console.error('usage: install-playwright-browsers.mjs <browser...>');
     process.exit(FAILURE);
   }
-  process.exit(installWithRetry(browsers));
+  process.exit(await installWithRetry(browsers));
 }
