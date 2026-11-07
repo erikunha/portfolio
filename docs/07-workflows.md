@@ -38,7 +38,7 @@ check (Biome) -> typecheck -> validate-content -> check:client-naming -> check:d
 | ---------------------- | ------------------------------------------------------------------------------------------------ |
 | `validate-content`     | every `content/*.ts` Zod schema parses (build gate)                                              |
 | `check:client-naming`  | client directive files use `*.client.*`, a `/client/` directory, or an App Router error filename |
-| `check:dep-pinning`    | no `latest`/`*`/tag deps                                                                         |
+| `check:dep-pinning`    | no `latest`/`*`/tag deps or open overrides                                                                       |
 | `check:harness-size`   | `CLAUDE.md` ≤ 275 lines                                                                          |
 | `check:section-order`  | section ids have mobile order rules or a listed nested-anchor exemption                          |
 | `check:doc-drift`      | `ARCHITECTURE.md` directory-tree paths exist on disk                                             |
@@ -93,14 +93,10 @@ flowchart TD
     dc --> perf
     dc --> e2e
     dc --> vis
-    dc --> ev
+    dc --> ev["ai-eval (if ai, same-repo PR or non-PR)"]
     qf --> ev
     tc --> ev
     t --> ev
-    b --> ev["ai-eval (if ai, same-repo PR or non-PR)"]
-    perf --> ev
-    e2e --> ev
-    vis --> ev
     pr --> secrets["gitleaks: history scan + fixture check"]
     secrets --> gate
     pr --> semgrep["semgrep: findings report-only, outside ci-gate"]
@@ -154,4 +150,4 @@ Large features use an **integration branch + sub-PRs** (`feat/<feature>` ← `fe
 | CLS / visual regression    | regenerate Argos baselines via the `visual-baseline-regen` skill                         |
 | Client error in prod       | it was POSTed to `/api/log` (`err:{date}:{id}`, 7-day TTL) by `error-bridge.client.ts`  |
 
-See `UI_PATHS`/`APP_PATHS` in `scripts/detect-changes-paths.mjs` for the current CI path filters.
+See `UI_PATHS`/`APP_PATHS` in `scripts/detect-changes-paths.mjs` for the current CI path filters. Every git-tracked root file and `scripts/` file must be in `AI_PATHS`, `APP_PATHS`, `UI_PATHS` or `IGNORED_PATHS`; `check:detect-changes-paths` fails otherwise, so a new file cannot skip the gated jobs.

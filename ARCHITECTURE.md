@@ -130,7 +130,7 @@ What we build is small, opinionated, Vercel-deployed, and budget-enforced.
 
 ### Default: React Server Components, statically generated at build time
 
-Static section bodies are Server Components. `AppShell` is a client boundary that receives server-rendered children; viewport checks use the `useBreakpoint` hook, not a context provider. `SectionNavigationProvider` wraps the shell chrome. Its context value (actions, copy, chrome, locale and a store) never changes after the first render. The current section, the drawer and the motion state live in the store and are read with `useSyncExternalStore`, so a scroll cannot force a not-yet-hydrated Suspense boundary to client-render. `ContactForm` and `InteractiveShell` adopt text typed before they hydrate from the kept server DOM. `ErrorBoundary` wraps each section and the footer independently. Measured data and device-selected sections stream through Suspense.
+Static section bodies are Server Components. `AppShell` is a client boundary that receives server-rendered children; viewport checks use the `useBreakpoint` hook, not a context provider. `SectionNavigationProvider` wraps the shell chrome. Its context value (actions, copy, chrome, locale and a store) never changes after the first render. The current section, the drawer and the motion state live in the store and are read with `useSyncExternalStore`, so a scroll cannot force a not-yet-hydrated Suspense boundary to client-render. `ContactForm` and `InteractiveShell` adopt text typed before they hydrate from the kept server DOM. The shell form also carries a React `action`, so an Enter pressed before hydration is queued by the server-rendered replay runtime and runs once after hydration instead of navigating to `/?command=...`; the welcome line follows `useBreakpoint` at render, so a phone gets the mobile line after hydration. `ErrorBoundary` wraps each section and the footer independently. Measured data and device-selected sections stream through Suspense.
 
 The section menu is a modal drawer at every width, opened by the menu icon trigger named `Open menu` (the first item in the desktop topbar and the mobile title bar; the brand icon closes both bars at the right end) or the dock MENU. The drawer header contains the title and the close control. Closing the drawer returns focus to the control that opened it, or to the first rendered menu trigger when there is no such control or a viewport change left it unrendered.
 
@@ -258,7 +258,7 @@ components/client/RefChip/            # request reference chip with copy, shared
 components/client/ContactTimezone/    # timezone overlap panel island: clocks, map, zone combobox
 components/client/HeroBootAnimation/  # boot typewriter island
 components/client/RoleTyper/          # About status role typewriter island
-components/client/TypeReveal/         # Scroll type reveal observer island
+components/client/TypeReveal/         # Scroll type reveal observer island (IntersectionObserver plus a MutationObserver on main)
 components/AppShell/                   # shell chrome slots and shared section navigation
 components/BrandLink/                  # server component: brand icon link home, named from content/brand.ts
 components/ExternalLink/               # the one new-tab anchor (target and rel pair)
@@ -678,11 +678,11 @@ The workflow runs on PRs, pushes to `main` and manual dispatch. Jobs are not a s
 - `build` requires `quality-fast`, `typecheck` and `test`. It builds Next, gates global client chunks at 220 KB and per-route first-load JS at 164.7 KB, then uploads `.next`.
 - `performance`, `e2e-functional` and `e2e-visual-chromium` require `build` and `detect-changes`. Performance and functional jobs use the `app` filter; visuals use `ui`. Non-PR events run them regardless of those PR filters.
 - `performance` starts a local production server, then runs desktop/mobile LHCI and axe-core. `e2e-functional` has five projects: chromium, chromium-mobile, webkit-desktop, webkit-mobile and chromium-components. `e2e-visual-chromium` has chromium and chromium-mobile projects and uploads Argos screenshots when credentials are available.
-- `ai-eval` waits for change detection, fast checks, build and runtime jobs. It requires AI-relevant changes, no upstream failures or cancellations, and an internal PR or non-PR event.
+- `ai-eval` waits for change detection, `quality-fast`, `typecheck` and `test`; it consumes no build output, so it does not wait for `build` or the browser jobs. It requires AI-relevant changes, no upstream failures or cancellations, and an internal PR or non-PR event.
 - `ci-gate` waits for all listed required jobs and fails on `failure` or `cancelled`; intentional skips pass. Semgrep is separate from that aggregate: its findings are report-only, but its fixture and SARIF-production checks can fail its own job.
 - CodeQL, production smoke, mutation tests and agent evals have separate workflows.
 
-Changes under `tests/visual/` or `tests/e2e/` set both `ui` and `app`, running visual and functional e2e gates. See `UI_PATHS`/`APP_PATHS` in `scripts/detect-changes-paths.mjs`.
+Changes under `tests/visual/` or `tests/e2e/` set both `ui` and `app`, running visual and functional e2e gates. Root build and runtime files (`proxy.ts`, `instrumentation.ts`, `vercel.json`, `postcss.config.mjs`, `tsconfig.json`, `.nvmrc`, `.npmrc`, `mdx-components.tsx`) and the scripts the build or runtime jobs run also set `app`; those that change rendered output set `ui`. Every git-tracked root file and `scripts/` file must appear in `AI_PATHS`, `APP_PATHS`, `UI_PATHS` or `IGNORED_PATHS`; `pnpm check:detect-changes-paths` fails on a file in none of them, so a new file cannot silently skip the gated jobs. See `scripts/detect-changes-paths.mjs`.
 
 ### Production deploy
 
