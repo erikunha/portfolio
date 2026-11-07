@@ -1,6 +1,8 @@
 import { NextRequest } from 'next/server';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+const TEST_CRON_SECRET = 'x'.repeat(24);
+
 const transaction = { zrem: vi.fn(), hdel: vi.fn(), exec: vi.fn() };
 const redis = {
   zrange: vi.fn(),
@@ -26,7 +28,7 @@ const stored = {
   receivedAt: '2026-10-24T00:00:00.000Z',
   ipHash: 'hash',
 };
-const request = (bearer: string | null = 'Bearer cron-secret') =>
+const request = (bearer: string | null = `Bearer ${TEST_CRON_SECRET}`) =>
   new NextRequest('http://localhost/api/contact-retry', {
     headers: bearer ? { authorization: bearer } : {},
   });
@@ -37,7 +39,7 @@ describe('daily contact delivery retry', () => {
     vi.clearAllMocks();
     vi.useFakeTimers();
     vi.setSystemTime(new Date('2026-10-24T04:00:00.000Z'));
-    vi.stubEnv('CRON_SECRET', 'cron-secret');
+    vi.stubEnv('CRON_SECRET', TEST_CRON_SECRET);
     vi.stubEnv('RESEND_API_KEY', 'test-key');
     redis.zrange.mockResolvedValue(['message-id']);
     redis.get.mockResolvedValue(stored);
@@ -51,7 +53,7 @@ describe('daily contact delivery retry', () => {
     vi.unstubAllEnvs();
   });
 
-  it.each([null, 'Bearer wrong', 'cron-secret'])(
+  it.each([null, 'Bearer wrong', TEST_CRON_SECRET])(
     'rejects unauthorized bearer %s before accessing Redis or Resend',
     async (bearer) => {
       const { GET } = await import('@/app/api/contact-retry/route');

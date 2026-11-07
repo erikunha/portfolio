@@ -72,6 +72,11 @@ const handleContact = defineHandler({
       log.error('contact outbox write failed', { requestId, msgId });
     }
     if (!queued) {
+      try {
+        await getRedis().del(contactMessageKey(msgId));
+      } catch {
+        log.error('contact message cleanup failed', { requestId, msgId });
+      }
       return err({
         requestId,
         status: STORAGE_UNAVAILABLE_STATUS,

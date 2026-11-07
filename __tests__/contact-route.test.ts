@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { contactContent } from '@/content/contact';
 
 const redisSet = vi.fn();
+const redisDel = vi.fn();
 const zcard = vi.fn();
 const transaction = { hset: vi.fn(), zadd: vi.fn(), exec: vi.fn() };
 const send = vi.fn();
@@ -13,7 +14,7 @@ const logger = { info: vi.fn(), error: vi.fn(), warn: vi.fn() };
 vi.mock('@/lib/rate-limit', () => ({
   getClientIp: () => '127.0.0.1',
   getContactLimit: () => ({ limit }),
-  getRedis: () => ({ set: redisSet, zcard, multi: () => transaction }),
+  getRedis: () => ({ set: redisSet, del: redisDel, zcard, multi: () => transaction }),
 }));
 vi.mock('@/lib/ip-hash', () => ({ hashIp: async () => 'hashed-ip' }));
 vi.mock('@/lib/log', () => ({ log: logger }));
@@ -41,6 +42,7 @@ describe('contact delivery outcome', () => {
     vi.clearAllMocks();
     vi.stubEnv('RESEND_API_KEY', 'test-key');
     redisSet.mockResolvedValue('OK');
+    redisDel.mockResolvedValue(1);
     zcard.mockResolvedValue(0);
     transaction.exec.mockResolvedValue([1, 1]);
     send.mockResolvedValue({ data: { id: 'accepted' }, error: null });
@@ -169,6 +171,54 @@ describe('contact delivery outcome', () => {
     expect(transaction.zadd).not.toHaveBeenCalled();
     expect(logger.warn).toHaveBeenCalledWith(
       'contact outbox full',
+      expect.objectContaining({ msgId: expect.any(String) }),
+    );
+  });
+
+  it('deletes the stored message when delivery failed and the outbox is full', async () => {
+    const { CONTACT_OUTBOX_MAX } = await import('@/lib/contact-outbox');
+    send.mockResolvedValueOnce({ error: { message: 'unavailable' } });
+    zcard.mockResolvedValueOnce(CONTACT_OUTBOX_MAX);
+    const { POST } = await import('@/app/api/contact/route');
+    const res = await POST(request());
+    const { requestId } = (await res.json()) as { requestId: string };
+
+    expect(
+      redisDel,
+      'the visitor was told delivery failed and nothing will retry, so the name, email and message must not stay in Redis for 90 days',
+    ).toHaveBeenCalledWith(`contact:msg:${requestId}`);
+  });
+
+  it('deletes the stored message when delivery failed and the outbox write throws', async () => {
+    send.mockResolvedValueOnce({ error: { message: 'unavailable' } });
+    transaction.exec.mockRejectedValueOnce(new Error('redis down'));
+    const { POST } = await import('@/app/api/contact/route');
+    const res = await POST(request());
+    const { requestId } = (await res.json()) as { requestId: string };
+
+    expect(redisDel).toHaveBeenCalledWith(`contact:msg:${requestId}`);
+  });
+
+  it('keeps the stored message when the delivery failure was queued for retry', async () => {
+    send.mockResolvedValueOnce({ error: { message: 'unavailable' } });
+    const { POST } = await import('@/app/api/contact/route');
+    const res = await POST(request());
+
+    expect(res.status).toBe(202);
+    expect(redisDel).not.toHaveBeenCalled();
+  });
+
+  it('still answers 502 when deleting the stored message fails', async () => {
+    const { CONTACT_OUTBOX_MAX } = await import('@/lib/contact-outbox');
+    send.mockResolvedValueOnce({ error: { message: 'unavailable' } });
+    zcard.mockResolvedValueOnce(CONTACT_OUTBOX_MAX);
+    redisDel.mockRejectedValueOnce(new Error('redis down'));
+    const { POST } = await import('@/app/api/contact/route');
+    const res = await POST(request());
+
+    expect(res.status).toBe(502);
+    expect(logger.error).toHaveBeenCalledWith(
+      'contact message cleanup failed',
       expect.objectContaining({ msgId: expect.any(String) }),
     );
   });

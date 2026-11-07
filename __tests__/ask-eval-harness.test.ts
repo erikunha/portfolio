@@ -119,7 +119,7 @@ describe('pnpm ask:eval harness without Redis', () => {
       'the upstream cause stays in the server log for the operator',
     ).toHaveBeenCalledWith(
       'ask stream failed',
-      expect.objectContaining({ err: expect.objectContaining({ message: 'gateway 503' }) }),
+      expect.objectContaining({ error: expect.objectContaining({ message: 'gateway 503' }) }),
     );
     expect(result.jailbreakResistance.total).toBe(
       ASK_EVAL_CORPUS.filter((i) => i.kind === 'jailbreak').length - 1,

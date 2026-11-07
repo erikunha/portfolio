@@ -12,7 +12,7 @@ import {
 import { env } from '@/lib/env';
 import { log } from '@/lib/log';
 import { isCronAuthorized } from '@/lib/server/cron-auth';
-import { ok } from '@/lib/server/route';
+import { err, ok } from '@/lib/server/route';
 
 const UNAUTHORIZED_STATUS = 401;
 const DROP_REASON = { expired: 'expired', exhausted: 'exhausted' } as const;
@@ -33,7 +33,12 @@ export const maxDuration = 60;
 export async function GET(req: NextRequest): Promise<Response> {
   const cronSecret = env.CRON_SECRET;
   if (!isCronAuthorized(req, cronSecret)) {
-    return new Response('Unauthorized', { status: UNAUTHORIZED_STATUS });
+    return err({
+      requestId: crypto.randomUUID(),
+      status: UNAUTHORIZED_STATUS,
+      code: 'unauthorized',
+      message: 'unauthorized',
+    });
   }
 
   const startedAt = Date.now();

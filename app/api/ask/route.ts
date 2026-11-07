@@ -12,6 +12,7 @@ import { type AskInteractionStatus, persistAskInteraction } from '@/lib/ask-log'
 import { env } from '@/lib/env';
 import { hashIp } from '@/lib/ip-hash';
 import { log } from '@/lib/log';
+import { describeError } from '@/lib/log-error';
 import {
   checkIdenticalQuestion,
   getAskLimit,
@@ -103,7 +104,10 @@ async function handleAsk(req: NextRequest): Promise<Response> {
   const startedAt = Date.now();
   const ip = getClientIp(req);
   const ipHash = await hashIp(ip).catch((hashErr: unknown) => {
-    log.error('ask ip hash unavailable, continuing unhashed', { requestId, err: hashErr });
+    log.error('ask ip hash unavailable, continuing unhashed', {
+      requestId,
+      error: describeError(hashErr),
+    });
     return UNHASHED_IP_LABEL;
   });
   log.info('ask request received', { requestId, ipHash, promptVersion: PROMPT_VERSION });
@@ -129,7 +133,7 @@ async function handleAsk(req: NextRequest): Promise<Response> {
     if (rateLimited) retryAfter = retryAfterSeconds(reset, Date.now());
   } catch (err) {
     if (hasRedisCredentials()) {
-      log.error('ask rate-limit check failed, allowing through', { err });
+      log.error('ask rate-limit check failed, allowing through', { error: describeError(err) });
     }
   }
   if (rateLimited) {
@@ -153,19 +157,18 @@ async function handleAsk(req: NextRequest): Promise<Response> {
         : {};
     const q = body.question;
     if (typeof q !== 'string' || !q.trim()) {
-      earlyExitPersist('errored');
+      log.info('ask rejected: question required', { requestId, ipHash });
       return Response.json({ error: askErrors[answerLocale].questionRequired }, { status: 400 });
     }
     question = q.trim().slice(0, ASK_MAX_QUESTION_CHARS);
     answerLocale = siteLocaleOf(body.locale) ?? answerLocale;
   } catch {
-    earlyExitPersist('errored');
+    log.info('ask rejected: invalid body', { requestId, ipHash });
     return Response.json({ error: askErrors[answerLocale].invalidBody }, { status: 400 });
   }
 
   if (INJECTION_RE.test(normalizeInjectionInput(question))) {
     log.info('ask rejected: prompt-injection pattern', { requestId, ipHash });
-    earlyExitPersist('errored');
     return Response.json({ error: askErrors[answerLocale].injection }, { status: 400 });
   }
 
@@ -202,13 +205,15 @@ async function handleAsk(req: NextRequest): Promise<Response> {
     ],
     onError({ error }) {
       upstreamFailed = true;
-      log.error('ask upstream error', { requestId, err: error });
+      log.error('ask upstream error', { requestId, error: describeError(error) });
     },
   });
 
-  const usageOrTimeout = Promise.resolve(result.usage).catch(
-    (): typeof USAGE_TIMED_OUT => USAGE_TIMED_OUT,
-  );
+  let usageRejected = false;
+  const usageOrTimeout = Promise.resolve(result.usage).catch((): typeof USAGE_TIMED_OUT => {
+    usageRejected = true;
+    return USAGE_TIMED_OUT;
+  });
   const enc = new TextEncoder();
   let totalBilledInput = 0;
   let outputTokens = 0;
@@ -292,7 +297,7 @@ async function handleAsk(req: NextRequest): Promise<Response> {
       } catch (err) {
         if (!clientGone) {
           status = 'errored';
-          log.error('ask stream failed', { requestId, err });
+          log.error('ask stream failed', { requestId, error: describeError(err) });
           send(enc.encode(`${STREAM_ERR_SENTINEL}${askErrors[answerLocale].interrupted}`));
         }
       } finally {
@@ -302,7 +307,7 @@ async function handleAsk(req: NextRequest): Promise<Response> {
         try {
           await settleAndPersist();
         } catch (settleErr) {
-          log.error('settle-and-persist failed', { requestId, err: settleErr });
+          log.error('settle-and-persist failed', { requestId, error: describeError(settleErr) });
         }
       }
     },
@@ -343,8 +348,12 @@ async function handleAsk(req: NextRequest): Promise<Response> {
       truncated,
       promptVersion: PROMPT_VERSION,
     });
+    const failedBeforeAnyOutput =
+      upstreamFailed && usageRejected && collectedAnswerText.length === 0;
     if (usageResolved) {
       await settleBudget(reserved, totalBilledInput, outputTokens, budgetKey);
+    } else if (failedBeforeAnyOutput) {
+      await settleBudget(reserved, 0, 0, budgetKey);
     }
     await persistAskInteraction({
       requestId,
