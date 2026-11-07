@@ -18,12 +18,15 @@ vi.mock('@/lib/ip-hash', () => ({ hashIp: vi.fn(async () => 'test-ip-hash') }));
 vi.mock('@/lib/ask-log', () => ({ persistAskInteraction: vi.fn(async () => undefined) }));
 
 const counter: { value: number } = { value: 0 };
-const decrbyMock = vi.fn(async (_key: string, n: number): Promise<number> => {
-  counter.value -= n;
-  return counter.value;
+const dailyCounter: { value: number } = { value: 0 };
+const counterFor = (key: string) => (key.includes(':day:') ? dailyCounter : counter);
+const decrbyMock = vi.fn(async (key: string, n: number): Promise<number> => {
+  counterFor(key).value -= n;
+  return counterFor(key).value;
 });
 
-const pipelineExec = vi.fn(async (): Promise<[number, number]> => [counter.value, 1]);
+const pipelineExec = vi.fn(async (): Promise<[number, number]> => [pipelineUsed.value, 1]);
+const pipelineUsed: { value: number } = { value: 0 };
 
 vi.mock('@upstash/redis', () => ({
   Redis: {
@@ -31,13 +34,14 @@ vi.mock('@upstash/redis', () => ({
       get: vi.fn(async () => counter.value),
       set: vi.fn(async () => 'OK'),
       decrby: decrbyMock,
-      incrby: vi.fn(async (_key: string, n: number): Promise<number> => {
-        counter.value += n;
-        return counter.value;
+      incrby: vi.fn(async (key: string, n: number): Promise<number> => {
+        counterFor(key).value += n;
+        return counterFor(key).value;
       }),
       pipeline: () => ({
-        incrby: (_k: string, n: number) => {
-          counter.value += n;
+        incrby: (key: string, n: number) => {
+          counterFor(key).value += n;
+          pipelineUsed.value = counterFor(key).value;
         },
         expire: vi.fn(),
         exec: pipelineExec,
@@ -63,6 +67,7 @@ describe('budget reservation pattern', () => {
     vi.stubEnv('UPSTASH_REDIS_REST_URL', 'https://redis.test');
     vi.stubEnv('UPSTASH_REDIS_REST_TOKEN', 'test-token');
     counter.value = 0;
+    dailyCounter.value = 0;
     vi.clearAllMocks();
     rateLimitMock.mockResolvedValue({ success: true });
   });
@@ -117,7 +122,7 @@ describe('budget reservation pattern', () => {
     );
     expect(response.status).toBe(200);
     expect(await response.text()).toBe('Erik builds web applications.');
-    expect(pipelineExec).toHaveBeenCalledOnce();
+    expect(pipelineExec).toHaveBeenCalledTimes(2);
     expect(streamTextMock).toHaveBeenCalledOnce();
   });
 
@@ -174,5 +179,27 @@ describe('budget reservation pattern', () => {
     decrbyMock.mockClear();
     await settleBudget(0, 100, 200, 'ask:tokens:test');
     expect(decrbyMock).not.toHaveBeenCalled();
+  });
+
+  it('rejects and refunds both reservations when the daily slice would be crossed', async () => {
+    dailyCounter.value = 149_000;
+    const { reserveBudget } = await import('@/lib/rate-limit');
+    const result = await reserveBudget(512);
+    expect(result.allowed).toBe(false);
+    expect(result.reserved).toBe(0);
+    expect(decrbyMock).toHaveBeenCalledWith(
+      expect.stringMatching(/ask:tokens:day:/),
+      INPUT_RESERVATION + 512,
+    );
+    expect(counter.value).toBe(0);
+    expect(dailyCounter.value).toBe(149_000);
+  });
+
+  it('settleBudget refunds the daily key as well as the monthly one', async () => {
+    const { reserveBudget, settleBudget } = await import('@/lib/rate-limit');
+    const { reserved, budgetKey, dailyKey } = await reserveBudget(512);
+    await settleBudget(reserved, 120, 80, budgetKey, dailyKey);
+    expect(counter.value).toBe(200);
+    expect(dailyCounter.value).toBe(200);
   });
 });

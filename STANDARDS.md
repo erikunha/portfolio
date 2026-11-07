@@ -60,7 +60,7 @@ whole route to on-demand rendering there.
 `{ ok: true, requestId, data? }` on success, or
 `{ ok: false, requestId, error: { code, message, issues? } }` on failure, with
 an `X-Request-Id` header on every response. The processing order is fixed:
-`rate-limit → parse → validate → handle`. This is centralized in
+`rate-limit → bounded read → parse → validate → handle`. This is centralized in
 `lib/server/route.ts` (`defineHandler`); routes own only their side effects and
 business logic. Every outbound external call (Anthropic, Resend, Redis) carries
 an explicit timeout — including a mid-stream watchdog on `/api/ask`, not only a
@@ -82,8 +82,8 @@ onto `defineHandler` — its response shape is intrinsically a token stream, not
 an envelope — but it still mints and exposes a request id.
 
 The MCP protocol at `/api/mcp` delegates JSON-RPC parsing and Zod tool
-validation to `mcp-handler`, outside `defineHandler`. `withBodyLimit`
-rejects bodies over `MAX_MCP_BODY_BYTES` (4096 bytes) with HTTP 413 before
+validation to `mcp-handler`, outside `defineHandler`. `withBodyLimit`,
+behind `withRateLimit`, rejects bodies over `MAX_MCP_BODY_BYTES` (4096 bytes) with HTTP 413 before
 JSON parsing. It checks `Content-Length` before reading and counts streamed
 bytes regardless of the header. Reading stops and the stream is cancelled
 as soon as it exceeds the limit. The bound fits a 500-character `ask_erik`
