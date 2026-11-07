@@ -77,7 +77,8 @@ cases are deliberately borderline-hard.
   sheet or omit a named fact. Two more traps cover the fact sheet: `true-fact-absent` (a true fact
   the criterion does not name, must pass) and `false-date` (a wrong date, must fail).
 - **The judge sees a fact sheet.** `buildJudgeFactSheet` (`lib/eval/fact-sheet.ts`) renders the run
-  date, the employment history and the education from content, and `scripts/ask-eval.ts` passes it
+  date, the current title, the core stack and AI focus, the credentials, the employment history
+  and the education from content, and `scripts/ask-eval.ts` passes it
   to the calibration pass and to every corpus grade. A claim that matches the sheet is never
   fabricated, so a criterion may leave out a true fact without failing the answer that states it.
   Add a field to the sheet when a criterion starts depending on a fact the sheet does not carry.

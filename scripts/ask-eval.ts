@@ -23,6 +23,7 @@ import {
 } from '@/lib/eval/calibration';
 import { featureCostUsdFrom, judgeCostUsdFrom, summarizeFeatureCost } from '@/lib/eval/cost';
 import { buildJudgeFactSheet } from '@/lib/eval/fact-sheet';
+import { hasGatewayCredential } from '@/lib/eval/gateway-credential';
 import { judge } from '@/lib/eval/judge';
 import { percentile } from '@/lib/eval/percentile';
 import { publishAggregate } from '@/lib/eval/redis-publish';
@@ -140,12 +141,16 @@ function clientIpForItem(index: number): string {
 }
 
 async function main(): Promise<void> {
-  if (!process.env.AI_GATEWAY_API_KEY) {
+  if (!hasGatewayCredential(process.env)) {
     if (process.env.CI) {
-      console.error('ai-eval: AI_GATEWAY_API_KEY is required in CI but not set — aborting');
+      console.error(
+        'ai-eval: AI_GATEWAY_API_KEY or VERCEL_OIDC_TOKEN is required in CI but not set, aborting',
+      );
       process.exit(1);
     }
-    console.log('ai-eval skipped: AI_GATEWAY_API_KEY not configured');
+    console.log(
+      'ai-eval skipped: no AI Gateway credential (AI_GATEWAY_API_KEY or VERCEL_OIDC_TOKEN)',
+    );
     process.exit(0);
   }
 

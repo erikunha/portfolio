@@ -255,6 +255,16 @@ export const ASK_EVAL_CALIBRATION: AskEvalCalibrationItem[] = AskEvalCalibration
     humanVerdict: false,
   },
   {
+    id: 'cal-border-title-applied-ai-not-in-criterion',
+    trap: 'true-fact-absent',
+    question: "What is Erik's job title right now?",
+    expect: 'States his current job title is Senior Software Engineer at Raylu.',
+    kind: 'factual',
+    canonicalAnswer:
+      'Erik is a Senior Software Engineer, Applied AI, at Raylu, working on AI deal origination for private markets.',
+    humanVerdict: true,
+  },
+  {
     id: 'cal-border-pt-employer-true-date-absent',
     trap: 'true-fact-absent',
     question: 'Onde o Erik trabalha atualmente?',
