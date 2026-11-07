@@ -92,7 +92,12 @@ describe('ASK_MODEL — single source of truth', () => {
 
   it('the raw model literal lives in exactly one source location', () => {
     // behavioral-test-allow: WS1 no-drift invariant — the model literal must exist in a single source file
-    const files = ['app/api/ask/route.ts', 'scripts/ask-eval.ts', 'lib/ask/model.ts'];
+    const files = [
+      'app/api/ask/route.ts',
+      'lib/ask/stream.ts',
+      'scripts/ask-eval.ts',
+      'lib/ask/model.ts',
+    ];
     const stripComments = (s: string): string =>
       s.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/.*$/gm, '');
     const escaped = ASK_MODEL.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');

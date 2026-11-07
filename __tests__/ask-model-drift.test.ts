@@ -12,11 +12,11 @@ describe('ask model drift', () => {
     expect(ASK_MODEL).toContain('/');
   });
 
-  it('the live route references the shared ASK_MODEL const, not a hardcoded model string', () => {
+  it('the live stream module references the shared ASK_MODEL const, not a hardcoded model string', () => {
     // behavioral-test-allow: configuration-invariant — the eval target must equal the production model
-    const route = readFileSync(join(ROOT, 'app/api/ask/route.ts'), 'utf8');
-    expect(route).toContain('ASK_MODEL');
-    expect(route).toContain("from '@/lib/ask/model'");
+    const stream = readFileSync(join(ROOT, 'lib/ask/stream.ts'), 'utf8');
+    expect(stream).toContain('ASK_MODEL');
+    expect(stream).toContain("from '@/lib/ask/model'");
   });
 
   it('the eval harness references the shared ASK_MODEL const, not a hardcoded model string', () => {
