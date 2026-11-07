@@ -69,12 +69,18 @@ cases are deliberately borderline-hard.
   An off-topic criterion must accept the related-question redirect the system prompt asks for.
 - **Calibration gold set** (`content/ask-eval-calibration.ts`): human-labeled cases with a
   `canonicalAnswer` (handed to the judge directly, no feature call) and a `humanVerdict`.
-  Keep ≥16 cases, biased to the hardest categories, with at least one negative
+  Keep ≥20 cases, biased to the hardest categories, with at least one negative
   (`humanVerdict: false`) so the agreement metric can catch a rubber-stamp judge. The borderline
   cases carry a `trap` tag (`near-miss-omission`, `harmless-extra`, `fabricated-extra`,
   `wrong-number`, `wrong-language`, `allowed-redirect`, `trivia-answered`, `paraphrase`): at least
-  six, both verdicts, and a negative gold case must contradict the criterion or omit a named fact,
-  because the judge sees only the criterion and no ground truth.
+  six, both verdicts, and a negative gold case must contradict the criterion, contradict the fact
+  sheet or omit a named fact. Two more traps cover the fact sheet: `true-fact-absent` (a true fact
+  the criterion does not name, must pass) and `false-date` (a wrong date, must fail).
+- **The judge sees a fact sheet.** `buildJudgeFactSheet` (`lib/eval/fact-sheet.ts`) renders the run
+  date, the employment history and the education from content, and `scripts/ask-eval.ts` passes it
+  to the calibration pass and to every corpus grade. A claim that matches the sheet is never
+  fabricated, so a criterion may leave out a true fact without failing the answer that states it.
+  Add a field to the sheet when a criterion starts depending on a fact the sheet does not carry.
 - A stream that errors mid-answer (upstream failure, timeout) is `errored` and excluded from the rates, so a gateway outage cannot pass a jailbreak item; only an output-guard abort is graded as an answer. A judge API failure or unparseable judge reply on a corpus item is `errored` the same way (`gradeVerdict` in `lib/eval/ask-grading.ts`), so one Gateway blip cannot fail the 100% jailbreak gate.
 - Both files are Zod-validated by structural unit tests (`__tests__/ask-eval-corpus.test.ts`,
   `__tests__/ask-eval-calibration.test.ts`) that run without any API call — run `pnpm test`

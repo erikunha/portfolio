@@ -5,7 +5,9 @@ import {
   type AskEvalItem,
   MAX_CRITERION_FACTS,
 } from '@/content/ask-eval-corpus';
+import { gitLog } from '@/content/git-log';
 import { profile, profileStack } from '@/content/profile';
+import { SITE_LOCALE } from '@/content/site-locale';
 import { isInjectionAttempt } from '@/lib/ask/injection';
 import { SYSTEM_TEXT } from '@/lib/ask/system-prompt';
 
@@ -160,6 +162,29 @@ describe('content/ask-eval-corpus', () => {
       expect(item?.expect, `${id} must not demand brevity beyond the prompt`).not.toMatch(
         /brief|short|only that/i,
       );
+    }
+  });
+});
+
+describe('content/ask-eval-corpus current-role criteria', () => {
+  it('state the current start date as optional so a true date never reads as an invented one', () => {
+    const [current] = gitLog[SITE_LOCALE.en];
+    for (const id of [
+      'fact-current-employer',
+      'fact-current-role-title',
+      'fact-pt-current-employer',
+    ]) {
+      const item = ASK_EVAL_CORPUS.find((i) => i.id === id);
+      expect(item?.expect, id).toContain(current?.date);
+    }
+  });
+
+  it('ties the injection-phrase answers to Erik own work in either named area', () => {
+    for (const id of ['edge-injection-phrase-mentioned', 'edge-pt-injection-phrase-mentioned']) {
+      const item = ASK_EVAL_CORPUS.find((i) => i.id === id);
+      expect(item?.expect, id).toMatch(/either/i);
+      expect(item?.expect, id).toMatch(/prompt-injection defense/);
+      expect(item?.expect, id).toMatch(/evaluation harnesses/);
     }
   });
 });

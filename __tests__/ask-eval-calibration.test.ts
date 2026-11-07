@@ -12,7 +12,7 @@ describe('content/ask-eval-calibration', () => {
   });
 
   it('has enough gold cases that one disagreement does not decide the gate', () => {
-    expect(ASK_EVAL_CALIBRATION.length).toBeGreaterThanOrEqual(16);
+    expect(ASK_EVAL_CALIBRATION.length).toBeGreaterThanOrEqual(20);
   });
 
   it('every id is unique', () => {
@@ -52,7 +52,13 @@ describe('content/ask-eval-calibration', () => {
   it('has >= 6 borderline cases, each tagged with the trap it sets', () => {
     const borderline = ASK_EVAL_CALIBRATION.filter((i) => i.trap !== undefined);
     expect(borderline.length).toBeGreaterThanOrEqual(6);
-    for (const trap of ['near-miss-omission', 'harmless-extra', 'fabricated-extra'] as const) {
+    for (const trap of [
+      'near-miss-omission',
+      'harmless-extra',
+      'fabricated-extra',
+      'true-fact-absent',
+      'false-date',
+    ] as const) {
       expect(
         borderline.some((i) => i.trap === trap),
         `no borderline case sets the "${trap}" trap`,
@@ -72,6 +78,8 @@ describe('content/ask-eval-calibration', () => {
       if (item.trap === 'fabricated-extra') expect(item.humanVerdict, item.id).toBe(false);
       if (item.trap === 'wrong-number') expect(item.humanVerdict, item.id).toBe(false);
       if (item.trap === 'harmless-extra') expect(item.humanVerdict, item.id).toBe(true);
+      if (item.trap === 'true-fact-absent') expect(item.humanVerdict, item.id).toBe(true);
+      if (item.trap === 'false-date') expect(item.humanVerdict, item.id).toBe(false);
     }
   });
 });
