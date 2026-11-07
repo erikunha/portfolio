@@ -92,6 +92,7 @@ docs/superpowers
 
 # Semgrep local SARIF output
 semgrep.sarif
+gitleaks.sarif
 
 # Stryker mutation testing output — transient sandbox + generated reports
 .stryker-tmp/

@@ -51,6 +51,55 @@ check (Biome) -> typecheck -> validate-content -> check:client-naming -> check:d
 
 `check:section-order` runs both directions: every rendered section needs a mobile order rule or a listed nested-anchor exemption, and every `#sec-*` selector in `app/css` must match an id some source renders, so a deleted section cannot leave dead rules behind.
 
+## Predicting CI before a push
+
+`pnpm ci:predict` (`scripts/ci-predict.ts`) runs locally what CI runs for the commits on the current branch against their base. It reads `.github/workflows/ci.yml` instead of copying it: job conditions, step commands, the build env and the e2e and visual project matrices all come from the workflow, and `detect-changes` runs the same `scripts/detect-changes.mjs` CI runs. A pure-TypeScript evaluator handles the workflow expressions the file uses (`needs.*`, `contains`, `endsWith`, `hashFiles`, `&&`, `||`).
+
+```mermaid
+flowchart TD
+    git["git diff base...HEAD"] --> dc["detect-changes.mjs (ai, app, ui)"]
+    yml[".github/workflows/ci.yml"] --> eng["step interpreter: if, env, matrix, step outputs"]
+    dc --> eng
+    eng --> st["quality-fast, typecheck, test, gitleaks: the job's own run steps"]
+    eng --> bd["build: ci.yml build env, bundle gate, route-JS gate"]
+    eng --> sel["spec selection: new or changed specs, co-located *.e2e.ts, importers of a changed helper"]
+    pw["playwright test --list"] --> sel
+    sel --> e2e["e2e-functional per project: --repeat-each=3 --retries=0"]
+    eng --> vis["e2e-visual-chromium and a11y: ci.yml arguments"]
+    e2e --> lx{"--linux?"}
+    vis --> lx
+    lx -->|no| nat["host Playwright"]
+    lx -->|yes| img["Playwright image v{version}-noble: copy tree, install, build and serve inside it"]
+    st --> tbl["one table: pass, fail, partial, not-run, skipped"]
+    bd --> tbl
+    nat --> tbl
+    img --> tbl
+```
+
+| Flag | Effect |
+| --- | --- |
+| `--base <ref>` | Base to diff against. Default: the open PR's base (`gh`), else `origin/main`. The base branch is fetched first. |
+| `--linux` | Runs Playwright (e2e, visual, a11y) in a container from the official Linux image whose tag is the installed `@playwright/test` version. The container copies the working tree, installs dependencies (pnpm store kept in the `ci-predict-pnpm-store` volume), builds with the ci.yml env and serves the app on `localhost:3000` inside itself, so browser, fonts and server origin all match CI. Catches font and layout metric differences that a macOS run hides. The first run pulls the image (about 2.5 GB). |
+| `--full` | Runs the whole e2e suite on every project, as CI does, instead of the selected specs. |
+| `--eval` | Runs the live `ask:eval` when ai paths changed, as `npx -y vercel@<pin> env run -- ...` from the Vercel-linked checkout, so secrets reach the process and are never printed. Without it the exact command is printed. |
+| `--skip-build` | Reuses the existing `.next`. |
+| `--keep-going` | Runs jobs whose `needs` failed (CI would skip them). |
+| `--repeat <n>` | `--repeat-each` for the selected specs (default 3). |
+| `--list` | Dry run: runs change detection only and prints what would run. |
+
+What each result means:
+
+- **pass**, **fail**: every reproducible step ran, with the outcome. The exit code is non-zero when any job fails.
+- **partial**: the reproducible steps passed but a step cannot run locally (the PR comment merge gate, Lighthouse, and the visual spec without `--linux`, because CI gates the Linux baselines and a macOS run compares different ones). Lighthouse scores depend on the host; `pnpm gates:runtime` still covers them.
+- **not-run**: the job needs GitHub (`dependency-review`), is report-only (`semgrep`), has no changed spec on that project, or its needs failed. Never read it as passed.
+- **skipped**: the job's own `if` is false for this diff, exactly as in CI.
+
+On Apple Silicon the container is arm64 while CI is x64, so pixel-level results can differ from CI: layout assertions such as the LCP element reproduce, but a screenshot diff in a section you did not touch is advisory. Check whether the diff is in your change before acting on it.
+
+The e2e step narrows to new or changed specs, specs next to a changed component (`Hero.tsx` selects `Hero.e2e.ts`), specs that import a changed helper under `tests/`, and every spec when `playwright.config.ts` changes. Without `--linux` the predictor starts its own production server on a free port and passes it to Playwright as `E2E_BASE_URL`; it refuses to continue if that port already answers. A spec runs on every project Playwright lists it under (`playwright test --list`, with `CI=true` as in CI), so a Chromium-only pass cannot hide a WebKit failure. `--retries=0` with `--repeat-each` makes a test that passes only some of the time fail, which is what `failOnFlakyTests` does in CI. A change to app code with no matching spec runs no e2e; use `--full` for that.
+
+`scripts/__tests__/ci-predict.test.ts` fails when `ci.yml` gains a job or an action the predictor does not map, and when a command in the `ci:local` chain is covered by no CI step.
+
 ## Testing
 
 ```mermaid

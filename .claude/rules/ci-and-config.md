@@ -31,3 +31,4 @@ ships unguarded.
 - A gate that routine `--no-verify` or override bypasses are working around is miscalibrated.
   Narrow its predicate to what it protects instead of weakening it for everyone.
 - Never raise a threshold or add an ignore entry to turn a gate green. Fix the measured property.
+- A job or action added to `ci.yml` needs an entry in `scripts/lib/ci-predict-policy.ts` (`JOB_POLICIES`, `ACTION_CLASSES`); `scripts/__tests__/ci-predict.test.ts` fails until it has one, so `pnpm ci:predict` never skips a job it cannot see.
