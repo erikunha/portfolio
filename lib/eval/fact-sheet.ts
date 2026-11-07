@@ -7,6 +7,7 @@ import {
   FUNDS_PHRASE,
   profile,
   profileLanguageLine,
+  profilePresentation,
   YEARS_OF_EXPERIENCE_LABEL,
 } from '@/content/profile';
 import { SITE_LOCALE } from '@/content/site-locale';
@@ -35,7 +36,7 @@ export function buildJudgeFactSheet(today: Date): string {
     `Work authorization and relocation: ${askFacts.openTo}`,
     ...askFacts.targeting,
     `Current title: ${profile.title}`,
-    `Current employer: ${profile.currentEmployer.name}, ${profile.currentEmployer.context}, ${FUNDS_PHRASE}`,
+    `Current employer: ${profile.currentEmployer.name}, ${profilePresentation[SITE_LOCALE.en].employerContext}, ${FUNDS_PHRASE}`,
     `Experience: ${YEARS_OF_EXPERIENCE_LABEL} in production systems`,
     `Core stack: ${profile.stackLine}`,
     `AI focus: ${profile.aiLine}`,
