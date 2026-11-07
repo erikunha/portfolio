@@ -92,14 +92,15 @@ flowchart LR
     comp --> c1["sections/** RSC"]
     comp --> c2["client/** islands"]
     comp --> c3["responsive/** chrome"]
-    comp --> c4["AppShell · ErrorBoundary"]
+    comp --> c4["SiteShell · AppShell · ErrorBoundary"]
 ```
 
 ## Dependency graph (module-level)
 
 ```mermaid
 flowchart TD
-    page["components/SiteHome.tsx (RSC)"] --> shell["AppShell.client"]
+    page["components/SiteHome.tsx (RSC)"] --> siteshell["SiteShell (RSC)"]
+    siteshell --> shell["AppShell.client"]
     shell --> main["PageMain (RSC)"]
     main --> sectionN["sections/* (RSC)"]
     shell --> footer["Footer (RSC), after PageMain"]

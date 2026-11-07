@@ -1,7 +1,7 @@
 'use client';
 
 import { usePathname } from 'next/navigation';
-import type { ReactNode } from 'react';
+import { type ReactNode, Suspense } from 'react';
 import { ExternalLink } from '@/components/ExternalLink';
 import { StatusDot } from '@/components/StatusDot';
 import { LINKS_PATH } from '@/content/links.constants';
@@ -42,31 +42,42 @@ function currentState(
   return isCurrentPath(pathname, href) ? 'page' : undefined;
 }
 
-export function DesktopTopbar({ brand }: { brand: ReactNode }) {
-  const { toggleMotion, chrome, copy, jump } = useSectionNavigation();
+function TopbarLinks({ pathname }: { pathname: string | null }) {
+  const { chrome, jump } = useSectionNavigation();
   const currentId = useCurrentSection();
+
+  return chrome.topbarNav.map(({ label, href }) => (
+    <a
+      key={href}
+      className="topbar-link hidden xl:inline"
+      href={href}
+      aria-current={currentState(pathname, currentId, href)}
+      onClick={(event) => {
+        const target = hashTarget(href);
+        if (target !== null) jump(event, target);
+      }}
+    >
+      {label}
+    </a>
+  ));
+}
+
+function CurrentTopbarLinks() {
+  return <TopbarLinks pathname={usePathname()} />;
+}
+
+export function DesktopTopbar({ brand }: { brand: ReactNode }) {
+  const { toggleMotion, chrome, copy } = useSectionNavigation();
   const motionOn = useMotionOn();
-  const pathname = usePathname();
 
   return (
-    <div className="desktop-topbar fixed top-0 left-0 right-0 bg-secondary-950 border-b border-primary-subtle hidden md:block">
+    <header className="desktop-topbar fixed top-0 left-0 right-0 bg-secondary-950 border-b border-primary-subtle hidden md:block">
       <div className="max-w-[var(--measure-page)] mx-auto px-[var(--space-gutter)] flex items-center gap-3 min-h-11">
         <MenuTrigger />
         <nav className="flex gap-2 items-center flex-nowrap" aria-label={copy.siteNavLabel}>
-          {chrome.topbarNav.map(({ label, href }) => (
-            <a
-              key={href}
-              className="topbar-link hidden xl:inline"
-              href={href}
-              aria-current={currentState(pathname, currentId, href)}
-              onClick={(event) => {
-                const target = hashTarget(href);
-                if (target !== null) jump(event, target);
-              }}
-            >
-              {label}
-            </a>
-          ))}
+          <Suspense fallback={<TopbarLinks pathname={null} />}>
+            <CurrentTopbarLinks />
+          </Suspense>
           <div className="flex gap-2 items-center flex-nowrap xl:ml-2">
             <button
               type="button"
@@ -96,6 +107,6 @@ export function DesktopTopbar({ brand }: { brand: ReactNode }) {
         <LanguageSwitch />
         <div className="flex items-center ml-auto pl-6">{brand}</div>
       </div>
-    </div>
+    </header>
   );
 }

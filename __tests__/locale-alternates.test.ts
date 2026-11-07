@@ -67,7 +67,7 @@ describe('locale alternates', () => {
     expect(languageSwitchPaths('/unknown')).toBeNull();
   });
 
-  it('the header switch serves the reading views and leaves /links to its own bar', () => {
+  it('the header switch serves every page, falling back to the other language home', () => {
     expect(headerLanguageSwitchPaths('/cv')).toEqual({ en: '/cv', pt: '/pt/cv' });
     expect(headerLanguageSwitchPaths('/pt/cv')).toEqual({ en: '/cv', pt: '/pt/cv' });
     expect(headerLanguageSwitchPaths('/summary')).toEqual({ en: '/summary', pt: '/pt/summary' });
@@ -75,8 +75,14 @@ describe('locale alternates', () => {
       en: '/summary',
       pt: '/pt/summary',
     });
-    expect(headerLanguageSwitchPaths('/links')).toBeNull();
-    expect(headerLanguageSwitchPaths('/links/en')).toBeNull();
+    expect(headerLanguageSwitchPaths('/links')).toEqual({ en: '/links/en', pt: '/links' });
+    expect(headerLanguageSwitchPaths('/links/en')).toEqual({ en: '/links/en', pt: '/links' });
+    expect(headerLanguageSwitchPaths('/design-system/tokens')).toEqual({
+      en: '/design-system/tokens',
+      pt: '/pt',
+    });
+    expect(headerLanguageSwitchPaths('/missing')).toEqual({ en: '/missing', pt: '/pt' });
+    expect(headerLanguageSwitchPaths('/pt/missing')).toEqual({ en: '/', pt: '/pt/missing' });
   });
 
   it('the language switch carries the current section between the two home pages only', () => {

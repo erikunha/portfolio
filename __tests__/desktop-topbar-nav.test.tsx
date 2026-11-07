@@ -176,11 +176,20 @@ describe('DesktopTopbar', () => {
     expect(links.map((link) => link.getAttribute('aria-current'))).toEqual([null, 'page']);
   });
 
-  it('renders no language switch where the page has no counterpart', async () => {
+  it('keeps the language switch where the page has no counterpart, pointing the other language home', async () => {
     mockPathname = '/design-system';
     mounted = await renderTopbar();
+    const links = [...mounted.container.querySelectorAll('nav[data-lang-switch] a')];
 
-    expect(mounted.container.querySelector('[data-lang-switch]')).toBeNull();
+    expect(links.map((link) => link.getAttribute('href'))).toEqual(['/design-system', '/pt']);
+  });
+
+  it('is the page banner landmark', async () => {
+    mounted = await renderTopbar();
+    const bar = mounted.container.querySelector('.desktop-topbar');
+
+    expect(bar?.tagName).toBe('HEADER');
+    expect(bar?.parentElement?.closest('main, article, section, aside, nav')).toBeNull();
   });
 
   it('draws no window dots in the topbar', async () => {

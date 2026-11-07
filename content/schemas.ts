@@ -795,11 +795,6 @@ const ErrorHrefSchema = z.string().regex(/^\/(?!\/)[\w/#-]*$/);
 const ErrorLinkSchema = z.object({ label: z.string().min(1), href: ErrorHrefSchema });
 
 export const ErrorsContentSchema = z.object({
-  chrome: z.object({
-    navLabel: z.string().min(1),
-    skipLabel: z.string().min(1),
-    nav: z.array(ErrorLinkSchema).min(1),
-  }),
   notFound: z.object({
     metaTitle: z.string().min(1),
     code: z.literal('404'),
@@ -831,7 +826,6 @@ export const ErrorsContentSchema = z.object({
 });
 export type ErrorsContent = z.infer<typeof ErrorsContentSchema>;
 export const ErrorsClientContentSchema = ErrorsContentSchema.pick({
-  chrome: true,
   serverError: true,
   componentUnavailable: true,
   componentExplanation: true,
@@ -992,7 +986,6 @@ export const LinksCopySchema = z.object({
   copyFailedMessage: LocalizedTextSchema,
   opensInNewTab: LocalizedTextSchema,
   newBadge: LocalizedTextSchema,
-  langSwitchLabel: LocalizedTextSchema,
   feedUnavailable: LocalizedTextSchema,
   pageHeading: LocalizedTextSchema,
 });
