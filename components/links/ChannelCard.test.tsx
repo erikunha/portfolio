@@ -47,6 +47,15 @@ describe('ChannelCard', () => {
     expect(container.textContent).toContain('4 days ago');
   });
 
+  it('fetches the latest-video cover at high priority, because it is the largest paint on the page', () => {
+    const { container } = render(<ChannelCard locale={LINKS_LOCALE.en} feed={populatedFeed} />);
+    const cover = container.querySelector('.links-thumb img');
+    expect(cover?.getAttribute('fetchpriority'), 'the cover is the LCP element of /links').toBe(
+      'high',
+    );
+    expect(cover?.getAttribute('loading'), 'a lazy LCP image waits for layout').toBeNull();
+  });
+
   it('keeps the 16:9 block while the latest video is missing, so the card holds its shape', () => {
     const { container } = render(<ChannelCard locale={LINKS_LOCALE.pt} feed={emptyFeed} />);
     expect(container.querySelector('.links-thumb-placeholder')).not.toBeNull();

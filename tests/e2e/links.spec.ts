@@ -295,3 +295,81 @@ test('shows no next-video teaser or launch status once the channel has a latest 
   await expect(page.locator('.links-ticker-track')).toHaveCount(0);
   await expect(page.locator('main')).not.toContainText(/first videos|\bsoon\b/);
 });
+
+const FONT_REQUEST = /\/_next\/static\/media\/([a-z_]+?)_?(\d+)?-s\./;
+const DISPLAY_FACE = 'inter';
+const MONO_FACE = 'jetbrains_mono';
+const MONO_WEIGHTS = ['400', '700'];
+
+async function fontFacesRequested(page: Page, path: string): Promise<string[]> {
+  const faces: string[] = [];
+  page.on('request', (request) => {
+    if (request.resourceType() !== 'font') return;
+    const match = FONT_REQUEST.exec(request.url());
+    if (match) faces.push(`${match[1]}:${match[2] ?? ''}`);
+  });
+  await page.goto(path, { waitUntil: 'networkidle' });
+  return faces;
+}
+
+test.describe('font payload', () => {
+  for (const path of ['/links', '/links/en']) {
+    test(`${path} downloads only the mono faces its text uses: the display face belongs to a visible h1 and a face no rule asks for is dead weight in the Lighthouse mobile LCP model`, async ({
+      page,
+    }) => {
+      const faces = await fontFacesRequested(page, path);
+      expect(faces.length, 'the page paints text, so at least one face loads').toBeGreaterThan(0);
+      expect(
+        faces.filter((face) => !face.startsWith(`${MONO_FACE}:`)),
+        'the sr-only h1 must not pull the display face',
+      ).toEqual([]);
+      expect(
+        faces
+          .map((face) => face.split(':')[1] ?? '')
+          .filter((weight) => !MONO_WEIGHTS.includes(weight)),
+        'only the 400 and 700 mono faces are declared',
+      ).toEqual([]);
+    });
+  }
+
+  test('the homepage still loads the display face for its visible h1, so the guard above is not vacuous', async ({
+    page,
+  }) => {
+    const faces = await fontFacesRequested(page, '/');
+    expect(faces.some((face) => face.startsWith(`${DISPLAY_FACE}:`))).toBe(true);
+  });
+});
+
+const LCP_VIEWPORT = { width: 375, height: 812 };
+
+test.describe('largest contentful paint', () => {
+  test.use({ viewport: LCP_VIEWPORT });
+
+  for (const path of ['/links', '/links/en']) {
+    test(`${path} paints the latest-video cover last and largest at mobile width, so the LCP work targets the right element`, async ({
+      page,
+    }) => {
+      await page.addInitScript(() => {
+        const entries: string[] = [];
+        Object.assign(window, { lcpElements: entries });
+        new PerformanceObserver((list) => {
+          for (const entry of list.getEntries()) {
+            const element = (entry as PerformanceEntry & { element?: Element | null }).element;
+            entries.push(
+              element
+                ? `${element.tagName}:${element.closest('.links-thumb') ? 'cover' : 'other'}`
+                : 'none',
+            );
+          }
+        }).observe({ type: 'largest-contentful-paint', buffered: true });
+      });
+      await page.goto(path, { waitUntil: 'networkidle' });
+      const hasCover = (await page.locator('.links-thumb img').count()) > 0;
+      test.skip(!hasCover, 'the channel feed has no latest video, so there is no cover to measure');
+      const entries = await page.evaluate(
+        () => (window as unknown as { lcpElements: string[] }).lcpElements,
+      );
+      expect(entries.at(-1), 'the final LCP candidate is the cover image').toBe('IMG:cover');
+    });
+  }
+});

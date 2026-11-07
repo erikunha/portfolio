@@ -75,6 +75,7 @@ export function ChannelCard({ locale, feed }: { locale: LinksLocale; feed: Chann
                 alt=""
                 fill
                 priority
+                fetchPriority="high"
                 sizes={THUMB_SIZES}
                 className="object-cover"
               />
