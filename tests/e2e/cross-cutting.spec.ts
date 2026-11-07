@@ -270,7 +270,7 @@ test.describe('cross-cutting', () => {
     await expectKeystrokeStaysResponsive(page);
   });
 
-  test('4b — a long task that ended before the keystroke is not charged to it', async ({
+  test('4b: a long task that ended before the keystroke is not charged to it', async ({
     page,
   }, testInfo) => {
     skipInpOnWebkit(testInfo);
