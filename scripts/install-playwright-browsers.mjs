@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import { spawn as nodeSpawn } from 'node:child_process';
+import { realpathSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
 
 export const INSTALL_ATTEMPTS = 3;
@@ -37,7 +38,10 @@ export async function installWithRetry(
   return FAILURE;
 }
 
-if (import.meta.url === pathToFileURL(process.argv[1] ?? '').href) {
+if (
+  typeof process.argv[1] === 'string' &&
+  import.meta.url === pathToFileURL(realpathSync(process.argv[1])).href
+) {
   const browsers = process.argv.slice(2);
   if (browsers.length === 0) {
     console.error('usage: install-playwright-browsers.mjs <browser...>');

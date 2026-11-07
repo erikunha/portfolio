@@ -167,33 +167,31 @@ describe('CI reviewer runs a trusted copy of the orchestrator', () => {
 
 const SNAPSHOT_STEP_TIMEOUT_MS = 30_000;
 
-describe(
-  'claude-review snapshot step',
-  () => {
-    const snapshotRun =
-      workflowSteps.find((step) => step.name?.startsWith('Snapshot PR metadata'))?.run ?? '';
+describe('claude-review snapshot step', { timeout: SNAPSHOT_STEP_TIMEOUT_MS }, () => {
+  const snapshotRun =
+    workflowSteps.find((step) => step.name?.startsWith('Snapshot PR metadata'))?.run ?? '';
 
-    const FAILED_CHECK = '[{"name":"lint","state":"FAILURE","bucket":"fail","link":"u"}]';
+  const FAILED_CHECK = '[{"name":"lint","state":"FAILURE","bucket":"fail","link":"u"}]';
 
-    function run(behaviour: {
-      checksExit: number;
-      checksOut?: string;
-      checksErr?: string;
-      logBytes?: number;
-      runListFails?: boolean;
-      prViewFails?: boolean;
-      prDiffFails?: boolean;
-      prNamesFail?: boolean;
-      filesApiFails?: boolean;
-      filesApiOut?: string;
-    }) {
-      const dir = mkdtempSync(join(tmpdir(), 'review-snapshot-'));
-      const bin = join(dir, 'bin');
-      const out = join(dir, 'out');
-      spawnSync('mkdir', ['-p', bin]);
-      writeFileSync(
-        join(bin, 'gh'),
-        `#!/usr/bin/env bash
+  function run(behaviour: {
+    checksExit: number;
+    checksOut?: string;
+    checksErr?: string;
+    logBytes?: number;
+    runListFails?: boolean;
+    prViewFails?: boolean;
+    prDiffFails?: boolean;
+    prNamesFail?: boolean;
+    filesApiFails?: boolean;
+    filesApiOut?: string;
+  }) {
+    const dir = mkdtempSync(join(tmpdir(), 'review-snapshot-'));
+    const bin = join(dir, 'bin');
+    const out = join(dir, 'out');
+    spawnSync('mkdir', ['-p', bin]);
+    writeFileSync(
+      join(bin, 'gh'),
+      `#!/usr/bin/env bash
 case "$1 $2" in
   "pr view") if [[ -n "$PR_VIEW_FAIL" ]]; then echo "HTTP 429" >&2; exit 1; fi; echo '{"headRefOid":"abc123"}' ;;
   "pr diff") if [[ -n "$PR_DIFF_FAIL" ]] || { [[ "$*" == *--name-only* ]] && [[ -n "$PR_NAMES_FAIL" ]]; }; then echo "HTTP 406" >&2; exit 1; fi; if [[ "$*" == *--name-only* ]]; then echo app/page.tsx; else echo "+line"; fi ;;
@@ -203,74 +201,119 @@ case "$1 $2" in
   *) if [[ "$*" != "api repos/o/r/pulls/1/files --paginate" ]]; then exit 3; fi; if [[ -n "$FILES_API_FAIL" ]]; then echo "HTTP 503" >&2; exit 1; fi; printf '%s' "$FILES_API_OUT" ;;
 esac
 `,
-      );
-      chmodSync(join(bin, 'gh'), 0o755);
-      const script = join(dir, 'snapshot.sh');
-      writeFileSync(script, snapshotRun);
-      const result = spawnSync('bash', ['-e', script], {
-        encoding: 'utf8',
-        env: {
-          ...process.env,
-          PATH: `${bin}:${process.env.PATH}`,
-          REPO: 'o/r',
-          PR: '1',
-          OUT_DIR: out,
-          MAX_LOG_BYTES: '1000',
-          CHECKS_EXIT: String(behaviour.checksExit),
-          CHECKS_ERR: behaviour.checksErr ?? '',
-          CHECKS_OUT: behaviour.checksOut ?? FAILED_CHECK,
-          LOG_BYTES: String(behaviour.logBytes ?? 10),
-          RUN_LIST_FAIL: behaviour.runListFails ? '1' : '',
-          PR_VIEW_FAIL: behaviour.prViewFails ? '1' : '',
-          PR_DIFF_FAIL: behaviour.prDiffFails ? '1' : '',
-          PR_NAMES_FAIL: behaviour.prNamesFail ? '1' : '',
-          FILES_API_FAIL: behaviour.filesApiFails ? '1' : '',
-          FILES_API_OUT: behaviour.filesApiOut ?? '',
-        },
-      });
-      const read = (name: string) => readArtifact(join(out, name));
-      return {
-        status: result.status,
-        stderr: result.stderr,
-        stdout: result.stdout,
-        read,
-        files: () => readdirSync(out).sort(),
-      };
+    );
+    chmodSync(join(bin, 'gh'), 0o755);
+    const script = join(dir, 'snapshot.sh');
+    writeFileSync(script, snapshotRun);
+    const result = spawnSync('bash', ['-e', script], {
+      encoding: 'utf8',
+      env: {
+        ...process.env,
+        PATH: `${bin}:${process.env.PATH}`,
+        REPO: 'o/r',
+        PR: '1',
+        OUT_DIR: out,
+        MAX_LOG_BYTES: '1000',
+        CHECKS_EXIT: String(behaviour.checksExit),
+        CHECKS_ERR: behaviour.checksErr ?? '',
+        CHECKS_OUT: behaviour.checksOut ?? FAILED_CHECK,
+        LOG_BYTES: String(behaviour.logBytes ?? 10),
+        RUN_LIST_FAIL: behaviour.runListFails ? '1' : '',
+        PR_VIEW_FAIL: behaviour.prViewFails ? '1' : '',
+        PR_DIFF_FAIL: behaviour.prDiffFails ? '1' : '',
+        PR_NAMES_FAIL: behaviour.prNamesFail ? '1' : '',
+        FILES_API_FAIL: behaviour.filesApiFails ? '1' : '',
+        FILES_API_OUT: behaviour.filesApiOut ?? '',
+      },
+    });
+    const read = (name: string) => readArtifact(join(out, name));
+    return {
+      status: result.status,
+      stderr: result.stderr,
+      stdout: result.stdout,
+      read,
+      files: () => readdirSync(out).sort(),
+    };
+  }
+
+  it('keeps failed and pending check results as evidence', () => {
+    for (const checksExit of [0, 1, 8]) {
+      const result = run({ checksExit });
+      expect(result.status).toBe(0);
+      expect(result.read('checks.txt')).toBe('fail\tFAILURE\tlint\tu\n');
     }
+  });
 
-    it('keeps failed and pending check results as evidence', () => {
-      for (const checksExit of [0, 1, 8]) {
-        const result = run({ checksExit });
-        expect(result.status).toBe(0);
-        expect(result.read('checks.txt')).toBe('fail\tFAILURE\tlint\tu\n');
-      }
-    });
-
-    it('marks an API error UNAVAILABLE even when gh exits 1 like a failed check', () => {
-      for (const [checksExit, checksOut] of [
-        [1, ''],
-        [1, 'not json'],
-        [4, ''],
-        [0, '[]'],
-      ] as const) {
-        const result = run({ checksExit, checksOut, checksErr: 'HTTP 503' });
-        expect(result.status).toBe(0);
-        expect(result.read('checks.txt')).toMatch(/^UNAVAILABLE: gh pr checks exited \d/);
-        expect(result.read('checks.txt')).toContain('HTTP 503');
-      }
-    });
-
-    it('snapshots the diff and changed paths for the reviewer', () => {
-      const result = run({ checksExit: 0, filesApiFails: true });
+  it('marks an API error UNAVAILABLE even when gh exits 1 like a failed check', () => {
+    for (const [checksExit, checksOut] of [
+      [1, ''],
+      [1, 'not json'],
+      [4, ''],
+      [0, '[]'],
+    ] as const) {
+      const result = run({ checksExit, checksOut, checksErr: 'HTTP 503' });
       expect(result.status).toBe(0);
-      expect(result.read('diff.patch')).toBe('+line\n');
-      expect(result.read('files.txt')).toBe('app/page.tsx\n');
-    });
+      expect(result.read('checks.txt')).toMatch(/^UNAVAILABLE: gh pr checks exited \d/);
+      expect(result.read('checks.txt')).toContain('HTTP 503');
+    }
+  });
 
-    it('truncates a large failed log without failing the step, leaving no full copy behind', () => {
-      const result = run({ checksExit: 1, logBytes: 5_000_000 });
+  it('snapshots the diff and changed paths for the reviewer', () => {
+    const result = run({ checksExit: 0, filesApiFails: true });
+    expect(result.status).toBe(0);
+    expect(result.read('diff.patch')).toBe('+line\n');
+    expect(result.read('files.txt')).toBe('app/page.tsx\n');
+  });
+
+  it('truncates a large failed log without failing the step, leaving no full copy behind', () => {
+    const result = run({ checksExit: 1, logBytes: 5_000_000 });
+    expect(result.status).toBe(0);
+    expect(result.read('failed-run-42.log')).toHaveLength(1000);
+    expect(result.files()).toEqual([
+      'checks.txt',
+      'diff.patch',
+      'failed-run-42.log',
+      'files.txt',
+      'pr.json',
+    ]);
+  });
+  it('marks failed-run logs UNAVAILABLE when gh run list fails, without aborting the job', () => {
+    const result = run({ checksExit: 0, runListFails: true });
+    expect(result.status).toBe(0);
+    expect(result.read('failed-runs-unavailable.txt')).toMatch(/^UNAVAILABLE: gh run list failed/);
+    expect(result.read('failed-runs-unavailable.txt')).toContain('HTTP 502');
+    expect(result.read('checks.txt')).toBe('fail\tFAILURE\tlint\tu\n');
+  });
+
+  it('marks PR metadata UNAVAILABLE when gh pr view fails, and skips the run lookup it feeds', () => {
+    const result = run({ checksExit: 1, prViewFails: true });
+    expect(result.status).toBe(0);
+    expect(result.files()).not.toContain('pr.json');
+    expect(result.read('pr-unavailable.txt')).toMatch(/^UNAVAILABLE: gh pr view failed/);
+    expect(result.read('pr-unavailable.txt')).toContain('HTTP 429');
+    expect(result.read('failed-runs-unavailable.txt')).toMatch(/^UNAVAILABLE: no head SHA/);
+    expect(result.read('diff.patch')).toBe('+line\n');
+  });
+
+  it.each([{ prDiffFails: true }, { prNamesFail: true }])(
+    'recovers diff evidence from paginated files when the primary command fails: %j',
+    (failure) => {
+      const filename = 'app/$(echo injected) page.tsx';
+      const patch = '@@ -1 +1 @@\n-old\n+new';
+      const filesApiOut = `${JSON.stringify([{ filename, patch }])}\n${JSON.stringify([
+        { filename: 'public/image.png' },
+        { filename: 'app/second.tsx', patch: '+second' },
+      ])}`;
+      const result = run({ checksExit: 0, ...failure, filesApiOut });
       expect(result.status).toBe(0);
-      expect(result.read('failed-run-42.log')).toHaveLength(1000);
+      expect(result.read('files.txt')).toBe(`${filename}\npublic/image.png\napp/second.tsx\n`);
+      expect(result.read('diff.patch')).toBe(
+        `diff --git a/${filename} b/${filename}\n${patch}\n` +
+          'diff --git a/public/image.png b/public/image.png\n' +
+          '# patch omitted by GitHub: public/image.png\n' +
+          'diff --git a/app/second.tsx b/app/second.tsx\n+second\n',
+      );
+      expect(result.read('checks.txt')).toBe('fail\tFAILURE\tlint\tu\n');
       expect(result.files()).toEqual([
         'checks.txt',
         'diff.patch',
@@ -278,69 +321,20 @@ esac
         'files.txt',
         'pr.json',
       ]);
-    });
-    it('marks failed-run logs UNAVAILABLE when gh run list fails, without aborting the job', () => {
-      const result = run({ checksExit: 0, runListFails: true });
-      expect(result.status).toBe(0);
-      expect(result.read('failed-runs-unavailable.txt')).toMatch(
-        /^UNAVAILABLE: gh run list failed/,
-      );
-      expect(result.read('failed-runs-unavailable.txt')).toContain('HTTP 502');
-      expect(result.read('checks.txt')).toBe('fail\tFAILURE\tlint\tu\n');
-    });
+    },
+  );
 
-    it('marks PR metadata UNAVAILABLE when gh pr view fails, and skips the run lookup it feeds', () => {
-      const result = run({ checksExit: 1, prViewFails: true });
-      expect(result.status).toBe(0);
-      expect(result.files()).not.toContain('pr.json');
-      expect(result.read('pr-unavailable.txt')).toMatch(/^UNAVAILABLE: gh pr view failed/);
-      expect(result.read('pr-unavailable.txt')).toContain('HTTP 429');
-      expect(result.read('failed-runs-unavailable.txt')).toMatch(/^UNAVAILABLE: no head SHA/);
-      expect(result.read('diff.patch')).toBe('+line\n');
-    });
-
-    it.each([{ prDiffFails: true }, { prNamesFail: true }])(
-      'recovers diff evidence from paginated files when the primary command fails: %j',
-      (failure) => {
-        const filename = 'app/$(echo injected) page.tsx';
-        const patch = '@@ -1 +1 @@\n-old\n+new';
-        const filesApiOut = `${JSON.stringify([{ filename, patch }])}\n${JSON.stringify([
-          { filename: 'public/image.png' },
-          { filename: 'app/second.tsx', patch: '+second' },
-        ])}`;
-        const result = run({ checksExit: 0, ...failure, filesApiOut });
-        expect(result.status).toBe(0);
-        expect(result.read('files.txt')).toBe(`${filename}\npublic/image.png\napp/second.tsx\n`);
-        expect(result.read('diff.patch')).toBe(
-          `diff --git a/${filename} b/${filename}\n${patch}\n` +
-            'diff --git a/public/image.png b/public/image.png\n' +
-            '# patch omitted by GitHub: public/image.png\n' +
-            'diff --git a/app/second.tsx b/app/second.tsx\n+second\n',
-        );
-        expect(result.read('checks.txt')).toBe('fail\tFAILURE\tlint\tu\n');
-        expect(result.files()).toEqual([
-          'checks.txt',
-          'diff.patch',
-          'failed-run-42.log',
-          'files.txt',
-          'pr.json',
-        ]);
-      },
+  it.each([
+    { filesApiFails: true, expectedError: 'HTTP 503' },
+    { filesApiOut: 'not json', expectedError: 'parse error' },
+  ])('stops the job when both diff sources fail: %j', ({ expectedError, ...failure }) => {
+    const result = run({ checksExit: 0, prDiffFails: true, ...failure });
+    expect(result.status).not.toBe(0);
+    expect(result.files()).not.toContain('checks.txt');
+    expect(result.stdout).toContain(
+      'there is nothing to review, so the job stops instead of approving blind.',
     );
-
-    it.each([
-      { filesApiFails: true, expectedError: 'HTTP 503' },
-      { filesApiOut: 'not json', expectedError: 'parse error' },
-    ])('stops the job when both diff sources fail: %j', ({ expectedError, ...failure }) => {
-      const result = run({ checksExit: 0, prDiffFails: true, ...failure });
-      expect(result.status).not.toBe(0);
-      expect(result.files()).not.toContain('checks.txt');
-      expect(result.stdout).toContain(
-        'there is nothing to review, so the job stops instead of approving blind.',
-      );
-      expect(result.stderr).toContain('HTTP 406');
-      expect(result.stderr).toContain(expectedError);
-    });
-  },
-  SNAPSHOT_STEP_TIMEOUT_MS,
-);
+    expect(result.stderr).toContain('HTTP 406');
+    expect(result.stderr).toContain(expectedError);
+  });
+});
