@@ -136,7 +136,7 @@
 
   .career-body {
     max-width: 72ch;
-    color: var(--color-tertiary-50);
+    color: var(--color-primary-500);
   }
 
   .career-hash,
