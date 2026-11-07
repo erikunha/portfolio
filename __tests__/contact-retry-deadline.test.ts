@@ -1,6 +1,8 @@
 import { NextRequest } from 'next/server';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+const TEST_CRON_SECRET = 'x'.repeat(24);
+
 const transaction = { zrem: vi.fn(), hdel: vi.fn(), exec: vi.fn() };
 const redis = {
   zrange: vi.fn(),
@@ -39,7 +41,7 @@ describe('contact retry time budget', () => {
     vi.clearAllMocks();
     vi.useFakeTimers();
     vi.setSystemTime(new Date('2026-10-24T04:00:00.000Z'));
-    vi.stubEnv('CRON_SECRET', 'cron-secret');
+    vi.stubEnv('CRON_SECRET', TEST_CRON_SECRET);
     vi.stubEnv('RESEND_API_KEY', 'test-key');
     redis.zrange.mockResolvedValue(Array.from({ length: PENDING_COUNT }, (_, i) => `message-${i}`));
     redis.get.mockResolvedValue(stored);
@@ -63,7 +65,7 @@ describe('contact retry time budget', () => {
     const startedAt = Date.now();
     const pending = GET(
       new NextRequest('http://localhost/api/contact-retry', {
-        headers: { authorization: 'Bearer cron-secret' },
+        headers: { authorization: `Bearer ${TEST_CRON_SECRET}` },
       }),
     );
     let settled = false;

@@ -46,7 +46,7 @@ describe('failures from the GET and cron routes use the shared envelope', () => 
   beforeEach(() => {
     vi.resetModules();
     limit.mockReset();
-    vi.stubEnv('CRON_SECRET', 'a-cron-secret-long-enough-to-be-real-0000');
+    vi.stubEnv('CRON_SECRET', 'x'.repeat(24));
   });
   afterEach(() => {
     vi.unstubAllEnvs();

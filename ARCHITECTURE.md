@@ -512,7 +512,7 @@ If Resend is down, the message stays in KV and enters the pending outbox. The fo
 
 ### Daily retry
 
-`GET /api/contact-retry` requires the same `CRON_SECRET` bearer as `/api/psi-refresh`; missing or wrong authorization returns 401. Vercel Cron runs it at `0 4 * * *` (04:00 UTC daily, compatible with Hobby).
+`GET /api/contact-retry` requires the same `CRON_SECRET` bearer as `/api/psi-refresh`; missing or wrong authorization returns 401, and so does any request while `CRON_SECRET` is shorter than 16 characters. Vercel Cron runs it at `0 4 * * *` (04:00 UTC daily, compatible with Hobby).
 
 `contact:outbox` is a Redis sorted set of message ids scored by `receivedAt`. `contact:outbox:attempts` stores retry counts. The cron removes entries older than 7 days or already at 3 attempts. Each eligible message consumes one attempt before the shared send function runs. Acceptance removes pending membership and its counter; failure keeps it pending. The success response is `{ ok: true, requestId, data: { sent, failed, expired, exhausted } }`, with a matching `X-Request-Id` header. Removal never deletes `contact:msg:{uuid}`, which retains its 90-day audit TTL.
 
