@@ -93,7 +93,7 @@ cases are deliberately borderline-hard.
 
 - The persona scope or SYSTEM prompt narrows/changes (`lib/ask/system-prompt.ts`).
 - The answer-length cap or stream-error sentinel protocol changes
-  (`app/api/ask/route.ts`) — can stale an output-validation gold case.
+  (`lib/ask/stream.ts`, `lib/ask/output-guard.ts`) — can stale an output-validation gold case.
 - A factual ground-truth source changes (e.g. `lib/hiring-profile.ts`).
 
 ## Budget

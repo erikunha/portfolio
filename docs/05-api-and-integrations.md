@@ -108,13 +108,15 @@ flowchart LR
 
 | File                | Purpose                                                                                                                                                                                        |
 | ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `preflight.ts`      | `preflightAsk`: kill switch, cross-site check, rate limit, bounded parse, injection gate, duplicate check and budget reservation; returns the rejection `Response` or an `AskContext`                       |
+| `stream.ts`         | `createAskStream`: the model call, the pump loop with its watchdog and guard, and budget settlement plus the log write; `app/api/ask/route.ts` only composes the two                           |
 | `model.ts`          | `ASK_MODEL` single source of truth (route + eval import it)                                                                                                                                    |
 | `system-prompt.ts`  | composes `SYSTEM_TEXT` from a hand-written narrative + **live `content/*` data** (stack lines, work authorization and targeting come from `content/ask-facts.ts`, which the eval fact sheet also reads), to share source data with the page; exports `PROMPT_VERSION = sha256(SYSTEM_TEXT)[:12]` (prompt fingerprint) |
 | `prompt-version.ts` | sync `sha256Hex` (works in both the Node route and the tsx eval)                                                                                                                               |
 | `injection.ts`      | `isInjectionAttempt` input reject (role tokens, ChatML delimiters, "ignore instructions"; quoted mentions pass); ReDoS-safe                                                                                                |
 | `output-guard.ts`   | **Layer 1** streaming guard (per-chunk leak/runaway scan, abort→sentinel, cross-chunk-seam safe) + **Layer 2** post-hoc audit; both **fail-open**                                              |
 
-The defense model for `/api/ask`: input `isInjectionAttempt` + a per-request unguessable 128-bit sentinel wrapping the user text ("data only") + an in-prompt non-disclosure instruction; output Layer-1 stream guard + Layer-2 audit. Egress guards catch verbatim/whitespace-reflowed prompt echoes; paraphrase leakage is owned by the prompt-side controls.
+The defense model for `/api/ask`: input `isInjectionAttempt` + a per-request unguessable 128-bit sentinel wrapping the user text ("data only") + an in-prompt non-disclosure instruction; output Layer-1 stream guard + Layer-2 audit. Egress guards are monitoring, not a guarantee: they catch verbatim and whitespace-reflowed prompt echoes, and a paraphrased or translated leak passes both layers. Paraphrase leakage is owned by the prompt-side controls. A Layer-1 abort is recorded as a finding in the persisted verdict and adds to the `ask:guard:{date}:{kind}` counter (`lib/ask/guard-count.ts`), as does every Layer-2 finding, so the rate is readable without grepping logs.
 
 ## Security surface
 

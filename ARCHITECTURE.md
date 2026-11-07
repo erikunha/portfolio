@@ -307,11 +307,11 @@ content/ask-eval-corpus.ts            # ask eval Q+A corpus (factual, edge, jail
 content/ask-facts.ts                  # facts about Erik the ask prompt states (stack lines, work authorization, targeting), shared with the eval fact sheet
 
 lib/agent/                            # agent-readiness helpers (MCP tools)
-lib/ask/                              # system prompt builder, model const, anti-abuse
+lib/ask/                              # system prompt builder, model const, anti-abuse; preflight.ts (every check before a model call) and stream.ts (model call, pump, settlement) that app/api/ask/route.ts composes
 lib/mdx/                              # MDX remark/recma plugins for /design-system docs
 lib/server/                           # server-only utilities (route-handler factory; fetch-metadata.ts isCrossSiteRequest, the Sec-Fetch-Site gate defineHandler runs first; read-body.ts bounded body read after the limiter; after-response.ts after() wrapper for post-response work)
 lib/env.ts                            # typed, format-validating env accessor
-lib/ask-log.ts                        # KV interaction log per /api/ask request that reaches the model; lib/ask/refusal-count.ts counts refused asks per day
+lib/ask-log.ts                        # KV interaction log per /api/ask request that reaches the model; lib/ask/refusal-count.ts counts refused asks per day; lib/ask/guard-count.ts counts output-guard findings per day
 lib/boot-animation.ts                 # boot sequence data
 lib/typewriter.ts                     # one type, hold and erase loop (runPhraseLoop, typeOut) and createPauseControl
 lib/use-copy-feedback.client.ts       # clipboard state for every copy button
@@ -406,9 +406,10 @@ Content-Type: application/json
 
 → 400 application/json   { "error": "..." }  # missing question, invalid body, injection guard
 → 429 application/json   { "error": "..." }  # per-IP sliding window or identical question
+→ 500 application/json   { "error": "..." }  # the model call could not start; the reservation is refunded
 → 503 application/json   { "error": "..." }  # kill switch or budget unavailable/exhausted
 ```
-See `app/api/ask/route.ts` and `lib/stream-protocol.ts`.
+See `app/api/ask/route.ts`, `lib/ask/preflight.ts`, `lib/ask/stream.ts` and `lib/stream-protocol.ts`.
 
 ### Stack
 
@@ -482,7 +483,7 @@ The asymmetry is intentional: this is a kill switch, not a feature flag. During 
 
 A module-scope `log.info('kill-switch on cold start', { askEnabled: env.ASK_ENABLED ?? 'unset' })`, the structured logger reading the Zod `env` accessor, wrapped in a try/catch so a logger failure can't crash cold start, emits once per warm instance, providing deploy-time proof of the env-var value in Vercel runtime logs without inspecting the dashboard.
 
-The normalized off-keyword set is defined in `app/api/ask/route.ts`.
+The normalized off-keyword set is defined in `lib/ask/preflight.ts`.
 
 ---
 
@@ -586,7 +587,7 @@ Observability spans real-user telemetry, structured logs and client error captur
 
 ### `/api/ask` Q+A retention
 
-- **`lib/ask-log.ts`** persists every `/api/ask` interaction that reaches the model to Upstash KV `ask:log:{yyyy-mm-dd}:{requestId}` with 90-day TTL. Captures `{requestId, ts, ipHash, question (≤500c), answer (≤1000c), inputTokens, outputTokens, durationMs, status}`. A request rejected for an injection pattern or an invalid body writes no row; it leaves one `ask rejected` log line with the request id and `ipHash`. A request refused by the rate limit, the duplicate check or the budget writes no row either: it leaves an `ask refused` log line and adds to the `ask:refused:{yyyy-mm-dd}:{status}` counter (32-day TTL). Enables retrospective audit of what the LLM said about Erik + product learning on user questions.
+- **`lib/ask-log.ts`** persists every `/api/ask` interaction that reaches the model to Upstash KV `ask:log:{yyyy-mm-dd}:{requestId}` with 90-day TTL. Captures `{requestId, ts, ipHash, question (≤500c), answer (≤1000c), inputTokens, outputTokens, durationMs, status}`; `lib/ask/redact-pii.ts` replaces email addresses and phone numbers in the question and the answer with placeholders on the whole question and the whole collected answer, then cuts to 500 and 1000 characters, so no readable prefix of a contact detail is stored. A request rejected for an injection pattern or an invalid body writes no row; it leaves one `ask rejected` log line with the request id and `ipHash`. A request refused by the rate limit, the duplicate check or the budget writes no row either: it leaves an `ask refused` log line and adds to the `ask:refused:{yyyy-mm-dd}:{status}` counter (32-day TTL). Enables retrospective audit of what the LLM said about Erik + product learning on user questions.
 - **`X-Request-Id`** response header on every `/api/ask` response, early refusals included, surfaces the requestId to the client for the GDPR/LGPD erasure flow. Refusals store no row under that id; the shell records the id whenever the header is present, and forgetting an id with no row is harmless.
 - **`app/api/log/forget/route.ts`** accepts POST `{requestId}` and idempotently DELETEs the matching record across every day-partition a live record can carry (the 90-day TTL plus the current day, 91 dates, from `askLogDatesInTtl`). Rate-limited (21/IP/hour: the 20 ids one tab holds plus one contact receipt, both counts from `lib/forget-limits.ts`) via `getForgetLimit()`.
 
