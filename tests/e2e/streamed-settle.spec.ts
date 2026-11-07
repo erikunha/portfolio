@@ -1,9 +1,10 @@
 import { expect, test } from '@playwright/test';
+import { settleFrames } from './_helpers/geometry';
 import { gotoSettled, PENDING_STREAMED } from './_helpers/streamed';
 
 const BOUNDARY_SWAP = /\$RC\(("B:[^)]*)\)/g;
 const HELD_SWAP = '(window.__heldSwaps=window.__heldSwaps||[]).push(()=>$RC($1))';
-const RELEASE_DELAY_MS = 300;
+const HELD_FRAMES = 30;
 
 test.describe('settling the streamed boundaries', () => {
   test.beforeEach(async ({ context }) => {
@@ -28,7 +29,7 @@ test.describe('settling the streamed boundaries', () => {
       page.locator(PENDING_STREAMED),
       'the held swap must leave a fallback in the DOM, or this test proves nothing',
     ).not.toHaveCount(0);
-    await page.waitForTimeout(RELEASE_DELAY_MS);
+    await settleFrames(page, HELD_FRAMES);
     expect(settled, 'gotoSettled returned while a fallback was still in the DOM').toBe(false);
 
     await page.evaluate(() => {

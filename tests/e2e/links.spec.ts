@@ -103,7 +103,6 @@ test.describe('/links link-in-bio', () => {
   });
 
   test('gives every interactive control a visible focus ring', async ({ page }) => {
-    test.slow();
     await gotoSettled(page, '/links');
     const controls = page.locator('a:visible, button:visible');
     const count = await controls.count();

@@ -14,15 +14,6 @@ const SWITCH = '[data-lang-switch]:visible';
 const target = (page: Page, locale: 'en' | 'pt') =>
   page.locator(`${SWITCH} a[hreflang="${locale}"]`).first();
 
-async function pressInPlace(page: Page, locale: 'en' | 'pt') {
-  const box = await target(page, locale).boundingBox();
-  expect(box, 'the language switch must be laid out before it is pressed').not.toBeNull();
-  await page.mouse.click(
-    (box?.x ?? 0) + (box?.width ?? 0) / 2,
-    (box?.y ?? 0) + (box?.height ?? 0) / 2,
-  );
-}
-
 for (const viewport of VIEWPORTS) {
   test.describe(`language switch keeps the section at ${viewport.name}`, () => {
     test.use({ viewport: { width: viewport.width, height: viewport.height } });
@@ -33,7 +24,7 @@ for (const viewport of VIEWPORTS) {
       await expect(target(page, 'pt')).toHaveAttribute('href', `/pt#${SECTION}`);
       await waitForStableHref(page, '[data-lang-switch] a[hreflang="pt"]');
 
-      await pressInPlace(page, 'pt');
+      await target(page, 'pt').click();
 
       await expect(page).toHaveURL(new RegExp(`/pt#${SECTION}$`));
       await expect
@@ -54,7 +45,7 @@ for (const viewport of VIEWPORTS) {
       await expect(target(page, 'en')).toHaveAttribute('href', `/#${SECTION}`);
       await waitForStableHref(page, '[data-lang-switch] a[hreflang="en"]');
 
-      await pressInPlace(page, 'en');
+      await target(page, 'en').click();
 
       await expect(page).toHaveURL(new RegExp(`/#${SECTION}$`));
       await expect

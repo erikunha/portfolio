@@ -20,12 +20,17 @@ export function heightOf(page: Page, selector: string): Promise<number> {
     .evaluate((node) => node.getBoundingClientRect().height);
 }
 
-export function settleFrames(page: Page): Promise<void> {
+const DEFAULT_SETTLE_FRAMES = 2;
+
+export function settleFrames(page: Page, frames = DEFAULT_SETTLE_FRAMES): Promise<void> {
   return page.evaluate(
-    () =>
+    (count) =>
       new Promise<void>((resolve) => {
-        requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
+        const tick = (remaining: number) =>
+          requestAnimationFrame(() => (remaining <= 1 ? resolve() : tick(remaining - 1)));
+        tick(count);
       }),
+    frames,
   );
 }
 

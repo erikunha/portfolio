@@ -3,6 +3,8 @@ import { footerSectionIds } from '@/content/footer';
 import { waitForHydration } from '../../../tests/e2e/_helpers/hydration';
 
 const COMMAND_RETRY_WINDOW_MS = 2_000;
+const NO_COMMANDS = '0';
+const ONE_COMMAND = '1';
 const DOCUMENT_SENTINEL = '__footerRebootSentinel';
 const SECTIONS_SEEN_TIMEOUT_MS = 90_000;
 const READING_BAND_MARGIN = 0.4;
@@ -69,11 +71,12 @@ test.describe('Footer', () => {
     const input = page.getByRole('textbox', { name: 'shell command', exact: true });
     const commands = page.locator('[data-sess="commands"]');
     await expect(async () => {
-      await input.fill('help');
-      await input.press('Enter');
-      await expect(commands).not.toHaveText('0', { timeout: COMMAND_RETRY_WINDOW_MS });
+      if ((await commands.textContent()) === NO_COMMANDS) {
+        await input.fill('help');
+        await input.press('Enter');
+      }
+      await expect(commands).toHaveText(ONE_COMMAND, { timeout: COMMAND_RETRY_WINDOW_MS });
     }).toPass();
-    const commandTotal = (await commands.textContent()) ?? '';
     await page.locator('footer').scrollIntoViewIfNeeded();
     await page.evaluate((key) => {
       (window as unknown as Record<string, boolean>)[key] = true;
@@ -88,7 +91,7 @@ test.describe('Footer', () => {
       ),
       'the reboot keeps the document: a reload would drop the sentinel set before the click',
     ).toBe(true);
-    await expect(commands).toHaveText(commandTotal);
+    await expect(commands).toHaveText(ONE_COMMAND);
     expect(await page.evaluate(() => scrollY)).toBeLessThan(100);
   });
 
