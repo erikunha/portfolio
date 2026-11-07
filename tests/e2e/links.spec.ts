@@ -340,12 +340,12 @@ test.describe('font payload', () => {
   });
 });
 
-const LCP_VIEWPORT = { width: 375, height: 812 };
+const LIGHTHOUSE_MOBILE_VIEWPORT = { width: 412, height: 823 };
 const LCP_COVER_FIXTURE = 'tests/e2e/fixtures/thumb.jpg';
 const LCP_OPTIMIZER_ROUTE = '**/_next/image**';
 
 test.describe('largest contentful paint', () => {
-  test.use({ viewport: LCP_VIEWPORT });
+  test.use({ viewport: LIGHTHOUSE_MOBILE_VIEWPORT });
 
   for (const path of ['/links', '/links/en']) {
     test(`${path} paints the latest-video cover last and largest at mobile width, so the LCP work targets the right element`, async ({
@@ -374,7 +374,10 @@ test.describe('largest contentful paint', () => {
       const entries = await page.evaluate(
         () => (window as unknown as { lcpElements: string[] }).lcpElements,
       );
-      expect(entries.at(-1), 'the final LCP candidate is the cover image').toBe('IMG:cover');
+      expect(
+        entries.at(-1),
+        'the final LCP candidate is the cover image: it starts near the fold, so a viewport shorter than the Lighthouse mobile one leaves a strip smaller than the identity text block',
+      ).toBe('IMG:cover');
     });
   }
 });
