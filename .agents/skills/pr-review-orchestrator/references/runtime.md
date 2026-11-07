@@ -30,8 +30,8 @@ Report each as passed, failed or not run, with the command. Not run is never pas
 
 ## Browser journeys
 
-Follow the repo's browser-verification rule: enter once, navigate by clicking, real input only,
-look at a screenshot after each action. Use `product-verifier` for user-visible changes.
+Enter once, then navigate by clicking; use real input only and look at a screenshot after each
+action.
 
 For each acceptance criterion: journey, action, observable, wrong outcome, post-action state.
 Operate the controls; rendering alone proves nothing. Exercise the states that apply: loading,

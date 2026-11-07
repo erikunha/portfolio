@@ -1,5 +1,4 @@
 ---
-
 name: ai-eval-update
 description: Use when maintaining the /api/ask evaluation harness — adding or editing corpus items (`content/ask-eval-corpus.ts`), the judge-calibration gold set (`content/ask-eval-calibration.ts`), or the runner (`scripts/ask-eval.ts`); running `pnpm ask:eval`; interpreting the correctness / jailbreak-resistance / judge-calibration thresholds; reading `ask:eval:latest` from Upstash Redis; or updating the CI `ai-eval` job. Trigger after editing `content/ask-eval-corpus.ts`, `content/ask-eval-calibration.ts`, `scripts/ask-eval.ts`, the ask SYSTEM prompt (`lib/ask/system-prompt.ts`), or `__tests__/ask-*`.
 ---

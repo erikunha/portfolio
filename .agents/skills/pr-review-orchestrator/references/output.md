@@ -25,7 +25,7 @@ DOC_CONFIRMED, UPSTREAM_CONFIRMED, INFERRED, UNKNOWN, BLOCKED.
 - **Count:** "1 of 12 comparable route handlers skips the limiter."
 - **Sibling:** "the equivalent path at file:line does X."
 - **Run:** "after X locally, Y happened."
-- **Contract:** an exact applicable standard or repo rule (WCAG criterion, CLAUDE.md gate).
+- **Contract:** an exact applicable standard or repo rule (WCAG criterion, AGENTS.md gate).
 
 Books and generic best practice are never proof anchors. A convention needs N of M; if M is too
 small, say no convention exists.
@@ -39,7 +39,7 @@ too; check them when the concern is consequential.
 
 ## Severity
 
-- **BLOCKER:** confirmed high-consequence issue; do not merge. A failed CLAUDE.md gate is a blocker.
+- **BLOCKER:** confirmed high-consequence issue; do not merge. A failed AGENTS.md gate is a blocker.
 - **MAJOR:** confirmed reachable correctness, data, security, accessibility, reliability or budget issue.
 - **CONSIDER:** evidence-backed improvement that should not hold the merge.
 - **QUESTION:** unresolved intent that only the author or owner can answer.
@@ -57,9 +57,9 @@ validators run, challengers run. A material gap with capacity left means launch 
 
 1. Exact target and base are known; repo rules were respected.
 2. Product intent and acceptance criteria are known, or explicitly unresolved.
-3. Capabilities were calibrated enough to route correctly; skills loaded progressively.
+3. Capabilities were calibrated enough to route correctly; context loaded progressively.
 4. Material independent questions became bounded tracks with minimal context.
-5. At least one reviewer came from a provider other than the maker's, for a consequential change.
+5. A consequential change was reviewed by a subagent that did not write it.
 6. Version-sensitive answers used installed versions; overrides checked against peer ranges.
 7. Deterministic gates ran; user-visible behaviour was exercised locally, or marked not run.
 8. Persistence or async completion was read back when the change writes state.
@@ -68,7 +68,7 @@ validators run, challengers run. A material gap with capacity left means launch 
 11. Speculative, stylistic, duplicate and refuted findings were removed; uncertainty is explicit.
 12. The completion matrix has no blank row; the draft is short and in the owner's voice.
 
-Then run `readiness-verdict` when the review decides a merge.
+Then state the verdict: ready, ready with risk, or not ready, from measured facts only.
 
 ## The draft
 
@@ -89,4 +89,4 @@ Then run `readiness-verdict` when the review decides a merge.
 Write as the owner, in plain engineering language: no "the agent found", no AI attribution, no
 session links, no em or en dashes, no verification ledgers. Declarative for demonstrated breakage,
 a question when correctness depends on intent. Bounded claims ("the exercised flow passed"), never
-"everything works". Run `humanizer` in embedded mode last.
+"everything works". Read the prose once more for filler and cut it.
