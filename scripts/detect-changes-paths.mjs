@@ -5,6 +5,7 @@ export const AI_PATHS = [
   'lib/ip-hash.ts',
   'lib/stream-protocol.ts',
   'lib/rate-limit.ts',
+  'lib/forget-limits.ts',
   'lib/env.ts',
   'lib/log.ts',
   'lib/log-error.ts',
