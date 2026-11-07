@@ -1,0 +1,70 @@
+@layer components {
+  .ref-chip {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-2);
+    min-width: 0;
+    padding: var(--spacing-2);
+    border: var(--border-width) solid var(--color-primary-subtle);
+    overflow-wrap: anywhere;
+  }
+
+  .ref-chip-prefix {
+    flex: none;
+    color: var(--color-text-secondary);
+  }
+
+  .ref-chip-id {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font: inherit;
+  }
+
+  .ref-copy {
+    display: inline-flex;
+    flex: none;
+    box-sizing: border-box;
+    align-items: center;
+    justify-content: center;
+    min-width: var(--spacing-target);
+    min-height: var(--spacing-target);
+    padding: 0 var(--spacing-3);
+    border: var(--border-width) solid var(--color-primary-500);
+    border-radius: var(--radius-none);
+    background: transparent;
+    color: var(--color-primary-500);
+    font: inherit;
+    font-weight: 700;
+    cursor: pointer;
+    touch-action: manipulation;
+  }
+
+  .ref-copy:focus-visible {
+    outline: calc(var(--border-width) * 2) solid var(--color-primary-500);
+    outline-offset: var(--spacing-1);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .ref-copy:hover {
+      background: var(--color-primary-quiet);
+    }
+  }
+
+  @media (max-width: 359.98px) {
+    .ref-chip {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .ref-chip-id {
+      flex: none;
+    }
+
+    .ref-copy {
+      width: 100%;
+    }
+  }
+}

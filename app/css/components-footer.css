@@ -69,6 +69,34 @@
     color: var(--color-text-secondary);
   }
 
+  .footer-receipt {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--spacing-2);
+    margin: var(--spacing-2) 0 0;
+    min-width: 0;
+    color: var(--color-text-secondary);
+  }
+
+  .footer-receipt-id {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .footer-receipt code {
+    font: inherit;
+  }
+
+  .footer-receipt .ref-copy {
+    border-color: var(--color-primary-border);
+    color: var(--color-text-secondary);
+    font-weight: 400;
+  }
+
   .footer-cards {
     display: grid;
     gap: var(--spacing-4);

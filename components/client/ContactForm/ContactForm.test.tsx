@@ -231,8 +231,8 @@ describe('contact form delivery states', () => {
     const container = await submitResponse({ ok: true, requestId: ref }, 200);
     const receipt = container.querySelector('[data-testid="contact-receipt"]') as HTMLElement;
     expect(receipt.textContent).toContain('ref');
-    expect(receipt.querySelector('dd')?.textContent).toBe(ref);
-    expect(receipt.querySelector('dd')?.getAttribute('title')).toBe(ref);
+    expect(receipt.querySelector('.ref-chip code')?.textContent).toBe(ref);
+    expect(receipt.querySelector('.ref-chip code')?.getAttribute('title')).toBe(ref);
     expect(receipt.querySelector('time')?.textContent).toMatch(/\d{4}.*\d{2}:\d{2}/);
     expect(within(receipt).getByRole('button', { name: /copy ref/i })).toBeTruthy();
     expect(within(receipt).getByRole('button', { name: '[FORGET MESSAGE]' })).toBeTruthy();
@@ -1503,6 +1503,25 @@ describe.each(Object.values(SITE_LOCALE))('contact receipt forget (%s)', (locale
     expect(forgetButton(container)).toBeNull();
     expect(container.querySelector('[data-testid="contact-forget-status"]')?.textContent).toBe(
       text.done,
+    );
+  });
+
+  it('moves focus to the ref copy button when the forget button leaves after a success', async () => {
+    const container = await deliver();
+    const button = forgetButton(container) as HTMLElement;
+    button.focus();
+    expect(document.activeElement).toBe(button);
+    await act(async () => {
+      fireEvent.click(button);
+    });
+    await flushMicrotasks();
+
+    expect(button.isConnected).toBe(false);
+    expect(document.activeElement).toBe(
+      within(container.querySelector('[data-testid="contact-receipt"]') as HTMLElement).getByRole(
+        'button',
+        { name: contactCopy[locale].success.receipt.copy },
+      ),
     );
   });
 

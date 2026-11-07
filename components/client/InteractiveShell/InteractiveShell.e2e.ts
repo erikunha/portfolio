@@ -1,5 +1,6 @@
 import { expect, type Locator, type Page, test } from '@playwright/test';
 import { askErrors } from '../../../content/ask-errors';
+import { shellUi } from '../../../content/shell-ui';
 import { SITE_LOCALE } from '../../../content/site-locale';
 import { waitForHydration } from '../../../tests/e2e/_helpers/hydration';
 import {
@@ -107,8 +108,7 @@ test.describe('ask / interactive shell', () => {
 
     const notice = page.locator('[data-testid="shell-privacy-notice"]');
     await expect(notice).toBeVisible();
-    await expect(notice).toContainText('Queries are stored 90 days');
-    await expect(notice).toContainText('To request deletion');
+    await expect(notice).toContainText(shellUi[SITE_LOCALE.en].privacy);
 
     const mailLink = notice.locator('a[href^="mailto:"]');
     await expect(mailLink).toBeVisible();
@@ -121,14 +121,7 @@ test('toolbar chips fill the prompt instead of submitting', async ({ page }) => 
   await setupAskPage(page, { ask: 'happy', log: 'accept' });
 
   const toolbar = page.locator('[data-testid="shell-commands"]');
-  await expect(toolbar.getByRole('button')).toHaveText([
-    'help',
-    'whois',
-    'cat skills.md',
-    'cat ~/.now',
-    'contact',
-    'clear',
-  ]);
+  await expect(toolbar.getByRole('button')).toHaveText([...shellUi[SITE_LOCALE.en].commands]);
 
   await toolbar.getByRole('button', { name: 'help' }).click();
 
@@ -154,7 +147,9 @@ test('the clear chip still runs immediately', async ({ page }) => {
     .getByRole('button', { name: 'clear' })
     .click();
 
-  await expect(page.locator('[role="log"]')).toContainText('Connected. Type help');
+  const { welcome, mobileWelcome } = shellUi[SITE_LOCALE.en];
+  const isMobile = test.info().project.name.includes('mobile');
+  await expect(page.locator('[role="log"]')).toContainText(isMobile ? mobileWelcome : welcome);
   await expect(getShellInput(page)).toHaveValue('');
 });
 

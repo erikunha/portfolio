@@ -3,6 +3,7 @@ import { Ratelimit } from '@upstash/ratelimit';
 import { Redis, type Requester } from '@upstash/redis';
 import { ASK_RESERVED_INPUT_TOKENS } from '@/lib/ask/input-reservation';
 import { ASK_MAX_OUTPUT_TOKENS } from '@/lib/ask/limits';
+import { FORGET_WINDOW, FORGET_WINDOW_REQUESTS } from '@/lib/forget-limits';
 import { log } from '@/lib/log';
 
 const REDIS_RETRIES = 1;
@@ -144,7 +145,7 @@ export function getForgetLimit(): Ratelimit {
   if (!_forgetLimit) {
     _forgetLimit = new Ratelimit({
       redis: getRedis(),
-      limiter: Ratelimit.slidingWindow(5, '1 h'),
+      limiter: Ratelimit.slidingWindow(FORGET_WINDOW_REQUESTS, FORGET_WINDOW),
       prefix: 'rl:forget',
     });
   }

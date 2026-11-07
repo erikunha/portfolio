@@ -29,7 +29,9 @@ const contactCopyFor = (locale: SiteLocale): ContactContent => {
         forget: {
           label: pt ? '[EXCLUIR MENSAGEM]' : '[FORGET MESSAGE]',
           pending: pt ? '[EXCLUINDO...]' : '[DELETING...]',
-          done: pt ? 'Mensagem excluída.' : 'Message deleted.',
+          done: pt
+            ? 'Pronto, nenhum registro desta mensagem é mantido.'
+            : 'Done, no record of this message is kept.',
           failed: pt
             ? 'Não foi possível excluir agora. Tente de novo, ou envie email para'
             : 'Could not delete right now. Try again, or email',
@@ -179,6 +181,11 @@ const contactCopyFor = (locale: SiteLocale): ContactContent => {
       },
       retained: pt ? 'Seu texto continua aqui.' : 'Your text is still here.',
       retryEmail: pt ? 'Tente novamente, ou envie email' : 'Retry, or email',
+      refNote: pt
+        ? 'A referência já vai preenchida no email, então nada se perde.'
+        : 'The reference is pre-filled in the email, so nothing gets lost.',
+      mailtoSubject: pt ? '[ref {ref}] contato' : '[ref {ref}] contact',
+      mailtoBody: pt ? 'ref: {ref}\n\n{text}' : 'ref: {ref}\n\n{text}',
       counterSeparator: '/',
       privacy: pt
         ? 'Mantido por 90 dias para Erik poder responder, depois excluído. IP hasheado para rate limiting. Nunca compartilhado.'

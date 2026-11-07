@@ -128,13 +128,19 @@ describe('rate-limit factory getters — configured correctly', () => {
     ).toHaveBeenCalledWith(3, '10 m');
   });
 
-  it('getForgetLimit configures slidingWindow(5, "1 h")', async () => {
+  it('getForgetLimit admits one full session id list per hour', async () => {
     const { Ratelimit } = await import('@upstash/ratelimit');
+    const { REQUEST_REF_LIMITS } = await import('@/lib/request-refs.client');
     const { getForgetLimit } = await import('@/lib/rate-limit');
     getForgetLimit();
+    const slidingWindow = (Ratelimit as unknown as { slidingWindow: ReturnType<typeof vi.fn> })
+      .slidingWindow;
+    const [requests, window] = slidingWindow.mock.calls.at(-1) ?? [];
     expect(
-      (Ratelimit as unknown as { slidingWindow: ReturnType<typeof vi.fn> }).slidingWindow,
-    ).toHaveBeenCalledWith(5, '1 h');
+      requests,
+      'privacy forget --all sends one request per stored id; a smaller window leaves ids it cannot finish',
+    ).toBeGreaterThanOrEqual(REQUEST_REF_LIMITS.maxRefs);
+    expect(window).toBe('1 h');
   });
 
   it('getAskLimit returns the same Ratelimit instance on repeated calls', async () => {

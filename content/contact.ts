@@ -140,6 +140,9 @@ export const ContactContentSchema = z.object({
     }),
     retained: z.string().min(1),
     retryEmail: z.string().min(1),
+    refNote: z.string().min(1),
+    mailtoSubject: z.string().min(1),
+    mailtoBody: z.string().min(1),
     counterSeparator: z.string().min(1),
     privacy: z.string().min(1),
     fieldLabels: z.object({

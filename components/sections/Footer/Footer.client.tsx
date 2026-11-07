@@ -4,6 +4,8 @@ import { type ReactNode, useCallback, useEffect, useRef } from 'react';
 import { MAIN_CONTENT_ID } from '@/components/PageMain';
 import type { FooterContent } from '@/content/schemas';
 import { isRendered } from '@/lib/dom/is-rendered';
+import { useLastRef } from '@/lib/request-refs.client';
+import { RefCopyButton } from '../../client/RefChip/RefChip.client';
 
 const EMPTY_SECTION_IDS: string[] = [];
 const SECOND_MS = 1000;
@@ -226,5 +228,18 @@ export function RebootControl({ copy }: { copy: FooterContent['reboot'] }) {
         data-testid="footer-reboot-status"
       />
     </>
+  );
+}
+
+export function SessionReceipt({ copy }: { copy: FooterContent['receipt'] }) {
+  const ref = useLastRef();
+  if (ref === null) return null;
+  return (
+    <p className="footer-receipt" data-testid="footer-receipt">
+      <span className="footer-receipt-id">
+        {copy.label} <code>{ref}</code>
+      </span>
+      <RefCopyButton value={ref} feedback={copy.feedback} />
+    </p>
   );
 }

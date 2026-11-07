@@ -16,6 +16,7 @@ import {
   shellStates,
 } from '@/content/shell-ui';
 import type { SiteLocale } from '@/content/site-locale';
+import { addRef } from '@/lib/request-refs.client';
 import {
   ASK_LOCALE_HEADER,
   GUARD_ABORT_PREFIX,
@@ -207,6 +208,7 @@ export function useAskStream({
           return;
         }
         requestId = response.headers.get(ui.requestIdHeader);
+        if (requestId) addRef(requestId);
         if (!response.ok) {
           const data = (await response.json().catch(() => null)) as {
             error?: unknown;

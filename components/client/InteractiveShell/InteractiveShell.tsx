@@ -14,9 +14,13 @@ import {
 } from '@/content/shell-ui';
 import type { SiteLocale } from '@/content/site-locale';
 import { asciiBar } from '@/lib/ascii-bar';
+import { forgetMany, forgetRequest, wasForgotten } from '@/lib/forget-request.client';
+import { listRefs } from '@/lib/request-refs.client';
 import { useBreakpoint } from '@/lib/use-breakpoint.client';
 import { TerminalChromeBar } from '../TerminalChromeBar';
 import { AnimatedPlaceholder, StaticPlaceholder } from './AnimatedPlaceholder.client';
+import { describeForget } from './forget-message';
+import { PRIVACY_COMMAND_KIND, type PrivacyCommand, parsePrivacyCommand } from './privacy-command';
 import { ResponseReference } from './ResponseReference.client';
 import { bounded, formatRemaining, type Line, type LineKind, useAskStream } from './useAskStream';
 
@@ -187,6 +191,90 @@ export function InteractiveShell({
     }
   }, [history, streamingText]);
 
+  const forgetBusyRef = useRef(false);
+  const runPrivacy = useCallback(
+    async (command: PrivacyCommand) => {
+      const push = (entries: { kind: LineKind; text: string }[]) =>
+        setHistory((lines) =>
+          bounded([...lines, ...entries.map((entry) => ({ id: nextId(), ...entry }))]),
+        );
+      const forgetLines = (id: string, result: Parameters<typeof describeForget>[0]) => ({
+        kind: wasForgotten(result) ? ShellLineKind.Output : ShellLineKind.Error,
+        text: `${id} ${describeForget(result, ui, states)}`,
+      });
+      const refs = listRefs();
+      if (command.kind === PRIVACY_COMMAND_KIND.Usage) {
+        push([{ kind: ShellLineKind.Info, text: ui.privacyUsage }]);
+      } else if (command.kind === PRIVACY_COMMAND_KIND.List) {
+        push(
+          refs.length === 0
+            ? [{ kind: ShellLineKind.Info, text: ui.privacyEmpty }]
+            : [
+                {
+                  kind: ShellLineKind.Info,
+                  text: fillShellState(ui.privacyHeader, { count: String(refs.length) }),
+                },
+                ...refs.map((id, index) => ({
+                  kind: ShellLineKind.Output,
+                  text: `${index + 1}. ${id}`,
+                })),
+              ],
+        );
+      } else if (forgetBusyRef.current) {
+        announce(ui.forgetting);
+        return;
+      } else {
+        const target =
+          command.kind === PRIVACY_COMMAND_KIND.ForgetNumber
+            ? refs[command.number - 1]
+            : command.kind === PRIVACY_COMMAND_KIND.ForgetId
+              ? command.id
+              : undefined;
+        if (command.kind === PRIVACY_COMMAND_KIND.ForgetAll && refs.length === 0) {
+          push([{ kind: ShellLineKind.Info, text: ui.privacyEmpty }]);
+        } else if (command.kind !== PRIVACY_COMMAND_KIND.ForgetAll && target === undefined) {
+          push([
+            {
+              kind: ShellLineKind.Error,
+              text: fillShellState(ui.privacyUnknown, {
+                target:
+                  command.kind === PRIVACY_COMMAND_KIND.ForgetNumber ? String(command.number) : '',
+              }),
+            },
+          ]);
+        } else {
+          forgetBusyRef.current = true;
+          announce(ui.forgetting);
+          try {
+            if (command.kind === PRIVACY_COMMAND_KIND.ForgetAll) {
+              const batch = await forgetMany(refs);
+              push([
+                ...batch.results.map(({ id, result }) => forgetLines(id, result)),
+                ...(batch.unattempted.length > 0
+                  ? [
+                      {
+                        kind: ShellLineKind.Info,
+                        text: fillShellState(ui.privacyNotAttempted, {
+                          count: String(batch.unattempted.length),
+                        }),
+                      },
+                    ]
+                  : []),
+              ]);
+            } else if (target !== undefined) {
+              push([forgetLines(target, await forgetRequest(target))]);
+            }
+          } finally {
+            forgetBusyRef.current = false;
+          }
+        }
+      }
+      announce(ui.commandComplete);
+      focusInput();
+    },
+    [announce, focusInput, nextId, states, ui],
+  );
+
   const runCommand = useCallback(
     (raw: string) => {
       if (isActive()) {
@@ -214,6 +302,11 @@ export function InteractiveShell({
         focusInput();
         return;
       }
+      const privacy = parsePrivacyCommand(key);
+      if (privacy) {
+        void runPrivacy(privacy);
+        return;
+      }
       const explicitQuestion = key.startsWith(ShellCommand.AskPrefix)
         ? command.slice(ShellCommand.AskPrefix.length).trim()
         : null;
@@ -229,7 +322,7 @@ export function InteractiveShell({
       }
       void streamQuestion(explicitQuestion ?? command, command);
     },
-    [announce, focusInput, initialLines, isActive, nextId, streamQuestion, ui],
+    [announce, focusInput, initialLines, isActive, nextId, runPrivacy, streamQuestion, ui],
   );
 
   return (
@@ -284,7 +377,12 @@ export function InteractiveShell({
               data-kind={line.kind}
             >
               {line.kind === ShellLineKind.Reference ? (
-                <ResponseReference ui={ui} requestId={line.text} announce={announce} />
+                <ResponseReference
+                  ui={ui}
+                  states={states}
+                  requestId={line.text}
+                  announce={announce}
+                />
               ) : line.kind === ShellLineKind.RateLimit && line.retryAfter ? (
                 <RateLimitCountdown
                   seconds={line.retryAfter}

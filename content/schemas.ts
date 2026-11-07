@@ -668,7 +668,18 @@ export const ShellUiSchema = z.object({
   networkError: z.string().min(1),
   localAvailable: z.string().min(1),
   referencePrefix: z.string().min(1),
+  trailerPrefix: z.string().min(1),
+  forgetting: z.string().min(1),
+  forgetDeleted: z.string().min(1),
+  forgetFailed: z.string().min(1),
+  forgetRateLimited: z.string().min(1),
+  privacyEmpty: z.string().min(1),
+  privacyHeader: z.string().min(1),
+  privacyUsage: z.string().min(1),
+  privacyUnknown: z.string().min(1),
+  privacyNotAttempted: z.string().min(1),
   copy: z.string().min(1),
+  forget: z.string().min(1),
   copied: z.string().min(1),
   copyFailed: z.string().min(1),
   copiedAnnouncement: z.string().min(1),
@@ -712,6 +723,10 @@ export type HeroClientContent = z.infer<typeof HeroClientContentSchema>;
 
 const FooterHrefSchema = z.string().regex(/^(?:#[\w-]+|\/(?!\/)[\w/-]*|https:\/\/[^\s]+)$/);
 const FooterLinkSchema = z.object({ label: z.string().min(1), href: FooterHrefSchema });
+
+export const CopyFeedbackSchema = z.object({ label: z.string().min(1), message: z.string() });
+export type CopyFeedback = z.infer<typeof CopyFeedbackSchema>;
+export type CopyFeedbackState = 'idle' | 'success' | 'failure' | 'unavailable';
 
 export const FooterContentSchema = z
   .object({
@@ -763,6 +778,10 @@ export const FooterContentSchema = z
       key: z.string().length(1),
       after: z.string().min(1),
       announcement: z.string().min(1),
+    }),
+    receipt: z.object({
+      label: z.string().min(1),
+      feedback: z.record(z.enum(['idle', 'success', 'failure', 'unavailable']), CopyFeedbackSchema),
     }),
     copyright: z.string().min(1),
   })
@@ -828,10 +847,6 @@ export const DmesgLineSchema = z.object({
   ok: z.boolean(),
 });
 export type DmesgLine = z.infer<typeof DmesgLineSchema>;
-
-export const CopyFeedbackSchema = z.object({ label: z.string().min(1), message: z.string() });
-export type CopyFeedback = z.infer<typeof CopyFeedbackSchema>;
-export type CopyFeedbackState = 'idle' | 'success' | 'failure' | 'unavailable';
 
 const DawMixerPluginSchema = z.object({
   name: z.string().min(1),

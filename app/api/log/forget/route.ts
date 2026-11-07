@@ -1,5 +1,6 @@
 import { z } from 'zod';
 
+import { askLogDatesInTtl, askLogKey } from '@/lib/ask-log';
 import { contactMessageKey, removePendingContact } from '@/lib/contact-outbox';
 import { log } from '@/lib/log';
 import { getForgetLimit, getRedis } from '@/lib/rate-limit';
@@ -13,17 +14,6 @@ const ForgetPayload = z.object({
 const MAX_FORGET_BODY_BYTES = 1024;
 const SMOKE_UUID = '00000000-0000-4000-8000-000000000000';
 
-function lastNDates(n: number): string[] {
-  const out: string[] = [];
-  const now = new Date();
-  for (let i = 0; i < n; i++) {
-    const d = new Date(now);
-    d.setUTCDate(d.getUTCDate() - i);
-    out.push(d.toISOString().slice(0, 10));
-  }
-  return out;
-}
-
 const handleForget = defineHandler({
   schema: ForgetPayload,
   rateLimit: getForgetLimit,
@@ -36,7 +26,7 @@ const handleForget = defineHandler({
     }
 
     const candidateKeys = [
-      ...lastNDates(90).map((d) => `ask:log:${d}:${targetRequestId}`),
+      ...askLogDatesInTtl(new Date()).map((date) => askLogKey(date, targetRequestId)),
       contactMessageKey(targetRequestId),
     ];
 
