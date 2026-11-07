@@ -25,7 +25,7 @@ export { GUARD_ABORT_PREFIX } from '@/lib/stream-protocol';
 export type GuardVerdict = { ok: true } | { ok: false; reason: 'leak' | 'length' };
 
 export type GuardFinding = {
-  kind: 'leak' | 'empty';
+  kind: 'leak' | 'length' | 'empty';
   detail: string;
 };
 
@@ -33,6 +33,20 @@ export type PostHocVerdict = {
   clean: boolean;
   findings: GuardFinding[];
 };
+
+export function withStreamAbort(
+  verdict: PostHocVerdict,
+  abortReason: Extract<GuardVerdict, { ok: false }>['reason'] | null,
+): PostHocVerdict {
+  if (abortReason === null) return verdict;
+  return {
+    clean: false,
+    findings: [
+      ...verdict.findings,
+      { kind: abortReason, detail: `stream guard aborted the answer: ${abortReason}` },
+    ],
+  };
+}
 
 export type StreamGuard = {
   inspect(chunk: string): GuardVerdict;

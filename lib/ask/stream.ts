@@ -1,10 +1,17 @@
 import { streamText } from 'ai';
 import { askErrors } from '@/content/ask-errors';
 import { SITE_LOCALE, type SiteLocale } from '@/content/site-locale';
+import { countAskGuardFinding } from '@/lib/ask/guard-count';
 import { ASK_RESERVED_INPUT_TOKENS } from '@/lib/ask/input-reservation';
 import { ASK_MAX_OUTPUT_TOKENS } from '@/lib/ask/limits';
 import { ASK_MODEL } from '@/lib/ask/model';
-import { createStreamGuard, GUARD_ABORT_PREFIX, validateAnswer } from '@/lib/ask/output-guard';
+import {
+  createStreamGuard,
+  GUARD_ABORT_PREFIX,
+  type GuardVerdict,
+  validateAnswer,
+  withStreamAbort,
+} from '@/lib/ask/output-guard';
 import type { AskContext } from '@/lib/ask/preflight';
 import { PROMPT_VERSION, SYSTEM_TEXT } from '@/lib/ask/system-prompt';
 import { countAskTokens, emitAskUsage } from '@/lib/ask/usage';
@@ -49,6 +56,7 @@ type RunState = {
   status: AskInteractionStatus;
   truncated: boolean;
   answerText: string;
+  guardAbort: Extract<GuardVerdict, { ok: false }>['reason'] | null;
 };
 
 type SettledUsage = {
@@ -97,6 +105,7 @@ export function createAskStream(context: AskContext): AskStream {
     status: 'completed',
     truncated: false,
     answerText: '',
+    guardAbort: null,
   };
 
   const upstream = new AbortController();
@@ -195,6 +204,7 @@ export function createAskStream(context: AskContext): AskStream {
           const verdict = guard.inspect(text);
           if (!verdict.ok) {
             state.status = 'errored';
+            state.guardAbort = verdict.reason;
             log.info('ask output-guard layer-1 abort', {
               requestId,
               reason: verdict.reason,
@@ -272,7 +282,10 @@ export function createAskStream(context: AskContext): AskStream {
   async function settleAndPersist(): Promise<void> {
     const usage = await readUsage();
 
-    const guardVerdict = validateAnswer(state.answerText, state.status);
+    const guardVerdict = withStreamAbort(
+      validateAnswer(state.answerText, state.status),
+      state.guardAbort,
+    );
     log.info('ask output-guard', {
       requestId,
       clean: guardVerdict.clean,
@@ -291,6 +304,7 @@ export function createAskStream(context: AskContext): AskStream {
       truncated: state.truncated,
       promptVersion: PROMPT_VERSION,
     });
+    await Promise.all(guardVerdict.findings.map((finding) => countAskGuardFinding(finding.kind)));
     await settleBudgetFor(usage);
     await persistAskInteraction({
       requestId,

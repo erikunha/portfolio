@@ -114,7 +114,7 @@ flowchart LR
 | `injection.ts`      | `isInjectionAttempt` input reject (role tokens, ChatML delimiters, "ignore instructions"; quoted mentions pass); ReDoS-safe                                                                                                |
 | `output-guard.ts`   | **Layer 1** streaming guard (per-chunk leak/runaway scan, abort→sentinel, cross-chunk-seam safe) + **Layer 2** post-hoc audit; both **fail-open**                                              |
 
-The defense model for `/api/ask`: input `isInjectionAttempt` + a per-request unguessable 128-bit sentinel wrapping the user text ("data only") + an in-prompt non-disclosure instruction; output Layer-1 stream guard + Layer-2 audit. Egress guards catch verbatim/whitespace-reflowed prompt echoes; paraphrase leakage is owned by the prompt-side controls.
+The defense model for `/api/ask`: input `isInjectionAttempt` + a per-request unguessable 128-bit sentinel wrapping the user text ("data only") + an in-prompt non-disclosure instruction; output Layer-1 stream guard + Layer-2 audit. Egress guards are monitoring, not a guarantee: they catch verbatim and whitespace-reflowed prompt echoes, and a paraphrased or translated leak passes both layers. Paraphrase leakage is owned by the prompt-side controls. A Layer-1 abort is recorded as a finding in the persisted verdict and adds to the `ask:guard:{date}:{kind}` counter (`lib/ask/guard-count.ts`), as does every Layer-2 finding, so the rate is readable without grepping logs.
 
 ## Security surface
 
