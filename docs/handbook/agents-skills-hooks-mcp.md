@@ -2,22 +2,57 @@
 
 This reference describes tracked project configuration. User-level tools and hooks require separate inspection.
 
+## Layout
+
+| Path                      | Role                                                                                                   | Read by             |
+| ------------------------- | ------------------------------------------------------------------------------------------------------ | ------------------- |
+| `AGENTS.md`               | The single source of project instructions                                                              | Codex, Claude Code  |
+| `CLAUDE.md`               | `@AGENTS.md` import plus the Claude-only lines                                                         | Claude Code         |
+| `REVIEW.md`               | Review severity, always-check list and skip list                                                       | CI review, reviewers |
+| `.agents/skills/<name>/`  | Canonical project skills                                                                               | Codex               |
+| `.claude/skills/<name>`   | Relative symlink to `../../.agents/skills/<name>`                                                      | Claude Code         |
+| `.claude/rules/*.md`      | Path-scoped rules with `paths:` frontmatter                                                            | Claude Code         |
+| `.claude/agents/`         | One read-only agent for the CI review job                                                              | Claude Code         |
+| `.claude/settings.json`   | Team permissions (deny rules) and the hooks                                                            | Claude Code         |
+| `.mcp.json`, `.codex/config.toml` | The same MCP servers, one file per tool (project layer, trusted projects only for Codex) | Claude Code, Codex  |
+| `.github/CODEOWNERS`      | Code owner for every path above                                                                        | GitHub              |
+
+Personal configuration stays out of the repository: `CLAUDE.local.md`, `.claude/settings.local.json`
+and the user-level homes of each tool. Symlinks need `core.symlinks` on Windows checkouts.
+
 ## Project skills
 
-| Skill                    | Use                                                                                          |
-| ------------------------ | -------------------------------------------------------------------------------------------- |
-| `visual-baseline-regen`  | Refresh affected Darwin and Linux screenshot baselines using its platform-specific procedure |
-| `ai-eval-update`         | Maintain the ask corpus, calibration, runner and CI eval job                                 |
-| `pr-review-orchestrator` | Review a diff across relevant domains, with local and CI profiles                            |
-| `semgrep`                | Run the pinned static-analysis wrapper when explicitly requested                             |
+| Skill                    | Use                                                                                          | Invocation        |
+| ------------------------ | -------------------------------------------------------------------------------------------- | ----------------- |
+| `visual-baseline-regen`  | Refresh affected Darwin and Linux screenshot baselines using its platform-specific procedure | model or user     |
+| `ai-eval-update`         | Maintain the ask corpus, calibration, runner and CI eval job                                 | model or user     |
+| `plan-review`            | Check a spec or plan against scope, JS budget, API constraints and Lighthouse floors         | model or user     |
+| `perf-budget`            | Diagnose a failing route-JS or Lighthouse budget                                             | model or user     |
+| `seo-discovery`          | Keep sitemap, robots, llms.txt, the JSON profile and metadata consistent                     | model or user     |
+| `pr-review-orchestrator` | Review a diff across relevant domains, with local and CI profiles                            | user only         |
+| `semgrep`                | Run the pinned static-analysis wrapper when explicitly requested                             | user only         |
 
-Read each `.claude/skills/<name>/SKILL.md` for its trigger and procedure. `.claude/commands/commit.md` delegates scoped commit creation to `commit-commands:commit`.
+Each skill is self-contained: it names no other skill, agent or command, and no config path. Frontmatter
+uses the Agent Skills keys (`name`, `description`, `license`, `compatibility`, `metadata`,
+`allowed-tools`). The two user-only skills add `disable-model-invocation: true`, a Claude Code key
+that other consumers of the standard, such as claude.ai uploads, may reject; the Codex equivalent
+is `agents/openai.yaml` with `policy.allow_implicit_invocation: false`. A guard test keeps the two in step.
 
-## Project agent hooks
+## Agent and hooks
 
-`.claude/settings.json` has no `hooks` block. The repository does not register `PreToolUse`, `PostToolUse` or `SessionStart` handlers. This says nothing about user-global runtime configuration.
+`.claude/agents/review-worker.md` is the only project agent. It has `Read`, `Grep` and `Glob` only, and
+the CI review job dispatches it for bounded investigations. A test pins its tool list.
 
-Architect review before planning, security review after API changes and pre-PR review are conventions in `CLAUDE.md`. There is no project hook proving those dispatches occurred.
+`.claude/settings.json` registers four hook entries. A `PreToolUse` hook on `Bash` runs `scripts/guard-merge-main.mjs`, which fails closed by intent: it normalizes the command (backslashes, quotes and the path of the `gh` binary removed) and, when it holds a `gh` invocation together with a merge intent (`pr merge`, a `pulls/<n>/merge` or `merges` endpoint, `mergePullRequest`, `enablePullRequestAutoMerge`), exits 2 unless every merge parses as a single `gh pr merge <selector>` or `gh api .../pulls/<n>/merge` at the start of a command. For those it asks `gh pr view` for the PR base, in the directory a leading `cd` selects and the repository named by `-R`, `--repo` or `GH_REPO`, and exits 2 when the base is `main` or `master`, or cannot be read (gh missing, offline, no such PR, a value only the shell can resolve). Wrappers (`eval`, `bash -c`, `xargs`, `env -i`, `sudo -u`), the `merges` endpoint and GraphQL merge mutations are refused outright, and so is text that only mentions a `gh` merge, such as a commit message. A second entry with matcher `mcp__github__merge_pull_request` runs the same script on the tool input's `owner`, `repo` and `pullNumber`. It does not see a merge assembled at run time or hidden in a script file. A second `PreToolUse` hook, on `Edit`, `Write`, `MultiEdit` and `NotebookEdit`, runs `scripts/guard-test-edits.mjs`: while a fix task is declared it exits 2 on any edit to an existing test file (`*.test|spec|e2e.{ts,tsx,js,mjs}`, or anything under `tests/` or `__tests__/`), and tells the agent to prove the defect in a new test file and change the source instead. Creating a new test file is always allowed. A fix task is declared when `FIX_MODE=1` is in the session environment or the gitignored marker `.claude/fix-mode` exists; unsetting the variable or deleting the marker lifts it. It does not see edits made through `Bash` (`sed -i`, redirects), and the agent can delete the marker, so it stops drift, not a determined bypass. Codex has no equivalent hook here; the rule is written in `AGENTS.md`. A `Stop` hook runs `scripts/stop-verify.mjs`: Biome on the
+changed files, then the typecheck when TypeScript changed. It measured about half a second on a
+warm tree, exits 2 to keep the turn going when a check fails, and does nothing in CI or when it is
+already continuing a turn. Heavy checks stay in the pre-push hook and CI.
+
+The permission deny rules turn the rules with no exceptions into enforcement for Claude Code:
+broad `git add`, npm and yarn installs, and reads of local env files. Codex has no
+equivalent here, so the same rules are also written in `AGENTS.md`.
+
+No project hook proves that a pre-PR review or an API review took place; those are conventions.
 
 ## Git hooks
 
@@ -31,9 +66,15 @@ A deletion-only push skips branch-name and verify checks after the main-ref guar
 
 ## Rules and permissions
 
-`.claude/rules/api-boundary.md` supplies path-scoped API guidance for `app/api/**`, `lib/rate-limit.ts`, `lib/server/**` and `proxy.ts`.
+Path-scoped rules in `.claude/rules/` load when a matching file is read:
 
-`.claude/settings.json` lists allowed skill invocations and denied `fallow fix` command forms. It does not set `defaultMode`.
+| Rule                   | Paths                                                                    |
+| ---------------------- | ------------------------------------------------------------------------ |
+| `api-boundary.md`      | `app/api/**`, `lib/rate-limit.ts`, `lib/server/**`, `proxy.ts`           |
+| `client-components.md` | `components/**`, `design-system/**`, `app/css/**`, `**/*.client.tsx`     |
+| `ci-and-config.md`     | `.github/**`, `.husky/**`, `scripts/**`, `biome.json`, test and Lighthouse configs |
+
+`.claude/settings.json` does not set `defaultMode`.
 
 ## MCP connections
 
@@ -42,7 +83,7 @@ A deletion-only push skips branch-name and verify checks after the main-ref guar
 | `context7` | HTTP endpoint in `.mcp.json` | Library documentation                                    |
 | `upstash`  | stdio command in `.mcp.json` | Redis access using the supplied read-only API credential |
 
-The configuration declares connections. It does not prove startup, available tools or credential permissions. GitHub, Vercel and browser tools are not declared in this project file.
+`.codex/config.toml` declares the same two servers for Codex; the Upstash command runs through `sh -c` because Codex does not expand variables inside `args`, and `env_vars` forwards the two credentials. A guard test keeps the server names and URLs equal across the two files. The configuration declares connections. It does not prove startup, available tools or credential permissions. GitHub, Vercel and browser tools are not declared in this project file.
 
 ```mermaid
 flowchart LR
@@ -59,6 +100,6 @@ The product endpoint `app/api/mcp/route.ts` is separate from the development con
 | Command            | Contract                                                                                                                                                                                                                                          |
 | ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `pnpm claude-gate` | Optional. After a requested review, the latest claude-review verdict must approve the current HEAD; an Approve on an ancestor SHA carries across a nonempty diff containing only visual baseline PNGs, and missing SHAs or other stale diffs fail |
-| `pnpm pr:gate`     | Review threads must be resolved and carry a reply; reports suspicious self-resolution                                                                                                                                                             |
+| `pnpm pr:gate`     | Review threads must be resolved and carry a reply; runs in `quality-fast`; reports suspicious self-resolution                                                                                                                                                             |
 
-`.github/workflows/claude-review.yml` runs a review only when an OWNER, MEMBER or COLLABORATOR comments `/claude-review` on a PR; no open or push starts it, and the review is never a merge requirement. `.github/workflows/claude.yml` handles human `@claude` mentions. Pre-PR review is procedural, independent of both workflows.
+`.github/workflows/claude-review.yml` runs a review only when an OWNER, MEMBER or COLLABORATOR comments `/claude-review` on a PR; no open or push starts it, and the review is never a merge requirement. `.github/workflows/claude.yml` handles human `@claude` mentions. The review job reads `.github/claude-review-prompt.md`, `REVIEW.md` and the `pr-review-orchestrator` skill from the default branch, and looks for the skill under `.agents/skills` first and `.claude/skills` second, so it works before and after the shared layout lands. Pre-PR review is procedural, independent of both workflows.

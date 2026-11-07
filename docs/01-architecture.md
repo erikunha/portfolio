@@ -81,9 +81,9 @@ flowchart LR
     root --> lib["lib/"]
     root --> scr["scripts/ (gates and tools)"]
     root --> tst["tests/ (e2e · a11y · visual)"]
-    root --> cl[".claude/ (AI platform)"]
+    root --> cl[".agents/ · .claude/ · .codex/ (AI platform)"]
     root --> gh[".github/workflows/"]
-    root --> docs["root docs: ARCHITECTURE · STANDARDS · DECISIONS · CLAUDE"]
+    root --> docs["root docs: ARCHITECTURE · STANDARDS · DECISIONS · AGENTS"]
 
     app --> a1["page.tsx · layout.tsx · summary/ · cv/ · links/ · sitemap.ts"]
     app --> a2["api/** route handlers"]

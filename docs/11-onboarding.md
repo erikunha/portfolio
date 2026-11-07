@@ -36,7 +36,7 @@ A good first PR (touches the common path, low blast radius):
 2. **Or add a design-system component variant** - follow `Foo/Foo.tsx` + `Foo/index.ts`, co-locate a test, document it (`check:component-docs`), and run `pnpm dev` to eyeball it.
 3. Commit with a conventional scope (`feat(content): ...`). Run `pnpm ci:local` and `pnpm gates:runtime`. Note that pushing runs `.husky/pre-push`: main-push guard, branch-name guard, and the full `pnpm verify` chain.
 
-For `app/api/**`, `lib/rate-limit.ts` or `proxy.ts` changes, follow the security-review convention in `.claude/rules/api-boundary.md`. No project agent hook blocks pushes on that review.
+For `app/api/**`, `lib/rate-limit.ts` or `proxy.ts` changes, follow `.claude/rules/api-boundary.md`. No hook blocks a push on a review of those paths.
 
 ## Week 1 - go deep where you'll work
 
@@ -45,7 +45,7 @@ For `app/api/**`, `lib/rate-limit.ts` or `proxy.ts` changes, follow the security
 | Sections / UI         | [04-components-and-state.md](./04-components-and-state.md)                           | `components/sections/**`, `design-system/**`                |
 | The AI feature        | [05-api-and-integrations.md](./05-api-and-integrations.md) §AI subsystem             | `app/api/ask/route.ts`, `lib/ask/**`, `scripts/ask-eval.ts` |
 | Performance           | [08-performance-and-accessibility.md](./08-performance-and-accessibility.md)         | `components/SiteHome.tsx` (PPR), `Module.tsx`, the islands  |
-| The dev platform / CI | [06-ai-development.md](./06-ai-development.md), [07-workflows.md](./07-workflows.md) | `.claude/**`, `scripts/check-*`, `.github/workflows/ci.yml` |
+| The dev platform / CI | [06-ai-development.md](./06-ai-development.md), [07-workflows.md](./07-workflows.md) | `.claude/**`, `.agents/**`, `scripts/check-*`, `.github/workflows/ci.yml` |
 | Anything risky        | [10-findings-and-debt.md](./10-findings-and-debt.md)                                 | the relevant `DECISIONS.md` entry                           |
 
 ## The mental models to internalize
@@ -66,4 +66,4 @@ Single-author repo, so "ownership" is by subsystem boundary, not by person:
 | Design system    | `design-system/**`                                   | `design-system/index.ts`           |
 | BFF / API        | `app/api/**` + `lib/**`                              | `lib/server/route.ts`              |
 | AI feature       | `app/api/ask` + `lib/ask/**` + eval                  | `lib/ask/model.ts`                 |
-| Dev platform     | `.claude/**` + `scripts/**` + `.github/**`           | `CLAUDE.md`                        |
+| Dev platform     | `.claude/**` + `.agents/**` + `scripts/**` + `.github/**` | `AGENTS.md`                   |

@@ -17,6 +17,7 @@ const nextConfig: NextConfig = {
   pageExtensions: ['ts', 'tsx', 'mdx'],
   cacheComponents: true,
   typedRoutes: true,
+  experimental: { agentFeedback: false },
   trailingSlash: false,
   images: {
     remotePatterns: [{ protocol: 'https', hostname: 'i.ytimg.com', pathname: '/vi/**' }],
