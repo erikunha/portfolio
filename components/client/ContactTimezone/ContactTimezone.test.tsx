@@ -635,6 +635,28 @@ describe('ContactTimezone link back to the message field', () => {
     expect(testId('ctz-proposed').textContent).toBe(copy.propose.added);
     expect(focusLink()).toBeNull();
   });
+
+  it('offers the link as soon as the form field mounts after the slot was added', () => {
+    renderAt(ONLINE_INSTANT);
+    fireEvent.click(screen.getByRole('button', { name: copy.propose.label }));
+    expect(focusLink()).toBeNull();
+
+    let unbind: () => void = vi.fn();
+    act(() => {
+      unbind = messageStore.bindField(FIELD_ID);
+    });
+
+    expect(
+      focusLink()?.getAttribute('href'),
+      'the panel and the form hydrate as separate islands, so the field can mount after the click',
+    ).toBe(`#${FIELD_ID}`);
+
+    act(() => {
+      unbind();
+    });
+
+    expect(focusLink(), 'no link to a field that unmounted').toBeNull();
+  });
 });
 
 describe('ContactTimezone pins and the map box', () => {

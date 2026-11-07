@@ -1,4 +1,5 @@
 import { expect, type Page, test } from '@playwright/test';
+import { gotoSettled } from './_helpers/streamed';
 
 const WIDTHS = [320, 390, 768, 1280];
 const SIGNAL_RGB = 'rgb(0, 255, 65)';
@@ -27,7 +28,7 @@ test.describe('type scale', () => {
   for (const width of WIDTHS) {
     test(`card titles use the base size at ${width}`, async ({ page }) => {
       await page.setViewportSize({ width, height: 900 });
-      await page.goto('/');
+      await gotoSettled(page, '/');
       for (const selector of ['.project-name', '.measured-heading', '.ab-h']) {
         expect(
           await px(page, selector, 'font-size'),
@@ -40,7 +41,7 @@ test.describe('type scale', () => {
       page,
     }) => {
       await page.setViewportSize({ width, height: 900 });
-      await page.goto('/');
+      await gotoSettled(page, '/');
       const size = await px(page, '.ab-code .ab-h', 'font-size');
       expect(size, '.ab-code .ab-h stays at or above --text-xs').toBeGreaterThanOrEqual(TEXT_XS_PX);
       if (width >= CODE_TITLE_FULL_SIZE_MIN_WIDTH) {
@@ -56,7 +57,7 @@ test.describe('type scale', () => {
       page,
     }) => {
       await page.setViewportSize({ width, height: 900 });
-      await page.goto('/');
+      await gotoSettled(page, '/');
       const size = await px(page, '.ab-resp .ab-h', 'font-size');
       expect(size, '.ab-resp .ab-h stays at or above --text-xs').toBeGreaterThanOrEqual(TEXT_XS_PX);
       if (width >= RESPONSIBILITIES_TITLE_FULL_SIZE_MIN_WIDTH) {
@@ -70,7 +71,7 @@ test.describe('type scale', () => {
 
     test(`section titles agree and are uppercase at ${width}`, async ({ page }) => {
       await page.setViewportSize({ width, height: 900 });
-      await page.goto('/');
+      await gotoSettled(page, '/');
       for (const selector of ['.about-section-header h2', '.career-header h2']) {
         expect(await px(page, selector, 'font-size'), `${selector} follows Module h2`).toBe(
           sectionTitleSize(width),
@@ -87,7 +88,7 @@ test.describe('type scale', () => {
 
     test(`About and Career spacing follows --space-section at ${width}`, async ({ page }) => {
       await page.setViewportSize({ width, height: 900 });
-      await page.goto('/');
+      await gotoSettled(page, '/');
       for (const selector of ['.about-section', '.career-section']) {
         expect(await px(page, selector, 'margin-bottom'), `${selector} margin-bottom`).toBe(
           sectionSpace(width),
@@ -97,7 +98,7 @@ test.describe('type scale', () => {
 
     test(`git log and project copy read at the body size at ${width}`, async ({ page }) => {
       await page.setViewportSize({ width, height: 900 });
-      await page.goto('/');
+      await gotoSettled(page, '/');
       for (const selector of ['.career-command', '.measured-description']) {
         expect(await px(page, selector, 'font-size'), `${selector} is reading text`).toBe(
           TEXT_BODY_PX,
@@ -107,7 +108,7 @@ test.describe('type scale', () => {
 
     test(`hero context meta steps down to the xs token below 390 at ${width}`, async ({ page }) => {
       await page.setViewportSize({ width, height: 900 });
-      await page.goto('/');
+      await gotoSettled(page, '/');
       expect(
         await px(page, '.hero-context', 'font-size'),
         '.hero-context stays on the type scale at every width',
@@ -116,7 +117,7 @@ test.describe('type scale', () => {
 
     test(`career descriptions render in the signal green at ${width}`, async ({ page }) => {
       await page.setViewportSize({ width, height: 900 });
-      await page.goto('/');
+      await gotoSettled(page, '/');
       const color = await page
         .locator('.career-body')
         .first()
@@ -126,7 +127,7 @@ test.describe('type scale', () => {
 
     test(`community block fills the section width at ${width}`, async ({ page }) => {
       await page.setViewportSize({ width, height: 900 });
-      await page.goto('/');
+      await gotoSettled(page, '/');
       const widths = await page.evaluate(() => {
         const group = document.querySelector('#sec-community');
         const block = group?.querySelector('.career-community');
@@ -142,7 +143,7 @@ test.describe('type scale', () => {
 
     test(`README code panel never scrolls sideways at ${width}`, async ({ page }) => {
       await page.setViewportSize({ width, height: 900 });
-      await page.goto('/');
+      await gotoSettled(page, '/');
       const metrics = await page.locator('.ab-code-scroll').evaluate((el) => ({
         scrollWidth: el.scrollWidth,
         clientWidth: el.clientWidth,

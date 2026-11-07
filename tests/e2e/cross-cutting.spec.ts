@@ -1,9 +1,82 @@
-import { expect, test } from '@playwright/test';
+import { expect, type Page, type TestInfo, test } from '@playwright/test';
 import { DEFERRED_SECTION_COUNT } from '../../components/responsive/Module/module.constants';
 import { waitForHydration } from './_helpers/hydration';
 import { installMockBackend } from './_helpers/mock-backend';
+import { gotoSettled } from './_helpers/streamed';
 
 const BASE_URL = 'http://localhost:3000';
+const SHELL_INPUT = '[aria-label="shell command"]';
+const KEYSTROKE_COMMIT_BUDGET_MS = 50;
+const LONG_TASK_MS = 100;
+const LONG_TASK_BLOCK_MS = 150;
+const IDLE_TIMEOUT_MS = 2_000;
+
+type LongTaskWindow = Window & {
+  __longTasks: PerformanceEntry[];
+  __longTaskObserver: PerformanceObserver;
+};
+
+function skipInpOnWebkit(testInfo: TestInfo) {
+  test.skip(
+    testInfo.project.name.startsWith('webkit-'),
+    'INP is Chrome-only; webkit input-event dispatch is too slow under emulation to assert <50ms',
+  );
+}
+
+async function openHydratedShell(page: Page) {
+  await installMockBackend(page, { log: 'accept', forget: 'happy' });
+  await gotoSettled(page, '/');
+  await page.waitForSelector(SHELL_INPUT, { state: 'visible' });
+  await waitForHydration(page, SHELL_INPUT);
+}
+
+async function expectKeystrokeStaysResponsive(page: Page) {
+  const input = page.locator(SHELL_INPUT);
+  await input.focus();
+  await expect(input).toHaveValue('');
+  await page.evaluate(
+    (timeout) => new Promise<void>((resolve) => requestIdleCallback(() => resolve(), { timeout })),
+    IDLE_TIMEOUT_MS,
+  );
+
+  await page.evaluate(() => {
+    const scoped = window as unknown as LongTaskWindow;
+    scoped.__longTasks = [];
+    scoped.__longTaskObserver = new PerformanceObserver((list) => {
+      scoped.__longTasks.push(...list.getEntries());
+    });
+    scoped.__longTaskObserver.observe({ type: 'longtask' });
+  });
+
+  const elapsedMs = await page.evaluate(async (selector) => {
+    const el = document.querySelector(selector) as HTMLInputElement | null;
+    if (!el) throw new Error('shell input not found');
+    const start = performance.now();
+    const proto = Object.getPrototypeOf(el) as HTMLInputElement;
+    const setter = Object.getOwnPropertyDescriptor(proto, 'value')?.set;
+    setter?.call(el, 'a');
+    el.dispatchEvent(new Event('input', { bubbles: true }));
+    await Promise.resolve();
+    await new Promise<void>((r) => requestAnimationFrame(() => r()));
+    return performance.now() - start;
+  }, SHELL_INPUT);
+
+  expect(
+    elapsedMs,
+    `keystroke -> DOM commit should be <${KEYSTROKE_COMMIT_BUDGET_MS}ms (got ${elapsedMs.toFixed(1)}ms)`,
+  ).toBeLessThan(KEYSTROKE_COMMIT_BUDGET_MS);
+
+  await expect(input).toHaveValue('a');
+
+  const longTasks = await page.evaluate(() => {
+    const scoped = window as unknown as LongTaskWindow;
+    return [...scoped.__longTasks, ...scoped.__longTaskObserver.takeRecords()].map((task) =>
+      task.toJSON(),
+    );
+  });
+  const offenders = longTasks.filter((task) => task.duration > LONG_TASK_MS);
+  expect(offenders, `Long tasks >100ms during keystroke: ${JSON.stringify(offenders)}`).toEqual([]);
+}
 
 test.describe('cross-cutting', () => {
   test('0 — below-fold sections actually resolve to content-visibility: auto', async ({ page }) => {
@@ -192,59 +265,23 @@ test.describe('cross-cutting', () => {
   test('4 — shell input INP guard: keystroke commits <50ms with no long task >100ms', async ({
     page,
   }, testInfo) => {
-    test.skip(
-      testInfo.project.name.startsWith('webkit-'),
-      'INP is Chrome-only; webkit input-event dispatch is too slow under emulation to assert <50ms',
-    );
-    await installMockBackend(page, { log: 'accept', forget: 'happy' });
-    await page.goto('/');
-    await page.waitForSelector('[aria-label="shell command"]', { state: 'visible' });
-    await waitForHydration(page, '[aria-label="shell command"]');
+    skipInpOnWebkit(testInfo);
+    await openHydratedShell(page);
+    await expectKeystrokeStaysResponsive(page);
+  });
 
-    await page.evaluate(() => {
-      (window as unknown as { __longTasks: PerformanceEntry[] }).__longTasks = [];
-      try {
-        const obs = new PerformanceObserver((list) => {
-          (window as unknown as { __longTasks: PerformanceEntry[] }).__longTasks.push(
-            ...list.getEntries(),
-          );
-        });
-        obs.observe({ type: 'longtask', buffered: true });
-        // biome-ignore lint/suspicious/noEmptyBlockStatements: intentional no-op
-      } catch {}
-    });
-
-    const input = page.locator('[aria-label="shell command"]');
-    await input.focus();
-    await expect(input).toHaveValue('');
-
-    const elapsedMs = await page.evaluate(async () => {
-      const el = document.querySelector('[aria-label="shell command"]') as HTMLInputElement | null;
-      if (!el) throw new Error('shell input not found');
-      const start = performance.now();
-      const proto = Object.getPrototypeOf(el) as HTMLInputElement;
-      const setter = Object.getOwnPropertyDescriptor(proto, 'value')?.set;
-      setter?.call(el, 'a');
-      el.dispatchEvent(new Event('input', { bubbles: true }));
-      await Promise.resolve();
-      await new Promise<void>((r) => requestAnimationFrame(() => r()));
-      return performance.now() - start;
-    });
-
-    expect(
-      elapsedMs,
-      `keystroke -> DOM commit should be <50ms (got ${elapsedMs.toFixed(1)}ms)`,
-    ).toBeLessThan(50);
-
-    await expect(input).toHaveValue('a');
-
-    const longTasks = await page.evaluate(
-      () => (window as unknown as { __longTasks: PerformanceEntry[] }).__longTasks ?? [],
-    );
-    const offenders = longTasks.filter((t) => t.duration > 100);
-    expect(offenders, `Long tasks >100ms during keystroke: ${JSON.stringify(offenders)}`).toEqual(
-      [],
-    );
+  test('4b: a long task that ended before the keystroke is not charged to it', async ({
+    page,
+  }, testInfo) => {
+    skipInpOnWebkit(testInfo);
+    await openHydratedShell(page);
+    await page.evaluate((blockMs) => {
+      const end = performance.now() + blockMs;
+      while (performance.now() < end) {
+        Math.sqrt(end);
+      }
+    }, LONG_TASK_BLOCK_MS);
+    await expectKeystrokeStaysResponsive(page);
   });
 
   test('5 — motion toggle INP guard: click commits under 200ms (two rAF cycles)', async ({
