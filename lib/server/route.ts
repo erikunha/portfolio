@@ -38,6 +38,7 @@ export type ApiErrorCode =
   | 'invalid_body'
   | 'validation_failed'
   | 'forbidden_origin'
+  | 'unauthorized'
   | 'storage_unavailable';
 
 interface ApiError {

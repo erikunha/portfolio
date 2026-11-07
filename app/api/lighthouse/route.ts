@@ -2,6 +2,7 @@ import type { NextRequest } from 'next/server';
 import { getScores, LIGHTHOUSE_FALLBACK, LIGHTHOUSE_TTL_S } from '@/lib/lighthouse-scores';
 import { log } from '@/lib/log';
 import { getClientIp, getLighthouseLimit } from '@/lib/rate-limit';
+import { err } from '@/lib/server/route';
 
 const TOO_MANY_REQUESTS_STATUS = 429;
 
@@ -9,9 +10,12 @@ export async function GET(req: NextRequest): Promise<Response> {
   try {
     const { success } = await getLighthouseLimit().limit(getClientIp(req));
     if (!success) {
-      return new Response('Too Many Requests', {
+      return err({
+        requestId: crypto.randomUUID(),
         status: TOO_MANY_REQUESTS_STATUS,
-        headers: { 'Cache-Control': 'no-store' },
+        code: 'rate_limited',
+        message: 'too many requests',
+        extraHeaders: { 'Cache-Control': 'no-store' },
       });
     }
   } catch (err) {
