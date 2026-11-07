@@ -1506,6 +1506,25 @@ describe.each(Object.values(SITE_LOCALE))('contact receipt forget (%s)', (locale
     );
   });
 
+  it('moves focus to the ref copy button when the forget button leaves after a success', async () => {
+    const container = await deliver();
+    const button = forgetButton(container) as HTMLElement;
+    button.focus();
+    expect(document.activeElement).toBe(button);
+    await act(async () => {
+      fireEvent.click(button);
+    });
+    await flushMicrotasks();
+
+    expect(button.isConnected).toBe(false);
+    expect(document.activeElement).toBe(
+      within(container.querySelector('[data-testid="contact-receipt"]') as HTMLElement).getByRole(
+        'button',
+        { name: contactCopy[locale].success.receipt.copy },
+      ),
+    );
+  });
+
   it('shows the busy label once and sends a single request on repeated clicks', async () => {
     const container = await deliver();
     let release: (response: Response) => void = () => undefined;

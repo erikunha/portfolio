@@ -247,7 +247,7 @@ components/sections/                  # RSC sections: Hero, HottestTakes, Guitar
 components/client/                    # co-located islands, ONLY interactivity
 components/client/InteractiveShell/   # streaming shell island
 components/client/InteractiveShell/useAskStream.ts  # shell request, idle timeout and rAF-coalesced stream state
-components/client/InteractiveShell/ResponseReference.client.tsx  # req= trailer under an answer: copy and forget
+components/client/InteractiveShell/ResponseReference.client.tsx  # req= trailer under an answer: copy and forget (focus moves to copy when a successful forget removes its button)
 components/client/InteractiveShell/privacy-command.ts  # parser for the privacy shell command
 lib/request-refs.client.ts            # this tab's request ids: sessionStorage with an in-memory fallback
 lib/forget-request.client.ts          # /api/log/forget client: 200, 429 and failure outcomes, sequential batches

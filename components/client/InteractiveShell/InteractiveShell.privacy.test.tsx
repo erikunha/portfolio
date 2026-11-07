@@ -128,6 +128,28 @@ describe('shell trailer and privacy command', () => {
       expect(feedLines(container).at(-1)).toBe(ui.privacyEmpty);
     });
 
+    it('moves focus to the copy button when forget succeeds and its own button leaves', async () => {
+      stubBackend({ asks: [A], forget: [{ status: 200 }] });
+      const container = await renderShell();
+      await submit(container, 'q');
+      const forgetButton = button(container, 'FORGET');
+      forgetButton.focus();
+      expect(document.activeElement).toBe(forgetButton);
+      await click(forgetButton);
+      expect(forgetButton.isConnected).toBe(false);
+      expect(document.activeElement).toBe(button(container, 'COPY'));
+    });
+
+    it('leaves focus where the visitor put it when forget succeeds after they moved on', async () => {
+      stubBackend({ asks: [A], forget: [{ status: 200 }] });
+      const container = await renderShell();
+      await submit(container, 'q');
+      const input = container.querySelector<HTMLInputElement>('input[name="command"]');
+      input?.focus();
+      await click(button(container, 'FORGET'));
+      expect(document.activeElement).toBe(input);
+    });
+
     it('keeps the forget button after a failure and succeeds on retry', async () => {
       const { forgetBodies } = stubBackend({
         asks: [A],

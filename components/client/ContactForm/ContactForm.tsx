@@ -120,6 +120,9 @@ function ContactReceipt({
   const text = copy.success.receipt;
   const [forget, setForget] = useState<ForgetState>(FORGET.IDLE);
   const forgetPending = useRef(false);
+  const forgetButton = useRef<HTMLButtonElement>(null);
+  const copyButton = useRef<HTMLButtonElement>(null);
+  const restoreFocus = useRef(false);
   const at = new Intl.DateTimeFormat(text.dateLocale, RECEIPT_TIME_FORMAT)
     .format(receipt.at)
     .replace(',', '');
@@ -131,15 +134,22 @@ function ContactReceipt({
     setForget(FORGET.PENDING);
     try {
       const result = await forgetRequest(receipt.ref);
+      restoreFocus.current =
+        wasForgotten(result) && document.activeElement === forgetButton.current;
       setForget(wasForgotten(result) ? FORGET.DONE : FORGET.FAILED);
     } finally {
       forgetPending.current = false;
     }
   }
 
+  useEffect(() => {
+    if (forget === FORGET.DONE && restoreFocus.current) copyButton.current?.focus();
+  }, [forget]);
+
   return (
     <div className="contact-receipt" data-testid="contact-receipt">
       <RefChip
+        buttonRef={copyButton}
         value={receipt.ref}
         prefix={text.refLabel}
         labels={{ copy: text.copy, copied: text.copied }}
@@ -154,6 +164,7 @@ function ContactReceipt({
       <div className="contact-receipt-actions">
         {forget !== FORGET.DONE && (
           <button
+            ref={forgetButton}
             type="button"
             className="copy-btn contact-copy-btn"
             aria-disabled={forget === FORGET.PENDING}

@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { ShellStates } from '@/content/shell-states.schema';
 import type { ShellUi } from '@/content/shell-ui';
 import { forgetRequest, wasForgotten } from '@/lib/forget-request.client';
@@ -27,6 +27,9 @@ export function ResponseReference({
   const { status, copy } = useCopyFeedback({ resetMs: null });
   const [forget, setForget] = useState<ForgetView>({ kind: FORGET_VIEW.Idle });
   const forgetPending = useRef(false);
+  const forgetButton = useRef<HTMLButtonElement>(null);
+  const copyButton = useRef<HTMLButtonElement>(null);
+  const restoreFocus = useRef(false);
 
   async function copyReference() {
     const outcome = await copy(requestId);
@@ -40,6 +43,7 @@ export function ResponseReference({
     setForget({ kind: FORGET_VIEW.Pending });
     const result = await forgetRequest(requestId);
     forgetPending.current = false;
+    restoreFocus.current = wasForgotten(result) && document.activeElement === forgetButton.current;
     const message = describeForget(result, ui, states);
     setForget({ kind: FORGET_VIEW.Settled, message, forgotten: wasForgotten(result) });
     announce(message);
@@ -54,6 +58,10 @@ export function ResponseReference({
   const forgotten = forget.kind === FORGET_VIEW.Settled && forget.forgotten;
   const forgetPendingView = forget.kind === FORGET_VIEW.Pending;
 
+  useEffect(() => {
+    if (forgotten && restoreFocus.current) copyButton.current?.focus();
+  }, [forgotten]);
+
   return (
     <span className="shell-reference" data-testid="shell-reference">
       <span>
@@ -61,6 +69,7 @@ export function ResponseReference({
         <code>{requestId}</code>
       </span>
       <button
+        ref={copyButton}
         type="button"
         className="shell-control"
         aria-label={`${label} ${ui.referencePrefix} ${requestId}`}
@@ -71,6 +80,7 @@ export function ResponseReference({
       </button>
       {!forgotten && (
         <button
+          ref={forgetButton}
           type="button"
           className="shell-control"
           aria-label={`${ui.forget} ${ui.referencePrefix} ${requestId}`}
