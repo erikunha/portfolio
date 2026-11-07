@@ -25,11 +25,13 @@ import {
 import type { TerminalChrome } from '@/content/schemas';
 import { localeOfPath } from '@/content/site-locale';
 import { Field } from '@/design-system/components/Field';
+import { FORGET_OUTCOME, forgetRequest } from '@/lib/forget-request.client';
 import { longestCopy } from '@/lib/longest-copy';
 import { postJson } from '@/lib/post-json';
+import { addRef } from '@/lib/request-refs.client';
 import { ASK_LOCALE_HEADER } from '@/lib/stream-protocol';
+import { RefChip } from '../RefChip/RefChip.client';
 import { TerminalChromeBar } from '../TerminalChromeBar';
-import { ContactCopyButton } from './ContactCopyButton.client';
 import { messageStore } from './messageStore';
 
 const STATUS = {
@@ -42,6 +44,10 @@ const STATUS = {
 type Status = (typeof STATUS)[keyof typeof STATUS];
 const CONTACT_ENDPOINT = '/api/contact';
 const QUEUED_STATUS = 202;
+const REQUEST_ID_HEADER = 'X-Request-Id';
+const MAILTO_SHORT_REF_LENGTH = 8;
+const MAILTO_REF_TOKEN = '{ref}';
+const MAILTO_TEXT_TOKEN = '{text}';
 const REQUEST_TIMEOUT_MS = 20_000;
 const MESSAGE_ROWS = 5;
 const INITIAL_FAILURE_COUNT = 0;
@@ -60,6 +66,17 @@ const FIELD_CHECKS: Record<ContactField, (value: string) => boolean> = {
     return length >= CONTACT_LIMITS.messageMin && length <= CONTACT_LIMITS.messageMax;
   },
 };
+function errorMailto(copy: ContactContent, ref: string, text: string): string {
+  const base = `mailto:${copy.section.email}`;
+  if (!ref) return base;
+  const subject = copy.form.mailtoSubject.replace(MAILTO_REF_TOKEN, () =>
+    ref.slice(0, MAILTO_SHORT_REF_LENGTH),
+  );
+  const body = copy.form.mailtoBody
+    .replace(MAILTO_REF_TOKEN, () => ref)
+    .replace(MAILTO_TEXT_TOKEN, () => text);
+  return `${base}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+}
 const focusResult = (node: HTMLDivElement | null) => node?.focus();
 
 interface ContactResponse {
@@ -83,7 +100,6 @@ function ContactShell({ chrome, children }: { chrome: TerminalChrome; children: 
 
 const FORGET = { IDLE: 'idle', PENDING: 'pending', DONE: 'done', FAILED: 'failed' } as const;
 type ForgetState = (typeof FORGET)[keyof typeof FORGET];
-const FORGET_ENDPOINT = '/api/log/forget';
 const RECEIPT_TIME_FORMAT: Intl.DateTimeFormatOptions = {
   year: 'numeric',
   month: '2-digit',
@@ -114,14 +130,12 @@ function ContactReceipt({
     forgetPending.current = true;
     setForget(FORGET.PENDING);
     try {
-      const { response } = await postJson(
-        FORGET_ENDPOINT,
-        { requestId: receipt.ref },
-        { timeoutMs: REQUEST_TIMEOUT_MS },
+      const result = await forgetRequest(receipt.ref);
+      setForget(
+        result.outcome === FORGET_OUTCOME.Deleted || result.outcome === FORGET_OUTCOME.NotFound
+          ? FORGET.DONE
+          : FORGET.FAILED,
       );
-      setForget(response.ok ? FORGET.DONE : FORGET.FAILED);
-    } catch {
-      setForget(FORGET.FAILED);
     } finally {
       forgetPending.current = false;
     }
@@ -129,20 +143,19 @@ function ContactReceipt({
 
   return (
     <div className="contact-receipt" data-testid="contact-receipt">
+      <RefChip
+        value={receipt.ref}
+        prefix={text.refLabel}
+        labels={{ copy: text.copy, copied: text.copied }}
+        feedback={text.feedback}
+      />
       <dl>
-        <dt>{text.refLabel}</dt>
-        <dd title={receipt.ref}>{receipt.ref}</dd>
         <dt>{text.atLabel}</dt>
         <dd>
           <time dateTime={receipt.at.toISOString()}>{at}</time>
         </dd>
       </dl>
       <div className="contact-receipt-actions">
-        <ContactCopyButton
-          value={receipt.ref}
-          labels={{ copy: text.copy, copied: text.copied }}
-          feedback={text.feedback}
-        />
         {forget !== FORGET.DONE && (
           <button
             type="button"
@@ -182,6 +195,7 @@ export function ContactForm({ copy, chrome }: { copy: ContactContent; chrome: Te
   const [errorMsg, setErrorMsg] = useState('');
   const [receipt, setReceipt] = useState<{ ref: string; at: Date } | null>(null);
   const [queuedRef, setQueuedRef] = useState('');
+  const [errorRef, setErrorRef] = useState('');
   const [failureCount, setFailureCount] = useState(INITIAL_FAILURE_COUNT);
   const formRef = useRef<HTMLFormElement>(null);
   const summaryRef = useRef<HTMLDivElement>(null);
@@ -257,6 +271,7 @@ export function ContactForm({ copy, chrome }: { copy: ContactContent; chrome: Te
     }
     setErrors(fieldErrors);
     setErrorMsg('');
+    setErrorRef('');
     if (Object.keys(fieldErrors).length) {
       setStatus(STATUS.ERROR);
       setFailureCount((count) => count + 1);
@@ -271,21 +286,24 @@ export function ContactForm({ copy, chrome }: { copy: ContactContent; chrome: Te
         { headers: { [ASK_LOCALE_HEADER]: pageLocale }, timeoutMs: REQUEST_TIMEOUT_MS },
       );
       const apiError = data?.error;
+      const ref =
+        typeof data?.requestId === 'string' && data.requestId
+          ? data.requestId
+          : (res.headers.get(REQUEST_ID_HEADER) ?? '');
       if (res.status === QUEUED_STATUS && apiError?.code === CONTACT_DELIVERY_CODE.QUEUED) {
         messageStore.reset();
-        setQueuedRef(typeof data?.requestId === 'string' ? data.requestId : '');
+        if (ref) addRef(ref);
+        setQueuedRef(ref);
         setStatus(STATUS.QUEUED);
         return;
       }
       if (!res.ok || data?.ok !== true || res.status === QUEUED_STATUS) {
+        setErrorRef(ref);
         throw new Error(CONTACT_ENDPOINT, { cause: apiError?.code });
       }
       messageStore.reset();
-      setReceipt(
-        typeof data?.requestId === 'string' && data.requestId
-          ? { ref: data.requestId, at: new Date() }
-          : null,
-      );
+      if (ref) addRef(ref);
+      setReceipt(ref ? { ref, at: new Date() } : null);
       setStatus(STATUS.SUCCESS);
     } catch (error) {
       const code =
@@ -385,8 +403,21 @@ export function ContactForm({ copy, chrome }: { copy: ContactContent; chrome: Te
             {errorMsg && (
               <p id={requestErrorId}>
                 {copy.form.errorPrefix} {errorMsg}. {copy.form.retained} {copy.form.retryEmail}{' '}
-                <a href={`mailto:${copy.section.email}`}>{copy.section.email}</a>
+                <a href={errorMailto(copy, errorRef, values.message.trim())}>
+                  {copy.section.email}
+                </a>
               </p>
+            )}
+            {errorMsg && errorRef && (
+              <>
+                <RefChip
+                  value={errorRef}
+                  prefix={copy.success.receipt.refLabel}
+                  labels={{ copy: copy.success.receipt.copy, copied: copy.success.receipt.copied }}
+                  feedback={copy.success.receipt.feedback}
+                />
+                <p>{copy.form.refNote}</p>
+              </>
             )}
           </div>
         )}
