@@ -26,9 +26,10 @@ interface KnobProps {
   initialAngle: number;
   label: string;
   channelName: string;
+  degreesUnit: string;
 }
 
-export function KnobIsland({ initialAngle, label, channelName }: KnobProps) {
+export function KnobIsland({ initialAngle, label, channelName, degreesUnit }: KnobProps) {
   const [angle, setAngle] = useState(initialAngle);
   const containerRef = useRef<HTMLDivElement>(null);
   const svgRef = useRef<SVGSVGElement>(null);
@@ -38,21 +39,24 @@ export function KnobIsland({ initialAngle, label, channelName }: KnobProps) {
   const dragStartAngle = useRef(initialAngle);
   const liveAngle = useRef(initialAngle);
 
-  const updateNeedle = useCallback((newAngle: number) => {
-    liveAngle.current = newAngle;
-    const el = containerRef.current;
-    if (el) {
-      const rounded = Math.round(newAngle);
-      el.setAttribute('aria-valuenow', String(rounded));
-      el.setAttribute('aria-valuetext', `${rounded > 0 ? '+' : ''}${rounded} degrees`);
-    }
-    const needle = needleRef.current;
-    if (needle) {
-      const { x2, y2 } = angleToCoords(newAngle);
-      needle.setAttribute('x2', x2.toFixed(2));
-      needle.setAttribute('y2', y2.toFixed(2));
-    }
-  }, []);
+  const updateNeedle = useCallback(
+    (newAngle: number) => {
+      liveAngle.current = newAngle;
+      const el = containerRef.current;
+      if (el) {
+        const rounded = Math.round(newAngle);
+        el.setAttribute('aria-valuenow', String(rounded));
+        el.setAttribute('aria-valuetext', `${rounded > 0 ? '+' : ''}${rounded} ${degreesUnit}`);
+      }
+      const needle = needleRef.current;
+      if (needle) {
+        const { x2, y2 } = angleToCoords(newAngle);
+        needle.setAttribute('x2', x2.toFixed(2));
+        needle.setAttribute('y2', y2.toFixed(2));
+      }
+    },
+    [degreesUnit],
+  );
 
   const onPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
     dragStartY.current = e.clientY;
@@ -95,7 +99,7 @@ export function KnobIsland({ initialAngle, label, channelName }: KnobProps) {
       aria-valuenow={angle}
       aria-valuemin={MIN_ANGLE}
       aria-valuemax={MAX_ANGLE}
-      aria-valuetext={`${angle > 0 ? '+' : ''}${angle} degrees`}
+      aria-valuetext={`${angle > 0 ? '+' : ''}${angle} ${degreesUnit}`}
       tabIndex={0}
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}

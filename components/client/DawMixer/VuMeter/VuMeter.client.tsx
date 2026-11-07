@@ -16,9 +16,16 @@ interface VuMeterProps {
   initialLevel: number;
   clipping?: boolean;
   channelName: string;
+  label: string;
 }
 
-export function VuMeter({ segments, initialLevel, clipping = false, channelName }: VuMeterProps) {
+export function VuMeter({
+  segments,
+  initialLevel,
+  clipping = false,
+  channelName,
+  label,
+}: VuMeterProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const segmentRefs = useRef<(HTMLSpanElement | null)[]>([]);
   const isDragging = useRef(false);
@@ -77,7 +84,7 @@ export function VuMeter({ segments, initialLevel, clipping = false, channelName 
     <div
       ref={containerRef}
       role="slider"
-      aria-label={`${channelName} VU meter demonstration, drag to adjust level`}
+      aria-label={`${channelName} ${label}`}
       aria-valuenow={initialLevel}
       aria-valuemin={0}
       aria-valuemax={100}

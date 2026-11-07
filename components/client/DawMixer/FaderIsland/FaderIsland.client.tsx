@@ -8,11 +8,18 @@ const KEY_STEP_PCT = 2;
 interface FaderProps {
   initialPct: number;
   channelName: string;
+  label: string;
   onPctChange?: (pct: number) => void;
   onAriaValueText?: (pct: number) => string;
 }
 
-export function FaderIsland({ initialPct, channelName, onPctChange, onAriaValueText }: FaderProps) {
+export function FaderIsland({
+  initialPct,
+  channelName,
+  label,
+  onPctChange,
+  onAriaValueText,
+}: FaderProps) {
   const [pct, setPct] = useState(initialPct);
   const trackRef = useRef<HTMLDivElement>(null);
   const thumbRef = useRef<HTMLDivElement>(null);
@@ -76,7 +83,7 @@ export function FaderIsland({ initialPct, channelName, onPctChange, onAriaValueT
     <div
       ref={trackRef}
       role="slider"
-      aria-label={`${channelName} fader`}
+      aria-label={`${channelName} ${label}`}
       aria-valuenow={pct}
       aria-valuemin={0}
       aria-valuemax={100}

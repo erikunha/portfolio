@@ -1,9 +1,13 @@
 import { createElement } from 'react';
 import { afterEach, describe, expect, it } from 'vitest';
 import { mountClient } from '@/__tests__/helpers/render';
+import { dawMixerCopy } from '@/content/daw-mixer';
+import { SITE_LOCALE } from '@/content/site-locale';
 import { FaderIsland } from './FaderIsland/FaderIsland.client';
 import { KnobIsland } from './KnobIsland/KnobIsland.client';
 import { VuMeter } from './VuMeter/VuMeter.client';
+
+const CONTROLS = dawMixerCopy[SITE_LOCALE.en].controls;
 
 type Case = {
   name: string;
@@ -17,7 +21,12 @@ type Case = {
 const CASES: Case[] = [
   {
     name: 'fader',
-    element: () => createElement(FaderIsland, { initialPct: 50, channelName: 'LEAD GTR' }),
+    element: () =>
+      createElement(FaderIsland, {
+        initialPct: 50,
+        channelName: 'LEAD GTR',
+        label: CONTROLS.fader,
+      }),
     min: 0,
     max: 100,
     start: 50,
@@ -26,7 +35,12 @@ const CASES: Case[] = [
   {
     name: 'vu meter',
     element: () =>
-      createElement(VuMeter, { segments: 12, initialLevel: 50, channelName: 'LEAD GTR' }),
+      createElement(VuMeter, {
+        segments: 12,
+        initialLevel: 50,
+        channelName: 'LEAD GTR',
+        label: CONTROLS.vuMeter,
+      }),
     min: 0,
     max: 100,
     start: 50,
@@ -35,7 +49,12 @@ const CASES: Case[] = [
   {
     name: 'knob',
     element: () =>
-      createElement(KnobIsland, { initialAngle: 0, label: 'GAIN', channelName: 'LEAD GTR' }),
+      createElement(KnobIsland, {
+        initialAngle: 0,
+        label: 'GAIN',
+        channelName: 'LEAD GTR',
+        degreesUnit: CONTROLS.degrees,
+      }),
     min: -150,
     max: 150,
     start: 0,

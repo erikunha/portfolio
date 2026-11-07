@@ -902,6 +902,16 @@ export const DawMixerCopySchema = z.object({
     meter: DawMixerCopyTextSchema,
     fader: DawMixerCopyTextSchema,
   }),
+  controls: z.object({
+    vuMeter: DawMixerCopyTextSchema,
+    fader: DawMixerCopyTextSchema,
+    degrees: DawMixerCopyTextSchema,
+    buttons: z.object({
+      R: DawMixerCopyTextSchema,
+      M: DawMixerCopyTextSchema,
+      S: DawMixerCopyTextSchema,
+    }),
+  }),
 });
 
 export const LinksProfileSchema = z.object({
