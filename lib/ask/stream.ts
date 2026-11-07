@@ -3,7 +3,7 @@ import { askErrors } from '@/content/ask-errors';
 import { SITE_LOCALE, type SiteLocale } from '@/content/site-locale';
 import { countAskGuardFinding } from '@/lib/ask/guard-count';
 import { ASK_RESERVED_INPUT_TOKENS } from '@/lib/ask/input-reservation';
-import { ASK_MAX_OUTPUT_TOKENS } from '@/lib/ask/limits';
+import { ASK_MAX_OUTPUT_TOKENS, ASK_TEMPERATURE } from '@/lib/ask/limits';
 import { ASK_MODEL } from '@/lib/ask/model';
 import {
   createStreamGuard,
@@ -112,6 +112,7 @@ export function createAskStream(context: AskContext): AskStream {
 
   const result = streamText({
     model: ASK_MODEL,
+    temperature: ASK_TEMPERATURE,
     maxOutputTokens: ASK_MAX_OUTPUT_TOKENS,
     abortSignal: AbortSignal.any([AbortSignal.timeout(REQUEST_TIMEOUT_MS), upstream.signal]),
     experimental_telemetry: { isEnabled: true, recordInputs: false, recordOutputs: false },
