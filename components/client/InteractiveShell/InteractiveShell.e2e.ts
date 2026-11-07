@@ -2,7 +2,11 @@ import { expect, type Locator, type Page, test } from '@playwright/test';
 import { askErrors } from '../../../content/ask-errors';
 import { SITE_LOCALE } from '../../../content/site-locale';
 import { waitForHydration } from '../../../tests/e2e/_helpers/hydration';
-import { installMockBackend, type MockState } from '../../../tests/e2e/_helpers/mock-backend';
+import {
+  installMockBackend,
+  MOCK_ASK_ANSWER,
+  type MockState,
+} from '../../../tests/e2e/_helpers/mock-backend';
 
 const SHELL_FORM = '[data-testid="shell-form"]';
 
@@ -29,7 +33,7 @@ test.describe('ask / interactive shell', () => {
     await ask(page, 'Who is Erik?');
 
     const feed = page.locator('[role="log"]');
-    await expect(feed).toContainText('Erik is a Senior Full-Stack Engineer', { timeout: 10_000 });
+    await expect(feed).toContainText(MOCK_ASK_ANSWER, { timeout: 10_000 });
   });
 
   test('2: kill switch on: 503 surfaces "temporarily unavailable" message', async ({ page }) => {
@@ -141,7 +145,7 @@ test('toolbar chips fill the prompt instead of submitting', async ({ page }) => 
 test('the clear chip still runs immediately', async ({ page }) => {
   await setupAskPage(page, { ask: 'happy', log: 'accept' });
   await ask(page, 'Who is Erik?');
-  await expect(page.locator('[role="log"]')).toContainText('Erik is a Senior Full-Stack Engineer', {
+  await expect(page.locator('[role="log"]')).toContainText(MOCK_ASK_ANSWER, {
     timeout: 10_000,
   });
 
