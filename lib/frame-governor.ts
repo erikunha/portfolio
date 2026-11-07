@@ -9,6 +9,7 @@ export type FrameGovernorConfig = {
   recoverFrameMs: number;
   windowMs: number;
   minSamples: number;
+  minWindowCoverage: number;
   evalIntervalMs: number;
   settleMs: number;
   recoverHoldMs: number;
@@ -24,6 +25,7 @@ export const FRAME_GOVERNOR_CONFIG: FrameGovernorConfig = {
   recoverFrameMs: 25,
   windowMs: 2000,
   minSamples: 3,
+  minWindowCoverage: 0.5,
   evalIntervalMs: 500,
   settleMs: 1500,
   recoverHoldMs: 10_000,
@@ -110,6 +112,7 @@ export function createFrameGovernor(
     if (lastTs === null) {
       lastTs = ts;
       settleUntil = ts + config.settleMs;
+      lastEvalTs = settleUntil;
       return;
     }
     const delta = ts - lastTs;
@@ -118,6 +121,7 @@ export function createFrameGovernor(
       forgetSamples();
       lastTs = ts;
       settleUntil = ts + config.settleMs;
+      lastEvalTs = settleUntil;
       return;
     }
     if (ts < settleUntil) return;
@@ -125,7 +129,13 @@ export function createFrameGovernor(
     while (samples.length > config.minSamples && (samples[0]?.ts ?? ts) < ts - config.windowMs) {
       samples.shift();
     }
-    if (samples.length < config.minSamples || ts - lastEvalTs < config.evalIntervalMs) return;
+    const spanMs = ts - (samples[0]?.ts ?? ts);
+    if (
+      samples.length < config.minSamples ||
+      spanMs < config.windowMs * config.minWindowCoverage ||
+      ts - lastEvalTs < config.evalIntervalMs
+    )
+      return;
     evaluate(ts);
   }
 

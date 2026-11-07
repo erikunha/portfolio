@@ -87,6 +87,20 @@ describe('frame governor state machine', () => {
     expect(governor.getLevel(), 'load-time jank must not count against the device').toBe(0);
   });
 
+  it('keeps a capable device at level 0 when one slow frame lands right after the settle period', () => {
+    for (const slowIndex of [0, 1, 2]) {
+      const governor = createFrameGovernor();
+      let t = 0;
+      governor.sample(t);
+      t += CONFIG.settleMs;
+      for (let i = 0; i < (4 * SECOND_MS) / CAPABLE_FRAME_MS; i++) {
+        t += i === slowIndex ? STALL_FRAME_MS : CAPABLE_FRAME_MS;
+        governor.sample(t);
+      }
+      expect(governor.getLevel(), `slow frame at sample ${slowIndex} after settle`).toBe(0);
+    }
+  });
+
   it('ignores a short burst of slow frames inside a healthy window', () => {
     const governor = createFrameGovernor();
     let t = feed(governor, 0, SETTLE_AND_WINDOW_MS, CAPABLE_FRAME_MS);
@@ -163,6 +177,7 @@ describe('frame governor pause', () => {
   const SINGLE_SAMPLE: FrameGovernorConfig = {
     ...CONFIG,
     minSamples: 1,
+    minWindowCoverage: 0,
     settleMs: 0,
     evalIntervalMs: 0,
   };
