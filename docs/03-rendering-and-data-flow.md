@@ -137,7 +137,7 @@ sequenceDiagram
     R->>R: ASK_ENABLED kill-switch (503 if off)
     R->>RL: getAskLimit().limit(ip)  (8/h, fail-open)
     R->>R: parse + validate (trim, <=500 chars)
-    R->>R: INJECTION_RE reject (400)
+    R->>R: isInjectionAttempt reject (400)
     R->>RL: checkIdenticalQuestion (60s dedup, 429)
     R->>RL: reserveBudget(512)  (monthly cap and daily slice, 503 if either is exhausted)
     R->>R: mint 128-bit sentinel, wrap question as data-only

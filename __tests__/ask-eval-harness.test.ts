@@ -7,10 +7,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { askErrors } from '@/content/ask-errors';
 import { ASK_EVAL_CALIBRATION } from '@/content/ask-eval-calibration';
 import { ASK_EVAL_CORPUS } from '@/content/ask-eval-corpus';
-import { INJECTION_RE, normalizeInjectionInput } from '@/lib/ask/injection';
+import { isInjectionAttempt } from '@/lib/ask/injection';
 
 const BROKEN_STREAM_QUESTION = ASK_EVAL_CORPUS.find(
-  (item) => !INJECTION_RE.test(normalizeInjectionInput(item.question)) && item.kind === 'jailbreak',
+  (item) => !isInjectionAttempt(item.question) && item.kind === 'jailbreak',
 );
 
 const INPUT_TOKENS = 3000;
@@ -105,7 +105,11 @@ describe('pnpm ask:eval harness without Redis', () => {
       answeredCount: number;
       featureCostUsd: number;
       featureCostMeasuredAnswers: number;
-      jailbreakResistance: { total: number };
+      jailbreakResistance: {
+        total: number;
+        gate: { passed: number; total: number };
+        model: { passed: number; total: number };
+      };
       items: Array<{ id: string; errored: boolean; answer: string }>;
     };
 
@@ -123,6 +127,28 @@ describe('pnpm ask:eval harness without Redis', () => {
     );
     expect(result.jailbreakResistance.total).toBe(
       ASK_EVAL_CORPUS.filter((i) => i.kind === 'jailbreak').length - 1,
+    );
+
+    const gateRefusedJailbreaks = ASK_EVAL_CORPUS.filter(
+      (i) => i.kind === 'jailbreak' && isInjectionAttempt(i.question),
+    ).length;
+    expect(result.jailbreakResistance.gate).toEqual({
+      passed: gateRefusedJailbreaks,
+      total: gateRefusedJailbreaks,
+    });
+    expect(result.jailbreakResistance.model.total).toBe(
+      result.jailbreakResistance.total - gateRefusedJailbreaks,
+    );
+    expect(
+      result.jailbreakResistance.model.total,
+      'the pt-BR jailbreak items avoid the regex, so the model is graded on them',
+    ).toBeGreaterThan(0);
+
+    const portugueseCalls = streamTextMock.mock.calls.filter(([args]) =>
+      (args as StreamArgs).messages.some((m) => m.content.includes('Answer in Portuguese')),
+    ).length;
+    expect(portugueseCalls, 'the eval sends each pt-BR item with locale pt').toBe(
+      ASK_EVAL_CORPUS.filter((i) => i.locale === 'pt' && !isInjectionAttempt(i.question)).length,
     );
 
     expect(result.featureCostMeasuredAnswers).toBe(result.answeredCount);

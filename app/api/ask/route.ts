@@ -1,7 +1,7 @@
 import { streamText } from 'ai';
 import { askErrors } from '@/content/ask-errors';
 import { SITE_LOCALE, type SiteLocale } from '@/content/site-locale';
-import { INJECTION_RE, normalizeInjectionInput } from '@/lib/ask/injection';
+import { isInjectionAttempt } from '@/lib/ask/injection';
 import { ASK_RESERVED_INPUT_TOKENS } from '@/lib/ask/input-reservation';
 import { ASK_MAX_OUTPUT_TOKENS, ASK_MAX_QUESTION_CHARS } from '@/lib/ask/limits';
 import { ASK_MODEL } from '@/lib/ask/model';
@@ -186,7 +186,7 @@ async function handleAsk(req: Request): Promise<Response> {
     return askError(requestId, askErrors[answerLocale].invalidBody, 400);
   }
 
-  if (INJECTION_RE.test(normalizeInjectionInput(question))) {
+  if (isInjectionAttempt(question)) {
     log.info('ask rejected: prompt-injection pattern', { requestId, ipHash });
     return askError(requestId, askErrors[answerLocale].injection, 400);
   }
