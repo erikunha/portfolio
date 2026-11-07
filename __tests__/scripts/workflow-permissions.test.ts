@@ -13,7 +13,7 @@ type Workflow = {
 };
 
 const workflows = readdirSync(WORKFLOW_DIR)
-  .filter((file) => file.endsWith('.yml'))
+  .filter((file) => /\.ya?ml$/.test(file))
   .map((file) => ({
     file,
     workflow: parse(readFileSync(join(WORKFLOW_DIR, file), 'utf8')) as Workflow,
