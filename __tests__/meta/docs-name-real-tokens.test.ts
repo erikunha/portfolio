@@ -1,21 +1,26 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { getThemeColors } from '../../app/design-system/_lib/theme-tokens';
+import { getThemeColors } from '../../app/(en)/design-system/_lib/theme-tokens';
+import { componentsCssFiles } from '../helpers/components-css';
 
 const DOCS = [
   'CLAUDE.md',
   'ARCHITECTURE.md',
   'STANDARDS.md',
-  'app/design-system/page.mdx',
-  'app/design-system/tokens/page.mdx',
-  'app/design-system/components/page.mdx',
-  'app/design-system/enforcement/page.mdx',
+  'app/(en)/design-system/page.mdx',
+  'app/(en)/design-system/tokens/page.mdx',
+  'app/(en)/design-system/components/page.mdx',
+  'app/(en)/design-system/enforcement/page.mdx',
 ];
 
-const STYLESHEETS = ['app/css/theme.css', 'app/css/base.css', 'app/css/components.css'];
+const STYLESHEETS = [
+  'app/css/theme.css',
+  'app/css/base.css',
+  ...componentsCssFiles().map((f) => `app/css/${f}`),
+];
 
-const FONT_SOURCE = 'app/layout.tsx';
+const FONT_SOURCE = 'components/RootShell.tsx';
 
 const NAMESPACED_TOKEN_IN_BACKTICKS = /`(--(?:color|font)-[\w-]+)`/g;
 

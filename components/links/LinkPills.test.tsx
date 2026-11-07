@@ -1,0 +1,102 @@
+import { act, render } from '@testing-library/react';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { LINKS_LOCALE } from '@/content/links.constants';
+import { LinkPills } from './LinkPills';
+
+const PAGE_URL = 'https://www.erikunha.dev/links';
+
+function links(container: HTMLElement): HTMLAnchorElement[] {
+  return Array.from(container.querySelectorAll('a'));
+}
+
+function byLabel(container: HTMLElement, label: RegExp): HTMLAnchorElement | undefined {
+  return links(container).find((link) => label.test(link.textContent ?? ''));
+}
+
+describe('LinkPills', () => {
+  it('tags every outbound pill with the bio campaign so clicks are attributable', () => {
+    const { container } = render(<LinkPills locale={LINKS_LOCALE.pt} url={PAGE_URL} />);
+    const portfolio = byLabel(container, /portfólio/i);
+    expect(portfolio).toBeDefined();
+
+    const href = new URL(portfolio?.getAttribute('href') ?? '');
+    expect(href.searchParams.get('utm_source')).toBe('bio');
+    expect(href.searchParams.get('utm_content')).toBe('portfolio');
+  });
+
+  it('leaves the mailto pill untagged, because utm on a mailto is a broken address', () => {
+    const { container } = render(<LinkPills locale={LINKS_LOCALE.pt} url={PAGE_URL} />);
+    const email = byLabel(container, /e-mail/i);
+    expect(email?.getAttribute('href')).toMatch(/^mailto:[^?]+$/);
+  });
+
+  it('omits a pill that has no confirmed destination rather than linking nowhere', () => {
+    const { container } = render(<LinkPills locale={LINKS_LOCALE.pt} url={PAGE_URL} />);
+    expect(byLabel(container, /instagram/i)).toBeUndefined();
+  });
+
+  it('renders a pill as soon as its destination is confirmed', () => {
+    const { container } = render(<LinkPills locale={LINKS_LOCALE.pt} url={PAGE_URL} />);
+    const tiktok = byLabel(container, /tiktok/i);
+    expect(tiktok?.getAttribute('href')).toContain('tiktok.com/@oeriknagringa');
+    expect(new URL(tiktok?.getAttribute('href') ?? '').searchParams.get('utm_content')).toBe(
+      'tiktok',
+    );
+  });
+
+  it('opens external pills in a new tab without leaking the opener', () => {
+    const { container } = render(<LinkPills locale={LINKS_LOCALE.pt} url={PAGE_URL} />);
+    const github = byLabel(container, /github/i);
+    expect(github?.getAttribute('target')).toBe('_blank');
+    expect(github?.getAttribute('rel')).toContain('noopener');
+  });
+
+  it('renders the English labels on the English route', () => {
+    const { container } = render(<LinkPills locale={LINKS_LOCALE.en} url={`${PAGE_URL}/en`} />);
+    expect(byLabel(container, /^\s*Portfolio\b/)).toBeDefined();
+  });
+
+  it('offers the copy-link control alongside the pills', () => {
+    const { container } = render(<LinkPills locale={LINKS_LOCALE.pt} url={PAGE_URL} />);
+    expect(container.querySelector('button')).not.toBeNull();
+  });
+
+  it('announces that external pills open a new tab, and leaves the mailto pill alone', () => {
+    const { container } = render(<LinkPills locale={LINKS_LOCALE.en} url={PAGE_URL} />);
+    expect(byLabel(container, /github/i)?.textContent).toMatch(/opens in a new tab/i);
+    expect(byLabel(container, /e-mail/i)?.textContent).not.toMatch(/new tab/i);
+  });
+
+  it('announces the new tab in Portuguese on the Portuguese route', () => {
+    const { container } = render(<LinkPills locale={LINKS_LOCALE.pt} url={PAGE_URL} />);
+    expect(byLabel(container, /github/i)?.textContent).toMatch(/abre em uma nova guia/i);
+  });
+});
+
+describe('LinkPills copy-link outcome', () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  it.each([
+    [LINKS_LOCALE.pt, 'copiado', 'Falha ao copiar'],
+    [LINKS_LOCALE.en, 'copied', 'Copy failed'],
+  ] as const)('words the copy outcome in the page language (%s)', async (locale, done, failed) => {
+    const writeText = vi
+      .fn()
+      .mockResolvedValueOnce(undefined)
+      .mockRejectedValueOnce(new DOMException('denied', 'NotAllowedError'));
+    vi.stubGlobal('navigator', { clipboard: { writeText } });
+    const { container } = render(<LinkPills locale={locale} url={PAGE_URL} />);
+    const button = container.querySelector('button') as HTMLButtonElement;
+    const status = () => container.querySelector('[role="status"]')?.textContent ?? '';
+
+    await act(async () => button.click());
+    expect(status()).toContain(done);
+
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 2_100));
+    });
+    await act(async () => button.click());
+    expect(status(), 'a failed copy says what to do next, in the page language').toContain(failed);
+    expect(status()).toMatch(/endereço|address/);
+  });
+});

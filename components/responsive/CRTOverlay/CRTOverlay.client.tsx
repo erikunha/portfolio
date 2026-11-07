@@ -2,13 +2,35 @@
 
 import { useEffect } from 'react';
 import { applyMotion, readMotion } from '@/lib/motion';
+import { reportClientError } from '@/lib/report-client-error.client';
+
+const GOVERNOR_LOAD_ERROR_PREFIX = '[CRTOverlay] frame governor failed to load:';
 
 export function CRTOverlay() {
   useEffect(() => {
     const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
-    const handler = () => applyMotion(readMotion());
+    const handler = () => applyMotion(readMotion(), false);
     mq.addEventListener('change', handler);
     return () => mq.removeEventListener('change', handler);
+  }, []);
+
+  useEffect(() => {
+    let release: (() => void) | undefined;
+    let unmounted = false;
+    import('@/lib/frame-governor')
+      .then(({ acquireFrameGovernor }) => {
+        if (!unmounted) release = acquireFrameGovernor();
+      })
+      .catch((error: unknown) => {
+        reportClientError(
+          GOVERNOR_LOAD_ERROR_PREFIX,
+          error instanceof Error ? error : new Error(String(error)),
+        );
+      });
+    return () => {
+      unmounted = true;
+      release?.();
+    };
   }, []);
 
   return (

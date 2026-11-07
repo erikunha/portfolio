@@ -1,5 +1,5 @@
 {
-  "$schema": "https://biomejs.dev/schemas/2.5.11/schema.json",
+  "$schema": "https://biomejs.dev/schemas/2.6.6/schema.json",
   "vcs": {
     "enabled": true,
     "clientKind": "git",
@@ -25,7 +25,10 @@
       "!app/globals.css",
       "!next-env.d.ts",
       "!.specify",
-      "!.claude/skills/speckit-*"
+      "!.claude/skills/speckit-*",
+      "!pnpm-lock.yaml",
+      "!CLAUDE.md",
+      "!DECISIONS.md"
     ]
   },
   "formatter": {
@@ -59,7 +62,18 @@
         "noUnusedTemplateLiteral": "error",
         "useImportType": "error",
         "useExportType": "error",
-        "noNonNullAssertion": "warn"
+        "noNonNullAssertion": "warn",
+        "noRestrictedImports": {
+          "level": "error",
+          "options": {
+            "paths": {
+              "next/image": {
+                "importNames": ["default"],
+                "message": "The default next/image export is a client component that ships its runtime to every route that renders it. Use components/OptimizedImage (getImageProps on the server)."
+              }
+            }
+          }
+        }
       },
       "suspicious": {
         "noConsole": {
@@ -105,5 +119,23 @@
     "linter": {
       "enabled": true
     }
-  }
+  },
+  "overrides": [
+    {
+      "includes": ["**/*.md", "**/*.mdx", "**/*.yml", "**/*.yaml"],
+      "formatter": {
+        "enabled": false
+      }
+    },
+    {
+      "includes": ["**/*.test.ts", "**/*.test.tsx"],
+      "linter": {
+        "rules": {
+          "correctness": {
+            "noComponentHookFactories": "off"
+          }
+        }
+      }
+    }
+  ]
 }

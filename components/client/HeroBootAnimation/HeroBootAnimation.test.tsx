@@ -3,22 +3,28 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { mountClient } from '@/__tests__/helpers/render';
 
 vi.mock('@/lib/motion', () => ({
-  readMotion: () => true,
+  readMotion: vi.fn(() => true),
 }));
 
 const bootDesktopClass = 'hero-boot-desktop';
 const bootCmdClass = 'hero-boot-cmd';
 
 describe('mobile boot container: line-count → height invariant', () => {
-  it('MOBILE_LINE_SPECS + cmd + blank + dialog = 8 lines; fits height: 165px', async () => {
-    const { MOBILE_LINE_SPECS } = await import('@/lib/boot-animation');
-    const extraLines = 3;
-    const totalLines = MOBILE_LINE_SPECS.length + extraLines;
-    const containerHeightPx = 165;
-    const fontSizePx = 12;
-    const lineHeight = 1.65;
-    expect(totalLines).toBe(8);
-    expect(Math.ceil(totalLines * fontSizePx * lineHeight)).toBeLessThanOrEqual(containerHeightPx);
+  it('renders exactly three boot lines and no blank filler line', async () => {
+    const { renderToStaticMarkup } = await import('react-dom/server');
+    const { HeroBootAnimation } = await import('./HeroBootAnimation');
+    const html = renderToStaticMarkup(<HeroBootAnimation variant="mobile" />);
+    const host = document.createElement('div');
+    host.innerHTML = html;
+    const lines = [...host.querySelectorAll('[data-testid="boot-line"]')];
+    expect(
+      lines,
+      'the mobile boot log is the sequence, the command and the matrix output',
+    ).toHaveLength(3);
+    expect(
+      lines.some((line) => (line.textContent ?? '').trim() === ''),
+      'a blank filler line is the dead space the r106 mobile hero does not have',
+    ).toBe(false);
   });
 });
 
@@ -93,6 +99,7 @@ describe('boot-animation: textContent-mutation invariant', () => {
 
     const mount = container.querySelector(`.${bootDesktopClass}`);
     expect(mount).not.toBeNull();
+    expect(mount?.getAttribute('aria-hidden')).toBe('true');
     expect(mount?.childElementCount).toBe(0);
 
     await act(async () => {
@@ -109,4 +116,230 @@ describe('boot-animation: textContent-mutation invariant', () => {
 
     unmount();
   });
+});
+
+describe('decorative boot output', () => {
+  it.each(['desktop', 'mobile'] as const)(
+    'hides the %s boot output from assistive technology',
+    async (variant) => {
+      const { renderToStaticMarkup } = await import('react-dom/server');
+      const { HeroBootAnimation } = await import('./HeroBootAnimation');
+      const html = renderToStaticMarkup(<HeroBootAnimation variant={variant} />);
+      const host = document.createElement('div');
+      host.innerHTML = html;
+      expect(host.firstElementChild?.getAttribute('aria-hidden')).toBe('true');
+    },
+  );
+
+  it('types the mobile command and the matrix output into the rendered lines', async () => {
+    vi.useFakeTimers();
+    vi.stubGlobal(
+      'matchMedia',
+      vi.fn(() => ({
+        matches: true,
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+      })),
+    );
+    const { HeroBootAnimation } = await import('./HeroBootAnimation');
+    const mounted = await mountClient(<HeroBootAnimation variant="mobile" />);
+    const host = mounted.container.querySelector('.hero-boot-mobile');
+    expect(host).not.toBeNull();
+    expect(host?.querySelectorAll('[data-testid="boot-line"]')).toHaveLength(3);
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(8000);
+    });
+
+    const cmd = host?.querySelector('.hero-boot-cmd');
+    const out = host?.querySelector('.hero-boot-matrix-out');
+    expect(cmd?.textContent, 'the mobile boot types the full command').toBe(
+      'run bio.exe --verbose',
+    );
+    expect(
+      (out?.textContent ?? '').length,
+      'the mobile boot types the matrix output',
+    ).toBeGreaterThan(0);
+
+    mounted.unmount();
+    vi.useRealTimers();
+    vi.unstubAllGlobals();
+  });
+
+  it('keeps reduced-motion output static without starting animation timers', async () => {
+    const { readMotion } = await import('@/lib/motion');
+    vi.mocked(readMotion).mockReturnValue(false);
+    vi.stubGlobal('matchMedia', () => ({
+      matches: false,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+    }));
+    vi.useFakeTimers();
+    const { HeroBootAnimation } = await import('./HeroBootAnimation');
+    const mounted = await mountClient(<HeroBootAnimation variant="desktop" />);
+    const before = mounted.container.textContent;
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(10_000);
+    });
+    expect(mounted.container.textContent).toBe(before);
+    expect(vi.getTimerCount()).toBe(0);
+    mounted.unmount();
+    vi.useRealTimers();
+    vi.mocked(readMotion).mockReturnValue(true);
+    vi.unstubAllGlobals();
+  });
+});
+
+describe('runMobileBoot: timers', () => {
+  const timing = {
+    cmdMs: 5,
+    cmdJitter: 0,
+    typeMs: 5,
+    holdMs: 20,
+    backMs: 5,
+    interMs: 10,
+  };
+
+  beforeEach(() => vi.useFakeTimers());
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it('keeps one pending timer however many phrases it cycles through', async () => {
+    const { runMobileBoot } = await import('./mobile-boot');
+    const cmdEl = document.createElement('span');
+    const outEl = document.createElement('span');
+    const boot = runMobileBoot(cmdEl, outEl, 'run', ['ab', 'cd', 'ef'], timing);
+    for (let step = 0; step < 400; step++) {
+      await vi.advanceTimersByTimeAsync(5);
+      expect(vi.getTimerCount()).toBeLessThanOrEqual(1);
+    }
+    expect(cmdEl.textContent).toBe('run');
+    expect(outEl.textContent).not.toBe('');
+    boot.cancel();
+    expect(vi.getTimerCount()).toBe(0);
+  });
+
+  it('stops typing the command when cancelled mid-way', async () => {
+    const { runMobileBoot } = await import('./mobile-boot');
+    const cmdEl = document.createElement('span');
+    const outEl = document.createElement('span');
+    const boot = runMobileBoot(cmdEl, outEl, 'run', ['ab'], timing);
+    boot.cancel();
+    await vi.advanceTimersByTimeAsync(1000);
+    expect(cmdEl.textContent).toBe('r');
+    expect(outEl.textContent).toBe('');
+  });
+});
+
+describe('hero boot follows the motion switch and the viewport', () => {
+  type ObserverCallback = (entries: { isIntersecting: boolean }[]) => void;
+  let reportIntersection: ObserverCallback = () => undefined;
+
+  class ObserverStub {
+    constructor(callback: ObserverCallback) {
+      reportIntersection = callback;
+    }
+    observe = vi.fn();
+    disconnect = vi.fn();
+  }
+
+  function stubViewport(isMobile: boolean) {
+    vi.stubGlobal(
+      'matchMedia',
+      vi.fn(() => ({
+        matches: isMobile,
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+      })),
+    );
+  }
+
+  function announceMotion(on: boolean) {
+    window.dispatchEvent(new CustomEvent('motionchange', { detail: { on } }));
+  }
+
+  beforeEach(() => {
+    vi.resetModules();
+    vi.useFakeTimers();
+    vi.stubGlobal('IntersectionObserver', ObserverStub);
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.unstubAllGlobals();
+  });
+
+  it.each([
+    ['desktop', false, '.hero-boot-desktop'],
+    ['mobile', true, '.hero-boot-mobile'],
+  ] as const)(
+    'stops the %s typing loop and shows the static boot when motion is switched off',
+    async (variant, isMobile, hostSelector) => {
+      const { readMotion } = await import('@/lib/motion');
+      vi.mocked(readMotion).mockReturnValue(true);
+      stubViewport(isMobile);
+      const { HeroBootAnimation } = await import('./HeroBootAnimation');
+      const mounted = await mountClient(<HeroBootAnimation variant={variant} />);
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(3000);
+      });
+      expect(vi.getTimerCount(), 'the loop is running before the switch').toBeGreaterThan(0);
+
+      vi.mocked(readMotion).mockReturnValue(false);
+      await act(async () => {
+        announceMotion(false);
+        await vi.advanceTimersByTimeAsync(0);
+      });
+
+      const host = mounted.container.querySelector(hostSelector);
+      expect(vi.getTimerCount(), 'switching motion off must stop every boot timer').toBe(0);
+      expect(host?.textContent, 'the static boot shows the full command').toContain(
+        'run bio.exe --verbose',
+      );
+      const frozen = host?.textContent;
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(10_000);
+      });
+      expect(host?.textContent).toBe(frozen);
+      mounted.unmount();
+    },
+  );
+
+  it.each([
+    ['desktop', false, '.hero-boot-matrix-out'],
+    ['mobile', true, '.hero-boot-matrix-out'],
+  ] as const)(
+    'pauses the %s dialog while the hero is off screen and resumes it in view',
+    async (variant, isMobile, outSelector) => {
+      const { readMotion } = await import('@/lib/motion');
+      vi.mocked(readMotion).mockReturnValue(true);
+      stubViewport(isMobile);
+      const { HeroBootAnimation } = await import('./HeroBootAnimation');
+      const mounted = await mountClient(<HeroBootAnimation variant={variant} />);
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(6000);
+      });
+      const out = mounted.container.querySelector(outSelector);
+
+      await act(async () => {
+        reportIntersection([{ isIntersecting: false }]);
+        await vi.advanceTimersByTimeAsync(2500);
+      });
+      const frozen = out?.textContent;
+      expect(vi.getTimerCount(), 'an off-screen hero keeps no typing timer').toBe(0);
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(10_000);
+      });
+      expect(out?.textContent).toBe(frozen);
+
+      await act(async () => {
+        reportIntersection([{ isIntersecting: true }]);
+        await vi.advanceTimersByTimeAsync(2000);
+      });
+      expect(vi.getTimerCount(), 'back in view the dialog types again').toBeGreaterThan(0);
+      mounted.unmount();
+    },
+  );
 });

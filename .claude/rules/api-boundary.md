@@ -1,9 +1,11 @@
 ---
+
 paths:
-  - "app/api/**"
-  - "lib/rate-limit.ts"
-  - "lib/server/**"
-  - "proxy.ts"
+- "app/api/**"
+- "lib/rate-limit.ts"
+- "lib/server/**"
+- "proxy.ts"
+
 ---
 
 # API & server boundary rules
@@ -16,13 +18,17 @@ context; this is the implementation guidance, not the enforcement.
 ## Handler contract
 
 - Route handlers go through `defineHandler`, which enforces the response
-  envelope and the fixed order: **rate-limit → parse → validate → handle**. Do
-  not reorder; the order is a security property (reject before parsing untrusted
-  input). Held by behavioral tests + e2e, not source-grep.
+  envelope and the fixed order: **rate-limit → bounded body read → parse →
+  validate → handle** (`maxBodyBytes` is required). Do not reorder; the order is
+  a security property (reject before reading or parsing untrusted input). A
+  route outside `defineHandler` reads through `readBoundedBody` after its own
+  limiter, and defers settlement or logging to `afterResponse`, never to work
+  that runs after the stream closes. Held by behavioral tests + e2e, not source-grep.
 - Read env only through the Zod accessor `lib/env.ts`. Never read
   `process.env.*` directly in a handler.
 - Rate limiting is Upstash sliding-window via `lib/rate-limit.ts` and is
-  **fail-open** (Redis down must not 500 the user). Keep that property.
+  **fail-open** (Redis down must not 500 the user). Keep that property. The
+  `/api/ask` budget reservation is the exception: it fails closed with 503.
 
 ## Security review (convention)
 
@@ -49,6 +55,7 @@ context; this is the implementation guidance, not the enforcement.
   `anthropic/claude-haiku-4-5`); the eval harness imports the same const so it
   grades the shipped model. Do not hardcode a model string in the route.
 - Ephemeral prompt cache via `providerOptions.anthropic.cacheControl` on the
-  system message; output capped (`MAX_OUTPUT_TOKENS`), request-timeout guarded.
+  system message; output capped (`MAX_OUTPUT_TOKENS`), request-timeout guarded;
+  sampling uses the named `ASK_TEMPERATURE` from `lib/ask/limits.ts`.
 - Changes to the ask corpus/calibration/system-prompt trigger the
   `ai-eval-update` skill and `pnpm ask:eval`.

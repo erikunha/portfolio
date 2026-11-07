@@ -19,25 +19,29 @@ describe('Icons — SVG smoke renders', () => {
 
   const iconNames = [
     'IconReadme',
-    'IconManPage',
-    'IconNow',
     'IconProjects',
     'IconGitLog',
-    'IconNpmStack',
-    'IconSysHealth',
     'IconShell',
     'IconLivePerf',
     'IconPerfReceipts',
     'IconGuitar',
-    'IconVisa',
     'IconCredentials',
     'IconCommunity',
     'IconHottestTakes',
-    'IconResponsibilities',
-    'IconUnknowns',
     'IconAiMetrics',
     'IconContact',
   ] as const;
+
+  it('exports only icons that have a smoke render', async () => {
+    const icons = await import('@/components/Icons/Icons');
+    const exported = Object.keys(icons)
+      .filter((name) => name.startsWith('Icon'))
+      .sort();
+    expect(
+      exported,
+      'every exported icon needs a smoke render; an icon with no renderer is dead code',
+    ).toEqual([...iconNames].sort());
+  });
 
   for (const name of iconNames) {
     it(`renders ${name} as an SVG element`, async () => {

@@ -9,26 +9,76 @@ const HEAD = 'bb390ab172aee6735d4c5200a92be6513dbb8767';
 
 describe('evaluateGate (fail-closed merge decision)', () => {
   it('passes only an Approve whose reviewed SHA is a prefix of HEAD', () => {
-    expect(evaluateGate('approve', HEAD, HEAD).ok).toBe(true);
-    expect(evaluateGate('approve', HEAD.slice(0, 7), HEAD).ok).toBe(true);
+    expect(evaluateGate('approve', HEAD, HEAD, []).ok).toBe(true);
+    expect(evaluateGate('approve', HEAD.slice(0, 7), HEAD, []).ok).toBe(true);
   });
 
   it('FAILS an Approve that states no head SHA (cannot confirm it is on HEAD)', () => {
-    const r = evaluateGate('approve', null, HEAD);
+    const r = evaluateGate('approve', null, HEAD, []);
     expect(r.ok).toBe(false);
     expect(r.reason).toMatch(/no head SHA/i);
   });
 
   it('FAILS a stale Approve (reviewed SHA not a prefix of HEAD)', () => {
-    const r = evaluateGate('approve', 'deadbee', HEAD);
+    const r = evaluateGate('approve', 'deadbee', HEAD, ['src/app/page.tsx']);
+    expect(r.ok).toBe(false);
+    expect(r.reason).toMatch(/STALE/);
+  });
+
+  it('carries an Approve when the commits since the reviewed SHA only touch visual baseline PNGs', () => {
+    const r = evaluateGate('approve', '0563abe', HEAD, [
+      'tests/visual/visual.spec.ts-snapshots/home-linux.png',
+      'tests/e2e/design-system-components.spec.ts-snapshots/ds-chromium.png',
+    ]);
+    expect(r.ok).toBe(true);
+    expect(r.reason).toMatch(/carried: baseline-only commits/);
+  });
+
+  it('carries an Approve across an uppercase baseline extension', () => {
+    const r = evaluateGate('approve', '0563abe', HEAD, [
+      'tests/visual/visual.spec.ts-snapshots/home-linux.PNG',
+    ]);
+    expect(r.ok).toBe(true);
+  });
+
+  it('FAILS a stale Approve when a snapshot dir holds a non-PNG file', () => {
+    const r = evaluateGate('approve', '0563abe', HEAD, [
+      'tests/visual/visual.spec.ts-snapshots/home-linux.txt',
+    ]);
+    expect(r.ok).toBe(false);
+    expect(r.reason).toMatch(/STALE/);
+  });
+
+  it('FAILS a stale Approve when a PNG sits outside a snapshot dir', () => {
+    const r = evaluateGate('approve', '0563abe', HEAD, ['public/images/og.png']);
+    expect(r.ok).toBe(false);
+    expect(r.reason).toMatch(/STALE/);
+  });
+
+  it('FAILS a stale Approve when any non-baseline file changed since the reviewed SHA', () => {
+    const r = evaluateGate('approve', '0563abe', HEAD, [
+      'tests/visual/visual.spec.ts-snapshots/home-linux.png',
+      'src/app/page.tsx',
+    ]);
+    expect(r.ok).toBe(false);
+    expect(r.reason).toMatch(/STALE/);
+  });
+
+  it('FAILS a stale Approve when the diff since the reviewed SHA is empty (unknown ancestry)', () => {
+    const r = evaluateGate('approve', '0563abe', HEAD, []);
     expect(r.ok).toBe(false);
     expect(r.reason).toMatch(/STALE/);
   });
 
   it('FAILS reject, request-changes, and no-verdict', () => {
-    expect(evaluateGate('reject', HEAD, HEAD).ok).toBe(false);
-    expect(evaluateGate('request-changes', HEAD, HEAD).ok).toBe(false);
-    expect(evaluateGate('none', null, HEAD).ok).toBe(false);
+    expect(evaluateGate('reject', HEAD, HEAD, []).ok).toBe(false);
+    expect(evaluateGate('request-changes', HEAD, HEAD, []).ok).toBe(false);
+    expect(evaluateGate('none', null, HEAD, []).ok).toBe(false);
+  });
+
+  it('FAILS a non-approve verdict even when the reviewed SHA is stale', () => {
+    expect(evaluateGate('reject', 'deadbee', HEAD, []).ok).toBe(false);
+    expect(evaluateGate('request-changes', 'deadbee', HEAD, []).ok).toBe(false);
   });
 });
 
@@ -56,6 +106,26 @@ describe('parseClaudeVerdict', () => {
   it('returns request-changes when both prose-mentions and a bold Request-changes verdict appear (verdict wins, not prose)', () => {
     const body = 'A reviewer might approve a smaller change, but here:\n\n**Request changes.**';
     expect(parseClaudeVerdict(body)).toBe('request-changes');
+  });
+
+  it('ignores verdict words in prose between two bold spans', () => {
+    const body =
+      '**Claude finished the task in 5m**\n\nI traced the reject-then-refund path.\n\n**Verdict: Approve.**';
+    expect(parseClaudeVerdict(body)).toBe('approve');
+  });
+
+  it('reads the verdict when the overview quotes a glob in a code span', () => {
+    const body = 'Touches `app/api/**` and `lib/**` only.\n\n**Verdict: Approve.**';
+    expect(parseClaudeVerdict(body)).toBe('approve');
+  });
+
+  it('reads the verdict when an unquoted glob sits on a line of its own', () => {
+    const body = 'Routes under app/api/** were reviewed.\n\n**Verdict: Request changes.**';
+    expect(parseClaudeVerdict(body)).toBe('request-changes');
+  });
+
+  it('does not read a verdict word inside a code span', () => {
+    expect(parseClaudeVerdict('Run `**Approve.**` to see the format.')).toBe('none');
   });
 
   it('returns none for an in-progress comment with no verdict yet', () => {
@@ -86,6 +156,16 @@ describe('extractReviewedSha', () => {
   it('extracts from the "committed HEAD (`sha`):" form (separator between head and the backtick)', () => {
     const sha = '3665027e14b928faa3dad325b202efc24077fc5b';
     expect(extractReviewedSha(`...confirmed fixed in the committed HEAD (\`${sha}\`):`)).toBe(sha);
+  });
+
+  it('takes the closing head SHA when a follow-up round cites the previous head first', () => {
+    const body = [
+      '- [x] Diff since last reviewed head (`4f363b3`, Approve) to scope what is new',
+      'The merge brought no net change.',
+      'Reviewed at head commit `41b5c3057bc0c2343981ccf52fda262ffb405976`.',
+      '**Verdict: Approve.**',
+    ].join('\n');
+    expect(extractReviewedSha(body)).toBe('41b5c3057bc0c2343981ccf52fda262ffb405976');
   });
 
   it('returns null when no head SHA is present', () => {

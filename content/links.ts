@@ -1,24 +1,35 @@
+import { OPENS_IN_NEW_TAB } from './company-link';
+import { profile, profilePresentation, profileStack } from './profile';
 import { type LinksContent, LinksContentSchema } from './schemas';
+import { SITE_LOCALE } from './site-locale';
 import { social } from './social';
 
+const LINKS_STACK_SEPARATOR = ' · ';
+
 export const linksContent: LinksContent = LinksContentSchema.parse({
-  shellTitle: 'erik@gringa — bash',
+  shellTitle: 'erik@gringa · bash',
   siteUrl: social.site,
   siteLabel: 'erikunha.dev',
   profile: {
-    name: 'Erik Cunha',
+    name: profile.displayName,
     avatar: '/images/erik-avatar.jpg',
     taglines: {
       pt: [
-        'Senior Full-Stack Engineer',
+        profilePresentation[SITE_LOCALE.pt].title,
         'AI Engineering na prática',
         'Carreira internacional para devs',
       ],
-      en: ['Senior Full-Stack Engineer', 'AI engineering, hands-on', 'Going global as a dev'],
+      en: [
+        profilePresentation[SITE_LOCALE.en].title,
+        'AI engineering, hands-on',
+        'Going global as a dev',
+      ],
     },
-    host: { pt: 'Nova York, US · remoto', en: 'New York, US · remote' },
-    stack: 'React · Next · Node · Claude/Codex',
-    status: { pt: 'primeiros vídeos chegando', en: 'first videos landing soon' },
+    host: {
+      pt: `${profilePresentation[SITE_LOCALE.pt].country} · remoto (${profile.currentEmployer.name}, Nova York)`,
+      en: `${profilePresentation[SITE_LOCALE.en].country} · remote (${profile.currentEmployer.name}, New York)`,
+    },
+    stack: profileStack.all.join(LINKS_STACK_SEPARATOR),
   },
   channel: {
     id: 'UCZ1P4Pqpo-j_uAHaIc_pGrA',
@@ -87,50 +98,54 @@ export const linksContent: LinksContent = LinksContentSchema.parse({
     whoami: 'whoami',
     hostLabel: { pt: 'host', en: 'host' },
     stackLabel: { pt: 'stack', en: 'stack' },
-    statusLabel: { pt: 'status', en: 'status' },
     channelHeading: { pt: 'o canal', en: 'the channel' },
     videosWord: { pt: 'vídeos', en: 'videos' },
     viewsWord: { pt: 'visualizações', en: 'views' },
     latestHeading: { pt: 'últimos vídeos', en: 'latest videos' },
     historyCommand: 'history -5',
-    thumbPlaceholder: { pt: 'primeiro vídeo · 16:9', en: 'first video · 16:9' },
+    thumbPlaceholder: { pt: 'último vídeo · 16:9', en: 'latest video · 16:9' },
     historyEmpty: {
-      pt: 'nenhuma entrada ainda · o primeiro vídeo aparece aqui sozinho',
-      en: 'no entries yet · the first video lands here on its own',
+      pt: 'a lista não carregou · recarregue em um minuto ou abra o canal',
+      en: 'the list did not load · reload in a minute or open the channel',
     },
     seeAllVideos: { pt: 'ver todos os vídeos', en: 'see all videos' },
     playlistsHeading: { pt: 'playlists', en: 'playlists' },
     qrHeading: { pt: 'levar a página com você', en: 'take this page with you' },
     qrCommand: 'qrencode -o links.png',
     qrBody: {
-      pt: 'Aponte a câmera para abrir esta página. Também serve para colar em vídeo, slide e crachá de evento.',
+      pt: 'Aponte a câmera para abrir esta página. Também serve para colar em vídeo, slide e credencial de evento.',
       en: 'Point your camera to open this page. Also works pasted into videos, slides and event badges.',
     },
     subscribe: { pt: 'inscrever-se no canal', en: 'subscribe' },
     subscribedCta: { pt: 'ver os últimos vídeos', en: 'see the latest videos' },
     watch: { pt: 'assistir', en: 'watch' },
     copyLink: { pt: 'copiar link', en: 'copy link' },
-    copyDone: 'copied ✓',
+    copyDone: { pt: 'copiado ✓', en: 'copied ✓' },
+    copyFailed: { pt: 'falha ao copiar', en: 'copy failed' },
+    copyFailedMessage: {
+      pt: 'Falha ao copiar. Copie o endereço na barra do navegador.',
+      en: 'Copy failed. Copy the address from the browser bar.',
+    },
+    opensInNewTab: OPENS_IN_NEW_TAB,
     newBadge: { pt: 'novo', en: 'new' },
     langSwitchLabel: { pt: 'Idioma', en: 'Language' },
     feedUnavailable: {
-      pt: 'Sem vídeos por aqui ainda. Inscreva-se para não perder o primeiro.',
-      en: "No videos here yet. Subscribe so you don't miss the first one.",
+      pt: 'O último vídeo não carregou agora. Recarregue em um minuto ou abra o canal.',
+      en: 'The latest video did not load just now. Reload in a minute or open the channel.',
     },
-    skipToContent: { pt: 'Ir para o conteúdo', en: 'Skip to content' },
     pageHeading: {
-      pt: 'Erik Cunha — links, canal e contato',
-      en: 'Erik Cunha — links, channel and contact',
+      pt: 'Erik Cunha · links, canal e contato',
+      en: 'Erik Cunha · links, channel and contact',
     },
   },
   meta: {
     title: {
-      pt: 'Erik Cunha — AI Engineering e carreira internacional para devs',
-      en: 'Erik Cunha — AI engineering and going global as a dev',
+      pt: 'Erik Cunha · AI Engineering e carreira internacional para devs',
+      en: 'Erik Cunha · AI engineering and going global as a dev',
     },
     description: {
-      pt: 'Senior Full-Stack Engineer em Nova York (remoto). Um vídeo novo toda semana no canal Erik na Gringa.',
-      en: 'Senior Full-Stack Engineer in New York (remote). A new video every week on the Erik na Gringa channel.',
+      pt: 'Engenheiro de Software Sênior, IA Aplicada, no Brasil e remoto. Um vídeo novo toda semana no canal Erik na Gringa.',
+      en: 'Senior Software Engineer, Applied AI, Brazil-based and remote. A new video every week on the Erik na Gringa channel.',
     },
   },
 });

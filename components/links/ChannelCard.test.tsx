@@ -1,13 +1,8 @@
 import { render } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { LINKS_LOCALE } from '@/content/links.constants';
 import type { ChannelFeed } from '@/lib/links/feed';
 import { ChannelCard } from './ChannelCard';
-
-vi.mock('next/image', () => ({
-  // biome-ignore lint/performance/noImgElement: this IS the jsdom stand-in for next/image, so there is no image pipeline to prefer and no LCP to guard.
-  default: ({ src, alt }: { src: string; alt: string }) => <img src={src} alt={alt} />,
-}));
 
 const CHANNEL_URL = 'https://www.youtube.com/@eriknagringa';
 
@@ -52,10 +47,13 @@ describe('ChannelCard', () => {
     expect(container.textContent).toContain('4 days ago');
   });
 
-  it('keeps the 16:9 block before the first video exists, so the card holds its shape', () => {
+  it('keeps the 16:9 block while the latest video is missing, so the card holds its shape', () => {
     const { container } = render(<ChannelCard locale={LINKS_LOCALE.pt} feed={emptyFeed} />);
     expect(container.querySelector('.links-thumb-placeholder')).not.toBeNull();
-    expect(container.textContent).toContain('Sem vídeos por aqui ainda');
+    expect(container.textContent).toContain('O último vídeo não carregou');
+    expect(container.textContent, 'the channel has published videos').not.toContain(
+      'Sem vídeos por aqui ainda',
+    );
   });
 
   it('offers subscribing even with nothing to watch yet, and does not offer watching', () => {
@@ -88,5 +86,15 @@ describe('ChannelCard', () => {
     const href = container.querySelector('[data-outbound="inscrever"]')?.getAttribute('href') ?? '';
     expect(href).toContain('sub_confirmation=1');
     expect(new URL(href).searchParams.get('utm_source')).toBe('bio');
+  });
+
+  it('hides the arrow glyph from screen readers so the watch button reads as its label', () => {
+    const { container } = render(<ChannelCard locale={LINKS_LOCALE.en} feed={populatedFeed} />);
+    const watch = container.querySelector('[data-outbound="assistir"]');
+    const arrow = watch?.querySelector('[aria-hidden="true"]');
+    expect(arrow?.textContent).toBe('→');
+    expect(watch?.textContent?.replace('→', '').replace(/\s+/g, ' ').trim()).toBe(
+      'watch (opens in a new tab)',
+    );
   });
 });

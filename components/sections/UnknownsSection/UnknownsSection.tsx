@@ -1,48 +1,33 @@
-import { SECTION_LABELS } from '@/content/section-labels';
+import type { SiteLocale } from '@/content/site-locale';
 import { unknowns } from '@/content/unknowns';
-import { IconUnknowns } from '../../Icons';
-import { Module } from '../../responsive/Module';
 
-export function UnknownsSection({ defer }: { defer?: boolean } = {}) {
+export function UnknownsSection({ locale }: { locale: SiteLocale }) {
+  const content = unknowns[locale];
+  const groups = [
+    { heading: content.learningHeading, items: content.learning },
+    { heading: content.notSpecializingHeading, items: content.notSpecializing },
+  ];
+
   return (
-    <Module
-      id="sec-unknowns"
-      header="CAT ~/.UNKNOWNS"
-      srLabel={SECTION_LABELS['sec-unknowns']}
-      icon={<IconUnknowns />}
-      defer={defer}
-    >
-      <div>
-        <pre className="m-0 font-mono text-sm max-md:text-xs leading-[1.75] text-tertiary-50 whitespace-pre-wrap max-[768px]:whitespace-pre-wrap max-[768px]:break-words">
-          <span className="text-primary-400 tracking-[0.02em]">
-            {"# things i'm actively learning"}
-          </span>
-          {'\n\n'}
-          {unknowns.learning.map((item) => (
-            <span key={item.claim}>
-              <span className="text-primary-500">{'-'}</span>
-              {` ${item.claim}\n`}
-              <span className="text-primary-400 opacity-85">{`  (${item.context})`}</span>
-              {'\n\n'}
-            </span>
-          ))}
-          <span className="text-primary-400 tracking-[0.02em]">
-            {"# things i've chosen not to specialize in (yet)"}
-          </span>
-          {'\n\n'}
-          {unknowns.notSpecializing.map((item) => (
-            <span key={item.claim}>
-              <span className="text-primary-500">{'-'}</span>
-              {` ${item.claim}\n`}
-              <span className="text-primary-400 opacity-85">{`  (${item.context})`}</span>
-              {'\n\n'}
-            </span>
-          ))}
-          <span className="block text-primary-500 font-bold text-xs max-md:text-[10px] pt-3 border-t border-dashed border-primary-quiet">
-            {unknowns.footer}
-          </span>
-        </pre>
+    <>
+      <div className="opinions-unknowns">
+        {groups.map((group) => (
+          <div key={group.heading}>
+            <h3>{group.heading}</h3>
+            <ul>
+              {group.items.map((item) => (
+                <li key={item.claim}>
+                  <b aria-hidden>{'-'}</b> {item.claim}
+                  {item.showContext ? (
+                    <span className="opinions-context"> ({item.context})</span>
+                  ) : null}
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
       </div>
-    </Module>
+      <p className="opinions-unknowns-end">{content.footer}</p>
+    </>
   );
 }

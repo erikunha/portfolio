@@ -11,7 +11,7 @@ export type MultiLineProps = FieldBase &
 export type FieldProps = SingleLineProps | MultiLineProps;
 
 const inputClasses =
-  'field-input w-full bg-transparent border border-primary-border text-tertiary-50 font-mono text-xs md:text-sm px-[10px] py-2 min-h-11 resize-y transition-[border-color] duration-200 ease-out placeholder:text-primary-500 placeholder:opacity-60 focus-visible:border-primary-500 aria-[invalid=true]:border-senary-300';
+  'field-input w-full bg-transparent border border-primary-border text-tertiary-50 font-mono text-xs md:text-sm px-[10px] py-2 min-h-11 resize-y transition-[border-color] duration-200 ease-out placeholder:text-tertiary-500 focus-visible:border-primary-500 aria-[invalid=true]:border-senary-300';
 
 export function Field({
   name,

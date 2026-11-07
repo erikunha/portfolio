@@ -1,4 +1,5 @@
 import { getRedis } from '@/lib/rate-limit';
+import { withTimeout } from '@/lib/with-timeout';
 
 const REDIS_RESULT_KEY = 'ask:eval:latest';
 
@@ -51,12 +52,7 @@ function parseAggregate(raw: unknown): EvalAggregate | null {
 }
 
 export async function getAskMetrics(): Promise<AskMetrics | null> {
-  let raw: unknown;
-  try {
-    raw = await getRedis().get(REDIS_RESULT_KEY);
-  } catch {
-    return null;
-  }
+  const raw: unknown = await withTimeout(() => getRedis().get(REDIS_RESULT_KEY));
   if (raw == null) return null;
 
   const payload = typeof raw === 'string' ? safeJsonParse(raw) : raw;

@@ -1,5 +1,5 @@
 import { spawnSync } from 'node:child_process';
-import { appendFileSync } from 'node:fs';
+import { appendFileSync, realpathSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
 import { AI_PATHS, APP_PATHS, UI_PATHS } from './detect-changes-paths.mjs';
 
@@ -103,7 +103,7 @@ function main() {
 
 if (
   typeof process.argv[1] === 'string' &&
-  import.meta.url === pathToFileURL(process.argv[1]).href
+  import.meta.url === pathToFileURL(realpathSync(process.argv[1])).href
 ) {
   try {
     main();

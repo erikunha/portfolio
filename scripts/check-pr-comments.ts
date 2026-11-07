@@ -1,5 +1,6 @@
 #!/usr/bin/env tsx
 import { execFile } from 'node:child_process';
+import { realpathSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
 import { promisify } from 'node:util';
 import { sanitizeSecrets } from './lib/sanitize-secrets';
@@ -211,5 +212,6 @@ async function main() {
 }
 
 const isMain =
-  typeof process.argv[1] === 'string' && import.meta.url === pathToFileURL(process.argv[1]).href;
+  typeof process.argv[1] === 'string' &&
+  import.meta.url === pathToFileURL(realpathSync(process.argv[1])).href;
 if (isMain) void main();

@@ -1,3 +1,5 @@
+import { MOTION_CHANGE_EVENT } from './motion-change';
+
 export function readMotion(): boolean {
   try {
     const stored = localStorage.getItem('erik.motion');
@@ -11,12 +13,24 @@ export function readMotion(): boolean {
   return true;
 }
 
-export function applyMotion(on: boolean): void {
+export function readSystemReducedMotion(): boolean {
+  if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return false;
+  return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+}
+
+export function applyMotion(on: boolean, persist = true): void {
   document.body.dataset.motion = on ? 'full' : 'reduce';
-  try {
-    localStorage.setItem('erik.motion', on ? 'on' : 'off');
-  } catch (err) {
-    console.warn('[motion] Failed to persist motion preference:', err);
+  if (persist) {
+    try {
+      localStorage.setItem('erik.motion', on ? 'on' : 'off');
+    } catch (err) {
+      console.warn('[motion] Failed to persist motion preference:', err);
+    }
   }
-  window.dispatchEvent(new CustomEvent('motionchange', { detail: { on } }));
+  window.dispatchEvent(new CustomEvent(MOTION_CHANGE_EVENT, { detail: { on } }));
+}
+
+export function motionInEffect(): boolean {
+  if (typeof document !== 'undefined' && document.body.dataset.motion === 'reduce') return false;
+  return readMotion();
 }

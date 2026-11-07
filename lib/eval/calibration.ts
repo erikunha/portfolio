@@ -1,16 +1,13 @@
-import { JUDGE_ERROR_REASON_PREFIX, JUDGE_NO_JSON_REASON, judge } from '@/lib/eval/judge';
+import { isJudgeError, judge } from '@/lib/eval/judge';
 import type { CalibrationCase, CalibrationResult } from '@/lib/eval/types';
 
 export const MIN_CALIBRATION_AGREEMENT = 0.85;
 
 export const CALIBRATION_ERROR_FRACTION_LIMIT = 0.5;
 
-function isJudgeError(reason: string): boolean {
-  return reason.startsWith(JUDGE_ERROR_REASON_PREFIX) || reason === JUDGE_NO_JSON_REASON;
-}
-
 export type CalibrationGoldCase = {
   id: string;
+  kind?: string;
   prompt: string;
   expect: string;
   canonicalAnswer: string;
@@ -19,7 +16,7 @@ export type CalibrationGoldCase = {
 
 export async function runCalibration(
   goldSet: CalibrationGoldCase[],
-  opts: { model: string },
+  opts: { model: string; factSheet?: string },
 ): Promise<CalibrationResult> {
   const cases: CalibrationCase[] = [];
   let judgeInputTokens = 0;
@@ -27,9 +24,9 @@ export async function runCalibration(
 
   for (const item of goldSet) {
     const verdict = await judge(
-      { id: item.id, question: item.prompt, kind: 'calibration', expect: item.expect },
+      { id: item.id, question: item.prompt, kind: item.kind ?? 'calibration', expect: item.expect },
       item.canonicalAnswer,
-      { model: opts.model },
+      opts,
     );
     judgeInputTokens += verdict.inputTokens;
     judgeOutputTokens += verdict.outputTokens;
@@ -38,6 +35,7 @@ export async function runCalibration(
     const agreed = !errored && verdict.pass === item.humanVerdict;
     cases.push({
       id: item.id,
+      ...(item.kind === undefined ? {} : { kind: item.kind }),
       humanVerdict: item.humanVerdict,
       judgeVerdict: verdict.pass,
       agreed,

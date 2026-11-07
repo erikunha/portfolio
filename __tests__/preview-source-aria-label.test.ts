@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   PREVIEW_SOURCE_ARIA_LABEL_FALLBACK,
   previewSourceAriaLabel,
-} from '../app/design-system/_components/preview.constants';
+} from '../app/(en)/design-system/_components/preview.constants';
 
 describe('previewSourceAriaLabel: unique per-component aria-label builder', () => {
   it('generates a label derived from the id', () => {
@@ -18,11 +18,12 @@ describe('previewSourceAriaLabel: unique per-component aria-label builder', () =
     expect(fieldLabel).toBe('field source code');
   });
 
-  it('produces 9 unique labels for all design-system component ids', () => {
+  it('produces 10 unique labels for all design-system component ids', () => {
     const componentIds = [
       'button',
       'field',
       'badge',
+      'brand-icon',
       'terminal-panel',
       'window-chrome',
       'stat-tile',
@@ -32,7 +33,7 @@ describe('previewSourceAriaLabel: unique per-component aria-label builder', () =
     ];
     const labels = componentIds.map(previewSourceAriaLabel);
     const uniqueLabels = new Set(labels);
-    expect(uniqueLabels.size, `expected 9 unique labels, got ${uniqueLabels.size}`).toBe(9);
+    expect(uniqueLabels.size, `expected 10 unique labels, got ${uniqueLabels.size}`).toBe(10);
   });
 
   it('falls back to fallback constant when id is undefined', () => {

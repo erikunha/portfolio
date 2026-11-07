@@ -12,7 +12,7 @@ export function assertWithinBudget(args: {
     ok: false,
     reason:
       `projected cost $${args.projectedUsd} exceeds the ` +
-      `${args.doubled ? 'A/B (doubled) ' : ''}cap of $${cap} — ` +
+      `${args.doubled ? 'A/B (doubled) ' : ''}cap of $${cap}: ` +
       'reduce N (EVAL_RUNS) or the corpus size, or split the run',
   };
 }

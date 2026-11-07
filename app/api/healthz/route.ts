@@ -1,22 +1,29 @@
-import type { NextRequest } from 'next/server';
+import { connection, type NextRequest } from 'next/server';
 import { log } from '@/lib/log';
 import { getClientIp, getHealthzLimit, getRedis } from '@/lib/rate-limit';
+import { err } from '@/lib/server/route';
 
+const HTTP_TOO_MANY_REQUESTS = 429;
+const RETRY_AFTER_SECONDS = '60';
 const PSI_STALE_MS = 25 * 60 * 60 * 1000;
 const PSI_CACHE_TTL_MS = 5_000;
 
 let _psiCache: { psiLastRun: string | null; cachedAt: number } | null = null;
 
 export async function GET(req: NextRequest): Promise<Response> {
+  await connection();
   const sha = process.env.VERCEL_GIT_COMMIT_SHA || 'local';
 
   try {
     const ip = getClientIp(req);
     const { success } = await getHealthzLimit().limit(ip);
     if (!success) {
-      return new Response('Too Many Requests', {
-        status: 429,
-        headers: { 'Cache-Control': 'no-store', 'Retry-After': '60' },
+      return err({
+        requestId: crypto.randomUUID(),
+        status: HTTP_TOO_MANY_REQUESTS,
+        code: 'rate_limited',
+        message: 'too many requests',
+        extraHeaders: { 'Cache-Control': 'no-store', 'Retry-After': RETRY_AFTER_SECONDS },
       });
     }
   } catch (err) {

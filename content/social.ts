@@ -1,10 +1,14 @@
 import { type Social, SocialSchema } from './schemas';
+import { EMAIL_ADDRESS, GITHUB_URL, LINKEDIN_URL, WHATSAPP_URL } from './social-urls';
 
 export const social: Social = SocialSchema.parse({
-  github: 'https://github.com/erikunha',
-  linkedin: 'https://www.linkedin.com/in/erikunha/',
-  email: 'erikhenriquealvescunha@gmail.com',
+  github: GITHUB_URL,
+  githubLabel: 'github.com/erikunha',
+  linkedin: LINKEDIN_URL,
+  linkedinLabel: 'linkedin.com/in/erikunha',
+  email: EMAIL_ADDRESS,
   site: 'https://www.erikunha.dev',
+  siteLabel: 'erikunha.dev',
   handle: 'erikunha',
-  whatsapp: 'https://wa.me/5519997049125',
+  whatsapp: WHATSAPP_URL,
 });

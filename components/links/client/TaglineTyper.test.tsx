@@ -1,4 +1,5 @@
-import { render } from '@testing-library/react';
+import { act, render } from '@testing-library/react';
+import { renderToStaticMarkup } from 'react-dom/server';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { TaglineTyper } from './TaglineTyper.client';
 
@@ -27,9 +28,14 @@ describe('TaglineTyper', () => {
   });
 
   it('renders the first phrase before any timer runs, so the line is never blank on paint', () => {
-    mockMotion(false);
-    const { container } = render(<TaglineTyper phrases={PHRASES} />);
-    expect(container.textContent).toContain('Senior Full-Stack Engineer');
+    const container = document.createElement('div');
+    container.innerHTML = renderToStaticMarkup(<TaglineTyper phrases={PHRASES} />);
+    const visible = container.querySelector('span[aria-hidden="true"]:not(.sr-only)');
+
+    expect(
+      visible?.textContent,
+      'the visible span must contain the first phrase before effects run',
+    ).toBe(PHRASES[0]);
   });
 
   it('types by mutating textContent rather than re-rendering per character', () => {
@@ -45,6 +51,26 @@ describe('TaglineTyper', () => {
     expect(visible?.textContent).toBe('Senior');
   });
 
+  it('stops on the first phrase when MOTION turns off and types again when it turns on', () => {
+    mockMotion(false);
+    const { container } = render(<TaglineTyper phrases={PHRASES} />);
+    const visible = container.querySelector('[aria-hidden="true"]');
+    vi.advanceTimersByTime(210);
+    expect(visible?.textContent).toBe('Seni');
+
+    act(() => {
+      window.dispatchEvent(new CustomEvent('motionchange', { detail: { on: false } }));
+    });
+    vi.advanceTimersByTime(2_000);
+    expect(visible?.textContent).toBe(PHRASES[0]);
+
+    act(() => {
+      window.dispatchEvent(new CustomEvent('motionchange', { detail: { on: true } }));
+    });
+    vi.advanceTimersByTime(210);
+    expect(visible?.textContent).not.toBe(PHRASES[0]);
+  });
+
   it('holds the full phrase still when the visitor prefers reduced motion', () => {
     mockMotion(true);
     const { container } = render(<TaglineTyper phrases={PHRASES} />);
@@ -54,13 +80,24 @@ describe('TaglineTyper', () => {
     expect(visible?.textContent).toBe('Senior Full-Stack Engineer');
   });
 
-  it('keeps one stable phrase for screen readers instead of announcing every keystroke', () => {
+  it('gives screen readers every phrase as static text, which never changes while typing', () => {
     mockMotion(false);
     const { container } = render(<TaglineTyper phrases={PHRASES} />);
-    const announced = container.querySelector('.sr-only');
+    const staticText = container.querySelector('.sr-only');
+    const before = staticText?.textContent;
+    expect(before).toContain(PHRASES[0]);
+    expect(before).toContain(PHRASES[1]);
 
-    vi.advanceTimersByTime(2_000);
-    expect(announced?.textContent).toBe('Senior Full-Stack Engineer');
+    vi.advanceTimersByTime(7_000);
+    expect(staticText?.textContent).toBe(before);
+  });
+
+  it('holds no live region, so the typing cycle never announces itself every few seconds', () => {
+    mockMotion(false);
+    const { container } = render(<TaglineTyper phrases={PHRASES} />);
+
+    expect(container.querySelector('[role="status"]')).toBeNull();
+    expect(container.querySelector('[aria-live]')).toBeNull();
   });
 
   it('stops its timers on unmount', () => {

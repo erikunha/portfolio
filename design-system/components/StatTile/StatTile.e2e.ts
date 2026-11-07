@@ -25,3 +25,28 @@ test.describe('StatTile — behavioral E2E', () => {
     await expect(preview.locator('dt').getByText('LCP').first()).toBeVisible();
   });
 });
+
+for (const width of [767, 768, 1280]) {
+  test(`StatTile reading order and type at ${width}px`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 812 });
+    await page.goto('/design-system/components');
+    const tiles = page.locator('#stat-tile dl');
+    await expect(tiles).toHaveCount(3);
+    for (const tile of await tiles.all()) {
+      const label = tile.locator('dt');
+      await expect(tile.locator(':scope > :first-child')).toHaveJSProperty('tagName', 'DT');
+      await expect(label).toHaveCSS('color', 'rgb(161, 179, 161)');
+      await expect(label).toHaveCSS('opacity', '1');
+      const sizes = await tile
+        .locator('dt, dd')
+        .evaluateAll((elements) =>
+          elements.map((element) => Number.parseFloat(getComputedStyle(element).fontSize)),
+        );
+      expect(sizes.every((size) => size >= (width >= 768 ? 13 : 12))).toBe(true);
+    }
+    const heading = page.getByRole('heading', { level: 1 });
+    await expect(heading).toHaveCSS('font-weight', '900');
+    const fontFamily = await heading.evaluate((element) => getComputedStyle(element).fontFamily);
+    expect(fontFamily).toContain('display');
+  });
+}

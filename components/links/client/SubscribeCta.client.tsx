@@ -1,8 +1,10 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { EXTERNAL_LINK_PROPS } from '@/components/ExternalLink';
 import { Button } from '@/design-system';
 import { IconYouTube } from '../LinkIcons';
+import { NewTabHint } from '../NewTabHint';
 
 const SUBSCRIBED_KEY = 'links.subscribed';
 const SUBSCRIBED_VALUE = '1';
@@ -20,6 +22,7 @@ export type SubscribeCtaProps = {
   subscribeLabel: string;
   subscribedLabel: string;
   outboundId: string;
+  newTabHint: string;
   subscribedHref: string;
 };
 
@@ -29,6 +32,7 @@ export function SubscribeCta({
   subscribedLabel,
   subscribedHref,
   outboundId,
+  newTabHint,
 }: SubscribeCtaProps) {
   const [subscribed, setSubscribed] = useState(false);
 
@@ -48,8 +52,7 @@ export function SubscribeCta({
     <Button
       as="a"
       href={subscribed ? subscribedHref : href}
-      target="_blank"
-      rel="noopener noreferrer"
+      {...EXTERNAL_LINK_PROPS}
       size="lg"
       variant="primary"
       className="gap-[9px]"
@@ -58,6 +61,7 @@ export function SubscribeCta({
     >
       <IconYouTube size={17} />
       {subscribed ? subscribedLabel : subscribeLabel}
+      <NewTabHint text={newTabHint} />
     </Button>
   );
 }

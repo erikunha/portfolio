@@ -10,7 +10,7 @@ export async function gradeRun(
   if (c.grader === 'code') {
     if (typeof c.assert !== 'function') {
       throw new Error(
-        `case "${c.id}": grader is 'code' but no assert predicate is attached — cannot grade deterministically`,
+        `case "${c.id}": grader is 'code' but no assert predicate is attached, cannot grade deterministically`,
       );
     }
     const pass = c.assert(output);

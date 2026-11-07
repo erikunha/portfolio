@@ -7,19 +7,22 @@ on:
   workflow_dispatch:
     inputs:
       update_visual_baselines:
-        description: 'Regenerate Linux visual baselines and upload them as an artifact (download + commit to refresh baselines).'
+        description: "Regenerate Linux visual baselines and upload them as an artifact (download + commit to refresh baselines)."
         required: false
-        default: 'false'
+        default: "false"
         type: choice
-        options: ['false', 'true']
+        options: ["false", "true"]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: false
 
+permissions:
+  contents: read
+
 jobs:
   quality-fast:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     permissions:
       contents: read
       pull-requests: read
@@ -32,11 +35,11 @@ jobs:
         with:
           fetch-depth: 0
 
-      - uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6.0.9
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
 
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
-          node-version-file: '.nvmrc'
+          node-version-file: ".nvmrc"
           cache: pnpm
 
       - name: Install
@@ -74,10 +77,11 @@ jobs:
       - name: Doc-drift gate (ARCHITECTURE.md tree vs disk)
         run: pnpm check:doc-drift
 
+      - name: Section-order gate (rendered sections vs registry)
+        run: pnpm check:section-order
 
       - name: Detect-changes pathspec gate (no orphaned filters)
         run: pnpm check:detect-changes-paths
-
 
       - name: Contrast check
         run: pnpm lint:contrast
@@ -88,7 +92,6 @@ jobs:
       - name: Package age check (supply-chain, info-only)
         run: node scripts/check-pkg-age.mjs --warn-only
 
-
       - name: PR comment merge gate
         if: github.event_name == 'pull_request'
         env:
@@ -96,7 +99,7 @@ jobs:
         run: pnpm tsx scripts/check-pr-comments.ts ${{ github.event.pull_request.number }}
 
   typecheck:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 5
     permissions:
       contents: read
@@ -106,11 +109,11 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6.0.9
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
 
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
-          node-version-file: '.nvmrc'
+          node-version-file: ".nvmrc"
           cache: pnpm
 
       - name: Install
@@ -128,7 +131,7 @@ jobs:
         run: pnpm typecheck
 
   test:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     permissions:
       contents: read
       pull-requests: write
@@ -141,11 +144,11 @@ jobs:
         with:
           fetch-depth: 0
 
-      - uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6.0.9
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
 
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
-          node-version-file: '.nvmrc'
+          node-version-file: ".nvmrc"
           cache: pnpm
 
       - name: Install
@@ -168,11 +171,28 @@ jobs:
         if: github.event_name != 'pull_request' || steps.lockfile-diff.outputs.changed == 'true'
         run: pnpm audit --audit-level=moderate
 
+      - name: Check if the mutation runner surface changed
+        id: mutation-surface-diff
+        if: github.event_name == 'pull_request'
+        env:
+          BASE: ${{ github.event.pull_request.base.sha }}
+          HEAD: ${{ github.event.pull_request.head.sha }}
+        run: |
+          changed=true
+          if git diff --quiet "$BASE...$HEAD" -- pnpm-lock.yaml stryker.config.mjs vitest.config.ts tests/mocks scripts/check-mutation-kills.mjs scripts/stryker-canary.config.mjs 2>/dev/null; then
+            changed=false
+          fi
+          echo "changed=${changed}" >> "$GITHUB_OUTPUT"
+
+      - name: Mutation runner canary (Stryker must kill mutants in a known file)
+        if: github.event_name != 'pull_request' || steps.mutation-surface-diff.outputs.changed == 'true'
+        run: node scripts/check-mutation-kills.mjs --canary
+
       - name: Unit tests
         run: pnpm test:coverage
 
       - name: Upload coverage reports
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: always()
         with:
           name: coverage-report
@@ -187,7 +207,7 @@ jobs:
           script: |
             const fs = require('fs');
             if (!fs.existsSync('coverage/coverage-summary.json')) {
-              core.warning('coverage/coverage-summary.json not found — skipping coverage comment. Did pnpm test:coverage complete?');
+              core.warning('coverage/coverage-summary.json not found, skipping coverage comment. Did pnpm test:coverage complete?');
               return;
             }
             let summary;
@@ -242,7 +262,7 @@ jobs:
             }
 
   dependency-review:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     if: github.event_name == 'pull_request'
     permissions:
       contents: read
@@ -256,7 +276,7 @@ jobs:
           deny-licenses: GPL-3.0, AGPL-3.0, GPL-2.0
 
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     permissions:
       contents: read
       id-token: write
@@ -269,11 +289,11 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6.0.9
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
 
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
-          node-version-file: '.nvmrc'
+          node-version-file: ".nvmrc"
           cache: pnpm
 
       - name: Install
@@ -296,6 +316,7 @@ jobs:
           UPSTASH_REDIS_REST_TOKEN: ${{ secrets.UPSTASH_REDIS_REST_TOKEN_BUILD }}
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY_BUILD }}
           DEPLOY_SALT: ci-build-salt
+          E2E_LINKS_FEED_FIXTURE: tests/e2e/fixtures/links-feed.json
 
       - name: Bundle size gate
         run: node scripts/check-bundle-size.mjs --max-client-kb=220
@@ -304,7 +325,7 @@ jobs:
         run: node scripts/check-route-js.mjs
 
       - name: Upload build artifact
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: next-build
           path: .next/
@@ -313,16 +334,16 @@ jobs:
 
       - name: Attest build provenance
         if: github.ref == 'refs/heads/main'
-        uses: actions/attest-build-provenance@0f67c3f4856b2e3261c31976d6725780e5e4c373 # v4.1.1
+        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
         with:
           subject-path: .next/
 
   performance:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     permissions:
       contents: read
       statuses: write
-    timeout-minutes: 20
+    timeout-minutes: 35
     concurrency:
       group: perf-${{ github.ref }}
       cancel-in-progress: true
@@ -335,37 +356,41 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6.0.9
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
 
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
-          node-version-file: '.nvmrc'
+          node-version-file: ".nvmrc"
           cache: pnpm
 
       - name: Install
         run: pnpm install --frozen-lockfile
 
       - name: Download build artifact
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: next-build
           path: .next/
 
+      - name: Runner image version
+        id: runner-image
+        run: echo "version=${ImageVersion:-unknown}" >> "$GITHUB_OUTPUT"
       - name: Cache Playwright browsers
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-chromium-${{ hashFiles('pnpm-lock.yaml') }}
+          key: playwright-${{ runner.os }}-${{ steps.runner-image.outputs.version }}-chromium-${{ hashFiles('pnpm-lock.yaml') }}
           restore-keys: |
-            playwright-${{ runner.os }}-chromium-
+            playwright-${{ runner.os }}-${{ steps.runner-image.outputs.version }}-chromium-
 
       - name: Install Playwright Chromium (for axe-core scan)
-        run: pnpm playwright install --with-deps chromium
+        run: node scripts/install-playwright-browsers.mjs chromium
 
       - name: Start preview server
         run: pnpm start > /tmp/server-perf.log 2>&1 &
         env:
           DEPLOY_SALT: ci-build-salt
+          E2E_LINKS_FEED_FIXTURE: tests/e2e/fixtures/links-feed.json
 
       - name: Wait for server
         run: |
@@ -385,33 +410,36 @@ jobs:
         run: pnpm playwright test tests/a11y
 
   e2e-functional:
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
     if: github.event_name != 'pull_request' || needs.detect-changes.outputs.app == 'true'
     needs: [build, detect-changes]
     strategy:
       fail-fast: false
       matrix:
-        project: [chromium, chromium-mobile, webkit-desktop, webkit-mobile, chromium-components]
+        project: [chromium, chromium-mobile, webkit-desktop, webkit-mobile, chromium-components, chromium-mobile-components, webkit-desktop-components, webkit-mobile-components]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6.0.9
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
-          node-version-file: '.nvmrc'
+          node-version-file: ".nvmrc"
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      - name: Runner image version
+        id: runner-image
+        run: echo "version=${ImageVersion:-unknown}" >> "$GITHUB_OUTPUT"
       - name: Cache Playwright browsers
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ contains(matrix.project, 'webkit') && 'webkit' || 'chromium' }}-${{ hashFiles('pnpm-lock.yaml') }}
+          key: playwright-${{ runner.os }}-${{ steps.runner-image.outputs.version }}-${{ contains(matrix.project, 'webkit') && 'webkit' || 'chromium' }}-${{ hashFiles('pnpm-lock.yaml') }}
           restore-keys: |
-            playwright-${{ runner.os }}-${{ contains(matrix.project, 'webkit') && 'webkit' || 'chromium' }}-
+            playwright-${{ runner.os }}-${{ steps.runner-image.outputs.version }}-${{ contains(matrix.project, 'webkit') && 'webkit' || 'chromium' }}-
       - name: Install Playwright browsers
-        run: pnpm playwright install --with-deps ${{ contains(matrix.project, 'webkit') && 'webkit' || 'chromium' }}
+        run: node scripts/install-playwright-browsers.mjs ${{ contains(matrix.project, 'webkit') && 'webkit' || 'chromium' }}
       - name: Download build artifact
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: next-build
           path: .next/
@@ -419,6 +447,7 @@ jobs:
         run: pnpm start > /tmp/server-${{ matrix.project }}.log 2>&1 &
         env:
           DEPLOY_SALT: ci-build-salt
+          E2E_LINKS_FEED_FIXTURE: tests/e2e/fixtures/links-feed.json
       - name: Wait for server
         run: |
           pnpm exec wait-on http://localhost:3000 --timeout 30000 || {
@@ -427,19 +456,19 @@ jobs:
             exit 1
           }
       - name: Run functional e2e (tests/e2e specs)
-        if: matrix.project != 'chromium-components'
+        if: ${{ !endsWith(matrix.project, '-components') }}
         run: pnpm playwright test --project=${{ matrix.project }} tests/e2e/
       - name: Run functional e2e (co-located component specs)
-        if: matrix.project == 'chromium-components'
+        if: endsWith(matrix.project, '-components')
         run: pnpm playwright test --project=${{ matrix.project }}
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: failure()
         with:
           name: playwright-report-${{ matrix.project }}
           path: test-results/
 
   detect-changes:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 2
     outputs:
       ai: ${{ steps.check.outputs.ai }}
@@ -458,7 +487,7 @@ jobs:
         run: node scripts/detect-changes.mjs
 
   ai-eval:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
     if: |
       always()
@@ -466,13 +495,13 @@ jobs:
       && needs.detect-changes.outputs.ai == 'true'
       && !contains(needs.*.result, 'failure')
       && !contains(needs.*.result, 'cancelled')
-    needs: [detect-changes, quality-fast, typecheck, test, build, e2e-functional, performance, e2e-visual-chromium]
+    needs: [detect-changes, quality-fast, typecheck, test]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6.0.9
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
-          node-version-file: '.nvmrc'
+          node-version-file: ".nvmrc"
           cache: pnpm
       - name: Install
         run: pnpm install --frozen-lockfile
@@ -480,14 +509,14 @@ jobs:
         run: pnpm ask:eval
         env:
           AI_GATEWAY_API_KEY: ${{ secrets.AI_GATEWAY_API_KEY_BUILD }}
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: always()
         with:
           name: ask-eval-result
           path: ask-eval-result.json
 
   e2e-visual-chromium:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
     if: github.event_name != 'pull_request' || needs.detect-changes.outputs.ui == 'true'
     needs: [build, detect-changes]
@@ -497,23 +526,26 @@ jobs:
         project: [chromium, chromium-mobile]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6.0.9
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
-          node-version-file: '.nvmrc'
+          node-version-file: ".nvmrc"
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      - name: Runner image version
+        id: runner-image
+        run: echo "version=${ImageVersion:-unknown}" >> "$GITHUB_OUTPUT"
       - name: Cache Playwright browsers
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-chromium-${{ hashFiles('pnpm-lock.yaml') }}
+          key: playwright-${{ runner.os }}-${{ steps.runner-image.outputs.version }}-chromium-${{ hashFiles('pnpm-lock.yaml') }}
           restore-keys: |
-            playwright-${{ runner.os }}-chromium-
+            playwright-${{ runner.os }}-${{ steps.runner-image.outputs.version }}-chromium-
       - name: Install Playwright browsers
-        run: pnpm playwright install --with-deps chromium
+        run: node scripts/install-playwright-browsers.mjs chromium
       - name: Download build artifact
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: next-build
           path: .next/
@@ -521,6 +553,7 @@ jobs:
         run: pnpm start > /tmp/server-${{ matrix.project }}.log 2>&1 &
         env:
           DEPLOY_SALT: ci-build-salt
+          E2E_LINKS_FEED_FIXTURE: tests/e2e/fixtures/links-feed.json
       - name: Wait for server
         run: |
           pnpm exec wait-on http://localhost:3000 --timeout 30000 || {
@@ -546,18 +579,18 @@ jobs:
           ARGOS_PARALLEL_TOTAL: ${{ strategy.job-total }}
       - if: inputs.update_visual_baselines == 'true'
         name: Upload regenerated visual baselines
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: visual-baselines-${{ matrix.project }}
-          path: tests/visual/visual.spec.ts-snapshots/
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+          path: tests/visual/visual.spec.ts-snapshots/*-${{ matrix.project }}-linux.png
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: failure()
         with:
           name: visual-report-${{ matrix.project }}
           path: test-results/
 
   ci-gate:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 5
     if: always()
     needs:
@@ -595,9 +628,9 @@ jobs:
 
   semgrep:
     name: Semgrep (static analysis)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     permissions:
-      security-events: write   # required to upload SARIF to the code-scanning tab
+      security-events: write # required to upload SARIF to the code-scanning tab
       contents: read
     timeout-minutes: 10
     concurrency:
@@ -606,9 +639,9 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
-          python-version: '3.12'
+          python-version: "3.12"
 
       - name: Install Semgrep (exact-pinned) and resolve its path
         run: |
@@ -634,14 +667,14 @@ jobs:
 
       - name: Upload SARIF to code-scanning
         if: always() && hashFiles('semgrep.sarif') != ''
-        uses: github/codeql-action/upload-sarif@e4fba868fa4b1b91e1fdab776edc8cfbe6e9fb81 # v4.37.3
+        uses: github/codeql-action/upload-sarif@9b3254085494b55a0f7c4c2b3d2d52cc712ce370 # v4.39.1
         with:
           sarif_file: semgrep.sarif
           category: semgrep
 
   gitleaks:
     name: Gitleaks (secret scan)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     permissions:
       contents: read
     timeout-minutes: 10
@@ -653,15 +686,15 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          fetch-depth: 0   # gitleaks scans history, not just the tip
+          fetch-depth: 0 # gitleaks scans history, not just the tip
 
       # The self-test below (check-gitleaks-fixture.mjs) imports smol-toml to parse .gitleaks.toml,
       # so this job needs node_modules. Scoped to the self-test's dependency, not the scan: gitleaks
       # scans git history, which node_modules (gitignored, untracked) does not touch.
-      - uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6.0.9
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
-          node-version-file: '.nvmrc'
+          node-version-file: ".nvmrc"
           cache: pnpm
       - run: pnpm install --frozen-lockfile
 
@@ -727,9 +760,8 @@ jobs:
 
       - name: Upload SARIF artifact
         if: always() && hashFiles('gitleaks.sarif') != ''
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: gitleaks-sarif
           path: gitleaks.sarif
           retention-days: 7
-

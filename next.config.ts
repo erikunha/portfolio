@@ -6,12 +6,14 @@ const withMDX = createMDX({
     remarkPlugins: [
       [`${process.cwd()}/lib/mdx/remark-gfm-wrapper.mjs`, {}],
       [`${process.cwd()}/lib/mdx/remark-preview-source.mjs`, {}],
+      [`${process.cwd()}/lib/mdx/remark-table-caption.mjs`, {}],
     ],
     rehypePlugins: [['rehype-pretty-code', { theme: 'github-dark-dimmed' }]],
   },
 });
 
 const nextConfig: NextConfig = {
+  poweredByHeader: false,
   pageExtensions: ['ts', 'tsx', 'mdx'],
   cacheComponents: true,
   typedRoutes: true,

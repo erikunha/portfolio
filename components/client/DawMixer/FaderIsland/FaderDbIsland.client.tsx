@@ -7,12 +7,22 @@ import { pctToDb } from './pct-to-db';
 export { pctToDb } from './pct-to-db';
 
 interface FaderDbProps {
+  decibelUnit: string;
+  loudnessLabel: string;
+  peakLabel: string;
   initialPct: number;
   channelName: string;
   footer?: { lufs: string; pk: string } | undefined;
 }
 
-export function FaderDbIsland({ initialPct, channelName, footer }: FaderDbProps) {
+export function FaderDbIsland({
+  decibelUnit,
+  loudnessLabel,
+  peakLabel,
+  initialPct,
+  channelName,
+  footer,
+}: FaderDbProps) {
   const dbRef = useRef<HTMLSpanElement>(null);
 
   const handlePctChange = useCallback((newPct: number) => {
@@ -21,7 +31,10 @@ export function FaderDbIsland({ initialPct, channelName, footer }: FaderDbProps)
     }
   }, []);
 
-  const handleAriaValueText = useCallback((pct: number) => `${pctToDb(pct)} dB`, []);
+  const handleAriaValueText = useCallback(
+    (pct: number) => `${pctToDb(pct)} ${decibelUnit}`,
+    [decibelUnit],
+  );
 
   return (
     <>
@@ -37,10 +50,10 @@ export function FaderDbIsland({ initialPct, channelName, footer }: FaderDbProps)
         <span ref={dbRef} className="dbValue">
           {pctToDb(initialPct)}
         </span>
-        <span className="dbUnit">dB</span>
+        <span className="dbUnit">{decibelUnit}</span>
         {footer && (
           <span className="lufs">
-            LUFS {footer.lufs} · PK {footer.pk}
+            {loudnessLabel} {footer.lufs} · {peakLabel} {footer.pk}
           </span>
         )}
       </div>

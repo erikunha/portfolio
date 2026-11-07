@@ -1,0 +1,233 @@
+import { externalLinkProps } from '@/components/ExternalLink';
+import { dmesgLines, dmesgStatus } from '@/content/dmesg';
+import { footerContent, footerSectionIds } from '@/content/footer';
+import type { SiteLocale } from '@/content/site-locale';
+import { HaltClock, RebootControl, SessionCounters, SessionReceipt } from './Footer.client';
+
+const INITIAL_UPTIME = '00:00:00';
+const INITIAL_COUNT = '0';
+const INITIAL_DEPTH = '0%';
+const DMESG_PRECISION = 3;
+const TABLE_ROLES = {
+  table: { role: 'table' },
+  rowgroup: { role: 'rowgroup' },
+  row: { role: 'row' },
+  columnheader: { role: 'columnheader' },
+  cell: { role: 'cell' },
+} as const;
+const SEEN_TOTAL_SEPARATOR = ' / ';
+const SITEMAP_ACCORDION = 'footer-sitemap';
+const SINGLE_FILE = 1;
+
+type FooterContent = (typeof footerContent)[SiteLocale];
+type SitemapGroup = FooterContent['groups'][number];
+type SitemapLink = SitemapGroup['links'][number];
+type ConnectionState = FooterContent['connections'][number]['state'];
+
+const CONNECTION_STATE_CLASS: Record<ConnectionState, string> = {
+  LISTEN: 'footer-listening',
+  ESTABLISHED: 'footer-established',
+};
+
+function SitemapRowLabel({
+  group,
+  fileCount,
+}: {
+  group: SitemapGroup;
+  fileCount: FooterContent['fileCount'];
+}) {
+  const count = group.links.length;
+  return (
+    <>
+      <span className="sm-dir">{group.directory}</span>
+      <span className="sm-count">
+        {count} {count === SINGLE_FILE ? fileCount.one : fileCount.other}
+      </span>
+    </>
+  );
+}
+
+function SitemapLinks({ links }: { links: readonly SitemapLink[] }) {
+  return (
+    <ul className="sm-list">
+      {links.map((link) => (
+        <li key={link.href}>
+          <a href={link.href}>{link.label}</a>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+export function Footer({ locale }: { locale: SiteLocale }) {
+  const content = footerContent[locale];
+  return (
+    <footer className="site-footer" id="shutdown">
+      <div className="footer-inner">
+        <div className="footer-shutdown-header">
+          <h2 className="footer-shutdown-title" data-type-reveal suppressHydrationWarning>
+            {content.shutdownTitle}
+          </h2>
+          <HaltClock label={content.haltedAt} />
+        </div>
+        <p className="footer-command">
+          <span>{content.prompt}</span> {content.shutdownCommand}
+        </p>
+        <div className="footer-cards">
+          <section className="footer-card" aria-labelledby="footer-session-title">
+            <h3 className="footer-card-title" id="footer-session-title">
+              <span data-type-reveal suppressHydrationWarning>
+                {content.sessionTitle}
+              </span>
+            </h3>
+            <SessionCounters sectionIds={footerSectionIds}>
+              <dl className="footer-session-grid">
+                <dt>{content.sessionLabels.user}</dt>
+                <dd>{content.user}</dd>
+                <dt>{content.sessionLabels.uptime}</dt>
+                <dd data-sess="uptime" data-volatile>
+                  {INITIAL_UPTIME}
+                </dd>
+                <dt>{content.sessionLabels.depth}</dt>
+                <dd>
+                  <meter
+                    className="footer-depth"
+                    min={0}
+                    max={100}
+                    value={0}
+                    aria-label={content.sessionLabels.depth}
+                  />
+                  <span data-sess="depth" data-volatile>
+                    {INITIAL_DEPTH}
+                  </span>
+                </dd>
+                <dt>{content.sessionLabels.seen}</dt>
+                <dd>
+                  <span data-sess="seen" data-volatile>
+                    {INITIAL_COUNT}
+                  </span>
+                  {SEEN_TOTAL_SEPARATOR}
+                  {footerSectionIds.length}
+                </dd>
+                <dt>{content.sessionLabels.commands}</dt>
+                <dd data-sess="commands" data-volatile>
+                  {INITIAL_COUNT}
+                </dd>
+              </dl>
+            </SessionCounters>
+          </section>
+          <section className="footer-card" aria-labelledby="footer-netstat-title">
+            <div className="footer-card-header">
+              <h3 className="footer-card-title" id="footer-netstat-title">
+                <span data-type-reveal suppressHydrationWarning>
+                  {content.netstatTitle}
+                </span>
+              </h3>
+            </div>
+            <div className="footer-netstat-scroll">
+              <table
+                className="footer-netstat"
+                {...TABLE_ROLES.table}
+                aria-labelledby="footer-netstat-title"
+              >
+                <thead {...TABLE_ROLES.rowgroup}>
+                  <tr {...TABLE_ROLES.row}>
+                    <th scope="col" {...TABLE_ROLES.columnheader}>
+                      {content.connectionLabels.protocol}
+                    </th>
+                    <th scope="col" {...TABLE_ROLES.columnheader}>
+                      {content.connectionLabels.state}
+                    </th>
+                    <th scope="col" {...TABLE_ROLES.columnheader}>
+                      {content.connectionLabels.endpoint}
+                    </th>
+                  </tr>
+                </thead>
+                <tbody {...TABLE_ROLES.rowgroup}>
+                  {content.connections.map((connection) => (
+                    <tr key={connection.href} {...TABLE_ROLES.row}>
+                      <td {...TABLE_ROLES.cell}>{connection.protocol}</td>
+                      <td
+                        {...TABLE_ROLES.cell}
+                        className={CONNECTION_STATE_CLASS[connection.state]}
+                      >
+                        {connection.state}
+                      </td>
+                      <td {...TABLE_ROLES.cell}>
+                        <a
+                          className="footer-link"
+                          href={connection.href}
+                          {...externalLinkProps(connection.external)}
+                        >
+                          {connection.label}
+                          {connection.external ? (
+                            <span className="footer-link-glyph" aria-hidden="true">
+                              {content.externalGlyph}
+                            </span>
+                          ) : null}
+                        </a>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </section>
+        </div>
+        <section className="footer-card footer-tree" aria-labelledby="footer-tree-title">
+          <h3 className="footer-card-title" id="footer-tree-title">
+            <span data-type-reveal suppressHydrationWarning>
+              {content.treeTitle}
+            </span>
+          </h3>
+          <nav className="sitemap" aria-label={content.treeLabel}>
+            <ul className="sm-groups">
+              {content.groups.map((group) => (
+                <li key={group.directory} className="sm-group">
+                  <h4 className="sm-title sm-row">
+                    <SitemapRowLabel group={group} fileCount={content.fileCount} />
+                  </h4>
+                  <SitemapLinks links={group.links} />
+                </li>
+              ))}
+            </ul>
+            <div className="sm-folds">
+              {content.groups.map((group) => (
+                <details
+                  key={group.directory}
+                  className="sm-fold"
+                  name={SITEMAP_ACCORDION}
+                  open={group.directory === content.treeOpenDirectory}
+                >
+                  <summary className="sm-fold-head sm-row">
+                    <SitemapRowLabel group={group} fileCount={content.fileCount} />
+                  </summary>
+                  <SitemapLinks links={group.links} />
+                </details>
+              ))}
+            </div>
+          </nav>
+        </section>
+        <ul className="footer-dmesg" aria-hidden="true">
+          {dmesgLines.map((line) => (
+            <li key={line.off}>
+              <span className="footer-timestamp">[ {line.off.toFixed(DMESG_PRECISION)}]</span>
+              <span>
+                {line.prefix}
+                {line.bold && <b>{line.bold}</b>}
+                {line.suffix}
+              </span>
+              <span className="footer-established">{line.ok ? dmesgStatus.ok : null}</span>
+            </li>
+          ))}
+        </ul>
+        <div className="footer-halt">
+          <span className="footer-halt-plate">{content.halted}</span>
+          <RebootControl copy={content.reboot} />
+        </div>
+        <p className="footer-copyright">{content.copyright}</p>
+        <SessionReceipt copy={content.receipt} />
+      </div>
+    </footer>
+  );
+}

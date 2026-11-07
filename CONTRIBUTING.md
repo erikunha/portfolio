@@ -34,20 +34,20 @@ See `ARCHITECTURE.md` for the system design, `STANDARDS.md` for the engineering 
 
 Git hooks run automatically, but you can (and should) run the checks yourself:
 
-| Command | What it checks |
-|---|---|
-| `pnpm check` | Biome lint + format |
-| `pnpm typecheck` | TypeScript strict |
-| `pnpm validate-content` | Zod content schemas |
-| `pnpm test` | Vitest unit tests |
-| `pnpm test:e2e` | Playwright: a11y scan, contact/ask journeys, visual regression |
-| `pnpm ci:local` | The full local CI chain (lint + type + content + tests + gates) |
-| `pnpm bundle-check` | Bundle-size gate |
-| `pnpm lhci` | Lighthouse CI |
+| Command                 | What it checks                                                  |
+| ----------------------- | --------------------------------------------------------------- |
+| `pnpm check`            | Biome lint + format                                             |
+| `pnpm typecheck`        | TypeScript strict                                               |
+| `pnpm validate-content` | Zod content schemas                                             |
+| `pnpm test`             | Vitest unit tests                                               |
+| `pnpm test:e2e`         | Playwright: a11y scan, contact/ask journeys, visual regression  |
+| `pnpm ci:local`         | The full local CI chain (lint + type + content + tests + gates) |
+| `pnpm bundle-check`     | Bundle-size gate                                                |
+| `pnpm lhci`             | Lighthouse CI                                                   |
 
 **Pre-commit** runs Biome, a staged `gitleaks` secret scan, and commitlint. **Pre-push** runs the full verify chain and enforces the branch-name format.
 
-Performance, accessibility (WCAG 2.1 AA), and security are treated as implicit on every change, not separate phases. The performance budgets and the Lighthouse thresholds in `CLAUDE.md` are CI-enforced. **Do not disable a gate to merge** — if a gate fails, fix the underlying issue, or open an issue explaining why the gate is wrong.
+Performance, accessibility (WCAG 2.2 AA), and security are treated as implicit on every change, not separate phases. The performance budgets and the Lighthouse thresholds in `CLAUDE.md` are CI-enforced. **Do not disable a gate to merge** — if a gate fails, fix the underlying issue, or open an issue explaining why the gate is wrong.
 
 ## Opening a pull request
 

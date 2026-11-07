@@ -1,0 +1,403 @@
+@layer components {
+  .reading-view {
+    position: relative;
+    z-index: var(--z-content);
+    min-height: 100vh;
+    color: var(--color-text);
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    line-height: 1.6;
+  }
+
+  .reading-view a {
+    color: var(--color-primary-500);
+  }
+
+  .reading-view a:hover {
+    color: var(--color-text);
+  }
+
+  .page-container {
+    width: 100%;
+    max-width: var(--measure-page);
+    margin-inline: auto;
+    padding-inline: var(--space-gutter);
+    padding-block-start: var(--space-page-top);
+  }
+
+  .reading-doc {
+    max-width: var(--measure-read);
+    margin: 0 auto;
+    padding-block-end: var(--spacing-6);
+  }
+
+  .reading-doc--wide {
+    max-width: var(--measure-page);
+  }
+
+  .reading-actions,
+  .reading-actions-inline {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--spacing-2) var(--spacing-4);
+    margin: 0 0 var(--spacing-4);
+  }
+
+  .reading-name {
+    margin: 0;
+    color: var(--color-primary-500);
+  }
+
+  .reading-role {
+    margin: var(--spacing-2) 0 0;
+    font-weight: 700;
+  }
+
+  .reading-meta {
+    margin: var(--spacing-1) 0 0;
+    color: var(--color-text-secondary);
+    font-size: var(--text-xs);
+  }
+
+  .reading-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 var(--spacing-4);
+    margin: var(--spacing-3) 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .reading-links a,
+  .reading-actions-inline a {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--spacing-target);
+    overflow-wrap: anywhere;
+  }
+
+  .reading-section {
+    margin-top: var(--spacing-8);
+    padding-top: var(--spacing-4);
+    border-top: var(--border-width) solid var(--color-primary-border);
+  }
+
+  .reading-heading {
+    margin: 0 0 var(--spacing-3);
+    color: var(--color-primary-500);
+    font-size: var(--text-xl);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+
+  .reading-entry {
+    margin: 0 0 var(--spacing-6);
+  }
+
+  .reading-entry h3 {
+    margin: 0;
+    font-size: var(--text-base);
+    font-weight: 700;
+  }
+
+  @media (pointer: coarse) {
+    .reading-entry h3 a {
+      display: inline-flex;
+      align-items: center;
+      min-height: var(--spacing-target);
+    }
+  }
+
+  .reading-entry h3[data-type-reveal] {
+    --reading-entry-title-scale: 4.6vw;
+    --reading-entry-title-size: clamp(
+      var(--text-xs),
+      var(--reading-entry-title-scale),
+      var(--text-base)
+    );
+    font-size: var(--reading-entry-title-size);
+  }
+
+  .reading-entry ul {
+    margin: var(--spacing-2) 0 0;
+    padding-left: var(--spacing-4);
+  }
+
+  .reading-entry li {
+    margin: 0 0 var(--spacing-1);
+    overflow-wrap: anywhere;
+  }
+
+  .reading-rows {
+    --reading-key-width: 24ch;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .reading-rows li {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    padding: 2px 0;
+  }
+
+  .reading-row-key {
+    min-width: 0;
+    color: var(--color-primary-500);
+    font-size: var(--text-xs);
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    overflow-wrap: anywhere;
+  }
+
+  .reading-row-value {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  @media (min-width: 768px) {
+    .reading-rows li {
+      grid-template-columns: var(--reading-key-width) minmax(0, 1fr);
+      gap: 0 var(--spacing-3);
+    }
+  }
+
+  .reading-split {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--spacing-8);
+    margin-top: var(--spacing-8);
+  }
+
+  .reading-split .reading-section {
+    margin-top: 0;
+  }
+
+  .reading-stats {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    border: var(--border-width) solid var(--color-primary-subtle);
+  }
+
+  .reading-stats > * + * {
+    border-left: var(--border-width) solid var(--color-primary-border);
+  }
+
+  .reading-projects {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-4);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .reading-project {
+    min-width: 0;
+    padding-left: var(--spacing-3);
+    border-left: calc(var(--border-width) * 2) solid var(--color-primary-500);
+  }
+
+  .reading-project-name {
+    margin: 0;
+    color: var(--color-primary-500);
+    font-size: var(--text-sm);
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    overflow-wrap: anywhere;
+  }
+
+  .reading-project-metric {
+    margin: var(--spacing-1) 0 0;
+    color: var(--color-text-secondary);
+    font-size: var(--text-xs);
+    overflow-wrap: anywhere;
+  }
+
+  .reading-project-metric b {
+    color: var(--color-text);
+  }
+
+  .reading-project-text {
+    margin: var(--spacing-1) 0 0;
+  }
+
+  .reading-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-2);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .reading-chips + .reading-chips {
+    margin-top: var(--spacing-2);
+  }
+
+  .reading-chips li {
+    padding: 2px var(--spacing-2);
+    border: var(--border-width) solid var(--color-primary-subtle);
+    color: var(--color-text);
+    font-size: var(--text-xs);
+    letter-spacing: 0.1em;
+  }
+
+  .reading-chips--ai li {
+    border-color: var(--color-primary-500);
+    color: var(--color-primary-500);
+  }
+
+  @media (min-width: 1024px) {
+    .reading-split {
+      grid-template-columns: var(--phi-pair-columns);
+    }
+  }
+
+  @media screen and (max-width: 767.98px) {
+    .reading-actions {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .reading-actions > * {
+      width: 100%;
+    }
+
+    .reading-stats {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .reading-stats > :nth-child(odd) {
+      border-left: 0;
+    }
+
+    .reading-stats > :nth-child(n + 3) {
+      border-top: var(--border-width) solid var(--color-primary-border);
+    }
+  }
+
+  @media print {
+    html:has(.reading-view),
+    body:has(.reading-view) {
+      background: white;
+    }
+
+    .reading-view {
+      --color-green: black;
+      --color-primary-400: black;
+      --color-primary-500: black;
+      --color-primary-subtle: black;
+      --color-primary-border: black;
+      --color-text: black;
+      --color-text-secondary: black;
+      --color-secondary-950: white;
+      min-height: 0;
+      background: white;
+      color: black;
+      font-size: 9.5pt;
+      line-height: 1.4;
+    }
+
+    body:has(.reading-view) {
+      padding-bottom: 0;
+    }
+
+    body:has(.reading-view)
+      :is(
+        .skip-to-content,
+        .desktop-only,
+        .mobile-only,
+        .section-nav-root,
+        .dock,
+        .pos-meter,
+        .to-top-btn,
+        .crt-vignette,
+        .crt-scanlines,
+        .crt-mask,
+        .crt-noise,
+        .crt-flicker,
+        .crt-scan-beam
+      ),
+    .reading-actions,
+    .reading-actions-inline .reading-cta {
+      display: none;
+    }
+
+    body:has(.reading-view) > canvas {
+      visibility: hidden;
+    }
+
+    .reading-view .page-container.page-main {
+      max-width: none;
+      padding: 0;
+    }
+
+    .reading-rows li {
+      grid-template-columns: var(--reading-key-width) minmax(0, 1fr);
+      gap: 0 10pt;
+    }
+
+    .reading-doc,
+    .reading-doc--wide {
+      max-width: none;
+      padding: 0;
+    }
+
+    .reading-name {
+      font-size: 26pt;
+    }
+
+    .reading-heading {
+      font-size: 10pt;
+      break-after: avoid;
+    }
+
+    .reading-section {
+      margin-top: 14pt;
+      padding-top: 8pt;
+      border-top-color: black;
+    }
+
+    .reading-entry,
+    .reading-project,
+    .reading-view .terminal-panel,
+    .reading-view .stat-tile {
+      break-inside: avoid;
+    }
+
+    .reading-view a {
+      color: black;
+    }
+
+    .reading-links a,
+    .reading-actions-inline a {
+      min-height: 0;
+    }
+
+    .reading-view a[href^="http"]::after {
+      content: " (" attr(href) ")";
+      font-size: 0.9em;
+      overflow-wrap: anywhere;
+    }
+
+    .reading-split {
+      grid-template-columns: var(--phi-pair-columns);
+      gap: 14pt;
+      margin-top: 14pt;
+    }
+
+    .reading-side {
+      gap: 14pt;
+    }
+
+    .reading-stats {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .reading-project {
+      break-inside: avoid;
+    }
+  }
+}

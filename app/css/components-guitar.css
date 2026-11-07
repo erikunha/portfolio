@@ -1,0 +1,458 @@
+@layer components {
+  .guitar-presentation {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-4);
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    line-height: var(--guitar-line-height);
+    color: var(--color-tertiary-50);
+  }
+
+  .guitar-eq-panel {
+    padding: var(--phi-space-2);
+    border: var(--border-width) solid var(--color-primary-border);
+    background: var(--color-secondary-950);
+  }
+
+  .guitar-signal-panel {
+    padding: var(--spacing-3);
+    border: var(--border-width) solid var(--color-primary-border);
+    background: var(--color-secondary-950);
+  }
+
+  .guitar-signal-strip {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-2);
+    padding-bottom: var(--spacing-2);
+    margin-bottom: var(--spacing-3);
+    border-bottom: var(--border-width) solid var(--color-primary-quiet);
+    color: var(--color-primary-400);
+    font-size: var(--text-xs);
+    letter-spacing: var(--guitar-label-tracking);
+  }
+
+  .guitar-signal-strip-live {
+    color: var(--color-primary-500);
+  }
+
+  .guitar-chain {
+    display: grid;
+    grid-template-columns: var(--guitar-columns);
+    gap: var(--guitar-node-gap);
+  }
+
+  .guitar-node {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-1);
+    min-width: 0;
+    padding: var(--spacing-3);
+    border: var(--border-width) solid var(--color-primary-500);
+    background: var(--color-glow-04);
+    overflow-wrap: anywhere;
+  }
+
+  .guitar-label {
+    color: var(--color-primary-400);
+    font-size: var(--text-xs);
+    letter-spacing: var(--guitar-label-tracking);
+  }
+
+  .guitar-node-heading {
+    margin: 0;
+    font-size: var(--text-sm);
+    font-weight: bold;
+    line-height: var(--guitar-heading-line-height);
+    color: var(--color-primary-500);
+  }
+
+  .guitar-node-subtitle {
+    font-size: var(--text-xs);
+  }
+
+  .guitar-bars {
+    display: flex;
+    gap: var(--guitar-bar-gap);
+    margin-top: auto;
+  }
+
+  .guitar-bar {
+    width: var(--guitar-bar-width);
+    height: var(--guitar-bar-height);
+    background: var(--color-primary-500);
+    opacity: var(--guitar-bar-opacity);
+  }
+
+  .guitar-bar[data-filled="true"] {
+    opacity: 1;
+  }
+
+  .guitar-arrow {
+    align-self: center;
+    justify-self: center;
+    color: var(--color-primary-500);
+    font-size: var(--text-xs);
+  }
+
+  @media (max-width: 767.98px) {
+    .guitar-arrow {
+      line-height: var(--guitar-arrow-length);
+      height: var(--guitar-arrow-length);
+    }
+  }
+
+  .eq-strip {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    border: var(--border-width) solid var(--color-primary-border);
+    background: var(--color-secondary-950);
+  }
+
+  .guitar-chain-label {
+    margin: 0;
+    padding: var(--phi-space-1) var(--phi-space-2);
+    color: var(--color-primary-500);
+    font-size: var(--text-xs);
+    letter-spacing: var(--guitar-label-tracking);
+    border-bottom: var(--border-width) solid var(--color-primary-quiet);
+    text-wrap: balance;
+  }
+
+  .eq-plot {
+    grid-area: 1 / 1;
+    display: grid;
+    grid-template: minmax(0, 1fr) / minmax(0, 1fr);
+    height: var(--eq-plot-height);
+  }
+
+  .eq-plot > * {
+    grid-area: 1 / 1;
+    min-width: 0;
+    min-height: 0;
+  }
+
+  .eq-grid,
+  .eq-curve {
+    display: block;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+  }
+
+  .eq-grid path {
+    fill: none;
+    stroke: var(--color-primary-quiet);
+    stroke-width: var(--border-width);
+    vector-effect: non-scaling-stroke;
+  }
+
+  .eq-curve {
+    z-index: 2;
+    filter: drop-shadow(0 0 var(--eq-curve-glow) var(--color-tertiary-50));
+  }
+
+  .eq-curve path {
+    fill: none;
+    stroke: var(--color-tertiary-50);
+    stroke-width: var(--eq-curve-stroke);
+    stroke-linejoin: round;
+    vector-effect: non-scaling-stroke;
+  }
+
+  .eq-bars {
+    z-index: 1;
+    display: flex;
+    align-items: flex-end;
+    gap: var(--eq-bar-gap);
+    margin-inline: var(--eq-inset);
+  }
+
+  .eq-bar {
+    flex: 1 1 0;
+    min-width: 0;
+    height: var(--eq-bar-height);
+    background: linear-gradient(
+      to bottom,
+      var(--color-eq-bar-top),
+      var(--color-primary-500) var(--eq-bar-mid-stop),
+      var(--color-eq-bar-bottom)
+    );
+    transform-origin: 50% 100%;
+    animation: eq-bounce calc(var(--eq-beat) * var(--eq-bar-cycle)) ease-in-out
+      calc(var(--eq-bar-delay) * -1) infinite;
+  }
+
+  @media (prefers-reduced-motion: reduce), print {
+    .eq-bar {
+      animation: none;
+    }
+  }
+
+  body[data-motion="reduce"] .eq-bar {
+    animation: none;
+  }
+
+  .eq-axis {
+    grid-area: 2 / 1;
+    display: grid;
+    height: var(--eq-axis-height);
+    border-top: var(--border-width) solid var(--color-primary-quiet);
+  }
+
+  .eq-axis-tick {
+    justify-self: end;
+    translate: 50% 0;
+    color: var(--color-primary-400);
+    font-size: var(--text-xs);
+    line-height: var(--eq-axis-height);
+  }
+
+  .guitar-photo {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    margin: 0;
+    border: var(--border-width) solid var(--color-primary-500);
+    overflow: hidden;
+  }
+
+  .guitar-pair {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) var(--guitar-photo-width);
+    gap: var(--spacing-4);
+  }
+
+  .guitar-details {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    gap: var(--spacing-3);
+  }
+
+  .guitar-influences {
+    margin: 0;
+    padding-inline: var(--spacing-3);
+    max-width: var(--guitar-prose-width);
+    font-size: var(--text-xs);
+    overflow-wrap: anywhere;
+  }
+
+  .guitar-influences strong,
+  .guitar-stat-value {
+    color: var(--color-primary-500);
+    font-weight: bold;
+  }
+
+  .guitar-stats {
+    display: grid;
+    grid-template-columns: var(--guitar-stat-columns);
+    grid-auto-rows: 1fr;
+    flex: 1;
+    gap: var(--border-width);
+    border: var(--border-width) solid var(--color-primary-quiet);
+    background: var(--color-primary-quiet);
+  }
+
+  .guitar-stat {
+    min-width: 0;
+    padding: var(--spacing-3);
+    background: var(--color-secondary-950);
+    overflow-wrap: anywhere;
+  }
+
+  .guitar-camera-labels,
+  .guitar-camera-caption {
+    padding: var(--spacing-1) var(--spacing-2);
+    color: var(--color-primary-400);
+    font-size: var(--text-xs);
+    letter-spacing: var(--guitar-camera-tracking);
+    overflow-wrap: anywhere;
+  }
+
+  .guitar-camera-labels {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--spacing-2);
+    border-bottom: var(--border-width) solid var(--color-primary-quiet);
+  }
+
+  .guitar-camera-caption {
+    border-top: var(--border-width) solid var(--color-primary-quiet);
+  }
+
+  .guitar-photo-frame {
+    position: relative;
+    container-type: size;
+    aspect-ratio: var(--guitar-photo-ratio);
+    min-height: var(--guitar-photo-min-height);
+    flex: 1;
+    isolation: isolate;
+    overflow: hidden;
+  }
+
+  .guitar-photo-image {
+    position: absolute;
+    inset: 0;
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    filter: grayscale(var(--guitar-photo-grayscale)) contrast(var(--guitar-photo-contrast))
+      brightness(var(--guitar-photo-brightness));
+  }
+
+  .guitar-photo-tint,
+  .guitar-photo-scanlines {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+  }
+
+  .guitar-photo-tint {
+    background: var(--color-primary-500);
+    mix-blend-mode: multiply;
+    opacity: var(--guitar-photo-tint-opacity);
+  }
+
+  .guitar-photo-scanlines {
+    background: var(--guitar-scanline);
+  }
+
+  #sec-guitar > header h2 {
+    font-size: var(--text-sm);
+    font-weight: bold;
+  }
+
+  @variant max-guitar {
+    .guitar-chain {
+      gap: 0;
+    }
+
+    .guitar-arrow {
+      transform: rotate(var(--guitar-arrow-rotation));
+      line-height: var(--guitar-arrow-length);
+      height: var(--guitar-arrow-length);
+    }
+
+    .guitar-node {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr);
+      gap: var(--guitar-bar-gap) var(--spacing-2);
+      align-items: baseline;
+      padding: var(--spacing-1) var(--spacing-2);
+    }
+
+    .guitar-node-subtitle,
+    .guitar-bars {
+      grid-column: 1 / -1;
+    }
+
+    .guitar-photo-frame {
+      min-height: 0;
+      flex: none;
+    }
+  }
+
+  @media (max-width: 767.98px) {
+    .guitar-signal-strip {
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+
+    .guitar-chain-label {
+      padding: var(--phi-space-2);
+      text-align: center;
+    }
+
+    .eq-plot {
+      grid-row: 2;
+      height: var(--eq-plot-height-compact);
+    }
+
+    .eq-axis {
+      grid-row: 3;
+    }
+
+    .eq-bars {
+      gap: var(--eq-bar-gap-compact);
+    }
+
+    .eq-bar:nth-child(even) {
+      display: none;
+    }
+
+    .guitar-stat,
+    .guitar-camera-caption {
+      text-align: center;
+    }
+
+    .guitar-camera-labels {
+      flex-direction: column;
+      align-items: center;
+    }
+  }
+
+  .daw-mixer-loading {
+    --daw-mixer-loading-height: 80.6rem;
+    display: grid;
+    align-content: start;
+    min-height: var(--daw-mixer-loading-height);
+    padding: var(--spacing-4);
+    border: var(--border-width) dashed var(--color-primary-subtle);
+    font-size: var(--text-sm);
+    line-height: 1.7;
+  }
+
+  @media (min-width: 768px) {
+    .daw-mixer-loading {
+      --daw-mixer-loading-height: 33rem;
+    }
+  }
+
+  @media (min-width: 1280px) {
+    .daw-mixer-loading {
+      --daw-mixer-loading-height: 22.7rem;
+    }
+  }
+
+  @media (scripting: none) {
+    .daw-mixer-loading {
+      min-height: 0;
+    }
+
+    .mixer-boot-current {
+      visibility: hidden;
+    }
+  }
+
+  .daw-mixer-loading > p {
+    margin: 0;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+
+  .mixer-boot-current {
+    color: var(--color-primary-500);
+  }
+
+  .mixer-boot-queued {
+    color: var(--color-text-secondary);
+  }
+
+  @keyframes mixer-boot-blink {
+    to {
+      visibility: hidden;
+    }
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    body:not([data-motion="reduce"]) .mixer-boot-cursor {
+      animation: mixer-boot-blink 1.05s steps(2, start) infinite;
+    }
+  }
+}

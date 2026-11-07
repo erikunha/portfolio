@@ -1,39 +1,39 @@
-import { Resend } from 'resend';
-import { z } from 'zod';
-
-import { isHoneypotTripped } from '@/lib/contact-validation';
-import { env } from '@/lib/env';
-import { hashIp } from '@/lib/ip-hash';
+import { contactContent } from '@/content/contact';
+import { CONTACT_DELIVERY_CODE, CONTACT_ERROR_CODE } from '@/content/contact-rules';
+import { DEFAULT_SITE_LOCALE, SITE_LOCALES, type SiteLocale } from '@/content/site-locale';
+import { sendContactMessage } from '@/lib/contact-delivery';
+import {
+  CONTACT_MESSAGE_TTL_SECONDS,
+  contactMessageKey,
+  enqueueContact,
+} from '@/lib/contact-outbox';
+import { ContactSchema, isHoneypotTripped } from '@/lib/contact-validation';
 import { log } from '@/lib/log';
 import { getContactLimit, getRedis } from '@/lib/rate-limit';
 import { defineHandler, err, ok } from '@/lib/server/route';
+import { ASK_LOCALE_HEADER } from '@/lib/stream-protocol';
 
 const HONEYPOT_JITTER_MIN_MS = 50;
 const HONEYPOT_JITTER_MAX_MS = 150;
 
-const CONTACT_KV_TTL_S = 60 * 60 * 24 * 90;
-const RESEND_TIMEOUT_MS = 10_000;
+const STORAGE_UNAVAILABLE_STATUS = 502;
+const QUEUED_STATUS = 202;
+const MAX_CONTACT_BODY_BYTES = 16_384;
 
-const ContactSchema = z.object({
-  name: z.string().trim().min(1).max(120),
-  email: z.string().trim().email(),
-  message: z.string().trim().min(10).max(2000),
-  field_company: z.string().optional(),
-});
-
-let _resend: Resend | undefined;
-function getResend(): Resend {
-  const key = env.RESEND_API_KEY;
-  if (!key) throw new Error('RESEND_API_KEY is not set');
-  _resend ??= new Resend(key);
-  return _resend;
+function requestLocale(req: Request): SiteLocale {
+  const header = req.headers.get(ASK_LOCALE_HEADER);
+  return SITE_LOCALES.find((locale) => locale === header) ?? DEFAULT_SITE_LOCALE;
 }
 
-export const POST = defineHandler({
+const handleContact = defineHandler({
   schema: ContactSchema,
+  maxBodyBytes: MAX_CONTACT_BODY_BYTES,
   rateLimit: getContactLimit,
-  rateLimitErrorMessage: 'too many requests — try again in 10 minutes',
-  async handler({ body, ip, requestId }) {
+  rateLimitErrorMessage: Object.fromEntries(
+    SITE_LOCALES.map((locale) => [locale, contactContent[locale].errors.rateLimited]),
+  ) as Record<SiteLocale, string>,
+  async handler({ body, ipHash, requestId, req }) {
+    const copy = contactContent[requestLocale(req)];
     if (isHoneypotTripped(body)) {
       log.info('contact honeypot tripped', { requestId });
       const jitterMs =
@@ -45,47 +45,53 @@ export const POST = defineHandler({
 
     const { name, email, message } = body;
 
-    const msgId = crypto.randomUUID();
-    const ipHash = await hashIp(ip);
+    const msgId = requestId;
     const payload = { name, email, message, receivedAt: new Date().toISOString(), ipHash };
 
     try {
-      await getRedis().set(`contact:msg:${msgId}`, JSON.stringify(payload), {
-        ex: CONTACT_KV_TTL_S,
+      await getRedis().set(contactMessageKey(msgId), JSON.stringify(payload), {
+        ex: CONTACT_MESSAGE_TTL_SECONDS,
       });
-    } catch (kvErr) {
-      log.error('KV write failed', { requestId, msgId, err: kvErr });
+    } catch {
+      log.error('KV write failed', { requestId, msgId });
       return err({
         requestId,
-        status: 502,
-        code: 'storage_unavailable',
-        message: 'storage unavailable — try again',
+        status: STORAGE_UNAVAILABLE_STATUS,
+        code: CONTACT_ERROR_CODE.STORAGE_UNAVAILABLE,
+        message: copy.errors.storageUnavailable,
       });
     }
 
-    let timerId: ReturnType<typeof setTimeout> | undefined;
+    if (await sendContactMessage(msgId, payload, requestId)) return ok({ requestId });
+
+    let queued = false;
     try {
-      const sendPromise = getResend().emails.send({
-        from: 'contact@erikunha.dev',
-        to: 'erikhenriquealvescunha@gmail.com',
-        replyTo: email,
-        subject: `[portfolio] message from ${name}`,
-        text: `From: ${name} <${email}>\nRef: ${msgId}\n\n${message}`,
-      });
-      const timeoutPromise = new Promise<never>((_, reject) => {
-        timerId = setTimeout(() => reject(new Error('resend timeout (10s)')), RESEND_TIMEOUT_MS);
-      });
-      const { error } = await Promise.race([sendPromise, timeoutPromise]);
-      if (error) {
-        log.error('Resend error', { requestId, msgId, err: error });
+      queued = await enqueueContact(msgId, payload.receivedAt);
+      if (!queued) log.warn('contact outbox full', { requestId, msgId });
+    } catch {
+      log.error('contact outbox write failed', { requestId, msgId });
+    }
+    if (!queued) {
+      try {
+        await getRedis().del(contactMessageKey(msgId));
+      } catch {
+        log.error('contact message cleanup failed', { requestId, msgId });
       }
-    } catch (sendErr) {
-      const reason = sendErr instanceof Error ? sendErr.message : String(sendErr);
-      log.error('Resend unavailable', { requestId, msgId, reason, err: sendErr });
-    } finally {
-      if (timerId !== undefined) clearTimeout(timerId);
+      return err({
+        requestId,
+        status: STORAGE_UNAVAILABLE_STATUS,
+        code: CONTACT_ERROR_CODE.DELIVERY_UNAVAILABLE,
+        message: copy.errors.retryUnavailable,
+      });
     }
 
-    return ok({ requestId });
+    return err({
+      requestId,
+      status: QUEUED_STATUS,
+      code: CONTACT_DELIVERY_CODE.QUEUED,
+      message: copy.queued.message,
+    });
   },
 });
+
+export const POST = handleContact;

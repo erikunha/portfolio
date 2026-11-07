@@ -28,7 +28,7 @@ vi.mock('@/lib/rate-limit', () => ({
 }));
 
 vi.mock('resend', () => ({
-  // biome-ignore lint/complexity/useArrowFunction: `function` required — arrow fns cannot be used with `new` in jsdom/vitest; the route calls `new Resend(key)`.
+  // biome-ignore lint/complexity/useArrowFunction: `function` required, arrow fns cannot be used with `new` in jsdom/vitest; the route calls `new Resend(key)`.
   Resend: vi.fn(function () {
     return { emails: { send: sendMock } };
   }),
@@ -133,7 +133,7 @@ describe('GET /api/psi-refresh', () => {
 
     expect(res.status).toBe(200);
     expect(vi.mocked(log.error)).toHaveBeenCalledWith(
-      'psi-refresh: failed to write meta:psi-last-run — healthz will report degraded',
+      'psi-refresh: failed to write meta:psi-last-run; healthz will report degraded',
       expect.objectContaining({ err: expect.any(Error) }),
     );
     expect(sendMock).not.toHaveBeenCalled();

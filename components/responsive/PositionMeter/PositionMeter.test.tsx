@@ -1,0 +1,197 @@
+import { act, render, screen } from '@testing-library/react';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { siteNavChrome } from '@/content/navigation';
+import { SECTION_REGISTRY } from '@/content/section-registry';
+import { SITE_LOCALE } from '@/content/site-locale';
+import { SectionNavigationProvider } from '../SectionNavigation';
+import { PositionMeter } from './PositionMeter.client';
+
+class FakeObserver {
+  observe = vi.fn();
+  disconnect = vi.fn();
+}
+
+class FakeResizeObserver {
+  static instances: FakeResizeObserver[] = [];
+  observed: Element[] = [];
+  disconnected = false;
+  constructor(readonly callback: ResizeObserverCallback) {
+    FakeResizeObserver.instances.push(this);
+  }
+  observe = (element: Element) => {
+    this.observed.push(element);
+  };
+  disconnect = () => {
+    this.disconnected = true;
+  };
+}
+
+const PAGE_HEIGHT = 5000;
+const VIEWPORT_HEIGHT = 1000;
+
+function scrollTo(y: number) {
+  Object.defineProperty(window, 'scrollY', { value: y, configurable: true });
+  window.dispatchEvent(new Event('scroll'));
+}
+
+const pendingFrames = new Map<number, FrameRequestCallback>();
+let nextFrameId = 0;
+
+async function frame() {
+  await act(async () => {
+    const callbacks = [...pendingFrames.values()];
+    pendingFrames.clear();
+    for (const callback of callbacks) callback(performance.now());
+  });
+}
+
+function line(): HTMLElement {
+  const node = document.querySelector<HTMLElement>('.pos-line');
+  if (!node) throw new Error('the position line is not rendered');
+  return node;
+}
+
+const fraction = (node: HTMLElement) => node.style.getPropertyValue('--posf');
+
+function mount() {
+  return render(
+    <SectionNavigationProvider chrome={siteNavChrome(SITE_LOCALE.en)} locale={SITE_LOCALE.en}>
+      <nav className="dock" data-position-target="" />
+      <PositionMeter />
+      {SECTION_REGISTRY.map(({ id }) => (
+        <section key={id} id={id} />
+      ))}
+    </SectionNavigationProvider>,
+  );
+}
+
+describe('PositionMeter', () => {
+  beforeEach(() => {
+    FakeResizeObserver.instances = [];
+    pendingFrames.clear();
+    vi.stubGlobal('requestAnimationFrame', (callback: FrameRequestCallback) => {
+      nextFrameId += 1;
+      pendingFrames.set(nextFrameId, callback);
+      return nextFrameId;
+    });
+    vi.stubGlobal('cancelAnimationFrame', (id: number) => {
+      pendingFrames.delete(id);
+    });
+    vi.stubGlobal('IntersectionObserver', FakeObserver);
+    vi.stubGlobal('ResizeObserver', FakeResizeObserver);
+    Object.defineProperty(document.documentElement, 'scrollHeight', {
+      value: PAGE_HEIGHT,
+      configurable: true,
+    });
+    Object.defineProperty(window, 'innerHeight', { value: VIEWPORT_HEIGHT, configurable: true });
+    Object.defineProperty(window, 'scrollY', { value: 0, configurable: true });
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it('is decorative: hidden from assistive technology so it sits in no landmark and announces nothing', () => {
+    const { container } = mount();
+    const meter = container.querySelector('.pos-meter');
+    expect(meter?.getAttribute('aria-hidden')).toBe('true');
+    expect(container.querySelector('[role="progressbar"]')).toBeNull();
+    expect(line().hasAttribute('aria-valuenow')).toBe(false);
+  });
+
+  it('starts at the top', () => {
+    mount();
+    expect(fraction(line())).toBe('0');
+  });
+
+  it('follows the scroll position and reaches 100 at the end of the page', async () => {
+    mount();
+    const bar = line();
+    scrollTo(2000);
+    await frame();
+    expect(fraction(bar)).toBe('0.5');
+    scrollTo(PAGE_HEIGHT - VIEWPORT_HEIGHT);
+    await frame();
+    expect(fraction(bar)).toBe('1');
+    scrollTo(PAGE_HEIGHT * 2);
+    await frame();
+    expect(fraction(bar)).toBe('1');
+  });
+
+  it('reports 0 when the page does not scroll', async () => {
+    Object.defineProperty(document.documentElement, 'scrollHeight', {
+      value: VIEWPORT_HEIGHT,
+      configurable: true,
+    });
+    mount();
+    scrollTo(300);
+    await frame();
+    expect(fraction(line())).toBe('0');
+  });
+
+  it('writes the fraction to every position target, including the dock strip', async () => {
+    const { container } = mount();
+    scrollTo(2000);
+    await frame();
+    const targets = container.querySelectorAll<HTMLElement>('[data-position-target]');
+    expect(targets.length).toBeGreaterThanOrEqual(2);
+    for (const target of targets) expect(target.style.getPropertyValue('--posf')).toBe('0.5');
+  });
+
+  it('coalesces a burst of scroll events into the latest value', async () => {
+    mount();
+    scrollTo(500);
+    scrollTo(1000);
+    scrollTo(3000);
+    await frame();
+    expect(fraction(line())).toBe('0.75');
+  });
+
+  it('renders only the progress line and no NN/9 readout', () => {
+    const { container } = mount();
+    expect(screen.queryByText('01/9'), 'the rail position strip was removed').toBeNull();
+    expect(container.querySelector('[aria-live], [role="status"], [role="alert"]')).toBeNull();
+  });
+
+  it('recomputes when the document height changes without a scroll or resize', async () => {
+    mount();
+    const bar = line();
+    scrollTo(1000);
+    await frame();
+    expect(fraction(bar)).toBe('0.25');
+    const watcher = FakeResizeObserver.instances[0];
+    expect(watcher?.observed).toEqual([document.body]);
+    Object.defineProperty(document.documentElement, 'scrollHeight', {
+      value: 2000,
+      configurable: true,
+    });
+    act(() => watcher?.callback([], watcher as unknown as ResizeObserver));
+    await frame();
+    expect(fraction(bar)).toBe('1');
+  });
+
+  it('works without ResizeObserver', () => {
+    vi.stubGlobal('ResizeObserver', undefined);
+    mount();
+    expect(fraction(line())).toBe('0');
+  });
+
+  it('removes what it wrote on the position targets and disconnects when unmounted', async () => {
+    const view = mount();
+    scrollTo(2000);
+    await frame();
+    const targets = [...view.container.querySelectorAll<HTMLElement>('[data-position-target]')];
+    expect(targets.every((target) => target.style.getPropertyValue('--posf') === '0.5')).toBe(true);
+    const dock = view.container.querySelector<HTMLElement>('.dock') as HTMLElement;
+    view.unmount();
+    expect(FakeResizeObserver.instances[0]?.disconnected).toBe(true);
+    expect(dock.style.getPropertyValue('--posf')).toBe('');
+  });
+
+  it('stops listening when unmounted', async () => {
+    const view = mount();
+    const remove = vi.spyOn(window, 'removeEventListener');
+    view.unmount();
+    expect(remove.mock.calls.map(([type]) => type)).toContain('scroll');
+  });
+});

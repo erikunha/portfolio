@@ -9,7 +9,7 @@ export function Badge({ variant = 'default', size = 'md', children }: BadgeProps
   return (
     <span
       className={cn(
-        'badge inline-flex items-center gap-[7px] border border-primary-subtle text-primary-500 font-mono tracking-[0.12em] py-1 px-[10px] whitespace-nowrap uppercase max-md:text-[10px]',
+        'badge inline-flex items-center gap-[7px] border border-primary-subtle text-primary-500 font-mono tracking-[0.12em] py-1 px-[10px] whitespace-nowrap uppercase',
         'max-[359px]:whitespace-normal max-[359px]:flex-wrap',
         size === 'sm' && 'text-xs py-[3px] px-2',
         size === 'md' && 'text-xs',

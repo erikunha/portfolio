@@ -1,7 +1,6 @@
-import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
 import { NextRequest } from 'next/server';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { ASK_TEMPERATURE } from '@/lib/ask/limits';
 import { ASK_MODEL } from '@/lib/ask/model';
 
 const mockStreamText = vi.fn();
@@ -86,20 +85,34 @@ describe('ASK_MODEL — single source of truth', () => {
     await drain(res);
   });
 
+  it('hands streamText the named low temperature so one question answers the same way across runs', async () => {
+    const { POST } = await import('@/app/api/ask/route');
+    const res = await POST(makeRequest());
+    const arg = mockStreamText.mock.calls[0]?.[0] as { temperature?: number };
+    expect(arg.temperature).toBe(ASK_TEMPERATURE);
+    expect(ASK_TEMPERATURE).toBeGreaterThan(0);
+    expect(ASK_TEMPERATURE).toBeLessThanOrEqual(0.3);
+    await drain(res);
+  });
+
   it('exposes a non-empty provider/model string', () => {
     expect(ASK_MODEL).toMatch(/^[a-z0-9-]+\/[a-z0-9.-]+$/);
   });
 
-  it('the raw model literal lives in exactly one source location', () => {
-    // behavioral-test-allow: WS1 no-drift invariant — the model literal must exist in a single source file
-    const files = ['app/api/ask/route.ts', 'scripts/ask-eval.ts', 'lib/ask/model.ts'];
-    const stripComments = (s: string): string =>
-      s.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/.*$/gm, '');
-    const escaped = ASK_MODEL.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    const literalRe = new RegExp(`['"\`]${escaped}['"\`]`);
-    const hits = files.filter((f) =>
-      literalRe.test(stripComments(readFileSync(join(process.cwd(), f), 'utf8'))),
-    );
-    expect(hits).toEqual(['lib/ask/model.ts']);
+  it('follows ASK_MODEL, so no second copy of the model string can drift from it', async () => {
+    const sentinel = 'sentinel-provider/sentinel-model';
+    vi.doMock('@/lib/ask/model', () => ({ ASK_MODEL: sentinel }));
+    try {
+      const { POST } = await import('@/app/api/ask/route');
+      const res = await POST(makeRequest());
+      const arg = mockStreamText.mock.calls[0]?.[0] as { model: string };
+      expect(
+        arg.model,
+        'a model string written into the stream module would still equal the real ASK_MODEL; a stand-in value exposes it',
+      ).toBe(sentinel);
+      await drain(res);
+    } finally {
+      vi.doUnmock('@/lib/ask/model');
+    }
   });
 });

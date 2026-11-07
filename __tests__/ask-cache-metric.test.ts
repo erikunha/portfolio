@@ -2,18 +2,10 @@ import { NextRequest } from 'next/server';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mockStreamText = vi.fn();
-const mockMessagesCreate = vi.fn();
 
 vi.mock('ai', () => ({
   streamText: mockStreamText,
 }));
-
-vi.mock('@anthropic-ai/sdk', () => {
-  class MockAnthropic {
-    messages = { create: mockMessagesCreate };
-  }
-  return { default: MockAnthropic };
-});
 
 const settleBudgetMock = vi.fn(
   async (_reserved: number, _actualIn: number, _actualOut: number, _key: string): Promise<void> =>
@@ -74,34 +66,6 @@ async function drain(res: Response): Promise<string> {
   return out;
 }
 
-function makeAnthropicSseStream(opts: {
-  inputTokens: number;
-  cacheReadInputTokens: number;
-  cacheCreationInputTokens: number;
-  outputTokens: number;
-  text: string;
-}): AsyncIterable<unknown> {
-  return {
-    async *[Symbol.asyncIterator]() {
-      yield {
-        type: 'message_start',
-        message: {
-          usage: {
-            input_tokens: opts.inputTokens,
-            cache_read_input_tokens: opts.cacheReadInputTokens,
-            cache_creation_input_tokens: opts.cacheCreationInputTokens,
-          },
-        },
-      };
-      yield {
-        type: 'content_block_delta',
-        delta: { type: 'text_delta', text: opts.text },
-      };
-      yield { type: 'message_delta', usage: { output_tokens: opts.outputTokens } };
-    },
-  };
-}
-
 function makeStreamTextResult(opts: {
   inputTokens: number;
   cacheReadInputTokens: number;
@@ -116,9 +80,10 @@ function makeStreamTextResult(opts: {
       },
     },
     usage: Promise.resolve({
-      inputTokens: opts.inputTokens,
+      inputTokens: opts.inputTokens + opts.cacheReadInputTokens + opts.cacheCreationInputTokens,
       outputTokens: opts.outputTokens,
       inputTokenDetails: {
+        noCacheTokens: opts.inputTokens,
         cacheReadTokens: opts.cacheReadInputTokens,
         cacheWriteTokens: opts.cacheCreationInputTokens,
       },
@@ -133,7 +98,6 @@ function armUpstream(opts: {
   outputTokens: number;
   text: string;
 }): void {
-  mockMessagesCreate.mockResolvedValue(makeAnthropicSseStream(opts));
   mockStreamText.mockReturnValue(makeStreamTextResult(opts));
 }
 
@@ -141,7 +105,6 @@ describe('/api/ask — cache-hit accounting (STANDARDS.md Ch.7)', () => {
   beforeEach(() => {
     process.env.ASK_ENABLED = 'true';
     vi.resetModules();
-    mockMessagesCreate.mockReset();
     mockStreamText.mockReset();
     settleBudgetMock.mockClear();
     reserveBudgetMock

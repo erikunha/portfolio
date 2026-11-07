@@ -1,1 +1,0 @@
-export { SysHealthSection } from './SysHealthSection';

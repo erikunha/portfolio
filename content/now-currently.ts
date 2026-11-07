@@ -1,2 +1,4 @@
 export const NOW_CURRENTLY =
-  'building shared UI systems for AI deal origination · Raylu.ai (private markets)';
+  'Senior Software Engineer, Applied AI. Brazil · UTC-3 · available now. Raylu: AI deal origination · private markets.';
+
+export const WHOIS_TITLE = 'Senior Software Engineer, Applied AI';

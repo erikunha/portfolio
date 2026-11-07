@@ -100,6 +100,8 @@ const SINGLE_LINE_BODIES: ReadonlyArray<readonly [string, boolean]> = [
   ['Approve', false],
   ['I approve of this approach, ship it', false],
   ['**Summary** of the change', false],
+  ['**Summary** we approve of nothing here **Notes**', false],
+  ['**Done** traced the reject-then-refund path. Verdict: **Approve**', true],
   ['', false],
 ];
 
@@ -131,11 +133,19 @@ describe('the guard verdict pattern is never looser than the gate it protects', 
     ).toEqual({ guard: false, parser: 'none' });
   });
 
-  it('is narrower across a newline, because grep is line-oriented and the parser is not', () => {
+  it('agrees across a newline: both are line-oriented, so a wrapped verdict reads as none', () => {
     const wrapped = '**Approve\nwith minor changes**';
     expect(
       { guard: guardMatches(wrapped), parser: parseClaudeVerdict(wrapped) },
-      'This case forces the two models apart. JS `[^*]` matches a newline so the parser reads a verdict; grep never matches across one so the guard does not. The divergence is fail-CLOSED — a review the gate would approve reds the job — acceptable, but it must stay visible rather than be met live.',
+      'The parser pairs bold spans per line, like grep. A verdict wrapped across a line break is read by neither, so the guard cannot go green on a body the gate reads as a verdict, or the reverse.',
+    ).toEqual({ guard: false, parser: 'none' });
+  });
+
+  it('is narrower than the parser when a code-span glob shares the verdict line', () => {
+    const body = 'Touches `app/api/**`. **Verdict: Approve.**';
+    expect(
+      { guard: guardMatches(body), parser: parseClaudeVerdict(body) },
+      'The parser strips code spans before pairing, the grep does not. The divergence is fail-CLOSED: a review the gate would approve reds the job, never the reverse.',
     ).toEqual({ guard: false, parser: 'approve' });
   });
 });

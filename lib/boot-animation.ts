@@ -1,3 +1,6 @@
+import { SYSFAIL_END, SYSFAIL_START } from '@/lib/events';
+import { createPauseControl, type PhraseLoop, runPhraseLoop, typeOut } from './typewriter';
+
 export type BootClassKey =
   | 'bootOk'
   | 'bootEnc'
@@ -25,14 +28,6 @@ export const DESKTOP_LINE_SPECS: LinePart[][] = [
   ['Loading security protocols... ', { cls: 'bootEnc', text: '[ENCRYPTED]' }],
   [{ cls: 'bootWelcome', text: 'Welcome to DEV_OS v2.0.4-stable [user: erik]' }],
   [' '],
-];
-
-export const MOBILE_LINE_SPECS: LinePart[][] = [
-  ['[BOOT SEQUENCE INITIATED]'],
-  [' '],
-  ['kernel modules... ', { cls: 'bootOk', text: 'OK' }],
-  ['security... ', { cls: 'bootEnc', text: '[ENCRYPTED]' }],
-  [{ cls: 'bootWelcome', text: 'DEV_OS v2.0.4 [user: erik]' }],
 ];
 
 export const DESKTOP_DIALOG = [
@@ -88,8 +83,8 @@ export function buildStaticDialogLine(text: string, cls: BootClasses): HTMLEleme
 
 export type BootCtrl = {
   cancel: () => void;
-  pauseDialog: () => void;
-  resumeDialog: () => void;
+  pauseDialog: (reason?: string) => void;
+  resumeDialog: (reason?: string) => void;
 };
 
 export function runBoot(
@@ -111,8 +106,12 @@ export function runBoot(
   },
 ): BootCtrl {
   let cancelled = false;
-  let dialogPaused = false;
-  let dialogResumeFn: (() => void) | null = null;
+  let dialogLoop: PhraseLoop | undefined;
+  const dialogPause = createPauseControl((paused) => {
+    if (paused) dialogLoop?.pause();
+    else dialogLoop?.resume();
+  });
+  let cancelTyping: (() => void) | undefined;
   const timers: ReturnType<typeof setTimeout>[] = [];
 
   function later(fn: () => void, ms: number) {
@@ -153,19 +152,17 @@ export function runBoot(
     line.appendChild(cursor);
     container.appendChild(line);
 
-    let i = 0;
-    function step() {
-      if (cancelled) return;
-      if (i >= cmdText.length) {
+    cancelTyping = typeOut(cmdText, {
+      stepMs: () => opts.cmdMs + Math.random() * opts.cmdJitter,
+      onText: (text) => {
+        cmdEl.textContent = text;
+      },
+      onDone: () => {
         cursor.remove();
-        container.appendChild(buildLine([' '], cls));
+        container.appendChild(buildLine([' '], cls));
         later(startDialog, 350);
-        return;
-      }
-      cmdEl.textContent += cmdText[i++];
-      later(step, opts.cmdMs + Math.random() * opts.cmdJitter);
-    }
-    step();
+      },
+    });
   }
 
   function startDialog() {
@@ -187,44 +184,25 @@ export function runBoot(
     line.appendChild(cur);
     container.appendChild(line);
 
-    let phraseIdx = 0;
-    let charIdx = 0;
-    let phase: 'type' | 'hold' | 'back' = 'type';
     let firedOnce = false;
-
-    function tick() {
-      if (cancelled) return;
-      if (dialogPaused) {
-        dialogResumeFn = tick;
-        return;
-      }
-      const phrase = dialog[phraseIdx];
-      if (!phrase) return;
-      if (phase === 'type') {
-        out.textContent = phrase.slice(0, ++charIdx);
-        if (charIdx >= phrase.length) {
-          phase = 'hold';
-          later(tick, opts.holdMs);
-        } else later(tick, opts.typeMs);
-      } else if (phase === 'hold') {
-        phase = 'back';
-        later(tick, opts.backMs);
-      } else {
-        out.textContent = phrase.slice(0, --charIdx);
-        if (charIdx <= 0) {
-          phraseIdx = (phraseIdx + 1) % dialog.length;
-          if (phraseIdx === 0 && !firedOnce) {
-            firedOnce = true;
-            opts.onFirstLoop?.();
-          }
-          phase = 'type';
-          later(tick, opts.interMs);
-        } else {
-          later(tick, opts.backMs);
-        }
-      }
-    }
-    tick();
+    dialogLoop = runPhraseLoop({
+      phrases: dialog,
+      timing: {
+        typeMs: opts.typeMs,
+        holdMs: opts.holdMs,
+        backMs: opts.backMs,
+        pauseMs: opts.interMs,
+      },
+      onText: (text) => {
+        out.textContent = text;
+      },
+      startPaused: dialogPause.isPaused(),
+      onWrap: () => {
+        if (firedOnce) return;
+        firedOnce = true;
+        opts.onFirstLoop?.();
+      },
+    });
   }
 
   later(() => revealLines(0), opts.startMs);
@@ -233,28 +211,45 @@ export function runBoot(
     cancel: () => {
       cancelled = true;
       timers.forEach(clearTimeout);
-      dialogResumeFn = null;
+      cancelTyping?.();
+      dialogLoop?.cancel();
     },
-    pauseDialog: () => {
-      dialogPaused = true;
-    },
-    resumeDialog: () => {
-      dialogPaused = false;
-      if (dialogResumeFn) {
-        const fn = dialogResumeFn;
-        dialogResumeFn = null;
-        fn();
-      }
-    },
+    pauseDialog: dialogPause.pause,
+    resumeDialog: dialogPause.resume,
   };
 }
+
+export type SysfailBeat = (() => void) & { settle: () => void };
 
 export function buildDesktopOnFirstLoop(
   el: HTMLElement,
   ctrlRef: { current: BootCtrl | null },
   cls: Pick<BootClasses, 'shake' | 'shake2'>,
-): () => void {
-  return () => {
+): SysfailBeat {
+  const timers = new Set<ReturnType<typeof setTimeout>>();
+  let shaken: Element | null = null;
+  let active = false;
+
+  function later(fn: () => void, ms: number) {
+    const timer = setTimeout(() => {
+      timers.delete(timer);
+      fn();
+    }, ms);
+    timers.add(timer);
+  }
+
+  function hidePlate() {
+    window.dispatchEvent(new CustomEvent('hero:sysfail:hide'));
+    document.documentElement.classList.remove('sysfail-on');
+  }
+
+  function release() {
+    active = false;
+    window.dispatchEvent(new CustomEvent(SYSFAIL_END));
+    ctrlRef.current?.resumeDialog();
+  }
+
+  const beat = () => {
     const section = el.closest('section');
 
     if (section) {
@@ -262,25 +257,34 @@ export function buildDesktopOnFirstLoop(
       if (r.bottom < 0 || r.top > window.innerHeight) return;
     }
 
+    active = true;
     if (section) {
+      shaken = section;
       section.classList.add(cls.shake);
-      setTimeout(() => section.classList.replace(cls.shake, cls.shake2), SYSFAIL_SHAKE_FRAME_1_MS);
-      setTimeout(() => section.classList.remove(cls.shake, cls.shake2), SYSFAIL_SHAKE_FRAME_2_MS);
+      later(() => section.classList.replace(cls.shake, cls.shake2), SYSFAIL_SHAKE_FRAME_1_MS);
+      later(() => section.classList.remove(cls.shake, cls.shake2), SYSFAIL_SHAKE_FRAME_2_MS);
     }
 
-    window.dispatchEvent(new CustomEvent('sysfail:start'));
+    window.dispatchEvent(new CustomEvent(SYSFAIL_START));
     document.documentElement.classList.add('sysfail-on');
     ctrlRef.current?.pauseDialog();
 
     window.dispatchEvent(new CustomEvent('hero:sysfail:show'));
 
-    setTimeout(() => {
-      window.dispatchEvent(new CustomEvent('hero:sysfail:hide'));
-      document.documentElement.classList.remove('sysfail-on');
-      setTimeout(() => {
-        window.dispatchEvent(new CustomEvent('sysfail:end'));
-        ctrlRef.current?.resumeDialog();
-      }, SYSFAIL_FADE_TAIL_MS);
+    later(() => {
+      hidePlate();
+      later(release, SYSFAIL_FADE_TAIL_MS);
     }, SYSFAIL_VISIBLE_MS);
   };
+
+  beat.settle = () => {
+    if (!active) return;
+    for (const timer of timers) clearTimeout(timer);
+    timers.clear();
+    shaken?.classList.remove(cls.shake, cls.shake2);
+    hidePlate();
+    release();
+  };
+
+  return beat;
 }

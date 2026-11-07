@@ -1,6 +1,7 @@
 #!/usr/bin/env tsx
 
 import { execFile } from 'node:child_process';
+import { realpathSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
 import { promisify } from 'node:util';
 
@@ -9,47 +10,74 @@ export const CLAUDE_LOGIN = 'claude[bot]';
 
 export type ClaudeVerdict = 'approve' | 'request-changes' | 'reject' | 'none';
 
+const BOLD_SPAN = /\*\*([^*]+)\*\*/g;
+const CODE_SPAN = /`[^`\n]*`/g;
+const LINE_BREAK = /\r?\n/;
+
 export function parseClaudeVerdict(body: string): ClaudeVerdict {
-  if (/\*\*[^*]*\breject\b[^*]*\*\*/i.test(body)) return 'reject';
-  if (/\*\*[^*]*\brequest changes\b[^*]*\*\*/i.test(body)) return 'request-changes';
-  if (/\*\*[^*]*\bapprove\b[^*]*\*\*/i.test(body)) return 'approve';
+  const spans = body
+    .split(LINE_BREAK)
+    .flatMap((line) => [...line.replace(CODE_SPAN, '').matchAll(BOLD_SPAN)])
+    .map((match) => match[1] ?? '');
+  const has = (word: RegExp) => spans.some((span) => word.test(span));
+  if (has(/\breject\b/i)) return 'reject';
+  if (has(/\brequest changes\b/i)) return 'request-changes';
+  if (has(/\bapprove\b/i)) return 'approve';
   return 'none';
 }
 
 export const HEAD_SHA_GAP_MAX = 24;
+export const COMPARE_FILES_CAP = 300;
 
 const REVIEWED_SHA = new RegExp(
   `\\bhead\\b[^\`\\n]{0,${HEAD_SHA_GAP_MAX}}\`([0-9a-f]{7,40})\``,
-  'i',
+  'gi',
 );
 
 export function extractReviewedSha(body: string): string | null {
-  const sha = body.match(REVIEWED_SHA)?.[1];
+  const sha = [...body.matchAll(REVIEWED_SHA)].at(-1)?.[1];
   return sha ? sha.toLowerCase() : null;
 }
 
 export type GateResult = { ok: boolean; reason: string };
 
+export const VISUAL_BASELINE_SNAPSHOT_DIR = '-snapshots';
+
+export function isVisualBaselineFile(path: string): boolean {
+  const normalized = path.toLowerCase();
+  return (
+    normalized.endsWith('.png') &&
+    normalized.split('/').some((segment) => segment.endsWith(VISUAL_BASELINE_SNAPSHOT_DIR))
+  );
+}
+
 export function evaluateGate(
   verdict: ClaudeVerdict,
   reviewedSha: string | null,
   headSha: string,
+  changedFiles: string[],
 ): GateResult {
   if (verdict === 'none') return { ok: false, reason: 'no verdict yet (review in progress?)' };
   if (verdict === 'reject' || verdict === 'request-changes') {
-    return { ok: false, reason: `verdict is "${verdict}" — address findings and re-review` };
+    return { ok: false, reason: `verdict is "${verdict}": address findings and re-review` };
   }
   if (!reviewedSha) {
     return {
       ok: false,
       reason:
-        'approved, but the overview states no head SHA — cannot confirm the review is on HEAD',
+        'approved, but the overview states no head SHA, so it cannot confirm the review is on HEAD',
     };
   }
   if (!headSha.startsWith(reviewedSha)) {
+    if (changedFiles.length > 0 && changedFiles.every(isVisualBaselineFile)) {
+      return {
+        ok: true,
+        reason: `approve on ${reviewedSha.slice(0, 12)} carried: baseline-only commits`,
+      };
+    }
     return {
       ok: false,
-      reason: `approved ${reviewedSha} but HEAD is ${headSha.slice(0, 12)} — STALE; re-run /claude-review`,
+      reason: `approved ${reviewedSha} but HEAD is ${headSha.slice(0, 12)}: STALE, re-run /claude-review`,
     };
   }
   return { ok: true, reason: `verdict=approve on ${reviewedSha.slice(0, 12)}` };
@@ -88,11 +116,31 @@ async function run() {
     fail(prNumber, 'No claude-review found. Comment `/claude-review` on the PR and wait for it.');
   }
 
-  const result = evaluateGate(
-    parseClaudeVerdict(latest.body),
-    extractReviewedSha(latest.body),
-    headSha,
-  );
+  const reviewedSha = extractReviewedSha(latest.body);
+  let changedFiles: string[] = [];
+  if (reviewedSha && !headSha.startsWith(reviewedSha)) {
+    const { stdout: compareOut } = await execFileP(
+      'gh',
+      ['api', `repos/${repo}/compare/${reviewedSha}...${headSha}`],
+      { encoding: 'utf8', maxBuffer: 10 * 1024 * 1024 },
+    ).catch(() => {
+      fail(
+        prNumber,
+        `could not compare ${reviewedSha.slice(0, 12)}...${headSha.slice(0, 12)}: treating the Approve as STALE`,
+      );
+    });
+    const compare = JSON.parse(compareOut) as {
+      merge_base_commit: { sha: string };
+      files: { filename: string }[];
+    };
+    const listComplete = compare.files.length < COMPARE_FILES_CAP;
+    changedFiles =
+      listComplete && compare.merge_base_commit.sha.startsWith(reviewedSha)
+        ? compare.files.map((file) => file.filename)
+        : [];
+  }
+
+  const result = evaluateGate(parseClaudeVerdict(latest.body), reviewedSha, headSha, changedFiles);
   if (!result.ok) {
     fail(prNumber, `${result.reason}.`);
   }
@@ -116,7 +164,7 @@ async function resolvePrNumber(passed: string | undefined): Promise<number> {
 
 if (
   typeof process.argv[1] === 'string' &&
-  import.meta.url === pathToFileURL(process.argv[1]).href
+  import.meta.url === pathToFileURL(realpathSync(process.argv[1])).href
 ) {
   run().catch((err) => {
     process.stderr.write(`[claude-gate] ${err instanceof Error ? err.message : String(err)}\n`);

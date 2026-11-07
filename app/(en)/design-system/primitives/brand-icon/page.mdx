@@ -1,0 +1,40 @@
+import { dsPageMetadata } from '../../_lib/page-metadata';
+import { OnThisPage } from '../../_components/OnThisPage';
+import { BrandIcon } from '../../../../../design-system/components/BrandIcon/BrandIcon';
+
+export const metadata = dsPageMetadata({
+  slug: 'primitives/brand-icon',
+  title: 'BrandIcon · Design System · erikunha.dev',
+  description: 'BrandIcon props, colour, glow and accessibility notes',
+});
+
+# BRAND-ICON
+
+<OnThisPage items={[{id:'props',label:'Props'},{id:'sizes',label:'Sizes'},{id:'colour',label:'Colour and glow'},{id:'accessibility',label:'Accessibility'}]} />
+
+Source: `design-system/components/BrandIcon/BrandIcon.tsx`. React Server Component, zero client JavaScript. The header, the error pages, the reading views and the design-system bar import it through `components/BrandLink`.
+
+<h2 id="props">Props</h2>
+
+| Prop | Type | Default | Required |
+|---|---|---|---|
+| `size` | `number` | `60` | no |
+| `className` | `string` | none | no |
+
+<h2 id="sizes">Sizes</h2>
+
+<Preview id="brand-icon">
+  <BrandIcon />
+  <BrandIcon size={90} />
+  <BrandIcon size={40} />
+</Preview>
+
+`size` is the width in px. The viewBox is cropped to the glasses, so the height is about 30% of the width.
+
+<h2 id="colour">Colour and glow</h2>
+
+The path fills with `currentColor`, so the colour comes from the parent: `--color-primary-500` on a `.brand-link`. The `.brand-icon` class adds a static `drop-shadow` that matches the phosphor text-shadow on headings. Nothing animates, so no reduced-motion override applies. Print removes the glow.
+
+<h2 id="accessibility">Accessibility</h2>
+
+The SVG is `aria-hidden` and not focusable. Wrap it in a link or button that has its own accessible name; `BrandLink` does this with the name `erikunha.dev, home` (`erikunha.dev, início` on Portuguese pages) and a 44px minimum target. The header has no visible wordmark: the name lives in that label.

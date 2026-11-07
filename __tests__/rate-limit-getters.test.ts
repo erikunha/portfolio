@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('@upstash/redis', () => ({
   Redis: {
@@ -16,11 +16,21 @@ vi.mock('@upstash/redis', () => ({
   },
 }));
 
+beforeEach(() => {
+  vi.stubEnv('UPSTASH_REDIS_REST_URL', 'https://redis.test');
+  vi.stubEnv('UPSTASH_REDIS_REST_TOKEN', 'test-token');
+});
+
+afterEach(() => {
+  vi.unstubAllEnvs();
+});
+
 vi.mock('@upstash/ratelimit', () => {
   function Ratelimit(this: object, opts: unknown) {
     Object.assign(this, opts);
   }
   Ratelimit.slidingWindow = vi.fn(() => ({}));
+  Ratelimit.fixedWindow = vi.fn(() => ({}));
   return { Ratelimit };
 });
 
@@ -91,6 +101,24 @@ describe('rate-limit factory getters — configured correctly', () => {
     ).toHaveBeenCalledWith(8, '1 h');
   });
 
+  it('getLighthouseLimit configures slidingWindow(30, "1 m")', async () => {
+    const { Ratelimit } = await import('@upstash/ratelimit');
+    const { getLighthouseLimit } = await import('@/lib/rate-limit');
+    getLighthouseLimit();
+    expect(
+      (Ratelimit as unknown as { slidingWindow: ReturnType<typeof vi.fn> }).slidingWindow,
+    ).toHaveBeenCalledWith(30, '1 m');
+  });
+
+  it('getErrorLogDailyLimit configures fixedWindow(500, "1 d")', async () => {
+    const { Ratelimit } = await import('@upstash/ratelimit');
+    const { getErrorLogDailyLimit } = await import('@/lib/rate-limit');
+    getErrorLogDailyLimit();
+    expect(
+      (Ratelimit as unknown as { fixedWindow: ReturnType<typeof vi.fn> }).fixedWindow,
+    ).toHaveBeenCalledWith(500, '1 d');
+  });
+
   it('getContactLimit configures slidingWindow(3, "10 m")', async () => {
     const { Ratelimit } = await import('@upstash/ratelimit');
     const { getContactLimit } = await import('@/lib/rate-limit');
@@ -100,13 +128,19 @@ describe('rate-limit factory getters — configured correctly', () => {
     ).toHaveBeenCalledWith(3, '10 m');
   });
 
-  it('getForgetLimit configures slidingWindow(5, "1 h")', async () => {
+  it('getForgetLimit admits one full session id list per hour', async () => {
     const { Ratelimit } = await import('@upstash/ratelimit');
+    const { REQUEST_REF_LIMITS } = await import('@/lib/request-refs.client');
     const { getForgetLimit } = await import('@/lib/rate-limit');
     getForgetLimit();
+    const slidingWindow = (Ratelimit as unknown as { slidingWindow: ReturnType<typeof vi.fn> })
+      .slidingWindow;
+    const [requests, window] = slidingWindow.mock.calls.at(-1) ?? [];
     expect(
-      (Ratelimit as unknown as { slidingWindow: ReturnType<typeof vi.fn> }).slidingWindow,
-    ).toHaveBeenCalledWith(5, '1 h');
+      requests,
+      'privacy forget --all sends one request per stored id; a smaller window leaves ids it cannot finish',
+    ).toBeGreaterThanOrEqual(REQUEST_REF_LIMITS.maxRefs);
+    expect(window).toBe('1 h');
   });
 
   it('getAskLimit returns the same Ratelimit instance on repeated calls', async () => {

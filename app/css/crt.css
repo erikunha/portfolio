@@ -20,7 +20,6 @@
       transparent 1px,
       transparent 4px
     );
-    mix-blend-mode: multiply;
     opacity: 0.3;
     z-index: 2;
   }
@@ -95,6 +94,10 @@
     animation: crt-flicker 4s infinite;
     will-change: opacity;
     z-index: 4;
+  }
+
+  html[data-crt-level]:not([data-crt-level="0"]) :is(.crt-noise, .crt-flicker, .crt-scan-beam) {
+    animation-play-state: paused;
   }
 
   @keyframes crt-scan-beam {

@@ -1,7 +1,12 @@
 'use client';
 
 import { useEffect, useLayoutEffect, useRef } from 'react';
+import { CRT_BASE_TICK_MS } from '@/lib/crt-effect-stepper';
+import { SYSFAIL_END, SYSFAIL_START } from '@/lib/events';
+import { getFrameGovernorTickMultiplier } from '@/lib/frame-governor';
 import { readMotion } from '@/lib/motion';
+import { subscribeMotion } from '@/lib/motion-change';
+import { scaleTailFade } from './tail-fade';
 
 type RainTunables = {
   fontSize: number;
@@ -12,7 +17,20 @@ type RainTunables = {
 };
 
 const DIGITS = '0123456789'.split('');
-const FRAME_MS = 1000 / 22;
+const RESIZE_DEBOUNCE_MS = 100;
+const IDLE_TIMEOUT_MS = 2000;
+const IDLE_FALLBACK_MS = 1000;
+const VIEW_THRESHOLD = 0.05;
+const RESPAWN_THRESHOLD = 0.975;
+const RESPAWN_RANGE = 6;
+
+type RunGate = 'ready' | 'motion' | 'visible' | 'calm' | 'inView';
+type IdleWindow = Window & {
+  requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => number;
+  cancelIdleCallback?: (handle: number) => void;
+};
+const MAX_BACKING_DPR = 2;
+const RAIN_CONTEXT_OPTIONS: CanvasRenderingContext2DSettings = { willReadFrequently: true };
 
 type RainCfg = {
   fontSize?: number;
@@ -53,16 +71,16 @@ export function MatrixRain({
 
     const canvas = canvasRef.current;
     if (!canvas) return;
-    const ctx = canvas.getContext('2d');
+    const ctx = canvas.getContext('2d', RAIN_CONTEXT_OPTIONS);
     if (!ctx) return;
 
     const canvasEl = canvas;
     const ctxEl = ctx;
 
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const dpr = Math.min(window.devicePixelRatio || 1, MAX_BACKING_DPR);
     let columns = 0;
     let drops: number[] = [];
-    let running = true;
+    let running = false;
     let raf = 0;
     let last = 0;
     let w = 0;
@@ -93,13 +111,14 @@ export function MatrixRain({
     let resizeTimer: ReturnType<typeof setTimeout> | undefined;
     function debouncedResize() {
       clearTimeout(resizeTimer);
-      resizeTimer = setTimeout(resize, 100);
+      resizeTimer = setTimeout(resize, RESIZE_DEBOUNCE_MS);
     }
     window.addEventListener('resize', debouncedResize, { passive: true });
 
     function frame(ts: number) {
       if (!running) return;
-      if (ts - last >= FRAME_MS) {
+      const rate = getFrameGovernorTickMultiplier();
+      if (ts - last >= CRT_BASE_TICK_MS * rate) {
         last = ts;
         const {
           fontSize: fs,
@@ -108,7 +127,7 @@ export function MatrixRain({
           bodyColor: body,
           tailFade: tail,
         } = tunablesRef.current;
-        ctxEl.fillStyle = tail;
+        ctxEl.fillStyle = scaleTailFade(tail, rate);
         ctxEl.fillRect(0, 0, w, h);
         for (let i = 0; i < columns; i++) {
           const y = (drops[i] ?? 0) * fs;
@@ -117,111 +136,88 @@ export function MatrixRain({
           ctxEl.fillText(ch, i * fs, y);
           ctxEl.fillStyle = body;
           ctxEl.fillText(ch, i * fs, y - fs);
-          if (y > h && Math.random() > 0.975) drops[i] = -Math.random() * 6;
-          drops[i] = (drops[i] ?? 0) + spd;
+          if (y > h && Math.random() > RESPAWN_THRESHOLD) drops[i] = -Math.random() * RESPAWN_RANGE;
+          drops[i] = (drops[i] ?? 0) + spd * rate;
         }
       }
       raf = requestAnimationFrame(frame);
     }
 
-    function pause() {
-      running = false;
-      cancelAnimationFrame(raf);
-    }
-    function resume() {
-      if (!running) {
-        running = true;
+    const gates: Record<RunGate, boolean> = {
+      ready: false,
+      motion: readMotion(),
+      visible: !document.hidden,
+      calm: true,
+      inView: true,
+    };
+    function sync() {
+      const next = Object.values(gates).every(Boolean);
+      if (next === running) return;
+      running = next;
+      if (next) {
         last = 0;
         raf = requestAnimationFrame(frame);
+      } else {
+        cancelAnimationFrame(raf);
       }
     }
+    function setGate(gate: RunGate, open: boolean) {
+      gates[gate] = open;
+      sync();
+    }
 
-    let isIntersecting = false;
-
-    const onMotionChange = (e: Event) => {
-      const detail = (e as CustomEvent).detail as unknown;
-      if (!detail || typeof (detail as { on?: unknown }).on !== 'boolean') return;
-      const on = (detail as { on: boolean }).on;
-      if (on) {
-        if (!watchRef || isIntersecting) resume();
-      } else {
-        pause();
+    const unsubscribeMotion = subscribeMotion((on) => {
+      setGate('motion', on);
+      if (!on) {
         ctxEl.fillStyle = '#000';
         ctxEl.fillRect(0, 0, w, h);
       }
-    };
-    window.addEventListener('motionchange', onMotionChange);
+    });
+    const onVisibility = () => setGate('visible', !document.hidden);
+    const onSysfailStart = () => setGate('calm', false);
+    const onSysfailEnd = () => setGate('calm', true);
+    document.addEventListener('visibilitychange', onVisibility);
+    window.addEventListener(SYSFAIL_START, onSysfailStart);
+    window.addEventListener(SYSFAIL_END, onSysfailEnd);
 
-    const motionOff = !readMotion();
-
+    let observer: IntersectionObserver | undefined;
+    let idleHandle: number | undefined;
+    let idleTimer: ReturnType<typeof setTimeout> | undefined;
+    const target = watchRef?.current;
     if (watchRef) {
-      running = false;
-      const target = watchRef.current;
       if (target && 'IntersectionObserver' in window) {
-        const io = new IntersectionObserver(
+        gates.inView = false;
+        observer = new IntersectionObserver(
           (entries) => {
-            entries.forEach((e) => {
-              isIntersecting = e.isIntersecting;
-              if (e.isIntersecting && readMotion()) resume();
-              else pause();
-            });
+            for (const entry of entries) setGate('inView', entry.isIntersecting);
           },
-          { threshold: 0.05 },
+          { threshold: VIEW_THRESHOLD },
         );
-        io.observe(target);
-        return () => {
-          io.disconnect();
-          pause();
-          clearTimeout(resizeTimer);
-          window.removeEventListener('resize', debouncedResize);
-          window.removeEventListener('motionchange', onMotionChange);
-        };
+        observer.observe(target);
       }
-      if (!motionOff) resume();
+      setGate('ready', true);
     } else {
-      type IdleWindow = Window & {
-        requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => number;
-        cancelIdleCallback?: (handle: number) => void;
-      };
-      const idleWin = window as IdleWindow;
-      let idleHandle: number | undefined;
-      let idleTimer: ReturnType<typeof setTimeout> | undefined;
-      const startLoop = () => {
-        if (readMotion()) raf = requestAnimationFrame(frame);
-      };
-      if (!motionOff) {
-        if (typeof idleWin.requestIdleCallback === 'function') {
-          idleHandle = idleWin.requestIdleCallback(startLoop, { timeout: 2000 });
-        } else {
-          idleTimer = setTimeout(startLoop, 1000);
-        }
+      const idleWindow = window as IdleWindow;
+      const open = () => setGate('ready', true);
+      if (typeof idleWindow.requestIdleCallback === 'function') {
+        idleHandle = idleWindow.requestIdleCallback(open, { timeout: IDLE_TIMEOUT_MS });
+      } else {
+        idleTimer = setTimeout(open, IDLE_FALLBACK_MS);
       }
-      const onVisibility = () => {
-        document.hidden ? pause() : resume();
-      };
-      document.addEventListener('visibilitychange', onVisibility);
-      const onSysfailStart = () => pause();
-      const onSysfailEnd = () => resume();
-      window.addEventListener('sysfail:start', onSysfailStart);
-      window.addEventListener('sysfail:end', onSysfailEnd);
-      return () => {
-        pause();
-        if (idleHandle !== undefined) idleWin.cancelIdleCallback?.(idleHandle);
-        if (idleTimer !== undefined) clearTimeout(idleTimer);
-        clearTimeout(resizeTimer);
-        window.removeEventListener('resize', debouncedResize);
-        document.removeEventListener('visibilitychange', onVisibility);
-        window.removeEventListener('sysfail:start', onSysfailStart);
-        window.removeEventListener('sysfail:end', onSysfailEnd);
-        window.removeEventListener('motionchange', onMotionChange);
-      };
     }
 
     return () => {
-      pause();
+      running = false;
+      cancelAnimationFrame(raf);
+      observer?.disconnect();
+      if (idleHandle !== undefined) (window as IdleWindow).cancelIdleCallback?.(idleHandle);
+      clearTimeout(idleTimer);
       clearTimeout(resizeTimer);
+      unsubscribeMotion();
       window.removeEventListener('resize', debouncedResize);
-      window.removeEventListener('motionchange', onMotionChange);
+      document.removeEventListener('visibilitychange', onVisibility);
+      window.removeEventListener(SYSFAIL_START, onSysfailStart);
+      window.removeEventListener(SYSFAIL_END, onSysfailEnd);
     };
   }, [watchRef]);
 

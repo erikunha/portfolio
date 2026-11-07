@@ -1,123 +1,115 @@
+import { CompanyLink } from '@/components/CompanyLink';
+import { EXTERNAL_LINK_PROPS, externalLinkProps } from '@/components/ExternalLink';
 import { HeroStats } from '@/components/HeroStats';
-import { heroCurrentEmployer, heroPlatformChip, heroTagline } from '@/content/hero';
-import { Badge, Button } from '@/design-system';
+import { heroContent, heroTagline } from '@/content/hero';
+import { profile, profilePresentation } from '@/content/profile';
+import type { SiteLocale } from '@/content/site-locale';
+import { Button } from '@/design-system';
 import { HeroBootAnimation } from '../../client/HeroBootAnimation';
 import { HeroSystemFailure } from '../../client/HeroSystemFailure';
 
-export function Hero() {
+const FIELD_SEPARATOR = ' · ';
+
+const HEADING_LEVEL = 1;
+
+function HeroIdentity({ locale, primary }: { locale: SiteLocale; primary: boolean }) {
+  const c = heroContent[locale];
+  const p = profilePresentation[locale];
   return (
     <>
-      <h1 className="sr-only">Erik Cunha</h1>
+      {primary ? (
+        <h1 className="hero-identity" data-testid="hero-name">
+          {profile.displayName}
+        </h1>
+      ) : (
+        // biome-ignore lint/a11y/useSemanticElements: a second h1 would duplicate the page title in the DOM; the desktop variant owns the only h1
+        <p
+          className="hero-identity"
+          data-testid="hero-name"
+          role="heading"
+          aria-level={HEADING_LEVEL}
+        >
+          {profile.displayName}
+        </p>
+      )}
+      <p className="hero-stack">{heroTagline(locale)}</p>
+      <p className="hero-context">
+        <span className="hero-context-fact hero-context-fact--location">
+          <span className="hero-context-item">
+            {c.locationLabel} <b className="hero-location">{p.country}</b>
+          </span>
+          <span className="hero-context-separator" aria-hidden="true">
+            {FIELD_SEPARATOR}
+          </span>
+          <span className="hero-context-item">
+            {profile.timezone}
+            {FIELD_SEPARATOR}
+            {p.availability}
+          </span>
+        </span>
+        <span className="hero-context-fact hero-context-fact--employer">
+          {c.employerLabel}{' '}
+          <b>
+            <CompanyLink href={profile.currentEmployer.url} locale={locale}>
+              {profile.currentEmployer.name}
+            </CompanyLink>
+          </b>
+        </span>
+        <span className="hero-context-fact hero-context-fact--domain">{p.employerContext}</span>
+        <span className="hero-context-fact hero-context-fact--language">
+          {c.languageLabel} {p.workingLanguageLine}
+        </span>
+      </p>
+      <HeroStats stats={c.stats} label={c.statsLabel} />
+      <div className="hero-actions" data-testid="hero-ctas">
+        <Button
+          as="a"
+          variant="primary"
+          href={c.hire.href}
+          {...EXTERNAL_LINK_PROPS}
+          aria-label={c.hire.accessibleLabel}
+        >
+          {c.hire.label}
+        </Button>
+        {c.actions.map((action) => (
+          <Button
+            key={action.href}
+            as="a"
+            variant="secondary"
+            href={action.href}
+            {...externalLinkProps(action.external)}
+            aria-label={action.accessibleLabel}
+            className={action.hiddenOnWide ? 'lg:hidden' : undefined}
+          >
+            {action.label}
+          </Button>
+        ))}
+      </div>
+    </>
+  );
+}
+
+export function Hero({ locale }: { locale: SiteLocale }) {
+  return (
+    <>
       <section
         id="bio"
-        className="hero-desktop relative border border-primary-subtle min-h-[640px] overflow-hidden mb-10 md:mb-[40px] bg-transparent transition-transform duration-100 ease-out motion-reduce:transition-none [body[data-motion=reduce]_&]:transition-none"
+        tabIndex={-1}
+        className="hero-desktop hero-frame"
         data-testid="hero-desktop"
       >
-        <div className="flex-1 relative overflow-hidden">
+        <div className="hero-terminal">
           <HeroBootAnimation variant="desktop" />
         </div>
-        <aside className="hero-bio flex-1 border-l border-dashed border-primary-subtle flex flex-col justify-end px-6 py-8 gap-[10px]">
-          <p
-            className="font-mono font-bold text-[32px] md:text-[48px] text-primary-500 m-0 mb-1 leading-[1.2]"
-            data-testid="hero-name"
-            aria-hidden="true"
-          >
-            Erik Cunha
-          </p>
-          <p className="text-tertiary-50 text-sm leading-[1.55] mb-2">{heroTagline}</p>
-          <p className="flex flex-wrap gap-x-3 gap-y-1.5 text-primary-400 text-sm tracking-[0.08em] mb-3.5">
-            <span>
-              LOC:{' '}
-              <b className="bg-primary-500 text-black font-bold px-1.5 border border-transparent transition-colors motion-reduce:transition-none [body[data-motion=reduce]_&]:transition-none hover:bg-transparent hover:text-primary-500 hover:border-primary-500">
-                Brazil
-              </b>
-            </span>
-            <span>
-              NOW: <b className="text-primary-500 font-bold">{heroCurrentEmployer}</b>
-            </span>
-            <span>{heroPlatformChip}</span>
-            <span>EN/PT/FR/ES</span>
-          </p>
-          <div className="self-start">
-            <Badge variant="dot">OPEN_TO_RELOCATION · WORLDWIDE</Badge>
-          </div>
-          <HeroStats />
-          <div className="grid grid-cols-2 gap-3 mt-3 [text-shadow:none]" data-testid="hero-ctas">
-            <Button
-              as="a"
-              variant="primary"
-              href="https://www.linkedin.com/in/erikunha/"
-              target="_blank"
-              rel="noreferrer"
-            >
-              EXEC HIRE
-            </Button>
-            <Button
-              as="a"
-              variant="secondary"
-              href="https://github.com/erikunha"
-              target="_blank"
-              rel="noreferrer"
-            >
-              GITHUB ↗
-            </Button>
-          </div>
+        <aside className="hero-bio">
+          <HeroIdentity locale={locale} primary />
         </aside>
         <HeroSystemFailure />
       </section>
-
-      <section
-        className="hero-mobile relative border border-primary-subtle overflow-hidden mb-10 bg-transparent mt-2"
-        data-testid="hero-mobile"
-      >
-        <div className="relative z-[1] p-4 pb-[18px]">
+      <section tabIndex={-1} className="hero-mobile hero-frame" data-testid="hero-mobile">
+        <div className="hero-mobile-content">
           <HeroBootAnimation variant="mobile" />
-
-          <p
-            className="font-mono font-bold text-[24px] text-primary-500 border-t border-dashed border-primary-quiet pt-3.5 mt-1.5 mb-0.5 leading-[1.55]"
-            data-testid="hero-name"
-            aria-hidden="true"
-          >
-            Erik Cunha
-          </p>
-          <p className="text-tertiary-50 text-xs leading-[1.55] mb-2">{heroTagline}</p>
-          <p className="flex flex-wrap gap-x-3 gap-y-1.5 text-primary-400 text-xs tracking-[0.08em] mb-3.5">
-            <span>
-              LOC:{' '}
-              <b className="bg-primary-500 text-black font-bold px-1.5 border border-transparent transition-colors motion-reduce:transition-none [body[data-motion=reduce]_&]:transition-none hover:bg-transparent hover:text-primary-500 hover:border-primary-500">
-                Brazil
-              </b>
-            </span>
-            <span>
-              NOW: <b className="text-primary-500 font-bold">{heroCurrentEmployer}</b>
-            </span>
-            <span>{heroPlatformChip}</span>
-            <span>EN/PT/FR/ES</span>
-          </p>
-          <div className="self-start mb-3.5">
-            <Badge variant="dot">OPEN_TO_RELOCATION · WORLDWIDE</Badge>
-          </div>
-          <HeroStats />
-          <div className="grid grid-cols-2 gap-3 mt-3 [text-shadow:none]" data-testid="hero-ctas">
-            <Button
-              as="a"
-              variant="primary"
-              href="https://www.linkedin.com/in/erikunha/"
-              target="_blank"
-              rel="noreferrer"
-            >
-              EXEC HIRE
-            </Button>
-            <Button
-              as="a"
-              variant="secondary"
-              href="https://github.com/erikunha"
-              target="_blank"
-              rel="noreferrer"
-            >
-              GITHUB ↗
-            </Button>
-          </div>
+          <HeroIdentity locale={locale} primary={false} />
         </div>
       </section>
     </>

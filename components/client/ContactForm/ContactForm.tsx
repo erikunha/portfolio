@@ -1,144 +1,520 @@
 'use client';
 
-import { useState } from 'react';
-import { contactChrome } from '@/content/terminal-chrome';
-import { WindowChrome } from '@/design-system';
+import { usePathname } from 'next/navigation';
+import {
+  Fragment,
+  useEffect,
+  useId,
+  useLayoutEffect,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from 'react';
+import { ExternalLink } from '@/components/ExternalLink';
+import type { ContactContent } from '@/content/contact';
+import {
+  CONTACT_DELIVERY_CODE,
+  CONTACT_EMAIL_PATTERN,
+  CONTACT_FIELD,
+  CONTACT_LIMITS,
+  type ContactField,
+  contactErrorMessage,
+  contactErrorSummary,
+  contactFieldError,
+} from '@/content/contact-rules';
+import type { TerminalChrome } from '@/content/schemas';
+import { localeOfPath } from '@/content/site-locale';
 import { Field } from '@/design-system/components/Field';
+import { forgetRequest, wasForgotten } from '@/lib/forget-request.client';
+import { longestCopy } from '@/lib/longest-copy';
+import { postJson } from '@/lib/post-json';
+import { addRef } from '@/lib/request-refs.client';
+import { ASK_LOCALE_HEADER } from '@/lib/stream-protocol';
+import { RefChip } from '../RefChip/RefChip.client';
+import { TerminalChromeBar } from '../TerminalChromeBar';
+import { messageStore } from './messageStore';
 
-type Status = 'idle' | 'submitting' | 'success' | 'error';
+const STATUS = {
+  IDLE: 'idle',
+  SUBMITTING: 'submitting',
+  SUCCESS: 'success',
+  QUEUED: 'queued',
+  ERROR: 'error',
+} as const;
+type Status = (typeof STATUS)[keyof typeof STATUS];
+const CONTACT_ENDPOINT = '/api/contact';
+const QUEUED_STATUS = 202;
+const REQUEST_ID_HEADER = 'X-Request-Id';
+const MAILTO_SHORT_REF_LENGTH = 8;
+const MAILTO_REF_TOKEN = '{ref}';
+const MAILTO_TEXT_TOKEN = '{text}';
+const REQUEST_TIMEOUT_MS = 20_000;
+const MESSAGE_ROWS = 5;
+const INITIAL_FAILURE_COUNT = 0;
+const FIELD_BORDER = '[&:not([aria-invalid=true])]:border-primary-500';
+type TypedField = Exclude<ContactField, typeof CONTACT_FIELD.MESSAGE>;
+const INITIAL_TYPED: Record<TypedField, string> = { name: '', email: '' };
+const CONTACT_FIELDS = Object.values(CONTACT_FIELD);
+const FIELD_CHECKS: Record<ContactField, (value: string) => boolean> = {
+  [CONTACT_FIELD.NAME]: (value) => {
+    const length = value.trim().length;
+    return length >= CONTACT_LIMITS.nameMin && length <= CONTACT_LIMITS.nameMax;
+  },
+  [CONTACT_FIELD.EMAIL]: (value) => CONTACT_EMAIL_PATTERN.test(value.trim()),
+  [CONTACT_FIELD.MESSAGE]: (value) => {
+    const length = value.trim().length;
+    return length >= CONTACT_LIMITS.messageMin && length <= CONTACT_LIMITS.messageMax;
+  },
+};
+function errorMailto(copy: ContactContent, ref: string, text: string): string {
+  const base = `mailto:${copy.section.email}`;
+  if (!ref) return base;
+  const subject = copy.form.mailtoSubject.replace(MAILTO_REF_TOKEN, () =>
+    ref.slice(0, MAILTO_SHORT_REF_LENGTH),
+  );
+  const body = copy.form.mailtoBody
+    .replace(MAILTO_REF_TOKEN, () => ref)
+    .replace(MAILTO_TEXT_TOKEN, () => text);
+  return `${base}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+}
+const focusResult = (node: HTMLDivElement | null) => node?.focus();
 
-function ContactShell({ children }: { children: React.ReactNode }) {
+interface ContactResponse {
+  ok?: boolean;
+  requestId?: string;
+  error?: { code?: string; message?: string };
+}
+
+function ContactShell({ chrome, children }: { chrome: TerminalChrome; children: React.ReactNode }) {
   return (
-    <div className="contact-shell bg-[var(--color-secondary-900)] font-mono -m-[14px] min-[769px]:-m-[18px]">
-      <div className="flex items-center gap-[10px] px-[14px] py-2 border-b border-[var(--color-primary-subtle)] text-primary-400 text-xs tracking-[0.14em]">
-        <WindowChrome size={10} />
-        <span className="max-md:hidden">{contactChrome.promptLabel}</span>
-        <span className="ml-auto max-md:text-[10px]">{contactChrome.rightTag}</span>
-      </div>
-      <div className="px-4 py-[14px]">{children}</div>
+    <div className="contact-shell">
+      <TerminalChromeBar
+        chrome={chrome}
+        className="contact-chrome"
+        tagClassName="contact-channel"
+      />
+      <div className="contact-body">{children}</div>
     </div>
   );
 }
 
-export function ContactForm() {
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [message, setMessage] = useState('');
-  const [honeypot, setHoneypot] = useState('');
-  const [status, setStatus] = useState<Status>('idle');
-  const [errorMsg, setErrorMsg] = useState('');
+const FORGET = { IDLE: 'idle', PENDING: 'pending', DONE: 'done', FAILED: 'failed' } as const;
+type ForgetState = (typeof FORGET)[keyof typeof FORGET];
+const RECEIPT_TIME_FORMAT: Intl.DateTimeFormatOptions = {
+  year: 'numeric',
+  month: '2-digit',
+  day: '2-digit',
+  hour: '2-digit',
+  minute: '2-digit',
+  hourCycle: 'h23',
+  timeZoneName: 'short',
+};
 
-  async function submit(e: React.FormEvent) {
-    e.preventDefault();
-    setStatus('submitting');
-    setErrorMsg('');
+function ContactReceipt({
+  copy,
+  receipt,
+}: {
+  copy: ContactContent;
+  receipt: { ref: string; at: Date };
+}) {
+  const text = copy.success.receipt;
+  const [forget, setForget] = useState<ForgetState>(FORGET.IDLE);
+  const forgetPending = useRef(false);
+  const forgetButton = useRef<HTMLButtonElement>(null);
+  const copyButton = useRef<HTMLButtonElement>(null);
+  const restoreFocus = useRef(false);
+  const at = new Intl.DateTimeFormat(text.dateLocale, RECEIPT_TIME_FORMAT)
+    .format(receipt.at)
+    .replace(',', '');
+  const subject = encodeURIComponent(`${text.forgetSubject} ${receipt.ref}`);
+
+  async function forgetMessage() {
+    if (forgetPending.current) return;
+    forgetPending.current = true;
+    setForget(FORGET.PENDING);
     try {
-      const res = await fetch('/api/contact', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, message, field_company: honeypot }),
-      });
-      if (!res.ok) {
-        const data = (await res.json().catch(() => null)) as { error?: string } | null;
-        throw new Error(data?.error ?? `HTTP ${res.status}`);
-      }
-      setStatus('success');
-    } catch (err) {
-      setErrorMsg(err instanceof Error ? err.message : String(err));
-      setStatus('error');
+      const result = await forgetRequest(receipt.ref);
+      restoreFocus.current =
+        wasForgotten(result) && document.activeElement === forgetButton.current;
+      setForget(wasForgotten(result) ? FORGET.DONE : FORGET.FAILED);
+    } finally {
+      forgetPending.current = false;
     }
   }
 
-  if (status === 'success') {
+  useEffect(() => {
+    if (forget === FORGET.DONE && restoreFocus.current) copyButton.current?.focus();
+  }, [forget]);
+
+  return (
+    <div className="contact-receipt" data-testid="contact-receipt">
+      <RefChip
+        buttonRef={copyButton}
+        value={receipt.ref}
+        prefix={text.refLabel}
+        labels={{ copy: text.copy, copied: text.copied }}
+        feedback={text.feedback}
+      />
+      <dl>
+        <dt>{text.atLabel}</dt>
+        <dd>
+          <time dateTime={receipt.at.toISOString()}>{at}</time>
+        </dd>
+      </dl>
+      <div className="contact-receipt-actions">
+        {forget !== FORGET.DONE && (
+          <button
+            ref={forgetButton}
+            type="button"
+            className="copy-btn contact-copy-btn"
+            aria-disabled={forget === FORGET.PENDING}
+            onClick={() => void forgetMessage()}
+          >
+            {forget === FORGET.PENDING ? text.forget.pending : text.forget.label}
+          </button>
+        )}
+      </div>
+      <p className="contact-forget-status" role="status" data-testid="contact-forget-status">
+        {forget === FORGET.DONE && text.forget.done}
+        {forget === FORGET.FAILED && (
+          <>
+            {text.forget.failed}{' '}
+            <a href={`mailto:${copy.section.email}?subject=${subject}`}>{copy.section.email}</a>
+          </>
+        )}
+      </p>
+    </div>
+  );
+}
+
+export function ContactForm({ copy, chrome }: { copy: ContactContent; chrome: TerminalChrome }) {
+  const pageLocale = localeOfPath(usePathname());
+  const [typed, setTyped] = useState(INITIAL_TYPED);
+  const message = useSyncExternalStore(
+    messageStore.subscribe,
+    messageStore.getSnapshot,
+    messageStore.getServerSnapshot,
+  );
+  const values: Record<ContactField, string> = { ...typed, message };
+  const [honeypot, setHoneypot] = useState('');
+  const [status, setStatus] = useState<Status>(STATUS.IDLE);
+  const [errors, setErrors] = useState<Partial<Record<ContactField, string>>>({});
+  const [errorMsg, setErrorMsg] = useState('');
+  const [receipt, setReceipt] = useState<{ ref: string; at: Date } | null>(null);
+  const [queuedRef, setQueuedRef] = useState('');
+  const [errorRef, setErrorRef] = useState('');
+  const [failureCount, setFailureCount] = useState(INITIAL_FAILURE_COUNT);
+  const formRef = useRef<HTMLFormElement>(null);
+  const summaryRef = useRef<HTMLDivElement>(null);
+  const pendingRef = useRef(false);
+  const formId = useId();
+  const counterId = `${formId}-count`;
+  const summaryId = `${formId}-summary`;
+  const requestErrorId = `${formId}-request-error`;
+  const fieldId = (field: ContactField) => `${formId}-${field}`;
+  const invalidFields = CONTACT_FIELDS.filter((field) => errors[field]);
+  const busy = status === STATUS.SUBMITTING;
+  const failedLine = errorMsg ? copy.form.statusFailed : copy.form.statusInvalid;
+  const statusLine = busy
+    ? copy.form.sending
+    : status === STATUS.ERROR
+      ? failedLine
+      : copy.form.waiting;
+
+  const messageFieldId = fieldId(CONTACT_FIELD.MESSAGE);
+  const fieldShown = status !== STATUS.SUCCESS && status !== STATUS.QUEUED;
+  useEffect(
+    () => (fieldShown ? messageStore.bindField(messageFieldId) : undefined),
+    [fieldShown, messageFieldId],
+  );
+
+  useLayoutEffect(() => {
+    const fields = formRef.current?.elements;
+    const typedInDom = (field: ContactField) =>
+      (fields?.namedItem(field) as HTMLInputElement | HTMLTextAreaElement | null)?.value ?? '';
+    setTyped((current) => ({
+      name: typedInDom(CONTACT_FIELD.NAME) || current.name,
+      email: typedInDom(CONTACT_FIELD.EMAIL) || current.email,
+    }));
+    messageStore.seed(typedInDom(CONTACT_FIELD.MESSAGE));
+  }, []);
+
+  useEffect(() => {
+    if (failureCount > INITIAL_FAILURE_COUNT) summaryRef.current?.focus();
+  }, [failureCount]);
+
+  useEffect(() => {
+    setErrors((current) => {
+      if (!current.message || !FIELD_CHECKS.message(message)) return current;
+      const { message: _cleared, ...rest } = current;
+      return rest;
+    });
+  }, [message]);
+
+  function change(field: ContactField, value: string) {
+    if (field === CONTACT_FIELD.MESSAGE) messageStore.set(value);
+    else setTyped((current) => ({ ...current, [field]: value }));
+    if (errors[field]) {
+      const valid = FIELD_CHECKS[field](value);
+      setErrors((current) => {
+        const { [field]: _cleared, ...rest } = current;
+        return valid ? rest : { ...current, [field]: contactFieldError(copy, field, value) };
+      });
+    }
+    if (!pendingRef.current) {
+      setStatus(STATUS.IDLE);
+      setErrorMsg('');
+    }
+  }
+
+  async function submit(event: React.FormEvent) {
+    event.preventDefault();
+    if (pendingRef.current) return;
+    const fieldErrors: Partial<Record<ContactField, string>> = {};
+    for (const field of CONTACT_FIELDS) {
+      if (!FIELD_CHECKS[field](values[field])) {
+        fieldErrors[field] = contactFieldError(copy, field, values[field]);
+      }
+    }
+    setErrors(fieldErrors);
+    setErrorMsg('');
+    setErrorRef('');
+    if (Object.keys(fieldErrors).length) {
+      setStatus(STATUS.ERROR);
+      setFailureCount((count) => count + 1);
+      return;
+    }
+    pendingRef.current = true;
+    setStatus(STATUS.SUBMITTING);
+    try {
+      const { response: res, data } = await postJson<ContactResponse>(
+        CONTACT_ENDPOINT,
+        { ...values, field_company: honeypot },
+        { headers: { [ASK_LOCALE_HEADER]: pageLocale }, timeoutMs: REQUEST_TIMEOUT_MS },
+      );
+      const apiError = data?.error;
+      const ref =
+        typeof data?.requestId === 'string' && data.requestId
+          ? data.requestId
+          : (res.headers.get(REQUEST_ID_HEADER) ?? '');
+      if (res.status === QUEUED_STATUS && apiError?.code === CONTACT_DELIVERY_CODE.QUEUED) {
+        messageStore.reset();
+        if (ref) addRef(ref);
+        setQueuedRef(ref);
+        setStatus(STATUS.QUEUED);
+        return;
+      }
+      if (!res.ok || data?.ok !== true || res.status === QUEUED_STATUS) {
+        setErrorRef(ref);
+        throw new Error(CONTACT_ENDPOINT, { cause: apiError?.code });
+      }
+      messageStore.reset();
+      if (ref) addRef(ref);
+      setReceipt(ref ? { ref, at: new Date() } : null);
+      setStatus(STATUS.SUCCESS);
+    } catch (error) {
+      const code =
+        error instanceof Error && typeof error.cause === 'string' ? error.cause : undefined;
+      setErrorMsg(contactErrorMessage(copy, code));
+      setStatus(STATUS.ERROR);
+      setFailureCount((count) => count + 1);
+    } finally {
+      pendingRef.current = false;
+    }
+  }
+
+  if (status === STATUS.SUCCESS || status === STATUS.QUEUED) {
     return (
-      <ContactShell>
-        <div className="contact-success" role="status" data-testid="contact-success">
-          <p>EXECUTE_SEND :: SUCCESS</p>
-          <p>handshake initiated · expect reply within 48h</p>
-        </div>
+      <ContactShell chrome={chrome}>
+        {status === STATUS.SUCCESS && (
+          <div
+            className="contact-success"
+            role="status"
+            data-testid="contact-success"
+            tabIndex={-1}
+            ref={focusResult}
+          >
+            <p className="contact-state-title">{copy.success.title}</p>
+            <p>{copy.success.message}</p>
+            {receipt && <ContactReceipt copy={copy} receipt={receipt} />}
+          </div>
+        )}
+        {status === STATUS.QUEUED && (
+          <div
+            className="contact-success contact-queued"
+            role="status"
+            data-testid="contact-queued"
+            tabIndex={-1}
+            ref={focusResult}
+          >
+            <p className="contact-state-title">{copy.queued.title}</p>
+            <p>{copy.queued.message}</p>
+            <p>
+              {copy.queued.fasterLabel}{' '}
+              <ExternalLink href={copy.queued.linkHref}>
+                {copy.queued.linkLabel} {copy.queued.linkGlyph}
+              </ExternalLink>
+            </p>
+            {queuedRef && (
+              <p className="contact-state-ref" data-testid="contact-queued-ref" title={queuedRef}>
+                {copy.queued.refLabel} {queuedRef}
+              </p>
+            )}
+          </div>
+        )}
       </ContactShell>
     );
   }
 
   return (
-    <ContactShell>
+    <ContactShell chrome={chrome}>
       <form
+        ref={formRef}
+        method="dialog"
         onSubmit={submit}
-        className="contact-form flex flex-col gap-[14px]"
-        aria-busy={status === 'submitting'}
+        noValidate
+        className="contact-form"
+        aria-busy={busy}
         data-testid="contact-form"
       >
+        {(invalidFields.length > 0 || errorMsg) && (
+          <div
+            ref={summaryRef}
+            role="alert"
+            tabIndex={-1}
+            className="contact-alert"
+            aria-labelledby={invalidFields.length > 0 ? summaryId : requestErrorId}
+          >
+            {invalidFields.length > 0 && (
+              <p>
+                <span id={summaryId} className="contact-summary-lead">
+                  {contactErrorSummary(copy, invalidFields.length)}
+                </span>
+                {invalidFields.map((field, index) => (
+                  <Fragment key={field}>
+                    {index === 0 ? ' ' : copy.form.errorSummary.separator}
+                    <a
+                      className="contact-summary-link"
+                      href={`#${fieldId(field)}`}
+                      onClick={(event) => {
+                        event.preventDefault();
+                        document.getElementById(fieldId(field))?.focus();
+                      }}
+                    >
+                      {copy.form.fieldLabels[field]}
+                    </a>
+                  </Fragment>
+                ))}
+              </p>
+            )}
+            {errorMsg && (
+              <p id={requestErrorId}>
+                {copy.form.errorPrefix} {errorMsg}. {copy.form.retained} {copy.form.retryEmail}{' '}
+                <a href={errorMailto(copy, errorRef, values.message.trim())}>
+                  {copy.section.email}
+                </a>
+              </p>
+            )}
+            {errorMsg && errorRef && (
+              <>
+                <RefChip
+                  value={errorRef}
+                  prefix={copy.success.receipt.refLabel}
+                  labels={{ copy: copy.success.receipt.copy, copied: copy.success.receipt.copied }}
+                  feedback={copy.success.receipt.feedback}
+                />
+                <p>{copy.form.refNote}</p>
+              </>
+            )}
+          </div>
+        )}
         <input
           type="text"
           name="field_company"
           value={honeypot}
-          onChange={(e) => setHoneypot(e.target.value)}
+          onChange={(event) => setHoneypot(event.target.value)}
           tabIndex={-1}
           autoComplete="off"
           aria-hidden="true"
           data-testid="contact-honeypot"
-          style={{
-            position: 'absolute',
-            left: '-9999px',
-            width: '1px',
-            height: '1px',
-            opacity: 0,
-            pointerEvents: 'none',
-          }}
+          className="contact-honeypot"
         />
         <Field
-          name="name"
-          label="$ name:"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
+          className={FIELD_BORDER}
+          id={fieldId(CONTACT_FIELD.NAME)}
+          name={CONTACT_FIELD.NAME}
+          label={copy.form.nameLabel}
+          value={values.name}
+          onChange={(event) => change(CONTACT_FIELD.NAME, event.target.value)}
+          error={errors.name ?? ''}
+          readOnly={busy}
           required
-          minLength={2}
-          maxLength={80}
+          minLength={CONTACT_LIMITS.nameMin}
+          maxLength={CONTACT_LIMITS.nameMax}
           autoComplete="name"
-          placeholder="[INPUT REQUIRED]"
+          placeholder={copy.form.namePlaceholder}
         />
         <Field
-          name="email"
-          label="$ email:"
+          className={FIELD_BORDER}
+          id={fieldId(CONTACT_FIELD.EMAIL)}
+          name={CONTACT_FIELD.EMAIL}
+          label={copy.form.emailLabel}
           type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          value={values.email}
+          onChange={(event) => change(CONTACT_FIELD.EMAIL, event.target.value)}
+          error={errors.email ?? ''}
+          readOnly={busy}
           required
           autoComplete="email"
-          placeholder="[INPUT REQUIRED]"
+          placeholder={copy.form.emailPlaceholder}
         />
         <Field
-          name="message"
-          label="$ message:"
+          className={FIELD_BORDER}
+          id={messageFieldId}
+          name={CONTACT_FIELD.MESSAGE}
+          label={copy.form.messageLabel}
           multiline
-          value={message}
-          onChange={(e) => setMessage(e.target.value)}
+          value={values.message}
+          onChange={(event) => change(CONTACT_FIELD.MESSAGE, event.target.value)}
+          error={errors.message ?? ''}
+          aria-describedby={counterId}
+          readOnly={busy}
           required
-          minLength={10}
-          maxLength={2000}
-          rows={5}
-          placeholder="[READY FOR DATA INPUT...]"
+          minLength={CONTACT_LIMITS.messageMin}
+          maxLength={CONTACT_LIMITS.messageMax}
+          rows={MESSAGE_ROWS}
+          placeholder={copy.form.messagePlaceholder}
         />
-        <div
-          className="flex items-center gap-3 flex-wrap mt-1 max-md:flex-col max-md:items-stretch"
-          aria-live="polite"
-        >
+        <p id={counterId} className="contact-count">
+          {values.message.trim().length}
+          {copy.form.counterSeparator}
+          {CONTACT_LIMITS.messageMax}
+        </p>
+        <div className="contact-submit-row">
           <button
             type="submit"
-            disabled={status === 'submitting'}
-            className="contact-send self-start max-md:self-auto max-md:w-full bg-primary-500 text-black border border-primary-500 px-[18px] py-[10px] font-bold text-xs tracking-[0.08em] cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+            aria-disabled={busy}
+            aria-busy={busy}
+            className="contact-send"
+            data-reserve={longestCopy([copy.form.submit, copy.form.submitting])}
           >
-            {status === 'submitting' ? 'TRANSMITTING...' : 'EXECUTE_SEND'}
+            <span>{busy ? copy.form.submitting : copy.form.submit}</span>
           </button>
-          <p className="text-primary-400 text-xs opacity-85 m-0 md:text-xs">
-            waiting for manual override... _
+          <p
+            className="contact-waiting"
+            role="status"
+            data-testid="contact-status"
+            data-reserve={longestCopy([
+              copy.form.waiting,
+              copy.form.sending,
+              copy.form.statusInvalid,
+              copy.form.statusFailed,
+            ])}
+          >
+            <span>{statusLine}</span>
           </p>
         </div>
-        {status === 'error' && (
-          <p role="alert" className="text-senary-300 text-xs">
-            error: {errorMsg}
-          </p>
-        )}
+        <p className="contact-privacy">{copy.form.privacy}</p>
       </form>
     </ContactShell>
   );

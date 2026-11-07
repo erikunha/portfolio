@@ -1,0 +1,75 @@
+import { dsPageMetadata } from '../_lib/page-metadata';
+
+export const metadata = dsPageMetadata({
+  slug: 'changelog',
+  title: 'Changelog — Design System — erikunha.dev',
+  description: 'Design system token and component changelog',
+});
+
+# CHANGELOG
+
+## 2026-11-03
+
+- **feat:** brand icon replaces the wordmark; menu trigger moves to the far right
+
+## 2026-11-01
+
+- **fix:** finish topbar, mobile menu and pager port (#319)
+
+## 2026-10-30
+
+- **fix:** one gutter, page measure and section rhythm (T075 part 1) (#302)
+
+## 2026-10-29
+
+- **feat:** r106 reference pages, sitemap coverage and mobile layout (#284)
+
+## 2026-07-17
+
+- **docs:** purge the removed component name from tracked files
+- **test:** regen DS component baselines after the nav-trail removal
+
+## 2026-07-16
+
+- **fix:** changelog generator silently dropped breaking changes
+- **feat!:** remove the per-page nav trail
+
+## 2026-07-11
+
+- **feat:** StatTile display variant — docs stat tiles at app scale (#177)
+
+## 2026-07-10
+
+- **feat:** add StatTile display variant at the app stat scale
+- **fix:** make changelog sync append-only across squash merges
+
+## 2026-07-09
+
+- **feat:** align docs type scale with the app
+
+## 2026-05-30
+
+- **docs:** fix phantom layer tokens on reference page
+
+## 2026-05-24
+
+- **fix:** remove commitizen, add space token aliases, fix token boundary violations
+- **test:** add Badge, Button, StatTile behavioral E2E + expand Playwright testMatch
+- **fix:** review findings — token th bg, allowlist reason, changelog cwd anchor
+- **fix:** narrow regex group types in sync-changelog to satisfy strict TS
+- **feat:** git-driven changelog + sidebar home link
+- **fix:** stat grids full content-column width via negative margins
+- **feat:** add live stat grid render to composition patterns
+- **fix:** code block overflow scroll and h3 visual hierarchy
+- **fix:** prose rhythm, table styles, token component legibility
+- **feat:** landing page — stat grid, import CmdLine, LIVE badge
+- **feat:** component docs — anchor nav + props tables
+- **feat:** token visualization + fix GFM tables
+- **fix:** seed visual baselines and add section IDs to Preview components
+
+## 2026-05-23
+
+- **feat:** /design-system route + MDX docs (PR-C) (#50)
+- **feat:** 7 primitive components + site-wide adoption (#49)
+- **feat:** two-tier token pipeline (Style Dictionary + migration) (#47)
+- **docs:** design system tokenized spec, plans A-E, MDX spike

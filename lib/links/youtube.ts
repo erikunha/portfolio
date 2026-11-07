@@ -31,6 +31,13 @@ const NAMED_ENTITIES: Record<string, string> = {
 
 const PAD_WIDTH = 2;
 
+const YTIMG_SHARD_HOST_RE = /^https:\/\/i\d\.ytimg\.com\//;
+const YTIMG_CANONICAL_ORIGIN = 'https://i.ytimg.com/';
+
+export function canonicalThumbnailUrl(url: string): string {
+  return url.replace(YTIMG_SHARD_HOST_RE, YTIMG_CANONICAL_ORIGIN);
+}
+
 export function decodeXmlText(raw: string): string {
   return raw
     .replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, '$1')
@@ -62,8 +69,11 @@ export function parseFeed(xml: string, limit = Number.POSITIVE_INFINITY): FeedVi
     if (!id || !title || !publishedAt) continue;
 
     const url = firstGroup(entry, LINK_RE) ?? `https://www.youtube.com/watch?v=${id}`;
+    const feedThumbnail = firstGroup(entry, THUMBNAIL_RE);
     const thumbnailUrl =
-      firstGroup(entry, THUMBNAIL_RE) ?? `https://i.ytimg.com/vi/${id}/hqdefault.jpg`;
+      feedThumbnail === undefined
+        ? `${YTIMG_CANONICAL_ORIGIN}vi/${id}/hqdefault.jpg`
+        : canonicalThumbnailUrl(feedThumbnail);
     const description = firstGroup(entry, DESCRIPTION_RE);
 
     const video: FeedVideo = { id, title, url, thumbnailUrl, publishedAt };
@@ -71,6 +81,28 @@ export function parseFeed(xml: string, limit = Number.POSITIVE_INFINITY): FeedVi
     videos.push(video);
   }
   return videos;
+}
+
+const SHORTS_PATH = '/shorts/';
+const SHORT_MAX_SECONDS = 60;
+const SECONDS_PER_MINUTE = 60;
+
+export function durationSeconds(formatted: string): number | null {
+  const parts = formatted.split(':').map(Number);
+  if (parts.length < 2 || parts.length > 3 || parts.some((part) => !Number.isFinite(part))) {
+    return null;
+  }
+  return parts.reduce((total, part) => total * SECONDS_PER_MINUTE + part, 0);
+}
+
+export function isShortUrl(video: FeedVideo): boolean {
+  return video.url.includes(SHORTS_PATH);
+}
+
+export function isShort(video: EnrichedVideo): boolean {
+  if (isShortUrl(video)) return true;
+  const seconds = video.duration === undefined ? null : durationSeconds(video.duration);
+  return seconds !== null && seconds <= SHORT_MAX_SECONDS;
 }
 
 export function parseIsoDuration(iso: string): string | null {
@@ -86,4 +118,45 @@ export function parseIsoDuration(iso: string): string | null {
 
   if (h > 0) return `${h}:${pad(m)}:${pad(s)}`;
   return `${m}:${pad(s)}`;
+}
+
+export type PlaylistItemsPayload = {
+  items?: Array<{
+    snippet?: {
+      title?: string;
+      publishedAt?: string;
+      description?: string;
+      resourceId?: { videoId?: string };
+    };
+    status?: { privacyStatus?: string };
+  }>;
+  nextPageToken?: string;
+};
+
+const PUBLIC_PRIVACY_STATUS = 'public';
+
+export function parsePlaylistItems(
+  payload: PlaylistItemsPayload,
+  limit = Number.POSITIVE_INFINITY,
+): FeedVideo[] {
+  const videos: FeedVideo[] = [];
+  for (const item of payload.items ?? []) {
+    if (videos.length >= limit) break;
+    if (item.status?.privacyStatus !== PUBLIC_PRIVACY_STATUS) continue;
+    const id = item.snippet?.resourceId?.videoId;
+    const title = item.snippet?.title;
+    const publishedAt = item.snippet?.publishedAt;
+    if (!id || !title || !publishedAt) continue;
+
+    const video: FeedVideo = {
+      id,
+      title,
+      url: `https://www.youtube.com/watch?v=${id}`,
+      thumbnailUrl: `${YTIMG_CANONICAL_ORIGIN}vi/${id}/hqdefault.jpg`,
+      publishedAt,
+    };
+    if (item.snippet?.description) video.description = item.snippet.description;
+    videos.push(video);
+  }
+  return videos;
 }

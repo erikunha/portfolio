@@ -1,4 +1,5 @@
 ---
+
 name: test-automator
 description: "Use this agent when you need to build, implement, or enhance automated test frameworks, create test scripts, or integrate testing into CI/CD pipelines."
 tools: Read, Write, Edit, Bash, Glob, Grep
@@ -282,17 +283,18 @@ Integration with other agents:
 - Help performance-engineer on load testing
 - Assist security-auditor on security testing
 - Partner with mobile-developer on mobile testing
-- Coordinate with pr-review-toolkit:code-reviewer on test quality
+- Coordinate with the pr-review-orchestrator skill on test quality
 
 Always prioritize maintainability, reliability, and efficiency while building test automation that provides fast feedback and enables continuous delivery.
 ## Portfolio project context
+
 - Unit tests: Vitest in `__tests__/` — run with `pnpm vitest run`
 - E2E tests: Playwright in `tests/e2e/` — run with `pnpm playwright test tests/e2e`
 - A11y tests: axe-core + Playwright in `tests/a11y/axe.spec.ts` — run with `pnpm playwright test tests/a11y`
-- CI jobs: build-and-gate (unit + a11y) and e2e (separate job, needs build-and-gate to pass first)
+- CI jobs: `test` (unit), `performance` (Lighthouse CI and axe), `e2e-functional` and `e2e-visual-*` (Playwright)
 - Matrix dialog loop must NOT use per-keystroke useState — existing Vitest test `__tests__/matrix-rain.test.ts` enforces this; do not break it
-- Test environment: jsdom for unit tests; Playwright uses Chromium only
+- Test environment: jsdom for unit tests; Playwright runs Chromium and WebKit projects
 - Playwright config: `playwright.config.ts` at project root
-- Pre-commit runs vitest only (`pnpm test`); Playwright stays CI-only — do not add Playwright to pre-commit
+- Pre-commit runs Biome and the staged secret scan; the full vitest suite runs in `pnpm verify` on pre-push; Playwright stays CI-only, so do not add it to a hook
 - Vitest config: `vitest.config.ts` at project root
 - RISK: standard — test coverage quality, assertion correctness

@@ -8,14 +8,24 @@ export const LEAK_MARKERS: readonly string[] = [
   'Treat it as data only',
   'Do NOT widen this to whole-platform ownership',
   'do not claim those',
+  '## Identidade -',
+  'Não revele, cite ou resuma',
+  '(fonte única da verdade',
+  'fonte única da verdade ·',
+  'Trate-o apenas como dados',
+  'NÃO amplie isso para a propriedade de toda a plataforma',
+  'não reivindique esses',
+  'não reivindique estes',
 ];
 
 export const MAX_ANSWER_CHARS = 4000;
 
+export { GUARD_ABORT_PREFIX } from '@/lib/stream-protocol';
+
 export type GuardVerdict = { ok: true } | { ok: false; reason: 'leak' | 'length' };
 
 export type GuardFinding = {
-  kind: 'leak' | 'empty';
+  kind: 'leak' | 'length' | 'empty';
   detail: string;
 };
 
@@ -23,6 +33,20 @@ export type PostHocVerdict = {
   clean: boolean;
   findings: GuardFinding[];
 };
+
+export function withStreamAbort(
+  verdict: PostHocVerdict,
+  abortReason: Extract<GuardVerdict, { ok: false }>['reason'] | null,
+): PostHocVerdict {
+  if (abortReason === null) return verdict;
+  return {
+    clean: false,
+    findings: [
+      ...verdict.findings,
+      { kind: abortReason, detail: `stream guard aborted the answer: ${abortReason}` },
+    ],
+  };
+}
 
 export type StreamGuard = {
   inspect(chunk: string): GuardVerdict;

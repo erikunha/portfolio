@@ -1,25 +1,94 @@
-import { createElement } from 'react';
+import { act, createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { describe, expect, it } from 'vitest';
-import { ROLES, RoleTyper } from './RoleTyper';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { mountClient } from '@/__tests__/helpers/render';
+import { aboutContent } from '@/content/about';
+import { SITE_LOCALES } from '@/content/site-locale';
+import { RoleTyper } from './RoleTyper';
+
+const ROLE = 'Senior';
+
+vi.mock('@/lib/motion', () => ({
+  readMotion: vi.fn(() => true),
+}));
 
 function getDOM() {
-  const html = renderToStaticMarkup(createElement(RoleTyper));
+  const html = renderToStaticMarkup(createElement(RoleTyper, { role: ROLE }));
   return new DOMParser().parseFromString(html, 'text/html');
 }
 
 function getPill() {
-  return getDOM().querySelector('span[aria-hidden="true"]');
+  return getDOM().querySelector('[data-role-pill]');
 }
 
 function getLiveRegion() {
   return getDOM().querySelector('span.sr-only[role="status"]');
 }
 
-describe('RoleTyper: ROLES length budget', () => {
-  it('no role exceeds 9 chars (so [role] stays ≤ 11 chars, within the 9em CSS budget)', () => {
-    const longest = Math.max(...ROLES.map((r) => r.length));
-    expect(longest).toBeLessThanOrEqual(9);
+describe('RoleTyper: role length budget', () => {
+  it.each(SITE_LOCALES)(
+    'the %s role is at most 9 chars (so [role] stays ≤ 11 chars, within the 9em CSS budget)',
+    (locale) => {
+      expect(aboutContent[locale].whoami.role.length).toBeLessThanOrEqual(9);
+    },
+  );
+});
+
+describe('RoleTyper: role vocabulary', () => {
+  it('never names a Staff or Principal role', () => {
+    expect(
+      /staff|principal/i.test(ROLE),
+      'owner decision 2026-10-30: no Staff or Principal wording on the hiring surface',
+    ).toBe(false);
+  });
+
+  it('offers Senior, the level the resume and the copy state', () => {
+    expect(ROLE).toBe('Senior');
+  });
+});
+
+describe('RoleTyper: slot sizing', () => {
+  it('reserves the slot from the full role text instead of a fixed em reservation', () => {
+    const doc = getDOM();
+    const slot = doc.querySelector('.role-typer');
+    expect(slot, 'the pill sits in a slot that owns the reserved width').not.toBeNull();
+    const sizer = slot?.querySelector('.role-typer-sizer');
+    expect(sizer?.getAttribute('data-role-text')).toBe(`[${ROLE}]`);
+    expect(
+      doc.querySelector('.min-w-\\[9em\\]'),
+      'the fixed 9em slot left a gap after the badge',
+    ).toBe(null);
+  });
+});
+
+describe('RoleTyper: typing', () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it('types the role once and holds it, so the badge never empties itself', async () => {
+    const { RoleTyper } = await import('./RoleTyper');
+    const mounted = await mountClient(<RoleTyper role={ROLE} />);
+    const pill = mounted.container.querySelector('[data-role-pill]');
+    expect(pill).not.toBeNull();
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(5000);
+    });
+    expect(pill?.textContent, 'the role is fully typed').toBe(`[${ROLE}]`);
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(10000);
+    });
+    expect(pill?.textContent, 'the role stays typed instead of erasing and retyping').toBe(
+      `[${ROLE}]`,
+    );
+
+    mounted.unmount();
   });
 });
 

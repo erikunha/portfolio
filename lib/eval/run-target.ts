@@ -1,4 +1,5 @@
 import { generateText } from 'ai';
+import { ASK_MAX_OUTPUT_TOKENS } from '@/lib/ask/limits';
 
 export async function runTarget(
   c: { prompt: string; target: { systemText: string } },
@@ -15,7 +16,7 @@ export async function runTarget(
       model: opts.model,
       system: c.target.systemText,
       prompt: c.prompt,
-      maxOutputTokens: 512,
+      maxOutputTokens: ASK_MAX_OUTPUT_TOKENS,
       temperature: 0,
     });
     return {

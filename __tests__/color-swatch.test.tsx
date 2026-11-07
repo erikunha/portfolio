@@ -10,7 +10,9 @@ describe('ColorSwatch', () => {
   });
 
   async function render(props: { token: string; usage?: string }) {
-    const { ColorSwatch } = await import('@/app/design-system/_components/ColorSwatch/ColorSwatch');
+    const { ColorSwatch } = await import(
+      '@/app/(en)/design-system/_components/ColorSwatch/ColorSwatch'
+    );
     mounted = await mountClient(createElement(ColorSwatch, props));
     return mounted.container;
   }

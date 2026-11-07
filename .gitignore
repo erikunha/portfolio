@@ -99,3 +99,8 @@ mutation-report.json
 # Vendored Python bytecode
 __pycache__/
 *.pyc
+.vitest/
+
+# weekly metrics output (scripts/metrics); history lives in a workflow artifact
+/metrics/weekly.json
+/metrics/breaches.json

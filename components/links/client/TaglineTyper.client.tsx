@@ -2,11 +2,13 @@
 
 import { useEffect, useRef } from 'react';
 import { readMotion } from '@/lib/motion';
+import { subscribeMotion } from '@/lib/motion-change';
 
 const TYPE_MS = 70;
 const HOLD_MS = 1_540;
 const BACK_MS = 40;
 const INTER_MS = 280;
+const ACCESSIBLE_SEPARATOR = ' · ';
 
 export function TaglineTyper({ phrases }: { phrases: readonly string[] }) {
   const spanRef = useRef<HTMLSpanElement>(null);
@@ -61,24 +63,21 @@ export function TaglineTyper({ phrases }: { phrases: readonly string[] }) {
 
     if (readMotion()) start();
 
-    const onMotionChange = (event: Event) => {
-      const detail = (event as CustomEvent).detail as { on?: unknown } | null;
-      if (!detail || typeof detail.on !== 'boolean') return;
+    const unsubscribe = subscribeMotion((on) => {
       clearTimeout(timerId);
-      if (detail.on) {
+      if (on) {
         cancelled = false;
         start();
         return;
       }
       cancelled = true;
       node.textContent = phrases[0] ?? '';
-    };
-    window.addEventListener('motionchange', onMotionChange);
+    });
 
     return () => {
       cancelled = true;
       clearTimeout(timerId);
-      window.removeEventListener('motionchange', onMotionChange);
+      unsubscribe();
     };
   }, [phrases]);
 
@@ -87,7 +86,7 @@ export function TaglineTyper({ phrases }: { phrases: readonly string[] }) {
       <span ref={spanRef} aria-hidden="true">
         {first}
       </span>
-      <span className="sr-only">{first}</span>
+      <span className="sr-only">{phrases.join(ACCESSIBLE_SEPARATOR)}</span>
     </>
   );
 }

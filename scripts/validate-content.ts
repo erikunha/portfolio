@@ -1,8 +1,13 @@
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
+import { ContactContentSchema, contactContent } from '../content/contact';
 import { listContentFiles } from './content-files.mjs';
 
 const MIN_EXPECTED_CONTENT_FILES = 20;
+
+for (const locale of Object.keys(contactContent) as Array<keyof typeof contactContent>) {
+  ContactContentSchema.parse(contactContent[locale]);
+}
 
 const files = listContentFiles();
 

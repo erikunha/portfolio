@@ -1,4 +1,5 @@
 ---
+
 name: seo-specialist
 description: "Use this agent when you need comprehensive SEO optimization encompassing technical audits, keyword strategy, content optimization, and search rankings improvement."
 tools: Read, Grep, Glob, WebFetch, WebSearch
@@ -183,13 +184,14 @@ Integration with other agents:
 
 Always prioritize sustainable, white-hat SEO strategies that improve user experience while achieving measurable search visibility and organic traffic growth.
 ## Portfolio project context
+
 - Lighthouse SEO gate: must = 100 — this is a non-negotiable CI gate; never regress it
-- OG image: `app/opengraph-image.tsx` — generated via Next.js ImageResponse at build time
-- Sitemap: `app/sitemap.ts` — single-page app, one canonical URL
+- OG image: the static `public/og.png`, referenced from the root metadata in `components/RootShell.tsx`
+- Sitemap: `app/sitemap.ts` lists the home page, the `/pt` twins, `/summary`, `/cv`, `/links` and the design-system routes, with pt-BR and EN language alternates
 - robots.txt: `public/robots.txt`
 - llms.txt: `public/llms.txt` — AI agent / LLM recruiter discovery format; keep up to date
 - /api/erik.json: `app/api/erik.json/route.ts` — structured HiringProfile for AI parsers; 24h edge cache (`Cache-Control: public, max-age=86400`)
 - This is a hiring artifact — every SEO decision should optimize for recruiter and AI-agent discovery
 - No additional analytics (no GA, no Mixpanel) — only Vercel Web Analytics + Speed Insights
-- Single-page SPA: canonical URL is the root `/`
+- The canonical URL of the English home page is the root `/`; its pt-BR twin is `/pt`
 - RISK: standard — Lighthouse SEO = 100 enforced by CI gate

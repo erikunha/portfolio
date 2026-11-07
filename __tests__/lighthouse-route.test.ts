@@ -15,12 +15,16 @@ vi.mock('@/lib/lighthouse-scores', () => ({
     accessibility: 0,
     bestPractices: 0,
     seo: 0,
-    fetchedAt: '—',
+    fetchedAt: '-',
   },
   LIGHTHOUSE_TTL_S: 86400,
 }));
 
+const limitMock = vi.fn();
+
 vi.mock('@/lib/rate-limit', () => ({
+  getClientIp: vi.fn(() => '203.0.113.7'),
+  getLighthouseLimit: vi.fn(() => ({ limit: limitMock })),
   getRedis: vi.fn(() => ({
     get: vi.fn(async () => null),
     set: vi.fn(async () => 'OK'),
@@ -34,6 +38,8 @@ vi.mock('@/lib/log', () => ({
 describe('GET /api/lighthouse', () => {
   beforeEach(() => {
     vi.resetModules();
+    limitMock.mockReset();
+    limitMock.mockResolvedValue({ success: true });
   });
 
   afterEach(() => {
@@ -67,7 +73,7 @@ describe('GET /api/lighthouse', () => {
     const res = await GET(req);
 
     const body = await res.json();
-    expect(body.fetchedAt).toBe('—');
+    expect(body.fetchedAt).toBe('-');
     expect(res.headers.get('Cache-Control')).toBe('no-store');
   });
 
@@ -80,7 +86,30 @@ describe('GET /api/lighthouse', () => {
     const res = await GET(req);
 
     const body = await res.json();
-    expect(body.fetchedAt).toBe('—');
+    expect(body.fetchedAt).toBe('-');
     expect(res.headers.get('Cache-Control')).toBe('no-store');
+  });
+
+  it('answers 429 without reading scores once the client is over the limit', async () => {
+    limitMock.mockResolvedValueOnce({ success: false });
+    const { getScores } = await import('@/lib/lighthouse-scores');
+
+    const { GET } = await import('@/app/api/lighthouse/route');
+    const res = await GET({} as import('next/server').NextRequest);
+
+    expect(res.status).toBe(429);
+    expect(res.headers.get('Cache-Control')).toBe('no-store');
+    expect(getScores).not.toHaveBeenCalled();
+  });
+
+  it('still serves scores when the limiter is unavailable', async () => {
+    limitMock.mockRejectedValueOnce(new Error('Upstash down'));
+    const { getScores } = await import('@/lib/lighthouse-scores');
+    vi.mocked(getScores).mockResolvedValueOnce(cachedScores);
+
+    const { GET } = await import('@/app/api/lighthouse/route');
+    const res = await GET({} as import('next/server').NextRequest);
+
+    expect(res.status).toBe(200);
   });
 });
