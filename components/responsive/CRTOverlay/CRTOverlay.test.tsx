@@ -61,9 +61,15 @@ describe('CRTOverlay owns the frame governor', () => {
     const gate = new Promise<void>((resolve) => {
       openGate = resolve;
     });
+    let markLoaded: () => void = () => undefined;
+    const loaded = new Promise<void>((resolve) => {
+      markLoaded = resolve;
+    });
     vi.doMock('@/lib/frame-governor', async () => {
       await gate;
-      return vi.importActual('@/lib/frame-governor');
+      const actual = await vi.importActual('@/lib/frame-governor');
+      markLoaded();
+      return actual;
     });
     const { CRTOverlay } = await import('./CRTOverlay.client');
     mounted = await mountClient(createElement(CRTOverlay));
@@ -71,7 +77,8 @@ describe('CRTOverlay owns the frame governor', () => {
     mounted = undefined;
 
     openGate();
-    await new Promise((resolve) => setTimeout(resolve, 20));
+    await loaded;
+    await new Promise((resolve) => setTimeout(resolve, 0));
 
     expect(scheduled, 'a late module load must not start a governor nobody holds').toBe(0);
     expect(document.documentElement.hasAttribute('data-crt-level')).toBe(false);
