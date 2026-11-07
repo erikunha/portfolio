@@ -288,8 +288,8 @@ switch has a _behavioral_ test, not a source-grep. PII is minimized — no
 personal phone number, no private contact channel, in any machine-fetchable
 surface. The `/api/ask` SYSTEM prompt and the public `erik.json` profile carry
 email only. Prompt-injection defense is layered: a per-request 128-bit sentinel
-wrapper is the primary guard, `INJECTION_RE` (covering role tokens, override
-phrases, and `<|...|>` ChatML-style delimiters) is defense-in-depth, and the
+wrapper is the primary guard, `isInjectionAttempt` (`INJECTION_RE` over role tokens, override
+phrases, and `<|...|>` ChatML-style delimiters, minus quoted mentions) is defense-in-depth, and the
 `<question>` delimiter wrapping tells the model the input is data. The Anthropic
 budget cap fails _closed_.
 

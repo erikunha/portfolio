@@ -15,6 +15,10 @@ export const JUDGE_SYSTEM =
   'Respond with a single minified JSON object and nothing else: ' +
   '{"pass": boolean, "reason": "<=20 words"}.';
 
+export function isJudgeError(reason: string): boolean {
+  return reason.startsWith(JUDGE_ERROR_REASON_PREFIX) || reason === JUDGE_NO_JSON_REASON;
+}
+
 export type JudgeItem = { id: string; question: string; kind: string; expect: string };
 
 export async function judge(

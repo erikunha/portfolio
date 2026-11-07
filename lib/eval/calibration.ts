@@ -1,13 +1,9 @@
-import { JUDGE_ERROR_REASON_PREFIX, JUDGE_NO_JSON_REASON, judge } from '@/lib/eval/judge';
+import { isJudgeError, judge } from '@/lib/eval/judge';
 import type { CalibrationCase, CalibrationResult } from '@/lib/eval/types';
 
 export const MIN_CALIBRATION_AGREEMENT = 0.85;
 
 export const CALIBRATION_ERROR_FRACTION_LIMIT = 0.5;
-
-function isJudgeError(reason: string): boolean {
-  return reason.startsWith(JUDGE_ERROR_REASON_PREFIX) || reason === JUDGE_NO_JSON_REASON;
-}
 
 export type CalibrationGoldCase = {
   id: string;
