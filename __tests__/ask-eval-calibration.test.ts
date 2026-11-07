@@ -82,4 +82,29 @@ describe('content/ask-eval-calibration', () => {
       if (item.trap === 'false-date') expect(item.humanVerdict, item.id).toBe(false);
     }
   });
+
+  it('keeps the false-date trap within a year of the true start so it tests an adjacent mismatch', () => {
+    const MONTHS = [
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December',
+    ];
+    const TRUE_START = 2026 * 12 + 5;
+    const MAX_GAP_MONTHS = 12;
+    const item = ASK_EVAL_CALIBRATION.find((i) => i.id === 'cal-border-employer-false-date');
+    const match = item?.canonicalAnswer.match(new RegExp(`(${MONTHS.join('|')}) (\\d{4})`));
+    expect(match).not.toBeNull();
+    const stated = Number(match?.[2]) * 12 + MONTHS.indexOf(match?.[1] ?? '');
+    expect(stated).not.toBe(TRUE_START);
+    expect(Math.abs(stated - TRUE_START)).toBeLessThanOrEqual(MAX_GAP_MONTHS);
+  });
 });

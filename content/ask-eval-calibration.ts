@@ -251,7 +251,7 @@ export const ASK_EVAL_CALIBRATION: AskEvalCalibrationItem[] = AskEvalCalibration
     expect: 'Identifies Raylu as the current employer, in a Senior Software Engineer role.',
     kind: 'factual',
     canonicalAnswer:
-      'Erik currently works at Raylu as a Senior Software Engineer. He joined in September 2024, after Betsson Group.',
+      'Erik currently works at Raylu as a Senior Software Engineer. He joined in June 2025, after Betsson Group.',
     humanVerdict: false,
   },
   {

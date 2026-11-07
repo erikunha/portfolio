@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import {
   ASK_EVAL_CORPUS,
   AskEvalCorpusSchema,
@@ -186,5 +186,13 @@ describe('content/ask-eval-corpus current-role criteria', () => {
       expect(item?.expect, id).toMatch(/prompt-injection defense/);
       expect(item?.expect, id).toMatch(/evaluation harnesses/);
     }
+  });
+
+  it('fails at load when the current role has no date', async () => {
+    vi.resetModules();
+    vi.doMock('@/content/git-log', () => ({ gitLog: { en: [], pt: [] } }));
+    await expect(import('@/content/ask-eval-corpus')).rejects.toThrow(/current role date/i);
+    vi.doUnmock('@/content/git-log');
+    vi.resetModules();
   });
 });
