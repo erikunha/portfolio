@@ -140,7 +140,7 @@ Renders the three macOS-style traffic-light dots (red/yellow/green) as a pure RS
 | Prop | Type | Default | Required |
 |---|---|---|---|
 | `command` | `string` | · | yes |
-| `user` | `string` | `'erik@portfolio'` | no |
+| `user` | `string` | none | yes |
 | `prompt` | `string` | `':~$'` | no |
 | `output` | `ReactNode` | · | no |
 | `className` | `string` | · | no, merged after the base classes |
@@ -148,7 +148,7 @@ Renders the three macOS-style traffic-light dots (red/yellow/green) as a pure RS
 Any other `div` attribute (`id`, `aria-*`, `data-*`) is forwarded to the root element.
 
 <Preview id="cmd-line">
-  <CmdLine command="cat README.md" />
+  <CmdLine user="erik@portfolio" command="cat README.md" />
   <CmdLine user="root@prod" prompt="#" command="whoami" output={<span>root</span>} />
 </Preview>
 

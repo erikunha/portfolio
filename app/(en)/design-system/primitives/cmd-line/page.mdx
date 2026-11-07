@@ -18,7 +18,7 @@ Source: `design-system/components/CmdLine/CmdLine.tsx`. React Server Component, 
 | Prop | Type | Default | Required |
 |---|---|---|---|
 | `command` | `string` | none | yes |
-| `user` | `string` | `'erik@portfolio'` | no |
+| `user` | `string` | none | yes |
 | `prompt` | `string` | `':~$'` | no |
 | `output` | `ReactNode` | none | no |
 | `className` | `string` | none | no, merged after the base classes |
@@ -28,7 +28,7 @@ Any other `div` attribute (`id`, `aria-*`, `data-*`) is forwarded to the root el
 <h2 id="examples">Examples</h2>
 
 <Preview id="cmd-line">
-  <CmdLine command="cat README.md" />
+  <CmdLine user="erik@portfolio" command="cat README.md" />
   <CmdLine user="root@prod" prompt=":#" command="whoami" output={<span>root</span>} />
 </Preview>
 

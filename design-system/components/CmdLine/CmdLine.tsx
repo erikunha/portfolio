@@ -1,16 +1,15 @@
 import type { ComponentPropsWithoutRef, ReactNode } from 'react';
-import { SHELL_USER } from '@/content/brand';
 import { cn } from '@/lib/cn';
 
 export type CmdLineProps = Omit<ComponentPropsWithoutRef<'div'>, 'children'> & {
-  user?: string;
+  user: string;
   command: string;
   output?: ReactNode;
   prompt?: string;
 };
 
 export function CmdLine({
-  user = SHELL_USER,
+  user,
   command,
   output,
   prompt = ':~$',

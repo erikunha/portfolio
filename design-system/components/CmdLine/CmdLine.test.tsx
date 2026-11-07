@@ -4,7 +4,7 @@ import { CmdLine } from './CmdLine';
 
 describe('CmdLine', () => {
   it('renders user, prompt, and command', () => {
-    render(<CmdLine command="ls -la" />);
+    render(<CmdLine user="erik@portfolio" command="ls -la" />);
     expect(screen.getByText(/erik@portfolio/)).toBeDefined();
     expect(screen.getByText(':~$')).toBeDefined();
     expect(screen.getByText('ls -la')).toBeDefined();
@@ -15,16 +15,23 @@ describe('CmdLine', () => {
     expect(screen.getByText('#')).toBeDefined();
   });
   it('renders output slot when output provided', () => {
-    render(<CmdLine command="echo hi" output={<span>hi</span>} />);
+    render(<CmdLine user="root@box" command="echo hi" output={<span>hi</span>} />);
     expect(screen.getByText('hi')).toBeDefined();
   });
   it('does not render output wrapper when output is undefined', () => {
-    const { container } = render(<CmdLine command="ls" />);
+    const { container } = render(<CmdLine user="root@box" command="ls" />);
     expect(container.firstElementChild?.childElementCount).toBe(1);
   });
   it('merges a consumer className and forwards id, aria and data attributes to the root', () => {
     const { container } = render(
-      <CmdLine command="ls" className="extra" id="cmd-1" aria-label="shell" data-testid="cmd" />,
+      <CmdLine
+        user="root@box"
+        command="ls"
+        className="extra"
+        id="cmd-1"
+        aria-label="shell"
+        data-testid="cmd"
+      />,
     );
     const root = container.firstElementChild as HTMLElement;
     expect(root.id).toBe('cmd-1');
@@ -36,8 +43,8 @@ describe('CmdLine', () => {
   it('renders two instances without sharing identity', () => {
     const { container } = render(
       <>
-        <CmdLine command="a" id="one" />
-        <CmdLine command="b" id="two" />
+        <CmdLine user="root@box" command="a" id="one" />
+        <CmdLine user="root@box" command="b" id="two" />
       </>,
     );
     expect(container.querySelector('#one')).not.toBeNull();
