@@ -11,6 +11,8 @@ describe('ci.yml regenerated visual baselines artifact', () => {
     expect(
       pathLine,
       'a whole-directory upload ships every project baseline; copying two artifacts in sequence lets the stale copy in the second overwrite the fresh one in the first',
-    ).toBe('tests/visual/visual.spec.ts-snapshots/*-${{ matrix.project }}-linux.png');
+    ).toMatch(
+      /^tests\/visual\/visual\.spec\.ts-snapshots\/\*-\$\{\{ matrix\.project \}\}-linux\.png$/,
+    );
   });
 });
