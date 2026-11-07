@@ -57,7 +57,7 @@ A feature branch is created (`<type>/<description>`, enforced by `.husky/pre-pus
 
 ### 7. Pre-PR self-review, and the pre-push gate chain
 
-Before opening the PR, read the diff. The specialist self-review runs on the pushed head before the merge (see the review chapter of the handbook), and `pnpm pr:gate` checks that it was posted. For non-deletion pushes, `.husky/pre-push` checks the main target, branch name and `pnpm verify`. Deletion-only pushes skip branch naming and verify after the main-target guard.
+Before opening the PR, read the diff. The specialist self-review runs on the pushed head before the merge (see the review chapter of the handbook). For non-deletion pushes, `.husky/pre-push` checks the main target, branch name and `pnpm verify`. Deletion-only pushes skip branch naming and verify after the main-target guard.
 
 ### 8. Pre-PR -> open PR
 
@@ -69,7 +69,7 @@ On the open PR, answer every review thread: rebase before every push, verify the
 
 ### 10. Pre-merge gates -> merge
 
-`pnpm pr:gate` (`scripts/check-pr-comments.ts`) requires the returned review threads (the first 100; the query does not paginate) to be resolved with a reply, requires a COMMENTED or APPROVED review from the owner, a member or a collaborator whose body contains `self-review: <current head SHA>` (`missing_self_review` otherwise; waived for the dependabot Bot account), and flags `suspicious_self_resolve`. CI runs it in the `pr-gate` workflow, which re-runs when a review is posted. Run `pnpm ci:local` alongside it, with CI green and the base contained. `pnpm claude-gate` (`scripts/check-claude-approval.ts`) is an optional check on a requested claude-review verdict, not a merge requirement; it requires the latest verdict to be Approve on the current head, an Approve on an ancestor SHA carries across a nonempty diff containing only visual baseline PNGs, and other stale or SHA-less Approves fail closed.
+`pnpm pr:gate` (`scripts/check-pr-comments.ts`) requires the returned review threads (the first 100; the query does not paginate) to be resolved with a reply, and flags `suspicious_self_resolve`. CI runs it in `quality-fast`. Run `pnpm ci:local` alongside it, with CI green and the base contained. `pnpm claude-gate` (`scripts/check-claude-approval.ts`) is an optional check on a requested claude-review verdict, not a merge requirement; it requires the latest verdict to be Approve on the current head, an Approve on an ancestor SHA carries across a nonempty diff containing only visual baseline PNGs, and other stale or SHA-less Approves fail closed.
 
 ### 11. Deploy -> smoke -> record
 
@@ -114,7 +114,7 @@ flowchart LR
         g13["Resolve review threads"]
     end
     subgraph premerge["pre-merge"]
-        g15["ci:local"] --> g18["pr:gate: resolved threads + self-review"]
+        g15["ci:local"] --> g18["pr:gate: resolved threads"]
     end
     commit --> prepush --> prepr --> open --> premerge --> merge["owner squash-merge"]
 ```

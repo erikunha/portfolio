@@ -102,13 +102,94 @@ describe('guard-merge-main hook', () => {
     expect(spawnSync('test', ['-e', join(dir, 'calls')]).status).not.toBe(0);
   });
 
-  it('does not mistake text that mentions the command for a merge', () => {
+  it('blocks text that merely mentions a gh merge, the chosen fail-closed trade-off', () => {
+    stubGh('feat/x', 0);
+    expect(run('git commit -m "docs: gh pr merge guard"').status).toBe(BLOCK_EXIT_CODE);
+    expect(run('echo "gh pr merge 5"').status).toBe(BLOCK_EXIT_CODE);
+    expect(run("grep -rn 'gh pr merge' docs").status).toBe(BLOCK_EXIT_CODE);
+    expect(run('gh pr view 5 --json title # gh pr merge').status).toBe(BLOCK_EXIT_CODE);
+  });
+
+  it('allows commands with no gh merge intent without calling gh', () => {
     stubGh('main', 0);
-    expect(run('git commit -m "docs: gh pr merge guard"').status).toBe(0);
-    expect(run('echo "gh pr merge 5"').status).toBe(0);
-    expect(run("grep -rn 'gh pr merge' docs").status).toBe(0);
-    expect(run('gh pr view 5 --json title # gh pr merge').status).toBe(0);
+    expect(run('git status').status).toBe(0);
+    expect(run('git merge origin/feat/terminal-redesign').status).toBe(0);
+    expect(run('git commit -m "fix: merge guard"').status).toBe(0);
+    expect(run('gh pr view 5 --json mergeStateStatus,mergeable').status).toBe(0);
+    expect(run('gh pr create --title "merge fix" --base feat/x').status).toBe(0);
+    expect(run('grep -rn "pr merge" docs').status).toBe(0);
     expect(calls()).toBe('');
+  });
+
+  it.each([
+    '\\gh pr merge 5',
+    '/opt/homebrew/bin/gh pr merge 5',
+    '"gh" pr merge 5',
+    "'gh' pr merge 5",
+    'g""h pr merge 5',
+    'gh -R o/r pr merge 5',
+    'gh --repo o/r pr merge 5',
+    'gh --repo=o/r pr merge 5',
+    'gh pr -R o/r merge 5',
+    '{ gh pr merge 5; }',
+    'if true; then gh pr merge 5; fi',
+    'gh \\\n pr merge 5',
+    'gh pr   merge   5',
+  ])('blocks a merge into main written as %s', (command) => {
+    stubGh('main', 0);
+    const result = run(command);
+    expect(result.status).toBe(BLOCK_EXIT_CODE);
+    expect(calls()).not.toBe('');
+  });
+
+  it.each([
+    'for n in 1 2; do gh pr merge $n; done',
+    'eval "gh pr merge 5"',
+    'env -i gh pr merge 5',
+    'sudo -u x gh pr merge 5',
+    'xargs gh pr merge',
+    'echo 5 | xargs gh pr merge',
+    'g=gh; $g pr merge 5',
+    'gh api graphql -f query="mutation { enablePullRequestAutoMerge(input: {pullRequestId: \\"X\\"}) { clientMutationId } }"',
+    'gh api graphql -f query=\'mutation { mergePullRequest(input: {pullRequestId: "X"}) { clientMutationId } }\'',
+    'gh api repos/o/r/merges -f base=main -f head=x',
+    'gh api repos/o/r/merges -f base=feat/x -f head=y',
+    'gh alias set m "pr merge"',
+    'bash -c "gh pr merge 5"',
+    "sh -c 'gh pr merge 5 --squash'",
+    'gh pr merge 5 --body "gh pr merge 6"',
+  ])('blocks %s even when the base would resolve to an integration branch', (command) => {
+    stubGh('feat/x', 0);
+    const result = run(command);
+    expect(result.status).toBe(BLOCK_EXIT_CODE);
+  });
+
+  it('propagates GH_REPO to the base lookup and blocks a merge into main of that repository', () => {
+    stubGh('main', 0);
+    const result = run('GH_REPO=other/repo gh pr merge 5');
+    expect(result.status).toBe(BLOCK_EXIT_CODE);
+    expect(calls()).toContain('pr view 5 --repo other/repo');
+  });
+
+  it('propagates GH_REPO exported in an earlier segment, and lets -R override it', () => {
+    stubGh('feat/x', 0);
+    expect(run('export GH_REPO=other/repo; gh pr merge 5').status).toBe(0);
+    expect(calls()).toContain('pr view 5 --repo other/repo');
+    expect(run('GH_REPO=other/repo gh pr merge 5 -R o/r').status).toBe(0);
+    expect(calls()).toContain('pr view 5 --repo o/r');
+  });
+
+  it('fails closed on a GH_REPO only the shell can resolve', () => {
+    stubGh('feat/x', 0);
+    expect(run('GH_REPO="$R" gh pr merge 5').status).toBe(BLOCK_EXIT_CODE);
+  });
+
+  it('allows a clean merge into an integration branch written with a prefix assignment or path', () => {
+    stubGh('feat/x', 0);
+    expect(run('GH_TOKEN=abc /opt/homebrew/bin/gh pr merge 5 --squash').status).toBe(0);
+    expect(run('gh -R o/r pr merge 5').status).toBe(0);
+    expect(run('{ gh pr merge 5; }').status).toBe(0);
+    expect(run('pnpm ci:local && gh pr merge 7 --squash').status).toBe(0);
   });
 
   it.each([

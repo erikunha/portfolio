@@ -82,7 +82,6 @@ flowchart TD
     pr["PR / push main / workflow_dispatch"] --> dc["detect-changes (app?, ai?, ui?)"]
     pr --> qf["quality-fast: Biome, branch/commit lint, content, naming, pinning, harness, doc-drift, contrast"]
     pr --> tc["typecheck"]
-    pr -.-> prg["pr-gate (own workflow, also on review events): threads + self-review"]
     pr --> t["test (Vitest + coverage)"]
     pr --> dr["dependency-review (PR)"]
     qf --> b["build (+ global bundle and route-JS gates, provenance attest on main)"]
@@ -116,7 +115,7 @@ flowchart TD
 
 `ci-gate` runs with `if: always()`, includes gitleaks and all build/test jobs above, and excludes semgrep, and is the terminal required status check. `__tests__/scripts/ci-gate-job.test.ts` asserts its `needs` list equals the full job set minus the self-reporting jobs, so adding a conditional job without fanning it in fails `pnpm test`.
 
-Other workflows: `codeql.yml` (SAST, weekly + PR), `mutation.yml` (Stryker, weekly; fails when the runner cannot kill a mutant, judged by `scripts/check-mutation-kills.mjs`), `smoke.yml` (post-deploy: healthz + 7 security headers + apex→www + `/api/ask`,`/api/contact` liveness), `pr-gate.yml` (`pnpm pr:gate` on PR updates and review events; the required `pr-gate` check), `claude-review.yml` (pull-request review, on a `/claude-review` comment), `claude.yml` (`@claude` interaction), and `agent-eval.yml` (advisory prompt evaluation).
+Other workflows: `codeql.yml` (SAST, weekly + PR), `mutation.yml` (Stryker, weekly; fails when the runner cannot kill a mutant, judged by `scripts/check-mutation-kills.mjs`), `smoke.yml` (post-deploy: healthz + 7 security headers + apex→www + `/api/ask`,`/api/contact` liveness), `claude-review.yml` (pull-request review, on a `/claude-review` comment), `claude.yml` (`@claude` interaction), and `agent-eval.yml` (advisory prompt evaluation).
 
 **Lighthouse budgets (LHCI, hard gates):** desktop perf ≥95 / a11y =100 / BP ≥95 / SEO =100, LCP ≤1800ms, CLS ≤0.05, TBT ≤200ms; mobile perf ≥90, LCP ≤3500ms. Never disable a gate to merge - fix the property (doc 08).
 
@@ -125,11 +124,11 @@ Both desktop and mobile collect `/`, `/pt`, `/cv`, `/summary`, `/links`, `/links
 ## The PR lifecycle
 
 ```
-commit (scope blocks) -> (read the diff before opening the PR; specialist self-review of the pushed head before any merge)
+commit (scope blocks) -> (read the diff before opening the PR; specialist self-review of the pushed head before any merge; not posted, not gated)
   -> pnpm ci:local + gates:runtime -> gh pr create (fill the template)
   -> resolve every review thread (rebase before each push) -> pnpm pr:gate
   -> sub-PR into feat/*: agent may merge after CI green; PR into main: repo owner runs gh pr merge
-     (Claude Code hook guard-merge-main blocks an agent merge into main via gh pr merge, gh api or the GitHub MCP tool)
+     (Claude Code hook guard-merge-main fails closed on an agent merge via gh pr merge, gh api or the GitHub MCP tool unless the base is not main)
 ```
 
 Large features use an **integration branch + sub-PRs** (`feat/<feature>` ← `feat/<feature>-<part>`) to group independently reviewable changes. See `AGENTS.md` "Git and pull requests".

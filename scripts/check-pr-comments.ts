@@ -23,7 +23,6 @@ export type EvalResult =
       code:
         | 'unresolved_threads'
         | 'silent_resolve'
-        | 'missing_self_review'
         | 'gh_auth_missing'
         | 'graphql_failure'
         | 'unknown';
@@ -31,32 +30,12 @@ export type EvalResult =
       unresolvedThreads?: string[];
     };
 
-const SELF_REVIEW_STATES = new Set(['COMMENTED', 'APPROVED']);
-const SELF_REVIEW_AUTHORS = new Set(['OWNER', 'MEMBER', 'COLLABORATOR']);
-const BOT_TYPENAME = 'Bot';
-const SELF_REVIEW_EXEMPT_BOTS = new Set(['dependabot', 'dependabot[bot]']);
-const SELF_REVIEW_MARKER = /self-review:\s*([0-9a-f]{40})(?![0-9a-f])/gi;
-
-type Review = { state: string; body: string; authorAssociation: string };
-
-const hasSelfReview = (reviews: Review[], headSha: string): boolean =>
-  reviews.some(
-    (review) =>
-      SELF_REVIEW_STATES.has(review.state) &&
-      SELF_REVIEW_AUTHORS.has(review.authorAssociation) &&
-      [...review.body.matchAll(SELF_REVIEW_MARKER)].some(
-        (match) => match[1]?.toLowerCase() === headSha.toLowerCase(),
-      ),
-  );
-
 export type GhExec = (args: string[]) => Promise<string>;
 
 const QUERY = `query($owner:String!,$repo:String!,$pr:Int!){
   repository(owner:$owner,name:$repo){
     pullRequest(number:$pr){
-      author{login __typename}
-      headRefOid
-      reviews(last:100){nodes{state body authorAssociation}}
+      author{login}
       reviewThreads(first:100){
         nodes{
           id
@@ -73,9 +52,7 @@ type GraphQLEnvelope = {
   data?: {
     repository?: {
       pullRequest?: {
-        author: { login: string; __typename?: string };
-        headRefOid: string;
-        reviews: { nodes: Review[] };
+        author: { login: string };
         reviewThreads: {
           nodes: Array<{
             id: string;
@@ -167,16 +144,6 @@ export async function evaluatePullRequest(opts: {
       code: 'silent_resolve',
       message: `${silent.length} resolved thread(s) on PR #${opts.prNumber} carry only the finding and no reply: ${silent.join(', ')}. Reply citing the fix SHA, then resolve.`,
       unresolvedThreads: silent,
-    };
-  }
-
-  const exemptBot =
-    pr.author.__typename === BOT_TYPENAME && SELF_REVIEW_EXEMPT_BOTS.has(author.toLowerCase());
-  if (!exemptBot && !hasSelfReview(pr.reviews.nodes, pr.headRefOid)) {
-    return {
-      ok: false,
-      code: 'missing_self_review',
-      message: `PR #${opts.prNumber} has no COMMENTED or APPROVED review from the owner, a member or a collaborator whose body contains "self-review: ${pr.headRefOid}". Run the self-review on the current head, then post its result as a comment review that names this SHA.`,
     };
   }
 

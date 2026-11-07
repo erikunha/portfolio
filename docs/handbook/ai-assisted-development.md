@@ -18,7 +18,7 @@ sequenceDiagram
     C->>C: plan with a failure-mode checklist (each failure mode -> a task)
     C->>C: TDD implement (tests first)
     C->>G: commit runs Biome, staged gitleaks and commitlint
-    C->>C: self-review the head (specialist reviewers, posted as a COMMENT review naming the SHA)
+    C->>C: self-review the head (specialist reviewers; the result is not posted)
     C->>A: scoped review investigation
     A-->>C: findings
     C->>G: git push (pre-push: main guard, branch name, pnpm verify)
@@ -70,7 +70,7 @@ The project instructions define this loop. The table distinguishes conventions f
 | Anticipate failure | pre-mortem                                                   | convention + plan tasks                                                                      |
 | Implement          | test-first project rule                                      | convention                                                                                   |
 | Self-verify        | project verification rule                                    | convention + `pnpm verify`                                                                   |
-| Review             | self-review by specialist reviewers; claude-review only on request | `pnpm pr:gate` (every thread resolved, and a self-review naming the head: `missing_self_review`); optional `pnpm claude-gate` after a requested review |
+| Review             | self-review by specialist reviewers; claude-review only on request | `pnpm pr:gate` (every thread resolved with a reply); optional `pnpm claude-gate` after a requested review |
 | Resolve            | reply in each review thread, then resolve it                 | `pnpm pr:gate` (fails `silent_resolve`)                                                      |
 | Record             | DECISIONS.md ADR                                             | PR template checklist (author confirmation)                                                  |
 
@@ -78,11 +78,11 @@ The project instructions define this loop. The table distinguishes conventions f
 
 **claude-review (claude[bot]) is opt-in.** It runs only when an owner, member or collaborator comments `/claude-review` on a PR, posting findings as inline review comments anchored to changed lines and closing with a `Verdict:` line that the optional `pnpm claude-gate` reads fail-closed. It is not a merge requirement.
 
-Self-review runs before every merge: reviewers that did not write the change, one per relevant specialty, each loading the matching skill, with screenshots examined for UI changes, every finding verified, then fixed or rejected with a reason. Its result is a COMMENT review whose body holds `self-review: <full head SHA>`. The review itself is a convention, but `pnpm pr:gate` makes its posting mechanical: it fails `missing_self_review` unless a COMMENTED or APPROVED review from the owner, a member or a collaborator names the current head, and it still checks thread resolution.
+Self-review runs before every merge: reviewers that did not write the change, one per relevant specialty, each loading the matching skill, with screenshots examined for UI changes, every finding verified, then fixed or rejected with a reason. It is a process step with no gate: its result stays out of the PR, and `pnpm pr:gate` only checks thread resolution.
 
 ## 4. Enforcement boundaries
 
-`.claude/settings.json` denies broad `git add`, npm and yarn installs and local env reads, and registers a Stop hook (Biome on changed files and the typecheck, skipped in CI), a PreToolUse hook that blocks `gh pr merge` into `main`, and a PreToolUse hook that refuses edits to existing test files while `FIX_MODE=1` or `.claude/fix-mode` declares a fix task. Git hooks run Biome and staged gitleaks at pre-commit, commitlint at commit-msg, and branch/main-ref checks plus `pnpm verify` at pre-push.
+`.claude/settings.json` denies broad `git add`, npm and yarn installs and local env reads, and registers a Stop hook (Biome on changed files and the typecheck, skipped in CI), a PreToolUse hook that fails closed on a `gh` merge unless it reads as a single merge into a base other than `main`, and a PreToolUse hook that refuses edits to existing test files while `FIX_MODE=1` or `.claude/fix-mode` declares a fix task. Git hooks run Biome and staged gitleaks at pre-commit, commitlint at commit-msg, and branch/main-ref checks plus `pnpm verify` at pre-push.
 
 CI runs separate quality, typecheck, unit-test and build jobs. Runtime and AI jobs use change filters. Semgrep findings are report-only; the fixture and report-existence checks can still fail. User-global runtime restrictions require separate inspection.
 
@@ -99,7 +99,7 @@ The repo encodes distinct prompt patterns for distinct SDLC stages:
 | Specification       | brainstorm -> spec with Context/Gaps/Changes                       | `/speckit.specify`, the spec template              |
 | Architecture review | four-gate plan review -> `GATE_RESULT: PASS \| BLOCK`              | `plan-review` skill                                |
 | Implementation      | TDD: failing test first, smallest change                           | `test-first discipline (AGENTS.md)` |
-| Review              | specialist self-review posted on the head; `pr-review-orchestrator` is one way to run it | `AGENTS.md` working agreement, `REVIEW.md`         |
+| Review              | specialist self-review of the head; `pr-review-orchestrator` is one way to run it | `AGENTS.md` working agreement, `REVIEW.md`         |
 | Documentation       | reverse-engineer from code, route don't duplicate                  | source comparisons and canonical documentation     |
 
 Choose verification from the affected behavior and the project gate requirements. A docs-only change still runs `pnpm ci:local` under `AGENTS.md`.

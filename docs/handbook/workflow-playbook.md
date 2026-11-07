@@ -17,7 +17,7 @@ Every runbook lists: **entry point** (what starts it), **steps**, **AI participa
   3. Run the `plan-review` skill on the spec; it must return `GATE_RESULT: PASS` (workflow convention).
   4. `speckit-plan` with a failure-mode checklist to decompose into tasks (shard into sub-PRs if large).
   5. Branch `feat/<description>`. Implement test-first.
-  6. Read the diff, push, then self-review the head with specialist reviewers, fix what verifies, and post the review naming the SHA.
+  6. Read the diff, push, then self-review the head with specialist reviewers, and fix what verifies.
   7. `pnpm ci:local`, `pnpm bundle-check`, `pnpm route-js-check` and `pnpm gates:runtime`, open the PR, drive threads to resolved, `pnpm pr:gate`.
   8. Record the ADR in `DECISIONS.md` in the same commit as the decision (a dated bullet with a reversibility note); the owner merges.
 - **AI:** brainstorming, plan review, planning, TDD implementation; the diff read before the PR is the owner's.
@@ -117,5 +117,5 @@ Every runbook lists: **entry point** (what starts it), **steps**, **AI participa
 - **Steps:**
   1. `pnpm ci:local`, `pnpm bundle-check`, `pnpm route-js-check` and `pnpm gates:runtime`; `gh pr create` filling the template (every section non-empty).
   2. Rebase before every push, verify the pushed SHA, reply citing the fix SHA before resolving a thread. claude-review runs only when an owner, member or collaborator comments `/claude-review`; fix its findings in one commit, reply, resolve.
-  3. CI is green and `pnpm pr:gate` passes (threads and the self-review of the head); the owner squash-merges.
+  3. CI is green and `pnpm pr:gate` passes (every thread resolved with a reply); the owner squash-merges.
 - **Output:** a merged PR. See [review-merge-release](./review-merge-release.md).

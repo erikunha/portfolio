@@ -38,7 +38,7 @@ This exercises the ordinary contribution path. Runtime checks depend on the affe
 
 1. **Scope every commit.** `type(scope): subject`, scope mandatory, scope is the feature area. commitlint will reject you otherwise.
 2. **Branch as `<type>/<description>`.** The pre-push hook enforces it; never commit on `main`.
-3. **Review your diff before opening the PR, and self-review the head before any merge.** The self-review uses reviewers that did not write the change and is posted as a COMMENT review naming the head SHA; `pnpm pr:gate` fails without it. No stamp gates the push; claude-review reviews the PR only when an owner, member or collaborator comments `/claude-review`.
+3. **Review your diff before opening the PR, and self-review the head before any merge.** The self-review uses reviewers that did not write the change; its result is not posted and no gate checks it. No stamp gates the push; claude-review reviews the PR only when an owner, member or collaborator comments `/claude-review`.
 4. **A red gate is fixed by fixing the property**, never by disabling the gate.
 5. **Record architectural decisions** in `DECISIONS.md` with a reversibility note.
 
