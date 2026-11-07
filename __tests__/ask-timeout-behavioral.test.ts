@@ -158,7 +158,7 @@ describe('/api/ask behavioral — stream-initiation failure handling', () => {
       expect(body).not.toContain('ai-gateway');
       expect(vi.mocked(log.error)).toHaveBeenCalledWith(
         'ask stream failed',
-        expect.objectContaining({ err: expect.objectContaining({ message: cause }) }),
+        expect.objectContaining({ error: expect.objectContaining({ message: cause }) }),
       );
     },
   );

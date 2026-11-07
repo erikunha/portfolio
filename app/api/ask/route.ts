@@ -12,6 +12,7 @@ import { type AskInteractionStatus, persistAskInteraction } from '@/lib/ask-log'
 import { env } from '@/lib/env';
 import { hashIp } from '@/lib/ip-hash';
 import { log } from '@/lib/log';
+import { describeError } from '@/lib/log-error';
 import {
   checkIdenticalQuestion,
   getAskLimit,
@@ -103,7 +104,10 @@ async function handleAsk(req: NextRequest): Promise<Response> {
   const startedAt = Date.now();
   const ip = getClientIp(req);
   const ipHash = await hashIp(ip).catch((hashErr: unknown) => {
-    log.error('ask ip hash unavailable, continuing unhashed', { requestId, err: hashErr });
+    log.error('ask ip hash unavailable, continuing unhashed', {
+      requestId,
+      error: describeError(hashErr),
+    });
     return UNHASHED_IP_LABEL;
   });
   log.info('ask request received', { requestId, ipHash, promptVersion: PROMPT_VERSION });
@@ -129,7 +133,7 @@ async function handleAsk(req: NextRequest): Promise<Response> {
     if (rateLimited) retryAfter = retryAfterSeconds(reset, Date.now());
   } catch (err) {
     if (hasRedisCredentials()) {
-      log.error('ask rate-limit check failed, allowing through', { err });
+      log.error('ask rate-limit check failed, allowing through', { error: describeError(err) });
     }
   }
   if (rateLimited) {
@@ -202,7 +206,7 @@ async function handleAsk(req: NextRequest): Promise<Response> {
     ],
     onError({ error }) {
       upstreamFailed = true;
-      log.error('ask upstream error', { requestId, err: error });
+      log.error('ask upstream error', { requestId, error: describeError(error) });
     },
   });
 
@@ -292,7 +296,7 @@ async function handleAsk(req: NextRequest): Promise<Response> {
       } catch (err) {
         if (!clientGone) {
           status = 'errored';
-          log.error('ask stream failed', { requestId, err });
+          log.error('ask stream failed', { requestId, error: describeError(err) });
           send(enc.encode(`${STREAM_ERR_SENTINEL}${askErrors[answerLocale].interrupted}`));
         }
       } finally {
@@ -302,7 +306,7 @@ async function handleAsk(req: NextRequest): Promise<Response> {
         try {
           await settleAndPersist();
         } catch (settleErr) {
-          log.error('settle-and-persist failed', { requestId, err: settleErr });
+          log.error('settle-and-persist failed', { requestId, error: describeError(settleErr) });
         }
       }
     },
