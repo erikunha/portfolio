@@ -3,6 +3,8 @@ import { expect, test } from '@playwright/test';
 const TABBABLE_SELECTOR =
   'a[href], button:not([disabled]), input:not([disabled]), select, textarea, summary, [tabindex]:not([tabindex="-1"])';
 
+const TAB_KEYS = ['Tab', 'Alt+Tab'];
+
 test.describe('Button behavioral E2E', () => {
   test('primary button is visible and keyboard-focusable', async ({ page }) => {
     await page.goto('/design-system/components');
@@ -11,11 +13,16 @@ test.describe('Button behavioral E2E', () => {
     const primary = preview.getByRole('link', { name: 'EXEC_HIRE' });
     await expect(primary).toBeVisible();
     const tabStops = await page.locator(TABBABLE_SELECTOR).count();
-    for (let step = 0; step < tabStops; step++) {
-      await page.keyboard.press('Tab');
-      if (await primary.evaluate((element) => element === document.activeElement)) break;
+    for (const tabKey of TAB_KEYS) {
+      for (let step = 0; step < tabStops; step++) {
+        if (await primary.evaluate((element) => element === document.activeElement)) break;
+        await page.keyboard.press(tabKey);
+      }
     }
-    await expect(primary).toBeFocused();
+    await expect(
+      primary,
+      'Safari and WebKit skip links on plain Tab unless the system setting is on; its users reach links with Option+Tab, so the sweep retries with Alt+Tab',
+    ).toBeFocused();
   });
 
   test('secondary button is visible', async ({ page }) => {
