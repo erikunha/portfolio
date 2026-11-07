@@ -35,8 +35,6 @@ const USAGE_TIMED_OUT = Symbol('usage-timeout');
 
 const CLIENT_GONE = Symbol('client-gone');
 
-const LOGGED_ANSWER_CHARS = 1000;
-
 const SENTINEL_BYTES = 16;
 
 const HEX_RADIX = 16;
@@ -96,7 +94,7 @@ function mintQuestionSentinel(): string {
 }
 
 export function createAskStream(context: AskContext): AskStream {
-  const { requestId, ipHash, question, answerLocale } = context;
+  const { requestId, ipHash, question, fullQuestion, answerLocale } = context;
   const state: RunState = {
     upstreamFailed: false,
     usageRejected: false,
@@ -215,9 +213,7 @@ export function createAskStream(context: AskContext): AskStream {
             break;
           }
           send(enc.encode(text));
-          if (state.answerText.length < LOGGED_ANSWER_CHARS) {
-            state.answerText += text.slice(0, LOGGED_ANSWER_CHARS - state.answerText.length);
-          }
+          state.answerText += text;
         }
       } catch (streamErr) {
         if (!state.clientGone) {
@@ -305,13 +301,12 @@ export function createAskStream(context: AskContext): AskStream {
       truncated: state.truncated,
       promptVersion: PROMPT_VERSION,
     });
-    await Promise.all(guardVerdict.findings.map((finding) => countAskGuardFinding(finding.kind)));
     await settleBudgetFor(usage);
     await persistAskInteraction({
       requestId,
       ts: new Date().toISOString(),
       ipHash,
-      question,
+      question: fullQuestion,
       answer: state.answerText,
       inputTokens: usage.billedInputTokens,
       outputTokens: usage.outputTokens,
@@ -327,6 +322,7 @@ export function createAskStream(context: AskContext): AskStream {
       cacheWriteTokens: usage.cacheCreationTokens,
       outputTokens: usage.outputTokens,
     });
+    await Promise.all(guardVerdict.findings.map((finding) => countAskGuardFinding(finding.kind)));
   }
 
   async function settle(): Promise<void> {

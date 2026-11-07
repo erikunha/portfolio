@@ -8,6 +8,7 @@ import { askErrors } from '@/content/ask-errors';
 import { ASK_EVAL_CALIBRATION } from '@/content/ask-eval-calibration';
 import { ASK_EVAL_CORPUS } from '@/content/ask-eval-corpus';
 import { isInjectionAttempt } from '@/lib/ask/injection';
+import { ASK_MODEL } from '@/lib/ask/model';
 
 const BROKEN_STREAM_QUESTION = ASK_EVAL_CORPUS.find(
   (item) => !isInjectionAttempt(item.question) && item.kind === 'jailbreak',
@@ -101,6 +102,7 @@ describe('pnpm ask:eval harness without Redis', () => {
     });
 
     const result = JSON.parse(readFileSync(path.join(outDir, 'ask-eval-result.json'), 'utf8')) as {
+      featureModel: string;
       errored: number;
       answeredCount: number;
       featureCostUsd: number;
@@ -113,6 +115,12 @@ describe('pnpm ask:eval harness without Redis', () => {
       items: Array<{ id: string; errored: boolean; answer: string }>;
     };
 
+    expect(result.featureModel).toBe(ASK_MODEL);
+    expect(streamTextMock.mock.calls.length).toBeGreaterThan(0);
+    expect(
+      streamTextMock.mock.calls.every(([args]) => (args as { model: string }).model === ASK_MODEL),
+      'the eval must grade the model production serves',
+    ).toBe(true);
     expect(result.errored).toBe(1);
     const broken = result.items.find((i) => i.errored);
     expect(broken?.id).toBe(BROKEN_STREAM_QUESTION?.id);

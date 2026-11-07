@@ -33,4 +33,21 @@ describe('countAskGuardFinding', () => {
     await expect(countAskGuardFinding('length')).resolves.toBeUndefined();
     expect(logError).toHaveBeenCalled();
   });
+
+  it('logs the failure as name and message only, never the raw error object', async () => {
+    const failure = Object.assign(new Error('Redis unavailable'), {
+      command: ['SET', 'ask:log', 'canary-question-9d2c'],
+    });
+    exec.mockRejectedValue(failure);
+    const { countAskGuardFinding } = await import('./guard-count');
+    await countAskGuardFinding('leak');
+
+    expect(
+      logError,
+      'a client error can carry the command it sent; serialising it writes request data to the log drain',
+    ).toHaveBeenCalledWith('ask guard counter write failed', {
+      kind: 'leak',
+      error: { name: 'Error', message: 'Redis unavailable' },
+    });
+  });
 });

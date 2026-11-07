@@ -3,6 +3,7 @@ import 'server-only';
 import type { PostHocVerdict } from '@/lib/ask/output-guard';
 import { redactPii } from '@/lib/ask/redact-pii';
 import { log } from '@/lib/log';
+import { describeError } from '@/lib/log-error';
 import { getRedis } from '@/lib/rate-limit';
 
 const SECONDS_PER_DAY = 24 * 60 * 60;
@@ -49,6 +50,9 @@ export async function persistAskInteraction(interaction: AskInteraction): Promis
   try {
     await getRedis().set(key, JSON.stringify(record), { ex: ASK_KV_TTL_S });
   } catch (err) {
-    log.error('ask-log KV write failed', { requestId: interaction.requestId, err });
+    log.error('ask-log KV write failed', {
+      requestId: interaction.requestId,
+      error: describeError(err),
+    });
   }
 }

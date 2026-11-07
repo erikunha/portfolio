@@ -405,9 +405,10 @@ Content-Type: application/json
 
 → 400 application/json   { "error": "..." }  # missing question, invalid body, injection guard
 → 429 application/json   { "error": "..." }  # per-IP sliding window or identical question
+→ 500 application/json   { "error": "..." }  # the model call could not start; the reservation is refunded
 → 503 application/json   { "error": "..." }  # kill switch or budget unavailable/exhausted
 ```
-See `app/api/ask/route.ts` and `lib/stream-protocol.ts`.
+See `app/api/ask/route.ts`, `lib/ask/preflight.ts`, `lib/ask/stream.ts` and `lib/stream-protocol.ts`.
 
 ### Stack
 
@@ -581,7 +582,7 @@ Observability spans real-user telemetry, structured logs and client error captur
 
 ### `/api/ask` Q+A retention
 
-- **`lib/ask-log.ts`** persists every `/api/ask` interaction that reaches the model to Upstash KV `ask:log:{yyyy-mm-dd}:{requestId}` with 90-day TTL. Captures `{requestId, ts, ipHash, question (≤500c), answer (≤1000c), inputTokens, outputTokens, durationMs, status}`; `lib/ask/redact-pii.ts` replaces email addresses and phone numbers in the question and the answer with placeholders before the cut to 500 and 1000 characters, so no readable prefix of a contact detail is stored. A request rejected for an injection pattern or an invalid body writes no row; it leaves one `ask rejected` log line with the request id and `ipHash`. A request refused by the rate limit, the duplicate check or the budget writes no row either: it leaves an `ask refused` log line and adds to the `ask:refused:{yyyy-mm-dd}:{status}` counter (32-day TTL). Enables retrospective audit of what the LLM said about Erik + product learning on user questions.
+- **`lib/ask-log.ts`** persists every `/api/ask` interaction that reaches the model to Upstash KV `ask:log:{yyyy-mm-dd}:{requestId}` with 90-day TTL. Captures `{requestId, ts, ipHash, question (≤500c), answer (≤1000c), inputTokens, outputTokens, durationMs, status}`; `lib/ask/redact-pii.ts` replaces email addresses and phone numbers in the question and the answer with placeholders on the whole question and the whole collected answer, then cuts to 500 and 1000 characters, so no readable prefix of a contact detail is stored. A request rejected for an injection pattern or an invalid body writes no row; it leaves one `ask rejected` log line with the request id and `ipHash`. A request refused by the rate limit, the duplicate check or the budget writes no row either: it leaves an `ask refused` log line and adds to the `ask:refused:{yyyy-mm-dd}:{status}` counter (32-day TTL). Enables retrospective audit of what the LLM said about Erik + product learning on user questions.
 - **`X-Request-Id`** response header on every `/api/ask` response, early refusals included, surfaces the requestId to the client for the GDPR/LGPD erasure flow. Refusals store no row under that id; the shell records the id whenever the header is present, and forgetting an id with no row is harmless.
 - **`app/api/log/forget/route.ts`** accepts POST `{requestId}` and idempotently DELETEs the matching record across every day-partition a live record can carry (the 90-day TTL plus the current day, 91 dates, from `askLogDatesInTtl`). Rate-limited (21/IP/hour: the 20 ids one tab holds plus one contact receipt, both counts from `lib/forget-limits.ts`) via `getForgetLimit()`.
 

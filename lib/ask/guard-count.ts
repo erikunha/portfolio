@@ -2,6 +2,7 @@ import 'server-only';
 
 import type { GuardFinding } from '@/lib/ask/output-guard';
 import { log } from '@/lib/log';
+import { describeError } from '@/lib/log-error';
 import { getRedis } from '@/lib/rate-limit';
 
 const ISO_DATE_LENGTH = 10;
@@ -22,6 +23,6 @@ export async function countAskGuardFinding(
     pipe.expire(key, GUARD_COUNTER_TTL_S, 'NX');
     await pipe.exec();
   } catch (err) {
-    log.error('ask guard counter write failed', { kind, err });
+    log.error('ask guard counter write failed', { kind, error: describeError(err) });
   }
 }

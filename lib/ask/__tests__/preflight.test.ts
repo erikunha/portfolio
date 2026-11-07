@@ -5,6 +5,7 @@ const checkIdenticalQuestion = vi.hoisted(() => vi.fn());
 const reserveBudget = vi.hoisted(() => vi.fn());
 const countAskRefusal = vi.hoisted(() => vi.fn(async () => undefined));
 const env = vi.hoisted(() => ({ ASK_ENABLED: undefined as string | undefined }));
+const readBoundedBody = vi.hoisted(() => vi.fn());
 
 vi.mock('@/lib/env', () => ({ env }));
 vi.mock('@/lib/rate-limit', () => ({
@@ -14,6 +15,11 @@ vi.mock('@/lib/rate-limit', () => ({
   checkIdenticalQuestion,
   reserveBudget,
 }));
+vi.mock('@/lib/server/read-body', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/lib/server/read-body')>();
+  readBoundedBody.mockImplementation(actual.readBoundedBody);
+  return { ...actual, readBoundedBody };
+});
 vi.mock('@/lib/ask/refusal-count', () => ({ countAskRefusal }));
 vi.mock('@/lib/ip-hash', () => ({ hashIp: vi.fn(async () => 'hashed-ip') }));
 vi.mock('@/lib/server/after-response', () => ({
@@ -43,6 +49,7 @@ describe('lib/ask/preflight', () => {
       dailyKey: 'ask:tokens:day:test',
     });
     countAskRefusal.mockClear();
+    readBoundedBody.mockClear();
   });
 
   it('returns the context a stream needs once every check passes, without starting a model call', async () => {
@@ -61,6 +68,7 @@ describe('lib/ask/preflight', () => {
       budgetKey: 'ask:tokens:test',
       dailyKey: 'ask:tokens:day:test',
     });
+    expect(result.context.fullQuestion).toBe('What does Erik build?');
     expect(result.context.requestId).toMatch(/^[0-9a-f-]{36}$/);
   });
 
@@ -88,6 +96,12 @@ describe('lib/ask/preflight', () => {
     expect(result.response.status).toBe(429);
     expect(Number(result.response.headers.get('Retry-After'))).toBeGreaterThan(0);
     expect(countAskRefusal).toHaveBeenCalledWith('rate-limited');
+    expect(
+      readBoundedBody,
+      'a caller over the limit must not cost a body read, a parse or a dedup write',
+    ).not.toHaveBeenCalled();
+    expect(checkIdenticalQuestion).not.toHaveBeenCalled();
+    expect(reserveBudget).not.toHaveBeenCalled();
   });
 
   it.each([

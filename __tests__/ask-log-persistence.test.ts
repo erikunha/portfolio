@@ -72,6 +72,22 @@ describe('lib/ask-log — persistAskInteraction', () => {
       expect.objectContaining({ requestId: 'req-abc-123' }),
     );
   });
+
+  it('logs a KV failure as name and message only, never the raw error object', async () => {
+    redisSetMock.mockRejectedValueOnce(
+      Object.assign(new Error('Upstash down'), { command: ['SET', 'canary-question-9d2c'] }),
+    );
+    const { persistAskInteraction } = await import('@/lib/ask-log');
+    await persistAskInteraction(interaction);
+
+    expect(
+      logErrorMock,
+      'a client error can carry the command it sent, which holds the stored question',
+    ).toHaveBeenCalledWith('ask-log KV write failed', {
+      requestId: 'req-abc-123',
+      error: { name: 'Error', message: 'Upstash down' },
+    });
+  });
 });
 
 describe('/api/log/forget endpoint', () => {

@@ -37,6 +37,7 @@ export type AskContext = {
   ipHash: string;
   startedAt: number;
   question: string;
+  fullQuestion: string;
   answerLocale: SiteLocale;
   reserved: number;
   budgetKey: string;
@@ -83,7 +84,7 @@ async function checkRateLimit(
 }
 
 type ParsedQuestion =
-  | { ok: true; question: string; answerLocale: SiteLocale }
+  | { ok: true; question: string; fullQuestion: string; answerLocale: SiteLocale }
   | { ok: false; reason: 'question required' | 'invalid body' };
 
 function parseQuestion(
@@ -98,9 +99,11 @@ function parseQuestion(
         : {};
     const q = body.question;
     if (typeof q !== 'string' || !q.trim()) return { ok: false, reason: 'question required' };
+    const fullQuestion = q.trim();
     return {
       ok: true,
-      question: q.trim().slice(0, ASK_MAX_QUESTION_CHARS),
+      question: fullQuestion.slice(0, ASK_MAX_QUESTION_CHARS),
+      fullQuestion,
       answerLocale: siteLocaleOf(body.locale) ?? pageLocale,
     };
   } catch {
@@ -169,7 +172,7 @@ export async function preflightAsk(req: Request): Promise<PreflightResult> {
         : askErrors[pageLocale].invalidBody;
     return reject(askError(requestId, message, 400));
   }
-  const { question, answerLocale } = parsed;
+  const { question, fullQuestion, answerLocale } = parsed;
 
   if (isInjectionAttempt(question)) {
     log.info('ask rejected: prompt-injection pattern', { requestId, ipHash });
@@ -195,6 +198,7 @@ export async function preflightAsk(req: Request): Promise<PreflightResult> {
       ipHash,
       startedAt,
       question,
+      fullQuestion,
       answerLocale,
       reserved,
       budgetKey,
