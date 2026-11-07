@@ -208,6 +208,7 @@ export function useAskStream({
           return;
         }
         requestId = response.headers.get(ui.requestIdHeader);
+        if (requestId) addRef(requestId);
         if (!response.ok) {
           const data = (await response.json().catch(() => null)) as {
             error?: unknown;
@@ -241,7 +242,6 @@ export function useAskStream({
           );
           return;
         }
-        if (requestId) addRef(requestId);
         if (!response.body) {
           finish('', ui.bodyUnavailable, true);
           return;

@@ -25,6 +25,7 @@ import { withBodyLimit } from '@/lib/server/body-limit';
 import { isCrossSiteRequest } from '@/lib/server/fetch-metadata';
 import {
   ASK_LOCALE_HEADER,
+  REQUEST_ID_HEADER,
   RETRY_AFTER_HEADER,
   retryAfterSeconds,
   STREAM_ERR_SENTINEL,
@@ -90,17 +91,29 @@ function siteLocaleOf(value: unknown): SiteLocale | null {
 
 const MAX_ASK_BODY_BYTES = 8_192;
 
+function askError(
+  requestId: string,
+  error: string,
+  status: number,
+  headers: Record<string, string> = {},
+): Response {
+  return Response.json(
+    { error },
+    { status, headers: { [REQUEST_ID_HEADER]: requestId, ...headers } },
+  );
+}
+
 async function handleAsk(req: NextRequest): Promise<Response> {
   const pageLocale = siteLocaleOf(req.headers.get(ASK_LOCALE_HEADER)) ?? SITE_LOCALE.en;
+  const requestId = crypto.randomUUID();
   const askFlag = (env.ASK_ENABLED ?? '').trim().toLowerCase();
   if (OFF_KEYWORDS.has(askFlag)) {
-    return Response.json({ error: askErrors[pageLocale].unavailable }, { status: 503 });
+    return askError(requestId, askErrors[pageLocale].unavailable, 503);
   }
   if (isCrossSiteRequest(req)) {
-    return Response.json({ error: askErrors[pageLocale].forbiddenOrigin }, { status: 403 });
+    return askError(requestId, askErrors[pageLocale].forbiddenOrigin, 403);
   }
 
-  const requestId = crypto.randomUUID();
   const startedAt = Date.now();
   const ip = getClientIp(req);
   const ipHash = await hashIp(ip).catch((hashErr: unknown) => {
@@ -138,12 +151,11 @@ async function handleAsk(req: NextRequest): Promise<Response> {
   }
   if (rateLimited) {
     earlyExitPersist('rate-limited');
-    return Response.json(
-      { error: askErrors[pageLocale].rateLimited },
-      {
-        status: 429,
-        ...(retryAfter === null ? {} : { headers: { [RETRY_AFTER_HEADER]: String(retryAfter) } }),
-      },
+    return askError(
+      requestId,
+      askErrors[pageLocale].rateLimited,
+      429,
+      retryAfter === null ? {} : { [RETRY_AFTER_HEADER]: String(retryAfter) },
     );
   }
 
@@ -158,30 +170,30 @@ async function handleAsk(req: NextRequest): Promise<Response> {
     const q = body.question;
     if (typeof q !== 'string' || !q.trim()) {
       log.info('ask rejected: question required', { requestId, ipHash });
-      return Response.json({ error: askErrors[answerLocale].questionRequired }, { status: 400 });
+      return askError(requestId, askErrors[answerLocale].questionRequired, 400);
     }
     question = q.trim().slice(0, ASK_MAX_QUESTION_CHARS);
     answerLocale = siteLocaleOf(body.locale) ?? answerLocale;
   } catch {
     log.info('ask rejected: invalid body', { requestId, ipHash });
-    return Response.json({ error: askErrors[answerLocale].invalidBody }, { status: 400 });
+    return askError(requestId, askErrors[answerLocale].invalidBody, 400);
   }
 
   if (INJECTION_RE.test(normalizeInjectionInput(question))) {
     log.info('ask rejected: prompt-injection pattern', { requestId, ipHash });
-    return Response.json({ error: askErrors[answerLocale].injection }, { status: 400 });
+    return askError(requestId, askErrors[answerLocale].injection, 400);
   }
 
   const { allowed: notDuplicate } = await checkIdenticalQuestion(ipHash, question);
   if (!notDuplicate) {
     earlyExitPersist('dedup-rejected');
-    return Response.json({ error: askErrors[answerLocale].duplicate }, { status: 429 });
+    return askError(requestId, askErrors[answerLocale].duplicate, 429);
   }
 
   const { allowed, reserved, budgetKey } = await reserveBudget(MAX_OUTPUT_TOKENS);
   if (!allowed) {
     earlyExitPersist('budget-exhausted');
-    return Response.json({ error: askErrors[answerLocale].budget }, { status: 503 });
+    return askError(requestId, askErrors[answerLocale].budget, 503);
   }
 
   const questionSentinel = mintQuestionSentinel();
@@ -382,7 +394,7 @@ async function handleAsk(req: NextRequest): Promise<Response> {
       'Content-Type': 'text/plain; charset=utf-8',
       'Cache-Control': 'no-store',
       'X-Content-Type-Options': 'nosniff',
-      'X-Request-Id': requestId,
+      [REQUEST_ID_HEADER]: requestId,
     },
   });
 }

@@ -204,12 +204,22 @@ describe('shell trailer and privacy command', () => {
       await act(async () => release(Response.json({ ok: true })));
     });
 
-    it('still shows the trailer for a failed ask, but does not list it as a logged request', async () => {
-      const fetchMock = vi.fn(async () => askReply(A, 503));
+    it('lists the id of a failed ask that carries the header, because the server may have stored a row for it', async () => {
+      const fetchMock = vi.fn(async () => askReply(A, 429));
       vi.stubGlobal('fetch', fetchMock);
       const container = await renderShell();
       await submit(container, 'q');
       expect(container.querySelector('[data-testid="shell-reference"]')?.textContent).toContain(A);
+      await submit(container, 'privacy');
+      expect(feedLines(container).at(-1)).toBe(`1. ${A}`);
+    });
+
+    it('lists nothing for a failed ask that carries no header', async () => {
+      const fetchMock = vi.fn(async () => askReply(null, 503));
+      vi.stubGlobal('fetch', fetchMock);
+      const container = await renderShell();
+      await submit(container, 'q');
+      expect(container.querySelector('[data-testid="shell-reference"]')).toBeNull();
       await submit(container, 'privacy');
       expect(feedLines(container).at(-1)).toBe(ui.privacyEmpty);
     });
