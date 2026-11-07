@@ -49,7 +49,7 @@ describe('installWithRetry', () => {
 describe('workflows install browsers through the retry wrapper', () => {
   // behavioral-test-allow: the artifact under test is the workflow YAML; no runtime surface exists.
   const dir = `${process.cwd()}/.github/workflows`;
-  const files = readdirSync(dir).filter((f) => f.endsWith('.yml'));
+  const files = readdirSync(dir).filter((f) => /\.ya?ml$/.test(f));
   it.each(files)('%s has no bare playwright install', (file) => {
     const text = readFileSync(`${dir}/${file}`, 'utf8');
     expect(text).not.toMatch(/run:\s*pnpm (exec )?playwright install/);

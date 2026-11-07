@@ -33,4 +33,21 @@ describe('countAskRefusal', () => {
     await expect(countAskRefusal('dedup-rejected')).resolves.toBeUndefined();
     expect(logError).toHaveBeenCalled();
   });
+
+  it('logs the failure as name and message only, never the raw error object', async () => {
+    const failure = Object.assign(new Error('Redis unavailable'), {
+      command: ['SET', 'ask:log', 'canary-question-9d2c'],
+    });
+    exec.mockRejectedValue(failure);
+    const { countAskRefusal } = await import('./refusal-count');
+    await countAskRefusal('rate-limited');
+
+    expect(
+      logError,
+      'a client error can carry the command it sent; serialising it writes request data to the log drain',
+    ).toHaveBeenCalledWith('ask refusal counter write failed', {
+      status: 'rate-limited',
+      error: { name: 'Error', message: 'Redis unavailable' },
+    });
+  });
 });

@@ -127,7 +127,7 @@ Transport is **plain `fetch` reading a raw `ReadableStream` of `text/plain`** - 
 ```mermaid
 sequenceDiagram
     participant U as InteractiveShell (client island)
-    participant R as app/api/ask/route.ts
+    participant R as app/api/ask/route.ts (lib/ask/preflight.ts, lib/ask/stream.ts)
     participant RL as lib/rate-limit
     participant G as lib/ask/output-guard (Layer 1)
     participant AI as Vercel AI Gateway (Haiku)
@@ -136,7 +136,7 @@ sequenceDiagram
     U->>R: POST /api/ask { question }
     R->>R: ASK_ENABLED kill-switch (503 if off)
     R->>RL: getAskLimit().limit(ip)  (8/h, fail-open)
-    R->>R: parse + validate (trim, <=500 chars)
+    R->>R: parse + validate (trim, model sees <=500 chars)
     R->>R: isInjectionAttempt reject (400)
     R->>RL: checkIdenticalQuestion (60s dedup, 429)
     R->>RL: reserveBudget(512)  (monthly cap and daily slice, 503 if either is exhausted)
@@ -154,7 +154,7 @@ sequenceDiagram
         end
     end
     U->>U: parseStreamChunk once per chunk -> rAF-coalesced setStreamingText (React state owned by InteractiveShell)
-    R->>KV: after(): settleBudget(refund) + Layer-2 audit + ask-log (fail-quiet)
+    R->>KV: after(): settleBudget(refund) + Layer-2 audit + ask-log (redact, then cut; fail-quiet) + guard counters
     U->>U: finalize() -> commit answer (or error line) into history
 ```
 

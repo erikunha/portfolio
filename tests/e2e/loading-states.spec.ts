@@ -1,5 +1,6 @@
 import { type Browser, type BrowserContext, expect, type Page, test } from '@playwright/test';
 import { heightOf, settleFrames } from './_helpers/geometry';
+import { drainRoutes } from './_helpers/routes';
 
 const WIDTHS = [320, 360, 390, 600, 768, 1024, 1280] as const;
 const FEED_WIDTHS = [390, 768, 1280] as const;
@@ -99,6 +100,7 @@ async function measure(
     heldPage,
     pairs.map((pair) => pair.fallback),
   );
+  await drainRoutes(held);
   await held.close();
 
   const live = await browser.newContext(options);

@@ -49,7 +49,7 @@ The pre-PR review procedure and the merge restriction are documented in `CLAUDE.
 
 ## Evaluation tools
 
-`pnpm ask:eval` evaluates the `/api/ask` product with calibration, corpus cases and aggregate gates. It writes `ask-eval-result.json`; configured Upstash credentials allow publishing the latest aggregate.
+`pnpm ask:eval` evaluates the `/api/ask` product with calibration, corpus cases and aggregate gates. It writes `ask-eval-result.json`; publishing the latest aggregate to Redis requires `EVAL_PUBLISH=1` plus Redis credentials, and only the scheduled `ask-eval.yml` and `agent-eval.yml` workflows set it. Without the flag the run removes every Redis credential from its environment at start, so a local run (including `vercel env run -- pnpm ask:eval`) never writes production data.
 
 `pnpm eval:agents` evaluates platform prompts separately. It writes `agent-eval-result.json`; the corresponding workflow is advisory. Neither command is a replacement for deterministic unit, type or browser checks.
 

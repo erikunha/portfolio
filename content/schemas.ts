@@ -914,6 +914,15 @@ export const DawMixerCopySchema = z.object({
   }),
 });
 
+export const AskFactsSchema = z.object({
+  openTo: z.string().min(1),
+  coreStack: z.array(z.string().min(1)).min(1),
+  currentRoleScope: z.array(z.string().min(1)).min(1),
+  targeting: z.array(z.string().min(1)).min(1),
+});
+
+export type AskFacts = z.infer<typeof AskFactsSchema>;
+
 export const LinksProfileSchema = z.object({
   name: z.string().min(1),
   avatar: z.string().min(1),

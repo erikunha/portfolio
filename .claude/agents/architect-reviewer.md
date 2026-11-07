@@ -328,7 +328,7 @@ If yes, verify the spec preserves all of. **Grep for the named symbol — do not
 - Ask rate-limit: `slidingWindow(8, '1 h')` in `lib/rate-limit.ts`
 - Contact rate-limit: `slidingWindow(3, '10 m')` in `lib/rate-limit.ts`
 - Contact IP hashing: `hashIp()` from `lib/ip-hash.ts` (SHA-256 + `DEPLOY_SALT`) before the durable KV write in `app/api/contact/route.ts`
-- Prompt caching: `providerOptions: { anthropic: { cacheControl: { type: 'ephemeral' } } }` on the system message in `app/api/ask/route.ts` (AI SDK v7 shape; the pre-v7 `cache_control: { type: 'ephemeral' }` spelling no longer exists)
+- Prompt caching: `providerOptions: { anthropic: { cacheControl: { type: 'ephemeral' } } }` on the system message in `lib/ask/stream.ts` (AI SDK v7 shape; the pre-v7 `cache_control: { type: 'ephemeral' }` spelling no longer exists)
 
 If any constraint is not clearly preserved: set `GATE_RESULT: BLOCK`, `BLOCKED_BY: Gate 3 — <specific constraint>`.
 

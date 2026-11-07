@@ -1,6 +1,7 @@
 import 'server-only';
 
 import { log } from '@/lib/log';
+import { describeError } from '@/lib/log-error';
 import { getRedis } from '@/lib/rate-limit';
 
 const ISO_DATE_LENGTH = 10;
@@ -20,6 +21,6 @@ export async function countAskRefusal(status: AskRefusalStatus, now = new Date()
     pipe.expire(key, REFUSAL_COUNTER_TTL_S, 'NX');
     await pipe.exec();
   } catch (err) {
-    log.error('ask refusal counter write failed', { status, err });
+    log.error('ask refusal counter write failed', { status, error: describeError(err) });
   }
 }
