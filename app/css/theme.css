@@ -94,6 +94,9 @@
   --links-thumb-tint-reveal: 0.3;
   --links-thumb-reveal-duration: 200ms;
   --border-width: 1px;
+  --focus-ring-width: 2px;
+  --focus-ring-offset: 2px;
+  --focus-ring-offset-inset: -2px;
   --shadow-glow: 0 0 12px var(--color-primary-500);
   --stroke-width-icon: 1.4;
   --radius-none: 0;

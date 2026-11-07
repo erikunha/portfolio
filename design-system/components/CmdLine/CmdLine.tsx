@@ -1,15 +1,24 @@
-import type { ReactNode } from 'react';
+import type { ComponentPropsWithoutRef, ReactNode } from 'react';
+import { SHELL_USER } from '@/content/brand';
+import { cn } from '@/lib/cn';
 
-export type CmdLineProps = { user?: string; command: string; output?: ReactNode; prompt?: string };
+export type CmdLineProps = Omit<ComponentPropsWithoutRef<'div'>, 'children'> & {
+  user?: string;
+  command: string;
+  output?: ReactNode;
+  prompt?: string;
+};
 
 export function CmdLine({
-  user = 'erik@portfolio',
+  user = SHELL_USER,
   command,
   output,
   prompt = ':~$',
+  className,
+  ...rest
 }: CmdLineProps) {
   return (
-    <div className="cmd-line font-mono text-sm leading-[1.55]">
+    <div className={cn('cmd-line font-mono text-sm leading-[1.55]', className)} {...rest}>
       <div className="flex flex-wrap gap-x-1">
         <span className="text-primary-400">{user}</span>
         <span className="text-primary-400">{prompt}</span>

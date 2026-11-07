@@ -33,7 +33,6 @@ export function RmsButtons({ buttons, initialActive, channelName, buttonLabels }
           onClick={() => toggle(btn)}
           className={cn(
             'min-w-[24px] min-h-[24px] px-[6px] font-mono text-xs font-bold flex items-center justify-center cursor-pointer tracking-[0.02em] shrink-0',
-            'focus-visible:outline-2 focus-visible:outline-primary-500 focus-visible:outline-offset-2',
             active.has(btn)
               ? [
                   'rms-active',

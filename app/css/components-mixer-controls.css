@@ -21,11 +21,6 @@
     pointer-events: none;
   }
 
-  .fader-track:focus-visible {
-    outline: 2px solid var(--color-primary-500);
-    outline-offset: 2px;
-  }
-
   .faderThumb {
     position: absolute;
     top: -2px;
@@ -69,11 +64,6 @@
     outline: none;
   }
 
-  .vu-meter:focus-visible {
-    outline: 2px solid var(--color-primary-500);
-    outline-offset: 2px;
-  }
-
   .vuSegFilled {
     flex: 1;
     background: var(--color-primary-500);
@@ -100,17 +90,6 @@
     gap: 3px;
     outline: none;
     user-select: none;
-  }
-
-  .knob-container:focus-visible {
-    outline: 2px solid var(--color-primary-500);
-    outline-offset: 2px;
-  }
-
-  .rms-active:focus-visible,
-  .rms-inactive:focus-visible {
-    outline: 2px solid var(--color-primary-500);
-    outline-offset: 2px;
   }
 
   .dbValue {

@@ -22,4 +22,25 @@ describe('CmdLine', () => {
     const { container } = render(<CmdLine command="ls" />);
     expect(container.firstElementChild?.childElementCount).toBe(1);
   });
+  it('merges a consumer className and forwards id, aria and data attributes to the root', () => {
+    const { container } = render(
+      <CmdLine command="ls" className="extra" id="cmd-1" aria-label="shell" data-testid="cmd" />,
+    );
+    const root = container.firstElementChild as HTMLElement;
+    expect(root.id).toBe('cmd-1');
+    expect(root.getAttribute('aria-label')).toBe('shell');
+    expect(root.getAttribute('data-testid')).toBe('cmd');
+    expect(root.classList.contains('extra')).toBe(true);
+    expect(root.classList.contains('cmd-line')).toBe(true);
+  });
+  it('renders two instances without sharing identity', () => {
+    const { container } = render(
+      <>
+        <CmdLine command="a" id="one" />
+        <CmdLine command="b" id="two" />
+      </>,
+    );
+    expect(container.querySelector('#one')).not.toBeNull();
+    expect(container.querySelector('#two')).not.toBeNull();
+  });
 });

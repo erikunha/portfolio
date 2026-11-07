@@ -143,6 +143,9 @@ Renders the three macOS-style traffic-light dots (red/yellow/green) as a pure RS
 | `user` | `string` | `'erik@portfolio'` | no |
 | `prompt` | `string` | `':~$'` | no |
 | `output` | `ReactNode` | · | no |
+| `className` | `string` | · | no, merged after the base classes |
+
+Any other `div` attribute (`id`, `aria-*`, `data-*`) is forwarded to the root element.
 
 <Preview id="cmd-line">
   <CmdLine command="cat README.md" />
