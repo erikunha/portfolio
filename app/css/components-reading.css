@@ -144,7 +144,7 @@
 
   .reading-row-key {
     min-width: 0;
-    color: var(--color-primary-500);
+    color: var(--color-tertiary-50);
     font-size: var(--text-xs);
     font-weight: 700;
     letter-spacing: 0.06em;

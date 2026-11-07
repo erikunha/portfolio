@@ -93,11 +93,26 @@ function ChannelDesktop({ ch, copy }: { ch: DawMixerChannel; copy: DawMixerCopy 
         </span>
       </div>
       <div className="flex gap-[10px] items-center justify-center">
-        <KnobIsland initialAngle={ch.knob1.angleDeg} label={ch.knob1.label} channelName={ch.name} />
-        <KnobIsland initialAngle={ch.knob2.angleDeg} label={ch.knob2.label} channelName={ch.name} />
+        <KnobIsland
+          initialAngle={ch.knob1.angleDeg}
+          label={ch.knob1.label}
+          channelName={ch.name}
+          degreesUnit={copy.controls.degrees}
+        />
+        <KnobIsland
+          initialAngle={ch.knob2.angleDeg}
+          label={ch.knob2.label}
+          channelName={ch.name}
+          degreesUnit={copy.controls.degrees}
+        />
       </div>
       <div className="flex justify-center">
-        <RmsButtons buttons={ch.buttons} initialActive={ch.activeButtons} channelName={ch.name} />
+        <RmsButtons
+          buttons={ch.buttons}
+          initialActive={ch.activeButtons}
+          channelName={ch.name}
+          buttonLabels={copy.controls.buttons}
+        />
       </div>
       <div className="min-w-0">
         <PluginChain plugins={ch.plugins} channelId={ch.id} />
@@ -108,6 +123,7 @@ function ChannelDesktop({ ch, copy }: { ch: DawMixerChannel; copy: DawMixerCopy 
           initialLevel={ch.meterPct}
           clipping={ch.meterClipping ?? false}
           channelName={ch.name}
+          label={copy.controls.vuMeter}
         />
       </div>
       <FaderDbIsland
@@ -116,6 +132,7 @@ function ChannelDesktop({ ch, copy }: { ch: DawMixerChannel; copy: DawMixerCopy 
         peakLabel={copy.peakLabel}
         initialPct={ch.faderPct}
         channelName={ch.name}
+        faderLabel={copy.controls.fader}
         footer={ch.footer}
       />
     </div>

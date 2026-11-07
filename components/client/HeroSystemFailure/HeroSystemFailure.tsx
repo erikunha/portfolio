@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { heroClientContent } from '@/content/hero-client';
+import { HERO_SYSFAIL_HIDE, HERO_SYSFAIL_SHOW } from '@/lib/events';
 
 export function HeroSystemFailure() {
   const [visible, setVisible] = useState(false);
@@ -10,11 +11,11 @@ export function HeroSystemFailure() {
     const onShow = () => setVisible(true);
     const onHide = () => setVisible(false);
 
-    window.addEventListener('hero:sysfail:show', onShow);
-    window.addEventListener('hero:sysfail:hide', onHide);
+    window.addEventListener(HERO_SYSFAIL_SHOW, onShow);
+    window.addEventListener(HERO_SYSFAIL_HIDE, onHide);
     return () => {
-      window.removeEventListener('hero:sysfail:show', onShow);
-      window.removeEventListener('hero:sysfail:hide', onHide);
+      window.removeEventListener(HERO_SYSFAIL_SHOW, onShow);
+      window.removeEventListener(HERO_SYSFAIL_HIDE, onHide);
     };
   }, []);
 

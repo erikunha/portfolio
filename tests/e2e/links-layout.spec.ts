@@ -27,14 +27,16 @@ const SECONDARY = '[data-stack="secondary"]';
 const PILLS = '[data-testid="links-pills"]';
 
 async function top(page: Page, selector: string): Promise<number> {
-  const box = await page.locator(selector).first().boundingBox();
-  expect(box, `${selector} must be on the page`).not.toBeNull();
+  const target = page.locator(selector).first();
+  await expect(target, `${selector} must be on the page`).toBeVisible();
+  const box = await target.boundingBox();
   return box?.y ?? 0;
 }
 
 async function width(page: Page, selector: string): Promise<number> {
-  const box = await page.locator(selector).first().boundingBox();
-  expect(box, `${selector} must be on the page`).not.toBeNull();
+  const target = page.locator(selector).first();
+  await expect(target, `${selector} must be on the page`).toBeVisible();
+  const box = await target.boundingBox();
   return box?.width ?? 0;
 }
 

@@ -1,5 +1,8 @@
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import {
+  CHANGELOG_HEADER,
   mergeChangelogGroups,
   parseChangelogGroups,
   renderChangelogGroups,
@@ -118,6 +121,50 @@ describe('breaking changes survive the parse/render round-trip', () => {
   });
 });
 
+const DASHES = /[\u2013\u2014]/;
+
+describe('changelog text carries no em or en dash', () => {
+  it('replaces a dash in a commit subject with a colon when rendering', () => {
+    const groups = new Map([
+      [
+        '2026-07-16',
+        [
+          {
+            type: 'feat',
+            description: 'StatTile display variant \u2014 docs tiles',
+            breaking: false,
+          },
+        ],
+      ],
+    ]);
+    const out = renderChangelogGroups(groups);
+    expect(out, 'the generated page is visible copy; the no-dash rule covers it').not.toMatch(
+      DASHES,
+    );
+    expect(out).toContain('- **feat:** StatTile display variant: docs tiles');
+  });
+
+  it('does not duplicate an entry whose git subject has a dash and whose file text is clean', () => {
+    const existing = new Map([
+      ['2026-07-16', [{ type: 'feat', description: 'a: b', breaking: false }]],
+    ]);
+    const fromGit = new Map([
+      ['2026-07-16', [{ type: 'feat', description: 'a \u2013 b', breaking: false }]],
+    ]);
+    expect(
+      mergeChangelogGroups(existing, fromGit).get('2026-07-16'),
+      'a re-sync must stay idempotent after the dash is rewritten',
+    ).toHaveLength(1);
+  });
+
+  it('writes a page title without a dash', () => {
+    expect(CHANGELOG_HEADER).not.toMatch(DASHES);
+    expect(CHANGELOG_HEADER).toContain(
+      "title: 'Changelog \u00b7 Design System \u00b7 erikunha.dev'",
+    );
+  });
+});
+
 describe('renderChangelogGroups', () => {
   it('renders date groups newest-first', () => {
     const merged = new Map([
@@ -127,5 +174,16 @@ describe('renderChangelogGroups', () => {
     const out = renderChangelogGroups(merged);
     expect(out.indexOf('## 2026-07-09')).toBeLessThan(out.indexOf('## 2026-05-24'));
     expect(out).toContain('- **fix:** newer');
+  });
+});
+
+describe('the committed changelog page', () => {
+  it('contains no em or en dash in its title or entries', () => {
+    // behavioral-test-allow: the generated MDX page is the published copy, the file text is the property under test
+    const page = readFileSync(
+      join(process.cwd(), 'app/(en)/design-system/changelog/page.mdx'),
+      'utf8',
+    );
+    expect(page, 'run pnpm changelog:sync; the generator rewrites dashes').not.toMatch(DASHES);
   });
 });

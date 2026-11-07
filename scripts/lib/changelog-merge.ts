@@ -1,6 +1,23 @@
 export type ChangelogEntry = { type: string; description: string; breaking: boolean };
 export type ChangelogGroups = Map<string, ChangelogEntry[]>;
 
+const DASH_RUN = /\s*[\u2013\u2014]\s*/g;
+const DASH_REPLACEMENT = ': ';
+
+const plainDashes = (text: string): string => text.replace(DASH_RUN, DASH_REPLACEMENT);
+
+export const CHANGELOG_HEADER = `import { dsPageMetadata } from '../_lib/page-metadata';
+
+export const metadata = dsPageMetadata({
+  slug: 'changelog',
+  title: 'Changelog · Design System · erikunha.dev',
+  description: 'Design system token and component changelog',
+});
+
+# CHANGELOG
+
+`;
+
 const DATE_HEADING = /^## (\d{4}-\d{2}-\d{2})\s*$/;
 const ENTRY_LINE = /^- \*\*(\w+)(!)?:\*\* (.+)$/;
 
@@ -35,13 +52,17 @@ export function mergeChangelogGroups(
   fromGit: ChangelogGroups,
 ): ChangelogGroups {
   const merged: ChangelogGroups = new Map();
-  for (const [date, entries] of existing) merged.set(date, [...entries]);
+  const clean = (entry: ChangelogEntry): ChangelogEntry => ({
+    ...entry,
+    description: plainDashes(entry.description),
+  });
+  for (const [date, entries] of existing) merged.set(date, entries.map(clean));
   for (const [date, entries] of fromGit) {
     const target = merged.get(date) ?? [];
     if (!merged.has(date)) merged.set(date, target);
     const entryKey = (e: ChangelogEntry) => `${e.type}:${e.breaking}:${e.description}`;
     const seen = new Set(target.map(entryKey));
-    for (const entry of entries) {
+    for (const entry of entries.map(clean)) {
       const key = entryKey(entry);
       if (!seen.has(key)) {
         target.push(entry);
@@ -59,7 +80,7 @@ export function renderChangelogGroups(groups: ChangelogGroups): string {
       const items = (groups.get(date) ?? [])
         .map(
           ({ type, description, breaking }) =>
-            `- **${type}${breaking ? '!' : ''}:** ${description}`,
+            `- **${type}${breaking ? '!' : ''}:** ${plainDashes(description)}`,
         )
         .join('\n');
       return `## ${date}\n\n${items}`;

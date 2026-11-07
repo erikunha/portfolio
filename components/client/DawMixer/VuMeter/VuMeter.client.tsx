@@ -1,8 +1,9 @@
 'use client';
 
-import { useCallback, useRef } from 'react';
+import { useRef } from 'react';
 import { MeterSegment, meterSegmentState } from '@/lib/meter';
-import { PERCENT_RANGE, percentAlong, sliderValueForKey } from '@/lib/slider';
+import { PERCENT_RANGE, percentAlong } from '@/lib/slider';
+import { useDragSlider } from '../useDragSlider.client';
 
 const KEY_STEP_PCT = 5;
 const SEGMENT_CLASS = {
@@ -16,89 +17,56 @@ interface VuMeterProps {
   initialLevel: number;
   clipping?: boolean;
   channelName: string;
+  label: string;
 }
 
-export function VuMeter({ segments, initialLevel, clipping = false, channelName }: VuMeterProps) {
+export function VuMeter({
+  segments,
+  initialLevel,
+  clipping = false,
+  channelName,
+  label,
+}: VuMeterProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const segmentRefs = useRef<(HTMLSpanElement | null)[]>([]);
-  const isDragging = useRef(false);
   const liveLevel = useRef(initialLevel);
-  const dragStartLevel = useRef(initialLevel);
 
-  const getSegmentClass = useCallback(
-    (index: number, level: number) =>
-      SEGMENT_CLASS[meterSegmentState(index, level, segments, clipping)],
-    [segments, clipping],
-  );
+  const getSegmentClass = (index: number, level: number) =>
+    SEGMENT_CLASS[meterSegmentState(index, level, segments, clipping)];
 
-  const applyLevel = useCallback(
-    (newLevel: number) => {
-      liveLevel.current = newLevel;
-      const el = containerRef.current;
-      if (el) {
-        el.setAttribute('aria-valuenow', String(newLevel));
-        el.setAttribute('aria-valuetext', `${newLevel}%`);
-      }
-      segmentRefs.current.forEach((seg, i) => {
-        if (seg) seg.className = getSegmentClass(i, newLevel);
-      });
-    },
-    [getSegmentClass],
-  );
-
-  const onPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
-    dragStartLevel.current = liveLevel.current;
-    const newLevel = percentAlong(containerRef.current, e.clientX);
-    try {
-      e.currentTarget.setPointerCapture(e.pointerId);
-      // biome-ignore lint/suspicious/noEmptyBlockStatements: intentional no-op
-    } catch {}
-    isDragging.current = true;
-    if (newLevel !== null) applyLevel(newLevel);
+  const applyLevel = (newLevel: number) => {
+    liveLevel.current = newLevel;
+    const el = containerRef.current;
+    if (el) {
+      el.setAttribute('aria-valuenow', String(newLevel));
+      el.setAttribute('aria-valuetext', `${newLevel}%`);
+    }
+    segmentRefs.current.forEach((seg, i) => {
+      if (seg) seg.className = getSegmentClass(i, newLevel);
+    });
   };
 
-  const onPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
-    if (!isDragging.current) return;
-    const newLevel = percentAlong(containerRef.current, e.clientX);
-    if (newLevel !== null) applyLevel(newLevel);
-  };
-
-  const onPointerUp = () => {
-    isDragging.current = false;
-  };
-
-  const onPointerCancel = () => {
-    if (!isDragging.current) return;
-    isDragging.current = false;
-    applyLevel(dragStartLevel.current);
-  };
+  const handlers = useDragSlider({
+    read: () => liveLevel.current,
+    apply: applyLevel,
+    valueAt: (event) => percentAlong(containerRef.current, event.clientX),
+    applyOnDown: true,
+    settleOn: 'live',
+    keys: { ...PERCENT_RANGE, step: KEY_STEP_PCT },
+  });
 
   return (
     <div
       ref={containerRef}
       role="slider"
-      aria-label={`${channelName} VU meter demonstration, drag to adjust level`}
+      aria-label={`${channelName} ${label}`}
       aria-valuenow={initialLevel}
       aria-valuemin={0}
       aria-valuemax={100}
       aria-valuetext={`${initialLevel}%`}
       tabIndex={0}
       className="vu-meter"
-      onPointerDown={onPointerDown}
-      onPointerMove={onPointerMove}
-      onPointerUp={onPointerUp}
-      onPointerCancel={onPointerCancel}
-      onKeyDown={(e) => {
-        if (isDragging.current) return;
-        const next = sliderValueForKey(e.key, {
-          value: liveLevel.current,
-          ...PERCENT_RANGE,
-          step: KEY_STEP_PCT,
-        });
-        if (next === null) return;
-        e.preventDefault();
-        applyLevel(next);
-      }}
+      {...handlers}
     >
       {Array.from({ length: segments }, (_, i) => {
         const cls = getSegmentClass(i, initialLevel);

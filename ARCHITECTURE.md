@@ -186,7 +186,7 @@ The top of `GuitarSection` is one EQ spectrum strip (`EqSpectrumStrip.tsx`). It 
 
 `GuitarSection` renders the guitar rig and the DAW mixer as one module at `sec-guitar` (header `CAT ~/.GUITAR_RIG + ./MIX --LIVE`, mobile `GUITAR_RIG + MIX`). The guitar part is one synchronous RSC layout at every width; only the mixer below it branches by user agent behind a Suspense boundary. The order is the chain label and the EQ spectrum strip, then the signal panel (a `SIGNAL_CHAIN.LIVE · SIGNAL OK` strip with a `TAIL -F ~/.RIG` tail and the INPUT, AMP and OUT cards joined by arrows, each with a named strength bar), then the details beside the live photo (influences with the current obsession and four stat cells on the left, the camera frame on a 20rem column on the right), then the mixer. The camera labels (`▶ REC · LIVE`, `CAM/01 · STAGE`) sit above the photo and the caption below it. Below 768px the cards, the details and the photo, and the stat cells each stack in one column; below 700px the chain cards collapse into compact rows with downward arrows.
 
-`DawMixerContent` renders the DAW mixer inside the guitar module, below the photo pair; there is no `sec-daw-mixer` section, nav entry or footer link. The mix has three channels (CH 01 rhythm, CH 02 lead, MASTER). `DawMixerContent` selects the variant by user agent behind a Suspense boundary: desktop UAs get the three-channel table (ID, TRACK, I/O, R/M/S, PLUGIN CHAIN, METER, FADER, dB) with the session header and interactive fader, knob, R/M/S and VU meter islands; mobile UAs get three static cards (both guitar tracks and MASTER) with the session header, meters, faders and plugin chains. The session header and the mobile legend derive the "N GTR + MASTER" count from the channel list. The master LUFS footer and terminal lines exist only on the MASTER channel. The desktop table is one eight-column `daw-channel-row` grid that is width-capped by its module, and the mobile cards stack one level per row.
+`DawMixerContent` renders the DAW mixer inside the guitar module, below the photo pair; there is no `sec-daw-mixer` section, nav entry or footer link. The mix has three channels (CH 01 rhythm, CH 02 lead, MASTER). `DawMixerContent` selects the variant by user agent behind a Suspense boundary: desktop UAs get the three-channel table (ID, TRACK, I/O, R/M/S, PLUGIN CHAIN, METER, FADER, dB) with the session header and interactive fader, knob, R/M/S and VU meter islands; mobile UAs get three static cards (both guitar tracks and MASTER) with the session header, meters, faders and plugin chains. The session header and the mobile legend derive the "N GTR + MASTER" count from the channel list. The master LUFS footer and terminal lines exist only on the MASTER channel. The desktop table is one eight-column `daw-channel-row` grid that is width-capped by its module, and the mobile cards stack one level per row. The islands hold no copy: the meter, fader and toggle names and the knob degree word come from `DawMixerCopy.controls` in both locales and arrive as props, so the pt page speaks Portuguese; the pointer-drag, cancel-revert and keyboard handling of the meter, fader and knob is one hook, `useDragSlider.client.ts`; `__tests__/meta/no-inline-aria-copy.test.ts` fails when a component types a word into an accessible-name attribute.
 
 Career (`sec-git-log`) renders synchronously without request headers or a Suspense boundary.
 Each career entry links its company (`companyUrl`) through `components/CompanyLink`; `__tests__/company-links.test.ts` holds the same URL across the JSON-LD, hiring profile, `llms.txt` and ask prompt.
@@ -281,7 +281,7 @@ content/nav.ts                        # zod-free nav vocabulary: labels, topbar 
 content/projects.ts                   # shared project cards
 content/perf-receipts.ts              # canonical deltas, attached receipts and reading-view stats
 content/measured.ts                   # ASK and PSI presentation metadata
-content/section-registry.ts           # nine navigation destinations and aliases
+content/section-registry.ts           # nine navigation destinations, icons and screen reader labels
 content/section-labels.ts             # section labels: the visible module name and the heading label
 content/reading-views.ts              # summary and CV presentation
 content/profile.ts                    # shared identity, hiring copy and language line formatting
@@ -318,12 +318,13 @@ lib/media-queries.ts                  # MOBILE_QUERY shared by every matchMedia 
 lib/json-ld.ts                        # serializeJsonLd, the only JSON-LD serializer
 lib/defer-props.ts                    # deferred-section class and marker
 lib/breakpoint.ts                     # viewport breakpoint constants
+lib/time.ts                           # time-unit constants and the two-digit clock pad shared by lib and components
 lib/contact-validation.ts             # server-only ContactSchema, shared limits export, honeypot check
 lib/contact-delivery.ts               # shared Resend configuration and 10s send timeout
 lib/contact-outbox.ts                 # ordered pending ids and retry attempt counters
 lib/timezone/                         # Intl-only zone, clock and overlap math, land-grid path builder
 lib/error-bridge.client.ts            # window error → /api/log bridge
-lib/events.ts                         # typed WindowEventMap: sysfail:start|end, shell-cmd-run, hero:sysfail:show|hide
+lib/events.ts                         # window event-name constants and the typed WindowEventMap: sysfail:start|end, shell-cmd-run, hero:sysfail:show|hide
 lib/crt-effect-stepper.ts              # moves the paused CRT animation clocks forward at the governed tick rate
 lib/frame-governor.ts                 # rolling frame-time governor: publishes html[data-crt-level], steps the CRT effects, sets the MatrixRain tick multiplier
 lib/hiring-profile.ts                 # HiringProfile reader for /api/erik.json

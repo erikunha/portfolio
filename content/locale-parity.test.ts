@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { aboutContent } from './about';
+import { dawMixerCopy } from './daw-mixer';
 import { gitLog } from './git-log';
 import { perfReceipts } from './perf-receipts';
 import { profilePresentation } from './profile';
@@ -92,5 +93,28 @@ describe('pt perf receipts', () => {
       sameNote.map((receipt) => receipt.metric),
       'a pt receipt note identical to the en one was never translated',
     ).toEqual([]);
+  });
+});
+
+describe('DAW mixer control names', () => {
+  const SAME_IN_BOTH_LANGUAGES = new Set(['fader', 'solo']);
+
+  it('translates each control name for pt unless the term is identical in both languages', () => {
+    const en = dawMixerCopy[SITE_LOCALE.en].controls;
+    const pt = dawMixerCopy[PT].controls;
+    const pairs: Array<[string, string]> = [
+      [en.vuMeter, pt.vuMeter],
+      [en.fader, pt.fader],
+      [en.degrees, pt.degrees],
+      [en.buttons.R, pt.buttons.R],
+      [en.buttons.M, pt.buttons.M],
+      [en.buttons.S, pt.buttons.S],
+    ];
+    for (const [english, portuguese] of pairs) {
+      if (SAME_IN_BOTH_LANGUAGES.has(english)) continue;
+      expect(portuguese, `pt control name "${portuguese}" is the en text "${english}"`).not.toBe(
+        english,
+      );
+    }
   });
 });

@@ -1,4 +1,4 @@
-import { SYSFAIL_END, SYSFAIL_START } from '@/lib/events';
+import { HERO_SYSFAIL_HIDE, HERO_SYSFAIL_SHOW, SYSFAIL_END, SYSFAIL_START } from '@/lib/events';
 import { createPauseControl, type PhraseLoop, runPhraseLoop, typeOut } from './typewriter';
 
 export type BootClassKey =
@@ -239,7 +239,7 @@ export function buildDesktopOnFirstLoop(
   }
 
   function hidePlate() {
-    window.dispatchEvent(new CustomEvent('hero:sysfail:hide'));
+    window.dispatchEvent(new CustomEvent(HERO_SYSFAIL_HIDE));
     document.documentElement.classList.remove('sysfail-on');
   }
 
@@ -269,7 +269,7 @@ export function buildDesktopOnFirstLoop(
     document.documentElement.classList.add('sysfail-on');
     ctrlRef.current?.pauseDialog();
 
-    window.dispatchEvent(new CustomEvent('hero:sysfail:show'));
+    window.dispatchEvent(new CustomEvent(HERO_SYSFAIL_SHOW));
 
     later(() => {
       hidePlate();
