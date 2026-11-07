@@ -41,7 +41,7 @@ for (const viewport of viewports) {
       );
     });
 
-    test('keeps five bordered About panels and readable retry code', async ({ page }, testInfo) => {
+    test('keeps five bordered About panels and readable retry code', async ({ page }) => {
       await page.goto('/');
       const about = page.locator('#sec-readme');
       await expect(about.locator('.ab-panel')).toHaveCount(5);
@@ -55,7 +55,6 @@ for (const viewport of viewports) {
       const code = about.getByRole('region', { name: 'README code' });
       await expect(code).toHaveAttribute('tabindex', '0');
       await expect(code).toContainText('Math.random()');
-      await page.screenshot({ path: testInfo.outputPath('hero-about.png'), fullPage: true });
     });
   });
 }
