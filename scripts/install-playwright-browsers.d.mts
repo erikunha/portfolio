@@ -1,28 +1,14 @@
-export interface AttemptResult {
-  status: number | null;
-  timedOut: boolean;
-}
+type Run = (command: string, args: string[], options: object) => { status: number | null };
 
 export const INSTALL_ATTEMPTS: number;
-export const INSTALL_ATTEMPT_TIMEOUT_MS: number;
-export function runAttempt(
-  args: string[],
-  options?: {
-    spawn?: (
-      command: string,
-      args: string[],
-      options: object,
-    ) => {
-      pid?: number;
-      on: (event: 'exit', listener: (status: number | null) => void) => unknown;
-    };
-    kill?: (pid: number, signal: string) => unknown;
-  },
-): Promise<AttemptResult>;
+export const APT_CONFIG_PATH: string;
+export const APT_CONFIG: string;
+export function configureApt(options?: {
+  run?: Run;
+  platform?: string;
+  ci?: string | undefined;
+}): boolean;
 export function installWithRetry(
   browsers: string[],
-  options?: {
-    attempt?: (args: string[]) => Promise<AttemptResult>;
-    log?: (message: string) => void;
-  },
-): Promise<number>;
+  options?: { run?: Run; log?: (message: string) => void },
+): number;
