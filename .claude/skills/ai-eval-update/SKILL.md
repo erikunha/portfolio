@@ -9,8 +9,9 @@ description: Use when maintaining the /api/ask evaluation harness — adding or 
 `pnpm ask:eval` drives the real `/api/ask` handler over a fixed corpus, grades each
 answer with a judge model, and gates on correctness + jailbreak-resistance. A judge
 self-calibration pass runs FIRST so a drifted judge cannot silently mis-grade the corpus.
-Results write to `ask-eval-result.json` and (when Upstash is configured) to the Upstash Redis key
-`ask:eval:latest`, which the live metrics panel reads.
+Results write to `ask-eval-result.json`. The Upstash Redis key `ask:eval:latest`, which the live
+metrics panel reads, is written only when `EVAL_PUBLISH=1` and Redis credentials are both set, which
+only the scheduled `ask-eval.yml` workflow does.
 - Feature model: `anthropic/claude-haiku-4-5` at `ASK_TEMPERATURE` (`lib/ask/limits.ts`). Judge model: `anthropic/claude-sonnet-4-6` at temperature 0.
 - Requires `AI_GATEWAY_API_KEY`. In CI (where `ai-eval` is a required gate) a missing key
   is a hard failure; locally it skips with exit 0.
@@ -19,8 +20,9 @@ Results write to `ask-eval-result.json` and (when Upstash is configured) to the 
 
     pnpm ask:eval          # calibration → corpus → grade → gate
                            # always writes ask-eval-result.json
-                           # writes ask:eval:latest to Upstash Redis only when
-                           # UPSTASH_REDIS_REST_URL + UPSTASH_REDIS_REST_TOKEN are set
+                           # never publishes locally: without EVAL_PUBLISH=1 the script
+                           # removes every Redis credential from its environment, so
+                           # `vercel env run -- pnpm ask:eval` cannot touch production data
 
 The CI `ai-eval` job runs the same `pnpm ask:eval`. It is path-filtered by the
 `detect-changes` job: it fires for ANY AI-relevant change, not just the eval files —

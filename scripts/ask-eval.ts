@@ -26,6 +26,7 @@ import { buildJudgeFactSheet } from '@/lib/eval/fact-sheet';
 import { hasGatewayCredential } from '@/lib/eval/gateway-credential';
 import { judge } from '@/lib/eval/judge';
 import { percentile } from '@/lib/eval/percentile';
+import { isolateFromRedis } from '@/lib/eval/publish-gate';
 import { publishAggregate } from '@/lib/eval/redis-publish';
 import type { CalibrationCase } from '@/lib/eval/types';
 import { createUsageMeter } from '@/lib/eval/usage-meter';
@@ -141,6 +142,7 @@ function clientIpForItem(index: number): string {
 }
 
 async function main(): Promise<void> {
+  isolateFromRedis(process.env);
   if (!hasGatewayCredential(process.env)) {
     if (process.env.CI) {
       console.error(

@@ -22,6 +22,7 @@ import {
 import { hasGatewayCredential } from '@/lib/eval/gateway-credential';
 import { gradeRun } from '@/lib/eval/grade';
 import { aggregateCase, type CaseStats } from '@/lib/eval/montecarlo';
+import { isolateFromRedis } from '@/lib/eval/publish-gate';
 import { publishAggregate } from '@/lib/eval/redis-publish';
 import { runTarget } from '@/lib/eval/run-target';
 import type { CalibrationResult } from '@/lib/eval/types';
@@ -140,6 +141,7 @@ function targetModelFor(tier: 'mechanical' | 'judgment'): string {
 }
 
 async function main(): Promise<void> {
+  isolateFromRedis(process.env);
   if (!hasGatewayCredential(process.env)) {
     if (process.env.CI) {
       console.error(
