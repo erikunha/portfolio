@@ -157,19 +157,18 @@ async function handleAsk(req: NextRequest): Promise<Response> {
         : {};
     const q = body.question;
     if (typeof q !== 'string' || !q.trim()) {
-      earlyExitPersist('errored');
+      log.info('ask rejected: question required', { requestId, ipHash });
       return Response.json({ error: askErrors[answerLocale].questionRequired }, { status: 400 });
     }
     question = q.trim().slice(0, ASK_MAX_QUESTION_CHARS);
     answerLocale = siteLocaleOf(body.locale) ?? answerLocale;
   } catch {
-    earlyExitPersist('errored');
+    log.info('ask rejected: invalid body', { requestId, ipHash });
     return Response.json({ error: askErrors[answerLocale].invalidBody }, { status: 400 });
   }
 
   if (INJECTION_RE.test(normalizeInjectionInput(question))) {
     log.info('ask rejected: prompt-injection pattern', { requestId, ipHash });
-    earlyExitPersist('errored');
     return Response.json({ error: askErrors[answerLocale].injection }, { status: 400 });
   }
 
