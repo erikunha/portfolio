@@ -19,6 +19,7 @@ import { externalLinkProps } from '@/components/ExternalLink';
 import { LocaleSwitch } from '@/components/LocaleSwitch/LocaleSwitch';
 import { MAIN_CONTENT_ID } from '@/components/PageMain';
 import { StatusDot } from '@/components/StatusDot';
+import { TOPBAR_MOTION_LABEL } from '@/content/nav';
 import type { NavigationCopy, SiteNavChrome } from '@/content/navigation';
 import {
   headerLanguageSwitchPaths,
@@ -429,6 +430,7 @@ export function SectionNavigation({ extra }: { extra?: ReactNode }) {
               type="button"
               className="menu-motion"
               data-motion-toggle=""
+              aria-label={TOPBAR_MOTION_LABEL}
               aria-pressed={motionOn}
               onClick={toggleMotion}
             >

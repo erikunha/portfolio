@@ -580,6 +580,23 @@ describe('SectionNavigation', () => {
     expect(toggle.textContent).toContain(NAVIGATION[LOCALE].copy.motionOff);
   });
 
+  it('keeps one fixed accessible name on the drawer motion toggle and leaves the state to aria-pressed', () => {
+    render(<Page />);
+    const toggle = document.querySelector('.menu-motion') as HTMLButtonElement;
+
+    expect(
+      screen.getByRole('button', { name: 'MOTION', pressed: true }),
+      'a name that spells the state ("MOTION: ON") on top of aria-pressed is announced twice and contradicts itself after a toggle',
+    ).toBe(toggle);
+
+    fireEvent.click(toggle);
+
+    expect(screen.getByRole('button', { name: 'MOTION', pressed: false })).toBe(toggle);
+    expect(toggle.textContent, 'the visible text still spells the state').toContain(
+      NAVIGATION[LOCALE].copy.motionOff,
+    );
+  });
+
   describe('drawer', () => {
     function open() {
       const trigger = screen.getByTestId('trigger');

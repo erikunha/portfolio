@@ -229,7 +229,7 @@ test.describe('Hero metadata facts', () => {
       const facts: [string, string][] = [
         ['location', heroContent[SITE_LOCALE.en].locationLabel],
         ['employer', heroContent[SITE_LOCALE.en].employerLabel],
-        ['domain', profile.currentEmployer.context],
+        ['domain', profile.currentEmployer.context.split(' · ')[0] ?? ''],
         ['language', heroContent[SITE_LOCALE.en].languageLabel],
       ];
       for (const [name, text] of facts) {
@@ -254,7 +254,7 @@ test.describe('Hero metadata facts', () => {
         ['location', metadataFact(page, heroContent[SITE_LOCALE.en].locationLabel)],
         ['availability', metadataItem(page, profile.availability)],
         ['employer', metadataFact(page, heroContent[SITE_LOCALE.en].employerLabel)],
-        ['domain', metadataFact(page, profile.currentEmployer.context)],
+        ['domain', metadataFact(page, profile.currentEmployer.context.split(' · ')[0] ?? '')],
         ['language', metadataFact(page, heroContent[SITE_LOCALE.en].languageLabel)],
       ];
       for (const [name, locator] of facts) {
@@ -266,6 +266,61 @@ test.describe('Hero metadata facts', () => {
         .map(([, names]) => names.join(' + '));
       expect(shape, 'the wide hero keeps the fact rows it had').toEqual(WIDE_METADATA_ROWS[width]);
     });
+  }
+});
+
+const SEPARATOR_WIDTHS = [320, 390, 768, 1024, 1280];
+
+test.describe('Hero metadata separators', () => {
+  for (const path of ['/', '/pt']) {
+    for (const width of SEPARATOR_WIDTHS) {
+      test(`${path} shows a separator only between two pairs on one line at ${width}`, async ({
+        page,
+      }) => {
+        await page.setViewportSize({ width, height: METADATA_VIEWPORT_HEIGHT });
+        await page.goto(path);
+        const report = await metadataContext(page).evaluate((context) => {
+          const SEPARATED =
+            '.hero-context-fact:not(:first-child), .hero-context-item:not(:first-child)';
+          const pairs = [...context.querySelectorAll<HTMLElement>('.hero-context-item')];
+          const containerLeft = context.getBoundingClientRect().left;
+          const rows = new Map<number, HTMLElement[]>();
+          for (const pair of pairs) {
+            const top = Math.round(pair.getBoundingClientRect().top);
+            rows.set(top, [...(rows.get(top) ?? []), pair]);
+          }
+          const leading = [...rows.values()]
+            .map((row) => row[0])
+            .filter((pair): pair is HTMLElement => pair !== undefined)
+            .filter((pair) =>
+              [pair, pair.closest<HTMLElement>('.hero-context-fact')].some(
+                (node) =>
+                  node?.matches(SEPARATED) &&
+                  Math.abs(node.getBoundingClientRect().left - containerLeft) > 1,
+              ),
+            )
+            .map((pair) => pair.textContent?.trim());
+          const overflow = [...context.querySelectorAll<HTMLElement>('.hero-context-item')]
+            .filter((pair) => pair.getBoundingClientRect().right > window.innerWidth)
+            .map((pair) => pair.textContent?.trim());
+          const separated = [...context.querySelectorAll<HTMLElement>(SEPARATED)].map(
+            (node) => getComputedStyle(node, '::before').content,
+          );
+          return { leading, overflow, separated };
+        });
+        expect(
+          report.leading,
+          'a pair that starts a wrapped line but is not at the left edge shows its separator in front of it',
+        ).toEqual([]);
+        expect(report.overflow, 'a pair runs past the viewport').toEqual([]);
+        expect(report.separated.length).toBeGreaterThan(0);
+        for (const content of report.separated) {
+          expect(content, 'every pair after the first is preceded by a drawn separator').toContain(
+            '·',
+          );
+        }
+      });
+    }
   }
 });
 

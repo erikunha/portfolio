@@ -33,7 +33,8 @@ describe('Hero identity and static actions', () => {
       expect(hero.textContent).toContain('Brazil');
       expect(hero.textContent).toContain('UTC-3 · available now');
       expect(hero.textContent).toContain('Raylu');
-      expect(hero.textContent).toContain('AI deal origination · private markets');
+      expect(hero.textContent).toContain('AI deal origination');
+      expect(hero.textContent).toContain('private markets');
       expect(hero.textContent).toContain('LANG: PT-BR native · EN C1');
     }
     expect(doc.querySelectorAll('[data-testid="hero-name"]')).toHaveLength(2);
@@ -160,7 +161,7 @@ describe('Hero owner decisions', () => {
 });
 
 describe('Hero copy discipline', () => {
-  it('groups the metadata into four facts with a decorative separator', () => {
+  it('groups the metadata into four facts of unbreakable items and draws no separator in the markup', () => {
     const doc = getDOM();
     const contexts = doc.querySelectorAll('.hero-context');
     expect(contexts).toHaveLength(2);
@@ -175,12 +176,29 @@ describe('Hero copy discipline', () => {
         'hero-context-fact hero-context-fact--domain',
         'hero-context-fact hero-context-fact--language',
       ]);
-      const location = facts[0];
-      expect(location?.querySelectorAll(':scope > .hero-context-item')).toHaveLength(2);
-      const separator = location?.querySelector(':scope > .hero-context-separator');
-      expect(separator?.getAttribute('aria-hidden')).toBe('true');
-      expect(separator?.textContent).toBe(' · ');
-      expect(context.textContent).toContain('LOC: Brazil · UTC-3 · available now');
+      expect(
+        facts.map((fact) => fact.querySelectorAll(':scope > .hero-context-item').length),
+        'every fact holds its pairs as items: a separator is drawn by CSS before an item, so a wrapped line never ends on one',
+      ).toEqual([2, 1, 2, 1]);
+      expect(
+        context.querySelector('.hero-context-separator'),
+        'a separator span in the markup can wrap to the end of a line',
+      ).toBeNull();
+      const [location, , domain] = facts;
+      expect(
+        [...(location?.querySelectorAll('.hero-context-item') ?? [])].map((item) =>
+          item.textContent?.trim(),
+        ),
+      ).toEqual(['LOC: Brazil', 'UTC-3 · available now']);
+      expect(
+        [...(domain?.querySelectorAll('.hero-context-item') ?? [])].map((item) =>
+          item.textContent?.trim(),
+        ),
+      ).toEqual(['AI deal origination', 'private markets']);
+      expect(
+        context.textContent,
+        'copy and assistive technology still read a space between items',
+      ).toContain('LOC: Brazil UTC-3 · available now');
     }
   });
 
