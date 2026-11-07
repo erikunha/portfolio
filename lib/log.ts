@@ -1,6 +1,7 @@
 import 'server-only';
 
 import pino from 'pino';
+import { clampLogContext } from '@/lib/log-error';
 
 const isEdge = process.env.NEXT_RUNTIME === 'edge';
 
@@ -8,7 +9,13 @@ type Ctx = Record<string, unknown>;
 
 function edgeLog(level: 'info' | 'warn' | 'error', msg: string, ctx?: Ctx): void {
   console.log(
-    JSON.stringify({ level, msg, ts: new Date().toISOString(), env: process.env.NODE_ENV, ...ctx }),
+    JSON.stringify({
+      level,
+      msg,
+      ts: new Date().toISOString(),
+      env: process.env.NODE_ENV,
+      ...(ctx && clampLogContext(ctx)),
+    }),
   );
 }
 
@@ -35,21 +42,21 @@ if (!isEdge) {
 export const log = {
   info: (msg: string, ctx?: Ctx) => {
     if (pinoInstance) {
-      ctx ? pinoInstance.info(ctx, msg) : pinoInstance.info(msg);
+      ctx ? pinoInstance.info(clampLogContext(ctx), msg) : pinoInstance.info(msg);
     } else {
       edgeLog('info', msg, ctx);
     }
   },
   warn: (msg: string, ctx?: Ctx) => {
     if (pinoInstance) {
-      ctx ? pinoInstance.warn(ctx, msg) : pinoInstance.warn(msg);
+      ctx ? pinoInstance.warn(clampLogContext(ctx), msg) : pinoInstance.warn(msg);
     } else {
       edgeLog('warn', msg, ctx);
     }
   },
   error: (msg: string, ctx?: Ctx) => {
     if (pinoInstance) {
-      ctx ? pinoInstance.error(ctx, msg) : pinoInstance.error(msg);
+      ctx ? pinoInstance.error(clampLogContext(ctx), msg) : pinoInstance.error(msg);
     } else {
       edgeLog('error', msg, ctx);
     }

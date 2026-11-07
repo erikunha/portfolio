@@ -1,13 +1,7 @@
-const INVISIBLE_CODES: ReadonlySet<number> = new Set([
-  0x00ad, 0x180e, 0x200b, 0x200c, 0x200d, 0x2060, 0xfeff,
-]);
+const NON_PRINTING_RE = /[\p{Cf}\p{Mn}\p{Variation_Selector}]/gu;
 
 export function normalizeInjectionInput(question: string): string {
-  let stripped = '';
-  for (const ch of question.normalize('NFKC')) {
-    if (!INVISIBLE_CODES.has(ch.charCodeAt(0))) stripped += ch;
-  }
-  return stripped;
+  return question.normalize('NFKD').replace(NON_PRINTING_RE, '').normalize('NFKC');
 }
 
 export const INJECTION_RE =

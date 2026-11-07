@@ -6,17 +6,25 @@ import { refreshScores, type Strategy } from '@/lib/lighthouse-scores';
 import { log } from '@/lib/log';
 import { getRedis } from '@/lib/rate-limit';
 import { isCronAuthorized } from '@/lib/server/cron-auth';
+import { err } from '@/lib/server/route';
 
 const PSI_CONSEC_KEY = (s: Strategy) => `meta:psi-consec-failures:${s}`;
 const PSI_CONSEC_TTL_S = 604_800;
 const PSI_ALERT_THRESHOLD = 3;
+
+const UNAUTHORIZED_STATUS = 401;
 
 export const maxDuration = 60;
 
 export async function GET(req: NextRequest): Promise<Response> {
   const cronSecret = env.CRON_SECRET;
   if (!isCronAuthorized(req, cronSecret)) {
-    return new Response('Unauthorized', { status: 401 });
+    return err({
+      requestId: crypto.randomUUID(),
+      status: UNAUTHORIZED_STATUS,
+      code: 'unauthorized',
+      message: 'unauthorized',
+    });
   }
 
   const t0 = Date.now();

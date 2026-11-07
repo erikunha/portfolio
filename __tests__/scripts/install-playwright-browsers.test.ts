@@ -24,7 +24,7 @@ describe('configureApt', () => {
   it('leaves a developer machine alone', () => {
     const run = vi.fn();
     expect(configureApt({ run, platform: 'darwin', ci: 'true' })).toBe(false);
-    expect(configureApt({ run, platform: 'linux', ci: undefined })).toBe(false);
+    expect(configureApt({ run, platform: 'linux', ci: '' })).toBe(false);
     expect(run).not.toHaveBeenCalled();
   });
 });

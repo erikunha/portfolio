@@ -69,6 +69,21 @@ export function getContactLimit(): Ratelimit {
   return _contactLimit;
 }
 
+const MCP_LIMIT_REQUESTS = 60;
+
+let _mcpLimit: Ratelimit | undefined;
+
+export function getMcpLimit(): Ratelimit {
+  if (!_mcpLimit) {
+    _mcpLimit = new Ratelimit({
+      redis: getRedis(),
+      limiter: Ratelimit.slidingWindow(MCP_LIMIT_REQUESTS, '1 m'),
+      prefix: 'rl:mcp',
+    });
+  }
+  return _mcpLimit;
+}
+
 let _healthzLimit: Ratelimit | undefined;
 
 export function getHealthzLimit(): Ratelimit {
@@ -177,7 +192,7 @@ function rateLimitBucket(ip: string): string {
   return `${ipv6Groups(ip).slice(0, IPV6_PREFIX_GROUPS).join(':')}::/64`;
 }
 
-export function getClientIp(req: import('next/server').NextRequest): string {
+export function getClientIp(req: { headers: Headers }): string {
   const raw =
     req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? req.headers.get('x-real-ip');
   return raw ? rateLimitBucket(raw) : UNKNOWN_CLIENT_IP;
