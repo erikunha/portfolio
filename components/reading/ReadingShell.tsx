@@ -8,15 +8,17 @@ const MAIN_CLASS = 'page-container page-main';
 
 export function ReadingShell({
   locale,
+  route,
   wide = false,
   children,
 }: {
   locale: SiteLocale;
+  route: string;
   wide?: boolean;
   children: ReactNode;
 }) {
   return (
-    <SiteShell locale={locale}>
+    <SiteShell locale={locale} route={route}>
       <div className="reading-view">
         <PageMain className={MAIN_CLASS}>
           <div className={cn('reading-doc', wide && 'reading-doc--wide')}>{children}</div>

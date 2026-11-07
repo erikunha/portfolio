@@ -2,14 +2,13 @@ import { Fragment } from 'react';
 import { CompanyLink } from '@/components/CompanyLink';
 import { EXTERNAL_LINK_PROPS, externalLinkProps } from '@/components/ExternalLink';
 import { HeroStats } from '@/components/HeroStats';
+import { FACT_SEPARATOR } from '@/content/fact-separator';
 import { heroContent, heroTagline } from '@/content/hero';
 import { profile, profilePresentation } from '@/content/profile';
 import type { SiteLocale } from '@/content/site-locale';
 import { Button } from '@/design-system';
 import { HeroBootAnimation } from '../../client/HeroBootAnimation';
 import { HeroSystemFailure } from '../../client/HeroSystemFailure';
-
-const FIELD_SEPARATOR = ' · ';
 
 const HEADING_LEVEL = 1;
 
@@ -41,7 +40,7 @@ function HeroIdentity({ locale, primary }: { locale: SiteLocale; primary: boolea
           </span>{' '}
           <span className="hero-context-item">
             {profile.timezone}
-            {FIELD_SEPARATOR}
+            {FACT_SEPARATOR}
             {p.availability}
           </span>
         </span>{' '}
@@ -56,7 +55,7 @@ function HeroIdentity({ locale, primary }: { locale: SiteLocale; primary: boolea
           </span>
         </span>{' '}
         <span className="hero-context-fact hero-context-fact--domain">
-          {p.employerContext.split(FIELD_SEPARATOR).map((part) => (
+          {p.employerContextFacts.map((part) => (
             <Fragment key={part}>
               <span className="hero-context-item">{part}</span>{' '}
             </Fragment>

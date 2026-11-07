@@ -67,7 +67,7 @@ function CurrentTopbarLinks() {
 }
 
 export function DesktopTopbar({ brand }: { brand: ReactNode }) {
-  const { toggleMotion, chrome, copy } = useSectionNavigation();
+  const { toggleMotion, chrome, copy, route } = useSectionNavigation();
   const motionOn = useMotionOn();
 
   return (
@@ -75,7 +75,7 @@ export function DesktopTopbar({ brand }: { brand: ReactNode }) {
       <div className="max-w-[var(--measure-page)] mx-auto px-[var(--space-gutter)] flex items-center gap-3 min-h-11">
         <MenuTrigger />
         <nav className="flex gap-2 items-center flex-nowrap" aria-label={copy.siteNavLabel}>
-          <Suspense fallback={<TopbarLinks pathname={null} />}>
+          <Suspense fallback={<TopbarLinks pathname={route} />}>
             <CurrentTopbarLinks />
           </Suspense>
           <div className="flex gap-2 items-center flex-nowrap xl:ml-2">

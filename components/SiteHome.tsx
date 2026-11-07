@@ -11,11 +11,13 @@ import { Hero } from '@/components/sections/Hero';
 import { HottestTakesSection } from '@/components/sections/HottestTakesSection';
 import { ProjectsSection } from '@/components/sections/ProjectsSection';
 import { ShellSection } from '@/components/sections/ShellSection';
-import type { SiteLocale } from '@/content/site-locale';
+import { localizedPath, type SiteLocale } from '@/content/site-locale';
+
+const HOME_PATH = '/';
 
 export function SiteHome({ locale }: { locale: SiteLocale }) {
   return (
-    <SiteShell locale={locale}>
+    <SiteShell locale={locale} route={localizedPath(locale, HOME_PATH)}>
       <PageMain>
         <ErrorBoundary locale={locale}>
           <Hero locale={locale} />

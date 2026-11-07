@@ -22,6 +22,7 @@ export function AppShell({
   drawerExtra,
   chrome,
   locale,
+  route,
   skipLabel,
 }: {
   brand: ReactNode;
@@ -29,6 +30,7 @@ export function AppShell({
   drawerExtra?: ReactNode;
   chrome: SiteNavChrome;
   locale: SiteLocale;
+  route?: string | undefined;
   skipLabel: string;
 }) {
   return (
@@ -37,7 +39,7 @@ export function AppShell({
         {skipLabel}
       </a>
       <OfflineNotice locale={locale} />
-      <SectionNavigationProvider chrome={chrome} locale={locale}>
+      <SectionNavigationProvider chrome={chrome} locale={locale} route={route ?? null}>
         <SectionNavigation extra={drawerExtra} />
         <ErrorBoundary fallback={null}>
           <CRTOverlay />

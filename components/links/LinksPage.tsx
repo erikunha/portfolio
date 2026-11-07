@@ -36,7 +36,7 @@ export function LinksPage({ locale }: { locale: LinksLocale }) {
   const pageUrl = `${siteUrl}${LINKS_PATH[locale]}`;
 
   return (
-    <SiteShell locale={locale}>
+    <SiteShell locale={locale} route={LINKS_PATH[locale]}>
       <NavProgress />
       <div className="links-page">
         <PageMain className="page-container page-main links-main">

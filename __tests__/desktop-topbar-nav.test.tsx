@@ -1,4 +1,5 @@
 import { act, createElement } from 'react';
+import { renderToString } from 'react-dom/server';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { SectionNavigationProvider } from '@/components/responsive/SectionNavigation';
 import {
@@ -15,9 +16,13 @@ import { type MountedClient, mountClient } from './helpers/render';
 import { isHiddenAtWidth } from './helpers/tailwind-visibility';
 
 let mockPathname: string | null = null;
+let pathnameSuspended = false;
 
 vi.mock('next/navigation', () => ({
-  usePathname: () => mockPathname,
+  usePathname: () => {
+    if (pathnameSuspended) throw new Promise(() => undefined);
+    return mockPathname;
+  },
 }));
 
 const DESKTOP_WIDTHS = [768, 1024, 1280, 1440];
@@ -43,6 +48,7 @@ describe('DesktopTopbar', () => {
   afterEach(() => {
     mounted?.unmount();
     mockPathname = null;
+    pathnameSuspended = false;
   });
 
   it('names every destination in the shared vocabulary, once', async () => {
@@ -248,7 +254,7 @@ describe('DesktopTopbar', () => {
 
     expect(button).not.toBeNull();
     expect(button.textContent).toContain(TOPBAR_MOTION_LABEL);
-    expect(button.textContent).not.toContain(NAVIGATION[SITE_LOCALE.en].copy.motionOn);
+    expect(button.textContent).toBe(TOPBAR_MOTION_LABEL);
     expect(button.getAttribute('aria-pressed'), 'the state rides on aria-pressed').toBe('true');
 
     await act(async () => {
@@ -293,6 +299,35 @@ describe('DesktopTopbar', () => {
     mounted = await renderTopbar();
     expect(currentLabels()).toEqual([label]);
   });
+
+  it.each([
+    ['/links', NAV_VOCABULARY[SITE_LOCALE.en].links],
+    ['/design-system', NAV_VOCABULARY[SITE_LOCALE.en].designSystem],
+  ])(
+    'ships the page link of %s as current in the server HTML, before the pathname resolves',
+    async (route, label) => {
+      pathnameSuspended = true;
+      const { DesktopTopbar } = await import(
+        '@/components/responsive/DesktopTopbar/DesktopTopbar.client'
+      );
+      const host = document.createElement('div');
+      host.innerHTML = renderToString(
+        createElement(
+          SectionNavigationProvider,
+          { chrome: siteNavChrome(SITE_LOCALE.en), locale: SITE_LOCALE.en, route },
+          createElement(DesktopTopbar, { brand: createElement('a', { href: '/' }, 'brand') }),
+        ),
+      );
+      const current = [
+        ...host.querySelectorAll('nav[aria-label="Site navigation"] a[aria-current="page"]'),
+      ].map((link) => (link.textContent ?? '').trim());
+
+      expect(
+        current,
+        'a visitor without JavaScript never gets the client pass that sets aria-current, so the server HTML has to carry it',
+      ).toEqual([label]);
+    },
+  );
 
   it.each(['/', '/design-systems', '/linksfoo', null])(
     'marks no page link current on %s',

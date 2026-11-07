@@ -229,7 +229,7 @@ test.describe('Hero metadata facts', () => {
       const facts: [string, string][] = [
         ['location', heroContent[SITE_LOCALE.en].locationLabel],
         ['employer', heroContent[SITE_LOCALE.en].employerLabel],
-        ['domain', profile.currentEmployer.context.split(' · ')[0] ?? ''],
+        ['domain', profile.currentEmployer.contextFacts[0] ?? ''],
         ['language', heroContent[SITE_LOCALE.en].languageLabel],
       ];
       for (const [name, text] of facts) {
@@ -254,7 +254,7 @@ test.describe('Hero metadata facts', () => {
         ['location', metadataFact(page, heroContent[SITE_LOCALE.en].locationLabel)],
         ['availability', metadataItem(page, profile.availability)],
         ['employer', metadataFact(page, heroContent[SITE_LOCALE.en].employerLabel)],
-        ['domain', metadataFact(page, profile.currentEmployer.context.split(' · ')[0] ?? '')],
+        ['domain', metadataFact(page, profile.currentEmployer.contextFacts[0] ?? '')],
         ['language', metadataFact(page, heroContent[SITE_LOCALE.en].languageLabel)],
       ];
       for (const [name, locator] of facts) {

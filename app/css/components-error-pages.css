@@ -68,6 +68,12 @@
     text-align: center;
   }
 
+  @media (max-width: 1023.98px) {
+    .err-main {
+      padding-block-end: var(--spacing-4);
+    }
+  }
+
   @media (min-width: 768px) {
     .err-main {
       --err-top-chrome: 0px;

@@ -6,10 +6,12 @@ import type { SiteLocale } from '@/content/site-locale';
 
 export function SiteShell({
   locale,
+  route,
   drawerExtra,
   children,
 }: {
   locale: SiteLocale;
+  route?: string | undefined;
   drawerExtra?: ReactNode;
   children: ReactNode;
 }) {
@@ -19,6 +21,7 @@ export function SiteShell({
       chrome={siteNavChrome(locale)}
       drawerExtra={drawerExtra}
       locale={locale}
+      route={route}
       skipLabel={NAVIGATION[locale].copy.skipLabel}
     >
       {children}

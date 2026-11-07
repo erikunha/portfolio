@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { FACT_SEPARATOR } from './fact-separator';
 import { SECTION_ICONS } from './section-registry';
 
 export { SECTION_ICONS };
@@ -551,6 +552,17 @@ export const CommunityEventSchema = z.object({
   statusLine: z.string().min(1),
 });
 
+export const ContextFactsSchema = z
+  .array(
+    z
+      .string()
+      .min(1)
+      .refine((fact) => !fact.includes(FACT_SEPARATOR), {
+        message: `a context fact must not contain "${FACT_SEPARATOR}": the separator is drawn between facts, so one inside a fact would split it in two`,
+      }),
+  )
+  .min(1);
+
 const MonthSchema = z.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/);
 
 export const ProfileSchema = z.object({
@@ -566,7 +578,7 @@ export const ProfileSchema = z.object({
   currentEmployer: z.object({
     name: z.string().min(1),
     url: CompanyUrlSchema,
-    context: z.string().min(1),
+    contextFacts: ContextFactsSchema,
   }),
   languages: z
     .array(

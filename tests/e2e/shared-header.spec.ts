@@ -178,13 +178,33 @@ test('the header is the one banner landmark and the dock menu claims no current 
 test.describe('the header without JavaScript', () => {
   test.use({ javaScriptEnabled: false, viewport: DESKTOP });
 
-  for (const path of ['/cv', '/pt/summary', '/links', '/links/en', '/design-system']) {
+  const LANGUAGE_HREFS: ReadonlyArray<readonly [string, [string, string]]> = [
+    ['/cv', ['/cv', '/pt/cv']],
+    ['/pt/summary', ['/summary', '/pt/summary']],
+    ['/links', ['/links/en', '/links']],
+    ['/links/en', ['/links/en', '/links']],
+    ['/design-system', ['/design-system', '/pt']],
+  ];
+
+  for (const [path, hrefs] of LANGUAGE_HREFS) {
     test(`${path} ships the language switch and the menu trigger in the HTML`, async ({ page }) => {
       await page.goto(path);
       const banner = page.getByRole('banner');
       await expect(banner.locator('[data-lang-switch]:visible')).toHaveCount(1);
-      await expect(banner.locator('[data-lang-switch] a')).toHaveCount(2);
+      const links = banner.locator('[data-lang-switch]:visible a');
+      await expect(links).toHaveCount(2);
+      await expect(links.nth(0)).toHaveAttribute('href', hrefs[0]);
+      await expect(links.nth(1)).toHaveAttribute('href', hrefs[1]);
       await expect(banner.locator('.menu-trigger')).toBeVisible();
+    });
+  }
+
+  for (const path of ['/links', '/links/en']) {
+    test(`${path} ships its own topbar link as the current one in the HTML`, async ({ page }) => {
+      await page.goto(path);
+      const current = page.locator('header a.topbar-link[aria-current="page"]');
+      await expect(current).toHaveCount(1);
+      await expect(current).toHaveAttribute('href', path);
     });
   }
 

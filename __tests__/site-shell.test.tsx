@@ -37,7 +37,7 @@ describe('every page frame renders through SiteShell', () => {
       const { NotFoundPage } = await import('@/components/ErrorPages/NotFoundPage');
       const frames = await Promise.all([
         topElement(async () => SiteHome({ locale })),
-        topElement(async () => ReadingShell({ locale, children: null })),
+        topElement(async () => ReadingShell({ locale, route: '/cv', children: null })),
         topElement(async () => LinksPage({ locale })),
         topElement(async () => NotFoundPage({ locale })),
       ]);
@@ -48,4 +48,34 @@ describe('every page frame renders through SiteShell', () => {
       }
     });
   }
+});
+
+describe('every static page hands its own route to the shell', () => {
+  for (const locale of LOCALES) {
+    it(`SiteHome, CvPage, SummaryPage and NotFoundPage name their route in ${locale}`, async () => {
+      const { SiteHome } = await import('@/components/SiteHome');
+      const { CvPage } = await import('@/components/reading/CvPage');
+      const { SummaryPage } = await import('@/components/reading/SummaryPage');
+      const { NotFoundPage } = await import('@/components/ErrorPages/NotFoundPage');
+      const { readingViews } = await import('@/content/reading-views');
+      const { localizedPath } = await import('@/content/site-locale');
+      const routeOf = (frame: ReactElement) => (frame.props as { route?: string }).route;
+
+      expect(routeOf(SiteHome({ locale }))).toBe(localizedPath(locale, '/'));
+      expect(routeOf(NotFoundPage({ locale })), 'a 404 has no route of its own').toBeUndefined();
+
+      const cv = CvPage({ locale });
+      const summary = SummaryPage({ locale });
+      expect((cv.props as { route?: string }).route).toBe(readingViews[locale].cv.path);
+      expect((summary.props as { route?: string }).route).toBe(readingViews[locale].summary.path);
+    });
+  }
+
+  it('LinksPage names the links route of its language', async () => {
+    const { LinksPage } = await import('@/components/links/LinksPage');
+    const { LINKS_LOCALE, LINKS_PATH } = await import('@/content/links.constants');
+    for (const locale of Object.values(LINKS_LOCALE)) {
+      expect((LinksPage({ locale }).props as { route?: string }).route).toBe(LINKS_PATH[locale]);
+    }
+  });
 });

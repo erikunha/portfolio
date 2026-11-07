@@ -7,6 +7,7 @@ import {
   FUNDS_PHRASE,
   profile,
   profileLanguageLine,
+  profilePresentation,
   profileSummary,
   RAYLU_OWNED_SCOPE,
   YEARS_OF_EXPERIENCE_LABEL,
@@ -55,7 +56,7 @@ AI: 12-agent GitHub Copilot engineering system at Betsson (codegen, review, debu
 AI-native: Vercel AI SDK + AI Gateway, Anthropic API, OpenAI, Google GenAI/Vertex, MCP servers, Zod structured output, eval harnesses with LLM judge calibrated on human labels, per-job cost caps, prompt-injection defense, agent and sub-agent orchestration, Claude Code/Codex skills, spec-driven development, model routing with cost ceilings
 
 ## Current role
-${profile.currentEmployer.name}: ${profile.currentEmployer.context} · ${FUNDS_PHRASE}.
+${profile.currentEmployer.name}: ${profilePresentation[SITE_LOCALE.en].employerContext} · ${FUNDS_PHRASE}.
 ${currentRoleLine}
 - Owns ${RAYLU_OWNED_SCOPE}. Do NOT widen this to whole-platform ownership: the scope is that frontend platform plus the backend changes listed under Raylu in the employment history below, not the whole product, its models or the company.
 - The table is a real table element, not an ARIA grid: it does not implement role="grid", aria-rowcount or aria-colcount · do not claim those.

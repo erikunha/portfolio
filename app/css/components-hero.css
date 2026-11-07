@@ -70,7 +70,7 @@
 
   .hero-context-fact:not(:first-child)::before,
   .hero-context-item:not(:first-child)::before {
-    content: "·" / "";
+    content: var(--separator-glyph) / "";
     position: absolute;
     left: calc(var(--hero-context-gap) / -2);
     transform: translateX(-50%);

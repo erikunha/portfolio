@@ -128,6 +128,22 @@ describe('derived strings render exactly what they rendered before', () => {
     expect(contact?.text).toBe('mailto: erikhenriquealvescunha@gmail.com');
   });
 
+  it('keeps the employer context as facts per locale and joins them for the line surfaces', () => {
+    expect(profilePresentation[SITE_LOCALE.en].employerContextFacts).toEqual([
+      'AI deal origination',
+      'private markets',
+    ]);
+    expect(profilePresentation[SITE_LOCALE.pt].employerContextFacts).toEqual([
+      'originação de negócios com IA',
+      'mercados privados',
+    ]);
+    for (const locale of LOCALES) {
+      expect(profilePresentation[locale].employerContext).toBe(
+        profilePresentation[locale].employerContextFacts.join(' · '),
+      );
+    }
+  });
+
   it('keeps the career domain line per locale', () => {
     expect(gitLog[SITE_LOCALE.en][0]?.domain).toBe('AI deal origination · private markets');
     expect(gitLog[SITE_LOCALE.pt][0]?.domain).toBe(
