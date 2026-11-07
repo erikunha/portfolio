@@ -21,7 +21,7 @@ A tree or heading can be correct while a described component, route or gate is w
 
 ### A2: Pre-PR checks are procedural
 
-There is no project agent-runtime hook requiring an architect PASS, security audit or completed local review. `CLAUDE.md` requires those steps. Git hooks and CI do not prove that they happened.
+There is no project hook requiring a plan-review PASS or a completed local review. `AGENTS.md` requires those steps. Git hooks and CI do not prove that they happened.
 
 ### A3: Client naming has explicit exceptions
 

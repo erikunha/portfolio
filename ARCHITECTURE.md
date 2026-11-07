@@ -694,10 +694,10 @@ Vercel "Promote to Production" of previous deployment. <60 seconds. No manual co
 
 ### Claude harness configuration
 
-The repo ships a project-level Claude Code permissions baseline in `.claude/settings.json` (committed): the minimum skill allowlist mandated by CLAUDE.md's dispatch matrix, with no `defaultMode` (the user-level settings decide it). Per-machine additions live in `.claude/settings.local.json` (gitignored). The effective merged allowlist is inspectable via:
+The repo ships a project-level Claude Code permissions baseline in `.claude/settings.json` (committed): the deny rules behind the zero-exception rules in `AGENTS.md` (broad `git add`, npm and yarn installs, local env reads), two PreToolUse entries that run `scripts/guard-merge-main.mjs` (fail closed on any `gh` merge that does not read as a single merge into a base other than `main`, and on the GitHub MCP merge tool when the PR base is `main` or unknown), a PreToolUse hook that runs `scripts/guard-test-edits.mjs` (refuses edits to existing test files while `FIX_MODE=1` or `.claude/fix-mode` declares a fix task), and a Stop hook that runs `scripts/stop-verify.mjs`, with no `defaultMode` (the user-level settings decide it). Per-machine additions live in `.claude/settings.local.json` (gitignored). `AGENTS.md` is the one instruction file for Codex and Claude Code; `CLAUDE.md` imports it, skills live in `.agents/skills` and are linked into `.claude/skills`, and `.codex/config.toml` mirrors `.mcp.json`. The effective merged permissions are inspectable via:
 
 ```bash
-jq -s '(.[0].permissions.allow + (.[1].permissions.allow // [])) | unique' \
+jq -s '(.[0].permissions.deny + (.[1].permissions.deny // [])) | unique' \
   .claude/settings.json .claude/settings.local.json 2>/dev/null
 ```
 

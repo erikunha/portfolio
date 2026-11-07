@@ -35,8 +35,11 @@
 # ai-eval harness output (scripts/ask-eval.ts)
 /ask-eval-result.json
 
-# local claude settings
+# personal Claude Code files
+CLAUDE.local.md
 .claude/settings.local.json
+.claude/*.local.md
+.claude/fix-mode
 
 # playwright mcp session logs
 .playwright-mcp/

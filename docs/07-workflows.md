@@ -39,7 +39,7 @@ check (Biome) -> typecheck -> validate-content -> check:client-naming -> check:d
 | `validate-content`     | every `content/*.ts` Zod schema parses (build gate)                                              |
 | `check:client-naming`  | client directive files use `*.client.*`, a `/client/` directory, or an App Router error filename |
 | `check:dep-pinning`    | no `latest`/`*`/tag deps or open overrides                                                                       |
-| `check:harness-size`   | `CLAUDE.md` ≤ 275 lines                                                                          |
+| `check:harness-size`   | `AGENTS.md` and `CLAUDE.md` within the line budgets in `scripts/harness-size.json`               |
 | `check:section-order`  | section ids have mobile order rules or a listed nested-anchor exemption                          |
 | `check:doc-drift`      | `ARCHITECTURE.md` directory-tree paths exist on disk                                             |
 | `lint:css-tokens`      | no raw hex outside `app/css/theme.css`                                                           |
@@ -80,7 +80,7 @@ Changes under `tests/visual/` or `tests/e2e/` set both `app` and `ui` to true, s
 ```mermaid
 flowchart TD
     pr["PR / push main / workflow_dispatch"] --> dc["detect-changes (app?, ai?, ui?)"]
-    pr --> qf["quality-fast: Biome, branch/commit lint, content, naming, pinning, harness, doc-drift, contrast, PR-comment gate"]
+    pr --> qf["quality-fast: Biome, branch/commit lint, content, naming, pinning, harness, doc-drift, contrast"]
     pr --> tc["typecheck"]
     pr --> t["test (Vitest + coverage)"]
     pr --> dr["dependency-review (PR)"]
@@ -124,13 +124,14 @@ Both desktop and mobile collect `/`, `/pt`, `/cv`, `/summary`, `/links`, `/links
 ## The PR lifecycle
 
 ```
-commit (scope blocks) -> (self-review the diff before opening the PR)
+commit (scope blocks) -> (read the diff before opening the PR; specialist self-review of the pushed head before any merge; not posted, not gated)
   -> pnpm ci:local + gates:runtime -> gh pr create (fill the template)
   -> resolve every review thread (rebase before each push) -> pnpm pr:gate
-  -> repo owner runs gh pr merge (project policy; no agent hook enforces it)
+  -> sub-PR into feat/*: agent may merge after CI green; PR into main: repo owner runs gh pr merge
+     (Claude Code hook guard-merge-main fails closed on an agent merge via gh pr merge, gh api or the GitHub MCP tool unless the base is not main)
 ```
 
-Large features use an **integration branch + sub-PRs** (`feat/<feature>` ← `feat/<feature>-<part>`) to group independently reviewable changes. See `CLAUDE.md` "Working agreement".
+Large features use an **integration branch + sub-PRs** (`feat/<feature>` ← `feat/<feature>-<part>`) to group independently reviewable changes. See `AGENTS.md` "Git and pull requests".
 
 ## Releases & deployment
 
