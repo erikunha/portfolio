@@ -8,7 +8,7 @@ How a change flows from requirement to production. Git hooks and CI enforce chec
 flowchart TD
     idea["Idea / requirement"] --> brainstorm["Brainstorm (/speckit.specify)"]
     brainstorm --> spec["Spec: local specs/NNN-feature/<br/>requirements + acceptance criteria"]
-    spec --> agate{"architect-reviewer convention<br/>GATE_RESULT: PASS?"}
+    spec --> agate{"plan-review convention<br/>GATE_RESULT: PASS?"}
     agate -->|no| spec
     agate -->|yes| plan["Plan: local feature directory<br/>independently verifiable tasks"]
     plan --> branch["feature branch: feat|fix|... /description"]
@@ -38,17 +38,17 @@ Work starts with `/speckit.specify` (mandated before any feature). The output is
 
 Write the feature requirements and acceptance criteria under local `specs/NNN-feature/`. `.gitignore` excludes `specs`, `.specify` and generated spec-kit skills. Artifact templates belong to the installed tooling; they are not tracked project contracts.
 
-### 3. The architect gate
+### 3. The plan gate
 
-Before a plan is written, an `architect-reviewer` agent runs the four-gate spec protocol and must return `GATE_RESULT: PASS`. This is a convention, not a project hook.
+Before a plan is written, the `plan-review` skill runs the four-gate protocol against the spec and must return `GATE_RESULT: PASS`. This is a convention, not a project hook.
 
 ### 4. Plan (the decomposed "how")
 
-Decompose the requirements into independently verifiable tasks under the feature directory. Large changes use an integration branch and focused sub-PRs, as described in `CLAUDE.md`.
+Decompose the requirements into independently verifiable tasks under the feature directory. Large changes use an integration branch and focused sub-PRs, as described in `AGENTS.md`.
 
 ### 5. Branch + TDD implementation
 
-A feature branch is created (`<type>/<description>`, enforced by `.husky/pre-push`). Implementation is test-first (`test-first discipline (CLAUDE.md skill dispatch)` is mandated before writing any new file/function/script). The agent works in scope blocks, one logical unit per commit.
+A feature branch is created (`<type>/<description>`, enforced by `.husky/pre-push`). Implementation is test-first (`test-first discipline (AGENTS.md)` is mandated before writing any new file/function/script). The agent works in scope blocks, one logical unit per commit.
 
 ### 6. Commit (per-commit gates)
 
@@ -95,7 +95,7 @@ A UI change is read at every width before its PR opens. Each section gets a crit
 
 **Screenshots.** Capture each section at 2x at 1280, 768 and 390, with the fixed chrome hidden, so the capture shows the section and not the chrome over it. `stripVolatileChrome` in `tests/e2e/_helpers/mask-volatile.ts` is the list of chrome hidden before a capture; add any new fixed or sticky bar to it.
 
-A finding that changes behavior is a decision, so it lands in `DECISIONS.md` as a dated bullet. A finding that touches a CI-gated baseline follows `.claude/skills/visual-baseline-regen`.
+A finding that changes behavior is a decision, so it lands in `DECISIONS.md` as a dated bullet. A finding that touches a CI-gated baseline follows the `visual-baseline-regen` skill.
 
 ## The gate chain between "written" and "merged"
 

@@ -50,7 +50,7 @@ This exercises the ordinary contribution path. Runtime checks depend on the affe
 | What is the rule here?           | `STANDARDS.md` chapter + the enforcing gate                                               |
 | How do I do X workflow?          | [workflow-playbook.md](./workflow-playbook.md)                                            |
 | What does this gate want?        | run it and read its output                                                                |
-| What is the agent allowed to do? | `CLAUDE.md` + `.claude/rules/*` + [agents-skills-hooks-mcp](./agents-skills-hooks-mcp.md) |
+| What is the agent allowed to do? | `AGENTS.md` + `.claude/rules/*` + [agents-skills-hooks-mcp](./agents-skills-hooks-mcp.md) |
 | What was just being worked on?   | recent commits and open PRs (no project handoff ledger)                                   |
 
 ## When you are stuck on a gate

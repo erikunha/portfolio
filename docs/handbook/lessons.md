@@ -94,7 +94,7 @@ The prompt for a manual or agent review that applies these rules to a diff is `d
 ## Pre-push judgement list
 
 Ranked by how often review caught each class on this repository.
-1. Stale sibling docs: which `ARCHITECTURE.md`, `CLAUDE.md`, `STANDARDS.md`, `docs/*`, mermaid
+1. Stale sibling docs: which `ARCHITECTURE.md`, `AGENTS.md`, `STANDARDS.md`, `docs/*`, mermaid
    diagrams, agent or skill mirrors, counts or "N-point" phrases describe what changed?
 2. Duplicated literal: does the value already have one source (`content/social.ts`, a token, a
    shared constant)? Import it.

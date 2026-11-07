@@ -8,7 +8,7 @@
 | --------------------------- | -------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
 | **Architecture** (the code) | [`/docs/01`-`/docs/11`](../README.md)                          | What the system is, how it renders, how the API works                                   |
 | **Handbook** (the process)  | this folder, `/docs/handbook/*`                                | How work flows from idea to production, how AI participates, how we review/test/release |
-| **Canonical intent** (root) | `ARCHITECTURE.md`, `STANDARDS.md`, `DECISIONS.md`, `CLAUDE.md` | The system design, the engineering bar, the ADR log, the agent instructions             |
+| **Canonical intent** (root) | `ARCHITECTURE.md`, `STANDARDS.md`, `DECISIONS.md`, `AGENTS.md` | The system design, the engineering bar, the ADR log, the agent instructions             |
 
 The handbook routes to the other two rather than duplicating them.
 
@@ -38,7 +38,7 @@ flowchart TB
         claude["Claude Code agents"]
     end
     subgraph context["Context layer"]
-        cl["CLAUDE.md + .claude/rules/* + skills + memory"]
+        cl["AGENTS.md + .claude/rules/* + skills + memory"]
         docs["STANDARDS.md · DECISIONS.md · /docs"]
     end
     subgraph enforce["Enforcement layer"]

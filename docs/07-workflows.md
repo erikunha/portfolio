@@ -39,7 +39,7 @@ check (Biome) -> typecheck -> validate-content -> check:client-naming -> check:d
 | `validate-content`     | every `content/*.ts` Zod schema parses (build gate)                                              |
 | `check:client-naming`  | client directive files use `*.client.*`, a `/client/` directory, or an App Router error filename |
 | `check:dep-pinning`    | no `latest`/`*`/tag deps                                                                         |
-| `check:harness-size`   | `CLAUDE.md` ≤ 275 lines                                                                          |
+| `check:harness-size`   | `AGENTS.md` and `CLAUDE.md` within the line budgets in `scripts/harness-size.json`               |
 | `check:section-order`  | section ids have mobile order rules or a listed nested-anchor exemption                          |
 | `check:doc-drift`      | `ARCHITECTURE.md` directory-tree paths exist on disk                                             |
 | `lint:css-tokens`      | no raw hex outside `app/css/theme.css`                                                           |
@@ -134,7 +134,7 @@ commit (scope blocks) -> (self-review the diff before opening the PR)
   -> repo owner runs gh pr merge (project policy; no agent hook enforces it)
 ```
 
-Large features use an **integration branch + sub-PRs** (`feat/<feature>` ← `feat/<feature>-<part>`) to group independently reviewable changes. See `CLAUDE.md` "Working agreement".
+Large features use an **integration branch + sub-PRs** (`feat/<feature>` ← `feat/<feature>-<part>`) to group independently reviewable changes. See `AGENTS.md` "Git and pull requests".
 
 ## Releases & deployment
 

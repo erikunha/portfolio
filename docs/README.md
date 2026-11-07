@@ -21,7 +21,7 @@ Read in order for onboarding; jump by topic once productive.
 | 03  | [rendering-and-data-flow.md](./03-rendering-and-data-flow.md)             | Routing tree, RSC/PPR rendering pipeline, end-to-end data flows + sequence diagrams                               |
 | 04  | [components-and-state.md](./04-components-and-state.md)                   | Component hierarchy, sections, design system, state ownership                                                     |
 | 05  | [api-and-integrations.md](./05-api-and-integrations.md)                   | `defineHandler`, API routes, external integrations, security surface                                              |
-| 06  | [ai-development.md](./06-ai-development.md)                               | How AI participates in development: CLAUDE.md, hooks, skills, rules, MCP, the review/verification/learning system |
+| 06  | [ai-development.md](./06-ai-development.md)                               | How AI participates in development: AGENTS.md, hooks, skills, rules, MCP, the review/verification/learning system |
 | 07  | [workflows.md](./07-workflows.md)                                         | Local dev, build, testing, CI/CD, releases, debugging                                                             |
 | 08  | [performance-and-accessibility.md](./08-performance-and-accessibility.md) | Perf budgets + techniques, a11y architecture                                                                      |
 | 09  | [hidden-knowledge.md](./09-hidden-knowledge.md)                           | Tribal knowledge, surprising behaviors, conventions                                                               |
@@ -34,7 +34,7 @@ These live at the repo root and remain authoritative. This knowledge base **rout
 - **`ARCHITECTURE.md`** - the system-design deep dive (the "why" narrative, trade-offs, "what I'd revisit").
 - **`STANDARDS.md`** - the engineering bar: 12 domain chapters, each naming its enforcement mechanism.
 - **`DECISIONS.md`** - the running ADR log (append-only decisions with reversibility notes).
-- **`CLAUDE.md`** + **`.claude/rules/*.md`** - the AI-agent instruction surface (see doc 06).
+- **`AGENTS.md`** (imported by `CLAUDE.md`) + **`.claude/rules/*.md`** + **`.agents/skills/`** - the AI-agent instruction surface (see doc 06).
 
 ## Executive summary
 
@@ -62,9 +62,11 @@ portfolio/
 ├── next.config.ts        cacheComponents, typedRoutes, static security headers, MDX pipeline
 ├── scripts/             gate/tooling scripts (validate-content, check-*, ask-eval, ...)
 ├── tests/               Playwright e2e, a11y (axe), visual regression
-├── .claude/             AI-agent platform: skills, rules, agents, commands, settings
+├── .agents/             canonical project skills (linked into .claude/skills)
+├── .claude/             Claude Code: rules, the review agent, settings, skill links
+├── .codex/              Codex project config (MCP servers)
 ├── .github/workflows/   CI (ci.yml), CodeQL, mutation, smoke, claude (AI reviewer pilot)
-└── ARCHITECTURE.md · STANDARDS.md · DECISIONS.md · CLAUDE.md   (canonical root docs)
+└── ARCHITECTURE.md · STANDARDS.md · DECISIONS.md · AGENTS.md · REVIEW.md   (canonical root docs)
 ```
 
 See [01-architecture.md](./01-architecture.md) for the layered view and dependency graph.

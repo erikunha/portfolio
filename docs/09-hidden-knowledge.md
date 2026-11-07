@@ -8,7 +8,7 @@
 - **Section data belongs in `content/*.ts`.** Validated content modules supply profile data and most section copy. Components also contain presentation labels, and `content/contact-copy.ts` keeps the contact form copy free of Zod, and `content/contact-rules.ts` holds the helpers the client imports so the copy table stays out of client chunks. Client-consumed modules stay Zod-free; `content/_validate-client-content.ts` validates their schemas during `pnpm validate-content`. It is the only parse site for `content/terminal-chrome.ts`, whose `shellChrome` and `contactChrome` reach the shell and the contact form. The same file parses `brand.ts`, the home link name that the brand icon in every header carries.
 - **No raw hex outside `app/css/theme.css`.** Use `var(--color-*)`. Enforced by `lint:css-tokens`. Complex CSS patterns become named classes in an `app/css/components-*.css` partial under `@layer components`; everything else is a Tailwind utility.
 - **Per-keystroke/per-pixel/per-frame updates must not re-render React.** Mutate `textContent`/`style`/`setAttribute` directly, or rAF-coalesce. This is the single most important runtime convention (it's a budget, not a preference).
-- **`CLAUDE.md` stays under 275 lines** (`check:harness-size`). New procedural rules go to a skill or a `.claude/rules/*` path-scoped file, not into `CLAUDE.md`.
+- **`AGENTS.md` stays under its line budget and `CLAUDE.md` stays a thin import** (`check:harness-size`). New procedural rules go to a skill or a `.claude/rules/*` path-scoped file, not into `AGENTS.md`.
 - **pnpm only.** Deps are pinned (no `latest`).
 - **Commit scope is required** (`commitlint`), and `(design-system)`-scoped commits must regenerate the changelog (`pnpm changelog:sync`).
 

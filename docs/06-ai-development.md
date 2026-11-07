@@ -7,9 +7,9 @@
 ```mermaid
 flowchart TB
     subgraph ctx["Project context"]
-        cl["CLAUDE.md"]
+        cl["AGENTS.md (CLAUDE.md imports it)"]
         rules[".claude/rules/*.md"]
-        skills[".claude/skills/*"]
+        skills[".agents/skills/* (linked into .claude/skills)"]
         docs["STANDARDS.md · ARCHITECTURE.md · DECISIONS.md"]
     end
     subgraph checks["Repository checks"]
@@ -26,13 +26,13 @@ flowchart TB
 
 ## Context
 
-`CLAUDE.md` names commands, standards and review conventions. Path-scoped rules live in `.claude/rules/`; `.claude/rules/api-boundary.md` covers the server boundary. On-demand procedures live in `.claude/skills/`, including visual baseline generation, AI eval maintenance, PR review and Semgrep.
+`AGENTS.md` names commands, standards and review conventions for Codex and Claude Code; `CLAUDE.md` imports it and adds the Claude-only lines. Path-scoped rules live in `.claude/rules/` (API boundary, components and CSS, CI and gate configuration). On-demand procedures live in `.agents/skills/` and are linked into `.claude/skills/`: visual baseline regeneration, AI eval maintenance, plan review, performance budgets, discovery surfaces, PR review and Semgrep.
 
-`check:harness-size` checks `CLAUDE.md` against a 275-line maximum. This is a size check, not proof that an agent follows the file.
+`check:harness-size` checks `AGENTS.md` and `CLAUDE.md` against the line budgets in `scripts/harness-size.json`. This is a size check, not proof that an agent follows the file.
 
 ## Repository enforcement
 
-The repository has no `.claude/hooks/` directory or project PreToolUse/PostToolUse wiring. API security review and architect review are conventions in `CLAUDE.md`; they are not project hook gates. User-level runtime policies are configured outside this repository.
+The repository registers one Claude Code hook, a `Stop` hook running `scripts/stop-verify.mjs` (Biome on changed files and the typecheck; skipped in CI), and permission deny rules for broad `git add`, `gh pr merge`, npm and yarn installs and local env reads. Plan review and API review are conventions in `AGENTS.md`, not hook gates. User-level runtime policies are configured outside this repository.
 
 Git hooks enforce separate stages:
 - `.husky/pre-commit` runs `pnpm check` and `pnpm gitleaks:staged`.
@@ -43,9 +43,9 @@ Git hooks enforce separate stages:
 
 ## Pull-request review
 
-`.github/workflows/claude-review.yml` configures the automated reviewer with `.github/claude-review-prompt.md`. It runs only when an owner, member or collaborator comments `/claude-review` on a PR and is never a merge requirement. `pnpm claude-gate` is an optional check of its approval against the current head. `pnpm pr:gate` checks review thread resolution and replies. These commands do not prove a local pre-PR review ran.
+`.github/workflows/claude-review.yml` configures the automated reviewer with `.github/claude-review-prompt.md` and `REVIEW.md`. It runs only when an owner, member or collaborator comments `/claude-review` on a PR and is never a merge requirement. `pnpm claude-gate` is an optional check of its approval against the current head. `pnpm pr:gate` checks review thread resolution and replies. These commands do not prove a local pre-PR review ran.
 
-The pre-PR review procedure and the merge restriction are documented in `CLAUDE.md`. Repository hooks do not prevent an agent from invoking `gh pr merge`.
+The pre-PR review procedure and the merge restriction are documented in `AGENTS.md`. For Claude Code, a permission deny rule blocks `gh pr merge`; other tools rely on the written rule.
 
 ## Evaluation tools
 
