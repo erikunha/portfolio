@@ -24,9 +24,9 @@ test.describe('hero desktop layout', () => {
         const probe = document.createElement('div');
         probe.style.position = 'absolute';
         probe.style.visibility = 'hidden';
-        probe.style.paddingTop = 'var(--spacing-6)';
+        probe.style.paddingTop = 'var(--space-page-top)';
         document.body.appendChild(probe);
-        const spacingSix = Number.parseFloat(getComputedStyle(probe).paddingTop);
+        const pageTop = Number.parseFloat(getComputedStyle(probe).paddingTop);
         probe.remove();
         return {
           barBottom: bar?.bottom ?? 0,
@@ -35,14 +35,14 @@ test.describe('hero desktop layout', () => {
           aboutTop: about?.top ?? 0,
           aboutBottom: about?.bottom ?? 0,
           nextTop: next?.top ?? 0,
-          spacingSix,
+          pageTop,
         };
       });
 
       expect(
         geometry.heroTop - geometry.barBottom,
         'the hero must clear the fixed topbar by the section spacing',
-      ).toBeGreaterThanOrEqual(geometry.spacingSix);
+      ).toBeGreaterThanOrEqual(geometry.pageTop);
       const heroGap = geometry.aboutTop - geometry.heroBottom;
       const sectionGap = geometry.nextTop - geometry.aboutBottom;
       expect(

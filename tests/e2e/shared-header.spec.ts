@@ -12,6 +12,22 @@ const DRAWER_NAV = '#section-nav a';
 const OPEN_DRAWER_TIMEOUT_MS = 5000;
 const STREAM_SETTLE_TIMEOUT_MS = 10_000;
 const OVERFLOW_WIDTHS = [320, 390, 768, 1280];
+const MIN_GAP_BELOW_HEADER = { desktop: 48, phone: 32 } as const;
+const CENTER_TOLERANCE_PX = 2;
+const VERTICAL_CENTER_TOLERANCE_PX = 24;
+const CONTENT_ROUTES = [
+  '/',
+  '/pt',
+  '/cv',
+  '/summary',
+  '/links/en',
+  '/links',
+  '/design-system',
+  '/design-system/tokens',
+  '/this-route-does-not-exist',
+  '/pt/rota-que-nao-existe',
+];
+const NOT_FOUND_ROUTES = ['/this-route-does-not-exist', '/pt/rota-que-nao-existe'];
 
 type RouteSpec = { path: string; status?: number };
 
@@ -179,4 +195,86 @@ test.describe('the header without JavaScript', () => {
     await expect(links.nth(0)).toHaveAttribute('href', '/');
     await expect(links.nth(1)).toHaveAttribute('href', '/pt');
   });
+});
+
+test.describe('the first content block clears the header', () => {
+  for (const { name, size } of VIEWPORT_CASES) {
+    test.describe(`at ${name}`, () => {
+      test.use({ viewport: size });
+
+      for (const path of CONTENT_ROUTES) {
+        test(`${path} starts at least the named gap below the header`, async ({ page }) => {
+          await page.goto(path);
+          await waitForHydration(page, `${BANNER} button`);
+          const gap = await page.evaluate(() => {
+            const bars = [
+              ...document.querySelectorAll('header.desktop-topbar, header.mobile-title-bar'),
+            ]
+              .map((node) => node.getBoundingClientRect())
+              .filter((box) => box.height > 0);
+            const barBottom = Math.max(...bars.map((box) => box.bottom));
+            const hero = document.querySelector(
+              '[data-testid="hero-desktop"], [data-testid="hero-mobile"]',
+            );
+            const heading = [...document.querySelectorAll('main h1, main h2, main h3')].find(
+              (node) => node.getBoundingClientRect().height > 2,
+            );
+            const first = [hero, heading].find(
+              (node) => node && node.getBoundingClientRect().height > 2,
+            );
+            if (!first) throw new Error('no visible first content block');
+            return first.getBoundingClientRect().top - barBottom;
+          });
+          expect(gap).toBeGreaterThanOrEqual(MIN_GAP_BELOW_HEADER[name]);
+        });
+      }
+    });
+  }
+});
+
+test.describe('the 404 content is centered', () => {
+  for (const { name, size } of VIEWPORT_CASES) {
+    for (const path of NOT_FOUND_ROUTES) {
+      test(`${path} centers the heading, the button and the block at ${name}`, async ({ page }) => {
+        await page.setViewportSize(size);
+        await page.goto(path);
+        await waitForHydration(page, `${BANNER} button`);
+        const geometry = await page.evaluate(() => {
+          const rect = (selector: string) => {
+            const node = document.querySelector(selector);
+            if (!node) throw new Error(`missing ${selector}`);
+            return node.getBoundingClientRect();
+          };
+          const heading = rect('main h1');
+          const action = rect('.err-actions a');
+          const bars = [
+            ...document.querySelectorAll('header.desktop-topbar, header.mobile-title-bar'),
+          ]
+            .map((node) => node.getBoundingClientRect())
+            .filter((box) => box.height > 0);
+          const dock = document.querySelector('.dock')?.getBoundingClientRect();
+          const dockVisible = dock && dock.height > 0 ? dock.top : window.innerHeight;
+          return {
+            viewportCenter: (() => {
+              const root = document.documentElement.getBoundingClientRect();
+              return root.left + root.width / 2;
+            })(),
+            headingCenter: heading.left + heading.width / 2,
+            actionCenter: action.left + action.width / 2,
+            contentCenter: (heading.top + action.bottom) / 2,
+            areaCenter: (Math.max(...bars.map((box) => box.bottom)) + dockVisible) / 2,
+          };
+        });
+        expect(Math.abs(geometry.headingCenter - geometry.viewportCenter)).toBeLessThanOrEqual(
+          CENTER_TOLERANCE_PX,
+        );
+        expect(Math.abs(geometry.actionCenter - geometry.viewportCenter)).toBeLessThanOrEqual(
+          CENTER_TOLERANCE_PX,
+        );
+        expect(Math.abs(geometry.contentCenter - geometry.areaCenter)).toBeLessThanOrEqual(
+          VERTICAL_CENTER_TOLERANCE_PX,
+        );
+      });
+    }
+  }
 });
