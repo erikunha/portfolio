@@ -13,6 +13,7 @@ const A = '7f3a9c2e-41b0-4d8e-9a77-3c51d0b2e8aa';
 const B = '0b9d11e4-7c2a-4f6e-8e0d-2a6b9f3c1d55';
 const C = '3c1f0a58-9d2e-4b7a-8c61-5e7d2f9b4a10';
 const FORGET_URL = '/api/log/forget';
+const ui = shellUi[SITE_LOCALE.en];
 const states = shellStates[SITE_LOCALE.en];
 
 type Reply = { status: number; headers?: Record<string, string> };
@@ -118,15 +119,13 @@ describe('shell trailer and privacy command', () => {
       await click(button(container, 'FORGET'));
       expect(forgetBodies).toEqual([JSON.stringify({ requestId: A })]);
       const trailer = container.querySelector('[data-testid="shell-reference"]');
-      expect(trailer?.textContent).toContain(states.forgetDeleted);
+      expect(trailer?.textContent).toContain(ui.forgetDeleted);
       expect(
         [...container.querySelectorAll('button')].some((b) => b.textContent === 'FORGET'),
       ).toBe(false);
-      expect(container.querySelector('p[role="status"]')?.textContent).toContain(
-        states.forgetDeleted,
-      );
+      expect(container.querySelector('p[role="status"]')?.textContent).toContain(ui.forgetDeleted);
       await submit(container, 'privacy');
-      expect(feedLines(container).at(-1)).toBe(states.privacyEmpty);
+      expect(feedLines(container).at(-1)).toBe(ui.privacyEmpty);
     });
 
     it('keeps the forget button after a failure and succeeds on retry', async () => {
@@ -138,10 +137,10 @@ describe('shell trailer and privacy command', () => {
       await submit(container, 'q');
       await click(button(container, 'FORGET'));
       const trailer = container.querySelector('[data-testid="shell-reference"]');
-      expect(trailer?.textContent).toContain(states.forgetFailed);
+      expect(trailer?.textContent).toContain(ui.forgetFailed);
       await click(button(container, 'FORGET'));
       expect(forgetBodies).toHaveLength(2);
-      expect(trailer?.textContent).toContain(states.forgetDeleted);
+      expect(trailer?.textContent).toContain(ui.forgetDeleted);
     });
 
     it('shows how long to wait on a 429 and keeps the button', async () => {
@@ -160,7 +159,7 @@ describe('shell trailer and privacy command', () => {
       await submit(container, 'q');
       await click(button(container, 'FORGET'));
       expect(container.querySelector('[data-testid="shell-reference"]')?.textContent).toContain(
-        states.forgetNotFound,
+        ui.forgetNotFound,
       );
     });
 
@@ -174,7 +173,7 @@ describe('shell trailer and privacy command', () => {
       const container = await renderShell();
       await submit(container, 'q');
       await click(button(container, 'FORGET'));
-      await click(button(container, states.forgetting));
+      await click(button(container, ui.forgetting));
       const forgetCalls = fetchMock.mock.calls.filter(([url]) => url === FORGET_URL);
       expect(forgetCalls).toHaveLength(1);
       await act(async () => release(Response.json({ ok: true })));
@@ -187,7 +186,7 @@ describe('shell trailer and privacy command', () => {
       await submit(container, 'q');
       expect(container.querySelector('[data-testid="shell-reference"]')?.textContent).toContain(A);
       await submit(container, 'privacy');
-      expect(feedLines(container).at(-1)).toBe(states.privacyEmpty);
+      expect(feedLines(container).at(-1)).toBe(ui.privacyEmpty);
     });
   });
 
@@ -206,7 +205,7 @@ describe('shell trailer and privacy command', () => {
       stubBackend({});
       const container = await renderShell();
       await submit(container, 'privacy');
-      expect(feedLines(container).at(-1)).toBe(states.privacyEmpty);
+      expect(feedLines(container).at(-1)).toBe(ui.privacyEmpty);
     });
 
     it('lists this session request ids in order, numbered, after asks', async () => {
@@ -236,7 +235,7 @@ describe('shell trailer and privacy command', () => {
       await submit(container, 'second');
       await submit(container, 'privacy forget 2');
       expect(forgetBodies).toEqual([JSON.stringify({ requestId: B })]);
-      expect(feedLines(container).at(-1)).toBe(`${B} ${states.forgetDeleted}`);
+      expect(feedLines(container).at(-1)).toBe(`${B} ${ui.forgetDeleted}`);
     });
 
     it('forgets by full id even when it is not in this session list', async () => {
@@ -244,7 +243,7 @@ describe('shell trailer and privacy command', () => {
       const container = await renderShell();
       await submit(container, `privacy forget ${C}`);
       expect(forgetBodies).toEqual([JSON.stringify({ requestId: C })]);
-      expect(feedLines(container).at(-1)).toBe(`${C} ${states.forgetDeleted}`);
+      expect(feedLines(container).at(-1)).toBe(`${C} ${ui.forgetDeleted}`);
     });
 
     it('forgets every id one at a time with one result line each, then lists nothing', async () => {
@@ -261,8 +260,8 @@ describe('shell trailer and privacy command', () => {
         JSON.stringify({ requestId: B }),
       ]);
       const lines = feedLines(container);
-      expect(lines.at(-2)).toBe(`${A} ${states.forgetDeleted}`);
-      expect(lines.at(-1)).toBe(`${B} ${states.forgetFailed}`);
+      expect(lines.at(-2)).toBe(`${A} ${ui.forgetDeleted}`);
+      expect(lines.at(-1)).toBe(`${B} ${ui.forgetFailed}`);
       await submit(container, 'privacy');
       expect(feedLines(container).at(-1)).toBe(`1. ${B}`);
     });
@@ -279,7 +278,7 @@ describe('shell trailer and privacy command', () => {
       await submit(container, 'privacy forget --all');
       expect(forgetBodies).toHaveLength(2);
       const lines = feedLines(container);
-      expect(lines.at(-3)).toBe(`${A} ${states.forgetDeleted}`);
+      expect(lines.at(-3)).toBe(`${A} ${ui.forgetDeleted}`);
       expect(lines.at(-2)).toContain(`2 ${states.minutesUnit}`);
       expect(lines.at(-1)).toContain('1');
     });
@@ -299,16 +298,16 @@ describe('shell trailer and privacy command', () => {
       const container = await renderShell();
       await submit(container, 'privacy forget');
       expect(fetchMock).not.toHaveBeenCalled();
-      expect(feedLines(container).at(-1)).toBe(states.privacyUsage);
+      expect(feedLines(container).at(-1)).toBe(ui.privacyUsage);
     });
 
     it('answers in Portuguese on the pt shell', async () => {
-      const pt = shellStates[SITE_LOCALE.pt];
+      const pt = shellUi[SITE_LOCALE.pt];
       stubBackend({});
       const container = await renderShell(SITE_LOCALE.pt);
       await submit(container, 'privacy');
       expect(feedLines(container).at(-1)).toBe(pt.privacyEmpty);
-      expect(pt.privacyEmpty).not.toBe(states.privacyEmpty);
+      expect(pt.privacyEmpty).not.toBe(ui.privacyEmpty);
     });
 
     it('keeps working when sessionStorage throws', async () => {

@@ -2,7 +2,7 @@
 
 import type { HTMLAttributes } from 'react';
 import type { CopyFeedback, CopyFeedbackState } from '@/content/schemas';
-import { COPY_STATUS, type CopyStatus, useCopyFeedback } from '@/lib/use-copy-feedback.client';
+import { ContactCopyButton } from '../ContactForm/ContactCopyButton.client';
 
 export const REF_COPY_RESET_MS = 2000;
 
@@ -13,38 +13,19 @@ export function RefCopyButton({
   value,
   feedback,
   labels,
-  className,
 }: {
   value: string;
   feedback: RefFeedback;
   labels?: RefLabels | undefined;
-  className?: string;
 }) {
-  const { status, attempt, copy } = useCopyFeedback({ resetMs: REF_COPY_RESET_MS });
-  const byStatus: Record<CopyStatus, CopyFeedback> = {
-    [COPY_STATUS.Idle]: { label: labels?.copy ?? feedback.idle.label, message: '' },
-    [COPY_STATUS.Pending]: { label: labels?.copy ?? feedback.idle.label, message: '' },
-    [COPY_STATUS.Copied]: {
-      label: labels?.copied ?? feedback.success.label,
-      message: feedback.success.message,
-    },
-    [COPY_STATUS.Failed]: feedback.failure,
-    [COPY_STATUS.Unavailable]: feedback.unavailable,
-  };
-  const current = byStatus[status];
   return (
-    <>
-      <button
-        type="button"
-        className={className ? `ref-copy ${className}` : 'ref-copy'}
-        onClick={() => void copy(value)}
-      >
-        {current.label}
-      </button>
-      <span role="status" aria-live="polite" aria-atomic="true" className="sr-only">
-        <span key={attempt}>{current.message}</span>
-      </span>
-    </>
+    <ContactCopyButton
+      value={value}
+      feedback={feedback}
+      labels={labels ?? { copy: feedback.idle.label, copied: feedback.success.label }}
+      className="ref-copy"
+      resetMs={REF_COPY_RESET_MS}
+    />
   );
 }
 

@@ -25,7 +25,7 @@ import {
 import type { TerminalChrome } from '@/content/schemas';
 import { localeOfPath } from '@/content/site-locale';
 import { Field } from '@/design-system/components/Field';
-import { FORGET_OUTCOME, forgetRequest } from '@/lib/forget-request.client';
+import { forgetRequest, wasForgotten } from '@/lib/forget-request.client';
 import { longestCopy } from '@/lib/longest-copy';
 import { postJson } from '@/lib/post-json';
 import { addRef } from '@/lib/request-refs.client';
@@ -131,11 +131,7 @@ function ContactReceipt({
     setForget(FORGET.PENDING);
     try {
       const result = await forgetRequest(receipt.ref);
-      setForget(
-        result.outcome === FORGET_OUTCOME.Deleted || result.outcome === FORGET_OUTCOME.NotFound
-          ? FORGET.DONE
-          : FORGET.FAILED,
-      );
+      setForget(wasForgotten(result) ? FORGET.DONE : FORGET.FAILED);
     } finally {
       forgetPending.current = false;
     }

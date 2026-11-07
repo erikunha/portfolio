@@ -3,9 +3,9 @@
 import { useRef, useState } from 'react';
 import type { ShellStates } from '@/content/shell-states.schema';
 import type { ShellUi } from '@/content/shell-ui';
-import { forgetRequest } from '@/lib/forget-request.client';
+import { forgetRequest, wasForgotten } from '@/lib/forget-request.client';
 import { COPY_STATUS, useCopyFeedback } from '@/lib/use-copy-feedback.client';
-import { describeForget, isForgotten } from './forget-message';
+import { describeForget } from './forget-message';
 
 const FORGET_VIEW = { Idle: 'idle', Pending: 'pending', Settled: 'settled' } as const;
 type ForgetView =
@@ -40,8 +40,8 @@ export function ResponseReference({
     setForget({ kind: FORGET_VIEW.Pending });
     const result = await forgetRequest(requestId);
     forgetPending.current = false;
-    const message = describeForget(result, states);
-    setForget({ kind: FORGET_VIEW.Settled, message, forgotten: isForgotten(result) });
+    const message = describeForget(result, ui, states);
+    setForget({ kind: FORGET_VIEW.Settled, message, forgotten: wasForgotten(result) });
     announce(message);
   }
 
@@ -77,7 +77,7 @@ export function ResponseReference({
           aria-disabled={forgetPendingView}
           onClick={forgetReference}
         >
-          {forgetPendingView ? states.forgetting : ui.forget}
+          {forgetPendingView ? ui.forgetting : ui.forget}
         </button>
       )}
       {forget.kind === FORGET_VIEW.Settled && (

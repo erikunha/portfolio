@@ -14,12 +14,12 @@ import {
 } from '@/content/shell-ui';
 import type { SiteLocale } from '@/content/site-locale';
 import { asciiBar } from '@/lib/ascii-bar';
-import { forgetMany, forgetRequest } from '@/lib/forget-request.client';
+import { forgetMany, forgetRequest, wasForgotten } from '@/lib/forget-request.client';
 import { listRefs } from '@/lib/request-refs.client';
 import { useBreakpoint } from '@/lib/use-breakpoint.client';
 import { TerminalChromeBar } from '../TerminalChromeBar';
 import { AnimatedPlaceholder, StaticPlaceholder } from './AnimatedPlaceholder.client';
-import { describeForget, isForgotten } from './forget-message';
+import { describeForget } from './forget-message';
 import { PRIVACY_COMMAND_KIND, type PrivacyCommand, parsePrivacyCommand } from './privacy-command';
 import { ResponseReference } from './ResponseReference.client';
 import { bounded, formatRemaining, type Line, type LineKind, useAskStream } from './useAskStream';
@@ -199,22 +199,21 @@ export function InteractiveShell({
           bounded([...lines, ...entries.map((entry) => ({ id: nextId(), ...entry }))]),
         );
       const forgetLines = (id: string, result: Parameters<typeof describeForget>[0]) => ({
-        kind: isForgotten(result) ? ShellLineKind.Output : ShellLineKind.Error,
-        text: `${id} ${describeForget(result, states)}`,
+        kind: wasForgotten(result) ? ShellLineKind.Output : ShellLineKind.Error,
+        text: `${id} ${describeForget(result, ui, states)}`,
       });
       const refs = listRefs();
       if (command.kind === PRIVACY_COMMAND_KIND.Usage) {
-        push([{ kind: ShellLineKind.Info, text: states.privacyUsage }]);
+        push([{ kind: ShellLineKind.Info, text: ui.privacyUsage }]);
       } else if (command.kind === PRIVACY_COMMAND_KIND.List) {
         push(
           refs.length === 0
-            ? [{ kind: ShellLineKind.Info, text: states.privacyEmpty }]
+            ? [{ kind: ShellLineKind.Info, text: ui.privacyEmpty }]
             : [
                 {
                   kind: ShellLineKind.Info,
-                  text: fillShellState(states.privacyHeader, { count: String(refs.length) }),
+                  text: fillShellState(ui.privacyHeader, { count: String(refs.length) }),
                 },
-                { kind: ShellLineKind.Info, text: states.privacyHint },
                 ...refs.map((id, index) => ({
                   kind: ShellLineKind.Output,
                   text: `${index + 1}. ${id}`,
@@ -222,7 +221,7 @@ export function InteractiveShell({
               ],
         );
       } else if (forgetBusyRef.current) {
-        announce(states.forgetting);
+        announce(ui.forgetting);
         return;
       } else {
         const target =
@@ -232,12 +231,12 @@ export function InteractiveShell({
               ? command.id
               : undefined;
         if (command.kind === PRIVACY_COMMAND_KIND.ForgetAll && refs.length === 0) {
-          push([{ kind: ShellLineKind.Info, text: states.privacyEmpty }]);
+          push([{ kind: ShellLineKind.Info, text: ui.privacyEmpty }]);
         } else if (command.kind !== PRIVACY_COMMAND_KIND.ForgetAll && target === undefined) {
           push([
             {
               kind: ShellLineKind.Error,
-              text: fillShellState(states.privacyUnknown, {
+              text: fillShellState(ui.privacyUnknown, {
                 target:
                   command.kind === PRIVACY_COMMAND_KIND.ForgetNumber ? String(command.number) : '',
               }),
@@ -245,7 +244,7 @@ export function InteractiveShell({
           ]);
         } else {
           forgetBusyRef.current = true;
-          announce(states.forgetting);
+          announce(ui.forgetting);
           try {
             if (command.kind === PRIVACY_COMMAND_KIND.ForgetAll) {
               const batch = await forgetMany(refs);
@@ -255,7 +254,7 @@ export function InteractiveShell({
                   ? [
                       {
                         kind: ShellLineKind.Info,
-                        text: fillShellState(states.privacyNotAttempted, {
+                        text: fillShellState(ui.privacyNotAttempted, {
                           count: String(batch.unattempted.length),
                         }),
                       },
@@ -273,7 +272,7 @@ export function InteractiveShell({
       announce(ui.commandComplete);
       focusInput();
     },
-    [announce, focusInput, nextId, states, ui.commandComplete],
+    [announce, focusInput, nextId, states, ui],
   );
 
   const runCommand = useCallback(

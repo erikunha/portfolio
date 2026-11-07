@@ -27,6 +27,10 @@ export type ForgetBatch = {
   unattempted: string[];
 };
 
+export function wasForgotten(result: ForgetResult): boolean {
+  return result.outcome === FORGET_OUTCOME.Deleted || result.outcome === FORGET_OUTCOME.NotFound;
+}
+
 export async function forgetRequest(id: string): Promise<ForgetResult> {
   let result: ForgetResult;
   try {
@@ -46,9 +50,7 @@ export async function forgetRequest(id: string): Promise<ForgetResult> {
   } catch {
     result = { outcome: FORGET_OUTCOME.Failed };
   }
-  if (result.outcome === FORGET_OUTCOME.Deleted || result.outcome === FORGET_OUTCOME.NotFound) {
-    removeRef(id);
-  }
+  if (wasForgotten(result)) removeRef(id);
   return result;
 }
 

@@ -4,10 +4,14 @@ import { useMemo } from 'react';
 import type { CopyFeedback } from '@/content/schemas';
 import { COPY_STATUS, type CopyStatus, useCopyFeedback } from '@/lib/use-copy-feedback.client';
 
+const DEFAULT_CLASS = 'copy-btn contact-copy-btn';
+
 export function ContactCopyButton({
   value,
   labels,
   feedback,
+  className = DEFAULT_CLASS,
+  resetMs,
 }: {
   value: string;
   labels: { readonly copy: string; readonly copied: string };
@@ -17,8 +21,10 @@ export function ContactCopyButton({
     readonly failure: CopyFeedback;
     readonly unavailable: CopyFeedback;
   };
+  className?: string;
+  resetMs?: number;
 }) {
-  const { status, attempt, copy } = useCopyFeedback();
+  const { status, attempt, copy } = useCopyFeedback(resetMs === undefined ? {} : { resetMs });
   const byStatus = useMemo<Record<CopyStatus, CopyFeedback>>(() => {
     const idle: CopyFeedback = { label: labels.copy, message: '' };
     return {
@@ -33,7 +39,7 @@ export function ContactCopyButton({
 
   return (
     <>
-      <button type="button" className="copy-btn contact-copy-btn" onClick={() => void copy(value)}>
+      <button type="button" className={className} onClick={() => void copy(value)}>
         {current.label}
       </button>
       <span role="status" aria-live="polite" aria-atomic="true" className="sr-only">
