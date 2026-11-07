@@ -45,6 +45,17 @@ for (const block of ['dependencies', 'devDependencies', 'optionalDependencies'])
   }
 }
 
+for (const [name, raw] of Object.entries(pkg.pnpm?.overrides ?? {})) {
+  if (typeof raw !== 'string') continue;
+  const spec = raw.trim();
+  if (PRERELEASE_EXACT.test(spec)) continue;
+  if (BANNED.test(spec)) {
+    violations.push(`  pnpm.overrides.${name}: "${raw}" is unbounded`);
+  } else if (!RANGED.test(spec)) {
+    violations.push(`  pnpm.overrides.${name}: "${raw}" is not a ^ or ~ range`);
+  }
+}
+
 if (violations.length === 0) {
   console.log('✓ dep-pinning: 0 violations');
   process.exit(0);

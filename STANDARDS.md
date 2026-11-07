@@ -207,7 +207,7 @@ and trip that guard on an otherwise-clean install.
 
 **How it is held.** Mechanical gate: `scripts/check-dep-pinning.mjs`
 (`pnpm check:dep-pinning`) rejects any `latest`, `*`, wildcard, or otherwise
-unbounded spec. It runs inside `pnpm verify`, in the `pre-push` hook, and as the
+unbounded spec, in dependencies and in `pnpm.overrides` alike (an override must be a `^` or `~` range). It runs inside `pnpm verify`, in the `pre-push` hook, and as the
 `Dependency-pinning gate` step in the `quality-fast` CI job. Reproducibility
 of the install itself is held by `pnpm install --frozen-lockfile` in CI.
 

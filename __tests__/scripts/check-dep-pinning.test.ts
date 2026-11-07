@@ -69,4 +69,33 @@ describe('check-dep-pinning', () => {
     const r = runOn({ dependencies: { clsx: '^2.1.1-beta.2' } });
     expect(r.code).toBe(0);
   });
+
+  it('fails when a pnpm override is an open >= range', () => {
+    const r = runOn({
+      dependencies: {},
+      devDependencies: {},
+      pnpm: { overrides: { postcss: '>=8.5.23' } },
+    });
+    expect(r.code).toBe(1);
+    expect(r.out).toContain('pnpm.overrides.postcss');
+  });
+
+  it('fails when a pnpm override is unbounded', () => {
+    const r = runOn({
+      dependencies: {},
+      devDependencies: {},
+      pnpm: { overrides: { lodash: 'latest' } },
+    });
+    expect(r.code).toBe(1);
+    expect(r.out).toContain('pnpm.overrides.lodash');
+  });
+
+  it('passes bounded overrides, including selector keys', () => {
+    const r = runOn({
+      dependencies: {},
+      devDependencies: {},
+      pnpm: { overrides: { 'body-parser@1': '^1.20.9', '@lhci/cli>chrome-launcher': '^1.2.2' } },
+    });
+    expect(r.code).toBe(0);
+  });
 });
