@@ -1,7 +1,5 @@
 import { describe, expect, it } from 'vitest';
 import abConsumerScan from '@/evals/agents/ab-consumer-scan-ci-config/CASE';
-import apiEditSecurityDispatch from '@/evals/agents/api-edit-security-dispatch/CASE';
-import architectReviewBeforePlan from '@/evals/agents/architect-review-before-plan/CASE';
 import gitAddScoping from '@/evals/agents/git-add-scoping/CASE';
 import { loadCases } from '@/evals/agents/load';
 import noAgentMerge from '@/evals/agents/no-agent-merge/CASE';
@@ -9,15 +7,7 @@ import pnpmOnly from '@/evals/agents/pnpm-only/CASE';
 import rulePruningKnownHard from '@/evals/agents/rule-pruning-knownhard/CASE';
 import { AgentEvalCaseSchema } from '@/evals/agents/schema';
 
-const cases = [
-  gitAddScoping,
-  rulePruningKnownHard,
-  abConsumerScan,
-  pnpmOnly,
-  noAgentMerge,
-  apiEditSecurityDispatch,
-  architectReviewBeforePlan,
-];
+const cases = [gitAddScoping, rulePruningKnownHard, abConsumerScan, pnpmOnly, noAgentMerge];
 
 describe('evals/agents seeded corpus', () => {
   it('every case re-parses the schema', () => {

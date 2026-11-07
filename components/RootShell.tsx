@@ -15,7 +15,6 @@ import { serializeJsonLd } from '@/lib/json-ld';
 const mono = localFont({
   src: [
     { path: '../public/fonts/jetbrains-mono-400.woff2', weight: '400', style: 'normal' },
-    { path: '../public/fonts/jetbrains-mono-500.woff2', weight: '500', style: 'normal' },
     { path: '../public/fonts/jetbrains-mono-700.woff2', weight: '700', style: 'normal' },
   ],
   variable: '--font-mono-src',

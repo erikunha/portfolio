@@ -179,7 +179,7 @@ Cross-browser functional coverage is the **required** `e2e-functional` CI job
 (chromium, chromium-mobile, webkit-desktop, webkit-mobile, and their four `-components` projects). Page-section
 visual regression is gated in CI by `e2e-visual-chromium` (**required**; Linux Chromium rendering
 is deterministic). There is no webkit visual CI job: the webkit baselines for the same spec are
-darwin-local, compared by a macOS run of the spec and refreshed by the visual-baseline-regen skill,
+darwin-local, compared by a macOS run of the spec and refreshed by the baseline regeneration procedure (darwin pass, inspected before commit),
 because webkit pixel rendering varies from Chromium and must not block merges.
 
 ---
@@ -247,7 +247,7 @@ against this chapter.
 
 **Rationale.** Tailwind v4 eliminates the authoring friction of typing raw `@media (max-width: 768px)` literals at every responsive override site. `md:` and `lg:` prefixes encode the breakpoint contract directly in the markup, colocated with the layout intent. `@theme` is the superior reference-system artifact: it is the current industry standard for design tokens in Next.js projects, readable by any senior frontend reviewer, and enforced by the same single-source-of-truth discipline the old Style Dictionary provided — without the build pipeline. PostCSS returns to the stack exclusively as the `@tailwindcss/postcss` plugin; no other PostCSS transformations are applied.
 
-**How it is held.** `scripts/contrast-check.mjs` audits every documented text/surface pair against WCAG AA ratios; values are hardcoded from `@theme` (update both when the palette changes). Patterns that utilities cannot express become named classes in `@layer components` (`app/css/components-*.css`); CSS modules are rejected (see the exclusion list in `CLAUDE.md`). Visual regression (`tests/visual/visual.spec.ts`) catches any layout shift from CSS changes. A CSS or layout change is verified by the Playwright MCP visual check, preceded by `web-design-guidelines`. That ordering was mechanically gated until 2026-07-27; the gate was removed with the rest of the unproven harness machinery, so it is now convention held by `CLAUDE.md` alone. ADR entries for CSS system changes live in `DECISIONS.md`.
+**How it is held.** `scripts/contrast-check.mjs` audits every documented text/surface pair against WCAG AA ratios; values are hardcoded from `@theme` (update both when the palette changes). Patterns that utilities cannot express become named classes in `@layer components` (`app/css/components-*.css`); CSS modules are rejected (see the exclusion list in `AGENTS.md`). Visual regression (`tests/visual/visual.spec.ts`) catches any layout shift from CSS changes. A CSS or layout change is verified by looking at the running page at desktop and mobile widths in a real browser before tests are written; that is convention held by `AGENTS.md`. ADR entries for CSS system changes live in `DECISIONS.md`.
 
 **Co-authoring rule — where new CSS goes:** Tailwind utilities in JSX `className` handle all spacing, color, layout, typography, and responsive breakpoints. A named class in `@layer components` is required (not optional) when a pattern needs any of the following: `@keyframes` or `animation:`, pseudo-element overlays (`::before`/`::after`), `mix-blend-mode`, simultaneous coordination of 5+ CSS declarations on one element, or a CSS custom property local variable (`--var: value`). Everything else is a Tailwind utility. When in doubt: if it can be expressed as 1-4 utility classes, it stays in JSX. Files: `crt.css` for CRT overlay effects, `animations.css` for `@keyframes`-heavy section animations, `components-*.css` partials for everything else (one partial per section, imported from `app/globals.css`; the `@import` order is the cascade order).
 
@@ -308,11 +308,7 @@ off-keyword and asserts the dependencies that should _not_ run were not
 called); the SYSTEM prompt is held by `__tests__/system-prompt.test.ts` (asserts
 no phone-number pattern, asserts the 1024-token cache threshold still clears).
 The "no dead CSP directive" and "PII minimization" rules are also enforced by
-PR review and the `security-auditor` dispatch on any `app/api/` change. That
-dispatch is a convention, not a gate: the PostToolUse marker and the pre-push guard that enforced it were removed 2026-07-27.
-Bash) blocks the next `git push` (`exit 2`) until the transcript shows a
-`security-auditor` dispatch following that marker. Boundary: the gate proves the
-auditor was _dispatched_ after the edit, not that its findings were resolved.
+PR review of any `app/api/` change; no gate blocks a push on that review.
 
 ---
 
@@ -381,7 +377,7 @@ runs the branch-name guard plus `pnpm verify`. `pnpm verify` is defined in
 check:client-naming + check:dep-pinning + test`). The "never disable a gate"
 rule is held by **culture** and by PR review — there is no meta-gate that can
 prevent a gate from being deleted, only the standard that says it must not be.
-The PR merge gate (`pnpm pr:gate`, GitHub `required_conversation_resolution`
+The PR merge gate (`pnpm pr:gate`: threads resolved with a reply; GitHub `required_conversation_resolution`
 branch protection) is the human-in-the-loop backstop.
 
 ---
@@ -392,7 +388,7 @@ branch protection) is the human-in-the-loop backstop.
 
 **Rationale.** Tailwind `@theme` replaces Style Dictionary as the design token source with zero build pipeline overhead — same single-source-of-truth discipline, immediately recognisable to any senior reviewer, and live-verified by TypeScript autocomplete on every utility class. The JSON token files are retained because they encode the palette structure and semantic intent legibly for documentation and human review; they are just not the build-time source of truth anymore.
 
-**How it is held.** CI gates: (1) `scripts/contrast-check.mjs` audits semantic pairs against WCAG AA, (2) `pnpm bundle-check` gates JS bundle size per route, (3) `check:component-docs-coverage` fails if a primitive component lacks a `## ComponentName` heading in `app/(en)/design-system/components/page.mdx`. CSS modules are allowed when a component needs them. Visual regression covers every primitive component. The `architect-reviewer` agent runs against any spec touching the design system before `writing-plans`. ADR entries for design-system changes live in `DECISIONS.md`.
+**How it is held.** CI gates: (1) `scripts/contrast-check.mjs` audits semantic pairs against WCAG AA, (2) `pnpm bundle-check` gates JS bundle size per route, (3) `check:component-docs-coverage` fails if a primitive component lacks a `## ComponentName` heading in `app/(en)/design-system/components/page.mdx`. CSS modules are allowed when a component needs them. Visual regression covers every primitive component. An architecture review of any spec touching the design system is a convention that runs before the plan is written; no gate enforces it. ADR entries for design-system changes live in `DECISIONS.md`.
 
 ---
 

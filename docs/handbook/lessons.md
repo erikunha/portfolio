@@ -10,7 +10,7 @@ The prompt for a manual or agent review that applies these rules to a diff is `d
 
 ## Rules
 
-1. Fix every finding in the PR that received it. Never reply "fixed in #NNN" or cite a commit
+1. Fix every blocking finding in the PR that received it (`REVIEW.md` lists what blocks). Never reply "fixed in #NNN" or cite a commit
    that is not reachable from this PR's head. Check: `git merge-base --is-ancestor <sha> HEAD`.
 2. A commit body cites only SHAs reachable from the branch it lands on. Describe off-branch facts
    in words. Check: the same `merge-base --is-ancestor` test for every SHA in the body.
@@ -121,7 +121,7 @@ The prompt for a manual or agent review that applies these rules to a diff is `d
 ## Pre-push judgement list
 
 Ranked by how often review caught each class on this repository.
-1. Stale sibling docs: which `ARCHITECTURE.md`, `CLAUDE.md`, `STANDARDS.md`, `docs/*`, mermaid
+1. Stale sibling docs: which `ARCHITECTURE.md`, `AGENTS.md`, `STANDARDS.md`, `docs/*`, mermaid
    diagrams, agent or skill mirrors, counts or "N-point" phrases describe what changed?
 2. Duplicated literal: does the value already have one source (`content/social.ts`, a token, a
    shared constant)? Import it.
