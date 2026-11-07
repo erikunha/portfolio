@@ -209,9 +209,11 @@ async function handleAsk(req: NextRequest): Promise<Response> {
     },
   });
 
-  const usageOrTimeout = Promise.resolve(result.usage).catch(
-    (): typeof USAGE_TIMED_OUT => USAGE_TIMED_OUT,
-  );
+  let usageRejected = false;
+  const usageOrTimeout = Promise.resolve(result.usage).catch((): typeof USAGE_TIMED_OUT => {
+    usageRejected = true;
+    return USAGE_TIMED_OUT;
+  });
   const enc = new TextEncoder();
   let totalBilledInput = 0;
   let outputTokens = 0;
@@ -346,8 +348,12 @@ async function handleAsk(req: NextRequest): Promise<Response> {
       truncated,
       promptVersion: PROMPT_VERSION,
     });
+    const failedBeforeAnyOutput =
+      upstreamFailed && usageRejected && collectedAnswerText.length === 0;
     if (usageResolved) {
       await settleBudget(reserved, totalBilledInput, outputTokens, budgetKey);
+    } else if (failedBeforeAnyOutput) {
+      await settleBudget(reserved, 0, 0, budgetKey);
     }
     await persistAskInteraction({
       requestId,

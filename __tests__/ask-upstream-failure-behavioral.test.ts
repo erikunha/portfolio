@@ -97,4 +97,22 @@ describe('/api/ask when the model provider fails', () => {
     );
     expect(body).not.toContain('sk-ant');
   });
+
+  it('refunds the whole budget reservation when the provider fails before reporting any usage', async () => {
+    const { POST } = await import('@/app/api/ask/route');
+    const res = await POST(
+      new NextRequest('http://localhost/api/ask', {
+        method: 'POST',
+        body: JSON.stringify({ question: 'Where does Erik work?' }),
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    );
+    await readBody(res);
+
+    await vi.waitFor(() => expect(persistMock).toHaveBeenCalledOnce());
+    expect(
+      settleMock,
+      'no usage was reported, so settlement was skipped and every failed call kept its 1512-token reservation against the monthly cap',
+    ).toHaveBeenCalledWith(1512, 0, 0, 'ask:tokens:test');
+  });
 });
