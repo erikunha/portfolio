@@ -2,6 +2,7 @@
 
 import { useEffect, useLayoutEffect, useRef } from 'react';
 import { CRT_BASE_TICK_MS } from '@/lib/crt-effect-stepper';
+import { SYSFAIL_END, SYSFAIL_START } from '@/lib/events';
 import { getFrameGovernorTickMultiplier } from '@/lib/frame-governor';
 import { readMotion } from '@/lib/motion';
 import { subscribeMotion } from '@/lib/motion-change';
@@ -176,8 +177,8 @@ export function MatrixRain({
     const onSysfailStart = () => setGate('calm', false);
     const onSysfailEnd = () => setGate('calm', true);
     document.addEventListener('visibilitychange', onVisibility);
-    window.addEventListener('sysfail:start', onSysfailStart);
-    window.addEventListener('sysfail:end', onSysfailEnd);
+    window.addEventListener(SYSFAIL_START, onSysfailStart);
+    window.addEventListener(SYSFAIL_END, onSysfailEnd);
 
     let observer: IntersectionObserver | undefined;
     let idleHandle: number | undefined;
@@ -215,8 +216,8 @@ export function MatrixRain({
       unsubscribeMotion();
       window.removeEventListener('resize', debouncedResize);
       document.removeEventListener('visibilitychange', onVisibility);
-      window.removeEventListener('sysfail:start', onSysfailStart);
-      window.removeEventListener('sysfail:end', onSysfailEnd);
+      window.removeEventListener(SYSFAIL_START, onSysfailStart);
+      window.removeEventListener(SYSFAIL_END, onSysfailEnd);
     };
   }, [watchRef]);
 

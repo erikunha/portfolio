@@ -1,7 +1,10 @@
 import type { Page } from '@playwright/test';
 import { askErrors } from '../../../content/ask-errors';
+import { profile } from '../../../content/profile';
 import { SITE_LOCALE } from '../../../content/site-locale';
 import { STREAM_ERR_SENTINEL } from '../../../lib/stream-protocol';
+
+export const MOCK_ASK_ANSWER = `Erik is a ${profile.title} with 8+ years of experience.`;
 
 export type MockState = {
   ask?:
@@ -79,7 +82,7 @@ export async function installMockBackend(page: Page, state: MockState = {}): Pro
         status: 200,
         contentType: 'text/plain; charset=utf-8',
         headers: { 'X-Request-Id': 'test-request-id-abc123' },
-        body: 'Erik is a Senior Full-Stack Engineer with 8+ years of experience.',
+        body: MOCK_ASK_ANSWER,
       });
       return;
     }

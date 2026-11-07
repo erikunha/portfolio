@@ -1,3 +1,4 @@
+import { SYSFAIL_END, SYSFAIL_START } from '@/lib/events';
 import { createPauseControl, type PhraseLoop, runPhraseLoop, typeOut } from './typewriter';
 
 export type BootClassKey =
@@ -244,7 +245,7 @@ export function buildDesktopOnFirstLoop(
 
   function release() {
     active = false;
-    window.dispatchEvent(new CustomEvent('sysfail:end'));
+    window.dispatchEvent(new CustomEvent(SYSFAIL_END));
     ctrlRef.current?.resumeDialog();
   }
 
@@ -264,7 +265,7 @@ export function buildDesktopOnFirstLoop(
       later(() => section.classList.remove(cls.shake, cls.shake2), SYSFAIL_SHAKE_FRAME_2_MS);
     }
 
-    window.dispatchEvent(new CustomEvent('sysfail:start'));
+    window.dispatchEvent(new CustomEvent(SYSFAIL_START));
     document.documentElement.classList.add('sysfail-on');
     ctrlRef.current?.pauseDialog();
 
