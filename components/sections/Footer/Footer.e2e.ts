@@ -15,7 +15,13 @@ test.describe('Footer', () => {
     baseURL,
   }) => {
     if (!baseURL) throw new Error('Footer e2e requires the configured baseURL.');
-    const context = await browser.newContext({ javaScriptEnabled: false, baseURL });
+    const context = await browser.newContext({
+      javaScriptEnabled: false,
+      baseURL,
+      viewport: { width: 1280, height: 720 },
+      isMobile: false,
+      hasTouch: false,
+    });
     const page = await context.newPage();
     await page.goto('/');
     const tree = page.getByRole('navigation', { name: 'Site map' });
