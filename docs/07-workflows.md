@@ -57,7 +57,7 @@ check (Biome) -> typecheck -> validate-content -> check:client-naming -> check:d
 flowchart LR
     unit["Vitest (jsdom)<br/>__tests__/** + co-located *.test.tsx<br/>behavioral, 80/70/80/80 coverage floor"] --> ci
     a11y["axe-core<br/>tests/a11y/axe.spec.ts (WCAG 2.2 AA tags)"] --> ci
-    e2e["Playwright e2e<br/>tests/e2e/** (CI: 5-project matrix)"] --> ci
+    e2e["Playwright e2e<br/>tests/e2e/** (CI: 8-project matrix)"] --> ci
     visual["Visual regression<br/>tests/visual/visual.spec.ts via Argos"] --> ci
     mut["Stryker mutation (weekly, advisory; kill canary in CI)"] -. trend .-> ci
     ci["CI gates"]
@@ -66,7 +66,7 @@ flowchart LR
 - **Unit (Vitest):** behavioral assertions only; a `no-source-grep` test bans `readFileSync`-style source-grep tests. Run `pnpm test` / `pnpm test:coverage` / `pnpm test:watch`.
   For effect-driven focus, await the focus assertion with `waitFor`; finding the element only establishes that it rendered.
 - **a11y (axe-core):** zero-violation gate over home (both languages), contact errors, design-system routes, the four reading views and both links locales. Every scan includes `wcag22aa`; page scans retain `wcag2a`, `wcag2aa` and `wcag21aa`, while contact errors retain `wcag2a` and `wcag2aa`.
-- **e2e (Playwright):** CI selects a 5-project matrix (`chromium`, `chromium-mobile`, `webkit-desktop`, `webkit-mobile`, `chromium-components`). `playwright.config.ts` also defines mobile Chromium and desktop/mobile WebKit component projects. The DS component visual spec is darwin-only (CI ignores it on Ubuntu). Playwright targets `http://localhost:3000` unless `E2E_BASE_URL` points it at another server.
+- **e2e (Playwright):** CI runs every project in `playwright.config.ts` (8): `chromium`, `chromium-mobile`, `webkit-desktop`, `webkit-mobile` and the matching `-components` projects for co-located component specs; `__tests__/scripts/e2e-matrix-coverage.test.ts` fails if a project is left out. The DS component visual spec is darwin-only (CI ignores it on Ubuntu). Playwright targets `http://localhost:3000` unless `E2E_BASE_URL` points it at another server.
   Reading views, error states, no-JavaScript recovery and mobile reflow run in all four page-browser projects.
 - **Visual regression:** Argos-backed snapshots of page sections; a color/layout/typography change requires regenerated baselines (see the `visual-baseline-regen` skill).
 - **AI eval (`pnpm ask:eval`):** calibration → corpus → gate for `/api/ask` (doc 02). Gated in CI when `ai`-paths change.
@@ -88,7 +88,7 @@ flowchart TD
     tc --> b
     t --> b
     b --> perf["performance: LHCI desktop+mobile + axe (if app)"]
-    b --> e2e["e2e-functional (5-project matrix, if app)"]
+    b --> e2e["e2e-functional (8-project matrix, if app)"]
     b --> vis["e2e-visual-chromium (desktop/mobile Chromium, if ui)"]
     dc --> perf
     dc --> e2e
