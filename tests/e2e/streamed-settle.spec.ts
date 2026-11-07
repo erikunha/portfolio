@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { settleFrames } from './_helpers/geometry';
+import { drainRoutes } from './_helpers/routes';
 import { gotoSettled, PENDING_STREAMED } from './_helpers/streamed';
 
 const BOUNDARY_SWAP = /\$RC\(("B:[^)]*)\)/g;
@@ -18,6 +19,8 @@ test.describe('settling the streamed boundaries', () => {
       await route.fulfill({ response, body });
     });
   });
+
+  test.afterEach(({ context }) => drainRoutes(context));
 
   test('gotoSettled stays pending until every held boundary swaps in', async ({ page }) => {
     let settled = false;
