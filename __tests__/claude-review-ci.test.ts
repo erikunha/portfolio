@@ -131,14 +131,23 @@ describe('CI reviewer runs a trusted copy of the orchestrator', () => {
 
   it('extracts the skill from a default-branch fetch that runs before it, unconditionally', () => {
     const fetch = indexOfStep(/^git fetch --depth=1 origin "\$DEFAULT_BRANCH"$/);
-    const archive = indexOfStep(
-      /^git archive FETCH_HEAD:\.claude\/skills\/pr-review-orchestrator /,
-    );
+    const archive = indexOfStep(/^git archive "FETCH_HEAD:\$\{skill_dir\}" /);
     expect(fetch, 'the default-branch fetch must be an active line').toBeGreaterThanOrEqual(0);
     expect(archive).toBeGreaterThan(fetch);
     expect(steps.slice(fetch, archive + 1).some((step) => step.if !== undefined)).toBe(false);
     expect(prompt).toContain('/tmp/review-skill/SKILL.md');
     expect(claudeArgs).toContain('--add-dir /tmp/review-skill');
+  });
+
+  it('finds the skill under the shared layout or the earlier layout of the default branch', () => {
+    const probe = steps
+      .flatMap((step) => activeLines(step.run))
+      .find((line) => line.startsWith('for candidate in '));
+    expect(probe).toContain('.agents/skills/pr-review-orchestrator');
+    expect(
+      probe,
+      'a default branch that has not landed the shared layout still holds the skill under .claude/skills',
+    ).toContain('.claude/skills/pr-review-orchestrator');
   });
 
   it('runs no package manager in the credentialed job', () => {

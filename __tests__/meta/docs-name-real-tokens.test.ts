@@ -5,6 +5,7 @@ import { getThemeColors } from '../../app/(en)/design-system/_lib/theme-tokens';
 import { componentsCssFiles } from '../helpers/components-css';
 
 const DOCS = [
+  'AGENTS.md',
   'CLAUDE.md',
   'ARCHITECTURE.md',
   'STANDARDS.md',
