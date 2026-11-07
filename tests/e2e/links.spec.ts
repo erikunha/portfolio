@@ -328,3 +328,37 @@ test.describe('font payload', () => {
     expect(faces.some((face) => face.startsWith(`${DISPLAY_FACE}:`))).toBe(true);
   });
 });
+
+const LCP_VIEWPORT = { width: 375, height: 812 };
+
+test.describe('largest contentful paint', () => {
+  test.use({ viewport: LCP_VIEWPORT });
+
+  for (const path of ['/links', '/links/en']) {
+    test(`${path} paints the latest-video cover last and largest at mobile width, so the LCP work targets the right element`, async ({
+      page,
+    }) => {
+      await page.addInitScript(() => {
+        const entries: string[] = [];
+        Object.assign(window, { lcpElements: entries });
+        new PerformanceObserver((list) => {
+          for (const entry of list.getEntries()) {
+            const element = (entry as PerformanceEntry & { element?: Element | null }).element;
+            entries.push(
+              element
+                ? `${element.tagName}:${element.closest('.links-thumb') ? 'cover' : 'other'}`
+                : 'none',
+            );
+          }
+        }).observe({ type: 'largest-contentful-paint', buffered: true });
+      });
+      await page.goto(path, { waitUntil: 'networkidle' });
+      const hasCover = (await page.locator('.links-thumb img').count()) > 0;
+      test.skip(!hasCover, 'the channel feed has no latest video, so there is no cover to measure');
+      const entries = await page.evaluate(
+        () => (window as unknown as { lcpElements: string[] }).lcpElements,
+      );
+      expect(entries.at(-1), 'the final LCP candidate is the cover image').toBe('IMG:cover');
+    });
+  }
+});
