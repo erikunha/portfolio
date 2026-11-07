@@ -117,6 +117,8 @@ flowchart TD
 
 Other workflows: `codeql.yml` (SAST, weekly + PR), `mutation.yml` (Stryker, weekly; fails when the runner cannot kill a mutant, judged by `scripts/check-mutation-kills.mjs`), `smoke.yml` (post-deploy: healthz + 7 security headers + apex→www + `/api/ask`,`/api/contact` liveness), `claude-review.yml` (pull-request review, on a `/claude-review` comment), `claude.yml` (`@claude` interaction), and `agent-eval.yml` (advisory prompt evaluation).
 
+**Token permissions:** every workflow sets a top-level `permissions` block of `contents: read` (`{}` for `smoke.yml`), and each job lists only the extra scopes it uses, for example `build` takes `id-token: write` + `attestations: write` for provenance, `semgrep` takes `security-events: write` to upload SARIF, `claude-review` takes `pull-requests: write` + `issues: read` + `checks: read` + `statuses: read` + `id-token: write` + `actions: read`. `__tests__/scripts/workflow-permissions.test.ts` fails a workflow with no top-level block or a broader one (OpenSSF Scorecard Token-Permissions).
+
 **Lighthouse budgets (LHCI, hard gates):** desktop perf ≥95 / a11y =100 / BP ≥95 / SEO =100, LCP ≤1800ms, CLS ≤0.05, TBT ≤200ms; mobile perf ≥90, LCP ≤3500ms. Never disable a gate to merge - fix the property (doc 08).
 
 Both desktop and mobile collect `/`, `/pt`, `/cv`, `/summary`, `/links`, `/links/en` and every design-system route listed in their configs. Run `pnpm lhci` and `pnpm lhci:mobile` against a production server.

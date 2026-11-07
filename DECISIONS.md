@@ -2,6 +2,10 @@
 
 ADR-lite running log. One bullet per decision · date · reversibility note.
 
+## 2026-11-07: Least-privilege workflow tokens
+
+- **2026-11-07** · **Every workflow declares a top-level `permissions` block no broader than `contents: read` (`{}` for `smoke.yml`, which uses no token); extra scopes live on the one job that needs them.** `codeql.yml` and `smoke.yml` had no top-level block, and `claude.yml` and `claude-review.yml` granted write scopes (`contents`, `pull-requests`, `issues`, `id-token`) to the whole workflow, which OpenSSF Scorecard Token-Permissions flags and which would widen silently when a job is added. Held by `__tests__/scripts/workflow-permissions.test.ts`. Reversible: revert the YAML move and the test; no scope was added or removed, only relocated (`smoke.yml` drops an unused `deployments: read`).
+
 ## 2026-11-07: API abuse bounds (budget slice, refusal rows, log caps, body order)
 
 - **2026-11-07** · **`/api/ask` reserves against a daily slice of one twentieth of the monthly token budget, as well as the month.** One IP at the 8-an-hour limit spends about 860,000 tokens a day, so the 3,000,000 monthly budget lasted about 3.5 days and every visitor then got 503 until the key expired. A slice of 150,000 tokens (`ask:tokens:day:{date}`, 2-day TTL) caps one day at about a twentieth of the month, so an attacker costs one day of answers at a time. Options weighed: a global hourly limiter (still lets the month go in a few days of sustained load), a per-IP daily token cap (one IP bucket is `unknown` for MCP callers, so it cannot separate them), a daily slice (chosen, no new identity needed). Twenty rather than thirty days leaves headroom for a quiet-week traffic spike. The daily reservation is returned with the monthly one when either denies, and settlement refunds both keys. Held by `__tests__/rate-limit-budget-store.test.ts` and `__tests__/budget-cap.test.ts`. _Reversible: drop the daily reservation in `reserveBudget`; the monthly key is unchanged._

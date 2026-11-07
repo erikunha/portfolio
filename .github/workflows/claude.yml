@@ -11,14 +11,16 @@ concurrency:
   cancel-in-progress: false
 
 permissions:
-  id-token: write
-  contents: write
-  pull-requests: write
-  issues: write
-  actions: read
+  contents: read
 
 jobs:
   claude:
+    permissions:
+      id-token: write
+      contents: write
+      pull-requests: write
+      issues: write
+      actions: read
     if: >-
       contains(github.event.comment.body, '@claude') &&
       contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.comment.author_association)

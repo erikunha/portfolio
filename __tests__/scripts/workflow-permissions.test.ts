@@ -6,7 +6,6 @@ import { parse } from 'yaml';
 // behavioral-test-allow: the artifacts under test ARE the workflow files; the token a job runs with
 // is a property of its YAML and has no runtime surface in this repository.
 const WORKFLOW_DIR = join(process.cwd(), '.github', 'workflows');
-const TOP_LEVEL_READ_ONLY = { contents: 'read' };
 
 type Workflow = {
   permissions?: Record<string, string> | string;
@@ -39,8 +38,23 @@ describe('workflow token permissions', () => {
     expect(grants.filter((grant) => grant === 'write-all')).toEqual([]);
   });
 
-  it('ci.yml defaults every job to read-only contents', () => {
-    const ci = workflows.find(({ file }) => file === 'ci.yml');
-    expect(ci?.workflow.permissions).toEqual(TOP_LEVEL_READ_ONLY);
+  it.each(workflows)('$file declares a top-level permissions block', ({ workflow }) => {
+    expect(
+      workflow.permissions,
+      'OpenSSF Scorecard Token-Permissions: a workflow without a top-level permissions block runs every job on the repository default token scope, which can be write. Add `permissions: contents: read` (or `{}`) and grant extra scopes per job.',
+    ).toBeDefined();
+  });
+
+  it.each(workflows)('$file top-level grant is no broader than contents: read', ({ workflow }) => {
+    const grant = workflow.permissions;
+    const broader =
+      typeof grant === 'string' ||
+      Object.entries(grant ?? {}).filter(
+        ([scope, level]) => !(scope === 'contents' && level === 'read') && level !== 'none',
+      ).length > 0;
+    expect(
+      broader,
+      'OpenSSF Scorecard Token-Permissions: write or extra scopes at the top level reach every job in the workflow. Keep the top level at `contents: read` and move each additional scope to the single job that needs it.',
+    ).toBe(false);
   });
 });
