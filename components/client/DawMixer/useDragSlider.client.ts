@@ -30,57 +30,48 @@ export function useDragSlider(config: DragSliderConfig): DragSliderHandlers {
   const dragging = useRef(false);
   const origin = useRef<DragOrigin>({ value: 0, clientX: 0, clientY: 0 });
 
+  const follow = (event: PointerEvent<HTMLDivElement>) => {
+    const next = config.valueAt(event, origin.current);
+    if (next !== null) config.apply(next);
+    return next;
+  };
+
   const onPointerDown = (event: PointerEvent<HTMLDivElement>) => {
-    const { read, apply, valueAt, applyOnDown } = config;
-    origin.current = { value: read(), clientX: event.clientX, clientY: event.clientY };
+    origin.current = { value: config.read(), clientX: event.clientX, clientY: event.clientY };
     try {
       event.currentTarget.setPointerCapture(event.pointerId);
       // biome-ignore lint/suspicious/noEmptyBlockStatements: capture is refused for synthetic pointers, the drag still works through bubbling
     } catch {}
     dragging.current = true;
-    if (!applyOnDown) return;
-    const next = valueAt(event, origin.current);
-    if (next !== null) apply(next);
+    if (config.applyOnDown) follow(event);
   };
 
   const onPointerMove = (event: PointerEvent<HTMLDivElement>) => {
-    if (!dragging.current) return;
-    const { apply, valueAt } = config;
-    const next = valueAt(event, origin.current);
-    if (next !== null) apply(next);
+    if (dragging.current) follow(event);
   };
 
   const onPointerUp = (event: PointerEvent<HTMLDivElement>) => {
     if (!dragging.current) return;
     dragging.current = false;
-    const { read, apply, commit, valueAt, settleOn } = config;
-    if (settleOn === 'live') {
-      commit?.(read());
-      return;
-    }
-    const next = valueAt(event, origin.current);
-    if (next === null) return;
-    apply(next);
-    commit?.(next);
+    const next = config.settleOn === 'live' ? config.read() : follow(event);
+    if (next !== null) config.commit?.(next);
   };
 
   const onPointerCancel = () => {
     if (!dragging.current) return;
     dragging.current = false;
-    const { apply, commit } = config;
-    apply(origin.current.value);
-    commit?.(origin.current.value);
+    config.apply(origin.current.value);
+    config.commit?.(origin.current.value);
   };
 
   const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
     if (dragging.current) return;
-    const { read, apply, commit, keys, normalizeKey } = config;
-    const next = sliderValueForKey(event.key, { value: read(), ...keys });
+    const next = sliderValueForKey(event.key, { value: config.read(), ...config.keys });
     if (next === null) return;
     event.preventDefault();
-    const settled = normalizeKey ? normalizeKey(next) : next;
-    apply(settled);
-    commit?.(settled);
+    const settled = config.normalizeKey ? config.normalizeKey(next) : next;
+    config.apply(settled);
+    config.commit?.(settled);
   };
 
   return { onPointerDown, onPointerMove, onPointerUp, onPointerCancel, onKeyDown };

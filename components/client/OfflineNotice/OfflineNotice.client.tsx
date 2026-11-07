@@ -1,8 +1,7 @@
 'use client';
 
 import { useSyncExternalStore } from 'react';
-import { offlineNotice } from '@/content/offline';
-import type { SiteLocale } from '@/content/site-locale';
+import type { OfflineNotice as OfflineNoticeCopy } from '@/content/shell-states.schema';
 
 const CONNECTION_EVENTS = ['online', 'offline'] as const;
 
@@ -16,9 +15,8 @@ function subscribe(notify: () => void): () => void {
 const isOffline = () => !navigator.onLine;
 const isOfflineOnServer = () => false;
 
-export function OfflineNotice({ locale }: { locale: SiteLocale }) {
+export function OfflineNotice({ copy }: { copy: OfflineNoticeCopy }) {
   const offline = useSyncExternalStore(subscribe, isOffline, isOfflineOnServer);
-  const copy = offlineNotice[locale];
   return (
     <div role="status" className="offline-notice">
       {offline && (

@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { useDragSlider } from '../useDragSlider.client';
 
 const MIN_ANGLE = -150;
@@ -37,24 +37,21 @@ export function KnobIsland({ initialAngle, label, channelName, degreesUnit }: Kn
   const needleRef = useRef<SVGLineElement>(null);
   const liveAngle = useRef(initialAngle);
 
-  const updateNeedle = useCallback(
-    (newAngle: number) => {
-      liveAngle.current = newAngle;
-      const el = containerRef.current;
-      if (el) {
-        const rounded = Math.round(newAngle);
-        el.setAttribute('aria-valuenow', String(rounded));
-        el.setAttribute('aria-valuetext', `${rounded > 0 ? '+' : ''}${rounded} ${degreesUnit}`);
-      }
-      const needle = needleRef.current;
-      if (needle) {
-        const { x2, y2 } = angleToCoords(newAngle);
-        needle.setAttribute('x2', x2.toFixed(2));
-        needle.setAttribute('y2', y2.toFixed(2));
-      }
-    },
-    [degreesUnit],
-  );
+  const updateNeedle = (newAngle: number) => {
+    liveAngle.current = newAngle;
+    const el = containerRef.current;
+    if (el) {
+      const rounded = Math.round(newAngle);
+      el.setAttribute('aria-valuenow', String(rounded));
+      el.setAttribute('aria-valuetext', `${rounded > 0 ? '+' : ''}${rounded} ${degreesUnit}`);
+    }
+    const needle = needleRef.current;
+    if (needle) {
+      const { x2, y2 } = angleToCoords(newAngle);
+      needle.setAttribute('x2', x2.toFixed(2));
+      needle.setAttribute('y2', y2.toFixed(2));
+    }
+  };
 
   const handlers = useDragSlider({
     read: () => liveAngle.current,

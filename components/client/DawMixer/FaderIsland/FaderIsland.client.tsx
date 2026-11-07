@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { PERCENT_RANGE, percentAlong } from '@/lib/slider';
 import { useDragSlider } from '../useDragSlider.client';
 
@@ -26,23 +26,20 @@ export function FaderIsland({
   const thumbRef = useRef<HTMLDivElement>(null);
   const livePct = useRef(initialPct);
 
-  const applyPct = useCallback(
-    (newPct: number) => {
-      livePct.current = newPct;
-      if (trackRef.current) {
-        trackRef.current.setAttribute('aria-valuenow', String(newPct));
-        trackRef.current.setAttribute(
-          'aria-valuetext',
-          onAriaValueText ? onAriaValueText(newPct) : `${newPct}%`,
-        );
-      }
-      if (thumbRef.current) {
-        thumbRef.current.style.left = `calc(${newPct}% - var(--fader-thumb-w) / 2)`;
-      }
-      onPctChange?.(newPct);
-    },
-    [onPctChange, onAriaValueText],
-  );
+  const applyPct = (newPct: number) => {
+    livePct.current = newPct;
+    if (trackRef.current) {
+      trackRef.current.setAttribute('aria-valuenow', String(newPct));
+      trackRef.current.setAttribute(
+        'aria-valuetext',
+        onAriaValueText ? onAriaValueText(newPct) : `${newPct}%`,
+      );
+    }
+    if (thumbRef.current) {
+      thumbRef.current.style.left = `calc(${newPct}% - var(--fader-thumb-w) / 2)`;
+    }
+    onPctChange?.(newPct);
+  };
 
   const handlers = useDragSlider({
     read: () => livePct.current,

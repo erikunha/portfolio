@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useRef } from 'react';
+import { useRef } from 'react';
 import { MeterSegment, meterSegmentState } from '@/lib/meter';
 import { PERCENT_RANGE, percentAlong } from '@/lib/slider';
 import { useDragSlider } from '../useDragSlider.client';
@@ -31,26 +31,20 @@ export function VuMeter({
   const segmentRefs = useRef<(HTMLSpanElement | null)[]>([]);
   const liveLevel = useRef(initialLevel);
 
-  const getSegmentClass = useCallback(
-    (index: number, level: number) =>
-      SEGMENT_CLASS[meterSegmentState(index, level, segments, clipping)],
-    [segments, clipping],
-  );
+  const getSegmentClass = (index: number, level: number) =>
+    SEGMENT_CLASS[meterSegmentState(index, level, segments, clipping)];
 
-  const applyLevel = useCallback(
-    (newLevel: number) => {
-      liveLevel.current = newLevel;
-      const el = containerRef.current;
-      if (el) {
-        el.setAttribute('aria-valuenow', String(newLevel));
-        el.setAttribute('aria-valuetext', `${newLevel}%`);
-      }
-      segmentRefs.current.forEach((seg, i) => {
-        if (seg) seg.className = getSegmentClass(i, newLevel);
-      });
-    },
-    [getSegmentClass],
-  );
+  const applyLevel = (newLevel: number) => {
+    liveLevel.current = newLevel;
+    const el = containerRef.current;
+    if (el) {
+      el.setAttribute('aria-valuenow', String(newLevel));
+      el.setAttribute('aria-valuetext', `${newLevel}%`);
+    }
+    segmentRefs.current.forEach((seg, i) => {
+      if (seg) seg.className = getSegmentClass(i, newLevel);
+    });
+  };
 
   const handlers = useDragSlider({
     read: () => liveLevel.current,
