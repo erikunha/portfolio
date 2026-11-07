@@ -25,7 +25,7 @@
 - **`ASK_ENABLED` fails OFF; `LANGFUSE_ENABLED` fails OFF.** The kill switch must disable on a typo; the telemetry must stay inert unless the string is exactly `'true'`. Asymmetric by intent.
 - **`StatusBar` initializes its clock to `''` and uses `suppressHydrationWarning`.** A `new Date()` at render would be a dynamicIO prerender hazard; the empty initial avoids prerendering a timestamp.
 - **`next-env.d.ts` flips on a local prod build** (dev path ↔ prod path). Inspect that diff before deciding whether it belongs in the change.
-- **The MCP `ask_erik` tool shares one global rate-limit bucket.** It re-invokes `/api/ask` in-process via a synthetic `Request` with no IP header, so `getClientIp` returns `'unknown'` and every MCP caller worldwide hits the same `rl:ask` bucket. Documented limitation in `lib/agent/mcp-tools.ts`.
+- **The MCP `ask_erik` tool limits and de-duplicates per caller.** It re-invokes `/api/ask` in-process via a synthetic `Request` and copies `x-forwarded-for` and `x-real-ip` from the MCP request (`ctx.http.req`), so `getClientIp` sees the caller. A request the transport delivers without those headers (an in-memory transport) falls back to `'unknown'` and shares one bucket. Failures set `isError`; the result carries the request id in `_meta.requestId` and in a second text block, for `/api/log/forget`.
 - **`/api/log/forget` never returns a deleted count** and answers a known and an unknown id with the same body, and `/api/log` stores no IP. Both are anti-oracle / minimization choices, not omissions.
 
 ## Naming map (decode the filesystem)
