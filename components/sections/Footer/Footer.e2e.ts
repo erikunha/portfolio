@@ -1,4 +1,13 @@
 import { expect, test } from '@playwright/test';
+import { footerSectionIds } from '@/content/footer';
+import { waitForHydration } from '../../../tests/e2e/_helpers/hydration';
+
+const DOCUMENT_SENTINEL = '__footerRebootSentinel';
+const SECTIONS_SEEN_TIMEOUT_MS = 90_000;
+const READING_BAND_MARGIN = 0.4;
+const OBSERVER_DELIVERY_FRAMES = 2;
+const SCROLL_ATTEMPTS = 5;
+const MOBILE_HERO_SELECTOR = '[data-testid="hero-mobile"]';
 
 async function loadFooter(page: import('@playwright/test').Page) {
   await page.emulateMedia({ reducedMotion: 'reduce' });
@@ -15,7 +24,13 @@ test.describe('Footer', () => {
     baseURL,
   }) => {
     if (!baseURL) throw new Error('Footer e2e requires the configured baseURL.');
-    const context = await browser.newContext({ javaScriptEnabled: false, baseURL });
+    const context = await browser.newContext({
+      javaScriptEnabled: false,
+      baseURL,
+      viewport: { width: 1280, height: 720 },
+      isMobile: false,
+      hasTouch: false,
+    });
     const page = await context.newPage();
     await page.goto('/');
     const tree = page.getByRole('navigation', { name: 'Site map' });
@@ -49,17 +64,26 @@ test.describe('Footer', () => {
   }) => {
     await page.emulateMedia({ reducedMotion: 'reduce' });
     await page.goto('/');
+    await waitForHydration(page, '[data-testid="shell-form"]');
     const input = page.getByRole('textbox', { name: 'shell command', exact: true });
     await input.fill('help');
     await input.press('Enter');
     const commands = page.locator('[data-sess="commands"]');
     await expect(commands).toHaveText('1');
     await page.locator('footer').scrollIntoViewIfNeeded();
-    const navigationStart = await page.evaluate(() => performance.timeOrigin);
+    await page.evaluate((key) => {
+      (window as unknown as Record<string, boolean>)[key] = true;
+    }, DOCUMENT_SENTINEL);
     await page.getByRole('link', { name: 'press R to reboot, back to top' }).click();
     await expect(page.locator('[data-testid="hero-name"]:visible')).toBeFocused();
     await expect(page.locator('[data-testid="footer-reboot-status"]')).toHaveText(/rebooted/i);
-    expect(await page.evaluate(() => performance.timeOrigin)).toBe(navigationStart);
+    expect(
+      await page.evaluate(
+        (key) => (window as unknown as Record<string, boolean>)[key],
+        DOCUMENT_SENTINEL,
+      ),
+      'the reboot keeps the document: a reload would drop the sentinel set before the click',
+    ).toBe(true);
     await expect(commands).toHaveText('1');
     expect(await page.evaluate(() => scrollY)).toBeLessThan(100);
   });
@@ -305,6 +329,7 @@ test.describe('Footer', () => {
   test('sections seen reaches every section after scrolling the page, even sections taller than the screen', async ({
     browser,
   }) => {
+    test.setTimeout(SECTIONS_SEEN_TIMEOUT_MS);
     for (const [width, height, isMobile] of [
       [390, 844, true],
       [1280, 800, false],
@@ -320,15 +345,48 @@ test.describe('Footer', () => {
         page.locator('[data-sess="seen"]'),
         'the counter observes the hero before the first scroll, so it must be live',
       ).not.toHaveText('0');
-      const total = await page.evaluate(() => document.documentElement.scrollHeight);
-      for (let y = 0; y < total; y += height / 2) {
-        await page.mouse.wheel(0, height / 2);
-        await page.waitForTimeout(50);
-      }
+      const unreached = await page.evaluate(
+        async ({ ids, mobileHero, band, frames, attempts }) => {
+          const nextFrame = () =>
+            new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+          const targets = [
+            ...ids.map((id) => document.getElementById(id)),
+            document.querySelector(mobileHero),
+          ]
+            .filter((element): element is Element => element !== null)
+            .filter((element) => element.getBoundingClientRect().height > 0);
+          const misses: string[] = [];
+          for (const target of targets) {
+            let reached = false;
+            for (let attempt = 0; attempt < attempts && !reached; attempt++) {
+              const top = target.getBoundingClientRect().top + window.scrollY;
+              window.scrollTo({ top: top - window.innerHeight / 2, behavior: 'instant' });
+              for (let frame = 0; frame < frames; frame++) await nextFrame();
+              const box = target.getBoundingClientRect();
+              reached =
+                box.height > 0 &&
+                box.top < window.innerHeight * (1 - band) &&
+                box.bottom > window.innerHeight * band;
+            }
+            if (!reached) misses.push(target.id || mobileHero);
+          }
+          return misses;
+        },
+        {
+          ids: footerSectionIds,
+          mobileHero: MOBILE_HERO_SELECTOR,
+          band: READING_BAND_MARGIN,
+          frames: OBSERVER_DELIVERY_FRAMES,
+          attempts: SCROLL_ATTEMPTS,
+        },
+      );
+      expect(unreached, `${width}px: every observed section scrolls into the reading band`).toEqual(
+        [],
+      );
       await expect(
         page.locator('[data-sess="seen"]'),
-        `a section taller than four screens never reaches a 25% visible ratio at ${width}`,
-      ).toHaveText('9');
+        `${width}px: each section was brought to the middle of the viewport and the page waited for the observer to deliver, so a section missing here is a counter bug and not a scroll that outran the observer`,
+      ).toHaveText(String(footerSectionIds.length));
       await context.close();
     }
   });

@@ -41,7 +41,7 @@ for (const viewport of viewports) {
       );
     });
 
-    test('keeps five bordered About panels and readable retry code', async ({ page }, testInfo) => {
+    test('keeps five bordered About panels and readable retry code', async ({ page }) => {
       await page.goto('/');
       const about = page.locator('#sec-readme');
       await expect(about.locator('.ab-panel')).toHaveCount(5);
@@ -55,7 +55,6 @@ for (const viewport of viewports) {
       const code = about.getByRole('region', { name: 'README code' });
       await expect(code).toHaveAttribute('tabindex', '0');
       await expect(code).toContainText('Math.random()');
-      await page.screenshot({ path: testInfo.outputPath('hero-about.png'), fullPage: true });
     });
   });
 }
@@ -321,8 +320,8 @@ const BOOT_QUIET_WINDOW_MS = 1500;
 const BOOT_SETTLE_MS = 400;
 const BOOT_DIALOG_HOLD_MS = 2500;
 const BOOT_DIALOG_START_TIMEOUT_MS = 15_000;
-const WHEEL_STEP_PX = 1200;
-const WHEEL_STEPS = 12;
+const SCROLL_STEP_PX = 1200;
+const SCROLL_STEPS = 12;
 
 async function countBootMutations(page: Page, windowMs: number): Promise<number> {
   return page.evaluate(
@@ -374,10 +373,16 @@ test.describe('Hero boot loop follows the motion switch and the viewport', () =>
     await expect(page.locator(`${BOOT_HOST} .hero-boot-matrix-out`)).not.toBeEmpty({
       timeout: BOOT_DIALOG_START_TIMEOUT_MS,
     });
-    for (let step = 0; step < WHEEL_STEPS; step += 1) {
-      await page.mouse.wheel(0, WHEEL_STEP_PX);
+    for (let step = 0; step < SCROLL_STEPS; step += 1) {
+      await page.evaluate(
+        (dy) => window.scrollBy({ top: dy, behavior: 'instant' }),
+        SCROLL_STEP_PX,
+      );
     }
-    await expect(page.locator(BOOT_HOST)).not.toBeInViewport();
+    await expect(
+      page.locator(BOOT_HOST),
+      'the hero must leave the viewport; scrolling uses scrollBy because WebKit throws on mouse.wheel when isMobile is set, and the visibility observer reacts to any scroll',
+    ).not.toBeInViewport();
     await page.waitForTimeout(BOOT_DIALOG_HOLD_MS);
 
     expect(
