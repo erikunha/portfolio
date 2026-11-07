@@ -1,14 +1,19 @@
 import { z } from 'zod';
 
 import { log } from '@/lib/log';
-import { getErrorLogDailyLimit, getErrorLogLimit, getRedis } from '@/lib/rate-limit';
-import { withBodyLimit } from '@/lib/server/body-limit';
+import {
+  getErrorLogDailyLimit,
+  getErrorLogIpDailyLimit,
+  getErrorLogLimit,
+  getRedis,
+} from '@/lib/rate-limit';
 import { defineHandler, err, ok } from '@/lib/server/route';
 
 const SMOKE_PREFIX = '[smoke]';
 const MAX_LOG_BODY_BYTES = 32_768;
 
-const ERR_KV_TTL_S = 30 * 24 * 60 * 60;
+const ERR_KV_TTL_S = 7 * 24 * 60 * 60;
+const MAX_STORED_STACK_CHARS = 4096;
 const ERROR_LOG_GLOBAL_KEY = 'global';
 const MAX_TS_LENGTH = 64;
 
@@ -23,11 +28,25 @@ const ErrorPayload = z.object({
 
 const handleLog = defineHandler({
   schema: ErrorPayload,
+  maxBodyBytes: MAX_LOG_BODY_BYTES,
   rateLimit: getErrorLogLimit,
   rateLimitErrorMessage: 'too many error reports',
-  async handler({ body, requestId }) {
+  async handler({ body, ip, requestId }) {
     if (body.message.toLowerCase().startsWith(SMOKE_PREFIX)) {
       return ok({ requestId });
+    }
+
+    try {
+      const { success: underIpDailyCap } = await getErrorLogIpDailyLimit().limit(ip);
+      if (!underIpDailyCap) {
+        log.warn('error-log per-IP daily cap reached, dropping record', { requestId });
+        return ok({ requestId });
+      }
+    } catch (capErr) {
+      log.warn('error-log per-IP daily cap unavailable, recording anyway', {
+        requestId,
+        err: capErr,
+      });
     }
 
     try {
@@ -46,6 +65,7 @@ const handleLog = defineHandler({
 
     const record = {
       ...body,
+      ...(body.stack === undefined ? {} : { stack: body.stack.slice(0, MAX_STORED_STACK_CHARS) }),
       errId,
       capturedAt: new Date().toISOString(),
     };
@@ -66,4 +86,4 @@ const handleLog = defineHandler({
   },
 });
 
-export const POST = withBodyLimit(handleLog, MAX_LOG_BODY_BYTES);
+export const POST = handleLog;

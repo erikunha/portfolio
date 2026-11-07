@@ -148,6 +148,6 @@ Large features use an **integration branch + sub-PRs** (`feat/<feature>` ← `fe
 | `/api/ask` stream cuts off | 15s watchdog, Layer-1 egress guard or provider failure (`STREAM_ERR_SENTINEL`)           |
 | Push blocked               | inspect the main-target guard, branch name or `pnpm verify` failure in `.husky/pre-push` |
 | CLS / visual regression    | regenerate Argos baselines via the `visual-baseline-regen` skill                         |
-| Client error in prod       | it was POSTed to `/api/log` (`err:{date}:{id}`, 30-day TTL) by `error-bridge.client.ts`  |
+| Client error in prod       | it was POSTed to `/api/log` (`err:{date}:{id}`, 7-day TTL) by `error-bridge.client.ts`  |
 
 See `UI_PATHS`/`APP_PATHS` in `scripts/detect-changes-paths.mjs` for the current CI path filters. Every git-tracked root file and `scripts/` file must be in `AI_PATHS`, `APP_PATHS`, `UI_PATHS` or `IGNORED_PATHS`; `check:detect-changes-paths` fails otherwise, so a new file cannot skip the gated jobs.

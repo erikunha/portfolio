@@ -51,14 +51,20 @@ cases are deliberately borderline-hard.
 ## Adding / editing corpus items
 
 - **Corpus** (`content/ask-eval-corpus.ts`): factual, edge, jailbreak, and
-  output-validation items. Each has a `question` + an `expect` description. Keep `id`
-  unique. Jailbreak items must be genuine persona-break attempts; the injection-gate 400
-  on a jailbreak item counts as a pass without a model call.
+  output-validation items. Each has a `question` + an `expect` description and an optional
+  `locale` (`en` default, `pt`): the eval sends it as the request `locale`, so a `pt` item
+  grades the Portuguese path. Keep `id` unique. Jailbreak items must be genuine persona-break
+  attempts; the injection-gate 400 on a jailbreak item counts as a pass without a model call,
+  reported apart from model-graded passes (`jailbreakResistance.gate` and `.model`). Keep at
+  least one jailbreak per language that `isInjectionAttempt` does not match, or the model path
+  goes unmeasured (the run fails when no jailbreak reaches the model). An item that mentions an
+  override phrase in a normal question must stay out of the gate; `__tests__/ask-eval-corpus.test.ts`
+  checks it.
 - **Calibration gold set** (`content/ask-eval-calibration.ts`): human-labeled cases with a
   `canonicalAnswer` (handed to the judge directly, no feature call) and a `humanVerdict`.
   Keep ≥8 cases, biased to the hardest categories, with at least one negative
   (`humanVerdict: false`) so the agreement metric can catch a rubber-stamp judge.
-- A stream that errors mid-answer (upstream failure, timeout) is `errored` and excluded from the rates, so a gateway outage cannot pass a jailbreak item; only an output-guard abort is graded as an answer.
+- A stream that errors mid-answer (upstream failure, timeout) is `errored` and excluded from the rates, so a gateway outage cannot pass a jailbreak item; only an output-guard abort is graded as an answer. A judge API failure or unparseable judge reply on a corpus item is `errored` the same way (`gradeVerdict` in `lib/eval/ask-grading.ts`), so one Gateway blip cannot fail the 100% jailbreak gate.
 - Both files are Zod-validated by structural unit tests (`__tests__/ask-eval-corpus.test.ts`,
   `__tests__/ask-eval-calibration.test.ts`) that run without any API call — run `pnpm test`
   after editing to catch a malformed entry before CI spends Gateway tokens.

@@ -3,6 +3,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
 import type { HandlerContext } from '@/lib/server/route';
 
+const TEST_BODY_LIMIT = 4096;
+
 const rateLimitMock = vi.fn(async () => ({ success: true }));
 const hashIpMock = vi.fn(async () => 'hashed-ip-test');
 
@@ -43,6 +45,7 @@ describe('lib/server/route — defineHandler', () => {
     const { defineHandler, ok } = await import('@/lib/server/route');
     const POST = defineHandler({
       schema: TestSchema,
+      maxBodyBytes: TEST_BODY_LIMIT,
       rateLimit: () => ({ limit: rateLimitMock }),
       async handler({ body, requestId }) {
         return ok({ requestId, data: { echoed: body.name, count: body.count } });
@@ -71,6 +74,7 @@ describe('lib/server/route — defineHandler', () => {
     const handlerSpy = vi.fn(async () => ok({ requestId: 'never' }));
     const POST = defineHandler({
       schema: TestSchema,
+      maxBodyBytes: TEST_BODY_LIMIT,
       rateLimit: () => ({ limit: rateLimitMock }),
       rateLimitErrorMessage: 'slow down',
       handler: handlerSpy,
@@ -101,6 +105,7 @@ describe('lib/server/route — defineHandler', () => {
     const { defineHandler, ok } = await import('@/lib/server/route');
     const POST = defineHandler({
       schema: TestSchema,
+      maxBodyBytes: TEST_BODY_LIMIT,
       rateLimit: () => ({ limit: rateLimitMock }),
       handler: async ({ requestId }) => ok({ requestId }),
     });
@@ -117,6 +122,7 @@ describe('lib/server/route — defineHandler', () => {
     const { defineHandler, ok } = await import('@/lib/server/route');
     const POST = defineHandler({
       schema: TestSchema,
+      maxBodyBytes: TEST_BODY_LIMIT,
       rateLimit: () => ({ limit: rateLimitMock }),
       handler: async ({ requestId }) => ok({ requestId }),
     });
@@ -136,6 +142,7 @@ describe('lib/server/route — defineHandler', () => {
     const { defineHandler, ok } = await import('@/lib/server/route');
     const POST = defineHandler({
       schema: TestSchema,
+      maxBodyBytes: TEST_BODY_LIMIT,
       rateLimit: flakyLimiter,
       async handler({ requestId }) {
         return ok({ requestId, data: { reached: true } });
@@ -152,6 +159,7 @@ describe('lib/server/route — defineHandler', () => {
     const { defineHandler, ok } = await import('@/lib/server/route');
     const POST = defineHandler({
       schema: TestSchema,
+      maxBodyBytes: TEST_BODY_LIMIT,
       rateLimit: () => ({ limit: rateLimitMock }),
       async handler({ requestId }) {
         return ok({ requestId });
@@ -174,6 +182,7 @@ describe('lib/server/route — defineHandler', () => {
     const { defineHandler, ok } = await import('@/lib/server/route');
     const POST = defineHandler({
       schema: TestSchema,
+      maxBodyBytes: TEST_BODY_LIMIT,
       rateLimit: () => ({ limit: rateLimitMock }),
       async handler({ requestId }) {
         return ok({ requestId });
@@ -198,6 +207,7 @@ describe('lib/server/route — defineHandler', () => {
     let captured: HandlerContext<Body> | undefined;
     const POST = defineHandler({
       schema: TestSchema,
+      maxBodyBytes: TEST_BODY_LIMIT,
       rateLimit: () => ({ limit: rateLimitMock }),
       async handler(ctx) {
         captured = ctx;
@@ -289,6 +299,7 @@ describe('lib/server/route — cross-site requests', () => {
     const handlerSpy = vi.fn(async ({ requestId }: { requestId: string }) => ok({ requestId }));
     const POST = defineHandler({
       schema: TestSchema,
+      maxBodyBytes: TEST_BODY_LIMIT,
       rateLimit: () => ({ limit: rateLimitMock }),
       handler: handlerSpy,
     });
@@ -334,6 +345,7 @@ describe('lib/server/route — ip hash outage', () => {
     const handlerSpy = vi.fn(async () => ok({ requestId: 'never' }));
     const POST = defineHandler({
       schema: TestSchema,
+      maxBodyBytes: TEST_BODY_LIMIT,
       rateLimit: () => ({ limit: rateLimitMock }),
       handler: handlerSpy,
     });

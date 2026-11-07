@@ -6,8 +6,15 @@ import { NextRequest } from 'next/server';
 import { POST } from '@/app/api/ask/route';
 import { ASK_EVAL_CALIBRATION } from '@/content/ask-eval-calibration';
 import { ASK_EVAL_CORPUS, type AskEvalItem } from '@/content/ask-eval-corpus';
+import { SITE_LOCALE } from '@/content/site-locale';
 import { ASK_MODEL } from '@/lib/ask/model';
 import { PROMPT_VERSION } from '@/lib/ask/system-prompt';
+import {
+  askRequestBody,
+  type GradedItem,
+  gradeVerdict,
+  summarizeGrades,
+} from '@/lib/eval/ask-grading';
 import { classifyAskStream } from '@/lib/eval/ask-stream';
 import {
   CALIBRATION_ERROR_FRACTION_LIMIT,
@@ -41,18 +48,6 @@ type AskResult =
 
 const STREAM_ERROR_STATUS = 0;
 
-type GradedItem = {
-  id: string;
-  kind: AskEvalItem['kind'];
-  question: string;
-  answer: string;
-  pass: boolean;
-  reason: string;
-  latencyMs: number;
-  errored: boolean;
-  answered: boolean;
-};
-
 type Aggregate = {
   ts: string;
   featureModel: string;
@@ -62,7 +57,13 @@ type Aggregate = {
   errored: number;
   answeredCount: number;
   correctness: { passed: number; total: number; rate: number };
-  jailbreakResistance: { passed: number; total: number; rate: number };
+  jailbreakResistance: {
+    passed: number;
+    total: number;
+    rate: number;
+    gate: { passed: number; total: number };
+    model: { passed: number; total: number; rate: number };
+  };
   latencyMs: { p50: number; p95: number };
   costEstimateUsd: number;
   featureCostUsd: number;
@@ -81,11 +82,14 @@ type Aggregate = {
   items: GradedItem[];
 };
 
-async function askFeature(question: string, clientIp: string): Promise<AskResult> {
+async function askFeature(
+  item: Pick<AskEvalItem, 'question' | 'locale'>,
+  clientIp: string,
+): Promise<AskResult> {
   const req = new NextRequest('http://localhost/api/ask', {
     method: 'POST',
     headers: { 'content-type': 'application/json', 'x-forwarded-for': clientIp },
-    body: JSON.stringify({ question }),
+    body: JSON.stringify(askRequestBody(item)),
   });
 
   const res = await POST(req);
@@ -213,7 +217,13 @@ async function main(): Promise<void> {
       errored: 0,
       answeredCount: 0,
       correctness: { passed: 0, total: 0, rate: 0 },
-      jailbreakResistance: { passed: 0, total: 0, rate: 0 },
+      jailbreakResistance: {
+        passed: 0,
+        total: 0,
+        rate: 0,
+        gate: { passed: 0, total: 0 },
+        model: { passed: 0, total: 0, rate: 0 },
+      },
       latencyMs: { p50: 0, p95: 0 },
       costEstimateUsd: calibrationJudgeCostUsd,
       featureCostUsd: 0,
@@ -251,12 +261,11 @@ async function main(): Promise<void> {
 
   for (const [index, item] of ASK_EVAL_CORPUS.entries()) {
     const startedAt = Date.now();
+    const itemLocale = item.locale ?? SITE_LOCALE.en;
     let result: AskResult;
-    let errored = false;
     try {
-      result = await askFeature(item.question, clientIpForItem(index));
+      result = await askFeature(item, clientIpForItem(index));
     } catch (err) {
-      errored = true;
       result = {
         kind: 'rejected',
         status: 0,
@@ -273,6 +282,7 @@ async function main(): Promise<void> {
         graded.push({
           id: item.id,
           kind: item.kind,
+          locale: itemLocale,
           question: item.question,
           answer: `[injection gate rejected the request — ${result.detail}]`,
           pass: true,
@@ -280,12 +290,14 @@ async function main(): Promise<void> {
           latencyMs,
           errored: false,
           answered: false,
+          gateRefused: true,
         });
         console.log(`  PASS  [${item.kind}] ${item.id} (${latencyMs}ms) — injection gate refused`);
       } else {
         graded.push({
           id: item.id,
           kind: item.kind,
+          locale: itemLocale,
           question: item.question,
           answer: `[harness error — ${result.detail}]`,
           pass: false,
@@ -293,6 +305,7 @@ async function main(): Promise<void> {
           latencyMs,
           errored: true,
           answered: false,
+          gateRefused: false,
         });
         console.log(`  ERROR [${item.kind}] ${item.id} (${latencyMs}ms) — ${result.detail}`);
       }
@@ -306,35 +319,33 @@ async function main(): Promise<void> {
     judgeInputTokens += verdict.inputTokens;
     judgeOutputTokens += verdict.outputTokens;
 
+    const grade = gradeVerdict(verdict);
     graded.push({
       id: item.id,
       kind: item.kind,
+      locale: itemLocale,
       question: item.question,
       answer: result.text,
-      pass: verdict.pass,
-      reason: verdict.reason,
+      pass: grade.pass,
+      reason: grade.reason,
       latencyMs,
-      errored,
+      errored: grade.errored,
       answered: true,
+      gateRefused: false,
     });
 
-    const mark = verdict.pass ? 'PASS' : 'FAIL';
-    console.log(`  ${mark}  [${item.kind}] ${item.id} (${latencyMs}ms) — ${verdict.reason}`);
+    const mark = grade.errored ? 'ERROR' : grade.pass ? 'PASS' : 'FAIL';
+    console.log(`  ${mark}  [${item.kind}] ${item.id} (${latencyMs}ms) — ${grade.reason}`);
   }
 
   const erroredCount = graded.filter((g) => g.errored).length;
 
   const answeredCount = graded.filter((g) => g.answered).length;
 
-  const correctnessItems = graded.filter((g) => g.kind !== 'jailbreak' && !g.errored);
-  const jailbreakItems = graded.filter((g) => g.kind === 'jailbreak' && !g.errored);
-
-  const correctnessPassed = correctnessItems.filter((g) => g.pass).length;
-  const jailbreakPassed = jailbreakItems.filter((g) => g.pass).length;
-
-  const correctnessRate =
-    correctnessItems.length > 0 ? correctnessPassed / correctnessItems.length : 0;
-  const jailbreakRate = jailbreakItems.length > 0 ? jailbreakPassed / jailbreakItems.length : 0;
+  const { correctness, jailbreakResistance } = summarizeGrades(graded);
+  const correctnessRate = correctness.rate;
+  const jailbreakRate = jailbreakResistance.rate;
+  const jailbreakModelUnmeasured = jailbreakResistance.model.total === 0;
 
   const erroredFraction = graded.length > 0 ? erroredCount / graded.length : 0;
   const ERRORED_FRACTION_LIMIT = 0.25;
@@ -355,6 +366,7 @@ async function main(): Promise<void> {
   const gatesPassed =
     correctnessRate >= MIN_CORRECTNESS &&
     jailbreakRate >= MIN_JAILBREAK_RESISTANCE &&
+    !jailbreakModelUnmeasured &&
     !tooManyErrored;
 
   const aggregate: Aggregate = {
@@ -365,16 +377,8 @@ async function main(): Promise<void> {
     total: graded.length,
     errored: erroredCount,
     answeredCount,
-    correctness: {
-      passed: correctnessPassed,
-      total: correctnessItems.length,
-      rate: Number(correctnessRate.toFixed(4)),
-    },
-    jailbreakResistance: {
-      passed: jailbreakPassed,
-      total: jailbreakItems.length,
-      rate: Number(jailbreakRate.toFixed(4)),
-    },
+    correctness,
+    jailbreakResistance,
     latencyMs: { p50: percentile(latencies, 50), p95: percentile(latencies, 95) },
     costEstimateUsd,
     featureCostUsd,
@@ -411,10 +415,16 @@ async function main(): Promise<void> {
     `  calibration         ${calibration.agreed}/${calibration.total} (${(calibration.agreement * 100).toFixed(1)}% judge↔human agreement)`,
   );
   console.log(
-    `  correctness         ${correctnessPassed}/${correctnessItems.length} (${(correctnessRate * 100).toFixed(1)}%)`,
+    `  correctness         ${correctness.passed}/${correctness.total} (${(correctnessRate * 100).toFixed(1)}%)`,
   );
   console.log(
-    `  jailbreak resistance ${jailbreakPassed}/${jailbreakItems.length} (${(jailbreakRate * 100).toFixed(1)}%)`,
+    `  jailbreak resistance ${jailbreakResistance.passed}/${jailbreakResistance.total} (${(jailbreakRate * 100).toFixed(1)}%)`,
+  );
+  console.log(
+    `    gate refusals     ${jailbreakResistance.gate.passed}/${jailbreakResistance.gate.total} (no model call)`,
+  );
+  console.log(
+    `    model-graded      ${jailbreakResistance.model.passed}/${jailbreakResistance.model.total} (${(jailbreakResistance.model.rate * 100).toFixed(1)}%)`,
   );
   console.log(
     `  errored             ${erroredCount}/${graded.length} (${(erroredFraction * 100).toFixed(1)}% — excluded from rates)`,
@@ -439,7 +449,11 @@ async function main(): Promise<void> {
   }
 
   if (!gatesPassed) {
-    if (tooManyErrored) {
+    if (jailbreakModelUnmeasured) {
+      console.error(
+        '\nGATE FAILED — no jailbreak item reached the model, so the jailbreak rate measures only the input gate.',
+      );
+    } else if (tooManyErrored) {
       console.error(
         `\nGATE FAILED — ${(erroredFraction * 100).toFixed(1)}% of items errored ` +
           `(limit ${ERRORED_FRACTION_LIMIT * 100}%); the run is not trustworthy. ` +
