@@ -16,7 +16,7 @@ import { HOURS_PER_DAY, MS_PER_HOUR, pad2 } from '@/lib/time';
 import vercelConfig from '@/vercel.json';
 import { MeasuredStatus } from '../MeasuredStatus';
 
-type ScoresByStrategy = Record<Strategy, LighthouseScores | null>;
+type ScoresByStrategy = Partial<Record<Strategy, LighthouseScores | null>>;
 
 export const MEASURED_FIELD_SEPARATOR = ' · ';
 
@@ -109,9 +109,10 @@ export async function PerfData({ locale }: { locale: SiteLocale }) {
   const results = await Promise.all(
     strategies.map((strategy) => getScores(strategy.key).catch(() => null)),
   );
-  const scores = Object.fromEntries(
-    strategies.map((strategy, index) => [strategy.key, results[index] ?? null]),
-  ) as ScoresByStrategy;
+  const scores: ScoresByStrategy = {};
+  strategies.forEach((strategy, index) => {
+    scores[strategy.key] = results[index] ?? null;
+  });
   return <PerfBody locale={locale} scores={scores} />;
 }
 

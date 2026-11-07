@@ -9,6 +9,7 @@ import { GOOGLE_API_KEY_HEADER } from '@/lib/google-api';
 import {
   canonicalThumbnailUrl,
   type EnrichedVideo,
+  EnrichedVideoSchema,
   isShort,
   isShortUrl,
   type PlaylistItemsPayload,
@@ -41,40 +42,19 @@ const PLAYLIST_ITEMS_ENDPOINT = 'https://www.googleapis.com/youtube/v3/playlistI
 const CHANNEL_ID_PREFIX = 'UC';
 const UPLOADS_PLAYLIST_PREFIX = 'UU';
 
-export type ChannelStats = {
-  subscriberCount?: number;
-  videoCount?: number;
-};
-
-export type ChannelFeed = {
-  fetchedAt: string | null;
-  latest: EnrichedVideo | null;
-  history: EnrichedVideo[];
-  stats: ChannelStats;
-  channelUrl: string;
-};
-
-const VideoSchema = z.object({
-  id: z.string(),
-  title: z.string(),
-  url: z.string(),
-  thumbnailUrl: z.string(),
-  publishedAt: z.string(),
-  description: z.string().optional(),
-  duration: z.string().optional(),
-  viewCount: z.number().optional(),
-});
-
-const ChannelFeedSchema = z.object({
+export const ChannelFeedSchema = z.object({
   fetchedAt: z.string().nullable(),
-  latest: VideoSchema.nullable(),
-  history: z.array(VideoSchema),
+  latest: EnrichedVideoSchema.nullable(),
+  history: z.array(EnrichedVideoSchema),
   stats: z.object({
     subscriberCount: z.number().optional(),
     videoCount: z.number().optional(),
   }),
   channelUrl: z.string(),
 });
+
+export type ChannelFeed = z.infer<typeof ChannelFeedSchema>;
+export type ChannelStats = ChannelFeed['stats'];
 
 export const CHANNEL_URL = `https://www.youtube.com/${linksContent.channel.handle}`;
 
@@ -243,9 +223,7 @@ export async function loadFixtureFeed(
 ): Promise<ChannelFeed | null> {
   const path = vars[FEED_FIXTURE_ENV];
   if (!path || vars.VERCEL) return null;
-  const fixture: ChannelFeed = ChannelFeedSchema.parse(
-    JSON.parse(await readFile(path, 'utf8')),
-  ) as ChannelFeed;
+  const fixture = ChannelFeedSchema.parse(JSON.parse(await readFile(path, 'utf8')));
   return {
     ...fixture,
     latest: fixture.latest
@@ -281,10 +259,13 @@ async function loadChannelFeed(
   apiKey: string | undefined,
   deadline: AbortSignal,
 ): Promise<ChannelFeed> {
-  const [stats, deepVideos] = await Promise.all([
-    apiKey ? fetchStats(channelId, apiKey, deadline) : ({} as ChannelStats),
-    apiKey ? fetchDeepUploads(channelId, apiKey, deadline) : ([] as EnrichedVideo[]),
-  ]);
+  const statsRequest: Promise<ChannelStats> = apiKey
+    ? fetchStats(channelId, apiKey, deadline)
+    : Promise.resolve({});
+  const uploadsRequest: Promise<EnrichedVideo[]> = apiKey
+    ? fetchDeepUploads(channelId, apiKey, deadline)
+    : Promise.resolve([]);
+  const [stats, deepVideos] = await Promise.all([statsRequest, uploadsRequest]);
 
   let videos = deepVideos;
   if (videos.length === 0) {

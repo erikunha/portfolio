@@ -1,12 +1,22 @@
 import * as fs from 'node:fs/promises';
 import { join } from 'node:path';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, expectTypeOf, it, vi } from 'vitest';
+import type { z } from 'zod';
+import type { ChannelFeed, ChannelFeedSchema } from '@/lib/links/feed';
+import type { EnrichedVideo } from '@/lib/links/youtube';
 
 vi.mock('server-only', () => ({}));
 vi.mock('next/cache', () => ({ cacheLife: vi.fn() }));
 vi.mock('node:fs/promises', { spy: true });
 
 const FIXTURE = join(process.cwd(), 'tests/e2e/fixtures/links-feed.json');
+
+describe('ChannelFeed type', () => {
+  it('is the inferred type of the schema that parses the fixture, so a new field cannot drift', () => {
+    expectTypeOf<ChannelFeed>().toEqualTypeOf<z.infer<typeof ChannelFeedSchema>>();
+    expectTypeOf<NonNullable<ChannelFeed['latest']>>().toEqualTypeOf<EnrichedVideo>();
+  });
+});
 
 describe('loadFixtureFeed', () => {
   it('returns null when the flag is unset', async () => {

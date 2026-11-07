@@ -1,18 +1,22 @@
+import { z } from 'zod';
 import { pad2, SECONDS_PER_MINUTE } from '@/lib/time';
 
-export type FeedVideo = {
-  id: string;
-  title: string;
-  url: string;
-  thumbnailUrl: string;
-  publishedAt: string;
-  description?: string;
-};
+const FeedVideoSchema = z.object({
+  id: z.string(),
+  title: z.string(),
+  url: z.string(),
+  thumbnailUrl: z.string(),
+  publishedAt: z.string(),
+  description: z.string().optional(),
+});
 
-export type EnrichedVideo = FeedVideo & {
-  duration?: string;
-  viewCount?: number;
-};
+export const EnrichedVideoSchema = FeedVideoSchema.extend({
+  duration: z.string().optional(),
+  viewCount: z.number().optional(),
+});
+
+export type FeedVideo = z.infer<typeof FeedVideoSchema>;
+export type EnrichedVideo = z.infer<typeof EnrichedVideoSchema>;
 
 const ENTRY_RE = /<entry\b[^>]*>([\s\S]*?)<\/entry>/g;
 const VIDEO_ID_RE = /<yt:videoId>([^<]+)<\/yt:videoId>/;
