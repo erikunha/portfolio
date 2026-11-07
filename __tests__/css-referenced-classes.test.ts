@@ -9,6 +9,8 @@ const SOURCE_EXTENSIONS = new Set(['.ts', '.tsx', '.mdx', '.js', '.mjs']);
 const TEST_FILE = /\.(test|spec|e2e)\.[tj]sx?$/;
 const CLASS_TOKEN = /\.(-?[_a-zA-Z][\w-]*)/g;
 
+const CORPUS_TOKEN = /[\w-]+/g;
+
 const SCRIPT_SET_CLASSES: Record<string, string> = {};
 
 function stripComments(css: string): string {
@@ -71,7 +73,22 @@ function listSourceFiles(dir: string): string[] {
   });
 }
 
+function unreferencedClasses(declared: Set<string>, corpus: string): string[] {
+  const tokens = new Set(corpus.match(CORPUS_TOKEN) ?? []);
+  return [...declared]
+    .filter((name) => !(name in SCRIPT_SET_CLASSES))
+    .filter((name) => !tokens.has(name))
+    .sort();
+}
+
 describe('stylesheet class selectors', () => {
+  it('matches whole class tokens, so a longer name never vouches for a shorter one', () => {
+    expect(unreferencedClasses(new Set(['halt-plate']), 'className="footer-halt-plate"')).toEqual([
+      'halt-plate',
+    ]);
+    expect(unreferencedClasses(new Set(['halt-plate']), "cn('halt-plate', x)")).toEqual([]);
+  });
+
   it('references every class selector in app/css from shipped source', () => {
     // behavioral-test-allow: reads shipped stylesheets and source; no runtime can enumerate unused CSS selectors
     const corpus = SOURCE_ROOTS.flatMap((root) => listSourceFiles(path.join(ROOT, root)))
@@ -82,10 +99,7 @@ describe('stylesheet class selectors', () => {
       const css = stripComments(readFileSync(path.join(CSS_DIR, file), 'utf8'));
       for (const name of selectorClasses(css)) declared.add(name);
     }
-    const unreferenced = [...declared]
-      .filter((name) => !(name in SCRIPT_SET_CLASSES))
-      .filter((name) => !corpus.includes(name))
-      .sort();
+    const unreferenced = unreferencedClasses(declared, corpus);
     expect(
       unreferenced,
       'A class selector in app/css has no reference in components, app, design-system, content or lib. ' +

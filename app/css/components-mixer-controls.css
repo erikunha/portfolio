@@ -6,7 +6,6 @@
     background: color-mix(in srgb, var(--color-primary-500) 3%, transparent);
     border: 1px solid var(--color-primary-quiet);
     cursor: ew-resize;
-    outline: none;
   }
 
   .fader-track::before {
@@ -61,7 +60,6 @@
     gap: 1px;
     padding: 1px;
     cursor: ew-resize;
-    outline: none;
   }
 
   .vuSegFilled {
@@ -88,7 +86,6 @@
     flex-direction: column;
     align-items: center;
     gap: 3px;
-    outline: none;
     user-select: none;
   }
 
