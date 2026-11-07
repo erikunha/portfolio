@@ -146,6 +146,7 @@ export const IGNORED_PATHS = [
   'scripts/gitleaks-staged.d.mts',
   'scripts/gitleaks-staged.mjs',
   'scripts/guard-merge-main.mjs',
+  'scripts/guard-test-edits.mjs',
   'scripts/harness-size.json',
   'scripts/inspect-pr-comments.mjs',
   'scripts/lint-css-tokens.ts',
