@@ -27,6 +27,22 @@ describe('messageStore', () => {
     expect(listener).toHaveBeenCalledTimes(2);
   });
 
+  it('notifies subscribers when the field binds and unbinds', () => {
+    const listener = vi.fn();
+    messageStore.subscribe(listener);
+
+    const unbind = messageStore.bindField('contact-message-field');
+    expect(messageStore.getFieldId()).toBe('contact-message-field');
+    expect(
+      listener,
+      'a reader of the field id must re-render when it appears',
+    ).toHaveBeenCalledTimes(1);
+
+    unbind();
+    expect(messageStore.getFieldId()).toBeNull();
+    expect(listener).toHaveBeenCalledTimes(2);
+  });
+
   it('appends on a new line when text is already there', () => {
     messageStore.set('Hi Erik');
 

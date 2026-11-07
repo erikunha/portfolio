@@ -183,7 +183,7 @@ test.describe('contact timezone panel, visitor in Berlin', () => {
 
     await expect(panel.getByTestId('ctz-proposed')).toBeVisible();
     const link = panel.getByRole('link', { name: FOCUS_LINK_LABEL });
-    await expect(link).toBeVisible();
+    await expect(link).toBeVisible({ timeout: ISLAND_READY_TIMEOUT_MS });
     await expect(message).not.toBeFocused();
     await link.click();
     await expect(message).toBeFocused();

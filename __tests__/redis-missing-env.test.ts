@@ -4,8 +4,6 @@ vi.mock('@/lib/log', () => ({
   log: { info: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn() },
 }));
 
-const FAST_REJECTION_BUDGET_MS = 50;
-
 describe('getRedis without Upstash credentials', () => {
   beforeEach(() => {
     vi.resetModules();
@@ -22,11 +20,18 @@ describe('getRedis without Upstash credentials', () => {
     expect(() => getRedis()).not.toThrow();
   });
 
-  it('rejects a command immediately instead of retrying against a dead endpoint', async () => {
-    const { getRedis } = await import('@/lib/rate-limit');
-    const startedAt = performance.now();
-    await expect(getRedis().get('any')).rejects.toThrow(/UPSTASH_REDIS_REST/);
-    expect(performance.now() - startedAt).toBeLessThan(FAST_REJECTION_BUDGET_MS);
+  it('rejects a command without waiting on a timer, so no retry backs off against a dead endpoint', async () => {
+    vi.useFakeTimers();
+    try {
+      const { getRedis } = await import('@/lib/rate-limit');
+      await expect(getRedis().get('any')).rejects.toThrow(/UPSTASH_REDIS_REST/);
+      expect(
+        vi.getTimerCount(),
+        'a retry delay leaves a timer pending; under fake timers it would also never fire, so the rejection above would hang',
+      ).toBe(0);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('lets a caller recover through .catch', async () => {

@@ -1,5 +1,6 @@
 import { expect, type Page, test } from '@playwright/test';
 import { horizontalOverflow, VIEWPORTS } from './_helpers/geometry';
+import { gotoSettled } from './_helpers/streamed';
 
 const SIGNAL_GREEN = 'rgb(0, 255, 65)';
 const FIRST_THUMB = '.links-thumb';
@@ -30,7 +31,7 @@ test.describe('/links thumbnail theme overlay', () => {
   });
 
   test('every thumbnail sits in the themed frame', async ({ page }) => {
-    await page.goto('/links');
+    await gotoSettled(page, '/links');
     const images = page.locator('main a img[src*="ytimg"], main a img[src*="_next/image"]');
     const count = await images.count();
     expect(count).toBeGreaterThan(0);
@@ -44,7 +45,7 @@ test.describe('/links thumbnail theme overlay', () => {
   test('covers are grayscale under a signal-green multiply layer from the tokens', async ({
     page,
   }) => {
-    await page.goto('/links');
+    await gotoSettled(page, '/links');
     const filter = await page
       .locator(`${FIRST_THUMB} img`)
       .first()
@@ -58,7 +59,7 @@ test.describe('/links thumbnail theme overlay', () => {
 
   test('a real hover reveals the cover colour and the layer relaxes', async ({ page }) => {
     await page.setViewportSize(VIEWPORTS.DESKTOP);
-    await page.goto('/links');
+    await gotoSettled(page, '/links');
     await page.locator(`a:has(${FIRST_THUMB})`).first().hover();
     await expect.poll(async () => (await tint(page)).opacity, { timeout: 2000 }).toBeLessThan(0.5);
     await expect
@@ -75,7 +76,7 @@ test.describe('/links thumbnail theme overlay', () => {
 
   test('reduced motion removes the reveal transition', async ({ page }) => {
     await page.emulateMedia({ reducedMotion: 'reduce' });
-    await page.goto('/links');
+    await gotoSettled(page, '/links');
     const durations = await page
       .locator(`${FIRST_THUMB} img`)
       .first()
@@ -86,7 +87,7 @@ test.describe('/links thumbnail theme overlay', () => {
   for (const width of WIDTHS) {
     test(`no sideways scroll and a framed cover at ${width}`, async ({ page }) => {
       await page.setViewportSize({ width, height: VIEWPORTS.DESKTOP.height });
-      await page.goto('/links');
+      await gotoSettled(page, '/links');
       const overflow = await horizontalOverflow(page);
       expect(overflow).toBeLessThanOrEqual(0);
       await expect(page.locator(FIRST_THUMB).first()).toBeVisible();
@@ -96,7 +97,7 @@ test.describe('/links thumbnail theme overlay', () => {
   for (const width of WIDTHS) {
     test(`every cover frame is 16:9 and the image fills it at ${width}`, async ({ page }) => {
       await page.setViewportSize({ width, height: VIEWPORTS.DESKTOP.height });
-      await page.goto('/links');
+      await gotoSettled(page, '/links');
       await page.waitForLoadState('load');
       await page.evaluate(() => document.fonts.ready);
       await expect(page.locator(FIRST_THUMB).first()).toBeVisible();
