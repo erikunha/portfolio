@@ -95,7 +95,9 @@ describe('/api/ask budget settlement and log write', () => {
 
   it('refunds the output reservation when the model times out before the first token', async () => {
     streamTextMock.mockReturnValue({
-      textStream: (async function* () {})(),
+      textStream: (async function* () {
+        yield* [];
+      })(),
       usage: Promise.reject(new Error('aborted by timeout')),
       finishReason: Promise.resolve('stop'),
     });
