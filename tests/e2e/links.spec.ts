@@ -1,8 +1,11 @@
 import { expect, type Page, test } from '@playwright/test';
 import { SITE_HTML_LANG, SITE_LOCALE } from '@/content/site-locale';
+import { gotoSettled } from './_helpers/streamed';
 
 const LANGUAGE_NAV_NAME = /^(Idioma|Language)$/;
 const LANGUAGE_LINK_COUNT = 2;
+const TAGLINE_FRAME_MS = 150;
+const TAGLINE_HYDRATION_TIMEOUT_MS = 20_000;
 
 const languageSwitch = (page: Page) => page.getByRole('navigation', { name: LANGUAGE_NAV_NAME });
 
@@ -100,7 +103,8 @@ test.describe('/links link-in-bio', () => {
   });
 
   test('gives every interactive control a visible focus ring', async ({ page }) => {
-    await page.goto('/links');
+    test.slow();
+    await gotoSettled(page, '/links');
     const controls = page.locator('a:visible, button:visible');
     const count = await controls.count();
     expect(count).toBeGreaterThan(10);
@@ -120,7 +124,7 @@ test.describe('/links link-in-bio', () => {
   });
 
   test('sizes every block tap target at 44px or more', async ({ page }) => {
-    await page.goto('/links');
+    await gotoSettled(page, '/links');
     const targets = page.locator(
       'nav a:visible, [data-testid="links-pills"] a:visible, [data-testid="links-pills"] button:visible, [data-outbound="inscrever"]:visible',
     );
@@ -158,11 +162,19 @@ test.describe('/links link-in-bio', () => {
     await page.emulateMedia({ reducedMotion: 'no-preference' });
     await page.reload();
     const samples = new Set<string | null>();
-    for (let i = 0; i < 6; i++) {
-      samples.add(await identity.textContent());
-      await page.clock.runFor(150);
-    }
-    expect(samples.size, 'the tagline must type when motion is allowed').toBeGreaterThan(1);
+    await expect
+      .poll(
+        async () => {
+          samples.add(await identity.textContent());
+          await page.clock.runFor(TAGLINE_FRAME_MS);
+          return samples.size;
+        },
+        {
+          message: 'the tagline must type when motion is allowed',
+          timeout: TAGLINE_HYDRATION_TIMEOUT_MS,
+        },
+      )
+      .toBeGreaterThan(1);
   });
 
   test('renders the English title on the English route', async ({ page }) => {

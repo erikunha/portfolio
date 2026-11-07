@@ -1,4 +1,6 @@
 import { expect, type Page, test } from '@playwright/test';
+import { waitForStableHref, waitForStablePosition } from './_helpers/geometry';
+import { gotoSettled } from './_helpers/streamed';
 
 const SECTION = 'sec-projects';
 const VIEWPORTS = [
@@ -12,15 +14,26 @@ const SWITCH = '[data-lang-switch]:visible';
 const target = (page: Page, locale: 'en' | 'pt') =>
   page.locator(`${SWITCH} a[hreflang="${locale}"]`).first();
 
+async function pressInPlace(page: Page, locale: 'en' | 'pt') {
+  const box = await target(page, locale).boundingBox();
+  expect(box, 'the language switch must be laid out before it is pressed').not.toBeNull();
+  await page.mouse.click(
+    (box?.x ?? 0) + (box?.width ?? 0) / 2,
+    (box?.y ?? 0) + (box?.height ?? 0) / 2,
+  );
+}
+
 for (const viewport of VIEWPORTS) {
   test.describe(`language switch keeps the section at ${viewport.name}`, () => {
     test.use({ viewport: { width: viewport.width, height: viewport.height } });
 
     test('en to pt lands on the same section', async ({ page }) => {
-      await page.goto(`/#${SECTION}`);
+      await gotoSettled(page, `/#${SECTION}`);
+      await waitForStablePosition(page, `#${SECTION}`);
       await expect(target(page, 'pt')).toHaveAttribute('href', `/pt#${SECTION}`);
+      await waitForStableHref(page, '[data-lang-switch] a[hreflang="pt"]');
 
-      await target(page, 'pt').click();
+      await pressInPlace(page, 'pt');
 
       await expect(page).toHaveURL(new RegExp(`/pt#${SECTION}$`));
       await expect
@@ -36,10 +49,12 @@ for (const viewport of VIEWPORTS) {
     });
 
     test('pt to en lands on the same section', async ({ page }) => {
-      await page.goto(`/pt#${SECTION}`);
+      await gotoSettled(page, `/pt#${SECTION}`);
+      await waitForStablePosition(page, `#${SECTION}`);
       await expect(target(page, 'en')).toHaveAttribute('href', `/#${SECTION}`);
+      await waitForStableHref(page, '[data-lang-switch] a[hreflang="en"]');
 
-      await target(page, 'en').click();
+      await pressInPlace(page, 'en');
 
       await expect(page).toHaveURL(new RegExp(`/#${SECTION}$`));
       await expect
@@ -48,7 +63,7 @@ for (const viewport of VIEWPORTS) {
     });
 
     test('follows the section the reader scrolled to, not only the address', async ({ page }) => {
-      await page.goto('/');
+      await gotoSettled(page, '/');
       await page.locator(`#${SECTION}`).scrollIntoViewIfNeeded();
       await page.evaluate(
         (id) =>
@@ -65,7 +80,7 @@ for (const viewport of VIEWPORTS) {
     });
 
     test('at the top of the page the switch stays a plain page link', async ({ page }) => {
-      await page.goto('/');
+      await gotoSettled(page, '/');
 
       await expect(target(page, 'pt')).toHaveAttribute('href', '/pt');
     });

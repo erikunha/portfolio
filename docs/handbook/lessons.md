@@ -120,3 +120,14 @@ Ranked by how often review caught each class on this repository.
 8. Rename leftovers: do comments, labels or error strings still name the old thing?
 9. Identity or copy change: checked `content/*`, `lib/ask/system-prompt.ts`,
    `content/ask-eval-corpus.ts`, `public/llms.txt`, the CV PDF and JSON-LD?
+34. `page.goto` resolves at `load`, before React swaps a streamed Suspense boundary in. A spec that
+    measures or counts anything under `#sec-live-metrics`, `#sec-live-perf` or the `/links` feed
+    navigates with `gotoSettled` (`tests/e2e/_helpers/streamed.ts`). A read in the gap sees the
+    fallback, and the swap then detaches it: `getComputedStyle` returns `''` and `NaN` follows.
+    Check: `tests/e2e/streamed-settle.spec.ts`.
+35. A `PerformanceObserver` for `longtask` is installed after the page is idle and without
+    `buffered: true`. Buffered entries include the hydration tasks of page load, which are not the
+    interaction under test. Check: `cross-cutting.spec.ts` test 4b.
+36. CI fails a test that passes on a retry (`failOnFlakyTests`). Fix the race, never the retry
+    count: wait on the state the assertion reads (`expect.poll`, `toPass`, `gotoSettled`), not on a
+    timeout. Check: `__tests__/scripts/playwright-flaky-policy.test.ts`.

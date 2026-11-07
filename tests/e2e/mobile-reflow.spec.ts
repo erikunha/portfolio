@@ -1,4 +1,5 @@
 import { expect, type Locator, test } from '@playwright/test';
+import { gotoSettled } from './_helpers/streamed';
 
 const MOBILE = { width: 390, height: 844 };
 const DESKTOP = { width: 1280, height: 720 };
@@ -117,20 +118,20 @@ test('the contact submit button spans its row below 768 and keeps its size at 12
       return row ? Math.round(row.width - button.getBoundingClientRect().width) : Number.NaN;
     });
   await page.setViewportSize(MOBILE);
-  await page.goto('/');
-  expect(await rowGap(), 'free space beside the button on a phone').toBeLessThanOrEqual(
-    EDGE_TOLERANCE_PX,
-  );
+  await gotoSettled(page, '/');
+  await expect
+    .poll(rowGap, { message: 'free space beside the button on a phone' })
+    .toBeLessThanOrEqual(EDGE_TOLERANCE_PX);
   await page.setViewportSize(DESKTOP);
-  expect(await rowGap(), 'the desktop button keeps its natural width').toBeGreaterThan(
-    EDGE_TOLERANCE_PX,
-  );
+  await expect
+    .poll(rowGap, { message: 'the desktop button keeps its natural width' })
+    .toBeGreaterThan(EDGE_TOLERANCE_PX);
 });
 
 for (const bar of ['.shell-chrome', '.contact-chrome']) {
   test(`${bar} keeps the window dots left and centres its labels at 375`, async ({ page }) => {
     await page.setViewportSize({ width: 375, height: 812 });
-    await page.goto('/');
+    await gotoSettled(page, '/');
     const chrome = page.locator(bar).first();
     await chrome.scrollIntoViewIfNeeded();
     const layout = await chrome.evaluate((element) => {
