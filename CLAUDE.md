@@ -89,7 +89,7 @@ Invoke the named skill inline (not as a subagent) before the described action. P
 - Upstash Redis for rate-limit + KV log
 - Vercel AI Gateway via the AI SDK v7 (`ai` package, `streamText`) with the model string `anthropic/claude-haiku-4-5` for `/api/ask`; ephemeral prompt cache preserved via `providerOptions.anthropic.cacheControl` on a system message (`allowSystemInMessages: true`); cache-token breakdown read from `usage.inputTokenDetails`. Needs `AI_GATEWAY_API_KEY` (OIDC token on Vercel). Migrated to the Gateway 2026-05-21; upgraded v6→v7 2026-07-02 — see DECISIONS.md.
 - Resend for contact form delivery
-- Playwright E2E: observability smoke (`tests/e2e/observability-smoke.spec.ts`), a11y scan (`tests/a11y/axe.spec.ts`), contact + ask user-journey tests, visual regression snapshots; 6-project matrix (chromium, chromium-mobile, webkit-desktop, webkit-mobile, chromium-components, chromium-mobile-components)
+- Playwright E2E: observability smoke (`tests/e2e/observability-smoke.spec.ts`), a11y scan (`tests/a11y/axe.spec.ts`), contact + ask user-journey tests, visual regression snapshots; 8-project matrix (chromium, chromium-mobile, webkit-desktop, webkit-mobile, and their four `-components` projects)
 - Vitest unit tests
 - axe-core a11y CI gate
 - Lighthouse CI gates

@@ -9,7 +9,7 @@ const matrix = (job.match(/project:\s*\[([^\]]*)\]/)?.[1] ?? '')
   .map((s) => s.trim())
   .filter(Boolean);
 
-const UNGATED_PROJECTS = ['webkit-desktop-components', 'webkit-mobile-components'];
+const UNGATED_PROJECTS: readonly string[] = [];
 
 describe('ci.yml e2e-functional matrix', () => {
   it('runs every Playwright project except the declared ungated ones', () => {

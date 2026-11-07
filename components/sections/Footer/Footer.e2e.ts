@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { waitForHydration } from '../../../tests/e2e/_helpers/hydration';
 
 async function loadFooter(page: import('@playwright/test').Page) {
   await page.emulateMedia({ reducedMotion: 'reduce' });
@@ -55,6 +56,7 @@ test.describe('Footer', () => {
   }) => {
     await page.emulateMedia({ reducedMotion: 'reduce' });
     await page.goto('/');
+    await waitForHydration(page, '[data-testid="shell-form"]');
     const input = page.getByRole('textbox', { name: 'shell command', exact: true });
     await input.fill('help');
     await input.press('Enter');
