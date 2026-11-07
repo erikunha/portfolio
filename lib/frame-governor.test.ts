@@ -302,47 +302,45 @@ describe('frame governor runtime', () => {
     expect(cancelled).toHaveLength(1);
   });
 
-  it('publishes the level as data-crt-level and to subscribers', async () => {
-    const { acquireFrameGovernor, subscribeFrameGovernor, getFrameGovernorTickMultiplier } =
-      await import('./frame-governor');
-    const heard: number[] = [];
-    const unsubscribe = subscribeFrameGovernor((level) => heard.push(level));
+  it('publishes the level as data-crt-level', async () => {
+    const { acquireFrameGovernor, getFrameGovernorTickMultiplier } = await import(
+      './frame-governor'
+    );
     const release = acquireFrameGovernor();
     expect(document.documentElement.dataset.crtLevel).toBe('0');
     expect(getFrameGovernorTickMultiplier()).toBe(1);
 
     runFrames(0, 60 * SECOND_MS, OVERLOADED_FRAME_MS);
 
-    expect(heard[0]).toBe(1);
-    expect(document.documentElement.dataset.crtLevel).toBe(String(heard.at(-1)));
+    expect(Number(document.documentElement.dataset.crtLevel)).toBeGreaterThan(0);
     expect(getFrameGovernorTickMultiplier()).toBeGreaterThan(1);
-    unsubscribe();
     release();
   });
 
   it('removes the attribute and returns to full rate when the last holder releases', async () => {
-    const { acquireFrameGovernor, getFrameGovernorLevel, getFrameGovernorTickMultiplier } =
-      await import('./frame-governor');
+    const { acquireFrameGovernor, getFrameGovernorTickMultiplier } = await import(
+      './frame-governor'
+    );
     const releaseA = acquireFrameGovernor();
     const releaseB = acquireFrameGovernor();
     runFrames(0, 60 * SECOND_MS, OVERLOADED_FRAME_MS);
-    expect(getFrameGovernorLevel()).toBeGreaterThan(0);
+    expect(Number(document.documentElement.dataset.crtLevel ?? 0)).toBeGreaterThan(0);
 
     releaseA();
     expect(pending, 'one holder is still sampling').toHaveLength(1);
-    expect(getFrameGovernorLevel()).toBeGreaterThan(0);
+    expect(Number(document.documentElement.dataset.crtLevel ?? 0)).toBeGreaterThan(0);
 
     releaseB();
-    expect(getFrameGovernorLevel()).toBe(0);
+    expect(Number(document.documentElement.dataset.crtLevel ?? 0)).toBe(0);
     expect(getFrameGovernorTickMultiplier()).toBe(1);
     expect(document.documentElement.hasAttribute('data-crt-level')).toBe(false);
   });
 
   it('pauses while the tab is hidden and resumes without losing the level', async () => {
-    const { acquireFrameGovernor, getFrameGovernorLevel } = await import('./frame-governor');
+    const { acquireFrameGovernor } = await import('./frame-governor');
     const release = acquireFrameGovernor();
     const t = runFrames(0, 60 * SECOND_MS, OVERLOADED_FRAME_MS);
-    const level = getFrameGovernorLevel();
+    const level = Number(document.documentElement.dataset.crtLevel ?? 0);
     expect(level).toBeGreaterThan(0);
 
     setHidden(true);
@@ -351,7 +349,7 @@ describe('frame governor runtime', () => {
     setHidden(false);
     expect(pending).toHaveLength(1);
     runFrames(t + 60 * SECOND_MS, 5 * SECOND_MS, CAPABLE_FRAME_MS);
-    expect(getFrameGovernorLevel()).toBe(level);
+    expect(Number(document.documentElement.dataset.crtLevel ?? 0)).toBe(level);
     release();
   });
 
@@ -389,14 +387,13 @@ describe('frame governor runtime', () => {
     release();
   });
 
-  function runUntilLevel(
-    getLevel: () => number,
-    level: number,
-    from: number,
-    frameMs: number,
-  ): number {
+  function runUntilLevel(level: number, from: number, frameMs: number): number {
     let t = from;
-    while (getLevel() !== level && pending.length > 0 && t < from + 600 * SECOND_MS) {
+    while (
+      Number(document.documentElement.dataset.crtLevel ?? 0) !== level &&
+      pending.length > 0 &&
+      t < from + 600 * SECOND_MS
+    ) {
       t += frameMs;
       step(t);
     }
@@ -427,11 +424,11 @@ describe('frame governor runtime', () => {
   });
 
   it('steps the paused CRT effects at the level interval once the device falls behind', async () => {
-    const { acquireFrameGovernor, getFrameGovernorLevel } = await import('./frame-governor');
+    const { acquireFrameGovernor } = await import('./frame-governor');
     const { CRT_BASE_TICK_MS } = await import('./crt-effect-stepper');
     const release = acquireFrameGovernor();
-    const t = runUntilLevel(getFrameGovernorLevel, 2, 0, OVERLOADED_FRAME_MS);
-    expect(getFrameGovernorLevel()).toBe(2);
+    const t = runUntilLevel(2, 0, OVERLOADED_FRAME_MS);
+    expect(Number(document.documentElement.dataset.crtLevel ?? 0)).toBe(2);
 
     const window = 2 * SECOND_MS;
     const count = distinctClocks(t, window);
@@ -444,9 +441,9 @@ describe('frame governor runtime', () => {
   });
 
   it('advances the effect clocks by real time, so the animation keeps its speed', async () => {
-    const { acquireFrameGovernor, getFrameGovernorLevel } = await import('./frame-governor');
+    const { acquireFrameGovernor } = await import('./frame-governor');
     const release = acquireFrameGovernor();
-    const t = runUntilLevel(getFrameGovernorLevel, 1, 0, OVERLOADED_FRAME_MS);
+    const t = runUntilLevel(1, 0, OVERLOADED_FRAME_MS);
     const before = clocks[0]?.currentTime ?? 0;
     runFrames(t, 4 * SECOND_MS, CAPABLE_FRAME_MS);
     const advanced = (clocks[0]?.currentTime ?? 0) - before;
@@ -456,13 +453,13 @@ describe('frame governor runtime', () => {
   });
 
   it('does not count the time spent at full rate when the device falls behind again', async () => {
-    const { acquireFrameGovernor, getFrameGovernorLevel } = await import('./frame-governor');
+    const { acquireFrameGovernor } = await import('./frame-governor');
     const release = acquireFrameGovernor();
-    let t = runUntilLevel(getFrameGovernorLevel, 1, 0, OVERLOADED_FRAME_MS);
-    t = runUntilLevel(getFrameGovernorLevel, 0, t, CAPABLE_FRAME_MS);
+    let t = runUntilLevel(1, 0, OVERLOADED_FRAME_MS);
+    t = runUntilLevel(0, t, CAPABLE_FRAME_MS);
     const clock = clocks[0]?.currentTime;
     t = runFrames(t, 120 * SECOND_MS, CAPABLE_FRAME_MS);
-    runUntilLevel(getFrameGovernorLevel, 1, t, OVERLOADED_FRAME_MS);
+    runUntilLevel(1, t, OVERLOADED_FRAME_MS);
     expect(
       clocks[0]?.currentTime,
       'the CSS animation already advanced while it ran, so the stepper must resume from where the clock stands',
@@ -471,9 +468,9 @@ describe('frame governor runtime', () => {
   });
 
   it('does not fast-forward the effects across a hidden tab', async () => {
-    const { acquireFrameGovernor, getFrameGovernorLevel } = await import('./frame-governor');
+    const { acquireFrameGovernor } = await import('./frame-governor');
     const release = acquireFrameGovernor();
-    const t = runUntilLevel(getFrameGovernorLevel, 1, 0, OVERLOADED_FRAME_MS);
+    const t = runUntilLevel(1, 0, OVERLOADED_FRAME_MS);
     runFrames(t, SECOND_MS, CAPABLE_FRAME_MS);
     const before = clocks[0]?.currentTime;
 
@@ -483,5 +480,14 @@ describe('frame governor runtime', () => {
 
     expect(clocks[0]?.currentTime).toBe(before);
     release();
+  });
+});
+
+describe('frame governor rate table', () => {
+  it('has one rate divisor per level, so no level falls back to full rate silently', async () => {
+    const { FRAME_GOVERNOR_CONFIG, FRAME_GOVERNOR_RATE_DIVISORS } = await import(
+      './frame-governor'
+    );
+    expect(FRAME_GOVERNOR_RATE_DIVISORS).toHaveLength(FRAME_GOVERNOR_CONFIG.maxLevel + 1);
   });
 });

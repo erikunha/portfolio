@@ -1,4 +1,5 @@
 import { CRT_BASE_TICK_MS, createEffectStepper } from '@/lib/crt-effect-stepper';
+import { SYSFAIL_END, SYSFAIL_START } from '@/lib/events';
 import { readMotion } from '@/lib/motion';
 import { subscribeMotion } from '@/lib/motion-change';
 
@@ -38,8 +39,6 @@ export const FRAME_GOVERNOR_RATE_DIVISORS: readonly number[] = [1, 2, 4, 8, 16, 
 const NO_LEVEL = 0;
 const HOLD_GROWTH = 2;
 const LEVEL_DATASET_KEY = 'crtLevel';
-const SYSFAIL_START = 'sysfail:start';
-const SYSFAIL_END = 'sysfail:end';
 
 type Sample = { ts: number; delta: number };
 
@@ -146,32 +145,18 @@ export function createFrameGovernor(
   };
 }
 
-type Listener = (level: number) => void;
-
 let holders = 0;
 let currentLevel = NO_LEVEL;
 let raf = 0;
 let sampling = false;
 let detach: (() => void) | undefined;
-const listeners = new Set<Listener>();
-
-export function getFrameGovernorLevel(): number {
-  return currentLevel;
-}
-
 export function getFrameGovernorTickMultiplier(): number {
   return FRAME_GOVERNOR_RATE_DIVISORS[currentLevel] ?? 1;
-}
-
-export function subscribeFrameGovernor(listener: Listener): () => void {
-  listeners.add(listener);
-  return () => listeners.delete(listener);
 }
 
 function publish(level: number) {
   currentLevel = level;
   document.documentElement.dataset[LEVEL_DATASET_KEY] = String(level);
-  for (const listener of listeners) listener(level);
 }
 
 function start() {
