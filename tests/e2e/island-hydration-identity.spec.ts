@@ -1,5 +1,6 @@
 import { expect, type Page, test } from '@playwright/test';
 import { waitForHydration } from './_helpers/hydration';
+import { drainRoutes } from './_helpers/routes';
 
 const ISLAND_DELAY_MS = 2500;
 const ISLAND_CHUNK_MARKERS = ['contact-count', 'shell-form'];
@@ -42,6 +43,8 @@ async function delayIslandChunks(page: Page): Promise<string[]> {
   });
   return delayed;
 }
+
+test.afterEach(({ page }) => drainRoutes(page));
 
 for (const island of ISLANDS) {
   test(`the server-rendered ${island.name} input is the same node after hydration`, async ({

@@ -1,0 +1,28 @@
+2026-11-07T12:19:47.0826576Z   ✓  745 [chromium] › tests/e2e/type-scale.spec.ts:127:5 › type scale › community block fills the section width at 1280 (303ms)
+2026-11-07T12:19:47.4744662Z   ✓  746 [chromium] › tests/e2e/type-scale.spec.ts:143:5 › type scale › README code panel never scrolls sideways at 1280 (378ms)
+2026-11-07T12:19:47.5329100Z ##[notice]  1 flaky
+2026-11-07T12:19:47.5365075Z 
+2026-11-07T12:19:47.5365081Z 
+2026-11-07T12:19:47.5365241Z       42 |       await target(page, 'en').click();
+2026-11-07T12:19:47.5365754Z       43 |
+2026-11-07T12:19:47.5366103Z     > 44 |       await expect(page).toHaveURL(new RegExp(`/#${SECTION}$`));
+2026-11-07T12:19:47.5366494Z          |                          ^
+2026-11-07T12:19:47.5366774Z       45 |       await expect
+2026-11-07T12:19:47.5367468Z       46 |         .poll(() => page.evaluate(() => window.scrollY), { timeout: LOAD_SCROLL_TIMEOUT_MS })
+2026-11-07T12:19:47.5368327Z       47 |         .toBeGreaterThan(0);
+2026-11-07T12:19:47.5369292Z         at /home/runner/work/portfolio/portfolio/tests/e2e/locale-switch-position.spec.ts:44:26
+2026-11-07T12:19:47.5369985Z 
+2026-11-07T12:19:47.5370875Z     Error Context: test-results/e2e-locale-switch-position-5cb3a-n-lands-on-the-same-section-chromium-retry1/error-context.md
+2026-11-07T12:19:47.5371927Z 
+2026-11-07T12:19:47.5372842Z     attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+2026-11-07T12:19:47.5373670Z     test-results/e2e-locale-switch-position-5cb3a-n-lands-on-the-same-section-chromium-retry1/trace.zip
+2026-11-07T12:19:47.5374307Z     Usage:
+2026-11-07T12:19:47.5374511Z 
+2026-11-07T12:19:47.5375245Z         pnpm exec playwright show-trace test-results/e2e-locale-switch-position-5cb3a-n-lands-on-the-same-section-chromium-retry1/trace.zip
+2026-11-07T12:19:47.5375848Z 
+2026-11-07T12:19:47.5376245Z     ────────────────────────────────────────────────────────────────────────────────────────────────
+2026-11-07T12:19:47.5376541Z 
+2026-11-07T12:19:47.5376628Z   1 flaky
+2026-11-07T12:19:47.5377363Z     [chromium] › tests/e2e/locale-switch-position.spec.ts:38:5 › language switch keeps the section at phone › pt to en lands on the same section 
+2026-11-07T12:19:47.5377987Z   3 skipped
+2026-11-07T12:19:47.5378204Z   740 passed (5.2m)

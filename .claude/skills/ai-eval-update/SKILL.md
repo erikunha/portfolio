@@ -9,9 +9,10 @@ description: Use when maintaining the /api/ask evaluation harness — adding or 
 `pnpm ask:eval` drives the real `/api/ask` handler over a fixed corpus, grades each
 answer with a judge model, and gates on correctness + jailbreak-resistance. A judge
 self-calibration pass runs FIRST so a drifted judge cannot silently mis-grade the corpus.
-Results write to `ask-eval-result.json` and (when Upstash is configured) to the Upstash Redis key
-`ask:eval:latest`, which the live metrics panel reads.
-- Feature model: `anthropic/claude-haiku-4-5`. Judge model: `anthropic/claude-sonnet-4-6`.
+Results write to `ask-eval-result.json`. The Upstash Redis key `ask:eval:latest`, which the live
+metrics panel reads, is written only when `EVAL_PUBLISH=1` and Redis credentials are both set, which
+only the scheduled `ask-eval.yml` workflow does.
+- Feature model: `anthropic/claude-haiku-4-5` at `ASK_TEMPERATURE` (`lib/ask/limits.ts`). Judge model: `anthropic/claude-sonnet-4-6` at temperature 0.
 - Requires `AI_GATEWAY_API_KEY`. In CI (where `ai-eval` is a required gate) a missing key
   is a hard failure; locally it skips with exit 0.
 
@@ -19,8 +20,9 @@ Results write to `ask-eval-result.json` and (when Upstash is configured) to the 
 
     pnpm ask:eval          # calibration → corpus → grade → gate
                            # always writes ask-eval-result.json
-                           # writes ask:eval:latest to Upstash Redis only when
-                           # UPSTASH_REDIS_REST_URL + UPSTASH_REDIS_REST_TOKEN are set
+                           # never publishes locally: without EVAL_PUBLISH=1 the script
+                           # removes every Redis credential from its environment, so
+                           # `vercel env run -- pnpm ask:eval` cannot touch production data
 
 The CI `ai-eval` job runs the same `pnpm ask:eval`. It is path-filtered by the
 `detect-changes` job: it fires for ANY AI-relevant change, not just the eval files —
@@ -60,10 +62,28 @@ cases are deliberately borderline-hard.
   goes unmeasured (the run fails when no jailbreak reaches the model). An item that mentions an
   override phrase in a normal question must stay out of the gate; `__tests__/ask-eval-corpus.test.ts`
   checks it.
+- **Write criteria as key facts, not lists.** A factual item declares `facts` (1 to `MAX_CRITERION_FACTS`,
+  currently 4): the few things a concise answer must carry. Each fact must appear in the criterion text
+  and in `SYSTEM_TEXT`, so an answer is never graded against something the model cannot know. Take
+  figures from `receiptDelta(...)`, `PROFILE_FACT`, `profile` and `YEARS_OF_EXPERIENCE_LABEL` instead of
+  retyping them. Do not enumerate a whole skill list or add a metric the question did not ask about:
+  the feature answers in under 200 words and the omission fails on model variance, not on quality.
+  An off-topic criterion must accept the related-question redirect the system prompt asks for.
 - **Calibration gold set** (`content/ask-eval-calibration.ts`): human-labeled cases with a
   `canonicalAnswer` (handed to the judge directly, no feature call) and a `humanVerdict`.
-  Keep ≥8 cases, biased to the hardest categories, with at least one negative
-  (`humanVerdict: false`) so the agreement metric can catch a rubber-stamp judge.
+  Keep ≥20 cases, biased to the hardest categories, with at least one negative
+  (`humanVerdict: false`) so the agreement metric can catch a rubber-stamp judge. The borderline
+  cases carry a `trap` tag (`near-miss-omission`, `harmless-extra`, `fabricated-extra`,
+  `wrong-number`, `wrong-language`, `allowed-redirect`, `trivia-answered`, `paraphrase`): at least
+  six, both verdicts, and a negative gold case must contradict the criterion, contradict the fact
+  sheet or omit a named fact. Two more traps cover the fact sheet: `true-fact-absent` (a true fact
+  the criterion does not name, must pass) and `false-date` (a wrong date, must fail).
+- **The judge sees a fact sheet.** `buildJudgeFactSheet` (`lib/eval/fact-sheet.ts`) renders the run
+  date, the current title, the core stack and AI focus, the stack, work authorization and targeting lines from `content/ask-facts.ts` (the module the system prompt composes them from), the credentials, the employment history
+  and the education from content, and `scripts/ask-eval.ts` passes it
+  to the calibration pass and to every corpus grade. A claim that matches the sheet is never
+  fabricated, so a criterion may leave out a true fact without failing the answer that states it.
+  Add a field to the sheet when a criterion starts depending on a fact the sheet does not carry. A fact about Erik that the system prompt states belongs in `content/ask-facts.ts`, never as a literal in `lib/ask/system-prompt.ts`, so the sheet and the prompt cannot diverge.
 - A stream that errors mid-answer (upstream failure, timeout) is `errored` and excluded from the rates, so a gateway outage cannot pass a jailbreak item; only an output-guard abort is graded as an answer. A judge API failure or unparseable judge reply on a corpus item is `errored` the same way (`gradeVerdict` in `lib/eval/ask-grading.ts`), so one Gateway blip cannot fail the 100% jailbreak gate.
 - Both files are Zod-validated by structural unit tests (`__tests__/ask-eval-corpus.test.ts`,
   `__tests__/ask-eval-calibration.test.ts`) that run without any API call — run `pnpm test`
@@ -73,7 +93,7 @@ cases are deliberately borderline-hard.
 
 - The persona scope or SYSTEM prompt narrows/changes (`lib/ask/system-prompt.ts`).
 - The answer-length cap or stream-error sentinel protocol changes
-  (`app/api/ask/route.ts`) — can stale an output-validation gold case.
+  (`lib/ask/stream.ts`, `lib/ask/output-guard.ts`) — can stale an output-validation gold case.
 - A factual ground-truth source changes (e.g. `lib/hiring-profile.ts`).
 
 ## Budget

@@ -16,7 +16,7 @@ export type CalibrationGoldCase = {
 
 export async function runCalibration(
   goldSet: CalibrationGoldCase[],
-  opts: { model: string },
+  opts: { model: string; factSheet?: string },
 ): Promise<CalibrationResult> {
   const cases: CalibrationCase[] = [];
   let judgeInputTokens = 0;
@@ -26,7 +26,7 @@ export async function runCalibration(
     const verdict = await judge(
       { id: item.id, question: item.prompt, kind: item.kind ?? 'calibration', expect: item.expect },
       item.canonicalAnswer,
-      { model: opts.model },
+      opts,
     );
     judgeInputTokens += verdict.inputTokens;
     judgeOutputTokens += verdict.outputTokens;

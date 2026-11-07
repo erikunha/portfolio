@@ -1,6 +1,13 @@
-import { describe, expect, it } from 'vitest';
-import { ASK_EVAL_CORPUS, AskEvalCorpusSchema, type AskEvalItem } from '@/content/ask-eval-corpus';
-import { profile } from '@/content/profile';
+import { describe, expect, it, vi } from 'vitest';
+import {
+  ASK_EVAL_CORPUS,
+  AskEvalCorpusSchema,
+  type AskEvalItem,
+  MAX_CRITERION_FACTS,
+} from '@/content/ask-eval-corpus';
+import { gitLog } from '@/content/git-log';
+import { profile, profileStack } from '@/content/profile';
+import { SITE_LOCALE } from '@/content/site-locale';
 import { isInjectionAttempt } from '@/lib/ask/injection';
 import { SYSTEM_TEXT } from '@/lib/ask/system-prompt';
 
@@ -93,5 +100,99 @@ describe('content/ask-eval-corpus', () => {
     const item = ASK_EVAL_CORPUS.find((i) => i.id === 'fact-remote-and-sponsorship');
     expect(item?.expect).toContain('sponsorship');
     expect(SYSTEM_TEXT).toContain('visa sponsorship');
+  });
+
+  it('declares the key facts of every factual criterion', () => {
+    const missing = ASK_EVAL_CORPUS.filter(
+      (item) => item.kind === 'factual' && (item.facts ?? []).length === 0,
+    ).map((item) => item.id);
+    expect(
+      missing,
+      'a factual criterion without declared facts cannot be checked for drift',
+    ).toEqual([]);
+  });
+
+  it('keeps each criterion to a few key facts, not an exhaustive list', () => {
+    for (const item of ASK_EVAL_CORPUS) {
+      expect(
+        (item.facts ?? []).length,
+        `item "${item.id}" requires more than ${MAX_CRITERION_FACTS} facts: the feature answers concisely, so a long list fails on model variance`,
+      ).toBeLessThanOrEqual(MAX_CRITERION_FACTS);
+    }
+  });
+
+  it('states every declared fact in its criterion', () => {
+    for (const item of ASK_EVAL_CORPUS) {
+      for (const fact of item.facts ?? []) {
+        expect(
+          item.expect.toLowerCase(),
+          `item "${item.id}" declares the fact "${fact}" but its criterion does not ask for it`,
+        ).toContain(fact.toLowerCase());
+      }
+    }
+  });
+
+  it('only requires facts the published system prompt states', () => {
+    const prompt = SYSTEM_TEXT.toLowerCase();
+    for (const item of ASK_EVAL_CORPUS) {
+      for (const fact of item.facts ?? []) {
+        expect(
+          prompt,
+          `item "${item.id}" requires "${fact}" but the system prompt does not state it: the model cannot be expected to know it`,
+        ).toContain(fact.toLowerCase());
+      }
+    }
+  });
+
+  it('grounds the primary-stack criterion in the profile stack', () => {
+    const item = ASK_EVAL_CORPUS.find((i) => i.id === 'fact-primary-stack');
+    expect(item?.facts?.length).toBeGreaterThan(0);
+    for (const fact of item?.facts ?? []) {
+      expect(profileStack.core).toContain(fact);
+    }
+  });
+
+  it('lets the off-topic criterion accept the redirect the system prompt asks for', () => {
+    expect(SYSTEM_TEXT).toContain('offer one related question you can answer');
+    for (const id of ['edge-off-topic', 'edge-pt-off-topic']) {
+      const item = ASK_EVAL_CORPUS.find((i) => i.id === id);
+      expect(item?.expect, `${id} must allow the related-question redirect`).toContain(
+        'related question',
+      );
+      expect(item?.expect, `${id} must not demand brevity beyond the prompt`).not.toMatch(
+        /brief|short|only that/i,
+      );
+    }
+  });
+});
+
+describe('content/ask-eval-corpus current-role criteria', () => {
+  it('state the current start date as optional so a true date never reads as an invented one', () => {
+    const [current] = gitLog[SITE_LOCALE.en];
+    for (const id of [
+      'fact-current-employer',
+      'fact-current-role-title',
+      'fact-pt-current-employer',
+    ]) {
+      const item = ASK_EVAL_CORPUS.find((i) => i.id === id);
+      expect(item?.expect, id).toContain(current?.date);
+    }
+  });
+
+  it('ties the injection-phrase answers to Erik own work in either named area', () => {
+    for (const id of ['edge-injection-phrase-mentioned', 'edge-pt-injection-phrase-mentioned']) {
+      const item = ASK_EVAL_CORPUS.find((i) => i.id === id);
+      expect(item?.expect, id).toMatch(/either/i);
+      expect(item?.expect, id).toMatch(/prompt-injection defense/);
+      expect(item?.expect, id).toMatch(/evaluation harnesses/);
+    }
+  });
+
+  it('fails at load when the current role has no date', async () => {
+    vi.resetModules();
+    vi.doMock('@/content/git-log', () => ({ gitLog: { en: [], pt: [] } }));
+    await expect(import('@/content/ask-eval-corpus')).rejects.toThrow(/current role date/i);
+    vi.doUnmock('@/content/git-log');
+    vi.resetModules();
   });
 });

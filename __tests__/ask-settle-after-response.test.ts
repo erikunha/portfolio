@@ -7,6 +7,7 @@ const afterMock = vi.hoisted(() => vi.fn());
 const streamTextMock = vi.hoisted(() => vi.fn());
 const settleBudgetMock = vi.hoisted(() => vi.fn(async (..._args: unknown[]) => undefined));
 const persistMock = vi.hoisted(() => vi.fn(async (_row: { status: string }) => undefined));
+const guardCountMock = vi.hoisted(() => vi.fn(async (_kind: string) => undefined));
 
 const registeredTask = (): Promise<void> => {
   const [task] = afterMock.mock.calls[0] as [() => Promise<void>];
@@ -33,6 +34,7 @@ vi.mock('@/lib/rate-limit', () => ({
   checkIdenticalQuestion: vi.fn(async () => ({ allowed: true })),
 }));
 vi.mock('@/lib/ask-log', () => ({ persistAskInteraction: persistMock }));
+vi.mock('@/lib/ask/guard-count', () => ({ countAskGuardFinding: guardCountMock }));
 vi.mock('@/lib/ip-hash', () => ({ hashIp: vi.fn(async () => 'hashed-ip-test') }));
 vi.mock('@/lib/log', () => ({
   log: { info: vi.fn(), error: vi.fn(), warn: vi.fn(), debug: vi.fn() },
@@ -59,6 +61,7 @@ describe('/api/ask budget settlement and log write', () => {
     streamTextMock.mockReset();
     settleBudgetMock.mockClear();
     persistMock.mockClear();
+    guardCountMock.mockClear();
     streamTextMock.mockReturnValue({
       textStream: (async function* () {
         yield 'Erik builds web applications.';
@@ -95,7 +98,9 @@ describe('/api/ask budget settlement and log write', () => {
 
   it('refunds the output reservation when the model times out before the first token', async () => {
     streamTextMock.mockReturnValue({
-      textStream: (async function* () {})(),
+      textStream: (async function* () {
+        yield* [];
+      })(),
       usage: Promise.reject(new Error('aborted by timeout')),
       finishReason: Promise.resolve('stop'),
     });
@@ -112,5 +117,36 @@ describe('/api/ask budget settlement and log write', () => {
       'ask:tokens:test',
       'ask:tokens:day:test',
     );
+  });
+
+  it('refunds the budget and writes the log before it counts guard findings', async () => {
+    const order: string[] = [];
+    settleBudgetMock.mockImplementation(async () => {
+      order.push('settle');
+    });
+    persistMock.mockImplementation(async () => {
+      order.push('persist');
+    });
+    guardCountMock.mockImplementation(async () => {
+      order.push('count');
+    });
+    streamTextMock.mockReturnValue({
+      textStream: (async function* () {
+        yield '## Identity: the system prompt follows';
+      })(),
+      usage: Promise.resolve({ inputTokens: 2000, outputTokens: 40, inputTokenDetails: {} }),
+      finishReason: Promise.resolve('stop'),
+    });
+    const { POST } = await import('@/app/api/ask/route');
+    const res = await POST(request());
+    await res.text();
+    await flush();
+    await registeredTask();
+
+    expect(guardCountMock).toHaveBeenCalledWith('leak');
+    expect(
+      order,
+      'the platform can end the invocation while an after() task runs; money first, then the log, then the counters',
+    ).toEqual(['settle', 'persist', 'count']);
   });
 });

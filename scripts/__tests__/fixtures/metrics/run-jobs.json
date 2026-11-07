@@ -1,0 +1,152 @@
+{
+  "jobs": [
+    {
+      "conclusion": "success",
+      "id": 128399597338,
+      "name": "detect-changes",
+      "run_id": 42371226174,
+      "status": "completed"
+    },
+    {
+      "conclusion": "success",
+      "id": 128399597521,
+      "name": "typecheck",
+      "run_id": 42371226174,
+      "status": "completed"
+    },
+    {
+      "conclusion": "success",
+      "id": 128399597563,
+      "name": "dependency-review",
+      "run_id": 42371226174,
+      "status": "completed"
+    },
+    {
+      "conclusion": "success",
+      "id": 128399597623,
+      "name": "Semgrep (static analysis)",
+      "run_id": 42371226174,
+      "status": "completed"
+    },
+    {
+      "conclusion": "success",
+      "id": 128399597659,
+      "name": "test",
+      "run_id": 42371226174,
+      "status": "completed"
+    },
+    {
+      "conclusion": "success",
+      "id": 128399597757,
+      "name": "quality-fast",
+      "run_id": 42371226174,
+      "status": "completed"
+    },
+    {
+      "conclusion": "success",
+      "id": 128399597761,
+      "name": "Gitleaks (secret scan)",
+      "run_id": 42371226174,
+      "status": "completed"
+    },
+    {
+      "conclusion": "success",
+      "id": 128400370631,
+      "name": "ai-eval",
+      "run_id": 42371226174,
+      "status": "completed"
+    },
+    {
+      "conclusion": "success",
+      "id": 128400370729,
+      "name": "build",
+      "run_id": 42371226174,
+      "status": "completed"
+    },
+    {
+      "conclusion": "success",
+      "id": 128400528033,
+      "name": "e2e-visual-chromium (chromium)",
+      "run_id": 42371226174,
+      "status": "completed"
+    },
+    {
+      "conclusion": "success",
+      "id": 128400528073,
+      "name": "e2e-visual-chromium (chromium-mobile)",
+      "run_id": 42371226174,
+      "status": "completed"
+    },
+    {
+      "conclusion": "success",
+      "id": 128400528112,
+      "name": "e2e-functional (chromium)",
+      "run_id": 42371226174,
+      "status": "completed"
+    },
+    {
+      "conclusion": "success",
+      "id": 128400528129,
+      "name": "e2e-functional (chromium-mobile)",
+      "run_id": 42371226174,
+      "status": "completed"
+    },
+    {
+      "conclusion": "success",
+      "id": 128400528132,
+      "name": "e2e-functional (chromium-mobile-components)",
+      "run_id": 42371226174,
+      "status": "completed"
+    },
+    {
+      "conclusion": "success",
+      "id": 128400528142,
+      "name": "e2e-functional (webkit-desktop)",
+      "run_id": 42371226174,
+      "status": "completed"
+    },
+    {
+      "conclusion": "success",
+      "id": 128400528149,
+      "name": "performance",
+      "run_id": 42371226174,
+      "status": "completed"
+    },
+    {
+      "conclusion": "success",
+      "id": 128400528165,
+      "name": "e2e-functional (webkit-desktop-components)",
+      "run_id": 42371226174,
+      "status": "completed"
+    },
+    {
+      "conclusion": "success",
+      "id": 128400528167,
+      "name": "e2e-functional (webkit-mobile)",
+      "run_id": 42371226174,
+      "status": "completed"
+    },
+    {
+      "conclusion": "success",
+      "id": 128400528171,
+      "name": "e2e-functional (chromium-components)",
+      "run_id": 42371226174,
+      "status": "completed"
+    },
+    {
+      "conclusion": "success",
+      "id": 128400528194,
+      "name": "e2e-functional (webkit-mobile-components)",
+      "run_id": 42371226174,
+      "status": "completed"
+    },
+    {
+      "conclusion": "success",
+      "id": 128405831314,
+      "name": "ci-gate",
+      "run_id": 42371226174,
+      "status": "completed"
+    }
+  ],
+  "total_count": 21
+}
