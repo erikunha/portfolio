@@ -20,4 +20,15 @@ describe('ci.yml e2e-functional matrix', () => {
       'a project missing from the matrix is never run in CI, so its failures stay invisible until someone runs it by hand',
     ).toEqual([...expected].sort());
   });
+
+  it('gates exactly one test step per matrix project', () => {
+    expect(job.length, 'e2e-functional job missing from ci.yml').toBeGreaterThan(0);
+    const nonComponents =
+      job.split(`if: $${'{'}{ !endsWith(matrix.project, '-components') }}`).length - 1;
+    const components = job.split("if: endsWith(matrix.project, '-components')").length - 1;
+    expect(
+      { nonComponents, components },
+      'a dropped or inverted step condition runs a matrix project tests twice or never',
+    ).toEqual({ nonComponents: 1, components: 1 });
+  });
 });

@@ -57,7 +57,7 @@ check (Biome) -> typecheck -> validate-content -> check:client-naming -> check:d
 flowchart LR
     unit["Vitest (jsdom)<br/>__tests__/** + co-located *.test.tsx<br/>behavioral, 80/70/80/80 coverage floor"] --> ci
     a11y["axe-core<br/>tests/a11y/axe.spec.ts (WCAG 2.2 AA tags)"] --> ci
-    e2e["Playwright e2e<br/>tests/e2e/** (CI: 5-project matrix)"] --> ci
+    e2e["Playwright e2e<br/>tests/e2e/** (CI: 8-project matrix)"] --> ci
     visual["Visual regression<br/>tests/visual/visual.spec.ts via Argos"] --> ci
     mut["Stryker mutation (weekly, advisory; kill canary in CI)"] -. trend .-> ci
     ci["CI gates"]
@@ -88,7 +88,7 @@ flowchart TD
     tc --> b
     t --> b
     b --> perf["performance: LHCI desktop+mobile + axe (if app)"]
-    b --> e2e["e2e-functional (5-project matrix, if app)"]
+    b --> e2e["e2e-functional (8-project matrix, if app)"]
     b --> vis["e2e-visual-chromium (desktop/mobile Chromium, if ui)"]
     dc --> perf
     dc --> e2e
