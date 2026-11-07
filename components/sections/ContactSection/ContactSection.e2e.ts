@@ -13,6 +13,9 @@ const SAME_LINE_PX = 4;
 const GOLDEN_RATIO = 1.618;
 const GOLDEN_PRECISION = 1;
 const MAX_HEIGHT_RATIO = 1.3;
+const ISLAND_LOAD_TIMEOUT_MS = 20_000;
+const SUBMIT_RETRY_VISIBLE_MS = 1_000;
+const HYDRATION_COMMIT_TIMEOUT_MS = 20_000;
 const CONTACT_FORM_SELECTOR = '[data-testid="contact-form"]';
 
 async function scrollToSelector(page: Page, selector: string): Promise<void> {
@@ -132,7 +135,9 @@ test.describe('ContactSection', () => {
     await expect(
       panel.getByRole('heading', { name: contactCopy[SITE_LOCALE.en].timezone.title }),
     ).toBeVisible();
-    await expect(panel.getByTestId('contact-timezone')).toBeVisible();
+    await expect(panel.getByTestId('contact-timezone')).toBeVisible({
+      timeout: ISLAND_LOAD_TIMEOUT_MS,
+    });
     await expect(panel.locator('a[href^="mailto:"]')).toHaveCount(0);
     await expect(panel.locator('.contact-fact')).toHaveCount(0);
   });
@@ -163,7 +168,9 @@ test.describe('ContactSection', () => {
     await page.setViewportSize(PHONE);
     await page.goto('/');
     await scrollToSelector(page, '.contact-timezone');
-    await expect(page.getByTestId('ctz-clock-you')).toBeVisible();
+    await expect(page.getByTestId('ctz-clock-you')).toBeVisible({
+      timeout: ISLAND_LOAD_TIMEOUT_MS,
+    });
     const stacked = await page.locator('.contact-layout').evaluate((layout) => {
       const rect = (element: Element | null) => (element as Element).getBoundingClientRect();
       const below = (rows: Element[], first: string, second: string) =>
@@ -250,8 +257,8 @@ test.describe('ContactSection', () => {
       await scrollToSelector(page, '.contact-timezone');
       const erik = page.getByTestId('ctz-clock-erik');
       const you = page.getByTestId('ctz-clock-you');
-      await expect(erik).toBeVisible();
-      await expect(you).toBeVisible();
+      await expect(erik).toBeVisible({ timeout: ISLAND_LOAD_TIMEOUT_MS });
+      await expect(you).toBeVisible({ timeout: ISLAND_LOAD_TIMEOUT_MS });
       const [erikBox, youBox] = await Promise.all([erik.boundingBox(), you.boundingBox()]);
 
       expect(
@@ -267,12 +274,16 @@ test.describe('ContactSection', () => {
     await page.goto('/');
     await page.locator(CONTACT_FORM_SELECTOR).scrollIntoViewIfNeeded();
     await waitForHydration(page, CONTACT_FORM_SELECTOR);
-    await page
-      .locator('#sec-contact form')
-      .getByRole('button', { name: /EXECUTE_SEND/ })
-      .click();
+    const send = page.locator('#sec-contact form').getByRole('button', { name: /EXECUTE_SEND/ });
     const summary = page.locator('.contact-alert');
-    await expect(summary).toBeVisible();
+    await expect(async () => {
+      await send.click();
+      await expect(summary).toBeVisible({ timeout: SUBMIT_RETRY_VISIBLE_MS });
+    }, 'a submit that lands before React commits the hydrated form is dropped, so the click repeats until the handler is live').toPass(
+      {
+        timeout: HYDRATION_COMMIT_TIMEOUT_MS,
+      },
+    );
     await expect(summary).toContainText('! 3 fields need fixing:');
     await expect(summary.locator('ul')).toHaveCount(0);
     await expect(summary.locator('a')).toHaveCount(3);

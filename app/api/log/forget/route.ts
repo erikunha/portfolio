@@ -4,7 +4,6 @@ import { askLogDatesInTtl, askLogKey } from '@/lib/ask-log';
 import { contactMessageKey, removePendingContact } from '@/lib/contact-outbox';
 import { log } from '@/lib/log';
 import { getForgetLimit, getRedis } from '@/lib/rate-limit';
-import { withBodyLimit } from '@/lib/server/body-limit';
 import { defineHandler, err, ok } from '@/lib/server/route';
 
 const ForgetPayload = z.object({
@@ -16,6 +15,7 @@ const SMOKE_UUID = '00000000-0000-4000-8000-000000000000';
 
 const handleForget = defineHandler({
   schema: ForgetPayload,
+  maxBodyBytes: MAX_FORGET_BODY_BYTES,
   rateLimit: getForgetLimit,
   rateLimitErrorMessage: 'too many forget requests',
   async handler({ body, requestId }) {
@@ -49,4 +49,4 @@ const handleForget = defineHandler({
   },
 });
 
-export const POST = withBodyLimit(handleForget, MAX_FORGET_BODY_BYTES);
+export const POST = handleForget;

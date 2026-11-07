@@ -140,7 +140,7 @@ sequenceDiagram
     R->>R: parse + validate (trim, <=500 chars)
     R->>R: isInjectionAttempt reject (400)
     R->>RL: checkIdenticalQuestion (60s dedup, 429)
-    R->>RL: reserveBudget(512)  (monthly token cap, 503 if exhausted)
+    R->>RL: reserveBudget(512)  (monthly cap and daily slice, 503 if either is exhausted)
     R->>R: mint 128-bit sentinel, wrap question as data-only
     R->>AI: streamText(model=ASK_MODEL, cacheControl: ephemeral)
     loop each delta (raced vs 15s watchdog)
@@ -155,13 +155,13 @@ sequenceDiagram
         end
     end
     U->>U: parseStreamChunk once per chunk -> rAF-coalesced setStreamingText (React state owned by InteractiveShell)
-    R->>KV: finally: settleBudget(refund) + Layer-2 audit + ask-log (fail-quiet)
+    R->>KV: after(): settleBudget(refund) + Layer-2 audit + ask-log (fail-quiet)
     U->>U: finalize() -> commit answer (or error line) into history
 ```
 
 **Client-side rendering nuance (verified in code):** the streamed text lands in an _isolated_ `streamingText` state and is flushed at most once per animation frame (`requestAnimationFrame`), so chunks within one frame share a state update. Each chunk is parsed once; the frame callback and the stop path reuse that result. The state lives in `useAskStream` and is read by `InteractiveShell`, whose component renders again when it changes; the text is displayed in a dedicated span. This is the opposite of the Hero boot loop, which mutates `textContent` directly with no React state (see doc 04). Both limit update work.
 
-**Server timeouts (defense in depth):** 30s whole-request `AbortSignal`, 15s mid-stream watchdog, 1s usage-resolve. A reader that cancels mid-answer (tab closed, navigation) aborts the upstream call and still runs settlement and the ask-log write, with status `aborted`. The shell client gives up after 15s with no token (idle timer, re-armed on every chunk) and offers a retry. The contact form and the receipt forget action post through `lib/post-json.ts`, which aborts after 20s (body read included); the abort lands in the generic failed-send alert and the fields unlock. The token budget is held **fail-closed** if usage can't be resolved (so a metering bug can't leak spend), while the rate limiters and dedup are **fail-open**. The one exception is the budget reservation: if Redis fails there, `/api/ask` returns 503 rather than answer without a spend cap.
+**Server timeouts (defense in depth):** 30s whole-request `AbortSignal`, 15s mid-stream watchdog, 1s usage-resolve. A reader that cancels mid-answer (tab closed, navigation) aborts the upstream call and still runs settlement and the ask-log write from `after()`, with status `aborted`; before the first token the output share of the reservation is refunded. The shell client gives up after 15s with no token (idle timer, re-armed on every chunk) and offers a retry. The contact form and the receipt forget action post through `lib/post-json.ts`, which aborts after 20s (body read included); the abort lands in the generic failed-send alert and the fields unlock. The token budget is held **fail-closed** if usage can't be resolved (so a metering bug can't leak spend), while the rate limiters and dedup are **fail-open**. The one exception is the budget reservation: if Redis fails there, `/api/ask` returns 503 rather than answer without a spend cap.
 
 ## End-to-end data flow #3 - `/api/contact` (the write path via `defineHandler`)
 

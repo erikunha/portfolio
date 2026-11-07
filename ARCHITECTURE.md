@@ -309,9 +309,9 @@ content/ask-eval-corpus.ts            # ask eval Q+A corpus (factual, edge, jail
 lib/agent/                            # agent-readiness helpers (MCP tools)
 lib/ask/                              # system prompt builder, model const, anti-abuse
 lib/mdx/                              # MDX remark/recma plugins for /design-system docs
-lib/server/                           # server-only utilities (route-handler factory; fetch-metadata.ts isCrossSiteRequest, the Sec-Fetch-Site gate defineHandler runs first)
+lib/server/                           # server-only utilities (route-handler factory; fetch-metadata.ts isCrossSiteRequest, the Sec-Fetch-Site gate defineHandler runs first; read-body.ts bounded body read after the limiter; after-response.ts after() wrapper for post-response work)
 lib/env.ts                            # typed, format-validating env accessor
-lib/ask-log.ts                        # KV interaction log per /api/ask request
+lib/ask-log.ts                        # KV interaction log per /api/ask request that reaches the model; lib/ask/refusal-count.ts counts refused asks per day
 lib/boot-animation.ts                 # boot sequence data
 lib/typewriter.ts                     # one type, hold and erase loop (runPhraseLoop, typeOut) and createPauseControl
 lib/use-copy-feedback.client.ts       # clipboard state for every copy button
@@ -422,7 +422,7 @@ See `app/api/ask/route.ts` and `lib/stream-protocol.ts`.
 Upstash Redis sliding window:
 - 8 questions per IP per rolling hour
 - Rate limiting keys use the client IP. Persisted ASK logs use a salted SHA-256 IP hash; raw IP is not stored in those records.
-- No daily cap (budget cap is the primary spend control)
+- The token budget has a daily slice (see Budget enforcement), so one client cannot spend the month in a few days
 
 ### Identical-question dedup
 
@@ -430,20 +430,20 @@ The same question text (SHA-256) from the same IP hash within 60 seconds is bloc
 
 ### Budget enforcement (the Principal-level move)
 
-Redis holds `ask:tokens:YYYY-MM` with a 32-day TTL set only when absent. `reserveBudget(MAX_OUTPUT_TOKENS)` reserves `ASK_RESERVED_INPUT_TOKENS` plus 512 output tokens before inference; `lib/ask/input-reservation.ts` derives the input share from the system prompt and the 500-character question cap at 3 characters per token. The monthly capacity is 3,000,000 tokens. `settleBudget` refunds the unused reservation against reported usage and charges any usage above it; a failed refund remains conservatively charged.
+Redis holds `ask:tokens:YYYY-MM` with a 32-day TTL set only when absent, and `ask:tokens:day:YYYY-MM-DD` with a 2-day TTL for the daily slice. `reserveBudget(MAX_OUTPUT_TOKENS)` reserves `ASK_RESERVED_INPUT_TOKENS` plus 512 output tokens before inference; `lib/ask/input-reservation.ts` derives the input share from the system prompt and the 500-character question cap at 3 characters per token. The monthly capacity is 3,000,000 tokens and the daily slice is one twentieth of it, so one client cannot spend the month in a few days. `settleBudget` refunds the unused reservation against reported usage and charges any usage above it; a failed refund remains conservatively charged.
 - At 80% capacity, reservation logs a warning and allows the request.
-- Above capacity, it refunds the rejected reservation and returns `allowed: false`; the route responds with HTTP 503.
+- Above either capacity, it refunds the rejected reservation (both keys when the daily slice is the one crossed) and returns `allowed: false`; the route responds with HTTP 503.
 - Redis failure during reservation fails closed. Rate limiting and identical-question dedup fail open, but the budget rejection prevents the model call.
-- `BudgetStore` exposes `reserve`, `release` and `capacity`. The eval harness installs an in-memory store sized for one full reservation per corpus item; no request parameter selects it.
+- `BudgetStore` exposes `reserve`, `release`, `capacity` and `dailyCapacity`. The eval harness installs an in-memory store sized for one full reservation per corpus item; no request parameter selects it.
 - `ASK_ENABLED` is checked before rate limiting and reservation.
 - Prompt caching uses `providerOptions.anthropic.cacheControl` on the system message. The AI SDK reports `inputTokens` as the total prompt size with the cache split under `inputTokenDetails`; settlement and the ask-log use `countAskTokens`, which counts each cached token once. Cache usage is logged; `persistAskInteraction` stores total input and output tokens, not the cache breakdown. Haiku 4.5 caches only prefixes of 4096 tokens or more, so a shorter system prompt records zero cache tokens.
 - A 30-second request deadline and a 15-second mid-stream watchdog bound streaming. A usage-resolution timeout preserves the reservation when actual usage cannot be read.
-- A reader that cancels mid-answer aborts the upstream call; settlement and the ask-log write still run, with status `aborted`.
+- A reader that cancels mid-answer aborts the upstream call; settlement and the ask-log write still run from an `after()` callback, with status `aborted`. A stream that ends before its first token keeps the input tokens charged and refunds the output share.
 
 ### MCP request boundary
 
-`app/api/mcp/route.ts` wraps its POST in `withBodyLimit`
-(`lib/server/body-limit.ts`) before the MCP transport parses JSON-RPC. `MAX_MCP_BODY_BYTES` is 4096 bytes, enough for the 500-character
+`app/api/mcp/route.ts` wraps its POST in `withRateLimit` and then `withBodyLimit`
+(`lib/server/body-limit.ts`, built on `readBoundedBody` in `lib/server/read-body.ts`) before the MCP transport parses JSON-RPC. The other body-reading routes read inside their handler, after the cross-site check and the limiter. `MAX_MCP_BODY_BYTES` is 4096 bytes, enough for the 500-character
 `ask_erik` question with six-byte JSON escapes and the request envelope.
 An oversized `Content-Length` returns HTTP 413 without reading. The reader
 also counts actual bytes, cancels oversized streams, and rejects them before
@@ -457,7 +457,7 @@ that fails before it is fully read returns `invalid_body`, HTTP 400.
 **Shipped:**
 - Trim and truncate `question` to 500 characters before injection checks
 - Per-IP sliding window (8/h): see `lib/rate-limit.ts`
-- Monthly token budget hard cap via reservation pattern: `reserveBudget(maxOutputTokens)` INCRBYs worst-case BEFORE the Anthropic call; `settleBudget(reserved, actualIn, actualOut)` DECRBYs the unused portion after. Survives client disconnects: the counter never undercounts.
+- Monthly token budget hard cap and a daily slice via reservation pattern: `reserveBudget(maxOutputTokens)` INCRBYs worst-case BEFORE the Anthropic call; `settleBudget(reserved, actualIn, actualOut)` DECRBYs the unused portion after. Survives client disconnects: the counter never undercounts.
 - `ASK_ENABLED` kill switch (env-var, off-by-keyword)
 - Reject `q` matching `INJECTION_RE` (`lib/ask/injection.ts`) after NFKC normalization and invisible-character stripping: English and Portuguese role tokens (`system`, `assistant`, `developer`, `sistema`, `assistente`, `desenvolvedor` followed by `:` or `>`) at the start of the input, a line, a sentence or a clause, chat-template tokens, and instruction-override phrasings in both languages. Cyrillic and Greek lookalike letters fold into Latin first. `isInjectionAttempt` skips quoted spans and "against/about/sobre/contra + phrase + attacks" mentions, and a role word followed by a short question fragment, so a visitor can ask about the phrase without a 400
 - Reject identical `q` from same IP within 60s: Redis `SET NX EX 60` keyed on `ipHash + sha256(q).slice(0,16)`
@@ -578,12 +578,12 @@ Observability spans real-user telemetry, structured logs and client error captur
 ### Client error capture
 
 - **`lib/error-bridge.client.ts`** registers `window.addEventListener('error')` + `unhandledrejection` as an import side effect (the module is imported by `AppShell.client.tsx` for that side effect and by `ErrorBoundary.client.tsx` for `buildLogPayload`), and both the listeners and the dedup state belong to the window, not to the module instance: the state object lives on the window under `Symbol.for('erikunha.dev/error-bridge')`, and the `listening` guard in `install()` makes a second instantiation in the same window (a dev re-import, the same module reached through two bundles) reuse that state and register nothing. Each capture POSTs to `/api/log` with `{level, message, stack, url, userAgent, ts}`. Dedup: 100ms tail-window keyed on `(message, stack)`: covers React's error replay (<50ms) without suppressing meaningful repeat-occurrence signal.
-- **`app/api/log/route.ts`** validates via zod, writes to Upstash KV `err:{yyyy-mm-dd}:{uuid}` with 30-day TTL. Rate-limited (10/IP/min) via `getErrorLogLimit()` to absorb runaway client error loops. The IP is used only for rate-limiting and discarded: `err:*` records store no `ipHash`, making them personal-data-free and outside the `/api/log/forget` erasure scope.
+- **`app/api/log/route.ts`** validates via zod, writes to Upstash KV `err:{yyyy-mm-dd}:{uuid}` with 7-day TTL and the stack cut to 4096 characters. Rate-limited (10/IP/min) via `getErrorLogLimit()` to absorb runaway client error loops, with a per-IP daily cap (50) and a shared daily cap (500). The IP is used only for rate-limiting and discarded: `err:*` records store no `ipHash`, making them personal-data-free and outside the `/api/log/forget` erasure scope.
 
 ### `/api/ask` Q+A retention
 
-- **`lib/ask-log.ts`** persists every `/api/ask` interaction that reaches the model or the rate, duplicate or budget gates to Upstash KV `ask:log:{yyyy-mm-dd}:{requestId}` with 90-day TTL. Captures `{requestId, ts, ipHash, question (≤500c), answer (≤1000c), inputTokens, outputTokens, durationMs, status}`. A request rejected for an injection pattern or an invalid body writes no row; it leaves one `ask rejected` log line with the request id and `ipHash`. Enables retrospective audit of what the LLM said about Erik + product learning on user questions.
-- **`X-Request-Id`** response header on every `/api/ask` response, early refusals included, surfaces the requestId to the client for the GDPR/LGPD erasure flow. The rate-limited, duplicate and budget refusals each store a row under that id, so the visitor can forget it; the shell records the id whenever the header is present, and forgetting an id with no row is harmless.
+- **`lib/ask-log.ts`** persists every `/api/ask` interaction that reaches the model to Upstash KV `ask:log:{yyyy-mm-dd}:{requestId}` with 90-day TTL. Captures `{requestId, ts, ipHash, question (≤500c), answer (≤1000c), inputTokens, outputTokens, durationMs, status}`. A request rejected for an injection pattern or an invalid body writes no row; it leaves one `ask rejected` log line with the request id and `ipHash`. A request refused by the rate limit, the duplicate check or the budget writes no row either: it leaves an `ask refused` log line and adds to the `ask:refused:{yyyy-mm-dd}:{status}` counter (32-day TTL). Enables retrospective audit of what the LLM said about Erik + product learning on user questions.
+- **`X-Request-Id`** response header on every `/api/ask` response, early refusals included, surfaces the requestId to the client for the GDPR/LGPD erasure flow. Refusals store no row under that id; the shell records the id whenever the header is present, and forgetting an id with no row is harmless.
 - **`app/api/log/forget/route.ts`** accepts POST `{requestId}` and idempotently DELETEs the matching record across every day-partition a live record can carry (the 90-day TTL plus the current day, 91 dates, from `askLogDatesInTtl`). Rate-limited (21/IP/hour: the 20 ids one tab holds plus one contact receipt, both counts from `lib/forget-limits.ts`) via `getForgetLimit()`.
 
 ### Inspection surfaces
@@ -678,7 +678,7 @@ The workflow runs on PRs, pushes to `main` and manual dispatch. Jobs are not a s
 - `quality-fast`, `typecheck`, `test`, `dependency-review`, `detect-changes`, `semgrep` and `gitleaks` start independently. Dependency review is PR-only. `test` runs coverage and audits dependencies when the lockfile changes (or on non-PR events).
 - `build` requires `quality-fast`, `typecheck` and `test`. It builds Next, gates global client chunks at 220 KB and per-route first-load JS at 164.7 KB, then uploads `.next`.
 - `performance`, `e2e-functional` and `e2e-visual-chromium` require `build` and `detect-changes`. Performance and functional jobs use the `app` filter; visuals use `ui`. Non-PR events run them regardless of those PR filters.
-- `performance` starts a local production server, then runs desktop/mobile LHCI and axe-core. `e2e-functional` has five projects: chromium, chromium-mobile, webkit-desktop, webkit-mobile and chromium-components. `e2e-visual-chromium` has chromium and chromium-mobile projects and uploads Argos screenshots when credentials are available.
+- `performance` starts a local production server, then runs desktop/mobile LHCI and axe-core. `e2e-functional` runs all eight Playwright projects: chromium, chromium-mobile, webkit-desktop, webkit-mobile, and the chromium, chromium-mobile, webkit-desktop and webkit-mobile component projects. `e2e-visual-chromium` has chromium and chromium-mobile projects and uploads Argos screenshots when credentials are available.
 - `ai-eval` waits for change detection, `quality-fast`, `typecheck` and `test`; it consumes no build output, so it does not wait for `build` or the browser jobs. It requires AI-relevant changes, no upstream failures or cancellations, and an internal PR or non-PR event.
 - `ci-gate` waits for all listed required jobs and fails on `failure` or `cancelled`; intentional skips pass. Semgrep is separate from that aggregate: its findings are report-only, but its fixture and SARIF-production checks can fail its own job.
 - CodeQL, production smoke, mutation tests and agent evals have separate workflows.

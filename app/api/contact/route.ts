@@ -10,7 +10,6 @@ import {
 import { ContactSchema, isHoneypotTripped } from '@/lib/contact-validation';
 import { log } from '@/lib/log';
 import { getContactLimit, getRedis } from '@/lib/rate-limit';
-import { withBodyLimit } from '@/lib/server/body-limit';
 import { defineHandler, err, ok } from '@/lib/server/route';
 import { ASK_LOCALE_HEADER } from '@/lib/stream-protocol';
 
@@ -28,6 +27,7 @@ function requestLocale(req: Request): SiteLocale {
 
 const handleContact = defineHandler({
   schema: ContactSchema,
+  maxBodyBytes: MAX_CONTACT_BODY_BYTES,
   rateLimit: getContactLimit,
   rateLimitErrorMessage: Object.fromEntries(
     SITE_LOCALES.map((locale) => [locale, contactContent[locale].errors.rateLimited]),
@@ -94,4 +94,4 @@ const handleContact = defineHandler({
   },
 });
 
-export const POST = withBodyLimit(handleContact, MAX_CONTACT_BODY_BYTES);
+export const POST = handleContact;
