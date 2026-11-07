@@ -154,6 +154,28 @@ describe('TypeReveal', () => {
     expect(late.style.getPropertyValue('--type-chars')).toBe('14');
   });
 
+  it('watches only the main landmark for late headings, so churn elsewhere in the body costs nothing', async () => {
+    setMotion(true);
+    const observe = vi.spyOn(MutationObserver.prototype, 'observe');
+    mount(
+      '<main id="host"><h2 data-type-reveal id="a">About</h2></main><aside id="chrome"></aside>',
+    );
+    const host = document.getElementById('host') as HTMLElement;
+    expect(
+      observe.mock.calls.map(([target]) => target),
+      'a body-wide subtree observer runs the marker query for every node the shell stream adds',
+    ).toEqual([host]);
+    const late = document.createElement('h2');
+    late.dataset.typeReveal = '';
+    late.textContent = 'LIVE_PERF.JSON';
+    await act(async () => {
+      host.appendChild(late);
+      await Promise.resolve();
+    });
+    expect(observers[0]?.observed.has(late)).toBe(true);
+    observe.mockRestore();
+  });
+
   it('reveals a late heading at once when motion is off', async () => {
     setMotion(false);
     mount('<h2 data-type-reveal id="a">About</h2>');

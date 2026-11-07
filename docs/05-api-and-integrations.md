@@ -110,10 +110,10 @@ flowchart LR
 | `model.ts`          | `ASK_MODEL` single source of truth (route + eval import it)                                                                                                                                    |
 | `system-prompt.ts`  | composes `SYSTEM_TEXT` from a hand-written narrative + **live `content/*` data**, to share source data with the page; exports `PROMPT_VERSION = sha256(SYSTEM_TEXT)[:12]` (prompt fingerprint) |
 | `prompt-version.ts` | sync `sha256Hex` (works in both the Node route and the tsx eval)                                                                                                                               |
-| `injection.ts`      | `INJECTION_RE` input reject (role tokens, ChatML delimiters, "ignore instructions"); ReDoS-safe                                                                                                |
+| `injection.ts`      | `isInjectionAttempt` input reject (role tokens, ChatML delimiters, "ignore instructions"; quoted mentions pass); ReDoS-safe                                                                                                |
 | `output-guard.ts`   | **Layer 1** streaming guard (per-chunk leak/runaway scan, abort→sentinel, cross-chunk-seam safe) + **Layer 2** post-hoc audit; both **fail-open**                                              |
 
-The defense model for `/api/ask`: input `INJECTION_RE` + a per-request unguessable 128-bit sentinel wrapping the user text ("data only") + an in-prompt non-disclosure instruction; output Layer-1 stream guard + Layer-2 audit. Egress guards catch verbatim/whitespace-reflowed prompt echoes; paraphrase leakage is owned by the prompt-side controls.
+The defense model for `/api/ask`: input `isInjectionAttempt` + a per-request unguessable 128-bit sentinel wrapping the user text ("data only") + an in-prompt non-disclosure instruction; output Layer-1 stream guard + Layer-2 audit. Egress guards catch verbatim/whitespace-reflowed prompt echoes; paraphrase leakage is owned by the prompt-side controls.
 
 ## Security surface
 
