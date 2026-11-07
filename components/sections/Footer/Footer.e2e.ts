@@ -328,12 +328,19 @@ test.describe('Footer', () => {
       ).not.toHaveText('0');
       const total = await page.evaluate(() => document.documentElement.scrollHeight);
       for (let y = 0; y < total; y += height / 2) {
-        await page.mouse.wheel(0, height / 2);
+        if (isMobile) {
+          await page.evaluate(
+            (dy) => window.scrollBy({ top: dy, behavior: 'instant' }),
+            height / 2,
+          );
+        } else {
+          await page.mouse.wheel(0, height / 2);
+        }
         await page.waitForTimeout(50);
       }
       await expect(
         page.locator('[data-sess="seen"]'),
-        `a section taller than four screens never reaches a 25% visible ratio at ${width}`,
+        `a section taller than four screens never reaches a 25% visible ratio at ${width}; mobile contexts scroll with scrollBy because WebKit throws on mouse.wheel when isMobile is set, and a scroll event drives the observer the same way as a touch drag`,
       ).toHaveText('9');
       await context.close();
     }
