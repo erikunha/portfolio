@@ -64,6 +64,8 @@ describe('Dock', () => {
 
   afterEach(() => {
     vi.unstubAllGlobals();
+    localStorage.clear();
+    delete document.body.dataset.motion;
   });
 
   it('has exactly the five controls, in order', () => {
@@ -156,7 +158,14 @@ describe('Dock', () => {
     expect(document.activeElement).toBe(document.getElementById('sec-projects'));
   });
 
-  it('does not smooth-scroll when the user prefers reduced motion', () => {
+  it('does not smooth-scroll when the MOTION switch is off', () => {
+    localStorage.setItem('erik.motion', 'off');
+    mount();
+    fireEvent.click(within(dock()).getByRole('link', { name: 'SHELL' }));
+    expect(scrollIntoView).toHaveBeenCalledWith({ behavior: 'auto', block: 'start' });
+  });
+
+  it('smooth-scrolls on a first visit even when the system asks for reduced motion', () => {
     window.matchMedia = vi.fn(() => ({
       matches: true,
       addEventListener: vi.fn(),
@@ -164,7 +173,7 @@ describe('Dock', () => {
     })) as unknown as typeof window.matchMedia;
     mount();
     fireEvent.click(within(dock()).getByRole('link', { name: 'SHELL' }));
-    expect(scrollIntoView).toHaveBeenCalledWith({ behavior: 'auto', block: 'start' });
+    expect(scrollIntoView).toHaveBeenCalledWith({ behavior: 'smooth', block: 'start' });
   });
 
   it('carries the progress-strip target and the label from content', () => {

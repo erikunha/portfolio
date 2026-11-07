@@ -49,10 +49,8 @@
     transform: translateX(-50%);
   }
 
-  @media (prefers-reduced-motion: reduce) {
-    .faderThumb {
-      box-shadow: none;
-    }
+  body[data-motion="reduce"] .faderThumb {
+    box-shadow: none;
   }
 
   .vu-meter {

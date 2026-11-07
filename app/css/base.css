@@ -145,10 +145,8 @@
     overflow: visible;
   }
 
-  @media (prefers-reduced-motion: reduce) {
-    .skip-to-content {
-      transition: none;
-    }
+  body[data-motion="reduce"] .skip-to-content {
+    transition: none;
   }
 
   button {

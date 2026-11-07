@@ -35,7 +35,7 @@ action.
 
 For each acceptance criterion: journey, action, observable, wrong outcome, post-action state.
 Operate the controls; rendering alone proves nothing. Exercise the states that apply: loading,
-empty, error, retry, success, disabled, long content, keyboard only, reduced motion, 320 to 1280.
+empty, error, retry, success, disabled, long content, keyboard only, MOTION off, 320 to 1280.
 
 UI state inventory: for each state that applies (initial, loading, empty, partial, populated,
 pending, success, error, retry, offline, disabled, stale, long content, overflow, destructive

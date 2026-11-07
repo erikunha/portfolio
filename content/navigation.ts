@@ -53,7 +53,6 @@ export type NavigationCopy = {
   dockLabel: string;
   motionOn: string;
   motionOff: string;
-  motionReduced: string;
   langSwitchLabel: string;
   skipLabel: string;
   siteNavLabel: string;
@@ -80,7 +79,6 @@ const navigationFor = (locale: SiteLocale): Navigation => {
       dockLabel: pt ? 'principal' : 'primary',
       motionOn: 'MOTION: ON',
       motionOff: 'MOTION: OFF',
-      motionReduced: 'MOTION: REDUCED',
       langSwitchLabel: pt ? 'Idioma' : 'Language',
       skipLabel: pt ? 'Pular para o conteúdo' : 'Skip to main content',
       siteNavLabel: pt ? 'Navegação do site' : 'Site navigation',

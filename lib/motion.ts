@@ -2,20 +2,10 @@ import { MOTION_CHANGE_EVENT } from './motion-change';
 
 export function readMotion(): boolean {
   try {
-    const stored = localStorage.getItem('erik.motion');
-    if (stored === 'on') return true;
-    if (stored === 'off') return false;
-    // biome-ignore lint/suspicious/noEmptyBlockStatements: intentional no-op
-  } catch {}
-  if (typeof window !== 'undefined' && typeof window.matchMedia === 'function') {
-    return !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    return localStorage.getItem('erik.motion') !== 'off';
+  } catch {
+    return true;
   }
-  return true;
-}
-
-export function readSystemReducedMotion(): boolean {
-  if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return false;
-  return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 }
 
 export function applyMotion(on: boolean, persist = true): void {

@@ -15,11 +15,6 @@
     animation: boot-blink 1.05s steps(2, start) infinite;
   }
 
-  @media (prefers-reduced-motion: reduce) {
-    .boot-cursor {
-      animation: none;
-    }
-  }
   body[data-motion="reduce"] .boot-cursor {
     animation: none;
   }
@@ -44,11 +39,6 @@
     animation: badge-pulse 1.6s ease-in-out infinite;
   }
 
-  @media (prefers-reduced-motion: reduce) {
-    .badge-dot {
-      animation: none;
-    }
-  }
   body[data-motion="reduce"] .badge-dot {
     animation: none;
   }
@@ -194,12 +184,6 @@
     transition: opacity 200ms ease-in;
   }
 
-  @media (prefers-reduced-motion: reduce) {
-    .hero-sysfail {
-      transition: none;
-    }
-  }
-
   body[data-motion="reduce"] .hero-sysfail {
     transition: none;
   }
@@ -298,13 +282,6 @@
     animation: barpulse 2.4s ease-in-out infinite;
   }
 
-  @media (prefers-reduced-motion: reduce) {
-    .bar-pulse > i {
-      animation: none;
-      opacity: 0;
-    }
-  }
-
   body[data-motion="reduce"] .bar-pulse > i {
     animation: none;
     opacity: 0;
@@ -334,13 +311,6 @@
     }
   }
 
-  @media (prefers-reduced-motion: reduce) {
-    .live-dot {
-      animation: none;
-      opacity: 0;
-    }
-  }
-
   body[data-motion="reduce"] .live-dot {
     animation: none;
     opacity: 0;
@@ -356,12 +326,6 @@
 
   .status-dot-blink {
     animation: live-blink 1.6s steps(2, start) infinite;
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .status-dot-blink {
-      animation: none;
-    }
   }
 
   body[data-motion="reduce"] .status-dot-blink {
@@ -393,13 +357,6 @@
     pointer-events: none;
     animation: guitar-scan-beam 7s linear infinite;
     will-change: transform;
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .guitar-scan-beam {
-      animation: none;
-      display: none;
-    }
   }
 
   body[data-motion="reduce"] .guitar-scan-beam {
@@ -457,7 +414,7 @@
     max-inline-size: 100%;
   }
 
-  @media screen and (prefers-reduced-motion: no-preference) {
+  @media screen {
     html.type-reveal-ready body:not([data-motion="reduce"]) [data-type-reveal] {
       --type-progress: 0;
       clip-path: inset(

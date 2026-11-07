@@ -29,7 +29,7 @@ import { NavItem } from '@/design-system';
 import { cn } from '@/lib/cn';
 import { isRendered } from '@/lib/dom/is-rendered';
 import { isolate } from '@/lib/dom/isolate';
-import { applyMotion, motionInEffect, readMotion, readSystemReducedMotion } from '@/lib/motion';
+import { applyMotion, motionInEffect, readMotion } from '@/lib/motion';
 import {
   createNavigationStore,
   type NavigationSnapshot,
@@ -57,7 +57,6 @@ const INITIAL_SNAPSHOT: NavigationSnapshot = {
   currentId: HOME_SECTION_ID,
   drawerOpen: false,
   motionOn: true,
-  systemReduced: false,
 };
 
 type NavigationState = {
@@ -100,9 +99,7 @@ export const useMotionOn = () => useNavigationSelector(selectMotionOn);
 
 export function useMotionLabel(): string {
   const { copy } = useSectionNavigation();
-  return useNavigationSelector(({ motionOn, systemReduced }) =>
-    motionOn ? copy.motionOn : systemReduced ? copy.motionReduced : copy.motionOff,
-  );
+  return useNavigationSelector(({ motionOn }) => (motionOn ? copy.motionOn : copy.motionOff));
 }
 
 function scrollBehavior(): ScrollBehavior {
@@ -164,7 +161,7 @@ export function SectionNavigationProvider({
 
   useLayoutEffect(() => {
     const on = readMotion();
-    store.set({ motionOn: on, systemReduced: readSystemReducedMotion() });
+    store.set({ motionOn: on });
     applyMotion(on, false);
   }, [store]);
 

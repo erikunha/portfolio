@@ -183,12 +183,12 @@ describe('navigation content', () => {
     expect(HOME_SECTION_ID).toBe(SECTION_REGISTRY[0].id);
   });
 
-  it('rejects a protocol-relative site link and a missing reduced-motion label', () => {
+  it('rejects a protocol-relative site link and a missing motion label', () => {
     const offsite = clone();
     at(offsite.siteLinks, 0).href = '//evil.example';
     expect(schema.safeParse(offsite).success).toBe(false);
     const unlabeled = clone() as unknown as { copy: Record<string, string> };
-    unlabeled.copy.motionReduced = '';
+    unlabeled.copy.motionOff = '';
     expect(schema.safeParse(unlabeled).success).toBe(false);
   });
 
