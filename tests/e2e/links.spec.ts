@@ -341,6 +341,8 @@ test.describe('font payload', () => {
 });
 
 const LCP_VIEWPORT = { width: 375, height: 812 };
+const LCP_COVER_FIXTURE = 'tests/e2e/fixtures/thumb.jpg';
+const LCP_OPTIMIZER_ROUTE = '**/_next/image**';
 
 test.describe('largest contentful paint', () => {
   test.use({ viewport: LCP_VIEWPORT });
@@ -349,6 +351,9 @@ test.describe('largest contentful paint', () => {
     test(`${path} paints the latest-video cover last and largest at mobile width, so the LCP work targets the right element`, async ({
       page,
     }) => {
+      await page.route(LCP_OPTIMIZER_ROUTE, (route) =>
+        route.fulfill({ path: LCP_COVER_FIXTURE, contentType: 'image/jpeg' }),
+      );
       await page.addInitScript(() => {
         const entries: string[] = [];
         Object.assign(window, { lcpElements: entries });
