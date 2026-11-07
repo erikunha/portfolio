@@ -1,5 +1,5 @@
 import { spawnSync } from 'node:child_process';
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, realpathSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
@@ -146,5 +146,65 @@ describe('guard-test-edits hook', () => {
   it('does not crash on malformed input', () => {
     expect(run('Edit', {}, { fixMode: '1', raw: 'not json' }).status).toBe(0);
     expect(run('Edit', {}, { fixMode: '1', input: { tool_name: 'Edit' } }).status).toBe(0);
+  });
+
+  describe('with symlinks', () => {
+    let link: string;
+
+    beforeEach(() => {
+      link = `${root}-link`;
+      symlinkSync(root, link);
+    });
+
+    afterEach(() => {
+      rmSync(link, { force: true });
+    });
+
+    const runIn = (projectDir: string, filePath: string) => {
+      const env: NodeJS.ProcessEnv = {
+        ...process.env,
+        CLAUDE_PROJECT_DIR: projectDir,
+        FIX_MODE: '1',
+      };
+      return spawnSync('node', [SCRIPT], {
+        input: JSON.stringify({ tool_name: 'Edit', tool_input: { file_path: filePath } }),
+        encoding: 'utf8',
+        env,
+      });
+    };
+
+    it('blocks a test file addressed by its real path when the project dir is a symlink', () => {
+      touch('lib/a.test.ts');
+      const result = runIn(link, join(realpathSync(root), 'lib/a.test.ts'));
+      expect(result.status).toBe(BLOCK_EXIT_CODE);
+      expect(result.stderr).toContain(join('lib', 'a.test.ts'));
+    });
+
+    it('blocks a test file addressed through a symlink when the project dir is the real path', () => {
+      touch('lib/a.test.ts');
+      expect(runIn(realpathSync(root), join(link, 'lib/a.test.ts')).status).toBe(BLOCK_EXIT_CODE);
+    });
+
+    it('blocks an alias inside the project that points at a test file', () => {
+      touch('tests/a.test.ts');
+      symlinkSync(join(root, 'tests/a.test.ts'), join(root, 'lib-alias.ts'));
+      expect(runIn(root, join(root, 'lib-alias.ts')).status).toBe(BLOCK_EXIT_CODE);
+    });
+
+    it('still allows a new test file whose parent directory is reached through a symlink', () => {
+      mkdirSync(join(root, 'lib'));
+      expect(runIn(link, join(realpathSync(root), 'lib/new.test.ts')).status).toBe(0);
+    });
+
+    it('still ignores a symlinked path that leads outside the project', () => {
+      const outside = mkdtempSync(join(tmpdir(), 'guard-test-edits-outside-'));
+      try {
+        writeFileSync(join(outside, 'a.test.ts'), 'x');
+        symlinkSync(join(outside, 'a.test.ts'), join(root, 'escape.ts'));
+        expect(runIn(root, join(root, 'escape.ts')).status).toBe(0);
+      } finally {
+        rmSync(outside, { recursive: true, force: true });
+      }
+    });
   });
 });

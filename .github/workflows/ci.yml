@@ -25,7 +25,6 @@ jobs:
     runs-on: ubuntu-24.04
     permissions:
       contents: read
-      pull-requests: read
     timeout-minutes: 8
     concurrency:
       group: quality-fast-${{ github.ref }}
@@ -91,12 +90,6 @@ jobs:
 
       - name: Package age check (supply-chain, info-only)
         run: node scripts/check-pkg-age.mjs --warn-only
-
-      - name: PR comment merge gate
-        if: github.event_name == 'pull_request'
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: pnpm tsx scripts/check-pr-comments.ts ${{ github.event.pull_request.number }}
 
   typecheck:
     runs-on: ubuntu-24.04
@@ -617,10 +610,10 @@ jobs:
             const needs = JSON.parse(process.env.NEEDS_JSON);
             const bad = Object.entries(needs).filter(([, n]) => BAD_RESULTS.has(n.result));
             for (const [job, n] of Object.entries(needs)) {
-              console.log(`${job}: ${n.result}`);
+              console.log(job + ": " + n.result);
             }
             if (bad.length > 0) {
-              console.error(`ci-gate: blocking on ${bad.map(([job]) => job).join(", ")}`);
+              console.error("ci-gate: blocking on " + bad.map(([job]) => job).join(", "));
               process.exit(1);
             }
             console.log("ci-gate: all upstream jobs succeeded or were intentionally skipped");

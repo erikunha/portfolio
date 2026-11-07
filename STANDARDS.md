@@ -388,7 +388,7 @@ branch protection) is the human-in-the-loop backstop.
 
 **Rationale.** Tailwind `@theme` replaces Style Dictionary as the design token source with zero build pipeline overhead — same single-source-of-truth discipline, immediately recognisable to any senior reviewer, and live-verified by TypeScript autocomplete on every utility class. The JSON token files are retained because they encode the palette structure and semantic intent legibly for documentation and human review; they are just not the build-time source of truth anymore.
 
-**How it is held.** CI gates: (1) `scripts/contrast-check.mjs` audits semantic pairs against WCAG AA, (2) `pnpm bundle-check` gates JS bundle size per route, (3) `check:component-docs-coverage` fails if a primitive component lacks a `## ComponentName` heading in `app/(en)/design-system/components/page.mdx`. CSS modules are allowed when a component needs them. Visual regression covers every primitive component. The `architect-reviewer` agent runs against any spec touching the design system before `writing-plans`. ADR entries for design-system changes live in `DECISIONS.md`.
+**How it is held.** CI gates: (1) `scripts/contrast-check.mjs` audits semantic pairs against WCAG AA, (2) `pnpm bundle-check` gates JS bundle size per route, (3) `check:component-docs-coverage` fails if a primitive component lacks a `## ComponentName` heading in `app/(en)/design-system/components/page.mdx`. CSS modules are allowed when a component needs them. Visual regression covers every primitive component. An architecture review of any spec touching the design system is a convention that runs before the plan is written; no gate enforces it. ADR entries for design-system changes live in `DECISIONS.md`.
 
 ---
 

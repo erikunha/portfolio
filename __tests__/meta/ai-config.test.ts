@@ -63,6 +63,13 @@ const RETIRED_NAMES = [
   'vercel:nextjs',
   'security-auditor',
   'ui-ux-tester',
+  'ai-engineer',
+  'architect-reviewer',
+  'dx-optimizer',
+  'nextjs-developer',
+  'performance-engineer',
+  'seo-specialist',
+  'test-automator',
 ];
 
 const tracked = (): string[] => {
@@ -328,10 +335,13 @@ describe('AI configuration guard', () => {
       settings.permissions?.deny ?? [],
       'a permission pattern cannot see the PR base, so the merge rule lives in the guard-merge-main hook',
     ).not.toContain('Bash(gh pr merge:*)');
-    const guard = (settings.hooks?.PreToolUse ?? []).find((entry) =>
+    const guards = (settings.hooks?.PreToolUse ?? []).filter((entry) =>
       entry.hooks.some((hook) => hook.command.includes('scripts/guard-merge-main.mjs')),
     );
-    expect(guard?.matcher).toBe('Bash');
+    expect(guards.map((entry) => entry.matcher).sort()).toEqual([
+      'Bash',
+      'mcp__github__merge_pull_request',
+    ]);
     expect(existsSync(join(ROOT, 'scripts/guard-merge-main.mjs'))).toBe(true);
     const testGuard = (settings.hooks?.PreToolUse ?? []).find((entry) =>
       entry.hooks.some((hook) => hook.command.includes('scripts/guard-test-edits.mjs')),

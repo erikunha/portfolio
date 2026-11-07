@@ -33,14 +33,15 @@ function mockGh(
   {
     reviews = [mkReview()],
     headRefOid = HEAD_SHA,
-  }: { reviews?: Review[]; headRefOid?: string } = {},
+    authorType = 'User',
+  }: { reviews?: Review[]; headRefOid?: string; authorType?: string } = {},
 ) {
   return vi.fn(async (_args: string[]) =>
     JSON.stringify({
       data: {
         repository: {
           pullRequest: {
-            author: { login: prAuthor },
+            author: { login: prAuthor, __typename: authorType },
             headRefOid,
             reviews: { nodes: reviews },
             reviewThreads: {
@@ -246,6 +247,48 @@ describe('evaluatePullRequest', () => {
     it('FAILS when the marker comes from someone without write standing on the repo', async () => {
       const stranger = mkReview({ authorAssociation: 'NONE' });
       const result = await evaluate(mockGh([mkThread()], 'erikunha', { reviews: [stranger] }));
+      expect(result.ok).toBe(false);
+    });
+
+    it('asks the API for the author type, which tells a bot from a user who took its name', async () => {
+      const ghExec = mockGh([mkThread()]);
+      await evaluate(ghExec);
+      expect(ghExec.mock.calls.flat().join(' ')).toContain('__typename');
+    });
+
+    it.each(['dependabot', 'dependabot[bot]'])(
+      'passes a Bot PR authored by %s with no self-review, since no reviewer can attest a dependency bump the owner did not write',
+      async (login) => {
+        const result = await evaluate(
+          mockGh([mkThread()], login, { reviews: [], authorType: 'Bot' }),
+        );
+        expect(result.ok).toBe(true);
+      },
+    );
+
+    it('keeps the thread checks for a dependabot PR', async () => {
+      const unresolved = mkThread({ isResolved: false });
+      const silent = mkThread({ comments: [{ author: { login: 'claude' } }] });
+      for (const thread of [unresolved, silent]) {
+        const result = await evaluate(
+          mockGh([thread], 'dependabot', { reviews: [], authorType: 'Bot' }),
+        );
+        expect(result.ok).toBe(false);
+      }
+    });
+
+    it('does not exempt a User account named dependabot', async () => {
+      const result = await evaluate(
+        mockGh([mkThread()], 'dependabot', { reviews: [], authorType: 'User' }),
+      );
+      expect(result.ok).toBe(false);
+      if (!result.ok) expect(result.code).toBe('missing_self_review');
+    });
+
+    it('does not exempt other bots', async () => {
+      const result = await evaluate(
+        mockGh([mkThread()], 'renovate[bot]', { reviews: [], authorType: 'Bot' }),
+      );
       expect(result.ok).toBe(false);
     });
 

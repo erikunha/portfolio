@@ -19,7 +19,7 @@ flowchart TD
     o1 --> o2["self-review on the head, resolve every review thread (claude-review only on request)"]
     o1b --> m1["pre-merge: ci:local"]
     o2 --> m1
-    m1 --> m4["pre-merge: pr:gate (threads + self-review)"]
+    m1 --> m4["pre-merge: pr:gate (threads + self-review), rerun on each review event"]
     m4 --> merge["owner: squash-merge (#NNN)"]
     merge --> deploy["Vercel deploy"]
     deploy --> smoke["smoke.yml: healthz + headers + liveness"]
@@ -39,12 +39,12 @@ After findings are answered, every finding fixed and every CI red becomes a cand
 
 ## Pre-merge gates (`pnpm ci:local` + `pnpm pr:gate`)
 
-In order: `ci:local` -> `check-pr-comments` (`pnpm pr:gate`, also run in CI: GraphQL `reviewThreads(first:100)` without pagination, every returned thread `isResolved` with a reply, `reviews(last:100)` holding a COMMENTED or APPROVED review from the owner, a member or a collaborator whose body contains `self-review: <current head SHA>` or the gate fails `missing_self_review`, flags `suspicious_self_resolve`). The marker is attested text: it shows a review was posted for this head, not that it was good, so the review itself still has to follow the steps above. The base branch must be contained and CI green. GitHub branch-protection settings are not in the repository; the settings read from GitHub and the controls that stand in for a second reviewer are listed in the 2026-11-07 review-model entry of `DECISIONS.md`.
+In order: `ci:local` -> `check-pr-comments` (`pnpm pr:gate`, also run in CI by the `pr-gate` workflow on every PR update and every review event, so a review posted after the push re-runs it, and skipped for the dependabot Bot account's `missing_self_review` only: GraphQL `reviewThreads(first:100)` without pagination, every returned thread `isResolved` with a reply, `reviews(last:100)` holding a COMMENTED or APPROVED review from the owner, a member or a collaborator whose body contains `self-review: <current head SHA>` or the gate fails `missing_self_review`, flags `suspicious_self_resolve`). The marker is attested text: it shows a review was posted for this head, not that it was good, so the review itself still has to follow the steps above. The base branch must be contained and CI green. GitHub branch-protection settings are not in the repository; the settings read from GitHub and the controls that stand in for a second reviewer are listed in the 2026-11-07 review-model entry of `DECISIONS.md`.
 
 `pnpm claude-gate` (`scripts/check-claude-approval.ts`) is an optional check: after a requested review it passes only when the latest claude-review verdict is Approve and names a head SHA that matches the current head. An Approve with no SHA, or a stale one, fails closed. When the head moved only through commits that touch visual baseline snapshots, `*-snapshots/*.png`, the Approve carries and the gate reports the carried SHA; any other file in the diff since the reviewed SHA, or a reviewed SHA that is not an ancestor of the head, fails closed as STALE. It is not part of merge readiness.
 
 
-**AI agents never merge into `main`.** The repo owner runs the final squash-merge once all gates pass. Sub-PRs into an integration branch (`feat/*`) may be merged by an agent once CI is green (Argos excepted) and the review is done. For Claude Code, the `guard-merge-main` hook blocks `gh pr merge` when the PR base is `main` or cannot be determined; other tools, and other merge paths (REST API, GitHub MCP tools, the web UI), rely on the written rule. The pre-push hook rejects a remote main target. Live GitHub protection and bypass permissions require separate inspection.
+**AI agents never merge into `main`.** The repo owner runs the final squash-merge once all gates pass. Sub-PRs into an integration branch (`feat/*`) may be merged by an agent once CI is green (Argos excepted) and the review is done. For Claude Code, the `guard-merge-main` hook blocks `gh pr merge`, a `gh api` call to `pulls/<n>/merge` and the GitHub MCP merge tool when the PR base is `main` or cannot be determined; other tools, and other merge paths (the web UI, Codex, a merge the hook cannot parse), rely on the written rule. The pre-push hook rejects a remote main target. Live GitHub protection and bypass permissions require separate inspection.
 
 ## PR sizing (avoid the bloated-PR failure mode)
 

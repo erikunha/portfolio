@@ -14,8 +14,8 @@
 - Personal settings belong in `CLAUDE.local.md` and `.claude/settings.local.json` (both gitignored).
 - `.claude/settings.json` denies broad `git add`, npm and yarn installs and reads of local env files,
   so those rules in AGENTS.md have no exceptions here.
-- A PreToolUse hook (`scripts/guard-merge-main.mjs`) blocks `gh pr merge` when the PR base is `main`
-  or cannot be determined.
+- A PreToolUse hook (`scripts/guard-merge-main.mjs`) blocks `gh pr merge`, `gh api` merges and the
+  GitHub MCP merge tool when the PR base is `main` or cannot be determined.
 - A PreToolUse hook (`scripts/guard-test-edits.mjs`) refuses edits to existing test files while a fix
   task is declared: set `FIX_MODE=1` before starting the session, or `touch .claude/fix-mode`
   (gitignored), and unset it or delete the marker to lift it. New test files are always allowed.

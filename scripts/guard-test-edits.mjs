@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
-import { existsSync, readFileSync } from 'node:fs';
-import { isAbsolute, join, relative, resolve, sep } from 'node:path';
+import { existsSync, readFileSync, realpathSync } from 'node:fs';
+import { basename, dirname, isAbsolute, join, relative, resolve, sep } from 'node:path';
 
 const BLOCK_EXIT_CODE = 2;
 const FIX_MODE_ENV = 'FIX_MODE';
@@ -19,7 +19,16 @@ const readHookInput = () => {
   }
 };
 
-const root = resolve(process.env.CLAUDE_PROJECT_DIR ?? process.cwd());
+const canonical = (path) => {
+  try {
+    return realpathSync(path);
+  } catch {
+    const parent = dirname(path);
+    return parent === path ? path : join(canonical(parent), basename(path));
+  }
+};
+
+const root = canonical(resolve(process.env.CLAUDE_PROJECT_DIR ?? process.cwd()));
 
 const fixModeDeclared = () =>
   process.env[FIX_MODE_ENV] === FIX_MODE_ON || existsSync(join(root, FIX_MODE_MARKER));
@@ -35,7 +44,7 @@ if (!EDIT_TOOLS.has(input.tool_name) || !fixModeDeclared()) process.exit(0);
 const target = input.tool_input?.file_path ?? input.tool_input?.notebook_path;
 if (typeof target !== 'string' || target === '') process.exit(0);
 
-const absolute = isAbsolute(target) ? target : resolve(root, target);
+const absolute = canonical(isAbsolute(target) ? target : resolve(root, target));
 const relativePath = relative(root, absolute);
 const outsideRoot = relativePath.startsWith('..') || isAbsolute(relativePath);
 if (outsideRoot || !isTestPath(relativePath) || !existsSync(absolute)) process.exit(0);

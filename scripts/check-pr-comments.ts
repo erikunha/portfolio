@@ -33,6 +33,8 @@ export type EvalResult =
 
 const SELF_REVIEW_STATES = new Set(['COMMENTED', 'APPROVED']);
 const SELF_REVIEW_AUTHORS = new Set(['OWNER', 'MEMBER', 'COLLABORATOR']);
+const BOT_TYPENAME = 'Bot';
+const SELF_REVIEW_EXEMPT_BOTS = new Set(['dependabot', 'dependabot[bot]']);
 const SELF_REVIEW_MARKER = /self-review:\s*([0-9a-f]{40})(?![0-9a-f])/gi;
 
 type Review = { state: string; body: string; authorAssociation: string };
@@ -52,7 +54,7 @@ export type GhExec = (args: string[]) => Promise<string>;
 const QUERY = `query($owner:String!,$repo:String!,$pr:Int!){
   repository(owner:$owner,name:$repo){
     pullRequest(number:$pr){
-      author{login}
+      author{login __typename}
       headRefOid
       reviews(last:100){nodes{state body authorAssociation}}
       reviewThreads(first:100){
@@ -71,7 +73,7 @@ type GraphQLEnvelope = {
   data?: {
     repository?: {
       pullRequest?: {
-        author: { login: string };
+        author: { login: string; __typename?: string };
         headRefOid: string;
         reviews: { nodes: Review[] };
         reviewThreads: {
@@ -168,7 +170,9 @@ export async function evaluatePullRequest(opts: {
     };
   }
 
-  if (!hasSelfReview(pr.reviews.nodes, pr.headRefOid)) {
+  const exemptBot =
+    pr.author.__typename === BOT_TYPENAME && SELF_REVIEW_EXEMPT_BOTS.has(author.toLowerCase());
+  if (!exemptBot && !hasSelfReview(pr.reviews.nodes, pr.headRefOid)) {
     return {
       ok: false,
       code: 'missing_self_review',

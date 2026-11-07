@@ -43,9 +43,9 @@ Git hooks enforce separate stages:
 
 ## Pull-request review
 
-`.github/workflows/claude-review.yml` configures the automated reviewer with `.github/claude-review-prompt.md` and `REVIEW.md`. It runs only when an owner, member or collaborator comments `/claude-review` on a PR and is never a merge requirement. `pnpm claude-gate` is an optional check of its approval against the current head. `pnpm pr:gate` checks review thread resolution and replies. These commands do not prove a local pre-PR review ran.
+`.github/workflows/claude-review.yml` configures the automated reviewer with `.github/claude-review-prompt.md` and `REVIEW.md`. It runs only when an owner, member or collaborator comments `/claude-review` on a PR and is never a merge requirement. `pnpm claude-gate` is an optional check of its approval against the current head. `pnpm pr:gate` checks review thread resolution and replies, and runs in the `pr-gate` workflow on PR updates and review events. These commands do not prove a local pre-PR review ran.
 
-The pre-PR review procedure and the merge restriction are documented in `AGENTS.md`. For Claude Code, the `guard-merge-main` hook blocks an agent merge into `main`; other tools rely on the written rule.
+The pre-PR review procedure and the merge restriction are documented in `AGENTS.md`. For Claude Code, the `guard-merge-main` hook blocks an agent merge into `main` through `gh pr merge`, `gh api` and the GitHub MCP merge tool; other tools and merge paths rely on the written rule.
 
 ## Evaluation tools
 
