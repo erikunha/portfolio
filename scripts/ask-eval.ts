@@ -22,8 +22,11 @@ import {
   runCalibration,
 } from '@/lib/eval/calibration';
 import { featureCostUsdFrom, judgeCostUsdFrom, summarizeFeatureCost } from '@/lib/eval/cost';
+import { buildJudgeFactSheet } from '@/lib/eval/fact-sheet';
+import { hasGatewayCredential } from '@/lib/eval/gateway-credential';
 import { judge } from '@/lib/eval/judge';
 import { percentile } from '@/lib/eval/percentile';
+import { isolateFromRedis } from '@/lib/eval/publish-gate';
 import { publishAggregate } from '@/lib/eval/redis-publish';
 import type { CalibrationCase } from '@/lib/eval/types';
 import { createUsageMeter } from '@/lib/eval/usage-meter';
@@ -139,23 +142,29 @@ function clientIpForItem(index: number): string {
 }
 
 async function main(): Promise<void> {
-  if (!process.env.AI_GATEWAY_API_KEY) {
+  isolateFromRedis(process.env);
+  if (!hasGatewayCredential(process.env)) {
     if (process.env.CI) {
-      console.error('ai-eval: AI_GATEWAY_API_KEY is required in CI but not set — aborting');
+      console.error(
+        'ai-eval: AI_GATEWAY_API_KEY or VERCEL_OIDC_TOKEN is required in CI but not set, aborting',
+      );
       process.exit(1);
     }
-    console.log('ai-eval skipped: AI_GATEWAY_API_KEY not configured');
+    console.log(
+      'ai-eval skipped: no AI Gateway credential (AI_GATEWAY_API_KEY or VERCEL_OIDC_TOKEN)',
+    );
     process.exit(0);
   }
 
   setBudgetStore(createEvalBudgetStore(ASK_EVAL_CORPUS.length));
+  const factSheet = buildJudgeFactSheet(new Date());
 
   console.log(
     `ask-eval: calibration - ${ASK_EVAL_CALIBRATION.length} gold cases → judge ${JUDGE_MODEL}\n`,
   );
   const calibration = await runCalibration(
     ASK_EVAL_CALIBRATION.map((item) => ({ ...item, prompt: item.question })),
-    { model: JUDGE_MODEL },
+    { model: JUDGE_MODEL, factSheet },
   );
   for (const c of calibration.cases) {
     const mark = c.agreed ? 'AGREE' : c.errored ? 'ERROR' : 'DISAGREE';
@@ -315,7 +324,7 @@ async function main(): Promise<void> {
     const usage = result.requestId ? await usageMeter.take(result.requestId, USAGE_WAIT_MS) : null;
     if (usage?.usageResolved) measuredAnswerCostsUsd.push(featureCostUsdFrom(usage));
 
-    const verdict = await judge(item, result.text, { model: JUDGE_MODEL });
+    const verdict = await judge(item, result.text, { model: JUDGE_MODEL, factSheet });
     judgeInputTokens += verdict.inputTokens;
     judgeOutputTokens += verdict.outputTokens;
 

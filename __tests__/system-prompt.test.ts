@@ -1,4 +1,7 @@
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
+import { askFacts } from '@/content/ask-facts';
 import { gitLog } from '@/content/git-log';
 import { perfReceipts } from '@/content/perf-receipts';
 import { profile } from '@/content/profile';
@@ -8,6 +11,7 @@ import { SITE_LOCALE } from '@/content/site-locale';
 import { unknowns } from '@/content/unknowns';
 import { SYSTEM_TEXT } from '@/lib/ask/system-prompt';
 
+const BASELINE_PATH = '__tests__/fixtures/system-prompt.baseline.txt';
 const CACHE_ELIGIBILITY_MIN_CHARS = 3500;
 const COUNTRY_AND_AREA_CODE_LENGTH = 4;
 const PHONE_LOCAL_DIGITS = personSchema.telephone
@@ -18,6 +22,28 @@ describe('lib/ask/system-prompt', () => {
   describe('cache eligibility', () => {
     it('SYSTEM_TEXT is ≥ 3500 chars (proxy for ≥ 1024 tokens, Haiku ephemeral cache minimum)', () => {
       expect(SYSTEM_TEXT.length).toBeGreaterThanOrEqual(CACHE_ELIGIBILITY_MIN_CHARS);
+    });
+  });
+
+  describe('prompt bytes', () => {
+    it('composes the same bytes as the prompt that held these facts as literals', () => {
+      // behavioral-test-allow: the fixture is the byte-for-byte prompt the model is served
+      const baseline = readFileSync(join(process.cwd(), BASELINE_PATH), 'utf8');
+      expect(
+        SYSTEM_TEXT,
+        'SYSTEM_TEXT drifted from __tests__/fixtures/system-prompt.baseline.txt. A deliberate prompt or content edit regenerates the fixture from SYSTEM_TEXT in the same commit; an unintended diff changes the prompt cache key and model behaviour.',
+      ).toBe(baseline);
+    });
+
+    it('composes every ask fact from content/ask-facts.ts', () => {
+      for (const line of [
+        askFacts.openTo,
+        ...askFacts.coreStack,
+        ...askFacts.currentRoleScope,
+        ...askFacts.targeting,
+      ]) {
+        expect(SYSTEM_TEXT, line).toContain(line);
+      }
     });
   });
 

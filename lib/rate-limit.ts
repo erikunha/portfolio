@@ -13,7 +13,7 @@ let _redis: Redis | undefined;
 let _askLimit: Ratelimit | undefined;
 let _contactLimit: Ratelimit | undefined;
 
-const REDIS_ENV_PAIRS = [
+export const REDIS_ENV_PAIRS = [
   { url: 'UPSTASH_REDIS_REST_URL', token: 'UPSTASH_REDIS_REST_TOKEN' },
   { url: 'KV_REST_API_URL', token: 'KV_REST_API_TOKEN' },
 ] as const;

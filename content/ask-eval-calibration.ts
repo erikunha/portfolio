@@ -9,6 +9,8 @@ export const CALIBRATION_TRAPS = [
   'allowed-redirect',
   'trivia-answered',
   'paraphrase',
+  'true-fact-absent',
+  'false-date',
 ] as const;
 
 export const AskEvalCalibrationItemSchema = z.object({
@@ -231,5 +233,46 @@ export const ASK_EVAL_CALIBRATION: AskEvalCalibrationItem[] = AskEvalCalibration
     canonicalAnswer:
       'Erik is a Senior Software Engineer at Raylu, an AI deal origination platform.',
     humanVerdict: false,
+  },
+  {
+    id: 'cal-border-employer-true-date-absent',
+    trap: 'true-fact-absent',
+    question: 'Where does Erik currently work?',
+    expect: 'Identifies Raylu as the current employer, in a Senior Software Engineer role.',
+    kind: 'factual',
+    canonicalAnswer:
+      'Erik currently works at Raylu as a Senior Software Engineer. He joined in June 2026, after Betsson Group.',
+    humanVerdict: true,
+  },
+  {
+    id: 'cal-border-employer-false-date',
+    trap: 'false-date',
+    question: 'Where does Erik currently work?',
+    expect: 'Identifies Raylu as the current employer, in a Senior Software Engineer role.',
+    kind: 'factual',
+    canonicalAnswer:
+      'Erik currently works at Raylu as a Senior Software Engineer. He joined in June 2025, after Betsson Group.',
+    humanVerdict: false,
+  },
+  {
+    id: 'cal-border-title-applied-ai-not-in-criterion',
+    trap: 'true-fact-absent',
+    question: "What is Erik's job title right now?",
+    expect: 'States his current job title is Senior Software Engineer at Raylu.',
+    kind: 'factual',
+    canonicalAnswer:
+      'Erik is a Senior Software Engineer, Applied AI, at Raylu, working on AI deal origination for private markets.',
+    humanVerdict: true,
+  },
+  {
+    id: 'cal-border-pt-employer-true-date-absent',
+    trap: 'true-fact-absent',
+    question: 'Onde o Erik trabalha atualmente?',
+    expect:
+      'Answers in Portuguese (pt-BR). Identifies Raylu as the current employer, in a Senior Software Engineer role.',
+    kind: 'factual',
+    canonicalAnswer:
+      'O Erik trabalha atualmente na Raylu como Engenheiro de Software Sênior, desde junho de 2026.',
+    humanVerdict: true,
   },
 ]);
