@@ -115,7 +115,7 @@
   .guitar-chain-label {
     margin: 0;
     padding: var(--phi-space-1) var(--phi-space-2);
-    color: var(--color-primary-500);
+    color: var(--color-tertiary-50);
     font-size: var(--text-xs);
     letter-spacing: var(--guitar-label-tracking);
     border-bottom: var(--border-width) solid var(--color-primary-quiet);
