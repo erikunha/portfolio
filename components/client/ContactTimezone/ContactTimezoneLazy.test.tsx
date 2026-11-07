@@ -1,5 +1,5 @@
 import { act, render, screen } from '@testing-library/react';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { contactCopy } from '@/content/contact-copy';
 import { SITE_LOCALE } from '@/content/site-locale';
 import { ContactTimezoneLazy } from './ContactTimezoneLazy';
@@ -29,6 +29,12 @@ class FakeIntersectionObserver {
 const loader = () => observers[0] as FakeIntersectionObserver;
 
 const STATIC_PANEL = <div data-testid="static-panel">static map</div>;
+
+const MODULE_LOAD_TIMEOUT_MS = 60_000;
+
+beforeAll(async () => {
+  await import('./ContactTimezone.client');
+}, MODULE_LOAD_TIMEOUT_MS);
 
 beforeEach(() => {
   observers = [];

@@ -1,5 +1,6 @@
 import { expect, type Page, test } from '@playwright/test';
 import { horizontalOverflow } from './_helpers/geometry';
+import { gotoSettled } from './_helpers/streamed';
 
 const GOLDEN_RATIO = 1.618;
 const RATIO_TOLERANCE = 0.1;
@@ -51,7 +52,7 @@ for (const path of ['/links', '/links/en']) {
       page,
     }) => {
       await page.setViewportSize(VIEWPORT.phone);
-      await page.goto(path);
+      await gotoSettled(page, path);
 
       expect(await columnCount(page, '.links-grid')).toBe(1);
 
@@ -74,7 +75,7 @@ for (const path of ['/links', '/links/en']) {
 
     test('puts the pills in a 2-column grid of 48px rows on a phone', async ({ page }) => {
       await page.setViewportSize(VIEWPORT.phone);
-      await page.goto(path);
+      await gotoSettled(page, path);
 
       expect(await columnCount(page, PILLS)).toBe(2);
       const heights = await page
@@ -86,7 +87,7 @@ for (const path of ['/links', '/links/en']) {
 
     test('splits 1fr to 1.618fr at 1280, identity and pills left, feed right', async ({ page }) => {
       await page.setViewportSize(VIEWPORT.desktop);
-      await page.goto(path);
+      await gotoSettled(page, path);
 
       expect(await columnCount(page, '.links-grid')).toBe(2);
       const left = await width(page, PRIMARY);
@@ -107,7 +108,7 @@ for (const path of ['/links', '/links/en']) {
       page,
     }) => {
       await page.setViewportSize(VIEWPORT.tablet);
-      await page.goto(path);
+      await gotoSettled(page, path);
 
       expect(await columnCount(page, '.links-grid')).toBe(2);
       const left = await width(page, PRIMARY);
@@ -119,7 +120,7 @@ for (const path of ['/links', '/links/en']) {
     for (const [name, viewport] of Object.entries(VIEWPORT)) {
       test(`has no horizontal overflow at ${viewport.width} (${name})`, async ({ page }) => {
         await page.setViewportSize(viewport);
-        await page.goto(path);
+        await gotoSettled(page, path);
 
         const offenders = await page.evaluate(() => {
           const root = document.documentElement;
@@ -135,7 +136,7 @@ for (const path of ['/links', '/links/en']) {
 
     test('wraps the full stack line inside the identity box at 320', async ({ page }) => {
       await page.setViewportSize(VIEWPORT.narrow);
-      await page.goto(path);
+      await gotoSettled(page, path);
 
       const stack = page.locator('.links-identity-meta dd').nth(1);
       await expect(stack).toContainText('Guardrails');
@@ -147,7 +148,7 @@ for (const path of ['/links', '/links/en']) {
 
     test('renders no text below the 12px floor', async ({ page }) => {
       await page.setViewportSize(VIEWPORT.desktop);
-      await page.goto(path);
+      await gotoSettled(page, path);
 
       const small = await page.evaluate((floor) => {
         const found: string[] = [];
@@ -166,7 +167,7 @@ for (const path of ['/links', '/links/en']) {
 
     test('labels the QR code and the shell chrome in the page language', async ({ page }) => {
       await page.setViewportSize(VIEWPORT.desktop);
-      await page.goto(path);
+      await gotoSettled(page, path);
 
       const copy = ROUTE_COPY[path];
       if (!copy) throw new Error(`no expected copy for ${path}`);

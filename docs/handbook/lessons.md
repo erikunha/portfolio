@@ -101,6 +101,22 @@ The prompt for a manual or agent review that applies these rules to a diff is `d
 33. A scroll loop paced by `waitForTimeout` outruns an IntersectionObserver on a slow runner: the
     observer delivers once per frame, so sections jumped over between deliveries are never counted.
     Bring each target into the observer's band, wait for frames, and check the band geometrically.
+34. `page.goto` resolves at `load`, before React swaps a streamed Suspense boundary in. A spec that
+    measures or counts anything under `#sec-live-metrics`, `#sec-live-perf` or the `/links` feed
+    navigates with `gotoSettled` (`tests/e2e/_helpers/streamed.ts`). A read in the gap sees the
+    fallback, and the swap then detaches it: `getComputedStyle` returns `''` and `NaN` follows.
+    Check: `tests/e2e/streamed-settle.spec.ts`.
+35. A `PerformanceObserver` for `longtask` is installed after the page is idle and without
+    `buffered: true`. Buffered entries include the hydration tasks of page load, which are not the
+    interaction under test. Check: `cross-cutting.spec.ts` test 4b.
+36. CI fails a test that passes on a retry (`failOnFlakyTests`). Fix the race, never the retry
+    count: wait on the state the assertion reads (`expect.poll`, `toPass`, `gotoSettled`), not on a
+    timeout. Check: `__tests__/scripts/playwright-flaky-policy.test.ts`.
+37. `html { scroll-padding-top }` reserves the room the phone's sticky bars occupy, so a scroll into
+    view (keyboard focus, `scrollIntoView`, Playwright's `locator.click()`) treats a control inside a
+    stuck bar as hidden and centres it, moving the page 379px at 390px wide. Controls in a stuck
+    bar carry a negative `scroll-margin-top` equal to the bars' height. Check:
+    `tests/e2e/sticky-bar-focus.spec.ts`.
 
 ## Pre-push judgement list
 

@@ -99,7 +99,11 @@ export function ContactTimezone({ copy }: { copy: TimezoneCopy }) {
     () => false,
   );
   const added = slotLine !== null && proposedLine === slotLine && lineInMessage;
-  const messageFieldId = messageStore.getFieldId();
+  const messageFieldId = useSyncExternalStore(
+    messageStore.subscribe,
+    messageStore.getFieldId,
+    () => null,
+  );
 
   function propose() {
     if (!slotLine) return;

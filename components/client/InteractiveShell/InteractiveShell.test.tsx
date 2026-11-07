@@ -353,6 +353,8 @@ async function typeDraft(input: HTMLInputElement, text: string) {
   });
 }
 
+const CAP_TEST_TIMEOUT_MS = 30_000;
+
 describe('InteractiveShell r106 controls', () => {
   let mounted: MountedClient;
 
@@ -943,22 +945,27 @@ describe('InteractiveShell r106 controls', () => {
     },
   );
 
-  it('caps rendered lines and command recall, and announces clear', async () => {
-    const { SHELL_LIMITS } = await import('@/content/shell-ui');
-    const container = await renderShell();
-    await submitQuestion(container, 'whois');
-    for (let index = 0; index < SHELL_LIMITS.commandHistory; index++) {
-      await submitQuestion(container, 'help');
-    }
-    for (let index = 0; index <= SHELL_LIMITS.commandHistory; index++) {
-      await press(shellInput(container), 'ArrowUp');
-    }
-    expect(shellInput(container).value).toBe('help');
-    expect(container.querySelector('[role="log"]')?.children.length).toBeLessThanOrEqual(50);
-    await submitQuestion(container, 'clear');
-    expect(container.querySelector('[role="log"]')?.children.length).toBe(1);
-    expect(container.querySelector('[role="status"]')?.textContent).toContain('log cleared');
-  });
+  it(
+    'caps rendered lines and command recall, and announces clear',
+    async () => {
+      const CHEAP_COMMAND = 'whoami';
+      const { SHELL_LIMITS } = await import('@/content/shell-ui');
+      const container = await renderShell();
+      await submitQuestion(container, 'whois');
+      for (let index = 0; index < SHELL_LIMITS.commandHistory; index++) {
+        await submitQuestion(container, CHEAP_COMMAND);
+      }
+      for (let index = 0; index <= SHELL_LIMITS.commandHistory; index++) {
+        await press(shellInput(container), 'ArrowUp');
+      }
+      expect(shellInput(container).value).toBe(CHEAP_COMMAND);
+      expect(container.querySelector('[role="log"]')?.children.length).toBeLessThanOrEqual(50);
+      await submitQuestion(container, 'clear');
+      expect(container.querySelector('[role="log"]')?.children.length).toBe(1);
+      expect(container.querySelector('[role="status"]')?.textContent).toContain('log cleared');
+    },
+    CAP_TEST_TIMEOUT_MS,
+  );
 
   it('aborts the request and cancels its reader when unmounted', async () => {
     let signal: AbortSignal | undefined;

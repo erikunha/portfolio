@@ -10,6 +10,7 @@ export default defineConfig({
   fullyParallel: false,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
+  failOnFlakyTests: !!process.env.CI,
   workers: process.env.CI ? 2 : 1,
   reporter: [
     ...(process.env.GITHUB_ACTIONS ? ([['github'], ['list']] as const) : ([['list']] as const)),

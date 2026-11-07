@@ -19,8 +19,10 @@ import {
   estimateJobCostUsd,
   judgeCostUsdFrom,
 } from '@/lib/eval/cost';
+import { hasGatewayCredential } from '@/lib/eval/gateway-credential';
 import { gradeRun } from '@/lib/eval/grade';
 import { aggregateCase, type CaseStats } from '@/lib/eval/montecarlo';
+import { isolateFromRedis } from '@/lib/eval/publish-gate';
 import { publishAggregate } from '@/lib/eval/redis-publish';
 import { runTarget } from '@/lib/eval/run-target';
 import type { CalibrationResult } from '@/lib/eval/types';
@@ -139,12 +141,17 @@ function targetModelFor(tier: 'mechanical' | 'judgment'): string {
 }
 
 async function main(): Promise<void> {
-  if (!process.env.AI_GATEWAY_API_KEY) {
+  isolateFromRedis(process.env);
+  if (!hasGatewayCredential(process.env)) {
     if (process.env.CI) {
-      console.error('agent-eval: AI_GATEWAY_API_KEY is required in CI but not set — aborting');
+      console.error(
+        'agent-eval: AI_GATEWAY_API_KEY or VERCEL_OIDC_TOKEN is required in CI but not set, aborting',
+      );
       process.exit(1);
     }
-    console.log('agent-eval skipped: AI_GATEWAY_API_KEY not configured');
+    console.log(
+      'agent-eval skipped: no AI Gateway credential (AI_GATEWAY_API_KEY or VERCEL_OIDC_TOKEN)',
+    );
     process.exit(0);
   }
 
