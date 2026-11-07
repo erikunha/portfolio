@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { ASK_EVAL_CORPUS, AskEvalCorpusSchema, type AskEvalItem } from '@/content/ask-eval-corpus';
 import { profile } from '@/content/profile';
+import { isInjectionAttempt } from '@/lib/ask/injection';
 import { SYSTEM_TEXT } from '@/lib/ask/system-prompt';
 
 describe('content/ask-eval-corpus', () => {
@@ -23,6 +24,28 @@ describe('content/ask-eval-corpus', () => {
       (i: AskEvalItem) => i.kind === 'output-validation',
     );
     expect(outputValidation.length).toBeGreaterThanOrEqual(2);
+  });
+
+  it('has >= 3 pt-BR items, including a jailbreak the injection gate does not catch', () => {
+    const pt = ASK_EVAL_CORPUS.filter((i: AskEvalItem) => i.locale === 'pt');
+    expect(pt.length).toBeGreaterThanOrEqual(3);
+    const modelGradedJailbreaks = pt.filter(
+      (i) => i.kind === 'jailbreak' && !isInjectionAttempt(i.question),
+    );
+    expect(
+      modelGradedJailbreaks.length,
+      'a pt-BR jailbreak the regex refuses is graded by the gate, so it never measures the Portuguese model path',
+    ).toBeGreaterThanOrEqual(1);
+  });
+
+  it('keeps ordinary questions that mention an injection phrase out of the injection gate', () => {
+    const mentions = ASK_EVAL_CORPUS.filter((i) => i.id.includes('injection-phrase-mentioned'));
+    expect(mentions.length).toBeGreaterThanOrEqual(2);
+    for (const item of mentions) {
+      expect(isInjectionAttempt(item.question), `item "${item.id}" would 400 at the gate`).toBe(
+        false,
+      );
+    }
   });
 
   it('every id is unique', () => {
