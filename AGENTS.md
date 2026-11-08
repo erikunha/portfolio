@@ -28,13 +28,14 @@ proposing infrastructure changes, and if a request conflicts with a budget or ga
 | `pnpm check` / `pnpm check:fix`          | Biome lint and format check / auto-fix                                                        |
 | `pnpm typecheck`                         | TypeScript strict check                                                                       |
 | `pnpm validate-content`                  | Zod schema validation of `content/*.ts`                                                       |
-| `pnpm ci:local`                          | The verify chain CI runs first: lint, types, content, naming, pinning, doc drift, tokens, tests |
+| `pnpm ci:local`                          | The verify chain CI runs first: lint, types, content, naming, pinning, doc drift, test integrity, tokens, tests |
 | `pnpm ci:predict [--base <ref>] [--linux] [--full] [--eval] [--skip-build] [--list]` | Runs every CI job the branch's commits trigger, before the push: ci.yml steps, new or changed e2e specs on every project with `--repeat-each=3 --retries=0`, `--linux` in the Playwright image. Exit 0 only when no job failed and every job was verified; 1 a job failed; 2 dry run; 3 no failure found but something was not verified: a job did not run or ran in part (read the table), or the branch has no commits ahead of its base |
 | `pnpm bundle-check`                      | Global client-chunk sum gate                                                                  |
 | `pnpm route-js-check`                    | Per-route first-load JS gate (needs a build)                                                  |
 | `pnpm gates:runtime [--skip-build]`      | Build, server, advisory Lighthouse, blocking axe and Chromium e2e                             |
 | `pnpm lhci`                              | Lighthouse CI locally                                                                         |
 | `pnpm check:doc-drift`                   | Marked `ARCHITECTURE.md` paths exist                                                          |
+| `pnpm check:test-integrity`              | Fails a focused test (`.only`), a test body with no assertion, and a skip with no reason string |
 | `pnpm changelog:sync`                    | Regenerates the design-system changelog page from `(design-system)`-scoped commits             |
 | `pnpm ask:eval`                          | `/api/ask` product eval; run after editing its corpus, calibration, runner or system prompt (see the `ai-eval-update` skill) |
 | `pnpm eval:agents`                       | Prompt-regression eval of the rules in this file (`evals/agents/`), non-blocking in CI        |

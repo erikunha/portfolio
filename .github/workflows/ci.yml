@@ -83,6 +83,9 @@ jobs:
       - name: Detect-changes pathspec gate (no orphaned filters)
         run: pnpm check:detect-changes-paths
 
+      - name: Test integrity gate (no focused, assertion-less or unexplained skipped tests)
+        run: pnpm check:test-integrity
+
       - name: Contrast check
         run: pnpm lint:contrast
 

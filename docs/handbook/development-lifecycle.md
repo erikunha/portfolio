@@ -56,7 +56,7 @@ A feature branch is created (`<type>/<description>`, enforced by `.husky/pre-pus
 
 ### 7. Pre-PR diff read, and the pre-push gate chain
 
-Before opening the PR, read the diff. For non-deletion pushes, `.husky/pre-push` checks the main target, branch name and `pnpm verify`. Deletion-only pushes skip branch naming and verify after the main-target guard.
+Before opening the PR, read the diff. For non-deletion pushes, `.husky/pre-push` checks the main target, branch name and `pnpm verify`. The verify chain includes `pnpm check:test-integrity` (`scripts/check-test-integrity.ts`, also a `quality-fast` step in CI): it fails a focused test, a test body with no assertion (a call to a helper that asserts, local or imported, counts) and a skip without a reason string. Deletion-only pushes skip branch naming and verify after the main-target guard.
 
 ### 8. Pre-PR -> open PR
 
