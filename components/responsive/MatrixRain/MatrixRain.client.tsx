@@ -6,6 +6,14 @@ import { SYSFAIL_END, SYSFAIL_START } from '@/lib/events';
 import { getFrameGovernorTickMultiplier } from '@/lib/frame-governor';
 import { readMotion } from '@/lib/motion';
 import { subscribeMotion } from '@/lib/motion-change';
+import {
+  RAIN_BODY_COLOR,
+  RAIN_CANVAS_BLACK,
+  RAIN_DESKTOP_PROFILE,
+  RAIN_HEAD_COLOR,
+  RAIN_TAIL_FADE,
+  rainFont,
+} from './rain-tokens';
 import { scaleTailFade } from './tail-fade';
 
 type RainTunables = {
@@ -44,11 +52,11 @@ type RainCfg = {
 };
 
 export function MatrixRain({
-  fontSize = 16,
-  speed = 0.7,
-  headColor = '#1d6a2a',
-  bodyColor = '#072810',
-  tailFade = 'rgba(0,0,0,0.10)',
+  fontSize = RAIN_DESKTOP_PROFILE.fontSize,
+  speed = RAIN_DESKTOP_PROFILE.speed,
+  headColor = RAIN_HEAD_COLOR,
+  bodyColor = RAIN_BODY_COLOR,
+  tailFade = RAIN_TAIL_FADE,
   className,
   style,
   watchRef,
@@ -94,7 +102,7 @@ export function MatrixRain({
       canvasEl.width = Math.max(1, Math.floor(w * dpr));
       canvasEl.height = Math.max(1, Math.floor(h * dpr));
       ctxEl.setTransform(dpr, 0, 0, dpr, 0, 0);
-      ctxEl.font = `${fs}px "JetBrains Mono", monospace`;
+      ctxEl.font = rainFont(fs);
       const newCols = Math.ceil(w / fs);
       const old = drops;
       drops = new Array(newCols);
@@ -102,7 +110,7 @@ export function MatrixRain({
         drops[i] = typeof old[i] === 'number' ? (old[i] as number) : -Math.random() * (h / fs);
       }
       columns = newCols;
-      ctxEl.fillStyle = '#000';
+      ctxEl.fillStyle = RAIN_CANVAS_BLACK;
       ctxEl.fillRect(0, 0, w, h);
     }
 
@@ -169,7 +177,7 @@ export function MatrixRain({
     const unsubscribeMotion = subscribeMotion((on) => {
       setGate('motion', on);
       if (!on) {
-        ctxEl.fillStyle = '#000';
+        ctxEl.fillStyle = RAIN_CANVAS_BLACK;
         ctxEl.fillRect(0, 0, w, h);
       }
     });

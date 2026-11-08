@@ -1,6 +1,7 @@
 import { createElement } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { type MountedClient, mountClient } from '@/__tests__/helpers/render';
+import { RAIN_HEAD_COLOR, RAIN_TAIL_FADE } from './rain-tokens';
 
 const CANVAS_RECT = {
   width: 400,
@@ -18,8 +19,8 @@ const COLUMNS = 25;
 const FONT_SIZE = 16;
 const SPEED = 0.7;
 const FRAME_SPACING_MS = 50;
-const TAIL = 'rgba(0,0,0,0.10)';
-const HEAD = '#1d6a2a';
+const TAIL = RAIN_TAIL_FADE;
+const HEAD = RAIN_HEAD_COLOR;
 
 function makeRecordingCtx() {
   const fills: string[] = [];

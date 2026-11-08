@@ -2,6 +2,10 @@
 
 ADR-lite running log. One bullet per decision · date · reversibility note.
 
+## 2026-11-08: Matrix Rain values are a TS constants module
+
+- **2026-11-08** · **The rain's colours, sizes, canvas font and the mobile and desktop profiles live in `components/responsive/MatrixRain/rain-tokens.ts`, not in `@theme` custom properties.** Tailwind v4 drops a `@theme` variable nothing references, and reading one with `getComputedStyle` when the rain starts at idle costs a style recalculation on the path the idle start exists to keep clear. The canvas black is not a second copy: `rain-tokens.test.ts` fails if it stops matching `--color-secondary-950`. The `"JetBrains Mono"` canvas family is pinned there too, because the `--font-mono` stack resolves through a `next/font` variable a canvas cannot read. Reversible: inline the constants back or declare them in `theme.css` and read them once at mount.
+
 ## 2026-11-08: pull requests that touch a high-risk surface are labelled
 
 - **2026-11-08** · **A PR that changes a high-risk surface gets the `high-risk` label automatically, and loses it when no changed file is on the list; no PR size limit is added.** Review attention should follow blast radius, and size says little about it: a one-line change to `proxy.ts` or `lib/env.ts` outweighs a large content edit. The list is one module (`scripts/high-risk-paths.ts`), unit-tested, with a guard that every entry exists on disk so a rename cannot drop a surface unnoticed. `high-risk-label.yml` takes `pull-requests: write` on the labelling job only, passes event values through `env`, and skips fork and Dependabot runs (read-only token) with a notice instead of failing. Alternative rejected: a size cap, which the owner declined. Reversible: delete the workflow, the script and its two tests.

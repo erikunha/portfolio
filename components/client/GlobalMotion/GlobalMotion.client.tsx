@@ -3,16 +3,15 @@
 import { useBreakpoint } from '@/lib/use-breakpoint.client';
 import { ErrorBoundary } from '../../ErrorBoundary';
 import { MatrixRainLazy } from '../../responsive/MatrixRain';
+import { RAIN_DESKTOP_PROFILE, RAIN_MOBILE_PROFILE } from '../../responsive/MatrixRain/rain-tokens';
 import { TypeReveal } from '../TypeReveal';
 
-const RAIN_MOBILE = { fontSize: 14, speed: 0.6, opacity: 0.22 } as const;
-const RAIN_DESKTOP = { fontSize: 16, speed: 0.7, opacity: 0.28 } as const;
 const RAIN_LAYER = 0;
 
 export function GlobalMotion() {
   const { isMobile } = useBreakpoint();
 
-  const rain = isMobile ? RAIN_MOBILE : RAIN_DESKTOP;
+  const rain = isMobile ? RAIN_MOBILE_PROFILE : RAIN_DESKTOP_PROFILE;
 
   return (
     <>
