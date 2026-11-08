@@ -17,7 +17,8 @@ describe('root layout person JSON-LD', () => {
     const html = renderToStaticMarkup(<RootLayout>body</RootLayout>);
     const block = /<script type="application\/ld\+json">([\s\S]*?)<\/script>/.exec(html);
     expect(block).not.toBeNull();
-    expect(block?.[1]).toContain('\\u003c/script>');
+    expect(block?.[1]).not.toContain('</');
+    expect(JSON.stringify(JSON.parse(block?.[1] ?? '{}'))).toContain(HOSTILE_NAME);
     expect(html).not.toContain(HOSTILE_NAME);
   });
 });
