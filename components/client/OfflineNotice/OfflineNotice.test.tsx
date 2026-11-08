@@ -17,7 +17,7 @@ describe('OfflineNotice', () => {
 
   async function mountWith(online: boolean, locale: SiteLocale = SITE_LOCALE.en) {
     vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(online);
-    mounted = await mountClient(createElement(OfflineNotice, { locale }));
+    mounted = await mountClient(createElement(OfflineNotice, { copy: offlineNotice[locale] }));
     return mounted.container;
   }
 
@@ -55,9 +55,21 @@ describe('OfflineNotice', () => {
     expect(container.querySelector('[role="status"]')?.textContent).toContain('○ SEM SINAL');
   });
 
+  it('renders the copy it is given instead of looking one up', async () => {
+    vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(false);
+    mounted = await mountClient(
+      createElement(OfflineNotice, { copy: { badge: 'BADGE-PROBE', message: 'message-probe' } }),
+    );
+    expect(mounted.container.querySelector('[role="status"]')?.textContent).toBe(
+      'BADGE-PROBEmessage-probe',
+    );
+  });
+
   it('stops listening when it unmounts', async () => {
     const remove = vi.spyOn(window, 'removeEventListener');
-    const local = await mountClient(createElement(OfflineNotice, { locale: SITE_LOCALE.en }));
+    const local = await mountClient(
+      createElement(OfflineNotice, { copy: offlineNotice[SITE_LOCALE.en] }),
+    );
     local.unmount();
     const removed = remove.mock.calls.map(([type]) => type);
     expect(removed).toEqual(expect.arrayContaining(['online', 'offline']));

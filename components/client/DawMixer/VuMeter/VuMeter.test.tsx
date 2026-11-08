@@ -2,14 +2,23 @@ import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { afterEach, describe, expect, it } from 'vitest';
 import { mountClient } from '@/__tests__/helpers/render';
+import { dawMixerCopy } from '@/content/daw-mixer';
+import { SITE_LOCALE } from '@/content/site-locale';
 import { VuMeter } from './VuMeter.client';
+
+const CONTROLS = dawMixerCopy[SITE_LOCALE.en].controls;
 
 function renderStatic(props: Parameters<typeof VuMeter>[0]) {
   const html = renderToStaticMarkup(createElement(VuMeter, props));
   return new DOMParser().parseFromString(html, 'text/html');
 }
 
-const defaults = { segments: 14, initialLevel: 70, channelName: 'RHYTHM GTR' };
+const defaults = {
+  segments: 14,
+  initialLevel: 70,
+  channelName: 'RHYTHM GTR',
+  label: CONTROLS.vuMeter,
+};
 
 describe('VuMeter — ARIA contract', () => {
   it('has role="slider"', () => {
@@ -173,7 +182,7 @@ describe('VuMeter — pointer drag behavior', () => {
 
   it('updates aria-valuenow and aria-valuetext via ref mutation during drag', async () => {
     const { container, unmount: u } = await mountClient(
-      createElement(VuMeter, { segments: 10, initialLevel: 10, channelName: 'TEST' }),
+      createElement(VuMeter, { ...defaults, segments: 10, initialLevel: 10, channelName: 'TEST' }),
     );
     unmount = u;
     const slider = container.querySelector('[role="slider"]') as HTMLElement;

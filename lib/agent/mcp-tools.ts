@@ -1,6 +1,7 @@
 import type { McpServer } from '@modelcontextprotocol/server';
 import { z } from 'zod';
 import { POST as askPost } from '@/app/api/ask/route';
+import { social } from '@/content/social';
 import { HIRING_PROFILE } from '@/lib/hiring-profile';
 import { parseStreamChunk, REQUEST_ID_HEADER } from '@/lib/stream-protocol';
 
@@ -9,7 +10,7 @@ const MAX_QUESTION_LENGTH = 500;
 
 const FORWARDED_CLIENT_HEADERS = ['x-forwarded-for', 'x-real-ip'] as const;
 
-const ASK_ENDPOINT_URL = 'https://www.erikunha.dev/api/ask';
+const ASK_ENDPOINT_URL = `${social.site}/api/ask`;
 
 const FORGET_ENDPOINT_PATH = '/api/log/forget';
 

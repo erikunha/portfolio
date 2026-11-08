@@ -8,7 +8,7 @@ How a change flows from requirement to production. Git hooks and CI enforce chec
 flowchart TD
     idea["Idea / requirement"] --> brainstorm["Brainstorm (/speckit.specify)"]
     brainstorm --> spec["Spec: local specs/NNN-feature/<br/>requirements + acceptance criteria"]
-    spec --> agate{"architect-reviewer convention<br/>GATE_RESULT: PASS?"}
+    spec --> agate{"plan-review convention<br/>GATE_RESULT: PASS?"}
     agate -->|no| spec
     agate -->|yes| plan["Plan: local feature directory<br/>independently verifiable tasks"]
     plan --> branch["feature branch: feat|fix|... /description"]
@@ -32,23 +32,23 @@ flowchart TD
 
 ### 1. Idea -> Brainstorm
 
-Work starts with `/speckit.specify` (mandated before any feature). The output is a shared understanding of intent, requirements, and the chosen approach, with failure modes considered up front (`thinking-risk-premortem`).
+Work starts with `/speckit.specify` (mandated before any feature). The output is a shared understanding of intent, requirements, and the chosen approach, with failure modes considered up front.
 
 ### 2. Spec (the approved requirements)
 
 Write the feature requirements and acceptance criteria under local `specs/NNN-feature/`. `.gitignore` excludes `specs`, `.specify` and generated spec-kit skills. Artifact templates belong to the installed tooling; they are not tracked project contracts.
 
-### 3. The architect gate
+### 3. The plan gate
 
-Before a plan is written, an `architect-reviewer` agent runs the four-gate spec protocol and must return `GATE_RESULT: PASS`. This is a convention, not a project hook.
+Before a plan is written, the `plan-review` skill runs the four-gate protocol against the spec and must return `GATE_RESULT: PASS`. This is a convention, not a project hook.
 
 ### 4. Plan (the decomposed "how")
 
-Decompose the requirements into independently verifiable tasks under the feature directory. Large changes use an integration branch and focused sub-PRs, as described in `CLAUDE.md`.
+Decompose the requirements into independently verifiable tasks under the feature directory. Large changes use an integration branch and focused sub-PRs, as described in `AGENTS.md`.
 
 ### 5. Branch + TDD implementation
 
-A feature branch is created (`<type>/<description>`, enforced by `.husky/pre-push`). Implementation is test-first (`test-first discipline (CLAUDE.md skill dispatch)` is mandated before writing any new file/function/script). The agent works in scope blocks, one logical unit per commit.
+A feature branch is created (`<type>/<description>`, enforced by `.husky/pre-push`). Implementation is test-first (`test-first discipline (AGENTS.md)` is mandated before writing any new file/function/script). The agent works in scope blocks, one logical unit per commit.
 
 ### 6. Commit (per-commit gates)
 
@@ -57,7 +57,7 @@ A feature branch is created (`<type>/<description>`, enforced by `.husky/pre-pus
 
 ### 7. Pre-PR self-review, and the pre-push gate chain
 
-Before opening the PR, read the diff; the `pr-review-orchestrator` skill runs only when the owner asks, and there is no project review-stamp gate. For non-deletion pushes, `.husky/pre-push` checks the main target, branch name and `pnpm verify`. Deletion-only pushes skip branch naming and verify after the main-target guard.
+Before opening the PR, read the diff. The specialist self-review runs on the pushed head before the merge (see the review chapter of the handbook). For non-deletion pushes, `.husky/pre-push` checks the main target, branch name and `pnpm verify`. Deletion-only pushes skip branch naming and verify after the main-target guard.
 
 ### 8. Pre-PR -> open PR
 
@@ -69,7 +69,7 @@ On the open PR, answer every review thread: rebase before every push, verify the
 
 ### 10. Pre-merge gates -> merge
 
-`pnpm pr:gate` (`scripts/check-pr-comments.ts`) requires the returned review threads (the first 100; the query does not paginate) to be resolved and flags `suspicious_self_resolve`. Run `pnpm ci:local` alongside it, with CI green and the base contained. `pnpm claude-gate` (`scripts/check-claude-approval.ts`) is an optional check on a requested claude-review verdict, not a merge requirement; it requires the latest verdict to be Approve on the current head, an Approve on an ancestor SHA carries across a nonempty diff containing only visual baseline PNGs, and other stale or SHA-less Approves fail closed.
+`pnpm pr:gate` (`scripts/check-pr-comments.ts`) requires the returned review threads (the first 100; the query does not paginate) to be resolved with a reply, and flags `suspicious_self_resolve`. CI runs it in `quality-fast`. Run `pnpm ci:local` alongside it, with CI green and the base contained. `pnpm claude-gate` (`scripts/check-claude-approval.ts`) is an optional check on a requested claude-review verdict, not a merge requirement; it requires the latest verdict to be Approve on the current head, an Approve on an ancestor SHA carries across a nonempty diff containing only visual baseline PNGs, and other stale or SHA-less Approves fail closed.
 
 ### 11. Deploy -> smoke -> record
 
@@ -95,7 +95,7 @@ A UI change is read at every width before its PR opens. Each section gets a crit
 
 **Screenshots.** Capture each section at 2x at 1280, 768 and 390, with the fixed chrome hidden, so the capture shows the section and not the chrome over it. `stripVolatileChrome` in `tests/e2e/_helpers/mask-volatile.ts` is the list of chrome hidden before a capture; add any new fixed or sticky bar to it.
 
-A finding that changes behavior is a decision, so it lands in `DECISIONS.md` as a dated bullet. A finding that touches a CI-gated baseline follows `.claude/skills/visual-baseline-regen`.
+A finding that changes behavior is a decision, so it lands in `DECISIONS.md` as a dated bullet. A finding that touches a CI-gated baseline follows the `visual-baseline-regen` skill.
 
 ## The gate chain between "written" and "merged"
 
@@ -108,7 +108,7 @@ flowchart LR
         g3["no direct main"] --> g4["branch name"] --> g7["pnpm verify"]
     end
     subgraph prepr["pre-PR (manual)"]
-        g8["ci:local"] --> g9["bundle-check + route-js-check (non-docs)"] --> g11["gates:runtime (LHCI+axe+E2E)"] --> g12["human diff read (extra model review on owner request)"]
+        g8["ci:local"] --> g9["bundle-check + route-js-check (non-docs)"] --> g11["gates:runtime (LHCI+axe+E2E)"] --> g12["self-review on the pushed head"]
     end
     subgraph open["post-open"]
         g13["Resolve review threads"]

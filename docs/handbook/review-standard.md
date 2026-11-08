@@ -27,7 +27,7 @@ Before writing: list every doc, ADR, diagram and skill file that mentions the sy
 Check: after the diff, grep the repo for the old symbol name and the old path and fix every hit. A renamed path left in one doc fails the review every time.
 Examples:
 - PR144 `lib/__tests__/env.test.ts`: the comment above the test still listed the old consumer script; the fix updated the list.
-- PR206 `.agents/skills/pr-merge-gate/SKILL.md`: the mirror asserted a control that the Codex side did not have; the fix corrected the claim.
+- A skill copy for one tool asserted a control that the other tool's copy did not have; the fix corrected the claim.
 
 **Rule 3. A diagram, mermaid graph and prose list inside the same doc must agree.**
 Before writing: after editing a node, read the prose sentence that summarises that graph.

@@ -115,10 +115,6 @@
     letter-spacing: 0.04em;
   }
 
-  .community-tags a {
-    overflow-wrap: anywhere;
-  }
-
   .ab-now dl,
   .ab-stack dl {
     display: grid;

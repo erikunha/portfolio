@@ -8,7 +8,7 @@
 - **Section data belongs in `content/*.ts`.** Validated content modules supply profile data and most section copy. Components also contain presentation labels, and `content/contact-copy.ts` keeps the contact form copy free of Zod, and `content/contact-rules.ts` holds the helpers the client imports so the copy table stays out of client chunks. Client-consumed modules stay Zod-free; `content/_validate-client-content.ts` validates their schemas during `pnpm validate-content`. It is the only parse site for `content/terminal-chrome.ts`, whose `shellChrome` and `contactChrome` reach the shell and the contact form. The same file parses `brand.ts`, the home link name that the brand icon in every header carries.
 - **No raw hex outside `app/css/theme.css`.** Use `var(--color-*)`. Enforced by `lint:css-tokens`. Complex CSS patterns become named classes in an `app/css/components-*.css` partial under `@layer components`; everything else is a Tailwind utility.
 - **Per-keystroke/per-pixel/per-frame updates must not re-render React.** Mutate `textContent`/`style`/`setAttribute` directly, or rAF-coalesce. This is the single most important runtime convention (it's a budget, not a preference).
-- **`CLAUDE.md` stays under 275 lines** (`check:harness-size`). New procedural rules go to a skill or a `.claude/rules/*` path-scoped file, not into `CLAUDE.md`.
+- **`AGENTS.md` stays under its line budget and `CLAUDE.md` stays a thin import** (`check:harness-size`). New procedural rules go to a skill or a `.claude/rules/*` path-scoped file, not into `AGENTS.md`.
 - **pnpm only.** Deps are pinned (no `latest`).
 - **Commit scope is required** (`commitlint`), and `(design-system)`-scoped commits must regenerate the changelog (`pnpm changelog:sync`).
 
@@ -45,7 +45,7 @@
 
 - `/api/erik.json` does **not** use the `defineHandler` envelope. It's a machine-readable _document_, not an _operation_, so it returns raw JSON with long cache headers.
 - The fixed-opacity color stops (`-subtle`, `-border`, ...) are explicit hex, not `color-mix()`. That's a byte-identical / contrast-stable choice.
-- `design-system/lib/cx.ts` reimplements a 3-line classname joiner instead of importing `clsx`/`tailwind-merge` - a bundle-budget call. (`lib/cn.ts` uses `clsx` but deliberately _not_ `tailwind-merge`, for the same reason.)
+- `lib/cn.ts` uses `clsx` but deliberately _not_ `tailwind-merge`, a bundle-budget call.
 - The DS docs `theme-tokens.ts` and the `contrast-check.mjs` gate parse `theme.css` with the _same regex_ on purpose, to read the same declarations. Parser changes still need comparison.
 
 ## "Where is X?" quick index

@@ -13,6 +13,7 @@ import { SECTION_LABELS } from '@/content/section-labels';
 import type { SiteLocale } from '@/content/site-locale';
 import type { AskMetrics } from '@/lib/ask-metrics';
 import { getAskMetrics } from '@/lib/ask-metrics';
+import { MS_PER_SECOND } from '@/lib/time';
 import { ReadTimeoutError, SSR_REDIS_TIMEOUT_MS } from '@/lib/with-timeout';
 import { IconAiMetrics } from '../../Icons';
 import { Module } from '../../responsive/Module';
@@ -38,7 +39,6 @@ const formatMetricFor = (content: Measured) => ({
 
 const REQUEST_REF_HEADER = 'x-vercel-id';
 const RETRY_HREF = '?retry=1#sec-live-metrics';
-const MS_PER_SECOND = 1000;
 
 const ASK_FAILURE = { timeout: 'timeout', unreadable: 'unreadable' } as const;
 type AskFailure = (typeof ASK_FAILURE)[keyof typeof ASK_FAILURE];

@@ -31,6 +31,18 @@ const dawMixerCopyFor = (locale: SiteLocale): DawMixerCopy => {
       meter: pt ? 'MEDIDOR' : 'METER',
       fader: 'FADER',
     },
+    controls: {
+      vuMeter: pt
+        ? 'medidor VU de demonstração, arraste para ajustar o nível'
+        : 'VU meter demonstration, drag to adjust level',
+      fader: 'fader',
+      degrees: pt ? 'graus' : 'degrees',
+      buttons: {
+        R: pt ? 'armar gravação' : 'record arm',
+        M: pt ? 'mudo' : 'mute',
+        S: 'solo',
+      },
+    },
   });
 };
 

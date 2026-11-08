@@ -30,10 +30,6 @@ export function localeOfPath(pathname: string | null): SiteLocale {
   return SITE_LOCALE.en;
 }
 
-export function stripLocalePrefix(pathname: string): string {
-  return pathname === '/pt' ? '/' : pathname.startsWith('/pt/') ? pathname.slice(3) : pathname;
-}
-
 export function localeAlternates(path: string): {
   en: string;
   pt: string;

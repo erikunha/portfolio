@@ -83,7 +83,7 @@ the live YouTube feed.
 | [`ARCHITECTURE.md`](./ARCHITECTURE.md) | System design, component deep-dives, trade-offs, what to revisit        |
 | [`STANDARDS.md`](./STANDARDS.md)       | Engineering bar, 12 domain chapters, each with an enforcement mechanism |
 | [`DECISIONS.md`](./DECISIONS.md)       | Running ADR log, why decisions were made and how to reverse them        |
-| [`CLAUDE.md`](./CLAUDE.md)             | AI assistant instructions (auto-loaded by Claude Code each session)     |
+| [`AGENTS.md`](./AGENTS.md)             | AI assistant instructions for Codex and Claude Code (`CLAUDE.md` imports it) |
 
 ---
 

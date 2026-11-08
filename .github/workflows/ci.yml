@@ -617,10 +617,10 @@ jobs:
             const needs = JSON.parse(process.env.NEEDS_JSON);
             const bad = Object.entries(needs).filter(([, n]) => BAD_RESULTS.has(n.result));
             for (const [job, n] of Object.entries(needs)) {
-              console.log(`${job}: ${n.result}`);
+              console.log(job + ": " + n.result);
             }
             if (bad.length > 0) {
-              console.error(`ci-gate: blocking on ${bad.map(([job]) => job).join(", ")}`);
+              console.error("ci-gate: blocking on " + bad.map(([job]) => job).join(", "));
               process.exit(1);
             }
             console.log("ci-gate: all upstream jobs succeeded or were intentionally skipped");
