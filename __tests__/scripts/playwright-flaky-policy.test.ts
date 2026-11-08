@@ -10,7 +10,7 @@ afterEach(() => {
 });
 
 describe('playwright.config.ts flaky-test policy', () => {
-  it('fails a CI run that passed only on a retry, and keeps the retries for traces', async () => {
+  it('fails a CI run that passed only on a retry, and traces the first failing attempt', async () => {
     vi.stubEnv('CI', 'true');
 
     const config = await loadConfig();
@@ -19,7 +19,11 @@ describe('playwright.config.ts flaky-test policy', () => {
       config.failOnFlakyTests,
       'with retries on and failOnFlakyTests off, a test that fails once and passes on retry reports green, so a flake is never fixed',
     ).toBe(true);
-    expect(config.retries, 'a failure with no retry leaves no trace to debug').toBeGreaterThan(0);
+    expect(config.retries).toBeGreaterThan(0);
+    expect(
+      config.use?.trace,
+      'on-first-retry records only the retries, so the failing attempt that names the stalled request leaves nothing',
+    ).toBe('retain-on-failure');
   });
 
   it('keeps a local run free of retries so a flake shows up on the first failure', async () => {
