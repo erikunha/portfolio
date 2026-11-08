@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 
 const DRY_RUN_TIMEOUT_MS = 180_000;
 const CLI_TIMEOUT_MS = 60_000;
+const BRANCH_ARGS = ['--branch', 'ci-predict-cli-test'];
 const hasParentCommit =
   spawnSync('git', ['rev-parse', '--verify', 'HEAD~1'], { stdio: 'ignore' }).status === 0;
 
@@ -34,7 +35,7 @@ describe('ci-predict command line', { timeout: CLI_TIMEOUT_MS }, () => {
   it.skipIf(!hasParentCommit)(
     'a dry run says DRY RUN and exits 2, and never claims that no failure was found',
     () => {
-      const result = run(['--list', '--base', 'HEAD~1']);
+      const result = run(['--list', '--base', 'HEAD~1', ...BRANCH_ARGS]);
       expect(result.stdout).toContain('DRY RUN');
       expect(result.stdout).not.toContain('no failure found');
       expect(result.status).toBe(2);
@@ -43,7 +44,7 @@ describe('ci-predict command line', { timeout: CLI_TIMEOUT_MS }, () => {
   );
 
   it('verifies nothing when HEAD is the base: exit 3, never the 0 that means verified', () => {
-    const result = run(['--list', '--base', 'HEAD']);
+    const result = run(['--list', '--base', 'HEAD', ...BRANCH_ARGS]);
     expect(result.status).toBe(3);
     expect(result.stdout).toContain('no commits ahead of');
     expect(result.stdout).toContain('NOT VERIFIED');
