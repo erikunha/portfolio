@@ -2,6 +2,10 @@
 
 ADR-lite running log. One bullet per decision · date · reversibility note.
 
+## 2026-11-08: hero CSS has one owner
+
+- **2026-11-08** · **Every `.hero-*` selector rule lives in `app/css/components-hero.css`; `animations.css` keeps only the hero `@keyframes`.** The hero layout and boot rules were spread over four partials (`animations.css`, `components-about.css`, `components-footer.css` and the hero partial), so a change to one hero state meant reading the cascade across files, and `.hero-boot-mobile` was declared in two of them. The rules moved in their original relative order: the `animations.css` block first (it is imported before the hero partial), then the hero partial, then the former `components-about.css` blocks, which were already imported after it. Computed styles and box rects of every `[class*="hero-"]` element at 320, 390, 768, 1024, 1280 and 1440px were identical before and after, and no visual baseline changed. Held by `__tests__/hero-css-owner.test.ts`. _Reversible: move the blocks back; no rule text changed._
+
 ## 2026-11-08: Matrix Rain values are a TS constants module
 
 - **2026-11-08** · **The rain's colours, sizes, canvas font and the mobile and desktop profiles live in `components/responsive/MatrixRain/rain-tokens.ts`, not in `@theme` custom properties.** Tailwind v4 drops a `@theme` variable nothing references, and reading one with `getComputedStyle` when the rain starts at idle costs a style recalculation on the path the idle start exists to keep clear. The canvas black is not a second copy: `rain-tokens.test.ts` fails if it stops matching `--color-secondary-950`. The `"JetBrains Mono"` canvas family is pinned there too, because the `--font-mono` stack resolves through a `next/font` variable a canvas cannot read. Reversible: inline the constants back or declare them in `theme.css` and read them once at mount.
