@@ -1,0 +1,115 @@
+@media (forced-colors: active) {
+  :root {
+    --forced-state-width: 3px;
+    --forced-hairline: 1px;
+  }
+
+  @layer components {
+    .crt-vignette,
+    .crt-scanlines,
+    .crt-mask,
+    .crt-noise,
+    .crt-flicker,
+    .crt-scan-beam {
+      display: none;
+    }
+
+    canvas[aria-hidden] {
+      visibility: hidden;
+    }
+
+    .menu-trigger[aria-expanded="true"],
+    .nav-item[aria-current],
+    .section-menu .nav-item[aria-current],
+    .ds-nav-item[aria-current] {
+      border-color: Highlight;
+      border-width: var(--forced-state-width);
+    }
+
+    .dock > [aria-current],
+    .dock > [data-current] {
+      border-top-color: Highlight;
+      border-top-width: var(--forced-state-width);
+    }
+
+    .dock::before {
+      background: Highlight;
+    }
+
+    .links-pill:hover,
+    .topbar-action:hover,
+    .contact-send:hover:not([aria-disabled="true"]),
+    .contact-channel-cta:hover,
+    .ctz-propose:hover,
+    .kbd-key:hover,
+    .nav-item:hover,
+    .ds-nav-item:hover {
+      border-color: Highlight;
+    }
+
+    .shell-control[aria-disabled="true"],
+    .contact-send[aria-disabled="true"] {
+      color: GrayText;
+      border-color: GrayText;
+      opacity: 1;
+    }
+
+    .shell-input {
+      outline: var(--forced-hairline) solid ButtonText;
+      outline-offset: calc(-1 * var(--forced-hairline));
+    }
+
+    .shell-input:focus-visible {
+      outline: var(--forced-state-width) solid Highlight;
+      outline-offset: calc(-1 * var(--forced-state-width));
+    }
+
+    .ctz-option:hover,
+    .ctz-option[aria-selected="true"] {
+      outline: var(--forced-state-width) solid Highlight;
+      outline-offset: calc(-1 * var(--forced-state-width));
+    }
+
+    .fader-track::before {
+      background: GrayText;
+    }
+
+    .faderThumb,
+    .mx-fader-thumb {
+      background: Highlight;
+      border-color: CanvasText;
+    }
+
+    .faderThumb::after,
+    .mx-fader-thumb::after,
+    .mx-dial::after,
+    .mx-chain::before {
+      background: CanvasText;
+    }
+
+    .vuSegFilled,
+    .guitar-bar[data-filled="true"],
+    .plugin-card-on::before,
+    .channel-row-focused::before {
+      background: Highlight;
+    }
+
+    .vuSegEmpty {
+      background: transparent;
+      outline: var(--forced-hairline) solid GrayText;
+      outline-offset: calc(-1 * var(--forced-hairline));
+      opacity: 1;
+    }
+
+    .vuSegRed,
+    .eq-bar,
+    .status-dot {
+      background: CanvasText;
+    }
+
+    .guitar-bar {
+      background: GrayText;
+      opacity: 1;
+    }
+  }
+}
