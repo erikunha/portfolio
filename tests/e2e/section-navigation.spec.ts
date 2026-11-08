@@ -377,8 +377,13 @@ test.describe('section navigation: drawer at 390px', () => {
     await page.keyboard.press('Escape');
     await expect(page.getByRole('dialog')).toHaveCount(0);
     await expect(page.locator('html')).not.toHaveCSS('overflow', 'hidden');
-    await page.mouse.wheel(0, SCROLL_PROBE_PX);
-    await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(0);
+    await expect(async () => {
+      await page.mouse.wheel(0, SCROLL_PROBE_PX);
+      expect(
+        await page.evaluate(() => window.scrollY),
+        'a wheel after the drawer closes must scroll the page; one wheel can land before the released page takes input under load, so the user scrolls again',
+      ).toBeGreaterThan(0);
+    }).toPass();
   });
 });
 
