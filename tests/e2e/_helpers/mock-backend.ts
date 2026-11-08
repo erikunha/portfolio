@@ -12,12 +12,14 @@ export type MockState = {
     | 'kill-switch'
     | 'rate-limit'
     | 'budget-exhausted'
-    | 'stream-error'
-    | 'pre-stream-timeout';
+    | 'budget-daily'
+    | 'stream-error';
   contact?: 'happy' | 'queued' | 'validation-error' | 'rate-limit' | 'server-error' | 'honeypot';
   log?: 'accept' | 'rate-limit' | 'storage-unavailable';
   forget?: 'happy' | 'not-found';
 };
+
+const EN = askErrors[SITE_LOCALE.en];
 
 export async function installMockBackend(page: Page, state: MockState = {}): Promise<void> {
   await page.route('**/api/ask', async (route) => {
@@ -27,9 +29,7 @@ export async function installMockBackend(page: Page, state: MockState = {}): Pro
       await route.fulfill({
         status: 503,
         contentType: 'application/json',
-        body: JSON.stringify({
-          error: 'temporarily unavailable: email erikhenriquealvescunha@gmail.com directly',
-        }),
+        body: JSON.stringify({ error: EN.unavailable }),
       });
       return;
     }
@@ -38,7 +38,7 @@ export async function installMockBackend(page: Page, state: MockState = {}): Pro
       await route.fulfill({
         status: 429,
         contentType: 'application/json',
-        body: JSON.stringify({ error: 'rate limit exceeded: try again in an hour' }),
+        body: JSON.stringify({ error: EN.rateLimited }),
       });
       return;
     }
@@ -47,27 +47,22 @@ export async function installMockBackend(page: Page, state: MockState = {}): Pro
       await route.fulfill({
         status: 503,
         contentType: 'application/json',
-        body: JSON.stringify({
-          error:
-            'AI answers are paused for this month. Email erikhenriquealvescunha@gmail.com instead.',
-        }),
+        body: JSON.stringify({ error: EN.budget }),
+      });
+      return;
+    }
+
+    if (s === 'budget-daily') {
+      await route.fulfill({
+        status: 503,
+        contentType: 'application/json',
+        body: JSON.stringify({ error: EN.budgetDaily }),
       });
       return;
     }
 
     if (s === 'stream-error') {
-      const body = `${STREAM_ERR_SENTINEL}${askErrors[SITE_LOCALE.en].interrupted}`;
-      await route.fulfill({
-        status: 200,
-        contentType: 'text/plain; charset=utf-8',
-        headers: { 'X-Request-Id': crypto.randomUUID() },
-        body,
-      });
-      return;
-    }
-
-    if (s === 'pre-stream-timeout') {
-      const body = `${STREAM_ERR_SENTINEL}${askErrors[SITE_LOCALE.en].interrupted}`;
+      const body = `${STREAM_ERR_SENTINEL}${EN.interrupted}`;
       await route.fulfill({
         status: 200,
         contentType: 'text/plain; charset=utf-8',

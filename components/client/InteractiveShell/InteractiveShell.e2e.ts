@@ -43,16 +43,16 @@ test.describe('ask / interactive shell', () => {
 
     const errorLine = page.locator('[role="log"] [data-kind="error"]');
     await expect(errorLine).toBeVisible({ timeout: 10_000 });
-    await expect(errorLine).toContainText('temporarily unavailable');
+    await expect(errorLine).toContainText(askErrors[SITE_LOCALE.en].unavailable);
   });
 
-  test('3: rate-limit hit: 429 surfaces "try again in an hour"', async ({ page }) => {
+  test('3: rate-limit hit: 429 surfaces the rate-limit message', async ({ page }) => {
     await setupAskPage(page, { ask: 'rate-limit', log: 'accept' });
     await ask(page, 'spammy question');
 
     const errorLine = page.locator('[role="log"] [data-kind="error"]');
     await expect(errorLine).toBeVisible({ timeout: 10_000 });
-    await expect(errorLine).toContainText('try again in an hour');
+    await expect(errorLine).toContainText(askErrors[SITE_LOCALE.en].rateLimited);
   });
 
   test('4: budget exhausted: 503 surfaces budget message', async ({ page }) => {
@@ -61,7 +61,19 @@ test.describe('ask / interactive shell', () => {
 
     const errorLine = page.locator('[role="log"] [data-kind="error"]');
     await expect(errorLine).toBeVisible({ timeout: 10_000 });
-    await expect(errorLine).toContainText('AI answers are paused for this month');
+    await expect(errorLine).toContainText(askErrors[SITE_LOCALE.en].budget);
+  });
+
+  test('4b: daily slice used up: 503 surfaces the day copy, not the month copy', async ({
+    page,
+  }) => {
+    await setupAskPage(page, { ask: 'budget-daily', log: 'accept' });
+    await ask(page, 'what is your stack?');
+
+    const errorLine = page.locator('[role="log"] [data-kind="error"]');
+    await expect(errorLine).toBeVisible({ timeout: 10_000 });
+    await expect(errorLine).toContainText(askErrors[SITE_LOCALE.en].budgetDaily);
+    await expect(errorLine).not.toContainText(askErrors[SITE_LOCALE.en].budget);
   });
 
   test('5: stream error: STREAM_ERR_SENTINEL mid-stream renders an error line', async ({
@@ -75,20 +87,7 @@ test.describe('ask / interactive shell', () => {
     await expect(errorLine).toContainText(askErrors[SITE_LOCALE.en].interrupted);
   });
 
-  test('6: pre-stream timeout: SDK rejects before SSE starts → error line, no crash', async ({
-    page,
-  }) => {
-    await setupAskPage(page, { ask: 'pre-stream-timeout', log: 'accept' });
-    await ask(page, 'slow question');
-
-    const errorLine = page.locator('[role="log"] [data-kind="error"]');
-    await expect(errorLine).toBeVisible({ timeout: 10_000 });
-    await expect(errorLine).toContainText(askErrors[SITE_LOCALE.en].interrupted);
-
-    await expect(getShellInput(page)).toBeEnabled();
-  });
-
-  test('7: X-Request-Id header is the deterministic value from the happy mock', async ({
+  test('6: X-Request-Id header is the deterministic value from the happy mock', async ({
     page,
   }) => {
     await setupAskPage(page, { ask: 'happy', log: 'accept' });
@@ -101,7 +100,7 @@ test.describe('ask / interactive shell', () => {
     expect(requestId).toBe('test-request-id-abc123');
   });
 
-  test('8: privacy notice is visible with a working mailto: link to the canonical email', async ({
+  test('7: privacy notice is visible with a working mailto: link to the canonical email', async ({
     page,
   }) => {
     await setupAskPage(page, { log: 'accept' });
