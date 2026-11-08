@@ -137,7 +137,6 @@ jobs:
     runs-on: ubuntu-24.04
     permissions:
       contents: read
-      pull-requests: write
     timeout-minutes: 8
     concurrency:
       group: test-${{ github.ref }}
@@ -202,8 +201,23 @@ jobs:
           path: coverage/
           retention-days: 7
 
+  coverage-comment:
+    runs-on: ubuntu-24.04
+    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+    permissions:
+      contents: read
+      pull-requests: write
+    timeout-minutes: 5
+    needs: [test]
+    steps:
+      - name: Download coverage report
+        continue-on-error: true
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: coverage-report
+          path: coverage/
+
       - name: Post coverage comment
-        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
         continue-on-error: true
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
@@ -221,7 +235,8 @@ jobs:
               return;
             }
             const t = summary.total;
-            if (!t || typeof t.lines?.pct !== 'number') {
+            const METRICS = ['lines', 'functions', 'branches', 'statements'];
+            if (!t || METRICS.some((m) => typeof t[m]?.pct !== 'number')) {
               core.warning('coverage-summary.json is missing expected "total" fields. Skipping coverage comment.');
               return;
             }
@@ -282,8 +297,6 @@ jobs:
     runs-on: ubuntu-24.04
     permissions:
       contents: read
-      id-token: write
-      attestations: write
     timeout-minutes: 12
     needs: [quality-fast, typecheck, test]
     concurrency:
@@ -335,8 +348,23 @@ jobs:
           retention-days: 1
           include-hidden-files: true
 
+  attest-build:
+    runs-on: ubuntu-24.04
+    if: github.ref == 'refs/heads/main'
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
+    timeout-minutes: 5
+    needs: [build]
+    steps:
+      - name: Download build artifact
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: next-build
+          path: .next/
+
       - name: Attest build provenance
-        if: github.ref == 'refs/heads/main'
         uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
         with:
           subject-path: .next/
@@ -495,6 +523,7 @@ jobs:
     if: |
       always()
       && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
+      && github.actor != 'dependabot[bot]'
       && needs.detect-changes.outputs.ai == 'true'
       && !contains(needs.*.result, 'failure')
       && !contains(needs.*.result, 'cancelled')
@@ -603,11 +632,14 @@ jobs:
         typecheck,
         test,
         dependency-review,
+        coverage-comment,
         build,
+        attest-build,
         performance,
         e2e-functional,
         e2e-visual-chromium,
         ai-eval,
+        semgrep,
         gitleaks,
       ]
     steps:
@@ -670,6 +702,7 @@ jobs:
 
       - name: Upload SARIF to code-scanning
         if: always() && hashFiles('semgrep.sarif') != ''
+        continue-on-error: true
         uses: github/codeql-action/upload-sarif@9b3254085494b55a0f7c4c2b3d2d52cc712ce370 # v4.39.1
         with:
           sarif_file: semgrep.sarif

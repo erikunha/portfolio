@@ -8,7 +8,9 @@ export const JOB_POLICIES: Record<string, JobPolicy> = {
   typecheck: 'run',
   test: 'run',
   'dependency-review': 'github-only',
+  'coverage-comment': 'github-only',
   build: 'run',
+  'attest-build': 'github-only',
   performance: 'run',
   'e2e-functional': 'e2e-narrowed',
   'ai-eval': 'ai-eval',
@@ -19,8 +21,9 @@ export const JOB_POLICIES: Record<string, JobPolicy> = {
 };
 
 export const POLICY_REASONS: Record<'github-only' | 'report-only', string> = {
-  'github-only': 'needs the GitHub dependency graph, not reproducible locally',
-  'report-only': 'report-only in CI and outside ci-gate',
+  'github-only':
+    'needs a GitHub-side service (dependency graph, OIDC, comments), not reproducible locally',
+  'report-only': 'findings scan is report-only in CI and needs the pinned Semgrep install',
 };
 
 export type ActionClass = 'infra' | 'publish' | 'unreproducible';

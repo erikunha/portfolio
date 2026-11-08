@@ -145,9 +145,11 @@ flowchart TD
     pr --> tc["typecheck"]
     pr --> t["test (Vitest + coverage)"]
     pr --> dr["dependency-review (PR)"]
-    qf --> b["build (+ global bundle and route-JS gates, provenance attest on main)"]
+    qf --> b["build (+ global bundle and route-JS gates)"]
     tc --> b
     t --> b
+    b --> at["attest-build: provenance on main, runs no repository code"]
+    t --> cc["coverage-comment: PR comment from the coverage artifact, runs no repository code"]
     b --> perf["performance: LHCI desktop+mobile + axe (if app)"]
     b --> e2e["e2e-functional (8-project matrix, if app)"]
     b --> vis["e2e-visual-chromium (desktop/mobile Chromium, if ui)"]
@@ -160,13 +162,16 @@ flowchart TD
     t --> ev
     pr --> secrets["gitleaks: history scan + fixture check"]
     secrets --> gate
-    pr --> semgrep["semgrep: findings report-only, outside ci-gate"]
+    pr --> semgrep["semgrep: fixture self-test blocks, findings scan report-only"]
+    semgrep --> gate
     dc --> gate
     qf --> gate
     tc --> gate
     t --> gate
     dr --> gate
     b --> gate
+    at --> gate
+    cc --> gate
     perf --> gate
     e2e --> gate
     vis --> gate
@@ -174,11 +179,11 @@ flowchart TD
     gate["ci-gate: always-on fan-in: fails on any failed/cancelled upstream; skipped passes"]
 ```
 
-`ci-gate` runs with `if: always()`, includes gitleaks and all build/test jobs above, and excludes semgrep, and is the terminal required status check. `__tests__/scripts/ci-gate-job.test.ts` asserts its `needs` list equals the full job set minus the self-reporting jobs, so adding a conditional job without fanning it in fails `pnpm test`.
+`ci-gate` runs with `if: always()`, includes gitleaks, semgrep and all build/test jobs above, and is the terminal required status check. `__tests__/scripts/ci-gate-job.test.ts` asserts its `needs` list equals the full job set minus the self-reporting jobs, so adding a conditional job without fanning it in fails `pnpm test`.
 
 Other workflows: `codeql.yml` (SAST, weekly + PR), `mutation.yml` (Stryker, weekly; fails when the runner cannot kill a mutant, judged by `scripts/check-mutation-kills.mjs`), `smoke.yml` (post-deploy: healthz + 7 security headers + apex→www + `/api/ask`,`/api/contact` liveness), `claude-review.yml` (pull-request review, on a `/claude-review` comment), `claude.yml` (`@claude` interaction), `agent-eval.yml` (advisory prompt evaluation), `high-risk-label.yml` (review-focus label, below), `rollback-rehearsal.yml` (weekly rollback rehearsal, below), and `weekly-metrics.yml` (delivery metrics and band check, below).
 
-**Token permissions:** every workflow sets a top-level `permissions` block of `contents: read` (`{}` for `smoke.yml`), and each job lists only the extra scopes it uses, for example `build` takes `id-token: write` + `attestations: write` for provenance, `semgrep` takes `security-events: write` to upload SARIF, `claude-review` takes `pull-requests: write` + `issues: read` + `checks: read` + `statuses: read` + `id-token: write` + `actions: read`. `__tests__/scripts/workflow-permissions.test.ts` fails a workflow with no top-level block or a broader one (OpenSSF Scorecard Token-Permissions).
+**Token permissions:** every workflow sets a top-level `permissions` block of `contents: read` (`{}` for `smoke.yml`), and each job lists only the extra scopes it uses, for example `attest-build` takes `id-token: write` + `attestations: write` for provenance and `coverage-comment` takes `pull-requests: write`, both in jobs that only download an artifact and run no repository command (`__tests__/scripts/ci-privilege-split.test.ts` fails a job that holds one of those scopes and runs a command), `semgrep` takes `security-events: write` to upload SARIF, `claude-review` takes `pull-requests: write` + `issues: read` + `checks: read` + `statuses: read` + `id-token: write` + `actions: read`. `__tests__/scripts/workflow-permissions.test.ts` fails a workflow with no top-level block or a broader one (OpenSSF Scorecard Token-Permissions).
 
 **Lighthouse budgets (LHCI, hard gates):** desktop perf ≥95 / a11y =100 / BP ≥95 / SEO =100, LCP ≤1800ms, CLS ≤0.05, TBT ≤200ms; mobile perf ≥90, LCP ≤3500ms. Never disable a gate to merge - fix the property (doc 08).
 
