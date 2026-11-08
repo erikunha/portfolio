@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { freezeMotion } from './_helpers/motion';
 import { gotoSettled } from './_helpers/streamed';
 
 const MARKED = '[data-type-reveal]';
@@ -6,7 +7,6 @@ const TYPING_TIMEOUT_MS = 20_000;
 
 test.describe('type reveal', () => {
   test('a marked heading types in once it scrolls into view', async ({ page }) => {
-    await page.emulateMedia({ reducedMotion: 'no-preference' });
     await gotoSettled(page, '/');
     await page.waitForFunction(() =>
       document.documentElement.classList.contains('type-reveal-ready'),
@@ -42,7 +42,6 @@ test.describe('type reveal', () => {
 
   test('turning motion off and on again never replays the typing animation', async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 720 });
-    await page.emulateMedia({ reducedMotion: 'no-preference' });
     await gotoSettled(page, '/');
     await page.waitForFunction(() =>
       document.documentElement.classList.contains('type-reveal-ready'),
@@ -73,7 +72,7 @@ test.describe('type reveal', () => {
   });
 
   test('with reduced motion every marked element is fully visible at load', async ({ page }) => {
-    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await freezeMotion(page);
     await gotoSettled(page, '/');
     await page.waitForFunction(() =>
       document.documentElement.classList.contains('type-reveal-ready'),
@@ -94,7 +93,6 @@ test.describe('type reveal', () => {
       page,
     }) => {
       await page.setViewportSize({ width, height: 812 });
-      await page.emulateMedia({ reducedMotion: 'no-preference' });
       await gotoSettled(page, route);
       await page.waitForFunction(() =>
         document.documentElement.classList.contains('type-reveal-ready'),
@@ -126,12 +124,11 @@ test.describe('type reveal', () => {
   }
 
   test('a printed reading page shows every marked heading in full', async ({ page }) => {
-    await page.emulateMedia({ reducedMotion: 'no-preference' });
     await gotoSettled(page, '/cv');
     await page.waitForFunction(() =>
       document.documentElement.classList.contains('type-reveal-ready'),
     );
-    await page.emulateMedia({ media: 'print', reducedMotion: 'no-preference' });
+    await page.emulateMedia({ media: 'print' });
     const clipped = await page
       .locator(MARKED)
       .evaluateAll((els) =>

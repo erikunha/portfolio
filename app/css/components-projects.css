@@ -397,28 +397,26 @@
     }
   }
 
-  @media (prefers-reduced-motion: no-preference) {
-    body:not([data-motion="reduce"]) .measured-load-bar {
-      color: transparent;
-    }
+  body:not([data-motion="reduce"]) .measured-load-bar {
+    color: transparent;
+  }
 
-    body:not([data-motion="reduce"]) .measured-load-bar::before,
-    body:not([data-motion="reduce"]) .measured-load-bar::after {
-      position: absolute;
-      inset: 0 auto 0 0;
-      overflow: hidden;
-    }
+  body:not([data-motion="reduce"]) .measured-load-bar::before,
+  body:not([data-motion="reduce"]) .measured-load-bar::after {
+    position: absolute;
+    inset: 0 auto 0 0;
+    overflow: hidden;
+  }
 
-    body:not([data-motion="reduce"]) .measured-load-bar::before {
-      content: attr(data-track);
-      color: var(--color-text-secondary);
-    }
+  body:not([data-motion="reduce"]) .measured-load-bar::before {
+    content: attr(data-track);
+    color: var(--color-text-secondary);
+  }
 
-    body:not([data-motion="reduce"]) .measured-load-bar::after {
-      content: attr(data-fill);
-      color: var(--color-primary-500);
-      animation: measured-load-fill 1.8s steps(12, jump-none) infinite;
-    }
+  body:not([data-motion="reduce"]) .measured-load-bar::after {
+    content: attr(data-fill);
+    color: var(--color-primary-500);
+    animation: measured-load-fill 1.8s steps(12, jump-none) infinite;
   }
 
   @container (min-width: 40rem) {

@@ -29,7 +29,7 @@
 <!-- Delete if no UI changes. Attach BEFORE / AFTER screenshots or a short recording. -->
 
 - [ ] Before / after screenshots (or recording) attached
-- [ ] Desktop (1280×720) + Mobile (375×812) checked via Playwright MCP
+- [ ] Desktop (1280×720) + Mobile (375×812) checked in a browser
 - [ ] Visual-regression baselines regenerated (if any captured section changed)
 - [ ] No visual regressions introduced
 

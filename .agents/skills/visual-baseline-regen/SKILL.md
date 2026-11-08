@@ -13,14 +13,11 @@ Two specs capture screenshot baselines with different CI treatment:
   This spec is ignored in CI on Ubuntu (`testIgnore` in `playwright.config.ts`). Darwin regen
   only (Step 1 only; skip Steps 2-3).
 
-The decision "does this push affect a baseline?" fires on EVERY push (kept inline in
-AGENTS.md); this skill is the full procedure once the answer is YES.
+## Step 0: assess impact
 
-## Step 0 — assess impact BEFORE every push (always)
-
-Before any push, decide whether the change touches a baseline. **State the assessment explicitly.**
+Decide whether the change touches a baseline before CI does.
 - **NO** baseline affected (e.g. a string moved to content with identical rendering):
-  say so and push once. Done.
+  nothing to regenerate.
 - **YES — `visual.spec.ts` baseline affected:** regenerate and commit baselines for BOTH
   platforms (darwin + linux) alongside the code so the first CI run is green. Continue
   through Steps 1-3.
@@ -103,5 +100,5 @@ run is green. Do not push the code first and let CI fail.
   hottest-takes); requires darwin + linux regen when changed.
 - `tests/e2e/design-system-components.spec.ts` — design-system component baselines;
   darwin-only (spec is ignored on Ubuntu in CI); requires only darwin regen when changed.
-- The runtime/perf (LHCI) gate and the pre-PR review rule stay inline in
-  AGENTS.md; this skill is only the baseline-regen mechanics.
+- The runtime/perf (LHCI) gate stays inline in AGENTS.md; this skill is only the
+  baseline-regen mechanics.

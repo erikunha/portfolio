@@ -420,15 +420,6 @@
     }
   }
 
-  @media (prefers-reduced-motion: reduce) {
-    .section-menu,
-    .section-menu.is-open,
-    .menu-scrim,
-    .menu-scrim.is-open {
-      transition: none;
-    }
-  }
-
   body[data-motion="reduce"] .section-menu,
   body[data-motion="reduce"] .menu-scrim {
     transition: none;
@@ -544,12 +535,6 @@
     color: var(--color-secondary-950);
     background: var(--color-primary-500);
     font-weight: 700;
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .topbar-action {
-      transition: none;
-    }
   }
 
   body[data-motion="reduce"] .topbar-action {

@@ -326,11 +326,7 @@ describe('LivePerfSection: lighthouse loading state', () => {
     stylesheet.walkRules((rule) => {
       const animation = declValue(rule, 'animation');
       if (!animation?.includes('measured-load-fill')) return;
-      const parent = rule.parent;
-      const inGuard =
-        parent?.type === 'atrule' &&
-        /prefers-reduced-motion:\s*no-preference/.test((parent as { params: string }).params);
-      if (inGuard && rule.selector === motionSelector) guarded = animation;
+      if (rule.selector === motionSelector) guarded = animation;
       else animatedOutsideGuard.push(rule.selector);
     });
     expect(guarded).toMatch(/steps\(/);

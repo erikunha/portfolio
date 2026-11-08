@@ -39,7 +39,6 @@
 CLAUDE.local.md
 .claude/settings.local.json
 .claude/*.local.md
-.claude/fix-mode
 
 # playwright mcp session logs
 .playwright-mcp/
@@ -92,6 +91,7 @@ docs/superpowers
 
 # Semgrep local SARIF output
 semgrep.sarif
+gitleaks.sarif
 
 # Stryker mutation testing output — transient sandbox + generated reports
 .stryker-tmp/

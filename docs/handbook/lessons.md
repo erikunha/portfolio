@@ -80,6 +80,9 @@ The prompt for a manual or agent review that applies these rules to a diff is `d
     both the fallback and a hidden staged copy, so a class locator matches two elements.
 27. A test that sets motion state clicks the MOTION toggle after `waitForHydration`. Writing
     `body.dataset.motion` before hydration is reset by the navigation store's layout effect.
+28. A test that needs a still page seeds the stored choice with `freezeMotion` from
+    `tests/e2e/_helpers/motion.ts` before `goto`. Emulated `reducedMotion` changes nothing: the
+    operating system preference is not read, and a first visit starts with motion on.
 28. A commit made with `--no-verify` skips commitlint, and CI's quality-fast job runs it on every
     commit in the push. Body lines over 100 characters then fail CI after the push. Check: commit
     through the hooks, or run `pnpm exec commitlint --from origin/<base>` before pushing.

@@ -61,7 +61,6 @@ Never let a missing input, a null value, an unreadable file or a parse error tur
 Before writing: for every `if (!x) return;` in a guard, decide what the safe answer is when `x` is missing. The safe answer is failure.
 Check: run the gate, then delete or corrupt the input it reads and confirm it still fails.
 Examples:
-- PR155 `scripts/check-claude-approval.ts`: a missing reviewed SHA silently skipped the staleness check; the fix made the null path a gate failure.
 - PR151 `.github/workflows/ci.yml`: the `ai_changed` pathspec did not include the newly extracted `lib/eval/judge.ts`, so the AI eval gate never ran; the fix added the path.
 
 **Rule 7. A caught error must be reported, not swallowed.**
@@ -69,14 +68,12 @@ No empty catch, no `.catch(() => '')`, no `|| true` on a command that can hide a
 Before writing: for each catch block, name the signal that reaches the operator. If there is none, do not catch.
 Check: search your diff for `catch`, `2>/dev/null`, `|| true` and `process.exit(0)` and justify each one.
 Examples:
-- PR234 `scripts/review-converge.ts`: `.catch(() => '')` turned a `gh pr diff` failure into an empty diff, which reads as no changes; the fix surfaced the failure.
 - PR154 `.github/workflows/mutation.yml`: the error was written to stderr where GitHub Actions never reads it; the fix used a workflow command.
 
 **Rule 8. A script must exit non-zero on failure and zero only on success.**
 Before writing: every branch that means "something is wrong" ends in a non-zero exit, and the process is allowed to unwind so `finally` runs.
 Check: `bash script.sh; echo $?` on the success path and on a deliberately broken path.
 Examples:
-- PR214 `.claude/hooks/api-security-push-guard.sh`: `process.exit` fired before the cleanup ran; the fix let the script unwind.
 - PR193 `scripts/check-gitleaks-fixture.mjs`: the exit code path ignored the real result; the fix made the code match the outcome.
 
 **Rule 9. A gate that scans files must scan the same set of files the other gate scans.**
@@ -85,20 +82,17 @@ Before writing: when you add a path or an allowlist entry, search for every othe
 Check: compare the new path against every pathspec, allowlist and directory list in `.github/` and `scripts/`.
 Examples:
 - PR193 `scripts/check-gitleaks-fixture.mjs`: the allowlist of files permitted to name the secret phrase did not include the test file that names it; the fix widened the list.
-- PR206 `scripts/sync-codex.mjs`: the write had no file mode, so the mirrored file was not executable; the fix set the mode.
 
 **Rule 10. Shell and Git invocations must not interpolate untrusted or path-derived values into a pattern.**
 Before writing: quote every expansion, and pass values as arguments rather than pasting them into a `sed` or `grep` pattern.
 Check: read the command as if the value contained a slash, a dot or a space.
 Examples:
-- PR214 `.claude/hooks/api-security-push-guard.sh`: the repository root was pasted unescaped into a `sed` pattern; the fix used parameter expansion instead.
-- PR311 `.github/workflows/claude-fix.yml`: the header cleanup relied on a single `git config` call that a second push could defeat; the fix removed every occurrence.
+- PR214, a push-guard shell script: the repository root was pasted unescaped into a `sed` pattern; the fix used parameter expansion instead.
 
 **Rule 11. A hook must cover the long and short form of every option it blocks.**
 Before writing: list the ways the command can be spelled, including equals form, short form and env assignment form.
 Check: for each blocked command, write down the three spellings and confirm all three are covered.
 Examples:
-- PR214 `.claude/hooks/bash-guard-detect.py`: only `git -c` was caught, `git --config-env` and `git --config` were not; the fix covered the long forms.
 - PR261 `.github/workflows/claude-review.yml`: the denied tool list missed one agent type, so the tool was still reachable; the fix denied the whole set.
 
 ---
@@ -273,7 +267,6 @@ Before writing: fill every box that applies, write why every box that does not a
 Check: `pnpm pr:gate` plus a read of the checklist against the diff.
 Examples:
 - PR220 `package.json`: seven dependency overrides shipped with the ADR box marked N/A; the fix added the ADR entry.
-- PR214 `.claude/hooks/bash-guard-detect.py`: ionice and chrt entered the wrapper list with no mention in the body; the fix named them in the body.
 
 **Rule 32. Every new client island, effect and dependency moves a budget.**
 Before writing: a new client island is inside the existing JS budget or it changes the budget in the same PR. An effect always gets its dependency array.

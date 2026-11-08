@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test';
 import { NAVIGATION } from '@/content/navigation';
 import { SITE_LOCALE } from '@/content/site-locale';
+import { freezeMotion } from '../../../tests/e2e/_helpers/motion';
 
 const PHONE = { width: 390, height: 844 };
 const DESKTOP = { width: 1280, height: 720 };
@@ -98,27 +99,26 @@ test.describe('SectionNavigation', () => {
     }
   });
 
-  test.describe('the motion control reports the operating system reduction', () => {
-    test.use({ reducedMotion: 'reduce' });
+  for (const system of ['reduce', 'no-preference'] as const) {
+    test.describe(`the motion control with the system set to ${system}`, () => {
+      test.use({ reducedMotion: system });
 
-    test('the drawer reads MOTION: REDUCED', async ({ page }) => {
-      await page.goto('/');
-      await openDrawer(page);
-      await expect(page.locator('.menu-motion')).toContainText(
-        NAVIGATION[SITE_LOCALE.en].copy.motionReduced,
-      );
+      test('the drawer reads MOTION: ON on a first visit', async ({ page }) => {
+        await page.goto('/');
+        await openDrawer(page);
+        await expect(page.locator('.menu-motion')).toContainText(
+          NAVIGATION[SITE_LOCALE.en].copy.motionOn,
+        );
+      });
+
+      test('the drawer reads MOTION: OFF once the visitor stored OFF', async ({ page }) => {
+        await freezeMotion(page);
+        await page.goto('/');
+        await openDrawer(page);
+        await expect(page.locator('.menu-motion')).toContainText(
+          NAVIGATION[SITE_LOCALE.en].copy.motionOff,
+        );
+      });
     });
-  });
-
-  test.describe('the motion control reports motion on by default', () => {
-    test.use({ reducedMotion: 'no-preference' });
-
-    test('the drawer reads MOTION: ON', async ({ page }) => {
-      await page.goto('/');
-      await openDrawer(page);
-      await expect(page.locator('.menu-motion')).toContainText(
-        NAVIGATION[SITE_LOCALE.en].copy.motionOn,
-      );
-    });
-  });
+  }
 });

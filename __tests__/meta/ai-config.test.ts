@@ -322,42 +322,16 @@ describe('AI configuration guard', () => {
     ).toEqual([]);
   });
 
-  it('turns the zero-exception rules into permission denials and registers the hooks', () => {
+  it('turns the zero-exception rules into permission denials and registers no hook', () => {
     const settings = JSON.parse(readFileSync(join(ROOT, '.claude/settings.json'), 'utf8')) as {
       permissions?: { deny?: string[] };
-      hooks?: {
-        Stop?: Array<{ hooks: Array<{ command: string }> }>;
-        PreToolUse?: Array<{ matcher: string; hooks: Array<{ command: string }> }>;
-      };
+      hooks?: unknown;
     };
     expect(settings.permissions?.deny ?? []).toEqual(expect.arrayContaining(REQUIRED_DENY_RULES));
     expect(
-      settings.permissions?.deny ?? [],
-      'a permission pattern cannot see the PR base, so the merge rule lives in the guard-merge-main hook',
-    ).not.toContain('Bash(gh pr merge:*)');
-    const guards = (settings.hooks?.PreToolUse ?? []).filter((entry) =>
-      entry.hooks.some((hook) => hook.command.includes('scripts/guard-merge-main.mjs')),
-    );
-    expect(guards.map((entry) => entry.matcher).sort()).toEqual([
-      'Bash',
-      'mcp__github__merge_pull_request',
-    ]);
-    expect(existsSync(join(ROOT, 'scripts/guard-merge-main.mjs'))).toBe(true);
-    const testGuard = (settings.hooks?.PreToolUse ?? []).find((entry) =>
-      entry.hooks.some((hook) => hook.command.includes('scripts/guard-test-edits.mjs')),
-    );
-    expect(testGuard?.matcher.split('|').sort()).toEqual([
-      'Edit',
-      'MultiEdit',
-      'NotebookEdit',
-      'Write',
-    ]);
-    expect(existsSync(join(ROOT, 'scripts/guard-test-edits.mjs'))).toBe(true);
-    const commands = (settings.hooks?.Stop ?? []).flatMap((entry) =>
-      entry.hooks.map((hook) => hook.command),
-    );
-    expect(commands.some((command) => command.includes('scripts/stop-verify.mjs'))).toBe(true);
-    expect(existsSync(join(ROOT, 'scripts/stop-verify.mjs'))).toBe(true);
+      settings.hooks,
+      "A project hook runs a command on every contributor machine that uses this tool. Workflow hooks (merge guards, edit guards, end-of-turn checks) belong in each engineer's own config; the repository enforces its rules through git hooks and CI.",
+    ).toBeUndefined();
   });
 
   it('keeps the Codex invocation policy in step with disable-model-invocation', () => {

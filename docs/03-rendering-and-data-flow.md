@@ -76,7 +76,7 @@ flowchart TD
     footer --> footerIslands["Footer.client: session counters + halt/reboot"]
 ```
 
-The motion bootstrap script is load-bearing: it reads `localStorage('erik.motion')` / OS preference and sets `body[data-motion]` **before first paint**, off the hydration path, so the initial motion preference does not wait for hydration.
+The motion bootstrap script is load-bearing: it reads `localStorage('erik.motion')` (anything but `off` means on, whatever the operating system asks) and sets `body[data-motion]` **before first paint**, off the hydration path, so the stored motion choice does not wait for hydration. The script lives in `lib/motion-bootstrap.ts`.
 
 ## The rendering pipeline (RSC + PPR)
 

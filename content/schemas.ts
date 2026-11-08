@@ -93,7 +93,6 @@ const NavigationCopySchema = z.object({
   dockLabel: NavTextSchema,
   motionOn: NavTextSchema,
   motionOff: NavTextSchema,
-  motionReduced: NavTextSchema,
   langSwitchLabel: NavTextSchema,
   skipLabel: NavTextSchema,
   siteNavLabel: NavTextSchema,
