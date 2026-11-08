@@ -57,7 +57,7 @@ function StaticFader({ pct }: { pct: number }) {
           'absolute top-1/2 -translate-x-1/2 -translate-y-1/2',
           'w-[18px] h-[28px]',
           'bg-primary-500 shadow-[0_0_10px_var(--color-primary-500)] border border-black',
-          'motion-reduce:shadow-none',
+          '[body[data-motion=reduce]_&]:shadow-none',
           'mx-fader-thumb',
         )}
         style={{ left: `${pct}%` }}

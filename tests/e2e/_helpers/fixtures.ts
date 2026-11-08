@@ -1,5 +1,6 @@
 import { test as base, expect, type Page } from '@playwright/test';
 import { installMockBackend } from './mock-backend';
+import { freezeMotion } from './motion';
 
 export { expect };
 
@@ -13,7 +14,7 @@ export const test = base.extend<Fixtures>({
       log: 'accept',
       forget: 'happy',
     });
-    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await freezeMotion(page);
     await page.goto('/');
     await page.waitForSelector('[data-testid="hero-name"]', { state: 'attached' });
     await page.waitForSelector('[aria-label="shell command"]', { state: 'visible' });

@@ -1,5 +1,6 @@
 import { type Browser, type BrowserContext, expect, type Page, test } from '@playwright/test';
 import { heightOf, settleFrames } from './_helpers/geometry';
+import { freezeMotion } from './_helpers/motion';
 import { drainRoutes } from './_helpers/routes';
 
 const WIDTHS = [320, 360, 390, 600, 768, 1024, 1280] as const;
@@ -88,11 +89,11 @@ async function measure(
 ) {
   const options = {
     viewport: { width, height: VIEWPORT_HEIGHT },
-    reducedMotion: 'reduce' as const,
     ...(baseURL ? { baseURL } : {}),
   };
 
   const held = await browser.newContext(options);
+  await freezeMotion(held);
   await holdBoundaries(held);
   const heldPage = await held.newPage();
   await heldPage.goto(path);
@@ -104,6 +105,7 @@ async function measure(
   await held.close();
 
   const live = await browser.newContext(options);
+  await freezeMotion(live);
   const livePage = await live.newPage();
   await livePage.goto(path);
   await expect(livePage.locator(PENDING_DATA)).toHaveCount(0);

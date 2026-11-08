@@ -1,17 +1,15 @@
-import { BrandLink } from '@/components/BrandLink';
 import { PageMain } from '@/components/PageMain';
+import { SiteShell } from '@/components/SiteShell';
 import { errorsContent } from '@/content/errors';
 import type { SiteLocale } from '@/content/site-locale';
 import { Button, CmdLine, TerminalPanel } from '@/design-system';
-import { ErrorChrome } from './ErrorChrome.client';
 import { ErrorHeading } from './ErrorPages.client';
 import { ERROR_MAIN_CLASS } from './error-main';
 
 export function NotFoundPage({ locale }: { locale: SiteLocale }) {
-  const { chrome, notFound } = errorsContent[locale];
+  const { notFound } = errorsContent[locale];
   return (
-    <>
-      <ErrorChrome chrome={chrome} brand={<BrandLink locale={locale} />} />
+    <SiteShell locale={locale}>
       <PageMain className={ERROR_MAIN_CLASS}>
         <ErrorHeading>{notFound.code}</ErrorHeading>
         <TerminalPanel header={notFound.panelHeader}>
@@ -29,7 +27,7 @@ export function NotFoundPage({ locale }: { locale: SiteLocale }) {
           <ul className="err-suggest">
             {notFound.suggestions.map((item) => (
               <li key={item.href}>
-                <a className="err-bar-link" href={item.href}>
+                <a className="err-link" href={item.href}>
                   {item.label}
                 </a>
               </li>
@@ -42,6 +40,6 @@ export function NotFoundPage({ locale }: { locale: SiteLocale }) {
           </Button>
         </div>
       </PageMain>
-    </>
+    </SiteShell>
   );
 }

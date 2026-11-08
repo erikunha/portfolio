@@ -128,6 +128,22 @@ describe('derived strings render exactly what they rendered before', () => {
     expect(contact?.text).toBe('mailto: erikhenriquealvescunha@gmail.com');
   });
 
+  it('keeps the employer context as facts per locale and joins them for the line surfaces', () => {
+    expect(profilePresentation[SITE_LOCALE.en].employerContextFacts).toEqual([
+      'AI deal origination',
+      'private markets',
+    ]);
+    expect(profilePresentation[SITE_LOCALE.pt].employerContextFacts).toEqual([
+      'originação de negócios com IA',
+      'mercados privados',
+    ]);
+    for (const locale of LOCALES) {
+      expect(profilePresentation[locale].employerContext).toBe(
+        profilePresentation[locale].employerContextFacts.join(' · '),
+      );
+    }
+  });
+
   it('keeps the career domain line per locale', () => {
     expect(gitLog[SITE_LOCALE.en][0]?.domain).toBe('AI deal origination · private markets');
     expect(gitLog[SITE_LOCALE.pt][0]?.domain).toBe(
@@ -209,7 +225,6 @@ describe('one source per fact', () => {
           footerContent[locale].groups.flatMap((group) => group.links.map((link) => link.href)),
         ],
         ['404 suggestions', errorsContent[locale].notFound.suggestions.map((link) => link.href)],
-        ['error chrome', errorsClientContent[locale].chrome.nav.map((link) => link.href)],
       ];
       for (const [name, hrefs] of surfaces) {
         const linksHrefs = hrefs.filter((href) => href.startsWith('/links'));

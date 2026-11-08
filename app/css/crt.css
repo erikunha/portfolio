@@ -123,16 +123,6 @@
     will-change: transform;
   }
 
-  @media (prefers-reduced-motion: reduce) {
-    .crt-flicker,
-    .crt-scan-beam,
-    .crt-noise {
-      animation: none;
-      opacity: 0;
-      will-change: auto;
-    }
-  }
-
   body[data-motion="reduce"] .crt-flicker,
   body[data-motion="reduce"] .crt-scan-beam,
   body[data-motion="reduce"] .crt-noise {

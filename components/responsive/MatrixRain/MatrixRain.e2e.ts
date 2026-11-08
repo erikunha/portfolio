@@ -1,5 +1,6 @@
 import { expect, type Page, test } from '@playwright/test';
 import { waitForHydration } from '../../../tests/e2e/_helpers/hydration';
+import { freezeMotion } from '../../../tests/e2e/_helpers/motion';
 
 const RAIN_CANVAS = 'canvas[style*="position: fixed"]';
 const TOGGLE = '.topbar-action-toggle';
@@ -14,7 +15,7 @@ test.describe('Matrix rain follows the MOTION control', () => {
   test.use({ viewport: { width: 1280, height: 720 } });
 
   test('starts when MOTION is switched on after loading with reduced motion', async ({ page }) => {
-    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await freezeMotion(page);
     await page.goto('/');
     await waitForHydration(page, TOGGLE);
     await expect(page.locator(RAIN_CANVAS)).toBeAttached();
@@ -35,7 +36,7 @@ test.describe('Matrix rain follows the MOTION control', () => {
   });
 
   test('stays still through a tab return while motion is off', async ({ page }) => {
-    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await freezeMotion(page);
     await page.goto('/');
     await waitForHydration(page, TOGGLE);
     await expect(page.locator(RAIN_CANVAS)).toBeAttached();

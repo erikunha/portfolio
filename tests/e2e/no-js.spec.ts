@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, type Page, test } from '@playwright/test';
 import { horizontalOverflow } from './_helpers/geometry';
 
 test.use({ javaScriptEnabled: false });
@@ -113,5 +113,56 @@ test.describe('home with JavaScript off', () => {
     await expect(trigger).toHaveAccessibleName('Open menu');
     await expect(trigger).toHaveText('');
     await expect(page.locator('.desktop-topbar')).not.toContainText('INDEX');
+  });
+});
+
+const EQ_BAR = '[data-testid="eq-spectrum"] .eq-bar';
+const TICKER_TRACK_CLASS = 'links-ticker-track';
+const NO_ANIMATION = 'none';
+
+const animationName = (page: Page, selector: string) =>
+  page
+    .locator(selector)
+    .first()
+    .evaluate((node) => getComputedStyle(node).animationName);
+
+test.describe('home with JavaScript off and the system asking for reduced motion', () => {
+  test.use({ reducedMotion: 'reduce' });
+
+  test('nothing animates, because no script can offer the MOTION switch', async ({ page }) => {
+    await page.goto('/');
+    await page.locator(EQ_BAR).first().scrollIntoViewIfNeeded();
+    expect(
+      await animationName(page, EQ_BAR),
+      'WCAG 2.2.2: with no script there is no MOTION switch, so the system setting must stop the animation',
+    ).toBe(NO_ANIMATION);
+  });
+
+  test('the links ticker becomes one static line', async ({ page }) => {
+    await page.goto('/');
+    await page.evaluate((trackClass) => {
+      const track = document.createElement('div');
+      track.className = trackClass;
+      track.style.width = '200px';
+      track.innerHTML = '<span>one</span><span>two</span>';
+      document.body.append(track);
+    }, TICKER_TRACK_CLASS);
+    expect(await animationName(page, `.${TICKER_TRACK_CLASS}`)).toBe(NO_ANIMATION);
+    await expect(page.locator(`.${TICKER_TRACK_CLASS} > span`).nth(1)).toBeHidden();
+    expect(
+      await page
+        .locator(`.${TICKER_TRACK_CLASS}`)
+        .evaluate((node) => getComputedStyle(node).whiteSpace),
+    ).toBe('normal');
+  });
+});
+
+test.describe('home with JavaScript off and no system preference', () => {
+  test.use({ reducedMotion: 'no-preference' });
+
+  test('the animation is left running', async ({ page }) => {
+    await page.goto('/');
+    await page.locator(EQ_BAR).first().scrollIntoViewIfNeeded();
+    expect(await animationName(page, EQ_BAR)).not.toBe(NO_ANIMATION);
   });
 });

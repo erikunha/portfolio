@@ -1,14 +1,14 @@
+import { Fragment } from 'react';
 import { CompanyLink } from '@/components/CompanyLink';
 import { EXTERNAL_LINK_PROPS, externalLinkProps } from '@/components/ExternalLink';
 import { HeroStats } from '@/components/HeroStats';
+import { FACT_SEPARATOR } from '@/content/fact-separator';
 import { heroContent, heroTagline } from '@/content/hero';
 import { profile, profilePresentation } from '@/content/profile';
 import type { SiteLocale } from '@/content/site-locale';
 import { Button } from '@/design-system';
 import { HeroBootAnimation } from '../../client/HeroBootAnimation';
 import { HeroSystemFailure } from '../../client/HeroSystemFailure';
-
-const FIELD_SEPARATOR = ' · ';
 
 const HEADING_LEVEL = 1;
 
@@ -37,27 +37,34 @@ function HeroIdentity({ locale, primary }: { locale: SiteLocale; primary: boolea
         <span className="hero-context-fact hero-context-fact--location">
           <span className="hero-context-item">
             {c.locationLabel} <b className="hero-location">{p.country}</b>
-          </span>
-          <span className="hero-context-separator" aria-hidden="true">
-            {FIELD_SEPARATOR}
-          </span>
+          </span>{' '}
           <span className="hero-context-item">
             {profile.timezone}
-            {FIELD_SEPARATOR}
+            {FACT_SEPARATOR}
             {p.availability}
           </span>
-        </span>
+        </span>{' '}
         <span className="hero-context-fact hero-context-fact--employer">
-          {c.employerLabel}{' '}
-          <b>
-            <CompanyLink href={profile.currentEmployer.url} locale={locale}>
-              {profile.currentEmployer.name}
-            </CompanyLink>
-          </b>
-        </span>
-        <span className="hero-context-fact hero-context-fact--domain">{p.employerContext}</span>
+          <span className="hero-context-item">
+            {c.employerLabel}{' '}
+            <b>
+              <CompanyLink href={profile.currentEmployer.url} locale={locale}>
+                {profile.currentEmployer.name}
+              </CompanyLink>
+            </b>
+          </span>
+        </span>{' '}
+        <span className="hero-context-fact hero-context-fact--domain">
+          {p.employerContextFacts.map((part) => (
+            <Fragment key={part}>
+              <span className="hero-context-item">{part}</span>{' '}
+            </Fragment>
+          ))}
+        </span>{' '}
         <span className="hero-context-fact hero-context-fact--language">
-          {c.languageLabel} {p.workingLanguageLine}
+          <span className="hero-context-item">
+            {c.languageLabel} {p.workingLanguageLine}
+          </span>
         </span>
       </p>
       <HeroStats stats={c.stats} label={c.statsLabel} />
