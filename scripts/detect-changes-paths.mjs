@@ -133,6 +133,7 @@ export const IGNORED_PATHS = [
   'scripts/check-section-order.mjs',
   'scripts/check-semgrep-fixture.d.mts',
   'scripts/check-semgrep-fixture.mjs',
+  'scripts/check-test-integrity.ts',
   'scripts/check-tool-pins.d.mts',
   'scripts/check-tool-pins.mjs',
   'scripts/ci-predict.ts',

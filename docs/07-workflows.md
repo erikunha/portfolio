@@ -27,7 +27,7 @@
 ```
 check (Biome) -> typecheck -> validate-content -> check:client-naming -> check:dep-pinning
   -> check:dependency-vetting -> check:harness-size -> check:section-order -> check:doc-drift
-  -> check:detect-changes-paths -> lint:css-tokens -> test (Vitest)
+  -> check:detect-changes-paths -> check:test-integrity -> lint:css-tokens -> test (Vitest)
 ```
 
 `pnpm ci:local` == `pnpm verify`. `pnpm ci` == `verify + build + bundle-check + route-js-check`. Before opening a PR, also run `pnpm bundle-check`, `pnpm route-js-check`, and `pnpm gates:runtime`.
@@ -38,8 +38,9 @@ check (Biome) -> typecheck -> validate-content -> check:client-naming -> check:d
 | ---------------------- | ------------------------------------------------------------------------------------------------ |
 | `validate-content`     | every `content/*.ts` Zod schema parses (build gate)                                              |
 | `check:client-naming`  | client directive files use `*.client.*`, a `/client/` directory, or an App Router error filename |
+| `check:test-integrity` | no focused test, no test without an assertion, no skip without a reason                          |
 | `check:dep-pinning`    | no `latest`/`*`/tag deps or open overrides                                                                       |
-| `check:dependency-vetting` | every direct dependency has a purpose and license in `dependency-vetting.json`; the installed license matches it; an install script needs `pnpm.onlyBuiltDependencies` |
+| `check:dependency-vetting` | every direct dependency has a purpose and license in `dependency-vetting.json`; the installed license matches it; an install script needs `pnpm.onlyBuiltDependencies` or `pnpm.ignoredBuiltDependencies` |
 | `check:harness-size`   | `AGENTS.md` and `CLAUDE.md` within the line budgets in `scripts/harness-size.json`               |
 | `check:section-order`  | section ids have mobile order rules or a listed nested-anchor exemption                          |
 | `check:doc-drift`      | `ARCHITECTURE.md` directory-tree paths exist on disk                                             |

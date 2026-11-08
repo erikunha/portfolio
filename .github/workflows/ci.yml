@@ -86,6 +86,9 @@ jobs:
       - name: Detect-changes pathspec gate (no orphaned filters)
         run: pnpm check:detect-changes-paths
 
+      - name: Test integrity gate (no focused, assertion-less or unexplained skipped tests)
+        run: pnpm check:test-integrity
+
       - name: Contrast check
         run: pnpm lint:contrast
 
@@ -709,8 +712,8 @@ jobs:
           set -euo pipefail   # explicit: the sha256sum -c below must abort the step, not just print
           base="https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}"
           tarball="gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
-          curl -sSfL -o "$tarball" "$base/$tarball"
-          curl -sSfL -o checksums.txt "$base/gitleaks_${GITLEAKS_VERSION}_checksums.txt"
+          curl -sSfL --retry 4 --retry-delay 5 --max-time 120 -o "$tarball" "$base/$tarball"
+          curl -sSfL --retry 4 --retry-delay 5 --max-time 120 -o checksums.txt "$base/gitleaks_${GITLEAKS_VERSION}_checksums.txt"
 
           expected="$(awk -v f="$tarball" '$2 == f { print $1 }' checksums.txt)"
           if [ -z "$expected" ]; then
