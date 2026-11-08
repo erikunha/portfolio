@@ -69,14 +69,18 @@ describe('CopyLinkButton', () => {
     expect(statusText(container)).toBe('copied ✓');
   });
 
-  it('keeps the status region outside the button and gives the button a stable name', () => {
+  it('keeps the status region outside the button and names the button by its visible text', () => {
     vi.stubGlobal('navigator', { clipboard: { writeText: vi.fn().mockResolvedValue(undefined) } });
 
     const { container } = renderButton();
     const button = container.querySelector('button');
     expect(button?.querySelector('[role="status"]')).toBeNull();
     expect(container.querySelector('[role="status"]')).not.toBeNull();
-    expect(button?.getAttribute('aria-label')).toBe('copiar link');
+    expect(
+      button?.hasAttribute('aria-label'),
+      'WCAG 2.5.3: an aria-label hides the visible label and host from the name, so the visible text names the button',
+    ).toBe(false);
+    expect(button?.textContent).toContain('copiar link');
   });
 
   it('returns to the idle label so a second copy is discoverable', async () => {

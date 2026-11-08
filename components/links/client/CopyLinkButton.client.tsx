@@ -49,12 +49,7 @@ export function CopyLinkButton({ url, hostLabel, ...labels }: CopyLinkButtonProp
 
   return (
     <>
-      <button
-        type="button"
-        aria-label={labels.idleLabel}
-        onClick={() => void copy(url)}
-        className="links-line"
-      >
+      <button type="button" onClick={() => void copy(url)} className="links-line">
         <LineContent
           glyph={<IconCopy />}
           label={`${view.prompt}${labels[view.shown]}`}
