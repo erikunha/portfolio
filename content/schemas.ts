@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { FACT_SEPARATOR } from './fact-separator';
 import { SECTION_ICONS } from './section-registry';
 
 export { SECTION_ICONS };
@@ -538,6 +539,17 @@ export const CommunityEventSchema = z.object({
   statusLine: z.string().min(1),
 });
 
+export const ContextFactsSchema = z
+  .array(
+    z
+      .string()
+      .min(1)
+      .refine((fact) => !fact.includes(FACT_SEPARATOR), {
+        message: `a context fact must not contain "${FACT_SEPARATOR}": the separator is drawn between facts, so one inside a fact would split it in two`,
+      }),
+  )
+  .min(1);
+
 const MonthSchema = z.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/);
 
 export const ProfileSchema = z.object({
@@ -553,7 +565,7 @@ export const ProfileSchema = z.object({
   currentEmployer: z.object({
     name: z.string().min(1),
     url: CompanyUrlSchema,
-    context: z.string().min(1),
+    contextFacts: ContextFactsSchema,
   }),
   languages: z
     .array(
@@ -782,11 +794,6 @@ const ErrorHrefSchema = z.string().regex(/^\/(?!\/)[\w/#-]*$/);
 const ErrorLinkSchema = z.object({ label: z.string().min(1), href: ErrorHrefSchema });
 
 export const ErrorsContentSchema = z.object({
-  chrome: z.object({
-    navLabel: z.string().min(1),
-    skipLabel: z.string().min(1),
-    nav: z.array(ErrorLinkSchema).min(1),
-  }),
   notFound: z.object({
     metaTitle: z.string().min(1),
     code: z.literal('404'),
@@ -818,7 +825,6 @@ export const ErrorsContentSchema = z.object({
 });
 export type ErrorsContent = z.infer<typeof ErrorsContentSchema>;
 export const ErrorsClientContentSchema = ErrorsContentSchema.pick({
-  chrome: true,
   serverError: true,
   componentUnavailable: true,
   componentExplanation: true,
@@ -998,7 +1004,6 @@ export const LinksCopySchema = z.object({
   copyFailedMessage: LocalizedTextSchema,
   opensInNewTab: LocalizedTextSchema,
   newBadge: LocalizedTextSchema,
-  langSwitchLabel: LocalizedTextSchema,
   feedUnavailable: LocalizedTextSchema,
   pageHeading: LocalizedTextSchema,
 });

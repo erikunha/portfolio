@@ -109,7 +109,10 @@ describe('Dock', () => {
     reveal('sec-shell');
     expect(current()).toEqual(['SHELL']);
     reveal('sec-contact');
-    expect(current()).toEqual(['MENU']);
+    expect(current()).toEqual([]);
+    expect(within(dock()).getByRole('button', { name: 'MENU' }).hasAttribute('data-current')).toBe(
+      true,
+    );
     expect(
       within(dock())
         .getByRole('link', { name: /Hire on LinkedIn/ })

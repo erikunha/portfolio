@@ -29,7 +29,7 @@
 
   @media (min-width: 768px) {
     .page-container.page-main {
-      padding-block-start: calc(var(--topbar-height) + var(--spacing-6));
+      padding-block-start: calc(var(--topbar-height) + var(--space-page-top));
     }
   }
 

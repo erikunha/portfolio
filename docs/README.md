@@ -54,7 +54,7 @@ portfolio/
 │   ├── (pt)/             pt-BR routes and their root layout (html lang pt-BR)
 │   ├── api/              11 route handlers (ask, contact, healthz, psi-refresh, mcp, ...)
 │   └── css/              Tailwind v4 entry + @theme tokens + base/crt/animations/components layers
-├── components/           sections/ (RSC sections and nested content) · client/ (islands) · responsive/ (chrome) · AppShell · ErrorBoundary · RootShell (fonts, JSON-LD, motion bootstrap, Vercel RUM shared by both root layouts)
+├── components/           sections/ (RSC sections and nested content) · client/ (islands) · responsive/ (chrome) · SiteShell · AppShell · ErrorBoundary · RootShell (fonts, JSON-LD, motion bootstrap, Vercel RUM shared by both root layouts)
 ├── design-system/        8 reusable primitives (Badge, Button, ...)
 ├── content/              typed content modules + central Zod schema registry + eval corpus
 ├── lib/                  BFF/server core: env, defineHandler, rate-limit, ask/*, telemetry, integrations

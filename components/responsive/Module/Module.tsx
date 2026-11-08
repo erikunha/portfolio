@@ -4,6 +4,8 @@ import { type ModuleVariant, moduleHeaderId } from './module.constants';
 
 const TYPE_CHARS_PROPERTY = '--module-type-chars';
 
+const COMMAND_LANG = 'en';
+
 function scrollTypeStyle(text: string): CSSProperties {
   return { [TYPE_CHARS_PROPERTY]: text.length } as CSSProperties;
 }
@@ -31,6 +33,7 @@ export function Module({
   variant,
   children,
 }: ModuleProps) {
+  const commandDecorative = Boolean(name || srLabel) || undefined;
   return (
     <section
       id={id}
@@ -65,12 +68,19 @@ export function Module({
               {icon}
             </span>
           ) : null}
-          <span className="module-scroll-type hidden md:inline" style={scrollTypeStyle(header)}>
+          <span
+            className="module-scroll-type hidden md:inline"
+            style={scrollTypeStyle(header)}
+            lang={COMMAND_LANG}
+            aria-hidden={commandDecorative}
+          >
             <span className="module-scroll-type-text">{header}</span>
           </span>
           <span
             className="module-scroll-type md:hidden"
             style={scrollTypeStyle(mobileHeader ?? header)}
+            lang={COMMAND_LANG}
+            aria-hidden={commandDecorative}
           >
             <span className="module-scroll-type-text">{mobileHeader ?? header}</span>
           </span>

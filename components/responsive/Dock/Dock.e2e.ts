@@ -47,3 +47,57 @@ test.describe('Dock: mobile navigation', () => {
     await expect(menu).toBeFocused();
   });
 });
+
+const NARROW_VIEWPORT = { width: 320, height: 640 };
+const MIN_LABEL_GAP_PX = 8;
+const MIN_TAP_TARGET_PX = 24;
+
+test.describe('Dock: narrowest phone', () => {
+  test.use({ viewport: NARROW_VIEWPORT });
+
+  for (const path of ['/', '/pt']) {
+    test(`${path} keeps every label inside its cell with a gap to its neighbour`, async ({
+      page,
+    }) => {
+      await page.goto(path);
+      await expect(page.locator('.dock')).toBeVisible();
+      const cells = await page.evaluate(() =>
+        [...document.querySelectorAll('.dock > a, .dock > button')].map((cell) => {
+          const label = [...cell.childNodes].find(
+            (node) => node.nodeType === Node.TEXT_NODE && node.textContent?.trim(),
+          );
+          const range = document.createRange();
+          range.selectNodeContents(label as Node);
+          const text = range.getBoundingClientRect();
+          const box = cell.getBoundingClientRect();
+          return {
+            name: cell.textContent,
+            cellLeft: box.left,
+            cellRight: box.right,
+            cellWidth: box.width,
+            cellHeight: box.height,
+            textLeft: text.left,
+            textRight: text.right,
+          };
+        }),
+      );
+      expect(cells.length).toBeGreaterThan(0);
+      for (const [index, cell] of cells.entries()) {
+        expect(cell.textLeft, `${cell.name} starts left of its dock cell`).toBeGreaterThanOrEqual(
+          cell.cellLeft,
+        );
+        expect(cell.textRight, `${cell.name} ends right of its dock cell`).toBeLessThanOrEqual(
+          cell.cellRight,
+        );
+        expect(Math.min(cell.cellWidth, cell.cellHeight)).toBeGreaterThanOrEqual(MIN_TAP_TARGET_PX);
+        const next = cells[index + 1];
+        if (next) {
+          expect(
+            next.textLeft - cell.textRight,
+            `${cell.name} and ${next.name} labels must not crowd each other`,
+          ).toBeGreaterThanOrEqual(MIN_LABEL_GAP_PX);
+        }
+      }
+    });
+  }
+});

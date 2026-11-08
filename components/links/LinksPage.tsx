@@ -1,10 +1,8 @@
 import { Suspense } from 'react';
-import { AppShell } from '@/components/AppShell';
-import { BrandLink } from '@/components/BrandLink';
 import { PageMain } from '@/components/PageMain';
+import { SiteShell } from '@/components/SiteShell';
 import { linksContent } from '@/content/links';
 import { LINKS_PATH, type LinksLocale } from '@/content/links.constants';
-import { NAVIGATION, siteNavChrome } from '@/content/navigation';
 import { CHANNEL_URL, EMPTY_FEED, getChannelFeed } from '@/lib/links/feed';
 import { ChannelCard } from './ChannelCard';
 import { ChromeBar } from './ChromeBar';
@@ -38,12 +36,7 @@ export function LinksPage({ locale }: { locale: LinksLocale }) {
   const pageUrl = `${siteUrl}${LINKS_PATH[locale]}`;
 
   return (
-    <AppShell
-      brand={<BrandLink locale={locale} />}
-      chrome={siteNavChrome(locale)}
-      locale={locale}
-      skipLabel={NAVIGATION[locale].copy.skipLabel}
-    >
+    <SiteShell locale={locale} route={LINKS_PATH[locale]}>
       <NavProgress />
       <div className="links-page">
         <PageMain className="page-container page-main links-main">
@@ -51,7 +44,7 @@ export function LinksPage({ locale }: { locale: LinksLocale }) {
           <Suspense fallback={null}>
             <LinksTicker locale={locale} />
           </Suspense>
-          <ChromeBar locale={locale} />
+          <ChromeBar />
           <div className="links-grid">
             <div className="links-stack" data-stack="primary">
               <IdentityCard locale={locale} />
@@ -68,6 +61,6 @@ export function LinksPage({ locale }: { locale: LinksLocale }) {
           <LinksFooter />
         </PageMain>
       </div>
-    </AppShell>
+    </SiteShell>
   );
 }

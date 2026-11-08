@@ -5,6 +5,7 @@ import {
   createContext,
   type MouseEvent,
   type ReactNode,
+  Suspense,
   useCallback,
   useContext,
   useEffect,
@@ -18,10 +19,12 @@ import { externalLinkProps } from '@/components/ExternalLink';
 import { LocaleSwitch } from '@/components/LocaleSwitch/LocaleSwitch';
 import { MAIN_CONTENT_ID } from '@/components/PageMain';
 import { StatusDot } from '@/components/StatusDot';
+import { TOPBAR_MOTION_LABEL } from '@/content/nav';
 import type { NavigationCopy, SiteNavChrome } from '@/content/navigation';
 import {
   headerLanguageSwitchPaths,
   LANGUAGE_SWITCH_NAME,
+  LOCALE_HOME_PATH,
   type SiteLocale,
   withSectionHash,
 } from '@/content/site-locale';
@@ -37,6 +40,7 @@ import {
 } from './navigationStore';
 
 const HOME_SECTION_ID = 'bio';
+const MOTION_STATE_SEPARATOR = ': ';
 const POSITION_DIGITS = 2;
 const formatSectionNumber = (order: number) => String(order).padStart(POSITION_DIGITS, '0');
 export const DRAWER_ID = 'section-drawer';
@@ -68,6 +72,7 @@ type NavigationState = {
   jump: (event: MouseEvent<HTMLElement>, id: string) => void;
   toggleMotion: () => void;
   locale: SiteLocale;
+  route: string | null;
   copy: NavigationCopy;
   chrome: SiteNavChrome;
 };
@@ -98,7 +103,7 @@ export const useCurrentSection = () => useNavigationSelector(selectCurrentId);
 export const useDrawerOpen = () => useNavigationSelector(selectDrawerOpen);
 export const useMotionOn = () => useNavigationSelector(selectMotionOn);
 
-export function useMotionLabel(): string {
+export function useMotionState(): string {
   const { copy } = useSectionNavigation();
   return useNavigationSelector(({ motionOn, systemReduced }) =>
     motionOn ? copy.motionOn : systemReduced ? copy.motionReduced : copy.motionOff,
@@ -151,10 +156,12 @@ export function SectionNavigationProvider({
   children,
   chrome,
   locale,
+  route = null,
 }: {
   children?: ReactNode;
   chrome: SiteNavChrome;
   locale: SiteLocale;
+  route?: string | null;
 }) {
   const [store] = useState(() => createNavigationStore(INITIAL_SNAPSHOT));
   const copy = chrome.navigation.copy;
@@ -266,31 +273,56 @@ export function SectionNavigationProvider({
       jump,
       toggleMotion,
       locale,
+      route,
       copy,
       chrome,
     }),
-    [store, openDrawer, closeDrawer, settleDrawer, jump, toggleMotion, locale, copy, chrome],
+    [store, openDrawer, closeDrawer, settleDrawer, jump, toggleMotion, locale, route, copy, chrome],
   );
 
   return <NavigationContext.Provider value={value}>{children}</NavigationContext.Provider>;
 }
 
-export function LanguageSwitch({ className }: { className?: string }) {
+function LanguageSwitchView({
+  className,
+  paths,
+}: {
+  className: string | undefined;
+  paths: Record<SiteLocale, string>;
+}) {
   const { locale, copy } = useSectionNavigation();
-  const currentId = useCurrentSection();
-  const pathname = usePathname();
-  const paths = pathname ? headerLanguageSwitchPaths(pathname) : null;
-  if (!pathname || !paths) return null;
-  const sectionId = currentId && currentId !== HOME_SECTION_ID ? currentId : null;
   return (
     <LocaleSwitch
       label={copy.langSwitchLabel}
       current={locale}
-      hrefs={withSectionHash(pathname, paths, sectionId)}
+      hrefs={paths}
       names={LANGUAGE_SWITCH_NAME}
       className={cn('flex-none', className)}
       data-lang-switch=""
     />
+  );
+}
+
+function CurrentLanguageSwitch({ className }: { className: string | undefined }) {
+  const currentId = useCurrentSection();
+  const pathname = usePathname();
+  if (!pathname) return null;
+  const sectionId = currentId && currentId !== HOME_SECTION_ID ? currentId : null;
+  return (
+    <LanguageSwitchView
+      className={className}
+      paths={withSectionHash(pathname, headerLanguageSwitchPaths(pathname), sectionId)}
+    />
+  );
+}
+
+export function LanguageSwitch({ className }: { className?: string }) {
+  const { route } = useSectionNavigation();
+  const fallbackPaths = route === null ? LOCALE_HOME_PATH : headerLanguageSwitchPaths(route);
+  return (
+    <Suspense fallback={<LanguageSwitchView className={className} paths={fallbackPaths} />}>
+      <CurrentLanguageSwitch className={className} />
+    </Suspense>
   );
 }
 
@@ -299,7 +331,7 @@ export function SectionNavigation({ extra }: { extra?: ReactNode }) {
   const currentId = useCurrentSection();
   const drawerOpen = useDrawerOpen();
   const motionOn = useMotionOn();
-  const motionLabel = useMotionLabel();
+  const motionState = useMotionState();
   const rootRef = useRef<HTMLDivElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
@@ -409,7 +441,11 @@ export function SectionNavigation({ extra }: { extra?: ReactNode }) {
               onClick={toggleMotion}
             >
               <StatusDot blink />
-              <span>{motionLabel}</span>
+              <span>{TOPBAR_MOTION_LABEL}</span>
+              <span aria-hidden="true">
+                {MOTION_STATE_SEPARATOR}
+                <span data-motion-state="">{motionState}</span>
+              </span>
             </button>
           </li>
         </ul>

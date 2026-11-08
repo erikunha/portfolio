@@ -31,7 +31,7 @@ Barrels beside `ContactFormLazy`, `InteractiveShellLazy` and `MatrixRainLazy` ex
 
 ```mermaid
 flowchart TD
-    page["components/SiteHome.tsx (RSC)"] --> shell["AppShell.client"]
+    page["page frame: SiteHome · ReadingShell · LinksPage · design-system layout · NotFoundPage · RouteErrorPage"] --> siteshell["SiteShell (RSC)"] --> shell["AppShell.client"]
     shell --> navigation["SectionNavigationProvider (client): stable actions and copy, plus a store for current section, drawer and motion"]
     navigation --> rail["SectionNavigation (client): menu trigger, drawer focus trap and focus return<br/>Header: title and drawer close control"]
     navigation --> position["PositionMeter (client): decorative scroll progress line, aria-hidden, top from 1024px and right edge below"]

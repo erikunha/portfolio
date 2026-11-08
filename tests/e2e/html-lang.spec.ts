@@ -1,4 +1,6 @@
 import { expect, test } from '@playwright/test';
+import { SECTION_LABELS } from '@/content/section-labels';
+import type { SectionId } from '@/content/section-registry';
 import { SITE_HTML_LANG, SITE_LOCALE, type SiteLocale } from '@/content/site-locale';
 
 const NOT_FOUND_STATUS = 404;
@@ -66,3 +68,28 @@ test('an unknown URL sends the 404 page itself, not an empty shell the browser f
     expect(html).not.toContain('content="index, follow"');
   }
 });
+
+for (const { path, locale } of [
+  { path: '/', locale: SITE_LOCALE.en },
+  { path: '/pt', locale: SITE_LOCALE.pt },
+]) {
+  test(`${path} names each module heading in its own language, with the command text left out`, async ({
+    page,
+  }) => {
+    await page.goto(path);
+    const headings = page.locator('section[id^="sec-"] > header > h2.module-heading');
+    const count = await headings.count();
+    expect(count, 'the page renders its module headings').toBeGreaterThan(0);
+    for (let index = 0; index < count; index += 1) {
+      const heading = headings.nth(index);
+      const sectionId = (await heading.evaluate(
+        (node) => node.closest('section')?.id,
+      )) as SectionId;
+      await expect(
+        heading,
+        `the ${sectionId} heading name must be the ${locale} section name alone: an English shell command inside it is read in the wrong voice (WCAG 3.1.2)`,
+      ).toHaveAccessibleName(SECTION_LABELS[locale][sectionId]);
+      await expect(heading.locator('.module-scroll-type[lang="en"]')).toHaveCount(2);
+    }
+  });
+}
