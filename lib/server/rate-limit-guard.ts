@@ -1,5 +1,6 @@
 import 'server-only';
 
+import { unstable_rethrow } from 'next/navigation';
 import { log } from '@/lib/log';
 import { describeError } from '@/lib/log-error';
 import { getClientIp } from '@/lib/rate-limit';
@@ -33,6 +34,7 @@ export function withRateLimit<TReq extends Request>(
         });
       }
     } catch (limitErr) {
+      unstable_rethrow(limitErr);
       log.warn('rate-limit unavailable, allowing request', { error: describeError(limitErr) });
     }
     return handler(req);

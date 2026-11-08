@@ -67,8 +67,8 @@ export const HiringProfileSchema = z.object({
 
 export type HiringProfile = z.infer<typeof HiringProfileSchema>;
 
-const ISO_DATE_TIME_SEPARATOR = 'T';
-const BUILD_DATE = new Date().toISOString().split(ISO_DATE_TIME_SEPARATOR)[0] ?? '';
+const BUILD_DATE_MESSAGE = 'BUILD_DATE must be a YYYY-MM-DD date baked in by next.config.ts';
+const BUILD_DATE = z.iso.date(BUILD_DATE_MESSAGE).parse(process.env.BUILD_DATE);
 
 export const HIRING_PROFILE: HiringProfile = HiringProfileSchema.parse({
   '@type': 'HiringProfile',

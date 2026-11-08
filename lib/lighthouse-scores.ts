@@ -2,7 +2,9 @@ import { social } from '@/content/social';
 import { env } from '@/lib/env';
 import { GOOGLE_API_KEY_HEADER } from '@/lib/google-api';
 import { log } from '@/lib/log';
-import { ReadTimeoutError, withTimeout } from '@/lib/with-timeout';
+import { afterResponse } from '@/lib/server/after-response';
+import { MS_PER_MINUTE } from '@/lib/time';
+import { ReadTimeoutError, SSR_REDIS_TIMEOUT_MS, withTimeout } from '@/lib/with-timeout';
 import { getRedis } from './rate-limit';
 
 class PsiHttpError extends Error {
@@ -47,6 +49,11 @@ export const PSI_STRATEGY_BUDGET_MS = 50_000;
 export const PSI_MIN_RETRY_BUDGET_MS = 8_000;
 export const PSI_RETRY_BACKOFF_MS = 500;
 export const PSI_MAX_ATTEMPTS = 2;
+
+export const NEGATIVE_CACHE_MS = MS_PER_MINUTE;
+export const LAST_GOOD_HEDGE_MS = 250;
+
+const negativeCache = new Map<Strategy, { until: number; scores: LighthouseScores }>();
 
 let _now: () => number = () => Date.now();
 export function __setNowForTest(fn: (() => number) | null): void {
@@ -132,10 +139,14 @@ async function fetchScoresOnce(
       });
     await writeLastGood(strategy, scores);
   } else {
-    getRedis()
-      .set(CACHE_KEY(strategy), scores, { ex: LIGHTHOUSE_TTL_S })
-      .catch((err) => log.error('Redis cache set failed', { err }));
-    void writeLastGood(strategy, scores);
+    afterResponse(async () => {
+      await Promise.all([
+        getRedis()
+          .set(CACHE_KEY(strategy), scores, { ex: LIGHTHOUSE_TTL_S })
+          .catch((err) => log.error('Redis cache set failed', { err })),
+        writeLastGood(strategy, scores),
+      ]);
+    });
   }
 
   return scores;
@@ -165,9 +176,13 @@ async function fetchAndCache(strategy: Strategy, forceRefresh = false): Promise<
   }
 }
 
-async function readLastGood(strategy: Strategy): Promise<LighthouseScores | null> {
-  const stored = await withTimeout(() =>
-    getRedis().get<LighthouseScores>(LAST_GOOD_KEY(strategy)),
+async function readLastGood(
+  strategy: Strategy,
+  timeoutMs: number,
+): Promise<LighthouseScores | null> {
+  const stored = await withTimeout(
+    () => getRedis().get<LighthouseScores>(LAST_GOOD_KEY(strategy)),
+    timeoutMs,
   ).catch((err) => {
     log.error('Redis last-good GET failed', { err, strategy });
     return null;
@@ -176,25 +191,39 @@ async function readLastGood(strategy: Strategy): Promise<LighthouseScores | null
 }
 
 export async function getScores(strategy: Strategy = 'desktop'): Promise<LighthouseScores> {
-  const cachedRead = withTimeout(() => getRedis().get<LighthouseScores>(CACHE_KEY(strategy))).catch(
-    (err) => {
+  const remembered = negativeCache.get(strategy);
+  if (remembered && _now() < remembered.until) return remembered.scores;
+
+  let lastGood: Promise<LighthouseScores | null> | undefined;
+  const loadLastGood = (timeoutMs = SSR_REDIS_TIMEOUT_MS) => {
+    lastGood ??= readLastGood(strategy, timeoutMs);
+    return lastGood;
+  };
+  const hedge = setTimeout(
+    () => void loadLastGood(SSR_REDIS_TIMEOUT_MS - LAST_GOOD_HEDGE_MS),
+    LAST_GOOD_HEDGE_MS,
+  );
+  const cached = await withTimeout(() => getRedis().get<LighthouseScores>(CACHE_KEY(strategy)))
+    .catch((err) => {
       log.error('Redis cache GET failed', { err, strategy });
       return err instanceof ReadTimeoutError ? LIGHTHOUSE_FALLBACK : null;
-    },
-  );
-  const lastGood = readLastGood(strategy);
-  const cached = await cachedRead;
-  if (cached === LIGHTHOUSE_FALLBACK) return (await lastGood) ?? LIGHTHOUSE_FALLBACK;
+    })
+    .finally(() => clearTimeout(hedge));
+  if (cached === LIGHTHOUSE_FALLBACK) return (await loadLastGood()) ?? LIGHTHOUSE_FALLBACK;
   if (cached) return cached;
 
   try {
     return await fetchAndCache(strategy);
   } catch (err) {
     log.error('PSI fetch failed', { err, strategy });
-    return (await lastGood) ?? LIGHTHOUSE_FALLBACK;
+    const scores = (await loadLastGood()) ?? LIGHTHOUSE_FALLBACK;
+    negativeCache.set(strategy, { until: _now() + NEGATIVE_CACHE_MS, scores });
+    return scores;
   }
 }
 
 export async function refreshScores(strategy: Strategy): Promise<LighthouseScores> {
-  return fetchAndCache(strategy, true);
+  const scores = await fetchAndCache(strategy, true);
+  negativeCache.delete(strategy);
+  return scores;
 }

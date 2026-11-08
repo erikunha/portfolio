@@ -12,7 +12,11 @@ const withMDX = createMDX({
   },
 });
 
+const ISO_DATE_LENGTH = 10;
+const BUILD_DATE = new Date().toISOString().slice(0, ISO_DATE_LENGTH);
+
 const nextConfig: NextConfig = {
+  env: { BUILD_DATE },
   poweredByHeader: false,
   pageExtensions: ['ts', 'tsx', 'mdx'],
   cacheComponents: true,

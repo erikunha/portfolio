@@ -592,7 +592,7 @@ Observability spans real-user telemetry, structured logs and client error captur
 
 ### Client error capture
 
-- **`lib/error-bridge.client.ts`** registers `window.addEventListener('error')` + `unhandledrejection` as an import side effect (the module is imported by `AppShell.client.tsx` for that side effect and by `ErrorBoundary.client.tsx` for `buildLogPayload`), and both the listeners and the dedup state belong to the window, not to the module instance: the state object lives on the window under `Symbol.for('erikunha.dev/error-bridge')`, and the `listening` guard in `install()` makes a second instantiation in the same window (a dev re-import, the same module reached through two bundles) reuse that state and register nothing. Each capture POSTs to `/api/log` with `{level, message, stack, url, userAgent, ts}`. Dedup: 100ms tail-window keyed on `(message, stack)`: covers React's error replay (<50ms) without suppressing meaningful repeat-occurrence signal.
+- **`lib/error-bridge.client.ts`** registers `window.addEventListener('error')` + `unhandledrejection` as an import side effect (the module is imported by `AppShell.client.tsx` for that side effect and by `ErrorBoundary.client.tsx` for `buildLogPayload`), and both the listeners and the dedup state belong to the window, not to the module instance: the state object lives on the window under `Symbol.for('erikunha.dev/error-bridge')`, and the `listening` guard in `install()` makes a second instantiation in the same window (a dev re-import, the same module reached through two bundles) reuse that state and register nothing. Each capture POSTs to `/api/log` with `{level, message, stack, url, userAgent, ts}`. Dedup: 100ms tail-window keyed on `(message, stack)`: covers React's error replay (<50ms) without suppressing meaningful repeat-occurrence signal. Sending is capped at 200 reports per window and backs off (5 s doubling to 5 min, or `Retry-After`) after a non-2xx answer or a network failure; the error boundaries post through the same `postLog` gate.
 - **`app/api/log/route.ts`** validates via zod, writes to Upstash KV `err:{yyyy-mm-dd}:{uuid}` with 7-day TTL and the stack cut to 4096 characters. Rate-limited (10/IP/min) via `getErrorLogLimit()` to absorb runaway client error loops, with a per-IP daily cap (50) and a shared daily cap (500). The IP is used only for rate-limiting and discarded: `err:*` records store no `ipHash`, making them personal-data-free and outside the `/api/log/forget` erasure scope.
 
 ### `/api/ask` Q+A retention
@@ -631,7 +631,7 @@ Observability spans real-user telemetry, structured logs and client error captur
 ### Answer Engine Optimization (the new layer)
 
 - `/llms.txt` manifest: emerging standard for AI-readable site maps
-- `/api/erik.json`: machine-readable profile (HiringProfile custom type, no schema.org @context: `Engineer` is not a valid schema.org type). Cached 24h at edge. Returns a structured hiring profile document.
+- `/api/erik.json`: machine-readable profile (HiringProfile custom type, no schema.org @context: `Engineer` is not a valid schema.org type). Cached 24h at edge. Returns a structured hiring profile document; `last_updated` is the build date baked in by `next.config.ts`.
 - This is the 2026 move for a Senior hire: build for human readers AND for AI agents doing first-pass recruiter triage. Yes, AI agents are already doing this. Yes, most portfolios aren't ready.
 
 ---
@@ -771,7 +771,7 @@ The principal-level discipline: **none of this is built today.** YAGNI is the de
 | `/api/ask`                                                                   | Streaming POST handler                                                                                                         |
 | `/api/contact`                                                               | Durable contact POST handler                                                                                                   |
 | `/api/contact-retry`, `/api/psi-refresh`                                     | Authenticated daily cron GET handlers                                                                                          |
-| `/api/lighthouse`, `/api/healthz`, `/api/erik.json`                          | Scores, health and structured profile GET handlers; `/api/lighthouse` and `/api/healthz` are per-IP rate limited and fail open |
+| `/api/lighthouse`, `/api/healthz`, `/api/erik.json`                          | Scores, health and structured profile GET handlers; `/api/lighthouse` and `/api/healthz` are per-IP rate limited and fail open (a prerender interrupt is rethrown, never treated as an outage) |
 | `/api/log`, `/api/log/forget`, `/api/csp-report`                             | Error ingestion, ASK erasure and CSP report POST handlers                                                                      |
 | `/api/mcp`                                                                   | MCP transport with `ask_erik` and `get_profile` tools                                                                          |
 | `/sitemap.xml`                                                               | `app/sitemap.ts`, homepage, reading views, links pages and design-system pages                                                 |

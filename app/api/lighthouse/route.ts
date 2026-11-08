@@ -1,3 +1,4 @@
+import { unstable_rethrow } from 'next/navigation';
 import type { NextRequest } from 'next/server';
 import { getScores, LIGHTHOUSE_FALLBACK, LIGHTHOUSE_TTL_S } from '@/lib/lighthouse-scores';
 import { log } from '@/lib/log';
@@ -19,6 +20,7 @@ export async function GET(req: NextRequest): Promise<Response> {
       });
     }
   } catch (err) {
+    unstable_rethrow(err);
     log.warn('lighthouse rate-limit unavailable, allowing request', { err });
   }
 
