@@ -1,3 +1,4 @@
+import type { HeroClientContent } from '@/content/schemas';
 import { HERO_SYSFAIL_HIDE, HERO_SYSFAIL_SHOW, SYSFAIL_END, SYSFAIL_START } from '@/lib/events';
 import { createPauseControl, type PhraseLoop, runPhraseLoop, typeOut } from './typewriter';
 
@@ -19,24 +20,21 @@ export type BootClasses = Record<BootClassKey, string>;
 export type Span = { cls: BootClassKey; text: string };
 export type LinePart = string | Span;
 
-export const DESKTOP_LINE_SPECS: LinePart[][] = [
-  ['[SYSTEM BOOT SEQUENCE INITIATED]'],
-  [' '],
-  ['Initializing kernel modules... ', { cls: 'bootOk', text: 'OK' }],
-  ['Mounting local filesystems... ', { cls: 'bootOk', text: 'OK' }],
-  ['Starting network services... ', { cls: 'bootOk', text: 'OK' }],
-  ['Loading security protocols... ', { cls: 'bootEnc', text: '[ENCRYPTED]' }],
-  [{ cls: 'bootWelcome', text: 'Welcome to DEV_OS v2.0.4-stable [user: erik]' }],
-  [' '],
-];
+export const BLANK_BOOT_LINE = '\u00a0';
 
-export const DESKTOP_DIALOG = [
-  'Wake up, Neo...',
-  'Wake up...',
-  'The Matrix has you...',
-  'Knock, knock, Neo...',
-];
-export const MOBILE_DIALOG = ['Wake up, Neo...', 'The Matrix has you...', 'Knock, knock, Neo...'];
+export function desktopBootLines(copy: HeroClientContent): LinePart[][] {
+  return [
+    [copy.bootSequenceLine],
+    [BLANK_BOOT_LINE],
+    ...copy.bootSteps.map((step): LinePart[] =>
+      step.status === 'ok'
+        ? [`${step.label} `, { cls: 'bootOk', text: copy.bootStatus.ok }]
+        : [`${step.label} `, { cls: 'bootEnc', text: copy.bootStatus.encrypted }],
+    ),
+    [{ cls: 'bootWelcome', text: copy.bootWelcome }],
+    [BLANK_BOOT_LINE],
+  ];
+}
 
 const SYSFAIL_SHAKE_FRAME_1_MS = 40;
 const SYSFAIL_SHAKE_FRAME_2_MS = 80;

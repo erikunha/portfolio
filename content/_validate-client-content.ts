@@ -40,9 +40,9 @@ for (const locale of LOCALES) {
   ContactContentSchema.parse(contactCopy[locale]);
   ErrorsContentSchema.parse(errorsContent[locale]);
   BrandSchema.parse(brandByLocale[locale]);
+  HeroClientContentSchema.parse(heroClientContent[locale]);
   for (const feedback of Object.values(copyFeedback[locale])) CopyFeedbackSchema.parse(feedback);
 }
-HeroClientContentSchema.parse(heroClientContent);
 SectionRegistrySchema.parse(SECTION_REGISTRY);
 z.object({ email: z.email(), linkedin: z.url() }).parse({
   email: EMAIL_ADDRESS,

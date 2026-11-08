@@ -1,10 +1,9 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { heroClientContent } from '@/content/hero-client';
 import { HERO_SYSFAIL_HIDE, HERO_SYSFAIL_SHOW } from '@/lib/events';
 
-export function HeroSystemFailure() {
+export function HeroSystemFailure({ plate }: { plate: string }) {
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
@@ -25,7 +24,7 @@ export function HeroSystemFailure() {
       aria-hidden="true"
       aria-live="off"
     >
-      <div className="sysfail-plate">{heroClientContent.systemFailurePlate}</div>
+      <div className="sysfail-plate">{plate}</div>
     </div>
   );
 }

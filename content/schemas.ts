@@ -66,6 +66,7 @@ const DockControlSchema = z
     sectionId: NavTextSchema.optional(),
     href: z.string().url().optional(),
     accessibleName: NavTextSchema.optional(),
+    lang: NavTextSchema.optional(),
   })
   .refine(
     ({ key, sectionId, href }) =>
@@ -716,6 +717,13 @@ export const HeroClientContentSchema = z.object({
   bootSequenceLine: z.string().min(1),
   bootPrompt: z.string().min(1),
   bootCommand: z.string().min(1),
+  bootSteps: z
+    .array(z.object({ label: z.string().min(1), status: z.enum(['ok', 'encrypted']) }))
+    .min(1),
+  bootStatus: z.object({ ok: z.string().min(1), encrypted: z.string().min(1) }),
+  bootWelcome: z.string().min(1),
+  bootDialogDesktop: z.array(z.string().min(1)).min(1),
+  bootDialogMobile: z.array(z.string().min(1)).min(1),
 });
 export type HeroClientContent = z.infer<typeof HeroClientContentSchema>;
 

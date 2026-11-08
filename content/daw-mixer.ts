@@ -56,7 +56,7 @@ const dawMixerFor = (locale: SiteLocale): DawMixer => {
     loadingLabel: pt ? 'carregando os canais do mixer' : 'loading the mixer channels',
     bpm: 87,
     timeSignature: '4/4',
-    status: 'MIXING',
+    status: pt ? 'MIXAGEM' : 'MIXING',
     transportTime: '00:01:24:08',
     channels: [
       {

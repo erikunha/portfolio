@@ -569,7 +569,7 @@ describe('HeroContentSchema and hero content', () => {
     const { heroContent } = await import('./hero');
     const { heroClientContent } = await import('./hero-client');
     expect(HeroContentSchema.safeParse(heroContent[EN]).success).toBe(true);
-    expect(HeroClientContentSchema.safeParse(heroClientContent).success).toBe(true);
+    expect(HeroClientContentSchema.safeParse(heroClientContent[EN]).success).toBe(true);
   });
 
   it.each(['locationLabel', 'employerLabel', 'languageLabel', 'statsLabel'])(
@@ -587,11 +587,12 @@ describe('HeroContentSchema and hero content', () => {
     'bootSequenceLine',
     'bootPrompt',
     'bootCommand',
+    'bootWelcome',
   ])('rejects an empty hero-client %s', async (field) => {
     const { HeroClientContentSchema } = await import('./schemas');
     const { heroClientContent } = await import('./hero-client');
-    expect(HeroClientContentSchema.safeParse({ ...heroClientContent, [field]: '' }).success).toBe(
-      false,
-    );
+    expect(
+      HeroClientContentSchema.safeParse({ ...heroClientContent[EN], [field]: '' }).success,
+    ).toBe(false);
   });
 });

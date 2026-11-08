@@ -32,7 +32,7 @@ export function Dock() {
 
   return (
     <nav className="dock" aria-label={copy.dockLabel} data-position-target="">
-      {navigation.dock.map(({ key, label, sectionId, href, accessibleName }) => {
+      {navigation.dock.map(({ key, label, sectionId, href, accessibleName, lang }) => {
         const current = active === key ? 'location' : undefined;
         if (key === 'menu') {
           return (
@@ -63,6 +63,7 @@ export function Dock() {
         return (
           <a
             key={key}
+            lang={lang}
             href={sectionId ? (chrome.sectionHrefs[sectionId] ?? '/') : '/'}
             aria-current={current}
             onClick={(event) => sectionId && jump(event, sectionId)}

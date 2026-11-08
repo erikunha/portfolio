@@ -4,6 +4,7 @@ import { EXTERNAL_LINK_PROPS, externalLinkProps } from '@/components/ExternalLin
 import { HeroStats } from '@/components/HeroStats';
 import { FACT_SEPARATOR } from '@/content/fact-separator';
 import { heroContent, heroTagline } from '@/content/hero';
+import { heroClientContent } from '@/content/hero-client';
 import { profile, profilePresentation } from '@/content/profile';
 import type { SiteLocale } from '@/content/site-locale';
 import { Button } from '@/design-system';
@@ -97,6 +98,7 @@ function HeroIdentity({ locale, primary }: { locale: SiteLocale; primary: boolea
 }
 
 export function Hero({ locale }: { locale: SiteLocale }) {
+  const bootCopy = heroClientContent[locale];
   return (
     <>
       <section
@@ -106,16 +108,16 @@ export function Hero({ locale }: { locale: SiteLocale }) {
         data-testid="hero-desktop"
       >
         <div className="hero-terminal">
-          <HeroBootAnimation variant="desktop" />
+          <HeroBootAnimation variant="desktop" copy={bootCopy} />
         </div>
         <aside className="hero-bio">
           <HeroIdentity locale={locale} primary />
         </aside>
-        <HeroSystemFailure />
+        <HeroSystemFailure plate={bootCopy.systemFailurePlate} />
       </section>
       <section tabIndex={-1} className="hero-mobile hero-frame" data-testid="hero-mobile">
         <div className="hero-mobile-content">
-          <HeroBootAnimation variant="mobile" />
+          <HeroBootAnimation variant="mobile" copy={bootCopy} />
           <HeroIdentity locale={locale} primary={false} />
         </div>
       </section>

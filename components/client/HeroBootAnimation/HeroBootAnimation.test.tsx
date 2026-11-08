@@ -2,12 +2,15 @@ import { act } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { installMatchMedia } from '@/__tests__/helpers/match-media';
 import { mountClient } from '@/__tests__/helpers/render';
+import { heroClientContent } from '@/content/hero-client';
+import { SITE_LOCALE } from '@/content/site-locale';
 import { MOBILE_QUERY } from '@/lib/media-queries';
 
 vi.mock('@/lib/motion', () => ({
   readMotion: vi.fn(() => true),
 }));
 
+const bootCopy = heroClientContent[SITE_LOCALE.en];
 const bootDesktopClass = 'hero-boot-desktop';
 const bootCmdClass = 'hero-boot-cmd';
 
@@ -15,7 +18,7 @@ describe('mobile boot container: line-count → height invariant', () => {
   it('renders exactly three boot lines and no blank filler line', async () => {
     const { renderToStaticMarkup } = await import('react-dom/server');
     const { HeroBootAnimation } = await import('./HeroBootAnimation');
-    const html = renderToStaticMarkup(<HeroBootAnimation variant="mobile" />);
+    const html = renderToStaticMarkup(<HeroBootAnimation variant="mobile" copy={bootCopy} />);
     const host = document.createElement('div');
     host.innerHTML = html;
     const lines = [...host.querySelectorAll('[data-testid="boot-line"]')];
@@ -89,7 +92,7 @@ describe('boot-animation: textContent-mutation invariant', () => {
     installMatchMedia(false);
 
     const { container, unmount } = await mountClient(
-      React.createElement(HeroBootAnimation, { variant: 'desktop' }),
+      React.createElement(HeroBootAnimation, { variant: 'desktop', copy: bootCopy }),
     );
 
     const mount = container.querySelector(`.${bootDesktopClass}`);
@@ -119,7 +122,7 @@ describe('decorative boot output', () => {
     async (variant) => {
       const { renderToStaticMarkup } = await import('react-dom/server');
       const { HeroBootAnimation } = await import('./HeroBootAnimation');
-      const html = renderToStaticMarkup(<HeroBootAnimation variant={variant} />);
+      const html = renderToStaticMarkup(<HeroBootAnimation variant={variant} copy={bootCopy} />);
       const host = document.createElement('div');
       host.innerHTML = html;
       expect(host.firstElementChild?.getAttribute('aria-hidden')).toBe('true');
@@ -130,7 +133,7 @@ describe('decorative boot output', () => {
     vi.useFakeTimers();
     installMatchMedia(true);
     const { HeroBootAnimation } = await import('./HeroBootAnimation');
-    const mounted = await mountClient(<HeroBootAnimation variant="mobile" />);
+    const mounted = await mountClient(<HeroBootAnimation variant="mobile" copy={bootCopy} />);
     const host = mounted.container.querySelector('.hero-boot-mobile');
     expect(host).not.toBeNull();
     expect(host?.querySelectorAll('[data-testid="boot-line"]')).toHaveLength(3);
@@ -160,7 +163,7 @@ describe('decorative boot output', () => {
     installMatchMedia(false);
     vi.useFakeTimers();
     const { HeroBootAnimation } = await import('./HeroBootAnimation');
-    const mounted = await mountClient(<HeroBootAnimation variant="desktop" />);
+    const mounted = await mountClient(<HeroBootAnimation variant="desktop" copy={bootCopy} />);
     const before = mounted.container.textContent;
     await act(async () => {
       await vi.advanceTimersByTimeAsync(10_000);
@@ -258,7 +261,7 @@ describe('hero boot follows the motion switch and the viewport', () => {
       vi.mocked(readMotion).mockReturnValue(true);
       stubViewport(isMobile);
       const { HeroBootAnimation } = await import('./HeroBootAnimation');
-      const mounted = await mountClient(<HeroBootAnimation variant={variant} />);
+      const mounted = await mountClient(<HeroBootAnimation variant={variant} copy={bootCopy} />);
       await act(async () => {
         await vi.advanceTimersByTimeAsync(3000);
       });
@@ -294,7 +297,7 @@ describe('hero boot follows the motion switch and the viewport', () => {
       vi.mocked(readMotion).mockReturnValue(true);
       stubViewport(isMobile);
       const { HeroBootAnimation } = await import('./HeroBootAnimation');
-      const mounted = await mountClient(<HeroBootAnimation variant={variant} />);
+      const mounted = await mountClient(<HeroBootAnimation variant={variant} copy={bootCopy} />);
       await act(async () => {
         await vi.advanceTimersByTimeAsync(6000);
       });
@@ -325,7 +328,7 @@ describe('hero boot follows the motion switch and the viewport', () => {
     vi.mocked(readMotion).mockReturnValue(true);
     const media = stubViewport(true);
     const { HeroBootAnimation } = await import('./HeroBootAnimation');
-    const mounted = await mountClient(<HeroBootAnimation variant="desktop" />);
+    const mounted = await mountClient(<HeroBootAnimation variant="desktop" copy={bootCopy} />);
     expect(vi.getTimerCount(), 'a mobile viewport leaves the desktop boot idle').toBe(0);
     expect(media.listenerCount(MOBILE_QUERY)).toBe(1);
 
@@ -344,7 +347,7 @@ describe('hero boot follows the motion switch and the viewport', () => {
     vi.mocked(readMotion).mockReturnValue(true);
     const media = stubViewport(true);
     const { HeroBootAnimation } = await import('./HeroBootAnimation');
-    const mounted = await mountClient(<HeroBootAnimation variant="mobile" />);
+    const mounted = await mountClient(<HeroBootAnimation variant="mobile" copy={bootCopy} />);
     await act(async () => {
       await vi.advanceTimersByTimeAsync(3000);
     });

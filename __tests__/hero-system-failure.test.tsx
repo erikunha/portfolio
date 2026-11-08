@@ -1,6 +1,10 @@
 import { act, createElement } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { heroClientContent } from '@/content/hero-client';
+import { SITE_LOCALE } from '@/content/site-locale';
 import { type MountedClient, mountClient } from './helpers/render';
+
+const PLATE = heroClientContent[SITE_LOCALE.en].systemFailurePlate;
 
 vi.mock('@/lib/motion', () => ({
   readMotion: () => false,
@@ -22,14 +26,13 @@ describe('HeroSystemFailure', () => {
     const { HeroSystemFailure } = await import(
       '@/components/client/HeroSystemFailure/HeroSystemFailure'
     );
-    mounted = await mountClient(createElement(HeroSystemFailure));
+    mounted = await mountClient(createElement(HeroSystemFailure, { plate: PLATE }));
     return mounted.container;
   }
 
   it('renders the SYSTEM FAILURE plate in the DOM on mount', async () => {
-    const { heroClientContent } = await import('@/content/hero-client');
     const container = await renderComponent();
-    expect(container.textContent).toContain(heroClientContent.systemFailurePlate);
+    expect(container.textContent).toContain(PLATE);
   });
 
   it('is hidden by default (visible state is false)', async () => {

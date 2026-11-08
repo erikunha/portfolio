@@ -36,6 +36,7 @@ export type DockControl = {
   sectionId?: SectionId;
   href?: string;
   accessibleName?: string;
+  lang?: string;
 };
 
 export type SiteLink = {
@@ -121,7 +122,12 @@ const navigationFor = (locale: SiteLocale): Navigation => {
     dock: [
       { key: 'home', label: homeLabel, sectionId: SECTION_ID.home },
       { key: 'work', label: NAV_VOCABULARY[locale].work, sectionId: SECTION_ID.projects },
-      { key: 'shell', label: 'SHELL', sectionId: SECTION_ID.shell },
+      {
+        key: 'shell',
+        label: 'SHELL',
+        sectionId: SECTION_ID.shell,
+        ...(pt ? { lang: SITE_LOCALE.en } : {}),
+      },
       {
         key: 'hire',
         label: DOCK_HIRE_LABEL[locale],

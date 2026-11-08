@@ -214,6 +214,8 @@ describe('Hero copy discipline', () => {
   it('validates the isolated client hero copy', async () => {
     const { HeroClientContentSchema } = await import('@/content/schemas');
     const { heroClientContent } = await import('@/content/hero-client');
-    expect(HeroClientContentSchema.safeParse(heroClientContent).success).toBe(true);
+    for (const locale of Object.values(SITE_LOCALE)) {
+      expect(HeroClientContentSchema.safeParse(heroClientContent[locale]).success).toBe(true);
+    }
   });
 });

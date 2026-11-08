@@ -51,7 +51,7 @@ const guitarRigFor = (locale: SiteLocale): GuitarRig => {
       },
       {
         role: 'AMP',
-        name: 'MODELED CAB',
+        name: pt ? 'CAB MODELADO' : 'MODELED CAB',
         subtitle: pt ? 'sem válvula · simulação de IR' : 'no tube · IR sim',
         strengthDots: 3,
       },
@@ -67,7 +67,7 @@ const guitarRigFor = (locale: SiteLocale): GuitarRig => {
       { name: 'Mateus Asato' },
       { name: 'Jimmy Page' },
       { name: 'John Frusciante' },
-      { name: "Iron Maiden's three" },
+      { name: pt ? 'as três guitarras do Iron Maiden' : "Iron Maiden's three" },
     ],
     stats: [
       {
@@ -94,8 +94,8 @@ const guitarRigFor = (locale: SiteLocale): GuitarRig => {
     liveCam: {
       photo: '/images/guitar-live.jpg',
       caption: './GIGS --LIVE · SACRED + SWORN · FEEL OVER NOISE',
-      status: '▶ REC · LIVE',
-      cameraLabel: 'CAM/01 · STAGE',
+      status: pt ? '▶ REC · AO VIVO' : '▶ REC · LIVE',
+      cameraLabel: pt ? 'CAM/01 · PALCO' : 'CAM/01 · STAGE',
     },
   });
 };
@@ -112,14 +112,14 @@ const guitarPresentationFor = (locale: SiteLocale): GuitarPresentation => {
   return GuitarPresentationSchema.parse({
     signalStrengthLabelTemplate: pt ? '{n} de {total}' : '{n} of {total}',
     signalStrip: {
-      live: '● SIGNAL_CHAIN.LIVE · SIGNAL OK',
+      live: pt ? '● SIGNAL_CHAIN.LIVE · SINAL OK' : '● SIGNAL_CHAIN.LIVE · SIGNAL OK',
       tail: 'TAIL -F ~/.RIG',
     },
     eqSpectrum: rig.eqSpectrum,
     signalChain: [
-      { ...input, label: '// INPUT' },
+      { ...input, label: pt ? '// ENTRADA' : '// INPUT' },
       { ...amp, label: '// AMP' },
-      { ...output, label: '// OUT' },
+      { ...output, label: pt ? '// SAÍDA' : '// OUT' },
     ],
     influences: {
       label: pt ? 'INFLUÊNCIAS' : 'INFLUENCES',

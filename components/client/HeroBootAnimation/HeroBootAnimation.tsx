@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
-import { heroClientContent } from '@/content/hero-client';
+import type { HeroClientContent } from '@/content/schemas';
 import {
   type BootClasses,
   type BootCtrl,
@@ -9,9 +9,7 @@ import {
   buildLine,
   buildStaticCmdLine,
   buildStaticDialogLine,
-  DESKTOP_DIALOG,
-  DESKTOP_LINE_SPECS,
-  MOBILE_DIALOG,
+  desktopBootLines,
   runBoot,
   type SysfailBeat,
 } from '@/lib/boot-animation';
@@ -23,6 +21,7 @@ import { runMobileBoot } from './mobile-boot';
 
 type Props = {
   variant: 'desktop' | 'mobile';
+  copy: HeroClientContent;
 };
 
 const bootCls: BootClasses = {
@@ -60,7 +59,7 @@ const timingMobile = {
   interMs: 300,
 };
 
-function DesktopBoot() {
+function DesktopBoot({ copy }: { copy: HeroClientContent }) {
   const bootRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -75,14 +74,14 @@ function DesktopBoot() {
 
     function render() {
       if (!readMotion()) {
-        for (const s of DESKTOP_LINE_SPECS) host.appendChild(buildLine(s, bootCls));
+        for (const s of desktopBootLines(copy)) host.appendChild(buildLine(s, bootCls));
         host.appendChild(buildStaticCmdLine(bootCls));
         host.appendChild(buildLine([' '], bootCls));
-        host.appendChild(buildStaticDialogLine(heroClientContent.bootStaticDialogLine, bootCls));
+        host.appendChild(buildStaticDialogLine(copy.bootStaticDialogLine, bootCls));
         return;
       }
       beat = buildDesktopOnFirstLoop(host, ctrlRef, bootCls);
-      ctrlRef.current = runBoot(host, DESKTOP_LINE_SPECS, DESKTOP_DIALOG, bootCls, {
+      ctrlRef.current = runBoot(host, desktopBootLines(copy), copy.bootDialogDesktop, bootCls, {
         ...timingDesktop,
         onFirstLoop: beat,
       });
@@ -124,12 +123,12 @@ function DesktopBoot() {
       unwatchViewport();
       clear();
     };
-  }, []);
+  }, [copy]);
 
   return <div ref={bootRef} aria-hidden="true" className="hero-boot-desktop" />;
 }
 
-function MobileBoot() {
+function MobileBoot({ copy }: { copy: HeroClientContent }) {
   const cmdRef = useRef<HTMLSpanElement>(null);
   const outRef = useRef<HTMLSpanElement>(null);
   const hostRef = useRef<HTMLDivElement>(null);
@@ -146,17 +145,11 @@ function MobileBoot() {
     function start() {
       if (!cmdEl || !outEl) return;
       if (!readMotion()) {
-        cmdEl.textContent = heroClientContent.bootCommand;
-        outEl.textContent = heroClientContent.bootStaticDialogLine;
+        cmdEl.textContent = copy.bootCommand;
+        outEl.textContent = copy.bootStaticDialogLine;
         return;
       }
-      ctrl = runMobileBoot(
-        cmdEl,
-        outEl,
-        heroClientContent.bootCommand,
-        MOBILE_DIALOG,
-        timingMobile,
-      );
+      ctrl = runMobileBoot(cmdEl, outEl, copy.bootCommand, copy.bootDialogMobile, timingMobile);
       unwatch = pauseWhileHidden(host as HTMLDivElement, {
         pause: (reason) => ctrl?.pauseDialog(reason),
         resume: (reason) => ctrl?.resumeDialog(reason),
@@ -195,15 +188,15 @@ function MobileBoot() {
       stop();
       unwatchViewport();
     };
-  }, []);
+  }, [copy]);
 
   return (
     <div ref={hostRef} aria-hidden="true" className="hero-boot-mobile">
       <span className="hero-boot-line" data-testid="boot-line">
-        {heroClientContent.bootSequenceLine}
+        {copy.bootSequenceLine}
       </span>
       <span className="hero-boot-line" data-testid="boot-line">
-        <span className="hero-boot-prompt">{heroClientContent.bootPrompt}</span>{' '}
+        <span className="hero-boot-prompt">{copy.bootPrompt}</span>{' '}
         <span className="hero-boot-cmd" ref={cmdRef} />
       </span>
       <span className="hero-boot-line" data-testid="boot-line">
@@ -214,6 +207,6 @@ function MobileBoot() {
   );
 }
 
-export function HeroBootAnimation({ variant }: Props) {
-  return variant === 'desktop' ? <DesktopBoot /> : <MobileBoot />;
+export function HeroBootAnimation({ variant, copy }: Props) {
+  return variant === 'desktop' ? <DesktopBoot copy={copy} /> : <MobileBoot copy={copy} />;
 }

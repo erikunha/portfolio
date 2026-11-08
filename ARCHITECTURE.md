@@ -282,7 +282,7 @@ components/responsive/                 # viewport-variant helpers
 
 content/about.ts                      # About panels, Now rows and Senior status
 content/hero.ts                       # validated Hero metrics, labels and actions
-content/hero-client.ts                # typed boot and system-failure copy, no runtime schema import
+content/hero-client.ts                # typed boot and system-failure copy per locale, passed to the islands as props, no runtime schema import
 content/nav.ts                        # zod-free nav vocabulary: labels, topbar links, reading link and motion label
 content/projects.ts                   # shared project cards
 content/perf-receipts.ts              # canonical deltas, attached receipts and reading-view stats
@@ -318,7 +318,7 @@ lib/mdx/                              # MDX remark/recma plugins for /design-sys
 lib/server/                           # server-only utilities (route-handler factory; rate-limit-key.ts clientRateLimitKey, the only producer of the branded RateLimitIdentifier every client limiter takes; fetch-metadata.ts isCrossSiteRequest, the Sec-Fetch-Site gate defineHandler runs first; read-body.ts bounded body read after the limiter; after-response.ts after() wrapper for post-response work)
 lib/env.ts                            # typed, format-validating env accessor
 lib/ask-log.ts                        # KV interaction log per /api/ask request that reaches the model; lib/ask/refusal-count.ts counts refused asks per day; lib/ask/guard-count.ts counts output-guard findings per day
-lib/boot-animation.ts                 # boot sequence data
+lib/boot-animation.ts                 # boot line builders; the sequence text comes from content/hero-client.ts
 lib/typewriter.ts                     # one type, hold and erase loop (runPhraseLoop, typeOut) and createPauseControl
 lib/use-copy-feedback.client.ts       # clipboard state for every copy button
 lib/media-queries.ts                  # MOBILE_QUERY, isMobileViewport(), watchMobileViewport(): the one matchMedia call site for the mobile breakpoint
