@@ -45,7 +45,7 @@ What we build is small, opinionated, Vercel-deployed, and budget-enforced.
 | LCP                                              | ≤ 1.8s desktop, ≤ 3.5s mobile |
 | INP (browser-test target, not an LHCI assertion) | < 200ms                       |
 | CLS                                              | < 0.05                        |
-| JS gzipped (per route, first-load total)         | < 164.7KB                     |
+| JS gzipped (per route, first-load total)         | < 164.2KB                     |
 | Lighthouse Performance                           | ≥ 95 desktop, ≥ 90 mobile     |
 | Lighthouse Accessibility                         | = 100                         |
 | Lighthouse Best Practices                        | ≥ 95                          |
@@ -158,7 +158,7 @@ The section menu is a modal drawer at every width, opened by the menu icon trigg
 
 `InteractiveShellLazy` and `ContactFormLazy` use `React.lazy` inside `LazyIsland` (an `ErrorBoundary` around `Suspense`): the server renders the island into the HTML, its chunk is split out of the route bundle, and a chunk that fails to load leaves the loading status placeholder instead of breaking the route. The placeholders (`.shell-loading`, `.contact-loading`) hold a per-breakpoint `min-height` close to the island's final height and are `display: none` when scripting is off. `ContactTimezoneLazy` uses `React.lazy` and mounts `ContactTimezone` once its host is within 400px of the viewport, so the island's chunk, the land grid and the timezone logic stay out of first load; the server-rendered `ContactTimezoneStatic` is the Suspense and error fallback, and `.ctz-host` reserves a per-locale minimum height so the live panel replaces it without a shift. With JavaScript off, `ContactSection` shows a `<noscript>` line beside the missing form that names the email address. `DawMixerContent` imports `DawMixerDesktop` statically and picks the variant from the user agent; both variants share their parts and copy (`content/daw-mixer.ts`) and embed smaller client islands.
 
-`pnpm route-js-check` fails a route above **164.7 KB gzipped total first-load JS**. It reports app-owned JS by subtracting the configured **131.9 KB** framework floor, leaving **32.8 KB** of headroom. App-owned JS has no separate assertion. The floor check fails when the lightest route is more than 2 KB below that baseline. `pnpm bundle-check` independently gates the global client-chunk sum at **220 KB**.
+`pnpm route-js-check` fails a route above **164.2 KB gzipped total first-load JS**. It reports app-owned JS by subtracting the configured **131.4 KB** framework floor, leaving **32.8 KB** of headroom. App-owned JS has no separate assertion. The floor check fails when the lightest route is more than 2 KB below that baseline. `pnpm bundle-check` independently gates the global client-chunk sum at **220 KB**.
 
 Client boundaries use `.client.ts`/`.client.tsx`, a `/client/` directory, or Next's `error.tsx` and `global-error.tsx` conventions. `scripts/check-client-naming.mjs` checks these exceptions.
 
@@ -691,7 +691,7 @@ Modest but professional:
 
 The workflow runs on PRs, pushes to `main` and manual dispatch. Jobs are not a single serial pipeline:
 - `quality-fast`, `typecheck`, `test`, `dependency-review`, `detect-changes`, `semgrep` and `gitleaks` start independently. Dependency review is PR-only and blocks high-severity advisories and GPL/AGPL licenses; `quality-fast` runs the dependency-vetting gate, which holds every direct dependency to a recorded purpose and license in `dependency-vetting.json` and refuses an install script on a direct dependency listed in neither `pnpm.onlyBuiltDependencies` nor `pnpm.ignoredBuiltDependencies`. `test` runs coverage and audits dependencies when the lockfile changes (or on non-PR events).
-- `build` requires `quality-fast`, `typecheck` and `test`. It builds Next, gates global client chunks at 220 KB and per-route first-load JS at 164.7 KB, then uploads `.next`.
+- `build` requires `quality-fast`, `typecheck` and `test`. It builds Next, gates global client chunks at 220 KB and per-route first-load JS at 164.2 KB, then uploads `.next`.
 - `performance`, `e2e-functional` and `e2e-visual-chromium` require `build` and `detect-changes`. Performance and functional jobs use the `app` filter; visuals use `ui`. Non-PR events run them regardless of those PR filters.
 - `performance` starts a local production server, then runs desktop/mobile LHCI and axe-core. `e2e-functional` runs all eight Playwright projects: chromium, chromium-mobile, webkit-desktop, webkit-mobile, and the chromium, chromium-mobile, webkit-desktop and webkit-mobile component projects. `e2e-visual-chromium` has chromium and chromium-mobile projects and uploads Argos screenshots when credentials are available.
 - `ai-eval` waits for change detection, `quality-fast`, `typecheck` and `test`; it consumes no build output, so it does not wait for `build` or the browser jobs. It requires AI-relevant changes, no upstream failures or cancellations, and an internal PR or non-PR event.

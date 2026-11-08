@@ -10,14 +10,14 @@
 | INP target (not asserted by LHCI)                        | < 200ms   | < 200ms   |
 | CLS                                                      | < 0.05    | < 0.05    |
 | TBT                                                      | < 200ms   | < 400ms   |
-| JS gzipped / route, first-load total                     | ≤ 164.7KB | ≤ 164.7KB |
+| JS gzipped / route, first-load total                     | ≤ 164.2KB | ≤ 164.2KB |
 | JS gzipped, app-owned allowance (reported, not asserted) | ≤ 32.8KB  | ≤ 32.8KB  |
 | Lighthouse Perf                                          | ≥ 95      | ≥ 90      |
 | Lighthouse A11y                                          | = 100     | = 100     |
 | Lighthouse Best Practices                                | ≥ 95      | ≥ 95      |
 | Lighthouse SEO                                           | = 100     | = 100     |
 
-See `lighthouserc.json` + `.mobile.json`, `scripts/check-route-js.mjs`, and `scripts/check-bundle-size.mjs` for enforcement. The app-owned row reports total JS minus the measured 131.9KB framework floor. The script stores that floor as a constant and rejects a lightest route more than 2KB below it. Re-measure the baseline when framework changes make it stale. The 164.7KB total preserves 32.8KB of app-owned allowance. `bundle-check` measures chunks globally and cannot detect per-route regressions.
+See `lighthouserc.json` + `.mobile.json`, `scripts/check-route-js.mjs`, and `scripts/check-bundle-size.mjs` for enforcement. The app-owned row reports total JS minus the measured 131.4KB framework floor. The script stores that floor as a constant and rejects a lightest route more than 2KB below it. Re-measure the baseline when framework changes make it stale. The 164.2KB total preserves 32.8KB of app-owned allowance. `bundle-check` measures chunks globally and cannot detect per-route regressions.
 
 ## Rendering techniques that support LCP
 

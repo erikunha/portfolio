@@ -63,7 +63,7 @@ proposing infrastructure changes, and if a request conflicts with a budget or ga
 
 Lighthouse (`lighthouserc.json`, `lighthouserc.mobile.json`), `pnpm route-js-check` and axe enforce the budgets. `__tests__/lighthouse-budgets.test.ts` fails when a Lighthouse assertion is lowered, warned or turned off. The Lighthouse INP audit is off; the only INP guard is the shell input keystroke check in `tests/e2e/cross-cutting.spec.ts` (Chromium). Never disable a gate to merge.
 
-`route-js-check` caps first-load JS per route at 164.7KB gzipped and reports the app-owned part (total minus the measured 131.9KB framework floor, so 32.8KB of headroom). `bundle-check` sums chunks globally and cannot see a per-route regression. A framework bump moves the floor: re-measure it and change floor and total together (`DECISIONS.md` 2026-10-23).
+`route-js-check` caps first-load JS per route at 164.2KB gzipped and reports the app-owned part (total minus the measured 131.4KB framework floor, so 32.8KB of headroom). `bundle-check` sums chunks globally and cannot see a per-route regression. A framework bump moves the floor: re-measure it and change floor and total together (`DECISIONS.md` 2026-10-23).
 
 ## Rendering model
 

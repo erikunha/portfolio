@@ -72,8 +72,8 @@ describe('check-route-js.mjs', () => {
     const res = run();
     expect(res.stderr).toBe('');
     expect(res.status).toBe(0);
-    expect(res.stdout).toContain('131.9 KB gzipped');
-    expect(res.stdout).toContain('under 164.7 KB total (32.8 KB of app-owned headroom');
+    expect(res.stdout).toContain('131.4 KB gzipped');
+    expect(res.stdout).toContain('under 164.2 KB total (32.8 KB of app-owned headroom');
   });
 
   it('fails a SINGLE route that busts the budget — the intersection definition reported 0.0 KB and OK here', () => {
@@ -85,7 +85,7 @@ describe('check-route-js.mjs', () => {
       res.status,
       'with one route, defining framework as "chunks every route shares" makes the whole bundle framework, app-owned computes to 0, and the gate prints OK over an unmeasured budget. The floor must be a measured constant, not an intersection of sibling routes.',
     ).not.toBe(0);
-    expect(res.stderr).toMatch(/over the 164\.7 KB budget/i);
+    expect(res.stderr).toMatch(/over the 164\.2 KB budget/i);
     expect(
       res.stderr,
       'a failure must name the app-owned share, since that is the part the reader can act on',
@@ -104,19 +104,19 @@ describe('check-route-js.mjs', () => {
       res.status,
       'a client island moved into the root shell lands on every route. Classifying "on every route" as framework would exempt it from the budget — the exact code the budget exists to constrain.',
     ).not.toBe(0);
-    expect(res.stderr).toMatch(/over the 164\.7 KB budget/i);
+    expect(res.stderr).toMatch(/over the 164\.2 KB budget/i);
   });
 
-  it('fails a route in the 164.7-174.9 KB band, where the retired app-owned threshold would not have fired', () => {
+  it('fails a route in the 164.2-174.9 KB band, where the retired app-owned threshold would not have fired', () => {
     const framework = writeChunk('framework.js', 132);
     const app = writeChunk('app.js', 37);
     writeManifest([{ route: '/', firstLoadChunkPaths: [framework, app] }]);
     const res = run();
     expect(
       res.status,
-      'The chunk writer rounds to 4 KB blocks, so nominal 132+37 measures about 172.1 KB total and 40.2 KB app-owned. This exceeds 164.7 KB while staying below both 175 KB and the retired 43 KB app-owned threshold.',
+      'The chunk writer rounds to 4 KB blocks, so nominal 132+37 measures about 172.1 KB total and 40.2 KB app-owned. This exceeds 164.2 KB while staying below both 175 KB and the retired 43 KB app-owned threshold.',
     ).not.toBe(0);
-    expect(res.stderr).toMatch(/over the 164\.7 KB budget/i);
+    expect(res.stderr).toMatch(/over the 164\.2 KB budget/i);
   });
 
   it('fails loudly when the framework-floor constant is stale rather than inflating app-owned', () => {
@@ -125,10 +125,10 @@ describe('check-route-js.mjs', () => {
     const res = run();
     expect(res.status).not.toBe(0);
     expect(res.stderr).toMatch(/stale/i);
-    expect(res.stderr).toContain('below the 131.9 KB framework floor');
+    expect(res.stderr).toContain('below the 131.4 KB framework floor');
     expect(
       res.stderr,
-      'The stale-floor message must quote the derived headroom (164.7 - 131.9 = 32.8).',
+      'The stale-floor message must quote the derived headroom (164.2 - 131.4 = 32.8).',
     ).toMatch(/32\.8 KB of app-owned headroom/);
     expect(res.stderr).not.toMatch(/43 KB/);
   });
@@ -139,6 +139,6 @@ describe('check-route-js.mjs', () => {
     writeManifest([{ route: '/', firstLoadChunkPaths: [framework, heavy] }]);
     const res = run();
     expect(res.status).not.toBe(0);
-    expect(res.stderr).toMatch(/over the 164\.7 KB budget/i);
+    expect(res.stderr).toMatch(/over the 164\.2 KB budget/i);
   });
 });

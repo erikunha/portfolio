@@ -47,7 +47,7 @@ flowchart TD
         naming["Client naming: suffix or /client/ directory"]
         hooks["Project review conventions: no agent hook enforcement"]
         perf["Lighthouse: home, reading + links routes, all DS pages; INP assertion off"]
-        js["Route JS: every manifest route, 164.7KB total"]
+        js["Route JS: every manifest route, 164.2KB total"]
     end
     mcp --> ask
     psi --> perf
