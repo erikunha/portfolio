@@ -54,7 +54,9 @@
       "correctness": {
         "noUnusedVariables": "error",
         "noUnusedImports": "error",
-        "useExhaustiveDependencies": "error"
+        "useExhaustiveDependencies": "error",
+        "noPlaywrightMissingAwait": "error",
+        "usePlaywrightValidDescribeCallback": "error"
       },
       "style": {
         "useConst": "error",
@@ -64,6 +66,7 @@
         "useExportType": "error",
         "noNonNullAssertion": "warn",
         "noNestedTernary": "error",
+        "useVarsOnTop": "error",
         "noRestrictedImports": {
           "level": "error",
           "options": {
@@ -86,11 +89,27 @@
         "noExplicitAny": "error",
         "noEmptyBlockStatements": "warn",
         "noImportCycles": "error",
-        "noLeakedRender": "error"
+        "noLeakedRender": "error",
+        "noLoopFunc": "error",
+        "noIdenticalTestTitle": "error"
       },
       "complexity": {
         "noUselessFragments": "error",
-        "noBannedTypes": "error"
+        "noBannedTypes": "error",
+        "useArraySome": "error",
+        "noUnnecessaryTemplateExpression": "error",
+        "noPlaywrightUselessAwait": "error",
+        "useMathMinMax": "error",
+        "useRegexpTest": "error"
+      },
+      "security": {
+        "useIframeSandbox": "error"
+      },
+      "performance": {
+        "useDomNodeTextContent": "error"
+      },
+      "nursery": {
+        "noTailwindRawColors": "error"
       },
       "a11y": {
         "noSvgWithoutTitle": "off",

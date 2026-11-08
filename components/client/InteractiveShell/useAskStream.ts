@@ -246,6 +246,12 @@ export function useAskStream({
         }
         reader = response.body.getReader();
         const decoder = new TextDecoder();
+        const flushFrame = () => {
+          rafRef.current = null;
+          if (!settled && mountedRef.current) {
+            setStreamingText(displayText);
+          }
+        };
         while (!settled) {
           const { done, value } = await reader.read();
           if (settled) return;
@@ -268,12 +274,7 @@ export function useAskStream({
               announce(ui.started);
             }
             if (rafRef.current === null) {
-              rafRef.current = requestAnimationFrame(() => {
-                rafRef.current = null;
-                if (!settled && mountedRef.current) {
-                  setStreamingText(displayText);
-                }
-              });
+              rafRef.current = requestAnimationFrame(flushFrame);
             }
           }
         }

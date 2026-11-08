@@ -49,9 +49,9 @@ describe('workflow token permissions', () => {
     const grant = workflow.permissions;
     const broader =
       typeof grant === 'string' ||
-      Object.entries(grant ?? {}).filter(
+      Object.entries(grant ?? {}).some(
         ([scope, level]) => !(scope === 'contents' && level === 'read') && level !== 'none',
-      ).length > 0;
+      );
     expect(
       broader,
       'OpenSSF Scorecard Token-Permissions: write or extra scopes at the top level reach every job in the workflow. Keep the top level at `contents: read` and move each additional scope to the single job that needs it.',

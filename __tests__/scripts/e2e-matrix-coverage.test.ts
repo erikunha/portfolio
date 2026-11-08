@@ -24,7 +24,7 @@ describe('ci.yml e2e-functional matrix', () => {
   it('gates exactly one test step per matrix project', () => {
     expect(job.length, 'e2e-functional job missing from ci.yml').toBeGreaterThan(0);
     const nonComponents =
-      job.split(`if: $${'{'}{ !endsWith(matrix.project, '-components') }}`).length - 1;
+      job.match(/if: \$\{\{ !endsWith\(matrix\.project, '-components'\) \}\}/g)?.length ?? 0;
     const components = job.split("if: endsWith(matrix.project, '-components')").length - 1;
     expect(
       { nonComponents, components },

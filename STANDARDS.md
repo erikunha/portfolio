@@ -368,7 +368,8 @@ lint + format). The heavier gate runs in `pre-push`: typecheck,
 `check:dependency-vetting`, and the unit
 tests. `pnpm verify` is the named, single pre-PR command that runs the full
 local gate. Biome also enforces `noImportCycles`, `noNestedTernary` (tests exempt) and
-`noLeakedRender`. CI gates are never disabled to merge — a failing gate means the
+`noLeakedRender`, plus the 2.6 rules listed in `__tests__/scripts/biome-rules.test.ts`, which
+fails when one of them stops being an error. CI gates are never disabled to merge — a failing gate means the
 underlying issue is fixed, not the gate removed. Every dependency is installed
 at the pinned range and `pnpm` is the only package manager.
 
