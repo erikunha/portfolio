@@ -54,11 +54,11 @@ export function FaderDbIsland({
           {pctToDb(initialPct)}
         </span>
         <span className="dbUnit">{decibelUnit}</span>
-        {footer && (
+        {footer ? (
           <span className="lufs">
             {loudnessLabel} {footer.lufs} · {peakLabel} {footer.pk}
           </span>
-        )}
+        ) : null}
       </div>
     </>
   );

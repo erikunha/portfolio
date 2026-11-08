@@ -29,11 +29,8 @@ interface Tree {
 
 function contentHash(path: string): string {
   const stat = lstatSync(path);
-  const bytes = stat.isSymbolicLink()
-    ? Buffer.from(readlinkSync(path))
-    : stat.isFile()
-      ? readFileSync(path)
-      : Buffer.alloc(0);
+  const fileBytes = stat.isFile() ? readFileSync(path) : Buffer.alloc(0);
+  const bytes = stat.isSymbolicLink() ? Buffer.from(readlinkSync(path)) : fileBytes;
   return createHash(HASH).update(bytes).digest('hex');
 }
 

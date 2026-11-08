@@ -167,7 +167,8 @@ async function main(): Promise<void> {
     { model: JUDGE_MODEL, factSheet },
   );
   for (const c of calibration.cases) {
-    const mark = c.agreed ? 'AGREE' : c.errored ? 'ERROR' : 'DISAGREE';
+    const disagreeMark = c.errored ? 'ERROR' : 'DISAGREE';
+    const mark = c.agreed ? 'AGREE' : disagreeMark;
     console.log(
       `  ${mark} [cal:${c.kind}] ${c.id} — human=${c.humanVerdict} judge=${c.judgeVerdict} (${c.reason})`,
     );
@@ -343,7 +344,8 @@ async function main(): Promise<void> {
       gateRefused: false,
     });
 
-    const mark = grade.errored ? 'ERROR' : grade.pass ? 'PASS' : 'FAIL';
+    const verdictMark = grade.pass ? 'PASS' : 'FAIL';
+    const mark = grade.errored ? 'ERROR' : verdictMark;
     console.log(`  ${mark}  [${item.kind}] ${item.id} (${latencyMs}ms) — ${grade.reason}`);
   }
 

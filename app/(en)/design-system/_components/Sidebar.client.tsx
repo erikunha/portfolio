@@ -35,11 +35,11 @@ function DsNavLinks({ currentPath, groupIdPrefix, withHome = true }: DsNavLinksP
       ) : null}
       {DS_NAV_GROUPS.map(({ id, title, links }) => (
         <div key={id} className="contents">
-          {title && (
+          {title ? (
             <p className="ds-nav-group-title" id={`${groupIdPrefix}${id}`}>
               {title}
             </p>
-          )}
+          ) : null}
           <ul
             aria-label={title ? undefined : DS_PAGES_LIST_LABEL}
             aria-labelledby={title ? `${groupIdPrefix}${id}` : undefined}

@@ -268,14 +268,14 @@ function ChannelMobile({ ch, copy }: { ch: DawMixerChannel; copy: DawMixerCopy }
         </div>
         <div className="flex flex-col gap-1">
           <FaderBar pct={ch.faderPct} />
-          {ch.footer && (
+          {ch.footer ? (
             <span className="text-xs text-primary-400 block text-center tracking-[0.08em] opacity-80">
               {copy.loudnessLabel} {ch.footer.lufs} {copy.separator} {copy.peakLabel} {ch.footer.pk}
             </span>
-          )}
+          ) : null}
         </div>
       </div>
-      {ch.terminalLines && (
+      {ch.terminalLines ? (
         <div className="border border-[var(--color-primary-quiet)] px-[10px] py-2 mt-1">
           {ch.terminalLines.map((line, i) => (
             // biome-ignore lint/suspicious/noArrayIndexKey: positional terminal lines
@@ -284,7 +284,7 @@ function ChannelMobile({ ch, copy }: { ch: DawMixerChannel; copy: DawMixerCopy }
             </div>
           ))}
         </div>
-      )}
+      ) : null}
     </div>
   );
 }

@@ -214,7 +214,7 @@ export function Footer({ locale }: { locale: SiteLocale }) {
               <span className="footer-timestamp">[ {line.off.toFixed(DMESG_PRECISION)}]</span>
               <span>
                 {line.prefix}
-                {line.bold && <b>{line.bold}</b>}
+                {line.bold ? <b>{line.bold}</b> : null}
                 {line.suffix}
               </span>
               <span className="footer-established">{line.ok ? dmesgStatus.ok : null}</span>

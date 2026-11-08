@@ -63,6 +63,7 @@
         "useImportType": "error",
         "useExportType": "error",
         "noNonNullAssertion": "warn",
+        "noNestedTernary": "error",
         "noRestrictedImports": {
           "level": "error",
           "options": {
@@ -83,7 +84,9 @@
           }
         },
         "noExplicitAny": "error",
-        "noEmptyBlockStatements": "warn"
+        "noEmptyBlockStatements": "warn",
+        "noImportCycles": "error",
+        "noLeakedRender": "warn"
       },
       "complexity": {
         "noUselessFragments": "error",
@@ -133,6 +136,9 @@
         "rules": {
           "correctness": {
             "noComponentHookFactories": "off"
+          },
+          "style": {
+            "noNestedTernary": "off"
           }
         }
       }

@@ -62,11 +62,8 @@ export function ContactForm({ copy, chrome }: { copy: ContactContent; chrome: Te
   const fieldId = (field: ContactField) => `${formId}-${field}`;
   const invalidFields = CONTACT_FIELDS.filter((field) => errors[field]);
   const failedLine = errorMsg ? copy.form.statusFailed : copy.form.statusInvalid;
-  const statusLine = busy
-    ? copy.form.sending
-    : status === CONTACT_STATUS.ERROR
-      ? failedLine
-      : copy.form.waiting;
+  const settledLine = status === CONTACT_STATUS.ERROR ? failedLine : copy.form.waiting;
+  const statusLine = busy ? copy.form.sending : settledLine;
 
   const messageFieldId = fieldId(CONTACT_FIELD.MESSAGE);
   const fieldShown = status !== CONTACT_STATUS.SUCCESS && status !== CONTACT_STATUS.QUEUED;
@@ -145,15 +142,15 @@ export function ContactForm({ copy, chrome }: { copy: ContactContent; chrome: Te
                 ))}
               </p>
             )}
-            {errorMsg && (
+            {errorMsg ? (
               <p id={requestErrorId}>
                 {copy.form.errorPrefix} {errorMsg}. {copy.form.retained} {copy.form.retryEmail}{' '}
                 <a href={errorMailto(copy, errorRef, values.message.trim())}>
                   {copy.section.email}
                 </a>
               </p>
-            )}
-            {errorMsg && errorRef && (
+            ) : null}
+            {errorMsg && errorRef ? (
               <>
                 <RefChip
                   value={errorRef}
@@ -163,7 +160,7 @@ export function ContactForm({ copy, chrome }: { copy: ContactContent; chrome: Te
                 />
                 <p>{copy.form.refNote}</p>
               </>
-            )}
+            ) : null}
           </div>
         )}
         <input

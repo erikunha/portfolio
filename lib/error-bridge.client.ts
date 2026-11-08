@@ -80,12 +80,8 @@ function handleError(state: BridgeState, event: ErrorEvent): void {
 
 function handleRejection(state: BridgeState, event: PromiseRejectionEvent): void {
   const reason = event.reason;
-  const message =
-    reason instanceof Error
-      ? reason.message
-      : typeof reason === 'string'
-        ? reason
-        : 'unhandled promise rejection';
+  const reasonText = typeof reason === 'string' ? reason : 'unhandled promise rejection';
+  const message = reason instanceof Error ? reason.message : reasonText;
   const stack = reason instanceof Error ? reason.stack : undefined;
   if (!shouldEmit(state, buildKey(message, stack))) return;
   send(buildLogPayload(message, stack));

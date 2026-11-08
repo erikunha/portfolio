@@ -55,11 +55,8 @@ export function Module({
           id={moduleHeaderId(id)}
           className="module-heading flex-1 flex items-center gap-2 text-primary-500 font-mono text-base md:text-lg font-bold tracking-[0.06em] md:tracking-[0.1em] uppercase m-0"
         >
-          {name ? (
-            <span className="module-name">{name}</span>
-          ) : srLabel ? (
-            <span className="sr-only">{srLabel}</span>
-          ) : null}
+          {name ? <span className="module-name">{name}</span> : null}
+          {!name && srLabel ? <span className="sr-only">{srLabel}</span> : null}
           {icon ? (
             <span
               className="inline-flex w-5 h-5 items-center justify-center text-primary-500 [&_svg]:w-[18px] [&_svg]:h-[18px] [&_svg]:stroke-current [&_svg]:fill-none [&_svg]:[stroke-width:1.4]"

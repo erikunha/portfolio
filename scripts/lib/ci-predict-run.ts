@@ -739,22 +739,16 @@ export async function predict(context: RunContext, deps: Deps): Promise<Predicti
           .filter((row) => row.verdict === 'not-run' || row.verdict === 'partial')
           .map((row) => row.job);
         const planned = upstream.filter((row) => row.verdict === 'would-run');
-        const verdict: Verdict =
-          failedJobs.length > 0
-            ? 'fail'
-            : planned.length > 0
-              ? 'would-run'
-              : unrun.length > 0
-                ? 'partial'
-                : 'pass';
-        const why =
-          failedJobs.length > 0
-            ? `blocked by ${failedJobs.join(', ')}`
-            : planned.length > 0
-              ? `${planned.length} job(s) would run (dry run)`
-              : unrun.length > 0
-                ? `${unrun.length} job(s) not fully reproduced locally`
-                : 'every upstream job passed or was skipped by paths';
+        const unrunVerdict: Verdict = unrun.length > 0 ? 'partial' : 'pass';
+        const plannedVerdict: Verdict = planned.length > 0 ? 'would-run' : unrunVerdict;
+        const verdict: Verdict = failedJobs.length > 0 ? 'fail' : plannedVerdict;
+        const unrunWhy =
+          unrun.length > 0
+            ? `${unrun.length} job(s) not fully reproduced locally`
+            : 'every upstream job passed or was skipped by paths';
+        const plannedWhy =
+          planned.length > 0 ? `${planned.length} job(s) would run (dry run)` : unrunWhy;
+        const why = failedJobs.length > 0 ? `blocked by ${failedJobs.join(', ')}` : plannedWhy;
         rows.push({ job: id, verdict, why, ms: 0 });
         outcomes.set(id, { result: failedJobs.length > 0 ? 'failure' : 'success', outputs: {} });
         continue;

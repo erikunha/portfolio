@@ -27,7 +27,7 @@ export function ContactResult({
       >
         <p className="contact-state-title">{copy.success.title}</p>
         <p>{copy.success.message}</p>
-        {receipt && <ContactReceipt copy={copy} receipt={receipt} />}
+        {receipt ? <ContactReceipt copy={copy} receipt={receipt} /> : null}
       </div>
     );
   }
@@ -47,11 +47,11 @@ export function ContactResult({
           {copy.queued.linkLabel} {copy.queued.linkGlyph}
         </ExternalLink>
       </p>
-      {queuedRef && (
+      {queuedRef ? (
         <p className="contact-state-ref" data-testid="contact-queued-ref" title={queuedRef}>
           {copy.queued.refLabel} {queuedRef}
         </p>
-      )}
+      ) : null}
     </div>
   );
 }

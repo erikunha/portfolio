@@ -106,11 +106,11 @@ function ShellLineBody({ line, ui, states, isMobile, announce, onRetry }: ShellL
   }
   return (
     <>
-      {line.ai && <span className="shell-ai-label">{ui.aiLabel}: </span>}
-      {line.prefix && <strong className="shell-stderr-command">{line.prefix}</strong>}
-      {line.prefix && ' '}
+      {line.ai ? <span className="shell-ai-label">{ui.aiLabel}: </span> : null}
+      {line.prefix ? <strong className="shell-stderr-command">{line.prefix}</strong> : null}
+      {line.prefix ? ' ' : null}
       <LineText text={line.welcome && isMobile ? ui.mobileWelcome : line.text} ui={ui} />
-      {line.retry && (
+      {line.retry ? (
         <>
           {' '}
           <button
@@ -122,7 +122,7 @@ function ShellLineBody({ line, ui, states, isMobile, announce, onRetry }: ShellL
             {states.retry}
           </button>
         </>
-      )}
+      ) : null}
     </>
   );
 }

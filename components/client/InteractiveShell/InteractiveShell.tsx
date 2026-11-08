@@ -275,7 +275,7 @@ export function InteractiveShell({
             ) : (
               <AnimatedPlaceholder ui={ui} />
             ))}
-          {busy && (
+          {busy ? (
             <button
               ref={stopRef}
               className="shell-control shell-stop"
@@ -285,7 +285,7 @@ export function InteractiveShell({
             >
               {ui.stop}
             </button>
-          )}
+          ) : null}
         </div>
       </form>
       <p id={accuracyId} className="shell-ai-notice">

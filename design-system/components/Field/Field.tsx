@@ -47,11 +47,11 @@ export function Field({
       ) : (
         <input {...(rest as InputHTMLAttributes<HTMLInputElement>)} {...inputProps} />
       )}
-      {error && (
+      {error ? (
         <span id={errId} className="field-error text-xs text-senary-300">
           {error}
         </span>
-      )}
+      ) : null}
     </div>
   );
 }
