@@ -108,16 +108,16 @@
 
   a:focus-visible {
     text-decoration: underline;
-    outline: 2px solid var(--color-primary-500);
-    outline-offset: 2px;
+    outline: var(--focus-ring-width) solid var(--color-primary-500);
+    outline-offset: var(--focus-ring-offset);
   }
 
   button:focus-visible,
   input:focus-visible,
   textarea:focus-visible,
   [tabindex="0"]:focus-visible {
-    outline: 2px solid var(--color-primary-500);
-    outline-offset: 2px;
+    outline: var(--focus-ring-width) solid var(--color-primary-500);
+    outline-offset: var(--focus-ring-offset);
   }
 
   [tabindex="-1"]:focus {
@@ -213,19 +213,6 @@
     clip: rect(0, 0, 0, 0);
     white-space: nowrap;
     border: 0;
-  }
-
-  .not-found {
-    min-height: 100svh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 2rem;
-    background: var(--color-secondary-950);
-    color: var(--color-tertiary-50);
-    font-family: var(--font-mono);
-    position: relative;
   }
 
   .mobile-only {

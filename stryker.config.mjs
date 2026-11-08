@@ -4,6 +4,7 @@ export default {
   testRunner: 'vitest',
   plugins: ['@stryker-mutator/vitest-runner'],
   coverageAnalysis: 'perTest',
+  ignorePatterns: ['.claude/skills'],
   incremental: true,
   incrementalFile: '.stryker-incremental.json',
   mutate: [

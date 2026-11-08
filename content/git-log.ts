@@ -250,7 +250,6 @@ export const careerCopy: Record<SiteLocale, ReturnType<typeof careerCopyFor>> = 
   [SITE_LOCALE.pt]: careerCopyFor(SITE_LOCALE.pt),
 };
 
-export const careerCommand = (locale: SiteLocale): string => careerCopy[locale].command;
 export const careerScrollLabel = (locale: SiteLocale): string => careerCopy[locale].scrollLabel;
 
 const COMPANY_SEPARATOR = ' ';

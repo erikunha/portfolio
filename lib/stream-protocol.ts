@@ -1,3 +1,5 @@
+import { MS_PER_SECOND } from './time';
+
 export const STREAM_ERR_SENTINEL = '\x00ERR:';
 
 export const GUARD_ABORT_PREFIX = 'output guard: ';
@@ -21,7 +23,6 @@ export function parseStreamChunk(accumulated: string): ParsedStreamChunk {
 }
 
 export const RETRY_AFTER_HEADER = 'Retry-After';
-const MS_PER_SECOND = 1000;
 
 export function retryAfterSeconds(resetMs: unknown, nowMs: number): number | null {
   if (typeof resetMs !== 'number' || !Number.isFinite(resetMs)) return null;

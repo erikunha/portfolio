@@ -1,3 +1,4 @@
+import { social } from '@/content/social';
 import { env } from '@/lib/env';
 import { GOOGLE_API_KEY_HEADER } from '@/lib/google-api';
 import { log } from '@/lib/log';
@@ -78,7 +79,7 @@ async function fetchScoresOnce(
 
   const psiUrl =
     'https://www.googleapis.com/pagespeedonline/v5/runPagespeed' +
-    `?url=${encodeURIComponent('https://www.erikunha.dev')}` +
+    `?url=${encodeURIComponent(social.site)}` +
     `&strategy=${strategy}` +
     '&category=PERFORMANCE&category=ACCESSIBILITY&category=BEST_PRACTICES&category=SEO';
 
@@ -89,7 +90,7 @@ async function fetchScoresOnce(
   const res = await fetch(psiUrl, {
     ...fetchCache,
     signal: AbortSignal.timeout(timeoutMs),
-    headers: { Referer: 'https://www.erikunha.dev/', [GOOGLE_API_KEY_HEADER]: apiKey },
+    headers: { Referer: `${social.site}/`, [GOOGLE_API_KEY_HEADER]: apiKey },
   });
   if (!res.ok) {
     let body = '(unreadable)';

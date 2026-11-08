@@ -12,6 +12,7 @@ interface FaderDbProps {
   peakLabel: string;
   initialPct: number;
   channelName: string;
+  faderLabel: string;
   footer?: { lufs: string; pk: string } | undefined;
 }
 
@@ -21,6 +22,7 @@ export function FaderDbIsland({
   peakLabel,
   initialPct,
   channelName,
+  faderLabel,
   footer,
 }: FaderDbProps) {
   const dbRef = useRef<HTMLSpanElement>(null);
@@ -42,6 +44,7 @@ export function FaderDbIsland({
         <FaderIsland
           initialPct={initialPct}
           channelName={channelName}
+          label={faderLabel}
           onPctChange={handlePctChange}
           onAriaValueText={handleAriaValueText}
         />

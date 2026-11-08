@@ -12,10 +12,11 @@ import {
   type LighthouseScores,
   type Strategy,
 } from '@/lib/lighthouse-scores';
+import { HOURS_PER_DAY, MS_PER_HOUR, pad2 } from '@/lib/time';
 import vercelConfig from '@/vercel.json';
 import { MeasuredStatus } from '../MeasuredStatus';
 
-type ScoresByStrategy = Record<Strategy, LighthouseScores | null>;
+type ScoresByStrategy = Partial<Record<Strategy, LighthouseScores | null>>;
 
 export const MEASURED_FIELD_SEPARATOR = ' · ';
 
@@ -61,17 +62,14 @@ export function MeasuredTile({
 }
 
 const PSI_REFRESH_PATH = '/api/psi-refresh';
-const MS_PER_HOUR = 3_600_000;
-const HOURS_PER_DAY = 24;
 const DAYS_SHOWN_FROM_HOURS = 48;
-const CLOCK_DIGITS = 2;
 const CLOCK_SEPARATOR = ':';
 
 function refreshTimeUtc(): string {
   const cron = vercelConfig.crons.find((entry) => entry.path === PSI_REFRESH_PATH);
   if (!cron) throw new Error(`vercel.json has no cron for ${PSI_REFRESH_PATH}`);
   const [minute = '', hour = ''] = cron.schedule.split(' ');
-  return [hour, minute].map((part) => part.padStart(CLOCK_DIGITS, '0')).join(CLOCK_SEPARATOR);
+  return [hour, minute].map(pad2).join(CLOCK_SEPARATOR);
 }
 
 const STALE_RESERVE_DAYS = 99;
@@ -111,9 +109,10 @@ export async function PerfData({ locale }: { locale: SiteLocale }) {
   const results = await Promise.all(
     strategies.map((strategy) => getScores(strategy.key).catch(() => null)),
   );
-  const scores = Object.fromEntries(
-    strategies.map((strategy, index) => [strategy.key, results[index] ?? null]),
-  ) as ScoresByStrategy;
+  const scores: ScoresByStrategy = {};
+  strategies.forEach((strategy, index) => {
+    scores[strategy.key] = results[index] ?? null;
+  });
   return <PerfBody locale={locale} scores={scores} />;
 }
 

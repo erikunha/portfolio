@@ -2,11 +2,20 @@ import { dsPageMetadata } from '../_lib/page-metadata';
 
 export const metadata = dsPageMetadata({
   slug: 'changelog',
-  title: 'Changelog — Design System — erikunha.dev',
+  title: 'Changelog · Design System · erikunha.dev',
   description: 'Design system token and component changelog',
 });
 
 # CHANGELOG
+
+## 2026-11-06
+
+- **fix:** make the component jump links 44px on touch
+- **docs:** record 44px touch links and pt copy parity
+- **perf:** keep plain anchors in the sidebar, next/link cost 3.2kb of client js
+- **refactor:** one theme color parser for swatches and the contrast gate
+- **test:** title the layout test for the sidebar preceding main
+- **fix:** sidebar first in the DOM and no skip link where its target is hidden
 
 ## 2026-11-03
 
@@ -36,7 +45,7 @@ export const metadata = dsPageMetadata({
 
 ## 2026-07-11
 
-- **feat:** StatTile display variant — docs stat tiles at app scale (#177)
+- **feat:** StatTile display variant: docs stat tiles at app scale (#177)
 
 ## 2026-07-10
 
@@ -55,15 +64,15 @@ export const metadata = dsPageMetadata({
 
 - **fix:** remove commitizen, add space token aliases, fix token boundary violations
 - **test:** add Badge, Button, StatTile behavioral E2E + expand Playwright testMatch
-- **fix:** review findings — token th bg, allowlist reason, changelog cwd anchor
+- **fix:** review findings: token th bg, allowlist reason, changelog cwd anchor
 - **fix:** narrow regex group types in sync-changelog to satisfy strict TS
 - **feat:** git-driven changelog + sidebar home link
 - **fix:** stat grids full content-column width via negative margins
 - **feat:** add live stat grid render to composition patterns
 - **fix:** code block overflow scroll and h3 visual hierarchy
 - **fix:** prose rhythm, table styles, token component legibility
-- **feat:** landing page — stat grid, import CmdLine, LIVE badge
-- **feat:** component docs — anchor nav + props tables
+- **feat:** landing page: stat grid, import CmdLine, LIVE badge
+- **feat:** component docs: anchor nav + props tables
 - **feat:** token visualization + fix GFM tables
 - **fix:** seed visual baselines and add section IDs to Preview components
 

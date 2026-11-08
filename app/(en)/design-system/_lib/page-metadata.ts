@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { buildPageMetadata } from '@/app/_lib/build-metadata';
-import { OG_LOCALE } from '@/content/seo';
+import { SITE_LOCALE, SITE_OG_LOCALE } from '@/content/site-locale';
 
 export function dsPageMetadata({
   slug,
@@ -15,6 +15,6 @@ export function dsPageMetadata({
     title,
     description,
     canonical: slug === '' ? '/design-system' : `/design-system/${slug}`,
-    ogLocale: OG_LOCALE,
+    ogLocale: SITE_OG_LOCALE[SITE_LOCALE.en],
   });
 }

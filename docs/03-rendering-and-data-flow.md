@@ -52,7 +52,7 @@ The user-facing routes are `/`, `/summary`, `/cv`, `/links`, `/links/en` and the
 
 ## Terminal sections and navigation
 
-`content/section-registry.ts` defines nine navigation destinations: Home (`bio`), About, Projects, Career, Interactive shell, Measured, Opinions, Guitar and mixer, and Contact. It supplies aliases, icons, section labels and navigation order. `content/section-labels.ts` exposes those labels and adds the scroll region labels; each module header shows its section label as a visible name beside the icon.
+`content/section-registry.ts` defines nine navigation destinations: Home (`bio`), About, Projects, Career, Interactive shell, Measured, Opinions, Guitar and mixer, and Contact. It supplies icons, screen reader labels and navigation order. `content/section-labels.ts` exposes those labels and adds the scroll region labels; each module header shows its section label as a visible name beside the icon.
 
 The JSX order in `components/SiteHome.tsx` is Hero, About, Shell, Measured, Projects, GitLog, HottestTakes (with Unknowns nested inside), Guitar (the guitar rig with the DAW mixer below it) and Contact. Footer follows `PageMain` as its sibling. CSS mobile ordering is a separate map in `app/css/base.css`.
 
