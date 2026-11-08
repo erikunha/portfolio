@@ -15,13 +15,16 @@ async function readMcpMessage(res: APIResponse): Promise<Record<string, unknown>
 }
 
 test.describe('observability smoke', () => {
-  test('/api/log accepts a structured error payload (unified envelope)', async ({ request }) => {
+  test('/api/log accepts a structured error payload (unified envelope)', async ({
+    request,
+    baseURL,
+  }) => {
     const res = await request.post('/api/log', {
       data: {
         level: 'error',
         message: '[smoke] synthetic test error',
         stack: 'Error: smoke\n  at test',
-        url: 'http://localhost:3000/smoke',
+        url: new URL('/smoke', baseURL).href,
         userAgent: 'playwright/smoke',
         ts: new Date().toISOString(),
       },
