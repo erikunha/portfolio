@@ -1,7 +1,7 @@
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { afterEach, describe, expect, it } from 'vitest';
-import { mountClient } from '@/__tests__/helpers/render';
+import { fire, mountClient } from '@/__tests__/helpers/render';
 import { dawMixerCopy } from '@/content/daw-mixer';
 import { SITE_LOCALE } from '@/content/site-locale';
 import { FaderDbIsland, pctToDb } from './FaderDbIsland.client';
@@ -138,7 +138,7 @@ describe('FaderDbIsland — dB updates on fader interaction', () => {
     expect(dbSpan.textContent).toBe(initialDb);
 
     const slider = container.querySelector('[role="slider"]') as HTMLElement;
-    slider.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
+    fire(slider, new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
 
     expect(dbSpan.textContent).toBe(pctToDb(52));
     expect(dbSpan.textContent).not.toBe(initialDb);
@@ -150,7 +150,7 @@ describe('FaderDbIsland — dB updates on fader interaction', () => {
     );
     unmount = u;
     const slider = container.querySelector('[role="slider"]') as HTMLElement;
-    slider.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowLeft', bubbles: true }));
+    fire(slider, new KeyboardEvent('keydown', { key: 'ArrowLeft', bubbles: true }));
 
     const dbSpan = container.querySelector('[class*="dbValue"]') as HTMLElement;
     expect(dbSpan.textContent).toBe(pctToDb(48));
@@ -180,7 +180,7 @@ describe('FaderDbIsland — dB updates on fader interaction', () => {
     );
     unmount = u;
     const slider = container.querySelector('[role="slider"]') as HTMLElement;
-    slider.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
+    fire(slider, new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
     const dbSpan = container.querySelector('[class*="dbValue"]') as HTMLElement;
     expect(dbSpan.textContent).toBe('+6.0');
   });
@@ -192,7 +192,7 @@ describe('FaderDbIsland — dB updates on fader interaction', () => {
     unmount = u;
     const slider = container.querySelector('[role="slider"]') as HTMLElement;
     expect(slider.getAttribute('aria-valuetext')).toBe(`${pctToDb(50)} dB`);
-    slider.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
+    fire(slider, new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
     expect(slider.getAttribute('aria-valuetext')).toBe(`${pctToDb(52)} dB`);
   });
 
@@ -207,8 +207,8 @@ describe('FaderDbIsland — dB updates on fader interaction', () => {
       value: () => ({ left: 0, right: 100, width: 100, top: 0, bottom: 20, height: 20 }),
       configurable: true,
     });
-    slider.dispatchEvent(new PointerEvent('pointerdown', { clientX: 50, bubbles: true }));
-    slider.dispatchEvent(new PointerEvent('pointermove', { clientX: 75, bubbles: true }));
+    fire(slider, new PointerEvent('pointerdown', { clientX: 50, bubbles: true }));
+    fire(slider, new PointerEvent('pointermove', { clientX: 75, bubbles: true }));
     expect(dbSpan.textContent).toBe(pctToDb(75));
     expect(slider.getAttribute('aria-valuetext')).toBe(`${pctToDb(75)} dB`);
   });
@@ -223,9 +223,9 @@ describe('FaderDbIsland — dB updates on fader interaction', () => {
       value: () => ({ left: 0, right: 100, width: 100, top: 0, bottom: 20, height: 20 }),
       configurable: true,
     });
-    slider.dispatchEvent(new PointerEvent('pointerdown', { clientX: 50, bubbles: true }));
-    slider.dispatchEvent(new PointerEvent('pointermove', { clientX: 60, bubbles: true }));
-    slider.dispatchEvent(new PointerEvent('pointerup', { clientX: 90, bubbles: true }));
+    fire(slider, new PointerEvent('pointerdown', { clientX: 50, bubbles: true }));
+    fire(slider, new PointerEvent('pointermove', { clientX: 60, bubbles: true }));
+    fire(slider, new PointerEvent('pointerup', { clientX: 90, bubbles: true }));
 
     const dbSpan = container.querySelector('[class*="dbValue"]') as HTMLElement;
     expect(dbSpan.textContent).toBe(pctToDb(90));

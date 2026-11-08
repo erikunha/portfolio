@@ -1,6 +1,6 @@
 import { act, createElement } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { flushMicrotasks, type MountedClient, mountClient } from '@/__tests__/helpers/render';
+import { fire, flushMicrotasks, type MountedClient, mountClient } from '@/__tests__/helpers/render';
 import SHELL_RESPONSES from '@/content/shell-commands';
 import { shellStates, shellUi } from '@/content/shell-ui';
 import { SITE_LOCALE, type SiteLocale } from '@/content/site-locale';
@@ -47,10 +47,10 @@ async function submit(container: HTMLElement, command: string) {
   const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set;
   await act(async () => {
     if (input && setter) setter.call(input, command);
-    input?.dispatchEvent(new Event('input', { bubbles: true }));
+    fire(input, new Event('input', { bubbles: true }));
   });
   await act(async () => {
-    form?.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    fire(form, new Event('submit', { bubbles: true, cancelable: true }));
   });
   await flushMicrotasks();
 }
@@ -133,7 +133,7 @@ describe('shell trailer and privacy command', () => {
       const container = await renderShell();
       await submit(container, 'q');
       const forgetButton = button(container, 'FORGET');
-      forgetButton.focus();
+      act(() => forgetButton.focus());
       expect(document.activeElement).toBe(forgetButton);
       await click(forgetButton);
       expect(forgetButton.isConnected).toBe(false);
@@ -145,7 +145,7 @@ describe('shell trailer and privacy command', () => {
       const container = await renderShell();
       await submit(container, 'q');
       const input = container.querySelector<HTMLInputElement>('input[name="command"]');
-      input?.focus();
+      act(() => input?.focus());
       await click(button(container, 'FORGET'));
       expect(document.activeElement).toBe(input);
     });

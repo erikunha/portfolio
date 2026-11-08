@@ -5,7 +5,7 @@ import { NextRequest } from 'next/server';
 import { act, createElement } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
-import { flushMicrotasks, type MountedClient, mountClient } from '@/__tests__/helpers/render';
+import { fire, flushMicrotasks, type MountedClient, mountClient } from '@/__tests__/helpers/render';
 import { contactCopy } from '@/content/contact-copy';
 import { linksContent } from '@/content/links';
 import { SITE_LOCALE, type SiteLocale } from '@/content/site-locale';
@@ -15,7 +15,7 @@ import { ContactForm } from './ContactForm';
 import { messageStore } from './messageStore';
 
 afterEach(() => {
-  messageStore.reset();
+  act(() => messageStore.reset());
 });
 
 function fillValidForm(container: HTMLElement) {
@@ -122,7 +122,7 @@ describe('ContactForm accessibility', () => {
     const form = container.querySelector<HTMLFormElement>('form');
     fillValidForm(container);
     await act(async () => {
-      form?.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+      fire(form, new Event('submit', { bubbles: true, cancelable: true }));
     });
     await flushMicrotasks();
 
@@ -173,7 +173,7 @@ describe('contact form error region', () => {
     expect(form).not.toBeNull();
     fillValidForm(container);
     await act(async () => {
-      form?.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+      fire(form, new Event('submit', { bubbles: true, cancelable: true }));
     });
     await flushMicrotasks();
 
@@ -210,7 +210,7 @@ describe('contact form delivery states', () => {
     const form = container.querySelector('form');
     fillValidForm(container);
     await act(async () => {
-      form?.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+      fire(form, new Event('submit', { bubbles: true, cancelable: true }));
     });
     await flushMicrotasks();
     return mounted.container;
@@ -644,7 +644,7 @@ describe('contact form — submitting state', () => {
 
     fillValidForm(container);
     await act(async () => {
-      form?.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+      fire(form, new Event('submit', { bubbles: true, cancelable: true }));
     });
     await flushMicrotasks();
 
@@ -655,8 +655,8 @@ describe('contact form — submitting state', () => {
     submitBtn?.focus();
     expect(document.activeElement).toBe(submitBtn);
     await act(async () => {
-      form?.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
-      form?.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+      fire(form, new Event('submit', { bubbles: true, cancelable: true }));
+      fire(form, new Event('submit', { bubbles: true, cancelable: true }));
     });
     expect(fetch).toHaveBeenCalledOnce();
 
@@ -704,7 +704,7 @@ describe.each(Object.values(SITE_LOCALE))('contact form status line (%s)', (loca
     const form = container.querySelector<HTMLFormElement>('form');
     fillValidForm(container);
     await act(async () => {
-      form?.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+      fire(form, new Event('submit', { bubbles: true, cancelable: true }));
     });
     await flushMicrotasks();
 
@@ -977,7 +977,7 @@ describe('contact cross-review fixes', () => {
     'ada@@example.com',
     "o'brien+tag@sub.example.org",
     'ada@example',
-  ])('client email check agrees with the server schema for %s', (email) => {
+  ])('client email check agrees with the server schema for %s', async (email) => {
     const fetchMock = vi.fn(async () => Response.json({ ok: true }));
     vi.stubGlobal('fetch', fetchMock);
     const { container } = render(
@@ -987,6 +987,7 @@ describe('contact cross-review fixes', () => {
     setField(container, 'input[name="email"]', email);
     setField(container, 'textarea', 'A platform engineering opportunity.');
     fireEvent.submit(container.querySelector('form') as HTMLFormElement);
+    await flushMicrotasks();
     const serverAccepts = z.string().trim().email().safeParse(email).success;
     expect(fetchMock.mock.calls.length === 1).toBe(serverAccepts);
   });
@@ -1224,7 +1225,7 @@ describe('contact form locale header and server message', () => {
     const form = mounted.container.querySelector('form');
     fillValidForm(mounted.container);
     await act(async () => {
-      form?.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+      fire(form, new Event('submit', { bubbles: true, cancelable: true }));
     });
     await flushMicrotasks();
     return { fetchMock, container: mounted.container };

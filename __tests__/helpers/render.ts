@@ -62,3 +62,9 @@ export async function hydrateClient(
 
   return { container, root: mountedRoot, unmount };
 }
+
+export function fire(target: EventTarget | null | undefined, event: Event): void {
+  act(() => {
+    target?.dispatchEvent(event);
+  });
+}

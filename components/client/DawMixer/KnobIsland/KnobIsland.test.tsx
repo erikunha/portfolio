@@ -1,7 +1,7 @@
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { afterEach, describe, expect, it } from 'vitest';
-import { mountClient } from '@/__tests__/helpers/render';
+import { fire, mountClient } from '@/__tests__/helpers/render';
 import { dawMixerCopy } from '@/content/daw-mixer';
 import { SITE_LOCALE } from '@/content/site-locale';
 import { KnobIsland } from './KnobIsland.client';
@@ -64,7 +64,7 @@ describe('KnobIsland — keyboard (clamp + direction)', () => {
     );
     unmount = u;
     const slider = container.querySelector('[role="slider"]') as SVGElement;
-    slider.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowUp', bubbles: true }));
+    fire(slider, new KeyboardEvent('keydown', { key: 'ArrowUp', bubbles: true }));
     expect(Number(slider.getAttribute('aria-valuenow'))).toBe(5);
   });
 
@@ -79,7 +79,7 @@ describe('KnobIsland — keyboard (clamp + direction)', () => {
     );
     unmount = u;
     const slider = container.querySelector('[role="slider"]') as SVGElement;
-    slider.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
+    fire(slider, new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
     expect(Number(slider.getAttribute('aria-valuenow'))).toBe(-5);
   });
 
@@ -94,7 +94,7 @@ describe('KnobIsland — keyboard (clamp + direction)', () => {
     );
     unmount = u;
     const slider = container.querySelector('[role="slider"]') as SVGElement;
-    slider.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowUp', bubbles: true }));
+    fire(slider, new KeyboardEvent('keydown', { key: 'ArrowUp', bubbles: true }));
     expect(Number(slider.getAttribute('aria-valuenow'))).toBeLessThanOrEqual(150);
   });
 
@@ -109,7 +109,7 @@ describe('KnobIsland — keyboard (clamp + direction)', () => {
     );
     unmount = u;
     const slider = container.querySelector('[role="slider"]') as SVGElement;
-    slider.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
+    fire(slider, new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
     expect(Number(slider.getAttribute('aria-valuenow'))).toBeGreaterThanOrEqual(-150);
   });
 });
@@ -133,12 +133,12 @@ describe('KnobIsland — pointer drag behavior', () => {
     unmount = u;
     const slider = container.querySelector('[role="slider"]') as HTMLElement;
 
-    slider.dispatchEvent(new PointerEvent('pointerdown', { clientY: 100, bubbles: true }));
-    slider.dispatchEvent(new PointerEvent('pointermove', { clientY: 50, bubbles: true }));
+    fire(slider, new PointerEvent('pointerdown', { clientY: 100, bubbles: true }));
+    fire(slider, new PointerEvent('pointermove', { clientY: 50, bubbles: true }));
     expect(Number(slider.getAttribute('aria-valuenow'))).toBe(45);
     expect(slider.getAttribute('aria-valuetext')).toBe('+45 degrees');
 
-    slider.dispatchEvent(new PointerEvent('pointercancel', { bubbles: true }));
+    fire(slider, new PointerEvent('pointercancel', { bubbles: true }));
     expect(Number(slider.getAttribute('aria-valuenow'))).toBe(-30);
     expect(slider.getAttribute('aria-valuetext')).toBe('-30 degrees');
   });

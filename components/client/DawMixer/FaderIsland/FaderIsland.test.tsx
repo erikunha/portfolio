@@ -1,7 +1,7 @@
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { afterEach, describe, expect, it } from 'vitest';
-import { mountClient } from '@/__tests__/helpers/render';
+import { fire, mountClient } from '@/__tests__/helpers/render';
 import { dawMixerCopy } from '@/content/daw-mixer';
 import { SITE_LOCALE } from '@/content/site-locale';
 import { FaderIsland } from './FaderIsland.client';
@@ -70,7 +70,7 @@ describe('FaderIsland — keyboard', () => {
     );
     unmount = u;
     const slider = container.querySelector('[role="slider"]') as HTMLElement;
-    slider.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
+    fire(slider, new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
     expect(Number(slider.getAttribute('aria-valuenow'))).toBe(52);
   });
 
@@ -80,7 +80,7 @@ describe('FaderIsland — keyboard', () => {
     );
     unmount = u;
     const slider = container.querySelector('[role="slider"]') as HTMLElement;
-    slider.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowLeft', bubbles: true }));
+    fire(slider, new KeyboardEvent('keydown', { key: 'ArrowLeft', bubbles: true }));
     expect(Number(slider.getAttribute('aria-valuenow'))).toBe(48);
   });
 
@@ -90,7 +90,7 @@ describe('FaderIsland — keyboard', () => {
     );
     unmount = u;
     const slider = container.querySelector('[role="slider"]') as HTMLElement;
-    slider.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowLeft', bubbles: true }));
+    fire(slider, new KeyboardEvent('keydown', { key: 'ArrowLeft', bubbles: true }));
     expect(Number(slider.getAttribute('aria-valuenow'))).toBeGreaterThanOrEqual(0);
   });
 
@@ -100,7 +100,7 @@ describe('FaderIsland — keyboard', () => {
     );
     unmount = u;
     const slider = container.querySelector('[role="slider"]') as HTMLElement;
-    slider.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
+    fire(slider, new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
     expect(Number(slider.getAttribute('aria-valuenow'))).toBeLessThanOrEqual(100);
   });
 });
@@ -118,7 +118,7 @@ describe('FaderIsland — pointer drag behavior', () => {
     );
     unmount = u;
     const slider = container.querySelector('[role="slider"]') as HTMLElement;
-    slider.dispatchEvent(new PointerEvent('pointermove', { clientX: 300, bubbles: true }));
+    fire(slider, new PointerEvent('pointermove', { clientX: 300, bubbles: true }));
     expect(slider.getAttribute('aria-valuenow')).toBe('50');
   });
 
@@ -128,9 +128,9 @@ describe('FaderIsland — pointer drag behavior', () => {
     );
     unmount = u;
     const slider = container.querySelector('[role="slider"]') as HTMLElement;
-    slider.dispatchEvent(new PointerEvent('pointerdown', { clientX: 100, bubbles: true }));
-    slider.dispatchEvent(new PointerEvent('pointermove', { clientX: 200, bubbles: true }));
-    slider.dispatchEvent(new PointerEvent('pointerup', { clientX: 200, bubbles: true }));
+    fire(slider, new PointerEvent('pointerdown', { clientX: 100, bubbles: true }));
+    fire(slider, new PointerEvent('pointermove', { clientX: 200, bubbles: true }));
+    fire(slider, new PointerEvent('pointerup', { clientX: 200, bubbles: true }));
     const val = Number(slider.getAttribute('aria-valuenow'));
     expect(Number.isNaN(val)).toBe(false);
     expect(val).toBeGreaterThanOrEqual(0);
@@ -149,11 +149,11 @@ describe('FaderIsland — pointer drag behavior', () => {
       configurable: true,
     });
 
-    slider.dispatchEvent(new PointerEvent('pointerdown', { clientX: 50, bubbles: true }));
-    slider.dispatchEvent(new PointerEvent('pointermove', { clientX: 80, bubbles: true }));
+    fire(slider, new PointerEvent('pointerdown', { clientX: 50, bubbles: true }));
+    fire(slider, new PointerEvent('pointermove', { clientX: 80, bubbles: true }));
     expect(slider.getAttribute('aria-valuenow')).toBe('80');
 
-    slider.dispatchEvent(new PointerEvent('pointercancel', { bubbles: true }));
+    fire(slider, new PointerEvent('pointercancel', { bubbles: true }));
     expect(slider.getAttribute('aria-valuenow')).toBe('50');
   });
 });

@@ -3,6 +3,7 @@ import { parse } from 'postcss';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { readComponentsCss } from '@/__tests__/helpers/components-css';
 import { declValue, rulesWithSelector } from '@/__tests__/helpers/css-rules';
+import { fire } from '@/__tests__/helpers/render';
 import { contactCopy } from '@/content/contact-copy';
 import { contactHoursPhrase, fillCopy } from '@/content/contact-rules';
 import { SITE_LOCALE } from '@/content/site-locale';
@@ -30,7 +31,7 @@ const input = () => screen.getByRole('combobox', { name: copy.search.label });
 
 function setVisibility(state: DocumentVisibilityState) {
   Object.defineProperty(document, 'visibilityState', { configurable: true, value: state });
-  document.dispatchEvent(new Event('visibilitychange'));
+  fire(document, new Event('visibilitychange'));
 }
 
 const visibilityDescriptor = Object.getOwnPropertyDescriptor(document, 'visibilityState');
@@ -56,7 +57,7 @@ beforeEach(() => {
 
 afterEach(() => {
   vi.useRealTimers();
-  messageStore.reset();
+  act(() => messageStore.reset());
   restoreVisibility();
 });
 
@@ -519,7 +520,7 @@ describe('ContactTimezone link back to the message field', () => {
     return {
       field,
       cleanup: () => {
-        unbind();
+        act(() => unbind());
         field.remove();
         view.unmount();
       },

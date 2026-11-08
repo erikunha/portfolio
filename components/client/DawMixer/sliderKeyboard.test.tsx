@@ -1,6 +1,6 @@
 import { createElement } from 'react';
 import { afterEach, describe, expect, it } from 'vitest';
-import { mountClient } from '@/__tests__/helpers/render';
+import { fire, mountClient } from '@/__tests__/helpers/render';
 import { dawMixerCopy } from '@/content/daw-mixer';
 import { SITE_LOCALE } from '@/content/site-locale';
 import { FaderIsland } from './FaderIsland/FaderIsland.client';
@@ -75,7 +75,7 @@ describe.each(CASES)('$name follows the slider keyboard contract', (spec) => {
     unmount = mounted.unmount;
     const slider = mounted.container.querySelector('[role="slider"]') as HTMLElement;
     const press = (key: string) =>
-      slider.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true }));
+      fire(slider, new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true }));
     const value = () => Number(slider.getAttribute('aria-valuenow'));
     return { slider, press, value };
   }

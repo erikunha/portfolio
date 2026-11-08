@@ -1,6 +1,6 @@
 import { createElement } from 'react';
 import { afterEach, describe, expect, it } from 'vitest';
-import { mountClient } from '@/__tests__/helpers/render';
+import { fire, mountClient } from '@/__tests__/helpers/render';
 import { dawMixerCopy } from '@/content/daw-mixer';
 import { SITE_LOCALE } from '@/content/site-locale';
 import { KnobIsland } from './KnobIsland.client';
@@ -37,10 +37,8 @@ async function mountKnob(initialAngle: number) {
 }
 
 function tap(slider: HTMLElement, y: number, releaseY = y) {
-  slider.dispatchEvent(new PointerEvent('pointerdown', { clientX: 10, clientY: y, bubbles: true }));
-  slider.dispatchEvent(
-    new PointerEvent('pointerup', { clientX: 10, clientY: releaseY, bubbles: true }),
-  );
+  fire(slider, new PointerEvent('pointerdown', { clientX: 10, clientY: y, bubbles: true }));
+  fire(slider, new PointerEvent('pointerup', { clientX: 10, clientY: releaseY, bubbles: true }));
 }
 
 const angleOf = (slider: HTMLElement) => Number(slider.getAttribute('aria-valuenow'));
@@ -72,14 +70,17 @@ describe('KnobIsland single-pointer alternative (WCAG 2.5.7)', () => {
 
   it('a drag that moves the pointer does not also step the angle on release', async () => {
     const slider = await mountKnob(0);
-    slider.dispatchEvent(
+    fire(
+      slider,
       new PointerEvent('pointerdown', { clientX: 10, clientY: LOWER_HALF_Y, bubbles: true }),
     );
-    slider.dispatchEvent(
+    fire(
+      slider,
       new PointerEvent('pointermove', { clientX: 10, clientY: LOWER_HALF_Y - 20, bubbles: true }),
     );
     const dragged = angleOf(slider);
-    slider.dispatchEvent(
+    fire(
+      slider,
       new PointerEvent('pointerup', { clientX: 10, clientY: LOWER_HALF_Y - 20, bubbles: true }),
     );
     expect(angleOf(slider)).toBe(dragged);

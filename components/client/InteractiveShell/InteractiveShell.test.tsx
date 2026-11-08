@@ -1,6 +1,7 @@
 import { act, createElement } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
+  fire,
   flushFrames,
   flushMicrotasks,
   type MountedClient,
@@ -49,10 +50,10 @@ async function submitQuestion(container: HTMLElement, question: string): Promise
   const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set;
   await act(async () => {
     if (input && setter) setter.call(input, question);
-    input?.dispatchEvent(new Event('input', { bubbles: true }));
+    fire(input, new Event('input', { bubbles: true }));
   });
   await act(async () => {
-    form?.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    fire(form, new Event('submit', { bubbles: true, cancelable: true }));
   });
 }
 
@@ -247,10 +248,10 @@ describe('shell feed accessibility', () => {
     const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set;
     await act(async () => {
       if (input && setter) setter.call(input, 'a question');
-      input?.dispatchEvent(new Event('input', { bubbles: true }));
+      fire(input, new Event('input', { bubbles: true }));
     });
     await act(async () => {
-      form?.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+      fire(form, new Event('submit', { bubbles: true, cancelable: true }));
     });
     await flushMicrotasks();
 
@@ -342,14 +343,14 @@ function buttonWithText(container: HTMLElement, text: string): HTMLButtonElement
 
 async function press(element: HTMLElement, key: string, options: KeyboardEventInit = {}) {
   await act(async () => {
-    element.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true, ...options }));
+    fire(element, new KeyboardEvent('keydown', { key, bubbles: true, ...options }));
   });
 }
 
 async function typeDraft(input: HTMLInputElement, text: string) {
   await act(async () => {
     Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set?.call(input, text);
-    input.dispatchEvent(new Event('input', { bubbles: true }));
+    fire(input, new Event('input', { bubbles: true }));
   });
 }
 
@@ -396,12 +397,12 @@ describe('InteractiveShell r106 controls', () => {
       }),
     );
     const container = await renderShell();
-    shellInput(container).focus();
+    act(() => shellInput(container).focus());
     await submitQuestion(container, 'question to restore');
     expect(container.querySelector('[role="status"]')?.textContent).toContain('thinking');
     const stop = buttonWithText(container, '[STOP]');
     await act(async () => {
-      stop.focus();
+      act(() => stop.focus());
       stop.click();
     });
     expect(signal?.aborted).toBe(true);
@@ -549,7 +550,7 @@ describe('InteractiveShell r106 controls', () => {
     const fetchMock = vi.fn().mockRejectedValue(new TypeError('Failed to fetch'));
     vi.stubGlobal('fetch', fetchMock);
     const container = await renderShell();
-    shellInput(container).focus();
+    act(() => shellInput(container).focus());
     await submitQuestion(container, 'offline question');
     expect(container.querySelector('[data-kind="error"]')?.textContent).toContain('offline');
     expect(container.querySelector('[role="status"]')?.textContent).toContain('offline');
@@ -661,7 +662,7 @@ describe('InteractiveShell r106 controls', () => {
       },
     });
     await act(async () => {
-      feed.dispatchEvent(new Event('scroll', { bubbles: true }));
+      fire(feed, new Event('scroll', { bubbles: true }));
     });
     expect(scrollTop).toBe(0);
     await submitQuestion(container, 'new question');
@@ -689,9 +690,9 @@ describe('InteractiveShell r106 controls', () => {
     });
     const plain = new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true });
     await act(async () => {
-      input.dispatchEvent(composing);
-      input.dispatchEvent(legacy);
-      input.dispatchEvent(plain);
+      fire(input, composing);
+      fire(input, legacy);
+      fire(input, plain);
     });
     expect(composing.defaultPrevented).toBe(true);
     expect(legacy.defaultPrevented).toBe(true);
@@ -792,7 +793,7 @@ describe('InteractiveShell r106 controls', () => {
     );
     const container = await renderShell();
     await submitQuestion(container, 'focus on completion');
-    buttonWithText(container, '[STOP]').focus();
+    act(() => buttonWithText(container, '[STOP]').focus());
     await act(async () => {
       complete();
     });
@@ -825,7 +826,7 @@ describe('InteractiveShell r106 controls', () => {
               : shellInput(container);
       expect(focused).not.toBeNull();
       await act(async () => {
-        focused?.focus();
+        act(() => focused?.focus());
       });
       expect(document.activeElement).toBe(focused);
       await act(async () => {
@@ -860,7 +861,7 @@ describe('InteractiveShell r106 controls', () => {
       feed.style.lineHeight = '20px';
       await act(async () => {
         feed.scrollTop = 800 - gap;
-        feed.dispatchEvent(new Event('scroll'));
+        fire(feed, new Event('scroll'));
       });
       scrollHeight = 1400;
       await act(async () => {
@@ -876,7 +877,7 @@ describe('InteractiveShell r106 controls', () => {
       expect(feed.scrollTop).toBe(gap <= 20 ? 1600 : 800 - gap);
       await act(async () => {
         feed.scrollTop = 1400;
-        feed.dispatchEvent(new Event('scroll'));
+        fire(feed, new Event('scroll'));
       });
       scrollHeight = 1800;
       await submitQuestion(container, 'help');
@@ -922,7 +923,7 @@ describe('InteractiveShell r106 controls', () => {
       const buttons = Array.from(toolbar.querySelectorAll('button'));
       expect(buttons.filter((button) => button.tabIndex === 0)).toHaveLength(1);
       const first = buttons[0] as HTMLButtonElement;
-      first.focus();
+      act(() => first.focus());
       await press(first, 'ArrowLeft');
       expect(document.activeElement).toBe(buttons.at(-1));
       await press(buttons.at(-1) as HTMLElement, 'ArrowRight');
@@ -1044,7 +1045,7 @@ describe('shell input hint states', () => {
     ).not.toBeNull();
 
     await act(async () => {
-      input.dispatchEvent(new FocusEvent('focusin', { bubbles: true }));
+      fire(input, new FocusEvent('focusin', { bubbles: true }));
     });
 
     const focusedHint = container.querySelector('[data-testid="shell-placeholder"]');
