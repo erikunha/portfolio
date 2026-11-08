@@ -67,10 +67,6 @@
     "purpose": "React rendering helpers for component tests",
     "license": "MIT"
   },
-  "@types/estree": {
-    "purpose": "ESTree type definitions; no direct importer in the tree",
-    "license": "MIT"
-  },
   "@types/mdx": {
     "purpose": "types for MDX modules and mdx-components.tsx",
     "license": "MIT"
@@ -125,14 +121,6 @@
   },
   "clsx": {
     "purpose": "class-name joiner in lib/cn.ts",
-    "license": "MIT"
-  },
-  "estree-util-to-js": {
-    "purpose": "ESTree serializer for MDX recma plugins; no direct importer in the tree",
-    "license": "MIT"
-  },
-  "estree-util-visit": {
-    "purpose": "ESTree walker for MDX recma plugins; no direct importer in the tree",
     "license": "MIT"
   },
   "husky": {
