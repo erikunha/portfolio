@@ -1,4 +1,5 @@
 import { EQ_TEMPLATE_TOKENS, type EqBand, type EqSpectrum } from '@/content/schemas';
+import { SECONDS_PER_MINUTE } from './time';
 
 export const EQ_VIEWBOX_WIDTH = 1000;
 export const EQ_VIEWBOX_HEIGHT = 132;
@@ -14,7 +15,6 @@ const GRID_ROW_OFFSETS = [-1, 0, 1];
 const GRID_ROW_STEP = 30;
 const INSET_FRACTION = 0.05;
 const PERCENT = 100;
-const SECONDS_PER_MINUTE = 60;
 
 const BAR_MIN_PX = 8;
 const BAR_BASE_PX = 26;

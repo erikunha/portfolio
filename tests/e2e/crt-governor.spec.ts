@@ -1,5 +1,6 @@
 import { expect, type Page, test } from '@playwright/test';
 import { waitForHydration } from './_helpers/hydration';
+import { freezeMotion } from './_helpers/motion';
 
 const GOVERNED_LEVEL = 2;
 const FULL_RATE_LEVEL = 0;
@@ -56,7 +57,7 @@ test.describe('CRT frame governor', () => {
   test('a degraded level never revives an effect that reduced motion switched off', async ({
     page,
   }) => {
-    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await freezeMotion(page);
     await page.goto('/');
     await waitForHydration(page, CRT_OVERLAY);
     const styles = await effectStylesAtLevel(page, GOVERNED_LEVEL);

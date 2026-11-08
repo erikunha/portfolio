@@ -59,8 +59,8 @@ commit and a statement of what breaks, and when, is dropped.
 - API handlers: order is rate limit, bounded read, parse, validate, handle; env is read only
   through `lib/env.ts`; the `/api/ask` budget fails closed while rate limits fail open.
 - User-visible copy lives in `content/*.ts` in English and pt-BR, and every variant of a changed
-  section (mobile, tablet, noscript, reduced motion, print, design-system demos) moved with it.
-- Motion stays off under `prefers-reduced-motion: reduce`.
+  section (mobile, tablet, noscript, MOTION off, print, design-system demos) moved with it.
+- Motion stays off while the MOTION switch is off (`body[data-motion="reduce"]`). No rule keys off the operating system preference.
 - A decision with no `DECISIONS.md` bullet, or a change whose docs and diagrams were not updated.
 
 ## Skip

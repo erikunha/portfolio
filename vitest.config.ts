@@ -24,13 +24,7 @@ export default defineConfig({
         functions: 80,
         statements: 80,
       },
-      include: [
-        'lib/**',
-        'components/**',
-        'app/**',
-        'design-system/components/**',
-        'design-system/lib/**',
-      ],
+      include: ['lib/**', 'components/**', 'app/**', 'design-system/components/**'],
       exclude: [
         '**/node_modules/**',
         '**/__tests__/**',

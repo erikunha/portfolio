@@ -2,14 +2,18 @@ import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { afterEach, describe, expect, it } from 'vitest';
 import { mountClient } from '@/__tests__/helpers/render';
+import { dawMixerCopy } from '@/content/daw-mixer';
+import { SITE_LOCALE } from '@/content/site-locale';
 import { FaderIsland } from './FaderIsland.client';
+
+const CONTROLS = dawMixerCopy[SITE_LOCALE.en].controls;
 
 function renderStatic(props: Parameters<typeof FaderIsland>[0]) {
   const html = renderToStaticMarkup(createElement(FaderIsland, props));
   return new DOMParser().parseFromString(html, 'text/html');
 }
 
-const defaults = { initialPct: 72, channelName: 'RHYTHM GTR' };
+const defaults = { initialPct: 72, channelName: 'RHYTHM GTR', label: CONTROLS.fader };
 
 describe('FaderIsland — ARIA contract', () => {
   it('has role="slider"', () => {
@@ -62,7 +66,7 @@ describe('FaderIsland — keyboard', () => {
 
   it('ArrowRight increases position by 2', async () => {
     const { container, unmount: u } = await mountClient(
-      createElement(FaderIsland, { initialPct: 50, channelName: 'TEST' }),
+      createElement(FaderIsland, { initialPct: 50, channelName: 'TEST', label: CONTROLS.fader }),
     );
     unmount = u;
     const slider = container.querySelector('[role="slider"]') as HTMLElement;
@@ -72,7 +76,7 @@ describe('FaderIsland — keyboard', () => {
 
   it('ArrowLeft decreases position by 2', async () => {
     const { container, unmount: u } = await mountClient(
-      createElement(FaderIsland, { initialPct: 50, channelName: 'TEST' }),
+      createElement(FaderIsland, { initialPct: 50, channelName: 'TEST', label: CONTROLS.fader }),
     );
     unmount = u;
     const slider = container.querySelector('[role="slider"]') as HTMLElement;
@@ -82,7 +86,7 @@ describe('FaderIsland — keyboard', () => {
 
   it('clamps to 0 at minimum', async () => {
     const { container, unmount: u } = await mountClient(
-      createElement(FaderIsland, { initialPct: 1, channelName: 'TEST' }),
+      createElement(FaderIsland, { initialPct: 1, channelName: 'TEST', label: CONTROLS.fader }),
     );
     unmount = u;
     const slider = container.querySelector('[role="slider"]') as HTMLElement;
@@ -92,7 +96,7 @@ describe('FaderIsland — keyboard', () => {
 
   it('clamps to 100 at maximum', async () => {
     const { container, unmount: u } = await mountClient(
-      createElement(FaderIsland, { initialPct: 99, channelName: 'TEST' }),
+      createElement(FaderIsland, { initialPct: 99, channelName: 'TEST', label: CONTROLS.fader }),
     );
     unmount = u;
     const slider = container.querySelector('[role="slider"]') as HTMLElement;
@@ -110,7 +114,7 @@ describe('FaderIsland — pointer drag behavior', () => {
 
   it('pointermove without pointerdown does not change position', async () => {
     const { container, unmount: u } = await mountClient(
-      createElement(FaderIsland, { initialPct: 50, channelName: 'TEST' }),
+      createElement(FaderIsland, { initialPct: 50, channelName: 'TEST', label: CONTROLS.fader }),
     );
     unmount = u;
     const slider = container.querySelector('[role="slider"]') as HTMLElement;
@@ -120,7 +124,7 @@ describe('FaderIsland — pointer drag behavior', () => {
 
   it('aria-valuenow is always a valid integer after pointer events', async () => {
     const { container, unmount: u } = await mountClient(
-      createElement(FaderIsland, { initialPct: 50, channelName: 'TEST' }),
+      createElement(FaderIsland, { initialPct: 50, channelName: 'TEST', label: CONTROLS.fader }),
     );
     unmount = u;
     const slider = container.querySelector('[role="slider"]') as HTMLElement;
@@ -135,7 +139,7 @@ describe('FaderIsland — pointer drag behavior', () => {
 
   it('pointercancel restores position to drag-start value', async () => {
     const { container, unmount: u } = await mountClient(
-      createElement(FaderIsland, { initialPct: 50, channelName: 'TEST' }),
+      createElement(FaderIsland, { initialPct: 50, channelName: 'TEST', label: CONTROLS.fader }),
     );
     unmount = u;
     const slider = container.querySelector('[role="slider"]') as HTMLElement;

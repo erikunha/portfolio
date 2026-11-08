@@ -2,14 +2,23 @@ import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { afterEach, describe, expect, it } from 'vitest';
 import { mountClient } from '@/__tests__/helpers/render';
+import { dawMixerCopy } from '@/content/daw-mixer';
+import { SITE_LOCALE } from '@/content/site-locale';
 import { KnobIsland } from './KnobIsland.client';
+
+const CONTROLS = dawMixerCopy[SITE_LOCALE.en].controls;
 
 function renderStatic(props: Parameters<typeof KnobIsland>[0]) {
   const html = renderToStaticMarkup(createElement(KnobIsland, props));
   return new DOMParser().parseFromString(html, 'text/html');
 }
 
-const defaults = { initialAngle: -30, label: 'GAIN', channelName: 'LEAD GTR' };
+const defaults = {
+  initialAngle: -30,
+  label: 'GAIN',
+  channelName: 'LEAD GTR',
+  degreesUnit: CONTROLS.degrees,
+};
 
 describe('KnobIsland — ARIA contract', () => {
   it('has role="slider"', () => {
@@ -46,7 +55,12 @@ describe('KnobIsland — keyboard (clamp + direction)', () => {
 
   it('ArrowUp increases angle by 5', async () => {
     const { container, unmount: u } = await mountClient(
-      createElement(KnobIsland, { initialAngle: 0, label: 'PAN', channelName: 'CH 01' }),
+      createElement(KnobIsland, {
+        initialAngle: 0,
+        label: 'PAN',
+        channelName: 'CH 01',
+        degreesUnit: CONTROLS.degrees,
+      }),
     );
     unmount = u;
     const slider = container.querySelector('[role="slider"]') as SVGElement;
@@ -56,7 +70,12 @@ describe('KnobIsland — keyboard (clamp + direction)', () => {
 
   it('ArrowDown decreases angle by 5', async () => {
     const { container, unmount: u } = await mountClient(
-      createElement(KnobIsland, { initialAngle: 0, label: 'PAN', channelName: 'CH 01' }),
+      createElement(KnobIsland, {
+        initialAngle: 0,
+        label: 'PAN',
+        channelName: 'CH 01',
+        degreesUnit: CONTROLS.degrees,
+      }),
     );
     unmount = u;
     const slider = container.querySelector('[role="slider"]') as SVGElement;
@@ -66,7 +85,12 @@ describe('KnobIsland — keyboard (clamp + direction)', () => {
 
   it('clamps at +150 (does not exceed maximum)', async () => {
     const { container, unmount: u } = await mountClient(
-      createElement(KnobIsland, { initialAngle: 148, label: 'GAIN', channelName: 'CH 01' }),
+      createElement(KnobIsland, {
+        initialAngle: 148,
+        label: 'GAIN',
+        channelName: 'CH 01',
+        degreesUnit: CONTROLS.degrees,
+      }),
     );
     unmount = u;
     const slider = container.querySelector('[role="slider"]') as SVGElement;
@@ -76,7 +100,12 @@ describe('KnobIsland — keyboard (clamp + direction)', () => {
 
   it('clamps at -150 (does not go below minimum)', async () => {
     const { container, unmount: u } = await mountClient(
-      createElement(KnobIsland, { initialAngle: -148, label: 'GAIN', channelName: 'CH 01' }),
+      createElement(KnobIsland, {
+        initialAngle: -148,
+        label: 'GAIN',
+        channelName: 'CH 01',
+        degreesUnit: CONTROLS.degrees,
+      }),
     );
     unmount = u;
     const slider = container.querySelector('[role="slider"]') as SVGElement;
@@ -94,7 +123,12 @@ describe('KnobIsland — pointer drag behavior', () => {
 
   it('pointercancel restores angle to drag-start value', async () => {
     const { container, unmount: u } = await mountClient(
-      createElement(KnobIsland, { initialAngle: -30, label: 'GAIN', channelName: 'CH 01' }),
+      createElement(KnobIsland, {
+        initialAngle: -30,
+        label: 'GAIN',
+        channelName: 'CH 01',
+        degreesUnit: CONTROLS.degrees,
+      }),
     );
     unmount = u;
     const slider = container.querySelector('[role="slider"]') as HTMLElement;

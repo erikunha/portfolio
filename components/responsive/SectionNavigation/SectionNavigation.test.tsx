@@ -1,7 +1,8 @@
 import { act, fireEvent, render, screen, within } from '@testing-library/react';
+import { renderToString } from 'react-dom/server';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { DesktopTopbar } from '@/components/responsive/DesktopTopbar/DesktopTopbar.client';
-import { HIRE_ACCESSIBLE_NAME } from '@/content/nav';
+import { HIRE_ACCESSIBLE_NAME, TOPBAR_MOTION_LABEL } from '@/content/nav';
 import { NAVIGATION, siteNavChrome } from '@/content/navigation';
 import { SECTION_REGISTRY } from '@/content/section-registry';
 import { SITE_LOCALE, type SiteLocale } from '@/content/site-locale';
@@ -15,9 +16,13 @@ import {
 } from './SectionNavigation.client';
 
 let mockPathname: string | null = null;
+let pathnameSuspended = false;
 
 vi.mock('next/navigation', () => ({
-  usePathname: () => mockPathname,
+  usePathname: () => {
+    if (pathnameSuspended) throw new Promise(() => undefined);
+    return mockPathname;
+  },
 }));
 
 class FakeObserver {
@@ -135,6 +140,10 @@ function MenuPage() {
   );
 }
 
+function toggleState(toggle: HTMLElement): string {
+  return toggle.querySelector('[data-motion-state]')?.textContent ?? '';
+}
+
 function panel() {
   return document.getElementById(DRAWER_ID) as HTMLElement;
 }
@@ -164,6 +173,7 @@ describe('SectionNavigation', () => {
   afterEach(() => {
     vi.unstubAllGlobals();
     mockPathname = null;
+    pathnameSuspended = false;
   });
 
   it('lists the nine registry destinations in order, each linking to its section', () => {
@@ -392,23 +402,32 @@ describe('SectionNavigation', () => {
     expect(scrollIntoView).toHaveBeenCalledTimes(1);
   });
 
-  it.each([
-    ['prefers-reduced-motion', () => (reducedMotion = true)],
-    ['the motion toggle', () => (document.body.dataset.motion = 'reduce')],
-  ])('does not smooth-scroll under %s', (_, enable) => {
+  it('does not smooth-scroll once the motion toggle is off', () => {
     render(<Page />);
-    enable();
+    document.body.dataset.motion = 'reduce';
     fireEvent.click(navLink('Career'));
     expect(scrollIntoView).toHaveBeenCalledWith({ behavior: 'auto', block: 'start' });
   });
 
-  it('smooth-scrolls when the visitor switched motion on over a reduced-motion system', () => {
-    localStorage.setItem('erik.motion', 'on');
+  it('smooth-scrolls and reads MOTION: ON on a first visit over a reduced-motion system', () => {
     reducedMotion = true;
     render(<Page />);
     fireEvent.click(navLink('Career'));
     expect(scrollIntoView).toHaveBeenCalledWith({ behavior: 'smooth', block: 'start' });
-    localStorage.removeItem('erik.motion');
+    expect(document.querySelector('.menu-motion')?.textContent).toContain(
+      NAVIGATION[LOCALE].copy.motionOn,
+    );
+  });
+
+  it('reads MOTION: OFF and stays on auto scroll when the visitor stored OFF', () => {
+    localStorage.setItem(MOTION_STORAGE_KEY, 'off');
+    render(<Page />);
+    fireEvent.click(navLink('Career'));
+    expect(scrollIntoView).toHaveBeenCalledWith({ behavior: 'auto', block: 'start' });
+    expect(document.querySelector('.menu-motion')?.textContent).toContain(
+      NAVIGATION[LOCALE].copy.motionOff,
+    );
+    localStorage.removeItem(MOTION_STORAGE_KEY);
   });
 
   it('sends Home to the top of the page and focuses the main landmark', () => {
@@ -524,15 +543,95 @@ describe('SectionNavigation', () => {
       expect(nav.textContent).not.toContain('\u00b7');
     });
 
-    it.each(['/design-system', '/unknown', null, '/links', '/links/en'])(
-      'renders nothing on %s (no pair, or the page renders its own switch)',
-      (path) => {
-        mockPathname = path;
-        const { container } = renderSwitch(LOCALE);
+    it.each([
+      ['/links', SITE_LOCALE.pt, ['/links/en', '/links'], [null, 'page']],
+      ['/links/en', SITE_LOCALE.en, ['/links/en', '/links'], ['page', null]],
+    ] as const)('on %s serves the pair the links page owns', (path, locale, hrefs, current) => {
+      mockPathname = path;
+      renderSwitch(locale);
+      const nav = screen.getByRole('navigation', { name: NAVIGATION[locale].copy.langSwitchLabel });
+      const links = within(nav).getAllByRole('link');
 
-        expect(container.querySelector('[data-lang-switch]')).toBeNull();
+      expect(links.map((link) => link.getAttribute('href'))).toEqual(hrefs);
+      expect(links.map((link) => link.getAttribute('aria-current'))).toEqual(current);
+    });
+
+    it.each([
+      ['/design-system', SITE_LOCALE.en, ['/design-system', '/pt']],
+      ['/design-system/tokens', SITE_LOCALE.en, ['/design-system/tokens', '/pt']],
+      ['/no-such-page', SITE_LOCALE.en, ['/no-such-page', '/pt']],
+      ['/pt/no-such-page', SITE_LOCALE.pt, ['/', '/pt/no-such-page']],
+    ] as const)(
+      'on %s keeps the switch and sends the other language to its home',
+      (path, locale, hrefs) => {
+        mockPathname = path;
+        renderSwitch(locale);
+        const nav = screen.getByRole('navigation', {
+          name: NAVIGATION[locale].copy.langSwitchLabel,
+        });
+
+        expect(
+          within(nav)
+            .getAllByRole('link')
+            .map((link) => link.getAttribute('href')),
+        ).toEqual(hrefs);
       },
     );
+
+    describe('in the server HTML, before the pathname resolves', () => {
+      function serverSwitch(locale: SiteLocale, route?: string) {
+        pathnameSuspended = true;
+        const host = document.createElement('div');
+        host.innerHTML = renderToString(
+          <SectionNavigationProvider
+            chrome={siteNavChrome(locale)}
+            locale={locale}
+            {...(route === undefined ? {} : { route })}
+          >
+            <LanguageSwitch />
+          </SectionNavigationProvider>,
+        );
+        const links = [...host.querySelectorAll('[data-lang-switch] a')];
+        return {
+          hrefs: links.map((link) => link.getAttribute('href')),
+          current: links.map((link) => link.getAttribute('aria-current')),
+        };
+      }
+
+      it.each([
+        ['/', SITE_LOCALE.en, ['/', '/pt'], ['page', null]],
+        ['/pt', SITE_LOCALE.pt, ['/', '/pt'], [null, 'page']],
+        ['/cv', SITE_LOCALE.en, ['/cv', '/pt/cv'], ['page', null]],
+        ['/pt/cv', SITE_LOCALE.pt, ['/cv', '/pt/cv'], [null, 'page']],
+        ['/summary', SITE_LOCALE.en, ['/summary', '/pt/summary'], ['page', null]],
+        ['/pt/summary', SITE_LOCALE.pt, ['/summary', '/pt/summary'], [null, 'page']],
+        ['/links', SITE_LOCALE.pt, ['/links/en', '/links'], [null, 'page']],
+        ['/links/en', SITE_LOCALE.en, ['/links/en', '/links'], ['page', null]],
+        ['/design-system', SITE_LOCALE.en, ['/design-system', '/pt'], ['page', null]],
+      ] as const)(
+        'serves the pair of the route %s a no-JavaScript visitor lands on',
+        (route, locale, hrefs, current) => {
+          const html = serverSwitch(locale, route);
+
+          expect(
+            html.hrefs,
+            'a fallback built from the locale homes sends a /cv or /links visitor to the wrong page until hydration',
+          ).toEqual(hrefs);
+          expect(html.current).toEqual(current);
+        },
+      );
+
+      it('falls back to each language home when the route is not known', () => {
+        expect(serverSwitch(SITE_LOCALE.en).hrefs).toEqual(['/', '/pt']);
+      });
+    });
+
+    it('renders nothing while the pathname is unknown', () => {
+      mockPathname = null;
+      const { container } = renderSwitch(LOCALE);
+
+      expect(container.querySelector('[data-lang-switch]')).toBeNull();
+    });
   });
 
   it('shares one motion state between the drawer toggle and the topbar toggle', () => {
@@ -540,12 +639,51 @@ describe('SectionNavigation', () => {
     const toggle = document.querySelector('.menu-motion') as HTMLButtonElement;
 
     expect(toggle.getAttribute('aria-pressed')).toBe('true');
-    expect(toggle.textContent).toContain(NAVIGATION[LOCALE].copy.motionOn);
+    expect(toggleState(toggle)).toBe(NAVIGATION[LOCALE].copy.motionOn);
 
     fireEvent.click(toggle);
 
     expect(toggle.getAttribute('aria-pressed')).toBe('false');
-    expect(toggle.textContent).toContain(NAVIGATION[LOCALE].copy.motionOff);
+    expect(toggleState(toggle)).toBe(NAVIGATION[LOCALE].copy.motionOff);
+  });
+
+  it('keeps one fixed accessible name on the drawer motion toggle and leaves the state to aria-pressed', () => {
+    render(<Page />);
+    const toggle = document.querySelector('.menu-motion') as HTMLButtonElement;
+
+    expect(
+      screen.getByRole('button', { name: 'MOTION', pressed: true }),
+      'a name that spells the state ("MOTION: ON") on top of aria-pressed is announced twice and contradicts itself after a toggle',
+    ).toBe(toggle);
+
+    fireEvent.click(toggle);
+
+    expect(screen.getByRole('button', { name: 'MOTION', pressed: false })).toBe(toggle);
+    expect(toggleState(toggle), 'the visible text still spells the state').toBe(
+      NAVIGATION[LOCALE].copy.motionOff,
+    );
+  });
+
+  it('takes the accessible name of the drawer motion toggle from its visible label, with the state kept out of it', () => {
+    render(<Page />);
+    const toggle = document.querySelector('.menu-motion') as HTMLButtonElement;
+    const visibleLabel = [...toggle.childNodes]
+      .filter(
+        (node) => !(node instanceof HTMLElement && node.getAttribute('aria-hidden') === 'true'),
+      )
+      .map((node) => node.textContent ?? '')
+      .join('')
+      .trim();
+
+    expect(visibleLabel).toBe(TOPBAR_MOTION_LABEL);
+    expect(
+      toggle.hasAttribute('aria-label'),
+      'WCAG 2.5.3: an aria-label that differs from the visible text breaks voice control; the name comes from the visible label',
+    ).toBe(false);
+    expect(
+      screen.getByRole('button', { name: visibleLabel }),
+      'the state word is aria-hidden, so the name is the label alone and aria-pressed carries the state',
+    ).toBe(toggle);
   });
 
   describe('drawer', () => {

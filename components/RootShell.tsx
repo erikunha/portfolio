@@ -7,14 +7,15 @@ import { Suspense } from 'react';
 import { GlobalMotion } from '@/components/client/GlobalMotion';
 import { NoscriptBar } from '@/components/NoscriptBar';
 import { profile, profileMetaDescription, profilePageTitle } from '@/content/profile';
-import { personSchema } from '@/content/seo';
-import type { SiteLocale } from '@/content/site-locale';
+import { personSchema, SITE_KEYWORDS, SITE_NAME } from '@/content/seo';
+import { SITE_LOCALE, SITE_OG_LOCALE, type SiteLocale } from '@/content/site-locale';
+import { social } from '@/content/social';
 import { serializeJsonLd } from '@/lib/json-ld';
+import { MOTION_BOOTSTRAP_SCRIPT } from '@/lib/motion-bootstrap';
 
 const mono = localFont({
   src: [
     { path: '../public/fonts/jetbrains-mono-400.woff2', weight: '400', style: 'normal' },
-    { path: '../public/fonts/jetbrains-mono-500.woff2', weight: '500', style: 'normal' },
     { path: '../public/fonts/jetbrains-mono-700.woff2', weight: '700', style: 'normal' },
   ],
   variable: '--font-mono-src',
@@ -30,27 +31,11 @@ const display = localFont({
 });
 
 export const rootMetadata: Metadata = {
-  metadataBase: new URL('https://www.erikunha.dev'),
+  metadataBase: new URL(social.site),
   title: profilePageTitle,
   description: profileMetaDescription,
-  keywords: [
-    profile.title,
-    'Applied AI',
-    'LLM Systems',
-    'LLM Evaluation',
-    'Agents',
-    'Guardrails',
-    'Angular',
-    'React',
-    'Next.js',
-    'Node.js',
-    'TypeScript',
-    'PCI-DSS',
-    'Healthcare',
-    'E-commerce',
-    'AI-native SaaS',
-  ],
-  authors: [{ name: profile.fullName, url: 'https://www.erikunha.dev' }],
+  keywords: SITE_KEYWORDS,
+  authors: [{ name: profile.fullName, url: social.site }],
   creator: profile.fullName,
   manifest: '/site.webmanifest',
   icons: {
@@ -67,11 +52,11 @@ export const rootMetadata: Metadata = {
   },
   openGraph: {
     type: 'website',
-    locale: 'en_US',
-    url: 'https://www.erikunha.dev',
+    locale: SITE_OG_LOCALE[SITE_LOCALE.en],
+    url: social.site,
     title: profilePageTitle,
     description: profileMetaDescription,
-    siteName: 'erikunha.dev',
+    siteName: SITE_NAME,
     images: [
       {
         url: '/og.png',
@@ -93,13 +78,13 @@ export const rootMetadata: Metadata = {
     googleBot: { index: true, follow: true, 'max-image-preview': 'large' },
   },
   alternates: {
-    canonical: 'https://www.erikunha.dev',
+    canonical: social.site,
   },
 };
 
 const personJsonLd = serializeJsonLd(personSchema);
 
-const initScript = `history.scrollRestoration="manual";window.scrollTo(0,0);(function(){try{var m=localStorage.getItem("erik.motion");var on=m==="on"?true:m==="off"?false:!window.matchMedia("(prefers-reduced-motion:reduce)").matches;document.body.dataset.motion=on?"full":"reduce"}catch(e){}})();`;
+const initScript = `history.scrollRestoration="manual";window.scrollTo(0,0);${MOTION_BOOTSTRAP_SCRIPT}`;
 
 export const ROOT_HTML_CLASS_NAME = `${mono.variable} ${display.variable}`;
 

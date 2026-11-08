@@ -13,7 +13,7 @@ import { ShellSection } from '@/components/sections/ShellSection';
 import { dockKeyForSection, HOME_SECTION_ID, NAVIGATION } from './navigation';
 import { createNavigationSchema, SectionRegistrySchema } from './schemas';
 import { SECTION_LABELS } from './section-labels';
-import { getSectionByAlias, getSectionById, SECTION_REGISTRY } from './section-registry';
+import { SECTION_REGISTRY } from './section-registry';
 import { SITE_LOCALE } from './site-locale';
 
 vi.mock('@/lib/ua', () => ({ getIsMobile: async () => false }));
@@ -62,34 +62,17 @@ describe('section registry', () => {
     expect(SectionRegistrySchema.safeParse(SECTION_REGISTRY).success).toBe(true);
   });
 
-  it('has unique ids, orders and search aliases', () => {
+  it('has unique ids and orders and an icon per entry', () => {
     const ids = SECTION_REGISTRY.map(({ id }) => id);
     const orders = SECTION_REGISTRY.map(({ order }) => order);
-    const aliases = SECTION_REGISTRY.flatMap<string>(({ aliases }) => [...aliases]);
     expect(new Set(ids).size).toBe(9);
     expect(new Set(orders).size).toBe(9);
-    expect(new Set(aliases).size).toBe(aliases.length);
     for (const entry of SECTION_REGISTRY) {
-      expect(entry.aliases.length).toBeGreaterThan(0);
       expect(entry.icon.length).toBeGreaterThan(0);
-      expect(getSectionById(entry.id)).toBe(entry);
-      for (const alias of entry.aliases) {
-        expect(getSectionByAlias(alias)).toBe(entry);
-        expect(getSectionByAlias(`  ${alias.toUpperCase()}  `)).toBe(entry);
-      }
     }
   });
 
-  it('returns undefined for unknown ids and aliases', () => {
-    expect(getSectionById('missing')).toBeUndefined();
-    expect(getSectionByAlias('missing')).toBeUndefined();
-    expect(getSectionByAlias('')).toBeUndefined();
-    expect(getSectionByAlias('care')).toBeUndefined();
-  });
-
-  it('resolves prototype anchors as aliases without breaking existing section labels', () => {
-    expect(getSectionByAlias('sec-about')?.id).toBe('sec-readme');
-    expect(getSectionByAlias('sec-live-perf')?.id).toBe('sec-live-metrics');
+  it('keeps each srLabel equal to the section label table in both locales', () => {
     for (const { id, srLabel } of SECTION_REGISTRY) {
       for (const locale of Object.values(SITE_LOCALE)) {
         expect(SECTION_LABELS[locale][id]).toBe(srLabel[locale]);
@@ -119,7 +102,7 @@ describe('section registry', () => {
   });
 
   it('rejects invalid content and duplicate destinations at the schema boundary', () => {
-    const entries = SECTION_REGISTRY.map((entry) => ({ ...entry, aliases: [...entry.aliases] }));
+    const entries = SECTION_REGISTRY.map((entry) => ({ ...entry }));
     for (const patch of [
       { id: '' },
       { id: ' bio ' },
@@ -127,17 +110,11 @@ describe('section registry', () => {
       { label: ' Home ' },
       { srLabel: '' },
       { srLabel: ' Home ' },
-      { aliases: [] },
-      { aliases: [''] },
-      { aliases: ['Home'] },
-      { aliases: [' home '] },
       { order: 0 },
       { order: 1.5 },
       { icon: 'missing' },
       { id: entries[1]?.id },
       { order: entries[1]?.order },
-      { aliases: entries[1]?.aliases },
-      { aliases: ['home', ' HOME '] },
     ]) {
       const result = SectionRegistrySchema.safeParse([
         { ...entries[0], ...patch },
@@ -183,12 +160,12 @@ describe('navigation content', () => {
     expect(HOME_SECTION_ID).toBe(SECTION_REGISTRY[0].id);
   });
 
-  it('rejects a protocol-relative site link and a missing reduced-motion label', () => {
+  it('rejects a protocol-relative site link and a missing motion label', () => {
     const offsite = clone();
     at(offsite.siteLinks, 0).href = '//evil.example';
     expect(schema.safeParse(offsite).success).toBe(false);
     const unlabeled = clone() as unknown as { copy: Record<string, string> };
-    unlabeled.copy.motionReduced = '';
+    unlabeled.copy.motionOff = '';
     expect(schema.safeParse(unlabeled).success).toBe(false);
   });
 

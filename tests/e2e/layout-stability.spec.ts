@@ -7,6 +7,7 @@ import {
 } from '@playwright/test';
 import { heightOf, settleFrames, VIEWPORTS } from './_helpers/geometry';
 import { waitForHydration } from './_helpers/hydration';
+import { freezeMotion } from './_helpers/motion';
 
 const { PHONE, TABLET, DESKTOP } = VIEWPORTS;
 const SUBPIXEL_PX = 1;
@@ -44,7 +45,7 @@ test.describe('the interactive shell keeps its height while an answer is pending
       page,
     }) => {
       await page.setViewportSize(viewport);
-      await page.emulateMedia({ reducedMotion: 'reduce' });
+      await freezeMotion(page);
       let release: () => void = () => undefined;
       const gate = new Promise<void>((resolve) => {
         release = resolve;
@@ -96,7 +97,8 @@ test.describe('the measured section keeps its height when its data resolves', ()
       const loading = await heightOf(fallbackPage, '#sec-live-metrics');
       await fallback.close();
 
-      const live = await contextFor(browser, baseURL, { viewport, reducedMotion: 'reduce' });
+      const live = await contextFor(browser, baseURL, { viewport });
+      await freezeMotion(live);
       const livePage = await live.newPage();
       await livePage.goto('/');
       await expect(livePage.locator(PENDING_DATA)).toHaveCount(0);
@@ -133,8 +135,8 @@ test.describe('the timezone panel keeps its height when the live panel mounts', 
           viewport,
           locale,
           timezoneId,
-          reducedMotion: 'reduce',
         });
+        await freezeMotion(live);
         const livePage = await live.newPage();
         await livePage.clock.setFixedTime(FIXED_NOW);
         await livePage.goto(path);

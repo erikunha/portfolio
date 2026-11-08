@@ -243,7 +243,7 @@ against this chapter.
 
 ## 7. CSS & Visual System
 
-**Rule.** All brand colors and font definitions live in `app/css/theme.css` under a single `@theme {}` block — these become Tailwind utility classes (`text-primary-500`, `bg-primary-500`, `border-primary-subtle`, etc.). Standard Tailwind utilities handle all spacing, typography, layout, and responsive breakpoints. Complex CSS that cannot be expressed as utilities — CRT scanlines, phosphor glow, `@keyframes`, pseudo-element overlays — lives in `app/css/components-*.css` under `@layer components` as named classes (`.crt-scanlines`, `.signal-glow`, `.boot-cursor`). No CSS module files exist anywhere in the project. The palette is two semantic roles: `--color-primary-500` (#00FF41) for headings/accents/large text only; `--color-tertiary-50` (#E6FFE6, ~13:1 contrast) for body. `--color-primary-500` is never used for paragraph text — it fails WCAG AA at body size. 1px borders, sharp corners.
+**Rule.** All brand colors and font definitions live in `app/css/theme.css` under a single `@theme {}` block — these become Tailwind utility classes (`text-primary-500`, `bg-primary-500`, `border-primary-subtle`, etc.). Standard Tailwind utilities handle all spacing, typography, layout, and responsive breakpoints. Complex CSS that cannot be expressed as utilities — CRT scanlines, phosphor glow, `@keyframes`, pseudo-element overlays — lives in `app/css/components-*.css` under `@layer components` as named classes (`.crt-scanlines`, `.signal-glow`, `.boot-cursor`). No CSS module files exist anywhere in the project. The palette is two semantic roles: `--color-primary-500` (#00FF41) for headings/accents/large text only; `--color-tertiary-50` (#E6FFE6, ~13:1 contrast) for body. `--color-primary-500` is never used for paragraph text — it fails WCAG AA at body size. `__tests__/signal-color-sentences.test.tsx` renders the sections and reading pages and fails when a stylesheet rule colours a class that carries a sentence with it. 1px borders, sharp corners.
 
 **Rationale.** Tailwind v4 eliminates the authoring friction of typing raw `@media (max-width: 768px)` literals at every responsive override site. `md:` and `lg:` prefixes encode the breakpoint contract directly in the markup, colocated with the layout intent. `@theme` is the superior reference-system artifact: it is the current industry standard for design tokens in Next.js projects, readable by any senior frontend reviewer, and enforced by the same single-source-of-truth discipline the old Style Dictionary provided — without the build pipeline. PostCSS returns to the stack exclusively as the `@tailwindcss/postcss` plugin; no other PostCSS transformations are applied.
 
@@ -260,7 +260,7 @@ exactly 100. Every interactive client component has a behavioral accessibility
 test asserting tab order, focus visibility, keyboard activation, and screen-
 reader announcement. Streaming UI emits discrete DOM nodes per chunk that React
 owns — never a `textContent` mutation on a shared node inside an `aria-live`
-region. All CRT motion effects are disabled under `prefers-reduced-motion: reduce`.
+region. All CRT motion effects are disabled while the MOTION switch is off (`body[data-motion="reduce"]`).
 
 **Rationale.** A11y is a unit test, not a final-phase audit: a regression in tab
 order or a missing `role="alert"` is a behavior change and should fail like any
@@ -275,8 +275,7 @@ Per-component behavioral a11y tests, for example
 `components/client/ContactForm/ContactForm.test.tsx` (tab order, `role`/`aria-live` error
 region, keyboard-activatable submit), `components/client/ContactTimezone/ContactTimezone.test.tsx`
 (combobox roles, keyboard path and `aria-activedescendant`, minutes-only live region, named map, the link back to the message field) and `components/client/InteractiveShell/InteractiveShell.test.tsx`, which run
-inside `pnpm test`. `prefers-reduced-motion` coverage is exercised by the
-`cross-cutting.spec.ts` e2e spec in the required `e2e-functional` job.
+inside `pnpm test`. MOTION switch coverage (first visit on, off persists, no stylesheet or source reads the operating system preference) is exercised by `motion-switch.spec.ts`, `cross-cutting.spec.ts` and `__tests__/motion-single-switch.test.ts`.
 
 ---
 

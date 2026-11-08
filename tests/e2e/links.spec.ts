@@ -1,5 +1,6 @@
 import { expect, type Page, test } from '@playwright/test';
 import { SITE_HTML_LANG, SITE_LOCALE } from '@/content/site-locale';
+import { freezeMotion, MOTION_CHOICE, MOTION_STORAGE_KEY } from './_helpers/motion';
 import { gotoSettled } from './_helpers/streamed';
 
 const LANGUAGE_NAV_NAME = /^(Idioma|Language)$/;
@@ -151,14 +152,17 @@ test.describe('/links link-in-bio', () => {
     const identity = page.locator('.links-identity-box');
 
     await page.clock.install();
-    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await freezeMotion(page);
     await page.goto('/links');
     await expect(identity).toContainText(title);
     const first = await identity.textContent();
     await page.clock.runFor(600);
     expect(await identity.textContent(), 'reduced motion must not type').toBe(first);
 
-    await page.emulateMedia({ reducedMotion: 'no-preference' });
+    await page.evaluate(([key, value]) => localStorage.setItem(key, value), [
+      MOTION_STORAGE_KEY,
+      MOTION_CHOICE.on,
+    ] as const);
     await page.reload();
     const samples = new Set<string | null>();
     await expect
@@ -294,4 +298,48 @@ test('shows no next-video teaser or launch status once the channel has a latest 
   await page.goto('/links/en');
   await expect(page.locator('.links-ticker-track')).toHaveCount(0);
   await expect(page.locator('main')).not.toContainText(/first videos|\bsoon\b/);
+});
+
+const FONT_REQUEST = /\/_next\/static\/media\/([a-z_]+?)_?(\d+)?-s\./;
+const DISPLAY_FACE = 'inter';
+const MONO_FACE = 'jetbrains_mono';
+const MONO_WEIGHTS = ['400', '700'];
+
+async function fontFacesRequested(page: Page, path: string): Promise<string[]> {
+  const faces: string[] = [];
+  page.on('request', (request) => {
+    if (request.resourceType() !== 'font') return;
+    const match = FONT_REQUEST.exec(request.url());
+    if (match) faces.push(`${match[1]}:${match[2] ?? ''}`);
+  });
+  await page.goto(path, { waitUntil: 'networkidle' });
+  return faces;
+}
+
+test.describe('font payload', () => {
+  for (const path of ['/links', '/links/en']) {
+    test(`${path} downloads only the mono faces its text uses: the display face belongs to a visible h1 and a face no rule asks for is dead weight in the Lighthouse mobile LCP model`, async ({
+      page,
+    }) => {
+      const faces = await fontFacesRequested(page, path);
+      expect(faces.length, 'the page paints text, so at least one face loads').toBeGreaterThan(0);
+      expect(
+        faces.filter((face) => !face.startsWith(`${MONO_FACE}:`)),
+        'the sr-only h1 must not pull the display face',
+      ).toEqual([]);
+      expect(
+        faces
+          .map((face) => face.split(':')[1] ?? '')
+          .filter((weight) => !MONO_WEIGHTS.includes(weight)),
+        'only the 400 and 700 mono faces are declared',
+      ).toEqual([]);
+    });
+  }
+
+  test('the homepage still loads the display face for its visible h1, so the guard above is not vacuous', async ({
+    page,
+  }) => {
+    const faces = await fontFacesRequested(page, '/');
+    expect(faces.some((face) => face.startsWith(`${DISPLAY_FACE}:`))).toBe(true);
+  });
 });

@@ -3,6 +3,7 @@ import { execFileSync } from 'node:child_process';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import {
+  CHANGELOG_HEADER,
   type ChangelogGroups,
   mergeChangelogGroups,
   parseChangelogGroups,
@@ -11,18 +12,6 @@ import {
 
 const ROOT = join(import.meta.dirname, '..');
 const CHANGELOG_PATH = join(ROOT, 'app/(en)/design-system/changelog/page.mdx');
-
-const HEADER = `import { dsPageMetadata } from '../_lib/page-metadata';
-
-export const metadata = dsPageMetadata({
-  slug: 'changelog',
-  title: 'Changelog — Design System — erikunha.dev',
-  description: 'Design system token and component changelog',
-});
-
-# CHANGELOG
-
-`;
 
 function parseCommits(): ChangelogGroups {
   const raw = execFileSync('git', ['log', '--format=%ad|%s', '--date=short', '--no-merges'], {
@@ -53,6 +42,6 @@ function parseCommits(): ChangelogGroups {
 
 const existing = parseChangelogGroups(readFileSync(CHANGELOG_PATH, 'utf8'));
 const merged = mergeChangelogGroups(existing, parseCommits());
-const content = `${HEADER}${renderChangelogGroups(merged)}\n`;
+const content = `${CHANGELOG_HEADER}${renderChangelogGroups(merged)}\n`;
 writeFileSync(CHANGELOG_PATH, content);
 console.log(`changelog: wrote ${merged.size} date group(s) to ${CHANGELOG_PATH}`);

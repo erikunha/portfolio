@@ -2,6 +2,7 @@ import { expect, type Page, type TestInfo, test } from '@playwright/test';
 import { DEFERRED_SECTION_COUNT } from '../../components/responsive/Module/module.constants';
 import { waitForHydration } from './_helpers/hydration';
 import { installMockBackend } from './_helpers/mock-backend';
+import { freezeMotion } from './_helpers/motion';
 import { gotoSettled } from './_helpers/streamed';
 
 const SHELL_INPUT = '[aria-label="shell command"]';
@@ -220,8 +221,9 @@ test.describe('cross-cutting', () => {
     expect(csp).toContain("'self'");
   });
 
-  test('3 — prefers-reduced-motion disables decorative animations', async ({ browser }) => {
-    const context = await browser.newContext({ reducedMotion: 'reduce' });
+  test('3 — the MOTION switch off disables decorative animations', async ({ browser }) => {
+    const context = await browser.newContext();
+    await freezeMotion(context);
     const page = await context.newPage();
     try {
       await installMockBackend(page, { log: 'accept', forget: 'happy' });
@@ -254,7 +256,7 @@ test.describe('cross-cutting', () => {
           Number(result.opacity) === 0;
         expect(
           disabled,
-          `${selector} should be motion-suppressed under prefers-reduced-motion (got ${JSON.stringify(result)})`,
+          `${selector} should be motion-suppressed while the MOTION switch is off (got ${JSON.stringify(result)})`,
         ).toBe(true);
         asserted++;
       }
@@ -383,7 +385,7 @@ test('footer is server-rendered and boot output is decorative under reduced moti
   await noScript.close();
 
   await installMockBackend(page, { log: 'accept', forget: 'happy' });
-  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await freezeMotion(page);
   await page.goto('/');
   await expect(page.locator('.hero-boot-desktop')).toHaveAttribute('aria-hidden', 'true');
   await expect(page.locator('.hero-boot-mobile')).toHaveAttribute('aria-hidden', 'true');

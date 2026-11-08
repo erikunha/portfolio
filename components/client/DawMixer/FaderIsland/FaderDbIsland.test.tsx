@@ -2,9 +2,18 @@ import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { afterEach, describe, expect, it } from 'vitest';
 import { mountClient } from '@/__tests__/helpers/render';
+import { dawMixerCopy } from '@/content/daw-mixer';
+import { SITE_LOCALE } from '@/content/site-locale';
 import { FaderDbIsland, pctToDb } from './FaderDbIsland.client';
 
-const LABELS = { decibelUnit: 'dB', loudnessLabel: 'LUFS', peakLabel: 'PK' };
+const CONTROLS = dawMixerCopy[SITE_LOCALE.en].controls;
+
+const LABELS = {
+  decibelUnit: 'dB',
+  loudnessLabel: 'LUFS',
+  peakLabel: 'PK',
+  faderLabel: CONTROLS.fader,
+};
 
 describe('pctToDb — formula', () => {
   it('returns "-∞" for 0%', () => {
@@ -80,7 +89,12 @@ describe('FaderDbIsland — initial render', () => {
 });
 
 describe('FaderDbIsland — labels come from props', () => {
-  const custom = { decibelUnit: 'unit-x', loudnessLabel: 'loud-x', peakLabel: 'peak-x' };
+  const custom = {
+    decibelUnit: 'unit-x',
+    loudnessLabel: 'loud-x',
+    peakLabel: 'peak-x',
+    faderLabel: CONTROLS.fader,
+  };
 
   it('renders the unit and footer labels it is given', () => {
     const html = renderToStaticMarkup(

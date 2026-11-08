@@ -49,48 +49,10 @@ export function IconShell() {
   );
 }
 
-export function IconLivePerf() {
-  return (
-    <svg {...baseProps}>
-      <path d="M3 18l5-6 4 4 5-7 4 5" />
-      <path d="M3 21h18" />
-    </svg>
-  );
-}
-
-export function IconPerfReceipts() {
-  return (
-    <svg {...baseProps}>
-      <path d="M3 21V3M3 21h18M7 17V10M11 17V7M15 17V12M19 17V5" />
-    </svg>
-  );
-}
-
 export function IconGuitar() {
   return (
     <svg {...baseProps}>
       <path d="M6 3v11a3 3 0 1 0 3 3V6h7V3z" />
-    </svg>
-  );
-}
-
-export function IconCredentials() {
-  return (
-    <svg {...baseProps}>
-      <rect x="3" y="6" width="18" height="13" />
-      <path d="M3 10h18" />
-      <path d="M7 15h4" />
-    </svg>
-  );
-}
-
-export function IconCommunity() {
-  return (
-    <svg {...baseProps}>
-      <circle cx="9" cy="8" r="3" />
-      <path d="M3 20a6 6 0 0 1 12 0" />
-      <circle cx="17" cy="9" r="2.5" />
-      <path d="M14 20a5 5 0 0 1 7-4.6" />
     </svg>
   );
 }

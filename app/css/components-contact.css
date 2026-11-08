@@ -399,12 +399,6 @@
     box-shadow: var(--shadow-glow);
   }
 
-  @media (prefers-reduced-motion: reduce) {
-    .contact-send {
-      transition: none;
-    }
-  }
-
   body[data-motion="reduce"] .contact-send {
     transition: none;
   }
@@ -482,12 +476,6 @@
     25%,
     100% {
       opacity: 0;
-    }
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .ctz-spin-frame {
-      animation: none;
     }
   }
 
@@ -1101,13 +1089,6 @@
 
     .ctz-propose {
       flex: 1 1 100%;
-    }
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .ctz-pulse,
-    .ctz-route {
-      animation: none;
     }
   }
 

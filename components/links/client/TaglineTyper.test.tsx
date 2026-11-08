@@ -5,11 +5,12 @@ import { TaglineTyper } from './TaglineTyper.client';
 
 const PHRASES = ['Senior Full-Stack Engineer', 'AI Engineering na prática'];
 
-function mockMotion(prefersReduced: boolean) {
+function setMotion(on: boolean) {
+  localStorage.setItem('erik.motion', on ? 'on' : 'off');
   vi.stubGlobal(
     'matchMedia',
     vi.fn().mockReturnValue({
-      matches: prefersReduced,
+      matches: true,
       addEventListener: vi.fn(),
       removeEventListener: vi.fn(),
     }),
@@ -39,7 +40,7 @@ describe('TaglineTyper', () => {
   });
 
   it('types by mutating textContent rather than re-rendering per character', () => {
-    mockMotion(false);
+    setMotion(true);
     const { container } = render(<TaglineTyper phrases={PHRASES} />);
     const visible = container.querySelector('[aria-hidden="true"]');
     expect(visible).not.toBeNull();
@@ -52,7 +53,7 @@ describe('TaglineTyper', () => {
   });
 
   it('stops on the first phrase when MOTION turns off and types again when it turns on', () => {
-    mockMotion(false);
+    setMotion(true);
     const { container } = render(<TaglineTyper phrases={PHRASES} />);
     const visible = container.querySelector('[aria-hidden="true"]');
     vi.advanceTimersByTime(210);
@@ -71,8 +72,8 @@ describe('TaglineTyper', () => {
     expect(visible?.textContent).not.toBe(PHRASES[0]);
   });
 
-  it('holds the full phrase still when the visitor prefers reduced motion', () => {
-    mockMotion(true);
+  it('holds the full phrase still when the MOTION switch is off, whatever the system asks', () => {
+    setMotion(false);
     const { container } = render(<TaglineTyper phrases={PHRASES} />);
     const visible = container.querySelector('[aria-hidden="true"]');
 
@@ -81,7 +82,7 @@ describe('TaglineTyper', () => {
   });
 
   it('gives screen readers every phrase as static text, which never changes while typing', () => {
-    mockMotion(false);
+    setMotion(true);
     const { container } = render(<TaglineTyper phrases={PHRASES} />);
     const staticText = container.querySelector('.sr-only');
     const before = staticText?.textContent;
@@ -93,7 +94,7 @@ describe('TaglineTyper', () => {
   });
 
   it('holds no live region, so the typing cycle never announces itself every few seconds', () => {
-    mockMotion(false);
+    setMotion(true);
     const { container } = render(<TaglineTyper phrases={PHRASES} />);
 
     expect(container.querySelector('[role="status"]')).toBeNull();
@@ -101,7 +102,7 @@ describe('TaglineTyper', () => {
   });
 
   it('stops its timers on unmount', () => {
-    mockMotion(false);
+    setMotion(true);
     const { unmount, container } = render(<TaglineTyper phrases={PHRASES} />);
     const visible = container.querySelector('[aria-hidden="true"]');
     const before = visible?.textContent;

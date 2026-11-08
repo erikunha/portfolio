@@ -1,10 +1,10 @@
 import type { WorldMap } from '@/content/schemas';
+import { HOURS_PER_DAY } from '../time';
+import { DEGREES_PER_HOUR } from './zones';
 
 export const DOT_PX = 4;
 export const DOT_GAP_PX = 2;
 
-const HOURS_PER_DAY = 24;
-const DEGREES_PER_HOUR = 15;
 const HALF_CIRCLE_DEGREES = 180;
 const LIT_FROM_HOUR = 9;
 const LIT_UNTIL_HOUR = 18;

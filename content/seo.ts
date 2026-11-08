@@ -11,7 +11,7 @@ export const personSchema = {
   name: profile.fullName,
   alternateName: profile.displayName,
   jobTitle: profile.title,
-  url: 'https://www.erikunha.dev',
+  url: social.site,
   email: social.email,
   telephone: PHONE_NUMBER,
   knowsLanguage: profile.languages.map((language) => ({
@@ -169,8 +169,25 @@ z.object({
   email: z.string().email(),
 }).parse(personSchema);
 
-export const SITE_NAME = 'erikunha.dev';
-export const OG_LOCALE = 'en_US';
+export const SITE_NAME = social.siteLabel;
+
+export const SITE_KEYWORDS: string[] = [
+  profile.title,
+  'Applied AI',
+  'LLM Systems',
+  'LLM Evaluation',
+  'Agents',
+  'Guardrails',
+  'Angular',
+  'React',
+  'Next.js',
+  'Node.js',
+  'TypeScript',
+  'PCI-DSS',
+  'Healthcare',
+  'E-commerce',
+  'AI-native SaaS',
+];
 export const OG_IMAGE_PATH = '/og.png';
 const OG_IMAGE_WIDTH = 1200;
 const OG_IMAGE_HEIGHT = 630;

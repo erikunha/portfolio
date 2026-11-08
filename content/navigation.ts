@@ -8,6 +8,7 @@ import {
   TOPBAR_READING_LINK,
   type TopbarNavLink,
 } from './nav';
+import { offlineNotice } from './offline';
 import { CV_LINK_LABEL, READING_PATHS } from './reading-paths';
 import {
   localizedSectionLabel,
@@ -16,6 +17,7 @@ import {
   type SectionId,
   sectionPath,
 } from './section-registry';
+import type { OfflineNotice } from './shell-states.schema';
 import { localizedPath, SITE_LOCALE, type SiteLocale } from './site-locale';
 import { LINKEDIN_URL } from './social-urls';
 
@@ -53,7 +55,6 @@ export type NavigationCopy = {
   dockLabel: string;
   motionOn: string;
   motionOff: string;
-  motionReduced: string;
   langSwitchLabel: string;
   skipLabel: string;
   siteNavLabel: string;
@@ -78,9 +79,8 @@ const navigationFor = (locale: SiteLocale): Navigation => {
       openMenu: pt ? 'Abrir menu' : 'Open menu',
       closeDrawer: pt ? '[ X ] FECHAR' : '[ X ] CLOSE',
       dockLabel: pt ? 'principal' : 'primary',
-      motionOn: 'MOTION: ON',
-      motionOff: 'MOTION: OFF',
-      motionReduced: 'MOTION: REDUCED',
+      motionOn: 'ON',
+      motionOff: 'OFF',
       langSwitchLabel: pt ? 'Idioma' : 'Language',
       skipLabel: pt ? 'Pular para o conteúdo' : 'Skip to main content',
       siteNavLabel: pt ? 'Navegação do site' : 'Site navigation',
@@ -223,6 +223,7 @@ export type SiteNavChrome = {
   topbarHire: TopbarNavLink & { accessibleName: string };
   sectionHrefs: Readonly<Record<string, string>>;
   dockKeyBySection: Readonly<Record<string, DockKey>>;
+  offline: OfflineNotice;
 };
 
 export function siteNavChrome(locale: SiteLocale): SiteNavChrome {
@@ -239,5 +240,6 @@ export function siteNavChrome(locale: SiteLocale): SiteNavChrome {
     dockKeyBySection: Object.fromEntries(
       groups.flatMap((group) => group.sectionIds.map((id) => [id, group.dock])),
     ),
+    offline: offlineNotice[locale],
   };
 }

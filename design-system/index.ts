@@ -14,4 +14,3 @@ export type { TerminalPanelProps } from './components/TerminalPanel/TerminalPane
 export { TerminalPanel } from './components/TerminalPanel/TerminalPanel';
 export type { WindowChromeProps } from './components/WindowChrome/WindowChrome';
 export { WindowChrome } from './components/WindowChrome/WindowChrome';
-export { cx } from './lib/cx';
