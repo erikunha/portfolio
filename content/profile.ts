@@ -1,9 +1,8 @@
+import { FACT_SEPARATOR } from './fact-separator';
 import { perfReceipts } from './perf-receipts';
-import { type Profile, ProfileSchema } from './schemas';
+import { ContextFactsSchema, type Profile, ProfileSchema } from './schemas';
 import { SITE_LOCALE, type SiteLocale } from './site-locale';
 import { social } from './social';
-
-const TECHNOLOGY_SEPARATOR = ' · ';
 
 export const YEARS_OF_EXPERIENCE = 8;
 export const YEARS_OF_EXPERIENCE_LABEL = `${YEARS_OF_EXPERIENCE}+ years`;
@@ -43,7 +42,7 @@ const profileFields = ProfileSchema.parse({
   currentEmployer: {
     name: 'Raylu',
     url: 'https://raylu.ai',
-    context: 'AI deal origination · private markets',
+    contextFacts: ['AI deal origination', 'private markets'],
   },
   languages: [
     {
@@ -91,16 +90,16 @@ export const profileStack = {
 
 export const profile: Profile = {
   ...profileFields,
-  technologyLine: [profileFields.stackLine, profileFields.aiLine].join(TECHNOLOGY_SEPARATOR),
+  technologyLine: [profileFields.stackLine, profileFields.aiLine].join(FACT_SEPARATOR),
 };
 
-const LANGUAGE_SEPARATOR = ' · ';
 const WORKING_LANGUAGE_LEVELS: readonly string[] = ['native', 'C2', 'C1'];
 
 export type ProfilePresentation = {
   title: string;
   country: string;
   availability: string;
+  employerContextFacts: readonly string[];
   employerContext: string;
   workingLanguageLine: string;
   languagesLine: string;
@@ -117,21 +116,22 @@ const presentation = (locale: SiteLocale): ProfilePresentation => {
   const title = pt ? 'Engenheiro de Software Sênior, IA Aplicada' : profile.title;
   const country = pt ? 'Brasil' : profile.country;
   const availability = pt ? 'disponível agora' : profile.availability;
-  const employerContext = pt
-    ? 'originação de negócios com IA · mercados privados'
-    : profile.currentEmployer.context;
+  const employerContextFacts = pt
+    ? ContextFactsSchema.parse(['originação de negócios com IA', 'mercados privados'])
+    : profile.currentEmployer.contextFacts;
+  const employerContext = employerContextFacts.join(FACT_SEPARATOR);
   const levelWord = (level: string) => (pt && level === 'native' ? 'nativo' : level);
   const languageCell = (label: string, level: string) => `${label} ${levelWord(level)}`;
   const workingLanguageLine = profile.languages
     .filter((language) => WORKING_LANGUAGE_LEVELS.includes(language.level))
     .map((language) => languageCell(language.label, language.level))
-    .join(LANGUAGE_SEPARATOR);
+    .join(FACT_SEPARATOR);
   const languagesLine = profile.languages
     .map((language) => `${language.label} (${levelWord(language.level)})`)
-    .join(LANGUAGE_SEPARATOR);
+    .join(FACT_SEPARATOR);
   const languageLevelsLine = profile.languages
     .map((language) => languageCell(language.label, language.level))
-    .join(LANGUAGE_SEPARATOR);
+    .join(FACT_SEPARATOR);
   const location = `${country} · ${profile.timezone} · ${availability}`;
   const tagline = `${title} · ${profile.technologyLine}`;
   const summary = `${title}. ${location}. ${profile.currentEmployer.name}: ${employerContext}.`;
@@ -139,6 +139,7 @@ const presentation = (locale: SiteLocale): ProfilePresentation => {
     title,
     country,
     availability,
+    employerContextFacts,
     employerContext,
     workingLanguageLine,
     languagesLine,
@@ -159,10 +160,9 @@ export const profilePresentation: Record<SiteLocale, ProfilePresentation> = {
 const englishPresentation = profilePresentation[SITE_LOCALE.en];
 
 export const profileLocation = englishPresentation.location;
-export const profileCityLine = `${profile.city}, ${profile.country}`;
 
 export const formatLanguages = (languages: typeof profile.languages) =>
-  languages.map((language) => `${language.label} (${language.level})`).join(LANGUAGE_SEPARATOR);
+  languages.map((language) => `${language.label} (${language.level})`).join(FACT_SEPARATOR);
 
 export const profileLanguageLine = englishPresentation.languageLevelsLine;
 export const profileWorkingLanguageLine = englishPresentation.workingLanguageLine;

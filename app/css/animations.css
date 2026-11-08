@@ -85,18 +85,6 @@
       0 0 8px var(--color-secondary-950);
   }
 
-  .hero-dialog-desktop {
-    position: absolute;
-    left: 24px;
-    right: 24px;
-    bottom: 24px;
-    z-index: 2;
-    font-size: 12px;
-    margin: 0;
-    color: var(--color-primary-500);
-    font-family: var(--font-mono);
-  }
-
   .hero-boot-mobile {
     color: var(--color-tertiary-50);
     font-size: 12px;
@@ -188,132 +176,10 @@
     transition: none;
   }
 
-  @keyframes dmesg-reveal {
-    from {
-      opacity: 0;
-      transform: translateY(2px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-
-  .dmesg-line {
-    opacity: 0;
-    transform: translateY(2px);
-  }
-
-  .dmesg-booted .dmesg-line {
-    animation: dmesg-reveal 220ms ease both;
-  }
-
-  @keyframes sd-halt-reveal {
-    from {
-      opacity: 0;
-      transform: translateY(2px);
-      box-shadow: none;
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-      box-shadow:
-        0 0 18px var(--color-glow-45),
-        0 0 40px var(--color-glow-15);
-    }
-  }
-
-  @keyframes sd-halt-hint-reveal {
-    from {
-      opacity: 0;
-    }
-    to {
-      opacity: 1;
-    }
-  }
-
-  .halt-plate {
-    opacity: 0;
-    transform: translateY(2px);
-  }
-
-  .halt-hint {
-    opacity: 0;
-  }
-
-  .halt-booted .halt-plate {
-    animation: sd-halt-reveal 280ms ease 660ms both;
-  }
-
-  .halt-booted .halt-hint {
-    animation: sd-halt-hint-reveal 280ms ease 840ms both;
-  }
-
-  body[data-motion="reduce"] .dmesg-line,
-  body[data-motion="reduce"] .dmesg-booted .dmesg-line,
-  body[data-motion="reduce"] .halt-plate,
-  body[data-motion="reduce"] .halt-booted .halt-plate,
-  body[data-motion="reduce"] .halt-hint,
-  body[data-motion="reduce"] .halt-booted .halt-hint {
-    opacity: 1;
-    transform: none;
-    transition: none;
-    animation: none;
-  }
-
-  body[data-motion="reduce"] .halt-booted .halt-plate {
-    box-shadow:
-      0 0 18px var(--color-glow-45),
-      0 0 40px var(--color-glow-15);
-  }
-
-  @keyframes barpulse {
-    0%,
-    100% {
-      opacity: 0.85;
-    }
-    50% {
-      opacity: 1;
-      box-shadow: 0 0 8px var(--color-primary-500);
-    }
-  }
-
-  .bar-pulse > i {
-    animation: barpulse 2.4s ease-in-out infinite;
-  }
-
-  body[data-motion="reduce"] .bar-pulse > i {
-    animation: none;
-    opacity: 0;
-  }
-
   @keyframes live-blink {
     to {
       opacity: 0;
     }
-  }
-
-  .live-dot {
-    --live-dot-size: 8px;
-    display: inline-block;
-    width: var(--live-dot-size);
-    height: var(--live-dot-size);
-    margin-right: var(--spacing-2);
-    border-radius: 0;
-    background: var(--color-primary-500);
-    vertical-align: -1px;
-    animation: live-blink 1.6s steps(2, start) infinite;
-  }
-
-  @media (max-width: 767.98px) {
-    .live-dot {
-      --live-dot-size: 6px;
-    }
-  }
-
-  body[data-motion="reduce"] .live-dot {
-    animation: none;
-    opacity: 0;
   }
 
   .status-dot {
@@ -491,7 +357,6 @@
     display: none;
   }
 
-  .live-dot,
   .crt-flicker,
   .crt-scan-beam,
   .crt-noise {

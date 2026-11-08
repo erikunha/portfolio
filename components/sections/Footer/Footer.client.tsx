@@ -4,25 +4,18 @@ import { type ReactNode, useCallback, useEffect, useRef } from 'react';
 import { MAIN_CONTENT_ID } from '@/components/PageMain';
 import type { FooterContent } from '@/content/schemas';
 import { isRendered } from '@/lib/dom/is-rendered';
+import { SHELL_COMMAND_EVENT } from '@/lib/events';
 import { useLastRef } from '@/lib/request-refs.client';
+import { MS_PER_SECOND, pad2, SECONDS_PER_HOUR, SECONDS_PER_MINUTE } from '@/lib/time';
 import { RefCopyButton } from '../../client/RefChip/RefChip.client';
 
 const EMPTY_SECTION_IDS: string[] = [];
-const SECOND_MS = 1000;
-const SECONDS_PER_MINUTE = 60;
-const SECONDS_PER_HOUR = SECONDS_PER_MINUTE * SECONDS_PER_MINUTE;
-const CLOCK_DIGITS = 2;
-const CLOCK_ZERO = '0';
 const PERCENT = 100;
 const SECTION_READING_BAND = '-40% 0px -40% 0px';
-const COMMAND_EVENT = 'shell-cmd-run';
-const SCROLL_EVENT = 'scroll';
-const VISIBILITY_EVENT = 'visibilitychange';
 const EDITABLE_SELECTOR =
   'input, textarea, select, [contenteditable]:not([contenteditable="false"]), [role="textbox"]';
 const HEADING_SELECTOR = 'main h1, main [role="heading"][aria-level="1"]';
 const FOOTER_SELECTOR = 'footer';
-const KEYDOWN_EVENT = 'keydown';
 const SCROLL_BEHAVIOR = 'instant';
 const HOME_SELECTOR = `#${MAIN_CONTENT_ID}`;
 const MOBILE_HERO_SELECTOR = '[data-testid="hero-mobile"]';
@@ -41,7 +34,7 @@ function formatUptime(seconds: number) {
     Math.floor((seconds % SECONDS_PER_HOUR) / SECONDS_PER_MINUTE),
     seconds % SECONDS_PER_MINUTE,
   ]
-    .map((part) => String(part).padStart(CLOCK_DIGITS, CLOCK_ZERO))
+    .map(pad2)
     .join(':');
 }
 
@@ -65,7 +58,7 @@ export function SessionCounters({
     );
     const tick = () => {
       if (fields.uptime)
-        fields.uptime.textContent = formatUptime(Math.floor(performance.now() / SECOND_MS));
+        fields.uptime.textContent = formatUptime(Math.floor(performance.now() / MS_PER_SECOND));
     };
     const onCommand = () => {
       commands += 1;
@@ -96,7 +89,7 @@ export function SessionCounters({
       clearInterval(interval);
       if (!document.hidden) {
         tick();
-        interval = setInterval(tick, SECOND_MS);
+        interval = setInterval(tick, MS_PER_SECOND);
       }
     };
     const observer =
@@ -125,16 +118,16 @@ export function SessionCounters({
     tick();
     onScroll();
     onVisibility();
-    window.addEventListener(COMMAND_EVENT, onCommand);
-    window.addEventListener(SCROLL_EVENT, onScrollFrame, { passive: true });
-    document.addEventListener(VISIBILITY_EVENT, onVisibility);
+    window.addEventListener(SHELL_COMMAND_EVENT, onCommand);
+    window.addEventListener('scroll', onScrollFrame, { passive: true });
+    document.addEventListener('visibilitychange', onVisibility);
     return () => {
       clearInterval(interval);
       if (scrollFrame !== undefined) cancelAnimationFrame(scrollFrame);
       observer?.disconnect();
-      window.removeEventListener(COMMAND_EVENT, onCommand);
-      window.removeEventListener(SCROLL_EVENT, onScrollFrame);
-      document.removeEventListener(VISIBILITY_EVENT, onVisibility);
+      window.removeEventListener(SHELL_COMMAND_EVENT, onCommand);
+      window.removeEventListener('scroll', onScrollFrame);
+      document.removeEventListener('visibilitychange', onVisibility);
     };
   }, [sectionIds]);
 
@@ -147,7 +140,7 @@ export function HaltClock({ label }: { label: string }) {
     const now = new Date();
     if (clock.current)
       clock.current.textContent = [now.getHours(), now.getMinutes(), now.getSeconds()]
-        .map((part) => String(part).padStart(CLOCK_DIGITS, CLOCK_ZERO))
+        .map(pad2)
         .join(':');
   }, []);
   return (
@@ -202,8 +195,8 @@ export function RebootControl({ copy }: { copy: FooterContent['reboot'] }) {
       if (event.key.toLowerCase() !== copy.key.toLowerCase()) return;
       if (reboot()) event.preventDefault();
     };
-    scope.addEventListener(KEYDOWN_EVENT, onKeyDown);
-    return () => scope.removeEventListener(KEYDOWN_EVENT, onKeyDown);
+    scope.addEventListener('keydown', onKeyDown);
+    return () => scope.removeEventListener('keydown', onKeyDown);
   }, [copy.key, reboot]);
 
   return (

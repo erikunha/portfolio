@@ -331,7 +331,8 @@
     background: var(--color-primary-faint);
   }
 
-  .dock > [aria-current] {
+  .dock > [aria-current],
+  .dock > [data-current] {
     color: var(--color-primary-500);
     border-top-color: var(--color-primary-500);
   }
@@ -342,10 +343,15 @@
   }
 
   @media (max-width: 359.98px) {
+    .dock {
+      gap: 0;
+      padding-inline: var(--spacing-1);
+    }
+
     .dock > a,
     .dock > button {
-      letter-spacing: 0.04em;
-      padding-inline: 2px;
+      letter-spacing: 0;
+      padding-inline: 0;
     }
   }
 

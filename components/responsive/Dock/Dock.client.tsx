@@ -42,7 +42,7 @@ export function Dock() {
               aria-haspopup="dialog"
               aria-expanded={drawerOpen}
               aria-controls={DRAWER_ID}
-              aria-current={current}
+              data-current={current ? '' : undefined}
               onClick={(event) =>
                 drawerOpen ? closeDrawer(true) : openDrawer(event.currentTarget)
               }

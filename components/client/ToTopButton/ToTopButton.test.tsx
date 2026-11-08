@@ -43,13 +43,23 @@ describe('ToTopButton', () => {
     expect(window.scrollTo).toHaveBeenCalledWith({ top: 0, behavior: 'auto' });
   });
 
-  it('applies the show class when the page is scrolled past the threshold', () => {
+  it('is inert while hidden, so Tab cannot land on an invisible control', () => {
+    renderButton(SITE_LOCALE.en);
+    const button = screen.getByRole('button', { name: 'Back to top' });
+    expect(button.hasAttribute('inert'), 'a hidden to-top button must leave the tab order').toBe(
+      true,
+    );
+    expect(button.classList.contains('to-top-show')).toBe(false);
+  });
+
+  it('applies the show class and leaves the tab order open once the page is scrolled', () => {
     const originalScrollY = Object.getOwnPropertyDescriptor(window, 'scrollY');
     Object.defineProperty(window, 'scrollY', { value: 500, writable: true, configurable: true });
     try {
       renderButton(SITE_LOCALE.en);
       const button = screen.getByRole('button', { name: 'Back to top' });
       expect(button.classList.contains('to-top-show')).toBe(true);
+      expect(button.hasAttribute('inert')).toBe(false);
     } finally {
       if (originalScrollY) Object.defineProperty(window, 'scrollY', originalScrollY);
     }

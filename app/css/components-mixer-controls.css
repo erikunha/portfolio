@@ -6,7 +6,6 @@
     background: color-mix(in srgb, var(--color-primary-500) 3%, transparent);
     border: 1px solid var(--color-primary-quiet);
     cursor: ew-resize;
-    outline: none;
   }
 
   .fader-track::before {
@@ -19,11 +18,6 @@
     background: var(--color-primary-quiet);
     transform: translateY(-0.5px);
     pointer-events: none;
-  }
-
-  .fader-track:focus-visible {
-    outline: 2px solid var(--color-primary-500);
-    outline-offset: 2px;
   }
 
   .faderThumb {
@@ -64,12 +58,6 @@
     gap: 1px;
     padding: 1px;
     cursor: ew-resize;
-    outline: none;
-  }
-
-  .vu-meter:focus-visible {
-    outline: 2px solid var(--color-primary-500);
-    outline-offset: 2px;
   }
 
   .vuSegFilled {
@@ -96,19 +84,7 @@
     flex-direction: column;
     align-items: center;
     gap: 3px;
-    outline: none;
     user-select: none;
-  }
-
-  .knob-container:focus-visible {
-    outline: 2px solid var(--color-primary-500);
-    outline-offset: 2px;
-  }
-
-  .rms-active:focus-visible,
-  .rms-inactive:focus-visible {
-    outline: 2px solid var(--color-primary-500);
-    outline-offset: 2px;
   }
 
   .dbValue {

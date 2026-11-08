@@ -94,6 +94,9 @@
   --links-thumb-tint-reveal: 0.3;
   --links-thumb-reveal-duration: 200ms;
   --border-width: 1px;
+  --focus-ring-width: 2px;
+  --focus-ring-offset: 2px;
+  --focus-ring-offset-inset: -2px;
   --shadow-glow: 0 0 12px var(--color-primary-500);
   --stroke-width-icon: 1.4;
   --radius-none: 0;
@@ -196,7 +199,7 @@
 @layer base {
   :root {
     --space-gutter: clamp(16px, 4vw, 24px);
-    --space-page-top: var(--spacing-6);
+    --space-page-top: var(--spacing-8);
     --space-section: var(--spacing-8);
     --text-section-title: var(--text-base);
     --measure-page: 1200px;

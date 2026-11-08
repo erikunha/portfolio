@@ -54,6 +54,28 @@ afterEach(() => {
   vi.useRealTimers();
 });
 
+describe('LivePerfSection: strategies come from content', () => {
+  it('renders a content list that omits a strategy without reading a missing score', async () => {
+    vi.doMock('@/content/measured', async (importOriginal) => {
+      const original = await importOriginal<typeof import('@/content/measured')>();
+      const en = original.measured[SITE_LOCALE.en];
+      const desktopOnly = en.psi.strategies.filter((strategy) => strategy.key === 'desktop');
+      return {
+        ...original,
+        measured: {
+          ...original.measured,
+          [SITE_LOCALE.en]: { ...en, psi: { ...en.psi, strategies: desktopOnly } },
+        },
+      };
+    });
+    getScoresMock.mockResolvedValue(strategyScores({}));
+    const html = await renderPerfData();
+    vi.doUnmock('@/content/measured');
+    expect(getScoresMock).toHaveBeenCalledTimes(1);
+    expect(valuesOf(html)).toEqual(['99', '100', '95', '100']);
+  });
+});
+
 describe('LivePerfSection: fetch-error fallback', () => {
   it('renders without throwing when getScores throws for both strategies', async () => {
     getScoresMock.mockRejectedValue(new Error('PSI API unavailable'));

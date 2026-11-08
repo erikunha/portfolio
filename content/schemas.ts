@@ -1,11 +1,11 @@
 import { z } from 'zod';
+import { FACT_SEPARATOR } from './fact-separator';
 import { SECTION_ICONS } from './section-registry';
 
 export { SECTION_ICONS };
 export const SECTION_DESTINATION_COUNT = 9;
 const FIRST_SECTION_ORDER = 1;
 const MIN_SECTION_TEXT_LENGTH = 1;
-const MIN_ALIAS_COUNT = 1;
 
 export const CompanyUrlSchema = z.url({ protocol: /^https$/ });
 
@@ -22,15 +22,10 @@ const SectionTextSchema = z
     message: 'Section text must not have leading or trailing whitespace',
   });
 
-const SectionAliasSchema = SectionTextSchema.refine((alias) => alias === alias.toLowerCase(), {
-  message: 'Section aliases must be lowercase',
-});
-
 export const SectionSchema = z.object({
   id: SectionTextSchema,
   label: LocalizedTextSchema,
   srLabel: LocalizedTextSchema,
-  aliases: z.array(SectionAliasSchema).min(MIN_ALIAS_COUNT).readonly(),
   order: z.number().int().min(FIRST_SECTION_ORDER).max(SECTION_DESTINATION_COUNT),
   icon: z.enum(SECTION_ICONS),
 });
@@ -49,13 +44,6 @@ export const SectionRegistrySchema = z
   .refine((entries) => entries.every(({ order }, index) => order === FIRST_SECTION_ORDER + index), {
     message: 'Section orders must match array position and be contiguous from the first order',
   })
-  .refine(
-    (entries) => {
-      const aliases = entries.flatMap(({ aliases }) => aliases);
-      return new Set(aliases).size === aliases.length;
-    },
-    { message: 'Section aliases must be unique across all destinations' },
-  )
   .readonly();
 
 const DOCK_KEYS = ['home', 'work', 'shell', 'hire', 'menu'] as const;
@@ -550,6 +538,17 @@ export const CommunityEventSchema = z.object({
   statusLine: z.string().min(1),
 });
 
+export const ContextFactsSchema = z
+  .array(
+    z
+      .string()
+      .min(1)
+      .refine((fact) => !fact.includes(FACT_SEPARATOR), {
+        message: `a context fact must not contain "${FACT_SEPARATOR}": the separator is drawn between facts, so one inside a fact would split it in two`,
+      }),
+  )
+  .min(1);
+
 const MonthSchema = z.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/);
 
 export const ProfileSchema = z.object({
@@ -565,7 +564,7 @@ export const ProfileSchema = z.object({
   currentEmployer: z.object({
     name: z.string().min(1),
     url: CompanyUrlSchema,
-    context: z.string().min(1),
+    contextFacts: ContextFactsSchema,
   }),
   languages: z
     .array(
@@ -794,11 +793,6 @@ const ErrorHrefSchema = z.string().regex(/^\/(?!\/)[\w/#-]*$/);
 const ErrorLinkSchema = z.object({ label: z.string().min(1), href: ErrorHrefSchema });
 
 export const ErrorsContentSchema = z.object({
-  chrome: z.object({
-    navLabel: z.string().min(1),
-    skipLabel: z.string().min(1),
-    nav: z.array(ErrorLinkSchema).min(1),
-  }),
   notFound: z.object({
     metaTitle: z.string().min(1),
     code: z.literal('404'),
@@ -830,7 +824,6 @@ export const ErrorsContentSchema = z.object({
 });
 export type ErrorsContent = z.infer<typeof ErrorsContentSchema>;
 export const ErrorsClientContentSchema = ErrorsContentSchema.pick({
-  chrome: true,
   serverError: true,
   componentUnavailable: true,
   componentExplanation: true,
@@ -913,6 +906,16 @@ export const DawMixerCopySchema = z.object({
     pluginChain: DawMixerCopyTextSchema,
     meter: DawMixerCopyTextSchema,
     fader: DawMixerCopyTextSchema,
+  }),
+  controls: z.object({
+    vuMeter: DawMixerCopyTextSchema,
+    fader: DawMixerCopyTextSchema,
+    degrees: DawMixerCopyTextSchema,
+    buttons: z.object({
+      R: DawMixerCopyTextSchema,
+      M: DawMixerCopyTextSchema,
+      S: DawMixerCopyTextSchema,
+    }),
   }),
 });
 
@@ -1000,7 +1003,6 @@ export const LinksCopySchema = z.object({
   copyFailedMessage: LocalizedTextSchema,
   opensInNewTab: LocalizedTextSchema,
   newBadge: LocalizedTextSchema,
-  langSwitchLabel: LocalizedTextSchema,
   feedUnavailable: LocalizedTextSchema,
   pageHeading: LocalizedTextSchema,
 });

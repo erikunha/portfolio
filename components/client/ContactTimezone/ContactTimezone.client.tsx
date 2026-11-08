@@ -5,20 +5,13 @@ import { StatusDot } from '@/components/StatusDot';
 import type { ContactContent } from '@/content/contact';
 import { contactHoursPhrase, fillCopy } from '@/content/contact-rules';
 import { ERIK_PIN, WORLD_MAP_GRID, WORLD_MAP_LAND } from '@/content/world-map';
+import { HOURS_PER_DAY, MINUTES_PER_HOUR, MS_PER_MINUTE, MS_PER_SECOND } from '@/lib/time';
 import { buildLandPaths } from '@/lib/timezone/land-paths';
-import {
-  computeOverlap,
-  erikAvailability,
-  HOURS_PER_DAY,
-  layoutPins,
-  MINUTES_PER_HOUR,
-  projectToMap,
-} from '@/lib/timezone/overlap';
+import { computeOverlap, erikAvailability, layoutPins, projectToMap } from '@/lib/timezone/overlap';
 import {
   detectTimeZone,
   ERIK_TIME_ZONE,
   formatClock,
-  MS_PER_MINUTE,
   zoneCity,
   zonePlace,
 } from '@/lib/timezone/zones';
@@ -28,7 +21,6 @@ import { useNow, usePanelActive } from './useClock';
 import { ZoneCombobox } from './ZoneCombobox';
 
 type TimezoneCopy = ContactContent['timezone'];
-const MS_PER_SECOND = 1000;
 const ROW_KEYS = ['erik', 'you', 'both'] as const;
 const HOURS = Array.from({ length: HOURS_PER_DAY }, (_, hour) => hour);
 

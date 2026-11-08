@@ -30,10 +30,6 @@ export function localeOfPath(pathname: string | null): SiteLocale {
   return SITE_LOCALE.en;
 }
 
-export function stripLocalePrefix(pathname: string): string {
-  return pathname === '/pt' ? '/' : pathname.startsWith('/pt/') ? pathname.slice(3) : pathname;
-}
-
 export function localeAlternates(path: string): {
   en: string;
   pt: string;
@@ -68,10 +64,15 @@ export const LANGUAGE_SWITCH_NAME: Record<SiteLocale, string> = {
   [SITE_LOCALE.pt]: 'Português',
 };
 
-const PAGE_OWNED_LANGUAGE_SWITCH = new Set(['/links', '/links/en']);
+export const LOCALE_HOME_PATH: Record<SiteLocale, string> = {
+  [SITE_LOCALE.en]: '/',
+  [SITE_LOCALE.pt]: PT_PREFIX,
+};
 
-export function headerLanguageSwitchPaths(pathname: string): Record<SiteLocale, string> | null {
-  return PAGE_OWNED_LANGUAGE_SWITCH.has(pathname) ? null : languageSwitchPaths(pathname);
+export function headerLanguageSwitchPaths(pathname: string): Record<SiteLocale, string> {
+  const pair = languageSwitchPaths(pathname);
+  if (pair) return pair;
+  return { ...LOCALE_HOME_PATH, [localeOfPath(pathname)]: pathname };
 }
 
 const HOME_PATHS: ReadonlySet<string> = new Set(['/', PT_PREFIX]);

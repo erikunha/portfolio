@@ -292,7 +292,7 @@ const profileFixture = {
   currentEmployer: {
     name: 'Raylu',
     url: 'https://raylu.ai',
-    context: 'AI deal origination · private markets',
+    contextFacts: ['AI deal origination', 'private markets'],
   },
   languages: [
     { code: 'pt', label: 'PT-BR', name: 'Portuguese', level: 'native' },
@@ -358,6 +358,21 @@ describe('canonical profile and education', () => {
       { ...profileFixture, country: '' },
       { ...profileFixture, actions: [{ label: 'CV', href: 'javascript:alert(1)' }] },
       { ...profileFixture, languages: [{ code: 'en', name: 'English' }] },
+      {
+        ...profileFixture,
+        currentEmployer: { ...profileFixture.currentEmployer, contextFacts: [] },
+      },
+      {
+        ...profileFixture,
+        currentEmployer: { ...profileFixture.currentEmployer, contextFacts: [''] },
+      },
+      {
+        ...profileFixture,
+        currentEmployer: {
+          ...profileFixture.currentEmployer,
+          contextFacts: ['AI deal origination · private markets'],
+        },
+      },
     ])
       expect(ProfileSchema.safeParse(invalid).success).toBe(false);
   });

@@ -55,6 +55,32 @@ test('the 404 heading takes focus for the announcement without painting a ring',
   ).toBe('none');
 });
 
+const SCROLL_TOLERANCE_PX = 0;
+const NARROW_ERROR_VIEWPORTS = [
+  { width: 320, height: 700 },
+  { width: 390, height: 844 },
+  { width: 768, height: 1024 },
+  { width: 1280, height: 720 },
+];
+
+for (const { width, height } of NARROW_ERROR_VIEWPORTS) {
+  test(`the 404 page does not scroll when its content fits at ${width}x${height}`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width, height });
+    await page.goto(MISSING_ROUTE);
+    await waitForHydration(page, 'h1');
+    const overflow = await page.evaluate(() => {
+      const root = document.scrollingElement ?? document.documentElement;
+      return root.scrollHeight - root.clientHeight;
+    });
+    expect(
+      overflow,
+      'a min-height that adds chrome the page already reserves makes a short 404 scroll by a pixel or more',
+    ).toBeLessThanOrEqual(SCROLL_TOLERANCE_PX);
+  });
+}
+
 const CONTACT_CHUNK_MARKER = 'contact-send';
 const CONTACT_SECTION = '#sec-contact';
 const TAP_TARGET_PX = 44;

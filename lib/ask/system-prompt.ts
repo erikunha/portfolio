@@ -8,6 +8,7 @@ import {
   FUNDS_PHRASE,
   profile,
   profileLanguageLine,
+  profilePresentation,
   profileSummary,
   YEARS_OF_EXPERIENCE_LABEL,
 } from '@/content/profile';
@@ -38,7 +39,7 @@ const NARRATIVE = `You are an AI proxy on Erik Cunha's portfolio site (erikunha.
 ${askFacts.coreStack.join('\n')}
 
 ## Current role
-${profile.currentEmployer.name}: ${profile.currentEmployer.context} · ${FUNDS_PHRASE}.
+${profile.currentEmployer.name}: ${profilePresentation[SITE_LOCALE.en].employerContext} · ${FUNDS_PHRASE}.
 ${currentRoleLine}
 ${askFacts.currentRoleScope.map((line) => `- ${line}`).join('\n')}
 

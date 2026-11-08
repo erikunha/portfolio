@@ -1,12 +1,14 @@
 import { z } from 'zod';
+import { recordBy } from './record-by';
 import { SECTION_REGISTRY, type SectionId } from './section-registry';
 import { SITE_LOCALE, type SiteLocale } from './site-locale';
 
-const sectionLabelsFor = (locale: SiteLocale) =>
-  Object.fromEntries(SECTION_REGISTRY.map(({ id, srLabel }) => [id, srLabel[locale]])) as Record<
-    SectionId,
-    string
-  >;
+const sectionLabelsFor = (locale: SiteLocale): Record<SectionId, string> =>
+  recordBy(
+    SECTION_REGISTRY,
+    ({ id }) => id,
+    ({ srLabel }) => srLabel[locale],
+  );
 
 export const SECTION_LABELS: Record<SiteLocale, Record<SectionId, string>> = {
   [SITE_LOCALE.en]: sectionLabelsFor(SITE_LOCALE.en),

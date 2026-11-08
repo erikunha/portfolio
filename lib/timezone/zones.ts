@@ -1,17 +1,14 @@
 import { KNOWN_ZONES } from '@/content/world-map';
+import { MINUTES_PER_HOUR, MS_PER_MINUTE, pad2 } from '../time';
 
 export const ERIK_TIME_ZONE = 'America/Sao_Paulo';
 export const FALLBACK_TIME_ZONE = 'UTC';
 
 const FORMAT_LOCALE = 'en-US';
-export const MS_PER_MINUTE = 60_000;
-const MINUTES_PER_HOUR = 60;
-const DEGREES_PER_HOUR = 15;
+export const DEGREES_PER_HOUR = 15;
 const FALLBACK_LATITUDE = 20;
 const MAX_FALLBACK_LONGITUDE = 170;
 const PLACE_CODE_LENGTH = 3;
-const CLOCK_PAD_LENGTH = 2;
-const CLOCK_PAD_CHAR = '0';
 const CLOCK_SEPARATOR = ':';
 const UTC_PREFIX = 'UTC';
 const ZONE_PATH_SEPARATOR = '/';
@@ -31,8 +28,6 @@ type CuratedZone = { key: string; geo: Geo };
 const wallClockFormatters = new Map<string, Intl.DateTimeFormat>();
 const curatedResults = new Map<string, CuratedZone | null>();
 let curatedByCanonical: Map<string, CuratedZone> | undefined;
-
-const padClock = (value: number) => String(value).padStart(CLOCK_PAD_LENGTH, CLOCK_PAD_CHAR);
 
 function wallClockFormatter(timeZone: string): Intl.DateTimeFormat {
   const cached = wallClockFormatters.get(timeZone);
@@ -83,7 +78,7 @@ export function formatUtcOffset(offsetMinutes: number): string {
   const absolute = Math.abs(offsetMinutes);
   const hours = Math.floor(absolute / MINUTES_PER_HOUR);
   const minutes = absolute % MINUTES_PER_HOUR;
-  const minutePart = minutes === 0 ? '' : `${UTC_OFFSET_MINUTE_JOINER}${padClock(minutes)}`;
+  const minutePart = minutes === 0 ? '' : `${UTC_OFFSET_MINUTE_JOINER}${pad2(minutes)}`;
   return `${UTC_PREFIX}${sign}${hours}${minutePart}`;
 }
 
@@ -95,7 +90,7 @@ export function localTime(timeZone: string, at: Date): WallClockTime {
 export function formatClock(timeZone: string, at: Date, withSeconds: boolean): string {
   const { hour, minute, second } = localTime(timeZone, at);
   const fields = withSeconds ? [hour, minute, second] : [hour, minute];
-  return fields.map(padClock).join(CLOCK_SEPARATOR);
+  return fields.map(pad2).join(CLOCK_SEPARATOR);
 }
 
 function curatedLookup(): Map<string, CuratedZone> {

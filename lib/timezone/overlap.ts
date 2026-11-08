@@ -1,9 +1,7 @@
 import { ERIK_PIN, WORLD_MAP_GRID } from '@/content/world-map';
-import { ERIK_TIME_ZONE, MS_PER_MINUTE, zoneOffsetMinutes } from './zones';
+import { HOURS_PER_DAY, MINUTES_PER_DAY, MINUTES_PER_HOUR, MS_PER_MINUTE, pad2 } from '../time';
+import { ERIK_TIME_ZONE, zoneOffsetMinutes } from './zones';
 
-export const MINUTES_PER_HOUR = 60;
-export const HOURS_PER_DAY = 24;
-export const MINUTES_PER_DAY = HOURS_PER_DAY * MINUTES_PER_HOUR;
 export const ERIK_WORK_START_HOUR = 10;
 export const ERIK_WORK_END_HOUR = 18;
 export const VISITOR_WORK_START_HOUR = 9;
@@ -17,8 +15,6 @@ const HALF_HOUR_MINUTES = MINUTES_PER_HOUR / 2;
 const DAY_SHIFTS = [-MINUTES_PER_DAY, 0, MINUTES_PER_DAY] as const;
 const RANGE_JOINER = ' to ';
 const CLOCK_SEPARATOR = ':';
-const CLOCK_PAD_LENGTH = 2;
-const CLOCK_PAD_CHAR = '0';
 
 const FULL_CIRCLE_DEGREES = 360;
 const PIN_NUDGE_DISTANCE = 30;
@@ -77,9 +73,7 @@ const roundCoordinate = (value: number) => Number(value.toFixed(COORDINATE_DECIM
 export function formatMinutesOfDay(minutes: number): string {
   const wrapped = mod(minutes, MINUTES_PER_DAY);
   const hours = Math.floor(wrapped / MINUTES_PER_HOUR);
-  return [hours, wrapped % MINUTES_PER_HOUR]
-    .map((field) => String(field).padStart(CLOCK_PAD_LENGTH, CLOCK_PAD_CHAR))
-    .join(CLOCK_SEPARATOR);
+  return [hours, wrapped % MINUTES_PER_HOUR].map(pad2).join(CLOCK_SEPARATOR);
 }
 
 export function computeOverlap(visitorZone: string, at: Date): Overlap {

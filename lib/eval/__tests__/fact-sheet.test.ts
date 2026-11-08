@@ -4,7 +4,12 @@ import { credentials } from '@/content/credentials';
 import { education } from '@/content/education';
 import { gitLog } from '@/content/git-log';
 import { perfReceipts } from '@/content/perf-receipts';
-import { FUNDS_PHRASE, profile, YEARS_OF_EXPERIENCE_LABEL } from '@/content/profile';
+import {
+  FUNDS_PHRASE,
+  profile,
+  profilePresentation,
+  YEARS_OF_EXPERIENCE_LABEL,
+} from '@/content/profile';
 import { SITE_LOCALE } from '@/content/site-locale';
 import { WORK_SCOPE_SENTENCE } from '@/content/work-scope';
 import { buildJudgeFactSheet } from '@/lib/eval/fact-sheet';
@@ -41,7 +46,7 @@ describe('lib/eval/fact-sheet', () => {
   it('states the current employer scale and the years of experience', () => {
     const sheet = buildJudgeFactSheet(TODAY);
     expect(sheet).toContain(FUNDS_PHRASE);
-    expect(sheet).toContain(profile.currentEmployer.context);
+    expect(sheet).toContain(profilePresentation[SITE_LOCALE.en].employerContext);
     expect(sheet).toContain(YEARS_OF_EXPERIENCE_LABEL);
   });
 
