@@ -3,11 +3,7 @@ import { productionSources } from '../helpers/production-sources';
 
 const PRODUCTION_ROOTS = ['app', 'components', 'lib'];
 const TIME_MODULE = 'lib/time.ts';
-const UNMIGRATED_CONSUMERS: readonly string[] = [
-  'components/ErrorPages/ErrorPages.client.tsx',
-  'components/client/InteractiveShell/InteractiveShell.tsx',
-  'components/client/InteractiveShell/useAskStream.ts',
-];
+const UNMIGRATED_CONSUMERS: readonly string[] = ['components/ErrorPages/ErrorPages.client.tsx'];
 const TIME_CONSTANT_DEFINITION =
   /^\s*(?:export )?const (MS_PER_SECOND|SECOND_MS|SECONDS_PER_MINUTE|SECONDS_PER_HOUR|MINUTES_PER_HOUR|HOURS_PER_DAY|MINUTES_PER_DAY|MS_PER_MINUTE|MS_PER_HOUR)\b/m;
 const CLOCK_PAD_DEFINITION =

@@ -3,112 +3,24 @@
 import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
 import type { TerminalChrome } from '@/content/schemas';
 import SHELL_RESPONSES from '@/content/shell-commands';
-import type { ShellStates } from '@/content/shell-states.schema';
-import {
-  fillShellState,
-  SHELL_LIMITS,
-  ShellCommand,
-  ShellLineKind,
-  type ShellUi,
-  shellStates,
-} from '@/content/shell-ui';
+import { ShellCommand, ShellLineKind, type ShellUi, shellStates } from '@/content/shell-ui';
 import type { SiteLocale } from '@/content/site-locale';
-import { asciiBar } from '@/lib/ascii-bar';
-import { forgetMany, forgetRequest, wasForgotten } from '@/lib/forget-request.client';
-import { listRefs } from '@/lib/request-refs.client';
+import { SHELL_COMMAND_EVENT } from '@/lib/events';
 import { useBreakpoint } from '@/lib/use-breakpoint.client';
 import { TerminalChromeBar } from '../TerminalChromeBar';
 import { AnimatedPlaceholder, StaticPlaceholder } from './AnimatedPlaceholder.client';
-import { describeForget } from './forget-message';
-import { PRIVACY_COMMAND_KIND, type PrivacyCommand, parsePrivacyCommand } from './privacy-command';
-import { ResponseReference } from './ResponseReference.client';
-import { bounded, formatRemaining, type Line, type LineKind, useAskStream } from './useAskStream';
+import { parsePrivacyCommand } from './privacy-command';
+import { ShellLine } from './ShellLines.client';
+import { ShellToolbar } from './ShellToolbar.client';
+import { ShellKey } from './shell-keys';
+import { bounded, type Line, useAskStream } from './useAskStream';
+import { HISTORY_STEP, useCommandHistory } from './useCommandHistory';
+import { usePrivacyCommands } from './usePrivacyCommands';
 
-const KIND_CLASS: Record<LineKind, string> = {
-  [ShellLineKind.Prompt]: 'shell-line-prompt',
-  [ShellLineKind.Output]: 'shell-line-output',
-  [ShellLineKind.Error]: 'shell-line-error',
-  [ShellLineKind.Info]: 'shell-line-info',
-  [ShellLineKind.Loading]: 'shell-line-loading',
-  [ShellLineKind.Reference]: 'shell-line-reference',
-  [ShellLineKind.Hint]: 'shell-line-hint',
-  [ShellLineKind.RateLimit]: 'shell-line-ratelimit',
-};
-const Key = {
-  Up: 'ArrowUp',
-  Down: 'ArrowDown',
-  Left: 'ArrowLeft',
-  Right: 'ArrowRight',
-  Home: 'Home',
-  End: 'End',
-  Enter: 'Enter',
-  Escape: 'Escape',
-} as const;
-const SHELL_COMMAND_EVENT = 'shell-cmd-run';
 const COMMAND_FIELD = 'command';
 const COMPOSITION_KEYCODE = 229;
 const WINDOW_DOT_SIZE = 10;
-const THINKING_TICK_MS = 100;
-const MS_PER_SECOND = 1000;
 const STREAM_CARET = '█';
-const COUNTDOWN_TICK_MS = 1000;
-
-function ThinkingLine({ template }: { template: string }) {
-  const [elapsedMs, setElapsedMs] = useState(0);
-  useEffect(() => {
-    const startedAt = Date.now();
-    const id = setInterval(() => setElapsedMs(Date.now() - startedAt), THINKING_TICK_MS);
-    return () => clearInterval(id);
-  }, []);
-  return fillShellState(template, { seconds: (elapsedMs / MS_PER_SECOND).toFixed(1) });
-}
-
-function LineText({ text, ui }: { text: string; ui: ShellUi }) {
-  const at = text.indexOf(ui.email);
-  if (at < 0) return text;
-  return (
-    <>
-      {text.slice(0, at)}
-      <a href={ui.emailHref}>{ui.email}</a>
-      {text.slice(at + ui.email.length)}
-    </>
-  );
-}
-
-function RateLimitCountdown({
-  seconds,
-  announcement,
-  states,
-}: {
-  seconds: number;
-  announcement: string;
-  states: ShellStates;
-}) {
-  const [remaining, setRemaining] = useState(seconds);
-  useEffect(() => {
-    const deadline = Date.now() + seconds * MS_PER_SECOND;
-    const id = setInterval(() => {
-      const left = Math.max(0, Math.ceil((deadline - Date.now()) / MS_PER_SECOND));
-      setRemaining(left);
-      if (left === 0) clearInterval(id);
-    }, COUNTDOWN_TICK_MS);
-    return () => clearInterval(id);
-  }, [seconds]);
-  const headline =
-    remaining === 0
-      ? states.rateLimitReady
-      : fillShellState(states.slowDown, { left: formatRemaining(remaining, states) });
-  return (
-    <>
-      <span className="sr-only">{announcement}</span>
-      <span aria-hidden="true">
-        <strong className="shell-ratelimit-headline">{headline}</strong>
-        <span className="shell-ratelimit-bar">[{asciiBar(1 - remaining / seconds)}]</span>
-        <span>{states.localCommands}</span>
-      </span>
-    </>
-  );
-}
 
 export function InteractiveShell({
   locale,
@@ -132,15 +44,11 @@ export function InteractiveShell({
   const [input, setInput] = useState('');
   const [inputFocused, setInputFocused] = useState(false);
   const [announcement, setAnnouncement] = useState({ id: 0, text: '' });
-  const [toolbarIndex, setToolbarIndex] = useState(0);
   const stopRef = useRef<HTMLButtonElement>(null);
   const followOutputRef = useRef(true);
   const feedRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-  const toolbarButtons = useRef<(HTMLButtonElement | null)[]>([]);
-  const commands = useRef<string[]>([]);
-  const historyIndex = useRef(0);
-  const draft = useRef('');
+  const commandHistory = useCommandHistory();
 
   const announce = useCallback((text: string) => {
     setAnnouncement((previous) => ({ id: previous.id + 1, text }));
@@ -164,12 +72,11 @@ export function InteractiveShell({
     setInput,
     onSettled: refocusAfterStream,
   });
+  const runPrivacy = usePrivacyCommands({ ui, states, nextId, setHistory, announce, focusInput });
 
   useLayoutEffect(() => {
     const typed = inputRef.current?.value;
-    if (!typed) return;
-    setInput(typed);
-    draft.current = typed;
+    if (typed) setInput(typed);
   }, []);
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: history and streamingText trigger scroll on the stable feed ref
@@ -178,90 +85,6 @@ export function InteractiveShell({
       feedRef.current.scrollTop = feedRef.current.scrollHeight;
     }
   }, [history, streamingText]);
-
-  const forgetBusyRef = useRef(false);
-  const runPrivacy = useCallback(
-    async (command: PrivacyCommand) => {
-      const push = (entries: { kind: LineKind; text: string }[]) =>
-        setHistory((lines) =>
-          bounded([...lines, ...entries.map((entry) => ({ id: nextId(), ...entry }))]),
-        );
-      const forgetLines = (id: string, result: Parameters<typeof describeForget>[0]) => ({
-        kind: wasForgotten(result) ? ShellLineKind.Output : ShellLineKind.Error,
-        text: `${id} ${describeForget(result, ui, states)}`,
-      });
-      const refs = listRefs();
-      if (command.kind === PRIVACY_COMMAND_KIND.Usage) {
-        push([{ kind: ShellLineKind.Info, text: ui.privacyUsage }]);
-      } else if (command.kind === PRIVACY_COMMAND_KIND.List) {
-        push(
-          refs.length === 0
-            ? [{ kind: ShellLineKind.Info, text: ui.privacyEmpty }]
-            : [
-                {
-                  kind: ShellLineKind.Info,
-                  text: fillShellState(ui.privacyHeader, { count: String(refs.length) }),
-                },
-                ...refs.map((id, index) => ({
-                  kind: ShellLineKind.Output,
-                  text: `${index + 1}. ${id}`,
-                })),
-              ],
-        );
-      } else if (forgetBusyRef.current) {
-        announce(ui.forgetting);
-        return;
-      } else {
-        const target =
-          command.kind === PRIVACY_COMMAND_KIND.ForgetNumber
-            ? refs[command.number - 1]
-            : command.kind === PRIVACY_COMMAND_KIND.ForgetId
-              ? command.id
-              : undefined;
-        if (command.kind === PRIVACY_COMMAND_KIND.ForgetAll && refs.length === 0) {
-          push([{ kind: ShellLineKind.Info, text: ui.privacyEmpty }]);
-        } else if (command.kind !== PRIVACY_COMMAND_KIND.ForgetAll && target === undefined) {
-          push([
-            {
-              kind: ShellLineKind.Error,
-              text: fillShellState(ui.privacyUnknown, {
-                target:
-                  command.kind === PRIVACY_COMMAND_KIND.ForgetNumber ? String(command.number) : '',
-              }),
-            },
-          ]);
-        } else {
-          forgetBusyRef.current = true;
-          announce(ui.forgetting);
-          try {
-            if (command.kind === PRIVACY_COMMAND_KIND.ForgetAll) {
-              const batch = await forgetMany(refs);
-              push([
-                ...batch.results.map(({ id, result }) => forgetLines(id, result)),
-                ...(batch.unattempted.length > 0
-                  ? [
-                      {
-                        kind: ShellLineKind.Info,
-                        text: fillShellState(ui.privacyNotAttempted, {
-                          count: String(batch.unattempted.length),
-                        }),
-                      },
-                    ]
-                  : []),
-              ]);
-            } else if (target !== undefined) {
-              push([forgetLines(target, await forgetRequest(target))]);
-            }
-          } finally {
-            forgetBusyRef.current = false;
-          }
-        }
-      }
-      announce(ui.commandComplete);
-      focusInput();
-    },
-    [announce, focusInput, nextId, states, ui],
-  );
 
   const runCommand = useCallback(
     (raw: string) => {
@@ -272,9 +95,7 @@ export function InteractiveShell({
       const command = raw.trim().replace(/\s+/g, ' ');
       if (!command) return;
       followOutputRef.current = true;
-      commands.current = [...commands.current, command].slice(-SHELL_LIMITS.commandHistory);
-      historyIndex.current = commands.current.length;
-      draft.current = '';
+      commandHistory.record(command);
       window.dispatchEvent(new CustomEvent(SHELL_COMMAND_EVENT));
       setHistory((lines) =>
         bounded([
@@ -310,7 +131,29 @@ export function InteractiveShell({
       }
       void streamQuestion(explicitQuestion ?? command, command);
     },
-    [announce, focusInput, initialLines, isActive, nextId, runPrivacy, streamQuestion, ui],
+    [
+      announce,
+      commandHistory,
+      focusInput,
+      initialLines,
+      isActive,
+      nextId,
+      runPrivacy,
+      streamQuestion,
+      ui,
+    ],
+  );
+
+  const activateToolbarCommand = useCallback(
+    (command: string) => {
+      if (command === ShellCommand.Clear || busy) {
+        runCommand(command);
+        return;
+      }
+      setInput(command);
+      focusInput();
+    },
+    [busy, focusInput, runCommand],
   );
 
   return (
@@ -318,7 +161,7 @@ export function InteractiveShell({
     <div
       className="interactive-shell"
       onKeyDown={(event) => {
-        if (event.key !== Key.Escape || event.nativeEvent.isComposing || !isActive()) return;
+        if (event.key !== ShellKey.Escape || event.nativeEvent.isComposing || !isActive()) return;
         event.preventDefault();
         stopStream();
       }}
@@ -345,70 +188,17 @@ export function InteractiveShell({
         // biome-ignore lint/a11y/noNoninteractiveTabindex: the vertically scrollable log must be keyboard-focusable so arrow keys can scroll it (WCAG 2.1.1, axe scrollable-region-focusable)
         tabIndex={0}
       >
-        {history.map((line) =>
-          line.kind === ShellLineKind.Loading ? (
-            <span
-              key={line.id}
-              className="shell-line shell-line-loading"
-              aria-hidden="true"
-              data-testid="shell-line-loading"
-            >
-              <span className="shell-stream-meta">
-                <ThinkingLine template={states.thinkingElapsed} />
-              </span>
-              <span className="shell-stream-meta shell-esc-hint">{states.escStop}</span>
-            </span>
-          ) : (
-            <span
-              key={line.id}
-              className={`shell-line ${KIND_CLASS[line.kind]}`}
-              data-kind={line.kind}
-            >
-              {line.kind === ShellLineKind.Reference ? (
-                <ResponseReference
-                  ui={ui}
-                  states={states}
-                  requestId={line.text}
-                  announce={announce}
-                />
-              ) : line.kind === ShellLineKind.RateLimit && line.retryAfter ? (
-                <RateLimitCountdown
-                  seconds={line.retryAfter}
-                  announcement={line.text}
-                  states={states}
-                />
-              ) : line.kind === ShellLineKind.Hint ? (
-                <>
-                  {states.tryPrefix} <code>{states.tryCommand}</code> {states.trySuffix}{' '}
-                  <a href={ui.emailHref}>{ui.email}</a>
-                </>
-              ) : (
-                <>
-                  {line.ai && <span className="shell-ai-label">{ui.aiLabel}: </span>}
-                  {line.prefix && <strong className="shell-stderr-command">{line.prefix}</strong>}
-                  {line.prefix && ' '}
-                  <LineText
-                    text={line.welcome && isMobile ? ui.mobileWelcome : line.text}
-                    ui={ui}
-                  />
-                  {line.retry && (
-                    <>
-                      {' '}
-                      <button
-                        type="button"
-                        className="shell-control"
-                        aria-label={states.retryLabel}
-                        onClick={() => runCommand(line.retry ?? '')}
-                      >
-                        {states.retry}
-                      </button>
-                    </>
-                  )}
-                </>
-              )}
-            </span>
-          ),
-        )}
+        {history.map((line) => (
+          <ShellLine
+            key={line.id}
+            line={line}
+            ui={ui}
+            states={states}
+            isMobile={isMobile}
+            announce={announce}
+            onRetry={runCommand}
+          />
+        ))}
         {streamingText !== null && (
           <span className="shell-line shell-line-output" data-kind={ShellLineKind.Output}>
             <span className="shell-ai-label">{ui.aiLabel}: </span>
@@ -446,14 +236,13 @@ export function InteractiveShell({
             value={input}
             onChange={(event) => {
               setInput(event.target.value);
-              historyIndex.current = commands.current.length;
-              draft.current = event.target.value;
+              commandHistory.noteEdit();
             }}
             onFocus={() => setInputFocused(true)}
             onBlur={() => setInputFocused(false)}
             onKeyDown={(event) => {
               if (
-                event.key === Key.Enter &&
+                event.key === ShellKey.Enter &&
                 (event.nativeEvent.isComposing || event.keyCode === COMPOSITION_KEYCODE)
               ) {
                 event.preventDefault();
@@ -465,20 +254,13 @@ export function InteractiveShell({
                 event.ctrlKey ||
                 event.metaKey ||
                 event.shiftKey ||
-                (event.key !== Key.Up && event.key !== Key.Down)
+                (event.key !== ShellKey.Up && event.key !== ShellKey.Down)
               ) {
                 return;
               }
               event.preventDefault();
-              if (historyIndex.current === commands.current.length) draft.current = input;
-              historyIndex.current = Math.max(
-                0,
-                Math.min(
-                  commands.current.length,
-                  historyIndex.current + (event.key === Key.Up ? -1 : 1),
-                ),
-              );
-              setInput(commands.current[historyIndex.current] ?? draft.current);
+              const step = event.key === ShellKey.Up ? HISTORY_STEP.Older : HISTORY_STEP.Newer;
+              setInput(commandHistory.recall(step, input));
             }}
             autoComplete="off"
             autoCapitalize="off"
@@ -521,51 +303,7 @@ export function InteractiveShell({
           <code>{ui.forgetEndpoint}</code>.
         </p>
       </div>
-      <div
-        className="shell-toolbar"
-        role="toolbar"
-        aria-label={ui.toolbarLabel}
-        data-testid="shell-commands"
-      >
-        {ui.commands.map((command, index) => (
-          <button
-            key={command}
-            ref={(node) => {
-              toolbarButtons.current[index] = node;
-            }}
-            type="button"
-            className="shell-control shell-cmd-hint"
-            data-cmd={command}
-            tabIndex={index === toolbarIndex ? 0 : -1}
-            aria-disabled={busy}
-            onFocus={() => setToolbarIndex(index)}
-            onClick={() => {
-              if (command === ShellCommand.Clear || busy) {
-                runCommand(command);
-                return;
-              }
-              setInput(command);
-              focusInput();
-            }}
-            onKeyDown={(event) => {
-              if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
-              let target = index;
-              if (event.key === Key.Home) target = 0;
-              else if (event.key === Key.End) target = ui.commands.length - 1;
-              else if (event.key === Key.Right) target = (index + 1) % ui.commands.length;
-              else if (event.key === Key.Left) {
-                target = (index - 1 + ui.commands.length) % ui.commands.length;
-              } else return;
-              event.preventDefault();
-              setToolbarIndex(target);
-              toolbarButtons.current[target]?.focus();
-            }}
-          >
-            {command}
-          </button>
-        ))}
-        <span className="shell-command-hint">{ui.commandHint}</span>
-      </div>
+      <ShellToolbar ui={ui} busy={busy} onActivate={activateToolbarCommand} />
     </div>
   );
 }

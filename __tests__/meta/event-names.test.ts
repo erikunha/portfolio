@@ -4,9 +4,7 @@ import { productionSources } from '../helpers/production-sources';
 
 const PRODUCTION_ROOTS = ['app', 'components', 'lib'];
 const REGISTRY_FILE = 'lib/events.ts';
-const UNMIGRATED_CONSUMERS: readonly string[] = [
-  'components/client/InteractiveShell/InteractiveShell.tsx',
-];
+const UNMIGRATED_CONSUMERS: readonly string[] = [];
 
 const EVENT_CONSTANTS = [
   'SYSFAIL_START',

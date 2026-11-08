@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import type { ShellStates } from '@/content/shell-states.schema';
 import type { ShellUi } from '@/content/shell-ui';
 import { forgetRequest, wasForgotten } from '@/lib/forget-request.client';
-import { COPY_STATUS, useCopyFeedback } from '@/lib/use-copy-feedback.client';
+import { COPY_STATUS, type CopyStatus, useCopyFeedback } from '@/lib/use-copy-feedback.client';
 import { describeForget } from './forget-message';
 
 const FORGET_VIEW = { Idle: 'idle', Pending: 'pending', Settled: 'settled' } as const;
@@ -12,6 +12,12 @@ type ForgetView =
   | { kind: typeof FORGET_VIEW.Idle }
   | { kind: typeof FORGET_VIEW.Pending }
   | { kind: typeof FORGET_VIEW.Settled; message: string; forgotten: boolean };
+
+function copyLabel(status: CopyStatus, ui: ShellUi): string {
+  if (status === COPY_STATUS.Copied) return ui.copied;
+  if (status === COPY_STATUS.Failed || status === COPY_STATUS.Unavailable) return ui.copyFailed;
+  return ui.copy;
+}
 
 export function ResponseReference({
   ui,
@@ -49,12 +55,7 @@ export function ResponseReference({
     announce(message);
   }
 
-  const label =
-    status === COPY_STATUS.Copied
-      ? ui.copied
-      : status === COPY_STATUS.Failed || status === COPY_STATUS.Unavailable
-        ? ui.copyFailed
-        : ui.copy;
+  const label = copyLabel(status, ui);
   const forgotten = forget.kind === FORGET_VIEW.Settled && forget.forgotten;
   const forgetPendingView = forget.kind === FORGET_VIEW.Pending;
 

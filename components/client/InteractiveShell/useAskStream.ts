@@ -24,6 +24,7 @@ import {
   parseStreamChunk,
   RETRY_AFTER_HEADER,
 } from '@/lib/stream-protocol';
+import { MS_PER_SECOND, SECONDS_PER_MINUTE } from '@/lib/time';
 
 export type LineKind = (typeof ShellLineKind)[keyof typeof ShellLineKind];
 export type Line = {
@@ -43,8 +44,6 @@ const ASK_ENDPOINT = '/api/ask';
 const RATE_LIMIT_STATUS = 429;
 const SERVER_ERROR_STATUS = 500;
 const PAYLOAD_TOO_LARGE_STATUS = 413;
-const SECONDS_PER_MINUTE = 60;
-const MS_PER_SECOND = 1000;
 
 export function formatRemaining(
   seconds: number,
