@@ -14,7 +14,6 @@ const OPEN_DRAWER_TIMEOUT_MS = 5000;
 const STREAM_SETTLE_TIMEOUT_MS = 10_000;
 const OVERFLOW_WIDTHS = [320, 390, 768, 1280];
 const MIN_GAP_BELOW_HEADER = { desktop: 48, phone: 32 } as const;
-const CENTER_TOLERANCE_PX = 2;
 const VERTICAL_CENTER_TOLERANCE_PX = 24;
 const CONTENT_ROUTES = [
   '/',
@@ -248,10 +247,10 @@ test.describe('the first content block clears the header', () => {
   }
 });
 
-test.describe('the 404 content is centered', () => {
+test.describe('the 404 block is centered between the bars', () => {
   for (const { name, size } of VIEWPORT_CASES) {
     for (const path of NOT_FOUND_ROUTES) {
-      test(`${path} centers the heading, the button and the block at ${name}`, async ({ page }) => {
+      test(`${path} centers the block vertically at ${name}`, async ({ page }) => {
         await page.setViewportSize(size);
         await gotoHydrated(page, path, `${BANNER} button`);
         const geometry = await page.evaluate(() => {
@@ -270,22 +269,10 @@ test.describe('the 404 content is centered', () => {
           const dock = document.querySelector('.dock')?.getBoundingClientRect();
           const dockVisible = dock && dock.height > 0 ? dock.top : window.innerHeight;
           return {
-            viewportCenter: (() => {
-              const root = document.documentElement.getBoundingClientRect();
-              return root.left + root.width / 2;
-            })(),
-            headingCenter: heading.left + heading.width / 2,
-            actionCenter: action.left + action.width / 2,
             contentCenter: (heading.top + action.bottom) / 2,
             areaCenter: (Math.max(...bars.map((box) => box.bottom)) + dockVisible) / 2,
           };
         });
-        expect(Math.abs(geometry.headingCenter - geometry.viewportCenter)).toBeLessThanOrEqual(
-          CENTER_TOLERANCE_PX,
-        );
-        expect(Math.abs(geometry.actionCenter - geometry.viewportCenter)).toBeLessThanOrEqual(
-          CENTER_TOLERANCE_PX,
-        );
         expect(Math.abs(geometry.contentCenter - geometry.areaCenter)).toBeLessThanOrEqual(
           VERTICAL_CENTER_TOLERANCE_PX,
         );
