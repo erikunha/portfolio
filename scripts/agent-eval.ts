@@ -141,7 +141,7 @@ export async function sampleRuns(
     if (target.errored) {
       results.push(false);
       console.log(
-        `  ERROR${opts.label ?? ''} [${c.tier}] ${c.id} run ${i + 1}/${opts.runs} — ${target.detail}`,
+        `  ERROR${opts.label ?? ''} [${c.tier}] ${c.id} run ${i + 1}/${opts.runs}: ${target.detail}`,
       );
       continue;
     }
@@ -149,7 +149,7 @@ export async function sampleRuns(
     opts.meter.addJudge(verdict);
     results.push(verdict.pass);
     console.log(
-      `  ${verdict.pass ? 'PASS' : 'FAIL'}${opts.label ?? ''} [${c.tier}] ${c.id} run ${i + 1}/${opts.runs} — ${verdict.reason}`,
+      `  ${verdict.pass ? 'PASS' : 'FAIL'}${opts.label ?? ''} [${c.tier}] ${c.id} run ${i + 1}/${opts.runs}: ${verdict.reason}`,
     );
   }
   return { results, budgetExceeded: false };
@@ -248,7 +248,7 @@ async function main(): Promise<void> {
       );
     } else {
       console.error(
-        `\nCALIBRATION GATE FAILED — ${describeCalibrationFailure(calibration)}. ` +
+        `\nCALIBRATION GATE FAILED: ${describeCalibrationFailure(calibration)}. ` +
           'Inspect the disagreements before trusting any grade.',
       );
     }

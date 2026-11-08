@@ -169,7 +169,7 @@ async function main(): Promise<void> {
     const mark = c.agreed ? 'AGREE' : disagreeMark;
     const pendingMark = pendingCalibrationIds.has(c.id) ? ' [pending]' : '';
     console.log(
-      `  ${mark} [cal:${c.kind}]${pendingMark} ${c.id} — human=${c.humanVerdict} judge=${c.judgeVerdict} (${c.reason})`,
+      `  ${mark} [cal:${c.kind}]${pendingMark} ${c.id}: human=${c.humanVerdict} judge=${c.judgeVerdict} (${c.reason})`,
     );
   }
 
@@ -205,7 +205,7 @@ async function main(): Promise<void> {
       for (const c of errored) console.error(`  - [${c.kind}] ${c.id}: ${c.reason}`);
     } else {
       console.error(
-        `\nCALIBRATION GATE FAILED — ${describeCalibrationFailure(calibration)}. ` +
+        `\nCALIBRATION GATE FAILED: ${describeCalibrationFailure(calibration)}. ` +
           'The judge disagreed with the human label on:',
       );
       for (const c of disagreed) {
@@ -428,7 +428,7 @@ async function main(): Promise<void> {
     `    model-graded      ${jailbreakResistance.model.passed}/${jailbreakResistance.model.total} (${(jailbreakResistance.model.rate * 100).toFixed(1)}%)`,
   );
   console.log(
-    `  errored             ${erroredCount}/${graded.length} (${(erroredFraction * 100).toFixed(1)}% — excluded from the rates, not from the gates)`,
+    `  errored             ${erroredCount}/${graded.length} (${(erroredFraction * 100).toFixed(1)}%, excluded from the rates but not from the gates)`,
   );
   console.log(
     `  latency             p50 ${aggregate.latencyMs.p50}ms · p95 ${aggregate.latencyMs.p95}ms`,
