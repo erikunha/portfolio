@@ -4,11 +4,12 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { parse } from 'yaml';
-import { CLAUDE_LOGIN, parseClaudeVerdict } from '@/scripts/check-claude-approval';
 
 const WORKFLOW = join(process.cwd(), '.github', 'workflows', 'claude-review.yml');
 
-const GUARD_STEP = 'Assert this run posted a verdict the gate can read';
+const GUARD_STEP = 'Assert this run posted a readable verdict';
+
+const CLAUDE_LOGIN = 'claude[bot]';
 
 type Step = { name?: string; run?: string; if?: unknown; 'continue-on-error'?: unknown };
 
@@ -42,7 +43,7 @@ function block(open: RegExp, what: string): string {
 const FETCH = /(\w+)=\$\(gh api[\s\S]*?\|\s*jq -r "((?:[^"\\]|\\.)*)"\s*\)/;
 const GREP = /\n\s*if printf '%s' "\$(\w+)"\s*\|\s*grep -qiE '([^']+)'; then/;
 
-describe('the guard fetches, filters and tests the same thing the merge gate reads', () => {
+describe('the guard fetches, filters and tests the latest review comment of this run', () => {
   it('no gh api fetch in this workflow passes a filter flag alongside --slurp', () => {
     // gh refuses --slurp with --jq, -q, or --template. The stub encodes that, but
     // only for the step it executes; this reads the WHOLE file, because the same
@@ -71,21 +72,21 @@ describe('the guard fetches, filters and tests the same thing the merge gate rea
     expect(grep, 'no `printf | grep -qiE` verdict test in the guard').toBeTruthy();
     expect(
       grep?.[1],
-      `The verdict grep must read the variable the FILTERED fetch assigns. Nothing previously tied them, and substituting an unfiltered \`gh api … --jq '.[].body'\` ran green — which returns both failures at once: a stale prior-run verdict and a bolded "approve" from any author each satisfy the guard while the merge gate reads none.\n\nfetch assigns: ${fetch?.[1]}\ngrep reads:    ${grep?.[1]}`,
+      `The verdict grep must read the variable the FILTERED fetch assigns. Nothing previously tied them, and substituting an unfiltered \`gh api … --jq '.[].body'\` ran green — which returns both failures at once: a stale prior-run verdict and a bolded "approve" from any author each satisfy the guard although this run posted nothing.\n\nfetch assigns: ${fetch?.[1]}\ngrep reads:    ${grep?.[1]}`,
     ).toBe(fetch?.[1]);
   });
 
-  it('selects the same comment the gate parses: latest claude[bot], this run only', () => {
+  it('selects the latest claude[bot] comment of this run only', () => {
     const filter = FETCH.exec(guardScript())?.[2] ?? '';
     expect(
       filter,
-      `The jq filter must restrict to ${CLAUDE_LOGIN} (imported from the gate, not mirrored), scope to this run via created_at, and take LAST.\n\nThe author and freshness predicates must be ONE composed expression: asserted separately, rewriting \`and\` to \`or\` leaves both substrings present and both assertions green while the freshness filter stops filtering.\n\n\`last\` matters because check-claude-approval.ts reads only claudeComments.at(-1). Reading the union goes green on a verdict in an older fresh comment while the gate, reading a newer progress comment, sees none — the same silent green one level up.`,
+      `The jq filter must restrict to ${CLAUDE_LOGIN}, scope to this run via created_at, and take LAST.\n\nThe author and freshness predicates must be ONE composed expression: asserted separately, rewriting \`and\` to \`or\` leaves both substrings present and both assertions green while the freshness filter stops filtering.\n\n\`last\` matters because the action edits its verdict into its newest comment. Reading the union goes green on a verdict in an older fresh comment while the newest one, a progress checklist, holds none.`,
     ).toContain(`select(.user.login == \\"${CLAUDE_LOGIN}\\" and .created_at >= \\"$SINCE\\")`);
     expect(filter).toContain('sort_by(.created_at)');
     expect(filter).toContain('last');
     expect(
       /gh api[^\n]*--paginate --slurp/.test(guardScript()),
-      'The fetch must pass --slurp. gh applies --jq PER PAGE under --paginate, so without it `last` yields one body per page and the grep sees their union — reintroducing the exact failure `last` was added to remove, invisibly, and only once a PR passes 30 comments. scripts/inspect-pr-comments.mjs already carries this workaround; the filter must also flatten with .[][] and sort explicitly rather than trusting API order, because the gate sorts.',
+      'The fetch must pass --slurp. gh applies --jq PER PAGE under --paginate, so without it `last` yields one body per page and the grep sees their union — reintroducing the exact failure `last` was added to remove, invisibly, and only once a PR passes 30 comments. The filter must also flatten with .[][] and sort explicitly rather than trusting API order.',
     ).toBe(true);
     expect(filter).toContain('.[][]');
   });
@@ -110,43 +111,35 @@ const guardMatches = (body: string): boolean => {
   return body.split('\n').some((line) => pattern.test(line));
 };
 
-describe('the guard verdict pattern is never looser than the gate it protects', () => {
-  it('keeps a non-empty agreement corpus, since it.each([]) registers nothing and still reports PASS', () => {
+describe('the guard verdict pattern accepts a bold verdict and nothing else', () => {
+  it('keeps a non-empty corpus, since it.each([]) registers nothing and still reports PASS', () => {
     expect(
       SINGLE_LINE_BODIES.length,
-      "Emptying this table removes every guard-vs-parser agreement case with no red: vitest reports PASS over zero registered tests. The file's central claim would then rest on two hand-written cases while the suite still read green.",
+      'Emptying this table removes every verdict-shape case with no red: vitest reports PASS over zero registered tests.',
     ).toBeGreaterThan(5);
   });
 
-  it.each(SINGLE_LINE_BODIES)('%j — on one line the two agree exactly', (body, expected) => {
-    expect({ guard: guardMatches(body), parser: parseClaudeVerdict(body) !== 'none' }).toEqual({
-      guard: expected,
-      parser: expected,
-    });
+  it.each(SINGLE_LINE_BODIES)('%j reads as a verdict: %s', (body, expected) => {
+    expect(guardMatches(body)).toBe(expected);
   });
 
   it('never matches a progress checklist with no verdict', () => {
     const checklist = '### Review\n- [x] Gather context\n- [x] Check schema compatibility';
     expect(
-      { guard: guardMatches(checklist), parser: parseClaudeVerdict(checklist) },
-      'That body is a progress checklist with no verdict, which the gate reads as none. If the guard ever accepts it, the guard has become the bug it was written to catch.',
-    ).toEqual({ guard: false, parser: 'none' });
+      guardMatches(checklist),
+      'That body is a progress checklist with no verdict. If the guard ever accepts it, the guard has become the bug it was written to catch.',
+    ).toBe(false);
   });
 
-  it('agrees across a newline: both are line-oriented, so a wrapped verdict reads as none', () => {
-    const wrapped = '**Approve\nwith minor changes**';
-    expect(
-      { guard: guardMatches(wrapped), parser: parseClaudeVerdict(wrapped) },
-      'The parser pairs bold spans per line, like grep. A verdict wrapped across a line break is read by neither, so the guard cannot go green on a body the gate reads as a verdict, or the reverse.',
-    ).toEqual({ guard: false, parser: 'none' });
+  it('is line-oriented, so a verdict wrapped across a newline reads as none', () => {
+    expect(guardMatches('**Approve\nwith minor changes**')).toBe(false);
   });
 
-  it('is narrower than the parser when a code-span glob shares the verdict line', () => {
-    const body = 'Touches `app/api/**`. **Verdict: Approve.**';
+  it('fails closed when a code-span glob shares the verdict line', () => {
     expect(
-      { guard: guardMatches(body), parser: parseClaudeVerdict(body) },
-      'The parser strips code spans before pairing, the grep does not. The divergence is fail-CLOSED: a review the gate would approve reds the job, never the reverse.',
-    ).toEqual({ guard: false, parser: 'approve' });
+      guardMatches('Touches `app/api/**`. **Verdict: Approve.**'),
+      'The ** inside the code span pairs with the verdict opener, so the line reads as no verdict. That reds the job and asks for a retry; it never passes a run that posted nothing.',
+    ).toBe(false);
   });
 });
 
