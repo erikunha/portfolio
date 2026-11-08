@@ -15,6 +15,8 @@ export const metadata: Metadata = localizedPageMetadata({
   ogType: 'profile',
 });
 
+export const ensureStatic = 'navigation';
+
 export default function CvRoute() {
   return <CvPage locale={locale} />;
 }

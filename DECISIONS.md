@@ -20,6 +20,7 @@ ADR-lite running log. One bullet per decision · date · reversibility note.
 ## 2026-11-08: dependency adoption, Zod formats and static routes
 
 - **2026-11-08** · **String formats use the Zod 4 top-level constructors (`z.url()`, `z.email()`, `z.uuid()`), never the deprecated `z.string().url()` chains.** Both forms run the same check, so acceptance is unchanged; `__tests__/meta/zod-string-formats.test.ts` pins that equivalence over a corpus and scans production sources for the old chains. The scanner lives in vitest because Biome has no rule for a call chain on `z.string()`. Reversible: restore the chains.
+- **2026-11-08** · **The static routes export `ensureStatic = 'navigation'`: `/cv`, `/summary`, `/links`, `/links/en`, `/pt/cv`, `/pt/summary` and the `/design-system` layout.** Next 16.4 fails the build when such a route reads `connection()`, `cookies()`, `headers()` or uncached data, so request-time rendering cannot return unseen. Negative control: an `await connection()` inside `/summary` failed `pnpm build` with "uncached or runtime data on a route that must be fully static", and the build passed again once removed. Needs `cacheComponents` (on). The home page and `/pt` stay unguarded: they are partial prerenders with a streamed part, which `'navigation'` would reject; `'shell'` there waits for a measurement. `__tests__/meta/ensure-static-routes.test.ts` keeps the export on every listed file. Reversible: delete the export lines.
 
 ## 2026-11-08: /cv reads as a document, and its aside stays beside the experience
 

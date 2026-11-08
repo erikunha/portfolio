@@ -14,6 +14,8 @@ export const metadata: Metadata = localizedPageMetadata({
   description: summary.description,
 });
 
+export const ensureStatic = 'navigation';
+
 export default function SummaryRoute() {
   return <SummaryPage locale={locale} />;
 }
