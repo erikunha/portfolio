@@ -29,7 +29,7 @@ test.describe('type scale', () => {
     test(`card titles use the base size at ${width}`, async ({ page }) => {
       await page.setViewportSize({ width, height: 900 });
       await gotoSettled(page, '/');
-      for (const selector of ['.project-name', '.measured-heading', '.ab-h']) {
+      for (const selector of ['.project-name', '.measured-heading', '.panel-title']) {
         expect(
           await px(page, selector, 'font-size'),
           `${selector} must not drop below the 14px body copy it heads`,
@@ -42,12 +42,14 @@ test.describe('type scale', () => {
     }) => {
       await page.setViewportSize({ width, height: 900 });
       await gotoSettled(page, '/');
-      const size = await px(page, '.ab-code .ab-h', 'font-size');
-      expect(size, '.ab-code .ab-h stays at or above --text-xs').toBeGreaterThanOrEqual(TEXT_XS_PX);
+      const size = await px(page, '.ab-code .panel-title', 'font-size');
+      expect(size, '.ab-code .panel-title stays at or above --text-xs').toBeGreaterThanOrEqual(
+        TEXT_XS_PX,
+      );
       if (width >= CODE_TITLE_FULL_SIZE_MIN_WIDTH) {
-        expect(size, '.ab-code .ab-h reaches the full base size').toBe(TEXT_BASE_PX);
+        expect(size, '.ab-code .panel-title reaches the full base size').toBe(TEXT_BASE_PX);
       } else {
-        expect(size, '.ab-code .ab-h shrinks only where it would not fit').toBeLessThan(
+        expect(size, '.ab-code .panel-title shrinks only where it would not fit').toBeLessThan(
           TEXT_BASE_PX,
         );
       }
@@ -58,12 +60,14 @@ test.describe('type scale', () => {
     }) => {
       await page.setViewportSize({ width, height: 900 });
       await gotoSettled(page, '/');
-      const size = await px(page, '.ab-resp .ab-h', 'font-size');
-      expect(size, '.ab-resp .ab-h stays at or above --text-xs').toBeGreaterThanOrEqual(TEXT_XS_PX);
+      const size = await px(page, '.ab-resp .panel-title', 'font-size');
+      expect(size, '.ab-resp .panel-title stays at or above --text-xs').toBeGreaterThanOrEqual(
+        TEXT_XS_PX,
+      );
       if (width >= RESPONSIBILITIES_TITLE_FULL_SIZE_MIN_WIDTH) {
-        expect(size, '.ab-resp .ab-h reaches the full base size').toBe(TEXT_BASE_PX);
+        expect(size, '.ab-resp .panel-title reaches the full base size').toBe(TEXT_BASE_PX);
       } else {
-        expect(size, '.ab-resp .ab-h shrinks only where it would not fit').toBeLessThan(
+        expect(size, '.ab-resp .panel-title shrinks only where it would not fit').toBeLessThan(
           TEXT_BASE_PX,
         );
       }

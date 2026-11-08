@@ -55,4 +55,10 @@ test.describe('design-system components (visual baselines)', () => {
     await stripVolatileChrome(page);
     await snapshotLocator(page, page.locator('#copybutton'), 'copybutton-variants.png');
   });
+
+  test('Panel variants', async ({ page }) => {
+    await page.goto('/design-system/components#panel');
+    await stripVolatileChrome(page);
+    await snapshotLocator(page, page.locator('#panel'), 'panel-variants.png');
+  });
 });

@@ -27,9 +27,9 @@ test.describe('About', () => {
     await expect(link).toContainText(aboutContent[SITE_LOCALE.en].code.repoLabel);
     await expect(link, 'the name comes from the content').not.toHaveAttribute('aria-label');
 
-    const header = await panel.locator('.ab-ph').evaluate((element) => {
+    const header = await panel.locator('.panel-head').evaluate((element) => {
       const children = [...element.children];
-      const title = element.querySelector('.ab-h')?.getBoundingClientRect();
+      const title = element.querySelector('.panel-title')?.getBoundingClientRect();
       const link = element.querySelector('a')?.getBoundingClientRect();
       return {
         children: children.length,

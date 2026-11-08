@@ -39,7 +39,7 @@ describe('About', () => {
 
     expect(container.querySelector('#sec-readme')).not.toBeNull();
     expect(
-      [...container.querySelectorAll('.ab-panel > header h3')].map((title) => title.textContent),
+      [...container.querySelectorAll('.panel > header h3')].map((title) => title.textContent),
     ).toEqual([
       aboutContent[SITE_LOCALE.en].whoami.title,
       aboutContent[SITE_LOCALE.en].now.title,

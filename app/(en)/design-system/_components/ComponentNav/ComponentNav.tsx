@@ -8,6 +8,7 @@ const COMPONENTS = [
   { id: 'cmd-line', label: 'CmdLine' },
   { id: 'kbd-key', label: 'KbdKey' },
   { id: 'copybutton', label: 'CopyButton' },
+  { id: 'panel', label: 'Panel' },
   { id: 'menu-trigger', label: 'MenuTrigger' },
   { id: 'position-line', label: 'Position line' },
   { id: 'eq-spectrum-strip', label: 'EqSpectrumStrip' },

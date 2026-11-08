@@ -18,7 +18,7 @@ afterEach(() => {
 describe('About r106 composition', () => {
   it('renders five framed panels with titles in their top bands', () => {
     const { container } = render(<About locale={SITE_LOCALE.en} />);
-    const panels = container.querySelectorAll('.ab-panel');
+    const panels = container.querySelectorAll('.panel');
     expect(panels).toHaveLength(5);
     expect(
       [...panels].map((panel) => panel.querySelector(':scope > header h3')?.textContent),
@@ -39,7 +39,7 @@ describe('About r106 composition', () => {
     expect(screen.getByText(/WCAG 2.2 AA, WAI-ARIA/)).toBeTruthy();
     const responsibilities = screen
       .getByRole('heading', { name: 'LS -LA ~/RESPONSIBILITIES' })
-      .closest('.ab-panel');
+      .closest('.panel');
     expect(responsibilities?.querySelectorAll('[data-file]')).toHaveLength(7);
     expect(screen.getByText('performance-optimization')).toBeTruthy();
     expect(screen.getByText('taste-and-judgment')).toBeTruthy();
@@ -94,7 +94,7 @@ describe('About r106 composition', () => {
     render(<About locale={SITE_LOCALE.en} />);
     const responsibilities = screen
       .getByRole('heading', { name: 'LS -LA ~/RESPONSIBILITIES' })
-      .closest('.ab-panel');
+      .closest('.panel');
     expect(
       responsibilities?.querySelector('[data-legend="true"]'),
       'r106 shows only the listing; the legend wrapped into broken rows',
@@ -106,7 +106,7 @@ describe('About r106 composition', () => {
     render(<About locale={SITE_LOCALE.en} />);
     const panel = screen
       .getByRole('heading', { name: '$ cat src/lib/with-retry.ts' })
-      .closest('.ab-panel');
+      .closest('.panel');
     const link = screen.getByRole('link', {
       name: `${aboutContent[SITE_LOCALE.en].code.repoLabel} ${aboutContent[SITE_LOCALE.en].code.repoNewTabNote}`,
     });
@@ -115,7 +115,7 @@ describe('About r106 composition', () => {
       'WCAG 2.5.3: the name comes from the visible text',
     ).toBeNull();
     expect(
-      panel?.querySelector('.ab-ph')?.contains(link),
+      panel?.querySelector('.panel-head')?.contains(link),
       'the repo link belongs in the panel header, right of the title',
     ).toBe(true);
     expect(

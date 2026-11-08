@@ -24,13 +24,13 @@ export function Panel({
   ...rest
 }: PanelProps) {
   return (
-    <Tag className={cn('ab-panel', className)} aria-labelledby={titleId} {...rest}>
-      <header className="ab-ph">
-        <span className="ab-mk" aria-hidden="true">
+    <Tag className={cn('panel', className)} aria-labelledby={titleId} {...rest}>
+      <header className="panel-head">
+        <span className="panel-marker" aria-hidden="true">
           {marker}
         </span>
         <h3
-          className="ab-h"
+          className="panel-title"
           id={titleId}
           data-type-reveal={reveal || undefined}
           suppressHydrationWarning={reveal || undefined}

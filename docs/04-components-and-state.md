@@ -19,7 +19,7 @@ The naming gate scans `app`, `components` and `lib`; `/client/` is an explicit d
 
 `components/CompanyLink` renders every employer link: through `components/ExternalLink` (the shared `target="_blank"` and `rel="noopener noreferrer"` pair; `externalLinkProps(external)` spreads the pair onto a `Button` or a conditional anchor), a new-tab disclosure from `content/company-link.ts`, chosen by the required `locale` prop (an `sr-only` suffix, or `aria-describedby` to one shared note where the link sits inside a `data-type-reveal` heading, whose clip is sized from its text), a persistent underline and a 28px (`--spacing-target-compact`) hit area drawn by the `.company-link::before` pseudo-element. The hit area stays that small because the links sit inside dense inline text, where a 44px zone would cover the neighbouring lines and take their taps. `CompanyMention` links the company name inside an existing sentence and throws when the sentence stops naming it.
 
-`components/Panel` is the `.ab-panel` frame (marker, `h3` title, optional action) shared by About and Contact; `as` picks `div`, `section` or `aside`, and `titleId` names the landmark. `components/PageMain` owns `MAIN_CONTENT_ID` and renders every `main#main-content` (home, reading views, error pages); `className` swaps its layout class. `components/reading/ReadingSection` and `ReadingActions` hold the section heading and the hire, secondary and print row that `/cv` and `/summary` share. `lib/defer-props.ts` returns the `module-deferred` class and `data-cv-defer` marker for a deferred section. `lib/json-ld.ts` `serializeJsonLd` escapes `<`, U+2028 and U+2029 so a value cannot end the script element it sits in.
+`Panel` (`design-system/components/Panel`) is the `.panel` frame (`.panel-head`, `.panel-marker`, `.panel-title`; marker, `h3` title, optional action) shared by About and Contact; `as` picks `div`, `section` or `aside`, `titleId` names the landmark, and `reveal` marks the heading for the app-wide `TypeReveal` island. The frame rules live in `app/css/components-panel.css`; a section scopes its own tweaks under its section class in its own partial. `components/PageMain` owns `MAIN_CONTENT_ID` and renders every `main#main-content` (home, reading views, error pages); `className` swaps its layout class. `components/reading/ReadingSection` and `ReadingActions` hold the section heading and the hire, secondary and print row that `/cv` and `/summary` share. `lib/defer-props.ts` returns the `module-deferred` class and `data-cv-defer` marker for a deferred section. `lib/json-ld.ts` `serializeJsonLd` escapes `<`, U+2028 and U+2029 so a value cannot end the script element it sits in.
 
 `links-thumb` frames every `/links` video cover at 16:9 with the image filling the frame (no crop). The cover is grayscale under a multiplied signal-green layer from the `--links-thumb-*` tokens; hover or focus on the parent link restores the cover colour, and the transition stops while the MOTION switch is off. Documented with a live example in the design system components page.
 
@@ -41,7 +41,7 @@ flowchart TD
     main --> eb["ErrorBoundary"]
     eb --> sec["Terminal section (RSC)"]
     sec --> mod["Module (RSC wrapper: section + CSS typing header)"]
-    sec --> dsp["design-system primitives: Badge · Button · CmdLine · StatTile · TerminalPanel · WindowChrome · KbdKey · BrandIcon · Field"]
+    sec --> dsp["design-system primitives: Badge · Button · CmdLine · Panel · StatTile · TerminalPanel · WindowChrome · KbdKey · BrandIcon · Field"]
     sec -. some host .-> isl["Islands: InteractiveShell · ContactForm · ContactTimezone · DawMixer{Fader,Knob,Vu,Rms} · HeroBoot · RoleTyper"]
     eb --> hero["Hero (RSC with boot and system-failure islands, owns its section)"]
     hero --> identity["HeroIdentity: shared desktop/mobile identity, actions and HeroStats props"]
@@ -71,7 +71,7 @@ Module headers use CSS scroll-driven typing with a stepped text reveal and caret
 
 ## The design system
 
-Ten primitives in `design-system/components/`; **eight exported** from `design-system/index.ts` (`Field` uses a direct import in `ContactForm` and the docs; `BrandIcon` is imported by path, because a barrel export kept its path data in the client chunks of seven routes and pushed `/` past the first-load budget). The docs also provide the client `CopyButton` under `app/(en)/design-system/_components/`.
+Eleven primitives in `design-system/components/`; **nine exported** from `design-system/index.ts` (`Field` uses a direct import in `ContactForm` and the docs; `BrandIcon` is imported by path, because a barrel export kept its path data in the client chunks of seven routes and pushed `/` past the first-load budget). The docs also provide the client `CopyButton` under `app/(en)/design-system/_components/`.
 
 | Primitive       | Type       | Variant surface                                                                |
 | --------------- | ---------- | ------------------------------------------------------------------------------ |
@@ -82,6 +82,7 @@ Ten primitives in `design-system/components/`; **eight exported** from `design-s
 | `Field`         | **client** | input/textarea + label + error/ARIA (not exported)                             |
 | `KbdKey`        | RSC        | `size: sm｜md`                                                                 |
 | `NavItem`       | RSC        | navigation link with `current` state and decorative `index`                    |
+| `Panel`         | RSC        | framed section panel, `as: div｜section｜aside`, marker, `h3` title, optional action |
 | `StatTile`      | RSC        | `<dl>` stat tile, `variant: default｜compact｜display`                         |
 | `TerminalPanel` | RSC        | bordered container, polymorphic `as`, optional header                          |
 | `WindowChrome`  | RSC        | macOS traffic-light dots for panel headers, `size` px                          |
@@ -90,7 +91,7 @@ Design-system primitives join class names with `lib/cn.ts`, which imports `clsx`
 
 ## CSS / token architecture
 
-Import order (`app/globals.css`): `tailwindcss` → `theme.css` → `base.css` → `crt.css` → `animations.css` → `components-*.css` (20 flat partials, imported in the original cascade order). That `@import` order is the cascade order, and it is the only place it is recorded: the stylesheet-reading test helper (`__tests__/helpers/components-css.ts`) derives the partial order from these `@import` lines rather than sorting filenames, so a stylesheet assertion sees the same cascade the browser resolves. Tailwind v4 via the single `@tailwindcss/postcss` plugin. No CSS modules, no Style Dictionary.
+Import order (`app/globals.css`): `tailwindcss` → `theme.css` → `base.css` → `crt.css` → `animations.css` → `components-*.css` (flat partials, imported in the cascade order). That `@import` order is the cascade order, and it is the only place it is recorded: the stylesheet-reading test helper (`__tests__/helpers/components-css.ts`) derives the partial order from these `@import` lines rather than sorting filenames, so a stylesheet assertion sees the same cascade the browser resolves. Tailwind v4 via the single `@tailwindcss/postcss` plugin. No CSS modules, no Style Dictionary.
 
 | File               | `@layer`     | Holds                                                                                                                              |
 | ------------------ | ------------ | ---------------------------------------------------------------------------------------------------------------------------------- |

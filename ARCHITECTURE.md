@@ -264,8 +264,8 @@ components/AppShell/                   # shell chrome slots and shared section n
 components/BrandLink/                  # server component: brand icon link home, named from content/brand.ts
 components/ExternalLink/               # the one new-tab anchor (target and rel pair)
 components/OptimizedImage/             # server component: next/image getImageProps rendered as a plain img, no client runtime
-components/Panel/                      # the .ab-panel frame shared by About and Contact
 components/PageMain/                   # main landmark and MAIN_CONTENT_ID for every route
+design-system/components/Panel/         # the .panel frame (marker, h3 title, optional action) shared by About and Contact
 components/ErrorBoundary/              # client error boundary
 components/ErrorPages/                 # 404/500 bodies inside SiteShell, focused heading, error reference
 components/ErrorPages/GlobalErrorPage.client.tsx  # global-error shell: locale, static 500 message, lazy body
@@ -352,7 +352,8 @@ lib/cn.ts                             # className join helper
 
 app/css/theme.css                     # @theme { palette, glow stops, typography vars }
 app/css/base.css                      # @layer base { resets, focus-visible, skip-to-content }
-app/css/components-hero.css           # one of 20 @layer components partials (components-<section>.css), imported in cascade order
+app/css/components-panel.css          # the .panel frame rules (panel-head, panel-title, panel-marker), imported before the section partials that scope onto them
+app/css/components-hero.css           # one of the @layer components partials (components-<section>.css), imported in cascade order
 app/globals.css                       # entry: @import "tailwindcss" + theme/base/components; the @import order is the cascade order
 
 public/fonts/                         # JetBrains Mono self-hosted

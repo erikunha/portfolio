@@ -1,0 +1,32 @@
+@layer components {
+  .panel {
+    min-width: 0;
+    border: var(--border-width) solid var(--color-primary-subtle);
+    border-radius: var(--radius-control);
+    background: linear-gradient(var(--color-glow-03), transparent), var(--color-secondary-950);
+  }
+
+  .panel-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--spacing-1) var(--spacing-2);
+    min-height: var(--spacing-target);
+    padding: var(--spacing-2) var(--spacing-4);
+    border-bottom: var(--border-width) solid var(--color-primary-quiet);
+  }
+
+  .panel-title {
+    margin: 0;
+    color: var(--color-primary-500);
+    font-size: var(--text-base);
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+
+  .panel-marker {
+    color: var(--color-primary-500);
+    font-weight: 700;
+  }
+}

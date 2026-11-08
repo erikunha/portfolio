@@ -3,7 +3,7 @@ import { dsPageMetadata } from '../_lib/page-metadata';
 export const metadata = dsPageMetadata({
   slug: 'components',
   title: 'Components · Design System · erikunha.dev',
-  description: '10 design-system components and a docs clipboard helper for erikunha.dev',
+  description: '11 design-system components and a docs clipboard helper for erikunha.dev',
 });
 
 import { OptimizedImage } from '../../../../components/OptimizedImage';
@@ -18,7 +18,7 @@ import { WindowChrome } from '../../../../design-system/components/WindowChrome/
 
 # COMPONENTS
 
-The `design-system/components` directory contains ten components. Nine have no client directive; `Field` is a client component. The docs also provide a client `CopyButton` helper from `app/(en)/design-system/_components`. Server-compatible components ship client JavaScript when imported through a client boundary.
+The `design-system/components` directory contains eleven components. Ten have no client directive; `Field` is a client component. The docs also provide a client `CopyButton` helper from `app/(en)/design-system/_components`. Server-compatible components ship client JavaScript when imported through a client boundary.
 
 <ComponentNav />
 
@@ -189,6 +189,30 @@ A navigation link. `current` sets `aria-current="location"`, `index` is decorati
 </Preview>
 
 **Behavior:** Copies `text` to the clipboard on click. Success shows `COPIED` for 1.5s. A failed request shows `COPY FAILED`; missing clipboard access shows `COPY UNAVAILABLE`. A polite live region announces the result and manual-copy guidance. Consumer button props are forwarded; a consumer click handler can cancel copying with `preventDefault()`.
+
+## Panel
+
+| Prop | Type | Default | Required |
+|---|---|---|---|
+| `title` | `string` | · | yes |
+| `marker` | `string` | · | yes |
+| `as` | `'div' \| 'section' \| 'aside'` | `'div'` | no |
+| `titleId` | `string` | · | no |
+| `reveal` | `boolean` | `false` | no |
+| `action` | `ReactNode` | · | no |
+
+<Preview id="panel">
+  <Panel className="w-full" marker="[+]" title="whoami"><p className="m-0 p-4">Body content.</p></Panel>
+  <Panel className="w-full" as="aside" marker="[~]" title="status" titleId="panel-demo-title" action={<a href="#panel">link</a>}><p className="m-0 p-4">Landmark panel with an action.</p></Panel>
+</Preview>
+
+A bordered frame on an opaque `secondary-950` surface. The header holds a decorative `marker` (`aria-hidden`), the `title` as an `h3` and an optional `action` node after it. `as` picks the root element; `titleId` becomes the heading `id` and the root's `aria-labelledby`, which names a `section` or `aside` landmark by its title. Other `div` attributes pass through to the root.
+
+**Reveal coupling:** `reveal` only sets `data-type-reveal` on the heading and `suppressHydrationWarning`, because the heading text is rewritten after hydration. The scroll typing itself comes from the app-wide `TypeReveal` island mounted by `GlobalMotion` in the root layout, which observes every `[data-type-reveal]` element. Without that island the attribute has no effect.
+
+**Accessibility:** the title is the heading, so give each landmark panel its own `titleId`.
+
+**Styling:** the frame rules live in `app/css/components-panel.css`. A section that needs a different title size or header layout scopes the change under its own class in its own stylesheet and selects `.panel-head` and `.panel-title`.
 
 ---
 

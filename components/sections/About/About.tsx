@@ -1,9 +1,9 @@
 import { ExternalLink } from '@/components/ExternalLink';
-import { Panel } from '@/components/Panel';
 import { aboutContent } from '@/content/about';
 import { responsibilities } from '@/content/responsibilities';
 import { SCROLL_REGION_LABELS } from '@/content/section-labels';
 import type { SiteLocale } from '@/content/site-locale';
+import { Panel } from '@/design-system';
 import { CompanyMention } from '../../CompanyLink';
 import { RoleTyper } from '../../client/RoleTyper';
 import { IconReadme } from '../../Icons';

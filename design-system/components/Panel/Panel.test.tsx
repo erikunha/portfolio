@@ -1,8 +1,13 @@
 import { render } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
+import * as designSystem from '@/design-system';
 import { Panel } from './Panel';
 
 describe('Panel', () => {
+  it('is exported from the design-system barrel', () => {
+    expect(designSystem.Panel).toBe(Panel);
+  });
+
   it('renders the marker hidden from assistive technology and the title as an h3', () => {
     const { container } = render(
       <Panel title="whoami" marker="[+]">
@@ -11,9 +16,9 @@ describe('Panel', () => {
     );
     const root = container.firstElementChild;
     expect(root?.tagName).toBe('DIV');
-    expect(root?.classList.contains('ab-panel')).toBe(true);
-    expect(container.querySelector('.ab-mk')?.getAttribute('aria-hidden')).toBe('true');
-    expect(container.querySelector('h3.ab-h')?.textContent).toBe('whoami');
+    expect(root?.classList.contains('panel')).toBe(true);
+    expect(container.querySelector('.panel-marker')?.getAttribute('aria-hidden')).toBe('true');
+    expect(container.querySelector('h3.panel-title')?.textContent).toBe('whoami');
     expect(container.querySelector('p')?.textContent).toBe('body');
   });
 
