@@ -292,3 +292,88 @@ test('the mobile mixer renders no text below the 12px floor', async ({ page }, t
   }, FONT_FLOOR_PX);
   expect(small).toEqual([]);
 });
+
+const WCAG_MIN_TARGET_PX = 24;
+const TOUCH_TARGET_PX = 44;
+const NARROW_WIDTHS = [320, 375];
+
+async function rmsBoxes(page: import('@playwright/test').Page) {
+  await page.locator(DESKTOP_SELECTOR).scrollIntoViewIfNeeded();
+  return page.locator(`${DESKTOP_SELECTOR} .rms-buttons button`).evaluateAll((nodes) =>
+    nodes.map((node) => {
+      const box = node.getBoundingClientRect();
+      return { name: node.getAttribute('aria-label'), width: box.width, height: box.height };
+    }),
+  );
+}
+
+for (const width of NARROW_WIDTHS) {
+  test(`record, mute and solo keep a 24px target at ${width}px`, async ({ page }, testInfo) => {
+    test.skip(
+      MOBILE_PROJECTS.includes(testInfo.project.name),
+      'the desktop table only ships to desktop user agents',
+    );
+    await installMockBackend(page, { log: 'accept', forget: 'happy' });
+    await page.setViewportSize({ width, height: VIEWPORT_HEIGHT });
+    await page.goto('/');
+    const boxes = await rmsBoxes(page);
+    expect(boxes.length).toBeGreaterThan(0);
+    for (const box of boxes) {
+      expect(box.width, `${box.name} width`).toBeGreaterThanOrEqual(WCAG_MIN_TARGET_PX);
+      expect(box.height, `${box.name} height`).toBeGreaterThanOrEqual(WCAG_MIN_TARGET_PX);
+    }
+  });
+}
+
+test.describe('touch screens', () => {
+  test.use({ hasTouch: true, isMobile: true });
+
+  for (const width of NARROW_WIDTHS) {
+    test(`record, mute and solo reach 44px and the console stays inside ${width}px`, async ({
+      page,
+    }, testInfo) => {
+      test.skip(
+        MOBILE_PROJECTS.includes(testInfo.project.name),
+        'the desktop table only ships to desktop user agents',
+      );
+      await installMockBackend(page, { log: 'accept', forget: 'happy' });
+      await page.setViewportSize({ width, height: VIEWPORT_HEIGHT });
+      await page.goto('/');
+      const boxes = await rmsBoxes(page);
+      expect(boxes.length).toBeGreaterThan(0);
+      for (const box of boxes) {
+        expect(box.width, `${box.name} width`).toBeGreaterThanOrEqual(TOUCH_TARGET_PX);
+        expect(box.height, `${box.name} height`).toBeGreaterThanOrEqual(TOUCH_TARGET_PX);
+      }
+      expect(await horizontalOverflow(page)).toBeLessThanOrEqual(SUBPIXEL_TOLERANCE_PX);
+    });
+  }
+});
+
+test('channel subtitles wrap below the md breakpoint instead of truncating', async ({
+  page,
+}, testInfo) => {
+  test.skip(
+    MOBILE_PROJECTS.includes(testInfo.project.name),
+    'the desktop table only ships to desktop user agents',
+  );
+  await installMockBackend(page, { log: 'accept', forget: 'happy' });
+  await page.setViewportSize({ width: 375, height: VIEWPORT_HEIGHT });
+  await page.goto('/');
+  await page.locator(DESKTOP_SELECTOR).scrollIntoViewIfNeeded();
+  const clipped = await page
+    .locator(`${DESKTOP_SELECTOR} [data-testid="mixer-desc"]`)
+    .evaluateAll((nodes) =>
+      nodes
+        .filter(
+          (node) =>
+            node.scrollWidth > node.clientWidth + 1 ||
+            (getComputedStyle(node).textOverflow === 'ellipsis' &&
+              getComputedStyle(node).whiteSpace === 'nowrap'),
+        )
+        .map((node) => node.textContent),
+    );
+  expect(clipped, 'a subtitle clipped with an ellipsis hides its words from touch users').toEqual(
+    [],
+  );
+});

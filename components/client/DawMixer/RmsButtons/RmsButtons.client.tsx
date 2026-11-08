@@ -32,7 +32,7 @@ export function RmsButtons({ buttons, initialActive, channelName, buttonLabels }
           aria-pressed={active.has(btn) ? 'true' : 'false'}
           onClick={() => toggle(btn)}
           className={cn(
-            'min-w-[24px] min-h-[24px] px-[6px] font-mono text-xs font-bold flex items-center justify-center cursor-pointer tracking-[0.02em] shrink-0',
+            'rms-btn px-[6px] font-mono text-xs font-bold flex items-center justify-center cursor-pointer tracking-[0.02em] shrink-0',
             active.has(btn)
               ? [
                   'rms-active',

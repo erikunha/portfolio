@@ -88,7 +88,10 @@ function ChannelDesktop({ ch, copy }: { ch: DawMixerChannel; copy: DawMixerCopy 
         >
           {ch.desktopName ?? ch.name}
         </span>
-        <span className="text-xs text-primary-400 leading-[1.3] whitespace-nowrap overflow-hidden text-ellipsis">
+        <span
+          className="text-xs text-primary-400 leading-[1.3] whitespace-nowrap overflow-hidden text-ellipsis max-md:whitespace-normal max-md:overflow-visible max-md:text-clip"
+          data-testid="mixer-desc"
+        >
           <ParsedText text={ch.desc} />
         </span>
       </div>

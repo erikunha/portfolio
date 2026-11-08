@@ -136,3 +136,16 @@ describe('RmsButtons — toggle interaction', () => {
     expect(mBtn.getAttribute('aria-pressed')).toBe('true');
   });
 });
+
+describe('RmsButtons: target size', () => {
+  it('every button carries the rms-btn class that sets the 28px and 44px floors', () => {
+    const doc = renderStatic({
+      buttons: ['R', 'M', 'S'],
+      initialActive: [],
+      channelName: 'CH 01',
+      buttonLabels: CONTROLS.buttons,
+    });
+    const buttons = Array.from(doc.querySelectorAll('button'));
+    expect(buttons.every((button) => button.classList.contains('rms-btn'))).toBe(true);
+  });
+});

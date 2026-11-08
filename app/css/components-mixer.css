@@ -9,6 +9,18 @@
     gap: var(--mixer-transport-gap);
   }
 
+  .rms-btn {
+    min-width: var(--spacing-target-compact);
+    min-height: var(--spacing-target-compact);
+  }
+
+  @media (pointer: coarse) {
+    .rms-btn {
+      min-width: var(--spacing-target);
+      min-height: var(--spacing-target);
+    }
+  }
+
   .plugin-chain {
     display: flex;
     align-items: stretch;
