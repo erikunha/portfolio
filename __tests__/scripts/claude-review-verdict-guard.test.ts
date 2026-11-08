@@ -72,7 +72,7 @@ describe('the guard fetches, filters and tests the latest review comment of this
     expect(grep, 'no `printf | grep -qiE` verdict test in the guard').toBeTruthy();
     expect(
       grep?.[1],
-      `The verdict grep must read the variable the FILTERED fetch assigns. Nothing previously tied them, and substituting an unfiltered \`gh api … --jq '.[].body'\` ran green — which returns both failures at once: a stale prior-run verdict and a bolded "approve" from any author each satisfy the guard although this run posted nothing.\n\nfetch assigns: ${fetch?.[1]}\ngrep reads:    ${grep?.[1]}`,
+      `The verdict grep must read the variable the FILTERED fetch assigns. Nothing previously tied them, and substituting an unfiltered \`gh api … --jq '.[].body'\` ran green, which returns both failures at once: a stale prior-run verdict and a bolded "approve" from any author each satisfy the guard although this run posted nothing.\n\nfetch assigns: ${fetch?.[1]}\ngrep reads:    ${grep?.[1]}`,
     ).toBe(fetch?.[1]);
   });
 
@@ -86,7 +86,7 @@ describe('the guard fetches, filters and tests the latest review comment of this
     expect(filter).toContain('last');
     expect(
       /gh api[^\n]*--paginate --slurp/.test(guardScript()),
-      'The fetch must pass --slurp. gh applies --jq PER PAGE under --paginate, so without it `last` yields one body per page and the grep sees their union — reintroducing the exact failure `last` was added to remove, invisibly, and only once a PR passes 30 comments. The filter must also flatten with .[][] and sort explicitly rather than trusting API order.',
+      'The fetch must pass --slurp. gh applies --jq PER PAGE under --paginate, so without it `last` yields one body per page and the grep sees their union, reintroducing the exact failure `last` was added to remove, invisibly, and only once a PR passes 30 comments. The filter must also flatten with .[][] and sort explicitly rather than trusting API order.',
     ).toBe(true);
     expect(filter).toContain('.[][]');
   });
