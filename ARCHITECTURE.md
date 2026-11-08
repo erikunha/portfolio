@@ -698,7 +698,7 @@ Vercel deploys `main`. CI runs LHCI against its own local production server, not
 
 ### Rollback
 
-Vercel "Promote to Production" of previous deployment. <60 seconds. No manual config needed.
+Vercel "Promote to Production" of previous deployment. <60 seconds. No manual config needed. The slow path (`git revert` of the latest commit on `main`) is rehearsed weekly by `.github/workflows/rollback-rehearsal.yml`, which reverts locally and runs install, typecheck, tests and build without pushing or calling Vercel. See `docs/07-workflows.md`.
 
 ### Claude harness configuration
 
