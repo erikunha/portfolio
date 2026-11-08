@@ -2,6 +2,7 @@ import { useId } from 'react';
 import { careerCopy, careerEntries, careerScrollLabel } from '@/content/git-log';
 import type { SiteLocale } from '@/content/site-locale';
 import { deferProps } from '@/lib/defer-props';
+import { CommandText } from '../../CommandText';
 import { CompanyLink } from '../../CompanyLink';
 import { IconGitLog } from '../../Icons';
 import { CredentialsSection } from '../CredentialsSection';
@@ -21,7 +22,7 @@ export function GitLogContent({ locale }: { locale: SiteLocale }) {
       tabIndex={0}
     >
       <p className="career-command">
-        <span>{copy.prompt}</span> {copy.command}
+        <span>{copy.prompt}</span> <CommandText>{copy.command}</CommandText>
       </p>
       <ol className="career-commits">
         {careerEntries(locale).map((entry) => (
@@ -79,7 +80,7 @@ export function GitLogSection({ locale, defer }: { locale: SiteLocale; defer?: b
             {copy.headerCommand}
           </span>
           <span className="career-header-command-mobile" aria-hidden="true">
-            {copy.mobileHeaderCommand}
+            <CommandText>{copy.mobileHeaderCommand}</CommandText>
           </span>
         </h2>
       </header>

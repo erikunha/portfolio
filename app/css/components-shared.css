@@ -1,4 +1,8 @@
 @layer components {
+  .cmd-word {
+    white-space: nowrap;
+  }
+
   .brand-link {
     display: inline-flex;
     flex: none;

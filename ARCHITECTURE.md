@@ -266,6 +266,7 @@ components/client/RoleTyper/          # About status role typewriter island
 components/client/TypeReveal/         # Scroll type reveal observer island (IntersectionObserver plus a MutationObserver on main)
 components/AppShell/                   # shell chrome slots and shared section navigation
 components/BrandLink/                  # server component: brand icon link home, named from content/brand.ts
+components/CommandText/                # server component: a shell command with each word unbreakable, so a flag never wraps after its dashes
 components/ExternalLink/               # the one new-tab anchor (target and rel pair)
 components/OptimizedImage/             # server component: next/image getImageProps rendered as a plain img, no client runtime
 components/PageMain/                   # main landmark and MAIN_CONTENT_ID for every route
