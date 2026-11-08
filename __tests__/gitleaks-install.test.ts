@@ -8,18 +8,22 @@ const CI = parse(readFileSync(join(process.cwd(), '.github', 'workflows', 'ci.ym
   jobs: Record<
     string,
     {
+      'timeout-minutes'?: number;
+      env?: Record<string, string>;
       steps: {
         id?: string;
         uses?: string;
         if?: string;
         run?: string;
+        'continue-on-error'?: boolean | string;
         with?: Record<string, string>;
       }[];
     }
   >;
 };
 
-const steps = CI.jobs.gitleaks?.steps ?? [];
+const job = CI.jobs.gitleaks;
+const steps = job?.steps ?? [];
 const cache = steps.find((s) => s.uses?.startsWith('actions/cache@'));
 const download = steps.find((s) => s.run?.includes('curl'));
 const verify = steps.find((s) => s.run?.includes('sha256sum'));
@@ -44,5 +48,43 @@ describe('gitleaks install survives a release-host outage', () => {
     expect(verify).not.toBe(download);
     expect(verify?.if ?? '').not.toContain('cache-hit');
     expect(verify?.run).toContain('set -euo pipefail');
+  });
+
+  it('cannot pass a failed verification', () => {
+    expect(verify?.['continue-on-error']).toBeUndefined();
+    expect(verify?.run).not.toContain('|| true');
+  });
+
+  it('compares the tarball against a sha256 pinned in the job env, never a cached checksums file', () => {
+    expect(job?.env?.GITLEAKS_SHA256).toMatch(/^[0-9a-f]{64}$/);
+    expect(verify?.run).toContain('GITLEAKS_SHA256');
+    for (const step of steps) {
+      expect(step.run ?? '').not.toContain('checksums.txt');
+    }
+  });
+
+  it('uses one release directory for the cache path, the download and the verify', () => {
+    expect(cache?.with?.path).toMatch(/^\$\{\{ runner\.temp \}\}\/gitleaks-release$/);
+    for (const step of [download, verify]) {
+      expect(step?.run).toMatch(/dir="\$\{RUNNER_TEMP:-\$\{TMPDIR:-\/tmp\}\}\/gitleaks-release"/);
+    }
+  });
+
+  it('orders the steps cache, download, verify', () => {
+    const at = (step: unknown) => steps.indexOf(step as (typeof steps)[number]);
+    expect(at(cache)).toBeGreaterThanOrEqual(0);
+    expect(at(cache)).toBeLessThan(at(download));
+    expect(at(download)).toBeLessThan(at(verify));
+  });
+
+  it('keeps the worst-case download inside the job timeout', () => {
+    const retryMax = Number(/--retry-max-time (\d+)/.exec(download?.run ?? '')?.[1]);
+    const attempt = Number(/--max-time (\d+)/.exec(download?.run ?? '')?.[1]);
+    const budget = (job?.['timeout-minutes'] ?? 0) * 60;
+    const downloads = (download?.run ?? '')
+      .split('\n')
+      .filter((line) => line.includes('curl ')).length;
+    expect(downloads).toBeGreaterThan(0);
+    expect(downloads * (retryMax + attempt)).toBeLessThan(budget);
   });
 });
