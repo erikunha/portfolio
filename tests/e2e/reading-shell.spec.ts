@@ -25,6 +25,11 @@ async function headerFingerprint(page: Page, selector: string) {
   return page.locator(selector).evaluate((bar) => {
     const strip = (node: Element) => {
       const clone = node.cloneNode(true) as Element;
+      for (const placeholder of clone.querySelectorAll('template')) placeholder.remove();
+      const comments = document.createTreeWalker(clone, NodeFilter.SHOW_COMMENT);
+      const streamMarkers: Node[] = [];
+      while (comments.nextNode()) streamMarkers.push(comments.currentNode);
+      for (const marker of streamMarkers) marker.parentNode?.removeChild(marker);
       for (const marked of clone.querySelectorAll('[aria-current]')) {
         marked.removeAttribute('aria-current');
       }
