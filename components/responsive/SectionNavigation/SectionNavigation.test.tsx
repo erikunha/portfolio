@@ -402,23 +402,32 @@ describe('SectionNavigation', () => {
     expect(scrollIntoView).toHaveBeenCalledTimes(1);
   });
 
-  it.each([
-    ['prefers-reduced-motion', () => (reducedMotion = true)],
-    ['the motion toggle', () => (document.body.dataset.motion = 'reduce')],
-  ])('does not smooth-scroll under %s', (_, enable) => {
+  it('does not smooth-scroll once the motion toggle is off', () => {
     render(<Page />);
-    enable();
+    document.body.dataset.motion = 'reduce';
     fireEvent.click(navLink('Career'));
     expect(scrollIntoView).toHaveBeenCalledWith({ behavior: 'auto', block: 'start' });
   });
 
-  it('smooth-scrolls when the visitor switched motion on over a reduced-motion system', () => {
-    localStorage.setItem('erik.motion', 'on');
+  it('smooth-scrolls and reads MOTION: ON on a first visit over a reduced-motion system', () => {
     reducedMotion = true;
     render(<Page />);
     fireEvent.click(navLink('Career'));
     expect(scrollIntoView).toHaveBeenCalledWith({ behavior: 'smooth', block: 'start' });
-    localStorage.removeItem('erik.motion');
+    expect(document.querySelector('.menu-motion')?.textContent).toContain(
+      NAVIGATION[LOCALE].copy.motionOn,
+    );
+  });
+
+  it('reads MOTION: OFF and stays on auto scroll when the visitor stored OFF', () => {
+    localStorage.setItem(MOTION_STORAGE_KEY, 'off');
+    render(<Page />);
+    fireEvent.click(navLink('Career'));
+    expect(scrollIntoView).toHaveBeenCalledWith({ behavior: 'auto', block: 'start' });
+    expect(document.querySelector('.menu-motion')?.textContent).toContain(
+      NAVIGATION[LOCALE].copy.motionOff,
+    );
+    localStorage.removeItem(MOTION_STORAGE_KEY);
   });
 
   it('sends Home to the top of the page and focuses the main landmark', () => {

@@ -73,22 +73,15 @@ describe('IdentityCard', () => {
     expect(pt).toContain('Engenheiro de Software Sênior, IA Aplicada');
   });
 
-  it('shows the first tagline at once when reduced motion is preferred', () => {
+  it('shows the first tagline at once when the MOTION switch is off', () => {
     vi.useFakeTimers();
-    vi.stubGlobal(
-      'matchMedia',
-      vi.fn().mockReturnValue({
-        matches: true,
-        addEventListener: vi.fn(),
-        removeEventListener: vi.fn(),
-      }),
-    );
+    localStorage.setItem('erik.motion', 'off');
     const { container } = render(<IdentityCard locale={LINKS_LOCALE.en} />);
     vi.advanceTimersByTime(5_000);
     const typed = container.querySelector('.tagline-live [aria-hidden="true"]:not(.boot-cursor)');
     expect(typed?.textContent).toBe('Senior Software Engineer, Applied AI');
     vi.useRealTimers();
-    vi.unstubAllGlobals();
+    localStorage.removeItem('erik.motion');
   });
   it('reserves the tallest tagline with hidden sizers so cycling never shifts layout', async () => {
     const { profile } = (await import('@/content/links')).linksContent;

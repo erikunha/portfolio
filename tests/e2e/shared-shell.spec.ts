@@ -4,6 +4,7 @@ import { LINKS_PATH } from '@/content/links.constants';
 import { siteNavChrome } from '@/content/navigation';
 import { SITE_LOCALE, type SiteLocale } from '@/content/site-locale';
 import { horizontalOverflow, VIEWPORTS } from './_helpers/geometry';
+import { gotoSettled } from './_helpers/streamed';
 
 const SHELL_PATHS: readonly { path: string; locale: SiteLocale }[] = [
   { path: '/', locale: SITE_LOCALE.en },
@@ -34,7 +35,7 @@ test.describe('one shell on every page', () => {
     const homeName = brandByLocale[locale].accessibleName;
     test(`${path} carries the home topbar at desktop`, async ({ page }) => {
       await page.setViewportSize(DESKTOP);
-      await page.goto(path);
+      await gotoSettled(page, path);
       const topbar = page.locator('.desktop-topbar');
       await expect(topbar).toBeVisible();
       const homeLink = topbar.getByRole('link', { name: homeName });
@@ -55,7 +56,7 @@ test.describe('one shell on every page', () => {
 
     test(`${path} carries the mobile title bar and the dock on a phone`, async ({ page }) => {
       await page.setViewportSize(PHONE);
-      await page.goto(path);
+      await gotoSettled(page, path);
       const bar = page.locator('.mobile-title-bar');
       await expect(bar).toBeVisible();
       await expect(bar.getByRole('link', { name: homeName })).toBeVisible();
@@ -71,7 +72,7 @@ test.describe('one shell on every page', () => {
     page,
   }) => {
     await page.setViewportSize(DESKTOP);
-    await page.goto(LINKS_PATH.en);
+    await gotoSettled(page, LINKS_PATH.en);
     await page.locator('.desktop-topbar').getByRole('button', { name: MENU_NAME }).click();
     const drawer = page.locator(DRAWER);
     await expect(drawer).toHaveClass(/is-open/);
@@ -82,7 +83,7 @@ test.describe('one shell on every page', () => {
 
   test('the design-system drawer also lists the design-system pages', async ({ page }) => {
     await page.setViewportSize(PHONE);
-    await page.goto('/design-system/tokens');
+    await gotoSettled(page, '/design-system/tokens');
     await page.locator('.mobile-title-bar').getByRole('button', { name: MENU_NAME }).click();
     const drawer = page.locator(DRAWER);
     await expect(drawer).toHaveClass(/is-open/);
@@ -96,7 +97,7 @@ test.describe('one shell on every page', () => {
 
   test('no dock item claims the home section off the home page', async ({ page }) => {
     await page.setViewportSize(PHONE);
-    await page.goto('/links');
+    await gotoSettled(page, '/links');
     await expect(
       page.getByRole('navigation', { name: 'primary' }).locator('[aria-current]'),
     ).toHaveCount(0);
@@ -107,14 +108,14 @@ test.describe('one shell on every page', () => {
       page,
     }) => {
       await page.setViewportSize({ width, height: PHONE.height });
-      await page.goto('/design-system');
+      await gotoSettled(page, '/design-system');
       await expect(page.locator('.ds-sidebar:visible')).toHaveCount(0);
     });
   }
 
   test('the design-system side rail shows from 1024px', async ({ page }) => {
     await page.setViewportSize({ width: 1024, height: DESKTOP.height });
-    await page.goto('/design-system');
+    await gotoSettled(page, '/design-system');
     await expect(page.locator('.ds-sidebar:visible')).toHaveCount(1);
   });
 
@@ -125,7 +126,7 @@ test.describe('one shell on every page', () => {
           width,
           height: width <= PHONE_MAX_WIDTH ? PHONE.height : DESKTOP.height,
         });
-        await page.goto(path);
+        await gotoSettled(page, path);
         expect(await horizontalOverflow(page)).toBeLessThanOrEqual(0);
       });
     }
@@ -138,7 +139,7 @@ for (const path of ['/', '/pt']) {
       page,
     }) => {
       await page.setViewportSize({ width, height: 844 });
-      await page.goto(path);
+      await gotoSettled(page, path);
       const bar = page.locator('.mobile-title-bar');
       const toggle = bar.locator('[data-lang-switch]');
       await expect(toggle).toBeVisible();

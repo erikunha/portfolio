@@ -11,6 +11,7 @@ import { personSchema, SITE_KEYWORDS, SITE_NAME } from '@/content/seo';
 import { SITE_LOCALE, SITE_OG_LOCALE, type SiteLocale } from '@/content/site-locale';
 import { social } from '@/content/social';
 import { serializeJsonLd } from '@/lib/json-ld';
+import { MOTION_BOOTSTRAP_SCRIPT } from '@/lib/motion-bootstrap';
 
 const mono = localFont({
   src: [
@@ -83,7 +84,7 @@ export const rootMetadata: Metadata = {
 
 const personJsonLd = serializeJsonLd(personSchema);
 
-const initScript = `history.scrollRestoration="manual";window.scrollTo(0,0);(function(){try{var m=localStorage.getItem("erik.motion");var on=m==="on"?true:m==="off"?false:!window.matchMedia("(prefers-reduced-motion:reduce)").matches;document.body.dataset.motion=on?"full":"reduce"}catch(e){}})();`;
+const initScript = `history.scrollRestoration="manual";window.scrollTo(0,0);${MOTION_BOOTSTRAP_SCRIPT}`;
 
 export const ROOT_HTML_CLASS_NAME = `${mono.variable} ${display.variable}`;
 

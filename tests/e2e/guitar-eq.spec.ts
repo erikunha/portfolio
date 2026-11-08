@@ -2,6 +2,7 @@ import { expect, type Page, test } from '@playwright/test';
 import { guitarRig } from '../../content/guitar-rig';
 import { SITE_LOCALE } from '../../content/site-locale';
 import { horizontalOverflow, VIEWPORTS as SHARED_VIEWPORTS } from './_helpers/geometry';
+import { freezeMotion } from './_helpers/motion';
 
 const STRIP = '[data-testid="eq-spectrum"]';
 const BAR = `${STRIP} .eq-bar`;
@@ -98,16 +99,14 @@ test.describe('EQ strip motion', () => {
   }
 
   test('bounces on the groove when motion is allowed', async ({ page }) => {
-    await page.emulateMedia({ reducedMotion: 'no-preference' });
     const bar = await firstBar(page);
     const name = await bar.evaluate((node) => getComputedStyle(node).animationName);
     expect(name).not.toBe(NO_ANIMATION);
   });
 
-  test('holds one static frame under prefers-reduced-motion', async ({ page }) => {
-    await page.emulateMedia({ reducedMotion: 'reduce' });
+  test('holds one static frame from first paint when MOTION is stored off', async ({ page }) => {
+    await freezeMotion(page);
     const bar = await firstBar(page);
-    await page.evaluate(() => document.body.removeAttribute('data-motion'));
     const style = await bar.evaluate((node) => {
       const computed = getComputedStyle(node);
       return { name: computed.animationName, transform: computed.transform };
@@ -117,7 +116,6 @@ test.describe('EQ strip motion', () => {
   });
 
   test('holds one static frame in print', async ({ page }) => {
-    await page.emulateMedia({ reducedMotion: 'no-preference' });
     const bar = await firstBar(page);
     await page.emulateMedia({ media: 'print' });
     const name = await bar.evaluate((node) => getComputedStyle(node).animationName);
@@ -125,7 +123,6 @@ test.describe('EQ strip motion', () => {
   });
 
   test('holds one static frame when the MOTION switch is off', async ({ page }) => {
-    await page.emulateMedia({ reducedMotion: 'no-preference' });
     const bar = await firstBar(page);
     await page.evaluate(() => document.body.setAttribute('data-motion', 'reduce'));
     const name = await bar.evaluate((node) => getComputedStyle(node).animationName);

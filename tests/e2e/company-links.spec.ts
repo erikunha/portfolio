@@ -4,6 +4,7 @@ import { profile } from '../../content/profile';
 import { READING_PATHS } from '../../content/reading-views';
 import { SITE_LOCALE } from '../../content/site-locale';
 import { VIEWPORTS } from './_helpers/geometry';
+import { freezeMotion } from './_helpers/motion';
 
 const TOUCH_TARGET_PX = 28;
 const NEIGHBOUR_CLEARANCE_PX = 14;
@@ -40,7 +41,7 @@ test.describe('career company links', () => {
   for (const viewport of COMPANY_VIEWPORTS) {
     test(`home career log links every company at ${viewport.name}`, async ({ page }) => {
       await page.setViewportSize({ width: viewport.width, height: viewport.height });
-      await page.emulateMedia({ reducedMotion: 'reduce' });
+      await freezeMotion(page);
       await page.goto('/');
       const links = page.locator('[data-testid="career-log"] a.company-link');
       await expect(links).toHaveCount(gitLog[SITE_LOCALE.en].length);
@@ -65,7 +66,7 @@ test.describe('career company links', () => {
   }
 
   test('company links show a visible focus ring when reached by keyboard', async ({ page }) => {
-    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await freezeMotion(page);
     await page.goto('/');
     const link = page.locator('[data-testid="career-log"] a.company-link').first();
     await link.focus();
@@ -81,7 +82,7 @@ test.describe('career company links', () => {
   });
 
   test('the hero links the current employer', async ({ page }) => {
-    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await freezeMotion(page);
     await page.goto('/');
     const link = page.locator('[data-testid="hero-desktop"] .hero-context-fact--employer a');
     await expect(link).toHaveAttribute('href', profile.currentEmployer.url);

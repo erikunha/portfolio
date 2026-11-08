@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test';
 import { footerSectionIds } from '@/content/footer';
 import { waitForHydration } from '../../../tests/e2e/_helpers/hydration';
+import { freezeMotion } from '../../../tests/e2e/_helpers/motion';
 
 const COMMAND_RETRY_WINDOW_MS = 2_000;
 const NO_COMMANDS = '0';
@@ -13,7 +14,7 @@ const SCROLL_ATTEMPTS = 5;
 const MOBILE_HERO_SELECTOR = '[data-testid="hero-mobile"]';
 
 async function loadFooter(page: import('@playwright/test').Page) {
-  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await freezeMotion(page);
   await page.goto('/');
   await page.locator('footer').scrollIntoViewIfNeeded();
   await expect(
@@ -65,7 +66,7 @@ test.describe('Footer', () => {
   test('reboots in place, focuses the top heading and preserves command totals', async ({
     page,
   }) => {
-    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await freezeMotion(page);
     await page.goto('/');
     await waitForHydration(page, '[data-testid="shell-form"]');
     const input = page.getByRole('textbox', { name: 'shell command', exact: true });

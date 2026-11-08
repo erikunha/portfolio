@@ -2,7 +2,6 @@ export type NavigationSnapshot = {
   currentId: string;
   drawerOpen: boolean;
   motionOn: boolean;
-  systemReduced: boolean;
 };
 
 export type NavigationStore = {

@@ -357,12 +357,6 @@
     animation: shell-blink 1.05s steps(2, start) infinite;
   }
 
-  @media (prefers-reduced-motion: reduce) {
-    .shell-cursor {
-      animation: none;
-    }
-  }
-
   body[data-motion="reduce"] .shell-cursor {
     animation: none;
   }
@@ -376,12 +370,6 @@
   .shell-cmd-hint:hover:not([aria-disabled="true"]) {
     color: var(--color-primary-500);
     text-shadow: 0 0 6px var(--color-glow-50);
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .shell-cmd-hint {
-      transition: none;
-    }
   }
 
   body[data-motion="reduce"] .shell-cmd-hint {
@@ -427,12 +415,6 @@
       opacity: 1;
       transform: translateY(0);
       pointer-events: auto;
-    }
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .to-top-btn {
-      transition: none;
     }
   }
 

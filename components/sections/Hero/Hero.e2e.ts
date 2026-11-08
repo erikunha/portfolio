@@ -3,6 +3,7 @@ import { heroContent } from '@/content/hero';
 import { profile } from '@/content/profile';
 import { SITE_LOCALE } from '@/content/site-locale';
 import { waitForHydration } from '../../../tests/e2e/_helpers/hydration';
+import { freezeMotion } from '../../../tests/e2e/_helpers/motion';
 
 const viewports = [
   { width: 1280, height: 720 },
@@ -137,7 +138,7 @@ test.describe('Hero boot log between 768 and 1023px', () => {
   for (const width of TABLET_BOOT_WIDTHS) {
     test(`keeps every boot line on one line at ${width}`, async ({ page }) => {
       await page.setViewportSize({ width, height: TABLET_BOOT_VIEWPORT_HEIGHT });
-      await page.emulateMedia({ reducedMotion: 'reduce' });
+      await freezeMotion(page);
       await page.goto('/');
 
       const lines = page.locator('.hero-desktop .hero-boot-line');

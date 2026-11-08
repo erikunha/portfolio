@@ -186,7 +186,7 @@
       calc(var(--eq-bar-delay) * -1) infinite;
   }
 
-  @media (prefers-reduced-motion: reduce), print {
+  @media print {
     .eq-bar {
       animation: none;
     }
@@ -450,9 +450,7 @@
     }
   }
 
-  @media (prefers-reduced-motion: no-preference) {
-    body:not([data-motion="reduce"]) .mixer-boot-cursor {
-      animation: mixer-boot-blink 1.05s steps(2, start) infinite;
-    }
+  body:not([data-motion="reduce"]) .mixer-boot-cursor {
+    animation: mixer-boot-blink 1.05s steps(2, start) infinite;
   }
 }
