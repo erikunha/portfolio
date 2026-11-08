@@ -15,7 +15,7 @@ This reference describes tracked project configuration. User-level tools and hoo
 | `.claude/agents/`         | One read-only agent for the CI review job                                                              | Claude Code         |
 | `.claude/settings.json`   | Team permissions (deny rules); no hooks                                                                | Claude Code         |
 | `.mcp.json`, `.codex/config.toml` | The same MCP servers, one file per tool (project layer, trusted projects only for Codex) | Claude Code, Codex  |
-| `.github/CODEOWNERS`      | Code owner for every path above                                                                        | GitHub              |
+| `.github/CODEOWNERS`      | Code owner for every path above, plus `.github/`, `.husky/`, `scripts/`, the manifests, lockfile and workspace settings, `biome.json`, `vercel.json` and `proxy.ts` | GitHub              |
 
 Personal configuration stays out of the repository: `CLAUDE.local.md`, `.claude/settings.local.json`
 and the user-level homes of each tool. Workflow hooks, review habits, merge habits and model choices

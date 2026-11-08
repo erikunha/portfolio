@@ -83,7 +83,7 @@ CI runs separate quality, typecheck, unit-test and build jobs. Runtime and AI jo
 
 ## 5. CI-side AI workflows
 
-`.github/workflows/claude-review.yml` handles PR review requested by a `/claude-review` comment. `.github/workflows/claude.yml` handles human `@claude` mentions. They have different triggers and permissions.
+`.github/workflows/claude-review.yml` handles PR review requested by a `/claude-review` comment. `.github/workflows/claude.yml` handles human `@claude` mentions with read-only tools and no `contents: write`. They have different triggers and permissions.
 
 ## Prompt architecture (the shapes of AI work)
 

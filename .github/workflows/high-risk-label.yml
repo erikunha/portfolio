@@ -3,7 +3,8 @@ name: High Risk Label
 # Marks a pull request that touches a high-risk surface (the API boundary, rate limiting, env and
 # secret handling, workflows, security headers, dependency manifests, the ask prompt and its
 # guards) with the `high-risk` label, and removes the label once no changed file is on that list.
-# The list lives in scripts/high-risk-paths.ts. The label directs review attention; it blocks no
+# The list lives in scripts/high-risk-paths.ts and is read from the base commit, so the pull request
+# under review cannot edit the script that runs with the token. The label directs review attention; it blocks no
 # merge and is not part of ci-gate.
 #
 # The token is contents: read plus pull-requests: write on the labelling job only. A fork pull
@@ -51,6 +52,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         if: steps.gate.outputs.skip != 'true'
         with:
+          ref: ${{ github.event.pull_request.base.sha }}
           persist-credentials: false
 
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
