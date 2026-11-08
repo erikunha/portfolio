@@ -1,34 +1,28 @@
-import { NextRequest } from 'next/server';
+import type { NextRequest } from 'next/server';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { askErrors } from '@/content/ask-errors';
+import { askRequest } from './helpers/ask-route';
 
 const limit = vi.fn(async () => ({ success: false, reset: 0 }));
 const persist = vi.fn(async () => undefined);
 
 vi.mock('ai', () => ({ streamText: vi.fn() }));
-vi.mock('@/lib/rate-limit', () => ({
-  getClientIp: vi.fn(() => '127.0.0.1'),
-  getAskLimit: vi.fn(() => ({ limit })),
-  hasRedisCredentials: vi.fn(() => false),
-  reserveBudget: vi.fn(async () => ({ allowed: true, reserved: 0, pct: 0, budgetKey: 'k' })),
-  settleBudget: vi.fn(async () => undefined),
-  checkIdenticalQuestion: vi.fn(async () => ({ allowed: true })),
-}));
-vi.mock('@/lib/ask-log', () => ({ persistAskInteraction: persist }));
-vi.mock('@/lib/ip-hash', () => ({ hashIp: vi.fn(async () => 'hashed-ip-test') }));
-vi.mock('@/lib/log', () => ({
-  log: { info: vi.fn(), error: vi.fn(), warn: vi.fn(), debug: vi.fn() },
-}));
+vi.mock('@/lib/rate-limit', async () =>
+  (await import('./helpers/ask-route')).rateLimitModule({
+    getAskLimit: vi.fn(() => ({ limit })),
+    hasRedisCredentials: vi.fn(() => false),
+    reserveBudget: vi.fn(async () => ({ allowed: true, reserved: 0, pct: 0, budgetKey: 'k' })),
+  }),
+);
+vi.mock('@/lib/ask-log', async () => (await import('./helpers/ask-route')).askLogModule(persist));
+vi.mock('@/lib/ip-hash', async () => (await import('./helpers/ask-route')).ipHashModule());
+vi.mock('@/lib/log', async () => (await import('./helpers/ask-route')).logModule());
 
 function ask(site: string | null, locale?: string): NextRequest {
-  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+  const headers: Record<string, string> = {};
   if (site !== null) headers['Sec-Fetch-Site'] = site;
   if (locale) headers['x-site-locale'] = locale;
-  return new NextRequest('http://localhost/api/ask', {
-    method: 'POST',
-    body: JSON.stringify({ question: 'hi' }),
-    headers,
-  });
+  return askRequest({ question: 'hi' }, { headers });
 }
 
 describe('ask cross-site gate', () => {

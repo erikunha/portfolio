@@ -1,5 +1,6 @@
-import { NextRequest } from 'next/server';
+import type { NextRequest } from 'next/server';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { askRequest } from './helpers/ask-route';
 
 const mockStreamText = vi.fn();
 const checkIdenticalQuestionMock = vi.fn();
@@ -20,32 +21,21 @@ function makeStreamTextResult(text = 'ok') {
   };
 }
 
-vi.mock('@/lib/rate-limit', () => ({
-  getClientIp: vi.fn(() => '127.0.0.1'),
-  getAskLimit: vi.fn(() => ({ limit: vi.fn(async () => ({ success: true })) })),
-  reserveBudget: reserveBudgetMock,
-  settleBudget: vi.fn(async () => undefined),
-  checkIdenticalQuestion: checkIdenticalQuestionMock,
-}));
+vi.mock('@/lib/rate-limit', async () =>
+  (await import('./helpers/ask-route')).rateLimitModule({
+    reserveBudget: reserveBudgetMock,
+    checkIdenticalQuestion: checkIdenticalQuestionMock,
+  }),
+);
 
-vi.mock('@/lib/ask-log', () => ({
-  persistAskInteraction: vi.fn(async () => undefined),
-}));
+vi.mock('@/lib/ask-log', async () => (await import('./helpers/ask-route')).askLogModule());
 
-vi.mock('@/lib/ip-hash', () => ({
-  hashIp: vi.fn(async () => 'hashed-ip-test'),
-}));
+vi.mock('@/lib/ip-hash', async () => (await import('./helpers/ask-route')).ipHashModule());
 
-vi.mock('@/lib/log', () => ({
-  log: { info: vi.fn(), error: vi.fn(), warn: vi.fn(), debug: vi.fn() },
-}));
+vi.mock('@/lib/log', async () => (await import('./helpers/ask-route')).logModule());
 
 function makeRequest(question: string): NextRequest {
-  return new NextRequest('http://localhost/api/ask', {
-    method: 'POST',
-    body: JSON.stringify({ question }),
-    headers: { 'Content-Type': 'application/json' },
-  });
+  return askRequest({ question });
 }
 
 describe('/api/ask identical-question gate', () => {

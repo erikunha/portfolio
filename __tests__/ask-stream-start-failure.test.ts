@@ -1,6 +1,7 @@
-import { NextRequest } from 'next/server';
+import type { NextRequest } from 'next/server';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { askErrors } from '@/content/ask-errors';
+import { askRequest } from './helpers/ask-route';
 
 const afterMock = vi.hoisted(() => vi.fn());
 const streamTextMock = vi.hoisted(() => vi.fn());
@@ -12,32 +13,27 @@ vi.mock('next/server', async (importOriginal) => ({
   after: afterMock,
 }));
 vi.mock('ai', () => ({ streamText: streamTextMock }));
-vi.mock('@/lib/rate-limit', () => ({
-  getClientIp: vi.fn(() => '127.0.0.1'),
-  getAskLimit: vi.fn(() => ({ limit: vi.fn(async () => ({ success: true })) })),
-  hasRedisCredentials: vi.fn(() => true),
-  reserveBudget: vi.fn(async () => ({
-    allowed: true,
-    reserved: 2712,
-    pct: 0,
-    budgetKey: 'ask:tokens:test',
-    dailyKey: 'ask:tokens:day:test',
-  })),
-  settleBudget: settleBudgetMock,
-  checkIdenticalQuestion: vi.fn(async () => ({ allowed: true })),
-}));
-vi.mock('@/lib/ask-log', () => ({ persistAskInteraction: vi.fn(async () => undefined) }));
-vi.mock('@/lib/ip-hash', () => ({ hashIp: vi.fn(async () => 'hashed-ip-test') }));
-vi.mock('@/lib/log', () => ({
-  log: { info: vi.fn(), error: logError, warn: vi.fn(), debug: vi.fn() },
-}));
+vi.mock('@/lib/rate-limit', async () =>
+  (await import('./helpers/ask-route')).rateLimitModule({
+    hasRedisCredentials: vi.fn(() => true),
+    reserveBudget: vi.fn(async () => ({
+      allowed: true,
+      reserved: 2712,
+      pct: 0,
+      budgetKey: 'ask:tokens:test',
+      dailyKey: 'ask:tokens:day:test',
+    })),
+    settleBudget: settleBudgetMock,
+  }),
+);
+vi.mock('@/lib/ask-log', async () => (await import('./helpers/ask-route')).askLogModule());
+vi.mock('@/lib/ip-hash', async () => (await import('./helpers/ask-route')).ipHashModule());
+vi.mock('@/lib/log', async () =>
+  (await import('./helpers/ask-route')).logModule({ error: logError }),
+);
 
 function request(): NextRequest {
-  return new NextRequest('http://localhost/api/ask', {
-    method: 'POST',
-    body: JSON.stringify({ question: 'Who is Erik?', locale: 'pt' }),
-    headers: { 'Content-Type': 'application/json' },
-  });
+  return askRequest({ question: 'Who is Erik?', locale: 'pt' });
 }
 
 describe('/api/ask when the model call cannot start', () => {

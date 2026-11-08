@@ -1,6 +1,6 @@
-import { NextRequest } from 'next/server';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ASK_KV_TTL_S, askLogDatesInTtl } from '@/lib/ask-log';
+import { askRequest } from './helpers/ask-route';
 
 const MS_PER_SECOND = 1000;
 const dayOf = (ms: number) => new Date(ms).toISOString().slice(0, 10);
@@ -69,11 +69,7 @@ describe('/api/log/forget reaches a key in its final day before expiry', () => {
   it('deletes the key dated exactly the TTL ago', async () => {
     const { POST } = await import('@/app/api/log/forget/route');
     const res = await POST(
-      new NextRequest('http://localhost/api/log/forget', {
-        method: 'POST',
-        body: JSON.stringify({ requestId: REAL_UUID }),
-        headers: { 'Content-Type': 'application/json' },
-      }),
+      askRequest({ requestId: REAL_UUID }, { url: 'http://localhost/api/log/forget' }),
     );
     expect(res.status).toBe(200);
     const keys = (redisDelMock.mock.calls[0] ?? []).map(String);

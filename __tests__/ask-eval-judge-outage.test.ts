@@ -17,9 +17,7 @@ const { streamTextMock, generateTextMock } = vi.hoisted(() => ({
 }));
 
 vi.mock('ai', () => ({ streamText: streamTextMock, generateText: generateTextMock }));
-vi.mock('@/lib/log', () => ({
-  log: { info: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn() },
-}));
+vi.mock('@/lib/log', async () => (await import('./helpers/ask-route')).logModule());
 vi.mock('@/lib/eval/judge', async (importOriginal) => {
   const original = await importOriginal<typeof import('@/lib/eval/judge')>();
   return {

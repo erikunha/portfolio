@@ -1,9 +1,10 @@
-import { NextRequest } from 'next/server';
+import type { NextRequest } from 'next/server';
 import { createElement } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { shellUi } from '@/content/shell-ui';
 import { SITE_LOCALE } from '@/content/site-locale';
 import { shellChrome } from '@/content/terminal-chrome';
+import { askRequest } from './helpers/ask-route';
 import { mountClient } from './helpers/render';
 
 describe('lib/ask-log — persistAskInteraction', () => {
@@ -119,11 +120,7 @@ describe('/api/log/forget endpoint', () => {
   });
 
   function makeRequest(body: Record<string, unknown>): NextRequest {
-    return new NextRequest('http://localhost/api/log/forget', {
-      method: 'POST',
-      body: JSON.stringify(body),
-      headers: { 'Content-Type': 'application/json' },
-    });
+    return askRequest(body, { url: 'http://localhost/api/log/forget' });
   }
 
   const REAL_UUID = '11111111-2222-4333-8444-555555555555';

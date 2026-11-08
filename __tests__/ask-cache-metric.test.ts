@@ -1,5 +1,6 @@
-import { NextRequest } from 'next/server';
+import type { NextRequest } from 'next/server';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { askRequest, readBody } from './helpers/ask-route';
 
 const mockStreamText = vi.fn();
 
@@ -18,13 +19,12 @@ const reserveBudgetMock = vi.fn(async () => ({
   budgetKey: 'ask:tokens:test',
 }));
 
-vi.mock('@/lib/rate-limit', () => ({
-  getClientIp: vi.fn(() => '127.0.0.1'),
-  getAskLimit: vi.fn(() => ({ limit: vi.fn(async () => ({ success: true })) })),
-  reserveBudget: reserveBudgetMock,
-  settleBudget: settleBudgetMock,
-  checkIdenticalQuestion: vi.fn(async () => ({ allowed: true })),
-}));
+vi.mock('@/lib/rate-limit', async () =>
+  (await import('./helpers/ask-route')).rateLimitModule({
+    reserveBudget: reserveBudgetMock,
+    settleBudget: settleBudgetMock,
+  }),
+);
 
 type PersistedInteraction = {
   inputTokens: number;
@@ -32,38 +32,19 @@ type PersistedInteraction = {
   status: string;
 };
 const persistMock = vi.fn(async (_interaction: PersistedInteraction): Promise<void> => undefined);
-vi.mock('@/lib/ask-log', () => ({
-  persistAskInteraction: persistMock,
-}));
+vi.mock('@/lib/ask-log', async () =>
+  (await import('./helpers/ask-route')).askLogModule(persistMock),
+);
 
-vi.mock('@/lib/ip-hash', () => ({
-  hashIp: vi.fn(async () => 'hashed-ip-test'),
-}));
+vi.mock('@/lib/ip-hash', async () => (await import('./helpers/ask-route')).ipHashModule());
 
 const logInfoMock = vi.fn();
-vi.mock('@/lib/log', () => ({
-  log: { info: logInfoMock, error: vi.fn(), warn: vi.fn(), debug: vi.fn() },
-}));
+vi.mock('@/lib/log', async () =>
+  (await import('./helpers/ask-route')).logModule({ info: logInfoMock }),
+);
 
 function makeRequest(question = 'What is your stack?'): NextRequest {
-  return new NextRequest('http://localhost/api/ask', {
-    method: 'POST',
-    body: JSON.stringify({ question }),
-    headers: { 'Content-Type': 'application/json' },
-  });
-}
-
-async function drain(res: Response): Promise<string> {
-  const reader = res.body?.getReader();
-  if (!reader) return '';
-  const dec = new TextDecoder();
-  let out = '';
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    if (value) out += dec.decode(value, { stream: true });
-  }
-  return out;
+  return askRequest({ question });
 }
 
 function makeStreamTextResult(opts: {
@@ -126,7 +107,7 @@ describe('/api/ask — cache-hit accounting (STANDARDS.md Ch.7)', () => {
     const { POST } = await import('@/app/api/ask/route');
     const res = await POST(makeRequest());
     expect(res.status).toBe(200);
-    expect(await drain(res)).toContain('Angular');
+    expect(await readBody(res)).toContain('Angular');
 
     await vi.waitFor(() => expect(settleBudgetMock).toHaveBeenCalledOnce());
 
@@ -157,7 +138,7 @@ describe('/api/ask — cache-hit accounting (STANDARDS.md Ch.7)', () => {
 
     const { POST } = await import('@/app/api/ask/route');
     const res = await POST(makeRequest());
-    await drain(res);
+    await readBody(res);
 
     await vi.waitFor(() =>
       expect(logInfoMock.mock.calls.some((c) => c[0] === 'ask completed')).toBe(true),
@@ -181,7 +162,7 @@ describe('/api/ask — cache-hit accounting (STANDARDS.md Ch.7)', () => {
 
     const { POST } = await import('@/app/api/ask/route');
     const res = await POST(makeRequest());
-    await drain(res);
+    await readBody(res);
 
     await vi.waitFor(() => expect(settleBudgetMock).toHaveBeenCalledOnce());
     const billedInput = settleBudgetMock.mock.calls[0]?.[1];
@@ -204,7 +185,7 @@ describe('/api/ask — cache-hit accounting (STANDARDS.md Ch.7)', () => {
 
     const { POST } = await import('@/app/api/ask/route');
     const res = await POST(makeRequest());
-    await drain(res);
+    await readBody(res);
 
     await vi.waitFor(() => expect(settleBudgetMock).toHaveBeenCalledOnce());
     const billedInput = settleBudgetMock.mock.calls[0]?.[1];
@@ -229,7 +210,7 @@ describe('/api/ask — cache-hit accounting (STANDARDS.md Ch.7)', () => {
     const { POST } = await import('@/app/api/ask/route');
     const res = await POST(makeRequest());
     expect(res.status).toBe(200);
-    expect(await drain(res)).toContain('an answer was streamed');
+    expect(await readBody(res)).toContain('an answer was streamed');
 
     await vi.waitFor(() => expect(persistMock).toHaveBeenCalled());
 
@@ -253,7 +234,7 @@ describe('/api/ask — cache-hit accounting (STANDARDS.md Ch.7)', () => {
 
     const { POST } = await import('@/app/api/ask/route');
     const res = await POST(makeRequest());
-    await drain(res);
+    await readBody(res);
 
     await vi.waitFor(() => expect(settleBudgetMock).toHaveBeenCalledOnce());
     const firstCall = settleBudgetMock.mock.calls[0];

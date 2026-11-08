@@ -1,7 +1,7 @@
-import { NextRequest } from 'next/server';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { askErrors } from '@/content/ask-errors';
 import { SITE_LOCALE } from '@/content/site-locale';
+import { askRequest, readBody } from './helpers/ask-route';
 
 const PROVIDER_DETAIL = 'Your credit balance is too low; key sk-ant-demo rejected by gateway.eu-1';
 const persistMock = vi.fn(async (_interaction: { status: string }) => undefined);
@@ -18,39 +18,25 @@ vi.mock('@/lib/ask/model', async () => {
   };
 });
 
-vi.mock('@/lib/rate-limit', () => ({
-  getClientIp: vi.fn(() => '127.0.0.1'),
-  getAskLimit: vi.fn(() => ({ limit: vi.fn(async () => ({ success: true })) })),
-  hasRedisCredentials: vi.fn(() => false),
-  reserveBudget: vi.fn(async () => ({
-    allowed: true,
-    reserved: 1512,
-    pct: 0,
-    budgetKey: 'ask:tokens:test',
-    dailyKey: 'ask:tokens:day:test',
-  })),
-  settleBudget: settleMock,
-  checkIdenticalQuestion: vi.fn(async () => ({ allowed: true })),
-}));
+vi.mock('@/lib/rate-limit', async () =>
+  (await import('./helpers/ask-route')).rateLimitModule({
+    hasRedisCredentials: vi.fn(() => false),
+    reserveBudget: vi.fn(async () => ({
+      allowed: true,
+      reserved: 1512,
+      pct: 0,
+      budgetKey: 'ask:tokens:test',
+      dailyKey: 'ask:tokens:day:test',
+    })),
+    settleBudget: settleMock,
+  }),
+);
 
-vi.mock('@/lib/ask-log', () => ({ persistAskInteraction: persistMock }));
-vi.mock('@/lib/ip-hash', () => ({ hashIp: vi.fn(async () => 'hashed-ip-test') }));
-vi.mock('@/lib/log', () => ({
-  log: { info: vi.fn(), error: vi.fn(), warn: vi.fn(), debug: vi.fn() },
-}));
-
-async function readBody(res: Response): Promise<string> {
-  const reader = res.body?.getReader();
-  if (!reader) return '';
-  const decoder = new TextDecoder();
-  let out = '';
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    out += decoder.decode(value, { stream: !done });
-  }
-  return out;
-}
+vi.mock('@/lib/ask-log', async () =>
+  (await import('./helpers/ask-route')).askLogModule(persistMock),
+);
+vi.mock('@/lib/ip-hash', async () => (await import('./helpers/ask-route')).ipHashModule());
+vi.mock('@/lib/log', async () => (await import('./helpers/ask-route')).logModule());
 
 describe('/api/ask when the model provider fails', () => {
   beforeEach(() => {
@@ -63,13 +49,7 @@ describe('/api/ask when the model provider fails', () => {
   it('tells the visitor the model failed instead of streaming an empty successful answer', async () => {
     const { POST } = await import('@/app/api/ask/route');
     const { STREAM_ERR_SENTINEL } = await import('@/lib/stream-protocol');
-    const res = await POST(
-      new NextRequest('http://localhost/api/ask', {
-        method: 'POST',
-        body: JSON.stringify({ question: 'Who is Erik?' }),
-        headers: { 'Content-Type': 'application/json' },
-      }),
-    );
+    const res = await POST(askRequest({ question: 'Who is Erik?' }));
 
     const body = await readBody(res);
 
@@ -83,13 +63,7 @@ describe('/api/ask when the model provider fails', () => {
 
   it('never forwards the provider error text to the visitor', async () => {
     const { POST } = await import('@/app/api/ask/route');
-    const res = await POST(
-      new NextRequest('http://localhost/api/ask', {
-        method: 'POST',
-        body: JSON.stringify({ question: 'What does Erik build?' }),
-        headers: { 'Content-Type': 'application/json' },
-      }),
-    );
+    const res = await POST(askRequest({ question: 'What does Erik build?' }));
 
     const body = await readBody(res);
 
@@ -101,13 +75,7 @@ describe('/api/ask when the model provider fails', () => {
 
   it('refunds the whole budget reservation when the provider fails before reporting any usage', async () => {
     const { POST } = await import('@/app/api/ask/route');
-    const res = await POST(
-      new NextRequest('http://localhost/api/ask', {
-        method: 'POST',
-        body: JSON.stringify({ question: 'Where does Erik work?' }),
-        headers: { 'Content-Type': 'application/json' },
-      }),
-    );
+    const res = await POST(askRequest({ question: 'Where does Erik work?' }));
     await readBody(res);
 
     await vi.waitFor(() => expect(persistMock).toHaveBeenCalledOnce());

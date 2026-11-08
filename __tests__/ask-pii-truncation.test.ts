@@ -1,6 +1,7 @@
-import { NextRequest } from 'next/server';
+import type { NextRequest } from 'next/server';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { ASK_MAX_QUESTION_CHARS } from '@/lib/ask/limits';
+import { askRequest } from './helpers/ask-route';
 
 const afterMock = vi.hoisted(() => vi.fn());
 const streamTextMock = vi.hoisted(() => vi.fn());
@@ -11,25 +12,21 @@ vi.mock('next/server', async (importOriginal) => ({
   after: afterMock,
 }));
 vi.mock('ai', () => ({ streamText: streamTextMock }));
-vi.mock('@/lib/rate-limit', () => ({
-  getClientIp: vi.fn(() => '127.0.0.1'),
-  getAskLimit: vi.fn(() => ({ limit: vi.fn(async () => ({ success: true })) })),
-  hasRedisCredentials: vi.fn(() => true),
-  getRedis: vi.fn(() => ({ set: redisSet })),
-  reserveBudget: vi.fn(async () => ({
-    allowed: true,
-    reserved: 2712,
-    pct: 0,
-    budgetKey: 'ask:tokens:test',
-    dailyKey: 'ask:tokens:day:test',
-  })),
-  settleBudget: vi.fn(async () => undefined),
-  checkIdenticalQuestion: vi.fn(async () => ({ allowed: true })),
-}));
-vi.mock('@/lib/ip-hash', () => ({ hashIp: vi.fn(async () => 'hashed-ip-test') }));
-vi.mock('@/lib/log', () => ({
-  log: { info: vi.fn(), error: vi.fn(), warn: vi.fn(), debug: vi.fn() },
-}));
+vi.mock('@/lib/rate-limit', async () =>
+  (await import('./helpers/ask-route')).rateLimitModule({
+    hasRedisCredentials: vi.fn(() => true),
+    getRedis: vi.fn(() => ({ set: redisSet })),
+    reserveBudget: vi.fn(async () => ({
+      allowed: true,
+      reserved: 2712,
+      pct: 0,
+      budgetKey: 'ask:tokens:test',
+      dailyKey: 'ask:tokens:day:test',
+    })),
+  }),
+);
+vi.mock('@/lib/ip-hash', async () => (await import('./helpers/ask-route')).ipHashModule());
+vi.mock('@/lib/log', async () => (await import('./helpers/ask-route')).logModule());
 
 const ANSWER_LOG_CHARS = 1000;
 const FILLER = 'q';
@@ -40,11 +37,7 @@ const STRADDLING_PII = [
 ] as const;
 
 function request(question: string): NextRequest {
-  return new NextRequest('http://localhost/api/ask', {
-    method: 'POST',
-    body: JSON.stringify({ question }),
-    headers: { 'Content-Type': 'application/json' },
-  });
+  return askRequest({ question });
 }
 
 function answering(answer: string): void {

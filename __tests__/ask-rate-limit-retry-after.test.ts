@@ -1,31 +1,25 @@
-import { NextRequest } from 'next/server';
+import type { NextRequest } from 'next/server';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { askRequest } from './helpers/ask-route';
 
 const limit = vi.fn();
 
 vi.mock('ai', () => ({ streamText: vi.fn() }));
-vi.mock('@/lib/rate-limit', () => ({
-  getClientIp: vi.fn(() => '127.0.0.1'),
-  getAskLimit: vi.fn(() => ({ limit })),
-  reserveBudget: vi.fn(async () => ({ allowed: true, reserved: 0, pct: 0, budgetKey: 'k' })),
-  settleBudget: vi.fn(async () => undefined),
-  checkIdenticalQuestion: vi.fn(async () => ({ allowed: true })),
-}));
-vi.mock('@/lib/ask-log', () => ({ persistAskInteraction: vi.fn(async () => undefined) }));
-vi.mock('@/lib/ip-hash', () => ({ hashIp: vi.fn(async () => 'hashed-ip-test') }));
-vi.mock('@/lib/log', () => ({
-  log: { info: vi.fn(), error: vi.fn(), warn: vi.fn(), debug: vi.fn() },
-}));
+vi.mock('@/lib/rate-limit', async () =>
+  (await import('./helpers/ask-route')).rateLimitModule({
+    getAskLimit: vi.fn(() => ({ limit })),
+    reserveBudget: vi.fn(async () => ({ allowed: true, reserved: 0, pct: 0, budgetKey: 'k' })),
+  }),
+);
+vi.mock('@/lib/ask-log', async () => (await import('./helpers/ask-route')).askLogModule());
+vi.mock('@/lib/ip-hash', async () => (await import('./helpers/ask-route')).ipHashModule());
+vi.mock('@/lib/log', async () => (await import('./helpers/ask-route')).logModule());
 
 const NOW = Date.parse('2026-11-05T12:00:00Z');
 const MINUTE_MS = 60_000;
 
 function ask(): NextRequest {
-  return new NextRequest('http://localhost/api/ask', {
-    method: 'POST',
-    body: JSON.stringify({ question: 'hi' }),
-    headers: { 'Content-Type': 'application/json' },
-  });
+  return askRequest({ question: 'hi' });
 }
 
 describe('ask 429 Retry-After', () => {

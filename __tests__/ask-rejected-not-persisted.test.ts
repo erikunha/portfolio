@@ -1,5 +1,6 @@
-import { NextRequest } from 'next/server';
+import type { NextRequest } from 'next/server';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { askRequest } from './helpers/ask-route';
 
 const persistMock = vi.fn(async (_interaction: { status: string }) => undefined);
 const logInfo = vi.fn();
@@ -20,27 +21,25 @@ const limitMock = vi.hoisted(() =>
 );
 
 vi.mock('ai', () => ({ streamText: streamTextMock }));
-vi.mock('@/lib/rate-limit', () => ({
-  getClientIp: vi.fn(() => '127.0.0.1'),
-  getAskLimit: vi.fn(() => ({ limit: limitMock })),
-  hasRedisCredentials: vi.fn(() => false),
-  reserveBudget: budgetMock,
-  settleBudget: vi.fn(async () => undefined),
-  checkIdenticalQuestion: dedupMock,
-}));
-vi.mock('@/lib/ask-log', () => ({ persistAskInteraction: persistMock }));
+vi.mock('@/lib/rate-limit', async () =>
+  (await import('./helpers/ask-route')).rateLimitModule({
+    getAskLimit: vi.fn(() => ({ limit: limitMock })),
+    hasRedisCredentials: vi.fn(() => false),
+    reserveBudget: budgetMock,
+    checkIdenticalQuestion: dedupMock,
+  }),
+);
+vi.mock('@/lib/ask-log', async () =>
+  (await import('./helpers/ask-route')).askLogModule(persistMock),
+);
 vi.mock('@/lib/ask/refusal-count', () => ({ countAskRefusal: countRefusalMock }));
-vi.mock('@/lib/ip-hash', () => ({ hashIp: vi.fn(async () => 'hashed-ip-test') }));
-vi.mock('@/lib/log', () => ({
-  log: { info: logInfo, error: vi.fn(), warn: vi.fn(), debug: vi.fn() },
-}));
+vi.mock('@/lib/ip-hash', async () => (await import('./helpers/ask-route')).ipHashModule());
+vi.mock('@/lib/log', async () =>
+  (await import('./helpers/ask-route')).logModule({ info: logInfo }),
+);
 
 function post(body: string): NextRequest {
-  return new NextRequest('http://localhost/api/ask', {
-    method: 'POST',
-    body,
-    headers: { 'Content-Type': 'application/json' },
-  });
+  return askRequest(body);
 }
 
 describe('/api/ask requests rejected before the model', () => {
