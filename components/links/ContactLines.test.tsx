@@ -1,12 +1,16 @@
 import { act, render } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { LINKS_LOCALE } from '@/content/links.constants';
+import { COPY_FEEDBACK_RESET_MS } from '@/lib/use-copy-feedback.client';
 import { ContactLines } from './ContactLines';
 
 const PAGE_URL = 'https://www.erikunha.dev/links';
 
 describe('ContactLines', () => {
-  afterEach(() => vi.unstubAllGlobals());
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.unstubAllGlobals();
+  });
 
   it('is a labelled section with its own heading', () => {
     const { container } = render(<ContactLines locale={LINKS_LOCALE.pt} url={PAGE_URL} />);
@@ -42,6 +46,7 @@ describe('ContactLines', () => {
     [LINKS_LOCALE.pt, 'copiado', 'Falha ao copiar'],
     [LINKS_LOCALE.en, 'copied', 'Copy failed'],
   ] as const)('words the copy outcome in the page language (%s)', async (locale, done, failed) => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
     const writeText = vi
       .fn()
       .mockResolvedValueOnce(undefined)
@@ -55,7 +60,7 @@ describe('ContactLines', () => {
     expect(status()).toContain(done);
 
     await act(async () => {
-      await new Promise((resolve) => setTimeout(resolve, 2_100));
+      await vi.advanceTimersByTimeAsync(COPY_FEEDBACK_RESET_MS);
     });
     await act(async () => button.click());
     expect(status(), 'a failed copy says what to do next, in the page language').toContain(failed);
