@@ -261,7 +261,6 @@
 
   .reading-chips--ai li {
     border-color: var(--color-primary-500);
-    color: var(--color-primary-500);
   }
 
   @media (min-width: 1024px) {

@@ -7,6 +7,7 @@ export {
   useCurrentSection,
   useDrawerOpen,
   useMotionOn,
+  useMotionState,
   useSectionNavigation,
 } from './SectionNavigationProvider.client';
 export { jumpToSection } from './sectionScroll';

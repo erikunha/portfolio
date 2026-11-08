@@ -47,7 +47,6 @@ export const linksContent: LinksContent = LinksContentSchema.parse({
   playlists: [
     {
       id: 'ai-engineering',
-      accent: 'quaternary',
       tag: 'AI',
       title: { pt: 'AI Engineering na prática', en: 'AI engineering, hands-on' },
       description: {
@@ -57,7 +56,6 @@ export const linksContent: LinksContent = LinksContentSchema.parse({
     },
     {
       id: 'carreira-internacional',
-      accent: 'quinary',
       tag: 'INTL',
       title: { pt: 'Carreira internacional para devs', en: 'Going global as a dev' },
       description: {

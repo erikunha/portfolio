@@ -607,8 +607,8 @@
   }
 
   .ctz-status[data-online="false"] {
-    border-color: var(--color-quinary-500);
-    color: var(--color-quinary-500);
+    border-color: var(--color-tertiary-300);
+    color: var(--color-tertiary-300);
   }
 
   .ctz-banner {

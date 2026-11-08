@@ -11,10 +11,6 @@ export const LINKS_PATH = {
 
 export const LINKS_INTL_LOCALE = SITE_HTML_LANG;
 
-export const PLAYLIST_ACCENT = { ai: 'quaternary', career: 'quinary' } as const;
-
-export type PlaylistAccent = (typeof PLAYLIST_ACCENT)[keyof typeof PLAYLIST_ACCENT];
-
 export const PILL_ICON = {
   portfolio: 'portfolio',
   github: 'github',

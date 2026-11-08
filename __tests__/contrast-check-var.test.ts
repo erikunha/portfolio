@@ -15,8 +15,7 @@ const PALETTE = `
   --color-tertiary-50: #e6ffe6;
   --color-tertiary-400: #e6ffe6;
   --color-tertiary-500: #e6ffe6;
-  --color-quaternary-400: #e6ffe6;
-  --color-quinary-300: #e6ffe6;
+  --color-senary-300: #e6ffe6;
   --color-primary-500: #00ff41;
   --color-primary-400: #e6ffe6;
   --color-primary-700: #e6ffe6;

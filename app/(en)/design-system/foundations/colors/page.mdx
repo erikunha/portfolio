@@ -35,13 +35,13 @@ Color tokens live in `app/css/theme.css` inside the single `@theme` block. Swatc
 
 <h2 id="status">Status</h2>
 
-<ColorSwatch token="senary-300" usage="Error states and validation messages" />
+<ColorSwatch token="senary-300" usage="Alerts: form errors, shell errors, mixer clip LED" />
 <ColorSwatch token="senary-500" usage="Window-chrome close dot" />
 <ColorSwatch token="quinary-500" usage="Window-chrome minimize dot" />
-<ColorSwatch token="quaternary-400" usage="Cool syntax accents" />
 
 <h2 id="rules">Rules</h2>
 
+- The green and grey ramps carry the whole interface. Cyan and amber do not exist; red (`senary`) marks alerts only and amber (`quinary-500`) the window-chrome dot, nothing else.
 - Reference colors through Tailwind utilities backed by `@theme` (`text-primary-500`, `border-primary-subtle`). Never write raw hex in components.
 - A control edge (input, textarea) uses `primary-500`: the translucent `primary-border` and `primary-subtle` stops measure below the 3:1 non-text minimum (WCAG 1.4.11) on the black surface.
 - Do not use the signal green for paragraph text. Body copy uses `text` (`tertiary-50`).

@@ -3,7 +3,7 @@
 import { type ReactNode, useEffect, useRef } from 'react';
 import { externalLinkProps } from '@/components/ExternalLink';
 import { StatusDot } from '@/components/StatusDot';
-import { TOPBAR_MOTION_LABEL } from '@/content/nav';
+import { MOTION_STATE_SEPARATOR, TOPBAR_MOTION_LABEL } from '@/content/nav';
 import { NavItem } from '@/design-system';
 import { cn } from '@/lib/cn';
 import { isolate } from '@/lib/dom/isolate';
@@ -16,7 +16,6 @@ import {
   useSectionNavigation,
 } from './SectionNavigationProvider.client';
 
-const MOTION_STATE_SEPARATOR = ': ';
 const POSITION_DIGITS = 2;
 const formatSectionNumber = (order: number) => String(order).padStart(POSITION_DIGITS, '0');
 const TRAPPED_CONTROLS = 'a[href], button';

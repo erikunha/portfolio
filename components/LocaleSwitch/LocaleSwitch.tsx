@@ -10,6 +10,9 @@ type LocaleSwitchProps = Omit<ComponentPropsWithoutRef<'nav'>, 'children' | 'ari
   names: Record<SiteLocale, string>;
 };
 
+const LINK_CLASSES =
+  'min-w-11 min-h-11 aria-[current=page]:border-primary-500 aria-[current=page]:underline aria-[current=page]:underline-offset-4 aria-[current=page]:decoration-2';
+
 export function LocaleSwitch({
   label,
   current,
@@ -29,8 +32,8 @@ export function LocaleSwitch({
             href={hrefs[candidate]}
             hrefLang={candidate}
             size="sm"
-            variant={active ? 'primary' : 'secondary'}
-            className="min-w-11 min-h-11"
+            variant="secondary"
+            className={LINK_CLASSES}
             {...(active ? { 'aria-current': 'page' as const } : {})}
           >
             {candidate.toUpperCase()}

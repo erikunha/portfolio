@@ -98,7 +98,7 @@
   }
 
   .ds-prose td code {
-    color: var(--color-primary-500);
+    color: var(--color-text);
     font-size: var(--text-xs);
   }
 

@@ -962,7 +962,6 @@ export const LinksChannelSchema = z.object({
 
 export const LinksPlaylistSchema = z.object({
   id: z.string().min(1),
-  accent: z.enum(['quaternary', 'quinary']),
   tag: z.string().min(1),
   title: LocalizedTextSchema,
   description: LocalizedTextSchema,

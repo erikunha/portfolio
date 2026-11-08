@@ -251,7 +251,7 @@ test.describe('section navigation: motion control tiers', () => {
     test.describe(`at ${width}px`, () => {
       test.use({ viewport: { width, height: 720 } });
 
-      test('the topbar spells MOTION at the xl tier and the drawer carries it at every width', async ({
+      test('the topbar prints MOTION: ON at the xl tier and the drawer carries it at every width', async ({
         page,
       }) => {
         await gotoHydrated(page, '/', MENU_TRIGGER);
@@ -261,13 +261,13 @@ test.describe('section navigation: motion control tiers', () => {
         if (width >= MOTION_TIER_WIDTH) {
           await expect(
             toggle,
-            'the topbar carries the compact MOTION control at the xl tier',
+            'the topbar carries the MOTION control at the xl tier',
           ).toBeVisible();
           await expect(
             toggle,
-            'the topbar spells the control MOTION, not MOTION: ON',
-          ).toContainText('MOTION');
-          await expect(toggle).not.toContainText('MOTION: ON');
+            'the topbar prints the state beside the label, so the control reads without aria-pressed',
+          ).toContainText('MOTION: ON');
+          await expect(toggle).toHaveAccessibleName('MOTION');
         } else {
           await expect(
             toggle,

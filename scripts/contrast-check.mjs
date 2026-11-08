@@ -68,8 +68,7 @@ const PAIRS = [
   ['tertiary-500', 'secondary-950', 4.5, 'form placeholder on base'],
   ['primary-500', 'secondary-900', 3.0, 'signal on shell (large text)'],
   ['tertiary-400', 'secondary-950', 4.5, 'tertiary-400 meta text on base (/links)'],
-  ['quaternary-400', 'secondary-950', 4.5, 'quaternary accent label on base (/links playlists)'],
-  ['quinary-300', 'secondary-950', 4.5, 'quinary accent label on base (/links playlists)'],
+  ['senary-300', 'secondary-950', 4.5, 'alert text on base (errors, clip LED)'],
 ];
 
 let failures = 0;

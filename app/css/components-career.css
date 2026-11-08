@@ -136,17 +136,14 @@
 
   .career-body {
     max-width: 72ch;
-    color: var(--color-primary-500);
+    color: var(--color-text);
   }
 
   .career-hash,
   .career-location,
-  .career-period {
-    color: var(--color-primary-400);
-  }
-
+  .career-period,
   .career-decoration {
-    color: var(--color-quaternary-400);
+    color: var(--color-text-secondary);
   }
 
   .career-company,
@@ -219,7 +216,7 @@
 
   .career-community-status {
     margin: var(--spacing-1) 0 0;
-    color: var(--color-primary-400);
+    color: var(--color-text-secondary);
   }
 
   .career-cv {

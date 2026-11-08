@@ -5,6 +5,7 @@ import { SectionNavigationProvider } from '@/components/responsive/SectionNaviga
 import {
   HIRE_ACCESSIBLE_NAME,
   HIRE_SHORT_LABEL,
+  MOTION_STATE_SEPARATOR,
   NAV_VOCABULARY,
   TOPBAR_MOTION_LABEL,
   TOPBAR_NAV,
@@ -248,13 +249,13 @@ describe('DesktopTopbar', () => {
     }
   });
 
-  it('spells the motion control compact and leaves the state on the button', async () => {
+  it('spells the motion control with its visible state and keeps aria-pressed as the state', async () => {
     mounted = await renderTopbar();
     const button = mounted.container.querySelector('button[aria-pressed]') as HTMLButtonElement;
 
     expect(button).not.toBeNull();
     expect(button.textContent).toContain(TOPBAR_MOTION_LABEL);
-    expect(button.textContent).toBe(TOPBAR_MOTION_LABEL);
+    expect(button.textContent).toBe(`${TOPBAR_MOTION_LABEL}${MOTION_STATE_SEPARATOR}ON`);
     expect(button.getAttribute('aria-pressed'), 'the state rides on aria-pressed').toBe('true');
 
     await act(async () => {

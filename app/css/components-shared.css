@@ -102,7 +102,7 @@
     background: var(--color-secondary-950);
     border: 1px solid var(--color-primary-border);
     padding: 0.1em 0.35em;
-    color: var(--color-primary-500);
+    color: var(--color-text);
 
     white-space: normal;
     overflow-wrap: anywhere;

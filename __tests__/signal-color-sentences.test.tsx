@@ -23,7 +23,6 @@ const SIGNAL_TOKEN = 'var(--color-primary-500)';
 const SENTENCE_WORDS = 4;
 const WORD = /[A-Za-z]{2,}/;
 const TERMINAL_STATUS_LINES: ReadonlySet<string> = new Set(['ctz-loading', 'mixer-boot-current']);
-const OWNER_DECIDED_SIGNAL_SENTENCES: ReadonlySet<string> = new Set(['career-body']);
 
 function directText(element: Element): string {
   return Array.from(element.childNodes)
@@ -44,7 +43,7 @@ function sentenceClasses(document: Document): Set<string> {
     if (!isSentence(directText(element)) || element.closest('h1,h2,h3,h4,h5,h6,[role="heading"]'))
       continue;
     for (const name of element.classList) {
-      if (!TERMINAL_STATUS_LINES.has(name) && !OWNER_DECIDED_SIGNAL_SENTENCES.has(name)) {
+      if (!TERMINAL_STATUS_LINES.has(name)) {
         classes.add(name);
       }
     }
@@ -93,7 +92,7 @@ describe('sentence text never uses the signal colour', () => {
     });
     expect(
       [...new Set(offenders)].sort(),
-      'the signal green fails WCAG AA for paragraph text and is reserved for headings, accents and large text; use var(--color-tertiary-50) for sentences; .career-body is exempt by the 2026-11-04 owner decision in DECISIONS.md (signal green at 15.4:1 on black passes AA), held by tests/e2e/type-scale.spec.ts',
+      'the signal green fails WCAG AA for paragraph text and is reserved for headings, accents and large text; use var(--color-tertiary-50) for sentences',
     ).toEqual([]);
   });
 });

@@ -2,7 +2,7 @@ import { expect, type Page, test } from '@playwright/test';
 import { gotoSettled } from './_helpers/streamed';
 
 const WIDTHS = [320, 390, 768, 1280];
-const SIGNAL_RGB = 'rgb(0, 255, 65)';
+const BODY_RGB = 'rgb(230, 255, 230)';
 const TEXT_BASE_PX = 16;
 const TEXT_LG_PX = 18;
 const TEXT_BODY_PX = 14;
@@ -119,14 +119,16 @@ test.describe('type scale', () => {
       ).toBe(width < 390 ? TEXT_XS_PX : TEXT_BODY_PX);
     });
 
-    test(`career descriptions render in the signal green at ${width}`, async ({ page }) => {
+    test(`career descriptions render in the body color at ${width}`, async ({ page }) => {
       await page.setViewportSize({ width, height: 900 });
       await gotoSettled(page, '/');
       const color = await page
         .locator('.career-body')
         .first()
         .evaluate((el) => getComputedStyle(el).color);
-      expect(color, 'the career description carries --color-primary-500').toBe(SIGNAL_RGB);
+      expect(color, 'the career description is a sentence, so it carries --color-tertiary-50').toBe(
+        BODY_RGB,
+      );
     });
 
     test(`community block fills the section width at ${width}`, async ({ page }) => {

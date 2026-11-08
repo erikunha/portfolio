@@ -102,7 +102,7 @@ Import order (`app/globals.css`): `tailwindcss` → `theme.css` → `base.css` �
 | `components-*.css` | `components` | named layout and effect classes (`.module-*`, `.signal-glow`, DawMixer `.mx-fader`/`.mx-dial`, `.contact-*`, `.shell-cursor`, ...) |
 | `forced-colors.css` | `components` | one `@media (forced-colors: active)` block, imported last: hides the CRT overlays and aria-hidden canvases, gives state-carrying controls system-color borders and outlines, and ends with an `!important` block that outranks Tailwind utilities (focus ring, primary and current buttons, pressed toggles, meter fills) |
 
-**Tokens (`@theme`):** six ordinal color families (primary/secondary/tertiary/quaternary/quinary/senary), each a 50 to 900 ramp, with the brand palette mapped onto specific stops: `--color-primary-500: #00ff41` (signal green), `--color-secondary-950: #000000` (surface black), `--color-tertiary-50: #e6ffe6` (body text). Fixed-opacity stops (`-subtle` 40%, `-border` 20%, `-faint` 12%, `-quiet` 10%) are kept as explicit hex (byte-identical, no `color-mix`). **No raw hex outside `theme.css`** - enforced by `lint:css-tokens` (see doc 06/07).
+**Tokens (`@theme`):** three ordinal color ramps (primary/secondary/tertiary, each 50 to 900) plus the status exception (`senary-300` alerts, `senary-500` and `quinary-500` window-chrome dots), with the brand palette mapped onto specific stops: `--color-primary-500: #00ff41` (signal green), `--color-secondary-950: #000000` (surface black), `--color-tertiary-50: #e6ffe6` (body text). Fixed-opacity stops (`-subtle` 40%, `-border` 20%, `-faint` 12%, `-quiet` 10%) are kept as explicit hex (byte-identical, no `color-mix`). **No raw hex outside `theme.css`** - enforced by `lint:css-tokens` (see doc 06/07).
 
 ## State architecture
 
@@ -116,7 +116,7 @@ flowchart TD
     end
     subgraph dom["2. DOM-as-state (motion)"]
         motion["lib/motion.ts: body[data-motion] + localStorage('erik.motion')<br/>broadcast via 'motionchange' CustomEvent"]
-        w1["writers: DesktopTopbar (MOTION toggle, xl tier)<br/>SectionNavigation drawer (MOTION: ON / OFF row, every width)"] --> motion
+        w1["writers: DesktopTopbar (MOTION: ON / OFF toggle, xl tier)<br/>SectionNavigation drawer (MOTION: ON / OFF row, every width)"] --> motion
         motion --> r1["subscribers via lib/motion-change.ts: MatrixRain · RoleTyper · TypeReveal · HeroBootAnimation<br/>readers on mount: InteractiveShell placeholder"]
     end
     subgraph bus["3. Window CustomEvent bus (lib/events.ts)"]

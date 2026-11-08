@@ -5,13 +5,14 @@ import { type ReactNode, Suspense } from 'react';
 import { ExternalLink } from '@/components/ExternalLink';
 import { StatusDot } from '@/components/StatusDot';
 import { LINKS_PATH } from '@/content/links.constants';
-import { TOPBAR_MOTION_LABEL } from '@/content/nav';
+import { MOTION_STATE_SEPARATOR, TOPBAR_MOTION_LABEL } from '@/content/nav';
 import { cn } from '@/lib/cn';
 import {
   LanguageSwitch,
   MenuTrigger,
   useCurrentSection,
   useMotionOn,
+  useMotionState,
   useSectionNavigation,
 } from '../SectionNavigation';
 
@@ -69,6 +70,7 @@ function CurrentTopbarLinks() {
 export function DesktopTopbar({ brand }: { brand: ReactNode }) {
   const { toggleMotion, chrome, copy, route } = useSectionNavigation();
   const motionOn = useMotionOn();
+  const motionState = useMotionState();
 
   return (
     <header className="desktop-topbar fixed top-0 left-0 right-0 bg-secondary-950 border-b border-primary-subtle hidden md:block">
@@ -87,7 +89,13 @@ export function DesktopTopbar({ brand }: { brand: ReactNode }) {
               aria-pressed={motionOn}
             >
               <StatusDot blink className={cn(!motionOn && 'opacity-40')} />
-              <span>{TOPBAR_MOTION_LABEL}</span>
+              <span>
+                {TOPBAR_MOTION_LABEL}
+                <span aria-hidden="true">
+                  {MOTION_STATE_SEPARATOR}
+                  {motionState}
+                </span>
+              </span>
             </button>
             <a
               className="topbar-action topbar-action-outline hidden lg:inline-flex"

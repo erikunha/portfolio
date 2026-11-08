@@ -89,6 +89,7 @@ export const TOPBAR_READING_LINK: Record<SiteLocale, TopbarNavLink> = {
 };
 
 export const TOPBAR_MOTION_LABEL = 'MOTION';
+export const MOTION_STATE_SEPARATOR = ': ';
 
 export const TOPBAR_HIRE_LINK = (
   locale: SiteLocale,

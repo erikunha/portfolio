@@ -1,6 +1,6 @@
 import { ExternalLink } from '@/components/ExternalLink';
 import { linksContent } from '@/content/links';
-import type { LinksLocale, PlaylistAccent } from '@/content/links.constants';
+import type { LinksLocale } from '@/content/links.constants';
 import { linksUi } from '@/content/links-ui';
 import type { LinksPlaylist } from '@/content/schemas';
 import { cn } from '@/lib/cn';
@@ -11,22 +11,10 @@ import { SectionHeading } from './SectionHeading';
 const HEADING_ID = 'links-playlists-heading';
 const PLAYLIST_ENDPOINT = 'https://www.youtube.com/playlist?list=';
 
-const ACCENT_CARD: Record<PlaylistAccent, string> = {
-  quaternary:
-    'hover:border-quaternary-400 hover:bg-linear-to-b hover:from-quaternary-400/[0.07] hover:to-quaternary-400/[0.07]',
-  quinary:
-    'hover:border-quinary-300 hover:bg-linear-to-b hover:from-quinary-300/[0.07] hover:to-quinary-300/[0.07]',
-};
-
-const ACCENT_TAG: Record<PlaylistAccent, string> = {
-  quaternary: 'border-quaternary-400/40 text-quaternary-400',
-  quinary: 'border-quinary-300/40 text-quinary-300',
-};
-
-const ACCENT_ARROW: Record<PlaylistAccent, string> = {
-  quaternary: 'text-quaternary-400/60',
-  quinary: 'text-quinary-300/60',
-};
+const CARD_HOVER =
+  'hover:border-primary-500 hover:bg-linear-to-b hover:from-primary-500/[0.07] hover:to-primary-500/[0.07]';
+const TAG = 'border border-primary-subtle text-tertiary-50 text-xs tracking-[0.06em] py-0.5 px-1';
+const ARROW = 'text-sm text-primary-500';
 
 function destination(playlist: LinksPlaylist, channelUrl: string): string {
   if (playlist.playlistId) return `${PLAYLIST_ENDPOINT}${playlist.playlistId}`;
@@ -54,22 +42,15 @@ export function PlaylistCards({ locale, channelUrl }: { locale: LinksLocale; cha
               data-outbound={`playlist-${playlist.id}`}
               className={cn(
                 'block h-full border border-primary-border p-4 no-underline bg-secondary-950 transition-[border-color,background] duration-150 [body[data-motion=reduce]_&]:transition-none focus-visible:outline-2 focus-visible:outline-primary-500 focus-visible:outline-offset-2',
-                ACCENT_CARD[playlist.accent],
+                CARD_HOVER,
               )}
             >
               <span className="flex items-center justify-between gap-3">
                 <span className="flex items-center gap-2">
-                  <span
-                    className={cn(
-                      'border text-xs tracking-[0.06em] py-0.5 px-1',
-                      ACCENT_TAG[playlist.accent],
-                    )}
-                  >
-                    {playlist.tag}
-                  </span>
+                  <span className={TAG}>{playlist.tag}</span>
                   <span className="text-tertiary-50 text-sm">{playlist.title[locale]}</span>
                 </span>
-                <span aria-hidden="true" className={cn('text-sm', ACCENT_ARROW[playlist.accent])}>
+                <span aria-hidden="true" className={ARROW}>
                   {linksUi.arrow}
                 </span>
               </span>
