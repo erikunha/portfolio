@@ -488,6 +488,28 @@
     font: inherit;
   }
 
+  .footer-reboot-keys {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-2);
+  }
+
+  @media (pointer: coarse) {
+    .footer-reboot-keys {
+      display: none;
+    }
+
+    .footer-reboot {
+      text-decoration: underline;
+      text-decoration-color: var(--color-primary-subtle);
+      text-underline-offset: var(--border-width);
+    }
+
+    .footer-reboot::before {
+      content: attr(data-touch-label);
+    }
+  }
+
   .footer-copyright {
     margin: var(--spacing-6) 0 0;
   }

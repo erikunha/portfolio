@@ -186,12 +186,15 @@ export function RebootControl({ copy }: { copy: FooterContent['reboot'] }) {
         href={HOME_SELECTOR}
         aria-label={copy.label}
         aria-keyshortcuts={copy.key}
+        data-touch-label={copy.touch}
         ref={link}
         onClick={(event) => {
           if (reboot()) event.preventDefault();
         }}
       >
-        {copy.before} <kbd>{copy.key}</kbd> {copy.after}
+        <span className="footer-reboot-keys">
+          {copy.before} <kbd>{copy.key}</kbd> {copy.after}
+        </span>
       </a>
       <p
         className="sr-only"

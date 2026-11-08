@@ -775,6 +775,7 @@ export const FooterContentSchema = z
       before: z.string().min(1),
       key: z.string().length(1),
       after: z.string().min(1),
+      touch: z.string().min(1),
       announcement: z.string().min(1),
     }),
     receipt: z.object({

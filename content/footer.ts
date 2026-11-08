@@ -112,6 +112,7 @@ const footerContentFor = (locale: SiteLocale) => {
       before: pt ? 'pressione' : 'press',
       key: 'R',
       after: pt ? 'para reiniciar' : 'to reboot',
+      touch: pt ? 'reiniciar, voltar ao topo' : 'reboot, back to top',
       announcement: pt
         ? 'Sessão reiniciada. De volta ao topo; sua sessão está preservada.'
         : 'Session rebooted. Back at the top; your session is preserved.',
