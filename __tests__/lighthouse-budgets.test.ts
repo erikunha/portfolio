@@ -8,6 +8,40 @@ type Config = { ci: { assert: { assertions: Record<string, Assertion> } } };
 
 const ERROR_LEVEL = 'error';
 
+const REPLACED_AUDIT_IDS = [
+  'critical-request-chains',
+  'dom-size',
+  'duplicated-javascript',
+  'efficient-animated-content',
+  'font-display',
+  'interaction-to-next-paint-insight',
+  'largest-contentful-paint-element',
+  'layout-shifts',
+  'lcp-lazy-loaded',
+  'lcp-phases-insight',
+  'legacy-javascript',
+  'modern-image-formats',
+  'prioritize-lcp-image',
+  'redirects',
+  'render-blocking-resources',
+  'server-response-time',
+  'third-party-summary',
+  'uses-http2',
+  'uses-long-cache-ttl',
+  'uses-optimized-images',
+  'uses-rel-preconnect',
+  'uses-responsive-images',
+  'uses-text-compression',
+  'viewport',
+  'work-during-interaction',
+];
+
+const INSIGHT_ERROR_GATES = [
+  'document-latency-insight',
+  'image-delivery-insight',
+  'font-display-insight',
+];
+
 const budgets = [
   {
     name: 'desktop',
@@ -64,5 +98,32 @@ describe.each(budgets)('$name Lighthouse budget', ({ config, minScores, maxValue
       options.maxNumericValue ?? Number.POSITIVE_INFINITY,
       `${audit} maxNumericValue was raised above the documented budget`,
     ).toBeLessThanOrEqual(ceiling);
+  });
+});
+
+describe.each(budgets)('$name Lighthouse assertion ids', ({ config }) => {
+  const assertions = config.ci.assert.assertions;
+
+  it.each(REPLACED_AUDIT_IDS)('asserts no audit id LHCI has replaced: %s', (legacyId) => {
+    expect(
+      Object.keys(assertions),
+      `${legacyId} is mapped to an insight audit by LHCI and the mapping is being removed`,
+    ).not.toContain(legacyId);
+  });
+
+  it.each(INSIGHT_ERROR_GATES)('keeps %s an active error gate', (insightId) => {
+    const entry = assertions[insightId];
+    const level = Array.isArray(entry) ? entry[0] : entry;
+    expect(level, `${insightId} replaced a legacy gate and must not be off or warn`).toBe(
+      ERROR_LEVEL,
+    );
+  });
+
+  it('keeps render-blocking-insight on, capped at three blocking resources', () => {
+    const entry = assertions['render-blocking-insight'];
+    expect(Array.isArray(entry) ? entry[0] : entry).not.toBe('off');
+    expect(Array.isArray(entry) ? (entry[1] as { maxLength?: number })?.maxLength : undefined).toBe(
+      3,
+    );
   });
 });
