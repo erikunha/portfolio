@@ -72,4 +72,13 @@ describe('SubscribeCta', () => {
     const { container } = renderCta();
     expect(anchor(container).getAttribute('data-outbound')).toBe('inscrever');
   });
+
+  it('shows exactly one of the two labels at a time', async () => {
+    const { container } = renderCta();
+    expect(container.textContent).not.toContain('ver os últimos vídeos');
+    await act(async () => {
+      anchor(container).dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+    expect(container.textContent).not.toContain('inscrever-se no canal');
+  });
 });

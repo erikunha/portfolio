@@ -36,7 +36,7 @@
       background: Highlight;
     }
 
-    .links-pill:hover,
+    .links-line:hover,
     .topbar-action:hover,
     .contact-send:hover:not([aria-disabled="true"]),
     .contact-channel-cta:hover,
@@ -110,6 +110,14 @@
     .guitar-bar {
       background: GrayText;
       opacity: 1;
+    }
+
+    .links-thumb::after {
+      display: none;
+    }
+
+    .links-thumb img {
+      filter: none;
     }
   }
 }

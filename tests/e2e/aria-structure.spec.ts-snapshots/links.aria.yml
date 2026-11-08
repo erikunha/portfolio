@@ -18,3 +18,9 @@
   - region /.+/:
     - /children: contain
     - heading /.+/ [level=2]
+  - region /.+/:
+    - /children: contain
+    - heading /.+/ [level=2]
+  - region /.+/:
+    - /children: contain
+    - heading /.+/ [level=2]

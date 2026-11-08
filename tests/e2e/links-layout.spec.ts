@@ -6,7 +6,7 @@ const GOLDEN_RATIO = 1.618;
 const RATIO_TOLERANCE = 0.1;
 const EVEN_TOLERANCE_PX = 1;
 const OVERFLOW_TOLERANCE_PX = 1;
-const PILL_MIN_HEIGHT_PX = 44;
+const LINE_MIN_HEIGHT_PX = 44;
 const COLUMN_FLOOR_PX = 280;
 
 const VIEWPORT = {
@@ -25,7 +25,8 @@ const ROUTE_COPY: Record<string, { qrLabel: RegExp; skipLabel: string }> = {
 
 const PRIMARY = '[data-stack="primary"]';
 const SECONDARY = '[data-stack="secondary"]';
-const PILLS = '[data-testid="links-pills"]';
+const PROFILES = '[data-testid="links-profiles"]';
+const LINES = '.links-line';
 
 async function top(page: Page, selector: string): Promise<number> {
   const target = page.locator(selector).first();
@@ -50,7 +51,7 @@ async function columnCount(page: Page, selector: string): Promise<number> {
 
 for (const path of ['/links', '/links/en']) {
   test.describe(`${path} layout`, () => {
-    test('is one column at 390 in reading order: identity, pills, latest video, history, playlists', async ({
+    test('is one column at 390 in reading order: identity, watch, history, playlists, profiles, contact', async ({
       page,
     }) => {
       await page.setViewportSize(VIEWPORT.phone);
@@ -60,10 +61,11 @@ for (const path of ['/links', '/links/en']) {
 
       const order = [
         '.links-identity',
-        PILLS,
         '[data-col="channel"]',
         '[data-col="history"]',
         '[data-col="playlists"]',
+        '[data-col="profiles"]',
+        '[data-col="contact"]',
         'footer',
       ];
       const tops: number[] = [];
@@ -75,19 +77,39 @@ for (const path of ['/links', '/links/en']) {
       expect(new Set(tops).size).toBe(order.length);
     });
 
-    test('puts the pills in a 2-column grid of 48px rows on a phone', async ({ page }) => {
+    test('lays profiles and contact out as full-width rows of 44px or more on a phone', async ({
+      page,
+    }) => {
       await page.setViewportSize(VIEWPORT.phone);
       await gotoSettled(page, path);
 
-      expect(await columnCount(page, PILLS)).toBe(2);
-      const heights = await page
-        .locator(`${PILLS} li > :is(a, button)`)
-        .evaluateAll((nodes) => nodes.map((node) => node.getBoundingClientRect().height));
-      expect(heights.length).toBeGreaterThan(2);
-      for (const height of heights) expect(height).toBeGreaterThanOrEqual(PILL_MIN_HEIGHT_PX);
+      const rows = await page.locator(`${LINES}:visible`).evaluateAll((nodes) =>
+        nodes.map((node) => ({
+          height: node.getBoundingClientRect().height,
+          width: node.getBoundingClientRect().width,
+          list: node.closest('ul')?.getBoundingClientRect().width ?? 0,
+        })),
+      );
+      expect(rows.length).toBeGreaterThan(4);
+      for (const row of rows) {
+        expect(row.height).toBeGreaterThanOrEqual(LINE_MIN_HEIGHT_PX);
+        expect(row.width).toBeGreaterThanOrEqual(row.list - OVERFLOW_TOLERANCE_PX);
+      }
     });
 
-    test('splits 1fr to 1.618fr at 1280, identity and pills left, feed right', async ({ page }) => {
+    test('pushes each row host to the right edge, ahead of the arrow', async ({ page }) => {
+      await page.setViewportSize(VIEWPORT.phone);
+      await gotoSettled(page, path);
+
+      const row = page.locator(`${PROFILES} .links-line`).first();
+      const host = await row.locator('.links-line-host').boundingBox();
+      const arrow = await row.locator('.links-line-arrow').boundingBox();
+      expect(host && arrow && Math.abs(host.x + host.width + 12 - arrow.x)).toBeLessThanOrEqual(
+        EVEN_TOLERANCE_PX + 1,
+      );
+    });
+
+    test('splits 1fr to 1.618fr at 1280, identity and rows left, feed right', async ({ page }) => {
       await page.setViewportSize(VIEWPORT.desktop);
       await gotoSettled(page, path);
 
@@ -96,14 +118,37 @@ for (const path of ['/links', '/links/en']) {
       const right = await width(page, SECONDARY);
       expect(Math.abs(right / left - GOLDEN_RATIO)).toBeLessThan(RATIO_TOLERANCE);
 
+      const identity = await page.locator('.links-grid > .links-identity').boundingBox();
+      const primary = await page.locator(PRIMARY).boundingBox();
+      expect(Math.abs((identity?.x ?? 0) - (primary?.x ?? 1))).toBeLessThanOrEqual(
+        OVERFLOW_TOLERANCE_PX,
+      );
+      expect(identity?.y ?? 0).toBeLessThan(primary?.y ?? 0);
+
       const inLeft = (selector: string) => page.locator(`${PRIMARY} ${selector}`);
       const inRight = (selector: string) => page.locator(`${SECONDARY} ${selector}`);
-      await expect(inLeft('.links-identity')).toHaveCount(1);
-      await expect(inLeft(PILLS)).toHaveCount(1);
+      await expect(inLeft('[data-col="profiles"]')).toHaveCount(1);
+      await expect(inLeft('[data-col="contact"]')).toHaveCount(1);
       await expect(inLeft('[data-col="qr"]')).toBeVisible();
       await expect(inRight('[data-col="channel"]')).toHaveCount(1);
       await expect(inRight('[data-col="history"]')).toHaveCount(1);
       await expect(inRight('[data-col="playlists"]')).toHaveCount(1);
+    });
+
+    test('splits the featured card thumbnail to text at 1 to 1.618 once the column is 600px wide', async ({
+      page,
+    }) => {
+      await page.setViewportSize(VIEWPORT.desktop);
+      await gotoSettled(page, path);
+
+      const media = await width(page, '.links-watch-media');
+      const body = await width(page, '.links-watch-body');
+      expect(Math.abs(body / media - GOLDEN_RATIO)).toBeLessThan(RATIO_TOLERANCE);
+      expect(await columnCount(page, '.links-playlists')).toBe(2);
+
+      await page.setViewportSize(VIEWPORT.phone);
+      expect(await columnCount(page, '.links-watch')).toBe(1);
+      expect(await columnCount(page, '.links-playlists')).toBe(1);
     });
 
     test('keeps two even columns on a tablet, the left never under the readable floor', async ({

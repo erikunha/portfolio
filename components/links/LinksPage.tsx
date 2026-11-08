@@ -6,12 +6,13 @@ import { LINKS_PATH, type LinksLocale } from '@/content/links.constants';
 import { CHANNEL_URL, EMPTY_FEED, getChannelFeed } from '@/lib/links/feed';
 import { ChannelCard } from './ChannelCard';
 import { ChromeBar } from './ChromeBar';
+import { ContactLines } from './ContactLines';
 import { NavProgress } from './client/NavProgress.client';
 import { IdentityCard } from './IdentityCard';
 import { LatestVideoSkeleton } from './LatestVideoSkeleton';
-import { LinkPills } from './LinkPills';
 import { LinksFooter } from './LinksFooter';
 import { PlaylistCards } from './PlaylistCards';
+import { ProfileLines } from './ProfileLines';
 import { QrPanel } from './QrPanel';
 import { Ticker } from './Ticker';
 import { VideoHistory } from './VideoHistory';
@@ -46,16 +47,17 @@ export function LinksPage({ locale }: { locale: LinksLocale }) {
           </Suspense>
           <ChromeBar />
           <div className="links-grid">
-            <div className="links-stack" data-stack="primary">
-              <IdentityCard locale={locale} />
-              <LinkPills locale={locale} url={pageUrl} />
-              <QrPanel locale={locale} url={pageUrl} />
-            </div>
+            <IdentityCard locale={locale} />
             <div className="links-stack" data-stack="secondary">
               <Suspense fallback={<LatestVideoSkeleton locale={locale} />}>
                 <LinksFeedColumn locale={locale} />
               </Suspense>
               <PlaylistCards locale={locale} channelUrl={CHANNEL_URL} />
+            </div>
+            <div className="links-stack" data-stack="primary">
+              <ProfileLines locale={locale} />
+              <ContactLines locale={locale} url={pageUrl} />
+              <QrPanel locale={locale} url={pageUrl} />
             </div>
           </div>
           <LinksFooter />

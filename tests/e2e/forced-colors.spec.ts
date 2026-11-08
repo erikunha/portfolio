@@ -166,13 +166,13 @@ test.describe('forced colors', () => {
     expect(await stateSignature(current)).not.toBe(await stateSignature(other));
   });
 
-  test('hovering a links pill changes its signature', async ({ page }) => {
+  test('hovering a links line changes its signature', async ({ page }) => {
     await openForced(page, '/links');
-    const pill = page.locator('.links-pill:visible').first();
+    const line = page.locator('.links-line:visible').first();
     await page.mouse.move(0, 0);
-    const resting = await stateSignature(pill);
-    await pill.hover();
-    expect(await stateSignature(pill)).not.toBe(resting);
+    const resting = await stateSignature(line);
+    await line.hover();
+    expect(await stateSignature(line)).not.toBe(resting);
   });
 
   test.describe('at phone width', () => {

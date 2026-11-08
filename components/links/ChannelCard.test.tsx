@@ -106,4 +106,86 @@ describe('ChannelCard', () => {
       'watch (opens in a new tab)',
     );
   });
+
+  it('is a labelled section whose heading names the group in the page language', () => {
+    const { container, rerender } = render(
+      <ChannelCard locale={LINKS_LOCALE.pt} feed={populatedFeed} />,
+    );
+    const section = container.querySelector('section[data-col="channel"]');
+    const heading = section?.querySelector('h2');
+    expect(heading?.textContent).toBe('assistir');
+    expect(section?.getAttribute('aria-labelledby')).toBe(heading?.id);
+    rerender(<ChannelCard locale={LINKS_LOCALE.en} feed={populatedFeed} />);
+    expect(container.querySelector('h2')?.textContent).toBe('watch');
+  });
+
+  it('names the channel with its handle', () => {
+    const { container } = render(<ChannelCard locale={LINKS_LOCALE.pt} feed={populatedFeed} />);
+    expect(container.querySelector('.links-watch-channel')?.textContent).toContain(
+      'Erik Na Gringa',
+    );
+    expect(container.querySelector('.links-watch-channel')?.textContent).toContain('@eriknagringa');
+  });
+
+  it('makes the video title the link and keeps the cover out of the tab order', () => {
+    const { container } = render(<ChannelCard locale={LINKS_LOCALE.pt} feed={populatedFeed} />);
+    const title = container.querySelector('a[data-outbound="ultimo-video-titulo"]');
+    expect(title?.textContent).toContain('Montei um time de 12 agentes');
+    expect(title?.closest('.links-watch-title')).not.toBeNull();
+
+    const cover = container.querySelector('a[data-outbound="ultimo-video"]');
+    expect(cover?.getAttribute('tabindex'), 'a second tab stop to the same destination').toBe('-1');
+    expect(cover?.getAttribute('aria-hidden')).toBe('true');
+    expect(cover?.querySelector('img')).not.toBeNull();
+    const campaign = (link: Element | null | undefined) =>
+      new URL(link?.getAttribute('href') ?? '').searchParams.get('utm_content');
+    expect(campaign(cover)).toBe('ultimo-video');
+    expect(campaign(title), 'each link to one video is attributable on its own').toBe(
+      'ultimo-video-titulo',
+    );
+  });
+
+  it('shows the new badge with the relative age and duration', () => {
+    const { container } = render(<ChannelCard locale={LINKS_LOCALE.pt} feed={populatedFeed} />);
+    const meta = container.querySelector('.links-watch-meta');
+    expect(meta?.textContent).toContain('novo');
+    expect(meta?.textContent).toContain('há 3 dias');
+    expect(meta?.textContent).toContain('14:32');
+  });
+
+  it('shows the description when the video has one', () => {
+    const { container } = render(<ChannelCard locale={LINKS_LOCALE.pt} feed={populatedFeed} />);
+    const description = container.querySelector('.links-watch-desc');
+    expect(description?.textContent).toBe('O setup completo.');
+    expect(description?.hasAttribute('hidden')).toBe(false);
+  });
+
+  it.each([
+    ['empty', ''],
+    ['missing', undefined],
+  ])(
+    'hides the description node, and renders no stray text, when it is %s',
+    (_name, description) => {
+      const feed: ChannelFeed = {
+        ...populatedFeed,
+        latest: populatedFeed.latest && { ...populatedFeed.latest, description },
+      };
+      const { container } = render(<ChannelCard locale={LINKS_LOCALE.pt} feed={feed} />);
+      const node = container.querySelector('.links-watch-desc');
+      expect(node?.hasAttribute('hidden'), 'an empty block would still take a margin').toBe(true);
+      expect(node?.textContent).toBe('');
+    },
+  );
+
+  it('keeps the heading, the placeholder and the subscribe action when the feed is down', () => {
+    const { container } = render(<ChannelCard locale={LINKS_LOCALE.en} feed={emptyFeed} />);
+    expect(container.querySelector('h2')?.textContent).toBe('watch');
+    expect(container.querySelector('.links-thumb-placeholder')?.getAttribute('aria-hidden')).toBe(
+      'true',
+    );
+    expect(container.textContent).toContain('The latest video did not load just now');
+    expect(container.querySelector('a[data-outbound="ultimo-video-titulo"]')).toBeNull();
+    expect(container.querySelector('.links-watch-meta')).toBeNull();
+    expect(container.querySelector('[data-outbound="inscrever"]')).not.toBeNull();
+  });
 });

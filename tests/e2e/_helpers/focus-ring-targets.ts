@@ -16,7 +16,7 @@ export const FOCUS_RING_TARGETS: RingTarget[] = [
   { name: 'knob', route: MIXER_ROUTE, selector: `${MIXER_SECTION} .knob-container` },
   { name: 'rms toggle', route: MIXER_ROUTE, selector: `${MIXER_SECTION} .rms-inactive` },
   { name: 'brand link', route: MIXER_ROUTE, selector: '.brand-link' },
-  { name: 'links pill', route: LINKS_ROUTE, selector: '.links-pill' },
+  { name: 'links line', route: LINKS_ROUTE, selector: '.links-line' },
   { name: 'links footer link', route: LINKS_ROUTE, selector: '.links-footer-link' },
 ];
 

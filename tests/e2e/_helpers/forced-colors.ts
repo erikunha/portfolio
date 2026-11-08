@@ -21,7 +21,7 @@ export const DESKTOP_CONTROLS: readonly ControlProbe[] = [
   { name: 'fader', route: '/', selector: '#sec-guitar .fader-track' },
   { name: 'fader thumb', route: '/', selector: '#sec-guitar .faderThumb' },
   { name: 'vu meter', route: '/', selector: '#sec-guitar .vu-meter' },
-  { name: 'links pill', route: '/links', selector: '.links-pill' },
+  { name: 'links line', route: '/links', selector: '.links-line' },
   { name: 'design system nav item', route: '/design-system', selector: '.ds-nav-item' },
 ];
 

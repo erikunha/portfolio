@@ -4,10 +4,14 @@ type LocalizedLabel = Readonly<Record<LinksLocale, string>>;
 
 export const linksUi: {
   arrow: string;
+  copyGlyph: string;
+  prompt: string;
   qrLabel: LocalizedLabel;
   latestVideoLoading: LocalizedLabel;
 } = {
   arrow: '→',
+  copyGlyph: '⧉',
+  prompt: '$ ',
   latestVideoLoading: {
     [LINKS_LOCALE.pt]: 'Carregando o vídeo mais recente',
     [LINKS_LOCALE.en]: 'Loading the latest video',

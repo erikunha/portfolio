@@ -4,7 +4,6 @@ import { linksContent } from '@/content/links';
 import type { LinksLocale } from '@/content/links.constants';
 import { linksUi } from '@/content/links-ui';
 import { Badge, Button } from '@/design-system';
-import { cn } from '@/lib/cn';
 import type { ChannelFeed } from '@/lib/links/feed';
 import { formatCompact } from '@/lib/links/format';
 import { formatRelative } from '@/lib/links/relative-time';
@@ -15,6 +14,7 @@ import { NewTabHint } from './NewTabHint';
 import { SectionHeading } from './SectionHeading';
 
 const HEADING_ID = 'links-channel-heading';
+const CHANNEL_GLYPH_PX = 16;
 const THUMB_SIZES = '(min-width: 1024px) 62vw, (min-width: 768px) 50vw, 100vw';
 
 export function ChannelCard({ locale, feed }: { locale: LinksLocale; feed: ChannelFeed }) {
@@ -34,79 +34,86 @@ export function ChannelCard({ locale, feed }: { locale: LinksLocale; feed: Chann
       : null;
   const subscribeHref = `${channelUrl}?sub_confirmation=1`;
 
+  const description = latest?.description ?? '';
+
   return (
     <section className="links-col" data-col="channel" aria-labelledby={HEADING_ID}>
-      <SectionHeading id={HEADING_ID}>{copy.channelHeading[locale]}</SectionHeading>
+      <SectionHeading id={HEADING_ID}>{copy.watchHeading[locale]}</SectionHeading>
 
-      <div className="links-channel-card border border-primary-subtle p-4">
-        <div className="flex items-center justify-between gap-2">
-          <span className="flex items-center gap-2 text-primary-500">
-            <IconYouTube />
-            <span className="text-primary-500 text-base font-bold">{channel.name}</span>
-          </span>
-          {counts.length > 0 && (
-            <span className="text-tertiary-400 text-xs tracking-[0.04em]">
-              {counts.join(' · ')}
-            </span>
-          )}
-        </div>
-
-        {latest === null ? (
-          <div className="mt-3">
+      <article className="links-channel-card links-watch border border-primary-subtle p-4">
+        <div className="links-watch-media">
+          {latest === null ? (
             <div
               aria-hidden="true"
               className="links-thumb-placeholder w-full border border-primary-border grid place-items-center text-primary-400 text-xs tracking-[0.08em] uppercase"
             >
               {copy.thumbPlaceholder[locale]}
             </div>
-            <p className="mt-3 mb-0 text-tertiary-400 text-xs leading-body text-pretty">
-              {copy.feedUnavailable[locale]}
-            </p>
-          </div>
-        ) : (
-          <ExternalLink
-            href={withUtm(latest.url, 'ultimo-video')}
-            data-outbound="ultimo-video"
-            className="block no-underline mt-3 focus-visible:outline-2 focus-visible:outline-primary-500 focus-visible:outline-offset-2 hover:opacity-92"
-          >
-            <span className="links-thumb w-full">
-              <OptimizedImage
-                src={latest.thumbnailUrl}
-                alt=""
-                fill
-                priority
-                fetchPriority="high"
-                sizes={THUMB_SIZES}
-                className="object-cover"
-              />
+          ) : (
+            <ExternalLink
+              href={withUtm(latest.url, 'ultimo-video')}
+              data-outbound="ultimo-video"
+              tabIndex={-1}
+              aria-hidden="true"
+              className="block no-underline hover:opacity-92"
+            >
+              <span className="links-thumb w-full">
+                <OptimizedImage
+                  src={latest.thumbnailUrl}
+                  alt=""
+                  fill
+                  priority
+                  fetchPriority="high"
+                  sizes={THUMB_SIZES}
+                  className="object-cover"
+                />
+              </span>
+            </ExternalLink>
+          )}
+        </div>
+
+        <div className="links-watch-body">
+          <p className="links-watch-channel">
+            <span className="links-watch-glyph">
+              <IconYouTube size={CHANNEL_GLYPH_PX} />
             </span>
-            <span className="flex items-center gap-2 mt-3">
-              <Badge variant="dot" size="sm">
-                {copy.newBadge[locale]}
-              </Badge>
-              {publishedAgo !== null && (
-                <span className="text-tertiary-400 text-xs">
+            <span>{channel.name}</span>
+            <span className="links-watch-handle">{channel.handle}</span>
+            <span className="links-watch-counts" hidden={counts.length === 0}>
+              {counts.join(' · ')}
+            </span>
+          </p>
+
+          {latest === null ? (
+            <p className="links-watch-note">{copy.feedUnavailable[locale]}</p>
+          ) : (
+            <>
+              <p className="links-watch-meta">
+                <Badge variant="dot" size="sm">
+                  {copy.newBadge[locale]}
+                </Badge>
+                <span className="links-watch-age" hidden={publishedAgo === null}>
                   {publishedAgo}
                   {latest.duration ? ` · ${latest.duration}` : ''}
                 </span>
-              )}
-            </span>
-            <span className="block text-tertiary-50 font-bold text-base mt-2 text-pretty">
-              {latest.title}
-            </span>
-            {latest.description && (
-              <span className="mt-1 text-tertiary-400 text-xs text-pretty line-clamp-4">
-                {latest.description}
-              </span>
-            )}
-            <NewTabHint text={copy.opensInNewTab[locale]} />
-          </ExternalLink>
-        )}
+              </p>
+              <p className="links-watch-title">
+                <ExternalLink
+                  href={withUtm(latest.url, 'ultimo-video-titulo')}
+                  data-outbound="ultimo-video-titulo"
+                >
+                  {latest.title}
+                  <NewTabHint text={copy.opensInNewTab[locale]} />
+                </ExternalLink>
+              </p>
+              <p className="links-watch-desc line-clamp-4" hidden={description === ''}>
+                {description}
+              </p>
+            </>
+          )}
+        </div>
 
-        <div
-          data-testid="links-channel-actions"
-          className={cn('grid gap-2 mt-[13px]', latest !== null && 'md:grid-cols-[1fr_auto]')}
-        >
+        <div data-testid="links-channel-actions" className="links-watch-actions">
           <SubscribeCta
             href={withUtm(subscribeHref, 'inscrever')}
             subscribedHref={withUtm(`${channelUrl}/videos`, 'inscrito-ver-videos')}
@@ -129,7 +136,7 @@ export function ChannelCard({ locale, feed }: { locale: LinksLocale; feed: Chann
             </Button>
           )}
         </div>
-      </div>
+      </article>
     </section>
   );
 }

@@ -8,7 +8,7 @@ const LANGUAGE_NAV_NAME = /^(Idioma|Language)$/;
 const LANGUAGE_LINK_COUNT = 2;
 const TAGLINE_FRAME_MS = 150;
 const TAGLINE_HYDRATION_TIMEOUT_MS = 20_000;
-const COPY_LINK_BUTTON = 'button.links-pill';
+const COPY_LINK_BUTTON = 'button.links-line';
 
 const languageSwitch = (page: Page) => page.getByRole('navigation', { name: LANGUAGE_NAV_NAME });
 
@@ -128,7 +128,7 @@ test.describe('/links link-in-bio', () => {
   test('sizes every block tap target at 44px or more', async ({ page }) => {
     await gotoSettled(page, '/links');
     const targets = page.locator(
-      'nav a:visible, [data-testid="links-pills"] a:visible, [data-testid="links-pills"] button:visible, [data-outbound="inscrever"]:visible',
+      'nav a:visible, .links-line:visible, .links-watch-title a:visible, [data-outbound="inscrever"]:visible',
     );
     const count = await targets.count();
     expect(count).toBeGreaterThan(5);
@@ -137,12 +137,12 @@ test.describe('/links link-in-bio', () => {
       const box = await targets.nth(i).boundingBox();
       expect(
         box?.height ?? 0,
-        `standalone tap target ${i} is under 44px. This selector deliberately covers the nav, the link pills and the subscribe CTA only: a link sitting inline inside a sentence is exempt from target-size minimums, so widening this to every anchor would fail on the footer's inline erikunha.dev link for no accessibility gain.`,
+        `standalone tap target ${i} is under 44px. This selector deliberately covers the nav, the profile and contact lines, the video title link and the subscribe CTA only: a link sitting inline inside a sentence is exempt from target-size minimums, so widening this to every anchor would fail on the footer's inline erikunha.dev link for no accessibility gain.`,
       ).toBeGreaterThanOrEqual(44);
     }
   });
 
-  test('never links a pill whose destination is unconfirmed', async ({ page }) => {
+  test('never links a profile whose destination is unconfirmed', async ({ page }) => {
     await page.goto('/links');
     expect(await page.locator('a[href="#"], a[href=""]').count()).toBe(0);
   });

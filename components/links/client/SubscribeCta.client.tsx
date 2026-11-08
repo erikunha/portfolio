@@ -9,11 +9,25 @@ import { NewTabHint } from '../NewTabHint';
 const SUBSCRIBED_KEY = 'links.subscribed';
 const SUBSCRIBED_VALUE = '1';
 
-function readSubscribed(): boolean {
+const SUBSCRIBE_STATE = { Idle: 'idle', Subscribed: 'subscribed' } as const;
+
+type SubscribeState = (typeof SUBSCRIBE_STATE)[keyof typeof SUBSCRIBE_STATE];
+
+const SUB_VIEW = {
+  [SUBSCRIBE_STATE.Idle]: { hrefProp: 'href', labelProp: 'subscribeLabel' },
+  [SUBSCRIBE_STATE.Subscribed]: { hrefProp: 'subscribedHref', labelProp: 'subscribedLabel' },
+} as const satisfies Record<
+  SubscribeState,
+  { hrefProp: keyof SubscribeCtaProps; labelProp: keyof SubscribeCtaProps }
+>;
+
+function readSubscribed(): SubscribeState {
   try {
-    return localStorage.getItem(SUBSCRIBED_KEY) === SUBSCRIBED_VALUE;
+    return localStorage.getItem(SUBSCRIBED_KEY) === SUBSCRIBED_VALUE
+      ? SUBSCRIBE_STATE.Subscribed
+      : SUBSCRIBE_STATE.Idle;
   } catch {
-    return false;
+    return SUBSCRIBE_STATE.Idle;
   }
 }
 
@@ -26,18 +40,13 @@ export type SubscribeCtaProps = {
   subscribedHref: string;
 };
 
-export function SubscribeCta({
-  href,
-  subscribeLabel,
-  subscribedLabel,
-  subscribedHref,
-  outboundId,
-  newTabHint,
-}: SubscribeCtaProps) {
-  const [subscribed, setSubscribed] = useState(false);
+export function SubscribeCta(props: SubscribeCtaProps) {
+  const { outboundId, newTabHint } = props;
+  const [state, setState] = useState<SubscribeState>(SUBSCRIBE_STATE.Idle);
+  const view = SUB_VIEW[state];
 
   useEffect(() => {
-    setSubscribed(readSubscribed());
+    setState(readSubscribed());
   }, []);
 
   function remember() {
@@ -45,13 +54,13 @@ export function SubscribeCta({
       localStorage.setItem(SUBSCRIBED_KEY, SUBSCRIBED_VALUE);
       // biome-ignore lint/suspicious/noEmptyBlockStatements: a blocked storage write must not stop the navigation this click exists for
     } catch {}
-    setSubscribed(true);
+    setState(SUBSCRIBE_STATE.Subscribed);
   }
 
   return (
     <Button
       as="a"
-      href={subscribed ? subscribedHref : href}
+      href={props[view.hrefProp]}
       {...EXTERNAL_LINK_PROPS}
       size="lg"
       variant="primary"
@@ -60,7 +69,7 @@ export function SubscribeCta({
       onClick={remember}
     >
       <IconYouTube size={17} />
-      {subscribed ? subscribedLabel : subscribeLabel}
+      {props[view.labelProp]}
       <NewTabHint text={newTabHint} />
     </Button>
   );

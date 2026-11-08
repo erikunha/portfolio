@@ -50,8 +50,8 @@ describe('LatestVideoSkeleton', () => {
 
 describe('LatestVideoSkeleton: the two columns it stands in for', () => {
   it.each([
-    [LINKS_LOCALE.en, 'THE CHANNEL', 'LATEST VIDEOS'],
-    [LINKS_LOCALE.pt, 'O CANAL', 'ÚLTIMOS VÍDEOS'],
+    [LINKS_LOCALE.en, 'WATCH', 'LATEST VIDEOS'],
+    [LINKS_LOCALE.pt, 'ASSISTIR', 'ÚLTIMOS VÍDEOS'],
   ])(
     'names both blocks with their real headings, untyped, so the swap does not retype them (%s)',
     (locale, channel, latest) => {

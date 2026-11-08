@@ -23,17 +23,23 @@ export function LatestVideoSkeleton({ locale }: { locale: LinksLocale }) {
       >
         <div aria-hidden="true">
           <SectionHeading id={CHANNEL_HEADING_ID} reveal={false}>
-            {copy.channelHeading[locale]}
+            {copy.watchHeading[locale]}
           </SectionHeading>
-          <div className="links-channel-card border border-primary-subtle p-4">
-            <span className="links-skeleton-block links-skeleton-title" />
-            <div className="links-skeleton-block links-skeleton-thumb" />
-            <div className="links-skeleton-bars">
-              {TEXT_BARS.map(({ position }) => (
-                <span key={position} className="links-skeleton-block links-skeleton-bar" />
-              ))}
+          <div className="links-channel-card links-watch border border-primary-subtle p-4">
+            <div className="links-watch-media">
+              <div className="links-skeleton-block links-skeleton-thumb" />
             </div>
-            <span className="links-skeleton-block links-skeleton-action" />
+            <div className="links-watch-body">
+              <span className="links-skeleton-block links-skeleton-title" />
+              <div className="links-skeleton-bars">
+                {TEXT_BARS.map(({ position }) => (
+                  <span key={position} className="links-skeleton-block links-skeleton-bar" />
+                ))}
+              </div>
+            </div>
+            <div className="links-watch-actions">
+              <span className="links-skeleton-block links-skeleton-action" />
+            </div>
           </div>
         </div>
       </div>

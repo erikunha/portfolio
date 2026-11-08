@@ -5,6 +5,7 @@ import { LINKS_LOCALE } from '@/content/links.constants';
 import type { ChannelFeed } from '@/lib/links/feed';
 import { ChannelCard } from './ChannelCard';
 import { PlaylistCards } from './PlaylistCards';
+import { ProfileLines } from './ProfileLines';
 import { VideoHistory } from './VideoHistory';
 
 const CHANNEL_URL = 'https://www.youtube.com/@eriknagringa';
@@ -32,9 +33,10 @@ describe.each(Object.values(LINKS_LOCALE))('/links new-tab anchors (%s)', (local
     ['ChannelCard', () => <ChannelCard locale={locale} feed={feed} />],
     ['VideoHistory', () => <VideoHistory locale={locale} feed={feed} />],
     ['PlaylistCards', () => <PlaylistCards locale={locale} channelUrl={CHANNEL_URL} />],
+    ['ProfileLines', () => <ProfileLines locale={locale} />],
   ])('%s tells a screen reader every new-tab link opens a new tab', (_name, ui) => {
     const { container } = render(ui());
-    const anchors = [...container.querySelectorAll('a[target="_blank"]')];
+    const anchors = [...container.querySelectorAll('a[target="_blank"]:not([aria-hidden="true"])')];
     expect(anchors.length).toBeGreaterThan(0);
     for (const anchor of anchors) {
       expect(anchor.textContent, anchor.getAttribute('href') ?? '').toContain(hint);

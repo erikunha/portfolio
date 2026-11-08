@@ -46,14 +46,14 @@ export function PlaylistCards({ locale, channelUrl }: { locale: LinksLocale; cha
     <section className="links-col" data-col="playlists" aria-labelledby={HEADING_ID}>
       <SectionHeading id={HEADING_ID}>{copy.playlistsHeading[locale]}</SectionHeading>
 
-      <ul className="list-none m-0 p-0 grid gap-3">
+      <ul className="links-playlists list-none m-0 p-0">
         {linkable.map(({ playlist, href }) => (
           <li key={playlist.id}>
             <ExternalLink
               href={withUtm(href, `playlist-${playlist.id}`)}
               data-outbound={`playlist-${playlist.id}`}
               className={cn(
-                'block border border-primary-border p-4 no-underline bg-secondary-950 transition-[border-color,background] duration-150 [body[data-motion=reduce]_&]:transition-none focus-visible:outline-2 focus-visible:outline-primary-500 focus-visible:outline-offset-2',
+                'block h-full border border-primary-border p-4 no-underline bg-secondary-950 transition-[border-color,background] duration-150 [body[data-motion=reduce]_&]:transition-none focus-visible:outline-2 focus-visible:outline-primary-500 focus-visible:outline-offset-2',
                 ACCENT_CARD[playlist.accent],
               )}
             >

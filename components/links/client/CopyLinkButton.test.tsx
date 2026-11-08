@@ -8,6 +8,7 @@ function renderButton() {
   return render(
     <CopyLinkButton
       url={PAGE_URL}
+      hostLabel="erikunha.dev/links"
       idleLabel="copiar link"
       doneLabel="copied ✓"
       failedLabel="copy failed"
@@ -38,11 +39,12 @@ describe('CopyLinkButton', () => {
     vi.unstubAllGlobals();
   });
 
-  it('wears the shared pill classes and keeps its status region outside the button', () => {
+  it('wears the shared line classes and keeps its status region outside the button', () => {
     const { container } = renderButton();
     const button = container.querySelector('button');
-    expect(button?.classList.contains('links-pill')).toBe(true);
-    expect(button?.querySelector('.links-pill-glyph')).not.toBeNull();
+    expect(button?.classList.contains('links-line')).toBe(true);
+    expect(button?.querySelector('.links-line-glyph')).not.toBeNull();
+    expect(button?.querySelector('.links-line-host')?.textContent).toBe('erikunha.dev/links');
     expect(button?.querySelector('[role="status"]')).toBeNull();
     expect(container.querySelector('[role="status"]')).not.toBeNull();
   });
@@ -89,6 +91,18 @@ describe('CopyLinkButton', () => {
     expect(statusText(container)).toBe('copiar link');
   });
 
+  it.each([
+    ['idle', 'copiar link'],
+    ['copied', '$ copied ✓'],
+  ])('shows one visible label at a time (%s)', async (state, expected) => {
+    vi.stubGlobal('navigator', { clipboard: { writeText: vi.fn().mockResolvedValue(undefined) } });
+
+    const { container } = renderButton();
+    if (state === 'copied') await click(container);
+    const label = container.querySelector('button .links-line-label');
+    expect(label?.textContent).toBe(expected);
+  });
+
   it('reports a denied clipboard instead of failing silently, then recovers', async () => {
     const writeText = vi.fn().mockRejectedValue(new DOMException('denied', 'NotAllowedError'));
     vi.stubGlobal('navigator', { clipboard: { writeText } });
@@ -96,7 +110,7 @@ describe('CopyLinkButton', () => {
     const { container } = renderButton();
     await click(container);
     expect(statusText(container)).toBe('Copy failed. Copy the address from the browser bar.');
-    expect(container.querySelector('button')?.textContent).toContain('copy failed');
+    expect(container.querySelector('button .links-line-label')?.textContent).toBe('$ copy failed');
 
     await act(async () => {
       await vi.advanceTimersByTimeAsync(2_000);

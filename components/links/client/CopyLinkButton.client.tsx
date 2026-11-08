@@ -1,52 +1,69 @@
 'use client';
 
+import { linksUi } from '@/content/links-ui';
 import { COPY_STATUS, type CopyStatus, useCopyFeedback } from '@/lib/use-copy-feedback.client';
+import { LineContent } from '../LineContent';
 import { IconCopy } from '../LinkIcons';
 
-export function CopyLinkButton({
-  url,
-  idleLabel,
-  doneLabel,
-  failedLabel,
-  failedMessage,
-}: {
-  url: string;
+type CopyLabels = {
   idleLabel: string;
   doneLabel: string;
   failedLabel: string;
   failedMessage: string;
-}) {
+};
+
+type CopyView = {
+  shown: keyof Omit<CopyLabels, 'failedMessage'>;
+  spoken: keyof CopyLabels;
+  prompt: string;
+};
+
+const IDLE_VIEW: CopyView = { shown: 'idleLabel', spoken: 'idleLabel', prompt: '' };
+const DONE_VIEW: CopyView = {
+  shown: 'doneLabel',
+  spoken: 'doneLabel',
+  prompt: linksUi.prompt,
+};
+const FAILED_VIEW: CopyView = {
+  shown: 'failedLabel',
+  spoken: 'failedMessage',
+  prompt: linksUi.prompt,
+};
+
+const COPY_VIEW: Record<CopyStatus, CopyView> = {
+  [COPY_STATUS.Idle]: IDLE_VIEW,
+  [COPY_STATUS.Pending]: IDLE_VIEW,
+  [COPY_STATUS.Copied]: DONE_VIEW,
+  [COPY_STATUS.Failed]: FAILED_VIEW,
+  [COPY_STATUS.Unavailable]: FAILED_VIEW,
+};
+
+export type CopyLinkButtonProps = CopyLabels & {
+  url: string;
+  hostLabel: string;
+};
+
+export function CopyLinkButton({ url, hostLabel, ...labels }: CopyLinkButtonProps) {
   const { status, copy } = useCopyFeedback({ resetOnFailure: true });
-  const labelByStatus: Record<CopyStatus, string> = {
-    [COPY_STATUS.Idle]: idleLabel,
-    [COPY_STATUS.Pending]: idleLabel,
-    [COPY_STATUS.Copied]: doneLabel,
-    [COPY_STATUS.Failed]: failedLabel,
-    [COPY_STATUS.Unavailable]: failedLabel,
-  };
-  const label = labelByStatus[status];
-  const showingOutcome =
-    status === COPY_STATUS.Copied ||
-    status === COPY_STATUS.Failed ||
-    status === COPY_STATUS.Unavailable;
+  const view = COPY_VIEW[status];
 
   return (
     <>
       <button
         type="button"
-        aria-label={idleLabel}
+        aria-label={labels.idleLabel}
         onClick={() => void copy(url)}
-        className="links-pill"
+        className="links-line"
       >
-        <span className="links-pill-glyph" aria-hidden="true">
-          <IconCopy />
-        </span>
-        <span aria-hidden="true">{showingOutcome ? `$ ${label}` : label}</span>
+        <LineContent
+          glyph={<IconCopy />}
+          label={`${view.prompt}${labels[view.shown]}`}
+          host={hostLabel}
+          arrow={linksUi.copyGlyph}
+        />
       </button>
       <span className="sr-only" role="status">
-        {status === COPY_STATUS.Failed || status === COPY_STATUS.Unavailable
-          ? failedMessage
-          : label}
+        {labels[view.spoken]}
       </span>
     </>
   );

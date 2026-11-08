@@ -86,7 +86,7 @@
         "noExplicitAny": "error",
         "noEmptyBlockStatements": "warn",
         "noImportCycles": "error",
-        "noLeakedRender": "warn"
+        "noLeakedRender": "error"
       },
       "complexity": {
         "noUselessFragments": "error",
