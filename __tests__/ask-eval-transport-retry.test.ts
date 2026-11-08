@@ -20,7 +20,7 @@ function rejected(status: number): AskResult {
   return { kind: 'rejected', status, detail: `HTTP ${status}` };
 }
 
-const noSleep = async (): Promise<void> => undefined;
+const noSleep = async (_ms: number): Promise<void> => undefined;
 
 describe('isTransportFailure', () => {
   it.each([0, 429, 500, 502, 503, 504])('treats status %i as a transport failure', (status) => {

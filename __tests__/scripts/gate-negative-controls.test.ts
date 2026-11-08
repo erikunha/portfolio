@@ -28,7 +28,7 @@ function run(script: string, env: Record<string, string> = {}) {
   const result = spawnSync('node', [script], {
     cwd: sandbox,
     encoding: 'utf8',
-    env: { PATH: process.env.PATH ?? '', ...env },
+    env: { ...process.env, CHECK_CLIENT_NAMING_LENIENT: '', ...env },
   });
   return { code: result.status, output: `${result.stdout}${result.stderr}` };
 }
