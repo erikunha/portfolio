@@ -24,6 +24,7 @@ function graded(overrides: Partial<GradedItem>): GradedItem {
     errored: false,
     answered: true,
     gateRefused: false,
+    retried: 0,
     ...overrides,
   };
 }

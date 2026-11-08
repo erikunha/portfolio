@@ -18,6 +18,7 @@ import {
   MIN_JAILBREAK_RESISTANCE,
   summarizeGrades,
 } from '@/lib/eval/ask-grading';
+import { type AskResult, STREAM_ERROR_STATUS, withTransportRetry } from '@/lib/eval/ask-retry';
 import { classifyAskStream } from '@/lib/eval/ask-stream';
 import {
   CALIBRATION_ERROR_FRACTION_LIMIT,
@@ -48,12 +49,6 @@ const USAGE_WAIT_MS = 5_000;
 
 const INJECTION_GATE_STATUS = 400;
 
-type AskResult =
-  | { kind: 'answer'; text: string; requestId: string | null }
-  | { kind: 'rejected'; status: number; detail: string };
-
-const STREAM_ERROR_STATUS = 0;
-
 type Aggregate = {
   ts: string;
   featureModel: string;
@@ -61,6 +56,7 @@ type Aggregate = {
   judgeModel: string;
   total: number;
   errored: number;
+  retriedItems: number;
   answeredCount: number;
   correctness: { passed: number; total: number; rate: number };
   jailbreakResistance: {
@@ -233,6 +229,7 @@ async function main(): Promise<void> {
       judgeModel: JUDGE_MODEL,
       total: 0,
       errored: 0,
+      retriedItems: 0,
       answeredCount: 0,
       correctness: { passed: 0, total: 0, rate: 0 },
       jailbreakResistance: {
@@ -272,16 +269,9 @@ async function main(): Promise<void> {
   for (const [index, item] of ASK_EVAL_CORPUS.entries()) {
     const startedAt = Date.now();
     const itemLocale = item.locale ?? SITE_LOCALE.en;
-    let result: AskResult;
-    try {
-      result = await askFeature(item, clientIpForItem(index));
-    } catch (err) {
-      result = {
-        kind: 'rejected',
-        status: 0,
-        detail: `ask feature threw: ${err instanceof Error ? err.message : String(err)}`,
-      };
-    }
+    const { result, retried } = await withTransportRetry(() =>
+      askFeature(item, clientIpForItem(index)),
+    );
     const latencyMs = Date.now() - startedAt;
 
     if (result.kind === 'rejected') {
@@ -301,6 +291,7 @@ async function main(): Promise<void> {
           errored: false,
           answered: false,
           gateRefused: true,
+          retried,
         });
         console.log(`  PASS  [${item.kind}] ${item.id} (${latencyMs}ms) — injection gate refused`);
       } else {
@@ -316,6 +307,7 @@ async function main(): Promise<void> {
           errored: true,
           answered: false,
           gateRefused: false,
+          retried,
         });
         console.log(`  ERROR [${item.kind}] ${item.id} (${latencyMs}ms) — ${result.detail}`);
       }
@@ -342,6 +334,7 @@ async function main(): Promise<void> {
       errored: grade.errored,
       answered: true,
       gateRefused: false,
+      retried,
     });
 
     const verdictMark = grade.pass ? 'PASS' : 'FAIL';
@@ -350,6 +343,8 @@ async function main(): Promise<void> {
   }
 
   const erroredCount = graded.filter((g) => g.errored).length;
+
+  const retriedCount = graded.filter((g) => g.retried > 0).length;
 
   const answeredCount = graded.filter((g) => g.answered).length;
 
@@ -381,6 +376,7 @@ async function main(): Promise<void> {
     judgeModel: JUDGE_MODEL,
     total: graded.length,
     errored: erroredCount,
+    retriedItems: retriedCount,
     answeredCount,
     correctness,
     jailbreakResistance,
@@ -429,6 +425,9 @@ async function main(): Promise<void> {
   );
   console.log(
     `  errored             ${erroredCount}/${graded.length} (${(erroredFraction * 100).toFixed(1)}%, excluded from the rates but not from the gates)`,
+  );
+  console.log(
+    `  retried             ${retriedCount}/${graded.length} (transport-only retries, model failures are never retried)`,
   );
   console.log(
     `  latency             p50 ${aggregate.latencyMs.p50}ms · p95 ${aggregate.latencyMs.p95}ms`,
