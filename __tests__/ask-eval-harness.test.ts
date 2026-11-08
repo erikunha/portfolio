@@ -70,7 +70,9 @@ function installModelDouble(): void {
   });
 
   generateTextMock.mockImplementation(async ({ prompt }: { prompt: string }) => {
-    const gold = ASK_EVAL_CALIBRATION.find((c) => prompt.includes(`ANSWER: ${c.canonicalAnswer}`));
+    const gold = ASK_EVAL_CALIBRATION.find((c) =>
+      prompt.includes(`\n${c.canonicalAnswer}\n</answer-`),
+    );
     const pass = gold ? gold.humanVerdict : true;
     return {
       text: JSON.stringify({ pass, reason: 'double' }),

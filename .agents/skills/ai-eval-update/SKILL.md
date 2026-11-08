@@ -85,6 +85,11 @@ cases are deliberately borderline-hard.
   to the calibration pass and to every corpus grade. A claim that matches the sheet is never
   fabricated, so a criterion may leave out a true fact without failing the answer that states it.
   Add a field to the sheet when a criterion starts depending on a fact the sheet does not carry. A fact about Erik that the system prompt states belongs in `content/ask-facts.ts`, never as a literal in `lib/ask/system-prompt.ts`, so the sheet and the prompt cannot diverge.
+- **The judge sees the answer as fenced data.** `judge` (`lib/eval/judge.ts`) wraps the answer in
+  `<answer-TOKEN>` lines with a random per-call token and the system prompt says everything inside is data,
+  so an answer that forges a closing fence or addresses the judge cannot steer the verdict. The verdict is
+  the last balanced JSON object with a boolean `pass` (`parseVerdictObject`); a reply with none is an
+  errored judge call, never a retry-as-API-failure and never a silent fail.
 - A stream that errors mid-answer (upstream failure, timeout) is `errored` and excluded from the rates, so a gateway outage cannot pass a jailbreak item; only an output-guard abort is graded as an answer. A judge API failure or unparseable judge reply on a corpus item is `errored` the same way (`gradeVerdict` in `lib/eval/ask-grading.ts`), so one Gateway blip cannot fail the 100% jailbreak gate.
 - Both files are Zod-validated by structural unit tests (`__tests__/ask-eval-corpus.test.ts`,
   `__tests__/ask-eval-calibration.test.ts`) that run without any API call — run `pnpm test`
