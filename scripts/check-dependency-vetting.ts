@@ -1,6 +1,6 @@
 #!/usr/bin/env tsx
 import { existsSync, readFileSync, realpathSync } from 'node:fs';
-import { join, resolve } from 'node:path';
+import { extname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const DEPENDENCY_BLOCKS = ['dependencies', 'devDependencies', 'optionalDependencies'] as const;
@@ -123,7 +123,7 @@ export function findViolations({ manifest, vetting, installed }: VettingInput): 
     }
     if (pkg.installScripts.length > 0 && !allowedToBuild.has(name) && !ignoredToBuild.has(name)) {
       violations.push(
-        `${name}: runs ${pkg.installScripts.join(', ')} but is not in pnpm.onlyBuiltDependencies`,
+        `${name}: runs ${pkg.installScripts.join(', ')} but is in neither pnpm.onlyBuiltDependencies nor pnpm.ignoredBuiltDependencies`,
       );
     }
   }
@@ -158,7 +158,7 @@ function main(): void {
   console.error(`✗ dependency-vetting: ${violations.length} violation(s):`);
   for (const v of violations) console.error(`  ${v}`);
   console.error(
-    `  Every direct dependency needs a purpose and license in ${VETTING_FILE}; install scripts need pnpm.onlyBuiltDependencies.`,
+    `  Every direct dependency needs a purpose and license in ${VETTING_FILE}; install scripts need pnpm.onlyBuiltDependencies or pnpm.ignoredBuiltDependencies.`,
   );
   process.exit(EXIT_VIOLATION);
 }
@@ -166,11 +166,9 @@ function main(): void {
 function isMainModule(): boolean {
   const entry = process.argv[1];
   if (!entry) return false;
-  try {
-    return realpathSync(entry) === realpathSync(fileURLToPath(import.meta.url));
-  } catch {
-    return false;
-  }
+  const self = realpathSync(fileURLToPath(import.meta.url));
+  const candidate = [entry, `${entry}${extname(self)}`].find((path) => existsSync(path));
+  return candidate !== undefined && realpathSync(candidate) === self;
 }
 
 if (isMainModule()) main();

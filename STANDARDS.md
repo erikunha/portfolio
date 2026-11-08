@@ -213,7 +213,8 @@ of the install itself is held by `pnpm install --frozen-lockfile` in CI.
 `scripts/check-dependency-vetting.ts` (`pnpm check:dependency-vetting`) requires an
 entry in `dependency-vetting.json`, with a purpose and the recorded license, for every
 direct dependency, fails when an installed license differs from the recorded one, and
-rejects an install script on a package outside `pnpm.onlyBuiltDependencies`. The
+rejects an install script on a package listed in neither `pnpm.onlyBuiltDependencies`
+nor `pnpm.ignoredBuiltDependencies`. The
 `dependency-review` CI job blocks high-severity advisories and GPL/AGPL licenses.
 
 ---

@@ -217,7 +217,7 @@ interface Fixture {
   vetting?: object | string | null;
   installed?: Record<string, object>;
   installedFiles?: Record<string, string[]>;
-  invokeVia?: 'direct' | 'symlink';
+  invokeVia?: 'direct' | 'symlink' | 'extensionless';
 }
 
 function runOn(fixture: Fixture): { code: number; out: string } {
@@ -245,6 +245,7 @@ function runOn(fixture: Fixture): { code: number; out: string } {
     script = join(dir, 'linked-check.ts');
     symlinkSync(SCRIPT, script);
   }
+  if (fixture.invokeVia === 'extensionless') script = SCRIPT.replace(/\.ts$/, '');
   try {
     const out = execFileSync(TSX, [script, dir], { encoding: 'utf8', stdio: 'pipe' });
     return { code: 0, out };
@@ -351,6 +352,17 @@ describe('check-dependency-vetting (process)', () => {
       invokeVia: 'symlink',
     });
     expect(r.code).toBe(1);
+    expect(r.out).toContain('clsx');
+  });
+
+  it('still runs the gate when invoked without the file extension', () => {
+    const r = runOn({
+      manifest: CLSX_MANIFEST,
+      vetting: {},
+      installed: { clsx: { name: 'clsx', license: 'MIT' } },
+      invokeVia: 'extensionless',
+    });
+    expect(r.code, 'an entry path the guard cannot resolve must not pass silently').toBe(1);
     expect(r.out).toContain('clsx');
   });
 
