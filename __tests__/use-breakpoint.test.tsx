@@ -1,28 +1,10 @@
-import { createElement } from 'react';
+import { act, createElement } from 'react';
 import { renderToString } from 'react-dom/server';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { installMatchMedia } from '@/__tests__/helpers/match-media';
 import { flushMicrotasks, mountClient } from '@/__tests__/helpers/render';
 import { MOBILE_QUERY } from '@/lib/media-queries';
 import { useBreakpoint } from '@/lib/use-breakpoint.client';
-
-type MediaListener = () => void;
-
-function stubMatchMedia(matches: boolean) {
-  const listeners: MediaListener[] = [];
-  const mql = {
-    matches,
-    addEventListener: (_: string, cb: MediaListener) => listeners.push(cb),
-    removeEventListener: (_: string, cb: MediaListener) => {
-      const idx = listeners.indexOf(cb);
-      if (idx >= 0) listeners.splice(idx, 1);
-    },
-  };
-  vi.stubGlobal(
-    'matchMedia',
-    vi.fn(() => mql),
-  );
-  return { mql, listeners };
-}
 
 let captured: { isMobile: boolean } | undefined;
 
@@ -41,7 +23,7 @@ describe('useBreakpoint', () => {
   });
 
   it('works without any provider above it', async () => {
-    stubMatchMedia(false);
+    installMatchMedia(false);
     const { unmount } = await mountClient(createElement(Consumer));
     await flushMicrotasks();
 
@@ -50,7 +32,7 @@ describe('useBreakpoint', () => {
   });
 
   it('reports a mobile viewport from matchMedia', async () => {
-    stubMatchMedia(true);
+    installMatchMedia(true);
     const { unmount } = await mountClient(createElement(Consumer));
     await flushMicrotasks();
 
@@ -63,12 +45,29 @@ describe('useBreakpoint', () => {
   });
 
   it('subscribes with the one mobile query and unsubscribes on unmount', async () => {
-    const { listeners } = stubMatchMedia(false);
+    const media = installMatchMedia(false);
     const { unmount } = await mountClient(createElement(Consumer));
-    expect(vi.mocked(window.matchMedia)).toHaveBeenCalledWith(MOBILE_QUERY);
-    expect(listeners).toHaveLength(1);
+    expect(media.matchMedia).toHaveBeenCalledWith(MOBILE_QUERY);
+    expect(media.listenerCount(MOBILE_QUERY)).toBe(1);
     unmount();
-    expect(listeners).toHaveLength(0);
+    expect(media.listenerCount(MOBILE_QUERY)).toBe(0);
+  });
+
+  it('re-renders when the viewport crosses the mobile breakpoint', async () => {
+    const media = installMatchMedia(false);
+    const { container, unmount } = await mountClient(createElement(Consumer));
+    expect(container.textContent).toBe('false');
+
+    await act(async () => {
+      media.emit(MOBILE_QUERY, true);
+    });
+    expect(container.textContent).toBe('true');
+
+    await act(async () => {
+      media.emit(MOBILE_QUERY, false);
+    });
+    expect(container.textContent).toBe('false');
+    unmount();
   });
 });
 

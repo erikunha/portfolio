@@ -1,13 +1,7 @@
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
+import { installMatchMedia } from '@/__tests__/helpers/match-media';
 
-Object.defineProperty(window, 'matchMedia', {
-  writable: true,
-  value: vi.fn().mockReturnValue({
-    matches: false,
-    addEventListener: vi.fn(),
-    removeEventListener: vi.fn(),
-  }),
-});
+installMatchMedia(false);
 
 const testCls = {
   bootLine: 'bootLine',

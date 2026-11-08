@@ -1,20 +1,14 @@
 import { act, render } from '@testing-library/react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { installMatchMedia } from '@/__tests__/helpers/match-media';
 import { TaglineTyper } from './TaglineTyper.client';
 
 const PHRASES = ['Senior Full-Stack Engineer', 'AI Engineering na prática'];
 
 function setMotion(on: boolean) {
   localStorage.setItem('erik.motion', on ? 'on' : 'off');
-  vi.stubGlobal(
-    'matchMedia',
-    vi.fn().mockReturnValue({
-      matches: true,
-      addEventListener: vi.fn(),
-      removeEventListener: vi.fn(),
-    }),
-  );
+  installMatchMedia(true);
 }
 
 describe('TaglineTyper', () => {

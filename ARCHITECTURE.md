@@ -316,7 +316,7 @@ lib/ask-log.ts                        # KV interaction log per /api/ask request 
 lib/boot-animation.ts                 # boot sequence data
 lib/typewriter.ts                     # one type, hold and erase loop (runPhraseLoop, typeOut) and createPauseControl
 lib/use-copy-feedback.client.ts       # clipboard state for every copy button
-lib/media-queries.ts                  # MOBILE_QUERY shared by every matchMedia call
+lib/media-queries.ts                  # MOBILE_QUERY, isMobileViewport(), watchMobileViewport(): the one matchMedia call site for the mobile breakpoint
 lib/json-ld.ts                        # serializeJsonLd, the only JSON-LD serializer
 lib/defer-props.ts                    # deferred-section class and marker
 lib/breakpoint.ts                     # viewport breakpoint constants

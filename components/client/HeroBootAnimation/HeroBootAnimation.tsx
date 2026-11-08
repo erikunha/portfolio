@@ -15,7 +15,7 @@ import {
   runBoot,
   type SysfailBeat,
 } from '@/lib/boot-animation';
-import { MOBILE_QUERY } from '@/lib/media-queries';
+import { isMobileViewport, watchMobileViewport } from '@/lib/media-queries';
 import { readMotion } from '@/lib/motion';
 import { subscribeMotion } from '@/lib/motion-change';
 import { pauseWhileHidden } from '@/lib/pause-when-hidden';
@@ -68,7 +68,6 @@ function DesktopBoot() {
     if (!el) return;
     const host: HTMLDivElement = el;
 
-    const mql = window.matchMedia(MOBILE_QUERY);
     const ctrlRef: { current: BootCtrl | null } = { current: null };
     let beat: SysfailBeat | null = null;
     let unwatch: (() => void) | undefined;
@@ -109,12 +108,11 @@ function DesktopBoot() {
       render();
     }
 
-    if (!mql.matches) startAnimation();
+    if (!isMobileViewport()) startAnimation();
 
-    const onBreakpointChange = (e: MediaQueryListEvent) => {
-      if (!e.matches) startAnimation();
-    };
-    mql.addEventListener('change', onBreakpointChange);
+    const unwatchViewport = watchMobileViewport((isMobile) => {
+      if (!isMobile) startAnimation();
+    });
     const unsubscribeMotion = subscribeMotion(() => {
       if (!started) return;
       clear();
@@ -123,7 +121,7 @@ function DesktopBoot() {
 
     return () => {
       unsubscribeMotion();
-      mql.removeEventListener('change', onBreakpointChange);
+      unwatchViewport();
       clear();
     };
   }, []);
@@ -142,7 +140,6 @@ function MobileBoot() {
     const outEl = outRef.current;
     if (!host || !cmdEl || !outEl) return;
 
-    const mql = window.matchMedia(MOBILE_QUERY);
     let ctrl: BootCtrl | null = null;
     let unwatch: (() => void) | undefined;
 
@@ -180,24 +177,23 @@ function MobileBoot() {
       start();
     }
 
-    if (mql.matches) start();
+    if (isMobileViewport()) start();
 
-    const onBreakpointChange = (e: MediaQueryListEvent) => {
-      if (!e.matches) {
+    const unwatchViewport = watchMobileViewport((isMobile) => {
+      if (!isMobile) {
         stop();
         return;
       }
       if (!ctrl) start();
-    };
-    mql.addEventListener('change', onBreakpointChange);
+    });
     const unsubscribeMotion = subscribeMotion(() => {
-      if (mql.matches) restart();
+      if (isMobileViewport()) restart();
     });
 
     return () => {
       unsubscribeMotion();
       stop();
-      mql.removeEventListener('change', onBreakpointChange);
+      unwatchViewport();
     };
   }, []);
 

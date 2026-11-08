@@ -1,6 +1,8 @@
 import { act } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { installMatchMedia } from '@/__tests__/helpers/match-media';
 import { mountClient } from '@/__tests__/helpers/render';
+import { MOBILE_QUERY } from '@/lib/media-queries';
 
 vi.mock('@/lib/motion', () => ({
   readMotion: vi.fn(() => true),
@@ -84,14 +86,7 @@ describe('boot-animation: textContent-mutation invariant', () => {
     const React = await import('react');
     const { HeroBootAnimation } = await import('./HeroBootAnimation');
 
-    vi.stubGlobal(
-      'matchMedia',
-      vi.fn(() => ({
-        matches: false,
-        addEventListener: vi.fn(),
-        removeEventListener: vi.fn(),
-      })),
-    );
+    installMatchMedia(false);
 
     const { container, unmount } = await mountClient(
       React.createElement(HeroBootAnimation, { variant: 'desktop' }),
@@ -133,14 +128,7 @@ describe('decorative boot output', () => {
 
   it('types the mobile command and the matrix output into the rendered lines', async () => {
     vi.useFakeTimers();
-    vi.stubGlobal(
-      'matchMedia',
-      vi.fn(() => ({
-        matches: true,
-        addEventListener: vi.fn(),
-        removeEventListener: vi.fn(),
-      })),
-    );
+    installMatchMedia(true);
     const { HeroBootAnimation } = await import('./HeroBootAnimation');
     const mounted = await mountClient(<HeroBootAnimation variant="mobile" />);
     const host = mounted.container.querySelector('.hero-boot-mobile');
@@ -169,11 +157,7 @@ describe('decorative boot output', () => {
   it('keeps reduced-motion output static without starting animation timers', async () => {
     const { readMotion } = await import('@/lib/motion');
     vi.mocked(readMotion).mockReturnValue(false);
-    vi.stubGlobal('matchMedia', () => ({
-      matches: false,
-      addEventListener: vi.fn(),
-      removeEventListener: vi.fn(),
-    }));
+    installMatchMedia(false);
     vi.useFakeTimers();
     const { HeroBootAnimation } = await import('./HeroBootAnimation');
     const mounted = await mountClient(<HeroBootAnimation variant="desktop" />);
@@ -246,14 +230,7 @@ describe('hero boot follows the motion switch and the viewport', () => {
   }
 
   function stubViewport(isMobile: boolean) {
-    vi.stubGlobal(
-      'matchMedia',
-      vi.fn(() => ({
-        matches: isMobile,
-        addEventListener: vi.fn(),
-        removeEventListener: vi.fn(),
-      })),
-    );
+    return installMatchMedia({ [MOBILE_QUERY]: isMobile });
   }
 
   function announceMotion(on: boolean) {
@@ -342,4 +319,49 @@ describe('hero boot follows the motion switch and the viewport', () => {
       mounted.unmount();
     },
   );
+
+  it('starts the desktop boot when the viewport widens past the mobile breakpoint', async () => {
+    const { readMotion } = await import('@/lib/motion');
+    vi.mocked(readMotion).mockReturnValue(true);
+    const media = stubViewport(true);
+    const { HeroBootAnimation } = await import('./HeroBootAnimation');
+    const mounted = await mountClient(<HeroBootAnimation variant="desktop" />);
+    expect(vi.getTimerCount(), 'a mobile viewport leaves the desktop boot idle').toBe(0);
+    expect(media.listenerCount(MOBILE_QUERY)).toBe(1);
+
+    await act(async () => {
+      media.emit(MOBILE_QUERY, false);
+      await vi.advanceTimersByTimeAsync(3000);
+    });
+    expect(vi.getTimerCount(), 'widening the viewport starts the desktop boot').toBeGreaterThan(0);
+
+    mounted.unmount();
+    expect(media.listenerCount(MOBILE_QUERY)).toBe(0);
+  });
+
+  it('stops the mobile boot when the viewport widens and restarts it when it narrows', async () => {
+    const { readMotion } = await import('@/lib/motion');
+    vi.mocked(readMotion).mockReturnValue(true);
+    const media = stubViewport(true);
+    const { HeroBootAnimation } = await import('./HeroBootAnimation');
+    const mounted = await mountClient(<HeroBootAnimation variant="mobile" />);
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(3000);
+    });
+    expect(vi.getTimerCount()).toBeGreaterThan(0);
+
+    await act(async () => {
+      media.emit(MOBILE_QUERY, false);
+    });
+    expect(vi.getTimerCount(), 'leaving the mobile viewport cancels the typing').toBe(0);
+
+    await act(async () => {
+      media.emit(MOBILE_QUERY, true);
+      await vi.advanceTimersByTimeAsync(3000);
+    });
+    expect(vi.getTimerCount(), 'returning to mobile types again').toBeGreaterThan(0);
+
+    mounted.unmount();
+    expect(media.listenerCount(MOBILE_QUERY)).toBe(0);
+  });
 });

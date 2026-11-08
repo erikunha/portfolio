@@ -1,5 +1,6 @@
 import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { installMatchMedia } from '@/__tests__/helpers/match-media';
 import { NAVIGATION, siteNavChrome } from '@/content/navigation';
 import { SITE_LOCALE } from '@/content/site-locale';
 import { LINKEDIN_URL } from '@/content/social-urls';
@@ -51,11 +52,7 @@ describe('Dock', () => {
   beforeEach(() => {
     notify = undefined;
     vi.stubGlobal('IntersectionObserver', FakeObserver);
-    window.matchMedia = vi.fn(() => ({
-      matches: false,
-      addEventListener: vi.fn(),
-      removeEventListener: vi.fn(),
-    })) as unknown as typeof window.matchMedia;
+    installMatchMedia(false);
     scrollIntoView = vi.fn();
     Element.prototype.scrollIntoView =
       scrollIntoView as unknown as typeof Element.prototype.scrollIntoView;
@@ -169,11 +166,7 @@ describe('Dock', () => {
   });
 
   it('smooth-scrolls on a first visit even when the system asks for reduced motion', () => {
-    window.matchMedia = vi.fn(() => ({
-      matches: true,
-      addEventListener: vi.fn(),
-      removeEventListener: vi.fn(),
-    })) as unknown as typeof window.matchMedia;
+    installMatchMedia(true);
     mount();
     fireEvent.click(within(dock()).getByRole('link', { name: 'SHELL' }));
     expect(scrollIntoView).toHaveBeenCalledWith({ behavior: 'smooth', block: 'start' });
