@@ -64,7 +64,7 @@ const DockControlSchema = z
     key: z.enum(DOCK_KEYS),
     label: NavTextSchema,
     sectionId: NavTextSchema.optional(),
-    href: z.string().url().optional(),
+    href: z.url().optional(),
     accessibleName: NavTextSchema.optional(),
     lang: NavTextSchema.optional(),
   })
@@ -141,15 +141,15 @@ export function createNavigationSchema(sectionIds: readonly string[]) {
 }
 
 export const SocialSchema = z.object({
-  github: z.string().url(),
+  github: z.url(),
   githubLabel: z.string().min(1),
-  linkedin: z.string().url(),
+  linkedin: z.url(),
   linkedinLabel: z.string().min(1),
-  email: z.string().email(),
-  site: z.string().url(),
+  email: z.email(),
+  site: z.url(),
   siteLabel: z.string().min(1),
   handle: z.string().min(1),
-  whatsapp: z.string().url(),
+  whatsapp: z.url(),
 });
 
 export const StatSchema = z.object({
@@ -237,7 +237,7 @@ export const ProjectSchema = z
     stats: z.array(StatSchema).min(1),
     perm: z.string().min(1).optional(),
     kind: ProjectKind,
-    url: z.string().url().optional(),
+    url: z.url().optional(),
   })
   .refine((project) => project.kind !== ProjectKind.enum.oss || project.url !== undefined);
 
@@ -278,7 +278,7 @@ export const MeasuredSchema = z.object({
   ask: z.object({
     title: z.string().min(1),
     source: z.string().min(1),
-    url: z.string().url(),
+    url: z.url(),
     cacheKey: z.string().min(1),
     timestampLabel: z.string().min(1),
     pending: z.string().min(1),
@@ -301,7 +301,7 @@ export const MeasuredSchema = z.object({
   psi: z.object({
     title: z.string().min(1),
     source: z.string().min(1),
-    url: z.string().url(),
+    url: z.url(),
     timestampLabel: z.string().min(1),
     pairSeparator: z.string().min(1),
     strategies: z
@@ -581,7 +581,7 @@ export const ProfileSchema = z.object({
     .array(
       z.object({
         label: z.string().min(1),
-        href: z.union([z.string().url().startsWith('https://'), z.string().regex(/^\/(?!\/)\S*$/)]),
+        href: z.union([z.url().startsWith('https://'), z.string().regex(/^\/(?!\/)\S*$/)]),
       }),
     )
     .min(1),
@@ -685,8 +685,8 @@ export const ShellUiSchema = z.object({
   copyFailedAnnouncement: z.string().min(1),
   accuracy: z.string().min(1),
   privacy: z.string().min(1),
-  email: z.string().min(1).email(),
-  emailHref: z.string().min(1).url(),
+  email: z.email(),
+  emailHref: z.url(),
   technicalPrivacy: z.string().min(1),
   requestIdHeader: z.string().min(1),
   technicalPrivacySuffix: z.string().min(1),
@@ -1021,7 +1021,7 @@ export const LinksCopySchema = z.object({
 
 export const LinksContentSchema = z.object({
   shellTitle: z.string().min(1),
-  siteUrl: z.string().url(),
+  siteUrl: z.url(),
   siteLabel: z.string().min(1),
   profile: LinksProfileSchema,
   channel: LinksChannelSchema,

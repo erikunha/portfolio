@@ -165,8 +165,8 @@ z.object({
   alternateName: z.string().min(1),
   jobTitle: z.string().min(1),
   description: z.string().min(1),
-  url: z.string().url(),
-  email: z.string().email(),
+  url: z.url(),
+  email: z.email(),
 }).parse(personSchema);
 
 export const SITE_NAME = social.siteLabel;

@@ -7,7 +7,7 @@ import { getForgetLimit, getRedis } from '@/lib/rate-limit';
 import { defineHandler, err, ok } from '@/lib/server/route';
 
 const ForgetPayload = z.object({
-  requestId: z.string().uuid().toLowerCase(),
+  requestId: z.uuid().toLowerCase(),
 });
 
 const MAX_FORGET_BODY_BYTES = 1024;
