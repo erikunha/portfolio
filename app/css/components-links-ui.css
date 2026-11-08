@@ -194,7 +194,8 @@
     border-block-start: 1px solid var(--color-primary-border);
   }
 
-  .links-footer-line {
+  .links-main .links-footer-line {
+    max-width: none;
     display: flex;
     align-items: center;
     justify-content: space-between;

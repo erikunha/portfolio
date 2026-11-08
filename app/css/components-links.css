@@ -168,17 +168,6 @@
     }
   }
 
-  @media (max-width: 767.98px) {
-    .links-chrome {
-      justify-content: center;
-      text-align: center;
-    }
-
-    .links-chrome-title {
-      flex-basis: 100%;
-    }
-  }
-
   @media (min-width: 768px) {
     .links-grid {
       grid-template-columns: repeat(2, minmax(0, 1fr));
