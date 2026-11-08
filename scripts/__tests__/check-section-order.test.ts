@@ -8,7 +8,6 @@ import {
   collectLiveSectionIds,
   collectOrderedIds,
   collectRenderedSectionIds,
-  findMissingOrderEntries,
   findOrphanedCssIds,
 } from '../check-section-order.mjs';
 
@@ -49,28 +48,6 @@ describe('collectCssSectionIds', () => {
     );
 
     expect([...ids]).toEqual(['sec-readme', 'sec-man-page-body']);
-  });
-});
-
-describe('findMissingOrderEntries', () => {
-  it('reports a rendered section with no order rule', () => {
-    const missing = findMissingOrderEntries(
-      new Set(['sec-projects', 'sec-shell']),
-      new Set(['sec-shell']),
-      new Set(),
-    );
-
-    expect(missing).toEqual(['sec-projects']);
-  });
-
-  it('exempts a declared nested anchor', () => {
-    const missing = findMissingOrderEntries(
-      new Set(['sec-perf-receipts']),
-      new Set(),
-      new Set(['sec-perf-receipts']),
-    );
-
-    expect(missing).toEqual([]);
   });
 });
 

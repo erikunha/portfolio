@@ -96,7 +96,7 @@ Import order (`app/globals.css`): `tailwindcss` → `theme.css` → `base.css` �
 | File               | `@layer`     | Holds                                                                                                                              |
 | ------------------ | ------------ | ---------------------------------------------------------------------------------------------------------------------------------- |
 | `theme.css`        | `@theme`     | The token system (below)                                                                                                           |
-| `base.css`         | `base`       | resets, focus-visible rings, skip-link, `.sr-only`, the `#sec-*` mobile-order map, `.mobile-only`/`.desktop-only`                  |
+| `base.css`         | `base`       | resets, focus-visible rings, skip-link, `.sr-only`, `.mobile-only`/`.desktop-only`                  |
 | `crt.css`          | `components` | the 6 CRT classes + keyframes + MOTION-off disables + the `html[data-crt-level]` pause rule                                    |
 | `animations.css`   | -            | section keyframes (`boot-blink`, `guitar-scan-beam`, `hero-shake-*`, ...)                                          |
 | `components-*.css` | `components` | named layout and effect classes (`.module-*`, `.signal-glow`, DawMixer `.mx-fader`/`.mx-dial`, `.contact-*`, `.shell-cursor`, ...) |

@@ -42,7 +42,7 @@ check (Biome) -> typecheck -> validate-content -> check:client-naming -> check:d
 | `check:dep-pinning`    | no `latest`/`*`/tag deps or open overrides                                                                       |
 | `check:dependency-vetting` | every direct dependency has a purpose and license in `dependency-vetting.json`; the installed license matches it; an install script needs `pnpm.onlyBuiltDependencies` or `pnpm.ignoredBuiltDependencies` |
 | `check:harness-size`   | `AGENTS.md` and `CLAUDE.md` within the line budgets in `scripts/harness-size.json`               |
-| `check:section-order`  | section ids have mobile order rules or a listed nested-anchor exemption                          |
+| `check:section-order`  | no `#sec-*` rule reorders a section with CSS `order`, and every `#sec-*` selector matches a rendered id |
 | `check:doc-drift`      | `ARCHITECTURE.md` directory-tree paths exist on disk                                             |
 | `lint:css-tokens`      | no raw hex, `rgb()` or `hsl()` outside `app/css/theme.css` and the named allowlist, in `app/css` and `*-tokens.ts` |
 | `lint:contrast`        | documented text/surface pairs meet WCAG AA                                                       |
@@ -52,7 +52,7 @@ check (Biome) -> typecheck -> validate-content -> check:client-naming -> check:d
 
 `check:dependency-vetting` reads the installed `package.json` of each direct dependency (`dependencies`, `devDependencies`, `optionalDependencies`). It fails on a dependency with no entry, an entry for a package that left `package.json`, an entry with no purpose, an installed license that differs from the recorded one, and a `preinstall`, `install` or `postinstall` script on a package outside `pnpm.onlyBuiltDependencies`. A license change on upgrade therefore needs the recorded license updated, which is the re-vetting step. Vulnerabilities and GPL/AGPL licenses are not checked there: the `dependency-review` job already blocks high-severity advisories and `GPL-3.0`, `AGPL-3.0` and `GPL-2.0` on pull requests.
 
-`check:section-order` runs both directions: every rendered section needs a mobile order rule or a listed nested-anchor exemption, and every `#sec-*` selector in `app/css` must match an id some source renders, so a deleted section cannot leave dead rules behind.
+`check:section-order` runs both directions: no rule in `app/css` may reorder a section with the CSS `order` property, so the visual order always equals the DOM order, and every `#sec-*` selector in `app/css` must match an id some source renders, so a deleted section cannot leave dead rules behind.
 
 ## Predicting CI before a push
 

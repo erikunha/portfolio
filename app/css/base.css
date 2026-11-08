@@ -226,33 +226,6 @@
     }
   }
 
-  @media (max-width: 767.98px) {
-    #sec-readme {
-      order: 1;
-    }
-    #sec-shell {
-      order: 2;
-    }
-    #sec-live-metrics {
-      order: 3;
-    }
-    #sec-projects {
-      order: 6;
-    }
-    #sec-git-log {
-      order: 7;
-    }
-    #sec-guitar {
-      order: 12;
-    }
-    #sec-hottest-takes {
-      order: 17;
-    }
-    #sec-contact {
-      order: 20;
-    }
-  }
-
   @media (max-width: 1023.98px) {
     html {
       scroll-padding-bottom: var(--dock-clearance);

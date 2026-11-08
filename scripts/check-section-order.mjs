@@ -4,14 +4,6 @@ import { readdirSync, readFileSync, realpathSync, statSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
-const KNOWN_UNORDERED = new Set([
-  'sec-ai-metrics',
-  'sec-live-perf',
-  'sec-perf-receipts',
-  'sec-credentials',
-  'sec-community',
-]);
-
 const SECTION_ID_PATTERN = /sec-[a-z0-9-]+/g;
 
 export function collectTsx(dir) {
@@ -57,10 +49,6 @@ export function collectCssSectionIds(css) {
   return new Set([...css.matchAll(/#(sec-[a-z0-9-]+)/g)].map((m) => m[1]));
 }
 
-export function findMissingOrderEntries(renderedIds, orderedIds, knownUnordered = KNOWN_UNORDERED) {
-  return [...renderedIds].filter((id) => !orderedIds.has(id) && !knownUnordered.has(id));
-}
-
 export function findOrphanedCssIds(cssIds, liveIds) {
   return [...cssIds].filter((id) => !liveIds.has(id));
 }
@@ -87,34 +75,23 @@ function main() {
     ...collectSourceIds(root, ['components', 'app']),
   ]);
 
-  const baseCss = readFileSync(resolve(root, 'app/css/base.css'), 'utf8');
-  const orderedIds = collectOrderedIds(baseCss);
+  const cssSources = readdirSync(resolve(root, 'app/css'))
+    .filter((file) => file.endsWith('.css'))
+    .map((file) => readFileSync(resolve(root, 'app/css', file), 'utf8'));
+  const reordered = new Set(cssSources.flatMap((css) => [...collectOrderedIds(css)]));
 
-  const missing = findMissingOrderEntries(renderedIds, orderedIds);
-
-  if (missing.length > 0) {
-    console.error('\n[check-section-order] Missing mobile order entries in app/css/base.css:');
-    for (const id of missing) {
+  if (reordered.size > 0) {
+    console.error('\n[check-section-order] Sections reordered with the CSS order property:');
+    for (const id of reordered) {
       console.error(`  - ${id}`);
     }
     console.error(
-      '\nFix: add #' +
-        missing[0] +
-        ' { order: N; } inside the @media (max-width: 768px) block in app/css/base.css.',
-    );
-    console.error(
-      'If this section intentionally defaults to order:0, add it to KNOWN_UNORDERED in this script and record why in DECISIONS.md.',
+      '\nFix: delete the order declaration. Keyboard and screen reader order follows the DOM order, so a section placed elsewhere on screen breaks WCAG 2.4.3. Reorder the sections in components/SiteHome.tsx instead.',
     );
     process.exit(1);
   }
 
-  const cssIds = collectCssSectionIds(baseCss);
-  for (const file of readdirSync(resolve(root, 'app/css'))) {
-    if (!file.endsWith('.css')) continue;
-    for (const id of collectCssSectionIds(readFileSync(resolve(root, 'app/css', file), 'utf8'))) {
-      cssIds.add(id);
-    }
-  }
+  const cssIds = new Set(cssSources.flatMap((css) => [...collectCssSectionIds(css)]));
 
   const orphaned = findOrphanedCssIds(cssIds, liveIds);
 
@@ -135,7 +112,7 @@ function main() {
   }
 
   console.log(
-    `[check-section-order] OK: ${renderedIds.size} sections checked (${KNOWN_UNORDERED.size} intentionally unordered), ${cssIds.size} live section ids in CSS.`,
+    `[check-section-order] OK: ${renderedIds.size} sections checked and none reordered by CSS, ${cssIds.size} live section ids in CSS.`,
   );
 }
 
