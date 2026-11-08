@@ -27,6 +27,8 @@ const TELEMETRY_FUNCTION_ID = 'ask';
 
 const FINISH_REASON_LENGTH = 'length' as const;
 
+const FINISH_REASON_INTERRUPTED = 'interrupted' as const;
+
 const MID_STREAM_TIMEOUT_MS = 15_000;
 
 const MID_STREAM_TIMEOUT_MESSAGE = 'mid-stream timeout';
@@ -116,13 +118,12 @@ export function createAskStream(context: AskContext): AskStream {
     maxOutputTokens: ASK_MAX_OUTPUT_TOKENS,
     abortSignal: AbortSignal.any([AbortSignal.timeout(REQUEST_TIMEOUT_MS), upstream.signal]),
     telemetry: { functionId: TELEMETRY_FUNCTION_ID, recordInputs: false, recordOutputs: false },
-    allowSystemInMessages: true,
+    instructions: {
+      role: 'system',
+      content: SYSTEM_TEXT,
+      providerOptions: { anthropic: { cacheControl: { type: 'ephemeral' } } },
+    },
     messages: [
-      {
-        role: 'system',
-        content: SYSTEM_TEXT,
-        providerOptions: { anthropic: { cacheControl: { type: 'ephemeral' } } },
-      },
       {
         role: 'user',
         content: wrapUserQuestion(question, mintQuestionSentinel(), answerLocale),
@@ -197,6 +198,9 @@ export function createAskStream(context: AskContext): AskStream {
             if (finishReason === FINISH_REASON_LENGTH) {
               state.truncated = true;
               send(enc.encode(askErrors[answerLocale].truncation));
+            } else if (finishReason === FINISH_REASON_INTERRUPTED) {
+              state.status = 'errored';
+              sendError(askErrors[answerLocale].interrupted);
             }
             break;
           }

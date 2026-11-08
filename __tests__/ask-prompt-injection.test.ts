@@ -123,22 +123,21 @@ describe('/api/ask prompt-injection sanitization', () => {
     expect(firstSentinel).not.toBe(secondSentinel);
   });
 
-  it('passes the system prompt as a cache-controlled system message', async () => {
+  it('passes the system prompt as cache-controlled instructions', async () => {
     mockStreamText.mockReturnValueOnce(makeStreamTextResult('ok'));
     const { POST } = await import('@/app/api/ask/route');
     await POST(makeRequest('What is your stack?'));
     const callArg = mockStreamText.mock.calls[0]?.[0] as {
       model: string;
-      messages: {
+      instructions?: {
         role: string;
         content: string;
         providerOptions?: { anthropic?: { cacheControl?: { type?: string } } };
-      }[];
+      };
     };
     expect(callArg.model).toBe('anthropic/claude-haiku-4-5');
-    const systemMsg = callArg.messages.find((m) => m.role === 'system');
-    expect(systemMsg, 'expected a system-role message').toBeDefined();
-    expect(systemMsg?.providerOptions?.anthropic?.cacheControl?.type).toBe('ephemeral');
+    expect(callArg.instructions?.role, 'expected a system-role instructions entry').toBe('system');
+    expect(callArg.instructions?.providerOptions?.anthropic?.cacheControl?.type).toBe('ephemeral');
   });
 });
 
