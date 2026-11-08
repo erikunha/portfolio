@@ -84,6 +84,23 @@ describe('rollback-rehearsal workflow', () => {
     expect(WORKFLOW_TEXT).not.toMatch(/secrets\.VERCEL|VERCEL_TOKEN/i);
   });
 
+  it('runs the rehearsal with no secret, no API token and no network write', () => {
+    const rehearsal = rehearseSteps.map(
+      (s) => `${s.run ?? ''}\n${JSON.stringify(s.env ?? {})}\n${JSON.stringify(s.with ?? {})}`,
+    );
+    for (const forbidden of [
+      /secrets\./,
+      /GH_TOKEN|GITHUB_TOKEN/,
+      /\bgh\s+(api|pr|release|issue)\b/,
+      /\bcurl\b/,
+    ]) {
+      expect(
+        rehearsal.filter((step) => forbidden.test(step)),
+        'the rehearse job must stay unable to reach anything outside the runner',
+      ).toEqual([]);
+    }
+  });
+
   it('checks out main with full history and no stored credentials', () => {
     const checkout = rehearseSteps.find((s) => s.uses?.startsWith('actions/checkout'));
     expect(checkout?.with).toMatchObject({
