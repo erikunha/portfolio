@@ -99,6 +99,43 @@ describe('MCP server tool surface', () => {
     }
   });
 
+  it('declares behaviour hints on both tools so agents can skip confirmation for the read-only one', async () => {
+    const client = await connectTestClient();
+    try {
+      const { tools } = await client.listTools();
+      const byName = new Map(tools.map((t) => [t.name, t]));
+      expect(byName.get('get_profile')?.annotations).toMatchObject({
+        readOnlyHint: true,
+        idempotentHint: true,
+        openWorldHint: false,
+      });
+      expect(byName.get('ask_erik')?.annotations).toMatchObject({
+        readOnlyHint: false,
+        idempotentHint: false,
+        openWorldHint: true,
+      });
+    } finally {
+      await client.close();
+    }
+  });
+
+  it('get_profile advertises an output schema and returns structuredContent equal to the profile', async () => {
+    const client = await connectTestClient();
+    try {
+      const { tools } = await client.listTools();
+      const profileTool = tools.find((t) => t.name === 'get_profile');
+      expect(profileTool?.outputSchema).toBeDefined();
+      expect(tools.find((t) => t.name === 'ask_erik')?.outputSchema).toBeUndefined();
+
+      const result = await client.callTool({ name: 'get_profile', arguments: {} });
+      expect(result.structuredContent).toEqual(JSON.parse(JSON.stringify(HIRING_PROFILE)));
+      const block = (result.content as Array<{ type: string; text: string }>)[0];
+      expect(JSON.parse(block?.text ?? '{}')).toEqual(JSON.parse(JSON.stringify(HIRING_PROFILE)));
+    } finally {
+      await client.close();
+    }
+  });
+
   it('get_profile returns an object with @type === HiringProfile', async () => {
     const client = await connectTestClient();
     try {

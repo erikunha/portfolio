@@ -2,7 +2,7 @@ import type { McpServer } from '@modelcontextprotocol/server';
 import { z } from 'zod';
 import { POST as askPost } from '@/app/api/ask/route';
 import { social } from '@/content/social';
-import { HIRING_PROFILE } from '@/lib/hiring-profile';
+import { HIRING_PROFILE, HiringProfileSchema } from '@/lib/hiring-profile';
 import { parseStreamChunk, REQUEST_ID_HEADER } from '@/lib/stream-protocol';
 
 const MIN_QUESTION_LENGTH = 1;
@@ -71,8 +71,11 @@ async function runAsk(question: string, clientHeaders: Headers | undefined): Pro
   return { ok: true, text: chunk.displayText || '(empty answer)', requestId };
 }
 
-function textResult(text: string) {
-  return { content: [{ type: 'text' as const, text }] };
+function profileResult() {
+  return {
+    content: [{ type: 'text' as const, text: JSON.stringify(HIRING_PROFILE) }],
+    structuredContent: HIRING_PROFILE,
+  };
 }
 
 export function registerAgentTools(server: McpServer): void {
@@ -83,8 +86,10 @@ export function registerAgentTools(server: McpServer): void {
       description:
         "Return Erik Cunha's structured HiringProfile: employers, primary/secondary stack, quantified receipts, education, and availability. Read-only; same data as /api/erik.json.",
       inputSchema: z.object({}),
+      outputSchema: HiringProfileSchema,
+      annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
     },
-    async () => textResult(JSON.stringify(HIRING_PROFILE)),
+    async () => profileResult(),
   );
 
   server.registerTool(
@@ -100,6 +105,7 @@ export function registerAgentTools(server: McpServer): void {
           .max(MAX_QUESTION_LENGTH)
           .describe('A natural-language question about Erik.'),
       }),
+      annotations: { readOnlyHint: false, idempotentHint: false, openWorldHint: true },
     },
     async ({ question }, ctx) => toolResult(await runAsk(question, ctx.http?.req?.headers)),
   );

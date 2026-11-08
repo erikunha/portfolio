@@ -49,6 +49,7 @@ ADR-lite running log. One bullet per decision · date · reversibility note.
 ## 2026-11-08: installed dependency features replace hand-written equivalents
 
 - **2026-11-08** · **Resend sends are cancelled by `AbortSignal.timeout`, not raced against a timer.** `resend` 6.37 accepts `signal` in the request options and rethrows the abort reason, so the contact send (10s) and the PSI alert (5s) now abort the request itself instead of leaving the loser running after a `Promise.race` timeout. The contact `idempotencyKey` stays, which keeps the retry cron safe if an aborted request had reached Resend. An abort lands in the existing catch and counts as unavailable. _Reversible: restore the race in `lib/contact-delivery.ts` and `app/api/psi-refresh/route.ts`._
+- **2026-11-08** · **The MCP tools declare `annotations`, and `get_profile` declares `outputSchema` and returns `structuredContent`.** `registerTool` in `@modelcontextprotocol/server` 2.4 accepts both, and neither tool set them. `get_profile` is `readOnlyHint` and `idempotentHint` with `openWorldHint: false`, so an agent can call it without confirmation; `ask_erik` is the opposite on all three (it writes an ask-log row and calls a model). The text block stays for clients that ignore structured output. _Reversible: drop the three fields in `lib/agent/mcp-tools.ts`._
 
 ## 2026-11-08: server paths stop doing work nobody asked for
 
