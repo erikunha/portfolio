@@ -1,0 +1,74 @@
+[
+  {
+    "file": "app/css/crt.css",
+    "literal": "rgba(0, 80, 20, 0.12)",
+    "count": 1,
+    "reason": "vignette green wash"
+  },
+  {
+    "file": "app/css/crt.css",
+    "literal": "rgba(0, 0, 0, 0.38)",
+    "count": 1,
+    "reason": "vignette edge darkening"
+  },
+  {
+    "file": "app/css/crt.css",
+    "literal": "rgba(0, 0, 0, 0.45)",
+    "count": 2,
+    "reason": "scanline stripe"
+  },
+  {
+    "file": "app/css/crt.css",
+    "literal": "rgba(255, 0, 0, 0.06)",
+    "count": 2,
+    "reason": "RGB sub-pixel mask, red stripe"
+  },
+  {
+    "file": "app/css/crt.css",
+    "literal": "rgba(0, 255, 0, 0.06)",
+    "count": 2,
+    "reason": "RGB sub-pixel mask, green stripe"
+  },
+  {
+    "file": "app/css/crt.css",
+    "literal": "rgba(0, 0, 255, 0.06)",
+    "count": 2,
+    "reason": "RGB sub-pixel mask, blue stripe"
+  },
+  {
+    "file": "app/css/crt.css",
+    "literal": "rgba(0, 255, 65, 0.02)",
+    "count": 1,
+    "reason": "phosphor flicker wash"
+  },
+  {
+    "file": "app/css/crt.css",
+    "literal": "rgba(0, 255, 65, 0.06)",
+    "count": 1,
+    "reason": "scan beam band"
+  },
+  {
+    "file": "components/responsive/MatrixRain/rain-tokens.ts",
+    "literal": "#1d6a2a",
+    "count": 1,
+    "reason": "canvas 2D head colour; the canvas API cannot read a CSS custom property without a computed-style read"
+  },
+  {
+    "file": "components/responsive/MatrixRain/rain-tokens.ts",
+    "literal": "#072810",
+    "count": 1,
+    "reason": "canvas 2D body colour, same constraint as the head colour"
+  },
+  {
+    "file": "components/responsive/MatrixRain/rain-tokens.ts",
+    "literal": "rgba(0,0,0,0.10)",
+    "count": 1,
+    "reason": "canvas 2D tail fade, same constraint as the head colour"
+  },
+  {
+    "file": "components/responsive/MatrixRain/rain-tokens.ts",
+    "literal": "#000",
+    "count": 1,
+    "reason": "canvas 2D clear colour, same constraint as the head colour"
+  }
+]

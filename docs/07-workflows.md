@@ -44,7 +44,7 @@ check (Biome) -> typecheck -> validate-content -> check:client-naming -> check:d
 | `check:harness-size`   | `AGENTS.md` and `CLAUDE.md` within the line budgets in `scripts/harness-size.json`               |
 | `check:section-order`  | section ids have mobile order rules or a listed nested-anchor exemption                          |
 | `check:doc-drift`      | `ARCHITECTURE.md` directory-tree paths exist on disk                                             |
-| `lint:css-tokens`      | no raw hex outside `app/css/theme.css`                                                           |
+| `lint:css-tokens`      | no raw hex, `rgb()` or `hsl()` outside `app/css/theme.css` and the named allowlist, in `app/css` and `*-tokens.ts` |
 | `lint:contrast`        | documented text/surface pairs meet WCAG AA                                                       |
 | `check:component-docs` | each DS component is documented                                                                  |
 | `bundle-check`         | global gzipped client chunks ≤ 220KB                                                             |
