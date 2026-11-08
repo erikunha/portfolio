@@ -100,7 +100,7 @@ Import order (`app/globals.css`): `tailwindcss` → `theme.css` → `base.css` �
 | `crt.css`          | `components` | the 6 CRT classes + keyframes + MOTION-off disables + the `html[data-crt-level]` pause rule                                    |
 | `animations.css`   | -            | section keyframes (`boot-blink`, `guitar-scan-beam`, `hero-shake-*`, ...)                                          |
 | `components-*.css` | `components` | named layout and effect classes (`.module-*`, `.signal-glow`, DawMixer `.mx-fader`/`.mx-dial`, `.contact-*`, `.shell-cursor`, ...) |
-| `forced-colors.css` | `components` | one `@media (forced-colors: active)` block, imported last: hides the CRT overlays and aria-hidden canvases, and gives state-carrying controls system-color borders and outlines |
+| `forced-colors.css` | `components` | one `@media (forced-colors: active)` block, imported last: hides the CRT overlays and aria-hidden canvases, gives state-carrying controls system-color borders and outlines, and ends with an `!important` block that outranks Tailwind utilities (focus ring, primary and current buttons, pressed toggles, meter fills) |
 
 **Tokens (`@theme`):** six ordinal color families (primary/secondary/tertiary/quaternary/quinary/senary), each a 50 to 900 ramp, with the brand palette mapped onto specific stops: `--color-primary-500: #00ff41` (signal green), `--color-secondary-950: #000000` (surface black), `--color-tertiary-50: #e6ffe6` (body text). Fixed-opacity stops (`-subtle` 40%, `-border` 20%, `-faint` 12%, `-quiet` 10%) are kept as explicit hex (byte-identical, no `color-mix`). **No raw hex outside `theme.css`** - enforced by `lint:css-tokens` (see doc 06/07).
 

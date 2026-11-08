@@ -390,4 +390,15 @@
     outline: var(--border-width) solid var(--color-green);
     outline-offset: var(--spacing-1);
   }
+
+  @media (forced-colors: active) {
+    .hero-context .hero-location {
+      text-decoration-line: underline;
+      text-underline-offset: var(--spacing-1);
+    }
+
+    .hero-boot-ok {
+      font-weight: 700;
+    }
+  }
 }

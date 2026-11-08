@@ -3,6 +3,25 @@ import { describe, expect, it, vi } from 'vitest';
 import { Button } from './Button';
 
 describe('Button', () => {
+  it('exposes its variant as data-variant on a button and on an anchor', () => {
+    const { container } = render(
+      <>
+        <Button>Primary default</Button>
+        <Button variant="secondary">Secondary</Button>
+        <Button as="a" href="/x" variant="secondary">
+          Link
+        </Button>
+      </>,
+    );
+    const variants = [...container.querySelectorAll('.btn')].map((node) =>
+      node.getAttribute('data-variant'),
+    );
+    expect(variants).toEqual(['primary', 'secondary', 'secondary']);
+  });
+  it('lets the caller override data-variant', () => {
+    render(<Button data-variant="custom">Custom</Button>);
+    expect(screen.getByRole('button').getAttribute('data-variant')).toBe('custom');
+  });
   it('renders as <button> by default', () => {
     render(<Button>Click</Button>);
     expect(screen.getByRole('button')).toBeDefined();

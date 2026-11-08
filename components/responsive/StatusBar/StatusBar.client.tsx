@@ -53,16 +53,16 @@ export function StatusBar() {
       </div>
       <div className="inline-flex items-center gap-1.5" aria-hidden>
         <span className="inline-flex items-end gap-0.5">
-          <i className="block w-[3px] bg-primary-500" style={{ height: 4 }} />
-          <i className="block w-[3px] bg-primary-500" style={{ height: 7 }} />
-          <i className="block w-[3px] bg-primary-500" style={{ height: 10 }} />
-          <i className="block w-[3px] bg-primary-500 opacity-50" style={{ height: 13 }} />
+          <i className="meter-fill block w-[3px] bg-primary-500" style={{ height: 4 }} />
+          <i className="meter-fill block w-[3px] bg-primary-500" style={{ height: 7 }} />
+          <i className="meter-fill block w-[3px] bg-primary-500" style={{ height: 10 }} />
+          <i className="meter-dim block w-[3px] bg-primary-500 opacity-50" style={{ height: 13 }} />
         </span>
         <span className="text-primary-500 text-xs tracking-[0.1em]">5G</span>
         <span className="inline-flex items-center gap-[3px] text-primary-500 font-bold" aria-hidden>
           <span className="text-xs">78%</span>
-          <span className="inline-block w-[22px] h-[11px] border border-primary-500 p-px relative after:content-[''] after:absolute after:right-[-3px] after:top-[2px] after:w-[2px] after:h-[5px] after:bg-primary-500">
-            <i className="block h-full bg-primary-500 w-[78%]" />
+          <span className="status-battery inline-block w-[22px] h-[11px] border border-primary-500 p-px relative after:content-[''] after:absolute after:right-[-3px] after:top-[2px] after:w-[2px] after:h-[5px] after:bg-primary-500">
+            <i className="meter-fill block h-full bg-primary-500 w-[78%]" />
           </span>
         </span>
       </div>

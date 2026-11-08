@@ -1,4 +1,4 @@
-import type { Locator } from '@playwright/test';
+import type { Locator, Page } from '@playwright/test';
 
 export const FORCED_ROUTES = ['/', '/pt', '/cv', '/links', '/design-system'] as const;
 
@@ -111,4 +111,108 @@ export async function hasBoundary(target: Locator): Promise<boolean> {
       )
     );
   });
+}
+
+export const SYSTEM_COLORS = [
+  'Canvas',
+  'CanvasText',
+  'Highlight',
+  'HighlightText',
+  'ButtonFace',
+  'ButtonText',
+  'ButtonBorder',
+  'GrayText',
+  'LinkText',
+  'VisitedText',
+  'ActiveText',
+  'Field',
+  'FieldText',
+  'Mark',
+  'MarkText',
+  'SelectedItem',
+  'SelectedItemText',
+] as const;
+
+export type SystemColor = (typeof SYSTEM_COLORS)[number];
+
+export const STATE_BORDER_FLOOR_PX = 3;
+export const HAIRLINE_PX = 1;
+export const BOLD_WEIGHT = 700;
+
+export async function resolveSystemColors(page: Page): Promise<Record<SystemColor, string>> {
+  return page.evaluate((keywords) => {
+    const probe = document.createElement('span');
+    document.body.append(probe);
+    const resolved = Object.fromEntries(
+      keywords.map((keyword) => {
+        probe.style.color = keyword;
+        return [keyword, getComputedStyle(probe).color];
+      }),
+    );
+    probe.remove();
+    return resolved;
+  }, SYSTEM_COLORS) as Promise<Record<SystemColor, string>>;
+}
+
+export async function px(target: Locator, property: string): Promise<number> {
+  const value = (await readStyles(target, [property]))[property] ?? '0';
+  return Number.parseFloat(value);
+}
+
+export interface SvgPaintLeak {
+  element: string;
+  property: string;
+  value: string;
+}
+
+export async function findSvgPaintLeaks(
+  page: Page,
+  allowed: readonly string[],
+): Promise<SvgPaintLeak[]> {
+  return page.evaluate((palette) => {
+    const NO_PAINT = new Set(['none', 'transparent', 'rgba(0, 0, 0, 0)']);
+    const leaks: { element: string; property: string; value: string }[] = [];
+    for (const node of document.querySelectorAll('svg *')) {
+      const style = getComputedStyle(node);
+      for (const property of ['fill', 'stroke']) {
+        const value = style.getPropertyValue(property);
+        if (!NO_PAINT.has(value) && !palette.includes(value) && !value.startsWith('url(')) {
+          leaks.push({
+            element: `${node.tagName.toLowerCase()}.${node.getAttribute('class') ?? ''}`,
+            property,
+            value,
+          });
+        }
+      }
+    }
+    return leaks;
+  }, allowed);
+}
+
+export async function findVanishedIndicators(
+  page: Page,
+  selector: string,
+  canvas: string,
+): Promise<string[]> {
+  return page.evaluate(
+    ([target, canvasColor]) => {
+      const sides = ['top', 'right', 'bottom', 'left'];
+      return [...document.querySelectorAll(target)]
+        .filter((node) => {
+          const style = getComputedStyle(node);
+          const bounds = node.getBoundingClientRect();
+          if (bounds.width < 1 || bounds.height < 1 || style.display === 'none') return false;
+          const drawnBorder = sides.some(
+            (side) =>
+              Number.parseFloat(style.getPropertyValue(`border-${side}-width`)) > 0 &&
+              style.getPropertyValue(`border-${side}-style`) !== 'none',
+          );
+          const drawnOutline =
+            style.outlineStyle !== 'none' && Number.parseFloat(style.outlineWidth) > 0;
+          return style.backgroundColor === canvasColor && !drawnBorder && !drawnOutline;
+        })
+        .map((node) => `${node.tagName.toLowerCase()}.${node.getAttribute('class') ?? ''}`);
+    },
+    [selector, canvas] as const,
+  );
 }

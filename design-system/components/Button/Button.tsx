@@ -43,6 +43,7 @@ export function Button({
     const { disabled, href, onClick, tabIndex, ...anchorRest } = rest as AsAnchor;
     return (
       <a
+        data-variant={variant}
         {...anchorRest}
         className={classes}
         {...(disabled ? { 'aria-disabled': 'true' as const } : {})}
@@ -53,5 +54,5 @@ export function Button({
     );
   }
   const { type = 'button', ...buttonRest } = rest as AsButton;
-  return <button className={classes} type={type} {...buttonRest} />;
+  return <button data-variant={variant} className={classes} type={type} {...buttonRest} />;
 }

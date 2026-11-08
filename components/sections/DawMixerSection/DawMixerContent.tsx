@@ -16,9 +16,9 @@ import { DawMixerDesktop } from './DawMixerDesktop';
 import { FaderBar, ParsedText, SessionSummary, StrengthDots } from './DawMixerShared';
 
 const STATIC_SEGMENT_CLASS = {
-  [MeterSegment.Red]: 'bg-senary-300',
-  [MeterSegment.Filled]: 'bg-primary-500',
-  [MeterSegment.Empty]: 'bg-primary-500 opacity-[0.22]',
+  [MeterSegment.Red]: 'meter-alert bg-senary-300',
+  [MeterSegment.Filled]: 'meter-fill bg-primary-500',
+  [MeterSegment.Empty]: 'meter-dim bg-primary-500 opacity-[0.22]',
 } as const;
 
 function StaticMeter({
@@ -118,8 +118,8 @@ function PluginChainMobile({
               className={cn(
                 'w-[6px] h-[6px] justify-self-center',
                 p.active
-                  ? 'bg-primary-500 shadow-[0_0_4px_var(--color-primary-500)]'
-                  : 'bg-[var(--color-primary-quiet)]',
+                  ? 'meter-fill bg-primary-500 shadow-[0_0_4px_var(--color-primary-500)]'
+                  : 'meter-dim bg-[var(--color-primary-quiet)]',
               )}
               aria-hidden="true"
             />
@@ -165,7 +165,7 @@ function MixLegendMobile({ mixer, copy }: { mixer: DawMixer; copy: DawMixerCopy 
       aria-hidden="true"
     >
       <span>
-        <span className="inline-block w-[5px] h-[5px] bg-primary-500 shadow-[0_0_5px_var(--color-primary-500)] mr-[6px] align-[1px]" />
+        <span className="meter-fill inline-block w-[5px] h-[5px] bg-primary-500 shadow-[0_0_5px_var(--color-primary-500)] mr-[6px] align-[1px]" />
         {lead.id} {copy.leadSuffix}
       </span>
     </div>

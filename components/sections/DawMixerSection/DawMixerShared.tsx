@@ -22,7 +22,11 @@ export function StrengthDots({
   dotClassName: string;
 }) {
   return Array.from({ length: PLUGIN_STRENGTH_STEPS }, (_, i) => {
-    const cls = cn('block bg-primary-500', dotClassName, i >= strength && 'opacity-[0.22]');
+    const cls = cn(
+      'block bg-primary-500',
+      i < strength ? 'meter-fill' : 'meter-dim opacity-[0.22]',
+      dotClassName,
+    );
     return (
       // biome-ignore lint/suspicious/noArrayIndexKey: positional strength dots
       <span key={i} className={cls} />
@@ -38,7 +42,7 @@ export function FaderBar({ pct, bright = false }: { pct: number; bright?: boolea
     >
       <div
         className={cn(
-          'absolute left-0 top-0 bottom-0 bg-primary-500 opacity-85',
+          'meter-fill absolute left-0 top-0 bottom-0 bg-primary-500 opacity-85',
           bright && 'opacity-100',
         )}
         style={{ width: `${pct}%` }}
