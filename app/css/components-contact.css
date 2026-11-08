@@ -55,12 +55,12 @@
   }
 
   .contact-loading {
-    min-height: 34.8rem;
+    min-height: 44rem;
   }
 
   @media (min-width: 480px) {
     .contact-loading {
-      min-height: 31.5rem;
+      min-height: 36rem;
     }
   }
 

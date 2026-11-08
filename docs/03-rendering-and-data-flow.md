@@ -105,7 +105,7 @@ flowchart LR
   ```
 
   `AsyncInner` awaits `getIsMobile()` and renders the desktop or mobile variant behind a null Suspense fallback. `GuitarSection` uses this pattern for its mixer content (`DawMixerContent`); the guitar rig and photo above it use one responsive presentation without this UA boundary or variant swap.
-- **`defer` prop:** the below-the-fold sections (`DEFERRED_SECTION_COUNT` in `components/responsive/Module/module.constants.ts`, held by `__tests__/content-visibility.test.ts`) pass `defer` to `Module`, which applies CSS `content-visibility` (defers render cost, not JS). Most use `Module`; Career applies the same attributes in its own wrapper. A deferred module reserves an estimated placeholder height while its content is laid out at full height: 520px is only the default, with per-section and per-breakpoint overrides (Career 3340px, Opinions 3180px, Guitar and mixer 3320px, Contact 2322px) and `contain-intrinsic-size: auto var(--module-estimate)` remembering the rendered height, so the axe gate reveals the deferred modules before the scan: the audit then sees the painted page, the state the visual baselines capture.
+- **`defer` prop:** the below-the-fold sections (`DEFERRED_SECTION_COUNT` in `components/responsive/Module/module.constants.ts`, held by `__tests__/content-visibility.test.ts`) pass `defer` to `Module`, which applies CSS `content-visibility` (defers render cost, not JS). Most use `Module`; Career applies the same attributes in its own wrapper. A deferred module reserves an estimated placeholder height while its content is laid out at full height: 520px is only the default, with per-section and per-breakpoint overrides (Career 3340px, Opinions 3180px, Guitar and mixer 3320px, Contact 2514px) and `contain-intrinsic-size: auto var(--module-estimate)` remembering the rendered height, so the axe gate reveals the deferred modules before the scan: the audit then sees the painted page, the state the visual baselines capture.
 - **Lazy boundaries:** `ContactFormLazy` and `InteractiveShellLazy` are `React.lazy` islands inside `LazyIsland`, rendered on the server, with accessible loading placeholders (`.shell-loading`, `.contact-loading`, each holding a per-breakpoint `min-height` and hidden when scripting is off) as the Suspense and error fallback. `ContactTimezoneLazy` is a `React.lazy` island instead: an `IntersectionObserver` with a 400px margin mounts it, the static panel (a dim map under a one-line `loading local time…` label, hidden when scripting is off or the chunk failed) stays as the Suspense and error fallback, the host holds a per-locale minimum height so the swap moves nothing, and its chunk stays out of first load. Its clocks tick only while the panel is on screen and the tab is visible. `MatrixRainLazy` loads from `GlobalMotion` (mounted in the root layout) with `ssr: false` as a decorative fixed overlay behind `main`; late hydration cannot shift layout. `Footer` is an RSC: content, cards, sitemap and shutdown log render on the server. It renders session counters and halt/reboot controls from `Footer.client` directly, without a dynamic import; the netstat card links each endpoint to its destination. The site map switches layout on its own width with container queries. Every folder is a full-width row (`./work/` and its file count) over its links, which hang off a vertical rule, with a faint divider between folders. Below 38rem the rows are native `<details name="footer-sitemap">` summaries with a `+`/`-` sign, one folder open at a time and `./work/` open on load. From 38rem all folders show in three columns, and from 68rem in six. Rows use `--text-body`, counts `--text-xs`, and links keep 44px targets. It needs no JavaScript and prints as the three-column grid. Counters start at mount to include commands before the footer is reached. The halt clock is empty on the server and reads the visitor’s clock after mount.
 
 The terminal home combines prerendered output and dynamic Suspense children. Separately, `lib/links/feed.ts` uses `use cache` and `cacheLife` for the YouTube feed: stale after 900 seconds, revalidate after 3,600 seconds, expire after 86,400 seconds. Without `YOUTUBE_API_KEY` the loader reads the RSS feed's newest 15 uploads and drops Shorts by their `/shorts/` URL. With the key it pages the channel uploads playlist (up to four pages of 50) until five regular videos are collected, dropping Shorts by URL and by a duration of 60 seconds or less, and keeps the first six regular videos; when the API cannot be read the loader falls back to the RSS feed, where the key still applies the duration filter. `LinksPage` awaits that feed and falls back to `EMPTY_FEED` on failure. An empty result shortens its own cache life (stale 30 seconds, revalidate 60 seconds, expire 300 seconds), so a transient upstream outage is retried within a minute and does not stay for an hour; the page then says the list did not load, not that the channel has no videos.
@@ -136,7 +136,8 @@ sequenceDiagram
 
     U->>R: POST /api/ask { question }
     R->>R: ASK_ENABLED kill-switch (503 if off)
-    R->>RL: getAskLimit().limit(ip)  (8/h, fail-open)
+    R->>R: clientRateLimitKey(req)  (salted hash of the IP bucket)
+    R->>RL: getAskLimit().limit(ipHash)  (8/h, fail-open)
     R->>R: parse + validate (trim, model sees <=500 chars)
     R->>R: isInjectionAttempt reject (400)
     R->>RL: checkIdenticalQuestion (60s dedup, 429)
@@ -173,10 +174,10 @@ sequenceDiagram
     participant RS as Resend
 
     F->>H: POST /api/contact { name, email, message, field_company }
-    H->>H: getContactLimit().limit(ip)  (3/10m, BEFORE parse, fail-open)
+    H->>H: clientRateLimitKey(req)  (salted hash, 503 storage_unavailable if the salt is unreadable)
+    H->>H: getContactLimit().limit(ipHash)  (3/10m, BEFORE parse, fail-open)
     H->>H: req.json() (400 invalid_json)
     H->>H: ContactSchema.safeParse (400 validation_failed)
-    H->>H: hashIp(ip)  (only after passing the gates)
     H->>H: honeypot field_company? -> jittered fake-200
     H->>KV: write contact:msg:* (durability-first)
     alt KV fails
@@ -197,7 +198,7 @@ sequenceDiagram
     end
 ```
 
-The **ordering is a security property**: rate-limit and validate _before_ the work, hash the IP and touch storage _only_ for requests that pass. Every response carries `X-Request-Id`. See doc 05 for the full `defineHandler` contract and the other routes.
+The **ordering is a security property**: hash the IP first so no limiter key holds the raw address, rate-limit and validate _before_ the work, and touch storage _only_ for requests that pass. Every response carries `X-Request-Id`. See doc 05 for the full `defineHandler` contract and the other routes.
 
 At 04:00 UTC daily (`0 4 * * *`), `/api/contact-retry` checks the `CRON_SECRET` bearer before reading pending ids in received-time order. Messages older than 7 days, or already at 3 retry attempts, leave the outbox. Each eligible message consumes an attempt before calling the same delivery function. Successful sends leave the outbox; failures remain pending. Audit messages retain their 90-day KV TTL. The success response is `{ ok: true, requestId, data: { sent, failed, expired, exhausted } }`, with a matching `X-Request-Id` header. Contact logs carry only `requestId` and `msgId`.
 

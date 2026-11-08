@@ -245,36 +245,36 @@
   }
 
   #sec-contact {
-    --module-estimate: 2328px;
+    --module-estimate: 2514px;
   }
 
   @media (min-width: 340px) {
     #sec-contact {
-      --module-estimate: 2291px;
+      --module-estimate: 2458px;
     }
   }
 
   @media (min-width: 360px) {
     #sec-contact {
-      --module-estimate: 2249px;
+      --module-estimate: 2398px;
     }
   }
 
   @media (min-width: 412px) {
     #sec-contact {
-      --module-estimate: 2227px;
+      --module-estimate: 2380px;
     }
   }
 
   @media (min-width: 480px) {
     #sec-contact {
-      --module-estimate: 2171px;
+      --module-estimate: 2285px;
     }
   }
 
   @media (min-width: 600px) {
     #sec-contact {
-      --module-estimate: 2136px;
+      --module-estimate: 2194px;
     }
   }
 
@@ -292,7 +292,7 @@
     }
 
     #sec-contact {
-      --module-estimate: 1882px;
+      --module-estimate: 1922px;
     }
   }
 
@@ -306,7 +306,7 @@
     }
 
     #sec-contact {
-      --module-estimate: 984px;
+      --module-estimate: 1018px;
     }
   }
 

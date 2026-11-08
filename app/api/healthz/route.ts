@@ -1,6 +1,7 @@
 import { connection, type NextRequest } from 'next/server';
 import { log } from '@/lib/log';
-import { getClientIp, getHealthzLimit, getRedis } from '@/lib/rate-limit';
+import { getHealthzLimit, getRedis } from '@/lib/rate-limit';
+import { clientRateLimitKey } from '@/lib/server/rate-limit-key';
 import { err } from '@/lib/server/route';
 
 const HTTP_TOO_MANY_REQUESTS = 429;
@@ -15,8 +16,7 @@ export async function GET(req: NextRequest): Promise<Response> {
   const sha = process.env.VERCEL_GIT_COMMIT_SHA || 'local';
 
   try {
-    const ip = getClientIp(req);
-    const { success } = await getHealthzLimit().limit(ip);
+    const { success } = await getHealthzLimit().limit(await clientRateLimitKey(req));
     if (!success) {
       return err({
         requestId: crypto.randomUUID(),

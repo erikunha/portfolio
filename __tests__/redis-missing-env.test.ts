@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import type { RateLimitIdentifier } from '@/lib/server/rate-limit-key';
 
 vi.mock('@/lib/log', () => ({
   log: { info: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn() },
@@ -118,7 +119,9 @@ describe('the unconfigured client under @upstash/ratelimit', () => {
     try {
       const { getAskLimit } = await import('@/lib/rate-limit');
       const limit = getAskLimit();
-      await expect(limit.limit('127.0.0.1')).rejects.toThrow(/not configured/);
+      await expect(limit.limit('0123456789abcdef' as RateLimitIdentifier)).rejects.toThrow(
+        /not configured/,
+      );
       await new Promise((resolve) => setTimeout(resolve, 20));
       expect(unhandled).toEqual([]);
     } finally {

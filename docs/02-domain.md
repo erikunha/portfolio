@@ -26,7 +26,7 @@ flowchart LR
     visitor -->|sends a message| contact["ContactForm -> /api/contact"]
 ```
 
-There is **no authentication, no accounts, no multi-tenancy**. The "user" is anonymous; rate-limit keys use the client IP, dedup uses its hash, and the monthly token budget is shared. Contact records and ask logs have retention periods; browser motion preference persists in localStorage.
+There is **no authentication, no accounts, no multi-tenancy**. The "user" is anonymous; rate-limit keys and dedup use the salted hash of the client IP (never the raw address), and the monthly token budget is shared. Contact records and ask logs have retention periods; browser motion preference persists in localStorage.
 
 ## The core insight: content _is_ the domain model
 
@@ -70,7 +70,7 @@ ContactForm and its field checks (`contact-form-checks.ts`) import the Zod-free 
 
 ## Contact delivery
 
-A `ContactMessage` contains `name`, `email`, `message`, `receivedAt` and `ipHash`. It is stored at `contact:msg:{msgId}` for 90 days before delivery is attempted. A KV write failure returns `502 storage_unavailable` and requires resubmission.
+A `ContactMessage` contains `name`, `email`, `message`, `receivedAt` and `ipHash`. It is stored at `contact:msg:{msgId}` for 90 days before delivery is attempted. The delivered email is a second copy that lives in the owner's mailbox and in Resend's logs, outside that TTL; the form's privacy line states both. A KV write failure returns `502 storage_unavailable` and requires resubmission.
 
 Resend acceptance returns 200. A provider error, timeout or missing key adds the id to `contact:outbox`, ordered by `receivedAt`, with a retry counter in `contact:outbox:attempts`. Only a successful outbox write returns `202 queued`. The visitor sees that the message is saved but undelivered, with a LinkedIn alternative. Other errors display the server's message string.
 

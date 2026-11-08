@@ -56,7 +56,7 @@ What we build is small, opinionated, Vercel-deployed, and budget-enforced.
 ### Constraints
 
 - Single author, no editorial workflow
-- Persisted ASK logs use salted IP hashes; rate-limit keys use client IPs
+- Rate-limit keys and persisted records use the salted IP hash; no Redis key or record holds a raw client IP
 - Must survive sustained 1k-10k visits/month with occasional 50k/day bursts (HN spike scenario)
 - Must work without JS for content (progressive enhancement; client islands add the shell, hero animation, form, navigation, motion controls, mixer interactions and session counters)
 - LLM `ask` cost must hard-cap; never blow the budget
@@ -194,7 +194,7 @@ Its timeline and `cert/*`, `edu/*`, and `community/*` tag groups share one stati
 `sec-credentials` and `sec-community` are nested in-page anchors, excluded from mobile section ordering.
 The community event link uses the validated label and URL in `content/community.ts`.
 
-Git log through Contact receive `defer` in `components/SiteHome.tsx`. Their shells set `module-deferred` and `data-cv-defer`; CSS `content-visibility: auto` defers offscreen rendering, not data fetching or hydration. A deferred module reserves an estimated placeholder height while its content is laid out at full height: 520px is only the default, and per-section and per-breakpoint overrides set Career to 3340px, Opinions to 3180px, Guitar and mixer to 3320px and Contact to 2322px, with `contain-intrinsic-size: auto var(--module-estimate)` remembering the rendered height once painted, so the axe gate reveals the deferred modules before the scan and audits the painted page, the same state the visual baselines capture. The nine entries in `content/section-registry.ts` define navigation order independently of DOM order. Their labels are Home, About, Projects, Career, Interactive shell, Measured, Opinions, Guitar and mixer, Contact. The registry supplies primary labels to `content/section-labels.ts`; the latter adds labels for auxiliary sections.
+Git log through Contact receive `defer` in `components/SiteHome.tsx`. Their shells set `module-deferred` and `data-cv-defer`; CSS `content-visibility: auto` defers offscreen rendering, not data fetching or hydration. A deferred module reserves an estimated placeholder height while its content is laid out at full height: 520px is only the default, and per-section and per-breakpoint overrides set Career to 3340px, Opinions to 3180px, Guitar and mixer to 3320px and Contact to 2514px, with `contain-intrinsic-size: auto var(--module-estimate)` remembering the rendered height once painted, so the axe gate reveals the deferred modules before the scan and audits the painted page, the same state the visual baselines capture. The nine entries in `content/section-registry.ts` define navigation order independently of DOM order. Their labels are Home, About, Projects, Career, Interactive shell, Measured, Opinions, Guitar and mixer, Contact. The registry supplies primary labels to `content/section-labels.ts`; the latter adds labels for auxiliary sections.
 
 ### Trade-off
 
@@ -314,7 +314,7 @@ content/ask-facts.ts                  # facts about Erik the ask prompt states (
 lib/agent/                            # agent-readiness helpers (MCP tools)
 lib/ask/                              # system prompt builder, model const, anti-abuse; preflight.ts (every check before a model call) and stream.ts (model call, pump, settlement) that app/api/ask/route.ts composes
 lib/mdx/                              # MDX remark/recma plugins for /design-system docs
-lib/server/                           # server-only utilities (route-handler factory; fetch-metadata.ts isCrossSiteRequest, the Sec-Fetch-Site gate defineHandler runs first; read-body.ts bounded body read after the limiter; after-response.ts after() wrapper for post-response work)
+lib/server/                           # server-only utilities (route-handler factory; rate-limit-key.ts clientRateLimitKey, the only producer of the branded RateLimitIdentifier every client limiter takes; fetch-metadata.ts isCrossSiteRequest, the Sec-Fetch-Site gate defineHandler runs first; read-body.ts bounded body read after the limiter; after-response.ts after() wrapper for post-response work)
 lib/env.ts                            # typed, format-validating env accessor
 lib/ask-log.ts                        # KV interaction log per /api/ask request that reaches the model; lib/ask/refusal-count.ts counts refused asks per day; lib/ask/guard-count.ts counts output-guard findings per day
 lib/boot-animation.ts                 # boot sequence data
@@ -334,7 +334,7 @@ lib/events.ts                         # window event-name constants and the type
 lib/crt-effect-stepper.ts              # moves the paused CRT animation clocks forward at the governed tick rate
 lib/frame-governor.ts                 # rolling frame-time governor: publishes html[data-crt-level], steps the CRT effects, sets the MatrixRain tick multiplier
 lib/hiring-profile.ts                 # HiringProfile reader for /api/erik.json
-lib/ip-hash.ts                        # salted IP hash for persisted interaction logs
+lib/ip-hash.ts                        # salted IP hash for rate-limit keys and persisted records
 lib/lighthouse-scores.ts              # PSI API fetcher (cached daily)
 lib/log.ts                            # pino wrapper (text dev / JSON prod)
 lib/motion.ts                         # readMotion / applyMotion (body data-attr)
@@ -432,7 +432,7 @@ See `app/api/ask/route.ts`, `lib/ask/preflight.ts`, `lib/ask/stream.ts` and `lib
 
 Upstash Redis sliding window:
 - 8 questions per IP per rolling hour
-- Rate limiting keys use the client IP. Persisted ASK logs use a salted SHA-256 IP hash; raw IP is not stored in those records.
+- Every client limiter is keyed by the salted SHA-256 IP hash from `clientRateLimitKey` (`lib/server/rate-limit-key.ts`), so a key reads `rl:<name>:<16 hex>`. The IPv6 `/64` bucketing runs before the hash, so one `/64` still shares one bucket. The limiters take a branded `RateLimitIdentifier` that only that helper produces, so passing a raw IP fails the type check. Persisted ASK logs and contact records carry the same hash.
 - The token budget has a daily slice (see Budget enforcement), so one client cannot spend the month in a few days
 
 ### Identical-question dedup
@@ -661,7 +661,8 @@ Modest but professional:
 - Fonts are self-hosted. Vercel Analytics and Speed Insights mount conditionally in `components/RootShell.tsx`, which both root layouts render.
 - `AI_GATEWAY_API_KEY` in Vercel env vars (OIDC token on Vercel), never client-side
 - IP hashing uses `DEPLOY_SALT` if supplied, a development fallback outside production, or a random production salt persisted in Redis (`meta:deploy-salt`, `SET NX`, no TTL)
-- Contact payloads and ASK questions, answers and salted IP hashes are persisted. ASK erasure uses `/api/log/forget`; retention is bounded by TTLs.
+- Contact payloads and ASK questions, answers and salted IP hashes are persisted. ASK erasure uses `/api/log/forget`; Redis retention is bounded by TTLs. A delivered contact message is also an email in the owner's mailbox and in Resend's logs, which no TTL here reaches; the contact form's privacy line says so.
+- The rate-limit key depends on the salt, so a salt change (or the first deploy that keyed limiters by the hash) starts every limiter window afresh.
 
 `next.config.ts` sets static security headers; `proxy.ts` adds CSP and reporting endpoints.
 

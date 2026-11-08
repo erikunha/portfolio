@@ -104,11 +104,11 @@ describe('/api/log endpoint', () => {
     ).not.toHaveBeenCalled();
   });
 
-  it('keys the per-IP daily cap on the client ip', async () => {
+  it('keys the per-IP daily cap on the salted ip hash, never the raw address', async () => {
     redisSetMock.mockResolvedValueOnce('OK');
     const { POST } = await import('@/app/api/log/route');
     await POST(makeRequest({ level: 'error', message: 'who' }));
-    expect(ipDailyLimitMock).toHaveBeenCalledWith('127.0.0.1');
+    expect(ipDailyLimitMock).toHaveBeenCalledWith('hashed-ip-test');
   });
 
   it('stores at most 4 KB of a stack trace', async () => {

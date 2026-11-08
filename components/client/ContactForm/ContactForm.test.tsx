@@ -94,11 +94,11 @@ describe('ContactForm accessibility', () => {
     expect(container.querySelectorAll('[aria-live]')).toHaveLength(0);
   });
 
-  it('states how long a message is kept before it is deleted', async () => {
+  it('states how long a message is kept, where the email copy lives, and that the IP is hashed', async () => {
     const container = await renderForm();
     const privacy = container.querySelector('.contact-privacy');
     expect(privacy?.textContent).toBe(
-      'Kept 90 days so Erik can reply, then deleted. IP hashed for rate limiting. Never shared.',
+      "Your message is stored 90 days so Erik can reply, then deleted. The copy emailed to him stays in his inbox and the email provider's logs, without that limit. Your IP is hashed before it becomes a key or a record, rate limiting included. Not shared with anyone else.",
     );
   });
 

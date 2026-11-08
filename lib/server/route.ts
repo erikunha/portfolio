@@ -4,22 +4,18 @@ import type { NextRequest } from 'next/server';
 import type { ZodTypeAny, z } from 'zod';
 
 import { DEFAULT_SITE_LOCALE, SITE_LOCALES, type SiteLocale } from '@/content/site-locale';
-import { hashIp } from '@/lib/ip-hash';
 import { log } from '@/lib/log';
-import { getClientIp } from '@/lib/rate-limit';
+import type { ClientRateLimiter } from '@/lib/rate-limit';
 import { isCrossSiteRequest } from '@/lib/server/fetch-metadata';
+import { clientRateLimitKey, type RateLimitIdentifier } from '@/lib/server/rate-limit-key';
 import { readBoundedBody } from '@/lib/server/read-body';
 import { ASK_LOCALE_HEADER, RETRY_AFTER_HEADER, retryAfterSeconds } from '@/lib/stream-protocol';
 
-interface RateLimit {
-  limit(ip: string): Promise<{ success: boolean; reset?: number }>;
-}
-type RateLimitFactory = () => RateLimit;
+type RateLimitFactory = () => ClientRateLimiter;
 
 export interface HandlerContext<TBody> {
   body: TBody;
-  ip: string;
-  ipHash: string;
+  ipHash: RateLimitIdentifier;
   requestId: string;
   req: NextRequest;
 }
@@ -103,12 +99,23 @@ export function defineHandler<TSchema extends ZodTypeAny>(
         message: 'cross-site requests are not accepted',
       });
     }
-    const ip = getClientIp(req);
+    let ipHash: RateLimitIdentifier;
+    try {
+      ipHash = await clientRateLimitKey(req);
+    } catch (hashErr) {
+      log.error('ip hash unavailable', { requestId, err: hashErr });
+      return err({
+        requestId,
+        status: HTTP_STATUS.storageUnavailable,
+        code: 'storage_unavailable',
+        message: 'storage unavailable',
+      });
+    }
 
     let rateLimitAllowed = true;
     let rateLimitReset: unknown;
     try {
-      const { success, reset } = await opts.rateLimit().limit(ip);
+      const { success, reset } = await opts.rateLimit().limit(ipHash);
       rateLimitAllowed = success;
       rateLimitReset = reset;
     } catch (rateLimitErr) {
@@ -155,19 +162,6 @@ export function defineHandler<TSchema extends ZodTypeAny>(
       });
     }
 
-    let ipHash: string;
-    try {
-      ipHash = await hashIp(ip);
-    } catch (hashErr) {
-      log.error('ip hash unavailable', { requestId, err: hashErr });
-      return err({
-        requestId,
-        status: HTTP_STATUS.storageUnavailable,
-        code: 'storage_unavailable',
-        message: 'storage unavailable',
-      });
-    }
-
-    return opts.handler({ body: parsed.data, ip, ipHash, requestId, req });
+    return opts.handler({ body: parsed.data, ipHash, requestId, req });
   };
 }

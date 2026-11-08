@@ -47,7 +47,8 @@ describe('/api/mcp rate limit', () => {
     expect(res.status).toBe(429);
     expect(Number(res.headers.get('Retry-After'))).toBeGreaterThan(0);
     expect(await res.json()).toMatchObject({ ok: false, error: { code: 'rate_limited' } });
-    expect(limit).toHaveBeenCalledWith('203.0.113.9');
+    expect(limit).toHaveBeenCalledWith(expect.stringMatching(/^[0-9a-f]{16}$/));
+    expect(limit).not.toHaveBeenCalledWith('203.0.113.9');
   });
 
   it('serves the tool while the caller is under the limit', async () => {

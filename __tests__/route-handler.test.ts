@@ -93,7 +93,9 @@ describe('lib/server/route — defineHandler', () => {
     expect(body.error.message).toBe('slow down');
     expect(res.headers.get('x-request-id')).toBe(body.requestId);
     expect(handlerSpy).not.toHaveBeenCalled();
-    expect(hashIpMock).not.toHaveBeenCalled();
+    expect(rateLimitMock, 'the limiter is keyed by the salted hash').toHaveBeenCalledWith(
+      'hashed-ip-test',
+    );
   });
 
   it('tells the client how long to wait: Retry-After in whole seconds from the limiter reset', async () => {
@@ -220,7 +222,7 @@ describe('lib/server/route — defineHandler', () => {
     expect(captured).toBeDefined();
     expect(captured?.body).toEqual({ name: 'erik', count: 1 });
     expect(captured?.ipHash).toBe('hashed-ip-test');
-    expect(captured?.ip).toBe('127.0.0.1');
+    expect(captured, 'the raw client address must never reach a handler').not.toHaveProperty('ip');
     expect(captured?.requestId).toMatch(/^[0-9a-f]{8}-/);
   });
 });

@@ -5,9 +5,20 @@ import { ASK_RESERVED_INPUT_TOKENS } from '@/lib/ask/input-reservation';
 import { ASK_MAX_OUTPUT_TOKENS } from '@/lib/ask/limits';
 import { FORGET_WINDOW, FORGET_WINDOW_REQUESTS } from '@/lib/forget-limits';
 import { log } from '@/lib/log';
+import type { RateLimitIdentifier } from '@/lib/server/rate-limit-key';
 
 const REDIS_RETRIES = 1;
 const REDIS_RETRY_BACKOFF_MS = 50;
+
+type LimitResult = { success: boolean; reset?: number };
+
+export interface ClientRateLimiter {
+  limit(identifier: RateLimitIdentifier): Promise<LimitResult>;
+}
+
+export interface GlobalRateLimiter {
+  limit(): Promise<LimitResult>;
+}
 
 let _redis: Redis | undefined;
 let _askLimit: Ratelimit | undefined;
@@ -48,7 +59,7 @@ export function getRedis(): Redis {
   return instance;
 }
 
-export function getAskLimit(): Ratelimit {
+export function getAskLimit(): ClientRateLimiter {
   if (!_askLimit) {
     _askLimit = new Ratelimit({
       redis: getRedis(),
@@ -59,7 +70,7 @@ export function getAskLimit(): Ratelimit {
   return _askLimit;
 }
 
-export function getContactLimit(): Ratelimit {
+export function getContactLimit(): ClientRateLimiter {
   if (!_contactLimit) {
     _contactLimit = new Ratelimit({
       redis: getRedis(),
@@ -74,7 +85,7 @@ const MCP_LIMIT_REQUESTS = 60;
 
 let _mcpLimit: Ratelimit | undefined;
 
-export function getMcpLimit(): Ratelimit {
+export function getMcpLimit(): ClientRateLimiter {
   if (!_mcpLimit) {
     _mcpLimit = new Ratelimit({
       redis: getRedis(),
@@ -87,7 +98,7 @@ export function getMcpLimit(): Ratelimit {
 
 let _healthzLimit: Ratelimit | undefined;
 
-export function getHealthzLimit(): Ratelimit {
+export function getHealthzLimit(): ClientRateLimiter {
   if (!_healthzLimit) {
     _healthzLimit = new Ratelimit({
       redis: getRedis(),
@@ -100,7 +111,7 @@ export function getHealthzLimit(): Ratelimit {
 
 let _lighthouseLimit: Ratelimit | undefined;
 
-export function getLighthouseLimit(): Ratelimit {
+export function getLighthouseLimit(): ClientRateLimiter {
   if (!_lighthouseLimit) {
     _lighthouseLimit = new Ratelimit({
       redis: getRedis(),
@@ -113,7 +124,7 @@ export function getLighthouseLimit(): Ratelimit {
 
 let _errorLogLimit: Ratelimit | undefined;
 
-export function getErrorLogLimit(): Ratelimit {
+export function getErrorLogLimit(): ClientRateLimiter {
   if (!_errorLogLimit) {
     _errorLogLimit = new Ratelimit({
       redis: getRedis(),
@@ -127,22 +138,25 @@ export function getErrorLogLimit(): Ratelimit {
 const ERROR_LOG_DAILY_CAP = 500;
 const ERROR_LOG_IP_DAILY_CAP = 50;
 
-let _errorLogDailyLimit: Ratelimit | undefined;
+const ERROR_LOG_GLOBAL_KEY = 'global';
 
-export function getErrorLogDailyLimit(): Ratelimit {
+let _errorLogDailyLimit: GlobalRateLimiter | undefined;
+
+export function getErrorLogDailyLimit(): GlobalRateLimiter {
   if (!_errorLogDailyLimit) {
-    _errorLogDailyLimit = new Ratelimit({
+    const shared = new Ratelimit({
       redis: getRedis(),
       limiter: Ratelimit.fixedWindow(ERROR_LOG_DAILY_CAP, '1 d'),
       prefix: 'rl:errlog:day',
     });
+    _errorLogDailyLimit = { limit: () => shared.limit(ERROR_LOG_GLOBAL_KEY) };
   }
   return _errorLogDailyLimit;
 }
 
 let _errorLogIpDailyLimit: Ratelimit | undefined;
 
-export function getErrorLogIpDailyLimit(): Ratelimit {
+export function getErrorLogIpDailyLimit(): ClientRateLimiter {
   if (!_errorLogIpDailyLimit) {
     _errorLogIpDailyLimit = new Ratelimit({
       redis: getRedis(),
@@ -155,7 +169,7 @@ export function getErrorLogIpDailyLimit(): Ratelimit {
 
 let _forgetLimit: Ratelimit | undefined;
 
-export function getForgetLimit(): Ratelimit {
+export function getForgetLimit(): ClientRateLimiter {
   if (!_forgetLimit) {
     _forgetLimit = new Ratelimit({
       redis: getRedis(),

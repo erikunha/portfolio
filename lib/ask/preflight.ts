@@ -5,18 +5,17 @@ import { ASK_MAX_OUTPUT_TOKENS, ASK_MAX_QUESTION_CHARS } from '@/lib/ask/limits'
 import { type AskRefusalStatus, countAskRefusal } from '@/lib/ask/refusal-count';
 import { PROMPT_VERSION } from '@/lib/ask/system-prompt';
 import { env } from '@/lib/env';
-import { hashIp } from '@/lib/ip-hash';
 import { log } from '@/lib/log';
 import { describeError } from '@/lib/log-error';
 import {
   checkIdenticalQuestion,
   getAskLimit,
-  getClientIp,
   hasRedisCredentials,
   reserveBudget,
 } from '@/lib/rate-limit';
 import { afterResponse } from '@/lib/server/after-response';
 import { isCrossSiteRequest } from '@/lib/server/fetch-metadata';
+import { clientRateLimitKey, type RateLimitIdentifier } from '@/lib/server/rate-limit-key';
 import { readBoundedBody } from '@/lib/server/read-body';
 import { err } from '@/lib/server/route';
 import {
@@ -66,12 +65,15 @@ function reject(response: Response): PreflightResult {
   return { ok: false, response };
 }
 
+const NOT_LIMITED = { limited: false, retryAfter: null } as const;
+
 async function checkRateLimit(
-  ip: string,
+  identifier: RateLimitIdentifier | null,
 ): Promise<{ limited: boolean; retryAfter: number | null }> {
+  if (identifier === null) return NOT_LIMITED;
   try {
-    const { success, reset } = await getAskLimit().limit(ip);
-    if (success) return { limited: false, retryAfter: null };
+    const { success, reset } = await getAskLimit().limit(identifier);
+    if (success) return NOT_LIMITED;
     return { limited: true, retryAfter: retryAfterSeconds(reset, Date.now()) };
   } catch (limitErr) {
     if (hasRedisCredentials()) {
@@ -79,7 +81,7 @@ async function checkRateLimit(
         error: describeError(limitErr),
       });
     }
-    return { limited: false, retryAfter: null };
+    return NOT_LIMITED;
   }
 }
 
@@ -123,14 +125,14 @@ export async function preflightAsk(req: Request): Promise<PreflightResult> {
   }
 
   const startedAt = Date.now();
-  const ip = getClientIp(req);
-  const ipHash = await hashIp(ip).catch((hashErr: unknown) => {
+  const rateLimitKey = await clientRateLimitKey(req).catch((hashErr: unknown) => {
     log.error('ask ip hash unavailable, continuing unhashed', {
       requestId,
       error: describeError(hashErr),
     });
-    return UNHASHED_IP_LABEL;
+    return null;
   });
+  const ipHash = rateLimitKey ?? UNHASHED_IP_LABEL;
   log.info('ask request received', { requestId, ipHash, promptVersion: PROMPT_VERSION });
 
   const recordRefusal = (status: AskRefusalStatus): void => {
@@ -138,7 +140,7 @@ export async function preflightAsk(req: Request): Promise<PreflightResult> {
     afterResponse(() => countAskRefusal(status));
   };
 
-  const { limited, retryAfter } = await checkRateLimit(ip);
+  const { limited, retryAfter } = await checkRateLimit(rateLimitKey);
   if (limited) {
     recordRefusal('rate-limited');
     return reject(

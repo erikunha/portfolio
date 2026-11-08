@@ -3,24 +3,21 @@ import 'server-only';
 import { unstable_rethrow } from 'next/navigation';
 import { log } from '@/lib/log';
 import { describeError } from '@/lib/log-error';
-import { getClientIp } from '@/lib/rate-limit';
+import type { ClientRateLimiter } from '@/lib/rate-limit';
+import { clientRateLimitKey } from '@/lib/server/rate-limit-key';
 import { err } from '@/lib/server/route';
 import { RETRY_AFTER_HEADER, retryAfterSeconds } from '@/lib/stream-protocol';
 
 const TOO_MANY_REQUESTS_STATUS = 429;
 
-interface Limiter {
-  limit(key: string): Promise<{ success: boolean; reset?: number }>;
-}
-
 export function withRateLimit<TReq extends Request>(
   handler: (req: TReq) => Promise<Response>,
-  getLimiter: () => Limiter,
+  getLimiter: () => ClientRateLimiter,
   message: string,
 ): (req: TReq) => Promise<Response> {
   return async (req) => {
     try {
-      const { success, reset } = await getLimiter().limit(getClientIp(req));
+      const { success, reset } = await getLimiter().limit(await clientRateLimitKey(req));
       if (!success) {
         const retryAfter = retryAfterSeconds(reset, Date.now());
         return err({

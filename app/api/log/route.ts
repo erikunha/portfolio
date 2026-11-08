@@ -14,7 +14,6 @@ const MAX_LOG_BODY_BYTES = 32_768;
 
 const ERR_KV_TTL_S = 7 * 24 * 60 * 60;
 const MAX_STORED_STACK_CHARS = 4096;
-const ERROR_LOG_GLOBAL_KEY = 'global';
 const MAX_TS_LENGTH = 64;
 
 const ErrorPayload = z.object({
@@ -31,13 +30,13 @@ const handleLog = defineHandler({
   maxBodyBytes: MAX_LOG_BODY_BYTES,
   rateLimit: getErrorLogLimit,
   rateLimitErrorMessage: 'too many error reports',
-  async handler({ body, ip, requestId }) {
+  async handler({ body, ipHash, requestId }) {
     if (body.message.toLowerCase().startsWith(SMOKE_PREFIX)) {
       return ok({ requestId });
     }
 
     try {
-      const { success: underIpDailyCap } = await getErrorLogIpDailyLimit().limit(ip);
+      const { success: underIpDailyCap } = await getErrorLogIpDailyLimit().limit(ipHash);
       if (!underIpDailyCap) {
         log.warn('error-log per-IP daily cap reached, dropping record', { requestId });
         return ok({ requestId });
@@ -50,7 +49,7 @@ const handleLog = defineHandler({
     }
 
     try {
-      const { success: underDailyCap } = await getErrorLogDailyLimit().limit(ERROR_LOG_GLOBAL_KEY);
+      const { success: underDailyCap } = await getErrorLogDailyLimit().limit();
       if (!underDailyCap) {
         log.warn('error-log daily cap reached, dropping record', { requestId });
         return ok({ requestId });
