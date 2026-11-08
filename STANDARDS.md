@@ -192,7 +192,7 @@ where a minor bump would break a build-time invariant). Never `latest`, never
 `*`, never a bare dist-tag. `next` is pinned tightly enough (a tilde range) that
 a fresh install cannot resolve a new minor and break the `postinstall`
 polyfill-strip checksum. The lockfile (`pnpm-lock.yaml`) is the source of truth;
-CI installs with `--frozen-lockfile`. `zod` is exact-pinned — its minor bumps
+CI installs with `--frozen-lockfile`. `zod` is `~`-pinned (patch updates only) — its minor bumps
 break type inference. `typescript` is held on the 6.x line (Dependabot ignores its
 major) — Stryker consumes the TypeScript JS API that TS7 removed.
 

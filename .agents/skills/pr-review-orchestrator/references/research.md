@@ -31,5 +31,5 @@ shown unreachable and the reason is recorded in DECISIONS.md.
 
 ## Repo-specific pins
 
-`zod` exact (minor bumps break inference), TypeScript held at 6.x (Stryker needs the TS JS API),
+`zod` `~`-pinned, patch updates only (minor bumps break inference), TypeScript held at 6.x (Stryker needs the TS JS API),
 Node from `.nvmrc`. A change that moves one of these needs its own DECISIONS.md entry.
