@@ -22,6 +22,7 @@ import {
   type ExprFunctions,
   type ExprObject,
   interpolate,
+  type SecretReader,
   UnsupportedExpressionError,
   type Workflow,
   type WorkflowJob,
@@ -252,13 +253,18 @@ function resolveEnv(
   layer: Record<string, string>,
   ctx: ExprContext,
   into: Record<string, string>,
+  onSecret?: SecretReader,
 ): Record<string, string> {
   const resolved = { ...into };
   for (const [key, value] of Object.entries(layer)) {
-    resolved[key] = interpolate(value, {
-      ...ctx,
-      env: { ...(ctx.env as ExprObject), ...resolved },
-    });
+    resolved[key] = interpolate(
+      value,
+      {
+        ...ctx,
+        env: { ...(ctx.env as ExprObject), ...resolved },
+      },
+      onSecret,
+    );
   }
   return resolved;
 }
@@ -270,6 +276,7 @@ function classifyStep(
   context: RunContext,
   deps: Deps,
   jobEnv: Record<string, string>,
+  onSecret: SecretReader,
 ): StepAction {
   if (step.uses !== undefined) {
     const kind = ACTION_CLASSES[actionName(step.uses)];
@@ -285,8 +292,8 @@ function classifyStep(
   let cmd: string;
   let env: Record<string, string>;
   try {
-    cmd = interpolate(step.run, ctx);
-    env = resolveEnv(step.env, ctx, jobEnv);
+    cmd = interpolate(step.run, ctx, onSecret);
+    env = resolveEnv(step.env, ctx, jobEnv, onSecret);
   } catch (error) {
     return { kind: 'unreproducible', reason: `${label}: ${(error as Error).message}` };
   }
@@ -525,6 +532,10 @@ export async function predict(context: RunContext, deps: Deps): Promise<Predicti
       }
     }
     const runEnv: Record<string, string> = {};
+    const secretsRead = new Set<string>();
+    const readSecret: SecretReader = (secret) => {
+      secretsRead.add(secret);
+    };
     let jobEnv: Record<string, string>;
     try {
       const unitCtx = base(job, {
@@ -533,7 +544,12 @@ export async function predict(context: RunContext, deps: Deps): Promise<Predicti
         env: {},
         strategy: { 'job-total': job.matrixProjects.length || 1, 'job-index': index },
       });
-      jobEnv = resolveEnv(job.env, unitCtx, resolveEnv(workflow.env, unitCtx, {}));
+      jobEnv = resolveEnv(
+        job.env,
+        unitCtx,
+        resolveEnv(workflow.env, unitCtx, {}, readSecret),
+        readSecret,
+      );
     } catch (error) {
       return finish('not-run', `env: ${(error as Error).message}`);
     }
@@ -553,13 +569,13 @@ export async function predict(context: RunContext, deps: Deps): Promise<Predicti
       });
       let applies: boolean;
       try {
-        applies = conditionHolds(step.if, ctx, functions);
+        applies = conditionHolds(step.if, ctx, functions, readSecret);
       } catch (error) {
         unreproducible.push(`${step.name ?? 'step'}: ${(error as Error).message}`);
         continue;
       }
       if (!applies) continue;
-      const action = classifyStep(step, job, ctx, context, deps, jobEnv);
+      const action = classifyStep(step, job, ctx, context, deps, jobEnv, readSecret);
       const label = `${name} > ${step.name ?? step.run?.split('\n')[0] ?? 'step'}`;
       if (action.kind === 'skip') continue;
       if (action.kind === 'publish') {
@@ -574,7 +590,10 @@ export async function predict(context: RunContext, deps: Deps): Promise<Predicti
         unreproducible.push(action.reason);
         continue;
       }
-      if (action.kind === 'eval') continue;
+      if (action.kind === 'eval') {
+        unreproducible.push(`${label}: the live eval needs the linked env (pnpm ask:eval)`);
+        continue;
+      }
       const env = { ...CI_ENV, ...runEnv, ...action.env };
       if (action.kind === 'server') {
         if (options.skipBuild && !options.stamp.valid) {
@@ -664,6 +683,11 @@ export async function predict(context: RunContext, deps: Deps): Promise<Predicti
           result.output,
         );
       }
+    }
+    if (secretsRead.size > 0) {
+      substituted.push(
+        `secrets read as empty (CI has them): ${[...secretsRead].join(LIST_SEPARATOR)}`,
+      );
     }
     const noted = [
       ...(unreproducible.length > 0

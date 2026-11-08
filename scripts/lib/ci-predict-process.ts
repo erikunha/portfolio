@@ -1,6 +1,7 @@
 import { type ChildProcess, spawn, spawnSync } from 'node:child_process';
 import { closeSync, openSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { SESSION_OWNER_LABEL } from './ci-predict-policy';
 
 export interface ProcessResult {
   code: number;
@@ -21,6 +22,7 @@ export interface RunOptions {
 
 const MS_PER_SECOND = 1000;
 const FAILED = 1;
+const SPAWN_OK = 0;
 const TAIL_LINES = 60;
 const STEP_TIMEOUT_MS = 30 * 60 * MS_PER_SECOND;
 const SIGNAL_EXIT_BASE = 128;
@@ -43,8 +45,48 @@ const SERVER_ERROR_STATUS = 500;
 const SESSION_FIELD_SEPARATOR = ' ';
 const ERROR_EXCERPT_LINES = 20;
 const MAX_ANCESTRY = 64;
+const INIT_PID = 1;
+const MIN_PID = 1;
+export const REQUEST_TIMEOUT_MS = 5 * MS_PER_SECOND;
+const MIN_REQUEST_TIMEOUT_MS = 1;
+const ALLOWED_ENV_NAMES = [
+  'PATH',
+  'HOME',
+  'USER',
+  'LOGNAME',
+  'SHELL',
+  'TERM',
+  'TMPDIR',
+  'TZ',
+  'CI',
+  'LANG',
+  'COLORTERM',
+  'FORCE_COLOR',
+  'NO_COLOR',
+  'COREPACK_HOME',
+  'PNPM_HOME',
+  'DOCKER_HOST',
+  'DOCKER_CONFIG',
+  'DOCKER_CONTEXT',
+];
+const ALLOWED_ENV_PREFIXES = ['LC_', 'XDG_', 'PLAYWRIGHT_'];
 
 const active = new Set<ChildProcess>();
+
+const isAllowedEnvName = (name: string): boolean =>
+  ALLOWED_ENV_NAMES.includes(name) ||
+  ALLOWED_ENV_PREFIXES.some((prefix) => name.startsWith(prefix));
+
+export function allowedEnv(source: NodeJS.ProcessEnv = process.env): NodeJS.ProcessEnv {
+  const allowed = {} as NodeJS.ProcessEnv;
+  for (const [name, value] of Object.entries(source)) {
+    if (value !== undefined && isAllowedEnvName(name)) allowed[name] = value;
+  }
+  return allowed;
+}
+
+export const isRunning = (child: ChildProcess): boolean =>
+  child.exitCode === null && child.signalCode === null;
 
 export const activeGroupIds = (): number[] =>
   [...active].flatMap((child) => (child.pid === undefined ? [] : [child.pid]));
@@ -56,7 +98,7 @@ export function tail(text: string, lines: number = TAIL_LINES): string {
 function parentMap(): Map<number, number> {
   const listing = spawnSync('ps', ['-ax', '-o', 'pid=,ppid='], { encoding: 'utf8' });
   const parents = new Map<number, number>();
-  for (const line of listing.stdout.split('\n')) {
+  for (const line of (listing.stdout ?? '').split('\n')) {
     const [pid, ppid] = line.trim().split(/\s+/).map(Number);
     if (pid !== undefined && ppid !== undefined && Number.isInteger(pid)) parents.set(pid, ppid);
   }
@@ -80,7 +122,7 @@ export function descendantPids(root: number): number[] {
 }
 
 export function killGroup(child: ChildProcess | null, signal: NodeJS.Signals = 'SIGTERM'): void {
-  if (child?.pid === undefined) return;
+  if (child?.pid === undefined || !isRunning(child)) return;
   for (const pid of descendantPids(child.pid)) {
     try {
       process.kill(pid, signal);
@@ -123,7 +165,7 @@ export function startTracked(
   const logFd = options.stdio === 'pipe' ? undefined : openSync(options.logPath, 'a');
   const child = spawn(file, args, {
     cwd: options.cwd,
-    env: { ...process.env, ...options.blank, ...options.env },
+    env: { ...allowedEnv(), ...options.blank, ...options.env },
     stdio: logFd === undefined ? ['ignore', 'pipe', 'pipe'] : ['ignore', logFd, logFd],
     detached: true,
   });
@@ -219,12 +261,16 @@ export function listenerPids(port: number): number[] | null {
     .split('\n')
     .filter((line) => line.startsWith(LSOF_PID_PREFIX))
     .map((line) => Number(line.slice(LSOF_PID_PREFIX.length)))
-    .filter((pid) => Number.isInteger(pid) && pid > 0);
+    .filter((pid) => Number.isInteger(pid) && pid >= MIN_PID);
 }
 
 export function startedBy(pid: number, ancestor: number, parents: Map<number, number>): boolean {
   let current: number | undefined = pid;
-  for (let depth = 0; current !== undefined && current > 1 && depth < MAX_ANCESTRY; depth++) {
+  for (
+    let depth = 0;
+    current !== undefined && current > INIT_PID && depth < MAX_ANCESTRY;
+    depth++
+  ) {
     if (current === ancestor) return true;
     current = parents.get(current);
   }
@@ -254,7 +300,13 @@ export async function waitForOwnServer(options: {
         `the server exited with code ${child.exitCode ?? child.signalCode} before it answered on :${port}${excerpt()}`,
       );
     }
-    const response = await fetch(options.url).catch(() => null);
+    const requestTimeoutMs = Math.max(
+      MIN_REQUEST_TIMEOUT_MS,
+      Math.min(REQUEST_TIMEOUT_MS, deadline - Date.now()),
+    );
+    const response = await fetch(options.url, {
+      signal: AbortSignal.timeout(requestTimeoutMs),
+    }).catch(() => null);
     if (response !== null && response.status < SERVER_ERROR_STATUS) {
       const listeners = listenerPids(port);
       if (listeners === null) {
@@ -281,4 +333,51 @@ export function staleSessions(listing: string[], isAlive: (pid: number) => boole
     const pid = Number(owner);
     return Number.isInteger(pid) && isAlive(pid) ? [] : [name];
   });
+}
+
+export function sweepStaleSessions(options: {
+  isAlive: (pid: number) => boolean;
+  log: (line: string) => void;
+}): void {
+  const listed = spawnSync(
+    'docker',
+    [
+      'ps',
+      '-a',
+      '--filter',
+      `label=${SESSION_OWNER_LABEL}`,
+      '--format',
+      `{{.Names}} {{index .Labels "${SESSION_OWNER_LABEL}"}}`,
+    ],
+    { encoding: 'utf8' },
+  );
+  if (listed.status !== SPAWN_OK) return;
+  for (const name of staleSessions(listed.stdout.split('\n').filter(Boolean), options.isAlive)) {
+    options.log(`removing ${name}, left behind by a predictor that is gone`);
+    spawnSync('docker', ['rm', '-f', name], { stdio: 'ignore' });
+  }
+}
+
+export function createSessionKeeper<T>(name: string, docker: (args: string[]) => void) {
+  let requested = false;
+  let current: { key: string; value: T } | null = null;
+  const stop = (): void => {
+    if (requested) docker(['rm', '-f', name]);
+    requested = false;
+    current = null;
+  };
+  const ensure = async (key: string, create: () => Promise<T>): Promise<T> => {
+    if (current?.key === key) return current.value;
+    stop();
+    requested = true;
+    try {
+      const value = await create();
+      current = { key, value };
+      return value;
+    } catch (error) {
+      stop();
+      throw error;
+    }
+  };
+  return { ensure, stop };
 }

@@ -585,6 +585,36 @@ describe('step execution fidelity', () => {
     expect(h.commands).toHaveLength(0);
   });
 
+  it('names every secret a job read as empty in its row, and still runs the step', async () => {
+    const wf = quality(
+      `    steps:\n      - run: echo hi\n        env:\n          TOKEN: ${expr('secrets.FIRST_TOKEN')}\n      - if: ${expr("secrets.SECOND_KEY != ''")}\n        run: echo gated\n`,
+    );
+    const h = harness({
+      workflow: wf,
+      categories: { ai: false, app: false, ui: false },
+      changedFiles: [],
+    });
+    const { rows } = await predict(h.context, h.deps);
+    const why = row(rows, 'quality-fast')?.why ?? '';
+    expect(why).toContain('FIRST_TOKEN');
+    expect(why).toContain('SECOND_KEY');
+    expect(why).toMatch(/empty/);
+    expect(h.commands.map((c) => c.cmd.trim())).toEqual(['echo hi']);
+  });
+
+  it('does not report pass for a live eval step inside an ordinary job', async () => {
+    const wf = quality('    steps:\n      - run: echo ok\n      - run: pnpm ask:eval\n');
+    const h = harness({
+      workflow: wf,
+      categories: { ai: false, app: false, ui: false },
+      changedFiles: [],
+    });
+    const { rows } = await predict(h.context, h.deps);
+    expect(row(rows, 'quality-fast')?.verdict).toBe('partial');
+    expect(row(rows, 'quality-fast')?.why).toContain('ask:eval');
+    expect(h.commands.map((c) => c.cmd.trim())).toEqual(['echo ok']);
+  });
+
   it('does not report a job pass when no step of it executed', async () => {
     const wf = quality('    steps:\n      - uses: actions/checkout@abc123\n');
     const h = harness({

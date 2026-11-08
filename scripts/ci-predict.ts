@@ -21,19 +21,22 @@ import {
   SERVER_LOG_PATH,
   SERVER_PID_PATH,
   SESSION_NAME_PREFIX,
-  SESSION_OWNER_LABEL,
   serverKey,
 } from './lib/ci-predict-policy';
 import {
+  allowedEnv,
+  createSessionKeeper,
   gitFilesMatch,
   installCleanup,
+  isRunning,
   killGroup,
   localEnvBlanks,
   type ProcessResult,
+  REQUEST_TIMEOUT_MS,
   runProcess,
   runShell,
-  staleSessions,
   startTracked,
+  sweepStaleSessions,
   waitForOwnServer,
 } from './lib/ci-predict-process';
 import {
@@ -50,6 +53,7 @@ import {
   BUILD_ID_FILE,
   checkStamp,
   fingerprint,
+  readTree,
   STAMP_FILE,
   type StampCheck,
   stampText,
@@ -69,7 +73,7 @@ Runs locally what CI will run for the commits on this branch against their base.
   --repeat <n>    repeat-each for changed specs (default ${DEFAULT_REPEAT})
   --list          dry run: print what would run, execute only change detection; exits ${EXIT.DRY_RUN}
 
-Exit code: ${EXIT.OK} no failure found and every job verified, ${EXIT.FAILED} a job failed, ${EXIT.DRY_RUN} dry run (nothing verified), ${EXIT.NOT_VERIFIED} no failure found but some job did not run or ran only in part.`;
+Exit code: ${EXIT.OK} no failure found and every job verified, ${EXIT.FAILED} a job failed, ${EXIT.DRY_RUN} dry run (nothing verified), ${EXIT.NOT_VERIFIED} no failure found but nothing was verified: some job did not run or ran only in part, or the branch has no commits ahead of its base.`;
 
 const OK = EXIT.OK;
 const FAILED = EXIT.FAILED;
@@ -87,6 +91,11 @@ const REMOTE_PREFIX = 'origin/';
 const REMOTE_FEATURE_REFS = 'refs/remotes/origin/feat';
 const SERVER_READY_SECONDS = SERVER_READY_TIMEOUT_MS / MS_PER_SECOND;
 const SERVER_LOG_NAME = 'server';
+const SHORT_SHA_LENGTH = 7;
+const SECONDS_DECIMALS = 1;
+const WHOLE_SECONDS_DECIMALS = 0;
+const GB_DECIMALS = 2;
+const NO_COMMITS_HEADLINE = 'PREDICTED CI: NOT VERIFIED, nothing ran';
 const COPY_EXCLUDES = [
   './node_modules',
   './.next',
@@ -217,7 +226,7 @@ function listSpecProjects(root: string): Map<string, Set<string>> {
     cwd: root,
     encoding: 'utf8',
     maxBuffer: LIST_MAX_BUFFER_BYTES,
-    env: { ...process.env, CI: 'true' },
+    env: { ...allowedEnv(), CI: 'true' },
   });
   if (listed.status !== OK)
     throw new Error(`playwright --list failed: ${listed.stderr.slice(-ERROR_EXCERPT_CHARS)}`);
@@ -271,7 +280,7 @@ function ensureImage(image: string): string {
     encoding: 'utf8',
   });
   if (present.status === OK) {
-    return `${image} (${(Number(present.stdout) / BYTES_PER_GB).toFixed(2)} GB, already local)`;
+    return `${image} (${(Number(present.stdout) / BYTES_PER_GB).toFixed(GB_DECIMALS)} GB, already local)`;
   }
   const started = Date.now();
   err(`[ci-predict] pulling ${image} (first --linux run on this machine)`);
@@ -280,7 +289,7 @@ function ensureImage(image: string): string {
   const size = spawnSync('docker', ['image', 'inspect', image, '--format', '{{.Size}}'], {
     encoding: 'utf8',
   });
-  return `${image} (${(Number(size.stdout) / BYTES_PER_GB).toFixed(2)} GB, pulled in ${((Date.now() - started) / MS_PER_SECOND).toFixed(0)}s)`;
+  return `${image} (${(Number(size.stdout) / BYTES_PER_GB).toFixed(GB_DECIMALS)} GB, pulled in ${((Date.now() - started) / MS_PER_SECOND).toFixed(WHOLE_SECONDS_DECIMALS)}s)`;
 }
 
 const pidAlive = (pid: number): boolean => {
@@ -292,36 +301,7 @@ const pidAlive = (pid: number): boolean => {
   }
 };
 
-function sweepStaleSessions(): void {
-  const listed = spawnSync(
-    'docker',
-    [
-      'ps',
-      '-a',
-      '--filter',
-      `label=${SESSION_OWNER_LABEL}`,
-      '--format',
-      `{{.Names}} {{index .Labels "${SESSION_OWNER_LABEL}"}}`,
-    ],
-    { encoding: 'utf8' },
-  );
-  if (listed.status !== OK) return;
-  for (const name of staleSessions(listed.stdout.split('\n').filter(Boolean), pidAlive)) {
-    err(`[ci-predict] removing ${name}, left behind by a predictor that is gone`);
-    spawnSync('docker', ['rm', '-f', name], { stdio: 'ignore' });
-  }
-}
-
-function treeFingerprint(headSha: string): string {
-  return fingerprint({
-    head: headSha,
-    diff: spawnSync('git', ['diff', DETACHED_HEAD], {
-      encoding: 'utf8',
-      maxBuffer: GIT_MAX_BUFFER_BYTES,
-    }).stdout,
-    untracked: gitLines(['ls-files', '-o', '--exclude-standard']),
-  });
-}
+const treeFingerprint = (headSha: string): string => fingerprint(readTree(process.cwd(), headSha));
 
 function readIfPresent(path: string): string | undefined {
   try {
@@ -347,7 +327,8 @@ async function main(): Promise<number> {
   const base = resolveBase(flags.base, branch);
   if (base.sha === headSha) {
     out(`ci-predict: ${branch} has no commits ahead of ${base.ref}; nothing to predict`);
-    return OK;
+    out(`\n${NO_COMMITS_HEADLINE}`);
+    return EXIT.NOT_VERIFIED;
   }
   const behind = !gitOk(['merge-base', '--is-ancestor', base.sha, headSha]);
   const dirty = git(['status', '--porcelain']) !== '';
@@ -367,7 +348,7 @@ async function main(): Promise<number> {
   ).version;
 
   out(
-    `ci-predict: ${branch} @ ${headSha.slice(0, 7)} against ${base.ref} @ ${base.sha.slice(0, 7)}`,
+    `ci-predict: ${branch} @ ${headSha.slice(0, SHORT_SHA_LENGTH)} against ${base.ref} @ ${base.sha.slice(0, SHORT_SHA_LENGTH)}`,
   );
   out(
     `${changedFiles.length} changed file(s)${flags.list ? ' (dry run: change detection only)' : ''}`,
@@ -402,7 +383,10 @@ async function main(): Promise<number> {
 
   let imageNote = '';
   if (flags.linux && !flags.list) {
-    sweepStaleSessions();
+    sweepStaleSessions({
+      isAlive: pidAlive,
+      log: (line) => err(`[ci-predict] ${line}`),
+    });
     imageNote = ensureImage(linuxImage(playwrightVersion));
   }
 
@@ -418,13 +402,10 @@ async function main(): Promise<number> {
     server = null;
   };
   const sessionName = `${SESSION_NAME_PREFIX}${process.pid}`;
-  let sessionRequested = false;
-  let session: { key: string; urls: ServerUrls } | null = null;
-  const stopSession = () => {
-    if (sessionRequested) spawnSync('docker', ['rm', '-f', sessionName], { stdio: 'ignore' });
-    sessionRequested = false;
-    session = null;
-  };
+  const sessions = createSessionKeeper<ServerUrls>(sessionName, (args) => {
+    spawnSync('docker', args, { stdio: 'ignore' });
+  });
+  const stopSession = sessions.stop;
   installCleanup(() => {
     stopServer();
     stopSession();
@@ -441,14 +422,7 @@ async function main(): Promise<number> {
     );
     if (result.code !== OK) throw new Error(`${label} failed in ${sessionName}\n${result.output}`);
   };
-  const startLinuxSession = async (env: Record<string, string>): Promise<ServerUrls> => {
-    const key = serverKey(env);
-    if (session?.key === key) return session.urls;
-    if (session !== null) {
-      announce('the server env changed; rebuilding the Linux session');
-      stopSession();
-    }
-    sessionRequested = true;
+  const createLinuxSession = async (env: Record<string, string>): Promise<ServerUrls> => {
     const started = spawnSync(
       'docker',
       dockerSessionArgs({
@@ -459,10 +433,8 @@ async function main(): Promise<number> {
       }),
       { encoding: 'utf8' },
     );
-    if (started.status !== OK) {
-      stopSession();
+    if (started.status !== OK)
       throw new Error(`could not start the Linux container: ${started.stderr}`);
-    }
     const urls = {
       hostUrl: `http://localhost:${CONTAINER_PORT}`,
       containerUrl: `http://localhost:${CONTAINER_PORT}`,
@@ -502,9 +474,10 @@ async function main(): Promise<number> {
       'wait for the server',
       `for i in $(seq 1 ${SERVER_READY_SECONDS}); do node -e "${probe}" && exit 0; kill -0 $(cat ${SERVER_PID_PATH}) 2>/dev/null || { echo 'the server exited before it answered'; cat ${SERVER_LOG_PATH}; exit 1; }; sleep 1; done; cat ${SERVER_LOG_PATH}; exit 1`,
     );
-    session = { key, urls };
     return urls;
   };
+  const startLinuxSession = (env: Record<string, string>): Promise<ServerUrls> =>
+    sessions.ensure(serverKey(env), () => createLinuxSession(env));
 
   const dryResult: ProcessResult & { dry: true } = { code: OK, output: '', dry: true };
   const stampBuild = () => {
@@ -558,10 +531,14 @@ async function main(): Promise<number> {
       const key = serverKey(env);
       if (flags.list) return { hostUrl: DRY_SERVER_URL, containerUrl: DRY_SERVER_URL };
       if (flags.linux) return startLinuxSession(env);
-      if (server?.key === key) return server.urls;
+      if (server?.key === key && isRunning(server.child)) return server.urls;
       stopServer();
       const port = await freePort();
-      if ((await fetch(`http://localhost:${port}`).catch(() => null)) !== null) {
+      if (
+        (await fetch(`http://localhost:${port}`, {
+          signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+        }).catch(() => null)) !== null
+      ) {
         throw new Error(
           `port ${port} answered before the server started; refusing to test another server`,
         );
@@ -624,7 +601,7 @@ async function main(): Promise<number> {
   out(summaryTable(prediction.rows));
   out('');
   out(
-    `total ${((Date.now() - started) / MS_PER_SECOND).toFixed(1)}s${imageNote === '' ? '' : `, Linux image ${imageNote}`}`,
+    `total ${((Date.now() - started) / MS_PER_SECOND).toFixed(SECONDS_DECIMALS)}s${imageNote === '' ? '' : `, Linux image ${imageNote}`}`,
   );
   for (const note of prediction.notes) out(`note: ${note}`);
   if (caveat !== undefined) out(`note: ${caveat}`);

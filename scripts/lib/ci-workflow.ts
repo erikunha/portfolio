@@ -141,10 +141,13 @@ const LITERALS: Record<string, ExprValue> = { true: true, false: false, null: nu
 
 export type ExprFunctions = Record<string, (args: ExprValue[]) => ExprValue>;
 
+export type SecretReader = (name: string) => void;
+
 export function evaluate(
   expression: string,
   ctx: ExprContext,
   extra: ExprFunctions = {},
+  onSecret?: SecretReader,
 ): ExprValue {
   const tokens = tokenize(expression);
   let index = 0;
@@ -214,7 +217,10 @@ export function evaluate(
         return fn(args);
       }
       if (token.text in LITERALS) return LITERALS[token.text];
-      if (token.text.startsWith(SECRETS_PREFIX)) return '';
+      if (token.text.startsWith(SECRETS_PREFIX)) {
+        onSecret?.(token.text.slice(SECRETS_PREFIX.length));
+        return '';
+      }
       const root = token.text.split('.')[0] ?? token.text;
       if (!(root in ctx)) {
         throw new UnsupportedExpressionError(
@@ -232,9 +238,9 @@ export function evaluate(
   return value;
 }
 
-export function interpolate(text: string, ctx: ExprContext): string {
+export function interpolate(text: string, ctx: ExprContext, onSecret?: SecretReader): string {
   return text.replace(EXPRESSION, (_whole, expression: string) => {
-    const value = evaluate(expression, ctx);
+    const value = evaluate(expression, ctx, {}, onSecret);
     return value === undefined || value === null ? '' : String(value);
   });
 }
@@ -243,10 +249,11 @@ export function conditionHolds(
   condition: string | undefined,
   ctx: ExprContext,
   extra: ExprFunctions = {},
+  onSecret?: SecretReader,
 ): boolean {
   if (condition === undefined) return true;
   const wrapped = WRAPPED.exec(condition);
-  return isTruthy(evaluate(wrapped?.[1] ?? condition, ctx, extra));
+  return isTruthy(evaluate(wrapped?.[1] ?? condition, ctx, extra, onSecret));
 }
 
 interface RawStep {

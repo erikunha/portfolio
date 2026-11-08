@@ -2,14 +2,18 @@ import { type ChildProcess, spawn, spawnSync } from 'node:child_process';
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { createServer, type Server } from 'node:http';
 import { createRequire } from 'node:module';
+import { createServer as createTcpServer, type Socket } from 'node:net';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   activeGroupIds,
+  createSessionKeeper,
   envKeyNames,
   gitFilesMatch,
+  isRunning,
   killAllChildren,
+  killGroup,
   localEnvBlanks,
   runProcess,
   runShell,
@@ -214,19 +218,93 @@ describe('local env blanking', () => {
   });
 });
 
-describe('child cleanup', () => {
-  it('kills the whole process group of a running step', async () => {
+describe('child environment', () => {
+  const PROBE = 'printf "[%s][%s][%s]" "$CI_PREDICT_SHELL_SECRET" "$PATH" "$HOME"';
+
+  it('keeps a shell-exported secret out of the child and still gives it PATH and HOME', async () => {
     const dir = scratch();
-    const running = runProcess('sh', ['-c', 'sleep 300 & wait'], {
+    const previous = process.env.CI_PREDICT_SHELL_SECRET;
+    process.env.CI_PREDICT_SHELL_SECRET = 'exported-in-the-shell';
+    try {
+      await runShell(PROBE, {
+        shell: undefined,
+        cwd: dir,
+        env: {},
+        logPath: join(dir, 'log'),
+      });
+      expect(readFileSync(join(dir, 'log'), 'utf8')).toMatch(/^\[\]\[.+\]\[.+\]$/);
+    } finally {
+      if (previous === undefined) delete process.env.CI_PREDICT_SHELL_SECRET;
+      else process.env.CI_PREDICT_SHELL_SECRET = previous;
+    }
+  });
+
+  it('passes a step env value through even when the name is not on the allowlist', async () => {
+    const dir = scratch();
+    await runShell('printf "%s" "$CI_PREDICT_FROM_STEP"', {
+      shell: undefined,
+      cwd: dir,
+      env: { CI_PREDICT_FROM_STEP: 'step-value' },
+      logPath: join(dir, 'log'),
+    });
+    expect(readFileSync(join(dir, 'log'), 'utf8')).toBe('step-value');
+  });
+});
+
+describe('child cleanup', () => {
+  it('kills the whole process group of a running step, the background sleep included', async () => {
+    const dir = scratch();
+    const pidFile = join(dir, 'sleep.pid');
+    const running = runProcess('sh', ['-c', `sleep 300 & echo $! > ${pidFile}; wait`], {
       cwd: dir,
       env: {},
       logPath: join(dir, 'log'),
     });
     expect(await waitUntil(() => activeGroupIds().length === 1, 2000)).toBe(true);
     const [group] = activeGroupIds();
+    expect(
+      await waitUntil(() => {
+        try {
+          return Number(readFileSync(pidFile, 'utf8')) > 0;
+        } catch {
+          return false;
+        }
+      }, 2000),
+    ).toBe(true);
+    const sleeper = Number(readFileSync(pidFile, 'utf8'));
+    expect(alive(sleeper)).toBe(true);
     killAllChildren();
     await running;
     expect(await waitUntil(() => !alive(group ?? 0), 2000)).toBe(true);
+    expect(await waitUntil(() => !alive(sleeper), 2000)).toBe(true);
+  });
+
+  it('sends no signal for a child that already exited, whose pid the system may have reused', async () => {
+    const dir = scratch();
+    const child = startTracked(process.execPath, ['-e', ''], {
+      cwd: dir,
+      env: {},
+      logPath: join(dir, 'log'),
+    });
+    await new Promise((resolve) => child.on('close', resolve));
+    expect(isRunning(child)).toBe(false);
+    const kill = vi.spyOn(process, 'kill');
+    try {
+      killGroup(child);
+      expect(kill).not.toHaveBeenCalled();
+    } finally {
+      kill.mockRestore();
+    }
+  });
+
+  it('reports a live child as running', () => {
+    const dir = scratch();
+    const child = startTracked(process.execPath, ['-e', 'setTimeout(() => {}, 20000)'], {
+      cwd: dir,
+      env: {},
+      logPath: join(dir, 'log'),
+    });
+    expect(isRunning(child)).toBe(true);
   });
 
   it.each(['SIGINT', 'SIGTERM', 'SIGHUP'] as const)(
@@ -335,6 +413,88 @@ describe('waitForOwnServer', () => {
         pollMs: 25,
       }),
     ).rejects.toThrow(/not the server this run started/);
+  });
+});
+
+describe('waitForOwnServer against a server that accepts and never answers', () => {
+  it('gives up at its deadline instead of hanging on the request', async () => {
+    const dir = scratch();
+    const held: Socket[] = [];
+    const hangs = createTcpServer((socket) => held.push(socket));
+    const port = await new Promise<number>((resolve) =>
+      hangs.listen(0, () => resolve((hangs.address() as { port: number }).port)),
+    );
+    const child = startTracked(process.execPath, ['-e', 'setTimeout(() => {}, 20000)'], {
+      cwd: dir,
+      env: {},
+      logPath: join(dir, 'server.log'),
+    });
+    try {
+      await expect(
+        waitForOwnServer({
+          url: `http://localhost:${port}`,
+          port,
+          child,
+          timeoutMs: 600,
+          pollMs: 25,
+        }),
+      ).rejects.toThrow(/did not answer/);
+    } finally {
+      for (const socket of held) socket.destroy();
+      hangs.close();
+    }
+  }, 3000);
+});
+
+describe('createSessionKeeper', () => {
+  const NAME = 'ci-predict-1';
+  const REMOVE = ['rm', '-f', NAME];
+
+  it('reuses a session whose key has not changed', async () => {
+    const calls: string[][] = [];
+    const keeper = createSessionKeeper(NAME, (args) => calls.push(args));
+    let created = 0;
+    const create = async () => {
+      created += 1;
+      return 'urls';
+    };
+    expect(await keeper.ensure('a', create)).toBe('urls');
+    expect(await keeper.ensure('a', create)).toBe('urls');
+    expect(created).toBe(1);
+    expect(calls).toEqual([]);
+  });
+
+  it('removes the old container before it starts one for a changed key', async () => {
+    const calls: string[][] = [];
+    const keeper = createSessionKeeper(NAME, (args) => calls.push(args));
+    await keeper.ensure('a', async () => {
+      calls.push(['create-a']);
+      return 'a';
+    });
+    await keeper.ensure('b', async () => {
+      calls.push(['create-b']);
+      return 'b';
+    });
+    expect(calls).toEqual([['create-a'], REMOVE, ['create-b']]);
+  });
+
+  it('removes the container when setup throws, so no container is left behind', async () => {
+    const calls: string[][] = [];
+    const keeper = createSessionKeeper(NAME, (args) => calls.push(args));
+    await expect(
+      keeper.ensure('a', async () => {
+        throw new Error('install failed');
+      }),
+    ).rejects.toThrow('install failed');
+    expect(calls).toEqual([REMOVE]);
+    await keeper.ensure('a', async () => 'again');
+    expect(calls).toEqual([REMOVE]);
+  });
+
+  it('does not touch docker on stop when no session was requested', () => {
+    const calls: string[][] = [];
+    createSessionKeeper(NAME, (args) => calls.push(args)).stop();
+    expect(calls).toEqual([]);
   });
 });
 

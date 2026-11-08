@@ -44,6 +44,15 @@ describe('evaluate', () => {
     expect(evaluate('secrets.ANY_KEY', {})).toBe('');
   });
 
+  it('reports each secret it read as empty, in expressions, interpolation and conditions', () => {
+    const seen: string[] = [];
+    const onSecret = (name: string) => seen.push(name);
+    evaluate('secrets.FIRST', {}, {}, onSecret);
+    interpolate(['$', '{{ secrets.SECOND }}'].join(''), {}, onSecret);
+    conditionHolds("secrets.THIRD != ''", {}, {}, onSecret);
+    expect(seen).toEqual(['FIRST', 'SECOND', 'THIRD']);
+  });
+
   it('refuses a context root the caller did not populate instead of reading it as empty', () => {
     expect(() => evaluate('runner.os', {})).toThrow(/runner/);
     expect(() => evaluate("vars.FLAG == 'x'", { github: {} })).toThrow(/vars/);

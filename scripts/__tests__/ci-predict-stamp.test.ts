@@ -1,5 +1,9 @@
-import { describe, expect, it } from 'vitest';
-import { checkStamp, fingerprint, stampText } from '../lib/ci-predict-stamp';
+import { spawnSync } from 'node:child_process';
+import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { afterEach, describe, expect, it } from 'vitest';
+import { checkStamp, fingerprint, readTree, stampText } from '../lib/ci-predict-stamp';
 
 const TREE = { head: 'a'.repeat(40), diff: '', untracked: [] as string[] };
 
@@ -50,5 +54,71 @@ describe('build stamp', () => {
     expect(
       checkStamp('{not json', { fingerprint: fingerprint(TREE), buildId: 'build-1' }).valid,
     ).toBe(false);
+  });
+});
+
+describe('readTree', () => {
+  const dirs: string[] = [];
+  afterEach(() => {
+    for (const dir of dirs.splice(0)) rmSync(dir, { recursive: true, force: true });
+  });
+
+  function repo(): { dir: string; head: string; git: (...args: string[]) => string } {
+    const dir = mkdtempSync(join(tmpdir(), 'ci-predict-stamp-'));
+    dirs.push(dir);
+    const git = (...args: string[]) =>
+      spawnSync(
+        'git',
+        [
+          '-c',
+          'user.email=t@t',
+          '-c',
+          'user.name=t',
+          '-c',
+          'commit.gpgsign=false',
+          '-c',
+          'core.hooksPath=/dev/null',
+          ...args,
+        ],
+        { cwd: dir, encoding: 'utf8' },
+      ).stdout.trim();
+    git('init', '--quiet');
+    writeFileSync(join(dir, 'tracked.bin'), Buffer.from([0, 1, 2, 3]));
+    writeFileSync(join(dir, 'tracked.ts'), 'export {};\n');
+    git('add', '.');
+    git('commit', '--quiet', '-m', 'init');
+    return { dir, head: git('rev-parse', 'HEAD'), git };
+  }
+
+  const stamped = (dir: string, head: string) => fingerprint(readTree(dir, head));
+
+  it('is stable while nothing changes', () => {
+    const { dir, head } = repo();
+    writeFileSync(join(dir, 'new.ts'), 'one');
+    expect(stamped(dir, head)).toBe(stamped(dir, head));
+  });
+
+  it('changes when an untracked file is edited after the stamp, not only when one appears', () => {
+    const { dir, head } = repo();
+    writeFileSync(join(dir, 'new.ts'), 'one');
+    const before = stamped(dir, head);
+    writeFileSync(join(dir, 'new.ts'), 'two');
+    expect(stamped(dir, head)).not.toBe(before);
+  });
+
+  it('changes when a tracked binary file is edited to different bytes', () => {
+    const { dir, head } = repo();
+    writeFileSync(join(dir, 'tracked.bin'), Buffer.from([0, 9, 9, 9]));
+    const first = stamped(dir, head);
+    writeFileSync(join(dir, 'tracked.bin'), Buffer.from([0, 8, 8, 8]));
+    expect(stamped(dir, head)).not.toBe(first);
+  });
+
+  it('ignores a file that git ignores', () => {
+    const { dir, head } = repo();
+    writeFileSync(join(dir, '.gitignore'), 'out.log\n');
+    const before = stamped(dir, head);
+    writeFileSync(join(dir, 'out.log'), 'noise');
+    expect(stamped(dir, head)).toBe(before);
   });
 });

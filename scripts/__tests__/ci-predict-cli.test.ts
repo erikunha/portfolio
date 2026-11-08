@@ -41,9 +41,14 @@ describe('ci-predict command line', () => {
     DRY_RUN_TIMEOUT_MS,
   );
 
-  it('has nothing to predict when HEAD is the base, instead of failing commitlint on an empty range', () => {
+  it('verifies nothing when HEAD is the base: exit 3, never the 0 that means verified', () => {
     const result = run(['--list', '--base', 'HEAD']);
-    expect(result.status).toBe(0);
+    expect(result.status).toBe(3);
     expect(result.stdout).toContain('no commits ahead of');
+    expect(result.stdout).toContain('NOT VERIFIED');
+  });
+
+  it('documents the empty range exit code in its usage text', () => {
+    expect(run(['--help']).stdout).toMatch(/no commits ahead[^\n]*3|3[^\n]*no commits ahead/);
   });
 });
