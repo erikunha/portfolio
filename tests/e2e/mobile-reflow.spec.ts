@@ -9,6 +9,7 @@ interface Group {
   name: string;
   path: string;
   container: string;
+  stacksAtDesktop?: boolean;
 }
 
 const GROUPS: Group[] = [
@@ -18,6 +19,7 @@ const GROUPS: Group[] = [
     name: 'cv row',
     path: '/cv',
     container: '.reading-rows li',
+    stacksAtDesktop: true,
   },
   { name: 'summary actions', path: '/summary', container: '.reading-actions' },
 ];
@@ -62,7 +64,9 @@ test.describe('mobile reflow: side-by-side groups stack below the tablet breakpo
       }
     });
 
-    test(`${group.name} keeps children side by side at 1280`, async ({ page }) => {
+    test(`${group.name} ${group.stacksAtDesktop ? 'stays one column' : 'keeps children side by side'} at 1280`, async ({
+      page,
+    }) => {
       await page.setViewportSize(DESKTOP);
       await page.goto(group.path);
       const container = page.locator(group.container);
@@ -70,6 +74,10 @@ test.describe('mobile reflow: side-by-side groups stack below the tablet breakpo
       const { children } = await measure(container);
       expect(children.length).toBeGreaterThan(1);
       const lefts = new Set(children.map((child) => Math.round(child.left)));
+      if (group.stacksAtDesktop) {
+        expect(lefts.size, 'a label above its value shares one left edge').toBe(1);
+        return;
+      }
       expect(lefts.size).toBeGreaterThan(1);
     });
   }

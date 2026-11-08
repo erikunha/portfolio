@@ -33,11 +33,6 @@ export function CvPage({ locale }: { locale: SiteLocale }) {
   return (
     <ReadingShell locale={locale} route={readingViews[locale].cv.path}>
       <script type={JSON_LD_TYPE}>{serializeJsonLd(cvJsonLd)}</script>
-      <ReadingActions
-        locale={locale}
-        secondary={{ href: summaryPath, label: cv.summaryLinkLabel }}
-      />
-
       <header>
         <h1 className="reading-name">{document_.name}</h1>
         <p className="reading-role">{document_.role}</p>
@@ -52,12 +47,28 @@ export function CvPage({ locale }: { locale: SiteLocale }) {
             </li>
           ))}
         </ul>
+        <ReadingActions
+          locale={locale}
+          className="mt-4"
+          secondary={{ href: summaryPath, label: cv.summaryLinkLabel }}
+        />
       </header>
 
       <div className="reading-split reading-split--flow">
         <div className="reading-main">
           <ReadingSection id={sectionId('summary')} heading={cv.headings.summary}>
             <p>{document_.summary}</p>
+          </ReadingSection>
+
+          <ReadingSection id={sectionId('skills')} heading={cv.headings.skills}>
+            <dl className="reading-skills">
+              {document_.skills.map((group) => (
+                <div key={group.label} className="reading-skill">
+                  <dt>{group.label}</dt>
+                  <dd>{group.items.join(SKILL_SEPARATOR)}</dd>
+                </div>
+              ))}
+            </dl>
           </ReadingSection>
 
           <ReadingSection id={sectionId('experience')} heading={cv.headings.experience}>
@@ -80,6 +91,10 @@ export function CvPage({ locale }: { locale: SiteLocale }) {
                 </ul>
               </article>
             ))}
+          </ReadingSection>
+
+          <ReadingSection id={sectionId('education')} heading={cv.headings.education}>
+            <Rows rows={document_.education} />
           </ReadingSection>
 
           <ReadingSection id={sectionId('community')} heading={cv.headings.community}>
@@ -105,16 +120,8 @@ export function CvPage({ locale }: { locale: SiteLocale }) {
         </div>
 
         <div className="reading-side">
-          <ReadingSection id={sectionId('skills')} heading={cv.headings.skills}>
-            <p>{document_.skills.join(SKILL_SEPARATOR)}</p>
-          </ReadingSection>
-
           <ReadingSection id={sectionId('certifications')} heading={cv.headings.certifications}>
             <Rows rows={document_.certifications} />
-          </ReadingSection>
-
-          <ReadingSection id={sectionId('education')} heading={cv.headings.education}>
-            <Rows rows={document_.education} />
           </ReadingSection>
 
           <ReadingSection id={sectionId('contact')} heading={cv.headings.contact}>

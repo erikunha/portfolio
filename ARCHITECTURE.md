@@ -219,7 +219,7 @@ app/(pt)/pt/page.tsx                 # pt-BR home route, renders SiteHome
 components/SiteShell.tsx             # the one AppShell builder (brand, chrome, skip label from the locale) used by every page frame
 components/SiteHome.tsx              # section composition, client shell boundaries, footer
 app/(en)/summary/page.tsx            # one-screen reading view: stats, CTAs, projects | stack + contact
-app/(en)/cv/page.tsx                 # full CV reading view and print control
+app/(en)/cv/page.tsx                 # full CV reading view and print control; header, actions row, then summary, skills, experience, education, community | certifications, contact
 components/reading/ReadingShell.tsx    # SiteShell, reading-view and main wrapper shared by both reading views
 components/reading/ReadingSection.tsx  # titled section block shared by /cv and /summary
 components/reading/ReadingActions.tsx  # hire, cross-view and print action row shared by both reading views

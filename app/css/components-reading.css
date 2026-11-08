@@ -112,15 +112,45 @@
   .reading-entry ul {
     margin: var(--spacing-2) 0 0;
     padding-left: var(--spacing-4);
+    list-style: disc;
   }
 
   .reading-entry li {
+    display: list-item;
     margin: 0 0 var(--spacing-1);
+    overflow-wrap: anywhere;
+  }
+
+  .reading-entry li::marker {
+    color: var(--color-primary-500);
+  }
+
+  .reading-skills {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-3);
+    margin: 0;
+  }
+
+  .reading-skill dt {
+    color: var(--color-text);
+    font-size: var(--text-xs);
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  .reading-skill dd {
+    max-width: var(--measure-read);
+    margin: var(--spacing-1) 0 0;
     overflow-wrap: anywhere;
   }
 
   .reading-rows {
     --reading-key-width: 24ch;
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-3);
     margin: 0;
     padding: 0;
     list-style: none;
@@ -134,7 +164,7 @@
 
   .reading-row-key {
     min-width: 0;
-    color: var(--color-tertiary-50);
+    color: var(--color-text);
     font-size: var(--text-xs);
     font-weight: 700;
     letter-spacing: 0.06em;
@@ -144,13 +174,6 @@
   .reading-row-value {
     min-width: 0;
     overflow-wrap: anywhere;
-  }
-
-  @media (min-width: 768px) {
-    .reading-rows li {
-      grid-template-columns: var(--reading-key-width) minmax(0, 1fr);
-      gap: 0 var(--spacing-3);
-    }
   }
 
   .reading-split {
@@ -245,6 +268,12 @@
     .reading-split {
       grid-template-columns: var(--phi-pair-columns);
     }
+
+    .reading-split--flow > .reading-side {
+      position: sticky;
+      top: calc(var(--topbar-height) + var(--spacing-4));
+      align-self: start;
+    }
   }
 
   @media screen and (max-width: 767.98px) {
@@ -331,11 +360,15 @@
       gap: 0 10pt;
     }
 
+    .reading-rows {
+      gap: 0;
+    }
+
     .reading-doc {
       padding: 0;
     }
 
-    .reading-doc :is(p, .reading-entry li) {
+    .reading-doc :is(p, .reading-entry li, .reading-skill dd) {
       max-width: none;
     }
 
@@ -389,6 +422,10 @@
     .reading-main,
     .reading-side {
       gap: 14pt;
+    }
+
+    .reading-split--flow > .reading-side {
+      position: static;
     }
 
     .reading-stats {

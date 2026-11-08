@@ -1113,6 +1113,11 @@ const ReadingRowSchema = z.object({
   value: ReadingTextSchema,
 });
 
+const CvSkillGroupSchema = z.object({
+  label: ReadingTextSchema,
+  items: z.array(ReadingTextSchema).min(1),
+});
+
 export const CvDocumentSchema = z.object({
   name: ReadingTextSchema,
   role: ReadingTextSchema,
@@ -1133,7 +1138,7 @@ export const CvDocumentSchema = z.object({
       }),
     )
     .min(1),
-  skills: z.array(ReadingTextSchema).min(1),
+  skills: z.array(CvSkillGroupSchema).min(1),
   certifications: z.array(ReadingRowSchema),
   community: z.object({
     heading: ReadingTextSchema,

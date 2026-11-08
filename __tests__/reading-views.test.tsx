@@ -145,7 +145,9 @@ describe('CV reading view', () => {
   });
 
   it('lists the resume core expertise as the CV skills', () => {
-    const skills = cvDocumentEn.skills.join(' · ');
+    const skills = cvDocumentEn.skills
+      .flatMap((group) => [group.label, ...group.items])
+      .join(' · ');
     expect(skills).toContain('LLM Systems & Evaluation');
     expect(skills).toContain('Agents & Guardrails');
     expect(skills).toContain('Backend & Data');
