@@ -31,7 +31,7 @@ export function CvPage({ locale }: { locale: SiteLocale }) {
   const document_ = cvDocument[locale];
   const summaryPath = readingViews[locale].summary.path;
   return (
-    <ReadingShell locale={locale}>
+    <ReadingShell locale={locale} route={readingViews[locale].cv.path}>
       <script type={JSON_LD_TYPE}>{serializeJsonLd(cvJsonLd)}</script>
       <ReadingActions
         locale={locale}

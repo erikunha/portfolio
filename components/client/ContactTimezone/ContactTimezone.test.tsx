@@ -2,7 +2,7 @@ import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import { parse } from 'postcss';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { readComponentsCss } from '@/__tests__/helpers/components-css';
-import { declValue, rulesInMedia, rulesWithSelector } from '@/__tests__/helpers/css-rules';
+import { declValue, rulesWithSelector } from '@/__tests__/helpers/css-rules';
 import { contactCopy } from '@/content/contact-copy';
 import { contactHoursPhrase, fillCopy } from '@/content/contact-rules';
 import { SITE_LOCALE } from '@/content/site-locale';
@@ -675,18 +675,9 @@ describe('ContactTimezone pins and the map box', () => {
   });
 });
 
-describe('ContactTimezone reduced motion', () => {
+describe('ContactTimezone motion switch', () => {
   const stylesheet = parse(readComponentsCss());
   const ANIMATED = ['.ctz-pulse', '.ctz-route'];
-
-  it('stops the pulse and the dash animation under prefers-reduced-motion', () => {
-    // behavioral-test-allow: motion is stylesheet-only and jsdom cannot evaluate a media query
-    for (const selector of ANIMATED) {
-      const rules = rulesInMedia(stylesheet, /prefers-reduced-motion: reduce/, selector);
-      expect(rules, `${selector} must stop animating under prefers-reduced-motion`).toHaveLength(1);
-      expect(declValue(rules[0], 'animation')).toBe('none');
-    }
-  });
 
   it('stops the pulse and the dash animation under the in-page motion switch', () => {
     // behavioral-test-allow: motion is stylesheet-only and jsdom cannot evaluate a body attribute selector
@@ -742,12 +733,10 @@ describe.each(Object.values(SITE_LOCALE))('ascii spinner on the static panel (%s
     expect(shown[1]).toContain('---');
   });
 
-  it('freezes on the first glyph under reduced motion and the motion toggle', () => {
-    // behavioral-test-allow: motion is stylesheet-only and jsdom cannot evaluate a media query
-    const media = rulesInMedia(stylesheet, /prefers-reduced-motion: reduce/, '.ctz-spin-frame');
+  it('freezes on the first glyph under the motion toggle', () => {
+    // behavioral-test-allow: motion is stylesheet-only and jsdom cannot evaluate a body attribute selector
     const toggle = rulesWithSelector(stylesheet, 'body[data-motion="reduce"] .ctz-spin-frame');
 
-    expect(declValue(media[0], 'animation')).toBe('none');
     expect(declValue(toggle[0], 'animation')).toBe('none');
   });
 

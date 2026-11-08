@@ -22,4 +22,33 @@ describe('Module srLabel', () => {
     );
     expect(container.querySelector('h2 span.sr-only')).toBeNull();
   });
+
+  it('keeps the command out of the heading name and tags it English when a localized name is given', () => {
+    const { container } = render(
+      <Module id="sec-z" header="SUDO CONTACT --INIT" mobileHeader="SUDO CONTACT" name="CONTATO">
+        <div />
+      </Module>,
+    );
+    const commands = container.querySelectorAll('h2 .module-scroll-type');
+    expect(commands).toHaveLength(2);
+    for (const command of commands) {
+      expect(
+        command.getAttribute('aria-hidden'),
+        'English command text inside a Portuguese heading name breaks WCAG 3.1.2, and the localized name already names the section',
+      ).toBe('true');
+      expect(command.getAttribute('lang')).toBe('en');
+    }
+  });
+
+  it('keeps the command in the heading name, tagged English, when nothing else names the section', () => {
+    const { container } = render(
+      <Module id="sec-w" header="LS -LA ./W">
+        <div />
+      </Module>,
+    );
+    for (const command of container.querySelectorAll('h2 .module-scroll-type')) {
+      expect(command.getAttribute('aria-hidden')).toBeNull();
+      expect(command.getAttribute('lang')).toBe('en');
+    }
+  });
 });

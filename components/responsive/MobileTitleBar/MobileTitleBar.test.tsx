@@ -33,6 +33,13 @@ describe('MobileTitleBar', () => {
     return mounted.container;
   }
 
+  it('is the page banner landmark', async () => {
+    const container = await render();
+    const bar = container.querySelector('.mobile-title-bar');
+
+    expect(bar?.tagName).toBe('HEADER');
+  });
+
   it('puts the menu trigger first and the brand last, matching focus order', async () => {
     const container = await render();
     const focusable = [...container.querySelectorAll<HTMLElement>('a[href], button')];

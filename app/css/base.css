@@ -1,5 +1,6 @@
 @layer base {
   :root {
+    --separator-glyph: "·";
     --topbar-height: 45px;
     --position-line-thickness: 2px;
     --icon-menu: calc(var(--spacing-target) / var(--phi) / var(--phi));
@@ -145,10 +146,8 @@
     overflow: visible;
   }
 
-  @media (prefers-reduced-motion: reduce) {
-    .skip-to-content {
-      transition: none;
-    }
+  body[data-motion="reduce"] .skip-to-content {
+    transition: none;
   }
 
   button {

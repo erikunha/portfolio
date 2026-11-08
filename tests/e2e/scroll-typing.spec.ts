@@ -1,5 +1,6 @@
 import { expect, type Locator, test } from '@playwright/test';
 import { waitForHydration } from './_helpers/hydration';
+import { freezeMotion } from './_helpers/motion';
 
 const MOTION_TOGGLE = '.desktop-topbar button[aria-pressed]';
 const BELOW_FOLD_HEADER = '#sec-contact-header .module-scroll-type-text:visible';
@@ -30,7 +31,7 @@ async function placeJustBelowFold(header: Locator): Promise<void> {
 
 test.describe('scroll typing', () => {
   test('with reduced motion the header is fully visible and static', async ({ page }) => {
-    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await freezeMotion(page);
     await page.goto('/');
     await page.waitForSelector('[data-testid="hero-name"]', { state: 'attached' });
 
@@ -50,7 +51,6 @@ test.describe('scroll typing', () => {
   });
 
   test('types the header in as the section scrolls into view', async ({ page }) => {
-    await page.emulateMedia({ reducedMotion: 'no-preference' });
     await page.goto('/');
     await page.waitForSelector('[data-testid="hero-name"]', { state: 'attached' });
 
@@ -75,7 +75,6 @@ test.describe('scroll typing', () => {
   });
 
   test('the caret parks at the end of the typed header', async ({ page }) => {
-    await page.emulateMedia({ reducedMotion: 'no-preference' });
     await page.goto('/');
     await page.waitForSelector('[data-testid="hero-name"]', { state: 'attached' });
 
@@ -102,7 +101,6 @@ test.describe('scroll typing', () => {
   });
 
   test('the MOTION toggle disables the typing animation', async ({ page }) => {
-    await page.emulateMedia({ reducedMotion: 'no-preference' });
     await page.goto('/');
     await page.waitForSelector('[data-testid="hero-name"]', { state: 'attached' });
 

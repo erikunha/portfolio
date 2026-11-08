@@ -128,7 +128,6 @@ export const linksContent: LinksContent = LinksContentSchema.parse({
     },
     opensInNewTab: OPENS_IN_NEW_TAB,
     newBadge: { pt: 'novo', en: 'new' },
-    langSwitchLabel: { pt: 'Idioma', en: 'Language' },
     feedUnavailable: {
       pt: 'O último vídeo não carregou agora. Recarregue em um minuto ou abra o canal.',
       en: 'The latest video did not load just now. Reload in a minute or open the channel.',

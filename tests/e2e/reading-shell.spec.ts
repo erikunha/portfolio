@@ -1,6 +1,7 @@
 import { expect, type Page, test } from '@playwright/test';
 import { READING_PATHS, readingViews } from '../../content/reading-views';
 import { SITE_LOCALE } from '../../content/site-locale';
+import { gotoSettled } from './_helpers/streamed';
 
 const DESKTOP = { width: 1280, height: 800 };
 const PHONE = { width: 390, height: 844 };
@@ -25,6 +26,11 @@ async function headerFingerprint(page: Page, selector: string) {
   return page.locator(selector).evaluate((bar) => {
     const strip = (node: Element) => {
       const clone = node.cloneNode(true) as Element;
+      for (const placeholder of clone.querySelectorAll('template')) placeholder.remove();
+      const comments = document.createTreeWalker(clone, NodeFilter.SHOW_COMMENT);
+      const streamMarkers: Node[] = [];
+      while (comments.nextNode()) streamMarkers.push(comments.currentNode);
+      for (const marker of streamMarkers) marker.parentNode?.removeChild(marker);
       for (const marked of clone.querySelectorAll('[aria-current]')) {
         marked.removeAttribute('aria-current');
       }
@@ -51,9 +57,9 @@ test.describe('reading views share the home header', () => {
   for (const { path, home } of PAIRS) {
     test(`${path} renders the home topbar at 1280`, async ({ page }) => {
       await page.setViewportSize(DESKTOP);
-      await page.goto(home);
+      await gotoSettled(page, home);
       const expected = await headerFingerprint(page, '.desktop-topbar');
-      await page.goto(path);
+      await gotoSettled(page, path);
       await expect(page.locator('.desktop-topbar')).toBeVisible();
       const actual = await headerFingerprint(page, '.desktop-topbar');
       expect(actual.boxes.map((box) => box.name)).toEqual(expected.boxes.map((box) => box.name));
@@ -64,9 +70,9 @@ test.describe('reading views share the home header', () => {
 
     test(`${path} renders the home title bar at 390 with the switch centered`, async ({ page }) => {
       await page.setViewportSize(PHONE);
-      await page.goto(home);
+      await gotoSettled(page, home);
       const expected = await headerFingerprint(page, '.mobile-title-bar');
-      await page.goto(path);
+      await gotoSettled(page, path);
       const bar = page.locator('.mobile-title-bar');
       await expect(bar).toBeVisible();
       const actual = await headerFingerprint(page, '.mobile-title-bar');
@@ -86,7 +92,7 @@ test.describe('reading views share the home header', () => {
         await page.setViewportSize(viewport);
         const selector = viewport === DESKTOP ? '.desktop-topbar' : '.mobile-title-bar';
         const capture = async (url: string) => {
-          await page.goto(url);
+          await gotoSettled(page, url);
           const bar = page.locator(selector);
           await expect(bar).toBeVisible();
           return bar.screenshot({ animations: 'disabled', caret: 'hide' });
@@ -97,19 +103,19 @@ test.describe('reading views share the home header', () => {
       }
     });
 
-    test(`${path} has one h1, one main, one skip link and no second banner`, async ({ page }) => {
-      await page.goto(path);
+    test(`${path} has one h1, one main, one skip link and one banner`, async ({ page }) => {
+      await gotoSettled(page, path);
       await expect(page.getByRole('heading', { level: 1 })).toHaveCount(1);
       await expect(page.locator(MAIN)).toHaveCount(1);
       await expect(page.locator('a.skip-to-content')).toHaveCount(1);
-      await expect(page.getByRole('banner')).toHaveCount(0);
+      await expect(page.getByRole('banner')).toHaveCount(1);
     });
   }
 
   test('the skip link is the first tab stop and moves focus to the main landmark', async ({
     page,
   }) => {
-    await page.goto(READING_PATHS.summary);
+    await gotoSettled(page, READING_PATHS.summary);
     await page.keyboard.press('Tab');
     const skip = page.locator('a.skip-to-content');
     await expect(skip).toBeFocused();
@@ -119,7 +125,7 @@ test.describe('reading views share the home header', () => {
 
   test('the language switch in the header swaps between the two languages', async ({ page }) => {
     await page.setViewportSize(DESKTOP);
-    await page.goto(READING_PATHS.cv);
+    await gotoSettled(page, READING_PATHS.cv);
     const bar = page.locator('.desktop-topbar [data-lang-switch]');
     await expect(bar.locator('a[aria-current="page"]')).toHaveAttribute('href', READING_PATHS.cv);
     await bar.locator(`a[href="/pt${READING_PATHS.cv}"]`).click();
@@ -133,7 +139,7 @@ test.describe('reading views share the home header', () => {
     test(`${path} keeps the print action and the sibling reading link in the page body`, async ({
       page,
     }) => {
-      await page.goto(path);
+      await gotoSettled(page, path);
       const shared = readingViews[locale].shared;
       await expect(
         page.locator(MAIN).getByRole('button', { name: shared.printLabel }),
@@ -152,7 +158,7 @@ test.describe('print hides the shell', () => {
   for (const { path } of PAIRS) {
     test(`${path} prints without the shell chrome`, async ({ page }) => {
       await page.setViewportSize(DESKTOP);
-      await page.goto(path);
+      await gotoSettled(page, path);
       await expect(page.locator('body > canvas')).toHaveCount(1);
       await page.emulateMedia({ media: 'print' });
       const hidden = [
@@ -190,7 +196,7 @@ test.describe('print hides the shell', () => {
         page,
       }) => {
         await page.setViewportSize(DESKTOP);
-        await page.goto(`${prefix}/${name}`);
+        await gotoSettled(page, `${prefix}/${name}`);
         await page.emulateMedia({ media: 'print' });
         const pdf = await page.pdf({ preferCSSPageSize: true });
         const pages = pdf.toString('latin1').match(PDF_PAGE_PATTERN) ?? [];

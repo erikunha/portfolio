@@ -1,4 +1,5 @@
 import { expect, type Page, test } from '@playwright/test';
+import { freezeMotion } from './_helpers/motion';
 
 const dot = (page: Page) => page.locator('button[data-motion] > span[aria-hidden="true"]').first();
 const animationName = (page: Page) =>
@@ -27,8 +28,8 @@ test.describe('status dots blink while motion is on', () => {
     ).toBe('0px');
   });
 
-  test('the MOTION dot stays solid under prefers-reduced-motion', async ({ page }) => {
-    await page.emulateMedia({ reducedMotion: 'reduce' });
+  test('the MOTION dot stays solid while MOTION is off', async ({ page }) => {
+    await freezeMotion(page);
     await page.goto('/');
     await expect(dot(page)).toBeVisible();
     expect(await animationName(page)).toBe('none');

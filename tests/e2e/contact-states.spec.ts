@@ -3,6 +3,7 @@ import { contactCopy } from '@/content/contact-copy';
 import { SITE_LOCALE, type SiteLocale } from '@/content/site-locale';
 import { waitForHydration } from './_helpers/hydration';
 import { installMockBackend } from './_helpers/mock-backend';
+import { freezeMotion } from './_helpers/motion';
 
 const PHONE = { width: 390, height: 844 };
 const NARROW = { width: 320, height: 700 };
@@ -177,7 +178,7 @@ test.describe('contact submit status line', () => {
       }) => {
         const { form: copy } = contactCopy[locale];
         await page.setViewportSize(viewport);
-        await page.emulateMedia({ reducedMotion: 'reduce' });
+        await freezeMotion(page);
         let release: () => void = () => undefined;
         const gate = new Promise<void>((resolve) => {
           release = resolve;
@@ -226,7 +227,7 @@ test.describe('contact form error growth', () => {
     page,
   }) => {
     await page.setViewportSize(PHONE);
-    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await freezeMotion(page);
     await installMockBackend(page, { contact: 'server-error', log: 'accept' });
     const form = await openForm(page, SITE_LOCALE.en);
     await fillValid(page);

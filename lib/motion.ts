@@ -1,28 +1,23 @@
-import { MOTION_CHANGE_EVENT } from './motion-change';
+import {
+  MOTION_BODY_STATE,
+  MOTION_CHANGE_EVENT,
+  MOTION_CHOICE,
+  MOTION_STORAGE_KEY,
+} from './motion-change';
 
 export function readMotion(): boolean {
   try {
-    const stored = localStorage.getItem('erik.motion');
-    if (stored === 'on') return true;
-    if (stored === 'off') return false;
-    // biome-ignore lint/suspicious/noEmptyBlockStatements: intentional no-op
-  } catch {}
-  if (typeof window !== 'undefined' && typeof window.matchMedia === 'function') {
-    return !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    return localStorage.getItem(MOTION_STORAGE_KEY) !== MOTION_CHOICE.off;
+  } catch {
+    return true;
   }
-  return true;
-}
-
-export function readSystemReducedMotion(): boolean {
-  if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return false;
-  return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 }
 
 export function applyMotion(on: boolean, persist = true): void {
-  document.body.dataset.motion = on ? 'full' : 'reduce';
+  document.body.dataset.motion = on ? MOTION_BODY_STATE.full : MOTION_BODY_STATE.reduce;
   if (persist) {
     try {
-      localStorage.setItem('erik.motion', on ? 'on' : 'off');
+      localStorage.setItem(MOTION_STORAGE_KEY, on ? MOTION_CHOICE.on : MOTION_CHOICE.off);
     } catch (err) {
       console.warn('[motion] Failed to persist motion preference:', err);
     }
@@ -31,6 +26,7 @@ export function applyMotion(on: boolean, persist = true): void {
 }
 
 export function motionInEffect(): boolean {
-  if (typeof document !== 'undefined' && document.body.dataset.motion === 'reduce') return false;
+  if (typeof document !== 'undefined' && document.body.dataset.motion === MOTION_BODY_STATE.reduce)
+    return false;
   return readMotion();
 }

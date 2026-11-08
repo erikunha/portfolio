@@ -29,6 +29,7 @@ proposing infrastructure changes, and if a request conflicts with a budget or ga
 | `pnpm typecheck`                         | TypeScript strict check                                                                       |
 | `pnpm validate-content`                  | Zod schema validation of `content/*.ts`                                                       |
 | `pnpm ci:local`                          | The verify chain CI runs first: lint, types, content, naming, pinning, doc drift, tokens, tests |
+| `pnpm ci:predict [--base <ref>] [--linux] [--full] [--eval] [--skip-build] [--list]` | Runs every CI job the branch's commits trigger, before the push: ci.yml steps, new or changed e2e specs on every project with `--repeat-each=3 --retries=0`, `--linux` in the Playwright image. Exit 0 only when no job failed and every job was verified; 1 a job failed; 2 dry run; 3 no failure found but something was not verified: a job did not run or ran in part (read the table), or the branch has no commits ahead of its base |
 | `pnpm bundle-check`                      | Global client-chunk sum gate                                                                  |
 | `pnpm route-js-check`                    | Per-route first-load JS gate (needs a build)                                                  |
 | `pnpm gates:runtime [--skip-build]`      | Build, server, advisory Lighthouse, blocking axe and Chromium e2e                             |
@@ -74,8 +75,8 @@ Lighthouse (`lighthouserc.json`, `lighthouserc.mobile.json`), `pnpm route-js-che
 
 - Pure black background (`#000000`), signal green (`#00FF41`, `text-primary-500`) for headings, accents and large text. Body text is `text-tertiary-50` (`#E6FFE6`); the signal never colors paragraph text because it fails WCAG AA.
 - JetBrains Mono everywhere (self-hosted through `next/font/local`); `h1` alone is Inter 900 via `--font-display`. 1px borders, no radius above 2px.
-- CRT effects (scanlines, mask, grain, beam, flicker, phosphor shadow) stay at dialed-back opacity and are all off under `prefers-reduced-motion: reduce`. Do not remove existing motion (typing, Matrix Rain, boot, CRT, blink).
-- Copy lives in `content/*.ts` (typed, Zod-validated at build, English and pt-BR). Never inline user-facing copy in JSX. A change to a section lands in every variant of it (mobile, tablet, placeholder, noscript, reduced-motion, print, design-system demos, tests): grep the old copy.
+- CRT effects (scanlines, mask, grain, beam, flicker, phosphor shadow) stay at dialed-back opacity and are all off while the MOTION switch is off (`body[data-motion="reduce"]`); the operating system preference is not read, and a first visit starts with motion on. Do not remove existing motion (typing, Matrix Rain, boot, CRT, blink).
+- Copy lives in `content/*.ts` (typed, Zod-validated at build, English and pt-BR). Never inline user-facing copy in JSX. A change to a section lands in every variant of it (mobile, tablet, placeholder, noscript, MOTION off, print, design-system demos, tests): grep the old copy.
 - Out of scope unless asked: locales beyond pt-BR and EN, light theme, blog or MDX engine, analytics beyond Vercel Web Analytics and Speed Insights, auth, accounts, comments, a CMS. Rejected earlier (see `DECISIONS.md`): GraphQL, Cloudflare Workers, multi-region deploy, Sentry by default, CAPTCHA on the contact form, per-section routes, a state management library.
 
 ## Code and docs style

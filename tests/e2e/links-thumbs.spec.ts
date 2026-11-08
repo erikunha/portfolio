@@ -1,5 +1,6 @@
 import { expect, type Page, test } from '@playwright/test';
 import { horizontalOverflow, VIEWPORTS } from './_helpers/geometry';
+import { freezeMotion } from './_helpers/motion';
 import { gotoSettled } from './_helpers/streamed';
 
 const SIGNAL_GREEN = 'rgb(0, 255, 65)';
@@ -75,7 +76,7 @@ test.describe('/links thumbnail theme overlay', () => {
   });
 
   test('reduced motion removes the reveal transition', async ({ page }) => {
-    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await freezeMotion(page);
     await gotoSettled(page, '/links');
     const durations = await page
       .locator(`${FIRST_THUMB} img`)

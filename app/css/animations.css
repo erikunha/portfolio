@@ -15,11 +15,6 @@
     animation: boot-blink 1.05s steps(2, start) infinite;
   }
 
-  @media (prefers-reduced-motion: reduce) {
-    .boot-cursor {
-      animation: none;
-    }
-  }
   body[data-motion="reduce"] .boot-cursor {
     animation: none;
   }
@@ -44,11 +39,6 @@
     animation: badge-pulse 1.6s ease-in-out infinite;
   }
 
-  @media (prefers-reduced-motion: reduce) {
-    .badge-dot {
-      animation: none;
-    }
-  }
   body[data-motion="reduce"] .badge-dot {
     animation: none;
   }
@@ -182,12 +172,6 @@
     transition: opacity 200ms ease-in;
   }
 
-  @media (prefers-reduced-motion: reduce) {
-    .hero-sysfail {
-      transition: none;
-    }
-  }
-
   body[data-motion="reduce"] .hero-sysfail {
     transition: none;
   }
@@ -208,12 +192,6 @@
 
   .status-dot-blink {
     animation: live-blink 1.6s steps(2, start) infinite;
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .status-dot-blink {
-      animation: none;
-    }
   }
 
   body[data-motion="reduce"] .status-dot-blink {
@@ -245,13 +223,6 @@
     pointer-events: none;
     animation: guitar-scan-beam 7s linear infinite;
     will-change: transform;
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .guitar-scan-beam {
-      animation: none;
-      display: none;
-    }
   }
 
   body[data-motion="reduce"] .guitar-scan-beam {
@@ -309,7 +280,7 @@
     max-inline-size: 100%;
   }
 
-  @media screen and (prefers-reduced-motion: no-preference) {
+  @media screen {
     html.type-reveal-ready body:not([data-motion="reduce"]) [data-type-reveal] {
       --type-progress: 0;
       clip-path: inset(
@@ -364,5 +335,35 @@
       animation: none;
       opacity: 0;
     }
+  }
+}
+
+@media (scripting: none) and (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    /* biome-ignore lint/complexity/noImportantStyles: this must beat inline styles and every layer; there is no script to turn it off */
+    animation: none !important;
+    /* biome-ignore lint/complexity/noImportantStyles: same as animation, a transition is motion too */
+    transition: none !important;
+  }
+
+  .links-ticker-track {
+    width: 100%;
+    white-space: normal;
+  }
+
+  .links-ticker-track > span:nth-child(2) {
+    display: none;
+  }
+
+  .crt-flicker,
+  .crt-scan-beam,
+  .crt-noise {
+    opacity: 0;
+  }
+
+  .guitar-scan-beam {
+    display: none;
   }
 }

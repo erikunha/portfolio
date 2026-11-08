@@ -67,7 +67,8 @@ flowchart TD
     body --> children["{route children}"]
     body --> rum["Analytics + SpeedInsights (only when VERCEL=1)"]
     body --> gm["GlobalMotion (client) -> MatrixRainLazy (client-only, ssr:false) + TypeReveal"]
-    children --> appshell["AppShell (client chrome)"]
+    children --> siteshell["SiteShell (RSC): the one AppShell builder, in every page frame, 404 and route error page"]
+    siteshell --> appshell["AppShell (client chrome)"]
     appshell --> chrome["CRTOverlay (6 layers) · DesktopTopbar · StatusBar+MobileTitleBar · Dock · ToTopButton · skip-link"]
     appshell --> main["PageMain (RSC): main#main-content"]
     main --> secs["ErrorBoundary-wrapped sections:<br/>Hero + About + Career + Modules (RSC)"]
@@ -75,7 +76,7 @@ flowchart TD
     footer --> footerIslands["Footer.client: session counters + halt/reboot"]
 ```
 
-The motion bootstrap script is load-bearing: it reads `localStorage('erik.motion')` / OS preference and sets `body[data-motion]` **before first paint**, off the hydration path, so the initial motion preference does not wait for hydration.
+The motion bootstrap script is load-bearing: it reads `localStorage('erik.motion')` (anything but `off` means on, whatever the operating system asks) and sets `body[data-motion]` **before first paint**, off the hydration path, so the stored motion choice does not wait for hydration. The script lives in `lib/motion-bootstrap.ts`.
 
 ## The rendering pipeline (RSC + PPR)
 

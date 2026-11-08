@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import NotFound, { metadata } from '@/app/(en)/[...missing]/not-found';
@@ -27,18 +27,17 @@ describe('errors content', () => {
 });
 
 describe('NotFound', () => {
-  it('leads the header with the page links and closes it with the brand icon', () => {
-    render(<NotFound />);
-    const header = document.querySelector('header.err-bar');
-    const children = [...(header?.children ?? [])];
+  it('renders inside the shared shell: one banner with the menu, MOTION and the brand icon', () => {
+    const { container } = render(<NotFound />);
+    const banner = container.querySelector('header.desktop-topbar');
 
-    expect(children[0]?.tagName, 'the page links lead the bar').toBe('NAV');
-    const last = children.at(-1);
-    expect(
-      Boolean(last && (last.matches('a[href="/"]') || last.querySelector('a[href="/"]'))),
-      'the brand icon home link sits at the far right, like the site header',
-    ).toBe(true);
-    expect(children.at(-1)?.tagName).not.toBe('NAV');
+    expect(banner, 'the home topbar').not.toBeNull();
+    expect(container.querySelector('header.err-bar')).toBeNull();
+    expect(container.querySelector('header.mobile-title-bar')).not.toBeNull();
+    expect(banner?.querySelector('.menu-trigger')).not.toBeNull();
+    expect(banner?.querySelector('a[href="/"]')).not.toBeNull();
+    expect(container.querySelectorAll('main#main-content')).toHaveLength(1);
+    expect(container.querySelectorAll('a.skip-to-content')).toHaveLength(1);
   });
 
   it('renders the 404 heading, the command line and every suggestion as a link', () => {
@@ -46,10 +45,14 @@ describe('NotFound', () => {
     expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('404');
     expect(screen.getByText(errorsContent[SITE_LOCALE.en].notFound.output)).not.toBeNull();
     for (const item of errorsContent[SITE_LOCALE.en].notFound.suggestions) {
-      expect(screen.getByRole('link', { name: item.label }).getAttribute('href')).toBe(item.href);
+      expect(
+        within(screen.getByRole('main'))
+          .getByRole('link', { name: item.label })
+          .getAttribute('href'),
+      ).toBe(item.href);
     }
     expect(
-      screen
+      within(screen.getByRole('main'))
         .getByRole('link', { name: errorsContent[SITE_LOCALE.en].notFound.home.label })
         .getAttribute('href'),
     ).toBe('/');
@@ -73,6 +76,14 @@ describe('RouteErrorPage', () => {
   });
   afterEach(() => {
     vi.unstubAllGlobals();
+  });
+
+  it('renders inside the shared shell', () => {
+    const { container } = render(<RouteErrorPage error={makeError()} reset={vi.fn()} />);
+
+    expect(container.querySelector('header.desktop-topbar .menu-trigger')).not.toBeNull();
+    expect(container.querySelector('header.mobile-title-bar')).not.toBeNull();
+    expect(container.querySelectorAll('main#main-content')).toHaveLength(1);
   });
 
   it('calls reset when Try again is pressed', () => {
@@ -111,7 +122,7 @@ describe('RouteErrorPage', () => {
     );
     await waitFor(() => expect(writeText).toHaveBeenCalledWith('7F3A9C'));
     await waitFor(() =>
-      expect(screen.getByRole('status').textContent).toBe(
+      expect(within(screen.getByRole('main')).getByRole('status').textContent).toBe(
         errorsContent[SITE_LOCALE.en].serverError.copiedAnnouncement,
       ),
     );

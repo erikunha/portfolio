@@ -2,6 +2,7 @@ import { expect, test } from '@playwright/test';
 import { brandByLocale } from '@/content/brand';
 import { HIRE_ACCESSIBLE_NAME } from '@/content/nav';
 import { SITE_LOCALE } from '../../content/site-locale';
+import { gotoSettled } from './_helpers/streamed';
 
 const SCROLL_PROBE_PX = 400;
 const TOPBAR_WIDTHS = [768, 1024, 1280, 1440];
@@ -17,7 +18,7 @@ for (const width of [390, 768, 1024, 1280, 1536]) {
     test('the menu stays closed until the menu button opens it, and never shifts content', async ({
       page,
     }) => {
-      await page.goto('/');
+      await gotoSettled(page, '/');
       const main = page.locator('#main-content');
       const leftBefore = await main.evaluate((element) => element.getBoundingClientRect().left);
       const menu = page.locator('#section-drawer');
@@ -39,7 +40,7 @@ for (const width of [390, 768, 1024, 1280, 1536]) {
     test('keyboard focus reaches the menu trigger first and the brand last, then opens and restores', async ({
       page,
     }) => {
-      await page.goto('/');
+      await gotoSettled(page, '/');
       const header = page.locator('.desktop-topbar, .mobile-title-bar').locator('visible=true');
       const order = await header.evaluate((element) => {
         const tabbables = [...element.querySelectorAll<HTMLElement>('a[href], button')].filter(
@@ -62,7 +63,7 @@ for (const width of [390, 768, 1024, 1280, 1536]) {
     });
 
     test('the trigger is the menu icon alone, and a 44px target', async ({ page }) => {
-      await page.goto('/');
+      await gotoSettled(page, '/');
       const trigger = page
         .getByRole('button', { name: 'Open menu', exact: true })
         .locator('visible=true');
@@ -88,7 +89,7 @@ for (const width of TOPBAR_WIDTHS) {
     test.use({ viewport: { width, height: 720 } });
 
     test('the topbar row neither overflows its column nor clips a control', async ({ page }) => {
-      await page.goto('/');
+      await gotoSettled(page, '/');
       const bar = page.locator('.desktop-topbar');
       const row = bar.locator('> div');
 
@@ -117,7 +118,7 @@ for (const width of TOPBAR_WIDTHS) {
     test('the menu trigger leads the bar and the brand icon closes it at the far right, unclipped', async ({
       page,
     }) => {
-      await page.goto('/');
+      await gotoSettled(page, '/');
       const bar = page.locator('.desktop-topbar');
       const brand = bar.getByRole('link', { name: brandByLocale.en.accessibleName });
 
@@ -169,7 +170,7 @@ for (const width of TOPBAR_WIDTHS) {
     });
 
     test('the topbar shows one vocabulary and carries no search trigger', async ({ page }) => {
-      await page.goto('/');
+      await gotoSettled(page, '/');
       const nav = page.getByRole('navigation', { name: 'Site navigation' });
       const cv = nav.getByRole('link', { name: 'VIEW_CV' });
       const hire = nav.getByRole('link', { name: HIRE_ACCESSIBLE_NAME[SITE_LOCALE.en] });
@@ -206,7 +207,7 @@ test.describe('desktop topbar: one hire action per viewport', () => {
       test.use({ viewport: { width, height: 720 } });
 
       test('VIEW_CV and the hire link follow the dock breakpoint', async ({ page }) => {
-        await page.goto('/');
+        await gotoSettled(page, '/');
         const bar = page.locator('.desktop-topbar');
         const nav = bar.getByRole('navigation', { name: 'Site navigation' });
         const cv = nav.getByRole('link', { name: 'VIEW_CV' });
@@ -252,7 +253,7 @@ test.describe('section navigation: motion control tiers', () => {
       test('the topbar spells MOTION at the xl tier and the drawer carries it at every width', async ({
         page,
       }) => {
-        await page.goto('/');
+        await gotoSettled(page, '/');
         const topbar = page.locator('.desktop-topbar');
         const toggle = topbar.locator('button[aria-pressed]');
 
@@ -294,7 +295,7 @@ test.describe('section navigation: drawer rows', () => {
   test('the drawer lists the reading views and the motion toggle, with no search row', async ({
     page,
   }) => {
-    await page.goto('/');
+    await gotoSettled(page, '/');
     await page
       .getByRole('navigation', { name: 'primary' })
       .getByRole('button', { name: /^MENU/ })
@@ -327,7 +328,7 @@ test.describe('section navigation: drawer rows', () => {
   test('the drawer foot follows the section list instead of floating at the bottom', async ({
     page,
   }) => {
-    await page.goto('/');
+    await gotoSettled(page, '/');
     await page
       .getByRole('navigation', { name: 'primary' })
       .getByRole('button', { name: /^MENU/ })
@@ -351,7 +352,7 @@ test.describe('section navigation: drawer at 390px', () => {
   test.use({ viewport: { width: 390, height: 844 } });
 
   test('the dock has one grid column per control', async ({ page }) => {
-    await page.goto('/');
+    await gotoSettled(page, '/');
     const dock = page.getByRole('navigation', { name: 'primary' });
     await expect(dock).toBeVisible();
     const controls = await dock.locator('> a, > button').count();
@@ -363,7 +364,7 @@ test.describe('section navigation: drawer at 390px', () => {
   });
 
   test('the open drawer locks page scrolling and closing releases it', async ({ page }) => {
-    await page.goto('/');
+    await gotoSettled(page, '/');
     const menu = page
       .getByRole('navigation', { name: 'primary' })
       .getByRole('button', { name: /^MENU/ });
@@ -377,8 +378,13 @@ test.describe('section navigation: drawer at 390px', () => {
     await page.keyboard.press('Escape');
     await expect(page.getByRole('dialog')).toHaveCount(0);
     await expect(page.locator('html')).not.toHaveCSS('overflow', 'hidden');
-    await page.mouse.wheel(0, SCROLL_PROBE_PX);
-    await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(0);
+    await expect(async () => {
+      await page.mouse.wheel(0, SCROLL_PROBE_PX);
+      expect(
+        await page.evaluate(() => window.scrollY),
+        'a wheel after the drawer closes must scroll the page; one wheel can land before the released page takes input under load, so the user scrolls again',
+      ).toBeGreaterThan(0);
+    }).toPass();
   });
 });
 
@@ -386,7 +392,7 @@ test.describe('section navigation: drawer across a viewport change', () => {
   test.use({ viewport: { width: 390, height: 844 } });
 
   test('the open drawer survives the change to a desktop width', async ({ page }) => {
-    await page.goto('/');
+    await gotoSettled(page, '/');
     await page
       .getByRole('navigation', { name: 'primary' })
       .getByRole('button', { name: /^MENU/ })
@@ -413,7 +419,7 @@ test.describe('section navigation: drawer across a viewport change', () => {
   test('closing after the viewport change returns focus to a rendered menu trigger', async ({
     page,
   }) => {
-    await page.goto('/');
+    await gotoSettled(page, '/');
     await page
       .getByRole('navigation', { name: 'primary' })
       .getByRole('button', { name: /^MENU/ })
@@ -437,7 +443,7 @@ test.describe('section navigation: position line at 1280px', () => {
   test.use({ viewport: { width: 1280, height: 720 } });
 
   test('the line never intercepts pointer events', async ({ page }) => {
-    await page.goto('/');
+    await gotoSettled(page, '/');
     const bar = page.locator('.pos-line');
     await expect(bar).toHaveCSS('pointer-events', 'none');
   });
@@ -454,7 +460,7 @@ for (const { width, height } of [
     test.use({ viewport: { width, height } });
 
     test('the position line runs down the right edge and follows the scroll', async ({ page }) => {
-      await page.goto('/');
+      await gotoSettled(page, '/');
       const bar = page.locator('.pos-line');
       await expect(bar, 'the line is present below 1024px, not hidden').toBeVisible();
       const box = await bar.boundingBox();
@@ -473,13 +479,13 @@ for (const { width, height } of [
     });
 
     test('the position line does not print', async ({ page }) => {
-      await page.goto('/');
+      await gotoSettled(page, '/');
       await page.emulateMedia({ media: 'print' });
       await expect(page.locator('.pos-line')).toBeHidden();
     });
 
     test('the trigger carries no position counter', async ({ page }) => {
-      await page.goto('/');
+      await gotoSettled(page, '/');
       await expect(page.locator('.menu-trigger').locator('visible=true')).toHaveText('');
     });
   });
@@ -489,7 +495,7 @@ test.describe('section navigation: top position line at 1280px', () => {
   test.use({ viewport: { width: 1280, height: 720 } });
 
   test('the desktop line stays a thin horizontal line across the top', async ({ page }) => {
-    await page.goto('/');
+    await gotoSettled(page, '/');
     const box = await page.locator('.pos-line').boundingBox();
     expect(box?.height ?? Number.POSITIVE_INFINITY).toBeLessThanOrEqual(SIDE_LINE_MAX_THICKNESS_PX);
     expect(box?.width ?? 0).toBeGreaterThanOrEqual(1280 * 0.9);
@@ -501,7 +507,7 @@ test('a section reached from the menu takes focus without the browser outline', 
   page,
 }) => {
   await page.setViewportSize({ width: 1280, height: 720 });
-  await page.goto('/');
+  await gotoSettled(page, '/');
   await page.locator('.desktop-topbar .menu-trigger').click();
   await page
     .locator('#section-drawer')
@@ -528,7 +534,7 @@ for (const { name, selector, width, height } of HEADER_VIEWPORTS) {
     test.use({ viewport: { width, height } });
 
     test('sits in the header with compact targets, left of the brand icon', async ({ page }) => {
-      await page.goto('/');
+      await gotoSettled(page, '/');
       const header = page.locator(selector);
       const langSwitch = header.getByRole('navigation', { name: LANGUAGE_LABEL.en });
       await expect(langSwitch).toBeVisible();
@@ -587,7 +593,7 @@ for (const { name, selector, width, height } of HEADER_VIEWPORTS) {
     });
 
     test('marks the current language and switches to Portuguese and back', async ({ page }) => {
-      await page.goto('/');
+      await gotoSettled(page, '/');
       const header = page.locator(selector);
       const english = header.getByRole('navigation', { name: LANGUAGE_LABEL.en });
       await expect(english.getByRole('link', { name: /^EN/ })).toHaveAttribute(
@@ -619,7 +625,7 @@ test.describe('language switch order in the desktop topbar', () => {
   test.use({ viewport: { width: 1280, height: 720 } });
 
   test('follows HIRE and precedes the brand icon in tab order', async ({ page }) => {
-    await page.goto('/');
+    await gotoSettled(page, '/');
     const stops = await page.locator('.desktop-topbar').evaluate((element) =>
       [...element.querySelectorAll<HTMLElement>('a[href], button')]
         .filter((node) => node.getClientRects().length > 0)

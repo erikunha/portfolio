@@ -133,6 +133,7 @@ export const IGNORED_PATHS = [
   'scripts/check-semgrep-fixture.mjs',
   'scripts/check-tool-pins.d.mts',
   'scripts/check-tool-pins.mjs',
+  'scripts/ci-predict.ts',
   'scripts/content-basename.d.mts',
   'scripts/content-basename.mjs',
   'scripts/content-files.d.mts',
