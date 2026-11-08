@@ -56,7 +56,7 @@ The `design-system/components` directory contains eleven components. Ten have no
   <Field name="broken" label="$ broken:" error="Required field" />
 </Preview>
 
-**Accessibility:** Label is always rendered and associated through the supplied `id`, or `field-${name}`. Error text is appended to any consumer `aria-describedby`. `aria-invalid="true"` is set on error. Use distinct names or explicit IDs for repeated instances.
+**Accessibility:** Label is always rendered and associated through the supplied `id`, or an id generated with `useId`, so two fields with the same `name` never share one. Error text is appended to any consumer `aria-describedby`. `aria-invalid="true"` is set on error.
 
 ## Badge
 
@@ -72,6 +72,8 @@ The `design-system/components` directory contains eleven components. Ten have no
 </Preview>
 
 **Sizing:** Both sizes use `text-xs`: 12px below 768px and 13px from 768px. There is no sub-12px mobile override.
+
+Other `<span>` attributes pass through and `className` is appended.
 
 **Accessibility:** Dot is `aria-hidden`. Pulse animation stops when the motion switch is off.
 
@@ -164,6 +166,8 @@ Any other `div` attribute (`id`, `aria-*`, `data-*`) is forwarded to the root el
   <KbdKey>K</KbdKey>
   <KbdKey size="sm">Enter</KbdKey>
 </Preview>
+
+Other `<kbd>` attributes pass through and `className` is appended.
 
 **Accessibility:** Uses semantic `<kbd>` element.
 

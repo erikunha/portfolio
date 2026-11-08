@@ -25,4 +25,16 @@ test.describe('Badge — behavioral E2E', () => {
     await expect(availableBadge).toBeVisible();
     await expect(availableBadge.locator('span[aria-hidden="true"]')).not.toBeAttached();
   });
+
+  test('sm keeps its own 8px side padding and md keeps 10px', async ({ page }) => {
+    await page.goto('/design-system/components');
+    const preview = page.locator('#badge');
+    await expect(preview).toBeVisible();
+    const small = preview.locator('.badge').filter({ hasText: /^SMALL$/ });
+    const medium = preview.locator('.badge').filter({ hasText: /^AVAILABLE$/ });
+    await expect(small).toHaveCSS('padding-left', '8px');
+    await expect(small).toHaveCSS('padding-top', '3px');
+    await expect(medium).toHaveCSS('padding-left', '10px');
+    await expect(medium).toHaveCSS('padding-top', '4px');
+  });
 });

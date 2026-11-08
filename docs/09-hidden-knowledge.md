@@ -45,7 +45,7 @@
 
 - `/api/erik.json` does **not** use the `defineHandler` envelope. It's a machine-readable _document_, not an _operation_, so it returns raw JSON with long cache headers.
 - The fixed-opacity color stops (`-subtle`, `-border`, ...) are explicit hex, not `color-mix()`. That's a byte-identical / contrast-stable choice.
-- `lib/cn.ts` uses `clsx` but deliberately _not_ `tailwind-merge`, a bundle-budget call.
+- `lib/cn.ts` uses `clsx` but deliberately _not_ `tailwind-merge`, a bundle-budget call; the cost is that no two utilities in one component may set the same property, held by `__tests__/design-system-class-conflicts.test.tsx`.
 - The DS docs `theme-tokens.ts` and the `contrast-check.mjs` gate parse `theme.css` with the _same regex_ on purpose, to read the same declarations. Parser changes still need comparison.
 
 ## "Where is X?" quick index

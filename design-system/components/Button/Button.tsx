@@ -16,13 +16,13 @@ export type AsAnchor = ButtonBaseProps &
 export type ButtonProps = AsButton | AsAnchor;
 
 const baseClasses =
-  'btn inline-flex items-center justify-center min-w-11 rounded-none font-mono border border-primary-subtle text-xs font-bold tracking-[0.1em] uppercase cursor-pointer transition-[box-shadow,background] duration-200 ease-out [body[data-motion=reduce]_&]:transition-none no-underline focus-visible:outline-2 focus-visible:outline-primary-500 focus-visible:outline-offset-2 aria-disabled:opacity-40 aria-disabled:pointer-events-none disabled:opacity-40 disabled:pointer-events-none';
+  'btn inline-flex items-center justify-center min-w-11 rounded-none font-mono border text-xs font-bold tracking-[0.1em] uppercase cursor-pointer transition-[box-shadow,background] duration-200 ease-out [body[data-motion=reduce]_&]:transition-none no-underline focus-visible:outline-2 focus-visible:outline-primary-500 focus-visible:outline-offset-2 aria-disabled:opacity-40 aria-disabled:pointer-events-none disabled:opacity-40 disabled:pointer-events-none';
 
 const variantClasses: Record<ButtonVariant, string> = {
   primary:
     'bg-primary-500 text-secondary-950 border-primary-500 hover:shadow-[0_0_12px_var(--color-primary-500)]',
   secondary:
-    'bg-transparent text-primary-500 hover:shadow-[0_0_12px_var(--color-primary-500)] hover:bg-primary-quiet',
+    'bg-transparent text-primary-500 border-primary-subtle hover:shadow-[0_0_12px_var(--color-primary-500)] hover:bg-primary-quiet',
 };
 
 const sizeClasses: Record<ButtonSize, string> = {

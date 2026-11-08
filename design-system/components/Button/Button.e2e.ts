@@ -5,6 +5,9 @@ const TABBABLE_SELECTOR =
 
 const TAB_KEYS = ['Tab', 'Alt+Tab'];
 
+const SIGNAL_RGB = 'rgb(0, 255, 65)';
+const SUBTLE_RGBA = 'rgba(0, 255, 65, 0.4)';
+
 test.describe('Button behavioral E2E', () => {
   test('primary button is visible and keyboard-focusable', async ({ page }) => {
     await page.goto('/design-system/components');
@@ -42,6 +45,22 @@ test.describe('Button behavioral E2E', () => {
     const bounds = await small.boundingBox();
     expect(bounds?.height).toBeGreaterThanOrEqual(44);
     expect(bounds?.width).toBeGreaterThanOrEqual(44);
+  });
+
+  test('primary draws its border in the signal color and secondary in the subtle stop', async ({
+    page,
+  }) => {
+    await page.goto('/design-system/components');
+    const preview = page.locator('#button');
+    await expect(preview).toBeVisible();
+    await expect(preview.getByRole('link', { name: 'EXEC_HIRE' })).toHaveCSS(
+      'border-top-color',
+      SIGNAL_RGB,
+    );
+    await expect(preview.getByRole('link', { name: 'DOWNLOAD_CV' })).toHaveCSS(
+      'border-top-color',
+      SUBTLE_RGBA,
+    );
   });
 
   test('lg size variant renders', async ({ page }) => {

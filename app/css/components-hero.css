@@ -219,11 +219,6 @@
     border-right: var(--border-width) solid var(--color-primary-subtle);
   }
 
-  .hero-stats .stat-tile {
-    padding: calc(var(--spacing-2) - var(--border-width))
-      calc(var(--spacing-2) + var(--spacing-1) / 2);
-  }
-
   .hero-stats .stat-tile-value {
     white-space: nowrap;
   }

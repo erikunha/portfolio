@@ -23,7 +23,7 @@ Color tokens live in `app/css/theme.css` inside the single `@theme` block. Swatc
 
 <ColorSwatch token="primary-500" usage="The signal: headings, accents, large text" />
 <ColorSwatch token="primary-subtle" usage="Borders and dividers (signal at 40%)" />
-<ColorSwatch token="primary-border" usage="Default border (signal at 20%)" />
+<ColorSwatch token="primary-border" usage="Decorative divider (signal at 20%, 1.5:1); never a control edge" />
 <ColorSwatch token="primary-quiet" usage="Hover and current background (signal at 10%)" />
 
 <h2 id="surfaces">Surfaces and text</h2>
@@ -43,5 +43,6 @@ Color tokens live in `app/css/theme.css` inside the single `@theme` block. Swatc
 <h2 id="rules">Rules</h2>
 
 - Reference colors through Tailwind utilities backed by `@theme` (`text-primary-500`, `border-primary-subtle`). Never write raw hex in components.
+- A control edge (input, textarea) uses `primary-500`: the translucent `primary-border` and `primary-subtle` stops measure below the 3:1 non-text minimum (WCAG 1.4.11) on the black surface.
 - Do not use the signal green for paragraph text. Body copy uses `text` (`tertiary-50`).
 - Text and surface pairs are checked by the contrast gate in CI.

@@ -1,18 +1,34 @@
-import type { ReactNode } from 'react';
+import type { ComponentPropsWithoutRef, ReactNode } from 'react';
 import { cn } from '@/lib/cn';
 
 export type BadgeVariant = 'default' | 'dot';
 export type BadgeSize = 'sm' | 'md';
-export type BadgeProps = { variant?: BadgeVariant; size?: BadgeSize; children: ReactNode };
+export type BadgeProps = Omit<ComponentPropsWithoutRef<'span'>, 'children'> & {
+  variant?: BadgeVariant;
+  size?: BadgeSize;
+  children: ReactNode;
+};
 
-export function Badge({ variant = 'default', size = 'md', children }: BadgeProps) {
+const sizeClasses: Record<BadgeSize, string> = {
+  sm: 'text-xs py-[3px] px-2',
+  md: 'text-xs py-1 px-[10px]',
+};
+
+export function Badge({
+  variant = 'default',
+  size = 'md',
+  className,
+  children,
+  ...rest
+}: BadgeProps) {
   return (
     <span
+      {...rest}
       className={cn(
-        'badge inline-flex items-center gap-[7px] border border-primary-subtle bg-secondary-950 text-primary-500 font-mono tracking-[0.12em] py-1 px-[10px] whitespace-nowrap uppercase',
+        'badge inline-flex items-center gap-[7px] border border-primary-subtle bg-secondary-950 text-primary-500 font-mono tracking-[0.12em] whitespace-nowrap uppercase',
         'max-[359px]:whitespace-normal max-[359px]:flex-wrap',
-        size === 'sm' && 'text-xs py-[3px] px-2',
-        size === 'md' && 'text-xs',
+        sizeClasses[size],
+        className,
       )}
     >
       {variant === 'dot' && <span className="badge-dot" aria-hidden="true" />}

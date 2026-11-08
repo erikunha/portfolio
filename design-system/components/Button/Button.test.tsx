@@ -104,4 +104,17 @@ describe('Button', () => {
     const { container: lgContainer } = render(<Button size="lg">Lg</Button>);
     expect(lgContainer.firstElementChild?.classList.contains('min-h-[52px]')).toBe(true);
   });
+  it('keeps the base free of a border color so each variant owns exactly one', () => {
+    const { container } = render(
+      <>
+        <Button>Primary</Button>
+        <Button variant="secondary">Secondary</Button>
+      </>,
+    );
+    const [primary, secondary] = [...container.querySelectorAll('.btn')];
+    expect(primary?.classList.contains('border-primary-subtle')).toBe(false);
+    expect(primary?.classList.contains('border-primary-500')).toBe(true);
+    expect(secondary?.classList.contains('border-primary-subtle')).toBe(true);
+    expect(secondary?.classList.contains('border-primary-500')).toBe(false);
+  });
 });

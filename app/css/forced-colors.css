@@ -60,7 +60,6 @@
     .contact-send:hover:not([aria-disabled="true"]),
     .contact-channel-cta:hover,
     .ctz-propose:hover,
-    .kbd-key:hover,
     .nav-item:hover,
     .ds-nav-item:hover {
       border-color: Highlight;
