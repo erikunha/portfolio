@@ -7,7 +7,11 @@ import { getRedis } from '@/lib/rate-limit';
 const ISO_DATE_LENGTH = 10;
 const REFUSAL_COUNTER_TTL_S = 32 * 24 * 60 * 60;
 
-export type AskRefusalStatus = 'rate-limited' | 'dedup-rejected' | 'budget-exhausted';
+export type AskRefusalStatus =
+  | 'rate-limited'
+  | 'dedup-rejected'
+  | 'budget-exhausted'
+  | 'budget-store-unavailable';
 
 export function askRefusalKey(date: string, status: AskRefusalStatus): string {
   return `ask:refused:${date}:${status}`;

@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const limit = vi.hoisted(() => vi.fn());
 const checkIdenticalQuestion = vi.hoisted(() => vi.fn());
+const releaseIdenticalQuestion = vi.hoisted(() => vi.fn(async () => undefined));
 const reserveBudget = vi.hoisted(() => vi.fn());
 const countAskRefusal = vi.hoisted(() => vi.fn(async () => undefined));
 const env = vi.hoisted(() => ({ ASK_ENABLED: undefined as string | undefined }));
@@ -13,6 +14,7 @@ vi.mock('@/lib/rate-limit', () => ({
   getAskLimit: vi.fn(() => ({ limit })),
   hasRedisCredentials: vi.fn(() => true),
   checkIdenticalQuestion,
+  releaseIdenticalQuestion,
   reserveBudget,
 }));
 vi.mock('@/lib/server/read-body', async (importOriginal) => {
@@ -142,7 +144,7 @@ describe('lib/ask/preflight', () => {
   });
 
   it('answers 503 when the budget is exhausted', async () => {
-    reserveBudget.mockResolvedValue({ allowed: false });
+    reserveBudget.mockResolvedValue({ allowed: false, reason: 'month' });
     const { preflightAsk } = await import('@/lib/ask/preflight');
     const result = await preflightAsk(request({ question: 'What does Erik build?' }));
 

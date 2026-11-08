@@ -298,13 +298,18 @@ export function getDailyBudgetKey(): string {
   return `ask:tokens:day:${new Date().toISOString().slice(0, ISO_DATE_LENGTH)}`;
 }
 
-export type BudgetReservation = {
-  allowed: boolean;
+export type BudgetRefusalReason = 'month' | 'day' | 'store';
+
+type BudgetReservationKeys = {
   reserved: number;
   pct: number;
   budgetKey: string;
   dailyKey: string;
 };
+
+export type BudgetReservation =
+  | ({ allowed: true } & BudgetReservationKeys)
+  | ({ allowed: false; reason: BudgetRefusalReason } & BudgetReservationKeys);
 
 async function refundReservation(keys: string[], tokens: number): Promise<void> {
   for (const key of keys) {
@@ -320,8 +325,9 @@ export async function reserveBudget(maxOutputTokens: number): Promise<BudgetRese
   const reserved = RESERVED_INPUT_TOKENS + maxOutputTokens;
   const budgetKey = getBudgetKey();
   const dailyKey = getDailyBudgetKey();
-  const denied = (pct: number): BudgetReservation => ({
+  const denied = (reason: BudgetRefusalReason, pct: number): BudgetReservation => ({
     allowed: false,
+    reason,
     reserved: 0,
     pct,
     budgetKey,
@@ -331,7 +337,7 @@ export async function reserveBudget(maxOutputTokens: number): Promise<BudgetRese
     const monthlyPct = (await budgetStore.reserve(budgetKey, reserved)) / budgetStore.capacity;
     if (monthlyPct > 1) {
       await refundReservation([budgetKey], reserved);
-      return denied(monthlyPct);
+      return denied('month', monthlyPct);
     }
     let dailyPct: number;
     try {
@@ -345,14 +351,14 @@ export async function reserveBudget(maxOutputTokens: number): Promise<BudgetRese
     if (dailyPct > 1) {
       await refundReservation([budgetKey, dailyKey], reserved);
       log.warn('daily budget slice exhausted', { dailyPct, monthlyPct });
-      return denied(Math.max(monthlyPct, dailyPct));
+      return denied('day', Math.max(monthlyPct, dailyPct));
     }
     const pct = Math.max(monthlyPct, dailyPct);
     if (pct >= BUDGET_WARN_PCT) log.warn('budget approaching cap', { monthlyPct, dailyPct });
     return { allowed: true, reserved, pct, budgetKey, dailyKey };
   } catch (err) {
     log.error('budget reservation failed, rejecting request', { err });
-    return denied(0);
+    return denied('store', 0);
   }
 }
 
@@ -388,14 +394,26 @@ export async function settleBudget(
   }
 }
 
+async function identicalQuestionKey(ipHash: string, question: string): Promise<string> {
+  const qBytes = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(question));
+  const qHash = Buffer.from(qBytes).toString('hex').slice(0, 16);
+  return `ask:dedup:${ipHash}:${qHash}`;
+}
+
+export async function releaseIdenticalQuestion(ipHash: string, question: string): Promise<void> {
+  try {
+    await getRedis().del(await identicalQuestionKey(ipHash, question));
+  } catch (err) {
+    log.error('identical-question release failed, the lock expires on its own', { err });
+  }
+}
+
 export async function checkIdenticalQuestion(
   ipHash: string,
   question: string,
 ): Promise<{ allowed: boolean }> {
   try {
-    const qBytes = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(question));
-    const qHash = Buffer.from(qBytes).toString('hex').slice(0, 16);
-    const key = `ask:dedup:${ipHash}:${qHash}`;
+    const key = await identicalQuestionKey(ipHash, question);
     const result = await getRedis().set(key, '1', { nx: true, ex: 60 });
     return { allowed: result === 'OK' };
   } catch (err) {

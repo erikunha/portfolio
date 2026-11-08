@@ -64,6 +64,7 @@ export function rateLimitModule(overrides: Record<string, unknown> = {}) {
     })),
     settleBudget: vi.fn(async (..._args: unknown[]) => undefined),
     checkIdenticalQuestion: vi.fn(async (..._args: unknown[]) => ({ allowed: true })),
+    releaseIdenticalQuestion: vi.fn(async (..._args: unknown[]) => undefined),
     ...overrides,
   };
 }

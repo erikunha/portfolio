@@ -141,7 +141,7 @@ sequenceDiagram
     R->>R: parse + validate (trim, model sees <=500 chars)
     R->>R: isInjectionAttempt reject (400)
     R->>RL: checkIdenticalQuestion (60s dedup, 429)
-    R->>RL: reserveBudget(512)  (monthly cap and daily slice, 503 if either is exhausted)
+    R->>RL: reserveBudget(512)  (monthly cap and daily slice; 503 if either is exhausted or the store is down, and the dedup lock is released)
     R->>R: mint 128-bit sentinel, wrap question as data-only
     R->>AI: streamText(model=ASK_MODEL, cacheControl: ephemeral)
     loop each delta (raced vs 15s watchdog)

@@ -13,13 +13,15 @@ const limitMock = vi.hoisted(() =>
 const countRefusalMock = vi.hoisted(() => vi.fn(async (_status: string) => undefined));
 const dedupMock = vi.hoisted(() => vi.fn(async () => ({ allowed: true })));
 const budgetMock = vi.hoisted(() =>
-  vi.fn(async () => ({
-    allowed: true,
-    reserved: 1512,
-    pct: 0,
-    budgetKey: 'ask:tokens:test',
-    dailyKey: 'ask:tokens:day:test',
-  })),
+  vi.fn(
+    async (): Promise<import('@/lib/rate-limit').BudgetReservation> => ({
+      allowed: true,
+      reserved: 1512,
+      pct: 0,
+      budgetKey: 'ask:tokens:test',
+      dailyKey: 'ask:tokens:day:test',
+    }),
+  ),
 );
 
 vi.mock('ai', () => ({ streamText: vi.fn() }));
@@ -107,6 +109,7 @@ describe('/api/ask early exits carry X-Request-Id', () => {
   it('answers an exhausted budget with an id and stores no row', async () => {
     budgetMock.mockResolvedValue({
       allowed: false,
+      reason: 'month',
       reserved: 0,
       pct: 1,
       budgetKey: 'k',

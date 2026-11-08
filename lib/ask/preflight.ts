@@ -1,4 +1,4 @@
-import { askErrors } from '@/content/ask-errors';
+import { type AskErrors, askErrors } from '@/content/ask-errors';
 import { SITE_LOCALE, type SiteLocale } from '@/content/site-locale';
 import { isInjectionAttempt } from '@/lib/ask/injection';
 import { ASK_MAX_OUTPUT_TOKENS, ASK_MAX_QUESTION_CHARS } from '@/lib/ask/limits';
@@ -8,9 +8,11 @@ import { env } from '@/lib/env';
 import { log } from '@/lib/log';
 import { describeError } from '@/lib/log-error';
 import {
+  type BudgetRefusalReason,
   checkIdenticalQuestion,
   getAskLimit,
   hasRedisCredentials,
+  releaseIdenticalQuestion,
   reserveBudget,
 } from '@/lib/rate-limit';
 import { afterResponse } from '@/lib/server/after-response';
@@ -30,6 +32,15 @@ const OFF_KEYWORDS = new Set(['false', '0', 'off', 'no', 'disabled']);
 const MAX_ASK_BODY_BYTES = 8_192;
 
 const UNHASHED_IP_LABEL = 'unhashed';
+
+const BUDGET_REFUSALS: Record<
+  BudgetRefusalReason,
+  { status: AskRefusalStatus; message: keyof AskErrors }
+> = {
+  month: { status: 'budget-exhausted', message: 'budget' },
+  day: { status: 'budget-exhausted', message: 'budgetDaily' },
+  store: { status: 'budget-store-unavailable', message: 'unavailable' },
+};
 
 export type AskContext = {
   requestId: string;
@@ -187,11 +198,14 @@ export async function preflightAsk(req: Request): Promise<PreflightResult> {
     return reject(askError(requestId, askErrors[answerLocale].duplicate, 429));
   }
 
-  const { allowed, reserved, budgetKey, dailyKey } = await reserveBudget(ASK_MAX_OUTPUT_TOKENS);
-  if (!allowed) {
-    recordRefusal('budget-exhausted');
-    return reject(askError(requestId, askErrors[answerLocale].budget, 503));
+  const reservation = await reserveBudget(ASK_MAX_OUTPUT_TOKENS);
+  if (!reservation.allowed) {
+    const refusal = BUDGET_REFUSALS[reservation.reason];
+    recordRefusal(refusal.status);
+    await releaseIdenticalQuestion(ipHash, question);
+    return reject(askError(requestId, askErrors[answerLocale][refusal.message], 503));
   }
+  const { reserved, budgetKey, dailyKey } = reservation;
 
   return {
     ok: true,

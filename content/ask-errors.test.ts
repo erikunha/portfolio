@@ -27,3 +27,16 @@ describe('ask interrupted error', () => {
     }
   });
 });
+
+describe('ask daily budget error', () => {
+  it('says the day is used up and when it resets, in both locales', () => {
+    for (const locale of [SITE_LOCALE.en, SITE_LOCALE.pt]) {
+      const message = askErrors[locale].budgetDaily;
+      expect(message, `${locale} must name the 00:00 UTC reset`).toContain('00:00 UTC');
+      expect(message, `${locale} must keep the email fallback`).toContain(social.email);
+      expect(message, `${locale} must not blame the month for a daily limit`).not.toMatch(
+        /m[eê]s|month/i,
+      );
+    }
+  });
+});

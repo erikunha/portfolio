@@ -4,7 +4,7 @@ import { type AskStream, createAskStream } from '@/lib/ask/stream';
 import { env } from '@/lib/env';
 import { log } from '@/lib/log';
 import { describeError } from '@/lib/log-error';
-import { settleBudget } from '@/lib/rate-limit';
+import { releaseIdenticalQuestion, settleBudget } from '@/lib/rate-limit';
 import { afterResponse } from '@/lib/server/after-response';
 import { REQUEST_ID_HEADER } from '@/lib/stream-protocol';
 
@@ -33,6 +33,7 @@ async function startStream(context: AskContext): Promise<AskStream | Response> {
       context.budgetKey,
       context.dailyKey,
     );
+    await releaseIdenticalQuestion(context.ipHash, context.question);
     return askError(
       context.requestId,
       askErrors[context.answerLocale].interrupted,

@@ -9,7 +9,13 @@ vi.mock('ai', () => ({ streamText: vi.fn() }));
 vi.mock('@/lib/rate-limit', async () =>
   (await import('./helpers/ask-route')).rateLimitModule({
     getAskLimit: vi.fn(() => ({ limit })),
-    reserveBudget: vi.fn(async () => ({ allowed: false, reserved: 0, pct: 100, budgetKey: 'k' })),
+    reserveBudget: vi.fn(async () => ({
+      allowed: false,
+      reason: 'month',
+      reserved: 0,
+      pct: 100,
+      budgetKey: 'k',
+    })),
   }),
 );
 vi.mock('@/lib/ask-log', async () => (await import('./helpers/ask-route')).askLogModule());

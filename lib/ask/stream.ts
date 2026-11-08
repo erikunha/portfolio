@@ -18,7 +18,7 @@ import { countAskTokens, emitAskUsage } from '@/lib/ask/usage';
 import { type AskInteractionStatus, persistAskInteraction } from '@/lib/ask-log';
 import { log } from '@/lib/log';
 import { describeError } from '@/lib/log-error';
-import { settleBudget } from '@/lib/rate-limit';
+import { releaseIdenticalQuestion, settleBudget } from '@/lib/rate-limit';
 import { STREAM_ERR_SENTINEL } from '@/lib/stream-protocol';
 
 const REQUEST_TIMEOUT_MS = 30_000;
@@ -329,6 +329,9 @@ export function createAskStream(context: AskContext): AskStream {
 
   async function settle(): Promise<void> {
     await streamEnded;
+    if (state.status === 'errored' && !state.firstChunkSeen) {
+      await releaseIdenticalQuestion(ipHash, question);
+    }
     try {
       await settleAndPersist();
     } catch (settleErr) {

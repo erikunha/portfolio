@@ -9,6 +9,7 @@ export type AskErrors = {
   injection: string;
   duplicate: string;
   budget: string;
+  budgetDaily: string;
   truncation: string;
   forbiddenOrigin: string;
   interrupted: string;
@@ -34,6 +35,9 @@ const askErrorsFor = (locale: SiteLocale): AskErrors => {
     budget: pt
       ? `As respostas de IA estão pausadas neste mês. Escreva para ${social.email}.`
       : `AI answers are paused for this month. Email ${social.email} instead.`,
+    budgetDaily: pt
+      ? `As respostas de IA de hoje acabaram e voltam às 00:00 UTC. Tente de novo amanhã ou escreva para ${social.email}.`
+      : `Today's AI answers are used up and reset at 00:00 UTC. Try again tomorrow or email ${social.email}.`,
     truncation: pt
       ? `\n\n[resposta truncada: esta resposta atingiu o limite de tamanho. Escreva para ${social.email} para a resposta completa.]`
       : `\n\n[answer truncated: this response hit its length limit. Email ${social.email} for the full answer.]`,

@@ -90,10 +90,10 @@ describe('budget reservation pattern', () => {
     pipelineExec.mockRejectedValueOnce(new Error('Redis unavailable'));
     const { reserveBudget } = await import('@/lib/rate-limit');
     const result = await reserveBudget(512);
-    expect(result).toMatchObject({ allowed: false, reserved: 0 });
+    expect(result).toMatchObject({ allowed: false, reserved: 0, reason: 'store' });
   });
 
-  it('returns the existing ask budget rejection without starting the model on Redis failure', async () => {
+  it('answers unavailable, not "paused for this month", without starting the model on Redis failure', async () => {
     rateLimitMock.mockRejectedValueOnce(new Error('Redis unavailable'));
     pipelineExec.mockRejectedValueOnce(new Error('Redis unavailable'));
     const { POST } = await import('@/app/api/ask/route');
@@ -104,9 +104,11 @@ describe('budget reservation pattern', () => {
       }),
     );
     expect(response.status).toBe(503);
-    expect(await response.json()).toEqual({
-      error:
-        'AI answers are paused for this month. Email erikhenriquealvescunha@gmail.com instead.',
+    expect(
+      await response.json(),
+      'a store outage told the visitor the budget was spent for the month',
+    ).toEqual({
+      error: 'temporarily unavailable: email erikhenriquealvescunha@gmail.com directly',
     });
     expect(streamTextMock).not.toHaveBeenCalled();
   });
