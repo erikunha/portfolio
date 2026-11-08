@@ -4,7 +4,7 @@
 
 ## Prerequisites
 
-- Use `.nvmrc` for the local Node version. `package.json` accepts `^22.22.2 || ^24.15.0 || >=26.0.0`, requires pnpm 10+, and pins the package manager to `pnpm@10.15.0`.
+- Use `.nvmrc` for the local Node version. `package.json` accepts `^22.22.2 || ^24.15.0 || >=26.0.0`, requires pnpm 10+, and pins the package manager to `pnpm@10.34.9`.
 - Install: `pnpm install` (CI uses `--frozen-lockfile`).
 - For full local runs you'll want the env vars in `.env.example` (Upstash, AI Gateway, Resend, PSI). The public pages have fallbacks for missing services. API behavior differs: ask budget reservation requires Redis and fails closed; contact storage also fails closed. See doc 05 for individual failure modes.
 
@@ -47,7 +47,6 @@ check (Biome) -> typecheck -> validate-content -> check:client-naming -> check:d
 | `lint:css-tokens`      | no raw hex outside `app/css/theme.css`                                                           |
 | `lint:contrast`        | documented text/surface pairs meet WCAG AA                                                       |
 | `check:component-docs` | each DS component is documented                                                                  |
-| `check:pkg-age`        | supply-chain: flags <7-day-old package versions                                                  |
 | `bundle-check`         | global gzipped client chunks ≤ 220KB                                                             |
 | `route-js-check`       | every manifest route ≤ 164.7KB total first-load JS; app-owned split reported                     |
 

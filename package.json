@@ -7,7 +7,7 @@
     "node": "^22.22.2 || ^24.15.0 || >=26.0.0",
     "pnpm": ">=10.0.0"
   },
-  "packageManager": "pnpm@10.15.0",
+  "packageManager": "pnpm@10.34.9",
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "next build",
@@ -35,7 +35,6 @@
     "check:dep-pinning": "node scripts/check-dep-pinning.mjs",
     "check:dependency-vetting": "tsx scripts/check-dependency-vetting.ts",
     "check:component-docs": "node scripts/check-component-docs-coverage.mjs",
-    "check:pkg-age": "node scripts/check-pkg-age.mjs",
     "check:harness-size": "node scripts/check-harness-size.mjs",
     "check:section-order": "node scripts/check-section-order.mjs",
     "check:doc-drift": "node scripts/check-doc-drift.mjs",

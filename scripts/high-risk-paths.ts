@@ -30,6 +30,7 @@ export const HIGH_RISK_FILES: readonly string[] = [
   '.gitleaks.toml',
   '.semgrepignore',
   '.npmrc',
+  'pnpm-workspace.yaml',
   '.github/CODEOWNERS',
   '.github/dependabot.yml',
   'package.json',
