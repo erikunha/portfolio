@@ -28,7 +28,7 @@ proposing infrastructure changes, and if a request conflicts with a budget or ga
 | `pnpm check` / `pnpm check:fix`          | Biome lint and format check / auto-fix                                                        |
 | `pnpm typecheck`                         | TypeScript strict check                                                                       |
 | `pnpm validate-content`                  | Zod schema validation of `content/*.ts`                                                       |
-| `pnpm ci:local`                          | The verify chain CI runs first: lint, types, content, naming, pinning, doc drift, tokens, tests |
+| `pnpm ci:local`                          | The verify chain CI runs first: lint, types, content, naming, pinning, vetting, doc drift, tokens, tests |
 | `pnpm ci:predict [--base <ref>] [--linux] [--full] [--eval] [--skip-build] [--list]` | Runs every CI job the branch's commits trigger, before the push: ci.yml steps, new or changed e2e specs on every project with `--repeat-each=3 --retries=0`, `--linux` in the Playwright image. Exit 0 only when no job failed and every job was verified; 1 a job failed; 2 dry run; 3 no failure found but something was not verified: a job did not run or ran in part (read the table), or the branch has no commits ahead of its base |
 | `pnpm bundle-check`                      | Global client-chunk sum gate                                                                  |
 | `pnpm route-js-check`                    | Per-route first-load JS gate (needs a build)                                                  |
@@ -56,7 +56,7 @@ proposing infrastructure changes, and if a request conflicts with a budget or ga
 - Vercel (Fluid Compute, Node runtime), Upstash Redis (rate limit, KV log), Resend (contact mail).
 - `/api/ask`: AI SDK v7 (`streamText`) through the Vercel AI Gateway, model `anthropic/claude-haiku-4-5` from `lib/ask/model.ts`, ephemeral prompt cache via `providerOptions.anthropic.cacheControl` on a system message. Needs `AI_GATEWAY_API_KEY` (OIDC on Vercel).
 - Tests: Vitest (jsdom), Playwright (chromium, chromium-mobile, webkit-desktop, webkit-mobile, and their four `-components` projects, all gated in CI), axe-core, Lighthouse CI.
-- Packages: pnpm only, never npm or yarn. The lockfile is the source of truth; CI installs with `--frozen-lockfile`. Bump with `pnpm up --latest`, except `zod` (`~`-pinned, patch-only: its minor bumps break inference; `check-dep-pinning` rejects exact pins for stable versions) and `typescript` (held at 6.x because Stryker needs the TS JS API that TS7 removed; `--latest` rewrites a pin too; held by `__tests__/stryker-typescript-api.test.ts`).
+- Packages: pnpm only, never npm or yarn. The lockfile is the source of truth; CI installs with `--frozen-lockfile`. Bump with `pnpm up --latest`, except `zod` (`~`-pinned, patch-only: its minor bumps break inference; `check-dep-pinning` rejects exact pins for stable versions) and `typescript` (held at 6.x because Stryker needs the TS JS API that TS7 removed; `--latest` rewrites a pin too; held by `__tests__/stryker-typescript-api.test.ts`). A new direct dependency also needs a purpose and license entry in `dependency-vetting.json`, or `check:dependency-vetting` fails.
 
 ## Budgets
 

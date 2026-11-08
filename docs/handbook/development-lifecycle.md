@@ -56,7 +56,7 @@ A feature branch is created (`<type>/<description>`, enforced by `.husky/pre-pus
 
 ### 7. Pre-PR diff read, and the pre-push gate chain
 
-Before opening the PR, read the diff. For non-deletion pushes, `.husky/pre-push` checks the main target, branch name and `pnpm verify`. Deletion-only pushes skip branch naming and verify after the main-target guard.
+Before opening the PR, read the diff. For non-deletion pushes, `.husky/pre-push` checks the main target, branch name and `pnpm verify`. Deletion-only pushes skip branch naming and verify after the main-target guard. Adding or upgrading a direct dependency also means updating its entry in `dependency-vetting.json` (purpose, license), because `pnpm verify` runs `check:dependency-vetting`.
 
 ### 8. Pre-PR -> open PR
 

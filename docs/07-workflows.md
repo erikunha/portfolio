@@ -26,7 +26,7 @@
 
 ```
 check (Biome) -> typecheck -> validate-content -> check:client-naming -> check:dep-pinning
-  -> check:harness-size -> check:section-order -> check:doc-drift
+  -> check:dependency-vetting -> check:harness-size -> check:section-order -> check:doc-drift
   -> check:detect-changes-paths -> lint:css-tokens -> test (Vitest)
 ```
 
@@ -39,6 +39,7 @@ check (Biome) -> typecheck -> validate-content -> check:client-naming -> check:d
 | `validate-content`     | every `content/*.ts` Zod schema parses (build gate)                                              |
 | `check:client-naming`  | client directive files use `*.client.*`, a `/client/` directory, or an App Router error filename |
 | `check:dep-pinning`    | no `latest`/`*`/tag deps or open overrides                                                                       |
+| `check:dependency-vetting` | every direct dependency has a purpose and license in `dependency-vetting.json`; the installed license matches it; an install script needs `pnpm.onlyBuiltDependencies` |
 | `check:harness-size`   | `AGENTS.md` and `CLAUDE.md` within the line budgets in `scripts/harness-size.json`               |
 | `check:section-order`  | section ids have mobile order rules or a listed nested-anchor exemption                          |
 | `check:doc-drift`      | `ARCHITECTURE.md` directory-tree paths exist on disk                                             |
@@ -48,6 +49,8 @@ check (Biome) -> typecheck -> validate-content -> check:client-naming -> check:d
 | `check:pkg-age`        | supply-chain: flags <7-day-old package versions                                                  |
 | `bundle-check`         | global gzipped client chunks ≤ 220KB                                                             |
 | `route-js-check`       | every manifest route ≤ 164.7KB total first-load JS; app-owned split reported                     |
+
+`check:dependency-vetting` reads the installed `package.json` of each direct dependency (`dependencies`, `devDependencies`, `optionalDependencies`). It fails on a dependency with no entry, an entry for a package that left `package.json`, an entry with no purpose, an installed license that differs from the recorded one, and a `preinstall`, `install` or `postinstall` script on a package outside `pnpm.onlyBuiltDependencies`. A license change on upgrade therefore needs the recorded license updated, which is the re-vetting step. Vulnerabilities and GPL/AGPL licenses are not checked there: the `dependency-review` job already blocks high-severity advisories and `GPL-3.0`, `AGPL-3.0` and `GPL-2.0` on pull requests.
 
 `check:section-order` runs both directions: every rendered section needs a mobile order rule or a listed nested-anchor exemption, and every `#sec-*` selector in `app/css` must match an id some source renders, so a deleted section cannot leave dead rules behind.
 
@@ -137,7 +140,7 @@ Changes under `tests/visual/` or `tests/e2e/` set both `app` and `ui` to true, s
 ```mermaid
 flowchart TD
     pr["PR / push main / workflow_dispatch"] --> dc["detect-changes (app?, ai?, ui?)"]
-    pr --> qf["quality-fast: Biome, branch/commit lint, content, naming, pinning, harness, doc-drift, contrast"]
+    pr --> qf["quality-fast: Biome, branch/commit lint, content, naming, pinning, vetting, harness, doc-drift, contrast"]
     pr --> tc["typecheck"]
     pr --> t["test (Vitest + coverage)"]
     pr --> dr["dependency-review (PR)"]
