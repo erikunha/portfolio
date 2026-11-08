@@ -2,6 +2,7 @@ import { expect, test } from '@playwright/test';
 import { brandByLocale } from '@/content/brand';
 import { HIRE_ACCESSIBLE_NAME } from '@/content/nav';
 import { SITE_LOCALE } from '../../content/site-locale';
+import { DOCK_MENU, gotoHydrated, MENU_TRIGGER } from './_helpers/hydration';
 import { gotoSettled } from './_helpers/streamed';
 
 const SCROLL_PROBE_PX = 400;
@@ -18,7 +19,7 @@ for (const width of [390, 768, 1024, 1280, 1536]) {
     test('the menu stays closed until the menu button opens it, and never shifts content', async ({
       page,
     }) => {
-      await gotoSettled(page, '/');
+      await gotoHydrated(page, '/', MENU_TRIGGER);
       const main = page.locator('#main-content');
       const leftBefore = await main.evaluate((element) => element.getBoundingClientRect().left);
       const menu = page.locator('#section-drawer');
@@ -40,7 +41,7 @@ for (const width of [390, 768, 1024, 1280, 1536]) {
     test('keyboard focus reaches the menu trigger first and the brand last, then opens and restores', async ({
       page,
     }) => {
-      await gotoSettled(page, '/');
+      await gotoHydrated(page, '/', MENU_TRIGGER);
       const header = page.locator('.desktop-topbar, .mobile-title-bar').locator('visible=true');
       const order = await header.evaluate((element) => {
         const tabbables = [...element.querySelectorAll<HTMLElement>('a[href], button')].filter(
@@ -253,7 +254,7 @@ test.describe('section navigation: motion control tiers', () => {
       test('the topbar spells MOTION at the xl tier and the drawer carries it at every width', async ({
         page,
       }) => {
-        await gotoSettled(page, '/');
+        await gotoHydrated(page, '/', MENU_TRIGGER);
         const topbar = page.locator('.desktop-topbar');
         const toggle = topbar.locator('button[aria-pressed]');
 
@@ -295,7 +296,7 @@ test.describe('section navigation: drawer rows', () => {
   test('the drawer lists the reading views and the motion toggle, with no search row', async ({
     page,
   }) => {
-    await gotoSettled(page, '/');
+    await gotoHydrated(page, '/', DOCK_MENU);
     await page
       .getByRole('navigation', { name: 'primary' })
       .getByRole('button', { name: /^MENU/ })
@@ -328,7 +329,7 @@ test.describe('section navigation: drawer rows', () => {
   test('the drawer foot follows the section list instead of floating at the bottom', async ({
     page,
   }) => {
-    await gotoSettled(page, '/');
+    await gotoHydrated(page, '/', DOCK_MENU);
     await page
       .getByRole('navigation', { name: 'primary' })
       .getByRole('button', { name: /^MENU/ })
@@ -364,7 +365,7 @@ test.describe('section navigation: drawer at 390px', () => {
   });
 
   test('the open drawer locks page scrolling and closing releases it', async ({ page }) => {
-    await gotoSettled(page, '/');
+    await gotoHydrated(page, '/', DOCK_MENU);
     const menu = page
       .getByRole('navigation', { name: 'primary' })
       .getByRole('button', { name: /^MENU/ });
@@ -392,7 +393,7 @@ test.describe('section navigation: drawer across a viewport change', () => {
   test.use({ viewport: { width: 390, height: 844 } });
 
   test('the open drawer survives the change to a desktop width', async ({ page }) => {
-    await gotoSettled(page, '/');
+    await gotoHydrated(page, '/', DOCK_MENU);
     await page
       .getByRole('navigation', { name: 'primary' })
       .getByRole('button', { name: /^MENU/ })
@@ -419,7 +420,7 @@ test.describe('section navigation: drawer across a viewport change', () => {
   test('closing after the viewport change returns focus to a rendered menu trigger', async ({
     page,
   }) => {
-    await gotoSettled(page, '/');
+    await gotoHydrated(page, '/', DOCK_MENU);
     await page
       .getByRole('navigation', { name: 'primary' })
       .getByRole('button', { name: /^MENU/ })
@@ -507,7 +508,7 @@ test('a section reached from the menu takes focus without the browser outline', 
   page,
 }) => {
   await page.setViewportSize({ width: 1280, height: 720 });
-  await gotoSettled(page, '/');
+  await gotoHydrated(page, '/', MENU_TRIGGER);
   await page.locator('.desktop-topbar .menu-trigger').click();
   await page
     .locator('#section-drawer')
