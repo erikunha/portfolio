@@ -107,7 +107,7 @@
     min-width: 0;
     padding: var(--spacing-4);
     border: var(--border-width) solid var(--color-primary-subtle);
-    background: linear-gradient(var(--color-glow-03), transparent);
+    background: linear-gradient(var(--color-glow-03), transparent), var(--color-secondary-950);
   }
 
   .footer-card-title {

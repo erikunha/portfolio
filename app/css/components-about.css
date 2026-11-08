@@ -40,7 +40,7 @@
     min-width: 0;
     border: var(--border-width) solid var(--color-primary-subtle);
     border-radius: var(--radius-control);
-    background: linear-gradient(var(--color-glow-03), transparent);
+    background: linear-gradient(var(--color-glow-03), transparent), var(--color-secondary-950);
   }
 
   .ab-ph {
@@ -293,6 +293,7 @@
   @media (max-width: 767.98px) {
     .about-section {
       border: var(--border-width) solid var(--color-primary-subtle);
+      background: var(--color-secondary-950);
     }
     .about-section-header {
       padding: var(--spacing-3) calc(var(--spacing-3) + var(--spacing-1) / 2);

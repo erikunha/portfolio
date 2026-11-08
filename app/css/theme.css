@@ -181,6 +181,11 @@
   --color-glow-04: rgba(0, 255, 65, 0.04);
   --color-glow-05: rgba(0, 255, 65, 0.05);
   --color-glow-06: rgba(0, 255, 65, 0.06);
+  --color-surface-glow-05: color-mix(
+    in srgb,
+    var(--color-primary-500) 5%,
+    var(--color-secondary-950)
+  );
   --color-glow-15: rgba(0, 255, 65, 0.15);
   --color-glow-18: rgba(0, 255, 65, 0.18);
   --color-glow-25: rgba(0, 255, 65, 0.25);

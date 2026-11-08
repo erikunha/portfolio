@@ -41,7 +41,7 @@ export function Module({
       aria-labelledby={moduleHeaderId(id)}
       {...deferProps(
         defer,
-        'mb-[var(--space-section)] border border-primary-subtle bg-[rgba(0,0,0,0.22)] md:bg-transparent overflow-hidden md:overflow-visible md:border-0',
+        'mb-[var(--space-section)] border border-primary-subtle bg-secondary-950 md:bg-transparent overflow-hidden md:overflow-visible md:border-0',
       )}
     >
       <header

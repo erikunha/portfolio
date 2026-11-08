@@ -3,7 +3,8 @@
     border: var(--border-width) solid var(--color-primary-500);
     padding: var(--spacing-6);
     color: var(--color-text);
-    background: linear-gradient(180deg, var(--color-glow-04), transparent);
+    background:
+      linear-gradient(180deg, var(--color-glow-04), transparent), var(--color-secondary-950);
     display: flex;
     flex-direction: column;
     gap: var(--spacing-2);
@@ -18,7 +19,7 @@
 
   .contact-queued {
     border-color: var(--color-primary-subtle);
-    background: none;
+    background: var(--color-secondary-950);
   }
 
   .contact-state-title {
