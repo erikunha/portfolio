@@ -300,7 +300,7 @@
   .module-body-content {
     padding: 14px;
     color: var(--color-tertiary-50);
-    background: transparent;
+    background: var(--color-secondary-950);
   }
 
   @media (min-width: 768px) {
@@ -311,12 +311,12 @@
   }
 
   .module-body-content[data-variant="green"] {
-    background: var(--color-glow-05);
+    background: var(--color-secondary-950);
   }
 
   #sec-projects > .module-body-content,
   #sec-live-metrics > .module-body-content {
     padding: var(--spacing-4);
-    background: var(--color-glow-05);
+    background: var(--color-secondary-950);
   }
 }
