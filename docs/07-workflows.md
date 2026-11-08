@@ -171,8 +171,7 @@ The token is read-only except `issues: write`. `__tests__/scripts/weekly-metrics
 commit (scope blocks) -> (read the diff before opening the PR)
   -> pnpm ci:local + gates:runtime -> gh pr create (fill the template)
   -> resolve every review thread (rebase before each push) -> pnpm pr:gate
-  -> sub-PR into feat/*: agent may merge after CI green; PR into main: repo owner runs gh pr merge
-     (Claude Code hook guard-merge-main fails closed on an agent merge via gh pr merge, gh api or the GitHub MCP tool unless the base is not main)
+  -> merge once CI is green and the base is contained
 ```
 
 Large features use an **integration branch + sub-PRs** (`feat/<feature>` ← `feat/<feature>-<part>`) to group independently reviewable changes. See `AGENTS.md` "Git and pull requests".

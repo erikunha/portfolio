@@ -6,13 +6,13 @@
 
 ```mermaid
 sequenceDiagram
-    participant H as Human (owner)
-    participant C as Claude Code (main loop)
+    participant H as Engineer
+    participant C as Coding agent (any tool)
     participant G as Git hooks and scripts
     participant CI as CI
 
     H->>C: intent ("build X" / "fix Y")
-    C->>C: /speckit.specify (intent + approach)
+    C->>C: spec (intent + approach)
     C->>C: plan-review skill (PASS or BLOCK against scope, JS budget, API limits)
     C->>C: plan with a failure-mode checklist (each failure mode -> a task)
     C->>C: TDD implement (tests first)
@@ -22,13 +22,12 @@ sequenceDiagram
     H->>CI: optional: owner, member or collaborator comments /claude-review
     CI->>C: claude-review posts inline findings + Verdict
     CI-->>C: review threads
-    C->>C: drive threads to resolved -> green
-    H->>CI: owner squash-merges (project convention)
+    C->>C: reply in each thread, resolve it, pr:gate green
 ```
 
 ## 1. Context engineering (what the agent knows)
 
-Project instructions divide context between always-loaded guidance and task-specific references. The guiding principle: pick the cheapest slot that still fires when needed. **gate > skill > path-scoped rule > memory > prose in AGENTS.md.** Prose in `AGENTS.md` is the most expensive slot (it taxes every session), so it keeps only what no gate can show and stays under the line budget in `scripts/harness-size.json`, checked by `check:harness-size`. A rule with no exceptions moves out of prose into a permission deny rule or a hook where the tool supports one.
+Project instructions divide context between always-loaded guidance and task-specific references. The guiding principle: pick the cheapest slot that still fires when needed. **gate > skill > path-scoped rule > memory > prose in AGENTS.md.** Prose in `AGENTS.md` is the most expensive slot (it taxes every session), so it keeps only what no gate can show and stays under the line budget in `scripts/harness-size.json`, checked by `check:harness-size`. A rule with no exceptions moves out of prose into a permission deny rule, a git hook or a CI gate.
 
 ```mermaid
 flowchart TD
@@ -66,19 +65,19 @@ The project instructions define this loop. The table distinguishes conventions f
 | Anticipate failure | pre-mortem                                                   | convention + plan tasks                                                                      |
 | Implement          | test-first project rule                                      | convention                                                                                   |
 | Self-verify        | project verification rule                                    | convention + `pnpm verify`                                                                   |
-| Review             | claude-review only on request                                | `pnpm pr:gate` (every thread resolved with a reply); optional `pnpm claude-gate` after a requested review |
+| Review             | claude-review only on request                                | `pnpm pr:gate` (every thread resolved with a reply)                                          |
 | Resolve            | reply in each review thread, then resolve it                 | `pnpm pr:gate` (fails `silent_resolve`)                                                      |
 | Record             | DECISIONS.md ADR                                             | PR template checklist (author confirmation)                                                  |
 
 ## 3. Review. claude-review on request
 
-**claude-review (claude[bot]) is opt-in.** It runs only when an owner, member or collaborator comments `/claude-review` on a PR, posting findings as inline review comments anchored to changed lines and closing with a `Verdict:` line that the optional `pnpm claude-gate` reads fail-closed. It is not a merge requirement.
+**claude-review (claude[bot]) is opt-in.** It runs only when an owner, member or collaborator comments `/claude-review` on a PR, posting findings as inline review comments anchored to changed lines and closing with a `Verdict:` line; a workflow step reds the job when the run posted none. It is not a merge requirement.
 
 `pnpm pr:gate` checks thread resolution.
 
 ## 4. Enforcement boundaries
 
-`.claude/settings.json` denies broad `git add`, npm and yarn installs and local env reads, and registers a Stop hook (Biome on changed files and the typecheck, skipped in CI), a PreToolUse hook that fails closed on a `gh` merge unless it reads as a single merge into a base other than `main`, and a PreToolUse hook that refuses edits to existing test files while `FIX_MODE=1` or `.claude/fix-mode` declares a fix task. Git hooks run Biome and staged gitleaks at pre-commit, commitlint at commit-msg, and branch/main-ref checks plus `pnpm verify` at pre-push.
+`.claude/settings.json` denies broad `git add`, npm and yarn installs and local env reads, and registers no hooks: workflow hooks are each engineer's own. Git hooks run Biome and staged gitleaks at pre-commit, commitlint at commit-msg, and branch/main-ref checks plus `pnpm verify` at pre-push.
 
 CI runs separate quality, typecheck, unit-test and build jobs. Runtime and AI jobs use change filters. Semgrep findings are report-only; the fixture and report-existence checks can still fail. User-global runtime restrictions require separate inspection.
 
@@ -92,7 +91,7 @@ The repo encodes distinct prompt patterns for distinct SDLC stages:
 
 | Stage               | Prompt shape                                                       | Where it lives                                     |
 | ------------------- | ------------------------------------------------------------------ | -------------------------------------------------- |
-| Specification       | brainstorm -> spec with Context/Gaps/Changes                       | `/speckit.specify`, the spec template              |
+| Specification       | brainstorm -> spec with Context/Gaps/Changes                       | the engineer's own spec tool (local, untracked)    |
 | Architecture review | four-gate plan review -> `GATE_RESULT: PASS \| BLOCK`              | `plan-review` skill                                |
 | Implementation      | TDD: failing test first, smallest change                           | `test-first discipline (AGENTS.md)` |
 | Review              | `claude-review` on request; `pr-review-orchestrator` is one way to run a review | `AGENTS.md` working agreement, `REVIEW.md`         |
