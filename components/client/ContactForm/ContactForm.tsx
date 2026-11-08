@@ -173,6 +173,7 @@ export function ContactForm({ copy, chrome }: { copy: ContactContent; chrome: Te
           data-testid="contact-honeypot"
           className="contact-honeypot"
         />
+        <p className="contact-required">{copy.form.requiredNote}</p>
         <Field
           id={fieldId(CONTACT_FIELD.NAME)}
           name={CONTACT_FIELD.NAME}

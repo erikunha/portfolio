@@ -108,12 +108,14 @@
 
   .contact-count,
   .contact-waiting,
-  .contact-privacy {
+  .contact-privacy,
+  .contact-required {
     color: var(--color-text-secondary);
     font-size: var(--text-xs);
   }
 
-  .contact-privacy {
+  .contact-privacy,
+  .contact-required {
     margin: 0;
   }
 
@@ -780,8 +782,15 @@
   }
 
   .ctz-detected,
-  .ctz-count {
+  .ctz-count,
+  .ctz-search-label {
     color: var(--color-text-secondary);
+  }
+
+  .ctz-search-label {
+    display: block;
+    margin-bottom: var(--spacing-1);
+    font-size: var(--text-xs);
   }
 
   .ctz-combobox {

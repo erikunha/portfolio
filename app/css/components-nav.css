@@ -3,6 +3,7 @@
     --menu-duration: 200ms;
     --menu-inset: var(--spacing-3);
     --menu-row: var(--spacing-target);
+    --menu-head-height: calc(var(--menu-row) + var(--spacing-2) * 2 + var(--border-width));
     --menu-text-column: calc(var(--spacing-2) + var(--border-width) + var(--spacing-3));
     display: contents;
   }
@@ -125,6 +126,7 @@
     overscroll-behavior: contain;
     scrollbar-color: var(--color-primary-border) transparent;
     scrollbar-gutter: stable;
+    scroll-padding-top: calc(var(--menu-head-height) + var(--spacing-2));
   }
 
   .section-menu.is-open {

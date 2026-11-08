@@ -36,6 +36,7 @@ export type Line = {
   retryAfter?: number;
   retry?: string;
   welcome?: true;
+  lang?: string;
 };
 type FailureDetail = { prefix?: string; hint?: boolean; retryAfter?: number; retry?: string };
 type ActiveRequest = { stop: () => void; dispose: () => void };

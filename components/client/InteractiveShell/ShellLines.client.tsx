@@ -144,7 +144,7 @@ export function ShellLine(props: ShellLineProps) {
     );
   }
   return (
-    <span className={`shell-line ${KIND_CLASS[line.kind]}`} data-kind={line.kind}>
+    <span className={`shell-line ${KIND_CLASS[line.kind]}`} data-kind={line.kind} lang={line.lang}>
       <ShellLineBody {...props} />
     </span>
   );

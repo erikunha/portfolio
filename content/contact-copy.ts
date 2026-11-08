@@ -102,10 +102,10 @@ const contactCopyFor = (locale: SiteLocale): ContactContent => {
         detectedManual: pt ? 'definido por você · {zone}' : 'set by you · {zone}',
       },
       search: {
-        label: pt ? 'Busque sua cidade ou fuso horário' : 'Search your city or timezone',
-        placeholder: pt
-          ? 'não certo? busque cidade ou fuso horário…'
-          : 'not right? search city or timezone…',
+        label: pt
+          ? 'Não é esse? Busque sua cidade ou fuso horário'
+          : 'Not right? Search your city or timezone',
+        placeholder: pt ? 'ex.: Lisboa ou Europe/Lisbon' : 'e.g. Lisbon or Europe/Lisbon',
         listLabel: pt ? 'Fusos horários' : 'Timezones',
         count: pt
           ? '{matches} de {total} fusos · do seu navegador, sem download'
@@ -164,6 +164,7 @@ const contactCopyFor = (locale: SiteLocale): ContactContent => {
       nameLabel: pt ? '$ nome:' : '$ name:',
       emailLabel: '$ email:',
       messageLabel: pt ? '$ mensagem:' : '$ message:',
+      requiredNote: pt ? 'Todos os campos são obrigatórios.' : 'All fields are required.',
       namePlaceholder: pt ? 'seu nome' : 'your name',
       emailPlaceholder: 'you@company.com',
       messagePlaceholder: pt ? '[PRONTO PARA RECEBER DADOS...]' : '[READY FOR DATA INPUT...]',

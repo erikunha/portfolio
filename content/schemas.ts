@@ -911,6 +911,7 @@ export const DawMixerCopySchema = z.object({
     vuMeter: DawMixerCopyTextSchema,
     fader: DawMixerCopyTextSchema,
     degrees: DawMixerCopyTextSchema,
+    knobHint: DawMixerCopyTextSchema,
     buttons: z.object({
       R: DawMixerCopyTextSchema,
       M: DawMixerCopyTextSchema,

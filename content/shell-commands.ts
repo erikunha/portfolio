@@ -1,7 +1,10 @@
 import { NOW_CURRENTLY, WHOIS_TITLE } from './now-currently';
 import type { ShellResponse } from './schemas';
 import { ShellCommand, ShellLineKind } from './shell-ui';
+import { SITE_LOCALE } from './site-locale';
 import { EMAIL_ADDRESS } from './social-urls';
+
+export const SHELL_RESPONSE_LANG = SITE_LOCALE.en;
 
 const SHELL_RESPONSES: ShellResponse[] = [
   {

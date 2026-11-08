@@ -123,6 +123,7 @@ export const ContactContentSchema = z.object({
     nameLabel: z.string().min(1),
     emailLabel: z.string().min(1),
     messageLabel: z.string().min(1),
+    requiredNote: z.string().min(1),
     namePlaceholder: z.string().min(1),
     emailPlaceholder: z.string().min(1),
     messagePlaceholder: z.string().min(1),

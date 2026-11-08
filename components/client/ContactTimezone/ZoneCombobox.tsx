@@ -32,6 +32,7 @@ export function ZoneCombobox({
 }) {
   const { search } = copy;
   const id = useId();
+  const inputId = `${id}-input`;
   const listId = `${id}-list`;
   const optionId = (index: number) => `${id}-option-${index}`;
   const zones = useMemo(() => supportedZones(), []);
@@ -97,11 +98,14 @@ export function ZoneCombobox({
 
   return (
     <div className="ctz-combobox">
+      <label className="ctz-search-label" htmlFor={inputId}>
+        {search.label}
+      </label>
       <input
+        id={inputId}
         className="ctz-input"
         type="text"
         role="combobox"
-        aria-label={search.label}
         aria-expanded={open}
         aria-controls={listId}
         aria-autocomplete="list"

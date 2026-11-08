@@ -37,6 +37,9 @@ const dawMixerCopyFor = (locale: SiteLocale): DawMixerCopy => {
         : 'VU meter demonstration, drag to adjust level',
       fader: 'fader',
       degrees: pt ? 'graus' : 'degrees',
+      knobHint: pt
+        ? 'arraste, use as setas, ou clique na metade de cima para subir e na de baixo para descer'
+        : 'drag, use the arrow keys, or click the top half to raise and the bottom half to lower',
       buttons: {
         R: pt ? 'armar gravação' : 'record arm',
         M: pt ? 'mudo' : 'mute',

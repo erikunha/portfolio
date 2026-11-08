@@ -6,6 +6,7 @@
     background: color-mix(in srgb, var(--color-primary-500) 3%, transparent);
     border: 1px solid var(--color-primary-quiet);
     cursor: ew-resize;
+    touch-action: pan-y;
   }
 
   .fader-track::before {
@@ -58,6 +59,7 @@
     gap: 1px;
     padding: 1px;
     cursor: ew-resize;
+    touch-action: pan-y;
   }
 
   .vuSegFilled {
@@ -85,6 +87,7 @@
     align-items: center;
     gap: 3px;
     user-select: none;
+    touch-action: none;
   }
 
   .dbValue {

@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
 import type { TerminalChrome } from '@/content/schemas';
-import SHELL_RESPONSES from '@/content/shell-commands';
+import SHELL_RESPONSES, { SHELL_RESPONSE_LANG } from '@/content/shell-commands';
 import { ShellCommand, ShellLineKind, type ShellUi, shellStates } from '@/content/shell-ui';
 import type { SiteLocale } from '@/content/site-locale';
 import { SHELL_COMMAND_EVENT } from '@/lib/events';
@@ -123,7 +123,10 @@ export function InteractiveShell({
         !explicitQuestion && SHELL_RESPONSES.find((entry) => entry.commands.includes(key));
       if (local) {
         setHistory((lines) =>
-          bounded([...lines, { id: nextId(), kind: local.kind, text: local.text }]),
+          bounded([
+            ...lines,
+            { id: nextId(), kind: local.kind, text: local.text, lang: SHELL_RESPONSE_LANG },
+          ]),
         );
         announce(ui.commandComplete);
         focusInput();

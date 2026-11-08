@@ -34,7 +34,9 @@ export function LocaleSwitch({
             {...(active ? { 'aria-current': 'page' as const } : {})}
           >
             {candidate.toUpperCase()}
-            <span className="sr-only">&nbsp;{names[candidate]}</span>
+            <span lang={candidate} className="sr-only">
+              &nbsp;{names[candidate]}
+            </span>
           </Button>
         );
       })}

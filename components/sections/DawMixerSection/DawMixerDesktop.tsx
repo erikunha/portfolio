@@ -98,12 +98,14 @@ function ChannelDesktop({ ch, copy }: { ch: DawMixerChannel; copy: DawMixerCopy 
           label={ch.knob1.label}
           channelName={ch.name}
           degreesUnit={copy.controls.degrees}
+          hint={copy.controls.knobHint}
         />
         <KnobIsland
           initialAngle={ch.knob2.angleDeg}
           label={ch.knob2.label}
           channelName={ch.name}
           degreesUnit={copy.controls.degrees}
+          hint={copy.controls.knobHint}
         />
       </div>
       <div className="flex justify-center">
