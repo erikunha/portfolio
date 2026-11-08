@@ -42,6 +42,7 @@ const LISTENER_PID_FLAG = '-Fp';
 const SERVER_ERROR_STATUS = 500;
 const SESSION_FIELD_SEPARATOR = ' ';
 const ERROR_EXCERPT_LINES = 20;
+const MAX_ANCESTRY = 64;
 
 const active = new Set<ChildProcess>();
 
@@ -52,8 +53,40 @@ export function tail(text: string, lines: number = TAIL_LINES): string {
   return text.split('\n').slice(-lines).join('\n');
 }
 
+function parentMap(): Map<number, number> {
+  const listing = spawnSync('ps', ['-ax', '-o', 'pid=,ppid='], { encoding: 'utf8' });
+  const parents = new Map<number, number>();
+  for (const line of listing.stdout.split('\n')) {
+    const [pid, ppid] = line.trim().split(/\s+/).map(Number);
+    if (pid !== undefined && ppid !== undefined && Number.isInteger(pid)) parents.set(pid, ppid);
+  }
+  return parents;
+}
+
+export function descendantPids(root: number): number[] {
+  const parents = parentMap();
+  const found = new Set<number>();
+  let grew = true;
+  while (grew) {
+    grew = false;
+    for (const [pid, ppid] of parents) {
+      if (!found.has(pid) && (ppid === root || found.has(ppid))) {
+        found.add(pid);
+        grew = true;
+      }
+    }
+  }
+  return [...found];
+}
+
 export function killGroup(child: ChildProcess | null, signal: NodeJS.Signals = 'SIGTERM'): void {
   if (child?.pid === undefined) return;
+  for (const pid of descendantPids(child.pid)) {
+    try {
+      process.kill(pid, signal);
+      // biome-ignore lint/suspicious/noEmptyBlockStatements: the process may already be gone
+    } catch {}
+  }
   try {
     process.kill(-child.pid, signal);
   } catch {
@@ -177,21 +210,25 @@ export function gitFilesMatch(cwd: string, pattern: string): boolean {
   return listed.status === 0 && listed.stdout.trim() !== '';
 }
 
-export function listenerGroupIds(port: number): Set<number> | null {
+export function listenerPids(port: number): number[] | null {
   const listing = spawnSync('lsof', ['-nP', `-iTCP:${port}`, '-sTCP:LISTEN', LISTENER_PID_FLAG], {
     encoding: 'utf8',
   });
   if (listing.error !== undefined) return null;
-  const groups = new Set<number>();
-  for (const line of listing.stdout.split('\n')) {
-    if (!line.startsWith(LSOF_PID_PREFIX)) continue;
-    const group = spawnSync('ps', ['-o', 'pgid=', '-p', line.slice(LSOF_PID_PREFIX.length)], {
-      encoding: 'utf8',
-    });
-    const id = Number(group.stdout.trim());
-    if (Number.isInteger(id) && id > 0) groups.add(id);
+  return listing.stdout
+    .split('\n')
+    .filter((line) => line.startsWith(LSOF_PID_PREFIX))
+    .map((line) => Number(line.slice(LSOF_PID_PREFIX.length)))
+    .filter((pid) => Number.isInteger(pid) && pid > 0);
+}
+
+export function startedBy(pid: number, ancestor: number, parents: Map<number, number>): boolean {
+  let current: number | undefined = pid;
+  for (let depth = 0; current !== undefined && current > 1 && depth < MAX_ANCESTRY; depth++) {
+    if (current === ancestor) return true;
+    current = parents.get(current);
   }
-  return groups;
+  return false;
 }
 
 export async function waitForOwnServer(options: {
@@ -219,11 +256,16 @@ export async function waitForOwnServer(options: {
     }
     const response = await fetch(options.url).catch(() => null);
     if (response !== null && response.status < SERVER_ERROR_STATUS) {
-      const groups = listenerGroupIds(port);
-      if (groups === null) {
+      const listeners = listenerPids(port);
+      if (listeners === null) {
         throw new Error(`cannot tell which process answers on :${port} (lsof is not available)`);
       }
-      if (child.pid !== undefined && groups.has(child.pid)) return;
+      const parents = parentMap();
+      if (
+        child.pid !== undefined &&
+        listeners.some((pid) => startedBy(pid, child.pid ?? 0, parents))
+      )
+        return;
     }
     await new Promise((resolveWait) => setTimeout(resolveWait, options.pollMs));
   }

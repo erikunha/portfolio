@@ -275,6 +275,28 @@ describe('waitForOwnServer', () => {
     ).resolves.toBeUndefined();
   });
 
+  it('accepts a server that the child started in its own process group, as pnpm start does', async () => {
+    const dir = scratch();
+    const port = await freePort();
+    const grandchild = `require('http').createServer((q, r) => r.end('ok')).listen(${port})`;
+    const child = startTracked(
+      process.execPath,
+      [
+        '-e',
+        `require('child_process').spawn(process.execPath, ['-e', ${JSON.stringify(grandchild)}], { detached: true, stdio: 'ignore' }); setTimeout(() => {}, 30000)`,
+      ],
+      { cwd: dir, env: {}, logPath: join(dir, 'server.log') },
+    );
+    await expect(
+      waitForOwnServer({ url: `http://localhost:${port}`, port, child, ...OPTIONS }),
+    ).resolves.toBeUndefined();
+    killAllChildren();
+    const gone = await waitUntil(() => {
+      return spawnSync('lsof', ['-nP', `-iTCP:${port}`, '-sTCP:LISTEN', '-t']).stdout.length === 0;
+    }, 3000);
+    expect(gone, 'the server the child started must not outlive the cleanup').toBe(true);
+  });
+
   it('fails as soon as the child exits, even when another process answers on that port', async () => {
     const dir = scratch();
     const rogue = createServer((_req, res) => res.end('rogue'));
