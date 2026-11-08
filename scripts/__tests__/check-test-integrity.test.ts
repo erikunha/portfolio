@@ -25,8 +25,23 @@ describe('focused tests', () => {
       "test.describe.serial.only('a', () => { test('b', () => { expect(1).toBe(1); }); });",
     ],
     ['it.only.each', "it.only.each([1, 2])('a %d', (n) => { expect(n).toBeGreaterThan(0); });"],
+    ['string element access', "test['only']('a', () => { expect(1).toBe(1); });"],
+    [
+      'string element access on a modifier chain',
+      "test.describe['only']('a', () => { test('b', () => { expect(1).toBe(1); }); });",
+    ],
+    ['a cast callee', "(it as any).only('a', () => { expect(1).toBe(1); });"],
+    ['a non-null callee', "it!.only('a', () => { expect(1).toBe(1); });"],
+    ['a parenthesized callee', "(it).only('a', () => { expect(1).toBe(1); });"],
+    ['a satisfies callee', "(it satisfies unknown).only('a', () => { expect(1).toBe(1); });"],
+    ['a nested wrapper', "((it as any)!).only('a', () => { expect(1).toBe(1); });"],
   ])('flags %s once, on the line of the call', (_name, source) => {
     expect(summarize(`\n${source}`)).toEqual(['focused@2']);
+  });
+
+  it('does not treat a non-literal element access as a modifier', () => {
+    const source = "it[name]('a', () => { expect(1).toBe(1); });";
+    expect(summarize(source)).toEqual([]);
   });
 
   it('ignores an unrelated member called only', () => {
@@ -101,6 +116,11 @@ describe('tests without an assertion', () => {
 
   it('flags a table-driven test written as a tagged template', () => {
     expect(summarize("it.each`\n  a | b\n`('t', () => {});")).toEqual(['no-assertion@1']);
+  });
+
+  it('judges the body of an expected-failure test', () => {
+    expect(summarize("it.fails('a', () => {});")).toEqual(['no-assertion@1']);
+    expect(summarize("it.fails('a', () => { expect(1).toBe(2); });")).toEqual([]);
   });
 
   it('reports two different rules broken by the same call', () => {
@@ -345,6 +365,164 @@ describe('scanRoot with helpers from other modules', () => {
           "import { outer } from './_helpers/outer';\nit('a', async () => { await outer(); });\n",
       }),
     ).toEqual([]);
+  });
+
+  it('follows a named re-export through a barrel', () => {
+    expect(
+      scan({
+        'tests/_helpers/helper.ts': ASSERTING_HELPER,
+        'tests/_helpers/index.ts': "export { snapshot } from './helper';\n",
+        'tests/a.test.ts': USES_HELPER('./_helpers'),
+      }),
+    ).toEqual([]);
+  });
+
+  it('follows a renamed re-export through a barrel', () => {
+    expect(
+      scan({
+        'tests/_helpers/helper.ts': ASSERTING_HELPER,
+        'tests/_helpers/index.ts': "export { snapshot as verify } from './helper';\n",
+        'tests/a.test.ts':
+          "import { verify } from './_helpers';\nit('a', async () => { await verify(); });\n",
+      }),
+    ).toEqual([]);
+  });
+
+  it('follows a star re-export through a barrel', () => {
+    expect(
+      scan({
+        'tests/_helpers/helper.ts': ASSERTING_HELPER,
+        'tests/_helpers/index.ts': "export * from './helper';\n",
+        'tests/a.test.ts': USES_HELPER('./_helpers'),
+      }),
+    ).toEqual([]);
+  });
+
+  it('follows a chain of barrels', () => {
+    expect(
+      scan({
+        'tests/_helpers/helper.ts': ASSERTING_HELPER,
+        'tests/_helpers/inner/index.ts': "export * from '../helper';\n",
+        'tests/_helpers/index.ts': "export * from './inner';\n",
+        'tests/a.test.ts': USES_HELPER('./_helpers'),
+      }),
+    ).toEqual([]);
+  });
+
+  it('flags a test whose barrel re-exports a helper that never asserts', () => {
+    expect(
+      scan({
+        'tests/_helpers/helper.ts': IDLE_HELPER,
+        'tests/_helpers/index.ts':
+          "export * from './helper';\nexport { snapshot as other } from './helper';\n",
+        'tests/a.test.ts': USES_HELPER('./_helpers'),
+      }),
+    ).toEqual(['tests/a.test.ts:2:no-assertion']);
+  });
+
+  it('survives barrels that re-export each other', () => {
+    expect(
+      scan({
+        'tests/_helpers/a.ts': "export * from './b';\n",
+        'tests/_helpers/b.ts': `export * from './a';\n${ASSERTING_HELPER}`,
+        'tests/a.test.ts': USES_HELPER('./_helpers/a'),
+      }),
+    ).toEqual([]);
+  });
+
+  it.each([
+    ['a default function declaration', 'export default async function () { expect(1).toBe(1); }\n'],
+    ['a named default function', 'export default async function named() { expect(1).toBe(1); }\n'],
+    ['a default arrow function', 'export default async () => { expect(1).toBe(1); };\n'],
+    [
+      'a default identifier',
+      'async function local() { expect(1).toBe(1); }\nexport default local;\n',
+    ],
+    [
+      'an export list default',
+      'async function local() { expect(1).toBe(1); }\nexport { local as default };\n',
+    ],
+  ])('counts a default import whose target exports %s', (_name, helper) => {
+    expect(
+      scan({
+        'tests/_helpers/def.ts': helper,
+        'tests/a.test.ts':
+          "import assertDef from './_helpers/def';\nit('a', async () => { await assertDef(); });\n",
+      }),
+    ).toEqual([]);
+  });
+
+  it('flags a default import whose target default export never asserts', () => {
+    expect(
+      scan({
+        'tests/_helpers/def.ts': `${ASSERTING_HELPER}export default async function idle() { return 1; }\n`,
+        'tests/a.test.ts':
+          "import assertDef from './_helpers/def';\nit('a', async () => { await assertDef(); });\n",
+      }),
+    ).toEqual(['tests/a.test.ts:2:no-assertion']);
+  });
+
+  it('follows a default re-export through a barrel', () => {
+    expect(
+      scan({
+        'tests/_helpers/def.ts': 'export default async function () { expect(1).toBe(1); }\n',
+        'tests/_helpers/index.ts':
+          "export { default as verify } from './def';\nexport { default } from './def';\n",
+        'tests/a.test.ts':
+          "import assertDef, { verify } from './_helpers';\nit('a', async () => { await assertDef(); });\nit('b', async () => { await verify(); });\n",
+      }),
+    ).toEqual([]);
+  });
+
+  it('does not count a named import as the default export', () => {
+    expect(
+      scan({
+        'tests/_helpers/def.ts': `${IDLE_HELPER}export default async function () { expect(1).toBe(1); }\n`,
+        'tests/a.test.ts': USES_HELPER('./_helpers/def'),
+      }),
+    ).toEqual(['tests/a.test.ts:2:no-assertion']);
+  });
+
+  const CYCLE_A =
+    "import { fromB } from './b';\nexport async function fromA() { await fromB(); }\n";
+  const CYCLE_B =
+    "import { fromA } from './a';\nexport async function fromB() { expect(1).toBe(1); }\nexport async function loop() { await fromA(); }\n";
+  const IMPORTS_FROM_A =
+    "import { fromA } from './_helpers/a';\nit('a', async () => { await fromA(); });\n";
+  const IMPORTS_LOOP_FROM_B =
+    "import { loop } from './_helpers/b';\nit('b', async () => { await loop(); });\n";
+
+  it.each([
+    ['the member that asserts directly is reached first', IMPORTS_LOOP_FROM_B, IMPORTS_FROM_A],
+    [
+      'the member that asserts through its peer is reached first',
+      IMPORTS_FROM_A,
+      IMPORTS_LOOP_FROM_B,
+    ],
+  ])(
+    'counts helpers that assert through an import cycle whichever test is scanned first (%s)',
+    (_name, first, second) => {
+      expect(
+        scan({
+          'tests/_helpers/a.ts': CYCLE_A,
+          'tests/_helpers/b.ts': CYCLE_B,
+          'tests/0.test.ts': first,
+          'tests/1.test.ts': second,
+        }),
+      ).toEqual([]);
+    },
+  );
+
+  it('flags a helper in an import cycle that no member asserts through', () => {
+    expect(
+      scan({
+        'tests/_helpers/a.ts':
+          "import { fromB } from './b';\nexport async function fromA() { await fromB(); }\n",
+        'tests/_helpers/b.ts':
+          "import { fromA } from './a';\nexport async function fromB() { await fromA(); }\n",
+        'tests/0.test.ts': IMPORTS_FROM_A,
+      }),
+    ).toEqual(['tests/0.test.ts:2:no-assertion']);
   });
 
   it('leaves a package import as unknown, so it does not count as an assertion', () => {

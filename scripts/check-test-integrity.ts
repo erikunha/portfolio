@@ -31,6 +31,7 @@ const DECLARATION_MODIFIERS = new Set([
   'skip',
   'fixme',
   'fail',
+  'fails',
   'concurrent',
   'sequential',
   'each',
@@ -53,6 +54,8 @@ const ALIAS_PREFIX = '@/';
 const RELATIVE_PREFIX = '.';
 const REASON_ARGUMENT_INDEX = 1;
 const MIN_TITLE_AND_BODY_ARGUMENTS = 2;
+const DEFAULT_EXPORT = 'default';
+const NODE_KEY_SEPARATOR = '\0';
 
 type FunctionLike = ts.ArrowFunction | ts.FunctionExpression | ts.FunctionDeclaration;
 
@@ -63,11 +66,36 @@ function isFunctionLike(node: ts.Node | undefined): node is FunctionLike {
   );
 }
 
+type TransparentWrapper =
+  | ts.AsExpression
+  | ts.NonNullExpression
+  | ts.ParenthesizedExpression
+  | ts.SatisfiesExpression
+  | ts.TypeAssertion;
+
+function isTransparentWrapper(node: ts.Node): node is TransparentWrapper {
+  return (
+    ts.isAsExpression(node) ||
+    ts.isNonNullExpression(node) ||
+    ts.isParenthesizedExpression(node) ||
+    ts.isSatisfiesExpression(node) ||
+    ts.isTypeAssertionExpression(node)
+  );
+}
+
 function memberChain(expression: ts.Expression): string[] {
   if (ts.isIdentifier(expression)) return [expression.text];
   if (ts.isPropertyAccessExpression(expression)) {
     return [...memberChain(expression.expression), expression.name.text];
   }
+  if (ts.isElementAccessExpression(expression)) {
+    const key = expression.argumentExpression;
+    if (ts.isStringLiteral(key) || ts.isNoSubstitutionTemplateLiteral(key)) {
+      return [...memberChain(expression.expression), key.text];
+    }
+    return [];
+  }
+  if (isTransparentWrapper(expression)) return memberChain(expression.expression);
   if (ts.isCallExpression(expression)) return memberChain(expression.expression);
   if (ts.isTaggedTemplateExpression(expression)) return memberChain(expression.tag);
   return [];
@@ -267,55 +295,186 @@ function resolveModule(root: string, fromFile: string, specifier: string): strin
   return candidates.find(isFile);
 }
 
-function createImportedHelperResolver(root: string) {
-  const cache = new Map<string, Set<string>>();
-  const visiting = new Set<string>();
+type ImportBinding = { target: string; imported: string };
+type ExportEntry = { local: string } | ImportBinding;
+type ModuleInfo = {
+  sourceFile: ts.SourceFile;
+  functions: Map<string, FunctionLike>;
+  imports: Map<string, ImportBinding>;
+  exports: Map<string, ExportEntry>;
+  stars: string[];
+};
+type HelperRef = { key: string; file: string; fn: FunctionLike };
+type HelperNode = { direct: boolean; deps: HelperRef[] };
 
-  const assertingNamesOf = (file: string): Set<string> => {
-    const cached = cache.get(file);
-    if (cached !== undefined) return cached;
-    if (visiting.has(file)) return new Set();
-    visiting.add(file);
-    const sourceFile = parse(readFileSync(file, 'utf8'), file);
-    const names = findAssertingHelpers(
-      collectLocalFunctions(sourceFile),
-      importedAssertingBindings(sourceFile, file),
-    );
-    visiting.delete(file);
-    cache.set(file, names);
-    return names;
-  };
+function hasDefaultModifier(node: ts.FunctionDeclaration): boolean {
+  return ts.getModifiers(node)?.some((m) => m.kind === ts.SyntaxKind.DefaultKeyword) ?? false;
+}
 
-  const importedAssertingBindings = (sourceFile: ts.SourceFile, file: string): Set<string> => {
-    const bindings = new Set<string>();
-    for (const statement of sourceFile.statements) {
-      if (!ts.isImportDeclaration(statement) || !ts.isStringLiteral(statement.moduleSpecifier)) {
+function readModule(root: string, file: string): ModuleInfo {
+  const sourceFile = parse(readFileSync(file, 'utf8'), file);
+  const functions = collectLocalFunctions(sourceFile);
+  const imports = new Map<string, ImportBinding>();
+  const exports = new Map<string, ExportEntry>();
+  const stars: string[] = [];
+  const targetOf = (specifier: ts.Expression | undefined) =>
+    specifier !== undefined && ts.isStringLiteral(specifier)
+      ? resolveModule(root, file, specifier.text)
+      : undefined;
+
+  for (const statement of sourceFile.statements) {
+    if (ts.isImportDeclaration(statement)) {
+      const target = targetOf(statement.moduleSpecifier);
+      const clause = statement.importClause;
+      if (target === undefined || clause === undefined) continue;
+      if (clause.name !== undefined) {
+        imports.set(clause.name.text, { target, imported: DEFAULT_EXPORT });
+      }
+      const named = clause.namedBindings;
+      if (named === undefined || !ts.isNamedImports(named)) continue;
+      for (const element of named.elements) {
+        imports.set(element.name.text, {
+          target,
+          imported: (element.propertyName ?? element.name).text,
+        });
+      }
+    } else if (ts.isExportDeclaration(statement)) {
+      const target = targetOf(statement.moduleSpecifier);
+      const clause = statement.exportClause;
+      if (clause === undefined) {
+        if (target !== undefined) stars.push(target);
         continue;
       }
-      const named = statement.importClause?.namedBindings;
-      if (named === undefined || !ts.isNamedImports(named)) continue;
-      const target = resolveModule(root, file, statement.moduleSpecifier.text);
-      if (target === undefined) continue;
-      const asserting = assertingNamesOf(target);
-      for (const specifier of named.elements) {
-        if (asserting.has((specifier.propertyName ?? specifier.name).text)) {
-          bindings.add(specifier.name.text);
+      if (!ts.isNamedExports(clause)) continue;
+      for (const element of clause.elements) {
+        const name = (element.propertyName ?? element.name).text;
+        if (statement.moduleSpecifier === undefined) {
+          exports.set(element.name.text, { local: name });
+        } else if (target !== undefined) {
+          exports.set(element.name.text, { target, imported: name });
         }
+      }
+    } else if (ts.isExportAssignment(statement) && !statement.isExportEquals) {
+      const { expression } = statement;
+      if (isFunctionLike(expression)) functions.set(DEFAULT_EXPORT, expression);
+      else if (ts.isIdentifier(expression)) exports.set(DEFAULT_EXPORT, { local: expression.text });
+    } else if (ts.isFunctionDeclaration(statement) && hasDefaultModifier(statement)) {
+      if (statement.name === undefined) functions.set(DEFAULT_EXPORT, statement);
+      else exports.set(DEFAULT_EXPORT, { local: statement.name.text });
+    }
+  }
+  return { sourceFile, functions, imports, exports, stars };
+}
+
+function createImportedHelperResolver(root: string) {
+  const modules = new Map<string, ModuleInfo>();
+  const nodes = new Map<string, HelperNode>();
+  const verdicts = new Map<string, boolean>();
+
+  const moduleOf = (file: string): ModuleInfo => {
+    const cached = modules.get(file);
+    if (cached !== undefined) return cached;
+    const module = readModule(root, file);
+    modules.set(file, module);
+    return module;
+  };
+
+  const functionRef = (file: string, name: string): HelperRef[] => {
+    const fn = moduleOf(file).functions.get(name);
+    return fn === undefined ? [] : [{ key: `${file}${NODE_KEY_SEPARATOR}${name}`, file, fn }];
+  };
+
+  const resolveLocal = (file: string, name: string, seen: Set<string>): HelperRef[] => {
+    const local = functionRef(file, name);
+    if (local.length > 0) return local;
+    const binding = moduleOf(file).imports.get(name);
+    return binding === undefined ? [] : resolveExport(binding.target, binding.imported, seen);
+  };
+
+  const resolveExport = (file: string, name: string, seen: Set<string>): HelperRef[] => {
+    const visit = `${file}${NODE_KEY_SEPARATOR}${name}`;
+    if (seen.has(visit)) return [];
+    seen.add(visit);
+    const module = moduleOf(file);
+    const entry = module.exports.get(name);
+    if (entry !== undefined) {
+      return 'target' in entry
+        ? resolveExport(entry.target, entry.imported, seen)
+        : resolveLocal(file, entry.local, seen);
+    }
+    const direct = functionRef(file, name);
+    if (direct.length > 0 || name === DEFAULT_EXPORT) return direct;
+    return module.stars.flatMap((star) => resolveExport(star, name, seen));
+  };
+
+  const nodeOf = (ref: HelperRef): HelperNode => {
+    const cached = nodes.get(ref.key);
+    if (cached !== undefined) return cached;
+    const deps = new Map<string, HelperRef>();
+    let direct = false;
+    for (const call of collectCalls(ref.fn)) {
+      const chain = memberChain(call.expression);
+      if (isAssertionCall(chain)) direct = true;
+      const [callee] = chain;
+      if (callee === undefined) continue;
+      for (const dep of resolveLocal(ref.file, callee, new Set())) deps.set(dep.key, dep);
+    }
+    const node = { direct, deps: [...deps.values()] };
+    nodes.set(ref.key, node);
+    return node;
+  };
+
+  const isAsserting = (ref: HelperRef): boolean => {
+    const known = verdicts.get(ref.key);
+    if (known !== undefined) return known;
+    const reachable = new Map<string, HelperNode>();
+    const pending = [ref];
+    for (let next = pending.pop(); next !== undefined; next = pending.pop()) {
+      if (reachable.has(next.key) || verdicts.has(next.key)) continue;
+      const node = nodeOf(next);
+      reachable.set(next.key, node);
+      pending.push(...node.deps);
+    }
+    const asserting = new Set<string>();
+    for (const [key, node] of reachable) if (node.direct) asserting.add(key);
+    let grew = true;
+    while (grew) {
+      grew = false;
+      for (const [key, node] of reachable) {
+        if (asserting.has(key)) continue;
+        if (node.deps.some((dep) => asserting.has(dep.key) || verdicts.get(dep.key) === true)) {
+          asserting.add(key);
+          grew = true;
+        }
+      }
+    }
+    for (const key of reachable.keys()) verdicts.set(key, asserting.has(key));
+    return asserting.has(ref.key);
+  };
+
+  const importedAssertingBindings = (file: string): Set<string> => {
+    const bindings = new Set<string>();
+    for (const [local, binding] of moduleOf(file).imports) {
+      if (resolveExport(binding.target, binding.imported, new Set()).some(isAsserting)) {
+        bindings.add(local);
       }
     }
     return bindings;
   };
 
-  return importedAssertingBindings;
+  return { sourceFileOf: (file: string) => moduleOf(file).sourceFile, importedAssertingBindings };
 }
 
 export function scanRoot(root: string): ScanResult {
   const files = collectTestFiles(root).sort();
-  const importedBindings = createImportedHelperResolver(root);
-  const violations = files.flatMap((full) => {
-    const sourceFile = parse(readFileSync(full, 'utf8'), full);
-    return inspectSourceFile(sourceFile, relative(root, full), importedBindings(sourceFile, full));
-  });
+  const resolver = createImportedHelperResolver(root);
+  const violations = files.flatMap((full) =>
+    inspectSourceFile(
+      resolver.sourceFileOf(full),
+      relative(root, full),
+      resolver.importedAssertingBindings(full),
+    ),
+  );
   return { files: files.length, violations };
 }
 
