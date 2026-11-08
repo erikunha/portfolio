@@ -54,78 +54,84 @@ export function CvPage({ locale }: { locale: SiteLocale }) {
         </ul>
       </header>
 
-      <ReadingSection id={sectionId('summary')} heading={cv.headings.summary}>
-        <p>{document_.summary}</p>
-      </ReadingSection>
+      <div className="reading-split reading-split--flow">
+        <div className="reading-main">
+          <ReadingSection id={sectionId('summary')} heading={cv.headings.summary}>
+            <p>{document_.summary}</p>
+          </ReadingSection>
 
-      <ReadingSection id={sectionId('experience')} heading={cv.headings.experience}>
-        <span id={NEW_TAB_NOTE_ID} className="sr-only">
-          {shared.newTabHint}
-        </span>
-        {document_.experience.map((job) => (
-          <article key={job.key} className="reading-entry">
-            <h3 data-type-reveal suppressHydrationWarning>
-              <CompanyLink href={job.companyUrl} locale={locale} describedBy={NEW_TAB_NOTE_ID}>
-                {job.company}
-              </CompanyLink>
-            </h3>
-            <p className="reading-meta">{job.meta}</p>
-            {job.context ? <p>{job.context}</p> : null}
-            <ul>
-              {job.bullets.map((bullet) => (
-                <li key={bullet}>{bullet}</li>
-              ))}
-            </ul>
-          </article>
-        ))}
-      </ReadingSection>
-
-      <ReadingSection id={sectionId('skills')} heading={cv.headings.skills}>
-        <p>{document_.skills.join(SKILL_SEPARATOR)}</p>
-      </ReadingSection>
-
-      <ReadingSection id={sectionId('certifications')} heading={cv.headings.certifications}>
-        <Rows rows={document_.certifications} />
-      </ReadingSection>
-
-      <ReadingSection id={sectionId('community')} heading={cv.headings.community}>
-        <article className="reading-entry">
-          <h3>
-            {document_.community.href ? (
-              <ExternalLink href={document_.community.href}>
-                {document_.community.heading}
-                <span className="sr-only"> {shared.newTabHint}</span>
-              </ExternalLink>
-            ) : (
-              document_.community.heading
-            )}
-          </h3>
-          <ul>
-            {document_.community.bullets.map((bullet) => (
-              <li key={bullet}>{bullet}</li>
+          <ReadingSection id={sectionId('experience')} heading={cv.headings.experience}>
+            <span id={NEW_TAB_NOTE_ID} className="sr-only">
+              {shared.newTabHint}
+            </span>
+            {document_.experience.map((job) => (
+              <article key={job.key} className="reading-entry">
+                <h3 data-type-reveal suppressHydrationWarning>
+                  <CompanyLink href={job.companyUrl} locale={locale} describedBy={NEW_TAB_NOTE_ID}>
+                    {job.company}
+                  </CompanyLink>
+                </h3>
+                <p className="reading-meta">{job.meta}</p>
+                {job.context ? <p>{job.context}</p> : null}
+                <ul>
+                  {job.bullets.map((bullet) => (
+                    <li key={bullet}>{bullet}</li>
+                  ))}
+                </ul>
+              </article>
             ))}
-          </ul>
-          <p className="reading-meta">{document_.community.status}</p>
-        </article>
-      </ReadingSection>
+          </ReadingSection>
 
-      <ReadingSection id={sectionId('education')} heading={cv.headings.education}>
-        <Rows rows={document_.education} />
-      </ReadingSection>
+          <ReadingSection id={sectionId('community')} heading={cv.headings.community}>
+            <article className="reading-entry">
+              <h3>
+                {document_.community.href ? (
+                  <ExternalLink href={document_.community.href}>
+                    {document_.community.heading}
+                    <span className="sr-only"> {shared.newTabHint}</span>
+                  </ExternalLink>
+                ) : (
+                  document_.community.heading
+                )}
+              </h3>
+              <ul>
+                {document_.community.bullets.map((bullet) => (
+                  <li key={bullet}>{bullet}</li>
+                ))}
+              </ul>
+              <p className="reading-meta">{document_.community.status}</p>
+            </article>
+          </ReadingSection>
+        </div>
 
-      <ReadingSection id={sectionId('contact')} heading={cv.headings.contact}>
-        <p className="reading-meta">{document_.languages}</p>
-        <p className="reading-actions-inline">
-          <ExternalLink
-            className="reading-cta"
-            href={shared.hire.href}
-            aria-label={shared.hire.ariaLabel}
-          >
-            {shared.hire.label}
-          </ExternalLink>
-          <a href={`mailto:${document_.email}`}>{document_.email}</a>
-        </p>
-      </ReadingSection>
+        <div className="reading-side">
+          <ReadingSection id={sectionId('skills')} heading={cv.headings.skills}>
+            <p>{document_.skills.join(SKILL_SEPARATOR)}</p>
+          </ReadingSection>
+
+          <ReadingSection id={sectionId('certifications')} heading={cv.headings.certifications}>
+            <Rows rows={document_.certifications} />
+          </ReadingSection>
+
+          <ReadingSection id={sectionId('education')} heading={cv.headings.education}>
+            <Rows rows={document_.education} />
+          </ReadingSection>
+
+          <ReadingSection id={sectionId('contact')} heading={cv.headings.contact}>
+            <p className="reading-meta">{document_.languages}</p>
+            <p className="reading-actions-inline">
+              <ExternalLink
+                className="reading-cta"
+                href={shared.hire.href}
+                aria-label={shared.hire.ariaLabel}
+              >
+                {shared.hire.label}
+              </ExternalLink>
+              <a href={`mailto:${document_.email}`}>{document_.email}</a>
+            </p>
+          </ReadingSection>
+        </div>
+      </div>
     </ReadingShell>
   );
 }

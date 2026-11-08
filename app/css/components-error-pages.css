@@ -60,9 +60,7 @@
     justify-content: center;
     gap: var(--spacing-6);
     min-height: calc(100dvh - var(--err-top-chrome) - var(--err-bottom-chrome));
-    max-width: var(--measure-read);
-    margin: 0 auto;
-    padding: var(--space-page-top) var(--space-gutter);
+    padding-block: var(--space-page-top);
     color: var(--color-text);
     font-family: var(--font-mono);
     text-align: center;

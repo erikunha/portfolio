@@ -17,22 +17,12 @@
     color: var(--color-text);
   }
 
-  .page-container {
-    width: 100%;
-    max-width: var(--measure-page);
-    margin-inline: auto;
-    padding-inline: var(--space-gutter);
-    padding-block-start: var(--space-page-top);
-  }
-
   .reading-doc {
-    max-width: var(--measure-read);
-    margin: 0 auto;
     padding-block-end: var(--spacing-6);
   }
 
-  .reading-doc--wide {
-    max-width: var(--measure-page);
+  .reading-doc :is(p, .reading-entry li) {
+    max-width: var(--measure-read);
   }
 
   .reading-actions,
@@ -341,10 +331,12 @@
       gap: 0 10pt;
     }
 
-    .reading-doc,
-    .reading-doc--wide {
-      max-width: none;
+    .reading-doc {
       padding: 0;
+    }
+
+    .reading-doc :is(p, .reading-entry li) {
+      max-width: none;
     }
 
     .reading-name {
@@ -390,6 +382,11 @@
       margin-top: 14pt;
     }
 
+    .reading-split--flow {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .reading-main,
     .reading-side {
       gap: 14pt;
     }

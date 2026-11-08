@@ -1,6 +1,5 @@
 @layer components {
   .site-footer {
-    --footer-max-width: 75rem;
     --footer-line-height: 1.5;
     --footer-session-leading: 1.95;
     --footer-dmesg-leading: calc(var(--spacing-4) + var(--spacing-1));
@@ -18,12 +17,6 @@
     font-size: var(--text-sm);
     line-height: var(--footer-line-height);
     padding-block: var(--spacing-6) calc(var(--spacing-16) + env(safe-area-inset-bottom, 0px));
-  }
-
-  .footer-inner {
-    max-width: var(--footer-max-width);
-    margin-inline: auto;
-    padding-inline: var(--space-gutter);
   }
 
   .footer-shutdown-title,

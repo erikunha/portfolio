@@ -13,7 +13,7 @@ export function SummaryPage({ locale }: { locale: SiteLocale }) {
   const doc = summaryDocument[locale];
   const cvPath = readingViews[locale].cv.path;
   return (
-    <ReadingShell locale={locale} route={readingViews[locale].summary.path} wide>
+    <ReadingShell locale={locale} route={readingViews[locale].summary.path}>
       <section aria-labelledby={sectionId('who')}>
         <h1 id={sectionId('who')} className="reading-name">
           {doc.name}

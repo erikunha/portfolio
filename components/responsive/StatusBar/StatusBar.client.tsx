@@ -42,7 +42,7 @@ export function StatusBar() {
 
   return (
     <div
-      className="status-bar sticky top-0 z-[110] flex items-center justify-between px-[14px] py-1.5 pt-[calc(env(safe-area-inset-top,0px)+6px)] bg-secondary-950 border-b border-primary-subtle text-xs tracking-[0.06em] text-primary-500 [font-variant-numeric:tabular-nums]"
+      className="status-bar sticky top-0 z-[110] flex items-center justify-between px-[var(--space-gutter)] py-1.5 pt-[calc(env(safe-area-inset-top,0px)+6px)] bg-secondary-950 border-b border-primary-subtle text-xs tracking-[0.06em] text-primary-500 [font-variant-numeric:tabular-nums]"
       aria-hidden="true"
     >
       <div className="flex items-center gap-2">
