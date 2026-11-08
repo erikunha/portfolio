@@ -1,4 +1,5 @@
 import { dsPageMetadata } from '../_lib/page-metadata';
+import { OnThisPage } from '../_components/OnThisPage';
 
 export const metadata = dsPageMetadata({
   slug: 'enforcement',
@@ -8,9 +9,11 @@ export const metadata = dsPageMetadata({
 
 # ENFORCEMENT
 
+<OnThisPage items={[{id:'tokens',label:'Tokens'},{id:'styling',label:'Styling'},{id:'components',label:'Components'},{id:'cross-cutting',label:'Cross-cutting'},{id:'adding-a-new-component',label:'Adding a New Component'}]} />
+
 The checks below run in CI or local tooling. CI scheduling and local-only coverage are stated separately.
 
-## Tokens
+<h2 id="tokens">Tokens</h2>
 
 `app/css/theme.css` (`@theme`) is the single source of truth for brand colour.
 The file declares `--color-*` custom properties; Tailwind generates matching utilities.
@@ -27,13 +30,13 @@ from `--text-xs` to `--text-7xl` with a `--text-min` floor that rises from 12px 
 `--spacing-target` for interactive targets. `lint:contrast` checks the color pairs;
 the unit tests in `app/(en)/design-system/_lib/theme-tokens.test.ts` pin the scale. Motion and z-index use utilities and named CSS classes, including arbitrary values.
 
-## Styling
+<h2 id="styling">Styling</h2>
 
 Components use Tailwind utilities and shared classes in `app/css/components-*.css`.
 The PostCSS configuration uses `@tailwindcss/postcss`. Design-system component
 directories have no CSS Modules.
 
-## Components
+<h2 id="components">Components</h2>
 
 | Gate | Command | Checks |
 |---|---|---|
@@ -41,7 +44,7 @@ directories have no CSS Modules.
 | Visual regression | `tests/e2e/design-system-components.spec.ts` | Local Darwin component snapshots; ignored in CI by `playwright.config.ts` |
 | A11y | `pnpm playwright test tests/a11y` | axe-core scan including `wcag22aa`, zero violations |
 
-## Cross-cutting
+<h2 id="cross-cutting">Cross-cutting</h2>
 
 | Gate | Command |
 |---|---|
@@ -55,7 +58,7 @@ directories have no CSS Modules.
 | Per-route first-load JS (164.2KB gzip) | `pnpm route-js-check` |
 | Lighthouse (a11y = 100) | `pnpm lhci` · `pnpm lhci:mobile` |
 
-## Adding a New Component
+<h2 id="adding-a-new-component">Adding a New Component</h2>
 
 1. Create `design-system/components/NewComponent/` with `.tsx`, `.test.tsx`, and `index.ts` · styled with Tailwind utilities, no `.module.css`.
 2. Export it from `design-system/index.ts`, unless it is a boundary exception: `Field` is deliberately client-only and `BrandIcon` is imported by path, and neither ships through the barrel.

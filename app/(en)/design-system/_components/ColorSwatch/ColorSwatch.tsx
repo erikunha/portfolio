@@ -7,7 +7,7 @@ export function ColorSwatch({ token, usage }: Props) {
   if (!resolved) return null;
 
   return (
-    <div className="flex items-center gap-3 py-2 border-b border-primary-border last:border-0">
+    <div className="ds-swatch flex items-center gap-3 py-2 border-b border-primary-border last:border-0">
       <div
         className="w-8 h-8 flex-shrink-0 border border-primary-border"
         style={{

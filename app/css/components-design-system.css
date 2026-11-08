@@ -280,6 +280,29 @@
     }
   }
 
+  @media (max-width: 767.98px) {
+    .ds-main:has(> .toc) {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .ds-main > .toc {
+      order: 1;
+    }
+
+    .ds-main > .toc ~ * {
+      order: 2;
+    }
+
+    .ds-main > .toc + * {
+      order: 0;
+    }
+  }
+
+  .ds-swatch:has(+ :is(p, ul, ol, pre, table)) {
+    margin-block-end: var(--spacing-3);
+  }
+
   @media print {
     .ds-sidebar,
     .toc,

@@ -3,11 +3,11 @@ import { execFileSync } from 'node:child_process';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import {
-  CHANGELOG_HEADER,
   type ChangelogGroups,
+  commitTypeToKind,
   mergeChangelogGroups,
   parseChangelogGroups,
-  renderChangelogGroups,
+  renderChangelogPage,
 } from './lib/changelog-merge';
 
 const ROOT = join(import.meta.dirname, '..');
@@ -34,7 +34,9 @@ function parseCommits(): ChangelogGroups {
     const description = match[3];
     if (!type || !description) continue;
     if (!groups.has(date)) groups.set(date, []);
-    groups.get(date)?.push({ type, description, breaking: match[2] === '!' });
+    groups
+      .get(date)
+      ?.push({ kind: commitTypeToKind(type), description, breaking: match[2] === '!' });
   }
 
   return groups;
@@ -42,6 +44,6 @@ function parseCommits(): ChangelogGroups {
 
 const existing = parseChangelogGroups(readFileSync(CHANGELOG_PATH, 'utf8'));
 const merged = mergeChangelogGroups(existing, parseCommits());
-const content = `${CHANGELOG_HEADER}${renderChangelogGroups(merged)}\n`;
+const content = renderChangelogPage(merged);
 writeFileSync(CHANGELOG_PATH, content);
 console.log(`changelog: wrote ${merged.size} date group(s) to ${CHANGELOG_PATH}`);

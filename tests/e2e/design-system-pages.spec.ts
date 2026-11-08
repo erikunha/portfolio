@@ -5,7 +5,9 @@ import { PREVIEW_SOURCE_ARIA_LABEL_FALLBACK } from '@/app/(en)/design-system/_co
 const SIDEBAR_MIN_WIDTH = 1024;
 const OVERVIEW_PATH = '/design-system';
 const OVERVIEW_HEADING = 'DESIGN SYSTEM';
-const REFERENCE_GROUP_EXCLUDED_ID = 'pages';
+const STACKED_TOC_MAX_WIDTH = 767;
+const RAIL_TOC_MIN_WIDTH = 1280;
+const SWATCH_LIST_GAP_MIN = 8;
 
 const toRoute = (link: { href: string; label: string }) => ({
   path: link.href,
@@ -13,10 +15,6 @@ const toRoute = (link: { href: string; label: string }) => ({
 });
 
 const ALL_ROUTES = DS_NAV_GROUPS.flatMap((group) => group.links.map(toRoute));
-
-const REFERENCE_ROUTES = DS_NAV_GROUPS.filter(
-  (group) => group.id !== REFERENCE_GROUP_EXCLUDED_ID,
-).flatMap((group) => group.links.map(toRoute));
 
 for (const { path, heading } of ALL_ROUTES) {
   test(`${path}: renders heading and the page tree`, async ({ page }) => {
@@ -30,7 +28,7 @@ for (const { path, heading } of ALL_ROUTES) {
   });
 }
 
-for (const { path } of REFERENCE_ROUTES) {
+for (const { path } of ALL_ROUTES) {
   test(`${path}: marks itself current and offers on-this-page links`, async ({ page }) => {
     await page.goto(path);
     const sidebar = page.locator(`#${DS_NAV_ID}`);
@@ -39,7 +37,59 @@ for (const { path } of REFERENCE_ROUTES) {
     await expect(toc).toBeVisible();
     expect(await toc.getByRole('link').count()).toBeGreaterThan(0);
   });
+
+  test(`${path}: every on-this-page link points at a heading on the page`, async ({ page }) => {
+    await page.goto(path);
+    const toc = page.getByRole('navigation', { name: 'On this page' });
+    const hrefs = await toc
+      .getByRole('link')
+      .evaluateAll((nodes) => nodes.map((node) => node.getAttribute('href') ?? ''));
+    expect(hrefs.length).toBeGreaterThan(0);
+    for (const href of hrefs) {
+      const target = page.locator(`[id="${href.slice(1)}"]`);
+      await expect(target, `${path} has no element for ${href}`).toHaveCount(1);
+    }
+  });
+
+  test(`${path}: on-this-page sits after the intro on a phone and beside it on a wide screen`, async ({
+    page,
+  }) => {
+    await page.goto(path);
+    const width = page.viewportSize()?.width ?? 0;
+    const toc = page.getByRole('navigation', { name: 'On this page' });
+    const intro = toc.locator('xpath=following-sibling::*[1]');
+    const tocBox = await toc.boundingBox();
+    const introBox = await intro.boundingBox();
+    expect(tocBox).not.toBeNull();
+    expect(introBox).not.toBeNull();
+    if (!tocBox || !introBox) return;
+    if (width <= STACKED_TOC_MAX_WIDTH) {
+      expect(tocBox.y, 'the intro must start before the list on a phone').toBeGreaterThanOrEqual(
+        introBox.y + introBox.height - 1,
+      );
+    }
+    if (width >= RAIL_TOC_MIN_WIDTH) {
+      expect(tocBox.x, 'the list stays in the right rail').toBeGreaterThanOrEqual(
+        introBox.x + introBox.width,
+      );
+    }
+  });
 }
+
+test('the line under the last colour swatch is followed by a gap before the next paragraph', async ({
+  page,
+}) => {
+  await page.goto('/design-system/tokens');
+  const gaps = await page.locator('.ds-swatch').evaluateAll((nodes) =>
+    nodes.flatMap((node) => {
+      const next = node.nextElementSibling;
+      if (!next || next.classList.contains('ds-swatch')) return [];
+      return [next.getBoundingClientRect().top - node.getBoundingClientRect().bottom];
+    }),
+  );
+  expect(gaps.length).toBeGreaterThan(0);
+  for (const gap of gaps) expect(gap).toBeGreaterThanOrEqual(SWATCH_LIST_GAP_MIN);
+});
 
 test('sidebar links every design-system page', async ({ page }) => {
   await page.goto('/design-system');

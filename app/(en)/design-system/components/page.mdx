@@ -1,4 +1,5 @@
 import { dsPageMetadata } from '../_lib/page-metadata';
+import { OnThisPage } from '../_components/OnThisPage';
 
 export const metadata = dsPageMetadata({
   slug: 'components',
@@ -17,6 +18,8 @@ import { BrandIcon } from '../../../../design-system/components/BrandIcon/BrandI
 import { WindowChrome } from '../../../../design-system/components/WindowChrome/WindowChrome';
 
 # COMPONENTS
+
+<OnThisPage items={[{id:'button',label:'Button'},{id:'field',label:'Field'},{id:'badge',label:'Badge'},{id:'terminal-panel',label:'TerminalPanel'},{id:'brand-icon',label:'BrandIcon'},{id:'window-chrome',label:'WindowChrome'},{id:'stat-tile',label:'StatTile'},{id:'cmd-line',label:'CmdLine'},{id:'kbd-key',label:'KbdKey'},{id:'nav-item',label:'NavItem'},{id:'copybutton',label:'CopyButton'},{id:'panel',label:'Panel'},{id:'shell-and-module-patterns',label:'Shell and module patterns'},{id:'composition-patterns',label:'Composition Patterns'}]} />
 
 The `design-system/components` directory contains eleven components. Ten have no client directive; `Field` is a client component. The docs also provide a client `CopyButton` helper from `app/(en)/design-system/_components`. Server-compatible components ship client JavaScript when imported through a client boundary.
 
@@ -171,7 +174,7 @@ Other `<kbd>` attributes pass through and `className` is appended.
 
 **Accessibility:** Uses semantic `<kbd>` element.
 
-## NavItem
+<h2 id="nav-item">NavItem</h2>
 
 | Prop | Type | Default | Required |
 |---|---|---|---|
@@ -220,7 +223,7 @@ A bordered frame on an opaque `secondary-950` surface. The header holds a decora
 
 ---
 
-## Shell and module patterns
+<h2 id="shell-and-module-patterns">Shell and module patterns</h2>
 
 These pieces live in `components/`, not in `design-system/components`. They are documented here because pages outside the home page reuse them.
 
@@ -283,7 +286,7 @@ An external link to a company named in the text. It always opens in a new tab wi
 
 ---
 
-## Composition Patterns
+<h2 id="composition-patterns">Composition Patterns</h2>
 
 ### Stat grid using StatTile
 
