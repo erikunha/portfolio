@@ -6,6 +6,7 @@ import type { FooterContent } from '@/content/schemas';
 import { isRendered } from '@/lib/dom/is-rendered';
 import { SHELL_COMMAND_EVENT } from '@/lib/events';
 import { useLastRef } from '@/lib/request-refs.client';
+import { NO_SECTION_ID, observeSections } from '@/lib/section-spy';
 import { MS_PER_SECOND, pad2, SECONDS_PER_HOUR, SECONDS_PER_MINUTE } from '@/lib/time';
 import { RefCopyButton } from '../../client/RefChip/RefChip.client';
 
@@ -18,8 +19,6 @@ const HEADING_SELECTOR = 'main h1, main [role="heading"][aria-level="1"]';
 const FOOTER_SELECTOR = 'footer';
 const SCROLL_BEHAVIOR = 'instant';
 const HOME_SELECTOR = `#${MAIN_CONTENT_ID}`;
-const MOBILE_HERO_SELECTOR = '[data-testid="hero-mobile"]';
-const HOME_SECTION_ID = 'bio';
 const SESSION_FIELDS = {
   uptime: '[data-sess="uptime"]',
   depth: '[data-sess="depth"]',
@@ -92,29 +91,10 @@ export function SessionCounters({
         interval = setInterval(tick, MS_PER_SECOND);
       }
     };
-    const observer =
-      typeof IntersectionObserver === 'undefined'
-        ? null
-        : new IntersectionObserver(
-            (entries) => {
-              for (const entry of entries) {
-                if (entry.isIntersecting) {
-                  const sectionId = entry.target.matches(MOBILE_HERO_SELECTOR)
-                    ? HOME_SECTION_ID
-                    : entry.target.id || HOME_SECTION_ID;
-                  seen.add(sectionId);
-                }
-              }
-              if (fields.seen) fields.seen.textContent = String(seen.size);
-            },
-            { rootMargin: SECTION_READING_BAND },
-          );
-    for (const id of sectionIds) {
-      const section = document.getElementById(id);
-      if (section) observer?.observe(section);
-    }
-    const mobileHero = document.querySelector(MOBILE_HERO_SELECTOR);
-    if (mobileHero) observer?.observe(mobileHero);
+    const stopSpy = observeSections(sectionIds, { rootMargin: SECTION_READING_BAND }, (entered) => {
+      for (const sectionId of entered) if (sectionId !== NO_SECTION_ID) seen.add(sectionId);
+      if (fields.seen) fields.seen.textContent = String(seen.size);
+    });
     tick();
     onScroll();
     onVisibility();
@@ -124,7 +104,7 @@ export function SessionCounters({
     return () => {
       clearInterval(interval);
       if (scrollFrame !== undefined) cancelAnimationFrame(scrollFrame);
-      observer?.disconnect();
+      stopSpy();
       window.removeEventListener(SHELL_COMMAND_EVENT, onCommand);
       window.removeEventListener('scroll', onScrollFrame);
       document.removeEventListener('visibilitychange', onVisibility);

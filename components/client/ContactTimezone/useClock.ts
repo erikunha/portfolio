@@ -1,6 +1,7 @@
 'use client';
 
 import { type RefObject, useEffect, useState } from 'react';
+import { useInView } from '@/lib/use-in-view.client';
 
 const VIEWPORT_ROOT_MARGIN = '0px';
 
@@ -28,25 +29,8 @@ export function useNow(active: boolean, stepMs: number): Date {
 }
 
 export function usePanelActive(ref: RefObject<Element | null>): boolean {
-  const [inView, setInView] = useState(false);
+  const inView = useInView(ref, { rootMargin: VIEWPORT_ROOT_MARGIN });
   const [tabVisible, setTabVisible] = useState(() => document.visibilityState !== 'hidden');
-
-  useEffect(() => {
-    const node = ref.current;
-    if (!node || typeof IntersectionObserver === 'undefined') {
-      setInView(true);
-      return undefined;
-    }
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const latest = entries[entries.length - 1];
-        if (latest) setInView(latest.isIntersecting);
-      },
-      { rootMargin: VIEWPORT_ROOT_MARGIN },
-    );
-    observer.observe(node);
-    return () => observer.disconnect();
-  }, [ref]);
 
   useEffect(() => {
     const sync = () => setTabVisible(document.visibilityState !== 'hidden');

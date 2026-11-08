@@ -335,7 +335,10 @@ lib/lighthouse-scores.ts              # PSI API fetcher (cached daily)
 lib/log.ts                            # pino wrapper (text dev / JSON prod)
 lib/motion.ts                         # readMotion / applyMotion (body data-attr)
 lib/motion-change.ts                  # MOTION_CHANGE_EVENT and subscribeMotion, the one motionchange listener
-lib/pause-when-hidden.ts              # pause a typewriter loop while the tab is hidden or the element is off screen
+lib/pause-when-hidden.ts              # pause a typewriter loop while the tab is hidden or the element is off screen (built on observeInView)
+lib/in-view.ts                        # observeInView, the one IntersectionObserver wrapper: callback with a stop handle, and a per-caller answer when the API is missing
+lib/use-in-view.client.ts            # useInView, in view now or once (the contact timezone preload, the clock panel)
+lib/section-spy.ts                   # section id to element resolution (mobile hero is `bio`) and observeSections; each caller passes its own reading band
 lib/slider.ts                         # sliderValueForKey and percentAlong for the DAW sliders
 lib/meter.ts                          # meterSegmentState, the VU clip rule shared by the live and static meters
 lib/post-json.ts                      # postJson, a JSON POST with an abort deadline
