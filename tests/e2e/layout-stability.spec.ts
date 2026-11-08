@@ -21,6 +21,13 @@ const LOCALES = [
   { name: 'pt', path: '/pt', locale: 'pt-BR', timezoneId: 'America/Sao_Paulo' },
 ] as const;
 const FIXED_NOW = new Date('2026-11-02T15:00:00Z');
+const TIMEZONE_PANEL_VIEWPORTS = [
+  VIEWPORTS.PHONE_NARROW,
+  PHONE,
+  TABLET,
+  { width: 1120, height: DESKTOP.height },
+  DESKTOP,
+] as const;
 
 function contextFor(browser: Browser, baseURL: string | undefined, options: BrowserContextOptions) {
   return browser.newContext({ ...options, ...(baseURL ? { baseURL } : {}) });
@@ -115,7 +122,7 @@ test.describe('the measured section keeps its height when its data resolves', ()
 
 test.describe('the timezone panel keeps its height when the live panel mounts', () => {
   for (const { name, path, locale, timezoneId } of LOCALES) {
-    for (const viewport of [PHONE, TABLET, DESKTOP]) {
+    for (const viewport of TIMEZONE_PANEL_VIEWPORTS) {
       test(`${name} at ${viewport.width}px: static and live panel are as tall`, async ({
         browser,
         baseURL,
