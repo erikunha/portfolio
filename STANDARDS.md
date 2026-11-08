@@ -210,6 +210,12 @@ and trip that guard on an otherwise-clean install.
 unbounded spec, in dependencies and in `pnpm.overrides` alike (an override must be a `^` or `~` range). It runs inside `pnpm verify`, in the `pre-push` hook, and as the
 `Dependency-pinning gate` step in the `quality-fast` CI job. Reproducibility
 of the install itself is held by `pnpm install --frozen-lockfile` in CI.
+`scripts/check-dependency-vetting.ts` (`pnpm check:dependency-vetting`) requires an
+entry in `dependency-vetting.json`, with a purpose and the recorded license, for every
+direct dependency, fails when an installed license differs from the recorded one, and
+rejects an install script on a package listed in neither `pnpm.onlyBuiltDependencies`
+nor `pnpm.ignoredBuiltDependencies`. The
+`dependency-review` CI job blocks high-severity advisories and GPL/AGPL licenses.
 
 ---
 
@@ -356,7 +362,8 @@ aspiration.
 
 **Rule.** The pre-commit hook is sub-second — it runs only `pnpm check` (Biome
 lint + format). The heavier gate runs in `pre-push`: typecheck,
-`validate-content`, `check:client-naming`, `check:dep-pinning`, and the unit
+`validate-content`, `check:client-naming`, `check:dep-pinning`,
+`check:dependency-vetting`, and the unit
 tests. `pnpm verify` is the named, single pre-PR command that runs the full
 local gate. CI gates are never disabled to merge — a failing gate means the
 underlying issue is fixed, not the gate removed. Every dependency is installed
@@ -373,7 +380,7 @@ deadline pressure enforces nothing.
 git hooks themselves — `.husky/pre-commit` runs `pnpm check`, `.husky/pre-push`
 runs the branch-name guard plus `pnpm verify`. `pnpm verify` is defined in
 `package.json` as the composed chain (`check + typecheck + validate-content +
-check:client-naming + check:dep-pinning + test`). The "never disable a gate"
+check:client-naming + check:dep-pinning + check:dependency-vetting + test`). The "never disable a gate"
 rule is held by **culture** and by PR review — there is no meta-gate that can
 prevent a gate from being deleted, only the standard that says it must not be.
 The PR merge gate (`pnpm pr:gate`: threads resolved with a reply; GitHub `required_conversation_resolution`

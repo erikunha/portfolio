@@ -68,6 +68,9 @@ jobs:
       - name: Dependency-pinning gate
         run: pnpm check:dep-pinning
 
+      - name: Dependency-vetting gate
+        run: pnpm check:dependency-vetting
+
       - name: Harness size gate
         run: node scripts/check-harness-size.mjs
 
