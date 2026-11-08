@@ -4,7 +4,7 @@
 
 ## The 30-second model
 
-You are joining a single-developer, AI-agent-assisted, spec-driven, gate-heavy platform. Work flows: brainstorm -> spec -> architect gate -> plan -> implement (test-first) -> the gate chain -> squash-merge -> ADR. Git hooks and CI enforce checks. Architect review and pre-PR review are conventions.
+You are joining a spec-driven, gate-heavy platform. Work flows: spec -> plan check -> plan -> implement (test-first) -> the gate chain -> squash-merge -> ADR. Git hooks and CI enforce checks. Which AI tools you use, if any, and how you review before a PR are your own choice.
 
 ## Day 1 - understand the flow before you touch it
 
@@ -28,8 +28,8 @@ flowchart LR
     tdd["write a failing behavior test"] --> edit["implement"] --> commit["commit (scope!)"]
     commit --> push["push (passes pre-push)"]
     push --> pr["ci:local; non-docs bundle + route-JS + runtime; open PR"]
-    pr --> conv["resolve every thread"] --> ready["pr:gate"] --> owner["owner merges"]
-    owner --> deploy["deploy; document architectural decisions with the change"]
+    pr --> conv["resolve every thread"] --> ready["pr:gate"] --> merge["squash-merge"]
+    merge --> deploy["deploy; document architectural decisions with the change"]
 ```
 
 This exercises the ordinary contribution path. Runtime checks depend on the affected surface.
@@ -63,4 +63,4 @@ This exercises the ordinary contribution path. Runtime checks depend on the affe
 
 ## When you can independently contribute
 
-You are ready when you can, without help: take a requirement through a spec and the architect gate, implement it test-first, pass the gate chain, open a PR and take it to merge readiness, and record the ADR. The [workflow-playbook](./workflow-playbook.md) is your reference until that is muscle memory.
+You are ready when you can, without help: take a requirement through a spec and the plan check, implement it test-first, pass the gate chain, open a PR and take it to merge readiness, and record the ADR. The [workflow-playbook](./workflow-playbook.md) is your reference until that is muscle memory.

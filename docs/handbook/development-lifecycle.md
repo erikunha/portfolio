@@ -6,8 +6,8 @@ How a change flows from requirement to production. Git hooks and CI enforce chec
 
 ```mermaid
 flowchart TD
-    idea["Idea / requirement"] --> brainstorm["Brainstorm (/speckit.specify)"]
-    brainstorm --> spec["Spec: local specs/NNN-feature/<br/>requirements + acceptance criteria"]
+    idea["Idea / requirement"] --> brainstorm["Brainstorm"]
+    brainstorm --> spec["Spec (local, untracked)<br/>requirements + acceptance criteria"]
     spec --> agate{"plan-review convention<br/>GATE_RESULT: PASS?"}
     agate -->|no| spec
     agate -->|yes| plan["Plan: local feature directory<br/>independently verifiable tasks"]
@@ -20,7 +20,7 @@ flowchart TD
     readypr --> pr["gh pr create (fill template)"]
     pr --> conv["resolve review threads (rebase before every push)"]
     conv --> readymerge["CI green + pr:gate"]
-    readymerge --> merge["owner squash-merges (#NNN)"]
+    readymerge --> merge["squash-merge (#NNN)"]
     merge --> deploy["Vercel deploy"]
     deploy --> smoke["post-deploy smoke test"]
     smoke --> adr["deployment verified; ADR recorded"]
@@ -31,11 +31,11 @@ flowchart TD
 
 ### 1. Idea -> Brainstorm
 
-Work starts with `/speckit.specify` (mandated before any feature). The output is a shared understanding of intent, requirements, and the chosen approach, with failure modes considered up front.
+Work starts with a short brainstorm. The output is a shared understanding of intent, requirements, and the chosen approach, with failure modes considered up front.
 
 ### 2. Spec (the approved requirements)
 
-Write the feature requirements and acceptance criteria under local `specs/NNN-feature/`. `.gitignore` excludes `specs`, `.specify` and generated spec-kit skills. Artifact templates belong to the installed tooling; they are not tracked project contracts.
+Write the feature requirements and acceptance criteria. Specs stay local: `.gitignore` excludes `specs`, `.specify` and generated spec-kit skills, and the tool that writes a spec is each engineer's choice.
 
 ### 3. The plan gate
 
@@ -64,11 +64,11 @@ Run `pnpm ci:predict` (add `--linux` when the change touches layout, fonts or me
 
 ### 9. Review threads
 
-On the open PR, answer every review thread: rebase before every push, verify the pushed SHA landed, and reply citing the fix SHA before resolving a thread. claude-review runs only when an owner, member or collaborator comments `/claude-review`; its findings are fixed in one commit, answered in each thread and resolved, with no automatic follow-up round.
+On the open PR, answer every review thread and reply before resolving it. claude-review runs only when an owner, member or collaborator comments `/claude-review`, with no automatic follow-up round.
 
 ### 10. Pre-merge gates -> merge
 
-`pnpm pr:gate` (`scripts/check-pr-comments.ts`) requires the returned review threads (the first 100; the query does not paginate) to be resolved with a reply, and flags `suspicious_self_resolve`. CI runs it in `quality-fast`. Run `pnpm ci:local` alongside it, with CI green and the base contained. `pnpm claude-gate` (`scripts/check-claude-approval.ts`) is an optional check on a requested claude-review verdict, not a merge requirement; it requires the latest verdict to be Approve on the current head, an Approve on an ancestor SHA carries across a nonempty diff containing only visual baseline PNGs, and other stale or SHA-less Approves fail closed.
+`pnpm pr:gate` (`scripts/check-pr-comments.ts`) requires the returned review threads (the first 100; the query does not paginate) to be resolved with a reply, and flags `suspicious_self_resolve`. CI runs it in `quality-fast`. Run `pnpm ci:local` alongside it, with CI green and the base contained.
 
 ### 11. Deploy -> smoke -> record
 
@@ -90,9 +90,7 @@ A UI change is read at every width before its PR opens. Each section gets a crit
 | Heuristics               | Does the surface show what happened and what to do next?         |
 | Copy                     | Does the wording say what the reader needs, in the fewest words? |
 
-**One PR per pass.** A pass collects its findings and fixes them in one branch and one pull request, so a reviewer reads one change.
-
-**Screenshots.** Capture each section at 2x at 1280, 768 and 390, with the fixed chrome hidden, so the capture shows the section and not the chrome over it. `stripVolatileChrome` in `tests/e2e/_helpers/mask-volatile.ts` is the list of chrome hidden before a capture; add any new fixed or sticky bar to it.
+**Captures.** A section capture hides the fixed chrome, so it shows the section and not the chrome over it. `stripVolatileChrome` in `tests/e2e/_helpers/mask-volatile.ts` is the list of chrome hidden before a capture; add any new fixed or sticky bar to it.
 
 A finding that changes behavior is a decision, so it lands in `DECISIONS.md` as a dated bullet. A finding that touches a CI-gated baseline follows the `visual-baseline-regen` skill.
 
@@ -115,5 +113,5 @@ flowchart LR
     subgraph premerge["pre-merge"]
         g15["ci:local"] --> g18["pr:gate: resolved threads"]
     end
-    commit --> prepush --> prepr --> open --> premerge --> merge["owner squash-merge"]
+    commit --> prepush --> prepr --> open --> premerge --> merge["squash-merge"]
 ```

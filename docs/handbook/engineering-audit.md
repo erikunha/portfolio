@@ -9,7 +9,7 @@ This audit separates repository checks from workflow conventions. See [engineeri
 | Commit safety     | `.husky/pre-commit` runs Biome and staged gitleaks; `commit-msg` runs commitlint                         | Hooks can be bypassed; CI supplies independent checks                   |
 | Push safety       | `.husky/pre-push` checks the remote main ref, branch name and `pnpm verify`                              | Runtime browser gates are a manual pre-PR step                          |
 | Documentation     | `check:doc-drift` checks the `ARCHITECTURE.md` tree; component-docs checks headings                      | Neither validates every prose claim                                     |
-| Review            | `pr:gate` checks review threads; optional `claude-gate` checks a requested review's verdict against HEAD | Pre-PR review and architect/security dispatch are conventions           |
+| Review            | `pr:gate` checks review threads; the claude-review job reds a run that posted no verdict                | Pre-PR review is each engineer's own practice                           |
 | Product AI        | `ask:eval` runs calibration and corpus checks                                                            | CI execution depends on the AI change filter and credentials            |
 | Security analysis | gitleaks blocks on secrets; Semgrep uploads findings                                                     | The Semgrep scan is report-only; its report and fixture checks can fail |
 
@@ -21,7 +21,7 @@ A tree or heading can be correct while a described component, route or gate is w
 
 ### A2: Pre-PR checks are procedural
 
-There is no project hook requiring a plan-review PASS or a completed local review. `AGENTS.md` requires those steps. Git hooks and CI do not prove that they happened.
+There is no project hook requiring a plan-review PASS or a completed local review. `AGENTS.md` asks for the plan check; how an engineer reviews locally is their own choice. Git hooks and CI do not prove that either happened.
 
 ### A3: Client naming has explicit exceptions
 

@@ -32,10 +32,6 @@ Only a finding in one of these six categories blocks the merge:
 Style, naming, formatting taste and refactors the change does not need never block, whatever the
 severity badge says. Report at most five nits (MINOR) in a review.
 
-The loop stops after three rounds. A round is one push followed by one review. Findings still open
-after round three that are not blocking become follow-up issues, named in the thread reply before the
-thread is resolved. A blocking finding still open after round three goes to the owner, who decides.
-
 Severity follows consequence, not the verdict you want. A finding without a `file:line` on the head
 commit and a statement of what breaks, and when, is dropped.
 
