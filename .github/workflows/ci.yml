@@ -689,6 +689,7 @@ jobs:
       cancel-in-progress: true
     env:
       GITLEAKS_VERSION: 8.30.1
+      GITLEAKS_SHA256: 551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb # gitleaks_<version>_linux_x64.tar.gz; change with GITLEAKS_VERSION
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -704,27 +705,44 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
 
-      # Verified by CHECKSUM, not by asking the binary what it is: a tampered binary can
-      # print any version string it likes. The repo SHA-pins its Actions and exact-pins
-      # semgrep; a curl'd tarball has to clear the same bar.
+      # The release host answers 504 in bursts, and one 504 fails a required job with nothing
+      # scanned. The tarball is cached (key pinned to the version and platform, so a bump
+      # downloads fresh) and fetched only on a miss, with retries that back off over minutes.
+      # The expected hash is the GITLEAKS_SHA256 job env, never a cached file: whatever writes
+      # the cache entry cannot also write the value the tarball is checked against.
+      - name: Restore gitleaks release tarball
+        id: gitleaks-release
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ runner.temp }}/gitleaks-release
+          key: gitleaks-release-${{ env.GITLEAKS_VERSION }}-linux_x64
+
+      - name: Download gitleaks release tarball
+        if: steps.gitleaks-release.outputs.cache-hit != 'true'
+        run: |
+          set -euo pipefail
+          dir="${RUNNER_TEMP:-${TMPDIR:-/tmp}}/gitleaks-release"
+          mkdir -p "$dir"
+          base="https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}"
+          tarball="gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
+          curl -sSfL --retry 8 --retry-all-errors --retry-max-time 240 --max-time 120 -o "$dir/$tarball" "$base/$tarball"
+
+      # Verified by CHECKSUM against the pinned GITLEAKS_SHA256, not by asking the binary what
+      # it is: a tampered binary can print any version string it likes. The repo SHA-pins its
+      # Actions and exact-pins semgrep; a curl'd tarball has to clear the same bar. Runs on
+      # every run, so a cached file clears the same check as a downloaded one. A version bump
+      # without a matching GITLEAKS_SHA256 fails here, closed.
       - name: Install gitleaks (checksum-verified, exact-pinned)
         run: |
           set -euo pipefail   # explicit: the sha256sum -c below must abort the step, not just print
-          base="https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}"
+          dir="${RUNNER_TEMP:-${TMPDIR:-/tmp}}/gitleaks-release"
           tarball="gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
-          curl -sSfL --retry 4 --retry-delay 5 --max-time 120 -o "$tarball" "$base/$tarball"
-          curl -sSfL --retry 4 --retry-delay 5 --max-time 120 -o checksums.txt "$base/gitleaks_${GITLEAKS_VERSION}_checksums.txt"
 
-          expected="$(awk -v f="$tarball" '$2 == f { print $1 }' checksums.txt)"
-          if [ -z "$expected" ]; then
-            echo "::error::no checksum for $tarball in the release checksums file. Refusing to install an unverified binary."
-            exit 1
-          fi
-          echo "${expected}  ${tarball}" | sha256sum -c -
+          echo "${GITLEAKS_SHA256}  ${dir}/${tarball}" | sha256sum -c -
 
-          tar -xzf "$tarball" gitleaks
-          sudo install -m 0755 gitleaks /usr/local/bin/gitleaks
-          rm -f gitleaks "$tarball" checksums.txt
+          tar -xzf "$dir/$tarball" -C "$dir" gitleaks
+          sudo install -m 0755 "$dir/gitleaks" /usr/local/bin/gitleaks
+          rm -f "$dir/gitleaks"
 
           installed="$(gitleaks version)"
           if [ "$installed" != "$GITLEAKS_VERSION" ]; then
