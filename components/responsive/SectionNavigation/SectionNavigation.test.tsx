@@ -1,6 +1,7 @@
 import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import { renderToString } from 'react-dom/server';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { installMatchMedia, type MatchMediaStub } from '@/__tests__/helpers/match-media';
 import { DesktopTopbar } from '@/components/responsive/DesktopTopbar/DesktopTopbar.client';
 import { HIRE_ACCESSIBLE_NAME, TOPBAR_MOTION_LABEL } from '@/content/nav';
 import { NAVIGATION, siteNavChrome } from '@/content/navigation';
@@ -13,7 +14,7 @@ import {
   SectionNavigation,
   SectionNavigationProvider,
   useSectionNavigation,
-} from './SectionNavigation.client';
+} from './index';
 
 let mockPathname: string | null = null;
 let pathnameSuspended = false;
@@ -67,20 +68,11 @@ function leave(target: Element | null) {
 const MOTION_STORAGE_KEY = 'erik.motion';
 let reducedMotion = false;
 
+const REDUCED_MOTION_QUERY = 'prefers-reduced-motion';
+let media: MatchMediaStub;
+
 function stubMatchMedia() {
-  window.matchMedia = vi.fn((query: string) => ({
-    get matches() {
-      if (query.includes('prefers-reduced-motion')) return reducedMotion;
-      return false;
-    },
-    media: query,
-    addEventListener: () => {
-      throw new Error(
-        'stubMatchMedia does not model media query listeners: model the query in the stub before the component listens to it',
-      );
-    },
-    removeEventListener: () => undefined,
-  })) as unknown as typeof window.matchMedia;
+  media = installMatchMedia((query) => query.includes(REDUCED_MOTION_QUERY) && reducedMotion);
 }
 
 function Trigger() {
@@ -171,6 +163,12 @@ describe('SectionNavigation', () => {
   });
 
   afterEach(() => {
+    for (const query of media.queries()) {
+      expect(
+        media.listenerCount(query),
+        `${query}: the navigation must not listen to a media query, the drawer stays open across a viewport change`,
+      ).toBe(0);
+    }
     vi.unstubAllGlobals();
     mockPathname = null;
     pathnameSuspended = false;
