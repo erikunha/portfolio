@@ -10,7 +10,6 @@ const CONTACT_FROM = 'contact@erikunha.dev';
 const CONTACT_TO = EMAIL_ADDRESS;
 const CONTACT_SUBJECT_PREFIX = '[portfolio] message from';
 const RESEND_TIMEOUT_MS = 10_000;
-const RESEND_TIMEOUT_ERROR = 'contact delivery timeout';
 
 let resend: Resend | undefined;
 
@@ -19,14 +18,13 @@ export async function sendContactMessage(
   message: ContactMessage,
   requestId: string,
 ): Promise<boolean> {
-  let timerId: ReturnType<typeof setTimeout> | undefined;
   try {
     if (!env.RESEND_API_KEY) {
       log.error('contact delivery unavailable', { requestId, msgId });
       return false;
     }
     resend ??= new Resend(env.RESEND_API_KEY);
-    const sendPromise = resend.emails.send(
+    const { error } = await resend.emails.send(
       {
         from: CONTACT_FROM,
         to: CONTACT_TO,
@@ -34,12 +32,8 @@ export async function sendContactMessage(
         subject: `${CONTACT_SUBJECT_PREFIX} ${message.name}`,
         text: `From: ${message.name} <${message.email}>\nRef: ${msgId}\n\n${message.message}`,
       },
-      { idempotencyKey: `contact:${msgId}` },
+      { idempotencyKey: `contact:${msgId}`, signal: AbortSignal.timeout(RESEND_TIMEOUT_MS) },
     );
-    const timeout = new Promise<never>((_, reject) => {
-      timerId = setTimeout(() => reject(new Error(RESEND_TIMEOUT_ERROR)), RESEND_TIMEOUT_MS);
-    });
-    const { error } = await Promise.race([sendPromise, timeout]);
     if (error) {
       log.error('contact delivery rejected', { requestId, msgId });
       return false;
@@ -48,7 +42,5 @@ export async function sendContactMessage(
   } catch {
     log.error('contact delivery unavailable', { requestId, msgId });
     return false;
-  } finally {
-    if (timerId !== undefined) clearTimeout(timerId);
   }
 }

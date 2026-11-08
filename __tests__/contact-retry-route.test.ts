@@ -1,5 +1,9 @@
 import { NextRequest } from 'next/server';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import {
+  driveAbortTimeoutWithFakeTimers,
+  stalledUntilAborted,
+} from '../tests/mocks/stalled-resend-send';
 
 const TEST_CRON_SECRET = 'x'.repeat(24);
 
@@ -150,7 +154,8 @@ describe('daily contact delivery retry', () => {
   });
 
   it('counts a timeout as a failed attempt and keeps it pending', async () => {
-    send.mockReturnValueOnce(new Promise(() => undefined));
+    driveAbortTimeoutWithFakeTimers();
+    send.mockImplementationOnce(stalledUntilAborted);
     const { GET } = await import('@/app/api/contact-retry/route');
     const pending = GET(request());
     await vi.advanceTimersByTimeAsync(10_000);

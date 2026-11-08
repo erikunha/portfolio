@@ -178,6 +178,21 @@ describe('GET /api/psi-refresh', () => {
     );
   });
 
+  it('bounds the alert email with an abort signal so a stalled request is cancelled', async () => {
+    const { refreshScores } = await import('@/lib/lighthouse-scores');
+    vi.mocked(refreshScores).mockRejectedValue(new Error('PSI timeout'));
+    pipeExec.mockResolvedValue([3, 1]);
+    const timeoutSpy = vi.spyOn(AbortSignal, 'timeout');
+
+    const { GET } = await import('@/app/api/psi-refresh/route');
+    await GET(makeRequest());
+
+    expect(timeoutSpy).toHaveBeenCalledWith(5_000);
+    const options = (sendMock.mock.calls[0] as unknown as [unknown, { signal?: AbortSignal }])[1];
+    expect(options.signal).toBeInstanceOf(AbortSignal);
+    timeoutSpy.mockRestore();
+  });
+
   it('returns 401 if Authorization header is missing', async () => {
     const { GET } = await import('@/app/api/psi-refresh/route');
     const req = new NextRequest('http://localhost/api/psi-refresh', { method: 'GET' });

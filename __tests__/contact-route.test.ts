@@ -2,6 +2,10 @@ import { readFileSync } from 'node:fs';
 import { NextRequest } from 'next/server';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { contactContent } from '@/content/contact';
+import {
+  driveAbortTimeoutWithFakeTimers,
+  stalledUntilAborted,
+} from '../tests/mocks/stalled-resend-send';
 
 const redisSet = vi.fn();
 const redisDel = vi.fn();
@@ -142,7 +146,8 @@ describe('contact delivery outcome', () => {
 
   it('queues after ten seconds when Resend never responds and clears its timer', async () => {
     vi.useFakeTimers();
-    send.mockReturnValueOnce(new Promise(() => undefined));
+    driveAbortTimeoutWithFakeTimers();
+    send.mockImplementationOnce(stalledUntilAborted);
     const { POST } = await import('@/app/api/contact/route');
     let settled = false;
     const pending = POST(request()).then((res) => {
