@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { gotoHydrated, MOBILE_BAR_CONTROL } from './_helpers/hydration';
+import { gotoHydrated, MOBILE_BAR_CONTROL, STATUS_BAR } from './_helpers/hydration';
 
 const PHONE = { width: 390, height: 844 };
 const READING_OFFSET_PX = 3000;
@@ -12,7 +12,7 @@ test.describe('focusing the phone header bars', () => {
   test('leaves the reading position alone for every control in the sticky bars', async ({
     page,
   }) => {
-    await gotoHydrated(page, '/', MOBILE_BAR_CONTROL);
+    await gotoHydrated(page, '/', [MOBILE_BAR_CONTROL, STATUS_BAR]);
     const controls = page.locator(STICKY_BAR_CONTROLS);
     const count = await controls.count();
     expect(count, 'the sticky bars must expose their controls at phone width').toBeGreaterThan(0);

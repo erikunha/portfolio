@@ -118,8 +118,10 @@ The prompt for a manual or agent review that applies these rules to a diff is `d
     `domcontentloaded` no longer implies hydration, because the Next chunks are async: a click on a
     server-rendered button before React attaches its handlers is lost. A spec that clicks, types,
     presses a key, hovers or focuses a client island navigates with `gotoHydrated`
-    (`tests/e2e/_helpers/hydration.ts`), which runs `gotoSettled` and then waits for that control's
-    hydration. The wait stays out of `gotoSettled`, which must not hang on a stalled chunk. A plain
+    (`tests/e2e/_helpers/hydration.ts`), which runs `gotoSettled` and then waits for the hydration
+    of each selector it is given, then one animation frame, because React sets the fiber key in the
+    render phase, before commit. A spec that touches several client components (the phone title bar
+    and the status bar are separate ones) passes one selector per component. The wait stays out of `gotoSettled`, which must not hang on a stalled chunk. A plain
     link or a native element needs no wait.
     Check: `tests/e2e/streamed-settle.spec.ts`.
 35. A `PerformanceObserver` for `longtask` is installed after the page is idle and without
