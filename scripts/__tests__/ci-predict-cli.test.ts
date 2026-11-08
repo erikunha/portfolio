@@ -2,6 +2,7 @@ import { spawnSync } from 'node:child_process';
 import { describe, expect, it } from 'vitest';
 
 const DRY_RUN_TIMEOUT_MS = 180_000;
+const CLI_TIMEOUT_MS = 60_000;
 const hasParentCommit =
   spawnSync('git', ['rev-parse', '--verify', 'HEAD~1'], { stdio: 'ignore' }).status === 0;
 
@@ -11,7 +12,7 @@ const run = (args: string[]) =>
     encoding: 'utf8',
   });
 
-describe('ci-predict command line', () => {
+describe('ci-predict command line', { timeout: CLI_TIMEOUT_MS }, () => {
   it('explains itself and exits cleanly on --help', () => {
     const result = run(['--help']);
     expect(result.status).toBe(0);
