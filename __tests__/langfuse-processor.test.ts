@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { resetTelemetryRegistration } from './helpers/telemetry-registration';
 
 const exporterCtor = vi.fn();
 class MockLangfuseExporter {
@@ -30,6 +31,7 @@ async function loadAndRegister() {
 describe('registerLangfuseProcessor - flag OFF', () => {
   beforeEach(() => {
     vi.resetModules();
+    resetTelemetryRegistration();
     exporterCtor.mockReset();
     registerOTel.mockReset();
     logWarn.mockReset();
@@ -63,6 +65,7 @@ describe('registerLangfuseProcessor - flag OFF', () => {
 describe('registerLangfuseProcessor - flag ON', () => {
   beforeEach(() => {
     vi.resetModules();
+    resetTelemetryRegistration();
     exporterCtor.mockReset();
     registerOTel.mockReset();
     logWarn.mockReset();

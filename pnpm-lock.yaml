@@ -40,6 +40,9 @@ importers:
 
   .:
     dependencies:
+      '@ai-sdk/otel':
+        specifier: ^1.0.164
+        version: 1.0.164(zod@4.6.7)
       '@mdx-js/loader':
         specifier: ^3.1.1
         version: 3.1.1
@@ -214,6 +217,10 @@ packages:
     engines: {node: '>=22'}
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
+
+  '@ai-sdk/otel@1.0.164':
+    resolution: {integrity: sha512-bO1BkBfD33H3viQoxOqCqnPECbesDZ3CLKzEbISnWMaOuxdDGxhDkCJEj60Y06fvx5T1QJfkd5I+MVWhIHaIFQ==}
+    engines: {node: '>=22'}
 
   '@ai-sdk/provider-utils@5.0.75':
     resolution: {integrity: sha512-k4yAsFliGZwoTpyTpm3ptxwIeaPvRh5vGh/UWoqDiLLXKoyz4zuBGS7p3ygf8to5Bh4fAOHynotLBsWLIYdu2A==}
@@ -4603,6 +4610,14 @@ snapshots:
       '@ai-sdk/provider-utils': 5.0.75(zod@4.6.7)
       '@vercel/oidc': 3.2.0
       zod: 4.6.7
+
+  '@ai-sdk/otel@1.0.164(zod@4.6.7)':
+    dependencies:
+      '@ai-sdk/provider': 4.0.36
+      '@opentelemetry/api': 1.9.1
+      ai: 7.0.164(zod@4.6.7)
+    transitivePeerDependencies:
+      - zod
 
   '@ai-sdk/provider-utils@5.0.75(zod@4.6.7)':
     dependencies:

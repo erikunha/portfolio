@@ -23,6 +23,8 @@ import { STREAM_ERR_SENTINEL } from '@/lib/stream-protocol';
 
 const REQUEST_TIMEOUT_MS = 30_000;
 
+const TELEMETRY_FUNCTION_ID = 'ask';
+
 const FINISH_REASON_LENGTH = 'length' as const;
 
 const MID_STREAM_TIMEOUT_MS = 15_000;
@@ -113,7 +115,7 @@ export function createAskStream(context: AskContext): AskStream {
     temperature: ASK_TEMPERATURE,
     maxOutputTokens: ASK_MAX_OUTPUT_TOKENS,
     abortSignal: AbortSignal.any([AbortSignal.timeout(REQUEST_TIMEOUT_MS), upstream.signal]),
-    experimental_telemetry: { isEnabled: true, recordInputs: false, recordOutputs: false },
+    telemetry: { functionId: TELEMETRY_FUNCTION_ID, recordInputs: false, recordOutputs: false },
     allowSystemInMessages: true,
     messages: [
       {

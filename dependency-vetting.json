@@ -1,4 +1,8 @@
 {
+  "@ai-sdk/otel": {
+    "purpose": "OpenTelemetry integration for the AI SDK, registered in lib/telemetry/langfuse.ts",
+    "license": "Apache-2.0"
+  },
   "@argos-ci/playwright": {
     "purpose": "uploads Playwright visual-regression screenshots to Argos",
     "license": "MIT"

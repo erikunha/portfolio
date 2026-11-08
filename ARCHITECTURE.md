@@ -612,7 +612,7 @@ Observability spans real-user telemetry, structured logs and client error captur
 
 - No Datadog / NewRelic / LaunchDarkly (overkill at this scale).
 - No Sentry: custom `/api/log` endpoint chosen instead for zero new SaaS vendor (see `DECISIONS.md` 2026-05-18).
-- Outside the Edge runtime, `instrumentation.ts` loads the Langfuse helper. When `LANGFUSE_ENABLED` is `true`, it registers an exporter through `@vercel/otel`. ASK telemetry disables recording input and output text.
+- Outside the Edge runtime, `instrumentation.ts` loads the Langfuse helper (`lib/telemetry/langfuse.ts`). Only when `LANGFUSE_ENABLED` is exactly `true` does it register the Langfuse exporter through `@vercel/otel` and the AI SDK's `LegacyOpenTelemetry` integration from `@ai-sdk/otel` (`registerTelemetry`). The AI SDK emits no spans without that integration, and `@ai-sdk/otel` is pinned to the same version as `ai` so one copy of `ai` is installed. A guard on `globalThis` makes the registration run once per process, because `registerTelemetry` appends without checking for duplicates. The `/api/ask` call sets `telemetry: { functionId: 'ask', recordInputs: false, recordOutputs: false }`, so spans carry usage and timing only, never the question or the answer.
 - Alerting is minimal by design (single-author site, no oncall rotation): the `/api/ask` 80%/100% budget warnings, plus Resend email alerts from `/api/psi-refresh` after consecutive failed refreshes and from the production smoke workflow when the canonical `/api/healthz` returns 503. Both email alerts need their credentials configured.
 - No client-side dashboards/UI; Upstash console + Vercel CLI are the inspection surfaces.
 
