@@ -31,6 +31,8 @@ flowchart TD
 
 `claude-review` is requested, not automatic. It is a model-judged sensor: it reports findings, it does not approve, and no merge waits on it. Only correctness, security, accessibility, performance budget, test validity and spec or plan compliance block (`REVIEW.md`); style and naming never do, and nits are capped at five. No automatic follow-up round runs. Deterministic validation (tests, typecheck, lint, build, bundle and route-JS gates, CI) is the quality bar.
 
+The `high-risk` label marks a pull request that changes a high-risk surface: `app/api/`, `lib/server/`, `lib/rate-limit.ts`, `proxy.ts`, `lib/env.ts` and other secret or env handling, `.github/workflows/`, the security headers in `next.config.ts` and `vercel.json`, the dependency manifests, and the ask prompt and its guards (`lib/ask/`). `high-risk-label.yml` adds and removes it on every push from the list in `scripts/high-risk-paths.ts`. Read a labelled PR for the abuse paths each of those surfaces closes (`.claude/rules/api-boundary.md`) before anything else. The label limits no PR size, blocks no merge, and is not applied to fork or Dependabot PRs, whose token is read-only.
+
 Answering threads: reply in the thread before resolving it, since `pnpm pr:gate` fails a thread resolved with no reply (`silent_resolve`); and put every comment in a review THREAD rather than an unanchored timeline comment, which `reviewThreads` cannot see.
 
 After findings are answered, every finding fixed and every CI red becomes a candidate rule: if the mistake can repeat, append a numbered rule with the check that proves it to [`lessons.md`](./lessons.md) in the same PR. The next change reads that file before it starts.

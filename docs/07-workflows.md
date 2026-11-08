@@ -176,13 +176,19 @@ flowchart TD
 
 `ci-gate` runs with `if: always()`, includes gitleaks and all build/test jobs above, and excludes semgrep, and is the terminal required status check. `__tests__/scripts/ci-gate-job.test.ts` asserts its `needs` list equals the full job set minus the self-reporting jobs, so adding a conditional job without fanning it in fails `pnpm test`.
 
-Other workflows: `codeql.yml` (SAST, weekly + PR), `mutation.yml` (Stryker, weekly; fails when the runner cannot kill a mutant, judged by `scripts/check-mutation-kills.mjs`), `smoke.yml` (post-deploy: healthz + 7 security headers + apex→www + `/api/ask`,`/api/contact` liveness), `claude-review.yml` (pull-request review, on a `/claude-review` comment), `claude.yml` (`@claude` interaction), `agent-eval.yml` (advisory prompt evaluation), and `weekly-metrics.yml` (delivery metrics and band check, below).
+Other workflows: `codeql.yml` (SAST, weekly + PR), `mutation.yml` (Stryker, weekly; fails when the runner cannot kill a mutant, judged by `scripts/check-mutation-kills.mjs`), `smoke.yml` (post-deploy: healthz + 7 security headers + apex→www + `/api/ask`,`/api/contact` liveness), `claude-review.yml` (pull-request review, on a `/claude-review` comment), `claude.yml` (`@claude` interaction), `agent-eval.yml` (advisory prompt evaluation), `high-risk-label.yml` (review-focus label, below), and `weekly-metrics.yml` (delivery metrics and band check, below).
 
 **Token permissions:** every workflow sets a top-level `permissions` block of `contents: read` (`{}` for `smoke.yml`), and each job lists only the extra scopes it uses, for example `build` takes `id-token: write` + `attestations: write` for provenance, `semgrep` takes `security-events: write` to upload SARIF, `claude-review` takes `pull-requests: write` + `issues: read` + `checks: read` + `statuses: read` + `id-token: write` + `actions: read`. `__tests__/scripts/workflow-permissions.test.ts` fails a workflow with no top-level block or a broader one (OpenSSF Scorecard Token-Permissions).
 
 **Lighthouse budgets (LHCI, hard gates):** desktop perf ≥95 / a11y =100 / BP ≥95 / SEO =100, LCP ≤1800ms, CLS ≤0.05, TBT ≤200ms; mobile perf ≥90, LCP ≤3500ms. Never disable a gate to merge - fix the property (doc 08).
 
 Both desktop and mobile collect `/`, `/pt`, `/cv`, `/summary`, `/links`, `/links/en` and every design-system route listed in their configs. Run `pnpm lhci` and `pnpm lhci:mobile` against a production server.
+
+### High-risk label
+
+`high-risk-label.yml` runs on `pull_request` (opened, synchronize, reopened). It lists the PR's changed files through the API, passes them to `scripts/high-risk-paths.ts`, and adds the `high-risk` label when any file is on the list, or removes it once none is. A renamed file counts under both its old and new name. The label sends review attention to the surfaces with the widest blast radius: `app/api/`, `lib/server/`, `lib/rate-limit.ts`, `proxy.ts`, `lib/env.ts` and the other secret and env handling, `.github/workflows/`, `next.config.ts` and `vercel.json` (security headers), the dependency manifests (`package.json`, `pnpm-lock.yaml`), and the ask prompt and its guards (`lib/ask/`). The full list is `HIGH_RISK_PREFIXES` and `HIGH_RISK_FILES` in `scripts/high-risk-paths.ts`. It limits no PR size and blocks no merge, and it is not in `ci-gate`.
+
+The job holds `pull-requests: write` and nothing else beyond `contents: read`; it runs no install, push or deploy, and every value it reads from the event goes through `env`. A fork PR and a Dependabot run get a read-only token, so the job skips them with a notice instead of failing. The label is created on first use when the token allows it; if it does not, the owner creates it once with `gh label create high-risk --color B60205`. `scripts/__tests__/high-risk-paths.test.ts` holds the list (every entry must exist on disk, so a rename cannot drop a surface silently) and `__tests__/scripts/high-risk-label-workflow.test.ts` holds the trigger, the token scope and the pinned actions.
 
 ### Weekly delivery metrics
 

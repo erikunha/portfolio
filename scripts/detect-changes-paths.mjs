@@ -151,6 +151,7 @@ export const IGNORED_PATHS = [
   'scripts/gitleaks-staged.d.mts',
   'scripts/gitleaks-staged.mjs',
   'scripts/harness-size.json',
+  'scripts/high-risk-paths.ts',
   'scripts/lint-css-tokens.ts',
   'scripts/run-semgrep.mjs',
   'scripts/stryker-canary.config.mjs',

@@ -313,7 +313,9 @@ off-keyword and asserts the dependencies that should _not_ run were not
 called); the SYSTEM prompt is held by `__tests__/system-prompt.test.ts` (asserts
 no phone-number pattern, asserts the 1024-token cache threshold still clears).
 The "no dead CSP directive" and "PII minimization" rules are also enforced by
-PR review of any `app/api/` change; no gate blocks a push on that review.
+PR review of any `app/api/` change; no gate blocks a push on that review. A PR that
+touches this surface (the list in `scripts/high-risk-paths.ts`) is labelled
+`high-risk` by `high-risk-label.yml`, so the review starts there.
 
 ---
 

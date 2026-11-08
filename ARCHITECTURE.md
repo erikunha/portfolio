@@ -554,7 +554,7 @@ The page MUST fail to merge if it regresses past the budgets. This is where the 
 
 ### GitHub Actions PR workflow
 
-See §13 for the job dependencies. `.github/workflows/ci.yml` defines build and runtime checks; `.github/workflows/codeql.yml` defines the separate CodeQL workflow.
+See §13 for the job dependencies. `.github/workflows/ci.yml` defines build and runtime checks; `.github/workflows/codeql.yml` defines the separate CodeQL workflow. `.github/workflows/high-risk-label.yml` labels a pull request `high-risk` when it changes a file listed in `scripts/high-risk-paths.ts` (API boundary, secret and env handling, workflows, security headers, dependency manifests, the ask prompt and its guards) and removes the label when none remains; it directs review attention and blocks nothing. See `docs/07-workflows.md`.
 
 Any failure blocks merge. No overrides except by branch protection bypass, and using that is itself a smell.
 
