@@ -82,7 +82,7 @@
   }
 
   .ds-prose :not(pre):not(td):not(th) > code {
-    background: var(--color-primary-quiet);
+    background: var(--color-secondary-950);
     border: 1px solid var(--color-primary-border);
     padding: 0.1em 0.35em;
     color: var(--color-primary-500);

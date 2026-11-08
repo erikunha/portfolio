@@ -17,7 +17,7 @@ export function QrPanel({ locale, url }: { locale: LinksLocale; url: string }) {
     <section className="links-col" data-col="qr" aria-labelledby={HEADING_ID}>
       <SectionHeading id={HEADING_ID}>{copy.qrHeading[locale]}</SectionHeading>
 
-      <div className="border border-primary-border bg-[var(--color-glow-03)] p-4 flex gap-4 items-center">
+      <div className="border border-primary-border bg-secondary-950 p-4 flex gap-4 items-center">
         <svg
           viewBox={`0 0 ${span} ${span}`}
           width={RENDER_PX}

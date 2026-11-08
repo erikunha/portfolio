@@ -10,7 +10,9 @@ export function ColorSwatch({ token, usage }: Props) {
     <div className="flex items-center gap-3 py-2 border-b border-primary-border last:border-0">
       <div
         className="w-8 h-8 flex-shrink-0 border border-primary-border"
-        style={{ background: resolved }}
+        style={{
+          background: `linear-gradient(${resolved}, ${resolved}), var(--color-secondary-950)`,
+        }}
         aria-hidden="true"
       />
       <div className="flex flex-col gap-0.5">

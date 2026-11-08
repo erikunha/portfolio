@@ -1,7 +1,7 @@
 import { defineConfig, devices } from 'playwright/test';
 
 const CROSS_BROWSER_SPECS =
-  /tests\/(e2e\/(shared-header|cross-cutting|motion-switch|observability-smoke|design-system-pages|links|contact-delivery|contact-timezone|guitar-mobile|guitar-eq|mixer-mobile|reading-views|error-states|no-js|mobile-reflow|hero-layout|section-surfaces|type-scale|shell-input-states|shell-hydration|refs-privacy)|visual\/visual)\.spec\.ts$/;
+  /tests\/(e2e\/(shared-header|cross-cutting|motion-switch|observability-smoke|design-system-pages|links|contact-delivery|contact-timezone|guitar-mobile|guitar-eq|mixer-mobile|reading-views|error-states|no-js|mobile-reflow|hero-layout|section-surfaces|route-surfaces|type-scale|shell-input-states|shell-hydration|refs-privacy)|visual\/visual)\.spec\.ts$/;
 
 const DEFAULT_BASE_URL = 'http://localhost:3000';
 

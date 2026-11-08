@@ -10,7 +10,10 @@ export function DesignSystemOpinion() {
   const number = take.num.replace(TRAILING_DOT, '');
 
   return (
-    <section id={`opinion-${number}`} className="my-6 border border-primary-border p-4">
+    <section
+      id={`opinion-${number}`}
+      className="my-6 border border-primary-border bg-secondary-950 p-4"
+    >
       <h2 className="font-mono text-primary-500">
         {`Opinion ${number}: ${designSystemOpinionConfig.topic}`}
       </h2>
