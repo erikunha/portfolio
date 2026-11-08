@@ -113,6 +113,12 @@ The prompt for a manual or agent review that applies these rules to a diff is `d
     `page.goto` times out on a page that was measurable at 270ms. It then waits for every declared
     font face itself, because `document.fonts.ready` stays pending in WebKit until `load`. A spec
     that needs images decoded passes `{ waitUntil: 'load' }` or waits on the image.
+    `domcontentloaded` no longer implies hydration, because the Next chunks are async: a click on a
+    server-rendered button before React attaches its handlers is lost. A spec that clicks, types,
+    presses a key, hovers or focuses a client island navigates with `gotoHydrated`
+    (`tests/e2e/_helpers/hydration.ts`), which runs `gotoSettled` and then waits for that control's
+    hydration. The wait stays out of `gotoSettled`, which must not hang on a stalled chunk. A plain
+    link or a native element needs no wait.
     Check: `tests/e2e/streamed-settle.spec.ts`.
 35. A `PerformanceObserver` for `longtask` is installed after the page is idle and without
     `buffered: true`. Buffered entries include the hydration tasks of page load, which are not the

@@ -4,6 +4,7 @@ import { LINKS_PATH } from '@/content/links.constants';
 import { siteNavChrome } from '@/content/navigation';
 import { SITE_LOCALE, type SiteLocale } from '@/content/site-locale';
 import { horizontalOverflow, VIEWPORTS } from './_helpers/geometry';
+import { gotoHydrated, MENU_TRIGGER } from './_helpers/hydration';
 import { gotoSettled } from './_helpers/streamed';
 
 const SHELL_PATHS: readonly { path: string; locale: SiteLocale }[] = [
@@ -72,7 +73,7 @@ test.describe('one shell on every page', () => {
     page,
   }) => {
     await page.setViewportSize(DESKTOP);
-    await gotoSettled(page, LINKS_PATH.en);
+    await gotoHydrated(page, LINKS_PATH.en, MENU_TRIGGER);
     await page.locator('.desktop-topbar').getByRole('button', { name: MENU_NAME }).click();
     const drawer = page.locator(DRAWER);
     await expect(drawer).toHaveClass(/is-open/);
@@ -83,7 +84,7 @@ test.describe('one shell on every page', () => {
 
   test('the design-system drawer also lists the design-system pages', async ({ page }) => {
     await page.setViewportSize(PHONE);
-    await gotoSettled(page, '/design-system/tokens');
+    await gotoHydrated(page, '/design-system/tokens', MENU_TRIGGER);
     await page.locator('.mobile-title-bar').getByRole('button', { name: MENU_NAME }).click();
     const drawer = page.locator(DRAWER);
     await expect(drawer).toHaveClass(/is-open/);

@@ -1,5 +1,6 @@
 import { expect, type Page, test } from '@playwright/test';
 import { SITE_HTML_LANG, SITE_LOCALE } from '@/content/site-locale';
+import { gotoHydrated } from './_helpers/hydration';
 import { freezeMotion, MOTION_CHOICE, MOTION_STORAGE_KEY } from './_helpers/motion';
 import { gotoSettled } from './_helpers/streamed';
 
@@ -7,6 +8,7 @@ const LANGUAGE_NAV_NAME = /^(Idioma|Language)$/;
 const LANGUAGE_LINK_COUNT = 2;
 const TAGLINE_FRAME_MS = 150;
 const TAGLINE_HYDRATION_TIMEOUT_MS = 20_000;
+const COPY_LINK_BUTTON = 'button.links-pill';
 
 const languageSwitch = (page: Page) => page.getByRole('navigation', { name: LANGUAGE_NAV_NAME });
 
@@ -104,7 +106,7 @@ test.describe('/links link-in-bio', () => {
   });
 
   test('gives every interactive control a visible focus ring', async ({ page }) => {
-    await gotoSettled(page, '/links');
+    await gotoHydrated(page, '/links', COPY_LINK_BUTTON);
     const controls = page.locator('a:visible, button:visible');
     const count = await controls.count();
     expect(count).toBeGreaterThan(10);

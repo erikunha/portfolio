@@ -1,5 +1,6 @@
 import { type BrowserContext, expect, type Page, test } from '@playwright/test';
 import { settleFrames } from './_helpers/geometry';
+import { gotoHydrated, MENU_TRIGGER } from './_helpers/hydration';
 import { drainRoutes } from './_helpers/routes';
 import { gotoSettled, PENDING_STREAMED } from './_helpers/streamed';
 
@@ -106,5 +107,46 @@ test.describe('settling while a subresource never answers', () => {
     release = await stallUntilReleased(context, `**${href}`);
 
     await settleWithinBudget(page);
+  });
+});
+
+const SCRIPT_CHUNK_DELAY_MS = 3_000;
+const SCRIPT_CHUNK_PATH = '/_next/static/chunks/';
+
+test.describe('interacting while the script chunks arrive late', () => {
+  let delayedChunks = 0;
+
+  test.beforeEach(async ({ context }) => {
+    delayedChunks = 0;
+    await context.route(
+      (url) => url.pathname.startsWith(SCRIPT_CHUNK_PATH) && url.pathname.endsWith('.js'),
+      async (route) => {
+        delayedChunks += 1;
+        await new Promise((resolve) => setTimeout(resolve, SCRIPT_CHUNK_DELAY_MS));
+        await route.continue();
+      },
+    );
+  });
+
+  test.afterEach(({ context }) => drainRoutes(context));
+
+  test('the section menu opens on the first click once the trigger has hydrated', async ({
+    page,
+  }) => {
+    await gotoHydrated(page, '/', MENU_TRIGGER);
+    const trigger = page
+      .getByRole('button', { name: 'Open menu', exact: true })
+      .locator('visible=true');
+    await trigger.click();
+
+    await expect(
+      page.locator('#section-drawer'),
+      'a click before React attaches its handlers is lost: the interaction must wait for hydration',
+    ).toBeVisible();
+    await expect(trigger).toHaveAttribute('aria-expanded', 'true');
+    expect(
+      delayedChunks,
+      'the delay must have held script requests, or this test proves nothing',
+    ).toBeGreaterThan(0);
   });
 });

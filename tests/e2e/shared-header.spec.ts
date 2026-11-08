@@ -1,7 +1,7 @@
 import { expect, type Page, test } from '@playwright/test';
 import { SITE_LOCALE, type SiteLocale } from '../../content/site-locale';
 import { horizontalOverflow, VIEWPORTS } from './_helpers/geometry';
-import { waitForHydration } from './_helpers/hydration';
+import { gotoHydrated } from './_helpers/hydration';
 import { gotoSettled } from './_helpers/streamed';
 
 const { DESKTOP, PHONE } = VIEWPORTS;
@@ -106,15 +106,13 @@ for (const { locale, home, routes } of GROUPS) {
 
       for (const { path, status } of routes) {
         test(`${path} renders the same header as ${home}`, async ({ page }) => {
-          await gotoSettled(page, home);
-          await waitForHydration(page, `${BANNER} button`);
+          await gotoHydrated(page, home, `${BANNER} button`);
           const expectedControls = await headerControls(page);
           const expectedBox = await headerBox(page);
           expect(expectedControls.length, 'the home header lists its controls').toBeGreaterThan(2);
 
-          const response = await gotoSettled(page, path);
+          const response = await gotoHydrated(page, path, `${BANNER} button`);
           if (status) expect(response?.status()).toBe(status);
-          await waitForHydration(page, `${BANNER} button`);
 
           await expect(page.getByRole('banner')).toHaveCount(1);
           await expect(
@@ -136,11 +134,9 @@ for (const { locale, home, routes } of GROUPS) {
         test(`${path} opens the same drawer as ${home}, linking the home sections`, async ({
           page,
         }) => {
-          await gotoSettled(page, home);
-          await waitForHydration(page, `${BANNER} button`);
+          await gotoHydrated(page, home, `${BANNER} button`);
           const expected = await drawerLinks(page);
-          await gotoSettled(page, path);
-          await waitForHydration(page, `${BANNER} button`);
+          await gotoHydrated(page, path, `${BANNER} button`);
           const actual = await drawerLinks(page);
 
           expect(actual).toEqual(expected);
@@ -225,8 +221,7 @@ test.describe('the first content block clears the header', () => {
 
       for (const path of CONTENT_ROUTES) {
         test(`${path} starts at least the named gap below the header`, async ({ page }) => {
-          await gotoSettled(page, path);
-          await waitForHydration(page, `${BANNER} button`);
+          await gotoHydrated(page, path, `${BANNER} button`);
           const gap = await page.evaluate(() => {
             const bars = [
               ...document.querySelectorAll('header.desktop-topbar, header.mobile-title-bar'),
@@ -258,8 +253,7 @@ test.describe('the 404 content is centered', () => {
     for (const path of NOT_FOUND_ROUTES) {
       test(`${path} centers the heading, the button and the block at ${name}`, async ({ page }) => {
         await page.setViewportSize(size);
-        await gotoSettled(page, path);
-        await waitForHydration(page, `${BANNER} button`);
+        await gotoHydrated(page, path, `${BANNER} button`);
         const geometry = await page.evaluate(() => {
           const rect = (selector: string) => {
             const node = document.querySelector(selector);

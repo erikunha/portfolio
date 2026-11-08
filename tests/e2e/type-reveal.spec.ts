@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { gotoHydrated, MOTION_TOPBAR_TOGGLE } from './_helpers/hydration';
 import { freezeMotion } from './_helpers/motion';
 import { gotoSettled } from './_helpers/streamed';
 
@@ -42,7 +43,7 @@ test.describe('type reveal', () => {
 
   test('turning motion off and on again never replays the typing animation', async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 720 });
-    await gotoSettled(page, '/');
+    await gotoHydrated(page, '/', MOTION_TOPBAR_TOGGLE);
     await page.waitForFunction(() =>
       document.documentElement.classList.contains('type-reveal-ready'),
     );
