@@ -47,3 +47,20 @@ test.describe('route surfaces are opaque', () => {
     });
   }
 });
+
+test('a hovered /links playlist card stays opaque', async ({ page }) => {
+  await page.setViewportSize(VIEWPORTS.DESKTOP);
+  await page.goto('/links');
+  await scrollThroughPage(page);
+  const cards = page.locator('[data-col="playlists"] a');
+  const count = await cards.count();
+  expect(count, '/links renders playlist cards').toBeGreaterThan(0);
+  for (let index = 0; index < count; index += 1) {
+    await cards.nth(index).hover();
+    const offenders = await translucentSurfaces(page, MAIN_SELECTOR);
+    expect(
+      offenders,
+      'a hover tint that replaces the black background lets the Matrix Rain through the card',
+    ).toEqual([]);
+  }
+});

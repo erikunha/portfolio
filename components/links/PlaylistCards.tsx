@@ -12,8 +12,10 @@ const HEADING_ID = 'links-playlists-heading';
 const PLAYLIST_ENDPOINT = 'https://www.youtube.com/playlist?list=';
 
 const ACCENT_CARD: Record<PlaylistAccent, string> = {
-  quaternary: 'hover:border-quaternary-400 hover:bg-quaternary-400/[0.07]',
-  quinary: 'hover:border-quinary-300 hover:bg-quinary-300/[0.07]',
+  quaternary:
+    'hover:border-quaternary-400 hover:bg-linear-to-b hover:from-quaternary-400/[0.07] hover:to-quaternary-400/[0.07]',
+  quinary:
+    'hover:border-quinary-300 hover:bg-linear-to-b hover:from-quinary-300/[0.07] hover:to-quinary-300/[0.07]',
 };
 
 const ACCENT_TAG: Record<PlaylistAccent, string> = {
