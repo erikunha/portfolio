@@ -15,15 +15,6 @@ branch; a human or agent review of a diff follows it too.
 - **MINOR**: optional polish that does not block the merge. Report at most five, and none when
   there is a CRITICAL or IMPORTANT finding in the same file.
 
-## Self-review before merge
-
-No PR merges, a sub-PR into an integration branch included, without a self-review of its current head.
-
-- Reviewers did not write the change, and there is one per relevant specialty: correctness, silent failures, tests, types, security (for `app/api/` and workflows), accessibility and visual (for UI). Each loads the matching repo skill.
-- A UI change also gets desktop 1280x720 and mobile 375x812 screenshots, and a reviewer examines them.
-- Each finding is verified against the code, then fixed or rejected with a reason. An unverified finding is dropped.
-- A push that moves the head needs a new self-review. The result stays out of the PR: nothing is posted, and no gate checks that the review ran.
-
 The categories below decide what blocks the merge.
 
 ## What blocks

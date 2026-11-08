@@ -4,7 +4,7 @@
 
 ## The 30-second model
 
-You are joining a single-developer, AI-agent-assisted, spec-driven, gate-heavy platform. Work flows: brainstorm -> spec -> architect gate -> plan -> implement (test-first) -> self-review (specialist reviewers on the pushed head) -> the gate chain -> squash-merge -> ADR. Git hooks and CI enforce checks. Architect review and pre-PR review are conventions.
+You are joining a single-developer, AI-agent-assisted, spec-driven, gate-heavy platform. Work flows: brainstorm -> spec -> architect gate -> plan -> implement (test-first) -> the gate chain -> squash-merge -> ADR. Git hooks and CI enforce checks. Architect review and pre-PR review are conventions.
 
 ## Day 1 - understand the flow before you touch it
 
@@ -26,7 +26,7 @@ Pick a small change (a content edit or a design-system variant per the [workflow
 ```mermaid
 flowchart LR
     tdd["write a failing behavior test"] --> edit["implement"] --> commit["commit (scope!)"]
-    commit --> selfreview["self-review the diff"] --> push["push (passes pre-push)"]
+    commit --> push["push (passes pre-push)"]
     push --> pr["ci:local; non-docs bundle + route-JS + runtime; open PR"]
     pr --> conv["resolve every thread"] --> ready["pr:gate"] --> owner["owner merges"]
     owner --> deploy["deploy; document architectural decisions with the change"]
@@ -38,7 +38,7 @@ This exercises the ordinary contribution path. Runtime checks depend on the affe
 
 1. **Scope every commit.** `type(scope): subject`, scope mandatory, scope is the feature area. commitlint will reject you otherwise.
 2. **Branch as `<type>/<description>`.** The pre-push hook enforces it; never commit on `main`.
-3. **Review your diff before opening the PR, and self-review the head before any merge.** The self-review uses reviewers that did not write the change; its result is not posted and no gate checks it. No stamp gates the push; claude-review reviews the PR only when an owner, member or collaborator comments `/claude-review`.
+3. **Review your diff before opening the PR.** No stamp gates the push; claude-review reviews the PR only when an owner, member or collaborator comments `/claude-review`.
 4. **A red gate is fixed by fixing the property**, never by disabling the gate.
 5. **Record architectural decisions** in `DECISIONS.md` with a reversibility note.
 
@@ -63,4 +63,4 @@ This exercises the ordinary contribution path. Runtime checks depend on the affe
 
 ## When you can independently contribute
 
-You are ready when you can, without help: take a requirement through a spec and the architect gate, implement it test-first, get a clean self-review, pass the gate chain, open a PR and take it to merge readiness, and record the ADR. The [workflow-playbook](./workflow-playbook.md) is your reference until that is muscle memory.
+You are ready when you can, without help: take a requirement through a spec and the architect gate, implement it test-first, pass the gate chain, open a PR and take it to merge readiness, and record the ADR. The [workflow-playbook](./workflow-playbook.md) is your reference until that is muscle memory.
