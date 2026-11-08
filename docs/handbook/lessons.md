@@ -137,6 +137,11 @@ The prompt for a manual or agent review that applies these rules to a diff is `d
     stuck bar as hidden and centres it, moving the page 379px at 390px wide. Controls in a stuck
     bar carry a negative `scroll-margin-top` equal to the bars' height. Check:
     `tests/e2e/sticky-bar-focus.spec.ts`.
+38. The page-structure aria snapshots under `tests/e2e/aria-structure.spec.ts-snapshots/` pin
+    landmarks and heading levels, not copy. A change that adds, removes or re-levels a landmark
+    or heading edits the matching `.aria.yml` in the same commit; names stay regexes because
+    headings come from `content/*.ts`. Never run `--update-snapshots` blind: read the diff, since
+    it rewrites the whole template to the full page. Check: `tests/e2e/aria-structure.spec.ts`.
 
 ## Pre-push judgement list
 
