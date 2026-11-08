@@ -49,9 +49,17 @@ export function InteractiveShell({
   const feedRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const commandHistory = useCommandHistory();
+  const promptEditedRef = useRef(false);
 
   const announce = useCallback((text: string) => {
     setAnnouncement((previous) => ({ id: previous.id + 1, text }));
+  }, []);
+  const editInput = useCallback((value: string) => {
+    promptEditedRef.current = true;
+    setInput(value);
+  }, []);
+  const restoreInput = useCallback((command: string) => {
+    if (!promptEditedRef.current) setInput((value) => value || command);
   }, []);
   const focusInput = useCallback(() => inputRef.current?.focus({ preventScroll: true }), []);
   const refocusAfterStream = useCallback(() => {
@@ -69,7 +77,7 @@ export function InteractiveShell({
     nextId,
     announce,
     setHistory,
-    setInput,
+    restoreInput,
     onSettled: refocusAfterStream,
   });
   const runPrivacy = usePrivacyCommands({ ui, states, nextId, setHistory, announce, focusInput });
@@ -103,6 +111,7 @@ export function InteractiveShell({
           { id: nextId(), kind: ShellLineKind.Prompt, text: `${ui.prompt} ${command}` },
         ]),
       );
+      promptEditedRef.current = false;
       setInput('');
       const key = command.toLowerCase();
       if (key === ShellCommand.Clear) {
@@ -153,10 +162,10 @@ export function InteractiveShell({
         runCommand(command);
         return;
       }
-      setInput(command);
+      editInput(command);
       focusInput();
     },
-    [busy, focusInput, runCommand],
+    [busy, editInput, focusInput, runCommand],
   );
 
   return (
@@ -238,7 +247,7 @@ export function InteractiveShell({
             enterKeyHint="send"
             value={input}
             onChange={(event) => {
-              setInput(event.target.value);
+              editInput(event.target.value);
               commandHistory.noteEdit();
             }}
             onFocus={() => setInputFocused(true)}
@@ -263,7 +272,7 @@ export function InteractiveShell({
               }
               event.preventDefault();
               const step = event.key === ShellKey.Up ? HISTORY_STEP.Older : HISTORY_STEP.Newer;
-              setInput(commandHistory.recall(step, input));
+              editInput(commandHistory.recall(step, input));
             }}
             autoComplete="off"
             autoCapitalize="off"

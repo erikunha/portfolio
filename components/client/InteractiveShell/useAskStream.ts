@@ -69,7 +69,7 @@ type AskStreamOptions = {
   nextId: () => number;
   announce: (text: string) => void;
   setHistory: Dispatch<SetStateAction<Line[]>>;
-  setInput: Dispatch<SetStateAction<string>>;
+  restoreInput: (command: string) => void;
   onSettled: () => void;
 };
 
@@ -79,7 +79,7 @@ export function useAskStream({
   nextId,
   announce,
   setHistory,
-  setInput,
+  restoreInput,
   onSettled,
 }: AskStreamOptions) {
   const states = shellStates[locale];
@@ -176,7 +176,7 @@ export function useAskStream({
         );
         setStreamingText(null);
         setBusy(false);
-        if (message) setInput((value) => value || command);
+        if (message) restoreInput(command);
         announce(message ? [detail.prefix, message].filter(Boolean).join(' ') : ui.complete);
         onSettled();
       }
@@ -285,7 +285,7 @@ export function useAskStream({
         reader?.releaseLock();
       }
     },
-    [announce, clearFrame, nextId, onSettled, setHistory, setInput, states, ui, locale],
+    [announce, clearFrame, nextId, onSettled, setHistory, restoreInput, states, ui, locale],
   );
 
   const stop = useCallback(() => activeRequest.current?.stop(), []);
