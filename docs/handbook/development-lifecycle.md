@@ -15,8 +15,7 @@ flowchart TD
     branch --> tdd["TDD implementation (tests first)"]
     tdd --> commit["commit (scope blocks): type(scope): subject"]
     commit --> hooks["per-commit hooks: Biome + staged gitleaks + commitlint"]
-    hooks --> selfreview["self-review the diff"]
-    selfreview --> push["git push (pre-push gate chain)"]
+    hooks --> push["git push (pre-push gate chain)"]
     push --> readypr["ci:local; non-docs bundle + route-JS + runtime"]
     readypr --> pr["gh pr create (fill template)"]
     pr --> conv["resolve review threads (rebase before every push)"]
@@ -55,9 +54,9 @@ A feature branch is created (`<type>/<description>`, enforced by `.husky/pre-pus
 - **`pre-commit`**: `pnpm check` (Biome check) and staged gitleaks scanning.
 - **`commit-msg`**: commitlint. Conventional Commits with a **mandatory scope** (`scope-empty: [2, 'never']`) drawn from an **open set** (`scope-enum: [0]`). Scopes are feature-area names (`ci`, `dx`, `observability`, `healthz`, `ppr`, `arch`, ...), not technical categories.
 
-### 7. Pre-PR self-review, and the pre-push gate chain
+### 7. Pre-PR diff read, and the pre-push gate chain
 
-Before opening the PR, read the diff. The specialist self-review runs on the pushed head before the merge (see the review chapter of the handbook). For non-deletion pushes, `.husky/pre-push` checks the main target, branch name and `pnpm verify`. Deletion-only pushes skip branch naming and verify after the main-target guard.
+Before opening the PR, read the diff. For non-deletion pushes, `.husky/pre-push` checks the main target, branch name and `pnpm verify`. Deletion-only pushes skip branch naming and verify after the main-target guard.
 
 ### 8. Pre-PR -> open PR
 
@@ -108,7 +107,7 @@ flowchart LR
         g3["no direct main"] --> g4["branch name"] --> g7["pnpm verify"]
     end
     subgraph prepr["pre-PR (manual)"]
-        g8["ci:local"] --> g9["bundle-check + route-js-check (non-docs)"] --> g11["gates:runtime (LHCI+axe+E2E)"] --> g12["self-review on the pushed head"]
+        g8["ci:local"] --> g9["bundle-check + route-js-check (non-docs)"] --> g11["gates:runtime (LHCI+axe+E2E)"]
     end
     subgraph open["post-open"]
         g13["Resolve review threads"]

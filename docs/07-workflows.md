@@ -168,7 +168,7 @@ The token is read-only except `issues: write`. `__tests__/scripts/weekly-metrics
 ## The PR lifecycle
 
 ```
-commit (scope blocks) -> (read the diff before opening the PR; specialist self-review of the pushed head before any merge; not posted, not gated)
+commit (scope blocks) -> (read the diff before opening the PR)
   -> pnpm ci:local + gates:runtime -> gh pr create (fill the template)
   -> resolve every review thread (rebase before each push) -> pnpm pr:gate
   -> sub-PR into feat/*: agent may merge after CI green; PR into main: repo owner runs gh pr merge

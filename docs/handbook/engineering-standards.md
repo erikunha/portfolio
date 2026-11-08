@@ -38,4 +38,4 @@ Performance, accessibility, and security are explicitly "implicit on every chang
 
 ## What "no enforcement" looks like
 
-A few standards are honor-system by acknowledgment, and they are labeled as such rather than pretended to be enforced. The clearest example is the review itself: `pnpm pr:gate` checks that threads are resolved, and nothing checks that the self-review ran or was good. Naming these boundaries explicitly is itself a standard.
+A few standards are honor-system by acknowledgment, and they are labeled as such rather than pretended to be enforced. The clearest example is reading your own diff before opening the PR: `pnpm pr:gate` checks that threads are resolved, and nothing checks that the diff was read. Naming these boundaries explicitly is itself a standard.
