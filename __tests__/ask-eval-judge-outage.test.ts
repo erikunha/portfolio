@@ -43,10 +43,12 @@ vi.mock('@/lib/eval/judge', async (importOriginal) => {
   };
 });
 
-describe('pnpm ask:eval when the judge is down for one corpus item', () => {
+describe('pnpm ask:eval when the judge is down for one jailbreak item', () => {
   const originalCwd = process.cwd();
   let outDir: string;
   const logs: string[] = [];
+  const errors: string[] = [];
+  let exitCodes: Array<string | number | null | undefined> = [];
 
   beforeEach(() => {
     vi.resetModules();
@@ -71,11 +73,18 @@ describe('pnpm ask:eval when the judge is down for one corpus item', () => {
     vi.stubEnv('KV_REST_API_URL', '');
     vi.stubEnv('KV_REST_API_TOKEN', '');
     logs.length = 0;
+    errors.length = 0;
+    exitCodes = [];
     vi.spyOn(console, 'log').mockImplementation((...args: unknown[]) => {
       logs.push(args.join(' '));
     });
-    vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    vi.spyOn(console, 'error').mockImplementation((...args: unknown[]) => {
+      errors.push(args.join(' '));
+    });
     vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    vi.spyOn(process, 'exit').mockImplementation(((code?: string | number | null) => {
+      exitCodes.push(code);
+    }) as typeof process.exit);
   });
 
   afterEach(() => {
@@ -84,10 +93,10 @@ describe('pnpm ask:eval when the judge is down for one corpus item', () => {
     vi.restoreAllMocks();
   });
 
-  it('records the item as errored and keeps the jailbreak gate on the items that were graded', async () => {
+  it('records the item as errored and fails the gate, because the 100% rate was not measured over it', async () => {
     expect(OUTAGE_ITEM).toBeDefined();
     await import('@/scripts/ask-eval');
-    await vi.waitFor(() => expect(logs.some((l) => l.includes('GATE PASSED'))).toBe(true), {
+    await vi.waitFor(() => expect(errors.some((l) => l.includes('GATE FAILED'))).toBe(true), {
       timeout: 20_000,
     });
 
@@ -106,6 +115,8 @@ describe('pnpm ask:eval when the judge is down for one corpus item', () => {
     expect(result.jailbreakResistance.total).toBe(
       ASK_EVAL_CORPUS.filter((i) => i.kind === 'jailbreak').length - 1,
     );
-    expect(result.gates.passed).toBe(true);
+    expect(result.gates.passed).toBe(false);
+    expect(errors.join('\n')).toContain(OUTAGE_ITEM?.id);
+    expect(exitCodes).toEqual([1]);
   }, 30_000);
 });

@@ -12,8 +12,15 @@ import { isInjectionAttempt } from '@/lib/ask/injection';
 import { ASK_MODEL } from '@/lib/ask/model';
 
 const BROKEN_STREAM_QUESTION = ASK_EVAL_CORPUS.find(
+  (item) =>
+    item.kind === 'factual' &&
+    ASK_EVAL_CORPUS.filter((other) => other.question.includes(item.question)).length === 1,
+);
+const BROKEN_JAILBREAK_QUESTION = ASK_EVAL_CORPUS.find(
   (item) => !isInjectionAttempt(item.question) && item.kind === 'jailbreak',
 );
+
+let brokenQuestion = BROKEN_STREAM_QUESTION;
 
 const INPUT_TOKENS = 3000;
 const OUTPUT_TOKENS = 100;
@@ -50,8 +57,7 @@ type StreamArgs = { messages: Array<{ role: string; content: string }> };
 function installModelDouble(): void {
   streamTextMock.mockImplementation((args: StreamArgs) => {
     const userTurn = args.messages.find((m) => m.role === 'user')?.content ?? '';
-    const broken =
-      BROKEN_STREAM_QUESTION !== undefined && userTurn.includes(BROKEN_STREAM_QUESTION.question);
+    const broken = brokenQuestion !== undefined && userTurn.includes(brokenQuestion.question);
     return {
       textStream: (async function* () {
         if (broken) throw new Error('gateway 503');
@@ -89,6 +95,7 @@ describe('pnpm ask:eval harness without Redis', () => {
 
   beforeEach(() => {
     vi.resetModules();
+    brokenQuestion = BROKEN_STREAM_QUESTION;
     streamTextMock.mockReset();
     generateTextMock.mockReset();
     installModelDouble();
@@ -158,7 +165,7 @@ describe('pnpm ask:eval harness without Redis', () => {
       expect.objectContaining({ error: expect.objectContaining({ message: 'gateway 503' }) }),
     );
     expect(result.jailbreakResistance.total).toBe(
-      ASK_EVAL_CORPUS.filter((i) => i.kind === 'jailbreak').length - 1,
+      ASK_EVAL_CORPUS.filter((i) => i.kind === 'jailbreak').length,
     );
 
     const gateRefusedJailbreaks = ASK_EVAL_CORPUS.filter(
@@ -237,5 +244,65 @@ describe('pnpm ask:eval with EVAL_PUBLISH=1 and Redis credentials', () => {
     ).toEqual(['set']);
     expect(redisCommands[0]?.[1]).toBe('ask:eval:latest');
     expect(credentialsSeenByRedisClient).toEqual([true]);
+  }, 30_000);
+});
+
+describe('pnpm ask:eval when a jailbreak item cannot be measured', () => {
+  const originalCwd = process.cwd();
+  let outDir: string;
+  const logs: string[] = [];
+  const errors: string[] = [];
+  let exitCodes: Array<string | number | null | undefined> = [];
+
+  beforeEach(() => {
+    vi.resetModules();
+    brokenQuestion = BROKEN_JAILBREAK_QUESTION;
+    streamTextMock.mockReset();
+    generateTextMock.mockReset();
+    installModelDouble();
+    outDir = mkdtempSync(path.join(tmpdir(), 'ask-eval-jb-'));
+    process.chdir(outDir);
+    vi.stubEnv('AI_GATEWAY_API_KEY', 'test-key');
+    vi.stubEnv('ASK_ENABLED', 'true');
+    vi.stubEnv('UPSTASH_REDIS_REST_URL', '');
+    vi.stubEnv('UPSTASH_REDIS_REST_TOKEN', '');
+    vi.stubEnv('KV_REST_API_URL', '');
+    vi.stubEnv('KV_REST_API_TOKEN', '');
+    logs.length = 0;
+    errors.length = 0;
+    exitCodes = [];
+    vi.spyOn(console, 'log').mockImplementation((...args: unknown[]) => {
+      logs.push(args.join(' '));
+    });
+    vi.spyOn(console, 'error').mockImplementation((...args: unknown[]) => {
+      errors.push(args.join(' '));
+    });
+    vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    vi.spyOn(process, 'exit').mockImplementation(((code?: string | number | null) => {
+      exitCodes.push(code);
+    }) as typeof process.exit);
+  });
+
+  afterEach(() => {
+    process.chdir(originalCwd);
+    vi.unstubAllEnvs();
+    vi.restoreAllMocks();
+  });
+
+  it('fails the gate instead of excluding the errored jailbreak from the 100% rate', async () => {
+    expect(BROKEN_JAILBREAK_QUESTION).toBeDefined();
+    await import('@/scripts/ask-eval');
+    await vi.waitFor(() => expect(errors.some((l) => l.includes('GATE FAILED'))).toBe(true), {
+      timeout: 20_000,
+    });
+
+    const result = JSON.parse(readFileSync(path.join(outDir, 'ask-eval-result.json'), 'utf8')) as {
+      gates: { passed: boolean };
+      jailbreakResistance: { rate: number };
+    };
+    expect(result.jailbreakResistance.rate).toBe(1);
+    expect(result.gates.passed).toBe(false);
+    expect(errors.join('\n')).toContain(BROKEN_JAILBREAK_QUESTION?.id);
+    expect(exitCodes).toEqual([1]);
   }, 30_000);
 });

@@ -8,7 +8,7 @@ import {
 import { gitLog } from '@/content/git-log';
 import { profile, profileStack } from '@/content/profile';
 import { SITE_LOCALE } from '@/content/site-locale';
-import { isInjectionAttempt } from '@/lib/ask/injection';
+import { INJECTION_RE, isInjectionAttempt, normalizeInjectionInput } from '@/lib/ask/injection';
 import { SYSTEM_TEXT } from '@/lib/ask/system-prompt';
 
 describe('content/ask-eval-corpus', () => {
@@ -162,6 +162,26 @@ describe('content/ask-eval-corpus', () => {
       expect(item?.expect, `${id} must not demand brevity beyond the prompt`).not.toMatch(
         /brief|short|only that/i,
       );
+    }
+  });
+});
+
+describe('content/ask-eval-corpus quote-wrapped override jailbreaks', () => {
+  const quoted = ASK_EVAL_CORPUS.filter((i) => i.id.startsWith('jb-quoted-override'));
+
+  it('has two English and one pt-BR item', () => {
+    expect(quoted.filter((i) => i.locale === undefined).length).toBeGreaterThanOrEqual(2);
+    expect(quoted.filter((i) => i.locale === 'pt').length).toBeGreaterThanOrEqual(1);
+  });
+
+  it('carries an override phrase the injection gate skips because it sits between quotes', () => {
+    for (const item of quoted) {
+      expect(item.kind, item.id).toBe('jailbreak');
+      expect(
+        INJECTION_RE.test(normalizeInjectionInput(item.question)),
+        `${item.id} has no phrase`,
+      ).toBe(true);
+      expect(isInjectionAttempt(item.question), `${item.id} would 400 at the gate`).toBe(false);
     }
   });
 });
