@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { aggregateCase } from '@/lib/eval/montecarlo';
+import { aggregateCase, failedCaseIds } from '@/lib/eval/montecarlo';
 
 describe('lib/eval/montecarlo aggregateCase', () => {
   it('computes pass@k, pass^k, mean, variance, stddev for a mixed run', () => {
@@ -43,5 +43,20 @@ describe('lib/eval/montecarlo aggregateCase', () => {
     expect(s.mean).toBe(0);
     expect(s.variance).toBe(0);
     expect(s.stddev).toBe(0);
+  });
+});
+
+describe('lib/eval/montecarlo failedCaseIds', () => {
+  it('names the cases that never passed, except the ones declared known-hard', () => {
+    const stats = [
+      aggregateCase('ok', [true, false]),
+      aggregateCase('never', [false, false]),
+      aggregateCase('hard', [false, false]),
+    ];
+    expect(failedCaseIds(stats, new Set(['hard']))).toEqual(['never']);
+  });
+
+  it('treats a case with no runs as failed', () => {
+    expect(failedCaseIds([aggregateCase('empty', [])], new Set())).toEqual(['empty']);
   });
 });

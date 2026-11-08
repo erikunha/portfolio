@@ -7,7 +7,12 @@ import { AGENT_EVAL_CALIBRATION } from '@/evals/agents/calibration';
 import { type LoadedCase, loadCases } from '@/evals/agents/load';
 import { type AbCase, selectAbCases } from '@/evals/agents/schema';
 import { type AbResult, abDelta } from '@/lib/eval/ab';
-import { assertWithinBudget, MAX_JOB_COST_USD } from '@/lib/eval/budget';
+import {
+  assertWithinBudget,
+  createSpendMeter,
+  MAX_JOB_COST_USD,
+  type SpendMeter,
+} from '@/lib/eval/budget';
 import {
   CALIBRATION_ERROR_FRACTION_LIMIT,
   describeCalibrationFailure,
@@ -23,10 +28,10 @@ import {
 } from '@/lib/eval/cost';
 import { hasGatewayCredential } from '@/lib/eval/gateway-credential';
 import { gradeRun } from '@/lib/eval/grade';
-import { aggregateCase, type CaseStats } from '@/lib/eval/montecarlo';
+import { aggregateCase, type CaseStats, failedCaseIds } from '@/lib/eval/montecarlo';
 import { isolateFromRedis } from '@/lib/eval/publish-gate';
 import { publishWithCredentials } from '@/lib/eval/redis-publish';
-import { runTarget } from '@/lib/eval/run-target';
+import { MONTE_CARLO_TEMPERATURE, runTarget } from '@/lib/eval/run-target';
 import type { CalibrationResult } from '@/lib/eval/types';
 
 export const MODELS = {
@@ -56,10 +61,32 @@ export type AgentEvalAggregate = {
   calibration: ReturnType<typeof summarizeCalibration>;
   cases: CaseStats[];
   costEstimateUsd: number;
+  costBasis: CostBasis;
   maxJobCostUsd: number;
-  gate: { calibrationPassed: boolean; withinBudget: boolean; passed: boolean };
+  gate: AgentEvalGate;
   ab?: AbResult;
 };
+
+export type CostBasis = 'measured-tokens' | 'projection';
+
+export type AgentEvalGate = {
+  calibrationPassed: boolean;
+  withinBudget: boolean;
+  harnessPassed: boolean;
+  casesPassed: boolean;
+  failedCaseIds: string[];
+  abDegraded: boolean;
+  passed: boolean;
+};
+
+export function describeGate(gate: AgentEvalGate): string[] {
+  const reasons: string[] = [];
+  if (!gate.calibrationPassed) reasons.push('judge calibration failed');
+  if (!gate.withinBudget) reasons.push('cost cap exceeded');
+  if (!gate.casesPassed) reasons.push(`cases that never passed: ${gate.failedCaseIds.join(', ')}`);
+  if (gate.abDegraded) reasons.push('the treatment arm degraded against the control');
+  return reasons;
+}
 
 export function buildAggregate(args: {
   ts: string;
@@ -67,10 +94,16 @@ export function buildAggregate(args: {
   calibration: CalibrationResult;
   caseStats: CaseStats[];
   costEstimateUsd: number;
+  costBasis?: CostBasis;
   withinBudget: boolean;
+  failedCaseIds?: string[];
   ab?: AbResult;
 }): AgentEvalAggregate {
   const calibrationPassed = args.calibration.passed;
+  const harnessPassed = calibrationPassed && args.withinBudget;
+  const failedCases = args.failedCaseIds ?? [];
+  const casesPassed = failedCases.length === 0;
+  const abDegraded = args.ab?.degraded === true;
   return {
     ts: args.ts,
     targetModelMechanical: MODELS.mechanical,
@@ -80,48 +113,82 @@ export function buildAggregate(args: {
     calibration: summarizeCalibration(args.calibration),
     cases: args.caseStats,
     costEstimateUsd: args.costEstimateUsd,
+    costBasis: args.costBasis ?? 'projection',
     maxJobCostUsd: MAX_JOB_COST_USD,
     gate: {
       calibrationPassed,
       withinBudget: args.withinBudget,
-      passed: calibrationPassed && args.withinBudget,
+      harnessPassed,
+      casesPassed,
+      failedCaseIds: failedCases,
+      abDegraded,
+      passed: harnessPassed && casesPassed && !abDegraded,
     },
     ...(args.ab ? { ab: args.ab } : {}),
   };
 }
 
+export async function sampleRuns(
+  c: LoadedCase,
+  opts: { runs: number; judgeModel: string; meter: SpendMeter; label?: string },
+): Promise<{ results: boolean[]; budgetExceeded: boolean }> {
+  const model = targetModelFor(c.tier);
+  const results: boolean[] = [];
+  for (let i = 0; i < opts.runs; i++) {
+    if (opts.meter.exceeded()) return { results, budgetExceeded: true };
+    const target = await runTarget(c, { model, temperature: MONTE_CARLO_TEMPERATURE });
+    opts.meter.addTarget(c.tier, target);
+    if (target.errored) {
+      results.push(false);
+      console.log(
+        `  ERROR${opts.label ?? ''} [${c.tier}] ${c.id} run ${i + 1}/${opts.runs} — ${target.detail}`,
+      );
+      continue;
+    }
+    const verdict = await gradeRun(c, target.output, { judgeModel: opts.judgeModel });
+    opts.meter.addJudge(verdict);
+    results.push(verdict.pass);
+    console.log(
+      `  ${verdict.pass ? 'PASS' : 'FAIL'}${opts.label ?? ''} [${c.tier}] ${c.id} run ${i + 1}/${opts.runs} — ${verdict.reason}`,
+    );
+  }
+  return { results, budgetExceeded: false };
+}
+
 export async function runAbArms(
   abCases: Array<AbCase<LoadedCase>>,
-  opts: { runs: number; judgeModel: string },
-): Promise<{ control: CaseStats[]; treatment: CaseStats[]; ab: AbResult }> {
+  opts: { runs: number; judgeModel: string; meter?: SpendMeter },
+): Promise<{
+  control: CaseStats[];
+  treatment: CaseStats[];
+  ab: AbResult;
+  budgetExceeded: boolean;
+}> {
+  const meter = opts.meter ?? createSpendMeter(Number.POSITIVE_INFINITY);
   const control: CaseStats[] = [];
   const treatment: CaseStats[] = [];
+  let budgetExceeded = false;
 
   for (const c of abCases) {
-    const model = targetModelFor(c.tier);
-    const runArm = async (systemText: string): Promise<CaseStats> => {
-      const armCase = { ...c, target: { ...c.target, systemText } };
-      const runResults: boolean[] = [];
-      for (let i = 0; i < opts.runs; i++) {
-        const target = await runTarget(armCase, { model });
-        if (target.errored) {
-          console.log(
-            `  ERROR (A/B) [${c.tier}] ${c.id} run ${i + 1}/${opts.runs} — ${target.detail}`,
-          );
-          runResults.push(false);
-          continue;
-        }
-        const verdict = await gradeRun(armCase, target.output, { judgeModel: opts.judgeModel });
-        runResults.push(verdict.pass);
-      }
-      return aggregateCase(c.id, runResults);
-    };
-
-    control.push(await runArm(c.control.systemText));
-    treatment.push(await runArm(c.treatment.systemText));
+    for (const [arm, stats] of [
+      [c.control, control],
+      [c.treatment, treatment],
+    ] as const) {
+      if (budgetExceeded) break;
+      const armCase = { ...c, target: { ...c.target, systemText: arm.systemText } };
+      const sampled = await sampleRuns(armCase, {
+        runs: opts.runs,
+        judgeModel: opts.judgeModel,
+        meter,
+        label: ' (A/B)',
+      });
+      budgetExceeded = sampled.budgetExceeded;
+      if (!budgetExceeded) stats.push(aggregateCase(c.id, sampled.results));
+    }
+    if (budgetExceeded) break;
   }
 
-  return { control, treatment, ab: abDelta(control, treatment) };
+  return { control, treatment, ab: abDelta(control, treatment), budgetExceeded };
 }
 
 function targetModelFor(tier: 'mechanical' | 'judgment'): string {
@@ -170,6 +237,7 @@ async function main(): Promise<void> {
       calibration,
       caseStats: [],
       costEstimateUsd: calibrationJudgeCostUsd,
+      costBasis: 'measured-tokens',
       withinBudget: true,
     });
     writeFileSync(RESULT_FILE, `${JSON.stringify(partial, null, 2)}\n`);
@@ -226,78 +294,62 @@ async function main(): Promise<void> {
   const effectiveCap = abMode ? MAX_JOB_COST_USD * 2 : MAX_JOB_COST_USD;
   console.log(
     `agent-eval${abMode ? ' --ab' : ''}: ${billableCases} ${abMode ? 'arm-cases' : 'cases'} × ${runs} runs ` +
-      `(projected ~$${projectedUsd}, cap $${effectiveCap})\n`,
+      `(projected ~$${projectedUsd}, cap $${effectiveCap} enforced on measured token usage)\n`,
   );
 
+  const meter = createSpendMeter(effectiveCap);
+  meter.addJudge({
+    inputTokens: calibration.judgeInputTokens,
+    outputTokens: calibration.judgeOutputTokens,
+  });
+  const knownHard = new Set(cases.filter((c) => c.knownHard).map((c) => c.id));
+
+  let caseStats: CaseStats[] = [];
+  let ab: AbResult | undefined;
+  let budgetExceeded = false;
+
   if (abMode) {
-    const { control, treatment, ab } = await runAbArms(abCases, {
-      runs,
-      judgeModel: MODELS.judge,
-    });
-    for (let i = 0; i < abCases.length; i++) {
-      const id = abCases[i]?.id ?? '?';
-      const cm = control[i]?.mean ?? 0;
-      const tm = treatment[i]?.mean ?? 0;
+    const arms = await runAbArms(abCases, { runs, judgeModel: MODELS.judge, meter });
+    budgetExceeded = arms.budgetExceeded;
+    caseStats = arms.treatment;
+    ab = arms.ab;
+    for (let i = 0; i < arms.treatment.length; i++) {
+      const id = arms.treatment[i]?.id ?? '?';
+      const cm = arms.control[i]?.mean ?? 0;
+      const tm = arms.treatment[i]?.mean ?? 0;
       console.log(`  ${id}: control mean ${cm.toFixed(2)} → treatment mean ${tm.toFixed(2)}`);
     }
     console.log(
-      `\n  A/B delta ${ab.deltaMean >= 0 ? '+' : ''}${ab.deltaMean.toFixed(3)} ` +
-        `(control ${ab.controlMean.toFixed(2)} → treatment ${ab.treatmentMean.toFixed(2)}, ` +
-        `stddev ${ab.deltaStddev.toFixed(3)}${ab.degraded ? ', DEGRADED' : ''})\n`,
+      `\n  A/B delta ${arms.ab.deltaMean >= 0 ? '+' : ''}${arms.ab.deltaMean.toFixed(3)} ` +
+        `(control ${arms.ab.controlMean.toFixed(2)} → treatment ${arms.ab.treatmentMean.toFixed(2)}, ` +
+        `stderr ${arms.ab.deltaStderr.toFixed(3)}${arms.ab.degraded ? ', DEGRADED' : ''})\n`,
     );
-    const aggregate = buildAggregate({
-      ts,
-      runs,
-      calibration,
-      caseStats: treatment,
-      costEstimateUsd: projectedUsd,
-      withinBudget: true,
-      ab,
-    });
-    writeFileSync(RESULT_FILE, `${JSON.stringify(aggregate, null, 2)}\n`);
-    const published = await publishWithCredentials(
-      AGENT_EVAL_REDIS_KEY,
-      aggregate,
-      withheldRedisCredentials,
-    );
-    if (published.published) console.log(`published aggregate → redis ${AGENT_EVAL_REDIS_KEY}`);
-    else if (published.error) console.error(`redis publish failed (non-fatal): ${published.error}`);
-    console.log(`  result file         ${RESULT_FILE}`);
-    console.log('\nGATE PASSED');
-    return;
-  }
-
-  const caseStats: CaseStats[] = [];
-  for (const c of cases) {
-    const targetModel = targetModelFor(c.tier);
-    const runResults: boolean[] = [];
-    for (let i = 0; i < runs; i++) {
-      const target = await runTarget(c, { model: targetModel });
-      if (target.errored) {
-        runResults.push(false);
-        console.log(`  ERROR [${c.tier}] ${c.id} run ${i + 1}/${runs} — ${target.detail}`);
-        continue;
+  } else {
+    for (const c of cases) {
+      const sampled = await sampleRuns(c, { runs, judgeModel: MODELS.judge, meter });
+      if (sampled.budgetExceeded) {
+        budgetExceeded = true;
+        break;
       }
-      const verdict = await gradeRun(c, target.output, { judgeModel: MODELS.judge });
-      runResults.push(verdict.pass);
+      const stats = aggregateCase(c.id, sampled.results);
+      caseStats.push(stats);
       console.log(
-        `  ${verdict.pass ? 'PASS' : 'FAIL'} [${c.tier}] ${c.id} run ${i + 1}/${runs} — ${verdict.reason}`,
+        `  ${c.id}: pass@k=${stats.passAtK} pass^k=${stats.passHatK} mean=${stats.mean.toFixed(2)} var=${stats.variance.toFixed(3)}\n`,
       );
     }
-    const stats = aggregateCase(c.id, runResults);
-    caseStats.push(stats);
-    console.log(
-      `  ${c.id}: pass@k=${stats.passAtK} pass^k=${stats.passHatK} mean=${stats.mean.toFixed(2)} var=${stats.variance.toFixed(3)}\n`,
-    );
   }
 
+  const measuredUsd = Number(meter.spentUsd.toFixed(4));
   const aggregate = buildAggregate({
     ts,
     runs,
     calibration,
     caseStats,
-    costEstimateUsd: projectedUsd,
-    withinBudget: true,
+    costEstimateUsd: measuredUsd,
+    costBasis: 'measured-tokens',
+    withinBudget: !budgetExceeded,
+    failedCaseIds: failedCaseIds(caseStats, knownHard),
+    ...(ab ? { ab } : {}),
   });
 
   writeFileSync(RESULT_FILE, `${JSON.stringify(aggregate, null, 2)}\n`);
@@ -319,8 +371,16 @@ async function main(): Promise<void> {
       `  ${s.id.padEnd(28)} pass@k ${s.passAtK} · pass^k ${s.passHatK} · var ${s.variance.toFixed(3)}`,
     );
   }
-  console.log(`  cost estimate       ~$${aggregate.costEstimateUsd} (cap $${MAX_JOB_COST_USD})`);
+  console.log(
+    `  cost measured       ~$${aggregate.costEstimateUsd} from token usage (cap $${effectiveCap})`,
+  );
   console.log(`  result file         ${RESULT_FILE}`);
+
+  if (!aggregate.gate.passed) {
+    console.error('\nGATE FAILED');
+    for (const reason of describeGate(aggregate.gate)) console.error(`  - ${reason}`);
+    process.exit(1);
+  }
   console.log('\nGATE PASSED');
 }
 

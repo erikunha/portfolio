@@ -26,10 +26,23 @@ export const featureCostUsdFrom = (counts: {
   );
 };
 
+const TOKENS_PER_MTOK = 1_000_000;
+
 export const judgeCostUsdFrom = (inputTokens: number, outputTokens: number): number =>
   (inputTokens * PRICING_USD_PER_MTOK.judge.input +
     outputTokens * PRICING_USD_PER_MTOK.judge.output) /
-  1_000_000;
+  TOKENS_PER_MTOK;
+
+export type TargetTier = 'mechanical' | 'judgment';
+
+export const targetCostUsdFrom = (
+  tier: TargetTier,
+  inputTokens: number,
+  outputTokens: number,
+): number => {
+  const rate = tier === 'mechanical' ? PRICING_USD_PER_MTOK.feature : PRICING_USD_PER_MTOK.judge;
+  return (inputTokens * rate.input + outputTokens * rate.output) / TOKENS_PER_MTOK;
+};
 
 export const APPROX_FEATURE_INPUT_TOKENS = 1700;
 export const APPROX_FEATURE_OUTPUT_TOKENS = 350;

@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 const { mockGenerateText } = vi.hoisted(() => ({ mockGenerateText: vi.fn() }));
 vi.mock('ai', () => ({ generateText: mockGenerateText }));
 
-import { runTarget } from '@/lib/eval/run-target';
+import { MONTE_CARLO_TEMPERATURE, runTarget } from '@/lib/eval/run-target';
 
 const testCase = {
   prompt: 'Do the task.',
@@ -54,5 +54,15 @@ describe('lib/eval/run-target runTarget', () => {
     expect(r.output).toBe('');
     expect(r.inputTokens).toBe(0);
     expect(r.outputTokens).toBe(0);
+  });
+
+  it('samples at the requested temperature so repeated runs can differ', async () => {
+    mockGenerateText.mockResolvedValueOnce({
+      text: 'x',
+      usage: { inputTokens: 1, outputTokens: 1 },
+    });
+    await runTarget(testCase, { model: 'm', temperature: MONTE_CARLO_TEMPERATURE });
+    expect(mockGenerateText.mock.calls[0]?.[0].temperature).toBe(MONTE_CARLO_TEMPERATURE);
+    expect(MONTE_CARLO_TEMPERATURE).toBeGreaterThan(0);
   });
 });

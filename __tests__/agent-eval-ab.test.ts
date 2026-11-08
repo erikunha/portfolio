@@ -5,7 +5,7 @@ vi.mock('ai', () => ({ generateText: mockGenerateText }));
 
 import { loadCases } from '@/evals/agents/load';
 import { selectAbCases } from '@/evals/agents/schema';
-import { assertWithinBudget, MAX_JOB_COST_USD } from '@/lib/eval/budget';
+import { assertWithinBudget, createSpendMeter, MAX_JOB_COST_USD } from '@/lib/eval/budget';
 import { runAbArms } from '@/scripts/agent-eval';
 
 function reply(text: string) {
@@ -55,5 +55,30 @@ describe('agent-eval --ab (SDK mocked, no real Gateway call)', () => {
     if (!r.ok) {
       expect(r.reason).toContain(`cap of $${MAX_JOB_COST_USD * 2}`);
     }
+  });
+
+  it('samples the target at a non-zero temperature', async () => {
+    mockGenerateText.mockImplementation(async () => reply('git add lib/eval/ab.ts'));
+    const abCases = selectAbCases(await loadCases()).filter((c) => c.id === 'ab-rule-loadbearing');
+    await runAbArms(abCases, { runs: 2, judgeModel: 'j' });
+    const targetCalls = mockGenerateText.mock.calls.map(
+      ([args]) => args as { temperature: number },
+    );
+    expect(targetCalls.length).toBeGreaterThan(0);
+    expect(targetCalls.every((a) => a.temperature > 0)).toBe(true);
+  });
+
+  it('stops when real token usage passes the cap, whatever the projection said', async () => {
+    const hugeUsage = { inputTokens: 5_000_000, outputTokens: 0 };
+    mockGenerateText.mockImplementation(async () => ({
+      text: 'git add lib/eval/ab.ts',
+      usage: hugeUsage,
+    }));
+    const abCases = selectAbCases(await loadCases()).filter((c) => c.id === 'ab-rule-loadbearing');
+    const meter = createSpendMeter(MAX_JOB_COST_USD * 2);
+    const out = await runAbArms(abCases, { runs: 5, judgeModel: 'j', meter });
+    expect(out.budgetExceeded).toBe(true);
+    expect(meter.spentUsd).toBeGreaterThan(MAX_JOB_COST_USD * 2);
+    expect(mockGenerateText.mock.calls.length).toBeLessThan(abCases.length * 2 * 5);
   });
 });

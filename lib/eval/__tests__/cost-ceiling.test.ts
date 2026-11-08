@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { assertWithinBudget, MAX_JOB_COST_USD } from '@/lib/eval/budget';
+import { assertWithinBudget, createSpendMeter, MAX_JOB_COST_USD } from '@/lib/eval/budget';
 
 describe('lib/eval/budget assertWithinBudget', () => {
   it('pins MAX_JOB_COST_USD at 2.0', () => {
@@ -38,5 +38,29 @@ describe('lib/eval/budget assertWithinBudget', () => {
     if (!r.ok) {
       expect(r.reason).toContain('4');
     }
+  });
+});
+
+describe('lib/eval/budget createSpendMeter', () => {
+  it('prices the mechanical tier at the feature rate and the judgment tier at the judge rate', () => {
+    const meter = createSpendMeter(MAX_JOB_COST_USD);
+    meter.addTarget('mechanical', { inputTokens: 1_000_000, outputTokens: 0 });
+    expect(meter.spentUsd).toBeCloseTo(1, 10);
+    meter.addTarget('judgment', { inputTokens: 1_000_000, outputTokens: 0 });
+    expect(meter.spentUsd).toBeCloseTo(4, 10);
+  });
+
+  it('prices judge calls at the judge rate', () => {
+    const meter = createSpendMeter(MAX_JOB_COST_USD);
+    meter.addJudge({ inputTokens: 0, outputTokens: 1_000_000 });
+    expect(meter.spentUsd).toBeCloseTo(15, 10);
+  });
+
+  it('is exceeded only once real spend passes the cap', () => {
+    const meter = createSpendMeter(1);
+    meter.addJudge({ inputTokens: 300_000, outputTokens: 0 });
+    expect(meter.exceeded()).toBe(false);
+    meter.addJudge({ inputTokens: 100_000, outputTokens: 0 });
+    expect(meter.exceeded()).toBe(true);
   });
 });

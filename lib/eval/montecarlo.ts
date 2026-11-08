@@ -32,3 +32,7 @@ export function aggregateCase(id: string, runResults: boolean[]): CaseStats {
     stddev,
   };
 }
+
+export function failedCaseIds(stats: CaseStats[], knownHard: ReadonlySet<string>): string[] {
+  return stats.filter((s) => s.passAtK === 0 && !knownHard.has(s.id)).map((s) => s.id);
+}

@@ -49,7 +49,7 @@ Git hooks enforce separate stages:
 
 `pnpm ask:eval` evaluates the `/api/ask` product with calibration, corpus cases and aggregate gates. Calibration gates judge agreement and the true-negative rate separately and reports the true-positive rate. It writes `ask-eval-result.json`; publishing the latest aggregate to Redis requires `EVAL_PUBLISH=1` plus Redis credentials, and only the scheduled `ask-eval.yml` and `agent-eval.yml` workflows set it. Every run removes the Redis credentials from its environment at start, so the in-process route never writes `ask:log`, `ask:guard` or refusal counters to production. With the flag set, the credentials come back only around the one `publishAggregate` call and are dropped again; without it they never come back, so a local run (including `vercel env run -- pnpm ask:eval`) never writes production data.
 
-`pnpm eval:agents` evaluates platform prompts separately. It writes `agent-eval-result.json`; the corresponding workflow is advisory. Neither command is a replacement for deterministic unit, type or browser checks.
+`pnpm eval:agents` evaluates platform prompts separately. Each run samples the target at `MONTE_CARLO_TEMPERATURE` (so pass@k and pass^k can differ), enforces the cost cap on the token usage the calls return, and writes `agent-eval-result.json` with a split gate: `harnessPassed` (calibration and budget), `casesPassed` (no non-known-hard case failed every run) and `abDegraded` (the `--ab` delta fell by more than its standard error). The run prints `GATE PASSED` and exits 0 only when all of them hold; the corresponding workflow is advisory, so a red run is a signal and blocks nothing. Neither command is a replacement for deterministic unit, type or browser checks.
 
 ## Project MCP configuration
 
