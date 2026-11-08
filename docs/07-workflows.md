@@ -176,7 +176,7 @@ flowchart TD
 
 `ci-gate` runs with `if: always()`, includes gitleaks and all build/test jobs above, and excludes semgrep, and is the terminal required status check. `__tests__/scripts/ci-gate-job.test.ts` asserts its `needs` list equals the full job set minus the self-reporting jobs, so adding a conditional job without fanning it in fails `pnpm test`.
 
-Other workflows: `codeql.yml` (SAST, weekly + PR), `mutation.yml` (Stryker, weekly; fails when the runner cannot kill a mutant, judged by `scripts/check-mutation-kills.mjs`), `smoke.yml` (post-deploy: healthz + 7 security headers + apex→www + `/api/ask`,`/api/contact` liveness), `claude-review.yml` (pull-request review, on a `/claude-review` comment), `claude.yml` (`@claude` interaction), `agent-eval.yml` (advisory prompt evaluation), `high-risk-label.yml` (review-focus label, below), and `weekly-metrics.yml` (delivery metrics and band check, below).
+Other workflows: `codeql.yml` (SAST, weekly + PR), `mutation.yml` (Stryker, weekly; fails when the runner cannot kill a mutant, judged by `scripts/check-mutation-kills.mjs`), `smoke.yml` (post-deploy: healthz + 7 security headers + apex→www + `/api/ask`,`/api/contact` liveness), `claude-review.yml` (pull-request review, on a `/claude-review` comment), `claude.yml` (`@claude` interaction), `agent-eval.yml` (advisory prompt evaluation), `high-risk-label.yml` (review-focus label, below), `rollback-rehearsal.yml` (weekly rollback rehearsal, below), and `weekly-metrics.yml` (delivery metrics and band check, below).
 
 **Token permissions:** every workflow sets a top-level `permissions` block of `contents: read` (`{}` for `smoke.yml`), and each job lists only the extra scopes it uses, for example `build` takes `id-token: write` + `attestations: write` for provenance, `semgrep` takes `security-events: write` to upload SARIF, `claude-review` takes `pull-requests: write` + `issues: read` + `checks: read` + `statuses: read` + `id-token: write` + `actions: read`. `__tests__/scripts/workflow-permissions.test.ts` fails a workflow with no top-level block or a broader one (OpenSSF Scorecard Token-Permissions).
 
@@ -231,6 +231,27 @@ Lighthouse LCP per route is not collected: LHCI uploads to `temporary-public-sto
 
 The token is read-only except `issues: write`. `__tests__/scripts/weekly-metrics-workflow.test.ts` fails if the permissions widen, a secret other than `GITHUB_TOKEN` appears, an action is not pinned to a SHA, or a `run:` script expands a context expression.
 
+### Weekly rollback rehearsal
+
+`rollback-rehearsal.yml` runs Mondays 06:00 UTC and on manual dispatch. It proves the slow rollback path (`git revert HEAD`) still produces a tree that installs, typechecks, passes its tests and builds. It is read-only toward production: it never pushes, never calls Vercel and holds no Vercel token. The fast path (`vercel promote`) is a platform action and is not rehearsed here.
+
+```mermaid
+flowchart LR
+    main["checkout main<br/>full history"] --> rev["git revert the latest commit<br/>local only, never pushed<br/>-m 1 when it is a merge"]
+    rev --> inst["pnpm install --frozen-lockfile"]
+    inst --> tc["pnpm typecheck"]
+    tc --> tst["pnpm test"]
+    tst --> bld["pnpm build<br/>same fixed env as ci.yml"]
+    rev -. conflict .-> fail
+    inst -. failure .-> fail
+    tc -. failure .-> fail
+    tst -. failure .-> fail
+    bld -. failure .-> fail
+    fail["report job<br/>open or comment on the issue<br/>Rollback rehearsal failed"]
+```
+
+A revert conflict or any failed step fails the `rehearse` job. The `report` job then opens one issue titled "Rollback rehearsal failed", or comments on the open one. Only that job holds `issues: write`. `__tests__/rollback-rehearsal-workflow.test.ts` fails if the triggers widen, the top-level token exceeds `contents: read`, a step pushes or touches Vercel, an action is not pinned to a SHA, or the revert, install, typecheck, test and build steps leave that order.
+
 ## The PR lifecycle
 
 ```
@@ -248,6 +269,7 @@ Large features use an **integration branch + sub-PRs** (`feat/<feature>` ← `fe
 - **Cron:** `vercel.json` runs `/api/psi-refresh` at `0 3 * * *` and `/api/contact-retry` at `0 4 * * *`.
 - **Post-deploy:** `smoke.yml` verifies the production deployment (healthz, headers, liveness) and emails on a 503.
 - **Emergency rollback:** fast = `vercel promote <previous-url>` (30s, no code); slow = `git revert HEAD && git push --no-verify` (the `--no-verify` is the documented escape hatch for the main-push guard). Verify with `curl https://erikunha.dev/api/healthz | jq .sha`.
+- **Rollback rehearsal:** `rollback-rehearsal.yml` proves the slow path still works. See "Weekly rollback rehearsal" under CI/CD.
 
 ## Debugging
 

@@ -73,6 +73,8 @@ flowchart LR
 
 Fast rollback is a Vercel promote (no code change). Slow rollback is a revert; the `--no-verify` is the documented escape hatch for the main-push guard (the revert still goes through CI after landing, but has no PR, which is the accepted emergency tradeoff).
 
+`rollback-rehearsal.yml` rehearses the slow path every week: it reverts the latest commit on `main` in the runner only, then runs install, typecheck, tests and build on the reverted tree. It pushes nothing and never touches Vercel. A failure opens or updates the issue "Rollback rehearsal failed". See `docs/07-workflows.md`.
+
 ## Docs-only changes
 
 Run `pnpm ci:local`. The project workflow skips bundle, route-JS and runtime gates for docs-only changes. CI still builds; its runtime and AI jobs use `scripts/detect-changes.mjs` and `scripts/detect-changes-paths.mjs` for classification. MDX under `app/` is part of that app surface.
