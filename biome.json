@@ -91,6 +91,7 @@
         "noImportCycles": "error",
         "noLeakedRender": "error",
         "noLoopFunc": "error",
+        "noDuplicateSelectors": "error",
         "noIdenticalTestTitle": "error"
       },
       "complexity": {

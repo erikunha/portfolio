@@ -327,6 +327,7 @@
     font-weight: bold;
   }
 
+  /* biome-ignore-start lint/suspicious/noDuplicateSelectors: Tailwind's @variant max-guitar is the (width < --breakpoint-guitar) media query, an at-rule context the rule does not resolve, so these are overrides, not duplicates */
   @variant max-guitar {
     .guitar-chain {
       gap: 0;
@@ -356,6 +357,7 @@
       flex: none;
     }
   }
+  /* biome-ignore-end lint/suspicious/noDuplicateSelectors: end of the @variant max-guitar block */
 
   @media (max-width: 767.98px) {
     .guitar-signal-strip {

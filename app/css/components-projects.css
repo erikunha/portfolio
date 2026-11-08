@@ -443,9 +443,6 @@
 
     .project-stats {
       margin-top: 0;
-    }
-
-    .project-stats {
       font-size: var(--text-sm);
     }
 

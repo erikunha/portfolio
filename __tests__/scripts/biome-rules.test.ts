@@ -19,6 +19,11 @@ const FIXTURES: Fixture[] = [
       'let n = 0;\nconst fns: (() => number)[] = [];\nfor (const item of [1, 2]) {\n  fns.push(() => n + item);\n  n += 1;\n}\n',
   },
   {
+    rule: 'suspicious/noDuplicateSelectors',
+    file: 'duplicate-selectors.css',
+    source: '.a {\n  margin: 0;\n}\n\n.a {\n  padding: 0;\n}\n',
+  },
+  {
     rule: 'suspicious/noIdenticalTestTitle',
     file: 'identical-title.test.ts',
     source:

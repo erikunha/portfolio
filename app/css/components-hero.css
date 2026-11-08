@@ -46,7 +46,7 @@
     font-size: 12px;
     line-height: 1.65;
 
-    height: 165px;
+    height: auto;
     overflow: hidden;
     margin: 0 0 12px;
   }
@@ -247,10 +247,6 @@
   .hero-mobile-content {
     position: relative;
     padding: var(--spacing-4) var(--spacing-4) calc(var(--spacing-4) + var(--spacing-1) / 2);
-  }
-
-  .hero-boot-mobile {
-    height: auto;
   }
 
   @media (max-width: 767.98px) {
