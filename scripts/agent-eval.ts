@@ -10,8 +10,10 @@ import { type AbResult, abDelta } from '@/lib/eval/ab';
 import { assertWithinBudget, MAX_JOB_COST_USD } from '@/lib/eval/budget';
 import {
   CALIBRATION_ERROR_FRACTION_LIMIT,
+  describeCalibrationFailure,
   MIN_CALIBRATION_AGREEMENT,
   runCalibration,
+  summarizeCalibration,
 } from '@/lib/eval/calibration';
 import {
   APPROX_FEATURE_INPUT_TOKENS,
@@ -51,14 +53,7 @@ export type AgentEvalAggregate = {
   targetModelJudgment: string;
   judgeModel: string;
   runs: number;
-  calibration: {
-    total: number;
-    agreed: number;
-    agreement: number;
-    passed: boolean;
-    minAgreement: number;
-    errored: number;
-  };
+  calibration: ReturnType<typeof summarizeCalibration>;
   cases: CaseStats[];
   costEstimateUsd: number;
   maxJobCostUsd: number;
@@ -82,14 +77,7 @@ export function buildAggregate(args: {
     targetModelJudgment: MODELS.judgment,
     judgeModel: MODELS.judge,
     runs: args.runs,
-    calibration: {
-      total: args.calibration.total,
-      agreed: args.calibration.agreed,
-      agreement: args.calibration.agreement,
-      passed: calibrationPassed,
-      minAgreement: MIN_CALIBRATION_AGREEMENT,
-      errored: args.calibration.errored,
-    },
+    calibration: summarizeCalibration(args.calibration),
     cases: args.caseStats,
     costEstimateUsd: args.costEstimateUsd,
     maxJobCostUsd: MAX_JOB_COST_USD,
@@ -192,8 +180,8 @@ async function main(): Promise<void> {
       );
     } else {
       console.error(
-        `\nCALIBRATION GATE FAILED — judge agreement ${(calibration.agreement * 100).toFixed(1)}% ` +
-          `(min ${MIN_CALIBRATION_AGREEMENT * 100}%). Inspect the disagreements before trusting any grade.`,
+        `\nCALIBRATION GATE FAILED — ${describeCalibrationFailure(calibration)}. ` +
+          'Inspect the disagreements before trusting any grade.',
       );
     }
     console.error(`result file (calibration-only) ${RESULT_FILE}`);

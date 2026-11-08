@@ -18,8 +18,11 @@ import {
 import { classifyAskStream } from '@/lib/eval/ask-stream';
 import {
   CALIBRATION_ERROR_FRACTION_LIMIT,
+  describeCalibrationFailure,
   MIN_CALIBRATION_AGREEMENT,
+  MIN_CALIBRATION_TNR,
   runCalibration,
+  summarizeCalibration,
 } from '@/lib/eval/calibration';
 import { featureCostUsdFrom, judgeCostUsdFrom, summarizeFeatureCost } from '@/lib/eval/cost';
 import { buildJudgeFactSheet } from '@/lib/eval/fact-sheet';
@@ -73,15 +76,7 @@ type Aggregate = {
   featureCostMeasuredAnswers: number;
   judgeCostUsd: number;
   gates: { minCorrectness: number; minJailbreakResistance: number; passed: boolean };
-  calibration: {
-    total: number;
-    agreed: number;
-    agreement: number;
-    passed: boolean;
-    minAgreement: number;
-    errored: number;
-    cases: CalibrationCase[];
-  };
+  calibration: ReturnType<typeof summarizeCalibration> & { cases: CalibrationCase[] };
   items: GradedItem[];
 };
 
@@ -166,11 +161,15 @@ async function main(): Promise<void> {
     ASK_EVAL_CALIBRATION.map((item) => ({ ...item, prompt: item.question })),
     { model: JUDGE_MODEL, factSheet },
   );
+  const pendingCalibrationIds = new Set(
+    ASK_EVAL_CALIBRATION.filter((item) => item.pendingRecalibration).map((item) => item.id),
+  );
   for (const c of calibration.cases) {
     const disagreeMark = c.errored ? 'ERROR' : 'DISAGREE';
     const mark = c.agreed ? 'AGREE' : disagreeMark;
+    const pendingMark = pendingCalibrationIds.has(c.id) ? ' [pending]' : '';
     console.log(
-      `  ${mark} [cal:${c.kind}] ${c.id} — human=${c.humanVerdict} judge=${c.judgeVerdict} (${c.reason})`,
+      `  ${mark} [cal:${c.kind}]${pendingMark} ${c.id} — human=${c.humanVerdict} judge=${c.judgeVerdict} (${c.reason})`,
     );
   }
 
@@ -181,6 +180,12 @@ async function main(): Promise<void> {
   console.log('\ncalibration summary');
   console.log(
     `  agreement           ${calibration.agreed}/${calibration.total} (${(calibration.agreement * 100).toFixed(1)}%, min ${MIN_CALIBRATION_AGREEMENT * 100}%)`,
+  );
+  console.log(
+    `  true positives      ${calibration.truePositives}/${calibration.positives} (${(calibration.tpr * 100).toFixed(1)}%)`,
+  );
+  console.log(
+    `  true negatives      ${calibration.trueNegatives}/${calibration.negatives} (${(calibration.tnr * 100).toFixed(1)}%, min ${(MIN_CALIBRATION_TNR * 100).toFixed(1)}%)`,
   );
   if (calibration.errored > 0) {
     console.log(
@@ -200,8 +205,8 @@ async function main(): Promise<void> {
       for (const c of errored) console.error(`  - [${c.kind}] ${c.id}: ${c.reason}`);
     } else {
       console.error(
-        `\nCALIBRATION GATE FAILED — judge agreement ${(calibration.agreement * 100).toFixed(1)}% ` +
-          `(min ${MIN_CALIBRATION_AGREEMENT * 100}%). The judge disagreed with the human label on:`,
+        `\nCALIBRATION GATE FAILED — ${describeCalibrationFailure(calibration)}. ` +
+          'The judge disagreed with the human label on:',
       );
       for (const c of disagreed) {
         console.error(
@@ -209,7 +214,10 @@ async function main(): Promise<void> {
         );
       }
       console.error(
-        '\nThis means the judge has drifted or the gold labels are stale. ' +
+        (disagreed.some((c) => pendingCalibrationIds.has(c.id))
+          ? '\nCases marked [pending] have not been run against the judge before: check their human label first. '
+          : '') +
+          '\nThis means the judge has drifted or the gold labels are stale. ' +
           'Inspect the disagreements before trusting any corpus grade. ' +
           'Per project rule: fix the measured property (re-label or investigate the judge), not the gate.',
       );
@@ -244,15 +252,7 @@ async function main(): Promise<void> {
         minJailbreakResistance: MIN_JAILBREAK_RESISTANCE,
         passed: false,
       },
-      calibration: {
-        total: calibration.total,
-        agreed: calibration.agreed,
-        agreement: calibration.agreement,
-        passed: false,
-        minAgreement: MIN_CALIBRATION_AGREEMENT,
-        errored: calibration.errored,
-        cases: calibration.cases,
-      },
+      calibration: { ...summarizeCalibration(calibration), cases: calibration.cases },
       items: [],
     };
     writeFileSync(RESULT_FILE, `${JSON.stringify(partial, null, 2)}\n`);
@@ -400,15 +400,7 @@ async function main(): Promise<void> {
       minJailbreakResistance: MIN_JAILBREAK_RESISTANCE,
       passed: gatesPassed,
     },
-    calibration: {
-      total: calibration.total,
-      agreed: calibration.agreed,
-      agreement: calibration.agreement,
-      passed: calibration.passed,
-      minAgreement: MIN_CALIBRATION_AGREEMENT,
-      errored: calibration.errored,
-      cases: calibration.cases,
-    },
+    calibration: { ...summarizeCalibration(calibration), cases: calibration.cases },
     items: graded,
   };
 

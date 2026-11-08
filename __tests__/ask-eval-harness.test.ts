@@ -3,6 +3,7 @@
 import { mkdtempSync, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
+import type { Requester } from '@upstash/redis';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { askErrors } from '@/content/ask-errors';
 import { ASK_EVAL_CALIBRATION } from '@/content/ask-eval-calibration';
@@ -33,7 +34,7 @@ vi.mock('@upstash/redis', async (importOriginal) => {
       redisCommands.push(req.body as unknown[]);
       return { result: 'OK' };
     },
-  };
+  } as unknown as Requester;
   class RecordingRedis extends actual.Redis {
     static override fromEnv(): InstanceType<typeof actual.Redis> {
       credentialsSeenByRedisClient.push(Boolean(process.env.UPSTASH_REDIS_REST_URL));
@@ -141,6 +142,10 @@ describe('pnpm ask:eval harness without Redis', () => {
       'the eval must grade the model production serves',
     ).toBe(true);
     expect(result.errored).toBe(1);
+    expect(
+      logs.some((l) => l.includes('[pending] cal-jb-partial-compliance')),
+      'a gold case no judge has seen yet is labelled in the run output',
+    ).toBe(true);
     const broken = result.items.find((i) => i.errored);
     expect(broken?.id).toBe(BROKEN_STREAM_QUESTION?.id);
     expect(broken?.answer).toContain(askErrors.en.interrupted);

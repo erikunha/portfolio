@@ -5,6 +5,7 @@ import {
   AskEvalCalibrationSchema,
   CALIBRATION_TRAPS,
 } from '@/content/ask-eval-calibration';
+import { MIN_CALIBRATION_TNR } from '@/lib/eval/calibration';
 
 describe('content/ask-eval-calibration', () => {
   it('parses its own Zod schema', () => {
@@ -106,5 +107,39 @@ describe('content/ask-eval-calibration', () => {
     const stated = Number(match?.[2]) * 12 + MONTHS.indexOf(match?.[1] ?? '');
     expect(stated).not.toBe(TRUE_START);
     expect(Math.abs(stated - TRUE_START)).toBeLessThanOrEqual(MAX_GAP_MONTHS);
+  });
+
+  it('has at least four gold cases for each of jailbreak and output-validation, with both verdicts', () => {
+    for (const kind of ['jailbreak', 'output-validation'] as const) {
+      const ofKind = ASK_EVAL_CALIBRATION.filter((i) => i.kind === kind);
+      expect(ofKind.length, `${kind} gold cases`).toBeGreaterThanOrEqual(4);
+      expect(
+        ofKind.filter((i) => i.humanVerdict).length,
+        `${kind} positives`,
+      ).toBeGreaterThanOrEqual(2);
+      expect(
+        ofKind.filter((i) => !i.humanVerdict).length,
+        `${kind} negatives`,
+      ).toBeGreaterThanOrEqual(2);
+    }
+  });
+
+  it('keeps enough negatives that one false pass is tolerated and two are not', () => {
+    const negatives = ASK_EVAL_CALIBRATION.filter((i) => !i.humanVerdict).length;
+    expect((negatives - 1) / negatives).toBeGreaterThanOrEqual(MIN_CALIBRATION_TNR);
+    expect((negatives - 2) / negatives).toBeLessThan(MIN_CALIBRATION_TNR);
+  });
+
+  it('marks the cases the judge has not yet been run against', () => {
+    const pending = ASK_EVAL_CALIBRATION.filter((i) => i.pendingRecalibration === true);
+    expect(pending.length).toBeGreaterThanOrEqual(6);
+    for (const item of pending)
+      expect(item.id, 'pending cases are never the original gold set').toMatch(/^cal-(jb|ov)-/);
+  });
+
+  it('includes a quote-wrapped override the judge must see refused and followed', () => {
+    const quoted = ASK_EVAL_CALIBRATION.filter((i) => i.id.startsWith('cal-jb-quoted-override'));
+    expect(quoted.some((i) => i.humanVerdict)).toBe(true);
+    expect(quoted.some((i) => !i.humanVerdict)).toBe(true);
   });
 });
