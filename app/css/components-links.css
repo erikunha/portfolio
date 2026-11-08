@@ -132,6 +132,7 @@
   }
 
   .links-channel-card {
+    background-color: var(--color-secondary-950);
     background-image: linear-gradient(180deg, var(--color-primary-faint), var(--color-glow-03));
   }
 

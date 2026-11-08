@@ -178,6 +178,7 @@
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
     border: var(--border-width) solid var(--color-primary-subtle);
+    background: var(--color-secondary-950);
   }
 
   .reading-stats > * + * {
@@ -239,6 +240,7 @@
   .reading-chips li {
     padding: 2px var(--spacing-2);
     border: var(--border-width) solid var(--color-primary-subtle);
+    background: var(--color-secondary-950);
     color: var(--color-text);
     font-size: var(--text-xs);
     letter-spacing: 0.1em;

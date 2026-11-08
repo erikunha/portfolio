@@ -51,7 +51,7 @@ export function PlaylistCards({ locale, channelUrl }: { locale: LinksLocale; cha
               href={withUtm(href, `playlist-${playlist.id}`)}
               data-outbound={`playlist-${playlist.id}`}
               className={cn(
-                'block border border-primary-border p-4 no-underline bg-[var(--color-glow-03)] transition-[border-color,background] duration-150 focus-visible:outline-2 focus-visible:outline-primary-500 focus-visible:outline-offset-2',
+                'block border border-primary-border p-4 no-underline bg-secondary-950 transition-[border-color,background] duration-150 focus-visible:outline-2 focus-visible:outline-primary-500 focus-visible:outline-offset-2',
                 ACCENT_CARD[playlist.accent],
               )}
             >
