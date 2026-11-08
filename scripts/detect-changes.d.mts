@@ -6,6 +6,7 @@ export interface ChangeSignals {
   uiChanged: boolean;
   pkgRenderChanged: boolean;
   aiMajorChanged?: boolean;
+  aiLockChanged?: boolean;
 }
 export interface Categories {
   ai: boolean;
@@ -13,4 +14,5 @@ export interface Categories {
   ui: boolean;
 }
 export function computeCategories(signals: ChangeSignals): Categories;
+export function aiDependencyVersions(lockText: string): string[];
 export function aiMajor(pkgJsonString: string): number | null;

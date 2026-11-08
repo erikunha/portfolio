@@ -14,15 +14,29 @@ export function canonicalJSON(value) {
   return JSON.stringify(value === undefined ? null : value);
 }
 
+const AI_DEPENDENCY_NAME = /^(ai|@ai-sdk\/.+|langfuse.*|@langfuse\/.+)$/;
+
+const LOCK_PACKAGE_KEY = /^ {2}'?((?:@[^/@\s']+\/)?[^@\s'/][^@\s']*)@([^\s'(:]+)[^']*'?:$/;
+
+export function aiDependencyVersions(lockText) {
+  const found = new Set();
+  for (const line of lockText.split('\n')) {
+    const match = LOCK_PACKAGE_KEY.exec(line);
+    if (match && AI_DEPENDENCY_NAME.test(match[1])) found.add(`${match[1]}@${match[2]}`);
+  }
+  return [...found].sort();
+}
+
 export function computeCategories({
   aiChanged,
   appChanged,
   uiChanged,
   pkgRenderChanged,
   aiMajorChanged,
+  aiLockChanged,
 }) {
   return {
-    ai: aiChanged || Boolean(aiMajorChanged),
+    ai: aiChanged || Boolean(aiMajorChanged) || Boolean(aiLockChanged),
     app: appChanged,
     ui: uiChanged || pkgRenderChanged,
   };
@@ -77,6 +91,15 @@ function aiMajorAtRef(ref) {
   return aiMajor(res.stdout);
 }
 
+function aiLockAtRef(ref) {
+  const res = spawnSync('git', ['show', `${ref}:pnpm-lock.yaml`], {
+    encoding: 'utf8',
+    maxBuffer: 64 * 1024 * 1024,
+  });
+  if (res.error || res.status !== 0) return 'null';
+  return aiDependencyVersions(res.stdout).join('\n');
+}
+
 function writeOutputs({ ai, app, ui }) {
   const file = process.env.GITHUB_OUTPUT;
   if (!file) throw new Error('GITHUB_OUTPUT is not set');
@@ -96,8 +119,16 @@ function main() {
   const uiChanged = diffNonEmpty(base, head, UI_PATHS);
   const pkgRenderChanged = renderSlice(base) !== renderSlice(head);
   const aiMajorChanged = aiMajorAtRef(base) !== aiMajorAtRef(head);
+  const aiLockChanged = aiLockAtRef(base) !== aiLockAtRef(head);
   writeOutputs(
-    computeCategories({ aiChanged, appChanged, uiChanged, pkgRenderChanged, aiMajorChanged }),
+    computeCategories({
+      aiChanged,
+      appChanged,
+      uiChanged,
+      pkgRenderChanged,
+      aiMajorChanged,
+      aiLockChanged,
+    }),
   );
 }
 
