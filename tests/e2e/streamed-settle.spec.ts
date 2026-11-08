@@ -2,7 +2,7 @@ import { type BrowserContext, expect, type Page, test } from '@playwright/test';
 import { settleFrames } from './_helpers/geometry';
 import { gotoHydrated, MENU_TRIGGER } from './_helpers/hydration';
 import { drainRoutes } from './_helpers/routes';
-import { gotoSettled, PENDING_STREAMED } from './_helpers/streamed';
+import { gotoSettled, PENDING_STREAMED, selfHostedFaceStatuses } from './_helpers/streamed';
 
 const BOUNDARY_SWAP = /\$RC\(("B:[^)]*)\)/g;
 const HELD_SWAP = '(window.__heldSwaps=window.__heldSwaps||[]).push(()=>$RC($1))';
@@ -82,12 +82,12 @@ test.describe('settling while a subresource never answers', () => {
     await expect(page.locator(PENDING_STREAMED)).toHaveCount(0);
     const box = await page.locator('#main-content').boundingBox();
     expect(box, 'the page must be laid out and measurable').not.toBeNull();
-    const fontsLoaded = await page.evaluate(() =>
-      [...document.fonts].every((face) => face.status === 'loaded'),
-    );
-    expect(fontsLoaded, 'every declared font face must be loaded when the page is measured').toBe(
-      true,
-    );
+    const statuses = await selfHostedFaceStatuses(page);
+    expect(statuses.length, 'the page must declare self-hosted font faces').toBeGreaterThan(0);
+    expect(
+      statuses.every((status) => status === 'loaded'),
+      `every self-hosted font face must be loaded when the page is measured, got ${statuses}`,
+    ).toBe(true);
   }
 
   test('a manifest that never answers does not hold the navigation', async ({ context, page }) => {

@@ -110,8 +110,10 @@ The prompt for a manual or agent review that applies these rules to a diff is `d
     fallback, and the swap then detaches it: `getComputedStyle` returns `''` and `NaN` follows.
     The helper navigates to `domcontentloaded`, not `load`: WebKit holds `load` for as long as any
     one subresource (the manifest, a script chunk, a font) has not answered, and 30 seconds later
-    `page.goto` times out on a page that was measurable at 270ms. It then waits for every declared
-    font face itself, because `document.fonts.ready` stays pending in WebKit until `load`. A spec
+    `page.goto` times out on a page that was measurable at 270ms. It then waits for every self-hosted
+    font face (a `src: url()` face; next/font's `src: local(Arial)` fallback faces end in `error`
+    on a runner without that font and are not counted) itself, because `document.fonts.ready`
+    stays pending in WebKit until `load`. A spec
     that needs images decoded passes `{ waitUntil: 'load' }` or waits on the image.
     `domcontentloaded` no longer implies hydration, because the Next chunks are async: a click on a
     server-rendered button before React attaches its handlers is lost. A spec that clicks, types,
@@ -125,8 +127,8 @@ The prompt for a manual or agent review that applies these rules to a diff is `d
     interaction under test. Check: `cross-cutting.spec.ts` test 4b.
 36. CI fails a test that passes on a retry (`failOnFlakyTests`). Fix the race, never the retry
     count: wait on the state the assertion reads (`expect.poll`, `toPass`, `gotoSettled`), not on a
-    timeout. The trace is `retain-on-failure`, so the first failing attempt keeps the request log
-    that names the stalled request; `on-first-retry` recorded only the retry, which passed.
+    timeout. The trace stays `on-first-retry`: `retain-on-failure` snapshots the DOM at every action
+    of every attempt, which tripled the run time of action-heavy specs past the 30s test timeout.
     Check: `__tests__/scripts/playwright-flaky-policy.test.ts`.
 37. `html { scroll-padding-top }` reserves the room the phone's sticky bars occupy, so a scroll into
     view (keyboard focus, `scrollIntoView`, Playwright's `locator.click()`) treats a control inside a

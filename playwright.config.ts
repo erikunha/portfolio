@@ -18,7 +18,7 @@ export default defineConfig({
   ],
   use: {
     baseURL: process.env.E2E_BASE_URL ?? DEFAULT_BASE_URL,
-    trace: 'retain-on-failure',
+    trace: 'on-first-retry',
   },
   expect: {
     toHaveScreenshot: { maxDiffPixelRatio: 0.01 },
