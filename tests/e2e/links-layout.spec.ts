@@ -1,4 +1,6 @@
 import { expect, type Page, test } from '@playwright/test';
+import { linksContent } from '../../content/links';
+import { LINKS_LOCALE, type LinksLocale } from '../../content/links.constants';
 import { horizontalOverflow } from './_helpers/geometry';
 import { gotoSettled } from './_helpers/streamed';
 
@@ -18,9 +20,19 @@ const VIEWPORT = {
 
 const FONT_FLOOR_PX = 12;
 
-const ROUTE_COPY: Record<string, { qrLabel: RegExp; skipLabel: string }> = {
-  '/links': { qrLabel: /^Código QR:/, skipLabel: 'Pular para o conteúdo' },
-  '/links/en': { qrLabel: /^QR code:/, skipLabel: 'Skip to main content' },
+const MAIL_PROTOCOL = 'mailto:';
+
+const ROUTE_COPY: Record<string, { qrLabel: RegExp; skipLabel: string; locale: LinksLocale }> = {
+  '/links': {
+    qrLabel: /^Código QR:/,
+    skipLabel: 'Pular para o conteúdo',
+    locale: LINKS_LOCALE.pt,
+  },
+  '/links/en': {
+    qrLabel: /^QR code:/,
+    skipLabel: 'Skip to main content',
+    locale: LINKS_LOCALE.en,
+  },
 };
 
 const PRIMARY = '[data-stack="primary"]';
@@ -95,6 +107,24 @@ for (const path of ['/links', '/links/en']) {
         expect(row.height).toBeGreaterThanOrEqual(LINE_MIN_HEIGHT_PX);
         expect(row.width).toBeGreaterThanOrEqual(row.list - OVERFLOW_TOLERANCE_PX);
       }
+    });
+
+    test('lists a profile row for every profile with a destination and none without', async ({
+      page,
+    }) => {
+      await page.setViewportSize(VIEWPORT.desktop);
+      await gotoSettled(page, path);
+
+      const copy = ROUTE_COPY[path];
+      if (!copy) throw new Error(`no expected copy for ${path}`);
+      const expected = linksContent.pills
+        .filter((pill) => pill.href && !pill.href.startsWith(MAIL_PROTOCOL))
+        .map((pill) => pill.label[copy.locale]);
+      const rendered = await page.locator(`${PROFILES} .links-line-label`).allTextContents();
+      expect(
+        rendered,
+        'a network without a confirmed destination must not render a row that links nowhere',
+      ).toEqual(expected);
     });
 
     test('pushes each row host to the right edge, ahead of the arrow', async ({ page }) => {
