@@ -1,10 +1,12 @@
 #!/usr/bin/env tsx
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync, realpathSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const DEPENDENCY_BLOCKS = ['dependencies', 'devDependencies', 'optionalDependencies'] as const;
 const INSTALL_SCRIPTS = ['preinstall', 'install', 'postinstall'] as const;
+const IMPLICIT_INSTALL_SCRIPT = 'install';
+const NATIVE_BUILD_FILE = 'binding.gyp';
 const MANIFEST_FILE = 'package.json';
 const VETTING_FILE = 'dependency-vetting.json';
 const LICENSE_JOINER = ' OR ';
@@ -25,7 +27,7 @@ export interface Manifest {
   dependencies?: Record<string, string>;
   devDependencies?: Record<string, string>;
   optionalDependencies?: Record<string, string>;
-  pnpm?: { onlyBuiltDependencies?: string[] };
+  pnpm?: { onlyBuiltDependencies?: string[]; ignoredBuiltDependencies?: string[] };
 }
 
 export interface VettingInput {
@@ -67,10 +69,14 @@ export function readInstalled(root: string, name: string): InstalledPackage | un
     return undefined;
   }
   const scripts = raw.scripts ?? {};
-  return {
-    license: normalizeLicense(raw),
-    installScripts: INSTALL_SCRIPTS.filter((script) => typeof scripts[script] === 'string'),
-  };
+  const installScripts: string[] = INSTALL_SCRIPTS.filter(
+    (script) => typeof scripts[script] === 'string',
+  );
+  const implicitNativeBuild =
+    !installScripts.includes(IMPLICIT_INSTALL_SCRIPT) &&
+    existsSync(join(root, 'node_modules', name, NATIVE_BUILD_FILE));
+  if (implicitNativeBuild) installScripts.push(IMPLICIT_INSTALL_SCRIPT);
+  return { license: normalizeLicense(raw), installScripts };
 }
 
 export function directDependencies(manifest: Manifest): string[] {
@@ -81,6 +87,7 @@ export function findViolations({ manifest, vetting, installed }: VettingInput): 
   const violations: string[] = [];
   const direct = directDependencies(manifest);
   const allowedToBuild = new Set(manifest.pnpm?.onlyBuiltDependencies ?? []);
+  const ignoredToBuild = new Set(manifest.pnpm?.ignoredBuiltDependencies ?? []);
 
   for (const name of Object.keys(vetting)) {
     if (!direct.includes(name)) {
@@ -114,7 +121,7 @@ export function findViolations({ manifest, vetting, installed }: VettingInput): 
         `${name}: installed license "${pkg.license}" differs from recorded "${recorded}"; re-vet it`,
       );
     }
-    if (pkg.installScripts.length > 0 && !allowedToBuild.has(name)) {
+    if (pkg.installScripts.length > 0 && !allowedToBuild.has(name) && !ignoredToBuild.has(name)) {
       violations.push(
         `${name}: runs ${pkg.installScripts.join(', ')} but is not in pnpm.onlyBuiltDependencies`,
       );
@@ -156,4 +163,14 @@ function main(): void {
   process.exit(EXIT_VIOLATION);
 }
 
-if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) main();
+function isMainModule(): boolean {
+  const entry = process.argv[1];
+  if (!entry) return false;
+  try {
+    return realpathSync(entry) === realpathSync(fileURLToPath(import.meta.url));
+  } catch {
+    return false;
+  }
+}
+
+if (isMainModule()) main();

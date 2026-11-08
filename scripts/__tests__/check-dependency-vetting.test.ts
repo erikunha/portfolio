@@ -1,5 +1,5 @@
 import { execFileSync } from 'node:child_process';
-import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { describe, expect, it } from 'vitest';
@@ -157,6 +157,20 @@ describe('findViolations', () => {
     ).toEqual([]);
   });
 
+  it('allows an install script on a package listed in pnpm.ignoredBuiltDependencies', () => {
+    const base = input();
+    expect(
+      findViolations({
+        ...base,
+        manifest: { ...base.manifest, pnpm: { ignoredBuiltDependencies: ['clsx'] } },
+        installed: {
+          clsx: { license: 'MIT', installScripts: ['postinstall'] },
+          vitest: CLEAN_INSTALL,
+        },
+      }),
+    ).toEqual([]);
+  });
+
   it('reports every problem in one run so a single pass lists all of them', () => {
     const violations = findViolations(
       input({
@@ -202,6 +216,8 @@ interface Fixture {
   manifest?: object;
   vetting?: object | string | null;
   installed?: Record<string, object>;
+  installedFiles?: Record<string, string[]>;
+  invokeVia?: 'direct' | 'symlink';
 }
 
 function runOn(fixture: Fixture): { code: number; out: string } {
@@ -221,8 +237,16 @@ function runOn(fixture: Fixture): { code: number; out: string } {
   for (const [name, pkg] of Object.entries(fixture.installed ?? {})) {
     write(join('node_modules', name, 'package.json'), JSON.stringify(pkg));
   }
+  for (const [name, files] of Object.entries(fixture.installedFiles ?? {})) {
+    for (const file of files) write(join('node_modules', name, file), '');
+  }
+  let script = SCRIPT;
+  if (fixture.invokeVia === 'symlink') {
+    script = join(dir, 'linked-check.ts');
+    symlinkSync(SCRIPT, script);
+  }
   try {
-    const out = execFileSync(TSX, [SCRIPT, dir], { encoding: 'utf8', stdio: 'pipe' });
+    const out = execFileSync(TSX, [script, dir], { encoding: 'utf8', stdio: 'pipe' });
     return { code: 0, out };
   } catch (e) {
     const err = e as { status: number; stdout: string; stderr: string };
@@ -285,6 +309,49 @@ describe('check-dependency-vetting (process)', () => {
       installed: { clsx: { name: 'clsx', license: 'MIT', scripts: { postinstall: 'node x.js' } } },
     });
     expect(r.code).toBe(0);
+  });
+
+  it('exits 1 when an installed package has binding.gyp and no install script', () => {
+    const r = runOn({
+      manifest: CLSX_MANIFEST,
+      vetting: CLSX_VETTING,
+      installed: { clsx: { name: 'clsx', license: 'MIT' } },
+      installedFiles: { clsx: ['binding.gyp'] },
+    });
+    expect(r.code).toBe(1);
+    expect(r.out).toMatch(/clsx.*install/);
+  });
+
+  it('allows an implicit node-gyp install once the package is in pnpm.onlyBuiltDependencies', () => {
+    const r = runOn({
+      manifest: { ...CLSX_MANIFEST, pnpm: { onlyBuiltDependencies: ['clsx'] } },
+      vetting: CLSX_VETTING,
+      installed: { clsx: { name: 'clsx', license: 'MIT' } },
+      installedFiles: { clsx: ['binding.gyp'] },
+    });
+    expect(r.code).toBe(0);
+  });
+
+  it('does not double-report binding.gyp alongside an explicit install script', () => {
+    const r = runOn({
+      manifest: CLSX_MANIFEST,
+      vetting: CLSX_VETTING,
+      installed: { clsx: { name: 'clsx', license: 'MIT', scripts: { install: 'node x.js' } } },
+      installedFiles: { clsx: ['binding.gyp'] },
+    });
+    expect(r.code).toBe(1);
+    expect(r.out.match(/install, install/)).toBeNull();
+  });
+
+  it('still runs the gate when invoked through a symlink', () => {
+    const r = runOn({
+      manifest: CLSX_MANIFEST,
+      vetting: {},
+      installed: { clsx: { name: 'clsx', license: 'MIT' } },
+      invokeVia: 'symlink',
+    });
+    expect(r.code).toBe(1);
+    expect(r.out).toContain('clsx');
   });
 
   it('exits 1 when the installed license changed since vetting', () => {
