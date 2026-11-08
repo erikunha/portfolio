@@ -23,7 +23,7 @@ import { hasGatewayCredential } from '@/lib/eval/gateway-credential';
 import { gradeRun } from '@/lib/eval/grade';
 import { aggregateCase, type CaseStats } from '@/lib/eval/montecarlo';
 import { isolateFromRedis } from '@/lib/eval/publish-gate';
-import { publishAggregate } from '@/lib/eval/redis-publish';
+import { publishWithCredentials } from '@/lib/eval/redis-publish';
 import { runTarget } from '@/lib/eval/run-target';
 import type { CalibrationResult } from '@/lib/eval/types';
 
@@ -141,7 +141,7 @@ function targetModelFor(tier: 'mechanical' | 'judgment'): string {
 }
 
 async function main(): Promise<void> {
-  isolateFromRedis(process.env);
+  const withheldRedisCredentials = isolateFromRedis(process.env);
   if (!hasGatewayCredential(process.env)) {
     if (process.env.CI) {
       console.error(
@@ -267,7 +267,11 @@ async function main(): Promise<void> {
       ab,
     });
     writeFileSync(RESULT_FILE, `${JSON.stringify(aggregate, null, 2)}\n`);
-    const published = await publishAggregate(AGENT_EVAL_REDIS_KEY, aggregate);
+    const published = await publishWithCredentials(
+      AGENT_EVAL_REDIS_KEY,
+      aggregate,
+      withheldRedisCredentials,
+    );
     if (published.published) console.log(`published aggregate → redis ${AGENT_EVAL_REDIS_KEY}`);
     else if (published.error) console.error(`redis publish failed (non-fatal): ${published.error}`);
     console.log(`  result file         ${RESULT_FILE}`);
@@ -310,7 +314,11 @@ async function main(): Promise<void> {
 
   writeFileSync(RESULT_FILE, `${JSON.stringify(aggregate, null, 2)}\n`);
 
-  const publishResult = await publishAggregate(AGENT_EVAL_REDIS_KEY, aggregate);
+  const publishResult = await publishWithCredentials(
+    AGENT_EVAL_REDIS_KEY,
+    aggregate,
+    withheldRedisCredentials,
+  );
   if (publishResult.published) {
     console.log(`\npublished aggregate → redis ${AGENT_EVAL_REDIS_KEY}`);
   } else if (publishResult.error) {

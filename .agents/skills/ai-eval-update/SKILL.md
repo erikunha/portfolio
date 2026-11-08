@@ -19,8 +19,10 @@ only the scheduled `ask-eval.yml` workflow does.
 
     pnpm ask:eval          # calibration → corpus → grade → gate
                            # always writes ask-eval-result.json
-                           # never publishes locally: without EVAL_PUBLISH=1 the script
-                           # removes every Redis credential from its environment, so
+                           # strips every Redis credential from its environment at start, so
+                           # the in-process route never writes ask:log / ask:guard / refusal
+                           # counters to production; with EVAL_PUBLISH=1 they return only
+                           # around the aggregate publish, without it they never return, so
                            # `vercel env run -- pnpm ask:eval` cannot touch production data
 
 The CI `ai-eval` job runs the same `pnpm ask:eval`. It is path-filtered by the

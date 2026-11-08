@@ -12,7 +12,7 @@ vi.mock('@/lib/rate-limit', async (importOriginal) => ({
 }));
 
 import { EVAL_PUBLISH_ENV, EVAL_PUBLISH_VALUE } from '@/lib/eval/publish-gate';
-import { publishAggregate } from '@/lib/eval/redis-publish';
+import { publishAggregate, publishWithCredentials } from '@/lib/eval/redis-publish';
 
 const ORIGINAL_ENV = { ...process.env };
 
@@ -98,5 +98,35 @@ describe('lib/eval/redis-publish', () => {
     const r = await publishAggregate('ask:eval:latest', { a: 1 });
     expect(r.published).toBe(false);
     expect(mockSet).not.toHaveBeenCalled();
+  });
+
+  it('restores the withheld credentials only while the publish runs and drops them after', async () => {
+    process.env[EVAL_PUBLISH_ENV] = EVAL_PUBLISH_VALUE;
+    const seenDuringSet: Array<string | undefined> = [];
+    mockSet.mockImplementationOnce(async () => {
+      seenDuringSet.push(process.env.UPSTASH_REDIS_REST_URL);
+      return 'OK';
+    });
+    const r = await publishWithCredentials(
+      'ask:eval:latest',
+      { a: 1 },
+      { UPSTASH_REDIS_REST_URL: 'https://redis.example', UPSTASH_REDIS_REST_TOKEN: 'tok' },
+    );
+    expect(r).toEqual({ published: true });
+    expect(seenDuringSet).toEqual(['https://redis.example']);
+    expect(process.env.UPSTASH_REDIS_REST_URL).toBeUndefined();
+    expect(process.env.UPSTASH_REDIS_REST_TOKEN).toBeUndefined();
+  });
+
+  it('drops the credentials again when the publish throws', async () => {
+    process.env[EVAL_PUBLISH_ENV] = EVAL_PUBLISH_VALUE;
+    mockSet.mockRejectedValueOnce(new Error('redis down'));
+    const r = await publishWithCredentials(
+      'ask:eval:latest',
+      { a: 1 },
+      { UPSTASH_REDIS_REST_URL: 'https://redis.example', UPSTASH_REDIS_REST_TOKEN: 'tok' },
+    );
+    expect(r.error).toContain('redis down');
+    expect(process.env.UPSTASH_REDIS_REST_URL).toBeUndefined();
   });
 });

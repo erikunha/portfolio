@@ -17,12 +17,31 @@ const BROKEN_STREAM_QUESTION = ASK_EVAL_CORPUS.find(
 const INPUT_TOKENS = 3000;
 const OUTPUT_TOKENS = 100;
 
-const { streamTextMock, generateTextMock } = vi.hoisted(() => ({
-  streamTextMock: vi.fn(),
-  generateTextMock: vi.fn(),
-}));
+const { streamTextMock, generateTextMock, redisCommands, credentialsSeenByRedisClient } =
+  vi.hoisted(() => ({
+    streamTextMock: vi.fn(),
+    generateTextMock: vi.fn(),
+    redisCommands: [] as unknown[][],
+    credentialsSeenByRedisClient: [] as boolean[],
+  }));
 
 vi.mock('ai', () => ({ streamText: streamTextMock, generateText: generateTextMock }));
+vi.mock('@upstash/redis', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@upstash/redis')>();
+  const recordingRequester = {
+    request: async (req: { body?: unknown }) => {
+      redisCommands.push(req.body as unknown[]);
+      return { result: 'OK' };
+    },
+  };
+  class RecordingRedis extends actual.Redis {
+    static override fromEnv(): InstanceType<typeof actual.Redis> {
+      credentialsSeenByRedisClient.push(Boolean(process.env.UPSTASH_REDIS_REST_URL));
+      return new actual.Redis(recordingRequester);
+    }
+  }
+  return { ...actual, Redis: RecordingRedis };
+});
 vi.mock('@/lib/log', async () => (await import('./helpers/ask-route')).logModule());
 
 type StreamArgs = { messages: Array<{ role: string; content: string }> };
@@ -160,5 +179,56 @@ describe('pnpm ask:eval harness without Redis', () => {
     expect(result.featureCostMeasuredAnswers).toBe(result.answeredCount);
     const perAnswer = (INPUT_TOKENS * 1 + OUTPUT_TOKENS * 5) / 1_000_000;
     expect(result.featureCostUsd).toBeCloseTo(perAnswer * result.answeredCount, 3);
+  }, 30_000);
+});
+
+describe('pnpm ask:eval with EVAL_PUBLISH=1 and Redis credentials', () => {
+  const originalCwd = process.cwd();
+  let outDir: string;
+  const logs: string[] = [];
+
+  beforeEach(() => {
+    vi.resetModules();
+    streamTextMock.mockReset();
+    generateTextMock.mockReset();
+    installModelDouble();
+    redisCommands.length = 0;
+    credentialsSeenByRedisClient.length = 0;
+    outDir = mkdtempSync(path.join(tmpdir(), 'ask-eval-publish-'));
+    process.chdir(outDir);
+    vi.stubEnv('AI_GATEWAY_API_KEY', 'test-key');
+    vi.stubEnv('ASK_ENABLED', 'true');
+    vi.stubEnv('EVAL_PUBLISH', '1');
+    vi.stubEnv('UPSTASH_REDIS_REST_URL', 'https://prod-redis.example');
+    vi.stubEnv('UPSTASH_REDIS_REST_TOKEN', 'prod-token');
+    vi.stubEnv('KV_REST_API_URL', '');
+    vi.stubEnv('KV_REST_API_TOKEN', '');
+    logs.length = 0;
+    vi.spyOn(console, 'log').mockImplementation((...args: unknown[]) => {
+      logs.push(args.join(' '));
+    });
+    vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+  });
+
+  afterEach(() => {
+    process.chdir(originalCwd);
+    vi.unstubAllEnvs();
+    vi.restoreAllMocks();
+  });
+
+  it('keeps the production credentials away from the route and uses them only to publish the aggregate', async () => {
+    await import('@/scripts/ask-eval');
+    await vi.waitFor(() => expect(logs.some((l) => l.includes('GATE PASSED'))).toBe(true), {
+      timeout: 20_000,
+    });
+
+    expect(streamTextMock.mock.calls.length).toBeGreaterThan(0);
+    expect(
+      redisCommands.map((command) => command[0]),
+      'the route must not run its ask:log, ask:guard and refusal counters against production Redis',
+    ).toEqual(['set']);
+    expect(redisCommands[0]?.[1]).toBe('ask:eval:latest');
+    expect(credentialsSeenByRedisClient).toEqual([true]);
   }, 30_000);
 });

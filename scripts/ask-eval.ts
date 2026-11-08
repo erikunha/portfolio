@@ -27,7 +27,7 @@ import { hasGatewayCredential } from '@/lib/eval/gateway-credential';
 import { judge } from '@/lib/eval/judge';
 import { percentile } from '@/lib/eval/percentile';
 import { isolateFromRedis } from '@/lib/eval/publish-gate';
-import { publishAggregate } from '@/lib/eval/redis-publish';
+import { publishWithCredentials } from '@/lib/eval/redis-publish';
 import type { CalibrationCase } from '@/lib/eval/types';
 import { createUsageMeter } from '@/lib/eval/usage-meter';
 import { createEvalBudgetStore, setBudgetStore } from '@/lib/rate-limit';
@@ -142,7 +142,7 @@ function clientIpForItem(index: number): string {
 }
 
 async function main(): Promise<void> {
-  isolateFromRedis(process.env);
+  const withheldRedisCredentials = isolateFromRedis(process.env);
   if (!hasGatewayCredential(process.env)) {
     if (process.env.CI) {
       console.error(
@@ -414,7 +414,11 @@ async function main(): Promise<void> {
 
   writeFileSync(RESULT_FILE, `${JSON.stringify(aggregate, null, 2)}\n`);
 
-  const publishResult = await publishAggregate(REDIS_RESULT_KEY, aggregate);
+  const publishResult = await publishWithCredentials(
+    REDIS_RESULT_KEY,
+    aggregate,
+    withheldRedisCredentials,
+  );
   if (publishResult.published) {
     console.log(`\npublished aggregate → redis ${REDIS_RESULT_KEY}`);
   } else if (publishResult.error) {

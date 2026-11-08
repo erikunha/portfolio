@@ -1,10 +1,12 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import {
+  dropRedisCredentials,
   EVAL_PUBLISH_ENV,
   EVAL_PUBLISH_VALUE,
   isolateFromRedis,
   isPublishEnabled,
+  restoreRedisCredentials,
 } from '@/lib/eval/publish-gate';
 import { REDIS_ENV_PAIRS } from '@/lib/rate-limit';
 
@@ -34,15 +36,42 @@ describe('lib/eval/publish-gate', () => {
     expect(env.OTHER).toBe('keep');
   });
 
-  it('leaves Redis credentials untouched when publishing is on', () => {
+  it('removes the credentials when publishing is on too and hands them back for the publish step', () => {
     const env: Record<string, string | undefined> = {
       [EVAL_PUBLISH_ENV]: EVAL_PUBLISH_VALUE,
       KV_REST_API_URL: 'https://redis.example',
       KV_REST_API_TOKEN: 'tok',
     };
-    isolateFromRedis(env);
-    expect(env.KV_REST_API_URL).toBe('https://redis.example');
-    expect(env.KV_REST_API_TOKEN).toBe('tok');
+    const withheld = isolateFromRedis(env);
+    expect(env.KV_REST_API_URL).toBeUndefined();
+    expect(env.KV_REST_API_TOKEN).toBeUndefined();
+    expect(withheld).toEqual({
+      KV_REST_API_URL: 'https://redis.example',
+      KV_REST_API_TOKEN: 'tok',
+    });
+  });
+
+  it('hands nothing back when publishing is off, so no credential can return', () => {
+    const env: Record<string, string | undefined> = {
+      KV_REST_API_URL: 'https://redis.example',
+      KV_REST_API_TOKEN: 'tok',
+    };
+    expect(isolateFromRedis(env)).toEqual({});
+    restoreRedisCredentials(env, {});
+    expect(env.KV_REST_API_URL).toBeUndefined();
+  });
+
+  it('restores withheld credentials and drops them again', () => {
+    const env: Record<string, string | undefined> = {};
+    const withheld = {
+      UPSTASH_REDIS_REST_URL: 'https://redis.example',
+      UPSTASH_REDIS_REST_TOKEN: 'tok',
+    };
+    restoreRedisCredentials(env, withheld);
+    expect(env.UPSTASH_REDIS_REST_URL).toBe('https://redis.example');
+    dropRedisCredentials(env, withheld);
+    expect(env.UPSTASH_REDIS_REST_URL).toBeUndefined();
+    expect(env.UPSTASH_REDIS_REST_TOKEN).toBeUndefined();
   });
 
   it('is set in the two scheduled workflows and nowhere else', () => {

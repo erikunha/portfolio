@@ -1,4 +1,10 @@
-import { EVAL_PUBLISH_ENV, isPublishEnabled } from '@/lib/eval/publish-gate';
+import {
+  dropRedisCredentials,
+  EVAL_PUBLISH_ENV,
+  isPublishEnabled,
+  type RedisCredentials,
+  restoreRedisCredentials,
+} from '@/lib/eval/publish-gate';
 import { getRedis, hasRedisCredentials } from '@/lib/rate-limit';
 
 export type PublishResult = { published: boolean; skipped?: string; error?: string };
@@ -15,5 +21,18 @@ export async function publishAggregate(key: string, aggregate: unknown): Promise
     return { published: true };
   } catch (err) {
     return { published: false, error: err instanceof Error ? err.message : String(err) };
+  }
+}
+
+export async function publishWithCredentials(
+  key: string,
+  aggregate: unknown,
+  credentials: RedisCredentials,
+): Promise<PublishResult> {
+  restoreRedisCredentials(process.env, credentials);
+  try {
+    return await publishAggregate(key, aggregate);
+  } finally {
+    dropRedisCredentials(process.env, credentials);
   }
 }
