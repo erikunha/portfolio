@@ -1,7 +1,8 @@
 import { defineConfig, devices } from 'playwright/test';
 
 const CROSS_BROWSER_SPECS =
-  /tests\/(e2e\/(shared-header|cross-cutting|motion-switch|observability-smoke|design-system-pages|links|contact-delivery|contact-timezone|guitar-mobile|guitar-eq|mixer-mobile|reading-views|cv-layout|error-states|no-js|mobile-reflow|hero-layout|section-surfaces|route-surfaces|type-scale|streamed-settle|shell-input-states|shell-hydration|refs-privacy|safe-zone|section-visual-order)|visual\/visual)\.spec\.ts$/;
+  /tests\/e2e\/(shared-header|cross-cutting|motion-switch|observability-smoke|design-system-pages|links|contact-delivery|contact-timezone|guitar-mobile|guitar-eq|mixer-mobile|reading-views|cv-layout|error-states|no-js|mobile-reflow|hero-layout|section-surfaces|route-surfaces|type-scale|streamed-settle|shell-input-states|shell-hydration|refs-privacy|safe-zone|section-visual-order)\.spec\.ts$/;
+const VISUAL_SPEC = /tests\/visual\/visual\.spec\.ts$/;
 
 const DEFAULT_BASE_URL = 'http://localhost:3000';
 
@@ -32,7 +33,7 @@ export default defineConfig({
     {
       name: 'chromium-mobile',
       use: { ...devices['iPhone SE'], defaultBrowserType: 'chromium' },
-      testMatch: CROSS_BROWSER_SPECS,
+      testMatch: [CROSS_BROWSER_SPECS, VISUAL_SPEC],
     },
     {
       name: 'webkit-desktop',

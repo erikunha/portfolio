@@ -178,9 +178,9 @@ are covered by behavioral tests (`__tests__/ask-killswitch-behavioral.test.ts`,
 Cross-browser functional coverage is the **required** `e2e-functional` CI job
 (chromium, chromium-mobile, webkit-desktop, webkit-mobile, and their four `-components` projects). Page-section
 visual regression is gated in CI by `e2e-visual-chromium` (**required**; Linux Chromium rendering
-is deterministic). There is no webkit visual CI job: the webkit baselines for the same spec are
-darwin-local, compared by a macOS run of the spec and refreshed by the baseline regeneration procedure (darwin pass, inspected before commit),
-because webkit pixel rendering varies from Chromium and must not block merges.
+is deterministic). The webkit projects do not run the visual spec and no webkit baselines are kept: webkit pixel
+rendering varies from Chromium, and a darwin-only baseline that no CI job compares drifts unseen
+(`__tests__/playwright-visual-projects.test.ts` holds the project set).
 
 ---
 
