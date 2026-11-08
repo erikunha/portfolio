@@ -29,12 +29,13 @@ proposing infrastructure changes, and if a request conflicts with a budget or ga
 | `pnpm typecheck`                         | TypeScript strict check                                                                       |
 | `pnpm validate-content`                  | Zod schema validation of `content/*.ts`                                                       |
 | `pnpm ci:local`                          | The verify chain CI runs first: lint, types, content, naming, pinning, doc drift, tokens, tests |
+| `pnpm ci:predict [--base <ref>] [--linux] [--full] [--eval] [--skip-build] [--list]` | Runs every CI job the branch's commits trigger, before the push: ci.yml steps, new or changed e2e specs on every project with `--repeat-each=3 --retries=0`, `--linux` in the Playwright image. Exit 0 only when no job failed and every job was verified; 1 a job failed; 2 dry run; 3 no failure found but something was not verified: a job did not run or ran in part (read the table), or the branch has no commits ahead of its base |
 | `pnpm bundle-check`                      | Global client-chunk sum gate                                                                  |
 | `pnpm route-js-check`                    | Per-route first-load JS gate (needs a build)                                                  |
 | `pnpm gates:runtime [--skip-build]`      | Build, server, advisory Lighthouse, blocking axe and Chromium e2e                             |
 | `pnpm lhci`                              | Lighthouse CI locally                                                                         |
 | `pnpm check:doc-drift`                   | Marked `ARCHITECTURE.md` paths exist                                                          |
-| `pnpm changelog:sync`                    | Run after any commit scoped `(design-system)`: regenerates the design-system changelog page    |
+| `pnpm changelog:sync`                    | Regenerates the design-system changelog page from `(design-system)`-scoped commits             |
 | `pnpm ask:eval`                          | `/api/ask` product eval; run after editing its corpus, calibration, runner or system prompt (see the `ai-eval-update` skill) |
 | `pnpm eval:agents`                       | Prompt-regression eval of the rules in this file (`evals/agents/`), non-blocking in CI        |
 
@@ -46,7 +47,7 @@ proposing infrastructure changes, and if a request conflicts with a budget or ga
 - A gate measures a real property. Fix the property, never the gate: no audit set to `"off"`, lowered threshold, ignore-list entry, or code wrapped to hide it from the checker. The one acceptable gate edit corrects an assertion that fires on the ideal state. A gate you cannot fix in scope gets escalated with root cause, options and the minimum change, not merged suppressed.
 - A fix needs: the root cause in one sentence before code; the same pattern searched across the codebase; no deferred debt (inherent limits go in `DECISIONS.md`); the measured property re-checked, with the before and after in the commit body.
 - Tests come first for new files, functions and scripts: write the failing test, watch it fail, make it pass. Assertions observe behavior, never source text. A claim of the form "held by X" is honest only after you break the property and watch X fail.
-- While fixing a defect, never edit an existing test to make it pass: add a new test file for the regression and change the source. Claude Code enforces this with a hook (`scripts/guard-test-edits.mjs`) while `FIX_MODE=1` is set or `.claude/fix-mode` exists, and refuses with exit 2. Codex has no equivalent hook here, so for Codex this is a rule you follow. If an existing test is wrong, say so to the owner before touching it.
+- While fixing a defect, never edit an existing test to make it pass: add a new test file for the regression and change the source. If an existing test is wrong, say why in the change that edits it.
 
 ## Stack (locked)
 
@@ -74,8 +75,8 @@ Lighthouse (`lighthouserc.json`, `lighthouserc.mobile.json`), `pnpm route-js-che
 
 - Pure black background (`#000000`), signal green (`#00FF41`, `text-primary-500`) for headings, accents and large text. Body text is `text-tertiary-50` (`#E6FFE6`); the signal never colors paragraph text because it fails WCAG AA.
 - JetBrains Mono everywhere (self-hosted through `next/font/local`); `h1` alone is Inter 900 via `--font-display`. 1px borders, no radius above 2px.
-- CRT effects (scanlines, mask, grain, beam, flicker, phosphor shadow) stay at dialed-back opacity and are all off under `prefers-reduced-motion: reduce`. Do not remove existing motion (typing, Matrix Rain, boot, CRT, blink).
-- Copy lives in `content/*.ts` (typed, Zod-validated at build, English and pt-BR). Never inline user-facing copy in JSX. A change to a section lands in every variant of it (mobile, tablet, placeholder, noscript, reduced-motion, print, design-system demos, tests): grep the old copy.
+- CRT effects (scanlines, mask, grain, beam, flicker, phosphor shadow) stay at dialed-back opacity and are all off while the MOTION switch is off (`body[data-motion="reduce"]`); the operating system preference is not read, and a first visit starts with motion on. Do not remove existing motion (typing, Matrix Rain, boot, CRT, blink).
+- Copy lives in `content/*.ts` (typed, Zod-validated at build, English and pt-BR). Never inline user-facing copy in JSX. A change to a section lands in every variant of it (mobile, tablet, placeholder, noscript, MOTION off, print, design-system demos, tests): grep the old copy.
 - Out of scope unless asked: locales beyond pt-BR and EN, light theme, blog or MDX engine, analytics beyond Vercel Web Analytics and Speed Insights, auth, accounts, comments, a CMS. Rejected earlier (see `DECISIONS.md`): GraphQL, Cloudflare Workers, multi-region deploy, Sentry by default, CAPTCHA on the contact form, per-section routes, a state management library.
 
 ## Code and docs style
@@ -85,7 +86,6 @@ Lighthouse (`lighthouserc.json`, `lighthouserc.mobile.json`), `pnpm route-js-che
 - One discriminator for every word you write (comments, docs, ADR bullets, PR bodies): does a gate already state this (compiler, type, test, lint rule, CI check)? If yes, delete it; prose that restates a gate is a second copy that drifts. If no, it is a decision: record it once in the cheapest durable place (a `biome-ignore` reason, `DECISIONS.md`, the commit body, a test's failure message).
 - `DECISIONS.md` takes one bullet per decision: date and reversibility note. Docs, diagrams and screenshots that describe a change are updated in the same commit.
 - No em or en dashes anywhere.
-- Lead with the recommendation. For decisions give two or three options, trade-offs, failure modes, one discriminator and one pick. Flag a flaw once. Ask a question only when the missing answer changes the decision; otherwise state the assumption in one line and proceed.
 
 ## Git and pull requests
 
@@ -94,18 +94,13 @@ Lighthouse (`lighthouserc.json`, `lighthouserc.mobile.json`), `pnpm route-js-che
 - Hooks: pre-commit runs Biome and `gitleaks git --staged` (fails closed without the binary; `brew install gitleaks`), commit-msg runs commitlint, pre-push runs the full verify and requires a `<type>/<description>` branch name. Do not push to `main`; only an emergency revert uses `--no-verify`.
 - A feature too big for one PR gets an integration branch `feat/<feature>` and sub-PRs from `feat/<feature>-<part>` into it; the final PR to `main` notes it was reviewed incrementally.
 - No PR until tests, perf gates and baselines have run on a locked design. Fill every section of `.github/pull_request_template.md`; never write a body from scratch.
-- Before every push state YES or NO: does the change touch `tests/visual/visual.spec.ts` baselines (darwin and linux) or `tests/e2e/design-system-components.spec.ts` baselines (darwin only)? On YES follow the `visual-baseline-regen` skill. Any color, layout, typography or spacing change regenerates baselines before the PR.
+- A change that moves a screenshot baseline regenerates it in the same PR: `tests/visual/visual.spec.ts` baselines on darwin and linux, `tests/e2e/design-system-components.spec.ts` baselines on darwin only. The `visual-baseline-regen` skill holds the procedure. Any color, layout, typography or spacing change counts.
 - Before implementing a plan that adds a client island or dependency, or touches the API surface, check it with the `plan-review` skill. When a performance gate fails or a client change may cost JS, use `perf-budget`; when routes, identity copy or metadata change, use `seo-discovery`.
 - After implementing a section or component, look at `pnpm dev` at 1280x720 and 375x812 in a real browser before writing or changing tests. Fix what looks wrong first.
-- Self-review is part of the loop, not an option. Before any merge, sub-PRs into `feat/*` included, run a self-review by reviewers that did not write the change, one per relevant specialty: correctness, silent failures, tests, types, security (for `app/api/` and workflows), accessibility and visual (for UI). Each loads the matching repo skill. UI changes also get 1280x720 and 375x812 screenshots examined by a reviewer. Verify each finding against the code, then fix it or reject it with a reason. A push that moves the head needs a new one. The result is not posted on the PR and no gate checks it.
-- `claude-review` is a separate extra: it runs only when an owner comments `/claude-review`, and it is never a merge gate or an approver. Only correctness, security, accessibility, performance budget, test validity and spec or plan compliance block (`REVIEW.md`); style and naming never do, and nits are capped at five. Fix the blocking findings in one commit, reply in each thread with what was done and the fix SHA, then resolve. The loop stops after three rounds: remaining non-blocking findings become follow-up issues named in the thread reply, and a blocking one still open goes to the owner.
+- `claude-review` runs in CI only when an owner, member or collaborator comments `/claude-review`, and it is never a merge gate or an approver. `REVIEW.md` defines what blocks (correctness, security, accessibility, performance budget, test validity, spec or plan compliance) and what never does (style, naming).
 - Every PR comment is a review thread on a file and line, never a timeline comment: `pnpm pr:gate` reads `reviewThreads` and fails `silent_resolve`. Reply in the existing thread or create one with `commit_id`, `path` and `line`.
-- Merge readiness: CI green, base contained, `pnpm pr:gate` passes (threads resolved with a reply). Rebase onto the base before pushing and check that the pushed SHA is the PR head. Agents never merge into `main`; the owner runs that merge (a hook enforces it in Claude Code only: it refuses any command that carries a `gh` merge it cannot read as a single merge into another base, and the GitHub MCP merge tool; the `DECISIONS.md` entry of 2026-11-07 lists what else holds it). Sub-PRs into an integration branch (`feat/*`) may be merged by an agent once CI is green (Argos excepted) and the self-review is done.
+- Merge readiness: CI green, base contained, `pnpm pr:gate` passes (threads resolved with a reply).
 - Emergency rollback: `vercel ls`, then `vercel promote <url>` (30s, no code change); or `git revert HEAD && git push --no-verify`. Verify with `curl https://erikunha.dev/api/healthz | jq .sha`.
-
-## Subagents
-
-Any prompt that dispatches a subagent, implementer or reviewer, carries this: "Stage with `git add -u` or `git add <specific files>`. Write no git state except staging and committing inside the tree you were dispatched into; that is the only exception. Do not move HEAD or the index, write refs, stash, or change git config. Read another revision with `git show <sha>:<path>` or your own `git worktree add`." State it as that single exception, not as a list of banned verbs.
 
 <!-- BEGIN:nextjs-agent-rules -->
 

@@ -329,24 +329,16 @@ describe('mixer loading state: boot log', () => {
   it('blinks the cursor in steps only where motion is allowed, and keeps the mixer height', () => {
     // behavioral-test-allow: blink, reduced-motion and height contracts live in the shipped stylesheet; jsdom runs no animations
     const stylesheet = parseCss(readComponentsCss());
-    const blinkRules: Array<{ selector: string; animation: string; guarded: boolean }> = [];
+    const blinkRules: Array<{ selector: string; animation: string }> = [];
     stylesheet.walkRules((rule) => {
       const animation = declValue(rule, 'animation');
       if (!animation?.includes('mixer-boot-blink')) return;
-      const parent = rule.parent;
-      blinkRules.push({
-        selector: rule.selector,
-        animation,
-        guarded:
-          parent?.type === 'atrule' &&
-          /prefers-reduced-motion:\s*no-preference/.test((parent as { params: string }).params),
-      });
+      blinkRules.push({ selector: rule.selector, animation });
     });
     expect(blinkRules).toEqual([
       {
         selector: 'body:not([data-motion="reduce"]) .mixer-boot-cursor',
         animation: expect.stringMatching(/steps\(/),
-        guarded: true,
       },
     ]);
     const box = rulesWithSelector(stylesheet, '.daw-mixer-loading');

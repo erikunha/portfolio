@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { VIEWPORTS } from './_helpers/geometry';
+import { freezeMotion } from './_helpers/motion';
 
 const PHONES = [VIEWPORTS.PHONE_NARROW, VIEWPORTS.PHONE] as const;
 const PATHS = ['/', '/pt'] as const;
@@ -12,7 +13,7 @@ test.describe('the back-to-top button never sits on footer text', () => {
         page,
       }) => {
         await page.setViewportSize(viewport);
-        await page.emulateMedia({ reducedMotion: 'reduce' });
+        await freezeMotion(page);
         await page.goto(path);
 
         const covered = await page.evaluate(
@@ -66,7 +67,7 @@ test.describe('the back-to-top button is a full touch target', () => {
       page,
     }) => {
       await page.setViewportSize(viewport);
-      await page.emulateMedia({ reducedMotion: 'reduce' });
+      await freezeMotion(page);
       await page.goto('/');
       await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
       const button = page.locator('.to-top-btn');

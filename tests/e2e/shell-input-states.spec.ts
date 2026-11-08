@@ -1,6 +1,7 @@
 import { expect, type Page, test } from '@playwright/test';
 import { waitForHydration } from './_helpers/hydration';
 import { stripVolatileChrome } from './_helpers/mask-volatile';
+import { freezeMotion } from './_helpers/motion';
 
 const INPUT = '[aria-label="shell command"]';
 const SHELL_FORM = '[data-testid="shell-form"]';
@@ -55,7 +56,7 @@ async function focusByKeyboard(page: Page): Promise<void> {
 }
 
 async function openShell(page: Page): Promise<void> {
-  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await freezeMotion(page);
   await page.goto('/');
   await page.waitForSelector('[data-testid="shell-form"]', { state: 'visible' });
   await waitForHydration(page, SHELL_FORM);

@@ -260,7 +260,7 @@ exactly 100. Every interactive client component has a behavioral accessibility
 test asserting tab order, focus visibility, keyboard activation, and screen-
 reader announcement. Streaming UI emits discrete DOM nodes per chunk that React
 owns — never a `textContent` mutation on a shared node inside an `aria-live`
-region. All CRT motion effects are disabled under `prefers-reduced-motion: reduce`.
+region. All CRT motion effects are disabled while the MOTION switch is off (`body[data-motion="reduce"]`).
 
 **Rationale.** A11y is a unit test, not a final-phase audit: a regression in tab
 order or a missing `role="alert"` is a behavior change and should fail like any
@@ -275,8 +275,7 @@ Per-component behavioral a11y tests, for example
 `components/client/ContactForm/ContactForm.test.tsx` (tab order, `role`/`aria-live` error
 region, keyboard-activatable submit), `components/client/ContactTimezone/ContactTimezone.test.tsx`
 (combobox roles, keyboard path and `aria-activedescendant`, minutes-only live region, named map, the link back to the message field) and `components/client/InteractiveShell/InteractiveShell.test.tsx`, which run
-inside `pnpm test`. `prefers-reduced-motion` coverage is exercised by the
-`cross-cutting.spec.ts` e2e spec in the required `e2e-functional` job.
+inside `pnpm test`. MOTION switch coverage (first visit on, off persists, no stylesheet or source reads the operating system preference) is exercised by `motion-switch.spec.ts`, `cross-cutting.spec.ts` and `__tests__/motion-single-switch.test.ts`.
 
 ---
 

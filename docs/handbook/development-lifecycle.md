@@ -6,8 +6,8 @@ How a change flows from requirement to production. Git hooks and CI enforce chec
 
 ```mermaid
 flowchart TD
-    idea["Idea / requirement"] --> brainstorm["Brainstorm (/speckit.specify)"]
-    brainstorm --> spec["Spec: local specs/NNN-feature/<br/>requirements + acceptance criteria"]
+    idea["Idea / requirement"] --> brainstorm["Brainstorm"]
+    brainstorm --> spec["Spec (local, untracked)<br/>requirements + acceptance criteria"]
     spec --> agate{"plan-review convention<br/>GATE_RESULT: PASS?"}
     agate -->|no| spec
     agate -->|yes| plan["Plan: local feature directory<br/>independently verifiable tasks"]
@@ -15,13 +15,12 @@ flowchart TD
     branch --> tdd["TDD implementation (tests first)"]
     tdd --> commit["commit (scope blocks): type(scope): subject"]
     commit --> hooks["per-commit hooks: Biome + staged gitleaks + commitlint"]
-    hooks --> selfreview["self-review the diff"]
-    selfreview --> push["git push (pre-push gate chain)"]
+    hooks --> push["git push (pre-push gate chain)"]
     push --> readypr["ci:local; non-docs bundle + route-JS + runtime"]
     readypr --> pr["gh pr create (fill template)"]
     pr --> conv["resolve review threads (rebase before every push)"]
     conv --> readymerge["CI green + pr:gate"]
-    readymerge --> merge["owner squash-merges (#NNN)"]
+    readymerge --> merge["squash-merge (#NNN)"]
     merge --> deploy["Vercel deploy"]
     deploy --> smoke["post-deploy smoke test"]
     smoke --> adr["deployment verified; ADR recorded"]
@@ -32,11 +31,11 @@ flowchart TD
 
 ### 1. Idea -> Brainstorm
 
-Work starts with `/speckit.specify` (mandated before any feature). The output is a shared understanding of intent, requirements, and the chosen approach, with failure modes considered up front.
+Work starts with a short brainstorm. The output is a shared understanding of intent, requirements, and the chosen approach, with failure modes considered up front.
 
 ### 2. Spec (the approved requirements)
 
-Write the feature requirements and acceptance criteria under local `specs/NNN-feature/`. `.gitignore` excludes `specs`, `.specify` and generated spec-kit skills. Artifact templates belong to the installed tooling; they are not tracked project contracts.
+Write the feature requirements and acceptance criteria. Specs stay local: `.gitignore` excludes `specs`, `.specify` and generated spec-kit skills, and the tool that writes a spec is each engineer's choice.
 
 ### 3. The plan gate
 
@@ -55,21 +54,21 @@ A feature branch is created (`<type>/<description>`, enforced by `.husky/pre-pus
 - **`pre-commit`**: `pnpm check` (Biome check) and staged gitleaks scanning.
 - **`commit-msg`**: commitlint. Conventional Commits with a **mandatory scope** (`scope-empty: [2, 'never']`) drawn from an **open set** (`scope-enum: [0]`). Scopes are feature-area names (`ci`, `dx`, `observability`, `healthz`, `ppr`, `arch`, ...), not technical categories.
 
-### 7. Pre-PR self-review, and the pre-push gate chain
+### 7. Pre-PR diff read, and the pre-push gate chain
 
-Before opening the PR, read the diff. The specialist self-review runs on the pushed head before the merge (see the review chapter of the handbook). For non-deletion pushes, `.husky/pre-push` checks the main target, branch name and `pnpm verify`. Deletion-only pushes skip branch naming and verify after the main-target guard.
+Before opening the PR, read the diff. For non-deletion pushes, `.husky/pre-push` checks the main target, branch name and `pnpm verify`. Deletion-only pushes skip branch naming and verify after the main-target guard.
 
 ### 8. Pre-PR -> open PR
 
-Run `pnpm ci:local`, then `pnpm bundle-check` and `pnpm route-js-check`, then `pnpm gates:runtime` (build, server, LHCI desktop/mobile, axe, E2E). Docs-only changes skip bundle, route-JS and runtime gates under the project workflow. Then `gh pr create` fills the PR template; every section must be non-empty, which is a convention checked by the author and the reviewer, not a gate.
+Run `pnpm ci:predict` (add `--linux` when the change touches layout, fonts or metrics): it runs every CI job the commits trigger and says which it could not verify (exit 0 only for a fully verified clean run, 3 when jobs are partial or not run or the branch has no commits ahead of its base, 2 for `--list`), including the verify chain, the bundle and route-JS gates, the new or changed e2e specs and the visual spec, and it subsumes `pnpm ci:local`, `pnpm bundle-check` and `pnpm route-js-check`. Lighthouse is host-dependent and stays with `pnpm gates:runtime` (build, server, LHCI desktop/mobile, axe, E2E). Docs-only changes skip bundle, route-JS and runtime gates under the project workflow. Then `gh pr create` fills the PR template; every section must be non-empty, which is a convention checked by the author and the reviewer, not a gate.
 
 ### 9. Review threads
 
-On the open PR, answer every review thread: rebase before every push, verify the pushed SHA landed, and reply citing the fix SHA before resolving a thread. claude-review runs only when an owner, member or collaborator comments `/claude-review`; its findings are fixed in one commit, answered in each thread and resolved, with no automatic follow-up round.
+On the open PR, answer every review thread and reply before resolving it. claude-review runs only when an owner, member or collaborator comments `/claude-review`, with no automatic follow-up round.
 
 ### 10. Pre-merge gates -> merge
 
-`pnpm pr:gate` (`scripts/check-pr-comments.ts`) requires the returned review threads (the first 100; the query does not paginate) to be resolved with a reply, and flags `suspicious_self_resolve`. CI runs it in `quality-fast`. Run `pnpm ci:local` alongside it, with CI green and the base contained. `pnpm claude-gate` (`scripts/check-claude-approval.ts`) is an optional check on a requested claude-review verdict, not a merge requirement; it requires the latest verdict to be Approve on the current head, an Approve on an ancestor SHA carries across a nonempty diff containing only visual baseline PNGs, and other stale or SHA-less Approves fail closed.
+`pnpm pr:gate` (`scripts/check-pr-comments.ts`) requires the returned review threads (the first 100; the query does not paginate) to be resolved with a reply, and flags `suspicious_self_resolve`. CI runs it in `quality-fast`. Run `pnpm ci:local` alongside it, with CI green and the base contained.
 
 ### 11. Deploy -> smoke -> record
 
@@ -91,9 +90,7 @@ A UI change is read at every width before its PR opens. Each section gets a crit
 | Heuristics               | Does the surface show what happened and what to do next?         |
 | Copy                     | Does the wording say what the reader needs, in the fewest words? |
 
-**One PR per pass.** A pass collects its findings and fixes them in one branch and one pull request, so a reviewer reads one change.
-
-**Screenshots.** Capture each section at 2x at 1280, 768 and 390, with the fixed chrome hidden, so the capture shows the section and not the chrome over it. `stripVolatileChrome` in `tests/e2e/_helpers/mask-volatile.ts` is the list of chrome hidden before a capture; add any new fixed or sticky bar to it.
+**Captures.** A section capture hides the fixed chrome, so it shows the section and not the chrome over it. `stripVolatileChrome` in `tests/e2e/_helpers/mask-volatile.ts` is the list of chrome hidden before a capture; add any new fixed or sticky bar to it.
 
 A finding that changes behavior is a decision, so it lands in `DECISIONS.md` as a dated bullet. A finding that touches a CI-gated baseline follows the `visual-baseline-regen` skill.
 
@@ -108,7 +105,7 @@ flowchart LR
         g3["no direct main"] --> g4["branch name"] --> g7["pnpm verify"]
     end
     subgraph prepr["pre-PR (manual)"]
-        g8["ci:local"] --> g9["bundle-check + route-js-check (non-docs)"] --> g11["gates:runtime (LHCI+axe+E2E)"] --> g12["self-review on the pushed head"]
+        g8["ci:predict (ci.yml jobs, e2e, visual)"] --> g11["gates:runtime (LHCI)"]
     end
     subgraph open["post-open"]
         g13["Resolve review threads"]
@@ -116,5 +113,5 @@ flowchart LR
     subgraph premerge["pre-merge"]
         g15["ci:local"] --> g18["pr:gate: resolved threads"]
     end
-    commit --> prepush --> prepr --> open --> premerge --> merge["owner squash-merge"]
+    commit --> prepush --> prepr --> open --> premerge --> merge["squash-merge"]
 ```

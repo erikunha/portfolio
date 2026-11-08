@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { createNavigationStore } from './navigationStore';
 
-const INITIAL = { currentId: 'bio', drawerOpen: false, motionOn: true, systemReduced: false };
+const INITIAL = { currentId: 'bio', drawerOpen: false, motionOn: true };
 
 describe('createNavigationStore', () => {
   it('keeps the same snapshot object when a patch changes nothing and does not notify', () => {

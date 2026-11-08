@@ -56,7 +56,7 @@ Performance, accessibility (WCAG 2.2 AA), and security are treated as implicit o
 3. Fill in **every** section of the PR template — do not write a body from scratch.
 4. **Show your work.** A PR should evidence what it claims, not just assert it: paste command output, attach before/after screenshots or a recording for UI changes, note bundle-size and Core Web Vitals deltas for performance work, and link the CI run or Vercel preview. Reviewers should be able to validate without pulling the branch.
 5. A visual change requires regenerated visual-regression baselines before the PR is opened.
-6. CI must be green and the automated review must approve before merge. Address all blocking review findings.
+6. CI must be green and every review thread resolved with a reply (`pnpm pr:gate`) before merge. Address all blocking review findings.
 
 ## Reporting bugs and requesting features
 

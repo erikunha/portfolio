@@ -1,19 +1,11 @@
 'use client';
 
 import { useEffect } from 'react';
-import { applyMotion, readMotion } from '@/lib/motion';
 import { reportClientError } from '@/lib/report-client-error.client';
 
 const GOVERNOR_LOAD_ERROR_PREFIX = '[CRTOverlay] frame governor failed to load:';
 
 export function CRTOverlay() {
-  useEffect(() => {
-    const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
-    const handler = () => applyMotion(readMotion(), false);
-    mq.addEventListener('change', handler);
-    return () => mq.removeEventListener('change', handler);
-  }, []);
-
   useEffect(() => {
     let release: (() => void) | undefined;
     let unmounted = false;

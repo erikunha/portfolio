@@ -287,23 +287,18 @@ jobs:
           echo "marked comment $id as superseded"
 
       # A review that posts nothing still exits 0, so the check renders green and
-      # `pnpm claude-gate` reads verdict=none, indistinguishable from "ran and
-      # found nothing". This step reds the job unless THIS run posted a verdict.
+      # reads the same as "ran and found nothing". This step reds the job unless
+      # THIS run posted a verdict.
       #
       # It filters on created_at against a timestamp taken before the action, so
-      # an earlier run's verdict cannot satisfy it. Its regex mirrors
-      # parseClaudeVerdict in scripts/check-claude-approval.ts: both pair ** spans
-      # per line, so prose between two bold spans never counts and a bolded
-      # verdict wrapped across a line break is read by neither. The parser also
-      # strips backtick code spans before pairing, so a quoted glob such as
-      # `app/api/**` cannot swallow the verdict's opening **; the grep does not,
-      # which makes the guard NARROWER than the parser on such a line, never wider.
-      # The parser reads only the LATEST claude[bot] comment, so the filter sorts
-      # and takes `last`. `--slurp` is load-bearing: it makes gh emit ONE array of
-      # pages, the shape `.[][]` destructures; without it `last` yields one body
-      # per page. gh refuses `--slurp` together with `--jq`, so the filter is a
-      # real jq.
-      - name: Assert this run posted a verdict the gate can read
+      # an earlier run's verdict cannot satisfy it. The regex pairs ** spans per
+      # line, so prose between two bold spans never counts and a bolded verdict
+      # wrapped across a line break does not count either. Only the LATEST
+      # claude[bot] comment is read, so the filter sorts and takes `last`.
+      # `--slurp` is load-bearing: it makes gh emit ONE array of pages, the shape
+      # `.[][]` destructures; without it `last` yields one body per page. gh
+      # refuses `--slurp` together with `--jq`, so the filter is a real jq.
+      - name: Assert this run posted a readable verdict
         if: always()
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -338,7 +333,7 @@ jobs:
           done
           echo "FAIL: claude-review posted no verdict on PR #$PR during this run."
           echo "  The action exits 0 regardless, so without this step the check would read"
-          echo "  green while claude-gate sees verdict=none."
+          echo "  green over a review that never happened."
           echo "  Known cause: tag mode returns a progress checklist instead of a review."
           echo "  Comment /claude-review again to retry."
           exit 1

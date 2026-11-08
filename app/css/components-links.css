@@ -16,13 +16,6 @@
     will-change: transform;
   }
 
-  @media (prefers-reduced-motion: reduce) {
-    .links-ticker-track {
-      animation: none;
-      width: 100%;
-      white-space: normal;
-    }
-  }
   body[data-motion="reduce"] .links-ticker-track {
     animation: none;
     width: 100%;
@@ -55,11 +48,9 @@
     animation: links-progress-fill 300ms linear forwards;
   }
 
-  @media (prefers-reduced-motion: reduce) {
-    .links-progress[data-running="true"] {
-      animation: none;
-      transform: scaleX(1);
-    }
+  body[data-motion="reduce"] .links-progress[data-running="true"] {
+    animation: none;
+    transform: scaleX(1);
   }
 
   .links-avatar {
@@ -117,13 +108,6 @@
 
   a:is(:hover, :focus-visible) .links-thumb::after {
     opacity: var(--links-thumb-tint-reveal);
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .links-thumb img,
-    .links-thumb::after {
-      transition: none;
-    }
   }
 
   body[data-motion="reduce"] .links-thumb img,

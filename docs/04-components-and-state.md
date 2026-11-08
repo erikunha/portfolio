@@ -21,7 +21,7 @@ The naming gate scans `app`, `components` and `lib`; `/client/` is an explicit d
 
 `components/Panel` is the `.ab-panel` frame (marker, `h3` title, optional action) shared by About and Contact; `as` picks `div`, `section` or `aside`, and `titleId` names the landmark. `components/PageMain` owns `MAIN_CONTENT_ID` and renders every `main#main-content` (home, reading views, error pages); `className` swaps its layout class. `components/reading/ReadingSection` and `ReadingActions` hold the section heading and the hire, secondary and print row that `/cv` and `/summary` share. `lib/defer-props.ts` returns the `module-deferred` class and `data-cv-defer` marker for a deferred section. `lib/json-ld.ts` `serializeJsonLd` escapes `<`, U+2028 and U+2029 so a value cannot end the script element it sits in.
 
-`links-thumb` frames every `/links` video cover at 16:9 with the image filling the frame (no crop). The cover is grayscale under a multiplied signal-green layer from the `--links-thumb-*` tokens; hover or focus on the parent link restores the cover colour, and reduced motion removes the transition. Documented with a live example in the design system components page.
+`links-thumb` frames every `/links` video cover at 16:9 with the image filling the frame (no crop). The cover is grayscale under a multiplied signal-green layer from the `--links-thumb-*` tokens; hover or focus on the parent link restores the cover colour, and the transition stops while the MOTION switch is off. Documented with a live example in the design system components page.
 
 The Hero identity line is static server-rendered text. Desktop and mobile share `HeroIdentity`, with metrics and accessible labels passed into `HeroStats`. Boot and system-failure islands import their copy from `content/hero-client.ts`, keeping server content validation out of those client imports. The About "Open to [role] roles" status line mounts the `RoleTyper` client island (`components/client/RoleTyper`), which types the single role `Senior` over the server-rendered text. `About` contains Whoami, Now, Responsibilities, Stack and retry-code panels. Career (`sec-git-log`) owns the `cert/*`, `edu/*` and `community/*` tag groups; community content comes from `content/community.ts`.
 
@@ -63,11 +63,11 @@ The section menu is a modal drawer at every width. It opens from the icon-only m
 
 `components/responsive/Module/Module.tsx` (RSC) wraps terminal modules. Hero, About, Career and Footer render separately. It renders a `<section id tabIndex={-1} aria-labelledby>` containing a non-interactive `<header>` with an `<h2>`; there is no collapse affordance on any viewport. The `<h2>` reads the section name, the icon and the typed command; every module passes `name`. Props: `id`, `header`, `mobileHeader?`, `srLabel?`, `name?`, `icon?`, `defer?`, `variant?: 'green'`. The `defer` prop still drives `content-visibility` deferral via `data-cv-defer`/`module-deferred`. `content/section-labels.ts` supplies readable labels. It derives the registry labels and adds the scroll region labels.
 
-Module headers use CSS scroll-driven typing with a stepped text reveal and caret. The caret blinks four times, then stays solid. Unsupported browsers, OS reduced motion and the MOTION toggle show static text. The text remains in the DOM and accessibility tree; no client JavaScript is added. `html` and `body` use `overflow-x: clip` so the view timeline follows page scrolling.
+Module headers use CSS scroll-driven typing with a stepped text reveal and caret. The caret blinks four times, then stays solid. Unsupported browsers and the MOTION switch off show static text. The text remains in the DOM and accessibility tree; no client JavaScript is added. `html` and `body` use `overflow-x: clip` so the view timeline follows page scrolling.
 
 ### CRT overlay layering
 
-`CRTOverlay.client.tsx` renders 6 fixed, `aria-hidden`, `pointer-events:none` overlay divs, z-stacked in `crt.css`: vignette (1) · scanlines (2) · RGB sub-pixel mask (3) · noise (4) · flicker (5) · scan beam (6). `MatrixRain` sits at z-0, `<main>` at z-10. All of it disables under `prefers-reduced-motion: reduce` **and** `body[data-motion="reduce"]`, and freezes during the system-failure overlay (`html.sysfail-on`). `CRTOverlay` also runs the frame governor (`lib/frame-governor.ts`): while `html[data-crt-level]` is above 0, `crt.css` pauses the noise, flicker and beam and the governor steps their clocks (`lib/crt-effect-stepper.ts`); `MatrixRain` reads the same level for its tick interval.
+`CRTOverlay.client.tsx` renders 6 fixed, `aria-hidden`, `pointer-events:none` overlay divs, z-stacked in `crt.css`: vignette (1) · scanlines (2) · RGB sub-pixel mask (3) · noise (4) · flicker (5) · scan beam (6). `MatrixRain` sits at z-0, `<main>` at z-10. All of it disables under `body[data-motion="reduce"]`, and freezes during the system-failure overlay (`html.sysfail-on`). `CRTOverlay` also runs the frame governor (`lib/frame-governor.ts`): while `html[data-crt-level]` is above 0, `crt.css` pauses the noise, flicker and beam and the governor steps their clocks (`lib/crt-effect-stepper.ts`); `MatrixRain` reads the same level for its tick interval.
 
 ## The design system
 
@@ -96,7 +96,7 @@ Import order (`app/globals.css`): `tailwindcss` → `theme.css` → `base.css` �
 | ------------------ | ------------ | ---------------------------------------------------------------------------------------------------------------------------------- |
 | `theme.css`        | `@theme`     | The token system (below)                                                                                                           |
 | `base.css`         | `base`       | resets, focus-visible rings, skip-link, `.sr-only`, the `#sec-*` mobile-order map, `.mobile-only`/`.desktop-only`                  |
-| `crt.css`          | `components` | the 6 CRT classes + keyframes + reduced-motion disables + the `html[data-crt-level]` pause rule                                    |
+| `crt.css`          | `components` | the 6 CRT classes + keyframes + MOTION-off disables + the `html[data-crt-level]` pause rule                                    |
 | `animations.css`   | -            | section keyframes (`boot-blink`, `guitar-scan-beam`, `hero-shake-*`, ...)                                          |
 | `components-*.css` | `components` | named layout and effect classes (`.module-*`, `.signal-glow`, DawMixer `.mx-fader`/`.mx-dial`, `.contact-*`, `.shell-cursor`, ...) |
 
@@ -114,8 +114,7 @@ flowchart TD
     end
     subgraph dom["2. DOM-as-state (motion)"]
         motion["lib/motion.ts: body[data-motion] + localStorage('erik.motion')<br/>broadcast via 'motionchange' CustomEvent"]
-        w1["writers: DesktopTopbar (MOTION toggle, xl tier)<br/>SectionNavigation drawer (MOTION: ON / OFF / REDUCED row, every width)"] --> motion
-        w2["writer: CRTOverlay (OS reduced-motion sync)"] --> motion
+        w1["writers: DesktopTopbar (MOTION toggle, xl tier)<br/>SectionNavigation drawer (MOTION: ON / OFF row, every width)"] --> motion
         motion --> r1["subscribers via lib/motion-change.ts: MatrixRain · RoleTyper · TypeReveal · HeroBootAnimation<br/>readers on mount: InteractiveShell placeholder"]
     end
     subgraph bus["3. Window CustomEvent bus (lib/events.ts)"]

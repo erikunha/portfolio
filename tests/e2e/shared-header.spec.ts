@@ -2,6 +2,7 @@ import { expect, type Page, test } from '@playwright/test';
 import { SITE_LOCALE, type SiteLocale } from '../../content/site-locale';
 import { horizontalOverflow, VIEWPORTS } from './_helpers/geometry';
 import { waitForHydration } from './_helpers/hydration';
+import { gotoSettled } from './_helpers/streamed';
 
 const { DESKTOP, PHONE } = VIEWPORTS;
 const NOT_FOUND_STATUS = 404;
@@ -105,13 +106,13 @@ for (const { locale, home, routes } of GROUPS) {
 
       for (const { path, status } of routes) {
         test(`${path} renders the same header as ${home}`, async ({ page }) => {
-          await page.goto(home);
+          await gotoSettled(page, home);
           await waitForHydration(page, `${BANNER} button`);
           const expectedControls = await headerControls(page);
           const expectedBox = await headerBox(page);
           expect(expectedControls.length, 'the home header lists its controls').toBeGreaterThan(2);
 
-          const response = await page.goto(path);
+          const response = await gotoSettled(page, path);
           if (status) expect(response?.status()).toBe(status);
           await waitForHydration(page, `${BANNER} button`);
 
@@ -135,10 +136,10 @@ for (const { locale, home, routes } of GROUPS) {
         test(`${path} opens the same drawer as ${home}, linking the home sections`, async ({
           page,
         }) => {
-          await page.goto(home);
+          await gotoSettled(page, home);
           await waitForHydration(page, `${BANNER} button`);
           const expected = await drawerLinks(page);
-          await page.goto(path);
+          await gotoSettled(page, path);
           await waitForHydration(page, `${BANNER} button`);
           const actual = await drawerLinks(page);
 
@@ -156,7 +157,7 @@ test.describe('the error pages carry the shell', () => {
     for (const width of OVERFLOW_WIDTHS) {
       test(`${path} has no sideways scroll at ${width}`, async ({ page }) => {
         await page.setViewportSize({ width, height: width < 768 ? PHONE.height : DESKTOP.height });
-        await page.goto(path);
+        await gotoSettled(page, path);
         expect(await horizontalOverflow(page)).toBeLessThanOrEqual(0);
       });
     }
@@ -167,7 +168,7 @@ test('the header is the one banner landmark and the dock menu claims no current 
   page,
 }) => {
   await page.setViewportSize(PHONE);
-  await page.goto('/');
+  await gotoSettled(page, '/');
   await expect(page.getByRole('banner')).toHaveCount(1);
   await page.locator('#sec-contact').scrollIntoViewIfNeeded();
   await expect(
@@ -224,7 +225,7 @@ test.describe('the first content block clears the header', () => {
 
       for (const path of CONTENT_ROUTES) {
         test(`${path} starts at least the named gap below the header`, async ({ page }) => {
-          await page.goto(path);
+          await gotoSettled(page, path);
           await waitForHydration(page, `${BANNER} button`);
           const gap = await page.evaluate(() => {
             const bars = [
@@ -257,7 +258,7 @@ test.describe('the 404 content is centered', () => {
     for (const path of NOT_FOUND_ROUTES) {
       test(`${path} centers the heading, the button and the block at ${name}`, async ({ page }) => {
         await page.setViewportSize(size);
-        await page.goto(path);
+        await gotoSettled(page, path);
         await waitForHydration(page, `${BANNER} button`);
         const geometry = await page.evaluate(() => {
           const rect = (selector: string) => {

@@ -1,5 +1,6 @@
 import { expect, type Page, test } from '@playwright/test';
 import { SITE_HTML_LANG, SITE_LOCALE } from '@/content/site-locale';
+import { freezeMotion, MOTION_CHOICE, MOTION_STORAGE_KEY } from './_helpers/motion';
 import { gotoSettled } from './_helpers/streamed';
 
 const LANGUAGE_NAV_NAME = /^(Idioma|Language)$/;
@@ -151,14 +152,17 @@ test.describe('/links link-in-bio', () => {
     const identity = page.locator('.links-identity-box');
 
     await page.clock.install();
-    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await freezeMotion(page);
     await page.goto('/links');
     await expect(identity).toContainText(title);
     const first = await identity.textContent();
     await page.clock.runFor(600);
     expect(await identity.textContent(), 'reduced motion must not type').toBe(first);
 
-    await page.emulateMedia({ reducedMotion: 'no-preference' });
+    await page.evaluate(([key, value]) => localStorage.setItem(key, value), [
+      MOTION_STORAGE_KEY,
+      MOTION_CHOICE.on,
+    ] as const);
     await page.reload();
     const samples = new Set<string | null>();
     await expect

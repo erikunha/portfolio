@@ -51,6 +51,62 @@ check (Biome) -> typecheck -> validate-content -> check:client-naming -> check:d
 
 `check:section-order` runs both directions: every rendered section needs a mobile order rule or a listed nested-anchor exemption, and every `#sec-*` selector in `app/css` must match an id some source renders, so a deleted section cannot leave dead rules behind.
 
+## Predicting CI before a push
+
+`pnpm ci:predict` (`scripts/ci-predict.ts`) runs locally what CI runs for the commits on the current branch against their base. It reads `.github/workflows/ci.yml` instead of copying it: job conditions, step commands, the build env and the e2e and visual project matrices all come from the workflow, and `detect-changes` runs the same `scripts/detect-changes.mjs` CI runs. A pure-TypeScript evaluator handles the workflow expressions the file uses (`needs.*`, `contains`, `endsWith`, `hashFiles` with globs, `&&`, `||`). It never reads an unknown context or key as empty: an expression root it does not populate, a function it does not implement, and a workflow, job or step key it does not execute (`container`, `services`, a new step field) throw, so the step is reported as not reproducible and the drift guard fails instead of the construct being skipped.
+
+```mermaid
+flowchart TD
+    git["git diff base...HEAD"] --> dc["detect-changes.mjs (ai, app, ui)"]
+    yml[".github/workflows/ci.yml"] --> eng["step interpreter: if, env, matrix, step outputs"]
+    dc --> eng
+    eng --> st["quality-fast, typecheck, test, gitleaks: the job's own run steps"]
+    eng --> bd["build: ci.yml build env, bundle gate, route-JS gate"]
+    eng --> sel["spec selection: new or changed specs, co-located *.e2e.ts, importers of a changed helper"]
+    pw["playwright test --list"] --> sel
+    sel --> e2e["e2e-functional per project: --repeat-each=3 --retries=0"]
+    eng --> vis["e2e-visual-chromium and a11y: ci.yml arguments"]
+    e2e --> lx{"--linux?"}
+    vis --> lx
+    lx -->|no| nat["host Playwright"]
+    lx -->|yes| img["Playwright image v{version}-noble: copy tree, install, build and serve inside it"]
+    st --> tbl["one table: pass, fail, partial, not-run, skipped, would-run (--list)"]
+    bd --> tbl
+    nat --> tbl
+    img --> tbl
+```
+
+| Flag | Effect |
+| --- | --- |
+| `--base <ref>` | Base to diff against. Default: the open PR's base (`gh`), else the nearest of `origin/main` and `origin/feat/*` (fewest commits ahead, printed with the alternatives); pass `--base` when that is not the branch you will merge into. The base branch is fetched first. |
+| `--linux` | Runs Playwright (e2e, visual, a11y) in a container from the official Linux image whose tag is the installed `@playwright/test` version. The container copies the working tree, installs dependencies (pnpm store kept in the `ci-predict-pnpm-store` volume), builds with the ci.yml env and serves the app on `localhost:3000` inside itself, so browser, fonts and server origin all match CI. Catches font and layout metric differences that a macOS run hides. The first run pulls the image (about 2.5 GB). |
+| `--full` | Runs the whole e2e suite on every project, as CI does, instead of the selected specs. |
+| `--eval` | Runs the live `ask:eval` when ai paths changed, as `npx -y vercel@<pin> env run -- ...` from the Vercel-linked checkout, so secrets reach the process and are never printed. Without it the exact command is printed. |
+| `--skip-build` | Reuses the `.next` this command built. A stamp written after a successful build records the commit, the tracked edits (`git diff HEAD --binary`), the path and a content hash of every untracked file, and the build id, so editing an untracked file after the build invalidates it; if it does not match the current tree the build and every server started on it are reported `partial`, never `pass`. |
+| `--keep-going` | Runs jobs whose `needs` failed (CI would skip them). |
+| `--repeat <n>` | `--repeat-each` for the selected specs (default 3). |
+| `--list` | Dry run: runs change detection only and prints what would run. Every other job is `would-run`, the last line is `DRY RUN`, and the exit code is 2. |
+
+What each result means:
+
+- **pass**, **fail**: every reproducible step ran, with the outcome.
+- **partial**: the steps that ran passed but something did not: a step cannot run locally (the PR comment merge gate, Lighthouse, a `sudo` step, an expression or shell the predictor cannot evaluate, and the visual spec without `--linux`, because CI gates the Linux baselines and a macOS run compares different ones), or the e2e job ran only the changed specs while CI runs the whole suite (`--full` makes it a pass). Lighthouse scores depend on the host; `pnpm gates:runtime` still covers them.
+- **not-run**: the job needs GitHub (`dependency-review`), is report-only (`semgrep`), has no changed spec on that project, its needs failed, or no step of it executed. Never read it as passed.
+- **would-run**: dry run only; nothing was executed.
+- **skipped**: the job's own `if` is false for this diff, exactly as in CI.
+
+The last line and the exit code summarise the table: exit 0 and `PREDICTED CI: no failure found` only when no job failed and every job passed or was skipped by paths (the GitHub-only and report-only jobs are listed beside it); exit 1 and `PREDICTED CI: FAIL` when a job failed; exit 2 and `DRY RUN` for `--list`; exit 3 when nothing ran (`NOT VERIFIED, nothing ran`), when some job is `partial` or `not-run` (`no failure found in what ran. NOT VERIFIED: <jobs>`), or when the branch has no commits ahead of its base (nothing to predict, which verifies nothing and never exits 0).
+
+On Apple Silicon the container is arm64 while CI is x64, so pixel-level results can differ from CI: layout assertions such as the LCP element reproduce, but a screenshot diff in a section you did not touch is advisory. Check whether the diff is in your change before acting on it.
+
+The e2e step narrows to new or changed specs, specs next to a changed component (`Hero.tsx` selects `Hero.e2e.ts`), specs that import a changed helper under `tests/`, and every spec when `playwright.config.ts` changes. Without `--linux` the predictor starts its own production server on a free port and passes it to Playwright as `E2E_BASE_URL`; it refuses to continue if that port already answers. A spec runs on every project Playwright lists it under (`playwright test --list`, with `CI=true` as in CI), so a Chromium-only pass cannot hide a WebKit failure. `--retries=0` with `--repeat-each` makes a test that passes only some of the time fail, which is what `failOnFlakyTests` does in CI. A change to app code with no matching spec runs no e2e; use `--full` for that. The server it starts must be the process it spawned: readiness fails when that process exits, and only counts when the process listening on the port descends from the spawned process (`pnpm start` starts `next-server` in its own process group, so ancestry, not group, is checked), so a stale server on a reused port cannot satisfy it. Stopping a server kills the spawned process and every descendant.
+
+Steps run as a GitHub runner runs them: `bash -e -c` by default, `bash --noprofile --norc -eo pipefail` for `shell: bash`, `sh -e`, with `working-directory` and `defaults.run` honoured, workflow, job and step `env:` merged, and a failed `continue-on-error` step reported without failing the job. A shell other than bash or sh is not reproducible. A `sudo` step is run only as the local-binary substitution for a tool in the local list (gitleaks); any other `sudo` step is reported as not reproducible. Native runs blank every key named in the `.env*.local` files (key names only are read, values never) in the build, the server and the test processes, so the app cannot reach real Redis or Resend; `--linux` copies the tree without those files. The build, server, Playwright and `playwright --list` processes do not inherit the shell's environment: they get an allowlist (`PATH`, `HOME`, `TMPDIR`, locale, terminal, Docker and `PNPM_HOME` variables, and names starting `LC_`, `XDG_` or `PLAYWRIGHT_`; `allowedEnv` in `scripts/lib/ci-predict-process.ts`) plus the step's own `env:`, so a secret exported in the shell cannot reach them. A variable a CI step needs that is neither in its `env:` nor on the allowlist is missing locally; add its name to the allowlist. A `${{ secrets.X }}` reference reads as an empty string, and the job's row names every secret it read that way. A job's `env:` and step `env:` reach `docker exec` too, and the Linux session is rebuilt when the server env changes.
+
+Child processes are tracked: on exit, `SIGINT`, `SIGTERM` or `SIGHUP` their process groups are killed and the `ci-predict-<pid>` container (labelled with its owner pid, started with `--rm`) is removed; the next `--linux` run removes containers whose owner is gone. A Linux session whose setup fails is removed before the error is reported, and a started server that has exited is never reused for a later job. Readiness requests and the free-port probe time out, so a server that accepts a connection and never answers fails at the readiness deadline. `--linux` on a machine that is not x64 prints that the container runs the machine's architecture, not CI's.
+
+`scripts/__tests__/ci-predict.test.ts` fails when `ci.yml` gains a job or an action the predictor does not map, and when a command in the `ci:local` chain is covered by no CI step.
+
 ## Testing
 
 ```mermaid
@@ -168,11 +224,10 @@ The token is read-only except `issues: write`. `__tests__/scripts/weekly-metrics
 ## The PR lifecycle
 
 ```
-commit (scope blocks) -> (read the diff before opening the PR; specialist self-review of the pushed head before any merge; not posted, not gated)
+commit (scope blocks) -> (read the diff before opening the PR)
   -> pnpm ci:local + gates:runtime -> gh pr create (fill the template)
   -> resolve every review thread (rebase before each push) -> pnpm pr:gate
-  -> sub-PR into feat/*: agent may merge after CI green; PR into main: repo owner runs gh pr merge
-     (Claude Code hook guard-merge-main fails closed on an agent merge via gh pr merge, gh api or the GitHub MCP tool unless the base is not main)
+  -> merge once CI is green and the base is contained
 ```
 
 Large features use an **integration branch + sub-PRs** (`feat/<feature>` ← `feat/<feature>-<part>`) to group independently reviewable changes. See `AGENTS.md` "Git and pull requests".
