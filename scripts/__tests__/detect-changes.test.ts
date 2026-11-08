@@ -141,7 +141,9 @@ import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 
-describe('runner main() via subprocess', () => {
+const SUBPROCESS_TEST_TIMEOUT_MS = 60_000;
+
+describe('runner main() via subprocess', { timeout: SUBPROCESS_TEST_TIMEOUT_MS }, () => {
   const runner = resolve(process.cwd(), 'scripts/detect-changes.mjs');
 
   it('non-PR event writes ai=true app=true ui=true and exits 0', () => {

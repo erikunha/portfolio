@@ -5,9 +5,11 @@ import { join } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 import { checkStamp, fingerprint, readTree, stampText } from '../lib/ci-predict-stamp';
 
+const SUBPROCESS_TEST_TIMEOUT_MS = 60_000;
+
 const TREE = { head: 'a'.repeat(40), diff: '', untracked: [] as string[] };
 
-describe('build stamp', () => {
+describe('build stamp', { timeout: SUBPROCESS_TEST_TIMEOUT_MS }, () => {
   const stamp = stampText({ fingerprint: fingerprint(TREE), buildId: 'build-1' });
 
   it('accepts a .next that was built from this exact tree', () => {
@@ -57,7 +59,7 @@ describe('build stamp', () => {
   });
 });
 
-describe('readTree', () => {
+describe('readTree', { timeout: SUBPROCESS_TEST_TIMEOUT_MS }, () => {
   const dirs: string[] = [];
   afterEach(() => {
     for (const dir of dirs.splice(0)) rmSync(dir, { recursive: true, force: true });

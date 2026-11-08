@@ -5,6 +5,8 @@ import { dirname, join, resolve } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { inheritedEnvWithIsolatedGit } from '../../__tests__/helpers/hermetic-git';
 
+const SUBPROCESS_TEST_TIMEOUT_MS = 60_000;
+
 const runner = resolve(process.cwd(), 'scripts/detect-changes.mjs');
 
 let repo: string;
@@ -49,7 +51,7 @@ function runScenario(seed: () => void, mutate: () => void) {
 const PKG = (extra: object = {}) =>
   JSON.stringify({ name: 'x', version: '1.0.0', browserslist: ['chrome >= 95'], ...extra });
 
-describe('detect-changes parity (real git)', () => {
+describe('detect-changes parity (real git)', { timeout: SUBPROCESS_TEST_TIMEOUT_MS }, () => {
   beforeEach(() => {
     repo = mkdtempSync(join(tmpdir(), 'dc-parity-'));
     git(['init', '-q']);

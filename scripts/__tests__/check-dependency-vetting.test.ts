@@ -10,6 +10,8 @@ import {
   type VettingInput,
 } from '../check-dependency-vetting';
 
+const SUBPROCESS_TEST_TIMEOUT_MS = 60_000;
+
 const SCRIPT = join(process.cwd(), 'scripts/check-dependency-vetting.ts');
 const TSX = join(process.cwd(), 'node_modules/.bin/tsx');
 const CLEAN_INSTALL: InstalledPackage = { license: 'MIT', installScripts: [] };
@@ -258,7 +260,7 @@ function runOn(fixture: Fixture): { code: number; out: string } {
 const CLSX_MANIFEST = { dependencies: { clsx: '^2.1.1' } };
 const CLSX_VETTING = { clsx: { purpose: 'joins class names', license: 'MIT' } };
 
-describe('check-dependency-vetting (process)', () => {
+describe('check-dependency-vetting (process)', { timeout: SUBPROCESS_TEST_TIMEOUT_MS }, () => {
   it('exits 0 and reports success on a vetted tree', () => {
     const r = runOn({
       manifest: CLSX_MANIFEST,

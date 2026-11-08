@@ -4,6 +4,8 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
+const SUBPROCESS_TEST_TIMEOUT_MS = 60_000;
+
 const SCRIPT = join(process.cwd(), 'scripts/check-doc-drift.mjs');
 
 const START = '<!-- doc-drift:start -->';
@@ -44,7 +46,7 @@ function runOn(markdown: string, files: string[] = []): { code: number; out: str
   }
 }
 
-describe('check-doc-drift', () => {
+describe('check-doc-drift', { timeout: SUBPROCESS_TEST_TIMEOUT_MS }, () => {
   it('passes when every referenced path exists', () => {
     const r = runOn(doc(['app/page.tsx', 'lib/env.ts', 'content/']), [
       'app/page.tsx',

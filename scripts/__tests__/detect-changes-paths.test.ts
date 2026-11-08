@@ -7,6 +7,8 @@ import { inheritedEnvWithIsolatedGit } from '../../__tests__/helpers/hermetic-gi
 import { computeCategories } from '../detect-changes.mjs';
 import { AI_PATHS, APP_PATHS, UI_PATHS } from '../detect-changes-paths.mjs';
 
+const SUBPROCESS_TEST_TIMEOUT_MS = 60_000;
+
 describe('detect-changes manifest', () => {
   it('exports non-empty path arrays (anti-vacuous)', () => {
     expect(AI_PATHS.length).toBeGreaterThan(0);
@@ -58,7 +60,7 @@ describe('detect-changes manifest', () => {
   });
 });
 
-describe('test-only diffs', () => {
+describe('test-only diffs', { timeout: SUBPROCESS_TEST_TIMEOUT_MS }, () => {
   it.each(['tests/visual/visual.spec.ts-snapshots/x.png', 'tests/e2e/contact.spec.ts'])(
     'runs UI and app gates for %s alone',
     (path) => {

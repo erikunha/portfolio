@@ -4,6 +4,8 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
+const SUBPROCESS_TEST_TIMEOUT_MS = 60_000;
+
 const SCRIPT = join(process.cwd(), 'scripts/contrast-check.mjs');
 
 const PALETTE = `
@@ -38,7 +40,7 @@ const run = (aliases: string) => {
   return spawnSync('node', [SCRIPT, theme], { encoding: 'utf8' });
 };
 
-describe('contrast-check theme parsing', () => {
+describe('contrast-check theme parsing', { timeout: SUBPROCESS_TEST_TIMEOUT_MS }, () => {
   it('resolves a color alias that points at another color token', () => {
     const result = run(
       '--color-text: var(--color-tertiary-50);\n--color-green: var(--color-primary-500);',

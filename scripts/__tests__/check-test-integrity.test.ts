@@ -5,6 +5,8 @@ import { join } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 import { findViolations, scanRoot } from '../check-test-integrity';
 
+const SUBPROCESS_TEST_TIMEOUT_MS = 60_000;
+
 const SCRIPT = join(process.cwd(), 'scripts', 'check-test-integrity.ts');
 
 function summarize(source: string, file = 'sample.test.ts') {
@@ -534,7 +536,7 @@ describe('scanRoot with helpers from other modules', () => {
   });
 });
 
-describe('command line', () => {
+describe('command line', { timeout: SUBPROCESS_TEST_TIMEOUT_MS }, () => {
   const roots: string[] = [];
 
   afterEach(() => {

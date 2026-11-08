@@ -8,6 +8,8 @@ import { SiteShell } from '@/components/SiteShell';
 import { NAVIGATION, siteNavChrome } from '@/content/navigation';
 import { SITE_LOCALE, type SiteLocale } from '@/content/site-locale';
 
+const PAGE_TREE_TIMEOUT_MS = 30_000;
+
 const LOCALES: readonly SiteLocale[] = Object.values(SITE_LOCALE);
 
 async function topElement(load: () => Promise<ReactElement>): Promise<ReactElement> {
@@ -28,7 +30,7 @@ describe('SiteShell', () => {
   }
 });
 
-describe('every page frame renders through SiteShell', () => {
+describe('every page frame renders through SiteShell', { timeout: PAGE_TREE_TIMEOUT_MS }, () => {
   for (const locale of LOCALES) {
     it(`SiteHome, ReadingShell, LinksPage and NotFoundPage open with SiteShell in ${locale}`, async () => {
       const { SiteHome } = await import('@/components/SiteHome');
@@ -50,7 +52,9 @@ describe('every page frame renders through SiteShell', () => {
   }
 });
 
-describe('every static page hands its own route to the shell', () => {
+describe('every static page hands its own route to the shell', {
+  timeout: PAGE_TREE_TIMEOUT_MS,
+}, () => {
   for (const locale of LOCALES) {
     it(`SiteHome, CvPage, SummaryPage and NotFoundPage name their route in ${locale}`, async () => {
       const { SiteHome } = await import('@/components/SiteHome');

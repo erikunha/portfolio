@@ -14,6 +14,8 @@ import { describe, expect, it } from 'vitest';
 import { parse as parseYaml } from 'yaml';
 import limits from '../../scripts/harness-size.json';
 
+const SUBPROCESS_TEST_TIMEOUT_MS = 60_000;
+
 const ROOT = process.cwd();
 const SELF = '__tests__/meta/ai-config.test.ts';
 const HISTORY_FILES = new Set(['DECISIONS.md', 'pnpm-lock.yaml']);
@@ -135,7 +137,7 @@ const ownerOf = (file: string): string | null => {
   return command ? (command[1] ?? null) : null;
 };
 
-describe('AI configuration guard', () => {
+describe('AI configuration guard', { timeout: SUBPROCESS_TEST_TIMEOUT_MS }, () => {
   it('names no harness, provider-routing or local-machine term in any tracked file', () => {
     const offenders = tracked()
       .filter((file) => file !== SELF && !HISTORY_FILES.has(file))

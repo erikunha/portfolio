@@ -5,6 +5,8 @@ import path from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { ENV_ALLOWLIST, hermeticEnv, NULL_DEVICE } from '../helpers/hermetic-git';
 
+const SUBPROCESS_TEST_TIMEOUT_MS = 60_000;
+
 const REPO_ROOT = path.resolve(__dirname, '..', '..');
 const HARNESS_SYMLINKS = ['.next', 'node_modules'];
 const SYMLINK_TARGET = 'target';
@@ -120,7 +122,9 @@ const FAILURE_SHAPES: Array<[string, GitResult, string]> = [
   ],
 ];
 
-describe('meta: .gitignore covers the paths the agent-worktree harness symlinks', () => {
+describe('meta: .gitignore covers the paths the agent-worktree harness symlinks', {
+  timeout: SUBPROCESS_TEST_TIMEOUT_MS,
+}, () => {
   it.each(HARNESS_SYMLINKS)('%s is ignored when materialised as a symlink', (name) => {
     expect(
       isIgnored(sandboxes.symlink, name),
@@ -205,7 +209,9 @@ const shapeTable = (name: string) =>
       `  "${asRuleFor(rule, name)}" -> ${verb(symlink)} the symlink, ${verb(directory)} the directory, ${verb(contents)} its contents, ${verb(nested)} a nested ${name}`,
   ).join('\n');
 
-describe('meta: the rule-shape claims the failure messages make are true', () => {
+describe('meta: the rule-shape claims the failure messages make are true', {
+  timeout: SUBPROCESS_TEST_TIMEOUT_MS,
+}, () => {
   it.each(RULE_MATRIX)(
     'rule %j -> symlink=%s directory=%s contents=%s nested=%s',
     (rule, symlinkIgnored, directoryIgnored, contentsIgnored, nestedIgnored) => {

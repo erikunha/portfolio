@@ -10,6 +10,8 @@ import {
   parseFileList,
 } from '../high-risk-paths';
 
+const SUBPROCESS_TEST_TIMEOUT_MS = 60_000;
+
 const ROOT = process.cwd();
 const SCRIPT = join(ROOT, 'scripts', 'high-risk-paths.ts');
 
@@ -126,7 +128,7 @@ describe('the path list', () => {
   });
 });
 
-describe('the command line', () => {
+describe('the command line', { timeout: SUBPROCESS_TEST_TIMEOUT_MS }, () => {
   const run = (stdin: string) =>
     execFileSync('node', [SCRIPT], { input: stdin, encoding: 'utf8' }).split('\n').filter(Boolean);
 

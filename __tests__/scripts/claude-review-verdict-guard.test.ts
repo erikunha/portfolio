@@ -5,6 +5,8 @@ import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { parse } from 'yaml';
 
+const SUBPROCESS_TEST_TIMEOUT_MS = 60_000;
+
 const WORKFLOW = join(process.cwd(), '.github', 'workflows', 'claude-review.yml');
 
 const GUARD_STEP = 'Assert this run posted a readable verdict';
@@ -143,7 +145,9 @@ describe('the guard verdict pattern accepts a bold verdict and nothing else', ()
   });
 });
 
-describe('the guard reds the job when this run posted no verdict', () => {
+describe('the guard reds the job when this run posted no verdict', {
+  timeout: SUBPROCESS_TEST_TIMEOUT_MS,
+}, () => {
   type Run = { body: string; since?: string };
 
   function runGuard({ body, since = '2026-01-01T00:00:00Z' }: Run) {

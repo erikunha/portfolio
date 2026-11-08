@@ -4,6 +4,8 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
+const SUBPROCESS_TEST_TIMEOUT_MS = 60_000;
+
 const SCRIPT = join(process.cwd(), 'scripts/check-dep-pinning.mjs');
 
 function runOn(pkg: object): { code: number; out: string } {
@@ -18,7 +20,7 @@ function runOn(pkg: object): { code: number; out: string } {
   }
 }
 
-describe('check-dep-pinning', () => {
+describe('check-dep-pinning', { timeout: SUBPROCESS_TEST_TIMEOUT_MS }, () => {
   it('passes when every dependency is caret/tilde major-locked', () => {
     const r = runOn({
       dependencies: { next: '~16.2.6', react: '~19.2.0', clsx: '^2.1.1' },

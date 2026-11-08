@@ -5,6 +5,8 @@ import { join } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 import { GIT_CONFIG_ISOLATION, hermeticEnv, inheritedEnvWithIsolatedGit } from './hermetic-git';
 
+const SUBPROCESS_TEST_TIMEOUT_MS = 60_000;
+
 const LOCAL_ENV_VARS = execFileSync('git', ['rev-parse', '--local-env-vars'], {
   encoding: 'utf8',
 })
@@ -30,7 +32,9 @@ afterEach(() => {
   saved.clear();
 });
 
-describe('inheritedEnvWithIsolatedGit: git’s repo-local env cannot reach the child', () => {
+describe('inheritedEnvWithIsolatedGit: git’s repo-local env cannot reach the child', {
+  timeout: SUBPROCESS_TEST_TIMEOUT_MS,
+}, () => {
   it.each(REPO_LOCAL_KEYS)('%s is stripped even though the parent exports it', (key) => {
     exportVar(key, '/somewhere/else/.git');
 

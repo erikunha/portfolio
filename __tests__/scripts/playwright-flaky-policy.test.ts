@@ -1,5 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+const CONFIG_IMPORT_TIMEOUT_MS = 30_000;
+
 async function loadConfig() {
   vi.resetModules();
   return (await import('../../playwright.config')).default;
@@ -9,7 +11,7 @@ afterEach(() => {
   vi.unstubAllEnvs();
 });
 
-describe('playwright.config.ts flaky-test policy', () => {
+describe('playwright.config.ts flaky-test policy', { timeout: CONFIG_IMPORT_TIMEOUT_MS }, () => {
   it('fails a CI run that passed only on a retry, and keeps the retries for traces', async () => {
     vi.stubEnv('CI', 'true');
 

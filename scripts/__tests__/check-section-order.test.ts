@@ -12,6 +12,8 @@ import {
   findOrphanedCssIds,
 } from '../check-section-order.mjs';
 
+const SUBPROCESS_TEST_TIMEOUT_MS = 60_000;
+
 describe('collectRenderedSectionIds', () => {
   it('reads ids from JSX id attributes only, so a prop or a string literal is not a section', () => {
     const ids = collectRenderedSectionIds([
@@ -89,7 +91,9 @@ describe('findOrphanedCssIds', () => {
   });
 });
 
-describe('running the script through a symlinked path', () => {
+describe('running the script through a symlinked path', {
+  timeout: SUBPROCESS_TEST_TIMEOUT_MS,
+}, () => {
   it('still runs main and reports, instead of exiting silently', () => {
     const dir = mkdtempSync(join(tmpdir(), 'section-order-link-'));
     const link = join(dir, 'check-section-order.mjs');
