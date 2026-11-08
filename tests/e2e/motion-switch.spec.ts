@@ -55,6 +55,21 @@ test.describe('the MOTION switch is the only motion control', () => {
     await expect(page.locator(MOTION_ROW)).toHaveAttribute('aria-pressed', 'true');
   });
 
+  test('the no-script fallback stays out of the way when scripts run', async ({ page }) => {
+    await page.goto('/');
+    expect(
+      await page.evaluate(() => matchMedia('(scripting: none)').matches),
+      'a scripted page must never match the fallback media query',
+    ).toBe(false);
+    expect(
+      await page.evaluate(() => matchMedia('(prefers-reduced-motion: reduce)').matches),
+      'the emulated system setting is reduce',
+    ).toBe(true);
+    await reachEqStrip(page);
+    expect(await animationName(page, EQ_BAR)).not.toBe(NO_ANIMATION);
+    await expect(page.locator('body')).toHaveAttribute('data-motion', BODY_FULL);
+  });
+
   test('switching it off reduces everything, persists, and survives a reload', async ({ page }) => {
     await page.goto('/');
     await expect(page.locator('body')).toHaveAttribute('data-motion', BODY_FULL);

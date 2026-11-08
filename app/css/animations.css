@@ -471,3 +471,34 @@
     }
   }
 }
+
+@media (scripting: none) and (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    /* biome-ignore lint/complexity/noImportantStyles: this must beat inline styles and every layer; there is no script to turn it off */
+    animation: none !important;
+    /* biome-ignore lint/complexity/noImportantStyles: same as animation, a transition is motion too */
+    transition: none !important;
+  }
+
+  .links-ticker-track {
+    width: 100%;
+    white-space: normal;
+  }
+
+  .links-ticker-track > span:nth-child(2) {
+    display: none;
+  }
+
+  .live-dot,
+  .crt-flicker,
+  .crt-scan-beam,
+  .crt-noise {
+    opacity: 0;
+  }
+
+  .guitar-scan-beam {
+    display: none;
+  }
+}

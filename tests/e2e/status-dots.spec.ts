@@ -28,7 +28,7 @@ test.describe('status dots blink while motion is on', () => {
     ).toBe('0px');
   });
 
-  test('the MOTION dot stays solid under prefers-reduced-motion', async ({ page }) => {
+  test('the MOTION dot stays solid while MOTION is off', async ({ page }) => {
     await freezeMotion(page);
     await page.goto('/');
     await expect(dot(page)).toBeVisible();

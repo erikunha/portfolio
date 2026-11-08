@@ -1,8 +1,7 @@
 import type { BrowserContext, Page } from '@playwright/test';
+import { MOTION_CHOICE, MOTION_STORAGE_KEY } from '@/lib/motion-change';
 
-export const MOTION_STORAGE_KEY = 'erik.motion';
-
-export const MOTION_CHOICE = { on: 'on', off: 'off' } as const;
+export { MOTION_CHOICE, MOTION_STORAGE_KEY };
 
 export type MotionChoice = (typeof MOTION_CHOICE)[keyof typeof MOTION_CHOICE];
 
