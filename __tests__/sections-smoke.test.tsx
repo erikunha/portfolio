@@ -4,6 +4,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { SectionNavigationProvider } from '@/components/responsive/SectionNavigation';
 import { siteNavChrome } from '@/content/navigation';
 import { SITE_LOCALE, type SiteLocale } from '@/content/site-locale';
+import { installMatchMedia } from './helpers/match-media';
 import { type MountedClient, mountClient } from './helpers/render';
 
 function firstOf<T>(arr: readonly T[]): T {
@@ -64,11 +65,7 @@ describe('Home page', () => {
   it(
     'renders exactly one h1 element',
     async () => {
-      vi.stubGlobal('matchMedia', () => ({
-        matches: false,
-        addEventListener: () => undefined,
-        removeEventListener: () => undefined,
-      }));
+      installMatchMedia(false);
       const { default: Home } = await import('@/app/(en)/page');
       const doc = new DOMParser().parseFromString(
         renderToStaticMarkup(createElement(Home)),
@@ -80,11 +77,7 @@ describe('Home page', () => {
   );
 
   it('resolves every in-page topbar link to a rendered section id', async () => {
-    vi.stubGlobal('matchMedia', () => ({
-      matches: false,
-      addEventListener: () => undefined,
-      removeEventListener: () => undefined,
-    }));
+    installMatchMedia(false);
     const { default: Home } = await import('@/app/(en)/page');
     const { DesktopTopbar } = await import(
       '@/components/responsive/DesktopTopbar/DesktopTopbar.client'

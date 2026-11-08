@@ -1,5 +1,6 @@
 import { createElement } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { installMatchMedia } from '@/__tests__/helpers/match-media';
 import { flushMicrotasks, hydrateClient, type MountedClient } from '@/__tests__/helpers/render';
 import { shellUi } from '@/content/shell-ui';
 import { SITE_LOCALE } from '@/content/site-locale';
@@ -11,12 +12,7 @@ vi.mock('@/lib/motion', () => ({ readMotion: () => false }));
 const ui = shellUi[SITE_LOCALE.en];
 
 function stubViewport(matches: boolean) {
-  vi.stubGlobal('matchMedia', (query: string) => ({
-    matches,
-    media: query,
-    addEventListener: () => undefined,
-    removeEventListener: () => undefined,
-  }));
+  installMatchMedia(matches);
 }
 
 function feedText(mounted: MountedClient): string {
