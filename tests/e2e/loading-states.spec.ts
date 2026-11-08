@@ -1,5 +1,5 @@
 import { type Browser, type BrowserContext, expect, type Page, test } from '@playwright/test';
-import { heightOf, settleFrames } from './_helpers/geometry';
+import { expectStableFor, heightOf, settleFrames } from './_helpers/geometry';
 import { freezeMotion } from './_helpers/motion';
 import { drainRoutes } from './_helpers/routes';
 
@@ -9,7 +9,6 @@ const VIEWPORT_HEIGHT = 900;
 const SUBPIXEL_PX = 1;
 const PENDING_DATA = '#sec-live-metrics [aria-busy="true"]';
 const PENDING_FEED = '[data-col="channel-loading"]';
-const SETTLE_MS = 800;
 const LOADING_COPY = /fetch|loading|load|buscando|carregando/i;
 const HOME_PATHS = ['/', '/pt'] as const;
 const LINKS_PATHS = ['/links', '/links/en'] as const;
@@ -110,7 +109,12 @@ async function measure(
   await livePage.goto(path);
   await expect(livePage.locator(PENDING_DATA)).toHaveCount(0);
   await expect(livePage.locator(PENDING_FEED)).toHaveCount(0);
-  await livePage.waitForTimeout(SETTLE_MS);
+  await expectStableFor(() =>
+    heights(
+      livePage,
+      pairs.map((pair) => pair.resolved),
+    ),
+  );
   await settleFrames(livePage);
   const resolved = await heights(
     livePage,

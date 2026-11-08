@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { expectStableFor } from './_helpers/geometry';
 import { waitForHydration } from './_helpers/hydration';
 import { installMockBackend } from './_helpers/mock-backend';
 
@@ -6,7 +7,6 @@ const HYDRATION_DELAY_MS = 2000;
 const SHELL_FORM_SELECTOR = '[data-testid="shell-form"]';
 const SHELL_INPUT_SELECTOR = '[aria-label="shell command"]';
 const TYPED_COMMAND = 'help me';
-const NAVIGATION_SETTLE_MS = 500;
 
 test.describe('shell input before it hydrates', () => {
   test('a command typed while the scripts load survives hydration and runs', async ({ page }) => {
@@ -45,7 +45,7 @@ test.describe('shell input before it hydrates', () => {
     const entryUrl = page.url();
     await input.pressSequentially(TYPED_COMMAND);
     await input.press('Enter');
-    await page.waitForTimeout(NAVIGATION_SETTLE_MS);
+    await expectStableFor(async () => page.url());
     expect(
       page.url(),
       'a native form submit before hydration navigates to /?command=... and loses the command',

@@ -83,6 +83,22 @@ for (const { en, pt, enTitle } of PAIRS) {
   });
 }
 
+test.describe('a Portuguese browser asking for the bare address', () => {
+  const PT_BR_ACCEPT_LANGUAGE = 'pt-BR,pt;q=0.9';
+  test.use({ extraHTTPHeaders: { 'Accept-Language': PT_BR_ACCEPT_LANGUAGE } });
+
+  for (const { en, enTitle } of PAIRS) {
+    test(`${en} stays English with no redirect`, async ({ page }) => {
+      const response = await page.goto(en);
+      expect(response?.status()).toBe(200);
+      expect(response?.request().redirectedFrom()).toBeNull();
+      expect(new URL(page.url()).pathname).toBe(en);
+      await expect(page.locator('html')).toHaveAttribute('lang', SITE_HTML_LANG[SITE_LOCALE.en]);
+      await expect(page).toHaveTitle(enTitle);
+    });
+  }
+});
+
 test('/pt hero renders Portuguese copy', async ({ page }) => {
   await page.goto('/pt');
   await expect(page.locator('[data-testid="hero-desktop"] [data-testid="hero-name"]')).toHaveText(

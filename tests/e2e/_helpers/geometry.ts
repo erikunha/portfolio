@@ -1,4 +1,4 @@
-import type { Page } from '@playwright/test';
+import { expect, type Page } from '@playwright/test';
 
 export const VIEWPORTS = {
   PHONE_NARROW: { width: 320, height: 640 },
@@ -75,4 +75,29 @@ export function waitForStablePosition(page: Page, selector: string): Promise<voi
 
 export function waitForStableHref(page: Page, selector: string): Promise<void> {
   return waitForStableReading(page, selector, 'href');
+}
+
+const STABILITY_WINDOW_MS = 500;
+const STABILITY_TIMEOUT_MS = 15_000;
+const STABILITY_POLL_MS = 50;
+
+export async function expectStableFor<T>(
+  read: () => Promise<T>,
+  windowMs = STABILITY_WINDOW_MS,
+): Promise<void> {
+  let last: T | undefined;
+  let since = Date.now();
+  await expect
+    .poll(
+      async () => {
+        const now = await read();
+        if (!Object.is(now, last) && JSON.stringify(now) !== JSON.stringify(last)) {
+          last = now;
+          since = Date.now();
+        }
+        return Date.now() - since >= windowMs;
+      },
+      { timeout: STABILITY_TIMEOUT_MS, intervals: [STABILITY_POLL_MS] },
+    )
+    .toBe(true);
 }

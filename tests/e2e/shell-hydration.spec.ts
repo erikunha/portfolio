@@ -3,7 +3,7 @@ import { waitForHydration } from './_helpers/hydration';
 
 const SHELL_CHROME = '.shell-chrome';
 const SHELL_FORM = '[data-testid="shell-form"]';
-const SETTLE_MS = 600;
+const SETTLE_FRAMES = 40;
 const SUBPIXEL_PX = 1;
 
 declare global {
@@ -34,7 +34,12 @@ test.describe('the server-rendered shell survives hydration', () => {
     await page.goto('/');
     await page.waitForSelector(SHELL_FORM, { state: 'attached' });
     await waitForHydration(page, SHELL_FORM);
-    await page.waitForTimeout(SETTLE_MS);
+    const framesAtHydration = await page.evaluate(() => window.__shellWatch.heights.length);
+    await expect
+      .poll(() => page.evaluate(() => window.__shellWatch.heights.length), {
+        message: 'the shell watcher stopped sampling frames after hydration',
+      })
+      .toBeGreaterThanOrEqual(framesAtHydration + SETTLE_FRAMES);
   });
 
   test('once the shell is painted it stays in the document through hydration', async ({ page }) => {

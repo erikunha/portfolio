@@ -13,6 +13,7 @@ const MENU_TRIGGER = '.mobile-title-bar .menu-trigger';
 const COMBOBOX = '[data-testid="contact-timezone"] [role="combobox"]';
 const OFFLINE_NOTICE = '.offline-notice';
 const COMBOBOX_QUERY = 'a';
+const CONTACT_REQUIRED_FIELDS = 3;
 const CONTACT_FORM = '[data-testid="contact-form"]';
 const TIMEZONE_PANEL = '[data-testid="contact-timezone"]';
 const ISLAND_READY_TIMEOUT_MS = 20_000;
@@ -102,8 +103,11 @@ test.describe('axe-core a11y scan', () => {
   test('contact form error state has no violations', async ({ page }) => {
     await page.goto('/');
     await page.waitForSelector('[data-testid="contact-form"]');
+    await waitForHydration(page, CONTACT_FORM);
     await page.click('button[type="submit"]');
-    await page.waitForTimeout(500);
+    const form = page.getByTestId('contact-form');
+    await expect(form.locator('[aria-invalid="true"]')).toHaveCount(CONTACT_REQUIRED_FIELDS);
+    await expect(form.getByRole('alert')).toBeVisible();
 
     const results = await new AxeBuilder({ page })
       .include('[data-testid="contact-form"]')
