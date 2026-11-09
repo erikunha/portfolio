@@ -400,7 +400,7 @@
   }
 
   .daw-mixer-loading {
-    --daw-mixer-loading-height: 80.6rem;
+    --daw-mixer-loading-height: 86.4rem;
     display: grid;
     align-content: start;
     min-height: var(--daw-mixer-loading-height);
@@ -408,6 +408,18 @@
     border: var(--border-width) dashed var(--color-primary-subtle);
     font-size: var(--text-sm);
     line-height: 1.7;
+  }
+
+  @media (min-width: 360px) {
+    .daw-mixer-loading {
+      --daw-mixer-loading-height: 82.6rem;
+    }
+  }
+
+  @media (min-width: 480px) {
+    .daw-mixer-loading {
+      --daw-mixer-loading-height: 78.7rem;
+    }
   }
 
   @media (min-width: 768px) {
