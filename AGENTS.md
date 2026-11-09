@@ -88,6 +88,25 @@ Lighthouse (`lighthouserc.json`, `lighthouserc.mobile.json`), `pnpm route-js-che
 - `DECISIONS.md` takes one bullet per decision: date and reversibility note. Docs, diagrams and screenshots that describe a change are updated in the same commit.
 - No em or en dashes anywhere.
 
+## Skill dispatch
+
+Repository skills live in the canonical skills directory, one directory each with a `SKILL.md`.
+A skill supplies the method for one surface; read its trigger before running it, and a skill
+that does not apply is not run.
+
+| Trigger | Skill |
+| ------- | ----- |
+| A plan adds a client island or dependency, touches the API surface, or could move a budget | `plan-review` |
+| A performance gate fails, or a client change may cost JS | `perf-budget` |
+| A change may move a screenshot baseline (color, layout, typography, spacing) | `visual-baseline-regen` |
+| Routes, identity copy or metadata change, or the Lighthouse SEO score drops | `seo-discovery` |
+| The ask eval corpus, calibration, runner or system prompt changes | `ai-eval-update` |
+| A pull request needs review | `pr-review-orchestrator` |
+| The owner asks for static analysis of the diff | `semgrep` |
+
+A review runs every matching repository skill, then adds the developer's own skills when they
+fit the same surface. A skill is a method: it never decides the verdict on its own.
+
 ## Git and pull requests
 
 - Commits are `type(scope): subject`; scope (feature area such as hero, shell, contact, ci) is required and commitlint enforces it. One logical unit per commit. No `Co-Authored-By` or attribution lines.
