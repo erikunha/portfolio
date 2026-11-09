@@ -13,7 +13,7 @@ Specialists investigate. Skills supply the method. Gates and the running product
 Nobody else decides. An approval with zero findings is a valid outcome; manufacturing findings is not.
 
 ```
-CALIBRATE -> RESOLVE TARGET -> MAP CHANGE -> SKILL DISPATCH -> DOMAIN MATRIX -> FAN OUT (stage 1)
+CALIBRATE -> RESOLVE TARGET -> MAP CHANGE -> DOMAIN MATRIX -> SKILL DISPATCH -> FAN OUT (stage 1)
 -> GATES + LOCAL RUN + BROWSER (stage 3, main thread) -> DEPTH (stage 2, from triggers)
 -> REFUTE + CHALLENGE (stage 4) -> COMPLETION MATRIX -> DRAFT
 ```
@@ -24,7 +24,7 @@ The diff is the entry point. The repository and the running site are the subject
 
 Confirm, do not assume, what this session has. Build a private capability map:
 
-- **Skills:** what this session can load. See step 3 and `references/skills.md`.
+- **Skills:** what this session can load. See step 4 and `references/skills.md`.
 - **Subagents:** read the agent types your runtime lists; do not assume them. When a specialist type
   is missing, use a general-purpose or read-only exploration agent with the same brief, or run the
   track in the main thread, and say which in the completion matrix.
@@ -45,16 +45,28 @@ Then build a compact REVIEW-CONTEXT (verified facts only): objective, acceptance
 gates the change touches. Mechanics of stages, fan-out and context are in
 `references/orchestration.md`, with worked shapes; in CI, follow `references/ci.md`.
 
-## 3. Skill dispatch (the specialists)
+## 3. Domain matrix
+
+Classify every domain in `references/domains.md` as MATERIAL, SUPPORTING, NOT_APPLICABLE or
+UNKNOWN. Resolve UNKNOWN when it could change scope. Each MATERIAL domain becomes one track
+with one falsifiable question ("does the outbox ever send twice inside the retry window",
+not "review the API"). The skill dispatch step attaches to each track the skill that covers
+it, when one does.
+
+Size calibrates fan-out, it is not a quota: trivial 0 to 1 track, narrow 2 to 4, substantial
+5 to 8, cross-system 10 or more across stages. Never spawn filler.
+
+## 4. Skill dispatch (the specialists)
 
 A skill is a **method**: it knows the checks, the traps and the order for one surface. The review
 needs one specialist per material surface, and the skill is how the specialist gets its method.
 
-Read `references/skills.md` and execute it. In short:
+Read `references/skills.md` and execute it against the MATERIAL domains of the matrix. In short:
 
 1. **Repository skills** live beside this skill, one directory each with a `SKILL.md`. Read the
    trigger table in `AGENTS.md`. Every repository skill whose trigger matches this diff is a
-   **mandatory** track: run it, or report why it did not apply.
+   **mandatory** track, matched to the MATERIAL domain it covers: run it, or report why it did
+   not apply.
 2. **Session skills** are the ones this runtime can load for the developer. When one matches a
    material domain, use it. Its absence is not a limit; its presence is an asset.
 3. Match by each skill's declared trigger, not by guessing from a name.
@@ -64,16 +76,6 @@ the ones that did not, with the reason. A skill nobody looked at is a silent ski
 
 A skill never decides the verdict and never licenses a finding. It supplies the method; the
 evidence decides.
-
-## 4. Domain matrix
-
-Classify every domain in `references/domains.md` as MATERIAL, SUPPORTING, NOT_APPLICABLE or
-UNKNOWN. Resolve UNKNOWN when it could change scope. Each MATERIAL domain becomes one track
-with one falsifiable question ("does the outbox ever send twice inside the retry window",
-not "review the API"). Attach to each track the skill that covers it, when one does.
-
-Size calibrates fan-out, it is not a quota: trivial 0 to 1 track, narrow 2 to 4, substantial
-5 to 8, cross-system 10 or more across stages. Never spawn filler.
 
 ## 5. Route each track (`references/orchestration.md`)
 
@@ -137,8 +139,10 @@ post nothing unless asked.
   empty result and a stale cached value each render differently; a fallback that shows "0" or
   an empty list on failure is a finding.
 - **No harness in the procedure:** this skill names no agent runtime, no provider and no path
-  outside the repository. A developer on another runtime, on another machine, with a different
-  set of personal skills must be able to run it unchanged.
+  outside the repository. The one exception is the CI profile (`references/ci.md`), which
+  describes the job that runs the review and therefore names that job's runtime and the paths
+  it uses. A developer on another runtime, on another machine, with a different set of personal
+  skills must be able to run the procedure unchanged.
 - **Skills are optional, methods are not.** A missing skill never removes a domain from the
   matrix; it removes that skill's method and leaves the question open.
 

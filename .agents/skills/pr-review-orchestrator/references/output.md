@@ -59,6 +59,10 @@ BLOCKED or UNKNOWN. Also check: tracks planned vs launched vs completed, follow-
 validators run, challengers run, skills dispatched (one row each, with the trigger that matched
 and the result), images read. A material gap with capacity left means launch it, not write.
 
+Each visual track carries the row `references/multimodal.md` defines: `VISUAL` (what was
+captured) / `READ` (yes, no or not-available) / `SEEN` (what the image showed) / `COMPARED`
+(base, design authority, baseline or none). A track with no row is a silent skip.
+
 ## Done when
 
 1. Exact target and base are known; repo rules were respected.
