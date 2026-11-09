@@ -32,10 +32,24 @@ test.describe('type reveal', () => {
     await expect
       .poll(
         () =>
-          heading.evaluate((el) => getComputedStyle(el).getPropertyValue('--type-progress').trim()),
-        { timeout: TYPING_TIMEOUT_MS },
+          heading.evaluate((el) => {
+            const running = el.getAnimations().filter((animation) => {
+              return (animation as CSSAnimation).animationName === 'type-reveal-clip';
+            });
+            return (
+              running.length > 0 && running.every((animation) => animation.playState === 'finished')
+            );
+          }),
+        {
+          message: 'the heading must run the clip-path typing animation to its end',
+          timeout: TYPING_TIMEOUT_MS,
+        },
       )
-      .toBe('1');
+      .toBe(true);
+    expect(
+      await heading.evaluate((el) => getComputedStyle(el).clipPath),
+      'the finished reveal leaves only the caret overhang clipped off',
+    ).toMatch(/^inset\(0px (?:-[\d.]+px|calc\(0% - [\d.]+px\)) 0px 0px\)$/);
     expect(Number(await heading.evaluate((el) => el.style.getPropertyValue('--type-chars')))).toBe(
       ((await heading.textContent()) ?? '').trim().length,
     );

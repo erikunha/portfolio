@@ -1,7 +1,7 @@
 @layer components {
   @keyframes boot-blink {
     to {
-      background: transparent;
+      opacity: 0;
     }
   }
 
@@ -125,19 +125,22 @@
   }
 }
 
-@property --type-progress {
-  syntax: "<number>";
-  inherits: true;
-  initial-value: 1;
-}
-
 @layer components {
-  @keyframes type-reveal-progress {
+  @keyframes type-reveal-clip {
     from {
-      --type-progress: 0;
+      clip-path: inset(0 calc(100% - var(--type-reveal-caret-width)) 0 0);
     }
     to {
-      --type-progress: 1;
+      clip-path: inset(0 calc(0% - var(--type-reveal-caret-width)) 0 0);
+    }
+  }
+
+  @keyframes type-reveal-travel {
+    from {
+      transform: translateX(calc(var(--type-reveal-caret-width) - 100%));
+    }
+    to {
+      transform: translateX(var(--type-reveal-caret-width));
     }
   }
 
@@ -160,17 +163,13 @@
 
   @media screen {
     html.type-reveal-ready body:not([data-motion="reduce"]) [data-type-reveal] {
-      --type-progress: 0;
-      clip-path: inset(
-        0 calc((1 - var(--type-progress)) * 100% - var(--type-reveal-caret-width)) 0 0
-      );
+      clip-path: inset(0 calc(100% - var(--type-reveal-caret-width)) 0 0);
     }
 
     html.type-reveal-ready
       body:not([data-motion="reduce"])
       [data-type-reveal].is-typed:not(.is-static) {
-      --type-progress: 1;
-      animation: type-reveal-progress
+      animation: type-reveal-clip
         min(
           calc(var(--type-chars, 1) * var(--type-reveal-char-duration)),
           var(--type-reveal-max-duration)
@@ -182,11 +181,16 @@
       content: "";
       position: absolute;
       inset-block-start: 50%;
-      inset-inline-start: calc(var(--type-progress) * 100%);
+      inset-inline-start: 0;
       translate: 0 -50%;
-      inline-size: var(--type-reveal-caret-width);
+      inline-size: 100%;
       block-size: var(--type-reveal-caret-height);
-      background: var(--color-primary-500);
+      background: linear-gradient(
+        to right,
+        transparent calc(100% - var(--type-reveal-caret-width)),
+        var(--color-primary-500) 0
+      );
+      transform: translateX(calc(var(--type-reveal-caret-width) - 100%));
       pointer-events: none;
       opacity: 0;
     }
@@ -200,8 +204,15 @@
     html.type-reveal-ready
       body:not([data-motion="reduce"])
       [data-type-reveal].is-typed:not(.is-static)::after {
-      animation: type-reveal-caret var(--type-reveal-caret-blink) step-end
-        var(--type-reveal-caret-blinks) both;
+      animation:
+        type-reveal-travel
+        min(
+          calc(var(--type-chars, 1) * var(--type-reveal-char-duration)),
+          var(--type-reveal-max-duration)
+        )
+        steps(var(--type-chars, 1), end) both,
+        type-reveal-caret var(--type-reveal-caret-blink) step-end var(--type-reveal-caret-blinks)
+        both;
     }
 
     html.type-reveal-ready body:not([data-motion="reduce"]) [data-type-reveal].is-static {

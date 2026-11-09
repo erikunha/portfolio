@@ -20,7 +20,7 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
   pageExtensions: ['ts', 'tsx', 'mdx'],
   cacheComponents: true,
-  partialPrefetching: true,
+  partialPrefetching: false,
   typedRoutes: true,
   experimental: { agentFeedback: false },
   trailingSlash: false,
