@@ -4,6 +4,10 @@ Classify each row MATERIAL, SUPPORTING, NOT_APPLICABLE or UNKNOWN before launchi
 Each MATERIAL row becomes one track with one falsifiable question. The "ask" column holds
 starting questions, not a checklist to recite.
 
+Each MATERIAL row also needs a specialist: the row names the specialty, and the skill dispatch
+step picks the skill that supplies that specialty's method. A row without a matching skill still
+gets a generic specialist track; it never gets dropped.
+
 ## Stack facts to resolve from the lockfile, never from memory
 
 Next.js App Router, React, TypeScript (held at 6.x for Stryker), Tailwind v4 (`app/css/theme.css`
@@ -43,6 +47,19 @@ Vercel AI Gateway (`/api/ask`), `mcp-handler` at `/api/mcp`, Vercel crons guarde
 | CI / build / deploy          | Do path filters in `detect-changes` still see moved files? Does a new spec run in the right Playwright projects?                                                                                                                                              | `.github/workflows/**`, `playwright.config.ts`                              |
 | Docs                         | Every doc describing the change states current behaviour (AGENTS.md, ARCHITECTURE.md, STANDARDS.md, docs/**, DECISIONS.md entry with reversibility note).                                                                                                     | `pnpm check:doc-drift`, grep                                                |
 | Regression attribution       | Reproduces on head and not on base, data held constant?                                                                                                                                                                                                       | base checkout in a scratch worktree                                         |
+
+## Rows that owe a look
+
+These rows end with an opened image, not only with measurements (see `multimodal.md`):
+
+- UI / design fidelity
+- Design-system pages
+- Responsive
+- Accessibility, when the surface is rendered
+- Motion
+- Visual baselines
+
+A track on one of these rows that captured without reading the image is `BLOCKED`, not complete.
 
 ## Not applicable here
 

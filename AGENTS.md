@@ -35,7 +35,6 @@ proposing infrastructure changes, and if a request conflicts with a budget or ga
 | `pnpm gates:runtime [--skip-build]`      | Build, server on `PORT` or a free port, advisory Lighthouse, blocking axe and Chromium e2e    |
 | `pnpm lhci` / `pnpm lhci:mobile`         | Lighthouse CI locally, desktop / mobile                                                       |
 | `pnpm check:doc-drift`                   | Marked `ARCHITECTURE.md` paths exist                                                          |
-| `pnpm pr:gate [<pr>]`                    | Every review thread of the PR is resolved with a reply (`silent_resolve` and `suspicious_self_resolve` flagged) |
 | `pnpm lint:semgrep`                      | Pinned Semgrep scan; report-only in CI, run it only when asked (the `semgrep` skill)          |
 | `pnpm test:mutation`                     | Stryker mutation run; weekly in CI (a PR runs only `check:mutation-canary`, and only when the runner surface changed)                                   |
 | `pnpm check:test-integrity`              | Fails a focused test (`.only`), a test body with no assertion, and a skip with no reason string |
@@ -91,6 +90,25 @@ Lighthouse (`lighthouserc.json`, `lighthouserc.mobile.json`), `pnpm route-js-che
 - `DECISIONS.md` takes one bullet per decision: date and reversibility note. Docs, diagrams and screenshots that describe a change are updated in the same commit.
 - No em or en dashes anywhere.
 
+## Skill dispatch
+
+Repository skills live in the canonical skills directory, one directory each with a `SKILL.md`.
+A skill supplies the method for one surface; read its trigger before running it, and a skill
+that does not apply is not run.
+
+| Trigger | Skill |
+| ------- | ----- |
+| A plan adds a client island or dependency, touches the API surface, or could move a budget | `plan-review` |
+| A performance gate fails, or a client change may cost JS | `perf-budget` |
+| A change may move a screenshot baseline (color, layout, typography, spacing) | `visual-baseline-regen` |
+| Routes, identity copy or metadata change, or the Lighthouse SEO score drops | `seo-discovery` |
+| The ask eval corpus, calibration, runner or system prompt changes | `ai-eval-update` |
+| A pull request needs review | `pr-review-orchestrator` |
+| The owner asks for static analysis of the diff | `semgrep` |
+
+A review runs every matching repository skill, then adds the developer's own skills when they
+fit the same surface. A skill is a method: it never decides the verdict on its own.
+
 ## Git and pull requests
 
 - Commits are `type(scope): subject`; scope (feature area such as hero, shell, contact, ci) is required and commitlint enforces it. One logical unit per commit. No `Co-Authored-By` or attribution lines.
@@ -102,8 +120,8 @@ Lighthouse (`lighthouserc.json`, `lighthouserc.mobile.json`), `pnpm route-js-che
 - Before implementing a plan that adds a client island or dependency, or touches the API surface, check it with the `plan-review` skill. When a performance gate fails or a client change may cost JS, use `perf-budget`; when routes, identity copy or metadata change, use `seo-discovery`.
 - After implementing a section or component, look at `pnpm dev` at 1280x720 and 375x812 in a real browser before writing or changing tests. Fix what looks wrong first.
 - `claude-review` runs in CI only when an owner, member or collaborator comments `/claude-review`, and it is never a merge gate or an approver. `REVIEW.md` defines what blocks (correctness, security, accessibility, performance budget, test validity, spec or plan compliance) and what never does (style, naming).
-- Every PR comment is a review thread on a file and line, never a timeline comment: `pnpm pr:gate` reads `reviewThreads` and fails `silent_resolve`. Reply in the existing thread or create one with `commit_id`, `path` and `line`.
-- Merge readiness: CI green, the Argos visual check approved, base contained, `pnpm pr:gate` passes (threads resolved with a reply). A pull request into `main` is reviewed, its Argos check approved and squash-merged by a human (the owner) in the browser; an agent prepares it (CI green, branch up to date with `main`) and never merges it. An agent may merge into a non-`main` integration branch once these hold.
+- Every PR comment is a review thread on a file and line, never a timeline comment. Reply in the existing thread or create one with `commit_id`, `path` and `line`.
+- Merge readiness: CI green, the Argos visual check approved, base contained, and a review has run against the pull request with every blocking finding answered. A pull request into `main` is reviewed, its Argos check approved and squash-merged by a human (the owner) in the browser; an agent prepares it (CI green, branch up to date with `main`) and never merges it. An agent may merge into a non-`main` integration branch once these hold.
 - Emergency rollback: `vercel ls`, then `vercel promote <url>` (30s, no code change); or `git revert HEAD && git push --no-verify`. Verify with `curl https://erikunha.dev/api/healthz | jq .sha`. `rollback-rehearsal.yml` rehearses the slow path weekly: it reverts the latest commit on `main` locally and runs typecheck, tests and build on the result. It never pushes, promotes or deploys.
 
 <!-- BEGIN:nextjs-agent-rules -->

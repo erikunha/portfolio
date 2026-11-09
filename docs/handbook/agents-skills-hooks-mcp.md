@@ -30,7 +30,7 @@ belong there too; the tracked files describe the repository only. Symlinks need 
 | `plan-review`            | Check a spec or plan against scope, JS budget, API constraints and Lighthouse floors         | model or user     |
 | `perf-budget`            | Diagnose a failing route-JS or Lighthouse budget                                             | model or user     |
 | `seo-discovery`          | Keep sitemap, robots, llms.txt, the JSON profile and metadata consistent                     | model or user     |
-| `pr-review-orchestrator` | Review a diff across relevant domains, with local and CI profiles                            | user only         |
+| `pr-review-orchestrator` | Review a diff across relevant domains, dispatching the matching skills and reading the render          | user only         |
 | `semgrep`                | Run the pinned static-analysis wrapper when explicitly requested                             | user only         |
 
 Each skill is self-contained: it names no other skill, agent or command, and no config path. Frontmatter
@@ -38,6 +38,22 @@ uses the Agent Skills keys (`name`, `description`, `license`, `compatibility`, `
 `allowed-tools`). The two user-only skills add `disable-model-invocation: true`, a Claude Code key
 that other consumers of the standard, such as claude.ai uploads, may reject; the Codex equivalent
 is `agents/openai.yaml` with `policy.allow_implicit_invocation: false`. A guard test keeps the two in step.
+
+## Skill dispatch
+
+A skill is a method: it holds the checks, the traps and the order for one surface. The review
+orchestrator discovers the skills the current session can load, matches them to the material
+domains of the diff by their declared trigger, and records every skill it considered.
+
+Two sources, with different weight. The project skills above are mandatory when their trigger
+matches the diff: the trigger table in `AGENTS.md` maps a surface to a skill. The developer's own
+skills are used when they fit the same surface, and their absence costs nothing, so the procedure
+runs unchanged on a machine that has none.
+
+The discovery is by directory, never by a written path: the project skills are the directories
+beside the orchestrator's own, and the session skills are whatever the runtime advertises or the
+per-user skill directories that exist on the machine. A skill that was never looked at does not
+belong in the record; a skill that was looked at and stayed out says why.
 
 ## Agent and hooks
 
@@ -96,8 +112,8 @@ The product endpoint `app/api/mcp/route.ts` is separate from the development con
 
 ## Review checks
 
-| Command        | Contract                                                                                                       |
-| -------------- | -------------------------------------------------------------------------------------------------------------- |
-| `pnpm pr:gate` | Review threads must be resolved and carry a reply; runs in `quality-fast`; reports suspicious self-resolution |
+| Check                                | Contract                                                                                                       |
+| ------------------------------------ | -------------------------------------------------------------------------------------------------------------- |
+| `pr-review-orchestrator` (the skill) | Review a diff: one specialist per material domain, every matching skill applied, every render read as an image |
 
 `.github/workflows/claude-review.yml` runs a review only when an OWNER, MEMBER or COLLABORATOR comments `/claude-review` on a PR; no open or push starts it, and the review is never a merge requirement. `.github/workflows/claude.yml` handles human `@claude` mentions. The review job reads `.github/claude-review-prompt.md`, `REVIEW.md` and the `pr-review-orchestrator` skill from the default branch, and looks for the skill under `.agents/skills` first and `.claude/skills` second, so it works before and after the shared layout lands. How an engineer reviews before opening a PR is their own choice, independent of both workflows.

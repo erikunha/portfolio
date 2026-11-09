@@ -62,7 +62,7 @@ Performance, accessibility (WCAG 2.2 AA), and security are treated as implicit o
 3. Fill in **every** section of the PR template; do not write a body from scratch.
 4. **Show your work.** A PR should evidence what it claims, not just assert it: paste command output, attach before/after screenshots or a recording for UI changes, note bundle-size and Core Web Vitals deltas for performance work, and link the CI run or Vercel preview. Reviewers should be able to validate without pulling the branch.
 5. A visual change requires regenerated visual-regression baselines before the PR is opened (darwin locally, linux from the CI dispatch).
-6. CI must be green, the Argos visual check approved and every review thread resolved with a reply (`pnpm pr:gate`) before merge. Address all blocking review findings (`REVIEW.md` lists what blocks). The `claude-review` job runs only when an owner, member or collaborator comments `/claude-review`; it never blocks a merge.
+6. CI must be green, the Argos visual check approved, and a review has run against the pull request before merge. Address all blocking review findings (`REVIEW.md` lists what blocks). The `claude-review` job runs only when an owner, member or collaborator comments `/claude-review`; it never blocks a merge.
 
 ## Reporting bugs and requesting features
 

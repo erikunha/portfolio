@@ -399,8 +399,9 @@ runs the main-ref and branch-name guards plus `pnpm verify`. `pnpm verify` is de
 `quality-fast` CI step is in neither the chain nor the named CI-only list. The "never disable a gate"
 rule is held by **culture** and by PR review; there is no meta-gate that can
 prevent a gate from being deleted, only the standard that says it must not be.
-The PR merge gate (`pnpm pr:gate`: threads resolved with a reply, run in `quality-fast` on every
-pull request) is the backstop; GitHub branch-protection settings are outside the repository.
+GitHub `required_conversation_resolution` branch protection still holds the conversation state.
+The repository's own backstop is the review: a review runs against the pull request before the
+merge, with every matching skill applied and every blocking finding answered.
 
 ---
 

@@ -31,7 +31,7 @@ check (Biome, warnings fail) -> typecheck -> validate-content -> check:client-na
   -> lint:contrast -> lint:css-tokens -> test:coverage (Vitest with the coverage thresholds)
 ```
 
-Three `quality-fast` steps stay CI-only: the branch-name lint (the pre-push hook enforces it), the commit-message lint (the commit-msg hook) and the PR comment merge gate (needs a pull request).
+Two `quality-fast` steps stay CI-only: the branch-name lint (the pre-push hook enforces it) and the commit-message lint (the commit-msg hook).
 
 `pnpm ci:local` == `pnpm verify`. `pnpm ci` == `verify + build + bundle-check + route-js-check`. Before opening a PR, also run `pnpm bundle-check`, `pnpm route-js-check`, and `pnpm gates:runtime`.
 
@@ -47,7 +47,6 @@ Three `quality-fast` steps stay CI-only: the branch-name lint (the pre-push hook
 | `check:harness-size`   | `AGENTS.md` and `CLAUDE.md` within the line budgets in `scripts/harness-size.json`               |
 | `check:section-order`  | no `#sec-*` rule reorders a section with CSS `order`, and every `#sec-*` selector matches a rendered id |
 | `check:detect-changes-paths` | every git-tracked root file and `scripts/` file is listed in `AI_PATHS`, `APP_PATHS`, `UI_PATHS` or `IGNORED_PATHS`, so a new file cannot skip a gated job |
-| `pr:gate`              | every review thread on the pull request is resolved and has a reply (PR only; CI-only step)      |
 | `check:doc-drift`      | `ARCHITECTURE.md` directory-tree paths exist on disk                                             |
 | `lint:css-tokens`      | no raw hex or color function (`rgb`, `hsl`, `hwb`, `lab`, `lch`, `oklab`, `oklch`, `color()`) outside `app/css/theme.css` and the named allowlist, in `app/css` and `*-tokens.ts`; no literal `z-index` or `--z-*` declaration outside the scale in `theme.css` (stylesheets and `*.tsx`); no focus rule that writes its own ring instead of `--focus-ring` on `:focus-visible` |
 | `lint:contrast`        | documented text/surface pairs meet WCAG AA                                                       |
@@ -99,7 +98,7 @@ flowchart TD
 What each result means:
 
 - **pass**, **fail**: every reproducible step ran, with the outcome.
-- **partial**: the steps that ran passed but something did not: a step cannot run locally (the PR comment merge gate, Lighthouse, a `sudo` step, an expression or shell the predictor cannot evaluate, and the visual spec without `--linux`, because CI gates the Linux baselines and a macOS run compares different ones), or the e2e job ran only the changed specs while CI runs the whole suite (`--full` makes it a pass). Lighthouse scores depend on the host; `pnpm gates:runtime` still covers them.
+- **partial**: the steps that ran passed but something did not: a step cannot run locally (Lighthouse, a `sudo` step, an expression or shell the predictor cannot evaluate, and the visual spec without `--linux`, because CI gates the Linux baselines and a macOS run compares different ones), or the e2e job ran only the changed specs while CI runs the whole suite (`--full` makes it a pass). Lighthouse scores depend on the host; `pnpm gates:runtime` still covers them.
 - **not-run**: the job needs GitHub (`dependency-review`), is report-only (`semgrep`), has no changed spec on that project, its needs failed, or no step of it executed. Never read it as passed.
 - **would-run**: dry run only; nothing was executed.
 - **skipped**: the job's own `if` is false for this diff, exactly as in CI.
@@ -201,7 +200,7 @@ flowchart TD
 
 | Job | Runs when | What it does |
 | --- | --- | --- |
-| `quality-fast` | always | branch-name lint, commit-message lint (PR), `biome ci --error-on-warnings`, `validate-content`, client-naming, dependency-pinning, dependency-vetting, harness-size, component-docs, doc-drift, section-order, detect-changes-paths, test-integrity, contrast, CSS-token gates, and the PR comment merge gate (PR) |
+| `quality-fast` | always | branch-name lint, commit-message lint (PR), `biome ci --error-on-warnings`, `validate-content`, client-naming, dependency-pinning, dependency-vetting, harness-size, component-docs, doc-drift, section-order, detect-changes-paths, test-integrity, contrast, CSS-token gates |
 | `typecheck` | always | `pnpm typecheck` with a cached `tsconfig.tsbuildinfo` |
 | `test` | always | `pnpm audit --audit-level=moderate` (always on a push, only when `pnpm-lock.yaml` changed on a PR), the Stryker kill canary (always on a push, only when the mutation runner files changed on a PR), then `pnpm test:coverage` and the coverage artifact |
 | `dependency-review` | PR | blocks high-severity advisories and `GPL-3.0`, `AGPL-3.0` and `GPL-2.0` licenses |
@@ -316,7 +315,7 @@ A revert conflict or any failed step fails the `rehearse` job. The `report` job 
 ```
 commit (scope blocks) -> (read the diff before opening the PR)
   -> pnpm ci:local + gates:runtime -> gh pr create (fill the template)
-  -> resolve every review thread (rebase before each push) -> pnpm pr:gate
+  -> review the pull request (answer every finding, rebase before each push)
   -> merge once CI is green and the base is contained
 ```
 
