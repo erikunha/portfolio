@@ -5,7 +5,7 @@
 ## Prerequisites
 
 - Use `.nvmrc` for the local Node version. `package.json` accepts `^22.22.2 || ^24.15.0 || >=26.0.0`, requires pnpm 10+, and pins the package manager to `pnpm@10.34.9`.
-- Install: `pnpm install` (CI uses `--frozen-lockfile`).
+- Install: `pnpm install` (CI uses `--frozen-lockfile`). Two lifecycle scripts run with it: `prepare` installs the Husky hooks through `scripts/prepare-hooks.mjs` (skipped when `CI`, `VERCEL` or `NODE_ENV=production` is set), and `postinstall` runs `scripts/strip-next-polyfills.mjs`, which empties Next's two legacy polyfill bundles in `node_modules` (the site targets modern browsers, and the Lighthouse Best Practices score counts that legacy JavaScript). It exits non-zero when the files are missing or have an unexpected shape.
 - For full local runs you'll want the env vars in `.env.example` (Upstash, AI Gateway, Resend, PSI). The public pages have fallbacks for missing services. API behavior differs: ask budget reservation requires Redis and fails closed; contact storage also fails closed. See doc 05 for individual failure modes.
 
 ## Local development
@@ -46,6 +46,8 @@ Three `quality-fast` steps stay CI-only: the branch-name lint (the pre-push hook
 | `check:dependency-vetting` | every direct dependency has a purpose and license in `dependency-vetting.json`; the installed license matches it; an install script needs `pnpm.onlyBuiltDependencies` or `pnpm.ignoredBuiltDependencies` |
 | `check:harness-size`   | `AGENTS.md` and `CLAUDE.md` within the line budgets in `scripts/harness-size.json`               |
 | `check:section-order`  | no `#sec-*` rule reorders a section with CSS `order`, and every `#sec-*` selector matches a rendered id |
+| `check:detect-changes-paths` | every git-tracked root file and `scripts/` file is listed in `AI_PATHS`, `APP_PATHS`, `UI_PATHS` or `IGNORED_PATHS`, so a new file cannot skip a gated job |
+| `pr:gate`              | every review thread on the pull request is resolved and has a reply (PR only; CI-only step)      |
 | `check:doc-drift`      | `ARCHITECTURE.md` directory-tree paths exist on disk                                             |
 | `lint:css-tokens`      | no raw hex or color function (`rgb`, `hsl`, `hwb`, `lab`, `lch`, `oklab`, `oklch`, `color()`) outside `app/css/theme.css` and the named allowlist, in `app/css` and `*-tokens.ts`; no literal `z-index` or `--z-*` declaration outside the scale in `theme.css` (stylesheets and `*.tsx`); no focus rule that writes its own ring instead of `--focus-ring` on `:focus-visible` |
 | `lint:contrast`        | documented text/surface pairs meet WCAG AA                                                       |
@@ -85,6 +87,7 @@ flowchart TD
 | Flag | Effect |
 | --- | --- |
 | `--base <ref>` | Base to diff against. Default: the open PR's base (`gh`), else the nearest of `origin/main` and `origin/feat/*` (fewest commits ahead, printed with the alternatives); pass `--base` when that is not the branch you will merge into. The base branch is fetched first. |
+| `--branch <name>` | Branch name CI would see. Needed on a detached HEAD. |
 | `--linux` | Runs Playwright (e2e, visual, a11y) in a container from the official Linux image whose tag is the installed `@playwright/test` version. The container copies the working tree, installs dependencies (pnpm store kept in the `ci-predict-pnpm-store` volume), builds with the ci.yml env and serves the app on `localhost:3000` inside itself, so browser, fonts and server origin all match CI. Catches font and layout metric differences that a macOS run hides. The first run pulls the image (about 2.5 GB). |
 | `--full` | Runs the whole e2e suite on every project, as CI does, instead of the selected specs. |
 | `--eval` | Runs the live `ask:eval` when ai paths changed, as `npx -y vercel@<pin> env run -- ...` from the Vercel-linked checkout, so secrets reach the process and are never printed. Without it the exact command is printed. |
@@ -127,26 +130,40 @@ flowchart LR
 
 - **Unit (Vitest):** behavioral assertions only; a `no-source-grep` test bans `readFileSync`-style source-grep tests. Run `pnpm test` / `pnpm test:coverage` / `pnpm test:watch`.
   For effect-driven focus, await the focus assertion with `waitFor`; finding the element only establishes that it rendered.
-- **a11y (axe-core):** zero-violation gate over home (both languages), contact errors, design-system routes, the four reading views and both links locales. Every scan includes `wcag22aa`; page scans retain `wcag2a`, `wcag2aa` and `wcag21aa`, while contact errors retain `wcag2a` and `wcag2aa`.
-- **e2e (Playwright):** CI runs every project in `playwright.config.ts` (8): `chromium`, `chromium-mobile`, `webkit-desktop`, `webkit-mobile` and the matching `-components` projects for co-located component specs; `__tests__/scripts/e2e-matrix-coverage.test.ts` fails if a project is left out. The DS component visual spec is darwin-only (CI ignores it on Ubuntu). Playwright targets `http://localhost:3000` unless `E2E_BASE_URL` points it at another server.
+- **a11y (axe-core):** `tests/a11y/axe.spec.ts` is a zero-violation gate over every design-system route, `/links`, `/links/en`, the four reading views and the home in both languages (design-system routes and reading views are also scanned at 390px, and so is the home), the open section drawer at 390px, the contact form error state (desktop and 390px), the open timezone combobox and the offline notice. A separate rule run checks WCAG 2.5.3 label-in-name on `/`, `/pt`, `/cv`, `/pt/cv`, `/summary` and `/links`. Every scan includes `wcag22aa`; page scans retain `wcag2a`, `wcag2aa` and `wcag21aa`, while contact errors retain `wcag2a` and `wcag2aa`. CI runs it in the `performance` job (`pnpm playwright test tests/a11y`), where only the `chromium` project matches it.
+- **e2e (Playwright):** `playwright.config.ts` defines eight projects and CI runs every one in the `e2e-functional` matrix; `__tests__/scripts/e2e-matrix-coverage.test.ts` fails if a project is left out. The suite runs against `http://localhost:3000` unless `E2E_BASE_URL` points it at another server.
+
+  | Project | Device | Specs it runs |
+  | --- | --- | --- |
+  | `chromium` | Desktop Chrome, 1280x720 | every spec under `tests/` (a11y, e2e, visual); CI ignores `design-system-components.spec.ts` |
+  | `chromium-mobile` | iPhone SE profile on Chromium | the `CROSS_BROWSER_SPECS` list in the config, plus `tests/visual/visual.spec.ts` |
+  | `webkit-desktop` | Desktop Safari, 1280x720 | `CROSS_BROWSER_SPECS` |
+  | `webkit-mobile` | iPhone 14 | `CROSS_BROWSER_SPECS` |
+  | `chromium-components`, `chromium-mobile-components`, `webkit-desktop-components`, `webkit-mobile-components` | the same four devices | co-located `*.e2e.ts` specs under `components/`, `design-system/components/` and `app/` (these projects set `testDir: '.'`) |
+
+  The `e2e-functional` job runs `tests/e2e/` for the four page projects and the whole project for the four `-components` projects. A spec that needs a second browser engine or a phone viewport joins `CROSS_BROWSER_SPECS`; every other spec under `tests/e2e/` runs on `chromium` alone. The config sets `fullyParallel: false`, `forbidOnly` in CI, two workers in CI and one locally, `maxDiffPixelRatio: 0.01` for screenshot comparisons, and adds the Argos reporter when `ARGOS_TOKEN` is set.
   CI retries a failing test twice so a failure leaves a trace, and `failOnFlakyTests` fails the run when a test passed only on a retry, so a flake is fixed rather than hidden. A spec that reads streamed content navigates with `gotoSettled` (`tests/e2e/_helpers/streamed.ts`), which returns at `domcontentloaded`, waits until no Suspense boundary is pending and until every self-hosted font face has loaded (next/font's `local()` fallback faces are not waited on), so a subresource that never answers cannot hold it. Hydration is not implied at `domcontentloaded`, so a spec that interacts with a client island navigates with `gotoHydrated` (`tests/e2e/_helpers/hydration.ts`), which adds a wait on that control's hydration (`tests/e2e/streamed-settle.spec.ts`). Playwright records a trace on the first retry (`on-first-retry`), uploaded from `test-results/` with the failed job; `__tests__/scripts/playwright-flaky-policy.test.ts` holds the policy.
   `tests/e2e/aria-structure.spec.ts` (chromium only) holds the page outline: `toMatchAriaSnapshot` against `tests/e2e/aria-structure.spec.ts-snapshots/*.aria.yml` for `/`, `/cv`, `/links` and `/design-system`. Each template lists landmarks and heading levels with `children: contain` and regex names, so copy and growing lists do not break it; a missing, extra-level or reordered landmark or section heading does. Aria snapshot paths carry no platform or project suffix, so macOS and Linux share one file, and a second test asserts exactly one `h1` per page because `contain` cannot see an extra heading.
   Reading views, error states, no-JavaScript recovery and mobile reflow run in all four page-browser projects.
-- **Visual regression:** Argos-backed snapshots of page sections; a color/layout/typography change requires regenerated baselines (see the `visual-baseline-regen` skill).
+- **Visual regression:** `tests/visual/visual.spec.ts` captures the hero above the fold (desktop only), the contact section, the shell idle and mid-stream, the hottest-takes section and the footer, on `chromium` and `chromium-mobile`. Baselines live in `tests/visual/visual.spec.ts-snapshots/` with a `darwin` and a `linux` file per capture, and `argosScreenshot` sends each capture to Argos. `tests/e2e/design-system-components.spec.ts` keeps its own darwin-only baselines, and CI ignores it. A color, layout or typography change requires regenerated baselines (see the `visual-baseline-regen` skill); the `update_visual_baselines` input of the manual `ci.yml` run regenerates the Linux ones as an artifact.
 - **AI eval (`pnpm ask:eval`):** calibration → corpus → gate for `/api/ask` (doc 02). Gated in CI when `ai`-paths change.
 
 ## CI/CD
 
-Changes under `tests/visual/` or `tests/e2e/` set both `app` and `ui` to true, so baseline-only and e2e-only PRs run the functional and visual jobs.
+`detect-changes` (`scripts/detect-changes.mjs`, with the path lists in `scripts/detect-changes-paths.mjs`) emits three booleans. On any event other than a pull request all three are true. On a pull request each is true when the diff touches its path list, and:
+
+- `ai` is also true when the `ai` package major or any AI dependency version in `pnpm-lock.yaml` changed.
+- `ui` is also true when the `browserslist` or `pnpm` section of `package.json` changed, and it excludes `lib/eval/**` and `lib/__tests__/**`.
+- Changes under `tests/visual/` or `tests/e2e/` set both `app` and `ui`, so baseline-only and e2e-only PRs run the functional and visual jobs.
 
 `.github/workflows/ci.yml` (the authoritative gate). A `detect-changes` job emits `app`, `ai` and `ui` booleans so heavy jobs skip on docs-only PRs (GitHub treats skipped required checks as satisfied). Matrix jobs skipped at job level report ONE unsuffixed check, so matrix-named required contexts (`e2e-functional (chromium)` etc.) hang forever on path-skipped PRs; required checks therefore point at always-reporting contexts and the conditional jobs are enforced through the `ci-gate` fan-in below.
 
 ```mermaid
 flowchart TD
     pr["PR / push main / workflow_dispatch"] --> dc["detect-changes (app?, ai?, ui?)"]
-    pr --> qf["quality-fast: Biome, branch/commit lint, content, naming, pinning, vetting, harness, doc-drift, contrast"]
+    pr --> qf["quality-fast: Biome, branch/commit lint, content, naming, pinning, vetting, harness, component docs, doc-drift, section order, path filters, test integrity, contrast, CSS tokens, PR comments"]
     pr --> tc["typecheck"]
-    pr --> t["test (Vitest + coverage)"]
+    pr --> t["test (audit, Stryker canary, Vitest + coverage)"]
     pr --> dr["dependency-review (PR)"]
     qf --> b["build (+ global bundle and route-JS gates)"]
     tc --> b
@@ -182,15 +199,47 @@ flowchart TD
     gate["ci-gate: always-on fan-in: fails on any failed/cancelled upstream; skipped passes"]
 ```
 
+| Job | Runs when | What it does |
+| --- | --- | --- |
+| `quality-fast` | always | branch-name lint, commit-message lint (PR), `biome ci --error-on-warnings`, `validate-content`, client-naming, dependency-pinning, dependency-vetting, harness-size, component-docs, doc-drift, section-order, detect-changes-paths, test-integrity, contrast, CSS-token gates, and the PR comment merge gate (PR) |
+| `typecheck` | always | `pnpm typecheck` with a cached `tsconfig.tsbuildinfo` |
+| `test` | always | `pnpm audit --audit-level=moderate` (always on a push, only when `pnpm-lock.yaml` changed on a PR), the Stryker kill canary (always on a push, only when the mutation runner files changed on a PR), then `pnpm test:coverage` and the coverage artifact |
+| `dependency-review` | PR | blocks high-severity advisories and `GPL-3.0`, `AGPL-3.0` and `GPL-2.0` licenses |
+| `coverage-comment` | same-repository PR | posts the coverage report from the artifact; runs no repository code |
+| `build` | after `quality-fast`, `typecheck` and `test` | `pnpm build` with fixed placeholder env, the global bundle gate (`--max-client-kb=220`), the per-route JS gate, then uploads `.next/` |
+| `attest-build` | `main` | build provenance attestation for the uploaded `.next/`; runs no repository code |
+| `performance` | push, or PR with `app` | preview server, `pnpm lhci`, `pnpm lhci:mobile`, then the axe scan |
+| `e2e-functional` | push, or PR with `app` | the eight-project matrix described under Testing |
+| `e2e-visual-chromium` | push, or PR with `ui` | `tests/visual/visual.spec.ts` on `chromium` and `chromium-mobile`; the manual run with `update_visual_baselines` regenerates and uploads baselines instead |
+| `ai-eval` | `ai`, same-repository PR or push, not Dependabot, and no failed upstream job | `pnpm ask:eval` against the live gateway; it never publishes to Redis |
+| `semgrep` | always | fixture self-test blocks; the findings scan is report-only and uploads SARIF |
+| `gitleaks` | always | checksum-verified pinned binary, fixture self-test, history scan |
+| `ci-gate` | always | fan-in over every job above |
+
 `ci-gate` runs with `if: always()`, includes gitleaks, semgrep and all build/test jobs above, and is the terminal required status check. `__tests__/scripts/ci-gate-job.test.ts` asserts its `needs` list equals the full job set minus the self-reporting jobs, so adding a conditional job without fanning it in fails `pnpm test`.
 
-Other workflows: `codeql.yml` (SAST, weekly + PR), `mutation.yml` (Stryker, weekly; fails when the runner cannot kill a mutant, judged by `scripts/check-mutation-kills.mjs`), `smoke.yml` (post-deploy: healthz + 7 security headers + apex→www + `/api/ask`,`/api/contact` liveness), `claude-review.yml` (pull-request review, on a `/claude-review` comment), `claude.yml` (`@claude` interaction), `agent-eval.yml` (advisory prompt evaluation), `high-risk-label.yml` (review-focus label, below), `rollback-rehearsal.yml` (weekly rollback rehearsal, below), `weekly-metrics.yml` (delivery metrics and band check, below), and `lockfile-resolution-probe.yml` (weekly: resolves every dependency range without a lockfile and keeps one open issue while `ERR_PNPM_NO_MATURE_MATCHING_VERSION` blocks it; not in `ci-gate`).
+Other workflows (none is in `ci-gate`):
 
-**Dependabot:** `.github/dependabot.yml` waits 7 days (`cooldown.default-days`, the same window as `minimumReleaseAge` in `pnpm-workspace.yaml`) before opening a version update and splits npm and Actions updates into three groups: `security` (security updates), `majors` and `rest` (minor and patch). `__tests__/scripts/dependabot-config.test.ts` fails a cooldown shorter than the pnpm window.
+| Workflow | Trigger | What it does |
+| --- | --- | --- |
+| `codeql.yml` | push and PR to `main`, Mondays 03:00 UTC, manual | CodeQL analysis of JavaScript and TypeScript with `.github/codeql/codeql-config.yml` |
+| `mutation.yml` | Sundays 04:00 UTC, manual | Stryker mutation run, advisory; fails when the runner produced no report or cannot kill a mutant, judged by `scripts/check-mutation-kills.mjs`; the score goes to the job summary |
+| `ask-eval.yml` | Mondays 05:00 UTC, manual | `pnpm ask:eval` with `EVAL_PUBLISH=1` and the Redis credentials, so `ask:eval:latest` stays fresh for the Measured section |
+| `tool-pins.yml` | Mondays 05:00 UTC, manual | `scripts/check-tool-pins.mjs` fails when the pinned gitleaks or semgrep version is behind upstream; a nudge, not a merge stop |
+| `agent-eval.yml` | Mondays 06:00 UTC, manual | `pnpm eval:agents`, advisory, publishes `agent-eval:latest` |
+| `rollback-rehearsal.yml` | Mondays 06:00 UTC, manual | weekly rollback rehearsal, below |
+| `weekly-metrics.yml` | Mondays 07:00 UTC, manual | delivery metrics and band check, below |
+| `lockfile-resolution-probe.yml` | Mondays 08:00 UTC, manual | resolves every dependency range without a lockfile and keeps one open issue while `ERR_PNPM_NO_MATURE_MATCHING_VERSION` blocks it |
+| `high-risk-label.yml` | PR opened, synchronized, reopened | review-focus label, below |
+| `smoke.yml` | a successful `Production` deployment status | post-deploy checks: artifact `/api/healthz`, canonical `/api/healthz`, 7 security headers, apex to www, `/api/ask` and `/api/contact` liveness; emails an alert through Resend on a 503 |
+| `claude-review.yml` | a `/claude-review` PR comment from an owner, member or collaborator | pull-request review, never a merge requirement |
+| `claude.yml` | an `@claude` comment from an owner, member or collaborator | read-only assistant |
 
-**Token permissions:** every workflow sets a top-level `permissions` block of `contents: read` (`{}` for `smoke.yml`), and each job lists only the extra scopes it uses, for example `attest-build` takes `id-token: write` + `attestations: write` for provenance and `coverage-comment` takes `pull-requests: write`, both in jobs that only download an artifact and run no repository command (`__tests__/scripts/ci-privilege-split.test.ts` fails a job that holds one of those scopes and runs a command), `semgrep` takes `security-events: write` to upload SARIF, `claude-review` takes `pull-requests: write` + `issues: read` + `checks: read` + `statuses: read` + `id-token: write` + `actions: read`. `__tests__/scripts/workflow-permissions.test.ts` fails a workflow with no top-level block or a broader one (OpenSSF Scorecard Token-Permissions).
+**Dependabot:** `.github/dependabot.yml` waits 7 days (`cooldown.default-days`, the same window as `minimumReleaseAge` in `pnpm-workspace.yaml`) before opening a version update and splits npm and Actions updates into three groups: `security` (security updates), `majors` and `rest` (minor and patch). npm updates ignore `zod` major and minor bumps and `typescript` major bumps, the two holds in `AGENTS.md`. `__tests__/scripts/dependabot-config.test.ts` fails a cooldown shorter than the pnpm window.
 
-**Lighthouse budgets (LHCI, hard gates):** desktop perf ≥95 / a11y =100 / BP ≥95 / SEO =100, LCP ≤1800ms, CLS ≤0.05, TBT ≤200ms; mobile perf ≥90, LCP ≤3500ms. Never disable a gate to merge - fix the property (doc 08).
+**Token permissions:** every workflow sets a top-level `permissions` block of `contents: read` (`{}` for `smoke.yml` and `weekly-metrics.yml`), and each job lists only the extra scopes it uses, for example `attest-build` takes `id-token: write` + `attestations: write` for provenance and `coverage-comment` takes `pull-requests: write`, both in jobs that only download an artifact and run no repository command (`__tests__/scripts/ci-privilege-split.test.ts` fails a job that holds one of those scopes and runs a command), `semgrep` takes `security-events: write` to upload SARIF, `claude-review` takes `pull-requests: write` + `issues: read` + `checks: read` + `statuses: read` + `id-token: write` + `actions: read`. `__tests__/scripts/workflow-permissions.test.ts` fails a workflow with no top-level block or a broader one (OpenSSF Scorecard Token-Permissions).
+
+**Lighthouse budgets (LHCI, hard gates in the `performance` job):** desktop perf ≥95 / a11y =100 / BP ≥95 / SEO =100, LCP ≤1800ms, CLS ≤0.05, TBT ≤200ms, interactive ≤2500ms; mobile perf ≥90, LCP ≤3500ms, TBT ≤400ms, interactive ≤4500ms. `__tests__/lighthouse-budgets.test.ts` fails when an assertion is lowered, warned or turned off. `pnpm gates:runtime` (`scripts/gates-runtime.ts`) is the local subset: it builds (or reuses `.next/` with `--skip-build`), starts a server on `PORT` or a free port, runs LHCI on the home URL only and treats it as advisory, then runs `tests/a11y` and the `cross-cutting` and `observability-smoke` specs on `chromium` as blocking gates, all within a 300 second limit. Never disable a gate to merge - fix the property (doc 08).
 
 Both desktop and mobile collect `/`, `/pt`, `/cv`, `/summary`, `/links`, `/links/en` and every design-system route listed in their configs. Run `pnpm lhci` and `pnpm lhci:mobile` against a production server.
 
@@ -291,5 +340,8 @@ Large features use an **integration branch + sub-PRs** (`feat/<feature>` ← `fe
 | Push blocked               | inspect the main-target guard, branch name or `pnpm verify` failure in `.husky/pre-push` |
 | CLS / visual regression    | regenerate Argos baselines via the `visual-baseline-regen` skill                         |
 | Client error in prod       | it was POSTed to `/api/log` (`err:{date}:{id}`, 7-day TTL) by `error-bridge.client.ts`  |
+| Contact message stuck      | `contact:outbox` holds ids waiting for the daily `/api/contact-retry` cron; a 202 `queued` response put it there |
+| A gated job skipped on a PR | `detect-changes` found no path in its list; read `scripts/detect-changes-paths.mjs` |
+| `ask:eval` red in CI       | the gate failure code printed by the run (`lib/eval/ask-grading.ts`); the artifact `ask-eval-result` holds every graded item |
 
 See `UI_PATHS`/`APP_PATHS` in `scripts/detect-changes-paths.mjs` for the current CI path filters. Every git-tracked root file and `scripts/` file must be in `AI_PATHS`, `APP_PATHS`, `UI_PATHS` or `IGNORED_PATHS`; `check:detect-changes-paths` fails otherwise, so a new file cannot skip the gated jobs.
