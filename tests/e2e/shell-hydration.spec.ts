@@ -3,12 +3,13 @@ import { waitForHydration } from './_helpers/hydration';
 
 const SHELL_CHROME = '.shell-chrome';
 const SHELL_FORM = '[data-testid="shell-form"]';
-const SETTLE_FRAMES = 40;
+const OBSERVE_WINDOW_MS = 1500;
+const MIN_FRAMES = 3;
 const SUBPIXEL_PX = 1;
 
 declare global {
   interface Window {
-    __shellWatch: { gaps: number; heights: number[] };
+    __shellWatch: { gaps: number; heights: number[]; frames: number; hydrated: boolean };
   }
 }
 
@@ -16,30 +17,62 @@ test.describe('the server-rendered shell survives hydration', () => {
   test.beforeEach(async ({ page }) => {
     await page.addInitScript(
       ([chrome]) => {
-        window.__shellWatch = { gaps: 0, heights: [] };
-        let painted = false;
-        const watch = () => {
+        const watch = { gaps: 0, heights: [] as number[], frames: 0, hydrated: false };
+        window.__shellWatch = watch;
+        let tracked: Element | null = null;
+        const sizes = new ResizeObserver(() => {
+          if (!tracked) return;
+          const { height } = tracked.getBoundingClientRect();
+          if (height > 0) watch.heights.push(height);
+        });
+        const track = () => {
           const node = document.querySelector(chrome);
-          if (node) {
-            painted = true;
-            const { height } = node.getBoundingClientRect();
-            if (height > 0) window.__shellWatch.heights.push(height);
-          } else if (painted) window.__shellWatch.gaps += 1;
-          requestAnimationFrame(watch);
+          if (node === tracked) return;
+          if (tracked) sizes.unobserve(tracked);
+          tracked = node;
+          if (node) sizes.observe(node);
         };
-        requestAnimationFrame(watch);
+        new MutationObserver((records) => {
+          const previous = tracked;
+          if (previous) {
+            const removed = records.some((record) =>
+              Array.from(record.removedNodes).some((node) => node.contains(previous)),
+            );
+            if (removed && (watch.hydrated || !document.querySelector(chrome))) watch.gaps += 1;
+          }
+          track();
+        }).observe(document, { childList: true, subtree: true });
+        const frame = () => {
+          watch.frames += 1;
+          requestAnimationFrame(frame);
+        };
+        requestAnimationFrame(frame);
       },
       [SHELL_CHROME] as const,
     );
     await page.goto('/');
     await page.waitForSelector(SHELL_FORM, { state: 'attached' });
     await waitForHydration(page, SHELL_FORM);
-    const framesAtHydration = await page.evaluate(() => window.__shellWatch.heights.length);
-    await expect
-      .poll(() => page.evaluate(() => window.__shellWatch.heights.length), {
-        message: 'the shell watcher stopped sampling frames after hydration',
-      })
-      .toBeGreaterThanOrEqual(framesAtHydration + SETTLE_FRAMES);
+    const framesAtHydration = await page.evaluate(() => {
+      window.__shellWatch.hydrated = true;
+      return window.__shellWatch.frames;
+    });
+    await page.evaluate(
+      ([windowMs, minFrames, framesBefore]) =>
+        new Promise<void>((resolve) => {
+          const deadline = performance.now() + windowMs;
+          const check = () => {
+            if (
+              performance.now() >= deadline &&
+              window.__shellWatch.frames >= framesBefore + minFrames
+            )
+              resolve();
+            else requestAnimationFrame(check);
+          };
+          check();
+        }),
+      [OBSERVE_WINDOW_MS, MIN_FRAMES, framesAtHydration] as const,
+    );
   });
 
   test('once the shell is painted it stays in the document through hydration', async ({ page }) => {
