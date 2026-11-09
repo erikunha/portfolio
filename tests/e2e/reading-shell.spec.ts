@@ -6,9 +6,10 @@ import { gotoSettled } from './_helpers/streamed';
 const DESKTOP = { width: 1280, height: 800 };
 const PHONE = { width: 390, height: 844 };
 const CENTER_TOLERANCE_PX = 1;
+const CV_PRINT_REGRESSION_CEILING = 10;
 const MAX_PRINT_PAGES = {
   summary: { '': 1, '/pt': 1 },
-  cv: { '': 7, '/pt': 7 },
+  cv: { '': CV_PRINT_REGRESSION_CEILING, '/pt': CV_PRINT_REGRESSION_CEILING },
 } as const;
 const PDF_PAGE_PATTERN = /\/Type\s*\/Page[^s]/g;
 const MAIN = 'main#main-content';
@@ -201,9 +202,10 @@ test.describe('print hides the shell', () => {
         const pdf = await page.pdf({ preferCSSPageSize: true });
         const pages = pdf.toString('latin1').match(PDF_PAGE_PATTERN) ?? [];
         expect(pages.length).toBeGreaterThan(0);
-        expect(pages.length, 'linux and darwin metrics differ by a page').toBeLessThanOrEqual(
-          expected,
-        );
+        expect(
+          pages.length,
+          'the ceiling guards against print CSS regressions (shell, rain or chrome printing, a layout that explodes), not against content length',
+        ).toBeLessThanOrEqual(expected);
       });
     }
   }

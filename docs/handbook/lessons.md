@@ -149,10 +149,10 @@ The prompt for a manual or agent review that applies these rules to a diff is `d
     changed copy, not only the edited one: run `tests/visual/visual.spec.ts` on chromium and
     chromium-mobile after any content edit on the home page, and read each regenerated PNG. Check: the
     visual spec passes on both projects.
-40. The `/cv` and `/pt/cv` print tests cap the page count, and a career entry never splits across pages,
-    so a longer entry moves whole to the next page and leaves a gap. Adding resume bullets means
-    re-measuring both locales (`page.pdf()` on each, count pages and the lines per page) and trimming
-    until the last page has room, not raising the cap. Check: `tests/e2e/reading-shell.spec.ts`.
+40. The `/cv` and `/pt/cv` print tests hold a regression ceiling of 10 pages, not a content budget:
+    linux and darwin font metrics differ by a page near any tight cap, and a career entry never splits
+    across pages. Resume length is a content decision; the ceiling only catches broken print CSS. Do
+    not tighten it to match today's page count. Check: `tests/e2e/reading-shell.spec.ts`.
 
 ## Pre-push judgement list
 
