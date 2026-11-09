@@ -57,6 +57,7 @@ jobs:
       - name: Health check - canonical /api/healthz never 308 (200 ok or 503 degraded)
         env:
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          ALERT_EMAIL: ${{ secrets.ALERT_EMAIL }}
         run: |
           http_code=$(curl --max-time 30 --retry 2 --retry-connrefused --silent --show-error \
             --head \
@@ -77,17 +78,17 @@ jobs:
             healthz_body=$(curl --max-time 15 --silent --show-error \
               "${CANONICAL_HOST}/api/healthz" 2>&1 || echo "(body unavailable)")
             echo "Healthz 503 body: ${healthz_body}"
-            if [ -n "$RESEND_API_KEY" ]; then
+            if [ -n "$RESEND_API_KEY" ] && [ -n "$ALERT_EMAIL" ]; then
               echo "Sending alert email via Resend."
               resend_resp=$(curl --max-time 15 --silent --show-error --fail-with-body \
                 --request POST \
                 --url "https://api.resend.com/emails" \
                 --header "Authorization: Bearer $RESEND_API_KEY" \
                 --header "Content-Type: application/json" \
-                --data "{\"from\":\"monitor@erikunha.dev\",\"to\":[\"erikhenriquealvescunha@gmail.com\"],\"subject\":\"[erikunha.dev] healthz 503, degraded state post-deploy\",\"text\":\"Post-deploy smoke detected healthz 503 at ${CANONICAL_HOST}/api/healthz. Possible causes: (1) Upstash Redis unavailable (rate limiting fails open, budget enforcement fails closed); (2) PSI data stale: PageSpeed cache miss. Check Upstash dashboard and /api/healthz response body for the specific degraded field. This is not a deploy failure - the site is serving. It is a monitoring degradation.\"}" \
+                --data "{\"from\":\"monitor@erikunha.dev\",\"to\":[\"${ALERT_EMAIL}\"],\"subject\":\"[erikunha.dev] healthz 503, degraded state post-deploy\",\"text\":\"Post-deploy smoke detected healthz 503 at ${CANONICAL_HOST}/api/healthz. Possible causes: (1) Upstash Redis unavailable (rate limiting fails open, budget enforcement fails closed); (2) PSI data stale: PageSpeed cache miss. Check Upstash dashboard and /api/healthz response body for the specific degraded field. This is not a deploy failure - the site is serving. It is a monitoring degradation.\"}" \
                 --write-out '\nHTTP %{http_code}' 2>&1) || echo "WARNING: could not send alert email (Resend error: ${resend_resp})"
             else
-              echo "WARNING: RESEND_API_KEY not set, cannot send alert email. Check repo secrets."
+              echo "WARNING: RESEND_API_KEY and ALERT_EMAIL must both be set, cannot send alert email. Check repo secrets."
             fi
           fi
 
