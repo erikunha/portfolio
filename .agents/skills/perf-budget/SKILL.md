@@ -6,8 +6,9 @@ description: Diagnose and fix a failing or shrinking performance budget in this 
 # Performance budget
 
 The budgets are enforced by `pnpm route-js-check`, `pnpm bundle-check`, `lighthouserc.json`,
-`lighthouserc.mobile.json` and browser tests. INP is measured in browser tests, not Lighthouse.
-Fix the measured property. Never raise a threshold, drop an audit or hide code from a checker.
+`lighthouserc.mobile.json` and browser tests. The Lighthouse INP audit is off; the only INP guard is
+the shell input keystroke check in `tests/e2e/cross-cutting.spec.ts` (Chromium). `__tests__/lighthouse-budgets.test.ts`
+fails when a Lighthouse assertion is lowered, warned or turned off. Fix the measured property. Never raise a threshold, drop an audit or hide code from a checker.
 
 ## Which gate speaks
 
@@ -36,6 +37,11 @@ Fix the measured property. Never raise a threshold, drop an audit or hide code f
   against the app-owned headroom.
 - The Matrix dialog loop mutates `useRef.textContent`. Moving it to per-keystroke state breaks INP.
 - Vercel Speed Insights and Web Analytics are the only analytics. Do not add another script.
+
+## Running the gates together
+
+`pnpm gates:runtime` builds, starts a server and runs Lighthouse (advisory), axe and the Chromium
+cross-cutting and observability e2e specs. `pnpm gates:runtime --skip-build` reuses an existing `.next/`.
 
 ## Evidence
 

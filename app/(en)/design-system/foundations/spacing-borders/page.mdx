@@ -9,7 +9,7 @@ export const metadata = dsPageMetadata({
 
 # SPACING-BORDERS
 
-<OnThisPage items={[{id:'spacing',label:'Spacing'},{id:'phi',label:'Golden ratio'},{id:'target',label:'Touch target'},{id:'borders',label:'Borders'},{id:'focus',label:'Focus'}]} />
+<OnThisPage items={[{id:'spacing',label:'Spacing'},{id:'phi',label:'Golden ratio'},{id:'target',label:'Touch target'},{id:'layout',label:'Layout tokens'},{id:'borders',label:'Borders'},{id:'focus',label:'Focus'}]} />
 
 Spacing and border tokens live in `app/css/theme.css`.
 
@@ -49,9 +49,11 @@ Page rhythm steps through one set of tokens, each the previous times `--phi` (1.
 | `--phi-space-2` | `--phi-space-1` × `--phi` | 13px |
 | `--phi-space-3` | `--phi-space-2` × `--phi` | 21px |
 | `--phi-space-4` | `--phi-space-3` × `--phi` | 34px |
-| `--phi-text-1` | `--text-xs` × `--phi-root` (1.272) | about 15px |
+| `--phi-text-1` | `--text-xs` × `--phi-root` (1.272) | about 15px below 768px, 16.5px from 768px |
 | `--phi-inv` | 1 ÷ `--phi` | 0.618 |
-| `--phi-pair-columns` | `minmax(0, 1.618fr) minmax(0, 1fr)` | 1.618 : 1 |
+| `--phi-pair-columns` | `minmax(0, 1.618fr) minmax(0, 1fr)` | 1.618 : 1, major column first |
+| `--phi-pair-columns-minor-first` | `minmax(0, 1fr) minmax(0, 1.618fr)` | 1 : 1.618, minor column first |
+| `--phi-pair-flex-minor` | `0 0 calc((1 - var(--phi-inv)) * 100%)` | the minor share of a flex row |
 
 <Preview id="phi-space">
   <div style={{display:'grid',gap:'8px',width:'100%'}}>
@@ -73,7 +75,7 @@ Whole-page type does not use phi: a 1.618 step from a 12px base jumps to 19px an
 
 <h2 id="target">Touch target</h2>
 
-`--spacing-target` is 44px, the minimum width and height of every control. `--spacing-target-compact` is 28px for dense, non-primary controls.
+`--spacing-target` is 44px, the minimum width and height of every control. `--spacing-target-compact` is 28px for dense, non-primary controls. `--spacing-target-pointer` is 36px, the row height of the section menu from 1024px with a fine pointer.
 
 <h2 id="layout">Layout tokens</h2>
 
