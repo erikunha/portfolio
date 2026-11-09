@@ -56,7 +56,7 @@ describe('ci.yml ci-gate fan-in invariants', () => {
       Object.fromEntries(Object.entries(results).map(([k, result]) => [k, { result }])),
     );
     const out = spawnSync(process.execPath, ['-e', gateScript], {
-      env: { PATH: process.env.PATH ?? '', NEEDS_JSON: needsJson },
+      env: { PATH: process.env.PATH ?? '', NODE_ENV: 'test', NEEDS_JSON: needsJson },
       encoding: 'utf8',
     });
     return out.status ?? -1;
