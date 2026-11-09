@@ -1,6 +1,6 @@
 ## Summary
 
-<!-- What changed and why. 2-3 bullets — give the reviewer the context, don't just restate the title. -->
+<!-- What changed and why. 2-3 bullets: give the reviewer the context, don't just restate the title. -->
 <!-- Link issues this resolves, e.g. "Closes #123" / "Fixes #123". Omit if none. -->
 
 -
@@ -8,12 +8,12 @@
 
 ## Type of change
 
-- [ ] `feat` — new functionality
-- [ ] `fix` — bug fix
-- [ ] `refactor` — no behaviour change
-- [ ] `perf` — performance improvement
-- [ ] `chore` / `ci` / `docs` — non-functional
-- [ ] ⚠️ **breaking change** — describe the impact, migration, and rollback in Summary
+- [ ] `feat`: new functionality
+- [ ] `fix`: bug fix
+- [ ] `refactor`: no behaviour change
+- [ ] `perf`: performance improvement
+- [ ] `chore` / `ci` / `docs`: non-functional
+- [ ] **breaking change**: describe the impact, migration, and rollback in Summary
 
 ## Test plan
 
@@ -21,8 +21,9 @@
      screenshots. Assertions without evidence will be questioned. -->
 
 - [ ] `pnpm ci:local` passes
+- [ ] `pnpm bundle-check`, `pnpm route-js-check` and `pnpm gates:runtime` pass (skip for docs-only changes)
 - [ ] New behaviour covered by tests
-- [ ] Evidence attached where it applies (output / screenshots / before→after / benchmark)
+- [ ] Evidence attached where it applies (output / screenshots / before and after / benchmark)
 
 ## Visual changes
 
@@ -30,16 +31,17 @@
 
 - [ ] Before / after screenshots (or recording) attached
 - [ ] Desktop (1280×720) + Mobile (375×812) checked in a browser
-- [ ] Visual-regression baselines regenerated (if any captured section changed)
+- [ ] Visual-regression baselines regenerated (if a section captured by `tests/visual/visual.spec.ts` or `tests/e2e/design-system-components.spec.ts` changed)
 - [ ] No visual regressions introduced
 
 ## Checklist
 
 - [ ] No hardcoded hex values / magic numbers (token boundary)
 - [ ] No `use client` added without necessity (RSC drift)
-- [ ] Bundle size impact assessed (`pnpm bundle-check`)
+- [ ] Bundle size impact assessed (`pnpm bundle-check`, `pnpm route-js-check`)
 - [ ] A11y impact considered (axe-core will gate in CI)
-- [ ] If performance-affecting: bundle-size delta + Lighthouse/CWV before→after noted
+- [ ] If performance-affecting: bundle-size delta + Lighthouse/CWV before and after noted
 - [ ] Security impact considered (no secrets, input validated, rate limits intact)
-- [ ] Reversible — a rollback path exists (revert SHA, or an ADR reversibility note)
+- [ ] Docs, diagrams and screenshots that describe the change are updated
+- [ ] Reversible: a rollback path exists (revert SHA, or an ADR reversibility note)
 - [ ] ADR added to `DECISIONS.md` if this changes architecture
