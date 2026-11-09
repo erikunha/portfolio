@@ -1,0 +1,11 @@
+@layer utilities {
+  .module-heading {
+    flex-wrap: wrap;
+  }
+
+  .module-heading > .module-name ~ .module-scroll-type {
+    color: var(--color-text-secondary);
+    font-size: var(--text-sm);
+    font-weight: 700;
+  }
+}

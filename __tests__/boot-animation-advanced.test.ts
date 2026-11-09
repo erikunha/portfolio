@@ -302,3 +302,61 @@ describe('buildDesktopOnFirstLoop', () => {
     document.body.removeChild(section);
   });
 });
+
+describe('buildDesktopOnFirstLoop: settling an unfinished beat', () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.restoreAllMocks();
+    document.documentElement.classList.remove('sysfail-on');
+  });
+
+  it('ends the beat at once and leaves no timer when the hero goes away mid-failure', () => {
+    const el = document.createElement('div');
+    const section = document.createElement('section');
+    section.appendChild(el);
+    document.body.appendChild(section);
+    vi.spyOn(section, 'getBoundingClientRect').mockReturnValue({
+      top: 100,
+      bottom: 200,
+    } as DOMRect);
+    const ctrlRef: { current: BootCtrl | null } = {
+      current: { cancel: vi.fn(), pauseDialog: vi.fn(), resumeDialog: vi.fn() },
+    };
+    const hideSpy = vi.fn();
+    const endSpy = vi.fn();
+    window.addEventListener('hero:sysfail:hide', hideSpy);
+    window.addEventListener('sysfail:end', endSpy);
+
+    const beat = buildDesktopOnFirstLoop(el, ctrlRef, { shake: 'shake', shake2: 'shake2' });
+    beat();
+    expect(document.documentElement.classList.contains('sysfail-on')).toBe(true);
+    beat.settle();
+
+    expect(
+      endSpy,
+      'sysfail:end releases the matrix rain, so a cancelled beat must still send it',
+    ).toHaveBeenCalledTimes(1);
+    expect(hideSpy).toHaveBeenCalledTimes(1);
+    expect(document.documentElement.classList.contains('sysfail-on')).toBe(false);
+    expect(vi.getTimerCount()).toBe(0);
+
+    window.removeEventListener('hero:sysfail:hide', hideSpy);
+    window.removeEventListener('sysfail:end', endSpy);
+    document.body.removeChild(section);
+  });
+
+  it('settling a beat that never started does nothing', () => {
+    const el = document.createElement('div');
+    const ctrlRef: { current: BootCtrl | null } = { current: null };
+    const endSpy = vi.fn();
+    window.addEventListener('sysfail:end', endSpy);
+    const beat = buildDesktopOnFirstLoop(el, ctrlRef, { shake: 'shake', shake2: 'shake2' });
+    beat.settle();
+    expect(endSpy).not.toHaveBeenCalled();
+    window.removeEventListener('sysfail:end', endSpy);
+  });
+});

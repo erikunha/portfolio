@@ -1,28 +1,21 @@
 import { z } from 'zod';
 
+import { askLogDatesInTtl, askLogKey } from '@/lib/ask-log';
+import { contactMessageKey, removePendingContact } from '@/lib/contact-outbox';
 import { log } from '@/lib/log';
 import { getForgetLimit, getRedis } from '@/lib/rate-limit';
 import { defineHandler, err, ok } from '@/lib/server/route';
 
 const ForgetPayload = z.object({
-  requestId: z.string().uuid(),
+  requestId: z.uuid().toLowerCase(),
 });
 
+const MAX_FORGET_BODY_BYTES = 1024;
 const SMOKE_UUID = '00000000-0000-4000-8000-000000000000';
 
-function lastNDates(n: number): string[] {
-  const out: string[] = [];
-  const now = new Date();
-  for (let i = 0; i < n; i++) {
-    const d = new Date(now);
-    d.setUTCDate(d.getUTCDate() - i);
-    out.push(d.toISOString().slice(0, 10));
-  }
-  return out;
-}
-
-export const POST = defineHandler({
+const handleForget = defineHandler({
   schema: ForgetPayload,
+  maxBodyBytes: MAX_FORGET_BODY_BYTES,
   rateLimit: getForgetLimit,
   rateLimitErrorMessage: 'too many forget requests',
   async handler({ body, requestId }) {
@@ -32,11 +25,15 @@ export const POST = defineHandler({
       return ok({ requestId });
     }
 
-    const candidateKeys = lastNDates(90).map((d) => `ask:log:${d}:${targetRequestId}`);
+    const candidateKeys = [
+      ...askLogDatesInTtl(new Date()).map((date) => askLogKey(date, targetRequestId)),
+      contactMessageKey(targetRequestId),
+    ];
 
     let deleted = 0;
     try {
       deleted = await getRedis().del(...candidateKeys);
+      await removePendingContact(targetRequestId);
     } catch (kvErr) {
       log.error('forget KV delete failed', { requestId, targetRequestId, err: kvErr });
       return err({
@@ -51,3 +48,5 @@ export const POST = defineHandler({
     return ok({ requestId });
   },
 });
+
+export const POST = handleForget;

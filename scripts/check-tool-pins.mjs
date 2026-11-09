@@ -72,7 +72,7 @@ export const PINS = [
     file: CI_YAML,
     pattern: /GITLEAKS_VERSION:\s*(\d+\.\d+\.\d+)/,
     latest: latestGitleaks,
-    bumpHint: `bump GITLEAKS_VERSION in ${CI_YAML} (the install step derives the sha256 from the release checksums.txt automatically)`,
+    bumpHint: `bump GITLEAKS_VERSION in ${CI_YAML} and GITLEAKS_SHA256 with it (the sha256 of gitleaks_<version>_linux_x64.tar.gz in the release's checksums.txt; a mismatch fails the install step)`,
   },
   {
     name: 'semgrep',
@@ -83,7 +83,7 @@ export const PINS = [
   },
 ];
 
-import { readFileSync } from 'node:fs';
+import { readFileSync, realpathSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
 
 async function statusOf(pin) {
@@ -126,7 +126,7 @@ const oneLine = (text) => String(text).replace(/[\r\n]+/g, ' ');
 
 if (
   typeof process.argv[1] === 'string' &&
-  import.meta.url === pathToFileURL(process.argv[1]).href
+  import.meta.url === pathToFileURL(realpathSync(process.argv[1])).href
 ) {
   main().catch((error) => {
     console.error(`::error::${oneLine(error.message)}`);

@@ -6,15 +6,23 @@ const withMDX = createMDX({
     remarkPlugins: [
       [`${process.cwd()}/lib/mdx/remark-gfm-wrapper.mjs`, {}],
       [`${process.cwd()}/lib/mdx/remark-preview-source.mjs`, {}],
+      [`${process.cwd()}/lib/mdx/remark-table-caption.mjs`, {}],
     ],
     rehypePlugins: [['rehype-pretty-code', { theme: 'github-dark-dimmed' }]],
   },
 });
 
+const ISO_DATE_LENGTH = 10;
+const BUILD_DATE = new Date().toISOString().slice(0, ISO_DATE_LENGTH);
+
 const nextConfig: NextConfig = {
+  env: { BUILD_DATE },
+  poweredByHeader: false,
   pageExtensions: ['ts', 'tsx', 'mdx'],
   cacheComponents: true,
+  partialPrefetching: true,
   typedRoutes: true,
+  experimental: { agentFeedback: false },
   trailingSlash: false,
   images: {
     remotePatterns: [{ protocol: 'https', hostname: 'i.ytimg.com', pathname: '/vi/**' }],

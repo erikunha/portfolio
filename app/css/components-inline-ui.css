@@ -1,0 +1,65 @@
+@layer components {
+  .kbd-key {
+    background: var(--color-glow-06);
+    margin: 0 var(--spacing-1);
+    letter-spacing: 0;
+    vertical-align: 1px;
+  }
+
+  .cam-corners {
+    position: absolute;
+    inset: var(--spacing-2);
+    pointer-events: none;
+    z-index: var(--z-local-above);
+  }
+
+  .cam-corners::before,
+  .cam-corners::after,
+  .cam-corners > i::before,
+  .cam-corners > i::after {
+    content: "";
+    position: absolute;
+    width: 14px;
+    height: 14px;
+    border: 1px solid var(--color-primary-500);
+  }
+
+  .cam-corners::before {
+    top: 0;
+    left: 0;
+    border-right: 0;
+    border-bottom: 0;
+  }
+
+  .cam-corners::after {
+    top: 0;
+    right: 0;
+    border-left: 0;
+    border-bottom: 0;
+  }
+
+  .cam-corners > i {
+    position: absolute;
+    inset: 0;
+  }
+
+  .cam-corners > i::before {
+    bottom: 0;
+    left: 0;
+    border-right: 0;
+    border-top: 0;
+    top: auto;
+  }
+
+  .cam-corners > i::after {
+    bottom: 0;
+    right: 0;
+    border-left: 0;
+    border-top: 0;
+    top: auto;
+  }
+
+  .signal-chain-arrow::before {
+    content: "\2500\2500\25b6";
+  }
+}

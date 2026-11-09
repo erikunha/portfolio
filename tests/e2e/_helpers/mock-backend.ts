@@ -1,5 +1,10 @@
 import type { Page } from '@playwright/test';
+import { askErrors } from '../../../content/ask-errors';
+import { profile } from '../../../content/profile';
+import { SITE_LOCALE } from '../../../content/site-locale';
 import { STREAM_ERR_SENTINEL } from '../../../lib/stream-protocol';
+
+export const MOCK_ASK_ANSWER = `Erik is a ${profile.title} with 8+ years of experience.`;
 
 export type MockState = {
   ask?:
@@ -7,12 +12,14 @@ export type MockState = {
     | 'kill-switch'
     | 'rate-limit'
     | 'budget-exhausted'
-    | 'stream-error'
-    | 'pre-stream-timeout';
-  contact?: 'happy' | 'validation-error' | 'rate-limit' | 'server-error' | 'honeypot';
+    | 'budget-daily'
+    | 'stream-error';
+  contact?: 'happy' | 'queued' | 'validation-error' | 'rate-limit' | 'server-error' | 'honeypot';
   log?: 'accept' | 'rate-limit' | 'storage-unavailable';
   forget?: 'happy' | 'not-found';
 };
+
+const EN = askErrors[SITE_LOCALE.en];
 
 export async function installMockBackend(page: Page, state: MockState = {}): Promise<void> {
   await page.route('**/api/ask', async (route) => {
@@ -22,9 +29,7 @@ export async function installMockBackend(page: Page, state: MockState = {}): Pro
       await route.fulfill({
         status: 503,
         contentType: 'application/json',
-        body: JSON.stringify({
-          error: 'temporarily unavailable — email erikhenriquealvescunha@gmail.com directly',
-        }),
+        body: JSON.stringify({ error: EN.unavailable }),
       });
       return;
     }
@@ -33,7 +38,7 @@ export async function installMockBackend(page: Page, state: MockState = {}): Pro
       await route.fulfill({
         status: 429,
         contentType: 'application/json',
-        body: JSON.stringify({ error: 'rate limit exceeded — try again in an hour' }),
+        body: JSON.stringify({ error: EN.rateLimited }),
       });
       return;
     }
@@ -42,26 +47,22 @@ export async function installMockBackend(page: Page, state: MockState = {}): Pro
       await route.fulfill({
         status: 503,
         contentType: 'application/json',
-        body: JSON.stringify({
-          error: 'monthly budget exhausted — email erikhenriquealvescunha@gmail.com directly',
-        }),
+        body: JSON.stringify({ error: EN.budget }),
+      });
+      return;
+    }
+
+    if (s === 'budget-daily') {
+      await route.fulfill({
+        status: 503,
+        contentType: 'application/json',
+        body: JSON.stringify({ error: EN.budgetDaily }),
       });
       return;
     }
 
     if (s === 'stream-error') {
-      const body = `${STREAM_ERR_SENTINEL}upstream error`;
-      await route.fulfill({
-        status: 200,
-        contentType: 'text/plain; charset=utf-8',
-        headers: { 'X-Request-Id': crypto.randomUUID() },
-        body,
-      });
-      return;
-    }
-
-    if (s === 'pre-stream-timeout') {
-      const body = `${STREAM_ERR_SENTINEL}Request Timeout`;
+      const body = `${STREAM_ERR_SENTINEL}${EN.interrupted}`;
       await route.fulfill({
         status: 200,
         contentType: 'text/plain; charset=utf-8',
@@ -76,7 +77,7 @@ export async function installMockBackend(page: Page, state: MockState = {}): Pro
         status: 200,
         contentType: 'text/plain; charset=utf-8',
         headers: { 'X-Request-Id': 'test-request-id-abc123' },
-        body: 'Erik is a Senior Full-Stack Engineer with 8+ years of experience.',
+        body: MOCK_ASK_ANSWER,
       });
       return;
     }
@@ -91,7 +92,24 @@ export async function installMockBackend(page: Page, state: MockState = {}): Pro
       await route.fulfill({
         status: 200,
         contentType: 'application/json',
-        body: JSON.stringify({ ok: true }),
+        body: JSON.stringify({ ok: true, requestId: 'contact-test-request-id' }),
+      });
+      return;
+    }
+
+    if (s === 'queued') {
+      await route.fulfill({
+        status: 202,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          ok: false,
+          requestId: 'contact-test-request-id',
+          error: {
+            code: 'queued',
+            message:
+              'saved, not delivered yet; delivery is retried automatically; for a faster reply use LinkedIn',
+          },
+        }),
       });
       return;
     }
@@ -100,7 +118,11 @@ export async function installMockBackend(page: Page, state: MockState = {}): Pro
       await route.fulfill({
         status: 400,
         contentType: 'application/json',
-        body: JSON.stringify({ error: 'name is required' }),
+        body: JSON.stringify({
+          ok: false,
+          requestId: 'contact-test-request-id',
+          error: { code: 'validation_failed', message: 'name is required' },
+        }),
       });
       return;
     }
@@ -109,7 +131,11 @@ export async function installMockBackend(page: Page, state: MockState = {}): Pro
       await route.fulfill({
         status: 429,
         contentType: 'application/json',
-        body: JSON.stringify({ error: 'too many requests — try again in 10 minutes' }),
+        body: JSON.stringify({
+          ok: false,
+          requestId: 'contact-test-request-id',
+          error: { code: 'rate_limited', message: 'too many requests, try again in 10 minutes' },
+        }),
       });
       return;
     }
@@ -118,7 +144,11 @@ export async function installMockBackend(page: Page, state: MockState = {}): Pro
       await route.fulfill({
         status: 502,
         contentType: 'application/json',
-        body: JSON.stringify({ error: 'storage unavailable — try again' }),
+        body: JSON.stringify({
+          ok: false,
+          requestId: 'contact-test-request-id',
+          error: { code: 'internal_error', message: 'internal server error' },
+        }),
       });
       return;
     }

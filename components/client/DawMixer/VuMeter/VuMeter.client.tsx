@@ -1,119 +1,79 @@
 'use client';
 
-import { useCallback, useRef } from 'react';
+import { useRef } from 'react';
+import { MeterSegment, meterSegmentState } from '@/lib/meter';
+import { PERCENT_RANGE, percentAlong } from '@/lib/slider';
+import { useDragSlider } from '../useDragSlider.client';
+
+const KEY_STEP_PCT = 5;
+const SEGMENT_CLASS = {
+  [MeterSegment.Red]: 'vuSegRed',
+  [MeterSegment.Filled]: 'vuSegFilled',
+  [MeterSegment.Empty]: 'vuSegEmpty',
+} as const;
 
 interface VuMeterProps {
   segments: number;
   initialLevel: number;
   clipping?: boolean;
   channelName: string;
+  label: string;
 }
 
-export function VuMeter({ segments, initialLevel, clipping = false, channelName }: VuMeterProps) {
+export function VuMeter({
+  segments,
+  initialLevel,
+  clipping = false,
+  channelName,
+  label,
+}: VuMeterProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const segmentRefs = useRef<(HTMLSpanElement | null)[]>([]);
-  const isDragging = useRef(false);
   const liveLevel = useRef(initialLevel);
-  const dragStartLevel = useRef(initialLevel);
 
-  const getSegmentClass = useCallback(
-    (i: number, currentLevel: number): string => {
-      const filledCount = Math.round((currentLevel / 100) * segments);
-      const isRed = clipping && currentLevel > 85 && i >= segments - 2 && i < filledCount;
-      if (isRed) return 'vuSegRed';
-      if (i < filledCount) return 'vuSegFilled';
-      return 'vuSegEmpty';
-    },
-    [segments, clipping],
-  );
+  const getSegmentClass = (index: number, level: number) =>
+    SEGMENT_CLASS[meterSegmentState(index, level, segments, clipping)];
 
-  const applyLevel = useCallback(
-    (newLevel: number) => {
-      liveLevel.current = newLevel;
-      const el = containerRef.current;
-      if (el) {
-        el.setAttribute('aria-valuenow', String(newLevel));
-        el.setAttribute('aria-valuetext', `${newLevel}%`);
-      }
-      segmentRefs.current.forEach((seg, i) => {
-        if (seg) seg.className = getSegmentClass(i, newLevel);
-      });
-    },
-    [getSegmentClass],
-  );
-
-  const getLevelFromPointer = useCallback((clientX: number): number | null => {
-    const rect = containerRef.current?.getBoundingClientRect();
-    if (!rect || rect.width === 0) return null;
-    return Math.max(0, Math.min(100, Math.round(((clientX - rect.left) / rect.width) * 100)));
-  }, []);
-
-  const onPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
-    dragStartLevel.current = liveLevel.current;
-    const newLevel = getLevelFromPointer(e.clientX);
-    try {
-      e.currentTarget.setPointerCapture(e.pointerId);
-      // biome-ignore lint/suspicious/noEmptyBlockStatements: intentional no-op
-    } catch {}
-    isDragging.current = true;
-    if (newLevel !== null) applyLevel(newLevel);
+  const applyLevel = (newLevel: number) => {
+    liveLevel.current = newLevel;
+    const el = containerRef.current;
+    if (el) {
+      el.setAttribute('aria-valuenow', String(newLevel));
+      el.setAttribute('aria-valuetext', `${newLevel}%`);
+    }
+    segmentRefs.current.forEach((seg, i) => {
+      if (seg) seg.className = getSegmentClass(i, newLevel);
+    });
   };
 
-  const onPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
-    if (!isDragging.current) return;
-    const newLevel = getLevelFromPointer(e.clientX);
-    if (newLevel !== null) applyLevel(newLevel);
-  };
-
-  const onPointerUp = () => {
-    isDragging.current = false;
-  };
-
-  const onPointerCancel = () => {
-    if (!isDragging.current) return;
-    isDragging.current = false;
-    applyLevel(dragStartLevel.current);
-  };
-
-  const filledCount = Math.round((initialLevel / 100) * segments);
+  const handlers = useDragSlider({
+    read: () => liveLevel.current,
+    apply: applyLevel,
+    valueAt: (event) => percentAlong(containerRef.current, event.clientX),
+    applyOnDown: true,
+    settleOn: 'live',
+    keys: { ...PERCENT_RANGE, step: KEY_STEP_PCT },
+  });
 
   return (
     <div
       ref={containerRef}
       role="slider"
-      aria-live="polite"
-      aria-atomic="true"
-      aria-label={`${channelName} VU meter demonstration, drag to adjust level`}
+      aria-label={`${channelName} ${label}`}
       aria-valuenow={initialLevel}
       aria-valuemin={0}
       aria-valuemax={100}
       aria-valuetext={`${initialLevel}%`}
       tabIndex={0}
       className="vu-meter"
-      onPointerDown={onPointerDown}
-      onPointerMove={onPointerMove}
-      onPointerUp={onPointerUp}
-      onPointerCancel={onPointerCancel}
-      onKeyDown={(e) => {
-        if (isDragging.current) return;
-        if (e.key === 'ArrowRight') {
-          e.preventDefault();
-          applyLevel(Math.min(100, liveLevel.current + 5));
-        }
-        if (e.key === 'ArrowLeft') {
-          e.preventDefault();
-          applyLevel(Math.max(0, liveLevel.current - 5));
-        }
-      }}
+      {...handlers}
     >
       {Array.from({ length: segments }, (_, i) => {
-        const isRed = clipping && initialLevel > 85 && i >= segments - 2 && i < filledCount;
-        const isFilled = i < filledCount;
-        const cls = isRed ? 'vuSegRed' : isFilled ? 'vuSegFilled' : 'vuSegEmpty';
+        const cls = getSegmentClass(i, initialLevel);
         const setRef = (el: HTMLSpanElement | null) => {
           segmentRefs.current[i] = el;
         };
-        // biome-ignore lint/suspicious/noArrayIndexKey: positional segments — no stable id exists
+        // biome-ignore lint/suspicious/noArrayIndexKey: positional segments, no stable id exists
         return <span key={i} ref={setRef} className={cls} />;
       })}
     </div>

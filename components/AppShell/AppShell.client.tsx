@@ -2,52 +2,60 @@
 
 import '@/lib/error-bridge.client';
 import type { ReactNode } from 'react';
-import { useBreakpoint } from '@/lib/use-breakpoint.client';
+import { MAIN_CONTENT_ID } from '@/components/PageMain';
+import type { SiteNavChrome } from '@/content/navigation';
+import type { SiteLocale } from '@/content/site-locale';
+import { OfflineNotice } from '../client/OfflineNotice';
 import { ToTopButton } from '../client/ToTopButton';
 import { ErrorBoundary } from '../ErrorBoundary';
 import { CRTOverlay } from '../responsive/CRTOverlay';
 import { DesktopTopbar } from '../responsive/DesktopTopbar';
 import { Dock } from '../responsive/Dock';
-import { MatrixRain } from '../responsive/MatrixRain';
 import { MobileTitleBar } from '../responsive/MobileTitleBar';
+import { PositionMeter } from '../responsive/PositionMeter';
+import { SectionNavigation, SectionNavigationProvider } from '../responsive/SectionNavigation';
 import { StatusBar } from '../responsive/StatusBar';
 
-export function AppShell({ children }: { children: ReactNode }) {
-  const { isMobile } = useBreakpoint();
-
+export function AppShell({
+  brand,
+  children,
+  drawerExtra,
+  chrome,
+  locale,
+  route,
+  skipLabel,
+}: {
+  brand: ReactNode;
+  children: ReactNode;
+  drawerExtra?: ReactNode;
+  chrome: SiteNavChrome;
+  locale: SiteLocale;
+  route?: string | undefined;
+  skipLabel: string;
+}) {
   return (
     <>
-      <a href="#main-content" className="skip-to-content">
-        Skip to main content
+      <a href={`#${MAIN_CONTENT_ID}`} className="skip-to-content">
+        {skipLabel}
       </a>
-      <ErrorBoundary>
-        <MatrixRain
-          fontSize={isMobile ? 14 : 16}
-          speed={isMobile ? 0.6 : 0.7}
-          style={{
-            position: 'fixed',
-            inset: 0,
-            pointerEvents: 'none',
-            zIndex: 0,
-            opacity: isMobile ? 0.22 : 0.28,
-          }}
-        />
-      </ErrorBoundary>
-      <ErrorBoundary>
-        <CRTOverlay />
-      </ErrorBoundary>
-      <div className="desktop-only">
-        <DesktopTopbar />
-      </div>
-      <div className="mobile-only">
-        <StatusBar />
-        <MobileTitleBar />
-      </div>
-      {children}
-      <div className="mobile-only">
+      <OfflineNotice copy={chrome.offline} />
+      <SectionNavigationProvider chrome={chrome} locale={locale} route={route ?? null}>
+        <SectionNavigation extra={drawerExtra} />
+        <ErrorBoundary fallback={null}>
+          <CRTOverlay />
+        </ErrorBoundary>
+        <div className="desktop-only">
+          <DesktopTopbar brand={brand} />
+        </div>
+        <div className="mobile-only">
+          <StatusBar />
+          <MobileTitleBar brand={brand} />
+        </div>
+        <div className="app-content">{children}</div>
         <Dock />
-      </div>
-      <ToTopButton />
+        <PositionMeter />
+        <ToTopButton />
+      </SectionNavigationProvider>
     </>
   );
 }

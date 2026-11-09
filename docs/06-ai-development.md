@@ -1,65 +1,63 @@
 # AI-Assisted Development
 
-> How AI participates in development. This repo treats Claude Code as a core engineering teammate. It used to govern that teammate with a bespoke enforcement layer of its own; as of 2026-07-27 it does not, and this doc is the map of what is left.
+> Project context, development checks and pull-request review.
 
 ## The layers
 
 ```mermaid
 flowchart TB
-    subgraph ctx["Context layer (what the agent knows)"]
-        cl["CLAUDE.md (project) + ~/.claude/CLAUDE.md (user)"]
-        rules[".claude/rules/*.md (path-scoped, load on matching files)"]
-        skills[".claude/skills/* (load on demand)"]
-        mem["auto memory: ~/.claude/projects/.../memory/MEMORY.md"]
+    subgraph ctx["Project context"]
+        cl["AGENTS.md (CLAUDE.md imports it)"]
+        rules[".claude/rules/*.md"]
+        skills[".agents/skills/* (linked into .claude/skills)"]
         docs["STANDARDS.md · ARCHITECTURE.md · DECISIONS.md"]
     end
-    subgraph enf["Enforcement layer (what the agent cannot bypass)"]
-        husky[".husky/* git hooks (pre-commit, pre-push)"]
-        gates["scripts/check-*.ts (CI + verify chain)"]
+    subgraph checks["Repository checks"]
+        commit["pre-commit: Biome + staged gitleaks"]
+        msg["commit-msg: commitlint"]
+        push["pre-push: target main guard + branch name + verify"]
+        ci["CI: static checks, tests, build, browser gates, secret scan"]
     end
-    ctx --> enf
+    ctx -. guides work .-> checks
+    commit --> msg
+    msg --> push --> ci
+    review["claude-review.yml: PR review<br/>runs only on a /claude-review comment,<br/>not gated on the CI workflow"]
 ```
 
-## Context layer
+## Context
 
-- **`CLAUDE.md` (project root)** - always loaded, kept under the 275-line cap enforced by `check:harness-size` (Anthropic guidance: <200 lines for adherence). It is an **index + always-true facts**, not procedures.
-- **`~/.claude/CLAUDE.md` (user, not in repo)** - the operator's global reasoning/skill-dispatch protocol.
-- **`.claude/rules/*.md`** - path-scoped rules with `paths:` frontmatter that load **only when the agent reads matching files**. Today: `api-boundary.md` (scopes `app/api/** | lib/rate-limit.ts | lib/server/** | proxy.ts`). This is the mechanism for keeping `CLAUDE.md` small (the "slot-routing" rule: gate > skill > memory > prose).
-- **`.claude/skills/*`** - load-on-demand procedures: `visual-baseline-regen`, `ai-eval-update`, `semgrep`, and the `speckit-*` flow.
-- **Auto memory** - `~/.claude/projects/<slug>/memory/MEMORY.md` (first 200 lines loaded each session); holds learned preferences and feedback.
+`AGENTS.md` names commands, standards and review conventions for Codex and Claude Code; `CLAUDE.md` imports it and adds the Claude-only lines. Path-scoped rules live in `.claude/rules/` (API boundary, components and CSS, CI and gate configuration). On-demand procedures live in `.agents/skills/` and are linked into `.claude/skills/`: visual baseline regeneration, AI eval maintenance, plan review, performance budgets, discovery surfaces, PR review and Semgrep.
 
-## Enforcement layer
+`check:harness-size` checks `AGENTS.md` and `CLAUDE.md` against the line budgets in `scripts/harness-size.json`. This is a size check, not proof that an agent follows the file.
 
-The load-bearing principle used to be **CLAUDE.md is advisory; anything that must hold is a hook.** The second half of that is no longer true here: **this repo has no `.claude/hooks/` and no `PreToolUse`/`PostToolUse` wiring in `settings.json`.** Six guards were removed on 2026-07-27 - `bash-guard` (broad `git add`, npm/yarn, `gh pr merge`, force-push-to-main), `api-security-push-guard`, `architect-gate`, `api-edit-marker`, `biome-format` and `session-context` - together with the meta-gate that checked they were wired.
+## Repository enforcement
 
-What survives is everything that does not depend on the agent runtime:
+`.claude/settings.json` holds only permission deny rules for broad `git add`, npm and yarn installs and local env reads, the rules `AGENTS.md` states with no exceptions. It registers no hooks: workflow hooks, review habits and tool choices are each engineer's own and live in their user-level configuration. Plan review and API review are conventions in `AGENTS.md`, not hook gates.
 
-- **`.husky/`**: `pre-commit` = Biome + `gitleaks --staged` + commitlint; `pre-push` = main-push guard, branch-name check, and the full `pnpm verify` chain.
-- **`scripts/check-*`**: the `verify` chain and CI - client-naming, dep-pinning, harness-size, section-order, doc-drift, detect-changes-paths, css-tokens, contrast, bundle-size, route-JS.
-- **CI**: Lighthouse, axe-core, Playwright, semgrep, gitleaks, CodeQL.
+Git hooks enforce separate stages:
+- `.husky/pre-commit` runs `pnpm check` and `pnpm gitleaks:staged`.
+- `.husky/commit-msg` runs commitlint against the message file.
+- `.husky/pre-push` rejects pushes targeting `main`, checks the branch name, and runs `pnpm verify`. Deletion-only pushes skip name and verification checks after the main-target guard.
 
-The trade this makes is explicit and worth naming: a git hook and a CI job constrain *the repository*, while a `PreToolUse` hook constrained *the agent mid-turn*. Nothing now blocks an agent from running a destructive command; the guard rails are at commit, push and CI time only.
+`package.json` defines the static chain. `.github/workflows/ci.yml` adds coverage, dependency review, build and JS budgets, Lighthouse, axe, Playwright, AI eval and secret scanning. Job conditions and the fan-in are described in [07-workflows.md](./07-workflows.md).
 
-## Review
+## Pull-request review
 
-**claude-review is the AI reviewer on pull requests.** `.github/workflows/claude-review.yml` runs `claude-code-action` (SHA-pinned) only when an owner, member or collaborator comments `/claude-review` on a PR, appending `.github/claude-review-prompt.md` as a system prompt. That prompt requires one `create_inline_comment` call per finding, anchored to a line the PR changed, and a complete review in a single pass rather than only the most salient issue. It closes with a `Verdict:` line that the optional `pnpm claude-gate` parses fail-closed. The review is never a merge requirement.
+`.github/workflows/claude-review.yml` configures the automated reviewer with `.github/claude-review-prompt.md` and `REVIEW.md`. It runs only when an owner, member or collaborator comments `/claude-review` on a PR and is never a merge requirement. A workflow step reds the job when the run posted no readable verdict. `pnpm pr:gate` checks review thread resolution and replies, and runs in `quality-fast`. Neither proves a local pre-PR review ran; how and when an engineer reviews locally is their own choice.
 
-**The local review battery is NOT restored.** The 4-agent battery, its findings ledger (`review:findings`) and the dispatch stamp (`review:stamp`) were removed on 2026-07-27 and stay removed. Pre-PR self-review is a discipline: read the diff, invoke `pr-review-toolkit:code-reviewer`, fix what it finds. `pnpm pr:gate` checks that every review thread is resolved and flags `suspicious_self_resolve`.
+## Evaluation tools
 
-## MCP servers
+`pnpm ask:eval` evaluates the `/api/ask` product with calibration, corpus cases and aggregate gates. Calibration gates judge agreement and the true-negative rate separately and reports the true-positive rate. It writes `ask-eval-result.json`; publishing the latest aggregate to Redis requires `EVAL_PUBLISH=1` plus Redis credentials, and only the scheduled `ask-eval.yml` and `agent-eval.yml` workflows set it. Every run removes the Redis credentials from its environment at start, so the in-process route never writes `ask:log`, `ask:guard` or refusal counters to production. With the flag set, the credentials come back only around the one `publishAggregate` call and are dropped again; without it they never come back, so a local run (including `vercel env run -- pnpm ask:eval`) never writes production data.
 
-| Server | Scope | Role |
-|---|---|---|
-| GitHub (`github` plugin) | user/plugin | PR/issue/CI access |
-| Vercel (`vercel` plugin) | user/plugin | deployments, logs, doc search |
-| Chrome DevTools (Google) | user/plugin | perf tracing / LCP debugging |
-| **Context7** (Upstash) | **project `.mcp.json`** | version-correct Next 16 / React 19 / AI SDK docs (read-only) |
-| Upstash | project `.mcp.json` | read-only Redis state inspection (scoped read-only key) |
+`pnpm eval:agents` evaluates platform prompts separately. Each run samples the target at `MONTE_CARLO_TEMPERATURE` (so pass@k and pass^k can differ), enforces the cost cap on the token usage the calls return, and writes `agent-eval-result.json` with a split gate: `harnessPassed` (calibration and budget), `casesPassed` (no non-known-hard case failed every run) and `abDegraded` (the `--ab` delta fell by more than its standard error). The run prints `GATE PASSED` and exits 0 only when all of them hold; the corresponding workflow is advisory, so a red run is a signal and blocks nothing. Neither command is a replacement for deterministic unit, type or browser checks.
 
-Context7 is the one repo-configured MCP; the GitHub/Vercel/Chrome ones are plugin-provided (the correct scope). The repo also *exposes* a read-only MCP server of its own at `/api/mcp` (a product feature, not a dev tool).
+## Project MCP configuration
 
-## Where to read more
+| Entry      | Transport                            | Purpose                                           |
+| ---------- | ------------------------------------ | ------------------------------------------------- |
+| `context7` | HTTP, `https://mcp.context7.com/mcp` | Documentation lookup                              |
+| `upstash`  | `npx @upstash/mcp-server@latest`     | Redis inspection using `UPSTASH_READONLY_API_KEY` |
 
-- `CLAUDE.md` → "Project agent dispatch", "Skill dispatch", "Working agreement" tables.
-- `STANDARDS.md` → each chapter names its enforcement mechanism.
-- `DECISIONS.md` 2026-07-27 → the ADRs for the harness prune and for removing the AI-review gate chain.
+Both entries are in `.mcp.json`. Registration does not establish a connected or working tool. Plugin and user-level server availability depends on the active runtime.
+
+The product also exposes `/api/mcp`, a separate read-only hiring-profile and question interface. See [05-api-and-integrations.md](./05-api-and-integrations.md).

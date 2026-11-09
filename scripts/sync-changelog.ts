@@ -4,25 +4,14 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import {
   type ChangelogGroups,
+  commitTypeToKind,
   mergeChangelogGroups,
   parseChangelogGroups,
-  renderChangelogGroups,
+  renderChangelogPage,
 } from './lib/changelog-merge';
 
 const ROOT = join(import.meta.dirname, '..');
-const CHANGELOG_PATH = join(ROOT, 'app/design-system/changelog/page.mdx');
-
-const HEADER = `import { dsPageMetadata } from '../_lib/page-metadata';
-
-export const metadata = dsPageMetadata({
-  slug: 'changelog',
-  title: 'Changelog — Design System — erikunha.dev',
-  description: 'Design system token and component changelog',
-});
-
-# CHANGELOG
-
-`;
+const CHANGELOG_PATH = join(ROOT, 'app/(en)/design-system/changelog/page.mdx');
 
 function parseCommits(): ChangelogGroups {
   const raw = execFileSync('git', ['log', '--format=%ad|%s', '--date=short', '--no-merges'], {
@@ -45,7 +34,9 @@ function parseCommits(): ChangelogGroups {
     const description = match[3];
     if (!type || !description) continue;
     if (!groups.has(date)) groups.set(date, []);
-    groups.get(date)?.push({ type, description, breaking: match[2] === '!' });
+    groups
+      .get(date)
+      ?.push({ kind: commitTypeToKind(type), description, breaking: match[2] === '!' });
   }
 
   return groups;
@@ -53,6 +44,6 @@ function parseCommits(): ChangelogGroups {
 
 const existing = parseChangelogGroups(readFileSync(CHANGELOG_PATH, 'utf8'));
 const merged = mergeChangelogGroups(existing, parseCommits());
-const content = `${HEADER}${renderChangelogGroups(merged)}\n`;
+const content = renderChangelogPage(merged);
 writeFileSync(CHANGELOG_PATH, content);
 console.log(`changelog: wrote ${merged.size} date group(s) to ${CHANGELOG_PATH}`);

@@ -2,12 +2,12 @@ import { describe, expect, it } from 'vitest';
 import { abDelta } from '@/lib/eval/ab';
 import type { CaseStats } from '@/lib/eval/montecarlo';
 
-function stat(id: string, mean: number): CaseStats {
+function stat(id: string, mean: number, runs = 5): CaseStats {
   const variance = mean * (1 - mean);
   return {
     id,
-    runs: 5,
-    passes: Math.round(mean * 5),
+    runs,
+    passes: Math.round(mean * runs),
     passAtK: mean > 0 ? 1 : 0,
     passHatK: mean === 1 ? 1 : 0,
     mean,
@@ -69,5 +69,39 @@ describe('lib/eval/ab abDelta', () => {
     expect(r.deltaMean).toBe(0);
     expect(r.deltaStddev).toBe(0);
     expect(r.degraded).toBe(false);
+  });
+
+  it('reports a standard error that shrinks as the runs per case grow', () => {
+    const few = abDelta(
+      [stat('a', 0.8, 3), stat('b', 0.8, 3)],
+      [stat('a', 0.7, 3), stat('b', 0.7, 3)],
+    );
+    const many = abDelta(
+      [stat('a', 0.8, 60), stat('b', 0.8, 60)],
+      [stat('a', 0.7, 60), stat('b', 0.7, 60)],
+    );
+    expect(few.deltaStderr).toBeGreaterThan(many.deltaStderr);
+    expect(many.deltaStderr).toBeGreaterThan(0);
+  });
+
+  it('does not flag a drop that sits inside the sampling noise', () => {
+    const r = abDelta(
+      [stat('a', 0.8, 3), stat('b', 0.8, 3)],
+      [stat('a', 0.7, 3), stat('b', 0.7, 3)],
+    );
+    expect(r.deltaMean).toBeCloseTo(-0.1, 10);
+    expect(r.degraded).toBe(false);
+  });
+
+  it('flags the same drop once enough runs make it distinguishable from noise', () => {
+    const r = abDelta(
+      [stat('a', 0.8, 60), stat('b', 0.8, 60)],
+      [stat('a', 0.7, 60), stat('b', 0.7, 60)],
+    );
+    expect(r.degraded).toBe(true);
+  });
+
+  it('has a zero standard error for empty arms', () => {
+    expect(abDelta([], []).deltaStderr).toBe(0);
   });
 });

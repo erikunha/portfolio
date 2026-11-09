@@ -15,11 +15,6 @@
     animation: boot-blink 1.05s steps(2, start) infinite;
   }
 
-  @media (prefers-reduced-motion: reduce) {
-    .boot-cursor {
-      animation: none;
-    }
-  }
   body[data-motion="reduce"] .boot-cursor {
     animation: none;
   }
@@ -39,83 +34,13 @@
   .badge-dot {
     width: 7px;
     height: 7px;
-    border-radius: 50%;
     background: var(--color-primary-500);
     flex-shrink: 0;
     animation: badge-pulse 1.6s ease-in-out infinite;
   }
 
-  @media (prefers-reduced-motion: reduce) {
-    .badge-dot {
-      animation: none;
-    }
-  }
   body[data-motion="reduce"] .badge-dot {
     animation: none;
-  }
-
-  .hero-desktop {
-    display: flex;
-  }
-
-  .hero-mobile {
-    display: block;
-  }
-
-  @media (max-width: 768px) {
-    .hero-desktop {
-      display: none;
-    }
-    .hero-mobile {
-      display: block;
-    }
-  }
-
-  @media (min-width: 769px) {
-    .hero-mobile {
-      display: none;
-    }
-  }
-
-  .hero-boot-desktop {
-    position: absolute;
-    left: 24px;
-    right: 24px;
-    top: 24px;
-    bottom: 24px;
-    z-index: 2;
-    color: var(--color-tertiary-50);
-    font-size: 14px;
-    line-height: 1.7;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-end;
-    text-shadow:
-      0 0 4px var(--color-secondary-950),
-      0 0 8px var(--color-secondary-950);
-  }
-
-  .hero-dialog-desktop {
-    position: absolute;
-    left: 24px;
-    right: 24px;
-    bottom: 24px;
-    z-index: 2;
-    font-size: 12px;
-    margin: 0;
-    color: var(--color-primary-500);
-    font-family: var(--font-mono);
-  }
-
-  .hero-boot-mobile {
-    color: var(--color-tertiary-50);
-    font-size: 12px;
-    line-height: 1.65;
-
-    height: 165px;
-    overflow: hidden;
-    margin: 0 0 12px;
   }
 
   @keyframes hero-shake-1 {
@@ -129,223 +54,26 @@
     }
   }
 
-  .hero-shake {
-    transform: translate(2px, -2px);
-  }
-
-  .hero-shake2 {
-    transform: translate(-2px, 1px);
-  }
-
-  .hero-boot-line {
-    display: block;
-  }
-
-  .hero-boot-ok {
-    color: var(--color-primary-500);
-  }
-
-  .hero-boot-enc {
-    color: var(--color-primary-500);
-    font-weight: 700;
-    text-shadow:
-      0 0 6px var(--color-glow-60),
-      0 0 4px var(--color-secondary-950);
-  }
-
-  .hero-boot-welcome {
-    color: var(--color-tertiary-50);
-    font-weight: 700;
-  }
-
-  .hero-boot-prompt {
-    color: var(--color-primary-400);
-  }
-
-  .hero-boot-cmd {
-    color: var(--color-tertiary-50);
-  }
-
-  .hero-boot-matrix-prefix {
-    color: var(--color-primary-400);
-    margin-right: 4px;
-  }
-
-  .hero-boot-matrix-out {
-    color: var(--color-primary-500);
-    text-shadow:
-      0 0 8px var(--color-glow-40),
-      0 0 4px var(--color-secondary-950);
-  }
-
-  .hero-sysfail {
-    position: fixed;
-    left: 50%;
-    top: 50%;
-    transform: translate(-50%, -50%);
-    z-index: 9999;
-    display: block;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 400ms ease-out;
-  }
-
-  .hero-sysfail-on {
-    opacity: 1;
-    transition: opacity 200ms ease-in;
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .hero-sysfail {
-      transition: none;
-    }
-  }
-
-  body[data-motion="reduce"] .hero-sysfail {
-    transition: none;
-  }
-
-  @keyframes dmesg-reveal {
-    from {
-      opacity: 0;
-      transform: translateY(2px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-
-  .dmesg-line {
-    opacity: 0;
-    transform: translateY(2px);
-  }
-
-  .dmesg-booted .dmesg-line {
-    animation: dmesg-reveal 220ms ease both;
-  }
-
-  @keyframes sd-halt-reveal {
-    from {
-      opacity: 0;
-      transform: translateY(2px);
-      box-shadow: none;
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-      box-shadow:
-        0 0 18px var(--color-glow-45),
-        0 0 40px var(--color-glow-15);
-    }
-  }
-
-  @keyframes sd-halt-hint-reveal {
-    from {
-      opacity: 0;
-    }
-    to {
-      opacity: 1;
-    }
-  }
-
-  .halt-plate {
-    opacity: 0;
-    transform: translateY(2px);
-  }
-
-  .halt-hint {
-    opacity: 0;
-  }
-
-  .halt-booted .halt-plate {
-    animation: sd-halt-reveal 280ms ease 660ms both;
-  }
-
-  .halt-booted .halt-hint {
-    animation: sd-halt-hint-reveal 280ms ease 840ms both;
-  }
-
-  body[data-motion="reduce"] .dmesg-line,
-  body[data-motion="reduce"] .dmesg-booted .dmesg-line,
-  body[data-motion="reduce"] .halt-plate,
-  body[data-motion="reduce"] .halt-booted .halt-plate,
-  body[data-motion="reduce"] .halt-hint,
-  body[data-motion="reduce"] .halt-booted .halt-hint {
-    opacity: 1;
-    transform: none;
-    transition: none;
-    animation: none;
-  }
-
-  body[data-motion="reduce"] .halt-booted .halt-plate {
-    box-shadow:
-      0 0 18px var(--color-glow-45),
-      0 0 40px var(--color-glow-15);
-  }
-
-  @keyframes barpulse {
-    0%,
-    100% {
-      opacity: 0.85;
-    }
-    50% {
-      opacity: 1;
-      box-shadow: 0 0 8px var(--color-primary-500);
-    }
-  }
-
-  .bar-pulse > i {
-    animation: barpulse 2.4s ease-in-out infinite;
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .bar-pulse > i {
-      animation: none;
-      opacity: 0;
-    }
-  }
-
-  body[data-motion="reduce"] .bar-pulse > i {
-    animation: none;
-    opacity: 0;
-  }
-
   @keyframes live-blink {
     to {
       opacity: 0;
     }
   }
 
-  .live-dot {
-    display: inline-block;
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: var(--color-primary-500);
-    margin-right: 8px;
-    vertical-align: -1px;
+  .status-dot {
+    flex: none;
+    display: block;
+    width: var(--status-dot-size, 6px);
+    height: var(--status-dot-size, 6px);
+    background: var(--status-dot-color, var(--color-primary-500));
+  }
+
+  .status-dot-blink {
     animation: live-blink 1.6s steps(2, start) infinite;
   }
 
-  @media (max-width: 768px) {
-    .live-dot {
-      width: 6px;
-      height: 6px;
-      margin-right: 6px;
-    }
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .live-dot {
-      animation: none;
-      opacity: 0;
-    }
-  }
-
-  body[data-motion="reduce"] .live-dot {
+  body[data-motion="reduce"] .status-dot-blink {
     animation: none;
-    opacity: 0;
   }
 
   @keyframes guitar-scan-beam {
@@ -375,15 +103,145 @@
     will-change: transform;
   }
 
-  @media (prefers-reduced-motion: reduce) {
-    .guitar-scan-beam {
-      animation: none;
-      display: none;
+  body[data-motion="reduce"] .guitar-scan-beam {
+    animation: none;
+    display: none;
+  }
+
+  @keyframes eq-bounce {
+    0%,
+    100% {
+      transform: scaleY(var(--eq-level-floor));
+    }
+    25% {
+      transform: scaleY(var(--eq-level-peak));
+    }
+    50% {
+      transform: scaleY(var(--eq-level-mid));
+    }
+    75% {
+      transform: scaleY(var(--eq-level-high));
+    }
+  }
+}
+
+@property --type-progress {
+  syntax: "<number>";
+  inherits: true;
+  initial-value: 1;
+}
+
+@layer components {
+  @keyframes type-reveal-progress {
+    from {
+      --type-progress: 0;
+    }
+    to {
+      --type-progress: 1;
     }
   }
 
-  body[data-motion="reduce"] .guitar-scan-beam {
-    animation: none;
+  @keyframes type-reveal-caret {
+    0%,
+    50% {
+      opacity: 1;
+    }
+    50.01%,
+    100% {
+      opacity: 0;
+    }
+  }
+
+  [data-type-reveal] {
+    position: relative;
+    inline-size: fit-content;
+    max-inline-size: 100%;
+  }
+
+  @media screen {
+    html.type-reveal-ready body:not([data-motion="reduce"]) [data-type-reveal] {
+      --type-progress: 0;
+      clip-path: inset(
+        0 calc((1 - var(--type-progress)) * 100% - var(--type-reveal-caret-width)) 0 0
+      );
+    }
+
+    html.type-reveal-ready
+      body:not([data-motion="reduce"])
+      [data-type-reveal].is-typed:not(.is-static) {
+      --type-progress: 1;
+      animation: type-reveal-progress
+        min(
+          calc(var(--type-chars, 1) * var(--type-reveal-char-duration)),
+          var(--type-reveal-max-duration)
+        )
+        steps(var(--type-chars, 1), end) both;
+    }
+
+    html.type-reveal-ready body:not([data-motion="reduce"]) [data-type-reveal]::after {
+      content: "";
+      position: absolute;
+      inset-block-start: 50%;
+      inset-inline-start: calc(var(--type-progress) * 100%);
+      translate: 0 -50%;
+      inline-size: var(--type-reveal-caret-width);
+      block-size: var(--type-reveal-caret-height);
+      background: var(--color-primary-500);
+      pointer-events: none;
+      opacity: 0;
+    }
+
+    html.type-reveal-ready
+      body:not([data-motion="reduce"])
+      [data-type-reveal]:not(.is-typed, .is-static)::after {
+      opacity: 1;
+    }
+
+    html.type-reveal-ready
+      body:not([data-motion="reduce"])
+      [data-type-reveal].is-typed:not(.is-static)::after {
+      animation: type-reveal-caret var(--type-reveal-caret-blink) step-end
+        var(--type-reveal-caret-blinks) both;
+    }
+
+    html.type-reveal-ready body:not([data-motion="reduce"]) [data-type-reveal].is-static {
+      clip-path: none;
+      animation: none;
+    }
+
+    html.type-reveal-ready body:not([data-motion="reduce"]) [data-type-reveal].is-static::after {
+      animation: none;
+      opacity: 0;
+    }
+  }
+}
+
+@media (scripting: none) and (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    /* biome-ignore lint/complexity/noImportantStyles: this must beat inline styles and every layer; there is no script to turn it off */
+    animation: none !important;
+    /* biome-ignore lint/complexity/noImportantStyles: same as animation, a transition is motion too */
+    transition: none !important;
+  }
+
+  .links-ticker-track {
+    width: 100%;
+    white-space: normal;
+  }
+
+  .links-ticker-track > span:nth-child(2) {
+    display: none;
+  }
+
+  .crt-flicker,
+  .crt-scan-beam,
+  .crt-noise {
+    opacity: 0;
+  }
+
+  .guitar-scan-beam {
     display: none;
   }
 }

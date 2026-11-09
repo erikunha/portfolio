@@ -1,53 +1,48 @@
 # AI-Assisted Development
 
-> How AI participates across the SDLC. Claude Code is treated as a core engineering teammate, not an autocomplete. This doc explains the context it works from, the loop it runs, and how it is kept honest. For the per-artifact reference (every hook, skill, agent), see [agents-skills-hooks-mcp](./agents-skills-hooks-mcp.md).
+> How AI participates across the SDLC. This doc describes the agent context, work loop and repository checks. For the per-artifact reference (every hook, skill, agent), see [agents-skills-hooks-mcp](./agents-skills-hooks-mcp.md).
 
 ## Where AI shows up in the lifecycle
 
 ```mermaid
 sequenceDiagram
-    participant H as Human (owner)
-    participant C as Claude Code (main loop)
-    participant A as Subagents (battery, architect)
-    participant G as Mechanical gates (hooks/scripts)
+    participant H as Engineer
+    participant C as Coding agent (any tool)
+    participant G as Git hooks and scripts
     participant CI as CI
 
     H->>C: intent ("build X" / "fix Y")
-    C->>C: /speckit.specify (intent + approach)
-    C->>A: architect-reviewer (spec gate)
-    A-->>G: GATE_RESULT: PASS (unblocks writing-plans)
-    C->>C: writing-plans + thinking-risk-premortem (failure modes -> tasks)
+    C->>C: spec (intent + approach)
+    C->>C: plan-review skill (PASS or BLOCK against scope, JS budget, API limits)
+    C->>C: plan with a failure-mode checklist (each failure mode -> a task)
     C->>C: TDD implement (tests first)
-    C->>G: edits trigger PostToolUse hooks (markers, lints)
-    C->>C: self-review the diff (pr-review-toolkit:code-reviewer)
-    A-->>C: findings
-    C->>G: git push (pre-push gate chain blocks if not stamped)
-    C->>CI: open PR; CI runs lint/type/test/build/perf/a11y/security
+    C->>G: commit runs Biome, staged gitleaks and commitlint
+    C->>G: git push (pre-push: main guard, branch name, pnpm verify)
+    C->>CI: open eligible PR; CI runs checks and filtered runtime jobs
     H->>CI: optional: owner, member or collaborator comments /claude-review
     CI->>C: claude-review posts inline findings + Verdict
     CI-->>C: review threads
-    C->>C: drive threads to resolved -> green
-    H->>CI: owner squash-merges (AI is blocked from merge)
+    C->>C: reply in each thread, resolve it, pr:gate green
 ```
 
 ## 1. Context engineering (what the agent knows)
 
-The agent's behavior is governed by a layered, deliberately-curated context. The guiding principle (`CLAUDE.md` rule-hygiene): pick the cheapest slot that still fires when needed. **gate > skill > path-scoped rule > memory > prose in CLAUDE.md.** Prose in `CLAUDE.md` is the most expensive slot (it taxes every session), so it is reserved for always-true facts and kept under 275 lines by `check:harness-size`.
+Project instructions divide context between always-loaded guidance and task-specific references. The guiding principle: pick the cheapest slot that still fires when needed. **gate > skill > path-scoped rule > memory > prose in AGENTS.md.** Prose in `AGENTS.md` is the most expensive slot (it taxes every session), so it keeps only what no gate can show and stays under the line budget in `scripts/harness-size.json`, checked by `check:harness-size`. A rule with no exceptions moves out of prose into a permission deny rule, a git hook or a CI gate.
 
 ```mermaid
 flowchart TD
     subgraph always["Loaded every session"]
-        cl["CLAUDE.md (project facts + dispatch tables)"]
-        ucl["~/.claude/CLAUDE.md (user reasoning protocol)"]
-        mem["MEMORY.md (first 200 lines)"]
+        cl["AGENTS.md (project instructions) via CLAUDE.md @import"]
+        ucl["User-global instructions (runtime-dependent)"]
     end
     subgraph ondemand["Loaded on demand"]
         rules[".claude/rules/*.md (when editing matching paths)"]
-        skills[".claude/skills/* (when triggered)"]
+        skills[".agents/skills/* via .claude/skills links (when triggered)"]
         topic["STANDARDS.md chapters · /docs (when relevant)"]
     end
     subgraph runtime["Discovered at runtime"]
-        ctx7["Context7 MCP (current library docs)"]
+        mem["User-global memory (runtime-dependent)"]
+        ctx7["Context7 MCP (configured docs connection)"]
         history["DECISIONS.md (why a thing is the way it is)"]
     end
     always --> agent["Claude Code"]
@@ -55,60 +50,51 @@ flowchart TD
     runtime --> agent
 ```
 
-- **`CLAUDE.md`** is an index plus dispatch tables (which skill/agent fires on which trigger), not a procedure manual.
-- **`.claude/rules/api-boundary.md`** loads only when the agent reads `app/api/**`, `lib/rate-limit.ts`, `lib/server/**`, or `proxy.ts` (path-scoped via `paths:` frontmatter). This keeps API-specific guidance out of always-loaded context.
-- **Memory** (`MEMORY.md` + `feedback_*.md`) carries learned preferences across sessions; `.remember/` carries in-flight session handoff.
+- **`AGENTS.md`** is the single source of project instructions for Codex and Claude Code. `CLAUDE.md` imports it with `@AGENTS.md` and adds only Claude-specific lines.
+- **`.claude/rules/*.md`** load only when the agent reads a matching path (`paths:` frontmatter): the API boundary, components and CSS, CI and gate configuration. This keeps path-specific guidance out of always-loaded context.
+- **Skills** live in `.agents/skills/` and are linked into `.claude/skills/`; only their name and description are always loaded.
+- User-global memory behavior depends on the active runtime. No project file establishes a `.remember/` handoff location; `AGENTS.md` never references one, and its reference list names the current sources.
 
 ## 2. The agent's working loop
 
-Every substantive change runs the same disciplined loop, enforced by mandated skills and mechanical gates:
+The project instructions define this loop. The table distinguishes conventions from mechanical checks:
 
-| Step | Mechanism | Enforced by |
-|---|---|---|
-| Explore + plan | brainstorming, writing-plans | architect-reviewer PASS (convention since 2026-07-27) |
-| Anticipate failure | thinking-risk-premortem, pre-mortem | convention + plan tasks |
-| Implement | test-driven-development | convention |
-| Self-verify | verification-before-completion | convention + `pnpm verify` |
-| Review | pre-PR self-review; claude-review only when an owner, member or collaborator requests it | `pnpm pr:gate` (every thread resolved) |
-| Resolve | findings ledger | stamp refuses while findings open |
-| Record | DECISIONS.md ADR | PR template checklist |
+| Step               | Mechanism                                                    | Enforced by                                                                                  |
+| ------------------ | ------------------------------------------------------------ | -------------------------------------------------------------------------------------------- |
+| Explore + plan     | brainstorming, planning                                      | `plan-review` PASS (convention)                                                              |
+| Anticipate failure | pre-mortem                                                   | convention + plan tasks                                                                      |
+| Implement          | test-first project rule                                      | convention                                                                                   |
+| Self-verify        | project verification rule                                    | convention + `pnpm verify`                                                                   |
+| Review             | claude-review only on request                                | `pnpm pr:gate` (every thread resolved with a reply)                                          |
+| Resolve            | reply in each review thread, then resolve it                 | `pnpm pr:gate` (fails `silent_resolve`)                                                      |
+| Record             | DECISIONS.md ADR                                             | PR template checklist (author confirmation)                                                  |
 
-## 3. Review — self-review before the PR, claude-review on request
+## 3. Review. claude-review on request
 
-**claude-review (claude[bot]) is opt-in.** It runs only when an owner, member or collaborator comments `/claude-review` on a PR, posting findings as inline review comments anchored to changed lines and closing with a `Verdict:` line that the optional `pnpm claude-gate` reads fail-closed. It is not a merge requirement.
+**claude-review (claude[bot]) is opt-in.** It runs only when an owner, member or collaborator comments `/claude-review` on a PR, posting findings as inline review comments anchored to changed lines and closing with a `Verdict:` line; a workflow step reds the job when the run posted none. It is not a merge requirement.
 
-**The local battery is not restored.** The 4-agent battery, `battery-synthesis`, the findings ledger and the transcript-verified stamp were removed on 2026-07-27 and stay removed. Pre-PR review is discipline: read the diff, run `pr-review-toolkit:code-reviewer` over it. `pnpm pr:gate` checks thread resolution.
+`pnpm pr:gate` checks thread resolution.
 
-## 4. Enforcement — git and CI only
+## 4. Enforcement boundaries
 
-**There are no `.claude/hooks/`.** Six PreToolUse/PostToolUse/SessionStart guards were removed on 2026-07-27, along with `check:gate-health` (the meta-gate that verified their wiring) and `scripts/lib/transcript.mjs` (the shared JSONL resolution all the fail-closed gates rode on).
+`.claude/settings.json` denies broad `git add`, npm and yarn installs and local env reads, and registers no hooks: workflow hooks are each engineer's own. Git hooks run Biome and staged gitleaks at pre-commit, commitlint at commit-msg, and branch/main-ref checks plus `pnpm verify` at pre-push.
 
-What enforces anything now runs at commit, push or CI time:
+CI runs separate quality, typecheck, unit-test and build jobs. Runtime and AI jobs use change filters. Semgrep findings are report-only; the fixture and report-existence checks can still fail. User-global runtime restrictions require separate inspection.
 
-- `.husky/pre-commit`: Biome, `gitleaks --staged`, commitlint.
-- `.husky/pre-push`: main-push guard, branch-name guard, `pnpm verify`.
-- CI: the `verify` chain plus build, bundle-size, route-JS, Lighthouse, axe-core, Playwright, semgrep, gitleaks, CodeQL.
+## 5. CI-side AI workflows
 
-The honest consequence: nothing constrains an agent *mid-turn* any more. A broad `git add`, a force-push, an npm invocation, or an unaudited API edit are all conventions in `CLAUDE.md` rather than blocked actions.
-
-## 5. The learning loop (AI improves the platform)
-
-The session-end learning loop was removed on 2026-07-27: the hook, `scripts/review-learn.ts` and the `review:learn` script all went. Recurring finding-classes are now noticed by reading `.review-findings-archive.jsonl` directly.
-
-## 6. The CI-side AI reviewer
-
-`.github/workflows/claude.yml` remains an opt-in pilot: `claude-code-action` (SHA-pinned) runs only when a human writes `@claude` on a PR or issue. It is the only AI reviewer wired to this repo, and it is human-triggered.
+`.github/workflows/claude-review.yml` handles PR review requested by a `/claude-review` comment. `.github/workflows/claude.yml` handles human `@claude` mentions with read-only tools and no `contents: write`. They have different triggers and permissions.
 
 ## Prompt architecture (the shapes of AI work)
 
 The repo encodes distinct prompt patterns for distinct SDLC stages:
 
-| Stage | Prompt shape | Where it lives |
-|---|---|---|
-| Specification | brainstorm -> spec with Context/Gaps/Changes | `/speckit.specify`, the spec template |
-| Architecture review | four-gate spec-gate -> `GATE_RESULT: PASS/FAIL` | `architect-reviewer` agent |
-| Implementation | TDD: failing test first, smallest change | `test-first discipline (CLAUDE.md skill dispatch)` |
-| Review | scoped-by-commit-type battery prompts | `CLAUDE.md` working agreement |
-| Documentation | reverse-engineer from code, route don't duplicate | this `/docs` set's provenance |
+| Stage               | Prompt shape                                                       | Where it lives                                     |
+| ------------------- | ------------------------------------------------------------------ | -------------------------------------------------- |
+| Specification       | brainstorm -> spec with Context/Gaps/Changes                       | the engineer's own spec tool (local, untracked)    |
+| Architecture review | four-gate plan review -> `GATE_RESULT: PASS \| BLOCK`              | `plan-review` skill                                |
+| Implementation      | TDD: failing test first, smallest change                           | `test-first discipline (AGENTS.md)` |
+| Review              | `claude-review` on request; `pr-review-orchestrator` is one way to run a review | `AGENTS.md` working agreement, `REVIEW.md`         |
+| Documentation       | reverse-engineer from code, route don't duplicate                  | source comparisons and canonical documentation     |
 
-The scoping rule for the battery is itself a prompt-engineering decision: a docs-only commit gets prompts that skip the test suite, because the stamp counts *dispatch*, not depth. This is how a heavy review process stays cheap on trivial changes.
+Choose verification from the affected behavior and the project gate requirements. A docs-only change still runs `pnpm ci:local` under `AGENTS.md`.

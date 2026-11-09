@@ -1,8 +1,11 @@
 import path from 'node:path';
 import { defineConfig } from 'vitest/config';
 
+const ISO_DATE_LENGTH = 10;
+
 export default defineConfig({
   test: {
+    env: { BUILD_DATE: new Date().toISOString().slice(0, ISO_DATE_LENGTH) },
     reporters: process.env.GITHUB_ACTIONS ? ['github-actions', 'verbose'] : ['verbose'],
     environment: 'jsdom',
     globals: false,
@@ -24,13 +27,7 @@ export default defineConfig({
         functions: 80,
         statements: 80,
       },
-      include: [
-        'lib/**',
-        'components/**',
-        'app/**',
-        'design-system/components/**',
-        'design-system/lib/**',
-      ],
+      include: ['lib/**', 'components/**', 'app/**', 'design-system/components/**'],
       exclude: [
         '**/node_modules/**',
         '**/__tests__/**',

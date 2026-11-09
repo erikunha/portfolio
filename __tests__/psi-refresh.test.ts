@@ -28,7 +28,7 @@ vi.mock('@/lib/rate-limit', () => ({
 }));
 
 vi.mock('resend', () => ({
-  // biome-ignore lint/complexity/useArrowFunction: `function` required — arrow fns cannot be used with `new` in jsdom/vitest; the route calls `new Resend(key)`.
+  // biome-ignore lint/complexity/useArrowFunction: `function` required, arrow fns cannot be used with `new` in jsdom/vitest; the route calls `new Resend(key)`.
   Resend: vi.fn(function () {
     return { emails: { send: sendMock } };
   }),
@@ -133,7 +133,7 @@ describe('GET /api/psi-refresh', () => {
 
     expect(res.status).toBe(200);
     expect(vi.mocked(log.error)).toHaveBeenCalledWith(
-      'psi-refresh: failed to write meta:psi-last-run — healthz will report degraded',
+      'psi-refresh: failed to write meta:psi-last-run; healthz will report degraded',
       expect.objectContaining({ err: expect.any(Error) }),
     );
     expect(sendMock).not.toHaveBeenCalled();
@@ -176,6 +176,21 @@ describe('GET /api/psi-refresh', () => {
       'psi-refresh alert email API error',
       expect.objectContaining({ err: expect.objectContaining({ message: 'invalid_api_key' }) }),
     );
+  });
+
+  it('bounds the alert email with an abort signal so a stalled request is cancelled', async () => {
+    const { refreshScores } = await import('@/lib/lighthouse-scores');
+    vi.mocked(refreshScores).mockRejectedValue(new Error('PSI timeout'));
+    pipeExec.mockResolvedValue([3, 1]);
+    const timeoutSpy = vi.spyOn(AbortSignal, 'timeout');
+
+    const { GET } = await import('@/app/api/psi-refresh/route');
+    await GET(makeRequest());
+
+    expect(timeoutSpy).toHaveBeenCalledWith(5_000);
+    const options = (sendMock.mock.calls[0] as unknown as [unknown, { signal?: AbortSignal }])[1];
+    expect(options.signal).toBeInstanceOf(AbortSignal);
+    timeoutSpy.mockRestore();
   });
 
   it('returns 401 if Authorization header is missing', async () => {

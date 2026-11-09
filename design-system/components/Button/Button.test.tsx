@@ -1,8 +1,27 @@
-import { render, screen } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { fireEvent, render, screen } from '@testing-library/react';
+import { describe, expect, it, vi } from 'vitest';
 import { Button } from './Button';
 
 describe('Button', () => {
+  it('exposes its variant as data-variant on a button and on an anchor', () => {
+    const { container } = render(
+      <>
+        <Button>Primary default</Button>
+        <Button variant="secondary">Secondary</Button>
+        <Button as="a" href="/x" variant="secondary">
+          Link
+        </Button>
+      </>,
+    );
+    const variants = [...container.querySelectorAll('.btn')].map((node) =>
+      node.getAttribute('data-variant'),
+    );
+    expect(variants).toEqual(['primary', 'secondary', 'secondary']);
+  });
+  it('lets the caller override data-variant', () => {
+    render(<Button data-variant="custom">Custom</Button>);
+    expect(screen.getByRole('button').getAttribute('data-variant')).toBe('custom');
+  });
   it('renders as <button> by default', () => {
     render(<Button>Click</Button>);
     expect(screen.getByRole('button')).toBeDefined();
@@ -35,6 +54,38 @@ describe('Button', () => {
     const el = container.querySelector('a');
     expect(el?.getAttribute('aria-disabled')).toBe('true');
   });
+  it('preserves consumer attributes for buttons and links', () => {
+    render(
+      <>
+        <Button id="action" className="consumer" aria-label="Run action" />
+        <Button as="a" href="/test" id="destination" className="consumer" aria-label="Open page" />
+      </>,
+    );
+    for (const [role, name, id] of [
+      ['button', 'Run action', 'action'],
+      ['link', 'Open page', 'destination'],
+    ] as const) {
+      const control = screen.getByRole(role, { name });
+      expect(control.id).toBe(id);
+      expect(control.classList.contains('consumer')).toBe(true);
+    }
+  });
+  it('blocks activation of disabled buttons and anchors', () => {
+    const onClick = vi.fn();
+    render(
+      <>
+        <Button disabled onClick={onClick}>
+          Disabled button
+        </Button>
+        <Button as="a" href="/test" disabled onClick={onClick}>
+          Disabled link
+        </Button>
+      </>,
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Disabled button' }));
+    expect(fireEvent.click(screen.getByText('Disabled link'))).toBe(false);
+    expect(onClick).not.toHaveBeenCalled();
+  });
   it('applies primary variant styles by default', () => {
     const { container } = render(<Button>Primary</Button>);
     const el = container.firstElementChild;
@@ -47,10 +98,23 @@ describe('Button', () => {
     expect(el?.classList.contains('bg-transparent')).toBe(true);
     expect(el?.classList.contains('text-primary-500')).toBe(true);
   });
-  it('applies size classes', () => {
+  it('keeps the small target at 44px and the large target at 52px', () => {
     const { container: smContainer } = render(<Button size="sm">Sm</Button>);
-    expect(smContainer.firstElementChild?.classList.contains('min-h-9')).toBe(true);
+    expect(smContainer.firstElementChild?.classList.contains('min-h-11')).toBe(true);
     const { container: lgContainer } = render(<Button size="lg">Lg</Button>);
     expect(lgContainer.firstElementChild?.classList.contains('min-h-[52px]')).toBe(true);
+  });
+  it('keeps the base free of a border color so each variant owns exactly one', () => {
+    const { container } = render(
+      <>
+        <Button>Primary</Button>
+        <Button variant="secondary">Secondary</Button>
+      </>,
+    );
+    const [primary, secondary] = [...container.querySelectorAll('.btn')];
+    expect(primary?.classList.contains('border-primary-subtle')).toBe(false);
+    expect(primary?.classList.contains('border-primary-500')).toBe(true);
+    expect(secondary?.classList.contains('border-primary-subtle')).toBe(true);
+    expect(secondary?.classList.contains('border-primary-500')).toBe(false);
   });
 });

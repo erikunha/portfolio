@@ -1,118 +1,234 @@
+import { headers } from 'next/headers';
+import { unstable_rethrow } from 'next/navigation';
+import { connection } from 'next/server';
 import { Suspense } from 'react';
+import {
+  type Measured,
+  measured as measuredContent,
+  measuredStates,
+  metricTimestamp,
+} from '@/content/measured';
+import { ERROR_SECONDS_TOKEN } from '@/content/measured-states.schema';
 import { SECTION_LABELS } from '@/content/section-labels';
-import { TerminalPanel } from '@/design-system';
+import type { SiteLocale } from '@/content/site-locale';
 import type { AskMetrics } from '@/lib/ask-metrics';
 import { getAskMetrics } from '@/lib/ask-metrics';
+import { MS_PER_SECOND } from '@/lib/time';
+import { ReadTimeoutError, SSR_REDIS_TIMEOUT_MS } from '@/lib/with-timeout';
 import { IconAiMetrics } from '../../Icons';
 import { Module } from '../../responsive/Module';
+import {
+  LivePerfSection,
+  MEASURED_FIELD_SEPARATOR,
+  MeasuredLink,
+  MeasuredTile,
+} from '../LivePerfSection';
+import { MeasuredStatus } from '../MeasuredStatus';
 
-const pct = (rate: number): string => `${Math.round(rate * 100)}%`;
+const percent = (content: Measured) => (rate: number) =>
+  `${Math.round(rate * content.format.percentScale)}${content.ask.percentUnit}`;
+const latency = (content: Measured) => (value: number) =>
+  `${Math.round(value).toLocaleString(content.format.locale)}${content.ask.latencyUnit}`;
+const formatMetricFor = (content: Measured) => ({
+  evalPassRate: percent(content),
+  jailbreakResistance: percent(content),
+  p95LatencyMs: latency(content),
+  costPerAnswer: (value: number) =>
+    `${content.ask.currencyUnit}${value.toFixed(content.format.costPrecision)}`,
+});
 
-const usd = (n: number): string => `$${n.toFixed(4)}`;
+const REQUEST_REF_HEADER = 'x-vercel-id';
+const RETRY_HREF = '?retry=1#sec-live-metrics';
 
-const ms = (n: number): string => `${Math.round(n)}ms`;
+const ASK_FAILURE = { timeout: 'timeout', unreadable: 'unreadable' } as const;
+type AskFailure = (typeof ASK_FAILURE)[keyof typeof ASK_FAILURE];
 
-function lastRunLabel(iso: string): string {
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return iso;
-  return d.toUTCString().replace(':00 GMT', ' UTC');
+const askFailureOf = (error: unknown): AskFailure =>
+  error instanceof ReadTimeoutError ? ASK_FAILURE.timeout : ASK_FAILURE.unreadable;
+
+async function readRequestRef(): Promise<string | undefined> {
+  try {
+    return (await headers()).get(REQUEST_REF_HEADER) ?? undefined;
+  } catch (error) {
+    unstable_rethrow(error);
+    return undefined;
+  }
 }
 
-function AiMetricsPending() {
+function AskError({
+  locale,
+  failure,
+  requestRef,
+}: {
+  locale: SiteLocale;
+  failure: AskFailure;
+  requestRef?: string | undefined;
+}) {
+  const { askError } = measuredStates[locale];
   return (
-    <div className="font-mono">
-      <p className="text-primary-400 text-sm tracking-[0.04em] m-0 min-h-[160px] max-[900px]:min-h-[290px]">
-        <span className="text-primary-500 mr-1.5">{'>'}</span>
-        eval pending — run <code className="text-primary-500 font-mono">pnpm ask:eval</code> to
-        publish the latest aggregate
+    <div className="measured-error" role="alert">
+      <strong>{askError.heading}</strong>
+      <p>
+        {failure === ASK_FAILURE.timeout
+          ? askError.timeoutBody.replace(
+              ERROR_SECONDS_TOKEN,
+              String(SSR_REDIS_TIMEOUT_MS / MS_PER_SECOND),
+            )
+          : askError.unreadableBody}
       </p>
+      <a className="measured-retry" href={RETRY_HREF}>
+        {askError.retry}
+      </a>
+      {requestRef ? (
+        <span className="measured-error-ref" title={requestRef}>
+          {askError.refLabel} {requestRef}
+        </span>
+      ) : null}
     </div>
   );
 }
 
-function AiMetricsBody({ metrics }: { metrics: AskMetrics | null }) {
-  if (metrics === null) return <AiMetricsPending />;
+const CACHE_KEY_OPEN = ' (';
+const CACHE_KEY_CLOSE = ')';
 
+function askStatusMessage(
+  content: Measured,
+  state: {
+    metrics: AskMetrics | null;
+    loading: boolean;
+    timestamp: ReturnType<typeof metricTimestamp>;
+  },
+) {
+  if (state.metrics) return state.timestamp.valid ? null : content.unknownTimestamp;
+  return state.loading ? content.loading : content.ask.pending;
+}
+
+function AiMetricsBody({
+  locale,
+  metrics,
+  loading = false,
+  failure,
+  requestRef,
+}: {
+  locale: SiteLocale;
+  metrics: AskMetrics | null;
+  loading?: boolean;
+  failure?: AskFailure | undefined;
+  requestRef?: string | undefined;
+}) {
+  const content = measuredContent[locale];
+  const format = content.format;
+  const formatMetric = formatMetricFor(content);
+  const timestamp = metricTimestamp(metrics?.lastRun, format.askStaleAfterMs, locale);
   return (
-    <div className="font-mono">
-      <div className="grid grid-cols-4 gap-[14px] max-[900px]:grid-cols-2 max-[900px]:gap-3">
-        <TerminalPanel className="p-4 pb-[18px] flex flex-col gap-2" data-metric>
-          <div className="text-tertiary-50 text-xs max-md:text-[10px] tracking-[0.16em]">
-            EVAL PASS-RATE
+    <div className="measured-ask" aria-busy={loading || undefined}>
+      <h3 className="measured-heading">
+        <MeasuredLink href={content.ask.url} disclosure={content.externalDisclosure}>
+          <span data-type-reveal suppressHydrationWarning>
+            {content.ask.title}
+          </span>
+        </MeasuredLink>
+        {metrics ? (
+          <>
+            {MEASURED_FIELD_SEPARATOR}
+            {content.ask.timestampLabel}{' '}
+            {timestamp.valid ? (
+              <time dateTime={metrics.lastRun}>{timestamp.label}</time>
+            ) : (
+              metrics.lastRun
+            )}
+          </>
+        ) : null}
+        {timestamp.stale ? (
+          <span className="measured-status">
+            {MEASURED_FIELD_SEPARATOR}
+            {content.stale}
+          </span>
+        ) : null}
+      </h3>
+      <div className="measured-ask-body">
+        <div className="measured-ask-reserve" aria-hidden={failure ? true : undefined}>
+          <div className="measured-tiles">
+            {content.ask.metrics.map((metric) => (
+              <MeasuredTile
+                key={metric.key}
+                label={metric.label}
+                value={metrics ? formatMetric[metric.key](metrics[metric.key]) : format.empty}
+                description={
+                  metric.description ||
+                  (metrics
+                    ? `${content.ask.p95Prefix} ${formatMetric.p95LatencyMs(metrics.p95LatencyMs)}`
+                    : content.ask.p95Pending)
+                }
+              />
+            ))}
           </div>
-          <div className="text-primary-500 font-bold text-2xl leading-none tracking-[0.01em] max-[900px]:text-xl max-md:text-2xl">
-            {pct(metrics.evalPassRate)}
-          </div>
-          <div className="text-primary-500 text-sm max-md:text-xs leading-[1.5] mt-auto">
-            correctness · factual + edge corpus
-          </div>
-        </TerminalPanel>
-        <TerminalPanel className="p-4 pb-[18px] flex flex-col gap-2" data-metric>
-          <div className="text-tertiary-50 text-xs max-md:text-[10px] tracking-[0.16em]">
-            JAILBREAK RESIST
-          </div>
-          <div className="text-primary-500 font-bold text-2xl leading-none tracking-[0.01em] max-[900px]:text-xl max-md:text-2xl">
-            {pct(metrics.jailbreakResistance)}
-          </div>
-          <div className="text-primary-500 text-sm max-md:text-xs leading-[1.5] mt-auto">
-            prompt-injection refusal rate
-          </div>
-        </TerminalPanel>
-        <TerminalPanel className="p-4 pb-[18px] flex flex-col gap-2" data-metric>
-          <div className="text-tertiary-50 text-xs max-md:text-[10px] tracking-[0.16em]">
-            P95 LATENCY
-          </div>
-          <div className="text-primary-500 font-bold text-2xl leading-none tracking-[0.01em] max-[900px]:text-xl max-md:text-2xl">
-            {ms(metrics.p95LatencyMs)}
-          </div>
-          <div className="text-primary-500 text-sm max-md:text-xs leading-[1.5] mt-auto">
-            end-to-end · slowest 5% of answers
-          </div>
-        </TerminalPanel>
-        <TerminalPanel className="p-4 pb-[18px] flex flex-col gap-2" data-metric>
-          <div className="text-tertiary-50 text-xs max-md:text-[10px] tracking-[0.16em]">
-            COST / ANSWER
-          </div>
-          <div className="text-primary-500 font-bold text-2xl leading-none tracking-[0.01em] max-[900px]:text-xl max-md:text-2xl">
-            {usd(metrics.costPerAnswer)}
-          </div>
-          <div className="text-primary-500 text-sm max-md:text-xs leading-[1.5] mt-auto">
-            production inference · feature model only
-          </div>
-        </TerminalPanel>
-      </div>
-      <div className="flex justify-between items-center mt-[18px] pt-3 border-t border-dashed border-primary-quiet text-primary-400 text-xs tracking-[0.06em] max-[768px]:flex-col max-[768px]:items-start max-[768px]:gap-1.5 max-[768px]:text-[10px]">
-        <span>
-          <span className="text-primary-500 mr-1.5">{'>'}</span>
-          SOURCE: scripts/ask-eval.ts · ask:eval:latest
-        </span>
-        <span>
-          LAST_RUN: <time dateTime={metrics.lastRun}>{lastRunLabel(metrics.lastRun)}</time>
-        </span>
+          <MeasuredStatus
+            message={failure ? null : askStatusMessage(content, { metrics, loading, timestamp })}
+            live={!metrics}
+            reserve={[
+              content.loading,
+              content.ask.unavailable,
+              content.ask.pending,
+              content.unknownTimestamp,
+            ]}
+          />
+        </div>
+        {failure ? <AskError locale={locale} failure={failure} requestRef={requestRef} /> : null}
       </div>
     </div>
   );
 }
 
-export async function AiMetricsData() {
-  const metrics = await getAskMetrics();
-  return <AiMetricsBody metrics={metrics} />;
+export async function AiMetricsData({ locale }: { locale: SiteLocale }) {
+  await connection();
+  try {
+    const metrics = await getAskMetrics();
+    return <AiMetricsBody locale={locale} metrics={metrics} />;
+  } catch (error) {
+    const requestRef = await readRequestRef();
+    return (
+      <AiMetricsBody
+        locale={locale}
+        metrics={null}
+        failure={askFailureOf(error)}
+        requestRef={requestRef}
+      />
+    );
+  }
 }
 
-export function AiMetricsSection({ defer }: { defer?: boolean } = {}) {
+export function AiMetricsSection({ locale, defer }: { locale: SiteLocale; defer?: boolean }) {
+  const content = measuredContent[locale];
   return (
     <Module
-      id="sec-ai-metrics"
-      header="ASK_EVAL.JSON --MEASURED"
+      id="sec-live-metrics"
+      header={content.command}
       variant="green"
-      mobileHeader="ASK_EVAL.JSON"
-      srLabel={SECTION_LABELS['sec-ai-metrics']}
+      name={SECTION_LABELS[locale]['sec-live-metrics']}
       icon={<IconAiMetrics />}
       defer={defer}
     >
-      <Suspense fallback={<AiMetricsPending />}>
-        <AiMetricsData />
-      </Suspense>
+      <span id="sec-ai-metrics" />
+      <p className="measured-source">
+        {content.sourceLabel}{' '}
+        <MeasuredLink href={content.psi.url} disclosure={content.externalDisclosure}>
+          {content.psi.source}
+        </MeasuredLink>
+        {MEASURED_FIELD_SEPARATOR}
+        <MeasuredLink href={content.ask.url} disclosure={content.externalDisclosure}>
+          {content.ask.source}
+        </MeasuredLink>
+        {CACHE_KEY_OPEN}
+        {content.ask.cacheKey}
+        {CACHE_KEY_CLOSE}
+      </p>
+      <div className="measured-grid">
+        <Suspense fallback={<AiMetricsBody locale={locale} metrics={null} loading />}>
+          <AiMetricsData locale={locale} />
+        </Suspense>
+        <LivePerfSection locale={locale} />
+      </div>
     </Module>
   );
 }

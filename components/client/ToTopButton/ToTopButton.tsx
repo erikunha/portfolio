@@ -1,8 +1,11 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { motionInEffect } from '@/lib/motion';
+import { useSectionNavigation } from '../../responsive/SectionNavigation';
 
 export function ToTopButton() {
+  const { copy } = useSectionNavigation();
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
@@ -19,8 +22,9 @@ export function ToTopButton() {
   return (
     <button
       className={visible ? 'to-top-btn to-top-show' : 'to-top-btn'}
-      aria-label="back to top"
-      onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+      aria-label={copy.backToTopLabel}
+      inert={!visible}
+      onClick={() => window.scrollTo({ top: 0, behavior: motionInEffect() ? 'smooth' : 'auto' })}
       type="button"
     >
       <svg

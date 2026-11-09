@@ -1,108 +1,78 @@
-import { type ComponentType, createElement } from 'react';
+import { act, createElement } from 'react';
+import { renderToString } from 'react-dom/server';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { installMatchMedia } from '@/__tests__/helpers/match-media';
 import { flushMicrotasks, mountClient } from '@/__tests__/helpers/render';
-import { BreakpointProvider, useBreakpoint } from '@/lib/use-breakpoint.client';
+import { MOBILE_QUERY } from '@/lib/media-queries';
+import { useBreakpoint } from '@/lib/use-breakpoint.client';
 
-function stubMatchMedia(matches: boolean) {
-  const listeners: (() => void)[] = [];
-  const mql = {
-    matches,
-    addEventListener: (_: string, cb: () => void) => listeners.push(cb),
-    removeEventListener: (_: string, cb: () => void) => {
-      const idx = listeners.indexOf(cb);
-      if (idx >= 0) listeners.splice(idx, 1);
-    },
-  };
-  vi.stubGlobal(
-    'matchMedia',
-    vi.fn(() => mql),
-  );
-  return mql;
+let captured: { isMobile: boolean } | undefined;
+
+function Consumer() {
+  captured = useBreakpoint();
+  return createElement('span', null, String(captured.isMobile));
 }
 
-describe('BreakpointProvider', () => {
+describe('useBreakpoint', () => {
   beforeEach(() => {
-    stubMatchMedia(false);
+    captured = undefined;
   });
 
   afterEach(() => {
     vi.unstubAllGlobals();
   });
 
-  it('renders children without throwing', async () => {
-    type BP = ComponentType<{ initialIsMobile: boolean }>;
-    const { container, unmount } = await mountClient(
-      createElement(
-        BreakpointProvider as BP,
-        { initialIsMobile: false },
-        createElement('span', { 'data-testid': 'child' }, 'inner'),
-      ),
-    );
-    expect(container.querySelector('[data-testid="child"]')).not.toBeNull();
-    unmount();
-  });
-
-  it('provides isMobile=false when initialIsMobile is false', async () => {
-    let captured: { isMobile: boolean } | undefined;
-
-    function Consumer() {
-      captured = useBreakpoint();
-      return createElement('span', null, null);
-    }
-
-    type BP = ComponentType<{ initialIsMobile: boolean }>;
-    const { unmount } = await mountClient(
-      createElement(BreakpointProvider as BP, { initialIsMobile: false }, createElement(Consumer)),
-    );
+  it('works without any provider above it', async () => {
+    installMatchMedia(false);
+    const { unmount } = await mountClient(createElement(Consumer));
     await flushMicrotasks();
 
     expect(captured?.isMobile).toBe(false);
     unmount();
   });
 
-  it('provides isMobile=true when initialIsMobile is true and matchMedia reports mobile', async () => {
-    stubMatchMedia(true);
-    let captured: { isMobile: boolean } | undefined;
-
-    function Consumer() {
-      captured = useBreakpoint();
-      return createElement('span', null, null);
-    }
-
-    type BP = ComponentType<{ initialIsMobile: boolean }>;
-    const { unmount } = await mountClient(
-      createElement(BreakpointProvider as BP, { initialIsMobile: true }, createElement(Consumer)),
-    );
+  it('reports a mobile viewport from matchMedia', async () => {
+    installMatchMedia(true);
+    const { unmount } = await mountClient(createElement(Consumer));
     await flushMicrotasks();
 
     expect(captured?.isMobile).toBe(true);
     unmount();
   });
-});
 
-describe('useBreakpoint — outside provider', () => {
-  afterEach(() => {
-    vi.unstubAllGlobals();
+  it('seeds the server render with a desktop viewport', () => {
+    expect(renderToString(createElement(Consumer))).toContain('false');
   });
 
-  it('throws when called outside <BreakpointProvider>', async () => {
-    // biome-ignore lint/suspicious/noEmptyBlockStatements: intentional no-op to suppress React render error noise
-    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+  it('subscribes with the one mobile query and unsubscribes on unmount', async () => {
+    const media = installMatchMedia(false);
+    const { unmount } = await mountClient(createElement(Consumer));
+    expect(media.matchMedia).toHaveBeenCalledWith(MOBILE_QUERY);
+    expect(media.listenerCount(MOBILE_QUERY)).toBe(1);
+    unmount();
+    expect(media.listenerCount(MOBILE_QUERY)).toBe(0);
+  });
 
-    let thrownMessage = '';
+  it('re-renders when the viewport crosses the mobile breakpoint', async () => {
+    const media = installMatchMedia(false);
+    const { container, unmount } = await mountClient(createElement(Consumer));
+    expect(container.textContent).toBe('false');
 
-    function ThrowingConsumer() {
-      const ctx = useBreakpoint();
-      return createElement('span', null, String(ctx.isMobile));
-    }
+    await act(async () => {
+      media.emit(MOBILE_QUERY, true);
+    });
+    expect(container.textContent).toBe('true');
 
-    try {
-      await mountClient(createElement(ThrowingConsumer));
-    } catch (e) {
-      thrownMessage = e instanceof Error ? e.message : String(e);
-    }
+    await act(async () => {
+      media.emit(MOBILE_QUERY, false);
+    });
+    expect(container.textContent).toBe('false');
+    unmount();
+  });
+});
 
-    consoleSpy.mockRestore();
-    expect(thrownMessage).toContain('useBreakpoint must be used inside');
+describe('MOBILE_QUERY', () => {
+  it('ends 0.02px below the mobile breakpoint, matching the CSS max-width queries', () => {
+    expect(MOBILE_QUERY).toBe('(max-width: 767.98px)');
   });
 });

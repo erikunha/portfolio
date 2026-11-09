@@ -3,6 +3,12 @@ import 'server-only';
 import { env } from '@/lib/env';
 import { log } from '@/lib/log';
 
+const REGISTERED_KEY = Symbol.for('erikunha.ai-telemetry.registered');
+
+const SERVICE_NAME = 'erikunha-dev';
+
+type RegistrationGuard = typeof globalThis & { [REGISTERED_KEY]?: true };
+
 function isEnabled(): boolean {
   return env.LANGFUSE_ENABLED === 'true';
 }
@@ -10,11 +16,17 @@ function isEnabled(): boolean {
 export async function registerLangfuseProcessor(): Promise<void> {
   if (!isEnabled()) return;
 
+  const guard = globalThis as RegistrationGuard;
+  if (guard[REGISTERED_KEY]) return;
+
   try {
-    const [{ LangfuseExporter }, { registerOTel }] = await Promise.all([
-      import('langfuse-vercel'),
-      import('@vercel/otel'),
-    ]);
+    const [{ LangfuseExporter }, { registerOTel }, { registerTelemetry }, { LegacyOpenTelemetry }] =
+      await Promise.all([
+        import('langfuse-vercel'),
+        import('@vercel/otel'),
+        import('ai'),
+        import('@ai-sdk/otel'),
+      ]);
 
     const exporterOptions: {
       secretKey?: string;
@@ -27,7 +39,9 @@ export async function registerLangfuseProcessor(): Promise<void> {
 
     const traceExporter = new LangfuseExporter(exporterOptions);
 
-    registerOTel({ serviceName: 'erikunha-dev', traceExporter });
+    registerOTel({ serviceName: SERVICE_NAME, traceExporter });
+    registerTelemetry(new LegacyOpenTelemetry());
+    guard[REGISTERED_KEY] = true;
 
     log.info('langfuse span processor registered');
   } catch (err) {

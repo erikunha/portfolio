@@ -18,7 +18,6 @@ describe('/api/erik.json route', () => {
     expect(body.availability).toBeDefined();
     expect(body.stack_primary).toBeDefined();
     expect(Array.isArray(body.stack_primary)).toBe(true);
-    expect(body.work_auth).toBeDefined();
   });
 
   it('sets a long-lived public cache header', async () => {

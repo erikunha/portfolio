@@ -1,65 +1,77 @@
-# Erik Cunha — Senior Full-Stack Engineer · Applied AI
+# Erik Cunha · Senior Software Engineer, Applied AI
 
-> Full-Stack Engineer with 8+ years shipping production AI systems
-> and high-scale frontend architecture. Currently building shared UI systems
-> and state architecture at Raylu.ai (New York, remote, on contract through
-> Torc) — an AI-native deal-origination product used by 45+ private-market
-> funds representing $500B+ in AUM. Prior:
-> PCI-DSS payments at Betsson Group (€1B+ ARR, 40M+ tx/yr, EU-regulated).
-> Impact at scale: 8M+ MAU e-commerce (Nike Brazil), 70M+ banking customers
-> (Itaú Unibanco), enterprise healthcare (Canon Medical).
-> Targeting Senior, Staff, or Principal IC roles at AI-forward product
-> companies. Based in Brazil (UTC-3), fully remote, open to relocation with
-> sponsorship. English C1, WES-verified.
+> Senior Software Engineer, Applied AI. 8+ years of production software across AI-native SaaS,
+> fintech, payments and e-commerce. Builds LLM systems and the evaluation that decides
+> whether they are safe to ship. Brazil · UTC-3 · available now. Currently at Raylu: AI deal
+> origination · private markets. TypeScript, Python, React, Next.js, Angular, Node.js, AWS · LLM Systems, Evals, Agents, MCP, Guardrails.
+> Investor workflow screens for 50+ funds holding $500B+ in assets.
 
 ## Availability
 
-- Status: Actively exploring new opportunities
-- Location: Campinas, São Paulo, Brazil (UTC-3)
-- Remote: Yes — currently working remotely for a New York AI startup
-- Relocation: Open, requires visa sponsorship
-- Target role: Senior / Staff / Principal IC — Applied AI & Full-Stack
-- Work authorization: Brazilian national. WES-verified academic credentials. English C1.
+- Status: available now
+- Location: Paulínia, Brazil (UTC-3)
+- Current role: working remotely for Raylu (New York, US)
+- Work scope: open to any arrangement: remote worldwide, hybrid or on-site
+- Target role: Senior Software Engineer, Applied AI
+- Focus: GenAI, AI-native products, LLM systems and agents (evals, guardrails, MCP)
 - Contact: erikhenriquealvescunha@gmail.com | +5519997049125
 
 ## AI Engineering
 
-Shipping production LLM, RAG, and multi-agent systems since 2024:
+Builds LLM systems and the evaluation that decides whether they are safe to ship:
 
-- Streaming LLM endpoint: Vercel AI Gateway + Anthropic Claude Haiku 4.5,
-  ephemeral prompt caching, cost tracking, token budget management
-- Multi-agent orchestration: 12-agent GitHub Copilot system deployed to
-  engineering team at Betsson Group — automating code generation, review,
-  debugging, testing, and architectural validation across a €1B+ ARR platform
-- Prompt engineering at production scale: structured output, tool use,
-  function calling, context window management
-- RAG pipeline design, GenAI feature integration, AI evaluation loops
-- AI cost optimization: prompt caching strategies, model selection for
-  latency/cost trade-offs
+- Governed LLM endpoint on this site (Vercel AI Gateway + Anthropic Claude Haiku 4.5): a
+  prompt-injection gate that rejects before inference, a streaming leak detector that survives
+  chunk boundaries, a kill switch, ephemeral prompt caching and per-job cost caps
+- Continuous integration (CI) eval harness: an LLM judge calibrated against human labels at a
+  0.85 agreement floor, correctness gated at 0.9, jailbreak resistance gated at 1.0 and a $2
+  per-job cost cap
+- Daily work in Claude Code and Codex, authoring the skills, guard policies and lifecycle hooks
+  they run under
+- Multi-agent orchestration: 12-agent AI-assisted engineering system on GitHub Copilot, adopted
+  across the team at Betsson Group: generation, review, debugging, testing and architecture
+  validation, with every automated action reviewable, on a PCI-DSS payment platform
+- LAIbemage (open source, MIT): TypeScript CLI classifying images across seven LLM vision
+  providers, escalating from a local model to cloud below a 0.70 confidence threshold, with
+  two-provider consensus voting and a benchmark gate that fails on a 5% regression
+  (github.com/erikunha/LAIbemage)
+- LedgerLens (open source, MIT): Python agent that investigates payment complaints with six
+  tools (read-only text-to-SQL behind a guard, ledger API, policy search, reference exchange
+  rates, a Decimal calculator, case memory) and a verifier that checks every claim against its
+  cited evidence, escalating to human review by rule. On thirty cases: correctness 0.82
+  against 0.55 for a ReAct agent and 0.17 for a tool-free chain, tool trajectory 0.73 against a
+  0.80 target (a miss). Thirty cases show a trend, not significance
+  (github.com/erikunha/ledgerlens)
 
-Keywords: LLM Engineering · RAG · Generative AI · Multi-Agent Orchestration ·
-Anthropic Claude · Function Calling · Context Window Management · Prompt Caching ·
-Streaming LLM · AI Evaluation · LLM Cost Optimization
+Keywords: LLM Systems · LLM Evaluation · LLM-as-Judge · Agents · Multi-Agent Orchestration ·
+Model Context Protocol (MCP) · Guardrails · Prompt-Injection Defense · Anthropic Claude ·
+Structured Output · Prompt Caching · Streaming LLM · LLM Cost Optimization
 
 ## Impact at Scale
 
-- -97.5% API latency — reporting endpoints from ~40s → <1s (query + indexing)
-- -98% CSS bundle reduction (Canon Medical Systems)
-- -52% Time to Interactive improvement (Canon Medical Systems)
-- -33% JavaScript bundle reduction (Canon Medical Systems)
+- -97.5% API latency: reporting endpoints from ~40s → <1s (query + indexing)
+- -98% CSS bundle reduction (Independent Consultant)
+- -52% Time to Interactive improvement (Independent Consultant)
+- -33% JavaScript bundle reduction (Independent Consultant)
 - -32% page load reduction (Nike Brazil / Centauro)
 - +10% conversion rate via 20+ A/B experiments (Nike Brazil)
-- -80% platform delivery cost — shared cross-platform codebase (MB Labs)
-- €1B+ ARR cashier platform (Betsson Group, 40M+ transactions/yr)
+- ~80% shared code, ~40% faster desktop build (MB Labs)
+- €1.197B group revenue cashier platform (Betsson Group, 31.1M customers, 40M+ transactions/yr)
 - 8M+ monthly active users (Nike Brazil + Centauro)
-- 70M+ customers served (Itaú Unibanco banking platform)
+- 24.2M digital clients, 1.2M businesses (Itaú Unibanco business insurance)
 - 12-agent AI system deployed to production engineering team
 
 ## Technical Skills
 
-Applied AI: LLM Engineering · RAG · Generative AI · Multi-Agent Orchestration ·
-Anthropic Claude · Prompt Engineering · Prompt Caching · Streaming LLM ·
-Function Calling · Context Window Management · LLM Cost Optimization · AI Evaluation
+LLM systems & evaluation: Eval harness design · Corpora graded on end state ·
+LLM-as-judge calibrated against human labels · pass@k and all-runs-pass · Control-treatment A/B ·
+Failure taxonomies · Per-job cost caps · Model routing by task tier · Tracing (Langfuse, OpenTelemetry) ·
+Anthropic, OpenAI and Google APIs · Vercel AI SDK · Structured output validation with Zod
+
+Agents & guardrails: Agent and sub-agent orchestration · Tool-surface design ·
+Model Context Protocol (MCP) servers · Prompt-injection defense at the request boundary ·
+Streaming leak detection · Kill switches · Content-hashed prompt versioning ·
+Model-drift detection · Policy guards that fail closed
 
 Frontend: TypeScript (strict) · React 19 · React Server Components ·
 Next.js 16 (App Router) · Angular · RxJS · NgRx · Redux · StencilJS ·
@@ -68,7 +80,7 @@ Web Components · Vue.js · Ionic · SSR/SSG · Micro-Frontend Architecture
 Backend & APIs: Node.js · Express.js · REST APIs · WebSocket (STOMP/SockJS) ·
 Python · Backend for Frontend (BFF)
 
-Architecture: Clean Architecture (DDD 4-layer) · Nx Monorepo ·
+Architecture: Nx Monorepo ·
 Component-Driven Architecture · Reactive Architecture
 
 Cloud & DevOps: AWS (S3 · CloudFront · EC2 · CodePipeline · CodeBuild) ·
@@ -78,61 +90,74 @@ Data: PostgreSQL · MongoDB · Redis · SQL · SQLite
 
 Testing: Playwright · Vitest · Jest · React Testing Library · MSW · WireMock
 
-Performance & A11y: Core Web Vitals · WCAG 2.1 AA · ARIA · Lighthouse CI
+Performance & A11y: Core Web Vitals · WCAG 2.2 AA · ARIA · Lighthouse CI
 
 ## Professional Experience
 
-| Period | Company | Role | Scale |
+| Period | Company | Role | Location |
 |---|---|---|---|
-| 06/2026–present | Raylu.ai (New York, remote from Brazil) | Senior Software Engineer | 45+ private-market funds · $500B+ AUM · AI deal origination |
-| 03/2025–05/2026 | Betsson Group (EU, remote from Brazil) | Senior Software Engineer | €1B+ ARR · 40M+ tx/yr · 15+ regulated markets |
-| 04/2023–02/2025 | Canon Medical Systems (remote) | Senior SE Consulting | Enterprise healthcare · multi-site hospital ops |
-| 12/2021–04/2023 | Grupo SBF — Nike Brazil / Centauro | React Engineer | 8M+ MAU · LATAM's largest sports retailer |
-| 01/2021–12/2021 | Encora — VMware Pathfinder | Frontend Engineer | 2.1M+ labs · multi-region |
-| 04/2020–01/2021 | Zup Innovation — Itaú Unibanco | Frontend Engineer | 70M+ customers · Latin America's largest bank |
-| 11/2019–04/2020 | Venturus — CCR AutoBAn | Frontend Engineer | 320km highway operations · real-time telemetry |
-| 02/2019–11/2019 | Venturus — CGO Assessoria | Full Stack Engineer | -97.5% API latency · MEAN stack |
-| 09/2018–02/2019 | MB Labs — SM Aprendizagem | Mobile Developer | 5-OS cross-platform · -80% delivery cost |
-| 07/2018–09/2018 | MB Labs — Hondana | Full Stack Developer | Enterprise chatbot · Cia Hering · KPMG |
-| 10/2017–05/2018 | Monde Sistemas | Frontend Engineer (Vue.js) | 2,200+ travel agencies |
+| Jun 2026 - Present | [Raylu](https://raylu.ai) | Senior Software Engineer | New York, US (remote) |
+| Mar 2025 - May 2026 | [Betsson Group](https://betssongroup.com) | Senior Software Engineer | Malta (hybrid) |
+| Mar 2023 - Mar 2025 | Independent Consultant | Senior Software Engineer | Remote |
+| Dec 2021 - Mar 2023 | [Grupo SBF (Nike / Centauro)](https://www.gruposbf.com.br) | Software Engineer | São Paulo, Brazil (remote) |
+| Jan 2021 - Dec 2021 | [Encora (formerly Daitan)](https://www.linkedin.com/company/encorainc/) | Frontend Developer · assigned to VMware | Campinas, Brazil |
+| Apr 2020 - Jan 2021 | [Zup Innovation (Itaú Unibanco)](https://zup.com.br) | Frontend Developer | Campinas, Brazil |
+| Feb 2019 - Apr 2020 | [Venturus](https://www.venturus.org.br) | Full Stack Engineer → Frontend Developer | Campinas, Brazil |
+| Jul 2018 - Feb 2019 | [MB Labs](https://mblabs.com.br) | Full Stack Engineer → Software Engineer | Campinas, Brazil |
 
 ## Industries
 
-- iGaming / Regulated Markets — PCI-DSS, 15+ jurisdictions, €1B+ ARR
-- E-commerce — 8M+ MAU, multi-brand, LATAM
-- Banking / Fintech — 70M+ customers, digital banking
-- Healthcare — enterprise hospital operations, WCAG 2.1 AA
-- EdTech — 5-OS offline-first educational platform
-- HR-tech / Corporate Training — enterprise chatbot (Cia Hering, KPMG)
-- SaaS / CRM — travel agency management, 2,200+ clients
-- Infrastructure / Logistics — highway ops dashboards, real-time telemetry
+- iGaming / Regulated Markets: PCI-DSS, 15+ jurisdictions, €1.197B group revenue
+- E-commerce: 8M+ MAU, multi-brand, LATAM
+- Banking / Fintech: 24.2M digital clients, business insurance
+- Private markets: AI deal origination for funds holding $500B+ in assets
+- Medical imaging equipment: hospital equipment service platform, specialist scheduling, field visits
+- EdTech: 5-OS offline-first educational platform
+- HR-tech / Corporate Training: enterprise chatbot (Cia Hering, 800+ stores)
+- Infrastructure / Logistics: highway ops dashboards, real-time telemetry
 
 ## Education
 
-- Web Development Specialist Co-op Diploma — CICCC, Vancouver, Canada (2023–2024)
-- Bachelor's in Information Systems — UNISAL, Campinas, Brazil (2015–2020)
-- WES Verified International Academic Qualifications (2022)
-- Angular Developer Certification — Alain Chautard, Google Developer Expert (2024)
+- MBA (Lato Sensu), AI Engineering, Machine Learning and Deep Learning, Instituto Infnet, Brazil (online), expected Dec 2027
+- Web Development Co-op Diploma, Cornerstone International Community College of Canada (CICCC), Vancouver, Canada (2023-2024)
+- B.S. Information Systems, Centro Universitário Salesiano de São Paulo (UNISAL), Campinas, Brazil (2015-2020)
+
+## Certifications
+
+- Angular Developer Certification, certificates.dev (2024)
+- English: IELTS General Training, C1 (2023)
+- International degree: WES verified, World Education Services (2022)
 
 ## Languages
 
-- Portuguese: Native
+- Portuguese: native
 - English: C1
-- French: A2
 - Spanish: B1
+- French: A2
 
 ## Community
 
-- DevOpsDays Campinas 2024 — Organizer
-  Speaker sourcing and program curation, 10+ talks across DevOps,
-  cloud infrastructure, and platform engineering
+- DevOpsDays Campinas 2024: organizer (https://devopsdays.org/events/2024-campinas/welcome/)
+  Curated 8 talks across DevOps, cloud and platform engineering.
+  Program: https://devopsdays.org/events/2024-campinas/program/
+  Organizers: https://devopsdays.org/events/2024-campinas/contact/
+- open to CFP submissions for 2027 · open to volunteer / organizer roles.
+
+## Selected project context
+
+- ORIGINATION_PLATFORM_UI, Raylu: React, Next.js 14, TypeScript 5. Investor workflow screens of an AI deal origination platform for private markets: versioned, URL-safe view state, a table engine on TanStack Table and React Query, and a migration measured as production builds against each route's parent commit across four Next.js routes (on the pipelines route CLS 0.166 to zero, LCP from 2,544 to 1,308 ms, Lighthouse performance 79 to 96).
+- ERIKUNHA.DEV, personal project: governed Anthropic endpoint with a prompt-injection gate, streaming leak detector, kill switch and a CI eval harness (LLM judge calibrated on human labels, 0.85 agreement floor).
+- LAIBEMAGE, personal project (open source, MIT): TypeScript CLI classifying images across seven LLM vision providers (github.com/erikunha/LAIbemage).
+- LEDGERLENS, personal project (open source, MIT): Python agent that investigates payment complaints and verifies every claim in its answer against the evidence it cited (github.com/erikunha/ledgerlens).
+- REACT_GOOGLE_MAPS_API, open-source contribution (PR #3266): diagnosed and fixed an infinite re-render loop in the Directions API example of a library with about 1.8M weekly npm downloads; reviewed and merged by the maintainer.
+- SERVICE_OPS_CONSOLE, Independent Consultant: hospital equipment service platform for service orders, specialist schedules and field visits.
 
 ## Links
 
 - [Portfolio](https://www.erikunha.dev): Live site with streaming AI terminal,
   performance receipts, and full project showcase
 - [GitHub](https://github.com/erikunha): Open source projects
-- [LinkedIn](https://linkedin.com/in/erikunha): Full professional history
+- [LinkedIn](https://www.linkedin.com/in/erikunha/): Full professional history
 - [Hiring profile API](https://www.erikunha.dev/api/erik.json): Machine-readable
   hiring profile (JSON)
 
@@ -140,6 +165,6 @@ Performance & A11y: Core Web Vitals · WCAG 2.1 AA · ARIA · Lighthouse CI
 
 Published design system at /design-system. Covers:
 - Two-tier token pipeline (primitives to semantic tokens as CSS custom properties in app/css/theme.css)
-- 9 primitive components (Field and CopyButton are client for form interactivity and clipboard access; the rest are RSC): Button, Field, Badge, CopyButton, TerminalPanel, StatTile, CmdLine, KbdKey, WindowChrome
+- 11 primitive components (Field is client for form interactivity; the other ten are RSC): Badge, BrandIcon, Button, CmdLine, Field, KbdKey, NavItem, Panel, StatTile, TerminalPanel, WindowChrome. The docs also provide a client CopyButton helper for clipboard access.
 - Enforcement: boundary lint, no-magic-values lint, contrast check, all in CI
 - Docs: /design-system/tokens, /design-system/components, /design-system/enforcement, /design-system/changelog

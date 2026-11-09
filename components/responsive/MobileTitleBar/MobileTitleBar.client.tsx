@@ -1,15 +1,18 @@
 'use client';
 
-import { WindowChrome } from '@/design-system';
+import type { ReactNode } from 'react';
+import { LanguageSwitch, MenuTrigger } from '../SectionNavigation';
 
-export function MobileTitleBar() {
+export function MobileTitleBar({ brand }: { brand: ReactNode }) {
   return (
-    <div className="mobile-title-bar sticky top-7 z-[109] flex items-center gap-2.5 px-[14px] py-2.5 bg-secondary-950 border-b border-primary-subtle text-xs uppercase tracking-[0.14em]">
-      <WindowChrome size={9} />
-      <div className="flex-1 text-center text-primary-500 font-bold" aria-hidden="true">
-        ERIK_CUNHA.SH
+    <header className="mobile-title-bar sticky top-7 z-(--z-title-bar) grid grid-cols-[1fr_auto_1fr] items-center gap-2.5 px-[var(--space-gutter)] py-2.5 bg-secondary-950 border-b border-primary-subtle">
+      <div className="justify-self-start">
+        <MenuTrigger />
       </div>
-      <div aria-hidden="true" />
-    </div>
+      <div className="justify-self-center">
+        <LanguageSwitch />
+      </div>
+      <div className="justify-self-end">{brand}</div>
+    </header>
   );
 }

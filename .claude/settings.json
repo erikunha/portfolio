@@ -1,17 +1,15 @@
 {
   "permissions": {
-    "allow": [
-      "Skill(commit-commands:commit)",
-      "Skill(commit-commands:commit-push-pr)",
-      "Skill(code-review:code-review)",
-      "Skill(pr-review-toolkit:review-pr)",
-      "Skill(security-review)",
-      "Skill(react-best-practices)",
-      "Skill(vercel:nextjs)",
-      "Skill(vercel:vercel-functions)",
-      "Skill(web-design-guidelines)",
-      "Skill(thinking-*)"
-    ],
-    "deny": ["Bash(fallow fix:*)", "Bash(npx fallow fix:*)", "Bash(npx fallow@2.95.0 fix:*)"]
+    "deny": [
+      "Bash(git add .:*)",
+      "Bash(git add -A:*)",
+      "Bash(git add --all:*)",
+      "Bash(npm install:*)",
+      "Bash(npm i:*)",
+      "Bash(yarn:*)",
+      "Read(./.env)",
+      "Read(./.env.local)",
+      "Read(./.env.*.local)"
+    ]
   }
 }

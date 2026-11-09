@@ -13,6 +13,7 @@ function renderCta() {
       subscribeLabel="inscrever-se no canal"
       subscribedLabel="ver os últimos vídeos"
       outboundId="inscrever"
+      newTabHint="abre em uma nova guia"
     />,
   );
 }
@@ -70,5 +71,14 @@ describe('SubscribeCta', () => {
   it('is marked outbound so the page shows the same loading feedback as every other link', () => {
     const { container } = renderCta();
     expect(anchor(container).getAttribute('data-outbound')).toBe('inscrever');
+  });
+
+  it('shows exactly one of the two labels at a time', async () => {
+    const { container } = renderCta();
+    expect(container.textContent).not.toContain('ver os últimos vídeos');
+    await act(async () => {
+      anchor(container).dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+    expect(container.textContent).not.toContain('inscrever-se no canal');
   });
 });

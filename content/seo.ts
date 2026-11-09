@@ -1,37 +1,46 @@
 import { z } from 'zod';
+import { communityEvent, communityTalksSentence } from './community';
+import { profile, profileSummary, receiptDelta, YEARS_OF_EXPERIENCE_LABEL } from './profile';
+import { SITE_LOCALE } from './site-locale';
+import { social } from './social';
+import { PHONE_NUMBER } from './social-urls';
 
 export const personSchema = {
   '@context': 'https://schema.org',
   '@type': 'Person',
-  name: 'Erik Henrique Alves Cunha',
-  alternateName: 'Erik Cunha',
-  jobTitle: 'Senior Full-Stack Engineer · Frontend Architecture & AI',
-  url: 'https://www.erikunha.dev',
-  email: 'erikhenriquealvescunha@gmail.com',
-  telephone: '+5519997049125',
-  knowsLanguage: [
-    { '@type': 'Language', name: 'Portuguese', alternateName: 'Native' },
-    { '@type': 'Language', name: 'English', alternateName: 'C1' },
-    { '@type': 'Language', name: 'French', alternateName: 'A2' },
-    { '@type': 'Language', name: 'Spanish', alternateName: 'B1' },
-  ],
-  nationality: { '@type': 'Country', name: 'Brazil' },
+  name: profile.fullName,
+  alternateName: profile.displayName,
+  jobTitle: profile.title,
+  url: social.site,
+  email: social.email,
+  telephone: PHONE_NUMBER,
+  knowsLanguage: profile.languages.map((language) => ({
+    '@type': 'Language',
+    name: language.name,
+    alternateName: language.level,
+  })),
+  nationality: { '@type': 'Country', name: profile.country },
   address: {
     '@type': 'PostalAddress',
-    addressLocality: 'Campinas',
+    addressLocality: profile.city,
     addressRegion: 'São Paulo',
     addressCountry: 'BR',
   },
-  sameAs: ['https://linkedin.com/in/erikunha', 'https://github.com/erikunha'],
+  sameAs: [social.linkedin, social.github],
   worksFor: {
     '@type': 'Organization',
-    name: 'Raylu.ai',
-    url: 'https://raylu.ai',
+    name: profile.currentEmployer.name,
+    url: profile.currentEmployer.url,
   },
-  description:
-    'Full-Stack Engineer with 8+ years specializing in Applied AI systems and high-scale production architecture. Currently building shared UI systems and state architecture at Raylu.ai — the AI deal-origination product for private markets — on contract through Torc. Prior: PCI-DSS payments at Betsson Group (€1B+ ARR, 40M+ transactions/yr). Impact across e-commerce (8M+ MAU), banking (70M+ customers), and healthcare. Track record: -97.5% API latency, -98% CSS bundle, -52% TTI. Staff/Principal-track, targeting AI-forward product companies worldwide.',
+  description: `${profileSummary} ${YEARS_OF_EXPERIENCE_LABEL} across regulated industries. Track record: ${receiptDelta('API_LATENCY')} API latency, ${receiptDelta('BUNDLE_CSS')} CSS bundle, ${receiptDelta('TTI')} TTI.`,
   knowsAbout: [
     'LLM Engineering',
+    'LLM Evaluation',
+    'LLM-as-Judge Calibration',
+    'Model Context Protocol (MCP)',
+    'Prompt-Injection Defense',
+    'AI Guardrails',
+    'Agent Orchestration',
     'Retrieval-Augmented Generation (RAG)',
     'Generative AI',
     'Multi-Agent Orchestration',
@@ -75,38 +84,33 @@ export const personSchema = {
     'SQL',
     'Rate Limiting Architecture',
     'Backend for Frontend (BFF)',
-    'Clean Architecture',
-    'Domain-Driven Design (DDD)',
     'Nx Monorepo',
     'Component-Driven Architecture',
     'PCI-DSS Systems',
     'Financial Technology',
-    'Healthcare Technology',
     'Private Markets Technology',
-    'B2B SaaS',
+    'AI-native SaaS',
     'Banking Technology',
     'E-commerce Platforms',
     'EdTech',
     'Performance Engineering',
     'Core Web Vitals',
-    'Web Accessibility (WCAG 2.1 AA)',
+    'Web Accessibility (WCAG 2.2 AA)',
     'ARIA',
     'CI/CD Pipelines',
     'GitHub Actions',
-    'Test-Driven Development',
     'Playwright',
     'Jest',
     'React Testing Library',
     'MSW',
-    'Edge Computing',
   ],
   hasOccupation: {
     '@type': 'Occupation',
-    name: 'Full-Stack Engineer',
-    occupationLocation: { '@type': 'City', name: 'Remote / Worldwide' },
+    name: profile.title,
+    occupationLocation: { '@type': 'Country', name: profile.country },
     skills:
-      'TypeScript, React, Angular, Next.js, Node.js, Python, LLM Engineering, RAG, Multi-Agent Systems, PCI-DSS, AWS, Docker, Performance Engineering',
-    experienceRequirements: '8+ years',
+      'TypeScript, Python, React, Next.js, Angular, Node.js, LLM Systems and Evaluation, Agents and Guardrails, PCI-DSS, AWS, Docker, Performance Engineering',
+    experienceRequirements: YEARS_OF_EXPERIENCE_LABEL,
   },
   alumniOf: [
     {
@@ -127,7 +131,7 @@ export const personSchema = {
       credentialCategory: 'certification',
       recognizedBy: {
         '@type': 'Organization',
-        name: 'Alain Chautard — Google Developer Expert, Angular',
+        name: 'certificates.dev',
       },
     },
     {
@@ -140,18 +144,17 @@ export const personSchema = {
   memberOf: {
     '@type': 'Organization',
     name: 'DevOpsDays Campinas',
-    description:
-      'Conference organizer — speaker sourcing, program curation, 10+ talks across DevOps, cloud, and platform engineering',
+    url: communityEvent[SITE_LOCALE.en].link.href,
+    description: `Conference organizer, ${communityEvent[SITE_LOCALE.en].year}: ${communityTalksSentence}`,
   },
   seeks: {
     '@type': 'Demand',
     itemOffered: {
       '@type': 'JobPosting',
-      title: 'Senior, Staff, or Principal Engineer — Applied AI Systems & Full-Stack',
+      title: profile.title,
       employmentType: 'FULL_TIME',
       jobLocationType: 'TELECOMMUTE',
-      description:
-        'Targeting Applied AI engineering roles (Senior, Staff, or Principal IC) at AI-forward product companies. Currently based in Brazil (UTC-3), working remotely for a New York AI startup company. Open to fully remote worldwide or relocation with visa sponsorship. 8+ years across regulated industries. WES-verified credentials, English C1.',
+      description: `${profileSummary} WES-verified credentials, English C1.`,
     },
   },
 } as const;
@@ -161,12 +164,29 @@ z.object({
   alternateName: z.string().min(1),
   jobTitle: z.string().min(1),
   description: z.string().min(1),
-  url: z.string().url(),
-  email: z.string().email(),
+  url: z.url(),
+  email: z.email(),
 }).parse(personSchema);
 
-export const SITE_NAME = 'erikunha.dev';
-export const OG_LOCALE = 'en_US';
+export const SITE_NAME = social.siteLabel;
+
+export const SITE_KEYWORDS: string[] = [
+  profile.title,
+  'Applied AI',
+  'LLM Systems',
+  'LLM Evaluation',
+  'Agents',
+  'Guardrails',
+  'Angular',
+  'React',
+  'Next.js',
+  'Node.js',
+  'TypeScript',
+  'PCI-DSS',
+  'GenAI',
+  'E-commerce',
+  'AI-native SaaS',
+];
 export const OG_IMAGE_PATH = '/og.png';
 const OG_IMAGE_WIDTH = 1200;
 const OG_IMAGE_HEIGHT = 630;

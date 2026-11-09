@@ -32,7 +32,7 @@ export function assertExpectedFindings(results) {
 }
 
 import { spawnSync } from 'node:child_process';
-import { cpSync, mkdtempSync, rmSync } from 'node:fs';
+import { cpSync, mkdtempSync, realpathSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
@@ -116,5 +116,8 @@ export function run({
   return exit(code);
 }
 
-if (typeof process.argv[1] === 'string' && import.meta.url === pathToFileURL(process.argv[1]).href)
+if (
+  typeof process.argv[1] === 'string' &&
+  import.meta.url === pathToFileURL(realpathSync(process.argv[1])).href
+)
   run();

@@ -1,12 +1,47 @@
-import { z } from 'zod';
+import { OPENS_IN_NEW_TAB } from './company-link';
+import { HIRE_ACCESSIBLE_NAME, NAV_VOCABULARY } from './nav';
+import { PROFILE_FACT, profile, profilePresentation } from './profile';
+import { type HeroContent, HeroContentSchema } from './schemas';
+import { localizedPath, SITE_LOCALE, type SiteLocale } from './site-locale';
+import { social } from './social';
 
-export const heroTagline = z
-  .string()
-  .min(1)
-  .parse(
-    'Senior Full-Stack Engineer · Applied AI · React · Next.js · TypeScript · Angular · Node.js · AWS',
-  );
+const EXTERNAL_PROTOCOL = 'https://';
 
-export const heroCurrentEmployer = z.string().min(1).parse('Raylu.ai');
+const heroContentFor = (locale: SiteLocale): HeroContent => {
+  const pt = locale === SITE_LOCALE.pt;
+  return HeroContentSchema.parse({
+    locationLabel: pt ? 'LOCAL:' : 'LOC:',
+    employerLabel: pt ? 'AGORA:' : 'NOW:',
+    languageLabel: pt ? 'IDIOMA:' : 'LANG:',
+    statsLabel: pt ? 'Impacto em escala' : 'Impact at scale',
+    hire: {
+      label: NAV_VOCABULARY[locale].hire,
+      href: social.linkedin,
+      accessibleLabel: HIRE_ACCESSIBLE_NAME[locale],
+    },
+    actions: [
+      ...profile.actions,
+      { label: pt ? 'VER_CV' : 'VIEW_CV', href: localizedPath(locale, '/cv'), hiddenOnWide: true },
+      { label: pt ? 'RESUMO_30S' : '30S_SUMMARY', href: localizedPath(locale, '/summary') },
+    ].map((action) => ({
+      ...action,
+      accessibleLabel: action.href.startsWith(EXTERNAL_PROTOCOL)
+        ? `${action.label}, ${OPENS_IN_NEW_TAB[locale]}`
+        : action.label,
+      external: action.href.startsWith(EXTERNAL_PROTOCOL),
+    })),
+    stats: [
+      { value: '$500B+', label: pt ? 'ativos em fundos' : 'fund assets' },
+      { value: PROFILE_FACT.peakMau, label: pt ? 'MAU e-commerce' : 'e-com MAU' },
+      { value: '40s → <1s', label: pt ? 'API de relatórios' : 'reporting API' },
+      { value: 'CLS → 0', label: pt ? 'deslocamento de layout' : 'layout shift' },
+    ],
+  });
+};
 
-export const heroPlatformChip = z.string().min(1).parse('AI deal origination · private markets');
+export const heroContent: Record<SiteLocale, HeroContent> = {
+  [SITE_LOCALE.en]: heroContentFor(SITE_LOCALE.en),
+  [SITE_LOCALE.pt]: heroContentFor(SITE_LOCALE.pt),
+};
+
+export const heroTagline = (locale: SiteLocale): string => profilePresentation[locale].tagline;

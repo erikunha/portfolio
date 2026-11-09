@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const componentsDir = path.join(ROOT, 'design-system/components');
-const docsPage = path.join(ROOT, 'app/design-system/components/page.mdx');
+const docsPage = path.join(ROOT, 'app/(en)/design-system/components/page.mdx');
 
 const componentNames = readdirSync(componentsDir, { withFileTypes: true })
   .filter((e) => e.isDirectory())
@@ -15,7 +15,8 @@ const docsContent = readFileSync(docsPage, 'utf8');
 let missing = 0;
 
 for (const name of componentNames) {
-  if (!docsContent.includes(`## ${name}`)) {
+  const heading = new RegExp(`^(?:## ${name}|<h2 id="[^"]+">${name}</h2>)\\s*$`, 'm');
+  if (!heading.test(docsContent)) {
     console.error(`MISSING DOCS: ${name} has no "## ${name}" heading in components/page.mdx`);
     missing++;
   }

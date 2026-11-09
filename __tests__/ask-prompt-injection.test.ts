@@ -1,6 +1,7 @@
-import { NextRequest } from 'next/server';
+import type { NextRequest } from 'next/server';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { INJECTION_RE } from '@/lib/ask/injection';
+import { askRequest } from './helpers/ask-route';
 
 const mockStreamText = vi.fn();
 
@@ -19,37 +20,16 @@ function makeStreamTextResult(text: string) {
   };
 }
 
-vi.mock('@/lib/rate-limit', () => ({
-  getClientIp: vi.fn(() => '127.0.0.1'),
-  getAskLimit: vi.fn(() => ({ limit: vi.fn(async () => ({ success: true })) })),
-  reserveBudget: vi.fn(async () => ({
-    allowed: true,
-    reserved: 1512,
-    pct: 0,
-    budgetKey: 'ask:tokens:test',
-  })),
-  settleBudget: vi.fn(async () => undefined),
-  checkIdenticalQuestion: vi.fn(async () => ({ allowed: true })),
-}));
+vi.mock('@/lib/rate-limit', async () => (await import('./helpers/ask-route')).rateLimitModule());
 
-vi.mock('@/lib/ask-log', () => ({
-  persistAskInteraction: vi.fn(async () => undefined),
-}));
+vi.mock('@/lib/ask-log', async () => (await import('./helpers/ask-route')).askLogModule());
 
-vi.mock('@/lib/ip-hash', () => ({
-  hashIp: vi.fn(async () => 'hashed-ip-test'),
-}));
+vi.mock('@/lib/ip-hash', async () => (await import('./helpers/ask-route')).ipHashModule());
 
-vi.mock('@/lib/log', () => ({
-  log: { info: vi.fn(), error: vi.fn(), warn: vi.fn(), debug: vi.fn() },
-}));
+vi.mock('@/lib/log', async () => (await import('./helpers/ask-route')).logModule());
 
 function makeRequest(question: string): NextRequest {
-  return new NextRequest('http://localhost/api/ask', {
-    method: 'POST',
-    body: JSON.stringify({ question }),
-    headers: { 'Content-Type': 'application/json' },
-  });
+  return askRequest({ question });
 }
 
 const INJECTION_SAMPLES = [
@@ -69,8 +49,8 @@ const INJECTION_SAMPLES = [
 
 const LEGITIMATE_SAMPLES = [
   'What is your experience with PCI-DSS?',
-  'Tell me about the Canon Medical project',
-  'Are you open to relocation?',
+  'Tell me about the consulting project',
+  'Are you open to contract roles?',
   'How many years of React?',
 ];
 
@@ -143,22 +123,21 @@ describe('/api/ask prompt-injection sanitization', () => {
     expect(firstSentinel).not.toBe(secondSentinel);
   });
 
-  it('passes the system prompt as a cache-controlled system message', async () => {
+  it('passes the system prompt as cache-controlled instructions', async () => {
     mockStreamText.mockReturnValueOnce(makeStreamTextResult('ok'));
     const { POST } = await import('@/app/api/ask/route');
     await POST(makeRequest('What is your stack?'));
     const callArg = mockStreamText.mock.calls[0]?.[0] as {
       model: string;
-      messages: {
+      instructions?: {
         role: string;
         content: string;
         providerOptions?: { anthropic?: { cacheControl?: { type?: string } } };
-      }[];
+      };
     };
     expect(callArg.model).toBe('anthropic/claude-haiku-4-5');
-    const systemMsg = callArg.messages.find((m) => m.role === 'system');
-    expect(systemMsg, 'expected a system-role message').toBeDefined();
-    expect(systemMsg?.providerOptions?.anthropic?.cacheControl?.type).toBe('ephemeral');
+    expect(callArg.instructions?.role, 'expected a system-role instructions entry').toBe('system');
+    expect(callArg.instructions?.providerOptions?.anthropic?.cacheControl?.type).toBe('ephemeral');
   });
 });
 
@@ -178,8 +157,8 @@ describe('INJECTION_RE — ChatML-style delimiter coverage', () => {
 
   it('does not false-positive on legitimate questions', () => {
     expect(INJECTION_RE.test('What is your experience with PCI-DSS?')).toBe(false);
-    expect(INJECTION_RE.test('Tell me about the Canon Medical project')).toBe(false);
-    expect(INJECTION_RE.test('Are you open to relocation?')).toBe(false);
+    expect(INJECTION_RE.test('Tell me about the consulting project')).toBe(false);
+    expect(INJECTION_RE.test('Are you open to contract roles?')).toBe(false);
     expect(INJECTION_RE.test('Do you know TypeScript generics like Pick<T>?')).toBe(false);
     expect(INJECTION_RE.test('Is a < b when a is small?')).toBe(false);
     expect(INJECTION_RE.test('What systems have you built?')).toBe(false);

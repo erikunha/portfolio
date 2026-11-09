@@ -3,18 +3,13 @@
 import { readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { parseThemeColors } from '../app/(en)/design-system/_lib/theme-tokens.ts';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const themeCss = readFileSync(resolve(__dirname, '../app/css/theme.css'), 'utf8');
-
-function parseThemeColors(css) {
-  const colors = {};
-  const re = /--color-([\w-]+):\s*([^;]+);/g;
-  for (const [, name, value] of css.matchAll(re)) {
-    colors[name.trim()] = value.trim();
-  }
-  return colors;
-}
+const themeCss = readFileSync(
+  process.argv[2] ?? resolve(__dirname, '../app/css/theme.css'),
+  'utf8',
+);
 
 function hexToRgb(hex) {
   const h = hex.replace('#', '').slice(0, 6);
@@ -57,16 +52,23 @@ function get(name) {
 }
 
 const PAIRS = [
+  ['text', 'secondary-950', 4.5, 'semantic body text on base'],
+  ['text', 'secondary-900', 4.5, 'semantic body text on shell'],
+  ['text-secondary', 'secondary-950', 4.5, 'semantic secondary text on base'],
+  ['text-secondary', 'secondary-900', 4.5, 'semantic secondary text on shell'],
+  ['green', 'secondary-950', 3.0, 'semantic signal on base (large text)'],
   ['primary-400', 'secondary-950', 4.5, 'muted text on base'],
+  ['primary-700', 'secondary-950', 4.5, 'site map links on base'],
+  ['primary-700', 'secondary-900', 4.5, 'site map links on card'],
   ['primary-300', 'secondary-950', 4.5, 'faint text on base'],
   ['secondary-200', 'secondary-950', 4.5, 'secondary-200 meta/label text on base'],
   ['tertiary-50', 'secondary-950', 4.5, 'tertiary-50 foreground title text on base'],
   ['primary-500', 'secondary-950', 3.0, 'signal on base (large text)'],
   ['tertiary-50', 'secondary-900', 4.5, 'body text on shell'],
+  ['tertiary-500', 'secondary-950', 4.5, 'form placeholder on base'],
   ['primary-500', 'secondary-900', 3.0, 'signal on shell (large text)'],
   ['tertiary-400', 'secondary-950', 4.5, 'tertiary-400 meta text on base (/links)'],
-  ['quaternary-400', 'secondary-950', 4.5, 'quaternary accent label on base (/links playlists)'],
-  ['quinary-300', 'secondary-950', 4.5, 'quinary accent label on base (/links playlists)'],
+  ['senary-300', 'secondary-950', 4.5, 'alert text on base (errors, clip LED)'],
 ];
 
 let failures = 0;

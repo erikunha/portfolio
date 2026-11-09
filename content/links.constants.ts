@@ -1,34 +1,15 @@
-export const LINKS_LOCALE = { pt: 'pt', en: 'en' } as const;
+import { SITE_HTML_LANG, SITE_LOCALE, type SiteLocale } from './site-locale';
 
-export type LinksLocale = (typeof LINKS_LOCALE)[keyof typeof LINKS_LOCALE];
+export const LINKS_LOCALE = SITE_LOCALE;
 
-export const LINKS_LOCALES: readonly LinksLocale[] = Object.values(LINKS_LOCALE);
-
-export const DEFAULT_LINKS_LOCALE: LinksLocale = LINKS_LOCALE.pt;
+export type LinksLocale = SiteLocale;
 
 export const LINKS_PATH = {
   [LINKS_LOCALE.pt]: '/links',
   [LINKS_LOCALE.en]: '/links/en',
 } as const satisfies Record<LinksLocale, string>;
 
-export const LINKS_HTML_LANG = {
-  [LINKS_LOCALE.pt]: 'pt-BR',
-  [LINKS_LOCALE.en]: 'en-US',
-} as const satisfies Record<LinksLocale, string>;
-
-export const LINKS_OG_LOCALE = {
-  [LINKS_LOCALE.pt]: 'pt_BR',
-  [LINKS_LOCALE.en]: 'en_US',
-} as const satisfies Record<LinksLocale, string>;
-
-export const LINKS_INTL_LOCALE = {
-  [LINKS_LOCALE.pt]: 'pt-BR',
-  [LINKS_LOCALE.en]: 'en-US',
-} as const satisfies Record<LinksLocale, string>;
-
-export const PLAYLIST_ACCENT = { ai: 'quaternary', career: 'quinary' } as const;
-
-export type PlaylistAccent = (typeof PLAYLIST_ACCENT)[keyof typeof PLAYLIST_ACCENT];
+export const LINKS_INTL_LOCALE = SITE_HTML_LANG;
 
 export const PILL_ICON = {
   portfolio: 'portfolio',

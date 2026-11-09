@@ -12,8 +12,13 @@ import { join } from 'node:path';
 import { afterAll, describe, expect, it } from 'vitest';
 
 const semgrepInstalled = spawnSync('semgrep', ['--version']).status === 0;
+const REAL_SCAN_TIMEOUT_MS = 60_000;
+const SPAWN_GRACE_MS = 5_000;
 const run = (args: string[]) =>
-  spawnSync('node', ['scripts/run-semgrep.mjs', ...args], { encoding: 'utf8' });
+  spawnSync('node', ['scripts/run-semgrep.mjs', ...args], {
+    encoding: 'utf8',
+    timeout: REAL_SCAN_TIMEOUT_MS - SPAWN_GRACE_MS,
+  });
 
 const tmpDirs: string[] = [];
 function fixtureTempDir(...fixtures: string[]): string {
@@ -88,22 +93,30 @@ process.exit(0);
     expect(argv[argv.length - 1]).toBe('lib');
   });
 
-  it.runIf(semgrepInstalled)('flags the vulnerable fixture and writes well-formed SARIF', () => {
-    const dir = fixtureTempDir('vulnerable.ts');
-    const sarif = join(dir, 'out.sarif');
-    const r = run(['--error', '--sarif', sarif, dir]);
-    expect(r.status).toBe(1);
-    expect(existsSync(sarif)).toBe(true);
-    const doc = JSON.parse(readFileSync(sarif, 'utf8'));
-    expect(doc.version).toBe('2.1.0');
-    expect(Array.isArray(doc.runs)).toBe(true);
-    const results = doc.runs.flatMap((x: { results?: unknown[] }) => x.results ?? []);
-    expect(results.length).toBeGreaterThan(0);
-  });
+  it.runIf(semgrepInstalled)(
+    'flags the vulnerable fixture and writes well-formed SARIF',
+    () => {
+      const dir = fixtureTempDir('vulnerable.ts');
+      const sarif = join(dir, 'out.sarif');
+      const r = run(['--error', '--sarif', sarif, dir]);
+      expect(r.status).toBe(1);
+      expect(existsSync(sarif)).toBe(true);
+      const doc = JSON.parse(readFileSync(sarif, 'utf8'));
+      expect(doc.version).toBe('2.1.0');
+      expect(Array.isArray(doc.runs)).toBe(true);
+      const results = doc.runs.flatMap((x: { results?: unknown[] }) => x.results ?? []);
+      expect(results.length).toBeGreaterThan(0);
+    },
+    REAL_SCAN_TIMEOUT_MS,
+  );
 
-  it.runIf(semgrepInstalled)('produces zero findings on the clean fixture', () => {
-    const dir = fixtureTempDir('clean.ts');
-    const r = run(['--error', join(dir, 'clean.ts')]);
-    expect(r.status).toBe(0);
-  });
+  it.runIf(semgrepInstalled)(
+    'produces zero findings on the clean fixture',
+    () => {
+      const dir = fixtureTempDir('clean.ts');
+      const r = run(['--error', join(dir, 'clean.ts')]);
+      expect(r.status).toBe(0);
+    },
+    REAL_SCAN_TIMEOUT_MS,
+  );
 });

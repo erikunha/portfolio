@@ -1,15 +1,19 @@
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { afterEach, describe, expect, it } from 'vitest';
-import { mountClient } from '@/__tests__/helpers/render';
+import { fire, mountClient } from '@/__tests__/helpers/render';
+import { dawMixerCopy } from '@/content/daw-mixer';
+import { SITE_LOCALE } from '@/content/site-locale';
 import { FaderIsland } from './FaderIsland.client';
+
+const CONTROLS = dawMixerCopy[SITE_LOCALE.en].controls;
 
 function renderStatic(props: Parameters<typeof FaderIsland>[0]) {
   const html = renderToStaticMarkup(createElement(FaderIsland, props));
   return new DOMParser().parseFromString(html, 'text/html');
 }
 
-const defaults = { initialPct: 72, channelName: 'RHYTHM GTR' };
+const defaults = { initialPct: 72, channelName: 'RHYTHM GTR', label: CONTROLS.fader };
 
 describe('FaderIsland — ARIA contract', () => {
   it('has role="slider"', () => {
@@ -62,41 +66,41 @@ describe('FaderIsland — keyboard', () => {
 
   it('ArrowRight increases position by 2', async () => {
     const { container, unmount: u } = await mountClient(
-      createElement(FaderIsland, { initialPct: 50, channelName: 'TEST' }),
+      createElement(FaderIsland, { initialPct: 50, channelName: 'TEST', label: CONTROLS.fader }),
     );
     unmount = u;
     const slider = container.querySelector('[role="slider"]') as HTMLElement;
-    slider.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
+    fire(slider, new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
     expect(Number(slider.getAttribute('aria-valuenow'))).toBe(52);
   });
 
   it('ArrowLeft decreases position by 2', async () => {
     const { container, unmount: u } = await mountClient(
-      createElement(FaderIsland, { initialPct: 50, channelName: 'TEST' }),
+      createElement(FaderIsland, { initialPct: 50, channelName: 'TEST', label: CONTROLS.fader }),
     );
     unmount = u;
     const slider = container.querySelector('[role="slider"]') as HTMLElement;
-    slider.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowLeft', bubbles: true }));
+    fire(slider, new KeyboardEvent('keydown', { key: 'ArrowLeft', bubbles: true }));
     expect(Number(slider.getAttribute('aria-valuenow'))).toBe(48);
   });
 
   it('clamps to 0 at minimum', async () => {
     const { container, unmount: u } = await mountClient(
-      createElement(FaderIsland, { initialPct: 1, channelName: 'TEST' }),
+      createElement(FaderIsland, { initialPct: 1, channelName: 'TEST', label: CONTROLS.fader }),
     );
     unmount = u;
     const slider = container.querySelector('[role="slider"]') as HTMLElement;
-    slider.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowLeft', bubbles: true }));
+    fire(slider, new KeyboardEvent('keydown', { key: 'ArrowLeft', bubbles: true }));
     expect(Number(slider.getAttribute('aria-valuenow'))).toBeGreaterThanOrEqual(0);
   });
 
   it('clamps to 100 at maximum', async () => {
     const { container, unmount: u } = await mountClient(
-      createElement(FaderIsland, { initialPct: 99, channelName: 'TEST' }),
+      createElement(FaderIsland, { initialPct: 99, channelName: 'TEST', label: CONTROLS.fader }),
     );
     unmount = u;
     const slider = container.querySelector('[role="slider"]') as HTMLElement;
-    slider.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
+    fire(slider, new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
     expect(Number(slider.getAttribute('aria-valuenow'))).toBeLessThanOrEqual(100);
   });
 });
@@ -110,23 +114,23 @@ describe('FaderIsland — pointer drag behavior', () => {
 
   it('pointermove without pointerdown does not change position', async () => {
     const { container, unmount: u } = await mountClient(
-      createElement(FaderIsland, { initialPct: 50, channelName: 'TEST' }),
+      createElement(FaderIsland, { initialPct: 50, channelName: 'TEST', label: CONTROLS.fader }),
     );
     unmount = u;
     const slider = container.querySelector('[role="slider"]') as HTMLElement;
-    slider.dispatchEvent(new PointerEvent('pointermove', { clientX: 300, bubbles: true }));
+    fire(slider, new PointerEvent('pointermove', { clientX: 300, bubbles: true }));
     expect(slider.getAttribute('aria-valuenow')).toBe('50');
   });
 
   it('aria-valuenow is always a valid integer after pointer events', async () => {
     const { container, unmount: u } = await mountClient(
-      createElement(FaderIsland, { initialPct: 50, channelName: 'TEST' }),
+      createElement(FaderIsland, { initialPct: 50, channelName: 'TEST', label: CONTROLS.fader }),
     );
     unmount = u;
     const slider = container.querySelector('[role="slider"]') as HTMLElement;
-    slider.dispatchEvent(new PointerEvent('pointerdown', { clientX: 100, bubbles: true }));
-    slider.dispatchEvent(new PointerEvent('pointermove', { clientX: 200, bubbles: true }));
-    slider.dispatchEvent(new PointerEvent('pointerup', { clientX: 200, bubbles: true }));
+    fire(slider, new PointerEvent('pointerdown', { clientX: 100, bubbles: true }));
+    fire(slider, new PointerEvent('pointermove', { clientX: 200, bubbles: true }));
+    fire(slider, new PointerEvent('pointerup', { clientX: 200, bubbles: true }));
     const val = Number(slider.getAttribute('aria-valuenow'));
     expect(Number.isNaN(val)).toBe(false);
     expect(val).toBeGreaterThanOrEqual(0);
@@ -135,7 +139,7 @@ describe('FaderIsland — pointer drag behavior', () => {
 
   it('pointercancel restores position to drag-start value', async () => {
     const { container, unmount: u } = await mountClient(
-      createElement(FaderIsland, { initialPct: 50, channelName: 'TEST' }),
+      createElement(FaderIsland, { initialPct: 50, channelName: 'TEST', label: CONTROLS.fader }),
     );
     unmount = u;
     const slider = container.querySelector('[role="slider"]') as HTMLElement;
@@ -145,11 +149,11 @@ describe('FaderIsland — pointer drag behavior', () => {
       configurable: true,
     });
 
-    slider.dispatchEvent(new PointerEvent('pointerdown', { clientX: 50, bubbles: true }));
-    slider.dispatchEvent(new PointerEvent('pointermove', { clientX: 80, bubbles: true }));
+    fire(slider, new PointerEvent('pointerdown', { clientX: 50, bubbles: true }));
+    fire(slider, new PointerEvent('pointermove', { clientX: 80, bubbles: true }));
     expect(slider.getAttribute('aria-valuenow')).toBe('80');
 
-    slider.dispatchEvent(new PointerEvent('pointercancel', { bubbles: true }));
+    fire(slider, new PointerEvent('pointercancel', { bubbles: true }));
     expect(slider.getAttribute('aria-valuenow')).toBe('50');
   });
 });

@@ -1,0 +1,10 @@
+[mcp_servers.context7]
+url = "https://mcp.context7.com/mcp"
+
+[mcp_servers.upstash]
+command = "sh"
+args = [
+  "-c",
+  "exec npx -y @upstash/mcp-server@latest --email \"$UPSTASH_EMAIL\" --api-key \"$UPSTASH_READONLY_API_KEY\"",
+]
+env_vars = ["UPSTASH_EMAIL", "UPSTASH_READONLY_API_KEY"]

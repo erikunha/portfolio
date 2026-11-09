@@ -34,20 +34,20 @@ See `ARCHITECTURE.md` for the system design, `STANDARDS.md` for the engineering 
 
 Git hooks run automatically, but you can (and should) run the checks yourself:
 
-| Command | What it checks |
-|---|---|
-| `pnpm check` | Biome lint + format |
-| `pnpm typecheck` | TypeScript strict |
-| `pnpm validate-content` | Zod content schemas |
-| `pnpm test` | Vitest unit tests |
-| `pnpm test:e2e` | Playwright: a11y scan, contact/ask journeys, visual regression |
-| `pnpm ci:local` | The full local CI chain (lint + type + content + tests + gates) |
-| `pnpm bundle-check` | Bundle-size gate |
-| `pnpm lhci` | Lighthouse CI |
+| Command                 | What it checks                                                  |
+| ----------------------- | --------------------------------------------------------------- |
+| `pnpm check`            | Biome lint + format                                             |
+| `pnpm typecheck`        | TypeScript strict                                               |
+| `pnpm validate-content` | Zod content schemas                                             |
+| `pnpm test`             | Vitest unit tests                                               |
+| `pnpm test:e2e`         | Playwright: a11y scan, contact/ask journeys, visual regression  |
+| `pnpm ci:local`         | The full local CI chain (lint + type + content + tests + gates) |
+| `pnpm bundle-check`     | Bundle-size gate                                                |
+| `pnpm lhci`             | Lighthouse CI                                                   |
 
 **Pre-commit** runs Biome, a staged `gitleaks` secret scan, and commitlint. **Pre-push** runs the full verify chain and enforces the branch-name format.
 
-Performance, accessibility (WCAG 2.1 AA), and security are treated as implicit on every change, not separate phases. The performance budgets and the Lighthouse thresholds in `CLAUDE.md` are CI-enforced. **Do not disable a gate to merge** — if a gate fails, fix the underlying issue, or open an issue explaining why the gate is wrong.
+Performance, accessibility (WCAG 2.2 AA), and security are treated as implicit on every change, not separate phases. The performance budgets and the Lighthouse thresholds in `lighthouserc.json` and `lighthouserc.mobile.json` are CI-enforced. **Do not disable a gate to merge** — if a gate fails, fix the underlying issue, or open an issue explaining why the gate is wrong.
 
 ## Opening a pull request
 
@@ -56,7 +56,7 @@ Performance, accessibility (WCAG 2.1 AA), and security are treated as implicit o
 3. Fill in **every** section of the PR template — do not write a body from scratch.
 4. **Show your work.** A PR should evidence what it claims, not just assert it: paste command output, attach before/after screenshots or a recording for UI changes, note bundle-size and Core Web Vitals deltas for performance work, and link the CI run or Vercel preview. Reviewers should be able to validate without pulling the branch.
 5. A visual change requires regenerated visual-regression baselines before the PR is opened.
-6. CI must be green and the automated review must approve before merge. Address all blocking review findings.
+6. CI must be green and every review thread resolved with a reply (`pnpm pr:gate`) before merge. Address all blocking review findings.
 
 ## Reporting bugs and requesting features
 

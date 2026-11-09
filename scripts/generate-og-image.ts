@@ -5,6 +5,17 @@ import path from 'node:path';
 import type { Browser } from 'playwright';
 import { chromium } from 'playwright';
 
+import {
+  BRAND_ICON_CROP,
+  BRAND_ICON_PATH,
+  BRAND_ICON_VIEWBOX,
+} from '../design-system/components/BrandIcon/brand-icon-path';
+
+const BRAND_WIDTH_PX = 240;
+const BRAND_HEIGHT_PX = Math.round(
+  (BRAND_WIDTH_PX * BRAND_ICON_CROP.height) / BRAND_ICON_CROP.width,
+);
+
 const fontsDir = path.resolve(process.cwd(), 'public/fonts');
 
 function fontBase64(file: string): string {
@@ -63,6 +74,13 @@ function buildHtml(): string {
     flex-direction: column;
     justify-content: space-between;
   }
+  .brand {
+    position: absolute;
+    top: 56px;
+    right: 80px;
+    color: #00FF41;
+    filter: drop-shadow(0 0 14px rgba(0,255,65,0.5));
+  }
   .top { display: flex; flex-direction: column; gap: 8px; }
   .domain {
     font-size: 20px;
@@ -117,19 +135,20 @@ function buildHtml(): string {
 </style>
 </head>
 <body>
+<svg class="brand" viewBox="${BRAND_ICON_VIEWBOX}" width="${BRAND_WIDTH_PX}" height="${BRAND_HEIGHT_PX}" fill="currentColor" aria-hidden="true"><path d="${BRAND_ICON_PATH}"/></svg>
 <div class="container">
   <div class="top">
     <div class="domain">erikunha.dev</div>
     <div class="name">ERIK CUNHA</div>
-    <div class="title">Senior Full-Stack Engineer</div>
-    <div class="subtitle">Frontend Architecture &bull; Platform &amp; AI Applied Engineering</div>
-    <div class="subtitle" style="margin-top:4px;">UI/UX &bull; Accessibility &bull; Web Performance for High-Traffic Apps</div>
+    <div class="title">Senior Software Engineer, Applied AI</div>
+    <div class="subtitle">LLM Systems &bull; Evals &amp; Guardrails &bull; Agents</div>
+    <div class="subtitle" style="margin-top:4px;">Data-Dense Product Platforms &bull; Accessibility &bull; Web Performance</div>
   </div>
   <div class="stack">
     <span class="tag">React</span>
     <span class="tag">Next.js</span>
-    <span class="tag">Angular</span>
     <span class="tag">TypeScript</span>
+    <span class="tag">Python</span>
     <span class="tag">Node.js</span>
     <span class="tag">AWS</span>
   </div>

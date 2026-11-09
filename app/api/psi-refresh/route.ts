@@ -1,20 +1,31 @@
 import type { NextRequest } from 'next/server';
 import { Resend } from 'resend';
+import { EMAIL_ADDRESS } from '@/content/social-urls';
 import { env } from '@/lib/env';
 import { refreshScores, type Strategy } from '@/lib/lighthouse-scores';
 import { log } from '@/lib/log';
 import { getRedis } from '@/lib/rate-limit';
+import { isCronAuthorized } from '@/lib/server/cron-auth';
+import { err } from '@/lib/server/route';
 
 const PSI_CONSEC_KEY = (s: Strategy) => `meta:psi-consec-failures:${s}`;
 const PSI_CONSEC_TTL_S = 604_800;
 const PSI_ALERT_THRESHOLD = 3;
+const RESEND_ALERT_TIMEOUT_MS = 5_000;
+
+const UNAUTHORIZED_STATUS = 401;
 
 export const maxDuration = 60;
 
 export async function GET(req: NextRequest): Promise<Response> {
   const cronSecret = env.CRON_SECRET;
-  if (!cronSecret || req.headers.get('authorization') !== `Bearer ${cronSecret}`) {
-    return new Response('Unauthorized', { status: 401 });
+  if (!isCronAuthorized(req, cronSecret)) {
+    return err({
+      requestId: crypto.randomUUID(),
+      status: UNAUTHORIZED_STATUS,
+      code: 'unauthorized',
+      message: 'unauthorized',
+    });
   }
 
   const t0 = Date.now();
@@ -71,7 +82,7 @@ export async function GET(req: NextRequest): Promise<Response> {
       }
     } catch (counterErr) {
       log.error(
-        'psi-refresh: consecutive-failure counter update failed for a strategy — that strategy skipped this run',
+        'psi-refresh: consecutive-failure counter update failed for a strategy; that strategy skipped this run',
         { strategy: name, err: counterErr },
       );
     }
@@ -85,25 +96,19 @@ export async function GET(req: NextRequest): Promise<Response> {
       try {
         const resend = new Resend(apiKey);
         const alertText = overThreshold
-          .map((o) => `${o.strategy}: ${o.count} consecutive failures — ${o.error}`)
+          .map((o) => `${o.strategy}: ${o.count} consecutive failures: ${o.error}`)
           .join('\n');
-        const sendPromise = resend.emails.send({
-          from: 'alerts@erikunha.dev',
-          to: 'erikhenriquealvescunha@gmail.com',
-          subject: '[portfolio] psi-refresh cron failed',
-          text: `One or more PSI strategies have reached ${PSI_ALERT_THRESHOLD}+ consecutive failures.\n\n${alertText}\nTimestamp: ${new Date().toISOString()}`,
-        });
-        let timerId: ReturnType<typeof setTimeout> | undefined;
-        const timeoutPromise = new Promise<never>((_, reject) => {
-          timerId = setTimeout(() => reject(new Error('resend alert timeout (5s)')), 5_000);
-        });
-        try {
-          const { error: sendError } = await Promise.race([sendPromise, timeoutPromise]);
-          if (sendError) {
-            log.error('psi-refresh alert email API error', { err: sendError });
-          }
-        } finally {
-          clearTimeout(timerId);
+        const { error: sendError } = await resend.emails.send(
+          {
+            from: 'alerts@erikunha.dev',
+            to: EMAIL_ADDRESS,
+            subject: '[portfolio] psi-refresh cron failed',
+            text: `One or more PSI strategies have reached ${PSI_ALERT_THRESHOLD}+ consecutive failures.\n\n${alertText}\nTimestamp: ${new Date().toISOString()}`,
+          },
+          { signal: AbortSignal.timeout(RESEND_ALERT_TIMEOUT_MS) },
+        );
+        if (sendError) {
+          log.error('psi-refresh alert email API error', { err: sendError });
         }
       } catch (alertErr) {
         log.error('psi-refresh alert email failed to send', { err: alertErr });
@@ -115,7 +120,7 @@ export async function GET(req: NextRequest): Promise<Response> {
     try {
       await getRedis().set('meta:psi-last-run', new Date().toISOString());
     } catch (redisErr) {
-      log.error('psi-refresh: failed to write meta:psi-last-run — healthz will report degraded', {
+      log.error('psi-refresh: failed to write meta:psi-last-run; healthz will report degraded', {
         err: redisErr,
       });
     }

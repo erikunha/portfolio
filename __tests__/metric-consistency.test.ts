@@ -4,6 +4,7 @@ import { beforeAll, describe, expect, it, vi } from 'vitest';
 import { perfReceipts } from '@/content/perf-receipts';
 import { projects } from '@/content/projects';
 import { PerfReceiptSchema } from '@/content/schemas';
+import { SITE_LOCALE } from '@/content/site-locale';
 import { SYSTEM_TEXT } from '@/lib/ask/system-prompt';
 import { HIRING_PROFILE } from '@/lib/hiring-profile';
 import { isPublishedSurface, readContentSurfaces } from './helpers/content-surfaces';
@@ -15,8 +16,9 @@ vi.mock('next/font/local', () => ({
 const REPO_ROOT = path.resolve(__dirname, '..');
 const read = (relativePath: string) => readFileSync(path.join(REPO_ROOT, relativePath), 'utf-8');
 
+const EN = SITE_LOCALE.en;
 const receiptFor = (metric: string) => {
-  const receipt = perfReceipts.find((r) => r.metric === metric);
+  const receipt = perfReceipts[EN].find((r) => r.metric === metric);
   if (!receipt) throw new Error(`no perf receipt for ${metric}`);
   return receipt.delta;
 };
@@ -25,15 +27,20 @@ const flipSign = (delta: string) =>
   delta.startsWith('-') ? `+${delta.slice(1)}` : `-${delta.slice(1)}`;
 
 const METRIC_KEYWORDS: Record<string, RegExp> = {
-  API_LATENCY: /latency/i,
+  // Portuguese alternatives: the pt-BR locale ships pt content surfaces, and an
+  // English-only keyword list would sweep none of them (DECISIONS 2026-08-30).
+  API_LATENCY: /latency|lat[êe]ncia/i,
+  LCP: /\bLCP\b|largest.contentful.paint/i,
   BUNDLE_CSS: /css/i,
   TTI: /\bTTI\b|time.to.interactive/i,
   BUNDLE_JS: /\bJS\b|javascript/i,
-  PAGE_LOAD: /page[\s-]*load|load[\s-]*time/i,
-  INITIAL_LOAD: /initial[\s-]*(page[\s-]*)?load/i,
-  CONVERSION: /conversion/i,
-  DESKTOP_BUILD: /desktop[\s-]*build|build[\s-]*time/i,
-  ONBOARDING_TIME: /onboarding/i,
+  PAGE_LOAD: /page[\s-]*load|load[\s-]*time|carregamento/i,
+  INITIAL_LOAD: /initial[\s-]*(page[\s-]*)?load|carregamento\s+inicial/i,
+  CONVERSION: /conversion|convers[ãa]o/i,
+  DESKTOP_BUILD: /desktop[\s-]*build|build[\s-]*time|build\s+desktop/i,
+  CLS: /\bCLS\b|layout.shift/i,
+  LIGHTHOUSE: /lighthouse/i,
+  RELEASE_TIME: /release/i,
 };
 
 const PROXIMITY_CHARS = 60;
@@ -67,7 +74,7 @@ const METRIC_SURFACES = (): Array<[string, string]> => [
   ['public/llms.txt', read('public/llms.txt')],
   ['public/.well-known/agent.json', read('public/.well-known/agent.json')],
   ['scripts/generate-og-image.ts (social preview card)', ogImageScript],
-  ['app/layout.tsx (metadata)', layoutMetadataText],
+  ['app/(en)/layout.tsx (metadata)', layoutMetadataText],
 ];
 
 const HIRING_PROFILE_RECEIPT_FIELDS: Array<[string, string]> = [
@@ -75,19 +82,32 @@ const HIRING_PROFILE_RECEIPT_FIELDS: Array<[string, string]> = [
   ['page_load_reduction', 'PAGE_LOAD'],
   ['conversion_uplift', 'CONVERSION'],
   ['api_latency_reduction', 'API_LATENCY'],
-  ['onboarding_reduction', 'ONBOARDING_TIME'],
   ['perf_delta_js', 'BUNDLE_JS'],
   ['perf_delta_css', 'BUNDLE_CSS'],
 ];
 
+const HIRING_PROFILE_BUSINESS_RECEIPTS = new Set([
+  'tx_volume_per_year',
+  'revenue_platform',
+  'mau_peak',
+  'a11y_score',
+  'labs_delivered',
+  'banking_customers',
+  'copilot_subagents',
+]);
+
 const PROJECT_STAT_METRICS: Record<string, string> = {
   TTI: 'TTI',
   'JS BUNDLE': 'BUNDLE_JS',
+  'BUNDLE JS': 'BUNDLE_JS',
   'LOAD TIME': 'PAGE_LOAD',
+  'TEMPO DE CARREGAMENTO': 'PAGE_LOAD',
+  'DESKTOP BUILD': 'DESKTOP_BUILD',
+  'BUILD DESKTOP': 'DESKTOP_BUILD',
 };
 
 beforeAll(async () => {
-  const { metadata } = await import('@/app/layout');
+  const { metadata } = await import('@/app/(en)/layout');
   layoutMetadataText = JSON.stringify(metadata);
 });
 
@@ -100,7 +120,7 @@ describe('performance metrics agree with the authoritative receipts', () => {
 
     expect(
       empty,
-      'a surface swept for contradictions is EMPTY, so the sweep over it finds nothing and passes — a silent no-op, not a pass. `app/layout.tsx (metadata)` is the live risk: layoutMetadataText starts as "" and is filled in beforeAll. An empty OBJECT is the likelier regression than an empty string — a refactor to generateMetadata() leaving a stub makes JSON.stringify(metadata) return "{}", which is 2 chars, not 0 — so the check is against a set of empty SERIALISATIONS, not against length. Fix the surface, not this assertion.',
+      'a surface swept for contradictions is EMPTY, so the sweep over it finds nothing and passes — a silent no-op, not a pass. `app/(en)/layout.tsx (metadata)` is the live risk: layoutMetadataText starts as "" and is filled in beforeAll. An empty OBJECT is the likelier regression than an empty string — a refactor to generateMetadata() leaving a stub makes JSON.stringify(metadata) return "{}", which is 2 chars, not 0 — so the check is against a set of empty SERIALISATIONS, not against length. Fix the surface, not this assertion.',
     ).toEqual([]);
   });
 
@@ -130,7 +150,7 @@ describe('performance metrics agree with the authoritative receipts', () => {
     const rejected = [
       '10%',
       '-40% build time',
-      '-97.5% (40s→<1s, Venturus)',
+      '-97.5% (40s → <1s, Venturus)',
       '-25',
       'build time -40%',
       ' -40%',
@@ -148,8 +168,21 @@ describe('performance metrics agree with the authoritative receipts', () => {
 
     expect(
       rejected,
-      'PerfReceiptSchema must reject every delta that is not a bare signed percentage. flipSign() flips the sign and the sweep searches each surface for that literal string, so the delta has to be a token a surface can literally contain. An unsigned "10%" flips to "-0%"; a trailing gloss "-40% build time" flips to "+40% build time"; a LEADING gloss "build time -40%" flips to "-uild time -40%" — all strings no surface holds, so the sweep for that metric silently passes forever instead of failing. DO NOT TRIM THIS LIST without recomputing the mutant kill-matrix; almost every case is the sole or joint guard of a distinct loosening. Sole killers: "10%" (optional sign), "-25" (optional `%`), "-40 %" (space before the `%`), " -40%" (leading whitespace). Joint-and-only killers: the two TRAILING glosses "-40% build time" and "-97.5% (40s→<1s, Venturus)" are the ONLY two cases that kill a dropped `$` anchor — delete both and the schema can drop `$`, accept a trailing gloss, and that metric silently stops being swept forever. Keep at least one; "-97.5% (…)" is the live idiom in lib/hiring-profile.ts one import away. "−25%" (U+2212) matters differently: its flip is the TRUE value "-25%" that every surface contains, so it would cause a false-positive storm rather than a no-op. The ONLY strictly dominated case is the LEADING gloss "build time -40%" (" -40%" kills everything it kills); it is kept purely as documentation of a shape a human types. Fix the schema (or move the gloss to `note`), not this test.',
+      'PerfReceiptSchema must reject every delta that is not a bare signed percentage. flipSign() flips the sign and the sweep searches each surface for that literal string, so the delta has to be a token a surface can literally contain. An unsigned "10%" flips to "-0%"; a trailing gloss "-40% build time" flips to "+40% build time"; a LEADING gloss "build time -40%" flips to "-uild time -40%", all strings no surface holds, so the sweep for that metric silently passes forever instead of failing. DO NOT TRIM THIS LIST without recomputing the mutant kill-matrix; almost every case is the sole or joint guard of a distinct loosening. Sole killers: "10%" (optional sign), "-25" (optional `%`), "-40 %" (space before the `%`), " -40%" (leading whitespace). Joint-and-only killers: the two TRAILING glosses "-40% build time" and "-97.5% (40s → <1s, Venturus)" are the ONLY two cases that kill a dropped `$` anchor, delete both and the schema can drop `$`, accept a trailing gloss, and that metric silently stops being swept forever. Keep at least one; "-97.5% (…)" is the live idiom in lib/hiring-profile.ts one import away. "−25%" (U+2212) matters differently: its flip is the TRUE value "-25%" that every surface contains, so it would cause a false-positive storm rather than a no-op. The ONLY strictly dominated case is the LEADING gloss "build time -40%" (" -40%" kills everything it kills); it is kept purely as documentation of a shape a human types. Fix the schema (or move the gloss to `note`), not this test.',
     ).toEqual([]);
+  });
+
+  it('keeps canonical deltas separate from the displayed before/after receipts', () => {
+    expect(receiptFor('API_LATENCY')).toBe('-97.5%');
+    expect(receiptFor('BUNDLE_CSS')).toBe('-98%');
+    expect(receiptFor('DESKTOP_BUILD')).toBe('-40%');
+    const lcp = perfReceipts[EN].find((receipt) => receipt.metric === 'LCP');
+    expect(lcp).toMatchObject({
+      before: 2544,
+      after: 1308,
+      displayValue: '2,544 → 1,308ms',
+    });
+    expect(lcp?.delta).toBe(`${(((1308 - 2544) / 2544) * 100).toFixed(1)}%`);
   });
 
   it('INITIAL_LOAD matches "initial page load" but never "load time"', () => {
@@ -165,7 +198,7 @@ describe('performance metrics agree with the authoritative receipts', () => {
   });
 
   it('every receipt has a keyword, so no metric can be added and left unswept', () => {
-    const unmapped = perfReceipts
+    const unmapped = perfReceipts[EN]
       .map((receipt) => receipt.metric)
       .filter((metric) => METRIC_KEYWORDS[metric] === undefined);
 
@@ -177,7 +210,7 @@ describe('performance metrics agree with the authoritative receipts', () => {
 
   it('no surface states the OPPOSITE sign of a receipt', () => {
     const contradictions = METRIC_SURFACES().flatMap(([surface, text]) =>
-      perfReceipts
+      perfReceipts[EN]
         .filter((receipt) => {
           const keyword = METRIC_KEYWORDS[receipt.metric];
           return keyword !== undefined && nearKeyword(text, flipSign(receipt.delta), keyword);
@@ -207,13 +240,28 @@ IF THIS FIRED ON A TRUE SENTENCE: it fires when the flipped number sits within $
 
     expect(
       drifted,
-      'the machine-readable hiring profile must quote the same numbers as the receipts. It is the endpoint llms.txt advertises to crawlers, so a wrong number here is consumed by machines and never eyeballed. This reads the PARSED object, not the source literal: HiringProfileSchema strips unknown keys, so `undefined` means the field is not being SERVED AT ALL — a different bug from serving it wrong, and one that renaming a field out of `receipts` causes silently.\n\nMatched as a PREFIX, deliberately: three served values carry a legitimate trailing gloss ("-97.5% (40s→<1s, Venturus)"). Do NOT "tighten" startsWith to === — it reds three true fields, and the tempting next step is deleting the glosses from /api/erik.json, which is real information a recruiter reads. The receipt is the prefix; the gloss is allowed to follow it.',
+      'the machine-readable hiring profile must quote the same numbers as the receipts. It is the endpoint llms.txt advertises to crawlers, so a wrong number here is consumed by machines and never eyeballed. This reads the PARSED object, not the source literal: HiringProfileSchema strips unknown keys, so `undefined` means the field is not being SERVED AT ALL, a different bug from serving it wrong, and one that renaming a field out of `receipts` causes silently.\n\nMatched as a PREFIX, deliberately: three served values carry a legitimate trailing gloss ("-97.5% (40s → <1s, Venturus)"). Do NOT "tighten" startsWith to ===, it reds three true fields, and the tempting next step is deleting the glosses from /api/erik.json, which is real information a recruiter reads. The receipt is the prefix; the gloss is allowed to follow it.',
+    ).toEqual([]);
+  });
+
+  it('every served hiring-profile receipt is either a live metric or a declared business fact', () => {
+    const mapped = new Set(HIRING_PROFILE_RECEIPT_FIELDS.map(([field]) => field));
+    const unaccounted = Object.keys(HIRING_PROFILE.receipts).filter(
+      (field) => !mapped.has(field) && !HIRING_PROFILE_BUSINESS_RECEIPTS.has(field),
+    );
+
+    expect(
+      unaccounted,
+      'a key in HIRING_PROFILE.receipts is neither mapped to a perf receipt nor declared as a business fact. The sweep above is receipt to surface: it walks HIRING_PROFILE_RECEIPT_FIELDS, so a receipt DELETED from content/perf-receipts.ts leaves its served field behind with nothing checking it, and /api/erik.json keeps serving a retired metric to crawlers and agents. That is exactly what happened to the ONBOARDING_TIME receipt: the receipt and its mapping were both deleted, and the served onboarding_reduction field survived. Declare the field in HIRING_PROFILE_BUSINESS_RECEIPTS when it is a business fact that has no perf receipt, or map it to a live metric, or delete it. Do not delete the assertion.',
     ).toEqual([]);
   });
 
   it('no PROJECT_STAT_METRICS key is orphaned, so a rename cannot drop a tile from the gate', () => {
     const orphaned = Object.keys(PROJECT_STAT_METRICS).filter(
-      (label) => !projects.some((project) => project.stats.some((stat) => stat.label === label)),
+      (label) =>
+        !Object.values(SITE_LOCALE).some((locale) =>
+          projects[locale].some((project) => project.stats.some((stat) => stat.label === label)),
+        ),
     );
 
     expect(
@@ -222,18 +270,20 @@ IF THIS FIRED ON A TRUE SENTENCE: it fires when the flipped number sits within $
     ).toEqual([]);
   });
 
-  it('content/projects.ts stat tiles match the receipts', () => {
-    const drifted = projects.flatMap((project) =>
-      project.stats
-        .filter((stat) => {
-          const metric = PROJECT_STAT_METRICS[stat.label];
-          return metric !== undefined && stat.value !== receiptFor(metric);
-        })
-        .map(
-          (stat) =>
-            `${project.name}: "${stat.label}" = ${stat.value} but ${PROJECT_STAT_METRICS[stat.label]} is ${receiptFor(PROJECT_STAT_METRICS[stat.label] as string)}`,
-        ),
-    );
+  it('content/projects.ts stat tiles match the receipts in both locales', () => {
+    const drifted = Object.values(SITE_LOCALE)
+      .flatMap((locale) => projects[locale])
+      .flatMap((project) =>
+        project.stats
+          .filter((stat) => {
+            const metric = PROJECT_STAT_METRICS[stat.label];
+            return metric !== undefined && stat.value !== receiptFor(metric);
+          })
+          .map(
+            (stat) =>
+              `${project.name}: "${stat.label}" = ${stat.value} but ${PROJECT_STAT_METRICS[stat.label]} is ${receiptFor(PROJECT_STAT_METRICS[stat.label] as string)}`,
+          ),
+      );
 
     expect(
       drifted,

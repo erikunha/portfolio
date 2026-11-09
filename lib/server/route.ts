@@ -3,19 +3,19 @@ import 'server-only';
 import type { NextRequest } from 'next/server';
 import type { ZodTypeAny, z } from 'zod';
 
-import { hashIp } from '@/lib/ip-hash';
+import { DEFAULT_SITE_LOCALE, SITE_LOCALES, type SiteLocale } from '@/content/site-locale';
 import { log } from '@/lib/log';
-import { getClientIp } from '@/lib/rate-limit';
+import type { ClientRateLimiter } from '@/lib/rate-limit';
+import { isCrossSiteRequest } from '@/lib/server/fetch-metadata';
+import { clientRateLimitKey, type RateLimitIdentifier } from '@/lib/server/rate-limit-key';
+import { readBoundedBody } from '@/lib/server/read-body';
+import { ASK_LOCALE_HEADER, RETRY_AFTER_HEADER, retryAfterSeconds } from '@/lib/stream-protocol';
 
-interface RateLimit {
-  limit(ip: string): Promise<{ success: boolean }>;
-}
-type RateLimitFactory = () => RateLimit;
+type RateLimitFactory = () => ClientRateLimiter;
 
 export interface HandlerContext<TBody> {
   body: TBody;
-  ip: string;
-  ipHash: string;
+  ipHash: RateLimitIdentifier;
   requestId: string;
   req: NextRequest;
 }
@@ -23,14 +23,20 @@ export interface HandlerContext<TBody> {
 export interface DefineHandlerOpts<TSchema extends ZodTypeAny> {
   schema: TSchema;
   rateLimit: RateLimitFactory;
-  rateLimitErrorMessage?: string;
+  maxBodyBytes: number;
+  rateLimitErrorMessage?: string | Readonly<Record<SiteLocale, string>>;
   handler: (ctx: HandlerContext<z.infer<TSchema>>) => Promise<Response>;
 }
+
+const HTTP_STATUS = { forbidden: 403, storageUnavailable: 503 } as const;
 
 export type ApiErrorCode =
   | 'rate_limited'
   | 'invalid_json'
+  | 'invalid_body'
   | 'validation_failed'
+  | 'forbidden_origin'
+  | 'unauthorized'
   | 'storage_unavailable';
 
 interface ApiError {
@@ -70,32 +76,77 @@ export function err(opts: {
   );
 }
 
+function rateLimitMessage(
+  message: DefineHandlerOpts<ZodTypeAny>['rateLimitErrorMessage'],
+  req: Request,
+): string {
+  if (message === undefined) return 'too many requests';
+  if (typeof message === 'string') return message;
+  const header = req.headers.get(ASK_LOCALE_HEADER);
+  return message[SITE_LOCALES.find((locale) => locale === header) ?? DEFAULT_SITE_LOCALE];
+}
+
 export function defineHandler<TSchema extends ZodTypeAny>(
   opts: DefineHandlerOpts<TSchema>,
 ): (req: NextRequest) => Promise<Response> {
   return async (req) => {
     const requestId = crypto.randomUUID();
-    const ip = getClientIp(req);
+    if (isCrossSiteRequest(req)) {
+      return err({
+        requestId,
+        status: HTTP_STATUS.forbidden,
+        code: 'forbidden_origin',
+        message: 'cross-site requests are not accepted',
+      });
+    }
+    let ipHash: RateLimitIdentifier;
+    try {
+      ipHash = await clientRateLimitKey(req);
+    } catch (hashErr) {
+      log.error('ip hash unavailable', { requestId, err: hashErr });
+      return err({
+        requestId,
+        status: HTTP_STATUS.storageUnavailable,
+        code: 'storage_unavailable',
+        message: 'storage unavailable',
+      });
+    }
 
     let rateLimitAllowed = true;
+    let rateLimitReset: unknown;
     try {
-      const { success } = await opts.rateLimit().limit(ip);
+      const { success, reset } = await opts.rateLimit().limit(ipHash);
       rateLimitAllowed = success;
+      rateLimitReset = reset;
     } catch (rateLimitErr) {
       log.warn('rate-limit unavailable, allowing request', { requestId, err: rateLimitErr });
     }
     if (!rateLimitAllowed) {
+      const retryAfter = retryAfterSeconds(rateLimitReset, Date.now());
       return err({
         requestId,
         status: 429,
         code: 'rate_limited',
-        message: opts.rateLimitErrorMessage ?? 'too many requests',
+        message: rateLimitMessage(opts.rateLimitErrorMessage, req),
+        ...(retryAfter === null
+          ? {}
+          : { extraHeaders: { [RETRY_AFTER_HEADER]: String(retryAfter) } }),
+      });
+    }
+
+    const bounded = await readBoundedBody(req, opts.maxBodyBytes);
+    if (!bounded.ok) {
+      return err({
+        requestId,
+        status: bounded.status,
+        code: bounded.code,
+        message: bounded.message,
       });
     }
 
     let raw: unknown;
     try {
-      raw = await req.json();
+      raw = JSON.parse(new TextDecoder().decode(bounded.bytes ?? new Uint8Array()));
     } catch {
       return err({ requestId, status: 400, code: 'invalid_json', message: 'invalid request body' });
     }
@@ -111,8 +162,6 @@ export function defineHandler<TSchema extends ZodTypeAny>(
       });
     }
 
-    const ipHash = await hashIp(ip);
-
-    return opts.handler({ body: parsed.data, ip, ipHash, requestId, req });
+    return opts.handler({ body: parsed.data, ipHash, requestId, req });
   };
 }

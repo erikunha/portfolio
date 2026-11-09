@@ -1,0 +1,104 @@
+name: High Risk Label
+
+# Marks a pull request that touches a high-risk surface (the API boundary, rate limiting, env and
+# secret handling, workflows, security headers, dependency manifests, the ask prompt and its
+# guards) with the `high-risk` label, and removes the label once no changed file is on that list.
+# The list lives in scripts/high-risk-paths.ts and is read from the base commit, so the pull request
+# under review cannot edit the script that runs with the token. The label directs review attention; it blocks no
+# merge and is not part of ci-gate.
+#
+# The token is contents: read plus pull-requests: write on the labelling job only. A fork pull
+# request and a Dependabot run get a read-only token and cannot label, so both are skipped with a
+# notice instead of failing. The repository owner creates the label once if the token cannot:
+# `gh label create high-risk --color B60205`.
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: high-risk-label-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  label:
+    name: Label high-risk changes
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - name: Skip when the token cannot write
+        id: gate
+        env:
+          HEAD_REPO: ${{ github.event.pull_request.head.repo.full_name }}
+          BASE_REPO: ${{ github.repository }}
+          ACTOR: ${{ github.actor }}
+        run: |
+          skip=false
+          if [ "$HEAD_REPO" != "$BASE_REPO" ]; then
+            skip=true
+            echo "::notice::Fork pull request: the token is read-only, so the high-risk label is not applied."
+          elif [ "$ACTOR" = "dependabot[bot]" ]; then
+            skip=true
+            echo "::notice::Dependabot run: the token is read-only, so the high-risk label is not applied."
+          fi
+          echo "skip=$skip" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        if: steps.gate.outputs.skip != 'true'
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          persist-credentials: false
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        if: steps.gate.outputs.skip != 'true'
+        with:
+          node-version-file: ".nvmrc"
+
+      - name: Add or remove the high-risk label
+        id: sync
+        if: steps.gate.outputs.skip != 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          LABEL: high-risk
+          LABEL_COLOR: B60205
+          LABEL_DESCRIPTION: Touches the API boundary, secrets, workflows, headers, dependencies or the ask prompt
+        run: |
+          set -euo pipefail
+          gh label create "$LABEL" --repo "$REPO" --color "$LABEL_COLOR" --description "$LABEL_DESCRIPTION" 2>/dev/null || true
+
+          changed=$(gh api --paginate "repos/$REPO/pulls/$PR_NUMBER/files" --jq '.[] | .filename, (.previous_filename // empty)')
+          if [ -f scripts/high-risk-paths.ts ]; then
+            matched=$(printf '%s\n' "$changed" | node scripts/high-risk-paths.ts)
+          else
+            echo "::notice::The base commit has no high-risk path list, so every changed file counts as high risk."
+            matched=$changed
+          fi
+          labels=$(gh api --paginate "repos/$REPO/issues/$PR_NUMBER/labels" --jq '.[].name')
+
+          if grep -Fxq -- "$LABEL" <<< "$labels"; then
+            present=true
+          else
+            present=false
+          fi
+
+          if [ -n "$matched" ]; then
+            echo "High-risk files:"
+            echo "$matched"
+            if [ "$present" = false ]; then
+              gh api --method POST "repos/$REPO/issues/$PR_NUMBER/labels" -f "labels[]=$LABEL" > /dev/null
+              echo "Added $LABEL."
+            fi
+          elif [ "$present" = true ]; then
+            gh api --method DELETE "repos/$REPO/issues/$PR_NUMBER/labels/$LABEL" > /dev/null
+            echo "No high-risk file remains; removed $LABEL."
+          else
+            echo "No high-risk file changed."
+          fi

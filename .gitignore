@@ -35,8 +35,10 @@
 # ai-eval harness output (scripts/ask-eval.ts)
 /ask-eval-result.json
 
-# local claude settings
+# personal Claude Code files
+CLAUDE.local.md
 .claude/settings.local.json
+.claude/*.local.md
 
 # playwright mcp session logs
 .playwright-mcp/
@@ -89,6 +91,7 @@ docs/superpowers
 
 # Semgrep local SARIF output
 semgrep.sarif
+gitleaks.sarif
 
 # Stryker mutation testing output — transient sandbox + generated reports
 .stryker-tmp/
@@ -99,3 +102,8 @@ mutation-report.json
 # Vendored Python bytecode
 __pycache__/
 *.pyc
+.vitest/
+
+# weekly metrics output (scripts/metrics); history lives in a workflow artifact
+/metrics/weekly.json
+/metrics/breaches.json

@@ -16,10 +16,12 @@ describe('StatusBar', () => {
     return mounted.container;
   }
 
-  it('renders a status role element with accessible label', async () => {
+  it('renders as decorative chrome outside the accessibility tree', async () => {
     const container = await render();
-    const status = container.querySelector('[role="status"][aria-label="device status"]');
-    expect(status).not.toBeNull();
+    const bar = container.querySelector('.status-bar');
+    expect(bar?.getAttribute('aria-hidden')).toBe('true');
+    expect(bar?.getAttribute('role')).toBeNull();
+    expect(bar?.getAttribute('aria-label')).toBeNull();
   });
 
   it('renders the carrier label DEV_OS', async () => {

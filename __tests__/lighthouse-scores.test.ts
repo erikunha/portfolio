@@ -13,6 +13,7 @@ const mockLogError = vi.fn();
 vi.mock('@/lib/log', () => ({ log: { error: mockLogError, info: vi.fn() } }));
 
 afterEach(() => {
+  vi.useRealTimers();
   vi.resetModules();
   mockGet.mockReset();
   mockSet.mockReset();
@@ -46,6 +47,26 @@ function makePsiResponse(score = 0.99) {
 }
 
 describe('getScores — cache hit', () => {
+  it.each(['desktop', 'mobile'] as const)(
+    'returns unavailable within 3s when the %s Redis read hangs',
+    async (strategy) => {
+      vi.useFakeTimers();
+      process.env.PSI_API_KEY = 'test-key';
+      mockGet.mockReturnValue(new Promise(() => undefined));
+      const { getScores, LIGHTHOUSE_FALLBACK } = await import('@/lib/lighthouse-scores');
+      const settled = vi.fn();
+      const result = getScores(strategy).then(settled);
+
+      await vi.advanceTimersByTimeAsync(2_999);
+      expect(settled).not.toHaveBeenCalled();
+      await vi.advanceTimersByTimeAsync(1);
+      expect(settled).toHaveBeenCalledWith(LIGHTHOUSE_FALLBACK);
+      await result;
+      expect(mockFetch).not.toHaveBeenCalled();
+      expect(vi.getTimerCount()).toBe(0);
+    },
+  );
+
   it('returns cached value without fetching PSI', async () => {
     mockGet.mockResolvedValue(CACHED_DESKTOP);
     const { getScores } = await import('@/lib/lighthouse-scores');
@@ -78,7 +99,7 @@ describe('getScores — cache miss', () => {
     const { getScores } = await import('@/lib/lighthouse-scores');
     const result = await getScores('desktop');
     expect(result.performance).toBe(99);
-    expect(result.fetchedAt).not.toBe('—');
+    expect(result.fetchedAt).not.toBe('-');
   });
 
   it('writes result to Redis with TTL', async () => {
@@ -137,6 +158,18 @@ describe('getScores — cache miss', () => {
       expect.stringContaining('pagespeedonline'),
       expect.objectContaining({ next: { revalidate: LIGHTHOUSE_TTL_S } }),
     );
+  });
+
+  it('sends the PSI key in a header, never in the request URL', async () => {
+    mockGet.mockResolvedValue(null);
+    process.env.PSI_API_KEY = 'test-key';
+    mockFetch.mockResolvedValue(makePsiResponse(0.99));
+    const { getScores } = await import('@/lib/lighthouse-scores');
+    await getScores('desktop');
+    const [url, init] = mockFetch.mock.calls[0] as [string, RequestInit];
+    expect(url).not.toContain('test-key');
+    expect(new URL(url).searchParams.has('key')).toBe(false);
+    expect(new Headers(init.headers).get('x-goog-api-key')).toBe('test-key');
   });
 
   it('logs error when Redis GET fails', async () => {
@@ -311,7 +344,9 @@ describe('refreshScores — cron retry', () => {
     const res = await p;
     expect(res.performance).toBe(99);
     expect(mockFetch).toHaveBeenCalledTimes(2);
-    expect(mockSet).toHaveBeenCalledTimes(1);
+    const writtenKeys = mockSet.mock.calls.map(([key]) => key);
+    expect(writtenKeys.filter((key) => key === 'lh:scores:mobile')).toHaveLength(1);
+    expect(writtenKeys.filter((key) => key === 'lh:scores:last-good:mobile')).toHaveLength(1);
   });
 
   it('retries on 429 then succeeds', async () => {
@@ -384,5 +419,118 @@ describe('refreshScores — cron retry', () => {
     const res = await getScores('mobile');
     expect(res).toEqual(LIGHTHOUSE_FALLBACK);
     expect(mockFetch).toHaveBeenCalledTimes(1);
+  });
+});
+
+const LAST_GOOD_DESKTOP = {
+  performance: 97,
+  accessibility: 100,
+  bestPractices: 93,
+  seo: 100,
+  fetchedAt: '2026-05-27T03:00:00.000Z',
+};
+
+const NEVER_SETTLES = new Promise<never>(() => undefined);
+const LAST_GOOD_KEY_DESKTOP = 'lh:scores:last-good:desktop';
+
+const redisByKey = (values: Record<string, unknown>) => (key: string) =>
+  key in values ? Promise.resolve(values[key]) : Promise.resolve(null);
+
+describe('last-good copy: written on every successful fetch', () => {
+  it('keeps a copy with no expiry beside the cached scores when a request fills the cache', async () => {
+    mockGet.mockResolvedValue(null);
+    mockSet.mockResolvedValue('OK');
+    process.env.PSI_API_KEY = 'test-key';
+    mockFetch.mockResolvedValue(makePsiResponse(0.96));
+    const { getScores } = await import('@/lib/lighthouse-scores');
+    await getScores('desktop');
+    await new Promise((r) => setTimeout(r, 0));
+    expect(mockSet).toHaveBeenCalledWith(
+      LAST_GOOD_KEY_DESKTOP,
+      expect.objectContaining({ performance: 96, fetchedAt: expect.any(String) }),
+    );
+  });
+
+  it('keeps a copy with no expiry when the cron refreshes, awaited before it returns', async () => {
+    process.env.PSI_API_KEY = 'test-key';
+    mockFetch.mockResolvedValue(makePsiResponse(0.94));
+    let lastGoodWritten = false;
+    mockSet.mockImplementation(async (key: string) => {
+      if (key === 'lh:scores:last-good:mobile') lastGoodWritten = true;
+      return 'OK';
+    });
+    const { refreshScores } = await import('@/lib/lighthouse-scores');
+    await refreshScores('mobile');
+    expect(lastGoodWritten).toBe(true);
+    expect(mockSet).toHaveBeenCalledWith(
+      'lh:scores:last-good:mobile',
+      expect.objectContaining({ performance: 94 }),
+    );
+  });
+
+  it('does not fail the cron run when only the last-good copy cannot be written', async () => {
+    process.env.PSI_API_KEY = 'test-key';
+    mockFetch.mockResolvedValue(makePsiResponse(0.95));
+    mockSet.mockImplementation(async (key: string) => {
+      if (key.startsWith('lh:scores:last-good')) throw new Error('last-good write failed');
+      return 'OK';
+    });
+    const { refreshScores } = await import('@/lib/lighthouse-scores');
+    await expect(refreshScores('desktop')).resolves.toMatchObject({ performance: 95 });
+    expect(mockLogError).toHaveBeenCalledWith(
+      'Redis last-good set failed',
+      expect.objectContaining({ strategy: 'desktop' }),
+    );
+  });
+});
+
+describe('last-good copy: served when today is unavailable', () => {
+  it('returns the last good scores marked stale when the cache read times out', async () => {
+    vi.useFakeTimers();
+    process.env.PSI_API_KEY = 'test-key';
+    mockGet.mockImplementation((key: string) =>
+      key === LAST_GOOD_KEY_DESKTOP ? Promise.resolve(LAST_GOOD_DESKTOP) : NEVER_SETTLES,
+    );
+    const { getScores } = await import('@/lib/lighthouse-scores');
+    const settled = vi.fn();
+    const result = getScores('desktop').then(settled);
+    await vi.advanceTimersByTimeAsync(2_999);
+    expect(settled).not.toHaveBeenCalled();
+    await vi.advanceTimersByTimeAsync(1);
+    expect(settled).toHaveBeenCalledWith({ ...LAST_GOOD_DESKTOP, stale: true });
+    await result;
+    expect(mockFetch).not.toHaveBeenCalled();
+  });
+
+  it('returns the last good scores marked stale when the cache is empty and PSI fails', async () => {
+    mockGet.mockImplementation(redisByKey({ [LAST_GOOD_KEY_DESKTOP]: LAST_GOOD_DESKTOP }));
+    process.env.PSI_API_KEY = 'test-key';
+    mockFetch.mockRejectedValue(new Error('network error'));
+    const { getScores } = await import('@/lib/lighthouse-scores');
+    await expect(getScores('desktop')).resolves.toEqual({ ...LAST_GOOD_DESKTOP, stale: true });
+  });
+
+  it('keeps the fallback when no last good copy exists', async () => {
+    vi.useFakeTimers();
+    mockGet.mockImplementation((key: string) =>
+      key === LAST_GOOD_KEY_DESKTOP ? Promise.resolve(null) : NEVER_SETTLES,
+    );
+    const { getScores, LIGHTHOUSE_FALLBACK } = await import('@/lib/lighthouse-scores');
+    const result = getScores('desktop');
+    await vi.advanceTimersByTimeAsync(3_000);
+    await expect(result).resolves.toEqual(LIGHTHOUSE_FALLBACK);
+  });
+
+  it('serves today scores unmarked when the cache is healthy', async () => {
+    mockGet.mockImplementation(
+      redisByKey({
+        'lh:scores:desktop': CACHED_DESKTOP,
+        [LAST_GOOD_KEY_DESKTOP]: LAST_GOOD_DESKTOP,
+      }),
+    );
+    const { getScores } = await import('@/lib/lighthouse-scores');
+    const result = await getScores('desktop');
+    expect(result).toEqual(CACHED_DESKTOP);
+    expect(result).not.toHaveProperty('stale');
   });
 });

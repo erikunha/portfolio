@@ -1,465 +1,321 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
-import SHELL_RESPONSES from '@/content/shell-commands';
-import { shellChrome } from '@/content/terminal-chrome';
-import { WindowChrome } from '@/design-system';
-import { readMotion } from '@/lib/motion';
-import { parseStreamChunk } from '@/lib/stream-protocol';
+import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
+import type { TerminalChrome } from '@/content/schemas';
+import SHELL_RESPONSES, { SHELL_RESPONSE_LANG } from '@/content/shell-commands';
+import { ShellCommand, ShellLineKind, type ShellUi, shellStates } from '@/content/shell-ui';
+import type { SiteLocale } from '@/content/site-locale';
+import { SHELL_COMMAND_EVENT } from '@/lib/events';
 import { useBreakpoint } from '@/lib/use-breakpoint.client';
+import { TerminalChromeBar } from '../TerminalChromeBar';
+import { AnimatedPlaceholder, StaticPlaceholder } from './AnimatedPlaceholder.client';
+import { parsePrivacyCommand } from './privacy-command';
+import { ShellLine } from './ShellLines.client';
+import { ShellToolbar } from './ShellToolbar.client';
+import { ShellKey } from './shell-keys';
+import { bounded, type Line, useAskStream } from './useAskStream';
+import { HISTORY_STEP, useCommandHistory } from './useCommandHistory';
+import { usePrivacyCommands } from './usePrivacyCommands';
 
-type Line = { id: number; kind: 'prompt' | 'output' | 'error' | 'info' | 'loading'; text: string };
+const COMMAND_FIELD = 'command';
+const COMPOSITION_KEYCODE = 229;
+const WINDOW_DOT_SIZE = 10;
+const STREAM_CARET = '█';
 
-const KIND_CLASS: Record<Line['kind'], string> = {
-  prompt: 'text-primary-500',
-  output: 'text-tertiary-50 opacity-[0.95]',
-  error: 'text-senary-300',
-  info: 'text-primary-400',
-  loading: 'text-primary-500 opacity-50',
-};
-
-const INITIAL_LINES: Omit<Line, 'id'>[] = [
-  {
-    kind: 'info',
-    text: 'Connected. Type help to list commands, or ask me anything about Erik.',
-  },
-];
-
-const MOBILE_INITIAL: Omit<Line, 'id'>[] = [
-  { kind: 'info', text: 'welcome. type help, tap a chip, or ask me anything.' },
-];
-
-const COMMANDS: { label: string; cmd: string }[] = [
-  { label: 'help', cmd: 'help' },
-  { label: 'whois', cmd: 'whois' },
-  { label: 'ls', cmd: 'ls' },
-  { label: 'cat skills.md', cmd: 'cat skills.md' },
-  { label: 'cat ~/.now', cmd: 'cat ~/.now' },
-  { label: 'contact', cmd: 'contact' },
-  { label: 'face', cmd: 'face' },
-  { label: 'hire', cmd: 'hire' },
-  { label: 'clear', cmd: 'clear' },
-];
-
-function withIds(lines: Omit<Line, 'id'>[], nextId: () => number): Line[] {
-  return lines.map((l) => ({ ...l, id: nextId() }));
-}
-
-const PLACEHOLDER_SUGGESTIONS = [
-  'help',
-  'whois',
-  'cat skills.md',
-  'cat ~/.now',
-  'what are your strongest projects?',
-  'open to relocation?',
-  'hire',
-];
-
-function AnimatedPlaceholder() {
-  const textRef = useRef<HTMLSpanElement>(null);
-  useEffect(() => {
-    const el = textRef.current;
-    if (!el) return;
-    const node = el;
-    if (!readMotion()) {
-      node.textContent = 'type a command or ask anything…';
-      return;
-    }
-    let cancelled = false;
-    let idx = 0;
-    let charIdx = 0;
-    let phase: 'type' | 'hold' | 'back' = 'type';
-
-    function tick() {
-      if (cancelled) return;
-      const suggestion = PLACEHOLDER_SUGGESTIONS[idx % PLACEHOLDER_SUGGESTIONS.length] ?? '';
-      if (phase === 'type') {
-        node.textContent = suggestion.slice(0, ++charIdx);
-        if (charIdx >= suggestion.length) {
-          phase = 'hold';
-          setTimeout(tick, 1800);
-        } else setTimeout(tick, 60);
-      } else if (phase === 'hold') {
-        phase = 'back';
-        setTimeout(tick, 40);
-      } else {
-        node.textContent = suggestion.slice(0, --charIdx);
-        if (charIdx <= 0) {
-          idx++;
-          charIdx = 0;
-          phase = 'type';
-          setTimeout(tick, 300);
-        } else setTimeout(tick, 30);
-      }
-    }
-    tick();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-  return (
-    <span
-      className="absolute left-0 top-1/2 -translate-y-1/2 text-primary-400 opacity-60 pointer-events-none font-inherit text-[14px] whitespace-nowrap overflow-hidden inline-flex items-center"
-      aria-hidden="true"
-      data-testid="shell-placeholder"
-    >
-      <span ref={textRef} />
-      <span className="shell-cursor" data-testid="shell-cursor" />
-    </span>
-  );
-}
-
-const DOT_FRAMES = ['...', '..', '.', '..'] as const;
-
-function LoadingDots() {
-  const [frame, setFrame] = useState(0);
-  useEffect(() => {
-    const id = setInterval(() => setFrame((f) => (f + 1) % DOT_FRAMES.length), 380);
-    return () => clearInterval(id);
-  }, []);
-  return (
-    <span
-      className="m-0 block whitespace-pre-wrap break-words text-primary-500 opacity-50"
-      aria-hidden="true"
-      data-testid="shell-line-loading"
-    >
-      {DOT_FRAMES[frame]}
-    </span>
-  );
-}
-
-export function InteractiveShell() {
+export function InteractiveShell({
+  locale,
+  ui,
+  chrome,
+}: {
+  locale: SiteLocale;
+  ui: ShellUi;
+  chrome: TerminalChrome;
+}) {
   const { isMobile } = useBreakpoint();
-  const lineIdRef = useRef(0);
-  const nextId = useCallback(() => ++lineIdRef.current, []);
-  const [history, setHistory] = useState<Line[]>(() => withIds(INITIAL_LINES, nextId));
+  const states = shellStates[locale];
+  const accuracyId = useId();
+  const lineId = useRef(0);
+  const nextId = useCallback(() => ++lineId.current, []);
+  const initialLines = useCallback(
+    (): Line[] => [{ id: nextId(), kind: ShellLineKind.Info, text: ui.welcome, welcome: true }],
+    [nextId, ui],
+  );
+  const [history, setHistory] = useState<Line[]>(initialLines);
   const [input, setInput] = useState('');
   const [inputFocused, setInputFocused] = useState(false);
-  const [busy, setBusy] = useState(false);
-  const [streamingText, setStreamingText] = useState<string | null>(null);
+  const [announcement, setAnnouncement] = useState({ id: 0, text: '' });
+  const stopRef = useRef<HTMLButtonElement>(null);
+  const followOutputRef = useRef(true);
   const feedRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-  const typingRef = useRef(false);
-  const mountedRef = useRef(true);
-  const rafRef = useRef<number | null>(null);
-  const typingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  useEffect(() => {
-    mountedRef.current = true;
-    return () => {
-      mountedRef.current = false;
-      if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
-      if (typingTimerRef.current !== null) clearTimeout(typingTimerRef.current);
-    };
+  const commandHistory = useCommandHistory();
+  const promptEditedRef = useRef(false);
+
+  const announce = useCallback((text: string) => {
+    setAnnouncement((previous) => ({ id: previous.id + 1, text }));
   }, []);
-  const initializedRef = useRef(false);
+  const editInput = useCallback((value: string) => {
+    promptEditedRef.current = true;
+    setInput(value);
+  }, []);
+  const restoreInput = useCallback((command: string) => {
+    if (!promptEditedRef.current) setInput((value) => value || command);
+  }, []);
+  const focusInput = useCallback(() => inputRef.current?.focus({ preventScroll: true }), []);
+  const refocusAfterStream = useCallback(() => {
+    if (stopRef.current === document.activeElement) focusInput();
+  }, [focusInput]);
+  const {
+    busy,
+    streamingText,
+    start: streamQuestion,
+    stop: stopStream,
+    isActive,
+  } = useAskStream({
+    locale,
+    ui,
+    nextId,
+    announce,
+    setHistory,
+    restoreInput,
+    onSettled: refocusAfterStream,
+  });
+  const runPrivacy = usePrivacyCommands({ ui, states, nextId, setHistory, announce, focusInput });
 
-  useEffect(() => {
-    if (initializedRef.current) return;
-    initializedRef.current = true;
-    if (isMobile) setHistory(withIds(MOBILE_INITIAL, nextId));
-  }, [isMobile, nextId]);
+  useLayoutEffect(() => {
+    const typed = inputRef.current?.value;
+    if (typed) setInput(typed);
+  }, []);
 
-  const wasBusyRef = useRef(false);
+  // biome-ignore lint/correctness/useExhaustiveDependencies: history and streamingText trigger scroll on the stable feed ref
   useEffect(() => {
-    if (!isMobile && wasBusyRef.current && !busy) {
-      inputRef.current?.focus();
-    }
-    wasBusyRef.current = busy;
-  }, [busy, isMobile]);
-
-  // biome-ignore lint/correctness/useExhaustiveDependencies: history + streamingText trigger scroll; feedRef is a stable ref
-  useEffect(() => {
-    if (feedRef.current) {
+    if (feedRef.current && followOutputRef.current) {
       feedRef.current.scrollTop = feedRef.current.scrollHeight;
     }
   }, [history, streamingText]);
 
-  const streamQuestion = useCallback(
-    async (question: string) => {
-      const loadingId = nextId();
-      setHistory((h) => [...h, { id: loadingId, kind: 'loading', text: '' }]);
-
-      const clearRaf = () => {
-        if (rafRef.current !== null) {
-          cancelAnimationFrame(rafRef.current);
-          rafRef.current = null;
-        }
-      };
-
-      const finalize = (finalText: string, errMsg?: string) => {
-        clearRaf();
-        if (!mountedRef.current) return;
-        setStreamingText(null);
-        const lines: Line[] = [];
-        if (finalText) lines.push({ id: nextId(), kind: 'output', text: finalText });
-        if (errMsg) lines.push({ id: nextId(), kind: 'error', text: `error: ${errMsg}` });
-        if (!finalText && !errMsg)
-          lines.push({ id: nextId(), kind: 'output', text: '(empty response)' });
-        setHistory((h) => [...h.filter((l) => l.id !== loadingId), ...lines]);
-      };
-
-      try {
-        const res = await fetch('/api/ask', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ question }),
-        });
-        if (!res.ok) {
-          const data = (await res.json().catch(() => null)) as { error?: string } | null;
-          finalize('', data?.error ?? `HTTP ${res.status}`);
-          return;
-        }
-        if (!res.body) {
-          finalize('', 'response body unavailable');
-          return;
-        }
-
-        const reader = res.body.getReader();
-        const dec = new TextDecoder();
-        let accumulated = '';
-        let pending = '';
-        let loadingCleared = false;
-
-        const scheduleFlush = () => {
-          if (rafRef.current !== null) return;
-          rafRef.current = requestAnimationFrame(() => {
-            rafRef.current = null;
-            if (!loadingCleared) {
-              setHistory((h) => h.filter((l) => l.id !== loadingId));
-              loadingCleared = true;
-            }
-            setStreamingText(pending);
-          });
-        };
-
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-          accumulated += dec.decode(value, { stream: true });
-          const { displayText } = parseStreamChunk(accumulated);
-          pending = displayText;
-          if (pending) scheduleFlush();
-        }
-
-        const chunkFinal = parseStreamChunk(accumulated);
-        finalize(chunkFinal.displayText, chunkFinal.ok ? undefined : chunkFinal.errorMessage);
-      } catch (err) {
-        finalize('', err instanceof Error ? err.message : String(err));
-      }
-    },
-    [nextId],
-  );
-
   const runCommand = useCallback(
-    async (cmd: string) => {
-      window.dispatchEvent(new CustomEvent('shell-cmd-run'));
-      setHistory((h) => [...h, { id: nextId(), kind: 'prompt', text: `erik@portfolio:~$ ${cmd}` }]);
-      setInput('');
-      setBusy(true);
-
-      if (cmd === 'clear') {
-        setHistory(withIds(isMobile ? MOBILE_INITIAL : INITIAL_LINES, nextId));
-        setBusy(false);
+    (raw: string) => {
+      if (isActive()) {
+        announce(ui.busy);
         return;
       }
-
-      const explicitQuestion = cmd.startsWith('ask ') ? cmd.slice(4).trim() : null;
-
-      if (!explicitQuestion) {
-        const local = SHELL_RESPONSES.find((r) => r.commands.includes(cmd));
-        if (local) {
-          setHistory((h) => [...h, { id: nextId(), kind: local.kind, text: local.text }]);
-          setBusy(false);
-          return;
-        }
+      const command = raw.trim().replace(/\s+/g, ' ');
+      if (!command) return;
+      followOutputRef.current = true;
+      commandHistory.record(command);
+      window.dispatchEvent(new CustomEvent(SHELL_COMMAND_EVENT));
+      setHistory((lines) =>
+        bounded([
+          ...lines,
+          { id: nextId(), kind: ShellLineKind.Prompt, text: `${ui.prompt} ${command}` },
+        ]),
+      );
+      promptEditedRef.current = false;
+      setInput('');
+      const key = command.toLowerCase();
+      if (key === ShellCommand.Clear) {
+        setHistory(initialLines());
+        announce(ui.cleared);
+        focusInput();
+        return;
       }
-
-      await streamQuestion(explicitQuestion ?? cmd);
-      setBusy(false);
+      const privacy = parsePrivacyCommand(key);
+      if (privacy) {
+        void runPrivacy(privacy);
+        return;
+      }
+      const explicitQuestion = key.startsWith(ShellCommand.AskPrefix)
+        ? command.slice(ShellCommand.AskPrefix.length).trim()
+        : null;
+      const local =
+        !explicitQuestion && SHELL_RESPONSES.find((entry) => entry.commands.includes(key));
+      if (local) {
+        setHistory((lines) =>
+          bounded([
+            ...lines,
+            { id: nextId(), kind: local.kind, text: local.text, lang: SHELL_RESPONSE_LANG },
+          ]),
+        );
+        announce(ui.commandComplete);
+        focusInput();
+        return;
+      }
+      void streamQuestion(explicitQuestion ?? command, command);
     },
-    [isMobile, nextId, streamQuestion],
+    [
+      announce,
+      commandHistory,
+      focusInput,
+      initialLines,
+      isActive,
+      nextId,
+      runPrivacy,
+      streamQuestion,
+      ui,
+    ],
   );
 
-  const runWithEffect = useCallback(
-    (cmd: string) => {
-      if (typingRef.current || busy) return;
-      typingRef.current = true;
-      let i = 0;
-      function tick() {
-        typingTimerRef.current = null;
-        if (!mountedRef.current) {
-          typingRef.current = false;
-          return;
-        }
-        if (i <= cmd.length) {
-          setInput(cmd.slice(0, i));
-          i++;
-          typingTimerRef.current = setTimeout(tick, 30);
-        } else {
-          typingTimerRef.current = setTimeout(() => {
-            if (!mountedRef.current) {
-              typingTimerRef.current = null;
-              typingRef.current = false;
-              return;
-            }
-            typingTimerRef.current = null;
-            runCommand(cmd);
-            typingRef.current = false;
-          }, 300);
-        }
+  const activateToolbarCommand = useCallback(
+    (command: string) => {
+      if (command === ShellCommand.Clear || busy) {
+        runCommand(command);
+        return;
       }
-      tick();
+      editInput(command);
+      focusInput();
     },
-    [busy, runCommand],
+    [busy, editInput, focusInput, runCommand],
   );
 
   return (
-    <div className="interactive-shell bg-[var(--color-secondary-900)] text-xs font-mono leading-[1.65] -m-[14px]">
-      <div className="flex items-center gap-[10px] px-[14px] py-2 border-b border-[var(--color-primary-subtle)] text-primary-400 text-xs tracking-[0.14em]">
-        <WindowChrome size={10} />
-        {isMobile ? (
-          <span className="ml-auto max-md:text-[10px]">
-            {shellChrome.mobileLabel ?? shellChrome.rightTag}
-          </span>
-        ) : (
-          <>
-            <span>{shellChrome.promptLabel}</span>
-            <span className="ml-auto">{shellChrome.rightTag}</span>
-          </>
-        )}
-      </div>
-
+    // biome-ignore lint/a11y/noStaticElementInteractions: Escape bubbles from the focusable controls inside; the wrapper has no role, and scoping the stop key here keeps it out of a global keydown listener
+    <div
+      className="interactive-shell"
+      onKeyDown={(event) => {
+        if (event.key !== ShellKey.Escape || event.nativeEvent.isComposing || !isActive()) return;
+        event.preventDefault();
+        stopStream();
+      }}
+    >
+      <TerminalChromeBar
+        chrome={chrome}
+        className="shell-chrome"
+        tagClassName="shell-chrome-tag"
+        dotSize={WINDOW_DOT_SIZE}
+      />
       <div
-        className="px-4 py-[14px] min-h-[220px] max-h-[400px] overflow-y-auto md:text-sm max-md:min-h-[200px] max-md:max-h-[320px] max-md:text-xs"
         ref={feedRef}
+        onScroll={(event) => {
+          const feed = event.currentTarget;
+          const lineHeight = Number.parseFloat(getComputedStyle(feed).lineHeight);
+          followOutputRef.current =
+            feed.scrollHeight - feed.scrollTop - feed.clientHeight <= lineHeight;
+        }}
+        className="shell-feed"
         role="log"
-        aria-label="shell output"
+        aria-label={ui.outputLabel}
         aria-live="polite"
         aria-busy={busy}
+        // biome-ignore lint/a11y/noNoninteractiveTabindex: the vertically scrollable log must be keyboard-focusable so arrow keys can scroll it (WCAG 2.1.1, axe scrollable-region-focusable)
+        tabIndex={0}
       >
-        {history.map((l) =>
-          l.kind === 'loading' ? (
-            <LoadingDots key={l.id} />
-          ) : (
-            <span
-              key={l.id}
-              className={`m-0 block whitespace-pre-wrap break-words ${KIND_CLASS[l.kind]}`}
-              data-kind={l.kind}
-            >
-              {l.text}
+        {history.map((line) => (
+          <ShellLine
+            key={line.id}
+            line={line}
+            ui={ui}
+            states={states}
+            isMobile={isMobile}
+            announce={announce}
+            onRetry={runCommand}
+          />
+        ))}
+        {streamingText !== null && (
+          <span className="shell-line shell-line-output" data-kind={ShellLineKind.Output}>
+            <span className="shell-ai-label">{ui.aiLabel}: </span>
+            {streamingText}
+            <span className="shell-caret" aria-hidden="true">
+              {STREAM_CARET}
             </span>
-          ),
+          </span>
         )}
         {streamingText !== null && (
-          <span
-            className="m-0 block whitespace-pre-wrap break-words text-tertiary-50 opacity-[0.95]"
-            data-kind="output"
-          >
-            {streamingText}
+          <span className="shell-line shell-stream-meta shell-esc-hint" aria-hidden="true">
+            {states.escStop}
           </span>
         )}
       </div>
-
       <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          const cmd = input.trim();
-          if (cmd && !busy) runCommand(cmd);
-        }}
-        className="flex gap-2 items-center px-4 py-2 pb-3 border-t border-[var(--color-primary-quiet)] max-md:px-3 max-md:pb-[10px]"
+        className="shell-form"
         data-testid="shell-form"
+        action={(data) => {
+          const queued = data.get(COMMAND_FIELD);
+          if (typeof queued === 'string') runCommand(queued);
+        }}
+        onSubmit={(event) => {
+          event.preventDefault();
+          runCommand(input);
+        }}
       >
-        <span className="text-primary-400 text-[14px] whitespace-nowrap">erik@portfolio:~$</span>
-        <div className="flex-1 relative min-w-0">
+        <span className="shell-prompt">{ui.prompt}</span>
+        <div className="shell-input-wrap" data-busy={busy || undefined}>
           <input
             ref={inputRef}
+            className="shell-input"
+            name={COMMAND_FIELD}
+            enterKeyHint="send"
             value={input}
-            onChange={(e) => setInput(e.target.value)}
+            onChange={(event) => {
+              editInput(event.target.value);
+              commandHistory.noteEdit();
+            }}
             onFocus={() => setInputFocused(true)}
             onBlur={() => setInputFocused(false)}
-            disabled={busy}
+            onKeyDown={(event) => {
+              if (
+                event.key === ShellKey.Enter &&
+                (event.nativeEvent.isComposing || event.keyCode === COMPOSITION_KEYCODE)
+              ) {
+                event.preventDefault();
+                return;
+              }
+              if (
+                event.nativeEvent.isComposing ||
+                event.altKey ||
+                event.ctrlKey ||
+                event.metaKey ||
+                event.shiftKey ||
+                (event.key !== ShellKey.Up && event.key !== ShellKey.Down)
+              ) {
+                return;
+              }
+              event.preventDefault();
+              const step = event.key === ShellKey.Up ? HISTORY_STEP.Older : HISTORY_STEP.Newer;
+              editInput(commandHistory.recall(step, input));
+            }}
             autoComplete="off"
             autoCapitalize="off"
             autoCorrect="off"
             spellCheck={false}
-            className="w-full bg-transparent border-0 outline-none text-tertiary-50 font-inherit text-[14px] caret-primary-500 [caret-shape:block] focus-visible:outline-2 focus-visible:outline-primary-500 focus-visible:outline-offset-2"
-            aria-label="shell command"
+            aria-label={ui.inputLabel}
+            aria-describedby={accuracyId}
           />
-          {!input && !busy && !inputFocused && <AnimatedPlaceholder />}
+          {!input &&
+            (inputFocused || busy ? (
+              <StaticPlaceholder ui={ui} />
+            ) : (
+              <AnimatedPlaceholder ui={ui} />
+            ))}
+          {busy ? (
+            <button
+              ref={stopRef}
+              className="shell-control shell-stop"
+              type="button"
+              aria-label={ui.stopLabel}
+              onClick={stopStream}
+            >
+              {ui.stop}
+            </button>
+          ) : null}
         </div>
       </form>
-
-      <p
-        className="m-0 px-4 py-2 border-t border-[color-mix(in_oklab,var(--color-primary-500)_14%,transparent)] text-xs max-md:text-[10px] leading-[1.5] text-[color-mix(in_oklab,var(--color-tertiary-50)_55%,transparent)]"
-        data-testid="shell-privacy-notice"
-      >
-        Queries are stored 90 days for product improvement. To request deletion, email{' '}
-        <a
-          href="mailto:erikhenriquealvescunha@gmail.com"
-          className="inherit underline underline-offset-2 hover:text-primary-500"
-        >
-          erikhenriquealvescunha@gmail.com
-        </a>
-        . If you are technical, you can also POST your request ID (in the{' '}
-        <code className="font-inherit text-primary-500 opacity-80">X-Request-Id</code> response
-        header) directly to{' '}
-        <code className="font-inherit text-primary-500 opacity-80">/api/log/forget</code>.
+      <p id={accuracyId} className="shell-ai-notice">
+        {ui.accuracy}
       </p>
-
-      {!isMobile && (
-        <div
-          className="flex gap-[6px] flex-wrap items-center px-4 py-2 pb-3 border-t border-dashed border-[var(--color-primary-quiet)] max-md:hidden"
-          role="toolbar"
-          aria-label="quick commands"
-          data-testid="shell-commands"
-          onClick={(e) => {
-            const cmd = (e.target as HTMLElement).closest<HTMLElement>('[data-cmd]')?.dataset.cmd;
-            if (cmd && !busy) runWithEffect(cmd);
-          }}
-        >
-          {COMMANDS.map(({ label, cmd }) => (
-            <button
-              key={cmd}
-              type="button"
-              className="shell-cmd-hint border border-[var(--color-primary-subtle)] text-primary-500 px-2 py-1 font-mono text-xs tracking-[0.1em] rounded-[2px] min-h-[28px] inline-flex items-center cursor-pointer bg-transparent hover:bg-[var(--color-primary-quiet)] disabled:cursor-default disabled:opacity-50"
-              data-cmd={cmd}
-              disabled={busy}
-            >
-              {label}
-            </button>
-          ))}
-          <span
-            aria-hidden="true"
-            className="text-primary-400 opacity-60 text-xs tracking-[0.1em] ml-1 whitespace-nowrap"
-          >
-            anything else → Claude
-          </span>
-        </div>
-      )}
-
-      {isMobile && (
-        <div
-          className="flex gap-[6px] flex-wrap px-3 py-2 pb-[10px] border-t border-dashed border-[var(--color-primary-quiet)]"
-          role="toolbar"
-          aria-label="quick commands"
-          onClick={(e) => {
-            const cmd = (e.target as HTMLElement).closest<HTMLElement>('[data-cmd]')?.dataset.cmd;
-            if (cmd && !busy) runWithEffect(cmd);
-          }}
-        >
-          {COMMANDS.map(({ label, cmd }) => (
-            <button
-              key={cmd}
-              type="button"
-              className="border border-[var(--color-primary-subtle)] text-primary-500 px-2 py-1 max-md:px-3 font-mono text-xs tracking-[0.1em] rounded-[2px] min-h-[28px] max-md:min-h-[40px] inline-flex items-center cursor-pointer bg-transparent active:bg-[var(--color-primary-quiet)]"
-              data-cmd={cmd}
-              disabled={busy}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
-      )}
+      <p className="sr-only" role="status" aria-live="polite" aria-atomic="true">
+        <span key={announcement.id}>{announcement.text}</span>
+      </p>
+      <div className="shell-privacy-notice" data-testid="shell-privacy-notice">
+        <p>
+          {ui.privacy} <a href={ui.emailHref}>{ui.email}</a>.
+        </p>
+        <p>
+          {ui.technicalPrivacy} <code>{ui.requestIdHeader}</code> {ui.technicalPrivacySuffix}{' '}
+          <code>{ui.forgetEndpoint}</code>.
+        </p>
+      </div>
+      <ShellToolbar ui={ui} busy={busy} onActivate={activateToolbarCommand} />
     </div>
   );
 }

@@ -1,5 +1,10 @@
 import { type ComponentType, createElement } from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { SectionNavigationProvider } from '@/components/responsive/SectionNavigation';
+import { siteNavChrome } from '@/content/navigation';
+import { SITE_LOCALE, type SiteLocale } from '@/content/site-locale';
+import { installMatchMedia } from './helpers/match-media';
 import { type MountedClient, mountClient } from './helpers/render';
 
 function firstOf<T>(arr: readonly T[]): T {
@@ -16,38 +21,90 @@ vi.mock('@/components/client/InteractiveShell', () => ({
   InteractiveShellLazy: () => null,
 }));
 
-describe('CommunitySection', () => {
+// The first test to import `@/app/(en)/page` pays the whole home-page module
+// transform; the default 5s budget loses the race on a loaded machine.
+const HOME_PAGE_IMPORT_TIMEOUT_MS = 20_000;
+
+describe('About', () => {
   let mounted: MountedClient;
 
   afterEach(() => {
     mounted?.unmount();
   });
 
-  async function render(props: { defer?: boolean } = {}) {
-    const { CommunitySection } = await import(
-      '@/components/sections/CommunitySection/CommunitySection'
-    );
-    mounted = await mountClient(
-      createElement(CommunitySection as ComponentType<{ defer?: boolean }>, props),
-    );
-    return mounted.container;
-  }
+  it('renders the merged panels without standalone section wrappers', async () => {
+    const { About } = await import('@/components/sections/About');
+    const { aboutContent } = await import('@/content/about');
+    mounted = await mountClient(createElement(About, { locale: SITE_LOCALE.en }));
+    const container = mounted.container;
 
-  it('renders the CAT ~/.COMMUNITY module header', async () => {
-    const container = await render();
-    const heading = container.querySelector('h2');
-    expect(heading?.textContent).toContain('CAT ~/.COMMUNITY');
+    expect(container.querySelector('#sec-readme')).not.toBeNull();
+    expect(
+      [...container.querySelectorAll('.panel > header h3')].map((title) => title.textContent),
+    ).toEqual([
+      aboutContent[SITE_LOCALE.en].whoami.title,
+      aboutContent[SITE_LOCALE.en].now.title,
+      aboutContent[SITE_LOCALE.en].responsibilities.title,
+      aboutContent[SITE_LOCALE.en].stack.title,
+      aboutContent[SITE_LOCALE.en].code.title,
+    ]);
+    expect(container.querySelector('#sec-now, #sec-npm-stack, #sec-responsibilities')).toBeNull();
+    expect(container.querySelector('[data-role-pill]')?.getAttribute('aria-hidden')).toBe('true');
+    expect(
+      container.querySelectorAll('.role-typer ~ [role="status"]'),
+      'the role line owns one live region, apart from the copy feedback region',
+    ).toHaveLength(1);
+  });
+});
+
+describe('Home page', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
   });
 
-  it('renders community event content', async () => {
-    const container = await render();
-    const { communityEvent } = await import('@/content/community');
-    expect(container.textContent).toContain(communityEvent.name);
-  });
+  it(
+    'renders exactly one h1 element',
+    async () => {
+      installMatchMedia(false);
+      const { default: Home } = await import('@/app/(en)/page');
+      const doc = new DOMParser().parseFromString(
+        renderToStaticMarkup(createElement(Home)),
+        'text/html',
+      );
+      expect(doc.querySelectorAll('h1')).toHaveLength(1);
+    },
+    HOME_PAGE_IMPORT_TIMEOUT_MS,
+  );
 
-  it('renders without error with defer prop', async () => {
-    const container = await render({ defer: true });
-    expect(container.querySelector('h2')).not.toBeNull();
+  it('resolves every in-page topbar link to a rendered section id', async () => {
+    installMatchMedia(false);
+    const { default: Home } = await import('@/app/(en)/page');
+    const { DesktopTopbar } = await import(
+      '@/components/responsive/DesktopTopbar/DesktopTopbar.client'
+    );
+    const page = new DOMParser().parseFromString(
+      renderToStaticMarkup(createElement(Home)),
+      'text/html',
+    );
+    const topbar = new DOMParser().parseFromString(
+      renderToStaticMarkup(
+        createElement(
+          SectionNavigationProvider,
+          { chrome: siteNavChrome(SITE_LOCALE.en), locale: SITE_LOCALE.en },
+          createElement(DesktopTopbar, { brand: null }),
+        ),
+      ),
+      'text/html',
+    );
+    const targets = [...topbar.querySelectorAll('a[href^="/#"]')].map((link) =>
+      (link.getAttribute('href') ?? '').slice('/#'.length),
+    );
+    expect(targets.length).toBeGreaterThan(0);
+    const dangling = targets.filter((id) => page.getElementById(id) === null);
+    expect(
+      dangling,
+      'a topbar link points at an id no section renders; re-point it or restore the section',
+    ).toEqual([]);
   });
 });
 
@@ -61,7 +118,10 @@ describe('ContactSection', () => {
   async function render(props: { defer?: boolean } = {}) {
     const { ContactSection } = await import('@/components/sections/ContactSection/ContactSection');
     mounted = await mountClient(
-      createElement(ContactSection as ComponentType<{ defer?: boolean }>, props),
+      createElement(ContactSection as ComponentType<{ locale: SiteLocale; defer?: boolean }>, {
+        locale: SITE_LOCALE.en,
+        ...props,
+      }),
     );
     return mounted.container;
   }
@@ -85,20 +145,32 @@ describe('CredentialsSection', () => {
     mounted?.unmount();
   });
 
-  async function render(props: { defer?: boolean } = {}) {
+  async function render() {
     const { CredentialsSection } = await import(
       '@/components/sections/CredentialsSection/CredentialsSection'
     );
-    mounted = await mountClient(
-      createElement(CredentialsSection as ComponentType<{ defer?: boolean }>, props),
-    );
+    mounted = await mountClient(createElement(CredentialsSection, { locale: SITE_LOCALE.en }));
     return mounted.container;
   }
 
-  it('renders the CAT ~/.CREDENTIALS module header', async () => {
+  it('renders named certification, education and community groups under Career', async () => {
     const container = await render();
-    const heading = container.querySelector('h2');
-    expect(heading?.textContent).toContain('CAT ~/.CREDENTIALS');
+    const { careerCredentials } = await import('@/content/credentials');
+    const groups = [...container.querySelectorAll('[role="group"]')];
+    const headings = [...container.querySelectorAll('h3')];
+    const expectedGroups = [
+      careerCredentials[SITE_LOCALE.en].certifications,
+      careerCredentials[SITE_LOCALE.en].education,
+      careerCredentials[SITE_LOCALE.en].community,
+    ];
+    expect(groups).toHaveLength(expectedGroups.length);
+    expectedGroups.forEach((group, index) => {
+      const heading = headings[index];
+      expect(heading?.textContent).toContain(group.label);
+      expect(heading?.textContent).toContain(group.command);
+      expect(groups[index]?.getAttribute('aria-labelledby')).toBe(heading?.id);
+    });
+    expect(container.querySelector('h2')).toBeNull();
   });
 
   it('renders at least one credential row', async () => {
@@ -107,9 +179,19 @@ describe('CredentialsSection', () => {
     expect(container.textContent).toContain(firstOf(credentials).label);
   });
 
-  it('renders without error with defer prop', async () => {
-    const container = await render({ defer: true });
-    expect(container.querySelector('h2')).not.toBeNull();
+  it('inherits deferral from Career while retaining credential and community anchors', async () => {
+    const { GitLogSection } = await import('@/components/sections/GitLogSection');
+    const container = document.createElement('div');
+    container.innerHTML = renderToStaticMarkup(<GitLogSection locale={SITE_LOCALE.en} defer />);
+    const career = container.querySelector('#sec-git-log');
+    expect(career?.querySelector('h2')?.textContent).toContain('Career');
+    expect(career?.classList.contains('module-deferred')).toBe(true);
+    expect(career?.getAttribute('data-cv-defer')).toBe('true');
+    expect(container.querySelectorAll('[data-cv-defer]')).toHaveLength(1);
+    const credentials = career?.querySelector('#sec-credentials');
+    expect(credentials).not.toBeNull();
+    expect(credentials?.querySelectorAll('[role="group"]')).toHaveLength(3);
+    expect(credentials?.querySelector('#sec-community')).not.toBeNull();
   });
 });
 
@@ -125,7 +207,10 @@ describe('HottestTakesSection', () => {
       '@/components/sections/HottestTakesSection/HottestTakesSection'
     );
     mounted = await mountClient(
-      createElement(HottestTakesSection as ComponentType<{ defer?: boolean }>, props),
+      createElement(HottestTakesSection as ComponentType<{ locale: SiteLocale; defer?: boolean }>, {
+        locale: SITE_LOCALE.en,
+        ...props,
+      }),
     );
     return mounted.container;
   }
@@ -142,106 +227,11 @@ describe('HottestTakesSection', () => {
     expect(list).not.toBeNull();
   });
 
-  it('renders at least one take item', async () => {
+  it('renders four home take items', async () => {
     const container = await render();
-    const { hottestTakes } = await import('@/content/hottest-takes');
-    expect(container.textContent).toContain(firstOf(hottestTakes).thesis);
-  });
-
-  it('renders without error with defer prop', async () => {
-    const container = await render({ defer: true });
-    expect(container.querySelector('h2')).not.toBeNull();
-  });
-});
-
-describe('NpmStackSection', () => {
-  let mounted: MountedClient;
-
-  afterEach(() => {
-    mounted?.unmount();
-  });
-
-  async function render(props: { defer?: boolean } = {}) {
-    const { NpmStackSection } = await import(
-      '@/components/sections/NpmStackSection/NpmStackSection'
-    );
-    mounted = await mountClient(
-      createElement(NpmStackSection as ComponentType<{ defer?: boolean }>, props),
-    );
-    return mounted.container;
-  }
-
-  it('renders the NPM LIST --GLOBAL module header', async () => {
-    const container = await render();
-    const heading = container.querySelector('h2');
-    expect(heading?.textContent).toContain('NPM LIST --GLOBAL');
-  });
-
-  it('renders at least one npm stack item', async () => {
-    const container = await render();
-    const { npmStack } = await import('@/content/npm-stack');
-    expect(container.textContent).toContain(firstOf(npmStack).label);
-  });
-
-  it('renders without error with defer prop', async () => {
-    const container = await render({ defer: true });
-    expect(container.querySelector('h2')).not.toBeNull();
-  });
-});
-
-describe('NowSection', () => {
-  let mounted: MountedClient;
-
-  afterEach(() => {
-    mounted?.unmount();
-  });
-
-  async function render() {
-    const { NowSection } = await import('@/components/sections/NowSection/NowSection');
-    mounted = await mountClient(createElement(NowSection));
-    return mounted.container;
-  }
-
-  it('renders the CAT ~/.NOW module header', async () => {
-    const container = await render();
-    const heading = container.querySelector('h2');
-    expect(heading?.textContent).toContain('CAT ~/.NOW');
-  });
-
-  it('renders at least one now row', async () => {
-    const container = await render();
-    const { nowRows } = await import('@/content/now');
-    expect(container.textContent).toContain(firstOf(nowRows).k);
-  });
-});
-
-describe('ResponsibilitiesSection', () => {
-  let mounted: MountedClient;
-
-  afterEach(() => {
-    mounted?.unmount();
-  });
-
-  async function render(props: { defer?: boolean } = {}) {
-    const { ResponsibilitiesSection } = await import(
-      '@/components/sections/ResponsibilitiesSection/ResponsibilitiesSection'
-    );
-    mounted = await mountClient(
-      createElement(ResponsibilitiesSection as ComponentType<{ defer?: boolean }>, props),
-    );
-    return mounted.container;
-  }
-
-  it('renders the LS -LA ~/RESPONSIBILITIES module header', async () => {
-    const container = await render();
-    const heading = container.querySelector('h2');
-    expect(heading?.textContent).toContain('LS -LA ~/RESPONSIBILITIES');
-  });
-
-  it('renders at least one responsibility entry', async () => {
-    const container = await render();
-    const { responsibilities } = await import('@/content/responsibilities');
-    expect(container.textContent).toContain(firstOf(responsibilities).name);
+    const { homeTakes } = await import('@/content/hottest-takes');
+    expect(container.querySelectorAll('[data-testid="hottest-takes-list"] > li')).toHaveLength(4);
+    expect(container.textContent).toContain(firstOf(homeTakes(SITE_LOCALE.en)).thesis);
   });
 
   it('renders without error with defer prop', async () => {
@@ -259,7 +249,7 @@ describe('ShellSection', () => {
 
   async function render() {
     const { ShellSection } = await import('@/components/sections/ShellSection/ShellSection');
-    mounted = await mountClient(createElement(ShellSection));
+    mounted = await mountClient(createElement(ShellSection, { locale: SITE_LOCALE.en }));
     return mounted.container;
   }
 
@@ -275,41 +265,6 @@ describe('ShellSection', () => {
   });
 });
 
-describe('SysHealthSection', () => {
-  let mounted: MountedClient;
-
-  afterEach(() => {
-    mounted?.unmount();
-  });
-
-  async function render(props: { defer?: boolean } = {}) {
-    const { SysHealthSection } = await import(
-      '@/components/sections/SysHealthSection/SysHealthSection'
-    );
-    mounted = await mountClient(
-      createElement(SysHealthSection as ComponentType<{ defer?: boolean }>, props),
-    );
-    return mounted.container;
-  }
-
-  it('renders the SYS_HEALTH_MONITOR module header', async () => {
-    const container = await render();
-    const heading = container.querySelector('h2');
-    expect(heading?.textContent).toContain('SYS_HEALTH_MONITOR');
-  });
-
-  it('renders at least one sys health stat', async () => {
-    const container = await render();
-    const { sysStats } = await import('@/content/sys-health');
-    expect(container.textContent).toContain(firstOf(sysStats).label);
-  });
-
-  it('renders without error with defer prop', async () => {
-    const container = await render({ defer: true });
-    expect(container.querySelector('h2')).not.toBeNull();
-  });
-});
-
 describe('UnknownsSection', () => {
   let mounted: MountedClient;
 
@@ -317,60 +272,15 @@ describe('UnknownsSection', () => {
     mounted?.unmount();
   });
 
-  async function render(props: { defer?: boolean } = {}) {
-    const { UnknownsSection } = await import(
-      '@/components/sections/UnknownsSection/UnknownsSection'
-    );
-    mounted = await mountClient(
-      createElement(UnknownsSection as ComponentType<{ defer?: boolean }>, props),
-    );
-    return mounted.container;
-  }
-
-  it('renders the CAT ~/.UNKNOWNS module header', async () => {
-    const container = await render();
-    const heading = container.querySelector('h2');
-    expect(heading?.textContent).toContain('CAT ~/.UNKNOWNS');
-  });
-
-  it('renders learning items', async () => {
-    const container = await render();
+  it('renders learning items under nested headings without a separate module', async () => {
+    const { UnknownsSection } = await import('@/components/sections/UnknownsSection');
     const { unknowns } = await import('@/content/unknowns');
-    expect(container.textContent).toContain(firstOf(unknowns.learning).claim);
-  });
-
-  it('renders without error with defer prop', async () => {
-    const container = await render({ defer: true });
-    expect(container.querySelector('h2')).not.toBeNull();
-  });
-});
-
-describe('ManPageDesktop', () => {
-  let mounted: MountedClient;
-
-  afterEach(() => {
-    mounted?.unmount();
-  });
-
-  async function render() {
-    const { ManPageDesktop } = await import('@/components/sections/ManPageSection/ManPageDesktop');
-    mounted = await mountClient(createElement(ManPageDesktop));
-    return mounted.container;
-  }
-
-  it('renders a pre element with man page content', async () => {
-    const container = await render();
-    expect(container.querySelector('pre')).not.toBeNull();
-  });
-
-  it('renders the NAME section', async () => {
-    const container = await render();
-    expect(container.textContent).toContain('NAME');
-  });
-
-  it('renders man page author name from content', async () => {
-    const container = await render();
-    const { manPage } = await import('@/content/man-page');
-    expect(container.textContent).toContain(manPage.name);
+    mounted = await mountClient(createElement(UnknownsSection, { locale: SITE_LOCALE.en }));
+    const { container } = mounted;
+    expect(container.querySelector('h3')?.textContent).toContain(
+      unknowns[SITE_LOCALE.en].learningHeading,
+    );
+    expect(container.textContent).toContain(firstOf(unknowns[SITE_LOCALE.en].learning).claim);
+    expect(container.querySelector('section')).toBeNull();
   });
 });

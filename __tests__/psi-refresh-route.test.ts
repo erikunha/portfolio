@@ -1,5 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+const TEST_CRON_SECRET = 'x'.repeat(24);
+
 const mockRefreshScores = vi.fn();
 vi.mock('@/lib/lighthouse-scores', () => ({
   refreshScores: mockRefreshScores,
@@ -72,14 +74,14 @@ describe('GET /api/psi-refresh — auth', () => {
   });
 
   it('returns 401 when Authorization header is missing', async () => {
-    process.env.CRON_SECRET = 'secret123';
+    process.env.CRON_SECRET = TEST_CRON_SECRET;
     const { GET } = await import('@/app/api/psi-refresh/route');
     const res = await GET(makeRequest() as never);
     expect(res.status).toBe(401);
   });
 
   it('returns 401 when Bearer token does not match CRON_SECRET', async () => {
-    process.env.CRON_SECRET = 'secret123';
+    process.env.CRON_SECRET = TEST_CRON_SECRET;
     const { GET } = await import('@/app/api/psi-refresh/route');
     const res = await GET(makeRequest('Bearer wrong') as never);
     expect(res.status).toBe(401);
@@ -88,10 +90,10 @@ describe('GET /api/psi-refresh — auth', () => {
 
 describe('GET /api/psi-refresh — success', () => {
   it('returns 200 with desktop and mobile scores when both succeed', async () => {
-    process.env.CRON_SECRET = 'secret123';
+    process.env.CRON_SECRET = TEST_CRON_SECRET;
     mockRefreshScores.mockResolvedValueOnce(DESKTOP_SCORES).mockResolvedValueOnce(MOBILE_SCORES);
     const { GET } = await import('@/app/api/psi-refresh/route');
-    const res = await GET(makeRequest('Bearer secret123') as never);
+    const res = await GET(makeRequest(`Bearer ${TEST_CRON_SECRET}`) as never);
     expect(res.status).toBe(200);
     const body = await res.json();
     expect(body.desktop).toEqual(DESKTOP_SCORES);
@@ -100,22 +102,22 @@ describe('GET /api/psi-refresh — success', () => {
   });
 
   it('calls refreshScores for both desktop and mobile', async () => {
-    process.env.CRON_SECRET = 'secret123';
+    process.env.CRON_SECRET = TEST_CRON_SECRET;
     mockRefreshScores.mockResolvedValue(DESKTOP_SCORES);
     const { GET } = await import('@/app/api/psi-refresh/route');
-    await GET(makeRequest('Bearer secret123') as never);
+    await GET(makeRequest(`Bearer ${TEST_CRON_SECRET}`) as never);
     expect(mockRefreshScores).toHaveBeenCalledWith('desktop');
     expect(mockRefreshScores).toHaveBeenCalledWith('mobile');
   });
 
   it('returns 500 with null for a failed strategy while the other succeeds', async () => {
-    process.env.CRON_SECRET = 'secret123';
+    process.env.CRON_SECRET = TEST_CRON_SECRET;
     process.env.RESEND_API_KEY = 're_test';
     mockRefreshScores
       .mockResolvedValueOnce(DESKTOP_SCORES)
       .mockRejectedValueOnce(new Error('mobile PSI failed'));
     const { GET } = await import('@/app/api/psi-refresh/route');
-    const res = await GET(makeRequest('Bearer secret123') as never);
+    const res = await GET(makeRequest(`Bearer ${TEST_CRON_SECRET}`) as never);
     expect(res.status).toBe(500);
     const body = await res.json();
     expect(body.desktop).toEqual(DESKTOP_SCORES);
@@ -123,13 +125,13 @@ describe('GET /api/psi-refresh — success', () => {
   });
 
   it('returns 500 when both strategies fail', async () => {
-    process.env.CRON_SECRET = 'secret123';
+    process.env.CRON_SECRET = TEST_CRON_SECRET;
     process.env.RESEND_API_KEY = 're_test';
     mockRefreshScores
       .mockRejectedValueOnce(new Error('desktop PSI failed'))
       .mockRejectedValueOnce(new Error('mobile PSI failed'));
     const { GET } = await import('@/app/api/psi-refresh/route');
-    const res = await GET(makeRequest('Bearer secret123') as never);
+    const res = await GET(makeRequest(`Bearer ${TEST_CRON_SECRET}`) as never);
     expect(res.status).toBe(500);
     const body = await res.json();
     expect(body.desktop).toBeNull();
@@ -137,13 +139,13 @@ describe('GET /api/psi-refresh — success', () => {
   });
 
   it('logs an error when a strategy fails', async () => {
-    process.env.CRON_SECRET = 'secret123';
+    process.env.CRON_SECRET = TEST_CRON_SECRET;
     process.env.RESEND_API_KEY = 're_test';
     mockRefreshScores
       .mockResolvedValueOnce(DESKTOP_SCORES)
       .mockRejectedValueOnce(new Error('mobile PSI failed'));
     const { GET } = await import('@/app/api/psi-refresh/route');
-    await GET(makeRequest('Bearer secret123') as never);
+    await GET(makeRequest(`Bearer ${TEST_CRON_SECRET}`) as never);
     expect(mockLogError).toHaveBeenCalledWith(
       'psi-refresh failed',
       expect.objectContaining({ errors: expect.stringContaining('mobile PSI failed') }),
@@ -151,10 +153,10 @@ describe('GET /api/psi-refresh — success', () => {
   });
 
   it('logs completion with durationMs', async () => {
-    process.env.CRON_SECRET = 'secret123';
+    process.env.CRON_SECRET = TEST_CRON_SECRET;
     mockRefreshScores.mockResolvedValue(DESKTOP_SCORES);
     const { GET } = await import('@/app/api/psi-refresh/route');
-    await GET(makeRequest('Bearer secret123') as never);
+    await GET(makeRequest(`Bearer ${TEST_CRON_SECRET}`) as never);
     expect(mockLogInfo).toHaveBeenCalledWith(
       'psi-refresh completed',
       expect.objectContaining({ durationMs: expect.any(Number) }),
@@ -162,13 +164,13 @@ describe('GET /api/psi-refresh — success', () => {
   });
 
   it('logs an error when desktop strategy fails', async () => {
-    process.env.CRON_SECRET = 'secret123';
+    process.env.CRON_SECRET = TEST_CRON_SECRET;
     process.env.RESEND_API_KEY = 're_test';
     mockRefreshScores
       .mockRejectedValueOnce(new Error('desktop PSI failed'))
       .mockResolvedValueOnce(MOBILE_SCORES);
     const { GET } = await import('@/app/api/psi-refresh/route');
-    await GET(makeRequest('Bearer secret123') as never);
+    await GET(makeRequest(`Bearer ${TEST_CRON_SECRET}`) as never);
     expect(mockLogError).toHaveBeenCalledWith(
       'psi-refresh failed',
       expect.objectContaining({ errors: expect.stringContaining('desktop PSI failed') }),

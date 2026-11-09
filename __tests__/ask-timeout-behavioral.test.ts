@@ -1,5 +1,7 @@
-import { NextRequest } from 'next/server';
+import type { NextRequest } from 'next/server';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { askErrors } from '@/content/ask-errors';
+import { askRequest, readBody } from './helpers/ask-route';
 
 const mockStreamText = vi.fn();
 
@@ -7,35 +9,13 @@ vi.mock('ai', () => ({
   streamText: mockStreamText,
 }));
 
-vi.mock('@/lib/rate-limit', () => ({
-  getClientIp: vi.fn(() => '127.0.0.1'),
-  getAskLimit: vi.fn(() => ({ limit: vi.fn(async () => ({ success: true })) })),
-  reserveBudget: vi.fn(async () => ({
-    allowed: true,
-    reserved: 1512,
-    pct: 0,
-    budgetKey: 'ask:tokens:test',
-  })),
-  settleBudget: vi.fn(async () => undefined),
-  checkIdenticalQuestion: vi.fn(async () => ({ allowed: true })),
-}));
+vi.mock('@/lib/rate-limit', async () => (await import('./helpers/ask-route')).rateLimitModule());
 
-vi.mock('@/lib/ask-log', () => ({
-  persistAskInteraction: vi.fn(async () => undefined),
-}));
+vi.mock('@/lib/ask-log', async () => (await import('./helpers/ask-route')).askLogModule());
 
-vi.mock('@/lib/ip-hash', () => ({
-  hashIp: vi.fn(async () => 'hashed-ip-test'),
-}));
+vi.mock('@/lib/ip-hash', async () => (await import('./helpers/ask-route')).ipHashModule());
 
-vi.mock('@/lib/log', () => ({
-  log: {
-    info: vi.fn(),
-    error: vi.fn(),
-    warn: vi.fn(),
-    debug: vi.fn(),
-  },
-}));
+vi.mock('@/lib/log', async () => (await import('./helpers/ask-route')).logModule());
 
 function makeFailingResult(message: string) {
   const err = new Error(message);
@@ -84,25 +64,8 @@ function makeOkResult(text = 'hello') {
   };
 }
 
-async function readBody(res: Response): Promise<string> {
-  const reader = res.body?.getReader();
-  if (!reader) return '';
-  const dec = new TextDecoder();
-  let out = '';
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    out += dec.decode(value, { stream: !done });
-  }
-  return out;
-}
-
 function makeRequest(question: string): NextRequest {
-  return new NextRequest('http://localhost/api/ask', {
-    method: 'POST',
-    body: JSON.stringify({ question }),
-    headers: { 'Content-Type': 'application/json' },
-  });
+  return askRequest({ question });
 }
 
 describe('/api/ask behavioral — stream-initiation failure handling', () => {
@@ -112,7 +75,7 @@ describe('/api/ask behavioral — stream-initiation failure handling', () => {
     mockStreamText.mockReset();
   });
 
-  it('returns HTTP 200 with STREAM_ERR_SENTINEL body when the stream fails to start', async () => {
+  it('returns HTTP 200 with the generic upstream error when the stream fails to start', async () => {
     mockStreamText.mockReturnValueOnce(makeFailingResult('Request timed out after 30000ms'));
 
     const { POST } = await import('@/app/api/ask/route');
@@ -123,9 +86,40 @@ describe('/api/ask behavioral — stream-initiation failure handling', () => {
 
     const body = await readBody(res);
     const { STREAM_ERR_SENTINEL } = await import('@/lib/stream-protocol');
+    const { askErrors } = await import('@/content/ask-errors');
     expect(body.startsWith(STREAM_ERR_SENTINEL)).toBe(true);
-    expect(body).toContain('timed out');
+    expect(body, 'a raw upstream message must never reach the visitor').not.toContain('timed out');
+    expect(body).toBe(`${STREAM_ERR_SENTINEL}${askErrors.en.interrupted}`);
   });
+
+  it.each([
+    ['en', askErrors.en.interrupted],
+    ['pt', askErrors.pt.interrupted],
+  ] as const)(
+    'words a failed stream in the visitor language (%s) and keeps the cause in the server log',
+    async (locale, interrupted) => {
+      const cause = 'Gateway request failed: 402 at https://ai-gateway.example/v1';
+      mockStreamText.mockReturnValueOnce(makeFailingResult(cause));
+
+      const { POST } = await import('@/app/api/ask/route');
+      const { log } = await import('@/lib/log');
+      const { STREAM_ERR_SENTINEL } = await import('@/lib/stream-protocol');
+
+      const res = await POST(
+        askRequest({ question: 'Who is Erik?', locale }, { headers: { 'x-site-locale': locale } }),
+      );
+      const body = await readBody(res);
+
+      expect(body, 'the stream error line is the localized copy, not the exception text').toBe(
+        `${STREAM_ERR_SENTINEL}${interrupted}`,
+      );
+      expect(body).not.toContain('ai-gateway');
+      expect(vi.mocked(log.error)).toHaveBeenCalledWith(
+        'ask stream failed',
+        expect.objectContaining({ error: expect.objectContaining({ message: cause }) }),
+      );
+    },
+  );
 });
 
 describe('/api/ask behavioral — mid-stream timeout watchdog', () => {
@@ -167,7 +161,10 @@ describe('/api/ask behavioral — mid-stream timeout watchdog', () => {
 
     expect(out).toContain('partial answer');
     expect(out).toContain(STREAM_ERR_SENTINEL);
-    expect(out).toContain('mid-stream timeout');
+    expect(out, 'the watchdog reason is internal and must not reach the visitor').not.toContain(
+      'mid-stream timeout',
+    );
+    expect(out).toContain(askErrors.en.interrupted);
   });
 });
 

@@ -2,9 +2,11 @@
 
 import { type ChildProcess, execFileSync, spawn } from 'node:child_process';
 import { existsSync } from 'node:fs';
+import { resolveServerPort } from './lib/free-port';
 
 const SKIP_BUILD = process.argv.includes('--skip-build');
-const PORT = 3000;
+const PORT = await resolveServerPort();
+const BASE_URL = `http://localhost:${PORT}`;
 
 const C = {
   reset: '\x1b[0m',
@@ -150,7 +152,7 @@ if (SKIP_BUILD) {
 
 step('Starting production server');
 server = spawn('pnpm', ['start'], {
-  env: { ...process.env, DEPLOY_SALT: 'local-gates' },
+  env: { ...process.env, DEPLOY_SALT: 'local-gates', PORT: String(PORT) },
   stdio: 'pipe',
 });
 server.on('error', (err) => {
@@ -159,13 +161,7 @@ server.on('error', (err) => {
   process.exit(1);
 });
 
-run('Wait for server', 'npx', [
-  '--yes',
-  'wait-on',
-  `http://localhost:${PORT}`,
-  '--timeout',
-  '30000',
-]);
+run('Wait for server', 'npx', ['--yes', 'wait-on', BASE_URL, '--timeout', '30000']);
 
 step('Running post-build gates in parallel');
 
@@ -173,7 +169,7 @@ const lhciDesktopPromise = spawnGate('Lighthouse CI — desktop', true, 'pnpm', 
   'exec',
   'lhci',
   'autorun',
-  `--collect.url=http://localhost:${PORT}`,
+  `--collect.url=${BASE_URL}`,
   '--upload.target=filesystem',
   '--upload.outputDir=.lhci-local/desktop',
 ]);
@@ -183,7 +179,7 @@ const lhciMobilePromise = lhciDesktopPromise.then(() =>
     'lhci',
     'autorun',
     '--config=lighthouserc.mobile.json',
-    `--collect.url=http://localhost:${PORT}`,
+    `--collect.url=${BASE_URL}`,
     '--upload.target=filesystem',
     '--upload.outputDir=.lhci-local/mobile',
   ]),
@@ -192,21 +188,27 @@ const lhciMobilePromise = lhciDesktopPromise.then(() =>
 const gatePromises = [
   lhciDesktopPromise,
   lhciMobilePromise,
-  spawnGate('axe-core a11y scan', false, 'pnpm', [
-    'playwright',
-    'test',
-    'tests/a11y',
-    '--project=chromium',
-    '--output=.playwright-results/axe',
-  ]),
-  spawnGate('E2E functional — chromium', false, 'pnpm', [
-    'playwright',
-    'test',
-    '--project=chromium',
-    'tests/e2e/cross-cutting.spec.ts',
-    'tests/e2e/observability-smoke.spec.ts',
-    '--output=.playwright-results/e2e',
-  ]),
+  spawnGate(
+    'axe-core a11y scan',
+    false,
+    'pnpm',
+    ['playwright', 'test', 'tests/a11y', '--project=chromium', '--output=.playwright-results/axe'],
+    { E2E_BASE_URL: BASE_URL },
+  ),
+  spawnGate(
+    'E2E functional — chromium',
+    false,
+    'pnpm',
+    [
+      'playwright',
+      'test',
+      '--project=chromium',
+      'tests/e2e/cross-cutting.spec.ts',
+      'tests/e2e/observability-smoke.spec.ts',
+      '--output=.playwright-results/e2e',
+    ],
+    { E2E_BASE_URL: BASE_URL },
+  ),
 ];
 
 const timeoutPromise = new Promise<never>((_, reject) =>

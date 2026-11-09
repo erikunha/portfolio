@@ -16,19 +16,19 @@ export type AsAnchor = ButtonBaseProps &
 export type ButtonProps = AsButton | AsAnchor;
 
 const baseClasses =
-  'btn inline-flex items-center justify-center px-[14px] border border-primary-subtle text-xs font-bold tracking-[0.1em] uppercase cursor-pointer transition-[box-shadow,background] duration-200 ease-out no-underline focus-visible:outline-2 focus-visible:outline-primary-500 focus-visible:outline-offset-2 aria-disabled:opacity-40 aria-disabled:pointer-events-none disabled:opacity-40 disabled:pointer-events-none';
+  'btn inline-flex items-center justify-center min-w-11 rounded-none font-mono border text-xs font-bold tracking-[0.1em] uppercase cursor-pointer transition-[box-shadow,background] duration-200 ease-out [body[data-motion=reduce]_&]:transition-none no-underline aria-disabled:opacity-40 aria-disabled:pointer-events-none disabled:opacity-40 disabled:pointer-events-none';
 
 const variantClasses: Record<ButtonVariant, string> = {
   primary:
     'bg-primary-500 text-secondary-950 border-primary-500 hover:shadow-[0_0_12px_var(--color-primary-500)]',
   secondary:
-    'bg-transparent text-primary-500 hover:shadow-[0_0_12px_var(--color-primary-500)] hover:bg-primary-quiet',
+    'bg-transparent text-primary-500 border-primary-subtle hover:shadow-[0_0_12px_var(--color-primary-500)] hover:bg-primary-quiet',
 };
 
 const sizeClasses: Record<ButtonSize, string> = {
-  sm: 'min-h-9',
-  md: 'min-h-11',
-  lg: 'min-h-[52px]',
+  sm: 'min-h-11 px-2.5',
+  md: 'min-h-11 px-[14px]',
+  lg: 'min-h-[52px] px-[14px]',
 };
 
 export function Button({
@@ -43,6 +43,7 @@ export function Button({
     const { disabled, href, onClick, tabIndex, ...anchorRest } = rest as AsAnchor;
     return (
       <a
+        data-variant={variant}
         {...anchorRest}
         className={classes}
         {...(disabled ? { 'aria-disabled': 'true' as const } : {})}
@@ -53,5 +54,5 @@ export function Button({
     );
   }
   const { type = 'button', ...buttonRest } = rest as AsButton;
-  return <button className={classes} type={type} {...buttonRest} />;
+  return <button data-variant={variant} className={classes} type={type} {...buttonRest} />;
 }

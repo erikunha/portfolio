@@ -9,8 +9,11 @@ vi.mock('@/lib/eval/judge', async (importOriginal) => ({
 
 import {
   CALIBRATION_ERROR_FRACTION_LIMIT,
+  describeCalibrationFailure,
   MIN_CALIBRATION_AGREEMENT,
+  MIN_CALIBRATION_TNR,
   runCalibration,
+  summarizeCalibration,
 } from '@/lib/eval/calibration';
 
 function gold(id: string, humanVerdict: boolean) {
@@ -104,5 +107,104 @@ describe('lib/eval/calibration runCalibration', () => {
     expect(r.errored).toBe(2);
     expect(r.passed).toBe(false);
     expect(r.errored / r.total).toBeGreaterThan(CALIBRATION_ERROR_FRACTION_LIMIT);
+  });
+
+  it('pins the true-negative gate at 11 of 12', () => {
+    expect(MIN_CALIBRATION_TNR).toBe(11 / 12);
+  });
+
+  it('reports the true-positive and true-negative rates', async () => {
+    const goldSet = [gold('a', true), gold('b', true), gold('c', false), gold('d', false)];
+    mockJudge
+      .mockResolvedValueOnce(verdict(true))
+      .mockResolvedValueOnce(verdict(false))
+      .mockResolvedValueOnce(verdict(false))
+      .mockResolvedValueOnce(verdict(false));
+    const r = await runCalibration(goldSet, { model: 'm' });
+    expect(r).toMatchObject({
+      positives: 2,
+      negatives: 2,
+      truePositives: 1,
+      trueNegatives: 2,
+      tpr: 0.5,
+      tnr: 1,
+    });
+  });
+
+  it('fails a lenient judge that clears raw agreement by passing wrong answers', async () => {
+    const goldSet = [
+      ...Array.from({ length: 12 }, (_, i) => gold(`p${i}`, true)),
+      ...Array.from({ length: 12 }, (_, i) => gold(`n${i}`, false)),
+    ];
+    for (let i = 0; i < 12; i++) mockJudge.mockResolvedValueOnce(verdict(true));
+    for (let i = 0; i < 12; i++) mockJudge.mockResolvedValueOnce(verdict(i < 3));
+    const r = await runCalibration(goldSet, { model: 'm' });
+    expect(r.agreement).toBeGreaterThanOrEqual(MIN_CALIBRATION_AGREEMENT);
+    expect(r.tnr).toBe(0.75);
+    expect(r.tnrPassed).toBe(false);
+    expect(r.passed).toBe(false);
+  });
+
+  it('lets one false pass in twelve negatives through', async () => {
+    const goldSet = [
+      ...Array.from({ length: 12 }, (_, i) => gold(`p${i}`, true)),
+      ...Array.from({ length: 12 }, (_, i) => gold(`n${i}`, false)),
+    ];
+    for (let i = 0; i < 12; i++) mockJudge.mockResolvedValueOnce(verdict(true));
+    for (let i = 0; i < 12; i++) mockJudge.mockResolvedValueOnce(verdict(i === 0));
+    const r = await runCalibration(goldSet, { model: 'm' });
+    expect(r.tnrPassed).toBe(true);
+    expect(r.passed).toBe(true);
+  });
+
+  it('scales the allowance with the negatives: two false passes in sixteen fail', async () => {
+    const goldSet = [
+      ...Array.from({ length: 14 }, (_, i) => gold(`p${i}`, true)),
+      ...Array.from({ length: 16 }, (_, i) => gold(`n${i}`, false)),
+    ];
+    for (let i = 0; i < 14; i++) mockJudge.mockResolvedValueOnce(verdict(true));
+    for (let i = 0; i < 16; i++) mockJudge.mockResolvedValueOnce(verdict(i < 2));
+    const r = await runCalibration(goldSet, { model: 'm' });
+    expect(r.agreement).toBeGreaterThanOrEqual(MIN_CALIBRATION_AGREEMENT);
+    expect(r.tnr).toBe(0.875);
+    expect(r.passed).toBe(false);
+  });
+
+  it('does not count an errored negative as a true negative', async () => {
+    const goldSet = [gold('p', true), gold('n', false)];
+    mockJudge
+      .mockResolvedValueOnce(verdict(true))
+      .mockResolvedValueOnce(verdict(false, 'judge returned no JSON'));
+    const r = await runCalibration(goldSet, { model: 'm' });
+    expect(r.trueNegatives).toBe(0);
+    expect(r.tnr).toBe(0);
+  });
+
+  it('cannot pass without a single negative gold case', async () => {
+    mockJudge.mockResolvedValue(verdict(true));
+    const r = await runCalibration([gold('a', true), gold('b', true)], { model: 'm' });
+    expect(r.negatives).toBe(0);
+    expect(r.tnrPassed).toBe(false);
+    expect(r.passed).toBe(false);
+  });
+
+  it('names the true-negative rate, not only agreement, when a lenient judge fails the gate', async () => {
+    const goldSet = [
+      ...Array.from({ length: 12 }, (_, i) => gold(`p${i}`, true)),
+      ...Array.from({ length: 12 }, (_, i) => gold(`n${i}`, false)),
+    ];
+    for (let i = 0; i < 12; i++) mockJudge.mockResolvedValueOnce(verdict(true));
+    for (let i = 0; i < 12; i++) mockJudge.mockResolvedValueOnce(verdict(i < 3));
+    const r = await runCalibration(goldSet, { model: 'm' });
+    expect(describeCalibrationFailure(r)).toContain('true-negative rate 75.0%');
+    expect(describeCalibrationFailure(r)).not.toContain('agreement');
+    expect(summarizeCalibration(r)).toMatchObject({
+      tpr: 1,
+      tnr: 0.75,
+      minTnr: MIN_CALIBRATION_TNR,
+      tnrPassed: false,
+      agreementPassed: true,
+      passed: false,
+    });
   });
 });

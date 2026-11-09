@@ -4,6 +4,12 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 const redisMockGet = vi.fn();
 const limitMock = vi.fn();
 const getClientIpMock = vi.fn(() => '1.2.3.4');
+const connectionMock = vi.fn(() => Promise.resolve());
+
+vi.mock('next/server', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('next/server')>()),
+  connection: connectionMock,
+}));
 
 vi.mock('@/lib/rate-limit', () => ({
   getRedis: vi.fn(() => ({ get: redisMockGet })),
@@ -29,6 +35,14 @@ describe('GET /api/healthz', () => {
 
   afterEach(() => {
     vi.unstubAllEnvs();
+  });
+
+  it('lets a prerender bail-out propagate instead of logging it as a rate-limit failure', async () => {
+    const bailOut = new Error('needs to bail out of prerendering');
+    connectionMock.mockRejectedValueOnce(bailOut);
+    const { GET } = await import('@/app/api/healthz/route');
+    await expect(GET(makeMockRequest())).rejects.toBe(bailOut);
+    expect(limitMock).not.toHaveBeenCalled();
   });
 
   it('returns 200 with status ok and sha when psiLastRun is fresh', async () => {

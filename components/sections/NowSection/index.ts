@@ -1,1 +1,0 @@
-export { NowSection } from './NowSection';

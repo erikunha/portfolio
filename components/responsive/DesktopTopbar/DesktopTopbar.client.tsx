@@ -1,128 +1,120 @@
 'use client';
 
-import { useLayoutEffect, useState } from 'react';
-import { WindowChrome } from '@/design-system';
+import { usePathname } from 'next/navigation';
+import { type ReactNode, Suspense } from 'react';
+import { ExternalLink } from '@/components/ExternalLink';
+import { StatusDot } from '@/components/StatusDot';
+import { LINKS_PATH } from '@/content/links.constants';
+import { MOTION_STATE_SEPARATOR, TOPBAR_MOTION_LABEL } from '@/content/nav';
 import { cn } from '@/lib/cn';
-import { applyMotion, readMotion } from '@/lib/motion';
+import {
+  LanguageSwitch,
+  MenuTrigger,
+  useCurrentSection,
+  useMotionOn,
+  useMotionState,
+  useSectionNavigation,
+} from '../SectionNavigation';
 
-export function DesktopTopbar() {
-  const [motionOn, setMotionOn] = useState(true);
+const SECTION_PATH_SEPARATOR = '/';
 
-  useLayoutEffect(() => {
-    if (typeof window === 'undefined') return;
-    const on = readMotion();
-    setMotionOn(on);
-    applyMotion(on);
-  }, []);
+const HASH_MARK = '#';
 
-  function toggleMotion() {
-    const next = !motionOn;
-    setMotionOn(next);
-    applyMotion(next);
-  }
+const LINKS_PAGE_PATHS: readonly string[] = Object.values(LINKS_PATH);
+
+function isCurrentPath(pathname: string | null, href: string): boolean {
+  if (pathname === null || href.includes(HASH_MARK)) return false;
+  if (LINKS_PAGE_PATHS.includes(href)) return LINKS_PAGE_PATHS.includes(pathname);
+  return pathname === href || pathname.startsWith(`${href}${SECTION_PATH_SEPARATOR}`);
+}
+
+function hashTarget(href: string): string | null {
+  const at = href.indexOf(HASH_MARK);
+  return at < 0 ? null : href.slice(at + HASH_MARK.length);
+}
+
+function currentState(
+  pathname: string | null,
+  currentId: string,
+  href: string,
+): 'page' | 'location' | undefined {
+  const target = hashTarget(href);
+  if (target !== null) return target === currentId ? 'location' : undefined;
+  return isCurrentPath(pathname, href) ? 'page' : undefined;
+}
+
+function TopbarLinks({ pathname }: { pathname: string | null }) {
+  const { chrome, jump } = useSectionNavigation();
+  const currentId = useCurrentSection();
+
+  return chrome.topbarNav.map(({ label, href }) => (
+    <a
+      key={href}
+      className="topbar-link hidden xl:inline"
+      href={href}
+      aria-current={currentState(pathname, currentId, href)}
+      onClick={(event) => {
+        const target = hashTarget(href);
+        if (target !== null) jump(event, target);
+      }}
+    >
+      {label}
+    </a>
+  ));
+}
+
+function CurrentTopbarLinks() {
+  return <TopbarLinks pathname={usePathname()} />;
+}
+
+export function DesktopTopbar({ brand }: { brand: ReactNode }) {
+  const { toggleMotion, chrome, copy, route } = useSectionNavigation();
+  const motionOn = useMotionOn();
+  const motionState = useMotionState();
 
   return (
-    <div className="desktop-topbar fixed top-0 left-0 right-0 z-[110] bg-secondary-950 border-b border-primary-subtle hidden md:block">
-      <div className="max-w-[1200px] mx-auto px-[14px] md:px-[18px] flex items-center gap-4 h-11">
-        <WindowChrome size={12} style={{ gap: '8px' }} />
-        <div className="flex gap-2 ml-2">
-          <div
-            className={cn(
-              'inline-flex items-center gap-2 h-[26px] px-3 text-[12px] tracking-[0.05em] text-tertiary-50 border border-transparent',
-              'text-primary-500 border-primary-subtle bg-glow-04',
-            )}
-          >
-            <span>&#9632;</span>
-            <span>ERIK_CUNHA.SH</span>
-            <span className="text-tertiary-50 ml-1.5 opacity-80">&times;</span>
+    <header className="desktop-topbar fixed top-0 left-0 right-0 bg-secondary-950 border-b border-primary-subtle hidden md:block">
+      <div className="safe-zone flex items-center gap-3 min-h-11">
+        <MenuTrigger />
+        <nav className="flex gap-2 items-center flex-nowrap" aria-label={copy.siteNavLabel}>
+          <Suspense fallback={<TopbarLinks pathname={route} />}>
+            <CurrentTopbarLinks />
+          </Suspense>
+          <div className="flex gap-2 items-center flex-nowrap xl:ml-2">
+            <button
+              type="button"
+              className="topbar-action topbar-action-toggle hidden xl:inline-flex"
+              onClick={toggleMotion}
+              data-motion={motionOn ? 'on' : 'off'}
+              aria-pressed={motionOn}
+            >
+              <StatusDot blink className={cn(!motionOn && 'opacity-40')} />
+              <span>
+                {TOPBAR_MOTION_LABEL}
+                <span aria-hidden="true">
+                  {MOTION_STATE_SEPARATOR}
+                  {motionState}
+                </span>
+              </span>
+            </button>
+            <a
+              className="topbar-action topbar-action-outline hidden lg:inline-flex"
+              href={chrome.topbarReading.href}
+            >
+              {chrome.topbarReading.label}
+            </a>
+            <ExternalLink
+              className="topbar-action topbar-action-solid hidden lg:inline-flex"
+              href={chrome.topbarHire.href}
+              aria-label={chrome.topbarHire.accessibleName}
+            >
+              {chrome.topbarHire.label}
+            </ExternalLink>
           </div>
-        </div>
-        <nav
-          className="ml-auto flex gap-[18px] items-center flex-nowrap"
-          aria-label="Site navigation"
-        >
-          <a
-            className="text-primary-500 text-[12px] tracking-[0.08em] whitespace-nowrap hover:text-shadow-[0_0_8px_var(--color-primary-500)] hidden xl:inline"
-            href="/#sec-projects"
-          >
-            01_WORK
-          </a>
-          <a
-            className="text-primary-500 text-[12px] tracking-[0.08em] whitespace-nowrap hover:text-shadow-[0_0_8px_var(--color-primary-500)] hidden xl:inline"
-            href="/#sec-perf-receipts"
-          >
-            02_IMPACT
-          </a>
-          <a
-            className="text-primary-500 text-[12px] tracking-[0.08em] whitespace-nowrap hover:text-shadow-[0_0_8px_var(--color-primary-500)] hidden xl:inline"
-            href="/#sec-npm-stack"
-          >
-            03_DEPS
-          </a>
-          <a
-            className="text-primary-500 text-[12px] tracking-[0.08em] whitespace-nowrap hover:text-shadow-[0_0_8px_var(--color-primary-500)] hidden xl:inline"
-            href="/#sec-contact"
-          >
-            04_CONTACT
-          </a>
-          <a
-            className="text-primary-500 text-[12px] tracking-[0.08em] whitespace-nowrap hover:text-shadow-[0_0_8px_var(--color-primary-500)] hidden xl:inline"
-            href="/design-system"
-          >
-            DESIGN_SYSTEM
-          </a>
-          <button
-            type="button"
-            className={cn(
-              'inline-flex items-center gap-1.5 text-primary-400 text-[12px] tracking-[0.08em]',
-              'border border-primary-subtle px-[14px] py-1.5 cursor-pointer bg-transparent whitespace-nowrap',
-              'transition-[box-shadow,background,border-color] duration-200 ease-out',
-              'hover:shadow-[0_0_12px_var(--color-primary-500)] hover:bg-primary-quiet hover:border-primary-500',
-              'hidden xl:inline-flex',
-              'motion-reduce:transition-none [body[data-motion=reduce]_&]:transition-none',
-            )}
-            onClick={toggleMotion}
-            data-motion={motionOn ? 'on' : 'off'}
-            aria-pressed={motionOn}
-          >
-            <span
-              className={cn(
-                'w-1.5 h-1.5 rounded-full bg-primary-500 block',
-                !motionOn && 'bg-primary-400 opacity-40',
-              )}
-              aria-hidden="true"
-            />
-            <span>{motionOn ? 'MOTION: ON' : 'MOTION: OFF'}</span>
-          </button>
-          <a
-            className={cn(
-              'border border-primary-500 text-primary-500 px-3 py-1.5 tracking-[0.08em] text-xs inline-block whitespace-nowrap',
-              'transition-[box-shadow,background] duration-200 ease-out',
-              'hover:shadow-[0_0_12px_var(--color-primary-500)] hover:bg-primary-quiet hover:no-underline',
-              'motion-reduce:transition-none [body[data-motion=reduce]_&]:transition-none',
-            )}
-            href="/erik-cunha-cv.pdf"
-            download
-          >
-            DOWNLOAD_CV
-          </a>
-          <a
-            className={cn(
-              'bg-primary-500 text-black font-bold tracking-[0.08em] px-[14px] py-1.5 text-[12px] border border-primary-500',
-              'transition-[box-shadow] duration-200 ease-out',
-              'hover:shadow-[0_0_12px_var(--color-primary-500)] hover:no-underline',
-              'inline-flex items-center whitespace-nowrap',
-              'motion-reduce:transition-none [body[data-motion=reduce]_&]:transition-none',
-            )}
-            href="https://www.linkedin.com/in/erikunha/"
-            target="_blank"
-            rel="noreferrer noopener"
-          >
-            SSH_CONNECT
-            <span className="sr-only"> (opens in new window)</span>
-          </a>
         </nav>
+        <LanguageSwitch />
+        <div className="flex items-center ml-auto pl-6">{brand}</div>
       </div>
-    </div>
+    </header>
   );
 }

@@ -1,0 +1,41 @@
+{
+  "version": 1,
+  "issueFromTier": "diagnose",
+  "defaults": {
+    "window": 12,
+    "minHistory": 6,
+    "tiers": { "log": 1, "diagnose": 2, "propose": 3 }
+  },
+  "metrics": {
+    "deploymentFrequency": {
+      "direction": "lower-is-worse",
+      "minStd": 1,
+      "unit": "production deploys per week"
+    },
+    "deploymentFailureRate": {
+      "direction": "higher-is-worse",
+      "minStd": 0.05,
+      "unit": "share of production deploys that failed"
+    },
+    "leadTimeHoursMedian": {
+      "direction": "higher-is-worse",
+      "minStd": 4,
+      "unit": "hours, first commit to merge, median"
+    },
+    "prCycleTimeHoursMedian": {
+      "direction": "higher-is-worse",
+      "minStd": 4,
+      "unit": "hours, PR opened to merged, median"
+    },
+    "ciMainFailureRate": {
+      "direction": "higher-is-worse",
+      "minStd": 0.05,
+      "unit": "share of completed CI runs on main that failed"
+    },
+    "flakyPerE2eJob": {
+      "direction": "higher-is-worse",
+      "minStd": 0.02,
+      "unit": "flaky tests per e2e job inspected"
+    }
+  }
+}

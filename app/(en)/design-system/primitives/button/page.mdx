@@ -1,0 +1,53 @@
+import { dsPageMetadata } from '../../_lib/page-metadata';
+import { OnThisPage } from '../../_components/OnThisPage';
+
+export const metadata = dsPageMetadata({
+  slug: 'primitives/button',
+  title: 'Button · Design System · erikunha.dev',
+  description: 'Button props, variants, sizes and accessibility notes',
+});
+
+# BUTTON
+
+<OnThisPage items={[{id:'props',label:'Props'},{id:'variants',label:'Variants'},{id:'sizes',label:'Sizes'},{id:'disabled',label:'Disabled'},{id:'accessibility',label:'Accessibility'}]} />
+
+Source: `design-system/components/Button/Button.tsx`. React Server Component, zero client JavaScript.
+
+<h2 id="props">Props</h2>
+
+| Prop | Type | Default | Required |
+|---|---|---|---|
+| `variant` | `'primary' \| 'secondary'` | `'primary'` | no |
+| `size` | `'sm' \| 'md' \| 'lg'` | `'md'` | no |
+| `as` | `'button' \| 'a'` | `'button'` | no |
+| `href` | `string` | none | yes when `as="a"` |
+| `disabled` | `boolean` | `false` | no |
+
+<h2 id="variants">Variants</h2>
+
+<Preview id="button-variants">
+  <Button variant="primary" as="a" href="#variants">EXEC_HIRE</Button>
+  <Button variant="secondary" as="a" href="#variants">DOWNLOAD_CV</Button>
+</Preview>
+
+<h2 id="sizes">Sizes</h2>
+
+<Preview id="button-sizes">
+  <Button size="sm" as="a" href="#sizes">SM</Button>
+  <Button size="md" as="a" href="#sizes">MD</Button>
+  <Button size="lg" as="a" href="#sizes">LG</Button>
+</Preview>
+
+Small and medium buttons have a 44px minimum height. Large buttons have a 52px minimum height.
+
+<h2 id="disabled">Disabled</h2>
+
+<Preview id="button-disabled">
+  <Button disabled>DISABLED</Button>
+</Preview>
+
+An anchor cannot be natively disabled. With `as="a"` and `disabled`, the button drops `href`, sets `aria-disabled="true"`, leaves the tab order and cancels click. That path attaches a click handler, so it is used from client components only.
+
+<h2 id="accessibility">Accessibility</h2>
+
+Every size meets the 44px target. Keyboard focus shows a 2px signal outline with a 2px offset through `:focus-visible`. This component defaults `type` to `"button"`, opting out of the browser's implicit submit inside a `<form>`.

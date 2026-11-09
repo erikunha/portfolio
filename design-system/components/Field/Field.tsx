@@ -1,6 +1,6 @@
 'use client';
 
-import type { InputHTMLAttributes, TextareaHTMLAttributes } from 'react';
+import { type InputHTMLAttributes, type TextareaHTMLAttributes, useId } from 'react';
 import { cn } from '@/lib/cn';
 
 export type FieldBase = { name: string; label: string; error?: string };
@@ -11,7 +11,7 @@ export type MultiLineProps = FieldBase &
 export type FieldProps = SingleLineProps | MultiLineProps;
 
 const inputClasses =
-  'field-input w-full bg-transparent border border-primary-border text-tertiary-50 font-mono text-xs md:text-sm px-[10px] py-2 min-h-11 resize-y transition-[border-color] duration-200 ease-out placeholder:text-primary-500 placeholder:opacity-60 focus-visible:border-primary-500 aria-[invalid=true]:border-senary-300';
+  'field-input w-full bg-transparent border border-primary-500 text-tertiary-50 font-mono text-xs md:text-sm px-[10px] py-2 min-h-11 resize-y transition-[border-color] duration-200 ease-out [body[data-motion=reduce]_&]:transition-none placeholder:text-tertiary-500 aria-[invalid=true]:border-senary-300';
 
 export function Field({
   name,
@@ -22,7 +22,8 @@ export function Field({
   className: consumerClassName,
   ...rest
 }: FieldProps) {
-  const id = consumerId ?? `field-${name}`;
+  const generatedId = useId();
+  const id = consumerId ?? generatedId;
   const errId = error ? `${id}-error` : undefined;
   const consumerDescribedBy = (rest as { 'aria-describedby'?: string })['aria-describedby'];
   const describedBy = [consumerDescribedBy, errId].filter(Boolean).join(' ') || undefined;
@@ -47,11 +48,11 @@ export function Field({
       ) : (
         <input {...(rest as InputHTMLAttributes<HTMLInputElement>)} {...inputProps} />
       )}
-      {error && (
+      {error ? (
         <span id={errId} className="field-error text-xs text-senary-300">
           {error}
         </span>
-      )}
+      ) : null}
     </div>
   );
 }

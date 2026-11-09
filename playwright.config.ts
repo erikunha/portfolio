@@ -1,17 +1,24 @@
 import { defineConfig, devices } from 'playwright/test';
 
+const CROSS_BROWSER_SPECS =
+  /tests\/e2e\/(shared-header|cross-cutting|motion-switch|observability-smoke|design-system-pages|links|contact-delivery|contact-timezone|guitar-mobile|guitar-eq|mixer-mobile|reading-views|cv-layout|error-states|no-js|mobile-reflow|hero-layout|section-surfaces|route-surfaces|type-scale|streamed-settle|shell-input-states|shell-hydration|refs-privacy|safe-zone|section-visual-order|error-pages-alignment|links-chrome-alignment|command-wrap|career-wrap|dock-labels|pt-hero-boot|palette-discipline)\.spec\.ts$/;
+const VISUAL_SPEC = /tests\/visual\/visual\.spec\.ts$/;
+
+const DEFAULT_BASE_URL = 'http://localhost:3000';
+
 export default defineConfig({
   testDir: './tests',
   fullyParallel: false,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
+  failOnFlakyTests: !!process.env.CI,
   workers: process.env.CI ? 2 : 1,
   reporter: [
     ...(process.env.GITHUB_ACTIONS ? ([['github'], ['list']] as const) : ([['list']] as const)),
     ...(process.env.ARGOS_TOKEN ? [['@argos-ci/playwright/reporter'] as [string]] : []),
   ],
   use: {
-    baseURL: 'http://localhost:3000',
+    baseURL: process.env.E2E_BASE_URL ?? DEFAULT_BASE_URL,
     trace: 'on-first-retry',
   },
   expect: {
@@ -26,20 +33,17 @@ export default defineConfig({
     {
       name: 'chromium-mobile',
       use: { ...devices['iPhone SE'], defaultBrowserType: 'chromium' },
-      testMatch:
-        /tests\/(e2e\/(cross-cutting|observability-smoke|design-system-pages|links)|visual\/visual)\.spec\.ts$/,
+      testMatch: [CROSS_BROWSER_SPECS, VISUAL_SPEC],
     },
     {
       name: 'webkit-desktop',
       use: { ...devices['Desktop Safari'], viewport: { width: 1280, height: 720 } },
-      testMatch:
-        /tests\/(e2e\/(cross-cutting|observability-smoke|design-system-pages|links)|visual\/visual)\.spec\.ts$/,
+      testMatch: CROSS_BROWSER_SPECS,
     },
     {
       name: 'webkit-mobile',
       use: { ...devices['iPhone 14'] },
-      testMatch:
-        /tests\/(e2e\/(cross-cutting|observability-smoke|design-system-pages|links)|visual\/visual)\.spec\.ts$/,
+      testMatch: CROSS_BROWSER_SPECS,
     },
 
     {

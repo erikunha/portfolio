@@ -1,0 +1,71 @@
+import { dsPageMetadata } from '../_lib/page-metadata';
+import { OnThisPage } from '../_components/OnThisPage';
+
+export const metadata = dsPageMetadata({
+  slug: 'enforcement',
+  title: 'Enforcement · Design System · erikunha.dev',
+  description: 'The CI gates that hold the design system to its contract',
+});
+
+# ENFORCEMENT
+
+<OnThisPage items={[{id:'tokens',label:'Tokens'},{id:'styling',label:'Styling'},{id:'components',label:'Components'},{id:'cross-cutting',label:'Cross-cutting'},{id:'adding-a-new-component',label:'Adding a New Component'}]} />
+
+The checks below run in CI or local tooling. CI scheduling and local-only coverage are stated separately.
+
+<h2 id="tokens">Tokens</h2>
+
+`app/css/theme.css` (`@theme`) is the single source of truth for brand colour.
+The file declares `--color-*` custom properties; Tailwind generates matching utilities.
+The token swatches on the [Tokens](/design-system/tokens) page read the
+same file.
+
+| Gate | Command | Checks |
+|---|---|---|
+| Contrast | `pnpm lint:contrast` | Parses `--color-*` from `theme.css`; fails if any documented pair misses WCAG AA |
+| Token boundary | `pnpm lint:css-tokens` | Fails a raw hex or color function outside `theme.css`, a literal z-index outside the `--z-*` scale, and a focus rule that writes its own ring instead of `--focus-ring` |
+
+Type and spacing are a maintained token layer in `app/css/theme.css`: a type scale
+from `--text-xs` to `--text-7xl` with a `--text-min` floor that rises from 12px to
+13px at 768px and up, spacing steps `--spacing-1` to `--spacing-16`, and a 44px
+`--spacing-target` for interactive targets. `lint:contrast` checks the color pairs;
+the unit tests in `app/(en)/design-system/_lib/theme-tokens.test.ts` pin the scale, and `tests/e2e/type-floor.spec.ts` fails any visible text set below `--text-min`. Z-index, letter spacing and media-query widths are token scales too (`--z-*`, `--tracking-*`, `--viewport-*`); motion uses utilities and named CSS classes, including arbitrary values.
+
+<h2 id="styling">Styling</h2>
+
+Components use Tailwind utilities and shared classes in `app/css/components-*.css`.
+The PostCSS configuration uses `@tailwindcss/postcss`. Design-system component
+directories have no CSS Modules.
+
+<h2 id="components">Components</h2>
+
+| Gate | Command | Checks |
+|---|---|---|
+| Component docs | `pnpm check:component-docs` | Every directory under `design-system/components` has a `## Name` section in `components/page.mdx` |
+| Visual regression | `tests/e2e/design-system-components.spec.ts` | Local Darwin component snapshots; ignored in CI by `playwright.config.ts` |
+| A11y | `pnpm playwright test tests/a11y` | axe-core scan including `wcag22aa`, zero violations |
+
+<h2 id="cross-cutting">Cross-cutting</h2>
+
+| Gate | Command |
+|---|---|
+| Lint + format | `pnpm biome ci --error-on-warnings .` |
+| Types | `pnpm typecheck` |
+| Content schema | `pnpm validate-content` |
+| Client/RSC naming (`app`, `components`, `lib`; excludes `design-system`) | `pnpm check:client-naming` |
+| Dependency pinning | `pnpm check:dep-pinning` |
+| Dependency vetting (purpose, license, install scripts) | `pnpm check:dependency-vetting` |
+| Global chunk size (220KB gzip) | `pnpm bundle-check` |
+| Per-route first-load JS (164.2KB gzip) | `pnpm route-js-check` |
+| Lighthouse (a11y = 100) | `pnpm lhci` · `pnpm lhci:mobile` |
+
+<h2 id="adding-a-new-component">Adding a New Component</h2>
+
+1. Create `design-system/components/NewComponent/` with `.tsx`, `.test.tsx`, and `index.ts` · styled with Tailwind utilities, no `.module.css`.
+2. Export it from `design-system/index.ts`, unless it is a boundary exception: `Field` is deliberately client-only and `BrandIcon` is imported by path, and neither ships through the barrel.
+3. Add a `## NewComponent` heading in `app/(en)/design-system/components/page.mdx` · `check:component-docs` fails if it is missing.
+4. Add a local Darwin visual baseline in `tests/e2e/design-system-components.spec.ts`. CI ignores this spec; page-section snapshots and co-located component behavior tests have separate coverage.
+
+`quality-fast` runs contrast and component-heading checks. The `performance` job runs
+Lighthouse and axe; PRs enter it when the app change filter matches. `app/` and
+`design-system/` changes match that filter. See `scripts/detect-changes-paths.mjs`.

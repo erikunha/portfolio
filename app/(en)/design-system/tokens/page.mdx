@@ -1,0 +1,235 @@
+import { dsPageMetadata } from '../_lib/page-metadata';
+import { OnThisPage } from '../_components/OnThisPage';
+
+export const metadata = dsPageMetadata({
+  slug: 'tokens',
+  title: 'Tokens · Design System · erikunha.dev',
+  description: 'Semantic colour, responsive type, spacing and border tokens from the terminal theme',
+});
+
+# TOKENS
+
+<OnThisPage items={[{id:'color',label:'Color'},{id:'type-scale',label:'Type Scale'},{id:'spacing',label:'Spacing'},{id:'tracking',label:'Letter Spacing'},{id:'viewports',label:'Viewports'},{id:'borders',label:'Borders'},{id:'motion',label:'Motion'},{id:'layers',label:'Layers'}]} />
+
+Colour, type, spacing and border tokens live in `app/css/theme.css`.
+Tailwind's `@theme` generates utilities from these custom properties. Swatches
+read their values directly from that file.
+
+<h2 id="color">Color</h2>
+
+Use semantic roles for text and emphasis. The ordinal families remain available
+for surfaces and existing consumers; code syntax uses the green and grey ramps.
+
+### Semantic roles
+
+<ColorSwatch token="text" usage="Body text on the page and terminal surfaces" />
+<ColorSwatch token="text-secondary" usage="Labels, captions and secondary text at full opacity" />
+<ColorSwatch token="green" usage="Headings, accents and interactive elements" />
+
+The page background is `secondary-950`. Body text uses `text` (the same mint
+as `tertiary-50`); signal emphasis uses `green` (the same green as `primary-500`).
+Use `text-secondary` for new secondary text instead of `primary-300`,
+`primary-400` or `tertiary-400`. Those shades remain available for existing consumers.
+
+### primary · green (the brand)
+
+<ColorSwatch token="primary-50" />
+<ColorSwatch token="primary-100" />
+<ColorSwatch token="primary-200" />
+<ColorSwatch token="primary-300" usage="Existing annotations; use text-secondary for new text" />
+<ColorSwatch token="primary-400" usage="Existing labels; use text-secondary for new text" />
+<ColorSwatch token="primary-500" usage="Headings, accents, interactive elements" />
+<ColorSwatch token="primary-600" />
+<ColorSwatch token="primary-700" />
+<ColorSwatch token="primary-800" />
+<ColorSwatch token="primary-900" />
+<ColorSwatch token="primary-subtle" usage="Borders, dividers (green 40%)" />
+<ColorSwatch token="primary-border" usage="Decorative divider (green 20%, 1.5:1); never a control edge" />
+<ColorSwatch token="primary-faint" usage="Very subtle background (green 12%)" />
+<ColorSwatch token="primary-quiet" usage="Hover background (green 10%)" />
+
+### secondary · black (surfaces)
+
+<ColorSwatch token="secondary-50" />
+<ColorSwatch token="secondary-100" />
+<ColorSwatch token="secondary-200" />
+<ColorSwatch token="secondary-300" />
+<ColorSwatch token="secondary-400" />
+<ColorSwatch token="secondary-500" />
+<ColorSwatch token="secondary-600" />
+<ColorSwatch token="secondary-700" />
+<ColorSwatch token="secondary-800" />
+<ColorSwatch token="secondary-900" usage="Shell / terminal backgrounds" />
+<ColorSwatch token="secondary-950" usage="Page background" />
+
+### tertiary · white (foreground)
+
+<ColorSwatch token="tertiary-50" usage="Body text (13:1+ contrast on black)" />
+<ColorSwatch token="tertiary-100" />
+<ColorSwatch token="tertiary-200" />
+<ColorSwatch token="tertiary-300" />
+<ColorSwatch token="tertiary-400" />
+<ColorSwatch token="tertiary-500" />
+<ColorSwatch token="tertiary-600" />
+<ColorSwatch token="tertiary-700" />
+<ColorSwatch token="tertiary-800" />
+<ColorSwatch token="tertiary-900" />
+
+### status · window chrome and alerts
+
+Two off-ramp hues exist, and each carries a meaning no green can. They are the only colors outside the green and grey ramps.
+
+<ColorSwatch token="quinary-500" usage="Window-chrome minimize dot" />
+<ColorSwatch token="senary-300" usage="Alerts: form errors, shell errors, mixer clip LED" />
+<ColorSwatch token="senary-500" usage="Window-chrome close dot" />
+
+<h2 id="type-scale">Type Scale</h2>
+
+The base `h1` rule uses `--font-display`, Inter at weight 900. Body text, controls
+and other base headings use `--font-mono`, JetBrains Mono. Consumers can override these rules. Both stacks reference
+the existing `next/font/local` variables.
+
+| Token | Utility | Size |
+|---|---|---|
+| `--text-xs` | `text-xs` | 12px below 768px; at least 13px from 768px |
+| `--text-sm` | `text-sm` | 14px |
+| `--text-body` | `text-body` | 14px, reading text (git log, card copy); 12px stays for labels |
+| `--text-base` | `text-base` | 16px |
+| `--text-lg` | `text-lg` | 18px |
+| `--text-xl` | `text-xl` | 20px |
+| `--text-2xl` | `text-2xl` | 24px |
+| `--text-3xl` | `text-3xl` | 32px |
+| `--text-5xl` | `text-5xl` | 48px |
+| `--text-7xl` | `text-7xl` | 64px |
+
+`--text-min` rises from 12px to 13px at 768px. `--text-xs` uses that floor.
+Use these tokens for small text; fixed pixel utilities do not inherit the floor.
+Sizes use rem units so they follow the reader's default font size.
+
+The base `h1` is 32px, rising to 48px at 1280px. `h2` is 20px, rising to
+24px at 768px. `h3` is 16px. Consumers can select larger steps for display text.
+
+<h2 id="spacing">Spacing</h2>
+
+| Token | Utility step | Size |
+|---|---|---|
+| `--spacing-1` | `1` | 4px |
+| `--spacing-2` | `2` | 8px |
+| `--spacing-3` | `3` | 12px |
+| `--spacing-4` | `4` | 16px |
+| `--spacing-6` | `6` | 24px |
+| `--spacing-8` | `8` | 32px |
+| `--spacing-12` | `12` | 48px |
+| `--spacing-16` | `16` | 64px |
+| `--spacing-target` | `target` | 44px general control target |
+| `--spacing-target-compact` | `target-compact` | 28px compact control target |
+| `--space-gutter` | `px-[var(--space-gutter)]` | `clamp(16px, 4vw, 24px)` page gutter |
+| `--space-page-top` | n/a | 32px below 768, 48px from 768 |
+| `--space-section` | `mb-[var(--space-section)]` | 32px below 768, 48px from 768 |
+| `--phi` | n/a | 1.618, the golden ratio behind the phi spacing scale and the contact and guitar column splits |
+| `--phi-space-1` | n/a | 8px, the base step of the phi scale |
+| `--phi-space-2` | n/a | about 13px, one phi step above the base |
+| `--phi-space-3` | n/a | about 21px, two phi steps above the base |
+| `--phi-space-4` | n/a | about 34px, three phi steps above the base |
+| `--text-section-title` | `text-[length:var(--text-section-title)]` | section h2: 16px below 768, 18px from 768 |
+| `--measure-page` | `safe-zone` | 1200px, the safe zone shared by the header, every page and the footer |
+| `--measure-read` | n/a | 72ch, the line length of text blocks |
+
+Small and medium Buttons have a 44px minimum height. Small Buttons use 10px
+horizontal padding; medium and large Buttons use 14px. Large Buttons have a
+52px minimum height. CopyButton has a 44px minimum width and height in every state.
+
+<h2 id="tracking">Letter Spacing</h2>
+
+| Token | Utility | Value |
+|---|---|---|
+| `--tracking-2xs` | `tracking-2xs` | 0.02em |
+| `--tracking-xs` | `tracking-xs` | 0.04em |
+| `--tracking-sm` | `tracking-sm` | 0.05em |
+| `--tracking-md` | `tracking-md` | 0.06em |
+| `--tracking-lg` | `tracking-lg` | 0.08em |
+| `--tracking-xl` | `tracking-xl` | 0.1em |
+| `--tracking-2xl` | `tracking-2xl` | 0.12em |
+| `--tracking-3xl` | `tracking-3xl` | 0.14em |
+| `--tracking-4xl` | `tracking-4xl` | 0.16em |
+| `--tracking-5xl` | `tracking-5xl` | 0.18em |
+
+Stylesheets write `letter-spacing: var(--tracking-xl)`; markup writes `tracking-xl`.
+
+<h2 id="viewports">Viewports</h2>
+
+A media query cannot read a custom property, so stylesheets write `theme(--viewport-md)` and Tailwind
+substitutes the width at build time. Each step has a `below` twin 0.02px lower, so `max-width` ends
+where the next `min-width` starts and no width matches both or neither.
+
+| Step | Min width | Max width (below) | Usage |
+|---|---|---|---|
+| `--viewport-narrow` | 360px | 359.98px | narrowest phones |
+| `--viewport-phone` | 480px | 479.98px | wide phones |
+| `--viewport-md` | 768px | 767.98px | phone to tablet; matches `MOBILE_BREAKPOINT_PX` |
+| `--viewport-split` | 900px | 899.98px | two-column splits |
+| `--viewport-lg` | 1024px | 1023.98px | tablet to desktop; the dock hides |
+| `--viewport-xl` | 1280px | 1279.98px | wide desktop |
+
+A few queries stay literal because they mark one component's measured ladder, not a layout step: the
+`content-visibility` size estimates (340, 412 and 600px), the contact grid steps (512 and 640px) and
+three one-off folds (389.98, 599.98 and 1199.98px).
+
+<h2 id="borders">Borders</h2>
+
+| Token | Value | Usage |
+|---|---|---|
+| `--border-width` | 1px | Borders and dividers |
+| `--radius-none` | 0 | Sharp controls |
+| `--radius-control` | 2px | Maximum control radius |
+
+Keyboard focus uses `:focus-visible` and one ring: `--focus-ring` (a 2px solid signal outline) with
+`--focus-ring-offset` (2px), or `--focus-ring-offset-inset` (-2px) for a control that sits flush against its
+neighbours. `app/css/base.css` applies it to links, buttons, inputs, selects, summaries and tabbable
+elements, so a component does not restate it. `pnpm lint:css-tokens` fails a focus rule that writes its
+own width, color or offset, or that paints the ring on plain `:focus`.
+
+<h2 id="motion">Motion</h2>
+
+Components use Tailwind duration and easing utilities, plus named CSS animations.
+The MOTION switch is the single control. A first visit starts with motion on, even
+when the operating system asks for reduced motion. Switching it off sets
+`body[data-motion="reduce"]`, and every reduction is keyed to that attribute in
+`app/css/animations.css`, `crt.css`, `components-*.css` and component logic. Check
+the affected animation rather than assuming one global rule disables all motion.
+
+Module headers reveal text in character steps as they enter the viewport. Their caret
+blinks four times and then stays solid. The MOTION switch
+disables this effect. Browsers without scroll-driven animation support show static headers.
+
+| Utility | Value | Usage |
+|---|---|---|
+| `duration-[80ms]` | 80ms | micro transitions (hover, press) |
+| `duration-100` | 100ms | fast UI feedback |
+| `duration-200` | 200ms | standard transitions |
+| `ease-out` | Shared | easing used by Button and Field |
+
+<h2 id="layers">Layers</h2>
+
+Every z-index is a step of the `--z-*` scale in `app/css/theme.css`; a stylesheet writes
+`z-index: var(--z-drawer)` and markup writes `z-(--z-topbar)`. `pnpm lint:css-tokens` fails a literal.
+Layers stack in this order:
+
+| Layer | z-index | Usage |
+|---|---|---|
+| rain | `--z-rain` (0) | the Matrix rain canvas |
+| CRT layers | `--z-crt-vignette` (1) to `--z-crt-beam` (5) | vignette, scanlines, mask, noise, flicker, scan beam |
+| local | `--z-local` (1), `--z-local-above` (2) | stacking inside one component |
+| content | `--z-content` (10), `--z-content-raised` (11) | `.page-main`, page content above the CRT overlay |
+| title bar | `--z-title-bar` (109) | the phone title bar |
+| header chrome | `--z-topbar` (110) | the desktop topbar and the phone status bar |
+| to top | `--z-to-top` (115) | the scroll-to-top button |
+| offline notice | `--z-offline` (118) | the no-signal bar; the drawer and its scrim cover it |
+| dock | `--z-dock` (120) | bottom navigation dock |
+| scrim | `--z-scrim` (125) | the drawer scrim behind the open menu |
+| position line | `--z-position-line` (126) | the side scroll-progress line below 1024px |
+| progress line | `--z-progress-line` (127) | the page-load bar on `/links` |
+| drawer | `--z-drawer` (130) | the section menu drawer |
+| system failure | `--z-sysfail` (9998) | the SYSTEM FAILURE plate |
+| skip link | `--z-skip-link` (9999) | skip-to-content link, always on top |
+

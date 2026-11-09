@@ -1,5 +1,5 @@
 {
-  "$schema": "https://biomejs.dev/schemas/2.5.11/schema.json",
+  "$schema": "https://biomejs.dev/schemas/2.6.6/schema.json",
   "vcs": {
     "enabled": true,
     "clientKind": "git",
@@ -25,7 +25,10 @@
       "!app/globals.css",
       "!next-env.d.ts",
       "!.specify",
-      "!.claude/skills/speckit-*"
+      "!.claude/skills/speckit-*",
+      "!pnpm-lock.yaml",
+      "!CLAUDE.md",
+      "!DECISIONS.md"
     ]
   },
   "formatter": {
@@ -51,7 +54,15 @@
       "correctness": {
         "noUnusedVariables": "error",
         "noUnusedImports": "error",
-        "useExhaustiveDependencies": "error"
+        "useExhaustiveDependencies": "error",
+        "noPlaywrightMissingAwait": "error",
+        "noUnknownFunction": {
+          "level": "error",
+          "options": {
+            "ignore": ["theme"]
+          }
+        },
+        "usePlaywrightValidDescribeCallback": "error"
       },
       "style": {
         "useConst": "error",
@@ -59,7 +70,20 @@
         "noUnusedTemplateLiteral": "error",
         "useImportType": "error",
         "useExportType": "error",
-        "noNonNullAssertion": "warn"
+        "noNonNullAssertion": "warn",
+        "noNestedTernary": "error",
+        "useVarsOnTop": "error",
+        "noRestrictedImports": {
+          "level": "error",
+          "options": {
+            "paths": {
+              "next/image": {
+                "importNames": ["default"],
+                "message": "The default next/image export is a client component that ships its runtime to every route that renders it. Use components/OptimizedImage (getImageProps on the server)."
+              }
+            }
+          }
+        }
       },
       "suspicious": {
         "noConsole": {
@@ -69,11 +93,30 @@
           }
         },
         "noExplicitAny": "error",
-        "noEmptyBlockStatements": "warn"
+        "noEmptyBlockStatements": "warn",
+        "noImportCycles": "error",
+        "noLeakedRender": "error",
+        "noLoopFunc": "error",
+        "noDuplicateSelectors": "error",
+        "noIdenticalTestTitle": "error"
       },
       "complexity": {
         "noUselessFragments": "error",
-        "noBannedTypes": "error"
+        "noBannedTypes": "error",
+        "useArraySome": "error",
+        "noUnnecessaryTemplateExpression": "error",
+        "noPlaywrightUselessAwait": "error",
+        "useMathMinMax": "error",
+        "useRegexpTest": "error"
+      },
+      "security": {
+        "useIframeSandbox": "error"
+      },
+      "performance": {
+        "useDomNodeTextContent": "error"
+      },
+      "nursery": {
+        "noTailwindRawColors": "error"
       },
       "a11y": {
         "noSvgWithoutTitle": "off",
@@ -105,5 +148,26 @@
     "linter": {
       "enabled": true
     }
-  }
+  },
+  "overrides": [
+    {
+      "includes": ["**/*.md", "**/*.mdx", "**/*.yml", "**/*.yaml"],
+      "formatter": {
+        "enabled": false
+      }
+    },
+    {
+      "includes": ["**/*.test.ts", "**/*.test.tsx"],
+      "linter": {
+        "rules": {
+          "correctness": {
+            "noComponentHookFactories": "off"
+          },
+          "style": {
+            "noNestedTernary": "off"
+          }
+        }
+      }
+    }
+  ]
 }

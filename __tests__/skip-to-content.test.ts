@@ -1,10 +1,11 @@
 import { createElement } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { siteNavChrome } from '@/content/navigation';
+import { SITE_LOCALE } from '@/content/site-locale';
 import { type MountedClient, mountClient } from './helpers/render';
 
 vi.mock('@/lib/use-breakpoint.client', () => ({
   useBreakpoint: () => ({ isMobile: false }),
-  BreakpointProvider: ({ children }: { children: unknown }) => children,
 }));
 
 vi.mock('@/lib/motion', () => ({
@@ -27,7 +28,14 @@ describe('skip-to-content link', () => {
   async function renderAppShell(): Promise<HTMLElement> {
     const { AppShell } = await import('@/components/AppShell');
     mounted = await mountClient(
-      createElement(AppShell, null, createElement('main', { id: 'main-content' }, 'content')),
+      createElement(AppShell, {
+        chrome: siteNavChrome(SITE_LOCALE.en),
+        locale: SITE_LOCALE.en,
+        skipLabel: 'Skip to main content',
+        brand: null,
+        // biome-ignore lint/correctness/noChildrenProp: AppShell requires brand, and createElement types a required prop together with children only when children sit in the props object
+        children: createElement('main', { id: 'main-content' }, 'content'),
+      }),
     );
     return mounted.container;
   }
@@ -52,7 +60,14 @@ describe('skip-to-content link', () => {
     const { AppShell } = await import('@/components/AppShell');
     const { PageMain } = await import('@/components/PageMain');
     mounted = await mountClient(
-      createElement(AppShell, null, createElement(PageMain, null, 'content')),
+      createElement(AppShell, {
+        chrome: siteNavChrome(SITE_LOCALE.en),
+        locale: SITE_LOCALE.en,
+        skipLabel: 'Skip to main content',
+        brand: null,
+        // biome-ignore lint/correctness/noChildrenProp: AppShell requires brand, and createElement types a required prop together with children only when children sit in the props object
+        children: createElement(PageMain, null, 'content'),
+      }),
     );
     const container = mounted.container;
 

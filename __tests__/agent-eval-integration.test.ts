@@ -86,8 +86,8 @@ describe('agent-eval integration (SDK mocked, no real Gateway call)', () => {
         c.humanVerdict,
       ]),
     );
-    mockGenerateText.mockImplementation(async (args: { system: string; prompt: string }) => {
-      expect(args.system).toBe(JUDGE_SYSTEM);
+    mockGenerateText.mockImplementation(async (args: { instructions: string; prompt: string }) => {
+      expect(args.instructions).toBe(JUDGE_SYSTEM);
       const matched = [...byAnswer.entries()].find(([ans]) => args.prompt.includes(ans));
       const pass = matched ? matched[1] : false;
       return reply(`{"pass": ${pass}, "reason": "matches the human label"}`);
