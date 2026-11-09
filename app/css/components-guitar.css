@@ -98,7 +98,7 @@
     font-size: var(--text-xs);
   }
 
-  @media (max-width: 767.98px) {
+  @media (max-width: theme(--viewport-below-md)) {
     .guitar-arrow {
       line-height: var(--guitar-arrow-length);
       height: var(--guitar-arrow-length);
@@ -151,7 +151,7 @@
   }
 
   .eq-curve {
-    z-index: 2;
+    z-index: var(--z-local-above);
     filter: drop-shadow(0 0 var(--eq-curve-glow) var(--color-tertiary-50));
   }
 
@@ -164,7 +164,7 @@
   }
 
   .eq-bars {
-    z-index: 1;
+    z-index: var(--z-local);
     display: flex;
     align-items: flex-end;
     gap: var(--eq-bar-gap);
@@ -359,7 +359,7 @@
   }
   /* biome-ignore-end lint/suspicious/noDuplicateSelectors: end of the @variant max-guitar block */
 
-  @media (max-width: 767.98px) {
+  @media (max-width: theme(--viewport-below-md)) {
     .guitar-signal-strip {
       flex-direction: column;
       align-items: center;
@@ -410,25 +410,25 @@
     line-height: 1.7;
   }
 
-  @media (min-width: 360px) {
+  @media (min-width: theme(--viewport-narrow)) {
     .daw-mixer-loading {
       --daw-mixer-loading-height: 82.6rem;
     }
   }
 
-  @media (min-width: 480px) {
+  @media (min-width: theme(--viewport-phone)) {
     .daw-mixer-loading {
       --daw-mixer-loading-height: 78.7rem;
     }
   }
 
-  @media (min-width: 768px) {
+  @media (min-width: theme(--viewport-md)) {
     .daw-mixer-loading {
       --daw-mixer-loading-height: 33rem;
     }
   }
 
-  @media (min-width: 1280px) {
+  @media (min-width: theme(--viewport-xl)) {
     .daw-mixer-loading {
       --daw-mixer-loading-height: 22.7rem;
     }

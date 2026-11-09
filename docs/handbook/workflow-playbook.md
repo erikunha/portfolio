@@ -80,7 +80,7 @@ Every runbook lists: **entry point** (what starts it), **steps**, **AI participa
 - **Steps:**
   1. Look at desktop (1280x720) and mobile (375x812) in a real browser before touching tests.
   2. If baselines are affected, regenerate them in the same PR; the `visual-baseline-regen` skill holds the procedure (darwin regen, linux artifact path, inspect before commit).
-  3. No raw hex, `rgb()` or `hsl()` in the `app/css` stylesheets or `*-tokens.ts` files outside `theme.css` (held by `pnpm lint:css-tokens` in `verify` and CI against `scripts/lint-css-tokens.allowlist.json`, whose entries each name a file, a literal, a count and a reason; the style rule is repo-wide, the gate scans only those files).
+  3. No raw hex or color function (`rgb()`, `hsl()`, `oklch()`, `color()` and kin), no literal z-index and no hand-written focus ring in the `app/css` stylesheets or `*-tokens.ts` files outside `theme.css` (held by `pnpm lint:css-tokens` in `verify` and CI against `scripts/lint-css-tokens.allowlist.json`, whose entries each name a file, a literal, a count and a reason; the style rule is repo-wide, the gate scans only those files).
 - **Output:** a PR with regenerated Playwright baselines if needed.
 
 ## Touching the `/api/ask` feature

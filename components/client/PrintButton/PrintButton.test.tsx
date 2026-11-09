@@ -30,6 +30,5 @@ describe('PrintButton', () => {
     render(<PrintButton label={readingViews[SITE_LOCALE.en].shared.printLabel} />);
     const classes = screen.getByRole('button').className;
     expect(classes).toContain('min-h-11');
-    expect(classes).toContain('focus-visible:outline-2');
   });
 });

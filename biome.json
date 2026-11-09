@@ -56,6 +56,12 @@
         "noUnusedImports": "error",
         "useExhaustiveDependencies": "error",
         "noPlaywrightMissingAwait": "error",
+        "noUnknownFunction": {
+          "level": "error",
+          "options": {
+            "ignore": ["theme"]
+          }
+        },
         "usePlaywrightValidDescribeCallback": "error"
       },
       "style": {

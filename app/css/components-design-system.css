@@ -93,7 +93,7 @@
     background: var(--color-primary-quiet);
     color: var(--color-primary-500);
     font-size: var(--text-xs);
-    letter-spacing: 0.05em;
+    letter-spacing: var(--tracking-sm);
     white-space: nowrap;
   }
 
@@ -106,7 +106,7 @@
     left: var(--spacing-3);
   }
 
-  @media (max-width: 1023.98px) {
+  @media (max-width: theme(--viewport-below-lg)) {
     .ds-skip-nav {
       display: none;
     }
@@ -161,7 +161,7 @@
     color: var(--color-text-secondary);
     font-family: var(--font-mono);
     font-size: var(--text-xs);
-    letter-spacing: 0.1em;
+    letter-spacing: var(--tracking-xl);
     text-decoration: none;
     text-transform: uppercase;
   }
@@ -177,18 +177,13 @@
     color: var(--color-green);
   }
 
-  .ds-nav-item:focus-visible {
-    outline: 2px solid var(--color-green);
-    outline-offset: 2px;
-  }
-
   .ds-nav-group-title,
   .toc-title {
     margin: var(--spacing-3) 10px var(--spacing-1);
     color: var(--color-green);
     font-family: var(--font-mono);
     font-size: var(--text-xs);
-    letter-spacing: 0.14em;
+    letter-spacing: var(--tracking-3xl);
   }
 
   .menu-extra .ds-nav-group-title {
@@ -226,7 +221,7 @@
     text-align: right;
   }
 
-  @media (min-width: 1024px) {
+  @media (min-width: theme(--viewport-lg)) {
     .ds-layout {
       grid-template-columns: var(--ds-sidebar-width) minmax(0, 1fr);
       column-gap: var(--phi-space-4);
@@ -255,7 +250,7 @@
     }
   }
 
-  @media (min-width: 1280px) {
+  @media (min-width: theme(--viewport-xl)) {
     .ds-main:has(> .toc) {
       padding-inline-end: calc(var(--ds-toc-width) + var(--phi-space-3));
     }
@@ -269,7 +264,7 @@
     }
   }
 
-  @media (min-width: 768px) and (max-width: 1279.98px) {
+  @media (min-width: theme(--viewport-md)) and (max-width: theme(--viewport-below-xl)) {
     .toc ul {
       flex-direction: row;
       flex-wrap: wrap;
@@ -280,7 +275,7 @@
     }
   }
 
-  @media (max-width: 767.98px) {
+  @media (max-width: theme(--viewport-below-md)) {
     .ds-main:has(> .toc) {
       display: flex;
       flex-direction: column;
@@ -327,7 +322,7 @@
     border-right: 0;
   }
 
-  @media (max-width: 1023.98px) {
+  @media (max-width: theme(--viewport-below-lg)) {
     .ds-stat-row {
       grid-template-columns: repeat(2, minmax(0, 1fr));
     }
@@ -341,7 +336,7 @@
     }
   }
 
-  @media (max-width: 359.98px) {
+  @media (max-width: theme(--viewport-below-narrow)) {
     .ds-stat-row {
       grid-template-columns: minmax(0, 1fr);
     }

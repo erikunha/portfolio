@@ -67,7 +67,7 @@ Module headers use CSS scroll-driven typing with a stepped text reveal and caret
 
 ### CRT overlay layering
 
-`CRTOverlay.client.tsx` renders 6 fixed, `aria-hidden`, `pointer-events:none` overlay divs, z-stacked in `crt.css`: vignette (1) · scanlines (2) · RGB sub-pixel mask (3) · noise (4) · flicker (5) · scan beam (6). `MatrixRain` sits at z-0, `<main>` at z-10. All of it disables under `body[data-motion="reduce"]`, and freezes during the system-failure overlay (`html.sysfail-on`). `CRTOverlay` also runs the frame governor (`lib/frame-governor.ts`): while `html[data-crt-level]` is above 0, `crt.css` pauses the noise, flicker and beam and the governor steps their clocks (`lib/crt-effect-stepper.ts`); `MatrixRain` reads the same level for its tick interval.
+`CRTOverlay.client.tsx` renders 6 fixed, `aria-hidden`, `pointer-events:none` overlay divs, z-stacked in `crt.css` by the `--z-crt-*` steps of the `--z-*` scale in `theme.css`: vignette (1) · scanlines (2) · RGB sub-pixel mask (3) · noise and flicker (4) · scan beam (5). `MatrixRain` sits at `--z-rain` (0), `<main>` at `--z-content` (10). The CRT colors derive from theme tokens (`color-mix` over the palette plus the `--color-crt-phosphor-*` primaries), and the rain reads `--color-rain-head`, `--color-rain-body` and `--rain-tail-alpha` through `readRainPalette`. All of it disables under `body[data-motion="reduce"]`, and freezes during the system-failure overlay (`html.sysfail-on`). `CRTOverlay` also runs the frame governor (`lib/frame-governor.ts`): while `html[data-crt-level]` is above 0, `crt.css` pauses the noise, flicker and beam and the governor steps their clocks (`lib/crt-effect-stepper.ts`); `MatrixRain` reads the same level for its tick interval.
 
 ## The design system
 

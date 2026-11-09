@@ -1,5 +1,6 @@
 import { act, createElement } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { clearRainTheme, declareRainTheme } from './helpers/rain-theme';
 import { type MountedClient, mountClient } from './helpers/render';
 
 const CANVAS_RECT = {
@@ -28,6 +29,7 @@ describe('MatrixRain — watchRef / IntersectionObserver path', () => {
   let mounted: MountedClient;
 
   beforeEach(() => {
+    declareRainTheme();
     vi.resetModules();
     vi.stubGlobal(
       'requestAnimationFrame',
@@ -39,6 +41,7 @@ describe('MatrixRain — watchRef / IntersectionObserver path', () => {
   });
 
   afterEach(() => {
+    clearRainTheme();
     mounted?.unmount();
     vi.restoreAllMocks();
     vi.unstubAllGlobals();
@@ -139,6 +142,7 @@ describe('MatrixRain — visibility change pause/resume', () => {
   let rafCallbacks: FrameRequestCallback[];
 
   beforeEach(() => {
+    declareRainTheme();
     vi.resetModules();
     rafCallbacks = [];
     vi.stubGlobal('requestAnimationFrame', (cb: FrameRequestCallback) => {
@@ -154,6 +158,7 @@ describe('MatrixRain — visibility change pause/resume', () => {
   });
 
   afterEach(() => {
+    clearRainTheme();
     mounted?.unmount();
     vi.restoreAllMocks();
     vi.unstubAllGlobals();
@@ -205,6 +210,7 @@ describe('MatrixRain — sysfail:start / sysfail:end events', () => {
   let rafCallbacks: FrameRequestCallback[];
 
   beforeEach(() => {
+    declareRainTheme();
     vi.resetModules();
     rafCallbacks = [];
     vi.stubGlobal('requestAnimationFrame', (cb: FrameRequestCallback) => {
@@ -220,6 +226,7 @@ describe('MatrixRain — sysfail:start / sysfail:end events', () => {
   });
 
   afterEach(() => {
+    clearRainTheme();
     mounted?.unmount();
     vi.restoreAllMocks();
     vi.unstubAllGlobals();

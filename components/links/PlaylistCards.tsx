@@ -13,7 +13,7 @@ const PLAYLIST_ENDPOINT = 'https://www.youtube.com/playlist?list=';
 
 const CARD_HOVER =
   'hover:border-primary-500 hover:bg-linear-to-b hover:from-primary-500/[0.07] hover:to-primary-500/[0.07]';
-const TAG = 'border border-primary-subtle text-tertiary-50 text-xs tracking-[0.06em] py-0.5 px-1';
+const TAG = 'border border-primary-subtle text-tertiary-50 text-xs tracking-md py-0.5 px-1';
 const ARROW = 'text-sm text-primary-500';
 
 function destination(playlist: LinksPlaylist, channelUrl: string): string {
@@ -41,7 +41,7 @@ export function PlaylistCards({ locale, channelUrl }: { locale: LinksLocale; cha
               href={withUtm(href, `playlist-${playlist.id}`)}
               data-outbound={`playlist-${playlist.id}`}
               className={cn(
-                'block h-full border border-primary-border p-4 no-underline bg-secondary-950 transition-[border-color,background] duration-150 [body[data-motion=reduce]_&]:transition-none focus-visible:outline-2 focus-visible:outline-primary-500 focus-visible:outline-offset-2',
+                'block h-full border border-primary-border p-4 no-underline bg-secondary-950 transition-[border-color,background] duration-150 [body[data-motion=reduce]_&]:transition-none',
                 CARD_HOVER,
               )}
             >

@@ -1,7 +1,7 @@
 @layer components {
   .nojs-bar {
     position: relative;
-    z-index: 10;
+    z-index: var(--z-content);
     padding: var(--spacing-2) var(--spacing-4);
     border-top: var(--border-width) solid var(--color-primary-subtle);
     background: var(--color-secondary-950);
@@ -19,7 +19,7 @@
     text-decoration: underline;
   }
 
-  @media (min-width: 768px) {
+  @media (min-width: theme(--viewport-md)) {
     .nojs-bar {
       margin-top: var(--topbar-height);
     }
@@ -34,7 +34,7 @@
     color: var(--color-text);
     font-family: var(--font-mono);
     font-size: var(--text-xs);
-    letter-spacing: 0.1em;
+    letter-spacing: var(--tracking-xl);
     text-decoration: none;
   }
 
@@ -45,11 +45,6 @@
     background: var(--color-primary-quiet);
   }
 
-  .err-link:focus-visible {
-    outline: 2px solid var(--color-green);
-    outline-offset: 2px;
-  }
-
   .err-main {
     --err-top-chrome: var(--mobile-bars-height);
     --err-bottom-chrome: calc(
@@ -58,7 +53,7 @@
       env(safe-area-inset-bottom, 0px)
     );
     position: relative;
-    z-index: 10;
+    z-index: var(--z-content);
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -69,20 +64,20 @@
     font-family: var(--font-mono);
   }
 
-  @media (max-width: 1023.98px) {
+  @media (max-width: theme(--viewport-below-lg)) {
     .err-main {
       padding-block-end: var(--spacing-4);
     }
   }
 
-  @media (min-width: 768px) {
+  @media (min-width: theme(--viewport-md)) {
     .err-main {
       --err-top-chrome: 0px;
       padding-block-start: calc(var(--topbar-height) + var(--space-page-top));
     }
   }
 
-  @media (min-width: 1024px) {
+  @media (min-width: theme(--viewport-lg)) {
     .err-main {
       --err-bottom-chrome: 0px;
     }
@@ -107,7 +102,7 @@
     margin: 0;
     color: var(--color-green);
     font-size: var(--text-xs);
-    letter-spacing: 0.14em;
+    letter-spacing: var(--tracking-3xl);
   }
 
   .err-suggest {
@@ -176,11 +171,6 @@
     font-weight: 700;
   }
 
-  .err-action:focus-visible {
-    outline: calc(var(--border-width) * 2) solid var(--color-primary-500);
-    outline-offset: var(--spacing-1);
-  }
-
   .err-ref {
     margin: 0;
     display: flex;
@@ -232,11 +222,6 @@
     cursor: pointer;
   }
 
-  .eb-reload:focus-visible {
-    outline: calc(var(--border-width) * 2) solid var(--color-primary-500);
-    outline-offset: var(--spacing-1);
-  }
-
   .err-ref .copy-btn {
     min-height: var(--spacing-target);
     padding: 0 var(--spacing-3);
@@ -245,10 +230,5 @@
     color: var(--color-primary-500);
     font: inherit;
     cursor: pointer;
-  }
-
-  .err-ref .copy-btn:focus-visible {
-    outline: calc(var(--border-width) * 2) solid var(--color-primary-500);
-    outline-offset: var(--spacing-1);
   }
 }

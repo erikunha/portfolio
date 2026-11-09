@@ -1,16 +1,16 @@
 @layer components {
   .kbd-key {
     background: var(--color-glow-06);
-    margin: 0 4px;
+    margin: 0 var(--spacing-1);
     letter-spacing: 0;
     vertical-align: 1px;
   }
 
   .cam-corners {
     position: absolute;
-    inset: 8px;
+    inset: var(--spacing-2);
     pointer-events: none;
-    z-index: 2;
+    z-index: var(--z-local-above);
   }
 
   .cam-corners::before,

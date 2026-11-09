@@ -17,7 +17,7 @@
     background: transparent;
   }
 
-  @media (max-width: 359.98px) {
+  @media (max-width: theme(--viewport-below-narrow)) {
     .project-card {
       padding: var(--spacing-3);
     }
@@ -445,7 +445,7 @@
     }
   }
 
-  @media (min-width: 768px) {
+  @media (min-width: theme(--viewport-md)) {
     #sec-projects > .module-body-content,
     #sec-live-metrics > .module-body-content {
       padding: var(--spacing-4);
@@ -516,7 +516,7 @@
     }
   }
 
-  @media (min-width: 1280px) {
+  @media (min-width: theme(--viewport-xl)) {
     .projects-grid {
       grid-template-columns: repeat(3, minmax(0, 1fr));
     }

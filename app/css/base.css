@@ -11,11 +11,6 @@
     --to-top-inset: 14px;
     --to-top-dock-offset: 64px;
     --to-top-reach: calc(var(--to-top-inset) + var(--to-top-size) + var(--spacing-2));
-    --z-dock: 120;
-    --z-scrim: 125;
-    --z-position-line: 126;
-    --z-drawer: 130;
-    --z-content: 10;
     color-scheme: dark;
     scrollbar-color: var(--color-primary-700) var(--color-secondary-950);
     scrollbar-width: thin;
@@ -82,7 +77,7 @@
     overflow-x: clip;
   }
 
-  @media (max-width: 767.98px) {
+  @media (max-width: theme(--viewport-below-md)) {
     html {
       scroll-padding-top: calc(var(--mobile-bars-height) + var(--spacing-3));
     }
@@ -109,15 +104,16 @@
 
   a:focus-visible {
     text-decoration: underline;
-    outline: var(--focus-ring-width) solid var(--color-primary-500);
-    outline-offset: var(--focus-ring-offset);
   }
 
+  a:focus-visible,
   button:focus-visible,
   input:focus-visible,
+  select:focus-visible,
+  summary:focus-visible,
   textarea:focus-visible,
   [tabindex="0"]:focus-visible {
-    outline: var(--focus-ring-width) solid var(--color-primary-500);
+    outline: var(--focus-ring);
     outline-offset: var(--focus-ring-offset);
   }
 
@@ -129,12 +125,12 @@
     position: absolute;
     left: 0;
     top: 0;
-    z-index: 9999;
-    padding: 8px 16px;
+    z-index: var(--z-skip-link);
+    padding: var(--spacing-2) var(--spacing-4);
     background: var(--color-primary-500);
     color: var(--color-secondary-950);
     font-family: var(--font-mono);
-    font-size: 16px;
+    font-size: var(--text-base);
     font-weight: 700;
     text-decoration: none;
     clip-path: inset(50%);
@@ -170,7 +166,7 @@
     font-family: var(--font-mono);
     font-weight: 700;
     color: var(--color-primary-500);
-    margin: 0 0 8px 0;
+    margin: 0 0 var(--spacing-2) 0;
     text-shadow: 0 0 2px var(--color-glow-30);
   }
 
@@ -189,13 +185,13 @@
     font-size: var(--text-base);
   }
 
-  @media (min-width: 768px) {
+  @media (min-width: theme(--viewport-md)) {
     h2 {
       font-size: var(--text-2xl);
     }
   }
 
-  @media (min-width: 1280px) {
+  @media (min-width: theme(--viewport-xl)) {
     h1 {
       font-size: var(--text-5xl);
     }
@@ -217,7 +213,7 @@
   .mobile-only {
     display: none;
   }
-  @media (max-width: 767.98px) {
+  @media (max-width: theme(--viewport-below-md)) {
     .desktop-only {
       display: none;
     }
@@ -226,7 +222,7 @@
     }
   }
 
-  @media (max-width: 1023.98px) {
+  @media (max-width: theme(--viewport-below-lg)) {
     html {
       scroll-padding-bottom: var(--dock-clearance);
     }

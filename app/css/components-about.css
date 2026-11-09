@@ -16,7 +16,7 @@
     color: var(--color-primary-500);
     font-size: var(--text-section-title);
     font-weight: 700;
-    letter-spacing: 0.1em;
+    letter-spacing: var(--tracking-xl);
     text-transform: uppercase;
   }
 
@@ -81,7 +81,7 @@
     background: var(--color-primary-500);
     color: var(--color-secondary-950);
     padding: var(--border-width) calc(var(--spacing-1) * 1.5);
-    letter-spacing: 0.04em;
+    letter-spacing: var(--tracking-xs);
   }
 
   .ab-now dl,
@@ -119,7 +119,7 @@
 
   .ab-stack dt {
     padding-top: var(--spacing-1);
-    letter-spacing: 0.08em;
+    letter-spacing: var(--tracking-lg);
   }
 
   .ab-stack ul {
@@ -133,7 +133,7 @@
     border-radius: var(--radius-control);
     padding: var(--spacing-1) var(--spacing-2);
     font-size: var(--text-xs);
-    letter-spacing: 0.06em;
+    letter-spacing: var(--tracking-md);
   }
 
   .ab-cmd {
@@ -178,7 +178,7 @@
       calc((100vw - var(--ab-title-gutter)) / var(--ab-title-em-budget)),
       var(--text-base)
     );
-    letter-spacing: 0.02em;
+    letter-spacing: var(--tracking-2xs);
     text-transform: none;
     font-weight: 400;
   }
@@ -209,19 +209,19 @@
     white-space: nowrap;
   }
 
-  @media (min-width: 1024px) {
+  @media (min-width: theme(--viewport-lg)) {
     .about-grid {
       grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
     }
   }
 
-  @media (min-width: 1024px) and (max-width: 1279.98px) {
+  @media (min-width: theme(--viewport-lg)) and (max-width: theme(--viewport-below-xl)) {
     .about-grid {
       grid-template-columns: var(--phi-pair-columns);
     }
   }
 
-  @media (max-width: 767.98px) {
+  @media (max-width: theme(--viewport-below-md)) {
     .about-section {
       border: var(--border-width) solid var(--color-primary-subtle);
       background: var(--color-secondary-950);
@@ -243,7 +243,7 @@
       padding: calc(var(--spacing-1) * 1.5) var(--spacing-3);
     }
     .panel-title {
-      letter-spacing: 0.04em;
+      letter-spacing: var(--tracking-xs);
     }
     .ab-resp .panel-title {
       --ab-resp-title-gutter: 6.4375rem;
@@ -283,7 +283,7 @@
     }
   }
 
-  @media (max-width: 479.98px) {
+  @media (max-width: theme(--viewport-below-phone)) {
     .panel-head:has(.repo-link) {
       column-gap: var(--spacing-1);
       justify-content: center;

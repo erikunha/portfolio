@@ -21,7 +21,7 @@
     color: var(--color-primary-500);
     font-size: var(--text-section-title);
     font-weight: 700;
-    letter-spacing: 0.14em;
+    letter-spacing: var(--tracking-3xl);
     text-transform: uppercase;
   }
 
@@ -47,7 +47,7 @@
     color: var(--color-primary-400);
     font-size: var(--text-xs);
     font-weight: 400;
-    letter-spacing: 0.1em;
+    letter-spacing: var(--tracking-xl);
   }
 
   .career-header-command {
@@ -230,7 +230,7 @@
     color: var(--color-primary-500);
     font-size: var(--text-min);
     font-weight: 700;
-    letter-spacing: 0.14em;
+    letter-spacing: var(--tracking-3xl);
     text-decoration: none;
   }
 
@@ -239,13 +239,7 @@
     color: var(--color-secondary-950);
   }
 
-  .career-cv:focus-visible,
-  .career-log:focus-visible {
-    outline: calc(var(--border-width) * 2) solid var(--color-primary-500);
-    outline-offset: var(--spacing-1);
-  }
-
-  @media (min-width: 768px) {
+  @media (min-width: theme(--viewport-md)) {
     .career-section {
       border: 0;
       background: transparent;
@@ -260,7 +254,7 @@
     }
 
     .career-header h2 {
-      letter-spacing: 0.1em;
+      letter-spacing: var(--tracking-xl);
     }
 
     .career-header-command {

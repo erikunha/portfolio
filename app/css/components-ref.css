@@ -42,18 +42,13 @@
     touch-action: manipulation;
   }
 
-  .ref-copy:focus-visible {
-    outline: calc(var(--border-width) * 2) solid var(--color-primary-500);
-    outline-offset: var(--spacing-1);
-  }
-
   @media (hover: hover) and (pointer: fine) {
     .ref-copy:hover {
       background: var(--color-primary-quiet);
     }
   }
 
-  @media (max-width: 359.98px) {
+  @media (max-width: theme(--viewport-below-narrow)) {
     .ref-chip {
       flex-direction: column;
       align-items: stretch;

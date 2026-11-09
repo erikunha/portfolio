@@ -53,7 +53,7 @@ export function Module({
       >
         <h2
           id={moduleHeaderId(id)}
-          className="module-heading flex-1 flex items-center gap-2 text-primary-500 font-mono text-base md:text-lg font-bold tracking-[0.06em] md:tracking-[0.1em] uppercase m-0"
+          className="module-heading flex-1 flex items-center gap-2 text-primary-500 font-mono text-base md:text-lg font-bold tracking-md md:tracking-xl uppercase m-0"
         >
           {name ? <span className="module-name">{name}</span> : null}
           {!name && srLabel ? <span className="sr-only">{srLabel}</span> : null}

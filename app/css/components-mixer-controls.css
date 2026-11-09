@@ -12,8 +12,8 @@
   .fader-track::before {
     content: "";
     position: absolute;
-    left: 8px;
-    right: 8px;
+    left: var(--spacing-2);
+    right: var(--spacing-2);
     top: 50%;
     height: 1px;
     background: var(--color-primary-quiet);
@@ -93,12 +93,12 @@
   .dbValue {
     font-weight: 700;
     color: var(--color-primary-500);
-    font-size: 12px;
+    font-size: var(--text-min);
   }
 
-  @media (max-width: 767.98px) {
+  @media (max-width: theme(--viewport-below-md)) {
     .dbValue {
-      font-size: 14px;
+      font-size: var(--text-sm);
     }
   }
 
@@ -111,7 +111,7 @@
     font-size: var(--text-min);
     color: var(--color-primary-400);
     display: block;
-    letter-spacing: 0.08em;
+    letter-spacing: var(--tracking-lg);
     margin-top: 2px;
     opacity: 0.8;
   }

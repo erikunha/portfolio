@@ -7,7 +7,7 @@
     display: block;
   }
 
-  @media (max-width: 767.98px) {
+  @media (max-width: theme(--viewport-below-md)) {
     .hero-desktop {
       display: none;
     }
@@ -16,7 +16,7 @@
     }
   }
 
-  @media (min-width: 768px) {
+  @media (min-width: theme(--viewport-md)) {
     .hero-mobile {
       display: none;
     }
@@ -24,13 +24,13 @@
 
   .hero-boot-desktop {
     position: absolute;
-    left: 24px;
-    right: 24px;
-    top: 24px;
-    bottom: 24px;
-    z-index: 2;
+    left: var(--spacing-6);
+    right: var(--spacing-6);
+    top: var(--spacing-6);
+    bottom: var(--spacing-6);
+    z-index: var(--z-local-above);
     color: var(--color-tertiary-50);
-    font-size: 14px;
+    font-size: var(--text-sm);
     line-height: 1.7;
     overflow: hidden;
     display: flex;
@@ -48,12 +48,12 @@
 
   .hero-boot-mobile {
     color: var(--color-tertiary-50);
-    font-size: 12px;
+    font-size: var(--text-min);
     line-height: 1.65;
 
     height: auto;
     overflow: hidden;
-    margin: 0 0 12px;
+    margin: 0 0 var(--spacing-3);
   }
 
   .hero-shake {
@@ -95,7 +95,7 @@
 
   .hero-boot-matrix-prefix {
     color: var(--color-primary-400);
-    margin-right: 4px;
+    margin-right: var(--spacing-1);
   }
 
   .hero-boot-matrix-out {
@@ -105,12 +105,23 @@
       0 0 4px var(--color-secondary-950);
   }
 
+  #main-content > h1:focus-visible ~ section [data-testid="hero-name"] {
+    outline: var(--focus-ring);
+    outline-offset: var(--focus-ring-offset);
+  }
+
+  @media print {
+    .hero-sysfail {
+      display: none;
+    }
+  }
+
   .hero-sysfail {
     position: fixed;
     left: 50%;
     top: 50%;
     transform: translate(-50%, -50%);
-    z-index: 9999;
+    z-index: var(--z-sysfail);
     display: block;
     opacity: 0;
     pointer-events: none;
@@ -180,7 +191,7 @@
     margin: 0 0 calc(var(--spacing-3) + var(--spacing-1) / 2);
     color: var(--color-text-secondary);
     font-size: var(--text-sm);
-    letter-spacing: 0.08em;
+    letter-spacing: var(--tracking-lg);
     clip-path: inset(-0.5em -100vw -0.5em 0);
   }
 
@@ -254,7 +265,7 @@
     padding: var(--spacing-4) var(--spacing-4) calc(var(--spacing-4) + var(--spacing-1) / 2);
   }
 
-  @media (max-width: 767.98px) {
+  @media (max-width: theme(--viewport-below-md)) {
     .hero-stack {
       line-height: var(--hero-stack-leading-compact);
     }
@@ -284,7 +295,7 @@
     }
   }
 
-  @media (min-width: 768px) and (max-width: 1023.98px) {
+  @media (min-width: theme(--viewport-md)) and (max-width: theme(--viewport-below-lg)) {
     .hero-desktop {
       flex-direction: column;
     }
@@ -308,7 +319,7 @@
     }
   }
 
-  @media (min-width: 1024px) {
+  @media (min-width: theme(--viewport-lg)) {
     .hero-actions {
       grid-template-columns: repeat(2, minmax(0, 1fr));
     }
@@ -320,7 +331,7 @@
     }
   }
 
-  @media (min-width: 1024px) {
+  @media (min-width: theme(--viewport-lg)) {
     .hero-terminal .hero-boot-desktop {
       top: var(--spacing-8);
       bottom: var(--spacing-8);
@@ -340,7 +351,7 @@
     }
   }
 
-  @media (max-width: 767.98px) {
+  @media (max-width: theme(--viewport-below-md)) {
     .hero-identity {
       margin-top: calc(var(--spacing-1) * 1.5);
       padding-top: calc(var(--spacing-3) + var(--spacing-1) / 2);
@@ -366,7 +377,7 @@
     .hero-context {
       font-size: var(--text-xs);
       line-height: 1.5;
-      letter-spacing: 0.04em;
+      letter-spacing: var(--tracking-xs);
       row-gap: 0;
       margin-bottom: var(--spacing-2);
     }
@@ -376,11 +387,6 @@
     .hero-mobile-content {
       padding-bottom: calc(var(--spacing-3) + var(--spacing-1) / 2);
     }
-  }
-
-  #main-content > h1:focus-visible ~ section [data-testid="hero-name"] {
-    outline: var(--border-width) solid var(--color-green);
-    outline-offset: var(--spacing-1);
   }
 
   @media (forced-colors: active) {

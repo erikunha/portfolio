@@ -67,10 +67,9 @@ function ChannelDesktop({ ch, copy }: { ch: DawMixerChannel; copy: DawMixerCopy 
       <div className="flex flex-col gap-1">
         <span
           className={cn(
-            'border px-[5px] py-[1px] text-xs font-mono text-primary-400 tracking-[0.04em] shrink-0',
+            'border px-[5px] py-[1px] text-xs font-mono text-primary-400 tracking-xs shrink-0',
             'border-[var(--color-primary-border)]',
-            isMaster &&
-              'border-primary-500 px-2 py-[2px] font-bold text-primary-500 tracking-[0.12em]',
+            isMaster && 'border-primary-500 px-2 py-[2px] font-bold text-primary-500 tracking-2xl',
           )}
           data-channel={isMaster ? 'master' : undefined}
         >
@@ -82,7 +81,7 @@ function ChannelDesktop({ ch, copy }: { ch: DawMixerChannel; copy: DawMixerCopy 
       <div className="flex flex-col gap-1 min-w-0">
         <span
           className={cn(
-            'font-bold text-base text-tertiary-50 tracking-[0.04em] leading-none',
+            'font-bold text-base text-tertiary-50 tracking-xs leading-none',
             (ch.focused || isMaster) && 'text-primary-500',
           )}
         >
@@ -151,7 +150,7 @@ function SessionHeaderDesktop({ mixer, copy }: { mixer: DawMixer; copy: DawMixer
         'daw-mixer-row-min grid gap-[18px] items-center px-[18px] py-3',
         'border-b border-[var(--color-primary-border)]',
         'bg-[color-mix(in_srgb,var(--color-primary-500)_5%,transparent)]',
-        'text-xs text-primary-400 tracking-[0.14em]',
+        'text-xs text-primary-400 tracking-3xl',
       )}
       data-testid="session-header"
     >
@@ -160,7 +159,7 @@ function SessionHeaderDesktop({ mixer, copy }: { mixer: DawMixer; copy: DawMixer
       </span>
       <span className="mixer-transport tabular-nums">
         <span className="transport-play" aria-hidden="true" />
-        <span className="text-primary-500 font-bold text-sm tracking-[0.06em]">
+        <span className="text-primary-500 font-bold text-sm tracking-md">
           {mixer.transportTime}
         </span>
         <span className="text-[var(--color-primary-quiet)]">{copy.transportSeparator}</span>
@@ -179,7 +178,7 @@ function TableHeader({ copy }: { copy: DawMixerCopy }) {
     <div
       className={cn(
         'daw-channel-row daw-mixer-labels',
-        'text-xs text-primary-400 tracking-[0.18em] uppercase',
+        'text-xs text-primary-400 tracking-5xl uppercase',
         'border-b border-[var(--color-primary-quiet)] px-[18px] py-[7px]',
         'bg-black/50',
       )}

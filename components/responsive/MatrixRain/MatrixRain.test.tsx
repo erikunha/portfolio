@@ -1,5 +1,6 @@
 import { act, createElement } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { clearRainTheme, declareRainTheme } from '@/__tests__/helpers/rain-theme';
 import { type MountedClient, mountClient } from '@/__tests__/helpers/render';
 
 const CANVAS_RECT = {
@@ -45,6 +46,7 @@ describe('MatrixRain canvas perf', () => {
   let rafCallbacks: FrameRequestCallback[];
 
   beforeEach(() => {
+    declareRainTheme();
     vi.resetModules();
     rafCallbacks = [];
 
@@ -61,6 +63,7 @@ describe('MatrixRain canvas perf', () => {
   });
 
   afterEach(() => {
+    clearRainTheme();
     mounted?.unmount();
     vi.restoreAllMocks();
     vi.unstubAllGlobals();

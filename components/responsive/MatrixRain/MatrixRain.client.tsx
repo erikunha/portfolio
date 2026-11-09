@@ -6,22 +6,15 @@ import { SYSFAIL_END, SYSFAIL_START } from '@/lib/events';
 import { getFrameGovernorTickMultiplier } from '@/lib/frame-governor';
 import { readMotion } from '@/lib/motion';
 import { subscribeMotion } from '@/lib/motion-change';
-import {
-  RAIN_BODY_COLOR,
-  RAIN_CANVAS_BLACK,
-  RAIN_DESKTOP_PROFILE,
-  RAIN_HEAD_COLOR,
-  RAIN_TAIL_FADE,
-  rainFont,
-} from './rain-tokens';
+import { RAIN_DESKTOP_PROFILE, type RainPalette, rainFont, readRainPalette } from './rain-tokens';
 import { scaleTailFade } from './tail-fade';
 
 type RainTunables = {
   fontSize: number;
   speed: number;
-  headColor: string;
-  bodyColor: string;
-  tailFade: string;
+  headColor: string | undefined;
+  bodyColor: string | undefined;
+  tailFade: string | undefined;
 };
 
 const DIGITS = '0123456789'.split('');
@@ -54,9 +47,9 @@ type RainCfg = {
 export function MatrixRain({
   fontSize = RAIN_DESKTOP_PROFILE.fontSize,
   speed = RAIN_DESKTOP_PROFILE.speed,
-  headColor = RAIN_HEAD_COLOR,
-  bodyColor = RAIN_BODY_COLOR,
-  tailFade = RAIN_TAIL_FADE,
+  headColor,
+  bodyColor,
+  tailFade,
   className,
   style,
   watchRef,
@@ -84,6 +77,7 @@ export function MatrixRain({
 
     const canvasEl = canvas;
     const ctxEl = ctx;
+    const palette: RainPalette = readRainPalette(getComputedStyle(document.documentElement));
 
     const dpr = Math.min(window.devicePixelRatio || 1, MAX_BACKING_DPR);
     let columns = 0;
@@ -110,7 +104,7 @@ export function MatrixRain({
         drops[i] = typeof old[i] === 'number' ? (old[i] as number) : -Math.random() * (h / fs);
       }
       columns = newCols;
-      ctxEl.fillStyle = RAIN_CANVAS_BLACK;
+      ctxEl.fillStyle = palette.canvasBlack;
       ctxEl.fillRect(0, 0, w, h);
     }
 
@@ -128,13 +122,10 @@ export function MatrixRain({
       const rate = getFrameGovernorTickMultiplier();
       if (ts - last >= CRT_BASE_TICK_MS * rate) {
         last = ts;
-        const {
-          fontSize: fs,
-          speed: spd,
-          headColor: head,
-          bodyColor: body,
-          tailFade: tail,
-        } = tunablesRef.current;
+        const { fontSize: fs, speed: spd } = tunablesRef.current;
+        const head = tunablesRef.current.headColor ?? palette.head;
+        const body = tunablesRef.current.bodyColor ?? palette.body;
+        const tail = tunablesRef.current.tailFade ?? palette.tailFade;
         ctxEl.fillStyle = scaleTailFade(tail, rate);
         ctxEl.fillRect(0, 0, w, h);
         for (let i = 0; i < columns; i++) {
@@ -177,7 +168,7 @@ export function MatrixRain({
     const unsubscribeMotion = subscribeMotion((on) => {
       setGate('motion', on);
       if (!on) {
-        ctxEl.fillStyle = RAIN_CANVAS_BLACK;
+        ctxEl.fillStyle = palette.canvasBlack;
         ctxEl.fillRect(0, 0, w, h);
       }
     });

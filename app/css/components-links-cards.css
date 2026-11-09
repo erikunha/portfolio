@@ -138,6 +138,7 @@
   }
 
   .links-line:focus-visible {
+    outline: var(--focus-ring);
     outline-offset: var(--focus-ring-offset-inset);
   }
 

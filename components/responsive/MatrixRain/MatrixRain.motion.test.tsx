@@ -1,5 +1,6 @@
 import { act, createElement } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { clearRainTheme, declareRainTheme } from '@/__tests__/helpers/rain-theme';
 import { type MountedClient, mountClient } from '@/__tests__/helpers/render';
 import { applyMotion } from '@/lib/motion';
 
@@ -26,6 +27,7 @@ describe('MatrixRain honours the motion preference through every pause source', 
   let cancelled: number;
 
   beforeEach(() => {
+    declareRainTheme();
     vi.resetModules();
     localStorage.clear();
     scheduled = 0;
@@ -53,6 +55,7 @@ describe('MatrixRain honours the motion preference through every pause source', 
   });
 
   afterEach(() => {
+    clearRainTheme();
     mounted?.unmount();
     setHidden(false);
     localStorage.clear();

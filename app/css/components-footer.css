@@ -4,12 +4,12 @@
     --footer-session-leading: 1.95;
     --footer-dmesg-leading: calc(var(--spacing-4) + var(--spacing-1));
     --footer-marker-width: 0.5ch;
-    --footer-title-tracking: 0.18em;
-    --footer-shutdown-tracking: 0.06em;
+    --footer-title-tracking: var(--tracking-5xl);
+    --footer-shutdown-tracking: var(--tracking-md);
     --footer-session-label-width: 13ch;
     --footer-meter-width: 7ch;
     --footer-timestamp-width: 9ch;
-    --footer-tracking: 0.1em;
+    --footer-tracking: var(--tracking-xl);
     --footer-fold-sign-width: 1ch;
     position: relative;
     color: var(--color-text);
@@ -285,13 +285,6 @@
     text-underline-offset: var(--spacing-1);
   }
 
-  .footer-link:focus-visible,
-  .sitemap a:focus-visible,
-  .footer-reboot:focus-visible {
-    outline: var(--border-width) solid var(--color-green);
-    outline-offset: var(--spacing-1);
-  }
-
   @media (pointer: fine) {
     .footer-link {
       min-height: var(--spacing-target-compact);
@@ -404,8 +397,8 @@
   }
 
   .sitemap .sm-fold-head:focus-visible {
-    outline: var(--border-width) solid var(--color-green);
-    outline-offset: calc(-1 * var(--border-width));
+    outline: var(--focus-ring);
+    outline-offset: var(--focus-ring-offset-inset);
   }
 
   .sitemap .sm-list {
@@ -514,7 +507,7 @@
     margin: var(--spacing-6) 0 0;
   }
 
-  @media (max-width: 767.98px) {
+  @media (max-width: theme(--viewport-below-md)) {
     .footer-inner {
       --footer-reach-inset: calc(var(--to-top-reach) - var(--space-gutter));
     }
@@ -530,7 +523,7 @@
 
     .site-footer {
       --footer-session-leading: var(--footer-line-height);
-      --footer-title-tracking: 0.16em;
+      --footer-title-tracking: var(--tracking-4xl);
       --footer-timestamp-width: var(--spacing-16);
       font-size: var(--text-xs);
       padding-bottom: calc(var(--spacing-16) * 2 + env(safe-area-inset-bottom, 0px));
@@ -587,7 +580,7 @@
     }
   }
 
-  @media (min-width: 900px) {
+  @media (min-width: theme(--viewport-split)) {
     .footer-cards {
       grid-template-columns: var(--phi-pair-columns-minor-first);
     }

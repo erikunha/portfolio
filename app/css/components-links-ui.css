@@ -35,7 +35,7 @@
     color: var(--color-primary-500);
     font-size: var(--text-xl);
     font-weight: 700;
-    letter-spacing: 0.02em;
+    letter-spacing: var(--tracking-2xs);
   }
 
   .links-identity-tagline {
@@ -125,7 +125,7 @@
   }
 
   .links-history-row:focus-visible {
-    outline: var(--focus-ring-width) solid var(--color-primary-500);
+    outline: var(--focus-ring);
     outline-offset: var(--focus-ring-offset-inset);
   }
 
@@ -170,7 +170,7 @@
     color: var(--color-primary-500);
     font-size: var(--text-xs);
     font-weight: 700;
-    letter-spacing: 0.1em;
+    letter-spacing: var(--tracking-xl);
     text-transform: uppercase;
     text-decoration: none;
     transition: background-color 150ms;
@@ -185,7 +185,7 @@
   }
 
   .links-history-all:focus-visible {
-    outline: var(--focus-ring-width) solid var(--color-primary-500);
+    outline: var(--focus-ring);
     outline-offset: var(--focus-ring-offset-inset);
   }
 

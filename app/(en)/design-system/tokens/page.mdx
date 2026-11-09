@@ -9,7 +9,7 @@ export const metadata = dsPageMetadata({
 
 # TOKENS
 
-<OnThisPage items={[{id:'color',label:'Color'},{id:'type-scale',label:'Type Scale'},{id:'spacing',label:'Spacing'},{id:'borders',label:'Borders'},{id:'motion',label:'Motion'},{id:'layers',label:'Layers'}]} />
+<OnThisPage items={[{id:'color',label:'Color'},{id:'type-scale',label:'Type Scale'},{id:'spacing',label:'Spacing'},{id:'tracking',label:'Letter Spacing'},{id:'viewports',label:'Viewports'},{id:'borders',label:'Borders'},{id:'motion',label:'Motion'},{id:'layers',label:'Layers'}]} />
 
 Colour, type, spacing and border tokens live in `app/css/theme.css`.
 Tailwind's `@theme` generates utilities from these custom properties. Swatches
@@ -139,6 +139,42 @@ Small and medium Buttons have a 44px minimum height. Small Buttons use 10px
 horizontal padding; medium and large Buttons use 14px. Large Buttons have a
 52px minimum height. CopyButton has a 44px minimum width and height in every state.
 
+<h2 id="tracking">Letter Spacing</h2>
+
+| Token | Utility | Value |
+|---|---|---|
+| `--tracking-2xs` | `tracking-2xs` | 0.02em |
+| `--tracking-xs` | `tracking-xs` | 0.04em |
+| `--tracking-sm` | `tracking-sm` | 0.05em |
+| `--tracking-md` | `tracking-md` | 0.06em |
+| `--tracking-lg` | `tracking-lg` | 0.08em |
+| `--tracking-xl` | `tracking-xl` | 0.1em |
+| `--tracking-2xl` | `tracking-2xl` | 0.12em |
+| `--tracking-3xl` | `tracking-3xl` | 0.14em |
+| `--tracking-4xl` | `tracking-4xl` | 0.16em |
+| `--tracking-5xl` | `tracking-5xl` | 0.18em |
+
+Stylesheets write `letter-spacing: var(--tracking-xl)`; markup writes `tracking-xl`.
+
+<h2 id="viewports">Viewports</h2>
+
+A media query cannot read a custom property, so stylesheets write `theme(--viewport-md)` and Tailwind
+substitutes the width at build time. Each step has a `below` twin 0.02px lower, so `max-width` ends
+where the next `min-width` starts and no width matches both or neither.
+
+| Step | Min width | Max width (below) | Usage |
+|---|---|---|---|
+| `--viewport-narrow` | 360px | 359.98px | narrowest phones |
+| `--viewport-phone` | 480px | 479.98px | wide phones |
+| `--viewport-md` | 768px | 767.98px | phone to tablet; matches `MOBILE_BREAKPOINT_PX` |
+| `--viewport-split` | 900px | 899.98px | two-column splits |
+| `--viewport-lg` | 1024px | 1023.98px | tablet to desktop; the dock hides |
+| `--viewport-xl` | 1280px | 1279.98px | wide desktop |
+
+A few queries stay literal because they mark one component's measured ladder, not a layout step: the
+`content-visibility` size estimates (340, 412 and 600px), the contact grid steps (512 and 640px) and
+three one-off folds (389.98, 599.98 and 1199.98px).
+
 <h2 id="borders">Borders</h2>
 
 | Token | Value | Usage |
@@ -147,7 +183,11 @@ horizontal padding; medium and large Buttons use 14px. Large Buttons have a
 | `--radius-none` | 0 | Sharp controls |
 | `--radius-control` | 2px | Maximum control radius |
 
-Keyboard focus uses `:focus-visible`, with a 2px signal outline and 2px offset.
+Keyboard focus uses `:focus-visible` and one ring: `--focus-ring` (a 2px solid signal outline) with
+`--focus-ring-offset` (2px), or `--focus-ring-offset-inset` (-2px) for a control that sits flush against its
+neighbours. `app/css/base.css` applies it to links, buttons, inputs, selects, summaries and tabbable
+elements, so a component does not restate it. `pnpm lint:css-tokens` fails a focus rule that writes its
+own width, color or offset, or that paints the ring on plain `:focus`.
 
 <h2 id="motion">Motion</h2>
 
@@ -171,19 +211,25 @@ disables this effect. Browsers without scroll-driven animation support show stat
 
 <h2 id="layers">Layers</h2>
 
-z-index comes from two sources: the `--z-*` custom properties in
-`app/css/base.css` and, for the top chrome, Tailwind `z-[N]` utilities. The
-cross-cutting contract:
+Every z-index is a step of the `--z-*` scale in `app/css/theme.css`; a stylesheet writes
+`z-index: var(--z-drawer)` and markup writes `z-(--z-topbar)`. `pnpm lint:css-tokens` fails a literal.
+Layers stack in this order:
 
 | Layer | z-index | Usage |
 |---|---|---|
-| content | `--z-content` (10) | `.page-main`, page content above the CRT overlay |
-| header chrome | `z-[110]` | DesktopTopbar / StatusBar (MobileTitleBar `z-[109]`) |
+| rain | `--z-rain` (0) | the Matrix rain canvas |
+| CRT layers | `--z-crt-vignette` (1) to `--z-crt-beam` (5) | vignette, scanlines, mask, noise, flicker, scan beam |
+| local | `--z-local` (1), `--z-local-above` (2) | stacking inside one component |
+| content | `--z-content` (10), `--z-content-raised` (11) | `.page-main`, page content above the CRT overlay |
+| title bar | `--z-title-bar` (109) | the phone title bar |
+| header chrome | `--z-topbar` (110) | the desktop topbar and the phone status bar |
+| to top | `--z-to-top` (115) | the scroll-to-top button |
+| offline notice | `--z-offline` (118) | the no-signal bar; the drawer and its scrim cover it |
 | dock | `--z-dock` (120) | bottom navigation dock |
 | scrim | `--z-scrim` (125) | the drawer scrim behind the open menu |
 | position line | `--z-position-line` (126) | the side scroll-progress line below 1024px |
+| progress line | `--z-progress-line` (127) | the page-load bar on `/links` |
 | drawer | `--z-drawer` (130) | the section menu drawer |
-| skip link | `9999` | skip-to-content link, always on top |
+| system failure | `--z-sysfail` (9998) | the SYSTEM FAILURE plate |
+| skip link | `--z-skip-link` (9999) | skip-to-content link, always on top |
 
-Component-local stacking (CRT effect layers 1 to 5, the Matrix rain at z-0)
-is intentionally not part of the contract.

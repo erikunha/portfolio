@@ -78,7 +78,7 @@ function StaticKnob({ angleDeg, label }: { angleDeg: number; label: string }) {
         style={{ '--mx-knob-angle': `${angleDeg}deg` } as CSSProperties}
         aria-hidden="true"
       />
-      <span className="text-xs tracking-[0.1em] text-primary-400 uppercase font-bold">{label}</span>
+      <span className="text-xs tracking-xl text-primary-400 uppercase font-bold">{label}</span>
     </div>
   );
 }
@@ -94,7 +94,7 @@ function PluginChainMobile({
 }) {
   return (
     <div className="mx-chain-wrap mb-[2px]" aria-hidden="true">
-      <div className="text-xs tracking-[0.18em] text-primary-400 uppercase mb-[5px] flex items-center gap-[6px] mx-chain-title">
+      <div className="text-xs tracking-5xl text-primary-400 uppercase mb-[5px] flex items-center gap-[6px] mx-chain-title">
         {copy.signalFlow}
       </div>
       <div className="mx-chain mx-chain-mobile">
@@ -123,7 +123,7 @@ function PluginChainMobile({
               )}
               aria-hidden="true"
             />
-            <span className="text-xs font-bold tracking-[0.08em] uppercase leading-none whitespace-nowrap">
+            <span className="text-xs font-bold tracking-lg uppercase leading-none whitespace-nowrap">
               {p.name}
             </span>
             <span
@@ -142,7 +142,7 @@ function PluginChainMobile({
 function SessionHeaderMobile({ mixer, copy }: { mixer: DawMixer; copy: DawMixerCopy }) {
   return (
     <div
-      className="text-xs text-primary-400 leading-[1.8] border-b border-[var(--color-primary-border)] px-[14px] py-[10px] tracking-[0.14em] bg-[color-mix(in_srgb,var(--color-primary-500)_5%,transparent)]"
+      className="text-xs text-primary-400 leading-[1.8] border-b border-[var(--color-primary-border)] px-[14px] py-[10px] tracking-3xl bg-[color-mix(in_srgb,var(--color-primary-500)_5%,transparent)]"
       data-testid="session-header-mobile"
     >
       <div>
@@ -161,7 +161,7 @@ function MixLegendMobile({ mixer, copy }: { mixer: DawMixer; copy: DawMixerCopy 
   if (!lead) return null;
   return (
     <div
-      className="flex flex-col gap-[3px] px-[14px] py-2 border-b border-[var(--color-primary-quiet)] bg-black/60 text-xs tracking-[0.16em] text-primary-400 uppercase"
+      className="flex flex-col gap-[3px] px-[14px] py-2 border-b border-[var(--color-primary-quiet)] bg-black/60 text-xs tracking-4xl text-primary-400 uppercase"
       aria-hidden="true"
     >
       <span>
@@ -196,12 +196,12 @@ function ChannelMobile({ ch, copy }: { ch: DawMixerChannel; copy: DawMixerCopy }
       >
         <span
           className={cn(
-            'text-xs tracking-[0.18em] border font-bold whitespace-nowrap shrink-0 px-[7px] py-[3px]',
+            'text-xs tracking-5xl border font-bold whitespace-nowrap shrink-0 px-[7px] py-[3px]',
             ch.focused
               ? 'text-primary-500 border-primary-500 bg-[color-mix(in_srgb,var(--color-primary-500)_10%,transparent)]'
               : 'text-primary-400 border-[var(--color-primary-quiet)] bg-black/55',
             isMaster &&
-              'border-primary-500 px-2 py-[2px] text-xs tracking-[0.12em] font-bold text-primary-500 bg-transparent',
+              'border-primary-500 px-2 py-[2px] text-xs tracking-2xl font-bold text-primary-500 bg-transparent',
           )}
           data-channel={isMaster ? 'master' : undefined}
         >
@@ -209,23 +209,20 @@ function ChannelMobile({ ch, copy }: { ch: DawMixerChannel; copy: DawMixerCopy }
         </span>
         <span
           className={cn(
-            'text-sm font-bold tracking-[0.04em] leading-[1.15] min-w-0 overflow-hidden text-ellipsis whitespace-nowrap',
+            'text-sm font-bold tracking-xs leading-[1.15] min-w-0 overflow-hidden text-ellipsis whitespace-nowrap',
             ch.focused || isMaster ? 'text-primary-500' : 'text-tertiary-50',
           )}
         >
           {ch.name}
         </span>
-        <div className="text-xs text-primary-400 tabular-nums tracking-[0.04em] text-right leading-[1.1] whitespace-nowrap">
+        <div className="text-xs text-primary-400 tabular-nums tracking-xs text-right leading-[1.1] whitespace-nowrap">
           <span className="font-bold text-primary-500 text-xs max-md:text-sm">
             {pctToDb(ch.faderPct)}
           </span>
           <span className="text-xs max-md:text-sm text-primary-400">{copy.decibelUnit}</span>
         </div>
       </div>
-      <div
-        className="text-primary-400 text-xs tracking-[0.02em] leading-[1.4]"
-        data-testid="mx-ref"
-      >
+      <div className="text-primary-400 text-xs tracking-2xs leading-[1.4]" data-testid="mx-ref">
         <ParsedText text={ch.desc} />
       </div>
       <div className="flex flex-col gap-2">
@@ -251,7 +248,7 @@ function ChannelMobile({ ch, copy }: { ch: DawMixerChannel; copy: DawMixerCopy }
                 key={btn}
                 className={cn(
                   'min-w-[32px] h-7 px-[10px] flex items-center justify-center',
-                  'text-xs font-bold tracking-[0.04em]',
+                  'text-xs font-bold tracking-xs',
                   ch.activeButtons.includes(btn)
                     ? [
                         'border border-primary-500 text-primary-500',
@@ -269,7 +266,7 @@ function ChannelMobile({ ch, copy }: { ch: DawMixerChannel; copy: DawMixerCopy }
         <div className="flex flex-col gap-1">
           <FaderBar pct={ch.faderPct} />
           {ch.footer ? (
-            <span className="text-xs text-primary-400 block text-center tracking-[0.08em] opacity-80">
+            <span className="text-xs text-primary-400 block text-center tracking-lg opacity-80">
               {copy.loudnessLabel} {ch.footer.lufs} {copy.separator} {copy.peakLabel} {ch.footer.pk}
             </span>
           ) : null}

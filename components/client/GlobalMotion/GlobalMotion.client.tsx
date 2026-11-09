@@ -6,8 +6,6 @@ import { MatrixRainLazy } from '../../responsive/MatrixRain';
 import { RAIN_DESKTOP_PROFILE, RAIN_MOBILE_PROFILE } from '../../responsive/MatrixRain/rain-tokens';
 import { TypeReveal } from '../TypeReveal';
 
-const RAIN_LAYER = 0;
-
 export function GlobalMotion() {
   const { isMobile } = useBreakpoint();
 
@@ -23,7 +21,7 @@ export function GlobalMotion() {
             position: 'fixed',
             inset: 0,
             pointerEvents: 'none',
-            zIndex: RAIN_LAYER,
+            zIndex: 'var(--z-rain)',
             opacity: rain.opacity,
           }}
         />
