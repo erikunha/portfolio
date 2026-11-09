@@ -194,7 +194,7 @@ rendering varies from Chromium, and a darwin-only baseline that no CI job compar
 where a minor bump would break a build-time invariant). Never `latest`, never
 `*`, never a bare dist-tag. `next` is pinned tightly enough (a tilde range) that
 a fresh install cannot resolve a new minor and break the `postinstall`
-polyfill-strip checksum. The lockfile (`pnpm-lock.yaml`) is the source of truth;
+polyfill-strip shape check. The lockfile (`pnpm-lock.yaml`) is the source of truth;
 CI installs with `--frozen-lockfile`. `zod` is `~`-pinned (patch updates only): its minor bumps
 break type inference. `typescript` is held on the 6.x line (Dependabot ignores its
 major): Stryker consumes the TypeScript JS API that TS7 removed.
@@ -204,8 +204,8 @@ a major version and silently change behavior; `--frozen-lockfile` only masks the
 drift until the lockfile is regenerated. Major-locking every dependency makes
 the build reproducible across machines and across time, a property a Staff-bar
 artifact must demonstrate, not merely claim. The tilde on `next` exists because
-`scripts/strip-next-polyfills.mjs` verifies a checksum of a Next-internal file
-and fails _loud_ on mismatch; a caret range could float `next` onto a new minor
+`scripts/strip-next-polyfills.mjs` checks that a Next-internal file is at least
+1024 bytes and still contains `Object.defineProperty`, and fails _loud_ otherwise; a caret range could float `next` onto a new minor
 and trip that guard on an otherwise-clean install.
 
 **How it is held.** Mechanical gate: `scripts/check-dep-pinning.mjs`
