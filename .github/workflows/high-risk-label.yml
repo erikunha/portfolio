@@ -75,7 +75,12 @@ jobs:
           gh label create "$LABEL" --repo "$REPO" --color "$LABEL_COLOR" --description "$LABEL_DESCRIPTION" 2>/dev/null || true
 
           changed=$(gh api --paginate "repos/$REPO/pulls/$PR_NUMBER/files" --jq '.[] | .filename, (.previous_filename // empty)')
-          matched=$(printf '%s\n' "$changed" | node scripts/high-risk-paths.ts)
+          if [ -f scripts/high-risk-paths.ts ]; then
+            matched=$(printf '%s\n' "$changed" | node scripts/high-risk-paths.ts)
+          else
+            echo "::notice::The base commit has no high-risk path list, so every changed file counts as high risk."
+            matched=$changed
+          fi
           labels=$(gh api --paginate "repos/$REPO/issues/$PR_NUMBER/labels" --jq '.[].name')
 
           if grep -Fxq -- "$LABEL" <<< "$labels"; then
