@@ -30,8 +30,7 @@
     align-items: center;
     min-height: var(--spacing-target);
     min-width: var(--spacing-target);
-    margin-inline-start: calc(var(--spacing-2) * -1);
-    padding: 0 var(--spacing-2);
+    padding: 0;
     color: var(--color-text);
     font-family: var(--font-mono);
     font-size: var(--text-xs);
@@ -40,6 +39,9 @@
   }
 
   .err-link:hover {
+    box-shadow:
+      calc(var(--spacing-2) * -1) 0 0 0 var(--color-primary-quiet),
+      var(--spacing-2) 0 0 0 var(--color-primary-quiet);
     background: var(--color-primary-quiet);
   }
 
