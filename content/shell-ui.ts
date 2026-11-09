@@ -117,7 +117,7 @@ export const shellUi: Record<SiteLocale, ShellUi> = {
       ShellCommand.Skills,
       ShellCommand.Now,
       'what are your strongest projects?',
-      'open to relocation?',
+      'what do you build with agents and LLMs?',
     ],
     commands: [
       ShellCommand.Help,
@@ -192,7 +192,7 @@ export const shellUi: Record<SiteLocale, ShellUi> = {
       ShellCommand.Skills,
       ShellCommand.Now,
       'quais são seus projetos mais fortes?',
-      'aberto a realocação?',
+      'o que você constrói com agentes e LLMs?',
     ],
     commands: [
       ShellCommand.Help,

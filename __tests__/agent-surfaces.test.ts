@@ -62,9 +62,9 @@ describe('public/.well-known/agent.json', () => {
       work_auth?: Record<string, unknown>;
     };
     expect(
-      manifest.work_auth,
-      'the profile publishes an empty work-authorization record, so no description may promise work-authorization data',
-    ).toEqual({});
+      manifest,
+      'the profile publishes no work-authorization field, so the manifest declares none',
+    ).not.toHaveProperty('work_auth');
     for (const profile of manifest.profiles ?? []) {
       expect(
         profile.description ?? '',

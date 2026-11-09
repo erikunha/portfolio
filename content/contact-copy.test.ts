@@ -50,10 +50,7 @@ describe('timezone panel copy', () => {
   });
 
   it('states the facts the spec lists', () => {
-    expect(timezone.facts.modeValue).toContain('remote-first');
-    expect(timezone.facts.modeValue).toContain('EU/US/CA');
-    expect(timezone.facts.relocationValue).toContain('relocation');
-    expect(timezone.facts.relocationValue).toContain('visa sponsorship');
+    expect(timezone.facts.modeValue).toBe('remote · async-first, overlap with any time zone');
     expect(timezone.facts.engagementValue).toBe('full-time or contract');
     expect(timezone.facts.replyValue).toBe('within 48h');
     expect(timezone.propose.label).toContain('PROPOSE_IN_MESSAGE');

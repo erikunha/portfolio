@@ -88,7 +88,6 @@ export const personSchema = {
     'Component-Driven Architecture',
     'PCI-DSS Systems',
     'Financial Technology',
-    'Healthcare Technology',
     'Private Markets Technology',
     'AI-native SaaS',
     'Banking Technology',
@@ -184,7 +183,7 @@ export const SITE_KEYWORDS: string[] = [
   'Node.js',
   'TypeScript',
   'PCI-DSS',
-  'Healthcare',
+  'GenAI',
   'E-commerce',
   'AI-native SaaS',
 ];

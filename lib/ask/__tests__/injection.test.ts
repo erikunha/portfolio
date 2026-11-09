@@ -66,7 +66,7 @@ const REJECTED_QUESTIONS = [
 
 const ALLOWED_QUESTIONS = [
   'What is Erik working on right now?',
-  'open to relocation?',
+  'what do you build with agents and LLMs?',
   'Quais são os projetos mais fortes do Erik?',
   'Ele responde em quanto tempo?',
   'como é o trabalho remoto na Raylu?',

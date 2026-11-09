@@ -41,16 +41,19 @@ describe('every machine-readable surface links employers to their company site',
 
   it('links every employer in the llms.txt experience table', () => {
     for (const entry of gitLog[SITE_LOCALE.en]) {
+      const cell = entry.companyUrl ? `[${entry.company}](${entry.companyUrl})` : entry.company;
       expect(
         llmsTxt,
-        `public/llms.txt must link ${entry.company} to ${entry.companyUrl} in the Professional Experience table`,
-      ).toContain(`| [${entry.company}](${entry.companyUrl}) |`);
+        `public/llms.txt must list ${entry.company} in the Professional Experience table, linked when it has a site`,
+      ).toContain(`| ${cell} |`);
     }
   });
 
   it('hands the ask prompt each company URL so answers cite the real site', () => {
     for (const entry of gitLog[SITE_LOCALE.en]) {
-      expect(SYSTEM_TEXT).toContain(`- ${entry.company} (${entry.companyUrl}):`);
+      expect(SYSTEM_TEXT).toContain(
+        entry.companyUrl ? `- ${entry.company} (${entry.companyUrl}):` : `- ${entry.company}:`,
+      );
     }
   });
 

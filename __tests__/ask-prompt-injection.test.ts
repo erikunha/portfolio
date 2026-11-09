@@ -49,8 +49,8 @@ const INJECTION_SAMPLES = [
 
 const LEGITIMATE_SAMPLES = [
   'What is your experience with PCI-DSS?',
-  'Tell me about the Canon Medical project',
-  'Are you open to relocation?',
+  'Tell me about the consulting project',
+  'Are you open to contract roles?',
   'How many years of React?',
 ];
 
@@ -157,8 +157,8 @@ describe('INJECTION_RE — ChatML-style delimiter coverage', () => {
 
   it('does not false-positive on legitimate questions', () => {
     expect(INJECTION_RE.test('What is your experience with PCI-DSS?')).toBe(false);
-    expect(INJECTION_RE.test('Tell me about the Canon Medical project')).toBe(false);
-    expect(INJECTION_RE.test('Are you open to relocation?')).toBe(false);
+    expect(INJECTION_RE.test('Tell me about the consulting project')).toBe(false);
+    expect(INJECTION_RE.test('Are you open to contract roles?')).toBe(false);
     expect(INJECTION_RE.test('Do you know TypeScript generics like Pick<T>?')).toBe(false);
     expect(INJECTION_RE.test('Is a < b when a is small?')).toBe(false);
     expect(INJECTION_RE.test('What systems have you built?')).toBe(false);

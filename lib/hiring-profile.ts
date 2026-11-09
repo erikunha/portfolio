@@ -15,7 +15,7 @@ import { social } from '@/content/social';
 
 const EmployerSchema = z.object({
   name: z.string(),
-  url: z.url(),
+  url: z.url().optional(),
   role: z.string(),
   domain: z.string(),
   current: z.boolean().optional(),
@@ -46,7 +46,6 @@ export const HiringProfileSchema = z.object({
   domains: z.array(z.string()),
   employers: z.array(EmployerSchema),
   receipts: z.record(z.string(), z.string()),
-  work_auth: z.record(z.string(), z.string()),
   education: z.array(
     z.object({
       institution: z.string(),
@@ -101,7 +100,7 @@ export const HIRING_PROFILE: HiringProfile = HiringProfileSchema.parse({
     'private markets deal origination',
     'fintech',
     'PCI-DSS',
-    'healthcare',
+    'field-service',
     'e-commerce',
     'edtech',
     'banking',
@@ -133,7 +132,6 @@ export const HIRING_PROFILE: HiringProfile = HiringProfileSchema.parse({
     copilot_subagents: '12-agent system (Betsson)',
   },
 
-  work_auth: {},
   education: education[SITE_LOCALE.en].map((entry) => ({
     institution: entry.institution,
     degree: entry.degree,

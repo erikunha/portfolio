@@ -147,10 +147,6 @@ const contactCopyFor = (locale: SiteLocale): ContactContent => {
         availabilityLabel: pt ? 'início' : 'start',
         modeLabel: pt ? 'modo' : 'mode',
         modeValue: WORK_SCOPE[locale],
-        relocationLabel: pt ? 'visto' : 'visa',
-        relocationValue: pt
-          ? 'aberto a realocação com patrocínio de visto'
-          : 'open to relocation with visa sponsorship',
         engagementLabel: pt ? 'tipo' : 'type',
         engagementValue: pt ? 'tempo integral ou contrato' : 'full-time or contract',
         replyLabel: pt ? 'resposta' : 'reply',

@@ -8,6 +8,7 @@ import {
 import { gitLog } from '@/content/git-log';
 import { profile, profileStack } from '@/content/profile';
 import { SITE_LOCALE } from '@/content/site-locale';
+import { WORK_SCOPE_SENTENCE } from '@/content/work-scope';
 import { INJECTION_RE, isInjectionAttempt, normalizeInjectionInput } from '@/lib/ask/injection';
 import { SYSTEM_TEXT } from '@/lib/ask/system-prompt';
 
@@ -96,10 +97,35 @@ describe('content/ask-eval-corpus', () => {
     expect(SYSTEM_TEXT).toContain(profile.timezone);
   });
 
-  it('grounds the sponsorship criterion in the published system prompt', () => {
-    const item = ASK_EVAL_CORPUS.find((i) => i.id === 'fact-remote-and-sponsorship');
-    expect(item?.expect).toContain('sponsorship');
-    expect(SYSTEM_TEXT).toContain('visa sponsorship');
+  it('grounds the work-scope criteria in the published system prompt', () => {
+    for (const id of ['fact-work-scope', 'fact-pt-work-scope']) {
+      const item = ASK_EVAL_CORPUS.find((i) => i.id === id);
+      expect(item?.expect, id).toContain('async-first');
+      expect(SYSTEM_TEXT, id).toContain(WORK_SCOPE_SENTENCE);
+    }
+  });
+
+  it('asks the permit and client questions as probes that a model must not answer with a claim', () => {
+    const byId = (id: string) => ASK_EVAL_CORPUS.find((i) => i.id === id);
+    for (const id of [
+      'edge-visa-sponsorship-not-claimed',
+      'edge-relocation-not-claimed',
+      'edge-pt-work-permit-not-claimed',
+    ]) {
+      expect(byId(id)?.expect, id).toMatch(/does not claim/i);
+      expect(byId(id)?.kind, id).toBe('edge');
+    }
+    expect(byId('edge-consulting-client-not-named')?.expect).toMatch(/does not name/i);
+    expect(SYSTEM_TEXT, 'the prompt names no client for the consulting role').toContain(
+      'Independent Consultant',
+    );
+  });
+
+  it('grades the targeting criterion against GenAI and agents, not a sector list', () => {
+    const item = ASK_EVAL_CORPUS.find((i) => i.id === 'fact-targeting-roles');
+    expect(item?.expect).toMatch(/GenAI/);
+    expect(item?.expect).toMatch(/agents/);
+    expect(item?.expect).not.toMatch(/fintech|healthcare/i);
   });
 
   it('declares the key facts of every factual criterion', () => {

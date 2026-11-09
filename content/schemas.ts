@@ -619,7 +619,7 @@ export const GitCommitSchema = z
     branch: z.string().min(1),
     type: z.enum(['career', 'life']),
     company: z.string().min(1),
-    companyUrl: CompanyUrlSchema,
+    companyUrl: CompanyUrlSchema.optional(),
     role: z.string().min(1),
     body: z.array(z.string().min(1)),
     context: z.string().min(1).optional(),
@@ -1139,7 +1139,7 @@ export const CvDocumentSchema = z.object({
       z.object({
         key: ReadingTextSchema,
         company: ReadingTextSchema,
-        companyUrl: CompanyUrlSchema,
+        companyUrl: CompanyUrlSchema.optional(),
         meta: ReadingTextSchema,
         context: ReadingTextSchema.optional(),
         bullets: z.array(ReadingTextSchema).min(1),

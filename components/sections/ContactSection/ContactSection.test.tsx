@@ -97,7 +97,6 @@ describe('ContactSection timezone panel first paint', () => {
 
     expect(factValue(host, facts.availabilityLabel)).toBe(profile.availability);
     expect(factValue(host, facts.modeLabel)).toBe(facts.modeValue);
-    expect(factValue(host, facts.relocationLabel)).toBe(facts.relocationValue);
     expect(factValue(host, facts.engagementLabel)).toBe(facts.engagementValue);
     expect(factValue(host, facts.replyLabel)).toBe(facts.replyValue);
     expect(factValue(host, contactCopy[SITE_LOCALE.en].channels.languagesLabel)).toBe(
@@ -106,7 +105,7 @@ describe('ContactSection timezone panel first paint', () => {
     expect(host.textContent).not.toMatch(/NaN|undefined|\{\w+\}/);
   });
 
-  it('lists six facts and drops the timezone fact the clocks already state', () => {
+  it('lists five facts and drops the timezone fact the clocks already state', () => {
     const labels = [...serverPanel().querySelectorAll('.contact-main .contact-fact dt')].map(
       (label) => label.textContent,
     );
@@ -114,7 +113,6 @@ describe('ContactSection timezone panel first paint', () => {
     expect(labels).toEqual([
       facts.availabilityLabel,
       facts.modeLabel,
-      facts.relocationLabel,
       facts.engagementLabel,
       facts.replyLabel,
       contactCopy[SITE_LOCALE.en].channels.languagesLabel,

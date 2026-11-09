@@ -6,6 +6,9 @@ import { SITE_LOCALE } from '../../content/site-locale';
 import { VIEWPORTS } from './_helpers/geometry';
 import { freezeMotion } from './_helpers/motion';
 
+const LINKED_JOBS = gitLog[SITE_LOCALE.en].flatMap((job) =>
+  job.companyUrl ? [{ company: job.company, companyUrl: job.companyUrl }] : [],
+);
 const TOUCH_TARGET_PX = 28;
 const NEIGHBOUR_CLEARANCE_PX = 14;
 const COMPANY_VIEWPORTS = [
@@ -39,13 +42,15 @@ async function probeHitArea(page: Page, selector: string, index: number) {
 
 test.describe('career company links', () => {
   for (const viewport of COMPANY_VIEWPORTS) {
-    test(`home career log links every company at ${viewport.name}`, async ({ page }) => {
+    test(`home career log links every company with a site at ${viewport.name}`, async ({
+      page,
+    }) => {
       await page.setViewportSize({ width: viewport.width, height: viewport.height });
       await freezeMotion(page);
       await page.goto('/');
       const links = page.locator('[data-testid="career-log"] a.company-link');
-      await expect(links).toHaveCount(gitLog[SITE_LOCALE.en].length);
-      for (const [index, job] of gitLog[SITE_LOCALE.en].entries()) {
+      await expect(links).toHaveCount(LINKED_JOBS.length);
+      for (const [index, job] of LINKED_JOBS.entries()) {
         const link = links.nth(index);
         await expect(link).toHaveAttribute('href', job.companyUrl);
         await expect(link).toHaveAttribute('target', '_blank');
@@ -91,13 +96,13 @@ test.describe('career company links', () => {
   test('/cv links every employer and prints the company URL', async ({ page }) => {
     await page.goto(READING_PATHS.cv);
     const links = page.locator('section[aria-labelledby="cv-experience"] article h3 a');
-    await expect(links).toHaveCount(gitLog[SITE_LOCALE.en].length);
-    for (const [index, job] of gitLog[SITE_LOCALE.en].entries()) {
+    await expect(links).toHaveCount(LINKED_JOBS.length);
+    for (const [index, job] of LINKED_JOBS.entries()) {
       await expect(links.nth(index)).toHaveAttribute('href', job.companyUrl);
     }
     await page.emulateMedia({ media: 'print' });
     const printed = await links.first().evaluate((el) => getComputedStyle(el, '::after').content);
-    expect(printed).toContain(gitLog[SITE_LOCALE.en][0]?.companyUrl);
+    expect(printed).toContain(LINKED_JOBS[0]?.companyUrl ?? '');
   });
 
   test('/summary links the current employer', async ({ page }) => {

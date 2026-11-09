@@ -44,6 +44,19 @@ describe('CompanyLink', () => {
   });
 });
 
+describe('CompanyLink without a company site', () => {
+  it('renders the name as plain text, with no link and no new-tab disclosure', () => {
+    const { container } = render(
+      <p>
+        <CompanyLink locale={SITE_LOCALE.en}>Independent Consultant</CompanyLink>
+      </p>,
+    );
+    expect(container.querySelector('a')).toBeNull();
+    expect(container.querySelector('.sr-only')).toBeNull();
+    expect(container.querySelector('p')?.textContent).toBe('Independent Consultant');
+  });
+});
+
 describe('CompanyLink inside a type-reveal heading', () => {
   it('points at a description elsewhere instead of carrying its own sr-only text', () => {
     const { container } = render(

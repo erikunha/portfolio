@@ -23,7 +23,6 @@ export function ContactSection({ locale, defer }: { locale: SiteLocale; defer?: 
   const factRows: ReadonlyArray<readonly [string, string]> = [
     [facts.availabilityLabel, presentation.availability],
     [facts.modeLabel, facts.modeValue],
-    [facts.relocationLabel, facts.relocationValue],
     [facts.engagementLabel, facts.engagementValue],
     [facts.replyLabel, facts.replyValue],
     [channels.languagesLabel, presentation.languagesLine],

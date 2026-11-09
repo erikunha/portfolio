@@ -429,13 +429,10 @@ describe('canonical profile and education', () => {
       expect(GitCommitSchema.safeParse(invalid).success).toBe(false);
   });
 
-  it('requires every career entry to link to its company over https', async () => {
+  it('requires a career entry company URL, when it has one, to be https', async () => {
     const { GitCommitSchema } = await import('./schemas');
     const { gitLog } = await import('./git-log');
-    const { companyUrl: _omitted, ...withoutUrl } =
-      gitLog[EN][0] ?? ({} as Record<string, unknown>);
     for (const invalid of [
-      withoutUrl,
       { ...gitLog[EN][0], companyUrl: '' },
       { ...gitLog[EN][0], companyUrl: 'raylu.ai' },
       { ...gitLog[EN][0], companyUrl: 'http://raylu.ai' },
@@ -449,8 +446,12 @@ describe('canonical profile and education', () => {
     }
     for (const entry of gitLog[EN]) {
       expect(GitCommitSchema.safeParse(entry).success).toBe(true);
-      expect(new URL(entry.companyUrl).protocol).toBe('https:');
+      if (entry.companyUrl) expect(new URL(entry.companyUrl).protocol).toBe('https:');
     }
+    expect(
+      gitLog[EN].filter((entry) => !entry.companyUrl).map((entry) => entry.company),
+      'only the independent consulting entry has no company site: it names no client, so there is nothing to link',
+    ).toEqual(['Independent Consultant']);
   });
 
   it('rejects a non-https company URL at every schema that carries one', async () => {
@@ -524,7 +525,9 @@ describe('canonical profile and education', () => {
 
   it('gives each employer its own company URL', async () => {
     const { gitLog } = await import('./git-log');
-    const origins = gitLog[EN].map((entry) => new URL(entry.companyUrl).origin);
+    const origins = gitLog[EN].flatMap((entry) =>
+      entry.companyUrl ? [new URL(entry.companyUrl).origin] : [],
+    );
     expect(new Set(origins).size).toBe(origins.length);
   });
 });

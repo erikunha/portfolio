@@ -1,7 +1,7 @@
 # Erik Cunha · Senior Software Engineer, Applied AI
 
 > Senior Software Engineer, Applied AI. 8+ years of production software across AI-native SaaS,
-> fintech, payments, healthcare and e-commerce. Builds LLM systems and the evaluation that decides
+> fintech, payments and e-commerce. Builds LLM systems and the evaluation that decides
 > whether they are safe to ship. Brazil · UTC-3 · available now. Currently at Raylu: AI deal
 > origination · private markets. TypeScript, Python, React, Next.js, Angular, Node.js, AWS · LLM Systems, Evals, Agents, MCP, Guardrails.
 > Investor workflow screens for 50+ funds holding $500B+ in assets.
@@ -11,8 +11,9 @@
 - Status: available now
 - Location: Paulínia, Brazil (UTC-3)
 - Remote: working remotely for Raylu (New York, US)
-- Relocation: open with sponsorship
+- Work scope: remote · async-first, overlap with any time zone
 - Target role: Senior Software Engineer, Applied AI
+- Focus: GenAI, AI-native products, LLM systems and agents (evals, guardrails, MCP)
 - Contact: erikhenriquealvescunha@gmail.com | +5519997049125
 
 ## AI Engineering
@@ -42,9 +43,9 @@ Structured Output · Prompt Caching · Streaming LLM · LLM Cost Optimization
 ## Impact at Scale
 
 - -97.5% API latency: reporting endpoints from ~40s → <1s (query + indexing)
-- -98% CSS bundle reduction (Canon Medical Systems Brazil)
-- -52% Time to Interactive improvement (Canon Medical Systems Brazil)
-- -33% JavaScript bundle reduction (Canon Medical Systems Brazil)
+- -98% CSS bundle reduction (Independent Consultant)
+- -52% Time to Interactive improvement (Independent Consultant)
+- -33% JavaScript bundle reduction (Independent Consultant)
 - -32% page load reduction (Nike Brazil / Centauro)
 - +10% conversion rate via 20+ A/B experiments (Nike Brazil)
 - ~80% shared code, ~40% faster desktop build (MB Labs)
@@ -90,7 +91,7 @@ Performance & A11y: Core Web Vitals · WCAG 2.2 AA · ARIA · Lighthouse CI
 |---|---|---|---|
 | Jun 2026 - Present | [Raylu](https://raylu.ai) | Senior Software Engineer | New York, US (remote) |
 | Mar 2025 - May 2026 | [Betsson Group](https://betssongroup.com) | Senior Software Engineer | Malta (hybrid) |
-| Mar 2023 - Mar 2025 | [Canon Medical Systems Brazil](https://br.medical.canon) | Senior Software Engineer (independent consultant) | Canada (remote) |
+| Mar 2023 - Mar 2025 | Independent Consultant | Senior Software Engineer | Canada (remote) |
 | Dec 2021 - Mar 2023 | [Grupo SBF (Nike / Centauro)](https://www.gruposbf.com.br) | Software Engineer | São Paulo, Brazil (remote) |
 | Jan 2021 - Dec 2021 | [Encora (formerly Daitan)](https://www.linkedin.com/company/encorainc/) | Frontend Developer · assigned to VMware | Campinas, Brazil |
 | Apr 2020 - Jan 2021 | [Zup Innovation (Itaú Unibanco)](https://zup.com.br) | Frontend Developer | Campinas, Brazil |
@@ -104,7 +105,7 @@ Performance & A11y: Core Web Vitals · WCAG 2.2 AA · ARIA · Lighthouse CI
 - E-commerce: 8M+ MAU, multi-brand, LATAM
 - Banking / Fintech: 24.2M digital clients, business insurance
 - Private markets: AI deal origination for funds holding $500B+ in assets
-- Healthcare: hospital equipment service platform, specialist scheduling, field visits
+- Field service: equipment service platform, specialist scheduling, field visits
 - EdTech: 5-OS offline-first educational platform
 - HR-tech / Corporate Training: enterprise chatbot (Cia Hering, 800+ stores)
 - SaaS / CRM: travel agency management, 1,600+ Brazilian travel agencies
@@ -143,7 +144,7 @@ Performance & A11y: Core Web Vitals · WCAG 2.2 AA · ARIA · Lighthouse CI
 - ERIKUNHA.DEV, personal project: governed Anthropic endpoint with a prompt-injection gate, streaming leak detector, kill switch and a CI eval harness (LLM judge calibrated on human labels, 0.85 agreement floor).
 - LAIBEMAGE, personal project (open source, MIT): TypeScript CLI classifying images across seven LLM vision providers (github.com/erikunha/LAIbemage).
 - REACT_GOOGLE_MAPS_API, open-source contribution (PR #3266): diagnosed and fixed an infinite re-render loop in the Directions API example of a library with about 1.8M weekly npm downloads; reviewed and merged by the maintainer.
-- SERVICE_OPS_CONSOLE, Canon Medical Systems Brazil: hospital equipment service platform for service orders, specialist schedules and field visits.
+- SERVICE_OPS_CONSOLE, Independent Consultant: equipment field-service platform for service orders, specialist schedules and field visits.
 
 ## Links
 

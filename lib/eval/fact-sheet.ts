@@ -33,7 +33,7 @@ export function buildJudgeFactSheet(today: Date): string {
   return [
     `Today's date: ${today.toISOString().slice(0, ISO_DATE_LENGTH)}`,
     `Erik lives in: ${profile.city}, ${profile.country} (${profile.timezone})`,
-    `Work authorization and relocation: ${askFacts.openTo}`,
+    `Work scope: ${askFacts.openTo}`,
     ...askFacts.targeting,
     `Current title: ${profile.title}`,
     `Current employer: ${profile.currentEmployer.name}, ${profilePresentation[SITE_LOCALE.en].employerContext}, ${FUNDS_PHRASE}`,

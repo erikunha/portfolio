@@ -105,6 +105,11 @@ describe('CV reading view', () => {
     expect(headings).toHaveLength(gitLogEn.length);
     gitLogEn.forEach((job, index) => {
       const link = headings[index]?.querySelector('a');
+      if (!job.companyUrl) {
+        expect(link, `${job.company} names no client and so links nowhere`).toBeNull();
+        expect(headings[index]?.textContent).toBe(job.company);
+        return;
+      }
       expect(link?.getAttribute('href'), job.company).toBe(job.companyUrl);
       expect(link?.getAttribute('target')).toBe('_blank');
       expect(link?.getAttribute('rel')).toBe(EXTERNAL_LINK_PROPS.rel);

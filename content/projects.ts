@@ -65,11 +65,11 @@ const projectsFor = (locale: SiteLocale): Project[] => {
       },
       {
         name: 'SERVICE_OPS_CONSOLE',
-        company: 'Canon Medical Systems Brazil',
+        company: 'Independent Consultant',
         kind: 'professional',
         description: pt
-          ? 'Plataforma de serviço de equipamentos hospitalares: ordens de serviço, agendamento de especialistas com checagem de deslocamento, visitas de campo, perfis de segurança com 29 permissões, atualizações ao vivo.'
-          : 'Hospital equipment service platform: service orders, specialist scheduling with travel-time checks, field visits, a 29-permission security-profile model, live updates.',
+          ? 'Plataforma de serviço em campo de equipamentos: ordens de serviço, agendamento de especialistas com checagem de deslocamento, visitas de campo, perfis de segurança com 29 permissões, atualizações ao vivo.'
+          : 'Equipment field-service platform: service orders, specialist scheduling with travel-time checks, field visits, a 29-permission security-profile model, live updates.',
         stats: [
           { label: pt ? 'BUNDLE JS' : 'JS BUNDLE', value: '-33%' },
           { label: 'TTI', value: '-52%' },

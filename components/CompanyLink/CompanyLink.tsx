@@ -6,7 +6,7 @@ import { cn } from '@/lib/cn';
 const BASE_CLASS = 'company-link';
 
 type CompanyLinkProps = {
-  href: string;
+  href?: string | undefined;
   locale: SiteLocale;
   className?: string;
   describedBy?: string;
@@ -14,6 +14,7 @@ type CompanyLinkProps = {
 };
 
 export function CompanyLink({ href, locale, className, describedBy, children }: CompanyLinkProps) {
+  if (href === undefined) return <>{children}</>;
   return (
     <ExternalLink className={cn(BASE_CLASS, className)} href={href} aria-describedby={describedBy}>
       {children}

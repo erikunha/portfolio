@@ -186,7 +186,6 @@ describe('identity is consistent across every gated surface', () => {
     expect(manifest.title).toBe(HIRING_PROFILE.title);
     expect(manifest.title).toBe(CANONICAL_TITLE);
     expect(manifest.availability).toBe(HIRING_PROFILE.availability);
-    expect(manifest.work_auth).toEqual(HIRING_PROFILE.work_auth);
   });
 
   it('keeps the zod-free shell copy equal to the canonical profile', async () => {
@@ -279,10 +278,10 @@ describe('identity is consistent across every gated surface', () => {
 });
 
 describe('terminal redesign canonical facts', () => {
-  it('publishes no work-authorization status in the hiring profile or the agent manifest', () => {
-    expect(HIRING_PROFILE.work_auth).toEqual({});
+  it('publishes no work-authorization field in the hiring profile or the agent manifest', () => {
+    expect(HIRING_PROFILE).not.toHaveProperty('work_auth');
     const manifest = JSON.parse(read('public/.well-known/agent.json'));
-    expect(manifest.work_auth).toEqual({});
+    expect(manifest).not.toHaveProperty('work_auth');
   });
 
   it('targets Senior only, never Staff or Principal', () => {
@@ -333,7 +332,7 @@ describe('terminal redesign canonical facts', () => {
       '24.2M digital clients',
       '10+ talks',
       'WCAG 2.2 AA',
-      'Canon Medical Systems Brazil',
+      'Independent Consultant',
       'Zup Innovation',
     ]) {
       expect(llmsTxt, `public/llms.txt must publish "${current}"`).toContain(current);
@@ -386,8 +385,8 @@ describe('terminal redesign canonical facts', () => {
       ['Raylu', 'Senior Software Engineer', '2026-06', null, 'New York, US', 'remote'],
       ['Betsson Group', 'Senior Software Engineer', '2025-03', '2026-05', 'Malta', 'hybrid'],
       [
-        'Canon Medical Systems Brazil',
-        'Senior Software Engineer (independent consultant)',
+        'Independent Consultant',
+        'Senior Software Engineer',
         '2023-03',
         '2025-03',
         'Canada',
@@ -459,7 +458,7 @@ describe('terminal redesign canonical facts', () => {
     const service = projects[SITE_LOCALE.en].find(
       (project) => project.name === 'SERVICE_OPS_CONSOLE',
     );
-    expect(service?.company).toBe('Canon Medical Systems Brazil');
+    expect(service?.company).toBe('Independent Consultant');
     expect(service?.description).toContain('service orders');
     expect(service?.description).toContain('specialist scheduling');
     expect(service?.description).toContain('field visits');

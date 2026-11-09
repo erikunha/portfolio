@@ -7,7 +7,7 @@ import { WORK_SCOPE_SENTENCE } from './work-scope';
 const mbaPeriod = education[SITE_LOCALE.en].find((entry) => entry.id === 'MBA_AI_ENG')?.period;
 
 export const askFacts: AskFacts = AskFactsSchema.parse({
-  openTo: `Open to ${WORK_SCOPE_SENTENCE}, or relocation with visa sponsorship.`,
+  openTo: `Open to ${WORK_SCOPE_SENTENCE}. Anything else about where or how Erik can be hired is answered by the contact email, never guessed.`,
   coreStack: [
     'Frontend: React, Next.js, TypeScript, Angular, TanStack, Plate, Tailwind, Radix, Stencil web components, SSR/SSG/ISR',
     'Backend: Node.js, Express.js, REST APIs, PostgreSQL, MongoDB, SQLite, Microsoft SQL Server',
@@ -22,8 +22,8 @@ export const askFacts: AskFacts = AskFactsSchema.parse({
     'The table is a real table element, not an ARIA grid: it does not implement role="grid", aria-rowcount or aria-colcount · do not claim those.',
   ],
   targeting: [
-    'Open to: Senior, Tech Lead. Fintech, healthcare, platform, DX, AI-native.',
+    'Open to: Senior, Tech Lead. GenAI, AI-native products, LLM systems and agents (evals, guardrails, MCP).',
     `Direction: applied AI engineering: LLM systems, the evaluation that decides whether they are safe to ship, agents and guardrails; MBA in AI Engineering in progress (Instituto Infnet, ${mbaPeriod}).`,
-    'Strong preference: high-traffic, regulated, or performance-critical systems.',
+    'Strong preference: AI-native products and agent systems that ship with evals and guardrails, and performance-critical systems.',
   ],
 });

@@ -72,7 +72,14 @@ describe('Projects', () => {
         entry.company.startsWith(project?.company ?? ''),
       );
       expect(employer, `${project?.company} must be an employer in the career log`).toBeDefined();
-      expect(link?.getAttribute('href')).toBe(employer?.companyUrl);
+      if (!employer?.companyUrl) {
+        expect(link, `${project?.company} names no client and so links nowhere`).toBeNull();
+        expect(card.querySelector('.project-co')?.textContent).toContain(
+          project?.company.toUpperCase().replaceAll(' ', '_'),
+        );
+        return;
+      }
+      expect(link?.getAttribute('href')).toBe(employer.companyUrl);
       expect(link?.getAttribute('target')).toBe('_blank');
       expect(link?.getAttribute('rel')).toBe('noopener noreferrer');
       expect(link?.textContent).toContain('(opens in a new tab)');

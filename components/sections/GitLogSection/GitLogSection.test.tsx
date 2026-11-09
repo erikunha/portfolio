@@ -51,13 +51,20 @@ describe('career git log', () => {
     expect(host.querySelectorAll('#sec-credentials')).toHaveLength(1);
   });
 
-  it('links every company to its own site with an accessible name that holds the company', () => {
+  it('links every company that has a site to it, with an accessible name that holds the company', () => {
     const host = document.createElement('div');
     host.innerHTML = renderToStaticMarkup(GitLogContent({ locale: SITE_LOCALE.en }));
     const rows = Array.from(host.querySelectorAll('ol > li'));
     expect(rows).toHaveLength(gitLog[SITE_LOCALE.en].length);
     gitLog[SITE_LOCALE.en].forEach((job, index) => {
       const links = rows[index]?.querySelectorAll('a') ?? [];
+      if (!job.companyUrl) {
+        expect(links, `${job.company} names no client and so links nowhere`).toHaveLength(0);
+        expect(rows[index]?.querySelector('.career-company')?.textContent?.toUpperCase()).toContain(
+          job.company.replaceAll(' ', '_').toUpperCase(),
+        );
+        return;
+      }
       expect(links, `${job.company} must have exactly one company link`).toHaveLength(1);
       const link = links[0];
       expect(link?.getAttribute('href')).toBe(job.companyUrl);

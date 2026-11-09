@@ -57,8 +57,6 @@ const TimezonePanelSchema = z.object({
     availabilityLabel: CopySchema,
     modeLabel: CopySchema,
     modeValue: CopySchema,
-    relocationLabel: CopySchema,
-    relocationValue: CopySchema,
     engagementLabel: CopySchema,
     engagementValue: CopySchema,
     replyLabel: CopySchema,

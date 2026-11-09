@@ -8,7 +8,7 @@ const DESKTOP = { width: 1280, height: 900 };
 const SCROLL_MARGIN_PX = 100;
 const COMPACT_TARGET_PX = 28;
 const TOUCH_TARGET_PX = 44;
-const FACT_COUNT = 6;
+const FACT_COUNT = 5;
 const SAME_LINE_PX = 4;
 const GOLDEN_RATIO = 1.618;
 const GOLDEN_PRECISION = 1;
@@ -70,7 +70,7 @@ test.describe('ContactSection', () => {
     ).toBeLessThan(MAX_HEIGHT_RATIO);
   });
 
-  test('the channels block follows the form in the left column with six facts under it', async ({
+  test('the channels block follows the form in the left column with five facts under it', async ({
     page,
   }) => {
     await page.setViewportSize(DESKTOP);

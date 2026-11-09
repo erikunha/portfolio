@@ -85,7 +85,7 @@ test.describe('home with JavaScript off', () => {
     const section = page.locator('#sec-contact');
 
     await expect(section.locator('.contact-channels a[href^="mailto:"]')).toBeAttached();
-    await expect(section.locator('.contact-fact')).toHaveCount(6);
+    await expect(section.locator('.contact-fact')).toHaveCount(5);
     await expect(section.getByTestId('contact-timezone-static')).toBeAttached();
     await expect(section.getByTestId('ctz-clock-erik')).toHaveCount(0);
     const inOrder = await section.evaluate((element) => {

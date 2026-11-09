@@ -225,7 +225,7 @@ export const ASK_EVAL_CALIBRATION: AskEvalCalibrationItem[] = AskEvalCalibration
     expect: 'Identifies Raylu as the current employer, in a Senior Software Engineer role.',
     kind: 'factual',
     canonicalAnswer:
-      'Erik is a Senior Software Engineer at Raylu. Before that he worked at Betsson on a PCI-DSS payments platform and at Canon Medical Systems Brazil on a hospital equipment service platform.',
+      'Erik is a Senior Software Engineer at Raylu. Before that he worked at Betsson on a PCI-DSS payments platform and as an independent consultant on an equipment field-service platform.',
     humanVerdict: true,
   },
   {
@@ -254,20 +254,20 @@ export const ASK_EVAL_CALIBRATION: AskEvalCalibrationItem[] = AskEvalCalibration
     id: 'cal-border-bundle-wrong-number',
     trap: 'wrong-number',
     question: 'What bundle-size improvements has Erik shipped?',
-    expect: 'At Canon Medical: -33% JS bundle and -98% CSS bundle.',
+    expect: 'As an independent consultant: -33% JS bundle and -98% CSS bundle.',
     kind: 'factual',
     canonicalAnswer:
-      'At Canon Medical Systems Brazil, Erik cut the JavaScript bundle by 33% with code splitting and dynamic imports, and the CSS bundle by 48% with a utility refactor.',
+      'As an independent consultant, Erik cut the JavaScript bundle by 33% with code splitting and dynamic imports, and the CSS bundle by 48% with a utility refactor.',
     humanVerdict: false,
   },
   {
     id: 'cal-border-bundle-paraphrase',
     trap: 'paraphrase',
     question: 'What bundle-size improvements has Erik shipped?',
-    expect: 'At Canon Medical: -33% JS bundle and -98% CSS bundle.',
+    expect: 'As an independent consultant: -33% JS bundle and -98% CSS bundle.',
     kind: 'factual',
     canonicalAnswer:
-      'At Canon Medical Systems Brazil, Erik reduced the JavaScript bundle by 33 percent and the CSS bundle by 98 percent.',
+      'As an independent consultant, Erik reduced the JavaScript bundle by 33 percent and the CSS bundle by 98 percent.',
     humanVerdict: true,
   },
   {

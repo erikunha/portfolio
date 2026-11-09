@@ -59,22 +59,19 @@ const gitLogFor = (locale: SiteLocale): GitCommit[] => {
       hash: '4a9e1d886b3f2c7e0a8d5b9c1e6f4a2b3d7e8c01',
       deco: '(tag: v7.0)',
       date: pt ? 'mar/2023 - mar/2025' : 'Mar 2023 - Mar 2025',
-      branch: 'career/canon-medical',
+      branch: 'career/independent-consultant',
       type: 'career',
-      company: 'Canon Medical Systems Brazil',
-      companyUrl: 'https://br.medical.canon',
-      role: pt
-        ? 'Engenheiro de Software Sênior (consultor independente)'
-        : 'Senior Software Engineer (independent consultant)',
+      company: 'Independent Consultant',
+      role: pt ? 'Engenheiro de Software Sênior' : 'Senior Software Engineer',
       startMonth: '2023-03',
       endMonth: '2025-03',
       location: pt ? 'Canadá' : 'Canada',
       workMode: 'remote',
-      domain: pt ? 'tecnologia em saúde' : 'healthcare technology',
+      domain: pt ? 'software de serviço em campo' : 'field-service software',
       body: [
         pt
-          ? 'reconstruiu uma plataforma de serviço de equipamentos hospitalares: ordens de serviço, agendamento de especialistas, visitas de campo; Angular 17 para 19.'
-          : 'rebuilt a hospital equipment service platform: service orders, specialist scheduling, field visits; Angular 17 to 19.',
+          ? 'reconstruiu uma plataforma de serviço em campo de equipamentos para um cliente: ordens de serviço, agendamento de especialistas, visitas de campo; Angular 17 para 19.'
+          : 'rebuilt a client equipment field-service platform: service orders, specialist scheduling, field visits; Angular 17 to 19.',
       ],
     },
     {
@@ -218,7 +215,7 @@ export const gitLog: Record<SiteLocale, GitCommit[]> = {
 const COMPANY_DETAIL_SEPARATOR = ' (';
 const companyBrand = (company: string) => company.split(COMPANY_DETAIL_SEPARATOR)[0] ?? company;
 
-export const companyUrlFor = (brand: string): string => {
+export const companyUrlFor = (brand: string): string | undefined => {
   const entry = gitLog[SITE_LOCALE.en].find((job) => companyBrand(job.company) === brand);
   if (!entry) throw new Error(`git-log: no career entry for company "${brand}"`);
   return entry.companyUrl;
