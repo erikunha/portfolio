@@ -11,16 +11,16 @@ flowchart TD
     c2 --> p1["pre-push: no direct main"]
     p1 --> p2["pre-push: branch name <type>/<desc>"]
     p2 --> p5["pre-push: pnpm verify"]
-    p5 --> r1["pre-PR: ci:local"]
-    r1 --> r2["pre-PR: bundle-check + route-js-check (non-docs)"]
-    r2 --> r4["pre-PR: gates:runtime (LHCI+axe+E2E)"]
+    p5 --> r1["pre-PR: ci:predict (docs-only: ci:local)"]
+    r1 --> r2["pre-PR: bundle + route-JS gates, changed e2e and visual specs (inside ci:predict)"]
+    r2 --> r4["pre-PR: gates:runtime (LHCI+axe+E2E, non-docs)"]
     r4 --> o1["open PR: fill every template section"]
-    o1 --> o1b["CI green on the PR head"]
+    o1 --> o1b["CI green on the PR head, Argos visual check approved"]
     o1 --> o2["resolve every review thread (claude-review only on request)"]
     o1b --> m1["pre-merge: ci:local"]
     o2 --> m1
     m1 --> m4["pre-merge: pr:gate (every thread resolved with a reply)"]
-    m4 --> merge["squash-merge (#NNN)"]
+    m4 --> merge["squash-merge (#NNN) by the owner, in the browser"]
     merge --> deploy["Vercel deploy"]
     deploy --> smoke["smoke.yml: healthz + headers + liveness"]
 ```
@@ -31,7 +31,7 @@ flowchart TD
 
 `claude-review` is requested, not automatic. It is a model-judged sensor: it reports findings, it does not approve, and no merge waits on it. Only correctness, security, accessibility, performance budget, test validity and spec or plan compliance block (`REVIEW.md`); style and naming never do, and nits are capped at five. No automatic follow-up round runs. Deterministic validation (tests, typecheck, lint, build, bundle and route-JS gates, CI) is the quality bar.
 
-The `high-risk` label marks a pull request that changes a high-risk surface: `app/api/`, `lib/server/`, `lib/rate-limit.ts`, `proxy.ts`, `lib/env.ts` and other secret or env handling, `.github/workflows/`, the security headers in `next.config.ts` and `vercel.json`, the dependency manifests, and the ask prompt and its guards (`lib/ask/`). `high-risk-label.yml` adds and removes it on every push from the list in `scripts/high-risk-paths.ts`, read from the PR's base commit. Read a labelled PR for the abuse paths each of those surfaces closes (`.claude/rules/api-boundary.md`) before anything else. The label limits no PR size, blocks no merge, and is not applied to fork or Dependabot PRs, whose token is read-only.
+The `high-risk` label marks a pull request that changes a high-risk surface: the API and server code, the ask and agent code, rate limiting, env and IP-hash handling, contact delivery, `proxy.ts`, `next.config.ts` and `vercel.json`, the workflows, hooks and scanner configuration, CODEOWNERS and Dependabot settings, `.env.example`, and the dependency manifests, lockfile and workspace settings. `high-risk-label.yml` adds and removes it on every push from the list in `scripts/high-risk-paths.ts`, read from the PR's base commit. Read a labelled PR for the abuse paths each of those surfaces closes (`.claude/rules/api-boundary.md`) before anything else. The label limits no PR size, blocks no merge, and is not applied to fork or Dependabot PRs, whose token is read-only.
 
 Answering threads: reply in the thread before resolving it, since `pnpm pr:gate` fails a thread resolved with no reply (`silent_resolve`); and put every comment in a review THREAD rather than an unanchored timeline comment, which `reviewThreads` cannot see.
 
@@ -39,7 +39,7 @@ After findings are answered, every finding fixed and every CI red becomes a cand
 
 ## Pre-merge gates (`pnpm ci:local` + `pnpm pr:gate`)
 
-In order: `ci:local` -> `check-pr-comments` (`pnpm pr:gate`, also run in CI by `quality-fast` on every PR: GraphQL `reviewThreads(first:100)` without pagination, every returned thread `isResolved` with a reply, flags `suspicious_self_resolve`). The base branch must be contained and CI green. GitHub branch-protection settings are not in the repository; the settings read from GitHub and the controls that stand in for a second reviewer are listed in the 2026-11-07 review-model entry of `DECISIONS.md`.
+In order: `ci:local` -> `check-pr-comments` (`pnpm pr:gate`, also run in CI by `quality-fast` on every PR: GraphQL `reviewThreads(first:100)` without pagination, every returned thread `isResolved` with a reply, flags `suspicious_self_resolve`). The base branch must be contained, CI green and the Argos visual check approved (the `e2e-visual-chromium` job uploads the screenshots; an agent may approve it). Once those hold, an agent may squash-merge the PR into an integration branch or into `main`; a direct push to `main` stays blocked by `.husky/pre-push`. GitHub branch-protection settings are not in the repository; the settings read from GitHub and the controls that stand in for a second reviewer are listed in the 2026-11-07 review-model entry of `DECISIONS.md`.
 
 The pre-push hook rejects a remote `main` target. Live GitHub protection and bypass permissions require separate inspection.
 
@@ -74,6 +74,23 @@ flowchart LR
 Fast rollback is a Vercel promote (no code change). Slow rollback is a revert; the `--no-verify` is the documented escape hatch for the main-push guard (the revert still goes through CI after landing, but has no PR, which is the accepted emergency tradeoff).
 
 `rollback-rehearsal.yml` rehearses the slow path every week: it reverts the latest commit on `main` in the runner only, then runs install, typecheck, tests and build on the reverted tree. It pushes nothing and never touches Vercel. A failure opens or updates the issue "Rollback rehearsal failed". See `docs/07-workflows.md`.
+
+## Scheduled and auxiliary workflows
+
+None of these gates a PR (`ci-gate` waits only on the jobs in `ci.yml`). Job-level detail is in [`/docs/07-workflows`](../07-workflows.md).
+
+| Workflow                         | Trigger                                         | What it does                                                                                       |
+| -------------------------------- | ----------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| `ask-eval.yml`                   | Monday 05:00 UTC, manual                        | Runs `pnpm ask:eval` and republishes the stored result the site's AI metrics read                  |
+| `agent-eval.yml`                 | Monday 06:00 UTC, manual                        | Runs `pnpm eval:agents`, the prompt-regression eval of the rules in `AGENTS.md`                     |
+| `codeql.yml`                     | Push and PR to `main`, Monday 03:00 UTC, manual | CodeQL analysis of the JavaScript and TypeScript sources, reported to code scanning                 |
+| `mutation.yml`                   | Sunday 04:00 UTC, manual                        | Stryker mutation run; fails when the runner produced no report                                      |
+| `tool-pins.yml`                  | Monday 05:00 UTC, manual                        | `pnpm check:tool-pins`: fails when the pinned gitleaks or Semgrep version is behind the latest     |
+| `lockfile-resolution-probe.yml`  | Monday 08:00 UTC, manual                        | Resolves every range without a lockfile and keeps one issue open while the release-age window blocks it |
+| `weekly-metrics.yml`             | Monday 07:00 UTC, manual                        | Collects delivery metrics, checks them against `metrics/bands.json` and opens issues for breaches   |
+| `rollback-rehearsal.yml`         | Monday 06:00 UTC, manual                        | Rehearses the slow rollback described above                                                         |
+| `high-risk-label.yml`            | Pull request events                             | Adds or removes the `high-risk` label                                                               |
+| `smoke.yml`                      | Successful production deployment                | Post-deploy checks described under Release                                                          |
 
 ## Docs-only changes
 

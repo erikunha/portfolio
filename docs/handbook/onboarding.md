@@ -27,8 +27,8 @@ Pick a small change (a content edit or a design-system variant per the [workflow
 flowchart LR
     tdd["write a failing behavior test"] --> edit["implement"] --> commit["commit (scope!)"]
     commit --> push["push (passes pre-push)"]
-    push --> pr["ci:local; non-docs bundle + route-JS + runtime; open PR"]
-    pr --> conv["resolve every thread"] --> ready["pr:gate"] --> merge["squash-merge"]
+    push --> pr["ci:predict; non-docs gates:runtime; open PR"]
+    pr --> conv["resolve every thread"] --> ready["pr:gate + Argos"] --> merge["squash-merge"]
     merge --> deploy["deploy; document architectural decisions with the change"]
 ```
 

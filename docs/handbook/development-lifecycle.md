@@ -16,11 +16,11 @@ flowchart TD
     tdd --> commit["commit (scope blocks): type(scope): subject"]
     commit --> hooks["per-commit hooks: Biome + staged gitleaks + commitlint"]
     hooks --> push["git push (pre-push gate chain)"]
-    push --> readypr["ci:local; non-docs bundle + route-JS + runtime"]
+    push --> readypr["ci:predict; non-docs gates:runtime"]
     readypr --> pr["gh pr create (fill template)"]
     pr --> conv["resolve review threads (rebase before every push)"]
-    conv --> readymerge["CI green + pr:gate"]
-    readymerge --> merge["squash-merge (#NNN)"]
+    conv --> readymerge["CI green + Argos approved + pr:gate"]
+    readymerge --> merge["squash-merge (#NNN) by the owner"]
     merge --> deploy["Vercel deploy"]
     deploy --> smoke["post-deploy smoke test"]
     smoke --> adr["deployment verified; ADR recorded"]
@@ -52,7 +52,7 @@ A feature branch is created (`<type>/<description>`, enforced by `.husky/pre-pus
 ### 6. Commit (per-commit gates)
 
 - **`pre-commit`**: `pnpm check` (Biome check) and staged gitleaks scanning.
-- **`commit-msg`**: commitlint. Conventional Commits with a **mandatory scope** (`scope-empty: [2, 'never']`) drawn from an **open set** (`scope-enum: [0]`). Scopes are feature-area names (`ci`, `dx`, `observability`, `healthz`, `ppr`, `arch`, ...), not technical categories.
+- **`commit-msg`**: commitlint. Conventional Commits with a **mandatory scope** (`scope-empty: [2, 'never']`) drawn from an **open set** (`scope-enum: [0]`), and the subject must not start sentence-case, start-case, PascalCase or upper-case. Scopes are feature-area names (`ci`, `dx`, `observability`, `healthz`, `ppr`, `arch`, ...), not technical categories.
 
 ### 7. Pre-PR diff read, and the pre-push gate chain
 
@@ -68,11 +68,11 @@ On the open PR, answer every review thread and reply before resolving it. claude
 
 ### 10. Pre-merge gates -> merge
 
-`pnpm pr:gate` (`scripts/check-pr-comments.ts`) requires the returned review threads (the first 100; the query does not paginate) to be resolved with a reply, and flags `suspicious_self_resolve`. CI runs it in `quality-fast`. Run `pnpm ci:local` alongside it, with CI green and the base contained.
+`pnpm pr:gate` (`scripts/check-pr-comments.ts`) requires the returned review threads (the first 100; the query does not paginate) to be resolved with a reply, and flags `suspicious_self_resolve`. CI runs it in `quality-fast`. Run `pnpm ci:local` alongside it, with CI green, the Argos visual check approved and the base contained. Once those hold, an agent may approve the Argos check and squash-merge the PR, into an integration branch or into `main`.
 
 ### 11. Deploy -> smoke -> record
 
-Vercel deploys on merge to `main`. The `smoke.yml` workflow verifies the production deployment (healthz, 7 security headers, apex->www promotion followed to its final 200, `/api/ask` + `/api/contact` liveness): the artifact probe is skipped for a protected `*.vercel.app` deployment without its bypass secret, and a canonical healthz 503 attempts a Resend alert only when that secret is configured, with delivery errors logged as warnings. The decision is recorded as an ADR in `DECISIONS.md` (with a reversibility note); no project file establishes a session-handoff location.
+Vercel deploys on merge to `main`. `attest-build` in `ci.yml` attests the build artifact on `main` only. The `smoke.yml` workflow verifies the production deployment (healthz, 7 security headers, apex->www promotion followed to its final 200, `/api/ask` + `/api/contact` liveness): the artifact probe is skipped for a protected `*.vercel.app` deployment without its bypass secret, and a canonical healthz 503 attempts a Resend alert only when that secret is configured, with delivery errors logged as warnings. The decision is recorded as an ADR in `DECISIONS.md` (with a reversibility note); no project file establishes a session-handoff location.
 
 ## The responsive critique pass
 
