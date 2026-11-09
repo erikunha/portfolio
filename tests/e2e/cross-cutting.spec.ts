@@ -7,6 +7,7 @@ import { gotoSettled } from './_helpers/streamed';
 
 const SHELL_INPUT = '[aria-label="shell command"]';
 const KEYSTROKE_COMMIT_BUDGET_MS = 50;
+const KEYSTROKE_SAMPLES = 5;
 const LONG_TASK_MS = 100;
 const LONG_TASK_BLOCK_MS = 150;
 const IDLE_TIMEOUT_MS = 2_000;
@@ -48,25 +49,37 @@ async function expectKeystrokeStaysResponsive(page: Page) {
     scoped.__longTaskObserver.observe({ type: 'longtask' });
   });
 
-  const elapsedMs = await page.evaluate(async (selector) => {
-    const el = document.querySelector(selector) as HTMLInputElement | null;
-    if (!el) throw new Error('shell input not found');
-    const start = performance.now();
-    const proto = Object.getPrototypeOf(el) as HTMLInputElement;
-    const setter = Object.getOwnPropertyDescriptor(proto, 'value')?.set;
-    setter?.call(el, 'a');
-    el.dispatchEvent(new Event('input', { bubbles: true }));
-    await Promise.resolve();
-    await new Promise<void>((r) => requestAnimationFrame(() => r()));
-    return performance.now() - start;
-  }, SHELL_INPUT);
+  const samples = await page.evaluate(
+    ({ selector, count }) => {
+      const el = document.querySelector(selector) as HTMLInputElement | null;
+      if (!el) throw new Error('shell input not found');
+      const proto = Object.getPrototypeOf(el) as HTMLInputElement;
+      const setter = Object.getOwnPropertyDescriptor(proto, 'value')?.set;
+      const elapsed: number[] = [];
+      const committed: boolean[] = [];
+      for (let index = 0; index < count; index += 1) {
+        const start = performance.now();
+        setter?.call(el, String.fromCharCode(97 + index));
+        el.dispatchEvent(new Event('input', { bubbles: true }));
+        elapsed.push(performance.now() - start);
+        committed.push(el.parentElement?.children.length === 1);
+      }
+      return { elapsed, committed };
+    },
+    { selector: SHELL_INPUT, count: KEYSTROKE_SAMPLES },
+  );
 
+  const slowest = Math.max(...samples.elapsed);
   expect(
-    elapsedMs,
-    `keystroke -> DOM commit should be <${KEYSTROKE_COMMIT_BUDGET_MS}ms (got ${elapsedMs.toFixed(1)}ms)`,
+    slowest,
+    `keystroke -> DOM commit should be <${KEYSTROKE_COMMIT_BUDGET_MS}ms (slowest of ${KEYSTROKE_SAMPLES} samples: ${samples.elapsed.map((s) => s.toFixed(1)).join(', ')}ms). The window ends when the dispatch returns: the shell commits the value inside the event, and the placeholder is already gone by then, so the reading is the commit and not the runner's next frame. Every sample is judged, the first one included, because the first keystroke is the one a user feels.`,
   ).toBeLessThan(KEYSTROKE_COMMIT_BUDGET_MS);
+  expect(
+    samples.committed.every(Boolean),
+    `every keystroke must commit inside its own dispatch: ${JSON.stringify(samples.committed)}`,
+  ).toBe(true);
 
-  await expect(input).toHaveValue('a');
+  await expect(input).toHaveValue('e');
 
   const longTasks = await page.evaluate(() => {
     const scoped = window as unknown as LongTaskWindow;
