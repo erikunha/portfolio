@@ -3,13 +3,19 @@
 import { useEffect, useRef } from 'react';
 import type { HeroClientContent } from '@/content/schemas';
 import {
+  BLANK_BOOT_LINE,
+  BOOT_SLOT_ATTR,
   type BootClasses,
   type BootCtrl,
+  type BootSlotSpec,
+  bootSlotSpecs,
+  buildBootSlots,
   buildDesktopOnFirstLoop,
   buildLine,
   buildStaticCmdLine,
   buildStaticDialogLine,
   desktopBootLines,
+  placeBootLine,
   runBoot,
   type SysfailBeat,
 } from '@/lib/boot-animation';
@@ -37,6 +43,25 @@ const bootCls: BootClasses = {
   shake: 'hero-shake',
   shake2: 'hero-shake2',
 };
+
+const BOOT_SLOT_CLASS = 'hero-boot-slot';
+const BOOT_SLOT_MARK = { [BOOT_SLOT_ATTR]: '' };
+
+function BootSlot({ spec }: { spec: BootSlotSpec }) {
+  return (
+    <span className={BOOT_SLOT_CLASS} {...BOOT_SLOT_MARK}>
+      {spec.parts.map((part) =>
+        typeof part === 'string' ? (
+          part
+        ) : (
+          <span key={part.text} className={bootCls[part.cls]}>
+            {part.text}
+          </span>
+        ),
+      )}
+    </span>
+  );
+}
 
 const timingDesktop = {
   lineMs: 150,
@@ -74,10 +99,10 @@ function DesktopBoot({ copy }: { copy: HeroClientContent }) {
 
     function render() {
       if (!readMotion()) {
-        for (const s of desktopBootLines(copy)) host.appendChild(buildLine(s, bootCls));
-        host.appendChild(buildStaticCmdLine(bootCls));
-        host.appendChild(buildLine([' '], bootCls));
-        host.appendChild(buildStaticDialogLine(copy.bootStaticDialogLine, bootCls));
+        for (const s of desktopBootLines(copy)) placeBootLine(host, buildLine(s, bootCls));
+        placeBootLine(host, buildStaticCmdLine(bootCls));
+        placeBootLine(host, buildLine([BLANK_BOOT_LINE], bootCls));
+        placeBootLine(host, buildStaticDialogLine(copy.bootStaticDialogLine, bootCls));
         return;
       }
       beat = buildDesktopOnFirstLoop(host, ctrlRef, bootCls);
@@ -98,7 +123,7 @@ function DesktopBoot({ copy }: { copy: HeroClientContent }) {
       beat = null;
       ctrlRef.current?.cancel();
       ctrlRef.current = null;
-      host.replaceChildren();
+      host.replaceChildren(...buildBootSlots(copy, bootCls, BOOT_SLOT_CLASS));
     }
 
     function startAnimation() {
@@ -125,7 +150,13 @@ function DesktopBoot({ copy }: { copy: HeroClientContent }) {
     };
   }, [copy]);
 
-  return <div ref={bootRef} aria-hidden="true" className="hero-boot-desktop" />;
+  return (
+    <div ref={bootRef} aria-hidden="true" className="hero-boot-desktop">
+      {bootSlotSpecs(copy).map((spec) => (
+        <BootSlot key={spec.id} spec={spec} />
+      ))}
+    </div>
+  );
 }
 
 function MobileBoot({ copy }: { copy: HeroClientContent }) {

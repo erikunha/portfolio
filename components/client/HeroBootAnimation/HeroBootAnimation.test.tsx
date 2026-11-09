@@ -98,13 +98,23 @@ describe('boot-animation: textContent-mutation invariant', () => {
     const mount = container.querySelector(`.${bootDesktopClass}`);
     expect(mount).not.toBeNull();
     expect(mount?.getAttribute('aria-hidden')).toBe('true');
-    expect(mount?.childElementCount).toBe(0);
+    const reserved = mount?.childElementCount ?? 0;
+    expect(
+      mount?.querySelectorAll('[data-boot-slot]'),
+      'the server markup reserves one hidden slot per final boot line and no live line',
+    ).toHaveLength(reserved);
+    expect(mount?.querySelectorAll('[data-testid="boot-line"]')).toHaveLength(0);
 
     await act(async () => {
       await vi.advanceTimersByTimeAsync(8000);
     });
 
-    expect(mount?.childElementCount ?? 0).toBeGreaterThan(0);
+    expect(
+      mount?.childElementCount,
+      'live boot lines replace the reserved slots, so the host never grows',
+    ).toBe(reserved);
+    expect(mount?.querySelectorAll('[data-boot-slot]')).toHaveLength(0);
+    expect(mount?.querySelectorAll('[data-testid="boot-line"]')).toHaveLength(reserved);
     const cmd = mount?.querySelector(`.${bootCmdClass}`);
     expect(cmd?.textContent).toBe('run bio.exe --verbose');
 

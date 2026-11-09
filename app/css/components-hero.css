@@ -41,6 +41,11 @@
       0 0 8px var(--color-secondary-950);
   }
 
+  .hero-boot-slot {
+    display: block;
+    visibility: hidden;
+  }
+
   .hero-boot-mobile {
     color: var(--color-tertiary-50);
     font-size: 12px;

@@ -36,6 +36,56 @@ export function desktopBootLines(copy: HeroClientContent): LinePart[][] {
   ];
 }
 
+const BOOT_PROMPT = 'erik@portfolio:~$';
+const BOOT_COMMAND = 'run bio.exe --verbose';
+const BOOT_CURSOR: Span = { cls: 'bootCursor', text: '' };
+export const BOOT_SLOT_ATTR = 'data-boot-slot';
+
+export type BootSlotSpec = { id: string; parts: LinePart[] };
+
+function longest(phrases: readonly string[]): string {
+  return phrases.reduce((a, b) => (b.length > a.length ? b : a), '');
+}
+
+export function bootSlotSpecs(copy: HeroClientContent): BootSlotSpec[] {
+  const parts: LinePart[][] = [
+    ...desktopBootLines(copy),
+    [
+      { cls: 'bootPrompt', text: BOOT_PROMPT },
+      ' ',
+      { cls: 'bootCmd', text: BOOT_COMMAND },
+      BOOT_CURSOR,
+    ],
+    [BLANK_BOOT_LINE],
+    [{ cls: 'bootMatrixPrefix', text: '>' }, longest(copy.bootDialogDesktop), BOOT_CURSOR],
+  ];
+  return parts.map((line, position) => ({ id: `slot-${position}`, parts: line }));
+}
+
+export function buildBootSlots(
+  copy: HeroClientContent,
+  cls: BootClasses,
+  slotClass: string,
+): HTMLElement[] {
+  return bootSlotSpecs(copy).map(({ parts }) => {
+    const slot = buildLine(parts, cls);
+    slot.className = slotClass;
+    slot.removeAttribute('data-testid');
+    slot.setAttribute(BOOT_SLOT_ATTR, '');
+    return slot;
+  });
+}
+
+export function placeBootLine(container: HTMLElement, line: HTMLElement): void {
+  const slot = container.querySelector(`:scope > [${BOOT_SLOT_ATTR}]`);
+  if (!slot) {
+    container.appendChild(line);
+    return;
+  }
+  line.style.minHeight = `${slot.getBoundingClientRect().height}px`;
+  slot.replaceWith(line);
+}
+
 const SYSFAIL_SHAKE_FRAME_1_MS = 40;
 const SYSFAIL_SHAKE_FRAME_2_MS = 80;
 const SYSFAIL_VISIBLE_MS = 5000;
@@ -60,11 +110,7 @@ export function buildLine(parts: LinePart[], cls: BootClasses): HTMLElement {
 
 export function buildStaticCmdLine(cls: BootClasses): HTMLElement {
   return buildLine(
-    [
-      { cls: 'bootPrompt', text: 'erik@portfolio:~$' },
-      ' ',
-      { cls: 'bootCmd', text: 'run bio.exe --verbose' },
-    ],
+    [{ cls: 'bootPrompt', text: BOOT_PROMPT }, ' ', { cls: 'bootCmd', text: BOOT_COMMAND }],
     cls,
   );
 }
@@ -125,20 +171,20 @@ export function runBoot(
     }
     const spec = specs[idx];
     if (!spec) return;
-    container.appendChild(buildLine(spec, cls));
+    placeBootLine(container, buildLine(spec, cls));
     later(() => revealLines(idx + 1), opts.lineMs + Math.random() * opts.lineJitter);
   }
 
   function typeCmd() {
     if (cancelled) return;
-    const cmdText = 'run bio.exe --verbose';
+    const cmdText = BOOT_COMMAND;
 
     const line = document.createElement('span');
     line.className = cls.bootLine;
     line.dataset.testid = 'boot-line';
     const prompt = document.createElement('span');
     prompt.className = cls.bootPrompt;
-    prompt.textContent = 'erik@portfolio:~$';
+    prompt.textContent = BOOT_PROMPT;
     const cmdEl = document.createElement('span');
     cmdEl.className = cls.bootCmd;
     const cursor = document.createElement('span');
@@ -148,7 +194,7 @@ export function runBoot(
     line.appendChild(document.createTextNode(' '));
     line.appendChild(cmdEl);
     line.appendChild(cursor);
-    container.appendChild(line);
+    placeBootLine(container, line);
 
     cancelTyping = typeOut(cmdText, {
       stepMs: () => opts.cmdMs + Math.random() * opts.cmdJitter,
@@ -157,7 +203,7 @@ export function runBoot(
       },
       onDone: () => {
         cursor.remove();
-        container.appendChild(buildLine([' '], cls));
+        placeBootLine(container, buildLine([BLANK_BOOT_LINE], cls));
         later(startDialog, 350);
       },
     });
@@ -180,7 +226,7 @@ export function runBoot(
     line.appendChild(prefix);
     line.appendChild(out);
     line.appendChild(cur);
-    container.appendChild(line);
+    placeBootLine(container, line);
 
     let firedOnce = false;
     dialogLoop = runPhraseLoop({
