@@ -1,0 +1,36 @@
+import { dsPageMetadata } from '../../_lib/page-metadata';
+import { OnThisPage } from '../../_components/OnThisPage';
+
+export const metadata = dsPageMetadata({
+  slug: 'primitives/stat-tile',
+  title: 'StatTile · Design System · erikunha.dev',
+  description: 'StatTile props, variants and accessibility notes',
+});
+
+# STAT-TILE
+
+<OnThisPage items={[{id:'props',label:'Props'},{id:'variants',label:'Variants'},{id:'accessibility',label:'Accessibility'}]} />
+
+Source: `design-system/components/StatTile/StatTile.tsx`. React Server Component, zero client JavaScript.
+
+<h2 id="props">Props</h2>
+
+| Prop | Type | Default | Required |
+|---|---|---|---|
+| `value` | `string` | none | yes |
+| `label` | `string` | none | yes |
+| `variant` | `'default' \| 'compact' \| 'display'` | `'default'` | no |
+
+<h2 id="variants">Variants</h2>
+
+<Preview id="stat-tile">
+  <StatTile value="99" label="LH_SCORE" variant="display" />
+  <StatTile value="5+" label="YRS_EXP" />
+  <StatTile value="1.2s" label="LCP" variant="compact" />
+</Preview>
+
+Grid layout stays in the consumer; the tile carries no layout opinion.
+
+<h2 id="accessibility">Accessibility</h2>
+
+Renders `<dl><dt>label</dt><dd>value</dd></dl>`. The value is ordered first visually, so assistive technology reads "label: value".

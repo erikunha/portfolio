@@ -1,0 +1,47 @@
+import { dsPageMetadata } from './_lib/page-metadata';
+import { OnThisPage } from './_components/OnThisPage';
+import { DesignSystemOpinion } from './_components/DesignSystemOpinion';
+
+export const metadata = dsPageMetadata({
+  slug: '',
+  title: 'Design System · erikunha.dev',
+  description: 'Theme tokens, component examples and enforcement docs for erikunha.dev',
+});
+
+# DESIGN SYSTEM
+
+<OnThisPage items={[{id:'sections',label:'Sections'},{id:'principles',label:'Principles'}]} />
+
+<div style={{marginBottom:'12px'}}>
+  <Badge variant="dot">LIVE</Badge>
+</div>
+
+The design system at `/design-system` documents theme tokens, reusable components and the checks that cover them.
+
+<div className="ds-stat-row">
+  <StatTile value="10" label="PRIMITIVES" variant="display" />
+  <StatTile value="9" label="RSC" variant="display" />
+  <StatTile value="100" label="A11Y" variant="display" />
+  <StatTile value="AA" label="WCAG_2.2" variant="display" />
+</div>
+
+<CmdLine user="erik@portfolio" command="import { Button, Badge, StatTile } from '@/design-system'" />
+
+<h2 id="sections">Sections</h2>
+
+- [Tokens](/design-system/tokens) · Color palette, type scale, spacing, motion, layers
+- [Components](/design-system/components) · 11 design-system components and the docs CopyButton helper
+- [Enforcement](/design-system/enforcement) · Lint rules, CI gates, contributing guide
+- [Changelog](/design-system/changelog) · Token and component change log
+- Foundations · [Colors](/design-system/foundations/colors), [Typography](/design-system/foundations/typography), [Spacing and borders](/design-system/foundations/spacing-borders)
+- Primitives · one page per component where a dedicated page exists, listed in the page menu; `NavItem` currently documents in the [Components](/design-system/components) gallery without its own page
+
+<h2 id="principles">Principles</h2>
+
+**Utilities over raw values.** Components reference Tailwind utilities backed by the `@theme` palette (`text-primary-500`, `border-primary-subtle`), never raw hex. The single `@theme` block in `theme.css` is the one place a colour changes.
+
+**Server components by default.** Ten components have no client directive. `Field` is a client component imported from `@/design-system/components/Field`; it is not exported by the main barrel. The docs add a client `CopyButton` helper for clipboard access. Server-compatible components can still enter a client bundle when imported across a client boundary.
+
+**Measured in CI.** Contrast and component-heading checks run in `quality-fast`. The path-filtered `performance` job runs axe-core and Lighthouse with an accessibility target of 100. The target is a configured assertion, not a live score on this page.
+
+<DesignSystemOpinion />

@@ -1,0 +1,230 @@
+import { createElement } from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { MEASURED_FORMAT, measured } from '@/content/measured';
+import { MeasuredSchema } from '@/content/schemas';
+import { SITE_LOCALE } from '@/content/site-locale';
+import { readComponentsCss } from './helpers/components-css';
+import { installMatchMedia } from './helpers/match-media';
+import { type MountedClient, mountClient } from './helpers/render';
+
+const getScoresMock = vi.fn();
+vi.mock('next/server', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('next/server')>()),
+  connection: vi.fn(async () => undefined),
+}));
+vi.mock('@/lib/lighthouse-scores', () => ({
+  getScores: getScoresMock,
+  LIGHTHOUSE_TTL_S: 90_000,
+  LIGHTHOUSE_FALLBACK: {
+    performance: 0,
+    accessibility: 0,
+    bestPractices: 0,
+    seo: 0,
+    fetchedAt: '-',
+  },
+}));
+
+describe('LivePerfSection: PerfBody with real scores (non-fallback branches)', () => {
+  afterEach(() => {
+    vi.resetModules();
+    getScoresMock.mockReset();
+  });
+
+  async function renderPerfData(): Promise<string> {
+    const { PerfData } = await import('@/components/sections/LivePerfSection/LivePerfSection');
+    const element = await PerfData({ locale: SITE_LOCALE.en });
+    return renderToStaticMarkup(element);
+  }
+
+  it('renders score values (not dashes) when getScores returns real data', async () => {
+    getScoresMock.mockResolvedValue({
+      performance: 98,
+      accessibility: 100,
+      bestPractices: 95,
+      seo: 100,
+      fetchedAt: '2026-05-25T12:00:00.000Z',
+    });
+    const html = await renderPerfData();
+    expect(html).toContain('98');
+    expect(html).toContain('100');
+    expect(html).toContain(measured[SITE_LOCALE.en].psi.url);
+    expect(html).toContain('98 / 98');
+  });
+
+  it('renders the PSI timestamp as a semantic time when fetchedAt is valid', async () => {
+    getScoresMock.mockResolvedValue({
+      performance: 95,
+      accessibility: 100,
+      bestPractices: 95,
+      seo: 100,
+      fetchedAt: '2026-05-25T12:00:00.000Z',
+    });
+    const html = await renderPerfData();
+    const doc = new DOMParser().parseFromString(html, 'text/html');
+    expect(doc.querySelector('time')?.getAttribute('datetime')).toBe('2026-05-25T12:00:00.000Z');
+    expect(doc.querySelector('time')?.textContent).toBe('2026-05-25');
+  });
+
+  it('marks PSI unavailable without zero scores or a time for fallback data', async () => {
+    getScoresMock.mockResolvedValue({
+      performance: 0,
+      accessibility: 0,
+      bestPractices: 0,
+      seo: 0,
+      fetchedAt: '-',
+    });
+    const html = await renderPerfData();
+    const doc = new DOMParser().parseFromString(html, 'text/html');
+    expect(doc.body.textContent).toContain(measured[SITE_LOCALE.en].unavailable);
+    expect(doc.querySelector('time')).toBeNull();
+    expect(doc.querySelectorAll('.measured-value')).toHaveLength(4);
+    for (const value of doc.querySelectorAll('.measured-value')) {
+      expect(value.textContent).toBe(measured[SITE_LOCALE.en].unavailable);
+    }
+  });
+});
+
+describe('AiMetricsSection: lastRunLabel NaN guard branch', () => {
+  const getAskMetricsMock = vi.fn();
+
+  beforeEach(() => {
+    vi.resetModules();
+    vi.doMock('@/lib/ask-metrics', () => ({
+      getAskMetrics: getAskMetricsMock,
+    }));
+  });
+
+  afterEach(() => {
+    vi.resetModules();
+    getAskMetricsMock.mockReset();
+  });
+
+  it('renders lastRun verbatim when the ISO string is unparseable', async () => {
+    getAskMetricsMock.mockResolvedValue({
+      evalPassRate: 0.95,
+      jailbreakResistance: 1.0,
+      p95LatencyMs: 2840,
+      costPerAnswer: 0.0021,
+      lastRun: 'not-a-date',
+    });
+    const { AiMetricsData } = await import(
+      '@/components/sections/AiMetricsSection/AiMetricsSection'
+    );
+    const element = await AiMetricsData({ locale: SITE_LOCALE.en });
+    const html = renderToStaticMarkup(element);
+    expect(html).toContain('not-a-date');
+    expect(html).toContain(measured[SITE_LOCALE.en].unknownTimestamp);
+    expect(html).toContain('95%');
+    expect(html).not.toContain('<time');
+  });
+});
+
+function MatrixRainStub({ fontSize, speed }: { fontSize: number; speed: number }) {
+  return createElement('div', { 'data-font-size': fontSize, 'data-speed': speed });
+}
+
+function NullStub() {
+  return null;
+}
+
+function PassThroughStub({ children }: { children: React.ReactNode }) {
+  return children;
+}
+
+describe('GlobalMotion: Matrix Rain settings per viewport', () => {
+  let mounted: MountedClient;
+  let viewportWidth = 0;
+  let queried: () => string[] = () => [];
+
+  beforeEach(() => {
+    vi.resetModules();
+    const stub = installMatchMedia((query) => {
+      const max = /max-width:\s*([\d.]+)px/.exec(query);
+      return max ? viewportWidth <= Number(max[1]) : false;
+    });
+    queried = stub.queries;
+    vi.doMock('@/components/responsive/MatrixRain', () => ({
+      MatrixRainLazy: MatrixRainStub,
+    }));
+    vi.doMock('@/components/client/TypeReveal', () => ({ TypeReveal: NullStub }));
+    vi.doMock('@/components/ErrorBoundary', () => ({
+      ErrorBoundary: PassThroughStub,
+    }));
+  });
+
+  afterEach(() => {
+    mounted?.unmount();
+    vi.unstubAllGlobals();
+    vi.restoreAllMocks();
+    vi.resetModules();
+  });
+
+  it('uses the mobile rain size and speed below 768px', async () => {
+    viewportWidth = 767;
+    const { flushMicrotasks } = await import('./helpers/render');
+    const { GlobalMotion } = await import('@/components/client/GlobalMotion/GlobalMotion.client');
+    mounted = await mountClient(createElement(GlobalMotion, null));
+    await flushMicrotasks();
+    const matrixEl = mounted.container.querySelector('[data-font-size]');
+    expect(matrixEl?.getAttribute('data-font-size')).toBe('14');
+    expect(matrixEl?.getAttribute('data-speed')).toBe('0.6');
+    expect(queried()).toContain('(max-width: 767.98px)');
+  });
+
+  it('uses the desktop rain size and speed from 768px', async () => {
+    viewportWidth = 768;
+    const { flushMicrotasks } = await import('./helpers/render');
+    const { GlobalMotion } = await import('@/components/client/GlobalMotion/GlobalMotion.client');
+    mounted = await mountClient(createElement(GlobalMotion, null));
+    await flushMicrotasks();
+    const matrixEl = mounted.container.querySelector('[data-font-size]');
+    expect(matrixEl?.getAttribute('data-font-size')).toBe('16');
+    expect(matrixEl?.getAttribute('data-speed')).toBe('0.7');
+  });
+});
+
+describe('ErrorBoundary: custom fallback prop branch', () => {
+  it('renders the custom fallback when provided and hasError is true', async () => {
+    const { ErrorBoundary } = await import('@/components/ErrorBoundary/ErrorBoundary.client');
+
+    class ErroredBoundary extends ErrorBoundary {
+      override state = { hasError: true };
+    }
+
+    const customFallback = createElement('div', { 'data-testid': 'custom-fallback' }, 'custom');
+    const { container, unmount } = await mountClient(
+      // biome-ignore lint/suspicious/noExplicitAny: children:ReactNode required by prop type, test-only
+      createElement(ErroredBoundary, { fallback: customFallback } as any, createElement('span')),
+    );
+
+    expect(container.querySelector('[data-testid="custom-fallback"]')).not.toBeNull();
+    unmount();
+  });
+});
+
+describe('Measured content validation', () => {
+  it.each(['empty', 'locale'])('rejects empty format copy for %s', (field) => {
+    expect(
+      MeasuredSchema.safeParse({
+        ...measured[SITE_LOCALE.en],
+        format: { ...MEASURED_FORMAT, [field]: '' },
+      }).success,
+    ).toBe(false);
+  });
+});
+
+describe('Project receipt narrow layout contract', () => {
+  it('lets both receipt columns shrink and long values wrap at 320px', () => {
+    // behavioral-test-allow: checks the shipped CSS layout contract because jsdom has no layout engine
+    const css = readComponentsCss();
+    const row = css.match(/\.project-receipts li\s*\{([^}]+)\}/)?.[1];
+    const value = css.match(/\.receipt-value\s*\{([^}]+)\}/)?.[1];
+    const metric = css.match(/\.receipt-metric\s*\{([^}]+)\}/)?.[1];
+    expect(row).toMatch(/grid-template-columns:\s*repeat\(2, minmax\(0, 1fr\)\)/);
+    for (const cell of [value, metric]) {
+      expect(cell).toMatch(/overflow-wrap:\s*anywhere/);
+      expect(cell).not.toMatch(/white-space:\s*nowrap/);
+    }
+  });
+});

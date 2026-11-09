@@ -1,0 +1,43 @@
+- /children: contain
+- banner:
+  - /children: contain
+  - button /.+/
+  - navigation /.+/
+  - navigation /.+/
+- main:
+  - complementary:
+    - /children: contain
+    - heading /.+/ [level=1]
+  - region /.+/:
+    - /children: contain
+    - heading /.+/ [level=2]
+  - region /.+/:
+    - /children: contain
+    - heading /.+/ [level=2]
+  - region /.+/:
+    - /children: contain
+    - heading /.+/ [level=2]
+  - region /.+/:
+    - /children: contain
+    - heading /.+/ [level=2]
+  - region /.+/:
+    - /children: contain
+    - heading /.+/ [level=2]
+  - region /.+/:
+    - /children: contain
+    - heading /.+/ [level=2]
+  - region /.+/:
+    - /children: contain
+    - heading /.+/ [level=2]
+  - region /.+/:
+    - /children: contain
+    - heading /.+/ [level=2]
+- contentinfo:
+  - /children: contain
+  - heading /.+/ [level=2]
+  - region /.+/
+  - region /.+/
+  - region /.+/:
+    - /children: contain
+    - heading /.+/ [level=3]
+    - navigation /.+/

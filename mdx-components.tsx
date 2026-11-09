@@ -1,0 +1,25 @@
+import type { MDXComponents } from 'mdx/types';
+import { ColorSwatch } from './app/(en)/design-system/_components/ColorSwatch';
+import { ComponentNav } from './app/(en)/design-system/_components/ComponentNav';
+import { CopyButton } from './app/(en)/design-system/_components/CopyButton';
+import { LabelledTable } from './app/(en)/design-system/_components/LabelledTable';
+import { Preview } from './app/(en)/design-system/_components/Preview';
+import { Badge, Button, CmdLine, KbdKey, Panel, StatTile, TerminalPanel } from './design-system';
+
+export function useMDXComponents(components: MDXComponents): MDXComponents {
+  return {
+    Preview,
+    Button,
+    Badge,
+    TerminalPanel,
+    Panel,
+    StatTile,
+    CmdLine,
+    KbdKey,
+    CopyButton,
+    ColorSwatch,
+    ComponentNav,
+    table: LabelledTable,
+    ...components,
+  };
+}

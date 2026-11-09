@@ -1,0 +1,147 @@
+import type { NextRequest } from 'next/server';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import {
+  driveAbortTimeoutWithFakeTimers,
+  stalledUntilAborted,
+} from '../tests/mocks/stalled-resend-send';
+import { askRequest } from './helpers/ask-route';
+
+const mockStreamText = vi.fn();
+const outboxExecMock = vi.fn(async () => [1, 1]);
+
+vi.mock('ai', () => ({
+  streamText: mockStreamText,
+}));
+
+function makeOkResult(text = 'ok') {
+  return {
+    textStream: {
+      async *[Symbol.asyncIterator]() {
+        yield text;
+      },
+    },
+    usage: Promise.resolve({ inputTokens: 10, outputTokens: 1 }),
+  };
+}
+
+vi.mock('@/lib/rate-limit', async () =>
+  (await import('./helpers/ask-route')).rateLimitModule({
+    getContactLimit: vi.fn(() => ({ limit: vi.fn(async () => ({ success: true })) })),
+    getRedis: vi.fn(() => ({
+      set: vi.fn(async () => 'OK'),
+      zcard: vi.fn(async () => 0),
+      multi: () => ({ hset: vi.fn(), zadd: vi.fn(), exec: outboxExecMock }),
+    })),
+  }),
+);
+
+vi.mock('@/lib/ask-log', async () => (await import('./helpers/ask-route')).askLogModule());
+
+vi.mock('@/lib/ip-hash', async () => (await import('./helpers/ask-route')).ipHashModule());
+
+const logErrorMock = vi.fn();
+vi.mock('@/lib/log', async () =>
+  (await import('./helpers/ask-route')).logModule({ error: logErrorMock }),
+);
+
+const resendSendMock = vi.fn();
+vi.mock('resend', () => ({
+  Resend: class {
+    emails = { send: resendSendMock };
+  },
+}));
+
+function makeRequest(url: string, body: unknown): NextRequest {
+  return askRequest(body, { url });
+}
+
+describe('/api/ask — AI Gateway stream-initiation timeout', () => {
+  beforeEach(() => {
+    process.env.ASK_ENABLED = 'true';
+    vi.resetModules();
+    mockStreamText.mockReset();
+  });
+
+  function makeRequestTo(question: string): NextRequest {
+    return askRequest({ question });
+  }
+
+  it('passes an AbortSignal stream-initiation deadline to streamText', async () => {
+    mockStreamText.mockReturnValueOnce(makeOkResult());
+    const { POST } = await import('@/app/api/ask/route');
+    const res = await POST(makeRequestTo('Who is Erik?'));
+    expect(res.status).toBe(200);
+
+    expect(mockStreamText).toHaveBeenCalledOnce();
+    const opts = mockStreamText.mock.calls[0]?.[0] as { abortSignal?: AbortSignal } | undefined;
+    expect(opts?.abortSignal).toBeInstanceOf(AbortSignal);
+    expect(opts?.abortSignal?.aborted).toBe(false);
+
+    const reader = res.body?.getReader();
+    if (reader) {
+      while (true) {
+        const { done } = await reader.read();
+        if (done) break;
+      }
+    }
+  });
+
+  it('routes through the AI Gateway with the plain provider/model string', async () => {
+    mockStreamText.mockReturnValueOnce(makeOkResult());
+    const { POST } = await import('@/app/api/ask/route');
+    const res = await POST(makeRequestTo('Who is Erik?'));
+    expect(res.status).toBe(200);
+
+    const opts = mockStreamText.mock.calls[0]?.[0] as { model?: unknown } | undefined;
+    expect(opts?.model).toBe('anthropic/claude-haiku-4-5');
+
+    const reader = res.body?.getReader();
+    if (reader) {
+      while (true) {
+        const { done } = await reader.read();
+        if (done) break;
+      }
+    }
+  });
+});
+
+describe('/api/contact — Resend send 10s timeout', () => {
+  beforeEach(() => {
+    process.env.RESEND_API_KEY = 'fake-key-for-tests';
+    resendSendMock.mockReset();
+    logErrorMock.mockReset();
+    outboxExecMock.mockClear();
+    vi.resetModules();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it('resolves with the message persisted even when Resend never responds', async () => {
+    resendSendMock.mockImplementationOnce(stalledUntilAborted);
+    vi.useFakeTimers();
+    driveAbortTimeoutWithFakeTimers();
+
+    const { POST } = await import('@/app/api/contact/route');
+    const resPromise = POST(
+      makeRequest('http://localhost/api/contact', {
+        name: 'Real Name',
+        email: 'real@example.com',
+        message: 'A perfectly long-enough legitimate message',
+      }),
+    );
+
+    await vi.advanceTimersByTimeAsync(10_000);
+    const res = await resPromise;
+
+    expect(res.status).toBe(202);
+    expect(await res.json()).toMatchObject({ ok: false, error: { code: 'queued' } });
+    expect(outboxExecMock).toHaveBeenCalledOnce();
+
+    expect(logErrorMock).toHaveBeenCalledWith(
+      'contact delivery unavailable',
+      expect.objectContaining({ requestId: expect.any(String), msgId: expect.any(String) }),
+    );
+  });
+});

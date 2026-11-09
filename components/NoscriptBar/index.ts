@@ -1,0 +1,1 @@
+export { NoscriptBar } from './NoscriptBar';

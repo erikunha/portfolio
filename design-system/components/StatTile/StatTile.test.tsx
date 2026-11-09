@@ -1,0 +1,66 @@
+import { render, screen } from '@testing-library/react';
+import { describe, expect, it } from 'vitest';
+import { StatTile } from './StatTile';
+
+describe('StatTile', () => {
+  it('renders value and label as dl/dt/dd with dt before dd in DOM', () => {
+    render(<StatTile value="99%" label="uptime" />);
+    const dl = screen.getByRole('definition').closest('dl');
+    expect(dl).not.toBeNull();
+    expect(screen.getByText('uptime').tagName).toBe('DT');
+    expect(screen.getByText('99%').tagName).toBe('DD');
+    const children = Array.from(dl?.children ?? []);
+    expect(children[0]?.tagName).toBe('DT');
+    expect(children[1]?.tagName).toBe('DD');
+  });
+  it('uses semantic secondary text without reducing label opacity', () => {
+    render(<StatTile value="99%" label="uptime" />);
+    const term = screen.getByRole('term');
+    expect(term.classList.contains('text-text-secondary')).toBe(true);
+    expect([...term.classList].some((name) => name.startsWith('opacity-'))).toBe(false);
+  });
+  it('passes consumer attributes to each independent description list', () => {
+    const { container } = render(
+      <>
+        <StatTile
+          value="99%"
+          label="uptime"
+          id="uptime"
+          className="consumer"
+          aria-label="Availability"
+        />
+        <StatTile value="1s" label="latency" id="latency" aria-label="Response time" />
+      </>,
+    );
+    const lists = container.querySelectorAll('dl');
+    expect(lists[0]?.id).toBe('uptime');
+    expect(lists[0]?.getAttribute('aria-label')).toBe('Availability');
+    expect(lists[0]?.classList.contains('consumer')).toBe(true);
+    expect(lists[1]?.id).toBe('latency');
+    expect(lists[1]?.getAttribute('aria-label')).toBe('Response time');
+  });
+  it('applies compact font size override when variant=compact', () => {
+    const { container } = render(<StatTile value="1" label="x" variant="compact" />);
+    const dd = container.querySelector('dd');
+    expect(dd?.classList.contains('text-xs')).toBe(true);
+    expect(dd?.classList.contains('text-2xl')).toBe(false);
+  });
+  it('default variant keeps the hero scale (text-base) — production Hero consumes it', () => {
+    const { container } = render(<StatTile value="1" label="x" />);
+    const dd = container.querySelector('dd');
+    expect(dd?.classList.contains('text-base')).toBe(true);
+    expect(dd?.classList.contains('text-2xl')).toBe(false);
+  });
+  it('display variant renders the value at the app stat-strip scale (text-2xl)', () => {
+    const { container } = render(<StatTile value="1" label="x" variant="display" />);
+    const dd = container.querySelector('dd');
+    expect(dd?.classList.contains('text-2xl')).toBe(true);
+    expect(dd?.classList.contains('max-md:text-base')).toBe(true);
+  });
+  it('does not apply an undefined default class when variant=default', () => {
+    const { container } = render(<StatTile value="1" label="x" />);
+    const classList = container.firstElementChild?.classList.toString() ?? '';
+    expect(classList).not.toContain('undefined');
+    expect(classList).not.toContain('default');
+  });
+});

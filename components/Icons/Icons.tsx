@@ -1,0 +1,92 @@
+import type { JSX } from 'react';
+
+type IconProps = JSX.IntrinsicElements['svg'];
+
+const baseProps: IconProps = {
+  viewBox: '0 0 24 24',
+  width: 14,
+  height: 14,
+  fill: 'none',
+  stroke: 'currentColor',
+  strokeWidth: 1.4,
+  'aria-hidden': true,
+  focusable: false,
+};
+
+export function IconReadme() {
+  return (
+    <svg {...baseProps}>
+      <path d="M6 3h9l4 4v14H6z" />
+      <path d="M14 3v5h5" />
+      <path d="M9 13h7M9 16h7M9 10h3" />
+    </svg>
+  );
+}
+
+export function IconProjects() {
+  return (
+    <svg {...baseProps}>
+      <path d="M3 7l3-3h5l2 3h8v13H3z" />
+    </svg>
+  );
+}
+
+export function IconGitLog() {
+  return (
+    <svg {...baseProps}>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M12 7v5l3 2" />
+    </svg>
+  );
+}
+
+export function IconShell() {
+  return (
+    <svg {...baseProps}>
+      <path d="M4 4h16v16H4z" />
+      <path d="M7 9l3 3-3 3M12 16h5" />
+    </svg>
+  );
+}
+
+export function IconGuitar() {
+  return (
+    <svg {...baseProps}>
+      <path d="M6 3v11a3 3 0 1 0 3 3V6h7V3z" />
+    </svg>
+  );
+}
+
+export function IconHottestTakes() {
+  return (
+    <svg {...baseProps}>
+      <path d="M12 3c2 4-2 5 0 8 2-2 4-1 4 3a6 6 0 1 1-10-3c1 2 3 2 3-1 0-3 1-5 3-7z" />
+    </svg>
+  );
+}
+
+export function IconAiMetrics() {
+  return (
+    <svg {...baseProps}>
+      <path d="M4 14a8 8 0 0 1 16 0" />
+      <path d="M12 14l4-3" />
+      <path d="M3 18h18" />
+    </svg>
+  );
+}
+
+export function IconContact() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      width={14}
+      height={14}
+      fill="currentColor"
+      stroke="none"
+      aria-hidden
+      focusable={false}
+    >
+      <polygon points="6,4 20,12 6,20" />
+    </svg>
+  );
+}

@@ -1,0 +1,155 @@
+import { dsPageMetadata } from '../_lib/page-metadata';
+import { OnThisPage } from '../_components/OnThisPage';
+
+export const metadata = dsPageMetadata({
+  slug: 'changelog',
+  title: 'Changelog · Design System · erikunha.dev',
+  description: 'Design system token and component changelog',
+});
+
+# CHANGELOG
+
+<OnThisPage items={[{id:'2026-11-08',label:'2026-11-08'},{id:'2026-11-07',label:'2026-11-07'},{id:'2026-11-06',label:'2026-11-06'},{id:'2026-11-03',label:'2026-11-03'},{id:'2026-11-01',label:'2026-11-01'},{id:'2026-10-30',label:'2026-10-30'},{id:'2026-10-29',label:'2026-10-29'},{id:'2026-07-17',label:'2026-07-17'},{id:'2026-07-16',label:'2026-07-16'},{id:'2026-07-11',label:'2026-07-11'},{id:'2026-07-10',label:'2026-07-10'},{id:'2026-07-09',label:'2026-07-09'},{id:'2026-05-30',label:'2026-05-30'},{id:'2026-05-24',label:'2026-05-24'},{id:'2026-05-23',label:'2026-05-23'}]} />
+
+Design system changes by date, newest first, grouped as Added, Changed and Fixed.
+
+<h2 id="2026-11-08">2026-11-08</h2>
+
+### Changed
+
+- Move Panel into the design system as a documented primitive
+- Regenerate CmdLine and CopyButton darwin baselines
+- Sync the changelog with the design-system fixes
+
+### Fixed
+
+- Give each property one owner and meet 3:1 on the field edge
+
+<h2 id="2026-11-07">2026-11-07</h2>
+
+### Changed
+
+- Keep CmdLine content-agnostic
+
+### Fixed
+
+- Keep em and en dashes out of the generated changelog
+
+<h2 id="2026-11-06">2026-11-06</h2>
+
+### Changed
+
+- Record 44px touch links and pt copy parity
+- Keep plain anchors in the sidebar, next/link cost 3.2kb of client js
+- One theme color parser for swatches and the contrast gate
+- Title the layout test for the sidebar preceding main
+
+### Fixed
+
+- Make the component jump links 44px on touch
+- Sidebar first in the DOM and no skip link where its target is hidden
+
+<h2 id="2026-11-03">2026-11-03</h2>
+
+### Added
+
+- Brand icon replaces the wordmark; menu trigger moves to the far right
+
+<h2 id="2026-11-01">2026-11-01</h2>
+
+### Fixed
+
+- Finish topbar, mobile menu and pager port
+
+<h2 id="2026-10-30">2026-10-30</h2>
+
+### Fixed
+
+- One gutter, page measure and section rhythm
+
+<h2 id="2026-10-29">2026-10-29</h2>
+
+### Added
+
+- r106 reference pages, sitemap coverage and mobile layout
+
+<h2 id="2026-07-17">2026-07-17</h2>
+
+### Changed
+
+- Purge the removed component name from tracked files
+- Regen DS component baselines after the nav-trail removal
+
+<h2 id="2026-07-16">2026-07-16</h2>
+
+### Added
+
+- Breaking: Remove the per-page nav trail
+
+### Fixed
+
+- Changelog generator silently dropped breaking changes
+
+<h2 id="2026-07-11">2026-07-11</h2>
+
+### Added
+
+- StatTile display variant: docs stat tiles at app scale
+
+<h2 id="2026-07-10">2026-07-10</h2>
+
+### Added
+
+- Add StatTile display variant at the app stat scale
+
+### Fixed
+
+- Make changelog sync append-only across squash merges
+
+<h2 id="2026-07-09">2026-07-09</h2>
+
+### Added
+
+- Align docs type scale with the app
+
+<h2 id="2026-05-30">2026-05-30</h2>
+
+### Changed
+
+- Fix phantom layer tokens on reference page
+
+<h2 id="2026-05-24">2026-05-24</h2>
+
+### Added
+
+- Git-driven changelog + sidebar home link
+- Add live stat grid render to composition patterns
+- Landing page: stat grid, import CmdLine, LIVE badge
+- Component docs: anchor nav + props tables
+- Token visualization + fix GFM tables
+
+### Changed
+
+- Add Badge, Button, StatTile behavioral E2E + expand Playwright testMatch
+
+### Fixed
+
+- Remove commitizen, add space token aliases, fix token boundary violations
+- Review findings: token th bg, allowlist reason, changelog cwd anchor
+- Narrow regex group types in sync-changelog to satisfy strict TS
+- Stat grids full content-column width via negative margins
+- Code block overflow scroll and h3 visual hierarchy
+- Prose rhythm, table styles, token component legibility
+- Seed visual baselines and add section IDs to Preview components
+
+<h2 id="2026-05-23">2026-05-23</h2>
+
+### Added
+
+- /design-system route + MDX docs
+- 7 primitive components + site-wide adoption
+- Two-tier token pipeline (Style Dictionary + migration)
+
+### Changed
+
+- Design system tokenized spec, plans A-E, MDX spike

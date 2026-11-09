@@ -1,0 +1,34 @@
+name: Scanner Pin Freshness
+
+# The security scanners (gitleaks, semgrep) are pinned by exact version in ci.yml. Dependabot
+# does not track binary/CLI tools, so nothing otherwise tells us when a pin falls behind and a
+# scanner starts running without upstream security patches. This weekly job is that signal: it
+# fails loudly (a red run + email) when a pin is behind, naming the current and latest versions.
+# It is intentionally NOT in ci-gate and blocks no PR -- a stale pin is a nudge, not a merge stop.
+
+on:
+  schedule:
+    - cron: "0 5 * * 1" # Weekly Monday 05:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  tool-pins:
+    name: Scanner pins are current
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: ".nvmrc"
+
+      - name: Check gitleaks and semgrep pins against upstream
+        env:
+          # Authenticates the GitHub Releases call so a shared-runner-IP rate limit cannot
+          # produce a spurious red run. The token is contents:read only (see permissions above).
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: node scripts/check-tool-pins.mjs

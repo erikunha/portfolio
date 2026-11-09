@@ -1,0 +1,226 @@
+{
+  "@ai-sdk/otel": {
+    "purpose": "OpenTelemetry integration for the AI SDK, registered in lib/telemetry/langfuse.ts",
+    "license": "Apache-2.0"
+  },
+  "@argos-ci/playwright": {
+    "purpose": "uploads Playwright visual-regression screenshots to Argos",
+    "license": "MIT"
+  },
+  "@axe-core/playwright": {
+    "purpose": "axe-core accessibility scan driven from Playwright (tests/a11y)",
+    "license": "MPL-2.0"
+  },
+  "@biomejs/biome": {
+    "purpose": "linter and formatter behind pnpm check",
+    "license": "MIT OR Apache-2.0"
+  },
+  "@commitlint/cli": {
+    "purpose": "commit-msg hook that enforces the conventional commit format",
+    "license": "MIT"
+  },
+  "@commitlint/config-conventional": {
+    "purpose": "conventional-commits ruleset loaded by commitlint.config.ts",
+    "license": "MIT"
+  },
+  "@lhci/cli": {
+    "purpose": "Lighthouse CI runner behind pnpm lhci",
+    "license": "Apache-2.0"
+  },
+  "@mdx-js/loader": {
+    "purpose": "required peer of @next/mdx (MDX webpack loader)",
+    "license": "MIT"
+  },
+  "@mdx-js/react": {
+    "purpose": "required peer of @next/mdx (MDX component provider)",
+    "license": "MIT"
+  },
+  "@modelcontextprotocol/client": {
+    "purpose": "MCP client used by tests to call the MCP server end to end",
+    "license": "Apache-2.0"
+  },
+  "@modelcontextprotocol/server": {
+    "purpose": "MCP server SDK for the tools in lib/agent/mcp-tools.ts",
+    "license": "Apache-2.0"
+  },
+  "@next/mdx": {
+    "purpose": "compiles .mdx pages (design-system docs) through next.config.ts",
+    "license": "MIT"
+  },
+  "@playwright/test": {
+    "purpose": "end-to-end and visual test runner",
+    "license": "Apache-2.0"
+  },
+  "@stryker-mutator/core": {
+    "purpose": "mutation testing engine behind pnpm test:mutation",
+    "license": "Apache-2.0"
+  },
+  "@stryker-mutator/vitest-runner": {
+    "purpose": "lets Stryker run the Vitest suite",
+    "license": "Apache-2.0"
+  },
+  "@tailwindcss/postcss": {
+    "purpose": "Tailwind v4 PostCSS plugin loaded by postcss.config.mjs",
+    "license": "MIT"
+  },
+  "@testing-library/dom": {
+    "purpose": "DOM queries for component tests",
+    "license": "MIT"
+  },
+  "@testing-library/react": {
+    "purpose": "React rendering helpers for component tests",
+    "license": "MIT"
+  },
+  "@types/mdx": {
+    "purpose": "types for MDX modules and mdx-components.tsx",
+    "license": "MIT"
+  },
+  "@types/node": {
+    "purpose": "Node.js type definitions",
+    "license": "MIT"
+  },
+  "@types/react": {
+    "purpose": "React type definitions",
+    "license": "MIT"
+  },
+  "@types/react-dom": {
+    "purpose": "React DOM type definitions",
+    "license": "MIT"
+  },
+  "@typescript/native-preview": {
+    "purpose": "tsgo, the native TypeScript compiler behind pnpm typecheck",
+    "license": "Apache-2.0"
+  },
+  "@upstash/ratelimit": {
+    "purpose": "rate limiting in lib/rate-limit.ts",
+    "license": "MIT"
+  },
+  "@upstash/redis": {
+    "purpose": "Redis client for rate limiting and the request log",
+    "license": "MIT"
+  },
+  "@vercel/analytics": {
+    "purpose": "Vercel Web Analytics, mounted in components/RootShell.tsx",
+    "license": "MIT"
+  },
+  "@vercel/otel": {
+    "purpose": "OpenTelemetry registration in lib/telemetry/langfuse.ts",
+    "license": "MIT"
+  },
+  "@vercel/speed-insights": {
+    "purpose": "Vercel Speed Insights, mounted in components/RootShell.tsx",
+    "license": "Apache-2.0"
+  },
+  "@vitest/coverage-v8": {
+    "purpose": "V8 coverage provider for pnpm test:coverage",
+    "license": "MIT"
+  },
+  "@vitest/ui": {
+    "purpose": "Vitest browser UI reporter",
+    "license": "MIT"
+  },
+  "ai": {
+    "purpose": "AI SDK streamText for the /api/ask route (lib/ask/stream.ts)",
+    "license": "Apache-2.0"
+  },
+  "clsx": {
+    "purpose": "class-name joiner in lib/cn.ts",
+    "license": "MIT"
+  },
+  "husky": {
+    "purpose": "installs the git hooks in .husky",
+    "license": "MIT"
+  },
+  "jsdom": {
+    "purpose": "DOM environment for Vitest component tests",
+    "license": "MIT"
+  },
+  "langfuse-vercel": {
+    "purpose": "Langfuse span exporter for LLM tracing in lib/telemetry/langfuse.ts",
+    "license": "MIT"
+  },
+  "mcp-handler": {
+    "purpose": "serves the MCP endpoint at app/api/mcp/route.ts",
+    "license": "Apache-2.0"
+  },
+  "next": {
+    "purpose": "application framework (App Router)",
+    "license": "MIT"
+  },
+  "pino": {
+    "purpose": "structured logger in lib/log.ts",
+    "license": "MIT"
+  },
+  "pino-pretty": {
+    "purpose": "human-readable log output for local development (lib/log.ts)",
+    "license": "MIT"
+  },
+  "playwright": {
+    "purpose": "browser automation library for the OG image and brand icon generators",
+    "license": "Apache-2.0"
+  },
+  "postcss": {
+    "purpose": "CSS processing for the Tailwind pipeline and CSS-rule test helpers",
+    "license": "MIT"
+  },
+  "react": {
+    "purpose": "UI library",
+    "license": "MIT"
+  },
+  "react-dom": {
+    "purpose": "React DOM renderer",
+    "license": "MIT"
+  },
+  "rehype-pretty-code": {
+    "purpose": "code-block syntax highlighting in MDX (next.config.ts)",
+    "license": "MIT"
+  },
+  "remark-gfm": {
+    "purpose": "GitHub-flavored markdown in MDX (lib/mdx/remark-gfm-wrapper.mjs)",
+    "license": "MIT"
+  },
+  "resend": {
+    "purpose": "contact form and PSI refresh mail delivery",
+    "license": "MIT"
+  },
+  "shiki": {
+    "purpose": "syntax highlighter used by rehype-pretty-code",
+    "license": "MIT"
+  },
+  "smol-toml": {
+    "purpose": "TOML parser for the gitleaks fixture check and config tests",
+    "license": "BSD-3-Clause"
+  },
+  "tailwindcss": {
+    "purpose": "utility CSS framework (app/globals.css)",
+    "license": "MIT"
+  },
+  "tsx": {
+    "purpose": "runs the TypeScript scripts in scripts/",
+    "license": "MIT"
+  },
+  "typescript": {
+    "purpose": "TypeScript JS API required by Stryker; held at 6.x",
+    "license": "Apache-2.0"
+  },
+  "vite": {
+    "purpose": "required peer of Vitest 5",
+    "license": "MIT"
+  },
+  "vitest": {
+    "purpose": "unit test runner",
+    "license": "MIT"
+  },
+  "wait-on": {
+    "purpose": "waits for the production server in pnpm gates:runtime",
+    "license": "MIT"
+  },
+  "yaml": {
+    "purpose": "YAML parser for workflow and config tests",
+    "license": "ISC"
+  },
+  "zod": {
+    "purpose": "schema validation for API inputs and content",
+    "license": "MIT"
+  }
+}

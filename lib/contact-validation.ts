@@ -1,0 +1,26 @@
+import 'server-only';
+
+import { z } from 'zod';
+
+import { CONTACT_EMAIL_PATTERN, CONTACT_LIMITS } from '@/content/contact-rules';
+
+export { CONTACT_FIELD, CONTACT_LIMITS, type ContactField } from '@/content/contact-rules';
+
+const CONTACT_EMAIL_MAX = 254;
+const SINGLE_LINE_PATTERN = /^[^\p{Cc}\p{Zl}\p{Zp}]*$/u;
+
+export const ContactSchema = z.object({
+  name: z
+    .string()
+    .trim()
+    .min(CONTACT_LIMITS.nameMin)
+    .max(CONTACT_LIMITS.nameMax)
+    .regex(SINGLE_LINE_PATTERN),
+  email: z.string().trim().max(CONTACT_EMAIL_MAX).regex(CONTACT_EMAIL_PATTERN),
+  message: z.string().trim().min(CONTACT_LIMITS.messageMin).max(CONTACT_LIMITS.messageMax),
+  field_company: z.string().optional(),
+});
+
+export function isHoneypotTripped(body: { field_company?: unknown }): boolean {
+  return typeof body.field_company === 'string' && body.field_company.trim().length > 0;
+}

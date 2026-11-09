@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "deny": [
+      "Bash(git add .:*)",
+      "Bash(git add -A:*)",
+      "Bash(git add --all:*)",
+      "Bash(npm install:*)",
+      "Bash(npm i:*)",
+      "Bash(yarn:*)",
+      "Read(./.env)",
+      "Read(./.env.local)",
+      "Read(./.env.*.local)"
+    ]
+  }
+}

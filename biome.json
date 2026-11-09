@@ -1,0 +1,173 @@
+{
+  "$schema": "https://biomejs.dev/schemas/2.6.6/schema.json",
+  "vcs": {
+    "enabled": true,
+    "clientKind": "git",
+    "useIgnoreFile": true
+  },
+  "files": {
+    "ignoreUnknown": true,
+    "includes": [
+      "**",
+      "!.next",
+      "!node_modules",
+      "!out",
+      "!dist",
+      "!design-system/dist",
+      "!coverage",
+      "!public",
+      "!prototype",
+      "!scaffold",
+      "!.claude/worktrees",
+      "!.worktrees",
+      "!.lighthouseci",
+      "!.playwright-results",
+      "!app/globals.css",
+      "!next-env.d.ts",
+      "!.specify",
+      "!.claude/skills/speckit-*",
+      "!pnpm-lock.yaml",
+      "!CLAUDE.md",
+      "!DECISIONS.md"
+    ]
+  },
+  "formatter": {
+    "enabled": true,
+    "formatWithErrors": false,
+    "indentStyle": "space",
+    "indentWidth": 2,
+    "lineWidth": 100,
+    "lineEnding": "lf"
+  },
+  "assist": {
+    "enabled": true,
+    "actions": {
+      "source": {
+        "organizeImports": "on"
+      }
+    }
+  },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "preset": "recommended",
+      "correctness": {
+        "noUnusedVariables": "error",
+        "noUnusedImports": "error",
+        "useExhaustiveDependencies": "error",
+        "noPlaywrightMissingAwait": "error",
+        "noUnknownFunction": {
+          "level": "error",
+          "options": {
+            "ignore": ["theme"]
+          }
+        },
+        "usePlaywrightValidDescribeCallback": "error"
+      },
+      "style": {
+        "useConst": "error",
+        "useTemplate": "error",
+        "noUnusedTemplateLiteral": "error",
+        "useImportType": "error",
+        "useExportType": "error",
+        "noNonNullAssertion": "warn",
+        "noNestedTernary": "error",
+        "useVarsOnTop": "error",
+        "noRestrictedImports": {
+          "level": "error",
+          "options": {
+            "paths": {
+              "next/image": {
+                "importNames": ["default"],
+                "message": "The default next/image export is a client component that ships its runtime to every route that renders it. Use components/OptimizedImage (getImageProps on the server)."
+              }
+            }
+          }
+        }
+      },
+      "suspicious": {
+        "noConsole": {
+          "level": "warn",
+          "options": {
+            "allow": ["log", "info", "warn", "error"]
+          }
+        },
+        "noExplicitAny": "error",
+        "noEmptyBlockStatements": "warn",
+        "noImportCycles": "error",
+        "noLeakedRender": "error",
+        "noLoopFunc": "error",
+        "noDuplicateSelectors": "error",
+        "noIdenticalTestTitle": "error"
+      },
+      "complexity": {
+        "noUselessFragments": "error",
+        "noBannedTypes": "error",
+        "useArraySome": "error",
+        "noUnnecessaryTemplateExpression": "error",
+        "noPlaywrightUselessAwait": "error",
+        "useMathMinMax": "error",
+        "useRegexpTest": "error"
+      },
+      "security": {
+        "useIframeSandbox": "error"
+      },
+      "performance": {
+        "useDomNodeTextContent": "error"
+      },
+      "nursery": {
+        "noTailwindRawColors": "error"
+      },
+      "a11y": {
+        "noSvgWithoutTitle": "off",
+        "useKeyWithClickEvents": "off"
+      }
+    }
+  },
+  "javascript": {
+    "formatter": {
+      "quoteStyle": "single",
+      "jsxQuoteStyle": "double",
+      "trailingCommas": "all",
+      "semicolons": "always",
+      "arrowParentheses": "always",
+      "bracketSpacing": true,
+      "bracketSameLine": false
+    }
+  },
+  "json": {
+    "formatter": {
+      "trailingCommas": "none"
+    }
+  },
+  "css": {
+    "parser": {
+      "cssModules": true,
+      "tailwindDirectives": true
+    },
+    "linter": {
+      "enabled": true
+    }
+  },
+  "overrides": [
+    {
+      "includes": ["**/*.md", "**/*.mdx", "**/*.yml", "**/*.yaml"],
+      "formatter": {
+        "enabled": false
+      }
+    },
+    {
+      "includes": ["**/*.test.ts", "**/*.test.tsx"],
+      "linter": {
+        "rules": {
+          "correctness": {
+            "noComponentHookFactories": "off"
+          },
+          "style": {
+            "noNestedTernary": "off"
+          }
+        }
+      }
+    }
+  ]
+}

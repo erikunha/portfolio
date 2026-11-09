@@ -1,0 +1,60 @@
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    cooldown:
+      default-days: 7
+    groups:
+      security:
+        applies-to: security-updates
+        patterns:
+          - "*"
+      majors:
+        applies-to: version-updates
+        update-types:
+          - major
+        patterns:
+          - "*"
+      rest:
+        applies-to: version-updates
+        update-types:
+          - minor
+          - patch
+        patterns:
+          - "*"
+    ignore:
+      - dependency-name: zod
+        update-types:
+          - version-update:semver-major
+          - version-update:semver-minor
+      - dependency-name: typescript
+        update-types:
+          - version-update:semver-major
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    cooldown:
+      default-days: 7
+    groups:
+      security:
+        applies-to: security-updates
+        patterns:
+          - "*"
+      majors:
+        applies-to: version-updates
+        update-types:
+          - major
+        patterns:
+          - "*"
+      rest:
+        applies-to: version-updates
+        update-types:
+          - minor
+          - patch
+        patterns:
+          - "*"

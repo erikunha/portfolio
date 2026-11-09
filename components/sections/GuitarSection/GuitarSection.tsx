@@ -1,0 +1,170 @@
+import { Fragment, Suspense } from 'react';
+import { OptimizedImage } from '@/components/OptimizedImage';
+import { dawMixer, mixerBoot } from '@/content/daw-mixer';
+import {
+  GUITAR_MODULE_HEADER,
+  GUITAR_MODULE_MOBILE_HEADER,
+  guitarPresentation,
+  guitarRig,
+} from '@/content/guitar-rig';
+import { GUITAR_SIGNAL_BAR_COUNT, GUITAR_SIGNAL_LABEL_TOKENS } from '@/content/schemas';
+import { SECTION_LABELS } from '@/content/section-labels';
+import type { SiteLocale } from '@/content/site-locale';
+import { MOBILE_BREAKPOINT_PX } from '@/lib/breakpoint';
+import { IconGuitar } from '../../Icons';
+import { Module } from '../../responsive/Module';
+import { DawMixerContent } from '../DawMixerSection';
+import { EqSpectrumStrip } from './EqSpectrumStrip';
+
+const SIGNAL_BARS = Array.from({ length: GUITAR_SIGNAL_BAR_COUNT }, (_, position) => ({
+  position,
+}));
+const FIRST_NODE_INDEX = 0;
+const SECTION_ID = 'sec-guitar';
+const STACKED_MAX_WIDTH_PX = MOBILE_BREAKPOINT_PX - 1;
+const PHOTO_SIZES = `(max-width: ${STACKED_MAX_WIDTH_PX}px) 100vw, 320px`;
+
+export function GuitarContent({ locale }: { locale: SiteLocale }) {
+  const {
+    eqSpectrum,
+    signalChain,
+    signalStrip,
+    signalStrengthLabelTemplate,
+    influences,
+    nowPlaying,
+    stats,
+    photo,
+  } = guitarPresentation[locale];
+  const { liveCam } = guitarRig[locale];
+  return (
+    <div className="guitar-presentation">
+      <div>
+        <p className="guitar-chain-label">{eqSpectrum.label}</p>
+        <div className="guitar-eq-panel">
+          <EqSpectrumStrip spectrum={eqSpectrum} />
+        </div>
+      </div>
+      <div className="guitar-signal-panel">
+        <div className="guitar-signal-strip">
+          <span className="guitar-signal-strip-live">{signalStrip.live}</span>
+          <span className="guitar-signal-strip-tail">{signalStrip.tail}</span>
+        </div>
+        <div className="guitar-chain max-md:grid-cols-1">
+          {signalChain.map((node, index) => (
+            <Fragment key={node.role}>
+              {index > FIRST_NODE_INDEX && (
+                <span
+                  className="signal-chain-arrow guitar-arrow guitar:max-md:rotate-90"
+                  aria-hidden="true"
+                />
+              )}
+              <div className="guitar-node" data-testid={`signal-node-${node.role}`}>
+                <div className="guitar-label">{node.label}</div>
+                <h3 className="guitar-node-heading" data-type-reveal suppressHydrationWarning>
+                  {node.name}
+                </h3>
+                <div className="guitar-node-subtitle">{node.subtitle}</div>
+                <div
+                  className="guitar-bars"
+                  role="img"
+                  aria-label={signalStrengthLabelTemplate
+                    .replace(GUITAR_SIGNAL_LABEL_TOKENS.strength, String(node.strengthDots))
+                    .replace(GUITAR_SIGNAL_LABEL_TOKENS.total, String(GUITAR_SIGNAL_BAR_COUNT))}
+                >
+                  {SIGNAL_BARS.map(({ position }) => (
+                    <span
+                      key={position}
+                      className="guitar-bar"
+                      aria-hidden="true"
+                      data-filled={position < node.strengthDots}
+                    />
+                  ))}
+                </div>
+              </div>
+            </Fragment>
+          ))}
+        </div>
+      </div>
+      <div className="guitar-pair max-md:grid-cols-1">
+        <div className="guitar-details">
+          <p className="guitar-influences">
+            <strong>{influences.label}</strong> {influences.text}{' '}
+            <strong>{nowPlaying.label}</strong> {nowPlaying.text}
+          </p>
+          <div className="guitar-stats max-md:grid-cols-1">
+            {stats.map((stat) => (
+              <div className="guitar-stat" key={stat.label} data-testid={`stat-${stat.label}`}>
+                <div className="guitar-label">{stat.label}</div>
+                <div className="guitar-stat-value">{stat.value}</div>
+                <div>{stat.sub}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+        <figure className="guitar-photo">
+          <div className="guitar-camera-labels">
+            <span>{liveCam.status}</span>
+            <span>{liveCam.cameraLabel}</span>
+          </div>
+          <div className="guitar-photo-frame">
+            <OptimizedImage {...photo} className="guitar-photo-image" sizes={PHOTO_SIZES} />
+            <div className="guitar-photo-tint" aria-hidden="true" />
+            <div className="guitar-photo-scanlines" aria-hidden="true" />
+            <div className="guitar-scan-beam" aria-hidden="true" />
+            <div className="cam-corners" aria-hidden="true">
+              <i />
+            </div>
+          </div>
+          <figcaption className="guitar-camera-caption">{liveCam.caption}</figcaption>
+        </figure>
+      </div>
+      <div className="guitar-mixer">
+        <Suspense fallback={<MixerLoading locale={locale} />}>
+          <DawMixerContent locale={locale} />
+        </Suspense>
+      </div>
+    </div>
+  );
+}
+
+export function GuitarSection({ locale, defer }: { locale: SiteLocale; defer?: boolean }) {
+  return (
+    <Module
+      id={SECTION_ID}
+      header={GUITAR_MODULE_HEADER}
+      mobileHeader={GUITAR_MODULE_MOBILE_HEADER}
+      name={SECTION_LABELS[locale][SECTION_ID]}
+      icon={<IconGuitar />}
+      defer={defer}
+      variant="green"
+    >
+      <GuitarContent locale={locale} />
+    </Module>
+  );
+}
+
+export function MixerLoading({ locale }: { locale: SiteLocale }) {
+  const mixer = dawMixer[locale];
+  const boot = mixerBoot[locale];
+  return (
+    <div className="daw-mixer-loading" aria-busy="true">
+      <p className="hero-boot-line" aria-hidden="true">
+        <span className="hero-boot-ok">{boot.doneTag}</span> {boot.sessionLabel} {mixer.sessionName}
+      </p>
+      <p className="hero-boot-line" aria-hidden="true">
+        <span className="hero-boot-ok">{boot.doneTag}</span> {mixer.bpm} {boot.tempoUnit}
+        {boot.separator}
+        {mixer.timeSignature}
+      </p>
+      <p className="hero-boot-line mixer-boot-current" role="status" aria-live="polite">
+        {boot.loadingTag} {mixer.loadingLabel}
+        <span className="mixer-boot-cursor" aria-hidden="true">
+          {boot.cursor}
+        </span>
+      </p>
+      <p className="hero-boot-line mixer-boot-queued" aria-hidden="true">
+        {boot.queuedTag} {mixer.channels.map((channel) => channel.name).join(boot.separator)}
+      </p>
+    </div>
+  );
+}

@@ -1,0 +1,821 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      update_visual_baselines:
+        description: "Regenerate Linux visual baselines and upload them as an artifact (download + commit to refresh baselines)."
+        required: false
+        default: "false"
+        type: choice
+        options: ["false", "true"]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  quality-fast:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      pull-requests: read
+    timeout-minutes: 8
+    concurrency:
+      group: quality-fast-${{ github.ref }}
+      cancel-in-progress: true
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: ".nvmrc"
+          cache: pnpm
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint branch name
+        env:
+          BRANCH: ${{ github.head_ref || github.ref_name }}
+        run: |
+          echo "$BRANCH" | grep -qE '^(feat|fix|chore|docs|refactor|perf|test|build|ci|style|revert|dependabot|design-system)/.+$|^main$' \
+            || (echo "Invalid branch name: $BRANCH" && exit 1)
+
+      - name: Lint commit messages
+        if: github.event_name == 'pull_request'
+        run: npx commitlint --from ${{ github.event.pull_request.base.sha }} --to ${{ github.event.pull_request.head.sha }} --verbose
+
+      - name: Biome check
+        run: pnpm biome ci --error-on-warnings .
+
+      - name: Validate content
+        run: pnpm validate-content
+
+      - name: Client-naming gate
+        run: pnpm check:client-naming
+
+      - name: Dependency-pinning gate
+        run: pnpm check:dep-pinning
+
+      - name: Dependency-vetting gate
+        run: pnpm check:dependency-vetting
+
+      - name: Harness size gate
+        run: node scripts/check-harness-size.mjs
+
+      - name: Component docs coverage
+        run: pnpm check:component-docs
+
+      - name: Doc-drift gate (ARCHITECTURE.md tree vs disk)
+        run: pnpm check:doc-drift
+
+      - name: Section-order gate (rendered sections vs registry)
+        run: pnpm check:section-order
+
+      - name: Detect-changes pathspec gate (no orphaned filters)
+        run: pnpm check:detect-changes-paths
+
+      - name: Test integrity gate (no focused, assertion-less or unexplained skipped tests)
+        run: pnpm check:test-integrity
+
+      - name: Contrast check
+        run: pnpm lint:contrast
+
+      - name: CSS tokens (no raw hex outside theme.css)
+        run: pnpm lint:css-tokens
+
+      - name: PR comment merge gate
+        if: github.event_name == 'pull_request'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: pnpm tsx scripts/check-pr-comments.ts ${{ github.event.pull_request.number }}
+
+  typecheck:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    concurrency:
+      group: typecheck-${{ github.ref }}
+      cancel-in-progress: true
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: ".nvmrc"
+          cache: pnpm
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Cache TypeScript build info
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: tsconfig.tsbuildinfo
+          key: tsbuildinfo-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml', 'tsconfig*.json') }}
+          restore-keys: |
+            tsbuildinfo-${{ runner.os }}-
+
+      - name: Type check
+        run: pnpm typecheck
+
+  test:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    timeout-minutes: 8
+    concurrency:
+      group: test-${{ github.ref }}
+      cancel-in-progress: true
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: ".nvmrc"
+          cache: pnpm
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Check if pnpm-lock.yaml changed
+        id: lockfile-diff
+        if: github.event_name == 'pull_request'
+        env:
+          BASE: ${{ github.event.pull_request.base.sha }}
+          HEAD: ${{ github.event.pull_request.head.sha }}
+        run: |
+          changed=true
+          if git diff --quiet "$BASE...$HEAD" -- pnpm-lock.yaml 2>/dev/null; then
+            changed=false
+          fi
+          echo "changed=${changed}" >> "$GITHUB_OUTPUT"
+
+      - name: Dependency vulnerability audit
+        if: github.event_name != 'pull_request' || steps.lockfile-diff.outputs.changed == 'true'
+        run: pnpm audit --audit-level=moderate
+
+      - name: Check if the mutation runner surface changed
+        id: mutation-surface-diff
+        if: github.event_name == 'pull_request'
+        env:
+          BASE: ${{ github.event.pull_request.base.sha }}
+          HEAD: ${{ github.event.pull_request.head.sha }}
+        run: |
+          changed=true
+          if git diff --quiet "$BASE...$HEAD" -- pnpm-lock.yaml stryker.config.mjs vitest.config.ts tests/mocks scripts/check-mutation-kills.mjs scripts/stryker-canary.config.mjs 2>/dev/null; then
+            changed=false
+          fi
+          echo "changed=${changed}" >> "$GITHUB_OUTPUT"
+
+      - name: Mutation runner canary (Stryker must kill mutants in a known file)
+        if: github.event_name != 'pull_request' || steps.mutation-surface-diff.outputs.changed == 'true'
+        run: node scripts/check-mutation-kills.mjs --canary
+
+      - name: Unit tests
+        run: pnpm test:coverage
+
+      - name: Upload coverage reports
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: coverage-report
+          path: coverage/
+          retention-days: 7
+
+  coverage-comment:
+    runs-on: ubuntu-24.04
+    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+    permissions:
+      contents: read
+      pull-requests: write
+    timeout-minutes: 5
+    needs: [test]
+    steps:
+      - name: Download coverage report
+        continue-on-error: true
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: coverage-report
+          path: coverage/
+
+      - name: Post coverage comment
+        continue-on-error: true
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          script: |
+            const fs = require('fs');
+            if (!fs.existsSync('coverage/coverage-summary.json')) {
+              core.warning('coverage/coverage-summary.json not found, skipping coverage comment. Did pnpm test:coverage complete?');
+              return;
+            }
+            let summary;
+            try {
+              summary = JSON.parse(fs.readFileSync('coverage/coverage-summary.json', 'utf8'));
+            } catch (err) {
+              core.warning(`Failed to parse coverage-summary.json: ${err.message}`);
+              return;
+            }
+            const t = summary.total;
+            const METRICS = ['lines', 'functions', 'branches', 'statements'];
+            if (!t || METRICS.some((m) => typeof t[m]?.pct !== 'number')) {
+              core.warning('coverage-summary.json is missing expected "total" fields. Skipping coverage comment.');
+              return;
+            }
+            const pct = (n) => `${n.pct.toFixed(1)}%`;
+            const marker = '<!-- coverage-bot -->';
+            const body = [
+              marker,
+              '## Coverage',
+              '| Metric | Coverage | Threshold |',
+              '|---|---|---|',
+              `| Lines | ${pct(t.lines)} | 80% |`,
+              `| Functions | ${pct(t.functions)} | -- |`,
+              `| Branches | ${pct(t.branches)} | -- |`,
+              `| Statements | ${pct(t.statements)} | -- |`,
+            ].join('\n');
+            try {
+              const { data: comments } = await github.rest.issues.listComments({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                per_page: 100,
+              });
+              const existing = comments.find(c => c.body?.includes(marker) && c.user?.type === 'Bot');
+              if (existing) {
+                await github.rest.issues.updateComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  comment_id: existing.id,
+                  body,
+                });
+              } else {
+                await github.rest.issues.createComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: context.issue.number,
+                  body,
+                });
+              }
+            } catch (err) {
+              core.warning(`Failed to post coverage comment (GitHub API error): ${err.message}. Coverage data is available in the uploaded artifact.`);
+            }
+
+  dependency-review:
+    runs-on: ubuntu-24.04
+    if: github.event_name == 'pull_request'
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294 # v5.0.0
+        with:
+          fail-on-severity: high
+          deny-licenses: GPL-3.0, AGPL-3.0, GPL-2.0
+
+  build:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    timeout-minutes: 12
+    needs: [quality-fast, typecheck, test]
+    concurrency:
+      group: build-${{ github.ref }}
+      cancel-in-progress: true
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: ".nvmrc"
+          cache: pnpm
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Cache Next.js build
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .next/cache
+          key: nextjs-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}-${{ hashFiles('app/**', 'components/**', 'lib/**', 'design-system/**') }}
+          restore-keys: |
+            nextjs-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}-
+            nextjs-${{ runner.os }}-
+
+      - name: Build
+        run: pnpm build
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY_BUILD }}
+          UPSTASH_REDIS_REST_URL: ${{ secrets.UPSTASH_REDIS_REST_URL_BUILD }}
+          UPSTASH_REDIS_REST_TOKEN: ${{ secrets.UPSTASH_REDIS_REST_TOKEN_BUILD }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY_BUILD }}
+          DEPLOY_SALT: ci-build-salt
+          E2E_LINKS_FEED_FIXTURE: tests/e2e/fixtures/links-feed.json
+
+      - name: Bundle size gate
+        run: node scripts/check-bundle-size.mjs --max-client-kb=220
+
+      - name: Per-route JS budget gate
+        run: node scripts/check-route-js.mjs
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: next-build
+          path: .next/
+          retention-days: 1
+          include-hidden-files: true
+
+  attest-build:
+    runs-on: ubuntu-24.04
+    if: github.ref == 'refs/heads/main'
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
+    timeout-minutes: 5
+    needs: [build]
+    steps:
+      - name: Download build artifact
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: next-build
+          path: .next/
+
+      - name: Attest build provenance
+        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+        with:
+          subject-path: .next/
+
+  performance:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      statuses: write
+    timeout-minutes: 35
+    concurrency:
+      group: perf-${{ github.ref }}
+      cancel-in-progress: true
+    if: github.event_name != 'pull_request' || needs.detect-changes.outputs.app == 'true'
+    needs: [build, detect-changes]
+    env:
+      LHCI_BUILD_CONTEXT__EXTERNAL_BUILD_URL: ${{ github.event.pull_request.html_url || github.event.head_commit.url }}
+      LHCI_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      LHCI_BUILD_CONTEXT__CURRENT_HASH: ${{ github.event.pull_request.head.sha || github.sha }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: ".nvmrc"
+          cache: pnpm
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Download build artifact
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: next-build
+          path: .next/
+
+      - name: Runner image version
+        id: runner-image
+        run: echo "version=${ImageVersion:-unknown}" >> "$GITHUB_OUTPUT"
+      - name: Cache Playwright browsers
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ steps.runner-image.outputs.version }}-chromium-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            playwright-${{ runner.os }}-${{ steps.runner-image.outputs.version }}-chromium-
+
+      - name: Install Playwright Chromium (for axe-core scan)
+        run: node scripts/install-playwright-browsers.mjs chromium
+
+      - name: Start preview server
+        run: pnpm start > /tmp/server-perf.log 2>&1 &
+        env:
+          DEPLOY_SALT: ci-build-salt
+          E2E_LINKS_FEED_FIXTURE: tests/e2e/fixtures/links-feed.json
+
+      - name: Wait for server
+        run: |
+          pnpm exec wait-on http://localhost:3000 --timeout 30000 || {
+            echo "Server failed to start. Log output:"
+            cat /tmp/server-perf.log
+            exit 1
+          }
+
+      - name: Lighthouse CI (desktop)
+        run: pnpm lhci
+
+      - name: Lighthouse CI (mobile)
+        run: pnpm lhci:mobile
+
+      - name: axe-core a11y scan
+        run: pnpm playwright test tests/a11y
+
+  e2e-functional:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    if: github.event_name != 'pull_request' || needs.detect-changes.outputs.app == 'true'
+    needs: [build, detect-changes]
+    strategy:
+      fail-fast: false
+      matrix:
+        project: [chromium, chromium-mobile, webkit-desktop, webkit-mobile, chromium-components, chromium-mobile-components, webkit-desktop-components, webkit-mobile-components]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: ".nvmrc"
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Runner image version
+        id: runner-image
+        run: echo "version=${ImageVersion:-unknown}" >> "$GITHUB_OUTPUT"
+      - name: Cache Playwright browsers
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ steps.runner-image.outputs.version }}-${{ contains(matrix.project, 'webkit') && 'webkit' || 'chromium' }}-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            playwright-${{ runner.os }}-${{ steps.runner-image.outputs.version }}-${{ contains(matrix.project, 'webkit') && 'webkit' || 'chromium' }}-
+      - name: Install Playwright browsers
+        run: node scripts/install-playwright-browsers.mjs ${{ contains(matrix.project, 'webkit') && 'webkit' || 'chromium' }}
+      - name: Download build artifact
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: next-build
+          path: .next/
+      - name: Start preview server
+        run: pnpm start > /tmp/server-${{ matrix.project }}.log 2>&1 &
+        env:
+          DEPLOY_SALT: ci-build-salt
+          E2E_LINKS_FEED_FIXTURE: tests/e2e/fixtures/links-feed.json
+      - name: Wait for server
+        run: |
+          pnpm exec wait-on http://localhost:3000 --timeout 30000 || {
+            echo "Server failed to start. Log output:"
+            cat /tmp/server-${{ matrix.project }}.log
+            exit 1
+          }
+      - name: Run functional e2e (tests/e2e specs)
+        if: ${{ !endsWith(matrix.project, '-components') }}
+        run: pnpm playwright test --project=${{ matrix.project }} tests/e2e/
+      - name: Run functional e2e (co-located component specs)
+        if: endsWith(matrix.project, '-components')
+        run: pnpm playwright test --project=${{ matrix.project }}
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: failure()
+        with:
+          name: playwright-report-${{ matrix.project }}
+          path: test-results/
+
+  detect-changes:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 2
+    outputs:
+      ai: ${{ steps.check.outputs.ai }}
+      app: ${{ steps.check.outputs.app }}
+      ui: ${{ steps.check.outputs.ui }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+      - name: Detect changed file categories
+        id: check
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          EVENT_NAME: ${{ github.event_name }}
+        run: node scripts/detect-changes.mjs
+
+  ai-eval:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    if: |
+      always()
+      && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
+      && github.actor != 'dependabot[bot]'
+      && needs.detect-changes.outputs.ai == 'true'
+      && !contains(needs.*.result, 'failure')
+      && !contains(needs.*.result, 'cancelled')
+    needs: [detect-changes, quality-fast, typecheck, test]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: ".nvmrc"
+          cache: pnpm
+      - name: Install
+        run: pnpm install --frozen-lockfile
+      - name: AI eval suite
+        run: pnpm ask:eval
+        env:
+          AI_GATEWAY_API_KEY: ${{ secrets.AI_GATEWAY_API_KEY_BUILD }}
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: ask-eval-result
+          path: ask-eval-result.json
+
+  e2e-visual-chromium:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    if: github.event_name != 'pull_request' || needs.detect-changes.outputs.ui == 'true'
+    needs: [build, detect-changes]
+    strategy:
+      fail-fast: false
+      matrix:
+        project: [chromium, chromium-mobile]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: ".nvmrc"
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Runner image version
+        id: runner-image
+        run: echo "version=${ImageVersion:-unknown}" >> "$GITHUB_OUTPUT"
+      - name: Cache Playwright browsers
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ steps.runner-image.outputs.version }}-chromium-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            playwright-${{ runner.os }}-${{ steps.runner-image.outputs.version }}-chromium-
+      - name: Install Playwright browsers
+        run: node scripts/install-playwright-browsers.mjs chromium
+      - name: Download build artifact
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: next-build
+          path: .next/
+      - name: Start preview server
+        run: pnpm start > /tmp/server-${{ matrix.project }}.log 2>&1 &
+        env:
+          DEPLOY_SALT: ci-build-salt
+          E2E_LINKS_FEED_FIXTURE: tests/e2e/fixtures/links-feed.json
+      - name: Wait for server
+        run: |
+          pnpm exec wait-on http://localhost:3000 --timeout 30000 || {
+            echo "Server failed to start. Log output:"
+            cat /tmp/server-${{ matrix.project }}.log
+            exit 1
+          }
+      - if: inputs.update_visual_baselines != 'true'
+        name: Run visual regression
+        run: pnpm playwright test --project=${{ matrix.project }} tests/visual/visual.spec.ts
+        env:
+          ARGOS_TOKEN: ${{ secrets.ARGOS_TOKEN }}
+          ARGOS_PARALLEL: true
+          ARGOS_PARALLEL_NONCE: ${{ github.run_id }}-${{ github.run_attempt }}
+          ARGOS_PARALLEL_TOTAL: ${{ strategy.job-total }}
+      - if: inputs.update_visual_baselines == 'true'
+        name: Regenerate visual baselines (workflow_dispatch only)
+        run: pnpm playwright test --project=${{ matrix.project }} tests/visual/visual.spec.ts --update-snapshots=all
+        env:
+          ARGOS_TOKEN: ${{ secrets.ARGOS_TOKEN }}
+          ARGOS_PARALLEL: true
+          ARGOS_PARALLEL_NONCE: ${{ github.run_id }}-${{ github.run_attempt }}
+          ARGOS_PARALLEL_TOTAL: ${{ strategy.job-total }}
+      - if: inputs.update_visual_baselines == 'true'
+        name: Upload regenerated visual baselines
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: visual-baselines-${{ matrix.project }}
+          path: tests/visual/visual.spec.ts-snapshots/*-${{ matrix.project }}-linux.png
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: failure()
+        with:
+          name: visual-report-${{ matrix.project }}
+          path: test-results/
+
+  ci-gate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    if: always()
+    needs:
+      [
+        detect-changes,
+        quality-fast,
+        typecheck,
+        test,
+        dependency-review,
+        coverage-comment,
+        build,
+        attest-build,
+        performance,
+        e2e-functional,
+        e2e-visual-chromium,
+        ai-eval,
+        semgrep,
+        gitleaks,
+      ]
+    steps:
+      - name: Gate on upstream job results
+        env:
+          NEEDS_JSON: ${{ toJSON(needs) }}
+        run: |
+          node -e '
+            const BAD_RESULTS = new Set(["failure", "cancelled"]);
+            const needs = JSON.parse(process.env.NEEDS_JSON);
+            const bad = Object.entries(needs).filter(([, n]) => BAD_RESULTS.has(n.result));
+            for (const [job, n] of Object.entries(needs)) {
+              console.log(job + ": " + n.result);
+            }
+            if (bad.length > 0) {
+              console.error("ci-gate: blocking on " + bad.map(([job]) => job).join(", "));
+              process.exit(1);
+            }
+            console.log("ci-gate: all upstream jobs succeeded or were intentionally skipped");
+          '
+
+  semgrep:
+    name: Semgrep (static analysis)
+    runs-on: ubuntu-24.04
+    permissions:
+      security-events: write # required to upload SARIF to the code-scanning tab
+      contents: read
+    timeout-minutes: 10
+    concurrency:
+      group: semgrep-${{ github.ref }}
+      cancel-in-progress: true
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.12"
+
+      - name: Install Semgrep (exact-pinned) and resolve its path
+        run: |
+          pip install semgrep==1.169.0
+          SEMGREP_BIN=$(python -c "import os,sysconfig,site,shutil; c=[os.path.join(sysconfig.get_path('scripts'),'semgrep'),os.path.join(site.getuserbase(),'bin','semgrep')]; w=shutil.which('semgrep'); c=c+[w] if w else c; print(next((p for p in c if os.path.exists(p)),''))")
+          test -n "$SEMGREP_BIN" || { echo '::error::semgrep console script not found after install'; exit 1; }
+          echo "SEMGREP_BIN=$SEMGREP_BIN" >> "$GITHUB_ENV"
+          "$SEMGREP_BIN" --version
+
+      - name: Self-test - vendored rules fire on the fixture
+        run: node scripts/check-semgrep-fixture.mjs
+
+      - name: Run Semgrep (SARIF, report-only)
+        continue-on-error: true
+        run: node scripts/run-semgrep.mjs --sarif semgrep.sarif
+
+      - name: Assert Semgrep produced a report
+        run: |
+          if [ ! -s semgrep.sarif ]; then
+            echo '::error::Semgrep produced no SARIF (semgrep.sarif missing or empty); the real-tree scan did not run. This is an infra failure, not a findings result.'
+            exit 1
+          fi
+
+      - name: Upload SARIF to code-scanning
+        if: always() && hashFiles('semgrep.sarif') != ''
+        continue-on-error: true
+        uses: github/codeql-action/upload-sarif@9b3254085494b55a0f7c4c2b3d2d52cc712ce370 # v4.39.1
+        with:
+          sarif_file: semgrep.sarif
+          category: semgrep
+
+  gitleaks:
+    name: Gitleaks (secret scan)
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    timeout-minutes: 10
+    concurrency:
+      group: gitleaks-${{ github.ref }}
+      cancel-in-progress: true
+    env:
+      GITLEAKS_VERSION: 8.30.1
+      GITLEAKS_SHA256: 551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb # gitleaks_<version>_linux_x64.tar.gz; change with GITLEAKS_VERSION
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0 # gitleaks scans history, not just the tip
+
+      # The self-test below (check-gitleaks-fixture.mjs) imports smol-toml to parse .gitleaks.toml,
+      # so this job needs node_modules. Scoped to the self-test's dependency, not the scan: gitleaks
+      # scans git history, which node_modules (gitignored, untracked) does not touch.
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: ".nvmrc"
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+
+      # The release host answers 504 in bursts, and one 504 fails a required job with nothing
+      # scanned. The tarball is cached (key pinned to the version and platform, so a bump
+      # downloads fresh) and fetched only on a miss, with retries that back off over minutes.
+      # The expected hash is the GITLEAKS_SHA256 job env, never a cached file: whatever writes
+      # the cache entry cannot also write the value the tarball is checked against.
+      - name: Restore gitleaks release tarball
+        id: gitleaks-release
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ runner.temp }}/gitleaks-release
+          key: gitleaks-release-${{ env.GITLEAKS_VERSION }}-linux_x64
+
+      - name: Download gitleaks release tarball
+        if: steps.gitleaks-release.outputs.cache-hit != 'true'
+        run: |
+          set -euo pipefail
+          dir="${RUNNER_TEMP:-${TMPDIR:-/tmp}}/gitleaks-release"
+          mkdir -p "$dir"
+          base="https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}"
+          tarball="gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
+          curl -sSfL --retry 8 --retry-all-errors --retry-max-time 240 --max-time 120 -o "$dir/$tarball" "$base/$tarball"
+
+      # Verified by CHECKSUM against the pinned GITLEAKS_SHA256, not by asking the binary what
+      # it is: a tampered binary can print any version string it likes. The repo SHA-pins its
+      # Actions and exact-pins semgrep; a curl'd tarball has to clear the same bar. Runs on
+      # every run, so a cached file clears the same check as a downloaded one. A version bump
+      # without a matching GITLEAKS_SHA256 fails here, closed.
+      - name: Install gitleaks (checksum-verified, exact-pinned)
+        run: |
+          set -euo pipefail   # explicit: the sha256sum -c below must abort the step, not just print
+          dir="${RUNNER_TEMP:-${TMPDIR:-/tmp}}/gitleaks-release"
+          tarball="gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
+
+          echo "${GITLEAKS_SHA256}  ${dir}/${tarball}" | sha256sum -c -
+
+          tar -xzf "$dir/$tarball" -C "$dir" gitleaks
+          sudo install -m 0755 "$dir/gitleaks" /usr/local/bin/gitleaks
+          rm -f "$dir/gitleaks"
+
+          installed="$(gitleaks version)"
+          if [ "$installed" != "$GITLEAKS_VERSION" ]; then
+            echo "::error::gitleaks reports version '$installed', expected '$GITLEAKS_VERSION'."
+            exit 1
+          fi
+
+      # Proves the scanner FIRES. A secret scan that finds nothing is indistinguishable
+      # from a scanner that is silently broken, so this plants a real secret and fails
+      # the job unless gitleaks detects it (and stays silent on the clean fixture).
+      - name: Self-test - gitleaks fires on the fixture
+        run: node scripts/check-gitleaks-fixture.mjs
+
+      - name: Scan the history reachable from the checked-out commit
+        run: |
+          set +e
+          gitleaks git . --no-banner --redact --config .gitleaks.toml \
+            --log-opts="--full-history HEAD" \
+            --report-format sarif --report-path gitleaks.sarif
+          status=$?
+          set -e
+          echo "GITLEAKS_STATUS=$status" >> "$GITHUB_ENV"
+          if [ ! -s gitleaks.sarif ]; then
+            echo '::error::gitleaks produced no SARIF; the scan did not run. This is an infra failure, not a clean result -- do not read it as "no secrets".'
+            exit 1
+          fi
+
+      - name: Fail on findings
+        run: |
+          if [ "$GITLEAKS_STATUS" -eq 1 ]; then
+            echo '::error::gitleaks found a secret. Values are redacted in the log; see the SARIF artifact. Rotate the credential -- it is already in git history.'
+            exit 1
+          fi
+          if [ "$GITLEAKS_STATUS" -ne 0 ]; then
+            echo "::error::gitleaks exited $GITLEAKS_STATUS (neither 0=clean nor 1=leaks). Treating an unknown exit code as clean would be a fail-open."
+            exit 1
+          fi
+          echo 'gitleaks: clean'
+
+      - name: Upload SARIF artifact
+        if: always() && hashFiles('gitleaks.sarif') != ''
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: gitleaks-sarif
+          path: gitleaks.sarif
+          retention-days: 7

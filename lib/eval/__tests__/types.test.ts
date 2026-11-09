@@ -1,0 +1,52 @@
+import { describe, expect, it } from 'vitest';
+import { CalibrationCaseSchema, CalibrationResultSchema } from '@/lib/eval/types';
+
+const validCase = {
+  id: 'cal-1',
+  humanVerdict: true,
+  judgeVerdict: true,
+  agreed: true,
+  errored: false,
+  reason: 'matches',
+};
+
+const validResult = {
+  cases: [validCase],
+  total: 1,
+  agreed: 1,
+  agreement: 1,
+  positives: 1,
+  negatives: 0,
+  truePositives: 1,
+  trueNegatives: 0,
+  tpr: 1,
+  tnr: 0,
+  agreementPassed: true,
+  tnrPassed: false,
+  errored: 0,
+  passed: true,
+  judgeInputTokens: 10,
+  judgeOutputTokens: 5,
+};
+
+describe('lib/eval/types', () => {
+  it('CalibrationCaseSchema parses a valid case', () => {
+    expect(() => CalibrationCaseSchema.parse(validCase)).not.toThrow();
+  });
+
+  it('CalibrationCaseSchema rejects a non-boolean humanVerdict', () => {
+    expect(() => CalibrationCaseSchema.parse({ ...validCase, humanVerdict: 'yes' })).toThrow();
+  });
+
+  it('CalibrationResultSchema parses a valid result', () => {
+    expect(() => CalibrationResultSchema.parse(validResult)).not.toThrow();
+  });
+
+  it('CalibrationResultSchema rejects agreement out of [0,1]', () => {
+    expect(() => CalibrationResultSchema.parse({ ...validResult, agreement: 1.5 })).toThrow();
+  });
+
+  it('CalibrationResultSchema rejects a negative token count', () => {
+    expect(() => CalibrationResultSchema.parse({ ...validResult, judgeInputTokens: -1 })).toThrow();
+  });
+});

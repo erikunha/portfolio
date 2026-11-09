@@ -1,0 +1,43 @@
+ZERO="0000000000000000000000000000000000000000"
+saw_refspec=0
+all_deletions=1
+while IFS=' ' read -r local_ref local_sha remote_ref _remote_sha; do
+  saw_refspec=1
+  if [ "$remote_ref" = "refs/heads/main" ]; then
+    echo ""
+    echo "BLOCKED: direct push to main (remote ref: $remote_ref)."
+    echo "  All changes must go through a feature branch and PR."
+    echo "  Emergency code rollback only: git push --no-verify"
+    echo ""
+    exit 1
+  fi
+  if [ "$local_sha" != "$ZERO" ] && [ "$local_ref" != "(delete)" ]; then
+    all_deletions=0
+  fi
+done
+
+branch=$(git rev-parse --abbrev-ref HEAD)
+
+if [ "$saw_refspec" = "0" ] && [ "$branch" = "main" ]; then
+  echo ""
+  echo "BLOCKED: pushing from local main with no refspec on stdin."
+  echo "  All changes must go through a feature branch and PR."
+  echo "  Emergency code rollback only: git push --no-verify"
+  echo ""
+  exit 1
+fi
+
+if [ "$saw_refspec" = "1" ] && [ "$all_deletions" = "1" ]; then
+  echo "[pre-push] Deletion-only push; name/verify gates not applicable."
+  exit 0
+fi
+
+if [ "$branch" != "main" ]; then
+  echo "$branch" | grep -qE '^(feat|fix|chore|docs|refactor|perf|test|build|ci|style|revert|dependabot|design-system)/.+$' \
+    || { echo "Error: invalid branch name '$branch'. Use <type>/<description>."; exit 1; }
+fi
+
+unset $(git rev-parse --local-env-vars 2>/dev/null)
+
+echo "[pre-push] Running verify chain (pnpm verify)..."
+pnpm verify || exit 1

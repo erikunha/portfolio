@@ -1,0 +1,26 @@
+- /children: contain
+- banner:
+  - /children: contain
+  - navigation /.+/
+  - navigation /.+/
+- main:
+  - /children: contain
+  - heading /.+/ [level=1]
+  - region /.+/:
+    - /children: contain
+    - heading /.+/ [level=2]
+  - region /.+/:
+    - /children: contain
+    - heading /.+/ [level=2]
+  - region /.+/:
+    - /children: contain
+    - heading /.+/ [level=2]
+  - region /.+/:
+    - /children: contain
+    - heading /.+/ [level=2]
+  - region /.+/:
+    - /children: contain
+    - heading /.+/ [level=2]
+  - region /.+/:
+    - /children: contain
+    - heading /.+/ [level=2]

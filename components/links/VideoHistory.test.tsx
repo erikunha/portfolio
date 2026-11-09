@@ -1,0 +1,111 @@
+import { render } from '@testing-library/react';
+import { describe, expect, it } from 'vitest';
+import { LINKS_LOCALE } from '@/content/links.constants';
+import type { ChannelFeed } from '@/lib/links/feed';
+import { VideoHistory } from './VideoHistory';
+
+const CHANNEL_URL = 'https://www.youtube.com/@eriknagringa';
+
+function feedWith(count: number): ChannelFeed {
+  return {
+    fetchedAt: '2026-08-31T19:00:00Z',
+    latest: null,
+    history: Array.from({ length: count }, (_, i) => ({
+      id: `id-${i}`,
+      title: `Vídeo ${i + 1}`,
+      url: `https://www.youtube.com/watch?v=id-${i}`,
+      thumbnailUrl: `https://i.ytimg.com/vi/id-${i}/hqdefault.jpg`,
+      publishedAt: '2026-08-28T19:00:00+00:00',
+      ...(i === 0 ? { duration: '14:32', viewCount: 9100 } : {}),
+    })),
+    stats: {},
+    channelUrl: CHANNEL_URL,
+  };
+}
+
+const empty = feedWith(0);
+
+describe('VideoHistory', () => {
+  it('renders relative labels from the feed timestamp in either locale', () => {
+    const feed = feedWith(1);
+    const { container, rerender } = render(<VideoHistory locale={LINKS_LOCALE.en} feed={feed} />);
+    expect(container.textContent).toContain('3 days ago');
+    rerender(<VideoHistory locale={LINKS_LOCALE.pt} feed={feed} />);
+    expect(container.textContent).toContain('há 3 dias');
+    rerender(
+      <VideoHistory
+        locale={LINKS_LOCALE.en}
+        feed={{ ...feed, fetchedAt: '2026-09-01T19:00:00Z' }}
+      />,
+    );
+    expect(container.textContent).toContain('4 days ago');
+  });
+
+  it('keeps its section and heading when the feed returns no videos', () => {
+    const { container } = render(<VideoHistory locale={LINKS_LOCALE.pt} feed={empty} />);
+    expect(container.querySelector('[data-col="history"]')).not.toBeNull();
+    expect(container.querySelector('h2')?.textContent).toContain('últimos vídeos');
+  });
+
+  it.each([
+    [LINKS_LOCALE.pt, 'a lista não carregou'],
+    [LINKS_LOCALE.en, 'the list did not load'],
+  ] as const)(
+    'says the list did not load, never that the channel is empty (%s)',
+    (locale, expected) => {
+      const { container } = render(<VideoHistory locale={locale} feed={empty} />);
+      expect(container.querySelectorAll('li')).toHaveLength(0);
+      expect(container.textContent).toContain(expected);
+      expect(container.textContent, 'the channel has published videos').not.toMatch(
+        /nenhuma entrada|no entries|primeiro vídeo|first video/,
+      );
+    },
+  );
+
+  it('keeps the way to the channel when the list did not load', () => {
+    const { container } = render(<VideoHistory locale={LINKS_LOCALE.pt} feed={empty} />);
+    const link = container.querySelector('a[data-outbound="todos-videos"]');
+    expect(link?.getAttribute('href')).toContain(`${CHANNEL_URL}/videos`);
+  });
+
+  it('renders one row per video once the feed returns some', () => {
+    const { container } = render(<VideoHistory locale={LINKS_LOCALE.pt} feed={feedWith(5)} />);
+    expect(container.querySelectorAll('li')).toHaveLength(5);
+    expect(container.textContent).not.toContain('nenhuma entrada ainda');
+  });
+
+  it('numbers the rows and tags each link for attribution', () => {
+    const { container } = render(<VideoHistory locale={LINKS_LOCALE.pt} feed={feedWith(3)} />);
+    const links = [...container.querySelectorAll('li a')];
+    expect(links.map((a) => a.getAttribute('data-outbound'))).toEqual([
+      'video-1',
+      'video-2',
+      'video-3',
+    ]);
+    expect(container.textContent).toContain('01');
+    expect(container.textContent).toContain('03');
+  });
+
+  it('shows duration and views only for the entries that carry them', () => {
+    const { container } = render(<VideoHistory locale={LINKS_LOCALE.pt} feed={feedWith(2)} />);
+    const rows = [...container.querySelectorAll('li')];
+    // Intl compact notation separates "9,1" and "mil" with a non-breaking space, so the
+    // whitespace here is matched loosely rather than typed literally.
+    expect(rows[0]?.textContent?.replace(/\s+/g, ' ')).toMatch(/14:32 . 9,1 mil visualizações/);
+    expect(
+      rows[1]?.textContent,
+      'the second entry carries neither duration nor viewCount, so its meta line must not invent them',
+    ).not.toMatch(/14:32|visualizações/);
+  });
+
+  it('restores the see-all link once videos exist', () => {
+    const { container } = render(<VideoHistory locale={LINKS_LOCALE.pt} feed={feedWith(5)} />);
+    const seeAll = container.querySelector('a[data-outbound="todos-videos"]');
+    expect(seeAll?.getAttribute('href')).toContain(`${CHANNEL_URL}/videos`);
+  });
+
+  it('localises the view count word on the English route', () => {
+    const { container } = render(<VideoHistory locale={LINKS_LOCALE.en} feed={feedWith(1)} />);
+    expect(container.textContent).toContain('9.1K views');
+  });
+});

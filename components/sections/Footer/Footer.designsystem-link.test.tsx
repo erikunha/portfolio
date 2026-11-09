@@ -1,0 +1,30 @@
+import { renderToStaticMarkup } from 'react-dom/server';
+import { describe, expect, it } from 'vitest';
+import { SITE_LOCALE } from '@/content/site-locale';
+import { Footer } from './Footer';
+
+describe('Footer destinations', () => {
+  it('keeps design-system links internal and uses the canonical www self-link', () => {
+    const host = document.createElement('div');
+    host.innerHTML = renderToStaticMarkup(<Footer locale={SITE_LOCALE.en} />);
+    const links = [...host.querySelectorAll('a[href="/design-system"]')];
+    expect(links.length).toBeGreaterThan(0);
+    for (const link of links) expect(link.getAttribute('target')).not.toBe('_blank');
+    expect(host.querySelector('a[href="https://erikunha.dev"]')).toBeNull();
+    expect(host.querySelector('a[href="https://www.erikunha.dev"]')).not.toBeNull();
+  });
+
+  it('marks only external netstat endpoints with the opens-externally glyph', () => {
+    const host = document.createElement('div');
+    host.innerHTML = renderToStaticMarkup(<Footer locale={SITE_LOCALE.en} />);
+    const links = [...host.querySelectorAll('a.footer-link')];
+    expect(links.length).toBeGreaterThan(0);
+    for (const link of links) {
+      const external = link.getAttribute('target') === '_blank';
+      expect(
+        link.querySelector('.footer-link-glyph') !== null,
+        `glyph must match external flag for ${link.getAttribute('href')}`,
+      ).toBe(external);
+    }
+  });
+});

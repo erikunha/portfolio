@@ -1,0 +1,16 @@
+/AGENTS.md @erikunha
+/CLAUDE.md @erikunha
+/REVIEW.md @erikunha
+/.claude/ @erikunha
+/.agents/ @erikunha
+/.codex/ @erikunha
+/.mcp.json @erikunha
+/.github/ @erikunha
+/.husky/ @erikunha
+/scripts/ @erikunha
+/package.json @erikunha
+/pnpm-lock.yaml @erikunha
+/pnpm-workspace.yaml @erikunha
+/biome.json @erikunha
+/vercel.json @erikunha
+/proxy.ts @erikunha

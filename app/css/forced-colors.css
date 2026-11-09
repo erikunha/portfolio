@@ -1,0 +1,253 @@
+@media (forced-colors: active) {
+  :root {
+    --forced-state-width: 3px;
+    --forced-hairline: 1px;
+    --forced-focus-offset: 2px;
+    --forced-grid-dash: 1 4;
+  }
+
+  @layer components {
+    .crt-vignette,
+    .crt-scanlines,
+    .crt-mask,
+    .crt-noise,
+    .crt-flicker,
+    .crt-scan-beam,
+    .guitar-photo-tint,
+    .guitar-photo-scanlines {
+      display: none;
+    }
+
+    canvas[aria-hidden] {
+      visibility: hidden;
+    }
+
+    .menu-trigger[aria-expanded="true"] {
+      border-color: Highlight;
+      border-width: var(--forced-state-width);
+    }
+
+    .topbar-action-solid,
+    .contact-send,
+    .contact-channel-cta,
+    .ctz-propose {
+      border-style: double;
+      border-width: var(--forced-state-width);
+      font-weight: 700;
+    }
+
+    .nav-item[aria-current],
+    .section-menu .nav-item[aria-current],
+    .ds-nav-item[aria-current] {
+      border-color: Highlight;
+      border-style: double;
+      border-width: var(--forced-state-width);
+      text-decoration-line: underline;
+    }
+
+    .dock > [aria-current],
+    .dock > [data-current] {
+      border-top-color: Highlight;
+      border-top-width: var(--forced-state-width);
+    }
+
+    .dock::before {
+      background: Highlight;
+    }
+
+    .links-line:hover,
+    .topbar-action:hover,
+    .contact-send:hover:not([aria-disabled="true"]),
+    .contact-channel-cta:hover,
+    .ctz-propose:hover,
+    .nav-item:hover,
+    .ds-nav-item:hover {
+      border-color: Highlight;
+    }
+
+    .shell-control[aria-disabled="true"],
+    .contact-send[aria-disabled="true"] {
+      color: GrayText;
+      border-color: GrayText;
+      opacity: 1;
+    }
+
+    .shell-input {
+      outline: var(--forced-hairline) solid ButtonText;
+      outline-offset: calc(-1 * var(--forced-hairline));
+    }
+
+    .ctz-option:hover,
+    .ctz-option[aria-selected="true"] {
+      outline: var(--forced-state-width) solid Highlight;
+      outline-offset: calc(-1 * var(--forced-state-width));
+    }
+
+    .fader-track::before {
+      background: ButtonText;
+    }
+
+    .faderThumb,
+    .mx-fader-thumb {
+      background: Highlight;
+      border-color: CanvasText;
+    }
+
+    .faderThumb::after,
+    .mx-fader-thumb::after,
+    .mx-dial::after,
+    .mx-chain::before {
+      background: CanvasText;
+    }
+
+    .vuSegFilled,
+    .guitar-bar[data-filled="true"],
+    .plugin-card-on::before,
+    .channel-row-focused::before {
+      background: Highlight;
+    }
+
+    .vuSegEmpty,
+    .guitar-bar {
+      background: transparent;
+      outline: var(--forced-hairline) dotted ButtonText;
+      outline-offset: calc(-1 * var(--forced-hairline));
+      opacity: 1;
+    }
+
+    .guitar-bar[data-filled="true"] {
+      outline-style: solid;
+    }
+
+    .vuSegRed,
+    .eq-bar,
+    .status-dot,
+    .badge-dot,
+    .ctz-pin {
+      background: CanvasText;
+    }
+
+    .ctz-pin[data-tone="erik"] {
+      background: Highlight;
+    }
+
+    .links-thumb::after {
+      display: none;
+    }
+
+    .links-thumb img {
+      filter: none;
+    }
+
+    .ctz-cell {
+      background: Canvas;
+      outline: var(--forced-hairline) solid GrayText;
+      outline-offset: calc(-1 * var(--forced-hairline));
+    }
+
+    .ctz-cell[data-on="true"],
+    .ctz-row[data-row="both"] .ctz-cell[data-on="true"] {
+      background: Highlight;
+    }
+
+    .ctz-row[data-row="both"] .ctz-cell[data-on="true"] {
+      outline: var(--forced-state-width) solid ButtonText;
+      outline-offset: calc(-1 * var(--forced-state-width));
+    }
+
+    .ctz-cell[data-now] {
+      border-block-end: var(--forced-state-width) solid CanvasText;
+    }
+
+    .window-chrome [data-dot] {
+      border: var(--forced-hairline) solid ButtonText;
+    }
+
+    .project-folder {
+      fill: currentColor;
+      stroke: currentColor;
+    }
+
+    .knob-container circle {
+      fill: Canvas;
+      stroke: currentColor;
+    }
+
+    .knob-container line,
+    .eq-curve path,
+    .ctz-land-lit,
+    .ctz-route {
+      stroke: currentColor;
+    }
+
+    .eq-grid path {
+      stroke: ButtonText;
+      stroke-dasharray: var(--forced-grid-dash);
+    }
+
+    .ctz-land-dim {
+      stroke: GrayText;
+    }
+
+    /* biome-ignore-start lint/complexity/noImportantStyles: Tailwind utilities sit in a later layer than components, so only important declarations here keep the state marks and the focus ring on every control */
+    :focus-visible {
+      outline: var(--forced-state-width) solid Highlight !important;
+      outline-offset: var(--forced-focus-offset) !important;
+    }
+
+    .shell-input:focus-visible {
+      outline: var(--forced-state-width) solid Highlight !important;
+      outline-offset: calc(-1 * var(--forced-state-width)) !important;
+    }
+
+    .btn[data-variant="primary"] {
+      border-style: double !important;
+      border-width: var(--forced-state-width) !important;
+      font-weight: 700;
+    }
+
+    .btn[aria-current] {
+      border-color: Highlight !important;
+      border-style: double !important;
+      border-width: var(--forced-state-width) !important;
+      text-decoration-line: underline !important;
+    }
+
+    [aria-pressed="true"] {
+      border-color: Highlight !important;
+      border-width: var(--forced-state-width) !important;
+      text-decoration-line: underline;
+    }
+    .meter-fill {
+      background: Highlight !important;
+    }
+
+    .meter-dim {
+      background: transparent !important;
+      outline: var(--forced-hairline) dotted ButtonText !important;
+      outline-offset: calc(-1 * var(--forced-hairline)) !important;
+      opacity: 1 !important;
+    }
+
+    .meter-alert {
+      background: CanvasText !important;
+    }
+
+    .status-battery::after {
+      background: ButtonText !important;
+    }
+
+    .window-chrome [data-dot="red"] {
+      background: CanvasText !important;
+    }
+
+    .window-chrome [data-dot="yellow"] {
+      background: Canvas !important;
+    }
+
+    .window-chrome [data-dot="green"] {
+      background: Highlight !important;
+    }
+    /* biome-ignore-end lint/complexity/noImportantStyles: end of the block that must outrank utilities */
+  }
+}

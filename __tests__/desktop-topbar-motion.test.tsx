@@ -1,0 +1,108 @@
+import { act, createElement } from 'react';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { siteNavChrome } from '@/content/navigation';
+import { SITE_LOCALE } from '@/content/site-locale';
+import { type MountedClient, mountClient } from './helpers/render';
+
+describe('DesktopTopbar — toggleMotion', () => {
+  let mounted: MountedClient;
+
+  beforeEach(() => {
+    vi.resetModules();
+  });
+
+  afterEach(() => {
+    mounted?.unmount();
+    vi.restoreAllMocks();
+  });
+
+  it('clicking the MOTION button toggles data-motion from on to off', async () => {
+    vi.doMock('@/lib/motion', () => ({
+      readMotion: () => true,
+      applyMotion: vi.fn(),
+    }));
+
+    const { SectionNavigationProvider } = await import('@/components/responsive/SectionNavigation');
+    const { DesktopTopbar } = await import(
+      '@/components/responsive/DesktopTopbar/DesktopTopbar.client'
+    );
+
+    mounted = await mountClient(
+      createElement(
+        SectionNavigationProvider,
+        { chrome: siteNavChrome(SITE_LOCALE.en), locale: SITE_LOCALE.en },
+        createElement(DesktopTopbar, { brand: null }),
+      ),
+    );
+    const container = mounted.container;
+
+    const btn = container.querySelector('button[data-motion]');
+    expect(btn).not.toBeNull();
+    expect(btn?.getAttribute('data-motion')).toBe('on');
+
+    await act(async () => {
+      btn?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+
+    expect(btn?.getAttribute('data-motion')).toBe('off');
+  });
+
+  it('clicking the MOTION button toggles data-motion from off to on', async () => {
+    vi.doMock('@/lib/motion', () => ({
+      readMotion: () => false,
+      applyMotion: vi.fn(),
+    }));
+
+    const { SectionNavigationProvider } = await import('@/components/responsive/SectionNavigation');
+    const { DesktopTopbar } = await import(
+      '@/components/responsive/DesktopTopbar/DesktopTopbar.client'
+    );
+
+    mounted = await mountClient(
+      createElement(
+        SectionNavigationProvider,
+        { chrome: siteNavChrome(SITE_LOCALE.en), locale: SITE_LOCALE.en },
+        createElement(DesktopTopbar, { brand: null }),
+      ),
+    );
+    const container = mounted.container;
+
+    const btn = container.querySelector('button[data-motion]');
+    expect(btn?.getAttribute('data-motion')).toBe('off');
+
+    await act(async () => {
+      btn?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+
+    expect(btn?.getAttribute('data-motion')).toBe('on');
+  });
+
+  it('calls applyMotion with the new state on toggle', async () => {
+    const applyMotionMock = vi.fn();
+    vi.doMock('@/lib/motion', () => ({
+      readMotion: () => true,
+      applyMotion: applyMotionMock,
+    }));
+
+    const { SectionNavigationProvider } = await import('@/components/responsive/SectionNavigation');
+    const { DesktopTopbar } = await import(
+      '@/components/responsive/DesktopTopbar/DesktopTopbar.client'
+    );
+
+    mounted = await mountClient(
+      createElement(
+        SectionNavigationProvider,
+        { chrome: siteNavChrome(SITE_LOCALE.en), locale: SITE_LOCALE.en },
+        createElement(DesktopTopbar, { brand: null }),
+      ),
+    );
+    const container = mounted.container;
+
+    const btn = container.querySelector('button[data-motion]');
+    await act(async () => {
+      btn?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+
+    expect(applyMotionMock).toHaveBeenLastCalledWith(false);
+  });
+});
