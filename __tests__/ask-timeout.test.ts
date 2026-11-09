@@ -1,5 +1,9 @@
 import type { NextRequest } from 'next/server';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import {
+  driveAbortTimeoutWithFakeTimers,
+  stalledUntilAborted,
+} from '../tests/mocks/stalled-resend-send';
 import { askRequest } from './helpers/ask-route';
 
 const mockStreamText = vi.fn();
@@ -115,8 +119,9 @@ describe('/api/contact — Resend send 10s timeout', () => {
   });
 
   it('resolves with the message persisted even when Resend never responds', async () => {
-    resendSendMock.mockReturnValueOnce(new Promise(() => undefined));
+    resendSendMock.mockImplementationOnce(stalledUntilAborted);
     vi.useFakeTimers();
+    driveAbortTimeoutWithFakeTimers();
 
     const { POST } = await import('@/app/api/contact/route');
     const resPromise = POST(
