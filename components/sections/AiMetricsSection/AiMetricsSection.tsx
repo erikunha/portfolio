@@ -146,10 +146,8 @@ function AiMetricsBody({
           </span>
         ) : null}
       </h3>
-      {failure ? (
-        <AskError locale={locale} failure={failure} requestRef={requestRef} />
-      ) : (
-        <>
+      <div className="measured-ask-body">
+        <div className="measured-ask-reserve" aria-hidden={failure ? true : undefined}>
           <div className="measured-tiles">
             {content.ask.metrics.map((metric) => (
               <MeasuredTile
@@ -166,7 +164,7 @@ function AiMetricsBody({
             ))}
           </div>
           <MeasuredStatus
-            message={askStatusMessage(content, { metrics, loading, timestamp })}
+            message={failure ? null : askStatusMessage(content, { metrics, loading, timestamp })}
             live={!metrics}
             reserve={[
               content.loading,
@@ -175,8 +173,9 @@ function AiMetricsBody({
               content.unknownTimestamp,
             ]}
           />
-        </>
-      )}
+        </div>
+        {failure ? <AskError locale={locale} failure={failure} requestRef={requestRef} /> : null}
+      </div>
     </div>
   );
 }

@@ -43,15 +43,22 @@ export function MeasuredTile({
   description,
   reserve,
   placeholder,
+  unavailable,
 }: {
   label: string;
   value: ReactNode;
   description: ReactNode;
   reserve?: string;
   placeholder?: boolean;
+  unavailable?: boolean;
 }) {
   return (
-    <div className="measured-tile" data-metric data-placeholder={placeholder || undefined}>
+    <div
+      className="measured-tile"
+      data-metric
+      data-placeholder={placeholder || unavailable || undefined}
+      data-unavailable={unavailable || undefined}
+    >
       <div className="measured-label" data-reserve={reserve}>
         {reserve === undefined || reserve === '' ? label : <span>{label}</span>}
       </div>
@@ -248,6 +255,7 @@ function PerfBody({ locale, scores }: { locale: SiteLocale; scores: ScoresByStra
                     .join(psi.pairSeparator)
             }
             description={psi.strategies.map((strategy) => strategy.label).join(psi.pairSeparator)}
+            unavailable={unavailable}
           />
         ))}
       </div>

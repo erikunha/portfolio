@@ -259,6 +259,7 @@
   }
 
   .measured-tile {
+    --measured-value-line: calc(var(--text-xl) * 1.1);
     min-width: 0;
     padding: var(--spacing-2) var(--spacing-3);
     border: var(--border-width) solid var(--color-primary-border);
@@ -313,11 +314,25 @@
     }
   }
 
+  .measured-ask-body {
+    display: grid;
+  }
+
+  .measured-ask-body > * {
+    grid-area: 1 / 1;
+    min-width: 0;
+  }
+
+  .measured-ask-body > .measured-ask-reserve[aria-hidden="true"] {
+    visibility: hidden;
+  }
+
   .measured-error {
     display: grid;
-    align-content: start;
+    align-content: center;
     gap: var(--spacing-2);
-    justify-items: start;
+    justify-items: center;
+    text-align: center;
     padding: var(--spacing-3);
     border: var(--border-width) solid var(--color-primary-500);
     background: var(--color-glow-03);
@@ -361,6 +376,14 @@
 
   .measured-tile[data-placeholder] .measured-value {
     color: var(--color-text-secondary);
+  }
+
+  .measured-tile[data-unavailable] .measured-value {
+    display: flex;
+    align-items: center;
+    min-height: var(--measured-value-line);
+    font-size: var(--text-xs);
+    line-height: 1.1;
   }
 
   .measured-label[data-reserve] {
@@ -478,6 +501,10 @@
 
     .measured-source {
       margin-bottom: var(--spacing-3);
+    }
+
+    .measured-tile {
+      --measured-value-line: calc(var(--text-2xl) * 1.1);
     }
 
     .measured-value {

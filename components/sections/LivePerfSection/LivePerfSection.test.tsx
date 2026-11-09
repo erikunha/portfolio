@@ -90,6 +90,14 @@ describe('LivePerfSection: fetch-error fallback', () => {
     expect(valuesOf(html)).toEqual(Array(4).fill(measured[SITE_LOCALE.en].unavailable));
   });
 
+  it('marks every tile unavailable, so the word is sized to fit and the tile keeps its height', async () => {
+    getScoresMock.mockRejectedValue(new Error('PSI API unavailable'));
+    const doc = new DOMParser().parseFromString(await renderPerfData(), 'text/html');
+    expect(doc.querySelectorAll('.measured-tile[data-unavailable][data-placeholder]')).toHaveLength(
+      4,
+    );
+  });
+
   it('shows the unavailable status once for the block, not per tile', async () => {
     getScoresMock.mockRejectedValue(new Error('PSI API unavailable'));
     const doc = new DOMParser().parseFromString(await renderPerfData(), 'text/html');
