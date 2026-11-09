@@ -35,7 +35,7 @@ fails when a Lighthouse assertion is lowered, warned or turned off. Fix the meas
 
 - Static sections ship zero JS. A client file is named `*.client.tsx` and justifies its weight
   against the app-owned headroom.
-- The Matrix dialog loop mutates `useRef.textContent`. Moving it to per-keystroke state breaks INP.
+- The hero boot loop mutates `useRef.textContent`. Moving it to per-keystroke state breaks INP.
 - Vercel Speed Insights and Web Analytics are the only analytics. Do not add another script.
 
 ## Running the gates together
