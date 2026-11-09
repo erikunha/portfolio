@@ -129,7 +129,7 @@ export const askFacts: AskFacts = AskFactsSchema.parse({
   ],
   stories: [
     {
-      title: "Payment primitives across frameworks (Betsson, Erik's own account)",
+      title: 'Payment primitives across frameworks (Betsson)',
       text: 'Each brand needed its own orchestration, but payment logic could not diverge between brands, because divergence in a regulated payment flow is an audit risk. Erik built the primitives as framework-agnostic StencilJS Web Components driven by white-label configuration in an Nx monorepo, so hosts on different frameworks consume one source. He rejected a shared React library because it would tie every host to one framework and one release cadence.',
     },
     {
@@ -200,7 +200,7 @@ export const askFacts: AskFacts = AskFactsSchema.parse({
     'NestJS and XState v5: no stated production use. His state-machine experience is RxJS and NgRx.',
     'The personal endpoint is public but low traffic: never imply paying users.',
     'No formal people management: only mentoring four junior engineers at Grupo SBF.',
-    "Employer revenue, assets, customers and platform volume are business context, not personal ownership. Volume figures such as 40M+ transactions a year are Erik's own figures: present them as his.",
+    'Employer revenue, assets, customers and platform volume are business context, not personal ownership.',
     'Spanish is B1 and he cannot yet hold a technical conversation in it. English is C1.',
     'Use only figures stated in this prompt (no onboarding-time reductions, page counts, skill or agent counts, or store counts other than 800+). No React 19 at any employer, no TanStack Query at the consulting client, no Claude Code or Codex at Raylu (Next.js 14, TypeScript 5, Fastify, TypeORM).',
     'The employment history is complete: for an employer not in it, say it is not in his record.',
