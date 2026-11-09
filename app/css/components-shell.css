@@ -335,7 +335,7 @@
 
   @keyframes shell-blink {
     to {
-      background: transparent;
+      opacity: 0;
     }
   }
 
