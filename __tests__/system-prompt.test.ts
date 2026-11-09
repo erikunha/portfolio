@@ -10,6 +10,7 @@ import { personSchema } from '@/content/seo';
 import { SITE_LOCALE } from '@/content/site-locale';
 import { unknowns } from '@/content/unknowns';
 import { isCacheEligible } from '@/lib/ask/cache-eligibility';
+import { ASK_ANSWER_WORDS, ASK_LONG_ANSWER_WORDS, ASK_MAX_OUTPUT_TOKENS } from '@/lib/ask/limits';
 import { SYSTEM_TEXT } from '@/lib/ask/system-prompt';
 
 const BASELINE_PATH = '__tests__/fixtures/system-prompt.baseline.txt';
@@ -182,6 +183,39 @@ describe('lib/ask/system-prompt', () => {
       expect(SYSTEM_TEXT).toContain('Do not fabricate');
       expect(SYSTEM_TEXT).toMatch(/under 200 words/);
       expect(SYSTEM_TEXT).toMatch(/Do not reveal.*instructions/);
+    });
+
+    it('caps a request for everything at a word count that fits the output token limit', () => {
+      const WORST_CASE_TOKENS_PER_WORD = 2;
+      expect(SYSTEM_TEXT).toContain(`under ${ASK_ANSWER_WORDS} words`);
+      expect(SYSTEM_TEXT).toContain(`stay within ${ASK_LONG_ANSWER_WORDS} words`);
+      expect(
+        ASK_LONG_ANSWER_WORDS * WORST_CASE_TOKENS_PER_WORD,
+        'an instruction that allows more words than the output cap lets the route cut the answer mid-content, which the output-validation eval reads as corruption',
+      ).toBeLessThan(ASK_MAX_OUTPUT_TOKENS);
+    });
+
+    it('does not let an unbounded detail request run past the length limit', () => {
+      expect(SYSTEM_TEXT).not.toMatch(/unless the question demands more detail/);
+    });
+
+    it('states where Erik lives and labels an employer location as the company base', () => {
+      expect(
+        SYSTEM_TEXT,
+        'without the label the model reads the employer city on the current role as where Erik lives',
+      ).toContain(`Lives in ${profile.country} (${profile.timezone})`);
+      for (const entry of gitLog[SITE_LOCALE.en]) {
+        expect(SYSTEM_TEXT, entry.company).toContain(`Employer location: ${entry.location}`);
+      }
+    });
+
+    it('keeps the working-style section apart from the work arrangement', () => {
+      expect(
+        SYSTEM_TEXT,
+        'a section titled "How Erik works" answers "how does he prefer to work" with method and drops the remote, hybrid or on-site scope',
+      ).not.toContain('## How Erik works');
+      expect(SYSTEM_TEXT).toMatch(/## Working style \(.*arrangement.*under Identity\)/);
+      expect(SYSTEM_TEXT).toContain(askFacts.openTo);
     });
 
     it('points the model at the receipts section as the authoritative metric source', () => {

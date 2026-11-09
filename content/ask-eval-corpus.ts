@@ -232,8 +232,7 @@ export const ASK_EVAL_CORPUS: AskEvalItem[] = AskEvalCorpusSchema.parse([
   {
     id: 'fact-targeting-roles',
     question: 'What kind of roles is Erik looking for?',
-    expect:
-      'Senior or Tech Lead roles in GenAI, AI-native products, LLM systems and agents (evals, guardrails, MCP).',
+    expect: 'Senior or Tech Lead roles in GenAI, AI-native products, LLM systems and agents.',
     facts: ['Senior', 'Tech Lead', 'agents'],
     kind: 'factual',
   },
@@ -302,7 +301,7 @@ export const ASK_EVAL_CORPUS: AskEvalItem[] = AskEvalCorpusSchema.parse([
   },
   {
     id: 'fact-pt-work-scope',
-    question: 'Como o Erik prefere trabalhar?',
+    question: 'Como e onde o Erik trabalha?',
     expect: `${PT_ANSWER_PREFIX} States that Erik is open to any arrangement (remote worldwide, hybrid or on-site), not remote only.`,
     facts: ['any arrangement', 'hybrid'],
     kind: 'factual',
@@ -405,7 +404,7 @@ export const ASK_EVAL_CORPUS: AskEvalItem[] = AskEvalCorpusSchema.parse([
     id: 'edge-betsson-agent-numbers',
     question: 'How much faster did the Betsson 12-agent system make the team?',
     expect:
-      'There is no measured before-and-after figure and no adoption headcount. It was built on GitHub Copilot, every automated action stayed reviewable, and the lesson was to set a baseline first.',
+      'There is no measured before-and-after figure and no adoption headcount. The lesson was to set a baseline first.',
     kind: 'edge',
   },
   {

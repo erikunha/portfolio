@@ -10,6 +10,6 @@ export const formatEmploymentHighlights = (entry: CareerEntry): string =>
   entry.highlights.map((highlight) => `\n  - ${highlight}.`).join('');
 
 export const formatEmployment = (entry: CareerEntry): string => {
-  const header = `- ${entry.company}${entry.companyUrl ? ` (${entry.companyUrl})` : ''}: ${entry.role}. ${entry.date}. ${entry.location}${entry.workMode ? ` (${entry.workMode})` : ''}. ${entry.body.join(' ')}`;
+  const header = `- ${entry.company}${entry.companyUrl ? ` (${entry.companyUrl})` : ''}: ${entry.role}. ${entry.date}. Employer location: ${entry.location}${entry.workMode ? ` (${entry.workMode})` : ''}. ${entry.body.join(' ')}`;
   return `${header}${formatEmploymentContext(entry)}${formatEmploymentHighlights(entry)}`;
 };
