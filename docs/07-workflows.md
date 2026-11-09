@@ -267,7 +267,7 @@ A revert conflict or any failed step fails the `rehearse` job. The `report` job 
 ```
 commit (scope blocks) -> (read the diff before opening the PR)
   -> pnpm ci:local + gates:runtime -> gh pr create (fill the template)
-  -> resolve every review thread (rebase before each push) -> pnpm pr:gate
+  -> review the pull request (answer every finding, rebase before each push)
   -> merge once CI is green and the base is contained
 ```
 

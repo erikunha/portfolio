@@ -22,7 +22,7 @@ sequenceDiagram
     H->>CI: optional: owner, member or collaborator comments /claude-review
     CI->>C: claude-review posts inline findings + Verdict
     CI-->>C: review threads
-    C->>C: reply in each thread, resolve it, pr:gate green
+    C->>C: review the pull request, answer every finding
 ```
 
 ## 1. Context engineering (what the agent knows)
@@ -65,15 +65,15 @@ The project instructions define this loop. The table distinguishes conventions f
 | Anticipate failure | pre-mortem                                                   | convention + plan tasks                                                                      |
 | Implement          | test-first project rule                                      | convention                                                                                   |
 | Self-verify        | project verification rule                                    | convention + `pnpm verify`                                                                   |
-| Review             | claude-review only on request                                | `pnpm pr:gate` (every thread resolved with a reply)                                          |
-| Resolve            | reply in each review thread, then resolve it                 | `pnpm pr:gate` (fails `silent_resolve`)                                                      |
+| Review             | claude-review only on request                                | `pr-review-orchestrator` (every matching skill applied)                                    |
+| Resolve            | answer every blocking finding, then resolve the thread        | the review's own finding list                                                               |
 | Record             | DECISIONS.md ADR                                             | PR template checklist (author confirmation)                                                  |
 
 ## 3. Review. claude-review on request
 
 **claude-review (claude[bot]) is opt-in.** It runs only when an owner, member or collaborator comments `/claude-review` on a PR, posting findings as inline review comments anchored to changed lines and closing with a `Verdict:` line; a workflow step reds the job when the run posted none. It is not a merge requirement.
 
-`pnpm pr:gate` checks thread resolution.
+The review that runs before the merge is the `pr-review-orchestrator` skill: it discovers the skills this session can load, dispatches one specialist per material domain, and reads the rendered result as images. Its findings are the ones that must be answered.
 
 ## 4. Enforcement boundaries
 

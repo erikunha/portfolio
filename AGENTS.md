@@ -118,8 +118,8 @@ fit the same surface. A skill is a method: it never decides the verdict on its o
 - Before implementing a plan that adds a client island or dependency, or touches the API surface, check it with the `plan-review` skill. When a performance gate fails or a client change may cost JS, use `perf-budget`; when routes, identity copy or metadata change, use `seo-discovery`.
 - After implementing a section or component, look at `pnpm dev` at 1280x720 and 375x812 in a real browser before writing or changing tests. Fix what looks wrong first.
 - `claude-review` runs in CI only when an owner, member or collaborator comments `/claude-review`, and it is never a merge gate or an approver. `REVIEW.md` defines what blocks (correctness, security, accessibility, performance budget, test validity, spec or plan compliance) and what never does (style, naming).
-- Every PR comment is a review thread on a file and line, never a timeline comment: `pnpm pr:gate` reads `reviewThreads` and fails `silent_resolve`. Reply in the existing thread or create one with `commit_id`, `path` and `line`.
-- Merge readiness: CI green, base contained, `pnpm pr:gate` passes (threads resolved with a reply).
+- Every PR comment is a review thread on a file and line, never a timeline comment. Reply in the existing thread or create one with `commit_id`, `path` and `line`.
+- Merge readiness: CI green, base contained, and a review has run against the pull request with every blocking finding answered.
 - Emergency rollback: `vercel ls`, then `vercel promote <url>` (30s, no code change); or `git revert HEAD && git push --no-verify`. Verify with `curl https://erikunha.dev/api/healthz | jq .sha`. `rollback-rehearsal.yml` rehearses the slow path weekly: it reverts the latest commit on `main` locally and runs typecheck, tests and build on the result. It never pushes, promotes or deploys.
 
 <!-- BEGIN:nextjs-agent-rules -->

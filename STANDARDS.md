@@ -389,8 +389,9 @@ lint:contrast + test:coverage` and the other gates in `docs/07-workflows.md`); a
 `quality-fast` CI step is in neither the chain nor the named CI-only list. The "never disable a gate"
 rule is held by **culture** and by PR review — there is no meta-gate that can
 prevent a gate from being deleted, only the standard that says it must not be.
-The PR merge gate (`pnpm pr:gate`: threads resolved with a reply; GitHub `required_conversation_resolution`
-branch protection) is the human-in-the-loop backstop.
+GitHub `required_conversation_resolution` branch protection still holds the conversation state.
+The repository's own backstop is the review: a review runs against the pull request before the
+merge, with every matching skill applied and every blocking finding answered.
 
 ---
 

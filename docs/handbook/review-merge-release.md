@@ -16,10 +16,10 @@ flowchart TD
     r2 --> r4["pre-PR: gates:runtime (LHCI+axe+E2E)"]
     r4 --> o1["open PR: fill every template section"]
     o1 --> o1b["CI green on the PR head"]
-    o1 --> o2["resolve every review thread (claude-review only on request)"]
+    o1 --> o2["review the PR (skills dispatched, render read)"]
     o1b --> m1["pre-merge: ci:local"]
     o2 --> m1
-    m1 --> m4["pre-merge: pr:gate (every thread resolved with a reply)"]
+    m1 --> m4["pre-merge: every blocking finding answered"]
     m4 --> merge["squash-merge (#NNN)"]
     merge --> deploy["Vercel deploy"]
     deploy --> smoke["smoke.yml: healthz + headers + liveness"]
@@ -33,13 +33,32 @@ flowchart TD
 
 The `high-risk` label marks a pull request that changes a high-risk surface: `app/api/`, `lib/server/`, `lib/rate-limit.ts`, `proxy.ts`, `lib/env.ts` and other secret or env handling, `.github/workflows/`, the security headers in `next.config.ts` and `vercel.json`, the dependency manifests, and the ask prompt and its guards (`lib/ask/`). `high-risk-label.yml` adds and removes it on every push from the list in `scripts/high-risk-paths.ts`, read from the PR's base commit. Read a labelled PR for the abuse paths each of those surfaces closes (`.claude/rules/api-boundary.md`) before anything else. The label limits no PR size, blocks no merge, and is not applied to fork or Dependabot PRs, whose token is read-only.
 
-Answering threads: reply in the thread before resolving it, since `pnpm pr:gate` fails a thread resolved with no reply (`silent_resolve`); and put every comment in a review THREAD rather than an unanchored timeline comment, which `reviewThreads` cannot see.
+Answering findings: reply in the thread before resolving it, and put every comment in a review THREAD rather than an unanchored timeline comment, which `reviewThreads` cannot see.
 
 After findings are answered, every finding fixed and every CI red becomes a candidate rule: if the mistake can repeat, append a numbered rule with the check that proves it to [`lessons.md`](./lessons.md) in the same PR. The next change reads that file before it starts.
 
-## Pre-merge gates (`pnpm ci:local` + `pnpm pr:gate`)
+## The review that runs before the merge
 
-In order: `ci:local` -> `check-pr-comments` (`pnpm pr:gate`, also run in CI by `quality-fast` on every PR: GraphQL `reviewThreads(first:100)` without pagination, every returned thread `isResolved` with a reply, flags `suspicious_self_resolve`). The base branch must be contained and CI green. GitHub branch-protection settings are not in the repository; the settings read from GitHub and the controls that stand in for a second reviewer are listed in the 2026-11-07 review-model entry of `DECISIONS.md`.
+The review is the `pr-review-orchestrator` skill, run against the pull request. It is not a gate on
+the conversation: nothing in CI reads the review threads, and a merge does not wait on a thread
+state.
+
+The review discovers the skills this session can load and dispatches one specialist per material
+domain of the diff. The project skills are mandatory when their trigger matches (`AGENTS.md` holds
+the trigger table); the developer's own skills are used when they fit the same surface, and their
+absence costs nothing, so the procedure runs the same on any machine with any runtime. Every skill
+considered appears in the record: the ones that ran and the ones that stayed out.
+
+A track about how something appears ends with the reviewer having opened the captured image and
+described what it shows. Capture without reading is not a look, and a visual track that did not
+look is blocked, not complete.
+
+## Pre-merge gates (`pnpm ci:local` + the review)
+
+In order: `ci:local`, then the review with every blocking finding answered. The base branch must be
+contained and CI green. GitHub branch-protection settings are not in the repository; the settings
+read from GitHub and the controls that stand in for a second reviewer are listed in the 2026-11-07
+review-model entry of `DECISIONS.md`.
 
 The pre-push hook rejects a remote `main` target. Live GitHub protection and bypass permissions require separate inspection.
 
