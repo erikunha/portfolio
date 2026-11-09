@@ -25,7 +25,7 @@ This is Erik Cunha's hiring artifact for Senior Software Engineer, Applied AI ro
 
 The AI centerpiece is a streaming `ask` endpoint (Vercel AI Gateway + Anthropic Haiku 4.5, prompt-cached, rate-limited, budget-capped) with a correctness eval suite and a visible metrics panel, making AI quality observable to hiring reviewers. Agent-readiness surfaces include `/.well-known/agent.json` and a minimal MCP server.
 
-The terminal homepage is complemented by `/summary`, `/cv`, `/links` (pt-BR), `/links/en`, the pt-BR twins `/pt`, `/pt/cv` and `/pt/summary`, and the `/design-system` documentation pages. The home page, `/links` and `/design-system` share one shell: the same topbar, site menu, dock and position line.
+The terminal homepage is complemented by `/summary`, `/cv`, `/links` (pt-BR), `/links/en`, the pt-BR twins `/pt`, `/pt/cv` and `/pt/summary`, and 18 `/design-system` documentation pages (overview, tokens, components, enforcement, changelog, three foundations and ten primitives). Every page, the 404 pages and the route error pages included, renders through one shell: the same topbar, site menu, dock and position line. The English and pt-BR routes live in two route groups, each with its own root layout and `<html lang>`.
 
 ---
 
@@ -35,14 +35,15 @@ The terminal homepage is complemented by `/summary`, `/cv`, `/links` (pt-BR), `/
 | --------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Next.js 16 (App Router)                 | RSC-first static generation with selective client islands                                                                                                 |
 | React 19                                | Server components + streaming hydration                                                                                                                   |
-| TypeScript strict                       | `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`                                                                                                  |
+| TypeScript strict                       | `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`; `pnpm typecheck` runs the native compiler preview (`tsgo`)                                      |
 | Vercel AI Gateway + Anthropic Haiku 4.5 | Streaming `/api/ask` with prompt caching and cost tracking                                                                                                |
 | Upstash Redis                           | Rate limiting, budget cap, KV interaction log                                                                                                             |
 | Tailwind v4 (via PostCSS)               | Utility-first styling; design tokens authored in `app/css/theme.css` under `@theme {}`. No CSS Modules, no Style Dictionary, no build-time token pipeline |
 | Design system (`/design-system`)        | 11 components (10 server-compatible; Field is client), docs CopyButton helper, `@theme` tokens and live docs                                               |
 | Biome                                   | Lint + format in a single Rust binary                                                                                                                     |
-| Vitest + Playwright                     | Unit (80% line coverage gate) + E2E + axe-core a11y CI suite                                                                                              |
+| Vitest + Playwright                     | Unit (80% line coverage gate) + E2E across eight Playwright projects + axe-core a11y CI suite + Argos visual diffs                                        |
 | Lighthouse CI                           | LCP, TBT, CLS and category scores gated for app changes; INP checked in browser tests                                                                     |
+| Stryker                                 | Weekly mutation testing; a canary run in CI proves the runner still kills mutants                                                                         |
 | pnpm 10+ / Node 22.22.2+                | Strict dependency resolution, content-addressed store                                                                                                     |
 
 ---
@@ -58,7 +59,22 @@ pnpm dev                      # http://localhost:3000
 pnpm test                     # unit tests (vitest)
 pnpm test:e2e                 # Playwright E2E + a11y
 pnpm build                    # production build
+pnpm check                    # Biome lint + format check
+pnpm typecheck                # TypeScript strict check
+pnpm ci:local                 # the verify chain CI runs first
 ```
+
+| Command                                                      | Purpose                                                                                   |
+| ------------------------------------------------------------ | ----------------------------------------------------------------------------------------- |
+| `pnpm validate-content`                                      | Zod validation of every `content/*.ts` module                                             |
+| `pnpm bundle-check` / `pnpm route-js-check`                  | Global client-chunk sum / per-route first-load JS gate (both need a build)                |
+| `pnpm lhci` / `pnpm lhci:mobile`                             | Lighthouse CI against a running production server (desktop / mobile)                      |
+| `pnpm gates:runtime [--skip-build]`                          | Build, start a server, advisory Lighthouse, blocking axe and Chromium e2e                 |
+| `pnpm ask:eval`                                              | `/api/ask` correctness, jailbreak and cost eval; writes `ask-eval-result.json`            |
+| `pnpm eval:agents`                                           | Prompt-regression eval of the rules in `AGENTS.md`; non-blocking in CI                    |
+| `pnpm test:mutation`                                         | Stryker mutation run (weekly in CI)                                                       |
+| `pnpm generate:og` / `pnpm generate:icons`                   | Regenerate `public/og.png` / the favicon and app icons                                    |
+| `pnpm changelog:sync`                                        | Regenerate the design-system changelog page from `(design-system)`-scoped commits         |
 
 Static content renders without environment variables. Without service credentials, `/api/ask` rejects budget reservation, `/api/contact` cannot save messages, and `/api/lighthouse` returns unavailable scores with `no-store`. See `.env.example` for the full variable list.
 
@@ -83,7 +99,11 @@ the live YouTube feed.
 | [`ARCHITECTURE.md`](./ARCHITECTURE.md) | System design, component deep-dives, trade-offs, what to revisit        |
 | [`STANDARDS.md`](./STANDARDS.md)       | Engineering bar, 12 domain chapters, each with an enforcement mechanism |
 | [`DECISIONS.md`](./DECISIONS.md)       | Running ADR log, why decisions were made and how to reverse them        |
-| [`AGENTS.md`](./AGENTS.md)             | AI assistant instructions for Codex and Claude Code (`CLAUDE.md` imports it) |
+| [`AGENTS.md`](./AGENTS.md)             | Instructions for coding agents working in this repository (`CLAUDE.md` imports it) |
+| [`REVIEW.md`](./REVIEW.md)             | What a review reports and what it skips                                 |
+| [`CONTRIBUTING.md`](./CONTRIBUTING.md) | Branch names, commit format and the pull request flow                   |
+| [`SECURITY.md`](./SECURITY.md)         | Reporting a vulnerability                                               |
+| [`docs/`](./docs/README.md)            | Engineering knowledge base (rendering, components, API, workflows) and the `handbook/` |
 
 ---
 
