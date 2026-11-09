@@ -20,7 +20,7 @@ flowchart TD
     o1b --> m1["pre-merge: ci:local"]
     o2 --> m1
     m1 --> m4["pre-merge: pr:gate (every thread resolved with a reply)"]
-    m4 --> merge["squash-merge (#NNN), by the owner or an agent"]
+    m4 --> merge["squash-merge (#NNN) by the owner, in the browser"]
     merge --> deploy["Vercel deploy"]
     deploy --> smoke["smoke.yml: healthz + headers + liveness"]
 ```

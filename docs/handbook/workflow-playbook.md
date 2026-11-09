@@ -114,5 +114,5 @@ Every runbook lists: **entry point** (what starts it), **steps**, **AI participa
 - **Steps:**
   1. `pnpm ci:predict` (it subsumes `pnpm ci:local`, `pnpm bundle-check` and `pnpm route-js-check`) and `pnpm gates:runtime`; `gh pr create` filling the template (every section non-empty).
   2. Reply in each review thread before resolving it. claude-review runs only when an owner, member or collaborator comments `/claude-review`.
-  3. CI is green, the Argos visual check is approved and `pnpm pr:gate` passes (every thread resolved with a reply); squash-merge. An agent may approve Argos and merge, into an integration branch or into `main`.
+  3. CI is green, the Argos visual check is approved and `pnpm pr:gate` passes (every thread resolved with a reply); a human (the owner) approves Argos and squash-merges into `main` in the browser. An agent only prepares the PR, and may merge only into a non-`main` integration branch.
 - **Output:** a merged PR. See [review-merge-release](./review-merge-release.md).

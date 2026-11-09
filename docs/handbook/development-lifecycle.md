@@ -20,7 +20,7 @@ flowchart TD
     readypr --> pr["gh pr create (fill template)"]
     pr --> conv["resolve review threads (rebase before every push)"]
     conv --> readymerge["CI green + Argos approved + pr:gate"]
-    readymerge --> merge["squash-merge (#NNN), owner or agent"]
+    readymerge --> merge["squash-merge (#NNN) by the owner"]
     merge --> deploy["Vercel deploy"]
     deploy --> smoke["post-deploy smoke test"]
     smoke --> adr["deployment verified; ADR recorded"]
