@@ -15,7 +15,8 @@ const docsContent = readFileSync(docsPage, 'utf8');
 let missing = 0;
 
 for (const name of componentNames) {
-  if (!docsContent.includes(`## ${name}`)) {
+  const heading = new RegExp(`^(?:## ${name}|<h2 id="[^"]+">${name}</h2>)\\s*$`, 'm');
+  if (!heading.test(docsContent)) {
     console.error(`MISSING DOCS: ${name} has no "## ${name}" heading in components/page.mdx`);
     missing++;
   }

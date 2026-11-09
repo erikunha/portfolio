@@ -80,6 +80,20 @@ describe('check-component-docs-coverage', { timeout: SUBPROCESS_TEST_TIMEOUT_MS 
     expect(output).not.toContain('MISSING DOCS: Alpha');
   });
 
+  it('accepts a component documented under an explicit-id h2', () => {
+    const script = install('check-component-docs-coverage.mjs');
+    mkdirSync(join(sandbox, 'design-system/components/NavItem'), { recursive: true });
+    write(DOCS_PAGE, '<h2 id="nav-item">NavItem</h2>\n');
+    expect(run(script).code).toBe(PASS);
+  });
+
+  it('does not take a heading that only starts with the component name', () => {
+    const script = install('check-component-docs-coverage.mjs');
+    mkdirSync(join(sandbox, 'design-system/components/Nav'), { recursive: true });
+    write(DOCS_PAGE, '## NavItem\n');
+    expect(run(script).code).toBe(FAIL);
+  });
+
   it('passes when every component has its heading', () => {
     const script = install('check-component-docs-coverage.mjs');
     mkdirSync(join(sandbox, 'design-system/components/Alpha'), { recursive: true });
