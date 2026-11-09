@@ -51,8 +51,8 @@ const gitLogFor = (locale: SiteLocale): GitCommit[] => {
       domain: pt ? 'jogos online e pagamentos' : 'online gaming and payments',
       body: [
         pt
-          ? `buscava escala regulada em múltiplos mercados; trabalhou em uma plataforma de pagamentos PCI-DSS que processa cerca de ${PROFILE_FACT.txPerYear} transações/ano (número do Erik) em mais de 15 jurisdições, em um grupo com 31,1M de clientes.`
-          : `wanted regulated multi-market scale; worked on a PCI-DSS payment platform that handles about ${PROFILE_FACT.txPerYear} tx/yr (Erik's figure) across 15+ jurisdictions, for a group with 31.1M customers.`,
+          ? `buscava escala regulada em múltiplos mercados; trabalhou em uma plataforma de pagamentos PCI-DSS que processa ${PROFILE_FACT.txPerYear} transações/ano em mais de 15 jurisdições, em um grupo com 31,1M de clientes.`
+          : `wanted regulated multi-market scale; worked on a PCI-DSS payment platform that handles ${PROFILE_FACT.txPerYear} tx/yr across 15+ jurisdictions, for a group with 31.1M customers.`,
       ],
     },
     {

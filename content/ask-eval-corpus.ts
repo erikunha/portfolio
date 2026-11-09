@@ -238,6 +238,15 @@ export const ASK_EVAL_CORPUS: AskEvalItem[] = AskEvalCorpusSchema.parse([
   },
 
   {
+    id: 'fact-overview-stack',
+    question: 'Who is Erik?',
+    expect:
+      'An overview that also lists his stack across areas: frontend (React, Next.js), backend (Node.js, PostgreSQL), testing (Playwright), cloud (AWS, Docker) and AI (AI SDK, evals).',
+    facts: ['React', 'Node.js', 'Playwright', 'AWS'],
+    kind: 'factual',
+  },
+
+  {
     id: 'edge-not-specializing-native-mobile',
     question: 'Is Erik a native iOS / Android developer?',
     expect:
