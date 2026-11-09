@@ -179,7 +179,7 @@ flowchart TD
     e2e --> gate
     vis --> gate
     ev --> gate
-    gate["ci-gate: always-on fan-in: fails on any failed/cancelled upstream; skipped passes"]
+    gate["ci-gate: always-on fan-in: always-run jobs must succeed; others pass only on success or path skip"]
 ```
 
 `ci-gate` runs with `if: always()`, includes gitleaks, semgrep and all build/test jobs above, and is the terminal required status check. `__tests__/scripts/ci-gate-job.test.ts` asserts its `needs` list equals the full job set minus the self-reporting jobs, so adding a conditional job without fanning it in fails `pnpm test`.
