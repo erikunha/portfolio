@@ -30,10 +30,30 @@ describe('ComponentNav', () => {
     expect(buttonLink?.textContent).toBe('Button');
   });
 
-  it('renders links for all expected component entries', async () => {
+  it('links every component section and nothing else', async () => {
     const container = await render();
-    const links = container.querySelectorAll('a[href^="#"]');
-    expect(links.length).toBeGreaterThanOrEqual(8);
+    const hrefs = Array.from(container.querySelectorAll<HTMLAnchorElement>('a[href^="#"]')).map(
+      (link) => link.getAttribute('href'),
+    );
+    expect(hrefs).toEqual([
+      '#button',
+      '#field',
+      '#badge',
+      '#brand-icon',
+      '#window-chrome',
+      '#terminal-panel',
+      '#stat-tile',
+      '#cmd-line',
+      '#kbd-key',
+      '#nav-item',
+      '#copybutton',
+      '#panel',
+      '#menu-trigger',
+      '#position-line',
+      '#eq-spectrum-strip',
+      '#cover-frame',
+      '#company-link',
+    ]);
   });
 
   it('renders hash fragment hrefs for all links', async () => {
