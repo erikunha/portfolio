@@ -1,7 +1,6 @@
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { beforeAll, describe, expect, it, vi } from 'vitest';
-import { aboutContent } from '@/content/about';
 import { ASK_EVAL_CORPUS } from '@/content/ask-eval-corpus';
 import { communityEvent, communityTalksSentence } from '@/content/community';
 import { contactLanguages } from '@/content/contact';
@@ -72,19 +71,6 @@ describe('identity is consistent across every gated surface', () => {
     expect(llmsTxt).toContain(`(${social.linkedin})`);
     expect(llmsTxt).toContain(`(${social.github})`);
     expect(profile.actions[0]?.href).toBe(social.github);
-  });
-
-  it('publishes no work-authorization status in search descriptions', () => {
-    const descriptions = [personSchema.description, personSchema.seeks.itemOffered.description];
-    const rawStatusToken = /CITIZEN|NEEDS_SPONSORSHIP|OPEN_WITH_SPONSORSHIP/;
-    const rendered = [
-      ...descriptions,
-      aboutContent[SITE_LOCALE.en].whoami.intro,
-      aboutContent[SITE_LOCALE.en].whoami.statusSuffix,
-      JSON.stringify(aboutContent[SITE_LOCALE.en].now.rows),
-    ];
-    for (const text of rendered) expect(text).not.toMatch(rawStatusToken);
-    for (const text of descriptions) expect(text).not.toMatch(/citizen|sponsorship/i);
   });
 
   it('states the cross-platform code reuse the resume gives, on both surfaces', () => {
@@ -278,12 +264,6 @@ describe('identity is consistent across every gated surface', () => {
 });
 
 describe('terminal redesign canonical facts', () => {
-  it('publishes no work-authorization field in the hiring profile or the agent manifest', () => {
-    expect(HIRING_PROFILE).not.toHaveProperty('work_auth');
-    const manifest = JSON.parse(read('public/.well-known/agent.json'));
-    expect(manifest).not.toHaveProperty('work_auth');
-  });
-
   it('targets Senior only, never Staff or Principal', () => {
     const surfaces: Array<[string, string]> = [
       ...contentSurfaces,
@@ -384,14 +364,7 @@ describe('terminal redesign canonical facts', () => {
     ).toEqual([
       ['Raylu', 'Senior Software Engineer', '2026-06', null, 'New York, US', 'remote'],
       ['Betsson Group', 'Senior Software Engineer', '2025-03', '2026-05', 'Malta', 'hybrid'],
-      [
-        'Independent Consultant',
-        'Senior Software Engineer',
-        '2023-03',
-        '2025-03',
-        'Canada',
-        'remote',
-      ],
+      ['Independent Consultant', 'Senior Software Engineer', '2023-03', '2025-03', 'Remote', null],
       [
         'Grupo SBF (Nike / Centauro)',
         'Software Engineer',

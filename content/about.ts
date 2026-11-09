@@ -113,8 +113,8 @@ const aboutFor = (locale: SiteLocale): AboutContent => {
     whoami: {
       title: '# Whoami',
       intro: pt
-        ? 'Mais de 8 anos de software em produção em SaaS AI-native, fintech, pagamentos e e-commerce: sistemas com LLMs e a avaliação que decide se é seguro colocá-los em produção, originação de negócios em mercados privados, pagamentos PCI-DSS, serviço em campo de equipamentos e seguros bancários.'
-        : '8+ years of production software across AI-native SaaS, fintech, payments and e-commerce: LLM systems and the evaluation that decides whether they are safe to ship, private-markets deal origination, PCI-DSS payments, equipment field service and bank insurance.',
+        ? 'Mais de 8 anos de software em produção em SaaS AI-native, fintech, pagamentos e e-commerce: sistemas com LLMs e a avaliação que decide se é seguro colocá-los em produção, originação de negócios em mercados privados, pagamentos PCI-DSS, serviço de equipamentos hospitalares e seguros bancários.'
+        : '8+ years of production software across AI-native SaaS, fintech, payments and e-commerce: LLM systems and the evaluation that decides whether they are safe to ship, private-markets deal origination, PCI-DSS payments, hospital equipment service and bank insurance.',
       principlesTitle: pt ? '## Princípios de operação' : '## Operating Principles',
       principles: [
         pt

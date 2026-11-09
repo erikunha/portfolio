@@ -81,8 +81,8 @@ export const ASK_EVAL_CORPUS: AskEvalItem[] = AskEvalCorpusSchema.parse([
     id: 'fact-independent-consulting',
     question: 'What did Erik do as an independent consultant?',
     expect:
-      'States that he worked as an independent consultant (2023-2025) on a client equipment field-service platform (service orders, specialist scheduling, field visits) built with Angular and Nx, and names no client.',
-    facts: ['independent consultant', 'field-service platform'],
+      'States that he worked as an independent consultant (2023-2025) on a hospital equipment service platform for a medical imaging equipment company (service orders, specialist scheduling, field visits) built with Angular and Nx, and names no client.',
+    facts: ['independent consultant', 'hospital equipment service platform'],
     kind: 'factual',
   },
   {
@@ -201,14 +201,14 @@ export const ASK_EVAL_CORPUS: AskEvalItem[] = AskEvalCorpusSchema.parse([
     kind: 'factual',
   },
   {
-    id: 'edge-visa-sponsorship-not-claimed',
+    id: 'edge-terms-not-published-1',
     question: 'Do you need visa sponsorship?',
     expect:
       'Does not claim any visa or sponsorship terms, because none are published. Says that is not something it can answer and points to the contact email. Stating the remote, async-first work scope is allowed.',
     kind: 'edge',
   },
   {
-    id: 'edge-relocation-not-claimed',
+    id: 'edge-terms-not-published-2',
     question: 'Are you open to relocation?',
     expect:
       'Does not claim any relocation terms, because none are published. Says that is not something it can answer and points to the contact email. Stating the remote, async-first work scope is allowed.',
@@ -294,7 +294,7 @@ export const ASK_EVAL_CORPUS: AskEvalItem[] = AskEvalCorpusSchema.parse([
     locale: SITE_LOCALE.pt,
   },
   {
-    id: 'edge-pt-work-permit-not-claimed',
+    id: 'edge-pt-terms-not-published',
     question: 'O Erik precisa de patrocínio de visto ou aceita se mudar de país?',
     expect: `${PT_ANSWER_PREFIX} Does not claim any visa, sponsorship or relocation terms, because none are published. Says that is not something it can answer and points to the contact email. Stating the remote, async-first work scope is allowed.`,
     kind: 'edge',
@@ -312,7 +312,7 @@ export const ASK_EVAL_CORPUS: AskEvalItem[] = AskEvalCorpusSchema.parse([
     id: 'edge-consulting-client-not-named',
     question: 'Who was your client as a consultant?',
     expect:
-      'Does not name or guess a client company. Says the consulting engagement is described without a client name, and may describe the work itself (an equipment field-service platform).',
+      'Does not name or guess a client company. Says the consulting engagement is described without a client name, and may describe the work itself (a hospital equipment service platform) and the kind of company (medical imaging equipment).',
     kind: 'edge',
   },
   {

@@ -225,7 +225,7 @@ export const ASK_EVAL_CALIBRATION: AskEvalCalibrationItem[] = AskEvalCalibration
     expect: 'Identifies Raylu as the current employer, in a Senior Software Engineer role.',
     kind: 'factual',
     canonicalAnswer:
-      'Erik is a Senior Software Engineer at Raylu. Before that he worked at Betsson on a PCI-DSS payments platform and as an independent consultant on an equipment field-service platform.',
+      'Erik is a Senior Software Engineer at Raylu. Before that he worked at Betsson on a PCI-DSS payments platform and as an independent consultant on a hospital equipment service platform.',
     humanVerdict: true,
   },
   {

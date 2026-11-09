@@ -65,13 +65,13 @@ const gitLogFor = (locale: SiteLocale): GitCommit[] => {
       role: pt ? 'Engenheiro de Software Sênior' : 'Senior Software Engineer',
       startMonth: '2023-03',
       endMonth: '2025-03',
-      location: pt ? 'Canadá' : 'Canada',
-      workMode: 'remote',
-      domain: pt ? 'software de serviço em campo' : 'field-service software',
+      location: pt ? 'Remoto' : 'Remote',
+      workMode: null,
+      domain: pt ? 'equipamentos de imagem médica' : 'medical imaging equipment',
       body: [
         pt
-          ? 'reconstruiu uma plataforma de serviço em campo de equipamentos para um cliente: ordens de serviço, agendamento de especialistas, visitas de campo; Angular 17 para 19.'
-          : 'rebuilt a client equipment field-service platform: service orders, specialist scheduling, field visits; Angular 17 to 19.',
+          ? 'reconstruiu uma plataforma de serviço de equipamentos hospitalares para uma empresa de equipamentos de imagem médica: ordens de serviço, agendamento de especialistas, visitas de campo; Angular 17 para 19.'
+          : 'rebuilt a hospital equipment service platform for a medical imaging equipment company: service orders, specialist scheduling, field visits; Angular 17 to 19.',
       ],
     },
     {

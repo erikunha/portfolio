@@ -24,9 +24,9 @@ const PUBLIC_TEXT_FILES = [
 ];
 const EVAL_FILE_PREFIX = 'content/ask-eval-';
 const PROBE_IDS = new Set([
-  'edge-visa-sponsorship-not-claimed',
-  'edge-relocation-not-claimed',
-  'edge-pt-work-permit-not-claimed',
+  'edge-terms-not-published-1',
+  'edge-terms-not-published-2',
+  'edge-pt-terms-not-published',
 ]);
 
 const publicSurfaces = (): Array<[string, string]> =>
@@ -72,13 +72,17 @@ describe('retired claims stay off every published surface', () => {
     ).toEqual([...PROBE_IDS].sort());
   });
 
-  it('publishes a contact fact row for neither a visa nor a relocation', () => {
+  it('keeps the contact facts to start, mode, type, reply and their values', () => {
     for (const locale of Object.values(SITE_LOCALE)) {
-      const keys = Object.keys(contactCopy[locale].timezone.facts);
-      expect(
-        keys.filter((key) => /relocation|visa/i.test(key)),
-        'the contact facts list start, mode, type and reply only',
-      ).toEqual([]);
+      expect(Object.keys(contactCopy[locale].timezone.facts)).toEqual([
+        'availabilityLabel',
+        'modeLabel',
+        'modeValue',
+        'engagementLabel',
+        'engagementValue',
+        'replyLabel',
+        'replyValue',
+      ]);
     }
   });
 });

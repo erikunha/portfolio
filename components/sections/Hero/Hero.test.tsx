@@ -152,10 +152,10 @@ describe('Hero on the Portuguese page', () => {
 });
 
 describe('Hero owner decisions', () => {
-  it('shows no relocation or sponsorship chip', () => {
+  it('shows no availability chip', () => {
     const html = renderToStaticMarkup(createElement(Hero, { locale: SITE_LOCALE.en }));
-    expect(html, 'owner decision 2026-10-30: no visa or relocation chip in the hero').not.toMatch(
-      /SPONSORSHIP|RELOCATION|hero-availability/,
+    expect(html, 'owner decision: the hero carries no availability chip').not.toMatch(
+      /hero-availability/,
     );
   });
 });

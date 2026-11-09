@@ -110,8 +110,10 @@ describe('the ask eval corpus grades only what the prompt can answer', () => {
   it('describes the consulting work, Nike and the Canadian diploma as content/ does', () => {
     const expectOf = (id: string) => ASK_EVAL_CORPUS.find((item) => item.id === id)?.expect ?? '';
     const coOp = education[SITE_LOCALE.en].find((entry) => entry.id === 'CO_OP_DIPLOMA');
-    expect(expectOf('fact-independent-consulting')).toContain('field-service platform');
-    expect(SYSTEM_TEXT).toContain('field-service platform');
+    expect(expectOf('fact-independent-consulting')).toContain(
+      'hospital equipment service platform',
+    );
+    expect(SYSTEM_TEXT).toContain('hospital equipment service platform');
     expect(expectOf('fact-nike-centauro')).toContain('BFF gateway');
     expect(SYSTEM_TEXT).toContain('BFF gateway');
     expect(expectOf('fact-canada-status')).toContain(coOp?.degree ?? 'missing degree');
@@ -135,10 +137,11 @@ describe('public text surfaces publish no eval corpus size', () => {
 });
 
 describe('llms.txt describes the consulting work as content/ does', () => {
-  it('names the equipment field-service platform and no client sector', () => {
+  it('names the hospital equipment service platform, not hospital operations', () => {
     const llms = readFileSync(path.join(ROOT, 'public/llms.txt'), 'utf8');
-    const fieldService = llms.split('\n').find((line) => line.startsWith('- Field service:')) ?? '';
-    expect(fieldService).toContain('equipment service platform');
-    expect(llms).not.toMatch(/hospital/i);
+    const imaging =
+      llms.split('\n').find((line) => line.startsWith('- Medical imaging equipment:')) ?? '';
+    expect(imaging).toContain('hospital equipment service');
+    expect(llms).not.toMatch(/hospital operations/i);
   });
 });

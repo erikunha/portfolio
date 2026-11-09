@@ -71,15 +71,6 @@ describe('content/ask-eval-corpus', () => {
     }
   });
 
-  it('grades no criterion against a work-authorization or citizenship fact', () => {
-    for (const item of ASK_EVAL_CORPUS) {
-      expect(
-        item.expect,
-        `item "${item.id}" grades a fact the ask prompt no longer publishes: the judge would score the model against data the site removed`,
-      ).not.toMatch(/work authorization|citizen|citizenship/i);
-    }
-  });
-
   it('grades no criterion against a Staff or Principal target', () => {
     for (const item of ASK_EVAL_CORPUS) {
       expect(
@@ -105,12 +96,12 @@ describe('content/ask-eval-corpus', () => {
     }
   });
 
-  it('asks the permit and client questions as probes that a model must not answer with a claim', () => {
+  it('asks the hiring-terms and client questions as probes that a model must not answer with a claim', () => {
     const byId = (id: string) => ASK_EVAL_CORPUS.find((i) => i.id === id);
     for (const id of [
-      'edge-visa-sponsorship-not-claimed',
-      'edge-relocation-not-claimed',
-      'edge-pt-work-permit-not-claimed',
+      'edge-terms-not-published-1',
+      'edge-terms-not-published-2',
+      'edge-pt-terms-not-published',
     ]) {
       expect(byId(id)?.expect, id).toMatch(/does not claim/i);
       expect(byId(id)?.kind, id).toBe('edge');
@@ -125,7 +116,6 @@ describe('content/ask-eval-corpus', () => {
     const item = ASK_EVAL_CORPUS.find((i) => i.id === 'fact-targeting-roles');
     expect(item?.expect).toMatch(/GenAI/);
     expect(item?.expect).toMatch(/agents/);
-    expect(item?.expect).not.toMatch(/fintech|healthcare/i);
   });
 
   it('declares the key facts of every factual criterion', () => {

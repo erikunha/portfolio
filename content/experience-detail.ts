@@ -34,9 +34,9 @@ const experienceDetailEn: Record<string, ExperienceDetail> = {
   },
   'career/independent-consultant': {
     context:
-      "Independent consulting for a client's service operation: the service-order and field-service platform its engineers maintain equipment on site through, with specialist scheduling, field visits and parts collection.",
+      'Independent consulting for a medical imaging equipment company: the service-order and field-service platform its engineers maintain imaging equipment at hospitals through, with specialist scheduling, field visits and parts collection.',
     highlights: [
-      "Rebuilt the client's equipment field-service platform, replacing a legacy tool with a layered domain, data and presentation architecture for service orders, specialist schedules and field visits, as a progressive web app on Angular 17 to 19 with TypeScript 5, RxJS, PrimeNG, Chart.js, FullCalendar, Bryntum Scheduler, the Google Maps API, WebSocket (STOMP/SockJS) and Nx",
+      "Rebuilt a medical imaging equipment company's hospital equipment service platform, replacing a legacy tool with a layered domain, data and presentation architecture for service orders, specialist schedules and field visits, as a progressive web app on Angular 17 to 19 with TypeScript 5, RxJS, PrimeNG, Chart.js, FullCalendar, Bryntum Scheduler, the Google Maps API, WebSocket (STOMP/SockJS) and Nx",
       'Built specialist visit scheduling with travel-time checks, plus a 29-permission security-profile model and an HTTP interceptor that retries with backoff and de-duplicates in-flight requests',
       'Automated releases with Bash, SSH and NGINX, cutting production updates from about 5 minutes to about 45 seconds and rollbacks to about 1 minute',
       'Cut time to interactive about 52% with concurrent RxJS loading and change-detection tuning, and the bundle about 33%, layout-shell CSS about 98% and initial load about 25% by lazy loading and PrimeFlex utilities',
@@ -119,9 +119,9 @@ const experienceDetailPt: Record<string, ExperienceDetail> = {
   },
   'career/independent-consultant': {
     context:
-      'Consultoria independente para a operação de serviço de um cliente: a plataforma de ordens de serviço e serviço em campo por onde seus engenheiros mantêm equipamentos em campo, com agendamento de especialistas, visitas de campo e coleta de peças.',
+      'Consultoria independente para uma empresa de equipamentos de imagem médica: a plataforma de ordens de serviço e serviço em campo por onde seus engenheiros mantêm equipamentos de imagem em hospitais, com agendamento de especialistas, visitas de campo e coleta de peças.',
     highlights: [
-      'Reconstruí a plataforma de serviço em campo de equipamentos do cliente, substituindo uma ferramenta legada por uma arquitetura em camadas de domínio, dados e apresentação para ordens de serviço, agendas de especialistas e visitas de campo, como um progressive web app em Angular 17 a 19 com TypeScript 5, RxJS, PrimeNG, Chart.js, FullCalendar, Bryntum Scheduler, a API do Google Maps, WebSocket (STOMP/SockJS) e Nx',
+      'Reconstruí a plataforma de serviço de equipamentos hospitalares de uma empresa de equipamentos de imagem médica, substituindo uma ferramenta legada por uma arquitetura em camadas de domínio, dados e apresentação para ordens de serviço, agendas de especialistas e visitas de campo, como um progressive web app em Angular 17 a 19 com TypeScript 5, RxJS, PrimeNG, Chart.js, FullCalendar, Bryntum Scheduler, a API do Google Maps, WebSocket (STOMP/SockJS) e Nx',
       'Construí o agendamento de visitas de especialistas com checagem de tempo de deslocamento, além de um modelo de perfis de segurança com 29 permissões e um interceptor HTTP que refaz tentativas com backoff e elimina requisições duplicadas em andamento',
       'Automatizei releases com Bash, SSH e NGINX, reduzindo atualizações de produção de cerca de 5 minutos para cerca de 45 segundos e rollbacks para cerca de 1 minuto',
       'Reduzi o time to interactive em cerca de 52% com carregamento concorrente em RxJS e ajuste de change detection, e o bundle em cerca de 33%, o CSS do shell de layout em cerca de 98% e o carregamento inicial em cerca de 25% com lazy loading e utilitários PrimeFlex',

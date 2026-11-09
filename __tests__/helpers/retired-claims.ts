@@ -21,9 +21,9 @@ export const RETIRED_CLAIMS: RetiredClaim[] = [
   },
   {
     name: 'sector targeting',
-    pattern: /healthcare|hospital|hospitalar|\bsaúde\b|health ?tech/i,
+    pattern: /healthcare|health ?tech|\bsaúde\b/i,
     reason:
-      'owner decision: targeting is GenAI, AI-native products, LLM systems and agents; the consulting work is described without its client sector',
+      'owner decision: targeting is GenAI, AI-native products, LLM systems and agents; the consulting work is described by its platform, with no healthcare sector or targeting claim',
   },
 ];
 

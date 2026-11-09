@@ -53,7 +53,7 @@ describe('pt copy states the same facts in Portuguese', () => {
     expect(JSON.stringify(gitLog[PT])).not.toMatch(/formerly/);
   });
 
-  it('keeps the field-service platform detail in the pt CV, as the en CV does', () => {
+  it('keeps the hospital platform detail in the pt CV, as the en CV does', () => {
     const entry = cvDocument[PT].experience.find((item) => item.company.startsWith('Independent'));
     expect(entry?.bullets.join(' '), 'the pt CV drops the service-orders detail').toContain(
       'ordens de serviço',

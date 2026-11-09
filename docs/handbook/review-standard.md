@@ -200,7 +200,6 @@ Before writing: check the shape of every value against the shape of its siblings
 Check: `pnpm validate-content` and a read of the rendered section.
 Examples:
 - PR263 `content/git-log.ts`: one hash had 42 characters where every sibling had 40; the fix corrected it.
-- PR263 `content/visa.ts`: the work authorisation summary spliced raw enum values into a human sentence; the fix mapped them to words.
 
 ---
 

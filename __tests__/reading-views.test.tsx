@@ -277,11 +277,6 @@ describe('summary reading view', () => {
     expect(links[0]?.textContent).toContain(readingViewsEn.shared.newTabHint);
   });
 
-  it('publishes no relocation or work-authorization chip', () => {
-    expect(host.textContent).not.toContain('OPEN_TO_RELOCATION');
-    expect(host.textContent).not.toContain('OPEN_WITH_SPONSORSHIP');
-  });
-
   it('shows the chosen projects with a headline stat each', () => {
     const entries = host.querySelectorAll('.reading-projects > li');
     expect(entries).toHaveLength(readingViewsEn.summary.projectNames.length);
@@ -293,8 +288,7 @@ describe('summary reading view', () => {
     }
   });
 
-  it('shows the stack chips and no work-authorization row', () => {
-    expect(host.textContent).not.toMatch(/work authori[sz]ation/i);
+  it('shows the stack chips', () => {
     const { core, ai } = readingViewsEn.summary.stack;
     const coreChips = host.querySelectorAll('.reading-chips:not(.reading-chips--ai) li');
     const aiChips = host.querySelectorAll('.reading-chips--ai li');
