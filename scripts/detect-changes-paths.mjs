@@ -136,7 +136,6 @@ export const IGNORED_PATHS = [
   'scripts/check-harness-size.mjs',
   'scripts/check-mutation-kills.d.mts',
   'scripts/check-mutation-kills.mjs',
-  'scripts/check-pr-comments.ts',
   'scripts/check-section-order.d.mts',
   'scripts/check-section-order.mjs',
   'scripts/check-semgrep-fixture.d.mts',

@@ -18,8 +18,8 @@ flowchart TD
     hooks --> push["git push (pre-push gate chain)"]
     push --> readypr["ci:local; non-docs bundle + route-JS + runtime"]
     readypr --> pr["gh pr create (fill template)"]
-    pr --> conv["resolve review threads (rebase before every push)"]
-    conv --> readymerge["CI green + pr:gate"]
+    pr --> conv["review the pull request (answer every finding)"]
+    conv --> readymerge["CI green + findings answered"]
     readymerge --> merge["squash-merge (#NNN)"]
     merge --> deploy["Vercel deploy"]
     deploy --> smoke["post-deploy smoke test"]
@@ -64,11 +64,11 @@ Run `pnpm ci:predict` (add `--linux` when the change touches layout, fonts or me
 
 ### 9. Review threads
 
-On the open PR, answer every review thread and reply before resolving it. claude-review runs only when an owner, member or collaborator comments `/claude-review`, with no automatic follow-up round.
+On the open PR, review it: the `pr-review-orchestrator` skill dispatches one specialist per material domain, applies every matching skill and reads the rendered result as images. Answer every blocking finding. claude-review runs only when an owner, member or collaborator comments `/claude-review`, with no automatic follow-up round.
 
 ### 10. Pre-merge gates -> merge
 
-`pnpm pr:gate` (`scripts/check-pr-comments.ts`) requires the returned review threads (the first 100; the query does not paginate) to be resolved with a reply, and flags `suspicious_self_resolve`. CI runs it in `quality-fast`. Run `pnpm ci:local` alongside it, with CI green and the base contained.
+The gates are `pnpm ci:local` and CI, with CI green and the base contained, plus a review whose blocking findings are answered. The conversation state is not a gate: nothing in CI reads the review threads.
 
 ### 11. Deploy -> smoke -> record
 
@@ -108,10 +108,10 @@ flowchart LR
         g8["ci:predict (ci.yml jobs, e2e, visual)"] --> g11["gates:runtime (LHCI)"]
     end
     subgraph open["post-open"]
-        g13["Resolve review threads"]
+        g13["Review the pull request"]
     end
     subgraph premerge["pre-merge"]
-        g15["ci:local"] --> g18["pr:gate: resolved threads"]
+        g15["ci:local"] --> g18["findings answered"]
     end
     commit --> prepush --> prepr --> open --> premerge --> merge["squash-merge"]
 ```

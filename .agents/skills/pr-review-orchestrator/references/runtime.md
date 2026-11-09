@@ -1,5 +1,22 @@
 # Runtime, browser and measurement
 
+## Capability detection
+
+Before routing a track, establish what this session can actually do. Each capability is checked
+once, from the tool that would provide it, and the result is recorded: available, or blocked
+with the missing piece named.
+
+| Capability | How to establish it | When missing |
+| ---------- | ------------------- | ------------ |
+| Subagents | the agent types the runtime lists | tracks run in the main thread, sequentially |
+| Screenshot capture | a driver that writes an image file | every visual track is BLOCKED |
+| Image reading | a reader that opens an image file and returns what it shows | captures exist but no visual track can complete |
+| Shell | a command runner with the repository installed | every gate is BLOCKED |
+| Repository client | a client that reads pull request metadata and check results | PR facts come from the snapshot the session was given |
+
+A capability the runtime lists is not necessarily one the current session may use; the tool that
+would provide it decides. When a tool exists but refuses, that refusal is the block.
+
 ## Local production run
 
 ```bash
@@ -31,7 +48,8 @@ Report each as passed, failed or not run, with the command. Not run is never pas
 ## Browser journeys
 
 Enter once, then navigate by clicking; use real input only and look at a screenshot after each
-action.
+action. Looking means opening the captured file and reading it (`multimodal.md`); the screenshot
+being written is not the look.
 
 For each acceptance criterion: journey, action, observable, wrong outcome, post-action state.
 Operate the controls; rendering alone proves nothing. Exercise the states that apply: loading,

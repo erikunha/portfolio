@@ -31,7 +31,7 @@ check (Biome, warnings fail) -> typecheck -> validate-content -> check:client-na
   -> lint:contrast -> lint:css-tokens -> test:coverage (Vitest with the coverage thresholds)
 ```
 
-Three `quality-fast` steps stay CI-only: the branch-name lint (the pre-push hook enforces it), the commit-message lint (the commit-msg hook) and the PR comment merge gate (needs a pull request).
+Two `quality-fast` steps stay CI-only: the branch-name lint (the pre-push hook enforces it) and the commit-message lint (the commit-msg hook).
 
 `pnpm ci:local` == `pnpm verify`. `pnpm ci` == `verify + build + bundle-check + route-js-check`. Before opening a PR, also run `pnpm bundle-check`, `pnpm route-js-check`, and `pnpm gates:runtime`.
 
@@ -96,7 +96,7 @@ flowchart TD
 What each result means:
 
 - **pass**, **fail**: every reproducible step ran, with the outcome.
-- **partial**: the steps that ran passed but something did not: a step cannot run locally (the PR comment merge gate, Lighthouse, a `sudo` step, an expression or shell the predictor cannot evaluate, and the visual spec without `--linux`, because CI gates the Linux baselines and a macOS run compares different ones), or the e2e job ran only the changed specs while CI runs the whole suite (`--full` makes it a pass). Lighthouse scores depend on the host; `pnpm gates:runtime` still covers them.
+- **partial**: the steps that ran passed but something did not: a step cannot run locally (Lighthouse, a `sudo` step, an expression or shell the predictor cannot evaluate, and the visual spec without `--linux`, because CI gates the Linux baselines and a macOS run compares different ones), or the e2e job ran only the changed specs while CI runs the whole suite (`--full` makes it a pass). Lighthouse scores depend on the host; `pnpm gates:runtime` still covers them.
 - **not-run**: the job needs GitHub (`dependency-review`), is report-only (`semgrep`), has no changed spec on that project, its needs failed, or no step of it executed. Never read it as passed.
 - **would-run**: dry run only; nothing was executed.
 - **skipped**: the job's own `if` is false for this diff, exactly as in CI.
@@ -267,7 +267,7 @@ A revert conflict or any failed step fails the `rehearse` job. The `report` job 
 ```
 commit (scope blocks) -> (read the diff before opening the PR)
   -> pnpm ci:local + gates:runtime -> gh pr create (fill the template)
-  -> resolve every review thread (rebase before each push) -> pnpm pr:gate
+  -> review the pull request (answer every finding, rebase before each push)
   -> merge once CI is green and the base is contained
 ```
 
