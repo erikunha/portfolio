@@ -160,6 +160,8 @@ export const IGNORED_PATHS = [
   'scripts/harness-size.json',
   'scripts/high-risk-paths.ts',
   'scripts/lint-css-tokens.allowlist.json',
+  'scripts/prepare-hooks.d.mts',
+  'scripts/prepare-hooks.mjs',
   'scripts/lint-css-tokens.ts',
   'scripts/run-semgrep.mjs',
   'scripts/stryker-canary.config.mjs',
