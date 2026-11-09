@@ -102,6 +102,20 @@ test('sidebar links every design-system page', async ({ page }) => {
   }
 });
 
+test('every component nav link points at an element on the page', async ({ page }) => {
+  await page.goto('/design-system/components');
+  const nav = page.locator('nav[aria-label="Jump to component"]');
+  await expect(nav).toHaveCount(1);
+  const hrefs = await nav
+    .locator('a')
+    .evaluateAll((nodes) => nodes.map((node) => node.getAttribute('href') ?? ''));
+  expect(hrefs.length).toBeGreaterThan(0);
+  for (const href of hrefs) {
+    const target = page.locator(`[id="${href.slice(1)}"]`);
+    await expect(target, `/design-system/components has no element for ${href}`).toHaveCount(1);
+  }
+});
+
 test('Preview renders the live component and its source without interaction', async ({ page }) => {
   await page.goto('/design-system/components');
   const preview = page.getByTestId('ds-preview').first();
