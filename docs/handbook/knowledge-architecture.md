@@ -43,7 +43,6 @@ flowchart TD
 | The codebase map             | `/docs/01-11`                                                                     | reverse-engineered, diagram-first             |
 | How engineering happens      | `/docs/handbook/`                                                                 | this set                                      |
 | Agent behavior               | `AGENTS.md`, `.claude/rules/*`, `.agents/skills/*`                                | instructions + path-scoped rules + skills     |
-| Learned preferences          | `MEMORY.md` + `feedback_*.md`                                                     | runtime-specific notes                        |
 | Session continuity           | no project-established handoff location (user-global memory is runtime-dependent) | runtime-specific notes                        |
 
 ## The ADR convention (load-bearing)
@@ -59,7 +58,7 @@ Rules that make the log trustworthy:
 - **Reversibility is mandatory.** Every entry ends with how to undo it. This is what lets a solo developer move fast: nothing is a one-way door without saying so.
 - **Failed attempts are recorded, not deleted.** "Falsified first attempt: ..." entries (e.g. the PSI twice-daily cron rejected by Vercel Hobby) preserve the reasoning so the same dead end is not re-explored.
 - **Evidence is cited.** SHAs, PR numbers, and external doc URLs ground each claim.
-- **Newest first**, grouped by working session.
+- **Newest first**, each entry under a dated heading.
 
 ## The spec -> plan pipeline
 

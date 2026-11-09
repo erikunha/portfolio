@@ -28,22 +28,25 @@ proposing infrastructure changes, and if a request conflicts with a budget or ga
 | `pnpm check` / `pnpm check:fix`          | Biome lint and format check / auto-fix                                                        |
 | `pnpm typecheck`                         | TypeScript strict check                                                                       |
 | `pnpm validate-content`                  | Zod schema validation of `content/*.ts`                                                       |
-| `pnpm ci:local`                          | The verify chain CI runs first: lint, types, content, naming, pinning, vetting, doc drift, test integrity, component docs, contrast, tokens, tests with coverage thresholds |
-| `pnpm ci:predict [--base <ref>] [--linux] [--full] [--eval] [--skip-build] [--list]` | Runs every CI job the branch's commits trigger, before the push: ci.yml steps, new or changed e2e specs on every project with `--repeat-each=3 --retries=0`, `--linux` in the Playwright image. Exit 0 only when no job failed and every job was verified; 1 a job failed; 2 dry run; 3 no failure found but something was not verified: a job did not run or ran in part (read the table), or the branch has no commits ahead of its base |
+| `pnpm ci:local` (alias of `pnpm verify`) | The chain CI's `quality-fast` job runs: Biome, types, content, client naming, dependency pinning and vetting, harness size, component docs, section order, doc drift, change-filter paths, test integrity, contrast, CSS tokens, then tests with coverage thresholds |
+| `pnpm ci:predict [--base <ref>] [--branch <name>] [--linux] [--full] [--eval] [--skip-build] [--keep-going] [--repeat <n>] [--list]` | Runs every CI job the branch's commits trigger, before the push: ci.yml steps, new or changed e2e specs on every project with `--repeat-each=3 --retries=0`, `--linux` in the Playwright image. Exit 0 only when no job failed and every job was verified; 1 a job failed; 2 dry run; 3 no failure found but something was not verified: a job did not run or ran in part (read the table), or the branch has no commits ahead of its base |
 | `pnpm bundle-check`                      | Global client-chunk sum gate                                                                  |
 | `pnpm route-js-check`                    | Per-route first-load JS gate (needs a build)                                                  |
 | `pnpm gates:runtime [--skip-build]`      | Build, server on `PORT` or a free port, advisory Lighthouse, blocking axe and Chromium e2e    |
-| `pnpm lhci`                              | Lighthouse CI locally                                                                         |
+| `pnpm lhci` / `pnpm lhci:mobile`         | Lighthouse CI locally, desktop / mobile                                                       |
 | `pnpm check:doc-drift`                   | Marked `ARCHITECTURE.md` paths exist                                                          |
+| `pnpm pr:gate [<pr>]`                    | Every review thread of the PR is resolved with a reply (`silent_resolve` and `suspicious_self_resolve` flagged) |
+| `pnpm lint:semgrep`                      | Pinned Semgrep scan; report-only in CI, run it only when asked (the `semgrep` skill)          |
+| `pnpm test:mutation`                     | Stryker mutation run; weekly in CI (a PR runs only `check:mutation-canary`, and only when the runner surface changed)                                   |
 | `pnpm check:test-integrity`              | Fails a focused test (`.only`), a test body with no assertion, and a skip with no reason string |
 | `pnpm changelog:sync`                    | Regenerates the design-system changelog page from `(design-system)`-scoped commits             |
-| `pnpm ask:eval`                          | `/api/ask` product eval; run after editing its corpus, calibration, runner or system prompt (see the `ai-eval-update` skill) |
+| `pnpm ask:eval`                          | `/api/ask` product eval; run after editing its corpus, calibration, runner, system prompt or the facts (`content/ask-facts.ts`) the prompt renders (see the `ai-eval-update` skill) |
 | `pnpm eval:agents`                       | Prompt-regression eval of the rules in this file (`evals/agents/`), non-blocking in CI; exits 1 when a case never passes or an A/B arm degrades |
 
 ## Done means verified
 
 - Before claiming done, fixed or passing, run `pnpm typecheck && pnpm test --run && pnpm build`, read the output and cite it. "Should pass" is not evidence.
-- Before opening a PR run `pnpm ci:local`, then `pnpm bundle-check`, `pnpm route-js-check` and `pnpm gates:runtime` (skip the last three for docs-only changes). CI stays the authoritative gate.
+- Before opening a PR run `pnpm ci:predict` (add `--linux` for a layout, font or metrics change). It subsumes `pnpm ci:local`, `pnpm bundle-check`, `pnpm route-js-check` and the changed e2e and visual specs, and says which jobs it could not verify. Lighthouse stays with `pnpm gates:runtime`. For a docs-only change `pnpm ci:local` is enough. CI stays the authoritative gate.
 - After fixing a finding, re-run the checks that cover the affected files.
 - A gate measures a real property. Fix the property, never the gate: no audit set to `"off"`, lowered threshold, ignore-list entry, or code wrapped to hide it from the checker. The one acceptable gate edit corrects an assertion that fires on the ideal state. A gate you cannot fix in scope gets escalated with root cause, options and the minimum change, not merged suppressed.
 - A fix needs: the root cause in one sentence before code; the same pattern searched across the codebase; no deferred debt (inherent limits go in `DECISIONS.md`); the measured property re-checked, with the before and after in the commit body.
@@ -56,21 +59,21 @@ proposing infrastructure changes, and if a request conflicts with a budget or ga
 - CSS: Tailwind v4 with tokens as custom properties in `app/css/theme.css`. No Style Dictionary, CSS modules, CSS-in-JS, or PostCSS plugin besides `@tailwindcss/postcss`.
 - Vercel (Fluid Compute, Node runtime), Upstash Redis (rate limit, KV log), Resend (contact mail).
 - `/api/ask`: AI SDK v7 (`streamText`) through the Vercel AI Gateway, model `anthropic/claude-haiku-4-5` from `lib/ask/model.ts`, ephemeral prompt cache via `providerOptions.anthropic.cacheControl` on the system `instructions`. Needs `AI_GATEWAY_API_KEY` (OIDC on Vercel).
-- Tests: Vitest (jsdom), Playwright (chromium, chromium-mobile, webkit-desktop, webkit-mobile, and their four `-components` projects, all gated in CI), axe-core, Lighthouse CI.
+- Tests: Vitest (jsdom), Playwright (chromium, chromium-mobile, webkit-desktop, webkit-mobile, and their four `-components` projects, all gated in CI; the visual spec runs on chromium and chromium-mobile and also uploads to Argos), axe-core, Lighthouse CI, Stryker (weekly).
 - Packages: pnpm only, never npm or yarn. The lockfile is the source of truth; CI installs with `--frozen-lockfile`. Bump with `pnpm up --latest`, except `zod` (`~`-pinned, patch-only: its minor bumps break inference; `check-dep-pinning` rejects exact pins for stable versions) and `typescript` (held at 6.x because Stryker needs the TS JS API that TS7 removed; `--latest` rewrites a pin too; held by `__tests__/stryker-typescript-api.test.ts`). A new direct dependency also needs a purpose and license entry in `dependency-vetting.json`, or `check:dependency-vetting` fails.
 
 ## Budgets
 
 Lighthouse (`lighthouserc.json`, `lighthouserc.mobile.json`), `pnpm route-js-check` and axe enforce the budgets. `__tests__/lighthouse-budgets.test.ts` fails when a Lighthouse assertion is lowered, warned or turned off. The Lighthouse INP audit is off; the only INP guard is the shell input keystroke check in `tests/e2e/cross-cutting.spec.ts` (Chromium). Never disable a gate to merge.
 
-`route-js-check` caps first-load JS per route at 164.2KB gzipped and reports the app-owned part (total minus the measured 131.4KB framework floor, so 32.8KB of headroom). `bundle-check` sums chunks globally and cannot see a per-route regression. A framework bump moves the floor: re-measure it and change floor and total together (`DECISIONS.md` 2026-10-23).
+`route-js-check` caps first-load JS per route at 164.2KB gzipped and reports the app-owned part (total minus the measured 131.4KB framework floor, so 32.8KB of headroom). `bundle-check` sums chunks globally and cannot see a per-route regression. A framework bump moves the floor: re-measure it and change floor and total together (`DECISIONS.md` 2026-11-08).
 
 ## Rendering model
 
 - Default is React Server Components with static generation; static sections ship zero JS.
-- Client islands by exception: Matrix dialog loop, interactive shell, contact form, contact timezone panel, role and tagline typewriters, scroll type reveal and Matrix Rain (`GlobalMotion`), MOTION indicator. Every client file is named `*.client.tsx`.
+- Client islands by exception: the app shell and its navigation chrome (topbar, status bar, mobile title bar, dock, section drawer, position meter), the hero boot and system-failure animations, the interactive shell, the contact form and timezone panel, the DAW mixer controls, the role and tagline typewriters, scroll type reveal and Matrix Rain with the CRT overlay (`GlobalMotion`), the footer counters, error boundaries, the print and to-top buttons, and the design-system sidebar. A `'use client'` file is named `*.client.ts(x)` or lives under a `client/` directory; Next's `error.tsx` and `global-error.tsx` are the exceptions (`pnpm check:client-naming`).
 - Hero identity is static server-rendered text; only the About role word animates.
-- The Matrix dialog loop mutates `useRef.textContent`, never per-keystroke `useState`: per-state re-renders tank INP. The shell's streaming answer renders through React with rAF-coalesced state (`STANDARDS.md` chapter 1).
+- The hero boot loop mutates `textContent` through refs, never per-keystroke `useState`: per-state re-renders tank INP (`components/client/HeroBootAnimation/HeroBootAnimation.test.tsx`). The shell's streaming answer renders through React with rAF-coalesced state (`STANDARDS.md` chapter 1).
 
 ## Look and content
 
@@ -92,7 +95,7 @@ Lighthouse (`lighthouserc.json`, `lighthouserc.mobile.json`), `pnpm route-js-che
 
 - Commits are `type(scope): subject`; scope (feature area such as hero, shell, contact, ci) is required and commitlint enforces it. One logical unit per commit. No `Co-Authored-By` or attribution lines.
 - Stage with `git add <file>` or `git add -u`, never `git add .`, `-A` or `--all`.
-- Hooks: pre-commit runs Biome and `gitleaks git --staged` (fails closed without the binary; `brew install gitleaks`), commit-msg runs commitlint, pre-push runs the full verify and requires a `<type>/<description>` branch name. Do not push to `main`; only an emergency revert uses `--no-verify`.
+- Hooks: pre-commit runs Biome and `gitleaks git --staged` (fails closed without the binary; `brew install gitleaks`), commit-msg runs commitlint, pre-push runs the full verify and requires a `<type>/<description>` branch name. Never push to `main` directly (pre-push blocks the ref); land through a PR. Only an emergency revert uses `--no-verify`.
 - A feature too big for one PR gets an integration branch `feat/<feature>` and sub-PRs from `feat/<feature>-<part>` into it; the final PR to `main` notes it was reviewed incrementally.
 - No PR until tests, perf gates and baselines have run on a locked design. Fill every section of `.github/pull_request_template.md`; never write a body from scratch.
 - A change that moves a screenshot baseline regenerates it in the same PR: `tests/visual/visual.spec.ts` baselines on darwin and linux, `tests/e2e/design-system-components.spec.ts` baselines on darwin only. The `visual-baseline-regen` skill holds the procedure. Any color, layout, typography or spacing change counts.
@@ -100,7 +103,7 @@ Lighthouse (`lighthouserc.json`, `lighthouserc.mobile.json`), `pnpm route-js-che
 - After implementing a section or component, look at `pnpm dev` at 1280x720 and 375x812 in a real browser before writing or changing tests. Fix what looks wrong first.
 - `claude-review` runs in CI only when an owner, member or collaborator comments `/claude-review`, and it is never a merge gate or an approver. `REVIEW.md` defines what blocks (correctness, security, accessibility, performance budget, test validity, spec or plan compliance) and what never does (style, naming).
 - Every PR comment is a review thread on a file and line, never a timeline comment: `pnpm pr:gate` reads `reviewThreads` and fails `silent_resolve`. Reply in the existing thread or create one with `commit_id`, `path` and `line`.
-- Merge readiness: CI green, base contained, `pnpm pr:gate` passes (threads resolved with a reply).
+- Merge readiness: CI green, the Argos visual check approved, base contained, `pnpm pr:gate` passes (threads resolved with a reply). When these hold, an agent may approve the Argos check and merge the PR (squash), into an integration branch or into `main`.
 - Emergency rollback: `vercel ls`, then `vercel promote <url>` (30s, no code change); or `git revert HEAD && git push --no-verify`. Verify with `curl https://erikunha.dev/api/healthz | jq .sha`. `rollback-rehearsal.yml` rehearses the slow path weekly: it reverts the latest commit on `main` locally and runs typecheck, tests and build on the result. It never pushes, promotes or deploys.
 
 <!-- BEGIN:nextjs-agent-rules -->
