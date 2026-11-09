@@ -10,6 +10,9 @@ const SIGNAL_RGB = 'rgb(0, 255, 65)';
 const BODY_RGB = 'rgb(230, 255, 230)';
 const SECONDARY_RGB = 'rgb(161, 179, 161)';
 const TRANSPARENT_RGB = 'rgba(0, 0, 0, 0)';
+const BLACK_RGB = 'rgb(0, 0, 0)';
+const MIN_SMALL_TEXT_CONTRAST = 4.5;
+const SRGB_LINEAR_CUTOFF = 0.03928;
 const UNDERLINE = 'underline';
 const DESKTOP = { width: 1280, height: 800 };
 const PHONE = { width: 390, height: 844 };
@@ -31,6 +34,19 @@ const OFF_PALETTE_HUES = [
 ];
 const WINDOW_CHROME_DOT = '[data-dot]';
 const SCANNED_ROUTES = ['/', '/links', '/summary', '/cv', '/design-system/tokens'];
+
+const luminance = (rgb: string): number => {
+  const [r = 0, g = 0, b = 0] = (rgb.match(/\d+/g) ?? []).slice(0, 3).map((channel) => {
+    const value = Number(channel) / 255;
+    return value <= SRGB_LINEAR_CUTOFF ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4;
+  });
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+};
+
+const contrastRatio = (foreground: string, background: string): number => {
+  const [light, dark] = [luminance(foreground), luminance(background)].sort((a, b) => b - a);
+  return ((light ?? 0) + 0.05) / ((dark ?? 0) + 0.05);
+};
 
 const computed = (page: Page, selector: string, property: string) =>
   page
@@ -87,19 +103,37 @@ test.describe('MOTION toggle', () => {
 test.describe('small text keeps to body and secondary colors', () => {
   test.use({ viewport: DESKTOP });
 
-  test('career descriptions are body text, dates and hashes are secondary, decorations are not cyan', async ({
+  test('career hash, company, role, location, dates and description carry distinct tones', async ({
     page,
   }) => {
     await gotoSettled(page, '/');
-    expect(await computed(page, '.career-body', 'color'), '.career-body is a sentence').toBe(
-      BODY_RGB,
-    );
-    for (const selector of ['.career-hash', '.career-period', '.career-location']) {
-      expect(await computed(page, selector, 'color'), `${selector} is metadata`).toBe(
-        SECONDARY_RGB,
-      );
+    const selectors = [
+      '.career-hash',
+      '.career-decoration',
+      '.career-company',
+      '.career-role',
+      '.career-location',
+      '.career-period',
+      '.career-body',
+    ];
+    const colors = new Map<string, string>();
+    for (const selector of selectors) {
+      colors.set(selector, await computed(page, selector, 'color'));
     }
-    expect(await computed(page, '.career-decoration', 'color')).toBe(SECONDARY_RGB);
+    expect(colors.get('.career-body'), '.career-body is a sentence').toBe(BODY_RGB);
+    expect(colors.get('.career-company'), 'the company is the signal').toBe(SIGNAL_RGB);
+    expect(
+      new Set(colors.values()).size,
+      `every career part has its own tone: ${JSON.stringify([...colors])}`,
+    ).toBe(selectors.length);
+    const surface = await computed(page, '.career-section', 'background-color');
+    const background = surface === TRANSPARENT_RGB ? BLACK_RGB : surface;
+    for (const [selector, color] of colors) {
+      expect(
+        contrastRatio(color, background),
+        `${selector} ${color} on ${background} clears AA for small text`,
+      ).toBeGreaterThanOrEqual(MIN_SMALL_TEXT_CONTRAST);
+    }
   });
 
   test('the footer LISTEN state is not amber', async ({ page }) => {

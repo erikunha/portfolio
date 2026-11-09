@@ -139,11 +139,12 @@
     color: var(--color-text);
   }
 
-  .career-hash,
-  .career-location,
-  .career-period,
+  .career-hash {
+    color: var(--color-primary-700);
+  }
+
   .career-decoration {
-    color: var(--color-text-secondary);
+    color: var(--color-tertiary-400);
   }
 
   .career-company,
@@ -152,8 +153,18 @@
     font-weight: 700;
   }
 
+  .career-role {
+    color: var(--color-primary-200);
+    font-weight: 700;
+  }
+
+  .career-period {
+    color: var(--color-primary-600);
+  }
+
   .career-location {
     margin-right: var(--spacing-3);
+    color: var(--color-tertiary-300);
   }
 
   .career-location::before {
@@ -161,6 +172,8 @@
     white-space: pre;
   }
 
+  .career-place,
+  .career-mode,
   .career-period {
     white-space: nowrap;
   }

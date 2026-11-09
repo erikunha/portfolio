@@ -43,8 +43,16 @@ export function GitLogContent({ locale }: { locale: SiteLocale }) {
                 </CompanyLink>
                 {entry.displayDetail}
               </strong>{' '}
-              <strong>{entry.displayRole}</strong>{' '}
-              <span className="career-location">{entry.displayLocation}</span>{' '}
+              <strong className="career-role">{entry.displayRole}</strong>{' '}
+              <span className="career-location">
+                <span className="career-place">{entry.displayPlace}</span>
+                {entry.displayMode !== null && (
+                  <>
+                    {' '}
+                    <span className="career-mode">{entry.displayMode}</span>
+                  </>
+                )}
+              </span>{' '}
               <span className="career-period">{entry.date}</span>
             </p>
             <p className="career-body">{entry.body.join(' ')}</p>

@@ -279,9 +279,8 @@ export const careerEntries = (locale: SiteLocale) => {
       displayBrand: name.replaceAll(COMPANY_SEPARATOR, COMPANY_JOINER).toUpperCase(),
       displayDetail: detail.toUpperCase(),
       displayRole: entry.role.toUpperCase(),
-      displayLocation: `${entry.location.replace(countryLabels.full, countryLabels.short)}${
-        entry.workMode ? ` (${workModeLabels[entry.workMode] ?? entry.workMode})` : ''
-      }`,
+      displayPlace: entry.location.replace(countryLabels.full, countryLabels.short),
+      displayMode: entry.workMode ? `(${workModeLabels[entry.workMode] ?? entry.workMode})` : null,
     };
   });
 };
