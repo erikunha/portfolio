@@ -2,6 +2,7 @@ import { act, createElement } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { clearRainTheme, declareRainTheme } from '@/__tests__/helpers/rain-theme';
 import { type MountedClient, mountClient } from '@/__tests__/helpers/render';
+import { MOTION_CHOICE, MOTION_STORAGE_KEY } from '@/lib/motion-change';
 
 const CANVAS_RECT = {
   width: 400,
@@ -44,6 +45,8 @@ describe('MatrixRain keeps its layout reads out of the hydration commit', () => 
   });
 
   afterEach(() => {
+    window.localStorage.removeItem(MOTION_STORAGE_KEY);
+    Reflect.deleteProperty(document, 'hidden');
     clearRainTheme();
     mounted?.unmount();
     vi.restoreAllMocks();
@@ -75,5 +78,27 @@ describe('MatrixRain keeps its layout reads out of the hydration commit', () => 
     const canvas = mounted.container.querySelector('canvas');
     expect(canvas?.width, 'the backing store is sized once the idle window opens').toBe(400);
     expect(canvas?.height).toBe(300);
+  });
+
+  it('does not start the loop on a tab return while motion is off', async () => {
+    const raf = vi.fn(() => 1);
+    vi.stubGlobal('requestAnimationFrame', raf);
+    window.localStorage.setItem(MOTION_STORAGE_KEY, MOTION_CHOICE.off);
+    const { MatrixRain } = await import('./MatrixRain.client');
+
+    mounted = await mountClient(createElement(MatrixRain, { fontSize: 16, speed: 0.7 }));
+    await act(async () => {
+      for (const callback of idleCallbacks) callback();
+    });
+    raf.mockClear();
+
+    await act(async () => {
+      for (const hidden of [true, false]) {
+        Object.defineProperty(document, 'hidden', { value: hidden, configurable: true });
+        document.dispatchEvent(new Event('visibilitychange'));
+      }
+    });
+
+    expect(raf, 'a tab return with motion off must not schedule a frame').not.toHaveBeenCalled();
   });
 });
