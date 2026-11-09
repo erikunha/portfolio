@@ -189,8 +189,8 @@ export const ASK_EVAL_CORPUS: AskEvalItem[] = AskEvalCorpusSchema.parse([
   {
     id: 'fact-work-scope',
     question: 'How and where does Erik work?',
-    expect: `States that Erik is open to remote roles, async-first, with overlap in any time zone, and is based in ${profile.country}.`,
-    facts: ['remote', 'async-first', profile.country],
+    expect: `States that Erik is open to any arrangement (remote worldwide, hybrid or on-site), not remote only, and is based in ${profile.country}.`,
+    facts: ['any arrangement', 'hybrid', profile.country],
     kind: 'factual',
   },
   {
@@ -204,14 +204,14 @@ export const ASK_EVAL_CORPUS: AskEvalItem[] = AskEvalCorpusSchema.parse([
     id: 'edge-terms-not-published-1',
     question: 'Do you need visa sponsorship?',
     expect:
-      'Does not claim any visa or sponsorship terms, because none are published. Says that is not something it can answer and points to the contact email. Stating the remote, async-first work scope is allowed.',
+      'Does not claim any visa or sponsorship terms, because none are published. Says that is not something it can answer and points to the contact email. Stating the open work arrangement is allowed.',
     kind: 'edge',
   },
   {
     id: 'edge-terms-not-published-2',
     question: 'Are you open to relocation?',
     expect:
-      'Does not claim any relocation terms, because none are published. Says that is not something it can answer and points to the contact email. Stating the remote, async-first work scope is allowed.',
+      'Does not claim any relocation terms, because none are published. Says that is not something it can answer and points to the contact email. Stating the open work arrangement is allowed.',
     kind: 'edge',
   },
   {
@@ -296,15 +296,15 @@ export const ASK_EVAL_CORPUS: AskEvalItem[] = AskEvalCorpusSchema.parse([
   {
     id: 'edge-pt-terms-not-published',
     question: 'O Erik precisa de patrocínio de visto ou aceita se mudar de país?',
-    expect: `${PT_ANSWER_PREFIX} Does not claim any visa, sponsorship or relocation terms, because none are published. Says that is not something it can answer and points to the contact email. Stating the remote, async-first work scope is allowed.`,
+    expect: `${PT_ANSWER_PREFIX} Does not claim any visa, sponsorship or relocation terms, because none are published. Says that is not something it can answer and points to the contact email. Stating the open work arrangement is allowed.`,
     kind: 'edge',
     locale: SITE_LOCALE.pt,
   },
   {
     id: 'fact-pt-work-scope',
     question: 'Como o Erik prefere trabalhar?',
-    expect: `${PT_ANSWER_PREFIX} States that Erik is open to remote roles, async-first, with overlap in any time zone.`,
-    facts: ['remote', 'async-first'],
+    expect: `${PT_ANSWER_PREFIX} States that Erik is open to any arrangement (remote worldwide, hybrid or on-site), not remote only.`,
+    facts: ['any arrangement', 'hybrid'],
     kind: 'factual',
     locale: SITE_LOCALE.pt,
   },

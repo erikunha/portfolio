@@ -91,7 +91,7 @@ describe('content/ask-eval-corpus', () => {
   it('grounds the work-scope criteria in the published system prompt', () => {
     for (const id of ['fact-work-scope', 'fact-pt-work-scope']) {
       const item = ASK_EVAL_CORPUS.find((i) => i.id === id);
-      expect(item?.expect, id).toContain('async-first');
+      expect(item?.expect, id).toContain('any arrangement');
       expect(SYSTEM_TEXT, id).toContain(WORK_SCOPE_SENTENCE);
     }
   });

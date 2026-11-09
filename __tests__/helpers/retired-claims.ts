@@ -17,7 +17,7 @@ export const RETIRED_CLAIMS: RetiredClaim[] = [
     name: 'region targeting',
     pattern: /\bEU\/US\b|\bUE\/EUA\b|\bEU, the US\b|Europe\/US\/Canada|remote-first|remoto-first/i,
     reason:
-      'owner decision: the work scope is region-neutral (remote, async-first, overlap in any time zone), so no surface targets the EU, the US or Canada',
+      'owner decision: the work scope is region-neutral (open to any arrangement: remote worldwide, hybrid or on-site), so no surface targets the EU, the US or Canada',
   },
   {
     name: 'sector targeting',

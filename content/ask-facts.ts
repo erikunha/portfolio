@@ -7,7 +7,7 @@ import { WORK_SCOPE_SENTENCE } from './work-scope';
 const mbaPeriod = education[SITE_LOCALE.en].find((entry) => entry.id === 'MBA_AI_ENG')?.period;
 
 export const askFacts: AskFacts = AskFactsSchema.parse({
-  openTo: `Open to ${WORK_SCOPE_SENTENCE}. Anything else about where or how Erik can be hired is answered by the contact email, never guessed.`,
+  openTo: `Open to ${WORK_SCOPE_SENTENCE}. Not limited to remote work. Anything else about where or how Erik can be hired is answered by the contact email, never guessed.`,
   coreStack: [
     'Frontend: React, Next.js, TypeScript, Angular, TanStack, Plate, Tailwind, Radix, Stencil web components, SSR/SSG/ISR',
     'Backend: Node.js, Express.js, REST APIs, PostgreSQL, MongoDB, SQLite, Microsoft SQL Server',

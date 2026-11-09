@@ -10,8 +10,8 @@
 
 - Status: available now
 - Location: Paulínia, Brazil (UTC-3)
-- Remote: working remotely for Raylu (New York, US)
-- Work scope: remote · async-first, overlap with any time zone
+- Current role: working remotely for Raylu (New York, US)
+- Work scope: open to any arrangement: remote worldwide, hybrid or on-site
 - Target role: Senior Software Engineer, Applied AI
 - Focus: GenAI, AI-native products, LLM systems and agents (evals, guardrails, MCP)
 - Contact: erikhenriquealvescunha@gmail.com | +5519997049125
