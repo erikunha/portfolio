@@ -340,6 +340,12 @@ jobs:
       - name: Per-route JS budget gate
         run: node scripts/check-route-js.mjs
 
+      - name: Write the build provenance manifest
+        run: |
+          find .next -type f ! -path '.next/cache/*' -print0 | LC_ALL=C sort -z \
+            | xargs -0 sha256sum > "$RUNNER_TEMP/build-subjects.sha256"
+          mv "$RUNNER_TEMP/build-subjects.sha256" .next/build-subjects.sha256
+
       - name: Upload build artifact
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
@@ -367,7 +373,7 @@ jobs:
       - name: Attest build provenance
         uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
         with:
-          subject-path: .next/
+          subject-path: .next/build-subjects.sha256
 
   performance:
     runs-on: ubuntu-24.04
