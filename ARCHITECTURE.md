@@ -357,6 +357,7 @@ lib/cn.ts                             # className join helper
 
 app/css/theme.css                     # @theme { palette, glow stops, typography vars }
 app/css/base.css                      # @layer base { resets, focus-visible, skip-to-content }
+app/css/print.css                     # @media print: ink-on-paper palette, hidden chrome, CRT layers and rain
 app/css/components-panel.css          # the .panel frame rules (panel-head, panel-title, panel-marker), imported before the section partials that scope onto them
 app/css/components-hero.css           # one of the @layer components partials (components-<section>.css), imported in cascade order
 app/globals.css                       # entry: @import "tailwindcss" + theme/base/components; the @import order is the cascade order

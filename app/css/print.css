@@ -1,0 +1,113 @@
+@layer components {
+  @media print {
+    :root {
+      color-scheme: light;
+      print-color-adjust: exact;
+      --color-black: var(--color-print-paper);
+      --color-white: var(--color-print-ink);
+      --color-primary-50: var(--color-print-ink);
+      --color-primary-100: var(--color-print-ink);
+      --color-primary-200: var(--color-print-ink);
+      --color-primary-300: var(--color-print-ink);
+      --color-primary-400: var(--color-print-ink);
+      --color-primary-500: var(--color-print-ink);
+      --color-primary-600: var(--color-print-ink);
+      --color-primary-700: var(--color-print-ink);
+      --color-primary-800: var(--color-print-ink);
+      --color-primary-900: var(--color-print-ink);
+      --color-primary-subtle: var(--color-print-rule);
+      --color-primary-border: var(--color-print-rule);
+      --color-primary-faint: transparent;
+      --color-primary-quiet: transparent;
+      --color-secondary-950: var(--color-print-paper);
+      --color-secondary-900: var(--color-print-paper);
+      --color-secondary-800: var(--color-print-paper);
+      --color-secondary-700: var(--color-print-paper);
+      --color-secondary-600: var(--color-print-rule);
+      --color-secondary-500: var(--color-print-rule);
+      --color-secondary-400: var(--color-print-rule);
+      --color-secondary-300: var(--color-print-rule);
+      --color-secondary-200: var(--color-print-rule);
+      --color-secondary-100: var(--color-print-rule);
+      --color-secondary-50: var(--color-print-rule);
+      --color-tertiary-50: var(--color-print-ink);
+      --color-tertiary-100: var(--color-print-ink);
+      --color-tertiary-200: var(--color-print-ink);
+      --color-tertiary-300: var(--color-print-ink);
+      --color-tertiary-400: var(--color-print-rule);
+      --color-tertiary-500: var(--color-print-rule);
+      --color-tertiary-600: var(--color-print-rule);
+      --color-tertiary-700: var(--color-print-paper);
+      --color-tertiary-800: var(--color-print-paper);
+      --color-tertiary-900: var(--color-print-paper);
+      --color-quinary-500: var(--color-print-ink);
+      --color-senary-300: var(--color-print-ink);
+      --color-senary-500: var(--color-print-ink);
+      --color-eq-bar-top: var(--color-print-ink);
+      --color-eq-bar-bottom: var(--color-print-rule);
+      --color-text: var(--color-print-ink);
+      --color-text-secondary: var(--color-print-rule);
+      --color-green: var(--color-print-ink);
+      --color-glow-02: transparent;
+      --color-glow-03: transparent;
+      --color-glow-04: transparent;
+      --color-glow-05: transparent;
+      --color-glow-06: transparent;
+      --color-glow-15: transparent;
+      --color-glow-18: transparent;
+      --color-glow-25: transparent;
+      --color-glow-30: transparent;
+      --color-glow-35: transparent;
+      --color-glow-40: transparent;
+      --color-glow-45: transparent;
+      --color-glow-50: transparent;
+      --color-glow-55: transparent;
+      --color-glow-60: transparent;
+    }
+
+    html,
+    body {
+      background: var(--color-print-paper);
+      color: var(--color-print-ink);
+    }
+
+    body {
+      padding-bottom: 0;
+    }
+
+    .page-container.page-main {
+      padding-block-start: var(--space-page-top);
+    }
+
+    /* biome-ignore-start lint/complexity/noImportantStyles: Tailwind utilities sit in a later layer than components, so only important declarations keep a glow off the printed page */
+    .skip-to-content,
+    .desktop-topbar,
+    .mobile-title-bar,
+    .status-bar,
+    .dock,
+    .section-menu,
+    .menu-scrim,
+    .pos-meter,
+    .pos-line,
+    .to-top-btn,
+    .offline-notice,
+    .crt-vignette,
+    .crt-scanlines,
+    .crt-mask,
+    .crt-noise,
+    .crt-flicker,
+    .crt-scan-beam,
+    body > canvas {
+      display: none !important;
+    }
+
+    *,
+    *::before,
+    *::after {
+      text-shadow: none !important;
+      box-shadow: none !important;
+      transition: none !important;
+    }
+    /* biome-ignore-end lint/complexity/noImportantStyles: end of the block that must outrank utilities */
+  }
+}
