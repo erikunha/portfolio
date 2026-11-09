@@ -77,6 +77,8 @@ async function childBoxes(page: Page, group: string) {
   return boxes;
 }
 
+const WIDE_PHONE = { width: 400, height: 844 };
+
 test.describe('Hero groups reflow by viewport', () => {
   test('keep the impact stats two by two below 768', async ({ page }) => {
     await page.setViewportSize(MOBILE_STACK);
@@ -92,8 +94,8 @@ test.describe('Hero groups reflow by viewport', () => {
     );
   });
 
-  test('keep the secondary CTAs in one row of three below 768', async ({ page }) => {
-    await page.setViewportSize(MOBILE_STACK);
+  test('keep the secondary CTAs in one row of three from 400 to 767', async ({ page }) => {
+    await page.setViewportSize(WIDE_PHONE);
     await page.goto('/');
     const boxes = await childBoxes(page, '[data-testid="hero-ctas"]');
     expect(boxes).toHaveLength(4);

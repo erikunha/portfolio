@@ -2,6 +2,13 @@ import { expect, test } from '@playwright/test';
 
 const MOBILE = { width: 390, height: 844 };
 const MOBILE_HERO_MAX_PX = 600;
+const STACKED_ACTIONS_MAX_WIDTH_PX = 399;
+const STACKED_HERO_MAX_PX = 700;
+const HERO_BUDGETS = [
+  { width: 390, max: STACKED_HERO_MAX_PX },
+  { width: STACKED_ACTIONS_MAX_WIDTH_PX + 1, max: MOBILE_HERO_MAX_PX },
+  { width: 430, max: MOBILE_HERO_MAX_PX },
+] as const;
 
 test.describe('hero desktop layout', () => {
   for (const width of [768, 1280]) {
@@ -54,17 +61,19 @@ test.describe('hero desktop layout', () => {
 });
 
 test.describe('hero mobile layout', () => {
-  test('the mobile hero fits the 600px budget at 390', async ({ page }) => {
-    await page.setViewportSize(MOBILE);
-    await page.goto('/');
-    const hero = page.locator('[data-testid="hero-mobile"]');
-    await expect(hero).toBeVisible();
-    const height = await hero.evaluate((node) => node.getBoundingClientRect().height);
-    expect(
-      height,
-      'the mobile hero grew past the budget: the boot log, the stats and the CTA rows are the levers',
-    ).toBeLessThanOrEqual(MOBILE_HERO_MAX_PX);
-  });
+  for (const { width, max } of HERO_BUDGETS) {
+    test(`the mobile hero fits the ${max}px budget at ${width}`, async ({ page }) => {
+      await page.setViewportSize({ width, height: MOBILE.height });
+      await page.goto('/');
+      const hero = page.locator('[data-testid="hero-mobile"]');
+      await expect(hero).toBeVisible();
+      const height = await hero.evaluate((node) => node.getBoundingClientRect().height);
+      expect(
+        height,
+        'the mobile hero grew past the budget: the boot log, the stats and the CTA rows are the levers',
+      ).toBeLessThanOrEqual(max);
+    });
+  }
 
   for (const [path, width] of [
     ['/', 320],

@@ -314,13 +314,9 @@
     }
   }
 
-  @media (max-width: 359.98px) {
+  @media (max-width: 399.98px) {
     .hero-actions {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-
-    .hero-actions > a:last-child {
-      grid-column: 1 / -1;
+      grid-template-columns: minmax(0, 1fr);
     }
   }
 

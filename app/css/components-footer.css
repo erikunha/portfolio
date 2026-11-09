@@ -516,7 +516,11 @@
 
   @media (max-width: 767.98px) {
     .footer-inner {
-      padding-inline-end: var(--to-top-reach);
+      --footer-reach-inset: calc(var(--to-top-reach) - var(--space-gutter));
+    }
+
+    .footer-inner > :not(.footer-cards) {
+      padding-inline-end: var(--footer-reach-inset);
     }
 
     .footer-shutdown-title,
@@ -541,8 +545,9 @@
     }
 
     .footer-card {
-      padding: var(--spacing-3) calc(var(--spacing-3) + var(--spacing-1) / 2)
-        calc(var(--spacing-3) + var(--spacing-1) / 2);
+      --footer-card-inset: calc(var(--spacing-3) + var(--spacing-1) / 2);
+      padding: var(--spacing-3) max(var(--footer-card-inset), var(--footer-reach-inset))
+        var(--footer-card-inset) var(--footer-card-inset);
     }
 
     .footer-session-grid {

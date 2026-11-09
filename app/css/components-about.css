@@ -285,11 +285,18 @@
 
   @media (max-width: 479.98px) {
     .panel-head:has(.repo-link) {
-      flex-direction: column;
+      column-gap: var(--spacing-1);
+      justify-content: center;
       text-align: center;
     }
 
+    .ab-code .panel-title {
+      letter-spacing: 0;
+    }
+
     .panel-head:has(.repo-link) .repo-link {
+      flex: 0 0 100%;
+      justify-content: center;
       margin-left: 0;
     }
   }
