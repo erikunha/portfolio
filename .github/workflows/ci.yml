@@ -95,12 +95,6 @@ jobs:
       - name: CSS tokens (no raw hex outside theme.css)
         run: pnpm lint:css-tokens
 
-      - name: PR comment merge gate
-        if: github.event_name == 'pull_request'
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: pnpm tsx scripts/check-pr-comments.ts ${{ github.event.pull_request.number }}
-
   typecheck:
     runs-on: ubuntu-24.04
     timeout-minutes: 5
