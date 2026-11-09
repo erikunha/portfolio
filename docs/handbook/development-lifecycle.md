@@ -72,7 +72,7 @@ The gates are `pnpm ci:local` and CI, with CI green, the Argos visual check appr
 
 ### 11. Deploy -> smoke -> record
 
-Vercel deploys on merge to `main`. `attest-build` in `ci.yml` attests the build artifact on `main` only. The `smoke.yml` workflow verifies the production deployment (healthz, 7 security headers, apex->www promotion followed to its final 200, `/api/ask` + `/api/contact` liveness): the artifact probe is skipped for a protected `*.vercel.app` deployment without its bypass secret, and a canonical healthz 503 attempts a Resend alert only when that secret is configured, with delivery errors logged as warnings. The decision is recorded as an ADR in `DECISIONS.md` (with a reversibility note); no project file establishes a session-handoff location.
+Vercel deploys on merge to `main`. `attest-build` in `ci.yml` attests the build artifact on `main` only. The `smoke.yml` workflow verifies the production deployment (healthz, 7 security headers, apex->www promotion followed to its final 200, `/api/ask` + `/api/contact` liveness): the artifact probe is skipped for a protected `*.vercel.app` deployment without its bypass secret, and a canonical healthz 503 attempts a Resend alert only when `RESEND_API_KEY` and the `ALERT_EMAIL` repository secret are both configured, with delivery errors logged as warnings. The decision is recorded as an ADR in `DECISIONS.md` (with a reversibility note); no project file establishes a session-handoff location.
 
 ## The responsive critique pass
 
