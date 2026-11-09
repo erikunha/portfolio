@@ -21,6 +21,8 @@ function calibration(passed: boolean): CalibrationResult {
     passed,
     judgeInputTokens: 100,
     judgeOutputTokens: 40,
+    judgeCacheReadTokens: 0,
+    judgeCacheWriteTokens: 0,
   };
 }
 

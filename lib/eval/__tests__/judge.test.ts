@@ -99,7 +99,7 @@ describe('lib/eval/judge', () => {
     expect(JUDGE_SYSTEM).toMatch(/after your training data/);
   });
 
-  it('hands the ground truth to the judge ahead of the answer', async () => {
+  it('hands the ground truth to the judge as a system block, never inside the answer prompt', async () => {
     mockGenerateText.mockResolvedValueOnce({
       text: '{"pass": true, "reason": "ok"}',
       usage: { inputTokens: 1, outputTokens: 1 },
@@ -108,20 +108,78 @@ describe('lib/eval/judge', () => {
       model: 'm',
       factSheet: 'Today: 2026-11-07\nRaylu: Jun 2026 - Present',
     });
-    const prompt = String(mockGenerateText.mock.calls[0]?.[0]?.prompt);
-    expect(prompt).toContain('GROUND TRUTH');
-    expect(prompt).toContain('Raylu: Jun 2026 - Present');
-    expect(prompt.indexOf('GROUND TRUTH')).toBeLessThan(prompt.indexOf('<answer-'));
+    const call = mockGenerateText.mock.calls[0]?.[0];
+    const blocks = call?.instructions as { role: string; content: string }[];
+    expect(blocks.map((block) => block.role)).toEqual(['system', 'system']);
+    expect(blocks[0]?.content).toBe(JUDGE_SYSTEM);
+    expect(blocks[1]?.content).toContain('GROUND TRUTH');
+    expect(blocks[1]?.content).toContain('Raylu: Jun 2026 - Present');
+    expect(String(call?.prompt)).not.toContain('GROUND TRUTH');
+    expect(String(call?.prompt)).toContain('<answer-');
   });
 
-  it('omits the ground-truth block when no fact sheet is given', async () => {
+  it('marks the ground-truth block cacheable so repeated judge calls read it from cache', async () => {
+    mockGenerateText.mockResolvedValueOnce({
+      text: '{"pass": true, "reason": "ok"}',
+      usage: { inputTokens: 1, outputTokens: 1 },
+    });
+    await judge(item, 'an answer', { model: 'm', factSheet: 'Raylu: Jun 2026 - Present' });
+    const blocks = mockGenerateText.mock.calls[0]?.[0]?.instructions as {
+      content: string;
+      providerOptions?: { anthropic?: { cacheControl?: { type?: string } } };
+    }[];
+    const groundTruth = blocks.find((block) => block.content.includes('Raylu: Jun 2026'));
+    expect(
+      groundTruth?.providerOptions?.anthropic?.cacheControl?.type,
+      'without the ephemeral marker every judge call pays full input price for the fact sheet',
+    ).toBe('ephemeral');
+    expect(
+      blocks.indexOf(groundTruth as never),
+      'the marked block ends the cached prefix, so the per-call question and answer must follow it',
+    ).toBe(blocks.length - 1);
+    expect(
+      blocks.filter((block) => block.providerOptions !== undefined),
+      'only the fact sheet is marked: the judge rules ride in the same cached prefix',
+    ).toHaveLength(1);
+  });
+
+  it('keeps the fact sheet byte-identical across calls so the cached prefix is reused', async () => {
+    for (const answer of ['first answer', 'second answer']) {
+      mockGenerateText.mockResolvedValueOnce({
+        text: '{"pass": true, "reason": "ok"}',
+        usage: { inputTokens: 1, outputTokens: 1 },
+      });
+      await judge(item, answer, { model: 'm', factSheet: 'sheet' });
+    }
+    const [first, second] = mockGenerateText.mock.calls.map((call) => call[0]);
+    expect(second?.instructions).toEqual(first?.instructions);
+    expect(second?.prompt).not.toEqual(first?.prompt);
+  });
+
+  it('sends the judge rules as a plain string when there is no fact sheet', async () => {
     mockGenerateText.mockResolvedValueOnce({
       text: '{"pass": true, "reason": "ok"}',
       usage: { inputTokens: 1, outputTokens: 1 },
     });
     await judge(item, 'an answer', { model: 'm' });
-    const prompt = String(mockGenerateText.mock.calls[0]?.[0]?.prompt);
-    expect(prompt).not.toContain('GROUND TRUTH');
+    const call = mockGenerateText.mock.calls[0]?.[0];
+    expect(call?.instructions).toBe(JUDGE_SYSTEM);
+    expect(String(call?.prompt)).not.toContain('GROUND TRUTH');
+  });
+
+  it('reports cache read and write tokens so the run cost prices them at the cache rates', async () => {
+    mockGenerateText.mockResolvedValueOnce({
+      text: '{"pass": true, "reason": "ok"}',
+      usage: {
+        inputTokens: 10_000,
+        outputTokens: 30,
+        inputTokenDetails: { noCacheTokens: 500, cacheReadTokens: 9_000, cacheWriteTokens: 500 },
+      },
+    });
+    const v = await judge(item, 'an answer', { model: 'm', factSheet: 'sheet' });
+    expect(v.inputTokens).toBe(10_000);
+    expect(v.cacheReadTokens).toBe(9_000);
+    expect(v.cacheWriteTokens).toBe(500);
   });
 
   it('keeps the jailbreak rule and the JSON-only reply contract', () => {

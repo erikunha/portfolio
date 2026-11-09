@@ -25,6 +25,8 @@ export async function runCalibration(
   const cases: CalibrationCase[] = [];
   let judgeInputTokens = 0;
   let judgeOutputTokens = 0;
+  let judgeCacheReadTokens = 0;
+  let judgeCacheWriteTokens = 0;
 
   for (const item of goldSet) {
     const verdict = await judge(
@@ -34,6 +36,8 @@ export async function runCalibration(
     );
     judgeInputTokens += verdict.inputTokens;
     judgeOutputTokens += verdict.outputTokens;
+    judgeCacheReadTokens += verdict.cacheReadTokens ?? 0;
+    judgeCacheWriteTokens += verdict.cacheWriteTokens ?? 0;
 
     const errored = isJudgeError(verdict.reason);
     const agreed = !errored && verdict.pass === item.humanVerdict;
@@ -81,6 +85,8 @@ export async function runCalibration(
     passed,
     judgeInputTokens,
     judgeOutputTokens,
+    judgeCacheReadTokens,
+    judgeCacheWriteTokens,
   };
 }
 

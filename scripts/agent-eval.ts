@@ -229,7 +229,10 @@ async function main(): Promise<void> {
 
   if (!calibration.passed) {
     const calibrationJudgeCostUsd = Number(
-      judgeCostUsdFrom(calibration.judgeInputTokens, calibration.judgeOutputTokens).toFixed(4),
+      judgeCostUsdFrom(calibration.judgeInputTokens, calibration.judgeOutputTokens, {
+        cacheReadTokens: calibration.judgeCacheReadTokens,
+        cacheWriteTokens: calibration.judgeCacheWriteTokens,
+      }).toFixed(4),
     );
     const partial = buildAggregate({
       ts,
@@ -301,6 +304,8 @@ async function main(): Promise<void> {
   meter.addJudge({
     inputTokens: calibration.judgeInputTokens,
     outputTokens: calibration.judgeOutputTokens,
+    cacheReadTokens: calibration.judgeCacheReadTokens,
+    cacheWriteTokens: calibration.judgeCacheWriteTokens,
   });
   const knownHard = new Set(cases.filter((c) => c.knownHard).map((c) => c.id));
 

@@ -28,10 +28,24 @@ export const featureCostUsdFrom = (counts: {
 
 const TOKENS_PER_MTOK = 1_000_000;
 
-export const judgeCostUsdFrom = (inputTokens: number, outputTokens: number): number =>
-  (inputTokens * PRICING_USD_PER_MTOK.judge.input +
-    outputTokens * PRICING_USD_PER_MTOK.judge.output) /
-  TOKENS_PER_MTOK;
+export const judgeCostUsdFrom = (
+  inputTokens: number,
+  outputTokens: number,
+  cache: { cacheReadTokens?: number; cacheWriteTokens?: number } = {},
+): number => {
+  const cacheReadTokens = cache.cacheReadTokens ?? 0;
+  const cacheWriteTokens = cache.cacheWriteTokens ?? 0;
+  const plainInput = Math.max(0, inputTokens - cacheReadTokens - cacheWriteTokens);
+  const inputUnits =
+    plainInput +
+    cacheReadTokens * CACHE_PRICE_MULTIPLIER.read +
+    cacheWriteTokens * CACHE_PRICE_MULTIPLIER.write;
+  return (
+    (inputUnits * PRICING_USD_PER_MTOK.judge.input +
+      outputTokens * PRICING_USD_PER_MTOK.judge.output) /
+    TOKENS_PER_MTOK
+  );
+};
 
 export type TargetTier = 'mechanical' | 'judgment';
 

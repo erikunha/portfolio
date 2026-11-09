@@ -19,7 +19,12 @@ export function assertWithinBudget(args: {
   };
 }
 
-export type TokenUsage = { inputTokens: number; outputTokens: number };
+export type TokenUsage = {
+  inputTokens: number;
+  outputTokens: number;
+  cacheReadTokens?: number;
+  cacheWriteTokens?: number;
+};
 
 export type SpendMeter = {
   addTarget(tier: TargetTier, usage: TokenUsage): void;
@@ -35,7 +40,7 @@ export function createSpendMeter(capUsd: number): SpendMeter {
       spentUsd += targetCostUsdFrom(tier, usage.inputTokens, usage.outputTokens);
     },
     addJudge(usage) {
-      spentUsd += judgeCostUsdFrom(usage.inputTokens, usage.outputTokens);
+      spentUsd += judgeCostUsdFrom(usage.inputTokens, usage.outputTokens, usage);
     },
     get spentUsd() {
       return spentUsd;

@@ -5,6 +5,8 @@ export type JudgeVerdict = {
   reason: string;
   inputTokens: number;
   outputTokens: number;
+  cacheReadTokens?: number;
+  cacheWriteTokens?: number;
 };
 
 export const CalibrationCaseSchema = z.object({
@@ -35,5 +37,7 @@ export const CalibrationResultSchema = z.object({
   passed: z.boolean(),
   judgeInputTokens: z.number().int().nonnegative(),
   judgeOutputTokens: z.number().int().nonnegative(),
+  judgeCacheReadTokens: z.number().int().nonnegative().default(0),
+  judgeCacheWriteTokens: z.number().int().nonnegative().default(0),
 });
 export type CalibrationResult = z.infer<typeof CalibrationResultSchema>;

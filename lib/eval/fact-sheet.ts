@@ -11,6 +11,12 @@ import {
   YEARS_OF_EXPERIENCE_LABEL,
 } from '@/content/profile';
 import { SITE_LOCALE } from '@/content/site-locale';
+import {
+  formatDecision,
+  formatProjects,
+  formatStory,
+  formatUnknowns,
+} from '@/lib/ask/ask-fact-format';
 import { formatEmploymentContext, formatEmploymentHighlights } from '@/lib/ask/employment-format';
 
 const ISO_DATE_LENGTH = 10;
@@ -44,6 +50,26 @@ export function buildJudgeFactSheet(today: Date): string {
     ...askFacts.coreStack.map((line) => `- ${line}`),
     'Current role scope:',
     ...askFacts.currentRoleScope.map((line) => `- ${line}`),
+    'Detail on the current role:',
+    ...askFacts.currentRoleDetail.map((line) => `- ${line}`),
+    'How Erik works:',
+    ...askFacts.workingStyle.map((line) => `- ${line}`),
+    'Decisions and the alternative he rejected:',
+    ...askFacts.decisions.map(formatDecision),
+    'Stories:',
+    ...askFacts.stories.map(formatStory),
+    'Opinions he states:',
+    ...askFacts.opinions.map((line) => `- ${line}`),
+    'Community and writing:',
+    ...askFacts.community.map((line) => `- ${line}`),
+    'Limits Erik states about his own record (what he does not claim):',
+    ...askFacts.calibration.map((line) => `- ${line}`),
+    'Project detail (LedgerLens, personal project, public repository):',
+    ...askFacts.projectDetail.map((line) => `- ${line}`),
+    'Projects:',
+    formatProjects(),
+    'Learning and not specializing in:',
+    formatUnknowns(),
     'Credentials (all verified):',
     ...certifications,
     'Performance receipts (all verified):',

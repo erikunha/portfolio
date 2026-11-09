@@ -10,12 +10,15 @@ import {
   profilePresentation,
   YEARS_OF_EXPERIENCE_LABEL,
 } from '@/content/profile';
+import { projects } from '@/content/projects';
 import { SITE_LOCALE } from '@/content/site-locale';
+import { unknowns } from '@/content/unknowns';
 import { WORK_SCOPE_SENTENCE } from '@/content/work-scope';
+import { formatDecision, formatStory } from '@/lib/ask/ask-fact-format';
 import { buildJudgeFactSheet } from '@/lib/eval/fact-sheet';
 
 const TODAY = new Date('2026-11-07T12:00:00Z');
-const MAX_SHEET_LENGTH = 21000;
+const MAX_SHEET_LENGTH = 48000;
 
 describe('lib/eval/fact-sheet', () => {
   it('states the run date so a recent start date is not read as a future date', () => {
@@ -86,13 +89,37 @@ describe('lib/eval/fact-sheet', () => {
 
   it('states every fact the system prompt states, so a true fact is never judged fabricated', () => {
     const sheet = buildJudgeFactSheet(TODAY);
-    expect(sheet).toContain(askFacts.openTo);
-    for (const line of [
-      ...askFacts.coreStack,
-      ...askFacts.currentRoleScope,
-      ...askFacts.targeting,
+    for (const [field, value] of Object.entries(askFacts)) {
+      const lines: string[] = Array.isArray(value)
+        ? value.map((entry) =>
+            typeof entry === 'string'
+              ? entry
+              : 'decision' in entry
+                ? formatDecision(entry)
+                : formatStory(entry),
+          )
+        : [value];
+      expect(lines.length, field).toBeGreaterThan(0);
+      for (const line of lines) expect(sheet, `${field}: ${line}`).toContain(line);
+    }
+  });
+
+  it('states the limits Erik states about his record, such as the Spanish level', () => {
+    const spanishLimit = askFacts.calibration.find((line) => line.startsWith('Spanish'));
+    expect(spanishLimit).toBeDefined();
+    expect(buildJudgeFactSheet(TODAY)).toContain(spanishLimit);
+  });
+
+  it('states every project card and every learning or not-specializing claim', () => {
+    const sheet = buildJudgeFactSheet(TODAY);
+    for (const project of projects[SITE_LOCALE.en]) {
+      expect(sheet, project.name).toContain(project.description);
+    }
+    for (const claim of [
+      ...unknowns[SITE_LOCALE.en].learning,
+      ...unknowns[SITE_LOCALE.en].notSpecializing,
     ]) {
-      expect(sheet, line).toContain(line);
+      expect(sheet, claim.claim).toContain(claim.claim);
     }
   });
 
@@ -121,7 +148,7 @@ describe('lib/eval/fact-sheet', () => {
   it('is compact enough to ride along on every judge call', () => {
     expect(
       buildJudgeFactSheet(TODAY).length,
-      'the judge sheet rides along uncached on every judge call at the judge model rate, and a run is capped at 2 USD: a sheet past this length projects a corpus plus calibration run over the cap. Add the fact to the criterion that needs it, not to the sheet.',
+      'the judge sheet is the cached block of every judge call: the first call writes it at 1.25x the input rate and the rest read it at 0.1x, so a sheet past this length projects a corpus plus calibration run toward the 2 USD cap even with the cache, and a cache miss on every call would cross it. Add a fact only one criterion needs to that criterion, not to the sheet.',
     ).toBeLessThan(MAX_SHEET_LENGTH);
   });
 });

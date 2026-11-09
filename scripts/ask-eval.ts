@@ -220,7 +220,10 @@ async function main(): Promise<void> {
     }
 
     const calibrationJudgeCostUsd = Number(
-      judgeCostUsdFrom(calibration.judgeInputTokens, calibration.judgeOutputTokens).toFixed(4),
+      judgeCostUsdFrom(calibration.judgeInputTokens, calibration.judgeOutputTokens, {
+        cacheReadTokens: calibration.judgeCacheReadTokens,
+        cacheWriteTokens: calibration.judgeCacheWriteTokens,
+      }).toFixed(4),
     );
     const partial: Aggregate = {
       ts: new Date().toISOString(),
@@ -265,6 +268,8 @@ async function main(): Promise<void> {
   const measuredAnswerCostsUsd: number[] = [];
   let judgeInputTokens = calibration.judgeInputTokens;
   let judgeOutputTokens = calibration.judgeOutputTokens;
+  let judgeCacheReadTokens = calibration.judgeCacheReadTokens;
+  let judgeCacheWriteTokens = calibration.judgeCacheWriteTokens;
 
   for (const [index, item] of ASK_EVAL_CORPUS.entries()) {
     const startedAt = Date.now();
@@ -320,6 +325,8 @@ async function main(): Promise<void> {
     const verdict = await judge(item, result.text, { model: JUDGE_MODEL, factSheet });
     judgeInputTokens += verdict.inputTokens;
     judgeOutputTokens += verdict.outputTokens;
+    judgeCacheReadTokens += verdict.cacheReadTokens ?? 0;
+    judgeCacheWriteTokens += verdict.cacheWriteTokens ?? 0;
 
     const grade = gradeVerdict(verdict);
     graded.push({
@@ -362,7 +369,10 @@ async function main(): Promise<void> {
     measuredAnswerCostsUsd,
     answeredCount,
   );
-  const judgeCost = judgeCostUsdFrom(judgeInputTokens, judgeOutputTokens);
+  const judgeCost = judgeCostUsdFrom(judgeInputTokens, judgeOutputTokens, {
+    cacheReadTokens: judgeCacheReadTokens,
+    cacheWriteTokens: judgeCacheWriteTokens,
+  });
   const featureCostUsd = Number(featureCost.toFixed(4));
   const judgeCostUsd = Number(judgeCost.toFixed(4));
   const costEstimateUsd = Number((featureCost + judgeCost).toFixed(4));

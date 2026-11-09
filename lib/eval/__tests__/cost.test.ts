@@ -12,6 +12,19 @@ describe('lib/eval/cost', () => {
     expect(judgeCostUsdFrom(1_000_000, 1_000_000)).toBe(18.0);
   });
 
+  it('judgeCostUsdFrom prices cache reads at 0.1x and cache writes at 1.25x of the input rate', () => {
+    const uncached = judgeCostUsdFrom(1_000_000, 0);
+    const cachedRead = judgeCostUsdFrom(1_000_000, 0, { cacheReadTokens: 1_000_000 });
+    const cachedWrite = judgeCostUsdFrom(1_000_000, 0, { cacheWriteTokens: 1_000_000 });
+    expect(cachedRead).toBeCloseTo(uncached * 0.1, 10);
+    expect(cachedWrite).toBeCloseTo(uncached * 1.25, 10);
+  });
+
+  it('judgeCostUsdFrom bills only the uncached remainder at the full rate', () => {
+    const mixed = judgeCostUsdFrom(1_000_000, 0, { cacheReadTokens: 900_000 });
+    expect(mixed).toBeCloseTo(((100_000 + 90_000) * 3.0) / 1_000_000, 10);
+  });
+
   it('judgeCostUsdFrom returns 0 for a zero-token call', () => {
     expect(judgeCostUsdFrom(0, 0)).toBe(0);
   });
