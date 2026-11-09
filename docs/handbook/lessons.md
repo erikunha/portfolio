@@ -142,6 +142,17 @@ The prompt for a manual or agent review that applies these rules to a diff is `d
     or heading edits the matching `.aria.yml` in the same commit; names stay regexes because
     headings come from `content/*.ts`. Never run `--update-snapshots` blind: read the diff, since
     it rewrites the whole template to the full page. Check: `tests/e2e/aria-structure.spec.ts`.
+39. A copy change above a screenshotted section moves its document offset by a fraction of a pixel,
+    and an element screenshot is sized from the rounded outer edges of that fractional box, so the
+    section below can flip its size by 1px (`Expected an image 288px by 854px, received 288px by 855px`)
+    with none of its own content changed. Regenerate the darwin baseline of every section below the
+    changed copy, not only the edited one: run `tests/visual/visual.spec.ts` on chromium and
+    chromium-mobile after any content edit on the home page, and read each regenerated PNG. Check: the
+    visual spec passes on both projects.
+40. The `/cv` and `/pt/cv` print tests cap the page count, and a career entry never splits across pages,
+    so a longer entry moves whole to the next page and leaves a gap. Adding resume bullets means
+    re-measuring both locales (`page.pdf()` on each, count pages and the lines per page) and trimming
+    until the last page has room, not raising the cap. Check: `tests/e2e/reading-shell.spec.ts`.
 
 ## Pre-push judgement list
 
