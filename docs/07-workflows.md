@@ -25,10 +25,13 @@
 `pnpm verify` runs the full static gate chain (also the heart of pre-push):
 
 ```
-check (Biome) -> typecheck -> validate-content -> check:client-naming -> check:dep-pinning
-  -> check:dependency-vetting -> check:harness-size -> check:section-order -> check:doc-drift
-  -> check:detect-changes-paths -> check:test-integrity -> lint:css-tokens -> test (Vitest)
+check (Biome, warnings fail) -> typecheck -> validate-content -> check:client-naming
+  -> check:dep-pinning -> check:dependency-vetting -> check:harness-size -> check:component-docs
+  -> check:section-order -> check:doc-drift -> check:detect-changes-paths -> check:test-integrity
+  -> lint:contrast -> lint:css-tokens -> test:coverage (Vitest with the coverage thresholds)
 ```
+
+Three `quality-fast` steps stay CI-only: the branch-name lint (the pre-push hook enforces it), the commit-message lint (the commit-msg hook) and the PR comment merge gate (needs a pull request).
 
 `pnpm ci:local` == `pnpm verify`. `pnpm ci` == `verify + build + bundle-check + route-js-check`. Before opening a PR, also run `pnpm bundle-check`, `pnpm route-js-check`, and `pnpm gates:runtime`.
 
@@ -108,7 +111,7 @@ Steps run as a GitHub runner runs them: `bash -e -c` by default, `bash --noprofi
 
 Child processes are tracked: on exit, `SIGINT`, `SIGTERM` or `SIGHUP` their process groups are killed and the `ci-predict-<pid>` container (labelled with its owner pid, started with `--rm`) is removed; the next `--linux` run removes containers whose owner is gone. A Linux session whose setup fails is removed before the error is reported, and a started server that has exited is never reused for a later job. Readiness requests and the free-port probe time out, so a server that accepts a connection and never answers fails at the readiness deadline. `--linux` on a machine that is not x64 prints that the container runs the machine's architecture, not CI's.
 
-`scripts/__tests__/ci-predict.test.ts` fails when `ci.yml` gains a job or an action the predictor does not map, and when a command in the `ci:local` chain is covered by no CI step.
+`scripts/__tests__/ci-predict.test.ts` fails when `ci.yml` gains a job or an action the predictor does not map, when a command in the `ci:local` chain is covered by no CI step, and when a `quality-fast` step is neither in the chain nor in the named CI-only list (`scripts/__tests__/ci-verify-parity.test.ts`).
 
 ## Testing
 

@@ -224,7 +224,7 @@ describe('predict', () => {
     });
     const { rows } = await predict(h.context, h.deps);
     const cmds = h.commands.map((c) => c.cmd.trim());
-    expect(cmds).toContain('pnpm biome ci .');
+    expect(cmds).toContain('pnpm biome ci --error-on-warnings .');
     expect(cmds).toContain('pnpm typecheck');
     expect(cmds).toContain('pnpm test:coverage');
     expect(cmds).toContain('node scripts/check-route-js.mjs');

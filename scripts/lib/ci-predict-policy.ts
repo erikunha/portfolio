@@ -68,9 +68,16 @@ export function unclassifiedActions(workflow: Workflow): string[] {
 }
 
 const SUPERSEDED_BY: Record<string, string> = {
-  'pnpm check': 'pnpm biome ci .',
+  'pnpm check': 'pnpm biome ci --error-on-warnings .',
   'pnpm test': 'pnpm test:coverage',
 };
+
+export const QUALITY_FAST_CI_ONLY_STEPS: ReadonlyMap<string, string> = new Map([
+  ['Install', 'the local checkout already has its dependencies installed'],
+  ['Lint branch name', 'the pre-push hook enforces the branch name before the push leaves'],
+  ['Lint commit messages', 'the commit-msg hook runs commitlint on every local commit'],
+  ['PR comment merge gate', 'needs a pull request number and a token that exist only in CI'],
+]);
 
 const COMPOUND = '&&';
 const PNPM_PREFIX = 'pnpm ';
