@@ -6,9 +6,22 @@ const RAIN_CANVAS = 'canvas[style*="position: fixed"]';
 const TOGGLE = '.topbar-action-toggle';
 const SAMPLE_GAP_MS = 700;
 const RAIN_START_TIMEOUT_MS = 8000;
+const CANVAS_DEFAULT_WIDTH = 300;
 
 async function snapshot(page: Page): Promise<string> {
   return page.locator(RAIN_CANVAS).evaluate((canvas) => (canvas as HTMLCanvasElement).toDataURL());
+}
+
+async function waitForRainSized(page: Page): Promise<void> {
+  await expect
+    .poll(
+      () => page.locator(RAIN_CANVAS).evaluate((canvas) => (canvas as HTMLCanvasElement).width),
+      {
+        timeout: RAIN_START_TIMEOUT_MS,
+        message: 'the rain sizes and paints its canvas in the first idle window',
+      },
+    )
+    .not.toBe(CANVAS_DEFAULT_WIDTH);
 }
 
 test.describe('Matrix rain follows the MOTION control', () => {
@@ -19,6 +32,7 @@ test.describe('Matrix rain follows the MOTION control', () => {
     await page.goto('/');
     await waitForHydration(page, TOGGLE);
     await expect(page.locator(RAIN_CANVAS)).toBeAttached();
+    await waitForRainSized(page);
     await expect(page.locator(TOGGLE)).toHaveAttribute('aria-pressed', 'false');
 
     const still = await snapshot(page);
@@ -40,6 +54,7 @@ test.describe('Matrix rain follows the MOTION control', () => {
     await page.goto('/');
     await waitForHydration(page, TOGGLE);
     await expect(page.locator(RAIN_CANVAS)).toBeAttached();
+    await waitForRainSized(page);
 
     const still = await snapshot(page);
     await page.evaluate(() => {

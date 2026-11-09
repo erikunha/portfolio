@@ -96,7 +96,7 @@ export function SessionCounters({
       if (fields.seen) fields.seen.textContent = String(seen.size);
     });
     tick();
-    onScroll();
+    onScrollFrame();
     onVisibility();
     window.addEventListener(SHELL_COMMAND_EVENT, onCommand);
     window.addEventListener('scroll', onScrollFrame, { passive: true });

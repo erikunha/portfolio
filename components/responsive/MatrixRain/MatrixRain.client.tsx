@@ -77,7 +77,11 @@ export function MatrixRain({
 
     const canvasEl = canvas;
     const ctxEl = ctx;
-    const palette: RainPalette = readRainPalette(getComputedStyle(document.documentElement));
+    let cachedPalette: RainPalette | undefined;
+    const palette = (): RainPalette => {
+      cachedPalette ??= readRainPalette(getComputedStyle(document.documentElement));
+      return cachedPalette;
+    };
 
     const dpr = Math.min(window.devicePixelRatio || 1, MAX_BACKING_DPR);
     let columns = 0;
@@ -104,14 +108,20 @@ export function MatrixRain({
         drops[i] = typeof old[i] === 'number' ? (old[i] as number) : -Math.random() * (h / fs);
       }
       columns = newCols;
-      ctxEl.fillStyle = palette.canvasBlack;
+      ctxEl.fillStyle = palette().canvasBlack;
       ctxEl.fillRect(0, 0, w, h);
     }
 
-    resize();
+    let sized = false;
+    function size() {
+      if (sized) return;
+      sized = true;
+      resize();
+    }
 
     let resizeTimer: ReturnType<typeof setTimeout> | undefined;
     function debouncedResize() {
+      if (!sized) return;
       clearTimeout(resizeTimer);
       resizeTimer = setTimeout(resize, RESIZE_DEBOUNCE_MS);
     }
@@ -123,9 +133,10 @@ export function MatrixRain({
       if (ts - last >= CRT_BASE_TICK_MS * rate) {
         last = ts;
         const { fontSize: fs, speed: spd } = tunablesRef.current;
-        const head = tunablesRef.current.headColor ?? palette.head;
-        const body = tunablesRef.current.bodyColor ?? palette.body;
-        const tail = tunablesRef.current.tailFade ?? palette.tailFade;
+        const colors = palette();
+        const head = tunablesRef.current.headColor ?? colors.head;
+        const body = tunablesRef.current.bodyColor ?? colors.body;
+        const tail = tunablesRef.current.tailFade ?? colors.tailFade;
         ctxEl.fillStyle = scaleTailFade(tail, rate);
         ctxEl.fillRect(0, 0, w, h);
         for (let i = 0; i < columns; i++) {
@@ -162,13 +173,14 @@ export function MatrixRain({
     }
     function setGate(gate: RunGate, open: boolean) {
       gates[gate] = open;
+      if (gate === 'ready' && open) size();
       sync();
     }
 
     const unsubscribeMotion = subscribeMotion((on) => {
       setGate('motion', on);
-      if (!on) {
-        ctxEl.fillStyle = palette.canvasBlack;
+      if (!on && sized) {
+        ctxEl.fillStyle = palette().canvasBlack;
         ctxEl.fillRect(0, 0, w, h);
       }
     });

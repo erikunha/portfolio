@@ -196,7 +196,7 @@ flowchart TD
     e2e --> gate
     vis --> gate
     ev --> gate
-    gate["ci-gate: always-on fan-in: fails on any failed/cancelled upstream; skipped passes"]
+    gate["ci-gate: always-on fan-in: always-run jobs must succeed; others pass only on success or path skip"]
 ```
 
 | Job | Runs when | What it does |
