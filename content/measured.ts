@@ -101,11 +101,11 @@ const measuredStatesFor = (locale: SiteLocale): MeasuredStates => {
     askError: {
       heading: pt ? '! resultados do eval indisponíveis' : '! eval results unavailable',
       timeoutBody: pt
-        ? 'O armazenamento não respondeu em {seconds}s. O site funciona; este painel tenta de novo na próxima visita.'
-        : 'The store did not answer in {seconds}s. The site works; this panel will try again on the next visit.',
+        ? 'Os resultados do eval não carregaram em {seconds}s. O restante do site funciona. Tente de novo.'
+        : 'The eval results did not load within {seconds}s. The rest of the site works. Try again.',
       unreadableBody: pt
-        ? 'Não foi possível ler o armazenamento. O site funciona; este painel tenta de novo na próxima visita.'
-        : 'The store could not be read. The site works; this panel will try again on the next visit.',
+        ? 'Os resultados do eval não estão disponíveis agora. O restante do site funciona. Tente de novo.'
+        : 'Eval results are not available right now. The rest of the site works. Try again.',
       retry: pt ? '[ TENTAR ]' : '[ RETRY ]',
       refLabel: 'ref',
     },

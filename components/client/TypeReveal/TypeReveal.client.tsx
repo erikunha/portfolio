@@ -11,9 +11,10 @@ const TYPED_CLASS = 'is-typed';
 const STATIC_CLASS = 'is-static';
 const READY_CLASS = 'type-reveal-ready';
 const CHARS_PROPERTY = '--type-chars';
+const REVEAL_ROOT_MARGIN = '0px';
 const OBSERVER_OPTIONS: IntersectionObserverInit = {
   threshold: 0,
-  rootMargin: '0px 0px -12% 0px',
+  rootMargin: REVEAL_ROOT_MARGIN,
 };
 
 function revealAll(elements: Iterable<HTMLElement>) {

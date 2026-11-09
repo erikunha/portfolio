@@ -3,6 +3,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { readComponentsCss } from '@/__tests__/helpers/components-css';
 import { declValue, rulesWithSelector } from '@/__tests__/helpers/css-rules';
+import { measured } from '@/content/measured';
 import { SITE_LOCALE } from '@/content/site-locale';
 import vercelConfig from '@/vercel.json';
 
@@ -86,7 +87,7 @@ describe('LivePerfSection: fetch-error fallback', () => {
     getScoresMock.mockRejectedValue(new Error('PSI API unavailable'));
     const html = await renderPerfData();
     expect(html).not.toContain('100');
-    expect(valuesOf(html)).toEqual(['- / -', '- / -', '- / -', '- / -']);
+    expect(valuesOf(html)).toEqual(Array(4).fill(measured[SITE_LOCALE.en].unavailable));
   });
 
   it('shows the unavailable status once for the block, not per tile', async () => {
@@ -187,7 +188,7 @@ describe('LivePerfSection: tile content', () => {
     const doc = new DOMParser().parseFromString(html, 'text/html');
     expect(doc.body.textContent).toContain('unavailable');
     expect(doc.querySelector('time')).toBeNull();
-    expect(valuesOf(html)).toEqual(['- / -', '- / -', '- / -', '- / -']);
+    expect(valuesOf(html)).toEqual(Array(4).fill(measured[SITE_LOCALE.en].unavailable));
   });
 
   it('dates the block by the parseable side when the other side has a corrupt fetchedAt', async () => {

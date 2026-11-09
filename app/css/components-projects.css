@@ -210,11 +210,21 @@
   }
 
   .measured-source a,
-  .measured-heading a,
   .measured-status a {
     color: var(--color-primary-500);
     text-decoration: underline;
     text-underline-offset: var(--spacing-1);
+  }
+
+  .measured-heading a {
+    color: var(--color-primary-500);
+    text-decoration: none;
+    text-underline-offset: var(--spacing-1);
+  }
+
+  .measured-heading a:hover,
+  .measured-heading a:focus-visible {
+    text-decoration: underline;
   }
 
   .measured-grid {
@@ -301,19 +311,6 @@
     [aria-busy="true"] .measured-status {
       visibility: hidden;
     }
-  }
-
-  .measured-ask-body {
-    display: grid;
-  }
-
-  .measured-ask-body > * {
-    grid-area: 1 / 1;
-    min-width: 0;
-  }
-
-  .measured-ask-body > .measured-ask-reserve[aria-hidden="true"] {
-    visibility: hidden;
   }
 
   .measured-error {

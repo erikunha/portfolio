@@ -186,32 +186,32 @@ describe('AiMetricsSection: on-page AI eval/cost metrics (RSC)', () => {
     [
       SITE_LOCALE.en,
       'timeout',
-      'The store did not answer in 3s. The site works; this panel will try again on the next visit.',
+      'The eval results did not load within 3s. The rest of the site works. Try again.',
     ],
     [
       SITE_LOCALE.pt,
       'timeout',
-      'O armazenamento não respondeu em 3s. O site funciona; este painel tenta de novo na próxima visita.',
+      'Os resultados do eval não carregaram em 3s. O restante do site funciona. Tente de novo.',
     ],
     [
       SITE_LOCALE.en,
       'not configured',
-      'The store could not be read. The site works; this panel will try again on the next visit.',
+      'Eval results are not available right now. The rest of the site works. Try again.',
     ],
     [
       SITE_LOCALE.pt,
       'not configured',
-      'Não foi possível ler o armazenamento. O site funciona; este painel tenta de novo na próxima visita.',
+      'Os resultados do eval não estão disponíveis agora. O restante do site funciona. Tente de novo.',
     ],
     [
       SITE_LOCALE.en,
       'other failure',
-      'The store could not be read. The site works; this panel will try again on the next visit.',
+      'Eval results are not available right now. The rest of the site works. Try again.',
     ],
     [
       SITE_LOCALE.pt,
       'other failure',
-      'Não foi possível ler o armazenamento. O site funciona; este painel tenta de novo na próxima visita.',
+      'Os resultados do eval não estão disponíveis agora. O restante do site funciona. Tente de novo.',
     ],
   ] as const)('explains the %s %s cause in the error box', async (locale, cause, explanation) => {
     const { ReadTimeoutError } = await import('@/lib/with-timeout');
@@ -235,22 +235,16 @@ describe('AiMetricsSection: on-page AI eval/cost metrics (RSC)', () => {
     expect(doc.body.textContent).not.toContain(measured[locale].ask.pending);
     expect(doc.querySelector('time')).toBeNull();
     expect(doc.querySelector('[aria-busy]')).toBeNull();
-    expect(
-      doc.querySelectorAll('.measured-ask-reserve:not([aria-hidden="true"]) .measured-tile'),
-    ).toHaveLength(0);
+    expect(doc.querySelectorAll('.measured-ask .measured-tile')).toHaveLength(0);
   });
 
-  it('reserves the tile block under the error box so the box fills the height the data fills', async () => {
+  it('shows only the error box when the read fails, with no reserved tile block under it', async () => {
     getAskMetricsMock.mockRejectedValue(new Error('adapter offline'));
     const doc = new DOMParser().parseFromString(await renderData(), 'text/html');
-    const reserve = doc.querySelector('.measured-ask-body > .measured-ask-reserve');
 
-    expect(reserve?.getAttribute('aria-hidden')).toBe('true');
-    expect(reserve?.querySelectorAll('.measured-tile')).toHaveLength(
-      measured[SITE_LOCALE.en].ask.metrics.length,
-    );
-    expect(reserve?.querySelector('[role="status"]')).toBeNull();
-    expect(doc.querySelector('.measured-ask-body > .measured-error')).not.toBeNull();
+    expect(doc.querySelector('.measured-ask > .measured-error')).not.toBeNull();
+    expect(doc.querySelectorAll('.measured-tile')).toHaveLength(0);
+    expect(doc.querySelector('[aria-hidden="true"]')).toBeNull();
   });
 
   it('renders the pending state without throwing when metrics are null', async () => {

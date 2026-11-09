@@ -109,11 +109,14 @@ describe('TypeReveal', () => {
     expect(document.documentElement.classList.contains('type-reveal-ready')).toBe(true);
   });
 
-  it('fires on the visible caret strip once it is inside the shrunken viewport', () => {
+  it('fires as soon as any part of a heading is inside the viewport, with no inset', () => {
     setMotion(true);
     mount('<h2 data-type-reveal>About</h2>');
     expect(observers[0]?.options?.threshold).toBe(0);
-    expect(observers[0]?.options?.rootMargin).toMatch(/^0px 0px -\d+% 0px$/);
+    expect(
+      observers[0]?.options?.rootMargin,
+      'a bottom inset leaves headings already on screen at load blank until the first scroll',
+    ).toBe('0px');
   });
 
   it('marks every element typed at once when motion is off', () => {

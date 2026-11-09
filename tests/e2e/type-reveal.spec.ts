@@ -140,3 +140,55 @@ test.describe('type reveal', () => {
     expect(clipped, 'print must never inherit the screen typing clip').toEqual([]);
   });
 });
+
+const BOTTOM_ZONE_RATIO = 0.94;
+const BOTTOM_ZONE_FLOOR = 0.88;
+const MIN_HEADING_TOP_PX = 300;
+const REVEAL_VIEWPORTS = [
+  { width: 390, height: 844 },
+  { width: 1280, height: 720 },
+] as const;
+
+test.describe('type reveal at first paint', () => {
+  for (const viewport of REVEAL_VIEWPORTS) {
+    test(`a heading near the bottom edge of the ${viewport.width}px first screen is not left blank`, async ({
+      page,
+    }) => {
+      await page.setViewportSize(viewport);
+      await gotoSettled(page, '/');
+      const target = await page.locator(MARKED).evaluateAll((els, minTop) => {
+        const index = els.findIndex(
+          (el) => el.getBoundingClientRect().top + window.scrollY > minTop && el.checkVisibility(),
+        );
+        const el = els[index];
+        return { index, top: el ? el.getBoundingClientRect().top + window.scrollY : 0 };
+      }, MIN_HEADING_TOP_PX);
+      expect(
+        target.index,
+        'the page needs a marked heading below the top of the page',
+      ).toBeGreaterThanOrEqual(0);
+
+      await page.setViewportSize({
+        width: viewport.width,
+        height: Math.ceil(target.top / BOTTOM_ZONE_RATIO),
+      });
+      await gotoSettled(page, '/');
+      await page.waitForFunction(() =>
+        document.documentElement.classList.contains('type-reveal-ready'),
+      );
+      const placement = await page
+        .locator(MARKED)
+        .nth(target.index)
+        .evaluate((el) => el.getBoundingClientRect().top / window.innerHeight);
+      expect(
+        placement,
+        'the heading must start inside the bottom twelfth of the screen',
+      ).toBeGreaterThan(BOTTOM_ZONE_FLOOR);
+      expect(placement).toBeLessThan(1);
+      await expect(
+        page.locator(MARKED).nth(target.index),
+        'a heading already on screen at load must start typing without a scroll',
+      ).toHaveClass(/is-typed/);
+    });
+  }
+});

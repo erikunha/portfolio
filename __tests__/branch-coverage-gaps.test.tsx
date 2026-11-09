@@ -8,7 +8,6 @@ import { readComponentsCss } from './helpers/components-css';
 import { installMatchMedia } from './helpers/match-media';
 import { type MountedClient, mountClient } from './helpers/render';
 
-const EMPTY = MEASURED_FORMAT.empty;
 const getScoresMock = vi.fn();
 vi.mock('next/server', async (importOriginal) => ({
   ...(await importOriginal<typeof import('next/server')>()),
@@ -81,7 +80,7 @@ describe('LivePerfSection: PerfBody with real scores (non-fallback branches)', (
     expect(doc.querySelector('time')).toBeNull();
     expect(doc.querySelectorAll('.measured-value')).toHaveLength(4);
     for (const value of doc.querySelectorAll('.measured-value')) {
-      expect(value.textContent).toBe(`${EMPTY} / ${EMPTY}`);
+      expect(value.textContent).toBe(measured[SITE_LOCALE.en].unavailable);
     }
   });
 });

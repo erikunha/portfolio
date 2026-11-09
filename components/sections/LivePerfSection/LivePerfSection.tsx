@@ -235,12 +235,18 @@ function PerfBody({ locale, scores }: { locale: SiteLocale; scores: ScoresByStra
           <MeasuredTile
             key={metric.key}
             label={metric.label}
-            value={psi.strategies
-              .map((strategy) => {
-                const strategyScores = scores?.[strategy.key];
-                return isAvailable(strategyScores) ? strategyScores[metric.key] : format.empty;
-              })
-              .join(psi.pairSeparator)}
+            value={
+              unavailable
+                ? measured.unavailable
+                : psi.strategies
+                    .map((strategy) => {
+                      const strategyScores = scores?.[strategy.key];
+                      return isAvailable(strategyScores)
+                        ? strategyScores[metric.key]
+                        : format.empty;
+                    })
+                    .join(psi.pairSeparator)
+            }
             description={psi.strategies.map((strategy) => strategy.label).join(psi.pairSeparator)}
           />
         ))}
