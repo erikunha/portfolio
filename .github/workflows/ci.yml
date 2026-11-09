@@ -340,6 +340,14 @@ jobs:
       - name: Per-route JS budget gate
         run: node scripts/check-route-js.mjs
 
+      - name: Write the build provenance manifest
+        run: |
+          set -euo pipefail
+          tmp="${RUNNER_TEMP:-${TMPDIR:-/tmp}}"
+          find .next -type f ! -path '.next/cache/*' -print0 | LC_ALL=C sort -z \
+            | xargs -0 sha256sum > "$tmp/build-subjects.sha256"
+          mv "$tmp/build-subjects.sha256" .next/build-subjects.sha256
+
       - name: Upload build artifact
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
@@ -367,7 +375,7 @@ jobs:
       - name: Attest build provenance
         uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
         with:
-          subject-path: .next/
+          subject-path: .next/build-subjects.sha256
 
   performance:
     runs-on: ubuntu-24.04
@@ -648,9 +656,12 @@ jobs:
           NEEDS_JSON: ${{ toJSON(needs) }}
         run: |
           node -e '
-            const BAD_RESULTS = new Set(["failure", "cancelled"]);
+            const PASSING_RESULTS = new Set(["success", "skipped"]);
+            const ALWAYS_RUN = new Set(["detect-changes", "quality-fast", "typecheck", "test", "build", "semgrep", "gitleaks"]);
             const needs = JSON.parse(process.env.NEEDS_JSON);
-            const bad = Object.entries(needs).filter(([, n]) => BAD_RESULTS.has(n.result));
+            const bad = Object.entries(needs).filter(([job, n]) =>
+              ALWAYS_RUN.has(job) ? n.result !== "success" : !PASSING_RESULTS.has(n.result),
+            );
             for (const [job, n] of Object.entries(needs)) {
               console.log(job + ": " + n.result);
             }
@@ -658,7 +669,7 @@ jobs:
               console.error("ci-gate: blocking on " + bad.map(([job]) => job).join(", "));
               process.exit(1);
             }
-            console.log("ci-gate: all upstream jobs succeeded or were intentionally skipped");
+            console.log("ci-gate: every always-run job succeeded and the rest succeeded or were path-skipped");
           '
 
   semgrep:

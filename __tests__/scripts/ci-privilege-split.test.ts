@@ -50,6 +50,27 @@ describe('ci.yml keeps privileged token scopes away from jobs that run pull requ
     ).toBe(false);
   });
 
+  it('attests one manifest subject, since the action rejects more than 1024 subjects and a build directory exceeds it', () => {
+    const attestStep = (CI.jobs['attest-build']?.steps ?? []).find((s) =>
+      s.uses?.startsWith('actions/attest-build-provenance'),
+    ) as { with?: Record<string, string> } | undefined;
+    const subject = attestStep?.with?.['subject-path'] ?? '';
+    expect(subject.endsWith('/'), 'a directory subject expands to one subject per file').toBe(
+      false,
+    );
+    expect(subject).toMatch(/\.sha256$/);
+    const buildSteps = CI.jobs.build?.steps ?? [];
+    const manifestIndex = buildSteps.findIndex((s) =>
+      s.run?.includes(subject.split('/').pop() ?? '\u0000'),
+    );
+    const uploadIndex = buildSteps.findIndex((s) => s.uses?.startsWith('actions/upload-artifact'));
+    expect(
+      manifestIndex,
+      'the build job writes the manifest before uploading the artifact',
+    ).toBeGreaterThan(-1);
+    expect(manifestIndex).toBeLessThan(uploadIndex);
+  });
+
   it('posts the coverage comment from a job that runs no repository code', () => {
     const comment = CI.jobs['coverage-comment'];
     expect(comment?.needs).toContain('test');
