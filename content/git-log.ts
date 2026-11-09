@@ -17,7 +17,7 @@ const gitLogFor = (locale: SiteLocale): GitCommit[] => {
   const entries = [
     {
       hash: 'b2e6a19f4c8d3057e1a9b6c2d8f40e73a5c1908d',
-      deco: '(HEAD -> main, tag: v9.0)',
+      deco: '(HEAD -> main, tag: v8.0)',
       date: pt ? 'jun/2026 - atual' : 'Jun 2026 - Present',
       branch: 'career/raylu',
       type: 'career',
@@ -37,7 +37,7 @@ const gitLogFor = (locale: SiteLocale): GitCommit[] => {
     },
     {
       hash: '7f3a2bc09f8e1d4c2b6a5d3e8c1f2a7b9d4e6c0a',
-      deco: '(tag: v8.0)',
+      deco: '(tag: v7.0)',
       date: pt ? 'mar/2025 - mai/2026' : 'Mar 2025 - May 2026',
       branch: 'career/betsson',
       type: 'career',
@@ -51,13 +51,13 @@ const gitLogFor = (locale: SiteLocale): GitCommit[] => {
       domain: pt ? 'jogos online e pagamentos' : 'online gaming and payments',
       body: [
         pt
-          ? `buscava escala regulada em múltiplos mercados; obteve ${PROFILE_FACT.txPerYear} transações/ano em mais de 15 jurisdições e 31,1M clientes em uma plataforma de pagamentos PCI-DSS.`
-          : `wanted regulated multi-market scale; got ${PROFILE_FACT.txPerYear} tx/yr across 15+ jurisdictions and 31.1M customers on a PCI-DSS payment platform.`,
+          ? `buscava escala regulada em múltiplos mercados; trabalhou em uma plataforma de pagamentos PCI-DSS que processa cerca de ${PROFILE_FACT.txPerYear} transações/ano (número do Erik) em mais de 15 jurisdições, em um grupo com 31,1M de clientes.`
+          : `wanted regulated multi-market scale; worked on a PCI-DSS payment platform that handles about ${PROFILE_FACT.txPerYear} tx/yr (Erik's figure) across 15+ jurisdictions, for a group with 31.1M customers.`,
       ],
     },
     {
       hash: '4a9e1d886b3f2c7e0a8d5b9c1e6f4a2b3d7e8c01',
-      deco: '(tag: v7.0)',
+      deco: '(tag: v6.0)',
       date: pt ? 'mar/2023 - mar/2025' : 'Mar 2023 - Mar 2025',
       branch: 'career/independent-consultant',
       type: 'career',
@@ -76,7 +76,7 @@ const gitLogFor = (locale: SiteLocale): GitCommit[] => {
     },
     {
       hash: '5b6f0a4c8d9e1b3a7c2f5d8b0a4e6c9f1b3d7a02',
-      deco: '(tag: v6.0)',
+      deco: '(tag: v5.0)',
       date: pt ? 'dez/2021 - mar/2023' : 'Dec 2021 - Mar 2023',
       branch: 'career/grupo-sbf',
       type: 'career',
@@ -90,13 +90,13 @@ const gitLogFor = (locale: SiteLocale): GitCommit[] => {
       domain: pt ? 'e-commerce de varejo esportivo' : 'sports retail e-commerce',
       body: [
         pt
-          ? `storefronts Next.js para Nike Brasil e Centauro (${PROFILE_FACT.peakMau} MAU); elevou a conversão em ~10% com mais de 20 experimentos A/B e cortou o carregamento da página em -32%; R$ 7,9B de receita bruta, R$ 2,5B digital.`
-          : `Next.js storefronts for Nike Brazil and Centauro (${PROFILE_FACT.peakMau} MAU); lifted conversion ~10% through 20+ A/B experiments and cut page load -32%; R$7.9B gross revenue, R$2.5B digital.`,
+          ? `storefronts Next.js para Nike Brasil e Centauro (${PROFILE_FACT.peakMau} MAU); elevou a conversão em ~10% com mais de 20 experimentos A/B e cortou o carregamento da página em -32%; mentorou quatro desenvolvedores juniores; R$ 7,9B de receita bruta, R$ 2,5B digital.`
+          : `Next.js storefronts for Nike Brazil and Centauro (${PROFILE_FACT.peakMau} MAU); lifted conversion ~10% through 20+ A/B experiments and cut page load -32%; mentored four junior engineers; R$7.9B gross revenue, R$2.5B digital.`,
       ],
     },
     {
       hash: '3d4e8c1a5b9f2c7e6d3a8b1c4e5f9d2a7b6c0e8d',
-      deco: '(tag: v5.0)',
+      deco: '(tag: v4.0)',
       date: pt ? 'jan/2021 - dez/2021' : 'Jan 2021 - Dec 2021',
       branch: 'career/encora',
       type: 'career',
@@ -118,7 +118,7 @@ const gitLogFor = (locale: SiteLocale): GitCommit[] => {
     },
     {
       hash: '1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a01',
-      deco: '(tag: v4.0)',
+      deco: '(tag: v3.0)',
       date: pt ? 'abr/2020 - jan/2021' : 'Apr 2020 - Jan 2021',
       branch: 'career/zup-itau',
       type: 'career',
@@ -138,7 +138,7 @@ const gitLogFor = (locale: SiteLocale): GitCommit[] => {
     },
     {
       hash: '9c8b7a6e5d4f3c2b1a0e9d8c7b6a5e4f3d2c1b0a',
-      deco: '(tag: v3.0)',
+      deco: '(tag: v2.0)',
       date: pt ? 'fev/2019 - abr/2020' : 'Feb 2019 - Apr 2020',
       branch: 'career/venturus',
       type: 'career',
@@ -160,7 +160,7 @@ const gitLogFor = (locale: SiteLocale): GitCommit[] => {
     },
     {
       hash: '0e0f0a0b0c0d0e0f0a0b0c0d0e0f0a0b0c0d0e0f',
-      deco: '(tag: v2.0)',
+      deco: '(tag: v1.0, root-commit)',
       date: pt ? 'jul/2018 - fev/2019' : 'Jul 2018 - Feb 2019',
       branch: 'career/mb-labs',
       type: 'career',
@@ -178,26 +178,6 @@ const gitLogFor = (locale: SiteLocale): GitCommit[] => {
         pt
           ? 'entregou app multiplataforma em 5 SOs a partir de uma base Ionic + Angular + Electron (~80% de código compartilhado).'
           : 'shipped 5-OS cross-platform from one Ionic + Angular + Electron codebase (~80% shared code).',
-      ],
-    },
-    {
-      hash: '0d1c2b3a4e5f67890123456789abcdef01234567',
-      deco: '(tag: v1.0, root-commit)',
-      date: pt ? 'out/2017 - mai/2018' : 'Oct 2017 - May 2018',
-      branch: 'career/monde-sistemas',
-      type: 'career',
-      company: 'Monde Sistemas',
-      companyUrl: 'https://monde.com.br',
-      role: pt ? 'Estagiário' : 'Intern',
-      startMonth: '2017-10',
-      endMonth: '2018-05',
-      location: pt ? 'Americana, Brasil' : 'Americana, Brazil',
-      workMode: null,
-      domain: pt ? 'tecnologia em turismo' : 'travel technology',
-      body: [
-        pt
-          ? 'primeiro emprego. Telas de back-office em Vue.js 2 para mais de 1.600 agências de turismo brasileiras.'
-          : 'first job. Vue.js 2 back-office screens for 1,600+ Brazilian travel agencies.',
       ],
       isRoot: true,
     },

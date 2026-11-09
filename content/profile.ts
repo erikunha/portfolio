@@ -26,8 +26,9 @@ export const localizeDecimals = (text: string, locale: SiteLocale): string =>
 export const FUNDS_SERVED = 50;
 export const ASSETS_UNDER_MANAGEMENT_BILLIONS = 500;
 export const FUNDS_PHRASE = `${FUNDS_SERVED}+ funds holding $${ASSETS_UNDER_MANAGEMENT_BILLIONS}B+ in assets`;
-export const RAYLU_OWNED_SCOPE =
+export const RAYLU_FRONTEND_SCOPE =
   "the frontend platform behind a private-markets product's data-dense pages";
+export const RAYLU_BUILT_CLAIM = `built, with one other engineer, ${RAYLU_FRONTEND_SCOPE}`;
 
 const profileFields = ProfileSchema.parse({
   fullName: 'Erik Henrique Alves Cunha',

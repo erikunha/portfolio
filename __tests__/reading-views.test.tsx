@@ -16,7 +16,7 @@ import {
   READING_PATHS,
   readingViews,
   summaryDocument,
-  toSentence as toSentenceBase,
+  toSentence,
 } from '@/content/reading-views';
 import { SITE_LOCALE } from '@/content/site-locale';
 import { social } from '@/content/social';
@@ -33,7 +33,6 @@ function page(host: HTMLElement): HTMLElement {
   return main;
 }
 
-const toSentence = toSentenceBase(SITE_LOCALE.en);
 const readingViewsEn = readingViews[SITE_LOCALE.en];
 const cvDocumentEn = cvDocument[SITE_LOCALE.en];
 const summaryDocumentEn = summaryDocument[SITE_LOCALE.en];
@@ -47,12 +46,6 @@ describe('toSentence', () => {
 
   it('keeps existing terminal punctuation', () => {
     expect(toSentence('Already done.')).toBe('Already done.');
-  });
-
-  it('rewrites a known resume fragment into a full sentence', () => {
-    expect(
-      toSentence('First job. Vue.js 2 back-office screens for 1,600+ Brazilian travel agencies'),
-    ).toBe('First role: Vue.js 2 back-office screens for 1,600+ Brazilian travel agencies.');
   });
 });
 

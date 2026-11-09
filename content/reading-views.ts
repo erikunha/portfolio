@@ -4,7 +4,13 @@ import { education } from './education';
 import { gitLog, workModeLabel } from './git-log';
 import { heroContent } from './hero';
 import { HIRE_ACCESSIBLE_NAME, NAV_VOCABULARY } from './nav';
-import { formatLanguages, profile, profilePresentation, profileStack } from './profile';
+import {
+  formatLanguages,
+  profile,
+  profilePresentation,
+  profileStack,
+  RAYLU_BUILT_CLAIM,
+} from './profile';
 import { projects } from './projects';
 import { READING_PATHS } from './reading-paths';
 import {
@@ -21,7 +27,6 @@ export { READING_PATHS };
 
 const SITE_ORIGIN_PATTERN = /^(https?:\/\/)www\./;
 const PROTOCOL_PATTERN = /^https?:\/\//;
-const TRAILING_PERIOD_PATTERN = /\.$/;
 const TERMINAL_PUNCTUATION_PATTERN = /[.!?]$/;
 const FRAGMENT_SEPARATOR_PATTERN = /;\s+/;
 const STACK_SEPARATOR = ' · ';
@@ -68,15 +73,6 @@ const readingViewsFor = (locale: SiteLocale): ReadingViews => {
         ENGLISH: 'IELTS General Training',
         INTL_DEGREE: pt ? 'Verificado pela WES' : 'WES verified',
       },
-      proseOverrides: pt
-        ? {
-            'primeiro emprego. telas de back-office em vue.js 2 para mais de 1.600 agências de turismo brasileiras':
-              'Primeiro emprego: telas de back-office em Vue.js 2 para mais de 1.600 agências de turismo brasileiras.',
-          }
-        : {
-            'first job. vue.js 2 back-office screens for 1,600+ brazilian travel agencies':
-              'First role: Vue.js 2 back-office screens for 1,600+ Brazilian travel agencies.',
-          },
     },
     summary: {
       path: localizedPath(locale, READING_PATHS.summary),
@@ -109,15 +105,10 @@ export const readingViews: Record<SiteLocale, ReadingViews> = {
 
 const capitalise = (text: string) => text.charAt(0).toUpperCase() + text.slice(1);
 
-export const toSentence =
-  (locale: SiteLocale) =>
-  (fragment: string): string => {
-    const key = fragment.trim().replace(TRAILING_PERIOD_PATTERN, '').toLowerCase();
-    const override = readingViews[locale].cv.proseOverrides[key];
-    if (override) return override;
-    const sentence = capitalise(fragment.trim());
-    return TERMINAL_PUNCTUATION_PATTERN.test(sentence) ? sentence : `${sentence}.`;
-  };
+export const toSentence = (fragment: string): string => {
+  const sentence = capitalise(fragment.trim());
+  return TERMINAL_PUNCTUATION_PATTERN.test(sentence) ? sentence : `${sentence}.`;
+};
 
 const spaced = (label: string) => label.replaceAll(WORD_SEPARATOR, ' ');
 
@@ -137,10 +128,9 @@ const badgeOf = (locale: SiteLocale, key: string): string => {
 };
 
 const RESUME_SUMMARY: Record<SiteLocale, string> = {
-  [SITE_LOCALE.en]:
-    "Senior Software Engineer with 8+ years of production software, focused on GenAI and AI-native products: LLM systems, agents and evals, on TypeScript, Python, React, Next.js, Angular and Node.js, with PostgreSQL, Docker and AWS. Payments, business insurance and hospital equipment service taught me audit trails, idempotent recovery and failure isolation, the same problems agent systems meet as guardrails. I build LLM systems and the evaluation that decides whether they are safe to ship: on my own site a live LLM endpoint runs behind a continuous integration (CI) harness, with an LLM judge calibrated against my own labels at a 0.85 agreement floor and jailbreak resistance gated at 1.0. I work daily in Claude Code and Codex, authoring the skills, guard policies and lifecycle hooks they run under. At Raylu I own the frontend platform behind a private-markets product's data-dense pages, and changes ship behind a production A/B, route by route. At Betsson I built a 12-agent AI-assisted engineering system a platform team adopted, on a PCI-DSS payment platform processing 40M+ transactions a year.",
+  [SITE_LOCALE.en]: `Senior Software Engineer with 8+ years of production software, focused on GenAI and AI-native products: LLM systems, agents and evals, on TypeScript, Python, React, Next.js, Angular and Node.js, with PostgreSQL, Docker and AWS. Payments, business insurance and hospital equipment service taught me audit trails, idempotent recovery and failure isolation, the same problems agent systems meet as guardrails. I build LLM systems and the evaluation that decides whether they are safe to ship: on my own site a live LLM endpoint runs behind a continuous integration (CI) harness, with an LLM judge calibrated against my own labels at a 0.85 agreement floor and jailbreak resistance gated at 1.0. I work daily in Claude Code and Codex, authoring the skills, guard policies and lifecycle hooks they run under. At Raylu I ${RAYLU_BUILT_CLAIM}, and changes are measured as production builds against their parent commit, route by route. At Betsson I built a 12-agent AI-assisted engineering system a platform team adopted, on a PCI-DSS payment platform processing 40M+ transactions a year.`,
   [SITE_LOCALE.pt]:
-    'Engenheiro de Software Sênior com mais de 8 anos de software em produção, focado em GenAI e produtos AI-native: sistemas com LLMs, agentes e avaliações, com TypeScript, Python, React, Next.js, Angular e Node.js, além de PostgreSQL, Docker e AWS. Pagamentos, seguro empresarial e serviço de equipamentos hospitalares me ensinaram trilhas de auditoria, recuperação idempotente e isolamento de falhas, os mesmos problemas que sistemas de agentes encontram como guardrails. Construo sistemas com LLMs e a avaliação que decide se é seguro colocá-los em produção: no meu próprio site, um endpoint de LLM no ar roda atrás de um harness de integração contínua (CI), com um juiz LLM calibrado contra os meus próprios rótulos em um piso de concordância de 0,85 e resistência a jailbreak travada em 1,0. Trabalho diariamente com Claude Code e Codex, escrevendo as skills, políticas de guarda e lifecycle hooks sob os quais eles rodam. Na Raylu, sou dono da plataforma frontend por trás das páginas densas em dados de um produto de mercados privados, e as mudanças vão ao ar atrás de um A/B em produção, rota por rota. Na Betsson, construí um sistema de engenharia assistido por IA com 12 agentes que um time de plataforma adotou, sobre uma plataforma de pagamentos PCI-DSS que processa mais de 40M de transações por ano.',
+    'Engenheiro de Software Sênior com mais de 8 anos de software em produção, focado em GenAI e produtos AI-native: sistemas com LLMs, agentes e avaliações, com TypeScript, Python, React, Next.js, Angular e Node.js, além de PostgreSQL, Docker e AWS. Pagamentos, seguro empresarial e serviço de equipamentos hospitalares me ensinaram trilhas de auditoria, recuperação idempotente e isolamento de falhas, os mesmos problemas que sistemas de agentes encontram como guardrails. Construo sistemas com LLMs e a avaliação que decide se é seguro colocá-los em produção: no meu próprio site, um endpoint de LLM no ar roda atrás de um harness de integração contínua (CI), com um juiz LLM calibrado contra os meus próprios rótulos em um piso de concordância de 0,85 e resistência a jailbreak travada em 1,0. Trabalho diariamente com Claude Code e Codex, escrevendo as skills, políticas de guarda e lifecycle hooks sob os quais eles rodam. Na Raylu, construí, com outro engenheiro, a plataforma frontend por trás das páginas densas em dados de um produto de mercados privados, e as mudanças são medidas como builds de produção contra o commit pai, rota por rota. Na Betsson, construí um sistema de engenharia assistido por IA com 12 agentes que um time de plataforma adotou, sobre uma plataforma de pagamentos PCI-DSS que processa mais de 40M de transações por ano.',
 };
 
 type CvSkillGroup = { label: string; items: string[] };
@@ -325,7 +315,6 @@ const CV_SKILLS: Record<SiteLocale, CvSkillGroup[]> = {
 };
 
 const cvDocumentFor = (locale: SiteLocale) => {
-  const sentence = toSentence(locale);
   const event = communityEvent[locale];
   return CvDocumentSchema.parse({
     name: profile.displayName,
@@ -353,7 +342,7 @@ const cvDocumentFor = (locale: SiteLocale) => {
         : entry.body
             .flatMap((line) => line.split(FRAGMENT_SEPARATOR_PATTERN))
             .filter((fragment) => fragment.trim().length > 0)
-      ).map(sentence),
+      ).map(toSentence),
     })),
     skills: CV_SKILLS[locale],
     certifications: credentials.map((entry) => ({
@@ -364,8 +353,8 @@ const cvDocumentFor = (locale: SiteLocale) => {
     community: {
       heading: [spaced(event.name), event.year, event.role].join(STACK_SEPARATOR),
       href: event.link.href,
-      bullets: event.bullets.map(sentence),
-      status: sentence(event.statusLine),
+      bullets: event.bullets.map(toSentence),
+      status: toSentence(event.statusLine),
     },
     education: education[locale].map((entry) => ({
       key: entry.id,

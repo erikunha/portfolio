@@ -92,7 +92,7 @@ cases are deliberately borderline-hard.
 - **The judge sees a fact sheet.** `buildJudgeFactSheet` (`lib/eval/fact-sheet.ts`) renders the run
   date, the current title, the core stack and AI focus, the stack, work scope and targeting lines from `content/ask-facts.ts` (the module the system prompt composes them from), the credentials, the employment history
   and the education from content, and `scripts/ask-eval.ts` passes it
-  to the calibration pass and to every corpus grade. A claim that matches the sheet is never
+  to the calibration pass and to every corpus grade. The sheet rides along uncached on every judge call at the judge rate under the 2 USD job cap, so it stays under the length `lib/eval/__tests__/fact-sheet.test.ts` pins: a fact only one criterion needs goes into that criterion, not into the sheet. A claim that matches the sheet is never
   fabricated, so a criterion may leave out a true fact without failing the answer that states it.
   Add a field to the sheet when a criterion starts depending on a fact the sheet does not carry. A fact about Erik that the system prompt states belongs in `content/ask-facts.ts`, never as a literal in `lib/ask/system-prompt.ts`, so the sheet and the prompt cannot diverge.
 - **The judge sees the answer as fenced data.** `judge` (`lib/eval/judge.ts`) wraps the answer in

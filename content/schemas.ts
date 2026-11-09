@@ -929,11 +929,32 @@ export const DawMixerCopySchema = z.object({
   }),
 });
 
+const AskFactLinesSchema = z.array(z.string().min(1)).min(1);
+
+export const AskDecisionSchema = z.object({
+  decision: z.string().min(1),
+  rejected: z.string().min(1),
+  because: z.string().min(1),
+});
+
+export const AskStorySchema = z.object({
+  title: z.string().min(1),
+  text: z.string().min(1),
+});
+
 export const AskFactsSchema = z.object({
   openTo: z.string().min(1),
-  coreStack: z.array(z.string().min(1)).min(1),
-  currentRoleScope: z.array(z.string().min(1)).min(1),
-  targeting: z.array(z.string().min(1)).min(1),
+  coreStack: AskFactLinesSchema,
+  currentRoleScope: AskFactLinesSchema,
+  currentRoleDetail: AskFactLinesSchema,
+  targeting: AskFactLinesSchema,
+  workingStyle: AskFactLinesSchema,
+  decisions: z.array(AskDecisionSchema).min(1),
+  stories: z.array(AskStorySchema).min(1),
+  opinions: AskFactLinesSchema,
+  calibration: AskFactLinesSchema,
+  community: AskFactLinesSchema,
+  projectDetail: AskFactLinesSchema,
 });
 
 export type AskFacts = z.infer<typeof AskFactsSchema>;
@@ -1090,7 +1111,6 @@ export const ReadingViewsSchema = z.object({
     }),
     credentialLabels: z.record(z.string(), ReadingTextSchema),
     credentialBadges: z.record(z.string(), ReadingTextSchema),
-    proseOverrides: z.record(z.string(), ReadingTextSchema),
   }),
   summary: z.object({
     path: z.string().startsWith('/'),

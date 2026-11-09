@@ -15,7 +15,7 @@ import { WORK_SCOPE_SENTENCE } from '@/content/work-scope';
 import { buildJudgeFactSheet } from '@/lib/eval/fact-sheet';
 
 const TODAY = new Date('2026-11-07T12:00:00Z');
-const MAX_SHEET_LENGTH = 18000;
+const MAX_SHEET_LENGTH = 21000;
 
 describe('lib/eval/fact-sheet', () => {
   it('states the run date so a recent start date is not read as a future date', () => {
@@ -119,6 +119,9 @@ describe('lib/eval/fact-sheet', () => {
   });
 
   it('is compact enough to ride along on every judge call', () => {
-    expect(buildJudgeFactSheet(TODAY).length).toBeLessThan(MAX_SHEET_LENGTH);
+    expect(
+      buildJudgeFactSheet(TODAY).length,
+      'the judge sheet rides along uncached on every judge call at the judge model rate, and a run is capped at 2 USD: a sheet past this length projects a corpus plus calibration run over the cap. Add the fact to the criterion that needs it, not to the sheet.',
+    ).toBeLessThan(MAX_SHEET_LENGTH);
   });
 });

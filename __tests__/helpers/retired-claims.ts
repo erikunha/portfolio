@@ -25,6 +25,49 @@ export const RETIRED_CLAIMS: RetiredClaim[] = [
     reason:
       'owner decision: targeting is GenAI, AI-native products, LLM systems and agents; the consulting work is described by its platform, with no healthcare sector or targeting claim',
   },
+  {
+    name: 'removed employer',
+    pattern: /\bmonde\b/i,
+    reason:
+      'owner decision: the first employer was removed from the career log and every derived surface, as if it never existed; the career log starts at MB Labs. Only the ask probe that asks about it is exempt',
+  },
+  {
+    name: 'unsupported talk count',
+    pattern: /10\+ talks|10\+ palestras|mais de 10 palestras/i,
+    reason:
+      'owner decision: DevOpsDays Campinas 2024 curated 8 talks, the number its official program lists; the larger figure had no source',
+  },
+  {
+    name: 'live traffic split claim',
+    pattern: /production A\/B|A\/B em produção/i,
+    reason:
+      'the Raylu result compares production builds of each route against its parent commit on one shared backend; it was never a live traffic split, so no surface calls it a production A/B',
+  },
+  {
+    name: 'sole frontend ownership',
+    pattern: /\bowns?\b[^.\n]{0,12}\bfrontend platform|sou dono da plataforma frontend/i,
+    reason:
+      'owner decision: Erik built the Raylu frontend platform with one other engineer, so no surface says he owns it',
+  },
+  {
+    name: 'wrong route for the Raylu layout and score results',
+    pattern:
+      /(?:layout shift|performance score|pontuação de performance)[^.\n]{0,45}(?:company route|rota de empresa)/i,
+    reason:
+      'the CLS, LCP and Lighthouse score improvements are the pipelines route; on the company route the score stayed flat',
+  },
+  {
+    name: 'internal Raylu detail',
+    pattern: /\bWorkOS\b|\bTabster\b|\b745 components\b|\b950 stories\b|\bSpeed Index\b|jobattle/i,
+    reason:
+      'owner decision: the ask facts take the approved Raylu repository figures with their caveats and nothing else from the internal evidence (stack internals, component and story counts, route-level timings, the job-search tooling)',
+  },
+  {
+    name: 'private repository',
+    pattern: /projeto-verificacao-pagamentos/i,
+    reason:
+      'owner decision: LedgerLens is cited only through its public repository (erikunha/ledgerlens); the private working repository is never named or linked',
+  },
 ];
 
 export const RENDERED_ROUTES = [

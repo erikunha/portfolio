@@ -176,7 +176,7 @@ Pages inside the shell use `.page-container.page-main`, so the topbar clearance,
 
 Only the DAW mixer selects a UA-specific variant: `DawMixerContent` awaits `getIsMobile()` (`lib/ua.ts`) and renders the three-card mobile mix or the three-channel desktop table behind a Suspense boundary inside the guitar module. With `cacheComponents: true`, the static shell is prerendered and ASK and PSI reads stream behind Suspense. The rest of the guitar module is one synchronous responsive layout.
 
-Projects renders one static RSC tree at every viewport. Its nine cards share descriptions and stats from `content/projects.ts`; CSS selects one, two or three columns. Six project receipts from `content/perf-receipts.ts` sit beneath the cards inside the Projects module. `sec-perf-receipts` remains a nested anchor.
+Projects renders one static RSC tree at every viewport. Its ten cards share descriptions and stats from `content/projects.ts`; CSS selects one, two or three columns. Six project receipts from `content/perf-receipts.ts` sit beneath the cards inside the Projects module. `sec-perf-receipts` remains a nested anchor.
 
 Measured is one module at `sec-live-metrics`, composed by `AiMetricsSection`. ASK evaluation data and the PSI scores stream through two independent Suspense boundaries; the PSI block resolves once both desktop and mobile runs return. Both blocks stack as tile grids, four across on wide containers and two by two below 40rem, and each Lighthouse tile reads `desktop / mobile`. `content/measured.ts` supplies labels, sources, units and timestamp formatting. The data adapters remain `lib/ask-metrics.ts` and `lib/lighthouse-scores.ts`. Each block ends in a `MeasuredStatus` slot that reserves the height of its longest status copy, so loading, pending, unavailable and data states are as tall as each other. The nested `sec-ai-metrics` and `sec-live-perf` anchors preserve existing links.
 
@@ -291,7 +291,7 @@ content/section-registry.ts           # nine navigation destinations, icons and 
 content/section-labels.ts             # section labels: the visible module name and the heading label
 content/reading-views.ts              # summary and CV presentation
 content/profile.ts                    # shared identity, hiring copy and language line formatting
-content/hottest-takes.ts              # defended opinions
+content/hottest-takes.ts              # defended opinions (their theses also feed the ask facts)
 content/responsibilities.ts           # permissions matrix
 content/guitar-rig.ts                 # gear sheet
 content/unknowns.ts                   # unknowns items
@@ -310,7 +310,7 @@ content/world-map.ts                  # zod-free land grid, Erik pin and curated
 content/_validate-client-content.ts  # build-time parse site for every client-read schema
 content/schemas.ts                    # Zod validation schemas, build-time
 content/ask-eval-corpus.ts            # ask eval Q+A corpus (factual, edge, jailbreak, output-validation)
-content/ask-facts.ts                  # facts about Erik the ask prompt states (stack lines, work scope, targeting), shared with the eval fact sheet
+content/ask-facts.ts                  # facts about Erik the ask prompt states (stack, work scope, targeting, Raylu detail, working style, decisions, stories, opinions, calibration limits, community, LedgerLens detail); the opinions and community lines derive from hottest-takes.ts and community.ts
 
 lib/agent/                            # agent-readiness helpers (MCP tools)
 lib/ask/                              # system prompt builder, model const, anti-abuse; preflight.ts (every check before a model call) and stream.ts (model call, pump, settlement) that app/api/ask/route.ts composes

@@ -30,7 +30,7 @@ describe('Projects', () => {
       'text/html',
     );
     const cards = Array.from(doc.querySelectorAll('.project-card'));
-    expect(cards).toHaveLength(9);
+    expect(cards).toHaveLength(10);
     for (const card of cards) {
       const coNode = card.querySelector('.project-co')?.cloneNode(true) as HTMLElement;
       for (const hidden of coNode.querySelectorAll('.sr-only')) hidden.remove();
@@ -47,6 +47,7 @@ describe('Projects', () => {
       'https://github.com/JustFly1984/react-google-maps-api/pull/3266',
       'https://github.com/erikunha/portfolio',
       'https://github.com/erikunha/LAIbemage',
+      'https://github.com/erikunha/ledgerlens',
     ]);
     for (const link of links) {
       expect(link.getAttribute('target')).toBe('_blank');
@@ -123,6 +124,6 @@ describe('Projects', () => {
     expect(doc.querySelectorAll('#sec-projects .project-receipts li')).toHaveLength(6);
     expect(doc.querySelector('#sec-perf-receipts')).not.toBeNull();
     expect(doc.querySelectorAll('section')).toHaveLength(1);
-    expect(doc.querySelectorAll('.project-card')).toHaveLength(9);
+    expect(doc.querySelectorAll('.project-card')).toHaveLength(10);
   });
 });

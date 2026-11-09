@@ -26,7 +26,7 @@ const projectsFor = (locale: SiteLocale): Project[] => {
   const pt = locale === SITE_LOCALE.pt;
   return z
     .array(ProjectSchema)
-    .length(9)
+    .length(10)
     .parse([
       {
         name: 'ORIGINATION_PLATFORM_UI',
@@ -167,6 +167,23 @@ const projectsFor = (locale: SiteLocale): Project[] => {
           { label: pt ? 'PROVEDORES' : 'PROVIDERS', value: '7' },
           { label: 'CI', value: '8 WORKFLOWS' },
           { label: 'GATE', value: pt ? 'REGRESSÃO DE 5%' : '5% REGRESSION' },
+        ],
+      },
+      {
+        name: 'LEDGERLENS',
+        company: 'Erikunha',
+        kind: 'oss',
+        url: 'https://github.com/erikunha/ledgerlens',
+        description: pt
+          ? 'Agente Python open-source (MIT) que investiga reclamações de pagamento: text-to-SQL somente leitura atrás de um guard, busca em políticas, câmbio de referência e uma calculadora em Decimal, e um verificador confere cada afirmação contra a evidência citada e escala para revisão humana por regra. Nunca altera dados e roda offline, sem chaves. Em trinta casos, correção de 0,82 contra 0,55 de um agente ReAct, mas trajetória de ferramentas em 0,73 contra uma meta de 0,80. Trinta casos mostram uma tendência, não significância estatística.'
+          : 'Open-source Python agent (MIT) that investigates payment complaints: read-only text-to-SQL behind a guard, policy search, reference exchange rates and a Decimal calculator, then a verifier checks every claim against its cited evidence and escalates to human review by rule. It never changes data and runs offline with no keys. On thirty cases, 0.82 correctness against 0.55 for a ReAct agent, but tool trajectory 0.73 against a 0.80 target. Thirty cases show a trend, not significance.',
+        stats: [
+          {
+            label: pt ? 'CORREÇÃO' : 'CORRECTNESS',
+            value: pt ? '0,82 CONTRA 0,55 REACT' : '0.82 VS 0.55 REACT',
+          },
+          { label: pt ? 'REVISÃO HUMANA' : 'HUMAN REVIEW', value: pt ? '9,3 DE 30' : '9.3 OF 30' },
+          { label: 'STACK', value: 'PYTHON / LANGCHAIN' },
         ],
       },
     ]);

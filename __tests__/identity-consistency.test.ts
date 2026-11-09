@@ -114,7 +114,7 @@ describe('identity is consistent across every gated surface', () => {
       llmsTxt,
       'llms.txt must state the same talks sentence as content/community.ts, or an agent reads a different conference than the page shows',
     ).toContain(capitalizedTalks);
-    expect(llmsTxt).not.toContain('8 talks');
+    expect(llmsTxt).not.toContain('10+ talks');
     for (const language of profile.languages) expect(llmsTxt).toContain(language.name);
   });
 
@@ -304,13 +304,13 @@ describe('terminal redesign canonical facts', () => {
   });
 
   it('states the resume numbers on llms.txt, not the ones the resume replaced', () => {
-    for (const stale of ['€1B+ ARR', '70M+', '8 talks', 'WCAG 2.1', 'KPMG', '2,200+ clients']) {
+    for (const stale of ['€1B+ ARR', '70M+', '10+ talks', 'WCAG 2.1', 'KPMG', '2,200+ clients']) {
       expect(llmsTxt, `public/llms.txt still publishes "${stale}"`).not.toContain(stale);
     }
     for (const current of [
       '€1.197B',
       '24.2M digital clients',
-      '10+ talks',
+      '8 talks',
       'WCAG 2.2 AA',
       'Independent Consultant',
       'Zup Innovation',
@@ -351,7 +351,7 @@ describe('terminal redesign canonical facts', () => {
     }
   });
 
-  it('keeps nine employers with exact titles, month ranges and locations, and no education', () => {
+  it('keeps eight employers with exact titles, month ranges and locations, and no education', () => {
     expect(
       gitLog[SITE_LOCALE.en].map((entry) => [
         entry.company,
@@ -405,12 +405,11 @@ describe('terminal redesign canonical facts', () => {
         'Campinas, Brazil',
         null,
       ],
-      ['Monde Sistemas', 'Intern', '2017-10', '2018-05', 'Americana, Brazil', null],
     ]);
     expect(gitLog[SITE_LOCALE.en].every((entry) => entry.type === 'career')).toBe(true);
     expect(
       gitLog[SITE_LOCALE.en].filter((entry) => entry.isRoot).map((entry) => entry.company),
-    ).toEqual(['Monde Sistemas']);
+    ).toEqual(['MB Labs']);
     expect(HIRING_PROFILE.employers.map((entry) => entry.role)).toEqual(
       gitLog[SITE_LOCALE.en].map((entry) => entry.role),
     );

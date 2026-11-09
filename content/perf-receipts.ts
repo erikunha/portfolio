@@ -76,8 +76,8 @@ const perfReceiptsFor = (locale: SiteLocale): PerfReceipt[] => {
       delta: '-100%',
       company: '@ RAYLU',
       note: pt
-        ? 'layout shift de 0,166 para 0 na rota de empresa.'
-        : 'layout shift 0.166 to 0 on the company route.',
+        ? 'layout shift de 0,166 para 0 na rota de pipelines.'
+        : 'layout shift 0.166 to 0 on the pipelines route.',
       displayValue: pt ? '0,166 → 0' : '0.166 → 0',
       before: 0.166,
       after: 0,
@@ -87,8 +87,8 @@ const perfReceiptsFor = (locale: SiteLocale): PerfReceipt[] => {
       delta: '+21.5%',
       company: '@ RAYLU',
       note: pt
-        ? 'pontuação de performance de 79 para 96 na rota de empresa.'
-        : 'performance score 79 to 96 on the company route.',
+        ? 'pontuação de performance de 79 para 96 na rota de pipelines.'
+        : 'performance score 79 to 96 on the pipelines route.',
       displayValue: '79 → 96',
       before: 79,
       after: 96,
@@ -109,8 +109,8 @@ const perfReceiptsFor = (locale: SiteLocale): PerfReceipt[] => {
       delta: '-48.6%',
       company: '@ RAYLU',
       note: pt
-        ? 'uma rota, migração de plataforma de dados atrás de um A/B em produção.'
-        : 'one route, data-platform migration behind a production A/B.',
+        ? 'rota de pipelines, migração de plataforma de dados medida como build de produção contra o commit pai.'
+        : 'pipelines route, data-platform migration measured as a production build against its parent commit.',
       project: true,
       displayValue: pt ? '2.544 → 1.308ms' : '2,544 → 1,308ms',
       before: 2544,

@@ -16,6 +16,7 @@ import { projects } from '@/content/projects';
 import { SITE_LOCALE } from '@/content/site-locale';
 import { social } from '@/content/social';
 import { unknowns } from '@/content/unknowns';
+import { formatDecision, formatStory } from '@/lib/ask/ask-fact-format';
 import { formatEmployment } from '@/lib/ask/employment-format';
 import { sha256Hex } from '@/lib/ask/prompt-version';
 
@@ -52,8 +53,29 @@ ${education[SITE_LOCALE.en].map((entry) => `- ${entry.degree}, ${entry.instituti
 ## Certifications
 ${credentials.map((entry) => `- ${entry.label}: ${entry.badge}, ${entry.evidence}`).join('\n')}
 
+## Raylu detail
+${askFacts.currentRoleDetail.map((line) => `- ${line}`).join('\n')}
+
 ## Targeting
 ${askFacts.targeting.join('\n')}
+
+## How Erik works
+${askFacts.workingStyle.map((line) => `- ${line}`).join('\n')}
+
+## Decisions and the alternative he rejected
+${askFacts.decisions.map(formatDecision).join('\n')}
+
+## Stories (situation, action, result)
+${askFacts.stories.map(formatStory).join('\n')}
+
+## Opinions he states
+${askFacts.opinions.map((line) => `- ${line}`).join('\n')}
+
+## Community and writing
+${askFacts.community.map((line) => `- ${line}`).join('\n')}
+
+## What Erik does not claim
+${askFacts.calibration.map((line) => `- ${line}`).join('\n')}
 
 Scope: you only answer questions about Erik, his work, skills, experience, projects, or this site. If a question is off-topic trivia (sports, general knowledge, math, other people, current events), do not answer it even partially: state in one sentence that you only answer questions about Erik, then offer one related question you can answer, without answering it.
 
@@ -91,6 +113,9 @@ ${formatPerfReceipts()}
 
 ## Projects (single source of truth · content/projects.ts)
 ${formatProjects()}
+
+## LedgerLens detail (personal project, public repository)
+${askFacts.projectDetail.map((line) => `- ${line}`).join('\n')}
 
 ## What I'm not pretending to know (single source of truth · content/unknowns.ts)
 ${formatUnknowns()}`;

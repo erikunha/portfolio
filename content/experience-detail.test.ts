@@ -6,7 +6,7 @@ import { SITE_LOCALE } from './site-locale';
 const RESUME_NUMBERS = {
   [SITE_LOCALE.en]: [
     '14 to the correct 75',
-    '55 to 1',
+    'down to 1 on every route, from 55 on the worst',
     '0.166 to zero',
     '2,544 to 1,308 ms',
     '79 to 96',
@@ -40,7 +40,7 @@ const RESUME_NUMBERS = {
   ],
   [SITE_LOCALE.pt]: [
     'de 14 para os 75 corretos',
-    'de 55 para 1',
+    'reduzidos a 1 em todas as rotas, de 55 na pior',
     'de 0,166 para zero',
     'de 2.544 para 1.308 ms',
     'de 79 para 96',

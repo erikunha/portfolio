@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 import { ASK_EVAL_CALIBRATION } from '@/content/ask-eval-calibration';
 import { ASK_EVAL_CORPUS } from '@/content/ask-eval-corpus';
 import { education } from '@/content/education';
-import { RAYLU_OWNED_SCOPE } from '@/content/profile';
+import { RAYLU_BUILT_CLAIM, RAYLU_FRONTEND_SCOPE } from '@/content/profile';
 import { cvDocument } from '@/content/reading-views';
 import { SITE_LOCALE } from '@/content/site-locale';
 import { SYSTEM_TEXT } from '@/lib/ask/system-prompt';
@@ -63,15 +63,15 @@ const publishedTextSurfaces = (): Array<[string, string]> => {
 };
 
 describe('the ask prompt states the Raylu scope the CV states', () => {
-  it('claims the frontend-platform ownership the CV summary claims, and nothing wider', () => {
+  it('claims the frontend-platform build the CV summary claims, and nothing wider', () => {
     expect(
       cvDocument[SITE_LOCALE.en].summary,
-      'the CV summary no longer says Erik owns this scope: update RAYLU_OWNED_SCOPE and the prompt together',
-    ).toContain(`own ${RAYLU_OWNED_SCOPE}`);
+      'the CV summary no longer states the build claim: update RAYLU_BUILT_CLAIM and the prompt together',
+    ).toContain(RAYLU_BUILT_CLAIM);
     expect(
       currentRole,
-      'the Current role section must state the ownership the CV states, or the ask answer contradicts the page it sits on',
-    ).toContain(RAYLU_OWNED_SCOPE);
+      'the Current role section must state the scope the CV states, or the ask answer contradicts the page it sits on',
+    ).toContain(RAYLU_FRONTEND_SCOPE);
     expect(currentRole).toContain(WHOLE_PLATFORM_GUARD);
   });
 

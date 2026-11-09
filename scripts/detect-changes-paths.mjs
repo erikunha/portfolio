@@ -32,6 +32,7 @@ export const AI_PATHS = [
   'content/education.ts',
   'content/experience-detail.ts',
   'content/git-log.ts',
+  'content/hottest-takes.ts',
   'content/profile.ts',
   'content/site-locale.ts',
   'content/social.ts',

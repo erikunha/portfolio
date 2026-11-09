@@ -40,9 +40,22 @@ describe('lib/ask/system-prompt', () => {
         askFacts.openTo,
         ...askFacts.coreStack,
         ...askFacts.currentRoleScope,
+        ...askFacts.currentRoleDetail,
         ...askFacts.targeting,
+        ...askFacts.workingStyle,
+        ...askFacts.opinions,
+        ...askFacts.calibration,
+        ...askFacts.community,
+        ...askFacts.projectDetail,
       ]) {
         expect(SYSTEM_TEXT, line).toContain(line);
+      }
+      for (const decision of askFacts.decisions) {
+        expect(SYSTEM_TEXT, decision.decision).toContain(decision.decision);
+        expect(SYSTEM_TEXT, decision.rejected).toContain(decision.rejected);
+      }
+      for (const story of askFacts.stories) {
+        expect(SYSTEM_TEXT, story.title).toContain(story.text);
       }
     });
   });

@@ -27,6 +27,7 @@ const PROBE_IDS = new Set([
   'edge-terms-not-published-1',
   'edge-terms-not-published-2',
   'edge-pt-terms-not-published',
+  'edge-employer-not-in-record',
 ]);
 
 const publicSurfaces = (): Array<[string, string]> =>

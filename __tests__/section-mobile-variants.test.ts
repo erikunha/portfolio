@@ -47,7 +47,7 @@ describe('responsive section mobile variants', () => {
     const doc = new DOMParser().parseFromString(html, 'text/html');
     expect(doc.querySelectorAll('.projects-grid')).toHaveLength(1);
     const cards = Array.from(doc.querySelectorAll('.project-card'));
-    expect(cards).toHaveLength(9);
+    expect(cards).toHaveLength(10);
     for (const [index, project] of projects[SITE_LOCALE.en].entries()) {
       expect(cards[index]?.querySelector('.project-name')?.textContent).toContain(project.name);
       expect(cards[index]?.querySelector('.project-desc')?.textContent).toBe(project.description);

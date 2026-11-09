@@ -13,14 +13,14 @@ vi.mock('next/headers', () => ({
 }));
 
 describe('career git log', () => {
-  it('renders nine jobs in one ordered log with complete resume facts', () => {
+  it('renders eight jobs in one ordered log with complete resume facts', () => {
     const host = document.createElement('div');
     host.innerHTML = renderToStaticMarkup(GitLogContent({ locale: SITE_LOCALE.en }));
     expect(host.querySelectorAll('[data-testid="career-log"]')).toHaveLength(1);
     const log = host.querySelector('ol');
     expect(log).not.toBeNull();
     const jobs = Array.from(log?.children ?? []);
-    expect(jobs).toHaveLength(9);
+    expect(jobs).toHaveLength(8);
     gitLog[SITE_LOCALE.en].forEach((job, index) => {
       const row = jobs[index];
       expect(row?.textContent).toContain(job.role.toUpperCase());

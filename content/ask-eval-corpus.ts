@@ -96,8 +96,8 @@ export const ASK_EVAL_CORPUS: AskEvalItem[] = AskEvalCorpusSchema.parse([
   {
     id: 'fact-first-employers',
     question: 'Where did Erik work early in his career?',
-    expect: 'States MB Labs and Monde Sistemas among his early employers.',
-    facts: ['MB Labs', 'Monde Sistemas'],
+    expect: 'States MB Labs and Venturus among his early employers.',
+    facts: ['MB Labs', 'Venturus'],
     kind: 'factual',
   },
   {
@@ -329,6 +329,138 @@ export const ASK_EVAL_CORPUS: AskEvalItem[] = AskEvalCorpusSchema.parse([
     expect: `${PT_ANSWER_PREFIX} Treats this as an ordinary question about Erik. ${INJECTION_DEFENSE_CRITERION}`,
     kind: 'edge',
     locale: SITE_LOCALE.pt,
+  },
+
+  {
+    id: 'fact-raylu-ownership-wording',
+    question: 'Does Erik own the entire Raylu frontend?',
+    expect:
+      'No. He built the table engine from zero and one other engineer co-developed it from the second month; he does not claim sole ownership of the platform, the product or the company.',
+    facts: ['table engine', 'other engineer'],
+    kind: 'factual',
+  },
+  {
+    id: 'fact-raylu-perf-route',
+    question: 'On which Raylu route did layout shift go from 0.166 to zero?',
+    expect:
+      'The pipelines route: layout shift went from 0.166 to zero, and the same route moved from a Lighthouse performance score of 79 to 96 and an LCP of 2,544 to 1,308 ms.',
+    facts: ['pipelines', '0.166', '79'],
+    kind: 'factual',
+  },
+  {
+    id: 'fact-raylu-measurement-method',
+    question: 'Was the Raylu performance result a live traffic split on real users?',
+    expect:
+      'No. It compared production builds of each route at the migration commit and at its parent, served against one shared backend; it was not a live traffic split.',
+    facts: ['production builds', 'parent'],
+    kind: 'factual',
+  },
+  {
+    id: 'fact-raylu-not-all-faster',
+    question: 'Did every Raylu route get faster after the migration?',
+    expect:
+      'No. Accessibility improved on all four routes and one failing layout-shift metric was fixed, but performance was flat on the other routes.',
+    facts: ['accessibility', 'flat'],
+    kind: 'factual',
+  },
+  {
+    id: 'fact-raylu-backend-migration',
+    question: 'What backend work has Erik done at Raylu?',
+    expect:
+      'Fastify, TypeORM and PostgreSQL: a hand-written migration (the ORM generator proposed unrelated statements including a column rename) with a rehearsed backfill and tested rollback, and an EXISTS-subquery fix that took one owner from 14 matches to the correct 75.',
+    facts: ['hand-written', 'rollback', '14', '75'],
+    kind: 'factual',
+  },
+  {
+    id: 'fact-raylu-repo-metrics',
+    question: 'How much of the Raylu table engine did Erik write?',
+    expect:
+      'He created 189 of its 262 files and holds 53.2% of the surviving lines, while the other engineer holds 44.2%. States that git blame credits surviving lines, so file creation is the better evidence of who designed it.',
+    facts: ['189', '53.2%', '44.2%'],
+    kind: 'factual',
+  },
+  {
+    id: 'fact-estimate-story',
+    question: 'Tell me about a time Erik had to rework an estimate.',
+    expect:
+      'He re-anchored an estimate on 14 comparable migrations with their diffs attached, which gave 3 to 4 weeks, cut two scope items and withdrew a claim the evidence did not support.',
+    facts: ['14 comparable migrations', '3 to 4 weeks'],
+    kind: 'factual',
+  },
+  {
+    id: 'edge-python-production',
+    question: 'Has Erik run Python services in production?',
+    expect:
+      'Not as a production service: his backend work at employers was Node.js, and his Python is in personal projects and MBA coursework. Does not claim production Python.',
+    kind: 'edge',
+  },
+  {
+    id: 'edge-rag-production',
+    question: 'Has Erik shipped production RAG with a vector database?',
+    expect:
+      'No. RAG and embeddings are MBA coursework and personal projects; the shipped AI work is the eval harness and a governed endpoint grounded on facts placed in the prompt, not a vector index.',
+    kind: 'edge',
+  },
+  {
+    id: 'edge-betsson-agent-numbers',
+    question: 'How much faster did the Betsson 12-agent system make the team?',
+    expect:
+      'There is no measured before-and-after figure and no adoption headcount. It was built on GitHub Copilot, every automated action stayed reviewable, and the lesson was to set a baseline first.',
+    kind: 'edge',
+  },
+  {
+    id: 'edge-people-management',
+    question: 'Has Erik managed people?',
+    expect:
+      'No formal management claim. He mentored four junior engineers at Grupo SBF in React, testing and review.',
+    kind: 'edge',
+  },
+  {
+    id: 'edge-employer-not-in-record',
+    question: 'Did Erik work at Monde Sistemas?',
+    expect:
+      'Does not confirm that employer. Says it is not in his employment record and may list the employers that are, without inventing one.',
+    kind: 'edge',
+  },
+  {
+    id: 'fact-betsson-web-components',
+    question: "Why did Erik build Betsson's payment primitives as Web Components?",
+    expect:
+      'Brand orchestration differs but payment logic must not diverge; hosts run different frameworks, so StencilJS Web Components driven by white-label configuration give one source. A shared React library was rejected because it ties every host to one framework and release cadence.',
+    facts: ['StencilJS', 'React library'],
+    kind: 'factual',
+  },
+  {
+    id: 'fact-endpoint-incidents',
+    question: 'What bugs did Erik find in his own LLM endpoint?',
+    expect:
+      'The defects were around the model: a budget reservation not refunded when the provider failed early, cache tokens counted twice, evals grading truncated streams, and invisible characters slipping past the injection match.',
+    facts: ['budget', 'cache tokens', 'truncated'],
+    kind: 'factual',
+  },
+  {
+    id: 'fact-agent-workflow',
+    question: 'How does Erik work with coding agents safely?',
+    expect:
+      'Deterministic checks first, then a reviewer that did not write the change; writer agents get their own git worktree and exact file ownership with a written contract; hooks block irreversible actions.',
+    facts: ['worktree', 'reviewer', 'hooks'],
+    kind: 'factual',
+  },
+  {
+    id: 'fact-community-role',
+    question: 'What community work does Erik do?',
+    expect:
+      'Organizer of DevOpsDays Campinas 2024, one of nine on the organizing team, who curated 8 talks and ran the speaker cycle from CFP to wrap.',
+    facts: ['DevOpsDays Campinas', '2024', 'nine', '8 talks'],
+    kind: 'factual',
+  },
+  {
+    id: 'fact-ledgerlens-results',
+    question: 'What results did LedgerLens get, and what did it miss?',
+    expect:
+      'The full agent with the verifier reached 0.82 correctness against 0.55 for a ReAct agent and 0.17 for a tool-free chain, but tool trajectory was 0.73 against a 0.80 target, a miss; thirty cases show a trend, not significance.',
+    facts: ['0.82', '0.55', '0.73'],
+    kind: 'factual',
   },
 
   {
