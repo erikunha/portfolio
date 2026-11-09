@@ -1,3 +1,4 @@
+import { spawnSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 
@@ -45,9 +46,45 @@ describe('ci.yml ci-gate fan-in invariants', () => {
     expect([...needs].sort()).toEqual(expected);
   });
 
-  it('blocks on failure and cancelled upstream results only (skipped passes)', () => {
-    expect(job).toMatch(/BAD_RESULTS = new Set\(\["failure", "cancelled"\]\)/);
+  const gateScript = (() => {
+    const body = job.slice(job.indexOf("node -e '") + "node -e '".length);
+    return body.slice(0, body.lastIndexOf("'"));
+  })();
+
+  function runGate(results: Record<string, string>): number {
+    const needsJson = JSON.stringify(
+      Object.fromEntries(Object.entries(results).map(([k, result]) => [k, { result }])),
+    );
+    const out = spawnSync(process.execPath, ['-e', gateScript], {
+      env: { PATH: process.env.PATH ?? '', NEEDS_JSON: needsJson },
+      encoding: 'utf8',
+    });
+    return out.status ?? -1;
+  }
+
+  const ALL_GREEN = Object.fromEntries(needs.map((n) => [n, 'success']));
+
+  it('passes when every upstream job succeeded', () => {
+    expect(runGate(ALL_GREEN)).toBe(0);
   });
+
+  it('passes a path-skipped optional job', () => {
+    expect(runGate({ ...ALL_GREEN, performance: 'skipped', 'attest-build': 'skipped' })).toBe(0);
+  });
+
+  it.each(['failure', 'cancelled', 'abandoned', 'timed_out', 'neutral'])(
+    'blocks an upstream job whose result is %s (an Actions outage reports abandoned)',
+    (result) => {
+      expect(runGate({ ...ALL_GREEN, typecheck: result })).toBe(1);
+    },
+  );
+
+  it.each(['detect-changes', 'quality-fast', 'typecheck', 'test', 'build', 'semgrep', 'gitleaks'])(
+    'blocks when the always-run job %s did not succeed, even as skipped',
+    (core) => {
+      expect(runGate({ ...ALL_GREEN, [core]: 'skipped' })).toBe(1);
+    },
+  );
 
   it('reads needs via toJSON into env, never interpolated into the script body', () => {
     expect(job).toMatch(/NEEDS_JSON:\s*\$\{\{\s*toJSON\(needs\)\s*\}\}/);

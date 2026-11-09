@@ -654,9 +654,12 @@ jobs:
           NEEDS_JSON: ${{ toJSON(needs) }}
         run: |
           node -e '
-            const BAD_RESULTS = new Set(["failure", "cancelled"]);
+            const PASSING_RESULTS = new Set(["success", "skipped"]);
+            const ALWAYS_RUN = new Set(["detect-changes", "quality-fast", "typecheck", "test", "build", "semgrep", "gitleaks"]);
             const needs = JSON.parse(process.env.NEEDS_JSON);
-            const bad = Object.entries(needs).filter(([, n]) => BAD_RESULTS.has(n.result));
+            const bad = Object.entries(needs).filter(([job, n]) =>
+              ALWAYS_RUN.has(job) ? n.result !== "success" : !PASSING_RESULTS.has(n.result),
+            );
             for (const [job, n] of Object.entries(needs)) {
               console.log(job + ": " + n.result);
             }
@@ -664,7 +667,7 @@ jobs:
               console.error("ci-gate: blocking on " + bad.map(([job]) => job).join(", "));
               process.exit(1);
             }
-            console.log("ci-gate: all upstream jobs succeeded or were intentionally skipped");
+            console.log("ci-gate: every always-run job succeeded and the rest succeeded or were path-skipped");
           '
 
   semgrep:
