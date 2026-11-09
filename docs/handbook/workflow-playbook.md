@@ -17,7 +17,7 @@ Every runbook lists: **entry point** (what starts it), **steps**, **AI participa
   3. Decompose into tasks with a failure-mode checklist (shard into sub-PRs if large).
   4. Branch `feat/<description>`. Implement test-first.
   5. Read the diff and push.
-  6. `pnpm ci:local`, `pnpm bundle-check`, `pnpm route-js-check` and `pnpm gates:runtime`, open the PR, resolve threads, `pnpm pr:gate`.
+  6. `pnpm ci:local`, `pnpm bundle-check`, `pnpm route-js-check` and `pnpm gates:runtime`, open the PR, then review it.
   7. Record the ADR in `DECISIONS.md` in the same commit as the decision (a dated bullet with a reversibility note).
 - **AI:** optional at every step; the `plan-review` skill encodes the limits check.
 - **Output:** a squash-merged PR `(#NNN)` + an ADR.
@@ -114,5 +114,5 @@ Every runbook lists: **entry point** (what starts it), **steps**, **AI participa
 - **Steps:**
   1. `pnpm ci:local`, `pnpm bundle-check`, `pnpm route-js-check` and `pnpm gates:runtime`; `gh pr create` filling the template (every section non-empty).
   2. Reply in each review thread before resolving it. claude-review runs only when an owner, member or collaborator comments `/claude-review`.
-  3. CI is green and `pnpm pr:gate` passes (every thread resolved with a reply); squash-merge.
+  3. CI is green and the review's blocking findings are answered; squash-merge.
 - **Output:** a merged PR. See [review-merge-release](./review-merge-release.md).

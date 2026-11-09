@@ -5,8 +5,10 @@
 ```text
 STATUS: complete | partial | blocked
 ANSWER: <one or two sentences answering the track question>
+SKILL: <the skill whose method this track ran, or none>
 OBSERVATIONS: direct facts
 EVIDENCE: file:line, count/denominator, command and result, source reference
+SEEN: <what the opened image showed, when the track owed a look>
 INFERENCES: kept separate from observations
 CANDIDATE FINDINGS: claim, consequence, proof anchor, certainty
 REFUTED: concern, and the evidence that refuted it
@@ -16,9 +18,12 @@ FOLLOW-UP: none, or question + trigger + suggested domain
 
 ## Evidence tags
 
-SOURCE_CONFIRMED, COUNTED, TEST_CONFIRMED, RUNTIME_OBSERVED, BROWSER_OBSERVED,
+SOURCE_CONFIRMED, COUNTED, TEST_CONFIRMED, RUNTIME_OBSERVED, BROWSER_OBSERVED, IMAGE_OBSERVED,
 NETWORK_OBSERVED, PERSISTENCE_OBSERVED, PERFORMANCE_MEASURED, BASELINE_COMPARED,
 DOC_CONFIRMED, UPSTREAM_CONFIRMED, INFERRED, UNKNOWN, BLOCKED.
+
+`IMAGE_OBSERVED` is reserved for a captured image the reviewer actually opened. A measurement of
+the same surface stays `BROWSER_OBSERVED`.
 
 ## Proof anchors (a finding needs one)
 
@@ -51,7 +56,8 @@ Uncertainty does not raise severity.
 Every domain from `domains.md` plus: runtime, browser, network, read-back, regression
 attribution, external research, challenge. Each is COMPLETE, RUN_AND_EMPTY, NOT_APPLICABLE,
 BLOCKED or UNKNOWN. Also check: tracks planned vs launched vs completed, follow-ups answered,
-validators run, challengers run. A material gap with capacity left means launch it, not write.
+validators run, challengers run, skills dispatched (one row each, with the trigger that matched
+and the result), images read. A material gap with capacity left means launch it, not write.
 
 ## Done when
 
@@ -59,14 +65,16 @@ validators run, challengers run. A material gap with capacity left means launch 
 2. Product intent and acceptance criteria are known, or explicitly unresolved.
 3. Capabilities were calibrated enough to route correctly; context loaded progressively.
 4. Material independent questions became bounded tracks with minimal context.
-5. A consequential change was reviewed by a subagent that did not write it.
+5. A consequential change was reviewed by a specialist that did not write it.
 6. Version-sensitive answers used installed versions; overrides checked against peer ranges.
 7. Deterministic gates ran; user-visible behaviour was exercised locally, or marked not run.
-8. Persistence or async completion was read back when the change writes state.
-9. Quantitative claims were measured; regressions compared with the base.
-10. Consequential findings were challenged; every accepted finding has a proof anchor.
-11. Speculative, stylistic, duplicate and refuted findings were removed; uncertainty is explicit.
-12. The completion matrix has no blank row; the draft is short and in the owner's voice.
+8. Every matching repository skill ran, or has a recorded reason it did not apply.
+9. Every visual track opened its capture and described what it showed, or is marked blocked.
+10. Persistence or async completion was read back when the change writes state.
+11. Quantitative claims were measured; regressions compared with the base.
+12. Consequential findings were challenged; every accepted finding has a proof anchor.
+13. Speculative, stylistic, duplicate and refuted findings were removed; uncertainty is explicit.
+14. The completion matrix has no blank row; the draft is short and in the owner's voice.
 
 Then state the verdict: ready, ready with risk, or not ready, from measured facts only.
 

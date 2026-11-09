@@ -263,7 +263,7 @@ Examples:
 
 **Rule 31. The checklist box and the ADR entry are part of the change, not paperwork after it.**
 Before writing: fill every box that applies, write why every box that does not apply does not apply, and land the ADR in the same commit as the decision.
-Check: `pnpm pr:gate` plus a read of the checklist against the diff.
+Check: the review's finding list plus a read of the checklist against the diff.
 Examples:
 - PR220 `package.json`: seven dependency overrides shipped with the ADR box marked N/A; the fix added the ADR entry.
 

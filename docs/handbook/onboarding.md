@@ -28,7 +28,7 @@ flowchart LR
     tdd["write a failing behavior test"] --> edit["implement"] --> commit["commit (scope!)"]
     commit --> push["push (passes pre-push)"]
     push --> pr["ci:local; non-docs bundle + route-JS + runtime; open PR"]
-    pr --> conv["resolve every thread"] --> ready["pr:gate"] --> merge["squash-merge"]
+    pr --> conv["review the pull request"] --> ready["findings answered"] --> merge["squash-merge"]
     merge --> deploy["deploy; document architectural decisions with the change"]
 ```
 
