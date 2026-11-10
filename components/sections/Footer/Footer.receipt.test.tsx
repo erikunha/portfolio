@@ -1,4 +1,4 @@
-import { act, cleanup, render, screen } from '@testing-library/react';
+import { act, cleanup, render } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { footerContent } from '@/content/footer';
 import { SITE_LOCALE } from '@/content/site-locale';
@@ -60,10 +60,8 @@ describe('footer session receipt', () => {
     const { container } = render(<Footer locale={SITE_LOCALE.en} />);
     const receipt = container.querySelector('[data-testid="footer-receipt"]');
     expect(receipt?.querySelector('code')).toBeNull();
+    expect(receipt?.querySelector('button')).toBeNull();
     expect(container.textContent).not.toContain(A);
-    expect(
-      screen.queryByRole('button', { name: new RegExp(copy.feedback.idle.label, 'i') }),
-    ).toBeNull();
   });
 
   it('does not render a receipt on the server, so hydration cannot mismatch', async () => {

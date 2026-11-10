@@ -1,4 +1,3 @@
-import { copyFeedback } from './copy-button';
 import { MAIN_CONTENT_ID } from './landmarks';
 import { LINKS_PATH } from './links.constants';
 import { FooterContentSchema } from './schemas';
@@ -119,7 +118,6 @@ const footerContentFor = (locale: SiteLocale) => {
     },
     receipt: {
       label: pt ? 'última requisição registrada' : 'last request recorded',
-      feedback: copyFeedback[locale],
     },
     copyright: pt
       ? '© 2026 erik cunha · esta sessão termina aqui · o trabalho não.'
