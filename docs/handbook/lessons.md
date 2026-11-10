@@ -14,8 +14,9 @@ The prompt for a manual or agent review that applies these rules to a diff is `d
    that is not reachable from this PR's head. Check: `git merge-base --is-ancestor <sha> HEAD`.
 2. A commit body cites only SHAs reachable from the branch it lands on. Describe off-branch facts
    in words. Check: the same `merge-base --is-ancestor` test for every SHA in the body.
-3. Predict CI before pushing. For every route or component the diff touches, run the matching
-   `tests/e2e` specs against a production build (`pnpm build`, then `pnpm start` on a free port).
+3. Predict CI before pushing: `pnpm ci:predict` runs every CI job the commits trigger. For every
+   route or component the diff touches, the matching `tests/e2e` specs also run against a production
+   build (`pnpm build`, then `pnpm start` on a free port).
    Scope page-wide assertions (`locator('canvas')`, counts over `document`) to the element they
    guard, because a new global layer breaks them. Check: the specs pass on the production build.
 4. A layout, spacing, type or color change regenerates the darwin baselines of
@@ -23,11 +24,11 @@ The prompt for a manual or agent review that applies these rules to a diff is `d
    change, and every regenerated PNG is read before it is committed. Linux baselines come from the
    CI dispatch (`update_visual_baselines`). Check: `git status tests/visual` lists the PNGs.
 5. A small visual fix can stay under the screenshot tolerance. `--update-snapshots` (the changed
-   mode) keeps a baseline whose diff is under `maxDiffPixels`, so a removed label survives the
+   mode) keeps a baseline whose diff is under `maxDiffPixelRatio`, so a removed label survives the
    regen. Force it only for the subject you changed: `--update-snapshots=all -g <subject>`, never
    for the whole suite. Check: open the regenerated PNG and confirm the fix is in it.
-6. `DECISIONS.md`: every entry sits under a dated heading, newest first, cites the SHA that lands
-   it and names how to undo it. Check: read the entry as a stranger who must revert it.
+6. `DECISIONS.md`: every entry sits under a dated heading, newest first, cites the PR that lands
+   it (a SHA only while it is reachable from the branch) and names how to undo it. Check: read the entry as a stranger who must revert it.
 7. Format before finishing: `pnpm check:fix`, then `pnpm check` reports no errors. Never call a
    lint error pre-existing without showing it on the base branch.
 8. Tokens added to `app/css/theme.css` by two branches conflict; keep both sides.
@@ -47,7 +48,7 @@ The prompt for a manual or agent review that applies these rules to a diff is `d
     find the cause, fix the cause, add the test and report the cause in one line. Pre-existing
     does not mean ignore; outside your scope means you say so with the evidence.
 16. Every review finding is addressed, minor and nit included: fixed at the root or answered in
-    the thread with why it is wrong. Only blocker and major findings block a push.
+    the thread with why it is wrong. Only CRITICAL and IMPORTANT findings block a merge (`REVIEW.md`).
 17. Never stop a server by its port (`lsof -ti :PORT | xargs kill`). Two runs on one port kill
     each other's server mid-suite. Stop the process group you started.
 18. A gate chained with `&&` is never piped (`gate | tail -1 && merge`): the pipeline's exit
@@ -83,9 +84,6 @@ The prompt for a manual or agent review that applies these rules to a diff is `d
 28. A test that needs a still page seeds the stored choice with `freezeMotion` from
     `tests/e2e/_helpers/motion.ts` before `goto`. Emulated `reducedMotion` changes nothing: the
     operating system preference is not read, and a first visit starts with motion on.
-28. A commit made with `--no-verify` skips commitlint, and CI's quality-fast job runs it on every
-    commit in the push. Body lines over 100 characters then fail CI after the push. Check: commit
-    through the hooks, or run `pnpm exec commitlint --from origin/<base>` before pushing.
 29. A loading fallback is measured against what replaces it, in both locales and at 320, 390, 768 and
     1280px, with the stream held (scripts blocked, `$RC("B:` swaps removed from the document) so the
     fallback is laid out with scripting on. A reserve list shared by two states is one function, never
@@ -153,6 +151,9 @@ The prompt for a manual or agent review that applies these rules to a diff is `d
     linux and darwin font metrics differ by a page near any tight cap, and a career entry never splits
     across pages. Resume length is a content decision; the ceiling only catches broken print CSS. Do
     not tighten it to match today's page count. Check: `tests/e2e/reading-shell.spec.ts`.
+41. A commit made with `--no-verify` skips commitlint, and CI's quality-fast job runs it on every
+    commit in the push. Body lines over 100 characters then fail CI after the push. Check: commit
+    through the hooks, or run `pnpm exec commitlint --from origin/<base>` before pushing.
 
 ## Pre-push judgement list
 

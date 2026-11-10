@@ -17,7 +17,7 @@ Every runbook lists: **entry point** (what starts it), **steps**, **AI participa
   3. Decompose into tasks with a failure-mode checklist (shard into sub-PRs if large).
   4. Branch `feat/<description>`. Implement test-first.
   5. Read the diff and push.
-  6. `pnpm ci:local`, `pnpm bundle-check`, `pnpm route-js-check` and `pnpm gates:runtime`, open the PR, then review it.
+  6. `pnpm ci:predict` and `pnpm gates:runtime`, open the PR, then review it and answer every finding.
   7. Record the ADR in `DECISIONS.md` in the same commit as the decision (a dated bullet with a reversibility note).
 - **AI:** optional at every step; the `plan-review` skill encodes the limits check.
 - **Output:** a squash-merged PR `(#NNN)` + an ADR.
@@ -106,13 +106,13 @@ Every runbook lists: **entry point** (what starts it), **steps**, **AI participa
 - **Entry:** any non-obvious or architectural decision.
 - **Format (the convention):** `**YYYY-MM-DD** · **Decision title.** <mechanism: what changed and the causal why> _Reversible: <how to undo>._`
 - **Rules:** cite SHAs/PR numbers; record failed approaches as "Falsified first attempt"; every entry ends in a reversibility note.
-- **Output:** a dated bullet at the top of `DECISIONS.md`.
+- **Output:** a dated bullet under the newest dated heading of `DECISIONS.md`.
 
 ## Opening and converging a PR
 
 - **Entry:** a ready branch.
 - **Steps:**
-  1. `pnpm ci:local`, `pnpm bundle-check`, `pnpm route-js-check` and `pnpm gates:runtime`; `gh pr create` filling the template (every section non-empty).
+  1. `pnpm ci:predict` (it subsumes `pnpm ci:local`, `pnpm bundle-check` and `pnpm route-js-check`) and `pnpm gates:runtime`; `gh pr create` filling the template (every section non-empty).
   2. Reply in each review thread before resolving it. claude-review runs only when an owner, member or collaborator comments `/claude-review`.
-  3. CI is green and the review's blocking findings are answered; squash-merge.
+  3. CI is green, the Argos visual check is approved and the review's blocking findings are answered; a human (the owner) approves Argos and squash-merges into `main` in the browser. An agent only prepares the PR, and may merge only into a non-`main` integration branch.
 - **Output:** a merged PR. See [review-merge-release](./review-merge-release.md).

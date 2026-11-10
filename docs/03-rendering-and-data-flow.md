@@ -33,6 +33,9 @@ flowchart TD
     ds --> ds3["/design-system/components"]
     ds --> ds4["/design-system/enforcement"]
     ds --> ds5["/design-system/changelog (git-generated)"]
+    ds --> ds6["/design-system/foundations/{colors,typography,spacing-borders}"]
+    ds --> ds7["/design-system/primitives/* (ten component pages)"]
+    dsnav["_components/ds-nav.ts: page tree, pager and sitemap entries"] -.-> ds
     subgraph api["API cluster (app/api/**)"]
       api1["POST /api/ask (streaming)"]
       api2["POST /api/contact (defineHandler)"]
@@ -42,19 +45,19 @@ flowchart TD
       api6["GET /api/erik.json"]
       api7["GET /api/lighthouse"]
       api8["POST /api/log · POST /api/log/forget"]
-      api9["POST /api/mcp (stateless handler; POST body limit 4096 bytes)"]
+      api9["GET · POST /api/mcp (stateless handler; POST body limit 4096 bytes)"]
       api10["GET /api/contact-retry (daily cron)"]
     end
     shell -.serves.-> api
 ```
 
-The user-facing routes are `/`, `/summary`, `/cv`, `/links`, `/links/en` and the pt-BR twins `/pt`, `/pt/cv` and `/pt/summary`, alongside the design-system docs, metadata routes and API cluster. Home sections use the client `ErrorBoundary` component; its default fallback is a bordered box that keeps the island's `minHeight` (`--eb-min-height`), and decorative islands (CRT overlay, Matrix rain) pass `fallback={null}` and render nothing. The English and pt-BR routes live in two route groups, `app/(en)` and `app/(pt)`, each with its own root layout that sets `<html lang>` and renders `components/RootShell.tsx`. A navigation between the groups, such as the language switch, is a full document load. App Router failures also have `app/(en)/error.tsx`, `app/(pt)/error.tsx` and `app/global-error.tsx`; there is no `loading.tsx`/`template.tsx`. Each group's `[...missing]/page.tsx` renders `components/ErrorPages/MissingRoute.tsx`, which calls `notFound()` inside a `Suspense` boundary whose fallback is the 404 page, so the first bytes carry the page, the group's `<html lang>` and status 404; a `notFound()` outside a boundary prerenders Next's empty error shell instead.
+The user-facing routes are `/`, `/summary`, `/cv`, `/links`, `/links/en` and the pt-BR twins `/pt`, `/pt/cv` and `/pt/summary`, alongside the 18 design-system pages (the five top-level pages, three foundations and ten primitives listed in `ds-nav.ts`), metadata routes and API cluster. `app/sitemap.ts` lists every page with its language alternates; `robots.txt`, `llms.txt`, `.well-known/agent.json` and `og.png` are static files in `public/`. Home sections use the client `ErrorBoundary` component; its default fallback is a bordered box that keeps the island's `minHeight` (`--eb-min-height`), and decorative islands (CRT overlay, Matrix rain) pass `fallback={null}` and render nothing. The English and pt-BR routes live in two route groups, `app/(en)` and `app/(pt)`, each with its own root layout that sets `<html lang>` and renders `components/RootShell.tsx`. A navigation between the groups, such as the language switch, is a full document load. App Router failures also have `app/(en)/error.tsx`, `app/(pt)/error.tsx` and `app/global-error.tsx`; there is no `loading.tsx`/`template.tsx`. Each group's `[...missing]/page.tsx` renders `components/ErrorPages/MissingRoute.tsx`, which calls `notFound()` inside a `Suspense` boundary whose fallback is the 404 page, so the first bytes carry the page, the group's `<html lang>` and status 404; a `notFound()` outside a boundary prerenders Next's empty error shell instead.
 
 ## Terminal sections and navigation
 
 `content/section-registry.ts` defines nine navigation destinations: Home (`bio`), About, Projects, Career, Interactive shell, Measured, Opinions, Guitar and mixer, and Contact. It supplies icons, screen reader labels and navigation order. `content/section-labels.ts` exposes those labels and adds the scroll region labels; each module header shows its section label as a visible name beside the icon.
 
-The JSX order in `components/SiteHome.tsx` is Hero, About, Shell, Measured, Projects, GitLog, HottestTakes (with Unknowns nested inside), Guitar (the guitar rig with the DAW mixer below it) and Contact. Footer follows `PageMain` as its sibling. CSS mobile ordering is a separate map in `app/css/base.css`.
+The JSX order in `components/SiteHome.tsx` is Hero, About, Shell, Measured, Projects, GitLog, HottestTakes (with Unknowns nested inside), Guitar (the guitar rig with the DAW mixer below it) and Contact. Footer follows `PageMain` as its sibling. No CSS `order` reorders a top-level section, so the page reads in this order at every width; the navigation order in the registry is independent of it.
 
 About contains Whoami, Now, Responsibilities, Stack and retry-code panels. Responsibilities and retry code are named keyboard scroll regions inside About. Projects contains its receipts. Career contains certification, education and community tag groups. Measured contains independent ASK, desktop PSI and mobile PSI reads. These nested groups do not become separate navigation destinations.
 
@@ -63,13 +66,14 @@ About contains Whoami, Now, Responsibilities, Stack and retry-code panels. Respo
 ```mermaid
 flowchart TD
     html["html (mono+display font vars)"] --> body["body (suppressHydrationWarning)"]
+    body --> noscript["NoscriptBar: no-JS notice with the contact link"]
     body --> boot["inline script: set body[data-motion] BEFORE paint"]
     body --> children["{route children}"]
     body --> rum["Analytics + SpeedInsights (only when VERCEL=1)"]
     body --> gm["GlobalMotion (client) -> MatrixRainLazy (client-only, ssr:false) + TypeReveal"]
     children --> siteshell["SiteShell (RSC): the one AppShell builder, in every page frame, 404 and route error page"]
     siteshell --> appshell["AppShell (client chrome)"]
-    appshell --> chrome["CRTOverlay (6 layers) · DesktopTopbar · StatusBar+MobileTitleBar · Dock · ToTopButton · skip-link"]
+    appshell --> chrome["skip-link · OfflineNotice · SectionNavigation drawer · CRTOverlay (6 layers) · DesktopTopbar · StatusBar+MobileTitleBar · Dock · PositionMeter · ToTopButton"]
     appshell --> main["PageMain (RSC): main#main-content"]
     main --> secs["ErrorBoundary-wrapped sections:<br/>Hero + About + Career + Modules (RSC)"]
     appshell --> footer["ErrorBoundary-wrapped Footer (RSC), after PageMain"]
@@ -91,8 +95,10 @@ flowchart LR
     susp --> dyn["Independent ASK / PSI data reads"]
     dyn --> html2["Streamed HTML"]
     html2 --> hydrate["Browser hydrates chrome and client islands"]
-    hydrate --> lazy["Contact form / Shell: next/dynamic, ssr:false<br/>Timezone panel: React.lazy near the viewport<br/>Footer islands mount directly"]
+    hydrate --> lazy["Contact form / Shell: React.lazy inside LazyIsland, server-rendered<br/>Timezone panel: React.lazy near the viewport<br/>Matrix Rain: next/dynamic, ssr:false<br/>Footer islands mount directly"]
 ```
+
+**Routes that must stay static.** `/cv`, `/summary`, `/links`, `/links/en`, `/pt/cv`, `/pt/summary` and the `/design-system` layout export `ensureStatic = 'navigation'`. Next then fails the build if the route reads `connection()`, `cookies()`, `headers()` or uncached data, so request-time rendering cannot return unseen. `__tests__/meta/ensure-static-routes.test.ts` lists the guarded files.
 
 **Static vs dynamic, concretely:**
 - **Static (prerendered):** `AppShell` chrome except the client-only MatrixRain canvas, `Hero` (outside Suspense so LCP never waits), `About`, `Shell`, the responsive `Guitar` presentation (EQ strip, signal chain and photo), Projects with its attached receipts, Contact, and section fallbacks. Projects uses one RSC tree with CSS controlling the responsive grid. The mixer selects its variant by user agent: desktop UAs get the three-channel table, mobile UAs get the three-card static mix, and only its islands hydrate. Contact renders on the server as two columns: the channels block (the email, a `[COPY EMAIL]` control, the LinkedIn call to action and GitHub) and five facts under the form, and the timezone panel's static first paint (dim land map and Erik's pin, no clock) beside it.
@@ -136,12 +142,14 @@ sequenceDiagram
 
     U->>R: POST /api/ask { question }
     R->>R: ASK_ENABLED kill-switch (503 if off)
+    R->>R: isCrossSiteRequest: Sec-Fetch-Site not same-origin or none (403)
     R->>R: clientRateLimitKey(req)  (salted hash of the IP bucket)
-    R->>RL: getAskLimit().limit(ipHash)  (8/h, fail-open)
-    R->>R: parse + validate (trim, model sees <=500 chars)
+    R->>RL: getAskLimit().limit(ipHash)  (8/h, fail-open, 429 + Retry-After)
+    R->>R: readBoundedBody (8 KiB, 413 payload_too_large)
+    R->>R: parse + validate (question and locale - trim, model sees <=500 chars)
     R->>R: isInjectionAttempt reject (400)
     R->>RL: checkIdenticalQuestion (60s dedup, 429)
-    R->>RL: reserveBudget(512)  (monthly cap and daily slice; 503 if either is exhausted or the store is down, and the dedup lock is released)
+    R->>RL: reserveBudget(512)  (monthly cap and daily slice - 503 if either is exhausted or the store is down, and the dedup lock is released)
     R->>R: mint 128-bit sentinel, wrap question as data-only
     R->>AI: streamText(model=ASK_MODEL, instructions: system + cacheControl ephemeral)
     loop each delta (raced vs 15s watchdog)
@@ -156,7 +164,7 @@ sequenceDiagram
         end
     end
     U->>U: parseStreamChunk once per chunk -> rAF-coalesced setStreamingText (React state owned by InteractiveShell)
-    R->>KV: after(): settleBudget(refund) + Layer-2 audit + ask-log (redact, then cut; fail-quiet) + guard counters
+    R->>KV: after(): settleBudget(refund) + Layer-2 audit + ask-log (redact, then cut - fail-quiet) + guard counters
     U->>U: finalize() -> commit answer (or error line) into history
 ```
 
@@ -174,9 +182,11 @@ sequenceDiagram
     participant RS as Resend
 
     F->>H: POST /api/contact { name, email, message, field_company }
+    H->>H: isCrossSiteRequest (403 forbidden_origin)
     H->>H: clientRateLimitKey(req)  (salted hash, 503 storage_unavailable if the salt is unreadable)
-    H->>H: getContactLimit().limit(ipHash)  (3/10m, BEFORE parse, fail-open)
-    H->>H: req.json() (400 invalid_json)
+    H->>H: getContactLimit().limit(ipHash)  (3/10m, BEFORE the body is read, fail-open)
+    H->>H: readBoundedBody (16 KiB, 413 payload_too_large)
+    H->>H: JSON.parse (400 invalid_json)
     H->>H: ContactSchema.safeParse (400 validation_failed)
     H->>H: honeypot field_company? -> jittered fake-200
     H->>KV: write contact:msg:* (durability-first)
@@ -191,14 +201,15 @@ sequenceDiagram
             alt outbox saved
                 H-->>F: 202 { ok: false, requestId, error: { code: queued, message } }
                 F->>F: show saved, not delivered yet + LinkedIn link
-            else outbox write fails
+            else outbox full or write fails
+                H->>KV: delete contact:msg:* (nothing will retry it)
                 H-->>F: 502 delivery_unavailable
             end
         end
     end
 ```
 
-The **ordering is a security property**: hash the IP first so no limiter key holds the raw address, rate-limit and validate _before_ the work, and touch storage _only_ for requests that pass. Every response carries `X-Request-Id`. See doc 05 for the full `defineHandler` contract and the other routes.
+The **ordering is a security property**: refuse cross-site requests first, hash the IP so no limiter key holds the raw address, rate-limit and bound the body _before_ reading it, validate _before_ the work, and touch storage _only_ for requests that pass. Every response carries `X-Request-Id`. See doc 05 for the full `defineHandler` contract and the other routes.
 
 At 04:00 UTC daily (`0 4 * * *`), `/api/contact-retry` checks the `CRON_SECRET` bearer before reading pending ids in received-time order. Messages older than 7 days, or already at 3 retry attempts, leave the outbox. Each eligible message consumes an attempt before calling the same delivery function. Successful sends leave the outbox; failures remain pending. Audit messages retain their 90-day KV TTL. The success response is `{ ok: true, requestId, data: { sent, failed, expired, exhausted } }`, with a matching `X-Request-Id` header. Contact logs carry only `requestId` and `msgId`.
 

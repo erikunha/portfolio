@@ -8,7 +8,7 @@ A request hits Vercel's edge, passes through `proxy.ts` (which stamps CSP + repo
 
 ## System purpose
 
-The site presents a professional profile through the terminal home page, printable `/summary` and `/cv` views, and Portuguese and English link pages. Since 2026-11-04 the whole site is bilingual pt-BR/EN: the bare address serves English and `/pt` serves pt-BR, the address alone determines the language (no framework, negotiation or middleware), and each language names itself canonical with `alternates.languages` plus `x-default`. The API supplies contact delivery, grounded answers, machine-readable hiring data and operational probes.
+The site presents a professional profile through the terminal home page, printable `/summary` and `/cv` views, and Portuguese and English link pages. The whole site is bilingual pt-BR/EN: the bare address serves English and `/pt` serves pt-BR, the address alone determines the language (no framework, negotiation or middleware), and each language names itself canonical with `alternates.languages` plus `x-default`. `/links` is the exception: it is the pt-BR page and `/links/en` the English one. The API supplies contact delivery, grounded answers, machine-readable hiring data and operational probes.
 
 ## Architectural layers
 
@@ -83,16 +83,18 @@ flowchart LR
     root --> tst["tests/ (e2e · a11y · visual)"]
     root --> cl[".agents/ · .claude/ · .codex/ (AI platform)"]
     root --> gh[".github/workflows/"]
-    root --> docs["root docs: ARCHITECTURE · STANDARDS · DECISIONS · AGENTS"]
+    root --> docs["root docs: ARCHITECTURE · STANDARDS · DECISIONS · AGENTS · REVIEW"]
+    root --> kb["docs/ knowledge base · evals/ · metrics/ · __tests__/"]
 
-    app --> a1["page.tsx · layout.tsx · summary/ · cv/ · links/ · sitemap.ts"]
+    app --> a1["(en)/ and (pt)/ route groups, each with its root layout · sitemap.ts · global-error.tsx · _lib/"]
     app --> a2["api/** route handlers"]
-    app --> a3["css/** (theme · base · crt · animations · components)"]
-    app --> a4["design-system/** MDX docs"]
+    app --> a3["css/** (theme · base · crt · animations · print · forced-colors · components-*)"]
+    app --> a4["(en)/design-system/** MDX docs"]
     comp --> c1["sections/** RSC"]
     comp --> c2["client/** islands"]
     comp --> c3["responsive/** chrome"]
-    comp --> c4["SiteShell · AppShell · ErrorBoundary"]
+    comp --> c4["SiteShell · AppShell · ErrorBoundary · RootShell"]
+    comp --> c5["links/** · reading/** · ErrorPages/**"]
 ```
 
 ## Dependency graph (module-level)
@@ -136,6 +138,8 @@ Contact submission persists a 90-day KV audit record before calling the shared d
 ## Build system
 
 - **Bundler:** Turbopack (Next 16). MDX compiled via `@next/mdx`, with local remark wrapper paths and the `rehype-pretty-code` package configured as string-tuples.
+- **Type check:** `pnpm typecheck` runs `tsgo` (the native TypeScript compiler preview); `typescript` itself stays on 6.x for the mutation runner.
+- **Install-time scripts:** `postinstall` runs `scripts/strip-next-polyfills.mjs`, which replaces Next's legacy polyfill bundles in `node_modules` with a one-line comment. The `browserslist` floor (Chrome 93, Safari 15.4) never needs them, and left in place they count against the client-chunk gate and Lighthouse Best Practices. The script exits non-zero when Next moves those files. `prepare` installs the Husky hooks and skips CI and Vercel.
 - **Rendering:** `cacheComponents: true` enables PPR / dynamicIO. `typedRoutes: true` gives compile-time route safety. `trailingSlash: false` is explicit.
 - **Scripts (`tsx`-run):** content validation, static gates, PR checks, the AI eval harness, and the design-system changelog generator. See doc 07.
 - **CSS:** Tailwind v4 via the single `@tailwindcss/postcss` plugin; no Style Dictionary, no CSS modules. Tokens are `@theme` custom properties (doc 04).
@@ -151,4 +155,6 @@ Contact submission persists a 90-day KV audit record before calling the shared d
 | `lib/rate-limit.ts`                       | Redis access, the sliding-window + token-budget + dedup primitives                                                           |
 | `lib/ask/system-prompt.ts`                | How the AI persona imports shared content                                                                                    |
 | `content/schemas.ts`                      | The domain schema registry                                                                                                   |
+| `content/site-locale.ts`                  | Locale codes, `<html lang>` values, localized paths and the hreflang alternates every page and the sitemap derive from       |
+| `content/section-registry.ts`             | The nine home navigation destinations: ids, labels, icons and order                                                          |
 | `components/responsive/Module/Module.tsx` | RSC wrapper for terminal modules; Hero, About, Career and Footer render separately                                           |

@@ -7,7 +7,7 @@ from `pnpm-lock.yaml` first; never reason from "latest".
 
 1. Installed implementation in `node_modules/<pkg>` (or `node_modules/.pnpm/<pkg>@<ver>/...`)
 2. Installed types (`.d.ts`) and `package.json` (peer ranges, exports)
-3. Version-matched official docs (context7 with the exact version, or the tagged docs)
+3. Version-matched official docs (the docs for the exact installed version, or the tagged docs)
 4. Upstream source and tests at the matching tag
 5. Release notes and migration guides for every major crossed (3 to 6 is three guides)
 6. Maintainer-confirmed issue

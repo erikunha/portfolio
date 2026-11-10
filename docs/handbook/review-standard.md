@@ -1,6 +1,6 @@
 # Review Standard
 
-Every rule below was extracted from real review findings on this repository. Apply the rule before you write the code, run the check before you push. An agent or person reviewing a diff by hand uses this file as the prompt (the claude-review bot, when requested, runs `.github/claude-review-prompt.md` instead): read the diff, check it against every rule whose file type it touches and against `docs/handbook/lessons.md`, and report each finding with file, line, rule number, severity (blocker, major, minor, nit) and the fix.
+Every rule below was extracted from real review findings on this repository. Apply the rule before you write the code, run the check before you push. An agent or person reviewing a diff by hand uses this file as the prompt (the claude-review bot, when requested, runs `.github/claude-review-prompt.md` instead): read the diff, check it against every rule whose file type it touches and against `docs/handbook/lessons.md`, and report each finding with file, line, rule number, severity (CRITICAL, IMPORTANT, MINOR, as `REVIEW.md` defines them) and the fix.
 
 ## Where findings cluster
 
@@ -36,18 +36,18 @@ Examples:
 - PR208 `docs/handbook/review-merge-release.md`: the table row was renamed but the mermaid diagram above it kept the old role name.
 - PR235 `docs/handbook/workflow-playbook.md`: collapsing two numbered steps left the list numbering skipping a number.
 
-**Rule 4. An ADR entry states one decision, cites the commit SHA, and names how to undo it.**
-Before writing: put the SHA of the commit that lands the decision in the bullet, not the PR number, because PR numbers survive rebases and SHAs do not.
+**Rule 4. An ADR entry states one decision, cites the PR that lands it, and names how to undo it.**
+Before writing: put the PR number in the bullet, because the squash merge removes the branch commits from `main` and a branch SHA stops resolving.
 Check: read the bullet and ask whether a stranger could undo it from the text alone.
 Examples:
-- PR185 `DECISIONS.md`: bullets cited `PR #185` and one cited a SHA that no longer resolved; the fix moved to SHAs that exist.
+- PR185 `DECISIONS.md`: one bullet cited a branch SHA that no longer resolved after the squash; the fix cited the PR number.
 - PR220 `DECISIONS.md`: seven dependency overrides shipped with the ADR checklist marked N/A; the fix added the ADR entry.
 
 **Rule 5. Source code carries machine directives only.**
 A short comment that says why the next line is correct is a decision and belongs in `DECISIONS.md` or in a test failure message. A comment that narrates what the code does is banned.
 Check: `pnpm check` (Biome) plus a read of your own diff for comment blocks longer than one line.
 Examples:
-- PR209 `scripts/pr-size-lib.ts`: a five line prose comment broke the bare source rule; the fix deleted it and moved the rationale to `DECISIONS.md`.
+- PR209, a script: a five line prose comment broke the bare source rule; the fix deleted it and moved the rationale to `DECISIONS.md`.
 - PR235 `.husky/pre-push`: a prose comment was reintroduced in the hook; the fix removed it.
 
 ---
@@ -121,14 +121,14 @@ Reading a file and matching a string is a source grep, not a test. It passes whe
 Before writing: ask what a user or a caller would observe. Assert that.
 Check: `pnpm test` plus the repository rule that bans `readFileSync` in tests without an explicit allow tag.
 Examples:
-- PR159 `evals/agents/claude-review-request/CASE.ts`: the assert predicate had a boundary nobody tested, so a bad phrase passed; the fix added the boundary case.
+- PR159, an agent eval case: the assert predicate had a boundary nobody tested, so a bad phrase passed; the fix added the boundary case.
 - PR280 `components/sections/ContactSection/ContactSection.test.tsx`: the test read text right after a click and raced the render; the fix awaited the state.
 
 **Rule 15. A test that guards a gate must cover the guard, not the happy path.**
 Before writing: for each gate, write the test that proves the gate blocks the bad case.
 Check: run the gate against a deliberately bad input and confirm the test fails.
 Examples:
-- PR227 `__tests__/battery-roles-resolve.test.ts`: the scan roots did not include every surface the gate covers, so a stale role in one place went unseen; the fix widened the roots.
+- PR227, a role-resolution test: the scan roots did not include every surface the gate covers, so a stale role in one place went unseen; the fix widened the roots.
 - PR305 `scripts/check-section-order.mjs`: the gate only checked live ids, so a section with no mobile order entry passed; the fix checks both directions.
 
 ---
@@ -150,7 +150,7 @@ Examples:
 Before writing: when a style change removes an implicit role or a visible label, restore the role or the label in the same change.
 Check: `pnpm test:e2e` after any layout change (the axe scan and the visual baselines both run there).
 Examples:
-- PR284 `app/css/components.css`: `display: block` on the table elements stripped the implicit `table` and `rowgroup` roles; the fix added explicit roles.
+- PR284, an `app/css/components-*.css` partial: `display: block` on the table elements stripped the implicit `table` and `rowgroup` roles; the fix added explicit roles.
 - PR284 `app/(en)/design-system/_components/LabelledTable.tsx`: `aria-hidden` on the per cell label removed the only column context on mobile; the fix restored it.
 
 **Rule 18. A value used in two places lives in one named place.**
@@ -209,15 +209,15 @@ Examples:
 Before writing: use the existing token names, and check that a new class name is actually used by a component.
 Check: `pnpm lint:contrast` and a grep for each new class selector.
 Examples:
-- PR271 `app/css/components.css`: the `.opinions-more` rules were added but no component used the class; the fix deleted the rules.
+- PR271, an `app/css/components-*.css` partial: the `.opinions-more` rules were added but no component used the class; the fix deleted the rules.
 - PR302 `app/css/theme.css`: the leading tokens were declared inside `@theme`, so Tailwind treated them as theme scale keys; the fix renamed them out of that namespace.
 
 **Rule 25. A specificity fix that relies on equal specificity is a fix that will break.**
 Before writing: when you override a rule, make the override unambiguous by construction, not by ordering luck.
 Check: read the two rules together and confirm the winner does not depend on file order.
 Examples:
-- PR302 `app/css/components.css`: the override worked only because both rules had identical specificity; the fix used a structural selector.
-- PR302 `app/css/components.css`: a rule inside `@layer components` could never apply because of the layer order; the fix moved it out.
+- PR302, an `app/css/components-*.css` partial: the override worked only because both rules had identical specificity; the fix used a structural selector.
+- PR302, an `app/css/components-*.css` partial: a rule inside `@layer components` could never apply because of the layer order; the fix moved it out.
 
 **Rule 26. Any change to layout or colour needs regenerated visual baselines.**
 Before writing: decide the visual baseline impact before the push, not after CI fails.
@@ -297,8 +297,8 @@ Ordered by how often the finding was missed.
 8. Check the accessible name and the native attributes on every element you touched.
 9. Confirm every new content field has a reader in the same change.
 10. Check every changed file against the file type rules above.
-11. Update the ADR with the commit SHA and the way to undo it, in the same change as the code.
-12. Run `pnpm ci:local`, then `pnpm bundle-check` and `pnpm route-js-check`.
+11. Update the ADR with the PR number and the way to undo it, in the same change as the code.
+12. Run `pnpm ci:predict` (it covers `pnpm ci:local`, `pnpm bundle-check` and `pnpm route-js-check`).
 13. Run `pnpm gates:runtime` and regenerate the visual baselines if the change touched layout or colour.
 14. Fill the whole PR template, and make every box true about the diff.
 15. Re-read `git diff origin/main...HEAD` end to end and fix what you find.
