@@ -81,6 +81,17 @@ against the local build.
 - **Verification:** `smoke.yml` (on `deployment_status == success && Production`) checks the canonical `/api/healthz` (the artifact probe is skipped for a protected `*.vercel.app` deployment without its bypass secret), the 7 security headers, apex->www promotion followed to its final 200 (the workflow asserts neither an intermediate 308 nor the final www host), and `/api/ask` + `/api/contact` liveness; a canonical healthz 503 attempts a Resend alert when `RESEND_API_KEY` and the `ALERT_EMAIL` repository secret are both configured, and delivery errors are warnings.
 - **Cron:** `vercel.json` runs `/api/psi-refresh` daily (`0 3 * * *`) and `/api/contact-retry` daily (`0 4 * * *`).
 
+## After the merge: the branch goes away
+
+The merge lands the work; the branch that carried it stops existing. Delete the remote branch
+(`git push origin --delete <branch>`) and the local one (`git branch -D <branch>`, after removing any
+worktree that has it checked out) as soon as the merge lands. The history is in `main` from the merge
+commit on, and a branch left behind reads as work still in flight: the next person opens it, sees a
+tree that no longer matches `main`, and has to rediscover that it was already merged.
+
+The exception is a branch that still holds work `main` does not have. That branch is not merged, and
+deleting it destroys the only copy; it stays until its content lands or its owner decides otherwise.
+
 ## Rollback
 
 ```mermaid
