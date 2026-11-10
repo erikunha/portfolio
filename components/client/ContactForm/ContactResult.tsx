@@ -17,7 +17,12 @@ export function ContactResult({
   onDismiss: () => void;
 }) {
   const dismissButton = (
-    <button type="button" className="copy-btn" aria-label={copy.dismiss.aria} onClick={onDismiss}>
+    <button
+      type="button"
+      className="copy-btn contact-dismiss"
+      aria-label={copy.dismiss.aria}
+      onClick={onDismiss}
+    >
       {copy.dismiss.label}
     </button>
   );

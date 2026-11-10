@@ -414,6 +414,12 @@ test.describe('contact state boards', () => {
           Math.abs(row.x + row.width - (button.x + button.width)),
           'the dismiss button sits at the far right of the row',
         ).toBeLessThan(SUBPIXEL_PX);
+        const paint = await dismiss.evaluate((node) => {
+          const style = getComputedStyle(node);
+          return { color: style.color, border: style.borderTopColor };
+        });
+        expect(paint.color, 'the dismiss button wears the theme green').toBe('rgb(0, 255, 65)');
+        expect(paint.border, 'the dismiss button wears the theme green').toBe('rgb(0, 255, 65)');
 
         await dismiss.click();
         await expect(page.getByTestId('contact-form')).toBeVisible();

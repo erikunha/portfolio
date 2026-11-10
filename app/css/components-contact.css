@@ -46,6 +46,16 @@
     margin-left: auto;
   }
 
+  .contact-dismiss {
+    border-color: var(--color-green);
+    color: var(--color-green);
+  }
+
+  .contact-dismiss:hover {
+    background: var(--color-primary-quiet);
+    box-shadow: var(--shadow-glow);
+  }
+
   .contact-layout {
     display: grid;
     gap: var(--phi-space-3);
