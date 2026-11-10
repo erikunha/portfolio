@@ -145,11 +145,11 @@ sequenceDiagram
     R->>R: isCrossSiteRequest: Sec-Fetch-Site not same-origin or none (403)
     R->>R: clientRateLimitKey(req)  (salted hash of the IP bucket)
     R->>RL: getAskLimit().limit(ipHash)  (8/h, fail-open, 429 + Retry-After)
-    R->>R: readBoundedBody (8 KiB; 413 payload_too_large)
-    R->>R: parse + validate (question and locale; trim, model sees <=500 chars)
+    R->>R: readBoundedBody (8 KiB, 413 payload_too_large)
+    R->>R: parse + validate (question and locale - trim, model sees <=500 chars)
     R->>R: isInjectionAttempt reject (400)
     R->>RL: checkIdenticalQuestion (60s dedup, 429)
-    R->>RL: reserveBudget(512)  (monthly cap and daily slice; 503 if either is exhausted or the store is down, and the dedup lock is released)
+    R->>RL: reserveBudget(512)  (monthly cap and daily slice - 503 if either is exhausted or the store is down, and the dedup lock is released)
     R->>R: mint 128-bit sentinel, wrap question as data-only
     R->>AI: streamText(model=ASK_MODEL, instructions: system + cacheControl ephemeral)
     loop each delta (raced vs 15s watchdog)
@@ -164,7 +164,7 @@ sequenceDiagram
         end
     end
     U->>U: parseStreamChunk once per chunk -> rAF-coalesced setStreamingText (React state owned by InteractiveShell)
-    R->>KV: after(): settleBudget(refund) + Layer-2 audit + ask-log (redact, then cut; fail-quiet) + guard counters
+    R->>KV: after(): settleBudget(refund) + Layer-2 audit + ask-log (redact, then cut - fail-quiet) + guard counters
     U->>U: finalize() -> commit answer (or error line) into history
 ```
 
@@ -185,7 +185,7 @@ sequenceDiagram
     H->>H: isCrossSiteRequest (403 forbidden_origin)
     H->>H: clientRateLimitKey(req)  (salted hash, 503 storage_unavailable if the salt is unreadable)
     H->>H: getContactLimit().limit(ipHash)  (3/10m, BEFORE the body is read, fail-open)
-    H->>H: readBoundedBody (16 KiB; 413 payload_too_large)
+    H->>H: readBoundedBody (16 KiB, 413 payload_too_large)
     H->>H: JSON.parse (400 invalid_json)
     H->>H: ContactSchema.safeParse (400 validation_failed)
     H->>H: honeypot field_company? -> jittered fake-200

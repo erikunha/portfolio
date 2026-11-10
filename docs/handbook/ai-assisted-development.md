@@ -18,7 +18,7 @@ sequenceDiagram
     C->>C: TDD implement (tests first)
     C->>G: commit runs Biome, staged gitleaks and commitlint
     C->>G: git push (pre-push: main guard, branch name, pnpm verify)
-    C->>CI: open eligible PR; CI runs checks and filtered runtime jobs
+    C->>CI: open eligible PR - CI runs checks and filtered runtime jobs
     H->>CI: optional: owner, member or collaborator comments /claude-review
     CI->>C: claude-review posts inline findings + Verdict
     CI-->>C: review threads

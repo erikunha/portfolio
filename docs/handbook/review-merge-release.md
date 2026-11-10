@@ -57,7 +57,7 @@ look is blocked, not complete.
 
 In order: `ci:local`, then the review with every blocking finding answered. The base branch must be
 contained, CI green and the Argos visual check approved (the `e2e-visual-chromium` job uploads the
-screenshots; an agent may approve it). GitHub branch-protection settings are not in the repository;
+screenshots; the owner approves it). GitHub branch-protection settings are not in the repository;
 the settings read from GitHub and the controls that stand in for a second reviewer are listed in
 the 2026-11-07 review-model entry of `DECISIONS.md`.
 

@@ -160,7 +160,7 @@ flowchart LR
 ```mermaid
 flowchart TD
     pr["PR / push main / workflow_dispatch"] --> dc["detect-changes (app?, ai?, ui?)"]
-    pr --> qf["quality-fast: Biome, branch/commit lint, content, naming, pinning, vetting, harness, component docs, doc-drift, section order, path filters, test integrity, contrast, CSS tokens, PR comments"]
+    pr --> qf["quality-fast: Biome, branch/commit lint, content, naming, pinning, vetting, harness, component docs, doc-drift, section order, path filters, test integrity, contrast, CSS tokens"]
     pr --> tc["typecheck"]
     pr --> t["test (audit, Stryker canary, Vitest + coverage)"]
     pr --> dr["dependency-review (PR)"]
