@@ -162,7 +162,8 @@
 
   h1,
   h2,
-  h3 {
+  h3,
+  h4 {
     font-family: var(--font-mono);
     font-weight: 700;
     color: var(--color-primary-500);
@@ -182,7 +183,11 @@
   }
 
   h3 {
-    font-size: var(--text-base);
+    font-size: var(--text-lg);
+  }
+
+  h4 {
+    font-size: var(--text-sm);
   }
 
   @media (min-width: theme(--viewport-md)) {
@@ -193,7 +198,7 @@
 
   @media (min-width: theme(--viewport-xl)) {
     h1 {
-      font-size: var(--text-5xl);
+      font-size: var(--text-4xl);
     }
   }
 

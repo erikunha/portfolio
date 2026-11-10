@@ -323,7 +323,7 @@
   }
 
   #sec-guitar > header h2 {
-    font-size: var(--text-sm);
+    font-size: var(--text-section-title);
     font-weight: bold;
   }
 
