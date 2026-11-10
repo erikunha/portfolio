@@ -44,7 +44,7 @@ flowchart TB
     subgraph enforce["Enforcement layer"]
         husky[".husky/* git hooks"]
         gates["scripts/check-* + the verify chain"]
-        ci["GitHub Actions: ci/codeql/smoke/claude"]
+        ci["GitHub Actions: ci, review, scheduled scans and evals, smoke"]
     end
     subgraph knowledge["Knowledge layer"]
         specs["specs/NNN-feature/ (local-only)"]

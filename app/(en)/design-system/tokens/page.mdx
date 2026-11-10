@@ -9,7 +9,7 @@ export const metadata = dsPageMetadata({
 
 # TOKENS
 
-<OnThisPage items={[{id:'color',label:'Color'},{id:'type-scale',label:'Type Scale'},{id:'spacing',label:'Spacing'},{id:'tracking',label:'Letter Spacing'},{id:'viewports',label:'Viewports'},{id:'borders',label:'Borders'},{id:'motion',label:'Motion'},{id:'layers',label:'Layers'}]} />
+<OnThisPage items={[{id:'color',label:'Color'},{id:'type-scale',label:'Type Scale'},{id:'spacing',label:'Spacing'},{id:'tracking',label:'Letter Spacing'},{id:'viewports',label:'Viewports'},{id:'borders',label:'Borders'},{id:'motion',label:'Motion'},{id:'layers',label:'Layers'},{id:'component-tokens',label:'Component tokens'}]} />
 
 Colour, type, spacing and border tokens live in `app/css/theme.css`.
 Tailwind's `@theme` generates utilities from these custom properties. Swatches
@@ -83,6 +83,8 @@ Two off-ramp hues exist, and each carries a meaning no green can. They are the o
 <ColorSwatch token="senary-300" usage="Alerts: form errors, shell errors, mixer clip LED" />
 <ColorSwatch token="senary-500" usage="Window-chrome close dot" />
 
+Other color tokens in the same file: the `--color-glow-02` to `--color-glow-60` ramp (signal green at 2% to 60% alpha, for glows and washes), `--color-eq-bar-top` and `--color-eq-bar-bottom` (the EQ spectrum gradient), `--color-print-ink`, `--color-print-paper` and `--color-print-rule` (print sheet), and `--color-crt-phosphor-red` and `--color-crt-phosphor-blue` (the CRT sub-pixel mask). The Matrix Rain colors `--color-rain-head` and `--color-rain-body` map to `primary-800` and `primary-900`. Components reference them through utilities or `var()`; no stylesheet writes a raw color.
+
 <h2 id="type-scale">Type Scale</h2>
 
 The base `h1` rule uses `--font-display`, Inter at weight 900. Body text, controls
@@ -124,6 +126,7 @@ The base `h1` is 32px, rising to 36px at 1280px. `h2` is 20px, rising to
 | `--spacing-16` | `16` | 64px |
 | `--spacing-target` | `target` | 44px general control target |
 | `--spacing-target-compact` | `target-compact` | 28px compact control target |
+| `--spacing-target-pointer` | `target-pointer` | 36px row height of the section menu from 1024px with a fine pointer |
 | `--space-gutter` | `px-[var(--space-gutter)]` | `clamp(16px, 4vw, 24px)` page gutter |
 | `--space-page-top` | n/a | 32px below 768, 48px from 768 |
 | `--space-section` | `mb-[var(--space-section)]` | 32px below 768, 48px from 768 |
@@ -132,6 +135,12 @@ The base `h1` is 32px, rising to 36px at 1280px. `h2` is 20px, rising to
 | `--phi-space-2` | n/a | about 13px, one phi step above the base |
 | `--phi-space-3` | n/a | about 21px, two phi steps above the base |
 | `--phi-space-4` | n/a | about 34px, three phi steps above the base |
+| `--phi-inv` | n/a | 0.618, one divided by phi |
+| `--phi-root` | n/a | 1.272, the square root of phi |
+| `--phi-text-1` | n/a | `--text-xs` times `--phi-root`: about 15px below 768px, 16.5px from 768px |
+| `--phi-pair-columns` | `grid-template-columns` | `minmax(0, 1.618fr) minmax(0, 1fr)`, major column first |
+| `--phi-pair-columns-minor-first` | `grid-template-columns` | the same split with the minor column first |
+| `--phi-pair-flex-minor` | `flex` | `0 0 calc((1 - var(--phi-inv)) * 100%)`, the minor share of a flex row |
 | `--text-section-title` | `text-[length:var(--text-section-title)]` | section h2: 16px below 768, 18px from 768 |
 | `--measure-page` | `safe-zone` | 1200px, the safe zone shared by the header, every page and the footer |
 | `--measure-read` | n/a | 72ch, the line length of text blocks |
@@ -199,9 +208,26 @@ when the operating system asks for reduced motion. Switching it off sets
 `app/css/animations.css`, `crt.css`, `components-*.css` and component logic. Check
 the affected animation rather than assuming one global rule disables all motion.
 
-Module headers reveal text in character steps as they enter the viewport. Their caret
-blinks four times and then stays solid. The MOTION switch
-disables this effect. Browsers without scroll-driven animation support show static headers.
+Module headers (`components/responsive/Module`) reveal text in character steps as they enter
+the viewport, driven by scroll position (`animation-timeline: view()` in
+`components-scroll-type.css`). Their caret blinks four times and then stays solid. The MOTION
+switch disables this effect. Browsers without scroll-driven animation support show static headers.
+
+Elements marked `data-type-reveal` (panel titles with `reveal`, reading-view headings, footer
+lines) use a second mechanism. The `TypeReveal` island, mounted once by `GlobalMotion` in the
+root layout, adds `type-reveal-ready` to `<html>` and a class to each element when it first enters
+the viewport. The text then reveals one character per step, and the caret blinks and disappears.
+With the MOTION switch off, or without `IntersectionObserver`, every element shows at once. The
+timing comes from tokens in the `:root` block of `app/css/theme.css`:
+
+| Token | Value | Usage |
+|---|---|---|
+| `--type-reveal-char-duration` | 28ms | time per revealed character |
+| `--type-reveal-max-duration` | 1.4s | cap on one element's reveal |
+| `--type-reveal-caret-width` | 0.6ch | caret width |
+| `--type-reveal-caret-height` | 1.05em | caret height |
+| `--type-reveal-caret-blink` | 1.05s | one blink cycle |
+| `--type-reveal-caret-blinks` | 3 | blink cycles after the reveal |
 
 | Utility | Value | Usage |
 |---|---|---|
@@ -234,3 +260,16 @@ Layers stack in this order:
 | system failure | `--z-sysfail` (9998) | the SYSTEM FAILURE plate |
 | skip link | `--z-skip-link` (9999) | skip-to-content link, always on top |
 
+<h2 id="component-tokens">Component tokens</h2>
+
+The `@theme` block also holds tokens scoped to one component. They are not a shared vocabulary, so
+a new component declares its own rather than reusing another's.
+
+| Prefix | Owner | Examples |
+|---|---|---|
+| `--eq-*` | the EQ curve and spectrum ([EqSpectrumStrip](/design-system/components#eq-spectrum-strip)) | plot and axis heights, bar gaps, curve stroke, level steps |
+| `--guitar-*` | the guitar module | column template, photo filters and ratio, arrow size |
+| `--mixer-*` | the DAW mixer | chip width, chain rows, transport gap |
+| `--links-thumb-*` | the `/links` cover frame ([Cover frame](/design-system/components#cover-frame)) | contrast, brightness, tint, reveal duration |
+| `--receipt-*` | the project receipts list | metric, value and company column widths |
+| `--breakpoint-guitar` | the guitar module | the one component-owned layout width (700px) |

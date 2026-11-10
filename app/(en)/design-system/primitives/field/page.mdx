@@ -12,7 +12,7 @@ export const metadata = dsPageMetadata({
 
 <OnThisPage items={[{id:'props',label:'Props'},{id:'states',label:'States'},{id:'accessibility',label:'Accessibility'}]} />
 
-Source: `design-system/components/Field/Field.tsx`. Client component (`'use client'`) so consumers can drive controlled input state.
+Source: `design-system/components/Field/Field.tsx`. Client component (`'use client'`) because it generates ids with `useId`. It is not exported by the `@/design-system` barrel; import it from `@/design-system/components/Field`.
 
 <h2 id="props">Props</h2>
 
