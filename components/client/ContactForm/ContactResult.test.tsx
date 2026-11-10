@@ -6,7 +6,6 @@ import { SITE_LOCALE } from '@/content/site-locale';
 import { ContactResult } from './ContactResult';
 import { CONTACT_STATUS } from './useContactSubmit';
 
-const REF = '7f3a9c2e-41b0-4d8e-9a77-3c51d0b2e8aa';
 const copy = contactCopy[SITE_LOCALE.en];
 
 describe('ContactResult', () => {
@@ -19,15 +18,13 @@ describe('ContactResult', () => {
 
   async function show(props: {
     status: typeof CONTACT_STATUS.SUCCESS | typeof CONTACT_STATUS.QUEUED;
-    receipt?: { ref: string; at: Date } | null;
-    queuedRef?: string;
+    receipt?: { at: Date } | null;
   }) {
     mounted = await mountClient(
       createElement(ContactResult, {
         copy,
         status: props.status,
         receipt: props.receipt ?? null,
-        queuedRef: props.queuedRef ?? '',
       }),
     );
     return mounted.container;
@@ -50,26 +47,24 @@ describe('ContactResult', () => {
 
     const withRef = await show({
       status: CONTACT_STATUS.SUCCESS,
-      receipt: { ref: REF, at: new Date('2026-11-08T12:42:00Z') },
+      receipt: { at: new Date('2026-11-08T12:42:00Z') },
     });
     expect(withRef.querySelector('[data-testid="contact-receipt"]')).not.toBeNull();
   });
 
   it('announces a queued message with the faster-contact link and takes focus', async () => {
-    const container = await show({ status: CONTACT_STATUS.QUEUED, queuedRef: REF });
+    const container = await show({ status: CONTACT_STATUS.QUEUED });
     const panel = container.querySelector('[data-testid="contact-queued"]') as HTMLElement;
     expect(panel.getAttribute('role')).toBe('status');
     expect(panel.textContent).toContain(copy.queued.title);
     expect(panel.querySelector('a')?.getAttribute('href')).toBe(copy.queued.linkHref);
     expect(document.activeElement).toBe(panel);
-    expect(container.querySelector('[data-testid="contact-queued-ref"]')?.textContent).toBe(
-      `${copy.queued.refLabel} ${REF}`,
-    );
     expect(container.querySelector('[data-testid="contact-success"]')).toBeNull();
   });
 
-  it('omits the ref line when the queued response carried none', async () => {
+  it('renders no request id line in the queued state', async () => {
     const container = await show({ status: CONTACT_STATUS.QUEUED });
     expect(container.querySelector('[data-testid="contact-queued-ref"]')).toBeNull();
+    expect(container.querySelector('code')).toBeNull();
   });
 });

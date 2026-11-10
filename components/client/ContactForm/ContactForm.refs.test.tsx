@@ -78,11 +78,13 @@ describe('contact request refs', () => {
       expect(body).toContain(MESSAGE);
     });
 
-    it('shows the full ref in a chip the visitor can copy', async () => {
+    it('never shows the ref to the visitor on a failed send', async () => {
       const container = await submit(failure(errorBody(REF)));
       const alert = container.querySelector('[role="alert"]') as HTMLElement;
-      expect(alert.querySelector('.ref-chip code')?.textContent).toBe(REF);
-      expect(within(alert).getAllByRole('button').length).toBeGreaterThan(0);
+      expect(alert.textContent).not.toContain(REF);
+      expect(alert.querySelector('.ref-chip')).toBeNull();
+      expect(alert.querySelector('code')).toBeNull();
+      expect(within(alert).queryAllByRole('button')).toHaveLength(0);
     });
 
     it('reads the ref from the X-Request-Id header when the body is not JSON', async () => {

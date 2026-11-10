@@ -360,7 +360,9 @@ test.describe('contact state boards', () => {
         await shot(`E5-${tag}`, form);
       });
 
-      test(`${tag}: E6 queued is a status with the ref and no success copy`, async ({ page }) => {
+      test(`${tag}: E6 queued is a status with no request id and no success copy`, async ({
+        page,
+      }) => {
         await installMockBackend(page, { contact: 'queued', log: 'accept' });
         await page.setViewportSize(viewport.size);
         const form = await openForm(page, locale);
@@ -371,9 +373,7 @@ test.describe('contact state boards', () => {
 
         const queued = page.getByTestId('contact-queued');
         await expect(queued).toContainText(contactCopy[locale].queued.title);
-        await expect(queued.getByTestId('contact-queued-ref')).toHaveText(
-          'ref contact-test-request-id',
-        );
+        await expect(queued).not.toContainText('contact-test-request-id');
         await expect(page.getByTestId('contact-success')).toHaveCount(0);
         await shot(`E6-${tag}`, queued);
       });

@@ -288,7 +288,7 @@ describe('contact form delivery states', () => {
       'Mais rápido: mensagem no LinkedIn ↗',
     ],
   ])(
-    'announces queued without success, with the real retry schedule, LinkedIn and the ref (%s)',
+    'announces queued without success, with the real retry schedule and LinkedIn (%s)',
     async (locale, title, message, faster) => {
       const ref = '7f3a9c2e-41b0-4d8e-9a77-3c51d0b2e8aa';
       const container = await submitResponse(
@@ -310,14 +310,13 @@ describe('contact form delivery states', () => {
       );
       expect(link.getAttribute('target')).toBe('_blank');
       expect(link.getAttribute('rel')).toContain('noopener');
-      const refLine = queued.querySelector('[data-testid="contact-queued-ref"]');
-      expect(refLine?.textContent).toBe(`ref ${ref}`);
-      expect(refLine?.getAttribute('title')).toBe(ref);
+      expect(queued.textContent).not.toContain(ref);
+      expect(queued.querySelector('[data-testid="contact-queued-ref"]')).toBeNull();
       expect(container.querySelector('form')).toBeNull();
     },
   );
 
-  it('omits the ref line when the queued response carries no request id', async () => {
+  it('shows no request id when the queued response carries none', async () => {
     const container = await submitResponse(
       { ok: false, error: { code: 'queued', message: 'Saved for retry' } },
       202,

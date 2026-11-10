@@ -84,12 +84,6 @@
     font: inherit;
   }
 
-  .footer-receipt .ref-copy {
-    border-color: var(--color-primary-border);
-    color: var(--color-text-secondary);
-    font-weight: 400;
-  }
-
   .footer-cards {
     display: grid;
     gap: var(--spacing-4);

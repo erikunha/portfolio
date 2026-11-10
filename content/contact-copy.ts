@@ -1,6 +1,5 @@
 import { companyLinkCopy } from './company-link';
 import type { ContactContent } from './contact';
-import { copyFeedback } from './copy-button';
 import { SITE_LOCALE, type SiteLocale } from './site-locale';
 import { EMAIL_ADDRESS, LINKEDIN_URL } from './social-urls';
 import { WORK_SCOPE } from './work-scope';
@@ -19,12 +18,8 @@ const contactCopyFor = (locale: SiteLocale): ContactContent => {
       title: pt ? '✓ mensagem entregue' : '✓ message delivered',
       message: pt ? `Resposta ${REPLY_WINDOW[locale]}.` : `Reply ${REPLY_WINDOW[locale]}.`,
       receipt: {
-        refLabel: 'ref',
         atLabel: pt ? 'em' : 'at',
         dateLocale: pt ? 'pt-BR' : 'en-CA',
-        copy: pt ? '[COPIAR REF]' : '[COPY REF]',
-        copied: pt ? '[REF COPIADA]' : '[REF COPIED]',
-        feedback: copyFeedback[locale],
       },
     },
     queued: {
@@ -36,7 +31,6 @@ const contactCopyFor = (locale: SiteLocale): ContactContent => {
       linkLabel: pt ? 'mensagem no LinkedIn' : 'message on LinkedIn',
       linkGlyph: '↗',
       linkHref: LINKEDIN_URL,
-      refLabel: 'ref',
     },
     section: {
       command: 'SUDO CONTACT --INIT',
@@ -165,9 +159,6 @@ const contactCopyFor = (locale: SiteLocale): ContactContent => {
       },
       retained: pt ? 'Seu texto continua aqui.' : 'Your text is still here.',
       retryEmail: pt ? 'Tente novamente, ou envie email' : 'Retry, or email',
-      refNote: pt
-        ? 'A referência já vai preenchida no email, então nada se perde.'
-        : 'The reference is pre-filled in the email, so nothing gets lost.',
       mailtoSubject: pt ? '[ref {ref}] contato' : '[ref {ref}] contact',
       mailtoBody: pt ? 'ref: {ref}\n\n{text}' : 'ref: {ref}\n\n{text}',
       counterSeparator: '/',

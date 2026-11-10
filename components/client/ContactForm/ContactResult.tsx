@@ -9,12 +9,10 @@ export function ContactResult({
   copy,
   status,
   receipt,
-  queuedRef,
 }: {
   copy: ContactContent;
   status: typeof CONTACT_STATUS.SUCCESS | typeof CONTACT_STATUS.QUEUED;
-  receipt: { ref: string; at: Date } | null;
-  queuedRef: string;
+  receipt: { at: Date } | null;
 }) {
   if (status === CONTACT_STATUS.SUCCESS) {
     return (
@@ -47,11 +45,6 @@ export function ContactResult({
           {copy.queued.linkLabel} {copy.queued.linkGlyph}
         </ExternalLink>
       </p>
-      {queuedRef ? (
-        <p className="contact-state-ref" data-testid="contact-queued-ref" title={queuedRef}>
-          {copy.queued.refLabel} {queuedRef}
-        </p>
-      ) : null}
     </div>
   );
 }

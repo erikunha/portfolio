@@ -29,9 +29,7 @@ for (const state of ['queued', 'happy'] as const) {
       await expect(queued).toHaveAttribute('role', 'status');
       await expect(queued).toContainText('~ saved, delivery pending');
       await expect(queued).toContainText('retried once a day, up to 3 times');
-      await expect(queued.getByTestId('contact-queued-ref')).toHaveText(
-        'ref contact-test-request-id',
-      );
+      await expect(queued).not.toContainText('contact-test-request-id');
       const linkedIn = queued.getByRole('link', { name: /message on LinkedIn/ });
       await expect(linkedIn).toHaveAttribute(
         'href',

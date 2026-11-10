@@ -27,11 +27,6 @@
     font-weight: bold;
   }
 
-  .contact-state-ref {
-    color: var(--color-text-secondary);
-    font-size: var(--text-xs);
-  }
-
   .contact-layout {
     display: grid;
     gap: var(--phi-space-3);

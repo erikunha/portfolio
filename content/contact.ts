@@ -1,7 +1,6 @@
 import { z } from 'zod';
 import { contactCopy } from './contact-copy';
 import { formatLanguages, profile } from './profile';
-import { CopyFeedbackSchema } from './schemas';
 import { SITE_LOCALE, type SiteLocale } from './site-locale';
 
 const CopySchema = z.string().min(1);
@@ -70,12 +69,8 @@ export const ContactContentSchema = z.object({
     title: z.string().min(1),
     message: z.string().min(1),
     receipt: z.object({
-      refLabel: z.string().min(1),
       atLabel: z.string().min(1),
       dateLocale: z.string().min(1),
-      copy: z.string().min(1),
-      copied: z.string().min(1),
-      feedback: z.record(z.enum(['idle', 'success', 'failure', 'unavailable']), CopyFeedbackSchema),
     }),
   }),
   queued: z.object({
@@ -85,7 +80,6 @@ export const ContactContentSchema = z.object({
     linkLabel: z.string().min(1),
     linkGlyph: z.string().min(1),
     linkHref: z.url(),
-    refLabel: z.string().min(1),
   }),
   section: z.object({
     command: z.string().min(1),
@@ -132,7 +126,6 @@ export const ContactContentSchema = z.object({
     }),
     retained: z.string().min(1),
     retryEmail: z.string().min(1),
-    refNote: z.string().min(1),
     mailtoSubject: z.string().min(1),
     mailtoBody: z.string().min(1),
     counterSeparator: z.string().min(1),

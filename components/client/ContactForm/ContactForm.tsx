@@ -19,7 +19,6 @@ import {
 import type { TerminalChrome } from '@/content/schemas';
 import { Field } from '@/design-system/components/Field';
 import { longestCopy } from '@/lib/longest-copy';
-import { RefChip } from '../RefChip/RefChip.client';
 import { ContactResult } from './ContactResult';
 import { ContactShell } from './ContactShell';
 import { errorMailto } from './contact-form-checks';
@@ -40,18 +39,8 @@ export function ContactForm({ copy, chrome }: { copy: ContactContent; chrome: Te
   );
   const values: Record<ContactField, string> = { ...typed, message };
   const [honeypot, setHoneypot] = useState('');
-  const {
-    status,
-    busy,
-    errors,
-    errorMsg,
-    errorRef,
-    receipt,
-    queuedRef,
-    failureCount,
-    noteEdit,
-    submit,
-  } = useContactSubmit({ copy, values, honeypot });
+  const { status, busy, errors, errorMsg, errorRef, receipt, failureCount, noteEdit, submit } =
+    useContactSubmit({ copy, values, honeypot });
   const formRef = useRef<HTMLFormElement>(null);
   const summaryRef = useRef<HTMLDivElement>(null);
   const formId = useId();
@@ -95,7 +84,7 @@ export function ContactForm({ copy, chrome }: { copy: ContactContent; chrome: Te
   if (status === CONTACT_STATUS.SUCCESS || status === CONTACT_STATUS.QUEUED) {
     return (
       <ContactShell chrome={chrome}>
-        <ContactResult copy={copy} status={status} receipt={receipt} queuedRef={queuedRef} />
+        <ContactResult copy={copy} status={status} receipt={receipt} />
       </ContactShell>
     );
   }
@@ -148,17 +137,6 @@ export function ContactForm({ copy, chrome }: { copy: ContactContent; chrome: Te
                   {copy.section.email}
                 </a>
               </p>
-            ) : null}
-            {errorMsg && errorRef ? (
-              <>
-                <RefChip
-                  value={errorRef}
-                  prefix={copy.success.receipt.refLabel}
-                  labels={{ copy: copy.success.receipt.copy, copied: copy.success.receipt.copied }}
-                  feedback={copy.success.receipt.feedback}
-                />
-                <p>{copy.form.refNote}</p>
-              </>
             ) : null}
           </div>
         )}

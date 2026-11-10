@@ -259,7 +259,6 @@ lib/forget-request.client.ts          # /api/log/forget client: 200, 429 and fai
 components/client/LazyIsland/         # ErrorBoundary around Suspense for every React.lazy island
 components/client/TerminalChromeBar/  # window chrome header shared by the shell and the contact form
 components/client/ContactForm/        # contact form island: composer, ContactShell, ContactResult, ContactReceipt, useContactSubmit (send state machine), contact-form-checks, and the messageStore it shares with the timezone panel
-components/client/RefChip/            # request reference chip with copy, shared by the contact receipt and error and the footer receipt
 components/client/ContactTimezone/    # timezone overlap panel island: clocks, map, zone combobox
 components/client/HeroBootAnimation/  # boot typewriter island
 components/client/RoleTyper/          # About status role typewriter island

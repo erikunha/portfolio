@@ -139,14 +139,13 @@ describe('useContactSubmit', () => {
   describe('202 queued', () => {
     const queued = { ok: false, requestId: REF, error: { code: 'queued', message: 'queued' } };
 
-    it('moves to the queued state with its ref and clears the draft', async () => {
+    it('moves to the queued state and clears the draft', async () => {
       reply(queued, { status: 202 });
       messageStore.seed('draft text');
       const hook = mount();
       await send(hook);
 
       expect(hook.result.current.status).toBe(CONTACT_STATUS.QUEUED);
-      expect(hook.result.current.queuedRef).toBe(REF);
       expect(hook.result.current.receipt).toBeNull();
       expect(hook.result.current.errorMsg).toBe('');
       expect(messageStore.getSnapshot()).toBe('');
