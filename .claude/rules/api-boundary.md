@@ -37,8 +37,8 @@ merge-blocking check on this surface is the behavioral test suite (the required
   re-reading the diff for the abuse paths each of them closes.
 - CSP and `Reporting-Endpoints` headers come from **`proxy.ts`**, not
   `next.config.ts` (which sets the static headers: COOP, X-Frame-Options, HSTS,
-  etc.). The CSP is asserted against the live host by the deploy smoke test, not
-  a unit test.
+  etc.). `__tests__/proxy-csp.test.ts` holds the CSP posture; the deploy smoke test
+  checks that the headers arrive on the live host.
 
 ## The `/api/ask` AI feature
 
@@ -46,7 +46,7 @@ merge-blocking check on this surface is the behavioral test suite (the required
   `anthropic/claude-haiku-4-5`); the eval harness imports the same const so it
   grades the shipped model. Do not hardcode a model string in the route.
 - Ephemeral prompt cache via `providerOptions.anthropic.cacheControl` on the
-  system `instructions`; output capped (`MAX_OUTPUT_TOKENS`), request-timeout guarded;
+  system `instructions`; output capped (`ASK_MAX_OUTPUT_TOKENS`), request-timeout guarded;
   sampling uses the named `ASK_TEMPERATURE` from `lib/ask/limits.ts`.
-- Changes to the ask corpus, calibration or system prompt require
-  `pnpm ask:eval`.
+- Changes to the ask corpus, calibration, system prompt or the facts it renders
+  (`content/ask-facts.ts`) require `pnpm ask:eval`.

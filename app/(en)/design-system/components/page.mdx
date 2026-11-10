@@ -32,6 +32,8 @@ The `design-system/components` directory contains eleven components. Ten have no
 | `variant` | `'primary' \| 'secondary'` | `'primary'` | no |
 | `size` | `'sm' \| 'md' \| 'lg'` | `'md'` | no |
 | `as` | `'button' \| 'a'` | `'button'` | no |
+| `href` | `string` | none | yes when `as="a"` |
+| `disabled` | `boolean` | `false` | no |
 
 <Preview id="button">
   <Button variant="primary" as="a" href="#">EXEC_HIRE</Button>
@@ -40,7 +42,7 @@ The `design-system/components` directory contains eleven components. Ten have no
   <Button variant="secondary" size="lg" as="a" href="#">LG</Button>
 </Preview>
 
-**Accessibility:** At least 44px wide. Small and medium sizes have a 44px minimum height; large has a 52px minimum height. `focus-visible` outline using `--color-primary-500`. Disabled anchors use `aria-disabled="true"` (anchors can't be natively disabled).
+**Accessibility:** At least 44px wide. Small and medium sizes have a 44px minimum height; large has a 52px minimum height. `focus-visible` outline using `--color-primary-500`. Disabled anchors use `aria-disabled="true"`, drop `href`, leave the tab order and cancel click (anchors can't be natively disabled). A `button` defaults `type` to `"button"`, so it never submits a surrounding form by accident.
 
 ## Field
 
@@ -52,6 +54,7 @@ The `design-system/components` directory contains eleven components. Ten have no
 | `multiline` | `boolean` | `false` | no |
 | `rows` | `number` | `4` | no |
 | `error` | `string` | · | no |
+| `id` | `string` | generated with `useId` | no |
 
 <Preview id="field">
   <Field name="email" label="$ email:" type="email" />
@@ -74,11 +77,11 @@ The `design-system/components` directory contains eleven components. Ten have no
   <Badge size="sm">SMALL</Badge>
 </Preview>
 
-**Sizing:** Both sizes use `text-xs`: 12px below 768px and 13px from 768px. There is no sub-12px mobile override.
+**Sizing:** Both sizes use `text-xs`: 12px below 768px and 13px from 768px. There is no sub-12px mobile override. Below 360px the badge wraps instead of overflowing.
 
 Other `<span>` attributes pass through and `className` is appended.
 
-**Accessibility:** Dot is `aria-hidden`. Pulse animation stops when the motion switch is off.
+**Accessibility:** Dot is `aria-hidden`. Pulse animation stops when the motion switch is off (`body[data-motion="reduce"]`).
 
 ## TerminalPanel
 
@@ -93,6 +96,8 @@ Other `<span>` attributes pass through and `className` is appended.
   <TerminalPanel borderStyle="dashed">Dashed panel.</TerminalPanel>
 </Preview>
 
+A 1px `primary-subtle` border on an opaque `secondary-950` background. With `header`, a bottom-bordered title bar renders above the content. Other `div` attributes pass through.
+
 ## BrandIcon
 
 | Prop | Type | Default | Required |
@@ -106,7 +111,7 @@ Other `<span>` attributes pass through and `className` is appended.
   <BrandIcon size={40} />
 </Preview>
 
-The brand mark as one inline SVG path. `size` is the width in px; the height follows the cropped viewBox. It fills with `currentColor`, so the surrounding text colour (`--color-primary-500` in the header) paints it, and a static `drop-shadow` gives the phosphor glow of the CRT headings. It is `aria-hidden`: the link that wraps it carries the name. The `BrandLink` component in `components/BrandLink` pairs the two, with a 44px minimum target and the accessible name from `content/brand.ts` (`erikunha.dev, home` or `erikunha.dev, início`, chosen by its `locale` prop).
+The brand mark as one inline SVG path. `size` is the width in px; the height follows the cropped viewBox. It fills with `currentColor`, so the surrounding text colour (`--color-primary-500` in the header) paints it, and a static `drop-shadow` gives the phosphor glow of the CRT headings; print removes the glow. It is `aria-hidden`: the link that wraps it carries the name. The `BrandLink` component in `components/BrandLink` pairs the two, with a 44px minimum target and the accessible name from `content/brand.ts` (`erikunha.dev, home` or `erikunha.dev, início`, chosen by its `locale` prop). `SiteShell` mounts `BrandLink` in the header of every page.
 
 ## WindowChrome
 
@@ -122,7 +127,7 @@ The brand mark as one inline SVG path. `size` is the width in px; the height fol
   <WindowChrome size={9} />
 </Preview>
 
-Renders the three macOS-style traffic-light dots (red/yellow/green) as a pure RSC. Dots are `aria-hidden="true"` · purely decorative, no focus management. The `size` prop sets dot diameter in px; pass it explicitly for context-aware sizing (10px in the shell and contact panels).
+Renders the three macOS-style traffic-light dots (red/yellow/green) as a pure RSC. Dots are `aria-hidden="true"` · purely decorative, no focus management. The `size` prop sets dot diameter in px and defaults to 10, the size used in the shell and contact panel headers (`TerminalChromeBar`).
 
 ## StatTile
 
@@ -213,7 +218,7 @@ A navigation link. `current` sets `aria-current="location"`, `index` is decorati
   <Panel className="w-full" as="aside" marker="[~]" title="status" titleId="panel-demo-title" action={<a href="#panel">link</a>}><p className="m-0 p-4">Landmark panel with an action.</p></Panel>
 </Preview>
 
-A bordered frame on an opaque `secondary-950` surface. The header holds a decorative `marker` (`aria-hidden`), the `title` as an `h3` and an optional `action` node after it. `as` picks the root element; `titleId` becomes the heading `id` and the root's `aria-labelledby`, which names a `section` or `aside` landmark by its title. Other `div` attributes pass through to the root.
+A bordered frame on a `secondary-950` surface with a faint top glow and a 2px corner radius. The header holds a decorative `marker` (`aria-hidden`), the `title` as an `h3` and an optional `action` node after it. `as` picks the root element; `titleId` becomes the heading `id` and the root's `aria-labelledby`, which names a `section` or `aside` landmark by its title. Other `div` attributes pass through to the root.
 
 **Reveal coupling:** `reveal` only sets `data-type-reveal` on the heading and `suppressHydrationWarning`, because the heading text is rewritten after hydration. The scroll typing itself comes from the app-wide `TypeReveal` island mounted by `GlobalMotion` in the root layout, which observes every `[data-type-reveal]` element. Without that island the attribute has no effect.
 

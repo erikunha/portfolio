@@ -48,6 +48,7 @@ commit and a statement of what breaks, and when, is dropped.
 - User-visible copy lives in `content/*.ts` in English and pt-BR, and every variant of a changed
   section (mobile, tablet, noscript, MOTION off, print, design-system demos) moved with it.
 - Motion stays off while the MOTION switch is off (`body[data-motion="reduce"]`). No rule keys off the operating system preference.
+- A change to the ask system prompt, its facts (`content/ask-facts.ts`) or the eval corpus without a passing `pnpm ask:eval`.
 - A decision with no `DECISIONS.md` bullet, or a change whose docs and diagrams were not updated.
 
 ## Skip

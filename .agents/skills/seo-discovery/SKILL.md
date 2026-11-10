@@ -12,11 +12,13 @@ of surfaces. A change to identity, routes or metrics must leave all of them cons
 
 | Surface           | File                                       | Notes                                                                               |
 | ----------------- | ------------------------------------------ | ----------------------------------------------------------------------------------- |
-| Sitemap           | `app/sitemap.ts`                           | Home, the `/pt` twins, `/cv`, `/summary`, `/links` and the design-system routes, each with pt-BR and en-US alternates |
+| Sitemap           | `app/sitemap.ts`                           | Home, the `/pt` twins, `/cv`, `/summary`, `/links` and `/links/en` with pt-BR and en-US alternates, plus the design-system routes (English only, from `DS_ROUTES`) |
 | Robots            | `public/robots.txt`                        | Allows crawlers, including the AI agents it names                                   |
 | LLM index         | `public/llms.txt`                          | Plain-text profile for AI agents; update it with any identity or metric change      |
 | Structured profile | `app/api/erik.json/route.ts`              | JSON profile for parsers; cached 24 hours at the edge                               |
-| Metadata and OG   | `components/RootShell.tsx`, `public/og.png` | Root metadata, canonical URLs, the static Open Graph image                          |
+| Agent manifest    | `public/.well-known/agent.json`            | Capability manifest for agents: endpoints, profiles and the `/api/mcp` server       |
+| JSON-LD           | `content/seo.ts` (`personSchema`)          | Person structured data rendered by the root layout                                  |
+| Metadata and OG   | `components/RootShell.tsx`, `public/og.png` | Root metadata, canonical URLs, the static Open Graph image (`pnpm generate:og` rebuilds it) |
 
 The English home page is the canonical `/`; its pt-BR twin is `/pt`.
 
@@ -25,7 +27,7 @@ The English home page is the canonical `/`; its pt-BR twin is `/pt`.
 1. A new or renamed route: add it to `app/sitemap.ts` with both language alternates, and keep
    `__tests__/sitemap.test.ts` passing.
 2. Identity or metric copy: the same fact must hold in the home page, the CV, `public/llms.txt`,
-   the profile served at `/api/erik.json` (`lib/hiring-profile.ts`) and the ask system prompt.
+   the profile served at `/api/erik.json` (`lib/hiring-profile.ts`), `public/.well-known/agent.json` and the ask system prompt.
    `__tests__/identity-consistency.test.ts` and `__tests__/metric-consistency.test.ts` hold the
    shared claims; extend them rather than editing one surface by hand.
 

@@ -18,6 +18,8 @@ Path-scoped: loads only when working on these files. The gates are `check-client
 2. Any `outline: none` on `:focus` must be `:focus-visible`.
 3. `querySelector` returns `null`, not `undefined`: assert with `.not.toBeNull()`.
 4. Can the component render twice? A hardcoded `id` breaks the second instance.
+5. A directory under `design-system/components/` needs a `## <Name>` heading in
+   `app/(en)/design-system/components/page.mdx` (`pnpm check:component-docs`).
 
 ## CSS
 
@@ -27,3 +29,5 @@ Path-scoped: loads only when working on these files. The gates are `check-client
 - Tailwind v4 ignores a utility whose token does not exist and says nothing, so check that the
   class resolves in the rendered page.
 - A new interactive element needs a keyboard path, a visible focus state and a 44px target.
+- Client files: `'use client'` modules under `app/`, `components/` and `lib/` are named `*.client.ts(x)` or live
+  in a `client/` directory. `pnpm check:client-naming` does not scan `design-system/`.

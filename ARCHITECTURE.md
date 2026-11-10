@@ -16,7 +16,7 @@ The Principal-level moves here are mostly **what we don't build**:
 - No state management library (client state confined to a few `*.client.tsx` islands)
 - No micro-frontends (one composition, no reuse pressure)
 - No GraphQL (route handlers and a read-only MCP interface)
-- No design system extraction (one page, no second consumer)
+- No design system as a separate package (the primitives live in `design-system/` inside the app and are documented at `/design-system`; there is no second consumer)
 
 What we build is small, opinionated, Vercel-deployed, and budget-enforced.
 
@@ -28,15 +28,15 @@ What we build is small, opinionated, Vercel-deployed, and budget-enforced.
 
 - Static composition with Hero and About followed by shell, AI evaluation, projects with attached performance receipts, Career, opinions with nested learning and specialization lists, the guitar and mixer module (EQ spectrum strip, signal chain, live photo and a three-channel DAW mixer), contact and footer. About contains Whoami, Now, Responsibilities, Stack and retry-code panels. Responsibilities and retry code expose named keyboard scroll regions inside About; Career owns certification, education and community tag groups.
 - Opinions renders four ordered home takes with nested learning and specialization lists, and closes with a link to the design-system opinion. The design-system opinion renders at `/design-system#opinion-07`; `TAKE_PLACEMENT` separates home and documentation content. Four below-fold modules use content-visibility deferral.
-- Hero: Matrix dialog loop + boot sequence (typewriter)
-- About "Open to [role] roles" mounts RoleTyper over server-rendered text; the Hero title is static. Module headers use CSS scroll-driven typing, with static text for unsupported browsers and while the MOTION switch is off. Every other single-line heading and command prompt marked `data-type-reveal` (on a span around the text only, never around icons, `sr-only` or `aria-hidden` siblings, and never on an element that can wrap) types in when it enters the viewport: `TypeReveal` (mounted once in the root layout through `GlobalMotion`) runs one IntersectionObserver, sets `--type-chars` and adds `is-typed`; CSS reveals the text with a stepped `clip-path` animation and moves the blinking caret with `transform`, so the typing runs on the compositor (`__tests__/css-compositor-animations.test.ts` holds every keyframe to compositor properties). The text stays in the HTML and keeps its box, so screen readers, search and layout see it whole. Hiding applies only after `html.type-reveal-ready`, so without JS or with `data-motion="reduce"` everything shows at once. The h1 and the first hero viewport are never marked. MatrixRain loads through `MatrixRainLazy` (`next/dynamic`, `ssr: false`) from `GlobalMotion` in the root layout, so it runs on every route, then IntersectionObserver gates its animation. The footer is server-rendered, with client islands only for session counters and halt/reboot.
-- INTERACTIVE_SHELL with `ask` LLM command + `help`, `whois`, `whois --recursive`, `cat skills.md`, `cat ~/.now`, `contact`, `privacy`, `clear`; anything else routes to Claude. Every answer ends with a `-- req=<id>` line with copy and forget; `privacy` lists this tab's request ids and forgets by number, id or `--all`
+- Bilingual: English at the bare address, pt-BR under `/pt` (`/links` is the pt-BR links page, `/links/en` the English one). The address alone picks the language; there is no negotiation or middleware
+- Hero: boot sequence (typewriter) and the hero boot loop
+- About "Open to [role] roles" mounts RoleTyper over server-rendered text; the Hero title is static. Module headers use CSS scroll-driven typing, with static text for unsupported browsers and while the MOTION switch is off. Every other single-line heading and command prompt marked `data-type-reveal` (on a span around the text only, never around icons, `sr-only` or `aria-hidden` siblings, and never on an element that can wrap) types in when it enters the viewport: `TypeReveal` (mounted once in the root layout through `GlobalMotion`) runs one IntersectionObserver, sets `--type-chars` and adds `is-typed`; CSS reveals the text with a stepped `clip-path` and a blinking caret. The text stays in the HTML and keeps its box, so screen readers, search and layout see it whole. Hiding applies only after `html.type-reveal-ready`, so without JS or with `data-motion="reduce"` everything shows at once. The h1 and the first hero viewport are never marked. MatrixRain loads through `MatrixRainLazy` (`next/dynamic`, `ssr: false`) from `GlobalMotion` in the root layout, so it runs on every route, then IntersectionObserver gates its animation. The footer is server-rendered, with client islands only for session counters and halt/reboot.- INTERACTIVE_SHELL with `ask` LLM command + `help`, `whois`, `whois --recursive`, `cat skills.md`, `cat ~/.now`, `contact`, `privacy`, `clear`; anything else routes to Claude. Every answer ends with a `-- req=<id>` line with copy and forget; `privacy` lists this tab's request ids and forgets by number, id or `--all`
 - Contact form: durable submission, explicit delivered or queued feedback, daily bounded retry
 - Live Lighthouse score (PSI API, cached daily)
 - `MOTION` switch: on for a first visit whatever the operating system asks, the one control for every animation
 - Static `/og.png` social image, generated by `pnpm generate:og` (it carries the brand icon). The favicon, `app/icon.svg`, the 180/192/512 app icons and `public/site.webmanifest` icons come from the same path via `pnpm generate:icons`
 - Machine-readable `/api/erik.json` for AI recruiting agents
-- /robots.txt, /sitemap.xml, /llms.txt
+- /robots.txt, /sitemap.xml, /llms.txt, /.well-known/agent.json
 
 ### Non-functional (non-negotiable)
 
@@ -88,7 +88,10 @@ What we build is small, opinionated, Vercel-deployed, and budget-enforced.
 │       ├── /api/contact-retry (daily cron, Node)             │
 │       ├── /api/lighthouse (Node, reads KV)                  │
 │       ├── /api/erik.json  (profile, cached)                 │
-│       ├── /llms.txt       (static)                          │
+│       ├── /api/healthz    (liveness + dependency probe)     │
+│       ├── /api/log + /api/log/forget (errors, erasure)      │
+│       ├── /api/csp-report (CSP violation sink)              │
+│       ├── /llms.txt + /.well-known/agent.json (static)      │
 │       ├── /summary + /cv (reading views)                    │
 │       ├── /pt, /pt/cv, /pt/summary (pt-BR twins)            │
 │       ├── /links + /links/en (link pages)                   │
@@ -138,7 +141,7 @@ The section menu is a modal drawer at every width, opened by the menu icon trigg
 
 | Surface                                           | Client responsibilities                                                                                                                  |
 | ------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
-| AppShell and breakpoint provider                  | Responsive chrome, error bridge and viewport state                                                                                       |
+| AppShell                                          | Responsive chrome, error bridge and offline notice                                                                                       |
 | DesktopTopbar, StatusBar, MobileTitleBar, Dock    | Navigation, motion controls and device chrome                                                                                            |
 | SectionNavigation, SectionNavigationProvider      | menu trigger, drawer focus trap, focus return, stable context and the `navigationStore` external state (current section, drawer, motion); one module each for the provider and section spy, the drawer, the language switch, the menu trigger and `sectionScroll.ts` (jump and scroll correction) |
 | PositionMeter                                     | Scroll-position tracking and a hidden page-position line: top from 1024px, right edge below                                              |
@@ -175,6 +178,8 @@ Pages inside the shell use `.page-container.page-main`, so the topbar clearance,
 ### Partial Prerendering (PPR)
 
 Only the DAW mixer selects a UA-specific variant: `DawMixerContent` awaits `getIsMobile()` (`lib/ua.ts`) and renders the three-card mobile mix or the three-channel desktop table behind a Suspense boundary inside the guitar module. With `cacheComponents: true`, the static shell is prerendered and ASK and PSI reads stream behind Suspense. The rest of the guitar module is one synchronous responsive layout.
+
+`/cv`, `/summary`, `/pt/cv`, `/pt/summary`, `/links`, `/links/en` and the `/design-system` layout export `ensureStatic = 'navigation'`. Next 16.4 then fails the build when one of them reads `connection()`, `cookies()`, `headers()` or uncached data, so request-time rendering cannot return unseen. `__tests__/meta/ensure-static-routes.test.ts` lists the guarded files.
 
 Projects renders one static RSC tree at every viewport. Its ten cards share descriptions and stats from `content/projects.ts`; CSS selects one, two or three columns. Six project receipts from `content/perf-receipts.ts` sit beneath the cards inside the Projects module. `sec-perf-receipts` remains a nested anchor.
 
@@ -223,6 +228,8 @@ app/(en)/cv/page.tsx                 # full CV reading view and print control; h
 components/reading/ReadingShell.tsx    # SiteShell, reading-view and main wrapper shared by both reading views
 components/reading/ReadingSection.tsx  # titled section block shared by /cv and /summary
 components/reading/ReadingActions.tsx  # hire, cross-view and print action row shared by both reading views
+components/reading/CvPage.tsx          # /cv and /pt/cv body
+components/reading/SummaryPage.tsx     # /summary and /pt/summary body
 app/(pt)/links/page.tsx              # pt-BR links page, in the pt-BR root layout
 app/(en)/links/en/page.tsx           # English links page, in the English root layout
 app/(en)/[...missing]/not-found.tsx  # Matrix-themed 404 for unmatched addresses, English root layout
@@ -230,9 +237,11 @@ app/(pt)/pt/[...missing]/not-found.tsx  # Matrix-themed 404 for unknown /pt addr
 app/(en)/error.tsx                   # route error page (500) of the English routes, digest + retry
 app/(pt)/error.tsx                   # route error page (500) of the pt-BR routes
 app/global-error.tsx                 # root error page, renders its own html/body
-app/sitemap.ts                       # SEO sitemap (robots.txt is static, in public/)
+app/sitemap.ts                       # SEO sitemap with language alternates (robots.txt is static, in public/)
+app/_lib/                            # shared page-metadata builders: canonical, hreflang alternates, Open Graph
 app/css/                             # global styles, Tailwind v4 via PostCSS
 app/(en)/design-system/            # MDX docs inside the shared shell: token gallery, on-this-page navigation, page tree in the site menu and content-backed DS opinion
+app/(en)/design-system/_components/ds-nav.ts  # page tree: five top-level pages, three foundations, ten primitives; feeds the side rail, drawer, pager and sitemap
 app/api/ask/route.ts                 # Fluid Compute: LLM streaming via AI Gateway
 app/api/contact/route.ts             # Node: durable contact submission, 200 accepted or 202 queued
 app/api/contact-retry/route.ts       # cron: retry undelivered contact messages daily
@@ -244,8 +253,30 @@ app/api/log/route.ts                 # client error-bridge sink
 app/api/psi-refresh/route.ts         # cron: refresh PSI cache
 app/api/mcp/route.ts                 # MCP Streamable HTTP; POST bounded to 4096 bytes by lib/server/body-limit.ts
 
-components/sections/                  # RSC sections: Hero, HottestTakes, GuitarSection, …
+components/sections/                  # RSC sections, one directory each
+components/sections/Hero/              # identity, stats and actions; hosts the boot animation
+components/sections/About/             # Whoami, Now, Responsibilities, Stack and retry-code panels
+components/sections/ShellSection/      # module that hosts the interactive shell island
+components/sections/AiMetricsSection/  # Measured module: ASK evaluation and PSI blocks behind two Suspense boundaries
+components/sections/LivePerfSection/   # desktop and mobile PSI tiles
+components/sections/MeasuredStatus/    # status slot that reserves the height of its longest copy
+components/sections/ProjectsSection/   # ten project cards
+components/sections/PerfReceiptsSection/  # six project receipts nested in Projects
+components/sections/GitLogSection/     # Career: git-log timeline
+components/sections/CredentialsSection/  # cert, edu and community tag groups inside Career
+components/sections/HottestTakesSection/  # Opinions module
+components/sections/UnknownsSection/   # learning and specialization lists inside Opinions
+components/sections/GuitarSection/     # guitar rig, EQ spectrum strip, signal chain and live photo
+components/sections/DawMixerSection/   # DawMixerContent: desktop table or mobile cards, chosen by user agent
+components/sections/ContactSection/    # contact form column, channels, facts and the timezone panel
+components/sections/Footer/            # shutdown log, session counters, site map and netstat card
 components/client/                    # co-located islands, ONLY interactivity
+components/client/GlobalMotion/       # mounts TypeReveal and MatrixRainLazy from the root layout
+components/client/DawMixer/           # fader, knob, R/M/S and VU meter islands and the drag-slider hook
+components/client/HeroSystemFailure/  # failure interaction in the Hero
+components/client/OfflineNotice/      # offline banner
+components/client/PrintButton/        # print action for /cv and /summary
+components/client/ToTopButton/        # scroll-to-top control
 components/client/InteractiveShell/   # streaming shell island
 components/client/InteractiveShell/useAskStream.ts  # shell request, idle timeout and rAF-coalesced stream state
 components/client/InteractiveShell/ShellLines.client.tsx  # one feed line per kind, thinking timer, email link, rate-limit countdown
@@ -270,6 +301,9 @@ components/CommandText/                # server component: a shell command with 
 components/ExternalLink/               # the one new-tab anchor (target and rel pair)
 components/OptimizedImage/             # server component: next/image getImageProps rendered as a plain img, no client runtime
 components/PageMain/                   # main landmark and MAIN_CONTENT_ID for every route
+design-system/index.ts                  # public barrel: Badge, Button, CmdLine, KbdKey, NavItem, Panel, StatTile, TerminalPanel, WindowChrome
+design-system/components/BrandIcon/     # the brand mark SVG, imported by BrandLink
+design-system/components/Field/         # the one client primitive: labelled form field used by ContactForm
 design-system/components/Panel/         # the .panel frame (marker, h3 title, optional action) shared by About and Contact
 components/ErrorBoundary/              # client error boundary
 components/ErrorPages/                 # 404/500 bodies inside SiteShell, focused heading, error reference
@@ -278,7 +312,21 @@ components/ErrorPages/GlobalErrorBody.client.tsx  # lazy global-error body: boot
 components/ErrorPages/MissingRoute.tsx  # catch-all body: notFound() inside Suspense, fallback is the 404 page
 components/HeroStats/                  # hero stat tiles
 components/Icons/                      # inline SVG icon set
-components/responsive/                 # viewport-variant helpers
+components/responsive/                 # app chrome
+components/responsive/Module/          # RSC wrapper for terminal modules: header, anchor id, content-visibility deferral
+components/responsive/SectionNavigation/  # provider, navigationStore, drawer, menu trigger, language switch, section spy
+components/responsive/DesktopTopbar/   # desktop topbar: menu, section links, MOTION, VIEW_CV, HIRE, language switch, brand
+components/responsive/StatusBar/       # phone status bar
+components/responsive/MobileTitleBar/  # phone title bar: menu, language switch, brand
+components/responsive/Dock/            # bottom dock
+components/responsive/PositionMeter/   # scroll-position line
+components/responsive/CRTOverlay/      # the six CRT layers and the frame governor hook-up
+components/responsive/MatrixRain/      # canvas Matrix Rain and its lazy loader
+components/CompanyLink/                # server component: company name as a link with a new-tab disclosure
+components/LocaleSwitch/               # EN · PT link pair rendered by the language switch
+components/NoscriptBar/                # no-JavaScript notice, first element in the body
+components/StatusDot/                  # blinking status dot
+components/links/                      # /links and /links/en: identity card, feed, playlists, QR panel and their client controls
 
 content/about.ts                      # About panels, Now rows and Senior status
 content/hero.ts                       # validated Hero metrics, labels and actions
@@ -299,6 +347,37 @@ content/community.ts                  # community/* tags and event references in
 content/credentials.ts                # cert/* tags and Career tag-group copy
 content/education.ts                  # edu/* tags inside Career
 content/social.ts                     # github / linkedin / email / site
+content/site-locale.ts                # locale codes, html lang, localizedPath, localeAlternates and the language-switch pairs
+content/navigation.ts                 # locale-keyed NAVIGATION chrome: topbar, drawer, dock, offline notice
+content/reading-paths.ts              # /cv and /summary paths and the VIEW_CV label
+content/landmarks.ts                  # MAIN_CONTENT_ID, the main landmark id
+content/git-log.ts                    # Career timeline entries
+content/experience-detail.ts          # per-role context and highlights merged into the Career entries
+content/daw-mixer.ts                  # mixer channels, plugin chains and controls copy
+content/footer.ts                     # footer cards, site map and shutdown log copy
+content/links.ts                      # /links identity, channels, playlists and copy
+content/links-ui.ts                   # /links interface labels
+content/links.constants.ts            # /links paths per locale
+content/offline.ts                    # offline notice copy
+content/copy-button.ts                # copy button feedback states per locale
+content/seo.ts                        # Person JSON-LD, site name and keywords
+content/shell-ui.ts                   # shell commands, suggestions, labels and status copy per locale
+content/shell-commands.ts             # canned answers for the built-in shell commands
+content/shell-section.ts              # shell module header text
+content/shell-states.schema.ts        # types for the shell and offline state copy
+content/measured-states.schema.ts     # types and tokens for the Measured and mixer-boot state copy
+content/contact-copy.ts               # server-only contact form copy per locale
+content/contact-rules.ts              # contact limits and error codes shared by client and server
+content/contact.ts                    # Zod schema that validates the contact copy
+content/social-urls.ts                # zod-free email, LinkedIn and GitHub constants
+content/company-link.ts               # new-tab disclosure copy for company links
+content/work-scope.ts                 # work arrangement sentence shared by About, contact copy, ask facts and the eval corpus
+content/now-currently.ts              # current-role line behind the `cat ~/.now` and `whois` shell answers
+content/dmesg.ts                      # shutdown log lines for the footer
+content/fact-separator.ts             # the separator between facts in one line
+content/record-by.ts                  # recordBy helper to build locale records
+content/ask-errors.ts                 # /api/ask error copy per locale
+content/ask-eval-calibration.ts       # gold cases that gate the eval judge
 content/errors.ts                     # 404, 500 and no-JS copy
 content/errors-client.ts              # zod-free error copy for client islands
 content/server-error-core.ts          # 500 copy the global-error shell needs
@@ -315,8 +394,20 @@ content/ask-facts.ts                  # facts about Erik the ask prompt states (
 lib/agent/                            # agent-readiness helpers (MCP tools)
 lib/ask/                              # system prompt builder, model const, anti-abuse; preflight.ts (every check before a model call) and stream.ts (model call, pump, settlement) that app/api/ask/route.ts composes
 lib/mdx/                              # MDX remark/recma plugins for /design-system docs
-lib/server/                           # server-only utilities (route-handler factory; rate-limit-key.ts clientRateLimitKey, the only producer of the branded RateLimitIdentifier every client limiter takes; fetch-metadata.ts isCrossSiteRequest, the Sec-Fetch-Site gate defineHandler runs first; read-body.ts bounded body read after the limiter; after-response.ts after() wrapper for post-response work)
+lib/server/                           # server-only utilities (route-handler factory; cron-auth.ts bearer check for the cron routes; rate-limit-guard.ts withRateLimit wrapper; body-limit.ts withBodyLimit wrapper; rate-limit-key.ts clientRateLimitKey, the only producer of the branded RateLimitIdentifier every client limiter takes; fetch-metadata.ts isCrossSiteRequest, the Sec-Fetch-Site gate defineHandler runs first; read-body.ts bounded body read after the limiter; after-response.ts after() wrapper for post-response work)
 lib/env.ts                            # typed, format-validating env accessor
+lib/ask-metrics.ts                    # reads ask:eval:latest for the Measured module
+lib/eval/                             # eval harness core shared by ask-eval and agent-eval: judge, calibration, grading, fact sheet, cost and budget, Redis publish gate
+lib/links/                            # /links feed loader (use cache), YouTube parsing, QR, UTM and formatting helpers
+lib/eq-spectrum.ts                    # EQ bar heights, curve path and axis positions from the guitar rig content
+lib/forget-limits.ts                  # per-tab request id cap and the forget limiter window
+lib/google-api.ts                     # API-key header name for Google API calls
+lib/log-error.ts                      # describeError and size-bounded error fields for logs
+lib/longest-copy.ts                   # longest string of a set, so loading placeholders reserve the final height
+lib/script-literal.ts                 # safe JS string literal for inline scripts
+lib/with-timeout.ts                   # bounded Redis read for server rendering
+lib/ascii-bar.ts                      # ASCII progress bar string
+lib/motion-bootstrap.ts               # the pre-paint script that sets body[data-motion]
 lib/ask-log.ts                        # KV interaction log per /api/ask request that reaches the model; lib/ask/refusal-count.ts counts refused asks per day; lib/ask/guard-count.ts counts output-guard findings per day
 lib/boot-animation.ts                 # boot line builders; the sequence text comes from content/hero-client.ts
 lib/typewriter.ts                     # one type, hold and erase loop (runPhraseLoop, typeOut) and createPauseControl
@@ -373,6 +464,13 @@ tests/visual/                         # visual-regression snapshots
 tests/mocks/                          # shared test mocks
 
 scripts/ask-eval.ts                   # ask eval harness, correctness, jailbreak, cost
+scripts/agent-eval.ts                 # prompt-regression eval of the repo's agent rules (evals/agents/ holds the cases)
+scripts/metrics/                      # weekly delivery-metrics collection, band scoring and issue filing
+metrics/bands.json                    # rolling bands each delivery metric is scored against
+__tests__/                            # repo-wide Vitest invariants: docs counts, content parity, API behavior, meta checks
+evals/agents/                         # cases for the agent-rules prompt-regression eval
+.github/workflows/                    # ci.yml plus the scheduled and event workflows listed in section 13
+.husky/                               # pre-commit, commit-msg and pre-push hooks
 
 ARCHITECTURE.md                       # this doc
 DECISIONS.md                          # ADR-lite, running log
@@ -404,7 +502,9 @@ This is the single highest-risk piece of the site (cost, abuse, latency).
 ```
 POST /api/ask
 Content-Type: application/json
-{ "question": "string" }          # trimmed and sliced to 500 chars server-side
+x-site-locale: en | pt            # page language; picks the language of refusal copy
+{ "question": "string", "locale": "en | pt" }   # question trimmed and sliced to 500 chars
+                                  # server-side; locale (optional) sets the answer language
 
 → 200 text/plain; charset=utf-8
   streamed answer tokens (AI SDK stream, not SSE JSON deltas).
@@ -416,11 +516,15 @@ Content-Type: application/json
   content/ask-errors.ts; the exception stays in the server log. A guard abort
   carries GUARD_ABORT_PREFIX and the shell words it as a withheld answer.
 
-→ 400 application/json   { "error": "..." }  # missing question, invalid body, injection guard
-→ 429 application/json   { "error": "..." }  # per-IP sliding window or identical question
+→ 400 application/json   { "error": "..." }  # missing question, invalid or unreadable body, injection guard
+→ 403 application/json   { "error": "..." }  # Sec-Fetch-Site says cross-site (lib/server/fetch-metadata.ts)
+→ 413 application/json   { "ok": false, ... } # body over 8 KiB (readBoundedBody, shared error envelope)
+→ 429 application/json   { "error": "..." }  # per-IP sliding window (with Retry-After) or identical question
 → 500 application/json   { "error": "..." }  # the model call could not start; the reservation is refunded
 → 503 application/json   { "error": "..." }  # kill switch, budget store down, or budget exhausted (month or day)
 ```
+Checks run in this order (`lib/ask/preflight.ts`): kill switch, cross-site gate, salted IP hash and rate limit, bounded body read, question parse, injection guard, identical-question lock, budget reservation. Rate-limit, duplicate and budget refusals are counted per day (`lib/ask/refusal-count.ts`).
+
 See `app/api/ask/route.ts`, `lib/ask/preflight.ts`, `lib/ask/stream.ts` and `lib/stream-protocol.ts`.
 
 ### Stack
@@ -509,7 +613,11 @@ The normalized off-keyword set is defined in `lib/ask/preflight.ts`.
 [client form]
     ↓ POST /api/contact (client-side fetch, no Server Action)
     ↓
+[cross-site gate: Sec-Fetch-Site]  → 403 forbidden_origin
+    ↓
 [rate limit: 3 / IP / 10min]  → 429 if exceeded
+    ↓
+[bounded body read: 16 KiB]  → 413 payload_too_large
     ↓
 [Zod validation via ContactSchema.safeParse in defineHandler]
     ↓
@@ -522,7 +630,7 @@ The normalized off-keyword set is defined in `lib/ask/preflight.ts`.
 [accepted: 200 ok + requestId]
 [error/timeout/missing key: enqueue id by receivedAt, attempts = 0]
     ↓
-[outbox saved: 202 queued + requestId; outbox unavailable or full (200 pending): 502]
+[outbox saved: 202 queued + requestId; outbox unavailable or full: stored record deleted, 502 delivery_unavailable]
 ```
 
 ### Why KV before Resend
@@ -613,7 +721,7 @@ Observability spans real-user telemetry, structured logs and client error captur
 ### What I deliberately don't do
 
 - No Datadog / NewRelic / LaunchDarkly (overkill at this scale).
-- No Sentry: custom `/api/log` endpoint chosen instead for zero new SaaS vendor (see `DECISIONS.md` 2026-05-18).
+- No Sentry: custom `/api/log` endpoint chosen instead for zero new SaaS vendor (see `DECISIONS.md`).
 - Outside the Edge runtime, `instrumentation.ts` loads the Langfuse helper (`lib/telemetry/langfuse.ts`). Only when `LANGFUSE_ENABLED` is exactly `true` does it register the Langfuse exporter through `@vercel/otel` and the AI SDK's `LegacyOpenTelemetry` integration from `@ai-sdk/otel` (`registerTelemetry`). The AI SDK emits no spans without that integration, and `@ai-sdk/otel` is pinned to the same version as `ai` so one copy of `ai` is installed. A guard on `globalThis` makes the registration run once per process, because `registerTelemetry` appends without checking for duplicates. The `/api/ask` call sets `telemetry: { functionId: 'ask', recordInputs: false, recordOutputs: false }`, so spans carry usage and timing only, never the question or the answer.
 - Alerting is minimal by design (single-author site, no oncall rotation): the `/api/ask` 80%/100% budget warnings, plus Resend email alerts from `/api/psi-refresh` after consecutive failed refreshes and from the production smoke workflow when the canonical `/api/healthz` returns 503. Both email alerts need their credentials configured.
 - No client-side dashboards/UI; Upstash console + Vercel CLI are the inspection surfaces.
@@ -625,9 +733,10 @@ Observability spans real-user telemetry, structured logs and client error captur
 ### Traditional SEO
 
 - `<title>` per route, `<meta description>` populated from content
-- Person JSON-LD with sameAs links (github, linkedin, erikunha.dev)
+- Person JSON-LD with sameAs links (github, linkedin, erikunha.dev) in the root layouts; the CV pages add `ProfilePage` JSON-LD
+- Each language names itself canonical and lists `alternates.languages` (`pt-BR`, `en-US`, `x-default`) through `app/_lib/locale-metadata.ts`; the sitemap repeats the alternates
 - Static `/og.png` for Open Graph and Twitter summary cards
-- /sitemap.xml generated from route list
+- /sitemap.xml generated from the route list (`app/sitemap.ts`)
 - /robots.txt allows everything (no need to hide anything from crawlers)
 
 ### Answer Engine Optimization (the new layer)
@@ -646,7 +755,7 @@ WCAG 2.2 AA at minimum. Specific risks for THIS aesthetic:
 | ---------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Lime green as paragraph text tires the eye                                               | `#00FF41` on black measures 15.38:1 (`pnpm lint:contrast`), so contrast is not the reason. It is reserved for accents, headings and large text by the aesthetic rule; body text uses `--color-text` / `--color-tertiary-50` (#E6FFE6, 19.81:1).                                                                                                                                                                                                                                                                                    |
 | Muted parentheticals in Unknowns (nested inside the Opinions module) and `~/.guitar_rig` | Muted text must be a resolved color that reaches 4.5:1 on its own (`lint:contrast` checks `primary-400` and `--color-text-secondary`); an `opacity-*` utility on top lowers it and is not covered by the gate. Unknowns uses solid `--color-primary-400` (no opacity) within Opinions, and the guitar section resolves its text colors in `app/css/components-guitar.css`; its one remaining opacity is the decorative photo tint, not text. Size is no way out: WCAG large text starts at 24px regular or 18.66px bold, not 14px. |
-| Matrix dialog loop is exhausting                                                         | The MOTION switch off disables the loop and renders static `> The Matrix has you...`. A first visit starts with motion on even when the operating system asks for reduced motion (owner decision, see DECISIONS.md 2026-11-07).                                                                                                                                                                                                                                                                                                                                                          |
+| Hero boot loop is exhausting                                                             | The MOTION switch off disables the loop and renders static `> The Matrix has you...`. A first visit starts with motion on even when the operating system asks for reduced motion (owner decision, see `DECISIONS.md`).                                                                                                                                                                                                                                                                                                                                                          |
 | Form labels invisible (terminal-styled prompts)                                          | Real `<label for="...">` paired with each input. Terminal prompt is decoration.                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
 | Heading hierarchy                                                                        | Section headers are `<h2>`, not styled `<div>`s. Critical for screen-reader navigation.                                                                                                                                                                                                                                                                                                                                                                                                                                            |
 | No skip-to-content link (WCAG 2.4.1 Level A)                                             | Skip-to-content link added to AppShell as first focusable element, targets `#main-content` on the `<main>` element.                                                                                                                                                                                                                                                                                                                                                                                                                |
@@ -659,7 +768,9 @@ Run axe-core in CI; fail builds on any new violation. Manual screen-reader pass 
 
 Modest but professional:
 - CSP `connect-src 'self' https://vitals.vercel-insights.com https://va.vercel-scripts.com`: the browser only calls same-origin `/api/ask`; the model call is server→AI Gateway, so no provider host is in the CSP (`proxy.ts`)
-- HSTS, X-Content-Type-Options, X-Frame-Options DENY
+- Static headers from `next.config.ts`: HSTS (preload), `X-Content-Type-Options`, `X-Frame-Options: DENY`, `Cross-Origin-Opener-Policy: same-origin`, `Referrer-Policy: strict-origin-when-cross-origin` and a `Permissions-Policy` that denies camera, microphone and geolocation
+- `/api/ask` and the `defineHandler` routes (`/api/contact`, `/api/log`, `/api/log/forget`) refuse requests whose `Sec-Fetch-Site` header is neither `same-origin` nor `none` with 403, before any Redis call (`lib/server/fetch-metadata.ts`)
+- Cron routes compare the `CRON_SECRET` bearer in constant time (`lib/server/cron-auth.ts`) and refuse a secret shorter than 16 characters
 - Fonts are self-hosted. Vercel Analytics and Speed Insights mount conditionally in `components/RootShell.tsx`, which both root layouts render.
 - `AI_GATEWAY_API_KEY` in Vercel env vars (OIDC token on Vercel), never client-side
 - IP hashing uses `DEPLOY_SALT` if supplied, a development fallback outside production, or a random production salt persisted in Redis (`meta:deploy-salt`, `SET NX`, no TTL)
@@ -687,20 +798,34 @@ Modest but professional:
 
 ### Pre-push (Husky)
 
-- Branch-name guard: blocks direct pushes to `main` (all changes must go through a PR)
-- `pnpm verify`: full verify chain: Biome + TypeScript strict + content validation + client-naming + dep-pinning + dependency-vetting + harness-size + section-order + doc-drift + detect-changes-paths + test-integrity + css-tokens + unit tests
+- Branch guard: blocks direct pushes to `main` (all changes must go through a PR) and requires a `<type>/<description>` branch name
+- `pnpm verify`: full verify chain: Biome + TypeScript strict + content validation + client-naming + dep-pinning + dependency-vetting + harness-size + component-docs + section-order + doc-drift + detect-changes-paths + test-integrity + contrast + css-tokens + unit tests with coverage thresholds
 
 ### CI (GitHub Actions)
 
 The workflow runs on PRs, pushes to `main` and manual dispatch. Jobs are not a single serial pipeline:
-- `quality-fast`, `typecheck`, `test`, `dependency-review`, `detect-changes`, `semgrep` and `gitleaks` start independently. Dependency review is PR-only and blocks high-severity advisories and GPL/AGPL licenses; `quality-fast` runs the dependency-vetting gate, which holds every direct dependency to a recorded purpose and license in `dependency-vetting.json` and refuses an install script on a direct dependency listed in neither `pnpm.onlyBuiltDependencies` nor `pnpm.ignoredBuiltDependencies`. `test` runs coverage and audits dependencies when the lockfile changes (or on non-PR events).
+- `quality-fast`, `typecheck`, `test`, `dependency-review`, `detect-changes`, `semgrep` and `gitleaks` start independently. Dependency review is PR-only and blocks high-severity advisories and GPL/AGPL licenses. `quality-fast` lints the branch name and (on PRs) the commit messages, then runs Biome, content validation and the static gates from `pnpm verify` (client naming, dependency pinning, dependency vetting, harness size, component docs, doc drift, section order, detect-changes paths, test integrity, contrast, CSS tokens). The dependency-vetting gate holds every direct dependency to a recorded purpose and license in `dependency-vetting.json` and refuses an install script on a direct dependency listed in neither `pnpm.onlyBuiltDependencies` nor `pnpm.ignoredBuiltDependencies`. `test` runs coverage, audits dependencies when the lockfile changes (or on non-PR events) and runs the Stryker canary when the mutation runner surface changed.
 - `build` requires `quality-fast`, `typecheck` and `test`. It builds Next, gates global client chunks at 220 KB and per-route first-load JS at 164.2 KB, then uploads `.next`. `attest-build` (main only) downloads that artifact and attests its provenance, and `coverage-comment` (same-repository PRs) downloads the coverage report and posts the comment; neither runs repository code, so the OIDC, attestation and pull-request write scopes never share a job with a build or test command.
 - `performance`, `e2e-functional` and `e2e-visual-chromium` require `build` and `detect-changes`. Performance and functional jobs use the `app` filter; visuals use `ui`. Non-PR events run them regardless of those PR filters.
 - `performance` starts a local production server, then runs desktop/mobile LHCI and axe-core. `e2e-functional` runs all eight Playwright projects: chromium, chromium-mobile, webkit-desktop, webkit-mobile, and the chromium, chromium-mobile, webkit-desktop and webkit-mobile component projects. `e2e-visual-chromium` has chromium and chromium-mobile projects and uploads Argos screenshots when credentials are available.
 - `ai-eval` waits for change detection, `quality-fast`, `typecheck` and `test`; it consumes no build output, so it does not wait for `build` or the browser jobs. It requires AI-relevant changes, no upstream failures or cancellations, and an internal PR or non-PR event; Dependabot runs skip it because the gateway secret is not exposed to them. The runner retries a request once the transport fails (stream error, 5xx, 429, a thrown error) up to twice with a growing wait, records `retried` per item in `ask-eval-result.json`, and fails the gate when more than 15 percent of items needed a retry. A model failure is never retried.
 - `ci-gate` waits for all listed required jobs. The always-run jobs (detect-changes, quality-fast, typecheck, test, build, semgrep, gitleaks) must report `success`; every other job passes only on `success` or a path skip, so any other result (`failure`, `cancelled`, `abandoned`, `timed_out`) blocks. Semgrep is in that aggregate: its findings scan stays report-only, but its fixture self-test and SARIF-production checks block.
-- CodeQL, production smoke, mutation tests, agent evals and the weekly delivery metrics have separate workflows.
+- Every other workflow is separate from `ci.yml` and outside `ci-gate`:
 
+| Workflow                        | Trigger                                              | What it does                                                                                                   |
+| ------------------------------- | ---------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| `codeql.yml`                    | push and PR to `main`, weekly                        | CodeQL analysis                                                                                                |
+| `smoke.yml`                     | successful Production deployment                     | Probes `/api/healthz` on the deployment and on the canonical host; a 308 or any status but 200 or 503 fails    |
+| `mutation.yml`                  | weekly                                               | Stryker run over `app/api` and `lib`; fails when no report is produced, then scores it with `check-mutation-kills.mjs` |
+| `ask-eval.yml`                  | weekly                                               | `pnpm ask:eval` with publishing on, so `ask:eval:latest` and the Measured block cannot go stale                |
+| `agent-eval.yml`                | weekly                                               | `pnpm eval:agents`, the non-blocking prompt-regression eval of the rules in `AGENTS.md`                        |
+| `weekly-metrics.yml`            | weekly                                               | Delivery metrics scored against `metrics/bands.json` (see above)                                               |
+| `rollback-rehearsal.yml`        | weekly                                               | Rehearses the slow rollback path locally (see Rollback)                                                        |
+| `tool-pins.yml`                 | weekly                                               | Fails when the gitleaks or semgrep pin trails upstream; a nudge, not a merge stop                              |
+| `lockfile-resolution-probe.yml` | weekly                                               | Resolves every dependency range without the lockfile and keeps one issue open while the release-age window blocks resolution |
+| `high-risk-label.yml`           | pull request                                         | Adds or removes the `high-risk` label                                                                          |
+| `claude-review.yml`             | `/claude-review` comment from an owner, member or collaborator | Opt-in review of the pull request; never a merge gate or an approver (`REVIEW.md`)                   |
+| `claude.yml`                    | `@claude` comment from an owner, member or collaborator | Answers on issues and pull requests with read-only tools                                                    |
 Changes under `tests/visual/` or `tests/e2e/` set both `ui` and `app`, running visual and functional e2e gates. Root build and runtime files (`proxy.ts`, `instrumentation.ts`, `vercel.json`, `postcss.config.mjs`, `tsconfig.json`, `.nvmrc`, `.npmrc`, `mdx-components.tsx`) and the scripts the build or runtime jobs run also set `app`; those that change rendered output set `ui`. Every git-tracked root file and `scripts/` file must appear in `AI_PATHS`, `APP_PATHS`, `UI_PATHS` or `IGNORED_PATHS`; `pnpm check:detect-changes-paths` fails on a file in none of them, so a new file cannot silently skip the gated jobs. See `scripts/detect-changes-paths.mjs`.
 
 ### Production deploy
@@ -711,16 +836,16 @@ Vercel deploys `main`. CI runs LHCI against its own local production server, not
 
 Vercel "Promote to Production" of previous deployment. <60 seconds. No manual config needed. The slow path (`git revert` of the latest commit on `main`) is rehearsed weekly by `.github/workflows/rollback-rehearsal.yml`, which reverts locally and runs install, typecheck, tests and build without pushing or calling Vercel. See `docs/07-workflows.md`.
 
-### Claude harness configuration
+### Agent configuration
 
-The repo ships a project-level Claude Code permissions baseline in `.claude/settings.json` (committed): the deny rules behind the zero-exception rules in `AGENTS.md` (broad `git add`, npm and yarn installs, local env reads), with no hooks and no `defaultMode`. Hooks, permission mode and other workflow choices are each engineer's, in user-level settings or `.claude/settings.local.json` (gitignored). `AGENTS.md` is the one instruction file for Codex and Claude Code; `CLAUDE.md` imports it, skills live in `.agents/skills` and are linked into `.claude/skills`, and `.codex/config.toml` mirrors `.mcp.json`. The effective merged permissions are inspectable via:
+The repo ships a project-level permissions baseline for coding agents in `.claude/settings.json` (committed): the deny rules behind the zero-exception rules in `AGENTS.md` (broad `git add`, npm and yarn installs, local env reads), with no hooks and no `defaultMode`. Hooks, permission mode and other workflow choices are each engineer's, in user-level settings or `.claude/settings.local.json` (gitignored). `AGENTS.md` is the one instruction file for coding agents; `CLAUDE.md` imports it, skills live in `.agents/skills` and are linked into `.claude/skills`, and `.codex/config.toml` mirrors `.mcp.json`. The effective merged permissions are inspectable via:
 
 ```bash
 jq -s '(.[0].permissions.deny + (.[1].permissions.deny // [])) | unique' \
   .claude/settings.json .claude/settings.local.json 2>/dev/null
 ```
 
-Configuration history and rationale: see `DECISIONS.md` 2026-10-29 (global permission mode) and 2026-05-18 (permissions lockdown).
+Rationale: see `DECISIONS.md`.
 
 ---
 
@@ -770,14 +895,14 @@ The principal-level discipline: **none of this is built today.** YAGNI is the de
 | `/summary`, `/cv`                                                            | RSC reading views inside `SiteShell` (home header); print hides the shell                                                       |
 | `/pt`, `/pt/cv`, `/pt/summary`                                               | pt-BR twins of the home page and the reading views, in the `app/(pt)` root layout                                              |
 | `/links`, `/links/en`                                                        | Localized link pages: `/links` in the `app/(pt)` root layout, `/links/en` in `app/(en)`                                        |
-| `/design-system`, `/design-system/{tokens,components,enforcement,changelog}` | MDX documentation and component gallery                                                                                        |
+| `/design-system` and 17 pages below it                                       | MDX documentation: tokens, components, enforcement, changelog, `foundations/{colors,typography,spacing-borders}` and ten `primitives/*` pages, all listed in `ds-nav.ts` |
 | `/api/ask`                                                                   | Streaming POST handler                                                                                                         |
 | `/api/contact`                                                               | Durable contact POST handler                                                                                                   |
 | `/api/contact-retry`, `/api/psi-refresh`                                     | Authenticated daily cron GET handlers                                                                                          |
 | `/api/lighthouse`, `/api/healthz`, `/api/erik.json`                          | Scores, health and structured profile GET handlers; `/api/lighthouse` and `/api/healthz` are per-IP rate limited and fail open (a prerender interrupt is rethrown, never treated as an outage) |
 | `/api/log`, `/api/log/forget`, `/api/csp-report`                             | Error ingestion, ASK erasure and CSP report POST handlers                                                                      |
 | `/api/mcp`                                                                   | MCP transport with `ask_erik` and `get_profile` tools                                                                          |
-| `/sitemap.xml`                                                               | `app/sitemap.ts`, homepage, reading views, links pages and design-system pages                                                 |
+| `/sitemap.xml`                                                               | `app/sitemap.ts`: homepage, reading views and links pages with their language alternates, plus every design-system page       |
 | `/robots.txt`, `/llms.txt`, `/.well-known/agent.json`                        | Public static discovery files                                                                                                  |
 | `/og.png`, `/erik-cunha-cv.pdf`                                              | Static social image and downloadable CV                                                                                        |
 
@@ -787,7 +912,7 @@ The principal-level discipline: **none of this is built today.** YAGNI is the de
 
 ## 18. The single biggest risk
 
-The Matrix dialog loop and CRT effects are the most novel piece of the page and also the most fragile under the perf budget. Per-keystroke React state updates would add rendering work to the animation loop. Performance budgets still require runtime measurement.
+The Hero boot loop and CRT effects are the most novel piece of the page and also the most fragile under the perf budget. Per-keystroke React state updates would add rendering work to the animation loop. Performance budgets still require runtime measurement.
 
 Mitigation: the loop uses `useRef.textContent` mutation rather than per-keystroke `useState`, enforced structurally by the boot-animation component test. The one runtime long-task/INP e2e guard (`tests/e2e/cross-cutting.spec.ts`) gates the interactive shell's keystroke commit (<50ms, no long task >100ms), not the boot loop itself, the boot loop is guarded at the pattern level, the shell at the runtime level.
 

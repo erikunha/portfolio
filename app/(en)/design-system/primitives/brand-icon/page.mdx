@@ -12,7 +12,7 @@ export const metadata = dsPageMetadata({
 
 <OnThisPage items={[{id:'props',label:'Props'},{id:'sizes',label:'Sizes'},{id:'colour',label:'Colour and glow'},{id:'accessibility',label:'Accessibility'}]} />
 
-Source: `design-system/components/BrandIcon/BrandIcon.tsx`. React Server Component, zero client JavaScript. The header, the error pages, the reading views and the design-system bar import it through `components/BrandLink`.
+Source: `design-system/components/BrandIcon/BrandIcon.tsx`. React Server Component, zero client JavaScript. It is not exported by the `@/design-system` barrel; import it by path. `components/SiteShell` mounts it through `components/BrandLink`, so every page header (home, links, reading views, error pages and the design system) renders it.
 
 <h2 id="props">Props</h2>
 

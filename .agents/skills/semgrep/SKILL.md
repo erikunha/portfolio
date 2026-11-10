@@ -11,7 +11,7 @@ secrets: a property a reviewer can reason about but not measure. The CI
 `semgrep` job (`.github/workflows/ci.yml`) is authoritative and uploads SARIF to
 the code-scanning tab; this skill is the local/agent interface.
 
-## Invocation — pinned only
+## Invocation: pinned only
 
 Semgrep is pinned to `1.169.0`. Run through the repo wrapper, never a bare global call:
 
@@ -19,32 +19,33 @@ Semgrep is pinned to `1.169.0`. Run through the repo wrapper, never a bare globa
     node scripts/run-semgrep.mjs <paths>    # scan specific paths
     node scripts/run-semgrep.mjs --error --sarif out.sarif <paths>
 
-Local install (optional — CI is authoritative): `pip install semgrep==1.169.0`.
+Local install (optional, CI is authoritative): `pip install semgrep==1.169.0`.
 If Semgrep is not installed, the wrapper exits 2 with an install hint; defer to CI.
 
 ## Rulesets
 
-- **Vendored, content-pinned** (`.semgrep/owasp-top-ten.yml`, `.semgrep/secrets.yml`)
-  — the security-load-bearing rules. Edit these files to change behavior; they are
+- **Vendored, content-pinned** (`.semgrep/owasp-top-ten.yml`, `.semgrep/secrets.yml`):
+  the security-load-bearing rules. Edit these files to change behavior; they are
   the source of truth, immune to registry-side drift.
-- **Registry-latest packs** (`p/typescript`, `p/react`, `p/nextjs`) — framework
+- **Registry-latest packs** (`p/typescript`, `p/react`, `p/nextjs`): framework
   lint, lower stakes. The Semgrep CLI has no pack version-pinning syntax, so these
   fetch the latest registry rules (mutable); findings may drift between runs. Drift
-  is accepted for the framework packs (documented in the ADR), which is why the
+  is accepted for the framework packs (recorded in `DECISIONS.md`), which is why the
   security-load-bearing rules are instead vendored + content-pinned in `.semgrep/`.
 
 ## Interpreting SARIF
 
-- `runs[].results[]` — each is one finding. `level` (`error`/`warning`), `ruleId`,
+- `runs[].results[]`: each is one finding. `level` (`error`/`warning`), `ruleId`,
   `message.text`, and `locations[].physicalLocation` (file + line).
 - Zero results in `--error` mode → wrapper exits 0. Any result → exits 1.
-- Triage a finding as real → fix the code; false positive → add a justified
-  `// nosemgrep: <rule-id> — <reason>` at the site (never a blanket disable).
+- Triage a finding as real → fix the code; false positive → add a per-line
+  `// nosemgrep: <rule-id>` at the site (never a blanket disable) and record the reason in the
+  commit body, since source comments are limited to machine directives.
 
 ## Hard rules
 
 - Never disable a rule globally to clear a finding. Fix the code or justify per-line.
-- Never edit fixtures under `tests/fixtures/semgrep/` to dodge a finding — they are
-  the wrapper's test ground truth.
+- Never edit fixtures under `tests/fixtures/semgrep/` to dodge a finding. They are
+  the wrapper's test ground truth, run by `pnpm lint:semgrep:selftest`.
 - The CI job is currently **non-blocking** (`continue-on-error: true`). Do not promote
   it to blocking without a measured FP-rate baseline recorded in DECISIONS.md.

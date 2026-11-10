@@ -42,6 +42,8 @@ directories have no CSS Modules.
 | Gate | Command | Checks |
 |---|---|---|
 | Component docs | `pnpm check:component-docs` | Every directory under `design-system/components` has a `## Name` section in `components/page.mdx` |
+| Unit tests | `pnpm test` | A `*.test.tsx` beside each component, run in the Vitest suite (jsdom) |
+| Behavior in a browser | `*.e2e.ts` beside a component | Run by the four `-components` Playwright projects (Chromium and WebKit, desktop and mobile) |
 | Visual regression | `tests/e2e/design-system-components.spec.ts` | Local Darwin component snapshots; ignored in CI by `playwright.config.ts` |
 | A11y | `pnpm playwright test tests/a11y` | axe-core scan including `wcag22aa`, zero violations |
 
@@ -55,6 +57,12 @@ directories have no CSS Modules.
 | Client/RSC naming (`app`, `components`, `lib`; excludes `design-system`) | `pnpm check:client-naming` |
 | Dependency pinning | `pnpm check:dep-pinning` |
 | Dependency vetting (purpose, license, install scripts) | `pnpm check:dependency-vetting` |
+| Test integrity (no focused test, assertion-less body or unexplained skip) | `pnpm check:test-integrity` |
+| Doc drift (paths marked in `ARCHITECTURE.md` exist) | `pnpm check:doc-drift` |
+| Section order (rendered section ids match the registry) | `pnpm check:section-order` |
+| Change-filter paths (no orphaned CI path filter) | `pnpm check:detect-changes-paths` |
+| Static analysis (CI scan is non-blocking) | `pnpm lint:semgrep` |
+| Secret scan | `pnpm gitleaks:staged` before commit; the `gitleaks` CI job |
 | Global chunk size (220KB gzip) | `pnpm bundle-check` |
 | Per-route first-load JS (164.2KB gzip) | `pnpm route-js-check` |
 | Lighthouse (a11y = 100) | `pnpm lhci` · `pnpm lhci:mobile` |
@@ -64,7 +72,9 @@ directories have no CSS Modules.
 1. Create `design-system/components/NewComponent/` with `.tsx`, `.test.tsx`, and `index.ts` · styled with Tailwind utilities, no `.module.css`.
 2. Export it from `design-system/index.ts`, unless it is a boundary exception: `Field` is deliberately client-only and `BrandIcon` is imported by path, and neither ships through the barrel.
 3. Add a `## NewComponent` heading in `app/(en)/design-system/components/page.mdx` · `check:component-docs` fails if it is missing.
-4. Add a local Darwin visual baseline in `tests/e2e/design-system-components.spec.ts`. CI ignores this spec; page-section snapshots and co-located component behavior tests have separate coverage.
+4. Update the counts the docs state (`README.md`, the overview and the components page); `__tests__/design-system-doc-counts.test.ts` compares them with the directory.
+5. If the component gets its own page under `app/(en)/design-system/primitives/`, add it to `DS_NAV_GROUPS` in `_components/ds-nav.ts` and to both Lighthouse configs; `__tests__/design-system-route-coverage.test.ts` fails when a page is missing from the menu, the sitemap or either config.
+6. Add a local Darwin visual baseline in `tests/e2e/design-system-components.spec.ts`. CI ignores this spec; page-section snapshots and co-located component behavior tests have separate coverage.
 
 `quality-fast` runs contrast and component-heading checks. The `performance` job runs
 Lighthouse and axe; PRs enter it when the app change filter matches. `app/` and
