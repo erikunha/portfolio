@@ -7,6 +7,8 @@ import { installMockBackend } from './_helpers/mock-backend';
 
 const REF_A = '7f3a9c2e-41b0-4d8e-9a77-3c51d0b2e8aa';
 const REF_B = '0b9d11e4-7c2a-4f6e-8e0d-2a6b9f3c1d55';
+const CONTACT_REF = 'contact-test-request-id';
+const MAILTO_SHORT_REF_LENGTH = 8;
 const SHELL_INPUT = '[aria-label="shell command"]';
 const SHELL_FORM = '[data-testid="shell-form"]';
 const NARROW = { width: 320, height: 700 };
@@ -138,13 +140,14 @@ test.describe('request refs and privacy', () => {
     await form
       .getByRole('button', { name: contactCopy[SITE_LOCALE.en].form.submit, exact: true })
       .click();
-    const alert = page.getByRole('alert');
-    await expect(alert).not.toContainText('contact-test-request-id');
+    const alert = form.getByRole('alert');
+    await expect(alert).toBeVisible();
+    await expect(alert).not.toContainText(CONTACT_REF);
     await expect(alert.locator('.ref-chip')).toHaveCount(0);
     const href = (await alert.locator('a[href^="mailto:"]').getAttribute('href')) ?? '';
     const subject = new URL(href).searchParams.get('subject');
-    expect(subject).toBe('[ref contact-] contact');
-    expect(new URL(href).searchParams.get('body')).toContain('contact-test-request-id');
+    expect(subject).toBe(`[ref ${CONTACT_REF.slice(0, MAILTO_SHORT_REF_LENGTH)}] contact`);
+    expect(new URL(href).searchParams.get('body')).toContain(CONTACT_REF);
     expect(await noHorizontalOverflow(page)).toBe(true);
   });
 });
