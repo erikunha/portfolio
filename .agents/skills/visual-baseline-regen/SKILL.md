@@ -1,6 +1,6 @@
 ---
 name: visual-baseline-regen
-description: Use when a push or PR may touch a Playwright screenshot baseline — any CSS, layout, typography, spacing, or rendering change. Page sections (hero, contact, shell, hottest-takes) are captured in `tests/visual/visual.spec.ts` and are CI-gated per-platform (darwin + linux). Design-system component baselines live in `tests/e2e/design-system-components.spec.ts` and are darwin-only (the spec is ignored in CI on Ubuntu). Covers assessing baseline impact before a push, the darwin regen path (`--update-snapshots` against a prod server), the linux regen path for `visual.spec.ts` baselines only (the `update_visual_baselines` CI dispatch + artifact download + per-project PNG copy), committing both platforms in one commit, the batch-to-one-push cost rule, and the inspect-before-commit rule.
+description: Use when a push or PR may touch a Playwright screenshot baseline — any CSS, layout, typography, spacing, or rendering change. Page sections (hero, contact, shell, hottest-takes) are captured in `tests/visual/visual.spec.ts`, which runs on the `chromium` and `chromium-mobile` projects and is CI-gated per-platform (darwin + linux). Design-system component baselines live in `tests/e2e/design-system-components.spec.ts`, which runs on the `chromium` project only and is darwin-only (no CI job runs it). Covers assessing baseline impact before a push, the darwin regen path (`--update-snapshots` against a prod server), the linux regen path for `visual.spec.ts` baselines only (the `update_visual_baselines` CI dispatch + artifact download + per-project PNG copy), committing both platforms in one commit, the batch-to-one-push cost rule, and the inspect-before-commit rule.
 ---
 
 # Visual baseline regeneration
@@ -10,8 +10,9 @@ Two specs capture screenshot baselines with different CI treatment:
   CI-gated, per-platform (darwin + linux). A stale baseline fails the E2E visual project
   in CI. Requires full darwin + linux regen (Steps 1-3 below).
 - **`tests/e2e/design-system-components.spec.ts`** (DS component baselines) — darwin-only.
-  This spec is ignored in CI on Ubuntu (`testIgnore` in `playwright.config.ts`). Darwin regen
-  only (Step 1 only; skip Steps 2-3).
+  No CI job runs this spec: the `chromium` project `testIgnore`s it when `CI` is set, and
+  the other projects' `testMatch`es exclude it. Darwin regen only (Step 1 only; skip
+  Steps 2-3).
 
 ## Step 0: assess impact
 
@@ -22,8 +23,8 @@ Decide whether the change touches a baseline before CI does.
   platforms (darwin + linux) alongside the code so the first CI run is green. Continue
   through Steps 1-3.
 - **YES — DS component baseline only (`design-system-components.spec.ts`) affected:**
-  darwin regen only (Step 1). Skip Steps 2-3. No linux artifact needed — CI ignores this
-  spec on Ubuntu.
+  darwin regen only (Step 1). Skip Steps 2-3. No linux artifact needed — no CI job runs
+  this spec.
 
 Never defer baselines, the test suite, or runtime/perf (LHCI) gates pending a design or
 "the shade might change" decision. Lock the decision, regenerate, run every gate, then
@@ -40,8 +41,8 @@ Regenerate against a production server locally, then update snapshots:
     # for visual.spec.ts baselines, run BOTH chromium projects:
     pnpm test:e2e --project=chromium --project=chromium-mobile tests/visual/visual.spec.ts --update-snapshots
 
-    # for design-system-components.spec.ts baselines:
-    pnpm test:e2e --project=<visual-project> tests/e2e/design-system-components.spec.ts --update-snapshots
+    # for design-system-components.spec.ts baselines, run the only project that runs it:
+    pnpm test:e2e --project=chromium tests/e2e/design-system-components.spec.ts --update-snapshots
 
 `DEPLOY_SALT=test` prevents prod-mode salt resolution from hitting Upstash Redis
 (see `lib/ip-hash.ts`). Use `pnpm start`, not `pnpm dev` — baselines must match
@@ -50,26 +51,28 @@ unrelated baselines.
 
 This writes the `*-darwin.png` baselines.
 
-**Both chromium projects, not the one you tested.** `visual.spec.ts` runs on the `chromium`
-and `chromium-mobile` projects only, so a section has two darwin baselines and two linux
-baselines. The webkit projects do not run the spec: no CI job compares webkit pixels, so a
-webkit baseline would be darwin-only and drift unseen.
+**Regenerate every project that produces a baseline for the spec, not the one you tested.**
+`visual.spec.ts` runs on the `chromium` and `chromium-mobile` projects only, so a captured
+section has two darwin baselines and two linux baselines.
+`design-system-components.spec.ts` runs on the `chromium` project only, so a DS component
+has one darwin baseline. The webkit projects run neither spec: no CI job compares webkit
+pixels, so a webkit baseline would be darwin-only and drift unseen.
 
 ## Step 2 — linux baseline for `visual.spec.ts` only (CI dispatch, artifacts UPLOADED not committed)
 
-**Skip this step for `design-system-components.spec.ts` baselines — CI ignores that spec on Ubuntu.**
+**Skip this step for `design-system-components.spec.ts` baselines — no CI job runs that spec.**
 
 The linux runner's pixels differ from darwin; you cannot fake them locally. Dispatch the
 CI regen workflow, wait, then pull the artifacts:
 
     gh workflow run "CI" -f update_visual_baselines=true --ref <branch>
     # wait for the run to finish, then download:
-    # artifacts are named visual-baselines-<project>
+    # artifacts are visual-baselines-chromium and visual-baselines-chromium-mobile
 
-Download each `visual-baselines-<project>` artifact into
-`tests/visual/visual.spec.ts-snapshots/`. Each artifact holds only that project's
-`*-<project>-linux.png` files, so the artifacts cannot overwrite each other. The CI
-workflow uploads the baselines as artifacts and does not commit them; you commit them.
+Download both artifacts into `tests/visual/visual.spec.ts-snapshots/`. Each artifact holds
+only that project's `*-<project>-linux.png` files, so the artifacts cannot overwrite each
+other. The CI workflow uploads the baselines as artifacts and does not commit them; you
+commit them.
 
 ## Step 3 — commit both platforms together (for `visual.spec.ts` baselines)
 
@@ -80,10 +83,10 @@ run is green. Do not push the code first and let CI fail.
 
 - **Inspect before committing.** Always Read the regenerated PNG before committing — never
   blind-update. A wrong baseline locks in a regression.
-- **Batch visual tweaks to one push.** NEVER push code that knowingly leaves a stale
-  baseline, let CI fail, then dispatch a regen, then push again — that is 3 paid runs
-  (build + dual-LHCI ~9min + 4 visual jobs) for what should be 1. Batch all visual tweaks
-  so the whole regen cycle happens once.
+- **Batch visual tweaks to one push.** NEVER push code that knowingly leaves a baseline
+  stale for a project the spec runs in, let CI fail, then dispatch a regen, then push
+  again — that is 3 paid runs (build + dual-LHCI ~9min + 2 visual jobs) for what should
+  be 1. Batch all visual tweaks so the whole regen cycle happens once.
 - **Never revert an unedited section's baseline as "noise."** A Tailwind utility change
   can reflow any captured section by 1px; commit ALL changed darwin baselines, not only
   the section you intended to touch.
@@ -96,6 +99,6 @@ run is green. Do not push the code first and let CI fail.
 - `tests/visual/visual.spec.ts` — CI-gated page sections (hero, contact, shell,
   hottest-takes); requires darwin + linux regen when changed.
 - `tests/e2e/design-system-components.spec.ts` — design-system component baselines;
-  darwin-only (spec is ignored on Ubuntu in CI); requires only darwin regen when changed.
+  darwin-only (no CI job runs the spec); requires only darwin regen when changed.
 - The runtime/perf (LHCI) gate stays inline in AGENTS.md; this skill is only the
   baseline-regen mechanics.
