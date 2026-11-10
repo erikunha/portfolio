@@ -168,7 +168,7 @@
     margin: 0 0 var(--spacing-1);
     color: var(--color-primary-500);
     font-family: var(--font-display);
-    font-size: var(--text-5xl);
+    font-size: var(--text-4xl);
     font-weight: 900;
     line-height: 1.2;
   }
