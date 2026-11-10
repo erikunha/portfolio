@@ -23,4 +23,27 @@ describe('shell AI scope disclosure', () => {
     );
     expect(placeholder).toContain('Erik');
   });
+
+  it('help lists the renamed stack command and every local command the shell accepts', () => {
+    const help = SHELL_RESPONSES.find((entry) => entry.commands.includes(ShellCommand.Help));
+    const text = help?.text ?? '';
+    expect(text).toContain(ShellCommand.Stack);
+    for (const command of [
+      ShellCommand.WhoIs,
+      ShellCommand.WhoAmI,
+      ShellCommand.WhoIsRecursive,
+      ShellCommand.WhoAmIRecursive,
+      ShellCommand.Stack,
+    ]) {
+      expect(text, `${command} is accepted by the shell, so help must name it`).toContain(command);
+    }
+  });
+
+  it('the stack answer points at the AI engineer direction', () => {
+    const stack = SHELL_RESPONSES.find((entry) => entry.commands.includes(ShellCommand.Stack));
+    expect(stack?.text).toContain('llm systems');
+    expect(stack?.text).toContain('eval harnesses');
+    expect(stack?.text).toContain('agent orchestration');
+    expect(stack?.text).toContain('mcp servers');
+  });
 });

@@ -1138,11 +1138,11 @@ describe('InteractiveShell stream states', () => {
     const address = 'erikhenriquealvescunha@gmail.com';
 
     it.each([
-      [SITE_LOCALE.en, 'temporarily unavailable', 'try: cat skills.md (works offline) or write to'],
+      [SITE_LOCALE.en, 'temporarily unavailable', 'try: cat stack.md (works offline) or write to'],
       [
         SITE_LOCALE.pt,
         'temporariamente indisponível',
-        'tente: cat skills.md (funciona offline) ou escreva para',
+        'tente: cat stack.md (funciona offline) ou escreva para',
       ],
     ] as const)(
       'prints the status command, a local fallback and the request id in %s',
@@ -1166,7 +1166,7 @@ describe('InteractiveShell stream states', () => {
         const hint = lines[errorIndex + 1];
         expect(hint?.getAttribute('data-kind')).toBe('hint');
         expect(hint?.textContent).toBe(`${tryText} ${address}`);
-        expect(hint?.querySelector('code')?.textContent).toBe('cat skills.md');
+        expect(hint?.querySelector('code')?.textContent).toBe('cat stack.md');
         expect(hint?.querySelector('a')?.getAttribute('href')).toBe(`mailto:${address}`);
         expect(lines[errorIndex + 2]?.textContent).toContain('req-503');
         expect(lines[errorIndex + 2]?.querySelector('button')).not.toBeNull();
@@ -1195,7 +1195,7 @@ describe('InteractiveShell stream states', () => {
       );
       const container = await renderShell();
       await submitQuestion(container, 'x');
-      expect(container.querySelector('[data-kind="hint"] code')?.textContent).toBe('cat skills.md');
+      expect(container.querySelector('[data-kind="hint"] code')?.textContent).toBe('cat stack.md');
     });
 
     it('says what to do when the body has no message, never a bare status label', async () => {
@@ -1258,7 +1258,7 @@ describe('InteractiveShell stream states', () => {
       expect(headline?.textContent).toBe('! slow down: 38 min until the next question');
       expect(bar(container)).toBe('.'.repeat(20));
       expect(visible(container).textContent).toContain(
-        'Local commands keep working meanwhile: help, cat skills.md, whoami.',
+        'Local commands keep working meanwhile: help, cat stack.md, whoami.',
       );
       expect(container.querySelector('[data-kind="error"]')).toBeNull();
       expect(container.querySelector('[data-testid="shell-reference"]')?.textContent).toContain(
