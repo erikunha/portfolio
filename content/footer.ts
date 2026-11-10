@@ -1,4 +1,3 @@
-import { copyFeedback } from './copy-button';
 import { MAIN_CONTENT_ID } from './landmarks';
 import { LINKS_PATH } from './links.constants';
 import { FooterContentSchema } from './schemas';
@@ -118,8 +117,7 @@ const footerContentFor = (locale: SiteLocale) => {
         : 'Session rebooted. Back at the top; your session is preserved.',
     },
     receipt: {
-      label: pt ? 'última requisição' : 'last request',
-      feedback: copyFeedback[locale],
+      label: pt ? 'última requisição registrada' : 'last request recorded',
     },
     copyright: pt
       ? '© 2026 erik cunha · esta sessão termina aqui · o trabalho não.'

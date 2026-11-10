@@ -1,6 +1,5 @@
 import { companyLinkCopy } from './company-link';
 import type { ContactContent } from './contact';
-import { copyFeedback } from './copy-button';
 import { SITE_LOCALE, type SiteLocale } from './site-locale';
 import { EMAIL_ADDRESS, LINKEDIN_URL } from './social-urls';
 import { WORK_SCOPE } from './work-scope';
@@ -17,27 +16,10 @@ const contactCopyFor = (locale: SiteLocale): ContactContent => {
   return {
     success: {
       title: pt ? '✓ mensagem entregue' : '✓ message delivered',
-      message: pt
-        ? `Resposta ${REPLY_WINDOW[locale]}. Guarde este recibo se quiser que sua mensagem seja excluída depois.`
-        : `Reply ${REPLY_WINDOW[locale]}. Keep this receipt if you want your message deleted later.`,
+      message: pt ? `Resposta ${REPLY_WINDOW[locale]}.` : `Reply ${REPLY_WINDOW[locale]}.`,
       receipt: {
-        refLabel: 'ref',
         atLabel: pt ? 'em' : 'at',
         dateLocale: pt ? 'pt-BR' : 'en-CA',
-        copy: pt ? '[COPIAR REF]' : '[COPY REF]',
-        copied: pt ? '[REF COPIADA]' : '[REF COPIED]',
-        forget: {
-          label: pt ? '[EXCLUIR MENSAGEM]' : '[FORGET MESSAGE]',
-          pending: pt ? '[EXCLUINDO...]' : '[DELETING...]',
-          done: pt
-            ? 'Pronto, nenhum registro desta mensagem é mantido.'
-            : 'Done, no record of this message is kept.',
-          failed: pt
-            ? 'Não foi possível excluir agora. Tente de novo, ou envie email para'
-            : 'Could not delete right now. Try again, or email',
-        },
-        forgetSubject: pt ? 'Excluir minha mensagem, ref' : 'Delete my message, ref',
-        feedback: copyFeedback[locale],
       },
     },
     queued: {
@@ -49,7 +31,12 @@ const contactCopyFor = (locale: SiteLocale): ContactContent => {
       linkLabel: pt ? 'mensagem no LinkedIn' : 'message on LinkedIn',
       linkGlyph: '↗',
       linkHref: LINKEDIN_URL,
-      refLabel: 'ref',
+    },
+    dismiss: {
+      label: '[ ok ]',
+      aria: pt
+        ? 'Dispensar o aviso e escrever outra mensagem'
+        : 'Dismiss this notice and write another message',
     },
     section: {
       command: 'SUDO CONTACT --INIT',
@@ -178,9 +165,6 @@ const contactCopyFor = (locale: SiteLocale): ContactContent => {
       },
       retained: pt ? 'Seu texto continua aqui.' : 'Your text is still here.',
       retryEmail: pt ? 'Tente novamente, ou envie email' : 'Retry, or email',
-      refNote: pt
-        ? 'A referência já vai preenchida no email, então nada se perde.'
-        : 'The reference is pre-filled in the email, so nothing gets lost.',
       mailtoSubject: pt ? '[ref {ref}] contato' : '[ref {ref}] contact',
       mailtoBody: pt ? 'ref: {ref}\n\n{text}' : 'ref: {ref}\n\n{text}',
       counterSeparator: '/',

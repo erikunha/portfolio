@@ -54,7 +54,6 @@ export function useContactSubmit({
   const [errors, setErrors] = useState<FieldErrors>({});
   const [errorMsg, setErrorMsg] = useState('');
   const [receipt, setReceipt] = useState<{ ref: string; at: Date } | null>(null);
-  const [queuedRef, setQueuedRef] = useState('');
   const [errorRef, setErrorRef] = useState('');
   const [failureCount, setFailureCount] = useState(INITIAL_FAILURE_COUNT);
   const pendingRef = useRef(false);
@@ -115,7 +114,6 @@ export function useContactSubmit({
       if (res.status === QUEUED_STATUS && apiError?.code === CONTACT_DELIVERY_CODE.QUEUED) {
         messageStore.reset();
         if (ref) addRef(ref);
-        setQueuedRef(ref);
         setStatus(CONTACT_STATUS.QUEUED);
         return;
       }
@@ -138,6 +136,14 @@ export function useContactSubmit({
     }
   }
 
+  function dismiss() {
+    setStatus(CONTACT_STATUS.IDLE);
+    setErrors({});
+    setErrorMsg('');
+    setErrorRef('');
+    setReceipt(null);
+  }
+
   return {
     status,
     busy: status === CONTACT_STATUS.SUBMITTING,
@@ -145,9 +151,9 @@ export function useContactSubmit({
     errorMsg,
     errorRef,
     receipt,
-    queuedRef,
     failureCount,
     noteEdit,
     submit,
+    dismiss,
   };
 }

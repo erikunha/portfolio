@@ -1,4 +1,4 @@
-import { act, cleanup, render, screen } from '@testing-library/react';
+import { act, cleanup, render } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { footerContent } from '@/content/footer';
 import { SITE_LOCALE } from '@/content/site-locale';
@@ -26,45 +26,42 @@ describe('footer session receipt', () => {
     expect(container.textContent).not.toContain(copy.label);
   });
 
-  it('shows the last request id after an ask or contact request, and follows the newest', () => {
+  it('shows a recorded-request status, without the request id, after a request is made', () => {
     const { container } = render(<Footer locale={SITE_LOCALE.en} />);
     act(() => addRef(A));
     const receipt = container.querySelector('[data-testid="footer-receipt"]');
-    expect(receipt?.textContent).toContain(`${copy.label} ${A}`);
-    act(() => addRef(B));
-    expect(receipt?.textContent).toContain(B);
+    expect(receipt?.textContent).toContain(copy.label);
     expect(receipt?.textContent).not.toContain(A);
+    act(() => addRef(B));
+    expect(receipt?.textContent).not.toContain(A);
+    expect(receipt?.textContent).not.toContain(B);
   });
 
   it('reads the receipt of a request made before this page mounted', () => {
     addRef(A);
     const { container } = render(<Footer locale={SITE_LOCALE.en} />);
-    expect(container.querySelector('[data-testid="footer-receipt"]')?.textContent).toContain(A);
+    const receipt = container.querySelector('[data-testid="footer-receipt"]');
+    expect(receipt?.textContent).toContain(copy.label);
+    expect(receipt?.textContent).not.toContain(A);
   });
 
-  it('goes back to the previous id, then to nothing, as requests are forgotten', () => {
+  it('stays while a request is remembered, then goes away when the last one is forgotten', () => {
     addRef(A);
     addRef(B);
     const { container } = render(<Footer locale={SITE_LOCALE.en} />);
     act(() => removeRef(B));
-    expect(container.querySelector('[data-testid="footer-receipt"]')?.textContent).toContain(A);
+    expect(container.querySelector('[data-testid="footer-receipt"]')).not.toBeNull();
     act(() => removeRef(A));
     expect(container.querySelector('[data-testid="footer-receipt"]')).toBeNull();
   });
 
-  it('copies the full id and announces it', async () => {
-    const writeText = vi.fn().mockResolvedValue(undefined);
-    vi.stubGlobal('navigator', { clipboard: { writeText } });
+  it('renders no request id and no copy control', () => {
     addRef(A);
-    render(<Footer locale={SITE_LOCALE.en} />);
-    await act(async () => {
-      screen.getByRole('button', { name: new RegExp(copy.feedback.idle.label, 'i') }).click();
-    });
-    expect(writeText).toHaveBeenCalledExactlyOnceWith(A);
-    const status = screen
-      .getAllByRole('status')
-      .find((node) => node.textContent === copy.feedback.success.message);
-    expect(status).toBeDefined();
+    const { container } = render(<Footer locale={SITE_LOCALE.en} />);
+    const receipt = container.querySelector('[data-testid="footer-receipt"]');
+    expect(receipt?.querySelector('code')).toBeNull();
+    expect(receipt?.querySelector('button')).toBeNull();
+    expect(container.textContent).not.toContain(A);
   });
 
   it('does not render a receipt on the server, so hydration cannot mismatch', async () => {

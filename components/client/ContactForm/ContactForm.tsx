@@ -19,7 +19,6 @@ import {
 import type { TerminalChrome } from '@/content/schemas';
 import { Field } from '@/design-system/components/Field';
 import { longestCopy } from '@/lib/longest-copy';
-import { RefChip } from '../RefChip/RefChip.client';
 import { ContactResult } from './ContactResult';
 import { ContactShell } from './ContactShell';
 import { errorMailto } from './contact-form-checks';
@@ -28,6 +27,7 @@ import { CONTACT_FIELDS, CONTACT_STATUS, useContactSubmit } from './useContactSu
 
 const MESSAGE_ROWS = 5;
 const INITIAL_FAILURE_COUNT = 0;
+const INITIAL_DISMISS_COUNT = 0;
 type TypedField = Exclude<ContactField, typeof CONTACT_FIELD.MESSAGE>;
 const INITIAL_TYPED: Record<TypedField, string> = { name: '', email: '' };
 
@@ -40,6 +40,7 @@ export function ContactForm({ copy, chrome }: { copy: ContactContent; chrome: Te
   );
   const values: Record<ContactField, string> = { ...typed, message };
   const [honeypot, setHoneypot] = useState('');
+  const [dismissCount, setDismissCount] = useState(INITIAL_DISMISS_COUNT);
   const {
     status,
     busy,
@@ -47,10 +48,10 @@ export function ContactForm({ copy, chrome }: { copy: ContactContent; chrome: Te
     errorMsg,
     errorRef,
     receipt,
-    queuedRef,
     failureCount,
     noteEdit,
     submit,
+    dismiss,
   } = useContactSubmit({ copy, values, honeypot });
   const formRef = useRef<HTMLFormElement>(null);
   const summaryRef = useRef<HTMLDivElement>(null);
@@ -86,6 +87,16 @@ export function ContactForm({ copy, chrome }: { copy: ContactContent; chrome: Te
     if (failureCount > INITIAL_FAILURE_COUNT) summaryRef.current?.focus();
   }, [failureCount]);
 
+  useEffect(() => {
+    if (dismissCount === INITIAL_DISMISS_COUNT) return;
+    document.getElementById(messageFieldId)?.focus();
+  }, [dismissCount, messageFieldId]);
+
+  function dismissResult() {
+    dismiss();
+    setDismissCount((count) => count + 1);
+  }
+
   function change(field: ContactField, value: string) {
     if (field === CONTACT_FIELD.MESSAGE) messageStore.set(value);
     else setTyped((current) => ({ ...current, [field]: value }));
@@ -95,7 +106,7 @@ export function ContactForm({ copy, chrome }: { copy: ContactContent; chrome: Te
   if (status === CONTACT_STATUS.SUCCESS || status === CONTACT_STATUS.QUEUED) {
     return (
       <ContactShell chrome={chrome}>
-        <ContactResult copy={copy} status={status} receipt={receipt} queuedRef={queuedRef} />
+        <ContactResult copy={copy} status={status} receipt={receipt} onDismiss={dismissResult} />
       </ContactShell>
     );
   }
@@ -148,17 +159,6 @@ export function ContactForm({ copy, chrome }: { copy: ContactContent; chrome: Te
                   {copy.section.email}
                 </a>
               </p>
-            ) : null}
-            {errorMsg && errorRef ? (
-              <>
-                <RefChip
-                  value={errorRef}
-                  prefix={copy.success.receipt.refLabel}
-                  labels={{ copy: copy.success.receipt.copy, copied: copy.success.receipt.copied }}
-                  feedback={copy.success.receipt.feedback}
-                />
-                <p>{copy.form.refNote}</p>
-              </>
             ) : null}
           </div>
         )}

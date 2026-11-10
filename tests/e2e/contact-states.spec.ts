@@ -360,7 +360,9 @@ test.describe('contact state boards', () => {
         await shot(`E5-${tag}`, form);
       });
 
-      test(`${tag}: E6 queued is a status with the ref and no success copy`, async ({ page }) => {
+      test(`${tag}: E6 queued is a status with no request id and no success copy`, async ({
+        page,
+      }) => {
         await installMockBackend(page, { contact: 'queued', log: 'accept' });
         await page.setViewportSize(viewport.size);
         const form = await openForm(page, locale);
@@ -371,27 +373,23 @@ test.describe('contact state boards', () => {
 
         const queued = page.getByTestId('contact-queued');
         await expect(queued).toContainText(contactCopy[locale].queued.title);
-        await expect(queued.getByTestId('contact-queued-ref')).toHaveText(
-          'ref contact-test-request-id',
-        );
+        await expect(queued).not.toContainText('contact-test-request-id');
         await expect(page.getByTestId('contact-success')).toHaveCount(0);
+        const type = await queued.evaluate((node) => {
+          const title = node.querySelector('.contact-state-title');
+          const body = node.querySelectorAll(':scope > p');
+          return {
+            title: title ? getComputedStyle(title).fontSize : '',
+            body: body[1] ? getComputedStyle(body[1]).fontSize : '',
+          };
+        });
+        expect(type.title, 'the title states its own size').toBe('16px');
+        expect(type.body, 'the body sits one canonical step below the title').toBe('14px');
         await shot(`E6-${tag}`, queued);
       });
 
-      test(`${tag}: R7 the receipt forgets the message and reports a failure`, async ({ page }) => {
-        const { forget } = contactCopy[locale].success.receipt;
-        await installMockBackend(page, { contact: 'happy', log: 'accept' });
-        let calls = 0;
-        await page.route('**/api/log/forget', async (route) => {
-          calls += 1;
-          await route.fulfill({
-            status: calls === 1 ? 503 : 200,
-            contentType: 'application/json',
-            body: JSON.stringify(
-              calls === 1 ? { ok: false, error: { code: 'storage_unavailable' } } : { ok: true },
-            ),
-          });
-        });
+      test(`${tag}: E7 the queued notice opens the way back to a new message`, async ({ page }) => {
+        await installMockBackend(page, { contact: 'queued', log: 'accept' });
         await page.setViewportSize(viewport.size);
         const form = await openForm(page, locale);
         await fillValid(page);
@@ -399,17 +397,36 @@ test.describe('contact state boards', () => {
           .getByRole('button', { name: contactCopy[locale].form.submit, exact: true })
           .click();
 
-        const receipt = page.getByTestId('contact-receipt');
-        await expect(receipt).toBeVisible();
-        await shot(`R7-${tag}`, page.getByTestId('contact-success'));
-        await receipt.getByRole('button', { name: forget.label }).click();
-        const status = page.getByTestId('contact-forget-status');
-        await expect(status).toContainText(forget.failed);
-        await shot(`R7-failed-${tag}`, page.getByTestId('contact-success'));
-        await receipt.getByRole('button', { name: forget.label }).click();
-        await expect(status).toHaveText(forget.done);
-        await expect(receipt.getByRole('button', { name: forget.label })).toHaveCount(0);
-        await shot(`R7-done-${tag}`, page.getByTestId('contact-success'));
+        const queued = page.getByTestId('contact-queued');
+        await expect(queued).toBeVisible();
+        const dismiss = queued.getByRole('button', { name: contactCopy[locale].dismiss.aria });
+        await expect(dismiss).toBeVisible();
+        await expect(dismiss).toHaveText(contactCopy[locale].dismiss.label);
+
+        const row =
+          (await page.locator('.contact-action-row').boundingBox()) ??
+          ({ x: 0, y: 0, width: 0, height: 0 } as const);
+        const button =
+          (await dismiss.boundingBox()) ?? ({ x: 0, y: 0, width: 0, height: 0 } as const);
+        expect(row.width).toBeGreaterThan(0);
+        expect(button.width).toBeGreaterThan(0);
+        expect(
+          Math.abs(row.x + row.width - (button.x + button.width)),
+          'the dismiss button sits at the far right of the row',
+        ).toBeLessThan(SUBPIXEL_PX);
+        const paint = await dismiss.evaluate((node) => {
+          const style = getComputedStyle(node);
+          return { color: style.color, border: style.borderTopColor };
+        });
+        expect(paint.color, 'the dismiss button wears the theme green').toBe('rgb(0, 255, 65)');
+        expect(paint.border, 'the dismiss button wears the theme green').toBe('rgb(0, 255, 65)');
+
+        await dismiss.click();
+        await expect(page.getByTestId('contact-form')).toBeVisible();
+        await expect(page.locator(FIELD_SELECTORS.message)).toBeFocused();
+        await expect(page.locator(FIELD_SELECTORS.name)).toHaveValue('Ada Lovelace');
+        await expect(page.locator(FIELD_SELECTORS.message)).toHaveValue('');
+        await shot(`E7-${tag}`, page.getByTestId('contact-form'));
       });
     }
   }

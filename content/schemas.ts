@@ -788,7 +788,6 @@ export const FooterContentSchema = z
     }),
     receipt: z.object({
       label: z.string().min(1),
-      feedback: z.record(z.enum(['idle', 'success', 'failure', 'unavailable']), CopyFeedbackSchema),
     }),
     copyright: z.string().min(1),
   })

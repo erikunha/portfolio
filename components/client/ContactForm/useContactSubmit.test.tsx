@@ -139,14 +139,13 @@ describe('useContactSubmit', () => {
   describe('202 queued', () => {
     const queued = { ok: false, requestId: REF, error: { code: 'queued', message: 'queued' } };
 
-    it('moves to the queued state with its ref and clears the draft', async () => {
+    it('moves to the queued state and clears the draft', async () => {
       reply(queued, { status: 202 });
       messageStore.seed('draft text');
       const hook = mount();
       await send(hook);
 
       expect(hook.result.current.status).toBe(CONTACT_STATUS.QUEUED);
-      expect(hook.result.current.queuedRef).toBe(REF);
       expect(hook.result.current.receipt).toBeNull();
       expect(hook.result.current.errorMsg).toBe('');
       expect(messageStore.getSnapshot()).toBe('');
@@ -159,6 +158,26 @@ describe('useContactSubmit', () => {
       await send(hook);
       expect(hook.result.current.status).toBe(CONTACT_STATUS.ERROR);
       expect(hook.result.current.errorMsg).toBe(copy.errors.requestFailed);
+    });
+  });
+
+  describe('dismiss', () => {
+    it('returns to idle so the visitor can write another message', async () => {
+      reply(
+        { ok: false, requestId: REF, error: { code: 'queued', message: 'queued' } },
+        { status: 202 },
+      );
+      const hook = mount();
+      await send(hook);
+      expect(hook.result.current.status).toBe(CONTACT_STATUS.QUEUED);
+
+      act(() => hook.result.current.dismiss());
+
+      expect(hook.result.current.status).toBe(CONTACT_STATUS.IDLE);
+      expect(hook.result.current.busy).toBe(false);
+      expect(hook.result.current.errorMsg).toBe('');
+      expect(hook.result.current.errorRef).toBe('');
+      expect(hook.result.current.receipt).toBeNull();
     });
   });
 
