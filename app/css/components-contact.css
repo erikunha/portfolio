@@ -10,6 +10,7 @@
     gap: var(--spacing-2);
     min-width: 0;
     overflow-wrap: anywhere;
+    font-size: var(--text-sm);
   }
 
   .contact-success p {
@@ -24,6 +25,7 @@
 
   .contact-state-title {
     color: var(--color-primary-500);
+    font-size: var(--text-base);
     font-weight: bold;
   }
 
