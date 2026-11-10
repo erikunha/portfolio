@@ -1,0 +1,12 @@
+last="$(git reflog -1 --format=%gs 2>/dev/null)"
+branch=""
+case "$last" in
+  "merge "*) branch="${last#merge }"; branch="${branch%%:*}" ;;
+  "checkout: moving from "*" to "*) branch="${last#checkout: moving from }"; branch="${branch%% to *}" ;;
+esac
+
+[ -n "$branch" ] || exit 0
+[ "$branch" != "main" ] || exit 0
+[ "$branch" != "$(git rev-parse --abbrev-ref HEAD)" ] || exit 0
+
+git branch -d "$branch" >/dev/null 2>&1 || exit 0
