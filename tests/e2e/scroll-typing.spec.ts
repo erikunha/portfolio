@@ -74,7 +74,7 @@ test.describe('scroll typing', () => {
     expect(endClip).toMatch(/inset\(0(px|%) 0(px|%) 0(px|%) 0(px|%)\)/);
   });
 
-  test('the caret parks at the end of the typed header', async ({ page }) => {
+  test('the caret clears the typed header once the typing ends', async ({ page }) => {
     await page.goto('/');
     await page.waitForSelector('[data-testid="hero-name"]', { state: 'attached' });
 
@@ -86,18 +86,23 @@ test.describe('scroll typing', () => {
     await header.evaluate((el) => el.scrollIntoView({ block: 'center', behavior: 'instant' }));
     await header.evaluate(() => new Promise(requestAnimationFrame));
 
-    const { delta, left } = await header.evaluate((el) => {
+    const { delta, left, opacity } = await header.evaluate((el) => {
       const host = el.closest('.module-scroll-type');
       if (!host) throw new Error('missing .module-scroll-type host');
       const caret = getComputedStyle(host, '::after');
       const offsetX = new DOMMatrixReadOnly(caret.transform).m41;
       const hostRect = host.getBoundingClientRect();
       const caretLeft = hostRect.left + offsetX + hostRect.width;
-      return { delta: Math.abs(caretLeft - el.getBoundingClientRect().right), left: caret.left };
+      return {
+        delta: Math.abs(caretLeft - el.getBoundingClientRect().right),
+        left: caret.left,
+        opacity: caret.opacity,
+      };
     });
 
     expect(left).toBe('0px');
     expect(delta).toBeLessThan(1);
+    expect(Number(opacity), 'the caret is gone once the header is fully typed').toBe(0);
   });
 
   test('the MOTION toggle disables the typing animation', async ({ page }) => {
