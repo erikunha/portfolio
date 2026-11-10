@@ -27,6 +27,7 @@ import { CONTACT_FIELDS, CONTACT_STATUS, useContactSubmit } from './useContactSu
 
 const MESSAGE_ROWS = 5;
 const INITIAL_FAILURE_COUNT = 0;
+const INITIAL_DISMISS_COUNT = 0;
 type TypedField = Exclude<ContactField, typeof CONTACT_FIELD.MESSAGE>;
 const INITIAL_TYPED: Record<TypedField, string> = { name: '', email: '' };
 
@@ -39,8 +40,19 @@ export function ContactForm({ copy, chrome }: { copy: ContactContent; chrome: Te
   );
   const values: Record<ContactField, string> = { ...typed, message };
   const [honeypot, setHoneypot] = useState('');
-  const { status, busy, errors, errorMsg, errorRef, receipt, failureCount, noteEdit, submit } =
-    useContactSubmit({ copy, values, honeypot });
+  const [dismissCount, setDismissCount] = useState(INITIAL_DISMISS_COUNT);
+  const {
+    status,
+    busy,
+    errors,
+    errorMsg,
+    errorRef,
+    receipt,
+    failureCount,
+    noteEdit,
+    submit,
+    dismiss,
+  } = useContactSubmit({ copy, values, honeypot });
   const formRef = useRef<HTMLFormElement>(null);
   const summaryRef = useRef<HTMLDivElement>(null);
   const formId = useId();
@@ -75,6 +87,16 @@ export function ContactForm({ copy, chrome }: { copy: ContactContent; chrome: Te
     if (failureCount > INITIAL_FAILURE_COUNT) summaryRef.current?.focus();
   }, [failureCount]);
 
+  useEffect(() => {
+    if (dismissCount === INITIAL_DISMISS_COUNT) return;
+    document.getElementById(messageFieldId)?.focus();
+  }, [dismissCount, messageFieldId]);
+
+  function dismissResult() {
+    dismiss();
+    setDismissCount((count) => count + 1);
+  }
+
   function change(field: ContactField, value: string) {
     if (field === CONTACT_FIELD.MESSAGE) messageStore.set(value);
     else setTyped((current) => ({ ...current, [field]: value }));
@@ -84,7 +106,7 @@ export function ContactForm({ copy, chrome }: { copy: ContactContent; chrome: Te
   if (status === CONTACT_STATUS.SUCCESS || status === CONTACT_STATUS.QUEUED) {
     return (
       <ContactShell chrome={chrome}>
-        <ContactResult copy={copy} status={status} receipt={receipt} />
+        <ContactResult copy={copy} status={status} receipt={receipt} onDismiss={dismissResult} />
       </ContactShell>
     );
   }

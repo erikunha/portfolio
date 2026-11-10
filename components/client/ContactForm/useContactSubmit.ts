@@ -136,6 +136,14 @@ export function useContactSubmit({
     }
   }
 
+  function dismiss() {
+    setStatus(CONTACT_STATUS.IDLE);
+    setErrors({});
+    setErrorMsg('');
+    setErrorRef('');
+    setReceipt(null);
+  }
+
   return {
     status,
     busy: status === CONTACT_STATUS.SUBMITTING,
@@ -146,5 +154,6 @@ export function useContactSubmit({
     failureCount,
     noteEdit,
     submit,
+    dismiss,
   };
 }

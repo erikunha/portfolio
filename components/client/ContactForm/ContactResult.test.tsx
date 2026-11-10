@@ -1,5 +1,6 @@
+import { fireEvent, within } from '@testing-library/react';
 import { createElement } from 'react';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { type MountedClient, mountClient } from '@/__tests__/helpers/render';
 import { contactCopy } from '@/content/contact-copy';
 import { SITE_LOCALE } from '@/content/site-locale';
@@ -19,12 +20,14 @@ describe('ContactResult', () => {
   async function show(props: {
     status: typeof CONTACT_STATUS.SUCCESS | typeof CONTACT_STATUS.QUEUED;
     receipt?: { at: Date } | null;
+    onDismiss?: () => void;
   }) {
     mounted = await mountClient(
       createElement(ContactResult, {
         copy,
         status: props.status,
         receipt: props.receipt ?? null,
+        onDismiss: props.onDismiss ?? (() => undefined),
       }),
     );
     return mounted.container;
@@ -66,5 +69,30 @@ describe('ContactResult', () => {
     const container = await show({ status: CONTACT_STATUS.QUEUED });
     expect(container.querySelector('[data-testid="contact-queued-ref"]')).toBeNull();
     expect(container.querySelector('code')).toBeNull();
+  });
+
+  it.each([CONTACT_STATUS.SUCCESS, CONTACT_STATUS.QUEUED])(
+    'puts the dismiss button at the far right of the action row (%s)',
+    async (status) => {
+      const onDismiss = vi.fn();
+      const container = await show({ status, onDismiss });
+      const row = container.querySelector('.contact-action-row') as HTMLElement;
+      const button = within(row).getByRole('button', { name: copy.dismiss.aria });
+
+      expect(button.textContent).toBe(copy.dismiss.label);
+      expect(row.lastElementChild).toBe(button);
+      expect(row.firstElementChild?.textContent?.trim()).not.toBe('');
+
+      await fireEvent.click(button);
+      expect(onDismiss).toHaveBeenCalledOnce();
+    },
+  );
+
+  it('keeps the faster contact link on the left of the queued action row', async () => {
+    const container = await show({ status: CONTACT_STATUS.QUEUED });
+    const row = container.querySelector('.contact-action-row') as HTMLElement;
+
+    expect(row.firstElementChild?.textContent).toContain(copy.queued.fasterLabel);
+    expect(row.querySelector('a')?.getAttribute('href')).toBe(copy.queued.linkHref);
   });
 });

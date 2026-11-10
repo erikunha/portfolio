@@ -32,6 +32,12 @@ const contactCopyFor = (locale: SiteLocale): ContactContent => {
       linkGlyph: '↗',
       linkHref: LINKEDIN_URL,
     },
+    dismiss: {
+      label: '[ ok ]',
+      aria: pt
+        ? 'Dispensar o aviso e escrever outra mensagem'
+        : 'Dismiss this notice and write another message',
+    },
     section: {
       command: 'SUDO CONTACT --INIT',
       mobileCommand: 'SUDO CONTACT',

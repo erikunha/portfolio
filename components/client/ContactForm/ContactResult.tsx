@@ -9,11 +9,19 @@ export function ContactResult({
   copy,
   status,
   receipt,
+  onDismiss,
 }: {
   copy: ContactContent;
   status: typeof CONTACT_STATUS.SUCCESS | typeof CONTACT_STATUS.QUEUED;
   receipt: { at: Date } | null;
+  onDismiss: () => void;
 }) {
+  const dismissButton = (
+    <button type="button" className="copy-btn" aria-label={copy.dismiss.aria} onClick={onDismiss}>
+      {copy.dismiss.label}
+    </button>
+  );
+
   if (status === CONTACT_STATUS.SUCCESS) {
     return (
       <div
@@ -24,7 +32,10 @@ export function ContactResult({
         ref={focusResult}
       >
         <p className="contact-state-title">{copy.success.title}</p>
-        <p>{copy.success.message}</p>
+        <div className="contact-action-row">
+          <p>{copy.success.message}</p>
+          {dismissButton}
+        </div>
         {receipt ? <ContactReceipt copy={copy} receipt={receipt} /> : null}
       </div>
     );
@@ -39,12 +50,15 @@ export function ContactResult({
     >
       <p className="contact-state-title">{copy.queued.title}</p>
       <p>{copy.queued.message}</p>
-      <p>
-        {copy.queued.fasterLabel}{' '}
-        <ExternalLink href={copy.queued.linkHref}>
-          {copy.queued.linkLabel} {copy.queued.linkGlyph}
-        </ExternalLink>
-      </p>
+      <div className="contact-action-row">
+        <p>
+          {copy.queued.fasterLabel}{' '}
+          <ExternalLink href={copy.queued.linkHref}>
+            {copy.queued.linkLabel} {copy.queued.linkGlyph}
+          </ExternalLink>
+        </p>
+        {dismissButton}
+      </div>
     </div>
   );
 }

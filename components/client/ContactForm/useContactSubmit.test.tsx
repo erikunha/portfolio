@@ -161,6 +161,26 @@ describe('useContactSubmit', () => {
     });
   });
 
+  describe('dismiss', () => {
+    it('returns to idle so the visitor can write another message', async () => {
+      reply(
+        { ok: false, requestId: REF, error: { code: 'queued', message: 'queued' } },
+        { status: 202 },
+      );
+      const hook = mount();
+      await send(hook);
+      expect(hook.result.current.status).toBe(CONTACT_STATUS.QUEUED);
+
+      act(() => hook.result.current.dismiss());
+
+      expect(hook.result.current.status).toBe(CONTACT_STATUS.IDLE);
+      expect(hook.result.current.busy).toBe(false);
+      expect(hook.result.current.errorMsg).toBe('');
+      expect(hook.result.current.errorRef).toBe('');
+      expect(hook.result.current.receipt).toBeNull();
+    });
+  });
+
   describe('ok:false mapping', () => {
     it.each([
       [CONTACT_ERROR_CODE.RATE_LIMITED, 429, copy.errors.rateLimited],

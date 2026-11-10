@@ -262,7 +262,7 @@ describe('contact form delivery states', () => {
       'contact-queued',
     ],
   ])(
-    'replaces the form with a focused result so it cannot be sent again (%#)',
+    'replaces the form with a focused result while the notice is up (%#)',
     async (body, status, testId) => {
       const container = await submitResponse(body, status);
       const result = container.querySelector(`[data-testid="${testId}"]`);
@@ -271,6 +271,38 @@ describe('contact form delivery states', () => {
       expect(container.querySelector('form')).toBeNull();
       expect(container.querySelector('button[type="submit"]')).toBeNull();
       expect(fetch).toHaveBeenCalledOnce();
+    },
+  );
+
+  it.each([
+    [{ ok: true, requestId: 'request-id' }, 200, 'contact-success'],
+    [
+      { ok: false, requestId: 'request-id', error: { code: 'queued', message: 'Saved for retry' } },
+      202,
+      'contact-queued',
+    ],
+  ])(
+    'brings the form back, focused on the message, when the notice is dismissed (%#)',
+    async (body, status, testId) => {
+      const container = await submitResponse(body, status);
+      const notice = container.querySelector(`[data-testid="${testId}"]`) as HTMLElement;
+      const dismiss = within(notice).getByRole('button', {
+        name: contactCopy[SITE_LOCALE.en].dismiss.aria,
+      });
+
+      await act(async () => {
+        fireEvent.click(dismiss);
+      });
+      await flushMicrotasks();
+
+      expect(container.querySelector(`[data-testid="${testId}"]`)).toBeNull();
+      const form = container.querySelector('form');
+      expect(form).not.toBeNull();
+      const message = container.querySelector('textarea');
+      expect(message).not.toBeNull();
+      expect(document.activeElement).toBe(message);
+      expect((container.querySelector('input[name="name"]') as HTMLInputElement).value).toBe('Ada');
+      expect((message as HTMLTextAreaElement).value).toBe('');
     },
   );
 

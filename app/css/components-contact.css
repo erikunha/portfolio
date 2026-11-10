@@ -29,6 +29,23 @@
     font-weight: bold;
   }
 
+  .contact-action-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--spacing-2) var(--spacing-3);
+  }
+
+  .contact-action-row > p {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  .contact-action-row > button {
+    flex: 0 0 auto;
+    margin-left: auto;
+  }
+
   .contact-layout {
     display: grid;
     gap: var(--phi-space-3);

@@ -81,6 +81,10 @@ export const ContactContentSchema = z.object({
     linkGlyph: z.string().min(1),
     linkHref: z.url(),
   }),
+  dismiss: z.object({
+    label: z.string().min(1),
+    aria: z.string().min(1),
+  }),
   section: z.object({
     command: z.string().min(1),
     mobileCommand: z.string().min(1),

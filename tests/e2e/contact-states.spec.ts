@@ -375,7 +375,52 @@ test.describe('contact state boards', () => {
         await expect(queued).toContainText(contactCopy[locale].queued.title);
         await expect(queued).not.toContainText('contact-test-request-id');
         await expect(page.getByTestId('contact-success')).toHaveCount(0);
+        const type = await queued.evaluate((node) => {
+          const title = node.querySelector('.contact-state-title');
+          const body = node.querySelectorAll(':scope > p');
+          return {
+            title: title ? getComputedStyle(title).fontSize : '',
+            body: body[1] ? getComputedStyle(body[1]).fontSize : '',
+          };
+        });
+        expect(type.title, 'the title states its own size').toBe('16px');
+        expect(type.body, 'the body sits one canonical step below the title').toBe('14px');
         await shot(`E6-${tag}`, queued);
+      });
+
+      test(`${tag}: E7 the queued notice opens the way back to a new message`, async ({ page }) => {
+        await installMockBackend(page, { contact: 'queued', log: 'accept' });
+        await page.setViewportSize(viewport.size);
+        const form = await openForm(page, locale);
+        await fillValid(page);
+        await form
+          .getByRole('button', { name: contactCopy[locale].form.submit, exact: true })
+          .click();
+
+        const queued = page.getByTestId('contact-queued');
+        await expect(queued).toBeVisible();
+        const dismiss = queued.getByRole('button', { name: contactCopy[locale].dismiss.aria });
+        await expect(dismiss).toBeVisible();
+        await expect(dismiss).toHaveText(contactCopy[locale].dismiss.label);
+
+        const row =
+          (await page.locator('.contact-action-row').boundingBox()) ??
+          ({ x: 0, y: 0, width: 0, height: 0 } as const);
+        const button =
+          (await dismiss.boundingBox()) ?? ({ x: 0, y: 0, width: 0, height: 0 } as const);
+        expect(row.width).toBeGreaterThan(0);
+        expect(button.width).toBeGreaterThan(0);
+        expect(
+          Math.abs(row.x + row.width - (button.x + button.width)),
+          'the dismiss button sits at the far right of the row',
+        ).toBeLessThan(SUBPIXEL_PX);
+
+        await dismiss.click();
+        await expect(page.getByTestId('contact-form')).toBeVisible();
+        await expect(page.locator(FIELD_SELECTORS.message)).toBeFocused();
+        await expect(page.locator(FIELD_SELECTORS.name)).toHaveValue('Ada Lovelace');
+        await expect(page.locator(FIELD_SELECTORS.message)).toHaveValue('');
+        await shot(`E7-${tag}`, page.getByTestId('contact-form'));
       });
     }
   }
