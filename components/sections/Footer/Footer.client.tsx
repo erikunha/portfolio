@@ -8,7 +8,6 @@ import { SHELL_COMMAND_EVENT } from '@/lib/events';
 import { useLastRef } from '@/lib/request-refs.client';
 import { NO_SECTION_ID, observeSections } from '@/lib/section-spy';
 import { MS_PER_SECOND, pad2, SECONDS_PER_HOUR, SECONDS_PER_MINUTE } from '@/lib/time';
-import { RefCopyButton } from '../../client/RefChip/RefChip.client';
 
 const EMPTY_SECTION_IDS: string[] = [];
 const PERCENT = 100;
@@ -212,10 +211,7 @@ export function SessionReceipt({ copy }: { copy: FooterContent['receipt'] }) {
   if (ref === null) return null;
   return (
     <p className="footer-receipt" data-testid="footer-receipt">
-      <span className="footer-receipt-id">
-        {copy.label} <code>{ref}</code>
-      </span>
-      <RefCopyButton value={ref} feedback={copy.feedback} />
+      <span className="footer-receipt-id">{copy.label}</span>
     </p>
   );
 }

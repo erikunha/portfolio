@@ -17,26 +17,13 @@ const contactCopyFor = (locale: SiteLocale): ContactContent => {
   return {
     success: {
       title: pt ? '✓ mensagem entregue' : '✓ message delivered',
-      message: pt
-        ? `Resposta ${REPLY_WINDOW[locale]}. Guarde este recibo se quiser que sua mensagem seja excluída depois.`
-        : `Reply ${REPLY_WINDOW[locale]}. Keep this receipt if you want your message deleted later.`,
+      message: pt ? `Resposta ${REPLY_WINDOW[locale]}.` : `Reply ${REPLY_WINDOW[locale]}.`,
       receipt: {
         refLabel: 'ref',
         atLabel: pt ? 'em' : 'at',
         dateLocale: pt ? 'pt-BR' : 'en-CA',
         copy: pt ? '[COPIAR REF]' : '[COPY REF]',
         copied: pt ? '[REF COPIADA]' : '[REF COPIED]',
-        forget: {
-          label: pt ? '[EXCLUIR MENSAGEM]' : '[FORGET MESSAGE]',
-          pending: pt ? '[EXCLUINDO...]' : '[DELETING...]',
-          done: pt
-            ? 'Pronto, nenhum registro desta mensagem é mantido.'
-            : 'Done, no record of this message is kept.',
-          failed: pt
-            ? 'Não foi possível excluir agora. Tente de novo, ou envie email para'
-            : 'Could not delete right now. Try again, or email',
-        },
-        forgetSubject: pt ? 'Excluir minha mensagem, ref' : 'Delete my message, ref',
         feedback: copyFeedback[locale],
       },
     },

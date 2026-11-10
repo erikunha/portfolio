@@ -125,11 +125,14 @@ describe('contact request refs', () => {
   });
 
   describe('R6 and R7 delivered and queued', () => {
-    it('records the ref of a delivered message and shows it in a chip on the receipt', async () => {
+    it('records the ref of a delivered message and keeps it out of the receipt', async () => {
       const container = await submit(async () => Response.json({ ok: true, requestId: REF }));
       expect(listRefs()).toEqual([REF]);
       const receipt = container.querySelector('[data-testid="contact-receipt"]') as HTMLElement;
-      expect(receipt.querySelector('.ref-chip code')?.textContent).toBe(REF);
+      expect(receipt.textContent).not.toContain(REF);
+      expect(receipt.querySelector('.ref-chip')).toBeNull();
+      expect(within(receipt).queryAllByRole('button')).toHaveLength(0);
+      expect(receipt.querySelector('a[href^="mailto:"]')).toBeNull();
     });
 
     it('records the ref of a queued message', async () => {
@@ -140,23 +143,6 @@ describe('contact request refs', () => {
         ),
       );
       expect(listRefs()).toEqual([REF]);
-    });
-
-    it('drops the ref from the session list once the receipt forget succeeds', async () => {
-      const container = await submit(async () => Response.json({ ok: true, requestId: REF }));
-      vi.stubGlobal(
-        'fetch',
-        vi.fn(async () => Response.json({ ok: true })),
-      );
-      const receipt = container.querySelector('[data-testid="contact-receipt"]') as HTMLElement;
-      await act(async () => {
-        within(receipt).getByRole('button', { name: '[FORGET MESSAGE]' }).click();
-      });
-      await flushMicrotasks();
-      expect(listRefs()).toEqual([]);
-      expect(container.querySelector('[data-testid="contact-forget-status"]')?.textContent).toBe(
-        contactCopy.en.success.receipt.forget.done,
-      );
     });
   });
 });

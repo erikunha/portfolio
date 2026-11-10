@@ -377,40 +377,6 @@ test.describe('contact state boards', () => {
         await expect(page.getByTestId('contact-success')).toHaveCount(0);
         await shot(`E6-${tag}`, queued);
       });
-
-      test(`${tag}: R7 the receipt forgets the message and reports a failure`, async ({ page }) => {
-        const { forget } = contactCopy[locale].success.receipt;
-        await installMockBackend(page, { contact: 'happy', log: 'accept' });
-        let calls = 0;
-        await page.route('**/api/log/forget', async (route) => {
-          calls += 1;
-          await route.fulfill({
-            status: calls === 1 ? 503 : 200,
-            contentType: 'application/json',
-            body: JSON.stringify(
-              calls === 1 ? { ok: false, error: { code: 'storage_unavailable' } } : { ok: true },
-            ),
-          });
-        });
-        await page.setViewportSize(viewport.size);
-        const form = await openForm(page, locale);
-        await fillValid(page);
-        await form
-          .getByRole('button', { name: contactCopy[locale].form.submit, exact: true })
-          .click();
-
-        const receipt = page.getByTestId('contact-receipt');
-        await expect(receipt).toBeVisible();
-        await shot(`R7-${tag}`, page.getByTestId('contact-success'));
-        await receipt.getByRole('button', { name: forget.label }).click();
-        const status = page.getByTestId('contact-forget-status');
-        await expect(status).toContainText(forget.failed);
-        await shot(`R7-failed-${tag}`, page.getByTestId('contact-success'));
-        await receipt.getByRole('button', { name: forget.label }).click();
-        await expect(status).toHaveText(forget.done);
-        await expect(receipt.getByRole('button', { name: forget.label })).toHaveCount(0);
-        await shot(`R7-done-${tag}`, page.getByTestId('contact-success'));
-      });
     }
   }
 });

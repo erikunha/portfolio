@@ -118,7 +118,7 @@ const footerContentFor = (locale: SiteLocale) => {
         : 'Session rebooted. Back at the top; your session is preserved.',
     },
     receipt: {
-      label: pt ? 'última requisição' : 'last request',
+      label: pt ? 'última requisição registrada' : 'last request recorded',
       feedback: copyFeedback[locale],
     },
     copyright: pt

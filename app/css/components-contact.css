@@ -32,11 +32,6 @@
     font-size: var(--text-xs);
   }
 
-  .contact-forget-status {
-    min-height: 1lh;
-    color: var(--color-text-secondary);
-  }
-
   .contact-layout {
     display: grid;
     gap: var(--phi-space-3);
@@ -219,13 +214,6 @@
   .contact-receipt dd:has(> time) {
     overflow: visible;
     white-space: normal;
-  }
-
-  .contact-receipt-actions {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: var(--spacing-2);
   }
 
   .contact-success:focus-visible {

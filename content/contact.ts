@@ -75,13 +75,6 @@ export const ContactContentSchema = z.object({
       dateLocale: z.string().min(1),
       copy: z.string().min(1),
       copied: z.string().min(1),
-      forget: z.object({
-        label: z.string().min(1),
-        pending: z.string().min(1),
-        done: z.string().min(1),
-        failed: z.string().min(1),
-      }),
-      forgetSubject: z.string().min(1),
       feedback: z.record(z.enum(['idle', 'success', 'failure', 'unavailable']), CopyFeedbackSchema),
     }),
   }),
