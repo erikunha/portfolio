@@ -24,13 +24,13 @@ describe('Projects', () => {
     expect(getIsMobile).not.toHaveBeenCalled();
   });
 
-  it('renders nine cards with a company and the three accessible OSS links', async () => {
+  it('renders every card with a company and the accessible OSS links', async () => {
     const doc = new DOMParser().parseFromString(
       renderToStaticMarkup(await ProjectsContent({ locale: SITE_LOCALE.en })),
       'text/html',
     );
     const cards = Array.from(doc.querySelectorAll('.project-card'));
-    expect(cards).toHaveLength(10);
+    expect(cards).toHaveLength(projects[SITE_LOCALE.en].length);
     for (const card of cards) {
       const coNode = card.querySelector('.project-co')?.cloneNode(true) as HTMLElement;
       for (const hidden of coNode.querySelectorAll('.sr-only')) hidden.remove();
@@ -48,6 +48,7 @@ describe('Projects', () => {
       'https://github.com/erikunha/portfolio',
       'https://github.com/erikunha/LAIbemage',
       'https://github.com/erikunha/ledgerlens',
+      'https://github.com/erikunha/vault-of-loci',
     ]);
     for (const link of links) {
       expect(link.getAttribute('target')).toBe('_blank');
@@ -124,6 +125,6 @@ describe('Projects', () => {
     expect(doc.querySelectorAll('#sec-projects .project-receipts li')).toHaveLength(6);
     expect(doc.querySelector('#sec-perf-receipts')).not.toBeNull();
     expect(doc.querySelectorAll('section')).toHaveLength(1);
-    expect(doc.querySelectorAll('.project-card')).toHaveLength(10);
+    expect(doc.querySelectorAll('.project-card')).toHaveLength(projects[SITE_LOCALE.en].length);
   });
 });

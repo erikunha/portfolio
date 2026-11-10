@@ -24,7 +24,7 @@ describe('Hero identity and static actions', () => {
       expect(name?.getAttribute('role') ?? 'heading').toBe('heading');
       const title = hero.querySelector('.hero-stack');
       expect(title?.textContent).toBe(
-        'Senior Software Engineer, Applied AI · TypeScript, Python, React, Next.js, Angular, Node.js, AWS · LLM Systems, Evals, Agents, MCP, Guardrails',
+        'Senior AI Engineer · TypeScript, Python, React, Next.js, Angular, Node.js, AWS · LLM Systems, Evals, Agents, MCP, Guardrails',
       );
       expect(title?.closest('[aria-hidden="true"], [aria-live], [role="status"]')).toBeNull();
       expect(hero.textContent).toContain(

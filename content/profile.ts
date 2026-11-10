@@ -33,7 +33,7 @@ export const RAYLU_BUILT_CLAIM = `built, with one other engineer, ${RAYLU_FRONTE
 const profileFields = ProfileSchema.parse({
   fullName: 'Erik Henrique Alves Cunha',
   displayName: 'Erik Cunha',
-  title: 'Senior Software Engineer, Applied AI',
+  title: 'Senior AI Engineer',
   stackLine: 'TypeScript, Python, React, Next.js, Angular, Node.js, AWS',
   aiLine: 'LLM Systems, Evals, Agents, MCP, Guardrails',
   country: 'Brazil',
@@ -114,7 +114,7 @@ export type ProfilePresentation = {
 
 const presentation = (locale: SiteLocale): ProfilePresentation => {
   const pt = locale === SITE_LOCALE.pt;
-  const title = pt ? 'Engenheiro de Software Sênior, IA Aplicada' : profile.title;
+  const title = pt ? 'Engenheiro de IA Sênior' : profile.title;
   const country = pt ? 'Brasil' : profile.country;
   const availability = pt ? 'disponível agora' : profile.availability;
   const employerContextFacts = pt

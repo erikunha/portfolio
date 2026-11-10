@@ -97,7 +97,7 @@ describe('derived strings render exactly what they rendered before', () => {
 
   it('keeps the Person JSON-LD description, experience, email and phone', () => {
     expect(personSchema.description).toBe(
-      'Senior Software Engineer, Applied AI. Brazil · UTC-3 · available now. Raylu: AI deal origination · private markets. 8+ years across regulated industries. Track record: -97.5% API latency, -98% CSS bundle, -52% TTI.',
+      'Senior AI Engineer. Brazil · UTC-3 · available now. Raylu: AI deal origination · private markets. 8+ years across regulated industries. Track record: -97.5% API latency, -98% CSS bundle, -52% TTI.',
     );
     expect(personSchema.hasOccupation.experienceRequirements).toBe('8+ years');
     expect(personSchema.email).toBe('erikhenriquealvescunha@gmail.com');
@@ -107,12 +107,12 @@ describe('derived strings render exactly what they rendered before', () => {
 
   it('keeps the English profile exports', () => {
     expect(profileSummary).toBe(
-      'Senior Software Engineer, Applied AI. Brazil · UTC-3 · available now. Raylu: AI deal origination · private markets.',
+      'Senior AI Engineer. Brazil · UTC-3 · available now. Raylu: AI deal origination · private markets.',
     );
     expect(profileLocation).toBe('Brazil · UTC-3 · available now');
-    expect(profilePageTitle).toBe('Erik Cunha · Senior Software Engineer, Applied AI');
+    expect(profilePageTitle).toBe('Erik Cunha · Senior AI Engineer');
     expect(profileMetaDescription).toBe(
-      'Senior Software Engineer, Applied AI. Brazil · UTC-3 · available now. TypeScript, Python, React, Next.js, Angular, Node.js, AWS.',
+      'Senior AI Engineer. Brazil · UTC-3 · available now. TypeScript, Python, React, Next.js, Angular, Node.js, AWS.',
     );
     expect(profileLanguageLine).toBe('PT-BR native · EN C1 · ES B1 · FR A2');
     expect(profileWorkingLanguageLine).toBe('PT-BR native · EN C1');

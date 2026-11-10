@@ -2,7 +2,7 @@
   "$comment": "Bespoke manifest. The shape of this file (schemaVersion, endpoints, profiles, mcp) is custom to erikunha.dev. There is no published .well-known/agent.json standard it conforms to, so `schemaVersion` is a self-versioning date, not a reference to an external schema. Same posture as the custom `@type: HiringProfile` contract in lib/hiring-profile.ts.",
   "schemaVersion": "2026-05-21",
   "name": "Erik Cunha · portfolio agent surface",
-  "description": "Machine-readable capability manifest for erikunha.dev, the portfolio of Erik Cunha, Senior Software Engineer, Applied AI. Brazil · UTC-3 · available now. Raylu: AI deal origination · private markets. Lists endpoints for the hiring profile and experience questions.",
+  "description": "Machine-readable capability manifest for erikunha.dev, the portfolio of Erik Cunha, Senior AI Engineer. Brazil · UTC-3 · available now. Raylu: AI deal origination · private markets. Lists endpoints for the hiring profile and experience questions.",
   "url": "https://www.erikunha.dev",
   "provider": {
     "name": "Erik Henrique Alves Cunha",
@@ -55,6 +55,18 @@
       "description": "Plain-text profile summary for LLM crawlers.",
       "url": "https://www.erikunha.dev/llms.txt",
       "contentType": "text/plain"
+    },
+    {
+      "name": "cv.pdf",
+      "description": "The resume as a PDF, four pages, English.",
+      "url": "https://www.erikunha.dev/erik-cunha-cv.pdf",
+      "contentType": "application/pdf"
+    },
+    {
+      "name": "cv-pt.pdf",
+      "description": "O currículo em PDF, quatro páginas, português.",
+      "url": "https://www.erikunha.dev/erik-cunha-cv-pt.pdf",
+      "contentType": "application/pdf"
     }
   ],
   "mcp": {
@@ -67,7 +79,7 @@
       "ask_erik"
     ]
   },
-  "title": "Senior Software Engineer, Applied AI",
+  "title": "Senior AI Engineer",
   "location": "Brazil",
   "timezone": "UTC-3",
   "availability": "available now"

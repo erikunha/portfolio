@@ -68,9 +68,9 @@ describe('IdentityCard', () => {
 
   it('puts the full first tagline in the server HTML, so typing is only an enhancement', () => {
     const html = renderToString(<IdentityCard locale={LINKS_LOCALE.en} />);
-    expect(html).toContain('Senior Software Engineer, Applied AI');
+    expect(html).toContain('Senior AI Engineer');
     const pt = renderToString(<IdentityCard locale={LINKS_LOCALE.pt} />);
-    expect(pt).toContain('Engenheiro de Software Sênior, IA Aplicada');
+    expect(pt).toContain('Engenheiro de IA Sênior');
   });
 
   it('shows the first tagline at once when the MOTION switch is off', () => {
@@ -79,7 +79,7 @@ describe('IdentityCard', () => {
     const { container } = render(<IdentityCard locale={LINKS_LOCALE.en} />);
     vi.advanceTimersByTime(5_000);
     const typed = container.querySelector('.tagline-live [aria-hidden="true"]:not(.boot-cursor)');
-    expect(typed?.textContent).toBe('Senior Software Engineer, Applied AI');
+    expect(typed?.textContent).toBe('Senior AI Engineer');
     vi.useRealTimers();
     localStorage.removeItem('erik.motion');
   });

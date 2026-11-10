@@ -1099,6 +1099,10 @@ export const ReadingViewsSchema = z.object({
     title: ReadingTextSchema,
     description: ReadingTextSchema,
     summaryLinkLabel: ReadingTextSchema,
+    pdf: z.object({
+      href: z.string().startsWith('/'),
+      label: ReadingTextSchema,
+    }),
     headings: z.object({
       summary: ReadingTextSchema,
       experience: ReadingTextSchema,

@@ -30,8 +30,8 @@ vi.mock('next/font/local', () => ({
   default: () => ({ variable: '--font-mock', className: 'mock' }),
 }));
 
-const CANONICAL_TITLE = 'Senior Software Engineer, Applied AI';
-const CANONICAL_TITLE_PT = 'Engenheiro de Software Sênior, IA Aplicada';
+const CANONICAL_TITLE = 'Senior AI Engineer';
+const CANONICAL_TITLE_PT = 'Engenheiro de IA Sênior';
 const RETIRED_TITLES = [
   'Senior Full-Stack Engineer',
   'Senior Software Engineer · Full Stack',
