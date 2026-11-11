@@ -84,7 +84,8 @@ test.describe('/summary layout', () => {
     const row = await top(page, '.reading-actions');
     const controls = page.locator('.reading-actions > *');
     const count = await controls.count();
-    expect(count).toBe(3);
+    // hire, the cv page, the cv download and print
+    expect(count).toBe(4);
     for (let index = 0; index < count; index += 1) {
       const box = await controls.nth(index).boundingBox();
       expect(box?.width).toBeCloseTo(row.width, 0);
