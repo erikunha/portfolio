@@ -144,8 +144,8 @@ export const linksContent: LinksContent = LinksContentSchema.parse({
       en: 'Erik Cunha · AI engineering and going global as a dev',
     },
     description: {
-      pt: 'Engenheiro de IA Sênior, no Brasil e remoto. Um vídeo novo toda semana no canal Erik na Gringa.',
-      en: 'Senior AI Engineer, Brazil-based and remote. A new video every week on the Erik na Gringa channel.',
+      pt: 'Engenheiro de Software Sênior, Engenheiro de IA, no Brasil e remoto. Um vídeo novo toda semana no canal Erik na Gringa.',
+      en: 'Senior Software Engineer, AI Engineer, Brazil-based and remote. A new video every week on the Erik na Gringa channel.',
     },
   },
 });
