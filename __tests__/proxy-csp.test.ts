@@ -32,7 +32,7 @@ describe('proxy CSP — nonce-less posture', () => {
     expect(csp).toContain("script-src 'self' 'unsafe-inline'");
     expect(csp).toContain("style-src 'self' 'unsafe-inline'");
     expect(csp).toContain("img-src 'self' data: blob:");
-    expect(csp).toContain("font-src 'self'");
+    expect(csp).toContain("font-src 'self' data:");
     expect(csp).toContain('connect-src');
     expect(csp).not.toContain('api.anthropic.com');
     expect(csp).toContain("frame-ancestors 'none'");
