@@ -281,7 +281,7 @@
     }
 
     .hero-actions {
-      margin-top: var(--spacing-2);
+      margin-top: var(--spacing-1);
     }
 
     .hero-actions > a:not(:first-child) {
