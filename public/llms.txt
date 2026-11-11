@@ -1,6 +1,6 @@
-# Erik Cunha · Senior Software Engineer, AI Engineer
+# Erik Cunha · Senior AI Engineer
 
-> Senior Software Engineer, AI Engineer. 8+ years of production software across AI-native SaaS,
+> Senior AI Engineer. 8+ years of production software across AI-native SaaS,
 > fintech, payments and e-commerce. Builds LLM systems and the evaluation that decides
 > whether they are safe to ship. Brazil · UTC-3 · available now. Currently at Raylu: AI deal
 > origination · private markets. TypeScript, Python, React, Next.js, Angular, Node.js, AWS · LLM Systems, Evals, Agents, MCP, Guardrails.
@@ -12,7 +12,7 @@
 - Location: Paulínia, Brazil (UTC-3)
 - Current role: working remotely for Raylu (New York, US)
 - Work scope: open to any arrangement: remote worldwide, hybrid or on-site
-- Target role: Senior Software Engineer, AI Engineer
+- Target role: Senior AI Engineer
 - Focus: GenAI, AI-native products, LLM systems and agents (evals, guardrails, MCP)
 - Contact: erikhenriquealvescunha@gmail.com | +5519997049125
 

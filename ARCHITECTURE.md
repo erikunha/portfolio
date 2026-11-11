@@ -1,4 +1,4 @@
-# Portfolio Architecture: Senior Software Engineer, AI Engineer Pass
+# Portfolio Architecture: Senior Frontend & Product Pass
 
 > Target stack: Next.js 16 (App Router) · React 19 · TypeScript strict · Tailwind CSS v4 via PostCSS · Vercel (Fluid Compute) · Biome · pnpm · Playwright E2E (contact, ask, a11y, visual)
 >
@@ -8,7 +8,7 @@
 
 ## 0. The meta-frame
 
-This portfolio is itself a hiring artifact for Senior Software Engineer, AI Engineer roles (open to Senior and Tech Lead). The architecture has to **demonstrate the engineering it claims**. A site that says "performance-first" but ships a 400KB JS bundle is self-disqualifying. The architecture below treats the page as a small production service with the same rigor I'd apply to a payment platform, minus the multi-region overkill.
+This portfolio is itself a hiring artifact for Senior AI Engineer roles (open to Senior and Tech Lead). The architecture has to **demonstrate the engineering it claims**. A site that says "performance-first" but ships a 400KB JS bundle is self-disqualifying. The architecture below treats the page as a small production service with the same rigor I'd apply to a payment platform, minus the multi-region overkill.
 
 The Principal-level moves here are mostly **what we don't build**:
 - No CMS (single-author, content fits in typed TS files)
