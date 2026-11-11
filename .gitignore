@@ -8,11 +8,26 @@
 # production
 /build
 
-# env files
+# env files — the wildcard is the point. A NEW environment name (`.env.preview`,
+# `.env.staging`, `.env.local`) must be ignored the moment someone types it, without
+# a line being added for it by hand, and the example file is the single tracked
+# exception. `.env*` covers the dot-prefixed family; `*.env` covers the suffix
+# family (`production.env`), which the dot form does NOT match. Both shapes are
+# asserted by __tests__/meta/gitignore-env-files.test.ts, so the two families
+# cannot drift apart silently.
 .env
 .env*
 .env*.local
 !.env.example
+*.env
+
+# credential files — a private key, a keystore or a service credential is never a
+# repo artifact, at any depth, in any directory. Same gate as the env block.
+*.pem
+*.key
+*.p12
+*.pfx
+*credentials*.json
 
 # vercel
 .vercel
