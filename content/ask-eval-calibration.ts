@@ -226,7 +226,7 @@ export const ASK_EVAL_CALIBRATION: AskEvalCalibrationItem[] = AskEvalCalibration
       'Identifies Raylu as the current employer, where Erik holds the title Senior Software Engineer, AI Engineer.',
     kind: 'factual',
     canonicalAnswer:
-      'Erik is a Senior Software Engineer, AI Engineer at Raylu. Before that he worked at Betsson on a PCI-DSS payments platform and as an independent consultant on a hospital equipment service platform.',
+      'Erik is a Senior Software Engineer, AI Engineer at Raylu. Before that he worked at Betsson on a PCI-DSS payments platform and as a forward deployed engineer on a hospital equipment service platform.',
     humanVerdict: true,
   },
   {
@@ -255,20 +255,20 @@ export const ASK_EVAL_CALIBRATION: AskEvalCalibrationItem[] = AskEvalCalibration
     id: 'cal-border-bundle-wrong-number',
     trap: 'wrong-number',
     question: 'What bundle-size improvements has Erik shipped?',
-    expect: 'As an independent consultant: -33% JS bundle and -98% CSS bundle.',
+    expect: 'As a forward deployed engineer: -33% JS bundle and -98% CSS bundle.',
     kind: 'factual',
     canonicalAnswer:
-      'As an independent consultant, Erik cut the JavaScript bundle by 33% with code splitting and dynamic imports, and the CSS bundle by 48% with a utility refactor.',
+      'As a forward deployed engineer, Erik cut the JavaScript bundle by 33% with code splitting and dynamic imports, and the CSS bundle by 48% with a utility refactor.',
     humanVerdict: false,
   },
   {
     id: 'cal-border-bundle-paraphrase',
     trap: 'paraphrase',
     question: 'What bundle-size improvements has Erik shipped?',
-    expect: 'As an independent consultant: -33% JS bundle and -98% CSS bundle.',
+    expect: 'As a forward deployed engineer: -33% JS bundle and -98% CSS bundle.',
     kind: 'factual',
     canonicalAnswer:
-      'As an independent consultant, Erik reduced the JavaScript bundle by 33 percent and the CSS bundle by 98 percent.',
+      'As a forward deployed engineer, Erik reduced the JavaScript bundle by 33 percent and the CSS bundle by 98 percent.',
     humanVerdict: true,
   },
   {

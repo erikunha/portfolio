@@ -108,7 +108,7 @@ describe('content/ask-eval-corpus', () => {
     }
     expect(byId('edge-consulting-client-not-named')?.expect).toMatch(/does not name/i);
     expect(SYSTEM_TEXT, 'the prompt names no client for the consulting role').toContain(
-      'Independent Consultant',
+      'Forward Deployed Engineer',
     );
   });
 

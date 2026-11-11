@@ -58,7 +58,7 @@ Opinions renders four ordered home takes and both Unknowns lists in one deferred
 The design-system take renders at `/design-system#opinion-07`; `placement` selects its surface.
 
 Career (`sec-git-log`) contains the `cert/*`, `edu/*`, and `community/*` tag groups.
-Every `GitCommit` may carry a `companyUrl` (https, validated by `CompanyUrlSchema`); the independent consulting entry names no client and carries none, so its name renders as plain text. A company name with a URL renders as a link, through `components/CompanyLink`, in the career log, the project company labels, the Hero employer line, the About Now row, `/cv`, `/summary` and the `/links` identity card. The same URL reaches the Person and ProfilePage JSON-LD (`worksFor.url`), `/api/erik.json` (`employers[].url`), `public/llms.txt` and the ask system prompt.
+Every `GitCommit` may carry a `companyUrl` (https, validated by `CompanyUrlSchema`); the forward deployed engineering entry names no client and carries none, so its name renders as plain text. A company name with a URL renders as a link, through `components/CompanyLink`, in the career log, the project company labels, the Hero employer line, the About Now row, `/cv`, `/summary` and the `/links` identity card. The same URL reaches the Person and ProfilePage JSON-LD (`worksFor.url`), `/api/erik.json` (`employers[].url`), `public/llms.txt` and the ask system prompt.
 `sec-credentials` and `sec-community` remain nested in-page anchors.
 About (`sec-readme`) contains the Whoami, Now, Responsibilities, Stack and retry-code panels.
 

@@ -93,7 +93,7 @@ export const askFacts: AskFacts = AskFactsSchema.parse({
     },
     {
       decision:
-        'Replace waterfalled requests with concurrent loading and tune change detection (Independent Consultant)',
+        'Replace waterfalled requests with concurrent loading and tune change detection (Forward Deployed Engineer)',
       rejected: 'adding a cache layer',
       because: 'the slowness was request sequencing, and a cache would have hidden the symptom',
     },
@@ -138,7 +138,7 @@ export const askFacts: AskFacts = AskFactsSchema.parse({
       text: 'Deposits and withdrawals were multi-step and audited across 15+ jurisdictions, so Erik modeled them as async state machines in RxJS and NgRx with recovery states for every failed step from the first design. For Trustly and Yape, a timed-out payment has an unknown outcome, so the flow polls provider status instead of retrying blindly or reporting success.',
     },
     {
-      title: 'Diagnose before adding a cache (Independent Consultant)',
+      title: 'Diagnose before adding a cache (Forward Deployed Engineer)',
       text: 'The service platform was slow to become interactive. Erik traced it to waterfalled request chains, a sequencing problem and not a data-freshness problem, replaced them with concurrent loading and tuned change detection, and did not add a cache layer that would have hidden the symptom. Time to interactive fell about 52%, the JS bundle about 33%, layout-shell CSS about 98% and initial load about 25% through lazy loading and a utility-class refactor.',
     },
     {

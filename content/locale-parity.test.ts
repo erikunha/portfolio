@@ -54,7 +54,7 @@ describe('pt copy states the same facts in Portuguese', () => {
   });
 
   it('keeps the hospital platform detail in the pt CV, as the en CV does', () => {
-    const entry = cvDocument[PT].experience.find((item) => item.company.startsWith('Independent'));
+    const entry = cvDocument[PT].experience.find((item) => item.company.startsWith('Forward'));
     expect(entry?.bullets.join(' '), 'the pt CV drops the service-orders detail').toContain(
       'ordens de serviço',
     );

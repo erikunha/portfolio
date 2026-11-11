@@ -65,7 +65,7 @@ const projectsFor = (locale: SiteLocale): Project[] => {
       },
       {
         name: 'SERVICE_OPS_CONSOLE',
-        company: 'Independent Consultant',
+        company: 'Forward Deployed Engineer',
         kind: 'professional',
         description: pt
           ? 'Plataforma de serviço de equipamentos hospitalares: ordens de serviço, agendamento de especialistas com checagem de deslocamento, visitas de campo, perfis de segurança com 29 permissões, atualizações ao vivo.'
