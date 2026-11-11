@@ -8,7 +8,7 @@
 
 ## 0. The meta-frame
 
-This portfolio is itself a hiring artifact for Senior Software Engineer, AI Engineer roles (open to Senior and Tech Lead). The architecture has to **demonstrate the engineering it claims**. A site that says "performance-first" but ships a 400KB JS bundle is self-disqualifying. The architecture below treats the page as a small production service with the same rigor I'd apply to a payment platform, minus the multi-region overkill.
+This portfolio is itself a hiring artifact. The site positions Erik as Senior Software Engineer, AI Engineer; the roles he is open to are Senior, AI Engineer, Applied AI Engineer, AI Product Engineer and Founding Engineer. The architecture has to **demonstrate the engineering it claims**. "Performance-first" is a budget and not an adjective: the Lighthouse thresholds and the axe scan are gates in the `performance` job, and the client-chunk and per-route first-load JS budgets are gates in the `build` job (`check-bundle-size.mjs` and `check-route-js.mjs`). The architecture below treats the page as a small production service with the same rigor I'd apply to a payment platform, minus the multi-region overkill.
 
 The Principal-level moves here are mostly **what we don't build**:
 - No CMS (single-author, content fits in typed TS files)
