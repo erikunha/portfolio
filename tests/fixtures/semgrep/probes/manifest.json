@@ -1,0 +1,47 @@
+{
+  "note": "The probe set measures what the vendored rules do, not what this repository contains. Each probe states what the rule must do with it, and the measurement script compares that against what the rules actually did. A probe that fires when it is declared quiet is a false positive; a probe that stays quiet when it is declared a finding is a rule regression. The count of known false positives is asserted by the script, so the number the decision records is held by a gate.",
+  "probes": [
+    {
+      "file": "shell-interpolated.ts",
+      "expect": "finding",
+      "rule": "child-process-shell-injection",
+      "kind": "true-positive",
+      "why": "The shell command interpolates a value. This is the injection the rule exists to catch."
+    },
+    {
+      "file": "shell-constant.ts",
+      "expect": "finding",
+      "rule": "child-process-shell-injection",
+      "kind": "known-false-positive",
+      "why": "The command is a literal, so no untrusted value reaches the shell. The rule's source pattern matches any expression, a literal included, so the finding contradicts the rule's own message. The remediation (execFile) is still right, but the rule states something the code does not do."
+    },
+    {
+      "file": "shell-execfile.ts",
+      "expect": "quiet",
+      "rule": "child-process-shell-injection",
+      "kind": "negative",
+      "why": "execFile takes an argv array and starts no shell. This is the shape the rule asks for."
+    },
+    {
+      "file": "shell-execsync.ts",
+      "expect": "quiet",
+      "rule": "child-process-shell-injection",
+      "kind": "negative",
+      "why": "execSync is not the sink the rule names."
+    },
+    {
+      "file": "secret-literal.ts",
+      "expect": "finding",
+      "rule": "hardcoded-stripe-secret-key",
+      "kind": "true-positive",
+      "why": "A key-shaped literal in the source. The rule is a pattern and the shape is what it matches."
+    },
+    {
+      "file": "secret-placeholder.ts",
+      "expect": "quiet",
+      "rule": "hardcoded-stripe-secret-key",
+      "kind": "negative",
+      "why": "A placeholder carries fewer than the characters the pattern needs."
+    }
+  ]
+}

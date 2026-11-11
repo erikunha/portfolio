@@ -205,7 +205,7 @@ The fan-in: every job above, plus the always-on gitleaks and semgrep, reports in
 flowchart TD
     pr["PR / push main / workflow_dispatch"] --> secrets["gitleaks: history scan + fixture check"]
     secrets --> gate
-    pr --> semgrep["semgrep: fixture self-test blocks, findings scan report-only"]
+    pr --> semgrep["semgrep: fixture self-test and FP baseline block, findings scan report-only"]
     semgrep --> gate
     dc["detect-changes"] --> gate
     qf["quality-fast"] --> gate
@@ -235,7 +235,7 @@ flowchart TD
 | `e2e-functional` | push, or PR with `app` | the eight-project matrix described under Testing |
 | `e2e-visual-chromium` | push, or PR with `ui` | `tests/visual/visual.spec.ts` on `chromium` and `chromium-mobile`; the manual run with `update_visual_baselines` regenerates and uploads baselines instead |
 | `ai-eval` | `ai`, same-repository PR or push, not Dependabot, and no failed upstream job | `pnpm ask:eval` against the live gateway; it never publishes to Redis |
-| `semgrep` | always | fixture self-test blocks; the findings scan is report-only and uploads SARIF |
+| `semgrep` | always | fixture self-test and the false-positive baseline block; the findings scan is report-only and uploads SARIF |
 | `gitleaks` | always | checksum-verified pinned binary, fixture self-test, history scan |
 | `ci-gate` | always | fan-in over every job above |
 

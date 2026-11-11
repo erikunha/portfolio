@@ -694,6 +694,9 @@ jobs:
       - name: Self-test - vendored rules fire on the fixture
         run: node scripts/check-semgrep-fixture.mjs
 
+      - name: FP baseline - the vendored rules' precision is what the decision recorded
+        run: node scripts/measure-semgrep-fp.mjs
+
       - name: Run Semgrep (SARIF, report-only)
         continue-on-error: true
         run: node scripts/run-semgrep.mjs --sarif semgrep.sarif

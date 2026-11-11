@@ -17,8 +17,17 @@ describe('ci.yml semgrep job invariants', () => {
     expect(ci).toMatch(/^\s{2}semgrep:/m);
   });
 
-  it('ships non-blocking (continue-on-error) until the FP baseline is recorded', () => {
+  it('keeps the scan report-only (the 2026-11-11 decision measured an empty denominator)', () => {
     expect(job).toMatch(/continue-on-error:\s*true/);
+  });
+
+  it('runs the false-positive baseline as a blocking step', () => {
+    expect(job).toMatch(/name:\s*FP baseline/);
+    expect(job).toMatch(/node scripts\/measure-semgrep-fp\.mjs/);
+    const start = job.indexOf('- name: FP baseline');
+    const next = job.indexOf('- name:', start + 1);
+    const step = job.slice(start, next === -1 ? job.length : next);
+    expect(step).not.toMatch(/continue-on-error/);
   });
 
   it('grants security-events: write to upload SARIF', () => {

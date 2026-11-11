@@ -164,6 +164,8 @@ export const IGNORED_PATHS = [
   'scripts/prepare-hooks.d.mts',
   'scripts/prepare-hooks.mjs',
   'scripts/lint-css-tokens.ts',
+  'scripts/measure-semgrep-fp.d.mts',
+  'scripts/measure-semgrep-fp.mjs',
   'scripts/run-semgrep.mjs',
   'scripts/stryker-canary.config.mjs',
   'scripts/sync-changelog.ts',
