@@ -130,7 +130,7 @@ describe('CV reading view', () => {
   });
 
   it('states the resume SUMMARY as the CV summary', () => {
-    expect(cvDocumentEn.summary).toContain('Senior Software Engineer with 8+ years');
+    expect(cvDocumentEn.summary).toContain('8+ years of production software, focused on GenAI');
     expect(cvDocumentEn.summary).toContain('0.85 agreement floor');
     expect(cvDocumentEn.summary).toContain('12-agent AI-assisted engineering system');
     expect(cvDocumentEn.summary).not.toContain('micro-frontend topologies');

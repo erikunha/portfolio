@@ -27,13 +27,13 @@ const publishedTakes = [...homeTakes(SITE_LOCALE.en), designSystemTake(SITE_LOCA
 export const askFacts: AskFacts = AskFactsSchema.parse({
   openTo: `Open to ${WORK_SCOPE_SENTENCE}. Not limited to remote work. Anything else about where or how Erik can be hired is answered by the contact email, never guessed.`,
   coreStack: [
+    `AI: 12-agent GitHub Copilot engineering system at Betsson (codegen, review, debugging, testing, architecture validation), the investor workflow screens of Raylu's AI deal origination platform (${FUNDS_PHRASE}), a governed Claude endpoint with a CI eval harness (this portfolio shell), a LangChain payment-complaint agent with a claim verifier (LedgerLens, personal project), daily work in Claude Code and Codex authoring skills, guard policies and lifecycle hooks`,
+    'AI-native: Vercel AI SDK + AI Gateway, Anthropic API, OpenAI, Google GenAI/Vertex, MCP servers, Zod structured output, eval harnesses with LLM judge calibrated on human labels, per-job cost caps, prompt-injection defense, agent and sub-agent orchestration, Claude Code/Codex skills, spec-driven development, model routing with cost ceilings',
     'Frontend: React, Next.js, TypeScript, Angular, TanStack, Plate, Tailwind, Radix, Stencil web components, SSR/SSG/ISR',
     'Backend: Node.js, Express.js, REST APIs, PostgreSQL, MongoDB, SQLite, Microsoft SQL Server',
     'Languages: TypeScript, JavaScript (ES6+), SQL, Python (in personal projects and coursework, not in a production service)',
     'Testing: Playwright, Jest, Vitest, MSW, WireMock, Stryker',
     'Cloud: AWS (CodePipeline, CodeBuild, S3, CloudFront, EC2), Docker, NGINX, Jenkins, GitHub Actions',
-    `AI: 12-agent GitHub Copilot engineering system at Betsson (codegen, review, debugging, testing, architecture validation), the investor workflow screens of Raylu's AI deal origination platform (${FUNDS_PHRASE}), a governed Claude endpoint with a CI eval harness (this portfolio shell), a LangChain payment-complaint agent with a claim verifier (LedgerLens, personal project), daily work in Claude Code and Codex authoring skills, guard policies and lifecycle hooks`,
-    'AI-native: Vercel AI SDK + AI Gateway, Anthropic API, OpenAI, Google GenAI/Vertex, MCP servers, Zod structured output, eval harnesses with LLM judge calibrated on human labels, per-job cost caps, prompt-injection defense, agent and sub-agent orchestration, Claude Code/Codex skills, spec-driven development, model routing with cost ceilings',
   ],
   currentRoleScope: [
     `Erik ${RAYLU_BUILT_CLAIM}. Do NOT widen this to whole-platform ownership: the scope is that frontend platform plus the backend changes listed under Raylu in the employment history below, not the whole product, its models or the company.`,

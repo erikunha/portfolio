@@ -150,7 +150,7 @@ test.describe('/links link-in-bio', () => {
   test('types the tagline, and holds the full first phrase under reduced motion', async ({
     page,
   }) => {
-    const title = 'Engenheiro de Software Sênior, IA Aplicada';
+    const title = 'Engenheiro de Software Sênior, Engenheiro de IA';
     const identity = page.locator('.links-identity-box');
 
     await page.clock.install();
@@ -185,7 +185,7 @@ test.describe('/links link-in-bio', () => {
   test('renders the English title on the English route', async ({ page }) => {
     await page.goto('/links/en');
     await expect(page.locator('.links-identity-box')).toContainText(
-      'Senior Software Engineer, Applied AI',
+      'Senior Software Engineer, AI Engineer',
     );
   });
 

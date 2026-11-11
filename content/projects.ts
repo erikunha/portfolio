@@ -26,7 +26,7 @@ const projectsFor = (locale: SiteLocale): Project[] => {
   const pt = locale === SITE_LOCALE.pt;
   return z
     .array(ProjectSchema)
-    .length(10)
+    .length(11)
     .parse([
       {
         name: 'ORIGINATION_PLATFORM_UI',
@@ -184,6 +184,20 @@ const projectsFor = (locale: SiteLocale): Project[] => {
           },
           { label: pt ? 'REVISÃO HUMANA' : 'HUMAN REVIEW', value: pt ? '9,3 DE 30' : '9.3 OF 30' },
           { label: 'STACK', value: 'PYTHON / LANGCHAIN' },
+        ],
+      },
+      {
+        name: 'VAULT_OF_LOCI',
+        company: 'Erikunha',
+        kind: 'oss',
+        url: 'https://github.com/erikunha/vault-of-loci',
+        description: pt
+          ? 'Template de vault do Obsidian open-source (MIT, Python) em que os agentes de IA dão aula em vez de responder: um AGENTS.md conduz sete ferramentas de agente, a tentativa vem antes da dica e a revelação espera a nota de confiança. Um teste de 17 cenários, avaliado por um modelo de outra família, segura as regras de tutor, e um ledger mede retenção em 7, 30 e 90 dias.'
+          : 'Open-source Obsidian vault template (MIT, Python) where AI agents tutor instead of answering: one AGENTS.md drives seven agent tools, the attempt comes before the hint, and the reveal waits for a confidence rating. A 17-scenario test graded by a model of another family holds the tutor rules, and a ledger measures retention at 7, 30 and 90 days.',
+        stats: [
+          { label: pt ? 'CENÁRIOS' : 'SCENARIOS', value: '17' },
+          { label: pt ? 'BARRA' : 'PASS BAR', value: '28/34' },
+          { label: pt ? 'FERRAMENTAS' : 'AGENT TOOLS', value: '7 · ONE AGENTS.MD' },
         ],
       },
     ]);

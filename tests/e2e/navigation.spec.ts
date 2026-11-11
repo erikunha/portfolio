@@ -44,6 +44,9 @@ test.describe('navigation: drawer at 390px', () => {
       .getByRole('navigation', { name: 'primary' })
       .getByRole('button', { name: /^MENU/ })
       .click();
+    // the scrim only takes pointer events once it is open, so the click has to
+    // land after the drawer is on screen and not before
+    await expect(page.getByRole('dialog', { name: 'Section menu' })).toBeVisible();
     await page.mouse.click(SCRIM_CLICK_X, SCRIM_CLICK_Y);
     await expect(page.getByRole('dialog')).toHaveCount(0);
   });

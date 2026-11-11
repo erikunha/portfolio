@@ -1,6 +1,6 @@
-# Erik Cunha · Senior Software Engineer, Applied AI
+# Erik Cunha · Senior Software Engineer, AI Engineer
 
-> Senior Software Engineer, Applied AI. 8+ years of production software across AI-native SaaS,
+> Senior Software Engineer, AI Engineer. 8+ years of production software across AI-native SaaS,
 > fintech, payments and e-commerce. Builds LLM systems and the evaluation that decides
 > whether they are safe to ship. Brazil · UTC-3 · available now. Currently at Raylu: AI deal
 > origination · private markets. TypeScript, Python, React, Next.js, Angular, Node.js, AWS · LLM Systems, Evals, Agents, MCP, Guardrails.
@@ -12,7 +12,7 @@
 - Location: Paulínia, Brazil (UTC-3)
 - Current role: working remotely for Raylu (New York, US)
 - Work scope: open to any arrangement: remote worldwide, hybrid or on-site
-- Target role: Senior Software Engineer, Applied AI
+- Target role: Senior Software Engineer, AI Engineer
 - Focus: GenAI, AI-native products, LLM systems and agents (evals, guardrails, MCP)
 - Contact: erikhenriquealvescunha@gmail.com | +5519997049125
 
@@ -42,6 +42,13 @@ Builds LLM systems and the evaluation that decides whether they are safe to ship
   against 0.55 for a ReAct agent and 0.17 for a tool-free chain, tool trajectory 0.73 against a
   0.80 target (a miss). Thirty cases show a trend, not significance
   (github.com/erikunha/ledgerlens)
+- vault-of-loci (open source, MIT): Obsidian vault template where AI agents tutor instead of
+  answering. One AGENTS.md drives seven agent tools (Claude Code, Codex, Gemini CLI, Copilot,
+  Cursor, Antigravity CLI, OpenCode); the attempt comes before the hint, the reveal waits for a
+  confidence rating, and the agent never writes the learner's notes. A 17-scenario test graded
+  by a model of another family (a same-family judge is refused in code) holds the tutor rules at
+  a 28/34 pass bar, and a ledger measures retention at 7, 30 and 90 days
+  (github.com/erikunha/vault-of-loci)
 
 Keywords: LLM Systems · LLM Evaluation · LLM-as-Judge · Agents · Multi-Agent Orchestration ·
 Model Context Protocol (MCP) · Guardrails · Prompt-Injection Defense · Anthropic Claude ·
@@ -66,7 +73,7 @@ Structured Output · Prompt Caching · Streaming LLM · LLM Cost Optimization
 LLM systems & evaluation: Eval harness design · Corpora graded on end state ·
 LLM-as-judge calibrated against human labels · pass@k and all-runs-pass · Control-treatment A/B ·
 Failure taxonomies · Per-job cost caps · Model routing by task tier · Tracing (Langfuse, OpenTelemetry) ·
-Anthropic, OpenAI and Google APIs · Vercel AI SDK · Structured output validation with Zod
+Anthropic, OpenAI and Google APIs · Vercel AI SDK · LangChain · FAISS · Structured output validation with Zod
 
 Agents & guardrails: Agent and sub-agent orchestration · Tool-surface design ·
 Model Context Protocol (MCP) servers · Prompt-injection defense at the request boundary ·
@@ -149,6 +156,7 @@ Performance & A11y: Core Web Vitals · WCAG 2.2 AA · ARIA · Lighthouse CI
 - ERIKUNHA.DEV, personal project: governed Anthropic endpoint with a prompt-injection gate, streaming leak detector, kill switch and a CI eval harness (LLM judge calibrated on human labels, 0.85 agreement floor).
 - LAIBEMAGE, personal project (open source, MIT): TypeScript CLI classifying images across seven LLM vision providers (github.com/erikunha/LAIbemage).
 - LEDGERLENS, personal project (open source, MIT): Python agent that investigates payment complaints and verifies every claim in its answer against the evidence it cited (github.com/erikunha/ledgerlens).
+- VAULT_OF_LOCI, personal project (open source, MIT): Obsidian vault template where AI agents quiz instead of answering, driven by one AGENTS.md across seven agent tools, with a 17-scenario tutor test graded by a model of another family (github.com/erikunha/vault-of-loci).
 - REACT_GOOGLE_MAPS_API, open-source contribution (PR #3266): diagnosed and fixed an infinite re-render loop in the Directions API example of a library with about 1.8M weekly npm downloads; reviewed and merged by the maintainer.
 - SERVICE_OPS_CONSOLE, Independent Consultant: hospital equipment service platform for service orders, specialist schedules and field visits.
 
@@ -156,6 +164,11 @@ Performance & A11y: Core Web Vitals · WCAG 2.2 AA · ARIA · Lighthouse CI
 
 - [Portfolio](https://www.erikunha.dev): Live site with streaming AI terminal,
   performance receipts, and full project showcase
+- [CV (HTML)](https://www.erikunha.dev/cv): Readable, printable curriculum
+- [CV (PDF, English)](https://www.erikunha.dev/erik-cunha-cv.pdf): The resume as a
+  PDF, four pages
+- [CV (PDF, Portuguese)](https://www.erikunha.dev/erik-cunha-cv-pt.pdf): A tradução
+  do currículo, quatro páginas
 - [GitHub](https://github.com/erikunha): Open source projects
 - [LinkedIn](https://www.linkedin.com/in/erikunha/): Full professional history
 - [Hiring profile API](https://www.erikunha.dev/api/erik.json): Machine-readable

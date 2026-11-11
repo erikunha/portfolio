@@ -30,12 +30,14 @@ vi.mock('next/font/local', () => ({
   default: () => ({ variable: '--font-mock', className: 'mock' }),
 }));
 
-const CANONICAL_TITLE = 'Senior Software Engineer, Applied AI';
-const CANONICAL_TITLE_PT = 'Engenheiro de Software Sênior, IA Aplicada';
+const CANONICAL_TITLE = 'Senior Software Engineer, AI Engineer';
+const CANONICAL_TITLE_PT = 'Engenheiro de Software Sênior, Engenheiro de IA';
 const RETIRED_TITLES = [
   'Senior Full-Stack Engineer',
   'Senior Software Engineer · Full Stack',
   'Engenheiro de Software Sênior · Full Stack',
+  'Senior AI Engineer',
+  'Engenheiro de IA Sênior',
 ];
 
 const REPO_ROOT = path.resolve(__dirname, '..');

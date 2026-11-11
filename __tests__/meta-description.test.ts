@@ -14,6 +14,6 @@ describe('homepage meta description', () => {
 
   it('retains the identity-gated substring', async () => {
     const { metadata } = await import('@/app/(en)/layout');
-    expect(String(metadata.description)).toContain('Senior Software Engineer, Applied AI');
+    expect(String(metadata.description)).toContain('Senior Software Engineer, AI Engineer');
   });
 });

@@ -10,7 +10,7 @@ const SHELL_RESPONSES: ShellResponse[] = [
   {
     commands: [ShellCommand.Help],
     kind: ShellLineKind.Output,
-    text: 'commands: help · whois · whois --recursive · cat skills.md · cat ~/.now · contact · privacy [forget <n|--all>] · clear\nanything else → sent to Claude, which only answers questions about Erik',
+    text: 'commands: help · whois · whois --recursive · whoami · whoami --recursive · cat stack.md · cat ~/.now · contact · ask <question> · privacy [forget <n|id|--all>] · clear\nanything else → sent to Claude, which only answers questions about Erik',
   },
   {
     commands: [ShellCommand.WhoIs, ShellCommand.WhoAmI],
@@ -23,9 +23,9 @@ const SHELL_RESPONSES: ShellResponse[] = [
     text: 'erik → engineer → builder → student → curious → 9yo with a guitar',
   },
   {
-    commands: [ShellCommand.Skills],
+    commands: [ShellCommand.Stack],
     kind: ShellLineKind.Output,
-    text: 'react, next.js, typescript, angular, node, fastify, web components, design systems, vercel ai sdk, agent orchestration, eval harnesses, spec-driven ai tooling',
+    text: 'llm systems, eval harnesses, agent orchestration, guardrails, mcp servers, model routing, prompt versioning, typescript, python, node.js, react, next.js, angular, fastify, postgresql, redis, docker, aws',
   },
   {
     commands: [ShellCommand.Now],

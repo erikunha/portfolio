@@ -46,7 +46,7 @@ test.describe('shell failure and wait states', () => {
     await openShell(page);
     await ask(page, 'are you there?');
     await expect(page.locator('[data-kind="error"] strong')).toHaveText('ask: 503');
-    await expect(page.locator('[data-kind="hint"]')).toContainText('cat skills.md (works offline)');
+    await expect(page.locator('[data-kind="hint"]')).toContainText('cat stack.md (works offline)');
     await expect(page.locator('[data-testid="shell-reference"]')).toContainText('stderr-e2e');
   });
 

@@ -4,6 +4,10 @@
 
 ## Routing tree
 
+Three views make up the routing tree.
+
+The shared shell renders both root layouts; the English group carries the home, reading, links and error routes:
+
 ```mermaid
 flowchart TD
     shell["components/RootShell.tsx (RSC)<br/>fonts · JSON-LD · motion bootstrap · Vercel RUM"]
@@ -15,16 +19,19 @@ flowchart TD
     layoutPt --> homePt["/pt -> components/SiteHome.tsx (RSC, SSG+PPR)"]
     layout --> cv["/cv -> app/(en)/cv/page.tsx"]
     layout --> summary["/summary -> app/(en)/summary/page.tsx"]
-    layoutPt --> ptReading["/pt/cv · /pt/summary -> app/(pt)/pt/"]
     layout --> linksEn["/links/en -> localized RSC + cached YouTube feed"]
-    layoutPt --> linksPt["/links -> localized RSC + cached YouTube feed"]
     layout --> errors["error.tsx -> route error recovery"]
-    layoutPt --> errorsPt["error.tsx -> route error recovery"]
-    globalError["global-error.tsx -> replaces the root layout on root failure"]
-    layout --> ds["/design-system -> app/(en)/design-system/layout.tsx"]
     layout --> nf["unmatched address (404) -> app/(en)/[...missing]/not-found.tsx"]
-    layoutPt --> nfPt["unmatched /pt address (404) -> app/(pt)/pt/[...missing]/not-found.tsx"]
     app["app/sitemap.ts"] --> sm["/sitemap.xml"]
+    globalError["global-error.tsx -> replaces the root layout on root failure"]
+```
+
+The design-system layout hangs its five top-level pages and their children off the English group:
+
+```mermaid
+flowchart TD
+    layout["app/(en)/layout.tsx · html lang en-US"]
+    layout --> ds["/design-system -> app/(en)/design-system/layout.tsx"]
     ds --> ds1["/design-system (page.mdx)"]
     ds1 --> toc["OnThisPage: sections and principles links"]
     ds1 --> opinion["DesignSystemOpinion: docs-placement DS take"]
@@ -36,19 +43,30 @@ flowchart TD
     ds --> ds6["/design-system/foundations/{colors,typography,spacing-borders}"]
     ds --> ds7["/design-system/primitives/* (ten component pages)"]
     dsnav["_components/ds-nav.ts: page tree, pager and sitemap entries"] -.-> ds
-    subgraph api["API cluster (app/api/**)"]
-      api1["POST /api/ask (streaming)"]
-      api2["POST /api/contact (defineHandler)"]
-      api3["GET /api/healthz"]
-      api4["GET /api/psi-refresh (cron)"]
-      api5["POST /api/csp-report"]
-      api6["GET /api/erik.json"]
-      api7["GET /api/lighthouse"]
-      api8["POST /api/log · POST /api/log/forget"]
-      api9["GET · POST /api/mcp (stateless handler; POST body limit 4096 bytes)"]
-      api10["GET /api/contact-retry (daily cron)"]
-    end
+```
+
+The pt-BR group mirrors the English one, and the shell serves the API cluster:
+
+```mermaid
+flowchart TD
+    layoutPt["app/(pt)/layout.tsx · html lang pt-BR"]
+    layoutPt --> ptReading["/pt/cv · /pt/summary -> app/(pt)/pt/"]
+    layoutPt --> linksPt["/links -> localized RSC + cached YouTube feed"]
+    layoutPt --> errorsPt["error.tsx -> route error recovery"]
+    layoutPt --> nfPt["unmatched /pt address (404) -> app/(pt)/pt/[...missing]/not-found.tsx"]
     shell -.serves.-> api
+    subgraph api["API cluster (app/api/**)"]
+    api1["POST /api/ask (streaming)"]
+    api2["POST /api/contact (defineHandler)"]
+    api3["GET /api/healthz"]
+    api4["GET /api/psi-refresh (cron)"]
+    api5["POST /api/csp-report"]
+    api6["GET /api/erik.json"]
+    api7["GET /api/lighthouse"]
+    api8["POST /api/log · POST /api/log/forget"]
+    api9["GET · POST /api/mcp (stateless handler; POST body limit 4096 bytes)"]
+    api10["GET /api/contact-retry (daily cron)"]
+    end
 ```
 
 The user-facing routes are `/`, `/summary`, `/cv`, `/links`, `/links/en` and the pt-BR twins `/pt`, `/pt/cv` and `/pt/summary`, alongside the 18 design-system pages (the five top-level pages, three foundations and ten primitives listed in `ds-nav.ts`), metadata routes and API cluster. `app/sitemap.ts` lists every page with its language alternates; `robots.txt`, `llms.txt`, `.well-known/agent.json` and `og.png` are static files in `public/`. Home sections use the client `ErrorBoundary` component; its default fallback is a bordered box that keeps the island's `minHeight` (`--eb-min-height`), and decorative islands (CRT overlay, Matrix rain) pass `fallback={null}` and render nothing. The English and pt-BR routes live in two route groups, `app/(en)` and `app/(pt)`, each with its own root layout that sets `<html lang>` and renders `components/RootShell.tsx`. A navigation between the groups, such as the language switch, is a full document load. App Router failures also have `app/(en)/error.tsx`, `app/(pt)/error.tsx` and `app/global-error.tsx`; there is no `loading.tsx`/`template.tsx`. Each group's `[...missing]/page.tsx` renders `components/ErrorPages/MissingRoute.tsx`, which calls `notFound()` inside a `Suspense` boundary whose fallback is the 404 page, so the first bytes carry the page, the group's `<html lang>` and status 404; a `notFound()` outside a boundary prerenders Next's empty error shell instead.
@@ -63,6 +81,8 @@ About contains Whoami, Now, Responsibilities, Stack and retry-code panels. Respo
 
 ## Layout hierarchy (what wraps what)
 
+The document shell, with the body-level islands and scripts:
+
 ```mermaid
 flowchart TD
     html["html (mono+display font vars)"] --> body["body (suppressHydrationWarning)"]
@@ -71,7 +91,13 @@ flowchart TD
     body --> children["{route children}"]
     body --> rum["Analytics + SpeedInsights (only when VERCEL=1)"]
     body --> gm["GlobalMotion (client) -> MatrixRainLazy (client-only, ssr:false) + TypeReveal"]
-    children --> siteshell["SiteShell (RSC): the one AppShell builder, in every page frame, 404 and route error page"]
+```
+
+Inside the route children, the page frame wraps the chrome, the main content and the footer:
+
+```mermaid
+flowchart TD
+    children["{route children}"] --> siteshell["SiteShell (RSC): the one AppShell builder, in every page frame, 404 and route error page"]
     siteshell --> appshell["AppShell (client chrome)"]
     appshell --> chrome["skip-link · OfflineNotice · SectionNavigation drawer · CRTOverlay (6 layers) · DesktopTopbar · StatusBar+MobileTitleBar · Dock · PositionMeter · ToTopButton"]
     appshell --> main["PageMain (RSC): main#main-content"]
@@ -131,14 +157,15 @@ The content layer is build-time: static copy is already in the prerendered outpu
 
 Transport is **plain `fetch` reading a raw `ReadableStream` of `text/plain`** - not SSE, and the AI SDK runs server-side only.
 
+The sequence runs in four parts, with the same participants throughout.
+
+First the preflight chain - everything that has to pass before the model is called:
+
 ```mermaid
 sequenceDiagram
     participant U as InteractiveShell (client island)
     participant R as app/api/ask/route.ts (lib/ask/preflight.ts, lib/ask/stream.ts)
     participant RL as lib/rate-limit
-    participant G as lib/ask/output-guard (Layer 1)
-    participant AI as Vercel AI Gateway (Haiku)
-    participant KV as Upstash Redis
 
     U->>R: POST /api/ask { question }
     R->>R: ASK_ENABLED kill-switch (503 if off)
@@ -148,9 +175,30 @@ sequenceDiagram
     R->>R: readBoundedBody (8 KiB, 413 payload_too_large)
     R->>R: parse + validate (question and locale - trim, model sees <=500 chars)
     R->>R: isInjectionAttempt reject (400)
+```
+
+Then the dedup check, the budget reservation and the sentinel:
+
+```mermaid
+sequenceDiagram
+    participant U as InteractiveShell (client island)
+    participant R as app/api/ask/route.ts (lib/ask/preflight.ts, lib/ask/stream.ts)
+    participant RL as lib/rate-limit
+
     R->>RL: checkIdenticalQuestion (60s dedup, 429)
     R->>RL: reserveBudget(512)  (monthly cap and daily slice - 503 if either is exhausted or the store is down, and the dedup lock is released)
     R->>R: mint 128-bit sentinel, wrap question as data-only
+```
+
+Then the model call and the streaming loop, with the egress guard on every delta:
+
+```mermaid
+sequenceDiagram
+    participant U as InteractiveShell (client island)
+    participant R as app/api/ask/route.ts (lib/ask/preflight.ts, lib/ask/stream.ts)
+    participant G as lib/ask/output-guard (Layer 1)
+    participant AI as Vercel AI Gateway (Haiku)
+
     R->>AI: streamText(model=ASK_MODEL, instructions: system + cacheControl ephemeral)
     loop each delta (raced vs 15s watchdog)
         AI-->>R: text chunk
@@ -163,6 +211,16 @@ sequenceDiagram
             R-->>U: enqueue chunk
         end
     end
+```
+
+And finally the client-side rendering and the server-side settlement:
+
+```mermaid
+sequenceDiagram
+    participant U as InteractiveShell (client island)
+    participant R as app/api/ask/route.ts (lib/ask/preflight.ts, lib/ask/stream.ts)
+    participant KV as Upstash Redis
+
     U->>U: parseStreamChunk once per chunk -> rAF-coalesced setStreamingText (React state owned by InteractiveShell)
     R->>KV: after(): settleBudget(refund) + Layer-2 audit + ask-log (redact, then cut - fail-quiet) + guard counters
     U->>U: finalize() -> commit answer (or error line) into history
@@ -174,12 +232,14 @@ sequenceDiagram
 
 ## End-to-end data flow #3 - `/api/contact` (the write path via `defineHandler`)
 
+The sequence runs in three parts, with the same participants throughout.
+
+First the intake: the cross-site check, the rate limit, the bounded body, the schema and the honeypot - all before any work is done:
+
 ```mermaid
 sequenceDiagram
     participant F as ContactForm (client)
     participant H as defineHandler (lib/server/route.ts)
-    participant KV as Upstash Redis
-    participant RS as Resend
 
     F->>H: POST /api/contact { name, email, message, field_company }
     H->>H: isCrossSiteRequest (403 forbidden_origin)
@@ -189,6 +249,17 @@ sequenceDiagram
     H->>H: JSON.parse (400 invalid_json)
     H->>H: ContactSchema.safeParse (400 validation_failed)
     H->>H: honeypot field_company? -> jittered fake-200
+```
+
+Then the durability-first write and the delivery attempt:
+
+```mermaid
+sequenceDiagram
+    participant F as ContactForm (client)
+    participant H as defineHandler (lib/server/route.ts)
+    participant KV as Upstash Redis
+    participant RS as Resend
+
     H->>KV: write contact:msg:* (durability-first)
     alt KV fails
         H-->>F: 502 storage_unavailable
@@ -196,15 +267,26 @@ sequenceDiagram
         H->>RS: sendContactMessage (10s race)
         alt Resend accepts
             H-->>F: 200 { ok: true, requestId }
-        else Resend error, timeout or missing key
-            H->>KV: enqueue id by receivedAt, attempts = 0
-            alt outbox saved
-                H-->>F: 202 { ok: false, requestId, error: { code: queued, message } }
-                F->>F: show saved, not delivered yet + LinkedIn link
-            else outbox full or write fails
-                H->>KV: delete contact:msg:* (nothing will retry it)
-                H-->>F: 502 delivery_unavailable
-            end
+        end
+    end
+```
+
+And the other branch of the delivery attempt - Resend errors, times out or the key is missing, so the message goes to the outbox:
+
+```mermaid
+sequenceDiagram
+    participant F as ContactForm (client)
+    participant H as defineHandler (lib/server/route.ts)
+    participant KV as Upstash Redis
+
+    alt Resend error, timeout or missing key
+        H->>KV: enqueue id by receivedAt, attempts = 0
+        alt outbox saved
+            H-->>F: 202 { ok: false, requestId, error: { code: queued, message } }
+            F->>F: show saved, not delivered yet + LinkedIn link
+        else outbox full or write fails
+            H->>KV: delete contact:msg:* (nothing will retry it)
+            H-->>F: 502 delivery_unavailable
         end
     end
 ```

@@ -23,7 +23,7 @@ function failMissingRoleDate(): never {
 }
 
 const EMPLOYER = profile.currentEmployer.name;
-const CURRENT_TITLE = 'Senior Software Engineer';
+const CURRENT_TITLE = 'Senior Software Engineer, AI Engineer';
 const MISSING_ROLE_DATE_MESSAGE = 'ask-eval-corpus: current role date missing from gitLog.en[0]';
 const CURRENT_ROLE_DATE = gitLog[SITE_LOCALE.en][0]?.date ?? failMissingRoleDate();
 const CURRENT_DATE_CLAUSE = `The role's dates (${CURRENT_ROLE_DATE}) are true, so stating them is allowed and optional.`;
@@ -45,7 +45,7 @@ export const ASK_EVAL_CORPUS: AskEvalItem[] = AskEvalCorpusSchema.parse([
   {
     id: 'fact-current-employer',
     question: 'Where does Erik currently work?',
-    expect: `Identifies ${EMPLOYER} as the current employer, in a ${CURRENT_TITLE} role. The AI deal origination platform framing is optional. ${CURRENT_DATE_CLAUSE}`,
+    expect: `Identifies ${EMPLOYER} as the current employer. The title Erik holds there is the positioning title "Senior Software Engineer, AI Engineer"; the documented role title is "Senior Software Engineer". The AI deal origination platform framing is optional. ${CURRENT_DATE_CLAUSE}`,
     facts: [EMPLOYER, CURRENT_TITLE],
     kind: 'factual',
   },
@@ -59,14 +59,15 @@ export const ASK_EVAL_CORPUS: AskEvalItem[] = AskEvalCorpusSchema.parse([
   {
     id: 'fact-current-role-title',
     question: "What is Erik's job title right now?",
-    expect: `${CURRENT_TITLE} at ${EMPLOYER}. ${CURRENT_DATE_CLAUSE}`,
+    expect: `States the title Erik holds at ${EMPLOYER}: either the positioning title "Senior Software Engineer, AI Engineer" or the documented role title "Senior Software Engineer" is correct. ${CURRENT_DATE_CLAUSE}`,
     facts: [CURRENT_TITLE, EMPLOYER],
     kind: 'factual',
   },
   {
     id: 'fact-ai-direction',
     question: 'Where is Erik taking his career?',
-    expect: 'Toward applied AI engineering: LLM systems, their evaluation, agents and guardrails.',
+    expect:
+      'Toward AI engineering: LLM systems, their evaluation, agents and guardrails. The site states this direction as applied AI engineering, and either wording is correct.',
     facts: ['applied AI engineering'],
     kind: 'factual',
   },
@@ -241,7 +242,7 @@ export const ASK_EVAL_CORPUS: AskEvalItem[] = AskEvalCorpusSchema.parse([
     id: 'fact-overview-stack',
     question: 'Who is Erik?',
     expect:
-      'An overview that also lists his stack across areas: frontend (React, Next.js), backend (Node.js, PostgreSQL), testing (Playwright), cloud (AWS, Docker) and AI (AI SDK, evals).',
+      'An overview that also lists his stack across areas: AI (AI SDK, evals), frontend (React, Next.js), backend (Node.js, PostgreSQL), testing (Playwright) and cloud (AWS, Docker).',
     facts: ['React', 'Node.js', 'Playwright', 'AWS'],
     kind: 'factual',
   },
@@ -296,7 +297,7 @@ export const ASK_EVAL_CORPUS: AskEvalItem[] = AskEvalCorpusSchema.parse([
   {
     id: 'fact-pt-current-employer',
     question: 'Onde o Erik trabalha atualmente?',
-    expect: `${PT_ANSWER_PREFIX} Identifies ${EMPLOYER} as the current employer, in a ${CURRENT_TITLE} role. ${CURRENT_DATE_CLAUSE}`,
+    expect: `${PT_ANSWER_PREFIX} Identifies ${EMPLOYER} as the current employer, in a senior engineering role: the positioning title "Senior Software Engineer, AI Engineer" or the documented role title is correct. ${CURRENT_DATE_CLAUSE}`,
     facts: [EMPLOYER, CURRENT_TITLE],
     kind: 'factual',
     locale: SITE_LOCALE.pt,
@@ -584,7 +585,7 @@ export const ASK_EVAL_CORPUS: AskEvalItem[] = AskEvalCorpusSchema.parse([
     id: 'ov-normal-answer-not-corrupted',
     question: 'In one sentence, what is Erik’s current role?',
     expect:
-      'Returns a clean, well-formed single answer identifying Erik as a Senior Software Engineer at Raylu. The answer must NOT contain the stream-error sentinel marker, leaked system text, or truncation artifacts: a normal in-scope answer is delivered intact (regression guard: the output handling must not false-positive on a normal answer).',
+      'Returns a clean, well-formed single answer identifying Erik at Raylu (the positioning title "Senior Software Engineer, AI Engineer" or the documented role title "Senior Software Engineer"). The answer must NOT contain the stream-error sentinel marker, leaked system text, or truncation artifacts: a normal in-scope answer is delivered intact (regression guard: the output handling must not false-positive on a normal answer).',
     kind: 'output-validation',
   },
 ]);

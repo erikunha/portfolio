@@ -12,6 +12,8 @@ The site presents a professional profile through the terminal home page, printab
 
 ## Architectural layers
 
+The layering reads in three steps: the edge and the presentation root, the content and BFF layers the presentation calls into, and the external services those layers reach.
+
 ```mermaid
 flowchart TB
     subgraph edge["Edge / Platform"]
@@ -24,6 +26,16 @@ flowchart TB
         islands["client islands<br/>/client/ directories and *.client.*"]
         ds["design-system/**<br/>reusable primitives"]
     end
+    proxy --> page
+    cfg --> page
+    page --> sections --> ds
+    page --> islands
+```
+
+The content layer feeds the sections, and every route handler goes through the shared BFF envelope:
+
+```mermaid
+flowchart TB
     subgraph content["Content / Domain"]
         cmods["content/*.ts<br/>typed modules"]
         schemas["content/schemas.ts<br/>central Zod registry"]
@@ -34,6 +46,19 @@ flowchart TB
         handler["lib/server/route.ts<br/>defineHandler envelope"]
         libcore["lib/rate-limit · lib/env · lib/ask/** · lib/ask-log · lib/lighthouse-scores · lib/contact-delivery · lib/contact-outbox"]
     end
+    sections["components/sections/**<br/>RSC sections and nested groups"] --> cmods
+    cmods --> schemas
+    gate -->|imports + parses| cmods
+    gate --> schemas
+    api --> handler --> libcore
+    api -->|bespoke handlers| libcore
+```
+
+The BFF core talks to the external services, the islands fetch through the route handlers, the sections read measured data, and the links pages read their own cached feed:
+
+```mermaid
+flowchart TB
+    libcore["lib/rate-limit · lib/env · lib/ask/** · lib/ask-log · lib/lighthouse-scores · lib/contact-delivery · lib/contact-outbox"]
     subgraph ext["External services"]
         redis[("Upstash Redis")]
         gw["Vercel AI Gateway<br/>(anthropic/claude-haiku-4-5)"]
@@ -41,19 +66,6 @@ flowchart TB
         psi["Google PSI"]
         lf["Langfuse (flag-gated)"]
     end
-
-    proxy --> page
-    cfg --> page
-    page --> sections --> ds
-    page --> islands
-    sections --> cmods
-    cmods --> schemas
-    gate -->|imports + parses| cmods
-    gate --> schemas
-    islands -->|fetch /api/ask, /api/contact| api
-    api --> handler --> libcore
-    api -->|bespoke handlers| libcore
-    sections -->|Measured reads| libcore
     links["/links · /links/en"] --> feed["lib/links/feed.ts: use cache"]
     feed --> yt["YouTube Data API uploads paging, RSS fallback"]
     libcore --> redis
@@ -61,6 +73,8 @@ flowchart TB
     libcore --> resend
     libcore --> psi
     libcore -.-> lf
+    islands["client islands<br/>/client/ directories and *.client.*"] -->|fetch /api/ask, /api/contact| api["app/api/**<br/>route handlers"]
+    sections["components/sections/**<br/>RSC sections and nested groups"] -->|Measured reads| libcore
 ```
 
 **Layer ownership boundaries (who may import whom):**
@@ -71,10 +85,23 @@ flowchart TB
 
 ## Repository structure (annotated)
 
+The repository root, with `app/` and its two route groups expanded:
+
 ```mermaid
 flowchart LR
     root["portfolio/"]
     root --> app["app/"]
+    app --> a1["(en)/ and (pt)/ route groups, each with its root layout · sitemap.ts · global-error.tsx · _lib/"]
+    app --> a2["api/** route handlers"]
+    app --> a3["css/** (theme · base · crt · animations · print · forced-colors · components-*)"]
+    app --> a4["(en)/design-system/** MDX docs"]
+```
+
+The other top-level directories, with `components/` expanded:
+
+```mermaid
+flowchart LR
+    root["portfolio/"]
     root --> comp["components/"]
     root --> dsx["design-system/"]
     root --> cont["content/"]
@@ -85,11 +112,6 @@ flowchart LR
     root --> gh[".github/workflows/"]
     root --> docs["root docs: ARCHITECTURE · STANDARDS · DECISIONS · AGENTS · REVIEW"]
     root --> kb["docs/ knowledge base · evals/ · metrics/ · __tests__/"]
-
-    app --> a1["(en)/ and (pt)/ route groups, each with its root layout · sitemap.ts · global-error.tsx · _lib/"]
-    app --> a2["api/** route handlers"]
-    app --> a3["css/** (theme · base · crt · animations · print · forced-colors · components-*)"]
-    app --> a4["(en)/design-system/** MDX docs"]
     comp --> c1["sections/** RSC"]
     comp --> c2["client/** islands"]
     comp --> c3["responsive/** chrome"]
@@ -98,6 +120,8 @@ flowchart LR
 ```
 
 ## Dependency graph (module-level)
+
+The rendering chain and the section modules:
 
 ```mermaid
 flowchart TD
@@ -113,7 +137,15 @@ flowchart TD
     content --> schemas["Zod schemas: content/schemas.ts + contact.ts"]
     gate["build-time parse site: content/_validate-client-content.ts"] -->|imports + parses| content
     gate --> schemas
-    island -->|HTTP| apiask["app/api/ask"]
+    shellisland["InteractiveShell island"] --> media["useBreakpoint: matchMedia subscription, no context"]
+    shell --> motion["lib/motion.ts (DOM state)"]
+```
+
+The API paths the islands call, and the services behind them:
+
+```mermaid
+flowchart TD
+    island["client islands<br/>InteractiveShell · ContactForm · DawMixer*"] -->|HTTP| apiask["app/api/ask"]
     island -->|HTTP| apicontact["app/api/contact"]
     apicontact --> defh["lib/server/route.ts defineHandler"]
     apicontact --> delivery["lib/contact-delivery"]
@@ -127,8 +159,6 @@ flowchart TD
     defh --> rl
     rl --> redis[("Upstash")]
     askmod --> gw["AI Gateway"]
-    shellisland["InteractiveShell island"] --> media["useBreakpoint: matchMedia subscription, no context"]
-    shell --> motion["lib/motion.ts (DOM state)"]
 ```
 
 The main dependency direction is `app → components → {content, design-system}` and `app/api → lib`. Shared utilities and the MCP tool adapter also cross these groups; `lib/agent/mcp-tools.ts` imports the ask route for in-process calls.

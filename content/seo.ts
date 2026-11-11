@@ -172,7 +172,7 @@ export const SITE_NAME = social.siteLabel;
 
 export const SITE_KEYWORDS: string[] = [
   profile.title,
-  'Applied AI',
+  'AI Engineering',
   'LLM Systems',
   'LLM Evaluation',
   'Agents',

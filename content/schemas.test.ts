@@ -282,7 +282,7 @@ describe('DawMixerSchema', () => {
 const profileFixture = {
   fullName: 'Erik Henrique Alves Cunha',
   displayName: 'Erik Cunha',
-  title: 'Senior Software Engineer, Applied AI',
+  title: 'Senior Software Engineer, AI Engineer',
   stackLine: 'TypeScript, Python, React, Next.js, Angular, Node.js, AWS',
   aiLine: 'LLM Systems, Evals, Agents, MCP, Guardrails',
   country: 'Brazil',

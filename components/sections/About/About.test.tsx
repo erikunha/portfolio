@@ -32,7 +32,7 @@ describe('About r106 composition', () => {
     expect(screen.getByRole('heading', { level: 2, name: /About/ })).toBeTruthy();
   });
 
-  it('server-renders the Senior status in the role typer, approved principles and all seven responsibilities', () => {
+  it('server-renders the Senior status in the role typer, approved principles and all eight responsibilities', () => {
     render(<About locale={SITE_LOCALE.en} />);
     expect(screen.getAllByRole('status').map((n) => n.textContent)).toContain('Senior');
     expect(screen.getByText(/LCP, INP, CLS and bundle size/)).toBeTruthy();
@@ -40,7 +40,7 @@ describe('About r106 composition', () => {
     const responsibilities = screen
       .getByRole('heading', { name: 'LS -LA ~/RESPONSIBILITIES' })
       .closest('.panel');
-    expect(responsibilities?.querySelectorAll('[data-file]')).toHaveLength(7);
+    expect(responsibilities?.querySelectorAll('[data-file]')).toHaveLength(8);
     expect(screen.getByText('performance-optimization')).toBeTruthy();
     expect(screen.getByText('taste-and-judgment')).toBeTruthy();
   });
@@ -90,7 +90,7 @@ describe('About r106 composition', () => {
     expect(container.querySelectorAll('.ab-now a')).toHaveLength(1);
   });
 
-  it('lists seven r106 ls -la rows with no extra legend lines', () => {
+  it('lists eight r106 ls -la rows with no extra legend lines', () => {
     render(<About locale={SITE_LOCALE.en} />);
     const responsibilities = screen
       .getByRole('heading', { name: 'LS -LA ~/RESPONSIBILITIES' })
@@ -99,7 +99,7 @@ describe('About r106 composition', () => {
       responsibilities?.querySelector('[data-legend="true"]'),
       'r106 shows only the listing; the legend wrapped into broken rows',
     ).toBeNull();
-    expect(responsibilities?.querySelectorAll('[data-file]')).toHaveLength(7);
+    expect(responsibilities?.querySelectorAll('[data-file]')).toHaveLength(8);
   });
 
   it('offers the full repo link in the code panel header and no copy control', () => {
@@ -126,9 +126,11 @@ describe('About r106 composition', () => {
 
   it('groups the stack and keeps retry code keyboard accessible on mobile', () => {
     render(<About locale={SITE_LOCALE.en} />);
-    for (const group of ['CORE', 'ANGULAR', 'LANG_DATA', 'QUALITY', 'TOOLING']) {
+    for (const group of ['AI/LLM', 'CORE', 'ANGULAR', 'LANG_DATA', 'QUALITY', 'TOOLING']) {
       expect(screen.getAllByText(group).length).toBeGreaterThan(0);
     }
+    expect(screen.getByText('LLM SYSTEMS')).toBeTruthy();
+    expect(screen.getByText('PROMPT ENGINEERING')).toBeTruthy();
     expect(screen.getByText('STORYBOOK')).toBeTruthy();
     expect(screen.getByText('TANSTACK')).toBeTruthy();
     const code = screen.getByRole('region', { name: 'README code' });

@@ -14,7 +14,7 @@ export function ReadingActions({
   secondary: { href: string; label: string };
   className?: string;
 }) {
-  const { shared } = readingViews[locale];
+  const { shared, cv } = readingViews[locale];
   return (
     <div className={cn('reading-actions', className)}>
       <Button
@@ -28,6 +28,9 @@ export function ReadingActions({
       </Button>
       <Button as="a" variant="secondary" href={secondary.href}>
         {secondary.label}
+      </Button>
+      <Button as="a" variant="secondary" href={cv.pdf.href} download>
+        {cv.pdf.label}
       </Button>
       <PrintButton label={shared.printLabel} />
     </div>
