@@ -35,7 +35,7 @@ export function QrPanel({ locale, url }: { locale: LinksLocale; url: string }) {
             <span aria-hidden="true">$ </span>
             {copy.qrCommand}
           </p>
-          <p className="mt-2 mb-0 text-tertiary-50 text-xs leading-body text-pretty">
+          <p className="mt-2 mb-0 text-tertiary-50 text-xs leading-ratio-body text-pretty">
             {copy.qrBody[locale]}
           </p>
           <p className="mt-2 mb-0 text-tertiary-400 text-xs">{siteLabel}</p>

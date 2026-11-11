@@ -446,7 +446,7 @@ lib/use-breakpoint.client.tsx         # client-side breakpoint hook
 lib/cn.ts                             # className join helper
 
 app/css/theme.css                     # @theme { palette, glow stops, typography vars }
-app/css/base.css                      # @layer base { resets, focus-visible, skip-to-content }
+app/css/base.css                      # @layer base { resets, focus-visible, skip-to-content, the rounded line box }
 app/css/print.css                     # @media print: ink-on-paper palette, hidden chrome, CRT layers and rain
 app/css/components-panel.css          # the .panel frame rules (panel-head, panel-title, panel-marker), imported before the section partials that scope onto them
 app/css/components-hero.css           # one of the @layer components partials (components-<section>.css), imported in cascade order

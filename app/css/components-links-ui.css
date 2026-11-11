@@ -84,7 +84,7 @@
     background: var(--color-secondary-950);
     color: var(--color-tertiary-400);
     font-size: var(--text-xs);
-    line-height: var(--leading-body);
+    --leading: var(--leading-body);
   }
 
   .links-history-empty-prompt {
@@ -142,7 +142,7 @@
     display: block;
     color: var(--color-tertiary-50);
     font-size: var(--text-xs);
-    line-height: 1.45;
+    --leading: 1.45;
     text-wrap: pretty;
   }
 

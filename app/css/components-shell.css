@@ -25,7 +25,7 @@
     color: var(--color-tertiary-50);
     font-family: var(--font-mono);
     font-size: var(--text-xs);
-    line-height: 1.65;
+    --leading: 1.65;
     --shell-focus-width: 2px;
   }
 
@@ -213,7 +213,7 @@
   .shell-privacy-notice {
     margin: 0;
     padding: var(--spacing-2) var(--spacing-4);
-    line-height: 1.5;
+    --leading: 1.5;
   }
 
   .shell-privacy-notice {

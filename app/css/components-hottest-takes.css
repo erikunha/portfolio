@@ -79,7 +79,7 @@
     font-size: var(--text-sm);
     font-weight: 700;
     letter-spacing: var(--tracking-2xs);
-    line-height: 1.5;
+    --leading: 1.5;
   }
 
   .opinions-take h3 > span {
@@ -99,7 +99,7 @@
     max-width: var(--measure-opinions-body);
     color: var(--color-tertiary-50);
     font-size: var(--text-sm);
-    line-height: 1.65;
+    --leading: 1.65;
   }
 
   .opinions-footer {
@@ -136,7 +136,7 @@
     margin: 0;
     padding: 0;
     font-size: var(--text-min);
-    line-height: 1.6;
+    --leading: 1.6;
     color: var(--color-tertiary-50);
   }
 

@@ -5,7 +5,7 @@
     gap: var(--spacing-4);
     font-family: var(--font-mono);
     font-size: var(--text-sm);
-    line-height: var(--guitar-line-height);
+    --leading: var(--guitar-line-height);
     color: var(--color-tertiary-50);
   }
 
@@ -66,7 +66,7 @@
     margin: 0;
     font-size: var(--text-sm);
     font-weight: bold;
-    line-height: var(--guitar-heading-line-height);
+    --leading: var(--guitar-heading-line-height);
     color: var(--color-primary-500);
   }
 
@@ -407,7 +407,7 @@
     padding: var(--spacing-4);
     border: var(--border-width) dashed var(--color-primary-subtle);
     font-size: var(--text-sm);
-    line-height: 1.7;
+    --leading: 1.7;
   }
 
   @media (min-width: theme(--viewport-narrow)) {
@@ -466,5 +466,21 @@
 
   body:not([data-motion="reduce"]) .mixer-boot-cursor {
     animation: mixer-boot-blink 1.05s steps(2, start) infinite;
+  }
+
+  /* The arrow is a square sized in `ch`, so its box is a fraction of a pixel
+     at the phone's 12px. The line box and the box around it are rounded
+     together, so the glyph stays centred in a whole-pixel square. The rule
+     is scoped like the square it rounds: the arrow is a square only below
+     the md breakpoint, and above it the arrow inherits its height from the
+     row it sits in. A browser without `round()` keeps the fraction, which is
+     what it has today. */
+  @media (max-width: theme(--viewport-below-md)) {
+    @supports (line-height: round(nearest, 1px, 1px)) {
+      .guitar-arrow {
+        line-height: round(nearest, var(--guitar-arrow-length), 1px);
+        height: round(nearest, var(--guitar-arrow-length), 1px);
+      }
+    }
   }
 }

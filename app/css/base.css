@@ -11,6 +11,11 @@
     --to-top-inset: 14px;
     --to-top-dock-offset: 64px;
     --to-top-reach: calc(var(--to-top-inset) + var(--to-top-size) + var(--spacing-2));
+    /* The leading in effect for an element and its subtree. It is a ratio, so
+       it inherits the way a unitless `line-height` inherits today: a child at
+       a different font-size still scales by the same ratio. The line box
+       itself is rounded to whole pixels further down. */
+    --leading: 1.55;
     color-scheme: dark;
     scrollbar-color: var(--color-primary-700) var(--color-secondary-950);
     scrollbar-width: thin;
@@ -20,6 +25,37 @@
   *::before,
   *::after {
     box-sizing: border-box;
+  }
+
+  /* Every element's line box is a whole number of pixels. A ratio multiplied
+     by a font-size lands on a fraction most of the time (16px x 1.55 is
+     24.8px), and a fractional line box is what makes a paragraph of text
+     land on half-pixels: the glyphs sit between pixel rows and the raster
+     renders them twice as dark, unevenly, on the lines that fall between
+     rows. The ratio stays the ratio; only the box it produces is rounded.
+     Browsers without `round()` keep the ratio, which is the behaviour they
+     have today.
+
+     The selector is `html *` and not `*`: Tailwind's preflight sets
+     `html { line-height: 1.5 }` in this same layer, and the universal
+     selector has lower specificity than an element selector, so on the root
+     element the preflight would win and the root would keep a fractional
+     box. `html *` carries the element's own specificity and comes later in
+     source order, so it wins there too. */
+  html,
+  html *,
+  html *::before,
+  html *::after {
+    line-height: var(--leading);
+  }
+
+  @supports (line-height: round(nearest, 1px, 1px)) {
+    html,
+    html *,
+    html *::before,
+    html *::after {
+      line-height: round(nearest, 1em * var(--leading), 1px);
+    }
   }
 
   html {
@@ -72,7 +108,6 @@
     color: var(--color-text);
     font-family: var(--font-mono);
     font-size: var(--text-base);
-    line-height: 1.55;
     -webkit-font-smoothing: antialiased;
     overflow-x: clip;
   }
@@ -175,7 +210,7 @@
     font-size: var(--text-3xl);
     font-family: var(--font-display);
     font-weight: 900;
-    line-height: 1.05;
+    --leading: 1.05;
   }
 
   h2 {

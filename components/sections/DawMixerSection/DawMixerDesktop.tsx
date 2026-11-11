@@ -32,7 +32,7 @@ function PluginChain({
           )}
           data-testid={`plugin-${channelId}-${p.name}`}
         >
-          <span className="text-xs font-bold text-center leading-tight overflow-hidden text-ellipsis max-w-full uppercase">
+          <span className="text-xs font-bold text-center leading-ratio-tight overflow-hidden text-ellipsis max-w-full uppercase">
             {p.name}
           </span>
           <span className="flex gap-px items-end" aria-hidden="true">
@@ -81,14 +81,14 @@ function ChannelDesktop({ ch, copy }: { ch: DawMixerChannel; copy: DawMixerCopy 
       <div className="flex flex-col gap-1 min-w-0">
         <span
           className={cn(
-            'font-bold text-base text-tertiary-50 tracking-xs leading-none',
+            'font-bold text-base text-tertiary-50 tracking-xs leading-ratio-1',
             (ch.focused || isMaster) && 'text-primary-500',
           )}
         >
           {ch.desktopName ?? ch.name}
         </span>
         <span
-          className="text-xs text-primary-400 leading-[1.3] whitespace-nowrap overflow-hidden text-ellipsis max-md:whitespace-normal max-md:overflow-visible max-md:text-clip"
+          className="text-xs text-primary-400 leading-ratio-1-3 whitespace-nowrap overflow-hidden text-ellipsis max-md:whitespace-normal max-md:overflow-visible max-md:text-clip"
           data-testid="mixer-desc"
         >
           <ParsedText text={ch.desc} />

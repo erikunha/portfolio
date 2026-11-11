@@ -6,7 +6,7 @@
     color: var(--color-text);
     font-family: var(--font-mono);
     font-size: var(--text-sm);
-    line-height: 1.6;
+    --leading: 1.6;
   }
 
   .reading-view a {
@@ -307,7 +307,7 @@
       background: var(--color-print-paper);
       color: var(--color-print-ink);
       font-size: 9.5pt;
-      line-height: 1.4;
+      --leading: 1.4;
     }
 
     body:has(.reading-view) :is(.desktop-only, .mobile-only, .section-nav-root),

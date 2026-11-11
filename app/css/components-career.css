@@ -65,7 +65,7 @@
     color: var(--color-primary-400);
     font-size: var(--text-body);
     font-weight: 400;
-    line-height: 1.6;
+    --leading: 1.6;
     overflow-wrap: anywhere;
   }
 
@@ -134,6 +134,21 @@
     overflow-wrap: break-word;
   }
 
+  /* The log keeps its 22px rhythm down the whole line. The base layer gives
+     every element a line-height of its own, and a length does not travel the
+     way a ratio does: before, the length reached the spans inside the line
+     because they inherited it; now it has to be stated for them, or they
+     would take the root's ratio and the line would breathe at a different
+     pace. */
+  .career-commits,
+  .career-commits > li,
+  .career-head,
+  .career-head *,
+  .career-body,
+  .career-body * {
+    line-height: var(--career-line-height);
+  }
+
   .career-body {
     max-width: 72ch;
     color: var(--color-text);
@@ -186,7 +201,7 @@
     padding-top: var(--spacing-4);
     border-top: var(--border-width) dashed var(--color-primary-quiet);
     font-size: var(--text-min);
-    line-height: 1.6;
+    --leading: 1.6;
   }
 
   .career-tag-list {
