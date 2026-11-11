@@ -101,7 +101,7 @@ Senior Software Engineer, Jun 2026 - Present, remote.
 - Design documents come before code: decision records, an evidence log citing code by path and line against the main branch, acceptance criteria in EARS format, a WCAG criterion-by-criterion table and a rollback plan keyed to a named signal rather than a date.
 
 ## Targeting
-Open to: Senior, Tech Lead. GenAI, AI-native products, LLM systems and agents (evals, guardrails, MCP).
+Open to: Senior, AI Engineer, Applied AI Engineer, AI Product Engineer and Founding Engineer. GenAI, AI-native products, LLM systems and agents (evals, guardrails, MCP).
 Direction: applied AI engineering: LLM systems, the evaluation that decides whether they are safe to ship, agents and guardrails; MBA in AI Engineering in progress (Instituto Infnet, expected Dec 2027).
 Strong preference: AI-native products and agent systems that ship with evals and guardrails, and performance-critical systems.
 

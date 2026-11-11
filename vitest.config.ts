@@ -3,6 +3,15 @@ import { defineConfig } from 'vitest/config';
 
 const ISO_DATE_LENGTH = 10;
 
+// The thresholds the README states, exported so the documentation and the gate
+// cannot drift apart: a threshold lowered here has to be restated there.
+export const COVERAGE_THRESHOLDS = {
+  lines: 80,
+  branches: 70,
+  functions: 80,
+  statements: 80,
+} as const;
+
 export default defineConfig({
   test: {
     env: { BUILD_DATE: new Date().toISOString().slice(0, ISO_DATE_LENGTH) },
@@ -22,10 +31,7 @@ export default defineConfig({
       provider: 'v8',
       reporter: ['text', 'json-summary', 'html'],
       thresholds: {
-        lines: 80,
-        branches: 70,
-        functions: 80,
-        statements: 80,
+        ...COVERAGE_THRESHOLDS,
       },
       include: ['lib/**', 'components/**', 'app/**', 'design-system/components/**'],
       exclude: [

@@ -42,7 +42,7 @@ Every section of the page is driven by a typed module in `content/`, and those t
 | ------------------------------ | -------------------------------------------------------- | --------------------- | -------------------------------------- |
 | About panels                   | Positioning, Now rows, stack and retry code              | `about.ts`            | `AboutContent`                         |
 | `GIT LOG --ONELINE --DECORATE --GRAPH` | Career timeline with nested tag groups           | `git-log.ts`          | `GitCommit[]` (`companyUrl`, `type`)   |
-| `LS -LA ./PROJECTS`            | Ten projects with shared desktop/mobile content          | `projects.ts`         | `Project[]`                            |
+| `LS -LA ./PROJECTS`            | Eleven projects with shared desktop/mobile content      | `projects.ts`         | `Project[]`                            |
 | `PERF_RECEIPTS --HARD-NUMBERS` | Six impact receipts nested under Projects                | `perf-receipts.ts`    | `projectReceipts` from `PerfReceipt[]` |
 | `MEASURED.JSON`                | ASK evaluation and desktop/mobile PSI                    | `measured.ts`         | `Measured` presentation metadata       |
 | About responsibilities panel   | Scope, as Unix permission bits                           | `responsibilities.ts` | `Responsibility[]` (`perms` regex)     |

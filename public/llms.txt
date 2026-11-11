@@ -13,6 +13,7 @@
 - Current role: working remotely for Raylu (New York, US)
 - Work scope: open to any arrangement: remote worldwide, hybrid or on-site
 - Target role: Senior Software Engineer, AI Engineer
+- Open to roles: Senior, AI Engineer, Applied AI Engineer, AI Product Engineer and Founding Engineer
 - Focus: GenAI, AI-native products, LLM systems and agents (evals, guardrails, MCP)
 - Contact: erikhenriquealvescunha@gmail.com | +5519997049125
 

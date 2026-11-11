@@ -15,6 +15,7 @@ import { LINKS_PATH } from '@/content/links.constants';
 import { measured } from '@/content/measured';
 import { HIRE_ACCESSIBLE_NAME, TOPBAR_NAV } from '@/content/nav';
 import { NAVIGATION } from '@/content/navigation';
+import { OPEN_ROLE_TOKENS, OPEN_ROLES_SENTENCE } from '@/content/open-roles';
 import {
   PROFILE_FACT,
   profile,
@@ -303,5 +304,32 @@ describe('one source per fact', () => {
       );
       expect(aboutContent[locale].code.repoNewTabNote).toBe(`(${phrase})`);
     }
+  });
+
+  it('names the open roles from one source on every surface that states them', () => {
+    const llmsTxt = readFileSync(path.join(REPO_ROOT, 'public', 'llms.txt'), 'utf-8');
+
+    for (const locale of LOCALES) {
+      const sentence = OPEN_ROLES_SENTENCE[locale];
+      expect(
+        aboutContent[locale].whoami.details.join('\n'),
+        `the About panel of the ${locale} site must state the open roles from content/open-roles.ts`,
+      ).toContain(sentence);
+    }
+
+    expect(
+      llmsTxt,
+      'public/llms.txt must state the open roles an agent reads, or a recruiter reads a different list than the page shows',
+    ).toContain(OPEN_ROLES_SENTENCE[SITE_LOCALE.en]);
+
+    expect(
+      SYSTEM_TEXT,
+      'the ask prompt must carry the open roles, or the answer names roles the site does not publish',
+    ).toContain(OPEN_ROLES_SENTENCE[SITE_LOCALE.en]);
+
+    expect(
+      HIRING_PROFILE.open_to,
+      'the hiring profile must publish every open role as a machine-readable token',
+    ).toEqual(expect.arrayContaining([...OPEN_ROLE_TOKENS]));
   });
 });

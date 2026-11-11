@@ -233,8 +233,9 @@ export const ASK_EVAL_CORPUS: AskEvalItem[] = AskEvalCorpusSchema.parse([
   {
     id: 'fact-targeting-roles',
     question: 'What kind of roles is Erik looking for?',
-    expect: 'Senior or Tech Lead roles in GenAI, AI-native products, LLM systems and agents.',
-    facts: ['Senior', 'Tech Lead', 'agents'],
+    expect:
+      'States that Erik is open to Senior, AI Engineer, Applied AI Engineer, AI Product Engineer and Founding Engineer roles, focused on GenAI, AI-native products, LLM systems and agents.',
+    facts: ['Senior', 'AI Engineer', 'Founding Engineer', 'agents'],
     kind: 'factual',
   },
 

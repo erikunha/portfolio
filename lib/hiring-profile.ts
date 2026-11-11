@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { credentials } from '@/content/credentials';
 import { education } from '@/content/education';
 import { gitLog } from '@/content/git-log';
+import { OPEN_ROLE_TOKENS } from '@/content/open-roles';
 import {
   PROFILE_FACT,
   profile,
@@ -156,7 +157,7 @@ export const HIRING_PROFILE: HiringProfile = HiringProfileSchema.parse({
   certifications: credentials.map((entry) => `${entry.label} · ${entry.badge} · ${entry.evidence}`),
   availability: profile.availability,
   notice_period_days: 0,
-  open_to: ['full_time', 'contract', 'ic', 'tech_lead'],
+  open_to: ['full_time', 'contract', 'ic', 'tech_lead', ...OPEN_ROLE_TOKENS],
   location: profileLocation,
 
   languages: profile.languages,

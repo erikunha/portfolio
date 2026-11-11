@@ -1,6 +1,8 @@
 # erikunha.dev
 
-Next.js 16 portfolio deployed to Vercel (Fluid Compute). RSC-first homepage composition of terminal-module sections plus a footer with client islands by exception, a streaming LLM endpoint, a durable contact form, and a CI pipeline that enforces performance, accessibility, and bundle size as hard contracts.
+**Erik Cunha — Senior Software Engineer, AI Engineer.** 8+ years of production software across AI-native SaaS, fintech, payments and e-commerce, and open to Senior, AI Engineer, Applied AI Engineer, AI Product Engineer and Founding Engineer roles.
+
+The site is the artifact: a Next.js 16 application on Vercel (Fluid Compute), an RSC-first homepage composed of terminal-module sections plus a footer with client islands by exception, a streaming LLM endpoint, a durable contact form, and a CI pipeline that enforces performance, accessibility and bundle size as hard contracts — the Lighthouse thresholds and the axe scan in the `performance` job, the client-chunk and per-route JS budgets in the `build` job.
 
 **Live:** [erikunha.dev](https://www.erikunha.dev)
 
@@ -21,7 +23,7 @@ Next.js 16 portfolio deployed to Vercel (Fluid Compute). RSC-first homepage comp
 
 ---
 
-This is Erik Cunha's hiring artifact for Senior Software Engineer, AI Engineer roles (open to Senior and Tech Lead). The codebase demonstrates the engineering it claims, a site that says "performance-first" but ships a 400 KB JS bundle is self-disqualifying. `ARCHITECTURE.md` describes the system; `DECISIONS.md` records decisions and reversibility notes.
+The codebase demonstrates the engineering it claims: "performance-first" is a budget and not an adjective — Lighthouse CI gates the category scores and the timings on the 24 routes the Lighthouse config lists, the axe scan fails CI, and the client-chunk and per-route first-load JS budgets are gates in the `build` job (`check-bundle-size.mjs` and `check-route-js.mjs`). `ARCHITECTURE.md` describes the system; `DECISIONS.md` records decisions and reversibility notes.
 
 The AI centerpiece is a streaming `ask` endpoint (Vercel AI Gateway + Anthropic Haiku 4.5, prompt-cached, rate-limited, budget-capped) with a correctness eval suite and a visible metrics panel, making AI quality observable to hiring reviewers. Agent-readiness surfaces include `/.well-known/agent.json` and a minimal MCP server.
 
@@ -41,8 +43,8 @@ The terminal homepage is complemented by `/summary`, `/cv`, `/links` (pt-BR), `/
 | Tailwind v4 (via PostCSS)               | Utility-first styling; design tokens authored in `app/css/theme.css` under `@theme {}`. No CSS Modules, no Style Dictionary, no build-time token pipeline |
 | Design system (`/design-system`)        | 11 components (10 server-compatible; Field is client), docs CopyButton helper, `@theme` tokens and live docs                                               |
 | Biome                                   | Lint + format in a single Rust binary                                                                                                                     |
-| Vitest + Playwright                     | Unit (80% line coverage gate) + E2E across eight Playwright projects + axe-core a11y CI suite + Argos visual diffs                                        |
-| Lighthouse CI                           | LCP, TBT, CLS and category scores gated for app changes; INP checked in browser tests                                                                     |
+| Vitest + Playwright                     | Unit (80% lines, 70% branches) + E2E across eight Playwright projects + axe-core a11y CI suite + Argos visual diffs                                    |
+| Lighthouse CI                           | LCP, TBT, CLS and the category scores gated on the 24 routes the Lighthouse config lists (performance ≥95 desktop / ≥90 mobile, accessibility and SEO = 100, best practices ≥95); INP checked in the browser tests |
 | Stryker                                 | Weekly mutation testing; a canary run in CI proves the runner still kills mutants                                                                         |
 | pnpm 10+ / Node 22.22.2+                | Strict dependency resolution, content-addressed store                                                                                                     |
 
