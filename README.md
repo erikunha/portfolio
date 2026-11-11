@@ -21,7 +21,7 @@ Next.js 16 portfolio deployed to Vercel (Fluid Compute). RSC-first homepage comp
 
 ---
 
-This is Erik Cunha's hiring artifact for Senior AI Engineer roles (open to Senior and Tech Lead). The codebase demonstrates the engineering it claims, a site that says "performance-first" but ships a 400 KB JS bundle is self-disqualifying. `ARCHITECTURE.md` describes the system; `DECISIONS.md` records decisions and reversibility notes.
+This is Erik Cunha's hiring artifact for Senior Software Engineer, AI Engineer roles (open to Senior and Tech Lead). The codebase demonstrates the engineering it claims, a site that says "performance-first" but ships a 400 KB JS bundle is self-disqualifying. `ARCHITECTURE.md` describes the system; `DECISIONS.md` records decisions and reversibility notes.
 
 The AI centerpiece is a streaming `ask` endpoint (Vercel AI Gateway + Anthropic Haiku 4.5, prompt-cached, rate-limited, budget-capped) with a correctness eval suite and a visible metrics panel, making AI quality observable to hiring reviewers. Agent-readiness surfaces include `/.well-known/agent.json` and a minimal MCP server.
 

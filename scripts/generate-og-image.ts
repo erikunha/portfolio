@@ -140,7 +140,7 @@ function buildHtml(): string {
   <div class="top">
     <div class="domain">erikunha.dev</div>
     <div class="name">ERIK CUNHA</div>
-    <div class="title">Senior AI Engineer</div>
+    <div class="title">Senior Software Engineer, AI Engineer</div>
     <div class="subtitle">Agents &bull; MCP &bull; LLM-as-Judge &bull; Evals &bull; Guardrails</div>
     <div class="subtitle" style="margin-top:4px;">Data-Dense Product Platforms &bull; Accessibility &bull; Web Performance</div>
   </div>
