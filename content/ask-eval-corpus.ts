@@ -79,11 +79,11 @@ export const ASK_EVAL_CORPUS: AskEvalItem[] = AskEvalCorpusSchema.parse([
     kind: 'factual',
   },
   {
-    id: 'fact-independent-consulting',
-    question: 'What did Erik do as an independent consultant?',
+    id: 'fact-forward-deployed-engineer',
+    question: 'What did Erik do as a forward deployed engineer?',
     expect:
-      'States that he worked as an independent consultant (2023-2025) on a hospital equipment service platform for a medical imaging equipment company (service orders, specialist scheduling, field visits) built with Angular and Nx, and names no client.',
-    facts: ['independent consultant', 'hospital equipment service platform'],
+      'States that he worked as a forward deployed engineer (2023-2025) on a hospital equipment service platform for a medical imaging equipment company (service orders, specialist scheduling, field visits) built with Angular and Nx, and names no client.',
+    facts: ['forward deployed engineer', 'hospital equipment service platform'],
     kind: 'factual',
   },
   {
@@ -175,7 +175,7 @@ export const ASK_EVAL_CORPUS: AskEvalItem[] = AskEvalCorpusSchema.parse([
   {
     id: 'fact-perf-consulting-bundles',
     question: 'What bundle-size improvements has Erik shipped?',
-    expect: `As an independent consultant: ${BUNDLE_JS_DELTA} JS bundle and ${BUNDLE_CSS_DELTA} CSS bundle.`,
+    expect: `As a forward deployed engineer: ${BUNDLE_JS_DELTA} JS bundle and ${BUNDLE_CSS_DELTA} CSS bundle.`,
     facts: [BUNDLE_JS_DELTA, BUNDLE_CSS_DELTA],
     kind: 'factual',
   },

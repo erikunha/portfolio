@@ -110,7 +110,7 @@ describe('the ask eval corpus grades only what the prompt can answer', () => {
   it('describes the consulting work, Nike and the Canadian diploma as content/ does', () => {
     const expectOf = (id: string) => ASK_EVAL_CORPUS.find((item) => item.id === id)?.expect ?? '';
     const coOp = education[SITE_LOCALE.en].find((entry) => entry.id === 'CO_OP_DIPLOMA');
-    expect(expectOf('fact-independent-consulting')).toContain(
+    expect(expectOf('fact-forward-deployed-engineer')).toContain(
       'hospital equipment service platform',
     );
     expect(SYSTEM_TEXT).toContain('hospital equipment service platform');

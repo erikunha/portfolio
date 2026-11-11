@@ -34,9 +34,9 @@ const experienceDetailEn: Record<string, ExperienceDetail> = {
       'Built a 12-agent AI-assisted engineering system on GitHub Copilot spanning generation, review, debugging, testing and architecture validation, adopted across the team with every automated action reviewable',
     ],
   },
-  'career/independent-consultant': {
+  'career/forward-deployed-engineer': {
     context:
-      'Independent consulting for a medical imaging equipment company: the service-order and field-service platform its engineers maintain imaging equipment at hospitals through, with specialist scheduling, field visits and parts collection.',
+      'Forward-deployed engineering for a medical imaging equipment company: the service-order and field-service platform its engineers maintain imaging equipment at hospitals through, with specialist scheduling, field visits and parts collection.',
     highlights: [
       "Rebuilt a medical imaging equipment company's hospital equipment service platform, replacing a legacy tool with a layered domain, data and presentation architecture for service orders, specialist schedules and field visits, as a progressive web app on Angular 17 to 19 with TypeScript 5, RxJS, PrimeNG, Chart.js, FullCalendar, Bryntum Scheduler, the Google Maps API, WebSocket (STOMP/SockJS) and Nx",
       'Built specialist visit scheduling with travel-time checks, plus a 29-permission security-profile model and an HTTP interceptor that retries with backoff and de-duplicates in-flight requests',
@@ -126,9 +126,9 @@ const experienceDetailPt: Record<string, ExperienceDetail> = {
       'Construí um sistema de engenharia assistido por IA com 12 agentes no GitHub Copilot, cobrindo geração, revisão, depuração, testes e validação de arquitetura, adotado pelo time com toda ação automatizada revisável',
     ],
   },
-  'career/independent-consultant': {
+  'career/forward-deployed-engineer': {
     context:
-      'Consultoria independente para uma empresa de equipamentos de imagem médica: a plataforma de ordens de serviço e serviço em campo por onde seus engenheiros mantêm equipamentos de imagem em hospitais, com agendamento de especialistas, visitas de campo e coleta de peças.',
+      'Engenharia implantada para uma empresa de equipamentos de imagem médica: a plataforma de ordens de serviço e serviço em campo por onde seus engenheiros mantêm equipamentos de imagem em hospitais, com agendamento de especialistas, visitas de campo e coleta de peças.',
     highlights: [
       'Reconstruí a plataforma de serviço de equipamentos hospitalares de uma empresa de equipamentos de imagem médica, substituindo uma ferramenta legada por uma arquitetura em camadas de domínio, dados e apresentação para ordens de serviço, agendas de especialistas e visitas de campo, como um progressive web app em Angular 17 a 19 com TypeScript 5, RxJS, PrimeNG, Chart.js, FullCalendar, Bryntum Scheduler, a API do Google Maps, WebSocket (STOMP/SockJS) e Nx',
       'Construí o agendamento de visitas de especialistas com checagem de tempo de deslocamento, além de um modelo de perfis de segurança com 29 permissões e um interceptor HTTP que refaz tentativas com backoff e elimina requisições duplicadas em andamento',

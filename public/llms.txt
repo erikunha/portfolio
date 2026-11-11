@@ -58,9 +58,9 @@ Structured Output · Prompt Caching · Streaming LLM · LLM Cost Optimization
 ## Impact at Scale
 
 - -97.5% API latency: reporting endpoints from ~40s → <1s (query + indexing)
-- -98% CSS bundle reduction (Independent Consultant)
-- -52% Time to Interactive improvement (Independent Consultant)
-- -33% JavaScript bundle reduction (Independent Consultant)
+- -98% CSS bundle reduction (Forward Deployed Engineer)
+- -52% Time to Interactive improvement (Forward Deployed Engineer)
+- -33% JavaScript bundle reduction (Forward Deployed Engineer)
 - -32% page load reduction (Nike Brazil / Centauro)
 - +10% conversion rate via 20+ A/B experiments (Nike Brazil)
 - ~80% shared code, ~40% faster desktop build (MB Labs)
@@ -106,7 +106,7 @@ Performance & A11y: Core Web Vitals · WCAG 2.2 AA · ARIA · Lighthouse CI
 |---|---|---|---|
 | Jun 2026 - Present | [Raylu](https://raylu.ai) | Senior Software Engineer | New York, US (remote) |
 | Mar 2025 - May 2026 | [Betsson Group](https://betssongroup.com) | Senior Software Engineer | Malta (hybrid) |
-| Mar 2023 - Mar 2025 | Independent Consultant | Senior Software Engineer | Remote |
+| Mar 2023 - Mar 2025 | Forward Deployed Engineer | Senior Software Engineer | Remote |
 | Dec 2021 - Mar 2023 | [Grupo SBF (Nike / Centauro)](https://www.gruposbf.com.br) | Software Engineer | São Paulo, Brazil (remote) |
 | Jan 2021 - Dec 2021 | [Encora (formerly Daitan)](https://www.linkedin.com/company/encorainc/) | Frontend Developer · assigned to VMware | Campinas, Brazil |
 | Apr 2020 - Jan 2021 | [Zup Innovation (Itaú Unibanco)](https://zup.com.br) | Frontend Developer | Campinas, Brazil |
@@ -159,7 +159,7 @@ Performance & A11y: Core Web Vitals · WCAG 2.2 AA · ARIA · Lighthouse CI
 - LEDGERLENS, personal project (open source, MIT): Python agent that investigates payment complaints and verifies every claim in its answer against the evidence it cited (github.com/erikunha/ledgerlens).
 - VAULT_OF_LOCI, personal project (open source, MIT): Obsidian vault template where AI agents quiz instead of answering, driven by one AGENTS.md across seven agent tools, with a 17-scenario tutor test graded by a model of another family (github.com/erikunha/vault-of-loci).
 - REACT_GOOGLE_MAPS_API, open-source contribution (PR #3266): diagnosed and fixed an infinite re-render loop in the Directions API example of a library with about 1.8M weekly npm downloads; reviewed and merged by the maintainer.
-- SERVICE_OPS_CONSOLE, Independent Consultant: hospital equipment service platform for service orders, specialist schedules and field visits.
+- SERVICE_OPS_CONSOLE, Forward Deployed Engineer: hospital equipment service platform for service orders, specialist schedules and field visits.
 
 ## Links
 

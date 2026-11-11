@@ -5,7 +5,7 @@ export const RETIRED_CLAIMS: RetiredClaim[] = [
     name: 'client name',
     pattern: /canon(?!ical)|¥/i,
     reason:
-      'the independent consulting role is published with no client name and no figure that identifies one, in any derived form (CANON_MEDICAL labels, canon-medical branch keys, slugs and anchors); only "canonical" is allowed',
+      'the forward deployed engineering role is published with no client name and no figure that identifies one, in any derived form (CANON_MEDICAL labels, canon-medical branch keys, slugs and anchors); only "canonical" is allowed',
   },
   {
     name: 'work permit or relocation',
@@ -23,7 +23,7 @@ export const RETIRED_CLAIMS: RetiredClaim[] = [
     name: 'sector targeting',
     pattern: /healthcare|health ?tech|\bsaúde\b/i,
     reason:
-      'owner decision: targeting is GenAI, AI-native products, LLM systems and agents; the consulting work is described by its platform, with no healthcare sector or targeting claim',
+      'owner decision: targeting is GenAI, AI-native products, LLM systems and agents; the forward deployed engineering work is described by its platform, with no healthcare sector or targeting claim',
   },
   {
     name: 'removed employer',
