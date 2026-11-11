@@ -123,3 +123,9 @@ __pycache__/
 # weekly metrics output (scripts/metrics); history lives in a workflow artifact
 /metrics/weekly.json
 /metrics/breaches.json
+
+# scratch scripts written at the repository root by a local demo (.ll_demo_*.mjs,
+# .ll_dbg_*.mjs, .probe_scroll.mjs and whatever name they take next): they are
+# throwaway, they are never tracked, and Biome lints the working tree, so one
+# of them breaks the pre-commit hook for whoever is committing next
+/.*.mjs
