@@ -253,3 +253,35 @@
     }
   }
 }
+
+/* Every Tailwind text size ships a line-height paired with it, and the utility
+   writes it as `line-height: var(--tw-leading, var(--text-xs--line-height))`.
+   The box that ratio produces is fractional (13px x 1.333 is 17.33px), and the
+   utilities layer outranks the base layer, so the universal rule in base.css
+   cannot round it. The ratio is kept exactly as Tailwind defines it - only the
+   box it produces is rounded - and the override sits behind the same
+   `@supports` so a browser without `round()` keeps the ratio it has today.
+
+   These are the ratios Tailwind v4 pairs with each size. A size the site adds
+   to the theme needs its own line here only if Tailwind pairs it with a
+   line-height: a size without a companion (`--text-min`, `--text-body`) has no
+   `line-height` in its utility, so the base layer rounds it like any other
+   element. */
+@layer base {
+  @supports (line-height: round(nearest, 1px, 1px)) {
+    /* biome-ignore-start lint/suspicious/noDuplicateSelectors: this `:root` is inside an `@supports` that only matches browsers with CSS `round()`, so it overrides the pair of Tailwind defaults above instead of repeating them */
+    :root {
+      --text-xs--line-height: round(nearest, 1em * calc(1 / 0.75), 1px);
+      --text-sm--line-height: round(nearest, 1em * calc(1.25 / 0.875), 1px);
+      --text-base--line-height: round(nearest, 1em * calc(1.5 / 1), 1px);
+      --text-lg--line-height: round(nearest, 1em * calc(1.75 / 1.125), 1px);
+      --text-xl--line-height: round(nearest, 1em * calc(1.75 / 1.25), 1px);
+      --text-2xl--line-height: round(nearest, 1em * calc(2 / 1.5), 1px);
+      --text-3xl--line-height: round(nearest, 1em * calc(2.25 / 1.875), 1px);
+      --text-4xl--line-height: round(nearest, 1em * calc(2.5 / 2.25), 1px);
+      --text-5xl--line-height: round(nearest, 1em * 1, 1px);
+      --text-7xl--line-height: round(nearest, 1em * 1, 1px);
+    }
+    /* biome-ignore-end lint/suspicious/noDuplicateSelectors: see above */
+  }
+}

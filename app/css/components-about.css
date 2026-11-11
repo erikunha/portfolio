@@ -40,7 +40,7 @@
     padding: var(--spacing-4);
     margin: 0;
     font-size: var(--text-sm);
-    line-height: 1.6;
+    --leading: 1.6;
   }
 
   .ab-text {
@@ -145,7 +145,7 @@
     max-width: 100%;
     margin: 0;
     font-size: var(--text-sm);
-    line-height: 1.6;
+    --leading: 1.6;
   }
 
   .ab-resp pre > span {
@@ -192,7 +192,7 @@
     white-space: pre-wrap;
     overflow-wrap: anywhere;
     font-size: var(--text-xs);
-    line-height: 1.4;
+    --leading: 1.4;
     padding: var(--spacing-2) var(--spacing-3);
     background: var(--color-glow-03);
   }
@@ -272,7 +272,7 @@
       line-height: var(--spacing-4);
     }
     .ab-resp pre {
-      line-height: 1.85;
+      --leading: 1.85;
     }
     .ab-resp [data-file] {
       flex: 0 0 100%;

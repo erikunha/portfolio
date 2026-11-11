@@ -14,7 +14,7 @@
     padding-inline-end: 0;
     padding-block-end: var(--spacing-6);
     font-size: var(--text-sm);
-    line-height: var(--leading-body);
+    --leading: var(--leading-body);
   }
 
   .ds-main:focus {
@@ -70,7 +70,7 @@
 
   .ds-prose li {
     margin-block-end: var(--spacing-1);
-    line-height: var(--leading-body);
+    --leading: var(--leading-body);
   }
 
   .ds-prose table {
@@ -86,7 +86,7 @@
     border: var(--border-width) solid var(--color-primary-border);
     text-align: left;
     vertical-align: top;
-    line-height: 1.35;
+    --leading: 1.35;
   }
 
   .ds-prose th {

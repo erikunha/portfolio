@@ -31,7 +31,7 @@
     z-index: var(--z-local-above);
     color: var(--color-tertiary-50);
     font-size: var(--text-sm);
-    line-height: 1.7;
+    --leading: 1.7;
     overflow: hidden;
     display: flex;
     flex-direction: column;
@@ -49,7 +49,7 @@
   .hero-boot-mobile {
     color: var(--color-tertiary-50);
     font-size: var(--text-min);
-    line-height: 1.65;
+    --leading: 1.65;
 
     height: auto;
     overflow: hidden;
@@ -170,7 +170,7 @@
     font-family: var(--font-display);
     font-size: var(--text-4xl);
     font-weight: 900;
-    line-height: 1.2;
+    --leading: 1.2;
   }
 
   .hero-stack {
@@ -178,7 +178,7 @@
     margin: 0 0 var(--spacing-2);
     color: var(--color-text);
     font-size: var(--text-sm);
-    line-height: 1.55;
+    --leading: 1.55;
     text-wrap: balance;
   }
 
@@ -267,7 +267,7 @@
 
   @media (max-width: theme(--viewport-below-md)) {
     .hero-stack {
-      line-height: var(--hero-stack-leading-compact);
+      --leading: var(--hero-stack-leading-compact);
     }
 
     .hero-context {
@@ -281,7 +281,7 @@
     }
 
     .hero-actions {
-      margin-top: var(--spacing-2);
+      margin-top: var(--spacing-1);
     }
 
     .hero-actions > a:not(:first-child) {
@@ -376,7 +376,7 @@
     }
     .hero-context {
       font-size: var(--text-xs);
-      line-height: 1.5;
+      --leading: 1.5;
       letter-spacing: var(--tracking-xs);
       row-gap: 0;
       margin-bottom: var(--spacing-2);

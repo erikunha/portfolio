@@ -140,13 +140,16 @@ The prompt for a manual or agent review that applies these rules to a diff is `d
     or heading edits the matching `.aria.yml` in the same commit; names stay regexes because
     headings come from `content/*.ts`. Never run `--update-snapshots` blind: read the diff, since
     it rewrites the whole template to the full page. Check: `tests/e2e/aria-structure.spec.ts`.
-39. A copy change above a screenshotted section moves its document offset by a fraction of a pixel,
-    and an element screenshot is sized from the rounded outer edges of that fractional box, so the
-    section below can flip its size by 1px (`Expected an image 288px by 854px, received 288px by 855px`)
-    with none of its own content changed. Regenerate the darwin baseline of every section below the
-    changed copy, not only the edited one: run `tests/visual/visual.spec.ts` on chromium and
+39. A copy change above a screenshotted section moves its document offset, and an element screenshot
+    is sized from the rounded outer edges of that box, so the section below can flip its size by 1px
+    (`Expected an image 288px by 854px, received 288px by 855px`) with none of its own content
+    changed. The line box is a whole number of pixels since the site rounds it (the base layer
+    computes `round(nearest, 1em * var(--leading), 1px)`), so what moves the offset now is the copy
+    itself and not the fraction of a pixel under it. Regenerate the darwin baseline of every section
+    below the changed copy, not only the edited one: run `tests/visual/visual.spec.ts` on chromium and
     chromium-mobile after any content edit on the home page, and read each regenerated PNG. Check: the
-    visual spec passes on both projects.
+    visual spec passes on both projects, and `tests/e2e/leading-integrity.spec.ts` holds every line box
+    on a whole pixel.
 40. The `/cv` and `/pt/cv` print tests hold a regression ceiling of 10 pages, not a content budget:
     linux and darwin font metrics differ by a page near any tight cap, and a career entry never splits
     across pages. Resume length is a content decision; the ceiling only catches broken print CSS. Do
@@ -154,6 +157,18 @@ The prompt for a manual or agent review that applies these rules to a diff is `d
 41. A commit made with `--no-verify` skips commitlint, and CI's quality-fast job runs it on every
     commit in the push. Body lines over 100 characters then fail CI after the push. Check: commit
     through the hooks, or run `pnpm exec commitlint --from origin/<base>` before pushing.
+42. A leading travels in two ways, and they are not interchangeable: a ratio travels as a ratio and
+    scales with the reader's own font-size, a length travels as a length and does not. So the moment
+    a rule gives every element a line-height of its own, the descendants stop inheriting, and the
+    ratio has to be carried on purpose. The rule that wins on an element is the one whose ratio its
+    descendants inherit: a Tailwind `text-xs` writes `line-height` in the utilities layer and wins
+    over a component rule, so the descendants inherit 1/0.75 and not the component's ratio. Getting
+    this wrong is invisible on the screen — the box is whole, the ratios the author wrote are
+    untouched, and the leading of a whole subtree has changed by 2.67px. Compare against `main`
+    element by element, not by eye: `tests/e2e/leading-integrity.spec.ts` holds the rule that a
+    descendant inherits the ratio or the length its parent declares. Check: that spec, and
+    `__tests__/meta/leading-integrity.test.ts`, which fails a font-size utility that does not carry
+    its ratio.
 
 ## Pre-push judgement list
 

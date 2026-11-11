@@ -123,7 +123,7 @@ function PluginChainMobile({
               )}
               aria-hidden="true"
             />
-            <span className="text-xs font-bold tracking-lg uppercase leading-none whitespace-nowrap">
+            <span className="text-xs font-bold tracking-lg uppercase leading-ratio-1 whitespace-nowrap">
               {p.name}
             </span>
             <span
@@ -142,7 +142,7 @@ function PluginChainMobile({
 function SessionHeaderMobile({ mixer, copy }: { mixer: DawMixer; copy: DawMixerCopy }) {
   return (
     <div
-      className="text-xs text-primary-400 leading-[1.8] border-b border-[var(--color-primary-border)] px-[14px] py-[10px] tracking-3xl bg-[color-mix(in_srgb,var(--color-primary-500)_5%,transparent)]"
+      className="text-xs text-primary-400 leading-ratio-1-8 border-b border-[var(--color-primary-border)] px-[14px] py-[10px] tracking-3xl bg-[color-mix(in_srgb,var(--color-primary-500)_5%,transparent)]"
       data-testid="session-header-mobile"
     >
       <div>
@@ -209,20 +209,20 @@ function ChannelMobile({ ch, copy }: { ch: DawMixerChannel; copy: DawMixerCopy }
         </span>
         <span
           className={cn(
-            'text-sm font-bold tracking-xs leading-[1.15] min-w-0 overflow-hidden text-ellipsis whitespace-nowrap',
+            'text-sm font-bold tracking-xs leading-ratio-1-15 min-w-0 overflow-hidden text-ellipsis whitespace-nowrap',
             ch.focused || isMaster ? 'text-primary-500' : 'text-tertiary-50',
           )}
         >
           {ch.name}
         </span>
-        <div className="text-xs text-primary-400 tabular-nums tracking-xs text-right leading-[1.1] whitespace-nowrap">
+        <div className="text-xs text-primary-400 tabular-nums tracking-xs text-right leading-ratio-1-1 whitespace-nowrap">
           <span className="font-bold text-primary-500 text-xs max-md:text-sm">
             {pctToDb(ch.faderPct)}
           </span>
           <span className="text-xs max-md:text-sm text-primary-400">{copy.decibelUnit}</span>
         </div>
       </div>
-      <div className="text-primary-400 text-xs tracking-2xs leading-[1.4]" data-testid="mx-ref">
+      <div className="text-primary-400 text-xs tracking-2xs leading-ratio-1-4" data-testid="mx-ref">
         <ParsedText text={ch.desc} />
       </div>
       <div className="flex flex-col gap-2">
@@ -276,7 +276,7 @@ function ChannelMobile({ ch, copy }: { ch: DawMixerChannel; copy: DawMixerCopy }
         <div className="border border-[var(--color-primary-quiet)] px-[10px] py-2 mt-1">
           {ch.terminalLines.map((line, i) => (
             // biome-ignore lint/suspicious/noArrayIndexKey: positional terminal lines
-            <div key={i} className="text-xs text-primary-400 leading-[1.8]">
+            <div key={i} className="text-xs text-primary-400 leading-ratio-1-8">
               <ParsedText text={line} />
             </div>
           ))}

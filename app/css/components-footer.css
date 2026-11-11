@@ -15,7 +15,7 @@
     color: var(--color-text);
     font-family: var(--font-mono);
     font-size: var(--text-sm);
-    line-height: var(--footer-line-height);
+    --leading: var(--footer-line-height);
     padding-block: var(--spacing-6) calc(var(--spacing-16) + env(safe-area-inset-bottom, 0px));
   }
 
@@ -117,7 +117,7 @@
     row-gap: var(--spacing-1);
     margin: 0;
     align-items: center;
-    line-height: var(--footer-session-leading);
+    --leading: var(--footer-session-leading);
   }
 
   .footer-session-grid dd {
@@ -339,7 +339,7 @@
     color: var(--color-green);
     font-size: var(--text-body);
     font-weight: 700;
-    line-height: var(--footer-line-height);
+    --leading: var(--footer-line-height);
   }
 
   .sitemap .sm-dir {
@@ -406,7 +406,7 @@
     padding-left: var(--footer-tree-link-inset);
     border-left: var(--border-width) solid var(--color-primary-subtle);
     font-size: var(--text-body);
-    line-height: var(--footer-line-height);
+    --leading: var(--footer-line-height);
     overflow-wrap: normal;
     word-break: normal;
   }
@@ -421,6 +421,14 @@
     list-style: none;
     line-height: var(--footer-dmesg-leading);
     font-size: var(--text-sm);
+  }
+
+  /* The dmesg keeps its 20px rhythm down the whole list, for the same reason
+     the career log does: a length does not reach the descendants once every
+     element has a line-height of its own. */
+  .footer-dmesg li,
+  .footer-dmesg li * {
+    line-height: var(--footer-dmesg-leading);
   }
 
   .footer-dmesg li {

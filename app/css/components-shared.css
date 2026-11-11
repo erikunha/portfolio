@@ -187,7 +187,7 @@
     font-size: var(--text-2xl);
     letter-spacing: var(--tracking-lg);
     padding: 6px 18px 8px;
-    line-height: 1;
+    --leading: 1;
     text-transform: uppercase;
     box-shadow:
       0 0 24px var(--color-glow-55),

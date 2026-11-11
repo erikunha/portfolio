@@ -23,7 +23,7 @@
     padding: 0 var(--spacing-3);
     font-family: var(--font-mono);
     font-size: var(--text-xs);
-    line-height: 1.3;
+    --leading: 1.3;
     letter-spacing: var(--tracking-xl);
     color: var(--color-text);
     background: transparent;
@@ -224,7 +224,7 @@
     padding: var(--spacing-4) var(--menu-text-column) var(--spacing-1);
     font-weight: 400;
     font-size: var(--text-xs);
-    line-height: 1.1;
+    --leading: 1.1;
     letter-spacing: var(--tracking-3xl);
     color: var(--color-tertiary-300);
   }

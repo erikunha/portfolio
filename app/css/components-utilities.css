@@ -8,4 +8,156 @@
     font-size: var(--text-sm);
     font-weight: 700;
   }
+
+  /* Tailwind's font-size utilities carry a ratio with them: `text-xs` pairs
+     0.75rem with 1/0.75. The utility writes that ratio as `line-height`, and
+     the ratio is what a descendant inherits - a descendant of a `text-xs`
+     element scales by 1.333, not by the site's 1.55. So the ratio has to
+     travel as `--leading` too, or the descendant changes its leading.
+
+     The rules are here, in the utilities layer, for the same reason the
+     leading utilities are: this layer outranks the components layer, so the
+     ratio that wins here is the ratio that won the `line-height` before the
+     base layer started rounding the box. The ratios are the ones Tailwind
+     pairs with each size, written the way Tailwind writes them. */
+  .text-xs {
+    --leading: calc(1 / 0.75);
+  }
+
+  .text-sm {
+    --leading: calc(1.25 / 0.875);
+  }
+
+  .text-base {
+    --leading: calc(1.5 / 1);
+  }
+
+  .text-lg {
+    --leading: calc(1.75 / 1.125);
+  }
+
+  .text-xl {
+    --leading: calc(1.75 / 1.25);
+  }
+
+  .text-2xl {
+    --leading: calc(2 / 1.5);
+  }
+
+  .text-3xl {
+    --leading: calc(2.25 / 1.875);
+  }
+
+  .text-4xl {
+    --leading: calc(2.5 / 2.25);
+  }
+
+  .text-5xl {
+    --leading: 1;
+  }
+
+  .text-7xl {
+    --leading: 1;
+  }
+
+  /* The responsive sizes the site uses. The breakpoints are the ones
+     Tailwind's `md` variant uses, read from the theme. */
+  @media (min-width: theme(--viewport-md)) {
+    .md\:text-sm {
+      --leading: calc(1.25 / 0.875);
+    }
+
+    .md\:text-lg {
+      --leading: calc(1.75 / 1.125);
+    }
+  }
+
+  @media (max-width: theme(--viewport-below-md)) {
+    .max-md\:text-sm {
+      --leading: calc(1.25 / 0.875);
+    }
+
+    .max-md\:text-base {
+      --leading: calc(1.5 / 1);
+    }
+
+    .max-md\:text-xs {
+      --leading: calc(1 / 0.75);
+    }
+  }
+
+  /* The leading a component asks for, as a token rather than as a
+     `line-height`. Tailwind's own leading utilities set `line-height`
+     directly, and the utilities layer outranks the base layer, so that
+     utility would hand back the fractional box the base layer exists to
+     remove. These set `--leading`, which the base layer reads. */
+  .leading-ratio-1 {
+    --leading: 1;
+  }
+
+  .leading-ratio-1-1 {
+    --leading: 1.1;
+  }
+
+  .leading-ratio-1-15 {
+    --leading: 1.15;
+  }
+
+  .leading-ratio-1-3 {
+    --leading: 1.3;
+  }
+
+  .leading-ratio-1-4 {
+    --leading: 1.4;
+  }
+
+  .leading-ratio-1-55 {
+    --leading: 1.55;
+  }
+
+  .leading-ratio-1-8 {
+    --leading: 1.8;
+  }
+
+  .leading-ratio-tight {
+    --leading: 1.25;
+  }
+
+  .leading-ratio-body {
+    --leading: var(--leading-body);
+  }
+
+  /* The class asks for a leading; the element has to wear it. A Tailwind
+     font-size utility writes `line-height` in this same layer, and it comes
+     first, so a `text-xs` on the same element would hand the element the
+     size's ratio and the asked-for ratio would only reach the descendants.
+     These rules set the element's own `line-height`, and they come after the
+     size rules for the same reason: the asked-for leading wins over the
+     size's, the way Tailwind's `leading-*` utility won over the size's
+     `line-height` before. */
+  .leading-ratio-1,
+  .leading-ratio-1-1,
+  .leading-ratio-1-15,
+  .leading-ratio-1-3,
+  .leading-ratio-1-4,
+  .leading-ratio-1-55,
+  .leading-ratio-1-8,
+  .leading-ratio-tight,
+  .leading-ratio-body {
+    line-height: var(--leading);
+  }
+
+  @supports (line-height: round(nearest, 1px, 1px)) {
+    .leading-ratio-1,
+    .leading-ratio-1-1,
+    .leading-ratio-1-15,
+    .leading-ratio-1-3,
+    .leading-ratio-1-4,
+    .leading-ratio-1-55,
+    .leading-ratio-1-8,
+    .leading-ratio-tight,
+    .leading-ratio-body {
+      line-height: round(nearest, 1em * var(--leading), 1px);
+    }
+  }
 }

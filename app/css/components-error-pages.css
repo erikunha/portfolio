@@ -86,7 +86,7 @@
   .err-h1 {
     margin: 0;
     font-size: var(--text-7xl);
-    line-height: 1;
+    --leading: 1;
   }
 
   .err-h1:focus {
@@ -129,7 +129,7 @@
     padding: var(--spacing-3);
     border: var(--border-width) solid var(--color-primary-subtle);
     font-size: var(--text-xs);
-    line-height: 1.6;
+    --leading: 1.6;
   }
 
   .err-log p {
@@ -207,7 +207,7 @@
   .eb-text {
     margin: 0;
     font-size: var(--text-xs);
-    line-height: 1.6;
+    --leading: 1.6;
     overflow-wrap: anywhere;
   }
 

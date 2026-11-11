@@ -67,7 +67,7 @@
     color: var(--color-primary-500);
     font-size: var(--text-base);
     font-weight: 700;
-    line-height: 1.5;
+    --leading: 1.5;
     overflow-wrap: anywhere;
     text-wrap: balance;
   }
@@ -84,7 +84,7 @@
     margin: 0 0 var(--spacing-4);
     color: var(--color-tertiary-50);
     font-size: var(--text-sm);
-    line-height: 1.6;
+    --leading: 1.6;
   }
 
   .project-stats {
@@ -93,7 +93,7 @@
     margin: 0;
     color: var(--color-primary-500);
     font-size: var(--text-xs);
-    line-height: 1.5;
+    --leading: 1.5;
   }
 
   .project-stats > div {
@@ -154,7 +154,7 @@
     gap: calc(var(--spacing-1) / 2) var(--spacing-2);
     padding: calc(var(--spacing-1) / 2) var(--spacing-3);
     font-size: var(--text-xs);
-    line-height: 1.6;
+    --leading: 1.6;
   }
 
   .project-receipts li + li {
@@ -201,7 +201,7 @@
   .measured-status {
     color: var(--color-text-secondary);
     font-size: var(--text-xs);
-    line-height: 1.6;
+    --leading: 1.6;
     overflow-wrap: anywhere;
   }
 
@@ -244,7 +244,7 @@
     color: var(--color-primary-500);
     font-size: var(--text-base);
     font-weight: 700;
-    line-height: 1.6;
+    --leading: 1.6;
   }
 
   .measured-heading time {
@@ -271,7 +271,7 @@
     font-weight: 700;
     overflow-wrap: anywhere;
     font-size: var(--text-xs);
-    line-height: 1.5;
+    --leading: 1.5;
   }
 
   .measured-value {
@@ -279,21 +279,21 @@
     color: var(--color-primary-500);
     font-size: var(--text-xl);
     font-weight: 700;
-    line-height: 1.1;
+    --leading: 1.1;
     overflow-wrap: anywhere;
   }
 
   .measured-description {
     color: var(--color-text-secondary);
     font-size: var(--text-body);
-    line-height: 1.5;
+    --leading: 1.5;
   }
 
   .measured-status-slot {
     display: grid;
     margin: var(--spacing-2) 0 0;
     font-size: var(--text-xs);
-    line-height: 1.6;
+    --leading: 1.6;
     overflow-wrap: anywhere;
   }
 
@@ -338,7 +338,7 @@
     background: var(--color-glow-03);
     color: var(--color-tertiary-50);
     font-size: var(--text-body);
-    line-height: 1.5;
+    --leading: 1.5;
   }
 
   .measured-error > p {
@@ -383,7 +383,7 @@
     align-items: center;
     min-height: var(--measured-value-line);
     font-size: var(--text-xs);
-    line-height: 1.1;
+    --leading: 1.1;
   }
 
   .measured-label[data-reserve] {
