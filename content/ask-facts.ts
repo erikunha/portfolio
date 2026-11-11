@@ -1,6 +1,7 @@
 import { communityEvent } from './community';
 import { education } from './education';
 import { designSystemTake, homeTakes } from './hottest-takes';
+import { OPEN_ROLES_SENTENCE } from './open-roles';
 import { FUNDS_PHRASE, RAYLU_BUILT_CLAIM } from './profile';
 import { type AskFacts, AskFactsSchema } from './schemas';
 import { SITE_LOCALE } from './site-locale';
@@ -53,7 +54,7 @@ export const askFacts: AskFacts = AskFactsSchema.parse({
     'Design documents come before code: decision records, an evidence log citing code by path and line against the main branch, acceptance criteria in EARS format, a WCAG criterion-by-criterion table and a rollback plan keyed to a named signal rather than a date.',
   ],
   targeting: [
-    'Open to: Senior, Tech Lead. GenAI, AI-native products, LLM systems and agents (evals, guardrails, MCP).',
+    `Open to: ${OPEN_ROLES_SENTENCE[SITE_LOCALE.en]}. GenAI, AI-native products, LLM systems and agents (evals, guardrails, MCP).`,
     `Direction: applied AI engineering: LLM systems, the evaluation that decides whether they are safe to ship, agents and guardrails; MBA in AI Engineering in progress (Instituto Infnet, ${mbaPeriod}).`,
     'Strong preference: AI-native products and agent systems that ship with evals and guardrails, and performance-critical systems.',
   ],

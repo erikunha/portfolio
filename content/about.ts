@@ -1,4 +1,5 @@
 import { companyLinkCopy } from './company-link';
+import { OPEN_ROLES_SENTENCE } from './open-roles';
 import { type AboutContent, AboutContentSchema } from './schemas';
 import { SITE_LOCALE, type SiteLocale } from './site-locale';
 import { social } from './social';
@@ -134,10 +135,12 @@ const aboutFor = (locale: SiteLocale): AboutContent => {
         ? ` ou contratos de impacto · ${WORK_SCOPE[locale]} · Inglês C1.`
         : ` roles or impactful contract roles · ${WORK_SCOPE[locale]} · English C1.`,
       details: [
-        pt ? '- Nível: Sênior' : '- Level: Senior',
         pt
-          ? '- Trilha: contribuidor individual ou tech lead'
-          : '- Track: individual contributor or technical lead',
+          ? `- Vagas: ${OPEN_ROLES_SENTENCE[SITE_LOCALE.pt]}`
+          : `- Roles: ${OPEN_ROLES_SENTENCE[SITE_LOCALE.en]}`,
+        pt
+          ? '- Trilha: contribuidor individual, tech lead ou engenheiro fundador'
+          : '- Track: individual contributor, tech lead or founding engineer',
         pt
           ? '- Contratação: tempo integral ou contrato de prazo fixo'
           : '- Engagement: full-time or fixed-term contract',
