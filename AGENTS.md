@@ -113,6 +113,7 @@ fit the same surface. A skill is a method: it never decides the verdict on its o
 
 - Commits are `type(scope): subject`; scope (feature area such as hero, shell, contact, ci) is required and commitlint enforces it. One logical unit per commit. No `Co-Authored-By` or attribution lines.
 - Stage with `git add <file>` or `git add -u`, never `git add .`, `-A` or `--all`.
+- `.env.example` is the only environment file the repository tracks. Every other env shape (`.env`, `.env.production`, `production.env`) and every credential file (`*.pem`, `*.key`, `*.p12`, `*.pfx`, `*credentials*.json`) is ignored, and `__tests__/meta/gitignore-env-files.test.ts` measures that rule: it asserts no such path is tracked and that none was ever committed on any branch. A new `.env.<name>` or `<name>.env` is ignored the moment someone types it, so nothing has to be added for it by hand.
 - Hooks: pre-commit runs Biome and `gitleaks git --staged` (fails closed without the binary; `brew install gitleaks`), commit-msg runs commitlint, pre-push runs the full verify and requires a `<type>/<description>` branch name. Never push to `main` directly (pre-push blocks the ref); land through a PR. Only an emergency revert uses `--no-verify`.
 - A feature too big for one PR gets an integration branch `feat/<feature>` and sub-PRs from `feat/<feature>-<part>` into it; the final PR to `main` notes it was reviewed incrementally.
 - No PR until tests, perf gates and baselines have run on a locked design. Fill every section of `.github/pull_request_template.md`; never write a body from scratch.
