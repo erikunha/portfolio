@@ -44,6 +44,7 @@
     "lint:css-tokens": "tsx scripts/lint-css-tokens.ts",
     "lint:semgrep": "node scripts/run-semgrep.mjs --error --sarif semgrep.sarif",
     "lint:semgrep:selftest": "node scripts/check-semgrep-fixture.mjs",
+    "lint:semgrep:fp-baseline": "node scripts/measure-semgrep-fp.mjs",
     "test:mutation": "stryker run",
     "verify": "pnpm check && pnpm typecheck && pnpm validate-content && pnpm check:client-naming && pnpm check:dep-pinning && pnpm check:dependency-vetting && pnpm check:harness-size && pnpm check:component-docs && pnpm check:section-order && pnpm check:doc-drift && pnpm check:detect-changes-paths && pnpm check:test-integrity && pnpm lint:contrast && pnpm lint:css-tokens && pnpm test:coverage",
     "ci": "pnpm verify && pnpm build && pnpm bundle-check && pnpm route-js-check",

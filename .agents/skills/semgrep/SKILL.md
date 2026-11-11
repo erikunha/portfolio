@@ -18,6 +18,7 @@ Semgrep is pinned to `1.169.0`. Run through the repo wrapper, never a bare globa
     pnpm lint:semgrep                       # scan app/ lib/ components/ scripts/, write semgrep.sarif
     node scripts/run-semgrep.mjs <paths>    # scan specific paths
     node scripts/run-semgrep.mjs --error --sarif out.sarif <paths>
+    pnpm lint:semgrep:fp-baseline           # measure the vendored rules' precision over the probe set
 
 Local install (optional, CI is authoritative): `pip install semgrep==1.169.0`.
 If Semgrep is not installed, the wrapper exits 2 with an install hint; defer to CI.
@@ -47,5 +48,12 @@ If Semgrep is not installed, the wrapper exits 2 with an install hint; defer to 
 - Never disable a rule globally to clear a finding. Fix the code or justify per-line.
 - Never edit fixtures under `tests/fixtures/semgrep/` to dodge a finding. They are
   the wrapper's test ground truth, run by `pnpm lint:semgrep:selftest`.
-- The CI job is currently **non-blocking** (`continue-on-error: true`). Do not promote
-  it to blocking without a measured FP-rate baseline recorded in DECISIONS.md.
+- The CI job is **report-only** (`continue-on-error: true`), and the decision of
+  2026-11-11 says why: the scan reports no findings on this codebase, so the
+  false-positive rate has an empty denominator, and the vendored taint rule's one
+  measured false positive (a constant `exec` command, which its source pattern
+  cannot tell apart from an interpolated one) is a third of what it produces.
+  `pnpm lint:semgrep:fp-baseline` measures that over the probe set and fails when
+  the rules move away from the recorded behaviour. Promoting the scan to blocking
+  needs the taint source narrowed so a literal is not a source, and then a window
+  of three pull requests that produce findings, measured for false positives.
