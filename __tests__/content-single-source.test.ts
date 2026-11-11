@@ -63,6 +63,9 @@ describe('derived strings render exactly what they rendered before', () => {
   it('keeps the hiring profile years, stack and receipts', () => {
     expect(HIRING_PROFILE.yoe).toBe(8);
     expect(HIRING_PROFILE.stack_primary).toEqual([
+      'Vercel AI SDK',
+      'Anthropic API',
+      'LangChain',
       'TypeScript',
       'Python',
       'React',

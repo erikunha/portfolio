@@ -1,11 +1,15 @@
 import { OPENS_IN_NEW_TAB } from './company-link';
 import { HIRE_ACCESSIBLE_NAME, NAV_VOCABULARY } from './nav';
-import { PROFILE_FACT, profile, profilePresentation } from './profile';
+import { localizeDecimals, PROFILE_FACT, profile, profilePresentation } from './profile';
 import { type HeroContent, HeroContentSchema } from './schemas';
 import { localizedPath, SITE_LOCALE, type SiteLocale } from './site-locale';
 import { social } from './social';
 
 const EXTERNAL_PROTOCOL = 'https://';
+
+// The LLM judge of this site's CI eval harness, calibrated against human labels.
+// Published as the CI agreement floor in public/llms.txt and content/projects.ts.
+const LLM_JUDGE_AGREEMENT_FLOOR = '0.85';
 
 const heroContentFor = (locale: SiteLocale): HeroContent => {
   const pt = locale === SITE_LOCALE.pt;
@@ -34,7 +38,10 @@ const heroContentFor = (locale: SiteLocale): HeroContent => {
       { value: '$500B+', label: pt ? 'ativos em fundos' : 'fund assets' },
       { value: PROFILE_FACT.peakMau, label: pt ? 'MAU e-commerce' : 'e-com MAU' },
       { value: '40s → <1s', label: pt ? 'API de relatórios' : 'reporting API' },
-      { value: 'CLS → 0', label: pt ? 'deslocamento de layout' : 'layout shift' },
+      {
+        value: localizeDecimals(LLM_JUDGE_AGREEMENT_FLOOR, locale),
+        label: pt ? 'piso de concordância do juiz LLM' : 'LLM-judge agreement floor',
+      },
     ],
   });
 };

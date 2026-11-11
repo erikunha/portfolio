@@ -180,6 +180,10 @@ const aboutFor = (locale: SiteLocale): AboutContent => {
       title: 'NPM LIST --GLOBAL',
       groups: [
         {
+          label: pt ? 'IA/LLM' : 'AI/LLM',
+          items: ['LLM SYSTEMS', 'EVALS', 'AGENTS', 'GUARDRAILS', 'MCP', 'PROMPT ENGINEERING'],
+        },
+        {
           label: pt ? 'NÚCLEO' : 'CORE',
           items: ['REACT', 'NEXT.JS', 'NODE', 'PYTHON', 'EXPRESS', 'AWS', 'DOCKER'],
         },
@@ -191,7 +195,7 @@ const aboutFor = (locale: SiteLocale): AboutContent => {
         { label: pt ? 'QUALIDADE' : 'QUALITY', items: ['JEST', 'VITEST', 'PLAYWRIGHT', 'A11Y'] },
         {
           label: pt ? 'FERRAMENTAS' : 'TOOLING',
-          items: ['COPILOT', 'CLAUDE', 'CODEX', 'MCP', 'STORYBOOK', 'VERCEL', 'TANSTACK'],
+          items: ['COPILOT', 'CLAUDE', 'CODEX', 'STORYBOOK', 'VERCEL', 'TANSTACK'],
         },
       ],
     },

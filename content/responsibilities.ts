@@ -6,6 +6,13 @@ export const responsibilities: Responsibility[] = z.array(ResponsibilitySchema).
     perms: 'drwxr-xr-x',
     user: 'erik',
     group: 'core',
+    name: 'llm-systems-and-evals',
+    highlight: true,
+  },
+  {
+    perms: 'drwxr-xr-x',
+    user: 'erik',
+    group: 'core',
     name: 'frontend-architecture',
     highlight: true,
   },
@@ -16,7 +23,7 @@ export const responsibilities: Responsibility[] = z.array(ResponsibilitySchema).
     name: 'performance-optimization',
     highlight: true,
   },
-  { perms: 'drwxr-x---', user: 'erik', group: 'core', name: 'security-mindset', highlight: true },
+  { perms: 'drwxr-x---', user: 'erik', group: 'core', name: 'security-mindset', highlight: false },
   { perms: 'drwxrwxrwx', user: 'erik', group: 'team', name: 'mentoring-juniors', highlight: false },
   {
     perms: '-rw-r--r--',

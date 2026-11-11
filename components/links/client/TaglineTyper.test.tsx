@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { installMatchMedia } from '@/__tests__/helpers/match-media';
 import { TaglineTyper } from './TaglineTyper.client';
 
-const PHRASES = ['Senior Full-Stack Engineer', 'AI Engineering na prática'];
+const PHRASES = ['Senior AI Engineer', 'AI Engineering na prática'];
 
 function setMotion(on: boolean) {
   localStorage.setItem('erik.motion', on ? 'on' : 'off');
@@ -72,7 +72,7 @@ describe('TaglineTyper', () => {
     const visible = container.querySelector('[aria-hidden="true"]');
 
     vi.advanceTimersByTime(5_000);
-    expect(visible?.textContent).toBe('Senior Full-Stack Engineer');
+    expect(visible?.textContent).toBe('Senior AI Engineer');
   });
 
   it('gives screen readers every phrase as static text, which never changes while typing', () => {
