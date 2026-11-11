@@ -62,6 +62,8 @@ Two `quality-fast` steps stay CI-only: the branch-name lint (the pre-push hook e
 
 `pnpm ci:predict` (`scripts/ci-predict.ts`) runs locally what CI runs for the commits on the current branch against their base. It reads `.github/workflows/ci.yml` instead of copying it: job conditions, step commands, the build env and the e2e and visual project matrices all come from the workflow, and `detect-changes` runs the same `scripts/detect-changes.mjs` CI runs. A pure-TypeScript evaluator handles the workflow expressions the file uses (`needs.*`, `contains`, `endsWith`, `hashFiles` with globs, `&&`, `||`). It never reads an unknown context or key as empty: an expression root it does not populate, a function it does not implement, and a workflow, job or step key it does not execute (`container`, `services`, a new step field) throw, so the step is reported as not reproducible and the drift guard fails instead of the construct being skipped.
 
+The predictor reads the diff and the workflow, then interprets the steps:
+
 ```mermaid
 flowchart TD
     git["git diff base...HEAD"] --> dc["detect-changes.mjs (ai, app, ui)"]
@@ -70,15 +72,21 @@ flowchart TD
     eng --> st["quality-fast, typecheck, test, gitleaks: the job's own run steps"]
     eng --> bd["build: ci.yml build env, bundle gate, route-JS gate"]
     eng --> sel["spec selection: new or changed specs, co-located *.e2e.ts, importers of a changed helper"]
-    pw["playwright test --list"] --> sel
-    sel --> e2e["e2e-functional per project: --repeat-each=3 --retries=0"]
     eng --> vis["e2e-visual-chromium and a11y: ci.yml arguments"]
+```
+
+The selected specs, the Linux branch and the single result table:
+
+```mermaid
+flowchart TD
+    sel["spec selection: new or changed specs, co-located *.e2e.ts, importers of a changed helper"] --> e2e["e2e-functional per project: --repeat-each=3 --retries=0"]
+    pw["playwright test --list"] --> sel
     e2e --> lx{"--linux?"}
-    vis --> lx
+    vis["e2e-visual-chromium and a11y: ci.yml arguments"] --> lx
     lx -->|no| nat["host Playwright"]
     lx -->|yes| img["Playwright image v{version}-noble: copy tree, install, build and serve inside it"]
-    st --> tbl["one table: pass, fail, partial, not-run, skipped, would-run (--list)"]
-    bd --> tbl
+    st["quality-fast, typecheck, test, gitleaks: the job's own run steps"] --> tbl["one table: pass, fail, partial, not-run, skipped, would-run (--list)"]
+    bd["build: ci.yml build env, bundle gate, route-JS gate"] --> tbl
     nat --> tbl
     img --> tbl
 ```
@@ -157,6 +165,10 @@ flowchart LR
 
 `.github/workflows/ci.yml` (the authoritative gate). A `detect-changes` job emits `app`, `ai` and `ui` booleans so heavy jobs skip on docs-only PRs (GitHub treats skipped required checks as satisfied). Matrix jobs skipped at job level report ONE unsuffixed check, so matrix-named required contexts (`e2e-functional (chromium)` etc.) hang forever on path-skipped PRs; required checks therefore point at always-reporting contexts and the conditional jobs are enforced through the `ci-gate` fan-in below.
 
+The CI graph splits into three views: the trigger and the always-on jobs, the job graph the gates hang off, and the `ci-gate` fan-in.
+
+The trigger fans out to change detection and to the always-on jobs:
+
 ```mermaid
 flowchart TD
     pr["PR / push main / workflow_dispatch"] --> dc["detect-changes (app?, ai?, ui?)"]
@@ -164,37 +176,49 @@ flowchart TD
     pr --> tc["typecheck"]
     pr --> t["test (audit, Stryker canary, Vitest + coverage)"]
     pr --> dr["dependency-review (PR)"]
-    qf --> b["build (+ global bundle and route-JS gates)"]
-    tc --> b
-    t --> b
+```
+
+The job graph: the build, the release attestation, the coverage comment and the path-gated jobs:
+
+```mermaid
+flowchart TD
+    qf["quality-fast"] --> b["build (+ global bundle and route-JS gates)"]
+    tc["typecheck"] --> b
+    t["test (audit, Stryker canary, Vitest + coverage)"] --> b
     b --> at["attest-build: provenance on main, runs no repository code"]
     t --> cc["coverage-comment: PR comment from the coverage artifact, runs no repository code"]
     b --> perf["performance: LHCI desktop+mobile + axe (if app)"]
     b --> e2e["e2e-functional (8-project matrix, if app)"]
     b --> vis["e2e-visual-chromium (desktop/mobile Chromium, if ui)"]
-    dc --> perf
+    dc["detect-changes (app?, ai?, ui?)"] --> perf
     dc --> e2e
     dc --> vis
     dc --> ev["ai-eval (if ai, same-repo PR or non-PR)"]
     qf --> ev
     tc --> ev
     t --> ev
-    pr --> secrets["gitleaks: history scan + fixture check"]
+```
+
+The fan-in: every job above, plus the always-on gitleaks and semgrep, reports into `ci-gate`. The nodes are the `ci.yml` job names; the table below carries their full descriptions.
+
+```mermaid
+flowchart TD
+    pr["PR / push main / workflow_dispatch"] --> secrets["gitleaks: history scan + fixture check"]
     secrets --> gate
     pr --> semgrep["semgrep: fixture self-test blocks, findings scan report-only"]
     semgrep --> gate
-    dc --> gate
-    qf --> gate
-    tc --> gate
-    t --> gate
-    dr --> gate
-    b --> gate
-    at --> gate
-    cc --> gate
-    perf --> gate
-    e2e --> gate
-    vis --> gate
-    ev --> gate
+    dc["detect-changes"] --> gate
+    qf["quality-fast"] --> gate
+    tc["typecheck"] --> gate
+    t["test"] --> gate
+    dr["dependency-review"] --> gate
+    b["build"] --> gate
+    at["attest-build"] --> gate
+    cc["coverage-comment"] --> gate
+    perf["performance"] --> gate
+    e2e["e2e-functional"] --> gate
+    vis["e2e-visual-chromium"] --> gate
+    ev["ai-eval"] --> gate
     gate["ci-gate: always-on fan-in: always-run jobs must succeed; others pass only on success or path skip"]
 ```
 
