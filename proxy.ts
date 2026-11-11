@@ -8,7 +8,12 @@ const CSP_DIRECTIVES: readonly string[] = [
     : "script-src 'self' 'unsafe-inline'",
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob:",
-  "font-src 'self'",
+  // The platform inlines a font as a data: URI when it cannot load it from
+  // its own CDN, and the CSP was refusing that font: the browser logged the
+  // violation and the best-practices audit lost the points. A font cannot
+  // execute script, so allowing the data: scheme here costs the policy
+  // nothing that script-src still holds.
+  "font-src 'self' data:",
   "connect-src 'self' https://vitals.vercel-insights.com https://va.vercel-scripts.com",
   "frame-ancestors 'none'",
   "frame-src 'none'",
