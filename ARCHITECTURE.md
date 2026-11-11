@@ -181,7 +181,7 @@ Only the DAW mixer selects a UA-specific variant: `DawMixerContent` awaits `getI
 
 `/cv`, `/summary`, `/pt/cv`, `/pt/summary`, `/links`, `/links/en` and the `/design-system` layout export `ensureStatic = 'navigation'`. Next 16.4 then fails the build when one of them reads `connection()`, `cookies()`, `headers()` or uncached data, so request-time rendering cannot return unseen. `__tests__/meta/ensure-static-routes.test.ts` lists the guarded files.
 
-Projects renders one static RSC tree at every viewport. Its ten cards share descriptions and stats from `content/projects.ts`; CSS selects one, two or three columns. Six project receipts from `content/perf-receipts.ts` sit beneath the cards inside the Projects module. `sec-perf-receipts` remains a nested anchor.
+Projects renders one static RSC tree at every viewport. Its eleven cards share descriptions and stats from `content/projects.ts`; CSS selects one, two or three columns. Six project receipts from `content/perf-receipts.ts` sit beneath the cards inside the Projects module. `sec-perf-receipts` remains a nested anchor.
 
 Measured is one module at `sec-live-metrics`, composed by `AiMetricsSection`. ASK evaluation data and the PSI scores stream through two independent Suspense boundaries; the PSI block resolves once both desktop and mobile runs return. Both blocks stack as tile grids, four across on wide containers and two by two below 40rem, and each Lighthouse tile reads `desktop / mobile`. `content/measured.ts` supplies labels, sources, units and timestamp formatting. The data adapters remain `lib/ask-metrics.ts` and `lib/lighthouse-scores.ts`. Each block ends in a `MeasuredStatus` slot that reserves the height of its longest status copy, so loading, pending, unavailable and data states are as tall as each other. The nested `sec-ai-metrics` and `sec-live-perf` anchors preserve existing links.
 
@@ -260,7 +260,7 @@ components/sections/ShellSection/      # module that hosts the interactive shell
 components/sections/AiMetricsSection/  # Measured module: ASK evaluation and PSI blocks behind two Suspense boundaries
 components/sections/LivePerfSection/   # desktop and mobile PSI tiles
 components/sections/MeasuredStatus/    # status slot that reserves the height of its longest copy
-components/sections/ProjectsSection/   # ten project cards
+components/sections/ProjectsSection/   # eleven project cards
 components/sections/PerfReceiptsSection/  # six project receipts nested in Projects
 components/sections/GitLogSection/     # Career: git-log timeline
 components/sections/CredentialsSection/  # cert, edu and community tag groups inside Career
