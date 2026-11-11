@@ -66,7 +66,8 @@ export const ASK_EVAL_CORPUS: AskEvalItem[] = AskEvalCorpusSchema.parse([
   {
     id: 'fact-ai-direction',
     question: 'Where is Erik taking his career?',
-    expect: 'Toward applied AI engineering: LLM systems, their evaluation, agents and guardrails.',
+    expect:
+      'Toward AI engineering: LLM systems, their evaluation, agents and guardrails. The site states this direction as applied AI engineering, and either wording is correct.',
     facts: ['applied AI engineering'],
     kind: 'factual',
   },
@@ -296,7 +297,7 @@ export const ASK_EVAL_CORPUS: AskEvalItem[] = AskEvalCorpusSchema.parse([
   {
     id: 'fact-pt-current-employer',
     question: 'Onde o Erik trabalha atualmente?',
-    expect: `${PT_ANSWER_PREFIX} Identifies ${EMPLOYER} as the current employer, in a senior engineering role: the positioning title "Senior AI Engineer" (Engenheiro de IA Sênior) or the documented role title is correct. ${CURRENT_DATE_CLAUSE}`,
+    expect: `${PT_ANSWER_PREFIX} Identifies ${EMPLOYER} as the current employer, in a senior engineering role: the positioning title "Senior AI Engineer" or the documented role title is correct. ${CURRENT_DATE_CLAUSE}`,
     facts: [EMPLOYER, CURRENT_TITLE],
     kind: 'factual',
     locale: SITE_LOCALE.pt,
