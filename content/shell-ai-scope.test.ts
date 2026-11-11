@@ -29,14 +29,27 @@ describe('shell AI scope disclosure', () => {
     const text = help?.text ?? '';
     expect(text).toContain(ShellCommand.Stack);
     for (const command of [
+      ShellCommand.Help,
       ShellCommand.WhoIs,
       ShellCommand.WhoAmI,
       ShellCommand.WhoIsRecursive,
       ShellCommand.WhoAmIRecursive,
       ShellCommand.Stack,
+      ShellCommand.Now,
+      ShellCommand.Contact,
+      ShellCommand.Privacy,
+      ShellCommand.Clear,
     ]) {
       expect(text, `${command} is accepted by the shell, so help must name it`).toContain(command);
     }
+    expect(
+      text,
+      'the shell accepts an "ask " prefix, so help must name the form the visitor can type',
+    ).toContain('ask <question>');
+    expect(
+      text,
+      'privacy forget takes a number, an id or --all, so help must name the id form too',
+    ).toContain('<n|id|--all>');
   });
 
   it('the stack answer points at the AI engineer direction', () => {
