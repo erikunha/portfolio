@@ -1,4 +1,6 @@
 import { argosScreenshot } from '@argos-ci/playwright';
+import { shellUi } from '../../content/shell-ui';
+import { SITE_LOCALE } from '../../content/site-locale';
 import { expect, test } from '../e2e/_helpers/fixtures';
 import { waitForHydration } from '../e2e/_helpers/hydration';
 import { stripVolatileChrome } from '../e2e/_helpers/mask-volatile';
@@ -60,18 +62,24 @@ test.describe('visual regression', () => {
         await revealDeferredContent(mockedPage);
         await argosScreenshot(mockedPage, 'contact-section', { element: contactSection });
       }
-      await snapshotLocator(mockedPage, contactSection, 'contact-section.png', {
-        maxDiffPixels: 3000,
-      });
+      await snapshotLocator(mockedPage, contactSection, 'contact-section.png');
     });
   });
 
-  test('3 — shell + ask form (idle) matches baseline', async ({ mockedPage }) => {
+  test('3 — shell + ask form (idle) matches baseline', async ({ mockedPage }, testInfo) => {
     const shellSection = mockedPage.locator('#sec-shell');
     await shellSection.scrollIntoViewIfNeeded();
     await mockedPage.waitForSelector('[data-testid="shell-form"]', { state: 'visible' });
     await mockedPage.waitForSelector('[role="log"] [data-kind="info"]', { state: 'visible' });
     await mockedPage.waitForSelector('[data-testid="shell-line-loading"]', { state: 'detached' });
+    // The server sends the desktop welcome and the client swaps it for the
+    // narrow one once it reads the real viewport. Capturing before that swap
+    // lands would photograph a different page on a narrow screen.
+    await waitForHydration(mockedPage, '[data-testid="shell-form"]');
+    const welcome = testInfo.project.name.includes('mobile')
+      ? shellUi[SITE_LOCALE.en].mobileWelcome
+      : shellUi[SITE_LOCALE.en].welcome;
+    await expect(mockedPage.locator('[role="log"]')).toContainText(welcome);
     await mockedPage.evaluate(() => document.fonts.ready);
     await mockedPage.evaluate(() => {
       const ph = document.querySelector('[data-testid="shell-placeholder"]');
