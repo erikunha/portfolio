@@ -111,7 +111,7 @@ describe('getChannelFeed upstream fallback', () => {
   it('reads the uploads playlist through the Data API when the RSS feed fails', async () => {
     const { feed, requested } = await load('test-key');
     expect(feed.latest?.id).toBe('v1');
-    expect(feed.history.map((v) => v.id)).toEqual(['v1', 'v2', 'v3']);
+    expect(feed.history.map((v) => v.id)).toEqual(['v2', 'v3']);
     const playlistCall = requested.find((url) => url.includes('/playlistItems'));
     expect(playlistCall).toContain('playlistId=UUZ1P4Pqpo-j_uAHaIc_pGrA');
     vi.unstubAllGlobals();
@@ -189,7 +189,15 @@ describe('getChannelFeed excludes Shorts in the data layer', () => {
       rssBody: rss([entry('short1', 'shorts/', 2), entry('video1', 'watch?v=', 1)]),
     });
     expect(feed.latest?.id).toBe('video1');
-    expect(feed.history.map((video) => video.id)).toEqual(['video1']);
+    expect(feed.history.map((video) => video.id)).toEqual([]);
+  });
+
+  it('never repeats the featured video as the first row of the history', async () => {
+    const feed = await loadWith({
+      rssBody: rss([entry('video1', 'watch?v=', 1), entry('video2', 'watch?v=', 2)]),
+    });
+    expect(feed.latest?.id).toBe('video1');
+    expect(feed.history.map((video) => video.id)).toEqual(['video2']);
   });
 
   it('still fills the history with regular videos when Shorts lead the feed', async () => {
@@ -200,27 +208,29 @@ describe('getChannelFeed excludes Shorts in the data layer', () => {
         ...[1, 2, 3, 4, 5, 6].map((n) => entry(`v${n}`, 'watch?v=', n)),
       ]),
     });
-    expect(feed.history.map((video) => video.id)).toEqual(['v1', 'v2', 'v3', 'v4', 'v5']);
+    expect(feed.history.map((video) => video.id)).toEqual(['v2', 'v3', 'v4', 'v5', 'v6']);
   });
 
-  it('drops a 60 second upload read through the Data API fallback', async () => {
+  it('drops a three minute upload read through the Data API fallback', async () => {
     const feed = await loadWith({
       rssBody: '',
       apiKey: 'test-key',
       playlistIds: ['clip', 'full'],
-      durations: { clip: 'PT59S', full: 'PT12M3S' },
+      durations: { clip: 'PT3M', full: 'PT12M3S' },
     });
-    expect(feed.history.map((video) => video.id)).toEqual(['full']);
+    expect(feed.latest?.id).toBe('full');
+    expect(feed.history.map((video) => video.id)).toEqual([]);
   });
 
-  it('keeps a video just over a minute', async () => {
+  it('keeps a video just over three minutes', async () => {
     const feed = await loadWith({
       rssBody: '',
       apiKey: 'test-key',
       playlistIds: ['edge'],
-      durations: { edge: 'PT1M1S' },
+      durations: { edge: 'PT3M1S' },
     });
-    expect(feed.history.map((video) => video.id)).toEqual(['edge']);
+    expect(feed.latest?.id).toBe('edge');
+    expect(feed.history.map((video) => video.id)).toEqual([]);
   });
 
   it('returns the empty feed when every upload is a Short', async () => {
@@ -348,15 +358,19 @@ describe('getChannelFeed pages the uploads playlist with a key', () => {
       ],
       durations: shortDurations(shorts),
     });
-    expect(feed.history.map((video) => video.id)).toEqual(['r1', 'r2', 'r3', 'r4', 'r5']);
+    expect(feed.history.map((video) => video.id)).toEqual(['r2', 'r3', 'r4', 'r5', 'r6']);
     expect(requested.some((url) => url.includes('pageToken=p2'))).toBe(true);
   });
 
-  it('stops paging once five regular videos are collected', async () => {
+  it('stops paging once the featured video and the five history rows are collected', async () => {
     const { feed, requested } = await loadPaged({
       apiKey: 'test-key',
-      pages: [{ items: ['r1', 'r2', 'r3', 'r4', 'r5'], nextPageToken: 'p2' }, { items: ['r6'] }],
+      pages: [
+        { items: ['r1', 'r2', 'r3', 'r4', 'r5', 'r6'], nextPageToken: 'p2' },
+        { items: ['r7'] },
+      ],
     });
+    expect(feed.latest?.id).toBe('r1');
     expect(feed.history).toHaveLength(5);
     const playlistCalls = requested.filter((url) => url.includes('/playlistItems'));
     expect(playlistCalls).toHaveLength(1);
@@ -371,7 +385,7 @@ describe('getChannelFeed pages the uploads playlist with a key', () => {
       ],
       durations: { clip: 'PT45S' },
     });
-    expect(feed.history.map((video) => video.id)).toEqual(['r1', 'r2', 'r3', 'r4', 'r5']);
+    expect(feed.history.map((video) => video.id)).toEqual(['r2', 'r3', 'r4', 'r5']);
   });
 
   it('gives up at the page cap and returns the regular videos it found', async () => {
@@ -385,7 +399,7 @@ describe('getChannelFeed pages the uploads playlist with a key', () => {
         { items: ['r5'] },
       ],
     });
-    expect(feed.history.map((video) => video.id)).toEqual(['r1', 'r2', 'r3', 'r4']);
+    expect(feed.history.map((video) => video.id)).toEqual(['r2', 'r3', 'r4']);
     expect(requested.filter((url) => url.includes('/playlistItems'))).toHaveLength(4);
   });
 
@@ -394,7 +408,8 @@ describe('getChannelFeed pages the uploads playlist with a key', () => {
       apiKey: 'test-key',
       pages: [{ items: ['r1', 'r2'], nextPageToken: 'p2' }, { fail: true }],
     });
-    expect(feed.history.map((video) => video.id)).toEqual(['r1', 'r2']);
+    expect(feed.latest?.id).toBe('r1');
+    expect(feed.history.map((video) => video.id)).toEqual(['r2']);
   });
 
   it('falls back to the RSS feed with the duration filter when the playlist cannot be read', async () => {
@@ -416,7 +431,8 @@ describe('getChannelFeed pages the uploads playlist with a key', () => {
       pages: [{ fail: true }],
       durations: { clip: 'PT20S' },
     });
-    expect(feed.history.map((video) => video.id)).toEqual(['v1']);
+    expect(feed.latest?.id).toBe('v1');
+    expect(feed.history.map((video) => video.id)).toEqual([]);
     expect(requested.some((url) => url.includes('/playlistItems'))).toBe(true);
   });
 
@@ -432,7 +448,8 @@ describe('getChannelFeed pages the uploads playlist with a key', () => {
       rssBody: `<feed xmlns:yt="y">${[rssEntry('v1', 2), rssEntry('v2', 1)].join('')}</feed>`,
       pages: [],
     });
-    expect(feed.history.map((video) => video.id)).toEqual(['v1', 'v2']);
+    expect(feed.latest?.id).toBe('v1');
+    expect(feed.history.map((video) => video.id)).toEqual(['v2']);
     expect(requested.some((url) => url.includes('googleapis'))).toBe(false);
   });
 });

@@ -68,6 +68,30 @@ describe('VideoHistory', () => {
     expect(link?.getAttribute('href')).toContain(`${CHANNEL_URL}/videos`);
   });
 
+  it.each([
+    [LINKS_LOCALE.pt, 'o vídeo mais recente é o único até agora'],
+    [LINKS_LOCALE.en, 'the latest video is the only one so far'],
+  ] as const)(
+    'says the latest video is the only one, never that the list failed to load (%s)',
+    (locale, expected) => {
+      const feed: ChannelFeed = {
+        ...empty,
+        latest: {
+          id: 'id-0',
+          title: 'Vídeo 1',
+          url: 'https://www.youtube.com/watch?v=id-0',
+          thumbnailUrl: 'https://i.ytimg.com/vi/id-0/hqdefault.jpg',
+          publishedAt: '2026-08-28T19:00:00+00:00',
+        },
+      };
+      const { container } = render(<VideoHistory locale={locale} feed={feed} />);
+      expect(container.textContent).toContain(expected);
+      expect(container.textContent).not.toContain(
+        locale === LINKS_LOCALE.pt ? 'a lista não carregou' : 'the list did not load',
+      );
+    },
+  );
+
   it('renders one row per video once the feed returns some', () => {
     const { container } = render(<VideoHistory locale={LINKS_LOCALE.pt} feed={feedWith(5)} />);
     expect(container.querySelectorAll('li')).toHaveLength(5);

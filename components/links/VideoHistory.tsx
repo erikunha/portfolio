@@ -38,6 +38,10 @@ function meta(
 export function VideoHistory({ locale, feed }: { locale: LinksLocale; feed: ChannelFeed }) {
   const { copy } = linksContent;
   const isEmpty = feed.history.length === 0;
+  // An empty history with a featured video means the channel has one long
+  // video so far, not that the feed failed to load.
+  const emptyMessage =
+    feed.latest === null ? copy.historyEmpty[locale] : copy.historyOnlyLatest[locale];
 
   return (
     <section className="links-col" data-col="history" aria-labelledby={HEADING_ID}>
@@ -50,7 +54,7 @@ export function VideoHistory({ locale, feed }: { locale: LinksLocale; feed: Chan
           <span aria-hidden="true" className="links-history-empty-prompt">
             ${' '}
           </span>
-          {copy.historyEmpty[locale]}
+          {emptyMessage}
         </p>
       )}
 

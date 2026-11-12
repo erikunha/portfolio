@@ -88,7 +88,9 @@ export function parseFeed(xml: string, limit = Number.POSITIVE_INFINITY): FeedVi
 }
 
 const SHORTS_PATH = '/shorts/';
-const SHORT_MAX_SECONDS = 60;
+// YouTube calls anything up to three minutes a Short, so the feed drops the same
+// length. A shorter ceiling threw away the long-form videos that are the point.
+const SHORT_MAX_SECONDS = 180;
 
 export function durationSeconds(formatted: string): number | null {
   const parts = formatted.split(':').map(Number);

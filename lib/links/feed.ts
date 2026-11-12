@@ -195,7 +195,7 @@ async function fetchDeepUploads(
   const uploadsId = uploadsPlaylistId(channelId);
   const regular: EnrichedVideo[] = [];
   let pageToken: string | undefined;
-  for (let page = 0; page < UPLOADS_MAX_PAGES && regular.length < HISTORY_LENGTH; page += 1) {
+  for (let page = 0; page < UPLOADS_MAX_PAGES && regular.length < FEED_LIMIT; page += 1) {
     const payload = await fetchUploadsPage(uploadsId, apiKey, deadline, pageToken);
     if (!payload) break;
     const pageVideos = parsePlaylistItems(payload, UPLOADS_PAGE_SIZE).filter(
@@ -298,7 +298,9 @@ async function loadChannelFeed(
   return {
     fetchedAt: new Date().toISOString(),
     latest: resolved[0] ?? null,
-    history: resolved.slice(0, HISTORY_LENGTH),
+    // The history starts after the featured video, so the newest upload is not
+    // shown twice on the page: once in the card, once as the first row.
+    history: resolved.slice(1),
     stats,
     channelUrl: CHANNEL_URL,
   };

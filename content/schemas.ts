@@ -1020,6 +1020,7 @@ export const LinksCopySchema = z.object({
   latestHeading: LocalizedTextSchema,
   historyCommand: z.string().min(1),
   historyEmpty: LocalizedTextSchema,
+  historyOnlyLatest: LocalizedTextSchema,
   thumbPlaceholder: LocalizedTextSchema,
   seeAllVideos: LocalizedTextSchema,
   playlistsHeading: LocalizedTextSchema,
