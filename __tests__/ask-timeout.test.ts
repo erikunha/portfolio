@@ -93,7 +93,7 @@ describe('/api/ask — AI Gateway stream-initiation timeout', () => {
     expect(res.status).toBe(200);
 
     const opts = mockStreamText.mock.calls[0]?.[0] as { model?: unknown } | undefined;
-    expect(opts?.model).toBe('anthropic/claude-haiku-4-5');
+    expect(opts?.model).toBe('anthropic/claude-haiku-5.5');
 
     const reader = res.body?.getReader();
     if (reader) {

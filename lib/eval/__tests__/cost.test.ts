@@ -30,7 +30,8 @@ describe('lib/eval/cost', () => {
   });
 
   it('PRICING_USD_PER_MTOK has the documented feature + judge shape', () => {
-    expect(PRICING_USD_PER_MTOK.feature).toEqual({ input: 1.0, output: 5.0 });
+    expect(PRICING_USD_PER_MTOK.feature).toEqual({ input: 0.1, output: 0.5 });
+    expect(PRICING_USD_PER_MTOK.mechanical).toEqual({ input: 1.0, output: 5.0 });
     expect(PRICING_USD_PER_MTOK.judge).toEqual({ input: 3.0, output: 15.0 });
   });
 
@@ -66,7 +67,7 @@ describe('lib/eval/cost', () => {
       cacheWriteTokens: 100_000,
       outputTokens: 100_000,
     });
-    expect(cost).toBeCloseTo(0.5 + 0.04 + 0.125 + 0.5, 10);
+    expect(cost).toBeCloseTo(0.05 + 0.004 + 0.0125 + 0.05, 10);
   });
 
   it('summarizeFeatureCost sums measured answers and fills gaps with their mean', () => {
@@ -78,6 +79,6 @@ describe('lib/eval/cost', () => {
   it('summarizeFeatureCost falls back to the approximation when nothing was measured', () => {
     const summary = summarizeFeatureCost([], 2);
     expect(summary.measuredAnswers).toBe(0);
-    expect(summary.featureCostUsd).toBeCloseTo((2 * (1700 * 1 + 350 * 5)) / 1_000_000, 10);
+    expect(summary.featureCostUsd).toBeCloseTo((2 * (1700 * 0.1 + 350 * 0.5)) / 1_000_000, 10);
   });
 });

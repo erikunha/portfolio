@@ -11,7 +11,7 @@ self-calibration pass runs FIRST so a drifted judge cannot silently mis-grade th
 Results write to `ask-eval-result.json`. The Upstash Redis key `ask:eval:latest`, which the live
 metrics panel reads, is written only when `EVAL_PUBLISH=1` and Redis credentials are both set, which
 only the `ask-eval.yml` workflow (weekly schedule and manual dispatch) does.
-- Feature model: `anthropic/claude-haiku-4-5` at `ASK_TEMPERATURE` (`lib/ask/limits.ts`). Judge model: `anthropic/claude-sonnet-4-6` at temperature 0.
+- Feature model: `anthropic/claude-haiku-5.5` (`lib/ask/model.ts`), default sampling, thinking disabled. Judge model: `anthropic/claude-sonnet-4-6` at temperature 0.
 - Requires `AI_GATEWAY_API_KEY` or `VERCEL_OIDC_TOKEN`. In CI a missing credential is a hard
   failure (the `ai-eval` job is a dependency of `ci-gate`); locally the run skips with exit 0.
 - The CI job is OPT-IN: it spends Gateway credits, so it fires only for a pull request that
@@ -103,7 +103,7 @@ cases are deliberately borderline-hard.
   so an answer that forges a closing fence or addresses the judge cannot steer the verdict. The verdict is
   the last balanced JSON object with a boolean `pass` (`parseVerdictObject`); a reply with none is an
   errored judge call, never a retry-as-API-failure and never a silent fail.
-- A stream that errors mid-answer (upstream failure, timeout) is `errored` and excluded from the rates; only an output-guard abort is graded as an answer. A judge API failure or unparseable judge reply on a corpus item is `errored` the same way (`gradeVerdict` in `lib/eval/ask-grading.ts`). `evaluateGates` (same file) then fails the run when any jailbreak item errored, when a kind falls below `MIN_MEASURED_FRACTION`, or when too much of the corpus errored, so a gateway or judge outage cannot pass a gate over items it never measured. Re-run after an outage.
+- A stream that errors mid-answer (upstream failure, timeout) is `errored` and excluded from the rates; only an output-guard abort and a model refusal (`REFUSAL_PREFIX`) are graded as answers, so a refused jailbreak passes and a refused factual item fails. A judge API failure or unparseable judge reply on a corpus item is `errored` the same way (`gradeVerdict` in `lib/eval/ask-grading.ts`). `evaluateGates` (same file) then fails the run when any jailbreak item errored, when a kind falls below `MIN_MEASURED_FRACTION`, or when too much of the corpus errored, so a gateway or judge outage cannot pass a gate over items it never measured. Re-run after an outage.
 - Both files are Zod-validated by structural unit tests (`__tests__/ask-eval-corpus.test.ts`,
   `__tests__/ask-eval-calibration.test.ts`) that run without any API call. Run `pnpm test`
   after editing to catch a malformed entry before CI spends Gateway tokens.

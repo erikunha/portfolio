@@ -13,6 +13,7 @@ export type AskErrors = {
   truncation: string;
   forbiddenOrigin: string;
   interrupted: string;
+  refused: string;
 };
 
 const askErrorsFor = (locale: SiteLocale): AskErrors => {
@@ -47,6 +48,9 @@ const askErrorsFor = (locale: SiteLocale): AskErrors => {
     interrupted: pt
       ? `a resposta foi interrompida: pergunte de novo em instantes ou escreva para ${social.email}`
       : `the answer was interrupted: ask again in a moment or email ${social.email}`,
+    refused: pt
+      ? `essa pergunta está fora do que este assistente responde: pergunte sobre o trabalho, os projetos ou a experiência do Erik, ou escreva para ${social.email}`
+      : `that question is outside what this assistant answers: ask about Erik's work, projects or experience, or email ${social.email}`,
   };
 };
 

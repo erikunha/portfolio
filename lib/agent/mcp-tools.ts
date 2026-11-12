@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { POST as askPost } from '@/app/api/ask/route';
 import { social } from '@/content/social';
 import { HIRING_PROFILE, HiringProfileSchema } from '@/lib/hiring-profile';
-import { parseStreamChunk, REQUEST_ID_HEADER } from '@/lib/stream-protocol';
+import { parseStreamChunk, REFUSAL_PREFIX, REQUEST_ID_HEADER } from '@/lib/stream-protocol';
 
 const MIN_QUESTION_LENGTH = 1;
 const MAX_QUESTION_LENGTH = 500;
@@ -62,6 +62,14 @@ async function runAsk(question: string, clientHeaders: Headers | undefined): Pro
 
   const raw = await res.text();
   const chunk = parseStreamChunk(raw);
+  if (!chunk.ok && chunk.errorMessage.startsWith(REFUSAL_PREFIX)) {
+    const refusal = chunk.errorMessage.slice(REFUSAL_PREFIX.length);
+    return {
+      ok: true,
+      text: chunk.displayText ? `${chunk.displayText}\n\n${refusal}` : refusal,
+      requestId,
+    };
+  }
   if (!chunk.ok) {
     const text = chunk.displayText
       ? `${chunk.displayText}\n\n[upstream error: ${chunk.errorMessage}]`
@@ -97,7 +105,7 @@ export function registerAgentTools(server: McpServer): void {
     {
       title: 'Ask Erik',
       description:
-        "Ask a natural-language question about Erik Cunha's experience, stack, projects, or availability. Answered by Claude Haiku 4.5 grounded only in the site's CV context. Rate limit: the caller's address is forwarded, so the ask limit of ~8 requests/hour and the 60-second duplicate-question check apply per caller; a shared monthly token budget is the hard cost cap. Failures set isError. The result carries the request id; POST it to /api/log/forget to delete the stored exchange.",
+        "Ask a natural-language question about Erik Cunha's experience, stack, projects, or availability. Answered by Claude Haiku 5.5 grounded only in the site's CV context. Rate limit: the caller's address is forwarded, so the ask limit of ~8 requests/hour and the 60-second duplicate-question check apply per caller; a shared monthly token budget is the hard cost cap. Failures set isError. The result carries the request id; POST it to /api/log/forget to delete the stored exchange.",
       inputSchema: z.object({
         question: z
           .string()

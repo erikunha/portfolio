@@ -1,4 +1,4 @@
-export const HAIKU_CACHE_MIN_TOKENS = 4096;
+export const HAIKU_CACHE_MIN_TOKENS = 512;
 
 export const CHARS_PER_TOKEN_CEILING = 5;
 

@@ -25,7 +25,7 @@ The site is the artifact: a Next.js 16 application on Vercel (Fluid Compute), an
 
 The codebase demonstrates the engineering it claims: "performance-first" is a budget and not an adjective — Lighthouse CI gates the category scores and the timings on the 24 routes the Lighthouse config lists, the axe scan fails CI, and the client-chunk and per-route first-load JS budgets are gates in the `build` job (`check-bundle-size.mjs` and `check-route-js.mjs`). `ARCHITECTURE.md` describes the system; `DECISIONS.md` records decisions and reversibility notes.
 
-The AI centerpiece is a streaming `ask` endpoint (Vercel AI Gateway + Anthropic Haiku 4.5, prompt-cached, rate-limited, budget-capped) with a correctness eval suite and a visible metrics panel, making AI quality observable to hiring reviewers. Agent-readiness surfaces include `/.well-known/agent.json` and a minimal MCP server.
+The AI centerpiece is a streaming `ask` endpoint (Vercel AI Gateway + Anthropic Haiku 5.5, prompt-cached, rate-limited, budget-capped) with a correctness eval suite and a visible metrics panel, making AI quality observable to hiring reviewers. Agent-readiness surfaces include `/.well-known/agent.json` and a minimal MCP server.
 
 The terminal homepage is complemented by `/summary`, `/cv`, `/links` (pt-BR), `/links/en`, the pt-BR twins `/pt`, `/pt/cv` and `/pt/summary`, and 18 `/design-system` documentation pages (overview, tokens, components, enforcement, changelog, three foundations and ten primitives). Every page, the 404 pages and the route error pages included, renders through one shell: the same topbar, site menu, dock and position line. The English and pt-BR routes live in two route groups, each with its own root layout and `<html lang>`.
 
@@ -38,7 +38,7 @@ The terminal homepage is complemented by `/summary`, `/cv`, `/links` (pt-BR), `/
 | Next.js 16 (App Router)                 | RSC-first static generation with selective client islands                                                                                                 |
 | React 19                                | Server components + streaming hydration                                                                                                                   |
 | TypeScript strict                       | `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`; `pnpm typecheck` runs the native compiler preview (`tsgo`)                                      |
-| Vercel AI Gateway + Anthropic Haiku 4.5 | Streaming `/api/ask` with prompt caching and cost tracking                                                                                                |
+| Vercel AI Gateway + Anthropic Haiku 5.5 | Streaming `/api/ask` with prompt caching and cost tracking                                                                                                |
 | Upstash Redis                           | Rate limiting, budget cap, KV interaction log                                                                                                             |
 | Tailwind v4 (via PostCSS)               | Utility-first styling; design tokens authored in `app/css/theme.css` under `@theme {}`. No CSS Modules, no Style Dictionary, no build-time token pipeline |
 | Design system (`/design-system`)        | 11 components (10 server-compatible; Field is client), docs CopyButton helper, `@theme` tokens and live docs                                               |

@@ -24,7 +24,7 @@ export function askLogDatesInTtl(now: Date): string[] {
   );
 }
 
-export type AskInteractionStatus = 'completed' | 'errored' | 'aborted';
+export type AskInteractionStatus = 'completed' | 'errored' | 'aborted' | 'refused';
 
 export type AskInteraction = {
   requestId: string;

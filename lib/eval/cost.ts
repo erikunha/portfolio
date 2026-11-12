@@ -1,5 +1,6 @@
 export const PRICING_USD_PER_MTOK = {
-  feature: { input: 1.0, output: 5.0 },
+  feature: { input: 0.1, output: 0.5 },
+  mechanical: { input: 1.0, output: 5.0 },
   judge: { input: 3.0, output: 15.0 },
 } as const;
 
@@ -54,7 +55,7 @@ export const targetCostUsdFrom = (
   inputTokens: number,
   outputTokens: number,
 ): number => {
-  const rate = tier === 'mechanical' ? PRICING_USD_PER_MTOK.feature : PRICING_USD_PER_MTOK.judge;
+  const rate = tier === 'mechanical' ? PRICING_USD_PER_MTOK.mechanical : PRICING_USD_PER_MTOK.judge;
   return (inputTokens * rate.input + outputTokens * rate.output) / TOKENS_PER_MTOK;
 };
 
@@ -70,8 +71,8 @@ export function estimateJobCostUsd(args: {
   approxJudgeOutputTokens: number;
 }): number {
   const targetPerRun =
-    (args.approxTargetInputTokens * PRICING_USD_PER_MTOK.feature.input +
-      args.approxTargetOutputTokens * PRICING_USD_PER_MTOK.feature.output) /
+    (args.approxTargetInputTokens * PRICING_USD_PER_MTOK.mechanical.input +
+      args.approxTargetOutputTokens * PRICING_USD_PER_MTOK.mechanical.output) /
     1_000_000;
   const judgePerRun = judgeCostUsdFrom(args.approxJudgeInputTokens, args.approxJudgeOutputTokens);
   return args.cases * args.runs * (targetPerRun + judgePerRun);

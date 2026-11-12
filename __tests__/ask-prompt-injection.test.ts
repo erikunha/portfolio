@@ -135,7 +135,7 @@ describe('/api/ask prompt-injection sanitization', () => {
         providerOptions?: { anthropic?: { cacheControl?: { type?: string } } };
       };
     };
-    expect(callArg.model).toBe('anthropic/claude-haiku-4-5');
+    expect(callArg.model).toBe('anthropic/claude-haiku-5.5');
     expect(callArg.instructions?.role, 'expected a system-role instructions entry').toBe('system');
     expect(callArg.instructions?.providerOptions?.anthropic?.cacheControl?.type).toBe('ephemeral');
   });

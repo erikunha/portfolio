@@ -1,6 +1,5 @@
 import { NextRequest } from 'next/server';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { ASK_TEMPERATURE } from '@/lib/ask/limits';
 import { ASK_MODEL } from '@/lib/ask/model';
 
 const mockStreamText = vi.fn();
@@ -82,16 +81,6 @@ describe('ASK_MODEL — single source of truth', () => {
     expect(mockStreamText).toHaveBeenCalledOnce();
     const arg = mockStreamText.mock.calls[0]?.[0] as { model: string };
     expect(arg.model).toBe(ASK_MODEL);
-    await drain(res);
-  });
-
-  it('hands streamText the named low temperature so one question answers the same way across runs', async () => {
-    const { POST } = await import('@/app/api/ask/route');
-    const res = await POST(makeRequest());
-    const arg = mockStreamText.mock.calls[0]?.[0] as { temperature?: number };
-    expect(arg.temperature).toBe(ASK_TEMPERATURE);
-    expect(ASK_TEMPERATURE).toBeGreaterThan(0);
-    expect(ASK_TEMPERATURE).toBeLessThanOrEqual(0.3);
     await drain(res);
   });
 
