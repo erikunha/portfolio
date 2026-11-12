@@ -1,3 +1,4 @@
+import { PRICING_USD_PER_MTOK } from '@/lib/eval/cost';
 // @vitest-environment node
 
 import { mkdtempSync, readFileSync } from 'node:fs';
@@ -191,7 +192,10 @@ describe('pnpm ask:eval harness without Redis', () => {
     );
 
     expect(result.featureCostMeasuredAnswers).toBe(result.answeredCount);
-    const perAnswer = (INPUT_TOKENS * 1 + OUTPUT_TOKENS * 5) / 1_000_000;
+    const perAnswer =
+      (INPUT_TOKENS * PRICING_USD_PER_MTOK.feature.input +
+        OUTPUT_TOKENS * PRICING_USD_PER_MTOK.feature.output) /
+      1_000_000;
     expect(result.featureCostUsd).toBeCloseTo(perAnswer * result.answeredCount, 3);
   }, 30_000);
 });

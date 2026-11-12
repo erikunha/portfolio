@@ -11,7 +11,7 @@ self-calibration pass runs FIRST so a drifted judge cannot silently mis-grade th
 Results write to `ask-eval-result.json`. The Upstash Redis key `ask:eval:latest`, which the live
 metrics panel reads, is written only when `EVAL_PUBLISH=1` and Redis credentials are both set, which
 only the `ask-eval.yml` workflow (weekly schedule and manual dispatch) does.
-- Feature model: `anthropic/claude-haiku-4-5` at `ASK_TEMPERATURE` (`lib/ask/limits.ts`). Judge model: `anthropic/claude-sonnet-4-6` at temperature 0.
+- Feature model: `anthropic/claude-haiku-5.5` (`lib/ask/model.ts`), default sampling, thinking disabled. Judge model: `anthropic/claude-sonnet-4-6` at temperature 0.
 - Requires `AI_GATEWAY_API_KEY` or `VERCEL_OIDC_TOKEN`. In CI a missing credential is a hard
   failure (the `ai-eval` job is a dependency of `ci-gate`); locally the run skips with exit 0.
 - The CI job is OPT-IN: it spends Gateway credits, so it fires only for a pull request that

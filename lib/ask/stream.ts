@@ -3,7 +3,7 @@ import { askErrors } from '@/content/ask-errors';
 import { SITE_LOCALE, type SiteLocale } from '@/content/site-locale';
 import { countAskGuardFinding } from '@/lib/ask/guard-count';
 import { ASK_RESERVED_INPUT_TOKENS } from '@/lib/ask/input-reservation';
-import { ASK_MAX_OUTPUT_TOKENS, ASK_TEMPERATURE } from '@/lib/ask/limits';
+import { ASK_MAX_OUTPUT_TOKENS } from '@/lib/ask/limits';
 import { ASK_MODEL } from '@/lib/ask/model';
 import {
   createStreamGuard,
@@ -28,6 +28,10 @@ const TELEMETRY_FUNCTION_ID = 'ask';
 const FINISH_REASON_LENGTH = 'length' as const;
 
 const FINISH_REASON_INTERRUPTED = 'interrupted' as const;
+
+const FINISH_REASON_REFUSED = 'content-filter' as const;
+
+const ANSWER_WITHOUT_THINKING = { anthropic: { thinking: { type: 'disabled' } } } as const;
 
 const MID_STREAM_TIMEOUT_MS = 15_000;
 
@@ -114,8 +118,8 @@ export function createAskStream(context: AskContext): AskStream {
 
   const result = streamText({
     model: ASK_MODEL,
-    temperature: ASK_TEMPERATURE,
     maxOutputTokens: ASK_MAX_OUTPUT_TOKENS,
+    providerOptions: ANSWER_WITHOUT_THINKING,
     abortSignal: AbortSignal.any([AbortSignal.timeout(REQUEST_TIMEOUT_MS), upstream.signal]),
     telemetry: { functionId: TELEMETRY_FUNCTION_ID, recordInputs: false, recordOutputs: false },
     instructions: {
@@ -198,7 +202,10 @@ export function createAskStream(context: AskContext): AskStream {
             if (finishReason === FINISH_REASON_LENGTH) {
               state.truncated = true;
               send(enc.encode(askErrors[answerLocale].truncation));
-            } else if (finishReason === FINISH_REASON_INTERRUPTED) {
+            } else if (
+              finishReason === FINISH_REASON_INTERRUPTED ||
+              finishReason === FINISH_REASON_REFUSED
+            ) {
               state.status = 'errored';
               sendError(askErrors[answerLocale].interrupted);
             }
