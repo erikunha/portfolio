@@ -314,7 +314,7 @@ const educationFixtures = [
     endYear: 2027,
     expectedCompletion: '2027-12',
     period: 'expected Dec 2027',
-    focus: 'Coursework: ML and deep learning, LLMs, RAG, multi-agent systems, Python',
+    focus: 'Coursework: PyTorch, LLM applications and RAG, LangChain and LangGraph',
   },
   {
     id: 'CO_OP_DIPLOMA',
@@ -384,7 +384,7 @@ describe('canonical profile and education', () => {
     expect(education[SITE_LOCALE.en]).toEqual(educationFixtures);
     const { credentials } = await import('./credentials');
     expect(credentials).toEqual([
-      { label: 'ANGULAR_DEV', badge: 'CERTIFIED', evidence: 'certificates.dev · 2024' },
+      { label: 'ANGULAR_DEVELOPER', badge: 'CERTIFIED', evidence: 'certificates.dev · 2024' },
       { label: 'ENGLISH', badge: 'IELTS_GENERAL_TRAINING', evidence: 'C1 · 2023' },
       { label: 'INTL_DEGREE', badge: 'WES_VERIFIED', evidence: 'World Education Services · 2022' },
     ]);

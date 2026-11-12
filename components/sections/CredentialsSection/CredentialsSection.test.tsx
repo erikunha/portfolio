@@ -12,7 +12,7 @@ describe('career tag groups', () => {
     const certifications = within(screen.getByRole('group', { name: 'Certifications' }));
     const educationGroup = within(screen.getByRole('group', { name: 'Education' }));
     expect(certifications.getAllByRole('listitem')).toHaveLength(3);
-    expect(certifications.getByText('cert/ANGULAR_DEV')).toBeTruthy();
+    expect(certifications.getByText('cert/ANGULAR_DEVELOPER')).toBeTruthy();
     expect(certifications.getByText('IELTS_GENERAL_TRAINING')).toBeTruthy();
     expect(certifications.getByText('WES_VERIFIED')).toBeTruthy();
     expect(certifications.queryByText('edu/MBA_AI_ENG')).toBeNull();
@@ -90,7 +90,7 @@ describe('career tag groups', () => {
       'UNISAL, Campinas',
     ]);
     expect(credentials.map((entry) => entry.label)).toEqual([
-      'ANGULAR_DEV',
+      'ANGULAR_DEVELOPER',
       'ENGLISH',
       'INTL_DEGREE',
     ]);

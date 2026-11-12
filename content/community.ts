@@ -10,14 +10,14 @@ const communityEventFor = (locale: SiteLocale): CommunityEvent => {
     role: pt ? 'ORGANIZADOR' : 'ORGANIZER',
     bullets: [
       pt
-        ? 'selecionou 8 palestras sobre DevOps, nuvem e engenharia de plataforma.'
-        : 'curated 8 talks across DevOps, cloud and platform engineering.',
+        ? 'selecionou 8 palestras sobre DevOps, infraestrutura de nuvem, engenharia de plataforma e arquitetura.'
+        : 'curated 8 talks across DevOps, cloud infrastructure, platform engineering and architecture.',
       pt
         ? 'conduziu o ciclo completo de palestrantes: abertura do CFP → revisão → seleção → desenho do programa → dia do evento → encerramento.'
         : 'ran the full speaker cycle: CFP launch → review → selection → program design → day-of → wrap.',
       pt
-        ? 'coordenou palestrantes, patrocinadores e co-organizadores de ponta a ponta.'
-        : 'coordinated with speakers, sponsors, and co-organizers end-to-end.',
+        ? 'coordenou palestrantes, patrocinadores e co-organizadores de ponta a ponta, e publicou palestrantes, programação e patrocinadores no site open source em 4 pull requests mergeados.'
+        : 'coordinated with speakers, sponsors, and co-organizers end-to-end, and published speakers, schedule and sponsors to the open-source site in 4 merged pull requests.',
     ],
     link: {
       label: 'devopsdays.org',

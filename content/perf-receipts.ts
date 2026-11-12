@@ -20,7 +20,7 @@ const perfReceiptsFor = (locale: SiteLocale): PerfReceipt[] => {
     {
       metric: 'BUNDLE_CSS',
       delta: '-98%',
-      company: '@ FORWARD_DEPLOY_ENG',
+      company: '@ CONFIDENTIAL',
       note: pt
         ? 'Refatoração de utilitários PrimeFlex no shell de layout, mais lazy load'
         : 'PrimeFlex utility refactor on the layout shell, plus lazy load',
@@ -29,13 +29,13 @@ const perfReceiptsFor = (locale: SiteLocale): PerfReceipt[] => {
     {
       metric: 'TTI',
       delta: '-52%',
-      company: '@ FORWARD_DEPLOY_ENG',
+      company: '@ CONFIDENTIAL',
       note: pt ? 'async concorrente + OnPush.' : 'concurrent async + OnPush.',
     },
     {
       metric: 'INITIAL_LOAD',
       delta: '-25%',
-      company: '@ FORWARD_DEPLOY_ENG',
+      company: '@ CONFIDENTIAL',
       note: pt
         ? 'Módulos lazy-loaded e code splitting por rota'
         : 'Lazy-loaded modules and route-level code splitting',
@@ -44,7 +44,7 @@ const perfReceiptsFor = (locale: SiteLocale): PerfReceipt[] => {
     {
       metric: 'BUNDLE_JS',
       delta: '-33%',
-      company: '@ FORWARD_DEPLOY_ENG',
+      company: '@ CONFIDENTIAL',
       note: pt ? 'code splitting + imports dinâmicos.' : 'code splitting + dynamic imports.',
     },
     {
@@ -96,7 +96,7 @@ const perfReceiptsFor = (locale: SiteLocale): PerfReceipt[] => {
     {
       metric: 'RELEASE_TIME',
       delta: '-85%',
-      company: '@ FORWARD_DEPLOY_ENG',
+      company: '@ CONFIDENTIAL',
       note: pt
         ? 'pipeline de release de ~5 min para ~45 s.'
         : 'release pipeline about 5 min to about 45 s.',

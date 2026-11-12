@@ -5,7 +5,7 @@ import { SITE_LOCALE, type SiteLocale } from './site-locale';
 
 export const credentials: Credential[] = z.array(CredentialSchema).parse([
   {
-    label: 'ANGULAR_DEV',
+    label: 'ANGULAR_DEVELOPER',
     badge: 'CERTIFIED',
     evidence: 'certificates.dev · 2024',
   },
