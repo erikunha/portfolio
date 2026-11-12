@@ -164,7 +164,7 @@ const experienceDetailPt: Record<string, ExperienceDetail> = {
       'Construí micro-frontends para substituir, jornada a jornada, a jornada legada de contratação de seguro empresarial do Itaú, empacotados como custom elements e renderizados em tempo de execução pela plataforma host interna do banco, em Angular 9 e Angular Elements com TypeScript, RxJS e Reactive Forms',
       'Entreguei cada micro-frontend por seu próprio pipeline de AWS CodePipeline e CodeBuild até S3 e CloudFront, para que fosse publicado no seu próprio ritmo',
       'Defini o contrato de cada micro-frontend com a plataforma host (atributos de custom element na entrada, CustomEvents do DOM na saída) e conduzi o fluxo de cada seguradora por configuração, de modo que uma nova seguradora parceira não exigia código frontend',
-      'Construí a vitrine de ofertas que compara planos médico, odontológico e de vida de mais de 4 seguradoras parceiras (ex.: MetLife, Amil), além de formulários de cotação que validam CNPJ e vidas cobertas',
+      'Construí a vitrine de ofertas que compara planos de saúde, odontológicos e de vida de mais de 4 seguradoras parceiras (ex.: MetLife, Amil), além de formulários de cotação que validam CNPJ e vidas cobertas',
       'Construí o acompanhamento de propostas e apólices após a contratação (status, pendências, documentos), com HTML semântico, ARIA e navegação por teclado cobertos por testes Jasmine',
     ],
   },
