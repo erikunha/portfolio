@@ -384,7 +384,7 @@ describe('terminal redesign canonical facts', () => {
       ],
       [
         'Encora (formerly Daitan)',
-        'Frontend Developer · assigned to VMware',
+        'Software Engineer · assigned to VMware',
         '2021-01',
         '2021-12',
         'Campinas, Brazil',
@@ -392,28 +392,14 @@ describe('terminal redesign canonical facts', () => {
       ],
       [
         'Zup Innovation (Itaú Unibanco)',
-        'Frontend Developer',
+        'Software Engineer',
         '2020-04',
         '2021-01',
         'Campinas, Brazil',
         null,
       ],
-      [
-        'Venturus',
-        'Full Stack Engineer → Frontend Developer',
-        '2019-02',
-        '2020-04',
-        'Campinas, Brazil',
-        null,
-      ],
-      [
-        'MB Labs',
-        'Full Stack Engineer → Software Engineer',
-        '2018-07',
-        '2019-02',
-        'Campinas, Brazil',
-        null,
-      ],
+      ['Venturus', 'Full Stack Engineer', '2019-02', '2020-04', 'Campinas, Brazil', null],
+      ['MB Labs', 'Full Stack Engineer', '2018-07', '2019-02', 'Campinas, Brazil', null],
     ]);
     expect(gitLog[SITE_LOCALE.en].every((entry) => entry.type === 'career')).toBe(true);
     expect(

@@ -144,8 +144,8 @@ const projectsFor = (locale: SiteLocale): Project[] => {
         kind: 'oss',
         url: 'https://github.com/erikunha/portfolio',
         description: pt
-          ? 'Este portfólio, um endpoint Anthropic governado e seu harness de avaliação. Um gate de prompt injection rejeita antes da inferência, um detector de vazamento em streaming sobrevive a limites de chunk e há um kill switch. O CI avalia o endpoint com um juiz LLM calibrado em rótulos humanos (piso de concordância de 0,85), com correção travada em 0,9, resistência a jailbreak em 1,0 e teto de US$ 2 de custo por job.'
-          : 'This portfolio, a governed Anthropic endpoint and its eval harness. A prompt-injection gate rejects before inference, a streaming leak detector survives chunk boundaries, and a kill switch is in place. CI grades the endpoint with an LLM judge calibrated on human labels (0.85 agreement floor), with correctness gated at 0.9, jailbreak resistance at 1.0 and a $2 per-job cost cap.',
+          ? 'Este portfólio, um endpoint Anthropic governado em streaming sobre o Vercel AI SDK e seu harness de avaliação. Um gate de prompt injection rejeita antes da inferência, um detector de vazamento em streaming sobrevive a limites de chunk, o versionamento de prompt por hash de conteúdo e a detecção de model drift guardam o prompt, e há um kill switch. O CI avalia o endpoint contra o modelo vivo num corpus de casos factuais, de limite, de jailbreak e de validação de saída, com um juiz LLM calibrado em rótulos humanos (piso de concordância de 0,85), correção travada em 0,9, resistência a jailbreak em 1,0 e teto de US$ 2 de custo por job. Um servidor MCP expõe o endpoint como ferramenta e uma suíte agent-eval avalia os agentes de código que o mantêm.'
+          : 'This portfolio, a governed streaming Anthropic endpoint on the Vercel AI SDK and its eval harness. A prompt-injection gate rejects before inference, a streaming leak detector survives chunk boundaries, content-hashed prompt versioning and model-drift detection guard the prompt, and a kill switch is in place. CI grades the endpoint against the live model over a corpus of factual, edge, jailbreak and output-validation cases, with an LLM judge calibrated on human labels (0.85 agreement floor), correctness gated at 0.9 and jailbreak resistance at 1.0 and a $2 per-job cost cap. An MCP server exposes the endpoint as a tool and an agent-eval suite grades the coding agents that maintain it.',
         stats: [
           {
             label: pt ? 'JUIZ LLM' : 'LLM JUDGE',
@@ -192,12 +192,12 @@ const projectsFor = (locale: SiteLocale): Project[] => {
         kind: 'oss',
         url: 'https://github.com/erikunha/vault-of-loci',
         description: pt
-          ? 'Template de vault do Obsidian open-source (MIT, Python) em que os agentes de IA dão aula em vez de responder: um AGENTS.md conduz sete ferramentas de agente, a tentativa vem antes da dica e a revelação espera a nota de confiança. Um teste de 17 cenários, avaliado por um modelo de outra família, segura as regras de tutor, e um ledger mede retenção em 7, 30 e 90 dias.'
-          : 'Open-source Obsidian vault template (MIT, Python) where AI agents tutor instead of answering: one AGENTS.md drives seven agent tools, the attempt comes before the hint, and the reveal waits for a confidence rating. A 17-scenario test graded by a model of another family holds the tutor rules, and a ledger measures retention at 7, 30 and 90 days.',
+          ? 'Template de vault do Obsidian open-source (MIT, Python) em que os agentes de IA dão aula em vez de responder: um AGENTS.md conduz cinco ferramentas de agente, a tentativa vem antes da dica e a revelação espera a nota de confiança. Um teste de 17 cenários, avaliado por um modelo de outra família, segura as regras de tutor, e um ledger mede retenção em 7, 30 e 90 dias.'
+          : 'Open-source Obsidian vault template (MIT, Python) where AI agents tutor instead of answering: one AGENTS.md drives five agent tools, the attempt comes before the hint, and the reveal waits for a confidence rating. A 17-scenario test graded by a model of another family holds the tutor rules, and a ledger measures retention at 7, 30 and 90 days.',
         stats: [
           { label: pt ? 'CENÁRIOS' : 'SCENARIOS', value: '17' },
           { label: pt ? 'BARRA' : 'PASS BAR', value: '28/34' },
-          { label: pt ? 'FERRAMENTAS' : 'AGENT TOOLS', value: '7 · ONE AGENTS.MD' },
+          { label: pt ? 'FERRAMENTAS' : 'AGENT TOOLS', value: '5 · ONE AGENTS.MD' },
         ],
       },
     ]);

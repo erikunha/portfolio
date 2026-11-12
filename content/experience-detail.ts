@@ -18,8 +18,8 @@ const experienceDetailEn: Record<string, ExperienceDetail> = {
       "Deliver backend changes on Fastify, TypeORM and PostgreSQL: a hand-written migration with a rehearsed backfill and tested rollback, and an EXISTS-subquery fix that raised one owner's team-filter matches from 14 to the correct 75",
       'Design the versioned view-state contract those data-dense pages share (sort, typed filters, search, column order and size, grouping, pagination) in namespaced, URL-safe TypeScript codecs, with a backward-compatible migration chain that falls back to a default instead of throwing, so every shared or stale link resolves to a working view',
       'Measure the data-platform migration with production builds of four Next.js routes against their parent commits on one shared backend: controls without an accessible name down to 1 on every route, from 55 on the worst, and on the pipelines route Cumulative Layout Shift (CLS) from 0.166 to zero, Largest Contentful Paint (LCP) from 2,544 to 1,308 ms and Lighthouse performance from 79 to 96, with performance flat on the other routes',
-      'Build the table engine from zero, with one other engineer co-developing it from the second month: a headless core that never imports the React layer, then client mode on TanStack Table and server mode on React Query with cancellable requests, deterministic caching and faceted filter counts, held to 94.7% line and 85.4% branch coverage against library baselines of 85.4% and 65.8%',
-      'Write design documents before code (decision records, an evidence log citing code by path and line, EARS acceptance criteria, a WCAG criterion-by-criterion table and a rollback plan keyed to a named signal), specifying native table semantics (row and column headers, aria-sort, a polite live region) and virtualizing rows over a real table element rather than display:grid to keep them',
+      'Build the table engine from zero, with one other engineer co-developing it from the second month: a headless core that never imports the React layer, then client mode on TanStack Table and server mode on React Query with cancellable requests, deterministic caching, shape validation and faceted filter counts, held to 94.7% line and 85.4% branch coverage against library baselines of 85.4% and 65.8%',
+      'Write design documents before code (decision records, an evidence log citing code by path and line, EARS acceptance criteria, a WCAG criterion-by-criterion table and a rollback plan keyed to a named signal), specifying native table semantics (row and column headers, aria-sort, a polite live region announcing the sort and the row count), roving-tabindex toolbars, and virtualizing flat and grouped rows over a real table element rather than display:grid to keep them',
       'Build the shared outreach editor on Plate and React, chosen over Lexical, TipTap and ProseMirror against an evidence log, holding personalization as document structure so authors see which fields resolve before sending',
     ],
   },
@@ -29,7 +29,7 @@ const experienceDetailEn: Record<string, ExperienceDetail> = {
       `Built the cashier micro-frontend platform every deposit and payout across the group's brands passes through, isolating brand orchestration from shared payment primitives on ${PROFILE_FACT.txPerYear} transactions a year, in Angular 19 with TypeScript, RxJS, NgRx, StencilJS Web Components, Storybook and Nx`,
       'Drove the payment primitives from white-label configuration, rendering the right frontend per country, jurisdiction and product across 5+ brands, 8+ languages and 10+ currencies (zero-decimal ones included) as framework-agnostic StencilJS Web Components',
       'Designed the multi-step deposit and withdrawal flows as async state machines in RxJS and NgRx, with recovery paths for failed steps, across 15+ regulated jurisdictions',
-      'Integrated Trustly open-banking deposits for the Nordic markets and Yape payments for Peru (app approval code, status polling and timeout handling), with WireMock and Playwright mocks of both providers',
+      'Integrated Trustly open-banking deposits for the Nordic markets and Yape payments for Peru, where Yape reaches about 16M monthly users (app approval code, status polling and timeout handling), with WireMock and Playwright mocks of both providers',
       'Covered KYC and payment flows with Jest, Playwright and WireMock against mocked providers so provider outages and API changes never broke the suite, and enforced path-scoped standards with Husky Git hooks and secret scanning',
       'Built a 12-agent AI-assisted engineering system on GitHub Copilot spanning generation, review, debugging, testing and architecture validation, adopted across the team with every automated action reviewable',
     ],
@@ -50,11 +50,11 @@ const experienceDetailEn: Record<string, ExperienceDetail> = {
       "B3-listed owner of Centauro and of Fisia, Nike's exclusive Brazil distributor through 2034: R$7.9B gross revenue in 2022 with 31.9% of sales digital, and group storefronts holding 21% of Brazil's online fashion, apparel and footwear traffic.",
     highlights: [
       "Rebuilt Nike Brazil's storefront behind a backend-for-frontend (BFF) gateway, including the listing, product detail and search pages, cut over in a phased rollout, in React and Next.js 12 to 13 (server-side rendering, static generation and incremental static regeneration) with TypeScript, styled-components, NextAuth, Nx, Webpack and Storybook",
-      `Kept the Nike and Centauro storefronts, serving ${PROFILE_FACT.peakMau} monthly users, isolated inside the shared Nx monorepo by enforced module boundaries, on a design system they share with brand theming and Storybook`,
+      `Kept the Nike and Centauro storefronts, serving ${PROFILE_FACT.peakMau} monthly users, isolated inside the shared Nx monorepo by enforced module boundaries, without forking the codebase, on a design system they share with brand theming and Storybook`,
       'Integrated a WebAR try-on into the Next.js purchase journey and mentored four junior engineers in React, testing and review',
-      'Cut page load about 32% on storefronts carrying R$2.5B of 2022 digital revenue through Next.js code splitting, image optimization and caching, improving Core Web Vitals about 12%',
+      'Cut page load about 32% on storefronts carrying R$2.5B of 2022 digital revenue through Next.js code splitting, image optimization and caching, improving Core Web Vitals about 12%, led by LCP',
       'Lifted conversion about 10% across 20+ Google Optimize 360 A/B experiments, each with pre-agreed stop-loss criteria',
-      'Implemented technical SEO (schema.org data, sitemaps, canonical URLs, incremental static regeneration) and data layer analytics feeding the funnel and the A/B experiments, and covered the four revenue-critical checkout journeys at about 70% coverage with Jest and MSW',
+      'Implemented technical SEO (schema.org data, meta tags, sitemaps, canonical URLs, incremental static regeneration) and data layer analytics (view_item, add_to_cart, purchase) feeding the funnel and the A/B experiments, and covered the four revenue-critical checkout journeys at about 70% coverage with Jest, React Testing Library and MSW',
     ],
   },
   'career/encora': {
@@ -72,13 +72,13 @@ const experienceDetailEn: Record<string, ExperienceDetail> = {
       "Built micro-frontends to replace Itaú's legacy business insurance application journey by journey, packaged as custom elements and rendered at runtime by the bank's internal host platform, in Angular 9 and Angular Elements with TypeScript, RxJS and Reactive Forms",
       'Shipped each micro-frontend through its own AWS CodePipeline and CodeBuild pipeline to S3 and CloudFront, so it deployed on its own schedule',
       "Defined each micro-frontend's contract with the host platform (custom-element attributes in, DOM CustomEvents out) and drove each insurer's flow from configuration, so a new partner insurer needed no frontend code",
-      'Built the offer showcase comparing plans from 4+ partner insurers (e.g. MetLife, Amil), plus quote forms validating CNPJ and covered lives',
+      'Built the offer showcase comparing health, dental and life plans from 4+ partner insurers (e.g. MetLife, Amil), plus quote forms validating CNPJ and covered lives',
       'Built proposal and policy tracking after contracting (status, pending items, documents), with semantic HTML, ARIA and keyboard navigation covered by Jasmine tests',
     ],
   },
   'career/venturus': {
     context:
-      'Built through a non-profit R&D institute. Transportation infrastructure: a toll-road concession with a 319.8 km corridor carrying 850,000 vehicles a day (2019). Agribusiness foreign trade: a B2B customs-documentation consultancy active since 1989.',
+      "Built through a non-profit Brazilian R&D institute born inside Ericsson in 1995, one of the country's largest private research and innovation centres, with Motorola and Sony among its clients. Transportation infrastructure: a toll-road concession with a 319.8 km corridor carrying 850,000 vehicles a day (2019). Agribusiness foreign trade: a B2B customs-documentation consultancy active since 1989.",
     highlights: [
       'Developed the traffic-monitoring dashboards for CCR AutoBAn (now Motiva), whose 24/7 control centre watches 106 cameras and 36 traffic sensors along a 319.8 km corridor carrying 850,000 vehicles a day, in Angular 8 with TypeScript, RxJS and NgRx',
       "Replaced the concession's spreadsheet billing with an Angular workflow: CSV import and export in TypeScript, row-by-row validation before saving, and a monthly close that locked edits and totalled gross revenue, equivalent vehicles and average tariff",
@@ -90,7 +90,7 @@ const experienceDetailEn: Record<string, ExperienceDetail> = {
   },
   'career/mb-labs': {
     context:
-      "Custom builds by a software house. Education publishing: Grupo SM, operating across Spain and nine Latin American markets. Retail workforce training: a B2B chat platform used across Cia Hering's 800+ stores.",
+      "Custom builds by a Campinas software house, founded 2013, for fintech, retail and education clients. Education publishing: Edições SM, the Brazilian arm of Grupo SM, the Marianist-owned Spanish educational publisher operating across Spain and nine Latin American markets. Retail workforce training: a B2B chat platform used across Cia Hering's 800+ stores.",
     highlights: [
       "Architected Edições SM's offline-first learning app for Android, iOS, Windows, macOS and Linux, sharing about 80% of the code, cutting desktop build time about 40%, on Ionic 3, Angular and Electron with TypeScript, Cordova, SQLite and REST APIs",
       "Built the offline content pipeline with Cordova file I/O and SQLite (resumable book-bundle downloads, catalogue and reading position stored locally) and the sync that merges two devices' offline reading histories on reconnection, so a student's devices converge instead of the last one winning",
@@ -109,8 +109,8 @@ const experienceDetailPt: Record<string, ExperienceDetail> = {
       'Entrego mudanças de backend em Fastify, TypeORM e PostgreSQL: uma migration escrita à mão com backfill ensaiado e rollback testado, e a correção de uma subquery EXISTS que elevou de 14 para os 75 corretos as correspondências do filtro de time de um proprietário',
       'Projeto o contrato de estado de visualização versionado que essas páginas densas em dados compartilham (ordenação, filtros tipados, busca, ordem e tamanho de colunas, agrupamento, paginação) em codecs TypeScript seguros para URL e com namespace, com uma cadeia de migração retrocompatível que recorre a um padrão em vez de lançar erro, para que todo link compartilhado ou antigo abra uma visualização funcional',
       'Meço a migração da plataforma de dados com builds de produção de quatro rotas Next.js contra os commits pai em um mesmo backend compartilhado: controles sem nome acessível reduzidos a 1 em todas as rotas, de 55 na pior, e, na rota de pipelines, o Cumulative Layout Shift (CLS) de 0,166 para zero, o Largest Contentful Paint (LCP) de 2.544 para 1.308 ms e a performance do Lighthouse de 79 para 96, com performance estável nas demais rotas',
-      'Construo o motor de tabelas do zero, com outro engenheiro co-desenvolvendo a partir do segundo mês: um núcleo headless que nunca importa a camada React, depois modo cliente em TanStack Table e modo servidor em React Query com requisições canceláveis, cache determinístico e contagens de filtros facetados, mantido em 94,7% de cobertura de linhas e 85,4% de ramos, contra bases de comparação de bibliotecas de 85,4% e 65,8%',
-      'Escrevo documentos de design antes do código (registros de decisão, um log de evidências que cita o código por caminho e linha, critérios de aceite em EARS, uma tabela WCAG critério a critério e um plano de rollback atrelado a um sinal nomeado), especificando semântica nativa de table (cabeçalhos de linha e coluna, aria-sort, uma live region educada) e virtualizando linhas sobre um elemento table real em vez de display:grid para preservá-la',
+      'Construo o motor de tabelas do zero, com outro engenheiro co-desenvolvendo a partir do segundo mês: um núcleo headless que nunca importa a camada React, depois modo cliente em TanStack Table e modo servidor em React Query com requisições canceláveis, cache determinístico, validação de shape e contagens de filtros facetados, mantido em 94,7% de cobertura de linhas e 85,4% de ramos, contra bases de comparação de bibliotecas de 85,4% e 65,8%',
+      'Escrevo documentos de design antes do código (registros de decisão, um log de evidências que cita o código por caminho e linha, critérios de aceite em EARS, uma tabela WCAG critério a critério e um plano de rollback atrelado a um sinal nomeado), especificando semântica nativa de table (cabeçalhos de linha e coluna, aria-sort, uma live region educada que anuncia a ordenação e a contagem de linhas), toolbars com roving tabindex, e virtualizando linhas planas e agrupadas sobre um elemento table real em vez de display:grid para preservá-la',
       'Construo o editor de prospecção compartilhado em Plate e React, escolhido entre Lexical, TipTap e ProseMirror a partir de um log de evidências, mantendo a personalização como estrutura do documento para que os autores vejam quais campos serão resolvidos antes do envio',
     ],
   },
@@ -121,7 +121,7 @@ const experienceDetailPt: Record<string, ExperienceDetail> = {
       `Construí a plataforma de micro-frontends do cashier por onde passam todos os depósitos e saques das marcas do grupo, isolando a orquestração de marca das primitivas de pagamento compartilhadas em ${PROFILE_FACT.txPerYear} transações por ano, em Angular 19 com TypeScript, RxJS, NgRx, Web Components StencilJS, Storybook e Nx`,
       'Conduzi as primitivas de pagamento por configuração white-label, renderizando o frontend certo por país, jurisdição e produto em mais de 5 marcas, mais de 8 idiomas e mais de 10 moedas (inclusive as sem casas decimais) como Web Components StencilJS agnósticos de framework',
       'Desenhei os fluxos de depósito e saque em várias etapas como máquinas de estado assíncronas em RxJS e NgRx, com caminhos de recuperação para etapas que falham, em mais de 15 jurisdições reguladas',
-      'Integrei depósitos open banking da Trustly para os mercados nórdicos e pagamentos Yape para o Peru (código de aprovação no app, polling de status e tratamento de timeout), com mocks de WireMock e Playwright dos dois provedores',
+      'Integrei depósitos open banking da Trustly para os mercados nórdicos e pagamentos Yape para o Peru, onde o Yape alcança cerca de 16M de usuários mensais (código de aprovação no app, polling de status e tratamento de timeout), com mocks de WireMock e Playwright dos dois provedores',
       'Cobri os fluxos de KYC e pagamento com Jest, Playwright e WireMock contra provedores simulados, para que quedas de provedor e mudanças de API nunca quebrassem a suíte, e impus padrões por caminho com hooks Git do Husky e varredura de segredos',
       'Construí um sistema de engenharia assistido por IA com 12 agentes no GitHub Copilot, cobrindo geração, revisão, depuração, testes e validação de arquitetura, adotado pelo time com toda ação automatizada revisável',
     ],
@@ -142,11 +142,11 @@ const experienceDetailPt: Record<string, ExperienceDetail> = {
       'Dona da Centauro e da Fisia, distribuidora exclusiva da Nike no Brasil até 2034, listada na B3: R$ 7,9B de receita bruta em 2022, com 31,9% das vendas digitais, e storefronts do grupo com 21% do tráfego online brasileiro de moda, vestuário e calçados.',
     highlights: [
       'Reconstruí o storefront da Nike Brasil atrás de um gateway backend-for-frontend (BFF), incluindo as páginas de listagem, detalhe de produto e busca, com virada em lançamento por fases, em React e Next.js 12 a 13 (server-side rendering, geração estática e regeneração estática incremental) com TypeScript, styled-components, NextAuth, Nx, Webpack e Storybook',
-      `Mantive os storefronts da Nike e da Centauro, com ${PROFILE_FACT.peakMau} usuários mensais, isolados dentro do monorepo Nx compartilhado por limites de módulo impostos, sobre um design system compartilhado com tematização por marca e Storybook`,
+      `Mantive os storefronts da Nike e da Centauro, com ${PROFILE_FACT.peakMau} usuários mensais, isolados dentro do monorepo Nx compartilhado por limites de módulo impostos, sem bifurcar o código, sobre um design system compartilhado com tematização por marca e Storybook`,
       'Integrei um provador de realidade aumentada na web (WebAR) à jornada de compra em Next.js e mentorei quatro desenvolvedores juniores em React, testes e revisão de código',
-      'Reduzi o carregamento de página em cerca de 32% em storefronts que carregavam R$ 2,5B da receita digital de 2022, com code splitting do Next.js, otimização de imagens e cache, melhorando os Core Web Vitals em cerca de 12%',
+      'Reduzi o carregamento de página em cerca de 32% em storefronts que carregavam R$ 2,5B da receita digital de 2022, com code splitting do Next.js, otimização de imagens e cache, melhorando os Core Web Vitals em cerca de 12%, puxados pelo LCP',
       'Elevei a conversão em cerca de 10% em mais de 20 experimentos A/B no Google Optimize 360, cada um com critérios de stop-loss combinados de antemão',
-      'Implementei SEO técnico (dados schema.org, sitemaps, URLs canônicas, regeneração estática incremental) e analytics de data layer que alimentavam o funil e os experimentos A/B, e cobri as quatro jornadas de checkout críticas para a receita com cerca de 70% de cobertura em Jest e MSW',
+      'Implementei SEO técnico (dados schema.org, meta tags, sitemaps, URLs canônicas, regeneração estática incremental) e analytics de data layer (view_item, add_to_cart, purchase) que alimentavam o funil e os experimentos A/B, e cobri as quatro jornadas de checkout críticas para a receita com cerca de 70% de cobertura em Jest, React Testing Library e MSW',
     ],
   },
   'career/encora': {
@@ -164,13 +164,13 @@ const experienceDetailPt: Record<string, ExperienceDetail> = {
       'Construí micro-frontends para substituir, jornada a jornada, a jornada legada de contratação de seguro empresarial do Itaú, empacotados como custom elements e renderizados em tempo de execução pela plataforma host interna do banco, em Angular 9 e Angular Elements com TypeScript, RxJS e Reactive Forms',
       'Entreguei cada micro-frontend por seu próprio pipeline de AWS CodePipeline e CodeBuild até S3 e CloudFront, para que fosse publicado no seu próprio ritmo',
       'Defini o contrato de cada micro-frontend com a plataforma host (atributos de custom element na entrada, CustomEvents do DOM na saída) e conduzi o fluxo de cada seguradora por configuração, de modo que uma nova seguradora parceira não exigia código frontend',
-      'Construí a vitrine de ofertas que compara planos de mais de 4 seguradoras parceiras (ex.: MetLife, Amil), além de formulários de cotação que validam CNPJ e vidas cobertas',
+      'Construí a vitrine de ofertas que compara planos médico, odontológico e de vida de mais de 4 seguradoras parceiras (ex.: MetLife, Amil), além de formulários de cotação que validam CNPJ e vidas cobertas',
       'Construí o acompanhamento de propostas e apólices após a contratação (status, pendências, documentos), com HTML semântico, ARIA e navegação por teclado cobertos por testes Jasmine',
     ],
   },
   'career/venturus': {
     context:
-      'Construído por um instituto de P&D sem fins lucrativos. Infraestrutura de transporte: uma concessão de rodovia com corredor de 319,8 km e 850.000 veículos por dia (2019). Comércio exterior do agronegócio: uma consultoria B2B de documentação aduaneira, ativa desde 1989.',
+      'Construído por um instituto brasileiro de P&D sem fins lucrativos nascido dentro da Ericsson em 1995, um dos maiores centros privados de pesquisa e inovação do país, com Motorola e Sony entre seus clientes. Infraestrutura de transporte: uma concessão de rodovia com corredor de 319,8 km e 850.000 veículos por dia (2019). Comércio exterior do agronegócio: uma consultoria B2B de documentação aduaneira, ativa desde 1989.',
     highlights: [
       'Desenvolvi os dashboards de monitoramento de tráfego da CCR AutoBAn (hoje Motiva), cujo centro de controle 24/7 acompanha 106 câmeras e 36 sensores de tráfego ao longo de um corredor de 319,8 km com 850.000 veículos por dia, em Angular 8 com TypeScript, RxJS e NgRx',
       'Substituí o faturamento em planilhas da concessão por um fluxo em Angular: importação e exportação de CSV em TypeScript, validação linha a linha antes de salvar e um fechamento mensal que travava edições e totalizava receita bruta, veículos equivalentes e tarifa média',
@@ -182,7 +182,7 @@ const experienceDetailPt: Record<string, ExperienceDetail> = {
   },
   'career/mb-labs': {
     context:
-      'Projetos sob medida de uma software house. Publicação educacional: Grupo SM, presente na Espanha e em nove mercados latino-americanos. Treinamento de equipes de varejo: uma plataforma B2B de chat usada nas mais de 800 lojas da Cia Hering.',
+      'Software house de Campinas, fundada em 2013, construindo produtos sob medida para clientes de fintech, varejo e educação. Entregue para as Edições SM, o braço brasileiro do Grupo SM, a editora educacional espanhola de propriedade dos marianistas, que atua na Espanha e em nove mercados latino-americanos. Treinamento de equipes de varejo: uma plataforma B2B de chat usada nas mais de 800 lojas da Cia Hering.',
     highlights: [
       'Projetei o app de aprendizado offline-first das Edições SM para Android, iOS, Windows, macOS e Linux, compartilhando cerca de 80% do código e reduzindo o tempo de build desktop em cerca de 40%, em Ionic 3, Angular e Electron com TypeScript, Cordova, SQLite e APIs REST',
       'Construí o pipeline de conteúdo offline com I/O de arquivos do Cordova e SQLite (downloads retomáveis de pacotes de livros, catálogo e posição de leitura guardados localmente) e a sincronização que mescla os históricos de leitura offline de dois dispositivos na reconexão, para que os dispositivos de um aluno convirjam em vez de o último vencer',

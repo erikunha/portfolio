@@ -103,8 +103,8 @@ const gitLogFor = (locale: SiteLocale): GitCommit[] => {
       company: pt ? 'Encora (antiga Daitan)' : 'Encora (formerly Daitan)',
       companyUrl: 'https://www.linkedin.com/company/encorainc/',
       role: pt
-        ? 'Desenvolvedor Frontend · alocado na VMware'
-        : 'Frontend Developer · assigned to VMware',
+        ? 'Engenheiro de Software · alocado na VMware'
+        : 'Software Engineer · assigned to VMware',
       startMonth: '2021-01',
       endMonth: '2021-12',
       location: pt ? 'Campinas, Brasil' : 'Campinas, Brazil',
@@ -124,7 +124,7 @@ const gitLogFor = (locale: SiteLocale): GitCommit[] => {
       type: 'career',
       company: 'Zup Innovation (Itaú Unibanco)',
       companyUrl: 'https://zup.com.br',
-      role: pt ? 'Desenvolvedor Frontend' : 'Frontend Developer',
+      role: pt ? 'Engenheiro de Software' : 'Software Engineer',
       startMonth: '2020-04',
       endMonth: '2021-01',
       location: pt ? 'Campinas, Brasil' : 'Campinas, Brazil',
@@ -144,9 +144,7 @@ const gitLogFor = (locale: SiteLocale): GitCommit[] => {
       type: 'career',
       company: 'Venturus',
       companyUrl: 'https://www.venturus.org.br',
-      role: pt
-        ? 'Engenheiro Full Stack → Desenvolvedor Frontend'
-        : 'Full Stack Engineer → Frontend Developer',
+      role: pt ? 'Engenheiro Full Stack' : 'Full Stack Engineer',
       startMonth: '2019-02',
       endMonth: '2020-04',
       location: pt ? 'Campinas, Brasil' : 'Campinas, Brazil',
@@ -166,9 +164,7 @@ const gitLogFor = (locale: SiteLocale): GitCommit[] => {
       type: 'career',
       company: 'MB Labs',
       companyUrl: 'https://mblabs.com.br',
-      role: pt
-        ? 'Engenheiro Full Stack → Engenheiro de Software'
-        : 'Full Stack Engineer → Software Engineer',
+      role: pt ? 'Engenheiro Full Stack' : 'Full Stack Engineer',
       startMonth: '2018-07',
       endMonth: '2019-02',
       location: pt ? 'Campinas, Brasil' : 'Campinas, Brazil',

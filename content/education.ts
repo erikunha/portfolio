@@ -15,8 +15,8 @@ const educationFor = (locale: SiteLocale): Education[] => {
       expectedCompletion: '2027-12',
       period: pt ? 'previsto para dez/2027' : 'expected Dec 2027',
       focus: pt
-        ? 'Disciplinas: ML e deep learning, LLMs, RAG, sistemas multi-agente, Python'
-        : 'Coursework: ML and deep learning, LLMs, RAG, multi-agent systems, Python',
+        ? 'Disciplinas: ML e deep learning com PyTorch, aplicações de LLM e RAG, sistemas multi-agente com LangChain e LangGraph'
+        : 'Coursework: ML and deep learning with PyTorch, LLM applications and RAG, multi-agent systems with LangChain and LangGraph',
     },
     {
       id: 'CO_OP_DIPLOMA',

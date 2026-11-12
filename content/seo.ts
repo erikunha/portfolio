@@ -61,7 +61,6 @@ export const personSchema = {
     'Angular',
     'RxJS',
     'NgRx',
-    'Redux',
     'StencilJS',
     'Web Components',
     'Vue.js',

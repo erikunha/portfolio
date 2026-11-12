@@ -68,12 +68,12 @@ const readingViewsFor = (locale: SiteLocale): ReadingViews => {
         contact: pt ? 'Contato' : 'Contact',
       },
       credentialLabels: {
-        ANGULAR_DEV: pt ? 'Desenvolvedor Angular' : 'Angular Developer',
+        ANGULAR_DEVELOPER: pt ? 'Desenvolvedor Angular' : 'Angular Developer',
         ENGLISH: pt ? 'Inglês' : 'English',
         INTL_DEGREE: pt ? 'Diploma internacional' : 'International degree',
       },
       credentialBadges: {
-        ANGULAR_DEV: pt ? 'Certificado' : 'Certified',
+        ANGULAR_DEVELOPER: pt ? 'Certificado' : 'Certified',
         ENGLISH: 'IELTS General Training',
         INTL_DEGREE: pt ? 'Verificado pela WES' : 'WES verified',
       },
