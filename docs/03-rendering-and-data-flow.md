@@ -207,6 +207,8 @@ sequenceDiagram
             G-->>R: abort -> append STREAM_ERR_SENTINEL
         else provider failure (onError) or finishReason interrupted
             R-->>U: append STREAM_ERR_SENTINEL with the interrupted message
+        else finishReason content-filter (model refusal)
+            R-->>U: append STREAM_ERR_SENTINEL with REFUSAL_PREFIX and the refused message
         else clean
             R-->>U: enqueue chunk
         end

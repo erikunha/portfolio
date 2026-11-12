@@ -513,7 +513,10 @@ x-site-locale: en | pt            # page language; picks the language of refusal
   reads it from `onError` and sends the sentinel too. The text after the
   sentinel is always the page-language `interrupted` line from
   content/ask-errors.ts; the exception stays in the server log. A guard abort
-  carries GUARD_ABORT_PREFIX and the shell words it as a withheld answer.
+  carries GUARD_ABORT_PREFIX and the shell words it as a withheld answer. A
+  model refusal (finish reason `content-filter`) sends REFUSAL_PREFIX plus the
+  page-language `refused` line; the shell shows the line without the prefix,
+  the run is logged `refused`, and the eval grades it as an answer.
 
 → 400 application/json   { "error": "..." }  # missing question, invalid or unreadable body, injection guard
 → 403 application/json   { "error": "..." }  # Sec-Fetch-Site says cross-site (lib/server/fetch-metadata.ts)
