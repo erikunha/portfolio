@@ -1,7 +1,7 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { expect, type Locator, type Page, test } from '@playwright/test';
+import { CAPTURE_SCALE, HIDE_DECORATIVE_CANVAS_PATH } from './capture-options';
 import { volatileMasks } from './mask-volatile';
 import {
   compareVisual,
@@ -11,9 +11,6 @@ import {
 } from './visual-compare';
 
 const SNAPSHOT_TIMEOUT_MS = 30_000;
-const HIDE_DECORATIVE_CANVAS = fileURLToPath(
-  new URL('./hide-decorative-canvas.css', import.meta.url),
-);
 
 export async function revealDeferredContent(page: Page): Promise<void> {
   await page.evaluate(() => {
@@ -36,11 +33,11 @@ function baselinePath(name: string): string {
 }
 
 async function captureOptions(page: Page) {
-  await page.addStyleTag({ path: HIDE_DECORATIVE_CANVAS });
+  await page.addStyleTag({ path: HIDE_DECORATIVE_CANVAS_PATH });
   return {
     mask: volatileMasks(page),
     animations: 'disabled' as const,
-    scale: 'css' as const,
+    scale: CAPTURE_SCALE,
     timeout: SNAPSHOT_TIMEOUT_MS,
   };
 }
