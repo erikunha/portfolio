@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, type Page, test } from '@playwright/test';
 
 const TABBABLE_SELECTOR =
   'a[href], button:not([disabled]), input:not([disabled]), select, textarea, summary, [tabindex]:not([tabindex="-1"])';
@@ -7,6 +7,17 @@ const TAB_KEYS = ['Tab', 'Alt+Tab'];
 
 const SIGNAL_RGB = 'rgb(0, 255, 65)';
 const SUBTLE_RGBA = 'rgba(0, 255, 65, 0.4)';
+
+// The small size steps down to 36px on a fine pointer and keeps the 44px touch
+// target, so every assertion reads the pointer the browser actually reports
+// instead of assuming the project it runs in.
+async function pointerKind(page: Page): Promise<'fine' | 'coarse'> {
+  return page.evaluate(() => (matchMedia('(pointer: coarse)').matches ? 'coarse' : 'fine'));
+}
+
+async function smallTargetHeight(page: Page): Promise<number> {
+  return (await pointerKind(page)) === 'coarse' ? 44 : 36;
+}
 
 test.describe('Button behavioral E2E', () => {
   test('primary button is visible and keyboard-focusable', async ({ page }) => {
@@ -35,15 +46,18 @@ test.describe('Button behavioral E2E', () => {
     await expect(secondary).toBeVisible();
   });
 
-  test('sm size keeps a 44px target', async ({ page }) => {
+  test('sm size keeps the 44px touch target and steps down to 36px on a fine pointer', async ({
+    page,
+  }) => {
     await page.goto('/design-system/components');
     const preview = page.locator('#button');
     const small = preview.getByRole('link', { name: 'SM', exact: true });
     await expect(small).toBeVisible();
-    await expect(small).toHaveCSS('min-height', '44px');
+    const target = await smallTargetHeight(page);
+    await expect(small).toHaveCSS('min-height', `${target}px`);
     await expect(small).toHaveCSS('padding-left', '10px');
     const bounds = await small.boundingBox();
-    expect(bounds?.height).toBeGreaterThanOrEqual(44);
+    expect(bounds?.height).toBeGreaterThanOrEqual(target);
     expect(bounds?.width).toBeGreaterThanOrEqual(44);
   });
 
@@ -74,11 +88,15 @@ for (const width of [375, 767, 768, 1280]) {
   test(`Button targets and type at ${width}px`, async ({ page }) => {
     await page.setViewportSize({ width, height: 812 });
     await page.goto('/design-system/components');
-    const buttons = page.locator('#button .btn');
+    const preview = page.locator('#button');
+    const buttons = preview.locator('.btn');
     await expect(buttons).toHaveCount(4);
+    const smallHeight = await smallTargetHeight(page);
     for (const button of await buttons.all()) {
       const bounds = await button.boundingBox();
-      expect(bounds?.height).toBeGreaterThanOrEqual(44);
+      const label = (await button.textContent())?.trim() ?? '';
+      const isSmall = label.startsWith('SM');
+      expect(bounds?.height).toBeGreaterThanOrEqual(isSmall ? smallHeight : 44);
       expect(bounds?.width).toBeGreaterThanOrEqual(44);
       const fontSize = await button.evaluate((element) =>
         Number.parseFloat(getComputedStyle(element).fontSize),
