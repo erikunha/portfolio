@@ -42,7 +42,7 @@ The `design-system/components` directory contains eleven components. Ten have no
   <Button variant="secondary" size="lg" as="a" href="#">LG</Button>
 </Preview>
 
-**Accessibility:** At least 44px wide. Small and medium sizes have a 44px minimum height; large has a 52px minimum height. `focus-visible` outline using `--color-primary-500`. Disabled anchors use `aria-disabled="true"`, drop `href`, leave the tab order and cancel click (anchors can't be natively disabled). A `button` defaults `type` to `"button"`, so it never submits a surrounding form by accident.
+**Accessibility:** At least 44px wide. The small size is 36px tall (`--spacing-target-pointer`) on a fine pointer and keeps the 44px minimum height on touch; medium is 44px and large is 52px at every pointer. The width never drops below 44px. `focus-visible` outline using `--color-primary-500`. Disabled anchors use `aria-disabled="true"`, drop `href`, leave the tab order and cancel click (anchors can't be natively disabled). A `button` defaults `type` to `"button"`, so it never submits a surrounding form by accident.
 
 ## Field
 

@@ -98,9 +98,22 @@ describe('Button', () => {
     expect(el?.classList.contains('bg-transparent')).toBe(true);
     expect(el?.classList.contains('text-primary-500')).toBe(true);
   });
-  it('keeps the small target at 44px and the large target at 52px', () => {
+  it('keeps the 44px target and steps the small size down to 36px on a fine pointer', () => {
     const { container: smContainer } = render(<Button size="sm">Sm</Button>);
-    expect(smContainer.firstElementChild?.classList.contains('min-h-11')).toBe(true);
+    const sm = smContainer.firstElementChild;
+    expect(sm?.classList.contains('min-h-11')).toBe(true);
+    expect(sm?.classList.contains('pointer-fine:min-h-[var(--spacing-target-pointer)]')).toBe(true);
+    expect(sm?.classList.contains('min-w-11')).toBe(true);
+    expect(sm?.classList.contains('pointer-fine:min-w-[var(--spacing-target-pointer)]')).toBe(
+      false,
+    );
+    const { container: mdContainer } = render(<Button size="md">Md</Button>);
+    expect(mdContainer.firstElementChild?.classList.contains('min-h-11')).toBe(true);
+    expect(
+      mdContainer.firstElementChild?.classList.contains(
+        'pointer-fine:min-h-[var(--spacing-target-pointer)]',
+      ),
+    ).toBe(false);
     const { container: lgContainer } = render(<Button size="lg">Lg</Button>);
     expect(lgContainer.firstElementChild?.classList.contains('min-h-[52px]')).toBe(true);
   });

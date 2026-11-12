@@ -10,8 +10,10 @@ type LocaleSwitchProps = Omit<ComponentPropsWithoutRef<'nav'>, 'children' | 'ari
   names: Record<SiteLocale, string>;
 };
 
+// The size owns the box: the small button is 36px on a fine pointer and keeps
+// the 44px target on touch. Only the current-locale marks live here.
 const LINK_CLASSES =
-  'min-w-11 min-h-11 aria-[current=page]:border-primary-500 aria-[current=page]:underline aria-[current=page]:underline-offset-4 aria-[current=page]:decoration-2';
+  'aria-[current=page]:border-primary-500 aria-[current=page]:underline aria-[current=page]:underline-offset-4 aria-[current=page]:decoration-2';
 
 export function LocaleSwitch({
   label,

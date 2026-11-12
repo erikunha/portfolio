@@ -38,7 +38,7 @@ Source: `design-system/components/Button/Button.tsx`. React Server Component, ze
   <Button size="lg" as="a" href="#sizes">LG</Button>
 </Preview>
 
-Small and medium buttons have a 44px minimum height. Large buttons have a 52px minimum height.
+The small size is the one that steps down: it is 36px tall (`--spacing-target-pointer`) on a fine pointer and keeps the 44px minimum height on touch. Medium buttons have a 44px minimum height, and large buttons have a 52px minimum height, at every pointer. The width is 44px in every size, at every pointer.
 
 <h2 id="disabled">Disabled</h2>
 
@@ -50,4 +50,4 @@ An anchor cannot be natively disabled. With `as="a"` and `disabled`, the button 
 
 <h2 id="accessibility">Accessibility</h2>
 
-Every size meets the 44px target. Keyboard focus shows a 2px signal outline with a 2px offset through `:focus-visible`. This component defaults `type` to `"button"`, opting out of the browser's implicit submit inside a `<form>`.
+Every size meets the 44px target on touch, and the small size is 36px tall on a fine pointer, where a mouse does not need the touch floor. The width never drops below 44px. Keyboard focus shows a 2px signal outline with a 2px offset through `:focus-visible`. This component defaults `type` to `"button"`, opting out of the browser's implicit submit inside a `<form>`.
