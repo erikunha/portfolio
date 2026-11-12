@@ -118,7 +118,7 @@ Performance & A11y: Core Web Vitals · WCAG 2.2 AA · ARIA · Lighthouse CI
 | Mar 2025 - May 2026 | [Betsson Group](https://betssongroup.com) | Senior Software Engineer | Malta (hybrid) |
 | Mar 2023 - Mar 2025 | Forward Deployed Engineer | Senior Software Engineer | Remote |
 | Dec 2021 - Mar 2023 | [Grupo SBF (Nike / Centauro)](https://www.gruposbf.com.br) | Software Engineer | São Paulo, Brazil (remote) |
-| Jan 2021 - Dec 2021 | [Encora (formerly Daitan)](https://www.linkedin.com/company/encorainc/) | Software Engineer · assigned to VMware | Campinas, Brazil |
+| Jan 2021 - Dec 2021 | [Encora (formerly Daitan)](https://www.linkedin.com/company/encorainc/) | Software Engineer | Campinas, Brazil |
 | Apr 2020 - Jan 2021 | [Zup Innovation (Itaú Unibanco)](https://zup.com.br) | Software Engineer | Campinas, Brazil |
 | Feb 2019 - Apr 2020 | [Venturus](https://www.venturus.org.br) | Full Stack Engineer | Campinas, Brazil |
 | Jul 2018 - Feb 2019 | [MB Labs](https://mblabs.com.br) | Full Stack Engineer | Campinas, Brazil |

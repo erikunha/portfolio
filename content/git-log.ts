@@ -102,9 +102,7 @@ const gitLogFor = (locale: SiteLocale): GitCommit[] => {
       type: 'career',
       company: pt ? 'Encora (antiga Daitan)' : 'Encora (formerly Daitan)',
       companyUrl: 'https://www.linkedin.com/company/encorainc/',
-      role: pt
-        ? 'Engenheiro de Software · alocado na VMware'
-        : 'Software Engineer · assigned to VMware',
+      role: pt ? 'Engenheiro de Software' : 'Software Engineer',
       startMonth: '2021-01',
       endMonth: '2021-12',
       location: pt ? 'Campinas, Brasil' : 'Campinas, Brazil',

@@ -384,7 +384,7 @@ describe('terminal redesign canonical facts', () => {
       ],
       [
         'Encora (formerly Daitan)',
-        'Software Engineer · assigned to VMware',
+        'Software Engineer',
         '2021-01',
         '2021-12',
         'Campinas, Brazil',
