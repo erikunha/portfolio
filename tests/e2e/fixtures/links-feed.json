@@ -10,14 +10,6 @@
   },
   "history": [
     {
-      "id": "dQw4w9WgXcQ",
-      "title": "Fixture video",
-      "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
-      "thumbnailUrl": "https://i0.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg",
-      "publishedAt": "2026-08-28T19:00:00+00:00",
-      "description": "Deterministic e2e fixture."
-    },
-    {
       "id": "jNQXAC9IVRw",
       "title": "Fixture archive video 2",
       "url": "https://www.youtube.com/watch?v=jNQXAC9IVRw",
@@ -47,6 +39,14 @@
       "url": "https://www.youtube.com/watch?v=JGwWNGJdvx8",
       "thumbnailUrl": "https://i.ytimg.com/vi/JGwWNGJdvx8/hqdefault.jpg",
       "publishedAt": "2026-08-24T19:00:00+00:00",
+      "description": "Deterministic e2e fixture."
+    },
+    {
+      "id": "aqz-KE-bpKQ",
+      "title": "Fixture archive video 6",
+      "url": "https://www.youtube.com/watch?v=aqz-KE-bpKQ",
+      "thumbnailUrl": "https://i.ytimg.com/vi/aqz-KE-bpKQ/hqdefault.jpg",
+      "publishedAt": "2026-08-23T19:00:00+00:00",
       "description": "Deterministic e2e fixture."
     }
   ],

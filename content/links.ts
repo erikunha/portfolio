@@ -83,7 +83,7 @@ export const linksContent: LinksContent = LinksContentSchema.parse({
       id: 'tiktok',
       icon: 'tiktok',
       label: { pt: 'TikTok', en: 'TikTok' },
-      href: 'https://www.tiktok.com/@oeriknagringa',
+      href: 'https://www.tiktok.com/@eriknagringaa',
     },
     {
       id: 'email',
@@ -108,6 +108,10 @@ export const linksContent: LinksContent = LinksContentSchema.parse({
     historyEmpty: {
       pt: 'a lista não carregou · recarregue em um minuto ou abra o canal',
       en: 'the list did not load · reload in a minute or open the channel',
+    },
+    historyOnlyLatest: {
+      pt: 'o vídeo mais recente é o único até agora · abra o canal para ver mais',
+      en: 'the latest video is the only one so far · open the channel to see more',
     },
     seeAllVideos: { pt: 'ver todos os vídeos', en: 'see all videos' },
     playlistsHeading: { pt: 'playlists', en: 'playlists' },
