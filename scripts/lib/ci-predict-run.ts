@@ -3,6 +3,7 @@ import { tmpdir } from 'node:os';
 import { basename, dirname, join } from 'node:path';
 import {
   ACTION_CLASSES,
+  AI_EVAL_LABEL,
   actionName,
   BUILD_COMMAND,
   CONTAINER_ROOT,
@@ -430,7 +431,7 @@ export async function predict(context: RunContext, deps: Deps): Promise<Predicti
   let server: ServerUrls | undefined;
   let fileCounter = 0;
 
-  const base = (job: WorkflowJob, extra: ExprObject): ExprContext => ({
+  const base = (job: WorkflowJob, extra: ExprObject, labelled = false): ExprContext => ({
     github: {
       event_name: EVENT_NAME,
       repository: github.repository,
@@ -441,6 +442,13 @@ export async function predict(context: RunContext, deps: Deps): Promise<Predicti
         pull_request: {
           base: { sha: github.baseSha },
           head: { sha: github.headSha, repo: { full_name: github.repository } },
+          // The CI ai-eval job is opt-in on this label, because the run spends
+          // Gateway credits. The predictor evaluates the job's condition with
+          // the label present, so it can tell the two skips apart: the job
+          // skipped because the AI paths did not change, and the job skipped
+          // only because the pull request carries no label. The local opt-in
+          // is the --eval flag, and the branch below runs the same suite here.
+          labels: labelled ? [{ name: AI_EVAL_LABEL }] : [],
         },
       },
     },
@@ -755,35 +763,43 @@ export async function predict(context: RunContext, deps: Deps): Promise<Predicti
       }
       let enabled: boolean;
       try {
-        enabled = conditionHolds(job.if, base(job, {}), functions);
+        enabled = conditionHolds(job.if, base(job, {}, policy === 'ai-eval'), functions);
       } catch (error) {
         rows.push({ job: id, verdict: 'not-run', why: (error as Error).message, ms: 0 });
         outcomes.set(id, { result: 'not-run', outputs: {} });
         continue;
       }
-      if (!enabled) {
-        const detect = outcomes.get('detect-changes')?.outputs ?? {};
-        const flags = Object.entries(detect)
-          .map(([key, value]) => `${key}=${value}`)
-          .join(' ');
-        rows.push({
-          job: id,
-          verdict: 'skipped',
-          why: `its if is false (detect-changes ${flags})`,
-          ms: 0,
-        });
-        outcomes.set(id, { result: 'skipped', outputs: {} });
-        continue;
-      }
       if (policy === 'ai-eval') {
+        // The CI job is opt-in on the ai-eval label, so CI skips it unless the
+        // pull request carries that label. This branch is reached either way,
+        // because the local opt-in is the --eval flag: the note says what CI
+        // does and carries the command that runs the same suite here.
         const evalStep = job.steps.find(
           (step) => step.run !== undefined && EVAL_COMMAND.test(step.run),
         );
         const command = evalStep?.run?.trim() ?? 'pnpm ask:eval';
+        if (!enabled) {
+          // The AI paths did not change, or an upstream job failed: CI skips
+          // the job whether or not the pull request carries the label.
+          const detect = outcomes.get('detect-changes')?.outputs ?? {};
+          const flags = Object.entries(detect)
+            .map(([key, value]) => `${key}=${value}`)
+            .join(' ');
+          rows.push({
+            job: id,
+            verdict: 'skipped',
+            why: `its if is false (detect-changes ${flags})`,
+            ms: 0,
+          });
+          outcomes.set(id, { result: 'skipped', outputs: {} });
+          continue;
+        }
         if (!options.evalLive || context.evalRun === null) {
           const full =
             context.evalRun === null ? command : evalCommand({ ...context.evalRun, command });
-          notes.push(`ai paths changed. Live eval: ${full}`);
+          notes.push(
+            `ai paths changed. The CI job runs only for a pull request carrying the ${AI_EVAL_LABEL} label. Live eval: ${full}`,
+          );
           rows.push({
             job: id,
             verdict: 'not-run',
@@ -809,6 +825,20 @@ export async function predict(context: RunContext, deps: Deps): Promise<Predicti
           ...(result.code === 0 ? {} : { detail: result.output }),
         });
         outcomes.set(id, { result: result.code === 0 ? 'success' : 'failure', outputs: {} });
+        continue;
+      }
+      if (!enabled) {
+        const detect = outcomes.get('detect-changes')?.outputs ?? {};
+        const flags = Object.entries(detect)
+          .map(([key, value]) => `${key}=${value}`)
+          .join(' ');
+        rows.push({
+          job: id,
+          verdict: 'skipped',
+          why: `its if is false (detect-changes ${flags})`,
+          ms: 0,
+        });
+        outcomes.set(id, { result: 'skipped', outputs: {} });
         continue;
       }
       const projects: (string | undefined)[] =

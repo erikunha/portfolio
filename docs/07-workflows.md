@@ -193,7 +193,7 @@ flowchart TD
     dc["detect-changes (app?, ai?, ui?)"] --> perf
     dc --> e2e
     dc --> vis
-    dc --> ev["ai-eval (if ai, same-repo PR or non-PR)"]
+    dc --> ev["ai-eval (if ai and the PR carries the ai-eval label)"]
     qf --> ev
     tc --> ev
     t --> ev
@@ -234,7 +234,7 @@ flowchart TD
 | `performance` | push, or PR with `app` | preview server, `pnpm lhci`, `pnpm lhci:mobile`, then the axe scan |
 | `e2e-functional` | push, or PR with `app` | the eight-project matrix described under Testing |
 | `e2e-visual-chromium` | push, or PR with `ui` | `tests/visual/visual.spec.ts` on `chromium` and `chromium-mobile`; the manual run with `update_visual_baselines` regenerates and uploads baselines instead |
-| `ai-eval` | `ai`, same-repository PR or push, not Dependabot, and no failed upstream job | `pnpm ask:eval` against the live gateway; it never publishes to Redis |
+| `ai-eval` | `ai` and the pull request carries the `ai-eval` label, same-repository PR, not Dependabot, and no failed upstream job | `pnpm ask:eval` against the live gateway; it never publishes to Redis, and it spends Gateway credits, so it is opt-in. The weekly `ask-eval` workflow covers `main`, and the same workflow can be dispatched by hand on any branch |
 | `semgrep` | always | fixture self-test and the false-positive baseline block; the findings scan is report-only and uploads SARIF |
 | `gitleaks` | always | checksum-verified pinned binary, fixture self-test, history scan |
 | `ci-gate` | always | fan-in over every job above |

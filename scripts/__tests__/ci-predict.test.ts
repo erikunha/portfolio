@@ -423,6 +423,10 @@ describe('predict', () => {
     const dryRun = await predict(dry.context, dry.deps);
     expect(row(dryRun.rows, 'ai-eval')?.verdict).toBe('not-run');
     expect(dryRun.notes.join('\n')).toContain('pnpm ask:eval');
+    expect(
+      dryRun.notes.join('\n'),
+      'the note must say the CI job is opt-in on the label, so a dry run does not read as a green eval',
+    ).toContain('ai-eval label');
 
     const live = harness({
       categories: { ai: true, app: true, ui: false },
