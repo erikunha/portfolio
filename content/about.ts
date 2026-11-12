@@ -145,8 +145,8 @@ const aboutFor = (locale: SiteLocale): AboutContent => {
           ? '- Contratação: tempo integral ou contrato de prazo fixo'
           : '- Engagement: full-time or fixed-term contract',
         pt
-          ? '- Domínios: produtos AI-native, GenAI e agentes, avaliação de LLMs, plataformas de produto densas em dados, pagamentos'
-          : '- Domains: AI-native products, GenAI and agents, LLM evaluation, data-dense product platforms, payments',
+          ? '- Domínios: produtos AI-native, GenAI e agentes, avaliação de LLMs, plataformas de produto densas em dados, pagamentos, saúde e EdTech'
+          : '- Domains: AI-native products, GenAI and agents, LLM evaluation, data-dense product platforms, payments, healthcare and EdTech',
       ],
       gutterLines: 64,
     },

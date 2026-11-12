@@ -20,10 +20,11 @@ export const RETIRED_CLAIMS: RetiredClaim[] = [
       'owner decision: the work scope is region-neutral (open to any arrangement: remote worldwide, hybrid or on-site), so no surface targets the EU, the US or Canada',
   },
   {
-    name: 'sector targeting',
-    pattern: /healthcare|health ?tech|\bsaúde\b/i,
+    name: 'healthcare client claim',
+    pattern:
+      /healthcare (?:company|client|sector|vertical|engagement)|(?:empresa|cliente|setor) de saúde/i,
     reason:
-      'owner decision: targeting is GenAI, AI-native products, LLM systems and agents; the forward deployed engineering work is described by its platform, with no healthcare sector or targeting claim',
+      'owner decision of 2026-11-12: healthcare and EdTech are published domains, so the site does target those sectors and the word is no longer a retired claim; what stays retired is naming a healthcare client. The forward deployed engineering engagement names no client and is described by its platform, so no surface may call it a healthcare company. The guard reads the Portuguese phrase that names a client rather than the word alone, so the domain can be published in both locales',
   },
   {
     name: 'removed employer',
