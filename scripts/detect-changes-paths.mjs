@@ -58,6 +58,8 @@ export const APP_PATHS = [
   'scripts/gates-runtime.ts',
   'scripts/install-playwright-browsers.mjs',
   'scripts/install-playwright-browsers.d.mts',
+  'scripts/wait-argos-reference.mjs',
+  'scripts/wait-argos-reference.d.mts',
   'scripts/strip-next-polyfills.mjs',
   'playwright.config.ts',
   'proxy.ts',

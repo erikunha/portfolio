@@ -5,12 +5,21 @@ const CROSS_BROWSER_SPECS =
 const VISUAL_SPEC = /tests\/visual\/visual\.spec\.ts$/;
 
 const DEFAULT_BASE_URL = 'http://localhost:3000';
+const REGEX_SPECIAL_CHARACTERS = /[.*+?^${}()|[\]\\]/g;
+const NESTED_WORKTREE_DIRECTORIES = String.raw`\.(?:claude/)?worktrees/`;
+
+export function nestedWorktreeIgnore(rootDir: string): RegExp {
+  const root = rootDir.replace(REGEX_SPECIAL_CHARACTERS, String.raw`\$&`);
+  return new RegExp(`^${root}/${NESTED_WORKTREE_DIRECTORIES}`);
+}
+
+const NESTED_WORKTREES = nestedWorktreeIgnore(import.meta.dirname);
 
 // Typed as Project[] so the literal types of the per-project settings survive
 // the extraction: inside the config object they were contextually narrowed
 // ('chromium' as a BrowserName), and a plain const array widens them back to
 // string, which the typecheck rejects.
-const PROJECTS: Project[] = [
+const PROJECT_DEFINITIONS: Project[] = [
   {
     name: 'chromium',
     use: { ...devices['Desktop Chrome'], viewport: { width: 1280, height: 720 } },
@@ -57,6 +66,16 @@ const PROJECTS: Project[] = [
     testMatch: /\/(components|design-system\/components|app)\/.*\.e2e\.ts$/,
   },
 ];
+
+function ignoreList(ignore: Project['testIgnore']): Array<string | RegExp> {
+  if (ignore === undefined) return [];
+  return Array.isArray(ignore) ? ignore : [ignore];
+}
+
+const PROJECTS: Project[] = PROJECT_DEFINITIONS.map((project) => ({
+  ...project,
+  testIgnore: [...ignoreList(project.testIgnore), NESTED_WORKTREES],
+}));
 
 // The count the README states, exported so the documentation and the matrix
 // cannot drift apart: a ninth project added here has to be counted there.

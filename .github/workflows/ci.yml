@@ -558,7 +558,10 @@ jobs:
 
   e2e-visual-chromium:
     runs-on: ubuntu-24.04
-    timeout-minutes: 15
+    timeout-minutes: 35
+    permissions:
+      contents: read
+      actions: read
     if: github.event_name != 'pull_request' || needs.detect-changes.outputs.ui == 'true'
     needs: [build, detect-changes]
     strategy:
@@ -602,6 +605,13 @@ jobs:
             cat /tmp/server-${{ matrix.project }}.log
             exit 1
           }
+      - if: github.event_name == 'pull_request'
+        name: Wait for the Argos reference of the merge base
+        run: node scripts/wait-argos-reference.mjs
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          ARGOS_BASE_REF: ${{ github.event.pull_request.base.ref }}
+          ARGOS_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
       - if: inputs.update_visual_baselines != 'true'
         name: Run visual regression
         run: pnpm playwright test --project=${{ matrix.project }} tests/visual/visual.spec.ts
