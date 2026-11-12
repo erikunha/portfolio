@@ -39,6 +39,22 @@ describe('evaluate', () => {
     expect(evaluate(expr, failed)).toBe(false);
   });
 
+  it('projects the wildcard over an array, the way the label gate reads it', () => {
+    const expr = "contains(github.event.pull_request.labels.*.name, 'ai-eval')";
+    const labelled = {
+      github: {
+        event: { pull_request: { labels: [{ name: 'bug' }, { name: 'ai-eval' }] } },
+      },
+    };
+    expect(evaluate(expr, labelled)).toBe(true);
+    expect(
+      evaluate(expr, {
+        github: { event: { pull_request: { labels: [{ name: 'bug' }] } } },
+      }),
+    ).toBe(false);
+    expect(evaluate(expr, { github: { event: { pull_request: {} } } })).toBe(false);
+  });
+
   it('treats a missing step output and any secret as an empty string', () => {
     expect(evaluate('steps.nope.outputs.value', { steps: {} })).toBeUndefined();
     expect(evaluate('secrets.ANY_KEY', {})).toBe('');

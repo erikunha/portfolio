@@ -522,11 +522,18 @@ jobs:
   ai-eval:
     runs-on: ubuntu-24.04
     timeout-minutes: 15
+    # Opt-in: the run spends Gateway credits, so it fires only for a PR that
+    # carries the ai-eval label. The label is on the pull_request event payload,
+    # so no extra permission is needed to read it. The standing coverage is the
+    # weekly ask-eval workflow on main (ask-eval.yml); a PR that wants the gate
+    # before merge gets it by labelling the PR, and a skipped job does not fail
+    # the ci-gate.
     if: |
       always()
       && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
       && github.actor != 'dependabot[bot]'
       && needs.detect-changes.outputs.ai == 'true'
+      && contains(github.event.pull_request.labels.*.name, 'ai-eval')
       && !contains(needs.*.result, 'failure')
       && !contains(needs.*.result, 'cancelled')
     needs: [detect-changes, quality-fast, typecheck, test]

@@ -14,6 +14,10 @@ only the `ask-eval.yml` workflow (weekly schedule and manual dispatch) does.
 - Feature model: `anthropic/claude-haiku-4-5` at `ASK_TEMPERATURE` (`lib/ask/limits.ts`). Judge model: `anthropic/claude-sonnet-4-6` at temperature 0.
 - Requires `AI_GATEWAY_API_KEY` or `VERCEL_OIDC_TOKEN`. In CI a missing credential is a hard
   failure (the `ai-eval` job is a dependency of `ci-gate`); locally the run skips with exit 0.
+- The CI job is OPT-IN: it spends Gateway credits, so it fires only for a pull request that
+  carries the `ai-eval` label. Label the PR to run it; without the label the job is skipped and a
+  skipped job does not block `ci-gate`. The standing coverage is the weekly `ask-eval` workflow on
+  `main`, which can also be dispatched by hand on any branch.
 
 ## Run it
 
@@ -26,7 +30,8 @@ only the `ask-eval.yml` workflow (weekly schedule and manual dispatch) does.
                            # `vercel env run -- pnpm ask:eval` cannot touch production data
 
 The CI `ai-eval` job runs the same `pnpm ask:eval`. It is path-filtered by the
-`detect-changes` job: it fires for ANY AI-relevant change, not just the eval files. The
+`detect-changes` job: it fires for ANY AI-relevant change, not just the eval files, and only
+when the pull request carries the `ai-eval` label. The
 filter is `AI_PATHS` in `scripts/detect-changes-paths.mjs`: the ask route and `lib/ask/`,
 `lib/eval/`, `lib/agent/`, the rate-limit, logging and env modules the route imports, the
 content modules the system prompt and the fact sheet compose from (`content/ask-facts.ts`,
@@ -129,5 +134,6 @@ Adding a request per item (retries, extra turns) means raising that size.
 
 ## After corpus changes
 
-If a push edits the eval inputs, the CI `ai-eval` job re-runs automatically (path filter).
-Confirm it passes before merge; if it `cancelled` on a timeout, re-run that single job.
+If a push edits the eval inputs, label the pull request with `ai-eval` so the CI job runs it
+(the path filter alone no longer starts it). Confirm it passes before merge; if it `cancelled` on
+a timeout, re-run that single job.

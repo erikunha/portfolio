@@ -108,6 +108,7 @@ export function coveredByCi(
 
 export const PLAYWRIGHT_IMAGE = 'mcr.microsoft.com/playwright';
 export const PLAYWRIGHT_IMAGE_SUFFIX = 'noble';
+export const AI_EVAL_LABEL = 'ai-eval';
 export const VERCEL_CLI_VERSION = '65.2.0';
 export const DEFAULT_REPEAT = 3;
 

@@ -99,8 +99,11 @@ function lookup(path: string, ctx: ExprContext): ExprValue {
   let spread = false;
   for (const segment of segments) {
     if (segment === WILDCARD) {
-      if (current === null || typeof current !== 'object' || Array.isArray(current))
-        return undefined;
+      // The wildcard projects over the values of an object and over the
+      // elements of an array, which is what GitHub does for both:
+      // `labels.*.name` over an array of label objects is the array of names,
+      // and `needs.*.result` over the needs map is the array of results.
+      if (current === null || typeof current !== 'object') return undefined;
       current = Object.values(current);
       spread = true;
       continue;
