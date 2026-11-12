@@ -9,6 +9,9 @@ const LANGUAGE_LINK_COUNT = 2;
 const TAGLINE_FRAME_MS = 150;
 const TAGLINE_HYDRATION_TIMEOUT_MS = 20_000;
 const COPY_LINK_BUTTON = 'button.links-line';
+const TAP_TARGET_PX = 44;
+const FINE_POINTER_SMALL_BUTTON_PX = 36;
+const LANGUAGE_LINK = 'a[hreflang]';
 
 const languageSwitch = (page: Page) => page.getByRole('navigation', { name: LANGUAGE_NAV_NAME });
 
@@ -133,12 +136,19 @@ test.describe('/links link-in-bio', () => {
     const count = await targets.count();
     expect(count).toBeGreaterThan(5);
 
+    const coarse = await page.evaluate(() => matchMedia('(pointer: coarse)').matches);
+    const switchFloor = coarse ? TAP_TARGET_PX : FINE_POINTER_SMALL_BUTTON_PX;
+
     for (let i = 0; i < count; i++) {
-      const box = await targets.nth(i).boundingBox();
+      const target = targets.nth(i);
+      const floor = (await target.evaluate((el, selector) => el.matches(selector), LANGUAGE_LINK))
+        ? switchFloor
+        : TAP_TARGET_PX;
+      const box = await target.boundingBox();
       expect(
         box?.height ?? 0,
-        `standalone tap target ${i} is under 44px. This selector deliberately covers the nav, the profile and contact lines, the video title link and the subscribe CTA only: a link sitting inline inside a sentence is exempt from target-size minimums, so widening this to every anchor would fail on the footer's inline erikunha.dev link for no accessibility gain.`,
-      ).toBeGreaterThanOrEqual(44);
+        `standalone tap target ${i} is under ${floor}px. Every target holds the ${TAP_TARGET_PX}px floor except the language switch, a small button that steps down to ${FINE_POINTER_SMALL_BUTTON_PX}px on a fine pointer and keeps ${TAP_TARGET_PX}px on touch. This selector deliberately covers the nav, the profile and contact lines, the video title link and the subscribe CTA only: a link sitting inline inside a sentence is exempt from target-size minimums, so widening this to every anchor would fail on the footer's inline erikunha.dev link for no accessibility gain.`,
+      ).toBeGreaterThanOrEqual(floor);
     }
   });
 
