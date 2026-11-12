@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { POST as askPost } from '@/app/api/ask/route';
 import { social } from '@/content/social';
 import { HIRING_PROFILE, HiringProfileSchema } from '@/lib/hiring-profile';
-import { parseStreamChunk, REQUEST_ID_HEADER } from '@/lib/stream-protocol';
+import { parseStreamChunk, REFUSAL_PREFIX, REQUEST_ID_HEADER } from '@/lib/stream-protocol';
 
 const MIN_QUESTION_LENGTH = 1;
 const MAX_QUESTION_LENGTH = 500;
@@ -62,6 +62,14 @@ async function runAsk(question: string, clientHeaders: Headers | undefined): Pro
 
   const raw = await res.text();
   const chunk = parseStreamChunk(raw);
+  if (!chunk.ok && chunk.errorMessage.startsWith(REFUSAL_PREFIX)) {
+    const refusal = chunk.errorMessage.slice(REFUSAL_PREFIX.length);
+    return {
+      ok: true,
+      text: chunk.displayText ? `${chunk.displayText}\n\n${refusal}` : refusal,
+      requestId,
+    };
+  }
   if (!chunk.ok) {
     const text = chunk.displayText
       ? `${chunk.displayText}\n\n[upstream error: ${chunk.errorMessage}]`
