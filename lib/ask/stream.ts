@@ -19,7 +19,7 @@ import { type AskInteractionStatus, persistAskInteraction } from '@/lib/ask-log'
 import { log } from '@/lib/log';
 import { describeError } from '@/lib/log-error';
 import { releaseIdenticalQuestion, settleBudget } from '@/lib/rate-limit';
-import { STREAM_ERR_SENTINEL } from '@/lib/stream-protocol';
+import { REFUSAL_PREFIX, STREAM_ERR_SENTINEL } from '@/lib/stream-protocol';
 
 const REQUEST_TIMEOUT_MS = 30_000;
 
@@ -202,10 +202,10 @@ export function createAskStream(context: AskContext): AskStream {
             if (finishReason === FINISH_REASON_LENGTH) {
               state.truncated = true;
               send(enc.encode(askErrors[answerLocale].truncation));
-            } else if (
-              finishReason === FINISH_REASON_INTERRUPTED ||
-              finishReason === FINISH_REASON_REFUSED
-            ) {
+            } else if (finishReason === FINISH_REASON_REFUSED) {
+              state.status = 'refused';
+              sendError(`${REFUSAL_PREFIX}${askErrors[answerLocale].refused}`);
+            } else if (finishReason === FINISH_REASON_INTERRUPTED) {
               state.status = 'errored';
               sendError(askErrors[answerLocale].interrupted);
             }

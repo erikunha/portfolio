@@ -90,11 +90,28 @@ describe('/api/ask request shape for Haiku 5.5', () => {
     await drain(res);
   });
 
-  it('ends a refused answer with the interrupted error line instead of a silent cut', async () => {
-    mockStreamText.mockReturnValueOnce(makeStreamTextResult('partial', 'content-filter'));
+  it('carries no sampling parameter in the Anthropic provider options either', async () => {
     const { POST } = await import('@/app/api/ask/route');
     const res = await POST(makeRequest());
+    const arg = mockStreamText.mock.calls[0]?.[0] as {
+      providerOptions?: { anthropic?: Record<string, unknown> };
+    };
+    const anthropic = arg.providerOptions?.anthropic ?? {};
+    expect(anthropic).not.toHaveProperty('temperature');
+    expect(anthropic).not.toHaveProperty('topP');
+    expect(anthropic).not.toHaveProperty('topK');
+    expect(anthropic).not.toHaveProperty('top_p');
+    expect(anthropic).not.toHaveProperty('top_k');
+    await drain(res);
+  });
+
+  it('ends a refused answer with the refusal line instead of a silent cut or the interrupted line', async () => {
+    mockStreamText.mockReturnValueOnce(makeStreamTextResult('partial', 'content-filter'));
+    const { POST } = await import('@/app/api/ask/route');
+    const { REFUSAL_PREFIX } = await import('@/lib/stream-protocol');
+    const res = await POST(makeRequest());
     const body = await drain(res);
-    expect(body).toContain(askErrors.en.interrupted);
+    expect(body).toContain(`${REFUSAL_PREFIX}${askErrors.en.refused}`);
+    expect(body).not.toContain(askErrors.en.interrupted);
   });
 });

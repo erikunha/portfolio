@@ -22,6 +22,7 @@ import {
   GUARD_ABORT_PREFIX,
   parseRetryAfter,
   parseStreamChunk,
+  REFUSAL_PREFIX,
   RETRY_AFTER_HEADER,
 } from '@/lib/stream-protocol';
 import { MS_PER_SECOND, SECONDS_PER_MINUTE } from '@/lib/time';
@@ -56,7 +57,10 @@ export function formatRemaining(
 }
 
 function streamFailureMessage(errorMessage: string, ui: ShellUi): string {
-  return errorMessage.startsWith(GUARD_ABORT_PREFIX) ? ui.answerWithheld : errorMessage;
+  if (errorMessage.startsWith(GUARD_ABORT_PREFIX)) return ui.answerWithheld;
+  return errorMessage.startsWith(REFUSAL_PREFIX)
+    ? errorMessage.slice(REFUSAL_PREFIX.length)
+    : errorMessage;
 }
 
 export function bounded(lines: Line[]): Line[] {
