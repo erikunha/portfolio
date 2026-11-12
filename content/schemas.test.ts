@@ -314,8 +314,7 @@ const educationFixtures = [
     endYear: 2027,
     expectedCompletion: '2027-12',
     period: 'expected Dec 2027',
-    focus:
-      'Coursework: ML and deep learning with PyTorch, LLM applications and RAG, multi-agent systems with LangChain and LangGraph',
+    focus: 'Coursework: PyTorch, LLM applications and RAG, LangChain and LangGraph',
   },
   {
     id: 'CO_OP_DIPLOMA',

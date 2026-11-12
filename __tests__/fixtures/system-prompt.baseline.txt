@@ -79,7 +79,7 @@ Senior Software Engineer, Jun 2026 - Present, remote.
   - Fixed duplicate Workplace webhook deliveries that double-counted answers, making ingestion idempotent on the message id.
 
 ## Education
-- MBA (Lato Sensu), AI Engineering, Machine Learning and Deep Learning, Instituto Infnet, Brazil (online), expected Dec 2027: Coursework: ML and deep learning with PyTorch, LLM applications and RAG, multi-agent systems with LangChain and LangGraph
+- MBA (Lato Sensu), AI Engineering, Machine Learning and Deep Learning, Instituto Infnet, Brazil (online), expected Dec 2027: Coursework: PyTorch, LLM applications and RAG, LangChain and LangGraph
 - Web Development Co-op Diploma, Cornerstone International Community College of Canada (CICCC), Vancouver, Canada, 2023-2024
 - B.S. Information Systems, Centro Universitário Salesiano de São Paulo (UNISAL), Campinas, Brazil, 2015-2020
 
