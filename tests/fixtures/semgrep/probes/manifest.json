@@ -32,16 +32,16 @@
     {
       "file": "secret-literal.ts",
       "expect": "finding",
-      "rule": "hardcoded-stripe-secret-key",
+      "rule": "hardcoded-anthropic-api-key",
       "kind": "true-positive",
-      "why": "A key-shaped literal in the source. The rule is a pattern and the shape is what it matches."
+      "why": "A key-shaped literal in the source. The rule is a pattern and the shape is what it matches. The shape is the real Anthropic one, so the secret scanner sees it as a credential too and the repository allowlists this exact value."
     },
     {
       "file": "secret-placeholder.ts",
       "expect": "quiet",
-      "rule": "hardcoded-stripe-secret-key",
+      "rule": "hardcoded-anthropic-api-key",
       "kind": "negative",
-      "why": "A placeholder carries fewer than the characters the pattern needs."
+      "why": "A placeholder carries the right prefix but fewer than the characters the pattern needs."
     }
   ]
 }

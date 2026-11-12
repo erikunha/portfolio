@@ -30,8 +30,12 @@ description = "Planted token proving gitleaks fires (scripts/check-gitleaks-fixt
 regexes = ['''ghp_R2d2c3poAbCdEfGhIjKlMnOpQrStUvWx1234''']
 
 [[allowlists]]
-description = "Planted token proving semgrep fires (scripts/check-semgrep-fixture.mjs asserts hardcoded-stripe-secret-key)"
+description = "HISTORY ONLY. This value is no longer in the tree: the vendored secret rule watches for an Anthropic key now (DECISIONS.md 2026-11-11), and the Stripe one was dropped because this repository has no Stripe code. It is still in the published history, and the secret scan reads every commit, so the exemption has to keep naming it."
 regexes = ['''sk_test_51HxFakeFixtureTokenABCDEFGHIJ''']
+
+[[allowlists]]
+description = "Planted token proving semgrep fires (scripts/check-semgrep-fixture.mjs asserts hardcoded-anthropic-api-key)"
+regexes = ['''sk-ant-api03-4ISu6Ooxjf89GsKUoIzjzkg8OloU2EGM_77qzvv1Tx8_y0KerI5ZspIdYWiQB-y5S-0KCcFS9IaAuZwNoWGK-2hjmScpJAA''']
 
 [[allowlists]]
 description = "CSS design token names (secondary-NNN), not secrets (generic-api-key false positives)"

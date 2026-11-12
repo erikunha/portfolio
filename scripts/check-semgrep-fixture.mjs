@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-export const EXPECTED_RULES = ['child-process-shell-injection', 'hardcoded-stripe-secret-key'];
+export const EXPECTED_RULES = ['child-process-shell-injection', 'hardcoded-anthropic-api-key'];
 
 export function assertExpectedFindings(results) {
   const byFile = new Map();

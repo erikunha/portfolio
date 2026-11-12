@@ -43,7 +43,7 @@ describe('semgrep false-positive baseline', () => {
     const results = [
       finding('shell-interpolated.ts', 'child-process-shell-injection'),
       finding('shell-constant.ts', 'child-process-shell-injection'),
-      finding('secret-literal.ts', 'hardcoded-stripe-secret-key'),
+      finding('secret-literal.ts', 'hardcoded-anthropic-api-key'),
     ];
     const measurement = classifyProbes(results, manifest);
     expect(measurement.truePositives).toHaveLength(2);
@@ -92,7 +92,7 @@ describe('semgrep false-positive baseline', () => {
       finding('shell-interpolated.ts', 'child-process-shell-injection'),
       finding('shell-constant.ts', 'child-process-shell-injection'),
       finding('shell-execsync.ts', 'child-process-shell-injection'),
-      finding('secret-literal.ts', 'hardcoded-stripe-secret-key'),
+      finding('secret-literal.ts', 'hardcoded-anthropic-api-key'),
     ];
     const measurement = classifyProbes(results, grown);
     expect(measurement.knownFalsePositives).toHaveLength(2);
@@ -105,7 +105,7 @@ describe('semgrep false-positive baseline', () => {
   it('reads a known false positive that went quiet as a rule regression, not as a moved baseline', () => {
     const results = [
       finding('shell-interpolated.ts', 'child-process-shell-injection'),
-      finding('secret-literal.ts', 'hardcoded-stripe-secret-key'),
+      finding('secret-literal.ts', 'hardcoded-anthropic-api-key'),
     ];
     const measurement = classifyProbes(results, manifest);
     expect(measurement.falseNegatives.map((f) => f.file)).toContain('shell-constant.ts');
@@ -117,7 +117,7 @@ describe('semgrep false-positive baseline', () => {
       finding('shell-interpolated.ts', 'child-process-shell-injection'),
       finding('shell-interpolated.ts', 'some-other-rule'),
       finding('shell-constant.ts', 'child-process-shell-injection'),
-      finding('secret-literal.ts', 'hardcoded-stripe-secret-key'),
+      finding('secret-literal.ts', 'hardcoded-anthropic-api-key'),
     ];
     const measurement = classifyProbes(results, manifest);
     expect(measurement.unexpectedRules).toHaveLength(1);
@@ -135,7 +135,7 @@ describe('semgrep false-positive baseline', () => {
     const results = [
       finding('shell-interpolated.ts', 'child-process-shell-injection'),
       finding('shell-constant.ts', 'child-process-shell-injection'),
-      finding('secret-literal.ts', 'hardcoded-stripe-secret-key'),
+      finding('secret-literal.ts', 'hardcoded-anthropic-api-key'),
     ];
     const decision = decideExit(classifyProbes(results, manifest));
     expect(decision.code).toBe(0);

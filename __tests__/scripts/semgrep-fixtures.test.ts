@@ -7,12 +7,12 @@ describe('semgrep fixtures + vendored rules', () => {
   it('vulnerable fixture contains an injection sink and a hardcoded secret', () => {
     const src = readFileSync(`${root}/tests/fixtures/semgrep/vulnerable.ts`, 'utf8');
     expect(src).toMatch(/exec\(/);
-    expect(src).toMatch(/sk_test_/);
+    expect(src).toMatch(/sk-ant-api03-/);
   });
 
   it('clean fixture has no injection sink and no hardcoded secret', () => {
     const src = readFileSync(`${root}/tests/fixtures/semgrep/clean.ts`, 'utf8');
-    expect(src).not.toMatch(/sk_test_/);
+    expect(src).not.toMatch(/sk-ant-api03-/);
     expect(src).not.toMatch(/exec\(/);
   });
 
