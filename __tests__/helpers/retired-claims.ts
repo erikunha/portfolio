@@ -1,5 +1,13 @@
 export type RetiredClaim = { name: string; pattern: RegExp; reason: string };
 
+// The healthcare guard reads the phrase that names a client, not the word alone,
+// so healthcare, health tech and saude stay publishable in both locales. The
+// English side matches the domain word followed by a client noun, the Portuguese
+// side matches a client noun followed by the domain word, and the accent is
+// folded so the Portuguese is caught spelled either way.
+const HEALTHCARE_CLIENT_CLAIM =
+  /health[\s-]?(?:care|tech)[^.\n<>]{0,25}?\b(?:compan(?:y|ies)|clients?|sectors?|verticals?|engagements?|providers?|business(?:es)?|organi[sz]ations?|firms?)\b|(?:empresa|empresas|clientes?|setor|provedora|organiza(?:ção|ção)|negócio|fornecedor|companhia)\s+(?:de|da|do)\s+(?:sa[uú]de|health[\s-]?(?:care|tech))/i;
+
 export const RETIRED_CLAIMS: RetiredClaim[] = [
   {
     name: 'client name',
@@ -20,10 +28,10 @@ export const RETIRED_CLAIMS: RetiredClaim[] = [
       'owner decision: the work scope is region-neutral (open to any arrangement: remote worldwide, hybrid or on-site), so no surface targets the EU, the US or Canada',
   },
   {
-    name: 'sector targeting',
-    pattern: /healthcare|health ?tech|\bsaúde\b/i,
+    name: 'healthcare client claim',
+    pattern: HEALTHCARE_CLIENT_CLAIM,
     reason:
-      'owner decision: targeting is GenAI, AI-native products, LLM systems and agents; the forward deployed engineering work is described by its platform, with no healthcare sector or targeting claim',
+      'owner decision of 2026-11-12: healthcare, health tech and EdTech are published domains, so the site does target those sectors and the word is no longer a retired claim; what stays retired is naming a healthcare client. The forward deployed engineering engagement names no client and is described by its platform, so no surface may call it a healthcare company, client, sector, vertical, engagement, provider, business, organization or firm. The guard reads the phrase that names the client rather than the word alone, in English and in Portuguese, and it folds the accent, so the domain can be published in both locales and the unaccented Portuguese is still caught',
   },
   {
     name: 'removed employer',

@@ -87,3 +87,52 @@ describe('retired claims stay off every published surface', () => {
     }
   });
 });
+
+describe('the healthcare guard catches the client wording it enumerates', () => {
+  const healthcare = RETIRED_CLAIMS.find((item) => item.name === 'healthcare client claim');
+  const pattern = healthcare?.pattern;
+
+  it('has the claim it claims to hold', () => {
+    expect(pattern, 'the retired claims list must carry the healthcare client claim').toBeDefined();
+  });
+
+  it.each([
+    'the engagement was at a healthcare company',
+    'a health tech company',
+    'a healthtech company',
+    'a healthcare client',
+    'a healthcare provider',
+    'a healthcare business',
+    'a healthcare organization',
+    'a healthcare organisation',
+    'a healthcare firm',
+    'a healthcare technology company',
+    'a healthcare-company',
+    'the healthcare sector',
+    'empresa de saúde',
+    'empresa da saúde',
+    'empresa de saude',
+    'cliente de saúde',
+    'setor de saúde',
+    'provedora de saúde',
+    'organização de saúde',
+    'negócio de saúde',
+    'fornecedor de saúde',
+    'companhia de saúde',
+    'empresa de healthcare',
+    'empresa de health tech',
+    'empresa de healthtech',
+  ])('catches %s', (phrase) => {
+    expect(pattern?.test(phrase), phrase).toBe(true);
+  });
+
+  it.each([
+    'payments, healthcare and EdTech',
+    'pagamentos, saúde e EdTech',
+    'healthcare and EdTech are published domains',
+    'health tech and EdTech',
+    'healthcare',
+  ])('leaves the published domain %s alone', (phrase) => {
+    expect(pattern?.test(phrase), phrase).toBe(false);
+  });
+});
