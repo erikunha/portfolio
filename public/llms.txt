@@ -21,7 +21,7 @@
 
 Builds LLM systems and the evaluation that decides whether they are safe to ship:
 
-- Governed LLM endpoint on this site (Vercel AI Gateway + Anthropic Claude Haiku 4.5): a
+- Governed LLM endpoint on this site (Vercel AI Gateway + Anthropic Claude Haiku 5.5): a
   prompt-injection gate that rejects before inference, a streaming leak detector that survives
   chunk boundaries, a kill switch, ephemeral prompt caching and per-job cost caps
 - Continuous integration (CI) eval harness: a corpus across factual, edge, jailbreak and

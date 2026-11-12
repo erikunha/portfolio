@@ -21,7 +21,7 @@ const PHONE_LOCAL_DIGITS = personSchema.telephone
 
 describe('lib/ask/system-prompt', () => {
   describe('cache eligibility', () => {
-    it('SYSTEM_TEXT clears the Haiku 4.5 minimum cacheable prefix by the conservative token bound', () => {
+    it('SYSTEM_TEXT clears the Haiku 5.5 minimum cacheable prefix by the conservative token bound', () => {
       expect(isCacheEligible(SYSTEM_TEXT)).toBe(true);
     });
   });

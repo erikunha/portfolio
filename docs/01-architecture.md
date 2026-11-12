@@ -61,7 +61,7 @@ flowchart TB
     libcore["lib/rate-limit · lib/env · lib/ask/** · lib/ask-log · lib/lighthouse-scores · lib/contact-delivery · lib/contact-outbox"]
     subgraph ext["External services"]
         redis[("Upstash Redis")]
-        gw["Vercel AI Gateway<br/>(anthropic/claude-haiku-4-5)"]
+        gw["Vercel AI Gateway<br/>(anthropic/claude-haiku-5.5)"]
         resend["Resend"]
         psi["Google PSI"]
         lf["Langfuse (flag-gated)"]

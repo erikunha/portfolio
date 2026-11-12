@@ -12,7 +12,7 @@
   "endpoints": [
     {
       "name": "ask",
-      "description": "Ask a question about Erik's experience, stack, or availability. Answered by Claude Haiku 4.5 grounded only in the site's CV context.",
+      "description": "Ask a question about Erik's experience, stack, or availability. Answered by Claude Haiku 5.5 grounded only in the site's CV context.",
       "url": "https://www.erikunha.dev/api/ask",
       "method": "POST",
       "input": {

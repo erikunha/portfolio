@@ -97,7 +97,7 @@ export function registerAgentTools(server: McpServer): void {
     {
       title: 'Ask Erik',
       description:
-        "Ask a natural-language question about Erik Cunha's experience, stack, projects, or availability. Answered by Claude Haiku 4.5 grounded only in the site's CV context. Rate limit: the caller's address is forwarded, so the ask limit of ~8 requests/hour and the 60-second duplicate-question check apply per caller; a shared monthly token budget is the hard cost cap. Failures set isError. The result carries the request id; POST it to /api/log/forget to delete the stored exchange.",
+        "Ask a natural-language question about Erik Cunha's experience, stack, projects, or availability. Answered by Claude Haiku 5.5 grounded only in the site's CV context. Rate limit: the caller's address is forwarded, so the ask limit of ~8 requests/hour and the 60-second duplicate-question check apply per caller; a shared monthly token budget is the hard cost cap. Failures set isError. The result carries the request id; POST it to /api/log/forget to delete the stored exchange.",
       inputSchema: z.object({
         question: z
           .string()
