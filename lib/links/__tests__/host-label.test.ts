@@ -6,7 +6,7 @@ describe('hostLabel', () => {
     ['https://www.erikunha.dev', 'erikunha.dev'],
     ['https://github.com/erikunha', 'github.com/erikunha'],
     ['https://www.linkedin.com/in/erikunha/', 'linkedin.com/in/erikunha'],
-    ['https://www.tiktok.com/@oeriknagringa', 'tiktok.com/@oeriknagringa'],
+    ['https://www.tiktok.com/@eriknagringaa', 'tiktok.com/@eriknagringaa'],
     ['https://www.erikunha.dev/links/en', 'erikunha.dev/links/en'],
   ])('reads %s as %s', (href, label) => {
     expect(hostLabel(href)).toBe(label);

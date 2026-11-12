@@ -44,7 +44,7 @@ describe('ProfileLines', () => {
   it('renders a profile as soon as its destination is confirmed', () => {
     const { container } = render(<ProfileLines locale={LINKS_LOCALE.pt} />);
     const tiktok = byLabel(container, /tiktok/i);
-    expect(tiktok?.getAttribute('href')).toContain('tiktok.com/@oeriknagringa');
+    expect(tiktok?.getAttribute('href')).toContain('tiktok.com/@eriknagringaa');
     expect(new URL(tiktok?.getAttribute('href') ?? '').searchParams.get('utm_content')).toBe(
       'tiktok',
     );
