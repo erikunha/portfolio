@@ -1,6 +1,6 @@
-import { argosScreenshot } from '@argos-ci/playwright';
 import { shellUi } from '../../content/shell-ui';
 import { SITE_LOCALE } from '../../content/site-locale';
+import { captureForArgos } from '../e2e/_helpers/argos-capture';
 import { expect, test } from '../e2e/_helpers/fixtures';
 import { waitForHydration } from '../e2e/_helpers/hydration';
 import { stripVolatileChrome } from '../e2e/_helpers/mask-volatile';
@@ -30,7 +30,7 @@ test.describe('visual regression', () => {
     await stripVolatileChrome(mockedPage);
     if (process.env.ARGOS_TOKEN) {
       await revealDeferredContent(mockedPage);
-      await argosScreenshot(mockedPage, 'hero-above-fold', { element: heroSection });
+      await captureForArgos(mockedPage, 'hero-above-fold', heroSection);
     }
     await snapshotLocator(mockedPage, heroSection, 'hero-above-fold.png');
   });
@@ -60,7 +60,7 @@ test.describe('visual regression', () => {
       await stripVolatileChrome(mockedPage);
       if (process.env.ARGOS_TOKEN) {
         await revealDeferredContent(mockedPage);
-        await argosScreenshot(mockedPage, 'contact-section', { element: contactSection });
+        await captureForArgos(mockedPage, 'contact-section', contactSection);
       }
       await snapshotLocator(mockedPage, contactSection, 'contact-section.png');
     });
@@ -88,7 +88,7 @@ test.describe('visual regression', () => {
     await stripVolatileChrome(mockedPage);
     if (process.env.ARGOS_TOKEN) {
       await revealDeferredContent(mockedPage);
-      await argosScreenshot(mockedPage, 'shell-idle', { element: shellSection });
+      await captureForArgos(mockedPage, 'shell-idle', shellSection);
     }
     await snapshotLocator(mockedPage, shellSection, 'shell-idle.png');
   });
@@ -140,7 +140,7 @@ test.describe('visual regression', () => {
           el.removeAttribute('aria-busy');
         }
       });
-      await argosScreenshot(mockedPage, 'shell-mid-stream', { element: shellSection });
+      await captureForArgos(mockedPage, 'shell-mid-stream', shellSection);
     }
     await snapshotLocator(mockedPage, shellSection, 'shell-mid-stream.png');
   });
@@ -155,7 +155,7 @@ test.describe('visual regression', () => {
     await stripVolatileChrome(mockedPage);
     if (process.env.ARGOS_TOKEN) {
       await revealDeferredContent(mockedPage);
-      await argosScreenshot(mockedPage, 'hottest-takes-section', { element: hottest });
+      await captureForArgos(mockedPage, 'hottest-takes-section', hottest);
     }
     await snapshotLocator(mockedPage, hottest, 'hottest-takes-section.png');
   });
@@ -167,7 +167,7 @@ test.describe('visual regression', () => {
     await stripVolatileChrome(mockedPage);
     if (process.env.ARGOS_TOKEN) {
       await revealDeferredContent(mockedPage);
-      await argosScreenshot(mockedPage, 'footer', { element: footer });
+      await captureForArgos(mockedPage, 'footer', footer);
     }
     await snapshotLocator(mockedPage, footer, 'footer.png');
   });
