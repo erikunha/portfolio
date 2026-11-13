@@ -61,9 +61,14 @@ export const DOCK_HIRE_LABEL: Record<SiteLocale, string> = {
   [SITE_LOCALE.pt]: 'CONTRATE',
 };
 
+const HIRE_NAME_LEAD: Record<SiteLocale, string> = {
+  [SITE_LOCALE.en]: 'Hire on LinkedIn',
+  [SITE_LOCALE.pt]: 'Contrate no LinkedIn',
+};
+
 export const HIRE_ACCESSIBLE_NAME: Record<SiteLocale, string> = {
-  [SITE_LOCALE.en]: `${NAV_VOCABULARY[SITE_LOCALE.en].hire} ${companyLinkCopy[SITE_LOCALE.en].disclosure}`,
-  [SITE_LOCALE.pt]: `${NAV_VOCABULARY[SITE_LOCALE.pt].hire} ${companyLinkCopy[SITE_LOCALE.pt].disclosure}`,
+  [SITE_LOCALE.en]: `${HIRE_NAME_LEAD[SITE_LOCALE.en]} ${companyLinkCopy[SITE_LOCALE.en].disclosure}`,
+  [SITE_LOCALE.pt]: `${HIRE_NAME_LEAD[SITE_LOCALE.pt]} ${companyLinkCopy[SITE_LOCALE.pt].disclosure}`,
 };
 
 const topbarNav = (locale: SiteLocale): readonly TopbarNavLink[] => [

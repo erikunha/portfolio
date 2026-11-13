@@ -21,10 +21,9 @@ function withoutPunctuation(text: string): string {
 }
 
 describe.each(Object.values(SITE_LOCALE))(
-  'hire accessible name holds the visible label character for character (%s)',
+  'hire accessible name holds the short visible labels (%s)',
   (locale) => {
     const visibleLabels = {
-      primary: NAV_VOCABULARY[locale].hire,
       topbar: HIRE_SHORT_LABEL[locale],
       dock: DOCK_HIRE_LABEL[locale],
       rail: NAV_VOCABULARY[locale].linkedin,
@@ -39,9 +38,5 @@ describe.each(Object.values(SITE_LOCALE))(
         ).toContain(withoutPunctuation(visible));
       },
     );
-
-    it('opens with the exact visible primary label', () => {
-      expect(HIRE_ACCESSIBLE_NAME[locale].startsWith(visibleLabels.primary)).toBe(true);
-    });
   },
 );

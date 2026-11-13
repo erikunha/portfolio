@@ -10,7 +10,7 @@ test.describe('Dock: mobile navigation', () => {
     await expect(dock.getByRole('link', { name: 'HOME' })).toBeVisible();
     await expect(dock.getByRole('link', { name: 'PROJECTS' })).toBeVisible();
     await expect(dock.getByRole('link', { name: 'SHELL' })).toBeVisible();
-    await expect(dock.getByRole('link', { name: /HIRE_ON_LINKEDIN/ })).toBeVisible();
+    await expect(dock.getByRole('link', { name: /Hire on LinkedIn/ })).toBeVisible();
     await expect(dock.getByRole('button', { name: /^MENU/ })).toBeVisible();
     await expect(dock.locator('a, button')).toHaveCount(5);
   });
@@ -30,7 +30,7 @@ test.describe('Dock: mobile navigation', () => {
     await page.goto('/');
     const hire = page
       .getByRole('navigation', { name: 'primary' })
-      .getByRole('link', { name: /HIRE_ON_LINKEDIN/ });
+      .getByRole('link', { name: /Hire on LinkedIn/ });
     await expect(hire).toHaveAttribute('target', '_blank');
     await expect(hire).toHaveAttribute('href', /linkedin\.com\/in\/erikunha/);
   });
