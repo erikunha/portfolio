@@ -9,7 +9,7 @@
     --dock-height: 4.5rem;
     --dock-clearance: var(--dock-height);
     --to-top-size: var(--spacing-target);
-    --to-top-inset: 14px;
+    --to-top-inset: 0px;
     --to-top-reach: calc(var(--to-top-inset) + var(--to-top-size) + var(--spacing-2));
     --dock-chrome: var(--dock-clearance);
     --page-bottom-chrome: calc(
