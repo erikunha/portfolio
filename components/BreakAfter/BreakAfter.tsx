@@ -24,10 +24,14 @@ export function BreakAfter({ chars, children }: BreakAfterProps) {
     }
   }
   pieces.push({ start, text: children.slice(start), breaks: false });
-  return pieces.map(({ start: offset, text, breaks }) => (
-    <Fragment key={offset}>
-      {text}
-      {breaks ? <wbr /> : null}
-    </Fragment>
-  ));
+  return (
+    <span>
+      {pieces.map(({ start: offset, text, breaks }) => (
+        <Fragment key={offset}>
+          {text}
+          {breaks ? <wbr /> : null}
+        </Fragment>
+      ))}
+    </span>
+  );
 }

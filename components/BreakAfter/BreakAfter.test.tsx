@@ -10,7 +10,7 @@ describe('BreakAfter', () => {
 
   it('offers a break opportunity after each listed character and nowhere else', () => {
     const { container } = render(<BreakAfter chars="_">FORWARD_DEPLOYED_ENGINEER</BreakAfter>);
-    const pieces = [...container.childNodes].map((node) =>
+    const pieces = [...(container.firstElementChild?.childNodes ?? [])].map((node) =>
       node.nodeName === 'WBR' ? '|' : node.textContent,
     );
     expect(pieces.join('')).toBe('FORWARD_|DEPLOYED_|ENGINEER');
