@@ -115,9 +115,9 @@ envelope and error paths per route. The `erik.json` exemption is held by
 
 ## 3. Performance
 
-**Rule.** The non-negotiable budgets: LCP < 1.8s on 4G, INP < 200ms, CLS < 0.05.
-Lighthouse must score Performance ≥ 95, Accessibility = 100, Best Practices ≥ 95,
-SEO = 100. Budgets are measured in the smallest _honest_ unit. Per-route first-load
+**Rule.** The non-negotiable budgets: LCP ≤ 1.8s on desktop and ≤ 3.5s on mobile, INP < 200ms, CLS < 0.05.
+Lighthouse must score Performance ≥ 95 on desktop and ≥ 90 on mobile, Accessibility = 100,
+Best Practices ≥ 95, SEO = 100. Budgets are measured in the smallest _honest_ unit. Per-route first-load
 JS is gated at 164.2 KB total; one gate, one quantity. App-owned JS (164.2 − the
 measured 131.4 KB framework floor = **32.8 KB**) is _reported_ on every run but
 never asserted: it is the total minus a constant, so gating it too would be a
@@ -257,7 +257,7 @@ against this chapter.
 
 ## 7. CSS & Visual System
 
-**Rule.** All brand colors and font definitions live in `app/css/theme.css` under a single `@theme {}` block; these become Tailwind utility classes (`text-primary-500`, `bg-primary-500`, `border-primary-subtle`, etc.). Standard Tailwind utilities handle all spacing, typography, layout, and responsive breakpoints. Complex CSS that cannot be expressed as utilities, CRT scanlines, phosphor glow, `@keyframes`, pseudo-element overlays, lives in `app/css/components-*.css` under `@layer components` as named classes (`.crt-scanlines`, `.signal-glow`, `.boot-cursor`). No CSS module files exist anywhere in the project. The palette is two semantic roles: `--color-primary-500` (#00FF41) for headings/accents/large text only; `--color-tertiary-50` (#E6FFE6, ~13:1 contrast) for body. `--color-primary-500` is never used for paragraph text, it fails WCAG AA at body size. `__tests__/signal-color-sentences.test.tsx` renders the sections and reading pages and fails when a stylesheet rule colours a class that carries a sentence with it. 1px borders, sharp corners.
+**Rule.** All brand colors and font definitions live in `app/css/theme.css` under a single `@theme {}` block; these become Tailwind utility classes (`text-primary-500`, `bg-primary-500`, `border-primary-subtle`, etc.). Standard Tailwind utilities handle all spacing, typography, layout, and responsive breakpoints. Complex CSS that cannot be expressed as utilities, CRT scanlines, phosphor glow, `@keyframes`, pseudo-element overlays, lives in `app/css/components-*.css` under `@layer components` as named classes (`.crt-scanlines`, `.signal-glow`, `.boot-cursor`). No CSS module files exist anywhere in the project. The palette is two semantic roles: `--color-primary-500` (#00FF41) for headings/accents/large text only; `--color-tertiary-50` (#E6FFE6, 19.81:1 contrast on black) for body. `--color-primary-500` is never used for paragraph text, it fails WCAG AA at body size. `__tests__/signal-color-sentences.test.tsx` renders the sections and reading pages and fails when a stylesheet rule colours a class that carries a sentence with it. 1px borders, sharp corners.
 
 **Rationale.** Tailwind v4 eliminates the authoring friction of typing raw `@media (max-width: 768px)` literals at every responsive override site. `md:` and `lg:` prefixes encode the breakpoint contract directly in the markup, colocated with the layout intent. `@theme` keeps every token in one file, readable by any senior frontend reviewer, with no build pipeline. PostCSS runs only as the `@tailwindcss/postcss` plugin; no other PostCSS transformations are applied.
 
@@ -319,7 +319,7 @@ correctly on responses); the `/api/ask` kill switch is held by
 `__tests__/ask-killswitch-behavioral.test.ts` (calls the route with each
 off-keyword and asserts the dependencies that should _not_ run were not
 called); the SYSTEM prompt is held by `__tests__/system-prompt.test.ts` (asserts
-no phone-number pattern, asserts the 1024-token cache threshold still clears).
+no phone-number pattern, asserts the prompt still clears the 512-token Haiku 5.5 cache minimum).
 The "no dead CSP directive" and "PII minimization" rules are also enforced by
 PR review of any `app/api/` change; no gate blocks a push on that review. A PR that
 touches this surface (the list in `scripts/high-risk-paths.ts`) is labelled
@@ -331,12 +331,10 @@ touches this surface (the list in `scripts/high-risk-paths.ts`) is labelled
 
 **Rule.** Every file, function, and numeric budget named in `ARCHITECTURE.md`
 must be verifiable against the live code: a doc claim that no longer matches
-the codebase is a defect. ADR entries in `DECISIONS.md` cite the **PR** they ship
-in (e.g. `PR #185`), and carry a one-line reversibility note. The repo
-squash-merges, so no per-commit SHA survives on `main` and pre-merge SHAs churn
-on every rebase; the PR number is the stable, auditable reference to the single
-squash commit the decision ships in. (Historical entries that predate this
-convention keep their commit-SHA citations.) There is one canonical
+the codebase is a defect. Each decision in `DECISIONS.md` is one bullet that starts with its date and carries a
+one-line reversibility note. The repo squash-merges, so no per-commit SHA survives on
+`main` and pre-merge SHAs churn on every rebase. An entry that cites a PR cites the PR
+number (e.g. `PR #185`), the stable reference to the single squash commit. There is one canonical
 production host, `www.erikunha.dev`, used consistently for every
 scheme-prefixed self-referential URL (`metadataBase`, `robots.txt` `Sitemap`,
 `sitemap.ts` `base`, `og:url`, canonical, JSON-LD) because the apex
@@ -351,22 +349,26 @@ branch merges, not superseded, because `main` never had it.
 **Rationale.** Documentation that drifts from code is worse than no
 documentation: a reader trusts it and is misled. A portfolio that is a hiring
 artifact cannot ship an `ARCHITECTURE.md` that describes a system that no longer
-exists. PR-anchored ADRs make a decision auditable and a revert precise: the
-squash commit is one `git revert` away, and the PR number never goes stale under
-rebase or squash-merge the way a per-commit SHA does. One
+exists. A dated entry with a reversibility note makes a decision auditable and a revert precise,
+and a PR number never goes stale under rebase or squash-merge the way a per-commit SHA does. One
 canonical host removes the apex/www ambiguity (`public/robots.txt`, `app/sitemap.ts`
 and the `metadataBase` in `components/RootShell.tsx` all ship `www.erikunha.dev`,
 matching the apex → www redirect).
 
 **How it is held.** PR review against this chapter is the primary mechanism: the
-reviewer checks that doc claims still match code and that any new ADR cites its
-PR and reversibility note. Three mechanical checks cover part of it:
+reviewer checks that doc claims still match code and that any new ADR carries its
+date and reversibility note. Mechanical checks cover part of it:
 `pnpm check:doc-drift` (the directory tree marked in `ARCHITECTURE.md` exists on
-disk), `pnpm check:component-docs` (every design-system component has a heading)
-and `__tests__/meta/docs-name-real-tokens.test.ts` (the design tokens a doc names
-are declared in the stylesheets). No script verifies the files, functions and
-numbers that prose describes; that part is held by review, and this chapter
-states the gap so it is not mistaken for coverage.
+disk), `pnpm check:component-docs` (every design-system component has a heading),
+`__tests__/meta/docs-name-real-tokens.test.ts` (the design tokens a doc names
+are declared in the stylesheets), `__tests__/meta/docs-numbers.test.ts` (the README's
+years, E2E project count, page count, coverage floor and Lighthouse thresholds),
+`__tests__/docs-section-counts.test.ts` (the section and deferred-module counts in
+`docs/README.md` and `ARCHITECTURE.md`), `__tests__/design-system-doc-counts.test.ts`
+(the design-system component counts) and `__tests__/scroll-regions.test.tsx` (the scroll
+region list in `docs/08-performance-and-accessibility.md`). No script verifies the
+other files, functions and numbers that prose describes; that part is held by review,
+and this chapter states the gap so it is not mistaken for coverage.
 
 ---
 

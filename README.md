@@ -12,7 +12,7 @@ The site is the artifact: a Next.js 16 application on Vercel (Fluid Compute), an
   <img alt="TypeScript strict" src="https://img.shields.io/badge/TypeScript-strict-3178C6?logo=typescript&logoColor=white" />
   <img alt="Vercel" src="https://img.shields.io/badge/Vercel-Fluid_Compute-000?logo=vercel&logoColor=white" />
   <img alt="pnpm 10" src="https://img.shields.io/badge/pnpm-10+-F69220?logo=pnpm&logoColor=white" />
-  <img alt="Node 22" src="https://img.shields.io/badge/Node-22.22.2+-417E38?logo=nodedotjs&logoColor=white" />
+  <img alt="Node 22.22.2+, 24.15+ or 26+" src="https://img.shields.io/badge/Node-22.22.2%2B%20%7C%2024.15%2B%20%7C%2026%2B-417E38?logo=nodedotjs&logoColor=white" />
   <img alt="Biome" src="https://img.shields.io/badge/Biome-lint%20%2B%20format-60A5FA?logo=biome&logoColor=white" />
   <img alt="Vitest" src="https://img.shields.io/badge/Vitest-unit-6E9F18?logo=vitest&logoColor=white" />
   <img alt="Playwright" src="https://img.shields.io/badge/Playwright-E2E%20%2B%20a11y-2EAD33?logo=playwright&logoColor=white" />
@@ -46,7 +46,7 @@ The terminal homepage is complemented by `/summary`, `/cv`, `/links` (pt-BR), `/
 | Vitest + Playwright                     | Unit (80% lines, 70% branches) + E2E across eight Playwright projects + axe-core a11y CI suite + Argos visual diffs                                    |
 | Lighthouse CI                           | LCP, TBT, CLS and the category scores gated on the 24 routes the Lighthouse config lists (performance ≥95 desktop / ≥90 mobile, accessibility and SEO = 100, best practices ≥95); INP checked in the browser tests |
 | Stryker                                 | Weekly mutation testing; a canary run in CI proves the runner still kills mutants                                                                         |
-| pnpm 10+ / Node 22.22.2+                | Strict dependency resolution, content-addressed store                                                                                                     |
+| pnpm 10+ / Node `^22.22.2 || ^24.15.0 || >=26.0.0` | Strict dependency resolution, content-addressed store                                                                                                     |
 
 ---
 
@@ -73,7 +73,7 @@ pnpm ci:local                 # the verify chain CI runs first
 | `pnpm lhci` / `pnpm lhci:mobile`                             | Lighthouse CI against a running production server (desktop / mobile)                      |
 | `pnpm gates:runtime [--skip-build]`                          | Build, start a server, advisory Lighthouse, blocking axe and Chromium e2e                 |
 | `pnpm ask:eval`                                              | `/api/ask` correctness, jailbreak and cost eval; writes `ask-eval-result.json`            |
-| `pnpm eval:agents`                                           | Prompt-regression eval of the rules in `AGENTS.md`; non-blocking in CI                    |
+| `pnpm eval:agents`                                           | Prompt-regression eval of fixed rule texts modelled on `AGENTS.md`; non-blocking in CI                    |
 | `pnpm test:mutation`                                         | Stryker mutation run (weekly in CI)                                                       |
 | `pnpm generate:og` / `pnpm generate:icons`                   | Regenerate `public/og.png` / the favicon and app icons                                    |
 | `pnpm changelog:sync`                                        | Regenerate the design-system changelog page from `(design-system)`-scoped commits         |
@@ -106,6 +106,17 @@ the live YouTube feed.
 | [`CONTRIBUTING.md`](./CONTRIBUTING.md) | Branch names, commit format and the pull request flow                   |
 | [`SECURITY.md`](./SECURITY.md)         | Reporting a vulnerability                                               |
 | [`docs/`](./docs/README.md)            | Engineering knowledge base (rendering, components, API, workflows) and the `handbook/` |
+
+---
+
+## Terms used
+
+- **RSC**: React Server Component, a component that renders on the server and ships no JavaScript.
+- **INP**: Interaction to Next Paint, the delay between an input and the next frame.
+- **TBT**: Total Blocking Time, the main-thread time lost to long tasks during load.
+- **Lighthouse CI**: Lighthouse run in CI against a local production server, with assertions.
+- **Argos**: the hosted service that compares Playwright screenshots against approved baselines.
+- **Stryker**: the mutation testing tool; it edits code and checks that a test fails.
 
 ---
 
