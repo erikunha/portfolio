@@ -10,22 +10,26 @@ for (const width of SIDE_WIDTHS) {
   test.describe(`the phone and tablet position line at ${width}px`, () => {
     test.use({ viewport: { width, height: VIEWPORT_HEIGHT } });
 
-    test('runs down the left edge, clear of the content gutter and the dock controls', async ({
+    test('runs down the left edge, clear of the content gutter and the dock icons and labels', async ({
       page,
     }) => {
       await gotoSettled(page, '/');
       const geometry = await page.evaluate(() => {
         const line = (document.querySelector('.pos-line') as HTMLElement).getBoundingClientRect();
         const main = document.querySelector('#main-content') as HTMLElement;
-        const dockControls = [
-          ...document.querySelectorAll<HTMLElement>('.dock > a, .dock > button'),
-        ].filter((control) => control.checkVisibility());
+        const dockContent = [...document.querySelectorAll<HTMLElement>('.dock > a, .dock > button')]
+          .filter((control) => control.checkVisibility())
+          .map((control) => {
+            const range = document.createRange();
+            range.selectNodeContents(control);
+            return range.getBoundingClientRect().left;
+          });
         return {
           line: { left: line.left, right: line.right, height: line.height },
           contentLeft:
             main.getBoundingClientRect().left +
             Number.parseFloat(getComputedStyle(main).paddingLeft),
-          dockLeft: Math.min(...dockControls.map((c) => c.getBoundingClientRect().left)),
+          dockLeft: Math.min(...dockContent),
         };
       });
       expect(geometry.line.left, 'the line starts at the left edge of the viewport').toBe(0);
@@ -35,7 +39,7 @@ for (const width of SIDE_WIDTHS) {
       expect(geometry.line.right, 'it stays inside the content gutter').toBeLessThanOrEqual(
         geometry.contentLeft,
       );
-      expect(geometry.line.right, 'it never paints over a dock control').toBeLessThanOrEqual(
+      expect(geometry.line.right, 'it never paints over a dock icon or label').toBeLessThanOrEqual(
         geometry.dockLeft,
       );
     });
