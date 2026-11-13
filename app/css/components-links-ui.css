@@ -286,4 +286,20 @@
   .links-skeleton-bar:nth-child(3) {
     width: 56%;
   }
+
+  .links-cta-label {
+    display: inline-grid;
+  }
+
+  .links-cta-label::after {
+    content: attr(data-reserve);
+    grid-area: 1 / 1;
+    visibility: hidden;
+    height: 0;
+    overflow: hidden;
+  }
+
+  .links-cta-label > span {
+    grid-area: 1 / 1;
+  }
 }
