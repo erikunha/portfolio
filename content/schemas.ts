@@ -504,7 +504,6 @@ export const CareerCopySchema = z.object({
   command: z.string().min(1),
   cvLabel: z.string().min(1),
   cvHref: z.string().startsWith('/'),
-  scrollLabel: z.string().min(1),
   graph: z.string().min(1),
   pipe: z.string().min(1),
 });
