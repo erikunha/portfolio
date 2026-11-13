@@ -6,12 +6,12 @@
   }
 
   .shell-loading {
-    min-height: 46.5rem;
+    min-height: 49rem;
   }
 
   @media (min-width: theme(--viewport-phone)) {
     .shell-loading {
-      min-height: 36.5rem;
+      min-height: 39rem;
     }
   }
 
@@ -322,7 +322,7 @@
 
   @media (max-width: theme(--viewport-below-md)) {
     .shell-feed {
-      min-height: calc(12.5 * var(--spacing-4));
+      min-height: calc(15 * var(--spacing-4));
       max-height: calc(20 * var(--spacing-4));
     }
   }
