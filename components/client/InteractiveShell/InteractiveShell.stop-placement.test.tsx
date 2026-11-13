@@ -102,11 +102,20 @@ describe('the shell stop control lives in the answer area', () => {
     });
   }
 
-  function expectInLogAfter(container: HTMLElement, lineSelector: string): HTMLButtonElement {
+  function expectInAnswerAreaAfter(
+    container: HTMLElement,
+    lineSelector: string,
+  ): HTMLButtonElement {
     const stop = stopControl(container);
     expect(stop, 'the stop control is shown while the answer is busy').not.toBeNull();
     const log = container.querySelector('[role="log"]');
-    expect(stop?.closest('[role="log"]'), 'the stop control sits in the log').toBe(log);
+    expect(stop?.closest('.shell-feed-wrap'), 'the stop control shares the log panel').toBe(
+      log?.closest('.shell-feed-wrap'),
+    );
+    expect(
+      stop?.closest('[role="log"]'),
+      'the stop control stays out of the live region',
+    ).toBeNull();
     expect(stop?.closest('.shell-form'), 'the stop control is not in the input row').toBeNull();
     expect(stop?.closest('[aria-hidden="true"]'), 'it stays in the accessibility tree').toBeNull();
     expect(stop?.textContent).toBe(ui.stop);
@@ -124,17 +133,17 @@ describe('the shell stop control lives in the answer area', () => {
     expect(stopControl(container)).toBeNull();
   });
 
-  it('shows in the log after the thinking line before the first token', async () => {
+  it('shows in the answer area after the thinking line before the first token', async () => {
     vi.stubGlobal(
       'fetch',
       vi.fn(() => new Promise<Response>(() => undefined)),
     );
     const container = await renderShell();
     await ask(container, 'question in flight');
-    expectInLogAfter(container, '[data-testid="shell-line-loading"]');
+    expectInAnswerAreaAfter(container, '[data-testid="shell-line-loading"]');
   });
 
-  it('shows in the log after the streaming line and leaves when the answer completes', async () => {
+  it('shows in the answer area after the streaming line and leaves when the answer completes', async () => {
     const stream = openStream();
     vi.stubGlobal(
       'fetch',
@@ -143,7 +152,7 @@ describe('the shell stop control lives in the answer area', () => {
     const container = await renderShell();
     await ask(container, 'stream a response');
     await flushFrames();
-    expectInLogAfter(container, '.shell-line-output');
+    expectInAnswerAreaAfter(container, '.shell-line-output');
     await act(async () => {
       stream.finish();
     });
@@ -160,7 +169,7 @@ describe('the shell stop control lives in the answer area', () => {
     );
     const container = await renderShell();
     await ask(container, 'question to stop');
-    const stop = expectInLogAfter(container, '[data-testid="shell-line-loading"]');
+    const stop = expectInAnswerAreaAfter(container, '[data-testid="shell-line-loading"]');
     await act(async () => {
       act(() => stop.focus());
       stop.click();

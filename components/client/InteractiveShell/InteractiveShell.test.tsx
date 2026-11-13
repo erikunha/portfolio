@@ -430,7 +430,8 @@ describe('InteractiveShell r106 controls', () => {
     await submitQuestion(container, 'question in flight');
 
     const stop = buttonWithText(container, '[STOP]');
-    expect(stop.closest('[role="log"]')).not.toBeNull();
+    expect(stop.closest('.shell-feed-wrap')).not.toBeNull();
+    expect(stop.closest('[role="log"]')).toBeNull();
     expect(container.querySelector('.shell-form button')).toBeNull();
     expect(rowCount()).toBe(rowsIdle);
   });
@@ -1487,7 +1488,7 @@ describe('InteractiveShell stream states', () => {
       const caret = container.querySelector('.shell-caret');
       expect(caret?.textContent).toBe('█');
       expect(caret?.getAttribute('aria-hidden')).toBe('true');
-      expect(container.querySelector('[role="log"]')?.textContent).toContain('[ Esc ] stop');
+      expect(container.querySelector('.shell-stop-row')?.textContent).toContain('[ Esc ] stop');
       await act(async () => {
         controllerRef?.close();
       });

@@ -80,6 +80,10 @@ export function InteractiveShell({
     restoreInput,
     onSettled: refocusAfterStream,
   });
+  const stopAndReturnFocus = useCallback(() => {
+    stopStream();
+    focusInput();
+  }, [stopStream, focusInput]);
   const runPrivacy = usePrivacyCommands({ ui, states, nextId, setHistory, announce, focusInput });
 
   useLayoutEffect(() => {
@@ -184,44 +188,46 @@ export function InteractiveShell({
         tagClassName="shell-chrome-tag"
         dotSize={WINDOW_DOT_SIZE}
       />
-      <div
-        ref={feedRef}
-        onScroll={(event) => {
-          const feed = event.currentTarget;
-          const lineHeight = Number.parseFloat(getComputedStyle(feed).lineHeight);
-          followOutputRef.current =
-            feed.scrollHeight - feed.scrollTop - feed.clientHeight <= lineHeight;
-        }}
-        className="shell-feed"
-        role="log"
-        aria-label={ui.outputLabel}
-        aria-live="polite"
-        aria-busy={busy}
-        // biome-ignore lint/a11y/noNoninteractiveTabindex: the vertically scrollable log must be keyboard-focusable so arrow keys can scroll it (WCAG 2.1.1, axe scrollable-region-focusable)
-        tabIndex={0}
-      >
-        {history.map((line) => (
-          <ShellLine
-            key={line.id}
-            line={line}
-            ui={ui}
-            states={states}
-            isMobile={isMobile}
-            announce={announce}
-            onRetry={runCommand}
-          />
-        ))}
-        {streamingText !== null && (
-          <span className="shell-line shell-line-output" data-kind={ShellLineKind.Output}>
-            <span className="shell-ai-label">{ui.aiLabel}: </span>
-            {streamingText}
-            <span className="shell-caret" aria-hidden="true">
-              {STREAM_CARET}
+      <div className="shell-feed-wrap">
+        <div
+          ref={feedRef}
+          onScroll={(event) => {
+            const feed = event.currentTarget;
+            const lineHeight = Number.parseFloat(getComputedStyle(feed).lineHeight);
+            followOutputRef.current =
+              feed.scrollHeight - feed.scrollTop - feed.clientHeight <= lineHeight;
+          }}
+          className="shell-feed"
+          role="log"
+          aria-label={ui.outputLabel}
+          aria-live="polite"
+          aria-busy={busy}
+          // biome-ignore lint/a11y/noNoninteractiveTabindex: the vertically scrollable log must be keyboard-focusable so arrow keys can scroll it (WCAG 2.1.1, axe scrollable-region-focusable)
+          tabIndex={0}
+        >
+          {history.map((line) => (
+            <ShellLine
+              key={line.id}
+              line={line}
+              ui={ui}
+              states={states}
+              isMobile={isMobile}
+              announce={announce}
+              onRetry={runCommand}
+            />
+          ))}
+          {streamingText !== null && (
+            <span className="shell-line shell-line-output" data-kind={ShellLineKind.Output}>
+              <span className="shell-ai-label">{ui.aiLabel}: </span>
+              {streamingText}
+              <span className="shell-caret" aria-hidden="true">
+                {STREAM_CARET}
+              </span>
             </span>
-          </span>
-        )}
+          )}
+        </div>
         {busy ? (
-          <span className="shell-line shell-stop-row">
+          <div className="shell-stop-row">
             <span className="shell-stream-meta shell-esc-hint" aria-hidden="true">
               {states.escStop}
             </span>
@@ -230,11 +236,11 @@ export function InteractiveShell({
               className="shell-control shell-stop"
               type="button"
               aria-label={ui.stopLabel}
-              onClick={stopStream}
+              onClick={stopAndReturnFocus}
             >
               {ui.stop}
             </button>
-          </span>
+          </div>
         ) : null}
       </div>
       <form

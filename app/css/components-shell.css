@@ -201,11 +201,25 @@
     color: var(--color-primary-400);
   }
 
+  .shell-feed-wrap {
+    position: relative;
+  }
+
+  .shell-feed[aria-busy="true"] {
+    padding-block-end: calc(var(--spacing-target) + var(--spacing-2));
+  }
+
   .shell-stop-row {
+    position: absolute;
+    inset-inline: 0;
+    inset-block-end: 0;
     display: flex;
     flex-wrap: wrap;
     align-items: center;
     gap: var(--spacing-2);
+    padding-inline: var(--spacing-4);
+    padding-block-end: var(--spacing-2);
+    background: var(--color-secondary-900);
   }
 
   .shell-ai-notice,
