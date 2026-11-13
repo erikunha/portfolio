@@ -68,7 +68,7 @@
       "@puppeteer/browsers": "^3.2.6",
       "@stryker-mutator/core>minimatch": "^11.0.3",
       "axios": "^1.18.0",
-      "basic-ftp": "^6.2.3",
+      "basic-ftp": "^6.2.4",
       "body-parser@1": "^1.20.9",
       "body-parser@>=2": "^2.3.0",
       "brace-expansion": "^5.0.12",
