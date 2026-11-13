@@ -1,3 +1,4 @@
+import '@/app/css/home.css';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { PageMain } from '@/components/PageMain';
 import { SiteShell } from '@/components/SiteShell';
