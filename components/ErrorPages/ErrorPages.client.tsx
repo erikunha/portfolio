@@ -26,6 +26,7 @@ export function ErrorHeading({ children }: { children: ReactNode }) {
 
 const MAX_PATH_CHARS = 64;
 const PATH_ELLIPSIS = '...';
+const SPOOFING_CONTROLS = /[\p{Cc}\u061C\u200E\u200F\u202A-\u202E\u2066-\u2069]/gu;
 
 export function readablePath(pathname: string | null, fallback: string): string {
   if (!pathname) return fallback;
@@ -35,6 +36,8 @@ export function readablePath(pathname: string | null, fallback: string): string 
   } catch {
     decoded = pathname;
   }
+  decoded = decoded.replace(SPOOFING_CONTROLS, '');
+  if (decoded === '') return fallback;
   const characters = Array.from(decoded);
   return characters.length > MAX_PATH_CHARS
     ? `${characters.slice(0, MAX_PATH_CHARS - PATH_ELLIPSIS.length).join('')}${PATH_ELLIPSIS}`
