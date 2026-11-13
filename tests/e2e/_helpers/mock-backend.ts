@@ -1,7 +1,7 @@
 import type { Page } from '@playwright/test';
 import { askErrors } from '../../../content/ask-errors';
 import { profile } from '../../../content/profile';
-import { SITE_LOCALE } from '../../../content/site-locale';
+import { SITE_LOCALE, type SiteLocale } from '../../../content/site-locale';
 import { STREAM_ERR_SENTINEL } from '../../../lib/stream-protocol';
 
 export const MOCK_ASK_ANSWER = `Erik is a ${profile.title} with 8+ years of experience.`;
@@ -13,7 +13,10 @@ export type MockState = {
     | 'rate-limit'
     | 'budget-exhausted'
     | 'budget-daily'
-    | 'stream-error';
+    | 'stream-error'
+    | 'server-error'
+    | 'network-error';
+  locale?: SiteLocale;
   contact?: 'happy' | 'queued' | 'validation-error' | 'rate-limit' | 'server-error' | 'honeypot';
   log?: 'accept' | 'rate-limit' | 'storage-unavailable';
   forget?: 'happy' | 'not-found';
@@ -22,14 +25,30 @@ export type MockState = {
 const EN = askErrors[SITE_LOCALE.en];
 
 export async function installMockBackend(page: Page, state: MockState = {}): Promise<void> {
+  const copy = state.locale ? askErrors[state.locale] : EN;
   await page.route('**/api/ask', async (route) => {
     const s = state.ask;
+
+    if (s === 'network-error') {
+      await route.abort('failed');
+      return;
+    }
+
+    if (s === 'server-error') {
+      await route.fulfill({
+        status: 500,
+        contentType: 'application/json',
+        headers: { 'X-Request-Id': 'server-error-request-id' },
+        body: JSON.stringify({}),
+      });
+      return;
+    }
 
     if (s === 'kill-switch') {
       await route.fulfill({
         status: 503,
         contentType: 'application/json',
-        body: JSON.stringify({ error: EN.unavailable }),
+        body: JSON.stringify({ error: copy.unavailable }),
       });
       return;
     }
@@ -38,7 +57,7 @@ export async function installMockBackend(page: Page, state: MockState = {}): Pro
       await route.fulfill({
         status: 429,
         contentType: 'application/json',
-        body: JSON.stringify({ error: EN.rateLimited }),
+        body: JSON.stringify({ error: copy.rateLimited }),
       });
       return;
     }
@@ -47,7 +66,7 @@ export async function installMockBackend(page: Page, state: MockState = {}): Pro
       await route.fulfill({
         status: 503,
         contentType: 'application/json',
-        body: JSON.stringify({ error: EN.budget }),
+        body: JSON.stringify({ error: copy.budget }),
       });
       return;
     }
@@ -56,13 +75,13 @@ export async function installMockBackend(page: Page, state: MockState = {}): Pro
       await route.fulfill({
         status: 503,
         contentType: 'application/json',
-        body: JSON.stringify({ error: EN.budgetDaily }),
+        body: JSON.stringify({ error: copy.budgetDaily }),
       });
       return;
     }
 
     if (s === 'stream-error') {
-      const body = `${STREAM_ERR_SENTINEL}${EN.interrupted}`;
+      const body = `${STREAM_ERR_SENTINEL}${copy.interrupted}`;
       await route.fulfill({
         status: 200,
         contentType: 'text/plain; charset=utf-8',
@@ -195,4 +214,83 @@ export async function installMockBackend(page: Page, state: MockState = {}): Pro
       body: JSON.stringify({ ok: true, requestId: crypto.randomUUID() }),
     });
   });
+}
+
+const CHUNKED_ASK_KEY = '__chunkedAsk';
+const CHUNKED_REQUEST_ID_PREFIX = 'chunked-request-id';
+
+export type ChunkedAsk = {
+  push: (text: string) => Promise<void>;
+  end: () => Promise<void>;
+  requests: () => Promise<number>;
+  aborted: () => Promise<number>;
+};
+
+type ChunkedAskStream = { controller: ReadableStreamDefaultController<Uint8Array>; open: boolean };
+type ChunkedAskHandle = { streams: ChunkedAskStream[]; aborted: number };
+
+export async function installChunkedAsk(page: Page): Promise<ChunkedAsk> {
+  await page.addInitScript(
+    ([key, idPrefix]) => {
+      const handle: ChunkedAskHandle = { streams: [], aborted: 0 };
+      (window as unknown as Record<string, ChunkedAskHandle>)[key] = handle;
+      const realFetch = window.fetch.bind(window);
+      window.fetch = (input, init) => {
+        const url = input instanceof Request ? input.url : String(input);
+        if (!url.includes('/api/ask')) return realFetch(input, init);
+        const index = handle.streams.length;
+        const body = new ReadableStream<Uint8Array>({
+          start(controller) {
+            handle.streams.push({ controller, open: true });
+          },
+        });
+        init?.signal?.addEventListener('abort', () => {
+          const stream = handle.streams[index];
+          if (!stream?.open) return;
+          stream.open = false;
+          handle.aborted += 1;
+          stream.controller.error(new DOMException('aborted', 'AbortError'));
+        });
+        return Promise.resolve(
+          new Response(body, {
+            status: 200,
+            headers: {
+              'Content-Type': 'text/plain; charset=utf-8',
+              'X-Request-Id': `${idPrefix}-${index + 1}`,
+            },
+          }),
+        );
+      };
+    },
+    [CHUNKED_ASK_KEY, CHUNKED_REQUEST_ID_PREFIX] as const,
+  );
+
+  return {
+    push: (text) =>
+      page.evaluate(
+        ([key, chunk]) => {
+          const handle = (window as unknown as Record<string, ChunkedAskHandle>)[key];
+          const stream = handle?.streams.at(-1);
+          if (stream?.open) stream.controller.enqueue(new TextEncoder().encode(chunk));
+        },
+        [CHUNKED_ASK_KEY, text] as const,
+      ),
+    end: () =>
+      page.evaluate((key) => {
+        const stream = (window as unknown as Record<string, ChunkedAskHandle>)[key]?.streams.at(-1);
+        if (!stream?.open) return;
+        stream.open = false;
+        stream.controller.close();
+      }, CHUNKED_ASK_KEY),
+    requests: () =>
+      page.evaluate(
+        (key) => (window as unknown as Record<string, ChunkedAskHandle>)[key]?.streams.length ?? 0,
+        CHUNKED_ASK_KEY,
+      ),
+    aborted: () =>
+      page.evaluate(
+        (key) => (window as unknown as Record<string, ChunkedAskHandle>)[key]?.aborted ?? 0,
+        CHUNKED_ASK_KEY,
+      ),
+  };
 }
