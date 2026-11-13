@@ -40,6 +40,7 @@ export const AI_PATHS = [
   'content/work-scope.ts',
   'scripts/ask-eval.ts',
   '__tests__/ask-*',
+  '.github/workflows/ci.yml',
 ];
 
 export const APP_PATHS = [
@@ -92,6 +93,9 @@ export const UI_PATHS = [
   'tsconfig.json',
   '.nvmrc',
   'scripts/strip-next-polyfills.mjs',
+  'scripts/install-playwright-browsers.mjs',
+  'scripts/wait-argos-reference.mjs',
+  '.github/workflows/ci.yml',
   'tests/visual/',
   'tests/e2e/',
   'pnpm-lock.yaml',
