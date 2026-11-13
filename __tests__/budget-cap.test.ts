@@ -153,7 +153,7 @@ describe('budget reservation pattern', () => {
     const result = await reserveBudget(512);
     expect(result.allowed).toBe(false);
     expect(result.reserved).toBe(0);
-    expect(decrbyMock).toHaveBeenCalledWith(expect.stringMatching(/ask:tokens:/), RESERVATION);
+    expect(decrbyMock).toHaveBeenCalledWith(expect.stringMatching(/ask:spend:/), RESERVATION);
   });
 
   it('settleBudget refunds (reserved - actual) when actual is less than reserved', async () => {
@@ -163,7 +163,7 @@ describe('budget reservation pattern', () => {
     decrbyMock.mockClear();
     await settleBudget(reserved, 120, 80, budgetKey);
     expect(decrbyMock).toHaveBeenCalledWith(
-      expect.stringMatching(/ask:tokens:/),
+      expect.stringMatching(/ask:spend:/),
       reserved - costOf(120, 80),
     );
   });
@@ -202,7 +202,7 @@ describe('budget reservation pattern', () => {
     const result = await reserveBudget(512);
     expect(result.allowed).toBe(false);
     expect(result.reserved).toBe(0);
-    expect(decrbyMock).toHaveBeenCalledWith(expect.stringMatching(/ask:tokens:day:/), RESERVATION);
+    expect(decrbyMock).toHaveBeenCalledWith(expect.stringMatching(/ask:spend:day:/), RESERVATION);
     expect(counter.value).toBe(0);
     expect(dailyCounter.value).toBe(nearlySpentDay);
   });

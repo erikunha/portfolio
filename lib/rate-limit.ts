@@ -292,11 +292,11 @@ export function getBudgetKey(): string {
   const now = new Date();
   const yyyy = now.getUTCFullYear();
   const mm = String(now.getUTCMonth() + 1).padStart(2, '0');
-  return `ask:tokens:${yyyy}-${mm}`;
+  return `ask:spend:${yyyy}-${mm}`;
 }
 
 export function getDailyBudgetKey(): string {
-  return `ask:tokens:day:${new Date().toISOString().slice(0, ISO_DATE_LENGTH)}`;
+  return `ask:spend:day:${new Date().toISOString().slice(0, ISO_DATE_LENGTH)}`;
 }
 
 export type BudgetRefusalReason = 'month' | 'day' | 'store';
