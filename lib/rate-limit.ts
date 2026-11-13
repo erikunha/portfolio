@@ -1,8 +1,9 @@
 import { isIP } from 'node:net';
 import { Ratelimit } from '@upstash/ratelimit';
 import { Redis, type Requester } from '@upstash/redis';
-import { ASK_RESERVED_INPUT_TOKENS } from '@/lib/ask/input-reservation';
+import { askReservationCost } from '@/lib/ask/input-reservation';
 import { ASK_MAX_OUTPUT_TOKENS } from '@/lib/ask/limits';
+import { ASK_BUDGET_UNITS_PER_USD, askBudgetCost } from '@/lib/ask/usage';
 import { FORGET_WINDOW, FORGET_WINDOW_REQUESTS } from '@/lib/forget-limits';
 import { log } from '@/lib/log';
 import type { RateLimitIdentifier } from '@/lib/server/rate-limit-key';
@@ -227,13 +228,13 @@ export function getClientIp(req: { headers: Headers }): string {
   return raw ? rateLimitBucket(raw) : UNKNOWN_CLIENT_IP;
 }
 
-const MONTHLY_TOKEN_BUDGET = 3_000_000;
+export const MONTHLY_BUDGET_USD = 3;
 const DAILY_BUDGET_DIVISOR = 20;
-const DAILY_TOKEN_BUDGET = MONTHLY_TOKEN_BUDGET / DAILY_BUDGET_DIVISOR;
+const MONTHLY_BUDGET_UNITS = MONTHLY_BUDGET_USD * ASK_BUDGET_UNITS_PER_USD;
+const DAILY_BUDGET_UNITS = MONTHLY_BUDGET_UNITS / DAILY_BUDGET_DIVISOR;
 const BUDGET_WINDOW_S = 60 * 60 * 24 * 32;
 const DAILY_BUDGET_WINDOW_S = 60 * 60 * 24 * 2;
 
-const RESERVED_INPUT_TOKENS = ASK_RESERVED_INPUT_TOKENS;
 const BUDGET_WARN_PCT = 0.8;
 const ISO_DATE_LENGTH = 10;
 
@@ -246,8 +247,8 @@ export type BudgetStore = {
 };
 
 const redisBudgetStore: BudgetStore = {
-  capacity: MONTHLY_TOKEN_BUDGET,
-  dailyCapacity: DAILY_TOKEN_BUDGET,
+  capacity: MONTHLY_BUDGET_UNITS,
+  dailyCapacity: DAILY_BUDGET_UNITS,
   async reserve(budgetKey, tokens, windowSeconds = BUDGET_WINDOW_S) {
     const pipe = getRedis().pipeline();
     pipe.incrby(budgetKey, tokens);
@@ -271,7 +272,7 @@ export function setBudgetStore(store: BudgetStore): void {
 
 export function createEvalBudgetStore(requests: number): BudgetStore {
   const used = new Map<string, number>();
-  const capacity = requests * (RESERVED_INPUT_TOKENS + ASK_MAX_OUTPUT_TOKENS);
+  const capacity = requests * askReservationCost(ASK_MAX_OUTPUT_TOKENS);
   return {
     capacity,
     dailyCapacity: capacity,
@@ -322,7 +323,7 @@ async function refundReservation(keys: string[], tokens: number): Promise<void> 
 }
 
 export async function reserveBudget(maxOutputTokens: number): Promise<BudgetReservation> {
-  const reserved = RESERVED_INPUT_TOKENS + maxOutputTokens;
+  const reserved = askReservationCost(maxOutputTokens);
   const budgetKey = getBudgetKey();
   const dailyKey = getDailyBudgetKey();
   const denied = (reason: BudgetRefusalReason, pct: number): BudgetReservation => ({
@@ -368,12 +369,20 @@ export async function settleBudget(
   actualOutputTokens: number,
   budgetKey: string,
   dailyKey?: string,
+  cache: { cacheReadTokens: number; cacheWriteTokens: number } = {
+    cacheReadTokens: 0,
+    cacheWriteTokens: 0,
+  },
 ): Promise<void> {
   if (reserved <= 0) {
     log.warn('budget settlement skipped: no positive reservation', { budgetKey });
     return;
   }
-  const actual = actualInputTokens + actualOutputTokens;
+  const actual = askBudgetCost({
+    billedInputTokens: actualInputTokens,
+    outputTokens: actualOutputTokens,
+    ...cache,
+  });
   const refund = reserved - actual;
   if (refund === 0) return;
   const keys = dailyKey === undefined ? [budgetKey] : [budgetKey, dailyKey];

@@ -182,7 +182,7 @@ Contact submission persists a 90-day KV audit record before calling the shared d
 | `components/RootShell.tsx`                | Fonts, JSON-LD, the pre-paint motion bootstrap, Vercel RUM gating, shared by `app/(en)/layout.tsx` and `app/(pt)/layout.tsx` |
 | `next.config.ts` + `proxy.ts`             | The two-place header split (static vs per-request CSP), PPR, MDX                                                             |
 | `lib/server/route.ts`                     | The `defineHandler` envelope - the API contract                                                                              |
-| `lib/rate-limit.ts`                       | Redis access, the sliding-window + token-budget + dedup primitives                                                           |
+| `lib/rate-limit.ts`                       | Redis access, the sliding-window + spend-budget + dedup primitives                                                           |
 | `lib/ask/system-prompt.ts`                | How the AI persona imports shared content                                                                                    |
 | `content/schemas.ts`                      | The domain schema registry                                                                                                   |
 | `content/site-locale.ts`                  | Locale codes, `<html lang>` values, localized paths and the hreflang alternates every page and the sitemap derive from       |

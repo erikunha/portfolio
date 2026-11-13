@@ -32,7 +32,7 @@ flowchart LR
     visitor -->|sends a message| contact["ContactForm -> /api/contact"]
 ```
 
-There is **no authentication, no accounts, no multi-tenancy**. The "user" is anonymous; rate-limit keys and dedup use the salted hash of the client IP (never the raw address), and the monthly token budget is shared. Contact records and ask logs have retention periods. The browser keeps two things: the motion preference in localStorage (`erik.motion`) and this tab's request ids, which back the `privacy` shell command and the footer receipt, in sessionStorage.
+There is **no authentication, no accounts, no multi-tenancy**. The "user" is anonymous; rate-limit keys and dedup use the salted hash of the client IP (never the raw address), and the monthly spend budget is shared. Contact records and ask logs have retention periods. The browser keeps two things: the motion preference in localStorage (`erik.motion`) and this tab's request ids, which back the `privacy` shell command and the footer receipt, in sessionStorage.
 
 ## The core insight: content _is_ the domain model
 

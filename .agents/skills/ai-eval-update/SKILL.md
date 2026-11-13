@@ -28,6 +28,15 @@ only the `ask-eval.yml` workflow (weekly schedule and manual dispatch) does.
                            # counters to production; with EVAL_PUBLISH=1 they return only
                            # around the aggregate publish, without it they never return, so
                            # `vercel env run -- pnpm ask:eval` cannot touch production data
+                           # with EVAL_PUBLISH=1, missing credentials fail the run before any
+                           # model call and a failed Redis write exits 1, so a green publishing
+                           # run means ask:eval:latest was refreshed
+
+The workflows set `EVAL_PUBLISH=1` only on `refs/heads/main` and map `UPSTASH_REDIS_REST_URL` and
+`UPSTASH_REDIS_REST_TOKEN` from the `EVAL_PUBLISH_REDIS_REST_URL` and
+`EVAL_PUBLISH_REDIS_REST_TOKEN` secrets: a Redis ACL user that can only `SET ask:eval:latest` and
+`agent-eval:latest`. A dispatch from another branch grades but never publishes, and no workflow
+reads the production Upstash token.
 
 The CI `ai-eval` job runs the same `pnpm ask:eval`. It is path-filtered by the
 `detect-changes` job: it fires for ANY AI-relevant change, not just the eval files, and only
@@ -117,9 +126,9 @@ cases are deliberately borderline-hard.
 
 ## Budget
 
-`/api/ask` reserves tokens before every model call and fails closed when the reservation
-store errors. `main()` in `scripts/ask-eval.ts` installs `createEvalBudgetStore(ASK_EVAL_CORPUS.length)`
-through `setBudgetStore`, so the run uses an in-memory counter sized to one reservation per
+`/api/ask` reserves its worst-case cost (budget units are nano-USD) before every model call and
+fails closed when the reservation store errors. `main()` in `scripts/ask-eval.ts` installs `createEvalBudgetStore(ASK_EVAL_CORPUS.length)`
+through `setBudgetStore`, so the run uses an in-memory counter sized to one `askReservationCost` per
 corpus item. It needs no Redis credentials and never spends the production monthly counter.
 Adding a request per item (retries, extra turns) means raising that size.
 `__tests__/ask-eval-budget.test.ts` fails if the route's reservation outgrows the store.

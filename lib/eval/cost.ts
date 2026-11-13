@@ -1,10 +1,13 @@
+import { ASK_RESERVED_INPUT_TOKENS } from '@/lib/ask/input-reservation';
+import { ASK_PRICING_USD_PER_MTOK, CACHE_PRICE_MULTIPLIER } from '@/lib/ask/pricing';
+
+export { CACHE_PRICE_MULTIPLIER };
+
 export const PRICING_USD_PER_MTOK = {
-  feature: { input: 0.1, output: 0.5 },
+  feature: ASK_PRICING_USD_PER_MTOK,
   mechanical: { input: 1.0, output: 5.0 },
   judge: { input: 3.0, output: 15.0 },
 } as const;
-
-export const CACHE_PRICE_MULTIPLIER = { read: 0.1, write: 1.25 } as const;
 
 export const featureCostUsdFrom = (counts: {
   billedInputTokens: number;
@@ -59,7 +62,8 @@ export const targetCostUsdFrom = (
   return (inputTokens * rate.input + outputTokens * rate.output) / TOKENS_PER_MTOK;
 };
 
-export const APPROX_FEATURE_INPUT_TOKENS = 1700;
+export const APPROX_FEATURE_INPUT_TOKENS = ASK_RESERVED_INPUT_TOKENS;
+export const APPROX_AGENT_EVAL_INPUT_TOKENS = 1700;
 export const APPROX_FEATURE_OUTPUT_TOKENS = 350;
 
 export function estimateJobCostUsd(args: {

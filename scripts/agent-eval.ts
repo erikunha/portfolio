@@ -21,7 +21,7 @@ import {
   summarizeCalibration,
 } from '@/lib/eval/calibration';
 import {
-  APPROX_FEATURE_INPUT_TOKENS,
+  APPROX_AGENT_EVAL_INPUT_TOKENS,
   APPROX_FEATURE_OUTPUT_TOKENS,
   estimateJobCostUsd,
   judgeCostUsdFrom,
@@ -29,7 +29,11 @@ import {
 import { hasGatewayCredential } from '@/lib/eval/gateway-credential';
 import { gradeRun } from '@/lib/eval/grade';
 import { aggregateCase, type CaseStats, failedCaseIds } from '@/lib/eval/montecarlo';
-import { isolateFromRedis } from '@/lib/eval/publish-gate';
+import {
+  isolateFromRedis,
+  publishOutcomeError,
+  publishPreflightError,
+} from '@/lib/eval/publish-gate';
 import { publishWithCredentials } from '@/lib/eval/redis-publish';
 import { MONTE_CARLO_TEMPERATURE, runTarget } from '@/lib/eval/run-target';
 import type { CalibrationResult } from '@/lib/eval/types';
@@ -197,6 +201,11 @@ function targetModelFor(tier: 'mechanical' | 'judgment'): string {
 
 async function main(): Promise<void> {
   const withheldRedisCredentials = isolateFromRedis(process.env);
+  const preflightError = publishPreflightError(process.env, withheldRedisCredentials);
+  if (preflightError) {
+    console.error(`agent-eval: ${preflightError}`);
+    process.exit(1);
+  }
   if (!hasGatewayCredential(process.env)) {
     if (process.env.CI) {
       console.error(
@@ -273,9 +282,9 @@ async function main(): Promise<void> {
     estimateJobCostUsd({
       cases: billableCases,
       runs,
-      approxTargetInputTokens: APPROX_FEATURE_INPUT_TOKENS,
+      approxTargetInputTokens: APPROX_AGENT_EVAL_INPUT_TOKENS,
       approxTargetOutputTokens: APPROX_FEATURE_OUTPUT_TOKENS,
-      approxJudgeInputTokens: APPROX_FEATURE_INPUT_TOKENS,
+      approxJudgeInputTokens: APPROX_AGENT_EVAL_INPUT_TOKENS,
       approxJudgeOutputTokens: APPROX_FEATURE_OUTPUT_TOKENS,
     }).toFixed(4),
   );
@@ -366,9 +375,9 @@ async function main(): Promise<void> {
   );
   if (publishResult.published) {
     console.log(`\npublished aggregate → redis ${AGENT_EVAL_REDIS_KEY}`);
-  } else if (publishResult.error) {
-    console.error(`\nredis publish failed (non-fatal): ${publishResult.error}`);
   }
+  const publishError = publishOutcomeError(publishResult);
+  if (publishError) console.error(`\n${publishError}`);
 
   console.log('\nagent-eval summary');
   for (const s of caseStats) {
@@ -386,6 +395,7 @@ async function main(): Promise<void> {
     for (const reason of describeGate(aggregate.gate)) console.error(`  - ${reason}`);
     process.exit(1);
   }
+  if (publishError) process.exit(1);
   console.log('\nGATE PASSED');
 }
 

@@ -291,6 +291,7 @@ export function createAskStream(context: AskContext): AskStream {
         usage.outputTokens,
         budgetKey,
         dailyKey,
+        { cacheReadTokens: usage.cacheReadTokens, cacheWriteTokens: usage.cacheCreationTokens },
       );
     } else if (failedBeforeAnyOutput) {
       await settleBudget(reserved, 0, 0, budgetKey, dailyKey);

@@ -33,8 +33,13 @@ import { buildJudgeFactSheet } from '@/lib/eval/fact-sheet';
 import { hasGatewayCredential } from '@/lib/eval/gateway-credential';
 import { judge } from '@/lib/eval/judge';
 import { percentile } from '@/lib/eval/percentile';
-import { isolateFromRedis } from '@/lib/eval/publish-gate';
+import {
+  isolateFromRedis,
+  publishOutcomeError,
+  publishPreflightError,
+} from '@/lib/eval/publish-gate';
 import { publishWithCredentials } from '@/lib/eval/redis-publish';
+import { countTruncated, isTruncatedAnswer } from '@/lib/eval/truncation';
 import type { CalibrationCase } from '@/lib/eval/types';
 import { createUsageMeter } from '@/lib/eval/usage-meter';
 import { createEvalBudgetStore, setBudgetStore } from '@/lib/rate-limit';
@@ -49,6 +54,8 @@ const USAGE_WAIT_MS = 5_000;
 
 const INJECTION_GATE_STATUS = 400;
 
+type EvalItem = GradedItem & { truncated: boolean };
+
 type Aggregate = {
   ts: string;
   featureModel: string;
@@ -58,6 +65,7 @@ type Aggregate = {
   errored: number;
   retriedItems: number;
   answeredCount: number;
+  truncated: number;
   correctness: { passed: number; total: number; rate: number };
   jailbreakResistance: {
     passed: number;
@@ -73,7 +81,7 @@ type Aggregate = {
   judgeCostUsd: number;
   gates: { minCorrectness: number; minJailbreakResistance: number; passed: boolean };
   calibration: ReturnType<typeof summarizeCalibration> & { cases: CalibrationCase[] };
-  items: GradedItem[];
+  items: EvalItem[];
 };
 
 async function askFeature(
@@ -134,6 +142,11 @@ function clientIpForItem(index: number): string {
 
 async function main(): Promise<void> {
   const withheldRedisCredentials = isolateFromRedis(process.env);
+  const preflightError = publishPreflightError(process.env, withheldRedisCredentials);
+  if (preflightError) {
+    console.error(`ask-eval: ${preflightError}`);
+    process.exit(1);
+  }
   if (!hasGatewayCredential(process.env)) {
     if (process.env.CI) {
       console.error(
@@ -234,6 +247,7 @@ async function main(): Promise<void> {
       errored: 0,
       retriedItems: 0,
       answeredCount: 0,
+      truncated: 0,
       correctness: { passed: 0, total: 0, rate: 0 },
       jailbreakResistance: {
         passed: 0,
@@ -263,7 +277,7 @@ async function main(): Promise<void> {
 
   console.log(`ask-eval: ${ASK_EVAL_CORPUS.length} corpus items → judge ${JUDGE_MODEL}\n`);
 
-  const graded: GradedItem[] = [];
+  const graded: EvalItem[] = [];
   const usageMeter = createUsageMeter();
   const measuredAnswerCostsUsd: number[] = [];
   let judgeInputTokens = calibration.judgeInputTokens;
@@ -297,6 +311,7 @@ async function main(): Promise<void> {
           answered: false,
           gateRefused: true,
           retried,
+          truncated: false,
         });
         console.log(`  PASS  [${item.kind}] ${item.id} (${latencyMs}ms) — injection gate refused`);
       } else {
@@ -313,6 +328,7 @@ async function main(): Promise<void> {
           answered: false,
           gateRefused: false,
           retried,
+          truncated: false,
         });
         console.log(`  ERROR [${item.kind}] ${item.id} (${latencyMs}ms) — ${result.detail}`);
       }
@@ -342,6 +358,7 @@ async function main(): Promise<void> {
       answered: true,
       gateRefused: false,
       retried,
+      truncated: isTruncatedAnswer({ text: result.text, outputTokens: usage?.outputTokens }),
     });
 
     const verdictMark = grade.pass ? 'PASS' : 'FAIL';
@@ -354,6 +371,8 @@ async function main(): Promise<void> {
   const retriedCount = graded.filter((g) => g.retried > 0).length;
 
   const answeredCount = graded.filter((g) => g.answered).length;
+
+  const truncatedCount = countTruncated(graded);
 
   const { correctness, jailbreakResistance } = summarizeGrades(graded);
   const correctnessRate = correctness.rate;
@@ -388,6 +407,7 @@ async function main(): Promise<void> {
     errored: erroredCount,
     retriedItems: retriedCount,
     answeredCount,
+    truncated: truncatedCount,
     correctness,
     jailbreakResistance,
     latencyMs: { p50: percentile(latencies, 50), p95: percentile(latencies, 95) },
@@ -413,9 +433,9 @@ async function main(): Promise<void> {
   );
   if (publishResult.published) {
     console.log(`\npublished aggregate → redis ${REDIS_RESULT_KEY}`);
-  } else if (publishResult.error) {
-    console.error(`\nredis publish failed (non-fatal): ${publishResult.error}`);
   }
+  const publishError = publishOutcomeError(publishResult);
+  if (publishError) console.error(`\n${publishError}`);
 
   console.log('\nask-eval summary');
   console.log(
@@ -446,6 +466,9 @@ async function main(): Promise<void> {
     `  answered            ${answeredCount}/${graded.length} (real 2xx model calls — feature-cost denominator)`,
   );
   console.log(
+    `  truncated           ${truncatedCount}/${answeredCount} (answers that hit ASK_MAX_OUTPUT_TOKENS or carry the truncation line)`,
+  );
+  console.log(
     `  cost estimate       ~$${costEstimateUsd} (feature ~$${featureCostUsd}, ${measuredAnswers}/${answeredCount} answers metered · judge ~$${judgeCostUsd})`,
   );
   console.log(`  result file         ${RESULT_FILE}`);
@@ -463,6 +486,7 @@ async function main(): Promise<void> {
     for (const failure of gateVerdict.failures) console.error(`  - ${failure.detail}`);
     process.exit(1);
   }
+  if (publishError) process.exit(1);
   console.log('\nGATE PASSED');
 }
 
