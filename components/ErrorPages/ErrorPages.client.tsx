@@ -1,28 +1,19 @@
 'use client';
 
 import { usePathname } from 'next/navigation';
-import { type ReactNode, Suspense, useEffect, useRef, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { PageMain } from '@/components/PageMain';
 import { NOT_FOUND_PATH_TOKEN } from '@/content/errors.constants';
 import type { ErrorsContent } from '@/content/schemas';
 import { CmdLine } from '@/design-system';
 import { reportClientError } from '@/lib/report-client-error.client';
 import { COPY_STATUS, useCopyFeedback } from '@/lib/use-copy-feedback.client';
+import { ErrorHeading } from './ErrorHeading.client';
 import { ERROR_MAIN_CLASS } from './error-main';
 
-const COPIED_RESET_MS = 2000;
+export { ErrorHeading };
 
-export function ErrorHeading({ children }: { children: ReactNode }) {
-  const ref = useRef<HTMLHeadingElement>(null);
-  useEffect(() => {
-    ref.current?.focus({ preventScroll: true });
-  }, []);
-  return (
-    <h1 ref={ref} className="err-h1" tabIndex={-1}>
-      {children}
-    </h1>
-  );
-}
+const COPIED_RESET_MS = 2000;
 
 const MAX_PATH_CHARS = 64;
 const PATH_ELLIPSIS = '...';
