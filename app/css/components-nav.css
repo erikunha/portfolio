@@ -389,7 +389,8 @@
     .pos-line {
       top: 0;
       bottom: 0;
-      left: auto;
+      left: 0;
+      right: auto;
       width: var(--position-line-thickness);
       height: auto;
     }

@@ -451,7 +451,6 @@ test.describe('section navigation: position line at 1280px', () => {
 });
 
 const SIDE_LINE_MAX_THICKNESS_PX = 4;
-const RIGHT_EDGE_RATIO = 0.95;
 
 for (const { width, height } of [
   { width: 390, height: 844 },
@@ -460,7 +459,7 @@ for (const { width, height } of [
   test.describe(`section navigation: side position line at ${width}px`, () => {
     test.use({ viewport: { width, height } });
 
-    test('the position line runs down the right edge and follows the scroll', async ({ page }) => {
+    test('the position line runs down the left edge and follows the scroll', async ({ page }) => {
       await gotoSettled(page, '/');
       const bar = page.locator('.pos-line');
       await expect(bar, 'the line is present below 1024px, not hidden').toBeVisible();
@@ -469,10 +468,7 @@ for (const { width, height } of [
         SIDE_LINE_MAX_THICKNESS_PX,
       );
       expect(box?.height ?? 0, 'it spans the viewport height').toBeGreaterThanOrEqual(height - 1);
-      expect(
-        (box?.x ?? 0) + (box?.width ?? 0),
-        'it sits on the right edge, left of any classic scrollbar',
-      ).toBeGreaterThanOrEqual(width * RIGHT_EDGE_RATIO);
+      expect(box?.x, 'it sits on the left edge of the viewport').toBe(0);
       await expect(bar).toHaveCSS('--posf', '0');
       await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
       await expect(bar).toHaveCSS('--posf', '1');

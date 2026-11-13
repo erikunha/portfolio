@@ -69,7 +69,7 @@ The chrome the app shell owns, the global motion the root shell mounts, and the 
 flowchart TD
     shell["AppShell.client"] --> navigation["SectionNavigationProvider (client): stable actions and copy, plus a store for current section, drawer and motion"]
     navigation --> rail["SectionNavigation (client): menu trigger, drawer focus trap and focus return<br/>Header: title and drawer close control"]
-    navigation --> position["PositionMeter (client): decorative scroll progress line, aria-hidden, top from 1024px and right edge below; writes --posf to every data-position-target, the Dock included"]
+    navigation --> position["PositionMeter (client): decorative scroll progress line, aria-hidden, top from 1024px and left edge below; writes --posf to every data-position-target, the Dock included"]
     navigation --> chrome["Chrome: CRTOverlay(6 layers) · DesktopTopbar · StatusBar · MobileTitleBar · Dock · ToTopButton"]
     rootshell["RootShell (RSC)"] --> gm["GlobalMotion (mounted by RootShell in both root layouts): MatrixRainLazy (client-only) + TypeReveal"]
     links["/links and /links/en"] --> tagline["TaglineTyper: localized tagline cycle"]
