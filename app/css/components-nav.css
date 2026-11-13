@@ -280,7 +280,7 @@
     z-index: var(--z-dock);
     display: grid;
     grid-auto-flow: column;
-    grid-auto-columns: minmax(0, 1fr);
+    grid-auto-columns: minmax(min-content, 1fr);
     gap: 2px;
     height: calc(var(--dock-height) + env(safe-area-inset-bottom, 0px));
     padding: var(--spacing-2) var(--spacing-2)
@@ -347,7 +347,7 @@
     .dock > a,
     .dock > button {
       letter-spacing: var(--tracking-tight);
-      padding-inline: 0;
+      padding-inline: 2px;
     }
   }
 
