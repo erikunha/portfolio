@@ -5,12 +5,27 @@ import { expect, test } from '../e2e/_helpers/fixtures';
 import { waitForHydration } from '../e2e/_helpers/hydration';
 import { stripVolatileChrome } from '../e2e/_helpers/mask-volatile';
 import { revealDeferredContent, snapshotLocator } from '../e2e/_helpers/snapshot';
+import { gotoSettled } from '../e2e/_helpers/streamed';
 
 test.describe.configure({ timeout: 60_000 });
 
 const CONTACT_VISITOR_ZONE = 'Europe/Berlin';
 const CONTACT_FIXED_NOW = new Date('2026-11-02T15:00:00Z');
 const CONTACT_SCROLL_MARGIN_PX = 100;
+const PAGE_VIEWPORT = {
+  chromium: { width: 1280, height: 720 },
+  'chromium-mobile': { width: 390, height: 844 },
+} as const;
+const PAGE_BASELINES = [
+  { name: 'cv', path: '/cv', target: 'main' },
+  { name: 'summary', path: '/summary', target: 'main' },
+  { name: 'links-en', path: '/links/en', target: 'main' },
+  {
+    name: 'pt-hero',
+    path: '/pt',
+    target: '[data-testid="hero-desktop"], [data-testid="hero-mobile"]',
+  },
+] as const;
 
 test.describe('visual regression', () => {
   test('1: hero above-the-fold matches baseline', async ({ mockedPage }, testInfo) => {
@@ -171,4 +186,21 @@ test.describe('visual regression', () => {
     }
     await snapshotLocator(mockedPage, footer, 'footer.png');
   });
+});
+
+test.describe('route page baselines', () => {
+  for (const { name, path, target } of PAGE_BASELINES) {
+    test(`${name} matches baseline`, async ({ mockedPage }, testInfo) => {
+      const viewport = PAGE_VIEWPORT[testInfo.project.name as keyof typeof PAGE_VIEWPORT];
+      await mockedPage.setViewportSize(viewport);
+      await gotoSettled(mockedPage, path);
+      await waitForHydration(mockedPage, '.menu-trigger');
+      const region = mockedPage.locator(target).filter({ visible: true }).first();
+      await region.waitFor({ state: 'visible' });
+      await region.scrollIntoViewIfNeeded();
+      await mockedPage.evaluate(() => document.fonts.ready);
+      await stripVolatileChrome(mockedPage);
+      await snapshotLocator(mockedPage, region, `${name}.png`);
+    });
+  }
 });
