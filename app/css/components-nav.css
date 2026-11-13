@@ -515,6 +515,22 @@
     border-color: var(--color-primary-500);
   }
 
+  .topbar-motion-state {
+    display: inline-grid;
+  }
+
+  .topbar-motion-state::after {
+    content: attr(data-reserve);
+    grid-area: 1 / 1;
+    visibility: hidden;
+    height: 0;
+    overflow: hidden;
+  }
+
+  .topbar-motion-state > span {
+    grid-area: 1 / 1;
+  }
+
   .topbar-action-outline {
     color: var(--color-primary-500);
   }
