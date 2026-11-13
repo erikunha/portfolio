@@ -43,7 +43,10 @@ describe('NotFound', () => {
   it('renders the 404 heading, the command line and every suggestion as a link', () => {
     render(<NotFound />);
     expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('404');
-    expect(screen.getByText(/bash: \/route: no such file or directory/)).not.toBeNull();
+    const { pathFallback } = errorsContent[SITE_LOCALE.en].notFound;
+    expect(
+      screen.getByText(`bash: ${pathFallback}: no such file or directory`, { exact: false }),
+    ).not.toBeNull();
     for (const item of errorsContent[SITE_LOCALE.en].notFound.suggestions) {
       expect(
         within(screen.getByRole('main'))

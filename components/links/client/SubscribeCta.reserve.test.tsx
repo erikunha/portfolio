@@ -28,6 +28,9 @@ describe('SubscribeCta: width stays fixed when the label swaps after hydration',
     const slot = container.querySelector('[data-reserve]');
     expect(slot, 'the label sits in a slot that owns the reserved width').not.toBeNull();
     expect(slot?.getAttribute('data-reserve')).toBe(SUBSCRIBED_LABEL);
+    expect(slot?.textContent, 'before the swap the slot shows the subscribe label').toBe(
+      SUBSCRIBE_LABEL,
+    );
 
     await act(async () => {
       container.querySelector('a')?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
