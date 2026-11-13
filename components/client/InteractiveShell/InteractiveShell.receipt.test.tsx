@@ -155,7 +155,12 @@ describe('one privacy receipt per conversation', () => {
       fillShellState(ui.conversationForgottenMany, { count: '2' }),
     );
     expect(document.activeElement).toBe(container.querySelector('input[name="command"]'));
-    expect(container.querySelector('p[role="status"]')?.textContent).toContain(
+    const forgotten = [...container.querySelectorAll('[role="log"] .shell-line')].find((line) =>
+      line.textContent?.includes(ui.conversationForgotten),
+    );
+    expect(forgotten?.closest('[role="log"][aria-live="polite"]')).not.toBeNull();
+    expect(forgotten?.closest('[aria-live="off"], [aria-hidden="true"]')).toBeNull();
+    expect(container.querySelector('p[role="status"]')?.textContent).not.toContain(
       ui.conversationForgotten,
     );
 

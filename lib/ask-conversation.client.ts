@@ -3,21 +3,17 @@
 import { useSyncExternalStore } from 'react';
 import { SESSION_REF_CAP } from '@/lib/forget-limits';
 import { type ForgetResult, forgetRequest, wasForgotten } from '@/lib/forget-request.client';
-import { removeRef } from '@/lib/request-refs.client';
+import { isRef, removeRef } from '@/lib/request-refs.client';
 
 const STORAGE_KEY = 'ask-conversation';
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
-const MAX_REF_LENGTH = 128;
 
 type Conversation = { id: string; questions: number; requestIds: readonly string[] };
 
 const listeners = new Set<() => void>();
 let loaded = false;
 let conversation: Conversation | null = null;
-
-function isRef(value: unknown): value is string {
-  return typeof value === 'string' && value.length > 0 && value.length <= MAX_REF_LENGTH;
-}
+let forgetsHeld = 0;
 
 function parseStored(raw: string | null): Conversation | null {
   if (raw === null) return null;
@@ -67,39 +63,22 @@ const VARIANT_MASK = 0x3f;
 const VARIANT_RFC = 0x80;
 const HEX_RADIX = 16;
 const HEX_BYTE_WIDTH = 2;
-const UUID_GROUPS = [8, 4, 4, 4, 12] as const;
+const UUID_GROUPING = /^(.{8})(.{4})(.{4})(.{4})(.{12})$/;
 
-function uuidFromRandomBytes(): string {
+function mint(): string {
   const bytes = crypto.getRandomValues(new Uint8Array(UUID_BYTES));
   bytes[VERSION_BYTE] = ((bytes[VERSION_BYTE] ?? 0) & VERSION_MASK) | VERSION_FOUR;
   bytes[VARIANT_BYTE] = ((bytes[VARIANT_BYTE] ?? 0) & VARIANT_MASK) | VARIANT_RFC;
-  const hex = Array.from(bytes, (byte) => byte.toString(HEX_RADIX).padStart(HEX_BYTE_WIDTH, '0'));
-  const text = hex.join('');
-  let offset = 0;
-  return UUID_GROUPS.map((length) => {
-    const group = text.slice(offset, offset + length);
-    offset += length;
-    return group;
-  }).join('-');
+  return Array.from(bytes, (byte) => byte.toString(HEX_RADIX).padStart(HEX_BYTE_WIDTH, '0'))
+    .join('')
+    .replace(UUID_GROUPING, '$1-$2-$3-$4-$5');
 }
 
-function mint(): string | null {
-  try {
-    return typeof crypto.randomUUID === 'function' ? crypto.randomUUID() : uuidFromRandomBytes();
-  } catch {
-    try {
-      return uuidFromRandomBytes();
-    } catch {
-      return null;
-    }
-  }
-}
-
-export function conversationIdForAsk(): string | null {
+export function conversationIdForAsk(): string {
   const existing = current();
   if (existing) return existing.id;
   const id = mint();
-  if (id !== null) write({ id, questions: 0, requestIds: [] });
+  write({ id, questions: 0, requestIds: [] });
   return id;
 }
 
@@ -134,14 +113,33 @@ export function endConversation(): void {
   write(null);
 }
 
+export function holdForget(): () => void {
+  forgetsHeld += 1;
+  let released = false;
+  return () => {
+    if (released) return;
+    released = true;
+    forgetsHeld -= 1;
+  };
+}
+
+export function forgetInFlight(): boolean {
+  return forgetsHeld > 0;
+}
+
 export async function forgetWithConversation(
   requestId: string,
 ): Promise<{ result: ForgetResult; endedConversation: boolean }> {
-  const member = inConversation(requestId);
-  const result = await forgetRequest(requestId);
-  const endedConversation = member && wasForgotten(result);
-  if (endedConversation) endConversation();
-  return { result, endedConversation };
+  const release = holdForget();
+  try {
+    const member = inConversation(requestId);
+    const result = await forgetRequest(requestId);
+    const endedConversation = member && wasForgotten(result);
+    if (endedConversation) endConversation();
+    return { result, endedConversation };
+  } finally {
+    release();
+  }
 }
 
 function subscribe(listener: () => void): () => void {

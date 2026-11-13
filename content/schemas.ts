@@ -689,6 +689,8 @@ export const ShellUiSchema = z.object({
   forgetEmailPrefix: z.string().min(1),
   forgetOffline: z.string().min(1),
   forgetOfflineHint: z.string().min(1),
+  forgetTimedOut: z.string().min(1),
+  forgetTimedOutHint: z.string().min(1),
   forgetRetry: z.string().min(1),
   forgetRetryLabel: z.string().min(1),
   forgetWaitNotice: z.string().includes('{left}'),

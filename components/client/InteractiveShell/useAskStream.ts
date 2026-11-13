@@ -212,9 +212,7 @@ export function useAskStream({
         const response = await fetch(ASK_ENDPOINT, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', [ASK_LOCALE_HEADER]: locale },
-          body: JSON.stringify(
-            conversationId === null ? { question, locale } : { question, locale, conversationId },
-          ),
+          body: JSON.stringify({ question, locale, conversationId }),
           signal: controller.signal,
         });
         if (settled) {
@@ -225,7 +223,7 @@ export function useAskStream({
         if (requestId) addRef(requestId);
         if (requestId && response.ok) {
           logged = true;
-          if (conversationId !== null) recordConversationRequest(conversationId, requestId);
+          recordConversationRequest(conversationId, requestId);
         }
         if (!response.ok) {
           const data = (await response.json().catch(() => null)) as {

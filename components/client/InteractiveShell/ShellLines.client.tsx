@@ -7,6 +7,7 @@ import { asciiBar } from '@/lib/ascii-bar';
 import { MS_PER_SECOND } from '@/lib/time';
 import { ConversationReceipt } from './ConversationReceipt.client';
 import { formatRemaining, type Line, type LineKind } from './useAskStream';
+import { useElapsedSeconds } from './useElapsed.client';
 
 const KIND_CLASS: Record<LineKind, string> = {
   [ShellLineKind.Prompt]: 'shell-line-prompt',
@@ -18,31 +19,19 @@ const KIND_CLASS: Record<LineKind, string> = {
   [ShellLineKind.Hint]: 'shell-line-hint',
   [ShellLineKind.RateLimit]: 'shell-line-ratelimit',
 };
-const THINKING_TICK_MS = 100;
 const COUNTDOWN_TICK_MS = MS_PER_SECOND;
 
 export function ThinkingLine({ template }: { template: string }) {
-  const [elapsedMs, setElapsedMs] = useState(0);
-  useEffect(() => {
-    const startedAt = Date.now();
-    const id = setInterval(() => setElapsedMs(Date.now() - startedAt), THINKING_TICK_MS);
-    return () => clearInterval(id);
-  }, []);
-  return fillShellState(template, { seconds: (elapsedMs / MS_PER_SECOND).toFixed(1) });
+  return fillShellState(template, { seconds: useElapsedSeconds() });
 }
 
 export function StopElapsed({ template }: { template: string }) {
-  const [elapsedMs, setElapsedMs] = useState(0);
-  useEffect(() => {
-    const startedAt = Date.now();
-    const id = setInterval(() => setElapsedMs(Date.now() - startedAt), THINKING_TICK_MS);
-    return () => clearInterval(id);
-  }, []);
+  const seconds = useElapsedSeconds();
   const [before, after = ''] = template.split(SHELL_STATE_TOKEN.seconds);
   return (
     <>
       {before}
-      <span className="shell-stop-time">{(elapsedMs / MS_PER_SECOND).toFixed(1)}</span>
+      <span className="shell-stop-time">{seconds}</span>
       {after}
     </>
   );

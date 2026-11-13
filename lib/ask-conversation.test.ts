@@ -156,3 +156,50 @@ describe('the conversation id outside a secure context', () => {
     expect(conversation.conversationQuestions()).toBe(2);
   });
 });
+
+describe('the conversation id source', () => {
+  beforeEach(() => {
+    window.sessionStorage.clear();
+  });
+  afterEach(() => {
+    vi.restoreAllMocks();
+    vi.unstubAllGlobals();
+  });
+
+  it('builds the id from crypto.getRandomValues even when randomUUID exists', async () => {
+    const randomUUID = vi.fn(() => 'not-the-source');
+    vi.stubGlobal('crypto', {
+      randomUUID,
+      getRandomValues: (bytes: Uint8Array) => {
+        bytes.forEach((_, index) => {
+          bytes[index] = index;
+        });
+        return bytes;
+      },
+    });
+    const { conversation } = await load();
+    expect(conversation.conversationIdForAsk()).toBe('00010203-0405-4607-8809-0a0b0c0d0e0f');
+    expect(randomUUID).not.toHaveBeenCalled();
+  });
+
+  it('mints a lower-case v4 uuid when randomUUID is undefined', async () => {
+    vi.stubGlobal('crypto', { getRandomValues: crypto.getRandomValues.bind(crypto) });
+    const { conversation } = await load();
+    expect(conversation.conversationIdForAsk()).toMatch(UUID);
+  });
+
+  it('shares the request ref length limit with the ref store', async () => {
+    const { conversation, refs } = await load();
+    const id = conversation.conversationIdForAsk() ?? '';
+    const longest = 'r'.repeat(128);
+    const tooLong = 'r'.repeat(129);
+    refs.addRef(tooLong);
+    conversation.recordConversationRequest(id, tooLong);
+    expect(refs.listRefs()).toEqual([]);
+    expect(conversation.conversationQuestions()).toBe(0);
+    refs.addRef(longest);
+    conversation.recordConversationRequest(id, longest);
+    expect(refs.listRefs()).toEqual([longest]);
+    expect(conversation.inConversation(longest)).toBe(true);
+  });
+});

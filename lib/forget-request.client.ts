@@ -7,6 +7,7 @@ import { parseRetryAfter, RETRY_AFTER_HEADER } from '@/lib/stream-protocol';
 export const FORGET_ENDPOINT = '/api/log/forget';
 export const FORGET_TIMEOUT_MS = 20_000;
 
+const ABORT_ERROR_NAME = 'AbortError';
 const STATUS = { ok: 200, rateLimited: 429, unavailable: 503 } as const;
 
 export const FORGET_OUTCOME = {
@@ -14,6 +15,7 @@ export const FORGET_OUTCOME = {
   RateLimited: 'rate-limited',
   Unavailable: 'unavailable',
   Offline: 'offline',
+  TimedOut: 'timed-out',
   Failed: 'failed',
 } as const;
 
@@ -22,6 +24,7 @@ export type ForgetResult =
   | { outcome: typeof FORGET_OUTCOME.RateLimited; retryAfter: number | null }
   | { outcome: typeof FORGET_OUTCOME.Unavailable }
   | { outcome: typeof FORGET_OUTCOME.Offline }
+  | { outcome: typeof FORGET_OUTCOME.TimedOut }
   | { outcome: typeof FORGET_OUTCOME.Failed };
 
 export type ForgetBatch = {
@@ -50,8 +53,9 @@ export async function forgetRequest(id: string): Promise<ForgetResult> {
     } else if (response.status === STATUS.unavailable) {
       result = { outcome: FORGET_OUTCOME.Unavailable };
     } else result = { outcome: FORGET_OUTCOME.Failed };
-  } catch {
-    result = { outcome: FORGET_OUTCOME.Offline };
+  } catch (error) {
+    const timedOut = error instanceof DOMException && error.name === ABORT_ERROR_NAME;
+    result = { outcome: timedOut ? FORGET_OUTCOME.TimedOut : FORGET_OUTCOME.Offline };
   }
   if (wasForgotten(result)) removeRef(id);
   return result;

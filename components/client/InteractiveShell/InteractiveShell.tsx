@@ -11,6 +11,7 @@ import {
   shellStates,
 } from '@/content/shell-ui';
 import type { SiteLocale } from '@/content/site-locale';
+import { forgetInFlight } from '@/lib/ask-conversation.client';
 import { SHELL_COMMAND_EVENT } from '@/lib/events';
 import { useBreakpoint } from '@/lib/use-breakpoint.client';
 import { TerminalChromeBar } from '../TerminalChromeBar';
@@ -106,10 +107,9 @@ export function InteractiveShell({
           },
         ]),
       );
-      announce(ui.conversationForgotten);
       focusInput();
     },
-    [announce, focusInput, nextId, ui],
+    [focusInput, nextId, ui],
   );
   const runPrivacy = usePrivacyCommands({
     ui,
@@ -141,6 +141,17 @@ export function InteractiveShell({
       }
       const command = raw.trim().replace(/\s+/g, ' ');
       if (!command) return;
+      const key = command.toLowerCase();
+      const privacy = parsePrivacyCommand(key);
+      const explicitQuestion = key.startsWith(ShellCommand.AskPrefix)
+        ? command.slice(ShellCommand.AskPrefix.length).trim()
+        : null;
+      const local =
+        !explicitQuestion && SHELL_RESPONSES.find((entry) => entry.commands.includes(key));
+      if (key !== ShellCommand.Clear && !privacy && !local && forgetInFlight()) {
+        announce(ui.forgetting);
+        return;
+      }
       followOutputRef.current = true;
       commandHistory.record(command);
       window.dispatchEvent(new CustomEvent(SHELL_COMMAND_EVENT));
@@ -152,23 +163,16 @@ export function InteractiveShell({
       );
       promptEditedRef.current = false;
       setInput('');
-      const key = command.toLowerCase();
       if (key === ShellCommand.Clear) {
         setHistory(initialLines());
         announce(ui.cleared);
         focusInput();
         return;
       }
-      const privacy = parsePrivacyCommand(key);
       if (privacy) {
         void runPrivacy(privacy);
         return;
       }
-      const explicitQuestion = key.startsWith(ShellCommand.AskPrefix)
-        ? command.slice(ShellCommand.AskPrefix.length).trim()
-        : null;
-      const local =
-        !explicitQuestion && SHELL_RESPONSES.find((entry) => entry.commands.includes(key));
       if (local) {
         setHistory((lines) =>
           bounded([

@@ -6,6 +6,7 @@ import { fillShellState, ShellLineKind, type ShellUi } from '@/content/shell-ui'
 import {
   conversationQuestions,
   forgetWithConversation,
+  holdForget,
   inConversation,
   latestConversationRequest,
 } from '@/lib/ask-conversation.client';
@@ -115,6 +116,7 @@ export function usePrivacyCommands({
         return finish();
       }
       forgetBusyRef.current = true;
+      const releaseForget = holdForget();
       announce(ui.forgetting);
       const questions = conversationQuestions();
       let endedConversation = false;
@@ -146,6 +148,7 @@ export function usePrivacyCommands({
         }
       } finally {
         forgetBusyRef.current = false;
+        releaseForget();
       }
       if (endedConversation) {
         onConversationForgotten(questions);

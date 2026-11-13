@@ -1,13 +1,17 @@
 'use client';
 
-import { type KeyboardEvent, useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
+import {
+  type KeyboardEvent,
+  type MouseEvent,
+  useEffect,
+  useId,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from 'react';
 import type { ShellStates } from '@/content/shell-states.schema';
 import { fillShellState, type ShellUi } from '@/content/shell-ui';
-import {
-  endConversation,
-  forgetWithConversation,
-  useConversationQuestions,
-} from '@/lib/ask-conversation.client';
+import { forgetWithConversation, useConversationQuestions } from '@/lib/ask-conversation.client';
 import { FORGET_OUTCOME, wasForgotten } from '@/lib/forget-request.client';
 import { MS_PER_MINUTE, MS_PER_SECOND, SECONDS_PER_MINUTE } from '@/lib/time';
 import { COPY_STATUS, useCopyFeedback } from '@/lib/use-copy-feedback.client';
@@ -19,6 +23,7 @@ const RECEIPT_VIEW = {
   Pending: 'pending',
   Unavailable: 'unavailable',
   Offline: 'offline',
+  TimedOut: 'timed-out',
   Failed: 'failed',
   Waiting: 'waiting',
 } as const;
@@ -28,6 +33,7 @@ type ReceiptView =
   | { kind: typeof RECEIPT_VIEW.Waiting; until: number };
 
 const FALLBACK_WAIT_SECONDS = SECONDS_PER_MINUTE;
+const CONFIRM_ARM_MS = 500;
 const FOCUS_TARGET = { Primary: 'primary', Secondary: 'secondary' } as const;
 type FocusTarget = (typeof FOCUS_TARGET)[keyof typeof FOCUS_TARGET];
 
@@ -52,6 +58,7 @@ function isError(view: ReceiptView): boolean {
   return (
     view.kind === RECEIPT_VIEW.Unavailable ||
     view.kind === RECEIPT_VIEW.Offline ||
+    view.kind === RECEIPT_VIEW.TimedOut ||
     view.kind === RECEIPT_VIEW.Failed
   );
 }
@@ -80,11 +87,20 @@ export function ConversationReceipt({
   const idRef = useRef<HTMLElement>(null);
   const rootRef = useRef<HTMLSpanElement>(null);
   const inFlight = useRef(false);
+  const mountedRef = useRef(true);
+  const confirmShownAt = useRef(0);
   const focusNext = useRef<FocusTarget | null>(null);
   const messageId = useId();
 
   const counted = (one: string, many: string) =>
     questions === 1 ? one : fillShellState(many, { count: String(questions) });
+
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
 
   useEffect(() => {
     const target = focusNext.current;
@@ -130,13 +146,14 @@ export function ConversationReceipt({
     if (inFlight.current) return;
     inFlight.current = true;
     setView({ kind: RECEIPT_VIEW.Pending });
+    announce(ui.forgetting);
     const { result } = await forgetWithConversation(requestId);
     inFlight.current = false;
     if (wasForgotten(result)) {
-      endConversation();
       onForgotten(questions);
       return;
     }
+    if (!mountedRef.current) return;
     if (result.outcome === FORGET_OUTCOME.RateLimited) {
       const seconds = result.retryAfter ?? FALLBACK_WAIT_SECONDS;
       const until = Date.now() + seconds * MS_PER_SECOND;
@@ -151,6 +168,7 @@ export function ConversationReceipt({
     }
     if (result.outcome === FORGET_OUTCOME.Unavailable) setView({ kind: RECEIPT_VIEW.Unavailable });
     else if (result.outcome === FORGET_OUTCOME.Offline) setView({ kind: RECEIPT_VIEW.Offline });
+    else if (result.outcome === FORGET_OUTCOME.TimedOut) setView({ kind: RECEIPT_VIEW.TimedOut });
     else setView({ kind: RECEIPT_VIEW.Failed });
   }
 
@@ -189,13 +207,16 @@ export function ConversationReceipt({
     void copyId();
   }
 
-  function onSecondary() {
+  function onSecondary(event: MouseEvent<HTMLButtonElement>) {
     if (forgetBlocked) return;
     if (view.kind === RECEIPT_VIEW.Idle) {
       focusNext.current = FOCUS_TARGET.Primary;
+      confirmShownAt.current = Date.now();
       setView({ kind: RECEIPT_VIEW.Confirm });
       return;
     }
+    const pointerClick = event.detail > 0;
+    if (confirming && pointerClick && Date.now() - confirmShownAt.current < CONFIRM_ARM_MS) return;
     void runForget();
   }
 
@@ -253,7 +274,13 @@ export function ConversationReceipt({
       const errorCopy: Record<string, string> = {
         [RECEIPT_VIEW.Unavailable]: ui.forgetUnavailable,
         [RECEIPT_VIEW.Offline]: ui.forgetOffline,
+        [RECEIPT_VIEW.TimedOut]: ui.forgetTimedOut,
       };
+      const errorHint: Record<string, string> = {
+        [RECEIPT_VIEW.Offline]: ui.forgetOfflineHint,
+        [RECEIPT_VIEW.TimedOut]: ui.forgetTimedOutHint,
+      };
+      const hint = errorHint[view.kind];
       const text = errorCopy[view.kind] ?? ui.forgetFailed;
       return (
         <>
@@ -266,11 +293,7 @@ export function ConversationReceipt({
           >
             {text}
           </span>
-          {view.kind === RECEIPT_VIEW.Offline ? (
-            <span className="shell-receipt-hint">{ui.forgetOfflineHint}</span>
-          ) : (
-            emailFallback
-          )}
+          {hint === undefined ? emailFallback : <span className="shell-receipt-hint">{hint}</span>}
         </>
       );
     }
