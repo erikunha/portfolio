@@ -9,7 +9,7 @@ flowchart TD
     write["code written"] --> c1["pre-commit: Biome + staged gitleaks"]
     c1 --> c2["commit-msg: commitlint (scope mandatory)"]
     c2 --> p1["pre-push: no direct main"]
-    p1 --> p2["pre-push: branch name <type>/<desc>"]
+    p1 --> p2["pre-push: branch name #lt;type#gt;/#lt;desc#gt;"]
     p2 --> p5["pre-push: pnpm verify"]
     p5 --> r1["pre-PR: ci:predict (docs-only: ci:local)"]
     r1 --> r2["pre-PR: bundle + route-JS gates, changed e2e and visual specs (inside ci:predict)"]

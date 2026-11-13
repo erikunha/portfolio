@@ -224,7 +224,7 @@ sequenceDiagram
     participant KV as Upstash Redis
 
     U->>U: parseStreamChunk once per chunk -> rAF-coalesced setStreamingText (React state owned by InteractiveShell)
-    R->>KV: after(): settleBudget(refund) + Layer-2 audit + ask-log (redact, then cut - fail-quiet) + guard counters
+    R->>KV: after(): settleBudget(refund) + Layer-2 audit + ask-log (redact, then cut - fail-quiet) + request key added to ask:conv:{id} (same MULTI as the log write) + guard counters
     U->>U: finalize() -> commit answer (or error line) into history
 ```
 

@@ -34,25 +34,19 @@ belong there too; the tracked files describe the repository only. Symlinks need 
 
 Each skill is self-contained: it names no other skill, agent or command, and no config path. Frontmatter
 uses the Agent Skills keys (`name`, `description`, `license`, `compatibility`, `metadata`,
-`allowed-tools`). The two user-only skills add `disable-model-invocation: true`, a Claude Code key
+`allowed-tools`). The user-only skill (`semgrep`) adds `disable-model-invocation: true`, a Claude Code key
 that other consumers of the standard, such as claude.ai uploads, may reject; the Codex equivalent
 is `agents/openai.yaml` with `policy.allow_implicit_invocation: false`. A guard test keeps the two in step.
 
 ## Skill dispatch
 
-A skill is a method: it holds the checks, the traps and the order for one surface. The review
-orchestrator discovers the skills the current session can load, matches them to the material
-domains of the diff by their declared trigger, and records every skill it considered.
+A skill is a method: it holds the checks, the traps and the order for one surface. A review reads
+`REVIEW.md` and `AGENTS.md` and runs every repository skill whose trigger matches the diff: the
+trigger table in `AGENTS.md` (Skill dispatch) maps a surface to a skill.
 
-Two sources, with different weight. The project skills above are mandatory when their trigger
-matches the diff: the trigger table in `AGENTS.md` maps a surface to a skill. The developer's own
-skills are used when they fit the same surface, and their absence costs nothing, so the procedure
-runs unchanged on a machine that has none.
-
-The discovery is by directory, never by a written path: the project skills are the directories
-beside the orchestrator's own, and the session skills are whatever the runtime advertises or the
-per-user skill directories that exist on the machine. A skill that was never looked at does not
-belong in the record; a skill that was looked at and stayed out says why.
+The developer's own skills are used when they fit the same surface, and their absence costs
+nothing, so the procedure runs unchanged on a machine that has none. A skill that was never looked
+at does not belong in the record; a skill that was looked at and stayed out says why.
 
 ## Agent and hooks
 
