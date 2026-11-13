@@ -22,6 +22,7 @@ export const AI_PATHS = [
   'content/ask-errors.ts',
   'content/community.ts',
   'content/company-link.ts',
+  'content/errors.constants.ts',
   'content/fact-separator.ts',
   'content/reading-paths.ts',
   'content/schemas.ts',
