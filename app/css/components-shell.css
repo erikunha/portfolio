@@ -201,18 +201,11 @@
     color: var(--color-primary-400);
   }
 
-  .shell-stop {
-    position: absolute;
-    inset-block: 0;
-    inset-inline-end: 0;
-  }
-
-  .shell-input-wrap[data-busy] .shell-input {
-    padding-inline-end: calc(var(--spacing-target) * 2);
-  }
-
-  .shell-input-wrap[data-busy] .shell-placeholder {
-    inset-inline-end: calc(var(--spacing-target) * 2);
+  .shell-stop-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--spacing-2);
   }
 
   .shell-ai-notice,

@@ -139,7 +139,6 @@ export function ShellLine(props: ShellLineProps) {
         <span className="shell-stream-meta">
           <ThinkingLine template={states.thinkingElapsed} />
         </span>
-        <span className="shell-stream-meta shell-esc-hint">{states.escStop}</span>
       </span>
     );
   }

@@ -220,11 +220,22 @@ export function InteractiveShell({
             </span>
           </span>
         )}
-        {streamingText !== null && (
-          <span className="shell-line shell-stream-meta shell-esc-hint" aria-hidden="true">
-            {states.escStop}
+        {busy ? (
+          <span className="shell-line shell-stop-row">
+            <span className="shell-stream-meta shell-esc-hint" aria-hidden="true">
+              {states.escStop}
+            </span>
+            <button
+              ref={stopRef}
+              className="shell-control shell-stop"
+              type="button"
+              aria-label={ui.stopLabel}
+              onClick={stopStream}
+            >
+              {ui.stop}
+            </button>
           </span>
-        )}
+        ) : null}
       </div>
       <form
         className="shell-form"
@@ -239,7 +250,7 @@ export function InteractiveShell({
         }}
       >
         <span className="shell-prompt">{ui.prompt}</span>
-        <div className="shell-input-wrap" data-busy={busy || undefined}>
+        <div className="shell-input-wrap">
           <input
             ref={inputRef}
             className="shell-input"
@@ -287,17 +298,6 @@ export function InteractiveShell({
             ) : (
               <AnimatedPlaceholder ui={ui} />
             ))}
-          {busy ? (
-            <button
-              ref={stopRef}
-              className="shell-control shell-stop"
-              type="button"
-              aria-label={ui.stopLabel}
-              onClick={stopStream}
-            >
-              {ui.stop}
-            </button>
-          ) : null}
         </div>
       </form>
       <p id={accuracyId} className="shell-ai-notice">

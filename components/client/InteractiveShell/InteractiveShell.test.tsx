@@ -417,7 +417,7 @@ describe('InteractiveShell r106 controls', () => {
     expect(container.textContent).not.toContain('late answer');
   });
 
-  it('puts the stop control in the input row, so no extra row appears while thinking', async () => {
+  it('puts the stop control in the answer area, so the input row never changes while thinking', async () => {
     vi.stubGlobal(
       'fetch',
       vi.fn(() => new Promise<Response>(() => undefined)),
@@ -430,8 +430,8 @@ describe('InteractiveShell r106 controls', () => {
     await submitQuestion(container, 'question in flight');
 
     const stop = buttonWithText(container, '[STOP]');
-    expect(stop.closest('.shell-form .shell-input-wrap')).not.toBeNull();
-    expect(stop.closest('.shell-input-wrap')?.hasAttribute('data-busy')).toBe(true);
+    expect(stop.closest('[role="log"]')).not.toBeNull();
+    expect(container.querySelector('.shell-form button')).toBeNull();
     expect(rowCount()).toBe(rowsIdle);
   });
 
@@ -1460,7 +1460,7 @@ describe('InteractiveShell stream states', () => {
       );
       const container = await renderShell();
       await submitQuestion(container, 'a question');
-      expect(loadingLine(container)?.textContent).toContain('[ Esc ] stop');
+      expect(container.querySelector('.shell-stop-row')?.textContent).toContain('[ Esc ] stop');
       release();
       await flushMicrotasks();
       await flushFrames();

@@ -113,12 +113,12 @@ describe('ShellLine', () => {
     return mounted.container;
   }
 
-  it('renders a loading line as an aria-hidden thinking indicator with the stop hint', async () => {
+  it('renders a loading line as an aria-hidden thinking indicator, leaving the stop hint to the stop row', async () => {
     const container = await renderLine({ id: 1, kind: ShellLineKind.Loading, text: '' });
     const line = container.querySelector('[data-testid="shell-line-loading"]');
     expect(line?.getAttribute('aria-hidden')).toBe('true');
     expect(line?.textContent).toContain('[ thinking');
-    expect(line?.textContent).toContain(states.escStop);
+    expect(line?.textContent).not.toContain(states.escStop);
   });
 
   it('renders a reference line as the request trailer', async () => {
