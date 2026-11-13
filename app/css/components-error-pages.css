@@ -75,6 +75,13 @@
     }
   }
 
+  @media (max-width: theme(--viewport-below-md)) {
+    .err-main {
+      gap: var(--spacing-4);
+      padding-block-start: var(--spacing-4);
+    }
+  }
+
   @media (min-width: theme(--viewport-md)) {
     .err-main {
       --err-top-chrome: 0px;

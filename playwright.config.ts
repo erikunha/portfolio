@@ -1,7 +1,7 @@
 import { defineConfig, devices, type Project } from 'playwright/test';
 
 const CROSS_BROWSER_SPECS =
-  /tests\/e2e\/(shared-header|cross-cutting|motion-switch|observability-smoke|design-system-pages|links|contact-delivery|contact-timezone|guitar-mobile|guitar-eq|mixer-mobile|reading-views|cv-layout|error-states|no-js|mobile-reflow|hero-layout|section-surfaces|route-surfaces|type-scale|streamed-settle|shell-input-states|shell-hydration|refs-privacy|safe-zone|section-visual-order|error-pages-alignment|links-chrome-alignment|command-wrap|career-wrap|dock-labels|pt-hero-boot|palette-discipline|leading-integrity)\.spec\.ts$/;
+  /tests\/e2e\/(shared-header|cross-cutting|motion-switch|observability-smoke|design-system-pages|links|contact-delivery|contact-timezone|guitar-mobile|guitar-eq|mixer-mobile|reading-views|cv-layout|error-states|error-pages-fit|no-js|mobile-reflow|hero-layout|section-surfaces|route-surfaces|type-scale|streamed-settle|shell-input-states|shell-hydration|refs-privacy|safe-zone|section-visual-order|error-pages-alignment|links-chrome-alignment|command-wrap|career-wrap|dock-labels|pt-hero-boot|palette-discipline|leading-integrity)\.spec\.ts$/;
 const VISUAL_SPEC = /tests\/visual\/visual\.spec\.ts$/;
 
 const DEFAULT_BASE_URL = 'http://localhost:3000';
