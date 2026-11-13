@@ -35,7 +35,7 @@ const heroContentFor = (locale: SiteLocale): HeroContent => {
       external: action.href.startsWith(EXTERNAL_PROTOCOL),
     })),
     stats: [
-      { value: '$500B+', label: pt ? 'ativos em fundos' : 'fund assets' },
+      { value: pt ? 'US$ 500B+' : '$500B+', label: pt ? 'ativos em fundos' : 'fund assets' },
       { value: PROFILE_FACT.peakMau, label: pt ? 'MAU e-commerce' : 'e-com MAU' },
       { value: '40s → <1s', label: pt ? 'API de relatórios' : 'reporting API' },
       {
