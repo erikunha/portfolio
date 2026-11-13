@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { NOT_FOUND_PATH_TOKEN } from './errors.constants';
 import { FACT_SEPARATOR } from './fact-separator';
 import { SECTION_ICONS } from './section-registry';
 
@@ -796,7 +797,6 @@ export const FooterContentSchema = z
   });
 export type FooterContent = z.infer<typeof FooterContentSchema>;
 
-export const NOT_FOUND_PATH_TOKEN = '{path}';
 const NotFoundTemplateSchema = z
   .string()
   .min(1)

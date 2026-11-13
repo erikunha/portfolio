@@ -3,7 +3,8 @@
 import { usePathname } from 'next/navigation';
 import { type ReactNode, Suspense, useEffect, useRef, useState } from 'react';
 import { PageMain } from '@/components/PageMain';
-import { type ErrorsContent, NOT_FOUND_PATH_TOKEN } from '@/content/schemas';
+import { NOT_FOUND_PATH_TOKEN } from '@/content/errors.constants';
+import type { ErrorsContent } from '@/content/schemas';
 import { CmdLine } from '@/design-system';
 import { reportClientError } from '@/lib/report-client-error.client';
 import { COPY_STATUS, useCopyFeedback } from '@/lib/use-copy-feedback.client';

@@ -1,6 +1,7 @@
+import { NOT_FOUND_PATH_TOKEN } from './errors.constants';
 import { errorsClientContent } from './errors-client';
 import { LINKS_PATH } from './links.constants';
-import { type ErrorsContent, NOT_FOUND_PATH_TOKEN } from './schemas';
+import type { ErrorsContent } from './schemas';
 import { localizedSectionLabel, SECTION_ID, sectionPath } from './section-registry';
 import { localizedPath, SITE_LOCALE, type SiteLocale } from './site-locale';
 

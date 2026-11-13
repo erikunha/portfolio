@@ -357,6 +357,7 @@ content/footer.ts                     # footer cards, site map and shutdown log 
 content/links.ts                      # /links identity, channels, playlists and copy
 content/links-ui.ts                   # /links interface labels
 content/links.constants.ts            # /links paths per locale
+content/errors.constants.ts           # zod-free 404 path token shared by the copy and the client
 content/offline.ts                    # offline notice copy
 content/copy-button.ts                # copy button feedback states per locale
 content/seo.ts                        # Person JSON-LD, site name and keywords
