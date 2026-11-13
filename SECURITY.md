@@ -27,7 +27,7 @@ Out of scope: findings that require a compromised maintainer machine or account,
 The repository defends in depth, and most of these are enforced in CI on every change:
 - **Secret scanning**: a checksum-pinned `gitleaks` runs as a pre-commit hook and in CI; a fixture test proves the scanner actually fires.
 - **Static analysis**: Semgrep and GitHub CodeQL run in CI.
-- **Dependency review**: a dependency-review gate runs on pull requests; dependencies are exact- or caret-pinned and installed with a frozen lockfile in CI.
+- **Dependency review**: a dependency-review gate runs on pull requests; dependencies use caret or tilde ranges (tilde is mandatory for the listed framework packages, and exact pins are rejected for stable versions by `scripts/check-dep-pinning.mjs`) and install with a frozen lockfile in CI.
 - **Content Security Policy** and security headers are set at the edge; the API boundary enforces rate limiting and input validation (Zod) before any handler logic runs.
 - **No secrets in the repo.** All credentials are environment variables provided at deploy time.
 
