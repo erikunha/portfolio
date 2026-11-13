@@ -27,7 +27,7 @@
 ```
 check (Biome, warnings fail) -> typecheck -> validate-content -> check:client-naming
   -> check:dep-pinning -> check:dependency-vetting -> check:harness-size -> check:component-docs
-  -> check:section-order -> check:doc-drift -> check:detect-changes-paths -> check:test-integrity
+  -> check:section-order -> check:doc-drift -> check:no-dashes -> check:detect-changes-paths -> check:test-integrity
   -> lint:contrast -> lint:css-tokens -> test:coverage (Vitest with the coverage thresholds)
 ```
 
@@ -48,6 +48,7 @@ Two `quality-fast` steps stay CI-only: the branch-name lint (the pre-push hook e
 | `check:section-order`  | no `#sec-*` rule reorders a section with CSS `order`, and every `#sec-*` selector matches a rendered id |
 | `check:detect-changes-paths` | every git-tracked root file and `scripts/` file is listed in `AI_PATHS`, `APP_PATHS`, `UI_PATHS` or `IGNORED_PATHS`, so a new file cannot skip a gated job |
 | `check:doc-drift`      | `ARCHITECTURE.md` directory-tree paths exist on disk                                             |
+| `check:no-dashes`      | no tracked text file holds an em or en dash, apart from the `next dev` block in `AGENTS.md` |
 | `lint:css-tokens`      | no raw hex or color function (`rgb`, `hsl`, `hwb`, `lab`, `lch`, `oklab`, `oklch`, `color()`) outside `app/css/theme.css` and the named allowlist, in `app/css` and `*-tokens.ts`; no literal `z-index` or `--z-*` declaration outside the scale in `theme.css` (stylesheets and `*.tsx`); no focus rule that writes its own ring instead of `--focus-ring` on `:focus-visible` |
 | `lint:contrast`        | documented text/surface pairs meet WCAG AA                                                       |
 | `check:component-docs` | each DS component is documented                                                                  |
@@ -172,7 +173,7 @@ The trigger fans out to change detection and to the always-on jobs:
 ```mermaid
 flowchart TD
     pr["PR / push main / workflow_dispatch"] --> dc["detect-changes (app?, ai?, ui?)"]
-    pr --> qf["quality-fast: Biome, branch/commit lint, content, naming, pinning, vetting, harness, component docs, doc-drift, section order, path filters, test integrity, contrast, CSS tokens"]
+    pr --> qf["quality-fast: Biome, branch/commit lint, content, naming, pinning, vetting, harness, component docs, doc-drift, no dashes, section order, path filters, test integrity, contrast, CSS tokens"]
     pr --> tc["typecheck"]
     pr --> t["test (audit, Stryker canary, Vitest + coverage)"]
     pr --> dr["dependency-review (PR)"]
@@ -224,7 +225,7 @@ flowchart TD
 
 | Job | Runs when | What it does |
 | --- | --- | --- |
-| `quality-fast` | always | branch-name lint, commit-message lint (PR), `biome ci --error-on-warnings`, `validate-content`, client-naming, dependency-pinning, dependency-vetting, harness-size, component-docs, doc-drift, section-order, detect-changes-paths, test-integrity, contrast, CSS-token gates |
+| `quality-fast` | always | branch-name lint, commit-message lint (PR), `biome ci --error-on-warnings`, `validate-content`, client-naming, dependency-pinning, dependency-vetting, harness-size, component-docs, doc-drift, no-dashes, section-order, detect-changes-paths, test-integrity, contrast, CSS-token gates |
 | `typecheck` | always | `pnpm typecheck` with a cached `tsconfig.tsbuildinfo` |
 | `test` | always | `pnpm audit --audit-level=moderate` (always on a push, only when `pnpm-lock.yaml` changed on a PR), the Stryker kill canary (always on a push, only when the mutation runner files changed on a PR), then `pnpm test:coverage` and the coverage artifact |
 | `dependency-review` | PR | blocks high-severity advisories and `GPL-3.0`, `AGPL-3.0` and `GPL-2.0` licenses |

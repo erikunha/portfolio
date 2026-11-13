@@ -801,7 +801,7 @@ Modest but professional:
 ### Pre-push (Husky)
 
 - Branch guard: blocks direct pushes to `main` (all changes must go through a PR) and requires a `<type>/<description>` branch name
-- `pnpm verify`: full verify chain: Biome + TypeScript strict + content validation + client-naming + dep-pinning + dependency-vetting + harness-size + component-docs + section-order + doc-drift + detect-changes-paths + test-integrity + contrast + css-tokens + unit tests with coverage thresholds
+- `pnpm verify`: full verify chain: Biome + TypeScript strict + content validation + client-naming + dep-pinning + dependency-vetting + harness-size + component-docs + section-order + doc-drift + no-dashes + detect-changes-paths + test-integrity + contrast + css-tokens + unit tests with coverage thresholds
 
 ### CI (GitHub Actions)
 
