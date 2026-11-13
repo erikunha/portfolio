@@ -15,6 +15,7 @@ const ALLOWLIST = [
   {
     path: 'AGENTS.md',
     fromLine: '## This is NOT the Next.js you know',
+    toLine: '<!-- END:nextjs-agent-rules -->',
     reason:
       '`next dev` writes and re-adds this block on every run, so removing its dashes only recreates an uncommitted change.',
   },
@@ -34,8 +35,13 @@ function isBinary(buffer) {
   return buffer.subarray(0, BINARY_PROBE_BYTES).includes(NUL);
 }
 
-function allowedFrom(file) {
-  return ALLOWLIST.find((entry) => entry.path === file)?.fromLine;
+function allowanceFor(file) {
+  return ALLOWLIST.find((entry) => entry.path === file);
+}
+
+if (tracked.length === 0) {
+  console.error(`✗ no-dashes: no tracked file found under ${root}, nothing was checked.`);
+  process.exit(1);
 }
 
 const violations = [];
@@ -48,11 +54,14 @@ for (const file of tracked) {
   }
   if (isBinary(buffer)) continue;
   const lines = buffer.toString('utf8').split('\n');
-  const allowedFromLine = allowedFrom(file);
+  const allowance = allowanceFor(file);
   let inAllowedRegion = false;
   lines.forEach((line, index) => {
-    if (allowedFromLine !== undefined && line.startsWith(allowedFromLine)) inAllowedRegion = true;
-    if (inAllowedRegion) return;
+    if (allowance !== undefined && line.startsWith(allowance.fromLine)) inAllowedRegion = true;
+    if (inAllowedRegion) {
+      if (line.startsWith(allowance.toLine)) inAllowedRegion = false;
+      return;
+    }
     if (DASHES.some((dash) => line.includes(dash))) violations.push(`${file}:${index + 1}`);
   });
 }
