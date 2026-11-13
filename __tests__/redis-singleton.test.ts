@@ -12,7 +12,7 @@ vi.mock('@/lib/log', () => ({
   log: { info: vi.fn(), error: vi.fn(), warn: vi.fn(), debug: vi.fn() },
 }));
 
-describe('Redis singleton — lighthouse-scores reuses the shared client', () => {
+describe('Redis singleton: lighthouse-scores reuses the shared client', () => {
   beforeEach(() => {
     vi.resetModules();
     getMock.mockReset();

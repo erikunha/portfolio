@@ -14,7 +14,7 @@ let dir;
 const run = () => spawnSync('node', [SCRIPT], { cwd: dir, encoding: 'utf8' });
 
 // A chunk whose GZIPPED size is `kb`. Incompressible bytes, so gzip cannot shrink them below
-// the payload — the gate measures gzipped bytes, and random data is the only way a fixture
+// the payload, the gate measures gzipped bytes, and random data is the only way a fixture
 // can pin that number instead of hoping the compressor cooperates.
 function writeChunk(name, kb) {
   const target = kb * 1024;
@@ -44,7 +44,7 @@ afterEach(() => {
 });
 
 describe('check-route-js.mjs', () => {
-  it('fails when the manifest is absent — a missing build must never read as a pass', () => {
+  it('fails when the manifest is absent: a missing build must never read as a pass', () => {
     rmSync(join(dir, MANIFEST_REL), { force: true });
     const res = run();
     expect(res.status).not.toBe(0);
@@ -76,7 +76,7 @@ describe('check-route-js.mjs', () => {
     expect(res.stdout).toContain('under 164.2 KB total (32.8 KB of app-owned headroom');
   });
 
-  it('fails a SINGLE route that busts the budget — the intersection definition reported 0.0 KB and OK here', () => {
+  it('fails a SINGLE route that busts the budget: the intersection definition reported 0.0 KB and OK here', () => {
     const framework = writeChunk('framework.js', 132);
     const island = writeChunk('island.js', 50);
     writeManifest([{ route: '/', firstLoadChunkPaths: [framework, island] }]);
@@ -102,7 +102,7 @@ describe('check-route-js.mjs', () => {
     const res = run();
     expect(
       res.status,
-      'a client island moved into the root shell lands on every route. Classifying "on every route" as framework would exempt it from the budget — the exact code the budget exists to constrain.',
+      'a client island moved into the root shell lands on every route. Classifying "on every route" as framework would exempt it from the budget, the exact code the budget exists to constrain.',
     ).not.toBe(0);
     expect(res.stderr).toMatch(/over the 164\.2 KB budget/i);
   });

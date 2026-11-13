@@ -38,7 +38,7 @@ vi.mock('@/lib/log', () => ({
   log: { info: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn() },
 }));
 
-describe('getClientIp — header precedence', () => {
+describe('getClientIp: header precedence', () => {
   beforeEach(() => {
     vi.resetModules();
   });
@@ -74,7 +74,7 @@ describe('getClientIp — header precedence', () => {
   });
 });
 
-describe('getRedis — singleton', () => {
+describe('getRedis: singleton', () => {
   beforeEach(() => {
     vi.resetModules();
   });
@@ -87,7 +87,7 @@ describe('getRedis — singleton', () => {
   });
 });
 
-describe('rate-limit factory getters — configured correctly', () => {
+describe('rate-limit factory getters: configured correctly', () => {
   beforeEach(() => {
     vi.resetModules();
   });

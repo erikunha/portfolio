@@ -76,7 +76,7 @@ describe('skip-to-content link', () => {
     const target = href ? container.querySelector(href) : null;
     expect(
       target,
-      "AppShell's skip link href and PageMain's id must agree — a mismatch silently breaks the keyboard skip link with no other gate catching it",
+      "AppShell's skip link href and PageMain's id must agree, a mismatch silently breaks the keyboard skip link with no other gate catching it",
     ).not.toBeNull();
     expect(target?.tagName).toBe('MAIN');
   });

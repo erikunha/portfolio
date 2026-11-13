@@ -37,7 +37,7 @@ describe('qrMatrix', () => {
     }
   });
 
-  it('leaves no module undecided — a null module renders as a hole', () => {
+  it('leaves no module undecided: a null module renders as a hole', () => {
     const { modules } = qrMatrix(URL_UNDER_TEST);
     for (const row of modules) for (const m of row) expect(typeof m).toBe('boolean');
   });

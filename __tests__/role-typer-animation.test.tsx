@@ -6,7 +6,7 @@ vi.mock('@/lib/motion', () => ({
   readMotion: () => true,
 }));
 
-describe('RoleTyper — animation loop', () => {
+describe('RoleTyper: animation loop', () => {
   let mounted: MountedClient;
 
   beforeEach(() => {
@@ -32,7 +32,7 @@ describe('RoleTyper — animation loop', () => {
     expect(pill).not.toBeNull();
   });
 
-  it('advances the typing loop — pill text grows as timer ticks advance', async () => {
+  it('advances the typing loop: pill text grows as timer ticks advance', async () => {
     const container = await render();
     const pill = container.querySelector('[aria-hidden="true"]');
     await act(async () => {
@@ -118,7 +118,7 @@ describe('RoleTyper — animation loop', () => {
   });
 });
 
-describe('RoleTyper — motion off (no animation)', () => {
+describe('RoleTyper: motion off (no animation)', () => {
   let mounted: MountedClient;
 
   beforeEach(() => {

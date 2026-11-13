@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 
-test.describe('StatTile — behavioral E2E', () => {
+test.describe('StatTile: behavioral E2E', () => {
   test('renders as a definition list (dl > dt + dd)', async ({ page }) => {
     await page.goto('/design-system/components');
     const preview = page.locator('#stat-tile');

@@ -46,7 +46,7 @@ function makePsiResponse(score = 0.99) {
   };
 }
 
-describe('getScores — cache hit', () => {
+describe('getScores: cache hit', () => {
   it.each(['desktop', 'mobile'] as const)(
     'returns unavailable within 3s when the %s Redis read hangs',
     async (strategy) => {
@@ -90,7 +90,7 @@ describe('getScores — cache hit', () => {
   });
 });
 
-describe('getScores — cache miss', () => {
+describe('getScores: cache miss', () => {
   it('fetches from PSI and returns scores', async () => {
     mockGet.mockResolvedValue(null);
     mockSet.mockResolvedValue('OK');
@@ -264,7 +264,7 @@ describe('refreshScores', () => {
   });
 });
 
-describe('refreshScores — error typing', () => {
+describe('refreshScores: error typing', () => {
   afterEach(() => {
     vi.useRealTimers();
   });
@@ -288,7 +288,7 @@ describe('refreshScores — error typing', () => {
   });
 });
 
-describe('PSI fetch timeout — differentiated by path', () => {
+describe('PSI fetch timeout: differentiated by path', () => {
   afterEach(() => {
     vi.restoreAllMocks();
   });
@@ -324,7 +324,7 @@ describe('PSI fetch timeout — differentiated by path', () => {
   });
 });
 
-describe('refreshScores — cron retry', () => {
+describe('refreshScores: cron retry', () => {
   const okResp = () => makePsiResponse(0.99);
   const errResp = (status: number) => ({ ok: false, status, text: async () => 'err' });
   afterEach(() => {
@@ -411,7 +411,7 @@ describe('refreshScores — cron retry', () => {
     __setNowForTest(null);
   });
 
-  it('request path (getScores cache-miss) is single-shot — no retry on 500', async () => {
+  it('request path (getScores cache-miss) is single-shot: no retry on 500', async () => {
     process.env.PSI_API_KEY = 'k';
     mockGet.mockResolvedValue(null);
     mockFetch.mockResolvedValue(errResp(500));

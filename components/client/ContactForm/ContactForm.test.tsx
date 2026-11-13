@@ -578,7 +578,7 @@ const VALID_BODY = {
   message: 'A perfectly long-enough legitimate message',
 };
 
-describe('/api/contact — rate-limit denial path', () => {
+describe('/api/contact: rate-limit denial path', () => {
   beforeEach(() => {
     process.env.RESEND_API_KEY = 'fake-key-for-tests';
     vi.resetModules();
@@ -637,7 +637,7 @@ describe('/api/contact — rate-limit denial path', () => {
   });
 });
 
-describe('contact form — submitting state', () => {
+describe('contact form: submitting state', () => {
   let mounted: MountedClient;
   let resolveFetch: () => void;
 

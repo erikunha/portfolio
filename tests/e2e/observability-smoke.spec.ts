@@ -53,7 +53,7 @@ test.describe('observability smoke', () => {
     });
     const status = res.status();
     if (status === 429) {
-      if (process.env.CI) throw new Error('Rate-limit hit in CI — check window configuration');
+      if (process.env.CI) throw new Error('Rate-limit hit in CI, check window configuration');
       return;
     }
     expect(status).toBe(200);
@@ -71,7 +71,7 @@ test.describe('observability smoke', () => {
     });
     const status = res.status();
     if (status === 429) {
-      if (process.env.CI) throw new Error('Rate-limit hit in CI — check window configuration');
+      if (process.env.CI) throw new Error('Rate-limit hit in CI, check window configuration');
       return;
     }
     expect(status).toBe(400);
