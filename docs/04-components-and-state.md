@@ -4,7 +4,7 @@
 
 ## Component taxonomy
 
-Four directories, four roles. The directory tells you the layer:
+Seven directories, seven roles. The directory tells you the layer:
 
 | Directory                     | Role                            | Ships JS?                                 | Example                                                            |
 | ----------------------------- | ------------------------------- | ----------------------------------------- | ------------------------------------------------------------------ |
@@ -71,7 +71,7 @@ flowchart TD
     navigation --> rail["SectionNavigation (client): menu trigger, drawer focus trap and focus return<br/>Header: title and drawer close control"]
     navigation --> position["PositionMeter (client): decorative scroll progress line, aria-hidden, top from 1024px and right edge below; writes --posf to every data-position-target, the Dock included"]
     navigation --> chrome["Chrome: CRTOverlay(6 layers) · DesktopTopbar · StatusBar · MobileTitleBar · Dock · ToTopButton"]
-    page --> gm["GlobalMotion (mounted by RootShell in both root layouts): MatrixRainLazy (client-only) + TypeReveal"]
+    rootshell["RootShell (RSC)"] --> gm["GlobalMotion (mounted by RootShell in both root layouts): MatrixRainLazy (client-only) + TypeReveal"]
     links["/links and /links/en"] --> tagline["TaglineTyper: localized tagline cycle"]
 ```
 
@@ -100,7 +100,7 @@ Module headers use CSS scroll-driven typing with a stepped text reveal and caret
 
 ### CRT overlay layering
 
-`CRTOverlay.client.tsx` renders 6 fixed, `aria-hidden`, `pointer-events:none` overlay divs, z-stacked in `crt.css` by the `--z-crt-*` steps of the `--z-*` scale in `theme.css`: vignette (1) · scanlines (2) · RGB sub-pixel mask (3) · noise and flicker (4) · scan beam (5). `MatrixRain` sits at `--z-rain` (0), `<main>` at `--z-content` (10). The CRT colors derive from theme tokens (`color-mix` over the palette plus the `--color-crt-phosphor-*` primaries), and the rain reads `--color-rain-head`, `--color-rain-body` and `--rain-tail-alpha` through `readRainPalette`. All of it disables under `body[data-motion="reduce"]`, and freezes during the system-failure overlay (`html.sysfail-on`). `CRTOverlay` also runs the frame governor (`lib/frame-governor.ts`): while `html[data-crt-level]` is above 0, `crt.css` pauses the noise, flicker and beam and the governor steps their clocks (`lib/crt-effect-stepper.ts`); `MatrixRain` reads the same level for its tick interval.
+`CRTOverlay.client.tsx` renders 6 fixed, `aria-hidden`, `pointer-events:none` overlay divs, z-stacked in `crt.css` by the five `--z-crt-*` steps of the `--z-*` scale in `theme.css`, so noise and flicker share step 4: vignette (1) · scanlines (2) · RGB sub-pixel mask (3) · noise and flicker (4) · scan beam (5). `MatrixRain` sits at `--z-rain` (0), `<main>` at `--z-content` (10). The CRT colors derive from theme tokens (`color-mix` over the palette plus the `--color-crt-phosphor-*` primaries), and the rain reads `--color-rain-head`, `--color-rain-body` and `--rain-tail-alpha` through `readRainPalette`. All of it disables under `body[data-motion="reduce"]`, and freezes during the system-failure overlay (`html.sysfail-on`). `CRTOverlay` also runs the frame governor (`lib/frame-governor.ts`): while `html[data-crt-level]` is above 0, `crt.css` pauses the noise, flicker and beam and the governor steps their clocks (`lib/crt-effect-stepper.ts`); `MatrixRain` reads the same level for its tick interval.
 
 ## The design system
 
@@ -136,7 +136,7 @@ Import order (`app/globals.css`): `tailwindcss` → `theme.css` → `base.css` �
 | `print.css`        | `components` | one `@media print` block: ink-on-paper palette overrides on `:root`, hides the shell chrome, CRT layers and rain, drops glows; reading views add their page layout in `components-reading.css` |
 | `forced-colors.css` | `components` | one `@media (forced-colors: active)` block, imported last: hides the CRT overlays and aria-hidden canvases, gives state-carrying controls system-color borders and outlines, and ends with an `!important` block that outranks Tailwind utilities (focus ring, primary and current buttons, pressed toggles, meter fills) |
 
-**Tokens (`@theme`):** three ordinal color ramps (primary/secondary/tertiary, each 50 to 900) plus the status exception (`senary-300` alerts, `senary-500` and `quinary-500` window-chrome dots), with the brand palette mapped onto specific stops: `--color-primary-500: #00ff41` (signal green), `--color-secondary-950: #000000` (surface black), `--color-tertiary-50: #e6ffe6` (body text). Fixed-opacity stops (`-subtle` 40%, `-border` 20%, `-faint` 12%, `-quiet` 10%) are kept as explicit hex (byte-identical, no `color-mix`). **No raw hex outside `theme.css`** - enforced by `lint:css-tokens` (see doc 06/07).
+**Tokens (`@theme`):** three ordinal color ramps (primary and tertiary, each 50 to 900; secondary, 50 to 950) plus the status exception (`senary-300` alerts, `senary-500` and `quinary-500` window-chrome dots), with the brand palette mapped onto specific stops: `--color-primary-500: #00ff41` (signal green), `--color-secondary-950: #000000` (surface black), `--color-tertiary-50: #e6ffe6` (body text). Fixed-opacity stops (`-subtle` 40%, `-border` 20%, `-faint` 12%, `-quiet` 10%) are kept as explicit hex (byte-identical, no `color-mix`). **No raw hex outside `theme.css`** - enforced by `lint:css-tokens` (see doc 06/07).
 
 ## State architecture
 
@@ -179,4 +179,12 @@ Islands fall into two camps, and the split is a deliberate INP strategy:
 
 Keep animation and drag updates off per-character React state. Streaming text is the exception: `InteractiveShell` coalesces React state updates with requestAnimationFrame. See its behavioral tests and doc 09.
 
-Other islands hold ordinary local state: `ContactForm` (a `idle→submitting→success｜queued｜error` status machine in the `useContactSubmit` hook, which owns the field errors, the request error, the receipt and the one-request-at-a-time guard, plus a honeypot, read out through one polite `role="status"` line that says waiting, sending, which fields are marked, or that the send failed; the message field is not local: it lives in `messageStore`, a module-level string store read with `useSyncExternalStore`, so `ContactTimezone` can append a proposed slot without prop drilling and typing re-renders only the form; the form resets the store after a delivered or queued send), `ContactTimezone` (the chosen zone, the proposed line, a boolean `useSyncExternalStore` read of whether that line is still in the message so the confirmation ends on a send or a deletion, and a `useNow` clock that ticks only while the panel is on screen and the tab is visible; the map, overlap and pin layout are memoised on the current minute), `ToTopButton` (`visible` on scroll>400), `StatusBar` and the `Footer.client` uptime counter (interval clocks with `visibilitychange` pause), the `Footer.client` halt clock (visitor time captured once after mount), `RmsButtons` (`Set<string>` toggle group), `CopyButton` (transient "COPIED"), the request-ref store (`lib/request-refs.client.ts`: this tab's request ids in `sessionStorage`, capped, with an in-memory fallback when storage throws, read through `useSyncExternalStore` by the shell `privacy` command and the footer receipt; only answers the server accepted and delivered or queued contact messages are recorded, and a confirmed forget removes the id).
+Other islands hold ordinary local state.
+
+- `ContactForm` runs an `idle→submitting→success｜queued｜error` status machine in the `useContactSubmit` hook. The hook owns the field errors, the request error, the receipt, the one-request-at-a-time guard and a honeypot. One polite `role="status"` line says waiting, sending, which fields are marked, or that the send failed.
+- The message field is not local. It lives in `messageStore`, a module-level string store read with `useSyncExternalStore`, so `ContactTimezone` can append a proposed slot without prop drilling and typing re-renders only the form. The form resets the store after a delivered or queued send.
+- `ContactTimezone` holds the chosen zone, the proposed line, and a boolean `useSyncExternalStore` read of whether that line is still in the message, so the confirmation ends on a send or a deletion. A `useNow` clock ticks only while the panel is on screen and the tab is visible. The map, overlap and pin layout are memoised on the current minute.
+- `ToTopButton` keeps `visible` on scroll>400.
+- `StatusBar` and the `Footer.client` uptime counter are interval clocks that pause on `visibilitychange`. The `Footer.client` halt clock captures visitor time once after mount.
+- `RmsButtons` is a `Set<string>` toggle group. `CopyButton` shows a transient "COPIED".
+- The request-ref store (`lib/request-refs.client.ts`) keeps this tab's request ids in `sessionStorage`, capped, with an in-memory fallback when storage throws. The shell `privacy` command and the footer receipt read it through `useSyncExternalStore`. It records only answers the server accepted and delivered or queued contact messages, and a confirmed forget removes the id.

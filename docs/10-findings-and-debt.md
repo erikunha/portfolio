@@ -44,7 +44,7 @@ The home and design-system performance gates therefore do not establish latency 
 
 ## Reference docs have few gates
 
-`check:doc-drift` checks the marked directory tree in `ARCHITECTURE.md`. Among the files in `docs/`, only the component counts in `04-components-and-state.md` (`__tests__/design-system-doc-counts.test.ts`) and the scroll-region list in `08-performance-and-accessibility.md` (`__tests__/scroll-regions.test.tsx`) are compared with the code. Every other claim in these documents is checked by review.
+`check:doc-drift` checks the marked directory tree in `ARCHITECTURE.md`. Among the files in `docs/`, four checks compare claims with the code: the component counts in `04-components-and-state.md` (`__tests__/design-system-doc-counts.test.ts`), the scroll-region list in `08-performance-and-accessibility.md` (`__tests__/scroll-regions.test.tsx`), the section and deferred-module counts in `docs/README.md` and `ARCHITECTURE.md` (`__tests__/docs-section-counts.test.ts`), and the design tokens the docs name (`__tests__/meta/docs-name-real-tokens.test.ts`). Every other claim in these documents is checked by review.
 
 ## Maintenance map
 

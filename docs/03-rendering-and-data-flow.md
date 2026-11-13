@@ -54,7 +54,7 @@ flowchart TD
     layoutPt --> linksPt["/links -> localized RSC + cached YouTube feed"]
     layoutPt --> errorsPt["error.tsx -> route error recovery"]
     layoutPt --> nfPt["unmatched /pt address (404) -> app/(pt)/pt/[...missing]/not-found.tsx"]
-    shell -.serves.-> api
+    shell["components/RootShell.tsx (RSC)"] -.serves.-> api
     subgraph api["API cluster (app/api/**)"]
     api1["POST /api/ask (streaming)"]
     api2["POST /api/contact (defineHandler)"]
@@ -133,10 +133,10 @@ flowchart LR
 - **The dual-variant pattern** (used on `/` by the DAW mixer):
 
   ```
-  <Module><Suspense fallback={null}><AsyncInner/></Suspense></Module>
+  <Module><Suspense fallback={<MixerLoading/>}><AsyncInner/></Suspense></Module>
   ```
 
-  `AsyncInner` awaits `getIsMobile()` and renders the desktop or mobile variant behind a null Suspense fallback. `GuitarSection` uses this pattern for its mixer content (`DawMixerContent`); the guitar rig and photo above it use one responsive presentation without this UA boundary or variant swap.
+  `AsyncInner` awaits `getIsMobile()` and renders the desktop or mobile variant behind a Suspense fallback, the `MixerLoading` boot log, whose `min-height` tracks the finished mixer. `GuitarSection` uses this pattern for its mixer content (`DawMixerContent`); the guitar rig and photo above it use one responsive presentation without this UA boundary or variant swap.
 - **`defer` prop:** the below-the-fold sections (`DEFERRED_SECTION_COUNT` in `components/responsive/Module/module.constants.ts`, held by `__tests__/content-visibility.test.ts`) pass `defer` to `Module`, which applies CSS `content-visibility` (defers render cost, not JS). Most use `Module`; Career applies the same attributes in its own wrapper. A deferred module reserves an estimated placeholder height while its content is laid out at full height: 520px is only the default, with per-section and per-breakpoint overrides (Career 3340px, Opinions 3180px, Guitar and mixer 3320px, Contact 2640px) and `contain-intrinsic-size: auto var(--module-estimate)` remembering the rendered height, so the axe gate reveals the deferred modules before the scan: the audit then sees the painted page, the state the visual baselines capture.
 - **Lazy boundaries:** `ContactFormLazy` and `InteractiveShellLazy` are `React.lazy` islands inside `LazyIsland`, rendered on the server, with accessible loading placeholders (`.shell-loading`, `.contact-loading`, each holding a per-breakpoint `min-height` and hidden when scripting is off) as the Suspense and error fallback. `ContactTimezoneLazy` is a `React.lazy` island instead: an `IntersectionObserver` with a 400px margin mounts it, the static panel (a dim map under a one-line `loading local time…` label, hidden when scripting is off or the chunk failed) stays as the Suspense and error fallback, the host holds a per-locale minimum height so the swap moves nothing, and its chunk stays out of first load. Its clocks tick only while the panel is on screen and the tab is visible. `MatrixRainLazy` loads from `GlobalMotion` (mounted in the root layout) with `ssr: false` as a decorative fixed overlay behind `main`; late hydration cannot shift layout. `Footer` is an RSC: content, cards, sitemap and shutdown log render on the server. It renders session counters and halt/reboot controls from `Footer.client` directly, without a dynamic import; the netstat card links each endpoint to its destination. The site map switches layout on its own width with container queries. Every folder is a full-width row (`./work/` and its file count) over its links, which hang off a vertical rule, with a faint divider between folders. Below 38rem the rows are native `<details name="footer-sitemap">` summaries with a `+`/`-` sign, one folder open at a time and `./work/` open on load. From 38rem all folders show in three columns, and from 68rem in six. Rows use `--text-body`, counts `--text-xs`, and links keep 44px targets. It needs no JavaScript and prints as the three-column grid. Counters start at mount to include commands before the footer is reached. The halt clock is empty on the server and reads the visitor’s clock after mount.
 
