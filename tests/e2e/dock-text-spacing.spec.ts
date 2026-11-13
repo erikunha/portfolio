@@ -62,7 +62,7 @@ for (const route of ROUTES) {
         hasTouch: true,
       });
 
-      test(`dock labels stay apart and unclipped under WCAG 1.4.12 text spacing`, async ({
+      test('dock labels stay apart and unclipped under WCAG 1.4.12 text spacing', async ({
         page,
       }) => {
         await gotoSettled(page, route);
