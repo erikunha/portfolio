@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { EXTERNAL_LINK_PROPS } from '@/components/ExternalLink';
 import { Button } from '@/design-system';
+import { longestCopy } from '@/lib/longest-copy';
 import { IconYouTube } from '../LinkIcons';
 import { NewTabHint } from '../NewTabHint';
 
@@ -69,7 +70,12 @@ export function SubscribeCta(props: SubscribeCtaProps) {
       onClick={remember}
     >
       <IconYouTube size={17} />
-      {props[view.labelProp]}
+      <span
+        className="links-cta-label"
+        data-reserve={longestCopy([props.subscribeLabel, props.subscribedLabel])}
+      >
+        <span>{props[view.labelProp]}</span>
+      </span>
       <NewTabHint text={newTabHint} />
     </Button>
   );

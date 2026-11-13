@@ -210,7 +210,6 @@ const careerCopyFor = (locale: SiteLocale) => {
       : 'git log --oneline --decorate --graph ~/career',
     cvLabel: CV_LINK_LABEL[locale],
     cvHref: localizedPath(locale, READING_PATHS.cv),
-    scrollLabel: pt ? 'Histórico profissional, rolável' : 'Career history, scrollable',
     pipe: '|',
     graph: `*\n${'|\n'.repeat(GRAPH_CONTINUATION_LINES)}`,
   });
@@ -220,8 +219,6 @@ export const careerCopy: Record<SiteLocale, ReturnType<typeof careerCopyFor>> = 
   [SITE_LOCALE.en]: careerCopyFor(SITE_LOCALE.en),
   [SITE_LOCALE.pt]: careerCopyFor(SITE_LOCALE.pt),
 };
-
-export const careerScrollLabel = (locale: SiteLocale): string => careerCopy[locale].scrollLabel;
 
 const COMPANY_SEPARATOR = ' ';
 const COMPANY_JOINER = '_';

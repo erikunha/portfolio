@@ -22,7 +22,7 @@ const PRIMARY_LABEL = 'HIRE_ON_LINKEDIN ↗';
 const TOPBAR_LABEL = HIRE_SHORT_LABEL[LOCALE];
 const DOCK_LABEL = DOCK_HIRE_LABEL[LOCALE];
 const RAIL_LABEL = 'LinkedIn';
-const ACCESSIBLE_NAME = 'Hire on LinkedIn (opens in a new tab)';
+const ACCESSIBLE_NAME = 'HIRE_ON_LINKEDIN ↗ (opens in a new tab)';
 const ARROW_GLYPH = '↗';
 const HIRE_HREF = social.linkedin;
 
@@ -47,7 +47,7 @@ function spokenWords(text: string): string {
 
 function expectLabelInName(link: HTMLAnchorElement): void {
   const visible = spokenWords(link.textContent ?? '');
-  const name = (link.getAttribute('aria-label') ?? '').toLowerCase();
+  const name = spokenWords(link.getAttribute('aria-label') ?? '');
   expect(
     name.includes(visible),
     `WCAG 2.5.3: the accessible name "${name}" must contain the visible words "${visible}" in order, or voice control cannot activate the link by what it reads`,

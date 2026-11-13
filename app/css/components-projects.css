@@ -217,6 +217,7 @@
   }
 
   .measured-heading a {
+    display: inline-block;
     color: var(--color-primary-500);
     text-decoration: none;
     text-underline-offset: var(--spacing-1);

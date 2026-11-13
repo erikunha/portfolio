@@ -40,6 +40,7 @@ export function RoleTyper({ role, className }: { role: string; className?: strin
       if (!on) {
         cancelled = true;
         stopTyping?.();
+        node.textContent = `[${role}]`;
       } else if (cancelled) {
         start();
       }

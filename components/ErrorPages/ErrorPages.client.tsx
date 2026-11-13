@@ -1,8 +1,11 @@
 'use client';
 
-import { type ReactNode, useEffect, useRef, useState } from 'react';
+import { usePathname } from 'next/navigation';
+import { type ReactNode, Suspense, useEffect, useRef, useState } from 'react';
 import { PageMain } from '@/components/PageMain';
+import { NOT_FOUND_PATH_TOKEN } from '@/content/errors.constants';
 import type { ErrorsContent } from '@/content/schemas';
+import { CmdLine } from '@/design-system';
 import { reportClientError } from '@/lib/report-client-error.client';
 import { COPY_STATUS, useCopyFeedback } from '@/lib/use-copy-feedback.client';
 import { ERROR_MAIN_CLASS } from './error-main';
@@ -18,6 +21,50 @@ export function ErrorHeading({ children }: { children: ReactNode }) {
     <h1 ref={ref} className="err-h1" tabIndex={-1}>
       {children}
     </h1>
+  );
+}
+
+const MAX_PATH_CHARS = 64;
+const PATH_ELLIPSIS = '...';
+
+function readablePath(pathname: string | null, fallback: string): string {
+  if (!pathname) return fallback;
+  let decoded = pathname;
+  try {
+    decoded = decodeURIComponent(pathname);
+  } catch {
+    decoded = pathname;
+  }
+  return decoded.length > MAX_PATH_CHARS
+    ? `${decoded.slice(0, MAX_PATH_CHARS - PATH_ELLIPSIS.length)}${PATH_ELLIPSIS}`
+    : decoded;
+}
+
+type RequestedPathContent = Pick<
+  ErrorsContent['notFound'],
+  'prompt' | 'command' | 'output' | 'pathFallback'
+>;
+
+function PathCmdLine({ content, path }: { content: RequestedPathContent; path: string }) {
+  return (
+    <CmdLine
+      user=""
+      prompt={content.prompt}
+      command={content.command.replace(NOT_FOUND_PATH_TOKEN, path)}
+      output={content.output.replace(NOT_FOUND_PATH_TOKEN, path)}
+    />
+  );
+}
+
+function CurrentPathCmdLine({ content }: { content: RequestedPathContent }) {
+  return <PathCmdLine content={content} path={readablePath(usePathname(), content.pathFallback)} />;
+}
+
+export function RequestedPathCmdLine({ content }: { content: RequestedPathContent }) {
+  return (
+    <Suspense fallback={<PathCmdLine content={content} path={content.pathFallback} />}>
+      <CurrentPathCmdLine content={content} />
+    </Suspense>
   );
 }
 

@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { NOT_FOUND_PATH_TOKEN } from './errors.constants';
 import { FACT_SEPARATOR } from './fact-separator';
 import { SECTION_ICONS } from './section-registry';
 
@@ -504,7 +505,6 @@ export const CareerCopySchema = z.object({
   command: z.string().min(1),
   cvLabel: z.string().min(1),
   cvHref: z.string().startsWith('/'),
-  scrollLabel: z.string().min(1),
   graph: z.string().min(1),
   pipe: z.string().min(1),
 });
@@ -797,6 +797,11 @@ export const FooterContentSchema = z
   });
 export type FooterContent = z.infer<typeof FooterContentSchema>;
 
+const NotFoundTemplateSchema = z
+  .string()
+  .min(1)
+  .refine((value) => value.includes(NOT_FOUND_PATH_TOKEN));
+
 const ErrorHrefSchema = z.string().regex(/^\/(?!\/)[\w/#-]*$/);
 const ErrorLinkSchema = z.object({ label: z.string().min(1), href: ErrorHrefSchema });
 
@@ -806,8 +811,9 @@ export const ErrorsContentSchema = z.object({
     code: z.literal('404'),
     panelHeader: z.string().min(1),
     prompt: z.string().min(1),
-    command: z.string().min(1),
-    output: z.string().min(1),
+    command: NotFoundTemplateSchema,
+    output: NotFoundTemplateSchema,
+    pathFallback: z.string().min(1),
     suggestionsLabel: z.string().min(1),
     suggestionsNavLabel: z.string().min(1),
     suggestions: z.array(ErrorLinkSchema).min(1),

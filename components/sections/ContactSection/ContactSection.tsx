@@ -111,7 +111,7 @@ export function ContactSection({ locale, defer }: { locale: SiteLocale; defer?: 
           </div>
         </div>
         <Panel
-          as="aside"
+          as="section"
           className="contact-timezone"
           title={timezone.title}
           marker={timezone.marker}

@@ -175,9 +175,9 @@ describe('derived strings render exactly what they rendered before', () => {
     expect(measured[SITE_LOCALE.pt].externalDisclosure).toBe('(abre em uma nova guia)');
     expect(projectPresentation[SITE_LOCALE.en].externalDisclosure).toBe('(opens in a new tab)');
     expect(projectPresentation[SITE_LOCALE.pt].externalDisclosure).toBe('(abre em uma nova guia)');
-    expect(HIRE_ACCESSIBLE_NAME[SITE_LOCALE.en]).toBe('Hire on LinkedIn (opens in a new tab)');
+    expect(HIRE_ACCESSIBLE_NAME[SITE_LOCALE.en]).toBe('HIRE_ON_LINKEDIN ↗ (opens in a new tab)');
     expect(HIRE_ACCESSIBLE_NAME[SITE_LOCALE.pt]).toBe(
-      'Contrate no LinkedIn (abre em uma nova guia)',
+      'CONTRATE_NO_LINKEDIN ↗ (abre em uma nova guia)',
     );
   });
 });
