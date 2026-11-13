@@ -115,10 +115,7 @@ export function endConversation(): void {
 
 export function holdForget(): () => void {
   forgetsHeld += 1;
-  let released = false;
   return () => {
-    if (released) return;
-    released = true;
     forgetsHeld -= 1;
   };
 }

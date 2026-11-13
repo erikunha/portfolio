@@ -54,6 +54,13 @@ function LabelStack({ labels, current }: { labels: readonly string[]; current: s
   );
 }
 
+function errorCopy(kind: ReceiptView['kind'], ui: ShellUi): [string, string | undefined] {
+  if (kind === RECEIPT_VIEW.Unavailable) return [ui.forgetUnavailable, undefined];
+  if (kind === RECEIPT_VIEW.Offline) return [ui.forgetOffline, ui.forgetOfflineHint];
+  if (kind === RECEIPT_VIEW.TimedOut) return [ui.forgetTimedOut, ui.forgetTimedOutHint];
+  return [ui.forgetFailed, undefined];
+}
+
 function isError(view: ReceiptView): boolean {
   return (
     view.kind === RECEIPT_VIEW.Unavailable ||
@@ -271,17 +278,7 @@ export function ConversationReceipt({
       );
     }
     if (isError(view)) {
-      const errorCopy: Record<string, string> = {
-        [RECEIPT_VIEW.Unavailable]: ui.forgetUnavailable,
-        [RECEIPT_VIEW.Offline]: ui.forgetOffline,
-        [RECEIPT_VIEW.TimedOut]: ui.forgetTimedOut,
-      };
-      const errorHint: Record<string, string> = {
-        [RECEIPT_VIEW.Offline]: ui.forgetOfflineHint,
-        [RECEIPT_VIEW.TimedOut]: ui.forgetTimedOutHint,
-      };
-      const hint = errorHint[view.kind];
-      const text = errorCopy[view.kind] ?? ui.forgetFailed;
+      const [text, hint] = errorCopy(view.kind, ui);
       return (
         <>
           <span
