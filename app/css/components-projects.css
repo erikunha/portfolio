@@ -124,7 +124,7 @@
 
   .project-stats dd {
     min-width: 0;
-    text-align: right;
+    text-align: start;
     overflow-wrap: anywhere;
     margin: 0;
     color: var(--color-tertiary-50);
@@ -461,7 +461,10 @@
     .projects-grid {
       grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: calc(var(--spacing-4) + var(--spacing-1));
-      align-items: start;
+    }
+
+    .project-stats dd {
+      margin-inline-start: auto;
     }
 
     .project-card:last-child:nth-child(odd) {
