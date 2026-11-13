@@ -51,7 +51,7 @@ function runOffsetsMinutes(minuteOfEachRun: number[]): number[] {
   const offsets: number[] = [];
   for (let day = 0; day < SCAN_DAYS; day++) {
     hours.forEach((hour, slot) => {
-      const minuteInHour = minuteOfEachRun[day * hours.length + slot];
+      const minuteInHour = minuteOfEachRun[day * hours.length + slot] ?? 0;
       offsets.push(day * MINUTES_PER_DAY + hour * MINUTES_PER_HOUR + minuteInHour);
     });
   }
