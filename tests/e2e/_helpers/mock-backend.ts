@@ -229,9 +229,12 @@ export type ChunkedAsk = {
 type ChunkedAskStream = { controller: ReadableStreamDefaultController<Uint8Array>; open: boolean };
 type ChunkedAskHandle = { streams: ChunkedAskStream[]; aborted: number };
 
-export async function installChunkedAsk(page: Page): Promise<ChunkedAsk> {
+export async function installChunkedAsk(
+  page: Page,
+  options: { requestId?: string } = {},
+): Promise<ChunkedAsk> {
   await page.addInitScript(
-    ([key, idPrefix]) => {
+    ([key, idPrefix, fixedId]) => {
       const handle: ChunkedAskHandle = { streams: [], aborted: 0 };
       (window as unknown as Record<string, ChunkedAskHandle>)[key] = handle;
       const realFetch = window.fetch.bind(window);
@@ -256,13 +259,13 @@ export async function installChunkedAsk(page: Page): Promise<ChunkedAsk> {
             status: 200,
             headers: {
               'Content-Type': 'text/plain; charset=utf-8',
-              'X-Request-Id': `${idPrefix}-${index + 1}`,
+              'X-Request-Id': fixedId || `${idPrefix}-${index + 1}`,
             },
           }),
         );
       };
     },
-    [CHUNKED_ASK_KEY, CHUNKED_REQUEST_ID_PREFIX] as const,
+    [CHUNKED_ASK_KEY, CHUNKED_REQUEST_ID_PREFIX, options.requestId ?? ''] as const,
   );
 
   return {

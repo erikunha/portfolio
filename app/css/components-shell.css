@@ -339,6 +339,7 @@
   .shell-reference code,
   .shell-privacy-notice code {
     font: inherit;
+    white-space: inherit;
   }
 
   .shell-toolbar {
