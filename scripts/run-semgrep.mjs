@@ -3,9 +3,18 @@ import { spawnSync } from 'node:child_process';
 
 const SEMGREP_BIN = process.env.SEMGREP_BIN;
 const RUNNER_CANDIDATES = SEMGREP_BIN ? [[SEMGREP_BIN]] : [['semgrep']];
-const DEFAULT_PATHS = ['app', 'lib', 'components', 'scripts'];
+const DEFAULT_PATHS = [
+  'app',
+  'lib',
+  'components',
+  'scripts',
+  'proxy.ts',
+  'instrumentation.ts',
+  'next.config.ts',
+  '.github/workflows',
+];
 
-const REGISTRY_CONFIGS = ['p/typescript', 'p/react', 'p/nextjs'];
+const REGISTRY_CONFIGS = ['p/typescript', 'p/react', 'p/nextjs', 'p/github-actions'];
 const VENDORED_CONFIG = '.semgrep';
 
 function parseArgs(argv) {
