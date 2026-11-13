@@ -13,6 +13,7 @@
     "build": "next build",
     "start": "next start",
     "check": "biome check --error-on-warnings .",
+    "check:staged": "biome check --staged --error-on-warnings --no-errors-on-unmatched",
     "check:fix": "biome check --write .",
     "gitleaks:staged": "node scripts/gitleaks-staged.mjs",
     "gitleaks:fixture": "node scripts/check-gitleaks-fixture.mjs",

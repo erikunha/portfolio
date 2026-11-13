@@ -50,12 +50,15 @@ commit and a statement of what breaks, and when, is dropped.
 - Motion stays off while the MOTION switch is off (`body[data-motion="reduce"]`). No rule keys off the operating system preference.
 - A change to the ask system prompt, its facts (`content/ask-facts.ts`) or the eval corpus without a passing `pnpm ask:eval`.
 - A decision with no `DECISIONS.md` bullet, or a change whose docs and diagrams were not updated.
+- A changed screenshot baseline under `tests/**-snapshots/` that shows clipped, overlapping or
+  cut-off content, text drawn through a control, or a word split mid-word. Open each new PNG beside
+  the one it replaces.
 
 ## Skip
 
 - Anything CI already enforces: format, lint, import order, types, `*.client.tsx` naming, CSS token
   and contrast lint, route and bundle JS numbers, Lighthouse scores, dependency pinning.
-- Generated and binary files: `pnpm-lock.yaml`, screenshot baselines under `tests/**-snapshots/`,
+- Generated and binary files: `pnpm-lock.yaml`,
   `app/(en)/design-system/changelog/page.mdx` (written by `pnpm changelog:sync`), `public/` images
   and fonts.
 - Issues the diff does not touch. Mention one only when the diff makes it newly reachable.

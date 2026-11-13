@@ -96,7 +96,8 @@ Run the repository's own gates for what the change touches, split into parallel 
 `vitest` and Playwright specs, `pnpm audit`, `pnpm lint:semgrep` on changed source.
 
 For anything user-visible or server-behaviour-changing: build, start the production server,
-drive the affected journeys with real input at 390 and 1280 (plus 320/768/1024 for layout work),
+drive the affected journeys with real input at 1280x720, 768x1024, 390x844 or 375x812 and 320x700,
+in English and pt-BR, through every state the change can reach, on darwin and in the Linux image,
 compare with the design authority, observe network and console, and read back state.
 A green suite with an unrun journey is `NOT_RUN`, not passed.
 

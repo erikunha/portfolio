@@ -137,7 +137,7 @@ triggers: a library behaviour the change depends on gets exact-version research;
 gets a reproduction on head and on the base.
 
 **Section redesign (RSC, client island, CSS).** Stage 1: semantic diff and route JS delta; RSC and
-client boundary; design fidelity against the prototype at 390 and 1280; accessibility and
+client boundary; design fidelity against the prototype at 1280, 768, 390 and 320; accessibility and
 keyboard; tests and visual baseline impact; content schema and identity consistency. Stage 3:
 build, `route-js-check`, real-input journeys at 320/390/768/1024/1280 with the MOTION switch on and
 off, measured section height against the budget. Stage 4: challenge any finding that would block

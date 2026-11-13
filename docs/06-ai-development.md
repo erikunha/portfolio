@@ -35,7 +35,7 @@ flowchart TB
 `.claude/settings.json` holds only permission deny rules for broad `git add`, npm and yarn installs and local env reads, the rules `AGENTS.md` states with no exceptions. It registers no hooks: workflow hooks, review habits and tool choices are each engineer's own and live in their user-level configuration. Plan review and API review are conventions in `AGENTS.md`, not hook gates.
 
 Git hooks enforce separate stages:
-- `.husky/pre-commit` runs `pnpm check` and `pnpm gitleaks:staged`.
+- `.husky/pre-commit` runs `pnpm check:staged` (Biome on the staged files) and `pnpm gitleaks:staged`.
 - `.husky/commit-msg` runs commitlint against the message file.
 - `.husky/pre-push` rejects pushes targeting `main`, checks the branch name, and runs `pnpm verify`. Deletion-only pushes skip name and verification checks after the main-target guard.
 

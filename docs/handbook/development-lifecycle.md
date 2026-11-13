@@ -51,7 +51,7 @@ A feature branch is created (`<type>/<description>`, enforced by `.husky/pre-pus
 
 ### 6. Commit (per-commit gates)
 
-- **`pre-commit`**: `pnpm check` (Biome check) and staged gitleaks scanning.
+- **`pre-commit`**: `pnpm check:staged` (Biome on the staged files) and staged gitleaks scanning.
 - **`commit-msg`**: commitlint. Conventional Commits with a **mandatory scope** (`scope-empty: [2, 'never']`) drawn from an **open set** (`scope-enum: [0]`), and the subject must not start sentence-case, start-case, PascalCase or upper-case. Scopes are feature-area names (`ci`, `dx`, `observability`, `healthz`, `ppr`, `arch`, ...), not technical categories.
 
 ### 7. Pre-PR diff read, and the pre-push gate chain

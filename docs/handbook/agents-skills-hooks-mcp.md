@@ -73,7 +73,7 @@ No project hook proves that a pre-PR review or an API review took place; those a
 
 | Hook         | Runs                                                                                                 |
 | ------------ | ---------------------------------------------------------------------------------------------------- |
-| `pre-commit` | `pnpm check`, then `pnpm gitleaks:staged`                                                            |
+| `pre-commit` | `pnpm check:staged`, then `pnpm gitleaks:staged`                                                     |
 | `commit-msg` | commitlint, including mandatory scope                                                                |
 | `pre-push`   | Rejects remote `refs/heads/main`; checks branch names and runs `pnpm verify` for non-deletion pushes |
 

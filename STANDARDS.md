@@ -374,8 +374,9 @@ and this chapter states the gap so it is not mistaken for coverage.
 
 ## 11. Developer Experience
 
-**Rule.** The pre-commit hook is sub-second: it runs `pnpm check` (Biome
-lint + format) and a staged `gitleaks` scan, and the `commit-msg` hook runs
+**Rule.** The pre-commit hook is sub-second: it runs `pnpm check:staged` (Biome
+lint + format on the staged files only, so a parallel writer's unstaged work cannot block
+the commit) and a staged `gitleaks` scan, and the `commit-msg` hook runs
 commitlint. The heavier gate runs in `pre-push`: the branch-name check, a refusal
 to push the `main` ref, and `pnpm verify`. `pnpm verify` (alias `pnpm ci:local`)
 is the named, single pre-PR command that runs the full local gate;
@@ -393,7 +394,8 @@ cultural rule of the whole document: a gate that can be switched off under
 deadline pressure enforces nothing.
 
 **How it is held.** Mechanical: the two-tier hook strategy is enforced by the
-git hooks themselves: `.husky/pre-commit` runs `pnpm check` and `pnpm gitleaks:staged`,
+git hooks themselves: `.husky/pre-commit` runs `pnpm check:staged` and `pnpm gitleaks:staged`
+(`scripts/__tests__/check-staged.test.ts`),
 `.husky/commit-msg` runs commitlint (scope required), `.husky/pre-push`
 runs the main-ref and branch-name guards plus `pnpm verify`. `pnpm verify` is defined in
 `package.json` as the composed chain (the `quality-fast` gates, then `test:coverage`; see
