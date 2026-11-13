@@ -203,23 +203,35 @@
 
   .shell-feed-wrap {
     position: relative;
+    --shell-stop-bar: calc(var(--spacing-target) + 2 * var(--spacing-1) + var(--border-width));
   }
 
   .shell-feed[aria-busy="true"] {
-    padding-block-end: calc(var(--spacing-target) + var(--spacing-2));
+    padding-block-end: var(--shell-stop-bar);
   }
 
   .shell-stop-row {
     position: absolute;
+    z-index: var(--z-local);
     inset-inline: 0;
     inset-block-end: 0;
+    box-sizing: border-box;
+    block-size: var(--shell-stop-bar);
     display: flex;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     align-items: center;
     gap: var(--spacing-2);
     padding-inline: var(--spacing-4);
-    padding-block-end: var(--spacing-2);
+    padding-block: var(--spacing-1);
+    border-top: var(--border-width) solid var(--color-primary-subtle);
     background: var(--color-secondary-900);
+  }
+
+  .shell-stop-row .shell-esc-hint {
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
   }
 
   .shell-ai-notice,
