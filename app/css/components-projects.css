@@ -374,6 +374,12 @@
     border-style: dashed;
   }
 
+  @media (max-width: theme(--viewport-below-narrow)) {
+    .measured-tile {
+      padding-inline: var(--spacing-2);
+    }
+  }
+
   .measured-tile[data-placeholder] .measured-value {
     color: var(--color-text-secondary);
   }

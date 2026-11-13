@@ -340,7 +340,7 @@
 
     .dock > a,
     .dock > button {
-      letter-spacing: 0;
+      letter-spacing: var(--tracking-tight);
       padding-inline: 0;
     }
   }
@@ -431,6 +431,13 @@
     background: var(--color-secondary-950);
     color: var(--color-tertiary-50);
     font-size: var(--text-xs);
+  }
+
+  @media (max-width: theme(--viewport-below-md)) {
+    .offline-notice {
+      inset-block-start: var(--mobile-bars-height);
+      padding-block-start: var(--spacing-2);
+    }
   }
 
   .offline-notice:empty {

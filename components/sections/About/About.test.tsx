@@ -6,9 +6,9 @@ import { profile } from '@/content/profile';
 import { SITE_LOCALE } from '@/content/site-locale';
 import { About } from './About';
 
-const CODE_FONT_PX = 12;
+const CODE_FONT_PX = 13;
 const MONO_ADVANCE_EM = 0.6;
-const NARROW_PANEL_TEXT_PX = 232;
+const NARROW_PANEL_TEXT_PX = 240;
 const NARROW_LINE_CHAR_BUDGET = Math.floor(NARROW_PANEL_TEXT_PX / (CODE_FONT_PX * MONO_ADVANCE_EM));
 
 afterEach(() => {

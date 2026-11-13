@@ -26,8 +26,8 @@ same file.
 | Token boundary | `pnpm lint:css-tokens` | Fails a raw hex or color function outside `theme.css`, a literal z-index outside the `--z-*` scale, and a focus rule that writes its own ring instead of `--focus-ring` |
 
 Type and spacing are a maintained token layer in `app/css/theme.css`: a type scale
-from `--text-xs` to `--text-7xl` with a `--text-min` floor that rises from 12px to
-13px at 768px and up, spacing steps `--spacing-1` to `--spacing-16`, and a 44px
+from `--text-xs` to `--text-7xl` with a `--text-min` floor of
+13px at every width, spacing steps `--spacing-1` to `--spacing-16`, and a 44px
 `--spacing-target` for interactive targets. `lint:contrast` checks the color pairs;
 the unit tests in `app/(en)/design-system/_lib/theme-tokens.test.ts` pin the scale, and `tests/e2e/type-floor.spec.ts` fails any visible text set below `--text-min`. Z-index, letter spacing and media-query widths are token scales too (`--z-*`, `--tracking-*`, `--viewport-*`); motion uses utilities and named CSS classes, including arbitrary values.
 

@@ -6,10 +6,16 @@
   }
 
   .shell-loading {
-    min-height: 42rem;
+    min-height: 46.5rem;
   }
 
   @media (min-width: theme(--viewport-phone)) {
+    .shell-loading {
+      min-height: 36.5rem;
+    }
+  }
+
+  @media (min-width: theme(--viewport-md)) {
     .shell-loading {
       min-height: 33rem;
     }
