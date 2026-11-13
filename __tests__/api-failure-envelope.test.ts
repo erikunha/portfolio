@@ -70,7 +70,7 @@ describe('failures from the GET and cron routes use the shared envelope', () => 
   });
 
   it.each(['psi-refresh', 'contact-retry'])('%s without the cron bearer', async (route) => {
-    const { GET } = await import(`@/app/api/${route}/route`);
+    const { GET } = await import(`@/app/api/${route}/route.ts`);
     const res = await GET(new NextRequest(`http://localhost/api/${route}`));
     await expectEnvelope(res, 401, 'unauthorized');
   });

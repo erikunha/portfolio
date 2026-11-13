@@ -5,6 +5,8 @@ import { clampLogContext } from '@/lib/log-error';
 
 const isEdge = process.env.NEXT_RUNTIME === 'edge';
 
+const PRETTY_OUTPUT_ENV = 'development';
+
 type Ctx = Record<string, unknown>;
 
 function edgeLog(level: 'info' | 'warn' | 'error', msg: string, ctx?: Ctx): void {
@@ -23,12 +25,13 @@ let pinoInstance: pino.Logger | null = null;
 
 if (!isEdge) {
   const isDev = process.env.NODE_ENV !== 'production';
+  const prettyOutput = process.env.NODE_ENV === PRETTY_OUTPUT_ENV;
   const baseOpts = {
     level: isDev ? 'debug' : 'info',
     base: { env: process.env.NODE_ENV ?? 'unknown' },
     serializers: { err: pino.stdSerializers.err },
   };
-  pinoInstance = isDev
+  pinoInstance = prettyOutput
     ? pino({
         ...baseOpts,
         transport: {
