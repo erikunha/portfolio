@@ -7,6 +7,12 @@ import { ReadingSection } from './ReadingSection';
 import { ReadingShell } from './ReadingShell';
 
 const sectionId = (key: string) => `summary-${key}`;
+const NO_BREAK_SPACE = '\u00a0';
+
+const keepLastWordsTogether = (text: string): string => {
+  const split = text.lastIndexOf(' ');
+  return split < 0 ? text : `${text.slice(0, split)}${NO_BREAK_SPACE}${text.slice(split + 1)}`;
+};
 
 export function SummaryPage({ locale }: { locale: SiteLocale }) {
   const { summary } = readingViews[locale];
@@ -22,7 +28,7 @@ export function SummaryPage({ locale }: { locale: SiteLocale }) {
         <p className="reading-meta">{doc.technologyLine}</p>
         <p className="reading-meta">
           <CompanyMention
-            text={doc.context}
+            text={keepLastWordsTogether(doc.context)}
             company={doc.employer.name}
             href={doc.employer.url}
             locale={locale}
