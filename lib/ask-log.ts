@@ -28,14 +28,14 @@ export function askForgottenKey(id: string): string {
 }
 
 export async function markForgotten(ids: readonly string[]): Promise<void> {
-  const redis = getRedis();
-  await Promise.all(ids.map((id) => redis.set(askForgottenKey(id), 1, { ex: FORGOTTEN_TTL_S })));
+  const tx = getRedis().multi();
+  for (const id of ids) tx.set(askForgottenKey(id), 1, { ex: FORGOTTEN_TTL_S });
+  await tx.exec();
 }
 
 async function wasForgotten(ids: readonly string[]): Promise<boolean> {
   try {
-    const redis = getRedis();
-    const marks = await Promise.all(ids.map((id) => redis.get(askForgottenKey(id))));
+    const marks = await getRedis().mget<unknown[]>(...ids.map(askForgottenKey));
     return marks.some((mark) => mark !== null && mark !== undefined);
   } catch {
     return false;
