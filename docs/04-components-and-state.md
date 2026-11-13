@@ -16,7 +16,7 @@ Seven directories, seven roles. The directory tells you the layer:
 | `components/reading/**`       | The `/cv` and `/summary` reading views | No                                | `ReadingShell`, `CvPage`, `SummaryPage`, `ReadingSection`          |
 | `components/ErrorPages/**`    | Route error, global error and not-found pages | Mixed (`*.client.tsx` for error boundaries) | `NotFoundPage`, `MissingRoute`, `RouteErrorPage`, `GlobalErrorPage` |
 
-Loose components in `components/` serve more than one layer: `RootShell` (the shared body of both root layouts), `SiteShell`, `SiteHome`, `AppShell`, `PageMain`, `ErrorBoundary`, `NoscriptBar`, `LocaleSwitch`, `BrandLink`, `CommandText`, `HeroStats`, `StatusDot`, `Icons`, `OptimizedImage`, `CompanyLink` and `ExternalLink`.
+Loose components in `components/` serve more than one layer: `RootShell` (the shared body of both root layouts), `SiteShell`, `SiteHome`, `AppShell`, `PageMain`, `ErrorBoundary`, `NoscriptBar`, `LocaleSwitch`, `BrandLink`, `BreakAfter`, `CommandText`, `KeepTail`, `HeroStats`, `StatusDot`, `Icons`, `OptimizedImage`, `CompanyLink` and `ExternalLink`.
 
 `check-client-naming.mjs` accepts `*.client.tsx`/`*.client.ts`, files inside a `/client/` directory, and App Router error convention files. Inspect the client directive and imports when tracing a boundary. Components commonly use a `Foo/` directory and `index.ts` barrel. Vitest tests use `*.test.tsx`; component Playwright specs use `*.e2e.ts`. `*Lazy` files are code-split wrappers: `ContactFormLazy`, `InteractiveShellLazy` and `ContactTimezoneLazy` use `React.lazy` through `LazyIsland`, and `MatrixRainLazy` in `responsive/MatrixRain/` uses `next/dynamic` with `ssr: false` (consumed by `GlobalMotion` from the root layout).
 

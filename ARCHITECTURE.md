@@ -297,7 +297,9 @@ components/client/RoleTyper/          # About status role typewriter island
 components/client/TypeReveal/         # Scroll type reveal observer island (IntersectionObserver plus a MutationObserver on main)
 components/AppShell/                   # shell chrome slots and shared section navigation
 components/BrandLink/                  # server component: brand icon link home, named from content/brand.ts
+components/BreakAfter/                 # server component: text with a break opportunity (`<wbr>`) after each listed character, so an identifier, host or address wraps at `_`, `/`, `.` or `@` and never mid-word
 components/CommandText/                # server component: a shell command with each word unbreakable, so a flag never wraps after its dashes
+components/KeepTail/                   # server component: the last short word of a line stays with the word before it (unbreakable span), so a year or level never sits alone
 components/ExternalLink/               # the one new-tab anchor (target and rel pair)
 components/OptimizedImage/             # server component: next/image getImageProps rendered as a plain img, no client runtime
 components/PageMain/                   # main landmark and MAIN_CONTENT_ID for every route

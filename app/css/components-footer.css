@@ -481,8 +481,10 @@
 
   .footer-reboot-keys {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
     gap: var(--spacing-2);
+    overflow-wrap: normal;
   }
 
   @media (pointer: coarse) {

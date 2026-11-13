@@ -1,19 +1,15 @@
+import { BREAK_AFTER, BreakAfter } from '@/components/BreakAfter';
 import { CompanyMention } from '@/components/CompanyLink';
+import { KeepTail } from '@/components/KeepTail';
 import { readingViews, summaryDocument } from '@/content/reading-views';
 import type { SiteLocale } from '@/content/site-locale';
 import { StatTile } from '@/design-system';
+import { keepTail } from '@/lib/keep-tail';
 import { ReadingActions } from './ReadingActions';
 import { ReadingSection } from './ReadingSection';
 import { ReadingShell } from './ReadingShell';
 
 const sectionId = (key: string) => `summary-${key}`;
-const NO_BREAK_SPACE = '\u00a0';
-
-const keepLastWordsTogether = (text: string): string => {
-  const split = text.lastIndexOf(' ');
-  return split < 0 ? text : `${text.slice(0, split)}${NO_BREAK_SPACE}${text.slice(split + 1)}`;
-};
-
 export function SummaryPage({ locale }: { locale: SiteLocale }) {
   const { summary } = readingViews[locale];
   const doc = summaryDocument[locale];
@@ -25,10 +21,12 @@ export function SummaryPage({ locale }: { locale: SiteLocale }) {
           {doc.name}
         </h1>
         <p className="reading-role">{doc.tagline}</p>
-        <p className="reading-meta">{doc.technologyLine}</p>
+        <p className="reading-meta">
+          <KeepTail>{doc.technologyLine}</KeepTail>
+        </p>
         <p className="reading-meta">
           <CompanyMention
-            text={keepLastWordsTogether(doc.context)}
+            text={keepTail(doc.context)}
             company={doc.employer.name}
             href={doc.employer.url}
             locale={locale}
@@ -57,7 +55,9 @@ export function SummaryPage({ locale }: { locale: SiteLocale }) {
                 <p className="reading-project-metric">
                   <span>{project.label}</span> <b>{project.value}</b>
                 </p>
-                <p className="reading-project-text">{project.description}</p>
+                <p className="reading-project-text">
+                  <KeepTail>{project.description}</KeepTail>
+                </p>
               </li>
             ))}
           </ul>
@@ -79,9 +79,13 @@ export function SummaryPage({ locale }: { locale: SiteLocale }) {
 
           <ReadingSection id={sectionId('contact')} heading={summary.headings.contact}>
             <p className="reading-actions-inline">
-              <a href={`mailto:${doc.email}`}>{doc.email}</a>
+              <a href={`mailto:${doc.email}`}>
+                <BreakAfter chars={BREAK_AFTER.email}>{doc.email}</BreakAfter>
+              </a>
             </p>
-            <p className="reading-meta">{doc.languages}</p>
+            <p className="reading-meta">
+              <KeepTail>{doc.languages}</KeepTail>
+            </p>
           </ReadingSection>
         </div>
       </div>

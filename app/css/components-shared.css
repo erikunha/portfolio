@@ -1,4 +1,8 @@
 @layer components {
+  .keep-together {
+    white-space: nowrap;
+  }
+
   .cmd-word {
     white-space: nowrap;
   }

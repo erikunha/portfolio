@@ -34,6 +34,10 @@
     margin: 0 0 var(--spacing-4);
   }
 
+  .reading-actions-inline {
+    gap: var(--spacing-4);
+  }
+
   .reading-name {
     margin: 0;
     color: var(--color-primary-500);
@@ -194,6 +198,10 @@
     background: var(--color-secondary-950);
   }
 
+  .reading-stats .stat-tile-label {
+    text-wrap: balance;
+  }
+
   .reading-stats > * + * {
     border-left: var(--border-width) solid var(--color-primary-border);
   }
@@ -295,6 +303,13 @@
 
     .reading-stats > :nth-child(n + 3) {
       border-top: var(--border-width) solid var(--color-primary-border);
+    }
+  }
+
+  @media (max-width: theme(--viewport-below-narrow)) {
+    .reading-stats {
+      --stat-tile-pad-x: var(--spacing-1);
+      --stat-tile-tracking: var(--tracking-2xs);
     }
   }
 

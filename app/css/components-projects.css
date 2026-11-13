@@ -377,7 +377,11 @@
 
   @media (max-width: theme(--viewport-below-narrow)) {
     .measured-tile {
-      padding-inline: var(--spacing-2);
+      padding-inline: var(--spacing-1);
+    }
+
+    .measured-label {
+      letter-spacing: var(--tracking-tight);
     }
   }
 

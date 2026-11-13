@@ -1,3 +1,4 @@
+import { BREAK_AFTER, BreakAfter } from '@/components/BreakAfter';
 import { ExternalLink } from '@/components/ExternalLink';
 import { contactContent } from '@/content/contact';
 import { timezonePlaceholderRows } from '@/content/contact-rules';
@@ -48,7 +49,10 @@ export function ContactSection({ locale, defer }: { locale: SiteLocale; defer?: 
           </ErrorBoundary>
           <noscript>
             <p className="contact-nojs" data-testid="contact-nojs">
-              {section.noscript} <a href={`mailto:${section.email}`}>{section.email}</a>
+              {section.noscript}{' '}
+              <a href={`mailto:${section.email}`}>
+                <BreakAfter chars={BREAK_AFTER.email}>{section.email}</BreakAfter>
+              </a>
             </p>
           </noscript>
           <div className="contact-reach">
@@ -65,7 +69,7 @@ export function ContactSection({ locale, defer }: { locale: SiteLocale; defer?: 
                     <dt>{channels.emailLabel}</dt>
                     <dd>
                       <a className="contact-channel-email" href={`mailto:${section.email}`}>
-                        {section.email}
+                        <BreakAfter chars={BREAK_AFTER.email}>{section.email}</BreakAfter>
                       </a>
                       <ContactCopyButton
                         value={section.email}
