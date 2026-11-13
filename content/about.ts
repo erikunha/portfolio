@@ -194,7 +194,10 @@ const aboutFor = (locale: SiteLocale): AboutContent => {
           label: 'ANGULAR',
           items: ['NGRX', 'RXJS', 'NX', 'STENCIL', 'MICRO-FRONTENDS'],
         },
-        { label: pt ? 'DADOS' : 'LANG_DATA', items: ['TS', 'CSS', 'POSTGRES', 'MONGO', 'REDIS'] },
+        {
+          label: pt ? 'LING_DADOS' : 'LANG_DATA',
+          items: ['TS', 'CSS', 'POSTGRES', 'MONGO', 'REDIS'],
+        },
         { label: pt ? 'QUALIDADE' : 'QUALITY', items: ['JEST', 'VITEST', 'PLAYWRIGHT', 'A11Y'] },
         {
           label: pt ? 'FERRAMENTAS' : 'TOOLING',

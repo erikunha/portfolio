@@ -10,7 +10,7 @@ import { SITE_LOCALE } from './site-locale';
 import { WORK_SCOPE } from './work-scope';
 
 const PT = SITE_LOCALE.pt;
-const ENGLISH_ONLY_TOKENS = /\b(YR|GROUP|COMPANY|OUTREACH|RECORDS|WEEKLY|formerly|first)\b/;
+const ENGLISH_ONLY_TOKENS = /\b(YR|GROUP|COMPANY|OUTREACH|RECORDS|WEEKLY|ONE|formerly|first)\b/;
 const DECIMAL_POINT = /\d\.\d/;
 const DECIMAL_POINT_MAGNITUDE = /\d\.\d+\s?[MB]\b/;
 
