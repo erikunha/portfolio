@@ -17,7 +17,7 @@ The site is the artifact: a Next.js 16 application on Vercel (Fluid Compute), an
   <img alt="Vitest" src="https://img.shields.io/badge/Vitest-unit-6E9F18?logo=vitest&logoColor=white" />
   <img alt="Playwright" src="https://img.shields.io/badge/Playwright-E2E%20%2B%20a11y-2EAD33?logo=playwright&logoColor=white" />
   <img alt="Lighthouse CI" src="https://img.shields.io/badge/Lighthouse-CI%20gates-F44B21?logo=lighthouse&logoColor=white" />
-  <img alt="Anthropic" src="https://img.shields.io/badge/Anthropic-Haiku%204.5-D97757?logo=anthropic&logoColor=white" />
+  <img alt="Anthropic" src="https://img.shields.io/badge/Anthropic-Haiku%205.5-D97757?logo=anthropic&logoColor=white" />
   <img alt="License" src="https://img.shields.io/badge/code-MIT-blue" />
 </p>
 
