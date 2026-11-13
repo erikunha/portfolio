@@ -240,7 +240,14 @@
   }
 
   .hero-stats .stat-tile-label {
-    overflow-wrap: anywhere;
+    overflow-wrap: normal;
+  }
+
+  @media (max-width: theme(--viewport-below-narrow)) {
+    .hero-stats {
+      --stat-tile-pad-x: var(--spacing-1);
+      --stat-tile-tracking: var(--tracking-xs);
+    }
   }
 
   .hero-actions {
