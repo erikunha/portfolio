@@ -27,7 +27,7 @@ export function ErrorHeading({ children }: { children: ReactNode }) {
 const MAX_PATH_CHARS = 64;
 const PATH_ELLIPSIS = '...';
 
-function readablePath(pathname: string | null, fallback: string): string {
+export function readablePath(pathname: string | null, fallback: string): string {
   if (!pathname) return fallback;
   let decoded = pathname;
   try {
@@ -35,8 +35,9 @@ function readablePath(pathname: string | null, fallback: string): string {
   } catch {
     decoded = pathname;
   }
-  return decoded.length > MAX_PATH_CHARS
-    ? `${decoded.slice(0, MAX_PATH_CHARS - PATH_ELLIPSIS.length)}${PATH_ELLIPSIS}`
+  const characters = Array.from(decoded);
+  return characters.length > MAX_PATH_CHARS
+    ? `${characters.slice(0, MAX_PATH_CHARS - PATH_ELLIPSIS.length).join('')}${PATH_ELLIPSIS}`
     : decoded;
 }
 
@@ -48,6 +49,7 @@ type RequestedPathContent = Pick<
 function PathCmdLine({ content, path }: { content: RequestedPathContent; path: string }) {
   return (
     <CmdLine
+      className="err-cmd"
       user=""
       prompt={content.prompt}
       command={content.command.replace(NOT_FOUND_PATH_TOKEN, () => path)}
