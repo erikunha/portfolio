@@ -31,7 +31,7 @@
 - **Static routes declare `ensureStatic = 'navigation'`.** The export makes Next fail the build if the route reads `connection()`, `cookies()`, `headers()` or uncached data. `__tests__/meta/ensure-static-routes.test.ts` holds the list of routes.
 - **Only the DAW mixer reads the user agent.** `lib/ua.ts` `getIsMobile()` picks the mixer variant inside the guitar module, behind a `Suspense` fallback (`MixerLoading`). No other section branches on the device; layout differences are CSS.
 - **Motion starts on.** A first visit has `body[data-motion="full"]` even when the operating system asks for reduced motion; only a stored `erik.motion = off` starts it off. `pnpm install` also empties Next's legacy polyfill bundles in `node_modules` (`scripts/strip-next-polyfills.mjs`).
-- **The ask log stores redacted text.** `lib/ask-log.ts` runs `redactPii` (emails and phone numbers) over the question and answer, cuts them to 500 and 1000 characters, and keeps the row 90 days; `/api/log/forget` deletes it by request id.
+- **The ask log stores redacted text.** `lib/ask-log.ts` runs `redactPii` (emails and phone numbers) over the question and answer, cuts them to 500 and 1000 characters, and keeps the row 90 days; `/api/log/forget` deletes it, and every row of its conversation, by any one request id.
 - **`/api/log/forget` never returns a deleted count** and answers a known and an unknown id with the same body, and `/api/log` stores no IP. Both are anti-oracle / minimization choices, not omissions.
 
 ## Naming map (decode the filesystem)

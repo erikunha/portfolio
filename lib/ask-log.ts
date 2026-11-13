@@ -1,5 +1,6 @@
 import 'server-only';
 
+import { parseConversationId } from '@/lib/ask/conversation-id';
 import type { AskFailureReason } from '@/lib/ask/failure-reason';
 import type { PostHocVerdict } from '@/lib/ask/output-guard';
 import { redactPii } from '@/lib/ask/redact-pii';
@@ -16,6 +17,37 @@ export const ASK_KV_TTL_S = 90 * SECONDS_PER_DAY;
 
 export function askLogKey(date: string, requestId: string): string {
   return `ask:log:${date}:${requestId}`;
+}
+
+const ASK_LOG_KEY_PATTERN = /^ask:log:\d{4}-\d{2}-\d{2}:[0-9a-f-]{36}$/;
+
+export function askConversationKey(conversationId: string): string {
+  return `ask:conv:${conversationId}`;
+}
+
+export function isAskLogKey(key: unknown): key is string {
+  return typeof key === 'string' && ASK_LOG_KEY_PATTERN.test(key);
+}
+
+function decodeStored(value: unknown): unknown {
+  if (typeof value !== 'string') return value;
+  try {
+    return JSON.parse(value);
+  } catch {
+    return null;
+  }
+}
+
+export function storedConversationId(values: readonly unknown[]): string | null {
+  for (const value of values) {
+    const decoded = decodeStored(value);
+    if (typeof decoded !== 'object' || decoded === null) continue;
+    const conversationId = parseConversationId(
+      (decoded as { conversationId?: unknown }).conversationId,
+    );
+    if (conversationId !== null) return conversationId;
+  }
+  return null;
 }
 
 export function askLogDatesInTtl(now: Date): string[] {
@@ -39,6 +71,7 @@ export type AskInteraction = {
   status: AskInteractionStatus;
   reason?: AskFailureReason;
   guard?: PostHocVerdict;
+  conversationId?: string;
 };
 
 export async function persistAskInteraction(interaction: AskInteraction): Promise<void> {
@@ -50,7 +83,16 @@ export async function persistAskInteraction(interaction: AskInteraction): Promis
     answer: redactPii(interaction.answer).slice(0, LOGGED_ANSWER_CHARS),
   };
   try {
-    await getRedis().set(key, JSON.stringify(record), { ex: ASK_KV_TTL_S });
+    if (interaction.conversationId === undefined) {
+      await getRedis().set(key, JSON.stringify(record), { ex: ASK_KV_TTL_S });
+      return;
+    }
+    const index = askConversationKey(interaction.conversationId);
+    const tx = getRedis().multi();
+    tx.set(key, JSON.stringify(record), { ex: ASK_KV_TTL_S });
+    tx.sadd(index, key);
+    tx.expire(index, ASK_KV_TTL_S);
+    await tx.exec();
   } catch (err) {
     log.error('ask-log KV write failed', {
       requestId: interaction.requestId,

@@ -271,7 +271,7 @@ describe('/api/log/forget for a contact message', () => {
     vi.doMock('@/lib/rate-limit', () => ({
       getClientIp: () => '127.0.0.1',
       getForgetLimit: () => ({ limit: forgetLimit }),
-      getRedis: () => ({ del, multi: () => multiTx }),
+      getRedis: () => ({ del, mget: async () => [], multi: () => multiTx }),
     }));
   });
   afterEach(() => {

@@ -1,6 +1,12 @@
 import { z } from 'zod';
 
-import { askLogDatesInTtl, askLogKey } from '@/lib/ask-log';
+import {
+  askConversationKey,
+  askLogDatesInTtl,
+  askLogKey,
+  isAskLogKey,
+  storedConversationId,
+} from '@/lib/ask-log';
 import { contactMessageKey, removePendingContact } from '@/lib/contact-outbox';
 import { log } from '@/lib/log';
 import { getForgetLimit, getRedis } from '@/lib/rate-limit';
@@ -12,6 +18,16 @@ const ForgetPayload = z.object({
 
 const MAX_FORGET_BODY_BYTES = 1024;
 const SMOKE_UUID = '00000000-0000-4000-8000-000000000000';
+
+async function conversationKeys(requestKeys: readonly string[]): Promise<string[]> {
+  const redis = getRedis();
+  const stored = await redis.mget<unknown[]>(...requestKeys);
+  const conversationId = storedConversationId(stored);
+  if (conversationId === null) return [];
+  const index = askConversationKey(conversationId);
+  const members = await redis.smembers(index);
+  return [...members.filter(isAskLogKey), index];
+}
 
 const handleForget = defineHandler({
   schema: ForgetPayload,
@@ -25,13 +41,18 @@ const handleForget = defineHandler({
       return ok({ requestId });
     }
 
-    const candidateKeys = [
-      ...askLogDatesInTtl(new Date()).map((date) => askLogKey(date, targetRequestId)),
-      contactMessageKey(targetRequestId),
-    ];
+    const requestKeys = askLogDatesInTtl(new Date()).map((date) =>
+      askLogKey(date, targetRequestId),
+    );
 
     let deleted = 0;
+    let conversation = false;
     try {
+      const siblings = await conversationKeys(requestKeys);
+      conversation = siblings.length > 0;
+      const candidateKeys = [
+        ...new Set([...requestKeys, ...siblings, contactMessageKey(targetRequestId)]),
+      ];
       deleted = await getRedis().del(...candidateKeys);
       await removePendingContact(targetRequestId);
     } catch (kvErr) {
@@ -44,7 +65,7 @@ const handleForget = defineHandler({
       });
     }
 
-    log.info('forget request processed', { requestId, targetRequestId, deleted });
+    log.info('forget request processed', { requestId, targetRequestId, deleted, conversation });
     return ok({ requestId });
   },
 });

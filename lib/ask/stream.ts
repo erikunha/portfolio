@@ -104,7 +104,7 @@ function mintQuestionSentinel(): string {
 }
 
 export function createAskStream(context: AskContext): AskStream {
-  const { requestId, ipHash, question, fullQuestion, answerLocale } = context;
+  const { requestId, ipHash, question, fullQuestion, answerLocale, conversationId } = context;
   const state: RunState = {
     upstreamFailed: false,
     usageRejected: false,
@@ -338,6 +338,7 @@ export function createAskStream(context: AskContext): AskStream {
       status: state.status,
       ...(state.failureReason !== null && { reason: state.failureReason }),
       guard: guardVerdict,
+      ...(conversationId !== undefined && { conversationId }),
     });
     emitAskUsage({
       requestId,

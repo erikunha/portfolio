@@ -104,6 +104,7 @@ describe('/api/log/forget endpoint', () => {
       getForgetLimit: vi.fn(() => ({ limit: vi.fn(async () => ({ success: true })) })),
       getRedis: vi.fn(() => ({
         del: redisDelMock,
+        mget: vi.fn(async () => []),
         multi: () => ({ zrem: vi.fn(), hdel: vi.fn(), exec: vi.fn(async () => []) }),
       })),
     }));
