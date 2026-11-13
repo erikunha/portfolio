@@ -87,7 +87,9 @@ Static content renders without environment variables. Without service credential
 For deterministic `/links` feed data, set
 `E2E_LINKS_FEED_FIXTURE=tests/e2e/fixtures/links-feed.json` during both
 `pnpm build` and `pnpm start`. CI uses this fixture for the latest video and
-five history rows, including cache revalidation. The fixture includes shard-host
+five history rows, including cache revalidation. A local run of `tests/visual/visual.spec.ts` or of the feed
+skeleton checks in `loading-states.spec.ts` needs it too: a live feed changes the height of
+the history column. The fixture includes shard-host
 thumbnails for the latest video and history. The loader applies the same URL
 normalizer as the live RSS parser before returning the fixture. Thumbnails still
 pass through the real Next.js image optimizer and require access to `i.ytimg.com`.
