@@ -33,6 +33,7 @@
     font-size: var(--text-xs);
     --leading: 1.65;
     --shell-focus-width: 2px;
+    --shell-stop-time-chars: 4;
   }
 
   .shell-chrome,
@@ -191,6 +192,12 @@
     color: var(--color-primary-400);
   }
 
+  .shell-placeholder-text {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
   .shell-feed-wrap {
     position: relative;
     --shell-stop-halo: calc(var(--spacing-1) + var(--spacing-1) / 2);
@@ -242,9 +249,13 @@
     }
   }
 
+  body[data-motion="reduce"] .interactive-shell {
+    --shell-stop-time-chars: 2;
+  }
+
   .shell-stop-time {
     display: inline-block;
-    min-inline-size: 4ch;
+    min-inline-size: calc(var(--shell-stop-time-chars) * 1ch);
     text-align: end;
   }
 
@@ -282,12 +293,34 @@
     margin-top: var(--spacing-2);
   }
 
-  .shell-privacy-notice a {
+  .shell-privacy-notice a,
+  .shell-nojs a {
     display: inline;
     padding-block: calc((var(--spacing-target) - 1em) / 2);
     overflow-wrap: normal;
     text-decoration: underline;
     text-underline-offset: var(--spacing-1);
+  }
+
+  .shell-privacy-notice code {
+    font: inherit;
+    white-space: nowrap;
+    overflow-wrap: normal;
+  }
+
+  .shell-email {
+    overflow-wrap: normal;
+  }
+
+  .shell-nojs {
+    margin: 0;
+    padding: var(--spacing-3);
+    border: var(--border-width) solid var(--color-primary-subtle);
+    background: var(--color-secondary-900);
+    color: var(--color-tertiary-50);
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    overflow-wrap: anywhere;
   }
 
   .shell-privacy-email {
@@ -432,8 +465,7 @@
     color: var(--color-tertiary-500);
   }
 
-  .shell-receipt-id code,
-  .shell-privacy-notice code {
+  .shell-receipt-id code {
     font: inherit;
     white-space: inherit;
   }
@@ -459,7 +491,6 @@
     color: var(--color-primary-200);
     text-decoration: underline;
     text-underline-offset: var(--spacing-1);
-    overflow-wrap: anywhere;
   }
 
   .shell-receipt-progress {
@@ -495,23 +526,19 @@
 
   .shell-receipt-actions {
     grid-area: actions;
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    display: flex;
+    flex-wrap: wrap;
     gap: var(--spacing-2);
     margin-block-start: var(--spacing-2);
   }
 
   .shell-receipt-button {
-    min-width: 0;
+    flex: 1 1 0;
+    min-inline-size: max-content;
     padding-block: var(--spacing-1);
     --leading: 1.25;
+    white-space: nowrap;
     overflow-wrap: normal;
-  }
-
-  @media (max-width: theme(--viewport-below-narrow)) {
-    .shell-receipt-actions {
-      grid-template-columns: minmax(0, 1fr);
-    }
   }
 
   .shell-receipt-button[data-copied] {
@@ -553,12 +580,7 @@
     }
 
     .shell-receipt-actions {
-      display: flex;
       margin-block-start: 0;
-    }
-
-    .shell-receipt-button {
-      white-space: nowrap;
     }
   }
 
@@ -615,6 +637,7 @@
 
   .shell-cursor {
     display: inline-block;
+    flex: none;
     width: 7px;
     height: 1.05em;
     background: var(--color-primary-500);

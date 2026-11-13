@@ -110,6 +110,7 @@ export const shellUi: Record<SiteLocale, ShellUi> = {
     toolbarLabel: 'Shell shortcuts',
     prompt: 'erik@portfolio:~$',
     placeholder: 'type a command or ask about Erik…',
+    mobilePlaceholder: 'ask about Erik…',
     suggestions: [
       ShellCommand.Help,
       ShellCommand.WhoIs,
@@ -117,6 +118,14 @@ export const shellUi: Record<SiteLocale, ShellUi> = {
       ShellCommand.Now,
       'what are your strongest projects?',
       'what do you build with agents and LLMs?',
+    ],
+    mobileSuggestions: [
+      ShellCommand.Help,
+      ShellCommand.WhoIs,
+      ShellCommand.Stack,
+      ShellCommand.Now,
+      'strongest projects?',
+      'what do you build?',
     ],
     commands: [
       ShellCommand.Help,
@@ -205,6 +214,7 @@ export const shellUi: Record<SiteLocale, ShellUi> = {
     technicalPrivacySuffix: 'response header) directly to',
     forgetEndpoint: '/api/log/forget',
     technicalPrivacyScope: 'Any one request id of a conversation deletes the whole conversation.',
+    noscript: 'The interactive shell needs JavaScript. Email me at',
   },
   [SITE_LOCALE.pt]: {
     welcome:
@@ -215,6 +225,7 @@ export const shellUi: Record<SiteLocale, ShellUi> = {
     toolbarLabel: 'Atalhos do shell',
     prompt: 'erik@portfolio:~$',
     placeholder: 'digite um comando ou pergunte sobre o Erik…',
+    mobilePlaceholder: 'pergunte sobre o Erik…',
     suggestions: [
       ShellCommand.Help,
       ShellCommand.WhoIs,
@@ -222,6 +233,14 @@ export const shellUi: Record<SiteLocale, ShellUi> = {
       ShellCommand.Now,
       'quais são seus projetos mais fortes?',
       'o que você constrói com agentes e LLMs?',
+    ],
+    mobileSuggestions: [
+      ShellCommand.Help,
+      ShellCommand.WhoIs,
+      ShellCommand.Stack,
+      ShellCommand.Now,
+      'projetos mais fortes?',
+      'o que você constrói?',
     ],
     commands: [
       ShellCommand.Help,
@@ -314,5 +333,6 @@ export const shellUi: Record<SiteLocale, ShellUi> = {
     technicalPrivacySuffix: 'da resposta) diretamente para',
     forgetEndpoint: '/api/log/forget',
     technicalPrivacyScope: 'Qualquer request id de uma conversa apaga a conversa inteira.',
+    noscript: 'O shell interativo precisa de JavaScript. Envie um email para',
   },
 };

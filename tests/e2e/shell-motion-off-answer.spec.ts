@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { MOBILE_BREAKPOINT_PX } from '../../lib/breakpoint';
 import { settleFrames } from './_helpers/geometry';
 import { installChunkedAsk } from './_helpers/mock-backend';
 import { freezeMotion } from './_helpers/motion';
@@ -37,7 +38,8 @@ test('with MOTION off the answer lands whole and the carets stay still', async (
   await page.keyboard.press('Tab');
   await expect(page.locator(SHELL_SELECTOR.input)).not.toBeFocused();
   const placeholder = page.locator(PLACEHOLDER);
-  await expect(placeholder).toHaveText(ui.placeholder);
+  const narrow = (page.viewportSize()?.width ?? MOBILE_BREAKPOINT_PX) < MOBILE_BREAKPOINT_PX;
+  await expect(placeholder).toHaveText(narrow ? ui.mobilePlaceholder : ui.placeholder);
   expect(
     await page
       .locator('[data-testid="shell-cursor"]')

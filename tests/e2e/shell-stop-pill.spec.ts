@@ -22,7 +22,8 @@ const PROBE_COLUMNS = 7;
 const PROBE_ROWS = 3;
 const EDGE_INSET_PX = 1;
 const SUBPIXEL_PX = 1;
-const ELAPSED = /\d+\.\ds$/;
+const ELAPSED_TENTHS = /\d+\.\ds$/;
+const ELAPSED_WHOLE = /\s\d+s$/;
 
 async function overflowFeed(page: Page): Promise<void> {
   const feed = page.locator(SHELL_SELECTOR.feed);
@@ -55,7 +56,7 @@ function pillCoverage(page: Page) {
   );
 }
 
-async function expectOpaquePill(page: Page, locale: SiteLocale) {
+async function expectOpaquePill(page: Page, locale: SiteLocale, motionOff: boolean) {
   const pill = stopButton(page, locale);
   await expect(pill).toBeVisible();
   const style = await pill.evaluate((node) => {
@@ -80,7 +81,9 @@ async function expectOpaquePill(page: Page, locale: SiteLocale) {
   const coverage = await pillCoverage(page);
   expect(coverage.samples).toBeGreaterThan(0);
   expect(coverage.misses, 'feed text shows through or over the pill').toEqual([]);
-  await expect(pill.locator('.shell-stop-elapsed')).toHaveText(ELAPSED);
+  await expect(pill.locator('.shell-stop-elapsed')).toHaveText(
+    motionOff ? ELAPSED_WHOLE : ELAPSED_TENTHS,
+  );
 }
 
 for (const { width, height, locale, motionOff } of CASES) {
@@ -101,12 +104,12 @@ for (const { width, height, locale, motionOff } of CASES) {
 
       await askShell(page, 'who is erik?');
       await expect.poll(chunked.requests).toBe(1);
-      await expectOpaquePill(page, locale);
+      await expectOpaquePill(page, locale, motionOff);
       await page.locator(SHELL_SELECTOR.feed).evaluate((feed) => {
         feed.scrollTop = 0;
       });
       await settleFrames(page);
-      await expectOpaquePill(page, locale);
+      await expectOpaquePill(page, locale, motionOff);
 
       await chunked.push('Erik builds agent platforms and evaluation harnesses. '.repeat(6));
       await expect(page.locator(SHELL_SELECTOR.caret)).toBeVisible();
@@ -114,7 +117,7 @@ for (const { width, height, locale, motionOff } of CASES) {
         feed.scrollTop = 0;
       });
       await settleFrames(page);
-      await expectOpaquePill(page, locale);
+      await expectOpaquePill(page, locale, motionOff);
 
       await page.locator(SHELL_SELECTOR.feed).evaluate((feed) => {
         feed.scrollTop = feed.scrollHeight;

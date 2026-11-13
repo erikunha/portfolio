@@ -17,6 +17,7 @@ import { useBreakpoint } from '@/lib/use-breakpoint.client';
 import { TerminalChromeBar } from '../TerminalChromeBar';
 import { AnimatedPlaceholder, StaticPlaceholder } from './AnimatedPlaceholder.client';
 import { parsePrivacyCommand } from './privacy-command';
+import { revealShell, SHELL_LIVE_PROPS } from './reveal-shell';
 import { ShellLine, StopElapsed } from './ShellLines.client';
 import { ShellToolbar } from './ShellToolbar.client';
 import { ShellKey } from './shell-keys';
@@ -57,6 +58,7 @@ export function InteractiveShell({
   const inputRef = useRef<HTMLInputElement>(null);
   const commandHistory = useCommandHistory();
   const promptEditedRef = useRef(false);
+  const revealedHistoryRef = useRef(history);
 
   const announce = useCallback((text: string) => {
     setAnnouncement((previous) => ({ id: previous.id + 1, text }));
@@ -132,6 +134,12 @@ export function InteractiveShell({
       feedRef.current.scrollTop = feedRef.current.scrollHeight;
     }
   }, [history, streamingText]);
+
+  useEffect(() => {
+    if (revealedHistoryRef.current === history) return;
+    revealedHistoryRef.current = history;
+    revealShell(feedRef.current);
+  }, [history]);
 
   const runCommand = useCallback(
     (raw: string) => {
@@ -227,124 +235,126 @@ export function InteractiveShell({
         tagClassName="shell-chrome-tag"
         dotSize={WINDOW_DOT_SIZE}
       />
-      <div className="shell-feed-wrap">
-        <div
-          ref={feedRef}
-          onScroll={(event) => {
-            const feed = event.currentTarget;
-            const lineHeight = Number.parseFloat(getComputedStyle(feed).lineHeight);
-            followOutputRef.current =
-              feed.scrollHeight - feed.scrollTop - feed.clientHeight <= lineHeight;
-          }}
-          className="shell-feed"
-          role="log"
-          aria-label={ui.outputLabel}
-          aria-live="polite"
-          aria-busy={busy}
-          // biome-ignore lint/a11y/noNoninteractiveTabindex: the vertically scrollable log must be keyboard-focusable so arrow keys can scroll it (WCAG 2.1.1, axe scrollable-region-focusable)
-          tabIndex={0}
-        >
-          {history.map((line) => (
-            <ShellLine
-              key={line.id}
-              line={line}
-              ui={ui}
-              states={states}
-              isMobile={isMobile}
-              announce={announce}
-              onRetry={runCommand}
-              busy={busy}
-              onConversationForgotten={onConversationForgotten}
-            />
-          ))}
-          {streamingText !== null && (
-            <span className="shell-line shell-line-output" data-kind={ShellLineKind.Output}>
-              <span className="shell-ai-label">{ui.aiLabel}: </span>
-              {streamingText}
-              <span className="shell-caret" aria-hidden="true">
-                {STREAM_CARET}
-              </span>
-            </span>
-          )}
-        </div>
-        {busy ? (
-          <button
-            ref={stopRef}
-            className="shell-stop-pill"
-            type="button"
-            aria-label={ui.stopLabel}
-            onClick={stopAndReturnFocus}
+      <div {...SHELL_LIVE_PROPS}>
+        <div className="shell-feed-wrap">
+          <div
+            ref={feedRef}
+            onScroll={(event) => {
+              const feed = event.currentTarget;
+              const lineHeight = Number.parseFloat(getComputedStyle(feed).lineHeight);
+              followOutputRef.current =
+                feed.scrollHeight - feed.scrollTop - feed.clientHeight <= lineHeight;
+            }}
+            className="shell-feed"
+            role="log"
+            aria-label={ui.outputLabel}
+            aria-live="polite"
+            aria-busy={busy}
+            // biome-ignore lint/a11y/noNoninteractiveTabindex: the vertically scrollable log must be keyboard-focusable so arrow keys can scroll it (WCAG 2.1.1, axe scrollable-region-focusable)
+            tabIndex={0}
           >
-            <span className="shell-stop-elapsed" aria-hidden="true">
-              <StopElapsed template={ui.stopPill} />
-            </span>
-            <kbd className="shell-stop-key">{ui.escKey}</kbd>
-          </button>
-        ) : null}
-      </div>
-      <form
-        className="shell-form"
-        data-testid="shell-form"
-        action={(data) => {
-          const queued = data.get(COMMAND_FIELD);
-          if (typeof queued === 'string') runCommand(queued);
-        }}
-        onSubmit={(event) => {
-          event.preventDefault();
-          runCommand(input);
-        }}
-      >
-        <span className="shell-prompt">{ui.prompt}</span>
-        <div className="shell-input-wrap">
-          <input
-            ref={inputRef}
-            className="shell-input"
-            name={COMMAND_FIELD}
-            enterKeyHint="send"
-            value={input}
-            onChange={(event) => {
-              editInput(event.target.value);
-              commandHistory.noteEdit();
-            }}
-            onFocus={() => setInputFocused(true)}
-            onBlur={() => setInputFocused(false)}
-            onKeyDown={(event) => {
-              if (
-                event.key === ShellKey.Enter &&
-                (event.nativeEvent.isComposing || event.keyCode === COMPOSITION_KEYCODE)
-              ) {
-                event.preventDefault();
-                return;
-              }
-              if (
-                event.nativeEvent.isComposing ||
-                event.altKey ||
-                event.ctrlKey ||
-                event.metaKey ||
-                event.shiftKey ||
-                (event.key !== ShellKey.Up && event.key !== ShellKey.Down)
-              ) {
-                return;
-              }
-              event.preventDefault();
-              const step = event.key === ShellKey.Up ? HISTORY_STEP.Older : HISTORY_STEP.Newer;
-              editInput(commandHistory.recall(step, input));
-            }}
-            autoComplete="off"
-            autoCapitalize="off"
-            autoCorrect="off"
-            spellCheck={false}
-            aria-label={ui.inputLabel}
-            aria-describedby={accuracyId}
-          />
-          {!input &&
-            (inputFocused || busy ? (
-              <StaticPlaceholder ui={ui} />
-            ) : (
-              <AnimatedPlaceholder ui={ui} />
+            {history.map((line) => (
+              <ShellLine
+                key={line.id}
+                line={line}
+                ui={ui}
+                states={states}
+                isMobile={isMobile}
+                announce={announce}
+                onRetry={runCommand}
+                busy={busy}
+                onConversationForgotten={onConversationForgotten}
+              />
             ))}
+            {streamingText !== null && (
+              <span className="shell-line shell-line-output" data-kind={ShellLineKind.Output}>
+                <span className="shell-ai-label">{ui.aiLabel}: </span>
+                {streamingText}
+                <span className="shell-caret" aria-hidden="true">
+                  {STREAM_CARET}
+                </span>
+              </span>
+            )}
+          </div>
+          {busy ? (
+            <button
+              ref={stopRef}
+              className="shell-stop-pill"
+              type="button"
+              aria-label={ui.stopLabel}
+              onClick={stopAndReturnFocus}
+            >
+              <span className="shell-stop-elapsed" aria-hidden="true">
+                <StopElapsed template={ui.stopPill} />
+              </span>
+              <kbd className="shell-stop-key">{ui.escKey}</kbd>
+            </button>
+          ) : null}
         </div>
-      </form>
+        <form
+          className="shell-form"
+          data-testid="shell-form"
+          action={(data) => {
+            const queued = data.get(COMMAND_FIELD);
+            if (typeof queued === 'string') runCommand(queued);
+          }}
+          onSubmit={(event) => {
+            event.preventDefault();
+            runCommand(input);
+          }}
+        >
+          <span className="shell-prompt">{ui.prompt}</span>
+          <div className="shell-input-wrap">
+            <input
+              ref={inputRef}
+              className="shell-input"
+              name={COMMAND_FIELD}
+              enterKeyHint="send"
+              value={input}
+              onChange={(event) => {
+                editInput(event.target.value);
+                commandHistory.noteEdit();
+              }}
+              onFocus={() => setInputFocused(true)}
+              onBlur={() => setInputFocused(false)}
+              onKeyDown={(event) => {
+                if (
+                  event.key === ShellKey.Enter &&
+                  (event.nativeEvent.isComposing || event.keyCode === COMPOSITION_KEYCODE)
+                ) {
+                  event.preventDefault();
+                  return;
+                }
+                if (
+                  event.nativeEvent.isComposing ||
+                  event.altKey ||
+                  event.ctrlKey ||
+                  event.metaKey ||
+                  event.shiftKey ||
+                  (event.key !== ShellKey.Up && event.key !== ShellKey.Down)
+                ) {
+                  return;
+                }
+                event.preventDefault();
+                const step = event.key === ShellKey.Up ? HISTORY_STEP.Older : HISTORY_STEP.Newer;
+                editInput(commandHistory.recall(step, input));
+              }}
+              autoComplete="off"
+              autoCapitalize="off"
+              autoCorrect="off"
+              spellCheck={false}
+              aria-label={ui.inputLabel}
+              aria-describedby={accuracyId}
+            />
+            {!input &&
+              (inputFocused || busy ? (
+                <StaticPlaceholder ui={ui} compact={isMobile} />
+              ) : (
+                <AnimatedPlaceholder ui={ui} compact={isMobile} />
+              ))}
+          </div>
+        </form>
+      </div>
       <p id={accuracyId} className="shell-ai-notice">
         {ui.accuracy}
       </p>

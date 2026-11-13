@@ -15,6 +15,8 @@ import { forgetWithConversation, useConversationQuestions } from '@/lib/ask-conv
 import { FORGET_OUTCOME, wasForgotten } from '@/lib/forget-request.client';
 import { MS_PER_MINUTE, MS_PER_SECOND, SECONDS_PER_MINUTE } from '@/lib/time';
 import { COPY_STATUS, useCopyFeedback } from '@/lib/use-copy-feedback.client';
+import { revealShell } from './reveal-shell';
+import { ShellEmail } from './ShellEmail';
 import { ShellKey } from './shell-keys';
 
 const RECEIPT_VIEW = {
@@ -143,6 +145,7 @@ export function ConversationReceipt({
       (feed.getBoundingClientRect().bottom -
         Number.parseFloat(getComputedStyle(feed).paddingBottom));
     if (overflow > 0) feed.scrollTop += overflow;
+    revealShell(root);
   }, [view.kind, copyStatus]);
 
   const waitLeft =
@@ -256,7 +259,7 @@ export function ConversationReceipt({
 
   const emailFallback = (
     <span className="shell-receipt-hint">
-      {ui.forgetEmailPrefix} <a href={ui.emailHref}>{ui.email}</a>
+      {ui.forgetEmailPrefix} <ShellEmail ui={ui} />
     </span>
   );
 

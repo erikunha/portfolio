@@ -645,6 +645,7 @@ export const ShellUiSchema = z.object({
   toolbarLabel: z.string().min(1),
   prompt: z.string().min(1),
   placeholder: z.string().min(1),
+  mobilePlaceholder: z.string().min(1),
   commandHint: z.string().min(1),
   aiLabel: z.string().min(1),
   thinking: z.string().min(1),
@@ -717,7 +718,9 @@ export const ShellUiSchema = z.object({
   technicalPrivacySuffix: z.string().min(1),
   forgetEndpoint: z.string().min(1),
   technicalPrivacyScope: z.string().min(1),
+  noscript: z.string().min(1),
   suggestions: z.array(z.string().min(1)).min(1),
+  mobileSuggestions: z.array(z.string().min(1)).min(1),
   commands: z.array(z.string().min(1)).min(1),
 });
 export type ShellUi = z.infer<typeof ShellUiSchema>;
