@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { parse } from 'yaml';
 
-const PARENT_SEPARATOR = '>';
+const PARENT_SEPARATOR = /(?<!@)>/;
 const VERSION_SEPARATOR = '@';
 const SCOPE_PREFIX = '@';
 const CARET = '^';
@@ -88,6 +88,12 @@ describe('pnpm.overrides', () => {
         resolved,
       ),
     ).toEqual(['hono', 'body-parser@>=2']);
+  });
+
+  it('reads a version range in the selector as part of the target, not as a parent separator', () => {
+    expect(overrideTarget('body-parser@>=2')).toBe('body-parser');
+    const resolved = new Map<string, Version[]>([['body-parser', [[2, 3, 1]]]]);
+    expect(deadOverrides({ 'body-parser@>=2': '^2.3.0' }, resolved)).toEqual([]);
   });
 
   it('reads the child of a parent selector and the zero-major caret rule', () => {

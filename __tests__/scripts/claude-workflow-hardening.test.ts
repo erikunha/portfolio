@@ -66,6 +66,10 @@ describe('claude.yml keeps pull-request content out of the instruction channel',
     expect(String(head?.with?.ref)).toContain('/head');
   });
 
+  it('keeps the token out of both checkouts', () => {
+    for (const checkout of checkouts) expect(checkout?.with?.['persist-credentials']).toBe(false);
+  });
+
   it('strips instruction-shaped files from pr-head before the action runs', () => {
     const stripAt = stripStep ? steps.indexOf(stripStep) : -1;
     expect(stripAt).toBeGreaterThanOrEqual(0);
