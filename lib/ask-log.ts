@@ -1,5 +1,6 @@
 import 'server-only';
 
+import type { AskFailureReason } from '@/lib/ask/failure-reason';
 import type { PostHocVerdict } from '@/lib/ask/output-guard';
 import { redactPii } from '@/lib/ask/redact-pii';
 import { log } from '@/lib/log';
@@ -36,6 +37,7 @@ export type AskInteraction = {
   outputTokens: number;
   durationMs: number;
   status: AskInteractionStatus;
+  reason?: AskFailureReason;
   guard?: PostHocVerdict;
 };
 

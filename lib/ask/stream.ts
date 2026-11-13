@@ -1,6 +1,7 @@
 import { streamText } from 'ai';
 import { askErrors } from '@/content/ask-errors';
 import { SITE_LOCALE, type SiteLocale } from '@/content/site-locale';
+import { ASK_FAILURE_REASON, type AskFailureReason } from '@/lib/ask/failure-reason';
 import { countAskGuardFinding } from '@/lib/ask/guard-count';
 import { ASK_RESERVED_INPUT_TOKENS } from '@/lib/ask/input-reservation';
 import { ASK_MAX_OUTPUT_TOKENS } from '@/lib/ask/limits';
@@ -60,6 +61,7 @@ type RunState = {
   clientGone: boolean;
   firstChunkSeen: boolean;
   status: AskInteractionStatus;
+  failureReason: AskFailureReason | null;
   truncated: boolean;
   answerText: string;
   guardAbort: Extract<GuardVerdict, { ok: false }>['reason'] | null;
@@ -109,6 +111,7 @@ export function createAskStream(context: AskContext): AskStream {
     clientGone: false,
     firstChunkSeen: false,
     status: 'completed',
+    failureReason: null,
     truncated: false,
     answerText: '',
     guardAbort: null,
@@ -193,6 +196,7 @@ export function createAskStream(context: AskContext): AskStream {
           if (next.done) {
             if (state.upstreamFailed) {
               state.status = 'errored';
+              state.failureReason = ASK_FAILURE_REASON.upstream;
               sendError(askErrors[answerLocale].interrupted);
               break;
             }
@@ -207,6 +211,7 @@ export function createAskStream(context: AskContext): AskStream {
               sendError(`${REFUSAL_PREFIX}${askErrors[answerLocale].refused}`);
             } else if (finishReason === FINISH_REASON_INTERRUPTED) {
               state.status = 'errored';
+              state.failureReason = ASK_FAILURE_REASON.interrupted;
               sendError(askErrors[answerLocale].interrupted);
             }
             break;
@@ -216,6 +221,7 @@ export function createAskStream(context: AskContext): AskStream {
           const verdict = guard.inspect(text);
           if (!verdict.ok) {
             state.status = 'errored';
+            state.failureReason = ASK_FAILURE_REASON.outputGuard;
             state.guardAbort = verdict.reason;
             log.info('ask output-guard layer-1 abort', {
               requestId,
@@ -231,6 +237,10 @@ export function createAskStream(context: AskContext): AskStream {
       } catch (streamErr) {
         if (!state.clientGone) {
           state.status = 'errored';
+          state.failureReason =
+            streamErr instanceof Error && streamErr.message === MID_STREAM_TIMEOUT_MESSAGE
+              ? ASK_FAILURE_REASON.midStreamTimeout
+              : ASK_FAILURE_REASON.streamError;
           log.error('ask stream failed', { requestId, error: describeError(streamErr) });
           sendError(askErrors[answerLocale].interrupted);
         }
@@ -325,6 +335,7 @@ export function createAskStream(context: AskContext): AskStream {
       outputTokens: usage.outputTokens,
       durationMs: Date.now() - context.startedAt,
       status: state.status,
+      ...(state.failureReason !== null && { reason: state.failureReason }),
       guard: guardVerdict,
     });
     emitAskUsage({
