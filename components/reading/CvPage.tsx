@@ -39,7 +39,9 @@ export function CvPage({ locale }: { locale: SiteLocale }) {
       <script type={JSON_LD_TYPE}>{serializeJsonLd(cvJsonLd)}</script>
       <header>
         <h1 className="reading-name">{document_.name}</h1>
-        <p className="reading-role">{document_.role}</p>
+        <p className="reading-role">
+          <KeepTail>{document_.role}</KeepTail>
+        </p>
         <p className="reading-meta">
           <KeepTail>{document_.location}</KeepTail>
         </p>

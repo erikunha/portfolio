@@ -20,7 +20,9 @@ export function SummaryPage({ locale }: { locale: SiteLocale }) {
         <h1 id={sectionId('who')} className="reading-name">
           {doc.name}
         </h1>
-        <p className="reading-role">{doc.tagline}</p>
+        <p className="reading-role">
+          <KeepTail>{doc.tagline}</KeepTail>
+        </p>
         <p className="reading-meta">
           <KeepTail>{doc.technologyLine}</KeepTail>
         </p>

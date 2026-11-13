@@ -7,6 +7,7 @@ import { Panel } from '@/design-system';
 import { CompanyMention } from '../../CompanyLink';
 import { RoleTyper } from '../../client/RoleTyper';
 import { IconReadme } from '../../Icons';
+import { KeepTail } from '../../KeepTail';
 
 const FIRST_LINE_NUMBER = 1;
 const CODE_SAMPLE_LOCALE = SITE_LOCALE.en;
@@ -41,19 +42,25 @@ export function About({ locale }: { locale: SiteLocale }) {
                   ))}
                 </div>
                 <div className="ab-prose">
-                  <p>{c.whoami.intro}</p>
+                  <p>
+                    <KeepTail>{c.whoami.intro}</KeepTail>
+                  </p>
                   <h4>{c.whoami.principlesTitle}</h4>
                   {c.whoami.principles.map((line) => (
-                    <p key={line}>{line}</p>
+                    <p key={line}>
+                      <KeepTail>{line}</KeepTail>
+                    </p>
                   ))}
                   <h4>{c.whoami.statusTitle}</h4>
                   <p>
                     {c.whoami.statusPrefix}
                     <RoleTyper role={c.whoami.role} className="ab-role font-bold" />
-                    {c.whoami.statusSuffix}
+                    <KeepTail>{c.whoami.statusSuffix}</KeepTail>
                   </p>
                   {c.whoami.details.map((line) => (
-                    <p key={line}>{line}</p>
+                    <p key={line}>
+                      <KeepTail>{line}</KeepTail>
+                    </p>
                   ))}
                 </div>
               </div>
