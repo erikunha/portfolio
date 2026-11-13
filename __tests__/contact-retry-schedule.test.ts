@@ -81,18 +81,24 @@ describe('the contact retry schedule reaches every queued message inside the ide
 
   it('retries a message queued at any minute before it is 24 hours old, wherever each run lands in its hour', async () => {
     const { isContactRetryExpired } = await import('@/lib/contact-outbox');
+    const missed: string[] = [];
     for (const minuteInHour of minuteChoices()) {
       const runs = runOffsetsMinutes(minuteInHour);
       for (let queuedAt = 0; queuedAt < MINUTES_PER_DAY; queuedAt++) {
         const firstRun = runs.find((run) => run >= queuedAt);
-        expect(firstRun, `no run after minute ${queuedAt}`).toBeDefined();
-        const ageMs = ((firstRun as number) - queuedAt) * MS_PER_MINUTE;
-        expect(
-          isContactRetryExpired(0, ageMs),
-          `queued at minute ${queuedAt} with run minutes ${minuteInHour.join('/')}: first retry at age ${ageMs / MS_PER_MINUTE} minutes`,
-        ).toBe(false);
+        if (firstRun === undefined) {
+          missed.push(`no run after minute ${queuedAt} with run minutes ${minuteInHour.join('/')}`);
+          continue;
+        }
+        const ageMs = (firstRun - queuedAt) * MS_PER_MINUTE;
+        if (isContactRetryExpired(0, ageMs)) {
+          missed.push(
+            `queued at minute ${queuedAt} with run minutes ${minuteInHour.join('/')}: first retry at age ${ageMs / MS_PER_MINUTE} minutes`,
+          );
+        }
       }
     }
+    expect(missed).toEqual([]);
   });
 });
 
