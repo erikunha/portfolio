@@ -102,7 +102,7 @@ None of these gates a PR (`ci-gate` waits only on the jobs in `ci.yml`). Job-lev
 | Workflow                         | Trigger                                         | What it does                                                                                       |
 | -------------------------------- | ----------------------------------------------- | -------------------------------------------------------------------------------------------------- |
 | `ask-eval.yml`                   | Monday 05:00 UTC, manual                        | Runs `pnpm ask:eval` and republishes the stored result the site's AI metrics read                  |
-| `agent-eval.yml`                 | Monday 06:00 UTC, manual                        | Runs `pnpm eval:agents`, the prompt-regression eval of the rules in `AGENTS.md`                     |
+| `agent-eval.yml`                 | Monday 06:00 UTC, manual                        | Runs `pnpm eval:agents`, the prompt-regression eval of fixed rule texts modelled on `AGENTS.md`                     |
 | `codeql.yml`                     | Push and PR to `main`, Monday 03:00 UTC, manual | CodeQL analysis of the JavaScript and TypeScript sources, reported to code scanning                 |
 | `mutation.yml`                   | Sunday 04:00 UTC, manual                        | Stryker mutation run; fails when the runner produced no report                                      |
 | `tool-pins.yml`                  | Monday 05:00 UTC, manual                        | `pnpm check:tool-pins`: fails when the pinned gitleaks or Semgrep version is behind the latest     |

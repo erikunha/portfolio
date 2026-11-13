@@ -32,8 +32,8 @@ merge-blocking check on this surface is the behavioral test suite (the required
 
 ## Security surface
 
-- The behavioral tests are the only merge-blocking check on this surface. Semgrep (`pnpm lint:semgrep`,
-  report-only in CI) and CodeQL report to code scanning and block nothing. Editing `app/api/**`, `lib/rate-limit.ts`, or `proxy.ts` means
+- The behavioral tests are the only merge-blocking check on this surface for a finding. Semgrep (`pnpm lint:semgrep`,
+  report-only in CI) and CodeQL findings block nothing; only Semgrep's fixture self-test and false-positive baseline can fail a run. Editing `app/api/**`, `lib/rate-limit.ts`, or `proxy.ts` means
   re-reading the diff for the abuse paths each of them closes.
 - CSP and `Reporting-Endpoints` headers come from **`proxy.ts`**, not
   `next.config.ts` (which sets the static headers: COOP, X-Frame-Options, HSTS,
