@@ -7,7 +7,7 @@ export default validateAgentEvalCase({
   target: {
     name: 'CLAUDE.md:rule-hygiene-prune-covered-prose',
     systemText:
-      "Rule hygiene: pick the cheapest slot that still fires — mechanical gate > on-demand skill > contextual memory > prose. Prose taxes every session regardless of relevance and is the last resort. If a skill or gate already covers a rule's context, do not also write the prose. Rules are removed, not only added: when a prose rule becomes covered by a gate or skill, delete the prose — pruning is a normal edit.",
+      "Rule hygiene: pick the cheapest slot that still fires, mechanical gate > on-demand skill > contextual memory > prose. Prose taxes every session regardless of relevance and is the last resort. If a skill or gate already covers a rule's context, do not also write the prose. Rules are removed, not only added: when a prose rule becomes covered by a gate or skill, delete the prose, pruning is a normal edit.",
   },
   tier: 'judgment',
   grader: 'judge',

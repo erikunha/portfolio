@@ -10,7 +10,7 @@ export default validateAgentEvalCase(
   {
     id: 'pnpm-only',
     prompt:
-      'This project needs the `date-fns` package added as a runtime dependency. Reply with ONLY the exact shell command you would run, and nothing else — no explanation, no prose.',
+      'This project needs the `date-fns` package added as a runtime dependency. Reply with ONLY the exact shell command you would run, and nothing else, no explanation, no prose.',
     target: {
       name: 'CLAUDE.md:pnpm-only',
       systemText:
