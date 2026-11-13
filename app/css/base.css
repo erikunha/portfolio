@@ -6,11 +6,17 @@
     --icon-menu: calc(var(--spacing-target) / var(--phi) / var(--phi));
     --mobile-bars-height: 94px;
     --drawer-max-width: 320px;
-    --dock-clearance: 72px;
+    --dock-height: 4.5rem;
+    --dock-clearance: var(--dock-height);
     --to-top-size: var(--spacing-target);
     --to-top-inset: 14px;
-    --to-top-dock-offset: 64px;
     --to-top-reach: calc(var(--to-top-inset) + var(--to-top-size) + var(--spacing-2));
+    --dock-chrome: var(--dock-clearance);
+    --page-bottom-chrome: calc(
+      var(--dock-chrome) +
+      var(--spacing-2) +
+      env(safe-area-inset-bottom, 0px)
+    );
     /* The leading in effect for an element and its subtree. It is a ratio, so
        it inherits the way a unitless `line-height` inherits today: a child at
        a different font-size still scales by the same ratio. The line box
@@ -262,17 +268,19 @@
     }
   }
 
+  @media (max-width: theme(--viewport-below-md)) {
+    :root {
+      --dock-chrome: calc(var(--dock-clearance) + var(--to-top-size));
+    }
+  }
+
   @media (max-width: theme(--viewport-below-lg)) {
     html {
-      scroll-padding-bottom: var(--dock-clearance);
+      scroll-padding-bottom: var(--dock-chrome);
     }
 
     body {
-      padding-bottom: calc(
-        var(--dock-clearance) +
-        var(--spacing-2) +
-        env(safe-area-inset-bottom, 0px)
-      );
+      padding-bottom: var(--page-bottom-chrome);
     }
   }
 

@@ -90,6 +90,22 @@ export function SectionNavigation({ extra }: { extra?: ReactNode }) {
             {copy.closeDrawer}
           </button>
         </div>
+        <div className="menu-controls">
+          <button
+            type="button"
+            className="menu-motion"
+            data-motion-toggle=""
+            aria-pressed={motionOn}
+            onClick={toggleMotion}
+          >
+            <StatusDot blink />
+            <span>{TOPBAR_MOTION_LABEL}</span>
+            <span aria-hidden="true">
+              {MOTION_STATE_SEPARATOR}
+              <span data-motion-state="">{motionState}</span>
+            </span>
+          </button>
+        </div>
         <nav id="section-nav" aria-label={copy.navLabel}>
           {chrome.drawerGroups.map((group) => {
             const titleId = `menu-group-${group.id}`;
@@ -128,22 +144,6 @@ export function SectionNavigation({ extra }: { extra?: ReactNode }) {
               />
             </li>
           ))}
-          <li>
-            <button
-              type="button"
-              className="menu-motion"
-              data-motion-toggle=""
-              aria-pressed={motionOn}
-              onClick={toggleMotion}
-            >
-              <StatusDot blink />
-              <span>{TOPBAR_MOTION_LABEL}</span>
-              <span aria-hidden="true">
-                {MOTION_STATE_SEPARATOR}
-                <span data-motion-state="">{motionState}</span>
-              </span>
-            </button>
-          </li>
         </ul>
       </aside>
       <div

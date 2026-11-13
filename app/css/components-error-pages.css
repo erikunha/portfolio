@@ -45,13 +45,13 @@
     background: var(--color-primary-quiet);
   }
 
+  :root:has(.err-main) {
+    --dock-chrome: var(--dock-clearance);
+  }
+
   .err-main {
     --err-top-chrome: var(--mobile-bars-height);
-    --err-bottom-chrome: calc(
-      var(--dock-clearance) +
-      var(--spacing-2) +
-      env(safe-area-inset-bottom, 0px)
-    );
+    --err-bottom-chrome: var(--page-bottom-chrome);
     position: relative;
     z-index: var(--z-content);
     display: flex;
