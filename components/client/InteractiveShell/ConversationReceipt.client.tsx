@@ -10,7 +10,7 @@ import {
   useState,
 } from 'react';
 import type { ShellStates } from '@/content/shell-states.schema';
-import { fillShellState, type ShellUi } from '@/content/shell-ui';
+import { fillShellState, SHELL_LIMITS, type ShellUi } from '@/content/shell-ui';
 import { forgetWithConversation, useConversationQuestions } from '@/lib/ask-conversation.client';
 import { FORGET_OUTCOME, wasForgotten } from '@/lib/forget-request.client';
 import { MS_PER_MINUTE, MS_PER_SECOND, SECONDS_PER_MINUTE } from '@/lib/time';
@@ -33,7 +33,6 @@ type ReceiptView =
   | { kind: typeof RECEIPT_VIEW.Waiting; until: number };
 
 const FALLBACK_WAIT_SECONDS = SECONDS_PER_MINUTE;
-const CONFIRM_ARM_MS = 500;
 const FOCUS_TARGET = { Primary: 'primary', Secondary: 'secondary' } as const;
 type FocusTarget = (typeof FOCUS_TARGET)[keyof typeof FOCUS_TARGET];
 
@@ -44,9 +43,14 @@ function minutesLeft(until: number, now: number): number {
 function LabelStack({ labels, current }: { labels: readonly string[]; current: string }) {
   const all = labels.includes(current) ? labels : [...labels, current];
   return (
-    <span className="shell-label-stack" aria-hidden="true">
+    <span className="shell-label-stack">
       {all.map((label) => (
-        <span key={label} data-label="" data-current={label === current ? '' : undefined}>
+        <span
+          key={label}
+          data-label=""
+          data-current={label === current ? '' : undefined}
+          aria-hidden={label === current ? undefined : true}
+        >
           {label}
         </span>
       ))}
@@ -223,7 +227,12 @@ export function ConversationReceipt({
       return;
     }
     const pointerClick = event.detail > 0;
-    if (confirming && pointerClick && Date.now() - confirmShownAt.current < CONFIRM_ARM_MS) return;
+    if (
+      confirming &&
+      pointerClick &&
+      Date.now() - confirmShownAt.current < SHELL_LIMITS.confirmArmMs
+    )
+      return;
     void runForget();
   }
 
@@ -237,19 +246,12 @@ export function ConversationReceipt({
   const copyFailed = copyStatus === COPY_STATUS.Failed || copyStatus === COPY_STATUS.Unavailable;
   const copyText = copyStatus === COPY_STATUS.Copied ? ui.copied : ui.copy;
   const primaryText = confirming || pending ? ui.forgetCancel : copyText;
-  const primaryName = confirming || pending ? ui.forgetCancelLabel : ui.copyIdLabel;
 
   let secondaryText: string = ui.forget;
-  let secondaryName: string = ui.forgetLabel;
-  if (confirming || pending) {
-    secondaryText = pending ? ui.forgetting : ui.forgetConfirm;
-    secondaryName = ui.forgetConfirmLabel;
-  } else if (isError(view)) {
-    secondaryText = ui.forgetRetry;
-    secondaryName = ui.forgetRetryLabel;
-  } else if (view.kind === RECEIPT_VIEW.Waiting) {
+  if (confirming || pending) secondaryText = pending ? ui.forgetting : ui.forgetConfirm;
+  else if (isError(view)) secondaryText = ui.forgetRetry;
+  else if (view.kind === RECEIPT_VIEW.Waiting) {
     secondaryText = fillShellState(ui.forgetWait, { left: waitLeft });
-    secondaryName = fillShellState(ui.forgetWaitLabel, { left: waitLeft });
   }
 
   const emailFallback = (
@@ -366,7 +368,7 @@ export function ConversationReceipt({
           ref={primaryRef}
           type="button"
           className="shell-control shell-receipt-button"
-          aria-label={primaryName}
+          data-testid="shell-receipt-primary"
           aria-disabled={pending}
           aria-describedby={confirming || pending ? messageId : undefined}
           data-copied={
@@ -380,7 +382,7 @@ export function ConversationReceipt({
           ref={secondaryRef}
           type="button"
           className="shell-control shell-receipt-button shell-receipt-forget"
-          aria-label={secondaryName}
+          data-testid="shell-receipt-secondary"
           aria-disabled={forgetBlocked}
           aria-busy={pending}
           aria-describedby={confirming || isError(view) ? messageId : undefined}

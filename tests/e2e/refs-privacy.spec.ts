@@ -4,6 +4,7 @@ import { shellStates, shellUi } from '@/content/shell-ui';
 import { SITE_LOCALE } from '@/content/site-locale';
 import { waitForHydration } from './_helpers/hydration';
 import { installMockBackend } from './_helpers/mock-backend';
+import { waitForConfirmArmed } from './_helpers/shell';
 
 const REF_A = '7f3a9c2e-41b0-4d8e-9a77-3c51d0b2e8aa';
 const REF_B = '0b9d11e4-7c2a-4f6e-8e0d-2a6b9f3c1d55';
@@ -59,8 +60,9 @@ test.describe('request refs and privacy', () => {
     await run(page, 'what does erik do?');
     const receipt = page.getByTestId('shell-receipt');
     await expect(receipt.locator('code')).toHaveText(REF_A);
-    await receipt.getByRole('button', { name: ui.forgetLabel }).click();
-    await receipt.getByRole('button', { name: ui.forgetConfirmLabel }).click();
+    await receipt.getByRole('button', { name: ui.forget, exact: true }).click();
+    await waitForConfirmArmed(page);
+    await receipt.getByRole('button', { name: ui.forgetConfirm, exact: true }).click();
     await expect(receipt).toHaveCount(0);
     expect(forgotten).toEqual([REF_A]);
     await expect(page.getByRole('log', { name: ui.outputLabel })).toContainText(
@@ -112,8 +114,9 @@ test.describe('request refs and privacy', () => {
     await expect(receipt).toHaveCount(1);
     await expect(receipt).not.toContainText(REF_A);
     const shellReceipt = page.getByTestId('shell-receipt');
-    await shellReceipt.getByRole('button', { name: ui.forgetLabel }).click();
-    await shellReceipt.getByRole('button', { name: ui.forgetConfirmLabel }).click();
+    await shellReceipt.getByRole('button', { name: ui.forget, exact: true }).click();
+    await waitForConfirmArmed(page);
+    await shellReceipt.getByRole('button', { name: ui.forgetConfirm, exact: true }).click();
     await expect(receipt).toHaveCount(0);
   });
 

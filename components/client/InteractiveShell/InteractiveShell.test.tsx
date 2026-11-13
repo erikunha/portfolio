@@ -1,3 +1,4 @@
+import { within } from '@testing-library/react';
 import { act, createElement } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
@@ -340,11 +341,7 @@ function stopButton(container: HTMLElement): HTMLButtonElement {
 }
 
 function buttonNamed(container: HTMLElement, name: string): HTMLButtonElement {
-  const button = Array.from(container.querySelectorAll('button')).find(
-    (b) => b.getAttribute('aria-label') === name,
-  );
-  expect(button).toBeDefined();
-  return button as HTMLButtonElement;
+  return within(container).getByRole<HTMLButtonElement>('button', { name });
 }
 
 const currentLabel = (button: HTMLButtonElement) =>
@@ -752,7 +749,7 @@ describe('InteractiveShell r106 controls', () => {
     const ui = shellUi[SITE_LOCALE.en];
     const container = await renderShell();
     await submitQuestion(container, 'reference please');
-    const copy = buttonNamed(container, ui.copyIdLabel);
+    const copy = buttonNamed(container, ui.copy);
     expect(currentLabel(copy)).toBe(ui.copy);
     await act(async () => {
       copy.click();
@@ -762,10 +759,10 @@ describe('InteractiveShell r106 controls', () => {
       ui.copyFailedAnnouncement,
     );
     await act(async () => {
-      buttonNamed(container, ui.copyIdLabel).click();
+      buttonNamed(container, ui.copy).click();
     });
     expect(writeText).toHaveBeenCalledTimes(2);
-    expect(currentLabel(buttonNamed(container, ui.copyIdLabel))).toBe(ui.copied);
+    expect(currentLabel(buttonNamed(container, ui.copied))).toBe(ui.copied);
     expect(container.querySelector('[role="status"]')?.textContent).toContain(
       ui.copiedAnnouncement,
     );
@@ -786,7 +783,7 @@ describe('InteractiveShell r106 controls', () => {
     const container = await renderShell();
     await submitQuestion(container, 'copy without clipboard');
     await act(async () => {
-      buttonNamed(container, ui.copyIdLabel).click();
+      buttonNamed(container, ui.copy).click();
     });
     expect(container.querySelector('[data-testid="shell-receipt-message"]')?.textContent).toBe(
       ui.copyFailedAnnouncement,

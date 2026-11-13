@@ -1,5 +1,5 @@
 import type { Locator, Page } from '@playwright/test';
-import { shellStates, shellUi } from '../../../content/shell-ui';
+import { SHELL_LIMITS, shellStates, shellUi } from '../../../content/shell-ui';
 import { SITE_LOCALE, type SiteLocale } from '../../../content/site-locale';
 import { waitForHydration } from './hydration';
 
@@ -32,6 +32,10 @@ export async function openShell(page: Page, path = '/'): Promise<void> {
 export async function askShell(page: Page, question: string): Promise<void> {
   await page.locator(SHELL_SELECTOR.input).fill(question);
   await page.keyboard.press('Enter');
+}
+
+export async function waitForConfirmArmed(page: Page): Promise<void> {
+  await page.waitForTimeout(SHELL_LIMITS.confirmArmMs);
 }
 
 export function stopButton(page: Page, locale: SiteLocale = SITE_LOCALE.en): Locator {

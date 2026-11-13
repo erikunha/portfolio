@@ -28,12 +28,15 @@ export type ForgetMock =
   | 'storage-unavailable'
   | 'rate-limit'
   | 'network-error'
-  | 'slow';
+  | 'held';
 
 export const FORGET_RETRY_AFTER_S = 150;
-export const FORGET_SLOW_MS = 1500;
 
-export async function fulfillForget(route: Route, state: ForgetMock | undefined): Promise<void> {
+export async function fulfillForget(
+  route: Route,
+  state: ForgetMock | undefined,
+  release: Promise<void> = Promise.resolve(),
+): Promise<void> {
   if (state === 'network-error') {
     await route.abort('internetdisconnected');
     return;
@@ -63,7 +66,7 @@ export async function fulfillForget(route: Route, state: ForgetMock | undefined)
     });
     return;
   }
-  if (state === 'slow') await new Promise((resolve) => setTimeout(resolve, FORGET_SLOW_MS));
+  if (state === 'held') await release;
   await route.fulfill({
     status: 200,
     contentType: 'application/json',

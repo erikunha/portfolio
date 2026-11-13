@@ -1,3 +1,4 @@
+import { within } from '@testing-library/react';
 import { act, createElement } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { fire, flushMicrotasks, type MountedClient, mountClient } from '@/__tests__/helpers/render';
@@ -59,11 +60,9 @@ async function submit(container: HTMLElement, command: string) {
 }
 
 function named(container: HTMLElement, name: string): HTMLButtonElement {
-  const found = [...container.querySelectorAll('button')].find(
-    (button) => button.getAttribute('aria-label') === name,
-  );
-  if (!found) throw new Error(`no button named ${name}`);
-  return found;
+  const receipt = container.querySelector<HTMLElement>('[data-testid="shell-receipt"]');
+  if (!receipt) throw new Error('no receipt');
+  return within(receipt).getByRole<HTMLButtonElement>('button', { name });
 }
 
 async function click(button: HTMLElement) {
@@ -145,8 +144,8 @@ describe('one privacy receipt per conversation', () => {
     const container = await renderShell();
     await submit(container, 'first question');
     await submit(container, 'second question');
-    await click(named(container, ui.forgetLabel));
-    await click(named(container, ui.forgetConfirmLabel));
+    await click(named(container, ui.forget));
+    await click(named(container, ui.forgetConfirm));
 
     expect(forgetBodies).toEqual([{ requestId: B }]);
     expect(receipts(container)).toHaveLength(0);

@@ -2,7 +2,7 @@ import { within } from '@testing-library/react';
 import { act, createElement } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { flushMicrotasks, type MountedClient, mountClient } from '@/__tests__/helpers/render';
-import { fillShellState, shellStates, shellUi } from '@/content/shell-ui';
+import { fillShellState, SHELL_LIMITS, shellStates, shellUi } from '@/content/shell-ui';
 import { SITE_LOCALE, type SiteLocale } from '@/content/site-locale';
 import { FORGET_OUTCOME, type ForgetResult } from '@/lib/forget-request.client';
 import { describeForget } from './forget-message';
@@ -11,7 +11,7 @@ const ID = '7f3a9c2e-41b0-4d8e-9a77-3c51d0b2e8aa';
 const SECOND = '0b9d11e4-7c2a-4f6e-8e0d-2a6b9f3c1d55';
 const FORGET_URL = '/api/log/forget';
 const DOUBLE_CLICK_GAP_MS = 120;
-const ARMED_AFTER_MS = 600;
+const ARMED_AFTER_MS = SHELL_LIMITS.confirmArmMs + 1;
 
 let mounted: MountedClient | null = null;
 
@@ -44,11 +44,7 @@ async function setup(
 }
 
 function named(container: HTMLElement, name: string): HTMLButtonElement {
-  const found = [...container.querySelectorAll('button')].find(
-    (button) => button.getAttribute('aria-label') === name,
-  );
-  if (!found) throw new Error(`no button named ${name}`);
-  return found;
+  return within(container).getByRole<HTMLButtonElement>('button', { name });
 }
 
 async function click(button: HTMLElement) {
@@ -95,13 +91,6 @@ function deferred() {
 const message = (container: HTMLElement) =>
   container.querySelector('[data-testid="shell-receipt-message"]');
 
-const comparable = (text: string) =>
-  text
-    .toLowerCase()
-    .replace(/[^\p{L}\p{N}\s]/gu, ' ')
-    .replace(/\s+/g, ' ')
-    .trim();
-
 describe('ConversationReceipt guards', () => {
   beforeEach(() => {
     window.sessionStorage.clear();
@@ -119,7 +108,7 @@ describe('ConversationReceipt guards', () => {
       const fetchMock = forgetReplies(ok);
       const ui = shellUi[SITE_LOCALE.en];
       const { container, onForgotten } = await setup();
-      const forget = named(container, ui.forgetLabel);
+      const forget = named(container, ui.forget);
       await pointerClick(forget, 1);
       vi.advanceTimersByTime(DOUBLE_CLICK_GAP_MS);
       await pointerClick(forget, 2);
@@ -133,9 +122,9 @@ describe('ConversationReceipt guards', () => {
       const fetchMock = forgetReplies(ok);
       const ui = shellUi[SITE_LOCALE.en];
       const { container, onForgotten } = await setup();
-      await pointerClick(named(container, ui.forgetLabel), 1);
+      await pointerClick(named(container, ui.forget), 1);
       vi.advanceTimersByTime(ARMED_AFTER_MS);
-      await pointerClick(named(container, ui.forgetConfirmLabel), 1);
+      await pointerClick(named(container, ui.forgetConfirm), 1);
       expect(fetchMock).toHaveBeenCalledOnce();
       expect(onForgotten).toHaveBeenCalledOnce();
     });
@@ -146,8 +135,8 @@ describe('ConversationReceipt guards', () => {
     const ui = shellUi[SITE_LOCALE.en];
     const { container, onForgotten } = await setup({ recordedId: SECOND });
     const conversation = await import('@/lib/ask-conversation.client');
-    await click(named(container, ui.forgetLabel));
-    await click(named(container, ui.forgetConfirmLabel));
+    await click(named(container, ui.forget));
+    await click(named(container, ui.forgetConfirm));
     expect(onForgotten).toHaveBeenCalledOnce();
     expect(conversation.inConversation(SECOND)).toBe(true);
     expect(conversation.conversationQuestions()).toBe(1);
@@ -159,8 +148,8 @@ describe('ConversationReceipt guards', () => {
       forgetReplies(() => reply.promise);
       const ui = shellUi[SITE_LOCALE.en];
       const { container, announce } = await setup();
-      await click(named(container, ui.forgetLabel));
-      await click(named(container, ui.forgetConfirmLabel));
+      await click(named(container, ui.forget));
+      await click(named(container, ui.forgetConfirm));
       expect(announce).toHaveBeenCalledWith(ui.forgetting);
       await act(async () => reply.resolve(Response.json({ ok: true })));
       await flushMicrotasks();
@@ -171,8 +160,8 @@ describe('ConversationReceipt guards', () => {
       forgetReplies(() => reply.promise);
       const ui = shellUi[SITE_LOCALE.en];
       const { container, announce } = await setup();
-      await click(named(container, ui.forgetLabel));
-      await click(named(container, ui.forgetConfirmLabel));
+      await click(named(container, ui.forget));
+      await click(named(container, ui.forgetConfirm));
       mounted?.unmount();
       mounted = null;
       announce.mockClear();
@@ -191,13 +180,13 @@ describe('ConversationReceipt guards', () => {
       const fetchMock = forgetReplies(timedOut, ok);
       const ui = shellUi[SITE_LOCALE.en];
       const { container, onForgotten } = await setup();
-      await click(named(container, ui.forgetLabel));
-      await click(named(container, ui.forgetConfirmLabel));
+      await click(named(container, ui.forget));
+      await click(named(container, ui.forgetConfirm));
       expect(message(container)?.textContent).toBe(ui.forgetTimedOut);
       expect(message(container)?.getAttribute('role')).toBe('alert');
       expect(container.textContent).toContain(ui.forgetTimedOutHint);
       expect(container.textContent).not.toContain(ui.forgetOffline);
-      await click(named(container, ui.forgetRetryLabel));
+      await click(named(container, ui.forgetRetry));
       expect(fetchMock).toHaveBeenCalledTimes(2);
       expect(onForgotten).toHaveBeenCalledOnce();
     });
@@ -206,30 +195,26 @@ describe('ConversationReceipt guards', () => {
       const fetchMock = forgetReplies(status(500), ok);
       const ui = shellUi[SITE_LOCALE.en];
       const { container, onForgotten } = await setup();
-      await click(named(container, ui.forgetLabel));
-      await click(named(container, ui.forgetConfirmLabel));
+      await click(named(container, ui.forget));
+      await click(named(container, ui.forgetConfirm));
       expect(message(container)?.textContent).toBe(ui.forgetFailed);
       expect(message(container)?.getAttribute('role')).toBe('alert');
       expect(container.textContent).toContain(ui.forgetEmailPrefix);
       expect(onForgotten).not.toHaveBeenCalled();
-      await click(named(container, ui.forgetRetryLabel));
+      await click(named(container, ui.forgetRetry));
       expect(fetchMock).toHaveBeenCalledTimes(2);
       expect(onForgotten).toHaveBeenCalledOnce();
     });
   });
 
-  describe('each button name contains its visible text (WCAG 2.5.3)', () => {
-    function expectNamesToContainVisibleText(container: HTMLElement) {
+  describe('each button name is its visible text (WCAG 2.5.3)', () => {
+    function expectNamesToBeVisibleText(container: HTMLElement) {
       const buttons = within(container).getAllByRole('button');
       expect(buttons).toHaveLength(2);
       for (const button of buttons) {
-        const visible = comparable(button.querySelector('[data-current]')?.textContent ?? '');
+        const visible = button.querySelector('[data-current]')?.textContent ?? '';
         expect(visible).not.toBe('');
-        const match = within(container).getByRole('button', {
-          name: (accessibleName) => comparable(accessibleName).includes(visible),
-        });
-        expect(match, `no accessible name contains "${visible}"`).toBeDefined();
-        expect(comparable(button.getAttribute('aria-label') ?? '')).toContain(visible);
+        expect(within(container).getByRole('button', { name: visible })).toBe(button);
       }
     }
 
@@ -241,20 +226,20 @@ describe('ConversationReceipt guards', () => {
         vi.stubGlobal('navigator', { ...navigator, clipboard: { writeText } });
         forgetReplies(status(503), timedOut, status(500), status(429, { 'Retry-After': '150' }));
         const { container } = await setup({ locale });
-        expectNamesToContainVisibleText(container);
+        expectNamesToBeVisibleText(container);
 
         await click(within(container).getAllByRole('button')[0] as HTMLElement);
-        expectNamesToContainVisibleText(container);
+        expectNamesToBeVisibleText(container);
 
-        await click(named(container, ui.forgetLabel));
-        expectNamesToContainVisibleText(container);
+        await click(named(container, ui.forget));
+        expectNamesToBeVisibleText(container);
 
-        await click(named(container, ui.forgetConfirmLabel));
-        expectNamesToContainVisibleText(container);
+        await click(named(container, ui.forgetConfirm));
+        expectNamesToBeVisibleText(container);
 
         for (let attempt = 0; attempt < 3; attempt++) {
-          await click(named(container, ui.forgetRetryLabel));
-          expectNamesToContainVisibleText(container);
+          await click(named(container, ui.forgetRetry));
+          expectNamesToBeVisibleText(container);
         }
       },
     );
@@ -264,9 +249,9 @@ describe('ConversationReceipt guards', () => {
       forgetReplies(() => reply.promise);
       const ui = shellUi[SITE_LOCALE.pt];
       const { container } = await setup({ locale: SITE_LOCALE.pt });
-      await click(named(container, ui.forgetLabel));
-      await click(named(container, ui.forgetConfirmLabel));
-      expectNamesToContainVisibleText(container);
+      await click(named(container, ui.forget));
+      await click(named(container, ui.forgetConfirm));
+      expectNamesToBeVisibleText(container);
       await act(async () => reply.resolve(Response.json({ ok: true })));
       await flushMicrotasks();
     });
@@ -275,15 +260,15 @@ describe('ConversationReceipt guards', () => {
       forgetReplies(status(429, { 'Retry-After': '150' }));
       const ui = shellUi[SITE_LOCALE.en];
       const { container } = await setup();
-      await click(named(container, ui.forgetLabel));
-      await click(named(container, ui.forgetConfirmLabel));
+      await click(named(container, ui.forget));
+      await click(named(container, ui.forgetConfirm));
       expect(
         named(
           container,
-          fillShellState(ui.forgetWaitLabel, { left: `3 ${shellStates.en.minutesUnit}` }),
+          fillShellState(ui.forgetWait, { left: `3 ${shellStates.en.minutesUnit}` }),
         ),
       ).toBeDefined();
-      expectNamesToContainVisibleText(container);
+      expectNamesToBeVisibleText(container);
     });
   });
 });
