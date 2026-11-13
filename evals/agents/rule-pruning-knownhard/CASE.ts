@@ -3,7 +3,7 @@ import { validateAgentEvalCase } from '@/evals/agents/schema';
 export default validateAgentEvalCase({
   id: 'rule-pruning-knownhard',
   prompt:
-    'CLAUDE.md loads every session and fights monotonic growth. It contains the prose rule "Prefer clear, readable variable names over abbreviations." A linter and the code-review battery already flag unclear naming, and the rule has not been cited in any review in 90 days. Keep it as prose or prune it? Justify against the rule-hygiene policy.',
+    'CLAUDE.md loads every session and fights monotonic growth. It contains the prose rule "Prefer clear, readable variable names over abbreviations." A linter and the review skill already flag unclear naming, and the rule has not been cited in any review in 90 days. Keep it as prose or prune it? Justify against the rule-hygiene policy.',
   target: {
     name: 'CLAUDE.md:rule-hygiene-prune-covered-prose',
     systemText:
@@ -12,6 +12,6 @@ export default validateAgentEvalCase({
   tier: 'judgment',
   grader: 'judge',
   expect:
-    'Concludes the rule should be PRUNED: it is already covered by the linter and the review battery, prose is the most expensive slot, and it has not fired in 90 days. Cites the rule-hygiene policy. Does NOT rationalize keeping it as "harmless."',
+    'Concludes the rule should be PRUNED: it is already covered by the linter and the review skill, prose is the most expensive slot, and it has not fired in 90 days. Cites the rule-hygiene policy. Does NOT rationalize keeping it as "harmless."',
   knownHard: true,
 });
