@@ -1126,21 +1126,14 @@
   @media (max-width: theme(--viewport-below-phone)) {
     .contact-chrome {
       display: grid;
-      grid-template-columns: 1fr auto 1fr;
+      grid-template-columns: minmax(0, 1fr);
       justify-items: center;
-      column-gap: var(--spacing-1);
       padding-inline: var(--spacing-3);
       text-align: center;
     }
 
     .contact-chrome > :first-child {
-      grid-column: 1;
-      grid-row: 1;
       justify-self: start;
-    }
-
-    .contact-chrome > :not(:first-child) {
-      grid-column: 2;
     }
 
     .contact-channel {
