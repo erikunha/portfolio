@@ -137,12 +137,6 @@
     cursor: pointer;
   }
 
-  @media (scripting: none) {
-    button.links-line {
-      display: none;
-    }
-  }
-
   .links-line:focus-visible {
     outline: var(--focus-ring);
     outline-offset: var(--focus-ring-offset-inset);
@@ -178,5 +172,35 @@
     flex: 0 0 1ch;
     justify-content: center;
     color: var(--color-primary-500);
+  }
+
+  @container (max-width: 22rem) {
+    .links-line {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr) 1ch;
+      align-items: center;
+      column-gap: var(--spacing-3);
+    }
+
+    .links-line-glyph {
+      grid-row: 1 / span 2;
+      grid-column: 1;
+    }
+
+    .links-line-label {
+      grid-row: 1;
+      grid-column: 2;
+    }
+
+    .links-line-host {
+      grid-row: 2;
+      grid-column: 2;
+      text-align: start;
+    }
+
+    .links-line-arrow {
+      grid-row: 1 / span 2;
+      grid-column: 3;
+    }
   }
 }
