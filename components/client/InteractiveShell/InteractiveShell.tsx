@@ -308,7 +308,10 @@ export function InteractiveShell({
       </p>
       <div className="shell-privacy-notice" data-testid="shell-privacy-notice">
         <p>
-          {ui.privacy} <a href={ui.emailHref}>{ui.email}</a>.
+          {ui.privacy}{' '}
+          <span className="shell-privacy-email">
+            <a href={ui.emailHref}>{ui.email}</a>.
+          </span>
         </p>
         <p>
           {ui.technicalPrivacy} <code>{ui.requestIdHeader}</code> {ui.technicalPrivacySuffix}{' '}

@@ -64,7 +64,9 @@ export function ContactSection({ locale, defer }: { locale: SiteLocale; defer?: 
                   <div className="contact-channel-row">
                     <dt>{channels.emailLabel}</dt>
                     <dd>
-                      <a href={`mailto:${section.email}`}>{section.email}</a>
+                      <a className="contact-channel-email" href={`mailto:${section.email}`}>
+                        {section.email}
+                      </a>
                       <ContactCopyButton
                         value={section.email}
                         labels={{ copy: section.copyEmail, copied: section.copyEmailCopied }}
