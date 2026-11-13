@@ -2,13 +2,14 @@ import { ExternalLink } from '@/components/ExternalLink';
 import { aboutContent } from '@/content/about';
 import { responsibilities } from '@/content/responsibilities';
 import { SCROLL_REGION_LABELS } from '@/content/section-labels';
-import type { SiteLocale } from '@/content/site-locale';
+import { SITE_LOCALE, type SiteLocale } from '@/content/site-locale';
 import { Panel } from '@/design-system';
 import { CompanyMention } from '../../CompanyLink';
 import { RoleTyper } from '../../client/RoleTyper';
 import { IconReadme } from '../../Icons';
 
 const FIRST_LINE_NUMBER = 1;
+const CODE_SAMPLE_LOCALE = SITE_LOCALE.en;
 
 export function About({ locale }: { locale: SiteLocale }) {
   const c = aboutContent[locale];
@@ -136,7 +137,10 @@ export function About({ locale }: { locale: SiteLocale }) {
                 // biome-ignore lint/a11y/noNoninteractiveTabindex: the labelled code region is a deliberate tab stop so keyboard users can focus and select the sample
                 tabIndex={0}
               >
-                <pre className="ab-body">
+                <pre
+                  className="ab-body"
+                  lang={locale === CODE_SAMPLE_LOCALE ? undefined : CODE_SAMPLE_LOCALE}
+                >
                   {c.code.tokens.map((token) => (
                     <span key={token.id} className={token.className}>
                       {token.text}
