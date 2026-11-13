@@ -17,7 +17,7 @@ const COPIED_RESET_MS = 2000;
 
 const MAX_PATH_CHARS = 64;
 const PATH_ELLIPSIS = '...';
-const SPOOFING_CONTROLS = /[\p{Cc}\u061C\u200E\u200F\u202A-\u202E\u2066-\u2069]/gu;
+const SPOOFING_CONTROLS = /(?!\u200D)[\p{Cc}\p{Cf}]/gu;
 
 export function readablePath(pathname: string | null, fallback: string): string {
   if (!pathname) return fallback;

@@ -21,6 +21,27 @@ export function askLogKey(date: string, requestId: string): string {
 
 const ASK_LOG_KEY_PATTERN = /^ask:log:\d{4}-\d{2}-\d{2}:[0-9a-f-]{36}$/;
 
+const FORGOTTEN_TTL_S = 10 * 60;
+
+export function askForgottenKey(id: string): string {
+  return `ask:forgotten:${id}`;
+}
+
+export async function markForgotten(ids: readonly string[]): Promise<void> {
+  const redis = getRedis();
+  await Promise.all(ids.map((id) => redis.set(askForgottenKey(id), 1, { ex: FORGOTTEN_TTL_S })));
+}
+
+async function wasForgotten(ids: readonly string[]): Promise<boolean> {
+  try {
+    const redis = getRedis();
+    const marks = await Promise.all(ids.map((id) => redis.get(askForgottenKey(id))));
+    return marks.some((mark) => mark !== null && mark !== undefined);
+  } catch {
+    return false;
+  }
+}
+
 export function askConversationKey(conversationId: string): string {
   return `ask:conv:${conversationId}`;
 }
@@ -82,17 +103,27 @@ export async function persistAskInteraction(interaction: AskInteraction): Promis
     question: redactPii(interaction.question).slice(0, LOGGED_QUESTION_CHARS),
     answer: redactPii(interaction.answer).slice(0, LOGGED_ANSWER_CHARS),
   };
+  const { conversationId } = interaction;
   try {
-    if (interaction.conversationId === undefined) {
+    if (conversationId === undefined) {
       await getRedis().set(key, JSON.stringify(record), { ex: ASK_KV_TTL_S });
-      return;
+    } else {
+      const index = askConversationKey(conversationId);
+      const tx = getRedis().multi();
+      tx.set(key, JSON.stringify(record), { ex: ASK_KV_TTL_S });
+      tx.sadd(index, key);
+      tx.expire(index, ASK_KV_TTL_S);
+      await tx.exec();
     }
-    const index = askConversationKey(interaction.conversationId);
-    const tx = getRedis().multi();
-    tx.set(key, JSON.stringify(record), { ex: ASK_KV_TTL_S });
-    tx.sadd(index, key);
-    tx.expire(index, ASK_KV_TTL_S);
-    await tx.exec();
+    const marks =
+      conversationId === undefined
+        ? [interaction.requestId]
+        : [interaction.requestId, conversationId];
+    if (await wasForgotten(marks)) {
+      const redis = getRedis();
+      await redis.del(key);
+      if (conversationId !== undefined) await redis.srem(askConversationKey(conversationId), key);
+    }
   } catch (err) {
     log.error('ask-log KV write failed', {
       requestId: interaction.requestId,

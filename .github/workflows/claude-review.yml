@@ -210,7 +210,7 @@ jobs:
           find pr-head -type l -delete
 
           find pr-head \
-            \( -name 'CLAUDE.md' -o -name 'AGENTS.md' -o -name 'copilot-instructions.md' \
+            \( -name 'CLAUDE.md' -o -name 'CLAUDE.local.md' -o -name 'AGENTS.md' -o -name 'copilot-instructions.md' \
                -o -name '.claude' -o -name '.agents' -o -name '.codex' -o -name '.cursor' \) \
             -prune -exec rm -rf {} +
 
@@ -218,7 +218,7 @@ jobs:
           # that enumerates paths independently drifts from the rm the moment one
           # of them is edited, and then passes while removing nothing.
           leftover=$(find pr-head \
-            \( -name 'CLAUDE.md' -o -name 'AGENTS.md' -o -name 'copilot-instructions.md' \
+            \( -name 'CLAUDE.md' -o -name 'CLAUDE.local.md' -o -name 'AGENTS.md' -o -name 'copilot-instructions.md' \
                -o -name '.claude' -o -name '.agents' -o -name '.codex' -o -name '.cursor' \) \
             -print -quit)
           if [ -n "$leftover" ]; then

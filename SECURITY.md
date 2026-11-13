@@ -31,4 +31,6 @@ The repository defends in depth, and most of these are enforced in CI on every c
 - **Content Security Policy** and security headers are set at the edge; the API boundary enforces rate limiting and input validation (Zod) before any handler logic runs.
 - **No secrets in the repo.** All credentials are environment variables provided at deploy time.
 
+- **Forget endpoint**: anyone who holds one request id can delete the whole conversation it belongs to. Request ids are random v4 UUIDs, responses never reveal whether an id exists, and the route is rate limited per IP. The conversation index is keyed by a client-chosen id that the server accepts only as a lower-case v4 UUID and writes itself; a client cannot write to it directly.
+
 Responsible reports that improve any of the above are genuinely appreciated.

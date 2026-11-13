@@ -480,3 +480,22 @@ esac
     expect(result.stderr).toContain(expectedError);
   });
 });
+
+describe('instruction strip covers the personal override file', () => {
+  const stripNames = (file: string): string[] => {
+    const workflow = parse(readArtifact(join(root, '.github/workflows', file))) as {
+      jobs: Record<string, { steps: Array<{ name?: string; run?: string }> }>;
+    };
+    const run = Object.values(workflow.jobs)
+      .flatMap((job) => job.steps)
+      .find((step) => step.name?.startsWith('Strip instruction-shaped files'))?.run;
+    return (run?.match(/-name '[^']+'/g) ?? []).map((match) => match.slice(7, -1));
+  };
+
+  for (const file of ['claude-review.yml', 'claude.yml']) {
+    it(`${file} removes and verifies CLAUDE.local.md`, () => {
+      const names = stripNames(file);
+      expect(names.filter((name) => name === 'CLAUDE.local.md')).toHaveLength(2);
+    });
+  }
+});
