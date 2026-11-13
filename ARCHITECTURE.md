@@ -451,6 +451,7 @@ app/css/print.css                     # @media print: ink-on-paper palette, hidd
 app/css/components-panel.css          # the .panel frame rules (panel-head, panel-title, panel-marker), imported before the section partials that scope onto them
 app/css/components-hero.css           # one of the @layer components partials (components-<section>.css), imported in cascade order
 app/globals.css                       # entry: @import "tailwindcss" + theme/base/components; the @import order is the cascade order
+app/css/home.css                      # home-only entry imported by SiteHome: the home section partials, then forced-colors.css again; loads after globals.css
 
 public/fonts/                         # JetBrains Mono self-hosted
 public/images/                        # static images (avatar, guitar live photo)

@@ -1,0 +1,42 @@
+@layer components {
+  .to-top-btn {
+    display: none;
+  }
+
+  @media (max-width: theme(--viewport-below-md)) {
+    .to-top-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: fixed;
+      right: var(--to-top-inset);
+      bottom: calc(
+        var(--to-top-dock-offset) +
+        env(safe-area-inset-bottom, 0px) +
+        var(--to-top-inset)
+      );
+      z-index: var(--z-to-top);
+      width: var(--to-top-size);
+      height: var(--to-top-size);
+      background: color-mix(in srgb, var(--color-secondary-950) 85%, transparent);
+      border: 1px solid var(--color-primary-subtle);
+      color: var(--color-primary-500);
+      opacity: 0;
+      transform: translateY(8px);
+      transition:
+        opacity 200ms ease,
+        transform 200ms ease;
+      pointer-events: none;
+    }
+
+    .to-top-btn.to-top-show {
+      opacity: 1;
+      transform: translateY(0);
+      pointer-events: auto;
+    }
+  }
+
+  body[data-motion="reduce"] .to-top-btn {
+    transition: none;
+  }
+}

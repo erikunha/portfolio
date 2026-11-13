@@ -3,19 +3,26 @@ import path from 'node:path';
 
 const CSS_DIR = path.resolve(__dirname, '../../app/css');
 const GLOBALS_CSS = path.resolve(__dirname, '../../app/globals.css');
+const HOME_CSS = path.join(CSS_DIR, 'home.css');
 const PARTIAL = /^components-.+\.css$/;
 const PARTIAL_IMPORT = /@import\s+"\.\/css\/(components-[^"]+\.css)";/g;
+const HOME_PARTIAL_IMPORT = /@import\s+"\.\/(components-[^"]+\.css)";/g;
 const BASE_CSS = 'base.css';
 
 export function componentsCssFiles(): string[] {
   // behavioral-test-allow: reads the shipped stylesheet entrypoint; jsdom cannot evaluate CSS cascade order
   const globals = readFileSync(GLOBALS_CSS, 'utf-8');
-  const imported = Array.from(globals.matchAll(PARTIAL_IMPORT), (m) => m[1] ?? '');
+  // behavioral-test-allow: reads the home stylesheet entrypoint, which the home route loads after app/globals.css
+  const home = readFileSync(HOME_CSS, 'utf-8');
+  const imported = [
+    ...Array.from(globals.matchAll(PARTIAL_IMPORT), (m) => m[1] ?? ''),
+    ...Array.from(home.matchAll(HOME_PARTIAL_IMPORT), (m) => m[1] ?? ''),
+  ];
   const onDisk = readdirSync(CSS_DIR).filter((f) => PARTIAL.test(f));
   const unimported = onDisk.filter((f) => !imported.includes(f));
   if (unimported.length > 0) {
     throw new Error(
-      `app/globals.css does not import these app/css partials: ${unimported.join(', ')}. ` +
+      `neither app/globals.css nor app/css/home.css imports these app/css partials: ${unimported.join(', ')}. ` +
         'An unimported partial is never shipped, so a stylesheet assertion that reads it ' +
         'would pass against CSS the browser never loads.',
     );
