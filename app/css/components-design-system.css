@@ -363,10 +363,14 @@
     background: var(--color-primary-500);
   }
 
+  .component-nav-link {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--spacing-target-compact);
+  }
+
   @media (pointer: coarse) {
     .component-nav-link {
-      display: inline-flex;
-      align-items: center;
       min-height: var(--spacing-target);
     }
   }
