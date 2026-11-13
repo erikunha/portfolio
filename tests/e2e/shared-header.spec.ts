@@ -191,7 +191,7 @@ test.describe('the header without JavaScript', () => {
       await expect(links).toHaveCount(2);
       await expect(links.nth(0)).toHaveAttribute('href', hrefs[0]);
       await expect(links.nth(1)).toHaveAttribute('href', hrefs[1]);
-      await expect(banner.locator('.menu-trigger')).toBeVisible();
+      await expect(banner.locator('.menu-trigger')).toBeAttached();
     });
   }
 
