@@ -24,8 +24,9 @@ merge-blocking check on this surface is the behavioral test suite (the required
   route outside `defineHandler` reads through `readBoundedBody` after its own
   limiter, and defers settlement or logging to `afterResponse`, never to work
   that runs after the stream closes. Held by behavioral tests + e2e, not source-grep.
-- Read env only through the Zod accessor `lib/env.ts`. Never read
-  `process.env.*` directly in a handler.
+- Read env only through the Zod accessors `lib/env.ts` and `lib/env-build.ts`
+  (deploy metadata such as the commit SHA). Never read `process.env.*` directly
+  in a handler: Biome's `noProcessEnv` fails `app/api/**` and `lib/server/**`.
 - Rate limiting is Upstash sliding-window via `lib/rate-limit.ts` and is
   **fail-open** (Redis down must not 500 the user). Keep that property. The
   `/api/ask` budget reservation is the exception: it fails closed with 503.

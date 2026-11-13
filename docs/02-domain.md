@@ -80,7 +80,7 @@ A `ContactMessage` contains `name`, `email`, `message`, `receivedAt` and `ipHash
 
 Resend acceptance returns 200. A provider error, timeout or missing key adds the id to `contact:outbox`, ordered by `receivedAt`, with a retry counter in `contact:outbox:attempts`. Only a successful outbox write returns `202 queued`. The visitor sees that the message is saved but undelivered, with a LinkedIn alternative. Other errors display the server's message string.
 
-The daily retry permits at most 3 additional delivery attempts within 7 days. Success, expiry and exhaustion remove pending membership and its counter while preserving the audit message. Logs contain request and message ids, never the contact payload.
+The daily retry permits at most 3 additional delivery attempts within 24 hours, the window in which the provider honors the send idempotency key. Success, expiry and exhaustion remove pending membership and its counter while preserving the audit message. Logs contain request and message ids, never the contact payload.
 
 ## Domain entity model
 
@@ -115,7 +115,7 @@ erDiagram
 ## The AI sub-domain (`/api/ask` and its evaluation)
 
 The AI feature has its own domain:
-- **`AskInteraction`** (`lib/ask-log.ts`): a question→answer event, status ∈ {`completed`, `errored`, `aborted`, `refused`}, persisted to Redis (`ask:log:{date}:{requestId}`, 90-day TTL, IP hashed, emails and phone numbers redacted, truncated). Requests rejected for an injection pattern, an invalid body, the rate limit, the duplicate check or the budget are not persisted; refusals add to the `ask:refused:{date}:{status}` counter.
+- **`AskInteraction`** (`lib/ask-log.ts`): a question→answer event, status ∈ {`completed`, `errored`, `aborted`, `refused`}, persisted to Redis (`ask:log:{date}:{requestId}`, 90-day TTL, IP hashed, emails and phone numbers redacted, truncated). An `errored` row also carries `reason` (`upstream`, `interrupted`, `output-guard`, `stream-error`, `mid-stream-timeout`), a class with no provider text, so the cause is readable from the row. Requests rejected for an injection pattern, an invalid body, the rate limit, the duplicate check or the budget are not persisted; refusals add to the `ask:refused:{date}:{status}` counter.
 - **`AskEvalItem`** (`content/ask-eval-corpus.ts`): an evaluation case `{ id, question, expect, kind, locale?, facts? }`, `kind ∈ {factual, edge, jailbreak, output-validation}`, `locale ∈ {en, pt}` (default `en`). The `expect` is a natural-language criterion an LLM judge scores. Ground truth is pulled from the _live_ content modules, so content/persona drift becomes a failing eval. The judge also gets a fact sheet built from the profile (title, stack), credentials, career and education modules plus every field of `content/ask-facts.ts` (the system prompt composes the same module), the project cards and the unknowns, and the run date; it rides in a cacheable system block of the judge request.
 - **`AskEvalCalibrationItem`** (`content/ask-eval-calibration.ts`): a gold case with a `canonicalAnswer` + a human `humanVerdict` and an optional `trap` naming the judging mistake it probes (near-miss omission, harmless extra, fabricated extra, wrong number, wrong language, and others). It **gates the judge itself**: judge-human agreement must clear 0.85 and the true-negative rate (the judge failing what a human failed) must clear 11/12 before any corpus tokens are spent (`lib/eval/calibration.ts`).
 

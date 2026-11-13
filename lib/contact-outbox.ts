@@ -11,7 +11,8 @@ const ATTEMPT_INCREMENT = 1;
 
 export const CONTACT_MESSAGE_TTL_SECONDS = 60 * 60 * 24 * 90;
 export const CONTACT_MAX_RETRY_ATTEMPTS = 3;
-export const CONTACT_MAX_RETRY_AGE_MS = 7 * 24 * 60 * 60 * 1_000;
+const RESEND_IDEMPOTENCY_WINDOW_MS = 24 * 60 * 60 * 1_000;
+export const CONTACT_MAX_RETRY_AGE_MS = RESEND_IDEMPOTENCY_WINDOW_MS;
 export const CONTACT_OUTBOX_MAX = 200;
 
 export interface ContactMessage {

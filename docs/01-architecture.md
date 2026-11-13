@@ -163,7 +163,7 @@ flowchart TD
 
 The main dependency direction is `app → components → {content, design-system}` and `app/api → lib`. Shared utilities and the MCP tool adapter also cross these groups; `lib/agent/mcp-tools.ts` imports the ask route for in-process calls.
 
-Contact submission persists a 90-day KV audit record before calling the shared delivery function. Only Resend acceptance returns 200. Provider failure or timeout returns `202 queued` after adding the id and retry counter to Redis. `ContactForm` distinguishes queued from delivered and reads structured error messages. A `CRON_SECRET` bearer protects the daily 04:00 UTC retry, limited to 3 retries within 7 days. Removing an outbox entry leaves the audit record intact; a delivery failure that cannot be queued (full or failing outbox) deletes the record, since nothing will retry it; contact logs contain only request and message ids.
+Contact submission persists a 90-day KV audit record before calling the shared delivery function. Only Resend acceptance returns 200. Provider failure or timeout returns `202 queued` after adding the id and retry counter to Redis. `ContactForm` distinguishes queued from delivered and reads structured error messages. A `CRON_SECRET` bearer protects the daily 04:00 UTC retry, limited to 3 retries within 24 hours (the provider idempotency window). Removing an outbox entry leaves the audit record intact; a delivery failure that cannot be queued (full or failing outbox) deletes the record, since nothing will retry it; contact logs contain only request and message ids.
 
 ## Build system
 
