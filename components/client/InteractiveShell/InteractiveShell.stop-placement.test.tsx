@@ -118,7 +118,7 @@ describe('the shell stop control lives in the answer area', () => {
     ).toBeNull();
     expect(stop?.closest('.shell-form'), 'the stop control is not in the input row').toBeNull();
     expect(stop?.closest('[aria-hidden="true"]'), 'it stays in the accessibility tree').toBeNull();
-    expect(stop?.textContent).toBe(ui.stop);
+    expect(stop?.classList.contains('shell-stop-pill')).toBe(true);
     const line = log?.querySelector(lineSelector);
     expect(line, `${lineSelector} is rendered`).not.toBeNull();
     expect(

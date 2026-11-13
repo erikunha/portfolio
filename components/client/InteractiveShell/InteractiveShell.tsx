@@ -3,14 +3,20 @@
 import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
 import type { TerminalChrome } from '@/content/schemas';
 import SHELL_RESPONSES, { SHELL_RESPONSE_LANG } from '@/content/shell-commands';
-import { ShellCommand, ShellLineKind, type ShellUi, shellStates } from '@/content/shell-ui';
+import {
+  fillShellState,
+  ShellCommand,
+  ShellLineKind,
+  type ShellUi,
+  shellStates,
+} from '@/content/shell-ui';
 import type { SiteLocale } from '@/content/site-locale';
 import { SHELL_COMMAND_EVENT } from '@/lib/events';
 import { useBreakpoint } from '@/lib/use-breakpoint.client';
 import { TerminalChromeBar } from '../TerminalChromeBar';
 import { AnimatedPlaceholder, StaticPlaceholder } from './AnimatedPlaceholder.client';
 import { parsePrivacyCommand } from './privacy-command';
-import { ShellLine } from './ShellLines.client';
+import { ShellLine, StopElapsed } from './ShellLines.client';
 import { ShellToolbar } from './ShellToolbar.client';
 import { ShellKey } from './shell-keys';
 import { bounded, type Line, useAskStream } from './useAskStream';
@@ -84,7 +90,36 @@ export function InteractiveShell({
     stopStream();
     focusInput();
   }, [stopStream, focusInput]);
-  const runPrivacy = usePrivacyCommands({ ui, states, nextId, setHistory, announce, focusInput });
+  const onConversationForgotten = useCallback(
+    (questions: number) => {
+      setHistory((lines) =>
+        bounded([
+          ...lines.filter((line) => line.kind !== ShellLineKind.Reference),
+          { id: nextId(), kind: ShellLineKind.Output, text: ui.conversationForgotten },
+          {
+            id: nextId(),
+            kind: ShellLineKind.Info,
+            text:
+              questions === 1
+                ? ui.conversationForgottenOne
+                : fillShellState(ui.conversationForgottenMany, { count: String(questions) }),
+          },
+        ]),
+      );
+      announce(ui.conversationForgotten);
+      focusInput();
+    },
+    [announce, focusInput, nextId, ui],
+  );
+  const runPrivacy = usePrivacyCommands({
+    ui,
+    states,
+    nextId,
+    setHistory,
+    announce,
+    focusInput,
+    onConversationForgotten,
+  });
 
   useLayoutEffect(() => {
     const typed = inputRef.current?.value;
@@ -214,6 +249,8 @@ export function InteractiveShell({
               isMobile={isMobile}
               announce={announce}
               onRetry={runCommand}
+              busy={busy}
+              onConversationForgotten={onConversationForgotten}
             />
           ))}
           {streamingText !== null && (
@@ -227,20 +264,18 @@ export function InteractiveShell({
           )}
         </div>
         {busy ? (
-          <div className="shell-stop-row">
-            <span className="shell-stream-meta shell-esc-hint" aria-hidden="true">
-              {states.escStop}
+          <button
+            ref={stopRef}
+            className="shell-stop-pill"
+            type="button"
+            aria-label={ui.stopLabel}
+            onClick={stopAndReturnFocus}
+          >
+            <span className="shell-stop-elapsed" aria-hidden="true">
+              <StopElapsed template={ui.stopPill} />
             </span>
-            <button
-              ref={stopRef}
-              className="shell-control shell-stop"
-              type="button"
-              aria-label={ui.stopLabel}
-              onClick={stopAndReturnFocus}
-            >
-              {ui.stop}
-            </button>
-          </div>
+            <kbd className="shell-stop-key">{ui.escKey}</kbd>
+          </button>
         ) : null}
       </div>
       <form
@@ -321,7 +356,7 @@ export function InteractiveShell({
         </p>
         <p>
           {ui.technicalPrivacy} <code>{ui.requestIdHeader}</code> {ui.technicalPrivacySuffix}{' '}
-          <code>{ui.forgetEndpoint}</code>.
+          <code>{ui.forgetEndpoint}</code>. {ui.technicalPrivacyScope}
         </p>
       </div>
       <ShellToolbar ui={ui} busy={busy} onActivate={activateToolbarCommand} />

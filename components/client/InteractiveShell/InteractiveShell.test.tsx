@@ -333,6 +333,23 @@ function shellInput(container: HTMLElement): HTMLInputElement {
   return input as HTMLInputElement;
 }
 
+function stopButton(container: HTMLElement): HTMLButtonElement {
+  const button = container.querySelector<HTMLButtonElement>('button.shell-stop-pill');
+  expect(button).not.toBeNull();
+  return button as HTMLButtonElement;
+}
+
+function buttonNamed(container: HTMLElement, name: string): HTMLButtonElement {
+  const button = Array.from(container.querySelectorAll('button')).find(
+    (b) => b.getAttribute('aria-label') === name,
+  );
+  expect(button).toBeDefined();
+  return button as HTMLButtonElement;
+}
+
+const currentLabel = (button: HTMLButtonElement) =>
+  button.querySelector('[data-current]')?.textContent;
+
 function buttonWithText(container: HTMLElement, text: string): HTMLButtonElement {
   const button = Array.from(container.querySelectorAll('button')).find(
     (b) => b.textContent === text,
@@ -400,7 +417,7 @@ describe('InteractiveShell r106 controls', () => {
     act(() => shellInput(container).focus());
     await submitQuestion(container, 'question to restore');
     expect(container.querySelector('[role="status"]')?.textContent).toContain('thinking');
-    const stop = buttonWithText(container, '[STOP]');
+    const stop = stopButton(container);
     await act(async () => {
       act(() => stop.focus());
       stop.click();
@@ -410,7 +427,7 @@ describe('InteractiveShell r106 controls', () => {
     expect(document.activeElement).toBe(shellInput(container));
     expect(container.querySelector('[role="log"]')?.getAttribute('aria-busy')).toBe('false');
     expect(container.querySelector('[role="status"]')?.textContent).toContain('stopped before');
-    expect(container.querySelector('[data-testid="shell-reference"]')).toBeNull();
+    expect(container.querySelector('[data-testid="shell-receipt"]')).toBeNull();
     await act(async () => {
       resolveFetch(streamingResponse(['late answer']));
     });
@@ -429,7 +446,7 @@ describe('InteractiveShell r106 controls', () => {
 
     await submitQuestion(container, 'question in flight');
 
-    const stop = buttonWithText(container, '[STOP]');
+    const stop = stopButton(container);
     expect(stop.closest('.shell-feed-wrap')).not.toBeNull();
     expect(stop.closest('[role="log"]')).toBeNull();
     expect(container.querySelector('.shell-form button')).toBeNull();
@@ -458,14 +475,14 @@ describe('InteractiveShell r106 controls', () => {
     expect(container.querySelector('[role="log"]')?.textContent).toContain('Partial answer');
     expect(container.querySelector('[role="status"]')?.textContent).toContain('answer started');
     await act(async () => {
-      buttonWithText(container, '[STOP]').click();
+      stopButton(container).click();
     });
     await flushFrames();
     expect(signal?.aborted).toBe(true);
     expect(cancel).toHaveBeenCalledOnce();
     expect(container.querySelector('[role="log"]')?.textContent).toContain('Partial answer');
     expect(container.querySelector('[role="status"]')?.textContent).toContain('incomplete');
-    expect(container.querySelector('[data-testid="shell-reference"]')?.textContent).toContain(
+    expect(container.querySelector('[data-testid="shell-receipt"] code')?.textContent).toBe(
       'real-request-42',
     );
     expect(container.querySelector('[data-testid="shell-line-loading"]')).toBeNull();
@@ -487,7 +504,7 @@ describe('InteractiveShell r106 controls', () => {
     );
     expect(shellInput(container).value).toBe('draft follow-up');
     await act(async () => {
-      buttonWithText(container, '[STOP]').click();
+      stopButton(container).click();
     });
     expect(shellInput(container).value).toBe('draft follow-up');
   });
@@ -509,9 +526,7 @@ describe('InteractiveShell r106 controls', () => {
       'try again in an hour',
     );
     expect(shellInput(container).value).toBe('limited question');
-    expect(container.querySelector('[data-testid="shell-reference"]')?.textContent).toContain(
-      'limited-request',
-    );
+    expect(container.querySelector('[data-testid="shell-receipt"]')).toBeNull();
     await submitQuestion(container, 'help');
     expect(fetchMock).toHaveBeenCalledOnce();
     expect(container.querySelector('[role="log"]')?.textContent).toContain('commands:');
@@ -557,7 +572,7 @@ describe('InteractiveShell r106 controls', () => {
     expect(container.querySelector('[role="status"]')?.textContent).toContain('offline');
     expect(shellInput(container).value).toBe('offline question');
     expect(document.activeElement).toBe(shellInput(container));
-    expect(container.querySelector('[data-testid="shell-reference"]')).toBeNull();
+    expect(container.querySelector('[data-testid="shell-receipt"]')).toBeNull();
     await submitQuestion(container, 'whois');
     expect(fetchMock).toHaveBeenCalledOnce();
     expect(container.querySelector('[role="log"]')?.textContent).toContain('erik');
@@ -639,7 +654,7 @@ describe('InteractiveShell r106 controls', () => {
     await submitQuestion(container, 'question to keep');
     await flushFrames();
     await act(async () => {
-      buttonWithText(container, '[STOP]').click();
+      stopButton(container).click();
     });
     expect(container.querySelector('[role="status"]')?.textContent).toContain('incomplete');
     expect(shellInput(container).value).toBe('question to keep');
@@ -734,27 +749,26 @@ describe('InteractiveShell r106 controls', () => {
           }),
       ),
     );
+    const ui = shellUi[SITE_LOCALE.en];
     const container = await renderShell();
     await submitQuestion(container, 'reference please');
-    expect(buttonWithText(container, 'COPY').getAttribute('aria-label')).toBe(
-      'COPY ref server-reference-123',
-    );
+    const copy = buttonNamed(container, ui.copyIdLabel);
+    expect(currentLabel(copy)).toBe(ui.copy);
     await act(async () => {
-      buttonWithText(container, 'COPY').click();
+      copy.click();
     });
-    expect(buttonWithText(container, 'COPY FAILED').getAttribute('aria-label')).toBe(
-      'COPY FAILED ref server-reference-123',
-    );
     expect(writeText).toHaveBeenCalledWith('server-reference-123');
-    expect(container.querySelector('[role="status"]')?.textContent).toContain('Copy failed');
+    expect(container.querySelector('[role="status"]')?.textContent).toContain(
+      ui.copyFailedAnnouncement,
+    );
     await act(async () => {
-      buttonWithText(container, 'COPY FAILED').click();
+      buttonNamed(container, ui.copyIdLabel).click();
     });
     expect(writeText).toHaveBeenCalledTimes(2);
-    expect(buttonWithText(container, 'COPIED').getAttribute('aria-label')).toBe(
-      'COPIED ref server-reference-123',
+    expect(currentLabel(buttonNamed(container, ui.copyIdLabel))).toBe(ui.copied);
+    expect(container.querySelector('[role="status"]')?.textContent).toContain(
+      ui.copiedAnnouncement,
     );
-    expect(container.querySelector('[role="status"]')?.textContent).toContain('Reference copied');
   });
 
   it('shows a copy failure when the clipboard API is unavailable', async () => {
@@ -768,14 +782,16 @@ describe('InteractiveShell r106 controls', () => {
           }),
       ),
     );
+    const ui = shellUi[SITE_LOCALE.en];
     const container = await renderShell();
     await submitQuestion(container, 'copy without clipboard');
     await act(async () => {
-      buttonWithText(container, 'COPY').click();
+      buttonNamed(container, ui.copyIdLabel).click();
     });
-    expect(buttonWithText(container, 'COPY FAILED')).toBeDefined();
-    expect(container.querySelector('[role="status"]')?.textContent).toContain('manually');
-    expect(container.querySelector('[data-testid="shell-reference"]')?.textContent).toContain(
+    expect(container.querySelector('[data-testid="shell-receipt-message"]')?.textContent).toBe(
+      ui.copyFailedAnnouncement,
+    );
+    expect(container.querySelector('[data-testid="shell-receipt"] code')?.textContent).toBe(
       'manual-copy-reference',
     );
   });
@@ -794,7 +810,7 @@ describe('InteractiveShell r106 controls', () => {
     );
     const container = await renderShell();
     await submitQuestion(container, 'focus on completion');
-    act(() => buttonWithText(container, '[STOP]').focus());
+    act(() => stopButton(container).focus());
     await act(async () => {
       complete();
     });
@@ -893,7 +909,7 @@ describe('InteractiveShell r106 controls', () => {
     );
     const container = await renderShell();
     await submitQuestion(container, 'without a reference');
-    expect(container.querySelector('[data-testid="shell-reference"]')).toBeNull();
+    expect(container.querySelector('[data-testid="shell-receipt"]')).toBeNull();
     expect(container.querySelector('[role="status"]')?.textContent).toContain('answer complete');
   });
 
@@ -993,7 +1009,7 @@ describe('InteractiveShell r106 controls', () => {
     // both locale copies validate, and both carry the same key set
     for (const locale of ['en', 'pt'] as const) {
       expect(ShellUiSchema.safeParse(shellUi[locale]).success).toBe(true);
-      expect(ShellUiSchema.safeParse({ ...shellUi[locale], stop: '' }).success).toBe(false);
+      expect(ShellUiSchema.safeParse({ ...shellUi[locale], stopPill: '' }).success).toBe(false);
     }
     expect(Object.keys(shellUi.en)).toEqual(Object.keys(shellUi.pt));
     expect(Object.keys(shellUi[SITE_LOCALE.en])).not.toContain('copyLabel');
@@ -1169,8 +1185,8 @@ describe('InteractiveShell stream states', () => {
         expect(hint?.textContent).toBe(`${tryText} ${address}`);
         expect(hint?.querySelector('code')?.textContent).toBe('cat stack.md');
         expect(hint?.querySelector('a')?.getAttribute('href')).toBe(`mailto:${address}`);
-        expect(lines[errorIndex + 2]?.textContent).toContain('req-503');
-        expect(lines[errorIndex + 2]?.querySelector('button')).not.toBeNull();
+        expect(lines[errorIndex + 2]).toBeUndefined();
+        expect(container.querySelector('[data-testid="shell-receipt"]')).toBeNull();
       },
     );
 
@@ -1262,9 +1278,7 @@ describe('InteractiveShell stream states', () => {
         'Local commands keep working meanwhile: help, cat stack.md, whoami.',
       );
       expect(container.querySelector('[data-kind="error"]')).toBeNull();
-      expect(container.querySelector('[data-testid="shell-reference"]')?.textContent).toContain(
-        'limited-request',
-      );
+      expect(container.querySelector('[data-testid="shell-receipt"]')).toBeNull();
       expect((container.querySelector('input[name="command"]') as HTMLInputElement).value).toBe(
         'limited question',
       );
@@ -1461,11 +1475,11 @@ describe('InteractiveShell stream states', () => {
       );
       const container = await renderShell();
       await submitQuestion(container, 'a question');
-      expect(container.querySelector('.shell-stop-row')?.textContent).toContain('[ Esc ] stop');
+      expect(container.querySelector('.shell-stop-pill kbd')?.textContent).toBe('esc');
       release();
       await flushMicrotasks();
       await flushFrames();
-      expect(container.querySelector('[role="log"]')?.textContent).not.toContain('[ Esc ] stop');
+      expect(container.querySelector('.shell-stop-pill')).toBeNull();
     });
 
     it('shows a block caret after the streamed text and removes it when the answer ends', async () => {
@@ -1488,7 +1502,7 @@ describe('InteractiveShell stream states', () => {
       const caret = container.querySelector('.shell-caret');
       expect(caret?.textContent).toBe('█');
       expect(caret?.getAttribute('aria-hidden')).toBe('true');
-      expect(container.querySelector('.shell-stop-row')?.textContent).toContain('[ Esc ] stop');
+      expect(container.querySelector('.shell-stop-pill kbd')?.textContent).toBe('esc');
       await act(async () => {
         controllerRef?.close();
       });

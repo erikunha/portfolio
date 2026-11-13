@@ -7,7 +7,7 @@ const REQUEST_ID = '3f1c9a2e-7b44-4d0a-9c1e-5a8d2b6f0e71';
 const ANSWER = 'Short answer.';
 const VIEWPORT_HEIGHT = 844;
 const PHONE_AND_TABLET_WIDTHS = [320, 375, 390, 480, 540, 600, 767] as const;
-const REFERENCE = '[data-testid="shell-reference"]';
+const REFERENCE = '[data-testid="shell-receipt"]';
 const SHELL_INPUT = '[aria-label="shell command"]';
 
 for (const width of PHONE_AND_TABLET_WIDTHS) {

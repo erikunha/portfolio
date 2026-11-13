@@ -1,4 +1,4 @@
-import type { Page } from '@playwright/test';
+import type { Page, Route } from '@playwright/test';
 import { askErrors } from '../../../content/ask-errors';
 import { profile } from '../../../content/profile';
 import { SITE_LOCALE, type SiteLocale } from '../../../content/site-locale';
@@ -19,8 +19,57 @@ export type MockState = {
   locale?: SiteLocale;
   contact?: 'happy' | 'queued' | 'validation-error' | 'rate-limit' | 'server-error' | 'honeypot';
   log?: 'accept' | 'rate-limit' | 'storage-unavailable';
-  forget?: 'happy' | 'not-found';
+  forget?: ForgetMock;
 };
+
+export type ForgetMock =
+  | 'happy'
+  | 'not-found'
+  | 'storage-unavailable'
+  | 'rate-limit'
+  | 'network-error'
+  | 'slow';
+
+export const FORGET_RETRY_AFTER_S = 150;
+export const FORGET_SLOW_MS = 1500;
+
+export async function fulfillForget(route: Route, state: ForgetMock | undefined): Promise<void> {
+  if (state === 'network-error') {
+    await route.abort('internetdisconnected');
+    return;
+  }
+  if (state === 'storage-unavailable') {
+    await route.fulfill({
+      status: 503,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        ok: false,
+        requestId: crypto.randomUUID(),
+        error: { code: 'storage_unavailable', message: 'storage unavailable' },
+      }),
+    });
+    return;
+  }
+  if (state === 'rate-limit') {
+    await route.fulfill({
+      status: 429,
+      contentType: 'application/json',
+      headers: { 'Retry-After': String(FORGET_RETRY_AFTER_S) },
+      body: JSON.stringify({
+        ok: false,
+        requestId: crypto.randomUUID(),
+        error: { code: 'rate_limited', message: 'too many forget requests' },
+      }),
+    });
+    return;
+  }
+  if (state === 'slow') await new Promise((resolve) => setTimeout(resolve, FORGET_SLOW_MS));
+  await route.fulfill({
+    status: 200,
+    contentType: 'application/json',
+    body: JSON.stringify({ ok: true, requestId: crypto.randomUUID() }),
+  });
+}
 
 const EN = askErrors[SITE_LOCALE.en];
 
@@ -196,24 +245,7 @@ export async function installMockBackend(page: Page, state: MockState = {}): Pro
     await route.fulfill({ status: 204 });
   });
 
-  await page.route('**/api/log/forget', async (route) => {
-    const s = state.forget;
-
-    if (s === 'happy' || s === 'not-found') {
-      await route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify({ ok: true, requestId: crypto.randomUUID() }),
-      });
-      return;
-    }
-
-    await route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify({ ok: true, requestId: crypto.randomUUID() }),
-    });
-  });
+  await page.route('**/api/log/forget', (route) => fulfillForget(route, state.forget));
 }
 
 const CHUNKED_ASK_KEY = '__chunkedAsk';

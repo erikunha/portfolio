@@ -10,5 +10,7 @@ export function describeForget(result: ForgetResult, ui: ShellUi, states: ShellS
       left: formatRemaining(result.retryAfter, states),
     });
   }
+  if (result.outcome === FORGET_OUTCOME.Unavailable) return ui.forgetUnavailable;
+  if (result.outcome === FORGET_OUTCOME.Offline) return ui.forgetOffline;
   return ui.forgetFailed;
 }

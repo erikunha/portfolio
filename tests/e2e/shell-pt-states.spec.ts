@@ -47,8 +47,9 @@ test.describe('the shell on the Portuguese page', () => {
     await askShell(page, QUESTION);
 
     await expect(stopButton(page, PT)).toBeVisible();
-    await expect(stopButton(page, PT)).toHaveText(ui.stop);
-    await expect(page.locator('.shell-esc-hint')).toHaveText(states.escStop);
+    await expect(stopButton(page, PT).locator('.shell-stop-elapsed')).toContainText(
+      ui.stopPill.slice(0, ui.stopPill.indexOf('{')),
+    );
     await expect(page.locator(SHELL_SELECTOR.loading)).toContainText(
       states.thinkingElapsed.slice(0, states.thinkingElapsed.indexOf('{')),
     );

@@ -3,6 +3,7 @@ import { ShellCommand } from '@/content/shell-ui';
 export const PRIVACY_COMMAND_KIND = {
   List: 'list',
   ForgetAll: 'forget-all',
+  ForgetConversation: 'forget-conversation',
   ForgetNumber: 'forget-number',
   ForgetId: 'forget-id',
   Usage: 'usage',
@@ -11,6 +12,7 @@ export const PRIVACY_COMMAND_KIND = {
 export type PrivacyCommand =
   | { kind: typeof PRIVACY_COMMAND_KIND.List }
   | { kind: typeof PRIVACY_COMMAND_KIND.ForgetAll }
+  | { kind: typeof PRIVACY_COMMAND_KIND.ForgetConversation }
   | { kind: typeof PRIVACY_COMMAND_KIND.ForgetNumber; number: number }
   | { kind: typeof PRIVACY_COMMAND_KIND.ForgetId; id: string }
   | { kind: typeof PRIVACY_COMMAND_KIND.Usage };
@@ -25,6 +27,9 @@ export function parsePrivacyCommand(input: string): PrivacyCommand | null {
   const [name, verb, target, ...extra] = input.trim().toLowerCase().split(/\s+/);
   if (name !== ShellCommand.Privacy) return null;
   if (verb === undefined) return { kind: PRIVACY_COMMAND_KIND.List };
+  if (verb === FORGET_WORD && target === undefined) {
+    return { kind: PRIVACY_COMMAND_KIND.ForgetConversation };
+  }
   if (verb !== FORGET_WORD || target === undefined || extra.length > 0) return USAGE;
   if (target === ALL_FLAG) return { kind: PRIVACY_COMMAND_KIND.ForgetAll };
   if (NUMBER_PATTERN.test(target)) {

@@ -32,7 +32,7 @@ test('with MOTION off the answer lands whole and the carets stay still', async (
   await chunked.end();
   await expect(page.locator(SHELL_SELECTOR.output).last()).toHaveText(`${ui.aiLabel}: ${ANSWER}`);
   await expect(caret).toHaveCount(0);
-  await expect(page.locator(SHELL_SELECTOR.reference)).toBeVisible();
+  await expect(page.locator(SHELL_SELECTOR.receipt)).toBeVisible();
 
   await page.keyboard.press('Tab');
   await expect(page.locator(SHELL_SELECTOR.input)).not.toBeFocused();

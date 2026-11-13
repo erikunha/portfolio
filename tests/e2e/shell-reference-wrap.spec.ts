@@ -19,10 +19,10 @@ for (const width of WIDTHS) {
     await expect.poll(chunked.requests).toBe(1);
     await chunked.push(ANSWER);
     await chunked.end();
-    await expect(page.locator(SHELL_SELECTOR.reference)).toBeVisible();
+    await expect(page.locator(SHELL_SELECTOR.receipt)).toBeVisible();
 
     const fit = await page.locator(SHELL_SELECTOR.feed).evaluate((feed) => {
-      const code = feed.querySelector('[data-testid="shell-reference"] code');
+      const code = feed.querySelector('[data-testid="shell-receipt"] code');
       const feedBox = feed.getBoundingClientRect();
       const lines = code ? [...code.getClientRects()] : [];
       return {

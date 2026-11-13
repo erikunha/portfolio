@@ -148,6 +148,11 @@ test.describe('visual regression', () => {
       if (ph) (ph as HTMLElement).style.visibility = 'hidden';
     });
     await stripVolatileChrome(mockedPage);
+    await mockedPage.evaluate(() => {
+      for (const time of document.querySelectorAll<HTMLElement>('.shell-stop-time')) {
+        time.style.visibility = 'hidden';
+      }
+    });
     if (process.env.ARGOS_TOKEN) {
       await revealDeferredContent(mockedPage);
       await mockedPage.evaluate(() => {

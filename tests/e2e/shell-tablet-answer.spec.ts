@@ -38,7 +38,7 @@ test('at 768px the shell goes from thinking to answered without overflow or a he
 
   await chunked.push(REST);
   await chunked.end();
-  await expect(page.locator(SHELL_SELECTOR.reference)).toBeVisible();
+  await expect(page.locator(SHELL_SELECTOR.receipt)).toBeVisible();
   await expect(page.locator(SHELL_SELECTOR.feed)).toHaveAttribute('aria-busy', 'false');
   await settleFrames(page);
   expect(await heightOf(), 'answered').toBe(idle);

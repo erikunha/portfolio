@@ -65,7 +65,7 @@ describe('forgetRequest', () => {
     });
   });
 
-  it.each([400, 500, 503])('reports failed on %i and keeps the id', async (status) => {
+  it.each([400, 500])('reports failed on %i and keeps the id', async (status) => {
     const { refs, forget } = await load();
     refs.addRef(A);
     vi.stubGlobal('fetch', respond(status));
@@ -81,7 +81,7 @@ describe('forgetRequest', () => {
         throw new TypeError('offline');
       }),
     );
-    expect(await forget.forgetRequest(A)).toEqual({ outcome: forget.FORGET_OUTCOME.Failed });
+    expect(await forget.forgetRequest(A)).toEqual({ outcome: forget.FORGET_OUTCOME.Offline });
   });
 });
 

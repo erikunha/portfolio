@@ -1,4 +1,5 @@
 import { expect, type Page, test } from '@playwright/test';
+import { fillShellState } from '../../content/shell-ui';
 import { installChunkedAsk } from './_helpers/mock-backend';
 import { freezeMotion } from './_helpers/motion';
 import { askShell, openShell, SHELL_SELECTOR, shellCopy, stopButton } from './_helpers/shell';
@@ -78,7 +79,10 @@ test.describe('stopping a real chunked answer', () => {
     await expect(
       page.locator(SHELL_SELECTOR.output).filter({ hasText: FIRST_CHUNK.trim() }),
     ).toHaveCount(1);
-    await expect(page.locator(SHELL_SELECTOR.reference)).toHaveCount(2);
+    await expect(page.locator(SHELL_SELECTOR.receipt)).toHaveCount(1);
+    await expect(page.locator(SHELL_SELECTOR.receipt)).toContainText(
+      fillShellState(ui.receiptQuestionsMany, { count: '2' }),
+    );
     await expect(page.locator(SHELL_SELECTOR.feed)).toHaveAttribute('aria-busy', 'false');
   });
 

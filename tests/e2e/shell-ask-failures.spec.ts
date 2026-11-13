@@ -12,7 +12,6 @@ const QUESTION = 'are you there?';
 const PARTIAL = 'Erik builds agent ';
 const LOCAL_COMMAND = 'cat stack.md';
 const LOCAL_COMMAND_OUTPUT = 'llm systems';
-const SERVER_ERROR_REFERENCE = 'server-error-request-id';
 const CHUNKED_FIRST_REFERENCE = 'chunked-request-id-1';
 const HTTP_UNAVAILABLE = 503;
 const HTTP_SERVER_ERROR = 500;
@@ -55,7 +54,7 @@ test.describe('a stream that fails mid answer', () => {
       `${ui.errorPrefix} ${EN.interrupted}`,
     );
     await expect(page.locator(SHELL_SELECTOR.error)).not.toContainText(STREAM_ERR_SENTINEL);
-    await expect(page.locator(SHELL_SELECTOR.reference)).toContainText(CHUNKED_FIRST_REFERENCE);
+    await expect(page.locator(SHELL_SELECTOR.receipt)).toContainText(CHUNKED_FIRST_REFERENCE);
     await expect(page.locator(SHELL_SELECTOR.loading)).toHaveCount(0);
     await expect(page.locator(SHELL_SELECTOR.caret)).toHaveCount(0);
     await expectDraftRestored(page);
@@ -73,13 +72,13 @@ test.describe('a stream that fails mid answer', () => {
     await expect(page.locator(SHELL_SELECTOR.output).filter({ hasText: ui.aiLabel })).toHaveCount(
       0,
     );
-    await expect(page.locator(SHELL_SELECTOR.reference)).toHaveCount(1);
+    await expect(page.locator(SHELL_SELECTOR.receipt)).toHaveCount(1);
     await expectDraftRestored(page);
   });
 });
 
 test.describe('a request that fails before any answer', () => {
-  test('a 500 shows the status line, the fallback hint and the reference, and restores the draft', async ({
+  test('a 500 shows the status line and the fallback hint, no receipt for a request that stored nothing, and restores the draft', async ({
     page,
   }) => {
     await installMockBackend(page, { ask: 'server-error' });
@@ -93,7 +92,7 @@ test.describe('a request that fails before any answer', () => {
     await expect(page.locator(SHELL_SELECTOR.hint)).toContainText(
       `${states.tryPrefix} ${states.tryCommand} ${states.trySuffix}`,
     );
-    await expect(page.locator(SHELL_SELECTOR.reference)).toContainText(SERVER_ERROR_REFERENCE);
+    await expect(page.locator(SHELL_SELECTOR.receipt)).toHaveCount(0);
     await expectDraftRestored(page);
     await expectLocalCommandStillWorks(page);
   });
@@ -109,7 +108,7 @@ test.describe('a request that fails before any answer', () => {
       `${ui.errorPrefix} ${ui.networkError}`,
     );
     await expect(page.locator(SHELL_SELECTOR.loading)).toHaveCount(0);
-    await expect(page.locator(SHELL_SELECTOR.reference)).toHaveCount(0);
+    await expect(page.locator(SHELL_SELECTOR.receipt)).toHaveCount(0);
     await expectDraftRestored(page);
     await expectLocalCommandStillWorks(page);
   });

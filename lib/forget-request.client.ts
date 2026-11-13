@@ -7,17 +7,21 @@ import { parseRetryAfter, RETRY_AFTER_HEADER } from '@/lib/stream-protocol';
 export const FORGET_ENDPOINT = '/api/log/forget';
 export const FORGET_TIMEOUT_MS = 20_000;
 
-const STATUS = { ok: 200, rateLimited: 429 } as const;
+const STATUS = { ok: 200, rateLimited: 429, unavailable: 503 } as const;
 
 export const FORGET_OUTCOME = {
   Deleted: 'deleted',
   RateLimited: 'rate-limited',
+  Unavailable: 'unavailable',
+  Offline: 'offline',
   Failed: 'failed',
 } as const;
 
 export type ForgetResult =
   | { outcome: typeof FORGET_OUTCOME.Deleted }
   | { outcome: typeof FORGET_OUTCOME.RateLimited; retryAfter: number | null }
+  | { outcome: typeof FORGET_OUTCOME.Unavailable }
+  | { outcome: typeof FORGET_OUTCOME.Offline }
   | { outcome: typeof FORGET_OUTCOME.Failed };
 
 export type ForgetBatch = {
@@ -43,18 +47,23 @@ export async function forgetRequest(id: string): Promise<ForgetResult> {
         outcome: FORGET_OUTCOME.RateLimited,
         retryAfter: parseRetryAfter(response.headers.get(RETRY_AFTER_HEADER)),
       };
+    } else if (response.status === STATUS.unavailable) {
+      result = { outcome: FORGET_OUTCOME.Unavailable };
     } else result = { outcome: FORGET_OUTCOME.Failed };
   } catch {
-    result = { outcome: FORGET_OUTCOME.Failed };
+    result = { outcome: FORGET_OUTCOME.Offline };
   }
   if (wasForgotten(result)) removeRef(id);
   return result;
 }
 
-export async function forgetMany(ids: readonly string[]): Promise<ForgetBatch> {
+export async function forgetMany(
+  ids: readonly string[],
+  forget: (id: string) => Promise<ForgetResult> = forgetRequest,
+): Promise<ForgetBatch> {
   const results: ForgetBatch['results'] = [];
   for (const [index, id] of ids.entries()) {
-    const result = await forgetRequest(id);
+    const result = await forget(id);
     results.push({ id, result });
     if (result.outcome === FORGET_OUTCOME.RateLimited) {
       return { results, unattempted: ids.slice(index + 1) };
