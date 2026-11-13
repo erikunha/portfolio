@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test';
 import { VIEWPORTS } from './_helpers/geometry';
 import { freezeMotion } from './_helpers/motion';
+import { revealDeferredContent } from './_helpers/snapshot';
 import { gotoSettled } from './_helpers/streamed';
 
 const PHONE = { width: 375, height: 812 } as const;
@@ -10,16 +11,17 @@ const BODY_COPY_PX = 14;
 const EDGE_TOLERANCE_PX = 1;
 const SCROLLED_PX = 1200;
 const OPAQUE = 1;
+const TYPE_FLOOR_ROUTES = ['/', '/pt', '/links', '/design-system', '/cv', '/summary'] as const;
 
-test.describe('mobile type floor', () => {
-  for (const route of ['/', '/pt', '/links', '/design-system', '/cv', '/summary']) {
-    test(`no visible text on ${route} at ${PHONE.width}px is smaller than ${READABLE_FLOOR_PX}px`, async ({
-      page,
-    }) => {
+test.describe(`mobile type floor at ${PHONE.width}px`, () => {
+  for (const route of TYPE_FLOOR_ROUTES) {
+    test(`no visible text on ${route} is smaller than ${READABLE_FLOOR_PX}px`, async ({ page }) => {
       await page.setViewportSize(PHONE);
       await gotoSettled(page, route);
-      const offenders = await page.evaluate((floor) => {
+      await revealDeferredContent(page);
+      const { offenders, measured } = await page.evaluate((floor) => {
         const found: string[] = [];
+        let count = 0;
         for (const el of document.querySelectorAll<HTMLElement>('body *')) {
           if (!el.checkVisibility({ checkVisibilityCSS: true })) continue;
           const box = el.getBoundingClientRect();
@@ -28,11 +30,13 @@ test.describe('mobile type floor', () => {
             (n) => n.nodeType === Node.TEXT_NODE && (n.textContent ?? '').trim() !== '',
           );
           if (!ownText) continue;
+          count += 1;
           const size = Number.parseFloat(getComputedStyle(el).fontSize);
           if (size < floor) found.push(`${el.tagName.toLowerCase()}.${el.className} ${size}px`);
         }
-        return found;
+        return { offenders: found, measured: count };
       }, READABLE_FLOOR_PX);
+      expect(measured, 'the scan found no text to measure').toBeGreaterThan(0);
       expect(offenders, 'phone text below 13px is unreadable at arm length').toEqual([]);
     });
   }
@@ -65,9 +69,10 @@ test.describe('the back-to-top button sits on the dock', () => {
         const btn = document.querySelector('.to-top-btn') as HTMLElement;
         const dock = document.querySelector('.dock') as HTMLElement;
         const background = getComputedStyle(btn).backgroundColor;
-        const alpha = background.startsWith('rgba')
-          ? Number.parseFloat(background.split(',')[3] ?? '1')
-          : 1;
+        const legacy = /^rgba\([^)]*,\s*([\d.]+)\s*\)$/.exec(background);
+        const slashed = /\/\s*([\d.]+)\s*\)$/.exec(background);
+        const written = legacy?.[1] ?? slashed?.[1];
+        const alpha = written === undefined ? 1 : Number.parseFloat(written);
         return {
           gap: dock.getBoundingClientRect().top - btn.getBoundingClientRect().bottom,
           alpha,
@@ -199,8 +204,9 @@ test.describe('project cards at desktop width', () => {
   }) => {
     await page.setViewportSize(VIEWPORTS.DESKTOP);
     await gotoSettled(page, '/');
-    const ragged = await page.locator('.project-stats dd').evaluateAll((values) =>
-      values.flatMap((value) => {
+    await revealDeferredContent(page);
+    const { ragged, wrapped } = await page.locator('.project-stats dd').evaluateAll((values) => {
+      const lefts = values.map((value) => {
         const range = document.createRange();
         range.selectNodeContents(value);
         const lines = new Map<number, number>();
@@ -208,10 +214,18 @@ test.describe('project cards at desktop width', () => {
           const top = Math.round(rect.top);
           lines.set(top, Math.min(lines.get(top) ?? rect.left, rect.left));
         }
-        const lefts = [...lines.values()].map(Math.round);
-        return lefts.length > 1 && new Set(lefts).size > 1 ? [value.textContent] : [];
-      }),
-    );
+        return { text: value.textContent, lefts: [...lines.values()].map(Math.round) };
+      });
+      const multiLine = lefts.filter((value) => value.lefts.length > 1);
+      return {
+        wrapped: multiLine.length,
+        ragged: multiLine.filter((value) => new Set(value.lefts).size > 1).map((v) => v.text),
+      };
+    });
+    expect(
+      wrapped,
+      'no stat value wraps here, so the alignment was never measured',
+    ).toBeGreaterThan(0);
     expect(ragged, 'wrapped values start every line at the same edge').toEqual([]);
   });
 });
