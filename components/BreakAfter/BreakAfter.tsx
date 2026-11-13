@@ -5,6 +5,7 @@ export const BREAK_AFTER = {
   host: '/.',
   identifier: '_',
   dottedIdentifier: '_.',
+  code: '_./:[>',
 } as const;
 
 type BreakAfterProps = {

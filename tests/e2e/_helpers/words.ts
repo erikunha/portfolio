@@ -33,7 +33,11 @@ export async function renderEverything(page: Page): Promise<void> {
   );
 }
 
-export function splitWords(page: Page, scope = 'body'): Promise<WordFinding[]> {
+export function splitWords(
+  page: Page,
+  scope = 'body',
+  allowedBreakAfter = ALLOWED_BREAK_AFTER,
+): Promise<WordFinding[]> {
   return page.evaluate(
     ([root, skipped, allowedAfter]) => {
       const found: WordFinding[] = [];
@@ -77,7 +81,7 @@ export function splitWords(page: Page, scope = 'body'): Promise<WordFinding[]> {
       }
       return found;
     },
-    [scope, SKIPPED_TAGS, ALLOWED_BREAK_AFTER] as const,
+    [scope, SKIPPED_TAGS, allowedBreakAfter] as const,
   );
 }
 
