@@ -80,7 +80,7 @@ A `ContactMessage` contains `name`, `email`, `message`, `receivedAt` and `ipHash
 
 Resend acceptance returns 200. A provider error, timeout or missing key adds the id to `contact:outbox`, ordered by `receivedAt`, with a retry counter in `contact:outbox:attempts`. Only a successful outbox write returns `202 queued`. The visitor sees that the message is saved but undelivered, with a LinkedIn alternative. Other errors display the server's message string.
 
-The daily retry permits at most 3 additional delivery attempts within 7 days. Success, expiry and exhaustion remove pending membership and its counter while preserving the audit message. Logs contain request and message ids, never the contact payload.
+The daily retry permits at most 3 additional delivery attempts within 24 hours, the window in which the provider honors the send idempotency key. Success, expiry and exhaustion remove pending membership and its counter while preserving the audit message. Logs contain request and message ids, never the contact payload.
 
 ## Domain entity model
 
