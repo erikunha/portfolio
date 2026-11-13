@@ -36,7 +36,7 @@ try {
   );
   if (!ok) failed = true;
 } catch (e) {
-  console.error('Could not read chunks dir — did the build run?', e.message);
+  console.error('Could not read chunks dir, did the build run?', e.message);
   process.exit(2);
 }
 
