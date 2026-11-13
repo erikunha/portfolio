@@ -192,6 +192,121 @@ describe('CI reviewer runs on trusted instructions and no repository skill', () 
   });
 });
 
+describe('CI reviewer prompt carries its evidence, gate, budget and challenge rules', () => {
+  const prompt = readArtifact(join(root, '.github/claude-review-prompt.md'));
+  const reviewMd = readArtifact(join(root, 'REVIEW.md'));
+  const snapshotScript =
+    workflowSteps.find((step) => step.name?.startsWith('Snapshot PR metadata'))?.run ?? '';
+
+  const scratchFile = /\.(err|full)$|^(files|checks)\.json$/;
+  const writtenEvidenceFiles = () =>
+    [
+      ...new Set(
+        [...snapshotScript.matchAll(/>\s*"\$OUT_DIR\/([A-Za-z][A-Za-z0-9.-]*)/g)].map(
+          (m) => m[1] ?? '',
+        ),
+      ),
+    ]
+      .filter((name) => !scratchFile.test(name))
+      .map((name) => (name === 'failed-run-' ? 'failed-run-<id>.log' : name));
+
+  it('names every evidence file the snapshot step leaves behind', () => {
+    const files = writtenEvidenceFiles();
+    expect(files).toEqual(
+      expect.arrayContaining([
+        'pr.json',
+        'diff.patch',
+        'files.txt',
+        'checks.txt',
+        'pr-unavailable.txt',
+        'failed-runs-unavailable.txt',
+        'head-sha.txt',
+        'failed-run-<id>.log',
+      ]),
+    );
+    for (const file of files) {
+      expect(prompt, `the prompt must tell the reviewer about ${file}`).toContain(file);
+    }
+  });
+
+  it('treats an UNAVAILABLE marker, a pending check and a passed check as limits, not passes', () => {
+    expect(prompt).toMatch(
+      /starting with UNAVAILABLE[\s\S]{0,400}stat\w+ in the overview as a limit/,
+    );
+    expect(prompt).toMatch(/passed check proves only what it exercises/);
+    expect(prompt).toMatch(/still pending at snapshot time is a limit, not a pass/);
+  });
+
+  it('explains the evidence gaps the snapshot can leave in the diff and the logs', () => {
+    expect(prompt).toContain('# patch omitted by GitHub');
+    expect(prompt).toMatch(/truncated/);
+    expect(prompt).toMatch(/head-sha\.txt/);
+    expect(prompt).toMatch(/baseRefName/);
+    expect(
+      prompt,
+      'pr.json carries no PR description, so a spec check against it is a limit',
+    ).toMatch(/description[\s\S]{0,200}limit/);
+  });
+
+  it('states the tools the job holds so the reviewer does not plan around a shell or the web', () => {
+    for (const tool of ['Read', 'Grep', 'Glob', 'Task']) {
+      expect(prompt).toContain(tool);
+    }
+    expect(prompt).toMatch(/no shell, no gh command, no web/);
+  });
+
+  it('says a fresh capture is impossible but a committed baseline image is read', () => {
+    expect(prompt).toMatch(/no driver/);
+    expect(prompt).toMatch(/fresh capture[\s\S]{0,120}limit/);
+    expect(prompt).toMatch(
+      /committed baseline PNG[\s\S]{0,260}open the new file[\s\S]{0,200}describe what you see/,
+    );
+    expect(prompt).toMatch(/never from numbers/);
+  });
+
+  it('sizes fan-out to the job and keeps workers independent and briefed', () => {
+    expect(prompt).toContain('For a trivial PR do the review yourself');
+    expect(prompt).toMatch(/one Task subagent per material domain in a single message/);
+    expect(prompt).toMatch(/job timeout/);
+    expect(prompt).toMatch(/no filler/);
+    expect(prompt).toMatch(/inherits nothing/);
+    expect(prompt).toMatch(/Agreement between workers is not proof/);
+  });
+
+  it('runs every matching repository skill as a method, never as a verdict', () => {
+    expect(prompt).toMatch(/every matching repository skill/);
+    expect(prompt).toMatch(/method, never a verdict/);
+    expect(prompt).toMatch(/only the repository's own skills/i);
+  });
+
+  it('resolves dependency facts from the lockfile and checks overrides against ranges', () => {
+    expect(prompt).toMatch(/pnpm override against the dependent's declared range/);
+    expect(prompt).toMatch(/pnpm-lock\.yaml, never from memory/);
+    expect(prompt).toMatch(/upstream[\s\S]{0,120}limit/);
+  });
+
+  it('refutes every candidate and sends each CRITICAL to one more challenger before posting', () => {
+    expect(prompt).toMatch(/refute it against guards, alternate paths/);
+    expect(prompt).toMatch(/send each CRITICAL to one more Task challenger before posting it/);
+    expect(prompt).toMatch(/weakest assumption/);
+    expect(prompt).toMatch(/strongest counterexample/);
+    expect(prompt).toMatch(/it informs, you decide/);
+  });
+
+  it('keeps the harness and the removed review skill out of the prompt', () => {
+    expect(prompt).not.toMatch(/pr-review-orchestrator|review-skill|completion matrix/i);
+  });
+
+  it('carries the review domains and proof rules REVIEW.md owes the bot', () => {
+    for (const domain of ['Target and base', 'Design-system pages', 'Motion', 'Observability']) {
+      expect(reviewMd, `REVIEW.md must classify the ${domain} domain`).toContain(`| ${domain}`);
+    }
+    expect(reviewMd).toMatch(/opened image/);
+    expect(reviewMd).toMatch(/Uncertainty never raises severity/);
+    expect(reviewMd).toMatch(/recorded in `DECISIONS\.md`/);
+  });
+});
+
 const SNAPSHOT_STEP_TIMEOUT_MS = 30_000;
 
 describe('claude-review snapshot step', { timeout: SNAPSHOT_STEP_TIMEOUT_MS }, () => {
