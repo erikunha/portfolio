@@ -137,6 +137,12 @@
     cursor: pointer;
   }
 
+  @media (scripting: none) {
+    button.links-line {
+      display: none;
+    }
+  }
+
   .links-line:focus-visible {
     outline: var(--focus-ring);
     outline-offset: var(--focus-ring-offset-inset);

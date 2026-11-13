@@ -218,6 +218,12 @@
     }
   }
 
+  @media (scripting: none) {
+    .links-skeleton {
+      display: none;
+    }
+  }
+
   .links-skeleton-block {
     display: block;
     outline: var(--border-width) solid var(--color-primary-border);
