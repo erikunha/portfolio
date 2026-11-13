@@ -23,7 +23,7 @@ flowchart TB
     subgraph present["Presentation (RSC-first)"]
         page["components/SiteHome.tsx<br/>composition root"]
         sections["components/sections/**<br/>RSC sections and nested groups"]
-        islands["client islands<br/>/client/ directories and *.client.*"]
+        islands["client islands<br/>/client/ directories and .client.ts(x) files"]
         ds["design-system/**<br/>reusable primitives"]
     end
     proxy --> page
@@ -73,7 +73,7 @@ flowchart TB
     libcore --> resend
     libcore --> psi
     libcore -.-> lf
-    islands["client islands<br/>/client/ directories and *.client.*"] -->|fetch /api/ask, /api/contact| api["app/api/**<br/>route handlers"]
+    islands["client islands<br/>/client/ directories and .client.ts(x) files"] -->|fetch /api/ask, /api/contact| api["app/api/**<br/>route handlers"]
     sections["components/sections/**<br/>RSC sections and nested groups"] -->|Measured reads| libcore
 ```
 
@@ -111,7 +111,7 @@ flowchart LR
     root --> cl[".agents/ · .claude/ · .codex/ (AI platform)"]
     root --> gh[".github/workflows/"]
     root --> docs["root docs: ARCHITECTURE · STANDARDS · DECISIONS · AGENTS · REVIEW"]
-    root --> kb["docs/ knowledge base · evals/ · metrics/ · __tests__/"]
+    root --> kb["docs/ knowledge base · evals/ · metrics/ · unit test directory"]
     comp --> c1["sections/** RSC"]
     comp --> c2["client/** islands"]
     comp --> c3["responsive/** chrome"]

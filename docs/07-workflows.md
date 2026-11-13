@@ -133,7 +133,7 @@ Child processes are tracked: on exit, `SIGINT`, `SIGTERM` or `SIGHUP` their proc
 
 ```mermaid
 flowchart LR
-    unit["Vitest (jsdom)<br/>__tests__/** + co-located *.test.tsx<br/>behavioral, 80/70/80/80 coverage floor"] --> ci
+    unit["Vitest (jsdom)<br/>the unit test directory + co-located *.test.tsx<br/>behavioral, 80/70/80/80 coverage floor"] --> ci
     a11y["axe-core<br/>tests/a11y/axe.spec.ts (WCAG 2.2 AA tags)"] --> ci
     e2e["Playwright e2e<br/>tests/e2e/** (CI: 8-project matrix)"] --> ci
     visual["Visual regression<br/>tests/visual/visual.spec.ts via Argos"] --> ci
