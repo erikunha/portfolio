@@ -47,6 +47,8 @@ merge-blocking check on this surface is the behavioral test suite (the required
   grades the shipped model. Do not hardcode a model string in the route.
 - Ephemeral prompt cache via `providerOptions.anthropic.cacheControl` on the
   system `instructions`; output capped (`ASK_MAX_OUTPUT_TOKENS`), request-timeout guarded;
+  the budget counts spend in nano-USD (`askBudgetCost` in `lib/ask/usage.ts`, rates in
+  `lib/ask/pricing.ts`), so cache reads are not charged at the uncached rate;
   no sampling parameters (Haiku 5.5 rejects them) and thinking disabled.
 - Changes to the ask corpus, calibration, system prompt or the facts it renders
   (`content/ask-facts.ts`) require `pnpm ask:eval`.

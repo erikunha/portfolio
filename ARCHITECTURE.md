@@ -51,7 +51,7 @@ What we build is small, opinionated, Vercel-deployed, and budget-enforced.
 | Lighthouse Best Practices                        | ≥ 95                          |
 | Lighthouse SEO                                   | = 100                         |
 | WCAG                                             | 2.2 AA                        |
-| ASK monthly token cap                            | 3,000,000 tokens              |
+| ASK monthly spend cap                            | $3.00 (metered in nano-USD)   |
 
 ### Constraints
 
@@ -549,7 +549,7 @@ The same question text (SHA-256) from the same IP hash within 60 seconds is bloc
 
 ### Budget enforcement (the Principal-level move)
 
-Redis holds `ask:tokens:YYYY-MM` with a 32-day TTL set only when absent, and `ask:tokens:day:YYYY-MM-DD` with a 2-day TTL for the daily slice. `reserveBudget(MAX_OUTPUT_TOKENS)` reserves `ASK_RESERVED_INPUT_TOKENS` plus 512 output tokens before inference; `lib/ask/input-reservation.ts` derives the input share from the system prompt and the 500-character question cap at 3 characters per token. The monthly capacity is 3,000,000 tokens and the daily slice is one twentieth of it, so one client cannot spend the month in a few days. `settleBudget` refunds the unused reservation against reported usage and charges any usage above it; a failed refund remains conservatively charged.
+Redis holds `ask:tokens:YYYY-MM` with a 32-day TTL set only when absent, and `ask:tokens:day:YYYY-MM-DD` with a 2-day TTL for the daily slice. Both counters hold spend in nano-USD (one billionth of a dollar), so a cached input token costs a tenth of an uncached one, as the Gateway bills it. `reserveBudget(MAX_OUTPUT_TOKENS)` reserves `askReservationCost`, the worst case: `ASK_RESERVED_INPUT_TOKENS` priced as a cache write plus 512 output tokens; `lib/ask/input-reservation.ts` derives the input share from the system prompt and the 500-character question cap at 3 characters per token. The monthly ceiling is `MONTHLY_BUDGET_USD` ($3.00) and the daily slice is one twentieth of it, so one client cannot spend the month in a few days. `settleBudget` prices the reported usage with `askBudgetCost` (uncached input, cache reads at 0.1x, cache writes at 1.25x, output at five times the input rate, from `lib/ask/pricing.ts`), refunds the unused reservation and charges any cost above it; a failed refund remains conservatively charged.
 - At 80% capacity, reservation logs a warning and allows the request.
 - Above either capacity, it refunds the rejected reservation (both keys when the daily slice is the one crossed) and returns `allowed: false` with `reason` `month` or `day`; the route responds with HTTP 503 and the month copy (`askErrors.budget`) or the day copy (`askErrors.budgetDaily`, which names the 00:00 UTC reset).
 - Redis failure or missing credentials during reservation fails closed with `reason: 'store'`. The route answers 503 with the `unavailable` copy and counts the refusal as `budget-store-unavailable`, apart from `budget-exhausted`, so an outage never reads as a spent budget. Rate limiting and identical-question dedup fail open, but the budget rejection prevents the model call.
@@ -576,7 +576,7 @@ that fails before it is fully read returns `invalid_body`, HTTP 400.
 **Shipped:**
 - Trim and truncate `question` to 500 characters before injection checks
 - Per-IP sliding window (8/h): see `lib/rate-limit.ts`
-- Monthly token budget hard cap and a daily slice via reservation pattern: `reserveBudget(maxOutputTokens)` INCRBYs worst-case BEFORE the Anthropic call; `settleBudget(reserved, actualIn, actualOut)` DECRBYs the unused portion after. Survives client disconnects: the counter never undercounts.
+- Monthly spend hard cap and a daily slice via reservation pattern: `reserveBudget(maxOutputTokens)` INCRBYs the worst-case cost BEFORE the Anthropic call; `settleBudget(reserved, actualIn, actualOut, budgetKey, dailyKey, cache)` DECRBYs the unused portion after, pricing cache reads and writes at their own rates. Survives client disconnects: the counter never undercounts.
 - `ASK_ENABLED` kill switch (env-var, off-by-keyword)
 - Reject `q` matching `INJECTION_RE` (`lib/ask/injection.ts`) after NFKC normalization and invisible-character stripping: English and Portuguese role tokens (`system`, `assistant`, `developer`, `sistema`, `assistente`, `desenvolvedor` followed by `:` or `>`) at the start of the input, a line, a sentence or a clause, chat-template tokens, and instruction-override phrasings in both languages. Cyrillic and Greek lookalike letters fold into Latin first. `isInjectionAttempt` skips quoted spans and "against/about/sobre/contra + phrase + attacks" mentions, and a role word followed by a short question fragment, so a visitor can ask about the phrase without a 400
 - Reject identical `q` from same IP within 60s: Redis `SET NX EX 60` keyed on `ipHash + sha256(q).slice(0,16)`

@@ -186,7 +186,7 @@ sequenceDiagram
     participant RL as lib/rate-limit
 
     R->>RL: checkIdenticalQuestion (60s dedup, 429)
-    R->>RL: reserveBudget(512)  (monthly cap and daily slice - 503 if either is exhausted or the store is down, and the dedup lock is released)
+    R->>RL: reserveBudget(512)  (monthly and daily dollar caps - 503 if either is exhausted or the store is down, and the dedup lock is released)
     R->>R: mint 128-bit sentinel, wrap question as data-only
 ```
 

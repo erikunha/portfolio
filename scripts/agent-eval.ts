@@ -21,7 +21,7 @@ import {
   summarizeCalibration,
 } from '@/lib/eval/calibration';
 import {
-  APPROX_FEATURE_INPUT_TOKENS,
+  APPROX_AGENT_EVAL_INPUT_TOKENS,
   APPROX_FEATURE_OUTPUT_TOKENS,
   estimateJobCostUsd,
   judgeCostUsdFrom,
@@ -273,9 +273,9 @@ async function main(): Promise<void> {
     estimateJobCostUsd({
       cases: billableCases,
       runs,
-      approxTargetInputTokens: APPROX_FEATURE_INPUT_TOKENS,
+      approxTargetInputTokens: APPROX_AGENT_EVAL_INPUT_TOKENS,
       approxTargetOutputTokens: APPROX_FEATURE_OUTPUT_TOKENS,
-      approxJudgeInputTokens: APPROX_FEATURE_INPUT_TOKENS,
+      approxJudgeInputTokens: APPROX_AGENT_EVAL_INPUT_TOKENS,
       approxJudgeOutputTokens: APPROX_FEATURE_OUTPUT_TOKENS,
     }).toFixed(4),
   );

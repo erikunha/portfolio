@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { ASK_RESERVED_INPUT_TOKENS } from '@/lib/ask/input-reservation';
 import {
   estimateJobCostUsd,
   featureCostUsdFrom,
@@ -79,6 +80,9 @@ describe('lib/eval/cost', () => {
   it('summarizeFeatureCost falls back to the approximation when nothing was measured', () => {
     const summary = summarizeFeatureCost([], 2);
     expect(summary.measuredAnswers).toBe(0);
-    expect(summary.featureCostUsd).toBeCloseTo((2 * (1700 * 0.1 + 350 * 0.5)) / 1_000_000, 10);
+    expect(summary.featureCostUsd).toBeCloseTo(
+      (2 * (ASK_RESERVED_INPUT_TOKENS * 0.1 + 350 * 0.5)) / 1_000_000,
+      10,
+    );
   });
 });
