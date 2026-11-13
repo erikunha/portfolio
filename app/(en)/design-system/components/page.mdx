@@ -143,6 +143,8 @@ Renders the three macOS-style traffic-light dots (red/yellow/green) as a pure RS
   <StatTile value="1.2s" label="LCP" variant="compact" />
 </Preview>
 
+**Layout:** A label wraps between words, never inside one. The tile reads `--stat-tile-pad-x` (default 10px) and `--stat-tile-tracking` (default 0.08em) from its container, so a narrow grid can trade padding and tracking for room without a new variant.
+
 **Accessibility:** Rendered as `<dl><dt>{label}</dt><dd>{value}</dd></dl>` · screen readers announce "label: value".
 
 ## CmdLine

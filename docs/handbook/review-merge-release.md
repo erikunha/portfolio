@@ -79,7 +79,7 @@ against the local build.
 
 - **Trigger:** squash-merge to `main` deploys via Vercel.
 - **Verification:** `smoke.yml` (on `deployment_status == success && Production`) checks the canonical `/api/healthz` (the artifact probe is skipped for a protected `*.vercel.app` deployment without its bypass secret), the 7 security headers, apex->www promotion followed to its final 200 (the workflow asserts neither an intermediate 308 nor the final www host), and `/api/ask` + `/api/contact` liveness; a canonical healthz 503 attempts a Resend alert when `RESEND_API_KEY` and the `ALERT_EMAIL` repository secret are both configured, and delivery errors are warnings.
-- **Cron:** `vercel.json` runs `/api/psi-refresh` daily (`0 3 * * *`) and `/api/contact-retry` daily (`0 4 * * *`).
+- **Cron:** `vercel.json` runs `/api/psi-refresh` daily (`0 3 * * *`) and `/api/contact-retry` twice a day (`0 4 * * *` and `0 16 * * *`).
 
 ## Rollback
 
@@ -104,7 +104,7 @@ None of these gates a PR (`ci-gate` waits only on the jobs in `ci.yml`). Job-lev
 | `ask-eval.yml`                   | Monday 05:00 UTC, manual                        | Runs `pnpm ask:eval`; on `main` it republishes the stored result the site's AI metrics read |
 | `agent-eval.yml`                 | Monday 06:00 UTC, manual                        | Runs `pnpm eval:agents`, the prompt-regression eval of fixed rule texts modelled on `AGENTS.md`                     |
 | `codeql.yml`                     | Push and PR to `main`, Monday 03:00 UTC, manual | CodeQL analysis of the JavaScript and TypeScript sources, reported to code scanning                 |
-| `mutation.yml`                   | Sunday 04:00 UTC, manual                        | Stryker mutation run; fails when the runner produced no report                                      |
+| `mutation.yml`                   | Sunday 04:00 UTC, manual                        | Stryker mutation run; fails on no report, a blind runner, or a score under the `thresholds.break` floor |
 | `tool-pins.yml`                  | Monday 05:00 UTC, manual                        | `pnpm check:tool-pins`: fails when the pinned gitleaks or Semgrep version is behind the latest     |
 | `lockfile-resolution-probe.yml`  | Monday 08:00 UTC, manual                        | Resolves every range without a lockfile and keeps one issue open while the release-age window blocks it |
 | `weekly-metrics.yml`             | Monday 07:00 UTC, manual                        | Collects delivery metrics, checks them against `metrics/bands.json` and opens issues for breaches   |

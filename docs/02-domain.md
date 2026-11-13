@@ -80,7 +80,7 @@ A `ContactMessage` contains `name`, `email`, `message`, `receivedAt` and `ipHash
 
 Resend acceptance returns 200. A provider error, timeout or missing key adds the id to `contact:outbox`, ordered by `receivedAt`, with a retry counter in `contact:outbox:attempts`. Only a successful outbox write returns `202 queued`. The visitor sees that the message is saved but undelivered, with a LinkedIn alternative. Every other failure shows copy from the page's locale, chosen by the response's `error.code`.
 
-The daily retry permits at most 3 additional delivery attempts within 24 hours, the window in which the provider honors the send idempotency key. Success, expiry and exhaustion remove pending membership and its counter while preserving the audit message. Logs contain request and message ids, never the contact payload.
+The retry runs twice a day and permits at most 3 additional delivery attempts while a message is under 24 hours old. That is the provider idempotency window: Resend drops a resend with the same idempotency key within 24 hours. The runs are at most 12 hours 59 minutes apart, so every message gets at least one retry. Success, expiry and exhaustion remove pending membership and its counter while preserving the audit message. Logs contain request and message ids, never the contact payload.
 
 ## Domain entity model
 

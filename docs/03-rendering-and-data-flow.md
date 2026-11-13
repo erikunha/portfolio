@@ -65,7 +65,7 @@ flowchart TD
     api7["GET /api/lighthouse"]
     api8["POST /api/log · POST /api/log/forget"]
     api9["GET · POST /api/mcp (stateless handler; POST body limit 4096 bytes)"]
-    api10["GET /api/contact-retry (daily cron)"]
+    api10["GET /api/contact-retry (cron, twice a day)"]
     end
 ```
 
@@ -295,7 +295,7 @@ sequenceDiagram
 
 The **ordering is a security property**: refuse cross-site requests first, hash the IP so no limiter key holds the raw address, rate-limit and bound the body _before_ reading it, validate _before_ the work, and touch storage _only_ for requests that pass. Every response carries `X-Request-Id`. See doc 05 for the full `defineHandler` contract and the other routes.
 
-At 04:00 UTC daily (`0 4 * * *`), `/api/contact-retry` checks the `CRON_SECRET` bearer before reading pending ids in received-time order. Messages older than 24 hours (the provider idempotency window), or already at 3 retry attempts, leave the outbox. Each eligible message consumes an attempt before calling the same delivery function. Successful sends leave the outbox; failures remain pending. Audit messages retain their 90-day KV TTL. The success response is `{ ok: true, requestId, data: { sent, failed, expired, exhausted } }`, with a matching `X-Request-Id` header. Contact logs carry only `requestId` and `msgId`.
+At 04:00 and 16:00 UTC (`0 4 * * *` and `0 16 * * *`), `/api/contact-retry` checks the `CRON_SECRET` bearer before reading pending ids in received-time order. Messages 24 hours old or older (the provider idempotency window), or already at 3 retry attempts, leave the outbox. Each eligible message consumes an attempt before calling the same delivery function. Successful sends leave the outbox; failures remain pending. Audit messages retain their 90-day KV TTL. The success response is `{ ok: true, requestId, data: { sent, failed, expired, exhausted } }`, with a matching `X-Request-Id` header. Contact logs carry only `requestId` and `msgId`.
 
 ## Request lifecycle summary (every request)
 

@@ -77,7 +77,7 @@ Lighthouse (`lighthouserc.json`, `lighthouserc.mobile.json`), `pnpm route-js-che
 
 ## Look and content
 
-- Pure black background (`#000000`), signal green (`#00FF41`, `text-primary-500`) for headings, accents and large text. Body text is `text-tertiary-50` (`#E6FFE6`); the signal never colors paragraph text because it fails WCAG AA.
+- Pure black background (`#000000`), signal green (`#00FF41`, `text-primary-500`) for headings, accents and large text. Body text is `text-tertiary-50` (`#E6FFE6`); the signal never colors paragraph text: the design rule reserves it for headings, accents and large text (it measures 15.38:1 on black, so contrast is not the reason).
 - JetBrains Mono everywhere (self-hosted through `next/font/local`); `h1` alone is Inter 900 via `--font-display`. 1px borders, no radius above 2px.
 - CRT effects (scanlines, mask, grain, beam, flicker, phosphor shadow) stay at dialed-back opacity and are all off while the MOTION switch is off (`body[data-motion="reduce"]`); the operating system preference is not read (the one exception is the no-script block in `animations.css`, where no switch can load), and a first visit starts with motion on. Do not remove existing motion (typing, Matrix Rain, boot, CRT, blink).
 - Copy lives in `content/*.ts` (typed, Zod-validated at build, English and pt-BR). Never inline user-facing copy in JSX. A change to a section lands in every variant of it (mobile, tablet, placeholder, noscript, MOTION off, print, design-system demos, tests): grep the old copy.

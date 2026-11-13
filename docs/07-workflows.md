@@ -137,7 +137,7 @@ flowchart LR
     a11y["axe-core<br/>tests/a11y/axe.spec.ts (WCAG 2.2 AA tags)"] --> ci
     e2e["Playwright e2e<br/>tests/e2e/** (CI: 8-project matrix)"] --> ci
     visual["Visual regression<br/>tests/visual/visual.spec.ts via Argos"] --> ci
-    mut["Stryker mutation (weekly, advisory; kill canary in CI)"] -. trend .-> ci
+    mut["Stryker mutation (weekly, outside the merge path, red below the break floor; kill canary in CI)"] -. trend .-> ci
     ci["CI gates"]
 ```
 
@@ -354,7 +354,7 @@ Large features use an **integration branch + sub-PRs** (`feat/<feature>` ← `fe
 ## Releases & deployment
 
 - **Platform:** Vercel (Fluid Compute, Node runtime) end-to-end. Push to `main` (via PR) deploys.
-- **Cron:** `vercel.json` runs `/api/psi-refresh` at `0 3 * * *` and `/api/contact-retry` at `0 4 * * *`.
+- **Cron:** `vercel.json` runs `/api/psi-refresh` at `0 3 * * *` and `/api/contact-retry` at `0 4 * * *` and `0 16 * * *`.
 - **Post-deploy:** `smoke.yml` verifies the production deployment (healthz, headers, liveness) and emails on a 503.
 - **Emergency rollback:** fast = `vercel promote <previous-url>` (30s, no code); slow = `git revert HEAD && git push --no-verify` (the `--no-verify` is the documented escape hatch for the main-push guard). Verify with `curl https://erikunha.dev/api/healthz | jq .sha`.
 - **Rollback rehearsal:** `rollback-rehearsal.yml` proves the slow path still works. See "Weekly rollback rehearsal" under CI/CD.
@@ -369,7 +369,7 @@ Large features use an **integration branch + sub-PRs** (`feat/<feature>` ← `fe
 | Push blocked               | inspect the main-target guard, branch name or `pnpm verify` failure in `.husky/pre-push` |
 | CLS / visual regression    | regenerate Argos baselines via the `visual-baseline-regen` skill                         |
 | Client error in prod       | it was POSTed to `/api/log` (`err:{date}:{id}`, 7-day TTL) by `error-bridge.client.ts`  |
-| Contact message stuck      | `contact:outbox` holds ids waiting for the daily `/api/contact-retry` cron; a 202 `queued` response put it there |
+| Contact message stuck      | `contact:outbox` holds ids waiting for the `/api/contact-retry` cron (04:00 and 16:00 UTC); a 202 `queued` response put it there |
 | A gated job skipped on a PR | `detect-changes` found no path in its list; read `scripts/detect-changes-paths.mjs` |
 | `ask:eval` red in CI       | the gate failure code printed by the run (`lib/eval/ask-grading.ts`); the artifact `ask-eval-result` holds every graded item |
 

@@ -46,7 +46,7 @@ The terminal homepage is complemented by `/summary`, `/cv`, `/links` (pt-BR), `/
 | Vitest + Playwright                     | Unit (80% lines, 70% branches) + E2E across eight Playwright projects + axe-core a11y CI suite + Argos visual diffs                                    |
 | Lighthouse CI                           | LCP, TBT, CLS and the category scores gated on the 24 routes the Lighthouse config lists (performance ≥95 desktop / ≥90 mobile, accessibility and SEO = 100, best practices ≥95); INP checked in the browser tests |
 | Stryker                                 | Weekly mutation testing; a canary run in CI proves the runner still kills mutants                                                                         |
-| pnpm 10+ / Node `^22.22.2 || ^24.15.0 || >=26.0.0` | Strict dependency resolution, content-addressed store                                                                                                     |
+| pnpm 10+ / Node `^22.22.2 \|\| ^24.15.0 \|\| >=26.0.0` | Strict dependency resolution, content-addressed store                                                                                                     |
 
 ---
 
