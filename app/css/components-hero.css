@@ -374,6 +374,11 @@
       display: none;
       min-height: 0;
     }
+    .hero-mobile .hero-identity {
+      margin-top: 0;
+      padding-top: 0;
+      border-top: 0;
+    }
     .hero-context {
       font-size: var(--text-xs);
       --leading: 1.5;
