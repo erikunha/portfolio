@@ -50,8 +50,8 @@ function PathCmdLine({ content, path }: { content: RequestedPathContent; path: s
     <CmdLine
       user=""
       prompt={content.prompt}
-      command={content.command.replace(NOT_FOUND_PATH_TOKEN, path)}
-      output={content.output.replace(NOT_FOUND_PATH_TOKEN, path)}
+      command={content.command.replace(NOT_FOUND_PATH_TOKEN, () => path)}
+      output={content.output.replace(NOT_FOUND_PATH_TOKEN, () => path)}
     />
   );
 }
