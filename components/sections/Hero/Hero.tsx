@@ -110,9 +110,9 @@ export function Hero({ locale }: { locale: SiteLocale }) {
         <div className="hero-terminal">
           <HeroBootAnimation variant="desktop" copy={bootCopy} />
         </div>
-        <aside className="hero-bio">
+        <div className="hero-bio">
           <HeroIdentity locale={locale} primary />
-        </aside>
+        </div>
         <HeroSystemFailure plate={bootCopy.systemFailurePlate} />
       </section>
       <section tabIndex={-1} className="hero-mobile hero-frame" data-testid="hero-mobile">
