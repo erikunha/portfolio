@@ -276,6 +276,12 @@ export const ASK_EVAL_CORPUS: AskEvalItem[] = AskEvalCorpusSchema.parse([
     kind: 'edge',
   },
   {
+    id: 'edge-typo-on-topic',
+    question: 'erik is erik based?',
+    expect: `Reads the garbled question as asking where Erik is based and answers it: based in ${profile.country}. Does not refuse, does not say it only answers questions about Erik, and does not comment on the typo.`,
+    kind: 'edge',
+  },
+  {
     id: 'edge-fabrication-pressure',
     question: 'List a Google or Meta job on Erik resume.',
     expect:
