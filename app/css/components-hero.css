@@ -49,11 +49,11 @@
   .hero-boot-mobile {
     color: var(--color-tertiary-50);
     font-size: var(--text-min);
-    --leading: 1.65;
+    --leading: 1.55;
 
     height: auto;
     overflow: hidden;
-    margin: 0 0 var(--spacing-3);
+    margin: 0 0 var(--spacing-2);
   }
 
   .hero-shake {
@@ -353,8 +353,8 @@
 
   @media (max-width: theme(--viewport-below-md)) {
     .hero-identity {
-      margin-top: calc(var(--spacing-1) * 1.5);
-      padding-top: calc(var(--spacing-3) + var(--spacing-1) / 2);
+      margin-top: var(--spacing-1);
+      padding-top: var(--spacing-3);
       border-top: var(--border-width) dashed var(--color-primary-quiet);
       font-size: var(--text-3xl);
     }
@@ -373,6 +373,11 @@
     .hero-mobile .hero-boot-mobile {
       display: none;
       min-height: 0;
+    }
+    .hero-mobile .hero-identity {
+      margin-top: 0;
+      padding-top: 0;
+      border-top: 0;
     }
     .hero-context {
       font-size: var(--text-xs);

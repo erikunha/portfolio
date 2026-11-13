@@ -583,4 +583,18 @@
       grid-template-columns: var(--phi-pair-columns-minor-first);
     }
   }
+
+  @media (max-width: theme(--viewport-below-narrow)) {
+    .site-footer {
+      --footer-shutdown-tracking: var(--tracking-2xs);
+    }
+
+    .footer-card {
+      --footer-card-inset: var(--spacing-2);
+    }
+
+    .footer-session-grid {
+      column-gap: var(--spacing-1);
+    }
+  }
 }

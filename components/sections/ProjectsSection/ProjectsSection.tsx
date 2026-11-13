@@ -85,7 +85,7 @@ export function ProjectsContent({ locale }: { locale: SiteLocale }) {
             {project.stats.map((stat) => (
               <div key={stat.label} className="max-md:flex-col max-md:gap-0">
                 <dt>{stat.label}:</dt>
-                <dd className="max-md:text-left">{stat.value}</dd>
+                <dd>{stat.value}</dd>
               </div>
             ))}
           </dl>

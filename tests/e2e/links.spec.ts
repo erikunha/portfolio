@@ -261,7 +261,7 @@ test.describe('/links link-in-bio', () => {
     ).toEqual([]);
   });
 
-  test('keeps every visible text element at or above the 12px mobile floor on both locales', async ({
+  test('keeps every visible text element at or above the 13px mobile floor on both locales', async ({
     page,
   }) => {
     await page.setViewportSize({ width: 390, height: 844 });
@@ -269,7 +269,7 @@ test.describe('/links link-in-bio', () => {
     for (const path of ['/links', '/links/en']) {
       await page.goto(path);
       const offenders = await page.evaluate(() => {
-        const floor = 12;
+        const floor = 13;
         const failures: string[] = [];
         for (const el of document.body.querySelectorAll<HTMLElement>('*')) {
           const ownText = Array.from(el.childNodes)
@@ -293,7 +293,7 @@ test.describe('/links link-in-bio', () => {
       });
       expect(
         offenders,
-        `${path}: sub-12px text on mobile is the Lighthouse font-size audit failing and the --text-min token floor broken. Each offender lists its class, computed size and copy so the culprit utility is identifiable without a debugger.`,
+        `${path}: sub-13px text on mobile is the Lighthouse font-size audit failing and the --text-min token floor broken. Each offender lists its class, computed size and copy so the culprit utility is identifiable without a debugger.`,
       ).toEqual([]);
     }
   });

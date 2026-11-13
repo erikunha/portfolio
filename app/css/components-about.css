@@ -293,4 +293,14 @@
       margin-left: 0;
     }
   }
+
+  @media (max-width: theme(--viewport-below-narrow)) {
+    .ab-code .panel-title {
+      letter-spacing: var(--tracking-tight);
+    }
+
+    .ab-code pre {
+      padding-inline: var(--spacing-2);
+    }
+  }
 }

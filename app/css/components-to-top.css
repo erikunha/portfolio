@@ -10,16 +10,13 @@
       justify-content: center;
       position: fixed;
       right: var(--to-top-inset);
-      bottom: calc(
-        var(--to-top-dock-offset) +
-        env(safe-area-inset-bottom, 0px) +
-        var(--to-top-inset)
-      );
+      bottom: calc(var(--dock-height) + env(safe-area-inset-bottom, 0px));
       z-index: var(--z-to-top);
       width: var(--to-top-size);
       height: var(--to-top-size);
-      background: color-mix(in srgb, var(--color-secondary-950) 85%, transparent);
-      border: 1px solid var(--color-primary-subtle);
+      background: var(--color-secondary-950);
+      border: var(--border-width) solid var(--color-primary-subtle);
+      border-bottom: 0;
       color: var(--color-primary-500);
       opacity: 0;
       transform: translateY(8px);

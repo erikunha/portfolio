@@ -200,6 +200,15 @@
 
   .toc .ds-nav-item {
     width: 100%;
+    color: var(--color-text);
+    text-decoration-line: underline;
+    text-decoration-color: var(--color-primary-subtle);
+    text-underline-offset: var(--spacing-1);
+  }
+
+  .toc .ds-nav-item:hover {
+    color: var(--color-green);
+    text-decoration-color: currentColor;
   }
 
   .pager {
