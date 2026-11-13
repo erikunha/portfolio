@@ -16,7 +16,7 @@ flowchart TD
     r2 --> r4["pre-PR: gates:runtime (LHCI+axe+E2E, non-docs)"]
     r4 --> o1["open PR: fill every template section"]
     o1 --> o1b["CI green on the PR head, Argos visual check approved"]
-    o1 --> o2["review the PR (skills dispatched, render read)"]
+    o1 --> o2["review the PR against REVIEW.md (matching skills, render read)"]
     o1b --> m1["pre-merge: ci:local"]
     o2 --> m1
     m1 --> m4["pre-merge: every blocking finding answered"]
@@ -27,7 +27,7 @@ flowchart TD
 
 ## Code review
 
-**claude-review (claude[bot]) is the AI reviewer.** It is opt-in: it runs only when an owner, member or collaborator comments `/claude-review` on the PR, and it is never a merge requirement. It posts one inline comment per finding anchored to a changed line and closes with a `Verdict:` line; a workflow step reds the job when the run posted none. It gathers evidence with the CI profile of the `pr-review-orchestrator` skill (`.claude/skills/pr-review-orchestrator/references/ci.md`): one `Task` subagent per material domain, and PR metadata, the diff and CI check results snapshotted by a workflow step before the review starts. The reviewer gets no `gh` or other shell command, and `--disallowedTools` denies the edit, git and push tools the action's tag mode would otherwise add, plus reads of `.git/` and other credential locations. No PR code runs in that job, so dependencies are not installed: for a dependency change it reviews the manifest and lockfile diff and names what only installed source could settle as a limit, which a local review can settle.
+**claude-review (claude[bot]) is the AI reviewer.** It is opt-in: it runs only when an owner, member or collaborator comments `/claude-review` on the PR, and it is never a merge requirement. It posts one inline comment per finding anchored to a changed line and closes with a `Verdict:` line; a workflow step reds the job when the run posted none. It gathers evidence against the review domains in `REVIEW.md`: one `Task` subagent (`review-worker`) per material domain, and PR metadata, the diff and CI check results snapshotted by a workflow step before the review starts. The reviewer gets no `gh` or other shell command, and `--disallowedTools` denies the edit, git and push tools the action's tag mode would otherwise add, plus reads of `.git/` and other credential locations. No PR code runs in that job, so dependencies are not installed: for a dependency change it reviews the manifest and lockfile diff and names what only installed source could settle as a limit, which a local review can settle.
 
 `claude-review` is requested, not automatic. It is a model-judged sensor: it reports findings, it does not approve, and no merge waits on it. Only correctness, security, accessibility, performance budget, test validity and spec or plan compliance block (`REVIEW.md`); style and naming never do, and nits are capped at five. No automatic follow-up round runs. Deterministic validation (tests, typecheck, lint, build, bundle and route-JS gates, CI) is the quality bar.
 
@@ -39,15 +39,13 @@ After findings are answered, every finding fixed and every CI red becomes a cand
 
 ## The review that runs before the merge
 
-The review is the `pr-review-orchestrator` skill, run against the pull request. It is not a gate on
-the conversation: nothing in CI reads the review threads, and a merge does not wait on a thread
-state.
+The review follows `REVIEW.md`: what blocks, what to always check, the review domains and the proof a
+finding needs. It is not a gate on the conversation: nothing in CI reads the review threads, and a
+merge does not wait on a thread state.
 
-The review discovers the skills this session can load and dispatches one specialist per material
-domain of the diff. The project skills are mandatory when their trigger matches (`AGENTS.md` holds
-the trigger table); the developer's own skills are used when they fit the same surface, and their
-absence costs nothing, so the procedure runs the same on any machine with any runtime. Every skill
-considered appears in the record: the ones that ran and the ones that stayed out.
+The review splits the diff into the material domains of `REVIEW.md` and runs every repository skill
+whose trigger matches (`AGENTS.md` holds the trigger table). The skills that ran and the ones that
+stayed out are named in the record.
 
 A track about how something appears ends with the reviewer having opened the captured image and
 described what it shows. Capture without reading is not a look, and a visual track that did not

@@ -8,7 +8,7 @@ This reference describes tracked project configuration. User-level tools and hoo
 | ------------------------- | ------------------------------------------------------------------------------------------------------ | ------------------- |
 | `AGENTS.md`               | The single source of project instructions                                                              | Codex, Claude Code  |
 | `CLAUDE.md`               | `@AGENTS.md` import plus the Claude-only lines                                                         | Claude Code         |
-| `REVIEW.md`               | Review severity, always-check list and skip list                                                       | CI review, reviewers |
+| `REVIEW.md`               | Review severity, always-check list, skip list, domains and proof                                                       | CI review, reviewers |
 | `.agents/skills/<name>/`  | Canonical project skills                                                                               | Codex               |
 | `.claude/skills/<name>`   | Relative symlink to `../../.agents/skills/<name>`                                                      | Claude Code         |
 | `.claude/rules/*.md`      | Path-scoped rules with `paths:` frontmatter                                                            | Claude Code         |
@@ -30,7 +30,6 @@ belong there too; the tracked files describe the repository only. Symlinks need 
 | `plan-review`            | Check a spec or plan against scope, JS budget, API constraints and Lighthouse floors         | model or user     |
 | `perf-budget`            | Diagnose a failing route-JS or Lighthouse budget                                             | model or user     |
 | `seo-discovery`          | Keep sitemap, robots, llms.txt, the JSON profile and metadata consistent                     | model or user     |
-| `pr-review-orchestrator` | Review a diff across relevant domains, dispatching the matching skills and reading the render          | user only         |
 | `semgrep`                | Run the pinned static-analysis wrapper when explicitly requested                             | user only         |
 
 Each skill is self-contained: it names no other skill, agent or command, and no config path. Frontmatter
@@ -110,10 +109,6 @@ flowchart LR
 
 The product endpoint `app/api/mcp/route.ts` is separate from the development connections.
 
-## Review checks
+## Review
 
-| Check                                | Contract                                                                                                       |
-| ------------------------------------ | -------------------------------------------------------------------------------------------------------------- |
-| `pr-review-orchestrator` (the skill) | Review a diff: one specialist per material domain, every matching skill applied, every render read as an image |
-
-`.github/workflows/claude-review.yml` runs a review only when an OWNER, MEMBER or COLLABORATOR comments `/claude-review` on a PR; no open or push starts it, and the review is never a merge requirement. `.github/workflows/claude.yml` handles human `@claude` mentions. The review job reads `.github/claude-review-prompt.md`, `REVIEW.md` and the `pr-review-orchestrator` skill from the default branch, and looks for the skill under `.agents/skills` first and `.claude/skills` second, so it works before and after the shared layout lands. How an engineer reviews before opening a PR is their own choice, independent of both workflows.
+`.github/workflows/claude-review.yml` runs a review only when an OWNER, MEMBER or COLLABORATOR comments `/claude-review` on a PR; no open or push starts it, and the review is never a merge requirement. `.github/workflows/claude.yml` handles human `@claude` mentions. The review job reads `.github/claude-review-prompt.md` from the default branch and `REVIEW.md`, `AGENTS.md` and `.claude/rules` from the base checkout, and hands bounded questions to the `review-worker` agent. It extracts no skill; a repository skill reaches it only as a file in the base checkout. How an engineer reviews before opening a PR is their own choice, independent of both workflows.

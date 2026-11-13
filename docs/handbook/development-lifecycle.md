@@ -64,7 +64,7 @@ Run `pnpm ci:predict` (add `--linux` when the change touches layout, fonts or me
 
 ### 9. Review threads
 
-On the open PR, review it: the `pr-review-orchestrator` skill dispatches one specialist per material domain, applies every matching skill and reads the rendered result as images. Answer every blocking finding. claude-review runs only when an owner, member or collaborator comments `/claude-review`, with no automatic follow-up round.
+On the open PR, review it against `REVIEW.md`, running every repository skill whose trigger matches the diff and looking at the rendered result. Answer every blocking finding. claude-review runs only when an owner, member or collaborator comments `/claude-review`, with no automatic follow-up round.
 
 ### 10. Pre-merge gates -> merge
 

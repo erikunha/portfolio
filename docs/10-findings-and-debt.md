@@ -32,7 +32,7 @@ A fresh health response describes the refresh timestamp. It does not prove both 
 
 ## Review and quality checks differ in how they run
 
-Git hooks and CI run deterministic checks on every change. `claude-review.yml` runs only when an owner, member or collaborator comments `/claude-review`, and it is never a merge requirement. The review that runs before the merge is the `pr-review-orchestrator` skill, and it is not a gate on the conversation: nothing in CI reads the review threads. Plan review and API review are conventions in `AGENTS.md`.
+Git hooks and CI run deterministic checks on every change. `claude-review.yml` runs only when an owner, member or collaborator comments `/claude-review`, and it is never a merge requirement. The review that runs before the merge follows `REVIEW.md`, and it is not a gate on the conversation: nothing in CI reads the review threads. Plan review and API review are conventions in `AGENTS.md`.
 
 Two quality signals run outside the merge path. Stryker mutation testing runs weekly in `mutation.yml`, outside the merge path, and the job is red below the `thresholds.break` floor; per pull request only a canary checks that the runner can still kill a mutant. The `ai-eval` job in `ci.yml` is opt-in: it runs only when a pull request carries the `ai-eval` label and touches `ai` paths, it is skipped for fork pull requests and Dependabot, and the weekly `ask-eval.yml` workflow runs the eval on `main`.
 
