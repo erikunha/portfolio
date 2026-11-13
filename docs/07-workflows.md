@@ -247,9 +247,9 @@ Other workflows (none is in `ci-gate`):
 | --- | --- | --- |
 | `codeql.yml` | push and PR to `main`, Mondays 03:00 UTC, manual | CodeQL analysis of JavaScript and TypeScript with `.github/codeql/codeql-config.yml` |
 | `mutation.yml` | Sundays 04:00 UTC, manual | Stryker mutation run, advisory; fails when the runner produced no report or cannot kill a mutant, judged by `scripts/check-mutation-kills.mjs`; the score goes to the job summary |
-| `ask-eval.yml` | Mondays 05:00 UTC, manual | `pnpm ask:eval` with `EVAL_PUBLISH=1` and the Redis credentials, so `ask:eval:latest` stays fresh for the Measured section |
+| `ask-eval.yml` | Mondays 05:00 UTC, manual | `pnpm ask:eval`, so `ask:eval:latest` stays fresh for the Measured section. On `main` only, it sets `EVAL_PUBLISH=1` and maps the `EVAL_PUBLISH_REDIS_REST_URL` and `EVAL_PUBLISH_REDIS_REST_TOKEN` secrets (a Redis ACL user that can only `SET` the two eval keys) onto `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN`. A first step fails the run when either is empty, and the script exits 1 when the credentials are missing or the Redis write fails. A dispatch from another branch grades without publishing |
 | `tool-pins.yml` | Mondays 05:00 UTC, manual | `scripts/check-tool-pins.mjs` fails when the pinned gitleaks or semgrep version is behind upstream; a nudge, not a merge stop |
-| `agent-eval.yml` | Mondays 06:00 UTC, manual | `pnpm eval:agents`, advisory, publishes `agent-eval:latest` |
+| `agent-eval.yml` | Mondays 06:00 UTC, manual | `pnpm eval:agents`, advisory, publishes `agent-eval:latest` from `main` with the same restricted secrets; fails on empty secrets or a failed publish like `ask-eval.yml` |
 | `rollback-rehearsal.yml` | Mondays 06:00 UTC, manual | weekly rollback rehearsal, below |
 | `weekly-metrics.yml` | Mondays 07:00 UTC, manual | delivery metrics and band check, below |
 | `lockfile-resolution-probe.yml` | Mondays 08:00 UTC, manual | resolves every dependency range without a lockfile and keeps one open issue while `ERR_PNPM_NO_MATURE_MATCHING_VERSION` blocks it |

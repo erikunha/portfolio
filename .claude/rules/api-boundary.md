@@ -52,3 +52,5 @@ merge-blocking check on this surface is the behavioral test suite (the required
   no sampling parameters (Haiku 5.5 rejects them) and thinking disabled.
 - Changes to the ask corpus, calibration, system prompt or the facts it renders
   (`content/ask-facts.ts`) require `pnpm ask:eval`.
+- Eval publishing reads only the `EVAL_PUBLISH_REDIS_REST_*` secrets (an ACL user limited to
+  `SET` on the two eval keys) and only on `main`; no workflow reads the production Upstash token.

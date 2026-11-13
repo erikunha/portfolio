@@ -33,7 +33,11 @@ import { buildJudgeFactSheet } from '@/lib/eval/fact-sheet';
 import { hasGatewayCredential } from '@/lib/eval/gateway-credential';
 import { judge } from '@/lib/eval/judge';
 import { percentile } from '@/lib/eval/percentile';
-import { isolateFromRedis } from '@/lib/eval/publish-gate';
+import {
+  isolateFromRedis,
+  publishOutcomeError,
+  publishPreflightError,
+} from '@/lib/eval/publish-gate';
 import { publishWithCredentials } from '@/lib/eval/redis-publish';
 import type { CalibrationCase } from '@/lib/eval/types';
 import { createUsageMeter } from '@/lib/eval/usage-meter';
@@ -134,6 +138,11 @@ function clientIpForItem(index: number): string {
 
 async function main(): Promise<void> {
   const withheldRedisCredentials = isolateFromRedis(process.env);
+  const preflightError = publishPreflightError(process.env, withheldRedisCredentials);
+  if (preflightError) {
+    console.error(`ask-eval: ${preflightError}`);
+    process.exit(1);
+  }
   if (!hasGatewayCredential(process.env)) {
     if (process.env.CI) {
       console.error(
@@ -413,9 +422,9 @@ async function main(): Promise<void> {
   );
   if (publishResult.published) {
     console.log(`\npublished aggregate → redis ${REDIS_RESULT_KEY}`);
-  } else if (publishResult.error) {
-    console.error(`\nredis publish failed (non-fatal): ${publishResult.error}`);
   }
+  const publishError = publishOutcomeError(publishResult);
+  if (publishError) console.error(`\n${publishError}`);
 
   console.log('\nask-eval summary');
   console.log(
@@ -463,6 +472,7 @@ async function main(): Promise<void> {
     for (const failure of gateVerdict.failures) console.error(`  - ${failure.detail}`);
     process.exit(1);
   }
+  if (publishError) process.exit(1);
   console.log('\nGATE PASSED');
 }
 

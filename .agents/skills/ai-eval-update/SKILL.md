@@ -28,6 +28,15 @@ only the `ask-eval.yml` workflow (weekly schedule and manual dispatch) does.
                            # counters to production; with EVAL_PUBLISH=1 they return only
                            # around the aggregate publish, without it they never return, so
                            # `vercel env run -- pnpm ask:eval` cannot touch production data
+                           # with EVAL_PUBLISH=1, missing credentials fail the run before any
+                           # model call and a failed Redis write exits 1, so a green publishing
+                           # run means ask:eval:latest was refreshed
+
+The workflows set `EVAL_PUBLISH=1` only on `refs/heads/main` and map `UPSTASH_REDIS_REST_URL` and
+`UPSTASH_REDIS_REST_TOKEN` from the `EVAL_PUBLISH_REDIS_REST_URL` and
+`EVAL_PUBLISH_REDIS_REST_TOKEN` secrets: a Redis ACL user that can only `SET ask:eval:latest` and
+`agent-eval:latest`. A dispatch from another branch grades but never publishes, and no workflow
+reads the production Upstash token.
 
 The CI `ai-eval` job runs the same `pnpm ask:eval`. It is path-filtered by the
 `detect-changes` job: it fires for ANY AI-relevant change, not just the eval files, and only
