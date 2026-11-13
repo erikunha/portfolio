@@ -51,8 +51,12 @@ const ROLE_TOKEN = String.raw`(?:^|[\n\r.!?,;]\s*)(?:${ROLE_WORDS})\s*[:>]${SHOR
 
 const CHATML_DELIMITER = String.raw`<\|[^|]*\|>`;
 
+const OVERRIDE_QUANTIFIERS =
+  '(?:all|any|previous|prior|earlier|preceding|above|the|of|your|todas|todos|os|as|anteriores)';
+
 const OVERRIDE_PHRASE = [
-  String.raw`(?:ignore|ignorar)\s+(?:(?:all|previous|the|todas|todos|os|as|anteriores)\s+)*(?:instructions|prompts|instru[çc](?:[õo]es|[ãa]o))`,
+  String.raw`(?:ignore|ignorar)\s+(?:${OVERRIDE_QUANTIFIERS}\s+)*(?:instructions|prompts|instru[çc](?:[õo]es|[ãa]o))`,
+  String.raw`(?:ignore|ignorar)\s+(?:${OVERRIDE_QUANTIFIERS}\s+)+(?:directions|directives)`,
   String.raw`(?:ignore|ignorar)\s+(?:(?:as|os)\s+)?(?:suas\s+|seus\s+)(?:diretrizes|regras)`,
   String.raw`(?:ignore|ignorar)\s+(?:(?:as|os)\s+)?(?:diretrizes|regras)\s+(?:anteriores|acima|do\s+sistema)`,
   String.raw`(?:ignore|ignorar)\s+tudo(?:\s+(?:o\s+que\s+foi\s+dito|acima))?`,
