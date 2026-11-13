@@ -1,8 +1,8 @@
 # erikunha.dev
 
-**Erik Cunha — Senior Software Engineer, AI Engineer.** 8+ years of production software across AI-native SaaS, fintech, payments and e-commerce, and open to Senior, AI Engineer, Applied AI Engineer, AI Product Engineer and Founding Engineer roles.
+**Erik Cunha, Senior Software Engineer, AI Engineer.** 8+ years of production software across AI-native SaaS, fintech, payments and e-commerce, and open to Senior, AI Engineer, Applied AI Engineer, AI Product Engineer and Founding Engineer roles.
 
-The site is the artifact: a Next.js 16 application on Vercel (Fluid Compute), an RSC-first homepage composed of terminal-module sections plus a footer with client islands by exception, a streaming LLM endpoint, a durable contact form, and a CI pipeline that enforces performance, accessibility and bundle size as hard contracts — the Lighthouse thresholds and the axe scan in the `performance` job, the client-chunk and per-route JS budgets in the `build` job.
+The site is the artifact: a Next.js 16 application on Vercel (Fluid Compute), an RSC-first homepage composed of terminal-module sections plus a footer with client islands by exception, a streaming LLM endpoint, a durable contact form, and a CI pipeline that enforces performance, accessibility and bundle size as hard contracts, the Lighthouse thresholds and the axe scan in the `performance` job, the client-chunk and per-route JS budgets in the `build` job.
 
 **Live:** [erikunha.dev](https://www.erikunha.dev)
 
@@ -23,7 +23,7 @@ The site is the artifact: a Next.js 16 application on Vercel (Fluid Compute), an
 
 ---
 
-The codebase demonstrates the engineering it claims: "performance-first" is a budget and not an adjective — Lighthouse CI gates the category scores and the timings on the 24 routes the Lighthouse config lists, the axe scan fails CI, and the client-chunk and per-route first-load JS budgets are gates in the `build` job (`check-bundle-size.mjs` and `check-route-js.mjs`). `ARCHITECTURE.md` describes the system; `DECISIONS.md` records decisions and reversibility notes.
+The codebase demonstrates the engineering it claims: "performance-first" is a budget and not an adjective, Lighthouse CI gates the category scores and the timings on the 24 routes the Lighthouse config lists, the axe scan fails CI, and the client-chunk and per-route first-load JS budgets are gates in the `build` job (`check-bundle-size.mjs` and `check-route-js.mjs`). `ARCHITECTURE.md` describes the system; `DECISIONS.md` records decisions and reversibility notes.
 
 The AI centerpiece is a streaming `ask` endpoint (Vercel AI Gateway + Anthropic Haiku 5.5, prompt-cached, rate-limited, budget-capped) with a correctness eval suite and a visible metrics panel, making AI quality observable to hiring reviewers. Agent-readiness surfaces include `/.well-known/agent.json` and a minimal MCP server.
 

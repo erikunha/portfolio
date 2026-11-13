@@ -163,7 +163,7 @@ The prompt for a manual or agent review that applies these rules to a diff is `d
     ratio has to be carried on purpose. The rule that wins on an element is the one whose ratio its
     descendants inherit: a Tailwind `text-xs` writes `line-height` in the utilities layer and wins
     over a component rule, so the descendants inherit 1/0.75 and not the component's ratio. Getting
-    this wrong is invisible on the screen — the box is whole, the ratios the author wrote are
+    this wrong is invisible on the screen, the box is whole, the ratios the author wrote are
     untouched, and the leading of a whole subtree has changed by 2.67px. Compare against `main`
     element by element, not by eye: `tests/e2e/leading-integrity.spec.ts` holds the rule that a
     descendant inherits the ratio or the length its parent declares. Check: that spec, and
