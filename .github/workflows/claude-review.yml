@@ -227,6 +227,10 @@ jobs:
           # adding `lib/CLAUDE.md` walked straight past a strip that listed seven
           # fixed root paths, and past its own verification, which checked the
           # same seven and reported success.
+          # A symlink would resolve to a path outside this name match (or outside
+          # the checkout) and be read through its target.
+          find pr-head -type l -delete
+
           find pr-head \
             \( -name 'CLAUDE.md' -o -name 'AGENTS.md' -o -name 'copilot-instructions.md' \
                -o -name '.claude' -o -name '.agents' -o -name '.codex' -o -name '.cursor' \) \
