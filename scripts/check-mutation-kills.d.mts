@@ -23,6 +23,10 @@ export interface MainOptions {
   err?: (message: string) => void;
 }
 
-export function assessReport(report: MutationReport): Assessment;
+export interface AssessOptions {
+  breakThreshold?: number | null;
+}
+
+export function assessReport(report: MutationReport, options?: AssessOptions): Assessment;
 export function runCanary(): CanaryResult;
 export function main(argv: string[], options?: MainOptions): number;

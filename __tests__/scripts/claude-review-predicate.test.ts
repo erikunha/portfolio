@@ -203,7 +203,9 @@ describe('the review is opt-in, fenced, and the workspace root holds default-bra
     // in the step. Matching against the whole string let the verify `find` be
     // narrowed to a single name while every token still appeared in the rm
     // `find` — restoring exactly the rm/verify drift this is meant to forbid.
-    const findBlocks = run.split(/(?=find pr-head)/).filter((b) => b.startsWith('find pr-head'));
+    const findBlocks = run
+      .split(/(?=find pr-head)/)
+      .filter((b) => b.startsWith('find pr-head') && b.includes('-name'));
     expect(
       findBlocks.length,
       'The strip does not re-run its own predicate to verify. A mistyped name would delete nothing and the step would still succeed.',
@@ -218,5 +220,20 @@ describe('the review is opt-in, fenced, and the workspace root holds default-bra
       /leftover/.test(run) && /exit 1/.test(run),
       'The strip does not fail when something survives it.',
     ).toBe(true);
+  });
+
+  it('symlinks are deleted from the mounted PR copy before the name match and the verification', () => {
+    const steps = (doc.jobs as { review?: { steps?: Array<{ name?: string; run?: string }> } })
+      ?.review?.steps;
+    const run = String(
+      steps?.find((st) => String(st.name ?? '').includes('Strip instruction-shaped'))?.run ?? '',
+    );
+    const link = run.indexOf('find pr-head -type l -delete');
+    expect(
+      link,
+      'The strip leaves symlinks in pr-head. A link named innocuously can resolve to an instruction-shaped file outside the name match.',
+    ).toBeGreaterThanOrEqual(0);
+    expect(link).toBeLessThan(run.indexOf("-name 'CLAUDE.md'"));
+    expect(link).toBeLessThan(run.indexOf('leftover=$(find pr-head'));
   });
 });

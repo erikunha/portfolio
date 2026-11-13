@@ -15,10 +15,13 @@ the code-scanning tab; this skill is the local/agent interface.
 
 Semgrep is pinned to `1.169.0`. Run through the repo wrapper, never a bare global call:
 
-    pnpm lint:semgrep                       # scan app/ lib/ components/ scripts/, write semgrep.sarif
+    pnpm lint:semgrep                       # scan the default targets, write semgrep.sarif
     node scripts/run-semgrep.mjs <paths>    # scan specific paths
     node scripts/run-semgrep.mjs --error --sarif out.sarif <paths>
     pnpm lint:semgrep:fp-baseline           # measure the vendored rules' precision over the probe set
+
+The default targets are `app/`, `lib/`, `components/`, `scripts/`, the root runtime files
+(`proxy.ts`, `instrumentation.ts`, `next.config.ts`) and `.github/workflows/`.
 
 Local install (optional, CI is authoritative): `pip install semgrep==1.169.0`.
 If Semgrep is not installed, the wrapper exits 2 with an install hint; defer to CI.
@@ -28,8 +31,8 @@ If Semgrep is not installed, the wrapper exits 2 with an install hint; defer to 
 - **Vendored, content-pinned** (`.semgrep/owasp-top-ten.yml`, `.semgrep/secrets.yml`):
   the security-load-bearing rules. Edit these files to change behavior; they are
   the source of truth, immune to registry-side drift.
-- **Registry-latest packs** (`p/typescript`, `p/react`, `p/nextjs`): framework
-  lint, lower stakes. The Semgrep CLI has no pack version-pinning syntax, so these
+- **Registry-latest packs** (`p/typescript`, `p/react`, `p/nextjs`, `p/github-actions`):
+  framework and workflow lint, lower stakes. The Semgrep CLI has no pack version-pinning syntax, so these
   fetch the latest registry rules (mutable); findings may drift between runs. Drift
   is accepted for the framework packs (recorded in `DECISIONS.md`), which is why the
   security-load-bearing rules are instead vendored + content-pinned in `.semgrep/`.

@@ -246,7 +246,7 @@ Other workflows (none is in `ci-gate`):
 | Workflow | Trigger | What it does |
 | --- | --- | --- |
 | `codeql.yml` | push and PR to `main`, Mondays 03:00 UTC, manual | CodeQL analysis of JavaScript and TypeScript with `.github/codeql/codeql-config.yml` |
-| `mutation.yml` | Sundays 04:00 UTC, manual | Stryker mutation run, advisory; fails when the runner produced no report or cannot kill a mutant, judged by `scripts/check-mutation-kills.mjs`; the score goes to the job summary |
+| `mutation.yml` | Sundays 04:00 UTC, manual | Stryker mutation run; fails when the runner produced no report, cannot kill a mutant or scores under the `thresholds.break` floor in `stryker.config.mjs`, judged by `scripts/check-mutation-kills.mjs`; the score goes to the job summary |
 | `ask-eval.yml` | Mondays 05:00 UTC, manual | `pnpm ask:eval` with `EVAL_PUBLISH=1` and the Redis credentials, so `ask:eval:latest` stays fresh for the Measured section |
 | `tool-pins.yml` | Mondays 05:00 UTC, manual | `scripts/check-tool-pins.mjs` fails when the pinned gitleaks or semgrep version is behind upstream; a nudge, not a merge stop |
 | `agent-eval.yml` | Mondays 06:00 UTC, manual | `pnpm eval:agents`, advisory, publishes `agent-eval:latest` |

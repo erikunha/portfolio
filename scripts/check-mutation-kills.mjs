@@ -5,16 +5,19 @@ import { existsSync, mkdtempSync, readFileSync, realpathSync, rmSync } from 'nod
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
+import strykerConfig from '../stryker.config.mjs';
 import { CANARY_FILE, CANARY_REPORT_ENV } from './stryker-canary.config.mjs';
 
 const KILLED = new Set(['Killed', 'Timeout']);
 const SCOREABLE = new Set(['Killed', 'Timeout', 'Survived', 'NoCoverage']);
+const PERCENT = 100;
+const SCORE_DIGITS = 1;
 const CANARY_CONFIG = 'scripts/stryker-canary.config.mjs';
 const EXIT_OK = 0;
 const EXIT_BLIND = 1;
 const EXIT_INFRA = 2;
 
-export function assessReport(report) {
+export function assessReport(report, { breakThreshold = null } = {}) {
   const mutants = Object.values(report?.files ?? {}).flatMap((file) => file.mutants ?? []);
   const scoreable = mutants.filter((m) => SCOREABLE.has(m.status));
   if (scoreable.length === 0) {
@@ -39,7 +42,17 @@ export function assessReport(report) {
       reason: `Stryker killed none of ${scoreable.length} scoreable mutants: the suite is not observing the mutation`,
     };
   }
-  return { ok: true, reason: `${killed} of ${scoreable.length} scoreable mutants killed` };
+  const summary = `${killed} of ${scoreable.length} scoreable mutants killed`;
+  if (typeof breakThreshold === 'number') {
+    const score = (killed / scoreable.length) * PERCENT;
+    if (score < breakThreshold) {
+      return {
+        ok: false,
+        reason: `mutation score ${score.toFixed(SCORE_DIGITS)}% is below the ${breakThreshold}% break threshold (${summary})`,
+      };
+    }
+  }
+  return { ok: true, reason: summary };
 }
 
 export function runCanary() {
@@ -74,7 +87,9 @@ export function main(argv, { log = console.log, err = console.error } = {}) {
     result = runCanary();
   } else if (arg) {
     try {
-      const verdict = assessReport(JSON.parse(readFileSync(arg, 'utf8')));
+      const verdict = assessReport(JSON.parse(readFileSync(arg, 'utf8')), {
+        breakThreshold: strykerConfig.thresholds?.break,
+      });
       result = { code: verdict.ok ? EXIT_OK : EXIT_BLIND, message: verdict.reason };
     } catch (error) {
       result = { code: EXIT_INFRA, message: `cannot read report ${arg}: ${error.message}` };

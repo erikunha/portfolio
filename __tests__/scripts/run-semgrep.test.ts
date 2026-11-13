@@ -93,6 +93,43 @@ process.exit(0);
     expect(argv[argv.length - 1]).toBe('lib');
   });
 
+  it('scans the root runtime files and the workflows by default, with the workflow ruleset', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'semgrep-stub-'));
+    tmpDirs.push(dir);
+    const out = join(dir, 'argv.json');
+    const stub = join(dir, 'fake-semgrep.mjs');
+    writeFileSync(
+      stub,
+      `#!/usr/bin/env node
+import { writeFileSync } from 'node:fs';
+const a = process.argv.slice(2);
+if (a.includes('--version')) { console.log('1.97.0'); process.exit(0); }
+writeFileSync(process.env.STUB_OUT, JSON.stringify(a));
+process.exit(0);
+`,
+      { mode: 0o755 },
+    );
+    const r = spawnSync('node', ['scripts/run-semgrep.mjs'], {
+      encoding: 'utf8',
+      env: { ...process.env, SEMGREP_BIN: stub, STUB_OUT: out },
+    });
+    expect(r.status).toBe(0);
+    const argv = JSON.parse(readFileSync(out, 'utf8')) as string[];
+    expect(argv).toContain('p/github-actions');
+    const targets = argv.slice(argv.indexOf('off') + 1);
+    expect(targets).toEqual(
+      expect.arrayContaining([
+        'proxy.ts',
+        'instrumentation.ts',
+        'next.config.ts',
+        '.github/workflows',
+      ]),
+    );
+    for (const target of targets) {
+      expect(existsSync(`${process.cwd()}/${target}`), `${target} must exist`).toBe(true);
+    }
+  });
+
   it.runIf(semgrepInstalled)(
     'flags the vulnerable fixture and writes well-formed SARIF',
     () => {
