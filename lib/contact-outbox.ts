@@ -15,6 +15,11 @@ const RESEND_IDEMPOTENCY_WINDOW_MS = 24 * 60 * 60 * 1_000;
 export const CONTACT_MAX_RETRY_AGE_MS = RESEND_IDEMPOTENCY_WINDOW_MS;
 export const CONTACT_OUTBOX_MAX = 200;
 
+export function isContactRetryExpired(receivedAtMs: number, nowMs: number): boolean {
+  const age = nowMs - receivedAtMs;
+  return !Number.isFinite(age) || age >= CONTACT_MAX_RETRY_AGE_MS;
+}
+
 export interface ContactMessage {
   name: string;
   email: string;

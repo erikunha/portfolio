@@ -210,8 +210,8 @@ describe('daily contact delivery retry', () => {
     expect(transaction.zrem).toHaveBeenCalledWith('contact:outbox', 'message-id');
   });
 
-  it('still retries a message exactly 24 hours old', async () => {
-    redis.get.mockResolvedValueOnce({ ...stored, receivedAt: '2026-10-23T04:00:00.000Z' });
+  it('still retries a message one millisecond short of 24 hours old', async () => {
+    redis.get.mockResolvedValueOnce({ ...stored, receivedAt: '2026-10-23T04:00:00.001Z' });
     const { GET } = await import('@/app/api/contact-retry/route');
     expect((await (await GET(request())).json()).data).toMatchObject({ sent: 1, expired: 0 });
   });
