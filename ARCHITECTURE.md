@@ -541,7 +541,7 @@ See `app/api/ask/route.ts`, `lib/ask/preflight.ts`, `lib/ask/stream.ts` and `lib
 Upstash Redis sliding window:
 - 8 questions per IP per rolling hour
 - Every client limiter is keyed by the salted SHA-256 IP hash from `clientRateLimitKey` (`lib/server/rate-limit-key.ts`), so a key reads `rl:<name>:<16 hex>`. The IPv6 `/64` bucketing runs before the hash, so one `/64` still shares one bucket. The limiters take a branded `RateLimitIdentifier` that only that helper produces, so passing a raw IP fails the type check. Persisted ASK logs and contact records carry the same hash.
-- The token budget has a daily slice (see Budget enforcement), so one client cannot spend the month in a few days
+- The spend budget has a daily slice (see Budget enforcement), so one client cannot spend the month in a few days
 
 ### Identical-question dedup
 
@@ -853,7 +853,7 @@ Rationale: see `DECISIONS.md`.
 
 ## 14. Cost controls
 
-ASK spend is bounded by the monthly token reservation in `lib/rate-limit.ts`, not a dollar-denominated application gate. The counter includes cached input tokens at full token weight, so actual provider charges depend on the input/output mix and cache usage. `ASK_ENABLED` disables inference independently of Redis.
+ASK spend is bounded by the dollar-denominated reservation in `lib/rate-limit.ts`: the counters hold nano-USD, a request reserves its worst-case cost and settles at its metered cost, with cache reads at a tenth of the input rate, cache writes at 1.25x and output at the output rate (`askBudgetCost` in `lib/ask/usage.ts`, rates in `lib/ask/pricing.ts`). The ceiling is `MONTHLY_BUDGET_USD` with a daily slice of one twentieth. `ASK_ENABLED` disables inference independently of Redis.
 
 Static content does not call the model. Contact delivery uses Resend; PSI refresh runs once daily per `vercel.json`. Hosting, provider plan limits and billing alerts are configured outside this repository.
 
@@ -866,7 +866,7 @@ Static content does not call the model. Contact delivery uses Resend; PSI refres
 | RSC-first with client islands                                     | Slightly harder to debug streaming hydration | Only way to hold the per-route JS budget                       |
 | No CMS                                                            | Erik edits TS files to update content        | Single author; CMS is YAGNI                                    |
 | Vercel end-to-end (Fluid Compute)                                 | Vendor lock-in to Vercel's RSC story         | Portability cost < ops savings at this scale                   |
-| AI Gateway for `ask`                                              | External inference dependency                | Monthly token reservations and a Redis-independent kill switch |
+| AI Gateway for `ask`                                              | External inference dependency                | Monthly dollar reservations and a Redis-independent kill switch |
 | No CAPTCHA                                                        | Some spam will get through                   | UX tax of CAPTCHA > value of perfect spam filtering            |
 | `anthropic/claude-haiku-5.5`                                      | Model-dependent answer quality               | The ASK eval harness checks the configured model on the corpus |
 | Single-page composition                                           | Long scroll, no per-section routing          | Recruiters scan; engineers scroll. Both work on a single page. |

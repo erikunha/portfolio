@@ -14,7 +14,7 @@ Changes to request validation or rate-limit behavior need comparison across the 
 
 ## Clients without an address share one rate-limit bucket
 
-`getClientIp` reads the first `x-forwarded-for` entry, then `x-real-ip`, and falls back to `unknown`. Every request with neither header shares that one bucket, and so does a value that is not an IP address. On Vercel the header is always set. The cases that reach the fallback are local development and an MCP request delivered by an in-memory transport, where `ask_erik` then shares the `rl:ask` allowance of eight requests per hour and the same token budget.
+`getClientIp` reads the first `x-forwarded-for` entry, then `x-real-ip`, and falls back to `unknown`. Every request with neither header shares that one bucket, and so does a value that is not an IP address. On Vercel the header is always set. The cases that reach the fallback are local development and an MCP request delivered by an in-memory transport, where `ask_erik` then shares the `rl:ask` allowance of eight requests per hour and the same spend budget.
 
 ## The Content Security Policy allows inline scripts and styles
 

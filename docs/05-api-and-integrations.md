@@ -45,7 +45,7 @@ Contact delivery also uses `202 { ok: false, requestId, error: { code: 'queued',
 
 Every body-reading POST route reads its body only after the cross-site check and the rate limiter admit the request, through `readBoundedBody` (`lib/server/read-body.ts`), and answers `413 payload_too_large` past its cap. `defineHandler` takes the cap as `maxBodyBytes`, `/api/ask` reads inside its handler, and `/api/mcp` wraps `withBodyLimit` inside `withRateLimit`. The caps: 8192 bytes for `/api/ask`, 16384 for `/api/contact`, 32768 for `/api/log`, 1024 for `/api/log/forget` and 4096 for `/api/mcp`. `/api/csp-report` never reads its body, so it has no cap. Both cron routes check the `CRON_SECRET` bearer through `isCronAuthorized` (`lib/server/cron-auth.ts`), a constant-time digest comparison. The links feed sends the YouTube key in the `x-goog-api-key` header, never in the URL.
 
-`/api/mcp` delegates GET and POST to `createMcpHandler`. POST has a 4096-byte body limit, and `maxSubscriptions: 0` configures stateless operation. Every request passes a per-IP limit (`getMcpLimit`, 60 a minute, fail-open) before the body is read, so `get_profile` is limited too. `ask_erik` additionally shares the ask limits and token budget. Both tools declare `annotations` (`get_profile` is read-only, idempotent and closed-world, so clients can skip confirmation; `ask_erik` writes an ask-log row and calls a model). `get_profile` also declares an `outputSchema` (`HiringProfileSchema`) and returns `structuredContent` next to the JSON text block for older clients.
+`/api/mcp` delegates GET and POST to `createMcpHandler`. POST has a 4096-byte body limit, and `maxSubscriptions: 0` configures stateless operation. Every request passes a per-IP limit (`getMcpLimit`, 60 a minute, fail-open) before the body is read, so `get_profile` is limited too. `ask_erik` additionally shares the ask limits and spend budget. Both tools declare `annotations` (`get_profile` is read-only, idempotent and closed-world, so clients can skip confirmation; `ask_erik` writes an ask-log row and calls a model). `get_profile` also declares an `outputSchema` (`HiringProfileSchema`) and returns `structuredContent` next to the JSON text block for older clients.
 
 `app/api/mcp/route.ts` wraps its POST in `withBodyLimit` (`lib/server/body-limit.ts`), which checks the declared `Content-Length` and buffers at most
 `MAX_MCP_BODY_BYTES` (4096 bytes) before handing a bounded request to the
@@ -57,7 +57,7 @@ responses; size rejections use the shared error envelope with
 `payload_too_large`, HTTP 413, and `X-Request-Id`. A body stream that fails
 before it is fully read returns `invalid_body`, HTTP 400.
 
-## Rate limits & token budget (`lib/rate-limit.ts`)
+## Rate limits & spend budget (`lib/rate-limit.ts`)
 
 Upstash sliding-window factories (lazy singletons over `Redis.fromEnv()`):
 
