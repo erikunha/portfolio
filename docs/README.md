@@ -66,7 +66,7 @@ portfolio/
 ├── next.config.ts        cacheComponents, typedRoutes, static security headers, MDX pipeline
 ├── scripts/             gate/tooling scripts (validate-content, check-*, ask-eval, agent-eval, ci-predict, ...) and scripts/metrics (weekly delivery metrics)
 ├── __tests__/           Vitest suites that hold repo-wide invariants (docs counts, content parity, API behavior, meta checks)
-├── evals/agents/        cases for the prompt-regression eval of the rules in AGENTS.md
+├── evals/agents/        cases for the prompt-regression eval of fixed rule texts modelled on AGENTS.md
 ├── metrics/             rolling bands the weekly delivery-metrics job scores against
 ├── tests/               Playwright e2e, a11y (axe), visual regression, shared mocks
 ├── .agents/             canonical project skills (linked into .claude/skills)

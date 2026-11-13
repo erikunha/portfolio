@@ -4,8 +4,8 @@ import { contactCopy } from './contact-copy';
 import { contactHoursPhrase, fillCopy } from './contact-rules';
 import { SITE_LOCALE } from './site-locale';
 
-const EM_DASH = '—';
-const EN_DASH = '–';
+const EM_DASH = '\u2014';
+const EN_DASH = '\u2013';
 
 const collectStrings = (value: unknown): string[] => {
   if (typeof value === 'string') return [value];

@@ -48,7 +48,7 @@ const joinRoles = (roles: readonly string[], conjunction: string): string => {
 };
 
 // "Senior, AI Engineer, Applied AI Engineer, AI Product Engineer and Founding
-// Engineer" — the form a sentence needs, so no surface hand-writes the list
+// Engineer", the form a sentence needs, so no surface hand-writes the list
 // and no two surfaces punctuate it differently.
 export const OPEN_ROLES_SENTENCE: Record<SiteLocale, string> = {
   [SITE_LOCALE.en]: joinRoles(OPEN_ROLES[SITE_LOCALE.en], CONJUNCTION[SITE_LOCALE.en]),

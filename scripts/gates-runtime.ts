@@ -19,7 +19,7 @@ const C = {
 const log = (s: string) => process.stdout.write(`${s}\n`);
 const step = (s: string) => log(`\n${C.bold}[gates:runtime]${C.reset} ${s}...`);
 const pass = (s: string) => log(`${C.green}  ✓${C.reset} ${s}`);
-const skipStep = (s: string) => log(`${C.yellow}  – ${s}${C.reset}`);
+const skipStep = (s: string) => log(`${C.yellow}  - ${s}${C.reset}`);
 
 log(`\n${C.bold}[gates:runtime] Server-dependent quality gates${C.reset}\n`);
 
@@ -165,7 +165,7 @@ run('Wait for server', 'npx', ['--yes', 'wait-on', BASE_URL, '--timeout', '30000
 
 step('Running post-build gates in parallel');
 
-const lhciDesktopPromise = spawnGate('Lighthouse CI — desktop', true, 'pnpm', [
+const lhciDesktopPromise = spawnGate('Lighthouse CI, desktop', true, 'pnpm', [
   'exec',
   'lhci',
   'autorun',
@@ -174,7 +174,7 @@ const lhciDesktopPromise = spawnGate('Lighthouse CI — desktop', true, 'pnpm', 
   '--upload.outputDir=.lhci-local/desktop',
 ]);
 const lhciMobilePromise = lhciDesktopPromise.then(() =>
-  spawnGate('Lighthouse CI — mobile', true, 'pnpm', [
+  spawnGate('Lighthouse CI, mobile', true, 'pnpm', [
     'exec',
     'lhci',
     'autorun',
@@ -196,7 +196,7 @@ const gatePromises = [
     { E2E_BASE_URL: BASE_URL },
   ),
   spawnGate(
-    'E2E functional — chromium',
+    'E2E functional, chromium',
     false,
     'pnpm',
     [
@@ -241,7 +241,7 @@ log(`\n${C.bold}[gates:runtime] Post-build gate results:${C.reset}`);
 for (const r of results) {
   if (r.status === 'rejected') {
     process.stderr.write(
-      `${C.red}  ✗${C.reset} [gate crashed]                      (blocking)   — ${String(r.reason)}\n`,
+      `${C.red}  ✗${C.reset} [gate crashed]                      (blocking)   - ${String(r.reason)}\n`,
     );
     exitCode = 1;
     continue;
@@ -265,7 +265,7 @@ if (exitCode === 0) {
   if (advisoryFailed) {
     log(
       `\n${C.green}${C.bold}[gates:runtime] All blocking runtime gates passed.${C.reset} ` +
-        `${C.yellow}LHCI advisory did not pass locally (see above) — CI's perf gate is authoritative.${C.reset}\n`,
+        `${C.yellow}LHCI advisory did not pass locally (see above), CI's perf gate is authoritative.${C.reset}\n`,
     );
   } else {
     log(`\n${C.green}${C.bold}[gates:runtime] All runtime gates passed.${C.reset}\n`);

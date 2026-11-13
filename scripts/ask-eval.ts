@@ -198,7 +198,7 @@ async function main(): Promise<void> {
   );
   if (calibration.errored > 0) {
     console.log(
-      `  judge errors        ${calibration.errored}/${calibration.total} (${(calibrationErrorFraction * 100).toFixed(1)}% — API failures, not disagreements)`,
+      `  judge errors        ${calibration.errored}/${calibration.total} (${(calibrationErrorFraction * 100).toFixed(1)}%, API failures, not disagreements)`,
     );
   }
 
@@ -207,7 +207,7 @@ async function main(): Promise<void> {
     const errored = calibration.cases.filter((c) => c.errored);
     if (calibrationOutage) {
       console.error(
-        '\nCALIBRATION SKIPPED due to judge API failures — not a quality signal. ' +
+        '\nCALIBRATION SKIPPED due to judge API failures, not a quality signal. ' +
           `${calibration.errored}/${calibration.total} gold cases errored ` +
           `(limit ${CALIBRATION_ERROR_FRACTION_LIMIT * 100}%). Re-run when the Gateway is healthy.`,
       );
@@ -219,7 +219,7 @@ async function main(): Promise<void> {
       );
       for (const c of disagreed) {
         console.error(
-          `  - [${c.kind}] ${c.id}: human=${c.humanVerdict} judge=${c.judgeVerdict} — ${c.reason}`,
+          `  - [${c.kind}] ${c.id}: human=${c.humanVerdict} judge=${c.judgeVerdict}, ${c.reason}`,
         );
       }
       console.error(
@@ -303,7 +303,7 @@ async function main(): Promise<void> {
           kind: item.kind,
           locale: itemLocale,
           question: item.question,
-          answer: `[injection gate rejected the request — ${result.detail}]`,
+          answer: `[injection gate rejected the request, ${result.detail}]`,
           pass: true,
           reason: 'injection gate refused the override (HTTP 400)',
           latencyMs,
@@ -313,14 +313,14 @@ async function main(): Promise<void> {
           retried,
           truncated: false,
         });
-        console.log(`  PASS  [${item.kind}] ${item.id} (${latencyMs}ms) — injection gate refused`);
+        console.log(`  PASS  [${item.kind}] ${item.id} (${latencyMs}ms), injection gate refused`);
       } else {
         graded.push({
           id: item.id,
           kind: item.kind,
           locale: itemLocale,
           question: item.question,
-          answer: `[harness error — ${result.detail}]`,
+          answer: `[harness error, ${result.detail}]`,
           pass: false,
           reason: `harness error: ${result.detail}`,
           latencyMs,
@@ -330,7 +330,7 @@ async function main(): Promise<void> {
           retried,
           truncated: false,
         });
-        console.log(`  ERROR [${item.kind}] ${item.id} (${latencyMs}ms) — ${result.detail}`);
+        console.log(`  ERROR [${item.kind}] ${item.id} (${latencyMs}ms), ${result.detail}`);
       }
       continue;
     }
@@ -363,7 +363,7 @@ async function main(): Promise<void> {
 
     const verdictMark = grade.pass ? 'PASS' : 'FAIL';
     const mark = grade.errored ? 'ERROR' : verdictMark;
-    console.log(`  ${mark}  [${item.kind}] ${item.id} (${latencyMs}ms) — ${grade.reason}`);
+    console.log(`  ${mark}  [${item.kind}] ${item.id} (${latencyMs}ms), ${grade.reason}`);
   }
 
   const erroredCount = graded.filter((g) => g.errored).length;
@@ -463,7 +463,7 @@ async function main(): Promise<void> {
     `  latency             p50 ${aggregate.latencyMs.p50}ms · p95 ${aggregate.latencyMs.p95}ms`,
   );
   console.log(
-    `  answered            ${answeredCount}/${graded.length} (real 2xx model calls — feature-cost denominator)`,
+    `  answered            ${answeredCount}/${graded.length} (real 2xx model calls, feature-cost denominator)`,
   );
   console.log(
     `  truncated           ${truncatedCount}/${answeredCount} (answers that hit ASK_MAX_OUTPUT_TOKENS or carry the truncation line)`,
@@ -475,7 +475,7 @@ async function main(): Promise<void> {
 
   if (erroredCount > 0) {
     const errored = graded.filter((g) => g.errored);
-    console.warn(`\n${erroredCount} item(s) errored — the feature was not exercised for these:`);
+    console.warn(`\n${erroredCount} item(s) errored, the feature was not exercised for these:`);
     for (const g of errored) {
       console.warn(`  - [${g.kind}] ${g.id}: ${g.reason}`);
     }

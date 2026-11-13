@@ -28,19 +28,20 @@ proposing infrastructure changes, and if a request conflicts with a budget or ga
 | `pnpm check` / `pnpm check:fix`          | Biome lint and format check / auto-fix                                                        |
 | `pnpm typecheck`                         | TypeScript strict check                                                                       |
 | `pnpm validate-content`                  | Zod schema validation of `content/*.ts`                                                       |
-| `pnpm ci:local` (alias of `pnpm verify`) | The chain CI's `quality-fast` job runs: Biome, types, content, client naming, dependency pinning and vetting, harness size, component docs, section order, doc drift, change-filter paths, test integrity, contrast, CSS tokens, then tests with coverage thresholds |
+| `pnpm ci:local` (alias of `pnpm verify`) | The chain CI's `quality-fast` job runs: Biome, types, content, client naming, dependency pinning and vetting, harness size, component docs, section order, doc drift, no dashes, change-filter paths, test integrity, contrast, CSS tokens, then tests with coverage thresholds |
 | `pnpm ci:predict [--base <ref>] [--branch <name>] [--linux] [--full] [--eval] [--skip-build] [--keep-going] [--repeat <n>] [--list]` | Runs every CI job the branch's commits trigger, before the push: ci.yml steps, new or changed e2e specs on every project with `--repeat-each=3 --retries=0`, `--linux` in the Playwright image. Exit 0 only when no job failed and every job was verified; 1 a job failed; 2 dry run; 3 no failure found but something was not verified: a job did not run or ran in part (read the table), or the branch has no commits ahead of its base |
 | `pnpm bundle-check`                      | Global client-chunk sum gate                                                                  |
 | `pnpm route-js-check`                    | Per-route first-load JS gate (needs a build)                                                  |
 | `pnpm gates:runtime [--skip-build]`      | Build, server on `PORT` or a free port, advisory Lighthouse, blocking axe and Chromium e2e    |
 | `pnpm lhci` / `pnpm lhci:mobile`         | Lighthouse CI locally, desktop / mobile                                                       |
 | `pnpm check:doc-drift`                   | Marked `ARCHITECTURE.md` paths exist                                                          |
+| `pnpm check:no-dashes`                   | No em or en dash in any tracked text file; the `next dev` block of this file is the one exception |
 | `pnpm lint:semgrep`                      | Pinned Semgrep scan; report-only in CI, run it only when asked (the `semgrep` skill)          |
 | `pnpm test:mutation`                     | Stryker mutation run; weekly in CI (a PR runs only `check:mutation-canary`, and only when the runner surface changed)                                   |
 | `pnpm check:test-integrity`              | Fails a focused test (`.only`), a test body with no assertion, and a skip with no reason string |
 | `pnpm changelog:sync`                    | Regenerates the design-system changelog page from `(design-system)`-scoped commits             |
 | `pnpm ask:eval`                          | `/api/ask` product eval; run after editing its corpus, calibration, runner, system prompt or the facts (`content/ask-facts.ts`) the prompt renders (see the `ai-eval-update` skill) |
-| `pnpm eval:agents`                       | Prompt-regression eval of the rules in this file (`evals/agents/`), non-blocking in CI; exits 1 when a case never passes or an A/B arm degrades |
+| `pnpm eval:agents`                       | Prompt-regression eval of fixed rule texts modelled on this file (`evals/agents/`), non-blocking in CI; exits 1 when a case never passes or an A/B arm degrades |
 
 ## Done means verified
 
@@ -54,7 +55,7 @@ proposing infrastructure changes, and if a request conflicts with a budget or ga
 
 ## Stack (locked)
 
-- Next.js 16 App Router, React 19, TypeScript strict, Biome, pnpm. Node 22.22.2 or newer (`.nvmrc` pins), pnpm 10 or newer.
+- Next.js 16 App Router, React 19, TypeScript strict, Biome, pnpm. Node `^22.22.2 || ^24.15.0 || >=26.0.0` (`.nvmrc` pins the version to develop on), pnpm 10 or newer.
 - CSS: Tailwind v4 with tokens as custom properties in `app/css/theme.css`. No Style Dictionary, CSS modules, CSS-in-JS, or PostCSS plugin besides `@tailwindcss/postcss`.
 - Vercel (Fluid Compute, Node runtime), Upstash Redis (rate limit, KV log), Resend (contact mail).
 - `/api/ask`: AI SDK v7 (`streamText`) through the Vercel AI Gateway, model `anthropic/claude-haiku-5.5` from `lib/ask/model.ts` with thinking disabled and no sampling parameters, ephemeral prompt cache via `providerOptions.anthropic.cacheControl` on the system `instructions`. Needs `AI_GATEWAY_API_KEY` (OIDC on Vercel).
@@ -118,7 +119,7 @@ fit the same surface. A skill is a method: it never decides the verdict on its o
 - A feature too big for one PR gets an integration branch `feat/<feature>` and sub-PRs from `feat/<feature>-<part>` into it; the final PR to `main` notes it was reviewed incrementally.
 - No PR until tests, perf gates and baselines have run on a locked design. Fill every section of `.github/pull_request_template.md`; never write a body from scratch.
 - A change that moves a screenshot baseline regenerates it in the same PR: `tests/visual/visual.spec.ts` baselines on darwin and linux, `tests/e2e/design-system-components.spec.ts` baselines on darwin only. The `visual-baseline-regen` skill holds the procedure. Any color, layout, typography or spacing change counts.
-- The visual comparison lines the render up with the baseline band by band before it counts pixels, because the layout runs on fractional line boxes and two runners round them differently. The gate allows two pixels of size, fails above 2% of the pixels (identical content lands at 0.23% to 0.89%, a real layout change at 19%) and fails above 4.5% of the ink of one strip (identical content lands at 2.68% at worst, a wording that changed at 8.07%). The ink signal is what catches a title that changed without moving the layout. A section that moves is a baseline to regenerate, not a tolerance to widen.
+- The visual comparison lines the render up with the baseline band by band before it counts pixels, because two runners can still differ by a pixel of section height. The gate allows two pixels of size, fails above 2% of the pixels (identical content lands at 0.23% to 0.89%, a real layout change at 19%) and fails above 4.5% of the ink of one strip (identical content lands at 2.68% at worst, a wording that changed at 8.07%). The ink signal is what catches a title that changed without moving the layout. A section that moves is a baseline to regenerate, not a tolerance to widen.
 - Before implementing a plan that adds a client island or dependency, or touches the API surface, check it with the `plan-review` skill. When a performance gate fails or a client change may cost JS, use `perf-budget`; when routes, identity copy or metadata change, use `seo-discovery`.
 - After implementing a section or component, look at `pnpm dev` at 1280x720 and 375x812 in a real browser before writing or changing tests. Fix what looks wrong first.
 - `claude-review` runs in CI only when an owner, member or collaborator comments `/claude-review`, and it is never a merge gate or an approver. `REVIEW.md` defines what blocks (correctness, security, accessibility, performance budget, test validity, spec or plan compliance) and what never does (style, naming).

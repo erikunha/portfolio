@@ -20,7 +20,7 @@ const defaults = {
   label: CONTROLS.vuMeter,
 };
 
-describe('VuMeter — ARIA contract', () => {
+describe('VuMeter: ARIA contract', () => {
   it('has role="slider"', () => {
     const doc = renderStatic(defaults);
     expect(doc.querySelector('[role="slider"]')).not.toBeNull();
@@ -56,7 +56,7 @@ describe('VuMeter — ARIA contract', () => {
   });
 });
 
-describe('VuMeter — segments', () => {
+describe('VuMeter: segments', () => {
   it('renders the correct number of segments', () => {
     const doc = renderStatic({ ...defaults, segments: 14 });
     const slider = doc.querySelector('[role="slider"]');
@@ -73,14 +73,14 @@ describe('VuMeter — segments', () => {
     expect(doc.querySelectorAll('[class*="vuSegRed"]').length).toBe(2);
   });
 
-  it('only filled red-zone segments get red class — unfilled slots stay empty', () => {
+  it('only filled red-zone segments get red class: unfilled slots stay empty', () => {
     const doc = renderStatic({ ...defaults, initialLevel: 93, clipping: true });
     expect(doc.querySelectorAll('[class*="vuSegRed"]').length).toBe(1);
     expect(doc.querySelector('[class*="vuSegEmpty"]')).not.toBeNull();
   });
 });
 
-describe('VuMeter — keyboard', () => {
+describe('VuMeter: keyboard', () => {
   let unmount: (() => void) | undefined;
   afterEach(() => {
     unmount?.();
@@ -148,7 +148,7 @@ describe('VuMeter — keyboard', () => {
   });
 });
 
-describe('VuMeter — pointer drag behavior', () => {
+describe('VuMeter: pointer drag behavior', () => {
   let unmount: (() => void) | undefined;
   afterEach(() => {
     unmount?.();

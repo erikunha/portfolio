@@ -25,7 +25,7 @@ vi.mock('@/lib/rate-limit', () => ({
 
 const mockSendEmail = vi.fn(async () => ({ data: { id: 'x' }, error: null }));
 vi.mock('resend', () => ({
-  // biome-ignore lint/complexity/useArrowFunction: `function` required — arrow fns cannot be used with `new` in jsdom/vitest; the route calls `new Resend(key)`.
+  // biome-ignore lint/complexity/useArrowFunction: `function` required, arrow fns cannot be used with `new` in jsdom/vitest; the route calls `new Resend(key)`.
   Resend: vi.fn(function () {
     return { emails: { send: mockSendEmail } };
   }),
@@ -66,7 +66,7 @@ const MOBILE_SCORES = {
   fetchedAt: '2026-05-29T03:00:01.000Z',
 };
 
-describe('GET /api/psi-refresh — auth', () => {
+describe('GET /api/psi-refresh: auth', () => {
   it('returns 401 when CRON_SECRET is not set', async () => {
     const { GET } = await import('@/app/api/psi-refresh/route');
     const res = await GET(makeRequest('Bearer anything') as never);
@@ -88,7 +88,7 @@ describe('GET /api/psi-refresh — auth', () => {
   });
 });
 
-describe('GET /api/psi-refresh — success', () => {
+describe('GET /api/psi-refresh: success', () => {
   it('returns 200 with desktop and mobile scores when both succeed', async () => {
     process.env.CRON_SECRET = TEST_CRON_SECRET;
     mockRefreshScores.mockResolvedValueOnce(DESKTOP_SCORES).mockResolvedValueOnce(MOBILE_SCORES);
@@ -178,7 +178,7 @@ describe('GET /api/psi-refresh — success', () => {
   });
 });
 
-describe('GET /api/psi-refresh — function config', () => {
+describe('GET /api/psi-refresh: function config', () => {
   it('sets maxDuration high enough for the parallel PSI audits to complete', async () => {
     const route = await import('@/app/api/psi-refresh/route');
     expect(route.maxDuration).toBeGreaterThanOrEqual(60);

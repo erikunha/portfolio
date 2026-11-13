@@ -12,7 +12,7 @@ function inspectAll(chunks: string[]) {
   return chunks.map((c) => guard.inspect(c));
 }
 
-describe('LEAK_MARKERS — marker set', () => {
+describe('LEAK_MARKERS: marker set', () => {
   it('is a non-empty readonly list of distinctive prompt fragments', () => {
     expect(Array.isArray(LEAK_MARKERS)).toBe(true);
     expect(LEAK_MARKERS.length).toBeGreaterThan(0);
@@ -71,7 +71,7 @@ describe('Layer 1/2: Portuguese leak coverage', () => {
   });
 });
 
-describe('Layer 1: createStreamGuard — clean stream pass-through', () => {
+describe('Layer 1: createStreamGuard: clean stream pass-through', () => {
   it('passes a normal answer chunked arbitrarily, returning ok every time', () => {
     const answer = 'Erik works at Raylu.ai as a Senior Software Engineer.';
     const chunks = answer.match(/.{1,7}/gs) ?? [answer];
@@ -102,7 +102,7 @@ describe('Layer 1: createStreamGuard — clean stream pass-through', () => {
   });
 });
 
-describe('Layer 1: createStreamGuard — leak detection', () => {
+describe('Layer 1: createStreamGuard: leak detection', () => {
   it('catches a marker delivered whole in one chunk', () => {
     const marker = LEAK_MARKERS[0] ?? '';
     const guard = createStreamGuard();
@@ -175,7 +175,7 @@ describe('Layer 1: createStreamGuard — leak detection', () => {
   });
 });
 
-describe('Layer 1: createStreamGuard — length cap', () => {
+describe('Layer 1: createStreamGuard: length cap', () => {
   it('aborts once cumulative chunk length exceeds MAX_ANSWER_CHARS', () => {
     const guard = createStreamGuard();
     const chunk = 'x'.repeat(1000);
@@ -209,16 +209,16 @@ describe('Layer 1: createStreamGuard — length cap', () => {
   });
 });
 
-describe('Layer 1: createStreamGuard — fail-open on internal error', () => {
+describe('Layer 1: createStreamGuard: fail-open on internal error', () => {
   it('returns ok when given a non-string (guard bug must never block answers)', () => {
     const guard = createStreamGuard();
-    // @ts-expect-error — deliberate string-contract violation; the guard must catch it and fail open
+    // @ts-expect-error, deliberate string-contract violation; the guard must catch it and fail open
     const verdict = guard.inspect(null);
     expect(verdict.ok).toBe(true);
   });
 });
 
-describe('Layer 2: validateAnswer — post-hoc full-answer audit', () => {
+describe('Layer 2: validateAnswer: post-hoc full-answer audit', () => {
   it('flags a leak marker present anywhere in the buffered answer', () => {
     const answer = `Here is something I should not say: ${LEAK_MARKERS[0]}`;
     const verdict = validateAnswer(answer, 'completed');
@@ -253,7 +253,7 @@ describe('Layer 2: validateAnswer — post-hoc full-answer audit', () => {
   });
 
   it('fails open (clean, no throw) when given a non-string answer', () => {
-    // @ts-expect-error — contract violation; Layer 2 must not throw into the response path
+    // @ts-expect-error, contract violation; Layer 2 must not throw into the response path
     const verdict = validateAnswer(null, 'completed');
     expect(verdict.clean).toBe(true);
     expect(verdict.findings).toEqual([]);

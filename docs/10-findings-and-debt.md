@@ -34,7 +34,7 @@ A fresh health response describes the refresh timestamp. It does not prove both 
 
 Git hooks and CI run deterministic checks on every change. `claude-review.yml` runs only when an owner, member or collaborator comments `/claude-review`, and it is never a merge requirement. The review that runs before the merge is the `pr-review-orchestrator` skill, and it is not a gate on the conversation: nothing in CI reads the review threads. Plan review and API review are conventions in `AGENTS.md`.
 
-Two quality signals run outside the merge path. Stryker mutation testing runs weekly in `mutation.yml` and is advisory; per pull request only a canary checks that the runner can still kill a mutant. The `ask:eval` job in `ci.yml` is skipped for fork pull requests and Dependabot, and it runs only when `ai` paths change.
+Two quality signals run outside the merge path. Stryker mutation testing runs weekly in `mutation.yml` and is advisory; per pull request only a canary checks that the runner can still kill a mutant. The `ai-eval` job in `ci.yml` is opt-in: it runs only when a pull request carries the `ai-eval` label and touches `ai` paths, it is skipped for fork pull requests and Dependabot, and the weekly `ask-eval.yml` workflow runs the eval on `main`.
 
 ## Performance and visual coverage differs by surface
 
@@ -44,7 +44,7 @@ The home and design-system performance gates therefore do not establish latency 
 
 ## Reference docs have few gates
 
-`check:doc-drift` checks the marked directory tree in `ARCHITECTURE.md`. Among the files in `docs/`, only the component counts in `04-components-and-state.md` (`__tests__/design-system-doc-counts.test.ts`) and the scroll-region list in `08-performance-and-accessibility.md` (`__tests__/scroll-regions.test.tsx`) are compared with the code. Every other claim in these documents is checked by review.
+`check:doc-drift` checks the marked directory tree in `ARCHITECTURE.md`. Among the files in `docs/`, four checks compare claims with the code: the component counts in `04-components-and-state.md` (`__tests__/design-system-doc-counts.test.ts`), the scroll-region list in `08-performance-and-accessibility.md` (`__tests__/scroll-regions.test.tsx`), the section and deferred-module counts in `docs/README.md` and `ARCHITECTURE.md` (`__tests__/docs-section-counts.test.ts`), and the design tokens the docs name (`__tests__/meta/docs-name-real-tokens.test.ts`). Every other claim in these documents is checked by review.
 
 ## Maintenance map
 

@@ -1,8 +1,8 @@
 # erikunha.dev
 
-**Erik Cunha — Senior Software Engineer, AI Engineer.** 8+ years of production software across AI-native SaaS, fintech, payments and e-commerce, and open to Senior, AI Engineer, Applied AI Engineer, AI Product Engineer and Founding Engineer roles.
+**Erik Cunha, Senior Software Engineer, AI Engineer.** 8+ years of production software across AI-native SaaS, fintech, payments and e-commerce, and open to Senior, AI Engineer, Applied AI Engineer, AI Product Engineer and Founding Engineer roles.
 
-The site is the artifact: a Next.js 16 application on Vercel (Fluid Compute), an RSC-first homepage composed of terminal-module sections plus a footer with client islands by exception, a streaming LLM endpoint, a durable contact form, and a CI pipeline that enforces performance, accessibility and bundle size as hard contracts — the Lighthouse thresholds and the axe scan in the `performance` job, the client-chunk and per-route JS budgets in the `build` job.
+The site is the artifact: a Next.js 16 application on Vercel (Fluid Compute), an RSC-first homepage composed of terminal-module sections plus a footer with client islands by exception, a streaming LLM endpoint, a durable contact form, and a CI pipeline that enforces performance, accessibility and bundle size as hard contracts, the Lighthouse thresholds and the axe scan in the `performance` job, the client-chunk and per-route JS budgets in the `build` job.
 
 **Live:** [erikunha.dev](https://www.erikunha.dev)
 
@@ -12,18 +12,18 @@ The site is the artifact: a Next.js 16 application on Vercel (Fluid Compute), an
   <img alt="TypeScript strict" src="https://img.shields.io/badge/TypeScript-strict-3178C6?logo=typescript&logoColor=white" />
   <img alt="Vercel" src="https://img.shields.io/badge/Vercel-Fluid_Compute-000?logo=vercel&logoColor=white" />
   <img alt="pnpm 10" src="https://img.shields.io/badge/pnpm-10+-F69220?logo=pnpm&logoColor=white" />
-  <img alt="Node 22" src="https://img.shields.io/badge/Node-22.22.2+-417E38?logo=nodedotjs&logoColor=white" />
+  <img alt="Node 22.22.2+, 24.15+ or 26+" src="https://img.shields.io/badge/Node-22.22.2%2B%20%7C%2024.15%2B%20%7C%2026%2B-417E38?logo=nodedotjs&logoColor=white" />
   <img alt="Biome" src="https://img.shields.io/badge/Biome-lint%20%2B%20format-60A5FA?logo=biome&logoColor=white" />
   <img alt="Vitest" src="https://img.shields.io/badge/Vitest-unit-6E9F18?logo=vitest&logoColor=white" />
   <img alt="Playwright" src="https://img.shields.io/badge/Playwright-E2E%20%2B%20a11y-2EAD33?logo=playwright&logoColor=white" />
   <img alt="Lighthouse CI" src="https://img.shields.io/badge/Lighthouse-CI%20gates-F44B21?logo=lighthouse&logoColor=white" />
-  <img alt="Anthropic" src="https://img.shields.io/badge/Anthropic-Haiku%204.5-D97757?logo=anthropic&logoColor=white" />
+  <img alt="Anthropic" src="https://img.shields.io/badge/Anthropic-Haiku%205.5-D97757?logo=anthropic&logoColor=white" />
   <img alt="License" src="https://img.shields.io/badge/code-MIT-blue" />
 </p>
 
 ---
 
-The codebase demonstrates the engineering it claims: "performance-first" is a budget and not an adjective — Lighthouse CI gates the category scores and the timings on the 24 routes the Lighthouse config lists, the axe scan fails CI, and the client-chunk and per-route first-load JS budgets are gates in the `build` job (`check-bundle-size.mjs` and `check-route-js.mjs`). `ARCHITECTURE.md` describes the system; `DECISIONS.md` records decisions and reversibility notes.
+The codebase demonstrates the engineering it claims: "performance-first" is a budget and not an adjective, Lighthouse CI gates the category scores and the timings on the 24 routes the Lighthouse config lists, the axe scan fails CI, and the client-chunk and per-route first-load JS budgets are gates in the `build` job (`check-bundle-size.mjs` and `check-route-js.mjs`). `ARCHITECTURE.md` describes the system; `DECISIONS.md` records decisions and reversibility notes.
 
 The AI centerpiece is a streaming `ask` endpoint (Vercel AI Gateway + Anthropic Haiku 5.5, prompt-cached, rate-limited, budget-capped) with a correctness eval suite and a visible metrics panel, making AI quality observable to hiring reviewers. Agent-readiness surfaces include `/.well-known/agent.json` and a minimal MCP server.
 
@@ -46,7 +46,7 @@ The terminal homepage is complemented by `/summary`, `/cv`, `/links` (pt-BR), `/
 | Vitest + Playwright                     | Unit (80% lines, 70% branches) + E2E across eight Playwright projects + axe-core a11y CI suite + Argos visual diffs                                    |
 | Lighthouse CI                           | LCP, TBT, CLS and the category scores gated on the 24 routes the Lighthouse config lists (performance ≥95 desktop / ≥90 mobile, accessibility and SEO = 100, best practices ≥95); INP checked in the browser tests |
 | Stryker                                 | Weekly mutation testing; a canary run in CI proves the runner still kills mutants                                                                         |
-| pnpm 10+ / Node 22.22.2+                | Strict dependency resolution, content-addressed store                                                                                                     |
+| pnpm 10+ / Node `^22.22.2 || ^24.15.0 || >=26.0.0` | Strict dependency resolution, content-addressed store                                                                                                     |
 
 ---
 
@@ -73,7 +73,7 @@ pnpm ci:local                 # the verify chain CI runs first
 | `pnpm lhci` / `pnpm lhci:mobile`                             | Lighthouse CI against a running production server (desktop / mobile)                      |
 | `pnpm gates:runtime [--skip-build]`                          | Build, start a server, advisory Lighthouse, blocking axe and Chromium e2e                 |
 | `pnpm ask:eval`                                              | `/api/ask` correctness, jailbreak and cost eval; writes `ask-eval-result.json`            |
-| `pnpm eval:agents`                                           | Prompt-regression eval of the rules in `AGENTS.md`; non-blocking in CI                    |
+| `pnpm eval:agents`                                           | Prompt-regression eval of fixed rule texts modelled on `AGENTS.md`; non-blocking in CI                    |
 | `pnpm test:mutation`                                         | Stryker mutation run (weekly in CI)                                                       |
 | `pnpm generate:og` / `pnpm generate:icons`                   | Regenerate `public/og.png` / the favicon and app icons                                    |
 | `pnpm changelog:sync`                                        | Regenerate the design-system changelog page from `(design-system)`-scoped commits         |
@@ -106,6 +106,17 @@ the live YouTube feed.
 | [`CONTRIBUTING.md`](./CONTRIBUTING.md) | Branch names, commit format and the pull request flow                   |
 | [`SECURITY.md`](./SECURITY.md)         | Reporting a vulnerability                                               |
 | [`docs/`](./docs/README.md)            | Engineering knowledge base (rendering, components, API, workflows) and the `handbook/` |
+
+---
+
+## Terms used
+
+- **RSC**: React Server Component, a component that renders on the server and ships no JavaScript.
+- **INP**: Interaction to Next Paint, the delay between an input and the next frame.
+- **TBT**: Total Blocking Time, the main-thread time lost to long tasks during load.
+- **Lighthouse CI**: Lighthouse run in CI against a local production server, with assertions.
+- **Argos**: the hosted service that compares Playwright screenshots against approved baselines.
+- **Stryker**: the mutation testing tool; it edits code and checks that a test fails.
 
 ---
 

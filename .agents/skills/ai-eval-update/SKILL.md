@@ -12,8 +12,8 @@ Results write to `ask-eval-result.json`. The Upstash Redis key `ask:eval:latest`
 metrics panel reads, is written only when `EVAL_PUBLISH=1` and Redis credentials are both set, which
 only the `ask-eval.yml` workflow (weekly schedule and manual dispatch) does.
 - Feature model: `anthropic/claude-haiku-5.5` (`lib/ask/model.ts`), default sampling, thinking disabled. Judge model: `anthropic/claude-sonnet-4-6` at temperature 0.
-- Requires `AI_GATEWAY_API_KEY` or `VERCEL_OIDC_TOKEN`. In CI a missing credential is a hard
-  failure (the `ai-eval` job is a dependency of `ci-gate`); locally the run skips with exit 0.
+- Requires `AI_GATEWAY_API_KEY` or `VERCEL_OIDC_TOKEN`. When the job runs in CI, a missing credential is a hard
+  failure; locally the run skips with exit 0.
 - The CI job is OPT-IN: it spends Gateway credits, so it fires only for a pull request that
   carries the `ai-eval` label. Label the PR to run it; without the label the job is skipped and a
   skipped job does not block `ci-gate`. The standing coverage is the weekly `ask-eval` workflow on

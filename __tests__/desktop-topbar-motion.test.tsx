@@ -4,7 +4,7 @@ import { siteNavChrome } from '@/content/navigation';
 import { SITE_LOCALE } from '@/content/site-locale';
 import { type MountedClient, mountClient } from './helpers/render';
 
-describe('DesktopTopbar — toggleMotion', () => {
+describe('DesktopTopbar: toggleMotion', () => {
   let mounted: MountedClient;
 
   beforeEach(() => {

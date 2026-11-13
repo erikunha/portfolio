@@ -29,7 +29,7 @@ const run = (over: Partial<Parameters<typeof interpretGitleaksRun>[0]>) =>
   interpretGitleaksRun({ status: LEAKS_FOUND, stderr: '', ...over });
 
 const FAIL_CLOSED =
-  'This is the whole fail-closed defence of the secret gate. If any of these branches returns ok:true, CI reports "no secrets" for a scan that never happened, or never fired — which reads identically to a clean tree and is the one failure this job exists to make impossible.';
+  'This is the whole fail-closed defence of the secret gate. If any of these branches returns ok:true, CI reports "no secrets" for a scan that never happened, or never fired, which reads identically to a clean tree and is the one failure this job exists to make impossible.';
 
 describe('interpretGitleaksRun (the gate cannot read clean unless gitleaks really scanned)', () => {
   it('a scanner that found the planted secret is the only accepted outcome', () => {
@@ -49,7 +49,7 @@ describe('interpretGitleaksRun (the gate cannot read clean unless gitleaks reall
     expect(verdict.ok, FAIL_CLOSED).toBe(false);
     expect(
       verdict.reason,
-      'The reason is the only thing anyone reads when this reds in CI. Asserting only `ok` lets the did-not-run branch be deleted silently: the result then falls through to the unknown-exit-code branch, which is also ok:false, so no test notices — while the message degrades to "exited null", which names nothing.',
+      'The reason is the only thing anyone reads when this reds in CI. Asserting only `ok` lets the did-not-run branch be deleted silently: the result then falls through to the unknown-exit-code branch, which is also ok:false, so no test notices, while the message degrades to "exited null", which names nothing.',
     ).toContain('ENOENT');
   });
 
@@ -84,7 +84,7 @@ describe('assertConfigShape (the config cannot be quietly gutted)', () => {
   it('rejects a `paths` allowlist, because it exempts the file from EVERY rule', () => {
     expect(
       shape(`${REAL_CONFIG}\n[[allowlists]]\npaths = ['''.*''']\n`).ok,
-      `Measured on gitleaks 8.30: a "paths" entry exempts that file from every rule, making it a permanent secret-laundering path. Three files in this repo were exempt from everything — including a test suite full of real-shaped tokens — and the probe could not see it, because the probe scans a token in a temp dir that no repo path regex matches. This is the assertion that catches it.`,
+      `Measured on gitleaks 8.30: a "paths" entry exempts that file from every rule, making it a permanent secret-laundering path. Three files in this repo were exempt from everything, including a test suite full of real-shaped tokens, and the probe could not see it, because the probe scans a token in a temp dir that no repo path regex matches. This is the assertion that catches it.`,
     ).toBe(false);
   });
 
@@ -149,19 +149,19 @@ describe('assertConfigShape (the config cannot be quietly gutted)', () => {
   it('rejects a suppression comment in the tree', () => {
     expect(
       shape(REAL_CONFIG, NO_IGNORE_FILE, ['lib/somewhere.ts']).ok,
-      `The ${SUPPRESSION_COMMENT} comment makes gitleaks skip the line, with no record of why. It is the cheapest way to make this whole gate lie, and it is the first thing a blocked developer reaches for.\n\nNote this test does not spell that comment out literally: the gate greps the tree for it, and a test file naming it would red the gate on itself — which is exactly what happened, and what the CI job caught before the unit tests did.`,
+      `The ${SUPPRESSION_COMMENT} comment makes gitleaks skip the line, with no record of why. It is the cheapest way to make this whole gate lie, and it is the first thing a blocked developer reaches for.\n\nNote this test does not spell that comment out literally: the gate greps the tree for it, and a test file naming it would red the gate on itself, which is exactly what happened, and what the CI job caught before the unit tests did.`,
     ).toBe(false);
   });
 });
 
-describe('assertConfigShape via TOML parse (residual neutering the regex denylist missed — #25)', () => {
+describe('assertConfigShape via TOML parse (residual neutering the regex denylist missed: #25)', () => {
   const shape = (config: string) => assertConfigShape(config, NO_IGNORE_FILE, NO_ALLOW_COMMENTS);
   const BASE = 'title = "x"\n[extend]\nuseDefault = true\n';
 
   it('rejects a `stopwords` allowlist, which drops any finding whose context contains the word', () => {
     expect(
       shape(`${BASE}[[allowlists]]\ndescription = "y"\nstopwords = ["AKIA"]\n`).ok,
-      'A stopword silently drops every finding whose surrounding line contains it, neutering a whole credential class (here, AWS keys). The github-pat probe never exercises that class, so nothing else notices. Only an allow-schema that rejects every unknown allowlist key catches it — the regex denylist has no pattern for `stopwords`.',
+      'A stopword silently drops every finding whose surrounding line contains it, neutering a whole credential class (here, AWS keys). The github-pat probe never exercises that class, so nothing else notices. Only an allow-schema that rejects every unknown allowlist key catches it, the regex denylist has no pattern for `stopwords`.',
     ).toBe(false);
   });
 
@@ -170,7 +170,7 @@ describe('assertConfigShape via TOML parse (residual neutering the regex denylis
       shape(
         `${BASE}[[allowlists]]\ndescription = "y"\ncommits = ["deadbeefdeadbeefdeadbeefdeadbeefdeadbeef"]\n`,
       ).ok,
-      'A commits allowlist exempts named commits from detection entirely — a real secret introduced in that commit is invisible forever. The probe scans a freshly-assembled token, never a historical commit, so it cannot see this.',
+      'A commits allowlist exempts named commits from detection entirely, a real secret introduced in that commit is invisible forever. The probe scans a freshly-assembled token, never a historical commit, so it cannot see this.',
     ).toBe(false);
   });
 
@@ -192,7 +192,7 @@ describe('assertConfigShape via TOML parse (residual neutering the regex denylis
   it('rejects [extend].path, which layers in an external config that can disable rules', () => {
     expect(
       shape('title = "x"\n[extend]\nuseDefault = true\npath = "other.toml"\n').ok,
-      'extend.path pulls in another config whose disabledRules/allowlists this file never shows — the disabling lives in a file this gate does not read. Only `useDefault` is a permitted extend key.',
+      'extend.path pulls in another config whose disabledRules/allowlists this file never shows, the disabling lives in a file this gate does not read. Only `useDefault` is a permitted extend key.',
     ).toBe(false);
   });
 
@@ -202,14 +202,14 @@ describe('assertConfigShape via TOML parse (residual neutering the regex denylis
     ).toBe(false);
   });
 
-  it('rejects an unknown top-level key — fail-closed on anything outside the schema', () => {
+  it('rejects an unknown top-level key: fail-closed on anything outside the schema', () => {
     expect(
       shape(`${BASE}future_neuter = true\n`).ok,
       'This is the whole point of an allow-schema over a denylist: a neutering key nobody has thought of yet is rejected by default because it is not on the allow-list, instead of slipping through until someone writes a pattern for it.',
     ).toBe(false);
   });
 
-  it('rejects an unknown key inside an allowlist — fail-closed at the allowlist level too', () => {
+  it('rejects an unknown key inside an allowlist: fail-closed at the allowlist level too', () => {
     expect(
       shape(`${BASE}[[allowlists]]\ndescription = "y"\nregexes = ['''x''']\nfuture_neuter = true\n`)
         .ok,
@@ -219,7 +219,7 @@ describe('assertConfigShape via TOML parse (residual neutering the regex denylis
   it('rejects a malformed TOML config rather than passing it as well-shaped', () => {
     expect(
       shape('this is [ not valid = toml').ok,
-      'The regex denylist silently passed unparseable config: none of its patterns matched, so it returned ok:true. A parse fails closed — an unreadable config is not a well-shaped one.',
+      'The regex denylist silently passed unparseable config: none of its patterns matched, so it returned ok:true. A parse fails closed, an unreadable config is not a well-shaped one.',
     ).toBe(false);
   });
 

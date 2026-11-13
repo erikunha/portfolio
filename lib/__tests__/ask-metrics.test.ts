@@ -34,7 +34,7 @@ beforeEach(() => {
   getRedisMock.mockClear();
 });
 
-describe('getAskMetrics — absent or malformed Redis payload', () => {
+describe('getAskMetrics: absent or malformed Redis payload', () => {
   it('returns null when Redis has no value', async () => {
     getMock.mockResolvedValueOnce(null);
     await expect(getAskMetrics()).resolves.toBeNull();
@@ -56,7 +56,7 @@ describe('getAskMetrics — absent or malformed Redis payload', () => {
   });
 });
 
-describe('getAskMetrics — required-field guards', () => {
+describe('getAskMetrics: required-field guards', () => {
   const MISSING_FIELD_CASES: Array<[string, (a: typeof VALID_AGGREGATE) => unknown]> = [
     ['ts', (a) => ({ ...a, ts: undefined })],
     ['total', (a) => ({ ...a, total: undefined })],
@@ -76,7 +76,7 @@ describe('getAskMetrics — required-field guards', () => {
   });
 });
 
-describe('getAskMetrics — valid payload shapes', () => {
+describe('getAskMetrics: valid payload shapes', () => {
   it('parses an already-parsed object payload', async () => {
     getMock.mockResolvedValueOnce(VALID_AGGREGATE);
     await expect(getAskMetrics()).resolves.toEqual(VALID_METRICS);
@@ -88,7 +88,7 @@ describe('getAskMetrics — valid payload shapes', () => {
   });
 });
 
-describe('getAskMetrics — costPerAnswer divisor', () => {
+describe('getAskMetrics: costPerAnswer divisor', () => {
   it('divides featureCostUsd by answeredCount when answeredCount > 0', async () => {
     getMock.mockResolvedValueOnce({ ...VALID_AGGREGATE, answeredCount: 4, featureCostUsd: 2 });
     const result = await getAskMetrics();

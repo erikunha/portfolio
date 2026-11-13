@@ -15,7 +15,7 @@ const LABELS = {
   faderLabel: CONTROLS.fader,
 };
 
-describe('pctToDb — formula', () => {
+describe('pctToDb: formula', () => {
   it('returns "-∞" for 0%', () => {
     expect(pctToDb(0)).toBe('-∞');
   });
@@ -56,7 +56,7 @@ describe('pctToDb — formula', () => {
   });
 });
 
-describe('FaderDbIsland — initial render', () => {
+describe('FaderDbIsland: initial render', () => {
   it('shows pctToDb(initialPct) as the dB value, not a raw content string', () => {
     const html = renderToStaticMarkup(
       createElement(FaderDbIsland, { ...LABELS, initialPct: 72, channelName: 'TEST' }),
@@ -88,7 +88,7 @@ describe('FaderDbIsland — initial render', () => {
   });
 });
 
-describe('FaderDbIsland — labels come from props', () => {
+describe('FaderDbIsland: labels come from props', () => {
   const custom = {
     decibelUnit: 'unit-x',
     loudnessLabel: 'loud-x',
@@ -121,7 +121,7 @@ describe('FaderDbIsland — labels come from props', () => {
   });
 });
 
-describe('FaderDbIsland — dB updates on fader interaction', () => {
+describe('FaderDbIsland: dB updates on fader interaction', () => {
   let unmount: (() => void) | undefined;
   afterEach(() => {
     unmount?.();

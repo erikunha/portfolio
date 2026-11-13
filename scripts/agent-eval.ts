@@ -225,7 +225,7 @@ async function main(): Promise<void> {
   const cases = await loadCases();
 
   console.log(
-    `agent-eval: calibration — ${AGENT_EVAL_CALIBRATION.length} gold cases → judge ${MODELS.judge}\n`,
+    `agent-eval: calibration: ${AGENT_EVAL_CALIBRATION.length} gold cases → judge ${MODELS.judge}\n`,
   );
   const calibration = await runCalibration(AGENT_EVAL_CALIBRATION, { model: MODELS.judge });
 
@@ -256,7 +256,7 @@ async function main(): Promise<void> {
     if (calibrationOutage) {
       console.error(
         `\nCALIBRATION SKIPPED due to judge API failures (${calibration.errored}/${calibration.total} errored, ` +
-          `limit ${CALIBRATION_ERROR_FRACTION_LIMIT * 100}%) — an outage, not drift. Re-run when the Gateway is healthy.`,
+          `limit ${CALIBRATION_ERROR_FRACTION_LIMIT * 100}%), an outage, not drift. Re-run when the Gateway is healthy.`,
       );
     } else {
       console.error(
@@ -299,7 +299,7 @@ async function main(): Promise<void> {
       withinBudget: false,
     });
     writeFileSync(RESULT_FILE, `${JSON.stringify(aborted, null, 2)}\n`);
-    console.error(`\nCOST CEILING EXCEEDED — ${budget.reason}`);
+    console.error(`\nCOST CEILING EXCEEDED: ${budget.reason}`);
     console.error(`result file (aborted) ${RESULT_FILE}`);
     process.exit(1);
   }

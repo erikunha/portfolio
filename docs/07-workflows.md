@@ -27,7 +27,7 @@
 ```
 check (Biome, warnings fail) -> typecheck -> validate-content -> check:client-naming
   -> check:dep-pinning -> check:dependency-vetting -> check:harness-size -> check:component-docs
-  -> check:section-order -> check:doc-drift -> check:detect-changes-paths -> check:test-integrity
+  -> check:section-order -> check:doc-drift -> check:no-dashes -> check:detect-changes-paths -> check:test-integrity
   -> lint:contrast -> lint:css-tokens -> test:coverage (Vitest with the coverage thresholds)
 ```
 
@@ -48,6 +48,7 @@ Two `quality-fast` steps stay CI-only: the branch-name lint (the pre-push hook e
 | `check:section-order`  | no `#sec-*` rule reorders a section with CSS `order`, and every `#sec-*` selector matches a rendered id |
 | `check:detect-changes-paths` | every git-tracked root file and `scripts/` file is listed in `AI_PATHS`, `APP_PATHS`, `UI_PATHS` or `IGNORED_PATHS`, so a new file cannot skip a gated job |
 | `check:doc-drift`      | `ARCHITECTURE.md` directory-tree paths exist on disk                                             |
+| `check:no-dashes`      | no tracked text file holds an em or en dash, apart from the `next dev` block in `AGENTS.md` |
 | `lint:css-tokens`      | no raw hex or color function (`rgb`, `hsl`, `hwb`, `lab`, `lch`, `oklab`, `oklch`, `color()`) outside `app/css/theme.css` and the named allowlist, in `app/css` and `*-tokens.ts`; no literal `z-index` or `--z-*` declaration outside the scale in `theme.css` (stylesheets and `*.tsx`); no focus rule that writes its own ring instead of `--focus-ring` on `:focus-visible` |
 | `lint:contrast`        | documented text/surface pairs meet WCAG AA                                                       |
 | `check:component-docs` | each DS component is documented                                                                  |
@@ -111,7 +112,12 @@ What each result means:
 - **would-run**: dry run only; nothing was executed.
 - **skipped**: the job's own `if` is false for this diff, exactly as in CI.
 
-The last line and the exit code summarise the table: exit 0 and `PREDICTED CI: no failure found` only when no job failed and every job passed or was skipped by paths (the GitHub-only and report-only jobs are listed beside it); exit 1 and `PREDICTED CI: FAIL` when a job failed; exit 2 and `DRY RUN` for `--list`; exit 3 when nothing ran (`NOT VERIFIED, nothing ran`), when some job is `partial` or `not-run` (`no failure found in what ran. NOT VERIFIED: <jobs>`), or when the branch has no commits ahead of its base (nothing to predict, which verifies nothing and never exits 0).
+The last line and the exit code summarise the table.
+
+- Exit 0 and `PREDICTED CI: no failure found` only when no job failed and every job passed or was skipped by paths. The GitHub-only and report-only jobs are listed beside it.
+- Exit 1 and `PREDICTED CI: FAIL` when a job failed.
+- Exit 2 and `DRY RUN` for `--list`.
+- Exit 3 when nothing ran (`NOT VERIFIED, nothing ran`), when some job is `partial` or `not-run` (`no failure found in what ran. NOT VERIFIED: <jobs>`), or when the branch has no commits ahead of its base. That last case has nothing to predict, verifies nothing and never exits 0.
 
 On Apple Silicon the container is arm64 while CI is x64, so pixel-level results can differ from CI: layout assertions such as the LCP element reproduce, but a screenshot diff in a section you did not touch is advisory. Check whether the diff is in your change before acting on it.
 
@@ -153,7 +159,7 @@ flowchart LR
   `tests/e2e/aria-structure.spec.ts` (chromium only) holds the page outline: `toMatchAriaSnapshot` against `tests/e2e/aria-structure.spec.ts-snapshots/*.aria.yml` for `/`, `/cv`, `/links` and `/design-system`. Each template lists landmarks and heading levels with `children: contain` and regex names, so copy and growing lists do not break it; a missing, extra-level or reordered landmark or section heading does. Aria snapshot paths carry no platform or project suffix, so macOS and Linux share one file, and a second test asserts exactly one `h1` per page because `contain` cannot see an extra heading.
   Reading views, error states, no-JavaScript recovery and mobile reflow run in all four page-browser projects.
 - **Visual regression:** `tests/visual/visual.spec.ts` captures the hero above the fold (desktop only), the contact section, the shell idle and mid-stream, the hottest-takes section and the footer, on `chromium` and `chromium-mobile`. Baselines live in `tests/visual/visual.spec.ts-snapshots/` with a `darwin` and a `linux` file per capture, and `argosScreenshot` sends each capture to Argos through the `captureForArgos` helper, which applies the baseline's volatile mask, CSS pixel scale and decorative-canvas stylesheet, so the cloud image and the repository image show the same page. On a pull request the job first waits, up to 20 minutes, for the visual jobs of the `main` run at the merge base to finish (`scripts/wait-argos-reference.mjs`): Argos compares a build against the build of the merge base, and a build uploaded before that one exists is compared against an older `main` build instead. `tests/e2e/design-system-components.spec.ts` keeps its own darwin-only baselines, and CI ignores it. A color, layout or typography change requires regenerated baselines (see the `visual-baseline-regen` skill); the `update_visual_baselines` input of the manual `ci.yml` run regenerates the Linux ones as an artifact.
-- **AI eval (`pnpm ask:eval`):** calibration → corpus → gate for `/api/ask` (doc 02). Gated in CI when `ai`-paths change.
+- **AI eval (`pnpm ask:eval`):** calibration → corpus → gate for `/api/ask` (doc 02). Opt-in in CI: the `ai-eval` job runs only when a pull request carries the `ai-eval` label and touches `ai` paths; the weekly `ask-eval.yml` workflow runs it on `main`.
 
 ## CI/CD
 
@@ -172,7 +178,7 @@ The trigger fans out to change detection and to the always-on jobs:
 ```mermaid
 flowchart TD
     pr["PR / push main / workflow_dispatch"] --> dc["detect-changes (app?, ai?, ui?)"]
-    pr --> qf["quality-fast: Biome, branch/commit lint, content, naming, pinning, vetting, harness, component docs, doc-drift, section order, path filters, test integrity, contrast, CSS tokens"]
+    pr --> qf["quality-fast: Biome, branch/commit lint, content, naming, pinning, vetting, harness, component docs, doc-drift, no dashes, section order, path filters, test integrity, contrast, CSS tokens"]
     pr --> tc["typecheck"]
     pr --> t["test (audit, Stryker canary, Vitest + coverage)"]
     pr --> dr["dependency-review (PR)"]
@@ -224,7 +230,7 @@ flowchart TD
 
 | Job | Runs when | What it does |
 | --- | --- | --- |
-| `quality-fast` | always | branch-name lint, commit-message lint (PR), `biome ci --error-on-warnings`, `validate-content`, client-naming, dependency-pinning, dependency-vetting, harness-size, component-docs, doc-drift, section-order, detect-changes-paths, test-integrity, contrast, CSS-token gates |
+| `quality-fast` | always | branch-name lint, commit-message lint (PR), `biome ci --error-on-warnings`, `validate-content`, client-naming, dependency-pinning, dependency-vetting, harness-size, component-docs, doc-drift, no-dashes, section-order, detect-changes-paths, test-integrity, contrast, CSS-token gates |
 | `typecheck` | always | `pnpm typecheck` with a cached `tsconfig.tsbuildinfo` |
 | `test` | always | `pnpm audit --audit-level=moderate` (always on a push, only when `pnpm-lock.yaml` changed on a PR), the Stryker kill canary (always on a push, only when the mutation runner files changed on a PR), then `pnpm test:coverage` and the coverage artifact |
 | `dependency-review` | PR | blocks high-severity advisories and `GPL-3.0`, `AGPL-3.0` and `GPL-2.0` licenses |
@@ -260,7 +266,7 @@ Other workflows (none is in `ci-gate`):
 
 **Dependabot:** `.github/dependabot.yml` waits 7 days (`cooldown.default-days`, the same window as `minimumReleaseAge` in `pnpm-workspace.yaml`) before opening a version update and splits npm and Actions updates into three groups: `security` (security updates), `majors` and `rest` (minor and patch). npm updates ignore `zod` major and minor bumps and `typescript` major bumps, the two holds in `AGENTS.md`. `__tests__/scripts/dependabot-config.test.ts` fails a cooldown shorter than the pnpm window.
 
-**Token permissions:** every workflow sets a top-level `permissions` block of `contents: read` (`{}` for `smoke.yml` and `weekly-metrics.yml`), and each job lists only the extra scopes it uses, for example `attest-build` takes `id-token: write` + `attestations: write` for provenance and `coverage-comment` takes `pull-requests: write`, both in jobs that only download an artifact and run no repository command (`__tests__/scripts/ci-privilege-split.test.ts` fails a job that holds one of those scopes and runs a command), `semgrep` takes `security-events: write` to upload SARIF, `claude-review` takes `pull-requests: write` + `issues: read` + `checks: read` + `statuses: read` + `id-token: write` + `actions: read`. `__tests__/scripts/workflow-permissions.test.ts` fails a workflow with no top-level block or a broader one (OpenSSF Scorecard Token-Permissions).
+**Token permissions:** every workflow sets a top-level `permissions` block of `contents: read` (`{}` for `smoke.yml` and `weekly-metrics.yml`), and each job lists only the extra scopes it uses. `attest-build` takes `id-token: write` + `attestations: write` for provenance, and `coverage-comment` takes `pull-requests: write`. Both run in jobs that only download an artifact and run no repository command (`__tests__/scripts/ci-privilege-split.test.ts` fails a job that holds one of those scopes and runs a command). `semgrep` takes `security-events: write` to upload SARIF. `claude-review` takes `pull-requests: write` + `issues: read` + `checks: read` + `statuses: read` + `id-token: write` + `actions: read`. `__tests__/scripts/workflow-permissions.test.ts` fails a workflow with no top-level block or a broader one (OpenSSF Scorecard Token-Permissions).
 
 **Lighthouse budgets (LHCI, hard gates in the `performance` job):** desktop perf ≥95 / a11y =100 / BP ≥95 / SEO =100, LCP ≤1800ms, CLS ≤0.05, TBT ≤200ms, interactive ≤2500ms; mobile perf ≥90, LCP ≤3500ms, TBT ≤400ms, interactive ≤4500ms. `__tests__/lighthouse-budgets.test.ts` fails when an assertion is lowered, warned or turned off. `pnpm gates:runtime` (`scripts/gates-runtime.ts`) is the local subset: it builds (or reuses `.next/` with `--skip-build`), starts a server on `PORT` or a free port, runs LHCI on the home URL only and treats it as advisory, then runs `tests/a11y` and the `cross-cutting` and `observability-smoke` specs on `chromium` as blocking gates, all within a 300 second limit. Never disable a gate to merge - fix the property (doc 08).
 

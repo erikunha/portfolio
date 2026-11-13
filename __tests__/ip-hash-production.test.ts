@@ -23,7 +23,7 @@ vi.mock('@/lib/log', () => ({
   log: { info: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn() },
 }));
 
-describe('hashIp — production Upstash salt resolution', () => {
+describe('hashIp: production Upstash salt resolution', () => {
   beforeEach(() => {
     vi.resetModules();
     vi.stubEnv('UPSTASH_REDIS_REST_URL', 'https://redis.test');

@@ -13,7 +13,7 @@ const CONTACT_FIXED_NOW = new Date('2026-11-02T15:00:00Z');
 const CONTACT_SCROLL_MARGIN_PX = 100;
 
 test.describe('visual regression', () => {
-  test('1 — hero above-the-fold matches baseline', async ({ mockedPage }, testInfo) => {
+  test('1: hero above-the-fold matches baseline', async ({ mockedPage }, testInfo) => {
     test.skip(
       testInfo.project.name === 'chromium-mobile',
       'chromium-mobile post-hydration reflow blocks stable hero snapshot.',
@@ -38,7 +38,7 @@ test.describe('visual regression', () => {
   test.describe('contact section', () => {
     test.use({ timezoneId: CONTACT_VISITOR_ZONE, locale: 'en-US' });
 
-    test('2 — contact section matches baseline', async ({ mockedPage }) => {
+    test('2: contact section matches baseline', async ({ mockedPage }) => {
       await mockedPage.clock.setFixedTime(CONTACT_FIXED_NOW);
       const contactSection = mockedPage.locator('#sec-contact');
       const scrollToContact = (selector: string) =>
@@ -66,7 +66,7 @@ test.describe('visual regression', () => {
     });
   });
 
-  test('3 — shell + ask form (idle) matches baseline', async ({ mockedPage }, testInfo) => {
+  test('3: shell + ask form (idle) matches baseline', async ({ mockedPage }, testInfo) => {
     const shellSection = mockedPage.locator('#sec-shell');
     await shellSection.scrollIntoViewIfNeeded();
     await mockedPage.waitForSelector('[data-testid="shell-form"]', { state: 'visible' });
@@ -93,7 +93,7 @@ test.describe('visual regression', () => {
     await snapshotLocator(mockedPage, shellSection, 'shell-idle.png');
   });
 
-  test('4 — shell + ask form (mid-stream) matches baseline', async ({ mockedPage }) => {
+  test('4: shell + ask form (mid-stream) matches baseline', async ({ mockedPage }) => {
     await mockedPage.addInitScript(() => {
       const realFetch = window.fetch.bind(window);
       window.fetch = async (input, init) => {
@@ -145,7 +145,7 @@ test.describe('visual regression', () => {
     await snapshotLocator(mockedPage, shellSection, 'shell-mid-stream.png');
   });
 
-  test('5 — hottest takes section matches baseline', async ({ mockedPage }) => {
+  test('5: hottest takes section matches baseline', async ({ mockedPage }) => {
     const hottest = mockedPage.locator('#sec-hottest-takes');
     await hottest.scrollIntoViewIfNeeded();
     await mockedPage.waitForSelector('#sec-hottest-takes [data-testid="hottest-takes-list"]', {

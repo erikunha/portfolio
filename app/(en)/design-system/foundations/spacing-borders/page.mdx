@@ -91,11 +91,11 @@ Responsive tokens live in the `:root` block of `app/css/theme.css`; every page c
 
 Line heights: `--leading-page-tight` 1.1, `--leading-page-snug` 1.35, `--leading-body` 1.6. The page-scoped names keep Tailwind's built-in tight and snug scale intact.
 
-`--leading` is the ratio in effect for an element and its subtree, and the line box it produces is rounded to whole pixels: `round(nearest, 1em * var(--leading), 1px)`. A component asks for a ratio by setting `--leading`, not `line-height` — a `line-height` written in the components or the utilities layer outranks the base layer, and the box it produces would stay fractional.
+`--leading` is the ratio in effect for an element and its subtree, and the line box it produces is rounded to whole pixels: `round(nearest, 1em * var(--leading), 1px)`. A component asks for a ratio by setting `--leading`, not `line-height`: a `line-height` written in the components or the utilities layer outranks the base layer, and the box it produces would stay fractional.
 
 The ratio has to travel, because a descendant inherits the ratio and not the box: a child at a different font-size scales by the same ratio. Two rules carry it. The font-size utilities carry the ratio Tailwind pairs with the size (`text-xs` is 1/0.75), so a descendant of a `text-xs` element keeps that rhythm. And the site's own `.leading-ratio-*` classes state both the ratio and the element's own `line-height`, because a font-size utility writes `line-height` in the same layer and comes first.
 
-A leading that is a length — the career log's 22px rhythm, the footer's 20px dmesg — does not travel that way: it reaches the descendants that inherited it, and no further. Those rules state it again for the elements inside, so the rhythm stays the one the design means.
+A leading that is a length, the career log's 22px rhythm, the footer's 20px dmesg, does not travel that way: it reaches the descendants that inherited it, and no further. Those rules state it again for the elements inside, so the rhythm stays the one the design means.
 
 A browser without CSS `round()` keeps the ratio, which is the render it has today.
 

@@ -26,7 +26,7 @@ afterEach(() => {
   vi.unstubAllEnvs();
 });
 
-describe('lib/env.ts — boot-time config integrity', () => {
+describe('lib/env.ts: boot-time config integrity', () => {
   it('does NOT throw when every secret is absent (optional-by-design)', async () => {
     const mod = await import('@/lib/env');
     expect(mod.env.AI_GATEWAY_API_KEY).toBeUndefined();
@@ -68,7 +68,7 @@ describe('lib/env.ts — boot-time config integrity', () => {
   });
 
   it('imports server-only before parsing so a client bundle fails loudly', () => {
-    // behavioral-test-allow: WS1 — assert the server-only guard precedes the parse.
+    // behavioral-test-allow: WS1, assert the server-only guard precedes the parse.
     const src = readFileSync(join(process.cwd(), 'lib/env.ts'), 'utf8');
     const serverOnlyIdx = src.indexOf("import 'server-only'");
     const parseIdx = src.search(/\.safeParse\(|\.parse\(/);
@@ -77,7 +77,7 @@ describe('lib/env.ts — boot-time config integrity', () => {
   });
 
   it('is the only place managed vars are read from process.env (no stray reads)', () => {
-    // behavioral-test-allow: WS1 env-centralization invariant — scan app/ + lib/.
+    // behavioral-test-allow: WS1 env-centralization invariant, scan app/ + lib/.
     const roots = ['app', 'lib'];
     const walk = (dir: string): string[] =>
       readdirSync(dir, { withFileTypes: true }).flatMap((e) => {

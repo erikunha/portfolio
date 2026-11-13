@@ -10,7 +10,7 @@ This audit separates repository checks from workflow conventions. See [engineeri
 | Push safety       | `.husky/pre-push` checks the remote main ref, branch name and `pnpm verify`                              | Runtime browser gates are a manual pre-PR step                          |
 | Documentation     | `check:doc-drift` checks the `ARCHITECTURE.md` tree; component-docs checks headings                      | Neither validates every prose claim                                     |
 | Review            | the `pr-review-orchestrator` skill dispatches the matching skills and reads the render                | Nothing forces the review to run; the merge decision stays with the owner |
-| Product AI        | `ask:eval` runs calibration and corpus checks                                                            | CI execution depends on the AI change filter and credentials            |
+| Product AI        | `ask:eval` runs calibration and corpus checks                                                            | CI runs it only for a pull request with the `ai-eval` label, an AI change and credentials |
 | Security analysis | gitleaks blocks on secrets; Semgrep uploads findings                                                     | The Semgrep scan is report-only; its report and fixture checks can fail |
 
 ## Gaps to consider

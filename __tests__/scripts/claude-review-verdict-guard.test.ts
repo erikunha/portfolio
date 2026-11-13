@@ -49,11 +49,11 @@ describe('the guard fetches, filters and tests the latest review comment of this
   it('no gh api fetch in this workflow passes a filter flag alongside --slurp', () => {
     // gh refuses --slurp with --jq, -q, or --template. The stub encodes that, but
     // only for the step it executes; this reads the WHOLE file, because the same
-    // invalid invocation shipped twice — once in the guard and once in the
+    // invalid invocation shipped twice, once in the guard and once in the
     // cancelled-run supersede step, which no test selects.
     // Backslash-continuations are joined FIRST. Without that the scan sees only
     // the first physical line of each fetch, and a `--jq` on the continuation
-    // line is invisible — which is exactly how the supersede step's copy of this
+    // line is invisible, which is exactly how the supersede step's copy of this
     // bug survived the first version of this assertion.
     const yml = readFileSync(WORKFLOW, 'utf8').replace(/\\\n\s*/g, ' ');
     const fetches = yml.match(/gh api[^\n]*/g) ?? [];
@@ -276,7 +276,7 @@ describe('the workflow grants the API scopes its own guard needs', () => {
     if (!usesIssuesApi) return;
     expect(
       permissions().issues,
-      '`none` is a valid GitHub Actions permission value meaning NO access, so asserting the key is merely present passes on the broken state — the level is the property. The guard fetches PR conversation comments from repos/:owner/:repo/issues/:number/comments. That endpoint is gated by the `issues` permission, NOT by `pull-requests` — the sibling claude.yml declares `issues: write` for equivalent access.\n\nWithout it the call 403s, `set -e` aborts the assignment before any diagnostic prints, and the step reds on EVERY run: a permanent false red on the gate this workflow exists to add, indistinguishable in the log from a real missing verdict.\n\nThe executed rows cannot catch this. They stub `gh` on PATH, so no row ever exercises a real API permission — which is exactly why this assertion is structural and lives here.',
+      '`none` is a valid GitHub Actions permission value meaning NO access, so asserting the key is merely present passes on the broken state, the level is the property. The guard fetches PR conversation comments from repos/:owner/:repo/issues/:number/comments. That endpoint is gated by the `issues` permission, NOT by `pull-requests`, the sibling claude.yml declares `issues: write` for equivalent access.\n\nWithout it the call 403s, `set -e` aborts the assignment before any diagnostic prints, and the step reds on EVERY run: a permanent false red on the gate this workflow exists to add, indistinguishable in the log from a real missing verdict.\n\nThe executed rows cannot catch this. They stub `gh` on PATH, so no row ever exercises a real API permission, which is exactly why this assertion is structural and lives here.',
     ).toMatch(/^(read|write)$/);
   });
 });

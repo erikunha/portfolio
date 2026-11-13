@@ -78,7 +78,7 @@ ContactForm and its field checks (`contact-form-checks.ts`) import the Zod-free 
 
 A `ContactMessage` contains `name`, `email`, `message`, `receivedAt` and `ipHash`. It is stored at `contact:msg:{msgId}` for 90 days before delivery is attempted. The delivered email is a second copy that lives in the owner's mailbox and in Resend's logs, outside that TTL; the form's privacy line states both. A KV write failure returns `502 storage_unavailable` and requires resubmission.
 
-Resend acceptance returns 200. A provider error, timeout or missing key adds the id to `contact:outbox`, ordered by `receivedAt`, with a retry counter in `contact:outbox:attempts`. Only a successful outbox write returns `202 queued`. The visitor sees that the message is saved but undelivered, with a LinkedIn alternative. Other errors display the server's message string.
+Resend acceptance returns 200. A provider error, timeout or missing key adds the id to `contact:outbox`, ordered by `receivedAt`, with a retry counter in `contact:outbox:attempts`. Only a successful outbox write returns `202 queued`. The visitor sees that the message is saved but undelivered, with a LinkedIn alternative. Every other failure shows copy from the page's locale, chosen by the response's `error.code`.
 
 The daily retry permits at most 3 additional delivery attempts within 24 hours, the window in which the provider honors the send idempotency key. Success, expiry and exhaustion remove pending membership and its counter while preserving the audit message. Logs contain request and message ids, never the contact payload.
 
@@ -107,7 +107,7 @@ erDiagram
     ASK_EVAL_ITEM }o--|| PERSON : "grounds-truth-in"
 ```
 
-**Two notable invariants the schema enforces** (because they are silent-corruption risks):
+**Three notable invariants the schema enforces** (because they are silent-corruption risks):
 - The guitar **EQ spectrum is one Zod object** (`EqSpectrumSchema` in `content/schemas.ts`). It rejects a band or axis tick outside the frequency range, an inverted range, a non-positive BPM and an accessible-name template that lost its `{freq}` or `{gain}` token. The curve and bars are derived from the bands by `lib/eq-spectrum.ts`, so the values live in one place.
 - The guitar **presentation signal chain is a three-node Zod `tuple`** (`GuitarPresentationSchema`). It fixes the rendered order to INPUT → AMP → OUT and rejects reordered, duplicate or missing roles. The source rig (`GuitarRigSchema`) carries the same three nodes, so no authored node goes unrendered.
 - The DAW mixer is `.length(3)` with `.refine(last.id === 'MASTER')` - CH 01, CH 02 and the master channel, which must be last.
