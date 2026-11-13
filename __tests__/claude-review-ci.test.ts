@@ -1,5 +1,12 @@
 import { spawnSync } from 'node:child_process';
-import { chmodSync, mkdtempSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
+import {
+  chmodSync,
+  existsSync,
+  mkdtempSync,
+  readdirSync,
+  readFileSync,
+  writeFileSync,
+} from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
@@ -8,8 +15,8 @@ import { parse } from 'yaml';
 const root = join(__dirname, '..');
 
 function readArtifact(path: string): string {
-  // behavioral-test-allow: the artifacts under test ARE the review skill's markdown, the CI reviewer
-  // prompt and its workflow; their property has no runtime surface other than these files.
+  // behavioral-test-allow: the artifacts under test ARE the CI reviewer prompt, REVIEW.md and the
+  // workflow; their property has no runtime surface other than these files.
   return readFileSync(path, 'utf8');
 }
 
@@ -19,7 +26,7 @@ const workflowSteps = (
   }
 ).jobs.review.steps;
 
-describe('CI reviewer runs a trusted copy of the orchestrator', () => {
+describe('CI reviewer runs on trusted instructions and no repository skill', () => {
   const prompt = readArtifact(join(root, '.github/claude-review-prompt.md'));
   type Step = {
     name?: string;
@@ -129,25 +136,36 @@ describe('CI reviewer runs a trusted copy of the orchestrator', () => {
     }
   });
 
-  it('extracts the skill from a default-branch fetch that runs before it, unconditionally', () => {
+  it('materialises the prompt from a default-branch fetch that runs before it, unconditionally', () => {
     const fetch = indexOfStep(/^git fetch --depth=1 origin "\$DEFAULT_BRANCH"$/);
-    const archive = indexOfStep(/^git archive "FETCH_HEAD:\$\{skill_dir\}" /);
+    const show = indexOfStep(/^git show "FETCH_HEAD:\.github\/claude-review-prompt\.md" > /);
     expect(fetch, 'the default-branch fetch must be an active line').toBeGreaterThanOrEqual(0);
-    expect(archive).toBeGreaterThan(fetch);
-    expect(steps.slice(fetch, archive + 1).some((step) => step.if !== undefined)).toBe(false);
-    expect(prompt).toContain('/tmp/review-skill/SKILL.md');
-    expect(claudeArgs).toContain('--add-dir /tmp/review-skill');
+    expect(show).toBeGreaterThanOrEqual(fetch);
+    expect(steps.slice(fetch, show + 1).some((step) => step.if !== undefined)).toBe(false);
+    expect(claudeArgs).toContain('--append-system-prompt-file /tmp/claude-review-prompt.md');
   });
 
-  it('finds the skill under the shared layout or the earlier layout of the default branch', () => {
-    const probe = steps
-      .flatMap((step) => activeLines(step.run))
-      .find((line) => line.startsWith('for candidate in '));
-    expect(probe).toContain('.agents/skills/pr-review-orchestrator');
+  it('extracts nothing else from the default branch and reads no repository skill directory', () => {
+    const lines = steps.flatMap((step) => activeLines(step.run));
     expect(
-      probe,
-      'a default branch that has not landed the shared layout still holds the skill under .claude/skills',
-    ).toContain('.claude/skills/pr-review-orchestrator');
+      lines.filter((line) => /\bgit (archive|checkout|restore)\b/.test(line)),
+      'only the prompt is read from the default branch, through git show',
+    ).toEqual([]);
+    expect(
+      lines.filter((line) => /(?:\.agents|\.claude)\/skills|review-skill/.test(line)),
+      'a repository skill reaches the reviewer through the base checkout, never through a workflow step',
+    ).toEqual([]);
+    expect(prompt).not.toContain('/tmp/review-skill');
+    expect(
+      claudeArgs.match(/--add-dir \S+/g),
+      'the reviewer mounts the PR copy and the evidence snapshot, nothing else',
+    ).toEqual(['--add-dir pr-head', '--add-dir /tmp/review-evidence']);
+  });
+
+  it('points the reviewer at REVIEW.md, which the base checkout carries', () => {
+    expect(prompt).toContain('REVIEW.md');
+    expect(prompt).toContain('subagent_type review-worker');
+    expect(existsSync(join(root, 'REVIEW.md'))).toBe(true);
   });
 
   it('runs no package manager in the credentialed job', () => {

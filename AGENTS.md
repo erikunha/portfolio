@@ -104,11 +104,10 @@ that does not apply is not run.
 | A change may move a screenshot baseline (color, layout, typography, spacing) | `visual-baseline-regen` |
 | Routes, identity copy or metadata change, or the Lighthouse SEO score drops | `seo-discovery` |
 | The ask eval corpus, calibration, runner or system prompt changes | `ai-eval-update` |
-| A pull request needs review | `pr-review-orchestrator` |
 | The owner asks for static analysis of the diff | `semgrep` |
 
-A review runs every matching repository skill, then adds the developer's own skills when they
-fit the same surface. A skill is a method: it never decides the verdict on its own.
+A review of a diff follows `REVIEW.md` and runs every matching repository skill. A skill is a
+method: it never decides the verdict on its own.
 
 ## Git and pull requests
 
