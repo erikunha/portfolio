@@ -11,6 +11,7 @@ const SURFACES: readonly CrashSurface[] = Object.values(CRASH_SURFACE);
 const WIDTHS = [VIEWPORTS.PHONE_NARROW, VIEWPORTS.PHONE] as const;
 const RECOVERED_MARKER = '[data-testid="hero-name"]';
 const SHELL_CHROME = '.app-content';
+const SETTLED_ERROR_BODY = '.err-log-boot';
 
 async function openCrashed(page: Page, surface: CrashSurface, path: string): Promise<void> {
   await installMockBackend(page, { log: 'accept' });
@@ -54,6 +55,10 @@ for (const surface of SURFACES) {
 
       test('the retry button recovers the page', async ({ page }) => {
         await openCrashed(page, surface, HOME_PATHS[locale]);
+        await expect(
+          page.locator(SETTLED_ERROR_BODY),
+          'click retry only once the lazy error body replaced its fallback, or the swap eats the click',
+        ).toBeAttached();
         await page.getByRole('button', { name: core.retryLabel }).click();
 
         await expect(page.getByRole('heading', { level: 1, name: core.code })).toHaveCount(0);
