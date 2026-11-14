@@ -26,6 +26,96 @@ const TEST_FILE = /\.test\.tsx?$/;
 const TOKEN_ROOTS = ['app', 'components', 'content', 'design-system', 'lib'];
 const SKIPPED_DIRS = new Set(['node_modules', '.next']);
 const ALLOWLIST_PATH = 'scripts/lint-css-tokens.allowlist.json';
+const CONSUMER_FILE = /\.(?:css|tsx?|mdx)$/;
+const CONSUMER_SKIPPED = /\.(?:test|e2e|spec)\.tsx?$/;
+const THEME_AT_RULE = 'theme';
+const CUSTOM_PROPERTY = '--';
+const COLOR_UTILITIES = [
+  'bg',
+  'text',
+  'border',
+  'border-x',
+  'border-y',
+  'border-t',
+  'border-r',
+  'border-b',
+  'border-l',
+  'ring',
+  'ring-offset',
+  'fill',
+  'stroke',
+  'outline',
+  'decoration',
+  'accent',
+  'caret',
+  'shadow',
+  'inset-shadow',
+  'drop-shadow',
+  'from',
+  'via',
+  'to',
+  'divide',
+  'placeholder',
+  'selection',
+];
+const SPACING_UTILITIES = [
+  'p',
+  'px',
+  'py',
+  'pt',
+  'pr',
+  'pb',
+  'pl',
+  'ps',
+  'pe',
+  'm',
+  'mx',
+  'my',
+  'mt',
+  'mr',
+  'mb',
+  'ml',
+  'ms',
+  'me',
+  'gap',
+  'gap-x',
+  'gap-y',
+  'space-x',
+  'space-y',
+  'w',
+  'h',
+  'size',
+  'min-w',
+  'min-h',
+  'max-w',
+  'max-h',
+  'inset',
+  'inset-x',
+  'inset-y',
+  'top',
+  'right',
+  'bottom',
+  'left',
+  'start',
+  'end',
+  'translate-x',
+  'translate-y',
+  'basis',
+  'indent',
+  'scroll-m',
+  'scroll-p',
+];
+const NAMESPACE_UTILITIES: Record<string, string[]> = {
+  color: COLOR_UTILITIES,
+  text: ['text'],
+  leading: ['leading'],
+  tracking: ['tracking'],
+  spacing: SPACING_UTILITIES,
+  radius: ['rounded', 'rounded-t', 'rounded-r', 'rounded-b', 'rounded-l', 'rounded-s', 'rounded-e'],
+  shadow: ['shadow'],
+  font: ['font'],
+};
+const BREAKPOINT_NAMESPACE = 'breakpoint';
 
 export interface HexHit {
   line: number;
@@ -205,6 +295,61 @@ export interface RepoScan {
   focus: RawColorHit[];
 }
 
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function themeTokenNames(themeCss: string): string[] {
+  const names: string[] = [];
+  postcss.parse(themeCss).walkAtRules(THEME_AT_RULE, (rule) => {
+    rule.each((node) => {
+      if (node.type === 'decl' && node.prop.startsWith(CUSTOM_PROPERTY)) names.push(node.prop);
+    });
+  });
+  return names;
+}
+
+function utilityPattern(token: string): RegExp | undefined {
+  const body = token.slice(CUSTOM_PROPERTY.length);
+  const dash = body.indexOf('-');
+  if (dash < 0) return undefined;
+  const namespace = body.slice(0, dash);
+  const name = escapeRegExp(body.slice(dash + 1));
+  if (namespace === BREAKPOINT_NAMESPACE) return new RegExp(`(?<![\\w-])(?:max-|min-)?${name}:`);
+  const prefixes = NAMESPACE_UTILITIES[namespace];
+  if (!prefixes) return undefined;
+  return new RegExp(`(?<![\\w-])-?(?:${prefixes.map(escapeRegExp).join('|')})-${name}(?![\\w-])`);
+}
+
+export function findUnusedThemeTokens(themeCss: string, sources: string[]): string[] {
+  const haystacks = [themeCss, ...sources].map(stripComments);
+  return themeTokenNames(themeCss).filter((token) => {
+    const reference = new RegExp(`${escapeRegExp(token)}(?![\\w-])(?!\\s*:)`);
+    if (haystacks.some((text) => reference.test(text))) return false;
+    const utility = utilityPattern(token);
+    return !(utility && haystacks.some((text) => utility.test(text)));
+  });
+}
+
+export function findConsumerFiles(root: string): string[] {
+  const out: string[] = [];
+  const walk = (dir: string): void => {
+    for (const entry of readdirSync(dir, { withFileTypes: true })) {
+      if (SKIPPED_DIRS.has(entry.name)) continue;
+      const full = join(dir, entry.name);
+      if (entry.isDirectory()) walk(full);
+      else if (CONSUMER_FILE.test(entry.name) && !CONSUMER_SKIPPED.test(entry.name)) {
+        out.push(relative(root, full));
+      }
+    }
+  };
+  for (const top of TOKEN_ROOTS) {
+    const dir = join(root, top);
+    if (existsSync(dir)) walk(dir);
+  }
+  return out.sort();
+}
+
 export function scanRepo(root: string, cssFiles: string[]): RepoScan {
   const read = (file: string) => readFileSync(join(root, file), 'utf8');
   const tag = (file: string, hits: ColorHit[]): RawColorHit[] =>
@@ -271,6 +416,16 @@ function main(): void {
       'A focus rule uses outline: var(--focus-ring) with outline-offset: var(--focus-ring-offset) (or -inset), on :focus-visible only.',
       scan.focus,
     ) || failed;
+  const unused = findUnusedThemeTokens(
+    readFileSync(join(root, `app/css/${THEME_SHEET}`), 'utf8'),
+    findConsumerFiles(root).map((file) => readFileSync(join(root, file), 'utf8')),
+  );
+  if (unused.length > 0) {
+    failed = true;
+    console.error(`[css-tokens] ${unused.length} @theme token(s) with no consumer:`);
+    for (const token of unused) console.error(`  ✗ app/css/theme.css: ${token}`);
+    console.error('Delete the token, or reference it from CSS, TSX, TS or MDX.');
+  }
   if (stale.length > 0) {
     failed = true;
     console.error(`[css-tokens] ${stale.length} stale allowlist entr(ies) in ${ALLOWLIST_PATH}:`);
@@ -280,7 +435,7 @@ function main(): void {
   }
   if (failed) process.exit(1);
   console.log(
-    '[css-tokens] no raw color literals, z-index values or focus rings outside their tokens.',
+    '[css-tokens] no raw color literals, z-index values or focus rings outside their tokens, and no unused @theme tokens.',
   );
 }
 

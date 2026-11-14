@@ -1,12 +1,10 @@
-@layer components {
+@layer overrides {
   @media print {
     :root {
       color-scheme: light;
       print-color-adjust: exact;
       --color-black: var(--color-print-paper);
       --color-white: var(--color-print-ink);
-      --color-primary-50: var(--color-print-ink);
-      --color-primary-100: var(--color-print-ink);
       --color-primary-200: var(--color-print-ink);
       --color-primary-300: var(--color-print-ink);
       --color-primary-400: var(--color-print-ink);
@@ -21,24 +19,10 @@
       --color-primary-quiet: transparent;
       --color-secondary-950: var(--color-print-paper);
       --color-secondary-900: var(--color-print-paper);
-      --color-secondary-800: var(--color-print-paper);
-      --color-secondary-700: var(--color-print-paper);
-      --color-secondary-600: var(--color-print-rule);
-      --color-secondary-500: var(--color-print-rule);
-      --color-secondary-400: var(--color-print-rule);
-      --color-secondary-300: var(--color-print-rule);
-      --color-secondary-200: var(--color-print-rule);
-      --color-secondary-100: var(--color-print-rule);
-      --color-secondary-50: var(--color-print-rule);
       --color-tertiary-50: var(--color-print-ink);
-      --color-tertiary-100: var(--color-print-ink);
-      --color-tertiary-200: var(--color-print-ink);
       --color-tertiary-300: var(--color-print-ink);
       --color-tertiary-400: var(--color-print-rule);
       --color-tertiary-500: var(--color-print-rule);
-      --color-tertiary-600: var(--color-print-rule);
-      --color-tertiary-700: var(--color-print-paper);
-      --color-tertiary-800: var(--color-print-paper);
       --color-tertiary-900: var(--color-print-paper);
       --color-quinary-500: var(--color-print-ink);
       --color-senary-300: var(--color-print-ink);
@@ -77,7 +61,10 @@
       padding-block-start: var(--space-page-top);
     }
 
-    /* biome-ignore-start lint/complexity/noImportantStyles: Tailwind utilities sit in a later layer than components, so only important declarations keep a glow off the printed page */
+    .reading-view .page-container.page-main {
+      padding-block-start: 0;
+    }
+
     .skip-to-content,
     .desktop-topbar,
     .mobile-title-bar,
@@ -94,18 +81,21 @@
     .crt-mask,
     .crt-noise,
     .crt-flicker,
-    .crt-scan-beam,
+    .crt-scan-beam {
+      display: none;
+    }
+
     body > canvas {
+      /* biome-ignore lint/complexity/noImportantStyles: the rain canvas sets display inline, which outranks every layered declaration that is not important */
       display: none !important;
     }
 
     *,
     *::before,
     *::after {
-      text-shadow: none !important;
-      box-shadow: none !important;
-      transition: none !important;
+      text-shadow: none;
+      box-shadow: none;
+      transition: none;
     }
-    /* biome-ignore-end lint/complexity/noImportantStyles: end of the block that must outrank utilities */
   }
 }

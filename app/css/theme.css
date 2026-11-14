@@ -1,3 +1,6 @@
+@custom-variant motion-off (body[data-motion="reduce"] &);
+@custom-variant motion-on (body:not([data-motion="reduce"]) &);
+
 @theme {
   --color-text: var(--color-tertiary-50);
   --color-text-secondary: #a1b3a1;
@@ -149,8 +152,6 @@
   --radius-none: 0;
   --radius-control: 2px;
 
-  --color-primary-50: #eafff0;
-  --color-primary-100: #c4ffd8;
   --color-primary-200: #8ff2b2;
   --color-primary-300: #5ae07b;
   --color-primary-400: #4ade80;
@@ -168,27 +169,13 @@
   --color-primary-faint: #00ff411f;
   --color-primary-quiet: #00ff411a;
 
-  --color-secondary-50: #e8e8e8;
-  --color-secondary-100: #cfcfcf;
-  --color-secondary-200: #a8a8a8;
-  --color-secondary-300: #808080;
-  --color-secondary-400: #5c5c5c;
-  --color-secondary-500: #3d3d3d;
-  --color-secondary-600: #262626;
-  --color-secondary-700: #141414;
-  --color-secondary-800: #0a0a0a;
   --color-secondary-900: #050505;
   --color-secondary-950: #000000;
 
   --color-tertiary-50: #e6ffe6;
-  --color-tertiary-100: #dbf2db;
-  --color-tertiary-200: #c4d9c4;
   --color-tertiary-300: #a9bda9;
   --color-tertiary-400: #8a9d8a;
   --color-tertiary-500: #6b7c6b;
-  --color-tertiary-600: #515f51;
-  --color-tertiary-700: #3a463a;
-  --color-tertiary-800: #262f26;
   --color-tertiary-900: #161b16;
 
   --color-quinary-500: #febc2e;

@@ -61,7 +61,6 @@ const PAIRS = [
   ['primary-700', 'secondary-950', 4.5, 'site map links on base'],
   ['primary-700', 'secondary-900', 4.5, 'site map links on card'],
   ['primary-300', 'secondary-950', 4.5, 'faint text on base'],
-  ['secondary-200', 'secondary-950', 4.5, 'secondary-200 meta/label text on base'],
   ['tertiary-50', 'secondary-950', 4.5, 'tertiary-50 foreground title text on base'],
   ['primary-500', 'secondary-950', 3.0, 'signal on base (large text)'],
   ['tertiary-50', 'secondary-900', 4.5, 'body text on shell'],
