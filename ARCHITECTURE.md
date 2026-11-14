@@ -306,7 +306,7 @@ components/OptimizedImage/             # server component: next/image getImagePr
 components/PageMain/                   # main landmark and MAIN_CONTENT_ID for every route
 design-system/index.ts                  # public barrel: Badge, Button, CmdLine, KbdKey, NavItem, Panel, StatTile, TerminalPanel, WindowChrome
 design-system/components/BrandIcon/     # the brand mark SVG, imported by BrandLink
-design-system/components/Field/         # the one client primitive: labelled form field used by ContactForm
+design-system/components/Field/         # server component: labelled form field used by ContactForm
 design-system/components/Panel/         # the .panel frame (marker, h3 title, optional action) shared by About and Contact
 components/ErrorBoundary/              # client error boundary
 components/ErrorPages/                 # 404/500 bodies inside SiteShell, focused heading, error reference
@@ -400,7 +400,7 @@ content/ask-facts.ts                  # facts about Erik the ask prompt states (
 lib/agent/                            # agent-readiness helpers (MCP tools)
 lib/ask/                              # system prompt builder, model const, anti-abuse; preflight.ts (every check before a model call) and stream.ts (model call, pump, settlement) that app/api/ask/route.ts composes
 lib/mdx/                              # MDX remark/recma plugins for /design-system docs
-lib/server/                           # server-only utilities (route-handler factory; cron-auth.ts bearer check for the cron routes; rate-limit-guard.ts withRateLimit wrapper; body-limit.ts withBodyLimit wrapper; rate-limit-key.ts clientRateLimitKey, the only producer of the branded RateLimitIdentifier every client limiter takes; fetch-metadata.ts isCrossSiteRequest, the Sec-Fetch-Site gate defineHandler runs first; read-body.ts bounded body read after the limiter; after-response.ts after() wrapper for post-response work)
+lib/server/                           # server-only utilities (route-handler factory; cron-auth.ts bearer check for the cron routes; rate-limit-guard.ts withRateLimit wrapper; body-limit.ts withBodyLimit wrapper; rate-limit-key.ts clientRateLimitKey, the only producer of the branded RateLimitIdentifier every client limiter takes; request-locale.ts localeFromRequest, the page locale from the x-site-locale header; fetch-metadata.ts isCrossSiteRequest, the Sec-Fetch-Site gate defineHandler runs first; read-body.ts bounded body read after the limiter; after-response.ts after() wrapper for post-response work)
 lib/env.ts                            # typed, format-validating env accessor
 lib/ask-metrics.ts                    # reads ask:eval:latest for the Measured module
 lib/eval/                             # eval harness core shared by ask-eval and agent-eval: judge, calibration, grading, fact sheet, cost and budget, Redis publish gate
@@ -414,7 +414,7 @@ lib/script-literal.ts                 # safe JS string literal for inline script
 lib/with-timeout.ts                   # bounded Redis read for server rendering
 lib/ascii-bar.ts                      # ASCII progress bar string
 lib/motion-bootstrap.ts               # the pre-paint script that sets body[data-motion]
-lib/ask-log.ts                        # KV interaction log per /api/ask request that reaches the model; lib/ask/refusal-count.ts counts refused asks per day; lib/ask/guard-count.ts counts output-guard findings per day
+lib/ask-log.ts                        # KV interaction log per /api/ask request that reaches the model; lib/ask/refusal-count.ts counts refused asks per day; lib/ask/guard-count.ts counts output-guard findings per day; both delegate to lib/ask/daily-counter.ts
 lib/boot-animation.ts                 # boot line builders; the sequence text comes from content/hero-client.ts
 lib/typewriter.ts                     # one type, hold and erase loop (runPhraseLoop, typeOut) and createPauseControl
 lib/use-copy-feedback.client.ts       # clipboard state for every copy button
@@ -422,7 +422,8 @@ lib/media-queries.ts                  # MOBILE_QUERY, isMobileViewport(), watchM
 lib/json-ld.ts                        # serializeJsonLd, the only JSON-LD serializer
 lib/defer-props.ts                    # deferred-section class and marker
 lib/breakpoint.ts                     # viewport breakpoint constants
-lib/time.ts                           # time-unit constants and the two-digit clock pad shared by lib and components
+lib/http-status.ts                    # HTTP_STATUS, the status codes the routes answer with
+lib/time.ts                           # time-unit constants, the two-digit clock pad and utcDay (the UTC YYYY-MM-DD string) shared by lib and components
 lib/contact-validation.ts             # server-only ContactSchema, shared limits export, honeypot check
 lib/contact-delivery.ts               # shared Resend configuration and 10s send timeout
 lib/contact-outbox.ts                 # ordered pending ids and retry attempt counters
@@ -444,6 +445,7 @@ lib/section-spy.ts                   # section id to element resolution (mobile 
 lib/slider.ts                         # sliderValueForKey and percentAlong for the DAW sliders
 lib/meter.ts                          # meterSegmentState, the VU clip rule shared by the live and static meters
 lib/post-json.ts                      # postJson, a JSON POST with an abort deadline
+lib/dom/has-modifier.ts               # hasModifier, the one modifier-key check for keyboard handlers
 lib/dom/is-rendered.ts                # isRendered, shared by the drawer and the footer reboot
 lib/dom/isolate.ts                    # isolate, marks every sibling outside a subtree inert and returns the undo function
 lib/rate-limit.ts                     # Upstash sliding-window + budget reserve/settle; client bucket is the IPv4 or IPv6 /64; rl:lighthouse and the rl:errlog:day global cap

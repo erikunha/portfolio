@@ -104,7 +104,7 @@ Module headers use CSS scroll-driven typing with a stepped text reveal and caret
 
 ## The design system
 
-Eleven primitives in `design-system/components/` (ten server components, one client); **nine exported** from `design-system/index.ts` (`Field` uses a direct import in `ContactForm` and the docs; `BrandIcon` is imported by path, because a barrel export kept its path data in the client chunks of seven routes and pushed `/` past the first-load budget). The docs also provide the client `CopyButton` under `app/(en)/design-system/_components/`.
+Eleven primitives in `design-system/components/` (all server components); **nine exported** from `design-system/index.ts` (`Field` uses a direct import in `ContactForm` and the docs; `BrandIcon` is imported by path, because a barrel export kept its path data in the client chunks of seven routes and pushed `/` past the first-load budget). The docs also provide the client `CopyButton` under `app/(en)/design-system/_components/`.
 
 | Primitive       | Type       | Variant surface                                                                |
 | --------------- | ---------- | ------------------------------------------------------------------------------ |
@@ -112,7 +112,7 @@ Eleven primitives in `design-system/components/` (ten server components, one cli
 | `BrandIcon`     | RSC        | inline SVG brand mark, `size` px wide, `currentColor` fill, `aria-hidden`      |
 | `Button`        | RSC        | polymorphic `as: button｜a`, `variant: primary｜secondary`, `size: sm｜md｜lg` |
 | `CmdLine`       | RSC        | terminal command line (`user`, `command`, `output`, `prompt`)                  |
-| `Field`         | **client** | input/textarea + label + error/ARIA (not exported)                             |
+| `Field`         | RSC        | input/textarea + label + error/ARIA (not exported)                             |
 | `KbdKey`        | RSC        | `size: sm｜md`                                                                 |
 | `NavItem`       | RSC        | navigation link with `current` state and decorative `index`                    |
 | `Panel`         | RSC        | framed section panel, `as: div｜section｜aside`, marker, `h3` title, optional action |

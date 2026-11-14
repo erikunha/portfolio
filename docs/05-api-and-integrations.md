@@ -43,6 +43,8 @@ Contact delivery also uses `202 { ok: false, requestId, error: { code: 'queued',
 
 `/api/contact-retry` returns `{ ok: true, requestId, data: { sent, failed, expired, exhausted } }` with a matching `X-Request-Id` header.
 
+Routes answer with the codes in `HTTP_STATUS` (`lib/http-status.ts`) and read the page language from the `x-site-locale` header (`SITE_LOCALE_HEADER` in `lib/stream-protocol.ts`) through `localeFromRequest` (`lib/server/request-locale.ts`), which falls back to English for an unknown value.
+
 Every body-reading POST route reads its body only after the cross-site check and the rate limiter admit the request, through `readBoundedBody` (`lib/server/read-body.ts`), and answers `413 payload_too_large` past its cap. `defineHandler` takes the cap as `maxBodyBytes`, `/api/ask` reads inside its handler, and `/api/mcp` wraps `withBodyLimit` inside `withRateLimit`. The caps: 8192 bytes for `/api/ask`, 16384 for `/api/contact`, 32768 for `/api/log`, 1024 for `/api/log/forget` and 4096 for `/api/mcp`. `/api/csp-report` never reads its body, so it has no cap. Both cron routes check the `CRON_SECRET` bearer through `isCronAuthorized` (`lib/server/cron-auth.ts`), a constant-time digest comparison. The links feed sends the YouTube key in the `x-goog-api-key` header, never in the URL.
 
 `/api/mcp` delegates GET and POST to `createMcpHandler`. POST has a 4096-byte body limit, and `maxSubscriptions: 0` configures stateless operation. Every request passes a per-IP limit (`getMcpLimit`, 60 a minute, fail-open) before the body is read, so `get_profile` is limited too. `ask_erik` additionally shares the ask limits and spend budget. Both tools declare `annotations` (`get_profile` is read-only, idempotent and closed-world, so clients can skip confirmation; `ask_erik` writes an ask-log row and calls a model). `get_profile` also declares an `outputSchema` (`HiringProfileSchema`) and returns `structuredContent` next to the JSON text block for older clients.
@@ -122,7 +124,7 @@ flowchart LR
 | `output-guard.ts`   | **Layer 1** streaming guard (per-chunk leak/runaway scan, abort→sentinel, cross-chunk-seam safe) + **Layer 2** post-hoc audit; both **fail-open**                                              |
 | `usage.ts`          | `countAskTokens` turns the SDK usage into billed input, cache read, cache write and output counts; `emitAskUsage` and `onAskUsage` let the eval harness meter a run in-process                  |
 | `redact-pii.ts`     | `redactPii` replaces email addresses and phone numbers with placeholders before `lib/ask-log.ts` stores a question or answer (cut to 500 and 1000 characters; 90-day TTL)                       |
-| `guard-count.ts`, `refusal-count.ts` | per-day Redis counters `ask:guard:{date}:{kind}` and `ask:refused:{date}:{status}` (32-day TTL), so guard findings and refusals are readable without grepping logs                  |
+| `guard-count.ts`, `refusal-count.ts` | per-day Redis counters `ask:guard:{date}:{kind}` and `ask:refused:{date}:{status}` (32-day TTL), both through `incrementDailyCounter` in `daily-counter.ts`, so guard findings and refusals are readable without grepping logs                  |
 
 `lib/ask-metrics.ts` reads `ask:eval:latest` for the Measured section; the eval harness that writes it is in doc 06.
 
