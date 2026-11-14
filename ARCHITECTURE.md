@@ -457,11 +457,11 @@ lib/cn.ts                             # className join helper
 
 app/css/theme.css                     # @theme { palette, glow stops, typography vars }
 app/css/base.css                      # @layer base { resets, focus-visible, skip-to-content, the rounded line box }
-app/css/print.css                     # @media print: ink-on-paper palette, hidden chrome, CRT layers and rain
+app/css/print.css                     # @layer overrides, @media print: ink-on-paper palette, hidden chrome, CRT layers and rain
 app/css/components-panel.css          # the .panel frame rules (panel-head, panel-title, panel-marker), imported before the section partials that scope onto them
 app/css/components-hero.css           # one of the @layer components partials (components-<section>.css), imported in cascade order
-app/globals.css                       # entry: @import "tailwindcss" + theme/base/components; the @import order is the cascade order
-app/css/home.css                      # home-only entry imported by SiteHome: the home section partials, then forced-colors.css again; loads after globals.css
+app/globals.css                       # entry: layer order (theme, base, components, utilities, overrides), then @import "tailwindcss" + theme/base/components; the @import order is the cascade order within a layer
+app/css/home.css                      # home-only entry imported by SiteHome: the home section partials; loads after globals.css
 
 public/fonts/                         # JetBrains Mono self-hosted
 public/images/                        # static images (avatar, guitar live photo)
