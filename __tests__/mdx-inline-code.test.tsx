@@ -12,7 +12,7 @@ describe('MDX inline code', () => {
 
   it('offers a break opportunity only after an underscore', () => {
     const { container } = render(<Code>{IDENTIFIER}</Code>);
-    const pieces = [...(container.querySelector('code')?.childNodes ?? [])].map((node) =>
+    const pieces = [...(container.querySelector('code > span')?.childNodes ?? [])].map((node) =>
       node.nodeName === 'WBR' ? '|' : node.textContent,
     );
     expect(pieces.join('')).toBe('MOBILE_|BREAKPOINT_|PX');
