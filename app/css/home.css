@@ -9,5 +9,4 @@
 @import "./components-footer.css";
 @import "./components-hero.css";
 @import "./components-about.css";
-@import "./forced-colors.css";
 @reference "../globals.css";

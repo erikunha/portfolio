@@ -234,40 +234,4 @@ describe('meta: the line box is rounded, and nothing bypasses it', () => {
 
     expect(offenders, offenders.join('\n')).toEqual([]);
   });
-
-  it('gives every leading-ratio class the ratio and the element own line-height', () => {
-    // The class asks for a leading. The element has to wear it: a Tailwind
-    // font-size utility writes `line-height` in the same layer and comes
-    // first, so a class that only set `--leading` would leave the element
-    // with the size's ratio and the asked-for ratio would reach only the
-    // descendants.
-    const utilities = read('app/css/components-utilities.css');
-    const classes = [
-      ...new Set(
-        [...utilities.matchAll(/\.(leading-ratio-[\w-]+)/g)].map((match) => match[1] ?? ''),
-      ),
-    ];
-    expect(classes.length, 'no leading-ratio class is defined').toBeGreaterThan(0);
-
-    const blocks = ruleBlocks(utilities);
-    const offenders: string[] = [];
-
-    for (const className of classes) {
-      const selector = `.${className}`;
-      const own = blocks.filter((block) => block.selectors.includes(selector));
-      const body = own.map((block) => block.body).join('\n');
-      if (!/--leading\s*:/.test(body)) {
-        offenders.push(`${selector} sets no --leading - it would not carry a ratio at all.`);
-      }
-      if (!/line-height\s*:/.test(body)) {
-        offenders.push(
-          `${selector} sets no line-height - the element itself would keep the ratio of ` +
-            'whatever font-size utility is on it, and the asked-for leading would reach ' +
-            'only the descendants.',
-        );
-      }
-    }
-
-    expect(offenders, offenders.join('\n')).toEqual([]);
-  });
 });

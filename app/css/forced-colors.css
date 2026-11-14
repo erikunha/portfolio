@@ -1,12 +1,12 @@
 @media (forced-colors: active) {
-  :root {
-    --forced-state-width: 3px;
-    --forced-hairline: 1px;
-    --forced-focus-offset: 2px;
-    --forced-grid-dash: 1 4;
-  }
+  @layer overrides {
+    :root {
+      --forced-state-width: 3px;
+      --forced-hairline: 1px;
+      --forced-focus-offset: 2px;
+      --forced-grid-dash: 1 4;
+    }
 
-  @layer components {
     .crt-vignette,
     .crt-scanlines,
     .crt-mask,
@@ -141,6 +141,9 @@
 
     .ctz-cell {
       background: Canvas;
+    }
+
+    .ctz-cell:not([data-now]) {
       outline: var(--forced-hairline) solid GrayText;
       outline-offset: calc(-1 * var(--forced-hairline));
     }
@@ -189,65 +192,63 @@
       stroke: GrayText;
     }
 
-    /* biome-ignore-start lint/complexity/noImportantStyles: Tailwind utilities sit in a later layer than components, so only important declarations here keep the state marks and the focus ring on every control */
     :focus-visible {
-      outline: var(--forced-state-width) solid Highlight !important;
-      outline-offset: var(--forced-focus-offset) !important;
+      outline: var(--forced-state-width) solid Highlight;
+      outline-offset: var(--forced-focus-offset);
     }
 
     .shell-input:focus-visible {
-      outline: var(--forced-state-width) solid Highlight !important;
-      outline-offset: calc(-1 * var(--forced-state-width)) !important;
+      outline: var(--forced-state-width) solid Highlight;
+      outline-offset: calc(-1 * var(--forced-state-width));
     }
 
     .btn[data-variant="primary"] {
-      border-style: double !important;
-      border-width: var(--forced-state-width) !important;
+      border-style: double;
+      border-width: var(--forced-state-width);
       font-weight: 700;
     }
 
     .btn[aria-current] {
-      border-color: Highlight !important;
-      border-style: double !important;
-      border-width: var(--forced-state-width) !important;
-      text-decoration-line: underline !important;
+      border-color: Highlight;
+      border-style: double;
+      border-width: var(--forced-state-width);
+      text-decoration-line: underline;
     }
 
     [aria-pressed="true"] {
-      border-color: Highlight !important;
-      border-width: var(--forced-state-width) !important;
+      border-color: Highlight;
+      border-width: var(--forced-state-width);
       text-decoration-line: underline;
     }
     .meter-fill {
-      background: Highlight !important;
+      background: Highlight;
     }
 
     .meter-dim {
-      background: transparent !important;
-      outline: var(--forced-hairline) dotted ButtonText !important;
-      outline-offset: calc(-1 * var(--forced-hairline)) !important;
-      opacity: 1 !important;
+      background: transparent;
+      outline: var(--forced-hairline) dotted ButtonText;
+      outline-offset: calc(-1 * var(--forced-hairline));
+      opacity: 1;
     }
 
     .meter-alert {
-      background: CanvasText !important;
+      background: CanvasText;
     }
 
     .status-battery::after {
-      background: ButtonText !important;
+      background: ButtonText;
     }
 
     .window-chrome [data-dot="red"] {
-      background: CanvasText !important;
+      background: CanvasText;
     }
 
     .window-chrome [data-dot="yellow"] {
-      background: Canvas !important;
+      background: Canvas;
     }
 
     .window-chrome [data-dot="green"] {
-      background: Highlight !important;
+      background: Highlight;
     }
-    /* biome-ignore-end lint/complexity/noImportantStyles: end of the block that must outrank utilities */
   }
 }
