@@ -1,7 +1,9 @@
 import { expect, type Page } from '@playwright/test';
 import { settleFrames } from './geometry';
+import { waitForHydration } from './hydration';
 
 export const TO_TOP_NUDGE_PX = 16;
+const TO_TOP_SELECTOR = '.to-top-btn';
 const WHEEL_UNSUPPORTED = /not supported/i;
 
 export async function scrollByInput(page: Page, deltaPx: number): Promise<void> {
@@ -17,7 +19,8 @@ export async function scrollByInput(page: Page, deltaPx: number): Promise<void> 
 }
 
 export async function revealToTop(page: Page, deltaPx = TO_TOP_NUDGE_PX): Promise<void> {
+  await waitForHydration(page, TO_TOP_SELECTOR);
   await settleFrames(page);
   await page.evaluate((by) => window.scrollBy(0, -by), deltaPx);
-  await expect(page.locator('.to-top-btn')).toHaveClass(/to-top-show/);
+  await expect(page.locator(TO_TOP_SELECTOR)).toHaveClass(/to-top-show/);
 }
