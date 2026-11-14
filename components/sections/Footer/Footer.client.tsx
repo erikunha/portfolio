@@ -3,6 +3,7 @@
 import { type ReactNode, useCallback, useEffect, useRef } from 'react';
 import { MAIN_CONTENT_ID } from '@/components/PageMain';
 import type { FooterContent } from '@/content/schemas';
+import { hasModifier } from '@/lib/dom/has-modifier';
 import { isRendered } from '@/lib/dom/is-rendered';
 import { SHELL_COMMAND_EVENT } from '@/lib/events';
 import { useLastRef } from '@/lib/request-refs.client';
@@ -161,15 +162,7 @@ export function RebootControl({ copy }: { copy: FooterContent['reboot'] }) {
     if (!scope) return;
     const onKeyDown = (event: Event) => {
       if (!(event instanceof KeyboardEvent)) return;
-      if (
-        event.defaultPrevented ||
-        event.repeat ||
-        event.altKey ||
-        event.ctrlKey ||
-        event.metaKey ||
-        event.shiftKey
-      )
-        return;
+      if (event.defaultPrevented || event.repeat || hasModifier(event)) return;
       if (event.target instanceof Element && event.target.closest(EDITABLE_SELECTOR)) return;
       if (event.key.toLowerCase() !== copy.key.toLowerCase()) return;
       if (reboot()) event.preventDefault();

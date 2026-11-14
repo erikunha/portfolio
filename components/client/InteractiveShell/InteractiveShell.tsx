@@ -12,6 +12,7 @@ import {
 } from '@/content/shell-ui';
 import type { SiteLocale } from '@/content/site-locale';
 import { forgetInFlight } from '@/lib/ask-conversation.client';
+import { hasModifier } from '@/lib/dom/has-modifier';
 import { SHELL_COMMAND_EVENT } from '@/lib/events';
 import { useBreakpoint } from '@/lib/use-breakpoint.client';
 import { TerminalChromeBar } from '../TerminalChromeBar';
@@ -27,7 +28,6 @@ import { usePrivacyCommands } from './usePrivacyCommands';
 
 const COMMAND_FIELD = 'command';
 const COMPOSITION_KEYCODE = 229;
-const WINDOW_DOT_SIZE = 10;
 const STREAM_CARET = '█';
 
 export function InteractiveShell({
@@ -229,12 +229,7 @@ export function InteractiveShell({
         stopStream();
       }}
     >
-      <TerminalChromeBar
-        chrome={chrome}
-        className="shell-chrome"
-        tagClassName="shell-chrome-tag"
-        dotSize={WINDOW_DOT_SIZE}
-      />
+      <TerminalChromeBar chrome={chrome} className="shell-chrome" tagClassName="shell-chrome-tag" />
       <div {...SHELL_LIVE_PROPS}>
         <div className="shell-feed-wrap">
           <div
@@ -327,10 +322,7 @@ export function InteractiveShell({
                 }
                 if (
                   event.nativeEvent.isComposing ||
-                  event.altKey ||
-                  event.ctrlKey ||
-                  event.metaKey ||
-                  event.shiftKey ||
+                  hasModifier(event) ||
                   (event.key !== ShellKey.Up && event.key !== ShellKey.Down)
                 ) {
                   return;

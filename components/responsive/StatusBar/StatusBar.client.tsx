@@ -46,9 +46,7 @@ export function StatusBar() {
       aria-hidden="true"
     >
       <div className="flex items-center gap-2">
-        <span className="text-primary-500 font-bold" suppressHydrationWarning>
-          {time}
-        </span>
+        <span className="text-primary-500 font-bold">{time}</span>
         <span className="text-tertiary-50 opacity-85">DEV_OS</span>
       </div>
       <div className="inline-flex items-center gap-1.5" aria-hidden>

@@ -15,6 +15,7 @@ import {
 } from 'react';
 import type { NavigationCopy, SiteNavChrome } from '@/content/navigation';
 import type { SiteLocale } from '@/content/site-locale';
+import { hasModifier } from '@/lib/dom/has-modifier';
 import { isRendered } from '@/lib/dom/is-rendered';
 import { applyMotion, readMotion } from '@/lib/motion';
 import { HOME_SECTION_ID, observeSections } from '@/lib/section-spy';
@@ -145,8 +146,7 @@ export function SectionNavigationProvider({
 
   const jump = useCallback(
     (event: MouseEvent<HTMLElement>, id: string) => {
-      const { defaultPrevented, button, metaKey, ctrlKey, shiftKey, altKey } = event;
-      if (defaultPrevented || button || metaKey || ctrlKey || shiftKey || altKey) return;
+      if (event.defaultPrevented || event.button || hasModifier(event)) return;
       if (!jumpTarget(id)) return;
       event.preventDefault();
       if (store.get().drawerOpen) {

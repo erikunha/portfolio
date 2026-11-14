@@ -2,6 +2,7 @@
 
 import { useRef, useState } from 'react';
 import type { ShellUi } from '@/content/shell-ui';
+import { hasModifier } from '@/lib/dom/has-modifier';
 import { ShellKey } from './shell-keys';
 
 function roveTarget(key: string, index: number, count: number): number | null {
@@ -51,7 +52,7 @@ export function ShellToolbar({
           onFocus={() => setToolbarIndex(index)}
           onClick={() => onActivate(command)}
           onKeyDown={(event) => {
-            if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
+            if (hasModifier(event)) return;
             const target = roveTarget(event.key, index, ui.commands.length);
             if (target === null) return;
             event.preventDefault();

@@ -1,5 +1,3 @@
-'use client';
-
 import { type InputHTMLAttributes, type TextareaHTMLAttributes, useId } from 'react';
 import { cn } from '@/lib/cn';
 

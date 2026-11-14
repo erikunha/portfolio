@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, '..');
 
-const SCAN_DIRS = ['app', 'components', 'lib'];
+const SCAN_DIRS = ['app', 'components', 'lib', 'design-system'];
 const NEXT_CLIENT_CONVENTION_FILES = /^app\/((.+\/)?error|global-error)\.tsx$/;
 const SKIP_NAMES = new Set(['node_modules', '.next', '.git', 'dist', 'out', '.vercel']);
 
