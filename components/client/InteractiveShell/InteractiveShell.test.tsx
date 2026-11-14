@@ -1,6 +1,6 @@
 import { within } from '@testing-library/react';
 import { act, createElement } from 'react';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, vi } from 'vitest';
 import {
   fire,
   flushFrames,
@@ -8,6 +8,7 @@ import {
   type MountedClient,
   mountClient,
 } from '@/__tests__/helpers/render';
+import { it, settleTestBodies } from '@/__tests__/helpers/settled-it';
 import { shellUi } from '@/content/shell-ui';
 import { SITE_LOCALE, type SiteLocale } from '@/content/site-locale';
 import { shellChrome } from '@/content/terminal-chrome';
@@ -20,6 +21,12 @@ vi.mock('@/lib/use-breakpoint.client', () => ({
 vi.mock('@/lib/motion', () => ({
   readMotion: () => false,
 }));
+
+const MODULE_WARMUP_TIMEOUT_MS = 30_000;
+
+beforeAll(async () => {
+  await Promise.all([import('./InteractiveShell'), import('react-dom/client')]);
+}, MODULE_WARMUP_TIMEOUT_MS);
 
 function streamingResponse(chunks: string[]): Response {
   const enc = new TextEncoder();
@@ -65,7 +72,8 @@ describe('InteractiveShell streaming behavior', () => {
     vi.resetModules();
   });
 
-  afterEach(() => {
+  afterEach(async () => {
+    await settleTestBodies();
     mounted?.unmount();
     vi.restoreAllMocks();
     vi.unstubAllGlobals();
@@ -198,7 +206,8 @@ describe('shell feed accessibility', () => {
     vi.resetModules();
   });
 
-  afterEach(() => {
+  afterEach(async () => {
+    await settleTestBodies();
     mounted?.unmount();
     vi.restoreAllMocks();
     vi.unstubAllGlobals();
@@ -274,7 +283,8 @@ describe('InteractiveShell multi-turn history', () => {
     vi.resetModules();
   });
 
-  afterEach(() => {
+  afterEach(async () => {
+    await settleTestBodies();
     mounted?.unmount();
     vi.restoreAllMocks();
     vi.unstubAllGlobals();
@@ -378,7 +388,8 @@ describe('InteractiveShell r106 controls', () => {
     mobileViewport.value = false;
   });
 
-  afterEach(() => {
+  afterEach(async () => {
+    await settleTestBodies();
     mounted?.unmount();
     vi.restoreAllMocks();
     vi.unstubAllGlobals();
@@ -1028,7 +1039,8 @@ describe('shell input hint states', () => {
     mobileViewport.value = false;
   });
 
-  afterEach(() => {
+  afterEach(async () => {
+    await settleTestBodies();
     mounted?.unmount();
     vi.restoreAllMocks();
     vi.unstubAllGlobals();
@@ -1110,7 +1122,8 @@ describe('InteractiveShell stream states', () => {
     mobileViewport.value = false;
   });
 
-  afterEach(() => {
+  afterEach(async () => {
+    await settleTestBodies();
     vi.useRealTimers();
     mounted?.unmount();
     vi.restoreAllMocks();
@@ -1549,7 +1562,8 @@ describe('InteractiveShell failure copy', () => {
     vi.resetModules();
   });
 
-  afterEach(() => {
+  afterEach(async () => {
+    await settleTestBodies();
     mounted?.unmount();
     vi.restoreAllMocks();
     vi.unstubAllGlobals();
