@@ -7,7 +7,7 @@ const MEASURE_PAGE = 1200;
 const PAGE_TOP_PHONE = 32;
 const SPACE_SECTION_PHONE = 32;
 const SPACE_SECTION_TABLET = 48;
-const LEADING_TOKENS = ['1.1', '1.35', '1.6'];
+const LEADING_TOKENS = ['1.6'];
 
 const contentLeft = (page: Page, selector: string) =>
   page
@@ -170,9 +170,7 @@ test.describe('layout tokens', () => {
     await page.goto('/');
     const tokens = await page.evaluate(() => {
       const style = getComputedStyle(document.documentElement);
-      return ['--leading-page-tight', '--leading-page-snug', '--leading-body'].map((name) =>
-        style.getPropertyValue(name).trim(),
-      );
+      return ['--leading-body'].map((name) => style.getPropertyValue(name).trim());
     });
     expect(tokens).toEqual(LEADING_TOKENS);
   });

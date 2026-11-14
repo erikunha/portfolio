@@ -95,7 +95,7 @@ const ruleBlocks = (source: string): { selectors: string[]; body: string }[] => 
 
 // Tailwind's own leading utilities. `leading-ratio-*` is the site's own
 // class and is deliberately not in this list. The lookbehind keeps the
-// custom properties (`--leading-body`, `--leading-page-tight`) out of it:
+// custom property (`--leading-body`) out of it:
 // those are tokens, not class names, and Tailwind does not generate a
 // utility out of a token.
 const TAILWIND_LEADING = /(?<![-\w])leading-(?!ratio-)[\w[\].-]+/g;

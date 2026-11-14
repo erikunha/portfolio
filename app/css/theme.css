@@ -66,7 +66,6 @@
   --phi-space-2: calc(var(--phi-space-1) * var(--phi));
   --phi-space-3: calc(var(--phi-space-2) * var(--phi));
   --phi-space-4: calc(var(--phi-space-3) * var(--phi));
-  --phi-text-1: calc(var(--text-xs) * var(--phi-root));
   --phi-pair-columns: minmax(0, 1.618fr) minmax(0, 1fr);
   --phi-pair-columns-minor-first: minmax(0, 1fr) minmax(0, 1.618fr);
   --phi-pair-flex-minor: 0 0 calc((1 - var(--phi-inv)) * 100%);
@@ -207,9 +206,7 @@
   --color-glow-02: rgba(0, 255, 65, 0.02);
   --color-glow-03: rgba(0, 255, 65, 0.03);
   --color-glow-04: rgba(0, 255, 65, 0.04);
-  --color-glow-05: rgba(0, 255, 65, 0.05);
   --color-glow-06: rgba(0, 255, 65, 0.06);
-  --color-glow-15: rgba(0, 255, 65, 0.15);
   --color-glow-18: rgba(0, 255, 65, 0.18);
   --color-glow-25: rgba(0, 255, 65, 0.25);
   --color-glow-30: rgba(0, 255, 65, 0.3);
@@ -235,8 +232,6 @@
     --color-rain-head: var(--color-primary-800);
     --color-rain-body: var(--color-primary-900);
     --rain-tail-alpha: 0.1;
-    --leading-page-tight: 1.1;
-    --leading-page-snug: 1.35;
     --type-reveal-char-duration: 28ms;
     --type-reveal-max-duration: 1.4s;
     --type-reveal-caret-width: 0.6ch;
