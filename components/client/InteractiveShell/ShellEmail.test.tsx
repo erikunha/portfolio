@@ -16,7 +16,7 @@ describe('ShellEmail', () => {
 
   it('offers a line break after the at sign and nowhere else in the address', () => {
     const { container } = render(<ShellEmail ui={ui} />);
-    const pieces = [...(container.querySelector('a')?.childNodes ?? [])].map((node) =>
+    const pieces = [...(container.querySelector('a > span')?.childNodes ?? [])].map((node) =>
       node.nodeName === 'WBR' ? '|' : node.textContent,
     );
     expect(pieces.join('')).toBe(ui.email.replace('@', '@|'));
