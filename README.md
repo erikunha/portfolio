@@ -41,7 +41,7 @@ The terminal homepage is complemented by `/summary`, `/cv`, `/links` (pt-BR), `/
 | Vercel AI Gateway + Anthropic Haiku 5.5 | Streaming `/api/ask` with prompt caching and cost tracking                                                                                                |
 | Upstash Redis                           | Rate limiting, budget cap, KV interaction log                                                                                                             |
 | Tailwind v4 (via PostCSS)               | Utility-first styling; design tokens authored in `app/css/theme.css` under `@theme {}`. No CSS Modules, no Style Dictionary, no build-time token pipeline |
-| Design system (`/design-system`)        | 11 components (10 server-compatible; Field is client), docs CopyButton helper, `@theme` tokens and live docs                                               |
+| Design system (`/design-system`)        | 11 components (all server-compatible), docs CopyButton helper, `@theme` tokens and live docs                                               |
 | Biome                                   | Lint + format in a single Rust binary                                                                                                                     |
 | Vitest + Playwright                     | Unit (80% lines, 70% branches) + E2E across eight Playwright projects + axe-core a11y CI suite + Argos visual diffs                                    |
 | Lighthouse CI                           | LCP, TBT, CLS and the category scores gated on the 24 routes the Lighthouse config lists (performance ≥95 desktop / ≥90 mobile, accessibility and SEO = 100, best practices ≥95); INP checked in the browser tests |

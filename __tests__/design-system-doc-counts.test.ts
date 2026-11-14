@@ -30,31 +30,42 @@ function count(): { total: number; client: number; barrel: number } {
 describe('design-system docs state the component counts the directory holds', () => {
   const { total, client, barrel } = count();
   const server = total - client;
+  const allServer = client === 0;
 
   it('README table', () => {
-    expect(read('README.md')).toContain(
-      `${total} components (${server} server-compatible; Field is client)`,
-    );
+    const split = allServer
+      ? 'all server-compatible'
+      : `${server} server-compatible; ${client} client`;
+    expect(read('README.md')).toContain(`${total} components (${split})`);
   });
 
   it('design-system index page', () => {
     // behavioral-test-allow: the docs are the artifact under test; they have no runtime surface and their stated counts must match the component directory
     const page = read('app/(en)/design-system/page.mdx');
     expect(page).toContain(`${total} design-system components`);
-    expect(page).toContain(`${COUNT_WORDS[server]} components have no client directive`);
+    expect(page).toContain(
+      allServer
+        ? 'No design-system component has a client directive'
+        : `${COUNT_WORDS[server]} components have no client directive`,
+    );
   });
 
   it('components gallery page', () => {
     // behavioral-test-allow: the docs are the artifact under test; they have no runtime surface and their stated counts must match the component directory
     const page = read('app/(en)/design-system/components/page.mdx');
     expect(page).toContain(`contains ${COUNT_WORDS[total]?.toLowerCase()} components`);
-    expect(page).toContain(`${COUNT_WORDS[server]} have no client directive`);
+    expect(page).toContain(
+      allServer ? 'None has a client directive' : `${COUNT_WORDS[server]} have no client directive`,
+    );
   });
 
   it('components doc', () => {
+    const split = allServer
+      ? 'all server components'
+      : `${COUNT_WORDS[server]?.toLowerCase()} server components, ${client} client`;
     // behavioral-test-allow: the docs are the artifact under test; they have no runtime surface and their stated counts must match the component directory
     expect(read('docs/04-components-and-state.md')).toContain(
-      `${COUNT_WORDS[total]} primitives in \`design-system/components/\` (${COUNT_WORDS[server]?.toLowerCase()} server components, one client); **${COUNT_WORDS[barrel]?.toLowerCase()} exported**`,
+      `${COUNT_WORDS[total]} primitives in \`design-system/components/\` (${split}); **${COUNT_WORDS[barrel]?.toLowerCase()} exported**`,
     );
   });
 });
