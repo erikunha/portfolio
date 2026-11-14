@@ -10,11 +10,11 @@ import {
   removePendingContact,
 } from '@/lib/contact-outbox';
 import { env } from '@/lib/env';
+import { HTTP_STATUS } from '@/lib/http-status';
 import { log } from '@/lib/log';
 import { isCronAuthorized } from '@/lib/server/cron-auth';
 import { err, ok } from '@/lib/server/route';
 
-const UNAUTHORIZED_STATUS = 401;
 const DROP_REASON = { expired: 'expired', exhausted: 'exhausted' } as const;
 type DropReason = (typeof DROP_REASON)[keyof typeof DROP_REASON];
 
@@ -30,7 +30,7 @@ export async function GET(req: NextRequest): Promise<Response> {
   if (!isCronAuthorized(req, cronSecret)) {
     return err({
       requestId: crypto.randomUUID(),
-      status: UNAUTHORIZED_STATUS,
+      status: HTTP_STATUS.unauthorized,
       code: 'unauthorized',
       message: 'unauthorized',
     });

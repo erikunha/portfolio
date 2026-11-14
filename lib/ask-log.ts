@@ -7,6 +7,7 @@ import { redactPii } from '@/lib/ask/redact-pii';
 import { log } from '@/lib/log';
 import { describeError } from '@/lib/log-error';
 import { getRedis } from '@/lib/rate-limit';
+import { utcDay } from '@/lib/time';
 
 const SECONDS_PER_DAY = 24 * 60 * 60;
 const MS_PER_DAY = SECONDS_PER_DAY * 1000;
@@ -74,7 +75,7 @@ export function storedConversationId(values: readonly unknown[]): string | null 
 export function askLogDatesInTtl(now: Date): string[] {
   const dayCount = Math.ceil(ASK_KV_TTL_S / SECONDS_PER_DAY) + 1;
   return Array.from({ length: dayCount }, (_unused, daysAgo) =>
-    new Date(now.getTime() - daysAgo * MS_PER_DAY).toISOString().slice(0, ISO_DATE_LENGTH),
+    utcDay(new Date(now.getTime() - daysAgo * MS_PER_DAY)),
   );
 }
 

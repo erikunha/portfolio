@@ -11,7 +11,7 @@ import {
 import { localeOfPath } from '@/content/site-locale';
 import { postJson } from '@/lib/post-json';
 import { addRef } from '@/lib/request-refs.client';
-import { ASK_LOCALE_HEADER } from '@/lib/stream-protocol';
+import { SITE_LOCALE_HEADER } from '@/lib/stream-protocol';
 import { FIELD_CHECKS } from './contact-form-checks';
 import { messageStore } from './messageStore';
 
@@ -104,7 +104,7 @@ export function useContactSubmit({
       const { response: res, data } = await postJson<ContactResponse>(
         CONTACT_ENDPOINT,
         { ...values, field_company: honeypot },
-        { headers: { [ASK_LOCALE_HEADER]: pageLocale }, timeoutMs: REQUEST_TIMEOUT_MS },
+        { headers: { [SITE_LOCALE_HEADER]: pageLocale }, timeoutMs: REQUEST_TIMEOUT_MS },
       );
       const apiError = data?.error;
       const ref =

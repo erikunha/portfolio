@@ -169,9 +169,9 @@ describe('/api/ask: cache-hit accounting (STANDARDS.md Ch.7)', () => {
     expect(billedInput).toBe(200 + 0 + 1500);
 
     const completed = logInfoMock.mock.calls.find((c) => c[0] === 'ask completed');
-    const meta = completed?.[1] as { cacheHitRate: number; cacheCreationTokens: number };
+    const meta = completed?.[1] as { cacheHitRate: number; cacheWriteTokens: number };
     expect(meta.cacheHitRate).toBe(0);
-    expect(meta.cacheCreationTokens).toBe(1500);
+    expect(meta.cacheWriteTokens).toBe(1500);
   });
 
   it('reports a zero cacheHitRate when no cache tokens are present', async () => {
@@ -245,10 +245,10 @@ describe('/api/ask: cache-hit accounting (STANDARDS.md Ch.7)', () => {
     const meta = completed?.[1] as {
       usageResolved: boolean;
       cacheReadTokens: number;
-      cacheCreationTokens: number;
+      cacheWriteTokens: number;
     };
     expect(meta.usageResolved).toBe(true);
     expect(meta.cacheReadTokens).toBe(0);
-    expect(meta.cacheCreationTokens).toBe(0);
+    expect(meta.cacheWriteTokens).toBe(0);
   });
 });

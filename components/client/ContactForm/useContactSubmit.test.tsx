@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { contactCopy } from '@/content/contact-copy';
 import { CONTACT_ERROR_CODE, type ContactField } from '@/content/contact-rules';
 import { clearRefs, listRefs } from '@/lib/request-refs.client';
-import { ASK_LOCALE_HEADER } from '@/lib/stream-protocol';
+import { SITE_LOCALE_HEADER } from '@/lib/stream-protocol';
 import { messageStore } from './messageStore';
 import { CONTACT_STATUS, useContactSubmit } from './useContactSubmit';
 
@@ -309,7 +309,7 @@ describe('useContactSubmit', () => {
       const hook = mount();
       await send(hook);
       const [, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit];
-      expect((init.headers as Record<string, string>)[ASK_LOCALE_HEADER]).toBe(locale);
+      expect((init.headers as Record<string, string>)[SITE_LOCALE_HEADER]).toBe(locale);
     });
   });
 

@@ -10,7 +10,7 @@ import { contactCopy } from '@/content/contact-copy';
 import { linksContent } from '@/content/links';
 import { SITE_LOCALE, type SiteLocale } from '@/content/site-locale';
 import { contactChrome } from '@/content/terminal-chrome';
-import { ASK_LOCALE_HEADER } from '@/lib/stream-protocol';
+import { SITE_LOCALE_HEADER } from '@/lib/stream-protocol';
 import { ContactForm } from './ContactForm';
 import { messageStore } from './messageStore';
 
@@ -1264,7 +1264,7 @@ describe('contact form locale header and server message', () => {
   ])('sends the page locale for %s as %s', async (pathname, expected) => {
     const { fetchMock } = await submitAt(pathname, Response.json({ ok: true }, { status: 200 }));
     const init = (fetchMock.mock.calls[0] as unknown as [string, RequestInit])[1];
-    expect((init.headers as Record<string, string>)[ASK_LOCALE_HEADER]).toBe(expected);
+    expect((init.headers as Record<string, string>)[SITE_LOCALE_HEADER]).toBe(expected);
   });
 
   it('words a storage failure from its own copy, not the server message', async () => {

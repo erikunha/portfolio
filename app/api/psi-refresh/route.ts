@@ -2,6 +2,7 @@ import type { NextRequest } from 'next/server';
 import { Resend } from 'resend';
 import { EMAIL_ADDRESS } from '@/content/social-urls';
 import { env } from '@/lib/env';
+import { HTTP_STATUS } from '@/lib/http-status';
 import { refreshScores, type Strategy } from '@/lib/lighthouse-scores';
 import { log } from '@/lib/log';
 import { getRedis } from '@/lib/rate-limit';
@@ -13,8 +14,6 @@ const PSI_CONSEC_TTL_S = 604_800;
 const PSI_ALERT_THRESHOLD = 3;
 const RESEND_ALERT_TIMEOUT_MS = 5_000;
 
-const UNAUTHORIZED_STATUS = 401;
-
 export const maxDuration = 60;
 
 export async function GET(req: NextRequest): Promise<Response> {
@@ -22,7 +21,7 @@ export async function GET(req: NextRequest): Promise<Response> {
   if (!isCronAuthorized(req, cronSecret)) {
     return err({
       requestId: crypto.randomUUID(),
-      status: UNAUTHORIZED_STATUS,
+      status: HTTP_STATUS.unauthorized,
       code: 'unauthorized',
       message: 'unauthorized',
     });
@@ -127,5 +126,7 @@ export async function GET(req: NextRequest): Promise<Response> {
   }
 
   log.info('psi-refresh completed', { durationMs: result.durationMs, anyFailed });
-  return Response.json(result, { status: anyFailed ? 500 : 200 });
+  return Response.json(result, {
+    status: anyFailed ? HTTP_STATUS.internalServerError : HTTP_STATUS.ok,
+  });
 }

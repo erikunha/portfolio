@@ -2,7 +2,7 @@ import { NextRequest } from 'next/server';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { contactContent } from '@/content/contact';
 import { SITE_LOCALE } from '@/content/site-locale';
-import { ASK_LOCALE_HEADER } from '@/lib/stream-protocol';
+import { SITE_LOCALE_HEADER } from '@/lib/stream-protocol';
 
 const TEST_BODY_LIMIT = 4096;
 
@@ -28,7 +28,7 @@ const request = (locale?: string) =>
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      ...(locale === undefined ? {} : { [ASK_LOCALE_HEADER]: locale }),
+      ...(locale === undefined ? {} : { [SITE_LOCALE_HEADER]: locale }),
     },
     body: JSON.stringify(validBody),
   });

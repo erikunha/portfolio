@@ -18,8 +18,8 @@ import {
   formatUnknowns,
 } from '@/lib/ask/ask-fact-format';
 import { formatEmploymentContext, formatEmploymentHighlights } from '@/lib/ask/employment-format';
+import { utcDay } from '@/lib/time';
 
-const ISO_DATE_LENGTH = 10;
 const CURRENT_ROLE_MARKER = 'current role';
 
 export function buildJudgeFactSheet(today: Date): string {
@@ -37,7 +37,7 @@ export function buildJudgeFactSheet(today: Date): string {
     (receipt) => `- ${receipt.metric} ${receipt.delta} ${receipt.company}: ${receipt.note}`,
   );
   return [
-    `Today's date: ${today.toISOString().slice(0, ISO_DATE_LENGTH)}`,
+    `Today's date: ${utcDay(today)}`,
     `Erik lives in: ${profile.city}, ${profile.country} (${profile.timezone})`,
     `Work scope: ${askFacts.openTo}`,
     ...askFacts.targeting,

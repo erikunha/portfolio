@@ -12,3 +12,7 @@ const CLOCK_FIELD_PAD = '0';
 
 export const pad2 = (value: number | string): string =>
   String(value).padStart(CLOCK_FIELD_WIDTH, CLOCK_FIELD_PAD);
+
+const UTC_DAY_LENGTH = 'YYYY-MM-DD'.length;
+
+export const utcDay = (date: Date): string => date.toISOString().slice(0, UTC_DAY_LENGTH);

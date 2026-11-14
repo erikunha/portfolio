@@ -6,7 +6,7 @@ export const GUARD_ABORT_PREFIX = 'output guard: ';
 
 export const REFUSAL_PREFIX = 'refused: ';
 
-export const ASK_LOCALE_HEADER = 'x-site-locale';
+export const SITE_LOCALE_HEADER = 'x-site-locale';
 
 export const REQUEST_ID_HEADER = 'X-Request-Id';
 

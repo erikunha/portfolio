@@ -8,6 +8,7 @@ import {
   getRedis,
 } from '@/lib/rate-limit';
 import { defineHandler, err, ok } from '@/lib/server/route';
+import { utcDay } from '@/lib/time';
 
 const SMOKE_PREFIX = '[smoke]';
 const MAX_LOG_BODY_BYTES = 32_768;
@@ -59,7 +60,7 @@ const handleLog = defineHandler({
     }
 
     const errId = crypto.randomUUID();
-    const today = new Date().toISOString().slice(0, 10);
+    const today = utcDay(new Date());
     const key = `err:${today}:${errId}`;
 
     const record = {

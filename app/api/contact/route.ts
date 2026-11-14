@@ -1,6 +1,6 @@
 import { contactContent } from '@/content/contact';
 import { CONTACT_DELIVERY_CODE, CONTACT_ERROR_CODE } from '@/content/contact-rules';
-import { DEFAULT_SITE_LOCALE, SITE_LOCALES, type SiteLocale } from '@/content/site-locale';
+import { SITE_LOCALES, type SiteLocale } from '@/content/site-locale';
 import { sendContactMessage } from '@/lib/contact-delivery';
 import {
   CONTACT_MESSAGE_TTL_SECONDS,
@@ -10,8 +10,8 @@ import {
 import { ContactSchema, isHoneypotTripped } from '@/lib/contact-validation';
 import { log } from '@/lib/log';
 import { getContactLimit, getRedis } from '@/lib/rate-limit';
+import { localeFromRequest } from '@/lib/server/request-locale';
 import { defineHandler, err, ok } from '@/lib/server/route';
-import { ASK_LOCALE_HEADER } from '@/lib/stream-protocol';
 
 const HONEYPOT_JITTER_MIN_MS = 50;
 const HONEYPOT_JITTER_MAX_MS = 150;
@@ -19,11 +19,6 @@ const HONEYPOT_JITTER_MAX_MS = 150;
 const STORAGE_UNAVAILABLE_STATUS = 502;
 const QUEUED_STATUS = 202;
 const MAX_CONTACT_BODY_BYTES = 16_384;
-
-function requestLocale(req: Request): SiteLocale {
-  const header = req.headers.get(ASK_LOCALE_HEADER);
-  return SITE_LOCALES.find((locale) => locale === header) ?? DEFAULT_SITE_LOCALE;
-}
 
 const handleContact = defineHandler({
   schema: ContactSchema,
@@ -33,7 +28,7 @@ const handleContact = defineHandler({
     SITE_LOCALES.map((locale) => [locale, contactContent[locale].errors.rateLimited]),
   ) as Record<SiteLocale, string>,
   async handler({ body, ipHash, requestId, req }) {
-    const copy = contactContent[requestLocale(req)];
+    const copy = contactContent[localeFromRequest(req)];
     if (isHoneypotTripped(body)) {
       log.info('contact honeypot tripped', { requestId });
       const jitterMs =

@@ -72,7 +72,7 @@ type SettledUsage = {
   billedInputTokens: number;
   outputTokens: number;
   cacheReadTokens: number;
-  cacheCreationTokens: number;
+  cacheWriteTokens: number;
 };
 
 async function withinDeadline<T>(p: Promise<T>): Promise<T | typeof USAGE_TIMED_OUT> {
@@ -266,7 +266,7 @@ export function createAskStream(context: AskContext): AskStream {
         billedInputTokens: 0,
         outputTokens: 0,
         cacheReadTokens: 0,
-        cacheCreationTokens: 0,
+        cacheWriteTokens: 0,
       };
     }
     const counts = countAskTokens(usage);
@@ -275,7 +275,7 @@ export function createAskStream(context: AskContext): AskStream {
       billedInputTokens: counts.billedInputTokens,
       outputTokens: counts.outputTokens,
       cacheReadTokens: counts.cacheReadTokens,
-      cacheCreationTokens: counts.cacheWriteTokens,
+      cacheWriteTokens: counts.cacheWriteTokens,
     };
   }
 
@@ -291,7 +291,7 @@ export function createAskStream(context: AskContext): AskStream {
         usage.outputTokens,
         budgetKey,
         dailyKey,
-        { cacheReadTokens: usage.cacheReadTokens, cacheWriteTokens: usage.cacheCreationTokens },
+        { cacheReadTokens: usage.cacheReadTokens, cacheWriteTokens: usage.cacheWriteTokens },
       );
     } else if (failedBeforeAnyOutput) {
       await settleBudget(reserved, 0, 0, budgetKey, dailyKey);
@@ -317,7 +317,7 @@ export function createAskStream(context: AskContext): AskStream {
       requestId,
       inputTokens: usage.billedInputTokens,
       cacheReadTokens: usage.cacheReadTokens,
-      cacheCreationTokens: usage.cacheCreationTokens,
+      cacheWriteTokens: usage.cacheWriteTokens,
       outputTokens: usage.outputTokens,
       cacheHitRate:
         usage.billedInputTokens > 0 ? usage.cacheReadTokens / usage.billedInputTokens : 0,
@@ -345,7 +345,7 @@ export function createAskStream(context: AskContext): AskStream {
       usageResolved: usage.resolved,
       billedInputTokens: usage.billedInputTokens,
       cacheReadTokens: usage.cacheReadTokens,
-      cacheWriteTokens: usage.cacheCreationTokens,
+      cacheWriteTokens: usage.cacheWriteTokens,
       outputTokens: usage.outputTokens,
     });
     await Promise.all(guardVerdict.findings.map((finding) => countAskGuardFinding(finding.kind)));

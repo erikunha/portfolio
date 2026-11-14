@@ -17,14 +17,15 @@ import {
 } from '@/content/shell-ui';
 import type { SiteLocale } from '@/content/site-locale';
 import { conversationIdForAsk, recordConversationRequest } from '@/lib/ask-conversation.client';
+import { HTTP_STATUS } from '@/lib/http-status';
 import { addRef } from '@/lib/request-refs.client';
 import {
-  ASK_LOCALE_HEADER,
   GUARD_ABORT_PREFIX,
   parseRetryAfter,
   parseStreamChunk,
   REFUSAL_PREFIX,
   RETRY_AFTER_HEADER,
+  SITE_LOCALE_HEADER,
 } from '@/lib/stream-protocol';
 import { MS_PER_SECOND, SECONDS_PER_MINUTE } from '@/lib/time';
 
@@ -44,9 +45,6 @@ type FailureDetail = { prefix?: string; hint?: boolean; retryAfter?: number; ret
 type ActiveRequest = { stop: () => void; dispose: () => void };
 
 const ASK_ENDPOINT = '/api/ask';
-const RATE_LIMIT_STATUS = 429;
-const SERVER_ERROR_STATUS = 500;
-const PAYLOAD_TOO_LARGE_STATUS = 413;
 
 export function formatRemaining(
   seconds: number,
@@ -211,7 +209,7 @@ export function useAskStream({
       try {
         const response = await fetch(ASK_ENDPOINT, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json', [ASK_LOCALE_HEADER]: locale },
+          headers: { 'Content-Type': 'application/json', [SITE_LOCALE_HEADER]: locale },
           body: JSON.stringify({ question, locale, conversationId }),
           signal: controller.signal,
         });
@@ -231,7 +229,7 @@ export function useAskStream({
           } | null;
           const detail = typeof data?.error === 'string' ? data.error : '';
           const retryAfter =
-            response.status === RATE_LIMIT_STATUS
+            response.status === HTTP_STATUS.tooManyRequests
               ? parseRetryAfter(response.headers.get(RETRY_AFTER_HEADER))
               : null;
           if (retryAfter) {
@@ -246,14 +244,16 @@ export function useAskStream({
           }
           const message =
             detail ||
-            (response.status === PAYLOAD_TOO_LARGE_STATUS ? ui.requestTooLarge : ui.serverError);
+            (response.status === HTTP_STATUS.payloadTooLarge ? ui.requestTooLarge : ui.serverError);
           finish(
             '',
-            response.status === RATE_LIMIT_STATUS ? `${message}. ${ui.localAvailable}` : message,
+            response.status === HTTP_STATUS.tooManyRequests
+              ? `${message}. ${ui.localAvailable}`
+              : message,
             true,
             {
               prefix: `${states.stderrCommand} ${response.status}`,
-              hint: response.status >= SERVER_ERROR_STATUS,
+              hint: response.status >= HTTP_STATUS.internalServerError,
             },
           );
           return;
