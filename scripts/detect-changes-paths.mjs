@@ -38,6 +38,7 @@ export const AI_PATHS = [
   'content/hottest-takes.ts',
   'content/open-roles.ts',
   'content/profile.ts',
+  'content/profile-title.ts',
   'content/site-locale.ts',
   'content/social.ts',
   'content/work-scope.ts',

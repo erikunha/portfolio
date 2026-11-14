@@ -1,5 +1,6 @@
 import { FACT_SEPARATOR } from './fact-separator';
 import { perfReceipts } from './perf-receipts';
+import { PROFILE_TITLE } from './profile-title';
 import { ContextFactsSchema, type Profile, ProfileSchema } from './schemas';
 import { SITE_LOCALE, type SiteLocale } from './site-locale';
 import { social } from './social';
@@ -33,7 +34,7 @@ export const RAYLU_BUILT_CLAIM = `built, with one other engineer, ${RAYLU_FRONTE
 const profileFields = ProfileSchema.parse({
   fullName: 'Erik Henrique Alves Cunha',
   displayName: 'Erik Cunha',
-  title: 'Senior Software Engineer, AI Engineer',
+  title: PROFILE_TITLE,
   stackLine: 'TypeScript, Python, React, Next.js, Angular, Node.js, AWS',
   aiLine: 'LLM Systems, Evals, Agents, MCP, Guardrails',
   country: 'Brazil',
