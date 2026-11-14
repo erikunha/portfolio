@@ -1,0 +1,11 @@
+@layer components {
+  @media (max-width: theme(--viewport-below-md)) {
+    .panel-head {
+      min-height: 0;
+      padding: calc(var(--spacing-1) * 1.5) var(--spacing-3);
+    }
+    .panel-title {
+      letter-spacing: var(--tracking-xs);
+    }
+  }
+}

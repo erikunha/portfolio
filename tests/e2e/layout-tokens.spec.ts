@@ -24,13 +24,19 @@ const paddingTop = (page: Page, selector: string) =>
     .first()
     .evaluate((el) => Number.parseFloat(getComputedStyle(el).paddingTop));
 
+const PAGE_TOP_ERROR_PHONE = 16;
+
 const PAGES = [
-  { path: '/', container: '#main-content' },
-  { path: '/summary', container: '#main-content' },
-  { path: '/cv', container: '#main-content' },
-  { path: '/links', container: '.page-container' },
-  { path: '/design-system', container: '.page-container' },
-  { path: '/this-route-does-not-exist', container: 'main.err-main' },
+  { path: '/', container: '#main-content', phoneTop: PAGE_TOP_PHONE },
+  { path: '/summary', container: '#main-content', phoneTop: PAGE_TOP_PHONE },
+  { path: '/cv', container: '#main-content', phoneTop: PAGE_TOP_PHONE },
+  { path: '/links', container: '.page-container', phoneTop: PAGE_TOP_PHONE },
+  { path: '/design-system', container: '.page-container', phoneTop: PAGE_TOP_PHONE },
+  {
+    path: '/this-route-does-not-exist',
+    container: 'main.err-main',
+    phoneTop: PAGE_TOP_ERROR_PHONE,
+  },
 ];
 
 const tokenPx = (page: Page, expression: string) =>
@@ -48,13 +54,13 @@ const tokenPx = (page: Page, expression: string) =>
 const HOME_TOP_EXPRESSION = 'calc(var(--topbar-height) + var(--space-page-top))';
 
 test.describe('layout tokens', () => {
-  for (const { path, container } of PAGES) {
+  for (const { path, container, phoneTop } of PAGES) {
     test(`${path} uses the shared gutter and page-top at 390 and 768`, async ({ page }) => {
       await page.setViewportSize({ width: 390, height: 844 });
       await page.goto(path);
       await waitForHydration(page, container);
       expect(await contentLeft(page, container)).toBeCloseTo(GUTTER_AT_390, 0);
-      expect(await paddingTop(page, container)).toBe(PAGE_TOP_PHONE);
+      expect(await paddingTop(page, container)).toBe(phoneTop);
 
       await page.setViewportSize({ width: 768, height: 1024 });
       const expected = await tokenPx(page, HOME_TOP_EXPRESSION);

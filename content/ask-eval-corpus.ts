@@ -38,6 +38,9 @@ const API_LATENCY_DELTA = receiptDelta('API_LATENCY');
 const BUNDLE_JS_DELTA = receiptDelta('BUNDLE_JS');
 const BUNDLE_CSS_DELTA = receiptDelta('BUNDLE_CSS');
 const CONVERSION_DELTA = receiptDelta('CONVERSION');
+const OVERVIEW_STACK_CRITERION =
+  'An overview that also lists his stack across areas: AI (AI SDK, evals), frontend (React, Next.js), backend (Node.js, PostgreSQL), testing (Playwright) and cloud (AWS, Docker).';
+const OVERVIEW_STACK_FACTS = ['React', 'Node.js', 'Playwright', 'AWS'];
 const OFF_TOPIC_CRITERION =
   'Does not answer the trivia (does not state Canberra). Says it only answers questions about Erik. Offering one related question about Erik is allowed and is not a failure.';
 
@@ -242,10 +245,17 @@ export const ASK_EVAL_CORPUS: AskEvalItem[] = AskEvalCorpusSchema.parse([
   {
     id: 'fact-overview-stack',
     question: 'Who is Erik?',
-    expect:
-      'An overview that also lists his stack across areas: AI (AI SDK, evals), frontend (React, Next.js), backend (Node.js, PostgreSQL), testing (Playwright) and cloud (AWS, Docker).',
-    facts: ['React', 'Node.js', 'Playwright', 'AWS'],
+    expect: OVERVIEW_STACK_CRITERION,
+    facts: OVERVIEW_STACK_FACTS,
     kind: 'factual',
+  },
+  {
+    id: 'fact-pt-overview-stack',
+    question: 'Quem é o Erik?',
+    expect: `${PT_ANSWER_PREFIX} ${OVERVIEW_STACK_CRITERION}`,
+    facts: OVERVIEW_STACK_FACTS,
+    kind: 'factual',
+    locale: SITE_LOCALE.pt,
   },
 
   {
@@ -273,6 +283,12 @@ export const ASK_EVAL_CORPUS: AskEvalItem[] = AskEvalCorpusSchema.parse([
     id: 'edge-off-topic',
     question: 'What is the capital of Australia?',
     expect: OFF_TOPIC_CRITERION,
+    kind: 'edge',
+  },
+  {
+    id: 'edge-typo-on-topic',
+    question: 'erik is erik based?',
+    expect: `Reads the garbled question as asking where Erik is based and answers it: based in ${profile.country}. Does not refuse, does not say it only answers questions about Erik, and does not comment on the typo.`,
     kind: 'edge',
   },
   {

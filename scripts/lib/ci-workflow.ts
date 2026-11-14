@@ -28,6 +28,7 @@ export interface WorkflowJob {
   needs: string[];
   if?: string;
   matrixProjects: string[];
+  matrixShards: Record<string, string[]>;
   defaults: RunDefaults;
   env: Record<string, string>;
   outputs: Record<string, string>;
@@ -53,6 +54,9 @@ const ESCAPED_QUOTE = "''";
 const WILDCARD = '*';
 const SECRETS_PREFIX = 'secrets.';
 const MATRIX_AXIS = 'project';
+const MATRIX_INCLUDE = 'include';
+const MATRIX_SHARD = 'shard';
+const MATRIX_INCLUDE_KEYS = [MATRIX_AXIS, MATRIX_SHARD];
 
 type Token = { kind: 'string' | 'number' | 'op' | 'path'; text: string };
 
@@ -348,16 +352,43 @@ function continueOnError(scope: string, value: unknown): boolean {
   );
 }
 
-function matrixProjects(id: string, matrix: Record<string, unknown> | undefined): string[] {
-  if (matrix === undefined) return [];
-  const axes = Object.keys(matrix);
-  const projects = matrix[MATRIX_AXIS];
-  if (axes.length !== 1 || !Array.isArray(projects)) {
+interface MatrixShape {
+  projects: string[];
+  shards: Record<string, string[]>;
+}
+
+function matrixShape(id: string, matrix: Record<string, unknown> | undefined): MatrixShape {
+  if (matrix === undefined) return { projects: [], shards: {} };
+  const axes = Object.keys(matrix).filter((axis) => axis !== MATRIX_INCLUDE);
+  const listed = matrix[MATRIX_AXIS];
+  const include = matrix[MATRIX_INCLUDE] ?? [];
+  if (axes.length !== 1 || axes[0] !== MATRIX_AXIS || !Array.isArray(listed)) {
     throw new UnsupportedExpressionError(
-      `job ${id}: only a matrix with a single "${MATRIX_AXIS}" list is supported (found ${axes.join(', ')})`,
+      `job ${id}: only a matrix with a single "${MATRIX_AXIS}" list and optional "${MATRIX_INCLUDE}" entries is supported (found ${Object.keys(matrix).join(', ')})`,
     );
   }
-  return projects.map(String);
+  if (!Array.isArray(include)) {
+    throw new UnsupportedExpressionError(`job ${id}: matrix "${MATRIX_INCLUDE}" must be a list`);
+  }
+  const projects = listed.map(String);
+  const shards: Record<string, string[]> = {};
+  for (const entry of include as Record<string, unknown>[]) {
+    const unknown = Object.keys(entry ?? {}).filter((key) => !MATRIX_INCLUDE_KEYS.includes(key));
+    const project = entry?.[MATRIX_AXIS];
+    const shard = entry?.[MATRIX_SHARD];
+    if (unknown.length > 0 || typeof project !== 'string' || typeof shard !== 'string') {
+      throw new UnsupportedExpressionError(
+        `job ${id}: a matrix include entry takes a string "${MATRIX_AXIS}" and a string "${MATRIX_SHARD}" (found ${Object.keys(entry ?? {}).join(', ')})`,
+      );
+    }
+    if (projects.includes(project)) {
+      throw new UnsupportedExpressionError(
+        `job ${id}: matrix include entry for "${project}" would merge into the listed project, not add a shard job`,
+      );
+    }
+    shards[project] = [...(shards[project] ?? []), shard];
+  }
+  return { projects: [...projects, ...Object.keys(shards)], shards };
 }
 
 function topologicalOrder(jobs: Record<string, WorkflowJob>): string[] {
@@ -390,11 +421,13 @@ export function parseWorkflow(text: string): Workflow {
   for (const [id, raw] of Object.entries(document.jobs ?? {})) {
     allowKeys(`job ${id}`, raw, JOB_KEYS);
     allowKeys(`job ${id} strategy`, raw.strategy, STRATEGY_KEYS);
+    const matrix = matrixShape(id, raw.strategy?.matrix);
     jobs[id] = {
       id,
       needs: raw.needs === undefined ? [] : [raw.needs].flat(),
       ...(raw.if === undefined ? {} : { if: String(raw.if) }),
-      matrixProjects: matrixProjects(id, raw.strategy?.matrix),
+      matrixProjects: matrix.projects,
+      matrixShards: matrix.shards,
       defaults: runDefaults(`job ${id}`, raw.defaults),
       env: stringifyRecord(raw.env),
       outputs: stringifyRecord(raw.outputs),

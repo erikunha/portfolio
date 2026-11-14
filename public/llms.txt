@@ -192,3 +192,5 @@ Published design system at /design-system. Covers:
 - 11 primitive components (Field is client for form interactivity; the other ten are RSC): Badge, BrandIcon, Button, CmdLine, Field, KbdKey, NavItem, Panel, StatTile, TerminalPanel, WindowChrome. The docs also provide a client CopyButton helper for clipboard access.
 - Enforcement: boundary lint, no-magic-values lint, contrast check, all in CI
 - Docs: /design-system/tokens, /design-system/components, /design-system/enforcement, /design-system/changelog
+- Foundations: /design-system/foundations/colors, /design-system/foundations/typography, /design-system/foundations/spacing-borders
+- Primitives: /design-system/primitives/badge, /design-system/primitives/brand-icon, /design-system/primitives/button, /design-system/primitives/cmd-line, /design-system/primitives/copybutton, /design-system/primitives/field, /design-system/primitives/kbd-key, /design-system/primitives/stat-tile, /design-system/primitives/terminal-panel, /design-system/primitives/window-chrome

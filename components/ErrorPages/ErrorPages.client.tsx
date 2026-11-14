@@ -1,23 +1,66 @@
 'use client';
 
-import { type ReactNode, useEffect, useRef, useState } from 'react';
+import { usePathname } from 'next/navigation';
+import { Suspense, useEffect, useState } from 'react';
 import { PageMain } from '@/components/PageMain';
+import { NOT_FOUND_PATH_TOKEN } from '@/content/errors.constants';
 import type { ErrorsContent } from '@/content/schemas';
+import { CmdLine } from '@/design-system';
 import { reportClientError } from '@/lib/report-client-error.client';
 import { COPY_STATUS, useCopyFeedback } from '@/lib/use-copy-feedback.client';
+import { ErrorHeading } from './ErrorHeading.client';
 import { ERROR_MAIN_CLASS } from './error-main';
+
+export { ErrorHeading };
 
 const COPIED_RESET_MS = 2000;
 
-export function ErrorHeading({ children }: { children: ReactNode }) {
-  const ref = useRef<HTMLHeadingElement>(null);
-  useEffect(() => {
-    ref.current?.focus({ preventScroll: true });
-  }, []);
+const MAX_PATH_CHARS = 64;
+const PATH_ELLIPSIS = '...';
+const SPOOFING_CONTROLS = /(?!\u200D)[\p{Cc}\p{Cf}]/gu;
+
+export function readablePath(pathname: string | null, fallback: string): string {
+  if (!pathname) return fallback;
+  let decoded = pathname;
+  try {
+    decoded = decodeURIComponent(pathname);
+  } catch {
+    decoded = pathname;
+  }
+  decoded = decoded.replace(SPOOFING_CONTROLS, '');
+  if (decoded === '') return fallback;
+  const characters = Array.from(decoded);
+  return characters.length > MAX_PATH_CHARS
+    ? `${characters.slice(0, MAX_PATH_CHARS - PATH_ELLIPSIS.length).join('')}${PATH_ELLIPSIS}`
+    : decoded;
+}
+
+type RequestedPathContent = Pick<
+  ErrorsContent['notFound'],
+  'prompt' | 'command' | 'output' | 'pathFallback'
+>;
+
+function PathCmdLine({ content, path }: { content: RequestedPathContent; path: string }) {
   return (
-    <h1 ref={ref} className="err-h1" tabIndex={-1}>
-      {children}
-    </h1>
+    <CmdLine
+      className="err-cmd"
+      user=""
+      prompt={content.prompt}
+      command={content.command.replace(NOT_FOUND_PATH_TOKEN, () => path)}
+      output={content.output.replace(NOT_FOUND_PATH_TOKEN, () => path)}
+    />
+  );
+}
+
+function CurrentPathCmdLine({ content }: { content: RequestedPathContent }) {
+  return <PathCmdLine content={content} path={readablePath(usePathname(), content.pathFallback)} />;
+}
+
+export function RequestedPathCmdLine({ content }: { content: RequestedPathContent }) {
+  return (
+    <Suspense fallback={<PathCmdLine content={content} path={content.pathFallback} />}>
+      <CurrentPathCmdLine content={content} />
+    </Suspense>
   );
 }
 

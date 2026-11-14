@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
+import { splitTail } from '@/lib/keep-tail';
 import { readMotion } from '@/lib/motion';
 import { subscribeMotion } from '@/lib/motion-change';
 
@@ -9,15 +10,34 @@ const HOLD_MS = 1_540;
 const BACK_MS = 40;
 const INTER_MS = 280;
 const ACCESSIBLE_SEPARATOR = ' · ';
+const SPACE = ' ';
+
+function leadingText(phrase: string): string {
+  const { head, tail } = splitTail(phrase);
+  if (tail === '') return phrase;
+  return head === '' ? '' : `${head}${SPACE}`;
+}
+
+function write(lead: HTMLElement, tail: HTMLElement, phrase: string, chars: number) {
+  const shown = phrase.slice(0, Math.max(chars, 0));
+  const leadLength = leadingText(phrase).length;
+  lead.textContent = shown.slice(0, leadLength);
+  tail.textContent = shown.slice(leadLength);
+}
 
 export function TaglineTyper({ phrases }: { phrases: readonly string[] }) {
-  const spanRef = useRef<HTMLSpanElement>(null);
+  const leadRef = useRef<HTMLSpanElement>(null);
+  const tailRef = useRef<HTMLSpanElement>(null);
   const first = phrases[0] ?? '';
+  const firstLead = leadingText(first);
 
   useEffect(() => {
-    const el = spanRef.current;
-    if (!el || phrases.length === 0) return;
-    const node: HTMLSpanElement = el;
+    const leadEl = leadRef.current;
+    const tailEl = tailRef.current;
+    if (!leadEl || !tailEl || phrases.length === 0) return;
+    const leadNode: HTMLSpanElement = leadEl;
+    const tailNode: HTMLSpanElement = tailEl;
+    const firstPhrase = phrases[0] ?? '';
 
     let cancelled = false;
     let timerId: ReturnType<typeof setTimeout> | undefined;
@@ -30,7 +50,7 @@ export function TaglineTyper({ phrases }: { phrases: readonly string[] }) {
       const phrase = phrases[phraseIdx % phrases.length] ?? '';
       if (phase === 'type') {
         charIdx++;
-        node.textContent = phrase.slice(0, charIdx);
+        write(leadNode, tailNode, phrase, charIdx);
         if (charIdx >= phrase.length) {
           phase = 'hold';
           timerId = setTimeout(tick, HOLD_MS);
@@ -42,7 +62,7 @@ export function TaglineTyper({ phrases }: { phrases: readonly string[] }) {
         timerId = setTimeout(tick, BACK_MS);
       } else {
         charIdx--;
-        node.textContent = phrase.slice(0, Math.max(charIdx, 0));
+        write(leadNode, tailNode, phrase, charIdx);
         if (charIdx <= 0) {
           phraseIdx++;
           charIdx = 0;
@@ -57,7 +77,7 @@ export function TaglineTyper({ phrases }: { phrases: readonly string[] }) {
     function start() {
       charIdx = 0;
       phase = 'type';
-      node.textContent = '';
+      write(leadNode, tailNode, firstPhrase, 0);
       tick();
     }
 
@@ -71,7 +91,7 @@ export function TaglineTyper({ phrases }: { phrases: readonly string[] }) {
         return;
       }
       cancelled = true;
-      node.textContent = phrases[0] ?? '';
+      write(leadNode, tailNode, firstPhrase, firstPhrase.length);
     });
 
     return () => {
@@ -83,8 +103,11 @@ export function TaglineTyper({ phrases }: { phrases: readonly string[] }) {
 
   return (
     <>
-      <span ref={spanRef} aria-hidden="true">
-        {first}
+      <span aria-hidden="true">
+        <span ref={leadRef}>{firstLead}</span>
+        <span ref={tailRef} className="keep-together">
+          {first.slice(firstLead.length)}
+        </span>
       </span>
       <span className="sr-only">{phrases.join(ACCESSIBLE_SEPARATOR)}</span>
     </>

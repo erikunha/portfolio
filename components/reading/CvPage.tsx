@@ -1,5 +1,7 @@
+import { BREAK_AFTER, BreakAfter } from '@/components/BreakAfter';
 import { CompanyLink } from '@/components/CompanyLink';
 import { ExternalLink, externalLinkProps } from '@/components/ExternalLink';
+import { KeepTail } from '@/components/KeepTail';
 import { cvDocument, cvJsonLd, readingViews } from '@/content/reading-views';
 import type { SiteLocale } from '@/content/site-locale';
 import { serializeJsonLd } from '@/lib/json-ld';
@@ -19,7 +21,9 @@ function Rows({ rows }: { rows: { key: string; label: string; value: string }[] 
       {rows.map((row) => (
         <li key={row.key}>
           <span className="reading-row-key">{row.label}</span>
-          <span className="reading-row-value">{row.value}</span>
+          <span className="reading-row-value">
+            <KeepTail>{row.value}</KeepTail>
+          </span>
         </li>
       ))}
     </ul>
@@ -35,8 +39,12 @@ export function CvPage({ locale }: { locale: SiteLocale }) {
       <script type={JSON_LD_TYPE}>{serializeJsonLd(cvJsonLd)}</script>
       <header>
         <h1 className="reading-name">{document_.name}</h1>
-        <p className="reading-role">{document_.role}</p>
-        <p className="reading-meta">{document_.location}</p>
+        <p className="reading-role">
+          <KeepTail>{document_.role}</KeepTail>
+        </p>
+        <p className="reading-meta">
+          <KeepTail>{document_.location}</KeepTail>
+        </p>
         <ul className="reading-links">
           {document_.links.map((link) => (
             <li key={link.href}>
@@ -57,7 +65,9 @@ export function CvPage({ locale }: { locale: SiteLocale }) {
       <div className="reading-split reading-split--flow">
         <div className="reading-main">
           <ReadingSection id={sectionId('summary')} heading={cv.headings.summary}>
-            <p>{document_.summary}</p>
+            <p>
+              <KeepTail>{document_.summary}</KeepTail>
+            </p>
           </ReadingSection>
 
           <ReadingSection id={sectionId('skills')} heading={cv.headings.skills}>
@@ -65,7 +75,9 @@ export function CvPage({ locale }: { locale: SiteLocale }) {
               {document_.skills.map((group) => (
                 <div key={group.label} className="reading-skill">
                   <dt>{group.label}</dt>
-                  <dd>{group.items.join(SKILL_SEPARATOR)}</dd>
+                  <dd>
+                    <KeepTail>{group.items.join(SKILL_SEPARATOR)}</KeepTail>
+                  </dd>
                 </div>
               ))}
             </dl>
@@ -82,11 +94,19 @@ export function CvPage({ locale }: { locale: SiteLocale }) {
                     {job.company}
                   </CompanyLink>
                 </h3>
-                <p className="reading-meta">{job.meta}</p>
-                {job.context ? <p>{job.context}</p> : null}
+                <p className="reading-meta">
+                  <KeepTail>{job.meta}</KeepTail>
+                </p>
+                {job.context ? (
+                  <p>
+                    <KeepTail>{job.context}</KeepTail>
+                  </p>
+                ) : null}
                 <ul>
                   {job.bullets.map((bullet) => (
-                    <li key={bullet}>{bullet}</li>
+                    <li key={bullet}>
+                      <KeepTail>{bullet}</KeepTail>
+                    </li>
                   ))}
                 </ul>
               </article>
@@ -111,10 +131,14 @@ export function CvPage({ locale }: { locale: SiteLocale }) {
               </h3>
               <ul>
                 {document_.community.bullets.map((bullet) => (
-                  <li key={bullet}>{bullet}</li>
+                  <li key={bullet}>
+                    <KeepTail>{bullet}</KeepTail>
+                  </li>
                 ))}
               </ul>
-              <p className="reading-meta">{document_.community.status}</p>
+              <p className="reading-meta">
+                <KeepTail>{document_.community.status}</KeepTail>
+              </p>
             </article>
           </ReadingSection>
         </div>
@@ -125,7 +149,9 @@ export function CvPage({ locale }: { locale: SiteLocale }) {
           </ReadingSection>
 
           <ReadingSection id={sectionId('contact')} heading={cv.headings.contact}>
-            <p className="reading-meta">{document_.languages}</p>
+            <p className="reading-meta">
+              <KeepTail>{document_.languages}</KeepTail>
+            </p>
             <p className="reading-actions-inline">
               <ExternalLink
                 className="reading-cta"
@@ -134,7 +160,9 @@ export function CvPage({ locale }: { locale: SiteLocale }) {
               >
                 {shared.hire.label}
               </ExternalLink>
-              <a href={`mailto:${document_.email}`}>{document_.email}</a>
+              <a href={`mailto:${document_.email}`}>
+                <BreakAfter chars={BREAK_AFTER.email}>{document_.email}</BreakAfter>
+              </a>
             </p>
           </ReadingSection>
         </div>

@@ -12,8 +12,8 @@ Results write to `ask-eval-result.json`. The Upstash Redis key `ask:eval:latest`
 metrics panel reads, is written only when `EVAL_PUBLISH=1` and Redis credentials are both set, which
 only the `ask-eval.yml` workflow (weekly schedule and manual dispatch) does.
 - Feature model: `anthropic/claude-haiku-5.5` (`lib/ask/model.ts`), default sampling, thinking disabled. Judge model: `anthropic/claude-sonnet-4-6` at temperature 0.
-- Requires `AI_GATEWAY_API_KEY` or `VERCEL_OIDC_TOKEN`. In CI a missing credential is a hard
-  failure (the `ai-eval` job is a dependency of `ci-gate`); locally the run skips with exit 0.
+- Requires `AI_GATEWAY_API_KEY` or `VERCEL_OIDC_TOKEN`. When the job runs in CI, a missing credential is a hard
+  failure; locally the run skips with exit 0.
 - The CI job is OPT-IN: it spends Gateway credits, so it fires only for a pull request that
   carries the `ai-eval` label. Label the PR to run it; without the label the job is skipped and a
   skipped job does not block `ci-gate`. The standing coverage is the weekly `ask-eval` workflow on
@@ -28,6 +28,15 @@ only the `ask-eval.yml` workflow (weekly schedule and manual dispatch) does.
                            # counters to production; with EVAL_PUBLISH=1 they return only
                            # around the aggregate publish, without it they never return, so
                            # `vercel env run -- pnpm ask:eval` cannot touch production data
+                           # with EVAL_PUBLISH=1, missing credentials fail the run before any
+                           # model call and a failed Redis write exits 1, so a green publishing
+                           # run means ask:eval:latest was refreshed
+
+The workflows set `EVAL_PUBLISH=1` only on `refs/heads/main` and map `UPSTASH_REDIS_REST_URL` and
+`UPSTASH_REDIS_REST_TOKEN` from the `EVAL_PUBLISH_REDIS_REST_URL` and
+`EVAL_PUBLISH_REDIS_REST_TOKEN` secrets: a Redis ACL user that can only `SET ask:eval:latest` and
+`agent-eval:latest`. A dispatch from another branch grades but never publishes, and no workflow
+reads the production Upstash token.
 
 The CI `ai-eval` job runs the same `pnpm ask:eval`. It is path-filtered by the
 `detect-changes` job: it fires for ANY AI-relevant change, not just the eval files, and only
@@ -117,9 +126,9 @@ cases are deliberately borderline-hard.
 
 ## Budget
 
-`/api/ask` reserves tokens before every model call and fails closed when the reservation
-store errors. `main()` in `scripts/ask-eval.ts` installs `createEvalBudgetStore(ASK_EVAL_CORPUS.length)`
-through `setBudgetStore`, so the run uses an in-memory counter sized to one reservation per
+`/api/ask` reserves its worst-case cost (budget units are nano-USD) before every model call and
+fails closed when the reservation store errors. `main()` in `scripts/ask-eval.ts` installs `createEvalBudgetStore(ASK_EVAL_CORPUS.length)`
+through `setBudgetStore`, so the run uses an in-memory counter sized to one `askReservationCost` per
 corpus item. It needs no Redis credentials and never spends the production monthly counter.
 Adding a request per item (retries, extra turns) means raising that size.
 `__tests__/ask-eval-budget.test.ts` fails if the route's reservation outgrows the store.

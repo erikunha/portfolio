@@ -82,7 +82,7 @@ function armUpstream(opts: {
   mockStreamText.mockReturnValue(makeStreamTextResult(opts));
 }
 
-describe('/api/ask — cache-hit accounting (STANDARDS.md Ch.7)', () => {
+describe('/api/ask: cache-hit accounting (STANDARDS.md Ch.7)', () => {
   beforeEach(() => {
     process.env.ASK_ENABLED = 'true';
     vi.resetModules();
@@ -196,7 +196,7 @@ describe('/api/ask — cache-hit accounting (STANDARDS.md Ch.7)', () => {
   });
 
   it('holds the reservation (no refund) when result.usage rejects', async () => {
-    const rejectingUsage = Promise.reject(new Error('usage unavailable — stream aborted'));
+    const rejectingUsage = Promise.reject(new Error('usage unavailable, stream aborted'));
     rejectingUsage.catch(() => undefined);
     mockStreamText.mockReturnValue({
       textStream: {

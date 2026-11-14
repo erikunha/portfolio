@@ -4,7 +4,7 @@
 
 ## Request model
 
-A request hits Vercel's edge, passes through `proxy.ts` (which stamps CSP + reporting headers), and is served by Next.js. The page `/` is **partially prerendered**: a static shell (the chrome + above-the-fold Hero) is prerendered, while independent ASK and PSI data reads stream behind `<Suspense>`. Client islands hydrate for chrome, animation and interaction. Section content comes from **typed, build-validated `content/*.ts` modules**. A few `/api/*` handlers form a thin **BFF** over Upstash Redis, Resend, the Vercel AI Gateway, and Google PageSpeed Insights. Rate limiting and dedup fail open; the `/api/ask` budget reservation fails closed with 503; contact storage fails closed. Stored messages remain queued when delivery fails.
+A request hits Vercel's edge, passes through `proxy.ts` (which stamps CSP + reporting headers), and is served by Next.js, which renders React Server Components (RSC, components that run only on the server). The page `/` is **partially prerendered** (PPR): a static shell (the chrome + above-the-fold Hero) is prerendered, while independent ASK and PSI data reads stream behind `<Suspense>`. Client islands hydrate for chrome, animation and interaction. Section content comes from **typed, build-validated `content/*.ts` modules**. A few `/api/*` handlers form a thin **BFF** (backend for frontend: one server layer that shapes calls to outside services for this site) over Upstash Redis, Resend, the Vercel AI Gateway, and Google PageSpeed Insights (PSI). Rate limiting and dedup fail open; the `/api/ask` budget reservation fails closed with 503; contact storage fails closed. Stored messages remain queued when delivery fails.
 
 ## System purpose
 
@@ -23,7 +23,7 @@ flowchart TB
     subgraph present["Presentation (RSC-first)"]
         page["components/SiteHome.tsx<br/>composition root"]
         sections["components/sections/**<br/>RSC sections and nested groups"]
-        islands["client islands<br/>/client/ directories and *.client.*"]
+        islands["client islands<br/>/client/ directories and .client.ts(x) files"]
         ds["design-system/**<br/>reusable primitives"]
     end
     proxy --> page
@@ -73,7 +73,7 @@ flowchart TB
     libcore --> resend
     libcore --> psi
     libcore -.-> lf
-    islands["client islands<br/>/client/ directories and *.client.*"] -->|fetch /api/ask, /api/contact| api["app/api/**<br/>route handlers"]
+    islands["client islands<br/>/client/ directories and .client.ts(x) files"] -->|fetch /api/ask, /api/contact| api["app/api/**<br/>route handlers"]
     sections["components/sections/**<br/>RSC sections and nested groups"] -->|Measured reads| libcore
 ```
 
@@ -111,7 +111,7 @@ flowchart LR
     root --> cl[".agents/ · .claude/ · .codex/ (AI platform)"]
     root --> gh[".github/workflows/"]
     root --> docs["root docs: ARCHITECTURE · STANDARDS · DECISIONS · AGENTS · REVIEW"]
-    root --> kb["docs/ knowledge base · evals/ · metrics/ · __tests__/"]
+    root --> kb["docs/ knowledge base · evals/ · metrics/ · unit test directory"]
     comp --> c1["sections/** RSC"]
     comp --> c2["client/** islands"]
     comp --> c3["responsive/** chrome"]
@@ -150,7 +150,7 @@ flowchart TD
     apicontact --> defh["lib/server/route.ts defineHandler"]
     apicontact --> delivery["lib/contact-delivery"]
     apicontact --> outbox["lib/contact-outbox"]
-    retry["app/api/contact-retry (daily cron)"] --> delivery
+    retry["app/api/contact-retry (cron, twice a day)"] --> delivery
     retry --> outbox
     outbox --> redis
     delivery --> resend["Resend"]
@@ -163,7 +163,7 @@ flowchart TD
 
 The main dependency direction is `app → components → {content, design-system}` and `app/api → lib`. Shared utilities and the MCP tool adapter also cross these groups; `lib/agent/mcp-tools.ts` imports the ask route for in-process calls.
 
-Contact submission persists a 90-day KV audit record before calling the shared delivery function. Only Resend acceptance returns 200. Provider failure or timeout returns `202 queued` after adding the id and retry counter to Redis. `ContactForm` distinguishes queued from delivered and reads structured error messages. A `CRON_SECRET` bearer protects the daily 04:00 UTC retry, limited to 3 retries within 7 days. Removing an outbox entry leaves the audit record intact; a delivery failure that cannot be queued (full or failing outbox) deletes the record, since nothing will retry it; contact logs contain only request and message ids.
+Contact submission persists a 90-day KV audit record before calling the shared delivery function. Only Resend acceptance returns 200. Provider failure or timeout returns `202 queued` after adding the id and retry counter to Redis. `ContactForm` distinguishes queued from delivered and reads structured error messages. A `CRON_SECRET` bearer protects the retry, which runs at 04:00 and 16:00 UTC while a message is under 24 hours old (the provider idempotency window), at most 3 times. Removing an outbox entry leaves the audit record intact; a delivery failure that cannot be queued (full or failing outbox) deletes the record, since nothing will retry it; contact logs contain only request and message ids.
 
 ## Build system
 
@@ -182,7 +182,7 @@ Contact submission persists a 90-day KV audit record before calling the shared d
 | `components/RootShell.tsx`                | Fonts, JSON-LD, the pre-paint motion bootstrap, Vercel RUM gating, shared by `app/(en)/layout.tsx` and `app/(pt)/layout.tsx` |
 | `next.config.ts` + `proxy.ts`             | The two-place header split (static vs per-request CSP), PPR, MDX                                                             |
 | `lib/server/route.ts`                     | The `defineHandler` envelope - the API contract                                                                              |
-| `lib/rate-limit.ts`                       | Redis access, the sliding-window + token-budget + dedup primitives                                                           |
+| `lib/rate-limit.ts`                       | Redis access, the sliding-window + spend-budget + dedup primitives                                                           |
 | `lib/ask/system-prompt.ts`                | How the AI persona imports shared content                                                                                    |
 | `content/schemas.ts`                      | The domain schema registry                                                                                                   |
 | `content/site-locale.ts`                  | Locale codes, `<html lang>` values, localized paths and the hreflang alternates every page and the sitemap derive from       |

@@ -1,3 +1,4 @@
+import { NOT_FOUND_PATH_TOKEN } from './errors.constants';
 import { errorsClientContent } from './errors-client';
 import { LINKS_PATH } from './links.constants';
 import type { ErrorsContent } from './schemas';
@@ -13,10 +14,11 @@ const errorsContentFor = (locale: SiteLocale): ErrorsContent => {
       code: '404',
       panelHeader: pt ? '[ NÃO ENCONTRADO ]' : '[ NOT FOUND ]',
       prompt: '$',
-      command: pt ? 'cd /rota' : 'cd /route',
+      command: `cd ${NOT_FOUND_PATH_TOKEN}`,
       output: pt
-        ? 'bash: /rota: arquivo ou diretório inexistente'
-        : 'bash: /route: no such file or directory',
+        ? `bash: ${NOT_FOUND_PATH_TOKEN}: arquivo ou diretório inexistente`
+        : `bash: ${NOT_FOUND_PATH_TOKEN}: no such file or directory`,
+      pathFallback: pt ? '/rota' : '/route',
       suggestionsLabel: pt ? 'TENTE ISTO' : 'TRY INSTEAD',
       suggestionsNavLabel: pt ? 'Páginas sugeridas' : 'Suggested pages',
       suggestions: [

@@ -12,7 +12,7 @@ const EMPTY: readonly string[] = [];
 const listeners = new Set<() => void>();
 let refs: readonly string[] | null = null;
 
-function isRef(value: unknown): value is string {
+export function isRef(value: unknown): value is string {
   return typeof value === 'string' && value.length > 0 && value.length <= MAX_REF_LENGTH;
 }
 

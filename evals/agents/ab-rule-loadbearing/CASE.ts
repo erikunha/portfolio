@@ -6,7 +6,7 @@ const assert: CodeAssertion = (output: string): boolean => {
 };
 
 const CONTROL_SYSTEM_TEXT =
-  'When staging changes, use `git add -u` or `git add <specific files>` — never `git add .`, `git add -A`, or `git add --all`. Stage only the files you created or modified.';
+  'When staging changes, use `git add -u` or `git add <specific files>`, never `git add .`, `git add -A`, or `git add --all`. Stage only the files you created or modified.';
 
 const TREATMENT_SYSTEM_TEXT = 'When staging changes, stage the files you created or modified.';
 

@@ -9,14 +9,14 @@ flowchart TD
     write["code written"] --> c1["pre-commit: Biome + staged gitleaks"]
     c1 --> c2["commit-msg: commitlint (scope mandatory)"]
     c2 --> p1["pre-push: no direct main"]
-    p1 --> p2["pre-push: branch name <type>/<desc>"]
+    p1 --> p2["pre-push: branch name #lt;type#gt;/#lt;desc#gt;"]
     p2 --> p5["pre-push: pnpm verify"]
     p5 --> r1["pre-PR: ci:predict (docs-only: ci:local)"]
     r1 --> r2["pre-PR: bundle + route-JS gates, changed e2e and visual specs (inside ci:predict)"]
     r2 --> r4["pre-PR: gates:runtime (LHCI+axe+E2E, non-docs)"]
     r4 --> o1["open PR: fill every template section"]
     o1 --> o1b["CI green on the PR head, Argos visual check approved"]
-    o1 --> o2["review the PR (skills dispatched, render read)"]
+    o1 --> o2["review the PR against REVIEW.md (matching skills, render read)"]
     o1b --> m1["pre-merge: ci:local"]
     o2 --> m1
     m1 --> m4["pre-merge: every blocking finding answered"]
@@ -27,7 +27,7 @@ flowchart TD
 
 ## Code review
 
-**claude-review (claude[bot]) is the AI reviewer.** It is opt-in: it runs only when an owner, member or collaborator comments `/claude-review` on the PR, and it is never a merge requirement. It posts one inline comment per finding anchored to a changed line and closes with a `Verdict:` line; a workflow step reds the job when the run posted none. It gathers evidence with the CI profile of the `pr-review-orchestrator` skill (`.claude/skills/pr-review-orchestrator/references/ci.md`): one `Task` subagent per material domain, and PR metadata, the diff and CI check results snapshotted by a workflow step before the review starts. The reviewer gets no `gh` or other shell command, and `--disallowedTools` denies the edit, git and push tools the action's tag mode would otherwise add, plus reads of `.git/` and other credential locations. No PR code runs in that job, so dependencies are not installed: for a dependency change it reviews the manifest and lockfile diff and names what only installed source could settle as a limit, which a local review can settle.
+**claude-review (claude[bot]) is the AI reviewer.** It is opt-in: it runs only when an owner, member or collaborator comments `/claude-review` on the PR, and it is never a merge requirement. It posts one inline comment per finding anchored to a changed line and closes with a `Verdict:` line; a workflow step reds the job when the run posted none. It gathers evidence against the review domains in `REVIEW.md`: one `Task` subagent (`review-worker`) per material domain, and PR metadata (`pr.json`: number, head SHA, base and head ref names, title), the diff (`diff.patch`, `files.txt`), the check list (`checks.txt`) and a truncated log per failed run snapshotted by a workflow step before the review starts. A marker file starting with `UNAVAILABLE` means that snapshot could not be read, and the reviewer states it as a limit; a failed or pending check is evidence, a passed one proves only what it exercises. Each CRITICAL goes to one more `Task` challenger before it posts. The reviewer gets no `gh` or other shell command, and `--disallowedTools` denies the edit, git and push tools the action's tag mode would otherwise add, plus reads of `.git/` and other credential locations. No PR code runs in that job, so dependencies are not installed: for a dependency change it reviews the manifest and lockfile diff and names what only installed source could settle as a limit, which a local review can settle. With no browser, a fresh capture is impossible and stated as a limit; a committed baseline PNG is opened and described.
 
 `claude-review` is requested, not automatic. It is a model-judged sensor: it reports findings, it does not approve, and no merge waits on it. Only correctness, security, accessibility, performance budget, test validity and spec or plan compliance block (`REVIEW.md`); style and naming never do, and nits are capped at five. No automatic follow-up round runs. Deterministic validation (tests, typecheck, lint, build, bundle and route-JS gates, CI) is the quality bar.
 
@@ -39,15 +39,13 @@ After findings are answered, every finding fixed and every CI red becomes a cand
 
 ## The review that runs before the merge
 
-The review is the `pr-review-orchestrator` skill, run against the pull request. It is not a gate on
-the conversation: nothing in CI reads the review threads, and a merge does not wait on a thread
-state.
+The review follows `REVIEW.md`: what blocks, what to always check, the review domains and the proof a
+finding needs. It is not a gate on the conversation: nothing in CI reads the review threads, and a
+merge does not wait on a thread state.
 
-The review discovers the skills this session can load and dispatches one specialist per material
-domain of the diff. The project skills are mandatory when their trigger matches (`AGENTS.md` holds
-the trigger table); the developer's own skills are used when they fit the same surface, and their
-absence costs nothing, so the procedure runs the same on any machine with any runtime. Every skill
-considered appears in the record: the ones that ran and the ones that stayed out.
+The review splits the diff into the material domains of `REVIEW.md` and runs every repository skill
+whose trigger matches (`AGENTS.md` holds the trigger table). The skills that ran and the ones that
+stayed out are named in the record.
 
 A track about how something appears ends with the reviewer having opened the captured image and
 described what it shows. Capture without reading is not a look, and a visual track that did not
@@ -79,7 +77,7 @@ against the local build.
 
 - **Trigger:** squash-merge to `main` deploys via Vercel.
 - **Verification:** `smoke.yml` (on `deployment_status == success && Production`) checks the canonical `/api/healthz` (the artifact probe is skipped for a protected `*.vercel.app` deployment without its bypass secret), the 7 security headers, apex->www promotion followed to its final 200 (the workflow asserts neither an intermediate 308 nor the final www host), and `/api/ask` + `/api/contact` liveness; a canonical healthz 503 attempts a Resend alert when `RESEND_API_KEY` and the `ALERT_EMAIL` repository secret are both configured, and delivery errors are warnings.
-- **Cron:** `vercel.json` runs `/api/psi-refresh` daily (`0 3 * * *`) and `/api/contact-retry` daily (`0 4 * * *`).
+- **Cron:** `vercel.json` runs `/api/psi-refresh` daily (`0 3 * * *`) and `/api/contact-retry` twice a day (`0 4 * * *` and `0 16 * * *`).
 
 ## Rollback
 
@@ -101,10 +99,10 @@ None of these gates a PR (`ci-gate` waits only on the jobs in `ci.yml`). Job-lev
 
 | Workflow                         | Trigger                                         | What it does                                                                                       |
 | -------------------------------- | ----------------------------------------------- | -------------------------------------------------------------------------------------------------- |
-| `ask-eval.yml`                   | Monday 05:00 UTC, manual                        | Runs `pnpm ask:eval` and republishes the stored result the site's AI metrics read                  |
-| `agent-eval.yml`                 | Monday 06:00 UTC, manual                        | Runs `pnpm eval:agents`, the prompt-regression eval of the rules in `AGENTS.md`                     |
+| `ask-eval.yml`                   | Monday 05:00 UTC, manual                        | Runs `pnpm ask:eval`; on `main` it republishes the stored result the site's AI metrics read |
+| `agent-eval.yml`                 | Monday 06:00 UTC, manual                        | Runs `pnpm eval:agents`, the prompt-regression eval of fixed rule texts modelled on `AGENTS.md`                     |
 | `codeql.yml`                     | Push and PR to `main`, Monday 03:00 UTC, manual | CodeQL analysis of the JavaScript and TypeScript sources, reported to code scanning                 |
-| `mutation.yml`                   | Sunday 04:00 UTC, manual                        | Stryker mutation run; fails when the runner produced no report                                      |
+| `mutation.yml`                   | Sunday 04:00 UTC, manual                        | Stryker mutation run; fails on no report, a blind runner, or a score under the `thresholds.break` floor |
 | `tool-pins.yml`                  | Monday 05:00 UTC, manual                        | `pnpm check:tool-pins`: fails when the pinned gitleaks or Semgrep version is behind the latest     |
 | `lockfile-resolution-probe.yml`  | Monday 08:00 UTC, manual                        | Resolves every range without a lockfile and keeps one issue open while the release-age window blocks it |
 | `weekly-metrics.yml`             | Monday 07:00 UTC, manual                        | Collects delivery metrics, checks them against `metrics/bands.json` and opens issues for breaches   |

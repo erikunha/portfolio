@@ -134,6 +134,7 @@
     padding: var(--spacing-1) var(--spacing-2);
     font-size: var(--text-xs);
     letter-spacing: var(--tracking-md);
+    overflow-wrap: break-word;
   }
 
   .ab-cmd {
@@ -238,13 +239,6 @@
     .about-col {
       gap: calc(var(--spacing-4) + var(--spacing-1));
     }
-    .panel-head {
-      min-height: 0;
-      padding: calc(var(--spacing-1) * 1.5) var(--spacing-3);
-    }
-    .panel-title {
-      letter-spacing: var(--tracking-xs);
-    }
     .ab-resp .panel-title {
       --ab-resp-title-gutter: 6.4375rem;
       --ab-resp-title-em-budget: 17;
@@ -298,6 +292,16 @@
       flex: 0 0 100%;
       justify-content: center;
       margin-left: 0;
+    }
+  }
+
+  @media (max-width: theme(--viewport-below-narrow)) {
+    .ab-code .panel-title {
+      letter-spacing: var(--tracking-tight);
+    }
+
+    .ab-code pre {
+      padding-inline: var(--spacing-2);
     }
   }
 }

@@ -22,7 +22,7 @@
 - **The ask-eval corpus pulls ground truth from live content**, and includes expectations tied to those values. Run the eval after changing grounded claims; shared imports do not guarantee every narrative statement agrees.
 - **The guitar EQ strip reads its values from `EqSpectrumSchema`, not from the markup.** The bands (high-pass 140 Hz, 3 dB cut at 400 Hz, 5 dB boost at 2.8 kHz, low-pass 9 kHz) are illustrative until the real settings replace them in `content/guitar-rig.ts`. The curve, the 72 bars, the axis positions and the accessible name all follow from those bands. The DAW mixer refines `last === 'MASTER'`.
 - **Failure behavior depends on the operation.** Rate limits and dedup fail open; logging failures are quiet. Ask budget reservation (monthly and daily) fails closed with 503. Contact audit and outbox persistence fail closed with 502.
-- **The token budget fails _closed_:** a Redis error during reservation rejects the request, and if `/api/ask` can't resolve token usage it keeps the reservation (so a metering bug can't leak spend). Both are deliberate.
+- **The spend budget fails _closed_:** a Redis error during reservation rejects the request, and if `/api/ask` can't resolve token usage it keeps the reservation (so a metering bug can't leak spend). Both are deliberate.
 - **`ASK_ENABLED` is an off-list; `LANGFUSE_ENABLED` is an on-list.** `/api/ask` answers 503 only when `ASK_ENABLED`, trimmed and lower-cased, is one of `false`, `0`, `off`, `no` or `disabled`; unset or any other value leaves it on, a misspelled value included. Telemetry stays inert unless `LANGFUSE_ENABLED` is exactly `'true'`. The two flags guard opposite directions on purpose.
 - **`StatusBar` initializes its clock to `''` and uses `suppressHydrationWarning`.** A `new Date()` at render would be a dynamicIO prerender hazard; the empty initial avoids prerendering a timestamp.
 - **`next-env.d.ts` flips on a local prod build** (dev path ↔ prod path). Inspect that diff before deciding whether it belongs in the change.
@@ -31,7 +31,7 @@
 - **Static routes declare `ensureStatic = 'navigation'`.** The export makes Next fail the build if the route reads `connection()`, `cookies()`, `headers()` or uncached data. `__tests__/meta/ensure-static-routes.test.ts` holds the list of routes.
 - **Only the DAW mixer reads the user agent.** `lib/ua.ts` `getIsMobile()` picks the mixer variant inside the guitar module, behind a `Suspense` fallback (`MixerLoading`). No other section branches on the device; layout differences are CSS.
 - **Motion starts on.** A first visit has `body[data-motion="full"]` even when the operating system asks for reduced motion; only a stored `erik.motion = off` starts it off. `pnpm install` also empties Next's legacy polyfill bundles in `node_modules` (`scripts/strip-next-polyfills.mjs`).
-- **The ask log stores redacted text.** `lib/ask-log.ts` runs `redactPii` (emails and phone numbers) over the question and answer, cuts them to 500 and 1000 characters, and keeps the row 90 days; `/api/log/forget` deletes it by request id.
+- **The ask log stores redacted text.** `lib/ask-log.ts` runs `redactPii` (emails and phone numbers) over the question and answer, cuts them to 500 and 1000 characters, and keeps the row 90 days; `/api/log/forget` deletes it, and every row of its conversation, by any one request id.
 - **`/api/log/forget` never returns a deleted count** and answers a known and an unknown id with the same body, and `/api/log` stores no IP. Both are anti-oracle / minimization choices, not omissions.
 
 ## Naming map (decode the filesystem)
@@ -61,7 +61,7 @@
 | the page composition       | `components/SiteHome.tsx`                                 |
 | a section's copy           | `content/<section>.ts`                                    |
 | the API contract           | `lib/server/route.ts` (`defineHandler`)                   |
-| rate limits / token budget | `lib/rate-limit.ts`                                       |
+| rate limits / spend budget | `lib/rate-limit.ts`                                       |
 | the AI system prompt       | `lib/ask/system-prompt.ts` (facts in `content/ask-facts.ts`) |
 | the ask request pipeline   | `lib/ask/preflight.ts` then `lib/ask/stream.ts`           |
 | the AI evals               | `scripts/ask-eval.ts`, `scripts/agent-eval.ts`, `lib/eval/`, `content/ask-eval-*.ts`, `evals/agents/` |

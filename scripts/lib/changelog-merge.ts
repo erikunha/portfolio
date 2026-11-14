@@ -13,7 +13,7 @@ export function commitTypeToKind(type: string): ChangelogKind {
   return COMMIT_TYPE_KIND[type] ?? DEFAULT_KIND;
 }
 
-const DASH_RUN = /\s*[–—]\s*/g;
+const DASH_RUN = /\s*[\u2013\u2014]\s*/g;
 const DASH_REPLACEMENT = ': ';
 const REFERENCE_SUFFIX = /\s*\((?:#\d+|T\d+[^)]*|PR-\w+)\)/g;
 const BREAKING_PREFIX = 'Breaking: ';

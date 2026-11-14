@@ -157,6 +157,16 @@
       }
     },
     {
+      "includes": ["app/api/**/*.ts", "lib/server/**/*.ts"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noProcessEnv": "error"
+          }
+        }
+      }
+    },
+    {
       "includes": ["**/*.test.ts", "**/*.test.tsx"],
       "linter": {
         "rules": {

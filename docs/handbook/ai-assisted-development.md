@@ -65,7 +65,7 @@ The project instructions define this loop. The table distinguishes conventions f
 | Anticipate failure | pre-mortem                                                   | convention + plan tasks                                                                      |
 | Implement          | test-first project rule                                      | convention                                                                                   |
 | Self-verify        | project verification rule                                    | convention + `pnpm verify`                                                                   |
-| Review             | claude-review only on request                                | `pr-review-orchestrator` (every matching skill applied)                                    |
+| Review             | claude-review only on request                                | `REVIEW.md` (every matching skill applied)                                                 |
 | Resolve            | answer every blocking finding, then resolve the thread        | the review's own finding list                                                               |
 | Record             | DECISIONS.md ADR                                             | PR template checklist (author confirmation)                                                  |
 
@@ -73,7 +73,7 @@ The project instructions define this loop. The table distinguishes conventions f
 
 **claude-review (claude[bot]) is opt-in.** It runs only when an owner, member or collaborator comments `/claude-review` on a PR, posting findings as inline review comments anchored to changed lines and closing with a `Verdict:` line; a workflow step reds the job when the run posted none. It is not a merge requirement.
 
-The review that runs before the merge is the `pr-review-orchestrator` skill: it discovers the skills this session can load, dispatches one specialist per material domain, and reads the rendered result as images. Its findings are the ones that must be answered.
+The review that runs before the merge follows `REVIEW.md`: one question per material domain, every repository skill whose trigger matches, and the rendered result read as images. Its findings are the ones that must be answered.
 
 ## 4. Enforcement boundaries
 
@@ -94,7 +94,7 @@ The repo encodes distinct prompt patterns for distinct SDLC stages:
 | Specification       | brainstorm -> spec with Context/Gaps/Changes                       | the engineer's own spec tool (local, untracked)    |
 | Architecture review | four-gate plan review -> `GATE_RESULT: PASS \| BLOCK`              | `plan-review` skill                                |
 | Implementation      | TDD: failing test first, smallest change                           | `test-first discipline (AGENTS.md)` |
-| Review              | `claude-review` on request; `pr-review-orchestrator` is one way to run a review | `AGENTS.md` working agreement, `REVIEW.md`         |
+| Review              | `claude-review` on request; any review follows `REVIEW.md` | `AGENTS.md` working agreement, `REVIEW.md`         |
 | Documentation       | reverse-engineer from code, route don't duplicate                  | source comparisons and canonical documentation     |
 
 Choose verification from the affected behavior and the project gate requirements. A docs-only change still runs `pnpm ci:local` under `AGENTS.md`.

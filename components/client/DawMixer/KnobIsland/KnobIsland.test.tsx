@@ -20,7 +20,7 @@ const defaults = {
   degreesUnit: CONTROLS.degrees,
 };
 
-describe('KnobIsland — ARIA contract', () => {
+describe('KnobIsland: ARIA contract', () => {
   it('has role="slider"', () => {
     const doc = renderStatic(defaults);
     expect(doc.querySelector('[role="slider"]')).not.toBeNull();
@@ -46,7 +46,7 @@ describe('KnobIsland — ARIA contract', () => {
   });
 });
 
-describe('KnobIsland — keyboard (clamp + direction)', () => {
+describe('KnobIsland: keyboard (clamp + direction)', () => {
   let unmount: (() => void) | undefined;
   afterEach(() => {
     unmount?.();
@@ -114,7 +114,7 @@ describe('KnobIsland — keyboard (clamp + direction)', () => {
   });
 });
 
-describe('KnobIsland — pointer drag behavior', () => {
+describe('KnobIsland: pointer drag behavior', () => {
   let unmount: (() => void) | undefined;
   afterEach(() => {
     unmount?.();

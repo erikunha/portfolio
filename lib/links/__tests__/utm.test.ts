@@ -20,7 +20,7 @@ describe('withUtm', () => {
     expect(out.searchParams.getAll('utm_content')).toEqual(['novo']);
   });
 
-  it('leaves a mailto link untouched — utm on mailto is a broken address', () => {
+  it('leaves a mailto link untouched: utm on mailto is a broken address', () => {
     expect(withUtm('mailto:erik@example.com', 'email')).toBe('mailto:erik@example.com');
   });
 

@@ -28,7 +28,7 @@ the headroom with no app change. BLOCK when the plan gives no budget argument.
 Does the plan touch `app/api/**`, `lib/rate-limit.ts` or `proxy.ts`? Then it must keep:
 
 - the handler order `defineHandler` enforces (rate limit before parse, validate, handle), with env read only through `lib/env.ts`;
-- the `/api/ask` token budget failing closed while the rate limits fail open;
+- the `/api/ask` spend budget failing closed while the rate limits fail open;
 - the ephemeral prompt cache (`providerOptions.anthropic.cacheControl`) on the system `instructions` and the single model constant in `lib/ask/model.ts`;
 - the `ASK_ENABLED` kill switch checked first in `lib/ask/preflight.ts`, before rate limiting and token reservation, answering 503 for its off keywords;
 - the CSP in `proxy.ts` and the static headers in `next.config.ts` where they are.

@@ -3,7 +3,7 @@
   --color-text-secondary: #a1b3a1;
   --color-green: var(--color-primary-500);
 
-  --text-min: 0.75rem;
+  --text-min: 0.8125rem;
   --text-xs: var(--text-min);
   --text-sm: 0.875rem;
   --text-body: var(--text-sm);
@@ -18,6 +18,7 @@
 
   --leading-body: 1.6;
 
+  --tracking-tight: -0.03em;
   --tracking-2xs: 0.02em;
   --tracking-xs: 0.04em;
   --tracking-sm: 0.05em;
@@ -246,7 +247,6 @@
 
   @media (min-width: 768px) {
     :root {
-      --text-min: 0.8125rem;
       --space-page-top: var(--spacing-12);
       --space-section: var(--spacing-12);
       --text-section-title: var(--text-lg);

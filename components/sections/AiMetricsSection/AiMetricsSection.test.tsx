@@ -23,7 +23,7 @@ vi.mock('@/lib/lighthouse-scores', () => ({
     accessibility: 0,
     bestPractices: 0,
     seo: 0,
-    fetchedAt: '—',
+    fetchedAt: '-',
   },
 }));
 vi.mock('@/lib/ask-metrics', () => ({

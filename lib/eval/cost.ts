@@ -1,10 +1,13 @@
+import { ASK_PRICING_USD_PER_MTOK, CACHE_PRICE_MULTIPLIER } from '@/lib/ask/pricing';
+import { SYSTEM_TEXT } from '@/lib/ask/system-prompt';
+
+export { CACHE_PRICE_MULTIPLIER };
+
 export const PRICING_USD_PER_MTOK = {
-  feature: { input: 0.1, output: 0.5 },
+  feature: ASK_PRICING_USD_PER_MTOK,
   mechanical: { input: 1.0, output: 5.0 },
   judge: { input: 3.0, output: 15.0 },
 } as const;
-
-export const CACHE_PRICE_MULTIPLIER = { read: 0.1, write: 1.25 } as const;
 
 export const featureCostUsdFrom = (counts: {
   billedInputTokens: number;
@@ -59,7 +62,14 @@ export const targetCostUsdFrom = (
   return (inputTokens * rate.input + outputTokens * rate.output) / TOKENS_PER_MTOK;
 };
 
-export const APPROX_FEATURE_INPUT_TOKENS = 1700;
+const TYPICAL_CHARS_PER_TOKEN = 4;
+const TYPICAL_QUESTION_CHARS = 120;
+const TYPICAL_REQUEST_FRAMING_TOKENS = 100;
+
+export const APPROX_TYPICAL_FEATURE_INPUT_TOKENS =
+  Math.ceil((SYSTEM_TEXT.length + TYPICAL_QUESTION_CHARS) / TYPICAL_CHARS_PER_TOKEN) +
+  TYPICAL_REQUEST_FRAMING_TOKENS;
+export const APPROX_AGENT_EVAL_INPUT_TOKENS = 1700;
 export const APPROX_FEATURE_OUTPUT_TOKENS = 350;
 
 export function estimateJobCostUsd(args: {
@@ -84,7 +94,7 @@ export function summarizeFeatureCost(
 ): { featureCostUsd: number; measuredAnswers: number } {
   const measuredAnswers = Math.min(measuredPerAnswerUsd.length, answeredCount);
   const approxPerAnswer =
-    (APPROX_FEATURE_INPUT_TOKENS * PRICING_USD_PER_MTOK.feature.input +
+    (APPROX_TYPICAL_FEATURE_INPUT_TOKENS * PRICING_USD_PER_MTOK.feature.input +
       APPROX_FEATURE_OUTPUT_TOKENS * PRICING_USD_PER_MTOK.feature.output) /
     1_000_000;
   const measuredSum = measuredPerAnswerUsd.slice(0, measuredAnswers).reduce((a, b) => a + b, 0);

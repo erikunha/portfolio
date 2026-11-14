@@ -1,0 +1,13 @@
+@import "./components-hottest-takes.css";
+@import "./components-projects.css";
+@import "./components-career.css";
+@import "./components-mixer.css";
+@import "./components-contact.css";
+@import "./components-shell.css";
+@import "./components-mixer-controls.css";
+@import "./components-guitar.css";
+@import "./components-footer.css";
+@import "./components-hero.css";
+@import "./components-about.css";
+@import "./forced-colors.css";
+@reference "../globals.css";

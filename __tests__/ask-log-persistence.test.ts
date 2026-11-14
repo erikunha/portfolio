@@ -7,7 +7,7 @@ import { shellChrome } from '@/content/terminal-chrome';
 import { askRequest } from './helpers/ask-route';
 import { mountClient } from './helpers/render';
 
-describe('lib/ask-log — persistAskInteraction', () => {
+describe('lib/ask-log: persistAskInteraction', () => {
   const redisSetMock = vi.fn();
   const logErrorMock = vi.fn();
 
@@ -64,7 +64,7 @@ describe('lib/ask-log — persistAskInteraction', () => {
     expect(record.answer).toHaveLength(1000);
   });
 
-  it('fails quiet on a KV outage — never throws into the /api/ask path', async () => {
+  it('fails quiet on a KV outage: never throws into the /api/ask path', async () => {
     redisSetMock.mockRejectedValueOnce(new Error('Upstash down'));
     const { persistAskInteraction } = await import('@/lib/ask-log');
     await expect(persistAskInteraction(interaction)).resolves.toBeUndefined();
@@ -104,6 +104,7 @@ describe('/api/log/forget endpoint', () => {
       getForgetLimit: vi.fn(() => ({ limit: vi.fn(async () => ({ success: true })) })),
       getRedis: vi.fn(() => ({
         del: redisDelMock,
+        mget: vi.fn(async () => []),
         multi: () => ({ zrem: vi.fn(), hdel: vi.fn(), exec: vi.fn(async () => []) }),
       })),
     }));

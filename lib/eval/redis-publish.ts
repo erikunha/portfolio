@@ -14,7 +14,7 @@ export async function publishAggregate(key: string, aggregate: unknown): Promise
     return { published: false, skipped: `${EVAL_PUBLISH_ENV} is not set` };
   }
   if (!hasRedisCredentials()) {
-    return { published: false, skipped: 'no Redis credentials' };
+    return { published: false, error: 'no Redis credentials are set, nothing was written' };
   }
   try {
     await getRedis().set(key, JSON.stringify(aggregate));

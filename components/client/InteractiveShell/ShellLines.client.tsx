@@ -2,11 +2,13 @@
 
 import { useEffect, useState } from 'react';
 import type { ShellStates } from '@/content/shell-states.schema';
-import { fillShellState, ShellLineKind, type ShellUi } from '@/content/shell-ui';
+import { fillShellState, SHELL_STATE_TOKEN, ShellLineKind, type ShellUi } from '@/content/shell-ui';
 import { asciiBar } from '@/lib/ascii-bar';
 import { MS_PER_SECOND } from '@/lib/time';
-import { ResponseReference } from './ResponseReference.client';
+import { ConversationReceipt } from './ConversationReceipt.client';
+import { ShellEmail } from './ShellEmail';
 import { formatRemaining, type Line, type LineKind } from './useAskStream';
+import { useElapsedSeconds } from './useElapsed.client';
 
 const KIND_CLASS: Record<LineKind, string> = {
   [ShellLineKind.Prompt]: 'shell-line-prompt',
@@ -18,17 +20,22 @@ const KIND_CLASS: Record<LineKind, string> = {
   [ShellLineKind.Hint]: 'shell-line-hint',
   [ShellLineKind.RateLimit]: 'shell-line-ratelimit',
 };
-const THINKING_TICK_MS = 100;
 const COUNTDOWN_TICK_MS = MS_PER_SECOND;
 
 export function ThinkingLine({ template }: { template: string }) {
-  const [elapsedMs, setElapsedMs] = useState(0);
-  useEffect(() => {
-    const startedAt = Date.now();
-    const id = setInterval(() => setElapsedMs(Date.now() - startedAt), THINKING_TICK_MS);
-    return () => clearInterval(id);
-  }, []);
-  return fillShellState(template, { seconds: (elapsedMs / MS_PER_SECOND).toFixed(1) });
+  return fillShellState(template, { seconds: useElapsedSeconds() });
+}
+
+export function StopElapsed({ template }: { template: string }) {
+  const seconds = useElapsedSeconds();
+  const [before, after = ''] = template.split(SHELL_STATE_TOKEN.seconds);
+  return (
+    <>
+      {before}
+      <span className="shell-stop-time">{seconds}</span>
+      {after}
+    </>
+  );
 }
 
 export function LineText({ text, ui }: { text: string; ui: ShellUi }) {
@@ -37,7 +44,7 @@ export function LineText({ text, ui }: { text: string; ui: ShellUi }) {
   return (
     <>
       {text.slice(0, at)}
-      <a href={ui.emailHref}>{ui.email}</a>
+      <ShellEmail ui={ui} />
       {text.slice(at + ui.email.length)}
     </>
   );
@@ -85,11 +92,31 @@ type ShellLineProps = {
   isMobile: boolean;
   announce: (text: string) => void;
   onRetry: (command: string) => void;
+  busy: boolean;
+  onConversationForgotten: (questions: number) => void;
 };
 
-function ShellLineBody({ line, ui, states, isMobile, announce, onRetry }: ShellLineProps) {
+function ShellLineBody({
+  line,
+  ui,
+  states,
+  isMobile,
+  announce,
+  onRetry,
+  busy,
+  onConversationForgotten,
+}: ShellLineProps) {
   if (line.kind === ShellLineKind.Reference) {
-    return <ResponseReference ui={ui} states={states} requestId={line.text} announce={announce} />;
+    return (
+      <ConversationReceipt
+        ui={ui}
+        states={states}
+        requestId={line.text}
+        busy={busy}
+        announce={announce}
+        onForgotten={onConversationForgotten}
+      />
+    );
   }
   if (line.kind === ShellLineKind.RateLimit && line.retryAfter) {
     return (
@@ -100,7 +127,7 @@ function ShellLineBody({ line, ui, states, isMobile, announce, onRetry }: ShellL
     return (
       <>
         {states.tryPrefix} <code>{states.tryCommand}</code> {states.trySuffix}{' '}
-        <a href={ui.emailHref}>{ui.email}</a>
+        <ShellEmail ui={ui} />
       </>
     );
   }
@@ -139,7 +166,6 @@ export function ShellLine(props: ShellLineProps) {
         <span className="shell-stream-meta">
           <ThinkingLine template={states.thinkingElapsed} />
         </span>
-        <span className="shell-stream-meta shell-esc-hint">{states.escStop}</span>
       </span>
     );
   }

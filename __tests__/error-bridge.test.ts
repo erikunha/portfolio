@@ -72,7 +72,7 @@ describe('MAX_DEDUP_SIZE', () => {
   });
 });
 
-describe('dedup — window error event behavior', () => {
+describe('dedup: window error event behavior', () => {
   let recorder: ReturnType<typeof createFetchRecorder>;
 
   beforeEach(() => {
@@ -111,7 +111,7 @@ describe('dedup — window error event behavior', () => {
   });
 });
 
-describe('dedup — FIFO eviction at MAX_DEDUP_SIZE', () => {
+describe('dedup: FIFO eviction at MAX_DEDUP_SIZE', () => {
   let recorder: ReturnType<typeof createFetchRecorder>;
 
   beforeEach(() => {

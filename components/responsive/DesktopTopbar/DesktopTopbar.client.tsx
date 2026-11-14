@@ -7,6 +7,7 @@ import { StatusDot } from '@/components/StatusDot';
 import { LINKS_PATH } from '@/content/links.constants';
 import { MOTION_STATE_SEPARATOR, TOPBAR_MOTION_LABEL } from '@/content/nav';
 import { cn } from '@/lib/cn';
+import { longestCopy } from '@/lib/longest-copy';
 import {
   LanguageSwitch,
   MenuTrigger,
@@ -93,7 +94,12 @@ export function DesktopTopbar({ brand }: { brand: ReactNode }) {
                 {TOPBAR_MOTION_LABEL}
                 <span aria-hidden="true">
                   {MOTION_STATE_SEPARATOR}
-                  {motionState}
+                  <span
+                    className="topbar-motion-state"
+                    data-reserve={longestCopy([copy.motionOn, copy.motionOff])}
+                  >
+                    <span>{motionState}</span>
+                  </span>
                 </span>
               </span>
             </button>

@@ -89,33 +89,11 @@ jobs:
             exit 1
           fi
 
-      # The review orchestrator's procedure is read from the DEFAULT branch for the same
-      # reason as the prompt above: on a sub-PR the base is an integration branch whose
-      # copy that branch authored. It lands outside pr-head, so the strip never sees it.
-      - name: Materialise the trusted review orchestrator from the default branch
-        run: |
-          set -euo pipefail
-          mkdir -p /tmp/review-skill
-          skill_dir=""
-          for candidate in .agents/skills/pr-review-orchestrator .claude/skills/pr-review-orchestrator; do
-            if git cat-file -e "FETCH_HEAD:${candidate}/SKILL.md" 2>/dev/null; then
-              skill_dir="$candidate"
-              break
-            fi
-          done
-          if [ -z "$skill_dir" ]; then
-            echo "::notice::the default branch has no review orchestrator yet; the reviewer runs without it"
-            exit 0
-          fi
-          git archive "FETCH_HEAD:${skill_dir}" | tar -x -C /tmp/review-skill
-          test -s /tmp/review-skill/SKILL.md
-          test -s /tmp/review-skill/references/ci.md
-
       # PR metadata and gate results are snapshotted here with the workflow token, so
       # the reviewer holds no `gh` command that takes `--jq`: a jq filter can read the
       # process environment, and the reviewer's environment holds its OAuth token. No
-      # PR code runs in this job, so dependency source is not installed; ci.md says
-      # what that leaves to the local orchestrator.
+      # PR code runs in this job, so dependency source is not installed; the prompt
+      # tells the reviewer to state what that leaves unchecked.
       - name: Snapshot PR metadata and CI gate results for the reviewer
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -227,8 +205,12 @@ jobs:
           # adding `lib/CLAUDE.md` walked straight past a strip that listed seven
           # fixed root paths, and past its own verification, which checked the
           # same seven and reported success.
+          # A symlink would resolve to a path outside this name match (or outside
+          # the checkout) and be read through its target.
+          find pr-head -type l -delete
+
           find pr-head \
-            \( -name 'CLAUDE.md' -o -name 'AGENTS.md' -o -name 'copilot-instructions.md' \
+            \( -name 'CLAUDE.md' -o -name 'CLAUDE.local.md' -o -name 'AGENTS.md' -o -name 'copilot-instructions.md' \
                -o -name '.claude' -o -name '.agents' -o -name '.codex' -o -name '.cursor' \) \
             -prune -exec rm -rf {} +
 
@@ -236,7 +218,7 @@ jobs:
           # that enumerates paths independently drifts from the rm the moment one
           # of them is edited, and then passes while removing nothing.
           leftover=$(find pr-head \
-            \( -name 'CLAUDE.md' -o -name 'AGENTS.md' -o -name 'copilot-instructions.md' \
+            \( -name 'CLAUDE.md' -o -name 'CLAUDE.local.md' -o -name 'AGENTS.md' -o -name 'copilot-instructions.md' \
                -o -name '.claude' -o -name '.agents' -o -name '.codex' -o -name '.cursor' \) \
             -print -quit)
           if [ -n "$leftover" ]; then
@@ -258,7 +240,6 @@ jobs:
             --allowedTools "Read,Grep,Glob,Task(review-worker),mcp__github_inline_comment__create_inline_comment"
             --disallowedTools "Edit,MultiEdit,Write,NotebookEdit,WebFetch,WebSearch,Task(general-purpose),Task(claude),Task(Explore),Task(Plan),Task(statusline-setup),Task(claude-code-guide),Bash,Bash(git add:*),Bash(git commit:*),Bash(git rm:*),Bash(/home/runner/work/_actions/anthropics/claude-code-action/c0949c50a78c1ec8ce2647db36629b870e715d0c/scripts/git-push.sh:*),mcp__github_file_ops__commit_files,mcp__github_file_ops__delete_files,Read(**/.git/**),Read(//proc/**),Read(~/.ssh/**),Read(~/.gitconfig),Read(~/.git-credentials),Read(~/.config/**),Read(~/.npmrc),Read(~/.docker/**),Read(~/.claude/**),Read(//home/runner/work/_temp/**)"
             --add-dir pr-head
-            --add-dir /tmp/review-skill
             --add-dir /tmp/review-evidence
             --append-system-prompt-file /tmp/claude-review-prompt.md
 

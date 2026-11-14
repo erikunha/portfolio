@@ -22,6 +22,7 @@ export const AI_PATHS = [
   'content/ask-errors.ts',
   'content/community.ts',
   'content/company-link.ts',
+  'content/errors.constants.ts',
   'content/fact-separator.ts',
   'content/reading-paths.ts',
   'content/schemas.ts',
@@ -40,6 +41,7 @@ export const AI_PATHS = [
   'content/work-scope.ts',
   'scripts/ask-eval.ts',
   '__tests__/ask-*',
+  '.github/workflows/ci.yml',
 ];
 
 export const APP_PATHS = [
@@ -92,6 +94,9 @@ export const UI_PATHS = [
   'tsconfig.json',
   '.nvmrc',
   'scripts/strip-next-polyfills.mjs',
+  'scripts/install-playwright-browsers.mjs',
+  'scripts/wait-argos-reference.mjs',
+  '.github/workflows/ci.yml',
   'tests/visual/',
   'tests/e2e/',
   'pnpm-lock.yaml',
@@ -139,6 +144,7 @@ export const IGNORED_PATHS = [
   'scripts/check-harness-size.mjs',
   'scripts/check-mutation-kills.d.mts',
   'scripts/check-mutation-kills.mjs',
+  'scripts/check-no-dashes.mjs',
   'scripts/check-section-order.d.mts',
   'scripts/check-section-order.mjs',
   'scripts/check-semgrep-fixture.d.mts',

@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { sha256Hex } from '@/lib/ask/prompt-version';
 import { PROMPT_VERSION, SYSTEM_TEXT } from '@/lib/ask/system-prompt';
 
-describe('sha256Hex — runtime-stable content hash', () => {
+describe('sha256Hex: runtime-stable content hash', () => {
   it('is deterministic for the same input', () => {
     expect(sha256Hex('hello world')).toBe(sha256Hex('hello world'));
   });
@@ -20,7 +20,7 @@ describe('sha256Hex — runtime-stable content hash', () => {
   });
 });
 
-describe('PROMPT_VERSION — derived from SYSTEM_TEXT', () => {
+describe('PROMPT_VERSION: derived from SYSTEM_TEXT', () => {
   it('equals the truncated SHA-256 of the assembled SYSTEM_TEXT', () => {
     expect(PROMPT_VERSION).toBe(sha256Hex(SYSTEM_TEXT).slice(0, 12));
   });

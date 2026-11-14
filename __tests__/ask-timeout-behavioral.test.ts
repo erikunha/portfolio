@@ -68,7 +68,7 @@ function makeRequest(question: string): NextRequest {
   return askRequest({ question });
 }
 
-describe('/api/ask behavioral — stream-initiation failure handling', () => {
+describe('/api/ask behavioral: stream-initiation failure handling', () => {
   beforeEach(() => {
     process.env.ASK_ENABLED = 'true';
     vi.resetModules();
@@ -122,7 +122,7 @@ describe('/api/ask behavioral — stream-initiation failure handling', () => {
   );
 });
 
-describe('/api/ask behavioral — mid-stream timeout watchdog', () => {
+describe('/api/ask behavioral: mid-stream timeout watchdog', () => {
   beforeEach(() => {
     process.env.ASK_ENABLED = 'true';
     vi.resetModules();
@@ -168,7 +168,7 @@ describe('/api/ask behavioral — mid-stream timeout watchdog', () => {
   });
 });
 
-describe('/api/ask behavioral — X-Request-Id response header', () => {
+describe('/api/ask behavioral: X-Request-Id response header', () => {
   const UUID_V4 = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
   beforeEach(() => {

@@ -8,11 +8,13 @@ export function SiteShell({
   locale,
   route,
   drawerExtra,
+  skipLinks,
   children,
 }: {
   locale: SiteLocale;
   route?: string | undefined;
   drawerExtra?: ReactNode;
+  skipLinks?: ReactNode;
   children: ReactNode;
 }) {
   return (
@@ -23,6 +25,7 @@ export function SiteShell({
       locale={locale}
       route={route}
       skipLabel={NAVIGATION[locale].copy.skipLabel}
+      skipLinks={skipLinks}
     >
       {children}
     </AppShell>

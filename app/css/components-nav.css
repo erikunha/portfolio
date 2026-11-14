@@ -235,6 +235,11 @@
     padding: 0 var(--spacing-2);
   }
 
+  .section-menu .menu-controls {
+    padding: var(--spacing-2);
+    border-bottom: var(--border-width) solid var(--color-primary-border);
+  }
+
   .section-menu .menu-foot {
     border-top: var(--border-width) solid var(--color-primary-border);
     padding: var(--spacing-2);
@@ -275,8 +280,9 @@
     z-index: var(--z-dock);
     display: grid;
     grid-auto-flow: column;
-    grid-auto-columns: minmax(0, 1fr);
+    grid-auto-columns: minmax(min-content, 1fr);
     gap: 2px;
+    height: calc(var(--dock-height) + env(safe-area-inset-bottom, 0px));
     padding: var(--spacing-2) var(--spacing-2)
       calc(var(--spacing-2) + env(safe-area-inset-bottom, 0px));
     background: color-mix(in srgb, var(--color-secondary-950) 92%, transparent);
@@ -335,13 +341,13 @@
   @media (max-width: theme(--viewport-below-narrow)) {
     .dock {
       gap: 0;
-      padding-inline: var(--spacing-1);
+      padding-inline: 0;
     }
 
     .dock > a,
     .dock > button {
-      letter-spacing: 0;
-      padding-inline: 0;
+      letter-spacing: var(--tracking-tight);
+      padding-inline: 2px;
     }
   }
 
@@ -383,7 +389,8 @@
     .pos-line {
       top: 0;
       bottom: 0;
-      left: auto;
+      left: 0;
+      right: auto;
       width: var(--position-line-thickness);
       height: auto;
     }
@@ -431,6 +438,13 @@
     background: var(--color-secondary-950);
     color: var(--color-tertiary-50);
     font-size: var(--text-xs);
+  }
+
+  @media (max-width: theme(--viewport-below-md)) {
+    .offline-notice {
+      inset-block-start: var(--mobile-bars-height);
+      padding-block-start: var(--spacing-2);
+    }
   }
 
   .offline-notice:empty {
@@ -513,6 +527,22 @@
 
   .topbar-action-toggle:hover {
     border-color: var(--color-primary-500);
+  }
+
+  .topbar-motion-state {
+    display: inline-grid;
+  }
+
+  .topbar-motion-state::after {
+    content: attr(data-reserve);
+    grid-area: 1 / 1;
+    visibility: hidden;
+    height: 0;
+    overflow: hidden;
+  }
+
+  .topbar-motion-state > span {
+    grid-area: 1 / 1;
   }
 
   .topbar-action-outline {

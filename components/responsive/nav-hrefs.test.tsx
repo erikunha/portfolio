@@ -23,7 +23,7 @@ describe('nav hrefs survive being mounted off the homepage', () => {
 
     expect(
       bare,
-      'These sections live on / only. A bare "#sec-projects" resolves against whatever page is current, so the moment this chrome renders anywhere but / — a second route mounting AppShell, or the Dock\'s own DS item navigating to /design-system and back — the link points at a section that does not exist there and silently does nothing. "/#sec-projects" resolves from anywhere. The skip link in AppShell.client.tsx is page-local by design and is not matched here.',
+      'These sections live on / only. A bare "#sec-projects" resolves against whatever page is current, so the moment this chrome renders anywhere but /, a second route mounting AppShell, or the Dock\'s own DS item navigating to /design-system and back, the link points at a section that does not exist there and silently does nothing. "/#sec-projects" resolves from anywhere. The skip link in AppShell.client.tsx is page-local by design and is not matched here.',
     ).toEqual([]);
   });
 });

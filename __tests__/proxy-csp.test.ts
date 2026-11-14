@@ -8,7 +8,7 @@ afterEach(() => {
   vi.unstubAllEnvs();
 });
 
-describe('proxy CSP — nonce-less posture', () => {
+describe('proxy CSP: nonce-less posture', () => {
   beforeEach(() => {
     vi.resetModules();
   });

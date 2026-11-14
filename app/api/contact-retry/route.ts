@@ -1,12 +1,12 @@
 import type { NextRequest } from 'next/server';
 import { sendContactMessage } from '@/lib/contact-delivery';
 import {
-  CONTACT_MAX_RETRY_AGE_MS,
   CONTACT_MAX_RETRY_ATTEMPTS,
   getContactAttempts,
   getContactMessage,
   getPendingContactIds,
   incrementContactAttempts,
+  isContactRetryExpired,
   removePendingContact,
 } from '@/lib/contact-outbox';
 import { env } from '@/lib/env';
@@ -17,11 +17,6 @@ import { err, ok } from '@/lib/server/route';
 const UNAUTHORIZED_STATUS = 401;
 const DROP_REASON = { expired: 'expired', exhausted: 'exhausted' } as const;
 type DropReason = (typeof DROP_REASON)[keyof typeof DROP_REASON];
-
-function isStale(receivedAt: string): boolean {
-  const age = Date.now() - Date.parse(receivedAt);
-  return !Number.isFinite(age) || age > CONTACT_MAX_RETRY_AGE_MS;
-}
 
 const MAX_DURATION_MS = 60_000;
 const SEND_TIMEOUT_MS = 10_000;
@@ -62,7 +57,7 @@ export async function GET(req: NextRequest): Promise<Response> {
     }
     try {
       const message = await getContactMessage(msgId);
-      if (!message || isStale(message.receivedAt)) {
+      if (!message || isContactRetryExpired(Date.parse(message.receivedAt), Date.now())) {
         await drop(msgId, DROP_REASON.expired);
         continue;
       }

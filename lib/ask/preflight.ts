@@ -1,5 +1,6 @@
 import { type AskErrors, askErrors } from '@/content/ask-errors';
 import { SITE_LOCALE, type SiteLocale } from '@/content/site-locale';
+import { parseConversationId } from '@/lib/ask/conversation-id';
 import { isInjectionAttempt } from '@/lib/ask/injection';
 import { ASK_MAX_OUTPUT_TOKENS, ASK_MAX_QUESTION_CHARS } from '@/lib/ask/limits';
 import { type AskRefusalStatus, countAskRefusal } from '@/lib/ask/refusal-count';
@@ -49,6 +50,7 @@ export type AskContext = {
   question: string;
   fullQuestion: string;
   answerLocale: SiteLocale;
+  conversationId?: string;
   reserved: number;
   budgetKey: string;
   dailyKey: string;
@@ -97,7 +99,13 @@ async function checkRateLimit(
 }
 
 type ParsedQuestion =
-  | { ok: true; question: string; fullQuestion: string; answerLocale: SiteLocale }
+  | {
+      ok: true;
+      question: string;
+      fullQuestion: string;
+      answerLocale: SiteLocale;
+      conversationId: string | null;
+    }
   | { ok: false; reason: 'question required' | 'invalid body' };
 
 function parseQuestion(
@@ -112,12 +120,18 @@ function parseQuestion(
         : {};
     const q = body.question;
     if (typeof q !== 'string' || !q.trim()) return { ok: false, reason: 'question required' };
+    const conversationId =
+      body.conversationId === undefined ? null : parseConversationId(body.conversationId);
+    if (body.conversationId !== undefined && conversationId === null) {
+      return { ok: false, reason: 'invalid body' };
+    }
     const fullQuestion = q.trim();
     return {
       ok: true,
       question: fullQuestion.slice(0, ASK_MAX_QUESTION_CHARS),
       fullQuestion,
       answerLocale: siteLocaleOf(body.locale) ?? pageLocale,
+      conversationId,
     };
   } catch {
     return { ok: false, reason: 'invalid body' };
@@ -185,7 +199,7 @@ export async function preflightAsk(req: Request): Promise<PreflightResult> {
         : askErrors[pageLocale].invalidBody;
     return reject(askError(requestId, message, 400));
   }
-  const { question, fullQuestion, answerLocale } = parsed;
+  const { question, fullQuestion, answerLocale, conversationId } = parsed;
 
   if (isInjectionAttempt(question)) {
     log.info('ask rejected: prompt-injection pattern', { requestId, ipHash });
@@ -216,6 +230,7 @@ export async function preflightAsk(req: Request): Promise<PreflightResult> {
       question,
       fullQuestion,
       answerLocale,
+      ...(conversationId === null ? {} : { conversationId }),
       reserved,
       budgetKey,
       dailyKey,

@@ -77,7 +77,7 @@ The `design-system/components` directory contains eleven components. Ten have no
   <Badge size="sm">SMALL</Badge>
 </Preview>
 
-**Sizing:** Both sizes use `text-xs`: 12px below 768px and 13px from 768px. There is no sub-12px mobile override. Below 360px the badge wraps instead of overflowing.
+**Sizing:** Both sizes use `text-xs`: 13px at every width. There is no smaller mobile override. Below 360px the badge wraps instead of overflowing.
 
 Other `<span>` attributes pass through and `className` is appended.
 
@@ -142,6 +142,8 @@ Renders the three macOS-style traffic-light dots (red/yellow/green) as a pure RS
   <StatTile value="5+" label="YRS_EXP" />
   <StatTile value="1.2s" label="LCP" variant="compact" />
 </Preview>
+
+**Layout:** A label wraps between words, never inside one. The tile reads `--stat-tile-pad-x` (default 10px) and `--stat-tile-tracking` (default 0.08em) from its container, so a narrow grid can trade padding and tracking for room without a new variant.
 
 **Accessibility:** Rendered as `<dl><dt>{label}</dt><dd>{value}</dd></dl>` · screen readers announce "label: value".
 
@@ -249,7 +251,7 @@ Scroll progress is one decorative element, hidden from assistive technology with
 | Viewport | Shape | Placement |
 |---|---|---|
 | From 1024px | 2px horizontal line | Across the top |
-| Below 1024px | 2px vertical line | Right edge |
+| Below 1024px | 2px vertical line | Left edge |
 
 The line does not print and carries no number: no readout of the position appears in any control name.
 

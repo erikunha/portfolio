@@ -4,6 +4,7 @@ import { shellStates, shellUi } from '@/content/shell-ui';
 import { SITE_LOCALE } from '@/content/site-locale';
 import { waitForHydration } from './_helpers/hydration';
 import { installMockBackend } from './_helpers/mock-backend';
+import { waitForConfirmArmed } from './_helpers/shell';
 
 const REF_A = '7f3a9c2e-41b0-4d8e-9a77-3c51d0b2e8aa';
 const REF_B = '0b9d11e4-7c2a-4f6e-8e0d-2a6b9f3c1d55';
@@ -52,35 +53,38 @@ const noHorizontalOverflow = (page: Page) =>
   );
 
 test.describe('request refs and privacy', () => {
-  test('an answer ends with a req= line and its forget button deletes the record', async ({
+  test('an answer ends with the conversation receipt and its forget deletes the conversation', async ({
     page,
   }) => {
     const forgotten = await openShell(page, [REF_A]);
     await run(page, 'what does erik do?');
-    const trailer = page.getByTestId('shell-reference');
-    await expect(trailer).toContainText(`${ui.trailerPrefix}${REF_A}`);
-    await trailer.getByRole('button', { name: ui.forget }).click();
-    await expect(trailer).toContainText(ui.forgetDeleted);
+    const receipt = page.getByTestId('shell-receipt');
+    await expect(receipt.locator('code')).toHaveText(REF_A);
+    await receipt.getByRole('button', { name: ui.forget, exact: true }).click();
+    await waitForConfirmArmed(page);
+    await receipt.getByRole('button', { name: ui.forgetConfirm, exact: true }).click();
+    await expect(receipt).toHaveCount(0);
     expect(forgotten).toEqual([REF_A]);
-    await expect(trailer.getByRole('button', { name: ui.forget })).toHaveCount(0);
+    await expect(page.getByRole('log', { name: ui.outputLabel })).toContainText(
+      ui.conversationForgotten,
+    );
   });
 
-  test('privacy lists this session ids and forgets them all, one result line each', async ({
+  test('privacy lists this session ids and forgets the conversation through one of them', async ({
     page,
   }) => {
     const forgotten = await openShell(page, [REF_A, REF_B]);
     await run(page, 'first question');
-    await expect(page.getByTestId('shell-reference')).toHaveCount(1);
+    await expect(page.getByTestId('shell-receipt')).toHaveCount(1);
     await run(page, 'second question');
-    await expect(page.getByTestId('shell-reference')).toHaveCount(2);
+    await expect(page.getByTestId('shell-receipt').locator('code')).toHaveText(REF_B);
     await run(page, 'privacy');
     const feed = page.getByRole('log', { name: ui.outputLabel });
     await expect(feed).toContainText(`1. ${REF_A}`);
     await expect(feed).toContainText(`2. ${REF_B}`);
     await run(page, 'privacy forget --all');
-    await expect(feed).toContainText(`${REF_A} ${ui.forgetDeleted}`);
     await expect(feed).toContainText(`${REF_B} ${ui.forgetDeleted}`);
-    expect(forgotten).toEqual([REF_A, REF_B]);
+    expect(forgotten).toEqual([REF_B]);
     await run(page, 'privacy');
     await expect(feed).toContainText(ui.privacyEmpty);
   });
@@ -92,7 +96,7 @@ test.describe('request refs and privacy', () => {
       route.fulfill({ status: 429, headers: { 'Retry-After': '120' }, body: '{}' }),
     );
     await run(page, 'a question');
-    await expect(page.getByTestId('shell-reference')).toHaveCount(1);
+    await expect(page.getByTestId('shell-receipt')).toHaveCount(1);
     await run(page, 'privacy forget 1');
     await expect(page.getByRole('log', { name: ui.outputLabel })).toContainText(
       `2 ${states.minutesUnit}`,
@@ -106,20 +110,23 @@ test.describe('request refs and privacy', () => {
     const receipt = page.getByTestId('footer-receipt');
     await expect(receipt).toHaveCount(0);
     await run(page, 'a question');
-    await expect(page.getByTestId('shell-reference')).toHaveCount(1);
+    await expect(page.getByTestId('shell-receipt')).toHaveCount(1);
     await expect(receipt).toHaveCount(1);
     await expect(receipt).not.toContainText(REF_A);
-    await page.getByTestId('shell-reference').getByRole('button', { name: ui.forget }).click();
+    const shellReceipt = page.getByTestId('shell-receipt');
+    await shellReceipt.getByRole('button', { name: ui.forget, exact: true }).click();
+    await waitForConfirmArmed(page);
+    await shellReceipt.getByRole('button', { name: ui.forgetConfirm, exact: true }).click();
     await expect(receipt).toHaveCount(0);
   });
 
-  test('at 320px the trailer, the privacy list and the footer receipt do not overflow', async ({
+  test('at 320px the shell receipt, the privacy list and the footer receipt do not overflow', async ({
     page,
   }) => {
     await page.setViewportSize(NARROW);
     await openShell(page, [REF_A]);
     await run(page, 'a question');
-    await expect(page.getByTestId('shell-reference')).toBeVisible();
+    await expect(page.getByTestId('shell-receipt')).toBeVisible();
     await run(page, 'privacy');
     await expect(page.getByTestId('footer-receipt')).toHaveCount(1);
     expect(await noHorizontalOverflow(page)).toBe(true);

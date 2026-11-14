@@ -13,7 +13,7 @@ import {
 } from '@/scripts/lib/changelog-merge';
 
 const EXISTING_MDX = `export const metadata = {
-  title: 'Changelog — Design System — erikunha.dev',
+  title: 'Changelog · Design System · erikunha.dev',
 };
 
 # CHANGELOG

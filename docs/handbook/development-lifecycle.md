@@ -51,7 +51,7 @@ A feature branch is created (`<type>/<description>`, enforced by `.husky/pre-pus
 
 ### 6. Commit (per-commit gates)
 
-- **`pre-commit`**: `pnpm check` (Biome check) and staged gitleaks scanning.
+- **`pre-commit`**: `pnpm check:staged` (Biome on the staged files) and staged gitleaks scanning.
 - **`commit-msg`**: commitlint. Conventional Commits with a **mandatory scope** (`scope-empty: [2, 'never']`) drawn from an **open set** (`scope-enum: [0]`), and the subject must not start sentence-case, start-case, PascalCase or upper-case. Scopes are feature-area names (`ci`, `dx`, `observability`, `healthz`, `ppr`, `arch`, ...), not technical categories.
 
 ### 7. Pre-PR diff read, and the pre-push gate chain
@@ -64,7 +64,7 @@ Run `pnpm ci:predict` (add `--linux` when the change touches layout, fonts or me
 
 ### 9. Review threads
 
-On the open PR, review it: the `pr-review-orchestrator` skill dispatches one specialist per material domain, applies every matching skill and reads the rendered result as images. Answer every blocking finding. claude-review runs only when an owner, member or collaborator comments `/claude-review`, with no automatic follow-up round.
+On the open PR, review it against `REVIEW.md`, running every repository skill whose trigger matches the diff and looking at the rendered result. Answer every blocking finding. claude-review runs only when an owner, member or collaborator comments `/claude-review`, with no automatic follow-up round.
 
 ### 10. Pre-merge gates -> merge
 

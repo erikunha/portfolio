@@ -1,4 +1,4 @@
-import { Fragment } from 'react';
+import { BREAK_AFTER, BreakAfter } from '@/components/BreakAfter';
 import { ExternalLink } from '@/components/ExternalLink';
 import { companyUrlFor } from '@/content/git-log';
 import { projectPresentation, projects } from '@/content/projects';
@@ -11,7 +11,7 @@ import { Module } from '../../responsive/Module';
 import { PerfReceiptsSection } from '../PerfReceiptsSection';
 
 const COMPANY_LABEL_PREFIX = '@ ';
-const COMPANY_WORD_SEPARATOR = '_';
+const COMPANY_WORD_SEPARATOR = BREAK_AFTER.identifier;
 
 function CompanyLabel({
   kind,
@@ -24,33 +24,10 @@ function CompanyLabel({
     <>
       {COMPANY_LABEL_PREFIX}
       <CompanyLink href={companyUrlFor(company)} locale={locale}>
-        {label}
+        <BreakAfter chars={COMPANY_WORD_SEPARATOR}>{label}</BreakAfter>
       </CompanyLink>
     </>
   );
-}
-
-const NAME_SEPARATOR = '_';
-
-function BreakAfterUnderscores({ text }: { text: string }) {
-  const segments: { offset: number; part: string; last: boolean }[] = [];
-  let offset = 0;
-  const parts = text.split(NAME_SEPARATOR);
-  for (const [position, part] of parts.entries()) {
-    segments.push({ offset, part, last: position === parts.length - 1 });
-    offset += part.length + NAME_SEPARATOR.length;
-  }
-  return segments.map(({ offset: start, part, last }) => (
-    <Fragment key={start}>
-      {part}
-      {last ? null : (
-        <>
-          {NAME_SEPARATOR}
-          <wbr />
-        </>
-      )}
-    </Fragment>
-  ));
 }
 
 export function ProjectsContent({ locale }: { locale: SiteLocale }) {
@@ -73,11 +50,11 @@ export function ProjectsContent({ locale }: { locale: SiteLocale }) {
           <h3 className="project-name">
             {project.url ? (
               <ExternalLink href={project.url}>
-                <BreakAfterUnderscores text={project.name} />
+                <BreakAfter chars={BREAK_AFTER.identifier}>{project.name}</BreakAfter>
                 <span className="sr-only"> {presentation.externalDisclosure}</span>
               </ExternalLink>
             ) : (
-              <BreakAfterUnderscores text={project.name} />
+              <BreakAfter chars={BREAK_AFTER.identifier}>{project.name}</BreakAfter>
             )}
           </h3>
           <p className="project-desc">{project.description}</p>
@@ -85,7 +62,7 @@ export function ProjectsContent({ locale }: { locale: SiteLocale }) {
             {project.stats.map((stat) => (
               <div key={stat.label} className="max-md:flex-col max-md:gap-0">
                 <dt>{stat.label}:</dt>
-                <dd className="max-md:text-left">{stat.value}</dd>
+                <dd>{stat.value}</dd>
               </div>
             ))}
           </dl>

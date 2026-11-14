@@ -2,8 +2,8 @@ import { PageMain } from '@/components/PageMain';
 import { SiteShell } from '@/components/SiteShell';
 import { errorsContent } from '@/content/errors';
 import type { SiteLocale } from '@/content/site-locale';
-import { Button, CmdLine, TerminalPanel } from '@/design-system';
-import { ErrorHeading } from './ErrorPages.client';
+import { Button, TerminalPanel } from '@/design-system';
+import { ErrorHeading, RequestedPathCmdLine } from './ErrorPages.client';
 import { ERROR_MAIN_CLASS } from './error-main';
 
 export function NotFoundPage({ locale }: { locale: SiteLocale }) {
@@ -14,12 +14,7 @@ export function NotFoundPage({ locale }: { locale: SiteLocale }) {
         <ErrorHeading>{notFound.code}</ErrorHeading>
         <TerminalPanel header={notFound.panelHeader}>
           <div className="p-[14px]">
-            <CmdLine
-              user=""
-              prompt={notFound.prompt}
-              command={notFound.command}
-              output={notFound.output}
-            />
+            <RequestedPathCmdLine content={notFound} />
           </div>
         </TerminalPanel>
         <nav aria-label={notFound.suggestionsNavLabel}>
