@@ -5,7 +5,7 @@ import { freezeMotion } from './_helpers/motion';
 
 const MIXER = '#sec-guitar .guitar-mixer';
 // WebKit on macOS leaves buttons out of the Tab order unless full keyboard access is on, so
-// there the walk covers the sliders, which carry tabindex.
+// there the walk covers the sliders, which carry tabindex. WebKit on Linux tabs to buttons.
 const CONTROLS = `${MIXER} [role="slider"]:visible, ${MIXER} button:visible`;
 const SLIDERS = `${MIXER} [role="slider"]:visible`;
 const MIN_RING_PX = 2;
@@ -13,6 +13,7 @@ const NO_OUTLINE = 'none';
 const VIEWPORT = { width: 1280, height: 900 } as const;
 const ARROW_STEPS = 3;
 const WEBKIT = 'webkit';
+const MACOS = 'darwin';
 
 test.skip(
   ({ isMobile }) => isMobile,
@@ -47,7 +48,8 @@ test('Tab walks every mixer control in order, each shows a focus ring, and focus
   browserName,
 }) => {
   await openMixer(page);
-  const controls = page.locator(browserName === WEBKIT ? SLIDERS : CONTROLS);
+  const buttonsSkipTab = browserName === WEBKIT && process.platform === MACOS;
+  const controls = page.locator(buttonsSkipTab ? SLIDERS : CONTROLS);
   const count = await controls.count();
   expect(count, 'the mixer exposes faders, knobs and buttons').toBeGreaterThan(3);
   const expected = await controls.evaluateAll((nodes) =>
