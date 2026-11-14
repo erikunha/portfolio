@@ -28,7 +28,7 @@ describe('the interactive shell for a visitor without scripts', () => {
       expect(noscript).toContain('data-testid="shell-nojs"');
       expect(noscript).toContain(ui.noscript);
       expect(noscript).toContain(`href="${ui.emailHref}"`);
-      expect(noscript.replaceAll('<wbr/>', '')).toContain(`>${ui.email}</a>`);
+      expect(noscript.replace(/<\/?(?:wbr\/|span)>/g, '')).toContain(`>${ui.email}</a>`);
     },
   );
 });
