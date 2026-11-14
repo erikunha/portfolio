@@ -55,6 +55,18 @@ describe('detect-changes manifest', () => {
     expect(paths.filter((p, index) => paths.indexOf(p) !== index)).toEqual([]);
   });
 
+  it.each([
+    '.github/workflows/ci.yml',
+    'scripts/install-playwright-browsers.mjs',
+    'scripts/wait-argos-reference.mjs',
+  ])('arms ui for %s, which the visual job runs', (path) => {
+    expect(UI_PATHS).toContain(path);
+  });
+
+  it('arms ai for the workflow that defines the ai-eval job', () => {
+    expect(AI_PATHS).toContain('.github/workflows/ci.yml');
+  });
+
   it('arms the ui gates for a Playwright e2e spec through its own entry', () => {
     expect(UI_PATHS).toContain('tests/e2e/');
   });

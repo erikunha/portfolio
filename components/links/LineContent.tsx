@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { BREAK_AFTER, BreakAfter } from '@/components/BreakAfter';
 
 export type LineContentProps = {
   glyph: ReactNode;
@@ -14,7 +15,9 @@ export function LineContent({ glyph, label, host, arrow }: LineContentProps) {
         {glyph}
       </span>
       <span className="links-line-label">{label}</span>
-      <span className="links-line-host">{host}</span>
+      <span className="links-line-host">
+        <BreakAfter chars={BREAK_AFTER.host}>{host}</BreakAfter>
+      </span>
       <span className="links-line-arrow" aria-hidden="true">
         {arrow}
       </span>

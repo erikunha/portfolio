@@ -4,7 +4,7 @@ import { decideStagedExit, LEAKS_FOUND, NO_LEAKS } from '../gitleaks-staged.mjs'
 const FATAL = 2;
 
 const FAIL_CLOSED =
-  'This runs on EVERY commit and is the only thing standing between a secret and git history. Once a secret is committed and pushed it is published, and rotation is the only remedy — so a branch here that lets the commit through is not a bug, it is the leak.';
+  'This runs on EVERY commit and is the only thing standing between a secret and git history. Once a secret is committed and pushed it is published, and rotation is the only remedy, so a branch here that lets the commit through is not a bug, it is the leak.';
 
 describe('decideStagedExit (the pre-commit gate cannot let a commit through unless gitleaks really scanned)', () => {
   // The literals, not the constants. Feeding NO_LEAKS/LEAKS_FOUND back in would make these
@@ -35,7 +35,7 @@ describe('decideStagedExit (the pre-commit gate cannot let a commit through unle
     });
     expect(
       verdict.block,
-      `${FAIL_CLOSED}\n\nA scanner that silently skips when it is not installed is the same as no scanner, and nobody would ever find out — which is precisely the state this repo was in before this gate existed.`,
+      `${FAIL_CLOSED}\n\nA scanner that silently skips when it is not installed is the same as no scanner, and nobody would ever find out, which is precisely the state this repo was in before this gate existed.`,
     ).toBe(true);
     expect(verdict.reason).toContain('brew install gitleaks');
     expect(verdict.reason).toContain('ENOENT');
@@ -46,11 +46,11 @@ describe('decideStagedExit (the pre-commit gate cannot let a commit through unle
     expect(verdict.block, FAIL_CLOSED).toBe(true);
     expect(
       verdict.reason,
-      'Asserting only `block` lets the did-not-run branch be deleted: the result falls through to the unknown-exit-code branch, which also blocks, so no test notices — while the message degrades to "exited null", which names nothing.',
+      'Asserting only `block` lets the did-not-run branch be deleted: the result falls through to the unknown-exit-code branch, which also blocks, so no test notices, while the message degrades to "exited null", which names nothing.',
     ).toContain('killed');
     expect(
       verdict.reason,
-      'A killed scanner is not a missing one. Telling the developer to `brew install gitleaks` when the binary is installed and was OOM-killed sends them to fix the wrong thing — the same message-contradiction class this PR keeps closing.',
+      'A killed scanner is not a missing one. Telling the developer to `brew install gitleaks` when the binary is installed and was OOM-killed sends them to fix the wrong thing, the same message-contradiction class this PR keeps closing.',
     ).not.toContain('brew install');
     expect(verdict.reason).not.toContain('null');
   });
@@ -68,7 +68,7 @@ describe('decideStagedExit (the pre-commit gate cannot let a commit through unle
     const verdict = decideStagedExit({ status: LEAKS_FOUND });
     expect(
       verdict.reason,
-      'This message is read at the exact moment a developer decides HOW to allowlist. It previously told them to add a `paths` entry — which exempts that file from EVERY rule and makes it a permanent secret-laundering path. The hook was instructing them to recreate the vulnerability.',
+      'This message is read at the exact moment a developer decides HOW to allowlist. It previously told them to add a `paths` entry, which exempts that file from EVERY rule and makes it a permanent secret-laundering path. The hook was instructing them to recreate the vulnerability.',
     ).toContain('Never a `paths` entry');
   });
 });

@@ -6,7 +6,7 @@ const validCase = {
   prompt: 'Stage your changes.',
   target: {
     name: 'CLAUDE.md:no-broad-git-add',
-    systemText: 'Never use `git add .` — stage only the files you changed.',
+    systemText: 'Never use `git add .`, stage only the files you changed.',
   },
   tier: 'mechanical' as const,
   grader: 'code' as const,

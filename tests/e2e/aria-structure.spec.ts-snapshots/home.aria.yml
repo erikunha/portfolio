@@ -5,9 +5,7 @@
   - navigation /.+/
   - navigation /.+/
 - main:
-  - complementary:
-    - /children: contain
-    - heading /.+/ [level=1]
+  - heading /.+/ [level=1]
   - region /.+/:
     - /children: contain
     - heading /.+/ [level=2]

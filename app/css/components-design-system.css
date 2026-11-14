@@ -97,6 +97,10 @@
     white-space: nowrap;
   }
 
+  .ds-code-piece {
+    white-space: nowrap;
+  }
+
   .ds-prose td code {
     color: var(--color-text);
     font-size: var(--text-xs);
@@ -200,6 +204,15 @@
 
   .toc .ds-nav-item {
     width: 100%;
+    color: var(--color-text);
+    text-decoration-line: underline;
+    text-decoration-color: var(--color-primary-subtle);
+    text-underline-offset: var(--spacing-1);
+  }
+
+  .toc .ds-nav-item:hover {
+    color: var(--color-green);
+    text-decoration-color: currentColor;
   }
 
   .pager {
@@ -363,10 +376,14 @@
     background: var(--color-primary-500);
   }
 
+  .component-nav-link {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--spacing-target-compact);
+  }
+
   @media (pointer: coarse) {
     .component-nav-link {
-      display: inline-flex;
-      align-items: center;
       min-height: var(--spacing-target);
     }
   }

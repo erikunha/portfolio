@@ -13,7 +13,7 @@ function renderStatic(props: Parameters<typeof RmsButtons>[0]) {
   return new DOMParser().parseFromString(html, 'text/html');
 }
 
-describe('RmsButtons — initial render', () => {
+describe('RmsButtons: initial render', () => {
   it('renders one button per label', () => {
     const doc = renderStatic({
       buttons: ['R', 'M', 'S'],
@@ -66,7 +66,7 @@ describe('RmsButtons — initial render', () => {
   });
 });
 
-describe('RmsButtons — toggle interaction', () => {
+describe('RmsButtons: toggle interaction', () => {
   let unmount: (() => void) | undefined;
   afterEach(() => {
     unmount?.();

@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { NOT_FOUND_PATH_TOKEN } from './errors.constants';
 import { FACT_SEPARATOR } from './fact-separator';
 import { SECTION_ICONS } from './section-registry';
 
@@ -504,7 +505,6 @@ export const CareerCopySchema = z.object({
   command: z.string().min(1),
   cvLabel: z.string().min(1),
   cvHref: z.string().startsWith('/'),
-  scrollLabel: z.string().min(1),
   graph: z.string().min(1),
   pipe: z.string().min(1),
 });
@@ -645,10 +645,12 @@ export const ShellUiSchema = z.object({
   toolbarLabel: z.string().min(1),
   prompt: z.string().min(1),
   placeholder: z.string().min(1),
+  mobilePlaceholder: z.string().min(1),
   commandHint: z.string().min(1),
   aiLabel: z.string().min(1),
   thinking: z.string().min(1),
-  stop: z.string().min(1),
+  stopPill: z.string().includes('{seconds}'),
+  escKey: z.string().min(1),
   stopLabel: z.string().min(1),
   stoppedBefore: z.string().min(1),
   stoppedPartial: z.string().min(1),
@@ -666,8 +668,32 @@ export const ShellUiSchema = z.object({
   offline: z.string().min(1),
   networkError: z.string().min(1),
   localAvailable: z.string().min(1),
-  referencePrefix: z.string().min(1),
-  trailerPrefix: z.string().min(1),
+  receiptTitle: z.string().min(1),
+  receiptQuestionsOne: z.string().min(1),
+  receiptQuestionsMany: z.string().includes('{count}'),
+  receiptRetention: z.string().min(1),
+  receiptIdLabel: z.string().min(1),
+  receiptLabel: z.string().min(1),
+  conversationForgotten: z.string().min(1),
+  conversationForgottenOne: z.string().min(1),
+  conversationForgottenMany: z.string().includes('{count}'),
+  forgetConfirmTitle: z.string().min(1),
+  forgetConfirmOne: z.string().min(1),
+  forgetConfirmMany: z.string().includes('{count}'),
+  forgetCancel: z.string().min(1),
+  forgetConfirm: z.string().min(1),
+  forgetPendingOne: z.string().min(1),
+  forgetPendingMany: z.string().includes('{count}'),
+  forgetUnavailable: z.string().min(1),
+  forgetEmailPrefix: z.string().min(1),
+  forgetOffline: z.string().min(1),
+  forgetOfflineHint: z.string().min(1),
+  forgetTimedOut: z.string().min(1),
+  forgetTimedOutHint: z.string().min(1),
+  forgetRetry: z.string().min(1),
+  forgetWaitNotice: z.string().includes('{left}'),
+  forgetWaitHint: z.string().min(1),
+  forgetWait: z.string().includes('{left}'),
   forgetting: z.string().min(1),
   forgetDeleted: z.string().min(1),
   forgetFailed: z.string().min(1),
@@ -677,10 +703,10 @@ export const ShellUiSchema = z.object({
   privacyUsage: z.string().min(1),
   privacyUnknown: z.string().min(1),
   privacyNotAttempted: z.string().min(1),
+  privacyNoConversation: z.string().min(1),
   copy: z.string().min(1),
   forget: z.string().min(1),
   copied: z.string().min(1),
-  copyFailed: z.string().min(1),
   copiedAnnouncement: z.string().min(1),
   copyFailedAnnouncement: z.string().min(1),
   accuracy: z.string().min(1),
@@ -691,7 +717,10 @@ export const ShellUiSchema = z.object({
   requestIdHeader: z.string().min(1),
   technicalPrivacySuffix: z.string().min(1),
   forgetEndpoint: z.string().min(1),
+  technicalPrivacyScope: z.string().min(1),
+  noscript: z.string().min(1),
   suggestions: z.array(z.string().min(1)).min(1),
+  mobileSuggestions: z.array(z.string().min(1)).min(1),
   commands: z.array(z.string().min(1)).min(1),
 });
 export type ShellUi = z.infer<typeof ShellUiSchema>;
@@ -797,6 +826,11 @@ export const FooterContentSchema = z
   });
 export type FooterContent = z.infer<typeof FooterContentSchema>;
 
+const NotFoundTemplateSchema = z
+  .string()
+  .min(1)
+  .refine((value) => value.includes(NOT_FOUND_PATH_TOKEN));
+
 const ErrorHrefSchema = z.string().regex(/^\/(?!\/)[\w/#-]*$/);
 const ErrorLinkSchema = z.object({ label: z.string().min(1), href: ErrorHrefSchema });
 
@@ -806,8 +840,9 @@ export const ErrorsContentSchema = z.object({
     code: z.literal('404'),
     panelHeader: z.string().min(1),
     prompt: z.string().min(1),
-    command: z.string().min(1),
-    output: z.string().min(1),
+    command: NotFoundTemplateSchema,
+    output: NotFoundTemplateSchema,
+    pathFallback: z.string().min(1),
     suggestionsLabel: z.string().min(1),
     suggestionsNavLabel: z.string().min(1),
     suggestions: z.array(ErrorLinkSchema).min(1),

@@ -45,7 +45,7 @@ describe('StatTile', () => {
     expect(dd?.classList.contains('text-xs')).toBe(true);
     expect(dd?.classList.contains('text-2xl')).toBe(false);
   });
-  it('default variant keeps the hero scale (text-base) — production Hero consumes it', () => {
+  it('default variant keeps the hero scale (text-base): production Hero consumes it', () => {
     const { container } = render(<StatTile value="1" label="x" />);
     const dd = container.querySelector('dd');
     expect(dd?.classList.contains('text-base')).toBe(true);

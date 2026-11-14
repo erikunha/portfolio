@@ -1,7 +1,8 @@
 // @vitest-environment node
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { ASK_RESERVED_INPUT_TOKENS } from '@/lib/ask/input-reservation';
+import { askReservationCost } from '@/lib/ask/input-reservation';
+import { askBudgetCost } from '@/lib/ask/usage';
 
 const pipelineExec = vi.fn(async (): Promise<[number, number]> => {
   throw new Error('Failed to parse URL from /pipeline');
@@ -23,7 +24,13 @@ vi.mock('@/lib/log', () => ({
   log: { info: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn() },
 }));
 
-const RESERVATION = ASK_RESERVED_INPUT_TOKENS + 512;
+const RESERVATION = askReservationCost(512);
+const SETTLED_COST = askBudgetCost({
+  billedInputTokens: 100,
+  cacheReadTokens: 0,
+  cacheWriteTokens: 0,
+  outputTokens: 50,
+});
 const RUN_REQUESTS = 3;
 
 describe('budget store seam', () => {
@@ -163,7 +170,7 @@ describe('budget store seam', () => {
     const { reserved, budgetKey, dailyKey } = await reserveBudget(512);
     await settleBudget(reserved, 100, 50, budgetKey, dailyKey);
 
-    expect(used.get(budgetKey)).toBe(150);
-    expect(used.get(dailyKey)).toBe(150);
+    expect(used.get(budgetKey)).toBe(SETTLED_COST);
+    expect(used.get(dailyKey)).toBe(SETTLED_COST);
   });
 });

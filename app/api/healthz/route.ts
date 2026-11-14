@@ -1,4 +1,5 @@
 import { connection, type NextRequest } from 'next/server';
+import { commitSha } from '@/lib/env-build';
 import { log } from '@/lib/log';
 import { getHealthzLimit, getRedis } from '@/lib/rate-limit';
 import { clientRateLimitKey } from '@/lib/server/rate-limit-key';
@@ -13,7 +14,7 @@ let _psiCache: { psiLastRun: string | null; cachedAt: number } | null = null;
 
 export async function GET(req: NextRequest): Promise<Response> {
   await connection();
-  const sha = process.env.VERCEL_GIT_COMMIT_SHA || 'local';
+  const sha = commitSha();
 
   try {
     const { success } = await getHealthzLimit().limit(await clientRateLimitKey(req));

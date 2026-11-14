@@ -19,7 +19,7 @@ vi.mock('@/lib/log', () => ({
   log: { info: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn() },
 }));
 
-describe('hashIp — output format', () => {
+describe('hashIp: output format', () => {
   beforeEach(() => {
     vi.resetModules();
     delete process.env.DEPLOY_SALT;
@@ -47,7 +47,7 @@ describe('hashIp — output format', () => {
   });
 });
 
-describe('hashIp — salt sourcing', () => {
+describe('hashIp: salt sourcing', () => {
   beforeEach(() => {
     vi.resetModules();
     delete process.env.DEPLOY_SALT;
@@ -82,7 +82,7 @@ describe('hashIp — salt sourcing', () => {
   });
 });
 
-describe('hashIp — concurrent dedup', () => {
+describe('hashIp: concurrent dedup', () => {
   beforeEach(() => {
     vi.resetModules();
     delete process.env.DEPLOY_SALT;

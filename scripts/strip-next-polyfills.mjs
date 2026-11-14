@@ -18,7 +18,7 @@ for (const name of TARGETS) {
   if (!existsSync(target)) {
     console.error(
       `[strip-polyfills] ${name} not found at ${target}. ` +
-        'Next.js may have reorganized the polyfill path — re-check the target ' +
+        'Next.js may have reorganized the polyfill path, re-check the target ' +
         'before relying on the Lighthouse Best-Practices score.',
     );
     process.exit(1);
@@ -37,12 +37,12 @@ for (const name of TARGETS) {
       `[strip-polyfills] unexpected shape at ${target} ` +
         `(size ${sizeBytes}B, token "${KNOWN_TOKEN}" ${
           current.includes(KNOWN_TOKEN) ? 'present' : 'absent'
-        }). Next.js likely changed the polyfill bundle — re-verify before stripping.`,
+        }). Next.js likely changed the polyfill bundle, re-verify before stripping.`,
     );
     process.exit(1);
   }
 
-  writeFileSync(target, `${SENTINEL} — modern browsers only\n`, 'utf8');
+  writeFileSync(target, `${SENTINEL}: modern browsers only\n`, 'utf8');
   stripped++;
 }
 

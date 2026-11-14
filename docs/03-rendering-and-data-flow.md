@@ -54,7 +54,7 @@ flowchart TD
     layoutPt --> linksPt["/links -> localized RSC + cached YouTube feed"]
     layoutPt --> errorsPt["error.tsx -> route error recovery"]
     layoutPt --> nfPt["unmatched /pt address (404) -> app/(pt)/pt/[...missing]/not-found.tsx"]
-    shell -.serves.-> api
+    shell["components/RootShell.tsx (RSC)"] -.serves.-> api
     subgraph api["API cluster (app/api/**)"]
     api1["POST /api/ask (streaming)"]
     api2["POST /api/contact (defineHandler)"]
@@ -65,7 +65,7 @@ flowchart TD
     api7["GET /api/lighthouse"]
     api8["POST /api/log · POST /api/log/forget"]
     api9["GET · POST /api/mcp (stateless handler; POST body limit 4096 bytes)"]
-    api10["GET /api/contact-retry (daily cron)"]
+    api10["GET /api/contact-retry (cron, twice a day)"]
     end
 ```
 
@@ -133,12 +133,12 @@ flowchart LR
 - **The dual-variant pattern** (used on `/` by the DAW mixer):
 
   ```
-  <Module><Suspense fallback={null}><AsyncInner/></Suspense></Module>
+  <Module><Suspense fallback={<MixerLoading/>}><AsyncInner/></Suspense></Module>
   ```
 
-  `AsyncInner` awaits `getIsMobile()` and renders the desktop or mobile variant behind a null Suspense fallback. `GuitarSection` uses this pattern for its mixer content (`DawMixerContent`); the guitar rig and photo above it use one responsive presentation without this UA boundary or variant swap.
+  `AsyncInner` awaits `getIsMobile()` and renders the desktop or mobile variant behind a Suspense fallback, the `MixerLoading` boot log, whose `min-height` tracks the finished mixer. `GuitarSection` uses this pattern for its mixer content (`DawMixerContent`); the guitar rig and photo above it use one responsive presentation without this UA boundary or variant swap.
 - **`defer` prop:** the below-the-fold sections (`DEFERRED_SECTION_COUNT` in `components/responsive/Module/module.constants.ts`, held by `__tests__/content-visibility.test.ts`) pass `defer` to `Module`, which applies CSS `content-visibility` (defers render cost, not JS). Most use `Module`; Career applies the same attributes in its own wrapper. A deferred module reserves an estimated placeholder height while its content is laid out at full height: 520px is only the default, with per-section and per-breakpoint overrides (Career 3340px, Opinions 3180px, Guitar and mixer 3320px, Contact 2640px) and `contain-intrinsic-size: auto var(--module-estimate)` remembering the rendered height, so the axe gate reveals the deferred modules before the scan: the audit then sees the painted page, the state the visual baselines capture.
-- **Lazy boundaries:** `ContactFormLazy` and `InteractiveShellLazy` are `React.lazy` islands inside `LazyIsland`, rendered on the server, with accessible loading placeholders (`.shell-loading`, `.contact-loading`, each holding a per-breakpoint `min-height` and hidden when scripting is off) as the Suspense and error fallback. `ContactTimezoneLazy` is a `React.lazy` island instead: an `IntersectionObserver` with a 400px margin mounts it, the static panel (a dim map under a one-line `loading local time…` label, hidden when scripting is off or the chunk failed) stays as the Suspense and error fallback, the host holds a per-locale minimum height so the swap moves nothing, and its chunk stays out of first load. Its clocks tick only while the panel is on screen and the tab is visible. `MatrixRainLazy` loads from `GlobalMotion` (mounted in the root layout) with `ssr: false` as a decorative fixed overlay behind `main`; late hydration cannot shift layout. `Footer` is an RSC: content, cards, sitemap and shutdown log render on the server. It renders session counters and halt/reboot controls from `Footer.client` directly, without a dynamic import; the netstat card links each endpoint to its destination. The site map switches layout on its own width with container queries. Every folder is a full-width row (`./work/` and its file count) over its links, which hang off a vertical rule, with a faint divider between folders. Below 38rem the rows are native `<details name="footer-sitemap">` summaries with a `+`/`-` sign, one folder open at a time and `./work/` open on load. From 38rem all folders show in three columns, and from 68rem in six. Rows use `--text-body`, counts `--text-xs`, and links keep 44px targets. It needs no JavaScript and prints as the three-column grid. Counters start at mount to include commands before the footer is reached. The halt clock is empty on the server and reads the visitor’s clock after mount.
+- **Lazy boundaries:** `ContactFormLazy` and `InteractiveShellLazy` are `React.lazy` islands inside `LazyIsland`, rendered on the server, with accessible loading placeholders (`.shell-loading`, `.contact-loading`, each holding a per-breakpoint `min-height` and hidden when scripting is off) as the Suspense and error fallback. With scripting off, `InteractiveShellLazy` renders a `<noscript>` note (`.shell-nojs`) naming the email address in the placeholder's place. `ContactTimezoneLazy` is a `React.lazy` island instead: an `IntersectionObserver` with a 400px margin mounts it, the static panel (a dim map under a one-line `loading local time…` label, hidden when scripting is off or the chunk failed) stays as the Suspense and error fallback, the host holds a per-locale minimum height so the swap moves nothing, and its chunk stays out of first load. Its clocks tick only while the panel is on screen and the tab is visible. `MatrixRainLazy` loads from `GlobalMotion` (mounted in the root layout) with `ssr: false` as a decorative fixed overlay behind `main`; late hydration cannot shift layout. `Footer` is an RSC: content, cards, sitemap and shutdown log render on the server. It renders session counters and halt/reboot controls from `Footer.client` directly, without a dynamic import; the netstat card links each endpoint to its destination. The site map switches layout on its own width with container queries. Every folder is a full-width row (`./work/` and its file count) over its links, which hang off a vertical rule, with a faint divider between folders. Below 38rem the rows are native `<details name="footer-sitemap">` summaries with a `+`/`-` sign, one folder open at a time and `./work/` open on load. From 38rem all folders show in three columns, and from 68rem in six. Rows use `--text-body`, counts `--text-xs`, and links keep 44px targets. It needs no JavaScript and prints as the three-column grid. Counters start at mount to include commands before the footer is reached. The halt clock is empty on the server and reads the visitor’s clock after mount.
 
 The terminal home combines prerendered output and dynamic Suspense children. Separately, `lib/links/feed.ts` uses `use cache` and `cacheLife` for the YouTube feed: stale after 900 seconds, revalidate after 3,600 seconds, expire after 86,400 seconds. Without `YOUTUBE_API_KEY` the loader reads the RSS feed's newest 15 uploads and drops Shorts by their `/shorts/` URL. With the key it pages the channel uploads playlist (up to four pages of 50) until six regular videos are collected (the featured video and the five history rows), dropping Shorts by URL and by a duration of 180 seconds or less, and keeps the first six regular videos; when the API cannot be read the loader falls back to the RSS feed, where the key still applies the duration filter. `LinksPage` awaits that feed and falls back to `EMPTY_FEED` on failure. An empty result shortens its own cache life (stale 30 seconds, revalidate 60 seconds, expire 300 seconds), so a transient upstream outage is retried within a minute and does not stay for an hour; the page then says the list did not load, not that the channel has no videos.
 
@@ -186,7 +186,7 @@ sequenceDiagram
     participant RL as lib/rate-limit
 
     R->>RL: checkIdenticalQuestion (60s dedup, 429)
-    R->>RL: reserveBudget(512)  (monthly cap and daily slice - 503 if either is exhausted or the store is down, and the dedup lock is released)
+    R->>RL: reserveBudget(512)  (monthly and daily dollar caps - 503 if either is exhausted or the store is down, and the dedup lock is released)
     R->>R: mint 128-bit sentinel, wrap question as data-only
 ```
 
@@ -224,13 +224,13 @@ sequenceDiagram
     participant KV as Upstash Redis
 
     U->>U: parseStreamChunk once per chunk -> rAF-coalesced setStreamingText (React state owned by InteractiveShell)
-    R->>KV: after(): settleBudget(refund) + Layer-2 audit + ask-log (redact, then cut - fail-quiet) + guard counters
+    R->>KV: after(): settleBudget(refund) + Layer-2 audit + ask-log (redact, then cut - fail-quiet) + request key added to ask:conv:{id} (same MULTI as the log write) + guard counters
     U->>U: finalize() -> commit answer (or error line) into history
 ```
 
 **Client-side rendering nuance (verified in code):** the streamed text lands in an _isolated_ `streamingText` state and is flushed at most once per animation frame (`requestAnimationFrame`), so chunks within one frame share a state update. Each chunk is parsed once; the frame callback and the stop path reuse that result. The state lives in `useAskStream` and is read by `InteractiveShell`, whose component renders again when it changes; the text is displayed in a dedicated span. This is the opposite of the Hero boot loop, which mutates `textContent` directly with no React state (see doc 04). Both limit update work.
 
-**Server timeouts (defense in depth):** 30s whole-request `AbortSignal`, 15s mid-stream watchdog, 1s usage-resolve. A reader that cancels mid-answer (tab closed, navigation) aborts the upstream call and still runs settlement and the ask-log write from `after()`, with status `aborted`; before the first token the output share of the reservation is refunded. The shell client gives up after 15s with no token (idle timer, re-armed on every chunk) and offers a retry. The contact form and the shell's forget actions post through `lib/post-json.ts`, which aborts after 20s (body read included); the abort lands in the generic failed-send alert and the fields unlock. The token budget is held **fail-closed** if usage can't be resolved (so a metering bug can't leak spend), while the rate limiters and dedup are **fail-open**. The one exception is the budget reservation: if Redis fails there, `/api/ask` returns 503 rather than answer without a spend cap.
+**Server timeouts (defense in depth):** 30s whole-request `AbortSignal`, 15s mid-stream watchdog, 1s usage-resolve. A reader that cancels mid-answer (tab closed, navigation) aborts the upstream call and still runs settlement and the ask-log write from `after()`, with status `aborted`; before the first token the output share of the reservation is refunded. The shell client gives up after 15s with no token (idle timer, re-armed on every chunk) and offers a retry. The contact form and the shell's forget actions post through `lib/post-json.ts`, which aborts after 20s (body read included); the abort lands in the generic failed-send alert and the fields unlock. The spend budget is held **fail-closed** if usage can't be resolved (so a metering bug can't leak spend), while the rate limiters and dedup are **fail-open**. The one exception is the budget reservation: if Redis fails there, `/api/ask` returns 503 rather than answer without a spend cap.
 
 ## End-to-end data flow #3 - `/api/contact` (the write path via `defineHandler`)
 
@@ -295,7 +295,7 @@ sequenceDiagram
 
 The **ordering is a security property**: refuse cross-site requests first, hash the IP so no limiter key holds the raw address, rate-limit and bound the body _before_ reading it, validate _before_ the work, and touch storage _only_ for requests that pass. Every response carries `X-Request-Id`. See doc 05 for the full `defineHandler` contract and the other routes.
 
-At 04:00 UTC daily (`0 4 * * *`), `/api/contact-retry` checks the `CRON_SECRET` bearer before reading pending ids in received-time order. Messages older than 7 days, or already at 3 retry attempts, leave the outbox. Each eligible message consumes an attempt before calling the same delivery function. Successful sends leave the outbox; failures remain pending. Audit messages retain their 90-day KV TTL. The success response is `{ ok: true, requestId, data: { sent, failed, expired, exhausted } }`, with a matching `X-Request-Id` header. Contact logs carry only `requestId` and `msgId`.
+At 04:00 and 16:00 UTC (`0 4 * * *` and `0 16 * * *`), `/api/contact-retry` checks the `CRON_SECRET` bearer before reading pending ids in received-time order. Messages 24 hours old or older (the provider idempotency window), or already at 3 retry attempts, leave the outbox. Each eligible message consumes an attempt before calling the same delivery function. Successful sends leave the outbox; failures remain pending. Audit messages retain their 90-day KV TTL. The success response is `{ ok: true, requestId, data: { sent, failed, expired, exhausted } }`, with a matching `X-Request-Id` header. Contact logs carry only `requestId` and `msgId`.
 
 ## Request lifecycle summary (every request)
 

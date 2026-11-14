@@ -15,8 +15,14 @@ const variantClasses: Record<NonNullable<StatTileProps['variant']>, string> = {
 
 export function StatTile({ value, label, variant = 'default', className, ...rest }: StatTileProps) {
   return (
-    <dl {...rest} className={cn('stat-tile flex flex-col py-[7px] px-[10px] m-0', className)}>
-      <dt className="stat-tile-label text-text-secondary text-xs tracking-[0.08em] font-mono leading-ratio-1-3">
+    <dl
+      {...rest}
+      className={cn(
+        'stat-tile flex flex-col py-[7px] px-[var(--stat-tile-pad-x,10px)] m-0',
+        className,
+      )}
+    >
+      <dt className="stat-tile-label text-text-secondary text-xs tracking-[var(--stat-tile-tracking,0.08em)] font-mono leading-ratio-1-3">
         {label}
       </dt>
       <dd

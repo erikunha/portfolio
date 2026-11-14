@@ -14,9 +14,9 @@ File types, most frequent first: workflow or script; markdown doc; test; tsx com
 
 Docs drift because the code moved and the doc did not.
 
-**Rule 1. Never write an exact count, an exact list, or a literal transcription into a doc.**
+**Rule 1. Never write an exact count, an exact list, or a literal transcription into a doc unless a test holds it.**
 Counts age on every PR. A number nobody recomputes is a lie by next month.
-Before writing: if the sentence contains a number that a machine could check, write an approximation or point at the source of truth.
+Before writing: if the sentence contains a number that a machine could check, write an approximation or point at the source of truth. A test already holds some counts (`__tests__/docs-section-counts.test.ts`, `__tests__/design-system-doc-counts.test.ts`, `__tests__/meta/docs-numbers.test.ts`); those may stay exact.
 Check: `pnpm check:doc-drift` (drifts the ARCHITECTURE tree), then grep the doc for numbers and confirm each one against the code.
 Examples:
 - PR127 `docs/handbook/README.md`: the ADR count said 75 while `DECISIONS.md` held 190; the fix replaced the exact count with an approximation.
@@ -28,6 +28,7 @@ Check: after the diff, grep the repo for the old symbol name and the old path an
 Examples:
 - PR144 `lib/__tests__/env.test.ts`: the comment above the test still listed the old consumer script; the fix updated the list.
 - A skill copy for one tool asserted a control that the other tool's copy did not have; the fix corrected the claim.
+- PR284 `app/(en)/design-system/primitives/button/page.mdx`: a wrong statement about the native button default misled every reader; the fix corrected it.
 
 **Rule 3. A diagram, mermaid graph and prose list inside the same doc must agree.**
 Before writing: after editing a node, read the prose sentence that summarises that graph.
@@ -36,8 +37,8 @@ Examples:
 - PR208 `docs/handbook/review-merge-release.md`: the table row was renamed but the mermaid diagram above it kept the old role name.
 - PR235 `docs/handbook/workflow-playbook.md`: collapsing two numbered steps left the list numbering skipping a number.
 
-**Rule 4. An ADR entry states one decision, cites the PR that lands it, and names how to undo it.**
-Before writing: put the PR number in the bullet, because the squash merge removes the branch commits from `main` and a branch SHA stops resolving.
+**Rule 4. An ADR entry states one decision, starts with its date, and names how to undo it.**
+Before writing: cite a PR number rather than a branch SHA, because the squash merge removes the branch commits from `main` and a branch SHA stops resolving.
 Check: read the bullet and ask whether a stranger could undo it from the text alone.
 Examples:
 - PR185 `DECISIONS.md`: one bullet cited a branch SHA that no longer resolved after the squash; the fix cited the PR number.
@@ -224,7 +225,6 @@ Before writing: decide the visual baseline impact before the push, not after CI 
 Check: `pnpm test:e2e` with regenerated baselines on both platforms.
 Examples:
 - PR271 `components/sections/HottestTakesSection/HottestTakesSection.tsx`: nesting another section inside the capturable element changed the captured size; the fix regenerated the baseline.
-- PR284 `app/(en)/design-system/primitives/button/page.mdx`: a wrong statement about the native button default misled every reader; the fix corrected it.
 
 ---
 
@@ -236,7 +236,7 @@ Server routes, settings, hooks config and agent files.
 Before writing: a route that returns a bare `Response.json` is wrong even when the payload is right.
 Check: `pnpm typecheck` and the API contract test.
 Examples:
-- PR267 `app/api/contact-retry/route.ts`: the route returned a bare `Response.json(counts)` instead of `defineHandler` and `ok()`; the fix used the envelope.
+- PR267 `app/api/contact-retry/route.ts`: the route returned a bare `Response.json(counts)` instead of the `ok()` envelope; the fix used the envelope. The route is a cron `GET`, so it uses `ok()` and `err()` without `defineHandler`.
 - PR262 `lib/server/body-limit.ts`: the new file was missing `import 'server-only'`, so client code could pull it in; the fix added it.
 
 **Rule 28. Retired: merged into Rule 33, which covers the same schema contract and adds the fixture.**

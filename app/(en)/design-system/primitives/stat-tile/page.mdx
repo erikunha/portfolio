@@ -29,7 +29,7 @@ Source: `design-system/components/StatTile/StatTile.tsx`. React Server Component
   <StatTile value="1.2s" label="LCP" variant="compact" />
 </Preview>
 
-Grid layout stays in the consumer; the tile carries no layout opinion.
+Grid layout stays in the consumer; the tile carries no layout opinion. A label wraps between words, never inside one. The tile reads `--stat-tile-pad-x` (default 10px) and `--stat-tile-tracking` (default 0.08em) from its container, so a narrow grid can trade padding and tracking for room without a new variant.
 
 <h2 id="accessibility">Accessibility</h2>
 

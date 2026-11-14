@@ -18,7 +18,7 @@ of surfaces. A change to identity, routes or metrics must leave all of them cons
 | Structured profile | `app/api/erik.json/route.ts`              | JSON profile for parsers; cached 24 hours at the edge                               |
 | Agent manifest    | `public/.well-known/agent.json`            | Capability manifest for agents: endpoints, profiles and the `/api/mcp` server       |
 | JSON-LD           | `content/seo.ts` (`personSchema`)          | Person structured data rendered by the root layout                                  |
-| Metadata and OG   | `components/RootShell.tsx`, `public/og.png` | Root metadata, canonical URLs, the static Open Graph image (`pnpm generate:og` rebuilds it) |
+| Metadata and OG   | `components/RootShell.tsx`, `app/_lib/locale-metadata.ts`, `app/(en)/design-system/_lib/page-metadata.ts`, `public/og.png` | Root metadata, canonical URLs, the static Open Graph image (`pnpm generate:og` rebuilds it) |
 
 The English home page is the canonical `/`; its pt-BR twin is `/pt`.
 

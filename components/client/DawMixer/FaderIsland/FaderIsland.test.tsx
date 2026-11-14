@@ -15,7 +15,7 @@ function renderStatic(props: Parameters<typeof FaderIsland>[0]) {
 
 const defaults = { initialPct: 72, channelName: 'RHYTHM GTR', label: CONTROLS.fader };
 
-describe('FaderIsland — ARIA contract', () => {
+describe('FaderIsland: ARIA contract', () => {
   it('has role="slider"', () => {
     const doc = renderStatic(defaults);
     expect(doc.querySelector('[role="slider"]')).not.toBeNull();
@@ -57,7 +57,7 @@ describe('FaderIsland — ARIA contract', () => {
   });
 });
 
-describe('FaderIsland — keyboard', () => {
+describe('FaderIsland: keyboard', () => {
   let unmount: (() => void) | undefined;
   afterEach(() => {
     unmount?.();
@@ -105,7 +105,7 @@ describe('FaderIsland — keyboard', () => {
   });
 });
 
-describe('FaderIsland — pointer drag behavior', () => {
+describe('FaderIsland: pointer drag behavior', () => {
   let unmount: (() => void) | undefined;
   afterEach(() => {
     unmount?.();

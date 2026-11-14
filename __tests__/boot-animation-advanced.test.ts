@@ -32,7 +32,7 @@ const fastOpts = {
   startMs: 5,
 };
 
-describe('runBoot — cancel path', () => {
+describe('runBoot: cancel path', () => {
   beforeEach(() => {
     vi.useFakeTimers();
   });
@@ -68,7 +68,7 @@ describe('runBoot — cancel path', () => {
   });
 });
 
-describe('runBoot — pauseDialog / resumeDialog', () => {
+describe('runBoot: pauseDialog / resumeDialog', () => {
   beforeEach(() => {
     vi.useFakeTimers();
   });
@@ -107,7 +107,7 @@ describe('runBoot — pauseDialog / resumeDialog', () => {
   });
 });
 
-describe('runBoot — onFirstLoop callback', () => {
+describe('runBoot: onFirstLoop callback', () => {
   beforeEach(() => {
     vi.useFakeTimers();
   });

@@ -4,7 +4,7 @@ export const PHONE_PLACEHOLDER = '[redacted-phone]';
 
 const PHONE_MIN_DIGITS = 9;
 
-const EMAIL_RE = /[\p{L}\p{N}._%+-]+@[\p{L}\p{N}-]+(?:\.[\p{L}\p{N}-]+)+/gu;
+const EMAIL_RE = /(?<![\p{L}\p{N}._%+-])[\p{L}\p{N}._%+-]+@[\p{L}\p{N}-]+(?:\.[\p{L}\p{N}-]+)+/gu;
 
 const PHONE_GROUPED_RE = /(?<![\w.])\+?\(?\d{1,4}\)?(?:[\s.-]\(?\d{2,5}\)?){2,5}(?!\w)/g;
 

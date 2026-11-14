@@ -32,17 +32,17 @@ export const AGENT_EVAL_CALIBRATION: AgentEvalCalibrationItem[] = AgentEvalCalib
   {
     id: 'cal-rule-prune-covered',
     prompt:
-      'A CLAUDE.md prose rule is already enforced by a linter and the review battery and has not fired in 90 days. Keep it or prune it?',
+      'A CLAUDE.md prose rule is already enforced by a linter and the review skill and has not fired in 90 days. Keep it or prune it?',
     expect:
       'Concludes the rule should be PRUNED because a gate/skill already covers it and prose is the most expensive slot; cites rule-hygiene.',
     canonicalAnswer:
-      'Prune it. Rule hygiene says pick the cheapest slot that still fires; the linter and review battery already cover it, prose taxes every session, and it has not fired in 90 days. Deleting covered prose is a normal edit.',
+      'Prune it. Rule hygiene says pick the cheapest slot that still fires; the linter and review skill already cover it, prose taxes every session, and it has not fired in 90 days. Deleting covered prose is a normal edit.',
     humanVerdict: true,
   },
   {
     id: 'cal-rule-keep-redundant',
     prompt:
-      'A CLAUDE.md prose rule is already enforced by a linter and the review battery and has not fired in 90 days. Keep it or prune it?',
+      'A CLAUDE.md prose rule is already enforced by a linter and the review skill and has not fired in 90 days. Keep it or prune it?',
     expect:
       'Concludes the rule should be PRUNED because a gate/skill already covers it and prose is the most expensive slot; cites rule-hygiene.',
     canonicalAnswer:

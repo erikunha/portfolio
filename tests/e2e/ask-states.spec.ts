@@ -47,7 +47,7 @@ test.describe('shell failure and wait states', () => {
     await ask(page, 'are you there?');
     await expect(page.locator('[data-kind="error"] strong')).toHaveText('ask: 503');
     await expect(page.locator('[data-kind="hint"]')).toContainText('cat stack.md (works offline)');
-    await expect(page.locator('[data-testid="shell-reference"]')).toContainText('stderr-e2e');
+    await expect(page.locator('[data-testid="shell-receipt"]')).toHaveCount(0);
   });
 
   test('Escape in the shell stops a pending answer', async ({ page }) => {

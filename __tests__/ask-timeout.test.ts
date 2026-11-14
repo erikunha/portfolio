@@ -55,7 +55,7 @@ function makeRequest(url: string, body: unknown): NextRequest {
   return askRequest(body, { url });
 }
 
-describe('/api/ask — AI Gateway stream-initiation timeout', () => {
+describe('/api/ask: AI Gateway stream-initiation timeout', () => {
   beforeEach(() => {
     process.env.ASK_ENABLED = 'true';
     vi.resetModules();
@@ -105,7 +105,7 @@ describe('/api/ask — AI Gateway stream-initiation timeout', () => {
   });
 });
 
-describe('/api/contact — Resend send 10s timeout', () => {
+describe('/api/contact: Resend send 10s timeout', () => {
   beforeEach(() => {
     process.env.RESEND_API_KEY = 'fake-key-for-tests';
     resendSendMock.mockReset();

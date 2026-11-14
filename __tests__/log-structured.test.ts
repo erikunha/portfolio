@@ -74,7 +74,7 @@ describe('lib/log.ts foundation', () => {
   });
 });
 
-describe('route integration — structured logging through the facade', () => {
+describe('route integration: structured logging through the facade', () => {
   const logInfoMock = vi.fn();
   const logErrorMock = vi.fn();
   const redisSetMock = vi.fn();

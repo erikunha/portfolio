@@ -62,7 +62,7 @@ flowchart TB
 
 ## Enforcement boundaries
 
-Git hooks check commits and pushes. CI checks source, build output and selected runtime behavior. Architect review, API security dispatch and pre-PR review are workflow conventions. See [engineering-audit](./engineering-audit.md) for the limits of those checks.
+Git hooks check commits and pushes. CI checks source, build output and selected runtime behavior. Plan review (the `plan-review` skill) and pre-PR review (against `REVIEW.md`) are workflow conventions. See [engineering-audit](./engineering-audit.md) for the limits of those checks.
 
 ## How to read this if you're new
 

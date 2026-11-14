@@ -65,6 +65,7 @@ describe('usePrivacyCommands', () => {
         setHistory: setHistory as Dispatch<SetStateAction<Line[]>>,
         announce,
         focusInput,
+        onConversationForgotten: () => undefined,
       });
       return null;
     }
@@ -158,7 +159,7 @@ describe('usePrivacyCommands', () => {
     });
     await mountPrivacy();
     await dispatch({ kind: PRIVACY_COMMAND_KIND.ForgetAll });
-    expect(mocks.forgetMany).toHaveBeenCalledWith([FIRST, SECOND]);
+    expect(mocks.forgetMany).toHaveBeenCalledWith([FIRST, SECOND], expect.any(Function));
     expect(texts()).toEqual([
       { kind: ShellLineKind.Output, text: `${FIRST} ${ui.forgetDeleted}` },
       { kind: ShellLineKind.Info, text: fillShellState(ui.privacyNotAttempted, { count: '1' }) },

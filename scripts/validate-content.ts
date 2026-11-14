@@ -15,7 +15,7 @@ if (files.length < MIN_EXPECTED_CONTENT_FILES) {
   console.error(
     `content validation: found only ${files.length} content modules, expected at least ${MIN_EXPECTED_CONTENT_FILES}.\n` +
       'The glob has resolved to (almost) nothing, which means it is no longer looking where the content lives.\n' +
-      'A gate that validates zero files prints "0 passed, 0 failed" and exits 0 — the fail-open the hand-listed\n' +
+      'A gate that validates zero files prints "0 passed, 0 failed" and exits 0, the fail-open the hand-listed\n' +
       'CONTENT_FILES array produced, rebuilt in a new shape. Refusing to pass.',
   );
   process.exit(1);

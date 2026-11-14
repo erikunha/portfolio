@@ -93,11 +93,11 @@ async function compare(
 
   expect(
     width,
-    `the render is ${width}px wider than the baseline, so the layout moved`,
+    `the render width differs from the baseline by ${width}px, so the layout moved`,
   ).toBeLessThanOrEqual(VISUAL_SIZE_TOLERANCE_PX);
   expect(
     height,
-    `the render is ${height}px taller than the baseline, so the layout moved`,
+    `the render height differs from the baseline by ${height}px, so the layout moved`,
   ).toBeLessThanOrEqual(VISUAL_SIZE_TOLERANCE_PX);
   expect(
     ratio,

@@ -46,7 +46,7 @@ describe('/api/log/forget reaches a key in its final day before expiry', () => {
     vi.doMock('@/lib/rate-limit', () => ({
       getClientIp: vi.fn(() => '127.0.0.1'),
       getForgetLimit: vi.fn(() => ({ limit: vi.fn(async () => ({ success: true })) })),
-      getRedis: vi.fn(() => ({ del: redisDelMock })),
+      getRedis: vi.fn(() => ({ del: redisDelMock, mget: vi.fn(async () => []) })),
     }));
     vi.doMock('@/lib/contact-outbox', () => ({
       contactMessageKey: (id: string) => `contact:msg:${id}`,

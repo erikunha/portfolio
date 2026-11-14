@@ -1,5 +1,12 @@
 import { spawnSync } from 'node:child_process';
-import { chmodSync, mkdtempSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
+import {
+  chmodSync,
+  existsSync,
+  mkdtempSync,
+  readdirSync,
+  readFileSync,
+  writeFileSync,
+} from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
@@ -8,8 +15,8 @@ import { parse } from 'yaml';
 const root = join(__dirname, '..');
 
 function readArtifact(path: string): string {
-  // behavioral-test-allow: the artifacts under test ARE the review skill's markdown, the CI reviewer
-  // prompt and its workflow; their property has no runtime surface other than these files.
+  // behavioral-test-allow: the artifacts under test ARE the CI reviewer prompt, REVIEW.md and the
+  // workflow; their property has no runtime surface other than these files.
   return readFileSync(path, 'utf8');
 }
 
@@ -19,7 +26,7 @@ const workflowSteps = (
   }
 ).jobs.review.steps;
 
-describe('CI reviewer runs a trusted copy of the orchestrator', () => {
+describe('CI reviewer runs on trusted instructions and no repository skill', () => {
   const prompt = readArtifact(join(root, '.github/claude-review-prompt.md'));
   type Step = {
     name?: string;
@@ -129,25 +136,36 @@ describe('CI reviewer runs a trusted copy of the orchestrator', () => {
     }
   });
 
-  it('extracts the skill from a default-branch fetch that runs before it, unconditionally', () => {
+  it('materialises the prompt from a default-branch fetch that runs before it, unconditionally', () => {
     const fetch = indexOfStep(/^git fetch --depth=1 origin "\$DEFAULT_BRANCH"$/);
-    const archive = indexOfStep(/^git archive "FETCH_HEAD:\$\{skill_dir\}" /);
+    const show = indexOfStep(/^git show "FETCH_HEAD:\.github\/claude-review-prompt\.md" > /);
     expect(fetch, 'the default-branch fetch must be an active line').toBeGreaterThanOrEqual(0);
-    expect(archive).toBeGreaterThan(fetch);
-    expect(steps.slice(fetch, archive + 1).some((step) => step.if !== undefined)).toBe(false);
-    expect(prompt).toContain('/tmp/review-skill/SKILL.md');
-    expect(claudeArgs).toContain('--add-dir /tmp/review-skill');
+    expect(show).toBeGreaterThanOrEqual(fetch);
+    expect(steps.slice(fetch, show + 1).some((step) => step.if !== undefined)).toBe(false);
+    expect(claudeArgs).toContain('--append-system-prompt-file /tmp/claude-review-prompt.md');
   });
 
-  it('finds the skill under the shared layout or the earlier layout of the default branch', () => {
-    const probe = steps
-      .flatMap((step) => activeLines(step.run))
-      .find((line) => line.startsWith('for candidate in '));
-    expect(probe).toContain('.agents/skills/pr-review-orchestrator');
+  it('extracts nothing else from the default branch and reads no repository skill directory', () => {
+    const lines = steps.flatMap((step) => activeLines(step.run));
     expect(
-      probe,
-      'a default branch that has not landed the shared layout still holds the skill under .claude/skills',
-    ).toContain('.claude/skills/pr-review-orchestrator');
+      lines.filter((line) => /\bgit (archive|checkout|restore)\b/.test(line)),
+      'only the prompt is read from the default branch, through git show',
+    ).toEqual([]);
+    expect(
+      lines.filter((line) => /(?:\.agents|\.claude)\/skills|review-skill/.test(line)),
+      'a repository skill reaches the reviewer through the base checkout, never through a workflow step',
+    ).toEqual([]);
+    expect(prompt).not.toContain('/tmp/review-skill');
+    expect(
+      claudeArgs.match(/--add-dir \S+/g),
+      'the reviewer mounts the PR copy and the evidence snapshot, nothing else',
+    ).toEqual(['--add-dir pr-head', '--add-dir /tmp/review-evidence']);
+  });
+
+  it('points the reviewer at REVIEW.md, which the base checkout carries', () => {
+    expect(prompt).toContain('REVIEW.md');
+    expect(prompt).toContain('subagent_type review-worker');
+    expect(existsSync(join(root, 'REVIEW.md'))).toBe(true);
   });
 
   it('runs no package manager in the credentialed job', () => {
@@ -171,6 +189,121 @@ describe('CI reviewer runs a trusted copy of the orchestrator', () => {
     expect(prompt).toContain('/tmp/review-evidence/pr.json');
     expect(prompt).toContain('/tmp/review-evidence/diff.patch');
     expect(prompt).not.toMatch(/gh pr (diff|view|checks)/);
+  });
+});
+
+describe('CI reviewer prompt carries its evidence, gate, budget and challenge rules', () => {
+  const prompt = readArtifact(join(root, '.github/claude-review-prompt.md'));
+  const reviewMd = readArtifact(join(root, 'REVIEW.md'));
+  const snapshotScript =
+    workflowSteps.find((step) => step.name?.startsWith('Snapshot PR metadata'))?.run ?? '';
+
+  const scratchFile = /\.(err|full)$|^(files|checks)\.json$/;
+  const writtenEvidenceFiles = () =>
+    [
+      ...new Set(
+        [...snapshotScript.matchAll(/>\s*"\$OUT_DIR\/([A-Za-z][A-Za-z0-9.-]*)/g)].map(
+          (m) => m[1] ?? '',
+        ),
+      ),
+    ]
+      .filter((name) => !scratchFile.test(name))
+      .map((name) => (name === 'failed-run-' ? 'failed-run-<id>.log' : name));
+
+  it('names every evidence file the snapshot step leaves behind', () => {
+    const files = writtenEvidenceFiles();
+    expect(files).toEqual(
+      expect.arrayContaining([
+        'pr.json',
+        'diff.patch',
+        'files.txt',
+        'checks.txt',
+        'pr-unavailable.txt',
+        'failed-runs-unavailable.txt',
+        'head-sha.txt',
+        'failed-run-<id>.log',
+      ]),
+    );
+    for (const file of files) {
+      expect(prompt, `the prompt must tell the reviewer about ${file}`).toContain(file);
+    }
+  });
+
+  it('treats an UNAVAILABLE marker, a pending check and a passed check as limits, not passes', () => {
+    expect(prompt).toMatch(
+      /starting with UNAVAILABLE[\s\S]{0,400}stat\w+ in the overview as a limit/,
+    );
+    expect(prompt).toMatch(/passed check proves only what it exercises/);
+    expect(prompt).toMatch(/still pending at snapshot time is a limit, not a pass/);
+  });
+
+  it('explains the evidence gaps the snapshot can leave in the diff and the logs', () => {
+    expect(prompt).toContain('# patch omitted by GitHub');
+    expect(prompt).toMatch(/truncated/);
+    expect(prompt).toMatch(/head-sha\.txt/);
+    expect(prompt).toMatch(/baseRefName/);
+    expect(
+      prompt,
+      'pr.json carries no PR description, so a spec check against it is a limit',
+    ).toMatch(/description[\s\S]{0,200}limit/);
+  });
+
+  it('states the tools the job holds so the reviewer does not plan around a shell or the web', () => {
+    for (const tool of ['Read', 'Grep', 'Glob', 'Task']) {
+      expect(prompt).toContain(tool);
+    }
+    expect(prompt).toMatch(/no shell, no gh command, no web/);
+  });
+
+  it('says a fresh capture is impossible but a committed baseline image is read', () => {
+    expect(prompt).toMatch(/no driver/);
+    expect(prompt).toMatch(/fresh capture[\s\S]{0,120}limit/);
+    expect(prompt).toMatch(
+      /committed baseline PNG[\s\S]{0,260}open the new file[\s\S]{0,200}describe what you see/,
+    );
+    expect(prompt).toMatch(/never from numbers/);
+  });
+
+  it('sizes fan-out to the job and keeps workers independent and briefed', () => {
+    expect(prompt).toContain('For a trivial PR do the review yourself');
+    expect(prompt).toMatch(/one Task subagent per material domain in a single message/);
+    expect(prompt).toMatch(/job timeout/);
+    expect(prompt).toMatch(/no filler/);
+    expect(prompt).toMatch(/inherits nothing/);
+    expect(prompt).toMatch(/Agreement between workers is not proof/);
+  });
+
+  it('runs every matching repository skill as a method, never as a verdict', () => {
+    expect(prompt).toMatch(/every matching repository skill/);
+    expect(prompt).toMatch(/method, never a verdict/);
+    expect(prompt).toMatch(/only the repository's own skills/i);
+  });
+
+  it('resolves dependency facts from the lockfile and checks overrides against ranges', () => {
+    expect(prompt).toMatch(/pnpm override against the dependent's declared range/);
+    expect(prompt).toMatch(/pnpm-lock\.yaml, never from memory/);
+    expect(prompt).toMatch(/upstream[\s\S]{0,120}limit/);
+  });
+
+  it('refutes every candidate and sends each CRITICAL to one more challenger before posting', () => {
+    expect(prompt).toMatch(/refute it against guards, alternate paths/);
+    expect(prompt).toMatch(/send each CRITICAL to one more Task challenger before posting it/);
+    expect(prompt).toMatch(/weakest assumption/);
+    expect(prompt).toMatch(/strongest counterexample/);
+    expect(prompt).toMatch(/it informs, you decide/);
+  });
+
+  it('keeps the harness and the removed review skill out of the prompt', () => {
+    expect(prompt).not.toMatch(/pr-review-orchestrator|review-skill|completion matrix/i);
+  });
+
+  it('carries the review domains and proof rules REVIEW.md owes the bot', () => {
+    for (const domain of ['Target and base', 'Design-system pages', 'Motion', 'Observability']) {
+      expect(reviewMd, `REVIEW.md must classify the ${domain} domain`).toContain(`| ${domain}`);
+    }
+    expect(reviewMd).toMatch(/opened image/);
+    expect(reviewMd).toMatch(/Uncertainty never raises severity/);
+    expect(reviewMd).toMatch(/recorded in `DECISIONS\.md`/);
   });
 });
 
@@ -346,4 +479,23 @@ esac
     expect(result.stderr).toContain('HTTP 406');
     expect(result.stderr).toContain(expectedError);
   });
+});
+
+describe('instruction strip covers the personal override file', () => {
+  const stripNames = (file: string): string[] => {
+    const workflow = parse(readArtifact(join(root, '.github/workflows', file))) as {
+      jobs: Record<string, { steps: Array<{ name?: string; run?: string }> }>;
+    };
+    const run = Object.values(workflow.jobs)
+      .flatMap((job) => job.steps)
+      .find((step) => step.name?.startsWith('Strip instruction-shaped files'))?.run;
+    return (run?.match(/-name '[^']+'/g) ?? []).map((match) => match.slice(7, -1));
+  };
+
+  for (const file of ['claude-review.yml', 'claude.yml']) {
+    it(`${file} removes and verifies CLAUDE.local.md`, () => {
+      const names = stripNames(file);
+      expect(names.filter((name) => name === 'CLAUDE.local.md')).toHaveLength(2);
+    });
+  }
 });

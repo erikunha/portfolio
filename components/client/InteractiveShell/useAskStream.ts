@@ -16,6 +16,7 @@ import {
   shellStates,
 } from '@/content/shell-ui';
 import type { SiteLocale } from '@/content/site-locale';
+import { conversationIdForAsk, recordConversationRequest } from '@/lib/ask-conversation.client';
 import { addRef } from '@/lib/request-refs.client';
 import {
   ASK_LOCALE_HEADER,
@@ -116,6 +117,8 @@ export function useAskStream({
       const loadingId = nextId();
       let reader: ReadableStreamDefaultReader<Uint8Array> | undefined;
       let requestId: string | null = null;
+      let logged = false;
+      const conversationId = conversationIdForAsk();
       let accumulated = '';
       let displayText = '';
       let receivedText = false;
@@ -174,9 +177,16 @@ export function useAskStream({
         if (!text && !message) {
           lines.push({ id: nextId(), kind: ShellLineKind.Output, text: ui.empty });
         }
-        if (requestId) lines.push({ id: nextId(), kind: ShellLineKind.Reference, text: requestId });
+        if (requestId && logged) {
+          lines.push({ id: nextId(), kind: ShellLineKind.Reference, text: requestId });
+        }
         setHistory((previous) =>
-          bounded([...previous.filter((line) => line.id !== loadingId), ...lines]),
+          bounded([
+            ...previous.filter(
+              (line) => line.id !== loadingId && !(logged && line.kind === ShellLineKind.Reference),
+            ),
+            ...lines,
+          ]),
         );
         setStreamingText(null);
         setBusy(false);
@@ -202,7 +212,7 @@ export function useAskStream({
         const response = await fetch(ASK_ENDPOINT, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', [ASK_LOCALE_HEADER]: locale },
-          body: JSON.stringify({ question, locale }),
+          body: JSON.stringify({ question, locale, conversationId }),
           signal: controller.signal,
         });
         if (settled) {
@@ -211,6 +221,10 @@ export function useAskStream({
         }
         requestId = response.headers.get(ui.requestIdHeader);
         if (requestId) addRef(requestId);
+        if (requestId && response.ok) {
+          logged = true;
+          recordConversationRequest(conversationId, requestId);
+        }
         if (!response.ok) {
           const data = (await response.json().catch(() => null)) as {
             error?: unknown;

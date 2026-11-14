@@ -87,6 +87,7 @@ describe('/api/ask budget settlement and log write', () => {
       40,
       'ask:tokens:test',
       'ask:tokens:day:test',
+      { cacheReadTokens: 0, cacheWriteTokens: 0 },
     );
     expect(persistMock).toHaveBeenCalledOnce();
     expect(persistMock.mock.calls[0]?.[0].status).toBe('completed');

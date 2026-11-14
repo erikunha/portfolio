@@ -1,3 +1,4 @@
+import { BREAK_AFTER, BreakAfter } from '@/components/BreakAfter';
 import { externalLinkProps } from '@/components/ExternalLink';
 import { dmesgLines, dmesgStatus } from '@/content/dmesg';
 import { footerContent, footerSectionIds } from '@/content/footer';
@@ -77,7 +78,7 @@ export function Footer({ locale }: { locale: SiteLocale }) {
           <section className="footer-card" aria-labelledby="footer-session-title">
             <h3 className="footer-card-title" id="footer-session-title">
               <span data-type-reveal suppressHydrationWarning>
-                {content.sessionTitle}
+                <BreakAfter chars={BREAK_AFTER.identifier}>{content.sessionTitle}</BreakAfter>
               </span>
             </h3>
             <SessionCounters sectionIds={footerSectionIds}>
@@ -214,7 +215,11 @@ export function Footer({ locale }: { locale: SiteLocale }) {
               <span className="footer-timestamp">[ {line.off.toFixed(DMESG_PRECISION)}]</span>
               <span>
                 {line.prefix}
-                {line.bold ? <b>{line.bold}</b> : null}
+                {line.bold ? (
+                  <b>
+                    <BreakAfter chars={BREAK_AFTER.dottedIdentifier}>{line.bold}</BreakAfter>
+                  </b>
+                ) : null}
                 {line.suffix}
               </span>
               <span className="footer-established">{line.ok ? dmesgStatus.ok : null}</span>

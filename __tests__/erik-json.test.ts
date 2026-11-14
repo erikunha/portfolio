@@ -33,7 +33,7 @@ describe('/api/erik.json route', () => {
     expect(res.headers.get('x-content-type-options')).toBe('nosniff');
   });
 
-  it('does not emit X-Request-Id — a static route can only mint a constant', async () => {
+  it('does not emit X-Request-Id: a static route can only mint a constant', async () => {
     const res = await GET();
     expect(res.headers.get('x-request-id')).toBeNull();
   });

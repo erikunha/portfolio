@@ -4,7 +4,6 @@ const text = z.string().min(1);
 
 export const ShellStatesSchema = z.object({
   thinkingElapsed: text,
-  escStop: text,
   stderrCommand: text,
   timeoutName: text,
   timeoutBody: text,

@@ -74,7 +74,7 @@ describe('computeCategories', () => {
     });
   });
 
-  it('re-arms ai from aiMajorChanged alone (a deps-only `ai` MAJOR bump — the #170 incident class)', () => {
+  it('re-arms ai from aiMajorChanged alone (a deps-only `ai` MAJOR bump: the #170 incident class)', () => {
     expect(computeCategories(signals({ appChanged: true, aiMajorChanged: true }))).toEqual({
       ai: true,
       app: true,
@@ -82,7 +82,7 @@ describe('computeCategories', () => {
     });
   });
 
-  it('does NOT re-arm ai for a minor/patch `ai` bump (aiMajorChanged false — credits preserved)', () => {
+  it('does NOT re-arm ai for a minor/patch `ai` bump (aiMajorChanged false: credits preserved)', () => {
     expect(computeCategories(signals({ appChanged: true, pkgRenderChanged: false }))).toEqual({
       ai: false,
       app: true,

@@ -92,7 +92,7 @@ async function expectKeystrokeStaysResponsive(page: Page) {
 }
 
 test.describe('cross-cutting', () => {
-  test('0 — below-fold sections actually resolve to content-visibility: auto', async ({ page }) => {
+  test('0: below-fold sections actually resolve to content-visibility: auto', async ({ page }) => {
     await installMockBackend(page, { log: 'accept', forget: 'happy' });
     await page.goto('/');
     await page.waitForSelector('section.module-deferred', { state: 'attached' });
@@ -117,7 +117,7 @@ test.describe('cross-cutting', () => {
     ).toEqual([]);
   });
 
-  test('1 — skip-to-content link is the first focusable element + targets #main-content', async ({
+  test('1: skip-to-content link is the first focusable element + targets #main-content', async ({
     page,
   }) => {
     await installMockBackend(page, { log: 'accept', forget: 'happy' });
@@ -152,7 +152,7 @@ test.describe('cross-cutting', () => {
     await expect(main).toHaveAttribute('tabindex', '-1');
   });
 
-  test('2 — CSP does not block any same-origin asset', async ({ page, baseURL }, testInfo) => {
+  test('2: CSP does not block any same-origin asset', async ({ page, baseURL }, testInfo) => {
     if (baseURL === undefined)
       throw new Error('the project has no baseURL to compare origins with');
     const appOrigin = new URL(baseURL).origin;
@@ -234,7 +234,7 @@ test.describe('cross-cutting', () => {
     expect(csp).toContain("'self'");
   });
 
-  test('3 — the MOTION switch off disables decorative animations', async ({ browser }) => {
+  test('3: the MOTION switch off disables decorative animations', async ({ browser }) => {
     const context = await browser.newContext();
     await freezeMotion(context);
     const page = await context.newPage();
@@ -279,7 +279,7 @@ test.describe('cross-cutting', () => {
     }
   });
 
-  test('4 — shell input INP guard: keystroke commits <50ms with no long task >100ms', async ({
+  test('4: shell input INP guard: keystroke commits <50ms with no long task >100ms', async ({
     page,
   }, testInfo) => {
     skipInpOnWebkit(testInfo);
@@ -301,7 +301,7 @@ test.describe('cross-cutting', () => {
     await expectKeystrokeStaysResponsive(page);
   });
 
-  test('5 — motion toggle INP guard: click commits under 200ms (two rAF cycles)', async ({
+  test('5: motion toggle INP guard: click commits under 200ms (two rAF cycles)', async ({
     page,
   }, testInfo) => {
     test.skip(
@@ -334,7 +334,7 @@ test.describe('cross-cutting', () => {
     ).toBeLessThan(200);
   });
 
-  test('7 — mono font ships font-display:swap and preloads (first-paint render guarantee)', async ({
+  test('7: mono font ships font-display:swap and preloads (first-paint render guarantee)', async ({
     page,
   }) => {
     await installMockBackend(page, { log: 'accept', forget: 'happy' });
@@ -366,7 +366,7 @@ test.describe('cross-cutting', () => {
     ).not.toEqual([]);
   });
 
-  test('8 — body resolves to the self-hosted mono family, not bare monospace (cascade guard)', async ({
+  test('8: body resolves to the self-hosted mono family, not bare monospace (cascade guard)', async ({
     page,
   }) => {
     await installMockBackend(page, { log: 'accept', forget: 'happy' });

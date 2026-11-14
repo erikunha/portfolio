@@ -73,7 +73,7 @@ for (const dir of SCAN_DIRS) {
 const LENIENT = process.env.CHECK_CLIENT_NAMING_LENIENT === '1';
 if (violations.length === 0) {
   console.log(
-    '✓ client-naming: 0 violations — every "use client" file is in /client/ or *.client.*',
+    '✓ client-naming: 0 violations, every "use client" file is in /client/ or *.client.*',
   );
   process.exit(0);
 }

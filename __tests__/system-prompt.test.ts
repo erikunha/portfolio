@@ -69,7 +69,7 @@ describe('lib/ask/system-prompt', () => {
       const digitsOnly = SYSTEM_TEXT.normalize('NFKC').replace(/[^\p{Nd}]/gu, '');
       expect(
         digitsOnly,
-        `the owner's real phone number must never appear in the SYSTEM prompt in ANY formatting. Two things this guard learned the hard way: (1) it used to pin a LITERAL ('99839-4086'), which went stale the moment the number changed and left the live one unguarded — it now derives from personSchema.telephone; (2) it used to strip a separator ALLOWLIST ([\\s()+.-]), which an en-dash or a zero-width space walked straight through. Deleting every non-digit after NFKC leaves no allowlist to go stale.`,
+        `the owner's real phone number must never appear in the SYSTEM prompt in ANY formatting. Two things this guard learned the hard way: (1) it used to pin a LITERAL ('99839-4086'), which went stale the moment the number changed and left the live one unguarded, it now derives from personSchema.telephone; (2) it used to strip a separator ALLOWLIST ([\\s()+.-]), which an en-dash or a zero-width space walked straight through. Deleting every non-digit after NFKC leaves no allowlist to go stale.`,
       ).not.toContain(PHONE_LOCAL_DIGITS);
 
       expect(SYSTEM_TEXT).not.toMatch(/WhatsApp/i);
@@ -81,11 +81,11 @@ describe('lib/ask/system-prompt', () => {
       for (const r of perfReceipts[SITE_LOCALE.en]) {
         expect(
           SYSTEM_TEXT,
-          `perf-receipts.ts entry "${r.metric}" missing from SYSTEM — drift detected`,
+          `perf-receipts.ts entry "${r.metric}" missing from SYSTEM, drift detected`,
         ).toContain(r.metric);
         expect(
           SYSTEM_TEXT,
-          `perf-receipts.ts delta "${r.delta}" missing from SYSTEM — drift detected`,
+          `perf-receipts.ts delta "${r.delta}" missing from SYSTEM, drift detected`,
         ).toContain(r.delta);
       }
     });

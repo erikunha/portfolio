@@ -1,6 +1,7 @@
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { basename, dirname, join } from 'node:path';
+import { parse } from 'yaml';
 import {
   ACTION_CLASSES,
   AI_EVAL_LABEL,
@@ -8,12 +9,16 @@ import {
   BUILD_COMMAND,
   CONTAINER_ROOT,
   EXIT,
+  FORECAST_BUDGET_SHARE,
+  FORECAST_JOBS,
   HOST_MOUNT,
   JOB_POLICIES,
   PLAYWRIGHT_IMAGE,
   PLAYWRIGHT_IMAGE_SUFFIX,
   POLICY_REASONS,
+  SECONDS_PER_MINUTE,
   SESSION_OWNER_LABEL,
+  secondsPerTest,
   VERCEL_CLI_VERSION,
 } from './ci-predict-policy';
 import { shellCommand } from './ci-predict-process';
@@ -77,6 +82,10 @@ export interface RunContext {
   changedFiles: string[];
   specProjects: Map<string, Set<string>>;
   specSources: Map<string, string>;
+  forecast: {
+    timeoutMinutes: Record<string, number>;
+    testCounts: Map<string, Map<string, number>>;
+  };
   evalRun: { linkedCheckout: string; workdir: string } | null;
 }
 export type Verdict = 'pass' | 'fail' | 'not-run' | 'skipped' | 'partial' | 'would-run';
@@ -99,6 +108,7 @@ export interface Prediction {
 }
 
 const MS_PER_SECOND = 1000;
+const LIST_SEPARATOR = ', ';
 const KEY_SEPARATOR = '\u0000';
 const EVENT_NAME = 'pull_request';
 const CI_ENV: Record<string, string> = { CI: 'true' };
@@ -117,12 +127,78 @@ const REPEAT_FLAG = '--repeat-each=';
 const GITHUB_TOKEN_REFERENCE = /secrets\.GITHUB_TOKEN/;
 const SHELL_OPERATORS = /[|&;<>]/;
 const PAGE_SPEC_ROOT = 'tests/';
+const PAGE_E2E_ROOT = 'tests/e2e/';
 const VISUAL_ROOT = 'tests/visual';
+const VISUAL_SPEC_ROOT = 'tests/visual/';
+const RENDERING_INPUT =
+  /^(app|components|design-system|content)\/|^public\/fonts\/|\.css$|^next\.config\.ts$/;
+const NOT_A_RENDERING_INPUT = /\.(test|e2e|spec)\.tsx?$/;
+const WIDENED_LISTED_FILES = 2;
+const PERCENT = 100;
+const FORECAST_DECIMALS = 1;
 const COMPONENT_ROOTS = /^(components|app|design-system)\//;
 const E2E_SUFFIX = '.e2e.ts';
 const PLAYWRIGHT_CONFIG = 'playwright.config.ts';
 const PNPM_STORE_VOLUME = 'ci-predict-pnpm-store';
 const PNPM_STORE_PATH = '/pnpm-store';
+
+export function jobTimeouts(text: string): Record<string, number> {
+  const document = parse(text) as { jobs?: Record<string, { 'timeout-minutes'?: unknown }> };
+  const timeouts: Record<string, number> = {};
+  for (const [id, job] of Object.entries(document.jobs ?? {})) {
+    const minutes = job['timeout-minutes'];
+    if (typeof minutes === 'number') timeouts[id] = minutes;
+  }
+  return timeouts;
+}
+
+export const renderingInputs = (changed: string[]): string[] =>
+  changed.filter((file) => RENDERING_INPUT.test(file) && !NOT_A_RENDERING_INPUT.test(file));
+
+export function widenedReason(inputs: string[]): string {
+  const listed = inputs.slice(0, WIDENED_LISTED_FILES).join(LIST_SEPARATOR);
+  const more =
+    inputs.length > WIDENED_LISTED_FILES ? ` and ${inputs.length - WIDENED_LISTED_FILES} more` : '';
+  return `selection widened to every page spec and the visual spec by a rendering input (${listed}${more})`;
+}
+
+export interface JobForecast {
+  minutes: number;
+  budgetMinutes: number;
+  seconds: number;
+  tests: number;
+  shards: number;
+}
+
+export function forecastJob(options: {
+  job: string;
+  project: string;
+  tests: number;
+  shards: number;
+  timeoutMinutes: number;
+}): JobForecast {
+  const seconds = secondsPerTest(options.job, options.project);
+  return {
+    minutes: ((options.tests / options.shards) * seconds) / SECONDS_PER_MINUTE,
+    budgetMinutes: options.timeoutMinutes * FORECAST_BUDGET_SHARE,
+    seconds,
+    tests: options.tests,
+    shards: options.shards,
+  };
+}
+
+export function countTests(
+  counts: Map<string, Map<string, number>>,
+  project: string,
+  scope: string[],
+): number {
+  let total = 0;
+  for (const [spec, perProject] of counts) {
+    if (scope.length > 0 && !scope.some((root) => spec.startsWith(root))) continue;
+    total += perProject.get(project) ?? 0;
+  }
+  return total;
+}
 
 export function selectSpecs(
   changed: string[],
@@ -132,6 +208,11 @@ export function selectSpecs(
   const specs = [...specProjects.keys()];
   if (changed.includes(PLAYWRIGHT_CONFIG)) return specs;
   const selected = new Set<string>();
+  if (renderingInputs(changed).length > 0) {
+    for (const spec of specs) {
+      if (spec.startsWith(PAGE_E2E_ROOT) || spec.startsWith(VISUAL_SPEC_ROOT)) selected.add(spec);
+    }
+  }
   for (const file of changed) {
     if (specProjects.has(file)) {
       selected.add(file);
@@ -387,8 +468,6 @@ interface JobOutcome {
   outputs: Record<string, string>;
 }
 
-const LIST_SEPARATOR = ', ';
-
 export function judge(rows: Row[], dryRun: boolean): Judgement {
   if (rows.some((row) => row.verdict === 'fail')) {
     return { code: EXIT.FAILED, headline: 'PREDICTED CI: FAIL' };
@@ -522,7 +601,29 @@ export async function predict(context: RunContext, deps: Deps): Promise<Predicti
       } satisfies Row,
     });
     const policy = JOB_POLICIES[job.id];
+    const timeoutMinutes = context.forecast.timeoutMinutes[job.id];
+    let forecastNote: string | undefined;
+    if (FORECAST_JOBS.includes(job.id) && project !== undefined && timeoutMinutes !== undefined) {
+      const forecast = forecastJob({
+        job: job.id,
+        project,
+        tests: countTests(context.forecast.testCounts, project, functionalScope(job, project)),
+        shards: job.matrixShards[project]?.length ?? 1,
+        timeoutMinutes,
+      });
+      const figures = `${forecast.minutes.toFixed(FORECAST_DECIMALS)} min`;
+      if (forecast.minutes > forecast.budgetMinutes) {
+        return finish(
+          'fail',
+          `${job.id}: forecast ${figures} for ${forecast.tests} tests in ${forecast.shards} shard(s) at ${forecast.seconds.toFixed(2)} s/test exceeds ${Math.round(FORECAST_BUDGET_SHARE * PERCENT)}% of the ${timeoutMinutes} min timeout (${forecast.budgetMinutes.toFixed(FORECAST_DECIMALS)} min): add shards to the ${job.id} matrix or split the specs`,
+        );
+      }
+      if (forecast.tests > 0) {
+        forecastNote = `forecast ${figures} of the ${timeoutMinutes} min timeout`;
+      }
+    }
     const scope = policy === 'e2e-narrowed' ? functionalScope(job, project) : [];
+    const widenedBy = selected === null ? [] : renderingInputs(context.changedFiles);
     const narrowed = (candidate: string | undefined): string[] =>
       selected === null
         ? []
@@ -632,7 +733,9 @@ export async function predict(context: RunContext, deps: Deps): Promise<Predicti
         }
         if (isNarrowed) partialSuite = true;
         const repeated =
-          policy === 'e2e-narrowed' || touchesChanged(positionals, context.changedFiles);
+          policy === 'e2e-narrowed' ||
+          touchesChanged(positionals, context.changedFiles) ||
+          (selected !== null && positionals.some((target) => selected.has(target)));
         const args = [
           ...kept,
           ...targets,
@@ -702,6 +805,8 @@ export async function predict(context: RunContext, deps: Deps): Promise<Predicti
         ? [`not reproducible: ${[...new Set(unreproducible)].join('; ')}`]
         : []),
       ...(partialSuite ? ['narrowed to the changed specs; CI runs the whole suite (--full)'] : []),
+      ...(partialSuite && widenedBy.length > 0 ? [widenedReason(widenedBy)] : []),
+      ...(forecastNote === undefined ? [] : [forecastNote]),
       ...(substituted.length > 0 ? [[...new Set(substituted)].join('; ')] : []),
       ...(tolerated.length > 0 ? [tolerated.join('; ')] : []),
       ...(published > 0 ? [`${published} GitHub-only publish step(s) skipped`] : []),

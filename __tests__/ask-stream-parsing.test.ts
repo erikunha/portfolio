@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { parseStreamChunk, STREAM_ERR_SENTINEL } from '@/lib/stream-protocol';
 
-describe('parseStreamChunk — /api/ask stream protocol', () => {
+describe('parseStreamChunk: /api/ask stream protocol', () => {
   it('returns the whole buffer as displayText when there is no sentinel', () => {
     const result = parseStreamChunk('Erik has 8 years of frontend experience.');
     expect(result.ok).toBe(true);
@@ -38,7 +38,7 @@ describe('parseStreamChunk — /api/ask stream protocol', () => {
     if (!result.ok) expect(result.errorMessage).toBe('upstream error');
   });
 
-  it('is stable across progressive accumulation — display text only grows', () => {
+  it('is stable across progressive accumulation: display text only grows', () => {
     const chunks = ['Erik ', 'is a ', 'senior ', 'engineer.'];
     let accumulated = '';
     const displays: string[] = [];

@@ -8,7 +8,7 @@
 # production
 /build
 
-# env files — the wildcard is the point. A NEW environment name (`.env.preview`,
+# env files, the wildcard is the point. A NEW environment name (`.env.preview`,
 # `.env.staging`, `.env.local`) must be ignored the moment someone types it, without
 # a line being added for it by hand, and the example file is the single tracked
 # exception. `.env*` covers the dot-prefixed family; `*.env` covers the suffix
@@ -21,7 +21,7 @@
 !.env.example
 *.env
 
-# credential files — a private key, a keystore or a service credential is never a
+# credential files, a private key, a keystore or a service credential is never a
 # repo artifact, at any depth, in any directory. Same gate as the env block.
 *.pem
 *.key
@@ -61,12 +61,12 @@ CLAUDE.local.md
 
 tsconfig.tsbuildinfo
 
-# leftover artifacts of the review chain deleted 2026-07-27 — no writer remains
+# leftover artifacts of the review chain deleted 2026-07-27, no writer remains
 .review-passed
 .review-findings.json
 .review-findings-archive.jsonl
 
-# leftover inbox from the learning loop deleted 2026-07-27 — no writer remains
+# leftover inbox from the learning loop deleted 2026-07-27, no writer remains
 .review-learnings.md
 
 
@@ -77,7 +77,7 @@ tsconfig.tsbuildinfo
 # The subagent-driven-development skill treats this as git-ignored scratch and
 # warns `git clean -fdx` destroys it; never tracked, absent from origin/main.
 # No trailing slash: that makes a rule directory-only, so it misses a symlink of
-# the same name — why /.next dropped its slash in 60b19c2. Proven by RULE_MATRIX
+# the same name, why /.next dropped its slash in 60b19c2. Proven by RULE_MATRIX
 # in __tests__/meta/gitignore-worktree-symlinks.test.ts.
 
 # spec-kit, in full: the engine, the generated skills, and the feature output.
@@ -102,14 +102,14 @@ docs/superpowers
 # git worktree symlinks (.claude/worktrees/)
 .claude/worktrees/
 
-# session-owned lock file — machine-generated runtime state, not source
+# session-owned lock file, machine-generated runtime state, not source
 .claude/scheduled_tasks.lock
 
 # Semgrep local SARIF output
 semgrep.sarif
 gitleaks.sarif
 
-# Stryker mutation testing output — transient sandbox + generated reports
+# Stryker mutation testing output, transient sandbox + generated reports
 .stryker-tmp/
 mutation-report.html
 mutation-report.json

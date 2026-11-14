@@ -77,6 +77,6 @@ describe.each(['en', 'pt'] as const)('ask route errors in %s', (locale) => {
   });
 
   it('writes every error without em or en dashes', () => {
-    expect(Object.values(copy).join(' ')).not.toMatch(/[–—]/);
+    expect(Object.values(copy).join(' ')).not.toMatch(/[\u2013\u2014]/);
   });
 });

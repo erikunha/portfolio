@@ -10,7 +10,7 @@ const nextJobRel = rest.search(/\n {2}\S/);
 const job =
   nextJobRel === -1 ? ci.slice(start) : ci.slice(start, start + heading.length + nextJobRel);
 
-describe('ci.yml performance job — LHCI GitHub status', () => {
+describe('ci.yml performance job: LHCI GitHub status', () => {
   it('defines a performance job', () => {
     expect(ci).toMatch(/^\s{2}performance:/m);
     expect(job).not.toBe('');

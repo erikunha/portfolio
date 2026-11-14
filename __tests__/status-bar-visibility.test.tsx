@@ -2,7 +2,7 @@ import { act, createElement } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { type MountedClient, mountClient } from './helpers/render';
 
-describe('StatusBar — visibilitychange handler', () => {
+describe('StatusBar: visibilitychange handler', () => {
   let mounted: MountedClient;
 
   beforeEach(() => {

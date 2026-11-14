@@ -143,3 +143,72 @@ export function archCaveat(arch: string): string | undefined {
   return `this machine is ${arch} and CI runs ${CI_ARCH}: the Linux container runs ${arch} too, so font metrics, WebKit rendering and timing can differ from CI`;
 }
 export const BUILD_COMMAND = 'pnpm build';
+
+export const FORECAST_JOBS = ['e2e-functional', 'e2e-visual-chromium'];
+export const FORECAST_BUDGET_SHARE = 0.8;
+export const SECONDS_PER_MINUTE = 60;
+
+export interface RateSample {
+  run: number;
+  job: number;
+  tests: number;
+  seconds: number;
+}
+
+const RUN_PR_421 = 43589844151;
+const RUN_MAIN = 43399768414;
+
+export const RATE_SAMPLES: Record<string, Record<string, RateSample[]>> = {
+  'e2e-functional': {
+    chromium: [
+      { run: RUN_PR_421, job: 132433950666, tests: 1809, seconds: 616.8 },
+      { run: RUN_MAIN, job: 131802593841, tests: 1307, seconds: 433.0 },
+    ],
+    'chromium-mobile': [
+      { run: RUN_PR_421, job: 132433950678, tests: 1115, seconds: 348.8 },
+      { run: RUN_MAIN, job: 131802593898, tests: 653, seconds: 214.0 },
+    ],
+    'webkit-desktop': [
+      { run: RUN_PR_421, job: 132433950815, tests: 1094, seconds: 1444.9 },
+      { run: RUN_MAIN, job: 131802594035, tests: 653, seconds: 539.3 },
+    ],
+    'webkit-mobile': [
+      { run: RUN_PR_421, job: 132433950694, tests: 1090, seconds: 1420.0 },
+      { run: RUN_MAIN, job: 131802593868, tests: 653, seconds: 924.8 },
+    ],
+    'chromium-components': [
+      { run: RUN_PR_421, job: 132433950789, tests: 160, seconds: 69.1 },
+      { run: RUN_MAIN, job: 131802593817, tests: 160, seconds: 66.9 },
+    ],
+    'chromium-mobile-components': [
+      { run: RUN_PR_421, job: 132433950748, tests: 160, seconds: 96.3 },
+      { run: RUN_MAIN, job: 131802593839, tests: 160, seconds: 78.2 },
+    ],
+    'webkit-desktop-components': [
+      { run: RUN_PR_421, job: 132433950794, tests: 160, seconds: 243.0 },
+      { run: RUN_MAIN, job: 131802593899, tests: 160, seconds: 176.2 },
+    ],
+    'webkit-mobile-components': [
+      { run: RUN_PR_421, job: 132433950784, tests: 160, seconds: 311.6 },
+      { run: RUN_MAIN, job: 131802593840, tests: 160, seconds: 224.5 },
+    ],
+  },
+  'e2e-visual-chromium': {
+    chromium: [
+      { run: RUN_PR_421, job: 132433950662, tests: 10, seconds: 14.8 },
+      { run: RUN_MAIN, job: 131802593763, tests: 6, seconds: 8.7 },
+    ],
+    'chromium-mobile': [
+      { run: RUN_PR_421, job: 132433950596, tests: 10, seconds: 26.5 },
+      { run: RUN_MAIN, job: 131802593650, tests: 6, seconds: 6.2 },
+    ],
+  },
+};
+
+export function secondsPerTest(job: string, project: string): number {
+  const samples = RATE_SAMPLES[job]?.[project];
+  if (samples === undefined || samples.length === 0) {
+    throw new Error(`no CI timing sample for ${job} (${project}); add one to RATE_SAMPLES`);
+  }
+  return Math.max(...samples.map((sample) => sample.seconds / sample.tests));
+}

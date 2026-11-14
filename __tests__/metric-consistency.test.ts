@@ -62,7 +62,7 @@ const nearKeyword = (text: string, needle: string, keyword: RegExp) => {
 const contentSurfaces: Array<[string, string]> = readContentSurfaces();
 
 // behavioral-test-allow: the OG card's numbers are baked into an HTML template string inside the
-// generator script, so they are reachable only as source text — there is nothing to import
+// generator script, so they are reachable only as source text, there is nothing to import
 const ogImageScript = readFileSync(path.join(REPO_ROOT, 'scripts/generate-og-image.ts'), 'utf-8');
 
 let layoutMetadataText = '';
@@ -120,7 +120,7 @@ describe('performance metrics agree with the authoritative receipts', () => {
 
     expect(
       empty,
-      'a surface swept for contradictions is EMPTY, so the sweep over it finds nothing and passes — a silent no-op, not a pass. `app/(en)/layout.tsx (metadata)` is the live risk: layoutMetadataText starts as "" and is filled in beforeAll. An empty OBJECT is the likelier regression than an empty string — a refactor to generateMetadata() leaving a stub makes JSON.stringify(metadata) return "{}", which is 2 chars, not 0 — so the check is against a set of empty SERIALISATIONS, not against length. Fix the surface, not this assertion.',
+      'a surface swept for contradictions is EMPTY, so the sweep over it finds nothing and passes, a silent no-op, not a pass. `app/(en)/layout.tsx (metadata)` is the live risk: layoutMetadataText starts as "" and is filled in beforeAll. An empty OBJECT is the likelier regression than an empty string, a refactor to generateMetadata() leaving a stub makes JSON.stringify(metadata) return "{}", which is 2 chars, not 0, so the check is against a set of empty SERIALISATIONS, not against length. Fix the surface, not this assertion.',
     ).toEqual([]);
   });
 
@@ -142,7 +142,7 @@ describe('performance metrics agree with the authoritative receipts', () => {
 
     expect(
       misjudged,
-      'isInfraModule must be tested against the BASENAME, never the path readdirSync returns. Matched against the full relative path, `_.+` greedily eats the directory separator: "_drafts/projects.ts" — real published content under an underscore-prefixed DIRECTORY — is then silently EXCLUDED from the sweep (a fail-open, the exact class this file exists to close), while genuine nested infra like "sub/_helper.ts" is swept. It is wrong in both directions at once. The bare "_drafts" and "README.md" rows are the directory entry and the non-TS file that readdirSync also returns; dropping the extension check admits them and the sweep then tries to read a directory. Both gates go through ONE reader (readContentSurfaces in __tests__/helpers/content-surfaces.ts), which applies isPublishedSurface — built from the shared basename primitives in scripts/content-basename.mjs (isTypeScriptModule, isTestModule, isSchemaModule, isInfraModule) — when it was duplicated per file, adding an exclusion to one copy diverged the two sweeps with both tables still green.',
+      'isInfraModule must be tested against the BASENAME, never the path readdirSync returns. Matched against the full relative path, `_.+` greedily eats the directory separator: "_drafts/projects.ts", real published content under an underscore-prefixed DIRECTORY, is then silently EXCLUDED from the sweep (a fail-open, the exact class this file exists to close), while genuine nested infra like "sub/_helper.ts" is swept. It is wrong in both directions at once. The bare "_drafts" and "README.md" rows are the directory entry and the non-TS file that readdirSync also returns; dropping the extension check admits them and the sweep then tries to read a directory. Both gates go through ONE reader (readContentSurfaces in __tests__/helpers/content-surfaces.ts), which applies isPublishedSurface, built from the shared basename primitives in scripts/content-basename.mjs (isTypeScriptModule, isTestModule, isSchemaModule, isInfraModule), when it was duplicated per file, adding an exclusion to one copy diverged the two sweeps with both tables still green.',
     ).toEqual([]);
   });
 
@@ -193,7 +193,7 @@ describe('performance metrics agree with the authoritative receipts', () => {
 
     expect(
       METRIC_KEYWORDS.INITIAL_LOAD?.test('load time'),
-      'INITIAL_LOAD must NOT match "load time" — that is PAGE_LOAD\'s own rendered tile label (content/projects.ts). Widening INITIAL_LOAD to claim it reds the real LOAD TIME tile as a fake contradiction, which is exactly the false positive a74ce37 fixed. This guards the upper bound; the assertion above guards the lower one.',
+      'INITIAL_LOAD must NOT match "load time", that is PAGE_LOAD\'s own rendered tile label (content/projects.ts). Widening INITIAL_LOAD to claim it reds the real LOAD TIME tile as a fake contradiction, which is exactly the false positive a74ce37 fixed. This guards the upper bound; the assertion above guards the lower one.',
     ).toBe(false);
   });
 
@@ -223,9 +223,9 @@ describe('performance metrics agree with the authoritative receipts', () => {
 
     expect(
       contradictions,
-      `a surface states the opposite sign of an authoritative receipt (content/perf-receipts.ts). Not hypothetical: TTI shipped as -52% in perf-receipts.ts and seo.ts while projects.ts, hiring-profile.ts, the /api/ask system prompt AND the eval corpus all said +52% — so the AI answered the opposite sign from the JSON-LD on the same metric, and the eval graded it against the wrong one.
+      `a surface states the opposite sign of an authoritative receipt (content/perf-receipts.ts). Not hypothetical: TTI shipped as -52% in perf-receipts.ts and seo.ts while projects.ts, hiring-profile.ts, the /api/ask system prompt AND the eval corpus all said +52%, so the AI answered the opposite sign from the JSON-LD on the same metric, and the eval graded it against the wrong one.
 
-IF THIS FIRED ON A TRUE SENTENCE: it fires when the flipped number sits within ${PROXIMITY_CHARS} chars of the metric's keyword, so a TRUE claim about a DIFFERENT metric that shares a magnitude in the same breath trips it — "bounce rate -10%" beside CONVERSION (+10%). Proximity cannot disambiguate two metrics sharing a number inside one sentence. Do NOT delete the true claim, and do NOT widen a keyword: METRIC_KEYWORDS is already tuned against two live collisions — "load time" is PAGE_LOAD's own rendered tile label (handing it to INITIAL_LOAD reds the real LOAD TIME tile), and a bare /build/i matches "building shared UI systems" in llms.txt. Narrow the sentence, or give the other metric its own receipt so it gets a keyword of its own.`,
+IF THIS FIRED ON A TRUE SENTENCE: it fires when the flipped number sits within ${PROXIMITY_CHARS} chars of the metric's keyword, so a TRUE claim about a DIFFERENT metric that shares a magnitude in the same breath trips it, "bounce rate -10%" beside CONVERSION (+10%). Proximity cannot disambiguate two metrics sharing a number inside one sentence. Do NOT delete the true claim, and do NOT widen a keyword: METRIC_KEYWORDS is already tuned against two live collisions, "load time" is PAGE_LOAD's own rendered tile label (handing it to INITIAL_LOAD reds the real LOAD TIME tile), and a bare /build/i matches "building shared UI systems" in llms.txt. Narrow the sentence, or give the other metric its own receipt so it gets a keyword of its own.`,
     ).toEqual([]);
   });
 
@@ -266,7 +266,7 @@ IF THIS FIRED ON A TRUE SENTENCE: it fires when the flipped number sits within $
 
     expect(
       orphaned,
-      'a stat label in PROJECT_STAT_METRICS matches no rendered tile, so it was renamed — and the tile it used to guard has silently LEFT the magnitude gate: an unmapped label is SKIPPED, not failed. These labels are display copy and they do move; this branch itself renamed "TTI GAIN" to "TTI". If the tile was RENAMED, re-point the key at the new label — deleting the entry there would drop a live tile out of the magnitude gate. Delete the entry ONLY if the tile is genuinely gone from the UI. Either way, do not "fix" this by deleting the assertion: the sign sweep still covers projects.ts, but magnitude is held ONLY here.',
+      'a stat label in PROJECT_STAT_METRICS matches no rendered tile, so it was renamed, and the tile it used to guard has silently LEFT the magnitude gate: an unmapped label is SKIPPED, not failed. These labels are display copy and they do move; this branch itself renamed "TTI GAIN" to "TTI". If the tile was RENAMED, re-point the key at the new label, deleting the entry there would drop a live tile out of the magnitude gate. Delete the entry ONLY if the tile is genuinely gone from the UI. Either way, do not "fix" this by deleting the assertion: the sign sweep still covers projects.ts, but magnitude is held ONLY here.',
     ).toEqual([]);
   });
 

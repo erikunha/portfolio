@@ -27,8 +27,8 @@ The prompt for a manual or agent review that applies these rules to a diff is `d
    mode) keeps a baseline whose diff is under `maxDiffPixelRatio`, so a removed label survives the
    regen. Force it only for the subject you changed: `--update-snapshots=all -g <subject>`, never
    for the whole suite. Check: open the regenerated PNG and confirm the fix is in it.
-6. `DECISIONS.md`: every entry sits under a dated heading, newest first, cites the PR that lands
-   it (a SHA only while it is reachable from the branch) and names how to undo it. Check: read the entry as a stranger who must revert it.
+6. `DECISIONS.md`: every entry is one bullet that starts with its date, goes at the top and names how to undo it.
+   An entry that cites its landing PR cites the PR number (a SHA only while it is reachable from the branch). Check: read the entry as a stranger who must revert it.
 7. Format before finishing: `pnpm check:fix`, then `pnpm check` reports no errors. Never call a
    lint error pre-existing without showing it on the base branch.
 8. Tokens added to `app/css/theme.css` by two branches conflict; keep both sides.
@@ -163,7 +163,7 @@ The prompt for a manual or agent review that applies these rules to a diff is `d
     ratio has to be carried on purpose. The rule that wins on an element is the one whose ratio its
     descendants inherit: a Tailwind `text-xs` writes `line-height` in the utilities layer and wins
     over a component rule, so the descendants inherit 1/0.75 and not the component's ratio. Getting
-    this wrong is invisible on the screen — the box is whole, the ratios the author wrote are
+    this wrong is invisible on the screen, the box is whole, the ratios the author wrote are
     untouched, and the leading of a whole subtree has changed by 2.67px. Compare against `main`
     element by element, not by eye: `tests/e2e/leading-integrity.spec.ts` holds the rule that a
     descendant inherits the ratio or the length its parent declares. Check: that spec, and

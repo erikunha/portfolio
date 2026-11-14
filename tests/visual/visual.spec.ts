@@ -5,15 +5,30 @@ import { expect, test } from '../e2e/_helpers/fixtures';
 import { waitForHydration } from '../e2e/_helpers/hydration';
 import { stripVolatileChrome } from '../e2e/_helpers/mask-volatile';
 import { revealDeferredContent, snapshotLocator } from '../e2e/_helpers/snapshot';
+import { gotoSettled } from '../e2e/_helpers/streamed';
 
 test.describe.configure({ timeout: 60_000 });
 
 const CONTACT_VISITOR_ZONE = 'Europe/Berlin';
 const CONTACT_FIXED_NOW = new Date('2026-11-02T15:00:00Z');
 const CONTACT_SCROLL_MARGIN_PX = 100;
+const PAGE_VIEWPORT = {
+  chromium: { width: 1280, height: 720 },
+  'chromium-mobile': { width: 390, height: 844 },
+} as const;
+const PAGE_BASELINES = [
+  { name: 'cv', path: '/cv', target: 'main' },
+  { name: 'summary', path: '/summary', target: 'main' },
+  { name: 'links-en', path: '/links/en', target: 'main' },
+  {
+    name: 'pt-hero',
+    path: '/pt',
+    target: '[data-testid="hero-desktop"], [data-testid="hero-mobile"]',
+  },
+] as const;
 
 test.describe('visual regression', () => {
-  test('1 — hero above-the-fold matches baseline', async ({ mockedPage }, testInfo) => {
+  test('1: hero above-the-fold matches baseline', async ({ mockedPage }, testInfo) => {
     test.skip(
       testInfo.project.name === 'chromium-mobile',
       'chromium-mobile post-hydration reflow blocks stable hero snapshot.',
@@ -38,7 +53,7 @@ test.describe('visual regression', () => {
   test.describe('contact section', () => {
     test.use({ timezoneId: CONTACT_VISITOR_ZONE, locale: 'en-US' });
 
-    test('2 — contact section matches baseline', async ({ mockedPage }) => {
+    test('2: contact section matches baseline', async ({ mockedPage }) => {
       await mockedPage.clock.setFixedTime(CONTACT_FIXED_NOW);
       const contactSection = mockedPage.locator('#sec-contact');
       const scrollToContact = (selector: string) =>
@@ -66,7 +81,7 @@ test.describe('visual regression', () => {
     });
   });
 
-  test('3 — shell + ask form (idle) matches baseline', async ({ mockedPage }, testInfo) => {
+  test('3: shell + ask form (idle) matches baseline', async ({ mockedPage }, testInfo) => {
     const shellSection = mockedPage.locator('#sec-shell');
     await shellSection.scrollIntoViewIfNeeded();
     await mockedPage.waitForSelector('[data-testid="shell-form"]', { state: 'visible' });
@@ -93,7 +108,7 @@ test.describe('visual regression', () => {
     await snapshotLocator(mockedPage, shellSection, 'shell-idle.png');
   });
 
-  test('4 — shell + ask form (mid-stream) matches baseline', async ({ mockedPage }) => {
+  test('4: shell + ask form (mid-stream) matches baseline', async ({ mockedPage }) => {
     await mockedPage.addInitScript(() => {
       const realFetch = window.fetch.bind(window);
       window.fetch = async (input, init) => {
@@ -133,6 +148,11 @@ test.describe('visual regression', () => {
       if (ph) (ph as HTMLElement).style.visibility = 'hidden';
     });
     await stripVolatileChrome(mockedPage);
+    await mockedPage.evaluate(() => {
+      for (const time of document.querySelectorAll<HTMLElement>('.shell-stop-time')) {
+        time.style.visibility = 'hidden';
+      }
+    });
     if (process.env.ARGOS_TOKEN) {
       await revealDeferredContent(mockedPage);
       await mockedPage.evaluate(() => {
@@ -145,7 +165,7 @@ test.describe('visual regression', () => {
     await snapshotLocator(mockedPage, shellSection, 'shell-mid-stream.png');
   });
 
-  test('5 — hottest takes section matches baseline', async ({ mockedPage }) => {
+  test('5: hottest takes section matches baseline', async ({ mockedPage }) => {
     const hottest = mockedPage.locator('#sec-hottest-takes');
     await hottest.scrollIntoViewIfNeeded();
     await mockedPage.waitForSelector('#sec-hottest-takes [data-testid="hottest-takes-list"]', {
@@ -171,4 +191,21 @@ test.describe('visual regression', () => {
     }
     await snapshotLocator(mockedPage, footer, 'footer.png');
   });
+});
+
+test.describe('route page baselines', () => {
+  for (const { name, path, target } of PAGE_BASELINES) {
+    test(`${name} matches baseline`, async ({ mockedPage }, testInfo) => {
+      const viewport = PAGE_VIEWPORT[testInfo.project.name as keyof typeof PAGE_VIEWPORT];
+      await mockedPage.setViewportSize(viewport);
+      await gotoSettled(mockedPage, path);
+      await waitForHydration(mockedPage, '.menu-trigger');
+      const region = mockedPage.locator(target).filter({ visible: true }).first();
+      await region.waitFor({ state: 'visible' });
+      await region.scrollIntoViewIfNeeded();
+      await mockedPage.evaluate(() => document.fonts.ready);
+      await stripVolatileChrome(mockedPage);
+      await snapshotLocator(mockedPage, region, `${name}.png`);
+    });
+  }
 });

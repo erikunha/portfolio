@@ -73,7 +73,7 @@ afterEach(() => {
   vi.unstubAllEnvs();
 });
 
-describe('ASK_MODEL — single source of truth', () => {
+describe('ASK_MODEL: single source of truth', () => {
   it('is the exact model string POST /api/ask hands to streamText', async () => {
     const { POST } = await import('@/app/api/ask/route');
     const res = await POST(makeRequest());

@@ -25,7 +25,7 @@ function makeCtx() {
   };
 }
 
-describe('MatrixRain — watchRef / IntersectionObserver path', () => {
+describe('MatrixRain: watchRef / IntersectionObserver path', () => {
   let mounted: MountedClient;
 
   beforeEach(() => {
@@ -137,7 +137,7 @@ describe('MatrixRain — watchRef / IntersectionObserver path', () => {
   });
 });
 
-describe('MatrixRain — visibility change pause/resume', () => {
+describe('MatrixRain: visibility change pause/resume', () => {
   let mounted: MountedClient;
   let rafCallbacks: FrameRequestCallback[];
 
@@ -205,7 +205,7 @@ describe('MatrixRain — visibility change pause/resume', () => {
   });
 });
 
-describe('MatrixRain — sysfail:start / sysfail:end events', () => {
+describe('MatrixRain: sysfail:start / sysfail:end events', () => {
   let mounted: MountedClient;
   let rafCallbacks: FrameRequestCallback[];
 

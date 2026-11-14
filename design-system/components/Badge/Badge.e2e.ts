@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 
-test.describe('Badge — behavioral E2E', () => {
+test.describe('Badge: behavioral E2E', () => {
   test('dot variant renders with aria-hidden dot span', async ({ page }) => {
     await page.goto('/design-system/components');
     const preview = page.locator('#badge');

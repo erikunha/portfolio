@@ -8,6 +8,7 @@ import { EXTERNAL_LINK_GLYPH } from './terminal-chrome';
 
 const HOME_HREF = `#${MAIN_CONTENT_ID}`;
 const SECTION_HREF_PREFIX = '#';
+const BUILD_YEAR = new Date().getFullYear();
 
 const sectionLink = (locale: SiteLocale, id: SectionId, href = `${SECTION_HREF_PREFIX}${id}`) => ({
   label: localizedSectionLabel(locale, id),
@@ -120,8 +121,8 @@ const footerContentFor = (locale: SiteLocale) => {
       label: pt ? 'última requisição registrada' : 'last request recorded',
     },
     copyright: pt
-      ? '© 2026 erik cunha · esta sessão termina aqui · o trabalho não.'
-      : "© 2026 erik cunha · this session ends here · the work doesn't.",
+      ? `© ${BUILD_YEAR} erik cunha · esta sessão termina aqui · o trabalho não.`
+      : `© ${BUILD_YEAR} erik cunha · this session ends here · the work doesn't.`,
   });
 };
 

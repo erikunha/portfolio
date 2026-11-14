@@ -1,4 +1,8 @@
 @layer components {
+  .keep-together {
+    white-space: nowrap;
+  }
+
   .cmd-word {
     white-space: nowrap;
   }
@@ -93,7 +97,7 @@
     color: var(--color-green);
   }
 
-  .ds-prose :not(pre):not(td):not(th) > code {
+  .ds-prose :not(pre):not(td):not(th):not(.ds-cell-value) > code {
     background: var(--color-secondary-950);
     border: 1px solid var(--color-primary-border);
     padding: 0.1em 0.35em;
@@ -126,7 +130,7 @@
 
     .ds-prose table[data-labelled-table] td {
       display: grid;
-      grid-template-columns: minmax(0, 0.382fr) minmax(0, 0.618fr);
+      grid-template-columns: minmax(min-content, 0.382fr) minmax(0, 0.618fr);
       column-gap: var(--phi-space-2);
       align-items: baseline;
       width: 100%;
@@ -142,9 +146,16 @@
 
     .ds-prose table[data-labelled-table] .ds-cell-label {
       display: block;
+      overflow-wrap: normal;
       color: var(--color-primary-500);
       font-size: var(--text-xs);
       letter-spacing: var(--tracking-sm);
+    }
+  }
+
+  @media (max-width: theme(--viewport-below-narrow)) {
+    .ds-prose table[data-labelled-table] td {
+      grid-template-columns: minmax(0, 1fr);
     }
   }
 
@@ -255,7 +266,7 @@
 
   @media (min-width: theme(--viewport-narrow)) {
     #sec-contact {
-      --module-estimate: 2470px;
+      --module-estimate: 2490px;
     }
   }
 

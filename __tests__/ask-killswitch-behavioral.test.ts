@@ -62,7 +62,7 @@ afterEach(() => {
 
 const OFF_KEYWORDS = ['false', '0', 'off', 'no', 'disabled'];
 
-describe('/api/ask kill switch — behavioral (PR 7, replaces source-grep)', () => {
+describe('/api/ask kill switch: behavioral (PR 7, replaces source-grep)', () => {
   for (const keyword of OFF_KEYWORDS) {
     it(`rejects with 503 + email-fallback message when ASK_ENABLED='${keyword}'`, async () => {
       vi.stubEnv('ASK_ENABLED', keyword);

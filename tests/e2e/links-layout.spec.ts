@@ -18,7 +18,7 @@ const VIEWPORT = {
   desktop: { width: 1280, height: 800 },
 };
 
-const FONT_FLOOR_PX = 12;
+const FONT_FLOOR_PX = 13;
 
 const MAIL_PROTOCOL = 'mailto:';
 
@@ -223,7 +223,7 @@ for (const path of ['/links', '/links/en']) {
       expect(fits).toBe(true);
     });
 
-    test('renders no text below the 12px floor', async ({ page }) => {
+    test('renders no text below the 13px floor', async ({ page }) => {
       await page.setViewportSize(VIEWPORT.desktop);
       await gotoSettled(page, path);
 

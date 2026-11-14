@@ -105,13 +105,6 @@
     }
   }
 
-  .eq-strip {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr);
-    border: var(--border-width) solid var(--color-primary-border);
-    background: var(--color-secondary-950);
-  }
-
   .guitar-chain-label {
     margin: 0;
     padding: var(--phi-space-1) var(--phi-space-2);
@@ -120,95 +113,6 @@
     letter-spacing: var(--guitar-label-tracking);
     border-bottom: var(--border-width) solid var(--color-primary-quiet);
     text-wrap: balance;
-  }
-
-  .eq-plot {
-    grid-area: 1 / 1;
-    display: grid;
-    grid-template: minmax(0, 1fr) / minmax(0, 1fr);
-    height: var(--eq-plot-height);
-  }
-
-  .eq-plot > * {
-    grid-area: 1 / 1;
-    min-width: 0;
-    min-height: 0;
-  }
-
-  .eq-grid,
-  .eq-curve {
-    display: block;
-    width: 100%;
-    height: 100%;
-    overflow: visible;
-  }
-
-  .eq-grid path {
-    fill: none;
-    stroke: var(--color-primary-quiet);
-    stroke-width: var(--border-width);
-    vector-effect: non-scaling-stroke;
-  }
-
-  .eq-curve {
-    z-index: var(--z-local-above);
-    filter: drop-shadow(0 0 var(--eq-curve-glow) var(--color-tertiary-50));
-  }
-
-  .eq-curve path {
-    fill: none;
-    stroke: var(--color-tertiary-50);
-    stroke-width: var(--eq-curve-stroke);
-    stroke-linejoin: round;
-    vector-effect: non-scaling-stroke;
-  }
-
-  .eq-bars {
-    z-index: var(--z-local);
-    display: flex;
-    align-items: flex-end;
-    gap: var(--eq-bar-gap);
-    margin-inline: var(--eq-inset);
-  }
-
-  .eq-bar {
-    flex: 1 1 0;
-    min-width: 0;
-    height: var(--eq-bar-height);
-    background: linear-gradient(
-      to bottom,
-      var(--color-eq-bar-top),
-      var(--color-primary-500) var(--eq-bar-mid-stop),
-      var(--color-eq-bar-bottom)
-    );
-    transform-origin: 50% 100%;
-    animation: eq-bounce calc(var(--eq-beat) * var(--eq-bar-cycle)) ease-in-out
-      calc(var(--eq-bar-delay) * -1) infinite;
-  }
-
-  @media print {
-    .eq-bar {
-      animation: none;
-    }
-  }
-
-  body[data-motion="reduce"] .eq-bar {
-    animation: none;
-  }
-
-  .eq-axis {
-    grid-area: 2 / 1;
-    display: grid;
-    height: var(--eq-axis-height);
-    border-top: var(--border-width) solid var(--color-primary-quiet);
-  }
-
-  .eq-axis-tick {
-    justify-self: end;
-    translate: 50% 0;
-    color: var(--color-primary-400);
-    font-size: var(--text-xs);
-    line-height: var(--eq-axis-height);
   }
 
   .guitar-photo {
@@ -369,23 +273,6 @@
     .guitar-chain-label {
       padding: var(--phi-space-2);
       text-align: center;
-    }
-
-    .eq-plot {
-      grid-row: 2;
-      height: var(--eq-plot-height-compact);
-    }
-
-    .eq-axis {
-      grid-row: 3;
-    }
-
-    .eq-bars {
-      gap: var(--eq-bar-gap-compact);
-    }
-
-    .eq-bar:nth-child(even) {
-      display: none;
     }
 
     .guitar-stat,

@@ -5,6 +5,7 @@ import { lazy, Suspense } from 'react';
 import { PageMain } from '@/components/PageMain';
 import { type ServerErrorCore, serverErrorCore } from '@/content/server-error-core';
 import { localeOfPath, SITE_HTML_LANG } from '@/content/site-locale';
+import { ErrorHeading } from './ErrorHeading.client';
 import type { RouteErrorProps } from './ErrorPages.client';
 import { ERROR_MAIN_CLASS } from './error-main';
 
@@ -16,7 +17,7 @@ function StaticServerError({
 }: Pick<RouteErrorProps, 'reset'> & { content: ServerErrorCore }) {
   return (
     <PageMain className={ERROR_MAIN_CLASS}>
-      <h1 className="err-h1">{content.code}</h1>
+      <ErrorHeading>{content.code}</ErrorHeading>
       <div className="err-log" role="alert">
         <p className="err-text">{content.message}</p>
       </div>

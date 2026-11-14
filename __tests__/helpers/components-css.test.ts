@@ -5,26 +5,32 @@ import { componentsCssFiles, readComponentsCss } from './components-css';
 
 const CSS_DIR = path.resolve(__dirname, '../../app/css');
 const GLOBALS_CSS = path.resolve(__dirname, '../../app/globals.css');
+const HOME_CSS = path.join(CSS_DIR, 'home.css');
 const PARTIAL = /^components-.+\.css$/;
 
 const HOTTEST_TAKES_MARKER = '#sec-hottest-takes > header h2';
 const CAREER_MARKER = '.career-section';
 
-function globalsImportOrder(): string[] {
-  // behavioral-test-allow: reads the shipped stylesheet entrypoint; jsdom cannot evaluate CSS cascade order
+function homeCascadeOrder(): string[] {
+  // behavioral-test-allow: reads the shipped stylesheet entrypoints; jsdom cannot evaluate CSS cascade order
   const globals = readFileSync(GLOBALS_CSS, 'utf-8');
-  return Array.from(
-    globals.matchAll(/@import\s+"\.\/css\/(components-[^"]+\.css)";/g),
-    (m) => m[1] ?? '',
-  );
+  // behavioral-test-allow: reads the home stylesheet entrypoint, which the home route loads after app/globals.css
+  const home = readFileSync(HOME_CSS, 'utf-8');
+  return [
+    ...Array.from(
+      globals.matchAll(/@import\s+"\.\/css\/(components-[^"]+\.css)";/g),
+      (m) => m[1] ?? '',
+    ),
+    ...Array.from(home.matchAll(/@import\s+"\.\/(components-[^"]+\.css)";/g), (m) => m[1] ?? ''),
+  ];
 }
 
 describe('components partial order', () => {
-  it('lists the partials in the app/globals.css @import order, not alphabetically', () => {
+  it('lists the partials in the home cascade order: app/globals.css, then app/css/home.css', () => {
     expect(
       componentsCssFiles(),
-      'the helper must return the partials in the order app/globals.css imports them, because that import order is the cascade order the browser resolves. An alphabetical order concatenates the stylesheet in an order no browser ever produces, so a last-match-wins assertion over it can disagree with the real cascade.',
-    ).toEqual(globalsImportOrder());
+      'the helper must return the partials in the order the home route loads them (every app/globals.css import, then every app/css/home.css import), because that order is the cascade the browser resolves. An alphabetical order concatenates the stylesheet in an order no browser ever produces, so a last-match-wins assertion over it can disagree with the real cascade.',
+    ).toEqual(homeCascadeOrder());
   });
 
   it('orders the partials so a later @import wins the cascade for a same-specificity rule', () => {
@@ -37,7 +43,7 @@ describe('components partial order', () => {
     ).toBeGreaterThanOrEqual(0);
     expect(
       career,
-      'components-career.css is imported fourth and must be found',
+      'components-career.css is imported by app/css/home.css and must be found',
     ).toBeGreaterThanOrEqual(0);
     expect(
       hottestTakes,
@@ -63,7 +69,7 @@ describe('components partial order', () => {
     const onDisk = readdirSync(CSS_DIR).filter((f) => PARTIAL.test(f));
     expect(
       [...componentsCssFiles()].sort(),
-      'every app/css/components-*.css partial must be imported by app/globals.css, because an unimported partial is never shipped and a stylesheet assertion that read it would pass against CSS the browser never loads.',
+      'every app/css/components-*.css partial must be imported by app/globals.css or app/css/home.css, because an unimported partial is never shipped and a stylesheet assertion that read it would pass against CSS the browser never loads.',
     ).toEqual([...onDisk].sort());
   });
 });

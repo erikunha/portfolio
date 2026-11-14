@@ -79,7 +79,7 @@ describe('content-visibility deferral', () => {
     const prefixedOverride = componentsCss.match(/[\w[\]="'-]+\.module-deferred(?![\w-])/);
     expect(
       prefixedOverride,
-      'no selector may PREFIX `.module-deferred` (e.g. `section.module-deferred`). A prefix raises specificity, wins the cascade regardless of source order, and is invisible to the exact-selector filter above. This checks prefixes only — it does NOT catch `.module-deferred.foo`, `.module-deferred:not(.x)`, or `.parent .module-deferred`. Those are caught by the computed-style assertion in tests/e2e/cross-cutting.spec.ts, which is the authoritative gate; a source-text test cannot resolve the cascade.',
+      'no selector may PREFIX `.module-deferred` (e.g. `section.module-deferred`). A prefix raises specificity, wins the cascade regardless of source order, and is invisible to the exact-selector filter above. This checks prefixes only, it does NOT catch `.module-deferred.foo`, `.module-deferred:not(.x)`, or `.parent .module-deferred`. Those are caught by the computed-style assertion in tests/e2e/cross-cutting.spec.ts, which is the authoritative gate; a source-text test cannot resolve the cascade.',
     ).toBeNull();
 
     expect(componentsCss).not.toMatch(/nth-of-type\(n\s*\+\s*\d+\)/);

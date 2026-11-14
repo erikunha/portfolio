@@ -33,7 +33,7 @@ afterEach(() => {
   rmSync(dir, { recursive: true, force: true });
 });
 
-describe('strip-next-polyfills.mjs — hardened postinstall', () => {
+describe('strip-next-polyfills.mjs: hardened postinstall', () => {
   it('exits non-zero when the targets are absent (no more silent no-op)', () => {
     const res = run();
     expect(res.status).not.toBe(0);
@@ -70,13 +70,13 @@ describe('strip-next-polyfills.mjs — hardened postinstall', () => {
     const res = run();
     expect(
       res.status,
-      'the script must fail when polyfill-nomodule.js is missing — stripping only polyfill-module.js is the exact defect this target list exists to close',
+      'the script must fail when polyfill-nomodule.js is missing, stripping only polyfill-module.js is the exact defect this target list exists to close',
     ).not.toBe(0);
     expect(res.stderr).toMatch(/polyfill-nomodule\.js not found/i);
   });
 
   it('is idempotent: already-stripped (tiny) files exit 0 without rewriting', () => {
-    const stripped = `${SENTINEL} — modern browsers only\n`;
+    const stripped = `${SENTINEL}: modern browsers only\n`;
     const [mod, nomod] = writeBoth(stripped);
     const res = run();
     expect(res.status).toBe(0);

@@ -1,4 +1,5 @@
 import { CompanyMention } from '@/components/CompanyLink';
+import { KeepTail } from '@/components/KeepTail';
 import { OptimizedImage } from '@/components/OptimizedImage';
 import { linksContent } from '@/content/links';
 import type { LinksLocale } from '@/content/links.constants';
@@ -48,7 +49,7 @@ export function IdentityCard({ locale }: { locale: LinksLocale }) {
             <p className="links-identity-tagline">
               {profile.taglines[locale].map((phrase) => (
                 <span key={phrase} className="tagline-sizer" aria-hidden="true">
-                  {phrase}
+                  <KeepTail>{phrase}</KeepTail>
                   <span className="boot-cursor" />
                 </span>
               ))}

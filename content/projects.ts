@@ -197,7 +197,10 @@ const projectsFor = (locale: SiteLocale): Project[] => {
         stats: [
           { label: pt ? 'CENÁRIOS' : 'SCENARIOS', value: '17' },
           { label: pt ? 'BARRA' : 'PASS BAR', value: '28/34' },
-          { label: pt ? 'FERRAMENTAS' : 'AGENT TOOLS', value: '5 · ONE AGENTS.MD' },
+          {
+            label: pt ? 'FERRAMENTAS' : 'AGENT TOOLS',
+            value: pt ? '5 · UM AGENTS.MD' : '5 · ONE AGENTS.MD',
+          },
         ],
       },
     ]);

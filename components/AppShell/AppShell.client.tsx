@@ -24,6 +24,7 @@ export function AppShell({
   locale,
   route,
   skipLabel,
+  skipLinks,
 }: {
   brand: ReactNode;
   children: ReactNode;
@@ -32,12 +33,14 @@ export function AppShell({
   locale: SiteLocale;
   route?: string | undefined;
   skipLabel: string;
+  skipLinks?: ReactNode;
 }) {
   return (
     <>
       <a href={`#${MAIN_CONTENT_ID}`} className="skip-to-content">
         {skipLabel}
       </a>
+      {skipLinks}
       <OfflineNotice copy={chrome.offline} />
       <SectionNavigationProvider chrome={chrome} locale={locale} route={route ?? null}>
         <SectionNavigation extra={drawerExtra} />

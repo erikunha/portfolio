@@ -31,3 +31,18 @@ export function restoreRedisCredentials(env: Env, credentials: RedisCredentials)
 export function dropRedisCredentials(env: Env, credentials: RedisCredentials): void {
   for (const name of Object.keys(credentials)) delete env[name];
 }
+
+function hasPublishCredentials(credentials: RedisCredentials): boolean {
+  return REDIS_ENV_PAIRS.some(({ url, token }) => Boolean(credentials[url] && credentials[token]));
+}
+
+export function publishPreflightError(env: Env, credentials: RedisCredentials): string | null {
+  if (!isPublishEnabled(env) || hasPublishCredentials(credentials)) return null;
+  const names = REDIS_ENV_PAIRS.map(({ url, token }) => `${url} and ${token}`).join(' or ');
+  return `${EVAL_PUBLISH_ENV}=${EVAL_PUBLISH_VALUE} needs Redis credentials, but ${names} is not set or is empty. In GitHub Actions they come from the EVAL_PUBLISH_REDIS_REST_URL and EVAL_PUBLISH_REDIS_REST_TOKEN secrets.`;
+}
+
+export function publishOutcomeError(result: { published: boolean; error?: string }): string | null {
+  if (result.published || result.error === undefined) return null;
+  return `${EVAL_PUBLISH_ENV}=${EVAL_PUBLISH_VALUE} but the aggregate was not published: ${result.error}`;
+}

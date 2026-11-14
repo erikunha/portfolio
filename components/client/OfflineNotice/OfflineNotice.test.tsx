@@ -77,6 +77,6 @@ describe('OfflineNotice', () => {
 
   it.each(Object.values(SITE_LOCALE))('keeps %s copy valid and free of dashes', (locale) => {
     const copy = OfflineNoticeSchema.parse(offlineNotice[locale]);
-    expect(Object.values(copy).join(' ')).not.toMatch(/[–—]/);
+    expect(Object.values(copy).join(' ')).not.toMatch(/[\u2013\u2014]/);
   });
 });

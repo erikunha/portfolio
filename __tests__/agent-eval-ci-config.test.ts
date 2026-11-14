@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 const wf = readFileSync(`${process.cwd()}/.github/workflows/agent-eval.yml`, 'utf8');
 const ci = readFileSync(`${process.cwd()}/.github/workflows/ci.yml`, 'utf8');
 
-describe('agent-eval.yml — non-blocking scheduled workflow', () => {
+describe('agent-eval.yml: non-blocking scheduled workflow', () => {
   it('defines an agent-eval job', () => {
     expect(wf).toMatch(/^\s{2}agent-eval:/m);
   });

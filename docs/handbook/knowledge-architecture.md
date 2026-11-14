@@ -57,8 +57,8 @@ failure mode it addresses> _Reversible: <exactly how to undo this>._
 Rules that make the log trustworthy:
 - **Reversibility is mandatory.** Every entry ends with how to undo it. This is what lets a solo developer move fast: nothing is a one-way door without saying so.
 - **Failed attempts are recorded, not deleted.** "Falsified first attempt: ..." entries (e.g. the PSI twice-daily cron rejected by Vercel Hobby) preserve the reasoning so the same dead end is not re-explored.
-- **Evidence is cited.** SHAs, PR numbers, and external doc URLs ground each claim.
-- **Newest first**, each entry under a dated heading.
+- **Evidence is cited** where it exists: PR numbers and external doc URLs ground a claim. A branch SHA is cited only while it resolves on `main`.
+- **New entries go at the top**, one bullet per decision, starting with its date. Older entries may sit under a dated heading.
 
 ## The spec -> plan pipeline
 
@@ -75,7 +75,7 @@ flowchart LR
     impl --> adr["ADR lands in the decision's commit (same-change rule)"]
 ```
 
-A spec is the approved "what and why" with explicit gaps to close. A plan decomposes it into tasks and, for large work, focused sub-PRs. Architect review sits between them as a workflow convention. No project hook enforces it.
+A spec is the approved "what and why" with explicit gaps to close. A plan decomposes it into tasks and, for large work, focused sub-PRs. Plan review (the `plan-review` skill) sits between them as a workflow convention. No project hook enforces it.
 
 ### Planning artifacts
 

@@ -110,7 +110,7 @@ test.describe('home with JavaScript off', () => {
     await page.setViewportSize({ width: 1280, height: 720 });
     await page.goto('/');
     const trigger = page.locator('.desktop-topbar .menu-trigger');
-    await expect(trigger).toHaveAccessibleName('Open menu');
+    await expect(trigger).toHaveAttribute('aria-label', 'Open menu');
     await expect(trigger).toHaveText('');
     await expect(page.locator('.desktop-topbar')).not.toContainText('INDEX');
   });

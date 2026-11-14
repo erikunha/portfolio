@@ -163,7 +163,7 @@ export function assertExpectedFindings(findings) {
     if (!leakyRules.includes(rule)) {
       return {
         ok: false,
-        reason: `${LEAKY_FIXTURE} did not trigger the expected rule "${rule}" (found: ${leakyRules.join(', ') || 'none'}). Either the rule was removed from the config, or the planted secret no longer matches it — in both cases the real scan is no longer proven to detect this class.`,
+        reason: `${LEAKY_FIXTURE} did not trigger the expected rule "${rule}" (found: ${leakyRules.join(', ') || 'none'}). Either the rule was removed from the config, or the planted secret no longer matches it, in both cases the real scan is no longer proven to detect this class.`,
       };
     }
   }
@@ -200,7 +200,7 @@ const REPORT_FILE = 'gitleaks-fixture.json';
 const PROBE_FILE = 'config-probe.ts';
 const GITLEAKS_BIN = process.env.GITLEAKS_BIN ?? 'gitleaks';
 
-// Assembled at runtime so the literal never appears in this file — otherwise the repo scan
+// Assembled at runtime so the literal never appears in this file, otherwise the repo scan
 // would flag this script. It is NOT the token .gitleaks.toml allowlists: the whole point of
 // the probe below is to scan a secret the repo config does not exempt.
 const PROBE_TOKEN = ['ghp', 'Pr0beNotAllowlisted0123456789abcdefg'].join('_');
@@ -301,8 +301,8 @@ function main() {
       process.exit(1);
     }
 
-    // 2. The REPO CONFIG still catches secrets. Step 1 cannot see this — it never loads
-    //    .gitleaks.toml — so an allowlist widened to `paths = ['''.*''']` would neuter the
+    // 2. The REPO CONFIG still catches secrets. Step 1 cannot see this, it never loads
+    //    .gitleaks.toml, so an allowlist widened to `paths = ['''.*''']` would neuter the
     //    real scan while step 1 stayed green and ci-gate went green with it. This scans a
     //    DIFFERENT, non-exempt secret under the repo config. It must still fire.
     const probeDir = mkdtempSync(join(tmpdir(), 'gitleaks-config-probe-'));
@@ -311,7 +311,7 @@ function main() {
       const probeReport = join(probeDir, REPORT_FILE);
       const probeRun = scan(probeDir, probeReport, resolve(REPO_CONFIG));
       const probeRan = interpretGitleaksRun(probeRun);
-      const neutered = `The repo config no longer detects a secret it is supposed to detect. An allowlist widened past the token it was written for — a "paths" entry (which exempts a file from EVERY rule), or an over-broad regex — disables the scanner for the REAL scan while the default-rules check above keeps passing. That is a green gate over no scanning at all.`;
+      const neutered = `The repo config no longer detects a secret it is supposed to detect. An allowlist widened past the token it was written for, a "paths" entry (which exempts a file from EVERY rule), or an over-broad regex, disables the scanner for the REAL scan while the default-rules check above keeps passing. That is a green gate over no scanning at all.`;
 
       if (!probeRan.ok) {
         console.error(
@@ -339,7 +339,7 @@ function main() {
     }
 
     console.log(
-      `[check-gitleaks-fixture] PASS — gitleaks fires on ${LEAKY_FIXTURE} (${EXPECTED_RULES.join(', ')}), stays silent on ${CLEAN_FIXTURE}, and ${REPO_CONFIG} still catches a secret it does not allowlist.`,
+      `[check-gitleaks-fixture] PASS: gitleaks fires on ${LEAKY_FIXTURE} (${EXPECTED_RULES.join(', ')}), stays silent on ${CLEAN_FIXTURE}, and ${REPO_CONFIG} still catches a secret it does not allowlist.`,
     );
   } finally {
     rmSync(tmp, { recursive: true, force: true });

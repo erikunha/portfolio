@@ -4,11 +4,26 @@ import { FORGET_OUTCOME, type ForgetResult } from '@/lib/forget-request.client';
 import { formatRemaining } from './useAskStream';
 
 export function describeForget(result: ForgetResult, ui: ShellUi, states: ShellStates): string {
-  if (result.outcome === FORGET_OUTCOME.Deleted) return ui.forgetDeleted;
-  if (result.outcome === FORGET_OUTCOME.RateLimited && result.retryAfter !== null) {
-    return fillShellState(ui.forgetRateLimited, {
-      left: formatRemaining(result.retryAfter, states),
-    });
+  switch (result.outcome) {
+    case FORGET_OUTCOME.Deleted:
+      return ui.forgetDeleted;
+    case FORGET_OUTCOME.RateLimited:
+      return result.retryAfter === null
+        ? ui.forgetFailed
+        : fillShellState(ui.forgetRateLimited, {
+            left: formatRemaining(result.retryAfter, states),
+          });
+    case FORGET_OUTCOME.Unavailable:
+      return ui.forgetUnavailable;
+    case FORGET_OUTCOME.Offline:
+      return ui.forgetOffline;
+    case FORGET_OUTCOME.TimedOut:
+      return ui.forgetTimedOut;
+    case FORGET_OUTCOME.Failed:
+      return ui.forgetFailed;
+    default: {
+      result satisfies never;
+      return ui.forgetFailed;
+    }
   }
-  return ui.forgetFailed;
 }

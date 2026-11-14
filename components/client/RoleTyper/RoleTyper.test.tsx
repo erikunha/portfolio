@@ -92,7 +92,7 @@ describe('RoleTyper: typing', () => {
   });
 });
 
-describe('RoleTyper ARIA contract — animated pill', () => {
+describe('RoleTyper ARIA contract: animated pill', () => {
   it('is aria-hidden so AT ignores per-character textContent mutations', () => {
     expect(getPill()?.getAttribute('aria-hidden')).toBe('true');
   });
@@ -102,7 +102,7 @@ describe('RoleTyper ARIA contract — animated pill', () => {
   });
 });
 
-describe('RoleTyper ARIA contract — sr-only live region', () => {
+describe('RoleTyper ARIA contract: sr-only live region', () => {
   it('carries role="status" so screen readers treat it as a live region', () => {
     expect(getLiveRegion()).not.toBeNull();
   });

@@ -45,7 +45,7 @@ function systemPrompt(): string {
   // Two independent properties, both required, and an earlier revision wrongly
   // treated them as alternatives. The LAYOUT (base at root, PR head confined to
   // pr-head/) is what stops untrusted content reaching the workspace root. The
-  // MATERIALISATION is what makes the prompt the DEFAULT branch's copy — the
+  // MATERIALISATION is what makes the prompt the DEFAULT branch's copy, the
   // root is only the PR's base, and on a sub-PR into an integration branch those
   // are different things.
   const yml = readFileSync(WORKFLOW, 'utf8');
@@ -56,7 +56,7 @@ function systemPrompt(): string {
   }
   if (!yml.includes(`git show "FETCH_HEAD:${PROMPT_PATH_IN_REPO}" > ${MATERIALISED_PROMPT}`)) {
     throw new Error(
-      `claude-review.yml no longer materialises ${PROMPT_PATH_IN_REPO} from the DEFAULT branch. The workspace root is the PR's BASE, which is not the default branch on a sub-PR into an integration branch — so without this step that branch's prompt would review its own sub-PRs.`,
+      `claude-review.yml no longer materialises ${PROMPT_PATH_IN_REPO} from the DEFAULT branch. The workspace root is the PR's BASE, which is not the default branch on a sub-PR into an integration branch, so without this step that branch's prompt would review its own sub-PRs.`,
     );
   }
   if (!yml.includes(`--add-dir ${PR_HEAD_DIR}`)) {
@@ -109,7 +109,7 @@ describe('the claude-review prompt instructs shapes the verdict check can read',
     // Materialising the prompt from the default branch protects the PROMPT. It
     // does not protect the five convention files the prompt then tells the
     // reviewer to read and follow: AGENTS.md, STANDARDS.md, ARCHITECTURE.md,
-    // DECISIONS.md and .claude/rules — which under the PR-head checkout are
+    // DECISIONS.md and .claude/rules, which under the PR-head checkout are
     // PR-authored. Without this boundary a PR can add a "convention" excusing
     // itself and the reviewer is instructed to obey it.
     const p = systemPrompt();

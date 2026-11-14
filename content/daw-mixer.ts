@@ -123,11 +123,17 @@ const dawMixerFor = (locale: SiteLocale): DawMixer => {
         buttons: ['FX', 'EQ'],
         activeButtons: [],
         footer: { lufs: '-14', pk: '-0.3' },
-        terminalLines: [
-          '> headroom -3.2 · lufs -14 · pk -0.3 · mastered for streaming.',
-          '> same philosophy as code: **fewer plugins, more space**.',
-          'two tracks doing one job each beats six tracks competing.',
-        ],
+        terminalLines: pt
+          ? [
+              '> headroom -3,2 · lufs -14 · pk -0,3 · masterizado para streaming.',
+              '> mesma filosofia do código: **menos plugins, mais espaço**.',
+              'duas faixas, cada uma com uma função, vencem seis faixas competindo.',
+            ]
+          : [
+              '> headroom -3.2 · lufs -14 · pk -0.3 · mastered for streaming.',
+              '> same philosophy as code: **fewer plugins, more space**.',
+              'two tracks doing one job each beats six tracks competing.',
+            ],
       },
     ],
   });

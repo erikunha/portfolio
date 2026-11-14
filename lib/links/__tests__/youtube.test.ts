@@ -51,7 +51,7 @@ describe('parseFeed', () => {
     expect(parseFeed('')).toEqual([]);
   });
 
-  it('skips an entry with no video id — an entry it cannot link to is not a video', () => {
+  it('skips an entry with no video id: an entry it cannot link to is not a video', () => {
     const broken = FEED.replace('<yt:videoId>dQw4w9WgXcQ</yt:videoId>', '');
     expect(parseFeed(broken).map((v) => v.id)).toEqual(['abc12345678']);
   });

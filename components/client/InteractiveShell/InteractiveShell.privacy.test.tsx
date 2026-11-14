@@ -2,7 +2,7 @@ import { act, createElement } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { fire, flushMicrotasks, type MountedClient, mountClient } from '@/__tests__/helpers/render';
 import SHELL_RESPONSES from '@/content/shell-commands';
-import { shellStates, shellUi } from '@/content/shell-ui';
+import { fillShellState, shellStates, shellUi } from '@/content/shell-ui';
 import { SITE_LOCALE, type SiteLocale } from '@/content/site-locale';
 import { shellChrome } from '@/content/terminal-chrome';
 
@@ -67,13 +67,6 @@ function button(container: HTMLElement, text: string): HTMLButtonElement {
   return found as HTMLButtonElement;
 }
 
-async function click(el: HTMLElement) {
-  await act(async () => {
-    el.click();
-  });
-  await flushMicrotasks();
-}
-
 describe('shell trailer and privacy command', () => {
   let mounted: MountedClient | undefined;
 
@@ -100,81 +93,7 @@ describe('shell trailer and privacy command', () => {
     vi.unstubAllGlobals();
   });
 
-  describe('trailer', () => {
-    it('ends an answer with a req= line holding the full id, copy and forget, and no token count', async () => {
-      stubBackend({ asks: [A] });
-      const container = await renderShell();
-      await submit(container, 'what does erik do?');
-      const trailer = container.querySelector('[data-testid="shell-reference"]');
-      expect(trailer?.textContent).toContain(`-- req=${A}`);
-      expect(trailer?.textContent).not.toMatch(/tokens/);
-      expect(button(container, 'COPY')).toBeDefined();
-      expect(button(container, 'FORGET')).toBeDefined();
-    });
-
-    it('forgets the request with one click, confirms in the trailer and announces it', async () => {
-      const { forgetBodies } = stubBackend({ asks: [A], forget: [{ status: 200 }] });
-      const container = await renderShell();
-      await submit(container, 'q');
-      await click(button(container, 'FORGET'));
-      expect(forgetBodies).toEqual([JSON.stringify({ requestId: A })]);
-      const trailer = container.querySelector('[data-testid="shell-reference"]');
-      expect(trailer?.textContent).toContain(ui.forgetDeleted);
-      expect(
-        [...container.querySelectorAll('button')].some((b) => b.textContent === 'FORGET'),
-      ).toBe(false);
-      expect(container.querySelector('p[role="status"]')?.textContent).toContain(ui.forgetDeleted);
-      await submit(container, 'privacy');
-      expect(feedLines(container).at(-1)).toBe(ui.privacyEmpty);
-    });
-
-    it('moves focus to the copy button when forget succeeds and its own button leaves', async () => {
-      stubBackend({ asks: [A], forget: [{ status: 200 }] });
-      const container = await renderShell();
-      await submit(container, 'q');
-      const forgetButton = button(container, 'FORGET');
-      act(() => forgetButton.focus());
-      expect(document.activeElement).toBe(forgetButton);
-      await click(forgetButton);
-      expect(forgetButton.isConnected).toBe(false);
-      expect(document.activeElement).toBe(button(container, 'COPY'));
-    });
-
-    it('leaves focus where the visitor put it when forget succeeds after they moved on', async () => {
-      stubBackend({ asks: [A], forget: [{ status: 200 }] });
-      const container = await renderShell();
-      await submit(container, 'q');
-      const input = container.querySelector<HTMLInputElement>('input[name="command"]');
-      act(() => input?.focus());
-      await click(button(container, 'FORGET'));
-      expect(document.activeElement).toBe(input);
-    });
-
-    it('keeps the forget button after a failure and succeeds on retry', async () => {
-      const { forgetBodies } = stubBackend({
-        asks: [A],
-        forget: [{ status: 503 }, { status: 200 }],
-      });
-      const container = await renderShell();
-      await submit(container, 'q');
-      await click(button(container, 'FORGET'));
-      const trailer = container.querySelector('[data-testid="shell-reference"]');
-      expect(trailer?.textContent).toContain(ui.forgetFailed);
-      await click(button(container, 'FORGET'));
-      expect(forgetBodies).toHaveLength(2);
-      expect(trailer?.textContent).toContain(ui.forgetDeleted);
-    });
-
-    it('shows how long to wait on a 429 and keeps the button', async () => {
-      stubBackend({ asks: [A], forget: [{ status: 429, headers: { 'Retry-After': '120' } }] });
-      const container = await renderShell();
-      await submit(container, 'q');
-      await click(button(container, 'FORGET'));
-      const trailer = container.querySelector('[data-testid="shell-reference"]');
-      expect(trailer?.textContent).toContain(`2 ${states.minutesUnit}`);
-      expect(button(container, 'FORGET')).toBeDefined();
-    });
-
+  describe('request ids', () => {
     it.each([
       [SITE_LOCALE.en, 'no record kept under this id'],
       [SITE_LOCALE.pt, 'nenhum registro mantido com este id'],
@@ -188,28 +107,12 @@ describe('shell trailer and privacy command', () => {
       },
     );
 
-    it('sends one request when forget is clicked twice while pending', async () => {
-      let release: (response: Response) => void = () => undefined;
-      const fetchMock = vi.fn(async (url: string) => {
-        if (url === FORGET_URL) return new Promise<Response>((resolve) => (release = resolve));
-        return askReply(A);
-      });
-      vi.stubGlobal('fetch', fetchMock);
-      const container = await renderShell();
-      await submit(container, 'q');
-      await click(button(container, 'FORGET'));
-      await click(button(container, ui.forgetting));
-      const forgetCalls = fetchMock.mock.calls.filter(([url]) => url === FORGET_URL);
-      expect(forgetCalls).toHaveLength(1);
-      await act(async () => release(Response.json({ ok: true })));
-    });
-
     it('lists the id of a failed ask that carries the header, because the server may have stored a row for it', async () => {
       const fetchMock = vi.fn(async () => askReply(A, 429));
       vi.stubGlobal('fetch', fetchMock);
       const container = await renderShell();
       await submit(container, 'q');
-      expect(container.querySelector('[data-testid="shell-reference"]')?.textContent).toContain(A);
+      expect(container.querySelector('[data-testid="shell-receipt"]')).toBeNull();
       await submit(container, 'privacy');
       expect(feedLines(container).at(-1)).toBe(`1. ${A}`);
     });
@@ -219,7 +122,7 @@ describe('shell trailer and privacy command', () => {
       vi.stubGlobal('fetch', fetchMock);
       const container = await renderShell();
       await submit(container, 'q');
-      expect(container.querySelector('[data-testid="shell-reference"]')).toBeNull();
+      expect(container.querySelector('[data-testid="shell-receipt"]')).toBeNull();
       await submit(container, 'privacy');
       expect(feedLines(container).at(-1)).toBe(ui.privacyEmpty);
     });
@@ -270,7 +173,8 @@ describe('shell trailer and privacy command', () => {
       await submit(container, 'second');
       await submit(container, 'privacy forget 2');
       expect(forgetBodies).toEqual([JSON.stringify({ requestId: B })]);
-      expect(feedLines(container).at(-1)).toBe(`${B} ${ui.forgetDeleted}`);
+      expect(feedLines(container)).toContain(`${B} ${ui.forgetDeleted}`);
+      expect(feedLines(container)).toContain(ui.conversationForgotten);
     });
 
     it('forgets by full id even when it is not in this session list', async () => {
@@ -281,7 +185,8 @@ describe('shell trailer and privacy command', () => {
       expect(feedLines(container).at(-1)).toBe(`${C} ${ui.forgetDeleted}`);
     });
 
-    it('forgets every id one at a time with one result line each, then lists nothing', async () => {
+    it('forgets the conversation once and every other id one at a time, one result line each', async () => {
+      window.sessionStorage.setItem('request-refs', JSON.stringify([C]));
       const { forgetBodies } = stubBackend({
         asks: [A, B],
         forget: [{ status: 200 }, { status: 500 }],
@@ -291,31 +196,30 @@ describe('shell trailer and privacy command', () => {
       await submit(container, 'second');
       await submit(container, 'privacy forget --all');
       expect(forgetBodies).toEqual([
-        JSON.stringify({ requestId: A }),
         JSON.stringify({ requestId: B }),
+        JSON.stringify({ requestId: C }),
       ]);
       const lines = feedLines(container);
-      expect(lines.at(-2)).toBe(`${A} ${ui.forgetDeleted}`);
-      expect(lines.at(-1)).toBe(`${B} ${ui.forgetFailed}`);
+      expect(lines).toContain(`${B} ${ui.forgetDeleted}`);
+      expect(lines).toContain(`${C} ${ui.forgetFailed}`);
       await submit(container, 'privacy');
-      expect(feedLines(container).at(-1)).toBe(`1. ${B}`);
+      expect(feedLines(container).at(-1)).toBe(`1. ${C}`);
     });
 
     it('stops at the first 429, prints the wait and the count it did not try', async () => {
+      window.sessionStorage.setItem('request-refs', JSON.stringify([B, C]));
       const { forgetBodies } = stubBackend({
-        asks: [A, B, C],
+        asks: [A],
         forget: [{ status: 200 }, { status: 429, headers: { 'Retry-After': '90' } }],
       });
       const container = await renderShell();
       await submit(container, '1');
-      await submit(container, '2');
-      await submit(container, '3');
       await submit(container, 'privacy forget --all');
       expect(forgetBodies).toHaveLength(2);
-      const lines = feedLines(container);
-      expect(lines.at(-3)).toBe(`${A} ${ui.forgetDeleted}`);
-      expect(lines.at(-2)).toContain(`2 ${states.minutesUnit}`);
-      expect(lines.at(-1)).toContain('1');
+      const text = feedLines(container).join('\n');
+      expect(text).toContain(`${A} ${ui.forgetDeleted}`);
+      expect(text).toContain(`2 ${states.minutesUnit}`);
+      expect(text).toContain(fillShellState(ui.privacyNotAttempted, { count: '1' }));
     });
 
     it('makes no request for an out-of-range number and says which one it could not find', async () => {
@@ -331,7 +235,7 @@ describe('shell trailer and privacy command', () => {
     it('prints usage for a malformed command and makes no request', async () => {
       const { fetchMock } = stubBackend({});
       const container = await renderShell();
-      await submit(container, 'privacy forget');
+      await submit(container, 'privacy forget abc');
       expect(fetchMock).not.toHaveBeenCalled();
       expect(feedLines(container).at(-1)).toBe(ui.privacyUsage);
     });

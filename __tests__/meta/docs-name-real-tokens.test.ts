@@ -78,7 +78,7 @@ describe('the design tokens the docs name are the ones the code declares', () =>
 
     expect(
       resurrected,
-      `${doc} names a retired token. These four were the DOCUMENTED palette across CLAUDE.md, ARCHITECTURE.md and STANDARDS.md, and none of them ever existed as a custom property — three different fictional naming schemes for one real palette. The namespace check above cannot catch --signal or --fg (no --color-/--font- prefix to key on), so they are pinned by name here. The real tokens are --color-primary-500 (${SIGNAL_HEX}) and --color-tertiary-50 (${BODY_HEX}).`,
+      `${doc} names a retired token. These four were the DOCUMENTED palette across CLAUDE.md, ARCHITECTURE.md and STANDARDS.md, and none of them ever existed as a custom property, three different fictional naming schemes for one real palette. The namespace check above cannot catch --signal or --fg (no --color-/--font- prefix to key on), so they are pinned by name here. The real tokens are --color-primary-500 (${SIGNAL_HEX}) and --color-tertiary-50 (${BODY_HEX}).`,
     ).toEqual([]);
   });
 

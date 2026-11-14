@@ -160,4 +160,10 @@
       line-height: round(nearest, 1em * var(--leading), 1px);
     }
   }
+
+  @media (scripting: none) {
+    button:not([type="submit"], [type="reset"], [popovertarget], [commandfor]) {
+      display: none;
+    }
+  }
 }

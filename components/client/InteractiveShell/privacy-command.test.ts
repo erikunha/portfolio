@@ -36,7 +36,6 @@ describe('parsePrivacyCommand', () => {
   });
 
   it.each([
-    'privacy forget',
     'privacy forget 0',
     'privacy forget -1',
     'privacy forget 1 2',

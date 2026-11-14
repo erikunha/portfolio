@@ -108,22 +108,24 @@ describe('ShellLine', () => {
         isMobile: extra.isMobile ?? false,
         announce: () => undefined,
         onRetry: extra.onRetry ?? (() => undefined),
+        busy: false,
+        onConversationForgotten: () => undefined,
       }),
     );
     return mounted.container;
   }
 
-  it('renders a loading line as an aria-hidden thinking indicator with the stop hint', async () => {
+  it('renders a loading line as an aria-hidden thinking indicator, leaving the stop hint to the stop pill', async () => {
     const container = await renderLine({ id: 1, kind: ShellLineKind.Loading, text: '' });
     const line = container.querySelector('[data-testid="shell-line-loading"]');
     expect(line?.getAttribute('aria-hidden')).toBe('true');
     expect(line?.textContent).toContain('[ thinking');
-    expect(line?.textContent).toContain(states.escStop);
+    expect(line?.querySelector('kbd')).toBeNull();
   });
 
-  it('renders a reference line as the request trailer', async () => {
+  it('renders a reference line as the conversation receipt', async () => {
     const container = await renderLine({ id: 2, kind: ShellLineKind.Reference, text: 'req-1' });
-    expect(container.querySelector('[data-testid="shell-reference"]')?.textContent).toContain(
+    expect(container.querySelector('[data-testid="shell-receipt"] code')?.textContent).toBe(
       'req-1',
     );
   });

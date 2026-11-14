@@ -92,7 +92,7 @@ describe('sentence text never uses the signal colour', () => {
     });
     expect(
       [...new Set(offenders)].sort(),
-      'the signal green fails WCAG AA for paragraph text and is reserved for headings, accents and large text; use var(--color-tertiary-50) for sentences',
+      'the design reserves the signal green for headings, accents and large text (it passes contrast at 15.38:1, the rule is visual); use var(--color-tertiary-50) for sentences',
     ).toEqual([]);
   });
 });

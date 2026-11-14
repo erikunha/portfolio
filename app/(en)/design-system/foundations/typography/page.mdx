@@ -24,9 +24,9 @@ Type tokens live in `app/css/theme.css`. Sizes use rem units, so they follow the
 
 | Token | Utility | Size |
 |---|---|---|
-| `--text-xs` | `text-xs` | 12px below 768px; at least 13px from 768px |
+| `--text-xs` | `text-xs` | 13px at every width |
 | `--text-sm` | `text-sm` | 14px |
-| `--text-body` | `text-body` | 14px, reading text; 12px stays for labels |
+| `--text-body` | `text-body` | 14px, reading text; 13px stays for labels |
 | `--text-base` | `text-base` | 16px |
 | `--text-lg` | `text-lg` | 18px |
 | `--text-xl` | `text-xl` | 20px |
@@ -36,7 +36,7 @@ Type tokens live in `app/css/theme.css`. Sizes use rem units, so they follow the
 | `--text-5xl` | `text-5xl` | 48px |
 | `--text-7xl` | `text-7xl` | 64px |
 
-`--text-min` rises from 12px to 13px at 768px, and `--text-xs` uses it as a floor. Fixed pixel utilities do not inherit the floor, so use these tokens for small text.
+`--text-min` is 13px at every width, phones included, and `--text-xs` uses it as a floor. Fixed pixel utilities do not inherit the floor, so use these tokens for small text.
 
 <h2 id="specimens">Specimens</h2>
 

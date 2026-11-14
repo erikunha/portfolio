@@ -10,7 +10,7 @@ const SUBPIXEL_TOLERANCE_PX = 1;
 const CROSSING_TOLERANCE_PX = 4;
 const LINE_LEADING_TOLERANCE_PX = 4;
 const MOBILE_PROJECTS = ['chromium-mobile', 'webkit-mobile'];
-const FONT_FLOOR_PX = 12;
+const FONT_FLOOR_PX = 13;
 const CHANNEL_IDS = ['CH 01', 'CH 02', 'MASTER'];
 
 test('the DAW mixer shares the guitar module and has no section of its own', async ({ page }) => {
@@ -267,7 +267,7 @@ test('narrow desktop windows stack the console instead of scrolling or shrinking
   ).toBeLessThanOrEqual(metrics.clientWidth);
 });
 
-test('the mobile mixer renders no text below the 12px floor', async ({ page }, testInfo) => {
+test('the mobile mixer renders no text below the 13px floor', async ({ page }, testInfo) => {
   test.skip(
     !MOBILE_PROJECTS.includes(testInfo.project.name),
     'the mobile variant only ships to mobile user agents',

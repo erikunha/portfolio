@@ -3,12 +3,12 @@
   //
   // WHY THIS EXISTS
   //   `scripts/ask-eval.ts` deliberately imports the real `app/api/ask/route.ts`
-  //   handler — faithfulness to the production route is the design intent. That
+  //   handler, faithfulness to the production route is the design intent. That
   //   route transitively imports `lib/ask/system-prompt.ts`, which has
   //   `import 'server-only'`.
   //
   //   `server-only` (and `client-only`) are marker packages that ship only
-  //   bundled inside `next/dist/compiled/` — they are NOT top-level
+  //   bundled inside `next/dist/compiled/`, they are NOT top-level
   //   dependencies. Next's RSC bundler resolves the bare specifier to a no-op
   //   via the package's `react-server` export condition; a plain `tsx`/`node`
   //   run has no such resolution and throws ERR_MODULE_NOT_FOUND.

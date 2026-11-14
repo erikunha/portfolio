@@ -62,7 +62,7 @@ describe('claude-review concurrency group mirrors the review job condition', () 
     const jobIf = at(doc, ['jobs', 'review', 'if']);
     expect(
       group,
-      `The workflow-level concurrency group no longer equals the review job's \`if:\` wrapped in the routing template.\n\nGitHub resolves concurrency at the RUN level, before \`if:\` is evaluated, so any run the group admits but the job skips still takes a slot and — with cancel-in-progress on — kills a live review while posting nothing. That is how PR #221 was left with no verdict.\n\nConcurrency cannot read \`env\` or a job output, so the duplication is forced by the platform and this assertion is the only thing holding the two copies together.\n\nif:       ${jobIf}\nexpected: ${groupFor(jobIf)}\nactual:   ${group}`,
+      `The workflow-level concurrency group no longer equals the review job's \`if:\` wrapped in the routing template.\n\nGitHub resolves concurrency at the RUN level, before \`if:\` is evaluated, so any run the group admits but the job skips still takes a slot and, with cancel-in-progress on, kills a live review while posting nothing. That is how PR #221 was left with no verdict.\n\nConcurrency cannot read \`env\` or a job output, so the duplication is forced by the platform and this assertion is the only thing holding the two copies together.\n\nif:       ${jobIf}\nexpected: ${groupFor(jobIf)}\nactual:   ${group}`,
     ).toBe(groupFor(jobIf));
   });
 
@@ -150,7 +150,7 @@ describe('the review is opt-in, fenced, and the workspace root holds default-bra
   });
   it('instruction-shaped files are stripped from the mounted PR copy before the action runs', () => {
     // `--add-dir pr-head` mounts PR-authored content as project scope, so a file
-    // the CLI reads as instructions — CLAUDE.md, AGENTS.md, .claude/** — would
+    // the CLI reads as instructions, CLAUDE.md, AGENTS.md, .claude/**, would
     // arrive on the INSTRUCTION channel rather than the data channel. Prose in
     // the appended prompt is not a mechanism; deleting the files is. The reviewer
     // still sees every one of them via `gh pr diff`, which is where a change to
@@ -202,8 +202,10 @@ describe('the review is opt-in, fenced, and the workspace root holds default-bra
     // Compared as SETS of -name tokens per find, not as tokens present anywhere
     // in the step. Matching against the whole string let the verify `find` be
     // narrowed to a single name while every token still appeared in the rm
-    // `find` — restoring exactly the rm/verify drift this is meant to forbid.
-    const findBlocks = run.split(/(?=find pr-head)/).filter((b) => b.startsWith('find pr-head'));
+    // `find`, restoring exactly the rm/verify drift this is meant to forbid.
+    const findBlocks = run
+      .split(/(?=find pr-head)/)
+      .filter((b) => b.startsWith('find pr-head') && b.includes('-name'));
     expect(
       findBlocks.length,
       'The strip does not re-run its own predicate to verify. A mistyped name would delete nothing and the step would still succeed.',
@@ -218,5 +220,20 @@ describe('the review is opt-in, fenced, and the workspace root holds default-bra
       /leftover/.test(run) && /exit 1/.test(run),
       'The strip does not fail when something survives it.',
     ).toBe(true);
+  });
+
+  it('symlinks are deleted from the mounted PR copy before the name match and the verification', () => {
+    const steps = (doc.jobs as { review?: { steps?: Array<{ name?: string; run?: string }> } })
+      ?.review?.steps;
+    const run = String(
+      steps?.find((st) => String(st.name ?? '').includes('Strip instruction-shaped'))?.run ?? '',
+    );
+    const link = run.indexOf('find pr-head -type l -delete');
+    expect(
+      link,
+      'The strip leaves symlinks in pr-head. A link named innocuously can resolve to an instruction-shaped file outside the name match.',
+    ).toBeGreaterThanOrEqual(0);
+    expect(link).toBeLessThan(run.indexOf("-name 'CLAUDE.md'"));
+    expect(link).toBeLessThan(run.indexOf('leftover=$(find pr-head'));
   });
 });

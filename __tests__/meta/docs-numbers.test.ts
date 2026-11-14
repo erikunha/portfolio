@@ -44,7 +44,7 @@ const wordFor = (count: number): string => {
   const word = NUMBER_WORDS[count];
   if (word === undefined) {
     throw new Error(
-      `no English word for ${count} in this file's NUMBER_WORDS table: the README states the count as a word, so the gate needs that word to check it. Add it here rather than changing the README to a digit — the two forms are both allowed, and the gate has to know which one it is looking for.`,
+      `no English word for ${count} in this file's NUMBER_WORDS table: the README states the count as a word, so the gate needs that word to check it. Add it here rather than changing the README to a digit, the two forms are both allowed, and the gate has to know which one it is looking for.`,
     );
   }
   return word;

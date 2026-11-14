@@ -3,9 +3,18 @@ import { spawnSync } from 'node:child_process';
 
 const SEMGREP_BIN = process.env.SEMGREP_BIN;
 const RUNNER_CANDIDATES = SEMGREP_BIN ? [[SEMGREP_BIN]] : [['semgrep']];
-const DEFAULT_PATHS = ['app', 'lib', 'components', 'scripts'];
+const DEFAULT_PATHS = [
+  'app',
+  'lib',
+  'components',
+  'scripts',
+  'proxy.ts',
+  'instrumentation.ts',
+  'next.config.ts',
+  '.github/workflows',
+];
 
-const REGISTRY_CONFIGS = ['p/typescript', 'p/react', 'p/nextjs'];
+const REGISTRY_CONFIGS = ['p/typescript', 'p/react', 'p/nextjs', 'p/github-actions'];
 const VENDORED_CONFIG = '.semgrep';
 
 function parseArgs(argv) {
@@ -41,7 +50,7 @@ function main() {
     const tried = RUNNER_CANDIDATES.map((c) => c.join(' ')).join('", "');
     console.error(
       `[run-semgrep] semgrep not found (tried "${tried}"). ` +
-        'Install with: pip install semgrep==1.169.0 — or rely on CI (authoritative).',
+        'Install with: pip install semgrep==1.169.0, or rely on CI (authoritative).',
     );
     process.exit(2);
   }

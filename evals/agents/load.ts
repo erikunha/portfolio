@@ -19,7 +19,7 @@ export async function loadCases(): Promise<LoadedCase[]> {
 
   const loaded: LoadedCase[] = [];
   for (const name of entries) {
-    const mod = (await import(`@/evals/agents/${name}/CASE`)) as {
+    const mod = (await import(`@/evals/agents/${name}/CASE.ts`)) as {
       default?: unknown;
     };
     const raw = mod.default;

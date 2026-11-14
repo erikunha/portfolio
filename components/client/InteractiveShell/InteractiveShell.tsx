@@ -3,14 +3,22 @@
 import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
 import type { TerminalChrome } from '@/content/schemas';
 import SHELL_RESPONSES, { SHELL_RESPONSE_LANG } from '@/content/shell-commands';
-import { ShellCommand, ShellLineKind, type ShellUi, shellStates } from '@/content/shell-ui';
+import {
+  fillShellState,
+  ShellCommand,
+  ShellLineKind,
+  type ShellUi,
+  shellStates,
+} from '@/content/shell-ui';
 import type { SiteLocale } from '@/content/site-locale';
+import { forgetInFlight } from '@/lib/ask-conversation.client';
 import { SHELL_COMMAND_EVENT } from '@/lib/events';
 import { useBreakpoint } from '@/lib/use-breakpoint.client';
 import { TerminalChromeBar } from '../TerminalChromeBar';
 import { AnimatedPlaceholder, StaticPlaceholder } from './AnimatedPlaceholder.client';
 import { parsePrivacyCommand } from './privacy-command';
-import { ShellLine } from './ShellLines.client';
+import { revealShell, SHELL_LIVE_PROPS } from './reveal-shell';
+import { ShellLine, StopElapsed } from './ShellLines.client';
 import { ShellToolbar } from './ShellToolbar.client';
 import { ShellKey } from './shell-keys';
 import { bounded, type Line, useAskStream } from './useAskStream';
@@ -50,6 +58,7 @@ export function InteractiveShell({
   const inputRef = useRef<HTMLInputElement>(null);
   const commandHistory = useCommandHistory();
   const promptEditedRef = useRef(false);
+  const revealedHistoryRef = useRef(history);
 
   const announce = useCallback((text: string) => {
     setAnnouncement((previous) => ({ id: previous.id + 1, text }));
@@ -80,7 +89,39 @@ export function InteractiveShell({
     restoreInput,
     onSettled: refocusAfterStream,
   });
-  const runPrivacy = usePrivacyCommands({ ui, states, nextId, setHistory, announce, focusInput });
+  const stopAndReturnFocus = useCallback(() => {
+    stopStream();
+    focusInput();
+  }, [stopStream, focusInput]);
+  const onConversationForgotten = useCallback(
+    (questions: number) => {
+      setHistory((lines) =>
+        bounded([
+          ...lines.filter((line) => line.kind !== ShellLineKind.Reference),
+          { id: nextId(), kind: ShellLineKind.Output, text: ui.conversationForgotten },
+          {
+            id: nextId(),
+            kind: ShellLineKind.Info,
+            text:
+              questions === 1
+                ? ui.conversationForgottenOne
+                : fillShellState(ui.conversationForgottenMany, { count: String(questions) }),
+          },
+        ]),
+      );
+      focusInput();
+    },
+    [focusInput, nextId, ui],
+  );
+  const runPrivacy = usePrivacyCommands({
+    ui,
+    states,
+    nextId,
+    setHistory,
+    announce,
+    focusInput,
+    onConversationForgotten,
+  });
 
   useLayoutEffect(() => {
     const typed = inputRef.current?.value;
@@ -94,6 +135,12 @@ export function InteractiveShell({
     }
   }, [history, streamingText]);
 
+  useEffect(() => {
+    if (revealedHistoryRef.current === history) return;
+    revealedHistoryRef.current = history;
+    revealShell(feedRef.current);
+  }, [history]);
+
   const runCommand = useCallback(
     (raw: string) => {
       if (isActive()) {
@@ -102,6 +149,17 @@ export function InteractiveShell({
       }
       const command = raw.trim().replace(/\s+/g, ' ');
       if (!command) return;
+      const key = command.toLowerCase();
+      const privacy = parsePrivacyCommand(key);
+      const explicitQuestion = key.startsWith(ShellCommand.AskPrefix)
+        ? command.slice(ShellCommand.AskPrefix.length).trim()
+        : null;
+      const local =
+        !explicitQuestion && SHELL_RESPONSES.find((entry) => entry.commands.includes(key));
+      if (key !== ShellCommand.Clear && !privacy && !local && forgetInFlight()) {
+        announce(ui.forgetting);
+        return;
+      }
       followOutputRef.current = true;
       commandHistory.record(command);
       window.dispatchEvent(new CustomEvent(SHELL_COMMAND_EVENT));
@@ -113,23 +171,16 @@ export function InteractiveShell({
       );
       promptEditedRef.current = false;
       setInput('');
-      const key = command.toLowerCase();
       if (key === ShellCommand.Clear) {
         setHistory(initialLines());
         announce(ui.cleared);
         focusInput();
         return;
       }
-      const privacy = parsePrivacyCommand(key);
       if (privacy) {
         void runPrivacy(privacy);
         return;
       }
-      const explicitQuestion = key.startsWith(ShellCommand.AskPrefix)
-        ? command.slice(ShellCommand.AskPrefix.length).trim()
-        : null;
-      const local =
-        !explicitQuestion && SHELL_RESPONSES.find((entry) => entry.commands.includes(key));
       if (local) {
         setHistory((lines) =>
           bounded([
@@ -184,122 +235,126 @@ export function InteractiveShell({
         tagClassName="shell-chrome-tag"
         dotSize={WINDOW_DOT_SIZE}
       />
-      <div
-        ref={feedRef}
-        onScroll={(event) => {
-          const feed = event.currentTarget;
-          const lineHeight = Number.parseFloat(getComputedStyle(feed).lineHeight);
-          followOutputRef.current =
-            feed.scrollHeight - feed.scrollTop - feed.clientHeight <= lineHeight;
-        }}
-        className="shell-feed"
-        role="log"
-        aria-label={ui.outputLabel}
-        aria-live="polite"
-        aria-busy={busy}
-        // biome-ignore lint/a11y/noNoninteractiveTabindex: the vertically scrollable log must be keyboard-focusable so arrow keys can scroll it (WCAG 2.1.1, axe scrollable-region-focusable)
-        tabIndex={0}
-      >
-        {history.map((line) => (
-          <ShellLine
-            key={line.id}
-            line={line}
-            ui={ui}
-            states={states}
-            isMobile={isMobile}
-            announce={announce}
-            onRetry={runCommand}
-          />
-        ))}
-        {streamingText !== null && (
-          <span className="shell-line shell-line-output" data-kind={ShellLineKind.Output}>
-            <span className="shell-ai-label">{ui.aiLabel}: </span>
-            {streamingText}
-            <span className="shell-caret" aria-hidden="true">
-              {STREAM_CARET}
-            </span>
-          </span>
-        )}
-        {streamingText !== null && (
-          <span className="shell-line shell-stream-meta shell-esc-hint" aria-hidden="true">
-            {states.escStop}
-          </span>
-        )}
-      </div>
-      <form
-        className="shell-form"
-        data-testid="shell-form"
-        action={(data) => {
-          const queued = data.get(COMMAND_FIELD);
-          if (typeof queued === 'string') runCommand(queued);
-        }}
-        onSubmit={(event) => {
-          event.preventDefault();
-          runCommand(input);
-        }}
-      >
-        <span className="shell-prompt">{ui.prompt}</span>
-        <div className="shell-input-wrap" data-busy={busy || undefined}>
-          <input
-            ref={inputRef}
-            className="shell-input"
-            name={COMMAND_FIELD}
-            enterKeyHint="send"
-            value={input}
-            onChange={(event) => {
-              editInput(event.target.value);
-              commandHistory.noteEdit();
+      <div {...SHELL_LIVE_PROPS}>
+        <div className="shell-feed-wrap">
+          <div
+            ref={feedRef}
+            onScroll={(event) => {
+              const feed = event.currentTarget;
+              const lineHeight = Number.parseFloat(getComputedStyle(feed).lineHeight);
+              followOutputRef.current =
+                feed.scrollHeight - feed.scrollTop - feed.clientHeight <= lineHeight;
             }}
-            onFocus={() => setInputFocused(true)}
-            onBlur={() => setInputFocused(false)}
-            onKeyDown={(event) => {
-              if (
-                event.key === ShellKey.Enter &&
-                (event.nativeEvent.isComposing || event.keyCode === COMPOSITION_KEYCODE)
-              ) {
-                event.preventDefault();
-                return;
-              }
-              if (
-                event.nativeEvent.isComposing ||
-                event.altKey ||
-                event.ctrlKey ||
-                event.metaKey ||
-                event.shiftKey ||
-                (event.key !== ShellKey.Up && event.key !== ShellKey.Down)
-              ) {
-                return;
-              }
-              event.preventDefault();
-              const step = event.key === ShellKey.Up ? HISTORY_STEP.Older : HISTORY_STEP.Newer;
-              editInput(commandHistory.recall(step, input));
-            }}
-            autoComplete="off"
-            autoCapitalize="off"
-            autoCorrect="off"
-            spellCheck={false}
-            aria-label={ui.inputLabel}
-            aria-describedby={accuracyId}
-          />
-          {!input &&
-            (inputFocused || busy ? (
-              <StaticPlaceholder ui={ui} />
-            ) : (
-              <AnimatedPlaceholder ui={ui} />
+            className="shell-feed"
+            role="log"
+            aria-label={ui.outputLabel}
+            aria-live="polite"
+            aria-busy={busy}
+            // biome-ignore lint/a11y/noNoninteractiveTabindex: the vertically scrollable log must be keyboard-focusable so arrow keys can scroll it (WCAG 2.1.1, axe scrollable-region-focusable)
+            tabIndex={0}
+          >
+            {history.map((line) => (
+              <ShellLine
+                key={line.id}
+                line={line}
+                ui={ui}
+                states={states}
+                isMobile={isMobile}
+                announce={announce}
+                onRetry={runCommand}
+                busy={busy}
+                onConversationForgotten={onConversationForgotten}
+              />
             ))}
+            {streamingText !== null && (
+              <span className="shell-line shell-line-output" data-kind={ShellLineKind.Output}>
+                <span className="shell-ai-label">{ui.aiLabel}: </span>
+                {streamingText}
+                <span className="shell-caret" aria-hidden="true">
+                  {STREAM_CARET}
+                </span>
+              </span>
+            )}
+          </div>
           {busy ? (
             <button
               ref={stopRef}
-              className="shell-control shell-stop"
+              className="shell-stop-pill"
               type="button"
               aria-label={ui.stopLabel}
-              onClick={stopStream}
+              onClick={stopAndReturnFocus}
             >
-              {ui.stop}
+              <span className="shell-stop-elapsed" aria-hidden="true">
+                <StopElapsed template={ui.stopPill} />
+              </span>
+              <kbd className="shell-stop-key">{ui.escKey}</kbd>
             </button>
           ) : null}
         </div>
-      </form>
+        <form
+          className="shell-form"
+          data-testid="shell-form"
+          action={(data) => {
+            const queued = data.get(COMMAND_FIELD);
+            if (typeof queued === 'string') runCommand(queued);
+          }}
+          onSubmit={(event) => {
+            event.preventDefault();
+            runCommand(input);
+          }}
+        >
+          <span className="shell-prompt">{ui.prompt}</span>
+          <div className="shell-input-wrap">
+            <input
+              ref={inputRef}
+              className="shell-input"
+              name={COMMAND_FIELD}
+              enterKeyHint="send"
+              value={input}
+              onChange={(event) => {
+                editInput(event.target.value);
+                commandHistory.noteEdit();
+              }}
+              onFocus={() => setInputFocused(true)}
+              onBlur={() => setInputFocused(false)}
+              onKeyDown={(event) => {
+                if (
+                  event.key === ShellKey.Enter &&
+                  (event.nativeEvent.isComposing || event.keyCode === COMPOSITION_KEYCODE)
+                ) {
+                  event.preventDefault();
+                  return;
+                }
+                if (
+                  event.nativeEvent.isComposing ||
+                  event.altKey ||
+                  event.ctrlKey ||
+                  event.metaKey ||
+                  event.shiftKey ||
+                  (event.key !== ShellKey.Up && event.key !== ShellKey.Down)
+                ) {
+                  return;
+                }
+                event.preventDefault();
+                const step = event.key === ShellKey.Up ? HISTORY_STEP.Older : HISTORY_STEP.Newer;
+                editInput(commandHistory.recall(step, input));
+              }}
+              autoComplete="off"
+              autoCapitalize="off"
+              autoCorrect="off"
+              spellCheck={false}
+              aria-label={ui.inputLabel}
+              aria-describedby={accuracyId}
+            />
+            {!input &&
+              (inputFocused || busy ? (
+                <StaticPlaceholder ui={ui} compact={isMobile} />
+              ) : (
+                <AnimatedPlaceholder ui={ui} compact={isMobile} />
+              ))}
+          </div>
+        </form>
+      </div>
       <p id={accuracyId} className="shell-ai-notice">
         {ui.accuracy}
       </p>
@@ -308,11 +363,14 @@ export function InteractiveShell({
       </p>
       <div className="shell-privacy-notice" data-testid="shell-privacy-notice">
         <p>
-          {ui.privacy} <a href={ui.emailHref}>{ui.email}</a>.
+          {ui.privacy}{' '}
+          <span className="shell-privacy-email">
+            <a href={ui.emailHref}>{ui.email}</a>.
+          </span>
         </p>
         <p>
           {ui.technicalPrivacy} <code>{ui.requestIdHeader}</code> {ui.technicalPrivacySuffix}{' '}
-          <code>{ui.forgetEndpoint}</code>.
+          <code>{ui.forgetEndpoint}</code>. {ui.technicalPrivacyScope}
         </p>
       </div>
       <ShellToolbar ui={ui} busy={busy} onActivate={activateToolbarCommand} />

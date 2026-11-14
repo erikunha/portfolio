@@ -81,16 +81,15 @@ describe('terminal theme contract', () => {
     });
   });
 
-  it('raises the minimum text token to 13px from 768px upward', () => {
-    let minimum: string | undefined;
+  it('holds the minimum text token at 13px at every width, phones included', () => {
+    const overrides: string[] = [];
     theme.walkAtRules('media', (rule) => {
-      if (rule.params === '(min-width: 768px)') {
-        rule.walkDecls('--text-min', (declaration) => {
-          minimum = declaration.value;
-        });
-      }
+      rule.walkDecls('--text-min', (declaration) => {
+        overrides.push(`${rule.params}: ${declaration.value}`);
+      });
     });
-    expect(minimum).toBe('0.8125rem');
+    expect(tokens['--text-min']).toBe('0.8125rem');
+    expect(overrides, 'no viewport may lower or move the 13px floor').toEqual([]);
   });
 
   it('provides the spacing steps, 44px target, hairline border and sharp radii', () => {

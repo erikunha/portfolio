@@ -17,14 +17,14 @@ const fail = (message) => {
 
 if (!existsSync(MANIFEST)) {
   fail(
-    `${MANIFEST} does not exist. Run \`pnpm build\` first — this gate reads the build's own route stats, and a missing manifest must never read as a pass.`,
+    `${MANIFEST} does not exist. Run \`pnpm build\` first, this gate reads the build's own route stats, and a missing manifest must never read as a pass.`,
   );
 }
 
 const manifest = JSON.parse(readFileSync(MANIFEST, 'utf-8'));
 
 if (!Array.isArray(manifest) || manifest.length === 0) {
-  fail(`${MANIFEST} lists no routes. The build emitted no route stats — refusing to pass.`);
+  fail(`${MANIFEST} lists no routes. The build emitted no route stats, refusing to pass.`);
 }
 
 const gzipKb = (files) => {
@@ -33,7 +33,7 @@ const gzipKb = (files) => {
     if (!existsSync(file)) {
       fail(
         `${MANIFEST} names a chunk that is not on disk: ${file}\n` +
-          'The manifest and .next/static are out of sync — rebuild rather than trust this reading.',
+          'The manifest and .next/static are out of sync, rebuild rather than trust this reading.',
       );
     }
     bytes += gzipSync(readFileSync(file)).length;
@@ -88,7 +88,7 @@ for (const { route, total, appOwned } of failures) {
   lines.push(
     `FAIL: ${route} ships ${total.toFixed(1)} KB total, over the ${MAX_ROUTE_TOTAL_KB} KB budget.`,
     `      ${FRAMEWORK_FLOOR_KB} KB of that is the framework floor you do not control; ${appOwned.toFixed(1)} KB is app-owned,`,
-    `      against ${appHeadroomKb} KB of headroom. Cut app-owned JS — the floor is not yours to shrink.`,
+    `      against ${appHeadroomKb} KB of headroom. Cut app-owned JS, the floor is not yours to shrink.`,
   );
 }
 lines.push(

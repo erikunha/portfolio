@@ -29,12 +29,16 @@ const percent = (content: Measured) => (rate: number) =>
   `${Math.round(rate * content.format.percentScale)}${content.ask.percentUnit}`;
 const latency = (content: Measured) => (value: number) =>
   `${Math.round(value).toLocaleString(content.format.locale)}${content.ask.latencyUnit}`;
+const cost = (content: Measured) => (value: number) =>
+  `${content.ask.currencyUnit}${value.toLocaleString(content.format.locale, {
+    minimumFractionDigits: content.format.costPrecision,
+    maximumFractionDigits: content.format.costPrecision,
+  })}`;
 const formatMetricFor = (content: Measured) => ({
   evalPassRate: percent(content),
   jailbreakResistance: percent(content),
   p95LatencyMs: latency(content),
-  costPerAnswer: (value: number) =>
-    `${content.ask.currencyUnit}${value.toFixed(content.format.costPrecision)}`,
+  costPerAnswer: cost(content),
 });
 
 const REQUEST_REF_HEADER = 'x-vercel-id';

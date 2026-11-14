@@ -5,6 +5,7 @@ import { linksContent } from '@/content/links';
 import { LINKS_PATH, type LinksLocale } from '@/content/links.constants';
 import { CHANNEL_URL, EMPTY_FEED, getChannelFeed } from '@/lib/links/feed';
 import { ChannelCard } from './ChannelCard';
+import { ChannelNoscript } from './ChannelNoscript';
 import { ChromeBar } from './ChromeBar';
 import { ContactLines } from './ContactLines';
 import { NavProgress } from './client/NavProgress.client';
@@ -49,7 +50,14 @@ export function LinksPage({ locale }: { locale: LinksLocale }) {
           <div className="links-grid">
             <IdentityCard locale={locale} />
             <div className="links-stack" data-stack="secondary">
-              <Suspense fallback={<LatestVideoSkeleton locale={locale} />}>
+              <Suspense
+                fallback={
+                  <>
+                    <LatestVideoSkeleton locale={locale} />
+                    <ChannelNoscript locale={locale} />
+                  </>
+                }
+              >
                 <LinksFeedColumn locale={locale} />
               </Suspense>
               <PlaylistCards locale={locale} channelUrl={CHANNEL_URL} />

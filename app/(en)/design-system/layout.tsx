@@ -9,10 +9,16 @@ export const ensureStatic = 'navigation';
 
 export default function DesignSystemLayout({ children }: { children: ReactNode }) {
   return (
-    <SiteShell locale={SITE_LOCALE.en} route={DS_ROOT_PATH} drawerExtra={<DsDrawerNav />}>
-      <a href={`#${DS_NAV_ID}`} className="skip-to-content ds-skip-nav">
-        {DS_SKIP_NAV_LABEL}
-      </a>
+    <SiteShell
+      locale={SITE_LOCALE.en}
+      route={DS_ROOT_PATH}
+      drawerExtra={<DsDrawerNav />}
+      skipLinks={
+        <a href={`#${DS_NAV_ID}`} className="skip-to-content ds-skip-nav">
+          {DS_SKIP_NAV_LABEL}
+        </a>
+      }
+    >
       <div className="page-container page-main ds-layout">
         <Sidebar />
         <PageMain className="ds-main ds-prose">

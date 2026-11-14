@@ -64,7 +64,7 @@ Use `text-secondary` for new secondary text instead of `primary-300`,
 
 ### tertiary · white (foreground)
 
-<ColorSwatch token="tertiary-50" usage="Body text (13:1+ contrast on black)" />
+<ColorSwatch token="tertiary-50" usage="Body text (19.8:1 contrast on black)" />
 <ColorSwatch token="tertiary-100" />
 <ColorSwatch token="tertiary-200" />
 <ColorSwatch token="tertiary-300" />
@@ -93,9 +93,9 @@ the existing `next/font/local` variables.
 
 | Token | Utility | Size |
 |---|---|---|
-| `--text-xs` | `text-xs` | 12px below 768px; at least 13px from 768px |
+| `--text-xs` | `text-xs` | 13px at every width |
 | `--text-sm` | `text-sm` | 14px |
-| `--text-body` | `text-body` | 14px, reading text (git log, card copy); 12px stays for labels |
+| `--text-body` | `text-body` | 14px, reading text (git log, card copy); 13px stays for labels |
 | `--text-base` | `text-base` | 16px |
 | `--text-lg` | `text-lg` | 18px |
 | `--text-xl` | `text-xl` | 20px |
@@ -105,7 +105,7 @@ the existing `next/font/local` variables.
 | `--text-5xl` | `text-5xl` | 48px |
 | `--text-7xl` | `text-7xl` | 64px |
 
-`--text-min` rises from 12px to 13px at 768px. `--text-xs` uses that floor.
+`--text-min` is 13px at every width, phones included. `--text-xs` uses that floor.
 Use these tokens for small text; fixed pixel utilities do not inherit the floor.
 Sizes use rem units so they follow the reader's default font size.
 
@@ -153,6 +153,7 @@ horizontal padding; medium and large Buttons use 14px. Large Buttons have a
 
 | Token | Utility | Value |
 |---|---|---|
+| `--tracking-tight` | `tracking-tight` | -0.03em, the dock labels below 360px |
 | `--tracking-2xs` | `tracking-2xs` | 0.02em |
 | `--tracking-xs` | `tracking-xs` | 0.04em |
 | `--tracking-sm` | `tracking-sm` | 0.05em |

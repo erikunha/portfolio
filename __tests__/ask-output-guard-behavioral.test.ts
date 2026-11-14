@@ -32,7 +32,7 @@ function makeRequest(question: string): NextRequest {
   return askRequest({ question });
 }
 
-describe('/api/ask behavioral — Layer-1 egress guard aborts a cross-chunk leak', () => {
+describe('/api/ask behavioral: Layer-1 egress guard aborts a cross-chunk leak', () => {
   beforeEach(() => {
     vi.stubEnv('ASK_ENABLED', 'true');
     vi.resetModules();

@@ -33,7 +33,7 @@ const TestSchema = z.object({
   count: z.number().int().positive(),
 });
 
-describe('lib/server/route — defineHandler', () => {
+describe('lib/server/route: defineHandler', () => {
   beforeEach(() => {
     vi.resetModules();
     rateLimitMock.mockReset();
@@ -227,7 +227,7 @@ describe('lib/server/route — defineHandler', () => {
   });
 });
 
-describe('lib/server/route — ok/err helpers', () => {
+describe('lib/server/route: ok/err helpers', () => {
   it('ok() omits data when undefined', async () => {
     const { ok } = await import('@/lib/server/route');
     const res = ok({ requestId: 'rid-abc' });
@@ -279,7 +279,7 @@ describe('lib/server/route — ok/err helpers', () => {
   });
 });
 
-describe('lib/server/route — cross-site requests', () => {
+describe('lib/server/route: cross-site requests', () => {
   beforeEach(() => {
     vi.resetModules();
     rateLimitMock.mockReset();
@@ -333,7 +333,7 @@ describe('lib/server/route — cross-site requests', () => {
   );
 });
 
-describe('lib/server/route — ip hash outage', () => {
+describe('lib/server/route: ip hash outage', () => {
   beforeEach(() => {
     vi.resetModules();
     hashIpMock.mockReset();

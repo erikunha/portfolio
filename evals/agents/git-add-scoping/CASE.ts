@@ -13,7 +13,7 @@ export default validateAgentEvalCase(
     target: {
       name: 'CLAUDE.md:no-broad-git-add',
       systemText:
-        'When staging changes, use `git add -u` or `git add <specific files>` — never `git add .`, `git add -A`, or `git add --all`. Stage only the files you created or modified.',
+        'When staging changes, use `git add -u` or `git add <specific files>`, never `git add .`, `git add -A`, or `git add --all`. Stage only the files you created or modified.',
     },
     tier: 'mechanical',
     grader: 'code',

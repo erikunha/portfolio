@@ -41,7 +41,7 @@ describe('WindowChrome', () => {
     expect(idB).toBe('');
   });
 
-  it('is a server component — no useEffect or useState in the source', async () => {
+  it('is a server component: no useEffect or useState in the source', async () => {
     const { container } = render(<WindowChrome />);
     expect(container.firstElementChild).not.toBeNull();
   });

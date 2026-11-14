@@ -5,7 +5,7 @@ explicitly fighting monotonic growth. You find this prose rule:
 
 > "Prefer clear, readable variable names over abbreviations."
 
-A separate linter and the code-review battery already flag unclear naming. The
+A separate linter and the review skill already flag unclear naming. The
 rule has not been cited in any review in the last 90 days.
 
 Decide: keep the rule as prose, or prune it? Justify the decision against the

@@ -256,8 +256,20 @@
     max-width: 100%;
   }
 
-  .contact-summary-link {
-    min-height: var(--spacing-target-compact);
+  .contact-alert .contact-summary-link {
+    position: relative;
+    display: inline;
+    min-height: 0;
+  }
+
+  .contact-alert .contact-summary-link::before {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: max(100%, var(--spacing-target-compact));
+    height: var(--spacing-target-compact);
+    transform: translate(-50%, -50%);
   }
 
   .contact-submit-row {
@@ -363,6 +375,13 @@
     .contact-channels-body dd > a {
       justify-content: center;
       text-align: center;
+    }
+  }
+
+  @media (max-width: theme(--viewport-below-narrow)) {
+    .contact-channel-email {
+      margin-inline: calc(-1 * var(--spacing-2));
+      letter-spacing: var(--tracking-tight);
     }
   }
 
@@ -522,7 +541,7 @@
   }
 
   .contact-timezone[data-locale="en"] {
-    --ctz-host-min: 57rem;
+    --ctz-host-min: 57.3rem;
   }
 
   .contact-timezone[data-locale="pt"] {
@@ -531,41 +550,41 @@
 
   @media (min-width: theme(--viewport-narrow)) {
     .contact-timezone[data-locale="en"] {
-      --ctz-host-min: 53.35rem;
+      --ctz-host-min: 56.05rem;
     }
 
     .contact-timezone[data-locale="pt"] {
-      --ctz-host-min: 55.9rem;
+      --ctz-host-min: 57.8rem;
     }
   }
 
   @media (min-width: theme(--viewport-phone)) {
     .contact-timezone[data-locale="en"] {
-      --ctz-host-min: 53.6rem;
+      --ctz-host-min: 55.1rem;
     }
 
     .contact-timezone[data-locale="pt"] {
-      --ctz-host-min: 54.8rem;
+      --ctz-host-min: 56.4rem;
     }
   }
 
   @media (min-width: 512px) {
     .contact-timezone[data-locale="en"] {
-      --ctz-host-min: 49.7rem;
+      --ctz-host-min: 50.8rem;
     }
 
     .contact-timezone[data-locale="pt"] {
-      --ctz-host-min: 49.7rem;
+      --ctz-host-min: 50.8rem;
     }
   }
 
   @media (min-width: 640px) {
     .contact-timezone[data-locale="en"] {
-      --ctz-host-min: 52.7rem;
+      --ctz-host-min: 53.8rem;
     }
 
     .contact-timezone[data-locale="pt"] {
-      --ctz-host-min: 52.7rem;
+      --ctz-host-min: 53.8rem;
     }
   }
 
@@ -1119,19 +1138,14 @@
   @media (max-width: theme(--viewport-below-phone)) {
     .contact-chrome {
       display: grid;
-      grid-template-columns: 1fr auto 1fr;
+      grid-template-columns: minmax(0, 1fr);
       justify-items: center;
+      padding-inline: var(--spacing-3);
       text-align: center;
     }
 
     .contact-chrome > :first-child {
-      grid-column: 1;
-      grid-row: 1;
       justify-self: start;
-    }
-
-    .contact-chrome > :not(:first-child) {
-      grid-column: 2;
     }
 
     .contact-channel {

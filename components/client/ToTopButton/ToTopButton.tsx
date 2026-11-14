@@ -3,18 +3,18 @@
 import { useEffect, useState } from 'react';
 import { motionInEffect } from '@/lib/motion';
 import { useSectionNavigation } from '../../responsive/SectionNavigation';
+import { nextToTopState, type ToTopState } from './scroll-direction';
 
 export function ToTopButton() {
   const { copy } = useSectionNavigation();
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
-    const onScroll = () =>
-      setVisible((v) => {
-        const next = window.scrollY > 400;
-        return v === next ? v : next;
-      });
-    onScroll();
+    let state: ToTopState = { visible: false, anchor: window.scrollY };
+    const onScroll = () => {
+      state = nextToTopState(state, window.scrollY);
+      setVisible(state.visible);
+    };
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
   }, []);

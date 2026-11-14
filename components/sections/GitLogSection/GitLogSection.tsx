@@ -1,5 +1,5 @@
 import { useId } from 'react';
-import { careerCopy, careerEntries, careerScrollLabel } from '@/content/git-log';
+import { careerCopy, careerEntries } from '@/content/git-log';
 import type { SiteLocale } from '@/content/site-locale';
 import { deferProps } from '@/lib/defer-props';
 import { CommandText } from '../../CommandText';
@@ -12,15 +12,7 @@ const CAREER_LOG_TEST_ID = 'career-log';
 export function GitLogContent({ locale }: { locale: SiteLocale }) {
   const copy = careerCopy[locale];
   return (
-    // biome-ignore lint/a11y/useSemanticElements: this names the keyboard-readable log, not form controls
-    <div
-      className="career-log"
-      data-testid={CAREER_LOG_TEST_ID}
-      role="group"
-      aria-label={careerScrollLabel(locale)}
-      // biome-ignore lint/a11y/noNoninteractiveTabindex: retain keyboard access to the career log
-      tabIndex={0}
-    >
+    <div className="career-log" data-testid={CAREER_LOG_TEST_ID}>
       <p className="career-command">
         <span>{copy.prompt}</span> <CommandText>{copy.command}</CommandText>
       </p>

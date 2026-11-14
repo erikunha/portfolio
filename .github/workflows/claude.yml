@@ -7,7 +7,17 @@ on:
     types: [created]
 
 concurrency:
-  group: claude-${{ github.event.issue.number || github.event.pull_request.number || github.run_id }}
+  # Concurrency resolves at the RUN level, before a job's `if:` is evaluated, so
+  # a comment the job will skip would otherwise queue behind a live answer in the
+  # same issue or pull request. The group admits exactly what the job admits;
+  # everything else gets a per-run group it shares with nothing. This predicate
+  # MUST stay identical to the job's `if:` below;
+  # `__tests__/scripts/claude-workflow-hardening.test.ts` keeps the copies equal.
+  group: >-
+    ${{ (contains(github.event.comment.body, '@claude') &&
+    contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.comment.author_association)) &&
+    format('claude-{0}', github.event.issue.number || github.event.pull_request.number) ||
+    format('claude-noop-{0}', github.run_id) }}
   cancel-in-progress: false
 
 permissions:
@@ -27,12 +37,48 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     steps:
+      # Same layout as claude-review.yml: the workspace root is the default
+      # branch, and pull-request content is confined to pr-head, which is mounted
+      # with --add-dir after the instruction-shaped files are stripped. On an
+      # issue there is no pull request, so pr-head is a second copy of the
+      # default branch.
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          ref: ${{ github.event.repository.default_branch }}
           fetch-depth: 1
+          persist-credentials: false
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ (github.event.issue.pull_request || github.event.pull_request) && format('refs/pull/{0}/head', github.event.issue.number || github.event.pull_request.number) || github.event.repository.default_branch }}
+          path: pr-head
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Strip instruction-shaped files from the mounted PR copy
+        run: |
+          set -euo pipefail
+
+          find pr-head -type l -delete
+
+          find pr-head \
+            \( -name 'CLAUDE.md' -o -name 'CLAUDE.local.md' -o -name 'AGENTS.md' -o -name 'copilot-instructions.md' \
+               -o -name '.claude' -o -name '.agents' -o -name '.codex' -o -name '.cursor' \) \
+            -prune -exec rm -rf {} +
+
+          leftover=$(find pr-head \
+            \( -name 'CLAUDE.md' -o -name 'CLAUDE.local.md' -o -name 'AGENTS.md' -o -name 'copilot-instructions.md' \
+               -o -name '.claude' -o -name '.agents' -o -name '.codex' -o -name '.cursor' \) \
+            -print -quit)
+          if [ -n "$leftover" ]; then
+            echo "instruction-shaped path survived the strip: $leftover" >&2
+            exit 1
+          fi
+
       - uses: anthropics/claude-code-action@c0949c50a78c1ec8ce2647db36629b870e715d0c # v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           claude_args: >-
+            --add-dir pr-head
             --allowedTools "Read,Grep,Glob,mcp__github_inline_comment__create_inline_comment"
             --disallowedTools "Edit,MultiEdit,Write,NotebookEdit,WebFetch,WebSearch,Task(general-purpose),Task(claude),Task(Explore),Task(Plan),Task(statusline-setup),Task(claude-code-guide),Bash,Bash(git add:*),Bash(git commit:*),Bash(git rm:*),Bash(/home/runner/work/_actions/anthropics/claude-code-action/c0949c50a78c1ec8ce2647db36629b870e715d0c/scripts/git-push.sh:*),mcp__github_file_ops__commit_files,mcp__github_file_ops__delete_files,Read(**/.git/**),Read(//proc/**),Read(~/.ssh/**),Read(~/.gitconfig),Read(~/.git-credentials),Read(~/.config/**),Read(~/.npmrc),Read(~/.docker/**),Read(~/.claude/**),Read(//home/runner/work/_temp/**)"

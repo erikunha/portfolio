@@ -14,7 +14,13 @@ const PLACEHOLDER_TIMING = {
   pauseMs: SHELL_LIMITS.placeholderPauseMs,
 } as const;
 
-export function AnimatedPlaceholder({ ui }: { ui: ShellUi }) {
+type PlaceholderProps = { ui: ShellUi; compact?: boolean };
+
+function restingText(ui: ShellUi, compact: boolean): string {
+  return compact ? ui.mobilePlaceholder : ui.placeholder;
+}
+
+export function AnimatedPlaceholder({ ui, compact = false }: PlaceholderProps) {
   const textRef = useRef<HTMLSpanElement>(null);
   useEffect(() => {
     const node = textRef.current;
@@ -28,11 +34,11 @@ export function AnimatedPlaceholder({ ui }: { ui: ShellUi }) {
 
     function render(motionOn: boolean) {
       if (!motionOn) {
-        typed.textContent = ui.placeholder;
+        typed.textContent = restingText(ui, compact);
         return;
       }
       loop = runPhraseLoop({
-        phrases: ui.suggestions,
+        phrases: compact ? ui.mobileSuggestions : ui.suggestions,
         timing: PLACEHOLDER_TIMING,
         onText: (text) => {
           typed.textContent = text;
@@ -53,19 +59,19 @@ export function AnimatedPlaceholder({ ui }: { ui: ShellUi }) {
       unwatch();
       loop?.cancel();
     };
-  }, [ui]);
+  }, [ui, compact]);
   return (
     <span className="shell-placeholder" aria-hidden="true" data-testid="shell-placeholder">
-      <span ref={textRef} />
+      <span ref={textRef} className="shell-placeholder-text" />
       <span className="shell-cursor" data-testid="shell-cursor" />
     </span>
   );
 }
 
-export function StaticPlaceholder({ ui }: { ui: ShellUi }) {
+export function StaticPlaceholder({ ui, compact = false }: PlaceholderProps) {
   return (
     <span className="shell-placeholder" aria-hidden="true" data-testid="shell-placeholder">
-      {ui.placeholder}
+      <span className="shell-placeholder-text">{restingText(ui, compact)}</span>
     </span>
   );
 }

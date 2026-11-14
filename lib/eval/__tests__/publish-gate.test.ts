@@ -12,7 +12,7 @@ import { REDIS_ENV_PAIRS } from '@/lib/rate-limit';
 
 const workflow = (name: string) =>
   readFileSync(`${process.cwd()}/.github/workflows/${name}`, 'utf8');
-const FLAG_LINE = new RegExp(`${EVAL_PUBLISH_ENV}:\\s*['"]?${EVAL_PUBLISH_VALUE}['"]?`);
+const FLAG_LINE = new RegExp(`${EVAL_PUBLISH_ENV}:.*['"]${EVAL_PUBLISH_VALUE}['"]`);
 
 describe('lib/eval/publish-gate', () => {
   it('is disabled unless the flag equals the opt-in value', () => {

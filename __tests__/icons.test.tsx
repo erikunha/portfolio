@@ -3,7 +3,7 @@ import { createElement } from 'react';
 import { afterEach, describe, expect, it } from 'vitest';
 import { type MountedClient, mountClient } from './helpers/render';
 
-describe('Icons — SVG smoke renders', () => {
+describe('Icons: SVG smoke renders', () => {
   let mounted: MountedClient;
 
   afterEach(() => {

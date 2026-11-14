@@ -105,8 +105,8 @@ Every runbook lists: **entry point** (what starts it), **steps**, **AI participa
 
 - **Entry:** any non-obvious or architectural decision.
 - **Format (the convention):** `**YYYY-MM-DD** · **Decision title.** <mechanism: what changed and the causal why> _Reversible: <how to undo>._`
-- **Rules:** cite SHAs/PR numbers; record failed approaches as "Falsified first attempt"; every entry ends in a reversibility note.
-- **Output:** a dated bullet under the newest dated heading of `DECISIONS.md`.
+- **Rules:** cite PR numbers where they exist; record failed approaches as "Falsified first attempt"; every entry ends in a reversibility note.
+- **Output:** a dated bullet at the top of `DECISIONS.md`.
 
 ## Opening and converging a PR
 

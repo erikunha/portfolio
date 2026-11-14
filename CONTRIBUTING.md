@@ -6,7 +6,7 @@ By participating you agree to the [Code of Conduct](./CODE_OF_CONDUCT.md).
 
 ## Prerequisites
 
-- **Node** 22.22.2 or newer (`.nvmrc` pins the exact version; `nvm use`)
+- **Node** `^22.22.2 || ^24.15.0 || >=26.0.0` (`.nvmrc` pins the exact version; `nvm use`)
 - **pnpm** >= 10 (this repo is pnpm-only; do not use npm or yarn)
 - **gitleaks** on your PATH for the pre-commit secret scan (`brew install gitleaks`)
 

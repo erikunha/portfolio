@@ -9,6 +9,7 @@ import {
   useState,
   useSyncExternalStore,
 } from 'react';
+import { BREAK_AFTER, BreakAfter } from '@/components/BreakAfter';
 import type { ContactContent } from '@/content/contact';
 import {
   CONTACT_FIELD,
@@ -156,7 +157,7 @@ export function ContactForm({ copy, chrome }: { copy: ContactContent; chrome: Te
               <p id={requestErrorId}>
                 {copy.form.errorPrefix} {errorMsg}. {copy.form.retained} {copy.form.retryEmail}{' '}
                 <a href={errorMailto(copy, errorRef, values.message.trim())}>
-                  {copy.section.email}
+                  <BreakAfter chars={BREAK_AFTER.email}>{copy.section.email}</BreakAfter>
                 </a>
               </p>
             ) : null}
