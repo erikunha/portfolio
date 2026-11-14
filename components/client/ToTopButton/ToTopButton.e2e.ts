@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { revealToTop } from '../../../tests/e2e/_helpers/to-top';
 
 const SCROLLED_DOWN_PX = 800;
 const AT_TOP_BELOW_PX = 10;
@@ -27,16 +28,17 @@ test.describe('ToTopButton: scroll-to-top affordance', () => {
 
   test('button takes keyboard focus once it is shown', async ({ page }) => {
     await page.goto('/');
-    await page.evaluate(() => window.scrollTo(0, 800));
+    await page.evaluate((top) => window.scrollTo(0, top), SCROLLED_DOWN_PX);
+    await revealToTop(page);
     const btn = page.getByRole('button', { name: /top/i });
-    await expect(btn).toHaveClass(/to-top-show/);
     await btn.focus();
     await expect(btn).toBeFocused();
   });
 
-  test('button appears after scrolling down the page', async ({ page }) => {
+  test('button appears after scrolling up the page', async ({ page }) => {
     await page.goto('/');
     await page.evaluate((top) => window.scrollTo(0, top), SCROLLED_DOWN_PX);
+    await revealToTop(page);
     const btn = page.getByRole('button', { name: /top/i });
     await expect(btn).toHaveCSS('pointer-events', 'auto');
     await expect(btn).toBeVisible();
@@ -46,6 +48,7 @@ test.describe('ToTopButton: scroll-to-top affordance', () => {
     await page.goto('/');
     await page.evaluate((top) => window.scrollTo(0, top), SCROLLED_DOWN_PX);
     await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(SCROLLED_DOWN_PX);
+    await revealToTop(page);
     const btn = page.getByRole('button', { name: /top/i });
     await expect(btn).toHaveCSS('pointer-events', 'auto');
     await btn.click();

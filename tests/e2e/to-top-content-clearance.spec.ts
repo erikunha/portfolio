@@ -1,6 +1,7 @@
 import { expect, type Page, test } from '@playwright/test';
 import { freezeMotion } from './_helpers/motion';
 import { gotoSettled } from './_helpers/streamed';
+import { revealToTop, TO_TOP_NUDGE_PX } from './_helpers/to-top';
 
 const WIDTHS = [320, 360, 375] as const;
 const VIEWPORT_HEIGHT = 700;
@@ -15,17 +16,17 @@ const TARGETS = [
 
 async function scrollIntoButtonRow(page: Page, selector: string): Promise<void> {
   await page.evaluate(
-    async ([target, frames]) => {
+    async ([target, frames, nudge]) => {
       const button = document.querySelector('.to-top-btn') as HTMLElement;
       const node = document.querySelector(String(target)) as HTMLElement;
       const rowCenter = button.getBoundingClientRect().top + button.offsetHeight / 2;
       const box = node.getBoundingClientRect();
-      window.scrollBy(0, box.top + box.height / 2 - rowCenter);
+      window.scrollBy(0, box.top + box.height / 2 - rowCenter + Number(nudge));
       for (let frame = 0; frame < Number(frames); frame += 1) {
         await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
       }
     },
-    [selector, SETTLE_FRAMES] as const,
+    [selector, SETTLE_FRAMES, TO_TOP_NUDGE_PX] as const,
   );
 }
 
@@ -71,7 +72,7 @@ test.describe('the back-to-top button never covers shell or contact content', ()
         await gotoSettled(page, '/');
         await page.locator(selector).first().scrollIntoViewIfNeeded();
         await scrollIntoButtonRow(page, selector);
-        await expect(page.locator('.to-top-btn')).toHaveClass(/to-top-show/);
+        await revealToTop(page);
         expect(
           await coveredByButton(page, selector),
           'the button sits clear of the box, so a tap or a read never lands on it',

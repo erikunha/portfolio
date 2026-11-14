@@ -3,6 +3,7 @@ import { VIEWPORTS } from './_helpers/geometry';
 import { freezeMotion } from './_helpers/motion';
 import { revealDeferredContent } from './_helpers/snapshot';
 import { gotoSettled } from './_helpers/streamed';
+import { revealToTop } from './_helpers/to-top';
 
 const PHONE = { width: 375, height: 812 } as const;
 const PHONES = [VIEWPORTS.PHONE_NARROW, PHONE, VIEWPORTS.PHONE] as const;
@@ -63,8 +64,7 @@ test.describe('the back-to-top button sits on the dock', () => {
       await freezeMotion(page);
       await page.goto('/');
       await page.evaluate((top) => window.scrollTo(0, top), SCROLLED_PX);
-      const button = page.locator('.to-top-btn');
-      await expect(button).toHaveClass(/to-top-show/);
+      await revealToTop(page);
       const seat = await page.evaluate(() => {
         const btn = document.querySelector('.to-top-btn') as HTMLElement;
         const dock = document.querySelector('.dock') as HTMLElement;
@@ -93,7 +93,6 @@ test.describe('the back-to-top button sits on the dock', () => {
     await freezeMotion(page);
     await gotoSettled(page, '/design-system');
     await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
-    await expect(page.locator('.to-top-btn')).toHaveClass(/to-top-show/);
     const overlap = await page.evaluate(() => {
       const btn = (document.querySelector('.to-top-btn') as HTMLElement).getBoundingClientRect();
       const main = document.querySelector('main') as HTMLElement;

@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { siteNavChrome } from '@/content/navigation';
 import { SITE_LOCALE, type SiteLocale } from '@/content/site-locale';
@@ -13,8 +13,16 @@ function renderButton(locale: SiteLocale) {
   );
 }
 
+function scrollTo(y: number) {
+  Object.defineProperty(window, 'scrollY', { value: y, writable: true, configurable: true });
+  act(() => {
+    window.dispatchEvent(new Event('scroll'));
+  });
+}
+
 describe('ToTopButton', () => {
   beforeEach(() => {
+    Object.defineProperty(window, 'scrollY', { value: 0, writable: true, configurable: true });
     localStorage.clear();
     vi.spyOn(window, 'scrollTo').mockImplementation(() => undefined);
   });
@@ -52,16 +60,35 @@ describe('ToTopButton', () => {
     expect(button.classList.contains('to-top-show')).toBe(false);
   });
 
-  it('applies the show class and leaves the tab order open once the page is scrolled', () => {
-    const originalScrollY = Object.getOwnPropertyDescriptor(window, 'scrollY');
-    Object.defineProperty(window, 'scrollY', { value: 500, writable: true, configurable: true });
-    try {
-      renderButton(SITE_LOCALE.en);
-      const button = screen.getByRole('button', { name: 'Back to top' });
-      expect(button.classList.contains('to-top-show')).toBe(true);
-      expect(button.hasAttribute('inert')).toBe(false);
-    } finally {
-      if (originalScrollY) Object.defineProperty(window, 'scrollY', originalScrollY);
-    }
+  it('stays hidden and inert when the page loads scrolled past the threshold', () => {
+    scrollTo(500);
+    renderButton(SITE_LOCALE.en);
+    const button = screen.getByRole('button', { name: 'Back to top' });
+    expect(button.classList.contains('to-top-show')).toBe(false);
+    expect(button.hasAttribute('inert')).toBe(true);
+  });
+
+  it('stays hidden while the page scrolls down past the threshold', () => {
+    scrollTo(0);
+    renderButton(SITE_LOCALE.en);
+    const button = screen.getByRole('button', { name: 'Back to top' });
+    scrollTo(900);
+    expect(button.classList.contains('to-top-show'), 'the tab covers text while reading').toBe(
+      false,
+    );
+    expect(button.hasAttribute('inert')).toBe(true);
+  });
+
+  it('shows and leaves the tab order open on a scroll up, then hides on a scroll down', () => {
+    scrollTo(0);
+    renderButton(SITE_LOCALE.en);
+    const button = screen.getByRole('button', { name: 'Back to top' });
+    scrollTo(900);
+    scrollTo(800);
+    expect(button.classList.contains('to-top-show')).toBe(true);
+    expect(button.hasAttribute('inert')).toBe(false);
+    scrollTo(1000);
+    expect(button.classList.contains('to-top-show')).toBe(false);
+    expect(button.hasAttribute('inert')).toBe(true);
   });
 });
