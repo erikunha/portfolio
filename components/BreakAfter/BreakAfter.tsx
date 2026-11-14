@@ -8,12 +8,18 @@ export const BREAK_AFTER = {
   code: '_./:[>',
 } as const;
 
+const TEXT_RUNS = /\s+|\S+/g;
+const NON_SPACE = /\S/;
+
 type BreakAfterProps = {
   chars: string;
   children: string;
+  pieceClassName?: string;
 };
 
-export function BreakAfter({ chars, children }: BreakAfterProps) {
+type Segment = { start: number; text: string; solid: boolean; breaks: boolean };
+
+export function BreakAfter({ chars, children, pieceClassName }: BreakAfterProps) {
   const pieces: { start: number; text: string; breaks: boolean }[] = [];
   let start = 0;
   const lastIndex = children.length - 1;
@@ -24,11 +30,24 @@ export function BreakAfter({ chars, children }: BreakAfterProps) {
     }
   }
   pieces.push({ start, text: children.slice(start), breaks: false });
+  const segments: Segment[] = pieces.flatMap((piece) => {
+    const runs = [...piece.text.matchAll(TEXT_RUNS)];
+    return runs.map((run, index) => ({
+      start: piece.start + (run.index ?? 0),
+      text: run[0],
+      solid: NON_SPACE.test(run[0]),
+      breaks: piece.breaks && index === runs.length - 1,
+    }));
+  });
   return (
     <span>
-      {pieces.map(({ start: offset, text, breaks }) => (
+      {segments.map(({ start: offset, text, solid, breaks }) => (
         <Fragment key={offset}>
-          {text}
+          {pieceClassName !== undefined && solid ? (
+            <span className={pieceClassName}>{text}</span>
+          ) : (
+            text
+          )}
           {breaks ? <wbr /> : null}
         </Fragment>
       ))}

@@ -97,6 +97,10 @@
     white-space: nowrap;
   }
 
+  .ds-code-piece {
+    white-space: nowrap;
+  }
+
   .ds-prose td code {
     color: var(--color-text);
     font-size: var(--text-xs);
