@@ -4,6 +4,8 @@ import { type ChildProcess, execFileSync, spawn } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import { resolveServerPort } from './lib/free-port';
 
+const LINKS_FEED_FIXTURE_ENV = 'E2E_LINKS_FEED_FIXTURE';
+const LINKS_FEED_FIXTURE_PATH = 'tests/e2e/fixtures/links-feed.json';
 const SKIP_BUILD = process.argv.includes('--skip-build');
 const PORT = await resolveServerPort();
 const BASE_URL = `http://localhost:${PORT}`;
@@ -143,6 +145,7 @@ if (SKIP_BUILD) {
 } else {
   run('Build', 'pnpm', ['build'], {
     DEPLOY_SALT: 'local-gates',
+    [LINKS_FEED_FIXTURE_ENV]: LINKS_FEED_FIXTURE_PATH,
     ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY ?? '',
     UPSTASH_REDIS_REST_URL: process.env.UPSTASH_REDIS_REST_URL ?? '',
     UPSTASH_REDIS_REST_TOKEN: process.env.UPSTASH_REDIS_REST_TOKEN ?? '',
