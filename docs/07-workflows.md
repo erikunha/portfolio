@@ -135,7 +135,7 @@ Child processes are tracked: on exit, `SIGINT`, `SIGTERM` or `SIGHUP` their proc
 flowchart LR
     unit["Vitest (jsdom)<br/>the unit test directory + co-located *.test.tsx<br/>behavioral, 80/70/80/80 coverage floor"] --> ci
     a11y["axe-core<br/>tests/a11y/axe.spec.ts (WCAG 2.2 AA tags)"] --> ci
-    e2e["Playwright e2e<br/>tests/e2e/** (CI: 8-project matrix)"] --> ci
+    e2e["Playwright e2e<br/>tests/e2e/** (CI: 8 projects, 10 jobs)"] --> ci
     visual["Visual regression<br/>tests/visual/visual.spec.ts via Argos"] --> ci
     mut["Stryker mutation (weekly, outside the merge path, red below the break floor; kill canary in CI)"] -. trend .-> ci
     ci["CI gates"]
@@ -144,7 +144,7 @@ flowchart LR
 - **Unit (Vitest):** behavioral assertions only; a `no-source-grep` test bans `readFileSync`-style source-grep tests. Run `pnpm test` / `pnpm test:coverage` / `pnpm test:watch`.
   For effect-driven focus, await the focus assertion with `waitFor`; finding the element only establishes that it rendered.
 - **a11y (axe-core):** `tests/a11y/axe.spec.ts` is a zero-violation gate over every design-system route, `/links`, `/links/en`, the four reading views and the home in both languages (design-system routes and reading views are also scanned at 390px, and so is the home), the open section drawer at 390px, the contact form error state (desktop and 390px), the open timezone combobox and the offline notice. A separate rule run checks WCAG 2.5.3 label-in-name on `/`, `/pt`, `/cv`, `/pt/cv`, `/summary` and `/links`. Every scan includes `wcag22aa`; page scans retain `wcag2a`, `wcag2aa` and `wcag21aa`, while contact errors retain `wcag2a` and `wcag2aa`. CI runs it in the `performance` job (`pnpm playwright test tests/a11y`), where only the `chromium` project matches it.
-- **e2e (Playwright):** `playwright.config.ts` defines eight projects and CI runs every one in the `e2e-functional` matrix; `__tests__/scripts/e2e-matrix-coverage.test.ts` fails if a project is left out. The suite runs against `http://localhost:3000` unless `E2E_BASE_URL` points it at another server.
+- **e2e (Playwright):** `playwright.config.ts` defines eight projects and CI runs every one in the `e2e-functional` matrix. webkit-desktop and webkit-mobile run as two shards each (`--shard=1/2` and `2/2`), since the full WebKit suite outgrew the 25-minute job limit; the other six run whole. `__tests__/scripts/e2e-matrix-coverage.test.ts` fails if a project or a shard is left out. The suite runs against `http://localhost:3000` unless `E2E_BASE_URL` points it at another server.
 
   | Project | Device | Specs it runs |
   | --- | --- | --- |
@@ -194,7 +194,7 @@ flowchart TD
     b --> at["attest-build: provenance on main, runs no repository code"]
     t --> cc["coverage-comment: PR comment from the coverage artifact, runs no repository code"]
     b --> perf["performance: LHCI desktop+mobile + axe (if app)"]
-    b --> e2e["e2e-functional (8-project matrix, if app)"]
+    b --> e2e["e2e-functional (8 projects, 10 jobs, if app)"]
     b --> vis["e2e-visual-chromium (desktop/mobile Chromium, if ui)"]
     dc["detect-changes (app?, ai?, ui?)"] --> perf
     dc --> e2e
@@ -238,7 +238,7 @@ flowchart TD
 | `build` | after `quality-fast`, `typecheck` and `test` | `pnpm build` with fixed placeholder env, the global bundle gate (`--max-client-kb=220`), the per-route JS gate, then uploads `.next/` |
 | `attest-build` | `main` | build provenance attestation for the uploaded `.next/`; runs no repository code |
 | `performance` | push, or PR with `app` | preview server, `pnpm lhci`, `pnpm lhci:mobile`, then the axe scan |
-| `e2e-functional` | push, or PR with `app` | the eight-project matrix described under Testing |
+| `e2e-functional` | push, or PR with `app` | the eight-project matrix, WebKit in two shards, described under Testing |
 | `e2e-visual-chromium` | push, or PR with `ui` | `tests/visual/visual.spec.ts` on `chromium` and `chromium-mobile`; the manual run with `update_visual_baselines` regenerates and uploads baselines instead |
 | `ai-eval` | `ai` and the pull request carries the `ai-eval` label, same-repository PR, not Dependabot, and no failed upstream job | `pnpm ask:eval` against the live gateway; it never publishes to Redis, and it spends Gateway credits, so it is opt-in. The weekly `ask-eval` workflow covers `main`, and the same workflow can be dispatched by hand on any branch |
 | `semgrep` | always | fixture self-test and the false-positive baseline block; the findings scan is report-only and uploads SARIF |

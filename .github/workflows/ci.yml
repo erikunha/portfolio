@@ -454,7 +454,16 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        project: [chromium, chromium-mobile, webkit-desktop, webkit-mobile, chromium-components, chromium-mobile-components, webkit-desktop-components, webkit-mobile-components]
+        project: [chromium, chromium-mobile, chromium-components, chromium-mobile-components, webkit-desktop-components, webkit-mobile-components]
+        include:
+          - project: webkit-desktop
+            shard: 1/2
+          - project: webkit-desktop
+            shard: 2/2
+          - project: webkit-mobile
+            shard: 1/2
+          - project: webkit-mobile
+            shard: 2/2
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
@@ -494,14 +503,14 @@ jobs:
           }
       - name: Run functional e2e (tests/e2e specs)
         if: ${{ !endsWith(matrix.project, '-components') }}
-        run: pnpm playwright test --project=${{ matrix.project }} tests/e2e/
+        run: pnpm playwright test --project=${{ matrix.project }} --shard=${{ matrix.shard || '1/1' }} tests/e2e/
       - name: Run functional e2e (co-located component specs)
         if: endsWith(matrix.project, '-components')
         run: pnpm playwright test --project=${{ matrix.project }}
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: failure()
         with:
-          name: playwright-report-${{ matrix.project }}
+          name: playwright-report-${{ matrix.project }}-${{ strategy.job-index }}
           path: test-results/
 
   detect-changes:

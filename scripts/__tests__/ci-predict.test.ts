@@ -877,3 +877,65 @@ describe('local prediction helpers', () => {
     expect(serverKey({ A: '1' })).not.toBe(serverKey({ A: '2' }));
   });
 });
+
+describe('sharded e2e projects', () => {
+  const WEBKIT_PAGE_PROJECTS = ['webkit-desktop', 'webkit-mobile'];
+
+  it('reads each sharded project once, with its shards, in the matrix', () => {
+    const job = workflow.jobs['e2e-functional'];
+    expect(job?.matrixProjects.filter((p) => p === 'webkit-mobile')).toHaveLength(1);
+    expect(job?.matrixProjects).toEqual(expect.arrayContaining(PAGE_PROJECTS));
+    expect(job?.matrixShards).toEqual({
+      'webkit-desktop': ['1/2', '2/2'],
+      'webkit-mobile': ['1/2', '2/2'],
+    });
+  });
+
+  it('predicts a sharded project as one whole run, never one shard', async () => {
+    const h = harness({
+      categories: { ai: false, app: true, ui: false },
+      changedFiles: [],
+      full: true,
+    });
+    const { rows } = await predict(h.context, h.deps);
+    for (const project of WEBKIT_PAGE_PROJECTS) {
+      const calls = h.playwright.filter((p) => p.project === project);
+      expect(calls, `${project} runs exactly once`).toHaveLength(1);
+      expect(calls[0]?.args).toContain('--shard=1/1');
+      expect(row(rows, `e2e-functional (${project})`)?.verdict).toBe('pass');
+    }
+    expect(rows.filter((r) => r.job.startsWith('e2e-functional (webkit-mobile'))).toHaveLength(2);
+  });
+
+  it('refuses a matrix include entry that would merge into a listed project', () => {
+    const text = [
+      'jobs:',
+      '  e2e-functional:',
+      '    runs-on: x',
+      '    strategy:',
+      '      matrix:',
+      '        project: [webkit-mobile]',
+      '        include:',
+      '          - project: webkit-mobile',
+      '            shard: 1/2',
+      '    steps: []',
+    ].join('\n');
+    expect(() => parseWorkflow(text)).toThrow(/merge into the listed project/);
+  });
+
+  it('refuses a matrix include entry with a key it does not execute', () => {
+    const text = [
+      'jobs:',
+      '  e2e-functional:',
+      '    runs-on: x',
+      '    strategy:',
+      '      matrix:',
+      '        project: [chromium]',
+      '        include:',
+      '          - project: webkit-mobile',
+      '            os: linux',
+      '    steps: []',
+    ].join('\n');
+    expect(() => parseWorkflow(text)).toThrow(/include entry/);
+  });
+});
