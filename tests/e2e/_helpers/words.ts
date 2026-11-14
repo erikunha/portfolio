@@ -8,6 +8,7 @@ export const WORD_VIEWPORTS = [
 
 export const ORPHAN_MAX_CHARS = 5;
 const SCROLL_STEP_PX = 600;
+const FRAME_WAIT_MS = 100;
 const ALLOWED_BREAK_AFTER = '_/.@';
 
 export type WordFinding = { word: string; host: string; breaks: string };
@@ -18,18 +19,22 @@ const SKIPPED_TAGS = `script, style, noscript, canvas, svg, .sr-only, ${CODE_SAM
 export async function renderEverything(page: Page): Promise<void> {
   await page.addStyleTag({ content: '* { content-visibility: visible !important; }' });
   await page.evaluate(
-    async ([step]) => {
+    async ([step, frameWaitMs]) => {
+      const nextFrame = () =>
+        new Promise<void>((resolve) => {
+          requestAnimationFrame(() => resolve());
+          setTimeout(resolve, Number(frameWaitMs));
+        });
       const last = document.documentElement.scrollHeight;
       for (let y = 0; y <= last; y += Number(step)) {
         window.scrollTo(0, y);
-        await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+        await nextFrame();
       }
       window.scrollTo(0, 0);
-      await new Promise<void>((resolve) =>
-        requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
-      );
+      await nextFrame();
+      await nextFrame();
     },
-    [SCROLL_STEP_PX] as const,
+    [SCROLL_STEP_PX, FRAME_WAIT_MS] as const,
   );
 }
 
