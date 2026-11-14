@@ -18,6 +18,7 @@ export default defineConfig({
     reporters: process.env.GITHUB_ACTIONS ? ['github-actions', 'verbose'] : ['verbose'],
     environment: 'jsdom',
     globals: false,
+    globalSetup: ['./tests/global-tmpdir.ts'],
     setupFiles: ['./tests/mocks/rtl-setup.ts'],
     exclude: [
       '**/node_modules/**',
@@ -45,6 +46,8 @@ export default defineConfig({
         '**/*.e2e.ts',
         '**/*.module.css',
         '**/*.mjs',
+        '**/*.md',
+        '**/*.mdx',
       ],
       reportsDirectory: 'coverage',
     },
