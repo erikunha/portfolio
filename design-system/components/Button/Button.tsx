@@ -16,13 +16,12 @@ export type AsAnchor = ButtonBaseProps &
 export type ButtonProps = AsButton | AsAnchor;
 
 const baseClasses =
-  'btn inline-flex items-center justify-center rounded-none font-mono border text-xs font-bold tracking-[0.1em] uppercase cursor-pointer transition-[box-shadow,background] duration-200 ease-out [body[data-motion=reduce]_&]:transition-none no-underline aria-disabled:opacity-40 aria-disabled:pointer-events-none disabled:opacity-40 disabled:pointer-events-none';
+  'btn inline-flex items-center justify-center rounded-none font-mono border text-xs font-bold tracking-xl uppercase cursor-pointer transition-[box-shadow,background] duration-200 ease-out [body[data-motion=reduce]_&]:transition-none no-underline aria-disabled:opacity-40 aria-disabled:pointer-events-none disabled:opacity-40 disabled:pointer-events-none';
 
 const variantClasses: Record<ButtonVariant, string> = {
-  primary:
-    'bg-primary-500 text-secondary-950 border-primary-500 hover:shadow-[0_0_12px_var(--color-primary-500)]',
+  primary: 'bg-primary-500 text-secondary-950 border-primary-500 hover:shadow-glow',
   secondary:
-    'bg-transparent text-primary-500 border-primary-subtle hover:shadow-[0_0_12px_var(--color-primary-500)] hover:bg-primary-quiet',
+    'bg-transparent text-primary-500 border-primary-subtle hover:shadow-glow hover:bg-primary-quiet',
 };
 
 // The small size is the one that steps down on a fine pointer: a mouse does not

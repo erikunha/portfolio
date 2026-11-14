@@ -123,7 +123,8 @@ export function KnobIsland({ initialAngle, label, channelName, degreesUnit, hint
           r="11"
           stroke="var(--color-primary-500)"
           strokeWidth="1"
-          fill="rgba(0,0,0,0.7)"
+          fill="var(--color-secondary-950)"
+          fillOpacity="0.7"
         />
         <line
           ref={needleRef}

@@ -29,7 +29,7 @@ export function TerminalPanel({
       {...rest}
     >
       {header != null && (
-        <div className="border-b border-primary-subtle py-[6px] px-[14px] md:px-[18px] lg:px-6 text-xs tracking-[0.12em] text-primary-500 font-mono">
+        <div className="border-b border-primary-subtle py-[6px] px-[14px] md:px-[18px] lg:px-6 text-xs tracking-2xl text-primary-500 font-mono">
           {header}
         </div>
       )}

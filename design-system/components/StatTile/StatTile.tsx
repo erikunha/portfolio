@@ -27,7 +27,7 @@ export function StatTile({ value, label, variant = 'default', className, ...rest
       </dt>
       <dd
         className={cn(
-          'stat-tile-value order-first text-primary-500 font-bold tracking-[0.04em] font-mono leading-ratio-1 m-0',
+          'stat-tile-value order-first text-primary-500 font-bold tracking-xs font-mono leading-ratio-1 m-0',
           variantClasses[variant],
         )}
       >

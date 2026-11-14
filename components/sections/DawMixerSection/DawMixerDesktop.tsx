@@ -28,7 +28,7 @@ function PluginChain({
                   'text-primary-500 border-primary-500',
                   'bg-[color-mix(in_srgb,var(--color-primary-500)_8%,transparent)]',
                 ].join(' ')
-              : 'border-[var(--color-primary-quiet)] bg-black/55',
+              : 'border-[var(--color-primary-quiet)] bg-secondary-950/55',
           )}
           data-testid={`plugin-${channelId}-${p.name}`}
         >
@@ -180,7 +180,7 @@ function TableHeader({ copy }: { copy: DawMixerCopy }) {
         'daw-channel-row daw-mixer-labels',
         'text-xs text-primary-400 tracking-5xl uppercase',
         'border-b border-[var(--color-primary-quiet)] px-[18px] py-[7px]',
-        'bg-black/50',
+        'bg-secondary-950/50',
       )}
       aria-hidden="true"
     >
@@ -199,7 +199,7 @@ function TableHeader({ copy }: { copy: DawMixerCopy }) {
 export function DawMixerDesktop({ mixer, copy }: { mixer: DawMixer; copy: DawMixerCopy }) {
   return (
     <div
-      className="daw-mixer-desktop font-mono text-sm text-tertiary-50 border border-[var(--color-primary-border)] bg-black/50 overflow-x-auto md:overflow-x-hidden"
+      className="daw-mixer-desktop font-mono text-sm text-tertiary-50 border border-[var(--color-primary-border)] bg-secondary-950/50 overflow-x-auto md:overflow-x-hidden"
       data-testid="daw-mixer-desktop"
     >
       <SessionHeaderDesktop mixer={mixer} copy={copy} />
