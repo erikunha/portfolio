@@ -8,6 +8,7 @@ import {
   enqueueContact,
 } from '@/lib/contact-outbox';
 import { ContactSchema, isHoneypotTripped } from '@/lib/contact-validation';
+import { HTTP_STATUS } from '@/lib/http-status';
 import { log } from '@/lib/log';
 import { getContactLimit, getRedis } from '@/lib/rate-limit';
 import { localeFromRequest } from '@/lib/server/request-locale';
@@ -16,8 +17,6 @@ import { defineHandler, err, ok } from '@/lib/server/route';
 const HONEYPOT_JITTER_MIN_MS = 50;
 const HONEYPOT_JITTER_MAX_MS = 150;
 
-const STORAGE_UNAVAILABLE_STATUS = 502;
-const QUEUED_STATUS = 202;
 const MAX_CONTACT_BODY_BYTES = 16_384;
 
 const handleContact = defineHandler({
@@ -51,7 +50,7 @@ const handleContact = defineHandler({
       log.error('KV write failed', { requestId, msgId });
       return err({
         requestId,
-        status: STORAGE_UNAVAILABLE_STATUS,
+        status: HTTP_STATUS.badGateway,
         code: CONTACT_ERROR_CODE.STORAGE_UNAVAILABLE,
         message: copy.errors.storageUnavailable,
       });
@@ -74,7 +73,7 @@ const handleContact = defineHandler({
       }
       return err({
         requestId,
-        status: STORAGE_UNAVAILABLE_STATUS,
+        status: HTTP_STATUS.badGateway,
         code: CONTACT_ERROR_CODE.DELIVERY_UNAVAILABLE,
         message: copy.errors.retryUnavailable,
       });
@@ -82,7 +81,7 @@ const handleContact = defineHandler({
 
     return err({
       requestId,
-      status: QUEUED_STATUS,
+      status: HTTP_STATUS.accepted,
       code: CONTACT_DELIVERY_CODE.QUEUED,
       message: copy.queued.message,
     });

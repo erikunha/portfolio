@@ -1,5 +1,6 @@
 'use client';
 
+import { HTTP_STATUS } from '@/lib/http-status';
 import { postJson } from '@/lib/post-json';
 import { removeRef } from '@/lib/request-refs.client';
 import { parseRetryAfter, RETRY_AFTER_HEADER } from '@/lib/stream-protocol';
@@ -8,7 +9,6 @@ export const FORGET_ENDPOINT = '/api/log/forget';
 export const FORGET_TIMEOUT_MS = 20_000;
 
 const ABORT_ERROR_NAME = 'AbortError';
-const STATUS = { ok: 200, rateLimited: 429, unavailable: 503 } as const;
 
 export const FORGET_OUTCOME = {
   Deleted: 'deleted',
@@ -44,13 +44,13 @@ export async function forgetRequest(id: string): Promise<ForgetResult> {
       { requestId: id },
       { timeoutMs: FORGET_TIMEOUT_MS },
     );
-    if (response.status === STATUS.ok) result = { outcome: FORGET_OUTCOME.Deleted };
-    else if (response.status === STATUS.rateLimited) {
+    if (response.status === HTTP_STATUS.ok) result = { outcome: FORGET_OUTCOME.Deleted };
+    else if (response.status === HTTP_STATUS.tooManyRequests) {
       result = {
         outcome: FORGET_OUTCOME.RateLimited,
         retryAfter: parseRetryAfter(response.headers.get(RETRY_AFTER_HEADER)),
       };
-    } else if (response.status === STATUS.unavailable) {
+    } else if (response.status === HTTP_STATUS.serviceUnavailable) {
       result = { outcome: FORGET_OUTCOME.Unavailable };
     } else result = { outcome: FORGET_OUTCOME.Failed };
   } catch (error) {

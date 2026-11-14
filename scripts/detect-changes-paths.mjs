@@ -2,6 +2,7 @@ export const AI_PATHS = [
   'app/api/ask/',
   'lib/ask/',
   'lib/ask-log.ts',
+  'lib/http-status.ts',
   'lib/ip-hash.ts',
   'lib/stream-protocol.ts',
   'lib/rate-limit.ts',

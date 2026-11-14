@@ -1,11 +1,11 @@
 import { connection, type NextRequest } from 'next/server';
 import { commitSha } from '@/lib/env-build';
+import { HTTP_STATUS } from '@/lib/http-status';
 import { log } from '@/lib/log';
 import { getHealthzLimit, getRedis } from '@/lib/rate-limit';
 import { clientRateLimitKey } from '@/lib/server/rate-limit-key';
 import { err } from '@/lib/server/route';
 
-const HTTP_TOO_MANY_REQUESTS = 429;
 const RETRY_AFTER_SECONDS = '60';
 const PSI_STALE_MS = 25 * 60 * 60 * 1000;
 const PSI_CACHE_TTL_MS = 5_000;
@@ -21,7 +21,7 @@ export async function GET(req: NextRequest): Promise<Response> {
     if (!success) {
       return err({
         requestId: crypto.randomUUID(),
-        status: HTTP_TOO_MANY_REQUESTS,
+        status: HTTP_STATUS.tooManyRequests,
         code: 'rate_limited',
         message: 'too many requests',
         extraHeaders: { 'Cache-Control': 'no-store', 'Retry-After': RETRY_AFTER_SECONDS },
@@ -58,7 +58,7 @@ export async function GET(req: NextRequest): Promise<Response> {
   return Response.json(
     { status, sha, psiLastRun },
     {
-      status: status === 'ok' ? 200 : 503,
+      status: status === 'ok' ? HTTP_STATUS.ok : HTTP_STATUS.serviceUnavailable,
       headers: { 'Cache-Control': 'no-store' },
     },
   );

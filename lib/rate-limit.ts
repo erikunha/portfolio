@@ -7,6 +7,7 @@ import { ASK_BUDGET_UNITS_PER_USD, askBudgetCost } from '@/lib/ask/usage';
 import { FORGET_WINDOW, FORGET_WINDOW_REQUESTS } from '@/lib/forget-limits';
 import { log } from '@/lib/log';
 import type { RateLimitIdentifier } from '@/lib/server/rate-limit-key';
+import { utcDay } from '@/lib/time';
 
 const REDIS_RETRIES = 1;
 const REDIS_RETRY_BACKOFF_MS = 50;
@@ -236,7 +237,6 @@ const BUDGET_WINDOW_S = 60 * 60 * 24 * 32;
 const DAILY_BUDGET_WINDOW_S = 60 * 60 * 24 * 2;
 
 const BUDGET_WARN_PCT = 0.8;
-const ISO_DATE_LENGTH = 10;
 
 export type BudgetStore = {
   capacity: number;
@@ -296,7 +296,7 @@ export function getBudgetKey(): string {
 }
 
 export function getDailyBudgetKey(): string {
-  return `ask:spend:day:${new Date().toISOString().slice(0, ISO_DATE_LENGTH)}`;
+  return `ask:spend:day:${utcDay(new Date())}`;
 }
 
 export type BudgetRefusalReason = 'month' | 'day' | 'store';

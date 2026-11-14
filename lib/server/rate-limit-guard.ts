@@ -1,14 +1,13 @@
 import 'server-only';
 
 import { unstable_rethrow } from 'next/navigation';
+import { HTTP_STATUS } from '@/lib/http-status';
 import { log } from '@/lib/log';
 import { describeError } from '@/lib/log-error';
 import type { ClientRateLimiter } from '@/lib/rate-limit';
 import { clientRateLimitKey } from '@/lib/server/rate-limit-key';
 import { err } from '@/lib/server/route';
 import { RETRY_AFTER_HEADER, retryAfterSeconds } from '@/lib/stream-protocol';
-
-const TOO_MANY_REQUESTS_STATUS = 429;
 
 export function withRateLimit<TReq extends Request>(
   handler: (req: TReq) => Promise<Response>,
@@ -22,7 +21,7 @@ export function withRateLimit<TReq extends Request>(
         const retryAfter = retryAfterSeconds(reset, Date.now());
         return err({
           requestId: crypto.randomUUID(),
-          status: TOO_MANY_REQUESTS_STATUS,
+          status: HTTP_STATUS.tooManyRequests,
           code: 'rate_limited',
           message,
           ...(retryAfter === null

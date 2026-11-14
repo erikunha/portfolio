@@ -9,9 +9,10 @@ import {
   contactFieldError,
 } from '@/content/contact-rules';
 import { localeOfPath } from '@/content/site-locale';
+import { HTTP_STATUS } from '@/lib/http-status';
 import { postJson } from '@/lib/post-json';
 import { addRef } from '@/lib/request-refs.client';
-import { SITE_LOCALE_HEADER } from '@/lib/stream-protocol';
+import { REQUEST_ID_HEADER, SITE_LOCALE_HEADER } from '@/lib/stream-protocol';
 import { FIELD_CHECKS } from './contact-form-checks';
 import { messageStore } from './messageStore';
 
@@ -27,8 +28,6 @@ export type ContactStatus = (typeof CONTACT_STATUS)[keyof typeof CONTACT_STATUS]
 export const CONTACT_FIELDS = Object.values(CONTACT_FIELD);
 
 const CONTACT_ENDPOINT = '/api/contact';
-const QUEUED_STATUS = 202;
-const REQUEST_ID_HEADER = 'X-Request-Id';
 const REQUEST_TIMEOUT_MS = 20_000;
 const INITIAL_FAILURE_COUNT = 0;
 
@@ -111,13 +110,13 @@ export function useContactSubmit({
         typeof data?.requestId === 'string' && data.requestId
           ? data.requestId
           : (res.headers.get(REQUEST_ID_HEADER) ?? '');
-      if (res.status === QUEUED_STATUS && apiError?.code === CONTACT_DELIVERY_CODE.QUEUED) {
+      if (res.status === HTTP_STATUS.accepted && apiError?.code === CONTACT_DELIVERY_CODE.QUEUED) {
         messageStore.reset();
         if (ref) addRef(ref);
         setStatus(CONTACT_STATUS.QUEUED);
         return;
       }
-      if (!res.ok || data?.ok !== true || res.status === QUEUED_STATUS) {
+      if (!res.ok || data?.ok !== true || res.status === HTTP_STATUS.accepted) {
         setErrorRef(ref);
         throw new Error(CONTACT_ENDPOINT, { cause: apiError?.code });
       }

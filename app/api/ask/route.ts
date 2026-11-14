@@ -2,6 +2,7 @@ import { askErrors } from '@/content/ask-errors';
 import { type AskContext, askError, preflightAsk } from '@/lib/ask/preflight';
 import { type AskStream, createAskStream } from '@/lib/ask/stream';
 import { env } from '@/lib/env';
+import { HTTP_STATUS } from '@/lib/http-status';
 import { log } from '@/lib/log';
 import { describeError } from '@/lib/log-error';
 import { releaseIdenticalQuestion, settleBudget } from '@/lib/rate-limit';
@@ -13,8 +14,6 @@ try {
 } catch {
   console.error('[ask] logger unavailable on cold start');
 }
-
-const INTERNAL_ERROR_STATUS = 500;
 
 const NO_TOKENS_USED = 0;
 
@@ -37,7 +36,7 @@ async function startStream(context: AskContext): Promise<AskStream | Response> {
     return askError(
       context.requestId,
       askErrors[context.answerLocale].interrupted,
-      INTERNAL_ERROR_STATUS,
+      HTTP_STATUS.internalServerError,
     );
   }
 }

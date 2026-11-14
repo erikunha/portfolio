@@ -2,22 +2,20 @@ export type AskResult =
   | { kind: 'answer'; text: string; requestId: string | null }
   | { kind: 'rejected'; status: number; detail: string };
 
+import { HTTP_STATUS } from '@/lib/http-status';
+
 export const STREAM_ERROR_STATUS = 0;
 
 export const ASK_TRANSPORT_RETRIES = 2;
 
 export const ASK_RETRY_BACKOFF_MS = 500;
 
-const RATE_LIMITED_STATUS = 429;
-
-const SERVER_ERROR_STATUS_FLOOR = 500;
-
 export function isTransportFailure(result: AskResult): boolean {
   if (result.kind !== 'rejected') return false;
   return (
     result.status === STREAM_ERROR_STATUS ||
-    result.status === RATE_LIMITED_STATUS ||
-    result.status >= SERVER_ERROR_STATUS_FLOOR
+    result.status === HTTP_STATUS.tooManyRequests ||
+    result.status >= HTTP_STATUS.internalServerError
   );
 }
 

@@ -1,5 +1,6 @@
 import { z } from 'zod';
 
+import { HTTP_STATUS } from '@/lib/http-status';
 import { log } from '@/lib/log';
 import {
   getErrorLogDailyLimit,
@@ -76,7 +77,7 @@ const handleLog = defineHandler({
       log.error('error-log KV write failed', { requestId, errId, err: kvErr });
       return err({
         requestId,
-        status: 503,
+        status: HTTP_STATUS.serviceUnavailable,
         code: 'storage_unavailable',
         message: 'storage unavailable',
       });
