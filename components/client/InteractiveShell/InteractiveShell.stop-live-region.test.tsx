@@ -95,7 +95,7 @@ describe('the shell stop control stays outside the live region', () => {
     const panel = container.querySelector('.interactive-shell') as HTMLElement;
     expect(panel.contains(stop)).toBe(true);
     const wrap = log.closest('.shell-feed-wrap');
-    expect(wrap, 'the log has a wrapper the stop row can share').not.toBeNull();
+    expect(wrap, 'the log has a wrapper the stop pill can share').not.toBeNull();
     expect(stop.closest('.shell-feed-wrap')).toBe(wrap);
     expect(
       stop.compareDocumentPosition(form) & Node.DOCUMENT_POSITION_FOLLOWING,
