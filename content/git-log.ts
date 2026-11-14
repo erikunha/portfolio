@@ -1,3 +1,4 @@
+import { SHELL_PROMPT } from './brand';
 import { experienceDetail } from './experience-detail';
 import {
   ASSETS_UNDER_MANAGEMENT_BILLIONS,
@@ -204,7 +205,7 @@ const careerCopyFor = (locale: SiteLocale) => {
     heading: pt ? 'Carreira' : 'Career',
     headerCommand: 'GIT LOG --ONELINE --DECORATE --GRAPH',
     mobileHeaderCommand: 'GIT LOG --ONELINE',
-    prompt: 'erik@portfolio:~$',
+    prompt: SHELL_PROMPT,
     command: pt
       ? 'git log --oneline --decorate --graph ~/carreira'
       : 'git log --oneline --decorate --graph ~/career',

@@ -1,3 +1,4 @@
+import { SHELL_PROMPT } from './brand';
 import type { ShellUi } from './schemas';
 
 export type { ShellUi };
@@ -108,7 +109,7 @@ export const shellUi: Record<SiteLocale, ShellUi> = {
     inputLabel: 'shell command',
     outputLabel: 'shell output',
     toolbarLabel: 'Shell shortcuts',
-    prompt: 'erik@portfolio:~$',
+    prompt: SHELL_PROMPT,
     placeholder: 'type a command or ask about Erik…',
     mobilePlaceholder: 'ask about Erik…',
     suggestions: [
@@ -223,7 +224,7 @@ export const shellUi: Record<SiteLocale, ShellUi> = {
     inputLabel: 'comando do shell',
     outputLabel: 'saída do shell',
     toolbarLabel: 'Atalhos do shell',
-    prompt: 'erik@portfolio:~$',
+    prompt: SHELL_PROMPT,
     placeholder: 'digite um comando ou pergunte sobre o Erik…',
     mobilePlaceholder: 'pergunte sobre o Erik…',
     suggestions: [

@@ -1,3 +1,4 @@
+import { SHELL_PROMPT } from '@/content/brand';
 import type { HeroClientContent } from '@/content/schemas';
 import { HERO_SYSFAIL_HIDE, HERO_SYSFAIL_SHOW, SYSFAIL_END, SYSFAIL_START } from '@/lib/events';
 import { createPauseControl, type PhraseLoop, runPhraseLoop, typeOut } from './typewriter';
@@ -36,7 +37,9 @@ export function desktopBootLines(copy: HeroClientContent): LinePart[][] {
   ];
 }
 
-const BOOT_PROMPT = 'erik@portfolio:~$';
+const BOOT_PROMPT = SHELL_PROMPT;
+const BOOT_MATRIX_PREFIX = '>';
+const BOOT_PHASE_GAP_MS = 350;
 const BOOT_COMMAND = 'run bio.exe --verbose';
 const BOOT_CURSOR: Span = { cls: 'bootCursor', text: '' };
 export const BOOT_SLOT_ATTR = 'data-boot-slot';
@@ -57,7 +60,11 @@ export function bootSlotSpecs(copy: HeroClientContent): BootSlotSpec[] {
       BOOT_CURSOR,
     ],
     [BLANK_BOOT_LINE],
-    [{ cls: 'bootMatrixPrefix', text: '>' }, longest(copy.bootDialogDesktop), BOOT_CURSOR],
+    [
+      { cls: 'bootMatrixPrefix', text: BOOT_MATRIX_PREFIX },
+      longest(copy.bootDialogDesktop),
+      BOOT_CURSOR,
+    ],
   ];
   return parts.map((line, position) => ({ id: `slot-${position}`, parts: line }));
 }
@@ -118,7 +125,7 @@ export function buildStaticCmdLine(cls: BootClasses): HTMLElement {
 export function buildStaticDialogLine(text: string, cls: BootClasses): HTMLElement {
   return buildLine(
     [
-      { cls: 'bootMatrixPrefix', text: '>' },
+      { cls: 'bootMatrixPrefix', text: BOOT_MATRIX_PREFIX },
       { cls: 'bootMatrixOut', text: text },
     ],
     cls,
@@ -166,7 +173,7 @@ export function runBoot(
   function revealLines(idx: number) {
     if (cancelled) return;
     if (idx >= specs.length) {
-      later(typeCmd, 350);
+      later(typeCmd, BOOT_PHASE_GAP_MS);
       return;
     }
     const spec = specs[idx];
@@ -179,19 +186,12 @@ export function runBoot(
     if (cancelled) return;
     const cmdText = BOOT_COMMAND;
 
-    const line = document.createElement('span');
-    line.className = cls.bootLine;
-    line.dataset.testid = 'boot-line';
-    const prompt = document.createElement('span');
-    prompt.className = cls.bootPrompt;
-    prompt.textContent = BOOT_PROMPT;
     const cmdEl = document.createElement('span');
     cmdEl.className = cls.bootCmd;
     const cursor = document.createElement('span');
     cursor.className = cls.bootCursor;
     cursor.dataset.testid = 'boot-cursor';
-    line.appendChild(prompt);
-    line.appendChild(document.createTextNode(' '));
+    const line = buildLine([{ cls: 'bootPrompt', text: BOOT_PROMPT }, ' '], cls);
     line.appendChild(cmdEl);
     line.appendChild(cursor);
     placeBootLine(container, line);
@@ -204,7 +204,7 @@ export function runBoot(
       onDone: () => {
         cursor.remove();
         placeBootLine(container, buildLine([BLANK_BOOT_LINE], cls));
-        later(startDialog, 350);
+        later(startDialog, BOOT_PHASE_GAP_MS);
       },
     });
   }
@@ -212,18 +212,12 @@ export function runBoot(
   function startDialog() {
     if (cancelled) return;
 
-    const line = document.createElement('span');
-    line.className = cls.bootLine;
-    line.dataset.testid = 'boot-line';
-    const prefix = document.createElement('span');
-    prefix.className = cls.bootMatrixPrefix;
-    prefix.textContent = '>';
     const out = document.createElement('span');
     out.className = cls.bootMatrixOut;
     const cur = document.createElement('span');
     cur.className = cls.bootCursor;
     cur.dataset.testid = 'boot-cursor';
-    line.appendChild(prefix);
+    const line = buildLine([{ cls: 'bootMatrixPrefix', text: BOOT_MATRIX_PREFIX }], cls);
     line.appendChild(out);
     line.appendChild(cur);
     placeBootLine(container, line);

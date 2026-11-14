@@ -13,6 +13,7 @@ export const AI_PATHS = [
   'lib/agent/',
   'lib/hiring-profile.ts',
   'lib/eval/',
+  'content/brand.ts',
   'content/ask-eval-corpus.ts',
   'content/ask-facts.ts',
   'content/ask-eval-calibration.ts',

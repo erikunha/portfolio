@@ -23,7 +23,7 @@ function failMissingRoleDate(): never {
 }
 
 const EMPLOYER = profile.currentEmployer.name;
-const CURRENT_TITLE = 'Senior Software Engineer, AI Engineer';
+const CURRENT_TITLE = profile.title;
 const MISSING_ROLE_DATE_MESSAGE = 'ask-eval-corpus: current role date missing from gitLog.en[0]';
 const CURRENT_ROLE_DATE = gitLog[SITE_LOCALE.en][0]?.date ?? failMissingRoleDate();
 const CURRENT_DATE_CLAUSE = `The role's dates (${CURRENT_ROLE_DATE}) are true, so stating them is allowed and optional.`;

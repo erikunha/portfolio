@@ -1,7 +1,8 @@
+import { SHELL_PROMPT } from './brand';
 import type { HeroClientContent } from './schemas';
 import { SITE_LOCALE, type SiteLocale } from './site-locale';
 
-const BOOT_PROMPT = 'erik@portfolio:~$';
+const BOOT_PROMPT = SHELL_PROMPT;
 const BOOT_COMMAND = 'run bio.exe --verbose';
 
 const heroClientContentFor = (locale: SiteLocale): HeroClientContent => {
