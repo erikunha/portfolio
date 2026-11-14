@@ -72,15 +72,16 @@ flowchart TD
     dc --> eng
     eng --> st["quality-fast, typecheck, test, gitleaks: the job's own run steps"]
     eng --> bd["build: ci.yml build env, bundle gate, route-JS gate"]
-    eng --> sel["spec selection: new or changed specs, co-located *.e2e.ts, importers of a changed helper"]
+    eng --> sel["spec selection: new or changed specs, co-located *.e2e.ts, importers of a changed helper, every page spec and the visual spec when a rendering input changed"]
     eng --> vis["e2e-visual-chromium and a11y: ci.yml arguments"]
+    eng --> fc["job time forecast: tests / shards x seconds per test, against timeout-minutes"]
 ```
 
 The selected specs, the Linux branch and the single result table:
 
 ```mermaid
 flowchart TD
-    sel["spec selection: new or changed specs, co-located *.e2e.ts, importers of a changed helper"] --> e2e["e2e-functional per project: --repeat-each=3 --retries=0"]
+    sel["spec selection: new or changed specs, co-located *.e2e.ts, importers of a changed helper, every page spec and the visual spec when a rendering input changed"] --> e2e["e2e-functional per project: --repeat-each=3 --retries=0"]
     pw["playwright test --list"] --> sel
     e2e --> lx{"--linux?"}
     vis["e2e-visual-chromium and a11y: ci.yml arguments"] --> lx
@@ -88,6 +89,7 @@ flowchart TD
     lx -->|yes| img["Playwright image v{version}-noble: copy tree, install, build and serve inside it"]
     st["quality-fast, typecheck, test, gitleaks: the job's own run steps"] --> tbl["one table: pass, fail, partial, not-run, skipped, would-run (--list)"]
     bd["build: ci.yml build env, bundle gate, route-JS gate"] --> tbl
+    fc["job time forecast: fails a job above 80% of its timeout-minutes"] --> tbl
     nat --> tbl
     img --> tbl
 ```
@@ -108,6 +110,7 @@ What each result means:
 
 - **pass**, **fail**: every reproducible step ran, with the outcome.
 - **partial**: the steps that ran passed but something did not: a step cannot run locally (Lighthouse, a `sudo` step, an expression or shell the predictor cannot evaluate, and the visual spec without `--linux`, because CI gates the Linux baselines and a macOS run compares different ones), or the e2e job ran only the changed specs while CI runs the whole suite (`--full` makes it a pass). Lighthouse scores depend on the host; `pnpm gates:runtime` still covers them.
+- **fail** also covers a job whose time forecast is over its budget (see the forecast below); it fails before any step of that job runs, in a dry run too.
 - **not-run**: the job needs GitHub (`dependency-review`), is report-only (`semgrep`), has no changed spec on that project, its needs failed, or no step of it executed. Never read it as passed.
 - **would-run**: dry run only; nothing was executed.
 - **skipped**: the job's own `if` is false for this diff, exactly as in CI.
@@ -121,13 +124,15 @@ The last line and the exit code summarise the table.
 
 On Apple Silicon the container is arm64 while CI is x64, so pixel-level results can differ from CI: layout assertions such as the LCP element reproduce, but a screenshot diff in a section you did not touch is advisory. Check whether the diff is in your change before acting on it.
 
-The e2e step narrows to new or changed specs, specs next to a changed component (`Hero.tsx` selects `Hero.e2e.ts`), specs that import a changed helper under `tests/`, and every spec when `playwright.config.ts` changes. Without `--linux` the predictor starts its own production server on a free port and passes it to Playwright as `E2E_BASE_URL`; it refuses to continue if that port already answers. A spec runs on every project Playwright lists it under (`playwright test --list`, with `CI=true` as in CI), so a Chromium-only pass cannot hide a WebKit failure. `--retries=0` with `--repeat-each` makes a test that passes only some of the time fail, which is what `failOnFlakyTests` does in CI. A change to app code with no matching spec runs no e2e; use `--full` for that. The server it starts must be the process it spawned: readiness fails when that process exits, and only counts when the process listening on the port descends from the spawned process (`pnpm start` starts `next-server` in its own process group, so ancestry, not group, is checked), so a stale server on a reused port cannot satisfy it. Stopping a server kills the spawned process and every descendant.
+The e2e step narrows to new or changed specs, specs next to a changed component (`Hero.tsx` selects `Hero.e2e.ts`), specs that import a changed helper under `tests/`, and every spec when `playwright.config.ts` changes. Without `--linux` the predictor starts its own production server on a free port and passes it to Playwright as `E2E_BASE_URL`; it refuses to continue if that port already answers. A spec runs on every project Playwright lists it under (`playwright test --list`, with `CI=true` as in CI), so a Chromium-only pass cannot hide a WebKit failure. `--retries=0` with `--repeat-each` makes a test that passes only some of the time fail, which is what `failOnFlakyTests` does in CI. A change to a rendering input (anything under `app/`, `components/`, `design-system/`, `content/` or `public/fonts/`, any `.css` file, and `next.config.ts`; unit tests and specs themselves do not count) widens the selection to every page spec under `tests/e2e/` and the visual spec under `tests/visual/`, because a CSS rule or a component can move any page at any width. The row of each narrowed e2e job says `selection widened to every page spec and the visual spec by a rendering input (<first two files, then a count>)`. The visual job repeats its spec with `--repeat-each` whenever the spec is selected. A change outside those paths keeps the narrow selection, and one with no matching spec runs no e2e; use `--full` for that. The server it starts must be the process it spawned: readiness fails when that process exits, and only counts when the process listening on the port descends from the spawned process (`pnpm start` starts `next-server` in its own process group, so ancestry, not group, is checked), so a stale server on a reused port cannot satisfy it. Stopping a server kills the spawned process and every descendant.
 
 Steps run as a GitHub runner runs them: `bash -e -c` by default, `bash --noprofile --norc -eo pipefail` for `shell: bash`, `sh -e`, with `working-directory` and `defaults.run` honoured, workflow, job and step `env:` merged, and a failed `continue-on-error` step reported without failing the job. A shell other than bash or sh is not reproducible. A `sudo` step is run only as the local-binary substitution for a tool in the local list (gitleaks); any other `sudo` step is reported as not reproducible. Native runs blank every key named in the `.env*.local` files (key names only are read, values never) in the build, the server and the test processes, so the app cannot reach real Redis or Resend; `--linux` copies the tree without those files. The build, server, Playwright and `playwright --list` processes do not inherit the shell's environment: they get an allowlist (`PATH`, `HOME`, `TMPDIR`, locale, terminal, Docker and `PNPM_HOME` variables, and names starting `LC_`, `XDG_` or `PLAYWRIGHT_`; `allowedEnv` in `scripts/lib/ci-predict-process.ts`) plus the step's own `env:`, so a secret exported in the shell cannot reach them. A variable a CI step needs that is neither in its `env:` nor on the allowlist is missing locally; add its name to the allowlist. A `${{ secrets.X }}` reference reads as an empty string, and the job's row names every secret it read that way. A job's `env:` and step `env:` reach `docker exec` too, and the Linux session is rebuilt when the server env changes.
 
 Child processes are tracked: on exit, `SIGINT`, `SIGTERM` or `SIGHUP` their process groups are killed and the `ci-predict-<pid>` container (labelled with its owner pid, started with `--rm`) is removed; the next `--linux` run removes containers whose owner is gone. A Linux session whose setup fails is removed before the error is reported, and a started server that has exited is never reused for a later job. Readiness requests and the free-port probe time out, so a server that accepts a connection and never answers fails at the readiness deadline. `--linux` on a machine that is not x64 prints that the container runs the machine's architecture, not CI's.
 
-`scripts/__tests__/ci-predict.test.ts` fails when `ci.yml` gains a job or an action the predictor does not map, when a command in the `ci:local` chain is covered by no CI step, and when a `quality-fast` step is neither in the chain nor in the named CI-only list (`scripts/__tests__/ci-verify-parity.test.ts`).
+The time forecast covers `e2e-functional` and `e2e-visual-chromium`. Before a unit of those jobs runs, the predictor reads the job's `timeout-minutes` from `ci.yml`, takes the shard count of its project from the matrix `include` entries, and counts the tests the job runs from the `playwright test --list` output (only specs under the path the job passes to Playwright; the whole suite, whatever the selection). The forecast is tests divided by shards, times seconds per test for that job and project. A forecast above 80% of `timeout-minutes` fails the unit with a message naming the job, the forecast, the limit and the fix: add shards to the matrix or split the specs. Every passing unit shows its forecast in the table. The seconds per test come from `RATE_SAMPLES` in `scripts/lib/ci-predict-policy.ts`: measured CI runs, each with its run id, job id, test count and seconds from the `Running N tests` line to the result line. The rate used is the slowest sample, so a forecast never undercounts a run that was measured. A project with no sample throws instead of being skipped. When a project's CI time moves, add the new run as a sample.
+
+`scripts/__tests__/ci-predict.test.ts` fails when `ci.yml` gains a job or an action the predictor does not map, when a command in the `ci:local` chain is covered by no CI step, and when a `quality-fast` step is neither in the chain nor in the named CI-only list (`scripts/__tests__/ci-verify-parity.test.ts`). It also fails when a project of a forecast job has no timing sample.
 
 ## Testing
 

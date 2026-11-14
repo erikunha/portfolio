@@ -7,8 +7,13 @@ import {
   chooseBase,
   coveredByCi,
   EXIT,
+  FORECAST_BUDGET_SHARE,
+  FORECAST_JOBS,
   HOST_MOUNT,
   JOB_POLICIES,
+  RATE_SAMPLES,
+  SECONDS_PER_MINUTE,
+  secondsPerTest,
   serverKey,
   unclassifiedActions,
   unmappedJobs,
@@ -20,6 +25,7 @@ import {
   type ExecRequest,
   type ExecResult,
   evalCommand,
+  jobTimeouts,
   judge,
   predict,
   type Row,
@@ -74,6 +80,8 @@ function harness(options: {
   dryRun?: boolean;
   stamp?: { valid: boolean; reason: string };
   matches?: (pattern: string) => boolean;
+  specProjects?: Map<string, Set<string>>;
+  forecast?: RunContext['forecast'];
 }) {
   const commands: Recorded[] = [];
   const playwright: { args: string[]; project: string | undefined }[] = [];
@@ -130,8 +138,9 @@ function harness(options: {
       stamp: options.stamp ?? { valid: true, reason: '' },
     },
     changedFiles: options.changedFiles,
-    specProjects,
+    specProjects: options.specProjects ?? specProjects,
     specSources: new Map(),
+    forecast: options.forecast ?? { timeoutMinutes: jobTimeouts(ciText), testCounts: new Map() },
     evalRun: null,
   };
   return { deps, context, commands, playwright, servers };
@@ -195,7 +204,7 @@ describe('selectSpecs', () => {
   ]);
 
   it('selects a changed spec and a spec next to a changed component', () => {
-    const files = [LINKS_SPEC, 'components/sections/Hero/Hero.tsx', 'README.md'];
+    const files = [LINKS_SPEC, 'components/sections/Hero/Hero.test.tsx', 'README.md'];
     expect(selectSpecs(files, specProjects, sources).sort()).toEqual([COMPONENT_SPEC, LINKS_SPEC]);
   });
 
@@ -213,6 +222,293 @@ describe('selectSpecs', () => {
 
   it('selects nothing for a docs-only change', () => {
     expect(selectSpecs(['docs/07-workflows.md'], specProjects, sources)).toEqual([]);
+  });
+});
+
+describe('selectSpecs widened by a rendering input', () => {
+  const VISUAL_SPEC = 'tests/visual/visual.spec.ts';
+  const LAYOUT_SPEC = 'tests/e2e/layout-tokens.spec.ts';
+  const withVisual = new Map([
+    ...specProjects,
+    [VISUAL_SPEC, new Set(['chromium', 'chromium-mobile'])],
+  ]);
+  const PAGE_AND_VISUAL = [LAYOUT_SPEC, LINKS_SPEC, VISUAL_SPEC].sort();
+
+  it('selects every page spec and the visual spec for a css-only change', () => {
+    const selected = selectSpecs(['app/css/components-shell.css'], withVisual, new Map());
+    expect(selected.sort()).toEqual(PAGE_AND_VISUAL);
+  });
+
+  it.each([
+    'app/css/theme.css',
+    'styles/standalone.css',
+    'components/sections/Hero/hero.module.css',
+    'app/(en)/design-system/_components/InlineCode/InlineCode.tsx',
+    'components/BreakAfter/BreakAfter.tsx',
+    'design-system/tokens.ts',
+    'content/hero.ts',
+    'public/fonts/JetBrainsMono.woff2',
+    'next.config.ts',
+  ])('treats %s as a rendering input', (file) => {
+    expect(selectSpecs([file], withVisual, new Map()).sort()).toEqual(
+      expect.arrayContaining(PAGE_AND_VISUAL),
+    );
+  });
+
+  it.each([
+    'docs/07-workflows.md',
+    'README.md',
+    'scripts/lib/ci-predict-run.ts',
+    'public/robots.txt',
+    'components/sections/Hero/Hero.test.tsx',
+    'lib/ask/model.ts',
+  ])('keeps the narrow selection for %s', (file) => {
+    expect(selectSpecs([file], withVisual, new Map())).not.toContain(VISUAL_SPEC);
+    expect(selectSpecs([file], withVisual, new Map())).not.toContain(LAYOUT_SPEC);
+  });
+
+  it('keeps the component specs out of the widening unless their component changed', () => {
+    expect(selectSpecs(['app/css/theme.css'], withVisual, new Map())).not.toContain(COMPONENT_SPEC);
+  });
+
+  it('says in the run table why the selection widened', async () => {
+    const h = harness({
+      categories: { ai: false, app: true, ui: true },
+      changedFiles: ['app/css/components-shell.css'],
+      specProjects: withVisual,
+    });
+    const { rows } = await predict(h.context, h.deps);
+    const widened = row(rows, 'e2e-functional (chromium)');
+    expect(widened?.why).toContain('widened');
+    expect(widened?.why).toContain('app/css/components-shell.css');
+    const chromiumRun = h.playwright.find((p) => p.project === 'chromium');
+    expect(chromiumRun?.args).toEqual(expect.arrayContaining([LAYOUT_SPEC, LINKS_SPEC]));
+    expect(chromiumRun?.args).not.toContain(VISUAL_SPEC);
+  });
+
+  it('repeats the visual spec when a rendering input changed, so a flaky baseline shows', async () => {
+    const h = harness({
+      categories: { ai: false, app: true, ui: true },
+      changedFiles: ['app/css/components-shell.css'],
+      specProjects: withVisual,
+      linux: true,
+    });
+    await predict(h.context, h.deps);
+    const visual = h.playwright.find((p) => p.args.includes(VISUAL_SPEC));
+    expect(visual?.args).toContain('--repeat-each=3');
+  });
+
+  it('does not repeat the visual spec for a docs-only change', async () => {
+    const h = harness({
+      categories: { ai: false, app: true, ui: true },
+      changedFiles: ['docs/07-workflows.md'],
+      specProjects: withVisual,
+      linux: true,
+    });
+    await predict(h.context, h.deps);
+    const visual = h.playwright.find((p) => p.args.includes(VISUAL_SPEC));
+    expect(visual).toBeDefined();
+    expect(visual?.args.some((arg) => arg.startsWith('--repeat-each'))).toBe(false);
+  });
+});
+
+describe('job time forecast', () => {
+  const VISUAL_SPEC = 'tests/visual/visual.spec.ts';
+  const counts = (project: string, spec: string, tests: number) =>
+    new Map([[spec, new Map([[project, tests]])]]);
+  const forecastOf = (project: string, spec: string, tests: number) => ({
+    timeoutMinutes: jobTimeouts(ciText),
+    testCounts: counts(project, spec, tests),
+  });
+  const shardedText = (sharded: boolean) =>
+    [
+      'jobs:',
+      '  e2e-functional:',
+      '    runs-on: x',
+      '    timeout-minutes: 25',
+      '    strategy:',
+      '      matrix:',
+      `        project: [${sharded ? 'chromium' : 'chromium, webkit-mobile'}]`,
+      ...(sharded
+        ? [
+            '        include:',
+            '          - project: webkit-mobile',
+            '            shard: 1/2',
+            '          - project: webkit-mobile',
+            '            shard: 2/2',
+          ]
+        : []),
+      '    steps:',
+      '      - run: pnpm start > /tmp/s.log 2>&1 &',
+      `      - run: pnpm playwright test --project=${expr('matrix.project')} --shard=${expr("matrix.shard || '1/1'")} tests/e2e/`,
+    ].join('\n');
+  const TIMEOUT_25 = { 'e2e-functional': 25 };
+  const WEBKIT_TESTS = 1300;
+  const webkitForecast = (tests: number, spec = LINKS_SPEC) => ({
+    timeoutMinutes: TIMEOUT_25,
+    testCounts: counts('webkit-mobile', spec, tests),
+  });
+
+  it('reads timeout-minutes of every job from ci.yml', () => {
+    expect(jobTimeouts(ciText)['e2e-functional']).toBe(25);
+    expect(jobTimeouts(ciText)['e2e-visual-chromium']).toBe(35);
+  });
+
+  it('has a measured rate for every project of every forecast job in ci.yml', () => {
+    for (const id of FORECAST_JOBS) {
+      const projects = workflow.jobs[id]?.matrixProjects ?? [];
+      expect(projects.length, `${id} has a matrix`).toBeGreaterThan(0);
+      for (const project of projects) {
+        expect(secondsPerTest(id, project), `${id} ${project}`).toBeGreaterThan(0);
+      }
+    }
+  });
+
+  it('fails a job whose forecast is above the budget share of its timeout, naming job, forecast, limit and fix', async () => {
+    const h = harness({
+      categories: { ai: false, app: true, ui: false },
+      changedFiles: [LINKS_SPEC],
+      workflow: parseWorkflow(shardedText(false)),
+      forecast: webkitForecast(WEBKIT_TESTS, LINKS_SPEC),
+    });
+    const { rows, failed, outcome } = await predict(h.context, h.deps);
+    const over = row(rows, 'e2e-functional (webkit-mobile)');
+    expect(over?.verdict).toBe('fail');
+    expect(over?.why).toMatch(/forecast \d+(\.\d+)? min/);
+    expect(over?.why).toContain('25 min');
+    expect(over?.why).toMatch(/shard|split/);
+    expect(over?.why).toContain(`${FORECAST_BUDGET_SHARE * 100}%`);
+    expect(failed).toBe(true);
+    expect(outcome.code).toBe(EXIT.FAILED);
+    expect(h.playwright.filter((p) => p.project === 'webkit-mobile')).toHaveLength(0);
+  });
+
+  it('fails a forecast between the budget share and the timeout', async () => {
+    const tests = Math.round(
+      (0.9 * TIMEOUT_25['e2e-functional'] * SECONDS_PER_MINUTE) /
+        secondsPerTest('e2e-functional', 'webkit-mobile'),
+    );
+    const h = harness({
+      categories: { ai: false, app: true, ui: false },
+      changedFiles: [LINKS_SPEC],
+      workflow: parseWorkflow(shardedText(false)),
+      forecast: webkitForecast(tests),
+    });
+    const { rows } = await predict(h.context, h.deps);
+    expect(row(rows, 'e2e-functional (webkit-mobile)')?.verdict).toBe('fail');
+  });
+
+  it.each(['webkit-desktop', 'webkit-mobile'])(
+    'fails the unsharded %s job at the test count of PR 421, which hit the 25 minute timeout',
+    async (project) => {
+      const PR_421_TESTS = 1115;
+      const text = shardedText(false).replace('chromium, webkit-mobile', `chromium, ${project}`);
+      const h = harness({
+        categories: { ai: false, app: true, ui: false },
+        changedFiles: [LINKS_SPEC],
+        workflow: parseWorkflow(text),
+        forecast: {
+          timeoutMinutes: TIMEOUT_25,
+          testCounts: counts(project, LINKS_SPEC, PR_421_TESTS),
+        },
+      });
+      const { rows } = await predict(h.context, h.deps);
+      expect(row(rows, `e2e-functional (${project})`)?.verdict).toBe('fail');
+    },
+  );
+
+  it('never forecasts a project faster than any CI run measured it', () => {
+    for (const [id, projects] of Object.entries(RATE_SAMPLES)) {
+      for (const [project, samples] of Object.entries(projects)) {
+        for (const sample of samples) {
+          expect(
+            secondsPerTest(id, project),
+            `${id} ${project} run ${sample.run}`,
+          ).toBeGreaterThanOrEqual(sample.seconds / sample.tests);
+        }
+      }
+    }
+  });
+
+  it('passes the same tests once the matrix shards them, because shards divide the forecast', async () => {
+    const h = harness({
+      categories: { ai: false, app: true, ui: false },
+      changedFiles: [LINKS_SPEC],
+      workflow: parseWorkflow(shardedText(true)),
+      forecast: webkitForecast(WEBKIT_TESTS, LINKS_SPEC),
+    });
+    const { rows } = await predict(h.context, h.deps);
+    expect(row(rows, 'e2e-functional (webkit-mobile)')?.verdict).not.toBe('fail');
+    expect(row(rows, 'e2e-functional (webkit-mobile)')?.why).toMatch(/forecast \d+(\.\d+)? min/);
+    expect(h.playwright.filter((p) => p.project === 'webkit-mobile')).toHaveLength(1);
+  });
+
+  it('passes a job whose forecast is below the budget', async () => {
+    const h = harness({
+      categories: { ai: false, app: true, ui: false },
+      changedFiles: [LINKS_SPEC],
+      workflow: parseWorkflow(shardedText(false)),
+      forecast: webkitForecast(100, LINKS_SPEC),
+    });
+    const { rows } = await predict(h.context, h.deps);
+    expect(row(rows, 'e2e-functional (webkit-mobile)')?.verdict).not.toBe('fail');
+  });
+
+  it('forecasts the whole suite CI runs, not only the narrowed specs', async () => {
+    const h = harness({
+      categories: { ai: false, app: true, ui: false },
+      changedFiles: ['docs/07-workflows.md'],
+      workflow: parseWorkflow(shardedText(false)),
+      forecast: webkitForecast(WEBKIT_TESTS, LINKS_SPEC),
+    });
+    const { rows } = await predict(h.context, h.deps);
+    expect(row(rows, 'e2e-functional (webkit-mobile)')?.verdict).toBe('fail');
+  });
+
+  it('fails the forecast in a dry run too, because it needs no execution', async () => {
+    const h = harness({
+      categories: { ai: false, app: true, ui: false },
+      changedFiles: [LINKS_SPEC],
+      dryRun: true,
+      workflow: parseWorkflow(shardedText(false)),
+      forecast: webkitForecast(WEBKIT_TESTS, LINKS_SPEC),
+    });
+    const { outcome } = await predict(h.context, h.deps);
+    expect(outcome.code).toBe(EXIT.FAILED);
+  });
+
+  it('counts only the specs under the path the job runs', async () => {
+    const h = harness({
+      categories: { ai: false, app: true, ui: false },
+      changedFiles: [LINKS_SPEC],
+      workflow: parseWorkflow(shardedText(false)),
+      forecast: webkitForecast(WEBKIT_TESTS, 'components/x/X.e2e.ts'),
+    });
+    const { rows } = await predict(h.context, h.deps);
+    expect(row(rows, 'e2e-functional (webkit-mobile)')?.verdict).not.toBe('fail');
+  });
+
+  it('forecasts the visual job against its own timeout', async () => {
+    const h = harness({
+      categories: { ai: false, app: true, ui: true },
+      changedFiles: [],
+      forecast: forecastOf('chromium', VISUAL_SPEC, 5000),
+    });
+    const { rows } = await predict(h.context, h.deps);
+    const visual = row(rows, 'e2e-visual-chromium (chromium)');
+    expect(visual?.verdict).toBe('fail');
+    expect(visual?.why).toContain('35 min');
+  });
+
+  it('forecasts nothing for a job that ci.yml gives no timeout', async () => {
+    const h = harness({
+      categories: { ai: false, app: true, ui: false },
+      changedFiles: [LINKS_SPEC],
+      workflow: parseWorkflow(shardedText(false)),
+      forecast: { ...webkitForecast(WEBKIT_TESTS), timeoutMinutes: {} },
+    });
+    const { rows } = await predict(h.context, h.deps);
+    expect(row(rows, 'e2e-functional (webkit-mobile)')?.verdict).not.toBe('fail');
   });
 });
 
@@ -278,7 +574,7 @@ describe('predict', () => {
   it('runs a changed component spec on exactly the projects that list it, repeated with no retries', async () => {
     const h = harness({
       categories: { ai: false, app: true, ui: false },
-      changedFiles: ['components/sections/Hero/Hero.tsx'],
+      changedFiles: ['components/sections/Hero/Hero.test.tsx'],
     });
     const { rows } = await predict(h.context, h.deps);
     const e2e = h.playwright.filter((p) => p.args.includes(COMPONENT_SPEC));

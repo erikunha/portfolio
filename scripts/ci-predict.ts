@@ -43,6 +43,7 @@ import {
   type Deps,
   dockerExecPlaywrightArgs,
   dockerSessionArgs,
+  jobTimeouts,
   linuxImage,
   predict,
   type RunContext,
@@ -221,7 +222,12 @@ interface PlaywrightListSuite {
   suites?: PlaywrightListSuite[];
 }
 
-function listSpecProjects(root: string): Map<string, Set<string>> {
+interface SpecListing {
+  projects: Map<string, Set<string>>;
+  testCounts: Map<string, Map<string, number>>;
+}
+
+function listSpecs(root: string): SpecListing {
   const listed = spawnSync('pnpm', ['exec', 'playwright', 'test', '--list', '--reporter=json'], {
     cwd: root,
     encoding: 'utf8',
@@ -235,17 +241,23 @@ function listSpecProjects(root: string): Map<string, Set<string>> {
     suites: PlaywrightListSuite[];
   };
   const projects = new Map<string, Set<string>>();
+  const testCounts = new Map<string, Map<string, number>>();
   const visit = (suite: PlaywrightListSuite) => {
     for (const spec of suite.specs ?? []) {
       const file = relative(root, resolve(parsed.config.rootDir, spec.file));
       const set = projects.get(file) ?? new Set<string>();
-      for (const test of spec.tests) set.add(test.projectName);
+      const counts = testCounts.get(file) ?? new Map<string, number>();
+      for (const test of spec.tests) {
+        set.add(test.projectName);
+        counts.set(test.projectName, (counts.get(test.projectName) ?? 0) + 1);
+      }
       projects.set(file, set);
+      testCounts.set(file, counts);
     }
     for (const child of suite.suites ?? []) visit(child);
   };
   for (const suite of parsed.suites) visit(suite);
-  return projects;
+  return { projects, testCounts };
 }
 
 function findLinkedCheckout(): string | null {
@@ -335,7 +347,8 @@ async function main(): Promise<number> {
   const changedFiles = git(['diff', '--name-only', `${base.sha}...${headSha}`])
     .split('\n')
     .filter(Boolean);
-  const workflow = parseWorkflow(readFileSync(join(root, CI_WORKFLOW), 'utf8'));
+  const workflowText = readFileSync(join(root, CI_WORKFLOW), 'utf8');
+  const workflow = parseWorkflow(workflowText);
   const packageManager = (
     JSON.parse(readFileSync(join(root, 'package.json'), 'utf8')) as { packageManager: string }
   ).packageManager;
@@ -374,7 +387,7 @@ async function main(): Promise<number> {
       err(`warning: ${stamp.reason}; the build and the servers on it are not verified`);
   }
 
-  const specProjects = listSpecProjects(root);
+  const { projects: specProjects, testCounts } = listSpecs(root);
   const specSources = new Map<string, string>();
   for (const spec of specProjects.keys())
     specSources.set(spec, readFileSync(join(root, spec), 'utf8'));
@@ -592,6 +605,7 @@ async function main(): Promise<number> {
     changedFiles,
     specProjects,
     specSources,
+    forecast: { timeoutMinutes: jobTimeouts(workflowText), testCounts },
     evalRun: linked === null ? null : { linkedCheckout: linked, workdir: root },
   };
 
