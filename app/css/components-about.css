@@ -134,6 +134,7 @@
     padding: var(--spacing-1) var(--spacing-2);
     font-size: var(--text-xs);
     letter-spacing: var(--tracking-md);
+    overflow-wrap: break-word;
   }
 
   .ab-cmd {
