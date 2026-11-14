@@ -266,7 +266,7 @@
 
   @media (min-width: theme(--viewport-narrow)) {
     #sec-contact {
-      --module-estimate: 2470px;
+      --module-estimate: 2490px;
     }
   }
 
