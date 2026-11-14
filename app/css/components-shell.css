@@ -285,6 +285,13 @@
     overflow-wrap: anywhere;
   }
 
+  @media (max-width: theme(--viewport-below-narrow)) {
+    .shell-ai-notice,
+    .shell-privacy-notice {
+      padding-inline: var(--spacing-3);
+    }
+  }
+
   .shell-privacy-notice p {
     margin: 0;
   }
