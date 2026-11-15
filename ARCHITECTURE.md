@@ -279,13 +279,20 @@ components/client/OfflineNotice/      # offline banner
 components/client/PrintButton/        # print action for /cv and /summary
 components/client/ToTopButton/        # scroll-to-top control
 components/client/InteractiveShell/   # streaming shell island
-components/client/InteractiveShell/useAskStream.ts  # shell request, idle timeout and rAF-coalesced stream state
+components/client/InteractiveShell/transcript.ts  # Line union on kind, bounded appendLines, formatRemaining, transcriptReducer
+components/client/InteractiveShell/shell-input.ts  # parseShellInput, historyStepFor, isCompositionEnter
+components/client/InteractiveShell/settled-lines.ts  # lines that settle an answer, failureForResponse
+components/client/InteractiveShell/ask-request.ts  # one AbortController per /api/ask request, aborted by stop and unmount
+components/client/InteractiveShell/receipt-view.ts  # receipt view reducer and outcomeAction
+components/client/InteractiveShell/useAskStream.ts  # shell request, idle timeout and rAF-coalesced stream state, dispatches transcript actions
 components/client/InteractiveShell/ShellLines.client.tsx  # one feed line per kind, thinking timer, email link, rate-limit countdown
 components/client/InteractiveShell/ShellToolbar.client.tsx  # command chips with one tab stop and Home, End and arrow roving focus
 components/client/InteractiveShell/useCommandHistory.ts  # recalled commands capped at SHELL_LIMITS.commandHistory, unsent draft restored
-components/client/InteractiveShell/usePrivacyCommands.ts  # privacy list and forget branches, one forget in flight
+components/client/InteractiveShell/usePrivacyCommands.ts  # privacy list and forget branches, one forget in flight, dispatches transcript actions
 components/client/InteractiveShell/ConversationReceipt.client.tsx  # privacy receipt after the latest answer: copy id, forget conversation with confirm, pending, outage, offline and wait states
 components/client/InteractiveShell/privacy-command.ts  # parser for the privacy shell command
+lib/use-announcer.client.tsx          # live-region announcer hook shared by the shell and ContactTimezone
+lib/use-countdown.client.ts           # clock that calls back when a deadline passes, used by the receipt wait
 lib/request-refs.client.ts            # this tab's request ids: sessionStorage with an in-memory fallback
 lib/ask/conversation.client.ts        # this tab's ask conversation: random id, question count and its request ids, rotated after a forget
 lib/ask/forget-request.client.ts      # /api/log/forget client: 200, 429, 503, offline and failure outcomes, sequential batches

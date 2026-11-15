@@ -42,6 +42,20 @@ render, and a screen reader on the `aria-live` region observes mutations React
 never announced. Streaming through React state, coalesced one update per
 animation frame, keeps the DOM React-owned and INP frame-bounded.
 
+**Shell structure.** The shell island keeps its rules in pure modules under
+`components/client/InteractiveShell/`: `transcript.ts` (`Line`, a union on `kind`;
+the bounded `appendLines`; `formatRemaining`; `transcriptReducer` with the actions
+append, remove, settle, forget-conversation and clear), `shell-input.ts`
+(`parseShellInput`, `historyStepFor`, `isCompositionEnter`), `settled-lines.ts`
+(`settledLines`, `failureForResponse`), `ask-request.ts` (`createAskRequest`: one
+`AbortController`, aborted by stop and by unmount) and `receipt-view.ts` (the receipt
+view reducer and `outcomeAction`). `InteractiveShell` owns
+`useReducer(transcriptReducer)`; `useAskStream` and `usePrivacyCommands` dispatch
+its actions. `useAnnouncer` (`lib/use-announcer.client.tsx`) serves the shell and
+`ContactTimezone`; `useCountdown` (`lib/use-countdown.client.ts`) serves the receipt
+wait. `InteractiveShell.render-count.test.tsx` holds one render per keystroke and
+per later streamed frame (two on the first).
+
 **How it is held.** Mechanical gate: `scripts/gates/check-client-naming.ts`
 (`pnpm check:client-naming`) runs in the `quality-fast` CI job and in the
 `pre-push` hook. It fails the build if any `'use client'` file outside those
