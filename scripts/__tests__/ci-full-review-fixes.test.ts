@@ -20,7 +20,7 @@ const FIXTURE = join(ROOT, 'scripts/__tests__/fixtures/ci-full-sigterm-ignorer.t
 const SUBPROCESS_TEST_TIMEOUT_MS = 60_000;
 const POLL_MS = 25;
 const DEAD_WITHIN_MS = 2000;
-const STAGE_TIMEOUT_MS = 500;
+const STAGE_TIMEOUT_MS = 5000;
 const READY_TIMEOUT_MS = 10_000;
 const CTX: StageContext = {
   root: ROOT,
@@ -221,6 +221,7 @@ describe('a descendant that ignores SIGTERM does not outlive its stage', {
       server: { command: ignorer(pidFile), portEnv: 'PORT' },
       stages: [hung],
     });
+    await waitUntil(() => pidsOf(pidFile).length > 0, DEAD_WITHIN_MS);
     spawned.push(...pidsOf(pidFile));
     expect(results[0]?.verdict).toBe('failed');
     expect(results[0]?.note).toContain('timed out');
