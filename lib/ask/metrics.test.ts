@@ -5,7 +5,7 @@ const { getMock, getRedisMock } = vi.hoisted(() => {
   return { getMock, getRedisMock: vi.fn(() => ({ get: getMock })) };
 });
 
-vi.mock('@/lib/rate-limit', () => ({
+vi.mock('@/lib/redis', () => ({
   getRedis: getRedisMock,
 }));
 

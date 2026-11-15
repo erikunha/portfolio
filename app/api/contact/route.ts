@@ -10,7 +10,8 @@ import {
 import { ContactSchema, isHoneypotTripped } from '@/lib/contact/validation';
 import { HTTP_STATUS } from '@/lib/http-status';
 import { log } from '@/lib/log';
-import { getContactLimit, getRedis } from '@/lib/rate-limit';
+import { getContactLimit } from '@/lib/rate-limit';
+import { getRedis } from '@/lib/redis';
 import { localeFromRequest } from '@/lib/server/request-locale';
 import { defineHandler, err, ok } from '@/lib/server/route';
 

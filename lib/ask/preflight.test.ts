@@ -9,10 +9,10 @@ const env = vi.hoisted(() => ({ ASK_ENABLED: undefined as string | undefined }))
 const readBoundedBody = vi.hoisted(() => vi.fn());
 
 vi.mock('@/lib/env', () => ({ env }));
+vi.mock('@/lib/redis', () => ({ hasRedisCredentials: vi.fn(() => true) }));
 vi.mock('@/lib/rate-limit', () => ({
   getClientIp: vi.fn(() => '127.0.0.1'),
   getAskLimit: vi.fn(() => ({ limit })),
-  hasRedisCredentials: vi.fn(() => true),
 }));
 vi.mock('@/lib/ask/budget', () => ({ reserveBudget }));
 vi.mock('@/lib/ask/dedup', () => ({ checkIdenticalQuestion, releaseIdenticalQuestion }));

@@ -1,6 +1,6 @@
 import 'server-only';
 
-import { getRedis } from '@/lib/rate-limit';
+import { getRedis } from '@/lib/redis';
 import { utcDay } from '@/lib/time';
 
 const COUNTER_TTL_DAYS = 32;

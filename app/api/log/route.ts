@@ -2,12 +2,8 @@ import { z } from 'zod';
 
 import { HTTP_STATUS } from '@/lib/http-status';
 import { log } from '@/lib/log';
-import {
-  getErrorLogDailyLimit,
-  getErrorLogIpDailyLimit,
-  getErrorLogLimit,
-  getRedis,
-} from '@/lib/rate-limit';
+import { getErrorLogDailyLimit, getErrorLogIpDailyLimit, getErrorLogLimit } from '@/lib/rate-limit';
+import { getRedis } from '@/lib/redis';
 import { defineHandler, err, ok } from '@/lib/server/route';
 import { utcDay } from '@/lib/time';
 

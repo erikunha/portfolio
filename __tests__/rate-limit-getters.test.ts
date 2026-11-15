@@ -80,7 +80,7 @@ describe('getRedis: singleton', () => {
   });
 
   it('returns the same Redis instance on repeated calls within a module lifecycle', async () => {
-    const { getRedis } = await import('@/lib/rate-limit');
+    const { getRedis } = await import('@/lib/redis');
     const a = getRedis();
     const b = getRedis();
     expect(a).toBe(b);

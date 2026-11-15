@@ -1,6 +1,6 @@
 import 'server-only';
 
-import { getRedis } from '@/lib/rate-limit';
+import { getRedis } from '@/lib/redis';
 
 const OUTBOX_KEY = 'contact:outbox';
 const ATTEMPTS_KEY = 'contact:outbox:attempts';

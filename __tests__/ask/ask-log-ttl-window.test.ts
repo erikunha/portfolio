@@ -43,10 +43,12 @@ describe('/api/log/forget reaches a key in its final day before expiry', () => {
     vi.setSystemTime(NOW);
     redisDelMock.mockReset();
     redisDelMock.mockResolvedValue(1);
+    vi.doMock('@/lib/redis', () => ({
+      getRedis: vi.fn(() => ({ del: redisDelMock, mget: vi.fn(async () => []) })),
+    }));
     vi.doMock('@/lib/rate-limit', () => ({
       getClientIp: vi.fn(() => '127.0.0.1'),
       getForgetLimit: vi.fn(() => ({ limit: vi.fn(async () => ({ success: true })) })),
-      getRedis: vi.fn(() => ({ del: redisDelMock, mget: vi.fn(async () => []) })),
     }));
     vi.doMock('@/lib/contact/outbox', () => ({
       contactMessageKey: (id: string) => `contact:msg:${id}`,
@@ -61,6 +63,7 @@ describe('/api/log/forget reaches a key in its final day before expiry', () => {
   afterEach(() => {
     vi.useRealTimers();
     vi.doUnmock('@/lib/rate-limit');
+    vi.doUnmock('@/lib/redis');
     vi.doUnmock('@/lib/contact/outbox');
     vi.doUnmock('@/lib/ip-hash');
     vi.doUnmock('@/lib/log');

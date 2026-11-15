@@ -13,12 +13,12 @@ describe('/api/log endpoint', () => {
     dailyLimitMock.mockResolvedValue({ success: true });
     ipDailyLimitMock.mockReset();
     ipDailyLimitMock.mockResolvedValue({ success: true });
+    vi.doMock('@/lib/redis', () => ({ getRedis: vi.fn(() => ({ set: redisSetMock })) }));
     vi.doMock('@/lib/rate-limit', () => ({
       getClientIp: vi.fn(() => '127.0.0.1'),
       getErrorLogLimit: vi.fn(() => ({ limit: vi.fn(async () => ({ success: true })) })),
       getErrorLogDailyLimit: vi.fn(() => ({ limit: dailyLimitMock })),
       getErrorLogIpDailyLimit: vi.fn(() => ({ limit: ipDailyLimitMock })),
-      getRedis: vi.fn(() => ({ set: redisSetMock })),
     }));
     vi.doMock('@/lib/ip-hash', () => ({ hashIp: vi.fn(async () => 'hashed-ip-test') }));
     vi.doMock('@/lib/log', () => ({
@@ -28,6 +28,7 @@ describe('/api/log endpoint', () => {
 
   afterEach(() => {
     vi.doUnmock('@/lib/rate-limit');
+    vi.doUnmock('@/lib/redis');
     vi.doUnmock('@/lib/ip-hash');
     vi.doUnmock('@/lib/log');
   });

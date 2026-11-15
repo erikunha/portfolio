@@ -8,6 +8,7 @@ const admit = vi.hoisted(() => async () => {
   return { success: limiterAdmits.value };
 });
 
+vi.mock('@/lib/redis', () => ({ getRedis: vi.fn(() => null) }));
 vi.mock('@/lib/rate-limit', () => ({
   getClientIp: vi.fn(() => '127.0.0.1'),
   getAskLimit: vi.fn(() => ({ limit: admit })),
@@ -15,7 +16,6 @@ vi.mock('@/lib/rate-limit', () => ({
   getErrorLogLimit: vi.fn(() => ({ limit: admit })),
   getErrorLogDailyLimit: vi.fn(() => ({ limit: admit })),
   getErrorLogIpDailyLimit: vi.fn(() => ({ limit: admit })),
-  getRedis: vi.fn(() => null),
 }));
 vi.mock('@/lib/ask/budget', () => ({
   reserveBudget: vi.fn(async () => ({

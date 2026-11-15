@@ -7,11 +7,9 @@ const limit = vi.fn(async () => ({ success: false, reset: 0 }));
 const persist = vi.fn(async () => undefined);
 
 vi.mock('ai', () => ({ streamText: vi.fn() }));
+vi.mock('@/lib/redis', () => ({ hasRedisCredentials: vi.fn(() => false) }));
 vi.mock('@/lib/rate-limit', async () =>
-  (await import('../helpers/ask-route')).rateLimitModule({
-    getAskLimit: vi.fn(() => ({ limit })),
-    hasRedisCredentials: vi.fn(() => false),
-  }),
+  (await import('../helpers/ask-route')).rateLimitModule({ getAskLimit: vi.fn(() => ({ limit })) }),
 );
 vi.mock('@/lib/ask/budget', async () =>
   (await import('../helpers/ask-route')).budgetModule({

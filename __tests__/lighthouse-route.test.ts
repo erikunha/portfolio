@@ -22,13 +22,15 @@ vi.mock('@/lib/lighthouse-scores', () => ({
 
 const limitMock = vi.fn();
 
-vi.mock('@/lib/rate-limit', () => ({
-  getClientIp: vi.fn(() => '203.0.113.7'),
-  getLighthouseLimit: vi.fn(() => ({ limit: limitMock })),
+vi.mock('@/lib/redis', () => ({
   getRedis: vi.fn(() => ({
     get: vi.fn(async () => null),
     set: vi.fn(async () => 'OK'),
   })),
+}));
+vi.mock('@/lib/rate-limit', () => ({
+  getClientIp: vi.fn(() => '203.0.113.7'),
+  getLighthouseLimit: vi.fn(() => ({ limit: limitMock })),
 }));
 
 vi.mock('@/lib/log', () => ({

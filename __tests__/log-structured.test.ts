@@ -91,10 +91,10 @@ describe('route integration: structured logging through the facade', () => {
     vi.doMock('@/lib/log', () => ({
       log: { info: logInfoMock, warn: vi.fn(), error: logErrorMock, debug: vi.fn() },
     }));
+    vi.doMock('@/lib/redis', () => ({ getRedis: vi.fn(() => ({ set: redisSetMock })) }));
     vi.doMock('@/lib/rate-limit', () => ({
       getClientIp: vi.fn(() => '127.0.0.1'),
       getContactLimit: vi.fn(() => ({ limit: vi.fn(async () => ({ success: true })) })),
-      getRedis: vi.fn(() => ({ set: redisSetMock })),
     }));
     vi.doMock('@/lib/ip-hash', () => ({
       hashIp: vi.fn(async () => 'hashed-ip-test'),
@@ -109,6 +109,7 @@ describe('route integration: structured logging through the facade', () => {
   afterEach(() => {
     vi.doUnmock('@/lib/log');
     vi.doUnmock('@/lib/rate-limit');
+    vi.doUnmock('@/lib/redis');
     vi.doUnmock('@/lib/ip-hash');
     vi.doUnmock('resend');
   });

@@ -1,4 +1,4 @@
-import { getRedis } from '@/lib/rate-limit';
+import { getRedis } from '@/lib/redis';
 import { withTimeout } from '@/lib/with-timeout';
 
 const REDIS_RESULT_KEY = 'ask:eval:latest';

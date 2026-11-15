@@ -3,10 +3,10 @@ import { env } from '@/lib/env';
 import { GOOGLE_API_KEY_HEADER } from '@/lib/google-api';
 import { HTTP_STATUS } from '@/lib/http-status';
 import { log } from '@/lib/log';
+import { getRedis } from '@/lib/redis';
 import { afterResponse } from '@/lib/server/after-response';
 import { MS_PER_MINUTE } from '@/lib/time';
 import { ReadTimeoutError, SSR_REDIS_TIMEOUT_MS, withTimeout } from '@/lib/with-timeout';
-import { getRedis } from './rate-limit';
 
 const SERVER_ERROR_STATUS_CEILING = 599;
 

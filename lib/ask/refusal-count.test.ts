@@ -5,7 +5,7 @@ const expire = vi.hoisted(() => vi.fn());
 const exec = vi.hoisted(() => vi.fn(async () => [1, 1]));
 const logError = vi.hoisted(() => vi.fn());
 
-vi.mock('@/lib/rate-limit', () => ({
+vi.mock('@/lib/redis', () => ({
   getRedis: () => ({ pipeline: () => ({ incr, expire, exec }) }),
 }));
 vi.mock('@/lib/log', () => ({ log: { error: logError, info: vi.fn(), warn: vi.fn() } }));

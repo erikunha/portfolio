@@ -7,11 +7,8 @@ const mockStreamText = vi.fn();
 vi.mock('ai', () => ({ streamText: mockStreamText }));
 
 const settleBudgetMock = vi.fn(async (..._args: unknown[]): Promise<void> => undefined);
-vi.mock('@/lib/rate-limit', async () =>
-  (await import('../helpers/ask-route')).rateLimitModule({
-    hasRedisCredentials: vi.fn(() => true),
-  }),
-);
+vi.mock('@/lib/redis', () => ({ hasRedisCredentials: vi.fn(() => true) }));
+vi.mock('@/lib/rate-limit', async () => (await import('../helpers/ask-route')).rateLimitModule());
 vi.mock('@/lib/ask/budget', async () =>
   (await import('../helpers/ask-route')).budgetModule({
     reserveBudget: vi.fn(async () => ({

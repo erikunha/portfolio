@@ -11,7 +11,8 @@ import {
 import { contactMessageKey, removePendingContact } from '@/lib/contact/outbox';
 import { HTTP_STATUS } from '@/lib/http-status';
 import { log } from '@/lib/log';
-import { getForgetLimit, getRedis } from '@/lib/rate-limit';
+import { getForgetLimit } from '@/lib/rate-limit';
+import { getRedis } from '@/lib/redis';
 import { defineHandler, err, ok } from '@/lib/server/route';
 
 const ForgetPayload = z.object({

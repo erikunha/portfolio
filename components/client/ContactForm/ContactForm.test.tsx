@@ -423,10 +423,10 @@ const redisSetMock = vi.fn();
 const resendSendMock = vi.fn();
 const rateLimitMock = vi.fn(async () => ({ success: true }));
 
+vi.mock('@/lib/redis', () => ({ getRedis: vi.fn(() => ({ set: redisSetMock })) }));
 vi.mock('@/lib/rate-limit', () => ({
   getClientIp: vi.fn(() => '127.0.0.1'),
   getContactLimit: vi.fn(() => ({ limit: rateLimitMock })),
-  getRedis: vi.fn(() => ({ set: redisSetMock })),
 }));
 
 vi.mock('@/lib/ip-hash', () => ({

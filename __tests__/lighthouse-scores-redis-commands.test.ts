@@ -29,7 +29,7 @@ vi.mock('next/server', async (importOriginal) => ({
   },
 }));
 
-vi.mock('@/lib/rate-limit', () => ({
+vi.mock('@/lib/redis', () => ({
   getRedis: () => ({
     get: vi.fn(async (key: string) => {
       commands.push({ op: 'get', key });

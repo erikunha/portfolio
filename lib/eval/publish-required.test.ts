@@ -3,8 +3,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const { mockSet } = vi.hoisted(() => ({ mockSet: vi.fn(async () => 'OK') }));
 
-vi.mock('@/lib/rate-limit', async (importOriginal) => {
-  const original = await importOriginal<typeof import('@/lib/rate-limit')>();
+vi.mock('@/lib/redis', async (importOriginal) => {
+  const original = await importOriginal<typeof import('@/lib/redis')>();
   return {
     hasRedisCredentials: original.hasRedisCredentials,
     REDIS_ENV_PAIRS: original.REDIS_ENV_PAIRS,

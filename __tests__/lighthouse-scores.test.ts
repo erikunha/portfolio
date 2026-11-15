@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 const mockGet = vi.fn();
 const mockSet = vi.fn();
-vi.mock('@/lib/rate-limit', () => ({
+vi.mock('@/lib/redis', () => ({
   getRedis: () => ({ get: mockGet, set: mockSet }),
 }));
 

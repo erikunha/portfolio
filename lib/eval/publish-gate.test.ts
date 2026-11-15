@@ -8,7 +8,7 @@ import {
   isPublishEnabled,
   restoreRedisCredentials,
 } from '@/lib/eval/publish-gate';
-import { REDIS_ENV_PAIRS } from '@/lib/rate-limit';
+import { REDIS_ENV_PAIRS } from '@/lib/redis';
 
 const workflow = (name: string) =>
   readFileSync(`${process.cwd()}/.github/workflows/${name}`, 'utf8');

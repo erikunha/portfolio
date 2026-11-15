@@ -4,7 +4,7 @@ const incr = vi.hoisted(() => vi.fn());
 const expire = vi.hoisted(() => vi.fn());
 const exec = vi.hoisted(() => vi.fn(async () => [1, 1]));
 
-vi.mock('@/lib/rate-limit', () => ({
+vi.mock('@/lib/redis', () => ({
   getRedis: () => ({ pipeline: () => ({ incr, expire, exec }) }),
 }));
 

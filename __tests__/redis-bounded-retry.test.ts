@@ -29,7 +29,7 @@ describe('getRedis client', () => {
   });
 
   it('bounds the client retry so an outage cannot stall a render', async () => {
-    const { getRedis } = await import('@/lib/rate-limit');
+    const { getRedis } = await import('@/lib/redis');
     getRedis();
     const config = fromEnv.mock.calls[0]?.[0] as {
       retry: { retries: number; backoff: (count: number) => number };
@@ -40,7 +40,7 @@ describe('getRedis client', () => {
   });
 
   it('builds the client once', async () => {
-    const { getRedis } = await import('@/lib/rate-limit');
+    const { getRedis } = await import('@/lib/redis');
     expect(getRedis()).toBe(getRedis());
     expect(fromEnv).toHaveBeenCalledTimes(1);
   });

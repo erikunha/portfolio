@@ -4,7 +4,7 @@ const getMock = vi.fn();
 const setMock = vi.fn();
 const getRedisMock = vi.fn(() => ({ get: getMock, set: setMock }));
 
-vi.mock('@/lib/rate-limit', () => ({
+vi.mock('@/lib/redis', () => ({
   getRedis: getRedisMock,
 }));
 

@@ -24,14 +24,16 @@ function makeOkResult(text = 'ok') {
   };
 }
 
+vi.mock('@/lib/redis', () => ({
+  getRedis: vi.fn(() => ({
+    set: vi.fn(async () => 'OK'),
+    zcard: vi.fn(async () => 0),
+    multi: () => ({ hset: vi.fn(), zadd: vi.fn(), exec: outboxExecMock }),
+  })),
+}));
 vi.mock('@/lib/rate-limit', async () =>
   (await import('../helpers/ask-route')).rateLimitModule({
     getContactLimit: vi.fn(() => ({ limit: vi.fn(async () => ({ success: true })) })),
-    getRedis: vi.fn(() => ({
-      set: vi.fn(async () => 'OK'),
-      zcard: vi.fn(async () => 0),
-      multi: () => ({ hset: vi.fn(), zadd: vi.fn(), exec: outboxExecMock }),
-    })),
   }),
 );
 vi.mock('@/lib/ask/budget', async () => (await import('../helpers/ask-route')).budgetModule());

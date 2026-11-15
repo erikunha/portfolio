@@ -9,7 +9,7 @@ const redis = {
   hincrby: vi.fn(),
   zcard: vi.fn(),
 };
-vi.mock('@/lib/rate-limit', () => ({ getRedis: () => redis }));
+vi.mock('@/lib/redis', () => ({ getRedis: () => redis }));
 
 describe('contact outbox', () => {
   beforeEach(() => {

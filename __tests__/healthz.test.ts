@@ -11,8 +11,8 @@ vi.mock('next/server', async (importOriginal) => ({
   connection: connectionMock,
 }));
 
+vi.mock('@/lib/redis', () => ({ getRedis: vi.fn(() => ({ get: redisMockGet })) }));
 vi.mock('@/lib/rate-limit', () => ({
-  getRedis: vi.fn(() => ({ get: redisMockGet })),
   getHealthzLimit: vi.fn(() => ({ limit: limitMock })),
   getClientIp: getClientIpMock,
 }));

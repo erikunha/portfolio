@@ -2,7 +2,8 @@ import { connection, type NextRequest } from 'next/server';
 import { commitSha } from '@/lib/env-build';
 import { HTTP_STATUS } from '@/lib/http-status';
 import { log } from '@/lib/log';
-import { getHealthzLimit, getRedis } from '@/lib/rate-limit';
+import { getHealthzLimit } from '@/lib/rate-limit';
+import { getRedis } from '@/lib/redis';
 import { clientRateLimitKey } from '@/lib/server/rate-limit-key';
 import { err } from '@/lib/server/route';
 

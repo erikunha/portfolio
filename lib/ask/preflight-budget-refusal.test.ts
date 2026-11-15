@@ -7,10 +7,10 @@ const reserveBudget = vi.hoisted(() => vi.fn());
 const countAskRefusal = vi.hoisted(() => vi.fn(async () => undefined));
 
 vi.mock('@/lib/env', () => ({ env: { ASK_ENABLED: undefined } }));
+vi.mock('@/lib/redis', () => ({ hasRedisCredentials: vi.fn(() => true) }));
 vi.mock('@/lib/rate-limit', () => ({
   getClientIp: vi.fn(() => '127.0.0.1'),
   getAskLimit: vi.fn(() => ({ limit: vi.fn(async () => ({ success: true })) })),
-  hasRedisCredentials: vi.fn(() => true),
 }));
 vi.mock('@/lib/ask/budget', () => ({ reserveBudget }));
 vi.mock('@/lib/ask/dedup', () => ({ checkIdenticalQuestion, releaseIdenticalQuestion }));

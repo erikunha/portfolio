@@ -10,10 +10,10 @@ const redisSet = vi.fn();
 const limit = vi.fn();
 const logger = { info: vi.fn(), error: vi.fn(), warn: vi.fn() };
 
+vi.mock('@/lib/redis', () => ({ getRedis: () => ({ set: redisSet }) }));
 vi.mock('@/lib/rate-limit', () => ({
   getClientIp: () => '127.0.0.1',
   getContactLimit: () => ({ limit }),
-  getRedis: () => ({ set: redisSet }),
 }));
 vi.mock('@/lib/ip-hash', () => ({ hashIp: async () => 'hashed-ip' }));
 vi.mock('@/lib/log', () => ({ log: logger }));

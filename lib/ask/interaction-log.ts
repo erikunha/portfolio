@@ -6,7 +6,7 @@ import { redactPii } from '@/lib/ask/redact-pii';
 import type { AskInteractionStatus, PostHocVerdict } from '@/lib/ask/types';
 import { log } from '@/lib/log';
 import { describeError } from '@/lib/log-error';
-import { getRedis } from '@/lib/rate-limit';
+import { getRedis } from '@/lib/redis';
 import { utcDay } from '@/lib/time';
 
 const SECONDS_PER_DAY = 24 * 60 * 60;

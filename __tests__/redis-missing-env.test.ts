@@ -17,14 +17,14 @@ describe('getRedis without Upstash credentials', () => {
   });
 
   it('returns a client without throwing synchronously', async () => {
-    const { getRedis } = await import('@/lib/rate-limit');
+    const { getRedis } = await import('@/lib/redis');
     expect(() => getRedis()).not.toThrow();
   });
 
   it('rejects a command without waiting on a timer, so no retry backs off against a dead endpoint', async () => {
     vi.useFakeTimers();
     try {
-      const { getRedis } = await import('@/lib/rate-limit');
+      const { getRedis } = await import('@/lib/redis');
       await expect(getRedis().get('any')).rejects.toThrow(/UPSTASH_REDIS_REST/);
       expect(
         vi.getTimerCount(),
@@ -36,7 +36,7 @@ describe('getRedis without Upstash credentials', () => {
   });
 
   it('lets a caller recover through .catch', async () => {
-    const { getRedis } = await import('@/lib/rate-limit');
+    const { getRedis } = await import('@/lib/redis');
     const recovered = await getRedis()
       .get('any')
       .catch(() => 'fallback');
@@ -44,7 +44,7 @@ describe('getRedis without Upstash credentials', () => {
   });
 
   it('rejects a pipeline on exec while keeping the chain synchronous', async () => {
-    const { getRedis } = await import('@/lib/rate-limit');
+    const { getRedis } = await import('@/lib/redis');
     const pipe = getRedis().pipeline();
     pipe.incrby('k', 1);
     pipe.expire('k', 1, 'NX');
@@ -64,7 +64,7 @@ describe('getRedis with one Upstash credential missing', () => {
     vi.resetModules();
     vi.stubEnv('UPSTASH_REDIS_REST_URL', env.url);
     vi.stubEnv('UPSTASH_REDIS_REST_TOKEN', env.token);
-    const { getRedis } = await import('@/lib/rate-limit');
+    const { getRedis } = await import('@/lib/redis');
     await expect(getRedis().get('any')).rejects.toThrow(/UPSTASH_REDIS_REST/);
   });
 });
@@ -97,7 +97,7 @@ describe('hasRedisCredentials', () => {
     ]) {
       vi.stubEnv(key, (env as Record<string, string>)[key] ?? '');
     }
-    const { hasRedisCredentials } = await import('@/lib/rate-limit');
+    const { hasRedisCredentials } = await import('@/lib/redis');
     expect(hasRedisCredentials()).toBe(expected);
   });
 });

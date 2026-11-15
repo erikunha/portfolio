@@ -5,7 +5,7 @@ import {
   type RedisCredentials,
   restoreRedisCredentials,
 } from '@/lib/eval/publish-gate';
-import { getRedis, hasRedisCredentials } from '@/lib/rate-limit';
+import { getRedis, hasRedisCredentials } from '@/lib/redis';
 
 export type PublishResult = { published: boolean; skipped?: string; error?: string };
 

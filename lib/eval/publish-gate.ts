@@ -1,4 +1,4 @@
-import { REDIS_ENV_PAIRS } from '@/lib/rate-limit';
+import { REDIS_ENV_PAIRS } from '@/lib/redis';
 
 export const EVAL_PUBLISH_ENV = 'EVAL_PUBLISH';
 export const EVAL_PUBLISH_VALUE = '1';

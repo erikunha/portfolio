@@ -5,7 +5,7 @@ import { env } from '@/lib/env';
 import { HTTP_STATUS } from '@/lib/http-status';
 import { refreshScores, type Strategy } from '@/lib/lighthouse-scores';
 import { log } from '@/lib/log';
-import { getRedis } from '@/lib/rate-limit';
+import { getRedis } from '@/lib/redis';
 import { isCronAuthorized } from '@/lib/server/cron-auth';
 import { err } from '@/lib/server/route';
 

@@ -19,7 +19,7 @@ const mockRedisPipeline = vi.fn(() => ({
   expire: vi.fn().mockReturnThis(),
   exec: mockPipeExec,
 }));
-vi.mock('@/lib/rate-limit', () => ({
+vi.mock('@/lib/redis', () => ({
   getRedis: vi.fn(() => ({ set: mockRedisSet, del: mockRedisDel, pipeline: mockRedisPipeline })),
 }));
 

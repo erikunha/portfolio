@@ -15,10 +15,12 @@ const send = vi.fn();
 const limit = vi.fn();
 const logger = { info: vi.fn(), error: vi.fn(), warn: vi.fn() };
 
+vi.mock('@/lib/redis', () => ({
+  getRedis: () => ({ set: redisSet, del: redisDel, zcard, multi: () => transaction }),
+}));
 vi.mock('@/lib/rate-limit', () => ({
   getClientIp: () => '127.0.0.1',
   getContactLimit: () => ({ limit }),
-  getRedis: () => ({ set: redisSet, del: redisDel, zcard, multi: () => transaction }),
 }));
 vi.mock('@/lib/ip-hash', () => ({ hashIp: async () => 'hashed-ip' }));
 vi.mock('@/lib/log', () => ({ log: logger }));
@@ -268,14 +270,17 @@ describe('/api/log/forget for a contact message', () => {
     del.mockResolvedValue(1);
     multiTx.exec.mockResolvedValue([1, 1]);
     forgetLimit.mockResolvedValue({ success: true });
+    vi.doMock('@/lib/redis', () => ({
+      getRedis: () => ({ del, mget: async () => [], multi: () => multiTx }),
+    }));
     vi.doMock('@/lib/rate-limit', () => ({
       getClientIp: () => '127.0.0.1',
       getForgetLimit: () => ({ limit: forgetLimit }),
-      getRedis: () => ({ del, mget: async () => [], multi: () => multiTx }),
     }));
   });
   afterEach(() => {
     vi.doUnmock('@/lib/rate-limit');
+    vi.doUnmock('@/lib/redis');
   });
 
   const forget = (body: unknown) =>

@@ -215,7 +215,7 @@ describe('AiMetricsSection: on-page AI eval/cost metrics (RSC)', () => {
     ],
   ] as const)('explains the %s %s cause in the error box', async (locale, cause, explanation) => {
     const { ReadTimeoutError } = await import('@/lib/with-timeout');
-    const { RedisNotConfiguredError } = await import('@/lib/rate-limit');
+    const { RedisNotConfiguredError } = await import('@/lib/redis');
     const error =
       cause === 'timeout'
         ? new ReadTimeoutError()

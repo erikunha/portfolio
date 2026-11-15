@@ -25,10 +25,10 @@ const budgetMock = vi.hoisted(() =>
 );
 
 vi.mock('ai', () => ({ streamText: vi.fn() }));
+vi.mock('@/lib/redis', () => ({ hasRedisCredentials: vi.fn(() => false) }));
 vi.mock('@/lib/rate-limit', async () =>
   (await import('../helpers/ask-route')).rateLimitModule({
     getAskLimit: vi.fn(() => ({ limit: limitMock })),
-    hasRedisCredentials: vi.fn(() => false),
   }),
 );
 vi.mock('@/lib/ask/budget', async () =>

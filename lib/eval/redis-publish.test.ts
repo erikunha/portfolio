@@ -5,9 +5,8 @@ const { mockSet, mockGetRedis } = vi.hoisted(() => {
   return { mockSet, mockGetRedis: vi.fn(() => ({ set: mockSet })) };
 });
 
-vi.mock('@/lib/rate-limit', async (importOriginal) => ({
-  hasRedisCredentials: (await importOriginal<typeof import('@/lib/rate-limit')>())
-    .hasRedisCredentials,
+vi.mock('@/lib/redis', async (importOriginal) => ({
+  hasRedisCredentials: (await importOriginal<typeof import('@/lib/redis')>()).hasRedisCredentials,
   getRedis: mockGetRedis,
 }));
 

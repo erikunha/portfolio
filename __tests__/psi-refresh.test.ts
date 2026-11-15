@@ -23,7 +23,7 @@ vi.mock('@/lib/lighthouse-scores', () => ({
   refreshScores: vi.fn(),
 }));
 
-vi.mock('@/lib/rate-limit', () => ({
+vi.mock('@/lib/redis', () => ({
   getRedis: vi.fn(() => ({ set: redisMockSet, del: redisMockDel, pipeline: redisMockPipeline })),
 }));
 
