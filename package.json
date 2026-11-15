@@ -37,7 +37,7 @@
     "check:dependency-vetting": "tsx scripts/check-dependency-vetting.ts",
     "check:component-docs": "node scripts/check-component-docs-coverage.mjs",
     "check:harness-size": "node scripts/check-harness-size.mjs",
-    "check:section-order": "node scripts/check-section-order.mjs",
+    "check:section-order": "tsx scripts/gates/check-section-order.ts",
     "check:doc-drift": "tsx scripts/gates/check-doc-drift.ts",
     "check:no-dashes": "tsx scripts/gates/check-no-dashes.ts",
     "check:detect-changes-paths": "node scripts/check-detect-changes-paths.mjs",
