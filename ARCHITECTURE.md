@@ -455,7 +455,7 @@ lib/ua.ts                             # UA-based device detection (headers())
 lib/use-breakpoint.client.tsx         # client-side breakpoint hook
 lib/cn.ts                             # className join helper
 
-app/css/theme.css                     # @theme { palette, glow stops, typography vars }
+app/css/theme.css                     # @theme { palette, glow stops, typography vars }, the motion custom variants, role tokens in :root
 app/css/base.css                      # @layer base { resets, focus-visible, skip-to-content, the rounded line box }
 app/css/print.css                     # @layer overrides, @media print: ink-on-paper palette, hidden chrome, CRT layers and rain
 app/css/components-panel.css          # the .panel frame rules (panel-head, panel-title, panel-marker), imported before the section partials that scope onto them
@@ -487,6 +487,16 @@ DECISIONS.md                          # ADR-lite, running log
 README.md                             # repo onboarding
 ```
 <!-- doc-drift:end -->
+
+### Stylesheets
+
+Layers run `theme, base, components, utilities, overrides`, declared once in `app/globals.css`. Print and forced colors sit in `overrides`, so the layer order beats Tailwind utilities without `!important`. `app/css/home.css` adds the home section partials after `globals.css`.
+
+`app/css/theme.css` resets the Tailwind default `--color-*`, `--radius-*` and `--shadow-*` scales, so only project tokens produce color, radius and shadow utilities; `bg-red-500`, `rounded-lg` and `shadow-md` emit nothing. Three custom variants spell the MOTION switch: `motion-off` and `motion-on` match `body[data-motion="reduce"]` and its negation, and `reveal-motion-on` adds the `html.type-reveal-ready` ancestor the type-reveal rules need. A rule nests a variant after splitting any comma list that holds a pseudo-element, because Tailwind groups a list in `:is()` and a pseudo-element inside `:is()` is invalid.
+
+Twelve role tokens name what a color does: `surface`, `surface-raised`, `border`, `border-strong`, `accent`, `on-accent`, `text`, `text-muted`, `focus`, `warning`, `danger` and `scrim`. Each aliases a primitive of the ramps. `text` lives in `@theme`; the other eleven sit in `:root` inside `@layer base`, so they generate no utilities and a stylesheet reads them through `var(--color-surface)`. `print.css` remaps all twelve to the ink-on-paper palette, and `scripts/contrast-check.mjs` audits seven role pairs. `--island-min-height`, declared once on `:root` in `components-shell.css`, is the box a crashed shell or contact island keeps.
+
+`pnpm lint:css-tokens` fails on: a raw color (hex or color function) in CSS or TSX, `bg-black`, `text-white` and the other black or white utilities, a literal `z-index`, a focus rule that writes its own ring, an `@theme` property no source consumes (a `-*: initial` reset excepted), and a Tailwind arbitrary value equal to a token in the same namespace. Stylesheet tests read the compiled CSS, since a variant changes the selector the browser receives.
 
 ---
 

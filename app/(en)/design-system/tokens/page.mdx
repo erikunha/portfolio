@@ -15,6 +15,9 @@ Colour, type, spacing and border tokens live in `app/css/theme.css`.
 Tailwind's `@theme` generates utilities from these custom properties. Swatches
 read their values directly from that file.
 
+Tailwind's default color, radius and shadow scales are reset, so `bg-red-500`, `rounded-lg`
+and `shadow-md` produce nothing. Only the tokens on this page generate those utilities.
+
 <h2 id="color">Color</h2>
 
 Use semantic roles for text and emphasis. The ordinal families remain available
@@ -30,6 +33,31 @@ The page background is `secondary-950`. Body text uses `text` (the same mint
 as `tertiary-50`); signal emphasis uses `green` (the same green as `primary-500`).
 Use `text-secondary` for new secondary text instead of `primary-300`,
 `primary-400` or `tertiary-400`. Those shades remain available for existing consumers.
+
+### Role tokens
+
+A role names what a color does. Each one is an alias of a primitive below, so a
+stylesheet reads `var(--color-surface)` and the role keeps one meaning if the primitive moves.
+Prefer a role to a primitive step in new code. Only `text` generates a utility; the other eleven
+are plain custom properties on `:root`, and the print sheet remaps all twelve to ink on paper.
+
+| Role | Resolves to | Use |
+|---|---|---|
+| `surface` | `secondary-950` | Page and terminal background |
+| `surface-raised` | `secondary-900` | Panels and shells above the page |
+| `border` | `primary-border` | Decorative dividers, never a control edge |
+| `border-strong` | `primary-subtle` | Control edges and visible borders |
+| `accent` | `primary-500` | Headings, signal and interactive emphasis |
+| `on-accent` | `secondary-950` | Text or icons drawn on an `accent` fill |
+| `text` | `tertiary-50` | Body text |
+| `text-muted` | `tertiary-400` | Meta text and captions |
+| `focus` | `primary-500` | The focus ring |
+| `warning` | `quinary-500` | Warning marks |
+| `danger` | `senary-500` | Error and close marks |
+| `scrim` | `secondary-950` | Backdrop behind a drawer or overlay |
+
+`pnpm lint:contrast` audits seven pairs: `text` and `text-muted` on `surface`, `on-accent` on
+`accent`, `accent` and `focus` on `surface` at the non-text minimum, and `warning` and `danger` on `surface`.
 
 ### primary · green (the brand)
 
@@ -191,6 +219,10 @@ when the operating system asks for reduced motion. Switching it off sets
 `body[data-motion="reduce"]`, and every reduction is keyed to that attribute in
 `app/css/animations.css`, `crt.css`, `components-*.css` and component logic. Check
 the affected animation rather than assuming one global rule disables all motion.
+
+Three custom variants in `app/css/theme.css` spell the selector, and nothing else may:
+`motion-off` (switch off), `motion-on` (switch on) and `reveal-motion-on` (switch on and the
+type reveal ready). A utility reads `motion-off:animate-none`; a stylesheet writes `@variant motion-off { ... }`.
 
 Module headers (`components/responsive/Module`) reveal text in character steps as they enter
 the viewport, driven by scroll position (`animation-timeline: view()` in

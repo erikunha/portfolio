@@ -168,6 +168,15 @@ The prompt for a manual or agent review that applies these rules to a diff is `d
     descendant inherits the ratio or the length its parent declares. Check: that spec, and
     `__tests__/meta/leading-integrity.test.ts`, which fails a font-size utility that does not carry
     its ratio.
+43. Never nest a variant inside a selector list that holds a pseudo-element. Tailwind compiles
+    `.a::before, .a::after { @variant motion-on { ... } }` to `:is(.a::before, .a::after)`, a
+    pseudo-element inside `:is()` is invalid, and the browser drops the whole rule with no error.
+    Split the list into one rule per selector first. Check: `__tests__/compiled-is-pseudo-element.test.ts`
+    compiles both entry stylesheets and fails on a pseudo-element inside `:is()` or `:where()`.
+44. Parallel writers reset only the files they own. A worker that runs `git checkout`, `restore`,
+    `reset` or `clean` on a shared tree discards another writer's edits, so a conflict or a stray
+    change is fixed by editing the owned file, or by asking `main` for the other writer's file.
+    Check: `git status` before and after a write lists only the paths the contract owns.
 
 ## Pre-push judgement list
 
