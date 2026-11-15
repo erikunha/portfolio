@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { DOCK_MENU, gotoHydrated } from './_helpers/hydration';
 
 const SECTION_COUNT = 9;
 const SCRIM_CLICK_X = 350;
@@ -10,7 +11,7 @@ test.describe('navigation: drawer at 390px', () => {
   test('the drawer is closed, opens from Menu and lists the nine destinations', async ({
     page,
   }) => {
-    await page.goto('/');
+    await gotoHydrated(page, '/', DOCK_MENU);
     await expect(page.locator('#section-drawer')).toBeHidden();
     await page
       .getByRole('navigation', { name: 'primary' })
@@ -28,7 +29,7 @@ test.describe('navigation: drawer at 390px', () => {
   });
 
   test('choosing a destination closes the drawer and lands on the section', async ({ page }) => {
-    await page.goto('/');
+    await gotoHydrated(page, '/', DOCK_MENU);
     await page
       .getByRole('navigation', { name: 'primary' })
       .getByRole('button', { name: /^MENU/ })
@@ -39,7 +40,7 @@ test.describe('navigation: drawer at 390px', () => {
   });
 
   test('the scrim closes the drawer', async ({ page }) => {
-    await page.goto('/');
+    await gotoHydrated(page, '/', DOCK_MENU);
     await page
       .getByRole('navigation', { name: 'primary' })
       .getByRole('button', { name: /^MENU/ })

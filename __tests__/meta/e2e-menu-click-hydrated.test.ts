@@ -8,7 +8,7 @@ const SCAN_ROOT = 'tests';
 const SPEC_FILE = /\.(spec|e2e)\.[cm]?[jt]sx?$/;
 const SKIP_DIRS = new Set(['node_modules', '.next', 'test-results', 'playwright-report']);
 const TRIGGER_IDENTIFIERS = new Set(['MENU_TRIGGER', 'DOCK_MENU']);
-const TRIGGER_TEXT = /menu-trigger|Open menu|Abrir menu/;
+const TRIGGER_TEXT = /menu-trigger|Open menu|Abrir menu|\^MENU/;
 const HYDRATION_WAITS = ['openSectionMenu', 'waitForHydration', 'gotoHydrated'];
 const TEST_ROOTS = new Set(['test', 'it']);
 const SUITE_MEMBER = 'describe';
@@ -225,6 +225,7 @@ describe('meta: the section menu controls are clicked only after they hydrate', 
 
   it('sees a click on the dock menu button selector', () => {
     expect(hits(inTest('await page.locator(DOCK_MENU).click();'))).toBe(1);
+    expect(hits(inTest("await nav.getByRole('button', { name: /^MENU/ }).click();"))).toBe(1);
   });
 
   it('accepts a click after a hydration wait in the same test', () => {
