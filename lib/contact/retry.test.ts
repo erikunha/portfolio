@@ -124,4 +124,17 @@ describe('retryPendingContacts', () => {
       remaining: 2,
     });
   });
+
+  it('keeps starting sends while the elapsed time stays under the start deadline', async () => {
+    let clock = NOW_MS;
+    const deps = makeDeps({
+      getPendingIds: vi.fn().mockResolvedValue(['a', 'b']),
+      deliver: vi.fn().mockImplementation(async () => {
+        clock += DEADLINE_MS - 1;
+        return true;
+      }),
+    });
+    expect(await retryPendingContacts(() => clock, deps)).toEqual(counts(2));
+    expect(deps.log.warn).not.toHaveBeenCalled();
+  });
 });
