@@ -13,6 +13,7 @@ import { HTTP_STATUS } from '@/lib/http-status';
 import { postJson } from '@/lib/post-json';
 import { addRef } from '@/lib/request-refs.client';
 import { REQUEST_ID_HEADER, SITE_LOCALE_HEADER } from '@/lib/stream-protocol';
+import { useMessageStore } from '../ContactIsland/ContactIslandProvider.client';
 import { FIELD_CHECKS } from './contact-form-checks';
 import {
   CONTACT_PHASE,
@@ -22,7 +23,6 @@ import {
   INITIAL_CONTACT_SUBMIT_STATE,
   visibleContactErrors,
 } from './contact-submit-state';
-import { messageStore } from './messageStore';
 
 export const CONTACT_STATUS = {
   IDLE: 'idle',
@@ -64,6 +64,7 @@ export function useContactSubmit({
 }) {
   const pageLocale = localeOfPath(usePathname());
   const [state, dispatch] = useReducer(contactSubmitReducer, INITIAL_CONTACT_SUBMIT_STATE);
+  const messageStore = useMessageStore();
   const pendingRef = useRef(false);
   const errors = visibleContactErrors(state.errors, FIELD_CHECKS.message(values.message));
 

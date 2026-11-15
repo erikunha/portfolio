@@ -87,9 +87,6 @@ export function ContactForm({ copy, chrome }: { copy: ContactContent; chrome: Te
     () => (fieldShown ? messageStore.bindField(messageFieldId) : undefined),
     [fieldShown, messageFieldId, messageStore],
   );
-  useEffect(() => {
-    if (!fieldShown) messageStore.reset();
-  }, [fieldShown, messageStore]);
 
   useLayoutEffect(() => {
     const fields = formRef.current?.elements;
