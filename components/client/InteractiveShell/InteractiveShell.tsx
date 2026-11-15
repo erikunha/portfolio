@@ -1,6 +1,14 @@
 'use client';
 
-import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useId,
+  useLayoutEffect,
+  useReducer,
+  useRef,
+  useState,
+} from 'react';
 import type { TerminalChrome } from '@/content/schemas';
 import { SHELL_RESPONSE_LANG } from '@/content/shell-commands';
 import {
@@ -23,7 +31,7 @@ import { ShellLine, StopElapsed } from './ShellLines.client';
 import { ShellToolbar } from './ShellToolbar.client';
 import { historyStepFor, isCompositionEnter, parseShellInput, ShellInputKind } from './shell-input';
 import { ShellKey } from './shell-keys';
-import { appendLines, type Line } from './transcript';
+import { type Line, TranscriptAction, transcriptReducer } from './transcript';
 import { useAskStream } from './useAskStream';
 import { useCommandHistory } from './useCommandHistory';
 import { usePrivacyCommands } from './usePrivacyCommands';
@@ -50,7 +58,7 @@ export function InteractiveShell({
     (): Line[] => [{ id: nextId(), kind: ShellLineKind.Info, text: ui.welcome, welcome: true }],
     [nextId, ui],
   );
-  const [history, setHistory] = useState<Line[]>(initialLines);
+  const [history, dispatch] = useReducer(transcriptReducer, undefined, initialLines);
   const [input, setInput] = useState('');
   const [inputFocused, setInputFocused] = useState(false);
   const { announce, region: announcerRegion } = useAnnouncer(ANNOUNCER_REGION_ATTRIBUTES);
@@ -84,7 +92,7 @@ export function InteractiveShell({
     ui,
     nextId,
     announce,
-    setHistory,
+    dispatch,
     restoreInput,
     onSettled: refocusAfterStream,
   });
@@ -94,9 +102,9 @@ export function InteractiveShell({
   }, [stopStream, focusInput]);
   const onConversationForgotten = useCallback(
     (questions: number) => {
-      setHistory((lines) =>
-        appendLines(
-          lines.filter((line) => line.kind !== ShellLineKind.Reference),
+      dispatch({
+        type: TranscriptAction.ForgetConversation,
+        lines: [
           { id: nextId(), kind: ShellLineKind.Output, text: ui.conversationForgotten },
           {
             id: nextId(),
@@ -106,8 +114,8 @@ export function InteractiveShell({
                 ? ui.conversationForgottenOne
                 : fillShellState(ui.conversationForgottenMany, { count: String(questions) }),
           },
-        ),
-      );
+        ],
+      });
       focusInput();
     },
     [focusInput, nextId, ui],
@@ -116,7 +124,7 @@ export function InteractiveShell({
     ui,
     states,
     nextId,
-    setHistory,
+    dispatch,
     announce,
     focusInput,
     onConversationForgotten,
@@ -156,17 +164,14 @@ export function InteractiveShell({
       followOutputRef.current = true;
       commandHistory.record(command);
       window.dispatchEvent(new CustomEvent(SHELL_COMMAND_EVENT));
-      setHistory((lines) =>
-        appendLines(lines, {
-          id: nextId(),
-          kind: ShellLineKind.Prompt,
-          text: `${ui.prompt} ${command}`,
-        }),
-      );
+      dispatch({
+        type: TranscriptAction.Append,
+        lines: [{ id: nextId(), kind: ShellLineKind.Prompt, text: `${ui.prompt} ${command}` }],
+      });
       promptEditedRef.current = false;
       setInput('');
       if (parsed.kind === ShellInputKind.Clear) {
-        setHistory(initialLines());
+        dispatch({ type: TranscriptAction.Clear, lines: initialLines() });
         announce(ui.cleared);
         focusInput();
         return;
@@ -177,14 +182,12 @@ export function InteractiveShell({
       }
       if (parsed.kind === ShellInputKind.Local) {
         const { response } = parsed;
-        setHistory((lines) =>
-          appendLines(lines, {
-            id: nextId(),
-            kind: response.kind,
-            text: response.text,
-            lang: SHELL_RESPONSE_LANG,
-          }),
-        );
+        dispatch({
+          type: TranscriptAction.Append,
+          lines: [
+            { id: nextId(), kind: response.kind, text: response.text, lang: SHELL_RESPONSE_LANG },
+          ],
+        });
         announce(ui.commandComplete);
         focusInput();
         return;

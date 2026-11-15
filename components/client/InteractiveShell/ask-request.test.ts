@@ -122,7 +122,7 @@ describe('useAskStream unmount', () => {
       announce: vi.fn(),
       restoreInput: vi.fn(),
       onSettled: vi.fn(),
-      setHistory: vi.fn(),
+      dispatch: vi.fn(),
     };
     let ids = 0;
     const api: { start?: (question: string, command: string) => Promise<void> } = {};
@@ -156,7 +156,7 @@ describe('useAskStream unmount', () => {
     });
     const before = {
       announce: callbacks.announce.mock.calls.length,
-      setHistory: callbacks.setHistory.mock.calls.length,
+      dispatch: callbacks.dispatch.mock.calls.length,
     };
 
     mounted?.unmount();
@@ -166,7 +166,7 @@ describe('useAskStream unmount', () => {
     expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(cancelled).toHaveBeenCalledTimes(1);
     expect(callbacks.announce).toHaveBeenCalledTimes(before.announce);
-    expect(callbacks.setHistory).toHaveBeenCalledTimes(before.setHistory);
+    expect(callbacks.dispatch).toHaveBeenCalledTimes(before.dispatch);
     expect(callbacks.restoreInput).not.toHaveBeenCalled();
     expect(callbacks.onSettled).not.toHaveBeenCalled();
   });

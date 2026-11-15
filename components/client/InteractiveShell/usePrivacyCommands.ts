@@ -1,6 +1,6 @@
 'use client';
 
-import { type Dispatch, type SetStateAction, useCallback, useRef } from 'react';
+import { type Dispatch, useCallback, useRef } from 'react';
 import type { ShellStates } from '@/content/shell-states.schema';
 import { fillShellState, ShellLineKind, type ShellUi } from '@/content/shell-ui';
 import {
@@ -14,7 +14,7 @@ import { type ForgetResult, forgetMany, wasForgotten } from '@/lib/ask/forget-re
 import { listRefs } from '@/lib/request-refs.client';
 import { describeForget } from './forget-message';
 import { PRIVACY_COMMAND_KIND, type PrivacyCommand } from './privacy-command';
-import { appendLines, type Line } from './transcript';
+import { TranscriptAction } from './transcript';
 
 type Entry = {
   kind: typeof ShellLineKind.Output | typeof ShellLineKind.Error | typeof ShellLineKind.Info;
@@ -44,7 +44,7 @@ export function usePrivacyCommands({
   ui,
   states,
   nextId,
-  setHistory,
+  dispatch,
   announce,
   focusInput,
   onConversationForgotten,
@@ -52,7 +52,7 @@ export function usePrivacyCommands({
   ui: ShellUi;
   states: ShellStates;
   nextId: () => number;
-  setHistory: Dispatch<SetStateAction<Line[]>>;
+  dispatch: Dispatch<TranscriptAction>;
   announce: (text: string) => void;
   focusInput: () => void;
   onConversationForgotten: (questions: number) => void;
@@ -61,9 +61,10 @@ export function usePrivacyCommands({
   return useCallback(
     async (command: PrivacyCommand) => {
       const push = (entries: Entry[]) =>
-        setHistory((lines) =>
-          appendLines(lines, ...entries.map((entry) => ({ id: nextId(), ...entry }))),
-        );
+        dispatch({
+          type: TranscriptAction.Append,
+          lines: entries.map((entry) => ({ id: nextId(), ...entry })),
+        });
       const forgetLines = (id: string, result: ForgetResult): Entry => ({
         kind: wasForgotten(result) ? ShellLineKind.Output : ShellLineKind.Error,
         text: `${id} ${describeForget(result, ui, states)}`,
@@ -159,6 +160,6 @@ export function usePrivacyCommands({
       }
       finish();
     },
-    [announce, focusInput, nextId, onConversationForgotten, setHistory, states, ui],
+    [announce, focusInput, nextId, onConversationForgotten, dispatch, states, ui],
   );
 }

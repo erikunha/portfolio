@@ -1,13 +1,6 @@
 'use client';
 
-import {
-  type Dispatch,
-  type SetStateAction,
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-} from 'react';
+import { type Dispatch, useCallback, useEffect, useRef, useState } from 'react';
 import {
   fillShellState,
   SHELL_LIMITS,
@@ -27,7 +20,7 @@ import {
 import { MS_PER_SECOND } from '@/lib/time';
 import { createAskRequest } from './ask-request';
 import { type FailureDetail, failureForResponse, settledLines } from './settled-lines';
-import { appendLines, type Line } from './transcript';
+import { TranscriptAction } from './transcript';
 
 type ActiveRequest = { stop: () => void; dispose: () => void };
 
@@ -43,7 +36,7 @@ type AskStreamOptions = {
   ui: ShellUi;
   nextId: () => number;
   announce: (text: string) => void;
-  setHistory: Dispatch<SetStateAction<Line[]>>;
+  dispatch: Dispatch<TranscriptAction>;
   restoreInput: (command: string) => void;
   onSettled: () => void;
 };
@@ -53,7 +46,7 @@ export function useAskStream({
   ui,
   nextId,
   announce,
-  setHistory,
+  dispatch,
   restoreInput,
   onSettled,
 }: AskStreamOptions) {
@@ -92,9 +85,10 @@ export function useAskStream({
       let settled = false;
       let timer: ReturnType<typeof setTimeout> | undefined;
       setBusy(true);
-      setHistory((lines) =>
-        appendLines(lines, { id: loadingId, kind: ShellLineKind.Loading, text: '' }),
-      );
+      dispatch({
+        type: TranscriptAction.Append,
+        lines: [{ id: loadingId, kind: ShellLineKind.Loading, text: '' }],
+      });
       announce(ui.thinking);
 
       function armIdleTimer() {
@@ -128,14 +122,7 @@ export function useAskStream({
           ui,
           nextId,
         });
-        setHistory((previous) =>
-          appendLines(
-            previous.filter(
-              (line) => line.id !== loadingId && !(logged && line.kind === ShellLineKind.Reference),
-            ),
-            ...lines,
-          ),
-        );
+        dispatch({ type: TranscriptAction.Settle, loadingId, dropReferences: logged, lines });
         setStreamingText(null);
         setBusy(false);
         if (message) restoreInput(command);
@@ -212,7 +199,7 @@ export function useAskStream({
           if (parsed.displayText) {
             if (!receivedText) {
               receivedText = true;
-              setHistory((lines) => lines.filter((line) => line.id !== loadingId));
+              dispatch({ type: TranscriptAction.Remove, id: loadingId });
               announce(ui.started);
             }
             if (rafRef.current === null) {
@@ -228,7 +215,7 @@ export function useAskStream({
         reader?.releaseLock();
       }
     },
-    [announce, clearFrame, nextId, onSettled, setHistory, restoreInput, states, ui, locale],
+    [announce, clearFrame, nextId, onSettled, dispatch, restoreInput, states, ui, locale],
   );
 
   const stop = useCallback(() => activeRequest.current?.stop(), []);

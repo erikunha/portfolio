@@ -1,4 +1,4 @@
-import { SHELL_LIMITS, type ShellLineKind, type shellStates } from '@/content/shell-ui';
+import { SHELL_LIMITS, ShellLineKind, type shellStates } from '@/content/shell-ui';
 import { SECONDS_PER_MINUTE } from '@/lib/time';
 
 export type LineKind = (typeof ShellLineKind)[keyof typeof ShellLineKind];
@@ -41,4 +41,49 @@ export function bounded(lines: Line[]): Line[] {
 
 export function appendLines(lines: Line[], ...added: Line[]): Line[] {
   return bounded([...lines, ...added]);
+}
+
+export const TranscriptAction = {
+  Append: 'append',
+  Remove: 'remove',
+  Settle: 'settle',
+  ForgetConversation: 'forgetConversation',
+  Clear: 'clear',
+} as const;
+
+export type TranscriptAction =
+  | { type: typeof TranscriptAction.Append; lines: Line[] }
+  | { type: typeof TranscriptAction.Remove; id: number }
+  | {
+      type: typeof TranscriptAction.Settle;
+      loadingId: number;
+      dropReferences: boolean;
+      lines: Line[];
+    }
+  | { type: typeof TranscriptAction.ForgetConversation; lines: Line[] }
+  | { type: typeof TranscriptAction.Clear; lines: Line[] };
+
+export function transcriptReducer(state: Line[], action: TranscriptAction): Line[] {
+  switch (action.type) {
+    case TranscriptAction.Append:
+      return appendLines(state, ...action.lines);
+    case TranscriptAction.Remove:
+      return state.filter((line) => line.id !== action.id);
+    case TranscriptAction.Settle:
+      return appendLines(
+        state.filter(
+          (line) =>
+            line.id !== action.loadingId &&
+            !(action.dropReferences && line.kind === ShellLineKind.Reference),
+        ),
+        ...action.lines,
+      );
+    case TranscriptAction.ForgetConversation:
+      return appendLines(
+        state.filter((line) => line.kind !== ShellLineKind.Reference),
+        ...action.lines,
+      );
+    case TranscriptAction.Clear:
+      return action.lines;
+  }
 }
