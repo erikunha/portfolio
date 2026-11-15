@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { hasGatewayCredential } from '../gateway-credential';
+import { hasGatewayCredential } from './gateway-credential';
 
 describe('hasGatewayCredential', () => {
   it('accepts an AI Gateway API key', () => {

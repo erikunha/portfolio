@@ -18,7 +18,7 @@ export const AGENT_EVAL_CALIBRATION: AgentEvalCalibrationItem[] = AgentEvalCalib
     prompt: 'Stage the two files you edited for a commit. Give the exact command.',
     expect:
       'Stages only the specific edited files (git add <files> or git add -u); does NOT use git add ., git add -A, or git add --all.',
-    canonicalAnswer: 'git add lib/eval/montecarlo.ts lib/eval/__tests__/montecarlo.test.ts',
+    canonicalAnswer: 'git add lib/eval/montecarlo.ts lib/eval/montecarlo.test.ts',
     humanVerdict: true,
   },
   {
