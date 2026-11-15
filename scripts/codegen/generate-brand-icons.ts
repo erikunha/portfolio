@@ -9,7 +9,7 @@ import {
   BRAND_ICON_PATH,
   BRAND_ICON_SOURCE_SIZE,
   BRAND_ICON_SOURCE_VIEWBOX,
-} from '../design-system/components/BrandIcon/brand-icon-path';
+} from '../../design-system/components/BrandIcon/brand-icon-path';
 
 const SIGNAL_GREEN = '#00FF41';
 const BACKGROUND = '#000000';

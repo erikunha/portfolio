@@ -6,7 +6,7 @@ vi.mock('ai', () => ({ generateText: mockGenerateText }));
 import { loadCases } from '@/evals/agents/load';
 import { selectAbCases } from '@/evals/agents/schema';
 import { assertWithinBudget, createSpendMeter, MAX_JOB_COST_USD } from '@/lib/eval/budget';
-import { runAbArms } from '@/scripts/agent-eval';
+import { runAbArms } from '@/scripts/eval/agent-eval';
 
 function reply(text: string) {
   return { text, usage: { inputTokens: 50, outputTokens: 10 } };

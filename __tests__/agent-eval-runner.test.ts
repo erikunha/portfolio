@@ -1,7 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import type { CaseStats } from '@/lib/eval/montecarlo';
 import type { CalibrationResult } from '@/lib/eval/types';
-import { AGENT_EVAL_REDIS_KEY, buildAggregate, describeGate, MODELS } from '@/scripts/agent-eval';
+import {
+  AGENT_EVAL_REDIS_KEY,
+  buildAggregate,
+  describeGate,
+  MODELS,
+} from '@/scripts/eval/agent-eval';
 
 function calibration(passed: boolean): CalibrationResult {
   return {

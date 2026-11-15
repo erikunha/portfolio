@@ -9,7 +9,7 @@ import {
   BRAND_ICON_CROP,
   BRAND_ICON_PATH,
   BRAND_ICON_VIEWBOX,
-} from '../design-system/components/BrandIcon/brand-icon-path';
+} from '../../design-system/components/BrandIcon/brand-icon-path';
 
 const BRAND_WIDTH_PX = 240;
 const BRAND_HEIGHT_PX = Math.round(

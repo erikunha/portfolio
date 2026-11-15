@@ -10,7 +10,7 @@ import {
   parseChangelogGroups,
   renderChangelogGroups,
   renderChangelogPage,
-} from '@/scripts/lib/changelog-merge';
+} from '@/scripts/codegen/changelog-merge';
 
 const EXISTING_MDX = `export const metadata = {
   title: 'Changelog · Design System · erikunha.dev',

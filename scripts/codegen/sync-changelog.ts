@@ -1,16 +1,16 @@
 #!/usr/bin/env tsx
 import { readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { gitText } from '../lib/git';
 import {
   type ChangelogGroups,
   commitTypeToKind,
   mergeChangelogGroups,
   parseChangelogGroups,
   renderChangelogPage,
-} from './lib/changelog-merge';
-import { gitText } from './lib/git';
+} from './changelog-merge';
 
-const ROOT = join(import.meta.dirname, '..');
+const ROOT = join(import.meta.dirname, '../..');
 const CHANGELOG_PATH = join(ROOT, 'app/(en)/design-system/changelog/page.mdx');
 
 function parseCommits(): ChangelogGroups {

@@ -47,8 +47,8 @@ describe('detect-changes-paths manifest: `ai` filter (ask-eval calibration/corpu
     expect(AI_PATHS).toContain('lib/eval/');
   });
 
-  it('still watches scripts/ask-eval.ts (the gate entrypoint)', () => {
-    expect(AI_PATHS).toContain('scripts/ask-eval.ts');
+  it('still watches scripts/eval/ask-eval.ts (the gate entrypoint)', () => {
+    expect(AI_PATHS).toContain('scripts/eval/ask-eval.ts');
   });
 });
 

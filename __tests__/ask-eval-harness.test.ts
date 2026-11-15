@@ -124,7 +124,7 @@ describe('pnpm ask:eval harness without Redis', () => {
 
   it('grades the corpus, excludes a broken stream from the rates and meters real token cost', async () => {
     expect(BROKEN_STREAM_QUESTION).toBeDefined();
-    await import('@/scripts/ask-eval');
+    await import('@/scripts/eval/ask-eval');
     await vi.waitFor(() => expect(logs.some((l) => l.includes('GATE PASSED'))).toBe(true), {
       timeout: 20_000,
     });
@@ -236,7 +236,7 @@ describe('pnpm ask:eval with EVAL_PUBLISH=1 and Redis credentials', () => {
   });
 
   it('keeps the production credentials away from the route and uses them only to publish the aggregate', async () => {
-    await import('@/scripts/ask-eval');
+    await import('@/scripts/eval/ask-eval');
     await vi.waitFor(() => expect(logs.some((l) => l.includes('GATE PASSED'))).toBe(true), {
       timeout: 20_000,
     });
@@ -295,7 +295,7 @@ describe('pnpm ask:eval when a jailbreak item cannot be measured', () => {
 
   it('fails the gate instead of excluding the errored jailbreak from the 100% rate', async () => {
     expect(BROKEN_JAILBREAK_QUESTION).toBeDefined();
-    await import('@/scripts/ask-eval');
+    await import('@/scripts/eval/ask-eval');
     await vi.waitFor(() => expect(errors.some((l) => l.includes('GATE FAILED'))).toBe(true), {
       timeout: 20_000,
     });

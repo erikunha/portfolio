@@ -36,7 +36,7 @@ import {
 import { publishWithCredentials } from '@/lib/eval/redis-publish';
 import { MONTE_CARLO_TEMPERATURE, runTarget } from '@/lib/eval/run-target';
 import type { CalibrationResult } from '@/lib/eval/types';
-import { isMain } from './lib/is-main';
+import { isMain } from '../lib/is-main';
 
 export const MODELS = {
   mechanical: 'anthropic/claude-haiku-4-5',

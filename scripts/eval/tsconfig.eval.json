@@ -2,7 +2,7 @@
   // tsconfig used ONLY by `pnpm ask:eval` (via TSX_TSCONFIG_PATH).
   //
   // WHY THIS EXISTS
-  //   `scripts/ask-eval.ts` deliberately imports the real `app/api/ask/route.ts`
+  //   `scripts/eval/ask-eval.ts` deliberately imports the real `app/api/ask/route.ts`
   //   handler, faithfulness to the production route is the design intent. That
   //   route transitively imports `lib/ask/system-prompt.ts`, which has
   //   `import 'server-only'`.
@@ -14,18 +14,18 @@
   //   run has no such resolution and throws ERR_MODULE_NOT_FOUND.
   //
   //   These `paths` mappings make `tsx`'s resolver alias both marker specifiers
-  //   to `scripts/lib/empty-module.ts` (a no-op). This is preferable to
+  //   to `scripts/eval/empty-module.ts` (a no-op). This is preferable to
   //   `node --conditions=react-server`, which would also flip React itself to
   //   its server build and break the route's React imports.
   //
   //   Scoped to this file so the mappings never leak into the Next.js build or
   //   the Vitest config, which resolve `server-only` correctly on their own.
-  "extends": "../tsconfig.json",
+  "extends": "../../tsconfig.json",
   "compilerOptions": {
     "paths": {
-      "@/*": ["../*"],
-      "server-only": ["./lib/empty-module.ts"],
-      "client-only": ["./lib/empty-module.ts"]
+      "@/*": ["../../*"],
+      "server-only": ["./empty-module.ts"],
+      "client-only": ["./empty-module.ts"]
     }
   }
 }

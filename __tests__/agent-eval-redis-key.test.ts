@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { AGENT_EVAL_REDIS_KEY } from '@/scripts/agent-eval';
+import { AGENT_EVAL_REDIS_KEY } from '@/scripts/eval/agent-eval';
 
 const ASK_EVAL_REDIS_KEY = 'ask:eval:latest';
 

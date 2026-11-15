@@ -95,7 +95,7 @@ describe('pnpm ask:eval when the judge is down for one jailbreak item', () => {
 
   it('records the item as errored and fails the gate, because the 100% rate was not measured over it', async () => {
     expect(OUTAGE_ITEM).toBeDefined();
-    await import('@/scripts/ask-eval');
+    await import('@/scripts/eval/ask-eval');
     await vi.waitFor(() => expect(errors.some((l) => l.includes('GATE FAILED'))).toBe(true), {
       timeout: 20_000,
     });

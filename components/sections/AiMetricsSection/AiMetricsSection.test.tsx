@@ -84,7 +84,7 @@ describe('AiMetricsSection: on-page AI eval/cost metrics (RSC)', () => {
     const doc = new DOMParser().parseFromString(await renderData(), 'text/html');
     expect(doc.body.textContent).toContain('95% of answers finish within 2,840ms');
     expect(doc.querySelector('a')?.getAttribute('href')).toBe(
-      'https://github.com/erikunha/portfolio/blob/main/scripts/ask-eval.ts',
+      'https://github.com/erikunha/portfolio/blob/main/scripts/eval/ask-eval.ts',
     );
   });
 

@@ -63,7 +63,10 @@ const contentSurfaces: Array<[string, string]> = readContentSurfaces();
 
 // behavioral-test-allow: the OG card's numbers are baked into an HTML template string inside the
 // generator script, so they are reachable only as source text, there is nothing to import
-const ogImageScript = readFileSync(path.join(REPO_ROOT, 'scripts/generate-og-image.ts'), 'utf-8');
+const ogImageScript = readFileSync(
+  path.join(REPO_ROOT, 'scripts/codegen/generate-og-image.ts'),
+  'utf-8',
+);
 
 let layoutMetadataText = '';
 
@@ -73,7 +76,7 @@ const METRIC_SURFACES = (): Array<[string, string]> => [
   ['lib/ask/system-prompt.ts (what the AI answers with)', SYSTEM_TEXT],
   ['public/llms.txt', read('public/llms.txt')],
   ['public/.well-known/agent.json', read('public/.well-known/agent.json')],
-  ['scripts/generate-og-image.ts (social preview card)', ogImageScript],
+  ['scripts/codegen/generate-og-image.ts (social preview card)', ogImageScript],
   ['app/(en)/layout.tsx (metadata)', layoutMetadataText],
 ];
 

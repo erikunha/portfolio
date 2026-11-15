@@ -123,11 +123,15 @@ describe.each(['ask-eval', 'agent-eval'])(
         for (const name of REDIS_ENV_NAMES) delete env[name];
         delete env.AI_GATEWAY_API_KEY;
         delete env.VERCEL_OIDC_TOKEN;
-        const run = spawnSync(`${process.cwd()}/node_modules/.bin/tsx`, [`scripts/${script}.ts`], {
-          env: { ...env, TSX_TSCONFIG_PATH: 'scripts/tsconfig.eval.json' },
-          encoding: 'utf8',
-          timeout: SCRIPT_TIMEOUT_MS,
-        });
+        const run = spawnSync(
+          `${process.cwd()}/node_modules/.bin/tsx`,
+          [`scripts/eval/${script}.ts`],
+          {
+            env: { ...env, TSX_TSCONFIG_PATH: 'scripts/eval/tsconfig.eval.json' },
+            encoding: 'utf8',
+            timeout: SCRIPT_TIMEOUT_MS,
+          },
+        );
         expect(run.status).toBe(FAILURE_EXIT_CODE);
         expect(run.stderr).toContain('UPSTASH_REDIS_REST_URL');
         expect(run.stderr).not.toContain('AI_GATEWAY_API_KEY');

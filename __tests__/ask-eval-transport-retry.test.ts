@@ -217,7 +217,7 @@ describe('pnpm ask:eval when one item hits a transient stream failure', () => {
 
   it('retries the item, grades the second answer, and records retried in the result file', async () => {
     expect(FLAKY_QUESTION).toBeDefined();
-    await import('@/scripts/ask-eval');
+    await import('@/scripts/eval/ask-eval');
     await vi.waitFor(() => expect(logs.some((l) => l.includes('GATE PASSED'))).toBe(true), {
       timeout: 20_000,
     });

@@ -3,7 +3,7 @@ import { dirname, join, normalize } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { AI_PATHS } from '../detect-changes-paths.mjs';
 
-const ROOTS = ['app/api/ask/route.ts', 'scripts/ask-eval.ts'];
+const ROOTS = ['app/api/ask/route.ts', 'scripts/eval/ask-eval.ts'];
 
 const EXTENSIONS = ['.ts', '.tsx', '/index.ts', '/index.tsx'];
 

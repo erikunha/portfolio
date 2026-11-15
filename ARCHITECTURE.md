@@ -473,8 +473,8 @@ tests/a11y/                           # axe-core accessibility scan
 tests/visual/                         # visual-regression snapshots
 tests/mocks/                          # shared test mocks
 
-scripts/ask-eval.ts                   # ask eval harness, correctness, jailbreak, cost
-scripts/agent-eval.ts                 # prompt-regression eval of the repo's agent rules (evals/agents/ holds the cases)
+scripts/eval/ask-eval.ts              # ask eval harness, correctness, jailbreak, cost
+scripts/eval/agent-eval.ts            # prompt-regression eval of the repo's agent rules (evals/agents/ holds the cases)
 scripts/metrics/                      # weekly delivery-metrics collection, band scoring and issue filing
 metrics/bands.json                    # rolling bands each delivery metric is scored against
 __tests__/                            # repo-wide Vitest invariants: docs counts, content parity, API behavior, meta checks
