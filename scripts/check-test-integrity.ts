@@ -1,8 +1,9 @@
 #!/usr/bin/env tsx
-import { readdirSync, readFileSync, statSync } from 'node:fs';
+import { readFileSync, statSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
 import ts from 'typescript';
 import { isMain } from './lib/is-main';
+import { listFiles } from './lib/walk';
 
 export type ViolationKind = 'focused' | 'no-assertion' | 'skip-without-reason';
 export type Violation = { file: string; line: number; kind: ViolationKind };
@@ -265,12 +266,7 @@ function inspectSourceFile(
 }
 
 function collectTestFiles(dir: string): string[] {
-  return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
-    if (SKIP_DIRS.has(entry.name)) return [];
-    const full = join(dir, entry.name);
-    if (entry.isDirectory()) return collectTestFiles(full);
-    return TEST_FILE.test(entry.name) ? [full] : [];
-  });
+  return listFiles(dir, { include: TEST_FILE, skipDirs: SKIP_DIRS }).map((rel) => join(dir, rel));
 }
 
 function isFile(path: string): boolean {

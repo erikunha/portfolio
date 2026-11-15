@@ -1,8 +1,9 @@
 #!/usr/bin/env tsx
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
-import { join, relative } from 'node:path';
+import { join } from 'node:path';
 import postcss from 'postcss';
 import { isMain } from './lib/is-main';
+import { listFiles } from './lib/walk';
 
 const HEX = /#(?:[0-9a-fA-F]{8}|[0-9a-fA-F]{6}|[0-9a-fA-F]{4}|[0-9a-fA-F]{3})\b/g;
 const COLOR_FUNCTION =
@@ -254,23 +255,16 @@ export function applyAllowlist(
   return { violations, stale };
 }
 
+function listUnderTokenRoots(root: string, include: (name: string) => boolean): string[] {
+  return TOKEN_ROOTS.filter((top) => existsSync(join(root, top)))
+    .flatMap((top) =>
+      listFiles(join(root, top), { include, skipDirs: SKIPPED_DIRS }).map((rel) => join(top, rel)),
+    )
+    .sort();
+}
+
 export function findTokenFiles(root: string): string[] {
-  const out: string[] = [];
-  const walk = (dir: string): void => {
-    for (const entry of readdirSync(dir, { withFileTypes: true })) {
-      if (SKIPPED_DIRS.has(entry.name)) continue;
-      const full = join(dir, entry.name);
-      if (entry.isDirectory()) walk(full);
-      else if (TOKEN_FILE.test(entry.name) && !TEST_FILE.test(entry.name)) {
-        out.push(relative(root, full));
-      }
-    }
-  };
-  for (const top of TOKEN_ROOTS) {
-    const dir = join(root, top);
-    if (existsSync(dir)) walk(dir);
-  }
-  return out.sort();
+  return listUnderTokenRoots(root, (name) => TOKEN_FILE.test(name) && !TEST_FILE.test(name));
 }
 
 export function assertScannable(
@@ -289,22 +283,7 @@ function loadAllowlist(root: string): AllowEntry[] {
 }
 
 export function findTsxFiles(root: string): string[] {
-  const out: string[] = [];
-  const walk = (dir: string): void => {
-    for (const entry of readdirSync(dir, { withFileTypes: true })) {
-      if (SKIPPED_DIRS.has(entry.name)) continue;
-      const full = join(dir, entry.name);
-      if (entry.isDirectory()) walk(full);
-      else if (TSX_FILE.test(entry.name) && !TSX_SKIPPED.test(entry.name)) {
-        out.push(relative(root, full));
-      }
-    }
-  };
-  for (const top of TOKEN_ROOTS) {
-    const dir = join(root, top);
-    if (existsSync(dir)) walk(dir);
-  }
-  return out.sort();
+  return listUnderTokenRoots(root, (name) => TSX_FILE.test(name) && !TSX_SKIPPED.test(name));
 }
 
 export interface RepoScan {
@@ -409,22 +388,10 @@ export function findUnusedThemeTokens(themeCss: string, sources: string[]): stri
 }
 
 export function findConsumerFiles(root: string): string[] {
-  const out: string[] = [];
-  const walk = (dir: string): void => {
-    for (const entry of readdirSync(dir, { withFileTypes: true })) {
-      if (SKIPPED_DIRS.has(entry.name)) continue;
-      const full = join(dir, entry.name);
-      if (entry.isDirectory()) walk(full);
-      else if (CONSUMER_FILE.test(entry.name) && !CONSUMER_SKIPPED.test(entry.name)) {
-        out.push(relative(root, full));
-      }
-    }
-  };
-  for (const top of TOKEN_ROOTS) {
-    const dir = join(root, top);
-    if (existsSync(dir)) walk(dir);
-  }
-  return out.sort();
+  return listUnderTokenRoots(
+    root,
+    (name) => CONSUMER_FILE.test(name) && !CONSUMER_SKIPPED.test(name),
+  );
 }
 
 export function scanRepo(root: string, cssFiles: string[]): RepoScan {
