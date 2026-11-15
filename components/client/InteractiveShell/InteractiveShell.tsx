@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
 import type { TerminalChrome } from '@/content/schemas';
-import SHELL_RESPONSES, { SHELL_RESPONSE_LANG } from '@/content/shell-commands';
+import { SHELL_RESPONSE_LANG } from '@/content/shell-commands';
 import {
   fillShellState,
   ShellCommand,
@@ -18,18 +18,17 @@ import { useAnnouncer } from '@/lib/use-announcer.client';
 import { useBreakpoint } from '@/lib/use-breakpoint.client';
 import { TerminalChromeBar } from '../TerminalChromeBar';
 import { AnimatedPlaceholder, StaticPlaceholder } from './AnimatedPlaceholder.client';
-import { parsePrivacyCommand } from './privacy-command';
 import { revealShell, SHELL_LIVE_PROPS } from './reveal-shell';
 import { ShellLine, StopElapsed } from './ShellLines.client';
 import { ShellToolbar } from './ShellToolbar.client';
+import { historyStepFor, isCompositionEnter, parseShellInput, ShellInputKind } from './shell-input';
 import { ShellKey } from './shell-keys';
 import { appendLines, type Line } from './transcript';
 import { useAskStream } from './useAskStream';
-import { HISTORY_STEP, useCommandHistory } from './useCommandHistory';
+import { useCommandHistory } from './useCommandHistory';
 import { usePrivacyCommands } from './usePrivacyCommands';
 
 const COMMAND_FIELD = 'command';
-const COMPOSITION_KEYCODE = 229;
 const STREAM_CARET = '█';
 const ANNOUNCER_REGION_ATTRIBUTES = { 'aria-live': 'polite', 'aria-atomic': true } as const;
 
@@ -147,16 +146,10 @@ export function InteractiveShell({
         announce(ui.busy);
         return;
       }
-      const command = raw.trim().replace(/\s+/g, ' ');
-      if (!command) return;
-      const key = command.toLowerCase();
-      const privacy = parsePrivacyCommand(key);
-      const explicitQuestion = key.startsWith(ShellCommand.AskPrefix)
-        ? command.slice(ShellCommand.AskPrefix.length).trim()
-        : null;
-      const local =
-        !explicitQuestion && SHELL_RESPONSES.find((entry) => entry.commands.includes(key));
-      if (key !== ShellCommand.Clear && !privacy && !local && forgetInFlight()) {
+      const parsed = parseShellInput(raw);
+      if (parsed.kind === ShellInputKind.Empty) return;
+      const { command } = parsed;
+      if (parsed.kind === ShellInputKind.Question && forgetInFlight()) {
         announce(ui.forgetting);
         return;
       }
@@ -172,22 +165,23 @@ export function InteractiveShell({
       );
       promptEditedRef.current = false;
       setInput('');
-      if (key === ShellCommand.Clear) {
+      if (parsed.kind === ShellInputKind.Clear) {
         setHistory(initialLines());
         announce(ui.cleared);
         focusInput();
         return;
       }
-      if (privacy) {
-        void runPrivacy(privacy);
+      if (parsed.kind === ShellInputKind.Privacy) {
+        void runPrivacy(parsed.privacy);
         return;
       }
-      if (local) {
+      if (parsed.kind === ShellInputKind.Local) {
+        const { response } = parsed;
         setHistory((lines) =>
           appendLines(lines, {
             id: nextId(),
-            kind: local.kind,
-            text: local.text,
+            kind: response.kind,
+            text: response.text,
             lang: SHELL_RESPONSE_LANG,
           }),
         );
@@ -195,7 +189,7 @@ export function InteractiveShell({
         focusInput();
         return;
       }
-      void streamQuestion(explicitQuestion ?? command, command);
+      void streamQuestion(parsed.question, command);
     },
     [
       announce,
@@ -316,22 +310,17 @@ export function InteractiveShell({
               onFocus={() => setInputFocused(true)}
               onBlur={() => setInputFocused(false)}
               onKeyDown={(event) => {
-                if (
-                  event.key === ShellKey.Enter &&
-                  (event.nativeEvent.isComposing || event.keyCode === COMPOSITION_KEYCODE)
-                ) {
+                const composing = event.nativeEvent.isComposing;
+                if (isCompositionEnter(event.key, composing, event.keyCode)) {
                   event.preventDefault();
                   return;
                 }
-                if (
-                  event.nativeEvent.isComposing ||
-                  hasModifier(event) ||
-                  (event.key !== ShellKey.Up && event.key !== ShellKey.Down)
-                ) {
-                  return;
-                }
+                const step = historyStepFor(event.key, {
+                  composing,
+                  modified: hasModifier(event),
+                });
+                if (step === null) return;
                 event.preventDefault();
-                const step = event.key === ShellKey.Up ? HISTORY_STEP.Older : HISTORY_STEP.Newer;
                 editInput(commandHistory.recall(step, input));
               }}
               autoComplete="off"
