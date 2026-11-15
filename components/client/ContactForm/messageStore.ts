@@ -1,13 +1,13 @@
-const LINE_BREAK = '\n';
+import { createListeners } from '@/lib/listeners';
 
-type Listener = () => void;
+const LINE_BREAK = '\n';
 
 let message = '';
 let fieldId: string | null = null;
-const listeners = new Set<Listener>();
+const listeners = createListeners();
 
 function notify(): void {
-  for (const listener of listeners) listener();
+  listeners.notify();
 }
 
 function write(next: string): void {
@@ -17,12 +17,7 @@ function write(next: string): void {
 }
 
 export const messageStore = {
-  subscribe(listener: Listener): () => void {
-    listeners.add(listener);
-    return () => {
-      listeners.delete(listener);
-    };
-  },
+  subscribe: listeners.subscribe,
   getSnapshot: (): string => message,
   getServerSnapshot: (): string => '',
   getFieldId: (): string | null => fieldId,
