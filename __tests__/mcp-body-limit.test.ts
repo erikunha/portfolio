@@ -6,6 +6,17 @@ import { POST } from '@/app/api/mcp/route';
 vi.mock('@/app/api/ask/route', () => ({
   POST: vi.fn(async () => new Response('answer')),
 }));
+vi.mock('@/lib/ask/stream', async () => {
+  const { POST } = await import('@/app/api/ask/route');
+  return {
+    startAsk: async (req: Request) => {
+      const response = await POST(req);
+      return response.ok
+        ? { ok: true, requestId: response.headers.get('X-Request-Id'), readable: response.body }
+        : { ok: false, response };
+    },
+  };
+});
 
 const MAX_MCP_BODY_BYTES = 4096;
 const MCP_URL = 'https://www.erikunha.dev/api/mcp';

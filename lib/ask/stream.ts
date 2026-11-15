@@ -1,7 +1,7 @@
 import { streamText } from 'ai';
 import { askErrors } from '@/content/ask-errors';
 import { SITE_LOCALE, type SiteLocale } from '@/content/site-locale';
-import { settleReservation } from '@/lib/ask/budget';
+import { abandonReservation, settleReservation } from '@/lib/ask/budget';
 import {
   type ClientEnding,
   classifyFinish,
@@ -22,12 +22,14 @@ import {
   validateAnswer,
   withStreamAbort,
 } from '@/lib/ask/output-guard';
-import type { AskContext } from '@/lib/ask/preflight';
+import { type AskContext, askError, preflightAsk } from '@/lib/ask/preflight';
 import { PROMPT_VERSION, SYSTEM_TEXT } from '@/lib/ask/system-prompt';
 import type { PostHocVerdict } from '@/lib/ask/types';
 import { countAskTokens, emitAskUsage } from '@/lib/ask/usage';
+import { HTTP_STATUS } from '@/lib/http-status';
 import { log } from '@/lib/log';
 import { describeError } from '@/lib/log-error';
+import { afterResponse } from '@/lib/server/after-response';
 import { REFUSAL_PREFIX, STREAM_ERR_SENTINEL } from '@/lib/stream-protocol';
 
 const REQUEST_TIMEOUT_MS = 30_000;
@@ -56,6 +58,10 @@ export type AskStream = {
   readable: ReadableStream<Uint8Array>;
   settle: () => Promise<void>;
 };
+
+export type AskStart =
+  | { ok: false; response: Response }
+  | { ok: true; requestId: string; readable: ReadableStream<Uint8Array> };
 
 type RunState = {
   upstreamFailed: boolean;
@@ -373,4 +379,31 @@ export function createAskStream(context: AskContext): AskStream {
   }
 
   return { readable, settle };
+}
+
+async function openStream(context: AskContext): Promise<AskStream | Response> {
+  try {
+    return createAskStream(context);
+  } catch (startErr) {
+    log.error('ask stream could not start', {
+      requestId: context.requestId,
+      error: describeError(startErr),
+    });
+    await abandonReservation(context);
+    return askError(
+      context.requestId,
+      askErrors[context.answerLocale].interrupted,
+      HTTP_STATUS.internalServerError,
+    );
+  }
+}
+
+export async function startAsk(req: Request): Promise<AskStart> {
+  const preflight = await preflightAsk(req);
+  if (!preflight.ok) return preflight;
+
+  const stream = await openStream(preflight.context);
+  if (stream instanceof Response) return { ok: false, response: stream };
+  afterResponse(stream.settle);
+  return { ok: true, requestId: preflight.context.requestId, readable: stream.readable };
 }

@@ -1,12 +1,6 @@
-import { askErrors } from '@/content/ask-errors';
-import { abandonReservation } from '@/lib/ask/budget';
-import { type AskContext, askError, preflightAsk } from '@/lib/ask/preflight';
-import { type AskStream, createAskStream } from '@/lib/ask/stream';
+import { startAsk } from '@/lib/ask/stream';
 import { env } from '@/lib/env';
-import { HTTP_STATUS } from '@/lib/http-status';
 import { log } from '@/lib/log';
-import { describeError } from '@/lib/log-error';
-import { afterResponse } from '@/lib/server/after-response';
 import { REQUEST_ID_HEADER } from '@/lib/stream-protocol';
 
 try {
@@ -15,38 +9,16 @@ try {
   console.error('[ask] logger unavailable on cold start');
 }
 
-async function startStream(context: AskContext): Promise<AskStream | Response> {
-  try {
-    return createAskStream(context);
-  } catch (startErr) {
-    log.error('ask stream could not start', {
-      requestId: context.requestId,
-      error: describeError(startErr),
-    });
-    await abandonReservation(context);
-    return askError(
-      context.requestId,
-      askErrors[context.answerLocale].interrupted,
-      HTTP_STATUS.internalServerError,
-    );
-  }
-}
-
 async function handleAsk(req: Request): Promise<Response> {
-  const preflight = await preflightAsk(req);
-  if (!preflight.ok) return preflight.response;
+  const start = await startAsk(req);
+  if (!start.ok) return start.response;
 
-  const stream = await startStream(preflight.context);
-  if (stream instanceof Response) return stream;
-  const { readable, settle } = stream;
-  afterResponse(settle);
-
-  return new Response(readable, {
+  return new Response(start.readable, {
     headers: {
       'Content-Type': 'text/plain; charset=utf-8',
       'Cache-Control': 'no-store',
       'X-Content-Type-Options': 'nosniff',
-      [REQUEST_ID_HEADER]: preflight.context.requestId,
+      [REQUEST_ID_HEADER]: start.requestId,
     },
   });
 }

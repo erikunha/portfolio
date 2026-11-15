@@ -14,6 +14,17 @@ const CALLER_IP = '203.0.113.7';
 const askPost = vi.hoisted(() => vi.fn());
 
 vi.mock('@/app/api/ask/route', () => ({ POST: askPost }));
+vi.mock('@/lib/ask/stream', async () => {
+  const { POST } = await import('@/app/api/ask/route');
+  return {
+    startAsk: async (req: Request) => {
+      const response = await POST(req);
+      return response.ok
+        ? { ok: true, requestId: response.headers.get('X-Request-Id'), readable: response.body }
+        : { ok: false, response };
+    },
+  };
+});
 vi.mock('@/lib/log', () => ({
   log: { info: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn() },
 }));

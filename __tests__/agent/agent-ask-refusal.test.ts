@@ -18,6 +18,17 @@ vi.mock('@/app/api/ask/route', () => ({
       }),
   ),
 }));
+vi.mock('@/lib/ask/stream', async () => {
+  const { POST } = await import('@/app/api/ask/route');
+  return {
+    startAsk: async (req: Request) => {
+      const response = await POST(req);
+      return response.ok
+        ? { ok: true, requestId: response.headers.get('X-Request-Id'), readable: response.body }
+        : { ok: false, response };
+    },
+  };
+});
 
 async function connectTestClient(): Promise<Client> {
   const server = new McpServer({ name: 'test', version: '0.0.0' });
