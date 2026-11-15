@@ -20,6 +20,7 @@ import {
 } from '@/lib/eval/ask-grading';
 import { type AskResult, STREAM_ERROR_STATUS, withTransportRetry } from '@/lib/eval/ask-retry';
 import { classifyAskStream } from '@/lib/eval/ask-stream';
+import { createEvalBudgetStore, setBudgetStore } from '@/lib/eval/budget-store';
 import {
   CALIBRATION_ERROR_FRACTION_LIMIT,
   describeCalibrationFailure,
@@ -42,7 +43,6 @@ import { publishWithCredentials } from '@/lib/eval/redis-publish';
 import { countTruncated, isTruncatedAnswer } from '@/lib/eval/truncation';
 import type { CalibrationCase } from '@/lib/eval/types';
 import { createUsageMeter } from '@/lib/eval/usage-meter';
-import { createEvalBudgetStore, setBudgetStore } from '@/lib/rate-limit';
 
 const JUDGE_MODEL = 'anthropic/claude-sonnet-4-6';
 

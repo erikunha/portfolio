@@ -9,7 +9,7 @@ The streaming question and answer API and the interactive shell that calls it.
 | Path prefix | Tracked files |
 | --- | ---: |
 | `app/api/ask/` | 1 |
-| `lib/ask/` | 45 |
+| `lib/ask/` | 47 |
 | `components/client/InteractiveShell/` | 46 |
 | `__tests__/ask/` | 45 |
 
@@ -42,7 +42,7 @@ The ask product eval: corpus runner, judge and calibration.
 
 | Path prefix | Tracked files |
 | --- | ---: |
-| `lib/eval/` | 41 |
+| `lib/eval/` | 42 |
 | `scripts/eval/` | 4 |
 
 ## links
