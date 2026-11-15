@@ -10,6 +10,8 @@ export const AI_PATHS: readonly string[] = [
   'lib/log.ts',
   'lib/log-error.ts',
   'lib/with-timeout.ts',
+  'lib/post-json.ts',
+  'lib/request-refs.client.ts',
   'lib/server/',
   'lib/agent/',
   'lib/hiring-profile.ts',
