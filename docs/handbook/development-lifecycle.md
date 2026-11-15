@@ -4,28 +4,40 @@ How a change flows from requirement to production. Git hooks and CI enforce chec
 
 ## The lifecycle at a glance
 
+Planning, up to the first line of code:
+
 ```mermaid
-flowchart TD
-    idea["Idea / requirement"] --> brainstorm["Brainstorm"]
-    brainstorm --> spec["Spec (local, untracked)<br/>requirements + acceptance criteria"]
-    spec --> agate{"plan-review convention<br/>GATE_RESULT: PASS?"}
+flowchart LR
+    idea["Idea"] --> brainstorm["Brainstorm"] --> spec["Spec (local)"]
+    spec --> agate{"plan-review PASS?"}
     agate -->|no| spec
-    agate -->|yes| plan["Plan: local feature directory<br/>independently verifiable tasks"]
-    plan --> branch["feature branch: feat|fix|... /description"]
-    branch --> tdd["TDD implementation (tests first)"]
-    tdd --> commit["commit (scope blocks): type(scope): subject"]
-    commit --> hooks["per-commit hooks: Biome + staged gitleaks + commitlint"]
-    hooks --> push["git push (pre-push gate chain)"]
-    push --> readypr["ci:full; non-docs gates:runtime"]
-    readypr --> pr["gh pr create (fill template)"]
-    pr --> conv["review the pull request (answer every finding)"]
-    conv --> readymerge["CI green + Argos approved + findings answered"]
-    readymerge --> merge["squash-merge (#NNN) by the owner"]
-    merge --> deploy["Vercel deploy"]
-    deploy --> smoke["post-deploy smoke test"]
-    smoke --> adr["deployment verified; ADR recorded"]
-    adr --> idea
+    agate -->|yes| plan["Plan"] --> branch["Feature branch"] --> tdd["TDD"]
 ```
+
+From the first commit to an open pull request:
+
+```mermaid
+flowchart LR
+    commit["commit"] --> hooks["pre-commit, commit-msg"] --> push["git push"]
+    push --> verify["pre-push: verify"] --> full["ci:full"] --> pr["gh pr create"]
+```
+
+From review to a recorded decision:
+
+```mermaid
+flowchart LR
+    review["Review, answer findings"] --> ready["CI green, Argos approved"]
+    ready --> merge["Squash-merge by owner"] --> deploy["Vercel deploy"]
+    deploy --> smoke["Smoke test"] --> adr["ADR recorded"]
+```
+
+- The recorded decision feeds the next idea.
+- The spec and plan live in a local, untracked feature directory.
+- `plan-review` must return `GATE_RESULT: PASS`; this is a convention, not a hook.
+- The branch is `feat|fix|...` plus `/description`, one logical unit per commit: `type(scope): subject`.
+- The per-commit hooks are Biome on staged files, staged gitleaks and commitlint.
+- `ci:full` runs before the PR; `gates:runtime` also runs for a change that is not docs-only.
+- The PR template is filled in full. Merge needs CI green, Argos approved and every finding answered.
 
 ## Phase by phase
 

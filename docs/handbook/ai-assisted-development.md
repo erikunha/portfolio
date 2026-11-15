@@ -4,26 +4,29 @@
 
 ## Where AI shows up in the lifecycle
 
-```mermaid
-sequenceDiagram
-    participant H as Engineer
-    participant C as Coding agent (any tool)
-    participant G as Git hooks and scripts
-    participant CI as CI
+Planning, from intent to a first test:
 
-    H->>C: intent ("build X" / "fix Y")
-    C->>C: spec (intent + approach)
-    C->>C: plan-review skill (PASS or BLOCK against scope, JS budget, API limits)
-    C->>C: plan with a failure-mode checklist (each failure mode -> a task)
-    C->>C: TDD implement (tests first)
-    C->>G: commit runs Biome, staged gitleaks and commitlint
-    C->>G: git push (pre-push: main guard, branch name, pnpm verify)
-    C->>CI: open eligible PR - CI runs checks and filtered runtime jobs
-    H->>CI: optional: owner, member or collaborator comments /claude-review
-    CI->>C: claude-review posts inline findings + Verdict
-    CI-->>C: review threads
-    C->>C: review the pull request, answer every finding
+```mermaid
+flowchart LR
+    intent["Intent from engineer"] --> spec["Spec"] --> pr1["plan-review"]
+    pr1 --> plan["Plan with failure modes"] --> tdd["TDD, tests first"]
 ```
+
+- `plan-review` returns PASS or BLOCK against scope, JS budget and API limits.
+- Each failure mode in the plan becomes a task.
+
+Shipping, from commit to answered findings:
+
+```mermaid
+flowchart LR
+    commit["commit"] --> push["git push"] --> pr["Open PR"]
+    pr --> rev["/claude-review (optional)"] --> ans["Answer every finding"]
+```
+
+- The commit runs Biome, staged gitleaks and commitlint.
+- The pre-push hook runs the main guard, the branch name check and `pnpm verify`.
+- CI runs its checks and the filtered runtime jobs on an eligible PR.
+- An owner, member or collaborator comments `/claude-review`. The bot posts inline findings and a `Verdict:` line.
 
 ## 1. Context engineering (what the agent knows)
 

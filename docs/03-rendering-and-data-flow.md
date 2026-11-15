@@ -26,23 +26,25 @@ flowchart TD
     globalError["global-error.tsx -> replaces the root layout on root failure"]
 ```
 
-The design-system layout hangs its five top-level pages and their children off the English group:
+The design-system layout hangs off the English group. Its routes:
+
+```text
+/design-system                          layout.tsx
+├── /design-system                      page.mdx
+├── tokens
+├── components
+├── enforcement
+├── changelog                           git-generated
+├── foundations/{colors,typography,spacing-borders}
+└── primitives/*                        ten component pages
+```
+
+`_components/ds-nav.ts` holds the page tree, the pager and the sitemap entries. The index page composes two parts:
 
 ```mermaid
-flowchart TD
-    layout["app/(en)/layout.tsx · html lang en-US"]
-    layout --> ds["/design-system -> app/(en)/design-system/layout.tsx"]
-    ds --> ds1["/design-system (page.mdx)"]
-    ds1 --> toc["OnThisPage: sections and principles links"]
-    ds1 --> opinion["DesignSystemOpinion: docs-placement DS take"]
-    opinion --> takes["content/hottest-takes.ts"]
-    ds --> ds2["/design-system/tokens"]
-    ds --> ds3["/design-system/components"]
-    ds --> ds4["/design-system/enforcement"]
-    ds --> ds5["/design-system/changelog (git-generated)"]
-    ds --> ds6["/design-system/foundations/{colors,typography,spacing-borders}"]
-    ds --> ds7["/design-system/primitives/* (ten component pages)"]
-    dsnav["_components/ds-nav.ts: page tree, pager and sitemap entries"] -.-> ds
+flowchart LR
+    page["design-system page.mdx"] --> toc["OnThisPage"]
+    page --> opinion["DesignSystemOpinion"] --> takes["content/hottest-takes.ts"]
 ```
 
 The pt-BR group mirrors the English one, and the shell serves the API cluster:

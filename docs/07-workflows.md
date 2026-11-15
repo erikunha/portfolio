@@ -136,7 +136,7 @@ flowchart LR
 
 `.github/workflows/ci.yml` (the authoritative gate). A `detect-changes` job emits `app`, `ai` and `ui` booleans so heavy jobs skip on docs-only PRs (GitHub treats skipped required checks as satisfied). Matrix jobs skipped at job level report ONE unsuffixed check, so matrix-named required contexts (`e2e-functional (chromium)` etc.) hang forever on path-skipped PRs; required checks therefore point at always-reporting contexts and the conditional jobs are enforced through the `ci-gate` fan-in below.
 
-The CI graph splits into three views: the trigger and the always-on jobs, the job graph the gates hang off, and the `ci-gate` fan-in.
+The CI graph is shown in four small views: the trigger and the always-on jobs, the build chain, the path-gated jobs and the `ci-gate` fan-in.
 
 The trigger fans out to change detection and to the always-on jobs:
 
@@ -149,49 +149,48 @@ flowchart TD
     pr --> dr["dependency-review (PR)"]
 ```
 
-The job graph: the build, the release attestation, the coverage comment and the path-gated jobs:
+Build chain: three always-on jobs feed the build, which feeds the attestation. The coverage comment reads the test job.
 
 ```mermaid
-flowchart TD
-    qf["quality-fast"] --> b["build (+ global bundle and route-JS gates)"]
+flowchart LR
+    qf["quality-fast"] --> b["build"]
     tc["typecheck"] --> b
-    t["test (audit, Stryker canary, Vitest + coverage)"] --> b
-    b --> at["attest-build: provenance on main, runs no repository code"]
-    t --> cc["coverage-comment: PR comment from the coverage artifact, runs no repository code"]
-    b --> perf["performance: LHCI desktop+mobile + axe (if app)"]
-    b --> e2e["e2e-functional (8 projects, 10 jobs, if app)"]
-    b --> vis["e2e-visual-chromium (desktop/mobile Chromium, if ui)"]
-    dc["detect-changes (app?, ai?, ui?)"] --> perf
+    t["test"] --> b
+    b --> at["attest-build"]
+    t --> cc["coverage-comment"]
+```
+
+Path-gated jobs: the first three wait on the build and on `detect-changes`. `ai-eval` waits on `detect-changes` and three other jobs.
+
+```mermaid
+flowchart LR
+    b["build"] --> perf["performance"]
+    b --> e2e["e2e-functional"]
+    b --> vis["e2e-visual-chromium"]
+    dc["detect-changes"] --> perf
     dc --> e2e
     dc --> vis
-    dc --> ev["ai-eval (if ai and the PR carries the ai-eval label)"]
-    qf --> ev
-    tc --> ev
-    t --> ev
+    dc --> ev["ai-eval"]
 ```
 
-The fan-in: every job above, plus the always-on gitleaks and semgrep, reports into `ci-gate`. The nodes are the `ci.yml` job names; the table below carries their full descriptions.
+- `performance` and `e2e-functional` run when `app` is true on a pull request. `e2e-visual-chromium` needs `ui`.
+- `ai-eval` needs `ai` and the `ai-eval` label. It also waits on `quality-fast`, `typecheck` and `test`, not on `build`.
+- `build` also runs the global bundle and route-JS gates.
+
+The fan-in: every job above, plus the always-on `gitleaks` and `semgrep`, reports into `ci-gate`.
 
 ```mermaid
-flowchart TD
-    pr["PR / push main / workflow_dispatch"] --> secrets["gitleaks: history scan + fixture check"]
-    secrets --> gate
-    pr --> semgrep["semgrep: fixture self-test and FP baseline block, findings scan report-only"]
-    semgrep --> gate
-    dc["detect-changes"] --> gate
-    qf["quality-fast"] --> gate
-    tc["typecheck"] --> gate
-    t["test"] --> gate
-    dr["dependency-review"] --> gate
-    b["build"] --> gate
-    at["attest-build"] --> gate
-    cc["coverage-comment"] --> gate
-    perf["performance"] --> gate
-    e2e["e2e-functional"] --> gate
-    vis["e2e-visual-chromium"] --> gate
-    ev["ai-eval"] --> gate
-    gate["ci-gate: always-on fan-in: always-run jobs must succeed; others pass only on success or path skip"]
+flowchart LR
+    always["Always-run jobs"] -->|must succeed| gate["ci-gate"]
+    cond["Conditional jobs"] -->|succeed or path-skip| gate
 ```
+
+| Group | Jobs |
+| --- | --- |
+| Always-run | `detect-changes`, `quality-fast`, `typecheck`, `test`, `build`, `semgrep`, `gitleaks` |
+| Conditional | `dependency-review`, `coverage-comment`, `attest-build`, `performance`, `e2e-functional`, `e2e-visual-chromium`, `ai-eval` |
+
+The table below carries the full description of each job.
 
 | Job | Runs when | What it does |
 | --- | --- | --- |

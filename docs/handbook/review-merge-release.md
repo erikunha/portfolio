@@ -4,26 +4,41 @@
 
 ## The full gate chain (commit -> production)
 
+Commit and push, the local hooks:
+
 ```mermaid
-flowchart TD
-    write["code written"] --> c1["pre-commit: Biome + staged gitleaks"]
-    c1 --> c2["commit-msg: commitlint (scope mandatory)"]
-    c2 --> p1["pre-push: no direct main"]
-    p1 --> p2["pre-push: branch name #lt;type#gt;/#lt;desc#gt;"]
-    p2 --> p5["pre-push: pnpm verify"]
-    p5 --> r1["pre-PR: ci:full (docs-only: ci:local)"]
-    r1 --> r2["pre-PR: bundle + route-JS gates, every e2e project and the visual specs (inside ci:full)"]
-    r2 --> r4["pre-PR: gates:runtime (LHCI+axe+E2E, non-docs)"]
-    r4 --> o1["open PR: fill every template section"]
-    o1 --> o1b["CI green on the PR head, Argos visual check approved"]
-    o1 --> o2["review the PR against REVIEW.md (matching skills, render read)"]
-    o1b --> m1["pre-merge: ci:local"]
-    o2 --> m1
-    m1 --> m4["pre-merge: every blocking finding answered"]
-    m4 --> merge["squash-merge (#NNN) by the owner, in the browser"]
-    merge --> deploy["Vercel deploy"]
-    deploy --> smoke["smoke.yml: healthz + headers + liveness"]
+flowchart LR
+    c1["pre-commit"] --> c2["commit-msg"] --> p1["pre-push: main guard"]
+    p1 --> p2["pre-push: branch name"] --> p3["pre-push: verify"]
 ```
+
+- `pre-commit` runs Biome and staged gitleaks. `commit-msg` runs commitlint, and the scope is mandatory.
+- The branch name must match `<type>/<description>`.
+
+Before the pull request opens:
+
+```mermaid
+flowchart LR
+    full["ci:full"] --> rt["gates:runtime"] --> open["Open PR"]
+```
+
+- `ci:full` includes the bundle and route-JS gates, every e2e project and the visual specs. A docs-only change runs `ci:local` instead.
+- `gates:runtime` (LHCI, axe, E2E) runs for a change that is not docs-only.
+- Opening the PR means filling every template section.
+
+From the open PR to production:
+
+```mermaid
+flowchart LR
+    pr["Open PR"] --> ci["CI green, Argos approved"]
+    pr --> rev["Review against REVIEW.md"]
+    ci --> local["ci:local"]
+    rev --> local
+    local --> found["Findings answered"] --> merge["Squash-merge"] --> deploy["Vercel deploy"]
+```
+
+- The review uses every matching skill and reads the rendered result.
+- The owner squash-merges in the browser. `smoke.yml` then checks healthz, headers and liveness.
 
 ## Code review
 
