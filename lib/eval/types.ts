@@ -41,3 +41,12 @@ export const CalibrationResultSchema = z.object({
   judgeCacheWriteTokens: z.number().int().nonnegative().default(0),
 });
 export type CalibrationResult = z.infer<typeof CalibrationResultSchema>;
+
+export type GradableCase = {
+  id: string;
+  prompt: string;
+  tier: string;
+  grader: 'code' | 'judge';
+  expect: string;
+  assert?: (output: string) => boolean;
+};

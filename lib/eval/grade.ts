@@ -1,9 +1,8 @@
-import type { LoadedCase } from '@/evals/agents/load';
 import { judge } from '@/lib/eval/judge';
-import type { JudgeVerdict } from '@/lib/eval/types';
+import type { GradableCase, JudgeVerdict } from '@/lib/eval/types';
 
 export async function gradeRun(
-  c: LoadedCase,
+  c: GradableCase,
   output: string,
   opts: { judgeModel: string },
 ): Promise<JudgeVerdict> {
