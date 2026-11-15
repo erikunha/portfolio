@@ -2,7 +2,12 @@ import { parse } from 'postcss';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { readComponentsCss } from '@/__tests__/helpers/components-css';
-import { declValue, rulesWithSelector } from '@/__tests__/helpers/css-rules';
+import {
+  compiledSiteStylesheet,
+  declValue,
+  ruleSelectors,
+  rulesWithSelector,
+} from '@/__tests__/helpers/css-rules';
 import { measured } from '@/content/measured';
 import { SITE_LOCALE } from '@/content/site-locale';
 import vercelConfig from '@/vercel.json';
@@ -326,17 +331,19 @@ describe('LivePerfSection: lighthouse loading state', () => {
     expect(doc.querySelector('.measured-description')?.textContent).toBe('desktop / celular');
   });
 
-  it('steps the bar with CSS only, and only where motion is allowed', () => {
+  it('steps the bar with CSS only, and only where motion is allowed', async () => {
     // behavioral-test-allow: animation and reduced-motion contracts live in the shipped stylesheet; jsdom runs no animations
-    const stylesheet = parse(readComponentsCss());
+    const stylesheet = await compiledSiteStylesheet();
     const motionSelector = 'body:not([data-motion="reduce"]) .measured-load-bar::after';
     const animatedOutsideGuard: string[] = [];
     let guarded: string | undefined;
     stylesheet.walkRules((rule) => {
       const animation = declValue(rule, 'animation');
       if (!animation?.includes('measured-load-fill')) return;
-      if (rule.selector === motionSelector) guarded = animation;
-      else animatedOutsideGuard.push(rule.selector);
+      for (const selector of ruleSelectors(rule)) {
+        if (selector === motionSelector) guarded = animation;
+        else animatedOutsideGuard.push(selector);
+      }
     });
     expect(guarded).toMatch(/steps\(/);
     expect(animatedOutsideGuard).toEqual([]);

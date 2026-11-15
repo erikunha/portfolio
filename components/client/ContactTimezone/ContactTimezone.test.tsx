@@ -2,7 +2,12 @@ import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import { parse } from 'postcss';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { readComponentsCss } from '@/__tests__/helpers/components-css';
-import { declValue, rulesWithSelector } from '@/__tests__/helpers/css-rules';
+import {
+  compiledSiteStylesheet,
+  declValue,
+  rulesWithResolvedSelector,
+  rulesWithSelector,
+} from '@/__tests__/helpers/css-rules';
 import { fire } from '@/__tests__/helpers/render';
 import { contactCopy } from '@/content/contact-copy';
 import { contactHoursPhrase, fillCopy } from '@/content/contact-rules';
@@ -677,13 +682,13 @@ describe('ContactTimezone pins and the map box', () => {
 });
 
 describe('ContactTimezone motion switch', () => {
-  const stylesheet = parse(readComponentsCss());
   const ANIMATED = ['.ctz-pulse', '.ctz-route'];
 
-  it('stops the pulse and the dash animation under the in-page motion switch', () => {
+  it('stops the pulse and the dash animation under the in-page motion switch', async () => {
     // behavioral-test-allow: motion is stylesheet-only and jsdom cannot evaluate a body attribute selector
+    const stylesheet = await compiledSiteStylesheet();
     for (const selector of ANIMATED) {
-      const rules = rulesWithSelector(stylesheet, `body[data-motion="reduce"] ${selector}`);
+      const rules = rulesWithResolvedSelector(stylesheet, `body[data-motion="reduce"] ${selector}`);
       expect(rules, `${selector} must stop animating when the motion switch is off`).toHaveLength(
         1,
       );
@@ -734,9 +739,13 @@ describe.each(Object.values(SITE_LOCALE))('ascii spinner on the static panel (%s
     expect(shown[1]).toContain('---');
   });
 
-  it('freezes on the first glyph under the motion toggle', () => {
+  it('freezes on the first glyph under the motion toggle', async () => {
     // behavioral-test-allow: motion is stylesheet-only and jsdom cannot evaluate a body attribute selector
-    const toggle = rulesWithSelector(stylesheet, 'body[data-motion="reduce"] .ctz-spin-frame');
+    const compiled = await compiledSiteStylesheet();
+    const toggle = rulesWithResolvedSelector(
+      compiled,
+      'body[data-motion="reduce"] .ctz-spin-frame',
+    );
 
     expect(declValue(toggle[0], 'animation')).toBe('none');
   });

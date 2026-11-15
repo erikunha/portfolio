@@ -1,9 +1,12 @@
-import { parse as parseCss } from 'postcss';
 import { createElement, isValidElement, type ReactNode } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
-import { readComponentsCss } from '@/__tests__/helpers/components-css';
-import { declValue, rulesWithSelector } from '@/__tests__/helpers/css-rules';
+import {
+  compiledSiteStylesheet,
+  declValue,
+  ruleSelectors,
+  rulesWithSelector,
+} from '@/__tests__/helpers/css-rules';
 import { dawMixer } from '@/content/daw-mixer';
 import { GUITAR_MODULE_HEADER, guitarPresentation, guitarRig } from '@/content/guitar-rig';
 import { SECTION_LABELS } from '@/content/section-labels';
@@ -326,14 +329,14 @@ describe('mixer loading state: boot log', () => {
     expect(cursor?.getAttribute('aria-hidden')).toBe('true');
   });
 
-  it('blinks the cursor in steps only where motion is allowed, and keeps the mixer height', () => {
+  it('blinks the cursor in steps only where motion is allowed, and keeps the mixer height', async () => {
     // behavioral-test-allow: blink, reduced-motion and height contracts live in the shipped stylesheet; jsdom runs no animations
-    const stylesheet = parseCss(readComponentsCss());
+    const stylesheet = await compiledSiteStylesheet();
     const blinkRules: Array<{ selector: string; animation: string }> = [];
     stylesheet.walkRules((rule) => {
       const animation = declValue(rule, 'animation');
       if (!animation?.includes('mixer-boot-blink')) return;
-      blinkRules.push({ selector: rule.selector, animation });
+      for (const selector of ruleSelectors(rule)) blinkRules.push({ selector, animation });
     });
     expect(blinkRules).toEqual([
       {
