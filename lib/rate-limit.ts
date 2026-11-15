@@ -3,27 +3,6 @@ import { FORGET_WINDOW, FORGET_WINDOW_REQUESTS } from '@/lib/forget-limits';
 import { getRedis } from '@/lib/redis';
 import type { RateLimitIdentifier } from '@/lib/server/rate-limit-key';
 
-export {
-  type BudgetRefusalReason,
-  type BudgetReservation,
-  type BudgetStore,
-  getBudgetKey,
-  getDailyBudgetKey,
-  MONTHLY_BUDGET_USD,
-  reserveBudget,
-  setBudgetStore,
-  settleBudget,
-} from '@/lib/ask/budget';
-export { checkIdenticalQuestion, releaseIdenticalQuestion } from '@/lib/ask/dedup';
-export { createEvalBudgetStore } from '@/lib/eval/budget-store';
-export {
-  getRedis,
-  hasRedisCredentials,
-  REDIS_ENV_PAIRS,
-  RedisNotConfiguredError,
-} from '@/lib/redis';
-export { getClientIp } from '@/lib/server/client-ip';
-
 type LimitResult = { success: boolean; reset?: number };
 
 export interface ClientRateLimiter {
