@@ -1,18 +1,19 @@
-import { readdirSync, readFileSync, statSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
+import { listFiles } from '@/scripts/lib/walk';
 
 const ROOTS = ['components', 'app', 'design-system'];
 const MARKER = /(?<![\w[-])data-type-reveal(?![\w\]-])/g;
 const SUPPRESS = 'suppressHydrationWarning';
 
+const SOURCE_TSX = /\.tsx$/;
+const TEST_TSX = /\.(test|e2e)\.tsx$/;
+
 function sourceFiles(dir: string): string[] {
-  return readdirSync(dir).flatMap((name) => {
-    const path = join(dir, name);
-    if (statSync(path).isDirectory()) return sourceFiles(path);
-    if (!path.endsWith('.tsx') || /\.(test|e2e)\.tsx$/.test(path)) return [];
-    return [path];
-  });
+  return listFiles(dir, { include: (name) => SOURCE_TSX.test(name) && !TEST_TSX.test(name) }).map(
+    (rel) => join(dir, rel),
+  );
 }
 
 describe('type reveal elements tolerate the pre-hydration mutation', () => {

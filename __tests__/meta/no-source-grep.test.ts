@@ -1,6 +1,7 @@
-import { readdirSync, readFileSync, statSync } from 'node:fs';
-import { join, sep } from 'node:path';
+import { readFileSync } from 'node:fs';
+import { basename, join, sep } from 'node:path';
 import { describe, expect, it } from 'vitest';
+import { listFiles } from '@/scripts/lib/walk';
 
 const ROOT_DIR = process.cwd();
 const SOURCE_HINT = /readFileSync|readFile\(/;
@@ -62,13 +63,10 @@ const isTestCode = (full: string, entry: string) => {
 };
 
 function walk(dir: string): string[] {
-  return readdirSync(dir).flatMap((e) => {
-    if (SKIP_DIRS.has(e)) return [];
-    if (dir === ROOT_DIR && SKIP_ROOTS.has(e)) return [];
-    const full = join(dir, e);
-    if (statSync(full).isDirectory()) return walk(full);
-    return isTestCode(full, e) ? [full] : [];
-  });
+  return listFiles(dir, { include: ANY_SCRIPT, skipDirs: SKIP_DIRS })
+    .filter((rel) => dir !== ROOT_DIR || !SKIP_ROOTS.has(rel.split(sep)[0] ?? ''))
+    .map((rel) => join(dir, rel))
+    .filter((full) => isTestCode(full, basename(full)));
 }
 
 const READER_BODY = 300;

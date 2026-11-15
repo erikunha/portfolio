@@ -1,6 +1,7 @@
-import { readdirSync, readFileSync, statSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
+import { listFiles } from '@/scripts/lib/walk';
 
 const ROOT = path.resolve(__dirname, '..');
 const CSS_DIR = path.join(ROOT, 'app', 'css');
@@ -63,14 +64,13 @@ function selectorClasses(css: string): Set<string> {
   return found;
 }
 
+const SKIP_DIRS: ReadonlySet<string> = new Set(['node_modules', '.next']);
+
 function listSourceFiles(dir: string): string[] {
-  return readdirSync(dir).flatMap((name) => {
-    if (name === 'node_modules' || name === '.next') return [];
-    const full = path.join(dir, name);
-    if (statSync(full).isDirectory()) return listSourceFiles(full);
-    const ext = path.extname(name);
-    return SOURCE_EXTENSIONS.has(ext) && !TEST_FILE.test(name) ? [full] : [];
-  });
+  return listFiles(dir, {
+    include: (name) => SOURCE_EXTENSIONS.has(path.extname(name)) && !TEST_FILE.test(name),
+    skipDirs: SKIP_DIRS,
+  }).map((rel) => path.join(dir, rel));
 }
 
 function unreferencedClasses(declared: Set<string>, corpus: string): string[] {

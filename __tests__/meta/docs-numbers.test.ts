@@ -1,6 +1,7 @@
-import { readdirSync, readFileSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
+import { listFiles } from '@/scripts/lib/walk';
 import { YEARS_OF_EXPERIENCE_LABEL } from '../../content/profile';
 import { projects } from '../../content/projects';
 import { SITE_LOCALE } from '../../content/site-locale';
@@ -56,15 +57,10 @@ const README = read('README.md');
 const ARCHITECTURE = read('ARCHITECTURE.md');
 const DOMAIN_DOC = read('docs/02-domain.md');
 
-const countDesignSystemPages = (): number => {
-  const dir = path.join(REPO_ROOT, 'app', '(en)', 'design-system');
-  const walk = (current: string): number =>
-    readdirSync(current, { withFileTypes: true }).reduce((total, entry) => {
-      if (entry.isDirectory()) return total + walk(path.join(current, entry.name));
-      return entry.name === 'page.mdx' ? total + 1 : total;
-    }, 0);
-  return walk(dir);
-};
+const countDesignSystemPages = (): number =>
+  listFiles(path.join(REPO_ROOT, 'app', '(en)', 'design-system'), {
+    include: (name) => name === 'page.mdx',
+  }).length;
 
 type LighthouseAssertions = Record<string, [string, { minScore?: number }] | string>;
 

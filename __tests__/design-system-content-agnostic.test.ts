@@ -1,6 +1,7 @@
-import { readdirSync, readFileSync, statSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import { describe, expect, it } from 'vitest';
+import { listFiles } from '@/scripts/lib/walk';
 
 const DESIGN_SYSTEM_DIR = join(process.cwd(), 'design-system');
 const SOURCE_FILE = /\.(?:ts|tsx|mdx|js|jsx|mjs|cjs)$/;
@@ -8,11 +9,7 @@ const CONTENT_SPECIFIER =
   /(?:\bfrom|\bimport\s*\(|\brequire\s*\()\s*['"](?:@\/content(?:\/[^'"]*)?|(?:\.\.\/)+content(?:\/[^'"]*)?)['"]/;
 
 function sourceFiles(dir: string): string[] {
-  return readdirSync(dir).flatMap((entry) => {
-    const path = join(dir, entry);
-    if (statSync(path).isDirectory()) return sourceFiles(path);
-    return SOURCE_FILE.test(entry) ? [path] : [];
-  });
+  return listFiles(dir, { include: SOURCE_FILE }).map((rel) => join(dir, rel));
 }
 
 describe('design system is content-agnostic', () => {

@@ -1,6 +1,7 @@
 import { readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
+import { listFiles } from '@/scripts/lib/walk';
 
 // Why this gate exists. The site rounds every line box to whole pixels
 // (`round(nearest, 1em * var(--leading), 1px)` in the base layer), because a
@@ -35,44 +36,23 @@ const cssFiles = (): string[] => {
     .map((name) => path.join(dir, name));
 };
 
-const sourceFiles = (): string[] => {
-  const files: string[] = [];
-  const walk = (current: string): void => {
-    for (const entry of readdirSync(current, { withFileTypes: true })) {
-      const full = path.join(current, entry.name);
-      if (entry.isDirectory()) {
-        if (entry.name === 'node_modules' || entry.name === '.next') continue;
-        walk(full);
-        continue;
-      }
-      if (/\.(tsx|ts)$/.test(entry.name)) files.push(full);
-    }
-  };
-  for (const root of SOURCE_ROOTS) walk(path.join(REPO_ROOT, root));
-  return files;
-};
+const SKIP_DIRS: ReadonlySet<string> = new Set(['node_modules', '.next']);
+
+const filesUnder = (root: string, include: RegExp): string[] =>
+  listFiles(root, { include, skipDirs: SKIP_DIRS }).map((rel) => path.join(root, rel));
+
+const sourceFiles = (): string[] =>
+  SOURCE_ROOTS.flatMap((root) => filesUnder(path.join(REPO_ROOT, root), /\.(tsx|ts)$/));
 
 // The stylesheets and the documentation pages. Tailwind's scanner reads
 // every file in the project, not only the components: a class name written
 // in a comment in a stylesheet or in a paragraph of a documentation page is
 // a class name Tailwind generates, and a generated leading utility writes
 // `line-height` in the utilities layer, where it bypasses the rounding.
-const styleAndDocFiles = (): string[] => {
-  const files: string[] = [...cssFiles()];
-  const walk = (current: string): void => {
-    for (const entry of readdirSync(current, { withFileTypes: true })) {
-      const full = path.join(current, entry.name);
-      if (entry.isDirectory()) {
-        if (entry.name === 'node_modules' || entry.name === '.next') continue;
-        walk(full);
-        continue;
-      }
-      if (/\.mdx$/.test(entry.name)) files.push(full);
-    }
-  };
-  walk(path.join(REPO_ROOT, 'app'));
-  return files;
-};
+const styleAndDocFiles = (): string[] => [
+  ...cssFiles(),
+  ...filesUnder(path.join(REPO_ROOT, 'app'), /\.mdx$/),
+];
 
 // The rules of a stylesheet, with the selectors of each and its body. The
 // body of a rule never holds a brace, so the innermost blocks are the ones
