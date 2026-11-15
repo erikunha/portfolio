@@ -31,7 +31,7 @@ flowchart TD
 
 `claude-review` is requested, not automatic. It is a model-judged sensor: it reports findings, it does not approve, and no merge waits on it. Only correctness, security, accessibility, performance budget, test validity and spec or plan compliance block (`REVIEW.md`); style and naming never do, and nits are capped at five. No automatic follow-up round runs. Deterministic validation (tests, typecheck, lint, build, bundle and route-JS gates, CI) is the quality bar.
 
-The `high-risk` label marks a pull request that changes a high-risk surface: the API and server code, the ask and agent code, rate limiting, env and IP-hash handling, contact delivery, `proxy.ts`, `next.config.ts` and `vercel.json`, the workflows, hooks and scanner configuration, CODEOWNERS and Dependabot settings, `.env.example`, and the dependency manifests, lockfile and workspace settings. `high-risk-label.yml` adds and removes it on every push from the list in `scripts/high-risk-paths.ts`, read from the PR's base commit. Read a labelled PR for the abuse paths each of those surfaces closes (`.claude/rules/api-boundary.md`) before anything else. The label limits no PR size, blocks no merge, and is not applied to fork or Dependabot PRs, whose token is read-only.
+The `high-risk` label marks a pull request that changes a high-risk surface: the API and server code, the ask and agent code, rate limiting, env and IP-hash handling, contact delivery, `proxy.ts`, `next.config.ts` and `vercel.json`, the workflows, hooks and scanner configuration, CODEOWNERS and Dependabot settings, `.env.example`, and the dependency manifests, lockfile and workspace settings. `high-risk-label.yml` adds and removes it on every push from the list in `scripts/ci/high-risk-paths.ts`, read from the PR's base commit. Read a labelled PR for the abuse paths each of those surfaces closes (`.claude/rules/api-boundary.md`) before anything else. The label limits no PR size, blocks no merge, and is not applied to fork or Dependabot PRs, whose token is read-only.
 
 Answering findings: reply in the thread before resolving it, and put every comment in a review THREAD rather than an unanchored timeline comment, which `reviewThreads` cannot see.
 
@@ -112,4 +112,4 @@ None of these gates a PR (`ci-gate` waits only on the jobs in `ci.yml`). Job-lev
 
 ## Docs-only changes
 
-Run `pnpm ci:local`. The project workflow skips bundle, route-JS and runtime gates for docs-only changes. CI still builds; its runtime and AI jobs use `scripts/detect-changes.mjs` and `scripts/detect-changes-paths.mjs` for classification. MDX under `app/` is part of that app surface.
+Run `pnpm ci:local`. The project workflow skips bundle, route-JS and runtime gates for docs-only changes. CI still builds; its runtime and AI jobs use `scripts/ci/detect-changes.ts` and `scripts/ci/detect-changes-paths.ts` for classification. MDX under `app/` is part of that app surface.

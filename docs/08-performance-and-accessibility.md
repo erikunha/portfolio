@@ -17,7 +17,7 @@
 | Lighthouse Best Practices                                | ≥ 95      | ≥ 95      |
 | Lighthouse SEO                                           | = 100     | = 100     |
 
-See `lighthouserc.json` + `.mobile.json`, `scripts/check-route-js.mjs`, and `scripts/check-bundle-size.mjs` for enforcement. The app-owned row reports total JS minus the measured 131.4KB framework floor. The script stores that floor as a constant and rejects a lightest route more than 2KB below it. Re-measure the baseline when framework changes make it stale. The 164.2KB total preserves 32.8KB of app-owned allowance. `bundle-check` measures chunks globally and cannot detect per-route regressions.
+See `lighthouserc.json` + `.mobile.json`, `scripts/gates/check-route-js.ts`, and `scripts/gates/check-bundle-size.ts` for enforcement. The app-owned row reports total JS minus the measured 131.4KB framework floor. The script stores that floor as a constant and rejects a lightest route more than 2KB below it. Re-measure the baseline when framework changes make it stale. The 164.2KB total preserves 32.8KB of app-owned allowance. `bundle-check` measures chunks globally and cannot detect per-route regressions.
 
 ## Rendering techniques that support LCP
 

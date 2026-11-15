@@ -27,7 +27,7 @@ sequenceDiagram
 
 ## 1. Context engineering (what the agent knows)
 
-Project instructions divide context between always-loaded guidance and task-specific references. The guiding principle: pick the cheapest slot that still fires when needed. **gate > skill > path-scoped rule > memory > prose in AGENTS.md.** Prose in `AGENTS.md` is the most expensive slot (it taxes every session), so it keeps only what no gate can show and stays under the line budget in `scripts/harness-size.json`, checked by `check:harness-size`. A rule with no exceptions moves out of prose into a permission deny rule, a git hook or a CI gate.
+Project instructions divide context between always-loaded guidance and task-specific references. The guiding principle: pick the cheapest slot that still fires when needed. **gate > skill > path-scoped rule > memory > prose in AGENTS.md.** Prose in `AGENTS.md` is the most expensive slot (it taxes every session), so it keeps only what no gate can show and stays under the line budget in `scripts/gates/harness-size.json`, checked by `check:harness-size`. A rule with no exceptions moves out of prose into a permission deny rule, a git hook or a CI gate.
 
 ```mermaid
 flowchart TD

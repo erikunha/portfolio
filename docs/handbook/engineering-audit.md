@@ -25,11 +25,11 @@ There is no project hook requiring a plan-review PASS or a completed local revie
 
 ### A3: Client naming has explicit exceptions
 
-`scripts/check-client-naming.mjs` scans `app`, `components` and `lib`. It accepts `*.client.tsx`, `*.client.ts`, files under a `client` directory and Next error boundaries. It does not scan `design-system`, where `Field.tsx` has a client directive.
+`scripts/gates/check-client-naming.ts` scans `app`, `components` and `lib`. It accepts `*.client.tsx`, `*.client.ts`, files under a `client` directory and Next error boundaries. It does not scan `design-system`, where `Field.tsx` has a client directive.
 
 ### A4: Browser checks depend on path classification
 
-CI uses `scripts/detect-changes.mjs` to decide whether app, UI and AI jobs run. New source locations must be included in the appropriate filters. `check:detect-changes-paths` checks filter paths, but cannot infer every semantic dependency.
+CI uses `scripts/ci/detect-changes.ts` to decide whether app, UI and AI jobs run. New source locations must be included in the appropriate filters. `check:detect-changes-paths` checks filter paths, but cannot infer every semantic dependency.
 
 ## Improvement map
 

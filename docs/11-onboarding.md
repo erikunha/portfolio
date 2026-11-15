@@ -43,10 +43,10 @@ For `app/api/**`, `lib/rate-limit.ts` or `proxy.ts` changes, follow `.claude/rul
 | If you'll work on...  | Read                                                                                 | Then read the code                                          |
 | --------------------- | ------------------------------------------------------------------------------------ | ----------------------------------------------------------- |
 | Sections / UI         | [04-components-and-state.md](./04-components-and-state.md)                           | `components/sections/**`, `design-system/**`                |
-| The AI feature        | [05-api-and-integrations.md](./05-api-and-integrations.md) §AI subsystem, [06-ai-development.md](./06-ai-development.md) §Evaluation tools | `app/api/ask/route.ts`, `lib/ask/**`, `lib/eval/**`, `scripts/ask-eval.ts` |
+| The AI feature        | [05-api-and-integrations.md](./05-api-and-integrations.md) §AI subsystem, [06-ai-development.md](./06-ai-development.md) §Evaluation tools | `app/api/ask/route.ts`, `lib/ask/**`, `lib/eval/**`, `scripts/eval/ask-eval.ts` |
 | Performance           | [08-performance-and-accessibility.md](./08-performance-and-accessibility.md)         | `components/SiteHome.tsx` (PPR), `Module.tsx`, the islands  |
 | Reading views and links | [04-components-and-state.md](./04-components-and-state.md) §Page frames             | `components/reading/**`, `components/links/**`, `lib/links/feed.ts` |
-| The dev platform / CI | [06-ai-development.md](./06-ai-development.md), [07-workflows.md](./07-workflows.md) | `.claude/**`, `.agents/**`, `scripts/check-*`, `.github/workflows/ci.yml`, `playwright.config.ts` |
+| The dev platform / CI | [06-ai-development.md](./06-ai-development.md), [07-workflows.md](./07-workflows.md) | `.claude/**`, `.agents/**`, `scripts/gates/check-*`, `.github/workflows/ci.yml`, `playwright.config.ts` |
 | Anything risky        | [10-findings-and-debt.md](./10-findings-and-debt.md)                                 | the relevant `DECISIONS.md` entry                           |
 
 ## The mental models to internalize
@@ -66,7 +66,7 @@ Single-author repo, so "ownership" is by subsystem boundary, not by person:
 | Content/domain   | `content/**`                                         | `content/schemas.ts`               |
 | Design system    | `design-system/**`                                   | `design-system/index.ts`           |
 | BFF / API        | `app/api/**` + `lib/**`                              | `lib/server/route.ts`              |
-| AI feature       | `app/api/ask` + `lib/ask/**` + `lib/eval/**` + `scripts/ask-eval.ts` | `lib/ask/model.ts`                 |
+| AI feature       | `app/api/ask` + `lib/ask/**` + `lib/eval/**` + `scripts/eval/ask-eval.ts` | `lib/ask/model.ts`                 |
 | Reading views and links | `components/reading/**` + `components/links/**` + `lib/links/**` | `components/reading/ReadingShell.tsx` |
 | Tests and gates  | `__tests__/**` + `tests/**` + `scripts/**`           | `playwright.config.ts`, `scripts/` |
 | Dev platform     | `.claude/**` + `.agents/**` + `scripts/**` + `.github/**` | `AGENTS.md`                   |

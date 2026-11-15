@@ -4,7 +4,7 @@
 
 ## Conventions you must follow (and the gate that catches you)
 
-- **Client naming accepts a suffix or directory.** `check-client-naming.mjs` accepts `*.client.tsx`/`*.client.ts`, `/client/` directories and App Router error filenames. `components/client/**` is an explicit exception, not a gap in scanning.
+- **Client naming accepts a suffix or directory.** `scripts/gates/check-client-naming.ts` accepts `*.client.tsx`/`*.client.ts`, `/client/` directories and App Router error filenames. `components/client/**` is an explicit exception, not a gap in scanning.
 - **Section data belongs in `content/*.ts`, keyed by locale.** Validated content modules supply profile data and most section copy, as a `Record<SiteLocale, ...>` with an `en` and a `pt` entry; a change to one language lands in the other. Components also contain presentation labels, and `content/contact-copy.ts` keeps the contact form copy free of Zod, and `content/contact-rules.ts` holds the helpers the client imports so the copy table stays out of client chunks. Client-consumed modules stay Zod-free; `content/_validate-client-content.ts` validates their schemas during `pnpm validate-content`. It is the only parse site for `content/terminal-chrome.ts`, whose `shellChrome` and `contactChrome` reach the shell and the contact form. The same file parses `brand.ts`, the home link name that the brand icon in every header carries.
 - **No raw hex outside `app/css/theme.css`.** Use `var(--color-*)`. Enforced by `lint:css-tokens`, which also rejects literal z-index values and hand-written focus rings (`--z-*`, `--focus-ring`). Complex CSS patterns become named classes in an `app/css/components-*.css` partial under `@layer components`; everything else is a Tailwind utility.
 - **Per-keystroke/per-pixel/per-frame updates must not re-render React.** Mutate `textContent`/`style`/`setAttribute` directly, or rAF-coalesce. This is the single most important runtime convention (it's a budget, not a preference).
@@ -52,7 +52,7 @@
 - `/api/erik.json` does **not** use the `defineHandler` envelope. It's a machine-readable _document_, not an _operation_, so it returns raw JSON with long cache headers.
 - The fixed-opacity color stops (`-subtle`, `-border`, ...) are explicit hex, not `color-mix()`. That's a byte-identical / contrast-stable choice.
 - `lib/cn.ts` uses `clsx` but deliberately _not_ `tailwind-merge`, a bundle-budget call; the cost is that no two utilities in one component may set the same property, held by `__tests__/design-system-class-conflicts.test.tsx`.
-- The DS docs `theme-tokens.ts` and the `contrast-check.mjs` gate parse `theme.css` with the _same regex_ on purpose, to read the same declarations. Parser changes still need comparison.
+- The DS docs `theme-tokens.ts` and the `scripts/gates/contrast-check.ts` gate parse `theme.css` with the _same regex_ on purpose, to read the same declarations. Parser changes still need comparison.
 
 ## "Where is X?" quick index
 
@@ -64,15 +64,15 @@
 | rate limits / spend budget | `lib/rate-limit.ts`                                       |
 | the AI system prompt       | `lib/ask/system-prompt.ts` (facts in `content/ask-facts.ts`) |
 | the ask request pipeline   | `lib/ask/preflight.ts` then `lib/ask/stream.ts`           |
-| the AI evals               | `scripts/ask-eval.ts`, `scripts/agent-eval.ts`, `lib/eval/`, `content/ask-eval-*.ts`, `evals/agents/` |
+| the AI evals               | `scripts/eval/ask-eval.ts`, `scripts/eval/agent-eval.ts`, `lib/eval/`, `content/ask-eval-*.ts`, `evals/agents/` |
 | MCP tools                  | `lib/agent/mcp-tools.ts` (route in `app/api/mcp/route.ts`) |
 | the section order and ids  | `content/section-registry.ts`                             |
 | locale helpers and paths   | `content/site-locale.ts`                                  |
 | the YouTube feed           | `lib/links/feed.ts`                                       |
-| which CI jobs a change runs | `scripts/detect-changes-paths.mjs`                        |
+| which CI jobs a change runs | `scripts/ci/detect-changes-paths.ts`                        |
 | CSP / security headers     | `proxy.ts` (per-request) + `next.config.ts` (static)      |
 | design tokens              | `app/css/theme.css` (`@theme`)                            |
 | motion state               | `lib/motion.ts` + `body[data-motion]` (not React)         |
 | cross-island events        | `lib/events.ts` (window CustomEvents)                     |
 | why a decision was made    | `DECISIONS.md` (search by date/topic)                     |
-| an enforcement rule        | `STANDARDS.md` (chapter) + `.husky/*` + `scripts/check-*` |
+| an enforcement rule        | `STANDARDS.md` (chapter) + `.husky/*` + `scripts/gates/check-*` |

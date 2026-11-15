@@ -146,7 +146,7 @@ The terminal home combines prerendered output and dynamic Suspense children. Sep
 
 ```
 build time:  content/*.ts imported -> Zod parse (gate) -> typed data baked into RSC output
-eval run:    scripts/ask-eval.ts -> Redis ask:eval:latest
+eval run:    scripts/eval/ask-eval.ts -> Redis ask:eval:latest
 request:     proxy.ts headers -> static shell streamed -> getIsMobile() resolves per request
              -> section variants and independent ASK / PSI reads stream -> client hydrates islands
 ```

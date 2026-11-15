@@ -75,14 +75,14 @@ Examples:
 Before writing: every branch that means "something is wrong" ends in a non-zero exit, and the process is allowed to unwind so `finally` runs.
 Check: `bash script.sh; echo $?` on the success path and on a deliberately broken path.
 Examples:
-- PR193 `scripts/check-gitleaks-fixture.mjs`: the exit code path ignored the real result; the fix made the code match the outcome.
+- PR193 `scripts/gates/check-gitleaks-fixture.ts`: the exit code path ignored the real result; the fix made the code match the outcome.
 
 **Rule 9. A gate that scans files must scan the same set of files the other gate scans.**
 Path filters, allowlists and directories are duplicated in more than one place and they drift apart.
 Before writing: when you add a path or an allowlist entry, search for every other list of the same kind in the repo and update them in the same change.
 Check: compare the new path against every pathspec, allowlist and directory list in `.github/` and `scripts/`.
 Examples:
-- PR193 `scripts/check-gitleaks-fixture.mjs`: the allowlist of files permitted to name the secret phrase did not include the test file that names it; the fix widened the list.
+- PR193 `scripts/gates/check-gitleaks-fixture.ts`: the allowlist of files permitted to name the secret phrase did not include the test file that names it; the fix widened the list.
 
 **Rule 10. Shell and Git invocations must not interpolate untrusted or path-derived values into a pattern.**
 Before writing: quote every expansion, and pass values as arguments rather than pasting them into a `sed` or `grep` pattern.
@@ -130,7 +130,7 @@ Before writing: for each gate, write the test that proves the gate blocks the ba
 Check: run the gate against a deliberately bad input and confirm the test fails.
 Examples:
 - PR227, a role-resolution test: the scan roots did not include every surface the gate covers, so a stale role in one place went unseen; the fix widened the roots.
-- PR305 `scripts/check-section-order.mjs`: the gate only checked live ids, so a section with no mobile order entry passed; the fix checks both directions.
+- PR305 `scripts/gates/check-section-order.ts`: the gate only checked live ids, so a section with no mobile order entry passed; the fix checks both directions.
 
 ---
 
@@ -258,7 +258,7 @@ Examples:
 Before writing: if you write "pure", "never", "always", "safe" or "prevents", prove the sentence against the implementation.
 Check: grep your new comments and your commit messages for absolute words and confirm each one.
 Examples:
-- PR147 `scripts/agent-eval.ts`: the doc comment called the function a pure aggregate assembler while it read the clock; the fix passed the timestamp in.
+- PR147 `scripts/eval/agent-eval.ts`: the doc comment called the function a pure aggregate assembler while it read the clock; the fix passed the timestamp in.
 - PR142 `DECISIONS.md`: the ADR said the linter flag stopped an in-progress import from being deleted, which the code said it does not; the fix aligned the ADR to the code.
 
 **Rule 31. The checklist box and the ADR entry are part of the change, not paperwork after it.**
