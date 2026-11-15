@@ -23,15 +23,13 @@ import {
   parseStreamChunk,
   REFUSAL_PREFIX,
   RETRY_AFTER_HEADER,
-  SITE_LOCALE_HEADER,
 } from '@/lib/stream-protocol';
 import { MS_PER_SECOND } from '@/lib/time';
+import { createAskRequest } from './ask-request';
 import { type FailureDetail, failureForResponse, settledLines } from './settled-lines';
 import { appendLines, type Line } from './transcript';
 
 type ActiveRequest = { stop: () => void; dispose: () => void };
-
-const ASK_ENDPOINT = '/api/ask';
 
 function streamFailureMessage(errorMessage: string, ui: ShellUi): string {
   if (errorMessage.startsWith(GUARD_ABORT_PREFIX)) return ui.answerWithheld;
@@ -63,7 +61,6 @@ export function useAskStream({
   const [busy, setBusy] = useState(false);
   const [streamingText, setStreamingText] = useState<string | null>(null);
   const activeRequest = useRef<ActiveRequest | null>(null);
-  const mountedRef = useRef(true);
   const rafRef = useRef<number | null>(null);
 
   const clearFrame = useCallback(() => {
@@ -74,9 +71,7 @@ export function useAskStream({
   }, []);
 
   useEffect(() => {
-    mountedRef.current = true;
     return () => {
-      mountedRef.current = false;
       activeRequest.current?.dispose();
       activeRequest.current = null;
       clearFrame();
@@ -85,12 +80,12 @@ export function useAskStream({
 
   const start = useCallback(
     async (question: string, command: string) => {
-      const controller = new AbortController();
+      const conversationId = conversationIdForAsk();
+      const request = createAskRequest({ question, locale, conversationId });
       const loadingId = nextId();
       let reader: ReadableStreamDefaultReader<Uint8Array> | undefined;
       let requestId: string | null = null;
       let logged = false;
-      const conversationId = conversationIdForAsk();
       let accumulated = '';
       let displayText = '';
       let receivedText = false;
@@ -116,16 +111,12 @@ export function useAskStream({
           SHELL_LIMITS.requestTimeoutMs,
         );
       }
-      function releaseTransport() {
-        controller.abort();
-        void reader?.cancel().catch(() => undefined);
-      }
       function finish(text: string, message?: string, error = false, detail: FailureDetail = {}) {
         if (settled) return;
         settled = true;
         clearTimeout(timer);
         clearFrame();
-        if (!mountedRef.current) return;
+        if (request.aborted) return;
         activeRequest.current = null;
         const lines = settledLines({
           text,
@@ -153,26 +144,21 @@ export function useAskStream({
       }
       function interrupt(message: string, error = false, detail?: FailureDetail) {
         finish(displayText, message, error, detail);
-        releaseTransport();
+        request.abort();
       }
       activeRequest.current = {
         stop: () => interrupt(displayText ? ui.stoppedPartial : ui.stoppedBefore),
         dispose: () => {
           settled = true;
           clearTimeout(timer);
-          releaseTransport();
+          request.abort();
         },
       };
       armIdleTimer();
 
       try {
-        const response = await fetch(ASK_ENDPOINT, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', [SITE_LOCALE_HEADER]: locale },
-          body: JSON.stringify({ question, locale, conversationId }),
-          signal: controller.signal,
-        });
-        if (settled) {
+        const response = await request.send();
+        if (settled || request.aborted) {
           void response.body?.cancel().catch(() => undefined);
           return;
         }
@@ -196,15 +182,15 @@ export function useAskStream({
           finish('', failure.message, true, failure.detail);
           return;
         }
-        if (!response.body) {
+        reader = request.openReader(response);
+        if (!reader) {
           finish('', ui.bodyUnavailable, true);
           return;
         }
-        reader = response.body.getReader();
         const decoder = new TextDecoder();
         const flushFrame = () => {
           rafRef.current = null;
-          if (!settled && mountedRef.current) {
+          if (!settled && !request.aborted) {
             setStreamingText(displayText);
           }
         };
