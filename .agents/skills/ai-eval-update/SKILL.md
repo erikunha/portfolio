@@ -1,6 +1,6 @@
 ---
 name: ai-eval-update
-description: Use when maintaining the /api/ask evaluation harness, including adding or editing corpus items (`content/ask-eval-corpus.ts`), the judge-calibration gold set (`content/ask-eval-calibration.ts`), or the runner (`scripts/ask-eval.ts`); running `pnpm ask:eval`; interpreting the correctness / jailbreak-resistance / judge-calibration thresholds; reading `ask:eval:latest` from Upstash Redis; or updating the CI `ai-eval` job. Trigger after editing `content/ask-eval-corpus.ts`, `content/ask-eval-calibration.ts`, `scripts/ask-eval.ts`, the ask SYSTEM prompt (`lib/ask/system-prompt.ts`), or `__tests__/ask-*`.
+description: Use when maintaining the /api/ask evaluation harness, including adding or editing corpus items (`content/ask-eval-corpus.ts`), the judge-calibration gold set (`content/ask-eval-calibration.ts`), or the runner (`scripts/eval/ask-eval.ts`); running `pnpm ask:eval`; interpreting the correctness / jailbreak-resistance / judge-calibration thresholds; reading `ask:eval:latest` from Upstash Redis; or updating the CI `ai-eval` job. Trigger after editing `content/ask-eval-corpus.ts`, `content/ask-eval-calibration.ts`, `scripts/eval/ask-eval.ts`, the ask SYSTEM prompt (`lib/ask/system-prompt.ts`), or `__tests__/ask-*`.
 ---
 
 # ai-eval harness maintenance
@@ -41,11 +41,11 @@ reads the production Upstash token.
 The CI `ai-eval` job runs the same `pnpm ask:eval`. It is path-filtered by the
 `detect-changes` job: it fires for ANY AI-relevant change, not just the eval files, and only
 when the pull request carries the `ai-eval` label. The
-filter is `AI_PATHS` in `scripts/detect-changes-paths.mjs`: the ask route and `lib/ask/`,
+filter is `AI_PATHS` in `scripts/ci/detect-changes-paths.ts`: the ask route and `lib/ask/`,
 `lib/eval/`, `lib/agent/`, the rate-limit, logging and env modules the route imports, the
 content modules the system prompt and the fact sheet compose from (`content/ask-facts.ts`,
 `content/profile.ts`, `content/projects.ts` and the other profile modules), the eval corpus
-and calibration, `scripts/ask-eval.ts`, and `__tests__/ask-*`. Read that file for the exact
+and calibration, `scripts/eval/ask-eval.ts`, and `__tests__/ask-*`. Read that file for the exact
 set. The job has a 15-minute timeout; a ~12-minute run is normal, so a single slow Gateway
 run can hit the limit and report `cancelled`. Re-run just that job (it is transient, not a
 quality failure) rather than bumping the timeout on a one-off.
@@ -103,7 +103,7 @@ cases are deliberately borderline-hard.
   sheet or omit a named fact. Two more traps cover the fact sheet: `true-fact-absent` (a true fact
   the criterion does not name, must pass) and `false-date` (a wrong date, must fail).
 - **The judge sees a fact sheet.** `buildJudgeFactSheet` (`lib/eval/fact-sheet.ts`) renders the run
-  date, where Erik lives, the current title, the core stack and AI focus, every field of `content/ask-facts.ts` (the module the system prompt composes them from: stack, work scope, targeting, working style, decisions, stories, opinions, the limits he states about his record, community and project detail), the projects and the learning or not-specializing claims, the credentials, the employment history and the education from content, and `scripts/ask-eval.ts` passes it
+  date, where Erik lives, the current title, the core stack and AI focus, every field of `content/ask-facts.ts` (the module the system prompt composes them from: stack, work scope, targeting, working style, decisions, stories, opinions, the limits he states about his record, community and project detail), the projects and the learning or not-specializing claims, the credentials, the employment history and the education from content, and `scripts/eval/ask-eval.ts` passes it
   to the calibration pass and to every corpus grade. `lib/eval/judge.ts` sends it as its own system block marked `cacheControl: ephemeral`, after the judge rules and before the per-call question, criterion and answer, so the first judge call writes the block and the rest read it at a tenth of the input rate; the judge cost line counts those cache tokens at their rates. The length `lib/eval/__tests__/fact-sheet.test.ts` pins bounds that cached block: a fact only one criterion needs goes into that criterion, not into the sheet. A claim that matches the sheet is never
   fabricated, so a criterion may leave out a true fact without failing the answer that states it.
   A new field on `AskFacts` reaches the sheet automatically through the test that walks every field; a fact the system prompt states belongs in `content/ask-facts.ts`, never as a literal in `lib/ask/system-prompt.ts`, so the sheet and the prompt cannot diverge. A criterion names only the key facts: the judge fails an answer that omits anything the criterion text names, including examples in parentheses.
@@ -127,7 +127,7 @@ cases are deliberately borderline-hard.
 ## Budget
 
 `/api/ask` reserves its worst-case cost (budget units are nano-USD) before every model call and
-fails closed when the reservation store errors. `main()` in `scripts/ask-eval.ts` installs `createEvalBudgetStore(ASK_EVAL_CORPUS.length)`
+fails closed when the reservation store errors. `main()` in `scripts/eval/ask-eval.ts` installs `createEvalBudgetStore(ASK_EVAL_CORPUS.length)`
 through `setBudgetStore`, so the run uses an in-memory counter sized to one `askReservationCost` per
 corpus item. It needs no Redis credentials and never spends the production monthly counter.
 Adding a request per item (retries, extra turns) means raising that size.
@@ -138,7 +138,7 @@ Adding a request per item (retries, extra turns) means raising that size.
 - Local artifact: `ask-eval-result.json` (full per-item grades + calibration cases + the
   cost breakdown: `featureCostUsd` is the production per-answer spend, metered from the route's token usage for `featureCostMeasuredAnswers` answers (the rest are filled with the metered mean, or an estimate when none resolved), `judgeCostUsd` is
   grading overhead and includes BOTH the calibration and corpus judge calls).
-- Live: Upstash Redis key `ask:eval:latest` (`REDIS_RESULT_KEY` in `scripts/ask-eval.ts`,
+- Live: Upstash Redis key `ask:eval:latest` (`REDIS_RESULT_KEY` in `scripts/eval/ask-eval.ts`,
   must match `lib/ask-metrics.ts`); the metrics panel reads this one location.
 
 ## After corpus changes

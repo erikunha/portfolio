@@ -23,7 +23,7 @@ fails when a Lighthouse assertion is lowered, warned or turned off. Fix the meas
 
 ## Finding the cost
 
-1. Run `pnpm build && node scripts/check-route-js.mjs` on the base branch and on the change; compare
+1. Run `pnpm build && node scripts/gates/check-route-js.ts` on the base branch and on the change; compare
    per-route totals, not the global sum.
 2. Open the failing route's chunk list in `.next/diagnostics/route-bundle-stats.json` and find the
    chunk that grew. Trace which import brought it: a `*.client.tsx` file, a barrel export, a
