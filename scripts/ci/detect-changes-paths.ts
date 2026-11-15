@@ -158,6 +158,7 @@ export const IGNORED_PATHS: readonly string[] = [
   'scripts/ci/detect-changes-paths.ts',
   'scripts/ci/detect-changes.ts',
   'scripts/codegen/changelog-merge.ts',
+  'scripts/codegen/feature-map.ts',
   'scripts/codegen/generate-brand-icons.ts',
   'scripts/codegen/generate-og-image.ts',
   'scripts/gates/gitleaks-staged.ts',
