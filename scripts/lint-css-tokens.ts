@@ -32,6 +32,8 @@ const CONSUMER_FILE = /\.(?:css|tsx?|mdx)$/;
 const CONSUMER_SKIPPED = /\.(?:test|e2e|spec)\.tsx?$/;
 const THEME_AT_RULE = 'theme';
 const CUSTOM_PROPERTY = '--';
+const NAMESPACE_WILDCARD = '-*';
+const NAMESPACE_RESET_VALUE = 'initial';
 const COLOR_UTILITIES = [
   'bg',
   'text',
@@ -377,9 +379,28 @@ export function findTokenEqualArbitraryValues(themeCss: string, source: string):
   return hits;
 }
 
+function namespaceResets(themeCss: string): Set<string> {
+  const resets = new Set<string>();
+  postcss.parse(themeCss).walkAtRules(THEME_AT_RULE, (rule) => {
+    rule.each((node) => {
+      if (
+        node.type === 'decl' &&
+        node.prop.startsWith(CUSTOM_PROPERTY) &&
+        node.prop.endsWith(NAMESPACE_WILDCARD) &&
+        node.value.trim() === NAMESPACE_RESET_VALUE
+      ) {
+        resets.add(node.prop);
+      }
+    });
+  });
+  return resets;
+}
+
 export function findUnusedThemeTokens(themeCss: string, sources: string[]): string[] {
   const haystacks = [themeCss, ...sources].map(stripComments);
+  const resets = namespaceResets(themeCss);
   return themeTokenNames(themeCss).filter((token) => {
+    if (resets.has(token)) return false;
     const reference = new RegExp(`${escapeRegExp(token)}(?![\\w-])(?!\\s*:)`);
     if (haystacks.some((text) => reference.test(text))) return false;
     const utility = utilityPattern(token);
