@@ -6,6 +6,7 @@ import { SYSFAIL_END, SYSFAIL_START } from '@/lib/events';
 import { getFrameGovernorTickMultiplier } from '@/lib/frame-governor';
 import { readMotion } from '@/lib/motion';
 import { subscribeMotion } from '@/lib/motion-change';
+import { createRunGates } from '@/lib/run-gates';
 import { RAIN_DESKTOP_PROFILE, type RainPalette, rainFont, readRainPalette } from './rain-tokens';
 import { scaleTailFade } from './tail-fade';
 
@@ -153,28 +154,27 @@ export function MatrixRain({
       raf = requestAnimationFrame(frame);
     }
 
-    const gates: Record<RunGate, boolean> = {
-      ready: false,
-      motion: readMotion(),
-      visible: !document.hidden,
-      calm: true,
-      inView: true,
-    };
-    function sync() {
-      const next = Object.values(gates).every(Boolean);
-      if (next === running) return;
-      running = next;
-      if (next) {
-        last = 0;
-        raf = requestAnimationFrame(frame);
-      } else {
-        cancelAnimationFrame(raf);
-      }
-    }
+    const gates = createRunGates<RunGate>(
+      {
+        ready: false,
+        motion: readMotion(),
+        visible: !document.hidden,
+        calm: true,
+        inView: true,
+      },
+      (open) => {
+        running = open;
+        if (open) {
+          last = 0;
+          raf = requestAnimationFrame(frame);
+        } else {
+          cancelAnimationFrame(raf);
+        }
+      },
+    );
     function setGate(gate: RunGate, open: boolean) {
-      gates[gate] = open;
       if (gate === 'ready' && open) size();
-      sync();
+      gates.set(gate, open);
     }
 
     const unsubscribeMotion = subscribeMotion((on) => {
@@ -197,7 +197,7 @@ export function MatrixRain({
     const target = watchRef?.current;
     if (watchRef) {
       if (target && 'IntersectionObserver' in window) {
-        gates.inView = false;
+        gates.set('inView', false);
         observer = new IntersectionObserver(
           (entries) => {
             for (const entry of entries) setGate('inView', entry.isIntersecting);
