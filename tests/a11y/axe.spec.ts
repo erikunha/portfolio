@@ -2,14 +2,13 @@ import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
 import { DS_ROUTES } from '@/app/(en)/design-system/_components/ds-nav';
 import { SITE_HTML_LANG, SITE_LOCALE } from '@/content/site-locale';
-import { waitForHydration } from '../e2e/_helpers/hydration';
+import { openSectionMenu, waitForHydration } from '../e2e/_helpers/hydration';
 import { revealDeferredContent } from '../e2e/_helpers/snapshot';
 
 const NARROW_VIEWPORT = { width: 390, height: 844 };
 const AXE_TAGS = ['wcag2a', 'wcag2aa', 'wcag21aa', 'wcag22aa'];
 const CRT_OVERLAYS =
   '[data-testid="crt-vignette"], [data-testid="crt-overlay"], [data-testid="crt-mask"], [data-testid="crt-noise"], [data-testid="crt-flicker"], [data-testid="crt-scan-beam"]';
-const MENU_TRIGGER = '.mobile-title-bar .menu-trigger';
 const COMBOBOX = '[data-testid="contact-timezone"] [role="combobox"]';
 const OFFLINE_NOTICE = '.offline-notice';
 const COMBOBOX_QUERY = 'a';
@@ -132,7 +131,7 @@ test.describe('axe-core a11y scan', () => {
   test('the open drawer at 390 has no violations', async ({ page }) => {
     await page.setViewportSize(NARROW_VIEWPORT);
     await page.goto('/');
-    await page.locator(MENU_TRIGGER).click();
+    await openSectionMenu(page);
     await expect(page.locator('.section-menu')).toHaveClass(/is-open/);
     const results = await new AxeBuilder({ page })
       .withTags(AXE_TAGS)

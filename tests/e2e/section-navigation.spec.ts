@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test';
 import { brandByLocale } from '@/content/brand';
 import { HIRE_ACCESSIBLE_NAME } from '@/content/nav';
 import { SITE_LOCALE } from '../../content/site-locale';
-import { DOCK_MENU, gotoHydrated, MENU_TRIGGER } from './_helpers/hydration';
+import { DOCK_MENU, gotoHydrated, MENU_TRIGGER, openSectionMenu } from './_helpers/hydration';
 import { gotoSettled } from './_helpers/streamed';
 
 const SCROLL_PROBE_PX = 400;
@@ -28,7 +28,7 @@ for (const width of [390, 768, 1024, 1280, 1536]) {
         .getByRole('button', { name: 'Open menu', exact: true })
         .locator('visible=true');
       await expect(trigger).toHaveAttribute('aria-expanded', 'false');
-      await trigger.click();
+      await openSectionMenu(page);
       await expect(menu).toBeVisible();
       await expect(trigger).toHaveAttribute('aria-expanded', 'true');
       const leftOpen = await main.evaluate((element) => element.getBoundingClientRect().left);
@@ -275,10 +275,7 @@ test.describe('section navigation: motion control tiers', () => {
           ).toBeHidden();
         }
 
-        await page
-          .getByRole('button', { name: 'Open menu', exact: true })
-          .locator('visible=true')
-          .click();
+        await openSectionMenu(page);
         const drawer = page.getByRole('dialog', { name: 'Section menu' });
         await expect(
           drawer.locator('.menu-motion'),
@@ -505,7 +502,7 @@ test('a section reached from the menu takes focus without the browser outline', 
 }) => {
   await page.setViewportSize({ width: 1280, height: 720 });
   await gotoHydrated(page, '/', MENU_TRIGGER);
-  await page.locator('.desktop-topbar .menu-trigger').click();
+  await openSectionMenu(page);
   await page
     .locator('#section-drawer')
     .getByRole('link', { name: /Career/ })

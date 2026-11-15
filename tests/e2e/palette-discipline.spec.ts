@@ -1,7 +1,7 @@
 import { expect, type Page, test } from '@playwright/test';
 import { NAVIGATION } from '../../content/navigation';
 import { SITE_LOCALE } from '../../content/site-locale';
-import { MENU_TRIGGER, MOTION_TOPBAR_TOGGLE } from './_helpers/hydration';
+import { MOTION_TOPBAR_TOGGLE, openSectionMenu } from './_helpers/hydration';
 import { gotoSettled } from './_helpers/streamed';
 
 const { copy } = NAVIGATION[SITE_LOCALE.en];
@@ -63,7 +63,7 @@ for (const viewport of [DESKTOP, PHONE]) {
     }) => {
       await gotoSettled(page, '/');
       if (viewport.width < DESKTOP.width) {
-        await page.locator(`${MENU_TRIGGER}:visible`).first().click();
+        await openSectionMenu(page);
       }
       const current = page.locator('[data-lang-switch] [aria-current]:visible').first();
       await expect(current).toBeVisible();

@@ -1,16 +1,13 @@
 import { expect, test } from '@playwright/test';
 import { linksContent } from '../../content/links';
+import { openSectionMenu } from './_helpers/hydration';
 import { installMockBackend } from './_helpers/mock-backend';
 
 for (const state of ['queued', 'happy'] as const) {
   test(`contact delivery: ${state}`, async ({ page }) => {
     await installMockBackend(page, { contact: state, log: 'accept' });
     await page.goto('/');
-    await page
-      .getByRole('button', { name: 'Open menu', exact: true })
-      .filter({ visible: true })
-      .first()
-      .click();
+    await openSectionMenu(page);
     await page
       .getByRole('dialog')
       .getByRole('link', { name: /contact/i })

@@ -8,7 +8,7 @@ import {
   SITE_LOCALE,
   type SiteLocale,
 } from '@/content/site-locale';
-import { MENU_TRIGGER, waitForHydration } from './_helpers/hydration';
+import { openSectionMenu, waitForHydration } from './_helpers/hydration';
 import { installMockBackend, MOCK_ASK_ANSWER } from './_helpers/mock-backend';
 import { freezeMotion } from './_helpers/motion';
 import { gotoSettled } from './_helpers/streamed';
@@ -55,10 +55,8 @@ async function expectHop(
   expect(state.problems, `after ${page.url()}`).toEqual([]);
 }
 
-async function openDrawer(page: Page, locale: SiteLocale): Promise<void> {
-  const name = locale === SITE_LOCALE.pt ? 'Abrir menu' : 'Open menu';
-  await waitForHydration(page, MENU_TRIGGER);
-  await page.getByRole('button', { name, exact: true }).filter({ visible: true }).first().click();
+async function openDrawer(page: Page): Promise<void> {
+  await openSectionMenu(page);
   await expect(page.locator(DRAWER)).toHaveClass(/is-open/);
 }
 
@@ -84,7 +82,7 @@ test('one visitor session: drawer, shell, contact, language switch, CV and links
   await waitForHydration(page, SHELL_FORM);
   await expectHop(page, state, { path: /\/$/, locale: SITE_LOCALE.en });
 
-  await openDrawer(page, SITE_LOCALE.en);
+  await openDrawer(page);
   await page
     .locator('#section-nav')
     .getByRole('link', { name: localizedSectionLabel(SITE_LOCALE.en, SECTION_ID.shell) })
@@ -109,7 +107,7 @@ test('one visitor session: drawer, shell, contact, language switch, CV and links
   await expect(page.getByRole('log')).toContainText(MOCK_ASK_ANSWER);
   await expectHop(page, state, { path: /\/(#sec-shell)?$/, locale: SITE_LOCALE.en });
 
-  await openDrawer(page, SITE_LOCALE.en);
+  await openDrawer(page);
   await page
     .locator('#section-nav')
     .getByRole('link', { name: localizedSectionLabel(SITE_LOCALE.en, SECTION_ID.contact) })
@@ -132,11 +130,11 @@ test('one visitor session: drawer, shell, contact, language switch, CV and links
     .click();
   await expectHop(page, state, { path: /\/pt(#.*)?$/, locale: SITE_LOCALE.pt });
 
-  await openDrawer(page, SITE_LOCALE.pt);
+  await openDrawer(page);
   await page.locator(`${DRAWER} a[href="/pt/cv"]`).click();
   await expectHop(page, state, { path: /\/pt\/cv$/, locale: SITE_LOCALE.pt });
 
-  await openDrawer(page, SITE_LOCALE.pt);
+  await openDrawer(page);
   await page.locator(`${DRAWER} a[href="/links"]`).click();
   await expectHop(page, state, { path: /\/links$/, locale: SITE_LOCALE.pt });
   await expect(page.getByRole('heading', { level: 1 })).toBeAttached();
