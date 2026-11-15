@@ -183,10 +183,11 @@ Then the dedup check, the budget reservation and the sentinel:
 sequenceDiagram
     participant U as InteractiveShell (client island)
     participant R as app/api/ask/route.ts (lib/ask/preflight.ts, lib/ask/stream.ts)
-    participant RL as lib/rate-limit
+    participant D as lib/ask/dedup
+    participant B as lib/ask/budget
 
-    R->>RL: checkIdenticalQuestion (60s dedup, 429)
-    R->>RL: reserveBudget(512)  (monthly and daily dollar caps - 503 if either is exhausted or the store is down, and the dedup lock is released)
+    R->>D: checkIdenticalQuestion (60s dedup, 429)
+    R->>B: reserveBudget(512)  (monthly and daily dollar caps - 503 if either is exhausted or the store is down, and the dedup lock is released)
     R->>R: mint 128-bit sentinel, wrap question as data-only
 ```
 
@@ -224,7 +225,7 @@ sequenceDiagram
     participant KV as Upstash Redis
 
     U->>U: parseStreamChunk once per chunk -> rAF-coalesced setStreamingText (React state owned by InteractiveShell)
-    R->>KV: after(): settleBudget(refund) + Layer-2 audit + ask-log (redact, then cut - fail-quiet) + request key added to ask:conv:{id} (same MULTI as the log write) + guard counters
+    R->>KV: after(): settleReservation(reservation, usage) refunds the unused part + Layer-2 audit + ask-log (redact, then cut - fail-quiet) + request key added to ask:conv:{id} (same MULTI as the log write) + guard counters
     U->>U: finalize() -> commit answer (or error line) into history
 ```
 

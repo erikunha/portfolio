@@ -26,7 +26,7 @@
 - **`ASK_ENABLED` is an off-list; `LANGFUSE_ENABLED` is an on-list.** `/api/ask` answers 503 only when `ASK_ENABLED`, trimmed and lower-cased, is one of `false`, `0`, `off`, `no` or `disabled`; unset or any other value leaves it on, a misspelled value included. Telemetry stays inert unless `LANGFUSE_ENABLED` is exactly `'true'`. The two flags guard opposite directions on purpose.
 - **`StatusBar` initializes its clock to `''` and uses `suppressHydrationWarning`.** A `new Date()` at render would be a dynamicIO prerender hazard; the empty initial avoids prerendering a timestamp.
 - **`next-env.d.ts` flips on a local prod build** (dev path ↔ prod path). Inspect that diff before deciding whether it belongs in the change.
-- **The MCP `ask_erik` tool limits and de-duplicates per caller.** It re-invokes `/api/ask` in-process via a synthetic `Request` and copies `x-forwarded-for` and `x-real-ip` from the MCP request (`ctx.http.req`), so `getClientIp` sees the caller. A request the transport delivers without those headers (an in-memory transport) falls back to `'unknown'` and shares one bucket. Failures set `isError`; the result carries the request id in `_meta.requestId` and in a second text block, for `/api/log/forget`.
+- **The MCP `ask_erik` tool limits and de-duplicates per caller.** It re-invokes `/api/ask` in-process via a synthetic `Request` and copies `x-forwarded-for` and `x-real-ip` from the MCP request (`ctx.http.req`), so `getClientIp` (`lib/server/client-ip.ts`) sees the caller. A request the transport delivers without those headers (an in-memory transport) falls back to `'unknown'` and shares one bucket. Failures set `isError`; the result carries the request id in `_meta.requestId` and in a second text block, for `/api/log/forget`.
 - **There is no root `app/layout.tsx`.** The site has two root layouts, `app/(en)/layout.tsx` and `app/(pt)/layout.tsx`, each setting `<html lang>` and rendering `RootShell`. Routes under `(pt)` are `/pt/**` and `/links`; routes under `(en)` are `/`, `/cv`, `/summary`, `/links/en` and `/design-system/**`. So `/links` is the Portuguese page and `/links/en` the English one.
 - **Static routes declare `ensureStatic = 'navigation'`.** The export makes Next fail the build if the route reads `connection()`, `cookies()`, `headers()` or uncached data. `__tests__/meta/ensure-static-routes.test.ts` holds the list of routes.
 - **Only the DAW mixer reads the user agent.** `lib/ua.ts` `getIsMobile()` picks the mixer variant inside the guitar module, behind a `Suspense` fallback (`MixerLoading`). No other section branches on the device; layout differences are CSS.
@@ -61,7 +61,8 @@
 | the page composition       | `components/SiteHome.tsx`                                 |
 | a section's copy           | `content/<section>.ts`                                    |
 | the API contract           | `lib/server/route.ts` (`defineHandler`)                   |
-| rate limits / spend budget | `lib/rate-limit.ts`                                       |
+| rate limits                | `lib/rate-limit.ts` (the Redis client is `lib/redis.ts`)  |
+| spend budget, dedup lock   | `lib/ask/budget.ts`, `lib/ask/dedup.ts`                   |
 | the AI system prompt       | `lib/ask/system-prompt.ts` (facts in `content/ask-facts.ts`) |
 | the ask request pipeline   | `lib/ask/preflight.ts` then `lib/ask/stream.ts`           |
 | the AI evals               | `scripts/eval/ask-eval.ts`, `scripts/eval/agent-eval.ts`, `lib/eval/`, `content/ask-eval-*.ts`, `evals/agents/` |

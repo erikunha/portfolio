@@ -42,7 +42,7 @@ The CI `ai-eval` job runs the same `pnpm ask:eval`. It is path-filtered by the
 `detect-changes` job: it fires for ANY AI-relevant change, not just the eval files, and only
 when the pull request carries the `ai-eval` label. The
 filter is `AI_PATHS` in `scripts/ci/detect-changes-paths.ts`: the ask route and `lib/ask/`,
-`lib/eval/`, `lib/agent/`, the rate-limit, logging and env modules the route imports, the
+`lib/eval/`, `lib/agent/`, the rate-limit, Redis, logging and env modules the route imports, the
 content modules the system prompt and the fact sheet compose from (`content/ask-facts.ts`,
 `content/profile.ts`, `content/projects.ts` and the other profile modules), the eval corpus
 and calibration, `scripts/eval/ask-eval.ts`, and `__tests__/ask/`. Read that file for the exact
@@ -127,8 +127,8 @@ cases are deliberately borderline-hard.
 ## Budget
 
 `/api/ask` reserves its worst-case cost (budget units are nano-USD) before every model call and
-fails closed when the reservation store errors. `main()` in `scripts/eval/ask-eval.ts` installs `createEvalBudgetStore(ASK_EVAL_CORPUS.length)`
-through `setBudgetStore`, so the run uses an in-memory counter sized to one `askReservationCost` per
+fails closed when the reservation store errors. `main()` in `scripts/eval/ask-eval.ts` installs `createEvalBudgetStore(ASK_EVAL_CORPUS.length)` (`lib/eval/budget-store.ts`)
+through `setBudgetStore` (`lib/ask/budget.ts`), so the run uses an in-memory counter sized to one `askReservationCost` per
 corpus item. It needs no Redis credentials and never spends the production monthly counter.
 Adding a request per item (retries, extra turns) means raising that size.
 `__tests__/ask/ask-eval-budget.test.ts` fails if the route's reservation outgrows the store.

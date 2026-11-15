@@ -1,6 +1,6 @@
 ---
 name: plan-review
-description: Review a spec or implementation plan against this repository's hard limits before any code is written. Use when a plan adds a client island or dependency, touches app/api, lib/rate-limit.ts or proxy.ts, proposes new infrastructure, or could move a Lighthouse or route-JS budget. Returns PASS or BLOCK with the first failed gate. Do not use to review code that already exists.
+description: Review a spec or implementation plan against this repository's hard limits before any code is written. Use when a plan adds a client island or dependency, touches app/api, lib/rate-limit.ts, lib/redis.ts, lib/ask/budget.ts, lib/ask/dedup.ts or proxy.ts, proposes new infrastructure, or could move a Lighthouse or route-JS budget. Returns PASS or BLOCK with the first failed gate. Do not use to review code that already exists.
 ---
 
 # Plan review
@@ -25,7 +25,7 @@ the headroom with no app change. BLOCK when the plan gives no budget argument.
 
 ## Gate 3: server surface
 
-Does the plan touch `app/api/**`, `lib/rate-limit.ts` or `proxy.ts`? Then it must keep:
+Does the plan touch `app/api/**`, `lib/rate-limit.ts` (the limiters), `lib/redis.ts` (the Redis client), `lib/ask/budget.ts` (the spend budget), `lib/ask/dedup.ts` (the identical-question lock) or `proxy.ts`? Then it must keep:
 
 - the handler order `defineHandler` enforces (rate limit before parse, validate, handle), with env read only through `lib/env.ts`;
 - the `/api/ask` spend budget failing closed while the rate limits fail open;

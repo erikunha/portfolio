@@ -44,7 +44,7 @@ flowchart TB
     subgraph bff["BFF / Server (lib + app/api)"]
         api["app/api/**<br/>route handlers"]
         handler["lib/server/route.ts<br/>defineHandler envelope"]
-        libcore["lib/rate-limit · lib/env · lib/ask/** · lib/lighthouse-scores · lib/contact/delivery · lib/contact/outbox"]
+        libcore["lib/rate-limit · lib/redis · lib/env · lib/ask/** · lib/lighthouse-scores · lib/contact/delivery · lib/contact/outbox"]
     end
     sections["components/sections/**<br/>RSC sections and nested groups"] --> cmods
     cmods --> schemas
@@ -58,7 +58,7 @@ The BFF core talks to the external services, the islands fetch through the route
 
 ```mermaid
 flowchart TB
-    libcore["lib/rate-limit · lib/env · lib/ask/** · lib/lighthouse-scores · lib/contact/delivery · lib/contact/outbox"]
+    libcore["lib/rate-limit · lib/redis · lib/env · lib/ask/** · lib/lighthouse-scores · lib/contact/delivery · lib/contact/outbox"]
     subgraph ext["External services"]
         redis[("Upstash Redis")]
         gw["Vercel AI Gateway<br/>(anthropic/claude-haiku-5.5)"]
@@ -155,9 +155,11 @@ flowchart TD
     outbox --> redis
     delivery --> resend["Resend"]
     apiask --> rl["lib/rate-limit"]
-    apiask --> askmod["lib/ask/{model,system-prompt,injection,output-guard,preflight,stream}"]
+    apiask --> askmod["lib/ask/{model,system-prompt,injection,output-guard,preflight,stream,budget,dedup}"]
     defh --> rl
-    rl --> redis[("Upstash")]
+    rl --> rds["lib/redis"]
+    askmod --> rds
+    rds --> redis[("Upstash")]
     askmod --> gw["AI Gateway"]
 ```
 
@@ -182,7 +184,10 @@ Contact submission persists a 90-day KV audit record before calling the shared d
 | `components/RootShell.tsx`                | Fonts, JSON-LD, the pre-paint motion bootstrap, Vercel RUM gating, shared by `app/(en)/layout.tsx` and `app/(pt)/layout.tsx` |
 | `next.config.ts` + `proxy.ts`             | The two-place header split (static vs per-request CSP), PPR, MDX                                                             |
 | `lib/server/route.ts`                     | The `defineHandler` envelope - the API contract                                                                              |
-| `lib/rate-limit.ts`                       | Redis access, the sliding-window + spend-budget + dedup primitives                                                           |
+| `lib/rate-limit.ts`                       | The table of limiters (limit, window, prefix per name) and nine named getters; imports nothing from `lib/ask`                |
+| `lib/redis.ts`                            | `getRedis`, `hasRedisCredentials`, the credential name pairs and `RedisNotConfiguredError`                                   |
+| `lib/ask/budget.ts`                       | The monthly and daily spend budget and the reservation record that settle or abandon it                                      |
+| `lib/ask/dedup.ts`                        | The identical-question lock: `checkIdenticalQuestion`, `releaseIdenticalQuestion`                                            |
 | `lib/ask/system-prompt.ts`                | How the AI persona imports shared content                                                                                    |
 | `content/schemas.ts`                      | The domain schema registry                                                                                                   |
 | `content/site-locale.ts`                  | Locale codes, `<html lang>` values, localized paths and the hreflang alternates every page and the sitemap derive from       |

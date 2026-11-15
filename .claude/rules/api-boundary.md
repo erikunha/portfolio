@@ -3,6 +3,9 @@
 paths:
 - "app/api/**"
 - "lib/rate-limit.ts"
+- "lib/redis.ts"
+- "lib/ask/budget.ts"
+- "lib/ask/dedup.ts"
 - "lib/server/**"
 - "proxy.ts"
 
@@ -27,14 +30,19 @@ merge-blocking check on this surface is the behavioral test suite (the required
 - Read env only through the Zod accessors `lib/env.ts` and `lib/env-build.ts`
   (deploy metadata such as the commit SHA). Never read `process.env.*` directly
   in a handler: Biome's `noProcessEnv` fails `app/api/**` and `lib/server/**`.
-- Rate limiting is Upstash sliding-window via `lib/rate-limit.ts` and is
+- Rate limiting is Upstash sliding-window via `lib/rate-limit.ts` (the table of
+  limiters and their getters; it imports nothing from `lib/ask`) and is
   **fail-open** (Redis down must not 500 the user). Keep that property. The
   `/api/ask` budget reservation is the exception: it fails closed with 503.
+- `lib/redis.ts` holds the one Redis client and its credential check;
+  `lib/ask/budget.ts` holds the monthly and daily spend budget and the
+  reservation record (`settleReservation` or `abandonReservation` ends it);
+  `lib/ask/dedup.ts` holds the identical-question lock.
 
 ## Security surface
 
 - The behavioral tests are the only merge-blocking check on this surface for a finding. Semgrep (`pnpm lint:semgrep`,
-  report-only in CI) and CodeQL findings block nothing; only Semgrep's fixture self-test and false-positive baseline can fail a run. Editing `app/api/**`, `lib/rate-limit.ts`, or `proxy.ts` means
+  report-only in CI) and CodeQL findings block nothing; only Semgrep's fixture self-test and false-positive baseline can fail a run. Editing `app/api/**`, `lib/rate-limit.ts`, `lib/redis.ts`, `lib/ask/budget.ts`, `lib/ask/dedup.ts` or `proxy.ts` means
   re-reading the diff for the abuse paths each of them closes.
 - CSP and `Reporting-Endpoints` headers come from **`proxy.ts`**, not
   `next.config.ts` (which sets the static headers: COOP, X-Frame-Options, HSTS,

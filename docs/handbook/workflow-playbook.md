@@ -87,7 +87,7 @@ Every runbook lists: **entry point** (what starts it), **steps**, **AI participa
 
 - **Entry:** a change to the ask route, prompt, guards, or eval.
 - **Steps:**
-  1. Editing `app/api/**`/`rate-limit.ts`/`proxy.ts` means re-reading the diff for the abuse paths each closes. No project hook checks this.
+  1. Editing `app/api/**`/`lib/rate-limit.ts`/`lib/redis.ts`/`lib/ask/budget.ts`/`lib/ask/dedup.ts`/`proxy.ts` means re-reading the diff for the abuse paths each closes. No project hook checks this.
   2. If the prompt/corpus changed, run `pnpm ask:eval` (the `ai-eval-update` skill) - calibration then corpus must clear their thresholds.
   3. Read `.claude/rules/api-boundary.md` for the matching API/server paths. It is guidance; `AGENTS.md` holds the rules.
 - **Output:** a PR with green API behavioural tests and a green eval.

@@ -78,7 +78,7 @@ Path-scoped rules in `.claude/rules/` load when a matching file is read:
 
 | Rule                   | Paths                                                                    |
 | ---------------------- | ------------------------------------------------------------------------ |
-| `api-boundary.md`      | `app/api/**`, `lib/rate-limit.ts`, `lib/server/**`, `proxy.ts`           |
+| `api-boundary.md`      | `app/api/**`, `lib/rate-limit.ts`, `lib/redis.ts`, `lib/ask/budget.ts`, `lib/ask/dedup.ts`, `lib/server/**`, `proxy.ts` |
 | `client-components.md` | `components/**`, `design-system/**`, `app/css/**`, `**/*.client.tsx`     |
 | `ci-and-config.md`     | `.github/**`, `.husky/**`, `scripts/**`, `biome.json`, test and Lighthouse configs |
 
