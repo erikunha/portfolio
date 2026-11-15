@@ -11,7 +11,7 @@ export type ContactFormProps = {
   loadingLabel: string;
 };
 
-export const CONTACT_FORM_MIN_HEIGHT = 'calc(5 * var(--spacing-target))';
+export const CONTACT_FORM_MIN_HEIGHT = 'var(--island-min-height)';
 
 const FormComponent = lazy(() => import('./ContactForm').then((m) => ({ default: m.ContactForm })));
 

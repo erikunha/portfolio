@@ -14,7 +14,7 @@ export type InteractiveShellProps = {
   loadingLabel: string;
 };
 
-export const SHELL_MIN_HEIGHT = 'calc(5 * var(--spacing-target))';
+export const SHELL_MIN_HEIGHT = 'var(--island-min-height)';
 
 const ShellComponent = lazy(() =>
   import('./InteractiveShell').then((m) => ({ default: m.InteractiveShell })),

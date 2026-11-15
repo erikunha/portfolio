@@ -1,4 +1,8 @@
 @layer components {
+  :root {
+    --island-min-height: calc(5 * var(--spacing-target));
+  }
+
   .interactive-shell,
   .shell-loading {
     margin: calc(-1 * (var(--spacing-3) + var(--spacing-1) / 2));
