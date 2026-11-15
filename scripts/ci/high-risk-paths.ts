@@ -1,5 +1,5 @@
 import { readFileSync } from 'node:fs';
-import { isMain } from './lib/is-main.ts';
+import { isMain } from '../lib/is-main.ts';
 
 const STDIN_FD = 0;
 const LINE_BREAK = /\r?\n/;

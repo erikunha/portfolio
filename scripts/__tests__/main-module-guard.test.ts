@@ -42,7 +42,7 @@ describe('script entry guards', () => {
 
   it('runs lint-css-tokens when it is started through a symlink', () => {
     const link = join(mkdtempSync(join(tmpdir(), 'css-tokens-')), 'linked-lint.ts');
-    symlinkSync(join(SCRIPTS_DIR, 'lint-css-tokens.ts'), link);
+    symlinkSync(join(SCRIPTS_DIR, 'gates', 'lint-css-tokens.ts'), link);
 
     const out = execFileSync(TSX, [link], { encoding: 'utf8', stdio: 'pipe' });
 

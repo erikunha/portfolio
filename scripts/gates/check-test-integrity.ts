@@ -2,8 +2,8 @@
 import { readFileSync, statSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
 import ts from 'typescript';
-import { isMain } from './lib/is-main';
-import { listFiles } from './lib/walk';
+import { isMain } from '../lib/is-main';
+import { listFiles } from '../lib/walk';
 
 export type ViolationKind = 'focused' | 'no-assertion' | 'skip-without-reason';
 export type Violation = { file: string; line: number; kind: ViolationKind };

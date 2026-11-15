@@ -33,12 +33,7 @@ const LINE_COMMENT = /(^|\s)\/\/.*$/gm;
 const withoutComments = (text: string): string =>
   text.replace(BLOCK_COMMENT, '').replace(LINE_COMMENT, '$1');
 
-const TEST_SUPPORT_LIBS: ReadonlyMap<string, string> = new Map([
-  [
-    'scripts/lib/ci-workflow.ts',
-    'parses ci.yml for the guard tests that hold ci:full and the verify chain to the workflow; no script runs it',
-  ],
-]);
+const TEST_SUPPORT_LIBS: ReadonlyMap<string, string> = new Map();
 
 function findOrphans(
   libFiles: readonly string[],

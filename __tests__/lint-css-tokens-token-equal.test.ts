@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { findTokenEqualArbitraryValues } from '../scripts/lint-css-tokens';
+import { findTokenEqualArbitraryValues } from '../scripts/gates/lint-css-tokens';
 
 const theme = [
   '@theme {',

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { findUnusedThemeTokens } from '../scripts/lint-css-tokens';
+import { findUnusedThemeTokens } from '../scripts/gates/lint-css-tokens';
 
 const theme = (body: string): string =>
   `@theme {\n${body}\n}\n@layer base { :root { margin: 0; } }`;

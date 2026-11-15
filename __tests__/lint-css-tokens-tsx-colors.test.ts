@@ -2,7 +2,7 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { findRawTsxColors, scanRepo } from '../scripts/lint-css-tokens';
+import { findRawTsxColors, scanRepo } from '../scripts/gates/lint-css-tokens';
 
 const literals = (source: string): string[] => findRawTsxColors(source).map((hit) => hit.literal);
 

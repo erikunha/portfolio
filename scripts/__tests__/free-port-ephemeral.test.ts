@@ -17,7 +17,7 @@ function bindable(port: number): Promise<void> {
 
 describe('ephemeralPort', () => {
   it('resolves an OS-assigned port that can be bound right after', async () => {
-    const { ephemeralPort } = await import('../lib/free-port');
+    const { ephemeralPort } = await import('../ci/free-port');
     const port = await ephemeralPort();
     expect(Number.isInteger(port)).toBe(true);
     expect(port).toBeGreaterThan(0);
@@ -33,7 +33,7 @@ describe('ephemeralPort', () => {
         return fake;
       },
     }));
-    const { ephemeralPort } = await import('../lib/free-port');
+    const { ephemeralPort } = await import('../ci/free-port');
     await expect(ephemeralPort()).rejects.toBe(refusal);
   });
 });

@@ -8,7 +8,7 @@ import {
   findRawHex,
   findTokenFiles,
   type RawColorHit,
-} from '../scripts/lint-css-tokens';
+} from '../scripts/gates/lint-css-tokens';
 
 describe('findRawHex', () => {
   it('flags a 3-digit hex literal with its line number', () => {

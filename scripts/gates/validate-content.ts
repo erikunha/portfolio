@@ -1,7 +1,7 @@
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { ContactContentSchema, contactContent } from '../content/contact';
-import { listContentFiles } from './lib/content-files.ts';
+import { ContactContentSchema, contactContent } from '../../content/contact';
+import { listContentFiles } from '../lib/content-files.ts';
 
 const MIN_EXPECTED_CONTENT_FILES = 20;
 

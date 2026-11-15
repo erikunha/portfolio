@@ -2,7 +2,7 @@ import { spawnSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { NOT_RUN, STAGES } from '../lib/ci-full-stages';
+import { NOT_RUN, STAGES } from '../ci/ci-full-stages';
 
 const CLI_TIMEOUT_MS = 60_000;
 const USAGE_EXIT = 2;
@@ -11,14 +11,14 @@ const pkg = JSON.parse(readFileSync(join(process.cwd(), 'package.json'), 'utf8')
 };
 
 const run = (args: string[]) =>
-  spawnSync('pnpm', ['exec', 'tsx', 'scripts/ci-full.ts', ...args], {
+  spawnSync('pnpm', ['exec', 'tsx', 'scripts/ci/ci-full.ts', ...args], {
     cwd: process.cwd(),
     encoding: 'utf8',
   });
 
 describe('ci:full command line', { timeout: CLI_TIMEOUT_MS }, () => {
   it('is what the package script runs', () => {
-    expect(pkg.scripts['ci:full']).toBe('tsx scripts/ci-full.ts');
+    expect(pkg.scripts['ci:full']).toBe('tsx scripts/ci/ci-full.ts');
   });
 
   it('lists every stage in order, then every declared not-run check with its reason, and runs nothing', () => {

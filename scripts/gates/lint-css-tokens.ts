@@ -2,8 +2,8 @@
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import postcss from 'postcss';
-import { isMain } from './lib/is-main';
-import { listFiles } from './lib/walk';
+import { isMain } from '../lib/is-main';
+import { listFiles } from '../lib/walk';
 
 const HEX = /#(?:[0-9a-fA-F]{8}|[0-9a-fA-F]{6}|[0-9a-fA-F]{4}|[0-9a-fA-F]{3})\b/g;
 const COLOR_FUNCTION =
@@ -28,7 +28,7 @@ const TOKEN_FILE = /-tokens\.ts$/;
 const TEST_FILE = /\.test\.tsx?$/;
 const TOKEN_ROOTS = ['app', 'components', 'content', 'design-system', 'lib'];
 const SKIPPED_DIRS = new Set(['node_modules', '.next']);
-const ALLOWLIST_PATH = 'scripts/lint-css-tokens.allowlist.json';
+const ALLOWLIST_PATH = 'scripts/gates/lint-css-tokens.allowlist.json';
 const CONSUMER_FILE = /\.(?:css|tsx?|mdx)$/;
 const CONSUMER_SKIPPED = /\.(?:test|e2e|spec)\.tsx?$/;
 const THEME_AT_RULE = 'theme';

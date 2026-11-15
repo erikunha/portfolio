@@ -50,7 +50,7 @@ describe('scripts a workflow runs with bare node', () => {
   it('includes the high-risk label, tool pins and hook installer scripts', () => {
     expect(scripts).toEqual(
       expect.arrayContaining([
-        'scripts/high-risk-paths.ts',
+        'scripts/ci/high-risk-paths.ts',
         'scripts/gates/check-tool-pins.ts',
         'scripts/install/prepare-hooks.ts',
       ]),

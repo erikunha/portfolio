@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import config from '../../playwright.config';
-import { parseWorkflow } from '../../scripts/lib/ci-workflow';
+import { parseWorkflow } from '../../scripts/ci/ci-workflow';
 
 const ci = readFileSync(`${process.cwd()}/.github/workflows/ci.yml`, 'utf8');
 const job = ci.slice(ci.indexOf('\n  e2e-functional:'));

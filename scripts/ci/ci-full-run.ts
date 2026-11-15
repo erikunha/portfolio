@@ -16,6 +16,7 @@ import {
 } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { delimiter, join } from 'node:path';
+import { gitText } from '../lib/git';
 import {
   DEFAULT_BASE,
   type Exclusion,
@@ -25,7 +26,6 @@ import {
   type StageContext,
 } from './ci-full-stages';
 import { ephemeralPort } from './free-port';
-import { gitText } from './git';
 
 export type Verdict = 'passed' | 'failed' | 'not-run';
 

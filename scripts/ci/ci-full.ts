@@ -1,6 +1,6 @@
 import { spawnSync } from 'node:child_process';
-import { EXIT, exitCode, parseArgs, renderTable, runStages } from './lib/ci-full-run';
-import { commandText, NOT_RUN, SERVER, STAGES } from './lib/ci-full-stages';
+import { EXIT, exitCode, parseArgs, renderTable, runStages } from './ci-full-run';
+import { commandText, NOT_RUN, SERVER, STAGES } from './ci-full-stages';
 
 const HELP = `pnpm ci:full [--base <ref>] [--from <stage>] [--keep-going] [--list]
 

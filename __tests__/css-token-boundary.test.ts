@@ -9,10 +9,10 @@ import {
   findRawZIndex,
   listScannedCss,
   scanRepo,
-} from '../scripts/lint-css-tokens';
+} from '../scripts/gates/lint-css-tokens';
 
 const ROOT = process.cwd();
-const ALLOWLIST_PATH = 'scripts/lint-css-tokens.allowlist.json';
+const ALLOWLIST_PATH = 'scripts/gates/lint-css-tokens.allowlist.json';
 
 const read = (file: string) => readFileSync(join(ROOT, file), 'utf8');
 

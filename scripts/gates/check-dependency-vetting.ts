@@ -1,7 +1,7 @@
 #!/usr/bin/env tsx
 import { existsSync, readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
-import { isMain } from './lib/is-main';
+import { isMain } from '../lib/is-main';
 
 const DEPENDENCY_BLOCKS = ['dependencies', 'devDependencies', 'optionalDependencies'] as const;
 const INSTALL_SCRIPTS = ['preinstall', 'install', 'postinstall'] as const;

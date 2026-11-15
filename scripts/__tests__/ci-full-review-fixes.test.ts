@@ -4,15 +4,15 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { parse as parseToml } from 'smol-toml';
 import { afterEach, describe, expect, it } from 'vitest';
-import { exitCode, runStages, type StageResult } from '../lib/ci-full-run';
+import { exitCode, runStages, type StageResult } from '../ci/ci-full-run';
 import {
   commandText,
   STAGES,
   type Stage,
   type StageContext,
   semgrepVersionProblem,
-} from '../lib/ci-full-stages';
-import { parseWorkflow } from '../lib/ci-workflow';
+} from '../ci/ci-full-stages';
+import { parseWorkflow } from '../ci/ci-workflow';
 
 const ROOT = process.cwd();
 const NODE = process.execPath;

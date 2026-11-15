@@ -8,12 +8,12 @@ import {
   highRiskFiles,
   isHighRisk,
   parseFileList,
-} from '../high-risk-paths';
+} from '../ci/high-risk-paths';
 
 const SUBPROCESS_TEST_TIMEOUT_MS = 60_000;
 
 const ROOT = process.cwd();
-const SCRIPT = join(ROOT, 'scripts', 'high-risk-paths.ts');
+const SCRIPT = join(ROOT, 'scripts', 'ci', 'high-risk-paths.ts');
 
 describe('isHighRisk', () => {
   it.each([

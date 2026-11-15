@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { parseWorkflow } from '../lib/ci-workflow';
+import { parseWorkflow } from '../ci/ci-workflow';
 
 const ci = parseWorkflow(readFileSync(`${process.cwd()}/.github/workflows/ci.yml`, 'utf8'));
 

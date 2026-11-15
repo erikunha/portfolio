@@ -110,7 +110,7 @@ describe('high-risk-label workflow', () => {
       PR_NUMBER: expression('github.event.pull_request.number'),
       GH_TOKEN: expression('secrets.GITHUB_TOKEN'),
     });
-    expect(sync?.run).toMatch(/scripts\/high-risk-paths\.ts/);
+    expect(sync?.run).toMatch(/scripts\/ci\/high-risk-paths\.ts/);
     expect(sync?.run).toMatch(/gh label create/);
     expect(sync?.run).toMatch(/--method POST/);
     expect(sync?.run).toMatch(/--method DELETE/);
@@ -128,6 +128,6 @@ describe('high-risk-label workflow', () => {
   });
 
   it('runs a script that exists', () => {
-    expect(existsSync(join(process.cwd(), 'scripts', 'high-risk-paths.ts'))).toBe(true);
+    expect(existsSync(join(process.cwd(), 'scripts', 'ci', 'high-risk-paths.ts'))).toBe(true);
   });
 });

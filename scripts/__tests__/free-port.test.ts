@@ -1,6 +1,6 @@
 import { createServer, type Server } from 'node:net';
 import { afterEach, describe, expect, it } from 'vitest';
-import { resolveServerPort } from '../lib/free-port';
+import { resolveServerPort } from '../ci/free-port';
 
 const held: Server[] = [];
 

@@ -26,8 +26,8 @@ import {
   stampText,
   startTracked,
   waitForOwnServer,
-} from '../lib/ci-full-run';
-import type { ServerSpec, Stage } from '../lib/ci-full-stages';
+} from '../ci/ci-full-run';
+import type { ServerSpec, Stage } from '../ci/ci-full-stages';
 
 const SUBPROCESS_TEST_TIMEOUT_MS = 60_000;
 const NODE = process.execPath;
@@ -499,7 +499,7 @@ describe('runStages server', { timeout: SUBPROCESS_TEST_TIMEOUT_MS }, () => {
     const sleeper = side(root, 'sleeper');
     const waitCode = `require('fs').writeFileSync(${JSON.stringify(sleeper)}, String(process.pid)); setTimeout(() => {}, 60000)`;
     const script = `
-      import { runStages } from ${JSON.stringify(join(process.cwd(), 'scripts/lib/ci-full-run.ts'))};
+      import { runStages } from ${JSON.stringify(join(process.cwd(), 'scripts/ci/ci-full-run.ts'))};
       const node = process.execPath;
       const stage = (id, code, extra = {}) => ({ id, title: id, jobs: [], mirrors: [], steps: [], command: () => ({ file: node, args: ['-e', code] }), ...extra });
       await runStages({

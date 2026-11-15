@@ -2,7 +2,7 @@
 
 import { type ChildProcess, execFileSync, spawn } from 'node:child_process';
 import { existsSync } from 'node:fs';
-import { resolveServerPort } from './lib/free-port';
+import { resolveServerPort } from './free-port';
 
 const LINKS_FEED_FIXTURE_ENV = 'E2E_LINKS_FEED_FIXTURE';
 const LINKS_FEED_FIXTURE_PATH = 'tests/e2e/fixtures/links-feed.json';

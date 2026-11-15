@@ -3,11 +3,11 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
-import { findViolations, scanRoot } from '../check-test-integrity';
+import { findViolations, scanRoot } from '../gates/check-test-integrity';
 
 const SUBPROCESS_TEST_TIMEOUT_MS = 60_000;
 
-const SCRIPT = join(process.cwd(), 'scripts', 'check-test-integrity.ts');
+const SCRIPT = join(process.cwd(), 'scripts', 'gates', 'check-test-integrity.ts');
 
 function summarize(source: string, file = 'sample.test.ts') {
   return findViolations(source, file).map((v) => `${v.kind}@${v.line}`);

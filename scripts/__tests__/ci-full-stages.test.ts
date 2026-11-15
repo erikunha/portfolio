@@ -16,8 +16,8 @@ import {
   type StageContext,
   UNMIRRORED_CI_STEPS,
   WORKERS,
-} from '../lib/ci-full-stages';
-import { parseWorkflow } from '../lib/ci-workflow';
+} from '../ci/ci-full-stages';
+import { parseWorkflow } from '../ci/ci-workflow';
 
 const ROOT = process.cwd();
 const ci = parseWorkflow(readFileSync(join(ROOT, '.github/workflows/ci.yml'), 'utf8'));
@@ -99,7 +99,7 @@ describe('every ci.yml job is run or declared not-run', () => {
   it('leaves no ci.yml job without a stage or a reasoned not-run entry', () => {
     expect(
       jobIds.filter((id) => !covered.has(id)),
-      'a job added to ci.yml must get a stage or a NOT_RUN entry in scripts/lib/ci-full-stages.ts',
+      'a job added to ci.yml must get a stage or a NOT_RUN entry in scripts/ci/ci-full-stages.ts',
     ).toEqual([]);
   });
 
