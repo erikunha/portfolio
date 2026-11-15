@@ -72,11 +72,6 @@
     width: var(--spacing-target);
     height: var(--spacing-target);
     padding: 0;
-    color: var(--color-primary-500);
-    background: transparent;
-    border: var(--border-width) solid var(--color-primary-subtle);
-    border-radius: var(--radius-none);
-    cursor: pointer;
     -webkit-tap-highlight-color: transparent;
   }
 
@@ -178,11 +173,6 @@
     font-family: var(--font-mono);
     font-size: var(--text-xs);
     letter-spacing: var(--tracking-xl);
-    color: var(--color-primary-500);
-    background: transparent;
-    border: var(--border-width) solid var(--color-primary-subtle);
-    border-radius: var(--radius-none);
-    cursor: pointer;
     text-align: left;
   }
 
@@ -198,11 +188,6 @@
     font-size: var(--text-xs);
     font-weight: 400;
     letter-spacing: var(--tracking-xl);
-    color: var(--color-primary-500);
-    background: transparent;
-    border: var(--border-width) solid var(--color-primary-subtle);
-    border-radius: var(--radius-none);
-    cursor: pointer;
   }
 
   .menu-close:hover {

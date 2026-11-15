@@ -262,16 +262,6 @@
     min-height: 0;
   }
 
-  .contact-alert .contact-summary-link::before {
-    content: "";
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: max(100%, var(--spacing-target-compact));
-    height: var(--spacing-target-compact);
-    transform: translate(-50%, -50%);
-  }
-
   .contact-submit-row {
     display: flex;
     flex-wrap: wrap;

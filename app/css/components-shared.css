@@ -62,7 +62,8 @@
     text-underline-offset: var(--spacing-1);
   }
 
-  .company-link::before {
+  .company-link::before,
+  .contact-alert .contact-summary-link::before {
     content: "";
     position: absolute;
     top: 50%;
@@ -74,6 +75,16 @@
 
   .company-link:hover {
     text-decoration-thickness: calc(var(--border-width) * 2);
+  }
+
+  .menu-trigger,
+  .menu-motion,
+  .menu-close {
+    color: var(--color-primary-500);
+    background: transparent;
+    border: var(--border-width) solid var(--color-primary-subtle);
+    border-radius: var(--radius-none);
+    cursor: pointer;
   }
 
   .copy-btn {
