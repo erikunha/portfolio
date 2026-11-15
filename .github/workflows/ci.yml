@@ -763,7 +763,7 @@ jobs:
         with:
           fetch-depth: 0 # gitleaks scans history, not just the tip
 
-      # The self-test below (check-gitleaks-fixture.mjs) imports smol-toml to parse .gitleaks.toml,
+      # The self-test below (check-gitleaks-fixture.ts) imports smol-toml to parse .gitleaks.toml,
       # so this job needs node_modules. Scoped to the self-test's dependency, not the scan: gitleaks
       # scans git history, which node_modules (gitignored, untracked) does not touch.
       - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
@@ -822,7 +822,7 @@ jobs:
       # from a scanner that is silently broken, so this plants a real secret and fails
       # the job unless gitleaks detects it (and stays silent on the clean fixture).
       - name: Self-test - gitleaks fires on the fixture
-        run: node scripts/check-gitleaks-fixture.mjs
+        run: pnpm exec tsx scripts/gates/check-gitleaks-fixture.ts
 
       - name: Scan the history reachable from the checked-out commit
         run: |

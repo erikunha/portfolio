@@ -56,7 +56,7 @@ const PAGE_SPECS = 'tests/e2e/';
 const VISUAL_SPEC = 'tests/visual/visual.spec.ts';
 const A11Y_SPECS = 'tests/a11y';
 const DESIGN_SYSTEM_SPEC = 'tests/e2e/design-system-components.spec.ts';
-const GITLEAKS_FIXTURE_SCRIPT = 'scripts/check-gitleaks-fixture.mjs';
+const GITLEAKS_FIXTURE_SCRIPT = 'scripts/gates/check-gitleaks-fixture.ts';
 const GITLEAKS_HISTORY = '--full-history HEAD';
 const SEMGREP_FIXTURE_SCRIPT = 'scripts/check-semgrep-fixture.mjs';
 const SEMGREP_FP_SCRIPT = 'scripts/measure-semgrep-fp.mjs';
@@ -233,8 +233,8 @@ export const STAGES: readonly Stage[] = [
     'gitleaks-selftest',
     'Gitleaks fires on its fixture',
     ['gitleaks'],
-    'node',
-    [GITLEAKS_FIXTURE_SCRIPT],
+    'pnpm',
+    ['exec', 'tsx', GITLEAKS_FIXTURE_SCRIPT],
     { requires: 'gitleaks' },
   ),
   {

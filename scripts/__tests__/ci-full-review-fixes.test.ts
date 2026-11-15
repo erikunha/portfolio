@@ -134,7 +134,9 @@ describe('gitleaks scans what the CI job scans', () => {
   it('runs the fixture self-test before the scan, with the binary it needs', () => {
     const ids = STAGES.map((candidate) => candidate.id);
     const selfTest = stage('gitleaks-selftest');
-    expect(commandText(selfTest.command(CTX))).toBe('node scripts/check-gitleaks-fixture.mjs');
+    expect(commandText(selfTest.command(CTX))).toBe(
+      'pnpm exec tsx scripts/gates/check-gitleaks-fixture.ts',
+    );
     expect(selfTest.requires).toBe('gitleaks');
     expect(ids.indexOf('gitleaks-selftest')).toBeLessThan(ids.indexOf('gitleaks'));
   });

@@ -6,7 +6,7 @@ useDefault = true
 # NO ALLOWLIST IN THIS FILE MAY USE `paths`. A `paths` entry exempts the file from EVERY
 # rule, which makes it a permanent secret-laundering path: a real credential committed there
 # would be invisible to the scanner forever. Allowlist the VALUE, never the file.
-# scripts/check-gitleaks-fixture.mjs fails the build if a `paths` key reappears here.
+# scripts/gates/check-gitleaks-fixture.ts fails the build if a `paths` key reappears here.
 
 [[allowlists]]
 description = "HISTORY ONLY. These fake GitHub tokens are no longer in the tree, but the first commit still carries them (the sanitize-secrets test) and the secret scan reads every commit, so the exemption has to keep naming them (generic-api-key false positives)"
@@ -24,7 +24,7 @@ regexes = ['''^gh[psour]_AbCdEf0123456789012345$''']
 #
 # The exempted values are fake and we own them, so exempting them repo-wide costs nothing.
 [[allowlists]]
-description = "Planted token proving gitleaks fires (scripts/check-gitleaks-fixture.mjs asserts it is detected)"
+description = "Planted token proving gitleaks fires (scripts/gates/check-gitleaks-fixture.ts asserts it is detected)"
 regexes = ['''ghp_R2d2c3poAbCdEfGhIjKlMnOpQrStUvWx1234''']
 
 [[allowlists]]

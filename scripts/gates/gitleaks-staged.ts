@@ -1,7 +1,9 @@
-#!/usr/bin/env node
+import { spawnSync } from 'node:child_process';
+import { isMain } from '../lib/is-main.ts';
 
 export const NO_LEAKS = 0;
 export const LEAKS_FOUND = 1;
+const EXIT_FAILURE = 1;
 
 export const MISSING_BINARY = [
   '\n[gitleaks] could not run gitleaks.\n',
@@ -21,13 +23,10 @@ export const SECRET_STAGED = [
   '\nIf it is a false positive, add a `regexes` entry to .gitleaks.toml matching the exact',
   'VALUE. Never a `paths` entry: a paths entry exempts that whole file from every rule, so',
   'a real credential committed there later would never be seen. And never a "gitleaks:allow"',
-  'comment or a .gitleaksignore -- both are unreviewable, and scripts/check-gitleaks-fixture.mjs',
+  'comment or a .gitleaksignore -- both are unreviewable, and scripts/gates/check-gitleaks-fixture.ts',
   'fails the build if either appears.\n',
 ].join('\n');
 
-// The exit-code decision, kept pure so it can be tested. It is the entire fail-closed defence
-// of the local gate, and it runs on every commit -- the sibling self-test script has its
-// equivalent tested exhaustively, and this one had nothing.
 export const SCANNER_KILLED = [
   '\n[gitleaks] gitleaks was killed before it could answer; the commit is blocked.\n',
   '\nThe binary is installed -- it started and died, so nothing was scanned. That is not a',
@@ -35,7 +34,17 @@ export const SCANNER_KILLED = [
   'for an OOM kill.\n',
 ].join('\n');
 
-export function decideStagedExit(res) {
+export interface StagedRun {
+  error?: Error | undefined;
+  status: number | null;
+}
+
+export interface StagedVerdict {
+  block: boolean;
+  reason?: string;
+}
+
+export function decideStagedExit(res: StagedRun): StagedVerdict {
   if (res.error !== undefined) {
     return { block: true, reason: `${MISSING_BINARY}\n(${res.error.message})\n` };
   }
@@ -54,29 +63,17 @@ export function decideStagedExit(res) {
   return { block: false };
 }
 
-import { spawnSync } from 'node:child_process';
-import { realpathSync } from 'node:fs';
-import { pathToFileURL } from 'node:url';
-
 const GITLEAKS_BIN = process.env.GITLEAKS_BIN ?? 'gitleaks';
+const GITLEAKS_ARGS = ['git', '--staged', '--no-banner', '--redact', '--config', '.gitleaks.toml'];
 
-function main() {
-  const res = spawnSync(
-    GITLEAKS_BIN,
-    ['git', '--staged', '--no-banner', '--redact', '--config', '.gitleaks.toml'],
-    { stdio: 'inherit' },
-  );
+function main(): void {
+  const res = spawnSync(GITLEAKS_BIN, GITLEAKS_ARGS, { stdio: 'inherit' });
 
   const verdict = decideStagedExit(res);
   if (verdict.block) {
     console.error(verdict.reason);
-    process.exitCode = 1;
+    process.exitCode = EXIT_FAILURE;
   }
 }
 
-if (
-  typeof process.argv[1] === 'string' &&
-  import.meta.url === pathToFileURL(realpathSync(process.argv[1])).href
-) {
-  main();
-}
+if (isMain(import.meta.url)) main();
