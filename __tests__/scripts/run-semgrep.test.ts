@@ -15,7 +15,7 @@ const semgrepInstalled = spawnSync('semgrep', ['--version']).status === 0;
 const REAL_SCAN_TIMEOUT_MS = 60_000;
 const SPAWN_GRACE_MS = 5_000;
 const run = (args: string[]) =>
-  spawnSync('node', ['scripts/run-semgrep.mjs', ...args], {
+  spawnSync('node', ['scripts/gates/run-semgrep.ts', ...args], {
     encoding: 'utf8',
     timeout: REAL_SCAN_TIMEOUT_MS - SPAWN_GRACE_MS,
   });
@@ -36,7 +36,7 @@ afterAll(() => {
 
 describe('run-semgrep wrapper', () => {
   it('exits 2 with a clear message when semgrep is not installed', () => {
-    const r = spawnSync('node', ['scripts/run-semgrep.mjs', '--sarif', '/tmp/x.sarif'], {
+    const r = spawnSync('node', ['scripts/gates/run-semgrep.ts', '--sarif', '/tmp/x.sarif'], {
       encoding: 'utf8',
       env: { ...process.env, SEMGREP_BIN: 'definitely-not-a-real-binary-xyz' },
     });
@@ -68,7 +68,7 @@ process.exit(0);
     );
     const r = spawnSync(
       'node',
-      ['scripts/run-semgrep.mjs', '--sarif', join(dir, 'o.sarif'), 'lib'],
+      ['scripts/gates/run-semgrep.ts', '--sarif', join(dir, 'o.sarif'), 'lib'],
       {
         encoding: 'utf8',
         env: { ...process.env, SEMGREP_BIN: stub, STUB_OUT: out },
@@ -109,7 +109,7 @@ process.exit(0);
 `,
       { mode: 0o755 },
     );
-    const r = spawnSync('node', ['scripts/run-semgrep.mjs'], {
+    const r = spawnSync('node', ['scripts/gates/run-semgrep.ts'], {
       encoding: 'utf8',
       env: { ...process.env, SEMGREP_BIN: stub, STUB_OUT: out },
     });

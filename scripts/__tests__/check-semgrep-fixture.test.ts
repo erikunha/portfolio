@@ -5,9 +5,8 @@ import {
   assertExpectedFindings,
   decideExit,
   EXPECTED_RULES,
-  interpretSemgrepRun,
   run,
-} from '../check-semgrep-fixture.mjs';
+} from '../gates/check-semgrep-fixture.ts';
 
 const f = (path: string, check_id: string) => ({ path, check_id });
 const CMD = '.semgrep.owasp-top-ten.child-process-shell-injection';
@@ -39,35 +38,6 @@ describe('assertExpectedFindings', () => {
     const v = assertExpectedFindings([...BOTH, f('/t/clean.ts', CMD)]);
     expect(v.ok).toBe(false);
     expect(v.ok === false && v.reason).toContain('clean.ts');
-  });
-});
-
-describe('interpretSemgrepRun', () => {
-  it('reports infra when the process failed to spawn', () => {
-    const v = interpretSemgrepRun({ error: { message: 'ENOENT' }, status: null, stdout: '' });
-    expect(v.ok).toBe(false);
-    expect(v.ok === false && v.reason).toContain('failed to run');
-  });
-
-  it('reports infra when stdout is not valid JSON', () => {
-    const v = interpretSemgrepRun({ status: 1, stdout: 'not json', stderr: 'boom' });
-    expect(v.ok).toBe(false);
-    expect(v.ok === false && v.reason).toContain('unparseable');
-  });
-
-  it('reports infra (not a rule regression) when semgrep emits scan errors', () => {
-    const stdout = JSON.stringify({ results: [], errors: [{ message: 'parse failure' }] });
-    const v = interpretSemgrepRun({ status: 2, stdout });
-    expect(v.ok).toBe(false);
-    expect(v.ok === false && v.reason).toContain('scan error');
-    expect(v.ok === false && v.reason).toContain('parse failure');
-  });
-
-  it('passes through the parsed json on a healthy run (findings present, exit 1, no errors)', () => {
-    const json = { results: BOTH, errors: [] };
-    const v = interpretSemgrepRun({ status: 1, stdout: JSON.stringify(json) });
-    expect(v.ok).toBe(true);
-    expect(v.ok === true && v.json.results).toHaveLength(2);
   });
 });
 

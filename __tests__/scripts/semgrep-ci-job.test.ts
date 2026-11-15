@@ -23,7 +23,7 @@ describe('ci.yml semgrep job invariants', () => {
 
   it('runs the false-positive baseline as a blocking step', () => {
     expect(job).toMatch(/name:\s*FP baseline/);
-    expect(job).toMatch(/node scripts\/measure-semgrep-fp\.mjs/);
+    expect(job).toMatch(/node scripts\/gates\/measure-semgrep-fp\.ts/);
     const start = job.indexOf('- name: FP baseline');
     const next = job.indexOf('- name:', start + 1);
     const step = job.slice(start, next === -1 ? job.length : next);

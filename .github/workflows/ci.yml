@@ -713,6 +713,10 @@ jobs:
         with:
           python-version: "3.12"
 
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: ".nvmrc"
+
       - name: Install Semgrep (exact-pinned) and resolve its path
         run: |
           pip install semgrep==1.185.0
@@ -722,14 +726,14 @@ jobs:
           "$SEMGREP_BIN" --version
 
       - name: Self-test - vendored rules fire on the fixture
-        run: node scripts/check-semgrep-fixture.mjs
+        run: node scripts/gates/check-semgrep-fixture.ts
 
       - name: FP baseline - the vendored rules' precision is what the decision recorded
-        run: node scripts/measure-semgrep-fp.mjs
+        run: node scripts/gates/measure-semgrep-fp.ts
 
       - name: Run Semgrep (SARIF, report-only)
         continue-on-error: true
-        run: node scripts/run-semgrep.mjs --sarif semgrep.sarif
+        run: node scripts/gates/run-semgrep.ts --sarif semgrep.sarif
 
       - name: Assert Semgrep produced a report
         run: |

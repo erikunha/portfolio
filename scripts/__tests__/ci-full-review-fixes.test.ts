@@ -291,10 +291,10 @@ describe('semgrep: the blocking steps of the job run when the install matches th
 
   it('runs the self-test and the false-positive baseline, each needing semgrep', () => {
     expect(commandText(stage('semgrep-selftest').command(CTX))).toBe(
-      'node scripts/check-semgrep-fixture.mjs',
+      'node scripts/gates/check-semgrep-fixture.ts',
     );
     expect(commandText(stage('semgrep-fp-baseline').command(CTX))).toBe(
-      'node scripts/measure-semgrep-fp.mjs',
+      'node scripts/gates/measure-semgrep-fp.ts',
     );
     expect(stage('semgrep-selftest').requires).toBe('semgrep');
     expect(stage('semgrep-fp-baseline').requires).toBe('semgrep');

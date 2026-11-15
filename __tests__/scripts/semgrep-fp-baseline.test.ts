@@ -1,12 +1,12 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import type { Probe } from '../../scripts/measure-semgrep-fp.mjs';
+import type { Probe } from '../../scripts/gates/measure-semgrep-fp.ts';
 import {
   classifyProbes,
   decideExit,
   EXPECTED_KNOWN_FALSE_POSITIVES,
   loadManifest,
-} from '../../scripts/measure-semgrep-fp.mjs';
+} from '../../scripts/gates/measure-semgrep-fp.ts';
 
 const manifest = loadManifest();
 
