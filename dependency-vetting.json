@@ -67,8 +67,16 @@
     "purpose": "DOM queries for component tests",
     "license": "MIT"
   },
+  "@testing-library/jest-dom": {
+    "purpose": "DOM matchers (toBeInTheDocument, toHaveAccessibleName) for component tests",
+    "license": "MIT"
+  },
   "@testing-library/react": {
     "purpose": "React rendering helpers for component tests",
+    "license": "MIT"
+  },
+  "@testing-library/user-event": {
+    "purpose": "Real user interaction (typing, clicking, keyboard) in component tests",
     "license": "MIT"
   },
   "@types/mdx": {
