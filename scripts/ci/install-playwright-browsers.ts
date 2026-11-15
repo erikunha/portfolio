@@ -1,7 +1,5 @@
-#!/usr/bin/env node
-import { spawnSync } from 'node:child_process';
-import { realpathSync } from 'node:fs';
-import { pathToFileURL } from 'node:url';
+import { type SpawnSyncReturns, spawnSync } from 'node:child_process';
+import { isMain } from '../lib/is-main.ts';
 
 export const INSTALL_ATTEMPTS = 3;
 export const APT_CONFIG_PATH = '/etc/apt/apt.conf.d/99ci-mirror-resilience';
@@ -14,12 +12,23 @@ export const APT_CONFIG = [
 const SUCCESS = 0;
 const FAILURE = 1;
 const LINUX = 'linux';
+const FIRST_ARGUMENT_INDEX = 2;
+
+type Run = (
+  command: string,
+  args: string[],
+  options: object,
+) => Pick<SpawnSyncReturns<string>, 'status'>;
 
 export function configureApt({
-  run = spawnSync,
-  platform = process.platform,
-  ci = process.env.CI,
-} = {}) {
+  run = spawnSync as Run,
+  platform = process.platform as string,
+  ci = process.env.CI as string | undefined,
+}: {
+  run?: Run;
+  platform?: string;
+  ci?: string | undefined;
+} = {}): boolean {
   if (platform !== LINUX || !ci) return false;
   const result = run('sudo', ['tee', APT_CONFIG_PATH], {
     input: `${APT_CONFIG}\n`,
@@ -28,7 +37,13 @@ export function configureApt({
   return result.status === SUCCESS;
 }
 
-export function installWithRetry(browsers, { run = spawnSync, log = console.error } = {}) {
+export function installWithRetry(
+  browsers: string[],
+  {
+    run = spawnSync as Run,
+    log = console.error,
+  }: { run?: Run; log?: (message: string) => void } = {},
+): number {
   const args = ['playwright', 'install', '--with-deps', ...browsers];
   for (let attempt = 1; attempt <= INSTALL_ATTEMPTS; attempt++) {
     const result = run('pnpm', args, { stdio: 'inherit' });
@@ -40,13 +55,10 @@ export function installWithRetry(browsers, { run = spawnSync, log = console.erro
   return FAILURE;
 }
 
-if (
-  typeof process.argv[1] === 'string' &&
-  import.meta.url === pathToFileURL(realpathSync(process.argv[1])).href
-) {
-  const browsers = process.argv.slice(2);
+if (isMain(import.meta.url)) {
+  const browsers = process.argv.slice(FIRST_ARGUMENT_INDEX);
   if (browsers.length === 0) {
-    console.error('usage: install-playwright-browsers.mjs <browser...>');
+    console.error('usage: install-playwright-browsers.ts <browser...>');
     process.exit(FAILURE);
   }
   configureApt();

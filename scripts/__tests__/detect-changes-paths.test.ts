@@ -57,8 +57,8 @@ describe('detect-changes manifest', () => {
 
   it.each([
     '.github/workflows/ci.yml',
-    'scripts/install-playwright-browsers.mjs',
-    'scripts/wait-argos-reference.mjs',
+    'scripts/ci/install-playwright-browsers.ts',
+    'scripts/ci/wait-argos-reference.ts',
   ])('arms ui for %s, which the visual job runs', (path) => {
     expect(UI_PATHS).toContain(path);
   });

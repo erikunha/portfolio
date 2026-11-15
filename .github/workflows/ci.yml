@@ -421,7 +421,7 @@ jobs:
             playwright-${{ runner.os }}-${{ steps.runner-image.outputs.version }}-chromium-
 
       - name: Install Playwright Chromium (for axe-core scan)
-        run: node scripts/install-playwright-browsers.mjs chromium
+        run: node scripts/ci/install-playwright-browsers.ts chromium
 
       - name: Start preview server
         run: pnpm start > /tmp/server-perf.log 2>&1 &
@@ -483,7 +483,7 @@ jobs:
           restore-keys: |
             playwright-${{ runner.os }}-${{ steps.runner-image.outputs.version }}-${{ contains(matrix.project, 'webkit') && 'webkit' || 'chromium' }}-
       - name: Install Playwright browsers
-        run: node scripts/install-playwright-browsers.mjs ${{ contains(matrix.project, 'webkit') && 'webkit' || 'chromium' }}
+        run: node scripts/ci/install-playwright-browsers.ts ${{ contains(matrix.project, 'webkit') && 'webkit' || 'chromium' }}
       - name: Download build artifact
         uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
@@ -600,7 +600,7 @@ jobs:
           restore-keys: |
             playwright-${{ runner.os }}-${{ steps.runner-image.outputs.version }}-chromium-
       - name: Install Playwright browsers
-        run: node scripts/install-playwright-browsers.mjs chromium
+        run: node scripts/ci/install-playwright-browsers.ts chromium
       - name: Download build artifact
         uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
@@ -620,7 +620,7 @@ jobs:
           }
       - if: github.event_name == 'pull_request'
         name: Wait for the Argos reference of the merge base
-        run: node scripts/wait-argos-reference.mjs
+        run: node scripts/ci/wait-argos-reference.ts
         env:
           GITHUB_TOKEN: ${{ github.token }}
           ARGOS_BASE_REF: ${{ github.event.pull_request.base.ref }}

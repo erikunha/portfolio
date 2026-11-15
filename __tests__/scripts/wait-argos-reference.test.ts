@@ -4,7 +4,7 @@ import {
   REFERENCE_STATE,
   referenceState,
   waitForReference,
-} from '../../scripts/wait-argos-reference.mjs';
+} from '../../scripts/ci/wait-argos-reference.ts';
 
 const VISUAL_DESKTOP = 'e2e-visual-chromium (chromium)';
 const VISUAL_MOBILE = 'e2e-visual-chromium (chromium-mobile)';

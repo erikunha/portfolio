@@ -6,7 +6,7 @@ import {
   configureApt,
   INSTALL_ATTEMPTS,
   installWithRetry,
-} from '../../scripts/install-playwright-browsers.mjs';
+} from '../../scripts/ci/install-playwright-browsers.ts';
 
 describe('configureApt', () => {
   it('makes apt wait for a held dpkg lock and retry a stalled download on a Linux CI runner', () => {

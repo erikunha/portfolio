@@ -42,7 +42,7 @@
     "check:no-dashes": "tsx scripts/gates/check-no-dashes.ts",
     "check:detect-changes-paths": "node scripts/check-detect-changes-paths.mjs",
     "check:test-integrity": "tsx scripts/check-test-integrity.ts",
-    "lint:contrast": "node scripts/contrast-check.mjs",
+    "lint:contrast": "tsx scripts/gates/contrast-check.ts",
     "lint:css-tokens": "tsx scripts/lint-css-tokens.ts",
     "lint:semgrep": "node scripts/run-semgrep.mjs --error --sarif semgrep.sarif",
     "lint:semgrep:selftest": "node scripts/check-semgrep-fixture.mjs",

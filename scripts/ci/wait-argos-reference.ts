@@ -1,7 +1,5 @@
-#!/usr/bin/env node
-import { realpathSync } from 'node:fs';
 import { setTimeout as delay } from 'node:timers/promises';
-import { pathToFileURL } from 'node:url';
+import { isMain } from '../lib/is-main.ts';
 
 export const REFERENCE_STATE = Object.freeze({
   ready: 'ready',
@@ -9,6 +7,17 @@ export const REFERENCE_STATE = Object.freeze({
   absent: 'absent',
   timeout: 'timeout',
 });
+
+export type ReferenceState = (typeof REFERENCE_STATE)[keyof typeof REFERENCE_STATE];
+
+interface RunInfo {
+  status: string;
+}
+
+interface JobInfo {
+  name: string;
+  status: string;
+}
 
 export const VISUAL_JOB_PREFIX = 'e2e-visual-chromium';
 export const CI_WORKFLOW_FILE = 'ci.yml';
@@ -22,7 +31,7 @@ const SINGLE_RESULT = 1;
 export const REQUEST_TIMEOUT_MS = 30_000;
 const LOG_PREFIX = '[wait-argos-reference]';
 
-export function referenceState(run, jobs) {
+export function referenceState(run: RunInfo | undefined, jobs: JobInfo[]): ReferenceState {
   if (!run) return REFERENCE_STATE.absent;
   if (run.status === COMPLETED) return REFERENCE_STATE.ready;
   const visualJobs = jobs.filter((job) => job.name.startsWith(VISUAL_JOB_PREFIX));
@@ -35,18 +44,27 @@ export function referenceState(run, jobs) {
 export async function waitForReference({
   readState,
   now = Date.now,
-  sleep = (ms) => delay(ms),
+  sleep = (ms: number) => delay(ms),
   intervalMs = POLL_INTERVAL_MS,
   deadlineMs = WAIT_DEADLINE_MS,
   log = console.error,
-}) {
+}: {
+  readState: () => Promise<ReferenceState>;
+  now?: () => number;
+  sleep?: (ms: number) => Promise<unknown>;
+  intervalMs?: number;
+  deadlineMs?: number;
+  log?: (message: string) => void;
+}): Promise<ReferenceState> {
   const start = now();
   for (;;) {
-    let state = REFERENCE_STATE.pending;
+    let state: ReferenceState = REFERENCE_STATE.pending;
     try {
       state = await readState();
     } catch (error) {
-      log(`${LOG_PREFIX} reading the merge base run failed: ${error.message}`);
+      log(
+        `${LOG_PREFIX} reading the merge base run failed: ${error instanceof Error ? error.message : String(error)}`,
+      );
     }
     if (state !== REFERENCE_STATE.pending) return state;
     if (now() - start + intervalMs > deadlineMs) return REFERENCE_STATE.timeout;
@@ -55,7 +73,7 @@ export async function waitForReference({
   }
 }
 
-async function github(path, token) {
+async function github<T>(path: string, token: string): Promise<T> {
   const response = await fetch(`${GITHUB_API}${path}`, {
     headers: {
       Accept: 'application/vnd.github+json',
@@ -64,23 +82,33 @@ async function github(path, token) {
     signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
   });
   if (!response.ok) throw new Error(`GitHub API ${response.status} on ${path}`);
-  return response.json();
+  return (await response.json()) as T;
 }
 
-export function githubReader({ repository, token, baseRef, headSha }) {
+export function githubReader({
+  repository,
+  token,
+  baseRef,
+  headSha,
+}: {
+  repository: string;
+  token: string;
+  baseRef: string;
+  headSha: string;
+}): () => Promise<ReferenceState> {
   return async () => {
-    const compare = await github(
+    const compare = await github<{ merge_base_commit: { sha: string } }>(
       `/repos/${repository}/compare/${encodeURIComponent(baseRef)}...${headSha}?per_page=${SINGLE_RESULT}`,
       token,
     );
     const mergeBase = compare.merge_base_commit.sha;
-    const runs = await github(
+    const runs = await github<{ workflow_runs: Array<RunInfo & { id: number }> }>(
       `/repos/${repository}/actions/workflows/${CI_WORKFLOW_FILE}/runs?head_sha=${mergeBase}&event=${PUSH_EVENT}&per_page=${SINGLE_RESULT}`,
       token,
     );
     const run = runs.workflow_runs[0];
     if (!run) return referenceState(undefined, []);
-    const { jobs } = await github(
+    const { jobs } = await github<{ jobs: JobInfo[] }>(
       `/repos/${repository}/actions/runs/${run.id}/jobs?per_page=${JOBS_PAGE_SIZE}`,
       token,
     );
@@ -88,10 +116,7 @@ export function githubReader({ repository, token, baseRef, headSha }) {
   };
 }
 
-if (
-  typeof process.argv[1] === 'string' &&
-  import.meta.url === pathToFileURL(realpathSync(process.argv[1])).href
-) {
+if (isMain(import.meta.url)) {
   const { GITHUB_REPOSITORY, GITHUB_TOKEN, ARGOS_BASE_REF, ARGOS_HEAD_SHA } = process.env;
   if (!GITHUB_REPOSITORY || !GITHUB_TOKEN || !ARGOS_BASE_REF || !ARGOS_HEAD_SHA) {
     console.error(`${LOG_PREFIX} not a pull request build, nothing to wait for`);
