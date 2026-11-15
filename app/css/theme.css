@@ -3,6 +3,10 @@
 @custom-variant reveal-motion-on (html.type-reveal-ready body:not([data-motion="reduce"]) &);
 
 @theme {
+  --color-*: initial;
+  --radius-*: initial;
+  --shadow-*: initial;
+
   --color-text: var(--color-tertiary-50);
   --color-text-secondary: #a1b3a1;
   --color-green: var(--color-primary-500);
