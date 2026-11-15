@@ -1,10 +1,10 @@
 import type { NextRequest } from 'next/server';
-import { Resend } from 'resend';
 import { EMAIL_ADDRESS } from '@/content/social-urls';
 import { env } from '@/lib/env';
 import { HTTP_STATUS } from '@/lib/http-status';
 import { refreshScores, type Strategy } from '@/lib/lighthouse-scores';
 import { log } from '@/lib/log';
+import { sendMail } from '@/lib/mail';
 import { getRedis } from '@/lib/redis';
 import { isCronAuthorized } from '@/lib/server/cron-auth';
 import { err } from '@/lib/server/route';
@@ -13,6 +13,7 @@ const PSI_CONSEC_KEY = (s: Strategy) => `meta:psi-consec-failures:${s}`;
 const PSI_CONSEC_TTL_S = 604_800;
 const PSI_ALERT_THRESHOLD = 3;
 const RESEND_ALERT_TIMEOUT_MS = 5_000;
+const PSI_ALERT_FROM = 'alerts@erikunha.dev';
 
 export const maxDuration = 60;
 
@@ -93,19 +94,16 @@ export async function GET(req: NextRequest): Promise<Response> {
       log.error('psi-refresh: RESEND_API_KEY not set, skipping alert');
     } else {
       try {
-        const resend = new Resend(apiKey);
         const alertText = overThreshold
           .map((o) => `${o.strategy}: ${o.count} consecutive failures: ${o.error}`)
           .join('\n');
-        const { error: sendError } = await resend.emails.send(
-          {
-            from: 'alerts@erikunha.dev',
-            to: EMAIL_ADDRESS,
-            subject: '[portfolio] psi-refresh cron failed',
-            text: `One or more PSI strategies have reached ${PSI_ALERT_THRESHOLD}+ consecutive failures.\n\n${alertText}\nTimestamp: ${new Date().toISOString()}`,
-          },
-          { signal: AbortSignal.timeout(RESEND_ALERT_TIMEOUT_MS) },
-        );
+        const { error: sendError } = await sendMail({
+          from: PSI_ALERT_FROM,
+          to: EMAIL_ADDRESS,
+          subject: '[portfolio] psi-refresh cron failed',
+          text: `One or more PSI strategies have reached ${PSI_ALERT_THRESHOLD}+ consecutive failures.\n\n${alertText}\nTimestamp: ${new Date().toISOString()}`,
+          timeoutMs: RESEND_ALERT_TIMEOUT_MS,
+        });
         if (sendError) {
           log.error('psi-refresh alert email API error', { err: sendError });
         }
