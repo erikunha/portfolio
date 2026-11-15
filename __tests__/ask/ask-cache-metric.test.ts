@@ -19,6 +19,9 @@ const reserveBudgetMock = vi.fn(async () => ({
   budgetKey: 'ask:tokens:test',
 }));
 
+vi.mock('@/lib/server/client-ip', async () =>
+  (await import('../helpers/ask-route')).clientIpModule(),
+);
 vi.mock('@/lib/rate-limit', async () => (await import('../helpers/ask-route')).rateLimitModule());
 vi.mock('@/lib/ask/budget', async () =>
   (await import('../helpers/ask-route')).budgetModule({

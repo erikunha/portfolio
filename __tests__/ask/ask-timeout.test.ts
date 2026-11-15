@@ -31,6 +31,9 @@ vi.mock('@/lib/redis', () => ({
     multi: () => ({ hset: vi.fn(), zadd: vi.fn(), exec: outboxExecMock }),
   })),
 }));
+vi.mock('@/lib/server/client-ip', async () =>
+  (await import('../helpers/ask-route')).clientIpModule(),
+);
 vi.mock('@/lib/rate-limit', async () =>
   (await import('../helpers/ask-route')).rateLimitModule({
     getContactLimit: vi.fn(() => ({ limit: vi.fn(async () => ({ success: true })) })),

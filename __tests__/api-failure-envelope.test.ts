@@ -12,8 +12,8 @@ vi.mock('@/lib/log', () => ({
   log: { info: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn() },
 }));
 vi.mock('@/lib/redis', () => ({ getRedis: vi.fn(() => ({})) }));
+vi.mock('@/lib/server/client-ip', () => ({ getClientIp: vi.fn(() => '203.0.113.7') }));
 vi.mock('@/lib/rate-limit', () => ({
-  getClientIp: vi.fn(() => '203.0.113.7'),
   getHealthzLimit: vi.fn(() => ({ limit })),
   getLighthouseLimit: vi.fn(() => ({ limit })),
 }));

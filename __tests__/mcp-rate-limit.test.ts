@@ -4,10 +4,10 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const limit = vi.hoisted(() => vi.fn());
 
-vi.mock('@/lib/rate-limit', () => ({
+vi.mock('@/lib/server/client-ip', () => ({
   getClientIp: vi.fn((req: Request) => req.headers.get('x-forwarded-for') ?? 'unknown'),
-  getMcpLimit: vi.fn(() => ({ limit })),
 }));
+vi.mock('@/lib/rate-limit', () => ({ getMcpLimit: vi.fn(() => ({ limit })) }));
 vi.mock('@/app/api/ask/route', () => ({
   POST: vi.fn(async () => new Response('answer')),
 }));

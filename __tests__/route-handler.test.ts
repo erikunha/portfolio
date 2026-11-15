@@ -8,7 +8,7 @@ const TEST_BODY_LIMIT = 4096;
 const rateLimitMock = vi.fn(async () => ({ success: true }));
 const hashIpMock = vi.fn(async () => 'hashed-ip-test');
 
-vi.mock('@/lib/rate-limit', () => ({
+vi.mock('@/lib/server/client-ip', () => ({
   getClientIp: vi.fn(() => '127.0.0.1'),
 }));
 

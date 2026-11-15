@@ -88,8 +88,8 @@ describe('forget then persist for the same request', () => {
     sets.clear();
     vi.doMock('server-only', () => ({}));
     vi.doMock('@/lib/redis', () => ({ getRedis: vi.fn(() => store) }));
+    vi.doMock('@/lib/server/client-ip', () => ({ getClientIp: vi.fn(() => '127.0.0.1') }));
     vi.doMock('@/lib/rate-limit', () => ({
-      getClientIp: vi.fn(() => '127.0.0.1'),
       getForgetLimit: vi.fn(() => ({ limit: vi.fn(async () => ({ success: true })) })),
     }));
     vi.doMock('@/lib/contact/outbox', () => ({

@@ -14,8 +14,8 @@ const limitMock = vi.fn();
 const getScoresMock = vi.fn();
 const logWarnMock = vi.fn();
 
+vi.mock('@/lib/server/client-ip', () => ({ getClientIp: getClientIpMock }));
 vi.mock('@/lib/rate-limit', () => ({
-  getClientIp: getClientIpMock,
   getLighthouseLimit: vi.fn(() => ({ limit: limitMock })),
   getMcpLimit: vi.fn(() => ({ limit: limitMock })),
 }));

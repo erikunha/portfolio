@@ -9,8 +9,8 @@ const admit = vi.hoisted(() => async () => {
 });
 
 vi.mock('@/lib/redis', () => ({ getRedis: vi.fn(() => null) }));
+vi.mock('@/lib/server/client-ip', () => ({ getClientIp: vi.fn(() => '127.0.0.1') }));
 vi.mock('@/lib/rate-limit', () => ({
-  getClientIp: vi.fn(() => '127.0.0.1'),
   getAskLimit: vi.fn(() => ({ limit: admit })),
   getContactLimit: vi.fn(() => ({ limit: admit })),
   getErrorLogLimit: vi.fn(() => ({ limit: admit })),

@@ -21,6 +21,9 @@ vi.mock('next/server', async (importOriginal) => ({
 }));
 vi.mock('ai', () => ({ streamText: streamTextMock }));
 vi.mock('@/lib/redis', () => ({ hasRedisCredentials: vi.fn(() => true) }));
+vi.mock('@/lib/server/client-ip', async () =>
+  (await import('../helpers/ask-route')).clientIpModule(),
+);
 vi.mock('@/lib/rate-limit', async () => (await import('../helpers/ask-route')).rateLimitModule());
 vi.mock('@/lib/ask/budget', async () =>
   (await import('../helpers/ask-route')).budgetModule({

@@ -12,10 +12,8 @@ vi.mock('next/server', async (importOriginal) => ({
 }));
 
 vi.mock('@/lib/redis', () => ({ getRedis: vi.fn(() => ({ get: redisMockGet })) }));
-vi.mock('@/lib/rate-limit', () => ({
-  getHealthzLimit: vi.fn(() => ({ limit: limitMock })),
-  getClientIp: getClientIpMock,
-}));
+vi.mock('@/lib/server/client-ip', () => ({ getClientIp: getClientIpMock }));
+vi.mock('@/lib/rate-limit', () => ({ getHealthzLimit: vi.fn(() => ({ limit: limitMock })) }));
 
 const FRESH_TIMESTAMP = new Date(Date.now() - 60 * 60 * 1000).toISOString();
 const STALE_TIMESTAMP = new Date(Date.now() - 26 * 60 * 60 * 1000).toISOString();

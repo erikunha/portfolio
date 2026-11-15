@@ -24,6 +24,9 @@ const limitMock = vi.hoisted(() =>
 
 vi.mock('ai', () => ({ streamText: streamTextMock }));
 vi.mock('@/lib/redis', () => ({ hasRedisCredentials: vi.fn(() => false) }));
+vi.mock('@/lib/server/client-ip', async () =>
+  (await import('../helpers/ask-route')).clientIpModule(),
+);
 vi.mock('@/lib/rate-limit', async () =>
   (await import('../helpers/ask-route')).rateLimitModule({
     getAskLimit: vi.fn(() => ({ limit: limitMock })),

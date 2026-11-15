@@ -8,6 +8,9 @@ const persist = vi.fn(async () => undefined);
 
 vi.mock('ai', () => ({ streamText: vi.fn() }));
 vi.mock('@/lib/redis', () => ({ hasRedisCredentials: vi.fn(() => false) }));
+vi.mock('@/lib/server/client-ip', async () =>
+  (await import('../helpers/ask-route')).clientIpModule(),
+);
 vi.mock('@/lib/rate-limit', async () =>
   (await import('../helpers/ask-route')).rateLimitModule({ getAskLimit: vi.fn(() => ({ limit })) }),
 );

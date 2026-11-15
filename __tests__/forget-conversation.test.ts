@@ -48,8 +48,8 @@ describe('/api/log/forget deletes the whole conversation of the id it is given',
     mget.mockResolvedValue([]);
     smembers.mockResolvedValue([]);
     vi.doMock('@/lib/redis', () => ({ getRedis: vi.fn(() => ({ del, mget, smembers })) }));
+    vi.doMock('@/lib/server/client-ip', () => ({ getClientIp: vi.fn(() => '127.0.0.1') }));
     vi.doMock('@/lib/rate-limit', () => ({
-      getClientIp: vi.fn(() => '127.0.0.1'),
       getForgetLimit: vi.fn(() => ({ limit: vi.fn(async () => ({ success: true })) })),
     }));
     vi.doMock('@/lib/contact/outbox', () => ({
@@ -65,6 +65,7 @@ describe('/api/log/forget deletes the whole conversation of the id it is given',
   afterEach(() => {
     vi.useRealTimers();
     vi.doUnmock('@/lib/rate-limit');
+    vi.doUnmock('@/lib/server/client-ip');
     vi.doUnmock('@/lib/redis');
     vi.doUnmock('@/lib/contact/outbox');
     vi.doUnmock('@/lib/ip-hash');

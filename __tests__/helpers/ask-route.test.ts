@@ -4,6 +4,7 @@ import {
   askLogModule,
   askRequest,
   budgetModule,
+  clientIpModule,
   dedupModule,
   ipHashModule,
   logModule,
@@ -86,7 +87,11 @@ describe('module factories', () => {
   it('rateLimitModule defaults to an allowed request and applies overrides', async () => {
     const base = rateLimitModule();
     expect(await base.getAskLimit().limit()).toEqual({ success: true });
-    const overridden = rateLimitModule({ getClientIp: vi.fn(() => '10.0.0.1') });
+  });
+
+  it('clientIpModule defaults to a fixed address and applies overrides', () => {
+    const base = clientIpModule();
+    const overridden = clientIpModule({ getClientIp: vi.fn(() => '10.0.0.1') });
     expect(overridden.getClientIp()).toBe('10.0.0.1');
     expect(base.getClientIp()).toBe('127.0.0.1');
   });

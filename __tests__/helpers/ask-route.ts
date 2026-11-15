@@ -52,9 +52,15 @@ export function ipHashModule(hashIp: AnyMock = vi.fn(async () => TEST_IP_HASH)) 
   return { hashIp };
 }
 
-export function rateLimitModule(overrides: Record<string, unknown> = {}) {
+export function clientIpModule(overrides: Record<string, unknown> = {}) {
   return {
     getClientIp: vi.fn(() => TEST_CLIENT_IP),
+    ...overrides,
+  };
+}
+
+export function rateLimitModule(overrides: Record<string, unknown> = {}) {
+  return {
     getAskLimit: vi.fn(() => ({ limit: vi.fn(async () => ({ success: true })) })),
     ...overrides,
   };

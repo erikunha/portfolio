@@ -40,8 +40,8 @@ describe('/api/log/forget on a large conversation', () => {
     vi.doMock('@/lib/redis', () => ({
       getRedis: vi.fn(() => ({ del, mget, smembers, set: vi.fn(async () => 'OK') })),
     }));
+    vi.doMock('@/lib/server/client-ip', () => ({ getClientIp: vi.fn(() => '127.0.0.1') }));
     vi.doMock('@/lib/rate-limit', () => ({
-      getClientIp: vi.fn(() => '127.0.0.1'),
       getForgetLimit: vi.fn(() => ({ limit: vi.fn(async () => ({ success: true })) })),
     }));
     vi.doMock('@/lib/contact/outbox', () => ({

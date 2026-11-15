@@ -23,6 +23,7 @@ describe('lib/ask-log: persistAskInteraction', () => {
 
   afterEach(() => {
     vi.doUnmock('@/lib/rate-limit');
+    vi.doUnmock('@/lib/server/client-ip');
     vi.doUnmock('@/lib/redis');
     vi.doUnmock('@/lib/log');
   });
@@ -107,8 +108,8 @@ describe('/api/log/forget endpoint', () => {
         multi: () => ({ zrem: vi.fn(), hdel: vi.fn(), exec: vi.fn(async () => []) }),
       })),
     }));
+    vi.doMock('@/lib/server/client-ip', () => ({ getClientIp: vi.fn(() => '127.0.0.1') }));
     vi.doMock('@/lib/rate-limit', () => ({
-      getClientIp: vi.fn(() => '127.0.0.1'),
       getForgetLimit: vi.fn(() => ({ limit: vi.fn(async () => ({ success: true })) })),
     }));
     vi.doMock('@/lib/ip-hash', () => ({ hashIp: vi.fn(async () => 'hashed-ip-test') }));
@@ -119,6 +120,7 @@ describe('/api/log/forget endpoint', () => {
 
   afterEach(() => {
     vi.doUnmock('@/lib/rate-limit');
+    vi.doUnmock('@/lib/server/client-ip');
     vi.doUnmock('@/lib/redis');
     vi.doUnmock('@/lib/ip-hash');
     vi.doUnmock('@/lib/log');
@@ -230,6 +232,7 @@ describe('lib/ask-log: persistAskInteraction minimization', () => {
 
   afterEach(() => {
     vi.doUnmock('@/lib/rate-limit');
+    vi.doUnmock('@/lib/server/client-ip');
     vi.doUnmock('@/lib/redis');
     vi.doUnmock('@/lib/log');
   });

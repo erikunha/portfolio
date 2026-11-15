@@ -11,6 +11,9 @@ const persistMock = vi.fn(async (_interaction: Persisted) => undefined);
 const mockStreamText = vi.fn();
 
 vi.mock('ai', () => ({ streamText: mockStreamText }));
+vi.mock('@/lib/server/client-ip', async () =>
+  (await import('../helpers/ask-route')).clientIpModule(),
+);
 vi.mock('@/lib/rate-limit', async () => (await import('../helpers/ask-route')).rateLimitModule());
 vi.mock('@/lib/ask/budget', async () => (await import('../helpers/ask-route')).budgetModule());
 vi.mock('@/lib/ask/dedup', async () => (await import('../helpers/ask-route')).dedupModule());

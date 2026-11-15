@@ -5,6 +5,9 @@ import { askRequest } from '../helpers/ask-route';
 const limit = vi.fn();
 
 vi.mock('ai', () => ({ streamText: vi.fn() }));
+vi.mock('@/lib/server/client-ip', async () =>
+  (await import('../helpers/ask-route')).clientIpModule(),
+);
 vi.mock('@/lib/rate-limit', async () =>
   (await import('../helpers/ask-route')).rateLimitModule({ getAskLimit: vi.fn(() => ({ limit })) }),
 );
