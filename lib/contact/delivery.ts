@@ -11,6 +11,24 @@ const CONTACT_TO = EMAIL_ADDRESS;
 const CONTACT_SUBJECT_PREFIX = '[portfolio] message from';
 const RESEND_TIMEOUT_MS = 10_000;
 
+const LOG_NOT_CONFIGURED = 'contact delivery not configured';
+const LOG_REJECTED = 'contact delivery rejected';
+const LOG_UNAVAILABLE = 'contact delivery unavailable';
+
+interface ErrorDetail {
+  errorName?: string;
+  statusCode?: number;
+}
+
+function errorDetail(error: unknown): ErrorDetail {
+  if (typeof error !== 'object' || error === null) return {};
+  const { name, statusCode } = error as { name?: unknown; statusCode?: unknown };
+  return {
+    ...(typeof name === 'string' ? { errorName: name } : {}),
+    ...(typeof statusCode === 'number' ? { statusCode } : {}),
+  };
+}
+
 export async function sendContactMessage(
   msgId: string,
   message: ContactMessage,
@@ -18,7 +36,7 @@ export async function sendContactMessage(
 ): Promise<boolean> {
   try {
     if (!env.RESEND_API_KEY) {
-      log.error('contact delivery unavailable', { requestId, msgId });
+      log.error(LOG_NOT_CONFIGURED, { requestId, msgId });
       return false;
     }
     const { error } = await sendMail({
@@ -31,12 +49,12 @@ export async function sendContactMessage(
       timeoutMs: RESEND_TIMEOUT_MS,
     });
     if (error) {
-      log.error('contact delivery rejected', { requestId, msgId });
+      log.error(LOG_REJECTED, { requestId, msgId, ...errorDetail(error) });
       return false;
     }
     return true;
-  } catch {
-    log.error('contact delivery unavailable', { requestId, msgId });
+  } catch (thrown) {
+    log.error(LOG_UNAVAILABLE, { requestId, msgId, ...errorDetail(thrown) });
     return false;
   }
 }
