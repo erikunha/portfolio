@@ -1,7 +1,8 @@
 import { SHELL_PROMPT } from '@/content/brand';
 import type { HeroClientContent } from '@/content/schemas';
 import { HERO_SYSFAIL_HIDE, HERO_SYSFAIL_SHOW, SYSFAIL_END, SYSFAIL_START } from '@/lib/events';
-import { createPauseControl, type PhraseLoop, runPhraseLoop, typeOut } from './typewriter';
+import { type BootTiming, type TypeThenLoop, typeThenLoop } from './boot-timing';
+import { createPauseControl } from './typewriter';
 
 export type BootClassKey =
   | 'bootOk'
@@ -143,26 +144,19 @@ export function runBoot(
   specs: LinePart[][],
   dialog: string[],
   cls: BootClasses,
-  opts: {
+  opts: BootTiming & {
     lineMs: number;
     lineJitter: number;
-    cmdMs: number;
-    cmdJitter: number;
-    typeMs: number;
-    holdMs: number;
-    backMs: number;
-    interMs: number;
     startMs: number;
     onFirstLoop?: () => void;
   },
 ): BootCtrl {
   let cancelled = false;
-  let dialogLoop: PhraseLoop | undefined;
+  let typing: TypeThenLoop | undefined;
   const dialogPause = createPauseControl((paused) => {
-    if (paused) dialogLoop?.pause();
-    else dialogLoop?.resume();
+    if (paused) typing?.pause();
+    else typing?.resume();
   });
-  let cancelTyping: (() => void) | undefined;
   const timers: ReturnType<typeof setTimeout>[] = [];
 
   function later(fn: () => void, ms: number) {
@@ -196,50 +190,40 @@ export function runBoot(
     line.appendChild(cursor);
     placeBootLine(container, line);
 
-    cancelTyping = typeOut(cmdText, {
-      stepMs: () => opts.cmdMs + Math.random() * opts.cmdJitter,
-      onText: (text) => {
+    let out: HTMLSpanElement | undefined;
+    let firedOnce = false;
+    typing = typeThenLoop({
+      command: cmdText,
+      dialog,
+      timing: opts,
+      handoffMs: BOOT_PHASE_GAP_MS,
+      onCommandText: (text) => {
         cmdEl.textContent = text;
       },
-      onDone: () => {
+      onCommandDone: () => {
         cursor.remove();
         placeBootLine(container, buildLine([BLANK_BOOT_LINE], cls));
-        later(startDialog, BOOT_PHASE_GAP_MS);
       },
-    });
-  }
-
-  function startDialog() {
-    if (cancelled) return;
-
-    const out = document.createElement('span');
-    out.className = cls.bootMatrixOut;
-    const cur = document.createElement('span');
-    cur.className = cls.bootCursor;
-    cur.dataset.testid = 'boot-cursor';
-    const line = buildLine([{ cls: 'bootMatrixPrefix', text: BOOT_MATRIX_PREFIX }], cls);
-    line.appendChild(out);
-    line.appendChild(cur);
-    placeBootLine(container, line);
-
-    let firedOnce = false;
-    dialogLoop = runPhraseLoop({
-      phrases: dialog,
-      timing: {
-        typeMs: opts.typeMs,
-        holdMs: opts.holdMs,
-        backMs: opts.backMs,
-        pauseMs: opts.interMs,
+      onDialogStart: () => {
+        out = document.createElement('span');
+        out.className = cls.bootMatrixOut;
+        const cur = document.createElement('span');
+        cur.className = cls.bootCursor;
+        cur.dataset.testid = 'boot-cursor';
+        const dialogLine = buildLine([{ cls: 'bootMatrixPrefix', text: BOOT_MATRIX_PREFIX }], cls);
+        dialogLine.appendChild(out);
+        dialogLine.appendChild(cur);
+        placeBootLine(container, dialogLine);
       },
-      onText: (text) => {
-        out.textContent = text;
+      onDialogText: (text) => {
+        if (out) out.textContent = text;
       },
-      startPaused: dialogPause.isPaused(),
       onWrap: () => {
         if (firedOnce) return;
         firedOnce = true;
         opts.onFirstLoop?.();
       },
+      startPaused: dialogPause.isPaused,
     });
   }
 
@@ -249,8 +233,7 @@ export function runBoot(
     cancel: () => {
       cancelled = true;
       timers.forEach(clearTimeout);
-      cancelTyping?.();
-      dialogLoop?.cancel();
+      typing?.cancel();
     },
     pauseDialog: dialogPause.pause,
     resumeDialog: dialogPause.resume,

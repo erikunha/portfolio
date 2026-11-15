@@ -424,6 +424,7 @@ lib/ascii-bar.ts                      # ASCII progress bar string
 lib/motion-bootstrap.ts               # the pre-paint script that sets body[data-motion]
 lib/ask/interaction-log.ts         # KV interaction log per /api/ask request that reaches the model; lib/ask/refusal-count.ts counts refused asks per day; lib/ask/guard-count.ts counts output-guard findings per day; both delegate to lib/ask/daily-counter.ts
 lib/boot-animation.ts                 # boot line builders; the sequence text comes from content/hero-client.ts
+lib/boot-timing.ts                    # BootTiming and typeThenLoop: type the command, wait, then loop the dialog; shared by desktop and mobile
 lib/typewriter.ts                     # one type, hold and erase loop (runPhraseLoop, typeOut) and createPauseControl
 lib/use-copy-feedback.client.ts       # clipboard state for every copy button
 lib/media-queries.ts                  # MOBILE_QUERY, isMobileViewport(), watchMobileViewport(): the one matchMedia call site for the mobile breakpoint

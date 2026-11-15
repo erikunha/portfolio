@@ -1,62 +1,35 @@
 import type { BootCtrl } from '@/lib/boot-animation';
-import { createPauseControl, type PhraseLoop, runPhraseLoop, typeOut } from '@/lib/typewriter';
-
-export type MobileBootTiming = {
-  cmdMs: number;
-  cmdJitter: number;
-  typeMs: number;
-  holdMs: number;
-  backMs: number;
-  interMs: number;
-};
+import { type BootTiming, typeThenLoop } from '@/lib/boot-timing';
+import { createPauseControl } from '@/lib/typewriter';
 
 export function runMobileBoot(
   cmdEl: HTMLSpanElement,
   outEl: HTMLSpanElement,
   command: string,
   dialog: readonly string[],
-  timing: MobileBootTiming,
+  timing: BootTiming,
 ): BootCtrl {
-  let cancelled = false;
-  let handoff: ReturnType<typeof setTimeout> | undefined;
-  let loop: PhraseLoop | undefined;
   const dialogPause = createPauseControl((paused) => {
-    if (paused) loop?.pause();
-    else loop?.resume();
+    if (paused) run.pause();
+    else run.resume();
   });
 
-  const cancelTyping = typeOut(command, {
-    stepMs: () => timing.cmdMs + Math.random() * timing.cmdJitter,
-    onText: (text) => {
+  const run = typeThenLoop({
+    command,
+    dialog,
+    timing,
+    handoffMs: timing.interMs,
+    onCommandText: (text) => {
       cmdEl.textContent = text;
     },
-    onDone: () => {
-      if (cancelled) return;
-      handoff = setTimeout(() => {
-        loop = runPhraseLoop({
-          phrases: dialog,
-          timing: {
-            typeMs: timing.typeMs,
-            holdMs: timing.holdMs,
-            backMs: timing.backMs,
-            pauseMs: timing.interMs,
-          },
-          onText: (text) => {
-            outEl.textContent = text;
-          },
-          startPaused: dialogPause.isPaused(),
-        });
-      }, timing.interMs);
+    onDialogText: (text) => {
+      outEl.textContent = text;
     },
+    startPaused: dialogPause.isPaused,
   });
 
   return {
-    cancel: () => {
-      cancelled = true;
-      cancelTyping();
-      clearTimeout(handoff);
-      loop?.cancel();
-    },
+    cancel: run.cancel,
     pauseDialog: dialogPause.pause,
     resumeDialog: dialogPause.resume,
   };
