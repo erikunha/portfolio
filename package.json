@@ -56,7 +56,7 @@
     "prepare": "node scripts/prepare-hooks.mjs",
     "postinstall": "node scripts/strip-next-polyfills.mjs",
     "changelog:sync": "tsx scripts/sync-changelog.ts",
-    "check:mutation-canary": "node scripts/check-mutation-kills.mjs --canary"
+    "check:mutation-canary": "tsx scripts/gates/check-mutation-kills.ts --canary"
   },
   "pnpm": {
     "onlyBuiltDependencies": [

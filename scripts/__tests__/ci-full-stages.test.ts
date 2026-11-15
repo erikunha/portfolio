@@ -240,7 +240,7 @@ describe('stage commands', () => {
   it('checks the scanner pins and the mutation canary with the package scripts CI uses', () => {
     expect(commandText(stage('tool-pins').command(CTX))).toBe('pnpm check:tool-pins');
     expect(commandText(stage('mutation-canary').command(CTX))).toBe(
-      'node scripts/check-mutation-kills.mjs --canary',
+      'pnpm exec tsx scripts/gates/check-mutation-kills.ts --canary',
     );
   });
 

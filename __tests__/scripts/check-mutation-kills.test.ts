@@ -7,7 +7,7 @@ import {
   type MutationReport,
   type MutationReportMutant,
   main,
-} from '@/scripts/check-mutation-kills.mjs';
+} from '@/scripts/gates/check-mutation-kills.ts';
 import strykerConfig from '@/stryker.config.mjs';
 
 const root = process.cwd();
@@ -191,13 +191,13 @@ describe('main with a report path', () => {
 describe('mutation workflow wiring', () => {
   it('weekly mutation.yml judges the report with the same assessor', () => {
     expect(read('.github/workflows/mutation.yml')).toContain(
-      'node scripts/check-mutation-kills.mjs mutation-report.json',
+      'pnpm exec tsx scripts/gates/check-mutation-kills.ts mutation-report.json',
     );
   });
 
   it('ci.yml runs the kill canary in the test job when its surface changes or on main', () => {
     const ci = read('.github/workflows/ci.yml');
-    const step = ci.indexOf('node scripts/check-mutation-kills.mjs --canary');
+    const step = ci.indexOf('pnpm exec tsx scripts/gates/check-mutation-kills.ts --canary');
     expect(step).toBeGreaterThan(-1);
     const stepStart = ci.lastIndexOf('      - name:', step);
     const stepText = ci.slice(stepStart, step);
@@ -212,7 +212,7 @@ describe('mutation workflow wiring', () => {
   it('package.json exposes the canary as check:mutation-canary', () => {
     const pkg = JSON.parse(read('package.json')) as { scripts: Record<string, string> };
     expect(pkg.scripts['check:mutation-canary']).toBe(
-      'node scripts/check-mutation-kills.mjs --canary',
+      'tsx scripts/gates/check-mutation-kills.ts --canary',
     );
   });
 });

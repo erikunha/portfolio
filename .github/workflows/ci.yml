@@ -178,14 +178,14 @@ jobs:
           HEAD: ${{ github.event.pull_request.head.sha }}
         run: |
           changed=true
-          if git diff --quiet "$BASE...$HEAD" -- pnpm-lock.yaml stryker.config.mjs vitest.config.ts tests/mocks scripts/check-mutation-kills.mjs scripts/stryker-canary.config.mjs 2>/dev/null; then
+          if git diff --quiet "$BASE...$HEAD" -- pnpm-lock.yaml stryker.config.mjs vitest.config.ts tests/mocks scripts/gates/check-mutation-kills.ts scripts/gates/stryker-canary.config.mjs 2>/dev/null; then
             changed=false
           fi
           echo "changed=${changed}" >> "$GITHUB_OUTPUT"
 
       - name: Mutation runner canary (Stryker must kill mutants in a known file)
         if: github.event_name != 'pull_request' || steps.mutation-surface-diff.outputs.changed == 'true'
-        run: node scripts/check-mutation-kills.mjs --canary
+        run: pnpm exec tsx scripts/gates/check-mutation-kills.ts --canary
 
       - name: Unit tests
         run: pnpm test:coverage

@@ -262,8 +262,10 @@ export const STAGES: readonly Stage[] = [
     '--audit-level=moderate',
   ]),
   plain('tool-pins', 'Scanner pins are current', [], 'pnpm', ['check:tool-pins']),
-  plain('mutation-canary', 'Mutation runner canary', ['test'], 'node', [
-    'scripts/check-mutation-kills.mjs',
+  plain('mutation-canary', 'Mutation runner canary', ['test'], 'pnpm', [
+    'exec',
+    'tsx',
+    'scripts/gates/check-mutation-kills.ts',
     '--canary',
   ]),
   plain(

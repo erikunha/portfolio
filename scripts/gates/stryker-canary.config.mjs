@@ -1,4 +1,4 @@
-import base from '../stryker.config.mjs';
+import base from '../../stryker.config.mjs';
 
 export const CANARY_FILE = 'lib/links/relative-time.ts';
 export const CANARY_REPORT_ENV = 'STRYKER_CANARY_REPORT';
