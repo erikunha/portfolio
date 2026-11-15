@@ -65,7 +65,13 @@ Next convention files is misnamed. It scans `app`, `components` and `lib`, not
 (`components/client/HeroBootAnimation/HeroBootAnimation.test.tsx`), never per-keystroke state. The streaming-through-React contract is held by the
 behavioral test `components/client/InteractiveShell/InteractiveShell.test.tsx`, which asserts
 every child of the shell feed is a React-owned node (`__reactFiber$` key
-present). The root route's rendering mode is held by the build output itself: it
+present). Two further guards hold it: `scripts/gates/check-shell-dom-writes.ts`
+(`pnpm check:shell-dom-writes`, in `verify` and the `quality-fast` job) fails any non-test file
+under `components/client/InteractiveShell/` that calls `document.createElement`, `appendChild` or
+`insertAdjacentHTML`, or assigns `textContent` or `innerHTML`; its one allowlisted path is
+`AnimatedPlaceholder.client.tsx`, the placeholder typewriter that writes through a ref and never
+renders the answer. `InteractiveShell.stream-once.test.tsx` asserts each streamed frame appears
+exactly once while the stream grows and after it settles. The root route's rendering mode is held by the build output itself: it
 reports `/` as Partial Prerender, and a section that started reading request
 data at the top level rather than inside a streaming boundary would move the
 whole route to on-demand rendering there.

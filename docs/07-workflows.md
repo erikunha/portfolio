@@ -26,7 +26,7 @@
 
 ```
 check (Biome, warnings fail) -> typecheck -> validate-content -> check:client-naming
-  -> check:dep-pinning -> check:dependency-vetting -> check:harness-size -> check:component-docs
+  -> check:shell-dom-writes -> check:dep-pinning -> check:dependency-vetting -> check:harness-size -> check:component-docs
   -> check:section-order -> check:doc-drift -> check:no-dashes -> check:detect-changes-paths -> check:test-integrity
   -> lint:contrast -> lint:css-tokens -> test:coverage (Vitest with the coverage thresholds)
 ```
@@ -41,6 +41,7 @@ Two `quality-fast` steps stay CI-only: the branch-name lint (the pre-push hook e
 | ---------------------- | ------------------------------------------------------------------------------------------------ |
 | `validate-content`     | every `content/*.ts` Zod schema parses (build gate)                                              |
 | `check:client-naming`  | client directive files use `*.client.*`, a `/client/` directory, or an App Router error filename |
+| `check:shell-dom-writes` | no `createElement`, `appendChild`, `insertAdjacentHTML`, `textContent` or `innerHTML` write in `components/client/InteractiveShell/` outside the placeholder typewriter |
 | `check:test-integrity` | no focused test, no test without an assertion, no skip without a reason                          |
 | `check:dep-pinning`    | no `latest`/`*`/tag deps or open overrides                                                                       |
 | `check:dependency-vetting` | every direct dependency has a purpose and license in `dependency-vetting.json`; the installed license matches it; an install script needs `pnpm.onlyBuiltDependencies` or `pnpm.ignoredBuiltDependencies` |
@@ -189,7 +190,7 @@ The table below carries the full description of each job.
 
 | Job | Runs when | What it does |
 | --- | --- | --- |
-| `quality-fast` | always | branch-name lint, commit-message lint (PR), `biome ci --error-on-warnings`, `validate-content`, client-naming, dependency-pinning, dependency-vetting, harness-size, component-docs, doc-drift, no-dashes, section-order, detect-changes-paths, test-integrity, contrast, CSS-token gates |
+| `quality-fast` | always | branch-name lint, commit-message lint (PR), `biome ci --error-on-warnings`, `validate-content`, client-naming, shell-dom-writes, dependency-pinning, dependency-vetting, harness-size, component-docs, doc-drift, no-dashes, section-order, detect-changes-paths, test-integrity, contrast, CSS-token gates |
 | `typecheck` | always | `pnpm typecheck` with a cached `tsconfig.tsbuildinfo` |
 | `test` | always | `pnpm audit --audit-level=moderate` (always on a push, only when `pnpm-lock.yaml` changed on a PR), the Stryker kill canary (always on a push, only when the mutation runner files changed on a PR), then `pnpm test:coverage` and the coverage artifact |
 | `dependency-review` | PR | blocks high-severity advisories and `GPL-3.0`, `AGPL-3.0` and `GPL-2.0` licenses |
