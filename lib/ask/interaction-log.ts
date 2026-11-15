@@ -2,8 +2,8 @@ import 'server-only';
 
 import { parseConversationId } from '@/lib/ask/conversation-id';
 import type { AskFailureReason } from '@/lib/ask/failure-reason';
-import type { PostHocVerdict } from '@/lib/ask/output-guard';
 import { redactPii } from '@/lib/ask/redact-pii';
+import type { AskInteractionStatus, PostHocVerdict } from '@/lib/ask/types';
 import { log } from '@/lib/log';
 import { describeError } from '@/lib/log-error';
 import { getRedis } from '@/lib/rate-limit';
@@ -79,7 +79,7 @@ export function askLogDatesInTtl(now: Date): string[] {
   );
 }
 
-export type AskInteractionStatus = 'completed' | 'errored' | 'aborted' | 'refused';
+export type { AskInteractionStatus } from '@/lib/ask/types';
 
 export type AskInteraction = {
   requestId: string;

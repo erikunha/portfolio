@@ -1,5 +1,5 @@
 import { companyLinkCopy } from './company-link';
-import type { ContactContent } from './contact';
+import type { ContactContent } from './contact-types';
 import { SITE_LOCALE, type SiteLocale } from './site-locale';
 import { EMAIL_ADDRESS, LINKEDIN_URL } from './social-urls';
 import { WORK_SCOPE } from './work-scope';

@@ -1,5 +1,5 @@
 import 'server-only';
-import type { AskInteractionStatus } from '@/lib/ask/interaction-log';
+import type { AskInteractionStatus, GuardFinding, PostHocVerdict } from '@/lib/ask/types';
 
 export const LEAK_MARKERS: readonly string[] = [
   '## Identity',
@@ -24,15 +24,7 @@ export { GUARD_ABORT_PREFIX } from '@/lib/stream-protocol';
 
 export type GuardVerdict = { ok: true } | { ok: false; reason: 'leak' | 'length' };
 
-export type GuardFinding = {
-  kind: 'leak' | 'length' | 'empty';
-  detail: string;
-};
-
-export type PostHocVerdict = {
-  clean: boolean;
-  findings: GuardFinding[];
-};
+export type { GuardFinding, PostHocVerdict } from '@/lib/ask/types';
 
 export function withStreamAbort(
   verdict: PostHocVerdict,
