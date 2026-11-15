@@ -1,11 +1,17 @@
 import { streamText } from 'ai';
 import { askErrors } from '@/content/ask-errors';
 import { SITE_LOCALE, type SiteLocale } from '@/content/site-locale';
-import { type CacheTokenCounts, settleReservation } from '@/lib/ask/budget';
+import { settleReservation } from '@/lib/ask/budget';
+import {
+  type ClientEnding,
+  classifyFinish,
+  type FinishOutcome,
+  statusAfterClose,
+} from '@/lib/ask/classify-finish';
+import { decideSettlement, type SettledUsage } from '@/lib/ask/decide-settlement';
 import { releaseIdenticalQuestion } from '@/lib/ask/dedup';
-import { ASK_FAILURE_REASON, type AskFailureReason } from '@/lib/ask/failure-reason';
+import type { AskFailureReason } from '@/lib/ask/failure-reason';
 import { countAskGuardFinding } from '@/lib/ask/guard-count';
-import { ASK_RESERVED_INPUT_TOKENS } from '@/lib/ask/input-reservation';
 import { type AskInteractionStatus, persistAskInteraction } from '@/lib/ask/interaction-log';
 import { ASK_MAX_OUTPUT_TOKENS } from '@/lib/ask/limits';
 import { ASK_MODEL } from '@/lib/ask/model';
@@ -18,6 +24,7 @@ import {
 } from '@/lib/ask/output-guard';
 import type { AskContext } from '@/lib/ask/preflight';
 import { PROMPT_VERSION, SYSTEM_TEXT } from '@/lib/ask/system-prompt';
+import type { PostHocVerdict } from '@/lib/ask/types';
 import { countAskTokens, emitAskUsage } from '@/lib/ask/usage';
 import { log } from '@/lib/log';
 import { describeError } from '@/lib/log-error';
@@ -26,12 +33,6 @@ import { REFUSAL_PREFIX, STREAM_ERR_SENTINEL } from '@/lib/stream-protocol';
 const REQUEST_TIMEOUT_MS = 30_000;
 
 const TELEMETRY_FUNCTION_ID = 'ask';
-
-const FINISH_REASON_LENGTH = 'length' as const;
-
-const FINISH_REASON_INTERRUPTED = 'interrupted' as const;
-
-const FINISH_REASON_REFUSED = 'content-filter' as const;
 
 const ANSWER_WITHOUT_THINKING = { anthropic: { thinking: { type: 'disabled' } } } as const;
 
@@ -66,12 +67,6 @@ type RunState = {
   truncated: boolean;
   answerText: string;
   guardAbort: Extract<GuardVerdict, { ok: false }>['reason'] | null;
-};
-
-type SettledUsage = CacheTokenCounts & {
-  resolved: boolean;
-  billedInputTokens: number;
-  outputTokens: number;
 };
 
 async function withinDeadline<T>(p: Promise<T>): Promise<T | typeof USAGE_TIMED_OUT> {
@@ -172,6 +167,30 @@ export function createAskStream(context: AskContext): AskStream {
       const sendError = (message: string): void => {
         send(enc.encode(`${STREAM_ERR_SENTINEL}${message}`));
       };
+      const sendEnding = (ending: ClientEnding): void => {
+        switch (ending.kind) {
+          case 'none':
+            return;
+          case 'truncation':
+            send(enc.encode(askErrors[answerLocale].truncation));
+            return;
+          case 'refusal':
+            sendError(`${REFUSAL_PREFIX}${askErrors[answerLocale].refused}`);
+            return;
+          case 'interrupted':
+            sendError(askErrors[answerLocale].interrupted);
+            return;
+          case 'guard-abort':
+            sendError(`${GUARD_ABORT_PREFIX}${ending.reason}`);
+            return;
+        }
+      };
+      const finishWith = (outcome: FinishOutcome): void => {
+        state.status = outcome.status;
+        state.failureReason = outcome.failureReason;
+        state.truncated = outcome.truncated;
+        sendEnding(outcome.ending);
+      };
       const iterator = result.textStream[Symbol.asyncIterator]();
       try {
         while (!state.clientGone) {
@@ -193,41 +212,29 @@ export function createAskStream(context: AskContext): AskStream {
           }
           if (next === CLIENT_GONE) break;
           if (next.done) {
-            if (state.upstreamFailed) {
-              state.status = 'errored';
-              state.failureReason = ASK_FAILURE_REASON.upstream;
-              sendError(askErrors[answerLocale].interrupted);
-              break;
-            }
-            const finishReason: unknown = await withinDeadline(
-              Promise.resolve(result.finishReason).catch(() => undefined),
+            const finishReason: unknown = state.upstreamFailed
+              ? undefined
+              : await withinDeadline(Promise.resolve(result.finishReason).catch(() => undefined));
+            finishWith(
+              classifyFinish({
+                source: 'stream-end',
+                upstreamFailed: state.upstreamFailed,
+                finishReason,
+              }),
             );
-            if (finishReason === FINISH_REASON_LENGTH) {
-              state.truncated = true;
-              send(enc.encode(askErrors[answerLocale].truncation));
-            } else if (finishReason === FINISH_REASON_REFUSED) {
-              state.status = 'refused';
-              sendError(`${REFUSAL_PREFIX}${askErrors[answerLocale].refused}`);
-            } else if (finishReason === FINISH_REASON_INTERRUPTED) {
-              state.status = 'errored';
-              state.failureReason = ASK_FAILURE_REASON.interrupted;
-              sendError(askErrors[answerLocale].interrupted);
-            }
             break;
           }
           const text = next.value;
           state.firstChunkSeen = true;
           const verdict = guard.inspect(text);
           if (!verdict.ok) {
-            state.status = 'errored';
-            state.failureReason = ASK_FAILURE_REASON.outputGuard;
             state.guardAbort = verdict.reason;
             log.info('ask output-guard layer-1 abort', {
               requestId,
               reason: verdict.reason,
               promptVersion: PROMPT_VERSION,
             });
-            sendError(`${GUARD_ABORT_PREFIX}${verdict.reason}`);
+            finishWith(classifyFinish({ source: 'guard-abort', reason: verdict.reason }));
             break;
           }
           send(enc.encode(text));
@@ -235,16 +242,18 @@ export function createAskStream(context: AskContext): AskStream {
         }
       } catch (streamErr) {
         if (!state.clientGone) {
-          state.status = 'errored';
-          state.failureReason =
-            streamErr instanceof Error && streamErr.message === MID_STREAM_TIMEOUT_MESSAGE
-              ? ASK_FAILURE_REASON.midStreamTimeout
-              : ASK_FAILURE_REASON.streamError;
+          const outcome = classifyFinish({
+            source: 'stream-error',
+            midStreamTimeout:
+              streamErr instanceof Error && streamErr.message === MID_STREAM_TIMEOUT_MESSAGE,
+          });
+          state.status = outcome.status;
+          state.failureReason = outcome.failureReason;
           log.error('ask stream failed', { requestId, error: describeError(streamErr) });
-          sendError(askErrors[answerLocale].interrupted);
+          sendEnding(outcome.ending);
         }
       } finally {
-        if (state.clientGone && state.status === 'completed') state.status = 'aborted';
+        state.status = statusAfterClose(state.status, state.clientGone);
         if (!state.clientGone) controller.close();
         void Promise.resolve(iterator.return?.()).catch(() => undefined);
         finishStream();
@@ -278,34 +287,7 @@ export function createAskStream(context: AskContext): AskStream {
     };
   }
 
-  async function settleBudgetFor(usage: SettledUsage): Promise<void> {
-    const failedBeforeAnyOutput =
-      state.upstreamFailed && state.usageRejected && state.answerText.length === 0;
-    const endedBeforeFirstToken = !state.firstChunkSeen && !state.upstreamFailed;
-    if (usage.resolved) {
-      await settleReservation(context, {
-        billedInputTokens: usage.billedInputTokens,
-        outputTokens: usage.outputTokens,
-        cacheReadTokens: usage.cacheReadTokens,
-        cacheWriteTokens: usage.cacheWriteTokens,
-      });
-    } else if (failedBeforeAnyOutput) {
-      await settleReservation(context, 'none');
-    } else if (endedBeforeFirstToken) {
-      await settleReservation(context, {
-        billedInputTokens: ASK_RESERVED_INPUT_TOKENS,
-        outputTokens: 0,
-      });
-    }
-  }
-
-  async function settleAndPersist(): Promise<void> {
-    const usage = await readUsage();
-
-    const guardVerdict = withStreamAbort(
-      validateAnswer(state.answerText, state.status),
-      state.guardAbort,
-    );
+  function logCompletion(usage: SettledUsage, guardVerdict: PostHocVerdict): void {
     log.info('ask output-guard', {
       requestId,
       clean: guardVerdict.clean,
@@ -324,7 +306,20 @@ export function createAskStream(context: AskContext): AskStream {
       truncated: state.truncated,
       promptVersion: PROMPT_VERSION,
     });
-    await settleBudgetFor(usage);
+  }
+
+  async function settleFor(usage: SettledUsage): Promise<void> {
+    const decision = decideSettlement({
+      usage,
+      upstreamFailed: state.upstreamFailed,
+      usageRejected: state.usageRejected,
+      firstChunkSeen: state.firstChunkSeen,
+      answerEmpty: state.answerText.length === 0,
+    });
+    if (decision !== null) await settleReservation(context, decision);
+  }
+
+  async function persist(usage: SettledUsage, guardVerdict: PostHocVerdict): Promise<void> {
     await persistAskInteraction({
       requestId,
       ts: new Date().toISOString(),
@@ -339,6 +334,9 @@ export function createAskStream(context: AskContext): AskStream {
       guard: guardVerdict,
       ...(conversationId !== undefined && { conversationId }),
     });
+  }
+
+  async function emitMetrics(usage: SettledUsage, guardVerdict: PostHocVerdict): Promise<void> {
     emitAskUsage({
       requestId,
       usageResolved: usage.resolved,
@@ -348,6 +346,18 @@ export function createAskStream(context: AskContext): AskStream {
       outputTokens: usage.outputTokens,
     });
     await Promise.all(guardVerdict.findings.map((finding) => countAskGuardFinding(finding.kind)));
+  }
+
+  async function settleAndPersist(): Promise<void> {
+    const usage = await readUsage();
+    const guardVerdict = withStreamAbort(
+      validateAnswer(state.answerText, state.status),
+      state.guardAbort,
+    );
+    logCompletion(usage, guardVerdict);
+    await settleFor(usage);
+    await persist(usage, guardVerdict);
+    await emitMetrics(usage, guardVerdict);
   }
 
   async function settle(): Promise<void> {
