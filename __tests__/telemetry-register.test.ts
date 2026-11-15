@@ -13,9 +13,7 @@ vi.mock('@vercel/otel', () => ({
 }));
 
 const logWarn = vi.fn();
-vi.mock('@/lib/log', () => ({
-  log: { info: vi.fn(), warn: logWarn, error: vi.fn() },
-}));
+vi.mock('@/lib/log', async () => (await import('./helpers/modules')).logModule({ warn: logWarn }));
 
 type TelemetryGlobal = typeof globalThis & {
   AI_SDK_TELEMETRY_INTEGRATIONS?: unknown[];

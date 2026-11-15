@@ -16,9 +16,7 @@ vi.mock('@/lib/ip-hash', () => ({
   hashIp: hashIpMock,
 }));
 
-vi.mock('@/lib/log', () => ({
-  log: { info: vi.fn(), error: vi.fn(), warn: vi.fn(), debug: vi.fn() },
-}));
+vi.mock('@/lib/log', async () => (await import('./helpers/modules')).logModule());
 
 function makeRequest(body: unknown): NextRequest {
   return new NextRequest('http://localhost/api/test', {

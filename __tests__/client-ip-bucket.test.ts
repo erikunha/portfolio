@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 vi.mock('@upstash/redis', () => ({ Redis: { fromEnv: vi.fn() } }));
 vi.mock('@upstash/ratelimit', () => ({ Ratelimit: class {} }));
-vi.mock('@/lib/log', () => ({ log: { info: vi.fn(), warn: vi.fn(), error: vi.fn() } }));
+vi.mock('@/lib/log', async () => (await import('./helpers/modules')).logModule());
 
 const forwarded = (value: string) =>
   new NextRequest('http://localhost/api/contact', { headers: { 'x-forwarded-for': value } });

@@ -8,9 +8,7 @@ vi.mock('@/lib/redis', () => ({
   getRedis: getRedisMock,
 }));
 
-vi.mock('@/lib/log', () => ({
-  log: { info: vi.fn(), error: vi.fn(), warn: vi.fn(), debug: vi.fn() },
-}));
+vi.mock('@/lib/log', async () => (await import('./helpers/modules')).logModule());
 
 describe('Redis singleton: lighthouse-scores reuses the shared client', () => {
   beforeEach(() => {

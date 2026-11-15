@@ -31,9 +31,7 @@ vi.mock('@/lib/redis', () => ({
 vi.mock('@/lib/server/client-ip', () => ({ getClientIp: vi.fn(() => '203.0.113.7') }));
 vi.mock('@/lib/rate-limit', () => ({ getLighthouseLimit: vi.fn(() => ({ limit: limitMock })) }));
 
-vi.mock('@/lib/log', () => ({
-  log: { info: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn() },
-}));
+vi.mock('@/lib/log', async () => (await import('./helpers/modules')).logModule());
 
 describe('GET /api/lighthouse', () => {
   beforeEach(() => {

@@ -65,9 +65,7 @@ vi.mock('next/server', async (importOriginal) => ({
   connection: vi.fn(async () => undefined),
 }));
 vi.mock('ai', () => ({ streamText: vi.fn() }));
-vi.mock('@/lib/log', () => ({
-  log: { info: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn() },
-}));
+vi.mock('@/lib/log', async () => (await import('./helpers/modules')).logModule());
 
 const RAW_IPV4 = '203.0.113.7';
 const OTHER_IPV4 = '198.51.100.24';

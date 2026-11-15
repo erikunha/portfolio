@@ -19,9 +19,7 @@ vi.mock('@upstash/ratelimit', () => {
   return { Ratelimit };
 });
 
-vi.mock('@/lib/log', () => ({
-  log: { info: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn() },
-}));
+vi.mock('@/lib/log', async () => (await import('./helpers/modules')).logModule());
 
 describe('hashIp: production Upstash salt resolution', () => {
   beforeEach(() => {

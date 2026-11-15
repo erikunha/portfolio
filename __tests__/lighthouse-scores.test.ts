@@ -10,7 +10,9 @@ const mockFetch = vi.fn();
 vi.stubGlobal('fetch', mockFetch);
 
 const mockLogError = vi.fn();
-vi.mock('@/lib/log', () => ({ log: { error: mockLogError, info: vi.fn() } }));
+vi.mock('@/lib/log', async () =>
+  (await import('./helpers/modules')).logModule({ error: mockLogError }),
+);
 
 afterEach(() => {
   vi.useRealTimers();

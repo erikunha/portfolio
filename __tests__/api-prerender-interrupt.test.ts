@@ -26,9 +26,9 @@ vi.mock('@/lib/lighthouse-scores', () => ({
   LIGHTHOUSE_TTL_S: 86400,
 }));
 
-vi.mock('@/lib/log', () => ({
-  log: { info: vi.fn(), warn: logWarnMock, error: vi.fn(), debug: vi.fn() },
-}));
+vi.mock('@/lib/log', async () =>
+  (await import('./helpers/modules')).logModule({ warn: logWarnMock }),
+);
 
 const request = {} as NextRequest;
 

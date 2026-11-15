@@ -9,7 +9,9 @@ vi.mock('@/lib/lighthouse-scores', () => ({
 
 const mockLogInfo = vi.fn();
 const mockLogError = vi.fn();
-vi.mock('@/lib/log', () => ({ log: { info: mockLogInfo, error: mockLogError } }));
+vi.mock('@/lib/log', async () =>
+  (await import('./helpers/modules')).logModule({ info: mockLogInfo, error: mockLogError }),
+);
 
 const mockRedisSet = vi.fn(async () => 'OK');
 const mockRedisDel = vi.fn(async () => 1);

@@ -31,9 +31,7 @@ vi.mock('@upstash/redis', () => ({
   },
 }));
 vi.mock('@upstash/ratelimit', () => ({ Ratelimit: { slidingWindow: () => ({}) } }));
-vi.mock('@/lib/log', () => ({
-  log: { info: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn() },
-}));
+vi.mock('@/lib/log', async () => (await import('../helpers/modules')).logModule());
 
 const CACHED_PROMPT_TOKENS = 17_000;
 const CACHED_PROMPT_UNCACHED_TOKENS = 500;

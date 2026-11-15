@@ -44,7 +44,7 @@ vi.mock('@/lib/redis', () => ({
   }),
 }));
 
-vi.mock('@/lib/log', () => ({ log: { error: vi.fn(), info: vi.fn(), warn: vi.fn() } }));
+vi.mock('@/lib/log', async () => (await import('./helpers/modules')).logModule());
 
 const mockFetch = vi.fn();
 vi.stubGlobal('fetch', mockFetch);
