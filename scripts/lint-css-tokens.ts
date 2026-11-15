@@ -7,6 +7,8 @@ import postcss from 'postcss';
 const HEX = /#(?:[0-9a-fA-F]{8}|[0-9a-fA-F]{6}|[0-9a-fA-F]{4}|[0-9a-fA-F]{3})\b/g;
 const COLOR_FUNCTION =
   /\b(?:rgba?|hsla?|hwb|lab|lch|oklab|oklch)\(\s*[\d.][^)]*\)|\bcolor\(\s*[a-z][\w-]*\s+[\d.][^)]*\)/gi;
+const TAILWIND_BLACK_WHITE =
+  /(?<![\w-])(?:[^\s'"`:]+:)*(?:bg|text|border)-(?:black|white)(?:\/\d+)?(?![\w-])/g;
 const Z_INDEX_DECLARATION = /z-index:\s*([^;}\n]+)/g;
 const Z_TOKEN_DECLARATION = /--z-[\w-]+\s*:\s*[^;}\n]+/g;
 const Z_TOKEN_REFERENCE = /^var\(--z-[\w-]+\)$/;
@@ -166,6 +168,12 @@ export function findRawColorFunctions(css: string): ColorHit[] {
 
 export function findRawColors(source: string): ColorHit[] {
   return [...scan(source, HEX), ...scan(source, COLOR_FUNCTION)].sort((a, b) => a.line - b.line);
+}
+
+export function findRawTsxColors(source: string): ColorHit[] {
+  return [...findRawColors(source), ...scan(source, TAILWIND_BLACK_WHITE)].sort(
+    (a, b) => a.line - b.line,
+  );
 }
 
 export function findRawZIndex(source: string, language: 'css' | 'tsx'): ColorHit[] {
@@ -357,7 +365,10 @@ export function scanRepo(root: string, cssFiles: string[]): RepoScan {
   const cssTargets = cssFiles.map((f) => `app/css/${f}`);
   const colorTargets = [...cssTargets, ...findTokenFiles(root)];
   return {
-    colors: colorTargets.flatMap((file) => tag(file, findRawColors(read(file)))),
+    colors: [
+      ...colorTargets.flatMap((file) => tag(file, findRawColors(read(file)))),
+      ...findTsxFiles(root).flatMap((file) => tag(file, findRawTsxColors(read(file)))),
+    ],
     zIndex: [
       ...cssTargets.flatMap((file) => tag(file, findRawZIndex(read(file), 'css'))),
       ...findTsxFiles(root).flatMap((file) => tag(file, findRawZIndex(read(file), 'tsx'))),
