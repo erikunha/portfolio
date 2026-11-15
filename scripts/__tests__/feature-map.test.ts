@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { renderFeatureMap } from '../codegen/feature-map';
+import { emptyPrefixes, renderFeatureMap } from '../codegen/feature-map';
 import { trackedFiles } from '../lib/git';
 
 const ROOT = join(import.meta.dirname, '../..');
@@ -17,28 +17,39 @@ const FIXTURE_FILES = [
 ];
 
 describe('renderFeatureMap', () => {
-  it('counts the tracked files under each prefix of a feature', () => {
-    const doc = renderFeatureMap(FIXTURE_FILES);
-    expect(doc).toContain('| `lib/ask/` | 2 |');
-    expect(doc).toContain('| `__tests__/ask/` | 1 |');
-    expect(doc).toContain('| `app/api/contact/` | 1 |');
-    expect(doc).toContain('| `app/api/contact-retry/` | 1 |');
-    expect(doc).toContain('| `lib/contact/` | 0 |');
+  it('lists each feature with its path prefixes and no file counts, so adding a file needs no regeneration', () => {
+    const doc = renderFeatureMap();
+    expect(doc).toContain('| `lib/ask/` |');
+    expect(doc).toContain('| `lib/contact/` |');
+    expect(doc).not.toMatch(/\| \d+ \|/);
   });
 
   it('is deterministic and names the command that regenerates it', () => {
-    const doc = renderFeatureMap(FIXTURE_FILES);
-    expect(renderFeatureMap([...FIXTURE_FILES].reverse())).toBe(doc);
-    expect(doc).toContain('pnpm docs:feature-map');
-    expect(doc).toMatch(/^# Feature map\n/);
+    expect(renderFeatureMap()).toBe(renderFeatureMap());
+    expect(renderFeatureMap()).toContain('pnpm docs:feature-map');
+    expect(renderFeatureMap()).toMatch(/^# Feature map\n/);
+  });
+});
+
+describe('emptyPrefixes', () => {
+  it('reports a declared prefix that no tracked file sits under', () => {
+    expect(emptyPrefixes(FIXTURE_FILES)).toContain('lib/contact/');
+    expect(emptyPrefixes(FIXTURE_FILES)).not.toContain('lib/ask/');
   });
 });
 
 describe('docs/feature-map.md', () => {
-  it('matches the tracked tree, so a move that changes counts needs a regeneration', () => {
+  it('matches the generator output', () => {
     expect(
       readFileSync(MAP_PATH, 'utf8'),
       'run `pnpm docs:feature-map` and commit docs/feature-map.md',
-    ).toBe(renderFeatureMap(trackedFiles([], { cwd: ROOT })));
+    ).toBe(renderFeatureMap());
+  });
+
+  it('names only prefixes that exist in the tracked tree, so a move that empties one fails', () => {
+    expect(
+      emptyPrefixes(trackedFiles([], { cwd: ROOT })),
+      'a feature prefix in scripts/codegen/feature-map.ts matches no tracked file: fix the table',
+    ).toEqual([]);
   });
 });
