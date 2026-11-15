@@ -18,7 +18,7 @@ describe('detect-changes manifest', () => {
 
   it('keeps the load-bearing anchor pathspecs (guards against a truncated copy)', () => {
     expect(AI_PATHS).toContain('lib/eval/');
-    expect(AI_PATHS).toContain('__tests__/ask-*');
+    expect(AI_PATHS).toContain('__tests__/ask/');
     expect(APP_PATHS).toContain('.github/workflows/');
     expect(APP_PATHS).toContain('package.json');
     expect(UI_PATHS).toContain(':(exclude)lib/eval/**');

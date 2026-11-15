@@ -45,7 +45,7 @@ export const AI_PATHS: readonly string[] = [
   'content/social.ts',
   'content/work-scope.ts',
   'scripts/eval/ask-eval.ts',
-  '__tests__/ask-*',
+  '__tests__/ask/',
   '.github/workflows/ci.yml',
 ];
 
