@@ -21,7 +21,7 @@ export function ChannelNoscript({ locale }: { locale: LinksLocale }) {
         <SectionHeading id={HEADING_ID} reveal={false}>
           {copy.watchHeading[locale]}
         </SectionHeading>
-        <article className="links-channel-card links-watch border border-primary-subtle p-4">
+        <article className="links-channel-card links-watch">
           <p className="links-watch-note">{copy.feedUnavailable[locale]}</p>
           <div className="links-watch-actions">
             <Button

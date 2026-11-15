@@ -25,7 +25,7 @@ export function LatestVideoSkeleton({ locale }: { locale: LinksLocale }) {
           <SectionHeading id={CHANNEL_HEADING_ID} reveal={false}>
             {copy.watchHeading[locale]}
           </SectionHeading>
-          <div className="links-channel-card links-watch border border-primary-subtle p-4">
+          <div className="links-channel-card links-watch">
             <div className="links-watch-media">
               <div className="links-skeleton-block links-skeleton-thumb" />
             </div>

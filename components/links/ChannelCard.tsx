@@ -40,7 +40,7 @@ export function ChannelCard({ locale, feed }: { locale: LinksLocale; feed: Chann
     <section className="links-col" data-col="channel" aria-labelledby={HEADING_ID}>
       <SectionHeading id={HEADING_ID}>{copy.watchHeading[locale]}</SectionHeading>
 
-      <article className="links-channel-card links-watch border border-primary-subtle p-4">
+      <article className="links-channel-card links-watch">
         <div className="links-watch-media">
           {latest === null ? (
             <div
