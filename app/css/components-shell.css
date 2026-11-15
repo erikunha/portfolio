@@ -249,8 +249,11 @@
     }
   }
 
-  body[data-motion="reduce"] .interactive-shell {
-    --shell-stop-time-chars: 2;
+  /* biome-ignore lint/suspicious/noDuplicateSelectors: `@variant motion-off` and `@variant motion-on` resolve to a `body` ancestor selector, so this rule has a different selector than the earlier one with the same class */
+  .interactive-shell {
+    @variant motion-off {
+      --shell-stop-time-chars: 2;
+    }
   }
 
   .shell-stop-time {
@@ -527,8 +530,11 @@
     }
   }
 
-  body[data-motion="reduce"] .shell-receipt-progress > span {
-    animation: none;
+  /* biome-ignore lint/suspicious/noDuplicateSelectors: `@variant motion-off` and `@variant motion-on` resolve to a `body` ancestor selector, so this rule has a different selector than the earlier one with the same class */
+  .shell-receipt-progress > span {
+    @variant motion-off {
+      animation: none;
+    }
   }
 
   .shell-receipt-actions {
@@ -654,8 +660,11 @@
     animation: shell-blink 1.05s steps(2, start) infinite;
   }
 
-  body[data-motion="reduce"] .shell-cursor {
-    animation: none;
+  /* biome-ignore lint/suspicious/noDuplicateSelectors: `@variant motion-off` and `@variant motion-on` resolve to a `body` ancestor selector, so this rule has a different selector than the earlier one with the same class */
+  .shell-cursor {
+    @variant motion-off {
+      animation: none;
+    }
   }
 
   .shell-cmd-hint {
@@ -669,8 +678,11 @@
     text-shadow: 0 0 6px var(--color-glow-50);
   }
 
-  body[data-motion="reduce"] .shell-cmd-hint {
-    transition: none;
+  /* biome-ignore lint/suspicious/noDuplicateSelectors: `@variant motion-off` and `@variant motion-on` resolve to a `body` ancestor selector, so this rule has a different selector than the earlier one with the same class */
+  .shell-cmd-hint {
+    @variant motion-off {
+      transition: none;
+    }
   }
 
   @media (max-width: theme(--viewport-below-phone)) {

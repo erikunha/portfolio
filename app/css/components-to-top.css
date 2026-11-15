@@ -34,7 +34,10 @@
     }
   }
 
-  body[data-motion="reduce"] .to-top-btn {
-    transition: none;
+  /* biome-ignore lint/suspicious/noDuplicateSelectors: `@variant motion-off` and `@variant motion-on` resolve to a `body` ancestor selector, so this rule has a different selector than the earlier one with the same class */
+  .to-top-btn {
+    @variant motion-off {
+      transition: none;
+    }
   }
 }

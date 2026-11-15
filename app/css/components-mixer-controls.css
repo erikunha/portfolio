@@ -44,8 +44,11 @@
     transform: translateX(-50%);
   }
 
-  body[data-motion="reduce"] .faderThumb {
-    box-shadow: none;
+  /* biome-ignore lint/suspicious/noDuplicateSelectors: `@variant motion-off` and `@variant motion-on` resolve to a `body` ancestor selector, so this rule has a different selector than the earlier one with the same class */
+  .faderThumb {
+    @variant motion-off {
+      box-shadow: none;
+    }
   }
 
   .vu-meter {

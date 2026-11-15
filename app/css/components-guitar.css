@@ -351,8 +351,10 @@
     }
   }
 
-  body:not([data-motion="reduce"]) .mixer-boot-cursor {
-    animation: mixer-boot-blink 1.05s steps(2, start) infinite;
+  .mixer-boot-cursor {
+    @variant motion-on {
+      animation: mixer-boot-blink 1.05s steps(2, start) infinite;
+    }
   }
 
   /* The arrow is a square sized in `ch`, so its box is a fraction of a pixel

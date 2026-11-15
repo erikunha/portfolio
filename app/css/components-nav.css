@@ -417,9 +417,18 @@
     }
   }
 
-  body[data-motion="reduce"] .section-menu,
-  body[data-motion="reduce"] .menu-scrim {
-    transition: none;
+  /* biome-ignore lint/suspicious/noDuplicateSelectors: `@variant motion-off` and `@variant motion-on` resolve to a `body` ancestor selector, so this rule has a different selector than the earlier one with the same class */
+  .section-menu {
+    @variant motion-off {
+      transition: none;
+    }
+  }
+
+  /* biome-ignore lint/suspicious/noDuplicateSelectors: `@variant motion-off` and `@variant motion-on` resolve to a `body` ancestor selector, so this rule has a different selector than the earlier one with the same class */
+  .menu-scrim {
+    @variant motion-off {
+      transition: none;
+    }
   }
 
   .offline-notice {
@@ -555,7 +564,10 @@
     font-weight: 700;
   }
 
-  body[data-motion="reduce"] .topbar-action {
-    transition: none;
+  /* biome-ignore lint/suspicious/noDuplicateSelectors: `@variant motion-off` and `@variant motion-on` resolve to a `body` ancestor selector, so this rule has a different selector than the earlier one with the same class */
+  .topbar-action {
+    @variant motion-off {
+      transition: none;
+    }
   }
 }

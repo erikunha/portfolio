@@ -433,8 +433,11 @@
     box-shadow: var(--shadow-glow);
   }
 
-  body[data-motion="reduce"] .contact-send {
-    transition: none;
+  /* biome-ignore lint/suspicious/noDuplicateSelectors: `@variant motion-off` and `@variant motion-on` resolve to a `body` ancestor selector, so this rule has a different selector than the earlier one with the same class */
+  .contact-send {
+    @variant motion-off {
+      transition: none;
+    }
   }
 
   .ctz {
@@ -513,8 +516,11 @@
     }
   }
 
-  body[data-motion="reduce"] .ctz-spin-frame {
-    animation: none;
+  /* biome-ignore lint/suspicious/noDuplicateSelectors: `@variant motion-off` and `@variant motion-on` resolve to a `body` ancestor selector, so this rule has a different selector than the earlier one with the same class */
+  .ctz-spin-frame {
+    @variant motion-off {
+      animation: none;
+    }
   }
 
   .ctz-failed {
@@ -1130,9 +1136,11 @@
     }
   }
 
-  body[data-motion="reduce"] .ctz-pulse,
-  body[data-motion="reduce"] .ctz-route {
-    animation: none;
+  .ctz-pulse,
+  .ctz-route {
+    @variant motion-off {
+      animation: none;
+    }
   }
 
   @media (max-width: theme(--viewport-below-phone)) {

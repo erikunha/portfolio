@@ -16,10 +16,13 @@
     will-change: transform;
   }
 
-  body[data-motion="reduce"] .links-ticker-track {
-    animation: none;
-    width: 100%;
-    white-space: normal;
+  /* biome-ignore lint/suspicious/noDuplicateSelectors: `@variant motion-off` and `@variant motion-on` resolve to a `body` ancestor selector, so this rule has a different selector than the earlier one with the same class */
+  .links-ticker-track {
+    @variant motion-off {
+      animation: none;
+      width: 100%;
+      white-space: normal;
+    }
   }
 
   @keyframes links-progress-fill {
@@ -48,9 +51,12 @@
     animation: links-progress-fill 300ms linear forwards;
   }
 
-  body[data-motion="reduce"] .links-progress[data-running="true"] {
-    animation: none;
-    transform: scaleX(1);
+  /* biome-ignore lint/suspicious/noDuplicateSelectors: `@variant motion-off` and `@variant motion-on` resolve to a `body` ancestor selector, so this rule has a different selector than the earlier one with the same class */
+  .links-progress[data-running="true"] {
+    @variant motion-off {
+      animation: none;
+      transform: scaleX(1);
+    }
   }
 
   .links-avatar {
@@ -110,9 +116,20 @@
     opacity: var(--links-thumb-tint-reveal);
   }
 
-  body[data-motion="reduce"] .links-thumb img,
-  body[data-motion="reduce"] .links-thumb::after {
-    transition: none;
+  /* biome-ignore lint/style/noDescendingSpecificity: `@variant motion-off` resolves to a `body` ancestor selector, so this rule matches under the MOTION switch only and the order is intended */
+  /* biome-ignore lint/suspicious/noDuplicateSelectors: `@variant motion-off` and `@variant motion-on` resolve to a `body` ancestor selector, so this rule has a different selector than the earlier one with the same class */
+  .links-thumb img {
+    @variant motion-off {
+      transition: none;
+    }
+  }
+
+  /* biome-ignore lint/style/noDescendingSpecificity: `@variant motion-off` resolves to a `body` ancestor selector, so this rule matches under the MOTION switch only and the order is intended */
+  /* biome-ignore lint/suspicious/noDuplicateSelectors: `@variant motion-off` and `@variant motion-on` resolve to a `body` ancestor selector, so this rule has a different selector than the earlier one with the same class */
+  .links-thumb::after {
+    @variant motion-off {
+      transition: none;
+    }
   }
 
   .links-channel-card {
