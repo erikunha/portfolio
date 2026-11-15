@@ -46,47 +46,53 @@ Barrels beside `ContactFormLazy`, `InteractiveShellLazy` and `MatrixRainLazy` ex
 
 ## Component hierarchy
 
-The hierarchy reads in three parts: the shell chain with the Hero and the footer, the chrome and the global motion, and the remaining sections.
+The hierarchy reads in three parts: the shell chain, the chrome and the global motion, and the sections.
 
-The shell chain, from the page frame down to the Hero it opens with and the footer below it:
-
-```mermaid
-flowchart TD
-    page["page frame: SiteHome · ReadingShell · LinksPage · design-system layout · NotFoundPage · RouteErrorPage"] --> siteshell["SiteShell (RSC)"] --> shell["AppShell.client"]
-    shell --> main["PageMain (RSC): main#main-content"]
-    main --> eb["ErrorBoundary"]
-    eb --> hero["Hero (RSC with boot and system-failure islands, owns its section)"]
-    hero --> identity["HeroIdentity: shared desktop/mobile identity, actions and HeroStats props"]
-    hero --> clientcopy["Boot + system-failure islands: typed hero-client copy"]
-    shell --> fl["ErrorBoundary-wrapped Footer (RSC): cards, sitemap, shutdown log"]
-    fl --> fi["Footer.client: session counters + halt/reboot island + last-request receipt"]
-    fl --> fc["Netstat endpoint cells: outbound links with a glyph"]
-```
-
-The chrome the app shell owns, the global motion the root shell mounts, and the links page tagline:
+The shell chain:
 
 ```mermaid
-flowchart TD
-    shell["AppShell.client"] --> navigation["SectionNavigationProvider (client): stable actions and copy, plus a store for current section, drawer and motion"]
-    navigation --> rail["SectionNavigation (client): menu trigger, drawer focus trap and focus return<br/>Header: title and drawer close control"]
-    navigation --> position["PositionMeter (client): decorative scroll progress line, aria-hidden, top from 1024px and left edge below; writes --posf to every data-position-target, the Dock included"]
-    navigation --> chrome["Chrome: CRTOverlay(6 layers) · DesktopTopbar · StatusBar · MobileTitleBar · Dock · ToTopButton"]
-    rootshell["RootShell (RSC)"] --> gm["GlobalMotion (mounted by RootShell in both root layouts): MatrixRainLazy (client-only) + TypeReveal"]
-    links["/links and /links/en"] --> tagline["TaglineTyper: localized tagline cycle"]
+flowchart LR
+    page["page frame"] --> site["SiteShell (RSC)"] --> app["AppShell.client"]
+    app --> main["PageMain (RSC)"] --> hero["Hero (RSC)"]
+    app --> footer["Footer (RSC)"]
 ```
 
-The remaining sections inside the error boundary: the terminal section with its module, primitives and islands, plus Career and About:
+- Page frames: `SiteHome`, `ReadingShell`, `LinksPage`, the design-system layout, `NotFoundPage`, `RouteErrorPage`.
+- `PageMain` renders `main#main-content`; the Hero sits inside an `ErrorBoundary` and owns its section. `HeroIdentity` holds the shared desktop and mobile identity, actions and `HeroStats` props; the boot and system-failure islands read typed hero-client copy.
+- The footer sits inside an `ErrorBoundary` and holds the cards, sitemap and shutdown log. `Footer.client` holds the session counters, the halt and reboot island and the last-request receipt; the netstat cells are outbound links with a glyph.
+
+The chrome and the global motion:
 
 ```mermaid
-flowchart TD
-    eb["ErrorBoundary"] --> sec["Terminal section (RSC)"]
-    sec --> mod["Module (RSC wrapper: section + CSS typing header)"]
-    sec --> dsp["design-system primitives: Badge · Button · CmdLine · Panel · StatTile · TerminalPanel · WindowChrome · KbdKey · BrandIcon · Field"]
-    sec -. some host .-> isl["Islands: InteractiveShell · ContactForm · ContactTimezone · DawMixer{Fader,Knob,Vu,Rms} · HeroBoot · RoleTyper"]
-    eb --> career["Career (GitLogSection): own section and header"]
-    eb --> about["About (RSC with RoleTyper island, owns its section)"]
-    about --> scroll["Responsibilities + retry code: named keyboard scroll regions"]
+flowchart LR
+    app["AppShell.client"] --> nav["SectionNavigationProvider"]
+    nav --> drawer["SectionNavigation"]
+    nav --> meter["PositionMeter"]
+    nav --> chrome["chrome"]
+    root["RootShell (RSC)"] --> gm["GlobalMotion"]
 ```
+
+- `SectionNavigationProvider` holds stable actions and copy, plus a store for the current section, drawer and motion.
+- `SectionNavigation` owns the menu trigger, the drawer focus trap and focus return; its header holds the title and the close control.
+- `PositionMeter` is a decorative scroll progress line (`aria-hidden`), at the top from 1024px and on the left edge below. It writes `--posf` to every `data-position-target`, the Dock included.
+- The chrome is `CRTOverlay` (6 layers), `DesktopTopbar`, `StatusBar`, `MobileTitleBar`, `Dock` and `ToTopButton`.
+- `GlobalMotion` is mounted by `RootShell` in both root layouts and runs `MatrixRainLazy` (client only) and `TypeReveal`. On `/links` and `/links/en`, `TaglineTyper` cycles the localized tagline.
+
+The sections inside the error boundary:
+
+```mermaid
+flowchart LR
+    eb["ErrorBoundary"] --> sec["terminal section (RSC)"] --> mod["Module (RSC)"]
+    sec --> ds["design-system primitives"]
+    sec -.->|some host| isl["client islands"]
+    eb --> career["Career (GitLogSection)"]
+    eb --> about["About (RSC)"]
+```
+
+- `Module` wraps a section with its CSS typing header.
+- Primitives: `Badge`, `Button`, `CmdLine`, `Panel`, `StatTile`, `TerminalPanel`, `WindowChrome`, `KbdKey`, `BrandIcon`, `Field`.
+- Islands: `InteractiveShell`, `ContactForm`, `ContactTimezone`, the `DawMixer` controls (`Fader`, `Knob`, `Vu`, `Rms`), `HeroBoot`, `RoleTyper`.
+- Career owns its section and header. About owns its section and hosts the `RoleTyper` island; its responsibilities and retry code are named keyboard scroll regions.
 
 ### The section drawer
 
@@ -145,32 +151,18 @@ Import order (`app/globals.css`, every route): `tailwindcss` → `theme.css` →
 
 This is a near-static site; the state model is intentionally tiny. Four mechanisms, in order of how much you'll touch them:
 
-The first two mechanisms, the React contexts and the DOM as motion state:
+1. **React contexts.** `SectionNavigationProvider` (`useSectionNavigation`) holds stable actions, copy and chrome. The current section, drawer and motion live in a store read with `useSyncExternalStore`. Consumers: `SectionNavigation`, `DesktopTopbar`, `Dock`, `MobileTitleBar`, `ToTopButton`.
+2. **DOM as motion state.** `lib/motion.ts` keeps the choice in `body[data-motion]` and `localStorage('erik.motion')` and broadcasts a `motionchange` CustomEvent:
 
 ```mermaid
-flowchart TD
-    subgraph ctx["1. React contexts"]
-        navigation["SectionNavigationProvider / useSectionNavigation<br/>stable actions, copy and chrome<br/>current section, drawer and motion live in a store read with useSyncExternalStore"]
-        navigation --> consumers["SectionNavigation · DesktopTopbar · Dock · MobileTitleBar · ToTopButton"]
-    end
-    subgraph dom["2. DOM-as-state (motion)"]
-        motion["lib/motion.ts: body[data-motion] + localStorage('erik.motion')<br/>broadcast via 'motionchange' CustomEvent"]
-        w1["writers: DesktopTopbar (MOTION: ON / OFF toggle, xl tier)<br/>SectionNavigation drawer (MOTION: ON / OFF row, every width)"] --> motion
-        motion --> r1["subscribers via lib/motion-change.ts: MatrixRain · RoleTyper · TypeReveal · HeroBootAnimation<br/>readers on mount: InteractiveShell placeholder"]
-    end
+flowchart LR
+    writers["MOTION switches"] --> motion["lib/motion.ts"] --> subs["motion subscribers"]
 ```
 
-The last two, the window event bus and the per-island local state:
-
-```mermaid
-flowchart TD
-    subgraph bus["3. Window CustomEvent bus (lib/events.ts)"]
-        ev["motionchange · shell-cmd-run · hero:sysfail:show|hide · sysfail:start|end"]
-    end
-    subgraph local["4. Per-island local state"]
-        li["each island owns useState/useRef<br/>one exception: ContactForm + ContactTimezone<br/>share the module-level messageStore"]
-    end
-```
+   - Writers: the `DesktopTopbar` MOTION toggle (xl tier) and the `SectionNavigation` drawer row (every width).
+   - Subscribers through `lib/motion-change.ts`: `MatrixRain`, `RoleTyper`, `TypeReveal`, `HeroBootAnimation`. The `InteractiveShell` placeholder reads it on mount.
+3. **Window CustomEvent bus** (`lib/events.ts`): `motionchange`, `shell-cmd-run`, `hero:sysfail:show|hide`, `sysfail:start|end`.
+4. **Per-island local state.** Each island owns its `useState` and `useRef`. One exception: `ContactForm` and `ContactTimezone` share the module-level `messageStore`.
 
 **There is no state-management library and no URL/`searchParams` state.** Two islands use `useReducer` for state that several handlers change: `InteractiveShell` (the transcript, through `transcriptReducer` in `components/client/InteractiveShell/transcript.ts`) and `ConversationReceipt` (`receiptViewReducer` in `receipt-view.ts`). The router reads in the app are all `usePathname()`: the design-system `Sidebar.client.tsx`, `DesktopTopbar` (which marks the current page in the site navigation), `LanguageSwitch` (the twin route of each language), the global `TypeReveal` (mounted on every route by `GlobalMotion`), and the error pages, `LazyIsland` and `useContactSubmit`, which read the page locale from the path. Section navigation shares state through `SectionNavigationProvider`: its context value (actions, copy, chrome, locale and the store) never changes after the first render, and the current section, the drawer and the motion state live in a small external store that `useCurrentSection`, `useDrawerOpen` and `useMotionOn` read with `useSyncExternalStore`, whose server snapshot is the initial state. The viewport is read with `useBreakpoint`, a `useSyncExternalStore` hook over `matchMedia` whose server snapshot is desktop; it has no provider, because a context value that changes after hydration forces every dehydrated Suspense boundary below it, the lazy shell and the contact form included, to discard their server DOM and client-render. The same rule is why the navigation provider keeps scroll, drawer and motion state out of its context value; text typed into the server-rendered fields before an island hydrates stays in the kept DOM, and the island adopts it into its state on mount. Other cross-island coordination uses window `CustomEvent`s. For example, `InteractiveShell` dispatches `shell-cmd-run` and the `Footer.client` session counter listens to increment a counter, with no shared parent state.
 
@@ -187,8 +179,7 @@ The shell's other state stays `useState` (`input`, `busy`, `streamingText`). Pur
 ```mermaid
 flowchart LR
     keys["keystroke or submit"] --> shell["InteractiveShell<br/>useReducer(transcriptReducer)"]
-    shell -->|props| lines["ShellLine"]
-    shell -->|props| receipt["ConversationReceipt"]
+    shell -->|props| lines["ShellLine"] -->|props| receipt["ConversationReceipt"]
     ask["useAskStream"] -->|dispatch| shell
     priv["usePrivacyCommands"] -->|dispatch| shell
 ```
