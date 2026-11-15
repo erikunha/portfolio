@@ -13,7 +13,7 @@ concurrency:
   #
   # This predicate MUST stay identical to the job's `if:` below. Concurrency
   # cannot read `env` or a job output, so the duplication is forced by the
-  # platform; `__tests__/scripts/claude-review-predicate.test.ts` keeps the two
+  # platform; `__tests__/ci/claude-review-predicate.test.ts` keeps the two
   # copies from drifting.
   group: >-
     ${{ (github.event_name == 'issue_comment' &&

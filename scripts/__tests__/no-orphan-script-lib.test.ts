@@ -72,7 +72,7 @@ describe('scripts/lib has no orphan module', () => {
 
   it('does not count a root-level test or a spec as an importer either', () => {
     const corpus = new Map([
-      ['__tests__/scripts/only.test.ts', "import { x } from '../../scripts/lib/a';"],
+      ['__tests__/ci/only.test.ts', "import { x } from '../../scripts/lib/a';"],
       ['tests/e2e/b.spec.ts', "import { x } from '../../scripts/lib/b';"],
     ]);
     expect(findOrphans(['scripts/lib/a.ts', 'scripts/lib/b.ts'], corpus)).toEqual([
