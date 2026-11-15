@@ -7,9 +7,24 @@ import { describe, expect, it } from 'vitest';
 const WORKFLOWS_DIR = join(process.cwd(), '.github/workflows');
 const BARE_NODE_TS_RUN = /\bnode (scripts\/[\w./-]+\.ts)\b/g;
 const WORKFLOW_FILE = /\.ya?ml$/;
+const LIFECYCLE_SCRIPTS = ['preinstall', 'install', 'postinstall', 'prepare'];
+const PACKAGE_JSON = join(process.cwd(), 'package.json');
+
+function lifecycleScripts(): string[] {
+  const { scripts } = JSON.parse(readFileSync(PACKAGE_JSON, 'utf8')) as {
+    scripts: Record<string, string>;
+  };
+  const found = new Set<string>();
+  for (const name of LIFECYCLE_SCRIPTS) {
+    for (const match of (scripts[name] ?? '').matchAll(BARE_NODE_TS_RUN)) {
+      if (match[1]) found.add(match[1]);
+    }
+  }
+  return [...found];
+}
 
 function bareNodeScripts(): string[] {
-  const found = new Set<string>();
+  const found = new Set<string>(lifecycleScripts());
   for (const name of readdirSync(WORKFLOWS_DIR).filter((file) => WORKFLOW_FILE.test(file))) {
     const text = readFileSync(join(WORKFLOWS_DIR, name), 'utf8');
     for (const match of text.matchAll(BARE_NODE_TS_RUN)) {
@@ -32,9 +47,13 @@ function importWithBareNode(script: string): { status: number | null; stderr: st
 describe('scripts a workflow runs with bare node', () => {
   const scripts = bareNodeScripts();
 
-  it('includes at least the high-risk label and tool pins scripts', () => {
+  it('includes the high-risk label, tool pins and hook installer scripts', () => {
     expect(scripts).toEqual(
-      expect.arrayContaining(['scripts/high-risk-paths.ts', 'scripts/gates/check-tool-pins.ts']),
+      expect.arrayContaining([
+        'scripts/high-risk-paths.ts',
+        'scripts/gates/check-tool-pins.ts',
+        'scripts/install/prepare-hooks.ts',
+      ]),
     );
   });
 

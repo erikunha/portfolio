@@ -53,7 +53,7 @@
     "ci:local": "pnpm verify",
     "ci:full": "tsx scripts/ci-full.ts",
     "gates:runtime": "tsx scripts/gates-runtime.ts",
-    "prepare": "node scripts/prepare-hooks.mjs",
+    "prepare": "node scripts/install/prepare-hooks.ts",
     "postinstall": "node scripts/strip-next-polyfills.mjs",
     "changelog:sync": "tsx scripts/sync-changelog.ts",
     "check:mutation-canary": "tsx scripts/gates/check-mutation-kills.ts --canary"

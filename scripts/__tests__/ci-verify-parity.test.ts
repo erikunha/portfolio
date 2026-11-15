@@ -3,9 +3,9 @@ import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
+import { prepareHooks } from '../install/prepare-hooks';
 import { chainLeaves, coveredByCi, QUALITY_FAST_CI_ONLY_STEPS } from '../lib/ci-full-stages';
 import { parseWorkflow } from '../lib/ci-workflow';
-import { prepareHooks } from '../prepare-hooks.mjs';
 
 const ROOT = process.cwd();
 const pkg = JSON.parse(readFileSync(join(ROOT, 'package.json'), 'utf8')) as {
