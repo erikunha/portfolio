@@ -1,7 +1,7 @@
 import { streamText } from 'ai';
 import { askErrors } from '@/content/ask-errors';
 import { SITE_LOCALE, type SiteLocale } from '@/content/site-locale';
-import { settleReservation } from '@/lib/ask/budget';
+import { type CacheTokenCounts, settleReservation } from '@/lib/ask/budget';
 import { releaseIdenticalQuestion } from '@/lib/ask/dedup';
 import { ASK_FAILURE_REASON, type AskFailureReason } from '@/lib/ask/failure-reason';
 import { countAskGuardFinding } from '@/lib/ask/guard-count';
@@ -68,12 +68,10 @@ type RunState = {
   guardAbort: Extract<GuardVerdict, { ok: false }>['reason'] | null;
 };
 
-type SettledUsage = {
+type SettledUsage = CacheTokenCounts & {
   resolved: boolean;
   billedInputTokens: number;
   outputTokens: number;
-  cacheReadTokens: number;
-  cacheWriteTokens: number;
 };
 
 async function withinDeadline<T>(p: Promise<T>): Promise<T | typeof USAGE_TIMED_OUT> {

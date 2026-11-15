@@ -121,13 +121,15 @@ export async function reserveBudget(maxOutputTokens: number): Promise<BudgetRese
   }
 }
 
+export type CacheTokenCounts = { cacheReadTokens: number; cacheWriteTokens: number };
+
 export async function settleBudget(
   reserved: number,
   actualInputTokens: number,
   actualOutputTokens: number,
   budgetKey: string,
   dailyKey?: string,
-  cache: { cacheReadTokens: number; cacheWriteTokens: number } = {
+  cache: CacheTokenCounts = {
     cacheReadTokens: 0,
     cacheWriteTokens: 0,
   },
@@ -172,9 +174,7 @@ export type AskReservation = {
 export type ReservationUsage = {
   billedInputTokens: number;
   outputTokens: number;
-  cacheReadTokens?: number;
-  cacheWriteTokens?: number;
-};
+} & Partial<CacheTokenCounts>;
 
 export async function settleReservation(
   reservation: AskReservation,
