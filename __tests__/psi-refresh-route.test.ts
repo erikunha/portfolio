@@ -24,12 +24,7 @@ vi.mock('@/lib/redis', () => ({
 }));
 
 const mockSendEmail = vi.fn(async () => ({ data: { id: 'x' }, error: null }));
-vi.mock('resend', () => ({
-  // biome-ignore lint/complexity/useArrowFunction: `function` required, arrow fns cannot be used with `new` in jsdom/vitest; the route calls `new Resend(key)`.
-  Resend: vi.fn(function () {
-    return { emails: { send: mockSendEmail } };
-  }),
-}));
+vi.mock('resend', async () => (await import('./helpers/modules')).resendModule(mockSendEmail));
 
 afterEach(() => {
   vi.resetModules();

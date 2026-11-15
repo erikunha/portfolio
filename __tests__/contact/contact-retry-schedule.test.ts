@@ -26,11 +26,7 @@ const redis = {
 const send = vi.fn();
 vi.mock('@/lib/redis', () => ({ getRedis: () => redis }));
 vi.mock('@/lib/log', () => ({ log: { error: vi.fn(), info: vi.fn(), warn: vi.fn() } }));
-vi.mock('resend', () => ({
-  Resend: class {
-    emails = { send };
-  },
-}));
+vi.mock('resend', async () => (await import('../helpers/modules')).resendModule(send));
 
 const retrySchedules = (): string[] => {
   const config = JSON.parse(readFileSync(join(process.cwd(), 'vercel.json'), 'utf8')) as {

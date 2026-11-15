@@ -54,11 +54,7 @@ vi.mock('@/lib/log', async () =>
 );
 
 const resendSendMock = vi.fn();
-vi.mock('resend', () => ({
-  Resend: class {
-    emails = { send: resendSendMock };
-  },
-}));
+vi.mock('resend', async () => (await import('../helpers/modules')).resendModule(resendSendMock));
 
 function makeRequest(url: string, body: unknown): NextRequest {
   return askRequest(body, { url });

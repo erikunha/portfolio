@@ -23,7 +23,7 @@ vi.mock('@/lib/lighthouse-scores', () => ({
   LIGHTHOUSE_FALLBACK: { fetchedAt: '-' },
   LIGHTHOUSE_TTL_S: 86400,
 }));
-vi.mock('resend', () => ({ Resend: class {} }));
+vi.mock('resend', async () => (await import('./helpers/modules')).resendModule(vi.fn()));
 
 interface Failure {
   ok: false;

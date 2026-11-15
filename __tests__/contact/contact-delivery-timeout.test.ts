@@ -5,12 +5,7 @@ import { stalledUntilAborted } from '../../tests/mocks/stalled-resend-send';
 
 const sendMock = vi.fn();
 
-vi.mock('resend', () => ({
-  // biome-ignore lint/complexity/useArrowFunction: `function` required, arrow fns cannot be used with `new`.
-  Resend: vi.fn(function () {
-    return { emails: { send: sendMock } };
-  }),
-}));
+vi.mock('resend', async () => (await import('../helpers/modules')).resendModule(sendMock));
 
 vi.mock('@/lib/env', () => ({ env: { RESEND_API_KEY: 're_test_key' } }));
 

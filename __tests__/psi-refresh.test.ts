@@ -27,12 +27,7 @@ vi.mock('@/lib/redis', () => ({
   getRedis: vi.fn(() => ({ set: redisMockSet, del: redisMockDel, pipeline: redisMockPipeline })),
 }));
 
-vi.mock('resend', () => ({
-  // biome-ignore lint/complexity/useArrowFunction: `function` required, arrow fns cannot be used with `new` in jsdom/vitest; the route calls `new Resend(key)`.
-  Resend: vi.fn(function () {
-    return { emails: { send: sendMock } };
-  }),
-}));
+vi.mock('resend', async () => (await import('./helpers/modules')).resendModule(sendMock));
 
 vi.mock('@/lib/log', () => ({
   log: { info: vi.fn(), error: vi.fn(), warn: vi.fn(), debug: vi.fn() },

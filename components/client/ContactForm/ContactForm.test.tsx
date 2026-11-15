@@ -435,11 +435,9 @@ vi.mock('@/lib/log', () => ({
   log: { info: vi.fn(), error: vi.fn(), warn: vi.fn(), debug: vi.fn() },
 }));
 
-vi.mock('resend', () => ({
-  Resend: class {
-    emails = { send: resendSendMock };
-  },
-}));
+vi.mock('resend', async () =>
+  (await import('../../../__tests__/helpers/modules')).resendModule(resendSendMock),
+);
 
 function makeRequest(body: Record<string, unknown>): NextRequest {
   return new NextRequest('http://localhost/api/contact', {

@@ -19,11 +19,7 @@ const send = vi.fn();
 const logger = { error: vi.fn(), info: vi.fn(), warn: vi.fn() };
 vi.mock('@/lib/redis', () => ({ getRedis: () => redis }));
 vi.mock('@/lib/log', () => ({ log: logger }));
-vi.mock('resend', () => ({
-  Resend: class {
-    emails = { send };
-  },
-}));
+vi.mock('resend', async () => (await import('../helpers/modules')).resendModule(send));
 
 const stored = {
   name: 'Visitor',
