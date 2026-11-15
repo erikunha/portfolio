@@ -128,8 +128,8 @@ describe('contact API delivery failure', () => {
   it('answers a saved but undeliverable message with its own code, not the storage code', async () => {
     vi.doMock('@/lib/contact/delivery', () => ({ sendContactMessage: async () => false }));
     vi.doMock('@/lib/contact/outbox', () => ({
-      CONTACT_MESSAGE_TTL_SECONDS: 60,
-      contactMessageKey: (id: string) => `contact:${id}`,
+      saveContactMessage: async () => undefined,
+      deleteContactMessage: async () => undefined,
       enqueueContact: async () => false,
     }));
     const { POST } = await import('@/app/api/contact/route');

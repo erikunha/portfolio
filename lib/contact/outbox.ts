@@ -30,6 +30,16 @@ export interface ContactMessage {
 
 export const contactMessageKey = (msgId: string) => `contact:msg:${msgId}`;
 
+export async function saveContactMessage(msgId: string, payload: ContactMessage): Promise<void> {
+  await getRedis().set(contactMessageKey(msgId), JSON.stringify(payload), {
+    ex: CONTACT_MESSAGE_TTL_SECONDS,
+  });
+}
+
+export async function deleteContactMessage(msgId: string): Promise<void> {
+  await getRedis().del(contactMessageKey(msgId));
+}
+
 export async function enqueueContact(msgId: string, receivedAt: string): Promise<boolean> {
   if ((await getRedis().zcard(OUTBOX_KEY)) >= CONTACT_OUTBOX_MAX) return false;
   const transaction = getRedis().multi();

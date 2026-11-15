@@ -2,16 +2,11 @@ import { contactContent } from '@/content/contact';
 import { CONTACT_DELIVERY_CODE, CONTACT_ERROR_CODE } from '@/content/contact-rules';
 import { SITE_LOCALES, type SiteLocale } from '@/content/site-locale';
 import { sendContactMessage } from '@/lib/contact/delivery';
-import {
-  CONTACT_MESSAGE_TTL_SECONDS,
-  contactMessageKey,
-  enqueueContact,
-} from '@/lib/contact/outbox';
+import { deleteContactMessage, enqueueContact, saveContactMessage } from '@/lib/contact/outbox';
 import { ContactSchema, isHoneypotTripped } from '@/lib/contact/validation';
 import { HTTP_STATUS } from '@/lib/http-status';
 import { log } from '@/lib/log';
 import { getContactLimit } from '@/lib/rate-limit';
-import { getRedis } from '@/lib/redis';
 import { localeFromRequest } from '@/lib/server/request-locale';
 import { defineHandler, err, ok } from '@/lib/server/route';
 
@@ -44,9 +39,7 @@ const handleContact = defineHandler({
     const payload = { name, email, message, receivedAt: new Date().toISOString(), ipHash };
 
     try {
-      await getRedis().set(contactMessageKey(msgId), JSON.stringify(payload), {
-        ex: CONTACT_MESSAGE_TTL_SECONDS,
-      });
+      await saveContactMessage(msgId, payload);
     } catch {
       log.error('KV write failed', { requestId, msgId });
       return err({
@@ -68,7 +61,7 @@ const handleContact = defineHandler({
     }
     if (!queued) {
       try {
-        await getRedis().del(contactMessageKey(msgId));
+        await deleteContactMessage(msgId);
       } catch {
         log.error('contact message cleanup failed', { requestId, msgId });
       }
