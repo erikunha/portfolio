@@ -17,16 +17,17 @@ vi.mock('@/lib/rate-limit', () => ({
   getErrorLogDailyLimit: vi.fn(() => ({ limit: admit })),
   getErrorLogIpDailyLimit: vi.fn(() => ({ limit: admit })),
 }));
-vi.mock('@/lib/ask/budget', () => ({
-  reserveBudget: vi.fn(async () => ({
-    allowed: false,
-    reserved: 0,
-    pct: 100,
-    budgetKey: 'k',
-    dailyKey: 'd',
-  })),
-  settleBudget: vi.fn(async () => undefined),
-}));
+vi.mock('@/lib/ask/budget', async () =>
+  (await import('./helpers/ask-route')).budgetModule({
+    reserveBudget: vi.fn(async () => ({
+      allowed: false,
+      reserved: 0,
+      pct: 100,
+      budgetKey: 'k',
+      dailyKey: 'd',
+    })),
+  }),
+);
 vi.mock('@/lib/ask/dedup', () => ({
   checkIdenticalQuestion: vi.fn(async () => ({ allowed: true })),
 }));
