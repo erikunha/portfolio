@@ -3,7 +3,7 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
-import { findViolations, scanRoot } from '../gates/check-test-integrity';
+import { findViolations, readerAliasesIn, scanRoot } from '../gates/check-test-integrity';
 
 const SUBPROCESS_TEST_TIMEOUT_MS = 60_000;
 
@@ -561,5 +561,152 @@ describe('command line', { timeout: SUBPROCESS_TEST_TIMEOUT_MS }, () => {
     const result = run("it('a', () => { expect(1).toBe(1); });\n");
     expect(result.status).toBe(0);
     expect(result.stdout).toContain('OK');
+  });
+});
+
+const unmask = (source: string) => source.replace(/(['"`/])@/g, '$1');
+
+describe('source-grep reads', () => {
+  const sourceGrep = (source: string, file = 'sample.test.ts') =>
+    findViolations(unmask(source), file)
+      .filter((v) => v.kind === 'source-grep')
+      .map((v) => `${v.kind}@${v.line}`);
+
+  it.each([
+    ['a direct read of app source', "const s = readFileSync('@app/page.tsx', 'utf8');"],
+    ['a joined path to components', "readFileSync(join(ROOT, '@components/x.tsx'), 'utf8');"],
+    ['a read of lib source', 'const s = readFile(`@lib/env.ts`);'],
+    ['a read of scripts source', "readFileSync('./@scripts/gates/a.ts');"],
+    ['a call split across lines', "readFileSync(\n  join(ROOT, '@app/x.ts'),\n  'utf8',\n);"],
+    [
+      'an aliased reader',
+      "const read = (p: string) => readFileSync(join(R, p), 'utf-8');\nread('@app/page.tsx');",
+    ],
+  ])('flags %s', (_name, source) => {
+    expect(sourceGrep(source)).toHaveLength(1);
+  });
+
+  it('reports the line of the read', () => {
+    expect(sourceGrep("\n\nreadFileSync('@app/a.ts');")).toEqual(['source-grep@3']);
+  });
+
+  it.each([
+    ['a read outside application source', "readFileSync('package.json', 'utf8');"],
+    ['an import line', "import { readFileSync } from 'node:fs'; // app/"],
+    [
+      'a same-line allow tag',
+      "readFileSync('@app/a.ts'); // behavioral-test-allow: needs raw text",
+    ],
+    [
+      'an allow tag in the comment block above',
+      "// behavioral-test-allow: raw text\n// more context\nreadFileSync('@app/a.ts');",
+    ],
+    ['a path segment that only resembles app', "readFileSync('apple/a.ts');"],
+  ])('does not flag %s', (_name, source) => {
+    expect(sourceGrep(source)).toEqual([]);
+  });
+
+  it('flags a read whose allow tag sits above an unrelated code line', () => {
+    const source = "// behavioral-test-allow: x\nconst a = 1;\nreadFileSync('@app/a.ts');";
+    expect(sourceGrep(source)).toEqual(['source-grep@3']);
+  });
+
+  const READER_SHAPES: Array<[string, string, string | null]> = [
+    ['single-line arrow', "const read = (p: string) => readFileSync(join(R, p), 'utf-8');", 'read'],
+    [
+      'arrow wrapped by the formatter',
+      "const read = (relativePathToFile: string) =>\n  readFileSync(join(R, relativePathToFile), 'utf-8');",
+      'read',
+    ],
+    ['block-body arrow', 'const read = (p: string) => {\n  return readFileSync(p);\n};', 'read'],
+    ['function declaration', 'function read(p: string) {\n  return readFileSync(p);\n}', 'read'],
+    ['dollar-prefixed name', "const $read = (p: string) => readFileSync(p, 'utf-8');", '$read'],
+    ['async arrow', 'const read = async (p: string) => readFile(p);', 'read'],
+    ['bare rebind', 'const read = readFileSync;', 'read'],
+    ['namespaced rebind', 'const read = fs.readFileSync;', 'read'],
+    [
+      'anonymous function expression',
+      'const read = function (p) {\n  return readFileSync(p);\n};',
+      'read',
+    ],
+    ['promisified', 'const read = promisify(fs.readFile);', 'read'],
+    ['non-fs namespace', 'const read = fsp.readFile;', 'read'],
+    ['nested namespace', 'const read = fs.promises.readFile;', 'read'],
+    ['type-annotated binding', 'const read: Reader = readFileSync;', 'read'],
+    ['type-annotated arrow', 'const read: Reader = (p: string) => readFileSync(p);', 'read'],
+    ['function-type annotation', 'const read: (p: string) => string = readFileSync;', 'read'],
+    [
+      'annotated declaration above a reader (must not shadow it)',
+      'let cached: string | undefined;\nconst read = fs.readFileSync;',
+      'read',
+    ],
+    [
+      'a preceding helper must not swallow the reader below it',
+      "const norm = (s: string) => s.trim();\nconst read = (p: string) => readFileSync(join(R, p), 'utf-8');",
+      'read',
+    ],
+    [
+      'result binding, not a reader',
+      "const pkg = JSON.parse(readFileSync('package.json', 'utf8'));",
+      null,
+    ],
+    ['call result, not a reader', "const raw = readFileSync('package.json', 'utf8');", null],
+  ];
+
+  it.each(READER_SHAPES)('reader shape %s -> alias: %j', (_shape, source, expected) => {
+    const aliases = readerAliasesIn(source);
+    const detected = expected === null ? aliases.length === 0 : aliases.includes(expected);
+    expect(
+      detected,
+      'a missed alias leaves the gate green, so the alias detector is gated by shape: formatter-wrapped arrows, dollar-prefixed names and bare rebinds must register, and results of a read must not',
+    ).toBe(true);
+  });
+});
+
+describe('scanRoot source-grep scope', () => {
+  const roots: string[] = [];
+
+  afterEach(() => {
+    for (const root of roots.splice(0)) rmSync(root, { recursive: true, force: true });
+  });
+
+  function scan(files: Record<string, string>) {
+    const root = mkdtempSync(join(tmpdir(), 'test-integrity-grep-'));
+    roots.push(root);
+    for (const [name, content] of Object.entries(files)) {
+      mkdirSync(join(root, name, '..'), { recursive: true });
+      writeFileSync(join(root, name), content);
+    }
+    return scanRoot(root).violations.map((v) => `${v.file}:${v.line}:${v.kind}`);
+  }
+
+  const GREP = unmask("readFileSync('@app/page.tsx', 'utf8');\n");
+
+  it('scans a helper file inside a test directory', () => {
+    expect(scan({ '__tests__/helpers/read.ts': GREP })).toEqual([
+      '__tests__/helpers/read.ts:1:source-grep',
+    ]);
+    expect(scan({ 'tests/e2e/util.js': GREP })).toEqual(['tests/e2e/util.js:1:source-grep']);
+  });
+
+  it('scans a test file outside a test directory', () => {
+    expect(scan({ 'lib/a.test.ts': GREP })).toEqual(['lib/a.test.ts:1:source-grep']);
+  });
+
+  it('skips a plain source file outside test directories', () => {
+    expect(scan({ 'scripts/tool.ts': GREP })).toEqual([]);
+  });
+
+  it('skips declaration files inside a test directory', () => {
+    expect(scan({ '__tests__/types.d.ts': GREP })).toEqual([]);
+  });
+
+  it('skips a root out or build directory but not a nested one', () => {
+    expect(scan({ 'out/a.test.ts': GREP, 'build/a.test.ts': GREP })).toEqual([]);
+    expect(scan({ 'lib/out/a.test.ts': GREP })).toEqual(['lib/out/a.test.ts:1:source-grep']);
+  });
+
+  it('does not run the no-assertion rule on a helper file', () => {
+    expect(scan({ '__tests__/helpers/h.ts': "it('a', () => {});\n" })).toEqual([]);
   });
 });

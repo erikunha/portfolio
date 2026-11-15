@@ -1,11 +1,11 @@
 #!/usr/bin/env tsx
 import { readFileSync, statSync } from 'node:fs';
-import { dirname, join, relative, resolve } from 'node:path';
+import { dirname, join, relative, resolve, sep } from 'node:path';
 import ts from 'typescript';
 import { isMain } from '../lib/is-main';
 import { listFiles } from '../lib/walk';
 
-export type ViolationKind = 'focused' | 'no-assertion' | 'skip-without-reason';
+export type ViolationKind = 'focused' | 'no-assertion' | 'skip-without-reason' | 'source-grep';
 export type Violation = { file: string; line: number; kind: ViolationKind };
 export type ScanResult = { files: number; violations: Violation[] };
 
@@ -50,6 +50,33 @@ const SNAPSHOT_MATCHERS = new Set([
   'toMatchFileSnapshot',
   'toHaveScreenshot',
 ]);
+const ROOT_SKIP_DIRS = new Set(['out', 'build']);
+const TEST_DIRS = new Set(['__tests__', 'tests']);
+const ANY_SCRIPT = /\.[cm]?[jt]sx?$/;
+const TYPE_DECL = /\.d\.ts$/;
+const SOURCE_HINT = /readFileSync|readFile\(/;
+const TARGETS_APP_SOURCE = /['"`](?:[^'"`]*\/)?(app|components|lib|scripts)(\/|['"`])/;
+const ALLOW_TAG = /behavioral-test-allow:/;
+const COMMENT_LINE = /^\s*(\/\/|\*|\/\*)/;
+const IMPORT_LINE = /^\s*import\b/;
+const CALL_LOOKAHEAD_LINES = 3;
+const STRING_LITERAL = /(['"`])(?:\\.|(?!\1).)*?\1/g;
+const LINE_COMMENT = /\/\/.*$/;
+const READER_BODY = 300;
+const BINDING = '(?:const|let|var)\\s+([A-Za-z_$][\\w$]*)\\s*(?::(?:[^=;\\n]|=>)*)?=\\s*';
+const NAMESPACE = '(?:[A-Za-z_$][\\w$]*\\.)*';
+const ARROW_READER = new RegExp(
+  `${BINDING}(?:async\\s+)?(?:\\([^)]*\\)|[A-Za-z_$][\\w$]*)\\s*=>[\\s\\S]{0,${READER_BODY}}?(?:readFileSync|readFile\\()`,
+  'g',
+);
+const FUNCTION_READER = new RegExp(
+  `${BINDING}(?:async\\s+)?function\\b[^{]*\\{[\\s\\S]{0,${READER_BODY}}?(?:readFileSync|readFile\\()|function\\s+([A-Za-z_$][\\w$]*)\\s*\\([^)]*\\)[\\s\\S]{0,${READER_BODY}}?(?:readFileSync|readFile\\()`,
+  'g',
+);
+const BOUND_READER = new RegExp(
+  `${BINDING}(?:promisify\\(\\s*)?${NAMESPACE}(?:readFileSync|readFile)\\b\\s*(?![\\w$(])`,
+  'g',
+);
 const MODULE_EXTENSIONS = ['.ts', '.tsx', '.mts', '.mjs', '.js'];
 const ALIAS_PREFIX = '@/';
 const RELATIVE_PREFIX = '.';
@@ -223,7 +250,10 @@ export function findViolations(
   file: string,
   importedAssertingHelpers: ReadonlySet<string> = new Set(),
 ): Violation[] {
-  return inspectSourceFile(parse(source, file), file, importedAssertingHelpers);
+  return [
+    ...inspectSourceFile(parse(source, file), file, importedAssertingHelpers),
+    ...findSourceGrepViolations(source, file),
+  ];
 }
 
 function inspectSourceFile(
@@ -267,6 +297,83 @@ function inspectSourceFile(
 
 function collectTestFiles(dir: string): string[] {
   return listFiles(dir, { include: TEST_FILE, skipDirs: SKIP_DIRS }).map((rel) => join(dir, rel));
+}
+
+function isTestCode(rel: string): boolean {
+  const segments = rel.split(sep);
+  const name = segments[segments.length - 1] ?? '';
+  if (ROOT_SKIP_DIRS.has(segments[0] ?? '')) return false;
+  if (TYPE_DECL.test(name)) return false;
+  const insideTestDir = segments.slice(0, -1).some((segment) => TEST_DIRS.has(segment));
+  return insideTestDir ? ANY_SCRIPT.test(name) : TEST_FILE.test(name);
+}
+
+function collectTestCodeFiles(dir: string): string[] {
+  return listFiles(dir, { include: ANY_SCRIPT, skipDirs: SKIP_DIRS })
+    .filter(isTestCode)
+    .map((rel) => join(dir, rel));
+}
+
+function parenBalance(line: string): number {
+  const code = line.replace(STRING_LITERAL, '').replace(LINE_COMMENT, '');
+  return (code.match(/\(/g) ?? []).length - (code.match(/\)/g) ?? []).length;
+}
+
+function callText(lines: string[], index: number): string {
+  let text = lines[index] ?? '';
+  let depth = parenBalance(text);
+  for (let i = index + 1; depth > 0 && i <= index + CALL_LOOKAHEAD_LINES; i++) {
+    const next = lines[i] ?? '';
+    text += ` ${next}`;
+    depth += parenBalance(next);
+  }
+  return text;
+}
+
+function isAllowTagged(lines: string[], index: number): boolean {
+  if (ALLOW_TAG.test(lines[index] ?? '')) return true;
+  for (let i = index - 1; i >= 0 && COMMENT_LINE.test(lines[i] ?? ''); i--) {
+    if (ALLOW_TAG.test(lines[i] ?? '')) return true;
+  }
+  return false;
+}
+
+const escapeForRegExp = (name: string) => name.replace(/[$\\^*+?.()|[\]{}]/g, '\\$&');
+
+export function readerAliasesIn(source: string): string[] {
+  const names = new Set<string>();
+  for (const pattern of [ARROW_READER, FUNCTION_READER, BOUND_READER]) {
+    pattern.lastIndex = 0;
+    for (;;) {
+      const match = pattern.exec(source);
+      if (match === null) break;
+      pattern.lastIndex = match.index + 1;
+      const name = match[1] ?? match[2];
+      if (name !== undefined) names.add(name);
+    }
+  }
+  return [...names];
+}
+
+function readHintFor(source: string): RegExp {
+  const aliases = readerAliasesIn(source);
+  if (aliases.length === 0) return SOURCE_HINT;
+  const alternation = aliases.map(escapeForRegExp).join('|');
+  return new RegExp(`${SOURCE_HINT.source}|(?<![\\w$])(?:${alternation})\\(`);
+}
+
+function findSourceGrepViolations(source: string, file: string): Violation[] {
+  const lines = source.split('\n');
+  const sourceHint = readHintFor(source);
+  const found: Violation[] = [];
+  lines.forEach((line, i) => {
+    if (!sourceHint.test(line)) return;
+    if (IMPORT_LINE.test(line)) return;
+    if (!TARGETS_APP_SOURCE.test(callText(lines, i))) return;
+    if (isAllowTagged(lines, i)) return;
+    found.push({ file, line: i + 1, kind: 'source-grep' });
+  });
+  return found;
 }
 
 function isFile(path: string): boolean {
@@ -471,10 +578,15 @@ export function scanRoot(root: string): ScanResult {
       resolver.importedAssertingBindings(full),
     ),
   );
-  return { files: files.length, violations };
+  const sourceGrep = collectTestCodeFiles(root).flatMap((full) =>
+    findSourceGrepViolations(readFileSync(full, 'utf8'), relative(root, full)),
+  );
+  return { files: files.length, violations: [...violations, ...sourceGrep] };
 }
 
 const ADVICE: Record<ViolationKind, string> = {
+  'source-grep':
+    'a test that reads application source asserts text, not behavior; exercise the code, or tag the read with behavioral-test-allow: and a reason',
   focused: 'a focused test silently skips every other test in the run; remove the .only',
   'no-assertion':
     'a test body with no expect or assert passes whatever the code does; assert the behavior it protects',

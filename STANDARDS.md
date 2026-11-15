@@ -199,10 +199,10 @@ innocuous rename even when behavior is unchanged. It tests the _shape of the
 text_, not the _correctness of the program_. Behavioral tests fail when, and
 only when, the guarantee actually regresses.
 
-**How it is held.** Mechanical gate: the meta-check
-`__tests__/meta/no-source-grep.test.ts` walks every `*.test.ts` file and fails
-if one reads application source via `readFileSync` without the allow tag; it
-runs as part of `pnpm test` inside `pnpm verify` and CI. Kill switches and CSP
+**How it is held.** Mechanical gate: `pnpm check:test-integrity`
+(`scripts/gates/check-test-integrity.ts`) scans every test file and every script under
+`__tests__/` or `tests/`, and fails if one reads application source via `readFileSync`
+without the allow tag; it runs inside `pnpm verify` and CI. Kill switches and CSP
 are covered by behavioral tests (`__tests__/ask/ask-killswitch-behavioral.test.ts`,
 `__tests__/proxy-csp.test.ts`); no kill switch is verified by grepping source.
 Cross-browser functional coverage is the **required** `e2e-functional` CI job

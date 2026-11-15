@@ -107,7 +107,7 @@ flowchart LR
     ci["CI gates"]
 ```
 
-- **Unit (Vitest):** behavioral assertions only; a `no-source-grep` test bans `readFileSync`-style source-grep tests. Run `pnpm test` / `pnpm test:coverage` / `pnpm test:watch`.
+- **Unit (Vitest):** behavioral assertions only; `pnpm check:test-integrity` bans `readFileSync`-style source-grep tests. Run `pnpm test` / `pnpm test:coverage` / `pnpm test:watch`.
   For effect-driven focus, await the focus assertion with `waitFor`; finding the element only establishes that it rendered.
 - **a11y (axe-core):** `tests/a11y/axe.spec.ts` is a zero-violation gate over every design-system route, `/links`, `/links/en`, the four reading views and the home in both languages (design-system routes and reading views are also scanned at 390px, and so is the home), the open section drawer at 390px, the contact form error state (desktop and 390px), the open timezone combobox and the offline notice. A separate rule run checks WCAG 2.5.3 label-in-name on `/`, `/pt`, `/cv`, `/pt/cv`, `/summary` and `/links`. Every scan includes `wcag22aa`; page scans retain `wcag2a`, `wcag2aa` and `wcag21aa`, while contact errors retain `wcag2a` and `wcag2aa`. CI runs it in the `performance` job (`pnpm playwright test tests/a11y`), where only the `chromium` project matches it.
 - **e2e (Playwright):** `playwright.config.ts` defines eight projects and CI runs every one in the `e2e-functional` matrix. webkit-desktop and webkit-mobile run as two shards each (`--shard=1/2` and `2/2`), since the full WebKit suite outgrew the 25-minute job limit; the other six run whole. `__tests__/ci/e2e-matrix-coverage.test.ts` fails if a project or a shard is left out. The suite runs against `http://localhost:3000` unless `E2E_BASE_URL` points it at another server.
