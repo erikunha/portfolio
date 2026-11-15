@@ -515,7 +515,7 @@ describe('/api/contact honeypot', () => {
   });
 
   it('also trips when field_company is whitespace-only (defensive)', async () => {
-    const { isHoneypotTripped } = await import('@/lib/contact-validation');
+    const { isHoneypotTripped } = await import('@/lib/contact/validation');
     expect(isHoneypotTripped({ field_company: '   ' })).toBe(false);
     expect(isHoneypotTripped({ field_company: '\t\n' })).toBe(false);
     expect(isHoneypotTripped({ field_company: 'x' })).toBe(true);
@@ -560,7 +560,7 @@ describe('contact email rule', () => {
   ] as const;
 
   it.each(ADDRESSES)('client and server agree on %s', async (address, valid) => {
-    const { ContactSchema } = await import('@/lib/contact-validation');
+    const { ContactSchema } = await import('@/lib/contact/validation');
     const { CONTACT_EMAIL_PATTERN } = await import('@/content/contact-rules');
     expect(CONTACT_EMAIL_PATTERN.test(address)).toBe(valid);
     const parsed = ContactSchema.safeParse({

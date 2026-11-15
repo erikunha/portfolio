@@ -80,7 +80,7 @@ describe('the contact retry schedule reaches every queued message inside the ide
   });
 
   it('retries a message queued at any minute before it is 24 hours old, wherever each run lands in its hour', async () => {
-    const { isContactRetryExpired } = await import('@/lib/contact-outbox');
+    const { isContactRetryExpired } = await import('@/lib/contact/outbox');
     const missed: string[] = [];
     for (const minuteInHour of minuteChoices()) {
       const runs = runOffsetsMinutes(minuteInHour);

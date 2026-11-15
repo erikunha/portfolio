@@ -44,7 +44,7 @@ describe('sendContactMessage timeout', () => {
 
   it('cancels the in-flight request through an abort signal and reports failure', async () => {
     sendMock.mockImplementation(stalledUntilAborted);
-    const { sendContactMessage } = await import('@/lib/contact-delivery');
+    const { sendContactMessage } = await import('@/lib/contact/delivery');
 
     const pending = sendContactMessage('msg-1', MESSAGE, 'req-1');
     controller.abort(new DOMException('timed out', 'TimeoutError'));

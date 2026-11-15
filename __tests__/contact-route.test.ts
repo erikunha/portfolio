@@ -166,7 +166,7 @@ describe('contact delivery outcome', () => {
   });
 
   it('refuses to queue past the outbox cap instead of growing it without bound', async () => {
-    const { CONTACT_OUTBOX_MAX } = await import('@/lib/contact-outbox');
+    const { CONTACT_OUTBOX_MAX } = await import('@/lib/contact/outbox');
     send.mockResolvedValueOnce({ error: { message: 'unavailable' } });
     zcard.mockResolvedValueOnce(CONTACT_OUTBOX_MAX);
     const { POST } = await import('@/app/api/contact/route');
@@ -181,7 +181,7 @@ describe('contact delivery outcome', () => {
   });
 
   it('deletes the stored message when delivery failed and the outbox is full', async () => {
-    const { CONTACT_OUTBOX_MAX } = await import('@/lib/contact-outbox');
+    const { CONTACT_OUTBOX_MAX } = await import('@/lib/contact/outbox');
     send.mockResolvedValueOnce({ error: { message: 'unavailable' } });
     zcard.mockResolvedValueOnce(CONTACT_OUTBOX_MAX);
     const { POST } = await import('@/app/api/contact/route');
@@ -214,7 +214,7 @@ describe('contact delivery outcome', () => {
   });
 
   it('still answers 502 when deleting the stored message fails', async () => {
-    const { CONTACT_OUTBOX_MAX } = await import('@/lib/contact-outbox');
+    const { CONTACT_OUTBOX_MAX } = await import('@/lib/contact/outbox');
     send.mockResolvedValueOnce({ error: { message: 'unavailable' } });
     zcard.mockResolvedValueOnce(CONTACT_OUTBOX_MAX);
     redisDel.mockRejectedValueOnce(new Error('redis down'));
@@ -358,7 +358,7 @@ describe('queued copy states the real retry schedule', () => {
   it.each(['en', 'pt'] as const)(
     'names the daily cron and the attempt cap (%s)',
     async (locale) => {
-      const { CONTACT_MAX_RETRY_ATTEMPTS } = await import('@/lib/contact-outbox');
+      const { CONTACT_MAX_RETRY_ATTEMPTS } = await import('@/lib/contact/outbox');
       const { contactContent } = await import('@/content/contact');
       // behavioral-test-allow: configuration-invariant, the copy must match the cron in vercel.json
       const { crons } = JSON.parse(readFileSync('vercel.json', 'utf8')) as {

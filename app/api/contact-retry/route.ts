@@ -1,5 +1,5 @@
 import type { NextRequest } from 'next/server';
-import { sendContactMessage } from '@/lib/contact-delivery';
+import { sendContactMessage } from '@/lib/contact/delivery';
 import {
   CONTACT_MAX_RETRY_ATTEMPTS,
   getContactAttempts,
@@ -8,7 +8,7 @@ import {
   incrementContactAttempts,
   isContactRetryExpired,
   removePendingContact,
-} from '@/lib/contact-outbox';
+} from '@/lib/contact/outbox';
 import { env } from '@/lib/env';
 import { HTTP_STATUS } from '@/lib/http-status';
 import { log } from '@/lib/log';

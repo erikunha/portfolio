@@ -1,13 +1,13 @@
 import { contactContent } from '@/content/contact';
 import { CONTACT_DELIVERY_CODE, CONTACT_ERROR_CODE } from '@/content/contact-rules';
 import { SITE_LOCALES, type SiteLocale } from '@/content/site-locale';
-import { sendContactMessage } from '@/lib/contact-delivery';
+import { sendContactMessage } from '@/lib/contact/delivery';
 import {
   CONTACT_MESSAGE_TTL_SECONDS,
   contactMessageKey,
   enqueueContact,
-} from '@/lib/contact-outbox';
-import { ContactSchema, isHoneypotTripped } from '@/lib/contact-validation';
+} from '@/lib/contact/outbox';
+import { ContactSchema, isHoneypotTripped } from '@/lib/contact/validation';
 import { HTTP_STATUS } from '@/lib/http-status';
 import { log } from '@/lib/log';
 import { getContactLimit, getRedis } from '@/lib/rate-limit';

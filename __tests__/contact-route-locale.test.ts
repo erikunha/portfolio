@@ -89,7 +89,7 @@ describe('defineHandler rate-limit message language', () => {
     ['fr', messages[SITE_LOCALE.en]],
   ])('answers a denied limit for locale header %s with %s', async (header, expected) => {
     const { defineHandler } = await import('@/lib/server/route');
-    const { ContactSchema } = await import('@/lib/contact-validation');
+    const { ContactSchema } = await import('@/lib/contact/validation');
     const handler = defineHandler({
       schema: ContactSchema,
       maxBodyBytes: TEST_BODY_LIMIT,
@@ -106,7 +106,7 @@ describe('defineHandler rate-limit message language', () => {
 
   it('keeps a plain string message for every locale', async () => {
     const { defineHandler } = await import('@/lib/server/route');
-    const { ContactSchema } = await import('@/lib/contact-validation');
+    const { ContactSchema } = await import('@/lib/contact/validation');
     const handler = defineHandler({
       schema: ContactSchema,
       maxBodyBytes: TEST_BODY_LIMIT,
@@ -128,8 +128,8 @@ describe('contact API delivery failure', () => {
   });
 
   it('answers a saved but undeliverable message with its own code, not the storage code', async () => {
-    vi.doMock('@/lib/contact-delivery', () => ({ sendContactMessage: async () => false }));
-    vi.doMock('@/lib/contact-outbox', () => ({
+    vi.doMock('@/lib/contact/delivery', () => ({ sendContactMessage: async () => false }));
+    vi.doMock('@/lib/contact/outbox', () => ({
       CONTACT_MESSAGE_TTL_SECONDS: 60,
       contactMessageKey: (id: string) => `contact:${id}`,
       enqueueContact: async () => false,
@@ -142,7 +142,7 @@ describe('contact API delivery failure', () => {
       'delivery_unavailable',
     );
     expect(body.error.message).toBe(contactContent[SITE_LOCALE.pt].errors.retryUnavailable);
-    vi.doUnmock('@/lib/contact-delivery');
-    vi.doUnmock('@/lib/contact-outbox');
+    vi.doUnmock('@/lib/contact/delivery');
+    vi.doUnmock('@/lib/contact/outbox');
   });
 });

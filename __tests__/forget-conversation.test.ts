@@ -52,7 +52,7 @@ describe('/api/log/forget deletes the whole conversation of the id it is given',
       getForgetLimit: vi.fn(() => ({ limit: vi.fn(async () => ({ success: true })) })),
       getRedis: vi.fn(() => ({ del, mget, smembers })),
     }));
-    vi.doMock('@/lib/contact-outbox', () => ({
+    vi.doMock('@/lib/contact/outbox', () => ({
       contactMessageKey: (id: string) => `contact:msg:${id}`,
       removePendingContact,
     }));
@@ -65,7 +65,7 @@ describe('/api/log/forget deletes the whole conversation of the id it is given',
   afterEach(() => {
     vi.useRealTimers();
     vi.doUnmock('@/lib/rate-limit');
-    vi.doUnmock('@/lib/contact-outbox');
+    vi.doUnmock('@/lib/contact/outbox');
     vi.doUnmock('@/lib/ip-hash');
     vi.doUnmock('@/lib/log');
   });

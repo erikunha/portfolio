@@ -42,7 +42,7 @@ describe('/api/log/forget on a large conversation', () => {
       getForgetLimit: vi.fn(() => ({ limit: vi.fn(async () => ({ success: true })) })),
       getRedis: vi.fn(() => ({ del, mget, smembers, set: vi.fn(async () => 'OK') })),
     }));
-    vi.doMock('@/lib/contact-outbox', () => ({
+    vi.doMock('@/lib/contact/outbox', () => ({
       contactMessageKey: (id: string) => `contact:msg:${id}`,
       removePendingContact,
     }));

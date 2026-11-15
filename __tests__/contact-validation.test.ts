@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { ContactSchema } from '@/lib/contact-validation';
+import { ContactSchema } from '@/lib/contact/validation';
 
 const valid = {
   name: 'Visitor',

@@ -92,7 +92,7 @@ describe('forget then persist for the same request', () => {
       getForgetLimit: vi.fn(() => ({ limit: vi.fn(async () => ({ success: true })) })),
       getRedis: vi.fn(() => store),
     }));
-    vi.doMock('@/lib/contact-outbox', () => ({
+    vi.doMock('@/lib/contact/outbox', () => ({
       contactMessageKey: (id: string) => `contact:msg:${id}`,
       removePendingContact: vi.fn(async () => undefined),
     }));

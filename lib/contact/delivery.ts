@@ -2,9 +2,9 @@ import 'server-only';
 
 import { Resend } from 'resend';
 import { EMAIL_ADDRESS } from '@/content/social-urls';
-import type { ContactMessage } from '@/lib/contact-outbox';
 import { env } from '@/lib/env';
 import { log } from '@/lib/log';
+import type { ContactMessage } from './outbox';
 
 const CONTACT_FROM = 'contact@erikunha.dev';
 const CONTACT_TO = EMAIL_ADDRESS;
