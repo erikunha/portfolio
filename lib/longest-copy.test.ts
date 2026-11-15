@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { longestCopy } from '../longest-copy';
+import { longestCopy } from './longest-copy';
 
 describe('longestCopy', () => {
   it('returns the longest string and the first of equals', () => {

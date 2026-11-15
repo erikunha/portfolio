@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { guitarRig } from '@/content/guitar-rig';
 import { SITE_LOCALE } from '@/content/site-locale';
-import { buildEqSpectrum, eqGainDb } from '../eq-spectrum';
+import { buildEqSpectrum, eqGainDb } from './eq-spectrum';
 
 const spectrum = buildEqSpectrum(guitarRig[SITE_LOCALE.en].eqSpectrum);
 const { bands, freqRange } = guitarRig[SITE_LOCALE.en].eqSpectrum;

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { hostLabel } from '../host-label';
+import { hostLabel } from './host-label';
 
 describe('hostLabel', () => {
   it.each([
