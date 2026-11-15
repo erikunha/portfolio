@@ -21,7 +21,13 @@ vi.mock('@/lib/redis', () => ({
 vi.mock('@/lib/server/client-ip', () => ({ getClientIp: () => '127.0.0.1' }));
 vi.mock('@/lib/rate-limit', () => ({ getContactLimit: () => ({ limit }) }));
 vi.mock('@/lib/ip-hash', () => ({ hashIp: async () => 'hashed-ip' }));
-vi.mock('@/lib/log', () => ({ log: logger }));
+vi.mock('@/lib/log', async () =>
+  (await import('@/__tests__/helpers/modules')).logModule({
+    info: logger.info,
+    error: logger.error,
+    warn: logger.warn,
+  }),
+);
 vi.mock('resend', async () => (await import('../helpers/modules')).resendModule(send));
 
 const validBody = {

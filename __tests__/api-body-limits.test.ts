@@ -31,9 +31,7 @@ vi.mock('@/lib/ask/budget', async () =>
 vi.mock('@/lib/ask/dedup', () => ({
   checkIdenticalQuestion: vi.fn(async () => ({ allowed: true })),
 }));
-vi.mock('@/lib/log', () => ({
-  log: { info: vi.fn(), error: vi.fn(), warn: vi.fn(), debug: vi.fn() },
-}));
+vi.mock('@/lib/log', async () => (await import('@/__tests__/helpers/modules')).logModule());
 vi.mock('@/lib/ask/interaction-log', () => ({
   persistAskInteraction: vi.fn(async () => undefined),
 }));

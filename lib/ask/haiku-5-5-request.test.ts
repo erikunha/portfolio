@@ -1,22 +1,11 @@
 import { NextRequest } from 'next/server';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { drain, streamTextResult } from '@/__tests__/helpers/modules';
 import { askErrors } from '@/content/ask-errors';
 
 const mockStreamText = vi.fn();
 
 vi.mock('ai', () => ({ streamText: mockStreamText }));
-
-function makeStreamTextResult(text = 'ok', finishReason = 'stop') {
-  return {
-    finishReason: Promise.resolve(finishReason),
-    textStream: {
-      async *[Symbol.asyncIterator]() {
-        yield text;
-      },
-    },
-    usage: Promise.resolve({ inputTokens: 10, outputTokens: 1 }),
-  };
-}
 
 vi.mock('@/lib/server/client-ip', () => ({ getClientIp: vi.fn(() => '127.0.0.1') }));
 vi.mock('@/lib/rate-limit', () => ({
@@ -39,9 +28,7 @@ vi.mock('@/lib/ask/interaction-log', () => ({
   persistAskInteraction: vi.fn(async () => undefined),
 }));
 vi.mock('@/lib/ip-hash', () => ({ hashIp: vi.fn(async () => 'hashed-ip-test') }));
-vi.mock('@/lib/log', () => ({
-  log: { info: vi.fn(), error: vi.fn(), warn: vi.fn(), debug: vi.fn() },
-}));
+vi.mock('@/lib/log', async () => (await import('@/__tests__/helpers/modules')).logModule());
 
 function makeRequest(question = 'Who is Erik?'): NextRequest {
   return new NextRequest('http://localhost/api/ask', {
@@ -51,13 +38,9 @@ function makeRequest(question = 'Who is Erik?'): NextRequest {
   });
 }
 
-async function drain(res: Response): Promise<string> {
-  return res.text();
-}
-
 beforeEach(() => {
   vi.resetModules();
-  mockStreamText.mockReset().mockReturnValue(makeStreamTextResult());
+  mockStreamText.mockReset().mockReturnValue(streamTextResult({ finishReason: 'stop' }));
   for (const key of [
     'UPSTASH_REDIS_REST_URL',
     'UPSTASH_REDIS_REST_TOKEN',
@@ -113,7 +96,9 @@ describe('/api/ask request shape for Haiku 5.5', () => {
   });
 
   it('ends a refused answer with the refusal line instead of a silent cut or the interrupted line', async () => {
-    mockStreamText.mockReturnValueOnce(makeStreamTextResult('partial', 'content-filter'));
+    mockStreamText.mockReturnValueOnce(
+      streamTextResult({ text: 'partial', finishReason: 'content-filter' }),
+    );
     const { POST } = await import('@/app/api/ask/route');
     const { REFUSAL_PREFIX } = await import('@/lib/stream-protocol');
     const res = await POST(makeRequest());

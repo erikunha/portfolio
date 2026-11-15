@@ -24,9 +24,7 @@ vi.mock('@/lib/ip-hash', () => ({ hashIp: vi.fn(async () => 'hashed-ip') }));
 vi.mock('@/lib/server/after-response', () => ({
   afterResponse: (task: () => Promise<void>) => void task(),
 }));
-vi.mock('@/lib/log', () => ({
-  log: { info: vi.fn(), error: vi.fn(), warn: vi.fn(), debug: vi.fn() },
-}));
+vi.mock('@/lib/log', async () => (await import('@/__tests__/helpers/modules')).logModule());
 
 function request(body: unknown, headers: Record<string, string> = {}): Request {
   return new Request('http://localhost/api/ask', {

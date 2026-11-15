@@ -8,9 +8,9 @@ const del = vi.hoisted(() => vi.fn());
 const logError = vi.hoisted(() => vi.fn());
 
 vi.mock('@/lib/redis', () => ({ getRedis: () => ({ set, del }) }));
-vi.mock('@/lib/log', () => ({
-  log: { info: vi.fn(), warn: vi.fn(), error: logError, debug: vi.fn() },
-}));
+vi.mock('@/lib/log', async () =>
+  (await import('@/__tests__/helpers/modules')).logModule({ error: logError }),
+);
 
 const IP_HASH = 'hashed-ip';
 const QUESTION = 'What does Erik build?';

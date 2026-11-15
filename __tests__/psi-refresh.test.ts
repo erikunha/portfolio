@@ -29,9 +29,7 @@ vi.mock('@/lib/redis', () => ({
 
 vi.mock('resend', async () => (await import('./helpers/modules')).resendModule(sendMock));
 
-vi.mock('@/lib/log', () => ({
-  log: { info: vi.fn(), error: vi.fn(), warn: vi.fn(), debug: vi.fn() },
-}));
+vi.mock('@/lib/log', async () => (await import('@/__tests__/helpers/modules')).logModule());
 
 function makeRequest(): NextRequest {
   return new NextRequest('http://localhost/api/psi-refresh', {

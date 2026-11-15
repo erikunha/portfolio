@@ -19,9 +19,7 @@ vi.mock('@upstash/ratelimit', () => {
   Ratelimit.fixedWindow = fixedWindow;
   return { Ratelimit };
 });
-vi.mock('@/lib/log', () => ({
-  log: { info: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn() },
-}));
+vi.mock('@/lib/log', async () => (await import('@/__tests__/helpers/modules')).logModule());
 
 type Getter =
   | 'getAskLimit'

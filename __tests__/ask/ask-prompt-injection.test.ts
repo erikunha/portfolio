@@ -2,23 +2,13 @@ import type { NextRequest } from 'next/server';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { INJECTION_RE } from '@/lib/ask/injection';
 import { askRequest } from '../helpers/ask-route';
+import { streamTextResult } from '../helpers/modules';
 
 const mockStreamText = vi.fn();
 
 vi.mock('ai', () => ({
   streamText: mockStreamText,
 }));
-
-function makeStreamTextResult(text: string) {
-  return {
-    textStream: {
-      async *[Symbol.asyncIterator]() {
-        yield text;
-      },
-    },
-    usage: Promise.resolve({ inputTokens: 10, outputTokens: 1 }),
-  };
-}
 
 vi.mock('@/lib/server/client-ip', async () =>
   (await import('../helpers/ask-route')).clientIpModule(),
@@ -86,7 +76,7 @@ describe('/api/ask prompt-injection sanitization', () => {
 
   for (const sample of LEGITIMATE_SAMPLES) {
     it(`accepts and forwards to Anthropic for: ${sample}`, async () => {
-      mockStreamText.mockReturnValueOnce(makeStreamTextResult('ok'));
+      mockStreamText.mockReturnValueOnce(streamTextResult({ text: 'ok' }));
       const { POST } = await import('@/app/api/ask/route');
       const res = await POST(makeRequest(sample));
       expect(res.status).toBe(200);
@@ -103,7 +93,7 @@ describe('/api/ask prompt-injection sanitization', () => {
   }
 
   it('wraps user input in per-request sentinel delimiters before forwarding', async () => {
-    mockStreamText.mockReturnValueOnce(makeStreamTextResult('ok'));
+    mockStreamText.mockReturnValueOnce(streamTextResult({ text: 'ok' }));
     const { POST } = await import('@/app/api/ask/route');
     await POST(makeRequest('What is your stack?'));
     const content = userContentOf(mockStreamText.mock.calls[0]?.[0]);
@@ -117,7 +107,7 @@ describe('/api/ask prompt-injection sanitization', () => {
   });
 
   it('uses a different sentinel per request (entropy holds)', async () => {
-    mockStreamText.mockReturnValue(makeStreamTextResult('ok'));
+    mockStreamText.mockReturnValue(streamTextResult({ text: 'ok' }));
     const { POST } = await import('@/app/api/ask/route');
     await POST(makeRequest('first request'));
     await POST(makeRequest('second request'));
@@ -131,7 +121,7 @@ describe('/api/ask prompt-injection sanitization', () => {
   });
 
   it('passes the system prompt as cache-controlled instructions', async () => {
-    mockStreamText.mockReturnValueOnce(makeStreamTextResult('ok'));
+    mockStreamText.mockReturnValueOnce(streamTextResult({ text: 'ok' }));
     const { POST } = await import('@/app/api/ask/route');
     await POST(makeRequest('What is your stack?'));
     const callArg = mockStreamText.mock.calls[0]?.[0] as {

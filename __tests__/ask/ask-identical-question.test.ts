@@ -1,6 +1,7 @@
 import type { NextRequest } from 'next/server';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { askRequest } from '../helpers/ask-route';
+import { streamTextResult } from '../helpers/modules';
 
 const mockStreamText = vi.fn();
 const checkIdenticalQuestionMock = vi.fn();
@@ -9,17 +10,6 @@ const reserveBudgetMock = vi.fn();
 vi.mock('ai', () => ({
   streamText: mockStreamText,
 }));
-
-function makeStreamTextResult(text = 'ok') {
-  return {
-    textStream: {
-      async *[Symbol.asyncIterator]() {
-        yield text;
-      },
-    },
-    usage: Promise.resolve({ inputTokens: 10, outputTokens: 1 }),
-  };
-}
 
 vi.mock('@/lib/server/client-ip', async () =>
   (await import('../helpers/ask-route')).clientIpModule(),
@@ -82,7 +72,7 @@ describe('/api/ask identical-question gate', () => {
       pct: 0,
       budgetKey: 'ask:tokens:test',
     });
-    mockStreamText.mockReturnValue(makeStreamTextResult());
+    mockStreamText.mockReturnValue(streamTextResult());
 
     const { POST } = await import('@/app/api/ask/route');
     const res = await POST(makeRequest('A fresh question'));

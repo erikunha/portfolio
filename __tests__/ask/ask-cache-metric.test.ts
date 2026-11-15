@@ -1,6 +1,7 @@
 import type { NextRequest } from 'next/server';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { askRequest, readBody } from '../helpers/ask-route';
+import { streamTextResult } from '../helpers/modules';
 
 const mockStreamText = vi.fn();
 
@@ -52,31 +53,6 @@ function makeRequest(question = 'What is your stack?'): NextRequest {
   return askRequest({ question });
 }
 
-function makeStreamTextResult(opts: {
-  inputTokens: number;
-  cacheReadInputTokens: number;
-  cacheCreationInputTokens: number;
-  outputTokens: number;
-  text: string;
-}) {
-  return {
-    textStream: {
-      async *[Symbol.asyncIterator]() {
-        yield opts.text;
-      },
-    },
-    usage: Promise.resolve({
-      inputTokens: opts.inputTokens + opts.cacheReadInputTokens + opts.cacheCreationInputTokens,
-      outputTokens: opts.outputTokens,
-      inputTokenDetails: {
-        noCacheTokens: opts.inputTokens,
-        cacheReadTokens: opts.cacheReadInputTokens,
-        cacheWriteTokens: opts.cacheCreationInputTokens,
-      },
-    }),
-  };
-}
-
 function armUpstream(opts: {
   inputTokens: number;
   cacheReadInputTokens: number;
@@ -84,7 +60,20 @@ function armUpstream(opts: {
   outputTokens: number;
   text: string;
 }): void {
-  mockStreamText.mockReturnValue(makeStreamTextResult(opts));
+  mockStreamText.mockReturnValue(
+    streamTextResult({
+      text: opts.text,
+      usage: Promise.resolve({
+        inputTokens: opts.inputTokens + opts.cacheReadInputTokens + opts.cacheCreationInputTokens,
+        outputTokens: opts.outputTokens,
+        inputTokenDetails: {
+          noCacheTokens: opts.inputTokens,
+          cacheReadTokens: opts.cacheReadInputTokens,
+          cacheWriteTokens: opts.cacheCreationInputTokens,
+        },
+      }),
+    }),
+  );
 }
 
 describe('/api/ask: cache-hit accounting (STANDARDS.md Ch.7)', () => {

@@ -10,7 +10,9 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock('@/lib/mail', () => ({ sendMail: mocks.sendMail }));
 vi.mock('@/lib/env', () => ({ env: mocks.env }));
-vi.mock('@/lib/log', () => ({ log: mocks.log }));
+vi.mock('@/lib/log', async () =>
+  (await import('@/__tests__/helpers/modules')).logModule(mocks.log),
+);
 
 const SENDER_NAME = 'Ada Lovelace';
 const SENDER_EMAIL = 'ada.private@example.org';

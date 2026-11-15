@@ -20,9 +20,7 @@ vi.mock('@upstash/redis', () => ({
   },
 }));
 vi.mock('@upstash/ratelimit', () => ({ Ratelimit: { slidingWindow: () => ({}) } }));
-vi.mock('@/lib/log', () => ({
-  log: { info: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn() },
-}));
+vi.mock('@/lib/log', async () => (await import('@/__tests__/helpers/modules')).logModule());
 
 const RESERVATION = askReservationCost(512);
 const SETTLED_COST = askBudgetCost({

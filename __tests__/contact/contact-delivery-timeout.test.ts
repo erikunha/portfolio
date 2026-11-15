@@ -9,9 +9,7 @@ vi.mock('resend', async () => (await import('../helpers/modules')).resendModule(
 
 vi.mock('@/lib/env', () => ({ env: { RESEND_API_KEY: 're_test_key' } }));
 
-vi.mock('@/lib/log', () => ({
-  log: { info: vi.fn(), error: vi.fn(), warn: vi.fn(), debug: vi.fn() },
-}));
+vi.mock('@/lib/log', async () => (await import('@/__tests__/helpers/modules')).logModule());
 
 const CONTACT_TIMEOUT_MS = 10_000;
 

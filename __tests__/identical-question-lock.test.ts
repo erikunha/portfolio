@@ -14,9 +14,7 @@ vi.mock('@upstash/redis', () => ({
   Redis: { fromEnv: () => ({ set: setMock, del: delMock }) },
 }));
 vi.mock('@upstash/ratelimit', () => ({ Ratelimit: { slidingWindow: () => ({}) } }));
-vi.mock('@/lib/log', () => ({
-  log: { info: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn() },
-}));
+vi.mock('@/lib/log', async () => (await import('@/__tests__/helpers/modules')).logModule());
 
 const IP = 'hashed-ip';
 const QUESTION = 'What does Erik build?';

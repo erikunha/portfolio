@@ -1,6 +1,7 @@
 import type { NextRequest } from 'next/server';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { askRequest } from '../helpers/ask-route';
+import { streamTextResult } from '../helpers/modules';
 
 const mockStreamText = vi.fn();
 const rateLimitMock = vi.fn(async () => ({ success: true }));
@@ -15,17 +16,6 @@ const persistMock = vi.fn(async () => undefined);
 vi.mock('ai', () => ({
   streamText: mockStreamText,
 }));
-
-function makeStreamTextResult(text = 'ok') {
-  return {
-    textStream: {
-      async *[Symbol.asyncIterator]() {
-        yield text;
-      },
-    },
-    usage: Promise.resolve({ inputTokens: 10, outputTokens: 1 }),
-  };
-}
 
 vi.mock('@/lib/server/client-ip', async () =>
   (await import('../helpers/ask-route')).clientIpModule(),
@@ -106,7 +96,7 @@ describe('/api/ask kill switch: behavioral (PR 7, replaces source-grep)', () => 
 
   it("passes the request through when ASK_ENABLED='true'", async () => {
     vi.stubEnv('ASK_ENABLED', 'true');
-    mockStreamText.mockReturnValue(makeStreamTextResult());
+    mockStreamText.mockReturnValue(streamTextResult());
     const { POST } = await import('@/app/api/ask/route');
     const res = await POST(makeRequest());
     expect(res.status).toBe(200);
@@ -125,7 +115,7 @@ describe('/api/ask kill switch: behavioral (PR 7, replaces source-grep)', () => 
 
   it('also passes when ASK_ENABLED is unset (treated as on)', async () => {
     vi.stubEnv('ASK_ENABLED', '');
-    mockStreamText.mockReturnValue(makeStreamTextResult());
+    mockStreamText.mockReturnValue(streamTextResult());
     const { POST } = await import('@/app/api/ask/route');
     const res = await POST(makeRequest());
     expect(res.status).toBe(200);
@@ -142,7 +132,7 @@ describe('/api/ask kill switch: behavioral (PR 7, replaces source-grep)', () => 
   it('does NOT reject on arbitrary non-off keywords (`maybe`, `yes`, `enabled`)', async () => {
     for (const value of ['maybe', 'yes', 'enabled']) {
       vi.stubEnv('ASK_ENABLED', value);
-      mockStreamText.mockReturnValueOnce(makeStreamTextResult());
+      mockStreamText.mockReturnValueOnce(streamTextResult());
       const { POST } = await import('@/app/api/ask/route');
       const res = await POST(makeRequest());
       expect(res.status).toBe(200);

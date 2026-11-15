@@ -1,6 +1,7 @@
 import type { NextRequest } from 'next/server';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { askRequest } from '../helpers/ask-route';
+import { drain } from '../helpers/modules';
 
 const SECRET_QUESTION = 'what is the salary expectation canary-7f3a91';
 const logError = vi.fn();
@@ -44,14 +45,6 @@ vi.mock('@/lib/ip-hash', async () => (await import('../helpers/ask-route')).ipHa
 vi.mock('@/lib/log', async () =>
   (await import('../helpers/ask-route')).logModule({ error: logError }),
 );
-
-async function drain(res: Response): Promise<void> {
-  const reader = res.body?.getReader();
-  if (!reader) return;
-  while (!(await reader.read()).done) {
-    /* drain */
-  }
-}
 
 function ask(): NextRequest {
   return askRequest({ question: SECRET_QUESTION });

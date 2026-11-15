@@ -8,9 +8,7 @@ const PERSIST_TIME_BOUND_MS = 100;
 const redisSet = vi.hoisted(() => vi.fn(async (..._args: unknown[]) => 'OK'));
 
 vi.mock('@/lib/redis', () => ({ getRedis: vi.fn(() => ({ set: redisSet })) }));
-vi.mock('@/lib/log', () => ({
-  log: { info: vi.fn(), error: vi.fn(), warn: vi.fn(), debug: vi.fn() },
-}));
+vi.mock('@/lib/log', async () => (await import('@/__tests__/helpers/modules')).logModule());
 
 const interaction = {
   requestId: 'req-cost',

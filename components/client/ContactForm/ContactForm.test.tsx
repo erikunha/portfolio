@@ -431,9 +431,7 @@ vi.mock('@/lib/ip-hash', () => ({
   hashIp: vi.fn(async () => 'hashed-ip-test'),
 }));
 
-vi.mock('@/lib/log', () => ({
-  log: { info: vi.fn(), error: vi.fn(), warn: vi.fn(), debug: vi.fn() },
-}));
+vi.mock('@/lib/log', async () => (await import('@/__tests__/helpers/modules')).logModule());
 
 vi.mock('resend', async () =>
   (await import('../../../__tests__/helpers/modules')).resendModule(resendSendMock),

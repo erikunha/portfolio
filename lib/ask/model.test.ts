@@ -1,21 +1,11 @@
 import { NextRequest } from 'next/server';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { drain, streamTextResult } from '@/__tests__/helpers/modules';
 import { ASK_MODEL } from '@/lib/ask/model';
 
 const mockStreamText = vi.fn();
 
 vi.mock('ai', () => ({ streamText: mockStreamText }));
-
-function makeStreamTextResult(text = 'ok') {
-  return {
-    textStream: {
-      async *[Symbol.asyncIterator]() {
-        yield text;
-      },
-    },
-    usage: Promise.resolve({ inputTokens: 10, outputTokens: 1 }),
-  };
-}
 
 vi.mock('@/lib/server/client-ip', () => ({ getClientIp: vi.fn(() => '127.0.0.1') }));
 vi.mock('@/lib/rate-limit', () => ({
@@ -38,9 +28,7 @@ vi.mock('@/lib/ask/interaction-log', () => ({
   persistAskInteraction: vi.fn(async () => undefined),
 }));
 vi.mock('@/lib/ip-hash', () => ({ hashIp: vi.fn(async () => 'hashed-ip-test') }));
-vi.mock('@/lib/log', () => ({
-  log: { info: vi.fn(), error: vi.fn(), warn: vi.fn(), debug: vi.fn() },
-}));
+vi.mock('@/lib/log', async () => (await import('@/__tests__/helpers/modules')).logModule());
 
 function makeRequest(question = 'Who is Erik?'): NextRequest {
   return new NextRequest('http://localhost/api/ask', {
@@ -50,18 +38,9 @@ function makeRequest(question = 'Who is Erik?'): NextRequest {
   });
 }
 
-async function drain(res: Response): Promise<void> {
-  const reader = res.body?.getReader();
-  if (!reader) return;
-  while (true) {
-    const { done } = await reader.read();
-    if (done) break;
-  }
-}
-
 beforeEach(() => {
   vi.resetModules();
-  mockStreamText.mockReset().mockReturnValue(makeStreamTextResult());
+  mockStreamText.mockReset().mockReturnValue(streamTextResult());
   for (const key of [
     'UPSTASH_REDIS_REST_URL',
     'UPSTASH_REDIS_REST_TOKEN',

@@ -18,9 +18,9 @@ vi.mock('@/lib/redis', () => ({
     pipeline: () => ({ incrby: pipelineIncrby, expire, exec: pipelineExec }),
   }),
 }));
-vi.mock('@/lib/log', () => ({
-  log: { info: vi.fn(), warn: logWarn, error: logError, debug: vi.fn() },
-}));
+vi.mock('@/lib/log', async () =>
+  (await import('@/__tests__/helpers/modules')).logModule({ warn: logWarn, error: logError }),
+);
 
 const MONTH = 'ask:spend:2026-11';
 const DAY = 'ask:spend:day:2026-11-15';

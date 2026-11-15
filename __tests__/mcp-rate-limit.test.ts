@@ -14,9 +14,7 @@ vi.mock('@/app/api/ask/route', () => ({
 vi.mock('@/lib/ask/stream', async () =>
   (await import('./helpers/ask-route')).streamModuleFromRoute(),
 );
-vi.mock('@/lib/log', () => ({
-  log: { info: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn() },
-}));
+vi.mock('@/lib/log', async () => (await import('@/__tests__/helpers/modules')).logModule());
 
 const GET_PROFILE_CALL = JSON.stringify({
   jsonrpc: '2.0',
