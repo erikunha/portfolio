@@ -1,7 +1,7 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { dirname, join, normalize } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { AI_PATHS } from '../detect-changes-paths.mjs';
+import { AI_PATHS } from '../ci/detect-changes-paths.ts';
 
 const ROOTS = ['app/api/ask/route.ts', 'scripts/eval/ask-eval.ts'];
 
@@ -59,7 +59,7 @@ describe('AI_PATHS covers the import closure of the ask route and the eval runne
     const missing = importClosure(ROOTS).filter((file) => !covered(file));
     expect(
       missing,
-      `a module the ask route or the eval runner imports is outside AI_PATHS: a change to it skips the eval and calibration gate. Add these lines to AI_PATHS in scripts/detect-changes-paths.mjs:\n${pasteLines(missing)}`,
+      `a module the ask route or the eval runner imports is outside AI_PATHS: a change to it skips the eval and calibration gate. Add these lines to AI_PATHS in scripts/ci/detect-changes-paths.ts:\n${pasteLines(missing)}`,
     ).toEqual([]);
   });
 

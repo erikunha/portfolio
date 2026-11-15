@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { canonicalJSON, computeCategories } from '../../scripts/detect-changes.mjs';
-import { AI_PATHS, APP_PATHS, UI_PATHS } from '../../scripts/detect-changes-paths.mjs';
+import { canonicalJSON, computeCategories } from '../../scripts/ci/detect-changes.ts';
+import { AI_PATHS, APP_PATHS, UI_PATHS } from '../../scripts/ci/detect-changes-paths.ts';
 
 describe('detect-changes-paths manifest: `ui` filter (visual / Argos gate)', () => {
   it('excludes package.json so a script-only edit does not trip the visual suite', () => {

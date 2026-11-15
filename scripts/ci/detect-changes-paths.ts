@@ -1,4 +1,4 @@
-export const AI_PATHS = [
+export const AI_PATHS: readonly string[] = [
   'app/api/ask/',
   'lib/ask/',
   'lib/ask-log.ts',
@@ -47,7 +47,7 @@ export const AI_PATHS = [
   '.github/workflows/ci.yml',
 ];
 
-export const APP_PATHS = [
+export const APP_PATHS: readonly string[] = [
   'app/',
   'components/',
   'design-system/',
@@ -79,7 +79,7 @@ export const APP_PATHS = [
   'pnpm-lock.yaml',
 ];
 
-export const UI_PATHS = [
+export const UI_PATHS: readonly string[] = [
   'app/',
   'components/',
   'design-system/',
@@ -105,7 +105,7 @@ export const UI_PATHS = [
   ':(exclude)lib/__tests__/**',
 ];
 
-export const IGNORED_PATHS = [
+export const IGNORED_PATHS: readonly string[] = [
   '.env.example',
   '.gitignore',
   '.gitleaks.toml',
@@ -141,8 +141,7 @@ export const IGNORED_PATHS = [
   'scripts/gates/check-component-docs-coverage.ts',
   'scripts/gates/check-dep-pinning.ts',
   'scripts/gates/check-dependency-vetting.ts',
-  'scripts/check-detect-changes-paths.d.mts',
-  'scripts/check-detect-changes-paths.mjs',
+  'scripts/gates/check-detect-changes-paths.ts',
   'scripts/gates/check-doc-drift.ts',
   'scripts/gates/check-gitleaks-fixture.ts',
   'scripts/gates/check-harness-size.ts',
@@ -154,10 +153,8 @@ export const IGNORED_PATHS = [
   'scripts/gates/check-test-integrity.ts',
   'scripts/ci/ci-full.ts',
   'scripts/gates/contrast-check.ts',
-  'scripts/detect-changes-paths.d.mts',
-  'scripts/detect-changes-paths.mjs',
-  'scripts/detect-changes.d.mts',
-  'scripts/detect-changes.mjs',
+  'scripts/ci/detect-changes-paths.ts',
+  'scripts/ci/detect-changes.ts',
   'scripts/codegen/changelog-merge.ts',
   'scripts/codegen/generate-brand-icons.ts',
   'scripts/codegen/generate-og-image.ts',

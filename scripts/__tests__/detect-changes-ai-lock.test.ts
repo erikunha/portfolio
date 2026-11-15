@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { inheritedEnvWithIsolatedGit } from '../../__tests__/helpers/hermetic-git';
-import { aiDependencyVersions, computeCategories } from '../detect-changes.mjs';
+import { aiDependencyVersions, computeCategories } from '../ci/detect-changes.ts';
 
 const SUBPROCESS_TEST_TIMEOUT_MS = 60_000;
 
@@ -64,7 +64,7 @@ describe('computeCategories with an AI dependency lockfile change', () => {
 describe('detect-changes main() on a lockfile-only commit', {
   timeout: SUBPROCESS_TEST_TIMEOUT_MS,
 }, () => {
-  const runner = resolve(process.cwd(), 'scripts/detect-changes.mjs');
+  const runner = resolve(process.cwd(), 'scripts/ci/detect-changes.ts');
 
   function categoriesFor(baseLock: string, headLock: string): string {
     const dir = mkdtempSync(join(tmpdir(), 'dc-ailock-'));

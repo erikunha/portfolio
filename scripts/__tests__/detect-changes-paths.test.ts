@@ -4,8 +4,8 @@ import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { inheritedEnvWithIsolatedGit } from '../../__tests__/helpers/hermetic-git';
-import { computeCategories } from '../detect-changes.mjs';
-import { AI_PATHS, APP_PATHS, UI_PATHS } from '../detect-changes-paths.mjs';
+import { computeCategories } from '../ci/detect-changes.ts';
+import { AI_PATHS, APP_PATHS, UI_PATHS } from '../ci/detect-changes-paths.ts';
 
 const SUBPROCESS_TEST_TIMEOUT_MS = 60_000;
 

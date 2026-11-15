@@ -47,9 +47,10 @@ function importWithBareNode(script: string): { status: number | null; stderr: st
 describe('scripts a workflow runs with bare node', () => {
   const scripts = bareNodeScripts();
 
-  it('includes the high-risk label, tool pins and hook installer scripts', () => {
+  it('includes the high-risk label, change detection, tool pins and hook installer scripts', () => {
     expect(scripts).toEqual(
       expect.arrayContaining([
+        'scripts/ci/detect-changes.ts',
         'scripts/ci/high-risk-paths.ts',
         'scripts/gates/check-tool-pins.ts',
         'scripts/install/prepare-hooks.ts',

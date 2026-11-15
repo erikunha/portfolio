@@ -1,13 +1,13 @@
 import { execFileSync } from 'node:child_process';
 import { describe, expect, it } from 'vitest';
+import { AI_PATHS, APP_PATHS, IGNORED_PATHS, UI_PATHS } from '../ci/detect-changes-paths.ts';
 import {
   assertResolves,
   classifyPathspec,
   globMatches,
   isGateScoped,
   unclassifiedFiles,
-} from '../check-detect-changes-paths.mjs';
-import { AI_PATHS, APP_PATHS, IGNORED_PATHS, UI_PATHS } from '../detect-changes-paths.mjs';
+} from '../gates/check-detect-changes-paths.ts';
 
 describe('classifyPathspec', () => {
   it('classifies literal, glob, and exclude pathspecs with the right base', () => {
