@@ -119,3 +119,15 @@ export function dedupModule(overrides: Record<string, unknown> = {}) {
     ...overrides,
   };
 }
+
+export async function streamModuleFromRoute() {
+  const { POST } = await import('@/app/api/ask/route');
+  return {
+    startAsk: async (req: Request) => {
+      const response = await POST(req);
+      return response.ok
+        ? { ok: true, requestId: response.headers.get('X-Request-Id'), readable: response.body }
+        : { ok: false, response };
+    },
+  };
+}

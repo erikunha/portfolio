@@ -11,17 +11,9 @@ vi.mock('@/lib/rate-limit', () => ({ getMcpLimit: vi.fn(() => ({ limit })) }));
 vi.mock('@/app/api/ask/route', () => ({
   POST: vi.fn(async () => new Response('answer')),
 }));
-vi.mock('@/lib/ask/stream', async () => {
-  const { POST } = await import('@/app/api/ask/route');
-  return {
-    startAsk: async (req: Request) => {
-      const response = await POST(req);
-      return response.ok
-        ? { ok: true, requestId: response.headers.get('X-Request-Id'), readable: response.body }
-        : { ok: false, response };
-    },
-  };
-});
+vi.mock('@/lib/ask/stream', async () =>
+  (await import('./helpers/ask-route')).streamModuleFromRoute(),
+);
 vi.mock('@/lib/log', () => ({
   log: { info: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn() },
 }));
