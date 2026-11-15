@@ -53,6 +53,13 @@ describe('sendMail', () => {
     expect(sendMock.mock.calls[0]?.[1]).not.toHaveProperty('idempotencyKey');
   });
 
+  it('omits the reply-to address when none is given', async () => {
+    const { sendMail } = await import('@/lib/mail');
+    const { replyTo: _omit, ...rest } = MAIL;
+    await sendMail(rest);
+    expect(sendMock.mock.calls[0]?.[0]).not.toHaveProperty('replyTo');
+  });
+
   it('returns the provider error', async () => {
     const providerError = { name: 'validation_error', message: 'bad' };
     sendMock.mockResolvedValue({ data: null, error: providerError });
