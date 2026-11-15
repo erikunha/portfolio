@@ -5,6 +5,21 @@ export type WindowChromeProps = ComponentPropsWithoutRef<'div'> & {
   size?: number;
 };
 
+type WindowChromeDot = {
+  key: 'red' | 'yellow' | 'green';
+  colorClass: string;
+};
+
+const WINDOW_CHROME_DOTS: readonly WindowChromeDot[] = [
+  { key: 'red', colorClass: 'bg-senary-500' },
+  { key: 'yellow', colorClass: 'bg-quinary-500' },
+  { key: 'green', colorClass: 'bg-primary-600' },
+];
+
+const DOT_BASE_CLASS = 'block flex-shrink-0 rounded-full';
+
+const DOT_STYLE = { width: 'var(--wc-dot-size)', height: 'var(--wc-dot-size)' };
+
 export function WindowChrome({ size = 10, className, style, ...rest }: WindowChromeProps) {
   return (
     <div
@@ -12,24 +27,15 @@ export function WindowChrome({ size = 10, className, style, ...rest }: WindowChr
       style={{ '--wc-dot-size': `${size}px`, ...style } as React.CSSProperties}
       {...rest}
     >
-      <span
-        aria-hidden="true"
-        className="block flex-shrink-0 rounded-full bg-senary-500"
-        style={{ width: 'var(--wc-dot-size)', height: 'var(--wc-dot-size)' }}
-        data-dot="red"
-      />
-      <span
-        aria-hidden="true"
-        className="block flex-shrink-0 rounded-full bg-quinary-500"
-        style={{ width: 'var(--wc-dot-size)', height: 'var(--wc-dot-size)' }}
-        data-dot="yellow"
-      />
-      <span
-        aria-hidden="true"
-        className="block flex-shrink-0 rounded-full bg-primary-600"
-        style={{ width: 'var(--wc-dot-size)', height: 'var(--wc-dot-size)' }}
-        data-dot="green"
-      />
+      {WINDOW_CHROME_DOTS.map((dot) => (
+        <span
+          key={dot.key}
+          aria-hidden="true"
+          className={`${DOT_BASE_CLASS} ${dot.colorClass}`}
+          style={DOT_STYLE}
+          data-dot={dot.key}
+        />
+      ))}
     </div>
   );
 }
