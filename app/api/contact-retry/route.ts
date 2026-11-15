@@ -9,11 +9,9 @@ import {
   isContactRetryExpired,
   removePendingContact,
 } from '@/lib/contact/outbox';
-import { env } from '@/lib/env';
-import { HTTP_STATUS } from '@/lib/http-status';
 import { log } from '@/lib/log';
-import { isCronAuthorized } from '@/lib/server/cron-auth';
-import { err, ok } from '@/lib/server/route';
+import { requireCron } from '@/lib/server/cron-auth';
+import { ok } from '@/lib/server/route';
 
 const DROP_REASON = { expired: 'expired', exhausted: 'exhausted' } as const;
 type DropReason = (typeof DROP_REASON)[keyof typeof DROP_REASON];
@@ -26,15 +24,8 @@ const RETRY_START_DEADLINE_MS = MAX_DURATION_MS - SEND_TIMEOUT_MS - SAFETY_MARGI
 export const maxDuration = 60;
 
 export async function GET(req: NextRequest): Promise<Response> {
-  const cronSecret = env.CRON_SECRET;
-  if (!isCronAuthorized(req, cronSecret)) {
-    return err({
-      requestId: crypto.randomUUID(),
-      status: HTTP_STATUS.unauthorized,
-      code: 'unauthorized',
-      message: 'unauthorized',
-    });
-  }
+  const denied = requireCron(req);
+  if (denied) return denied;
 
   const startedAt = Date.now();
   const requestId = crypto.randomUUID();

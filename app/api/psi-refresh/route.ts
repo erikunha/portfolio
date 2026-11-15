@@ -6,8 +6,7 @@ import { refreshScores, type Strategy } from '@/lib/lighthouse-scores';
 import { log } from '@/lib/log';
 import { sendMail } from '@/lib/mail';
 import { getRedis } from '@/lib/redis';
-import { isCronAuthorized } from '@/lib/server/cron-auth';
-import { err } from '@/lib/server/route';
+import { requireCron } from '@/lib/server/cron-auth';
 
 const PSI_CONSEC_KEY = (s: Strategy) => `meta:psi-consec-failures:${s}`;
 const PSI_CONSEC_TTL_S = 604_800;
@@ -18,15 +17,8 @@ const PSI_ALERT_FROM = 'alerts@erikunha.dev';
 export const maxDuration = 60;
 
 export async function GET(req: NextRequest): Promise<Response> {
-  const cronSecret = env.CRON_SECRET;
-  if (!isCronAuthorized(req, cronSecret)) {
-    return err({
-      requestId: crypto.randomUUID(),
-      status: HTTP_STATUS.unauthorized,
-      code: 'unauthorized',
-      message: 'unauthorized',
-    });
-  }
+  const denied = requireCron(req);
+  if (denied) return denied;
 
   const t0 = Date.now();
   const [desktopResult, mobileResult] = await Promise.allSettled([
