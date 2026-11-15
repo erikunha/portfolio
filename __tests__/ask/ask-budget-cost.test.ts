@@ -123,14 +123,14 @@ describe('the ask budget measures cost, not raw token count', () => {
   });
 
   it('keeps the monthly dollar ceiling at or below the old 3M-token cap priced at Haiku 4.5 input', async () => {
-    const { MONTHLY_BUDGET_USD } = await import('@/lib/rate-limit');
+    const { MONTHLY_BUDGET_USD } = await import('@/lib/ask/budget');
     expect(MONTHLY_BUDGET_USD).toBeLessThanOrEqual(
       (OLD_MONTHLY_TOKEN_CAP / TOKENS_PER_MTOK) * HAIKU_4_5_INPUT_USD_PER_MTOK,
     );
   });
 
   it('admits hundreds of cache-hit asks a day where 8 exhausted the old token slice', async () => {
-    const { reserveBudget, settleBudget } = await import('@/lib/rate-limit');
+    const { reserveBudget, settleBudget } = await import('@/lib/ask/budget');
     let admitted = 0;
     let refusal: string | undefined;
     while (admitted < SAFETY_ASK_LIMIT) {
@@ -158,7 +158,7 @@ describe('the ask budget measures cost, not raw token count', () => {
   });
 
   it('still bounds a day of all-miss asks by dollars', async () => {
-    const { MONTHLY_BUDGET_USD, reserveBudget, settleBudget } = await import('@/lib/rate-limit');
+    const { MONTHLY_BUDGET_USD, reserveBudget, settleBudget } = await import('@/lib/ask/budget');
     const { askBudgetCost } = await import('@/lib/ask/usage');
     const missCost = askBudgetCost(CACHE_MISS_USAGE);
     let spent = 0;
@@ -183,7 +183,7 @@ describe('the ask budget measures cost, not raw token count', () => {
   });
 
   it('settles the monthly and the daily counter to exactly the metered cost', async () => {
-    const { reserveBudget, settleBudget } = await import('@/lib/rate-limit');
+    const { reserveBudget, settleBudget } = await import('@/lib/ask/budget');
     const { askBudgetCost } = await import('@/lib/ask/usage');
     const { reserved, budgetKey, dailyKey } = await reserveBudget(ASK_MAX_OUTPUT_TOKENS);
     expect(counters.get(budgetKey)).toBe(reserved);
@@ -203,7 +203,7 @@ describe('the ask budget measures cost, not raw token count', () => {
   });
 
   it('charges the overage when metered cost exceeds the reservation', async () => {
-    const { reserveBudget, settleBudget } = await import('@/lib/rate-limit');
+    const { reserveBudget, settleBudget } = await import('@/lib/ask/budget');
     const { askBudgetCost } = await import('@/lib/ask/usage');
     const { reserved, budgetKey, dailyKey } = await reserveBudget(ASK_MAX_OUTPUT_TOKENS);
     const huge = {
@@ -220,7 +220,7 @@ describe('the ask budget measures cost, not raw token count', () => {
   });
 
   it('prices input at the full rate when the caller has no cache split', async () => {
-    const { reserveBudget, settleBudget } = await import('@/lib/rate-limit');
+    const { reserveBudget, settleBudget } = await import('@/lib/ask/budget');
     const { reserved, budgetKey, dailyKey } = await reserveBudget(ASK_MAX_OUTPUT_TOKENS);
     await settleBudget(reserved, 1000, 0, budgetKey, dailyKey);
     expect(counters.get(budgetKey)).toBe(100_000);

@@ -72,7 +72,8 @@ describe('ask route under the eval harness budget store', () => {
   });
 
   it('answers a full corpus-sized run with Redis unreachable', async () => {
-    const { createEvalBudgetStore, setBudgetStore } = await import('@/lib/rate-limit');
+    const { createEvalBudgetStore } = await import('@/lib/eval/budget-store');
+    const { setBudgetStore } = await import('@/lib/ask/budget');
     setBudgetStore(createEvalBudgetStore(RUN_REQUESTS));
     const { POST } = await import('@/app/api/ask/route');
 
@@ -85,7 +86,8 @@ describe('ask route under the eval harness budget store', () => {
   });
 
   it('holds the run bound against the route reservation even when no completion settles', async () => {
-    const { createEvalBudgetStore, setBudgetStore } = await import('@/lib/rate-limit');
+    const { createEvalBudgetStore } = await import('@/lib/eval/budget-store');
+    const { setBudgetStore } = await import('@/lib/ask/budget');
     setBudgetStore(createEvalBudgetStore(RUN_REQUESTS));
     streamTextMock.mockImplementation(() => ({
       textStream: (async function* () {

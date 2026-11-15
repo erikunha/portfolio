@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { getBudgetKey, getDailyBudgetKey } from '@/lib/rate-limit';
+import { getBudgetKey, getDailyBudgetKey } from '@/lib/ask/budget';
 
 const LEGACY_TOKEN_KEY_PREFIX = 'ask:tokens:';
 

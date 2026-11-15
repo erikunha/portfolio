@@ -101,7 +101,7 @@ describe('budget reservation pattern', () => {
 
   it('rejects the reservation when Redis throws', async () => {
     pipelineExec.mockRejectedValueOnce(new Error('Redis unavailable'));
-    const { reserveBudget } = await import('@/lib/rate-limit');
+    const { reserveBudget } = await import('@/lib/ask/budget');
     const result = await reserveBudget(512);
     expect(result).toMatchObject({ allowed: false, reserved: 0, reason: 'store' });
   });
@@ -142,7 +142,7 @@ describe('budget reservation pattern', () => {
   });
 
   it('reserves the worst-case cost of the input reservation and maxOutputTokens upfront and allows within cap', async () => {
-    const { reserveBudget } = await import('@/lib/rate-limit');
+    const { reserveBudget } = await import('@/lib/ask/budget');
     const result = await reserveBudget(512);
     expect(result.allowed).toBe(true);
     expect(result.reserved).toBe(RESERVATION);
@@ -151,7 +151,7 @@ describe('budget reservation pattern', () => {
 
   it('rejects and refunds the reservation when it would cross the monthly dollar cap', async () => {
     counter.value = MONTHLY_CAPACITY - RESERVATION + 1;
-    const { reserveBudget } = await import('@/lib/rate-limit');
+    const { reserveBudget } = await import('@/lib/ask/budget');
     const result = await reserveBudget(512);
     expect(result.allowed).toBe(false);
     expect(result.reserved).toBe(0);
@@ -159,7 +159,7 @@ describe('budget reservation pattern', () => {
   });
 
   it('settleBudget refunds (reserved - actual) when actual is less than reserved', async () => {
-    const { reserveBudget, settleBudget } = await import('@/lib/rate-limit');
+    const { reserveBudget, settleBudget } = await import('@/lib/ask/budget');
     const result = await reserveBudget(512);
     const { reserved, budgetKey } = result;
     decrbyMock.mockClear();
@@ -171,7 +171,7 @@ describe('budget reservation pattern', () => {
   });
 
   it('settleBudget charges the overage when actual usage exceeds the reservation', async () => {
-    const { settleBudget } = await import('@/lib/rate-limit');
+    const { settleBudget } = await import('@/lib/ask/budget');
     decrbyMock.mockClear();
     const reserved = RESERVATION;
     counter.value = reserved;
@@ -181,7 +181,7 @@ describe('budget reservation pattern', () => {
   });
 
   it('settleBudget leaves the counter alone when actual equals the reservation', async () => {
-    const { settleBudget } = await import('@/lib/rate-limit');
+    const { settleBudget } = await import('@/lib/ask/budget');
     decrbyMock.mockClear();
     const exact = costOf(600, 400);
     counter.value = exact;
@@ -191,7 +191,7 @@ describe('budget reservation pattern', () => {
   });
 
   it('settleBudget skips when there is no positive reservation', async () => {
-    const { settleBudget } = await import('@/lib/rate-limit');
+    const { settleBudget } = await import('@/lib/ask/budget');
     decrbyMock.mockClear();
     await settleBudget(0, 100, 200, 'ask:tokens:test');
     expect(decrbyMock).not.toHaveBeenCalled();
@@ -200,7 +200,7 @@ describe('budget reservation pattern', () => {
   it('rejects and refunds both reservations when the daily slice would be crossed', async () => {
     const nearlySpentDay = DAILY_CAPACITY - RESERVATION + 1;
     dailyCounter.value = nearlySpentDay;
-    const { reserveBudget } = await import('@/lib/rate-limit');
+    const { reserveBudget } = await import('@/lib/ask/budget');
     const result = await reserveBudget(512);
     expect(result.allowed).toBe(false);
     expect(result.reserved).toBe(0);
@@ -210,7 +210,7 @@ describe('budget reservation pattern', () => {
   });
 
   it('settleBudget refunds the daily key as well as the monthly one', async () => {
-    const { reserveBudget, settleBudget } = await import('@/lib/rate-limit');
+    const { reserveBudget, settleBudget } = await import('@/lib/ask/budget');
     const { reserved, budgetKey, dailyKey } = await reserveBudget(512);
     await settleBudget(reserved, 120, 80, budgetKey, dailyKey);
     expect(counter.value).toBe(costOf(120, 80));

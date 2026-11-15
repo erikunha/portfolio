@@ -1,7 +1,7 @@
 // @vitest-environment node
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import type { BudgetStore } from '@/lib/rate-limit';
+import type { BudgetStore } from '@/lib/ask/budget';
 
 vi.mock('@upstash/ratelimit', () => ({ Ratelimit: { slidingWindow: () => ({}) } }));
 vi.mock('@/lib/log', () => ({
@@ -31,19 +31,19 @@ describe('why a budget reservation was refused', () => {
   });
 
   it('names the month when the monthly cap is crossed', async () => {
-    const { reserveBudget, setBudgetStore } = await import('@/lib/rate-limit');
+    const { reserveBudget, setBudgetStore } = await import('@/lib/ask/budget');
     setBudgetStore(storeReserving(OVER_CAPACITY, 0));
     expect(await reserveBudget(512)).toMatchObject({ allowed: false, reason: 'month' });
   });
 
   it('names the day when only the daily slice is crossed', async () => {
-    const { reserveBudget, setBudgetStore } = await import('@/lib/rate-limit');
+    const { reserveBudget, setBudgetStore } = await import('@/lib/ask/budget');
     setBudgetStore(storeReserving(0, OVER_CAPACITY));
     expect(await reserveBudget(512)).toMatchObject({ allowed: false, reason: 'day' });
   });
 
   it('names the store when the daily reservation throws', async () => {
-    const { reserveBudget, setBudgetStore } = await import('@/lib/rate-limit');
+    const { reserveBudget, setBudgetStore } = await import('@/lib/ask/budget');
     setBudgetStore({
       ...storeReserving(0, 0),
       reserve: async (key) => {
@@ -59,7 +59,7 @@ describe('why a budget reservation was refused', () => {
     vi.stubEnv('UPSTASH_REDIS_REST_TOKEN', '');
     vi.stubEnv('KV_REST_API_URL', '');
     vi.stubEnv('KV_REST_API_TOKEN', '');
-    const { reserveBudget } = await import('@/lib/rate-limit');
+    const { reserveBudget } = await import('@/lib/ask/budget');
     const result = await reserveBudget(512);
     expect(
       result,
@@ -68,7 +68,7 @@ describe('why a budget reservation was refused', () => {
   });
 
   it('carries no refusal reason on a granted reservation', async () => {
-    const { reserveBudget, setBudgetStore } = await import('@/lib/rate-limit');
+    const { reserveBudget, setBudgetStore } = await import('@/lib/ask/budget');
     setBudgetStore(storeReserving(0, 0));
     const result = await reserveBudget(512);
     expect(result.allowed).toBe(true);
