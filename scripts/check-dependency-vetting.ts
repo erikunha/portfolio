@@ -1,7 +1,7 @@
 #!/usr/bin/env tsx
-import { existsSync, readFileSync, realpathSync } from 'node:fs';
-import { extname, join, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { existsSync, readFileSync } from 'node:fs';
+import { join, resolve } from 'node:path';
+import { isMain } from './lib/is-main';
 
 const DEPENDENCY_BLOCKS = ['dependencies', 'devDependencies', 'optionalDependencies'] as const;
 const INSTALL_SCRIPTS = ['preinstall', 'install', 'postinstall'] as const;
@@ -163,12 +163,4 @@ function main(): void {
   process.exit(EXIT_VIOLATION);
 }
 
-function isMainModule(): boolean {
-  const entry = process.argv[1];
-  if (!entry) return false;
-  const self = realpathSync(fileURLToPath(import.meta.url));
-  const candidate = [entry, `${entry}${extname(self)}`].find((path) => existsSync(path));
-  return candidate !== undefined && realpathSync(candidate) === self;
-}
-
-if (isMainModule()) main();
+if (isMain(import.meta.url)) main();

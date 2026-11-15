@@ -1,8 +1,8 @@
 #!/usr/bin/env tsx
-import { readdirSync, readFileSync, realpathSync, statSync } from 'node:fs';
+import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
-import { pathToFileURL } from 'node:url';
 import ts from 'typescript';
+import { isMain } from './lib/is-main';
 
 export type ViolationKind = 'focused' | 'no-assertion' | 'skip-without-reason';
 export type Violation = { file: string; line: number; kind: ViolationKind };
@@ -499,9 +499,4 @@ function main() {
   console.log(`[check-test-integrity] OK: ${files} test files checked.`);
 }
 
-if (
-  typeof process.argv[1] === 'string' &&
-  import.meta.url === pathToFileURL(realpathSync(process.argv[1])).href
-) {
-  main();
-}
+if (isMain(import.meta.url)) main();

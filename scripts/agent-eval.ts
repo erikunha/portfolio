@@ -1,8 +1,7 @@
 #!/usr/bin/env tsx
 
-import { realpathSync, writeFileSync } from 'node:fs';
+import { writeFileSync } from 'node:fs';
 import path from 'node:path';
-import { pathToFileURL } from 'node:url';
 import { AGENT_EVAL_CALIBRATION } from '@/evals/agents/calibration';
 import { type LoadedCase, loadCases } from '@/evals/agents/load';
 import { type AbCase, selectAbCases } from '@/evals/agents/schema';
@@ -37,6 +36,7 @@ import {
 import { publishWithCredentials } from '@/lib/eval/redis-publish';
 import { MONTE_CARLO_TEMPERATURE, runTarget } from '@/lib/eval/run-target';
 import type { CalibrationResult } from '@/lib/eval/types';
+import { isMain } from './lib/is-main';
 
 export const MODELS = {
   mechanical: 'anthropic/claude-haiku-4-5',
@@ -399,11 +399,7 @@ async function main(): Promise<void> {
   console.log('\nGATE PASSED');
 }
 
-const invokedDirectly =
-  typeof process.argv[1] === 'string' &&
-  import.meta.url === pathToFileURL(realpathSync(process.argv[1])).href;
-
-if (invokedDirectly) {
+if (isMain(import.meta.url)) {
   main().catch((err) => {
     console.error('agent-eval: fatal error', err);
     process.exit(1);
