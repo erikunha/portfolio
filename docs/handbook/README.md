@@ -32,33 +32,17 @@ The handbook routes to the other two rather than duplicating them.
 ## The platform in one picture
 
 ```mermaid
-flowchart TB
-    subgraph people["Human + AI"]
-        dev["Developer (single, owner)"]
-        claude["Claude Code agents"]
-    end
-    subgraph context["Context layer"]
-        cl["AGENTS.md + .claude/rules/* + skills + memory"]
-        docs["STANDARDS.md · DECISIONS.md · /docs"]
-    end
-    subgraph enforce["Enforcement layer"]
-        husky[".husky/* git hooks"]
-        gates["scripts/check-* + the verify chain"]
-        ci["GitHub Actions: ci, review, scheduled scans and evals, smoke"]
-    end
-    subgraph knowledge["Knowledge layer"]
-        specs["specs/NNN-feature/ (local-only)"]
-        adr["DECISIONS.md (architectural decisions)"]
-        mem["auto memory (user-global, runtime-dependent)"]
-    end
-    dev --> claude
-    claude --> context
-    context --> enforce
-    claude --> enforce
-    review["PR review workflows"] --> enforce
-    enforce --> knowledge
+flowchart LR
+    people["Developer and agents"] --> context["Context"] --> enforce["Enforcement"] --> knowledge["Knowledge"]
     knowledge --> context
 ```
+
+| Layer | What it holds |
+| --- | --- |
+| Developer and agents | The single owner and Claude Code agents. Agents also run checks directly; PR review workflows feed enforcement too. |
+| Context | `AGENTS.md`, `.claude/rules/*`, skills and memory; `STANDARDS.md`, `DECISIONS.md` and `/docs`. |
+| Enforcement | `.husky/*` git hooks, the `scripts/check-*` gates and the verify chain, and GitHub Actions (CI, review, scheduled scans and evals, smoke). |
+| Knowledge | Local-only `specs/NNN-feature/`, `DECISIONS.md` and the user-global auto memory. What it records feeds the context for the next change. |
 
 ## Enforcement boundaries
 
