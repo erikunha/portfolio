@@ -5,7 +5,7 @@ import { fillShellState, ShellLineKind, shellStates, shellUi } from '@/content/s
 import { SITE_LOCALE } from '@/content/site-locale';
 import { FORGET_OUTCOME, type ForgetResult } from '@/lib/ask/forget-request.client';
 import { PRIVACY_COMMAND_KIND, type PrivacyCommand } from './privacy-command';
-import type { Line } from './useAskStream';
+import type { Line } from './transcript';
 import { usePrivacyCommands } from './usePrivacyCommands';
 
 const mocks = vi.hoisted(() => ({

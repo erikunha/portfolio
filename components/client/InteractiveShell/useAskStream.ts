@@ -28,9 +28,7 @@ import {
   SITE_LOCALE_HEADER,
 } from '@/lib/stream-protocol';
 import { MS_PER_SECOND } from '@/lib/time';
-import { bounded, formatRemaining, type Line } from './transcript';
-
-export { bounded, type Line };
+import { appendLines, formatRemaining, type Line } from './transcript';
 
 type FailureDetail = { prefix?: string; hint?: boolean; retryAfter?: number; retry?: string };
 type ActiveRequest = { stop: () => void; dispose: () => void };
@@ -102,7 +100,7 @@ export function useAskStream({
       let timer: ReturnType<typeof setTimeout> | undefined;
       setBusy(true);
       setHistory((lines) =>
-        bounded([...lines, { id: loadingId, kind: ShellLineKind.Loading, text: '' }]),
+        appendLines(lines, { id: loadingId, kind: ShellLineKind.Loading, text: '' }),
       );
       announce(ui.thinking);
 
@@ -157,12 +155,12 @@ export function useAskStream({
           lines.push({ id: nextId(), kind: ShellLineKind.Reference, text: requestId });
         }
         setHistory((previous) =>
-          bounded([
-            ...previous.filter(
+          appendLines(
+            previous.filter(
               (line) => line.id !== loadingId && !(logged && line.kind === ShellLineKind.Reference),
             ),
             ...lines,
-          ]),
+          ),
         );
         setStreamingText(null);
         setBusy(false);

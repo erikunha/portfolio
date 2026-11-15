@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { SHELL_LIMITS, ShellLineKind } from '@/content/shell-ui';
-import { bounded, formatRemaining, type Line } from './transcript';
+import { appendLines, bounded, formatRemaining, type Line } from './transcript';
 
 const UNITS = { minutesUnit: 'min', secondsUnit: 's' };
 
@@ -31,6 +31,38 @@ describe('bounded', () => {
     expect(result).toHaveLength(SHELL_LIMITS.logEntries);
     expect(result[0]?.id).toBe(count - SHELL_LIMITS.logEntries);
     expect(result.at(-1)?.id).toBe(count - 1);
+  });
+});
+
+describe('appendLines', () => {
+  const extra = lines(3, 1000);
+
+  it('returns the existing lines unchanged when nothing is added', () => {
+    const input = lines(2);
+    expect(appendLines(input)).toEqual(input);
+  });
+
+  it('appends a single line after the existing ones', () => {
+    const input = lines(2);
+    expect(appendLines(input, extra[0] as Line).map((line) => line.id)).toEqual([0, 1, 1000]);
+  });
+
+  it('appends several lines in the order given', () => {
+    expect(appendLines(lines(1), ...extra).map((line) => line.id)).toEqual([0, 1000, 1001, 1002]);
+  });
+
+  it('keeps the newest lines when the result crosses the cap', () => {
+    const result = appendLines(lines(SHELL_LIMITS.logEntries - 1), ...extra);
+    expect(result).toHaveLength(SHELL_LIMITS.logEntries);
+    expect(result[0]?.id).toBe(2);
+    expect(result.slice(-3).map((line) => line.id)).toEqual([1000, 1001, 1002]);
+  });
+
+  it('does not mutate the input array', () => {
+    const input = lines(SHELL_LIMITS.logEntries);
+    const snapshot = [...input];
+    appendLines(input, ...extra);
+    expect(input).toEqual(snapshot);
   });
 });
 

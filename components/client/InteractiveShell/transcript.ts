@@ -26,3 +26,7 @@ export function formatRemaining(
 export function bounded(lines: Line[]): Line[] {
   return lines.slice(-SHELL_LIMITS.logEntries);
 }
+
+export function appendLines(lines: Line[], ...added: Line[]): Line[] {
+  return bounded([...lines, ...added]);
+}

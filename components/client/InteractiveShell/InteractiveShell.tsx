@@ -23,7 +23,8 @@ import { revealShell, SHELL_LIVE_PROPS } from './reveal-shell';
 import { ShellLine, StopElapsed } from './ShellLines.client';
 import { ShellToolbar } from './ShellToolbar.client';
 import { ShellKey } from './shell-keys';
-import { bounded, type Line, useAskStream } from './useAskStream';
+import { appendLines, type Line } from './transcript';
+import { useAskStream } from './useAskStream';
 import { HISTORY_STEP, useCommandHistory } from './useCommandHistory';
 import { usePrivacyCommands } from './usePrivacyCommands';
 
@@ -95,8 +96,8 @@ export function InteractiveShell({
   const onConversationForgotten = useCallback(
     (questions: number) => {
       setHistory((lines) =>
-        bounded([
-          ...lines.filter((line) => line.kind !== ShellLineKind.Reference),
+        appendLines(
+          lines.filter((line) => line.kind !== ShellLineKind.Reference),
           { id: nextId(), kind: ShellLineKind.Output, text: ui.conversationForgotten },
           {
             id: nextId(),
@@ -106,7 +107,7 @@ export function InteractiveShell({
                 ? ui.conversationForgottenOne
                 : fillShellState(ui.conversationForgottenMany, { count: String(questions) }),
           },
-        ]),
+        ),
       );
       focusInput();
     },
@@ -163,10 +164,11 @@ export function InteractiveShell({
       commandHistory.record(command);
       window.dispatchEvent(new CustomEvent(SHELL_COMMAND_EVENT));
       setHistory((lines) =>
-        bounded([
-          ...lines,
-          { id: nextId(), kind: ShellLineKind.Prompt, text: `${ui.prompt} ${command}` },
-        ]),
+        appendLines(lines, {
+          id: nextId(),
+          kind: ShellLineKind.Prompt,
+          text: `${ui.prompt} ${command}`,
+        }),
       );
       promptEditedRef.current = false;
       setInput('');
@@ -182,10 +184,12 @@ export function InteractiveShell({
       }
       if (local) {
         setHistory((lines) =>
-          bounded([
-            ...lines,
-            { id: nextId(), kind: local.kind, text: local.text, lang: SHELL_RESPONSE_LANG },
-          ]),
+          appendLines(lines, {
+            id: nextId(),
+            kind: local.kind,
+            text: local.text,
+            lang: SHELL_RESPONSE_LANG,
+          }),
         );
         announce(ui.commandComplete);
         focusInput();
