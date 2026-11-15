@@ -1,8 +1,9 @@
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { execFileSync } from 'node:child_process';
+import { describe, expect, it } from 'vitest';
 import config from '../playwright.config';
 
-const VISUAL_SPEC_PATH = '/repo/tests/visual/visual.spec.ts';
-const DESIGN_SYSTEM_COMPONENTS_SPEC_PATH = '/repo/tests/e2e/design-system-components.spec.ts';
+const VISUAL_SPEC_PATH = 'visual/visual.spec.ts';
+const DESIGN_SYSTEM_COMPONENTS_SPEC_PATH = 'e2e/design-system-components.spec.ts';
 const CI_VISUAL_PROJECTS = ['chromium', 'chromium-mobile'];
 const WEBKIT_PROJECTS = ['webkit-desktop', 'webkit-mobile'];
 const DESIGN_SYSTEM_COMPONENTS_PROJECTS = ['chromium'];
@@ -23,40 +24,62 @@ const ALL_PROJECTS = new Set([
 ]);
 const CI_ENV_VALUE = '1';
 
-type ConfigProject = NonNullable<typeof config.projects>[number];
+const LIST_TIMEOUT_MS = 120_000;
+const LIST_BUFFER_BYTES = 256 * 1024 * 1024;
 
-function runsSpec(name: string, specPath: string): boolean {
-  const project = config.projects?.find((candidate) => candidate.name === name);
-  if (!project) throw new Error(`project ${name} missing from playwright.config.ts`);
-  if (project.testMatch === undefined) return true;
-  const matchers = Array.isArray(project.testMatch) ? project.testMatch : [project.testMatch];
-  return matchers.some((matcher) => matcher instanceof RegExp && matcher.test(specPath));
+interface ListedSpec {
+  file: string;
+  tests: Array<{ projectName: string }>;
 }
 
-function findProject(projects: ConfigProject[], name: string): ConfigProject {
-  const project = projects.find((candidate) => candidate.name === name);
-  if (!project) throw new Error(`project ${name} missing from playwright.config.ts`);
-  return project;
+interface ListedSuite {
+  specs?: ListedSpec[];
+  suites?: ListedSuite[];
 }
 
-function projectIgnoresSpec(project: ConfigProject, specPath: string): boolean {
-  if (project.testIgnore === undefined) return false;
-  const matchers = Array.isArray(project.testIgnore) ? project.testIgnore : [project.testIgnore];
-  return matchers.some((matcher) => matcher instanceof RegExp && matcher.test(specPath));
+function collectSpecs(suite: ListedSuite, into: ListedSpec[]): ListedSpec[] {
+  into.push(...(suite.specs ?? []));
+  for (const child of suite.suites ?? []) collectSpecs(child, into);
+  return into;
 }
 
-function projectRunsSpec(project: ConfigProject, specPath: string): boolean {
-  if (projectIgnoresSpec(project, specPath)) return false;
-  if (project.testMatch === undefined) return true;
-  const matchers = Array.isArray(project.testMatch) ? project.testMatch : [project.testMatch];
-  return matchers.some((matcher) => matcher instanceof RegExp && matcher.test(specPath));
+const selectionByMode = new Map<boolean, Map<string, Set<string>>>();
+
+function selectedSpecsPerProject(ciMode: boolean): Map<string, Set<string>> {
+  const cached = selectionByMode.get(ciMode);
+  if (cached) return cached;
+  const output = execFileSync('pnpm', ['exec', 'playwright', 'test', '--list', '--reporter=json'], {
+    cwd: process.cwd(),
+    encoding: 'utf8',
+    env: { ...process.env, CI: ciMode ? CI_ENV_VALUE : '' },
+    maxBuffer: LIST_BUFFER_BYTES,
+    stdio: ['ignore', 'pipe', 'ignore'],
+    timeout: LIST_TIMEOUT_MS,
+  });
+  const report = JSON.parse(output) as { suites: ListedSuite[] };
+  const perProject = new Map<string, Set<string>>();
+  for (const suite of report.suites) {
+    for (const spec of collectSpecs(suite, [])) {
+      for (const test of spec.tests) {
+        const files = perProject.get(test.projectName) ?? new Set<string>();
+        files.add(spec.file);
+        perProject.set(test.projectName, files);
+      }
+    }
+  }
+  selectionByMode.set(ciMode, perProject);
+  return perProject;
 }
 
-async function loadConfigWithCiEnv(ciMode: boolean): Promise<typeof config> {
-  vi.resetModules();
-  vi.stubEnv('CI', ciMode ? CI_ENV_VALUE : undefined);
-  const reloaded = await import('../playwright.config');
-  return reloaded.default;
+function projectRunsSpec(name: string, specFile: string, ciMode: boolean): boolean {
+  if (!config.projects?.some((candidate) => candidate.name === name)) {
+    throw new Error(`project ${name} missing from playwright.config.ts`);
+  }
+  return selectedSpecsPerProject(ciMode).get(name)?.has(specFile) ?? false;
+}
+
+function runsSpec(name: string, specFile: string): boolean {
+  return projectRunsSpec(name, specFile, false);
 }
 
 describe('visual regression project set', () => {
@@ -108,27 +131,21 @@ describe('design-system component baseline project set', () => {
 });
 
 describe('design-system component spec CI exclusion', () => {
-  afterEach(() => {
-    vi.unstubAllEnvs();
-  });
-
   it.each(DESIGN_SYSTEM_COMPONENTS_PROJECTS)(
     '%s ignores the design-system component spec in CI mode, because its baseline is darwin-only',
-    async (name) => {
-      const ciConfig = await loadConfigWithCiEnv(true);
-      const project = findProject(ciConfig.projects ?? [], name);
+    (name) => {
       expect(
-        projectIgnoresSpec(project, DESIGN_SYSTEM_COMPONENTS_SPEC_PATH),
+        projectRunsSpec(name, DESIGN_SYSTEM_COMPONENTS_SPEC_PATH, true),
         `${name} would run tests/e2e/design-system-components.spec.ts in CI, whose baseline exists only on darwin, so every CI run would fail on a baseline no CI job can regenerate`,
-      ).toBe(true);
+      ).toBe(false);
     },
   );
 
-  it('no project runs the design-system component spec in CI mode', async () => {
-    const ciConfig = await loadConfigWithCiEnv(true);
-    const runningInCi = (ciConfig.projects ?? [])
-      .filter((project) => projectRunsSpec(project, DESIGN_SYSTEM_COMPONENTS_SPEC_PATH))
-      .map((project) => project.name);
+  it('no project runs the design-system component spec in CI mode', () => {
+    const runningInCi = (config.projects ?? [])
+      .map((project) => project.name)
+      .filter((name): name is string => name !== undefined)
+      .filter((name) => projectRunsSpec(name, DESIGN_SYSTEM_COMPONENTS_SPEC_PATH, true));
     expect(
       runningInCi,
       'a project running tests/e2e/design-system-components.spec.ts in CI would compare a darwin-only baseline that no CI job regenerates, so every CI run would fail on a baseline no CI job can regenerate',
@@ -137,11 +154,9 @@ describe('design-system component spec CI exclusion', () => {
 
   it.each(DESIGN_SYSTEM_COMPONENTS_PROJECTS)(
     '%s runs the design-system component spec outside CI mode, so the darwin baseline can be regenerated',
-    async (name) => {
-      const localConfig = await loadConfigWithCiEnv(false);
-      const project = findProject(localConfig.projects ?? [], name);
+    (name) => {
       expect(
-        projectRunsSpec(project, DESIGN_SYSTEM_COMPONENTS_SPEC_PATH),
+        projectRunsSpec(name, DESIGN_SYSTEM_COMPONENTS_SPEC_PATH, false),
         `${name} must run tests/e2e/design-system-components.spec.ts on darwin, otherwise the darwin-only baseline could never be regenerated and would rot against the component it covers`,
       ).toBe(true);
     },
