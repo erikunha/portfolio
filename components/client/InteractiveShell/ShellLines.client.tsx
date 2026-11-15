@@ -7,7 +7,7 @@ import { asciiBar } from '@/lib/ascii-bar';
 import { MS_PER_SECOND } from '@/lib/time';
 import { ConversationReceipt } from './ConversationReceipt.client';
 import { ShellEmail } from './ShellEmail';
-import { formatRemaining, type Line, type LineKind } from './useAskStream';
+import { formatRemaining, type Line, type LineKind } from './transcript';
 import { useElapsedSeconds } from './useElapsed.client';
 
 const KIND_CLASS: Record<LineKind, string> = {

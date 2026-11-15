@@ -27,43 +27,21 @@ import {
   RETRY_AFTER_HEADER,
   SITE_LOCALE_HEADER,
 } from '@/lib/stream-protocol';
-import { MS_PER_SECOND, SECONDS_PER_MINUTE } from '@/lib/time';
+import { MS_PER_SECOND } from '@/lib/time';
+import { bounded, formatRemaining, type Line } from './transcript';
 
-export type LineKind = (typeof ShellLineKind)[keyof typeof ShellLineKind];
-export type Line = {
-  id: number;
-  kind: LineKind;
-  text: string;
-  ai?: boolean;
-  prefix?: string;
-  retryAfter?: number;
-  retry?: string;
-  welcome?: true;
-  lang?: string;
-};
+export { bounded, type Line };
+
 type FailureDetail = { prefix?: string; hint?: boolean; retryAfter?: number; retry?: string };
 type ActiveRequest = { stop: () => void; dispose: () => void };
 
 const ASK_ENDPOINT = '/api/ask';
-
-export function formatRemaining(
-  seconds: number,
-  states: Pick<(typeof shellStates)['en'], 'minutesUnit' | 'secondsUnit'>,
-): string {
-  return seconds >= SECONDS_PER_MINUTE
-    ? `${Math.ceil(seconds / SECONDS_PER_MINUTE)} ${states.minutesUnit}`
-    : `${seconds} ${states.secondsUnit}`;
-}
 
 function streamFailureMessage(errorMessage: string, ui: ShellUi): string {
   if (errorMessage.startsWith(GUARD_ABORT_PREFIX)) return ui.answerWithheld;
   return errorMessage.startsWith(REFUSAL_PREFIX)
     ? errorMessage.slice(REFUSAL_PREFIX.length)
     : errorMessage;
-}
-
-export function bounded(lines: Line[]): Line[] {
-  return lines.slice(-SHELL_LIMITS.logEntries);
 }
 
 type AskStreamOptions = {

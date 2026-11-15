@@ -14,7 +14,7 @@ import { type ForgetResult, forgetMany, wasForgotten } from '@/lib/ask/forget-re
 import { listRefs } from '@/lib/request-refs.client';
 import { describeForget } from './forget-message';
 import { PRIVACY_COMMAND_KIND, type PrivacyCommand } from './privacy-command';
-import { bounded, type Line, type LineKind } from './useAskStream';
+import { bounded, type Line, type LineKind } from './transcript';
 
 type Entry = { kind: LineKind; text: string };
 
