@@ -1,15 +1,21 @@
-#!/usr/bin/env node
-
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
-const LIMITS = JSON.parse(readFileSync(new URL('./harness-size.json', import.meta.url), 'utf8'));
+interface HarnessLimit {
+  maxLines: number;
+}
+
+const FAILURE_EXIT_CODE = 1;
+
+const LIMITS = JSON.parse(
+  readFileSync(new URL('./harness-size.json', import.meta.url), 'utf8'),
+) as Record<string, HarnessLimit>;
 
 let failed = false;
 
 for (const [file, { maxLines }] of Object.entries(LIMITS)) {
   const filePath = resolve(file);
-  let content;
+  let content: string;
   try {
     content = readFileSync(filePath, 'utf8');
   } catch {
@@ -34,4 +40,4 @@ for (const [file, { maxLines }] of Object.entries(LIMITS)) {
   process.stdout.write(`[harness-size] OK ${file} (${lines}/${maxLines} lines)\n`);
 }
 
-process.exit(failed ? 1 : 0);
+process.exit(failed ? FAILURE_EXIT_CODE : 0);

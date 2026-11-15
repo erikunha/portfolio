@@ -18,10 +18,14 @@ function write(rel: string, body: string): void {
   writeFileSync(abs, body);
 }
 
+const WALK_HELPER = 'scripts/lib/walk.ts';
+
 function install(script: string): string {
-  mkdirSync(join(sandbox, 'scripts'), { recursive: true });
-  copyFileSync(join(REPO, 'scripts', script), join(sandbox, 'scripts', script));
-  return join(sandbox, 'scripts', script);
+  mkdirSync(join(sandbox, 'scripts/gates'), { recursive: true });
+  mkdirSync(join(sandbox, 'scripts/lib'), { recursive: true });
+  copyFileSync(join(REPO, WALK_HELPER), join(sandbox, WALK_HELPER));
+  copyFileSync(join(REPO, 'scripts/gates', script), join(sandbox, 'scripts/gates', script));
+  return join(sandbox, 'scripts/gates', script);
 }
 
 function run(script: string, env: Record<string, string> = {}) {
@@ -45,7 +49,7 @@ describe('check-client-naming', { timeout: SUBPROCESS_TEST_TIMEOUT_MS }, () => {
   const USE_CLIENT = "'use client';\nexport const x = 1;\n";
 
   it('fails on a "use client" file whose name and folder do not mark it as client code', () => {
-    const script = install('check-client-naming.mjs');
+    const script = install('check-client-naming.ts');
     write('components/Widget.tsx', USE_CLIENT);
     const { code, output } = run(script);
     expect(code).toBe(FAIL);
@@ -53,13 +57,13 @@ describe('check-client-naming', { timeout: SUBPROCESS_TEST_TIMEOUT_MS }, () => {
   });
 
   it('passes the same file once it is named *.client.tsx', () => {
-    const script = install('check-client-naming.mjs');
+    const script = install('check-client-naming.ts');
     write('components/Widget.client.tsx', USE_CLIENT);
     expect(run(script).code).toBe(PASS);
   });
 
   it('downgrades to a warning only when the lenient switch is set', () => {
-    const script = install('check-client-naming.mjs');
+    const script = install('check-client-naming.ts');
     write('lib/state.ts', USE_CLIENT);
     expect(run(script).code).toBe(FAIL);
     expect(run(script, { CHECK_CLIENT_NAMING_LENIENT: '1' }).code).toBe(PASS);
@@ -70,7 +74,7 @@ describe('check-component-docs-coverage', { timeout: SUBPROCESS_TEST_TIMEOUT_MS 
   const DOCS_PAGE = 'app/(en)/design-system/components/page.mdx';
 
   it('fails when a design-system component has no heading in the components page', () => {
-    const script = install('check-component-docs-coverage.mjs');
+    const script = install('check-component-docs-coverage.ts');
     mkdirSync(join(sandbox, 'design-system/components/Alpha'), { recursive: true });
     mkdirSync(join(sandbox, 'design-system/components/Beta'), { recursive: true });
     write(DOCS_PAGE, '## Alpha\n');
@@ -81,21 +85,21 @@ describe('check-component-docs-coverage', { timeout: SUBPROCESS_TEST_TIMEOUT_MS 
   });
 
   it('accepts a component documented under an explicit-id h2', () => {
-    const script = install('check-component-docs-coverage.mjs');
+    const script = install('check-component-docs-coverage.ts');
     mkdirSync(join(sandbox, 'design-system/components/NavItem'), { recursive: true });
     write(DOCS_PAGE, '<h2 id="nav-item">NavItem</h2>\n');
     expect(run(script).code).toBe(PASS);
   });
 
   it('does not take a heading that only starts with the component name', () => {
-    const script = install('check-component-docs-coverage.mjs');
+    const script = install('check-component-docs-coverage.ts');
     mkdirSync(join(sandbox, 'design-system/components/Nav'), { recursive: true });
     write(DOCS_PAGE, '## NavItem\n');
     expect(run(script).code).toBe(FAIL);
   });
 
   it('passes when every component has its heading', () => {
-    const script = install('check-component-docs-coverage.mjs');
+    const script = install('check-component-docs-coverage.ts');
     mkdirSync(join(sandbox, 'design-system/components/Alpha'), { recursive: true });
     write(DOCS_PAGE, '## Alpha\n');
     expect(run(script).code).toBe(PASS);
@@ -106,8 +110,8 @@ describe('check-harness-size', { timeout: SUBPROCESS_TEST_TIMEOUT_MS }, () => {
   const LIMITS = JSON.stringify({ 'AGENTS.md': { maxLines: 5 } });
 
   function seed(lines: number): string {
-    const script = install('check-harness-size.mjs');
-    write('scripts/harness-size.json', LIMITS);
+    const script = install('check-harness-size.ts');
+    write('scripts/gates/harness-size.json', LIMITS);
     write('AGENTS.md', `${'rule\n'.repeat(lines)}`);
     return script;
   }
@@ -119,8 +123,8 @@ describe('check-harness-size', { timeout: SUBPROCESS_TEST_TIMEOUT_MS }, () => {
   });
 
   it('fails when a limited file is missing, never reading absence as small', () => {
-    const script = install('check-harness-size.mjs');
-    write('scripts/harness-size.json', LIMITS);
+    const script = install('check-harness-size.ts');
+    write('scripts/gates/harness-size.json', LIMITS);
     expect(run(script).code).toBe(FAIL);
   });
 

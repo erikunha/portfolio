@@ -72,7 +72,7 @@ jobs:
         run: pnpm check:dependency-vetting
 
       - name: Harness size gate
-        run: node scripts/check-harness-size.mjs
+        run: pnpm check:harness-size
 
       - name: Component docs coverage
         run: pnpm check:component-docs

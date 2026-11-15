@@ -12,7 +12,7 @@ import { basename, join } from 'node:path';
 import { parse as parseToml } from 'smol-toml';
 import { describe, expect, it } from 'vitest';
 import { parse as parseYaml } from 'yaml';
-import limits from '../../scripts/harness-size.json';
+import limits from '../../scripts/gates/harness-size.json';
 
 const SUBPROCESS_TEST_TIMEOUT_MS = 60_000;
 

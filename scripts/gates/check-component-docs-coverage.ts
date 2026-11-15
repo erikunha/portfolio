@@ -1,11 +1,11 @@
-#!/usr/bin/env node
 import { readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const componentsDir = path.join(ROOT, 'design-system/components');
 const docsPage = path.join(ROOT, 'app/(en)/design-system/components/page.mdx');
+const FAILURE_EXIT_CODE = 1;
 
 const componentNames = readdirSync(componentsDir, { withFileTypes: true })
   .filter((e) => e.isDirectory())
@@ -24,6 +24,6 @@ for (const name of componentNames) {
 
 if (missing > 0) {
   console.error(`\n${missing} component(s) missing documentation.`);
-  process.exit(1);
+  process.exit(FAILURE_EXIT_CODE);
 }
 console.log(`Component docs coverage OK (${componentNames.length} components).`);

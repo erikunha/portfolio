@@ -4,14 +4,17 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 
-const SCRIPT = path.resolve('scripts/check-client-naming.mjs');
+const SCRIPT = path.resolve('scripts/gates/check-client-naming.ts');
+const WALK_HELPER = path.resolve('scripts/lib/walk.ts');
 const roots: string[] = [];
 
 function run(relativeFile: string) {
   const root = mkdtempSync(path.join(tmpdir(), 'client-naming-'));
   roots.push(root);
-  mkdirSync(path.join(root, 'scripts'));
-  const copy = path.join(root, 'scripts/check-client-naming.mjs');
+  mkdirSync(path.join(root, 'scripts/gates'), { recursive: true });
+  mkdirSync(path.join(root, 'scripts/lib'), { recursive: true });
+  copyFileSync(WALK_HELPER, path.join(root, 'scripts/lib/walk.ts'));
+  const copy = path.join(root, 'scripts/gates/check-client-naming.ts');
   copyFileSync(SCRIPT, copy);
   const file = path.join(root, relativeFile);
   mkdirSync(path.dirname(file), { recursive: true });
