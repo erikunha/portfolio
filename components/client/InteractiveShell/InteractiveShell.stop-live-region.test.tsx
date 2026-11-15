@@ -1,15 +1,9 @@
-import { act, createElement } from 'react';
+import { act } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import {
-  fire,
-  flushFrames,
-  flushMicrotasks,
-  type MountedClient,
-  mountClient,
-} from '@/__tests__/helpers/render';
+import { fire, flushFrames, flushMicrotasks, type MountedClient } from '@/__tests__/helpers/render';
+import { askQuestion, renderShell as mountShell } from '@/__tests__/helpers/shell';
 import { shellUi } from '@/content/shell-ui';
 import { SITE_LOCALE } from '@/content/site-locale';
-import { shellChrome } from '@/content/terminal-chrome';
 
 vi.mock('@/lib/use-breakpoint.client', () => ({
   useBreakpoint: () => ({ isMobile: false }),
@@ -40,14 +34,7 @@ describe('the shell stop control stays outside the live region', () => {
   });
 
   async function renderShell(): Promise<HTMLElement> {
-    const { InteractiveShell } = await import('./InteractiveShell');
-    mounted = await mountClient(
-      createElement(InteractiveShell, {
-        locale: SITE_LOCALE.en,
-        ui,
-        chrome: shellChrome[SITE_LOCALE.en],
-      }),
-    );
+    mounted = await mountShell();
     return mounted.container;
   }
 
@@ -62,18 +49,8 @@ describe('the shell stop control stays outside the live region', () => {
   }
 
   async function ask(container: HTMLElement, question: string): Promise<void> {
-    const field = input(container);
-    const form = container.querySelector<HTMLFormElement>('form');
-    await act(async () => {
-      Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set?.call(
-        field,
-        question,
-      );
-      fire(field, new Event('input', { bubbles: true }));
-    });
-    await act(async () => {
-      fire(form, new Event('submit', { bubbles: true, cancelable: true }));
-    });
+    input(container);
+    await askQuestion(container, question, 0);
   }
 
   it('is not a descendant of the log, of any live region or of a busy subtree', async () => {

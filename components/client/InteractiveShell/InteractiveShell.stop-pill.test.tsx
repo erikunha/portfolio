@@ -1,9 +1,9 @@
-import { act, createElement } from 'react';
+import { act } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { fire, flushMicrotasks, type MountedClient, mountClient } from '@/__tests__/helpers/render';
+import { flushMicrotasks, type MountedClient } from '@/__tests__/helpers/render';
+import { askQuestion, renderShell as mountShell } from '@/__tests__/helpers/shell';
 import { shellUi } from '@/content/shell-ui';
 import { SITE_LOCALE, type SiteLocale } from '@/content/site-locale';
-import { shellChrome } from '@/content/terminal-chrome';
 
 vi.mock('@/lib/use-breakpoint.client', () => ({ useBreakpoint: () => ({ isMobile: false }) }));
 vi.mock('@/lib/motion', () => ({ readMotion: () => false }));
@@ -33,31 +33,12 @@ describe('the stop pill', () => {
   let mounted: MountedClient | undefined;
 
   async function renderShell(locale: SiteLocale = SITE_LOCALE.en) {
-    const { InteractiveShell } = await import('./InteractiveShell');
-    mounted = await mountClient(
-      createElement(InteractiveShell, {
-        locale,
-        ui: shellUi[locale],
-        chrome: shellChrome[locale],
-      }),
-    );
+    mounted = await mountShell(locale);
     return mounted.container;
   }
 
   async function ask(container: HTMLElement) {
-    const input = container.querySelector<HTMLInputElement>('input[name="command"]');
-    const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set;
-    await act(async () => {
-      if (input && setter) setter.call(input, 'who is erik?');
-      fire(input, new Event('input', { bubbles: true }));
-    });
-    await act(async () => {
-      fire(
-        container.querySelector('form'),
-        new Event('submit', { bubbles: true, cancelable: true }),
-      );
-    });
-    await flushMicrotasks();
+    await askQuestion(container, 'who is erik?');
   }
 
   const pill = (container: HTMLElement, locale: SiteLocale = SITE_LOCALE.en) =>
