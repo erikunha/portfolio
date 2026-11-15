@@ -24,7 +24,7 @@ const interaction = {
 };
 
 async function storedQuestion(question: string): Promise<string> {
-  const { persistAskInteraction } = await import('@/lib/ask-log');
+  const { persistAskInteraction } = await import('@/lib/ask/interaction-log');
   await persistAskInteraction({ ...interaction, question });
   const [, value] = redisSet.mock.calls.at(-1) ?? [];
   return (JSON.parse(String(value)) as { question: string }).question;
@@ -40,7 +40,7 @@ describe('ask log redaction cost and cut', () => {
     ['one long local-part run', 'a'.repeat(QUESTION_BODY_BYTES)],
     ['letters then an unfinished domain', `${'a'.repeat(QUESTION_BODY_BYTES - 2)}@b`],
   ])('persists an 8KB question of %s inside the time bound', async (_label, question) => {
-    const { persistAskInteraction } = await import('@/lib/ask-log');
+    const { persistAskInteraction } = await import('@/lib/ask/interaction-log');
     await persistAskInteraction({ ...interaction, question: 'warm up' });
     const startedAt = performance.now();
     await persistAskInteraction({ ...interaction, question });

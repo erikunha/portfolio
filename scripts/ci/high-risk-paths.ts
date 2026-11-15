@@ -23,7 +23,6 @@ export const HIGH_RISK_FILES: readonly string[] = [
   'lib/rate-limit.ts',
   'lib/env.ts',
   'lib/ip-hash.ts',
-  'lib/ask-log.ts',
   'lib/contact-delivery.ts',
   'lib/contact-outbox.ts',
   '.env.example',

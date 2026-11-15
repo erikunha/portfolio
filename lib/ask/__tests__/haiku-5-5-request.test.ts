@@ -30,7 +30,9 @@ vi.mock('@/lib/rate-limit', () => ({
   settleBudget: vi.fn(async () => undefined),
   checkIdenticalQuestion: vi.fn(async () => ({ allowed: true })),
 }));
-vi.mock('@/lib/ask-log', () => ({ persistAskInteraction: vi.fn(async () => undefined) }));
+vi.mock('@/lib/ask/interaction-log', () => ({
+  persistAskInteraction: vi.fn(async () => undefined),
+}));
 vi.mock('@/lib/ip-hash', () => ({ hashIp: vi.fn(async () => 'hashed-ip-test') }));
 vi.mock('@/lib/log', () => ({
   log: { info: vi.fn(), error: vi.fn(), warn: vi.fn(), debug: vi.fn() },

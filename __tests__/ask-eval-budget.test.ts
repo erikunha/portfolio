@@ -14,7 +14,9 @@ const streamTextMock = vi.fn(() => ({
 vi.mock('ai', () => ({ streamText: streamTextMock }));
 vi.mock('@/lib/env', () => ({ env: { ASK_ENABLED: 'true' } }));
 vi.mock('@/lib/ip-hash', () => ({ hashIp: vi.fn(async () => 'test-ip-hash') }));
-vi.mock('@/lib/ask-log', async () => (await import('./helpers/ask-route')).askLogModule());
+vi.mock('@/lib/ask/interaction-log', async () =>
+  (await import('./helpers/ask-route')).askLogModule(),
+);
 vi.mock('@/lib/log', async () => (await import('./helpers/ask-route')).logModule());
 
 const UNREACHABLE = 'Failed to parse URL from /pipeline';

@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { getAskMetrics } from '@/lib/ask-metrics';
+import { getAskMetrics } from '@/lib/ask/metrics';
 
 const { mockGet } = vi.hoisted(() => ({ mockGet: vi.fn() }));
 vi.mock('@/lib/rate-limit', () => ({ getRedis: () => ({ get: mockGet }) }));

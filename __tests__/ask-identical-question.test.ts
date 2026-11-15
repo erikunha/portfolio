@@ -28,7 +28,9 @@ vi.mock('@/lib/rate-limit', async () =>
   }),
 );
 
-vi.mock('@/lib/ask-log', async () => (await import('./helpers/ask-route')).askLogModule());
+vi.mock('@/lib/ask/interaction-log', async () =>
+  (await import('./helpers/ask-route')).askLogModule(),
+);
 
 vi.mock('@/lib/ip-hash', async () => (await import('./helpers/ask-route')).ipHashModule());
 

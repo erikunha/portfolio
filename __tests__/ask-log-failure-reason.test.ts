@@ -12,7 +12,7 @@ const mockStreamText = vi.fn();
 
 vi.mock('ai', () => ({ streamText: mockStreamText }));
 vi.mock('@/lib/rate-limit', async () => (await import('./helpers/ask-route')).rateLimitModule());
-vi.mock('@/lib/ask-log', async () =>
+vi.mock('@/lib/ask/interaction-log', async () =>
   (await import('./helpers/ask-route')).askLogModule(persistMock),
 );
 vi.mock('@/lib/ip-hash', async () => (await import('./helpers/ask-route')).ipHashModule());

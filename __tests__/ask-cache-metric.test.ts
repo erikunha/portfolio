@@ -32,7 +32,7 @@ type PersistedInteraction = {
   status: string;
 };
 const persistMock = vi.fn(async (_interaction: PersistedInteraction): Promise<void> => undefined);
-vi.mock('@/lib/ask-log', async () =>
+vi.mock('@/lib/ask/interaction-log', async () =>
   (await import('./helpers/ask-route')).askLogModule(persistMock),
 );
 

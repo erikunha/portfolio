@@ -40,7 +40,7 @@ describe('lib/ask-log: persistAskInteraction', () => {
 
   it('writes to the date-partitioned ask:log: key with a 90-day TTL', async () => {
     redisSetMock.mockResolvedValueOnce('OK');
-    const { persistAskInteraction } = await import('@/lib/ask-log');
+    const { persistAskInteraction } = await import('@/lib/ask/interaction-log');
     await persistAskInteraction(interaction);
 
     expect(redisSetMock).toHaveBeenCalledOnce();
@@ -51,7 +51,7 @@ describe('lib/ask-log: persistAskInteraction', () => {
 
   it('truncates the question to 500 chars and the answer to 1000 chars', async () => {
     redisSetMock.mockResolvedValueOnce('OK');
-    const { persistAskInteraction } = await import('@/lib/ask-log');
+    const { persistAskInteraction } = await import('@/lib/ask/interaction-log');
     await persistAskInteraction({
       ...interaction,
       question: 'q'.repeat(900),
@@ -66,7 +66,7 @@ describe('lib/ask-log: persistAskInteraction', () => {
 
   it('fails quiet on a KV outage: never throws into the /api/ask path', async () => {
     redisSetMock.mockRejectedValueOnce(new Error('Upstash down'));
-    const { persistAskInteraction } = await import('@/lib/ask-log');
+    const { persistAskInteraction } = await import('@/lib/ask/interaction-log');
     await expect(persistAskInteraction(interaction)).resolves.toBeUndefined();
     expect(logErrorMock).toHaveBeenCalledWith(
       expect.any(String),
@@ -78,7 +78,7 @@ describe('lib/ask-log: persistAskInteraction', () => {
     redisSetMock.mockRejectedValueOnce(
       Object.assign(new Error('Upstash down'), { command: ['SET', 'canary-question-9d2c'] }),
     );
-    const { persistAskInteraction } = await import('@/lib/ask-log');
+    const { persistAskInteraction } = await import('@/lib/ask/interaction-log');
     await persistAskInteraction(interaction);
 
     expect(
@@ -231,7 +231,7 @@ describe('lib/ask-log: persistAskInteraction minimization', () => {
 
   it('stores neither an email address nor a phone number from the question or the answer, and keeps the request id', async () => {
     redisSetMock.mockResolvedValueOnce('OK');
-    const { persistAskInteraction } = await import('@/lib/ask-log');
+    const { persistAskInteraction } = await import('@/lib/ask/interaction-log');
     await persistAskInteraction({
       requestId: 'req-pii-1',
       ts: '2026-11-07T12:00:00.000Z',
@@ -258,7 +258,7 @@ describe('lib/ask-log: persistAskInteraction minimization', () => {
 
   it('redacts before truncating, so a cut address never leaves a readable prefix', async () => {
     redisSetMock.mockResolvedValueOnce('OK');
-    const { persistAskInteraction } = await import('@/lib/ask-log');
+    const { persistAskInteraction } = await import('@/lib/ask/interaction-log');
     const padding = 'x'.repeat(490);
     await persistAskInteraction({
       requestId: 'req-pii-2',

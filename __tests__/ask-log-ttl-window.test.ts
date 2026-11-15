@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { ASK_KV_TTL_S, askLogDatesInTtl } from '@/lib/ask-log';
+import { ASK_KV_TTL_S, askLogDatesInTtl } from '@/lib/ask/interaction-log';
 import { askRequest } from './helpers/ask-route';
 
 const MS_PER_SECOND = 1000;

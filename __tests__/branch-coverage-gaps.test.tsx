@@ -90,7 +90,7 @@ describe('AiMetricsSection: lastRunLabel NaN guard branch', () => {
 
   beforeEach(() => {
     vi.resetModules();
-    vi.doMock('@/lib/ask-metrics', () => ({
+    vi.doMock('@/lib/ask/metrics', () => ({
       getAskMetrics: getAskMetricsMock,
     }));
   });

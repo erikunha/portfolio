@@ -32,7 +32,9 @@ vi.mock('@/lib/ask/model', () => ({ ASK_MODEL: model }));
 
 vi.mock('@/lib/rate-limit', async () => (await import('./helpers/ask-route')).rateLimitModule());
 
-vi.mock('@/lib/ask-log', async () => (await import('./helpers/ask-route')).askLogModule());
+vi.mock('@/lib/ask/interaction-log', async () =>
+  (await import('./helpers/ask-route')).askLogModule(),
+);
 
 vi.mock('@/lib/log', async () => (await import('./helpers/ask-route')).logModule());
 

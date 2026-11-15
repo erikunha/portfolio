@@ -26,7 +26,7 @@ vi.mock('@/lib/lighthouse-scores', () => ({
     fetchedAt: '-',
   },
 }));
-vi.mock('@/lib/ask-metrics', () => ({
+vi.mock('@/lib/ask/metrics', () => ({
   getAskMetrics: getAskMetricsMock,
 }));
 

@@ -4,6 +4,7 @@ import { SITE_LOCALE, type SiteLocale } from '@/content/site-locale';
 import { ASK_FAILURE_REASON, type AskFailureReason } from '@/lib/ask/failure-reason';
 import { countAskGuardFinding } from '@/lib/ask/guard-count';
 import { ASK_RESERVED_INPUT_TOKENS } from '@/lib/ask/input-reservation';
+import { type AskInteractionStatus, persistAskInteraction } from '@/lib/ask/interaction-log';
 import { ASK_MAX_OUTPUT_TOKENS } from '@/lib/ask/limits';
 import { ASK_MODEL } from '@/lib/ask/model';
 import {
@@ -16,7 +17,6 @@ import {
 import type { AskContext } from '@/lib/ask/preflight';
 import { PROMPT_VERSION, SYSTEM_TEXT } from '@/lib/ask/system-prompt';
 import { countAskTokens, emitAskUsage } from '@/lib/ask/usage';
-import { type AskInteractionStatus, persistAskInteraction } from '@/lib/ask-log';
 import { log } from '@/lib/log';
 import { describeError } from '@/lib/log-error';
 import { releaseIdenticalQuestion, settleBudget } from '@/lib/rate-limit';

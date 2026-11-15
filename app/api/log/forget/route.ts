@@ -7,7 +7,7 @@ import {
   isAskLogKey,
   markForgotten,
   storedConversationId,
-} from '@/lib/ask-log';
+} from '@/lib/ask/interaction-log';
 import { contactMessageKey, removePendingContact } from '@/lib/contact-outbox';
 import { HTTP_STATUS } from '@/lib/http-status';
 import { log } from '@/lib/log';

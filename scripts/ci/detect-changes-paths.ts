@@ -1,7 +1,6 @@
 export const AI_PATHS: readonly string[] = [
   'app/api/ask/',
   'lib/ask/',
-  'lib/ask-log.ts',
   'lib/http-status.ts',
   'lib/ip-hash.ts',
   'lib/stream-protocol.ts',
@@ -10,6 +9,7 @@ export const AI_PATHS: readonly string[] = [
   'lib/env.ts',
   'lib/log.ts',
   'lib/log-error.ts',
+  'lib/with-timeout.ts',
   'lib/server/',
   'lib/agent/',
   'lib/hiring-profile.ts',

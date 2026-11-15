@@ -26,7 +26,9 @@ vi.mock('@/lib/rate-limit', async () =>
     settleBudget: settleBudgetMock,
   }),
 );
-vi.mock('@/lib/ask-log', async () => (await import('./helpers/ask-route')).askLogModule());
+vi.mock('@/lib/ask/interaction-log', async () =>
+  (await import('./helpers/ask-route')).askLogModule(),
+);
 vi.mock('@/lib/ip-hash', async () => (await import('./helpers/ask-route')).ipHashModule());
 vi.mock('@/lib/log', async () =>
   (await import('./helpers/ask-route')).logModule({ error: logError }),

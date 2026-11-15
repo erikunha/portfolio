@@ -33,7 +33,7 @@ vi.mock('@/lib/rate-limit', async () =>
     checkIdenticalQuestion: dedupMock,
   }),
 );
-vi.mock('@/lib/ask-log', async () =>
+vi.mock('@/lib/ask/interaction-log', async () =>
   (await import('./helpers/ask-route')).askLogModule(persistMock),
 );
 vi.mock('@/lib/ask/refusal-count', () => ({ countAskRefusal: countRefusalMock }));

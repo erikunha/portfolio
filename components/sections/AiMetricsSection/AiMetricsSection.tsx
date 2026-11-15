@@ -11,8 +11,8 @@ import {
 import { ERROR_SECONDS_TOKEN } from '@/content/measured-states.schema';
 import { SECTION_LABELS } from '@/content/section-labels';
 import type { SiteLocale } from '@/content/site-locale';
-import type { AskMetrics } from '@/lib/ask-metrics';
-import { getAskMetrics } from '@/lib/ask-metrics';
+import type { AskMetrics } from '@/lib/ask/metrics';
+import { getAskMetrics } from '@/lib/ask/metrics';
 import { MS_PER_SECOND } from '@/lib/time';
 import { ReadTimeoutError, SSR_REDIS_TIMEOUT_MS } from '@/lib/with-timeout';
 import { IconAiMetrics } from '../../Icons';

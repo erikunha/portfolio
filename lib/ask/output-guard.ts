@@ -1,5 +1,5 @@
 import 'server-only';
-import type { AskInteractionStatus } from '@/lib/ask-log';
+import type { AskInteractionStatus } from '@/lib/ask/interaction-log';
 
 export const LEAK_MARKERS: readonly string[] = [
   '## Identity',

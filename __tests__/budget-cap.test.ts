@@ -16,7 +16,9 @@ const streamTextMock = vi.fn(() => ({
 vi.mock('ai', () => ({ streamText: streamTextMock }));
 vi.mock('@/lib/env', () => ({ env: { ASK_ENABLED: 'true' } }));
 vi.mock('@/lib/ip-hash', () => ({ hashIp: vi.fn(async () => 'test-ip-hash') }));
-vi.mock('@/lib/ask-log', () => ({ persistAskInteraction: vi.fn(async () => undefined) }));
+vi.mock('@/lib/ask/interaction-log', () => ({
+  persistAskInteraction: vi.fn(async () => undefined),
+}));
 
 const counter: { value: number } = { value: 0 };
 const dailyCounter: { value: number } = { value: 0 };

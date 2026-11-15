@@ -9,7 +9,7 @@ vi.mock('@/lib/rate-limit', () => ({
   getRedis: getRedisMock,
 }));
 
-import { getAskMetrics } from '@/lib/ask-metrics';
+import { getAskMetrics } from './metrics';
 
 const VALID_AGGREGATE = {
   ts: '2026-07-14T00:00:00.000Z',

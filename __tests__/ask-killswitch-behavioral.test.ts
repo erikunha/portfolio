@@ -34,7 +34,7 @@ vi.mock('@/lib/rate-limit', async () =>
   }),
 );
 
-vi.mock('@/lib/ask-log', async () =>
+vi.mock('@/lib/ask/interaction-log', async () =>
   (await import('./helpers/ask-route')).askLogModule(persistMock),
 );
 

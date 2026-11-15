@@ -11,7 +11,9 @@ vi.mock('@/lib/rate-limit', async () =>
     reserveBudget: vi.fn(async () => ({ allowed: true, reserved: 0, pct: 0, budgetKey: 'k' })),
   }),
 );
-vi.mock('@/lib/ask-log', async () => (await import('./helpers/ask-route')).askLogModule());
+vi.mock('@/lib/ask/interaction-log', async () =>
+  (await import('./helpers/ask-route')).askLogModule(),
+);
 vi.mock('@/lib/ip-hash', async () => (await import('./helpers/ask-route')).ipHashModule());
 vi.mock('@/lib/log', async () => (await import('./helpers/ask-route')).logModule());
 

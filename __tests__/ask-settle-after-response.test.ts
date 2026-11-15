@@ -33,7 +33,7 @@ vi.mock('@/lib/rate-limit', async () =>
     settleBudget: settleBudgetMock,
   }),
 );
-vi.mock('@/lib/ask-log', async () =>
+vi.mock('@/lib/ask/interaction-log', async () =>
   (await import('./helpers/ask-route')).askLogModule(persistMock),
 );
 vi.mock('@/lib/ask/guard-count', () => ({ countAskGuardFinding: guardCountMock }));
