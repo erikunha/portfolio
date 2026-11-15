@@ -1,6 +1,9 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
+import { useVisibleInterval } from '@/lib/use-visible-interval.client';
+
+const CLOCK_STEP_MS = 15_000;
 
 function pad(n: number) {
   return String(n).padStart(2, '0');
@@ -13,32 +16,7 @@ function fmtClock(d: Date) {
 export function StatusBar() {
   const [time, setTime] = useState('');
 
-  useEffect(() => {
-    let id: ReturnType<typeof setInterval> | null = null;
-
-    function startClock() {
-      setTime(fmtClock(new Date()));
-      id = setInterval(() => setTime(fmtClock(new Date())), 15_000);
-    }
-
-    function onVisibility() {
-      if (document.hidden) {
-        if (id !== null) {
-          clearInterval(id);
-          id = null;
-        }
-      } else {
-        startClock();
-      }
-    }
-
-    startClock();
-    document.addEventListener('visibilitychange', onVisibility);
-    return () => {
-      if (id !== null) clearInterval(id);
-      document.removeEventListener('visibilitychange', onVisibility);
-    };
-  }, []);
+  useVisibleInterval(() => setTime(fmtClock(new Date())), CLOCK_STEP_MS);
 
   return (
     <div

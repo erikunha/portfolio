@@ -53,7 +53,8 @@ view reducer and `outcomeAction`). `InteractiveShell` owns
 `useReducer(transcriptReducer)`; `useAskStream` and `usePrivacyCommands` dispatch
 its actions. `useAnnouncer` (`lib/use-announcer.client.tsx`) serves the shell and
 `ContactTimezone`; `useCountdown` (`lib/use-countdown.client.ts`) serves the receipt
-wait. `InteractiveShell.render-count.test.tsx` holds one render per keystroke and
+wait; `useVisibleInterval` (`lib/use-visible-interval.client.ts`) runs the `StatusBar` clock
+only while the tab is visible. `InteractiveShell.render-count.test.tsx` holds one render per keystroke and
 per later streamed frame (two on the first).
 
 **How it is held.** Mechanical gate: `scripts/gates/check-client-naming.ts`
