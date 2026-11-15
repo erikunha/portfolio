@@ -167,6 +167,125 @@
       }
     },
     {
+      "includes": [
+        "lib/**/*.ts",
+        "lib/**/*.tsx",
+        "!lib/rate-limit.ts",
+        "!lib/**/*.test.ts",
+        "!lib/**/*.test.tsx"
+      ],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "paths": {
+                  "next/image": {
+                    "importNames": ["default"],
+                    "message": "The default next/image export is a client component that ships its runtime to every route that renders it. Use components/OptimizedImage (getImageProps on the server)."
+                  }
+                },
+                "patterns": [
+                  {
+                    "group": ["@/app/**", "@/components/**"],
+                    "message": "lib imports neither app nor components: the dependency points from the UI to lib."
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "includes": ["lib/rate-limit.ts"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "paths": {
+                  "next/image": {
+                    "importNames": ["default"],
+                    "message": "The default next/image export is a client component that ships its runtime to every route that renders it. Use components/OptimizedImage (getImageProps on the server)."
+                  }
+                },
+                "patterns": [
+                  {
+                    "group": ["@/app/**", "@/components/**"],
+                    "message": "lib imports neither app nor components: the dependency points from the UI to lib."
+                  },
+                  {
+                    "group": ["@/lib/ask", "@/lib/ask/**", "@/lib/eval", "@/lib/eval/**"],
+                    "message": "lib/rate-limit.ts stays independent of the ask and eval modules that depend on it."
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "includes": ["content/**/*.ts", "!content/**/*.test.ts"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "paths": {
+                  "next/image": {
+                    "importNames": ["default"],
+                    "message": "The default next/image export is a client component that ships its runtime to every route that renders it. Use components/OptimizedImage (getImageProps on the server)."
+                  }
+                },
+                "patterns": [
+                  {
+                    "group": ["@/**", "!@/content/**"],
+                    "message": "content imports only content and zod."
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "includes": [
+        "design-system/**/*.ts",
+        "design-system/**/*.tsx",
+        "!design-system/**/*.test.ts",
+        "!design-system/**/*.test.tsx"
+      ],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "paths": {
+                  "next/image": {
+                    "importNames": ["default"],
+                    "message": "The default next/image export is a client component that ships its runtime to every route that renders it. Use components/OptimizedImage (getImageProps on the server)."
+                  }
+                },
+                "patterns": [
+                  {
+                    "group": ["@/**", "!@/lib/cn", "!@/design-system", "!@/design-system/**"],
+                    "message": "design-system imports only @/lib/cn besides its own folder."
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    {
       "includes": ["**/*.test.ts", "**/*.test.tsx"],
       "linter": {
         "rules": {
