@@ -1,10 +1,10 @@
 import { within } from '@testing-library/react';
-import { act, createElement } from 'react';
+import { act } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { fire, flushMicrotasks, type MountedClient, mountClient } from '@/__tests__/helpers/render';
+import { flushMicrotasks, type MountedClient } from '@/__tests__/helpers/render';
+import { askQuestion, renderShell } from '@/__tests__/helpers/shell';
 import { fillShellState, shellStates, shellUi } from '@/content/shell-ui';
 import { SITE_LOCALE } from '@/content/site-locale';
-import { shellChrome } from '@/content/terminal-chrome';
 
 vi.mock('@/lib/use-breakpoint.client', () => ({ useBreakpoint: () => ({ isMobile: false }) }));
 vi.mock('@/lib/motion', () => ({ readMotion: () => false }));
@@ -44,21 +44,6 @@ function stubBackend(asks: AskReply[], forgets: number[] = []) {
   return { askBodies, forgetBodies };
 }
 
-async function submit(container: HTMLElement, command: string) {
-  const input = container.querySelector<HTMLInputElement>('input[name="command"]');
-  const form = container.querySelector<HTMLFormElement>('form');
-  const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set;
-  await act(async () => {
-    if (input && setter) setter.call(input, command);
-    fire(input, new Event('input', { bubbles: true }));
-  });
-  await act(async () => {
-    fire(form, new Event('submit', { bubbles: true, cancelable: true }));
-  });
-  await flushMicrotasks();
-  await flushMicrotasks();
-}
-
 function named(container: HTMLElement, name: string): HTMLButtonElement {
   const receipt = container.querySelector<HTMLElement>('[data-testid="shell-receipt"]');
   if (!receipt) throw new Error('no receipt');
@@ -81,18 +66,6 @@ const feedText = (container: HTMLElement) =>
 describe('one privacy receipt per conversation', () => {
   let mounted: MountedClient | undefined;
 
-  async function renderShell() {
-    const { InteractiveShell } = await import('./InteractiveShell');
-    mounted = await mountClient(
-      createElement(InteractiveShell, {
-        locale: SITE_LOCALE.en,
-        ui,
-        chrome: shellChrome[SITE_LOCALE.en],
-      }),
-    );
-    return mounted.container;
-  }
-
   beforeEach(() => {
     vi.resetModules();
     window.sessionStorage.clear();
@@ -106,9 +79,10 @@ describe('one privacy receipt per conversation', () => {
 
   it('sends one conversation id with every question of the tab', async () => {
     const { askBodies } = stubBackend([{ id: A }, { id: B }]);
-    const container = await renderShell();
-    await submit(container, 'first question');
-    await submit(container, 'second question');
+    mounted = await renderShell();
+    const container = mounted.container;
+    await askQuestion(container, 'first question', 2);
+    await askQuestion(container, 'second question', 2);
     const [first, second] = askBodies;
     expect(first?.conversationId).toMatch(UUID);
     expect(second?.conversationId).toBe(first?.conversationId);
@@ -116,9 +90,10 @@ describe('one privacy receipt per conversation', () => {
 
   it('renders the receipt only after the latest answer, counting the questions, with no per-answer trailer', async () => {
     stubBackend([{ id: A }, { id: B }]);
-    const container = await renderShell();
-    await submit(container, 'first question');
-    await submit(container, 'second question');
+    mounted = await renderShell();
+    const container = mounted.container;
+    await askQuestion(container, 'first question', 2);
+    await askQuestion(container, 'second question', 2);
     expect(receipts(container)).toHaveLength(1);
     const receipt = receipts(container)[0];
     expect(receipt?.querySelector('code')?.textContent).toBe(B);
@@ -131,9 +106,10 @@ describe('one privacy receipt per conversation', () => {
 
   it('keeps the receipt after the latest answer when a later request is refused', async () => {
     stubBackend([{ id: A }, { id: B, status: 429 }]);
-    const container = await renderShell();
-    await submit(container, 'first question');
-    await submit(container, 'second question');
+    mounted = await renderShell();
+    const container = mounted.container;
+    await askQuestion(container, 'first question', 2);
+    await askQuestion(container, 'second question', 2);
     expect(receipts(container)).toHaveLength(1);
     expect(receipts(container)[0]?.querySelector('code')?.textContent).toBe(A);
     expect(receipts(container)[0]?.textContent).toContain(ui.receiptQuestionsOne);
@@ -141,9 +117,10 @@ describe('one privacy receipt per conversation', () => {
 
   it('forget conversation clears the receipt, reports the count, refocuses the input and starts a new conversation', async () => {
     const { askBodies, forgetBodies } = stubBackend([{ id: A }, { id: B }, { id: C }]);
-    const container = await renderShell();
-    await submit(container, 'first question');
-    await submit(container, 'second question');
+    mounted = await renderShell();
+    const container = mounted.container;
+    await askQuestion(container, 'first question', 2);
+    await askQuestion(container, 'second question', 2);
     await click(named(container, ui.forget));
     await click(named(container, ui.forgetConfirm));
 
@@ -163,7 +140,7 @@ describe('one privacy receipt per conversation', () => {
       ui.conversationForgotten,
     );
 
-    await submit(container, 'third question');
+    await askQuestion(container, 'third question', 2);
     expect(askBodies[2]?.conversationId).toMatch(UUID);
     expect(askBodies[2]?.conversationId).not.toBe(askBodies[0]?.conversationId);
     expect(receipts(container)[0]?.textContent).toContain(ui.receiptQuestionsOne);
@@ -171,9 +148,10 @@ describe('one privacy receipt per conversation', () => {
 
   it('privacy forget with no target forgets this conversation', async () => {
     const { forgetBodies } = stubBackend([{ id: A }]);
-    const container = await renderShell();
-    await submit(container, 'a question');
-    await submit(container, 'privacy forget');
+    mounted = await renderShell();
+    const container = mounted.container;
+    await askQuestion(container, 'a question', 2);
+    await askQuestion(container, 'privacy forget', 2);
     expect(forgetBodies).toEqual([{ requestId: A }]);
     expect(receipts(container)).toHaveLength(0);
     expect(feedText(container)).toContain(ui.conversationForgotten);
@@ -181,30 +159,33 @@ describe('one privacy receipt per conversation', () => {
 
   it('privacy forget with no logged question says so and sends nothing', async () => {
     const { forgetBodies } = stubBackend([]);
-    const container = await renderShell();
-    await submit(container, 'privacy forget');
+    mounted = await renderShell();
+    const container = mounted.container;
+    await askQuestion(container, 'privacy forget', 2);
     expect(forgetBodies).toEqual([]);
     expect(feedText(container)).toContain(ui.privacyNoConversation);
   });
 
   it('privacy forget <n> on an id of this conversation ends the conversation too', async () => {
     stubBackend([{ id: A }, { id: B }]);
-    const container = await renderShell();
-    await submit(container, 'first question');
-    await submit(container, 'second question');
-    await submit(container, 'privacy forget 1');
+    mounted = await renderShell();
+    const container = mounted.container;
+    await askQuestion(container, 'first question', 2);
+    await askQuestion(container, 'second question', 2);
+    await askQuestion(container, 'privacy forget 1', 2);
     expect(feedText(container)).toContain(`${A} ${ui.forgetDeleted}`);
     expect(receipts(container)).toHaveLength(0);
-    await submit(container, 'privacy');
+    await askQuestion(container, 'privacy', 2);
     expect(feedText(container)).toContain(ui.privacyEmpty);
   });
 
   it('privacy forget --all forgets the conversation once through its latest id', async () => {
     const { forgetBodies } = stubBackend([{ id: A }, { id: B }]);
-    const container = await renderShell();
-    await submit(container, 'first question');
-    await submit(container, 'second question');
-    await submit(container, 'privacy forget --all');
+    mounted = await renderShell();
+    const container = mounted.container;
+    await askQuestion(container, 'first question', 2);
+    await askQuestion(container, 'second question', 2);
+    await askQuestion(container, 'privacy forget --all', 2);
     expect(forgetBodies).toEqual([{ requestId: B }]);
     expect(feedText(container)).toContain(`${B} ${ui.forgetDeleted}`);
     expect(receipts(container)).toHaveLength(0);
@@ -212,9 +193,10 @@ describe('one privacy receipt per conversation', () => {
 
   it('a failed privacy forget keeps the receipt and names the outage', async () => {
     stubBackend([{ id: A }], [503]);
-    const container = await renderShell();
-    await submit(container, 'a question');
-    await submit(container, 'privacy forget');
+    mounted = await renderShell();
+    const container = mounted.container;
+    await askQuestion(container, 'a question', 2);
+    await askQuestion(container, 'privacy forget', 2);
     expect(receipts(container)).toHaveLength(1);
     expect(feedText(container)).toContain(ui.forgetUnavailable);
     expect(states.minutesUnit).toBeTruthy();
