@@ -152,6 +152,7 @@ export const IGNORED_PATHS: readonly string[] = [
   'scripts/gates/check-mutation-kills.ts',
   'scripts/gates/check-no-dashes.ts',
   'scripts/gates/check-section-order.ts',
+  'scripts/gates/check-shell-dom-writes.ts',
   'scripts/gates/check-tool-pins.ts',
   'scripts/gates/check-semgrep-fixture.ts',
   'scripts/gates/check-test-integrity.ts',
