@@ -435,17 +435,11 @@
     }
   }
 
-  .measured-load-bar::before,
-  .measured-load-bar::after {
+  .measured-load-bar::before {
     @variant motion-on {
       position: absolute;
       inset: 0 auto 0 0;
       overflow: hidden;
-    }
-  }
-
-  .measured-load-bar::before {
-    @variant motion-on {
       content: attr(data-track);
       color: var(--color-text-secondary);
     }
@@ -453,6 +447,9 @@
 
   .measured-load-bar::after {
     @variant motion-on {
+      position: absolute;
+      inset: 0 auto 0 0;
+      overflow: hidden;
       content: attr(data-fill);
       color: var(--color-primary-500);
       animation: measured-load-fill 1.8s steps(12, jump-none) infinite;
