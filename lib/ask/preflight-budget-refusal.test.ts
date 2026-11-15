@@ -11,10 +11,9 @@ vi.mock('@/lib/rate-limit', () => ({
   getClientIp: vi.fn(() => '127.0.0.1'),
   getAskLimit: vi.fn(() => ({ limit: vi.fn(async () => ({ success: true })) })),
   hasRedisCredentials: vi.fn(() => true),
-  checkIdenticalQuestion,
-  releaseIdenticalQuestion,
-  reserveBudget,
 }));
+vi.mock('@/lib/ask/budget', () => ({ reserveBudget }));
+vi.mock('@/lib/ask/dedup', () => ({ checkIdenticalQuestion, releaseIdenticalQuestion }));
 vi.mock('@/lib/ask/refusal-count', () => ({ countAskRefusal }));
 vi.mock('@/lib/ip-hash', () => ({ hashIp: vi.fn(async () => 'hashed-ip') }));
 vi.mock('@/lib/server/after-response', () => ({

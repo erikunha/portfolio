@@ -8,6 +8,8 @@ const mockStreamText = vi.fn();
 vi.mock('ai', () => ({ streamText: mockStreamText }));
 
 vi.mock('@/lib/rate-limit', async () => (await import('../helpers/ask-route')).rateLimitModule());
+vi.mock('@/lib/ask/budget', async () => (await import('../helpers/ask-route')).budgetModule());
+vi.mock('@/lib/ask/dedup', async () => (await import('../helpers/ask-route')).dedupModule());
 
 vi.mock('@/lib/ask/interaction-log', async () =>
   (await import('../helpers/ask-route')).askLogModule(),
@@ -53,7 +55,7 @@ describe('/api/ask behavioral: Layer-1 egress guard aborts a cross-chunk leak', 
 
     const { POST } = await import('@/app/api/ask/route');
     const { STREAM_ERR_SENTINEL, parseStreamChunk } = await import('@/lib/stream-protocol');
-    const { settleBudget } = await import('@/lib/rate-limit');
+    const { settleBudget } = await import('@/lib/ask/budget');
     const { persistAskInteraction } = await import('@/lib/ask/interaction-log');
     const settleBudgetMock = vi.mocked(settleBudget);
     const persistMock = vi.mocked(persistAskInteraction);

@@ -1,6 +1,8 @@
 import { streamText } from 'ai';
 import { askErrors } from '@/content/ask-errors';
 import { SITE_LOCALE, type SiteLocale } from '@/content/site-locale';
+import { settleBudget } from '@/lib/ask/budget';
+import { releaseIdenticalQuestion } from '@/lib/ask/dedup';
 import { ASK_FAILURE_REASON, type AskFailureReason } from '@/lib/ask/failure-reason';
 import { countAskGuardFinding } from '@/lib/ask/guard-count';
 import { ASK_RESERVED_INPUT_TOKENS } from '@/lib/ask/input-reservation';
@@ -19,7 +21,6 @@ import { PROMPT_VERSION, SYSTEM_TEXT } from '@/lib/ask/system-prompt';
 import { countAskTokens, emitAskUsage } from '@/lib/ask/usage';
 import { log } from '@/lib/log';
 import { describeError } from '@/lib/log-error';
-import { releaseIdenticalQuestion, settleBudget } from '@/lib/rate-limit';
 import { REFUSAL_PREFIX, STREAM_ERR_SENTINEL } from '@/lib/stream-protocol';
 
 const REQUEST_TIMEOUT_MS = 30_000;

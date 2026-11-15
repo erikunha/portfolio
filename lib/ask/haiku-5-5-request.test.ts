@@ -21,6 +21,8 @@ function makeStreamTextResult(text = 'ok', finishReason = 'stop') {
 vi.mock('@/lib/rate-limit', () => ({
   getClientIp: vi.fn(() => '127.0.0.1'),
   getAskLimit: vi.fn(() => ({ limit: vi.fn(async () => ({ success: true })) })),
+}));
+vi.mock('@/lib/ask/budget', () => ({
   reserveBudget: vi.fn(async () => ({
     allowed: true,
     reserved: 1512,
@@ -28,6 +30,8 @@ vi.mock('@/lib/rate-limit', () => ({
     budgetKey: 'ask:tokens:test',
   })),
   settleBudget: vi.fn(async () => undefined),
+}));
+vi.mock('@/lib/ask/dedup', () => ({
   checkIdenticalQuestion: vi.fn(async () => ({ allowed: true })),
 }));
 vi.mock('@/lib/ask/interaction-log', () => ({

@@ -30,9 +30,12 @@ function makeStreamTextResult(text = 'ok') {
 vi.mock('@/lib/rate-limit', async () =>
   (await import('../helpers/ask-route')).rateLimitModule({
     getAskLimit: vi.fn(() => ({ limit: rateLimitMock })),
-    reserveBudget: reserveBudgetMock,
   }),
 );
+vi.mock('@/lib/ask/budget', async () =>
+  (await import('../helpers/ask-route')).budgetModule({ reserveBudget: reserveBudgetMock }),
+);
+vi.mock('@/lib/ask/dedup', async () => (await import('../helpers/ask-route')).dedupModule());
 
 vi.mock('@/lib/ask/interaction-log', async () =>
   (await import('../helpers/ask-route')).askLogModule(persistMock),

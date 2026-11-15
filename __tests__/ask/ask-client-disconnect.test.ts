@@ -10,6 +10,10 @@ const settleBudgetMock = vi.fn(async (..._args: unknown[]): Promise<void> => und
 vi.mock('@/lib/rate-limit', async () =>
   (await import('../helpers/ask-route')).rateLimitModule({
     hasRedisCredentials: vi.fn(() => true),
+  }),
+);
+vi.mock('@/lib/ask/budget', async () =>
+  (await import('../helpers/ask-route')).budgetModule({
     reserveBudget: vi.fn(async () => ({
       allowed: true,
       reserved: 2712,
@@ -20,6 +24,7 @@ vi.mock('@/lib/rate-limit', async () =>
     settleBudget: settleBudgetMock,
   }),
 );
+vi.mock('@/lib/ask/dedup', async () => (await import('../helpers/ask-route')).dedupModule());
 
 const persistMock = vi.fn(async (_interaction: { status: string; answer: string }) => undefined);
 vi.mock('@/lib/ask/interaction-log', async () =>

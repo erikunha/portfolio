@@ -7,8 +7,10 @@ const limit = vi.fn(async () => ({ success: true }));
 
 vi.mock('ai', () => ({ streamText: vi.fn() }));
 vi.mock('@/lib/rate-limit', async () =>
-  (await import('../helpers/ask-route')).rateLimitModule({
-    getAskLimit: vi.fn(() => ({ limit })),
+  (await import('../helpers/ask-route')).rateLimitModule({ getAskLimit: vi.fn(() => ({ limit })) }),
+);
+vi.mock('@/lib/ask/budget', async () =>
+  (await import('../helpers/ask-route')).budgetModule({
     reserveBudget: vi.fn(async () => ({
       allowed: false,
       reason: 'month',
@@ -18,6 +20,7 @@ vi.mock('@/lib/rate-limit', async () =>
     })),
   }),
 );
+vi.mock('@/lib/ask/dedup', async () => (await import('../helpers/ask-route')).dedupModule());
 vi.mock('@/lib/ask/interaction-log', async () =>
   (await import('../helpers/ask-route')).askLogModule(),
 );

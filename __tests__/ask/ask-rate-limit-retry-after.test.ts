@@ -6,11 +6,14 @@ const limit = vi.fn();
 
 vi.mock('ai', () => ({ streamText: vi.fn() }));
 vi.mock('@/lib/rate-limit', async () =>
-  (await import('../helpers/ask-route')).rateLimitModule({
-    getAskLimit: vi.fn(() => ({ limit })),
+  (await import('../helpers/ask-route')).rateLimitModule({ getAskLimit: vi.fn(() => ({ limit })) }),
+);
+vi.mock('@/lib/ask/budget', async () =>
+  (await import('../helpers/ask-route')).budgetModule({
     reserveBudget: vi.fn(async () => ({ allowed: true, reserved: 0, pct: 0, budgetKey: 'k' })),
   }),
 );
+vi.mock('@/lib/ask/dedup', async () => (await import('../helpers/ask-route')).dedupModule());
 vi.mock('@/lib/ask/interaction-log', async () =>
   (await import('../helpers/ask-route')).askLogModule(),
 );

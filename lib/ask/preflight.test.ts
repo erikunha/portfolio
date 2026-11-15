@@ -13,10 +13,9 @@ vi.mock('@/lib/rate-limit', () => ({
   getClientIp: vi.fn(() => '127.0.0.1'),
   getAskLimit: vi.fn(() => ({ limit })),
   hasRedisCredentials: vi.fn(() => true),
-  checkIdenticalQuestion,
-  releaseIdenticalQuestion,
-  reserveBudget,
 }));
+vi.mock('@/lib/ask/budget', () => ({ reserveBudget }));
+vi.mock('@/lib/ask/dedup', () => ({ checkIdenticalQuestion, releaseIdenticalQuestion }));
 vi.mock('@/lib/server/read-body', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/lib/server/read-body')>();
   readBoundedBody.mockImplementation(actual.readBoundedBody);

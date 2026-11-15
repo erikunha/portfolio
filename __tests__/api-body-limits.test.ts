@@ -16,6 +16,8 @@ vi.mock('@/lib/rate-limit', () => ({
   getErrorLogDailyLimit: vi.fn(() => ({ limit: admit })),
   getErrorLogIpDailyLimit: vi.fn(() => ({ limit: admit })),
   getRedis: vi.fn(() => null),
+}));
+vi.mock('@/lib/ask/budget', () => ({
   reserveBudget: vi.fn(async () => ({
     allowed: false,
     reserved: 0,
@@ -24,6 +26,8 @@ vi.mock('@/lib/rate-limit', () => ({
     dailyKey: 'd',
   })),
   settleBudget: vi.fn(async () => undefined),
+}));
+vi.mock('@/lib/ask/dedup', () => ({
   checkIdenticalQuestion: vi.fn(async () => ({ allowed: true })),
 }));
 vi.mock('@/lib/log', () => ({

@@ -16,6 +16,10 @@ vi.mock('@/lib/rate-limit', async () =>
   (await import('../helpers/ask-route')).rateLimitModule({
     hasRedisCredentials: vi.fn(() => true),
     getRedis: vi.fn(() => ({ set: redisSet })),
+  }),
+);
+vi.mock('@/lib/ask/budget', async () =>
+  (await import('../helpers/ask-route')).budgetModule({
     reserveBudget: vi.fn(async () => ({
       allowed: true,
       reserved: 2712,
@@ -25,6 +29,7 @@ vi.mock('@/lib/rate-limit', async () =>
     })),
   }),
 );
+vi.mock('@/lib/ask/dedup', async () => (await import('../helpers/ask-route')).dedupModule());
 vi.mock('@/lib/ip-hash', async () => (await import('../helpers/ask-route')).ipHashModule());
 vi.mock('@/lib/log', async () => (await import('../helpers/ask-route')).logModule());
 

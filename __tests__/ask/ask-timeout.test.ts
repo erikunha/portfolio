@@ -34,6 +34,8 @@ vi.mock('@/lib/rate-limit', async () =>
     })),
   }),
 );
+vi.mock('@/lib/ask/budget', async () => (await import('../helpers/ask-route')).budgetModule());
+vi.mock('@/lib/ask/dedup', async () => (await import('../helpers/ask-route')).dedupModule());
 
 vi.mock('@/lib/ask/interaction-log', async () =>
   (await import('../helpers/ask-route')).askLogModule(),

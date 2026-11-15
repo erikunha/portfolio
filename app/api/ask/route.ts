@@ -1,11 +1,12 @@
 import { askErrors } from '@/content/ask-errors';
+import { settleBudget } from '@/lib/ask/budget';
+import { releaseIdenticalQuestion } from '@/lib/ask/dedup';
 import { type AskContext, askError, preflightAsk } from '@/lib/ask/preflight';
 import { type AskStream, createAskStream } from '@/lib/ask/stream';
 import { env } from '@/lib/env';
 import { HTTP_STATUS } from '@/lib/http-status';
 import { log } from '@/lib/log';
 import { describeError } from '@/lib/log-error';
-import { releaseIdenticalQuestion, settleBudget } from '@/lib/rate-limit';
 import { afterResponse } from '@/lib/server/after-response';
 import { REQUEST_ID_HEADER } from '@/lib/stream-protocol';
 

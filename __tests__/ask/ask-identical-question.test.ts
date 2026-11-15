@@ -21,9 +21,12 @@ function makeStreamTextResult(text = 'ok') {
   };
 }
 
-vi.mock('@/lib/rate-limit', async () =>
-  (await import('../helpers/ask-route')).rateLimitModule({
-    reserveBudget: reserveBudgetMock,
+vi.mock('@/lib/rate-limit', async () => (await import('../helpers/ask-route')).rateLimitModule());
+vi.mock('@/lib/ask/budget', async () =>
+  (await import('../helpers/ask-route')).budgetModule({ reserveBudget: reserveBudgetMock }),
+);
+vi.mock('@/lib/ask/dedup', async () =>
+  (await import('../helpers/ask-route')).dedupModule({
     checkIdenticalQuestion: checkIdenticalQuestionMock,
   }),
 );

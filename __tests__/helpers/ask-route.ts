@@ -56,6 +56,12 @@ export function rateLimitModule(overrides: Record<string, unknown> = {}) {
   return {
     getClientIp: vi.fn(() => TEST_CLIENT_IP),
     getAskLimit: vi.fn(() => ({ limit: vi.fn(async () => ({ success: true })) })),
+    ...overrides,
+  };
+}
+
+export function budgetModule(overrides: Record<string, unknown> = {}) {
+  return {
     reserveBudget: vi.fn(async (..._args: unknown[]) => ({
       allowed: true,
       reserved: TEST_RESERVED_TOKENS,
@@ -63,6 +69,12 @@ export function rateLimitModule(overrides: Record<string, unknown> = {}) {
       budgetKey: TEST_BUDGET_KEY,
     })),
     settleBudget: vi.fn(async (..._args: unknown[]) => undefined),
+    ...overrides,
+  };
+}
+
+export function dedupModule(overrides: Record<string, unknown> = {}) {
+  return {
     checkIdenticalQuestion: vi.fn(async (..._args: unknown[]) => ({ allowed: true })),
     releaseIdenticalQuestion: vi.fn(async (..._args: unknown[]) => undefined),
     ...overrides,

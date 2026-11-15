@@ -3,6 +3,8 @@ import {
   ASK_URL,
   askLogModule,
   askRequest,
+  budgetModule,
+  dedupModule,
   ipHashModule,
   logModule,
   rateLimitModule,
@@ -84,9 +86,24 @@ describe('module factories', () => {
   it('rateLimitModule defaults to an allowed request and applies overrides', async () => {
     const base = rateLimitModule();
     expect(await base.getAskLimit().limit()).toEqual({ success: true });
+    const overridden = rateLimitModule({ getClientIp: vi.fn(() => '10.0.0.1') });
+    expect(overridden.getClientIp()).toBe('10.0.0.1');
+    expect(base.getClientIp()).toBe('127.0.0.1');
+  });
+
+  it('budgetModule defaults to an allowed reservation and applies overrides', async () => {
+    const base = budgetModule();
     expect((await base.reserveBudget()).allowed).toBe(true);
-    const denied = rateLimitModule({ reserveBudget: vi.fn(async () => ({ allowed: false })) });
+    expect(await base.settleBudget()).toBeUndefined();
+    const denied = budgetModule({ reserveBudget: vi.fn(async () => ({ allowed: false })) });
     expect((await denied.reserveBudget()).allowed).toBe(false);
-    expect(denied.getClientIp()).toBe('127.0.0.1');
+  });
+
+  it('dedupModule defaults to an allowed question and applies overrides', async () => {
+    const base = dedupModule();
+    expect(await base.checkIdenticalQuestion()).toEqual({ allowed: true });
+    expect(await base.releaseIdenticalQuestion()).toBeUndefined();
+    const denied = dedupModule({ checkIdenticalQuestion: vi.fn(async () => ({ allowed: false })) });
+    expect(await denied.checkIdenticalQuestion()).toEqual({ allowed: false });
   });
 });

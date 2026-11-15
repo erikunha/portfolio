@@ -1,6 +1,8 @@
 import { type AskErrors, askErrors } from '@/content/ask-errors';
 import { SITE_LOCALE, type SiteLocale } from '@/content/site-locale';
+import { type BudgetRefusalReason, reserveBudget } from '@/lib/ask/budget';
 import { parseConversationId } from '@/lib/ask/conversation-id';
+import { checkIdenticalQuestion, releaseIdenticalQuestion } from '@/lib/ask/dedup';
 import { isInjectionAttempt } from '@/lib/ask/injection';
 import { ASK_MAX_OUTPUT_TOKENS, ASK_MAX_QUESTION_CHARS } from '@/lib/ask/limits';
 import { type AskRefusalStatus, countAskRefusal } from '@/lib/ask/refusal-count';
@@ -9,14 +11,7 @@ import { env } from '@/lib/env';
 import { HTTP_STATUS } from '@/lib/http-status';
 import { log } from '@/lib/log';
 import { describeError } from '@/lib/log-error';
-import {
-  type BudgetRefusalReason,
-  checkIdenticalQuestion,
-  getAskLimit,
-  hasRedisCredentials,
-  releaseIdenticalQuestion,
-  reserveBudget,
-} from '@/lib/rate-limit';
+import { getAskLimit, hasRedisCredentials } from '@/lib/rate-limit';
 import { afterResponse } from '@/lib/server/after-response';
 import { isCrossSiteRequest } from '@/lib/server/fetch-metadata';
 import { clientRateLimitKey, type RateLimitIdentifier } from '@/lib/server/rate-limit-key';
