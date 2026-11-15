@@ -7,9 +7,21 @@ const WORKFLOW_DIR = join(process.cwd(), '.github', 'workflows');
 const USES = /uses:\s*(?<repo>[\w.-]+\/[\w.-]+)(?:\/[^@\s]+)?@(?<sha>[0-9a-f]{40})/g;
 const ACTION_PATH = /_actions\/(?<repo>[\w.-]+\/[\w.-]+)\/(?<sha>[0-9a-f]{40})/g;
 
-const workflows = readdirSync(WORKFLOW_DIR)
-  .filter((file) => /\.ya?ml$/.test(file))
-  .map((file) => ({ file, text: readFileSync(join(WORKFLOW_DIR, file), 'utf8') }));
+const ACTIONS_DIR = join(process.cwd(), '.github', 'actions');
+const PINNED_SHA = /^[0-9a-f]{40}$/;
+
+const workflows = [
+  ...readdirSync(WORKFLOW_DIR)
+    .filter((file) => /\.ya?ml$/.test(file))
+    .map((file) => ({ file, text: readFileSync(join(WORKFLOW_DIR, file), 'utf8') })),
+  ...readdirSync(ACTIONS_DIR, { withFileTypes: true })
+    .filter((entry) => entry.isDirectory())
+    .map((entry) => join(entry.name, 'action.yml'))
+    .map((file) => ({
+      file: join('actions', file),
+      text: readFileSync(join(ACTIONS_DIR, file), 'utf8'),
+    })),
+];
 
 describe('action SHAs embedded in workflow text', () => {
   it.each(workflows)('$file embeds only SHAs that its uses: lines pin', ({ text }) => {
@@ -23,6 +35,32 @@ describe('action SHAs embedded in workflow text', () => {
       .filter(({ repo, sha }) => !pinned.get(repo)?.has(sha))
       .map(({ repo, sha }) => `${repo}@${sha}`);
     expect(stale).toEqual([]);
+  });
+
+  it('pins each action repository to one commit SHA across workflows and local actions', () => {
+    const shas = new Map<string, Set<string>>();
+    for (const { text } of workflows) {
+      for (const match of text.matchAll(USES)) {
+        const { repo = '', sha = '' } = match.groups ?? {};
+        shas.set(repo, (shas.get(repo) ?? new Set()).add(sha));
+      }
+    }
+    const split = [...shas]
+      .filter(([, pinned]) => pinned.size > 1)
+      .map(([repo, pinned]) => `${repo}: ${[...pinned].join(', ')}`);
+    expect(split).toEqual([]);
+  });
+
+  it('covers the local action files and pins every uses: in them to a full SHA', () => {
+    const local = workflows.filter(({ file }) => file.startsWith('actions'));
+    expect(local.length).toBeGreaterThan(0);
+    for (const { file, text } of local) {
+      const refs = [...text.matchAll(/^\s*-?\s*uses:\s*(?<ref>\S+)/gm)].map(
+        (match) => match.groups?.ref ?? '',
+      );
+      const loose = refs.filter((ref) => !PINNED_SHA.test(ref.split('@')[1] ?? ''));
+      expect(loose, file).toEqual([]);
+    }
   });
 
   it('finds at least one embedded action path (anti-vacuous)', () => {

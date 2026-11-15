@@ -90,3 +90,64 @@ describe('parseWorkflow keys', () => {
     ).toThrow(/continue-on-error/);
   });
 });
+
+describe('parseWorkflow local composite actions', () => {
+  const ACTION = [
+    'inputs:',
+    '  install:',
+    '    default: "true"',
+    'runs:',
+    '  using: composite',
+    '  steps:',
+    '    - uses: pnpm/action-setup@abc',
+    '    - name: Install',
+    "      if: inputs.install == 'true'",
+    '      shell: bash',
+    '      run: pnpm install --frozen-lockfile',
+  ].join('\n');
+  const loadAction = (path: string) => {
+    if (path !== '.github/actions/setup') throw new Error(`unexpected action path ${path}`);
+    return ACTION;
+  };
+  const caller = (withBlock = '') =>
+    `jobs:\n  a:\n    runs-on: x\n    steps:\n      - uses: ./.github/actions/setup\n${withBlock}      - run: pnpm test\n`;
+  const labels = (steps: { uses?: string; run?: string }[]) =>
+    steps.map((step) => step.uses ?? step.run);
+
+  it('reads the real ci.yml install as the steps of the shared setup action', () => {
+    const steps = ci.jobs.test?.steps ?? [];
+    const install = steps.filter((step) => step.run === 'pnpm install --frozen-lockfile');
+    expect(install).toHaveLength(1);
+    expect(install[0]?.name).toBe('Install');
+    expect(install[0]?.if).toBeUndefined();
+    expect(steps.some((step) => step.uses === './.github/actions/setup')).toBe(false);
+  });
+
+  it('replaces the call with the action steps, in order, before the steps that follow', () => {
+    const steps = parseWorkflow(caller(), loadAction).jobs.a?.steps ?? [];
+    expect(labels(steps)).toEqual([
+      'pnpm/action-setup@abc',
+      'pnpm install --frozen-lockfile',
+      'pnpm test',
+    ]);
+    expect(steps[1]?.shell).toBe('bash');
+  });
+
+  it('drops a step whose input condition is false for the call', () => {
+    const text = caller('        with:\n          install: "false"\n');
+    const steps = parseWorkflow(text, loadAction).jobs.a?.steps ?? [];
+    expect(labels(steps)).toEqual(['pnpm/action-setup@abc', 'pnpm test']);
+  });
+
+  it('refuses a condition it cannot evaluate', () => {
+    const unevaluable = ACTION.replace("inputs.install == 'true'", 'always()');
+    expect(() => parseWorkflow(caller(), () => unevaluable)).toThrow(/condition/);
+  });
+
+  it('refuses a call that carries a key it would drop, and an action that is not composite', () => {
+    const withIf =
+      'jobs:\n  a:\n    steps:\n      - uses: ./.github/actions/setup\n        if: always()\n';
+    expect(() => parseWorkflow(withIf, loadAction)).toThrow(/"if"/);
+    expect(() => parseWorkflow(caller(), () => 'runs:\n  using: node24\n')).toThrow(/composite/);
+  });
+});

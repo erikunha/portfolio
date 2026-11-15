@@ -7,7 +7,11 @@ import { parse } from 'yaml';
 const WORKFLOW_PATH = join(process.cwd(), '.github', 'workflows', 'rollback-rehearsal.yml');
 const WORKFLOW_TEXT = readFileSync(WORKFLOW_PATH, 'utf8');
 // behavioral-test-allow: ci.yml is read only to prove the rehearsal builds with the env the real build uses.
-const CI_TEXT = readFileSync(join(process.cwd(), '.github', 'workflows', 'ci.yml'), 'utf8');
+const CI_TEXT = [
+  readFileSync(join(process.cwd(), '.github', 'workflows', 'ci.yml'), 'utf8'),
+  // behavioral-test-allow: the shared setup action holds the pnpm and node pins that ci.yml jobs call.
+  readFileSync(join(process.cwd(), '.github', 'actions', 'setup', 'action.yml'), 'utf8'),
+].join('\n');
 
 type Step = {
   name?: string;

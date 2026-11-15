@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { parse } from 'yaml';
 
 export interface RunDefaults {
@@ -50,10 +52,18 @@ interface RawStep {
   uses?: string;
   run?: string;
   shell?: string;
+  with?: Record<string, unknown>;
   'working-directory'?: string;
   'continue-on-error'?: unknown;
   env?: Record<string, unknown>;
 }
+
+interface RawAction {
+  inputs?: Record<string, { default?: unknown }>;
+  runs?: { using?: string; steps?: RawStep[] };
+}
+
+export type ActionLoader = (path: string) => string;
 
 interface RawDefaults {
   run?: { shell?: string; 'working-directory'?: string };
@@ -188,7 +198,59 @@ function topologicalOrder(jobs: Record<string, WorkflowJob>): string[] {
     .map((entry) => entry.id);
 }
 
-export function parseWorkflow(text: string): Workflow {
+const LOCAL_ACTION_PREFIX = './';
+const COMPOSITE = 'composite';
+const CALLER_STEP_KEYS = ['id', 'name', 'uses', 'with'];
+const INPUT_CONDITION = /^inputs\.([\w-]+)\s*==\s*'([^']*)'$/;
+
+const readLocalAction: ActionLoader = (path) =>
+  readFileSync(join(process.cwd(), path, 'action.yml'), 'utf8');
+
+function toStep(scope: string, step: RawStep): WorkflowStep {
+  allowKeys(scope, step, STEP_KEYS);
+  return {
+    ...(step.id === undefined ? {} : { id: step.id }),
+    ...(step.name === undefined ? {} : { name: step.name }),
+    ...(step.if === undefined ? {} : { if: String(step.if) }),
+    ...(step.uses === undefined ? {} : { uses: step.uses }),
+    ...(step.run === undefined ? {} : { run: step.run }),
+    ...(step.shell === undefined ? {} : { shell: step.shell }),
+    ...(step['working-directory'] === undefined
+      ? {}
+      : { workingDirectory: step['working-directory'] }),
+    continueOnError: continueOnError(scope, step['continue-on-error']),
+    env: stringifyRecord(step.env),
+  };
+}
+
+function expandLocalAction(scope: string, caller: RawStep, load: ActionLoader): WorkflowStep[] {
+  const path = (caller.uses ?? '').slice(LOCAL_ACTION_PREFIX.length);
+  allowKeys(scope, caller, CALLER_STEP_KEYS);
+  const action = parse(load(path)) as RawAction;
+  if (action.runs?.using !== COMPOSITE) {
+    throw new UnsupportedWorkflowError(`${scope}: ${caller.uses} is not a composite action`);
+  }
+  const defaults = Object.fromEntries(
+    Object.entries(action.inputs ?? {}).map(([name, input]) => [name, input.default ?? '']),
+  );
+  const inputs = { ...stringifyRecord(defaults), ...stringifyRecord(caller.with) };
+  return (action.runs.steps ?? []).flatMap((step, index) => {
+    const stepScope = `${scope} action ${caller.uses} step ${step.name ?? index + 1}`;
+    if (step.if === undefined) return [toStep(stepScope, step)];
+    const condition = INPUT_CONDITION.exec(String(step.if));
+    const name = condition?.[1] ?? '';
+    if (condition === null || !(name in inputs)) {
+      throw new UnsupportedWorkflowError(
+        `${stepScope}: only an "inputs.<name> == '<value>'" condition on a declared input is supported`,
+      );
+    }
+    if (inputs[name] !== condition[2]) return [];
+    const { if: _resolved, ...unconditional } = step;
+    return [toStep(stepScope, unconditional)];
+  });
+}
+
+export function parseWorkflow(text: string, loadAction: ActionLoader = readLocalAction): Workflow {
   const document = parse(text) as {
     jobs?: Record<string, RawJob>;
     env?: Record<string, unknown>;
@@ -209,22 +271,11 @@ export function parseWorkflow(text: string): Workflow {
       defaults: runDefaults(`job ${id}`, raw.defaults),
       env: stringifyRecord(raw.env),
       outputs: stringifyRecord(raw.outputs),
-      steps: (raw.steps ?? []).map((step, index) => {
+      steps: (raw.steps ?? []).flatMap((step, index) => {
         const scope = `job ${id} step ${step.name ?? index + 1}`;
-        allowKeys(scope, step, STEP_KEYS);
-        return {
-          ...(step.id === undefined ? {} : { id: step.id }),
-          ...(step.name === undefined ? {} : { name: step.name }),
-          ...(step.if === undefined ? {} : { if: String(step.if) }),
-          ...(step.uses === undefined ? {} : { uses: step.uses }),
-          ...(step.run === undefined ? {} : { run: step.run }),
-          ...(step.shell === undefined ? {} : { shell: step.shell }),
-          ...(step['working-directory'] === undefined
-            ? {}
-            : { workingDirectory: step['working-directory'] }),
-          continueOnError: continueOnError(scope, step['continue-on-error']),
-          env: stringifyRecord(step.env),
-        };
+        return step.uses?.startsWith(LOCAL_ACTION_PREFIX)
+          ? expandLocalAction(scope, step, loadAction)
+          : [toStep(scope, step)];
       }),
     };
   }

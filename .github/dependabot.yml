@@ -34,7 +34,9 @@ updates:
         update-types:
           - version-update:semver-major
   - package-ecosystem: github-actions
-    directory: /
+    directories:
+      - /
+      - /.github/actions/setup
     schedule:
       interval: weekly
     open-pull-requests-limit: 5

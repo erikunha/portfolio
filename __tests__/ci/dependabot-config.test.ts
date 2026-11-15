@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { parse } from 'yaml';
@@ -12,6 +12,8 @@ type Group = {
 };
 type Update = {
   'package-ecosystem': string;
+  directory?: string;
+  directories?: string[];
   cooldown?: { 'default-days'?: number };
   groups?: Record<string, Group>;
 };
@@ -63,4 +65,28 @@ describe('dependabot.yml and the install-time release-age window', () => {
       expect(rest?.['update-types']).not.toContain('major');
     },
   );
+});
+
+const LOCAL_ACTIONS_DIR = join(process.cwd(), '.github', 'actions');
+const localActionDirs = readdirSync(LOCAL_ACTIONS_DIR, { withFileTypes: true })
+  .filter((entry) => entry.isDirectory())
+  .filter((entry) => existsSync(join(LOCAL_ACTIONS_DIR, entry.name, 'action.yml')))
+  .map((entry) => `/.github/actions/${entry.name}`);
+const actionsUpdate = dependabot.updates.find(
+  (update) => update['package-ecosystem'] === 'github-actions',
+);
+const actionsCovered = [actionsUpdate?.directory, ...(actionsUpdate?.directories ?? [])];
+
+describe('dependabot.yml and the local composite actions', () => {
+  it('finds at least one local action (anti-vacuous)', () => {
+    expect(localActionDirs.length).toBeGreaterThan(0);
+  });
+
+  it.each(localActionDirs)('the github-actions ecosystem updates the pins inside %s', (dir) => {
+    expect(actionsCovered).toContain(dir);
+  });
+
+  it('keeps updating the workflows directory next to the local actions', () => {
+    expect(actionsCovered).toContain('/');
+  });
 });

@@ -385,7 +385,6 @@ export const NOT_RUN: readonly Exclusion[] = [
 
 export const UNMIRRORED_CI_STEPS: ReadonlyMap<string, string> = new Map([
   ['Install', 'the local checkout already has its dependencies installed'],
-  ['pnpm install --frozen-lockfile', 'the local checkout already has its dependencies installed'],
   ['Check if pnpm-lock.yaml changed', 'ci:full runs the audit whatever changed'],
   ['Check if the mutation runner surface changed', 'ci:full runs the canary whatever changed'],
   ['Download gitleaks release tarball', 'the local gitleaks is the one installed on this machine'],

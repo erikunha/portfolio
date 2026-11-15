@@ -7,7 +7,13 @@ import { parse } from 'yaml';
 const PATH = join(process.cwd(), '.github', 'workflows', 'lockfile-resolution-probe.yml');
 const TEXT = readFileSync(PATH, 'utf8');
 
-type Step = { name?: string; uses?: string; run?: string; env?: Record<string, string> };
+type Step = {
+  name?: string;
+  uses?: string;
+  run?: string;
+  env?: Record<string, string>;
+  with?: Record<string, string>;
+};
 type Workflow = {
   on: { schedule?: { cron: string }[]; workflow_dispatch?: unknown } & Record<string, unknown>;
   permissions?: Record<string, string>;
@@ -19,6 +25,7 @@ const job = Object.values(workflow.jobs)[0];
 const steps = job?.steps ?? [];
 const runs = steps.map((s) => s.run ?? '').join('\n');
 const SHA_PIN = /@[0-9a-f]{40}$/;
+const LOCAL_ACTION = /^\.\//;
 const EXPRESSION_OPEN = ['$', '{{'].join('');
 const MATURE_ERROR = 'ERR_PNPM_NO_MATURE_MATCHING_VERSION';
 
@@ -46,7 +53,10 @@ describe('lockfile-resolution-probe workflow', () => {
 
   it('pins every action to a commit SHA', () => {
     const unpinned = steps.filter(
-      (s) => s.uses !== undefined && !SHA_PIN.test(s.uses.split(' ')[0] ?? ''),
+      (s) =>
+        s.uses !== undefined &&
+        !LOCAL_ACTION.test(s.uses) &&
+        !SHA_PIN.test(s.uses.split(' ')[0] ?? ''),
     );
     expect(unpinned).toEqual([]);
   });
@@ -64,13 +74,8 @@ describe('lockfile-resolution-probe workflow', () => {
     expect(runs).toMatch(/gh issue close/);
   });
 
-  it('uses the same action SHAs as ci.yml for the actions it shares', () => {
-    const ci = readFileSync(join(process.cwd(), '.github', 'workflows', 'ci.yml'), 'utf8');
-    const ciPins = new Set(
-      [...ci.matchAll(/uses:\s*(\S+@[0-9a-f]{40})/g)].map((m) => m[1] as string),
-    );
-    const own = steps.map((s) => s.uses?.split(' ')[0]).filter((u): u is string => u !== undefined);
-    expect(own.length).toBeGreaterThan(0);
-    expect(own.filter((u) => !ciPins.has(u))).toEqual([]);
+  it('sets up through the shared action with the cache and the install off, since it resolves without a lockfile', () => {
+    const setup = steps.find((s) => s.uses === './.github/actions/setup');
+    expect(setup?.with).toEqual({ cache: 'false', install: 'false' });
   });
 });
