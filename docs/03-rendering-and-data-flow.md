@@ -151,7 +151,7 @@ request:     proxy.ts headers -> static shell streamed -> getIsMobile() resolves
              -> section variants and independent ASK / PSI reads stream -> client hydrates islands
 ```
 
-The content layer is build-time: static copy is already in the prerendered output. Measured reads live data through `lib/ask-metrics.ts` and `lib/lighthouse-scores.ts`. PSI uses its Redis cache and may fetch PageSpeed Insights when the cache is missing. Projects does not read the user agent or wait on live data.
+The content layer is build-time: static copy is already in the prerendered output. Measured reads live data through `lib/ask/metrics.ts` and `lib/lighthouse-scores.ts`. PSI uses its Redis cache and may fetch PageSpeed Insights when the cache is missing. Projects does not read the user agent or wait on live data.
 
 ## End-to-end data flow #2 - `/api/ask` (the streaming AI feature)
 

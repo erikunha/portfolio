@@ -67,6 +67,6 @@ Single-author repo, so "ownership" is by subsystem boundary, not by person:
 | Design system    | `design-system/**`                                   | `design-system/index.ts`           |
 | BFF / API        | `app/api/**` + `lib/**`                              | `lib/server/route.ts`              |
 | AI feature       | `app/api/ask` + `lib/ask/**` + `lib/eval/**` + `scripts/eval/ask-eval.ts` | `lib/ask/model.ts`                 |
-| Reading views and links | `components/reading/**` + `components/links/**` + `lib/links/**` | `components/reading/ReadingShell.tsx` |
+| Reading views and links | `components/reading/**` + `components/links/**` + `lib/links/**` | `components/reading/ReadingShell/ReadingShell.tsx` |
 | Tests and gates  | `__tests__/**` + `tests/**` + `scripts/**`           | `playwright.config.ts`, `scripts/` |
 | Dev platform     | `.claude/**` + `.agents/**` + `scripts/**` + `.github/**` | `AGENTS.md`                   |

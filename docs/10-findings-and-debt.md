@@ -10,7 +10,7 @@ Changes to request validation or rate-limit behavior need comparison across the 
 
 ## The kill switch is an off-list
 
-`/api/ask` answers 503 only when `ASK_ENABLED`, trimmed and lower-cased, is `false`, `0`, `off`, `no` or `disabled`. Unset or any other value leaves the route on, so a misspelled value does not stop spending. `__tests__/ask-killswitch-behavioral.test.ts` holds the accepted keywords and that an unset value leaves the route on; nothing in the code or the tests rejects or warns on an unknown value.
+`/api/ask` answers 503 only when `ASK_ENABLED`, trimmed and lower-cased, is `false`, `0`, `off`, `no` or `disabled`. Unset or any other value leaves the route on, so a misspelled value does not stop spending. `__tests__/ask/ask-killswitch-behavioral.test.ts` holds the accepted keywords and that an unset value leaves the route on; nothing in the code or the tests rejects or warns on an unknown value.
 
 ## Clients without an address share one rate-limit bucket
 

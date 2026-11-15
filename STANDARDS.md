@@ -176,7 +176,7 @@ only when, the guarantee actually regresses.
 `__tests__/meta/no-source-grep.test.ts` walks every `*.test.ts` file and fails
 if one reads application source via `readFileSync` without the allow tag; it
 runs as part of `pnpm test` inside `pnpm verify` and CI. Kill switches and CSP
-are covered by behavioral tests (`__tests__/ask-killswitch-behavioral.test.ts`,
+are covered by behavioral tests (`__tests__/ask/ask-killswitch-behavioral.test.ts`,
 `__tests__/proxy-csp.test.ts`); no kill switch is verified by grepping source.
 Cross-browser functional coverage is the **required** `e2e-functional` CI job
 (chromium, chromium-mobile, webkit-desktop, webkit-mobile, and their four `-components` projects). Page-section
@@ -324,7 +324,7 @@ is a privacy leak on a fetchable surface.
 **How it is held.** Mechanical: the CSP posture is held by the behavioral test
 `__tests__/proxy-csp.test.ts` (asserts the header is present and shaped
 correctly on responses); the `/api/ask` kill switch is held by
-`__tests__/ask-killswitch-behavioral.test.ts` (calls the route with each
+`__tests__/ask/ask-killswitch-behavioral.test.ts` (calls the route with each
 off-keyword and asserts the dependencies that should _not_ run were not
 called); the SYSTEM prompt is held by `__tests__/system-prompt.test.ts` (asserts
 no phone-number pattern, asserts the prompt still clears the 512-token Haiku 5.5 cache minimum).

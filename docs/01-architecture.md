@@ -44,7 +44,7 @@ flowchart TB
     subgraph bff["BFF / Server (lib + app/api)"]
         api["app/api/**<br/>route handlers"]
         handler["lib/server/route.ts<br/>defineHandler envelope"]
-        libcore["lib/rate-limit · lib/env · lib/ask/** · lib/ask-log · lib/lighthouse-scores · lib/contact-delivery · lib/contact-outbox"]
+        libcore["lib/rate-limit · lib/env · lib/ask/** · lib/lighthouse-scores · lib/contact/delivery · lib/contact/outbox"]
     end
     sections["components/sections/**<br/>RSC sections and nested groups"] --> cmods
     cmods --> schemas
@@ -58,7 +58,7 @@ The BFF core talks to the external services, the islands fetch through the route
 
 ```mermaid
 flowchart TB
-    libcore["lib/rate-limit · lib/env · lib/ask/** · lib/ask-log · lib/lighthouse-scores · lib/contact-delivery · lib/contact-outbox"]
+    libcore["lib/rate-limit · lib/env · lib/ask/** · lib/lighthouse-scores · lib/contact/delivery · lib/contact/outbox"]
     subgraph ext["External services"]
         redis[("Upstash Redis")]
         gw["Vercel AI Gateway<br/>(anthropic/claude-haiku-5.5)"]
@@ -148,8 +148,8 @@ flowchart TD
     island["client islands<br/>InteractiveShell · ContactForm · DawMixer*"] -->|HTTP| apiask["app/api/ask"]
     island -->|HTTP| apicontact["app/api/contact"]
     apicontact --> defh["lib/server/route.ts defineHandler"]
-    apicontact --> delivery["lib/contact-delivery"]
-    apicontact --> outbox["lib/contact-outbox"]
+    apicontact --> delivery["lib/contact/delivery"]
+    apicontact --> outbox["lib/contact/outbox"]
     retry["app/api/contact-retry (cron, twice a day)"] --> delivery
     retry --> outbox
     outbox --> redis

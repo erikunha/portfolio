@@ -106,7 +106,7 @@ Almost all findings here are tests that pass for the wrong reason.
 Before writing: state the sentence the test proves. Then break the code and confirm the test fails. If it still passes, the test is worthless.
 Check: mutate the value under test and watch the test fail before you watch it pass.
 Examples:
-- PR148 `__tests__/agent-eval-ab.test.ts`: the assertion matched the substring `$4`, so `$4.01` satisfied it; the fix anchored it to the cap clause.
+- PR148 `__tests__/agent/agent-eval-ab.test.ts`: the assertion matched the substring `$4`, so `$4.01` satisfied it; the fix anchored it to the cap clause.
 - PR301 `tests/e2e/type-reveal.spec.ts`: the per route guard visited zero marked elements, so it passed for free; the fix asserted a marked count above zero.
 
 **Rule 13. A loop that filters items must assert that the filter produced something.**

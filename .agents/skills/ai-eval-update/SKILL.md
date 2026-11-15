@@ -1,6 +1,6 @@
 ---
 name: ai-eval-update
-description: Use when maintaining the /api/ask evaluation harness, including adding or editing corpus items (`content/ask-eval-corpus.ts`), the judge-calibration gold set (`content/ask-eval-calibration.ts`), or the runner (`scripts/eval/ask-eval.ts`); running `pnpm ask:eval`; interpreting the correctness / jailbreak-resistance / judge-calibration thresholds; reading `ask:eval:latest` from Upstash Redis; or updating the CI `ai-eval` job. Trigger after editing `content/ask-eval-corpus.ts`, `content/ask-eval-calibration.ts`, `scripts/eval/ask-eval.ts`, the ask SYSTEM prompt (`lib/ask/system-prompt.ts`), or `__tests__/ask-*`.
+description: Use when maintaining the /api/ask evaluation harness, including adding or editing corpus items (`content/ask-eval-corpus.ts`), the judge-calibration gold set (`content/ask-eval-calibration.ts`), or the runner (`scripts/eval/ask-eval.ts`); running `pnpm ask:eval`; interpreting the correctness / jailbreak-resistance / judge-calibration thresholds; reading `ask:eval:latest` from Upstash Redis; or updating the CI `ai-eval` job. Trigger after editing `content/ask-eval-corpus.ts`, `content/ask-eval-calibration.ts`, `scripts/eval/ask-eval.ts`, the ask SYSTEM prompt (`lib/ask/system-prompt.ts`), or `__tests__/ask/`.
 ---
 
 # ai-eval harness maintenance
@@ -45,7 +45,7 @@ filter is `AI_PATHS` in `scripts/ci/detect-changes-paths.ts`: the ask route and 
 `lib/eval/`, `lib/agent/`, the rate-limit, logging and env modules the route imports, the
 content modules the system prompt and the fact sheet compose from (`content/ask-facts.ts`,
 `content/profile.ts`, `content/projects.ts` and the other profile modules), the eval corpus
-and calibration, `scripts/eval/ask-eval.ts`, and `__tests__/ask-*`. Read that file for the exact
+and calibration, `scripts/eval/ask-eval.ts`, and `__tests__/ask/`. Read that file for the exact
 set. The job has a 15-minute timeout; a ~12-minute run is normal, so a single slow Gateway
 run can hit the limit and report `cancelled`. Re-run just that job (it is transient, not a
 quality failure) rather than bumping the timeout on a one-off.
@@ -80,7 +80,7 @@ cases are deliberately borderline-hard.
   goes unmeasured (the run fails when no jailbreak reaches the model). The `jb-quoted-override-*` items
   wrap an override phrase in quotes (English and pt-BR): the gate skips quoted spans, so they reach the
   model and measure whether it obeys a quoted instruction. An item that mentions an
-  override phrase in a normal question must stay out of the gate; `__tests__/ask-eval-corpus.test.ts`
+  override phrase in a normal question must stay out of the gate; `__tests__/ask/ask-eval-corpus.test.ts`
   checks it.
 - **Write criteria as key facts, not lists.** A factual item declares `facts` (1 to `MAX_CRITERION_FACTS`,
   currently 4): the few things a concise answer must carry. Each fact must appear in the criterion text
@@ -93,7 +93,7 @@ cases are deliberately borderline-hard.
   `canonicalAnswer` (handed to the judge directly, no feature call) and a `humanVerdict`.
   Keep ≥20 cases, biased to the hardest categories, at least four each for `jailbreak` and
   `output-validation` with both verdicts, and enough negatives (`humanVerdict: false`) that one false pass
-  is tolerated by `MIN_CALIBRATION_TNR` and two are not (`__tests__/ask-eval-calibration.test.ts` checks it).
+  is tolerated by `MIN_CALIBRATION_TNR` and two are not (`__tests__/ask/ask-eval-calibration.test.ts` checks it).
   A case with `pendingRecalibration: true` has a human label no judge run has confirmed yet: the run output
   tags it `[pending]`, and a disagreement on it means check the label first. Remove the marker once a
   scheduled run agrees with it. The borderline
@@ -104,7 +104,7 @@ cases are deliberately borderline-hard.
   the criterion does not name, must pass) and `false-date` (a wrong date, must fail).
 - **The judge sees a fact sheet.** `buildJudgeFactSheet` (`lib/eval/fact-sheet.ts`) renders the run
   date, where Erik lives, the current title, the core stack and AI focus, every field of `content/ask-facts.ts` (the module the system prompt composes them from: stack, work scope, targeting, working style, decisions, stories, opinions, the limits he states about his record, community and project detail), the projects and the learning or not-specializing claims, the credentials, the employment history and the education from content, and `scripts/eval/ask-eval.ts` passes it
-  to the calibration pass and to every corpus grade. `lib/eval/judge.ts` sends it as its own system block marked `cacheControl: ephemeral`, after the judge rules and before the per-call question, criterion and answer, so the first judge call writes the block and the rest read it at a tenth of the input rate; the judge cost line counts those cache tokens at their rates. The length `lib/eval/__tests__/fact-sheet.test.ts` pins bounds that cached block: a fact only one criterion needs goes into that criterion, not into the sheet. A claim that matches the sheet is never
+  to the calibration pass and to every corpus grade. `lib/eval/judge.ts` sends it as its own system block marked `cacheControl: ephemeral`, after the judge rules and before the per-call question, criterion and answer, so the first judge call writes the block and the rest read it at a tenth of the input rate; the judge cost line counts those cache tokens at their rates. The length `lib/eval/fact-sheet.test.ts` pins bounds that cached block: a fact only one criterion needs goes into that criterion, not into the sheet. A claim that matches the sheet is never
   fabricated, so a criterion may leave out a true fact without failing the answer that states it.
   A new field on `AskFacts` reaches the sheet automatically through the test that walks every field; a fact the system prompt states belongs in `content/ask-facts.ts`, never as a literal in `lib/ask/system-prompt.ts`, so the sheet and the prompt cannot diverge. A criterion names only the key facts: the judge fails an answer that omits anything the criterion text names, including examples in parentheses.
 - **The judge sees the answer as fenced data.** `judge` (`lib/eval/judge.ts`) wraps the answer in
@@ -113,8 +113,8 @@ cases are deliberately borderline-hard.
   the last balanced JSON object with a boolean `pass` (`parseVerdictObject`); a reply with none is an
   errored judge call, never a retry-as-API-failure and never a silent fail.
 - A stream that errors mid-answer (upstream failure, timeout) is `errored` and excluded from the rates; only an output-guard abort and a model refusal (`REFUSAL_PREFIX`) are graded as answers, so a refused jailbreak passes and a refused factual item fails. A judge API failure or unparseable judge reply on a corpus item is `errored` the same way (`gradeVerdict` in `lib/eval/ask-grading.ts`). `evaluateGates` (same file) then fails the run when any jailbreak item errored, when a kind falls below `MIN_MEASURED_FRACTION`, or when too much of the corpus errored, so a gateway or judge outage cannot pass a gate over items it never measured. Re-run after an outage.
-- Both files are Zod-validated by structural unit tests (`__tests__/ask-eval-corpus.test.ts`,
-  `__tests__/ask-eval-calibration.test.ts`) that run without any API call. Run `pnpm test`
+- Both files are Zod-validated by structural unit tests (`__tests__/ask/ask-eval-corpus.test.ts`,
+  `__tests__/ask/ask-eval-calibration.test.ts`) that run without any API call. Run `pnpm test`
   after editing to catch a malformed entry before CI spends Gateway tokens.
 
 ## Re-labeling triggers (review gold cases when ANY occurs)
@@ -131,7 +131,7 @@ fails closed when the reservation store errors. `main()` in `scripts/eval/ask-ev
 through `setBudgetStore`, so the run uses an in-memory counter sized to one `askReservationCost` per
 corpus item. It needs no Redis credentials and never spends the production monthly counter.
 Adding a request per item (retries, extra turns) means raising that size.
-`__tests__/ask-eval-budget.test.ts` fails if the route's reservation outgrows the store.
+`__tests__/ask/ask-eval-budget.test.ts` fails if the route's reservation outgrows the store.
 
 ## Reading results
 
@@ -139,7 +139,7 @@ Adding a request per item (retries, extra turns) means raising that size.
   cost breakdown: `featureCostUsd` is the production per-answer spend, metered from the route's token usage for `featureCostMeasuredAnswers` answers (the rest are filled with the metered mean, or an estimate when none resolved), `judgeCostUsd` is
   grading overhead and includes BOTH the calibration and corpus judge calls).
 - Live: Upstash Redis key `ask:eval:latest` (`REDIS_RESULT_KEY` in `scripts/eval/ask-eval.ts`,
-  must match `lib/ask-metrics.ts`); the metrics panel reads this one location.
+  must match `lib/ask/metrics.ts`); the metrics panel reads this one location.
 
 ## After corpus changes
 

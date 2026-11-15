@@ -226,11 +226,11 @@ components/SiteShell.tsx             # the one AppShell builder (brand, chrome, 
 components/SiteHome.tsx              # section composition, client shell boundaries, footer
 app/(en)/summary/page.tsx            # one-screen reading view: stats, CTAs, projects | stack + contact
 app/(en)/cv/page.tsx                 # full CV reading view and print control; header, actions row, then summary, skills, experience, education, community | certifications, contact
-components/reading/ReadingShell/ReadingShell.tsx    # SiteShell, reading-view and main wrapper shared by both reading views
-components/reading/ReadingSection/ReadingSection.tsx  # titled section block shared by /cv and /summary
-components/reading/ReadingActions/ReadingActions.tsx  # hire, cross-view and print action row shared by both reading views
-components/reading/CvPage/CvPage.tsx          # /cv and /pt/cv body
-components/reading/SummaryPage/SummaryPage.tsx     # /summary and /pt/summary body
+components/reading/ReadingShell/ReadingShell.tsx        # SiteShell, reading-view and main wrapper shared by both reading views
+components/reading/ReadingSection/ReadingSection.tsx    # titled section block shared by /cv and /summary
+components/reading/ReadingActions/ReadingActions.tsx    # hire, cross-view and print action row shared by both reading views
+components/reading/CvPage/CvPage.tsx                    # /cv and /pt/cv body
+components/reading/SummaryPage/SummaryPage.tsx          # /summary and /pt/summary body
 app/(pt)/links/page.tsx              # pt-BR links page, in the pt-BR root layout
 app/(en)/links/en/page.tsx           # English links page, in the English root layout
 app/(en)/[...missing]/not-found.tsx  # Matrix-themed 404 for unmatched addresses, English root layout
@@ -288,7 +288,7 @@ components/client/InteractiveShell/ConversationReceipt.client.tsx  # privacy rec
 components/client/InteractiveShell/privacy-command.ts  # parser for the privacy shell command
 lib/request-refs.client.ts            # this tab's request ids: sessionStorage with an in-memory fallback
 lib/ask/conversation.client.ts        # this tab's ask conversation: random id, question count and its request ids, rotated after a forget
-lib/ask/forget-request.client.ts          # /api/log/forget client: 200, 429, 503, offline and failure outcomes, sequential batches
+lib/ask/forget-request.client.ts      # /api/log/forget client: 200, 429, 503, offline and failure outcomes, sequential batches
 components/client/LazyIsland/         # ErrorBoundary around Suspense for every React.lazy island
 components/client/TerminalChromeBar/  # window chrome header shared by the shell and the contact form
 components/client/ContactForm/        # contact form island: composer, ContactShell, ContactResult, ContactReceipt, useContactSubmit (send state machine), contact-form-checks, and the messageStore it shares with the timezone panel
@@ -330,7 +330,7 @@ components/CompanyLink/                # server component: company name as a lin
 components/LocaleSwitch/               # EN · PT link pair rendered by the language switch
 components/NoscriptBar/                # no-JavaScript notice, first element in the body
 components/StatusDot/                  # blinking status dot
-components/links/                      # /links and /links/en: identity card, feed, playlists, QR panel and their client controls
+components/links/                      # /links and /links/en: one folder per component (ChannelCard/, IdentityCard/, LinksPage/, Ticker/, VideoHistory/ and the rest, each with its index.ts and test), client controls in client/
 
 content/about.ts                      # About panels, Now rows and Senior status
 content/hero.ts                       # validated Hero metrics, labels and actions
@@ -372,6 +372,7 @@ content/shell-section.ts              # shell module header text
 content/shell-states.schema.ts        # types for the shell and offline state copy
 content/measured-states.schema.ts     # types and tokens for the Measured and mixer-boot state copy
 content/contact-copy.ts               # server-only contact form copy per locale
+content/contact-types.ts              # contact content types, the leaf module the copy, rules and schema import
 content/contact-rules.ts              # contact limits and error codes shared by client and server
 content/contact.ts                    # Zod schema that validates the contact copy
 content/social-urls.ts                # zod-free email, LinkedIn and GitHub constants
@@ -398,12 +399,12 @@ content/open-roles.ts                 # the roles Erik is open to, English and p
 content/ask-facts.ts                  # facts about Erik the ask prompt states (stack, work scope, targeting, Raylu detail, working style, decisions, stories, opinions, calibration limits, community, LedgerLens detail); the opinions and community lines derive from hottest-takes.ts and community.ts
 
 lib/agent/                            # agent-readiness helpers (MCP tools)
-lib/ask/                              # system prompt builder, model const, anti-abuse; preflight.ts (every check before a model call) and stream.ts (model call, pump, settlement) that app/api/ask/route.ts composes
+lib/ask/                              # system prompt builder, model const, anti-abuse, interaction log, metrics, conversation and forget client; types.ts holds the shared log and guard types; preflight.ts (every check before a model call) and stream.ts (model call, pump, settlement) that app/api/ask/route.ts composes
 lib/mdx/                              # MDX remark/recma plugins for /design-system docs
 lib/server/                           # server-only utilities (route-handler factory; cron-auth.ts bearer check for the cron routes; rate-limit-guard.ts withRateLimit wrapper; body-limit.ts withBodyLimit wrapper; rate-limit-key.ts clientRateLimitKey, the only producer of the branded RateLimitIdentifier every client limiter takes; request-locale.ts localeFromRequest, the page locale from the x-site-locale header; fetch-metadata.ts isCrossSiteRequest, the Sec-Fetch-Site gate defineHandler runs first; read-body.ts bounded body read after the limiter; after-response.ts after() wrapper for post-response work)
 lib/env.ts                            # typed, format-validating env accessor
 lib/ask/metrics.ts                    # reads ask:eval:latest for the Measured module
-lib/eval/                             # eval harness core shared by ask-eval and agent-eval: judge, calibration, grading, fact sheet, cost and budget, Redis publish gate
+lib/eval/                             # eval harness core shared by ask-eval and agent-eval (types.ts declares the graded case, so it never imports evals/): judge, calibration, grading, fact sheet, cost and budget, Redis publish gate
 lib/links/                            # /links feed loader (use cache), YouTube parsing, QR, UTM and formatting helpers
 lib/eq-spectrum.ts                    # EQ bar heights, curve path and axis positions from the guitar rig content
 lib/forget-limits.ts                  # per-tab request id cap and the forget limiter window
@@ -414,7 +415,7 @@ lib/script-literal.ts                 # safe JS string literal for inline script
 lib/with-timeout.ts                   # bounded Redis read for server rendering
 lib/ascii-bar.ts                      # ASCII progress bar string
 lib/motion-bootstrap.ts               # the pre-paint script that sets body[data-motion]
-lib/ask/interaction-log.ts                        # KV interaction log per /api/ask request that reaches the model; lib/ask/refusal-count.ts counts refused asks per day; lib/ask/guard-count.ts counts output-guard findings per day; both delegate to lib/ask/daily-counter.ts
+lib/ask/interaction-log.ts         # KV interaction log per /api/ask request that reaches the model; lib/ask/refusal-count.ts counts refused asks per day; lib/ask/guard-count.ts counts output-guard findings per day; both delegate to lib/ask/daily-counter.ts
 lib/boot-animation.ts                 # boot line builders; the sequence text comes from content/hero-client.ts
 lib/typewriter.ts                     # one type, hold and erase loop (runPhraseLoop, typeOut) and createPauseControl
 lib/use-copy-feedback.client.ts       # clipboard state for every copy button
@@ -424,6 +425,7 @@ lib/defer-props.ts                    # deferred-section class and marker
 lib/breakpoint.ts                     # viewport breakpoint constants
 lib/http-status.ts                    # HTTP_STATUS, the status codes the routes answer with
 lib/time.ts                           # time-unit constants, the two-digit clock pad and utcDay (the UTC YYYY-MM-DD string) shared by lib and components
+lib/contact/                         # contact delivery, outbox and validation
 lib/contact/validation.ts             # server-only ContactSchema, shared limits export, honeypot check
 lib/contact/delivery.ts               # shared Resend configuration and 10s send timeout
 lib/contact/outbox.ts                 # ordered pending ids and retry attempt counters
@@ -478,6 +480,9 @@ scripts/eval/agent-eval.ts            # prompt-regression eval of the repo's age
 scripts/metrics/                      # weekly delivery-metrics collection, band scoring and issue filing
 metrics/bands.json                    # rolling bands each delivery metric is scored against
 __tests__/                            # repo-wide Vitest invariants: docs counts, content parity, API behavior, meta checks
+__tests__/ask/                        # route-level /api/ask tests: budget, eval, injection, log, settle, stream, timeout
+__tests__/contact/                    # route-level contact and contact-retry tests
+__tests__/agent/                      # agent surfaces and agent-eval tests
 evals/agents/                         # cases for the agent-rules prompt-regression eval
 .github/workflows/                    # ci.yml plus the scheduled and event workflows listed in section 13
 .husky/                               # pre-commit, commit-msg and pre-push hooks
