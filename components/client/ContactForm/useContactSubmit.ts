@@ -1,5 +1,5 @@
 import { usePathname } from 'next/navigation';
-import { type FormEvent, useEffect, useRef, useState } from 'react';
+import { type FormEvent, useReducer, useRef } from 'react';
 import type { ContactContent } from '@/content/contact';
 import {
   CONTACT_DELIVERY_CODE,
@@ -14,6 +14,14 @@ import { postJson } from '@/lib/post-json';
 import { addRef } from '@/lib/request-refs.client';
 import { REQUEST_ID_HEADER, SITE_LOCALE_HEADER } from '@/lib/stream-protocol';
 import { FIELD_CHECKS } from './contact-form-checks';
+import {
+  CONTACT_PHASE,
+  type ContactFieldErrors,
+  type ContactPhase,
+  contactSubmitReducer,
+  INITIAL_CONTACT_SUBMIT_STATE,
+  visibleContactErrors,
+} from './contact-submit-state';
 import { messageStore } from './messageStore';
 
 export const CONTACT_STATUS = {
@@ -29,15 +37,21 @@ export const CONTACT_FIELDS = Object.values(CONTACT_FIELD);
 
 const CONTACT_ENDPOINT = '/api/contact';
 const REQUEST_TIMEOUT_MS = 20_000;
-const INITIAL_FAILURE_COUNT = 0;
-
-type FieldErrors = Partial<Record<ContactField, string>>;
 
 interface ContactResponse {
   ok?: boolean;
   requestId?: string;
   error?: { code?: string; message?: string };
 }
+
+const STATUS_OF_PHASE: Record<ContactPhase, ContactStatus> = {
+  [CONTACT_PHASE.IDLE]: CONTACT_STATUS.IDLE,
+  [CONTACT_PHASE.SUBMITTING]: CONTACT_STATUS.SUBMITTING,
+  [CONTACT_PHASE.INVALID]: CONTACT_STATUS.ERROR,
+  [CONTACT_PHASE.FAILED]: CONTACT_STATUS.ERROR,
+  [CONTACT_PHASE.QUEUED]: CONTACT_STATUS.QUEUED,
+  [CONTACT_PHASE.SUCCESS]: CONTACT_STATUS.SUCCESS,
+};
 
 export function useContactSubmit({
   copy,
@@ -49,56 +63,28 @@ export function useContactSubmit({
   honeypot: string;
 }) {
   const pageLocale = localeOfPath(usePathname());
-  const [status, setStatus] = useState<ContactStatus>(CONTACT_STATUS.IDLE);
-  const [errors, setErrors] = useState<FieldErrors>({});
-  const [errorMsg, setErrorMsg] = useState('');
-  const [receipt, setReceipt] = useState<{ ref: string; at: Date } | null>(null);
-  const [errorRef, setErrorRef] = useState('');
-  const [failureCount, setFailureCount] = useState(INITIAL_FAILURE_COUNT);
+  const [state, dispatch] = useReducer(contactSubmitReducer, INITIAL_CONTACT_SUBMIT_STATE);
   const pendingRef = useRef(false);
-  const { message } = values;
-
-  useEffect(() => {
-    setErrors((current) => {
-      if (!current.message || !FIELD_CHECKS.message(message)) return current;
-      const { message: _cleared, ...rest } = current;
-      return rest;
-    });
-  }, [message]);
+  const errors = visibleContactErrors(state.errors, FIELD_CHECKS.message(values.message));
 
   function noteEdit(field: ContactField, value: string) {
-    if (errors[field]) {
-      const valid = FIELD_CHECKS[field](value);
-      setErrors((current) => {
-        const { [field]: _cleared, ...rest } = current;
-        return valid ? rest : { ...current, [field]: contactFieldError(copy, field, value) };
-      });
-    }
-    if (!pendingRef.current) {
-      setStatus(CONTACT_STATUS.IDLE);
-      setErrorMsg('');
-    }
+    const error = FIELD_CHECKS[field](value) ? undefined : contactFieldError(copy, field, value);
+    dispatch({ type: 'edited', field, error });
   }
 
   async function submit(event: FormEvent) {
     event.preventDefault();
     if (pendingRef.current) return;
-    const fieldErrors: FieldErrors = {};
+    const fieldErrors: ContactFieldErrors = {};
     for (const field of CONTACT_FIELDS) {
       if (!FIELD_CHECKS[field](values[field])) {
         fieldErrors[field] = contactFieldError(copy, field, values[field]);
       }
     }
-    setErrors(fieldErrors);
-    setErrorMsg('');
-    setErrorRef('');
-    if (Object.keys(fieldErrors).length) {
-      setStatus(CONTACT_STATUS.ERROR);
-      setFailureCount((count) => count + 1);
-      return;
-    }
+    dispatch({ type: 'validated', errors: fieldErrors });
+    if (Object.keys(fieldErrors).length) return;
     pendingRef.current = true;
-    setStatus(CONTACT_STATUS.SUBMITTING);
+    let failureRef = '';
     try {
       const { response: res, data } = await postJson<ContactResponse>(
         CONTACT_ENDPOINT,
@@ -113,44 +99,37 @@ export function useContactSubmit({
       if (res.status === HTTP_STATUS.accepted && apiError?.code === CONTACT_DELIVERY_CODE.QUEUED) {
         messageStore.reset();
         if (ref) addRef(ref);
-        setStatus(CONTACT_STATUS.QUEUED);
+        dispatch({ type: 'queued' });
         return;
       }
       if (!res.ok || data?.ok !== true || res.status === HTTP_STATUS.accepted) {
-        setErrorRef(ref);
+        failureRef = ref;
         throw new Error(CONTACT_ENDPOINT, { cause: apiError?.code });
       }
       messageStore.reset();
       if (ref) addRef(ref);
-      setReceipt(ref ? { ref, at: new Date() } : null);
-      setStatus(CONTACT_STATUS.SUCCESS);
+      dispatch({ type: 'delivered', receipt: ref ? { ref, at: new Date() } : null });
     } catch (error) {
       const code =
         error instanceof Error && typeof error.cause === 'string' ? error.cause : undefined;
-      setErrorMsg(contactErrorMessage(copy, code));
-      setStatus(CONTACT_STATUS.ERROR);
-      setFailureCount((count) => count + 1);
+      dispatch({ type: 'rejected', message: contactErrorMessage(copy, code), ref: failureRef });
     } finally {
       pendingRef.current = false;
     }
   }
 
   function dismiss() {
-    setStatus(CONTACT_STATUS.IDLE);
-    setErrors({});
-    setErrorMsg('');
-    setErrorRef('');
-    setReceipt(null);
+    dispatch({ type: 'dismissed' });
   }
 
   return {
-    status,
-    busy: status === CONTACT_STATUS.SUBMITTING,
+    status: STATUS_OF_PHASE[state.phase],
+    busy: state.phase === CONTACT_PHASE.SUBMITTING,
     errors,
-    errorMsg,
-    errorRef,
-    receipt,
-    failureCount,
+    errorMsg: state.errorMsg,
+    errorRef: state.errorRef,
+    receipt: state.receipt,
+    failureCount: state.failureCount,
     noteEdit,
     submit,
     dismiss,
