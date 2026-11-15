@@ -1,16 +1,20 @@
 import { isIP } from 'node:net';
 import { Ratelimit } from '@upstash/ratelimit';
-import { Redis, type Requester } from '@upstash/redis';
 import { askReservationCost } from '@/lib/ask/input-reservation';
 import { ASK_MAX_OUTPUT_TOKENS } from '@/lib/ask/limits';
 import { ASK_BUDGET_UNITS_PER_USD, askBudgetCost } from '@/lib/ask/usage';
 import { FORGET_WINDOW, FORGET_WINDOW_REQUESTS } from '@/lib/forget-limits';
 import { log } from '@/lib/log';
+import { getRedis } from '@/lib/redis';
 import type { RateLimitIdentifier } from '@/lib/server/rate-limit-key';
 import { utcDay } from '@/lib/time';
 
-const REDIS_RETRIES = 1;
-const REDIS_RETRY_BACKOFF_MS = 50;
+export {
+  getRedis,
+  hasRedisCredentials,
+  REDIS_ENV_PAIRS,
+  RedisNotConfiguredError,
+} from '@/lib/redis';
 
 type LimitResult = { success: boolean; reset?: number };
 
@@ -22,44 +26,8 @@ export interface GlobalRateLimiter {
   limit(): Promise<LimitResult>;
 }
 
-let _redis: Redis | undefined;
 let _askLimit: Ratelimit | undefined;
 let _contactLimit: Ratelimit | undefined;
-
-export const REDIS_ENV_PAIRS = [
-  { url: 'UPSTASH_REDIS_REST_URL', token: 'UPSTASH_REDIS_REST_TOKEN' },
-  { url: 'KV_REST_API_URL', token: 'KV_REST_API_TOKEN' },
-] as const;
-const REDIS_ENV_NAMES = REDIS_ENV_PAIRS.map(({ url, token }) => `${url} and ${token}`).join(' or ');
-
-export class RedisNotConfiguredError extends Error {
-  constructor() {
-    super(`Redis is not configured: ${REDIS_ENV_NAMES} must be set`);
-    this.name = 'RedisNotConfiguredError';
-  }
-}
-
-const notConfiguredRequester: Requester = {
-  request: () => Promise.reject(new RedisNotConfiguredError()),
-};
-
-function rejectedClient(): Redis {
-  return new Redis(notConfiguredRequester);
-}
-
-export function hasRedisCredentials(): boolean {
-  return REDIS_ENV_PAIRS.some(({ url, token }) => Boolean(process.env[url] && process.env[token]));
-}
-
-export function getRedis(): Redis {
-  if (_redis) return _redis;
-  if (!hasRedisCredentials()) return rejectedClient();
-  const instance = Redis.fromEnv({
-    retry: { retries: REDIS_RETRIES, backoff: () => REDIS_RETRY_BACKOFF_MS },
-  });
-  _redis = instance;
-  return instance;
-}
 
 export function getAskLimit(): ClientRateLimiter {
   if (!_askLimit) {

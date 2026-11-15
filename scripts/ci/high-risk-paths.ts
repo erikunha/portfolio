@@ -22,6 +22,7 @@ export const HIGH_RISK_FILES: readonly string[] = [
   'next.config.ts',
   'vercel.json',
   'lib/rate-limit.ts',
+  'lib/redis.ts',
   'lib/env.ts',
   'lib/ip-hash.ts',
   '.env.example',

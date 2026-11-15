@@ -5,6 +5,7 @@ export const AI_PATHS: readonly string[] = [
   'lib/ip-hash.ts',
   'lib/stream-protocol.ts',
   'lib/rate-limit.ts',
+  'lib/redis.ts',
   'lib/forget-limits.ts',
   'lib/env.ts',
   'lib/log.ts',
