@@ -65,8 +65,8 @@ Two `quality-fast` steps stay CI-only: the branch-name lint (the pre-push hook e
 
 ```mermaid
 flowchart TD
-    A["ci-local: the verify chain (Biome, types, content, gates, unit tests with coverage)"] --> B["commitlint and gitleaks over base..HEAD"]
-    B --> C["audit, tool-pins, mutation canary"]
+    A["ci-local: the verify chain (Biome, types, content, gates, unit tests with coverage)"] --> B["commitlint over base..HEAD, gitleaks fixture self-test, gitleaks over the full history"]
+    B --> C["audit, tool-pins, mutation canary, Semgrep self-test and false-positive baseline when the install matches the pin"]
     C --> D["build, bundle-check, route-js-check"]
     D --> E["a11y"]
     E --> F["functional e2e: one project at a time, two workers"]
@@ -75,22 +75,22 @@ flowchart TD
     H --> I["Lighthouse desktop, then mobile, report written to disk"]
 ```
 
-Every stage that serves the build starts a fresh `pnpm start` on a free port, waits until the process it started answers, runs, and stops that process by pid, also when the stage fails and on `SIGINT`, `SIGTERM` or `SIGHUP`. Each CI job has a fresh server too, so in-memory state never carries from one stage to the next. A stage that serves refuses a `.next` that was not built by this run's build stage from the current tree: a stamp written after the build records the commit, the tracked edits and a hash of every untracked file, so editing a file after the build, or resuming with `--from` on an older build, fails the stage instead of verifying old code.
+Every stage that serves the build starts a fresh `pnpm start` on a free port, waits until the process it started answers, runs, and stops it and every process left in its group, escalating to `SIGKILL` for one that ignores `SIGTERM`, also when the stage fails and on `SIGINT`, `SIGTERM` or `SIGHUP`. Each CI job has a fresh server too, so in-memory state never carries from one stage to the next. A stage that serves refuses a `.next` that was not built from the current tree: the build stage writes a stamp after the build that records the commit, the tracked edits and a hash of every untracked file, so editing a file after the build, or resuming with `--from` on an older build, fails the stage instead of verifying old code.
 
 | Flag | Effect |
 | --- | --- |
-| `--base <ref>` | Start of the commit range for commitlint and gitleaks. Default `origin/main`; an unknown ref exits 2 before any stage runs. |
+| `--base <ref>` | Start of the commit range for commitlint. Default `origin/main`; an unknown ref exits 2 before any stage runs. |
 | `--from <stage>` | Resumes at a stage. The stages before it are reported not-run. |
 | `--keep-going` | Continues after a failed stage. |
 | `--list` | Prints the stages with their commands and the declared not-run checks. Runs nothing and verifies nothing. |
 
-Exit codes: 0 every stage passed; 1 a stage failed; 2 bad arguments or an unknown base; 3 nothing failed but a stage did not run (a missing `gitleaks` binary, or the stages before `--from`).
+Exit codes: 0 every stage passed; 1 a stage failed; 2 bad arguments or an unknown base; 3 nothing failed but a stage did not run (a missing `gitleaks` or `semgrep` binary, a Semgrep install whose version differs from the `ci.yml` pin, or the stages before `--from`).
 
-The stage list is the exported `STAGES` in `scripts/lib/ci-full-stages.ts`. Checks that spend model credits (`ask:eval`, `eval:agents`, the `ai-eval` job) and jobs that need GitHub (`ci-gate`, `dependency-review`, `coverage-comment`, `attest-build`) or are report-only (`semgrep`) are listed in `NOT_RUN` with a reason and appear in the table as not-run, never as passed.
+The stage list is the exported `STAGES` in `scripts/lib/ci-full-stages.ts`. Checks that spend model credits (`ask:eval`, `eval:agents`, the `ai-eval` job) and jobs that need GitHub (`ci-gate`, `dependency-review`, `coverage-comment`, `attest-build`) are listed in `NOT_RUN` with a reason and appear in the table as not-run, never as passed. So is the Semgrep scan itself, which is report-only in CI; `pnpm lint:semgrep` runs it on request. The Semgrep self-test and false-positive baseline block `ci-gate`, so they run as stages, but only when the installed `semgrep` is the version `ci.yml` pins: otherwise each is reported not-run with the installed and the pinned version.
 
-Playwright stages run with `CI=true` (retries, `failOnFlakyTests` and `forbidOnly` as in CI) and `--workers=2`, against `E2E_BASE_URL` set to the served port, with the webkit projects as one run each instead of two shards. The design-system components spec, which CI ignores because it has macOS baselines only, runs in its own stage without `CI`. Lighthouse runs from a copy of `lighthouserc.json` and `lighthouserc.mobile.json` whose urls point at the served port and whose upload target is the work directory, so nothing goes to public storage; the files in the repository are unchanged.
+Playwright stages run with `CI=true` (retries, `failOnFlakyTests` and `forbidOnly` as in CI) and `--workers=2`, against `E2E_BASE_URL` set to the served port, with the webkit projects as one run each instead of two shards. The design-system components spec, which CI ignores because it has macOS baselines only, runs in its own stage without `CI`, even when the shell exports it. Lighthouse runs from a copy of `lighthouserc.json` and `lighthouserc.mobile.json` whose urls point at the served port and whose upload target is the work directory, so nothing goes to public storage; the files in the repository are unchanged.
 
-The stages and their children get an environment allowlist (`PATH`, `HOME`, `TMPDIR`, locale, terminal, `PNPM_HOME` and names starting `LC_`, `XDG_` or `PLAYWRIGHT_`; `allowedEnv` in `scripts/lib/ci-full-run.ts`) plus the stage's own env, so a secret exported in the shell cannot reach them. Every key named in a `.env*.local` file (names only, never values) is blanked for them, so the app cannot reach real Redis or Resend.
+The stages and their children get the environment allowlist `ALLOWED_ENV_NAMES` and `ALLOWED_ENV_PREFIXES` in `scripts/lib/ci-full-run.ts` (read it there; it includes `CI`) plus the stage's own env, so a secret exported in the shell cannot reach them. A stage can also name variables to remove from the inherited set: the design-system stage removes `CI` whatever the shell exports. Every key named in a `.env*.local` file (names only, never values) is blanked for them, so the app cannot reach real Redis or Resend.
 
 `scripts/__tests__/ci-full-stages.test.ts` fails when `ci.yml` gains a job that has neither a stage nor a `NOT_RUN` entry, when a `run` step of a mirrored job has no stage, no place in the `ci:local` chain and no named exception, when a Playwright project of the matrix is not run, and when a build or server env differs from the workflow's. `scripts/__tests__/ci-verify-parity.test.ts` fails when a `quality-fast` step is neither in the chain nor in the named CI-only list.
 

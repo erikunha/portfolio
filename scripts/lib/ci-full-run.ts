@@ -167,21 +167,63 @@ export function descendantPids(root: number): number[] {
   return [...found];
 }
 
-export function killGroup(child: ChildProcess | null, signal: NodeJS.Signals = 'SIGTERM'): void {
-  if (child?.pid === undefined || !isRunning(child)) return;
-  for (const pid of descendantPids(child.pid)) {
-    try {
-      process.kill(pid, signal);
-      // biome-ignore lint/suspicious/noEmptyBlockStatements: the process may already be gone
-    } catch {}
+function groupMembers(group: number): number[] {
+  const listing = spawnSync('ps', ['-ax', '-o', 'pid=,pgid='], { encoding: 'utf8' });
+  return (listing.stdout ?? '')
+    .split('\n')
+    .map((line) => line.trim().split(/\s+/).map(Number))
+    .flatMap(([pid, pgid]) =>
+      pid !== undefined && pgid === group && Number.isInteger(pid) && pid !== group ? [pid] : [],
+    );
+}
+
+export const groupAlive = (child: ChildProcess | null): boolean =>
+  child?.pid !== undefined && (isRunning(child) || groupMembers(child.pid).length > 0);
+
+function signal(pid: number, signalName: NodeJS.Signals): void {
+  try {
+    process.kill(pid, signalName);
+    // biome-ignore lint/suspicious/noEmptyBlockStatements: the process may already be gone
+  } catch {}
+}
+
+export function killGroup(
+  child: ChildProcess | null,
+  signalName: NodeJS.Signals = 'SIGTERM',
+): void {
+  if (child?.pid === undefined) return;
+  const leader = child.pid;
+  const leaderRunning = isRunning(child);
+  const survivors = groupMembers(leader);
+  if (!leaderRunning && survivors.length === 0) return;
+  const roots = leaderRunning ? [leader, ...survivors] : survivors;
+  for (const pid of new Set([...roots.flatMap((root) => descendantPids(root)), ...survivors])) {
+    signal(pid, signalName);
   }
   try {
-    process.kill(-child.pid, signal);
+    process.kill(-leader, signalName);
   } catch {
-    try {
-      child.kill(signal);
-      // biome-ignore lint/suspicious/noEmptyBlockStatements: the child may already be gone
-    } catch {}
+    if (leaderRunning) {
+      try {
+        child.kill(signalName);
+        // biome-ignore lint/suspicious/noEmptyBlockStatements: the child may already be gone
+      } catch {}
+    }
+  }
+}
+
+export async function terminateGroup(
+  child: ChildProcess | null,
+  graceMs: number = KILL_GRACE_MS,
+): Promise<void> {
+  if (child === null) return;
+  killGroup(child, 'SIGTERM');
+  const deadline = Date.now() + graceMs;
+  while (groupAlive(child) && Date.now() < deadline) await sleep(STOP_POLL_MS);
+  const killDeadline = Date.now() + graceMs;
+  while (groupAlive(child) && Date.now() < killDeadline) {
+    killGroup(child, 'SIGKILL');
+    await sleep(STOP_POLL_MS);
   }
 }
 
@@ -199,6 +241,19 @@ function installCleanup(): void {
   }
 }
 
+export function childEnv(
+  options: {
+    env: Record<string, string>;
+    blank?: Record<string, string> | undefined;
+    unset?: readonly string[] | undefined;
+  },
+  source: Record<string, string | undefined> = process.env,
+): NodeJS.ProcessEnv {
+  const inherited = allowedEnv(source);
+  for (const name of options.unset ?? []) delete inherited[name];
+  return { ...inherited, ...options.blank, ...options.env } as NodeJS.ProcessEnv;
+}
+
 export function startTracked(
   file: string,
   args: string[],
@@ -206,12 +261,13 @@ export function startTracked(
     cwd: string;
     env: Record<string, string>;
     blank?: Record<string, string>;
+    unset?: readonly string[] | undefined;
     stdio: Stdio;
   },
 ): ChildProcess {
   installCleanup();
   const logFd = options.stdio === 'inherit' ? undefined : openSync(options.stdio.log, 'a');
-  const env = { ...allowedEnv(), ...options.blank, ...options.env } as NodeJS.ProcessEnv;
+  const env = childEnv(options);
   const child = spawn(file, args, {
     cwd: options.cwd,
     env,
@@ -446,10 +502,7 @@ const sleep = (ms: number) => new Promise((resolveWait) => setTimeout(resolveWai
 
 async function stopServer(server: ChildProcess | null): Promise<void> {
   if (server === null) return;
-  killGroup(server, 'SIGTERM');
-  const deadline = Date.now() + KILL_GRACE_MS;
-  while (isRunning(server) && Date.now() < deadline) await sleep(STOP_POLL_MS);
-  if (isRunning(server)) killGroup(server, 'SIGKILL');
+  await terminateGroup(server);
   active.delete(server);
 }
 
@@ -470,13 +523,14 @@ function runChild(
       cwd: root,
       env: command.env ?? {},
       blank,
+      unset: command.unset,
       stdio: 'inherit',
     });
     let timedOut = false;
+    let termination: Promise<void> | undefined;
     const timer = setTimeout(() => {
       timedOut = true;
-      killGroup(child, 'SIGTERM');
-      setTimeout(() => killGroup(child, 'SIGKILL'), KILL_GRACE_MS).unref();
+      termination = terminateGroup(child);
     }, timeoutMs);
     child.on('error', (error) => {
       clearTimeout(timer);
@@ -484,7 +538,9 @@ function runChild(
     });
     child.on('close', (code) => {
       clearTimeout(timer);
-      resolveOutcome({ code: code ?? FAILED, timedOut });
+      const settle = () => resolveOutcome({ code: code ?? FAILED, timedOut });
+      if (termination === undefined) settle();
+      else void termination.then(settle);
     });
   });
 }
@@ -566,6 +622,20 @@ async function runStage(
   }
 }
 
+function unavailableReason(
+  stage: Stage,
+  options: RunnerOptions,
+  workDir: string,
+): string | undefined {
+  return stage.unavailable?.({
+    root: options.root,
+    base: options.base,
+    port: null,
+    origin: null,
+    workDir,
+  });
+}
+
 export async function runStages(options: RunnerOptions): Promise<StageResult[]> {
   const { stages } = options;
   const fromIndex =
@@ -592,10 +662,15 @@ export async function runStages(options: RunnerOptions): Promise<StageResult[]> 
     } else if (stage.requires !== undefined && !hasBinary(stage.requires)) {
       results.push(skipped(stage, `${stage.requires} is not installed`));
     } else {
-      options.log(`stage ${index + 1}/${stages.length}: ${stage.id}`);
-      const result = await runStage(stage, options, workDir, blank);
-      results.push(result);
-      if (result.verdict === 'failed') firstFailure ??= stage.id;
+      const unavailable = unavailableReason(stage, options, workDir);
+      if (unavailable !== undefined) {
+        results.push(skipped(stage, unavailable));
+      } else {
+        options.log(`stage ${index + 1}/${stages.length}: ${stage.id}`);
+        const result = await runStage(stage, options, workDir, blank);
+        results.push(result);
+        if (result.verdict === 'failed') firstFailure ??= stage.id;
+      }
     }
   }
   if (results.every((result) => result.verdict === 'passed')) {

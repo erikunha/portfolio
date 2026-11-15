@@ -8,6 +8,10 @@ useDefault = true
 # would be invisible to the scanner forever. Allowlist the VALUE, never the file.
 # scripts/check-gitleaks-fixture.mjs fails the build if a `paths` key reappears here.
 
+[[allowlists]]
+description = "HISTORY ONLY. These fake GitHub tokens are no longer in the tree, but the first commit still carries them (the sanitize-secrets test) and the secret scan reads every commit, so the exemption has to keep naming them (generic-api-key false positives)"
+regexes = ['''^gh[psour]_AbCdEf0123456789012345$''']
+
 # Both fixtures plant a fake-but-real-shaped secret on purpose, to prove their scanner FIRES.
 # These allowlists exempt the planted VALUE, not the file.
 #

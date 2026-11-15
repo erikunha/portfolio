@@ -7,7 +7,7 @@ const HELP = `pnpm ci:full [--base <ref>] [--from <stage>] [--keep-going] [--lis
 Runs every check CI runs, one stage at a time, on this machine, and prints a table of
 passed, failed and not-run stages with their durations.
 
-  --base <ref>    commit range origin/main..HEAD for commitlint and gitleaks (default origin/main)
+  --base <ref>    commit range origin/main..HEAD for commitlint (default origin/main)
   --from <stage>  resume at a stage; the stages before it are reported not-run
   --keep-going    continue after a failed stage (default: stop at the first failure)
   --list          print the stages and the declared not-run checks, run nothing

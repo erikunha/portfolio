@@ -41,6 +41,8 @@ const MIRRORED_JOBS = [
   'performance',
   'e2e-functional',
   'e2e-visual-chromium',
+  'gitleaks',
+  'semgrep',
 ];
 const ES_COMPONENTS_SUFFIX = '-components';
 const MATRIX_PROJECT = /\$\{\{ matrix\.project \}\}/g;
@@ -227,10 +229,10 @@ describe('stage commands', () => {
     expect(commandText(stage('ci-local').command(CTX))).toBe('pnpm ci:local');
   });
 
-  it('lints commits and scans for secrets over the range from the base to HEAD', () => {
+  it('lints commits over the range from the base to HEAD and scans the whole history for secrets', () => {
     expect(commandText(stage('commitlint').command(CTX))).toContain('--from origin/main --to HEAD');
     const gitleaks = commandText(stage('gitleaks').command(CTX));
-    expect(gitleaks).toContain('origin/main..HEAD');
+    expect(gitleaks).toContain('--full-history HEAD');
     expect(gitleaks).toContain('--config .gitleaks.toml');
     expect(stage('gitleaks').requires).toBe('gitleaks');
   });

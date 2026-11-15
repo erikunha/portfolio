@@ -1,3 +1,4 @@
+import { spawnSync } from 'node:child_process';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
@@ -13,6 +14,7 @@ export interface StageCommand {
   file: string;
   args: string[];
   env?: Record<string, string>;
+  unset?: string[];
 }
 
 export interface Stage {
@@ -23,6 +25,7 @@ export interface Stage {
   steps: readonly string[];
   server?: boolean;
   requires?: string;
+  unavailable?: (ctx: StageContext) => string | undefined;
   produces?: 'build';
   prepare?: (ctx: StageContext) => void;
   command: (ctx: StageContext) => StageCommand;
@@ -53,6 +56,14 @@ const PAGE_SPECS = 'tests/e2e/';
 const VISUAL_SPEC = 'tests/visual/visual.spec.ts';
 const A11Y_SPECS = 'tests/a11y';
 const DESIGN_SYSTEM_SPEC = 'tests/e2e/design-system-components.spec.ts';
+const GITLEAKS_FIXTURE_SCRIPT = 'scripts/check-gitleaks-fixture.mjs';
+const GITLEAKS_HISTORY = '--full-history HEAD';
+const SEMGREP_FIXTURE_SCRIPT = 'scripts/check-semgrep-fixture.mjs';
+const SEMGREP_FP_SCRIPT = 'scripts/measure-semgrep-fp.mjs';
+const CI_WORKFLOW_FILE = '.github/workflows/ci.yml';
+const SEMGREP_PIN = /semgrep==(\d+\.\d+\.\d+)/;
+const SEMGREP_VERSION_LINE = /^(\d+\.\d+\.\d+)\s*$/m;
+const SEMGREP_PROBE_TIMEOUT_MS = 30_000;
 const COMPOUND = '&&';
 const PNPM_PREFIX = 'pnpm ';
 
@@ -60,6 +71,45 @@ export const SERVER: ServerSpec = {
   command: { file: 'pnpm', args: ['start'], env: { ...CI_BUILD_ENV } },
   portEnv: 'PORT',
 };
+
+export function semgrepVersionProblem(
+  installed: string | undefined,
+  pinned: string | undefined,
+): string | undefined {
+  if (pinned === undefined) return `the semgrep pin could not be read from ${CI_WORKFLOW_FILE}`;
+  if (installed === undefined) return `semgrep did not report a version; CI pins ${pinned}`;
+  if (installed !== pinned) {
+    return `semgrep ${installed} is installed but CI pins ${pinned}; the blocking steps run only on the pinned version`;
+  }
+  return undefined;
+}
+
+let probedSemgrepVersion: { value: string | undefined } | undefined;
+
+function installedSemgrepVersion(): string | undefined {
+  if (probedSemgrepVersion === undefined) {
+    const probe = spawnSync('semgrep', ['--version'], {
+      encoding: 'utf8',
+      timeout: SEMGREP_PROBE_TIMEOUT_MS,
+      env: { ...process.env, SEMGREP_ENABLE_VERSION_CHECK: '0' },
+    });
+    probedSemgrepVersion = {
+      value: probe.error === undefined ? SEMGREP_VERSION_LINE.exec(probe.stdout)?.[1] : undefined,
+    };
+  }
+  return probedSemgrepVersion.value;
+}
+
+function pinnedSemgrepVersion(root: string): string | undefined {
+  try {
+    return SEMGREP_PIN.exec(readFileSync(join(root, CI_WORKFLOW_FILE), 'utf8'))?.[1];
+  } catch {
+    return undefined;
+  }
+}
+
+const semgrepUnavailable = (ctx: StageContext): string | undefined =>
+  semgrepVersionProblem(installedSemgrepVersion(), pinnedSemgrepVersion(ctx.root));
 
 export const commandText = (command: StageCommand): string =>
   [command.file, ...command.args].join(' ');
@@ -104,6 +154,11 @@ const playwright = (
     command: (ctx) => ({ file, args: [...args, `--workers=${WORKERS}`], env: env(ctx) }),
   };
 };
+
+const withoutCi = (stage: Stage): Stage => ({
+  ...stage,
+  command: (ctx) => ({ ...stage.command(ctx), unset: ['CI'] }),
+});
 
 const E2E_PROJECTS = [
   'chromium',
@@ -174,14 +229,22 @@ export const STAGES: readonly Stage[] = [
       args: ['exec', 'commitlint', '--from', ctx.base, '--to', 'HEAD', '--verbose'],
     }),
   },
+  plain(
+    'gitleaks-selftest',
+    'Gitleaks fires on its fixture',
+    ['gitleaks'],
+    'node',
+    [GITLEAKS_FIXTURE_SCRIPT],
+    { requires: 'gitleaks' },
+  ),
   {
     id: 'gitleaks',
-    title: 'Secret scan of the branch commits',
+    title: 'Secret scan of the full history',
     jobs: ['gitleaks'],
     mirrors: [],
-    steps: [],
+    steps: ['Scan the history reachable from the checked-out commit'],
     requires: 'gitleaks',
-    command: (ctx) => ({
+    command: () => ({
       file: 'gitleaks',
       args: [
         'git',
@@ -190,7 +253,7 @@ export const STAGES: readonly Stage[] = [
         '--redact',
         '--config',
         '.gitleaks.toml',
-        `--log-opts=${ctx.base}..HEAD`,
+        `--log-opts=${GITLEAKS_HISTORY}`,
       ],
     }),
   },
@@ -203,6 +266,22 @@ export const STAGES: readonly Stage[] = [
     'scripts/check-mutation-kills.mjs',
     '--canary',
   ]),
+  plain(
+    'semgrep-selftest',
+    'Semgrep vendored rules fire on the fixture',
+    ['semgrep'],
+    'node',
+    [SEMGREP_FIXTURE_SCRIPT],
+    { requires: 'semgrep', unavailable: semgrepUnavailable },
+  ),
+  plain(
+    'semgrep-fp-baseline',
+    'Semgrep false-positive baseline',
+    ['semgrep'],
+    'node',
+    [SEMGREP_FP_SCRIPT],
+    { requires: 'semgrep', unavailable: semgrepUnavailable },
+  ),
   {
     ...plain('build', 'Production build', ['build'], 'pnpm', ['build']),
     produces: 'build',
@@ -237,7 +316,7 @@ export const STAGES: readonly Stage[] = [
       `pnpm playwright test --project=${project} ${VISUAL_SPEC}`,
     ),
   ),
-  {
+  withoutCi({
     ...playwright(
       'design-system-components',
       'Design-system components spec on chromium (macOS baselines)',
@@ -246,7 +325,7 @@ export const STAGES: readonly Stage[] = [
       (ctx) => ({ E2E_BASE_URL: ctx.origin ?? '' }),
     ),
     mirrors: [],
-  },
+  }),
   lighthouse('lhci-desktop', 'Lighthouse desktop', 'lighthouserc.json', 'pnpm lhci'),
   lighthouse('lhci-mobile', 'Lighthouse mobile', 'lighthouserc.mobile.json', 'pnpm lhci:mobile'),
 ];
@@ -294,7 +373,7 @@ export const NOT_RUN: readonly Exclusion[] = [
     id: 'semgrep',
     job: 'semgrep',
     reason:
-      'report-only in CI and needs the pinned Semgrep install; pnpm lint:semgrep runs it on request',
+      'the scan is report-only in CI; pnpm lint:semgrep runs it on request. The blocking self-test and false-positive baseline have their own stages',
   },
 ];
 
@@ -303,6 +382,18 @@ export const UNMIRRORED_CI_STEPS: ReadonlyMap<string, string> = new Map([
   ['pnpm install --frozen-lockfile', 'the local checkout already has its dependencies installed'],
   ['Check if pnpm-lock.yaml changed', 'ci:full runs the audit whatever changed'],
   ['Check if the mutation runner surface changed', 'ci:full runs the canary whatever changed'],
+  ['Download gitleaks release tarball', 'the local gitleaks is the one installed on this machine'],
+  [
+    'Install gitleaks (checksum-verified, exact-pinned)',
+    'the local gitleaks is the one installed on this machine',
+  ],
+  ['Fail on findings', 'the gitleaks stage fails on any non-zero exit of the scan'],
+  [
+    'Install Semgrep (exact-pinned) and resolve its path',
+    'the semgrep stages compare the installed version with the pin and report a difference as not-run',
+  ],
+  ['Run Semgrep (SARIF, report-only)', 'report-only in CI; pnpm lint:semgrep runs it on request'],
+  ['Assert Semgrep produced a report', 'the scan that writes the report is not run'],
   ['Write the build provenance manifest', 'only the attestation on main reads it'],
   ['Runner image version', 'names the GitHub runner image for the browser cache key'],
   ['Install Playwright Chromium (for axe-core scan)', 'browsers are installed once per machine'],
