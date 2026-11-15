@@ -1,4 +1,4 @@
-import { Ratelimit } from '@upstash/ratelimit';
+import { type Duration, Ratelimit } from '@upstash/ratelimit';
 import { askReservationCost } from '@/lib/ask/input-reservation';
 import { ASK_MAX_OUTPUT_TOKENS } from '@/lib/ask/limits';
 import { ASK_BUDGET_UNITS_PER_USD, askBudgetCost } from '@/lib/ask/usage';
@@ -26,128 +26,101 @@ export interface GlobalRateLimiter {
   limit(): Promise<LimitResult>;
 }
 
-let _askLimit: Ratelimit | undefined;
-let _contactLimit: Ratelimit | undefined;
-
-export function getAskLimit(): ClientRateLimiter {
-  if (!_askLimit) {
-    _askLimit = new Ratelimit({
-      redis: getRedis(),
-      limiter: Ratelimit.slidingWindow(8, '1 h'),
-      prefix: 'rl:ask',
-    });
-  }
-  return _askLimit;
-}
-
-export function getContactLimit(): ClientRateLimiter {
-  if (!_contactLimit) {
-    _contactLimit = new Ratelimit({
-      redis: getRedis(),
-      limiter: Ratelimit.slidingWindow(3, '10 m'),
-      prefix: 'rl:contact',
-    });
-  }
-  return _contactLimit;
-}
-
-const MCP_LIMIT_REQUESTS = 60;
-
-let _mcpLimit: Ratelimit | undefined;
-
-export function getMcpLimit(): ClientRateLimiter {
-  if (!_mcpLimit) {
-    _mcpLimit = new Ratelimit({
-      redis: getRedis(),
-      limiter: Ratelimit.slidingWindow(MCP_LIMIT_REQUESTS, '1 m'),
-      prefix: 'rl:mcp',
-    });
-  }
-  return _mcpLimit;
-}
-
-let _healthzLimit: Ratelimit | undefined;
-
-export function getHealthzLimit(): ClientRateLimiter {
-  if (!_healthzLimit) {
-    _healthzLimit = new Ratelimit({
-      redis: getRedis(),
-      limiter: Ratelimit.slidingWindow(120, '1 m'),
-      prefix: 'rl:healthz',
-    });
-  }
-  return _healthzLimit;
-}
-
-let _lighthouseLimit: Ratelimit | undefined;
-
-export function getLighthouseLimit(): ClientRateLimiter {
-  if (!_lighthouseLimit) {
-    _lighthouseLimit = new Ratelimit({
-      redis: getRedis(),
-      limiter: Ratelimit.slidingWindow(30, '1 m'),
-      prefix: 'rl:lighthouse',
-    });
-  }
-  return _lighthouseLimit;
-}
-
-let _errorLogLimit: Ratelimit | undefined;
-
-export function getErrorLogLimit(): ClientRateLimiter {
-  if (!_errorLogLimit) {
-    _errorLogLimit = new Ratelimit({
-      redis: getRedis(),
-      limiter: Ratelimit.slidingWindow(10, '1 m'),
-      prefix: 'rl:errlog',
-    });
-  }
-  return _errorLogLimit;
-}
+type LimiterSpec = {
+  algorithm: 'slidingWindow' | 'fixedWindow';
+  limit: number;
+  window: Duration;
+  prefix: string;
+};
 
 const ERROR_LOG_DAILY_CAP = 500;
 const ERROR_LOG_IP_DAILY_CAP = 50;
-
 const ERROR_LOG_GLOBAL_KEY = 'global';
+
+const LIMITERS = {
+  ask: { algorithm: 'slidingWindow', limit: 8, window: '1 h', prefix: 'rl:ask' },
+  contact: { algorithm: 'slidingWindow', limit: 3, window: '10 m', prefix: 'rl:contact' },
+  mcp: { algorithm: 'slidingWindow', limit: 60, window: '1 m', prefix: 'rl:mcp' },
+  healthz: { algorithm: 'slidingWindow', limit: 120, window: '1 m', prefix: 'rl:healthz' },
+  lighthouse: { algorithm: 'slidingWindow', limit: 30, window: '1 m', prefix: 'rl:lighthouse' },
+  errorLog: { algorithm: 'slidingWindow', limit: 10, window: '1 m', prefix: 'rl:errlog' },
+  errorLogDaily: {
+    algorithm: 'fixedWindow',
+    limit: ERROR_LOG_DAILY_CAP,
+    window: '1 d',
+    prefix: 'rl:errlog:day',
+  },
+  errorLogIpDaily: {
+    algorithm: 'fixedWindow',
+    limit: ERROR_LOG_IP_DAILY_CAP,
+    window: '1 d',
+    prefix: 'rl:errlog:ipday',
+  },
+  forget: {
+    algorithm: 'slidingWindow',
+    limit: FORGET_WINDOW_REQUESTS,
+    window: FORGET_WINDOW,
+    prefix: 'rl:forget',
+  },
+} as const satisfies Record<string, LimiterSpec>;
+
+type LimiterName = keyof typeof LIMITERS;
+
+const limiters = new Map<LimiterName, Ratelimit>();
+
+function limiterFor(name: LimiterName): Ratelimit {
+  const cached = limiters.get(name);
+  if (cached) return cached;
+  const { algorithm, limit, window, prefix } = LIMITERS[name];
+  const built = new Ratelimit({
+    redis: getRedis(),
+    limiter: Ratelimit[algorithm](limit, window),
+    prefix,
+  });
+  limiters.set(name, built);
+  return built;
+}
+
+export function getAskLimit(): ClientRateLimiter {
+  return limiterFor('ask');
+}
+
+export function getContactLimit(): ClientRateLimiter {
+  return limiterFor('contact');
+}
+
+export function getMcpLimit(): ClientRateLimiter {
+  return limiterFor('mcp');
+}
+
+export function getHealthzLimit(): ClientRateLimiter {
+  return limiterFor('healthz');
+}
+
+export function getLighthouseLimit(): ClientRateLimiter {
+  return limiterFor('lighthouse');
+}
+
+export function getErrorLogLimit(): ClientRateLimiter {
+  return limiterFor('errorLog');
+}
 
 let _errorLogDailyLimit: GlobalRateLimiter | undefined;
 
 export function getErrorLogDailyLimit(): GlobalRateLimiter {
   if (!_errorLogDailyLimit) {
-    const shared = new Ratelimit({
-      redis: getRedis(),
-      limiter: Ratelimit.fixedWindow(ERROR_LOG_DAILY_CAP, '1 d'),
-      prefix: 'rl:errlog:day',
-    });
+    const shared = limiterFor('errorLogDaily');
     _errorLogDailyLimit = { limit: () => shared.limit(ERROR_LOG_GLOBAL_KEY) };
   }
   return _errorLogDailyLimit;
 }
 
-let _errorLogIpDailyLimit: Ratelimit | undefined;
-
 export function getErrorLogIpDailyLimit(): ClientRateLimiter {
-  if (!_errorLogIpDailyLimit) {
-    _errorLogIpDailyLimit = new Ratelimit({
-      redis: getRedis(),
-      limiter: Ratelimit.fixedWindow(ERROR_LOG_IP_DAILY_CAP, '1 d'),
-      prefix: 'rl:errlog:ipday',
-    });
-  }
-  return _errorLogIpDailyLimit;
+  return limiterFor('errorLogIpDaily');
 }
 
-let _forgetLimit: Ratelimit | undefined;
-
 export function getForgetLimit(): ClientRateLimiter {
-  if (!_forgetLimit) {
-    _forgetLimit = new Ratelimit({
-      redis: getRedis(),
-      limiter: Ratelimit.slidingWindow(FORGET_WINDOW_REQUESTS, FORGET_WINDOW),
-      prefix: 'rl:forget',
-    });
-  }
-  return _forgetLimit;
+  return limiterFor('forget');
 }
 
 export const MONTHLY_BUDGET_USD = 3;
@@ -324,9 +297,14 @@ export async function settleBudget(
   }
 }
 
+const QUESTION_HASH_LENGTH = 16;
+const DEDUP_LOCK_VALUE = '1';
+const DEDUP_LOCK_TTL_S = 60;
+const DEDUP_LOCK_ACQUIRED = 'OK';
+
 async function identicalQuestionKey(ipHash: string, question: string): Promise<string> {
   const qBytes = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(question));
-  const qHash = Buffer.from(qBytes).toString('hex').slice(0, 16);
+  const qHash = Buffer.from(qBytes).toString('hex').slice(0, QUESTION_HASH_LENGTH);
   return `ask:dedup:${ipHash}:${qHash}`;
 }
 
@@ -344,8 +322,11 @@ export async function checkIdenticalQuestion(
 ): Promise<{ allowed: boolean }> {
   try {
     const key = await identicalQuestionKey(ipHash, question);
-    const result = await getRedis().set(key, '1', { nx: true, ex: 60 });
-    return { allowed: result === 'OK' };
+    const result = await getRedis().set(key, DEDUP_LOCK_VALUE, {
+      nx: true,
+      ex: DEDUP_LOCK_TTL_S,
+    });
+    return { allowed: result === DEDUP_LOCK_ACQUIRED };
   } catch (err) {
     log.error('identical-question check failed, allowing', { err });
     return { allowed: true };
