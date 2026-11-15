@@ -12,6 +12,7 @@ const GLOBALS_CSS = path.join(APP_DIR, 'globals.css');
 const MOTION_OFF_SELECTOR = 'body[data-motion="reduce"] .motion-off\\:transition-none';
 const MOTION_ON_SELECTOR = 'body:not([data-motion="reduce"]) .motion-on\\:opacity-100';
 const PARTIAL_SELECTOR = 'body[data-motion="reduce"] .probe';
+const REVEAL_SELECTOR = 'html.type-reveal-ready body:not([data-motion="reduce"]) .probe';
 
 async function compile(markup: string, source: (dir: string) => string): Promise<Root> {
   const dir = mkdtempSync(path.join(tmpdir(), 'motion-variant-'));
@@ -77,5 +78,17 @@ describe('motion variants', () => {
     });
     expect(declarations(root, PARTIAL_SELECTOR)).toEqual({ transition: 'none' });
     expect(selectors(root)).toEqual([PARTIAL_SELECTOR]);
+  });
+
+  it('resolves reveal-motion-on under the type reveal ready and MOTION on ancestors', async () => {
+    const root = await compile('<div class="probe">', (dir) => {
+      const partial = path.join(dir, 'partial.css');
+      writeFileSync(
+        partial,
+        `@reference "${GLOBALS_CSS}";\n.probe { @variant reveal-motion-on { opacity: 1; } }\n`,
+      );
+      return `@import "${partial}";`;
+    });
+    expect(declarations(root, REVEAL_SELECTOR)).toEqual({ opacity: '1' });
   });
 });

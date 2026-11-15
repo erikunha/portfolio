@@ -41,7 +41,7 @@ export function PlaylistCards({ locale, channelUrl }: { locale: LinksLocale; cha
               href={withUtm(href, `playlist-${playlist.id}`)}
               data-outbound={`playlist-${playlist.id}`}
               className={cn(
-                'block h-full border border-primary-border p-4 no-underline bg-secondary-950 transition-[border-color,background] duration-150 [body[data-motion=reduce]_&]:transition-none',
+                'block h-full border border-primary-border p-4 no-underline bg-secondary-950 transition-[border-color,background] duration-150 motion-off:transition-none',
                 CARD_HOVER,
               )}
             >

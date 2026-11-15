@@ -174,68 +174,78 @@
   }
 
   @media screen {
-    html.type-reveal-ready body:not([data-motion="reduce"]) [data-type-reveal] {
-      clip-path: inset(0 calc(100% - var(--type-reveal-caret-width)) 0 0);
+    /* biome-ignore-start lint/suspicious/noDuplicateSelectors: @variant reveal-motion-on prefixes the selector with ancestors, so these are not duplicates of the base rules */
+    [data-type-reveal] {
+      @variant reveal-motion-on {
+        clip-path: inset(0 calc(100% - var(--type-reveal-caret-width)) 0 0);
+      }
     }
 
-    html.type-reveal-ready
-      body:not([data-motion="reduce"])
-      [data-type-reveal].is-typed:not(.is-static) {
-      animation: type-reveal-clip
-        min(
-          calc(var(--type-chars, 1) * var(--type-reveal-char-duration)),
-          var(--type-reveal-max-duration)
-        )
-        steps(var(--type-chars, 1), end) both;
+    [data-type-reveal].is-typed:not(.is-static) {
+      @variant reveal-motion-on {
+        animation: type-reveal-clip
+          min(
+            calc(var(--type-chars, 1) * var(--type-reveal-char-duration)),
+            var(--type-reveal-max-duration)
+          )
+          steps(var(--type-chars, 1), end) both;
+      }
     }
 
-    html.type-reveal-ready body:not([data-motion="reduce"]) [data-type-reveal]::after {
-      content: "";
-      position: absolute;
-      inset-block-start: 50%;
-      inset-inline-start: 0;
-      translate: 0 -50%;
-      inline-size: 100%;
-      block-size: var(--type-reveal-caret-height);
-      background: linear-gradient(
-        to right,
-        transparent calc(100% - var(--type-reveal-caret-width)),
-        var(--color-primary-500) 0
-      );
-      transform: translateX(calc(var(--type-reveal-caret-width) - 100%));
-      pointer-events: none;
-      opacity: 0;
+    [data-type-reveal]::after {
+      @variant reveal-motion-on {
+        content: "";
+        position: absolute;
+        inset-block-start: 50%;
+        inset-inline-start: 0;
+        translate: 0 -50%;
+        inline-size: 100%;
+        block-size: var(--type-reveal-caret-height);
+        background: linear-gradient(
+          to right,
+          transparent calc(100% - var(--type-reveal-caret-width)),
+          var(--color-primary-500) 0
+        );
+        transform: translateX(calc(var(--type-reveal-caret-width) - 100%));
+        pointer-events: none;
+        opacity: 0;
+      }
     }
 
-    html.type-reveal-ready
-      body:not([data-motion="reduce"])
-      [data-type-reveal]:not(.is-typed, .is-static)::after {
-      opacity: 1;
+    [data-type-reveal]:not(.is-typed, .is-static)::after {
+      @variant reveal-motion-on {
+        opacity: 1;
+      }
     }
 
-    html.type-reveal-ready
-      body:not([data-motion="reduce"])
-      [data-type-reveal].is-typed:not(.is-static)::after {
-      animation:
-        type-reveal-travel
-        min(
-          calc(var(--type-chars, 1) * var(--type-reveal-char-duration)),
-          var(--type-reveal-max-duration)
-        )
-        steps(var(--type-chars, 1), end) both,
-        type-reveal-caret var(--type-reveal-caret-blink) step-end var(--type-reveal-caret-blinks)
-        both;
+    [data-type-reveal].is-typed:not(.is-static)::after {
+      @variant reveal-motion-on {
+        animation:
+          type-reveal-travel
+          min(
+            calc(var(--type-chars, 1) * var(--type-reveal-char-duration)),
+            var(--type-reveal-max-duration)
+          )
+          steps(var(--type-chars, 1), end) both,
+          type-reveal-caret var(--type-reveal-caret-blink) step-end var(--type-reveal-caret-blinks)
+          both;
+      }
     }
 
-    html.type-reveal-ready body:not([data-motion="reduce"]) [data-type-reveal].is-static {
-      clip-path: none;
-      animation: none;
+    [data-type-reveal].is-static {
+      @variant reveal-motion-on {
+        clip-path: none;
+        animation: none;
+      }
     }
 
-    html.type-reveal-ready body:not([data-motion="reduce"]) [data-type-reveal].is-static::after {
-      animation: none;
-      opacity: 0;
+    [data-type-reveal].is-static::after {
+      @variant reveal-motion-on {
+        animation: none;
+        opacity: 0;
+      }
     }
+    /* biome-ignore-end lint/suspicious/noDuplicateSelectors: end of the @variant reveal-motion-on rules */
   }
 }
 

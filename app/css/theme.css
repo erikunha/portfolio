@@ -1,5 +1,6 @@
 @custom-variant motion-off (body[data-motion="reduce"] &);
 @custom-variant motion-on (body:not([data-motion="reduce"]) &);
+@custom-variant reveal-motion-on (html.type-reveal-ready body:not([data-motion="reduce"]) &);
 
 @theme {
   --color-text: var(--color-tertiary-50);
