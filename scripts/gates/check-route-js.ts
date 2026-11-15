@@ -1,5 +1,5 @@
 import { existsSync, readFileSync } from 'node:fs';
-import { gzipSync } from 'node:zlib';
+import { gzipBytes } from '../lib/gzip-size';
 
 const MAX_ROUTE_TOTAL_KB = 164.2;
 
@@ -9,8 +9,25 @@ const FRAMEWORK_FLOOR_TOLERANCE_KB = 2;
 const MANIFEST = '.next/diagnostics/route-bundle-stats.json';
 
 const BYTES_PER_KB = 1024;
+const ROUTE_COLUMN_WIDTH = 28;
+const TOTAL_COLUMN_WIDTH = 6;
+const STATUS_COLUMN_WIDTH = 5;
 
-const fail = (message) => {
+interface RouteRow {
+  route: string;
+  firstLoadChunkPaths?: string[];
+}
+
+interface RouteTotal {
+  route: string;
+  total: number;
+}
+
+interface RouteFailure extends RouteTotal {
+  appOwned: number;
+}
+
+const fail = (message: string): never => {
   console.error(message);
   process.exit(1);
 };
@@ -21,13 +38,13 @@ if (!existsSync(MANIFEST)) {
   );
 }
 
-const manifest = JSON.parse(readFileSync(MANIFEST, 'utf-8'));
+const manifest: unknown = JSON.parse(readFileSync(MANIFEST, 'utf-8'));
 
 if (!Array.isArray(manifest) || manifest.length === 0) {
   fail(`${MANIFEST} lists no routes. The build emitted no route stats, refusing to pass.`);
 }
 
-const gzipKb = (files) => {
+const gzipKb = (files: string[]): number => {
   let bytes = 0;
   for (const file of files) {
     if (!existsSync(file)) {
@@ -36,12 +53,12 @@ const gzipKb = (files) => {
           'The manifest and .next/static are out of sync, rebuild rather than trust this reading.',
       );
     }
-    bytes += gzipSync(readFileSync(file)).length;
+    bytes += gzipBytes(file);
   }
   return bytes / BYTES_PER_KB;
 };
 
-const routes = manifest.map((row) => ({
+const routes: RouteTotal[] = (manifest as RouteRow[]).map((row) => ({
   route: row.route,
   total: gzipKb((row.firstLoadChunkPaths ?? []).filter((file) => file.endsWith('.js'))),
 }));
@@ -63,7 +80,7 @@ console.log(
 );
 console.log('');
 
-const failures = [];
+const failures: RouteFailure[] = [];
 
 const appHeadroomKb = (MAX_ROUTE_TOTAL_KB - FRAMEWORK_FLOOR_KB).toFixed(1);
 
@@ -71,7 +88,7 @@ for (const { route, total } of routes) {
   const appOwned = total - FRAMEWORK_FLOOR_KB;
   const over = total > MAX_ROUTE_TOTAL_KB;
   console.log(
-    `${(over ? 'FAIL' : 'ok').padEnd(5)} ${route.padEnd(28)} ${total.toFixed(1).padStart(6)} KB total  (${appOwned.toFixed(1)} KB app-owned)`,
+    `${(over ? 'FAIL' : 'ok').padEnd(STATUS_COLUMN_WIDTH)} ${route.padEnd(ROUTE_COLUMN_WIDTH)} ${total.toFixed(1).padStart(TOTAL_COLUMN_WIDTH)} KB total  (${appOwned.toFixed(1)} KB app-owned)`,
   );
   if (over) failures.push({ route, total, appOwned });
 }
@@ -93,7 +110,7 @@ for (const { route, total, appOwned } of failures) {
 }
 lines.push(
   '',
-  'check-bundle-size.mjs cannot catch this: it sums every chunk in .next/static/chunks globally, so a route',
+  'check-bundle-size.ts cannot catch this: it sums every chunk in .next/static/chunks globally, so a route',
   'reusing chunks that already exist for / adds ~0 new bytes and that gate stays green regardless.',
   '',
   `The ${MAX_ROUTE_TOTAL_KB} KB total is the ONLY assertion here. App-owned is reported, never gated: it is`,

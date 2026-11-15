@@ -287,12 +287,16 @@ export const STAGES: readonly Stage[] = [
     produces: 'build',
     command: () => ({ file: 'pnpm', args: ['build'], env: { ...CI_BUILD_ENV } }),
   },
-  plain('bundle-check', 'Bundle size gate', ['build'], 'node', [
-    'scripts/check-bundle-size.mjs',
+  plain('bundle-check', 'Bundle size gate', ['build'], 'pnpm', [
+    'exec',
+    'tsx',
+    'scripts/gates/check-bundle-size.ts',
     '--max-client-kb=220',
   ]),
-  plain('route-js-check', 'Per-route JS budget gate', ['build'], 'node', [
-    'scripts/check-route-js.mjs',
+  plain('route-js-check', 'Per-route JS budget gate', ['build'], 'pnpm', [
+    'exec',
+    'tsx',
+    'scripts/gates/check-route-js.ts',
   ]),
   playwright(
     'a11y',

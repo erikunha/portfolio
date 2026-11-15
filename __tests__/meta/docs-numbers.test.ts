@@ -181,7 +181,7 @@ describe('meta: the README states the numbers the code holds', () => {
     expect(
       ci,
       'the README says the bundle and per-route JS budgets are gates in the build job; the workflow does not run them there',
-    ).toContain('check-bundle-size.mjs');
-    expect(ci).toContain('check-route-js.mjs');
+    ).toContain('check-bundle-size.ts');
+    expect(ci).toContain('check-route-js.ts');
   });
 });

@@ -333,10 +333,10 @@ jobs:
           E2E_LINKS_FEED_FIXTURE: tests/e2e/fixtures/links-feed.json
 
       - name: Bundle size gate
-        run: node scripts/check-bundle-size.mjs --max-client-kb=220
+        run: pnpm exec tsx scripts/gates/check-bundle-size.ts --max-client-kb=220
 
       - name: Per-route JS budget gate
-        run: node scripts/check-route-js.mjs
+        run: pnpm exec tsx scripts/gates/check-route-js.ts
 
       - name: Write the build provenance manifest
         run: |

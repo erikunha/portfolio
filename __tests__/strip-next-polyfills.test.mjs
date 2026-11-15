@@ -61,7 +61,7 @@ describe('strip-next-polyfills.mjs: hardened postinstall', () => {
     expect(readFileSync(mod, 'utf8').startsWith(SENTINEL)).toBe(true);
     expect(
       readFileSync(nomod, 'utf8').startsWith(SENTINEL),
-      'polyfill-nomodule.js is byte-identical to polyfill-module.js (~112KB) and ships as a real chunk. Modern browsers never fetch it (the tag carries noModule, and every browser in this repo browserslist has supported ES modules since ~2017), but check-bundle-size.mjs sums the chunks directory blindly, so leaving it unstripped inflates that gate by ~38KB of bytes no supported user ever downloads.',
+      'polyfill-nomodule.js is byte-identical to polyfill-module.js (~112KB) and ships as a real chunk. Modern browsers never fetch it (the tag carries noModule, and every browser in this repo browserslist has supported ES modules since ~2017), but check-bundle-size.ts sums the chunks directory blindly, so leaving it unstripped inflates that gate by ~38KB of bytes no supported user ever downloads.',
     ).toBe(true);
   });
 

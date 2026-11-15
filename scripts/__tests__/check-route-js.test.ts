@@ -5,18 +5,19 @@ import { join } from 'node:path';
 import { gzipSync } from 'node:zlib';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-const SCRIPT = join(process.cwd(), 'scripts/check-route-js.mjs');
+const SCRIPT = join(process.cwd(), 'scripts/gates/check-route-js.ts');
+const TSX = join(process.cwd(), 'node_modules/.bin/tsx');
 const MANIFEST_REL = '.next/diagnostics/route-bundle-stats.json';
 const CHUNK_DIR_REL = '.next/static/chunks';
 
-let dir;
+let dir: string;
 
-const run = () => spawnSync('node', [SCRIPT], { cwd: dir, encoding: 'utf8' });
+const run = () => spawnSync(TSX, [SCRIPT], { cwd: dir, encoding: 'utf8' });
 
 // A chunk whose GZIPPED size is `kb`. Incompressible bytes, so gzip cannot shrink them below
 // the payload, the gate measures gzipped bytes, and random data is the only way a fixture
 // can pin that number instead of hoping the compressor cooperates.
-function writeChunk(name, kb) {
+function writeChunk(name: string, kb: number) {
   const target = kb * 1024;
   let body = Buffer.alloc(0);
   while (gzipSync(body).length < target) {
@@ -30,7 +31,7 @@ function writeChunk(name, kb) {
   return rel;
 }
 
-function writeManifest(rows) {
+function writeManifest(rows: unknown[]) {
   writeFileSync(join(dir, MANIFEST_REL), JSON.stringify(rows));
 }
 
@@ -43,7 +44,7 @@ afterEach(() => {
   rmSync(dir, { recursive: true, force: true });
 });
 
-describe('check-route-js.mjs', () => {
+describe('check-route-js.ts', () => {
   it('fails when the manifest is absent: a missing build must never read as a pass', () => {
     rmSync(join(dir, MANIFEST_REL), { force: true });
     const res = run();
