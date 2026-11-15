@@ -448,9 +448,9 @@ lib/frame-governor.ts                 # rolling frame-time governor: publishes h
 lib/hiring-profile.ts                 # HiringProfile reader for /api/erik.json
 lib/ip-hash.ts                        # salted IP hash for rate-limit keys and persisted records
 lib/lighthouse-scores.ts              # PSI API fetcher (cached daily)
+lib/listeners.ts                      # createListeners: the subscribe and notify core of every external store
 lib/log.ts                            # pino wrapper (text dev / JSON prod)
 lib/run-gates.ts                      # createRunGates: named run gates, one answer, one callback per change (MatrixRain loop, frame governor sampling)
-lib/listeners.ts                      # createListeners: the subscribe and notify core of every external store
 lib/motion.ts                         # readMotion / applyMotion (body data-attr)
 lib/motion-change.ts                  # MOTION_CHANGE_EVENT and subscribeMotion, the one motionchange listener
 lib/pause-when-hidden.ts              # pause a typewriter loop while the tab is hidden or the element is off screen (built on observeInView)
