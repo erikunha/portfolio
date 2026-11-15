@@ -5,7 +5,8 @@ import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 const SUBPROCESS_TEST_TIMEOUT_MS = 60_000;
-const SCRIPT = join(process.cwd(), 'scripts/check-no-dashes.mjs');
+const SCRIPT = join(process.cwd(), 'scripts/gates/check-no-dashes.ts');
+const TSX = join(process.cwd(), 'node_modules/.bin/tsx');
 const EM_DASH = String.fromCodePoint(0x2014);
 const EN_DASH = String.fromCodePoint(0x2013);
 const GENERATED_HEADING = '## This is NOT the Next.js you know';
@@ -25,7 +26,7 @@ function runOn(files: Fixture, untracked: Fixture = {}): { code: number; out: st
   }
   for (const [name, body] of Object.entries(untracked)) writeFileSync(join(dir, name), body);
   try {
-    const out = execFileSync('node', [SCRIPT, dir], { encoding: 'utf8' });
+    const out = execFileSync(TSX, [SCRIPT, dir], { encoding: 'utf8' });
     return { code: 0, out };
   } catch (e) {
     const err = e as { status: number; stdout: string; stderr: string };

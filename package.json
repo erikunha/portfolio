@@ -39,7 +39,7 @@
     "check:harness-size": "node scripts/check-harness-size.mjs",
     "check:section-order": "node scripts/check-section-order.mjs",
     "check:doc-drift": "node scripts/check-doc-drift.mjs",
-    "check:no-dashes": "node scripts/check-no-dashes.mjs",
+    "check:no-dashes": "tsx scripts/gates/check-no-dashes.ts",
     "check:detect-changes-paths": "node scripts/check-detect-changes-paths.mjs",
     "check:test-integrity": "tsx scripts/check-test-integrity.ts",
     "lint:contrast": "node scripts/contrast-check.mjs",

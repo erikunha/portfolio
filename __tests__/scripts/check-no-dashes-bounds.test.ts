@@ -5,7 +5,8 @@ import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 const SUBPROCESS_TEST_TIMEOUT_MS = 60_000;
-const SCRIPT = join(process.cwd(), 'scripts/check-no-dashes.mjs');
+const SCRIPT = join(process.cwd(), 'scripts/gates/check-no-dashes.ts');
+const TSX = join(process.cwd(), 'node_modules/.bin/tsx');
 const EM_DASH = String.fromCodePoint(0x2014);
 const GENERATED_HEADING = '## This is NOT the Next.js you know';
 const GENERATED_END = '<!-- END:nextjs-agent-rules -->';
@@ -18,7 +19,7 @@ function runOn(files: Record<string, string>): { code: number; out: string } {
     execFileSync('git', ['add', name], { cwd: dir, stdio: 'ignore' });
   }
   try {
-    return { code: 0, out: execFileSync('node', [SCRIPT, dir], { encoding: 'utf8' }) };
+    return { code: 0, out: execFileSync(TSX, [SCRIPT, dir], { encoding: 'utf8' }) };
   } catch (e) {
     const err = e as { status: number; stdout: string; stderr: string };
     return { code: err.status, out: `${err.stdout}${err.stderr}` };
