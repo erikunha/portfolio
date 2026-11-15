@@ -30,7 +30,7 @@ describe('ci.yml build provenance manifest step', () => {
     expect(manifestStep?.run).toBeTypeOf('string');
   });
 
-  it('writes the manifest when RUNNER_TEMP is unset, as the local CI predictor runs it', () => {
+  it('writes the manifest when RUNNER_TEMP is unset, as a local run does', () => {
     const env = { ...process.env };
     delete env.RUNNER_TEMP;
 

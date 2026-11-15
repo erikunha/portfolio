@@ -1,11 +1,5 @@
 import { parse } from 'yaml';
 
-export type ExprValue = string | number | boolean | null | undefined | ExprValue[] | ExprObject;
-export interface ExprObject {
-  [key: string]: ExprValue;
-}
-export type ExprContext = ExprObject;
-
 export interface RunDefaults {
   shell?: string;
   workingDirectory?: string;
@@ -42,226 +36,12 @@ export interface Workflow {
   defaults: RunDefaults;
 }
 
-export class UnsupportedExpressionError extends Error {}
+export class UnsupportedWorkflowError extends Error {}
 
-const EXPRESSION = /\$\{\{([\s\S]*?)\}\}/g;
-const WRAPPED = /^\s*\$\{\{([\s\S]*)\}\}\s*$/;
-const TOKEN =
-  /\s*(?:('(?:[^']|'')*')|(\d+(?:\.\d+)?)|(\|\||&&|==|!=|!|\(|\)|,)|([A-Za-z_][\w-]*(?:\.(?:[A-Za-z_][\w-]*|\*))*))/y;
-const SNIPPET_CHARS = 20;
-const QUOTE = "'";
-const ESCAPED_QUOTE = "''";
-const WILDCARD = '*';
-const SECRETS_PREFIX = 'secrets.';
 const MATRIX_AXIS = 'project';
 const MATRIX_INCLUDE = 'include';
 const MATRIX_SHARD = 'shard';
 const MATRIX_INCLUDE_KEYS = [MATRIX_AXIS, MATRIX_SHARD];
-
-type Token = { kind: 'string' | 'number' | 'op' | 'path'; text: string };
-
-function tokenize(source: string): Token[] {
-  const tokens: Token[] = [];
-  let position = 0;
-  while (position < source.length) {
-    if (/^\s*$/.test(source.slice(position))) break;
-    TOKEN.lastIndex = position;
-    const match = TOKEN.exec(source);
-    if (match === null) {
-      throw new UnsupportedExpressionError(
-        `unsupported expression syntax near "${source.slice(position, position + SNIPPET_CHARS)}"`,
-      );
-    }
-    position = TOKEN.lastIndex;
-    if (match[1] !== undefined) {
-      tokens.push({ kind: 'string', text: match[1].slice(1, -1).replaceAll(ESCAPED_QUOTE, QUOTE) });
-    } else if (match[2] !== undefined) {
-      tokens.push({ kind: 'number', text: match[2] });
-    } else if (match[3] !== undefined) {
-      tokens.push({ kind: 'op', text: match[3] });
-    } else if (match[4] !== undefined) {
-      tokens.push({ kind: 'path', text: match[4] });
-    }
-  }
-  return tokens;
-}
-
-export function isTruthy(value: ExprValue): boolean {
-  return !(value === false || value === 0 || value === '' || value === null || value === undefined);
-}
-
-function comparable(value: ExprValue): string | number | boolean {
-  if (value === null || value === undefined) return '';
-  if (typeof value === 'string') return value.toLowerCase();
-  if (typeof value === 'number' || typeof value === 'boolean') return value;
-  return JSON.stringify(value);
-}
-
-function lookup(path: string, ctx: ExprContext): ExprValue {
-  const segments = path.split('.');
-  let current: ExprValue[] | ExprValue = ctx;
-  let spread = false;
-  for (const segment of segments) {
-    if (segment === WILDCARD) {
-      // The wildcard projects over the values of an object and over the
-      // elements of an array, which is what GitHub does for both:
-      // `labels.*.name` over an array of label objects is the array of names,
-      // and `needs.*.result` over the needs map is the array of results.
-      if (current === null || typeof current !== 'object') return undefined;
-      current = Object.values(current);
-      spread = true;
-      continue;
-    }
-    const step = (value: ExprValue): ExprValue =>
-      value !== null && typeof value === 'object' && !Array.isArray(value)
-        ? value[segment]
-        : undefined;
-    current = spread && Array.isArray(current) ? current.map(step) : step(current as ExprValue);
-  }
-  return current;
-}
-
-const FUNCTIONS: Record<string, (args: ExprValue[]) => ExprValue> = {
-  always: () => true,
-  success: () => true,
-  failure: () => false,
-  cancelled: () => false,
-  toJSON: ([value]) => JSON.stringify(value ?? null),
-  contains: ([haystack, needle]) => {
-    if (Array.isArray(haystack))
-      return haystack.some((item) => comparable(item) === comparable(needle));
-    return String(haystack ?? '')
-      .toLowerCase()
-      .includes(String(needle ?? '').toLowerCase());
-  },
-  startsWith: ([value, prefix]) =>
-    String(value ?? '')
-      .toLowerCase()
-      .startsWith(String(prefix ?? '').toLowerCase()),
-  endsWith: ([value, suffix]) =>
-    String(value ?? '')
-      .toLowerCase()
-      .endsWith(String(suffix ?? '').toLowerCase()),
-};
-
-const LITERALS: Record<string, ExprValue> = { true: true, false: false, null: null };
-
-export type ExprFunctions = Record<string, (args: ExprValue[]) => ExprValue>;
-
-export type SecretReader = (name: string) => void;
-
-export function evaluate(
-  expression: string,
-  ctx: ExprContext,
-  extra: ExprFunctions = {},
-  onSecret?: SecretReader,
-): ExprValue {
-  const tokens = tokenize(expression);
-  let index = 0;
-  const peek = () => tokens[index];
-  const take = () => tokens[index++];
-  const isOp = (text: string) => peek()?.kind === 'op' && peek()?.text === text;
-
-  const parseOr = (): ExprValue => {
-    let left = parseAnd();
-    while (isOp('||')) {
-      take();
-      const right = parseAnd();
-      left = isTruthy(left) ? left : right;
-    }
-    return left;
-  };
-  const parseAnd = (): ExprValue => {
-    let left = parseEquality();
-    while (isOp('&&')) {
-      take();
-      const right = parseEquality();
-      left = isTruthy(left) ? right : left;
-    }
-    return left;
-  };
-  const parseEquality = (): ExprValue => {
-    let left = parseUnary();
-    while (isOp('==') || isOp('!=')) {
-      const negate = take()?.text === '!=';
-      const right = parseUnary();
-      const equal = comparable(left) === comparable(right);
-      left = negate ? !equal : equal;
-    }
-    return left;
-  };
-  const parseUnary = (): ExprValue => {
-    if (isOp('!')) {
-      take();
-      return !isTruthy(parseUnary());
-    }
-    return parsePrimary();
-  };
-  const parsePrimary = (): ExprValue => {
-    const token = take();
-    if (token === undefined) throw new UnsupportedExpressionError('unexpected end of expression');
-    if (token.kind === 'string') return token.text;
-    if (token.kind === 'number') return Number(token.text);
-    if (token.kind === 'op' && token.text === '(') {
-      const inner = parseOr();
-      if (!isOp(')')) throw new UnsupportedExpressionError('missing closing parenthesis');
-      take();
-      return inner;
-    }
-    if (token.kind === 'path') {
-      if (isOp('(')) {
-        take();
-        const args: ExprValue[] = [];
-        while (!isOp(')')) {
-          args.push(parseOr());
-          if (isOp(',')) take();
-          else if (!isOp(')')) throw new UnsupportedExpressionError('malformed function call');
-        }
-        take();
-        const fn = extra[token.text] ?? FUNCTIONS[token.text];
-        if (fn === undefined)
-          throw new UnsupportedExpressionError(`unsupported function ${token.text}()`);
-        return fn(args);
-      }
-      if (token.text in LITERALS) return LITERALS[token.text];
-      if (token.text.startsWith(SECRETS_PREFIX)) {
-        onSecret?.(token.text.slice(SECRETS_PREFIX.length));
-        return '';
-      }
-      const root = token.text.split('.')[0] ?? token.text;
-      if (!(root in ctx)) {
-        throw new UnsupportedExpressionError(
-          `context "${root}" is not available to the predictor (in ${token.text})`,
-        );
-      }
-      return lookup(token.text, ctx);
-    }
-    throw new UnsupportedExpressionError(`unexpected token ${token.text}`);
-  };
-
-  const value = parseOr();
-  if (index < tokens.length)
-    throw new UnsupportedExpressionError(`unexpected token ${peek()?.text}`);
-  return value;
-}
-
-export function interpolate(text: string, ctx: ExprContext, onSecret?: SecretReader): string {
-  return text.replace(EXPRESSION, (_whole, expression: string) => {
-    const value = evaluate(expression, ctx, {}, onSecret);
-    return value === undefined || value === null ? '' : String(value);
-  });
-}
-
-export function conditionHolds(
-  condition: string | undefined,
-  ctx: ExprContext,
-  extra: ExprFunctions = {},
-  onSecret?: SecretReader,
-): boolean {
-  if (condition === undefined) return true;
-  const wrapped = WRAPPED.exec(condition);
-  return isTruthy(evaluate(wrapped?.[1] ?? condition, ctx, extra, onSecret));
-}
 
 interface RawStep {
   id?: string;
@@ -324,8 +104,8 @@ const DEFAULTS_RUN_KEYS = ['shell', 'working-directory'];
 function allowKeys(scope: string, value: object | undefined, allowed: string[]): void {
   const unknown = Object.keys(value ?? {}).filter((key) => !allowed.includes(key));
   if (unknown.length > 0) {
-    throw new UnsupportedExpressionError(
-      `${scope}: "${unknown.join('", "')}" is not executed by the predictor; teach it or the drift guard stays blind to it`,
+    throw new UnsupportedWorkflowError(
+      `${scope}: "${unknown.join('", "')}" is not supported by the workflow parser; teach it or the drift guard stays blind to it`,
     );
   }
 }
@@ -347,9 +127,7 @@ function runDefaults(scope: string, raw: RawDefaults | undefined): RunDefaults {
 function continueOnError(scope: string, value: unknown): boolean {
   if (value === undefined || value === false) return false;
   if (value === true) return true;
-  throw new UnsupportedExpressionError(
-    `${scope}: continue-on-error must be a literal true or false`,
-  );
+  throw new UnsupportedWorkflowError(`${scope}: continue-on-error must be a literal true or false`);
 }
 
 interface MatrixShape {
@@ -363,12 +141,12 @@ function matrixShape(id: string, matrix: Record<string, unknown> | undefined): M
   const listed = matrix[MATRIX_AXIS];
   const include = matrix[MATRIX_INCLUDE] ?? [];
   if (axes.length !== 1 || axes[0] !== MATRIX_AXIS || !Array.isArray(listed)) {
-    throw new UnsupportedExpressionError(
+    throw new UnsupportedWorkflowError(
       `job ${id}: only a matrix with a single "${MATRIX_AXIS}" list and optional "${MATRIX_INCLUDE}" entries is supported (found ${Object.keys(matrix).join(', ')})`,
     );
   }
   if (!Array.isArray(include)) {
-    throw new UnsupportedExpressionError(`job ${id}: matrix "${MATRIX_INCLUDE}" must be a list`);
+    throw new UnsupportedWorkflowError(`job ${id}: matrix "${MATRIX_INCLUDE}" must be a list`);
   }
   const projects = listed.map(String);
   const shards: Record<string, string[]> = {};
@@ -377,12 +155,12 @@ function matrixShape(id: string, matrix: Record<string, unknown> | undefined): M
     const project = entry?.[MATRIX_AXIS];
     const shard = entry?.[MATRIX_SHARD];
     if (unknown.length > 0 || typeof project !== 'string' || typeof shard !== 'string') {
-      throw new UnsupportedExpressionError(
+      throw new UnsupportedWorkflowError(
         `job ${id}: a matrix include entry takes a string "${MATRIX_AXIS}" and a string "${MATRIX_SHARD}" (found ${Object.keys(entry ?? {}).join(', ')})`,
       );
     }
     if (projects.includes(project)) {
-      throw new UnsupportedExpressionError(
+      throw new UnsupportedWorkflowError(
         `job ${id}: matrix include entry for "${project}" would merge into the listed project, not add a shard job`,
       );
     }
@@ -396,7 +174,7 @@ function topologicalOrder(jobs: Record<string, WorkflowJob>): string[] {
   const levelOf = (id: string, trail: string[]): number => {
     const known = levels.get(id);
     if (known !== undefined) return known;
-    if (trail.includes(id)) throw new UnsupportedExpressionError(`job ${id} needs itself`);
+    if (trail.includes(id)) throw new UnsupportedWorkflowError(`job ${id} needs itself`);
     const needs = (jobs[id]?.needs ?? []).filter((need) => need in jobs);
     const level =
       needs.length === 0 ? 0 : 1 + Math.max(...needs.map((need) => levelOf(need, [...trail, id])));
