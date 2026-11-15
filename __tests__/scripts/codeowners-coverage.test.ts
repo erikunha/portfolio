@@ -21,7 +21,7 @@ const CONTROL_SURFACES = [
   '.github/CODEOWNERS',
   '.github/dependabot.yml',
   '.husky/pre-push',
-  'scripts/check-dep-pinning.mjs',
+  'scripts/gates/check-dep-pinning.ts',
   'package.json',
   'pnpm-lock.yaml',
   'pnpm-workspace.yaml',

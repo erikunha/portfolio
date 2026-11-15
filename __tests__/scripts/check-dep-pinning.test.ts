@@ -6,13 +6,17 @@ import { describe, expect, it } from 'vitest';
 
 const SUBPROCESS_TEST_TIMEOUT_MS = 60_000;
 
-const SCRIPT = join(process.cwd(), 'scripts/check-dep-pinning.mjs');
+const SCRIPT = join(process.cwd(), 'scripts/gates/check-dep-pinning.ts');
 
 function runOn(pkg: object): { code: number; out: string } {
   const dir = mkdtempSync(join(tmpdir(), 'deppin-'));
   writeFileSync(join(dir, 'package.json'), JSON.stringify(pkg));
   try {
-    const out = execFileSync('node', [SCRIPT, join(dir, 'package.json')], { encoding: 'utf8' });
+    const out = execFileSync(
+      process.execPath,
+      ['--import', 'tsx', SCRIPT, join(dir, 'package.json')],
+      { encoding: 'utf8' },
+    );
     return { code: 0, out };
   } catch (e) {
     const err = e as { status: number; stdout: string; stderr: string };

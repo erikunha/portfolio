@@ -6,7 +6,7 @@ import { describe, expect, it } from 'vitest';
 
 const SUBPROCESS_TEST_TIMEOUT_MS = 60_000;
 
-const SCRIPT = join(process.cwd(), 'scripts/check-doc-drift.mjs');
+const SCRIPT = join(process.cwd(), 'scripts/gates/check-doc-drift.ts');
 
 const START = '<!-- doc-drift:start -->';
 const END = '<!-- doc-drift:end -->';
@@ -38,7 +38,9 @@ function runOn(markdown: string, files: string[] = []): { code: number; out: str
   const mdPath = join(dir, 'ARCHITECTURE.md');
   writeFileSync(mdPath, markdown);
   try {
-    const out = execFileSync('node', [SCRIPT, mdPath], { encoding: 'utf8' });
+    const out = execFileSync(process.execPath, ['--import', 'tsx', SCRIPT, mdPath], {
+      encoding: 'utf8',
+    });
     return { code: 0, out };
   } catch (e) {
     const err = e as { status: number; stdout: string; stderr: string };
@@ -106,7 +108,10 @@ describe('check-doc-drift', { timeout: SUBPROCESS_TEST_TIMEOUT_MS }, () => {
     let code = 0;
     let out = '';
     try {
-      out = execFileSync('node', [SCRIPT], { encoding: 'utf8', cwd: process.cwd() });
+      out = execFileSync(process.execPath, ['--import', 'tsx', SCRIPT], {
+        encoding: 'utf8',
+        cwd: process.cwd(),
+      });
     } catch (e) {
       const err = e as { status: number; stdout: string; stderr: string };
       code = err.status;
