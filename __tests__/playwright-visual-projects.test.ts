@@ -1,5 +1,5 @@
 import { execFileSync } from 'node:child_process';
-import { describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it } from 'vitest';
 import config from '../playwright.config';
 
 const VISUAL_SPEC_PATH = 'visual/visual.spec.ts';
@@ -77,6 +77,11 @@ function projectRunsSpec(name: string, specFile: string, ciMode: boolean): boole
   }
   return selectedSpecsPerProject(ciMode).get(name)?.has(specFile) ?? false;
 }
+
+beforeAll(() => {
+  selectedSpecsPerProject(false);
+  selectedSpecsPerProject(true);
+}, LIST_TIMEOUT_MS * 2);
 
 function runsSpec(name: string, specFile: string): boolean {
   return projectRunsSpec(name, specFile, false);
