@@ -1,5 +1,4 @@
 #!/usr/bin/env tsx
-import { execFileSync } from 'node:child_process';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import {
@@ -9,14 +8,15 @@ import {
   parseChangelogGroups,
   renderChangelogPage,
 } from './lib/changelog-merge';
+import { gitText } from './lib/git';
 
 const ROOT = join(import.meta.dirname, '..');
 const CHANGELOG_PATH = join(ROOT, 'app/(en)/design-system/changelog/page.mdx');
 
 function parseCommits(): ChangelogGroups {
-  const raw = execFileSync('git', ['log', '--format=%ad|%s', '--date=short', '--no-merges'], {
+  const raw = gitText(['log', '--format=%ad|%s', '--date=short', '--no-merges'], {
     cwd: ROOT,
-    encoding: 'utf8',
+    trim: false,
   });
 
   const groups: ChangelogGroups = new Map();

@@ -25,6 +25,7 @@ import {
   type StageContext,
 } from './ci-full-stages';
 import { ephemeralPort } from './free-port';
+import { gitText } from './git';
 
 export type Verdict = 'passed' | 'failed' | 'not-run';
 
@@ -88,9 +89,6 @@ const STAMP_FILE = '.next/.ci-full-stamp.json';
 const BUILD_ID_FILE = '.next/BUILD_ID';
 const FIELD_SEPARATOR = '\u0000';
 const HASH = 'sha256';
-const BYTES_PER_MIB = 1024 * 1024;
-const GIT_MAX_BUFFER_BYTES = 256 * BYTES_PER_MIB;
-const GIT_OK = 0;
 const DURATION_MINUTE_PAD = 2;
 const VERDICT_WIDTH = 8;
 const DURATION_WIDTH = 7;
@@ -388,23 +386,13 @@ function contentHash(path: string): string {
   return createHash(HASH).update(bytes).digest('hex');
 }
 
-function gitText(cwd: string, args: string[]): string {
-  const result = spawnSync('git', args, {
-    cwd,
-    encoding: 'utf8',
-    maxBuffer: GIT_MAX_BUFFER_BYTES,
-  });
-  if (result.status !== GIT_OK) throw new Error(`git ${args.join(' ')} failed: ${result.stderr}`);
-  return result.stdout;
-}
-
 export function readTree(cwd: string, head: string): Tree {
-  const untracked = gitText(cwd, ['ls-files', '-o', '--exclude-standard', '-z'])
+  const untracked = gitText(['ls-files', '-o', '--exclude-standard', '-z'], { cwd, trim: false })
     .split(FIELD_SEPARATOR)
     .filter(Boolean);
   return {
     head,
-    diff: gitText(cwd, ['diff', 'HEAD', '--binary']),
+    diff: gitText(['diff', 'HEAD', '--binary'], { cwd, trim: false }),
     untracked: untracked.map((path) => `${path}${FIELD_SEPARATOR}${contentHash(join(cwd, path))}`),
   };
 }
@@ -449,7 +437,7 @@ const readIfPresent = (path: string): string | undefined =>
   existsSync(path) ? readFileSync(path, 'utf8') : undefined;
 
 function currentFingerprint(root: string): string {
-  const head = gitText(root, ['rev-parse', 'HEAD']).trim();
+  const head = gitText(['rev-parse', 'HEAD'], { cwd: root });
   return fingerprint(readTree(root, head));
 }
 
