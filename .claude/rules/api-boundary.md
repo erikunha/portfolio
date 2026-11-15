@@ -38,6 +38,15 @@ merge-blocking check on this surface is the behavioral test suite (the required
   `lib/ask/budget.ts` holds the monthly and daily spend budget and the
   reservation record (`settleReservation` or `abandonReservation` ends it);
   `lib/ask/dedup.ts` holds the identical-question lock.
+- Cron routes authorise through `requireCron(req)` in `lib/server/cron-auth.ts`
+  and return its 401 response when it is non-null.
+- Mail goes through `sendMail` in `lib/mail.ts` (cached Resend client, timeout,
+  optional `replyTo` and `idempotencyKey`); a route never builds a Resend client.
+- A route keeps only HTTP concerns. Contact persistence and flow live in
+  `lib/contact/` (`submitContact`, `retryPendingContacts`) with injected deps.
+- The MCP `ask_erik` tool answers in process through `askOnce`
+  (`lib/ask/ask-once.ts`) on `startAsk` (`lib/ask/stream.ts`); it never imports
+  `app/api/ask/route`. Every preflight gate applies to it.
 
 ## Security surface
 

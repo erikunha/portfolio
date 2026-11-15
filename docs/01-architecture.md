@@ -81,7 +81,8 @@ flowchart TB
 - `content/*` holds typed data, schemas and shared presentation metadata. Server sections and client islands import different modules to control browser dependencies.
 - `design-system/*` primitives use React and shared class utilities. Components import them through the public barrel or an internal module such as `Field`.
 - `lib/*` is the server/BFF core. `lib/*.client.tsx` and a few browser utilities are the exception (client-side), clearly suffixed.
-- `app/api/*` handlers depend on `lib`. The MCP adapter in `lib/agent/mcp-tools.ts` also imports the ask route for an in-process invocation.
+- `app/api/*` handlers depend on `lib`. The MCP adapter in `lib/agent/mcp-tools.ts` imports only `lib`: `ask_erik` calls `askOnce` (`lib/ask/ask-once.ts`), which drives the shared `startAsk` (`lib/ask/stream.ts`) in process.
+- Biome `noRestrictedImports` overrides enforce the direction: `lib` imports neither `app` nor `components`, `content` imports only `content` and `zod`, `design-system` imports only `@/lib/cn` and itself. Test files are excluded.
 
 ## Repository structure (annotated)
 
@@ -148,12 +149,21 @@ flowchart TD
     island["client islands<br/>InteractiveShell · ContactForm · DawMixer*"] -->|HTTP| apiask["app/api/ask"]
     island -->|HTTP| apicontact["app/api/contact"]
     apicontact --> defh["lib/server/route.ts defineHandler"]
+    apicontact --> submit["lib/contact/submit"]
     apicontact --> delivery["lib/contact/delivery"]
     apicontact --> outbox["lib/contact/outbox"]
-    retry["app/api/contact-retry (cron, twice a day)"] --> delivery
+    retry["app/api/contact-retry (cron, twice a day)"] --> cron["lib/server/cron-auth requireCron"]
+    retry --> retrymod["lib/contact/retry"]
+    retry --> delivery
     retry --> outbox
     outbox --> redis
-    delivery --> resend["Resend"]
+    delivery --> mail["lib/mail sendMail"]
+    psirefresh["app/api/psi-refresh (cron)"] --> cron
+    psirefresh --> mail
+    mail --> resend["Resend"]
+    mcp["app/api/mcp"] --> mcptools["lib/agent/mcp-tools"]
+    mcptools --> askonce["lib/ask/ask-once askOnce"]
+    askonce --> askmod
     apiask --> rl["lib/rate-limit"]
     apiask --> askmod["lib/ask/{model,system-prompt,injection,output-guard,preflight,stream,budget,dedup}"]
     defh --> rl
@@ -163,7 +173,7 @@ flowchart TD
     askmod --> gw["AI Gateway"]
 ```
 
-The main dependency direction is `app → components → {content, design-system}` and `app/api → lib`. Shared utilities and the MCP tool adapter also cross these groups; `lib/agent/mcp-tools.ts` imports the ask route for in-process calls.
+The main dependency direction is `app → components → {content, design-system}` and `app/api → lib`.
 
 Contact submission persists a 90-day KV audit record before calling the shared delivery function. Only Resend acceptance returns 200. Provider failure or timeout returns `202 queued` after adding the id and retry counter to Redis. `ContactForm` distinguishes queued from delivered and reads structured error messages. A `CRON_SECRET` bearer protects the retry, which runs at 04:00 and 16:00 UTC while a message is under 24 hours old (the provider idempotency window), at most 3 times. Removing an outbox entry leaves the audit record intact; a delivery failure that cannot be queued (full or failing outbox) deletes the record, since nothing will retry it; contact logs contain only request and message ids.
 
