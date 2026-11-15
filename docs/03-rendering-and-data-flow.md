@@ -98,15 +98,17 @@ flowchart TD
 Inside the route children, the page frame wraps the chrome, the main content and the footer:
 
 ```mermaid
-flowchart TD
-    children["{route children}"] --> siteshell["SiteShell (RSC): the one AppShell builder, in every page frame, 404 and route error page"]
-    siteshell --> appshell["AppShell (client chrome)"]
-    appshell --> chrome["skip-link · OfflineNotice · SectionNavigation drawer · CRTOverlay (6 layers) · DesktopTopbar · StatusBar+MobileTitleBar · Dock · PositionMeter · ToTopButton"]
-    appshell --> main["PageMain (RSC): main#main-content"]
-    main --> secs["ErrorBoundary-wrapped sections:<br/>Hero + About + Career + Modules (RSC)"]
-    appshell --> footer["ErrorBoundary-wrapped Footer (RSC), after PageMain"]
-    footer --> footerIslands["Footer.client: session counters + halt/reboot"]
+flowchart LR
+    children["route children"] --> siteshell["SiteShell (RSC)"] --> appshell["AppShell (client)"]
+    appshell --> chrome["chrome"]
+    appshell --> main["PageMain (RSC)"] --> secs["sections (RSC)"]
+    appshell --> footer["Footer (RSC)"] --> fclient["Footer.client"]
 ```
+
+- `SiteShell` is the one `AppShell` builder, used by every page frame, the 404 and the route error page.
+- The chrome is the skip link, `OfflineNotice`, the `SectionNavigation` drawer, `CRTOverlay` (6 layers), `DesktopTopbar`, `StatusBar` with `MobileTitleBar`, `Dock`, `PositionMeter` and `ToTopButton`.
+- `PageMain` renders `main#main-content`. Hero, About, Career and the modules each sit inside an `ErrorBoundary`.
+- The footer is also wrapped in an `ErrorBoundary` and renders after `PageMain`; `Footer.client` holds the session counters and halt/reboot.
 
 The motion bootstrap script is load-bearing: it reads `localStorage('erik.motion')` (anything but `off` means on, whatever the operating system asks) and sets `body[data-motion]` **before first paint**, off the hydration path, so the stored motion choice does not wait for hydration. The script lives in `lib/motion-bootstrap.ts`.
 
@@ -116,15 +118,17 @@ The motion bootstrap script is load-bearing: it reads `localStorage('erik.motion
 
 ```mermaid
 flowchart LR
-    req["Request"] --> px["proxy.ts: add CSP + Reporting-Endpoints"]
-    px --> shell["Prerendered shell:<br/>AppShell chrome + Hero (outside Suspense) + above-fold sections"]
-    shell --> stream["Server streams"]
-    stream --> susp["Suspense boundaries resolve per-request"]
-    susp --> dyn["Independent ASK / PSI data reads"]
-    dyn --> html2["Streamed HTML"]
-    html2 --> hydrate["Browser hydrates chrome and client islands"]
-    hydrate --> lazy["Contact form / Shell: React.lazy inside LazyIsland, server-rendered<br/>Timezone panel: React.lazy near the viewport<br/>Matrix Rain: next/dynamic, ssr:false<br/>Footer islands mount directly"]
+    req["Request"] --> px["proxy.ts"] --> shell["Prerendered shell"] --> susp["Suspense boundaries"] --> html["Streamed HTML"] --> hydrate["Hydration"]
 ```
+
+1. `proxy.ts` adds the CSP and `Reporting-Endpoints` headers.
+2. The prerendered shell holds the `AppShell` chrome, the Hero (outside Suspense) and the above-the-fold sections.
+3. The server streams the rest. Suspense boundaries resolve per request, with the ask and PageSpeed data read independently.
+4. The browser hydrates the chrome and the client islands:
+   - the contact form and the shell load through `React.lazy` inside `LazyIsland`, already server-rendered;
+   - the timezone panel loads through `React.lazy` near the viewport;
+   - Matrix Rain loads through `next/dynamic` with `ssr: false`;
+   - the footer islands mount directly.
 
 **Routes that must stay static.** `/cv`, `/summary`, `/links`, `/links/en`, `/pt/cv`, `/pt/summary` and the `/design-system` layout export `ensureStatic = 'navigation'`. Next then fails the build if the route reads `connection()`, `cookies()`, `headers()` or uncached data, so request-time rendering cannot return unseen. `__tests__/meta/ensure-static-routes.test.ts` lists the guarded files.
 

@@ -63,17 +63,17 @@ Two `quality-fast` steps stay CI-only: the branch-name lint (the pre-push hook e
 
 `pnpm ci:full` (`scripts/ci/ci-full.ts`) runs the checks CI runs, on this machine, one stage at a time. Nothing runs in parallel and no container is involved: it uses the host's Node, browsers and fonts. Each stage's output streams to the terminal, the run stops at the first failed stage, and a table of passed, failed and not-run stages with their durations ends the run.
 
-```mermaid
-flowchart TD
-    A["ci-local: the verify chain (Biome, types, content, gates, unit tests with coverage)"] --> B["commitlint over base..HEAD, gitleaks fixture self-test, gitleaks over the full history"]
-    B --> C["audit, tool-pins, mutation canary, Semgrep self-test and false-positive baseline when the install matches the pin"]
-    C --> D["build, bundle-check, route-js-check"]
-    D --> E["a11y"]
-    E --> F["functional e2e: one project at a time, two workers"]
-    F --> G["visual on chromium, then chromium-mobile, no Argos upload"]
-    G --> H["design-system-components on chromium"]
-    H --> I["Lighthouse desktop, then mobile, report written to disk"]
-```
+Stages, in order:
+
+1. `ci:local`: the verify chain (Biome, types, content, gates, unit tests with coverage).
+2. commitlint over `base..HEAD`, the gitleaks fixture self-test, gitleaks over the full history.
+3. Audit, tool pins, the mutation canary, and the Semgrep self-test and false-positive baseline when the install matches the pin.
+4. Build, `bundle-check`, `route-js-check`.
+5. a11y.
+6. Functional e2e, one project at a time, two workers.
+7. Visual on chromium, then chromium-mobile, with no Argos upload.
+8. design-system-components on chromium.
+9. Lighthouse desktop, then mobile, with the report written to disk.
 
 Every stage that serves the build starts a fresh `pnpm start` on a free port, waits until the process it started answers, runs, and stops it and every process left in its group, escalating to `SIGKILL` for one that ignores `SIGTERM`, also when the stage fails and on `SIGINT`, `SIGTERM` or `SIGHUP`. Each CI job has a fresh server too, so in-memory state never carries from one stage to the next. A stage that serves refuses a `.next` that was not built from the current tree: the build stage writes a stamp after the build that records the commit, the tracked edits and a hash of every untracked file, so editing a file after the build, or resuming with `--from` on an older build, fails the stage instead of verifying old code.
 
@@ -160,21 +160,16 @@ flowchart LR
     t --> cc["coverage-comment"]
 ```
 
-Path-gated jobs: the first three wait on the build and on `detect-changes`. `ai-eval` waits on `detect-changes` and three other jobs.
+Path-gated jobs:
 
-```mermaid
-flowchart LR
-    b["build"] --> perf["performance"]
-    b --> e2e["e2e-functional"]
-    b --> vis["e2e-visual-chromium"]
-    dc["detect-changes"] --> perf
-    dc --> e2e
-    dc --> vis
-    dc --> ev["ai-eval"]
-```
+| Job | Waits on | Runs when |
+| --- | --- | --- |
+| `performance` | `build`, `detect-changes` | `app` is true on a pull request |
+| `e2e-functional` | `build`, `detect-changes` | `app` is true on a pull request |
+| `e2e-visual-chromium` | `build`, `detect-changes` | `ui` is true |
+| `ai-eval` | `detect-changes`, `quality-fast`, `typecheck`, `test` | `ai` is true and the PR carries the `ai-eval` label |
 
-- `performance` and `e2e-functional` run when `app` is true on a pull request. `e2e-visual-chromium` needs `ui`.
-- `ai-eval` needs `ai` and the `ai-eval` label. It also waits on `quality-fast`, `typecheck` and `test`, not on `build`.
+
 - `build` also runs the global bundle and route-JS gates.
 
 The fan-in: every job above, plus the always-on `gitleaks` and `semgrep`, reports into `ci-gate`.
