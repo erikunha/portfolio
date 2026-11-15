@@ -118,6 +118,10 @@ const NAMESPACE_UTILITIES: Record<string, string[]> = {
   font: ['font'],
 };
 const BREAKPOINT_NAMESPACE = 'breakpoint';
+const TOKEN_EQUAL_NAMESPACES = ['tracking', 'radius', 'shadow', 'leading', 'text', 'spacing'];
+const SUBPROPERTY_SEPARATOR = '--';
+const ARBITRARY_CLASS = /(?<![\w-])([a-z][a-z-]*)-\[([^\]\s'"`]+)\]/g;
+const WHITESPACE = /\s+/g;
 
 export interface HexHit {
   line: number;
@@ -131,6 +135,10 @@ export interface ColorHit {
 
 export interface RawColorHit extends ColorHit {
   file: string;
+}
+
+export interface TokenEqualHit extends ColorHit {
+  utility: string;
 }
 
 export interface AllowEntry {
@@ -301,6 +309,7 @@ export interface RepoScan {
   colors: RawColorHit[];
   zIndex: RawColorHit[];
   focus: RawColorHit[];
+  tokenEqual: RawColorHit[];
 }
 
 function escapeRegExp(value: string): string {
@@ -327,6 +336,45 @@ function utilityPattern(token: string): RegExp | undefined {
   const prefixes = NAMESPACE_UTILITIES[namespace];
   if (!prefixes) return undefined;
   return new RegExp(`(?<![\\w-])-?(?:${prefixes.map(escapeRegExp).join('|')})-${name}(?![\\w-])`);
+}
+
+function normalizeValue(value: string): string {
+  return value.replace(WHITESPACE, '').toLowerCase();
+}
+
+function tokenUtilities(themeCss: string): Map<string, string> {
+  const byPrefixAndValue = new Map<string, string>();
+  postcss.parse(themeCss).walkAtRules(THEME_AT_RULE, (rule) => {
+    rule.each((node) => {
+      if (node.type !== 'decl' || !node.prop.startsWith(CUSTOM_PROPERTY)) return;
+      const body = node.prop.slice(CUSTOM_PROPERTY.length);
+      const dash = body.indexOf('-');
+      if (dash < 0 || body.includes(SUBPROPERTY_SEPARATOR)) return;
+      const namespace = body.slice(0, dash);
+      if (!TOKEN_EQUAL_NAMESPACES.includes(namespace)) return;
+      const name = body.slice(dash + 1);
+      for (const prefix of NAMESPACE_UTILITIES[namespace] ?? []) {
+        const key = `${prefix}\u0000${normalizeValue(node.value)}`;
+        if (!byPrefixAndValue.has(key)) byPrefixAndValue.set(key, `${prefix}-${name}`);
+      }
+    });
+  });
+  return byPrefixAndValue;
+}
+
+export function findTokenEqualArbitraryValues(themeCss: string, source: string): TokenEqualHit[] {
+  const utilities = tokenUtilities(themeCss);
+  const hits: TokenEqualHit[] = [];
+  stripComments(source)
+    .split('\n')
+    .forEach((line, i) => {
+      for (const match of line.matchAll(ARBITRARY_CLASS)) {
+        const value = normalizeValue((match[2] ?? '').replace(/_/g, ' '));
+        const utility = utilities.get(`${match[1]}\u0000${value}`);
+        if (utility) hits.push({ line: i + 1, literal: match[0], utility });
+      }
+    });
+  return hits;
 }
 
 export function findUnusedThemeTokens(themeCss: string, sources: string[]): string[] {
@@ -364,6 +412,8 @@ export function scanRepo(root: string, cssFiles: string[]): RepoScan {
     hits.map((hit) => ({ ...hit, file }));
   const cssTargets = cssFiles.map((f) => `app/css/${f}`);
   const colorTargets = [...cssTargets, ...findTokenFiles(root)];
+  const themePath = `app/css/${THEME_SHEET}`;
+  const themeCss = existsSync(join(root, themePath)) ? read(themePath) : '';
   return {
     colors: [
       ...colorTargets.flatMap((file) => tag(file, findRawColors(read(file)))),
@@ -376,6 +426,13 @@ export function scanRepo(root: string, cssFiles: string[]): RepoScan {
     focus: cssTargets
       .filter((file) => !file.endsWith(FORCED_COLORS_SHEET))
       .flatMap((file) => tag(file, findRawFocusRing(read(file)))),
+    tokenEqual: findTsxFiles(root).flatMap((file) =>
+      findTokenEqualArbitraryValues(themeCss, read(file)).map((hit) => ({
+        file,
+        line: hit.line,
+        literal: `${hit.literal} (use ${hit.utility})`,
+      })),
+    ),
   };
 }
 
@@ -427,6 +484,12 @@ function main(): void {
       'A focus rule uses outline: var(--focus-ring) with outline-offset: var(--focus-ring-offset) (or -inset), on :focus-visible only.',
       scan.focus,
     ) || failed;
+  failed =
+    report(
+      'arbitrary value(s) that equal an @theme token',
+      'Use the token utility named on each line instead of the arbitrary value.',
+      scan.tokenEqual,
+    ) || failed;
   const unused = findUnusedThemeTokens(
     readFileSync(join(root, `app/css/${THEME_SHEET}`), 'utf8'),
     findConsumerFiles(root).map((file) => readFileSync(join(root, file), 'utf8')),
@@ -446,7 +509,7 @@ function main(): void {
   }
   if (failed) process.exit(1);
   console.log(
-    '[css-tokens] no raw color literals, z-index values or focus rings outside their tokens, and no unused @theme tokens.',
+    '[css-tokens] no raw color literals, z-index values or focus rings outside their tokens, no arbitrary values that equal a token, and no unused @theme tokens.',
   );
 }
 
