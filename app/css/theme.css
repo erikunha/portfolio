@@ -223,6 +223,17 @@
     --measure-read: 72ch;
     --color-rain-head: var(--color-primary-800);
     --color-rain-body: var(--color-primary-900);
+    --color-surface: var(--color-secondary-950);
+    --color-surface-raised: var(--color-secondary-900);
+    --color-border: var(--color-primary-border);
+    --color-border-strong: var(--color-primary-subtle);
+    --color-accent: var(--color-primary-500);
+    --color-on-accent: var(--color-secondary-950);
+    --color-text-muted: var(--color-tertiary-400);
+    --color-focus: var(--color-primary-500);
+    --color-warning: var(--color-quinary-500);
+    --color-danger: var(--color-senary-500);
+    --color-scrim: var(--color-secondary-950);
     --rain-tail-alpha: 0.1;
     --type-reveal-char-duration: 28ms;
     --type-reveal-max-duration: 1.4s;

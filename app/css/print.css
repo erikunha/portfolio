@@ -32,6 +32,17 @@
       --color-text: var(--color-print-ink);
       --color-text-secondary: var(--color-print-rule);
       --color-green: var(--color-print-ink);
+      --color-surface: var(--color-print-paper);
+      --color-surface-raised: var(--color-print-paper);
+      --color-border: var(--color-print-rule);
+      --color-border-strong: var(--color-print-rule);
+      --color-accent: var(--color-print-ink);
+      --color-on-accent: var(--color-print-paper);
+      --color-text-muted: var(--color-print-rule);
+      --color-focus: var(--color-print-ink);
+      --color-warning: var(--color-print-ink);
+      --color-danger: var(--color-print-ink);
+      --color-scrim: var(--color-print-paper);
       --color-glow-02: transparent;
       --color-glow-03: transparent;
       --color-glow-04: transparent;
