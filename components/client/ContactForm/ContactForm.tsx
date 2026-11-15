@@ -21,10 +21,10 @@ import {
 import type { TerminalChrome } from '@/content/schemas';
 import { Field } from '@/design-system/components/Field';
 import { longestCopy } from '@/lib/longest-copy';
+import { useMessageStore } from '../ContactIsland/ContactIslandProvider.client';
 import { ContactResult } from './ContactResult';
 import { ContactShell } from './ContactShell';
 import { errorMailto } from './contact-form-checks';
-import { messageStore } from './messageStore';
 import { CONTACT_FIELDS, CONTACT_STATUS, useContactSubmit } from './useContactSubmit';
 
 const MESSAGE_ROWS = 5;
@@ -32,6 +32,7 @@ type TypedField = Exclude<ContactField, typeof CONTACT_FIELD.MESSAGE>;
 const INITIAL_TYPED: Record<TypedField, string> = { name: '', email: '' };
 
 export function ContactForm({ copy, chrome }: { copy: ContactContent; chrome: TerminalChrome }) {
+  const messageStore = useMessageStore();
   const [typed, setTyped] = useState(INITIAL_TYPED);
   const message = useSyncExternalStore(
     messageStore.subscribe,
@@ -84,8 +85,11 @@ export function ContactForm({ copy, chrome }: { copy: ContactContent; chrome: Te
   const fieldShown = status !== CONTACT_STATUS.SUCCESS && status !== CONTACT_STATUS.QUEUED;
   useEffect(
     () => (fieldShown ? messageStore.bindField(messageFieldId) : undefined),
-    [fieldShown, messageFieldId],
+    [fieldShown, messageFieldId, messageStore],
   );
+  useEffect(() => {
+    if (!fieldShown) messageStore.reset();
+  }, [fieldShown, messageStore]);
 
   useLayoutEffect(() => {
     const fields = formRef.current?.elements;
@@ -96,7 +100,7 @@ export function ContactForm({ copy, chrome }: { copy: ContactContent; chrome: Te
       email: typedInDom(CONTACT_FIELD.EMAIL) || current.email,
     }));
     messageStore.seed(typedInDom(CONTACT_FIELD.MESSAGE));
-  }, []);
+  }, [messageStore]);
 
   function dismissResult() {
     dismiss();

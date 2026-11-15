@@ -2,7 +2,7 @@
 
 import { useState, useSyncExternalStore } from 'react';
 import type { ContactContent } from '@/content/contact';
-import { messageStore } from '../ContactForm/messageStore';
+import { useMessageStore } from '../ContactIsland/ContactIslandProvider.client';
 
 type TimezoneCopy = ContactContent['timezone'];
 
@@ -17,6 +17,7 @@ export function ProposeSlot({
   slot: ProposeSlotTimes | null;
   slotLine: string | null;
 }) {
+  const messageStore = useMessageStore();
   const [proposedLine, setProposedLine] = useState<string | null>(null);
 
   const lineInMessage = useSyncExternalStore(

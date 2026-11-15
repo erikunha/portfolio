@@ -12,6 +12,7 @@ import { ERIK_PIN } from '@/content/world-map';
 import { Panel } from '@/design-system';
 import { ContactFormLazy } from '../../client/ContactForm';
 import { ContactCopyButton } from '../../client/ContactForm/ContactCopyButton.client';
+import { ContactIslandProvider } from '../../client/ContactIsland/ContactIslandProvider.client';
 import { ContactTimezoneLazy, ContactTimezoneStatic } from '../../client/ContactTimezone';
 import { ErrorBoundary } from '../../ErrorBoundary';
 import { IconContact } from '../../Icons';
@@ -38,102 +39,104 @@ export function ContactSection({ locale, defer }: { locale: SiteLocale; defer?: 
       defer={defer}
       variant="green"
     >
-      <div className="contact-layout">
-        <div className="contact-main">
-          <ErrorBoundary locale={locale}>
-            <ContactFormLazy
-              copy={contactContent[locale]}
-              chrome={contactChrome[locale]}
-              loadingLabel={contactContent[locale].section.loadingLabel}
-            />
-          </ErrorBoundary>
-          <noscript>
-            <p className="contact-nojs" data-testid="contact-nojs">
-              {section.noscript}{' '}
-              <a href={`mailto:${section.email}`}>
-                <BreakAfter chars={BREAK_AFTER.email}>{section.email}</BreakAfter>
-              </a>
-            </p>
-          </noscript>
-          <div className="contact-reach">
-            <Panel
-              as="section"
-              className="contact-channels"
-              title={channels.title}
-              marker={channels.marker}
-              titleId="contact-channels-title"
-            >
-              <div className="ab-body">
-                <dl className="contact-channels-body">
-                  <div className="contact-channel-row">
-                    <dt>{channels.emailLabel}</dt>
-                    <dd>
-                      <a className="contact-channel-email" href={`mailto:${section.email}`}>
-                        <BreakAfter chars={BREAK_AFTER.email}>{section.email}</BreakAfter>
-                      </a>
-                      <ContactCopyButton
-                        value={section.email}
-                        labels={{ copy: section.copyEmail, copied: section.copyEmailCopied }}
-                        feedback={copyFeedback[locale]}
-                      />
-                    </dd>
-                  </div>
-                  <div className="contact-channel-row">
-                    <dt>{channels.linkedinLabel}</dt>
-                    <dd>
-                      <ExternalLink className="contact-channel-cta" href={section.linkedinHref}>
-                        {channels.linkedinCta}{' '}
-                        <span aria-hidden="true">{channels.linkedinGlyph}</span>
-                        <span className="sr-only"> {channels.linkedinNewTabNote}</span>
-                      </ExternalLink>
-                    </dd>
-                  </div>
-                  <div className="contact-channel-row">
-                    <dt>{channels.githubLabel}</dt>
-                    <dd>
-                      <ExternalLink
-                        className="contact-channel-link"
-                        href={social.github}
-                        aria-label={channels.githubAccessibleLabel}
-                      >
-                        {social.githubLabel}
-                        <span className="contact-channel-glyph" aria-hidden="true">
-                          {EXTERNAL_LINK_GLYPH}
-                        </span>
-                      </ExternalLink>
-                    </dd>
-                  </div>
-                </dl>
-              </div>
-            </Panel>
-            <dl className="contact-facts">
-              {factRows.map(([label, value]) => (
-                <div className="contact-fact" key={label}>
-                  <dt>{label}</dt>
-                  <dd>{value}</dd>
-                </div>
-              ))}
-            </dl>
-          </div>
-        </div>
-        <Panel
-          as="section"
-          className="contact-timezone"
-          title={timezone.title}
-          marker={timezone.marker}
-          titleId="contact-timezone-title"
-          data-locale={locale}
-        >
-          <div className="ab-body">
-            <ContactTimezoneLazy copy={timezone}>
-              <ContactTimezoneStatic
-                loadingLabel={timezone.loading}
-                placeholderRows={timezonePlaceholderRows(timezone.map, ERIK_PIN.code)}
+      <ContactIslandProvider>
+        <div className="contact-layout">
+          <div className="contact-main">
+            <ErrorBoundary locale={locale}>
+              <ContactFormLazy
+                copy={contactContent[locale]}
+                chrome={contactChrome[locale]}
+                loadingLabel={contactContent[locale].section.loadingLabel}
               />
-            </ContactTimezoneLazy>
+            </ErrorBoundary>
+            <noscript>
+              <p className="contact-nojs" data-testid="contact-nojs">
+                {section.noscript}{' '}
+                <a href={`mailto:${section.email}`}>
+                  <BreakAfter chars={BREAK_AFTER.email}>{section.email}</BreakAfter>
+                </a>
+              </p>
+            </noscript>
+            <div className="contact-reach">
+              <Panel
+                as="section"
+                className="contact-channels"
+                title={channels.title}
+                marker={channels.marker}
+                titleId="contact-channels-title"
+              >
+                <div className="ab-body">
+                  <dl className="contact-channels-body">
+                    <div className="contact-channel-row">
+                      <dt>{channels.emailLabel}</dt>
+                      <dd>
+                        <a className="contact-channel-email" href={`mailto:${section.email}`}>
+                          <BreakAfter chars={BREAK_AFTER.email}>{section.email}</BreakAfter>
+                        </a>
+                        <ContactCopyButton
+                          value={section.email}
+                          labels={{ copy: section.copyEmail, copied: section.copyEmailCopied }}
+                          feedback={copyFeedback[locale]}
+                        />
+                      </dd>
+                    </div>
+                    <div className="contact-channel-row">
+                      <dt>{channels.linkedinLabel}</dt>
+                      <dd>
+                        <ExternalLink className="contact-channel-cta" href={section.linkedinHref}>
+                          {channels.linkedinCta}{' '}
+                          <span aria-hidden="true">{channels.linkedinGlyph}</span>
+                          <span className="sr-only"> {channels.linkedinNewTabNote}</span>
+                        </ExternalLink>
+                      </dd>
+                    </div>
+                    <div className="contact-channel-row">
+                      <dt>{channels.githubLabel}</dt>
+                      <dd>
+                        <ExternalLink
+                          className="contact-channel-link"
+                          href={social.github}
+                          aria-label={channels.githubAccessibleLabel}
+                        >
+                          {social.githubLabel}
+                          <span className="contact-channel-glyph" aria-hidden="true">
+                            {EXTERNAL_LINK_GLYPH}
+                          </span>
+                        </ExternalLink>
+                      </dd>
+                    </div>
+                  </dl>
+                </div>
+              </Panel>
+              <dl className="contact-facts">
+                {factRows.map(([label, value]) => (
+                  <div className="contact-fact" key={label}>
+                    <dt>{label}</dt>
+                    <dd>{value}</dd>
+                  </div>
+                ))}
+              </dl>
+            </div>
           </div>
-        </Panel>
-      </div>
+          <Panel
+            as="section"
+            className="contact-timezone"
+            title={timezone.title}
+            marker={timezone.marker}
+            titleId="contact-timezone-title"
+            data-locale={locale}
+          >
+            <div className="ab-body">
+              <ContactTimezoneLazy copy={timezone}>
+                <ContactTimezoneStatic
+                  loadingLabel={timezone.loading}
+                  placeholderRows={timezonePlaceholderRows(timezone.map, ERIK_PIN.code)}
+                />
+              </ContactTimezoneLazy>
+            </div>
+          </Panel>
+        </div>
+      </ContactIslandProvider>
     </Module>
   );
 }
