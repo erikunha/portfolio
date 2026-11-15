@@ -3,16 +3,27 @@ import { createServer } from 'node:net';
 const DEFAULT_PORT = 3000;
 const ANY_PORT = 0;
 
-function listen(port: number): Promise<number | null> {
-  return new Promise((resolve) => {
+function bind(port: number): Promise<number> {
+  return new Promise((resolve, reject) => {
     const probe = createServer();
-    probe.once('error', () => resolve(null));
+    probe.once('error', reject);
     probe.listen(port, () => {
       const address = probe.address();
-      const bound = typeof address === 'object' && address ? address.port : null;
+      const bound = typeof address === 'object' && address ? address.port : 0;
       probe.close(() => resolve(bound));
     });
   });
+}
+
+function listen(port: number): Promise<number | null> {
+  return bind(port).then(
+    (bound) => (bound > 0 ? bound : null),
+    () => null,
+  );
+}
+
+export function ephemeralPort(): Promise<number> {
+  return bind(ANY_PORT);
 }
 
 export async function resolveServerPort(

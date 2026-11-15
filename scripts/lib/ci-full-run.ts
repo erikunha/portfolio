@@ -14,7 +14,6 @@ import {
   rmSync,
   writeFileSync,
 } from 'node:fs';
-import { createServer } from 'node:net';
 import { tmpdir } from 'node:os';
 import { delimiter, join } from 'node:path';
 import {
@@ -25,6 +24,7 @@ import {
   type StageCommand,
   type StageContext,
 } from './ci-full-stages';
+import { ephemeralPort } from './free-port';
 
 export type Verdict = 'passed' | 'failed' | 'not-run';
 
@@ -486,18 +486,6 @@ function hasBinary(name: string): boolean {
   });
 }
 
-function freePort(): Promise<number> {
-  return new Promise((resolvePort, reject) => {
-    const probe = createServer();
-    probe.on('error', reject);
-    probe.listen(0, () => {
-      const address = probe.address();
-      const port = typeof address === 'object' && address !== null ? address.port : 0;
-      probe.close(() => resolvePort(port));
-    });
-  });
-}
-
 const sleep = (ms: number) => new Promise((resolveWait) => setTimeout(resolveWait, ms));
 
 async function stopServer(server: ChildProcess | null): Promise<void> {
@@ -576,7 +564,7 @@ async function runStage(
       } catch (error) {
         return result('failed', error instanceof Error ? error.message : String(error));
       }
-      const port = await freePort();
+      const port = await ephemeralPort();
       ctx = { ...ctx, port, origin: `http://localhost:${port}` };
       const logPath = join(workDir, `server-${stage.id}.log`);
       const { command, portEnv } = options.server;
