@@ -8,7 +8,7 @@ import { afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { compiledStylesheet } from './helpers/css-rules';
 
 const SUBPROCESS_TEST_TIMEOUT_MS = 60_000;
-const SCRIPT = path.join(process.cwd(), 'scripts/contrast-check.mjs');
+const SCRIPT = path.join(process.cwd(), 'scripts/gates/contrast-check.ts');
 const PRIMITIVE_REFERENCE = /^var\(--color-((?:primary|secondary|tertiary|quinary|senary)-\w+)\)$/;
 const PRINT_REFERENCE = /^var\(--color-print-(?:ink|paper|rule)\)$/;
 const PRINT_MEDIA = /^print$/;

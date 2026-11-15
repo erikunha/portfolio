@@ -6,7 +6,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 const SUBPROCESS_TEST_TIMEOUT_MS = 60_000;
 
-const SCRIPT = join(process.cwd(), 'scripts/contrast-check.mjs');
+const SCRIPT = join(process.cwd(), 'scripts/gates/contrast-check.ts');
 
 const PALETTE = `
   --color-secondary-950: #000000;
