@@ -1,14 +1,146 @@
-import {
-  appendFileSync,
-  existsSync,
-  mkdirSync,
-  readFileSync,
-  realpathSync,
-  writeFileSync,
-} from 'node:fs';
+import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname } from 'node:path';
-import { pathToFileURL } from 'node:url';
-import { createGithubClient, resolveRepo, resolveToken } from './github.mjs';
+import { isMain } from '../lib/is-main.ts';
+import type { GithubClient, HttpError } from './github.ts';
+import { createGithubClient, resolveRepo, resolveToken } from './github.ts';
+
+export interface WeekWindow {
+  start: Date;
+  end: Date;
+  weekStart: string;
+  weekEnd: string;
+}
+
+export interface PullRequestNode {
+  number: number;
+  createdAt: string;
+  mergedAt: string | null;
+  author?: { __typename?: string; login?: string } | null;
+  commits?: { nodes?: { commit?: { authoredDate?: string | null } | null }[] } | null;
+}
+
+export interface PullRequest {
+  number: number;
+  createdAt: string;
+  mergedAt: string | null;
+  authorIsBot: boolean;
+  firstCommitAt: string | null;
+}
+
+export interface WeekMetrics {
+  deploymentFrequency: number;
+  deploymentFailureRate: number | null;
+  leadTimeHoursMedian: number | null;
+  prCycleTimeHoursMedian: number | null;
+  ciMainFailureRate: number | null;
+  flakyPerE2eJob: number | null;
+}
+
+export interface WeekCounts {
+  prsMerged: number;
+  productionDeploys: number;
+  failedDeploys: number;
+  ciMainRuns: number;
+  e2eJobsInspected: number;
+  flakyTests: number;
+  distinctFlakyTests: number;
+  logsTruncated: boolean;
+  logErrors: number;
+  logsExpired: number;
+}
+
+export interface CollectedWeek {
+  weekStart: string;
+  weekEnd: string;
+  collectedAt: string;
+  metrics: WeekMetrics;
+  counts: WeekCounts;
+  topFlaky: { test: string; count: number }[];
+  skipped: Record<string, string>;
+}
+
+export interface CollectOptions {
+  repo: string;
+  windows: WeekWindow[];
+  maxLogsPerWeek?: number;
+  skipLogs?: boolean;
+  now?: Date;
+}
+
+type DeployOutcomeName = 'success' | 'failure' | 'pending';
+
+interface DeploymentRecord {
+  createdAt: string;
+  outcome: string;
+}
+
+interface CiRun {
+  id: number;
+  createdAt: string;
+  conclusion: string;
+}
+
+interface FlakyJob {
+  flaky: string[];
+}
+
+interface FlakyInspection {
+  jobs: FlakyJob[];
+  truncated: boolean;
+  logErrors: number;
+  logsExpired: number;
+}
+
+interface FlakySummary {
+  e2eJobsInspected: number;
+  flakyTests: number;
+  distinctFlakyTests: number;
+  flakyPerE2eJob: number | null;
+  topFlaky: { test: string; count: number }[];
+}
+
+interface PullRequestSearch {
+  search: {
+    issueCount: number;
+    pageInfo: { hasNextPage: boolean; endCursor: string | null };
+    nodes: (PullRequestNode | null)[];
+  };
+}
+
+interface DeploymentApi {
+  id: number;
+  created_at: string;
+}
+
+interface WorkflowRunApi {
+  id: number;
+  created_at: string;
+  conclusion: string;
+}
+
+interface JobApi {
+  id: number;
+  name: string;
+  conclusion: string | null;
+}
+
+interface HistoryFile {
+  schemaVersion: number;
+  repo: string;
+  weeks: CollectedWeek[];
+}
+
+interface CollectArgs {
+  weeks: string;
+  history: string;
+  repo: string | undefined;
+  maxLogsPerWeek: string;
+  now: string | undefined;
+  skipLogs: boolean;
+}
+
+type ValuedKey = 'weeks' | 'history' | 'repo' | 'maxLogsPerWeek' | 'now';
+type MergedPullRequest = PullRequest & { mergedAt: string };
 
 export const SCHEMA_VERSION = 1;
 export const CI_WORKFLOW = 'ci.yml';
@@ -35,15 +167,19 @@ const TOP_FLAKY_COUNT = 5;
 const MAX_TEST_NAME_LENGTH = 200;
 const ROUND_DIGITS = 4;
 const DEFAULT_HISTORY_PATH = 'metrics/weekly.json';
-const CONCLUSION = Object.freeze({ SUCCESS: 'success', FAILURE: 'failure' });
-const COMPLETED_CONCLUSIONS = [CONCLUSION.SUCCESS, CONCLUSION.FAILURE];
-const DEPLOY_STATE = Object.freeze({ SUCCESS: 'success', FAILURE: 'failure', ERROR: 'error' });
-const FAILED_DEPLOY_STATES = [DEPLOY_STATE.FAILURE, DEPLOY_STATE.ERROR];
+const CONCLUSION = Object.freeze({ SUCCESS: 'success', FAILURE: 'failure' } as const);
+const COMPLETED_CONCLUSIONS: readonly string[] = [CONCLUSION.SUCCESS, CONCLUSION.FAILURE];
+const DEPLOY_STATE = Object.freeze({
+  SUCCESS: 'success',
+  FAILURE: 'failure',
+  ERROR: 'error',
+} as const);
+const FAILED_DEPLOY_STATES: readonly string[] = [DEPLOY_STATE.FAILURE, DEPLOY_STATE.ERROR];
 const DEPLOY_OUTCOME = Object.freeze({
   SUCCESS: 'success',
   FAILURE: 'failure',
   PENDING: 'pending',
-});
+} as const);
 const RUN_STATUS_COMPLETED = 'completed';
 const EVENT_PUSH = 'push';
 const ACTOR_TYPE_BOT = 'Bot';
@@ -51,6 +187,15 @@ const WEEKS_AUTO = 'auto';
 const LOG_GONE_STATUSES = [404, 410];
 const RESULT_CAP = 1000;
 const ISO_DATE_LENGTH = 10;
+const SKIP_LOGS_FLAG = '--skip-logs';
+const LINE_BREAKS = /[\r\n]+/g;
+const VALUED_FLAGS = new Map<string, ValuedKey>([
+  ['--weeks', 'weeks'],
+  ['--history', 'history'],
+  ['--repo', 'repo'],
+  ['--max-logs-per-week', 'maxLogsPerWeek'],
+  ['--now', 'now'],
+]);
 
 const ESCAPE_CODE = 27;
 const DELETE_CODE = 127;
@@ -59,8 +204,12 @@ const ANSI_PATTERN = new RegExp(`${String.fromCharCode(ESCAPE_CODE)}\\[[0-9;]*[A
 const TIMESTAMP_PATTERN = /^\d{4}-\d{2}-\d{2}T[\d:.]+Z ?/;
 const FLAKY_HEADER_PATTERN = /^\s+(\d+) flaky\s*$/;
 const SUMMARY_COUNT_PATTERN = /^\s+\d+ (?:flaky|skipped|passed|failed|did not run|interrupted)\b/;
+const INDENTED_LINE_PATTERN = /^\s+\S/;
 const WORKFLOW_COMMAND_PATTERN = /::/g;
 const MARKUP_CHARACTERS_PATTERN = /[<>@]/g;
+const BACKTICK_PATTERN = /`/g;
+const WHITESPACE_RUN_PATTERN = /\s+/g;
+const CARRIAGE_RETURN_END_PATTERN = /\r$/;
 
 const PULL_REQUESTS_QUERY = `query($q: String!, $after: String) {
   search(query: $q, type: ISSUE, first: ${PAGE_SIZE}, after: $after) {
@@ -76,21 +225,22 @@ const PULL_REQUESTS_QUERY = `query($q: String!, $after: String) {
   }
 }`;
 
-const toIso = (date) => date.toISOString().replace('.000Z', 'Z');
-const toDay = (date) => date.toISOString().slice(0, ISO_DATE_LENGTH);
-const round = (value) =>
+const toIso = (date: Date): string => date.toISOString().replace('.000Z', 'Z');
+const toDay = (date: Date): string => date.toISOString().slice(0, ISO_DATE_LENGTH);
+const round = (value: number | null): number | null =>
   value === null ? null : Math.round(value * 10 ** ROUND_DIGITS) / 10 ** ROUND_DIGITS;
-const hoursBetween = (from, to) => Math.max(0, (Date.parse(to) - Date.parse(from)) / MS_PER_HOUR);
+const hoursBetween = (from: string, to: string): number =>
+  Math.max(0, (Date.parse(to) - Date.parse(from)) / MS_PER_HOUR);
 
-function startOfWeek(date) {
+function startOfWeek(date: Date): Date {
   const day = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
   const sinceMonday = (day.getUTCDay() + MONDAY_OFFSET_FROM_SUNDAY_START) % DAYS_PER_WEEK;
   return new Date(day.getTime() - sinceMonday * MS_PER_DAY);
 }
 
-export function weekWindows(now, count) {
+export function weekWindows(now: Date, count: number): WeekWindow[] {
   const current = startOfWeek(now).getTime();
-  const windows = [];
+  const windows: WeekWindow[] = [];
   for (let back = count; back >= 1; back -= 1) {
     const start = new Date(current - back * WEEK_MS);
     const end = new Date(start.getTime() + WEEK_MS);
@@ -99,18 +249,26 @@ export function weekWindows(now, count) {
   return windows;
 }
 
-export function weeksToCollect({ weeks, now, explicit }) {
+export function weeksToCollect({
+  weeks,
+  now,
+  explicit,
+}: {
+  weeks: { weekStart: string }[];
+  now: Date;
+  explicit?: number | undefined;
+}): number {
   if (explicit !== undefined) return explicit;
-  if (weeks.length === 0) return BACKFILL_WEEKS;
   const last = weeks
     .map((w) => w.weekStart)
     .sort()
     .at(-1);
+  if (last === undefined) return BACKFILL_WEEKS;
   const gap = (startOfWeek(now).getTime() - Date.parse(last)) / WEEK_MS - 1;
   return Math.min(BACKFILL_WEEKS, Math.max(1, Math.round(gap)));
 }
 
-export function parseWeeksArg(raw) {
+export function parseWeeksArg(raw: string): number | undefined {
   if (raw === WEEKS_AUTO) return undefined;
   const count = Number(raw);
   if (!Number.isInteger(count) || count < 1 || count > MAX_HISTORY_WEEKS) {
@@ -121,19 +279,20 @@ export function parseWeeksArg(raw) {
   return count;
 }
 
-const inWindow = (iso, window) => {
+const inWindow = (iso: string, window: WeekWindow): boolean => {
   const at = Date.parse(iso);
   return at >= window.start.getTime() && at < window.end.getTime();
 };
 
-export function median(values) {
+export function median(values: number[]): number | null {
   if (values.length === 0) return null;
   const sorted = [...values].sort((a, b) => a - b);
   const mid = Math.floor(sorted.length / 2);
-  return sorted.length % 2 === 1 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+  const upper = sorted[mid] as number;
+  return sorted.length % 2 === 1 ? upper : ((sorted[mid - 1] as number) + upper) / 2;
 }
 
-export function normalizePullRequest(node) {
+export function normalizePullRequest(node: PullRequestNode): PullRequest {
   return {
     number: node.number,
     createdAt: node.createdAt,
@@ -143,8 +302,18 @@ export function normalizePullRequest(node) {
   };
 }
 
-export function summarizePullRequests(prs, window) {
-  const merged = prs.filter((pr) => pr.mergedAt && inWindow(pr.mergedAt, window));
+export function summarizePullRequests(
+  prs: PullRequest[],
+  window: WeekWindow,
+): {
+  prsMerged: number;
+  leadTimeHoursMedian: number | null;
+  prCycleTimeHoursMedian: number | null;
+} {
+  const merged = prs.filter(
+    (pr): pr is MergedPullRequest =>
+      typeof pr.mergedAt === 'string' && pr.mergedAt !== '' && inWindow(pr.mergedAt, window),
+  );
   const human = merged.filter((pr) => !pr.authorIsBot);
   return {
     prsMerged: merged.length,
@@ -155,14 +324,22 @@ export function summarizePullRequests(prs, window) {
   };
 }
 
-export function deploymentOutcome(statuses) {
+export function deploymentOutcome(statuses: { state: string }[]): DeployOutcomeName {
   const states = statuses.map((s) => s.state);
   if (states.includes(DEPLOY_STATE.SUCCESS)) return DEPLOY_OUTCOME.SUCCESS;
   if (states.some((state) => FAILED_DEPLOY_STATES.includes(state))) return DEPLOY_OUTCOME.FAILURE;
   return DEPLOY_OUTCOME.PENDING;
 }
 
-export function summarizeDeployments(deployments, window) {
+export function summarizeDeployments(
+  deployments: DeploymentRecord[],
+  window: WeekWindow,
+): {
+  productionDeploys: number;
+  failedDeploys: number;
+  deploymentFrequency: number;
+  deploymentFailureRate: number | null;
+} {
   const inRange = deployments.filter((d) => inWindow(d.createdAt, window));
   const succeeded = inRange.filter((d) => d.outcome === DEPLOY_OUTCOME.SUCCESS).length;
   const failed = inRange.filter((d) => d.outcome === DEPLOY_OUTCOME.FAILURE).length;
@@ -175,7 +352,10 @@ export function summarizeDeployments(deployments, window) {
   };
 }
 
-export function summarizeCiRuns(runs, window) {
+export function summarizeCiRuns(
+  runs: { createdAt: string; conclusion: string }[],
+  window: WeekWindow,
+): { ciMainRuns: number; ciMainFailureRate: number | null } {
   const completed = runs.filter(
     (run) => inWindow(run.createdAt, window) && COMPLETED_CONCLUSIONS.includes(run.conclusion),
   );
@@ -186,43 +366,47 @@ export function summarizeCiRuns(runs, window) {
   };
 }
 
-const isControl = (char) => {
+const isControl = (char: string): boolean => {
   const code = char.charCodeAt(0);
   return code < SPACE_CODE || code === DELETE_CODE;
 };
 
-export function sanitizeTestName(name) {
+export function sanitizeTestName(name: string): string {
   return [...String(name)]
     .map((char) => (isControl(char) ? ' ' : char))
     .join('')
-    .replace(/`/g, '')
+    .replace(BACKTICK_PATTERN, '')
     .replace(WORKFLOW_COMMAND_PATTERN, ': :')
     .replace(MARKUP_CHARACTERS_PATTERN, '')
-    .replace(/\s+/g, ' ')
+    .replace(WHITESPACE_RUN_PATTERN, ' ')
     .trim()
     .slice(0, MAX_TEST_NAME_LENGTH);
 }
 
-const hasTotals = (lines) => lines.some((line) => SUMMARY_COUNT_PATTERN.test(line));
+const hasTotals = (lines: string[]): boolean =>
+  lines.some((line) => SUMMARY_COUNT_PATTERN.test(line));
 
-export function parsePlaywrightFlaky(logText) {
+export function parsePlaywrightFlaky(logText: string): string[] {
   const lines = String(logText)
     .split('\n')
     .map((line) =>
-      line.replace(ANSI_PATTERN, '').replace(TIMESTAMP_PATTERN, '').replace(/\r$/, ''),
+      line
+        .replace(ANSI_PATTERN, '')
+        .replace(TIMESTAMP_PATTERN, '')
+        .replace(CARRIAGE_RETURN_END_PATTERN, ''),
     );
   if (!hasTotals(lines)) {
     throw new Error('the log has no Playwright totals line, so flaky tests cannot be read from it');
   }
-  const names = [];
-  for (let i = 0; i < lines.length; i += 1) {
-    const header = FLAKY_HEADER_PATTERN.exec(lines[i]);
+  const names: string[] = [];
+  for (const [i, headerLine] of lines.entries()) {
+    const header = FLAKY_HEADER_PATTERN.exec(headerLine);
     if (header === null) continue;
     const expected = Number(header[1]);
     let taken = 0;
-    for (let j = i + 1; j < lines.length && taken < expected; j += 1) {
-      const line = lines[j];
-      if (!/^\s+\S/.test(line) || SUMMARY_COUNT_PATTERN.test(line)) break;
+    for (const line of lines.slice(i + 1)) {
+      if (taken >= expected) break;
+      if (!INDENTED_LINE_PATTERN.test(line) || SUMMARY_COUNT_PATTERN.test(line)) break;
       names.push(sanitizeTestName(line));
       taken += 1;
     }
@@ -230,8 +414,8 @@ export function parsePlaywrightFlaky(logText) {
   return names;
 }
 
-export function summarizeFlaky(jobs) {
-  const counts = new Map();
+export function summarizeFlaky(jobs: FlakyJob[]): FlakySummary {
+  const counts = new Map<string, number>();
   for (const job of jobs) {
     for (const test of job.flaky) counts.set(test, (counts.get(test) ?? 0) + 1);
   }
@@ -249,7 +433,7 @@ export function summarizeFlaky(jobs) {
   };
 }
 
-export function upsertWeeks(existing, fresh) {
+export function upsertWeeks<T extends { weekStart: string }>(existing: T[], fresh: T[]): T[] {
   const byStart = new Map(existing.map((week) => [week.weekStart, week]));
   for (const week of fresh) byStart.set(week.weekStart, week);
   return [...byStart.values()]
@@ -257,21 +441,33 @@ export function upsertWeeks(existing, fresh) {
     .slice(-MAX_HISTORY_WEEKS);
 }
 
-async function mapPool(items, limit, task) {
-  const results = new Array(items.length);
-  let next = 0;
-  async function worker() {
-    while (next < items.length) {
-      const index = next;
-      next += 1;
-      results[index] = await task(items[index], index);
+async function mapPool<T, R>(
+  items: T[],
+  limit: number,
+  task: (item: T, index: number) => Promise<R>,
+): Promise<R[]> {
+  const results = new Array<R>(items.length);
+  const queue = items.entries();
+  async function worker(): Promise<void> {
+    for (const [index, item] of queue) {
+      results[index] = await task(item, index);
     }
   }
   await Promise.all(Array.from({ length: Math.min(limit, items.length) }, worker));
   return results;
 }
 
-function assertComplete({ what, window, fetched, reported }) {
+function assertComplete({
+  what,
+  window,
+  fetched,
+  reported,
+}: {
+  what: string;
+  window: WeekWindow;
+  fetched: number;
+  reported: number | undefined;
+}): void {
   if (typeof reported !== 'number') {
     throw new Error(`${what} for the week starting ${window.weekStart} reported no total`);
   }
@@ -282,16 +478,25 @@ function assertComplete({ what, window, fetched, reported }) {
   }
 }
 
-async function fetchPullRequests(client, repo, window) {
+async function fetchPullRequests(
+  client: GithubClient,
+  repo: string,
+  window: WeekWindow,
+): Promise<PullRequest[]> {
   const q = `repo:${repo} is:pr is:merged merged:${toIso(window.start)}..${toIso(window.end)}`;
-  const prs = [];
-  let reported;
-  let after = null;
+  const prs: PullRequest[] = [];
+  let reported: number | undefined;
+  let after: string | null = null;
   do {
-    const data = await client.graphql(PULL_REQUESTS_QUERY, { q, after });
+    const data: PullRequestSearch = await client.graphql<PullRequestSearch>(PULL_REQUESTS_QUERY, {
+      q,
+      after,
+    });
     reported = data.search.issueCount;
     prs.push(
-      ...data.search.nodes.filter((node) => node?.number !== undefined).map(normalizePullRequest),
+      ...data.search.nodes
+        .filter((node): node is PullRequestNode => node?.number !== undefined)
+        .map(normalizePullRequest),
     );
     after = data.search.pageInfo.hasNextPage ? data.search.pageInfo.endCursor : null;
   } while (after !== null);
@@ -299,9 +504,14 @@ async function fetchPullRequests(client, repo, window) {
   return prs;
 }
 
-async function fetchDeployments(client, repo, start, end) {
+async function fetchDeployments(
+  client: GithubClient,
+  repo: string,
+  start: Date,
+  end: Date,
+): Promise<DeploymentRecord[]> {
   const startMs = start.getTime();
-  const listed = await client.paginate(`/repos/${repo}/deployments`, {
+  const listed = await client.paginate<DeploymentApi>(`/repos/${repo}/deployments`, {
     params: { environment: PRODUCTION_ENVIRONMENT, per_page: PAGE_SIZE },
     stopWhen: (page) => page.some((d) => Date.parse(d.created_at) < startMs),
   });
@@ -310,46 +520,64 @@ async function fetchDeployments(client, repo, start, end) {
     return at >= startMs && at < end.getTime();
   });
   return mapPool(inRange, STATUS_CONCURRENCY, async (deployment) => {
-    const statuses = await client.json(`/repos/${repo}/deployments/${deployment.id}/statuses`, {
-      params: { per_page: STATUS_PAGE_SIZE },
-    });
+    const statuses = await client.json<{ state: string }[]>(
+      `/repos/${repo}/deployments/${deployment.id}/statuses`,
+      { params: { per_page: STATUS_PAGE_SIZE } },
+    );
     return { createdAt: deployment.created_at, outcome: deploymentOutcome(statuses) };
   });
 }
 
-async function fetchCiRuns(client, repo, window, filters) {
-  let reported;
-  const runs = await client.paginate(`/repos/${repo}/actions/workflows/${CI_WORKFLOW}/runs`, {
-    params: {
-      status: RUN_STATUS_COMPLETED,
-      per_page: PAGE_SIZE,
-      created: `${toIso(window.start)}..${toIso(window.end)}`,
-      ...filters,
+async function fetchCiRuns(
+  client: GithubClient,
+  repo: string,
+  window: WeekWindow,
+  filters: Record<string, string>,
+): Promise<CiRun[]> {
+  let reported: number | undefined;
+  const runs = await client.paginate<WorkflowRunApi>(
+    `/repos/${repo}/actions/workflows/${CI_WORKFLOW}/runs`,
+    {
+      params: {
+        status: RUN_STATUS_COMPLETED,
+        per_page: PAGE_SIZE,
+        created: `${toIso(window.start)}..${toIso(window.end)}`,
+        ...filters,
+      },
+      pick: (body: { total_count: number; workflow_runs: WorkflowRunApi[] }) => {
+        reported = body.total_count;
+        return body.workflow_runs;
+      },
     },
-    pick: (body) => {
-      reported = body.total_count;
-      return body.workflow_runs;
-    },
-  });
+  );
   assertComplete({ what: 'the CI run list', window, fetched: runs.length, reported });
   return runs.map((run) => ({ id: run.id, createdAt: run.created_at, conclusion: run.conclusion }));
 }
 
-async function fetchE2eJobs(client, repo, run) {
-  const jobs = await client.paginate(`/repos/${repo}/actions/runs/${run.id}/jobs`, {
+async function fetchE2eJobs(client: GithubClient, repo: string, run: CiRun): Promise<JobApi[]> {
+  const jobs = await client.paginate<JobApi>(`/repos/${repo}/actions/runs/${run.id}/jobs`, {
     params: { per_page: PAGE_SIZE },
-    pick: (body) => body.jobs,
+    pick: (body: { jobs: JobApi[] }) => body.jobs,
   });
   return jobs.filter(
-    (job) => job.name.startsWith(E2E_JOB_PREFIX) && COMPLETED_CONCLUSIONS.includes(job.conclusion),
+    (job) =>
+      job.name.startsWith(E2E_JOB_PREFIX) &&
+      job.conclusion !== null &&
+      COMPLETED_CONCLUSIONS.includes(job.conclusion),
   );
 }
 
-async function inspectFlaky(client, repo, runs, window, cap) {
+async function inspectFlaky(
+  client: GithubClient,
+  repo: string,
+  runs: CiRun[],
+  window: WeekWindow,
+  cap: number,
+): Promise<FlakyInspection> {
   const weekRuns = runs
     .filter((run) => inWindow(run.createdAt, window))
     .sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt));
-  const candidates = [];
+  const candidates: JobApi[] = [];
   let truncated = false;
   for (const run of weekRuns) {
     if (candidates.length >= cap) {
@@ -365,24 +593,29 @@ async function inspectFlaky(client, repo, runs, window, cap) {
   let fetchFailures = 0;
   let parseFailures = 0;
   let logsExpired = 0;
-  const inspected = await mapPool(candidates, LOG_CONCURRENCY, async (job) => {
-    let text;
-    try {
-      text = await client.text(`/repos/${repo}/actions/jobs/${job.id}/logs`);
-    } catch (error) {
-      if (!(error instanceof Error)) throw error;
-      if (LOG_GONE_STATUSES.includes(error.status)) logsExpired += 1;
-      else fetchFailures += 1;
-      return null;
-    }
-    try {
-      return { flaky: parsePlaywrightFlaky(text) };
-    } catch (error) {
-      if (!(error instanceof Error)) throw error;
-      parseFailures += 1;
-      return null;
-    }
-  });
+  const inspected = await mapPool(
+    candidates,
+    LOG_CONCURRENCY,
+    async (job): Promise<FlakyJob | null> => {
+      let text: string;
+      try {
+        text = await client.text(`/repos/${repo}/actions/jobs/${job.id}/logs`);
+      } catch (error) {
+        if (!(error instanceof Error)) throw error;
+        const { status } = error as HttpError;
+        if (status !== undefined && LOG_GONE_STATUSES.includes(status)) logsExpired += 1;
+        else fetchFailures += 1;
+        return null;
+      }
+      try {
+        return { flaky: parsePlaywrightFlaky(text) };
+      } catch (error) {
+        if (!(error instanceof Error)) throw error;
+        parseFailures += 1;
+        return null;
+      }
+    },
+  );
   const attempted = candidates.length - logsExpired;
   if (attempted > 0 && fetchFailures === attempted) {
     throw new Error(
@@ -390,18 +623,32 @@ async function inspectFlaky(client, repo, runs, window, cap) {
     );
   }
   return {
-    jobs: inspected.filter((job) => job !== null),
+    jobs: inspected.filter((job): job is FlakyJob => job !== null),
     truncated,
     logErrors: fetchFailures + parseFailures,
     logsExpired,
   };
 }
 
-function buildWeek({ window, prs, deployments, mainRuns, flaky, collectedAt }) {
+function buildWeek({
+  window,
+  prs,
+  deployments,
+  mainRuns,
+  flaky,
+  collectedAt,
+}: {
+  window: WeekWindow;
+  prs: PullRequest[];
+  deployments: DeploymentRecord[];
+  mainRuns: CiRun[];
+  flaky: FlakyInspection | null;
+  collectedAt: string;
+}): CollectedWeek {
   const pull = summarizePullRequests(prs, window);
   const deploy = summarizeDeployments(deployments, window);
   const ci = summarizeCiRuns(mainRuns, window);
-  const skipped = { lighthouseLcp: LIGHTHOUSE_SKIP_REASON };
+  const skipped: Record<string, string> = { lighthouseLcp: LIGHTHOUSE_SKIP_REASON };
   const flakySummary = flaky === null ? null : summarizeFlaky(flaky.jobs);
   if (flaky === null) skipped.flaky = FLAKY_SKIP_REASON;
   return {
@@ -434,17 +681,28 @@ function buildWeek({ window, prs, deployments, mainRuns, flaky, collectedAt }) {
 }
 
 export async function collectRange(
-  client,
-  { repo, windows, maxLogsPerWeek = DEFAULT_MAX_LOGS_PER_WEEK, skipLogs = false, now = new Date() },
-) {
-  const deployments = await fetchDeployments(client, repo, windows[0].start, windows.at(-1).end);
+  client: GithubClient,
+  {
+    repo,
+    windows,
+    maxLogsPerWeek = DEFAULT_MAX_LOGS_PER_WEEK,
+    skipLogs = false,
+    now = new Date(),
+  }: CollectOptions,
+): Promise<CollectedWeek[]> {
+  const first = windows[0];
+  const last = windows.at(-1);
+  if (first === undefined || last === undefined) {
+    throw new Error('collectRange needs at least one week window');
+  }
+  const deployments = await fetchDeployments(client, repo, first.start, last.end);
   const collectedAt = toIso(now);
-  const weeks = [];
+  const weeks: CollectedWeek[] = [];
   for (const window of windows) {
     const [prs, mainRuns, allRuns] = await Promise.all([
       fetchPullRequests(client, repo, window),
       fetchCiRuns(client, repo, window, { branch: MAIN_BRANCH, event: EVENT_PUSH }),
-      skipLogs ? Promise.resolve([]) : fetchCiRuns(client, repo, window, {}),
+      skipLogs ? Promise.resolve<CiRun[]>([]) : fetchCiRuns(client, repo, window, {}),
     ]);
     const flaky = skipLogs
       ? null
@@ -454,8 +712,8 @@ export async function collectRange(
   return weeks;
 }
 
-export function collectionWarnings(weeks) {
-  const notes = [];
+export function collectionWarnings(weeks: CollectedWeek[]): string[] {
+  const notes: string[] = [];
   for (const week of weeks) {
     const { logErrors, logsExpired, e2eJobsInspected } = week.counts;
     if (logErrors > 0) {
@@ -473,16 +731,18 @@ export function collectionWarnings(weeks) {
     (sum, week) => sum + week.counts.productionDeploys + week.counts.failedDeploys,
     0,
   );
-  if (weeks.length > 0 && finished === 0) {
+  const first = weeks[0];
+  const last = weeks.at(-1);
+  if (first !== undefined && last !== undefined && finished === 0) {
     notes.push(
-      `::warning::no finished ${PRODUCTION_ENVIRONMENT} deployment from ${weeks[0].weekStart} to ${weeks.at(-1).weekStart}; check that the environment name still matches before trusting the deployment metrics`,
+      `::warning::no finished ${PRODUCTION_ENVIRONMENT} deployment from ${first.weekStart} to ${last.weekStart}; check that the environment name still matches before trusting the deployment metrics`,
     );
   }
   return notes;
 }
 
-function parseArgs(argv) {
-  const args = {
+function parseArgs(argv: string[]): CollectArgs {
+  const args: CollectArgs = {
     weeks: WEEKS_AUTO,
     history: DEFAULT_HISTORY_PATH,
     repo: undefined,
@@ -490,20 +750,15 @@ function parseArgs(argv) {
     now: undefined,
     skipLogs: false,
   };
-  const valued = {
-    '--weeks': 'weeks',
-    '--history': 'history',
-    '--repo': 'repo',
-    '--max-logs-per-week': 'maxLogsPerWeek',
-    '--now': 'now',
-  };
-  for (let i = 0; i < argv.length; i += 1) {
-    const flag = argv[i];
-    if (flag === '--skip-logs') {
+  const queue = [...argv];
+  for (let flag = queue.shift(); flag !== undefined; flag = queue.shift()) {
+    const key = VALUED_FLAGS.get(flag);
+    const value = queue[0];
+    if (flag === SKIP_LOGS_FLAG) {
       args.skipLogs = true;
-    } else if (flag in valued && argv[i + 1] !== undefined) {
-      args[valued[flag]] = argv[i + 1];
-      i += 1;
+    } else if (key !== undefined && value !== undefined) {
+      args[key] = value;
+      queue.shift();
     } else {
       throw new Error(`unknown or incomplete argument: ${flag}`);
     }
@@ -511,14 +766,14 @@ function parseArgs(argv) {
   return args;
 }
 
-function renderSummary(weeks) {
+function renderSummary(weeks: CollectedWeek[]): string {
   const lines = [
     '| week | deploys | deploy fail | lead h | cycle h | main CI fail | flaky/job |',
     '| --- | --- | --- | --- | --- | --- | --- |',
   ];
   for (const week of weeks) {
     const m = week.metrics;
-    const cell = (v) => (v === null ? '-' : String(v));
+    const cell = (v: number | null): string => (v === null ? '-' : String(v));
     lines.push(
       `| ${week.weekStart} | ${m.deploymentFrequency} | ${cell(m.deploymentFailureRate)} | ${cell(m.leadTimeHoursMedian)} | ${cell(m.prCycleTimeHoursMedian)} | ${cell(m.ciMainFailureRate)} | ${cell(m.flakyPerE2eJob)} |`,
     );
@@ -526,13 +781,13 @@ function renderSummary(weeks) {
   return lines.join('\n');
 }
 
-async function main() {
+async function main(): Promise<void> {
   const args = parseArgs(process.argv.slice(2));
   const now = args.now === undefined ? new Date() : new Date(args.now);
   const repo = resolveRepo({ arg: args.repo });
   const client = createGithubClient({ token: resolveToken() });
-  const existing = existsSync(args.history)
-    ? JSON.parse(readFileSync(args.history, 'utf8'))
+  const existing: HistoryFile = existsSync(args.history)
+    ? (JSON.parse(readFileSync(args.history, 'utf8')) as HistoryFile)
     : { schemaVersion: SCHEMA_VERSION, repo, weeks: [] };
   const count = weeksToCollect({
     weeks: existing.weeks,
@@ -546,7 +801,7 @@ async function main() {
     skipLogs: args.skipLogs,
     now,
   });
-  const history = {
+  const history: HistoryFile = {
     schemaVersion: SCHEMA_VERSION,
     repo,
     weeks: upsertWeeks(existing.weeks, weeks),
@@ -563,13 +818,10 @@ async function main() {
   }
 }
 
-if (
-  typeof process.argv[1] === 'string' &&
-  import.meta.url === pathToFileURL(realpathSync(process.argv[1])).href
-) {
-  main().catch((error) => {
+if (isMain(import.meta.url)) {
+  main().catch((error: unknown) => {
     console.error(
-      `::error::${String(error instanceof Error ? error.message : error).replace(/[\r\n]+/g, ' ')}`,
+      `::error::${String(error instanceof Error ? error.message : error).replace(LINE_BREAKS, ' ')}`,
     );
     process.exitCode = 1;
   });

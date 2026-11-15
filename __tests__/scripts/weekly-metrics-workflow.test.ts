@@ -68,7 +68,7 @@ describe('weekly-metrics workflow', () => {
 
   it('runs scripts that exist and reads the band config that is committed', () => {
     const scripts = steps
-      .flatMap((s) => [...(s.run ?? '').matchAll(/scripts\/metrics\/[\w.-]+\.mjs/g)])
+      .flatMap((s) => [...(s.run ?? '').matchAll(/scripts\/metrics\/[\w.-]+\.ts/g)])
       .map((m) => m[0]);
     expect(scripts.length).toBe(3);
     for (const script of scripts) expect(existsSync(join(process.cwd(), script))).toBe(true);
@@ -113,10 +113,10 @@ describe('weekly-metrics workflow', () => {
       position((s) => s.id === 'previous'),
       position((s) => s.uses?.startsWith('actions/download-artifact') === true),
       position((s) => s.name === 'Verify the previous history'),
-      position((s) => s.run?.includes('scripts/metrics/collect.mjs') === true),
-      position((s) => s.run?.includes('scripts/metrics/bands.mjs') === true),
+      position((s) => s.run?.includes('scripts/metrics/collect.ts') === true),
+      position((s) => s.run?.includes('scripts/metrics/bands.ts') === true),
       position((s) => s.uses?.startsWith('actions/upload-artifact') === true),
-      position((s) => s.run?.includes('scripts/metrics/issues.mjs') === true),
+      position((s) => s.run?.includes('scripts/metrics/issues.ts') === true),
     ];
     expect(order.every((index) => index >= 0)).toBe(true);
     expect([...order].sort((a, b) => a - b)).toEqual(order);

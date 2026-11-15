@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import bandsConfig from '../../metrics/bands.json';
-import type { BandsConfig, MetricConfig } from '../metrics/bands.mjs';
+import type { BandsConfig, MetricConfig } from '../metrics/bands.ts';
 import {
   applyWesternElectricRules,
   bandAnnotations,
@@ -11,7 +11,7 @@ import {
   sampleStd,
   tierAtLeast,
   validateBandsConfig,
-} from '../metrics/bands.mjs';
+} from '../metrics/bands.ts';
 
 const TIERS = { log: 1, diagnose: 2, propose: 3 };
 const CONFIG: MetricConfig = {

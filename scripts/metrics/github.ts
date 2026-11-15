@@ -13,8 +13,8 @@ const RATE_LIMIT_STATUSES = [FORBIDDEN_STATUS, TOO_MANY_REQUESTS_STATUS];
 const MAX_RETRY_AFTER_SECONDS = 60;
 const REDIRECT_STATUSES = [301, 302, 303, 307, 308];
 const MS_PER_SECOND = 1000;
-export const HTTP_METHOD = Object.freeze({ GET: 'GET', HEAD: 'HEAD', POST: 'POST' });
-const REPLAYABLE_METHODS = [HTTP_METHOD.GET, HTTP_METHOD.HEAD];
+export const HTTP_METHOD = Object.freeze({ GET: 'GET', HEAD: 'HEAD', POST: 'POST' } as const);
+const REPLAYABLE_METHODS: readonly string[] = [HTTP_METHOD.GET, HTTP_METHOD.HEAD];
 const ACCEPT_JSON = 'application/vnd.github+json';
 const ACCEPT_TEXT = 'text/plain';
 const GRAPHQL_PATH = '/graphql';
@@ -22,24 +22,74 @@ const REMAINING_EXHAUSTED = '0';
 const REMOTE_PATTERN = /github\.com[:/]([\w.-]+\/[\w.-]+?)(?:\.git)?\/?$/;
 const NEXT_LINK = /<([^>]+)>;\s*rel="next"/;
 
-const defaultSleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-const defaultExecFile = (file, args) => execFileSync(file, args, { encoding: 'utf8' });
+export interface HttpError extends Error {
+  status?: number;
+}
 
-export function parseNextLink(header) {
+export interface RequestOptions {
+  params?: Record<string, string | number>;
+  method?: string;
+  body?: unknown;
+  accept?: string;
+  redirect?: 'manual' | 'follow';
+  readOnly?: boolean;
+}
+
+export interface PaginateOptions<T> {
+  params?: Record<string, string | number>;
+  pick?: (body: never) => T[];
+  stopWhen?: (page: T[]) => boolean;
+}
+
+export interface GithubClient {
+  request(path: string, options?: RequestOptions): Promise<Response>;
+  json<T = unknown>(path: string, options?: RequestOptions): Promise<T>;
+  paginate<T = unknown>(path: string, options?: PaginateOptions<T>): Promise<T[]>;
+  graphql<T = unknown>(query: string, variables?: Record<string, unknown>): Promise<T>;
+  text(path: string): Promise<string>;
+}
+
+export interface GithubClientOptions {
+  token: string;
+  fetchImpl?: typeof fetch;
+  sleep?: (ms: number) => Promise<void>;
+  retries?: number;
+}
+
+type ExecFile = (file: string, args: string[]) => string;
+type Env = Record<string, string | undefined>;
+
+interface SendInit {
+  method: string;
+  redirect?: 'manual' | 'follow';
+  body?: string;
+  headers?: Record<string, string>;
+}
+
+interface GraphqlBody<T> {
+  data: T;
+  errors?: { message: string }[];
+}
+
+const defaultSleep = (ms: number): Promise<void> =>
+  new Promise((resolve) => setTimeout(resolve, ms));
+const defaultExecFile: ExecFile = (file, args) => execFileSync(file, args, { encoding: 'utf8' });
+
+export function parseNextLink(header: string | null | undefined): string | null {
   if (typeof header !== 'string') return null;
   return NEXT_LINK.exec(header)?.[1] ?? null;
 }
 
-function withParams(path, params) {
+function withParams(path: string, params: Record<string, string | number> | undefined): string {
   const base = path.startsWith('http') ? path : `${API_BASE}${path}`;
   if (params === undefined) return base;
   const query = new URLSearchParams(
-    Object.entries(params).map(([key, value]) => [key, String(value)]),
+    Object.entries(params).map(([key, value]): [string, string] => [key, String(value)]),
   ).toString();
   return query === '' ? base : `${base}${base.includes('?') ? '&' : '?'}${query}`;
 }
 
-function describeRateLimit(res) {
+function describeRateLimit(res: Response): string {
   const reset = Number(res.headers.get('x-ratelimit-reset'));
   const when =
     Number.isFinite(reset) && reset > 0
@@ -48,16 +98,16 @@ function describeRateLimit(res) {
   return `GitHub API rate limit exhausted, resets at ${when}`;
 }
 
-function httpError(message, status) {
+function httpError(message: string, status: number): HttpError {
   return Object.assign(new Error(message), { status });
 }
 
-function describeSecondaryLimit(res, retryAfter) {
+function describeSecondaryLimit(res: Response, retryAfter: number | null): string {
   const asked = retryAfter === null ? 'no retry-after header' : `retry-after ${retryAfter} seconds`;
   return `GitHub API secondary rate limit hit (HTTP ${res.status}, ${asked}); waiting more than ${MAX_RETRY_AFTER_SECONDS} seconds is not attempted`;
 }
 
-function readRetryAfter(res) {
+function readRetryAfter(res: Response): number | null {
   const raw = res.headers.get('retry-after');
   if (raw === null) return null;
   const seconds = Number(raw);
@@ -69,9 +119,9 @@ export function createGithubClient({
   fetchImpl = globalThis.fetch,
   sleep = defaultSleep,
   retries = DEFAULT_RETRIES,
-}) {
-  const headersFor = (url, accept) => {
-    const headers = {
+}: GithubClientOptions): GithubClient {
+  const headersFor = (url: string, accept: string): Record<string, string> => {
+    const headers: Record<string, string> = {
       'User-Agent': USER_AGENT,
       Accept: accept,
       'X-GitHub-Api-Version': API_VERSION,
@@ -80,9 +130,14 @@ export function createGithubClient({
     return headers;
   };
 
-  async function send(url, init, accept, { replayable }) {
+  async function send(
+    url: string,
+    init: SendInit,
+    accept: string,
+    { replayable }: { replayable: boolean },
+  ): Promise<Response> {
     for (let attempt = 0; ; attempt += 1) {
-      let res;
+      let res: Response;
       try {
         res = await fetchImpl(url, {
           ...init,
@@ -117,11 +172,18 @@ export function createGithubClient({
   }
 
   async function request(
-    path,
-    { params, method = HTTP_METHOD.GET, body, accept = ACCEPT_JSON, redirect, readOnly } = {},
-  ) {
+    path: string,
+    {
+      params,
+      method = HTTP_METHOD.GET,
+      body,
+      accept = ACCEPT_JSON,
+      redirect,
+      readOnly,
+    }: RequestOptions = {},
+  ): Promise<Response> {
     const url = withParams(path, params);
-    const init = { method, ...(redirect === undefined ? {} : { redirect }) };
+    const init: SendInit = { method, ...(redirect === undefined ? {} : { redirect }) };
     if (body !== undefined) {
       init.body = JSON.stringify(body);
       init.headers = { 'Content-Type': 'application/json' };
@@ -135,16 +197,20 @@ export function createGithubClient({
     return res;
   }
 
-  async function json(path, options) {
+  async function json<T = unknown>(path: string, options?: RequestOptions): Promise<T> {
     return (await request(path, options)).json();
   }
 
-  async function paginate(path, { params, pick = (page) => page, stopWhen } = {}) {
-    const items = [];
-    let url = withParams(path, params);
+  async function paginate<T = unknown>(
+    path: string,
+    { params, pick, stopWhen }: PaginateOptions<T> = {},
+  ): Promise<T[]> {
+    const items: T[] = [];
+    let url: string | null = withParams(path, params);
     while (url !== null) {
-      const res = await request(url);
-      const page = pick(await res.json());
+      const res: Response = await request(url);
+      const body: unknown = await res.json();
+      const page = pick === undefined ? (body as T[]) : pick(body as never);
       items.push(...page);
       if (stopWhen?.(page) === true) break;
       url = parseNextLink(res.headers.get('link'));
@@ -152,8 +218,11 @@ export function createGithubClient({
     return items;
   }
 
-  async function graphql(query, variables) {
-    const body = await json(GRAPHQL_PATH, {
+  async function graphql<T = unknown>(
+    query: string,
+    variables?: Record<string, unknown>,
+  ): Promise<T> {
+    const body = await json<GraphqlBody<T>>(GRAPHQL_PATH, {
       method: HTTP_METHOD.POST,
       body: { query, variables },
       readOnly: true,
@@ -164,7 +233,7 @@ export function createGithubClient({
     return body.data;
   }
 
-  async function text(path) {
+  async function text(path: string): Promise<string> {
     const first = await request(path, {
       redirect: 'manual',
       accept: ACCEPT_JSON,
@@ -181,7 +250,13 @@ export function createGithubClient({
   return { request, json, paginate, graphql, text };
 }
 
-export function resolveToken({ env = process.env, execFile = defaultExecFile } = {}) {
+export function resolveToken({
+  env = process.env,
+  execFile = defaultExecFile,
+}: {
+  env?: Env;
+  execFile?: ExecFile;
+} = {}): string {
   const fromEnv = env.GITHUB_TOKEN || env.GH_TOKEN;
   if (fromEnv) return fromEnv;
   try {
@@ -193,11 +268,19 @@ export function resolveToken({ env = process.env, execFile = defaultExecFile } =
   throw new Error('no GitHub token: set GITHUB_TOKEN or sign in with `gh auth login`');
 }
 
-export function parseRemoteUrl(url) {
+export function parseRemoteUrl(url: string): string | null {
   return REMOTE_PATTERN.exec(String(url).trim())?.[1] ?? null;
 }
 
-export function resolveRepo({ arg, env = process.env, execFile = defaultExecFile } = {}) {
+export function resolveRepo({
+  arg,
+  env = process.env,
+  execFile = defaultExecFile,
+}: {
+  arg?: string | undefined;
+  env?: Env;
+  execFile?: ExecFile;
+} = {}): string {
   if (arg) return arg;
   if (env.GITHUB_REPOSITORY) return env.GITHUB_REPOSITORY;
   const repo = parseRemoteUrl(execFile('git', ['remote', 'get-url', 'origin']));

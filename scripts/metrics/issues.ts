@@ -1,7 +1,28 @@
-import { existsSync, readFileSync, realpathSync } from 'node:fs';
-import { pathToFileURL } from 'node:url';
-import { DIRECTION, resolveMetricConfig, TIER } from './bands.mjs';
-import { createGithubClient, HTTP_METHOD, resolveRepo, resolveToken } from './github.mjs';
+import { existsSync, readFileSync } from 'node:fs';
+import { isMain } from '../lib/is-main.ts';
+import type { BandsConfig, BandsReport, Evaluation } from './bands.ts';
+import { DIRECTION, resolveMetricConfig, TIER } from './bands.ts';
+import type { GithubClient } from './github.ts';
+import { createGithubClient, HTTP_METHOD, resolveRepo, resolveToken } from './github.ts';
+
+export interface IssueHistoryWeek {
+  weekStart: string;
+  topFlaky?: { test: string; count: number }[];
+}
+
+export type IssueAction =
+  | { type: 'create'; metric: string; title: string; body: string }
+  | { type: 'comment'; metric: string; issueNumber: number; body: string };
+
+interface IssuesArgs {
+  history: string;
+  config: string;
+  report: string;
+  repo: string | undefined;
+  dryRun: boolean;
+}
+
+type ValuedKey = 'history' | 'config' | 'report' | 'repo';
 
 export const ISSUE_LABEL = 'metrics-breach';
 const LABEL_COLOR = 'b60205';
@@ -13,25 +34,38 @@ const PAGE_SIZE = 100;
 const DEFAULT_HISTORY_PATH = 'metrics/weekly.json';
 const DEFAULT_CONFIG_PATH = 'metrics/bands.json';
 const DEFAULT_REPORT_PATH = 'metrics/breaches.json';
+const LINE_BREAKS = /[\r\n]+/g;
+const DRY_RUN_FLAG = '--dry-run';
+const VALUED_FLAGS = new Map<string, ValuedKey>([
+  ['--history', 'history'],
+  ['--config', 'config'],
+  ['--report', 'report'],
+  ['--repo', 'repo'],
+]);
 
-const TIER_ACTION = {
-  [TIER.LOG]: 'Log only. Note it and watch the next week.',
+const LOG_ACTION = 'Log only. Note it and watch the next week.';
+const TIER_ACTION: Readonly<Record<string, string>> = {
+  [TIER.LOG]: LOG_ACTION,
   [TIER.DIAGNOSE]: 'Diagnose. Find the cause before changing anything, and write it in this issue.',
   [TIER.PROPOSE]:
     'Propose. Open a pull request that changes the code or process behind the number, and link it here.',
 };
 
-export const issueMarker = (metric) => `<!-- ${ISSUE_LABEL}:${metric} -->`;
-const firstLine = (body) =>
-  String(body ?? '')
-    .split('\n', 1)[0]
-    .trim();
-export const buildIssueTitle = (metric) => `Metric breach: ${metric}`;
+export const issueMarker = (metric: string): string => `<!-- ${ISSUE_LABEL}:${metric} -->`;
+const firstLine = (body: string | null | undefined): string =>
+  (String(body ?? '').split('\n', 1)[0] ?? '').trim();
+export const buildIssueTitle = (metric: string): string => `Metric breach: ${metric}`;
 
-const fmt = (value) =>
+const fmt = (value: number | undefined): string =>
   typeof value === 'number' ? String(Number(value.toFixed(NUMBER_DIGITS))) : '-';
 
-function flakyEvidence(history, weekStart) {
+function evaluationOf(report: BandsReport, metric: string): Evaluation {
+  const evaluation = report.evaluations[metric];
+  if (evaluation === undefined) throw new Error(`the report has no evaluation for ${metric}`);
+  return evaluation;
+}
+
+function flakyEvidence(history: IssueHistoryWeek[], weekStart: string | null): string[] {
   const week = history.find((w) => w.weekStart === weekStart);
   const top = week?.topFlaky ?? [];
   if (top.length === 0) return [];
@@ -42,8 +76,18 @@ function flakyEvidence(history, weekStart) {
   ];
 }
 
-function evidenceLines({ metric, report, config, history }) {
-  const evaluation = report.evaluations[metric];
+function evidenceLines({
+  metric,
+  report,
+  config,
+  history,
+}: {
+  metric: string;
+  report: BandsReport;
+  config: BandsConfig;
+  history: IssueHistoryWeek[];
+}): string[] {
+  const evaluation = evaluationOf(report, metric);
   const resolved = resolveMetricConfig(config, metric);
   const unit = config.metrics[metric]?.unit;
   const lines = [
@@ -52,29 +96,49 @@ function evidenceLines({ metric, report, config, history }) {
     `Band: mean ${fmt(evaluation.mean)}, std ${fmt(evaluation.std)}, over the previous ${resolved.window} weeks at most. z = ${fmt(evaluation.z)}. Worse is ${resolved.direction === DIRECTION.HIGHER_IS_WORSE ? 'higher' : 'lower'}.`,
     'Rules that fired:',
     ...evaluation.rules.map((rule) => `- ${rule.description}`),
-    `Recent weeks, oldest first: ${evaluation.recent.map(fmt).join(', ')}`,
+    `Recent weeks, oldest first: ${evaluation.recent.map((value) => fmt(value)).join(', ')}`,
   ];
   if (metric === FLAKY_METRIC) lines.push(...flakyEvidence(history, report.weekStart));
   return lines;
 }
 
-export function buildIssueBody({ metric, report, config, history, runUrl }) {
-  const evaluation = report.evaluations[metric];
+export function buildIssueBody({
+  metric,
+  report,
+  config,
+  history,
+  runUrl,
+}: {
+  metric: string;
+  report: BandsReport;
+  config: BandsConfig;
+  history: IssueHistoryWeek[];
+  runUrl: string;
+}): string {
+  const evaluation = evaluationOf(report, metric);
   return [
     issueMarker(metric),
     `**Tier: ${evaluation.tier}**, week starting ${report.weekStart}.`,
     '',
     ...evidenceLines({ metric, report, config, history }),
     '',
-    `What to do at this tier: ${TIER_ACTION[evaluation.tier] ?? TIER_ACTION.log}`,
+    `What to do at this tier: ${TIER_ACTION[evaluation.tier] ?? LOG_ACTION}`,
     'Close this issue with the pull request that addresses it. Do not turn this number into a target: a metric that is optimised stops measuring what it measured.',
     '',
     `Run: ${runUrl}`,
   ].join('\n');
 }
 
-function buildComment({ metric, report, runUrl }) {
-  const evaluation = report.evaluations[metric];
+function buildComment({
+  metric,
+  report,
+  runUrl,
+}: {
+  metric: string;
+  report: BandsReport;
+  runUrl: string;
+}): string {
+  const evaluation = evaluationOf(report, metric);
   return [
     `Still outside the band. Week starting ${report.weekStart}: tier **${evaluation.tier}**, value ${fmt(evaluation.value)}, mean ${fmt(evaluation.mean)}, std ${fmt(evaluation.std)}, z = ${fmt(evaluation.z)}.`,
     ...evaluation.rules.map((rule) => `- ${rule.description}`),
@@ -83,8 +147,20 @@ function buildComment({ metric, report, runUrl }) {
   ].join('\n');
 }
 
-export function planIssueActions({ report, config, history, openIssues, runUrl }) {
-  return report.breaches.map((metric) => {
+export function planIssueActions({
+  report,
+  config,
+  history,
+  openIssues,
+  runUrl,
+}: {
+  report: BandsReport;
+  config: BandsConfig;
+  history: IssueHistoryWeek[];
+  openIssues: { number: number; body?: string | null }[];
+  runUrl: string;
+}): IssueAction[] {
+  return report.breaches.map((metric): IssueAction => {
     const existing = openIssues.find((issue) => firstLine(issue.body) === issueMarker(metric));
     if (existing !== undefined) {
       return {
@@ -103,7 +179,7 @@ export function planIssueActions({ report, config, history, openIssues, runUrl }
   });
 }
 
-async function ensureLabel(client, repo) {
+async function ensureLabel(client: GithubClient, repo: string): Promise<void> {
   try {
     await client.request(`/repos/${repo}/labels`, {
       method: HTTP_METHOD.POST,
@@ -114,7 +190,12 @@ async function ensureLabel(client, repo) {
   }
 }
 
-export async function applyPlan(client, repo, actions, { dryRun = false } = {}) {
+export async function applyPlan(
+  client: GithubClient,
+  repo: string,
+  actions: IssueAction[],
+  { dryRun = false }: { dryRun?: boolean } = {},
+): Promise<void> {
   if (actions.length === 0 || dryRun) return;
   await ensureLabel(client, repo);
   for (const action of actions) {
@@ -132,21 +213,23 @@ export async function applyPlan(client, repo, actions, { dryRun = false } = {}) 
   }
 }
 
-function parseArgs(argv) {
-  const args = {
+function parseArgs(argv: string[]): IssuesArgs {
+  const args: IssuesArgs = {
     history: DEFAULT_HISTORY_PATH,
     config: DEFAULT_CONFIG_PATH,
     report: DEFAULT_REPORT_PATH,
     repo: undefined,
     dryRun: false,
   };
-  for (let i = 0; i < argv.length; i += 1) {
-    const flag = argv[i];
-    if (flag === '--dry-run') {
+  const queue = [...argv];
+  for (let flag = queue.shift(); flag !== undefined; flag = queue.shift()) {
+    const key = VALUED_FLAGS.get(flag);
+    const value = queue[0];
+    if (flag === DRY_RUN_FLAG) {
       args.dryRun = true;
-    } else if (['--history', '--config', '--report', '--repo'].includes(flag) && argv[i + 1]) {
-      args[flag.slice(2)] = argv[i + 1];
-      i += 1;
+    } else if (key !== undefined && value) {
+      args[key] = value;
+      queue.shift();
     } else {
       throw new Error(`unknown or incomplete argument: ${flag}`);
     }
@@ -154,29 +237,30 @@ function parseArgs(argv) {
   return args;
 }
 
-function runUrlFromEnv(env) {
+function runUrlFromEnv(env: NodeJS.ProcessEnv): string {
   const { GITHUB_SERVER_URL, GITHUB_REPOSITORY, GITHUB_RUN_ID } = env;
   return GITHUB_SERVER_URL && GITHUB_REPOSITORY && GITHUB_RUN_ID
     ? `${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}`
     : 'local run';
 }
 
-async function main() {
+async function main(): Promise<void> {
   const args = parseArgs(process.argv.slice(2));
-  const report = JSON.parse(readFileSync(args.report, 'utf8'));
+  const report = JSON.parse(readFileSync(args.report, 'utf8')) as BandsReport;
   if (report.breaches.length === 0) {
     console.log('[issues] no metric breached its band; nothing to open.');
     return;
   }
-  const config = JSON.parse(readFileSync(args.config, 'utf8'));
+  const config = JSON.parse(readFileSync(args.config, 'utf8')) as BandsConfig;
   const history = existsSync(args.history)
-    ? JSON.parse(readFileSync(args.history, 'utf8')).weeks
+    ? (JSON.parse(readFileSync(args.history, 'utf8')) as { weeks: IssueHistoryWeek[] }).weeks
     : [];
   const repo = resolveRepo({ arg: args.repo });
   const client = createGithubClient({ token: resolveToken() });
-  const openIssues = await client.paginate(`/repos/${repo}/issues`, {
-    params: { labels: ISSUE_LABEL, state: 'open', per_page: PAGE_SIZE },
-  });
+  const openIssues = await client.paginate<{ number: number; body?: string | null }>(
+    `/repos/${repo}/issues`,
+    { params: { labels: ISSUE_LABEL, state: 'open', per_page: PAGE_SIZE } },
+  );
   const actions = planIssueActions({
     report,
     config,
@@ -190,13 +274,10 @@ async function main() {
   await applyPlan(client, repo, actions, { dryRun: args.dryRun });
 }
 
-if (
-  typeof process.argv[1] === 'string' &&
-  import.meta.url === pathToFileURL(realpathSync(process.argv[1])).href
-) {
-  main().catch((error) => {
+if (isMain(import.meta.url)) {
+  main().catch((error: unknown) => {
     console.error(
-      `::error::${String(error instanceof Error ? error.message : error).replace(/[\r\n]+/g, ' ')}`,
+      `::error::${String(error instanceof Error ? error.message : error).replace(LINE_BREAKS, ' ')}`,
     );
     process.exitCode = 1;
   });

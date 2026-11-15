@@ -63,10 +63,10 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           WEEKS: ${{ inputs.weeks }}
-        run: node scripts/metrics/collect.mjs ${WEEKS:+--weeks "$WEEKS"}
+        run: node scripts/metrics/collect.ts ${WEEKS:+--weeks "$WEEKS"}
 
       - name: Check the bands
-        run: node scripts/metrics/bands.mjs
+        run: node scripts/metrics/bands.ts
 
       - name: Keep the history
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
@@ -81,4 +81,4 @@ jobs:
       - name: Open or update breach issues
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: node scripts/metrics/issues.mjs
+        run: node scripts/metrics/issues.ts
