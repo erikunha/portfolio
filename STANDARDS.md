@@ -208,6 +208,12 @@ is deterministic). The webkit projects do not run the visual spec and no webkit 
 rendering varies from Chromium, and a darwin-only baseline that no CI job compares drifts unseen
 (`__tests__/playwright-visual-projects.test.ts` holds the project set).
 
+**Queries and input.** Find elements by role, label or text first. Reach for a class or data selector
+only for a property no accessible query exposes. Type with `user-event`, except IME composition, where
+`fireEvent` stays because `user-event` has no composition API. Assert with the `jest-dom` matchers
+(`toBeInTheDocument`, `toHaveValue`), which `tests/mocks/rtl-setup.ts` registers for every test. Tests
+that read the file system are sorted in [docs/handbook/static-test-triage.md](docs/handbook/static-test-triage.md).
+
 **Placement.** A unit test sits beside the module it covers, named `<module>.test.ts`. A test that
 crosses modules or exercises a route goes in `__tests__/`, and a family of them goes in
 `__tests__/<family>/`: `ask`, `contact`, `agent`. A repo invariant goes in `__tests__/meta/`. A

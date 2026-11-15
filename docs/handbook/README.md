@@ -27,6 +27,7 @@ The handbook routes to the other two rather than duplicating them.
 | [engineering-standards.md](./engineering-standards.md)     | The explicit standards index and the gate that enforces each                                                                                                |
 | [engineering-audit.md](./engineering-audit.md)             | An evaluation of the platform's maturity, with a technical-debt register                                                                                    |
 | [onboarding.md](./onboarding.md)                           | Process onboarding: how to do the work, not just read the code                                                                                              |
+| [static-test-triage.md](./static-test-triage.md)           | Every test that reads the file system, sorted by what it checks and where the check belongs long term                                                     |
 | [roadmap.md](./roadmap.md)                                 | Future-state engineering platform, ranked by ROI                                                                                                            |
 
 ## The platform in one picture
