@@ -6,37 +6,59 @@ import {
   useEffect,
   useId,
   useLayoutEffect,
+  useReducer,
   useRef,
-  useState,
 } from 'react';
+import { flushSync } from 'react-dom';
 import type { ShellStates } from '@/content/shell-states.schema';
 import { fillShellState, SHELL_LIMITS, type ShellUi } from '@/content/shell-ui';
 import { forgetWithConversation, useConversationQuestions } from '@/lib/ask/conversation.client';
-import { FORGET_OUTCOME, wasForgotten } from '@/lib/ask/forget-request.client';
-import { MS_PER_MINUTE, MS_PER_SECOND, SECONDS_PER_MINUTE } from '@/lib/time';
+import { wasForgotten } from '@/lib/ask/forget-request.client';
+import { MS_PER_MINUTE } from '@/lib/time';
 import { COPY_STATUS, useCopyFeedback } from '@/lib/use-copy-feedback.client';
+import { useCountdown } from '@/lib/use-countdown.client';
+import {
+  IDLE_VIEW,
+  isErrorView,
+  outcomeAction,
+  RECEIPT_ACTION,
+  RECEIPT_VIEW,
+  type ReceiptView,
+  receiptViewReducer,
+} from './receipt-view';
 import { revealShell } from './reveal-shell';
 import { ShellEmail } from './ShellEmail';
 import { ShellKey } from './shell-keys';
 
-const RECEIPT_VIEW = {
-  Idle: 'idle',
-  Confirm: 'confirm',
-  Pending: 'pending',
-  Unavailable: 'unavailable',
-  Offline: 'offline',
-  TimedOut: 'timed-out',
-  Failed: 'failed',
-  Waiting: 'waiting',
-} as const;
+const MESSAGE_TONE = { Danger: 'danger', Warning: 'warning' } as const;
+const MESSAGE_ROLE = { Status: 'status', Alert: 'alert' } as const;
+const MESSAGE_CLASS = { Message: 'shell-receipt-message', Body: 'shell-receipt-body' } as const;
 
-type ReceiptView =
-  | { kind: Exclude<(typeof RECEIPT_VIEW)[keyof typeof RECEIPT_VIEW], typeof RECEIPT_VIEW.Waiting> }
-  | { kind: typeof RECEIPT_VIEW.Waiting; until: number };
-
-const FALLBACK_WAIT_SECONDS = SECONDS_PER_MINUTE;
-const FOCUS_TARGET = { Primary: 'primary', Secondary: 'secondary' } as const;
-type FocusTarget = (typeof FOCUS_TARGET)[keyof typeof FOCUS_TARGET];
+function renderMessage({
+  id,
+  text,
+  tone,
+  role,
+  className = MESSAGE_CLASS.Message,
+}: {
+  id: string;
+  text: string;
+  tone?: (typeof MESSAGE_TONE)[keyof typeof MESSAGE_TONE];
+  role?: (typeof MESSAGE_ROLE)[keyof typeof MESSAGE_ROLE];
+  className?: string;
+}) {
+  return (
+    <span
+      id={id}
+      className={className}
+      data-tone={tone}
+      data-testid="shell-receipt-message"
+      role={role}
+    >
+      {text}
+    </span>
+  );
+}
 
 function minutesLeft(until: number, now: number): number {
   return Math.max(1, Math.ceil((until - now) / MS_PER_MINUTE));
@@ -67,15 +89,6 @@ function errorCopy(kind: ReceiptView['kind'], ui: ShellUi): [string, string | un
   return [ui.forgetFailed, undefined];
 }
 
-function isError(view: ReceiptView): boolean {
-  return (
-    view.kind === RECEIPT_VIEW.Unavailable ||
-    view.kind === RECEIPT_VIEW.Offline ||
-    view.kind === RECEIPT_VIEW.TimedOut ||
-    view.kind === RECEIPT_VIEW.Failed
-  );
-}
-
 export function ConversationReceipt({
   ui,
   states,
@@ -92,48 +105,30 @@ export function ConversationReceipt({
   onForgotten: (questions: number) => void;
 }) {
   const questions = Math.max(1, useConversationQuestions());
-  const [view, setView] = useState<ReceiptView>({ kind: RECEIPT_VIEW.Idle });
-  const [now, setNow] = useState(() => Date.now());
+  const [view, dispatch] = useReducer(receiptViewReducer, IDLE_VIEW);
+  const now = useCountdown({
+    until: view.kind === RECEIPT_VIEW.Waiting ? view.until : null,
+    stepMs: MS_PER_MINUTE,
+    onElapsed: () => dispatch({ type: RECEIPT_ACTION.Expire }),
+  });
   const { status: copyStatus, copy } = useCopyFeedback({ resetMs: null });
   const primaryRef = useRef<HTMLButtonElement>(null);
   const secondaryRef = useRef<HTMLButtonElement>(null);
   const idRef = useRef<HTMLElement>(null);
   const rootRef = useRef<HTMLSpanElement>(null);
   const inFlight = useRef(false);
-  const mountedRef = useRef(true);
+  const lifetime = useRef<AbortController | null>(null);
   const confirmShownAt = useRef(0);
-  const focusNext = useRef<FocusTarget | null>(null);
   const messageId = useId();
 
   const counted = (one: string, many: string) =>
     questions === 1 ? one : fillShellState(many, { count: String(questions) });
 
   useEffect(() => {
-    mountedRef.current = true;
-    return () => {
-      mountedRef.current = false;
-    };
+    const controller = new AbortController();
+    lifetime.current = controller;
+    return () => controller.abort();
   }, []);
-
-  useEffect(() => {
-    const target = focusNext.current;
-    focusNext.current = null;
-    if (target === FOCUS_TARGET.Primary) primaryRef.current?.focus();
-    if (target === FOCUS_TARGET.Secondary) secondaryRef.current?.focus();
-  });
-
-  // biome-ignore lint/correctness/useExhaustiveDependencies: now re-arms the timer each time the minute shown in the wait changes
-  useEffect(() => {
-    if (view.kind !== RECEIPT_VIEW.Waiting) return;
-    const remaining = view.until - Date.now();
-    if (remaining <= 0) {
-      setView({ kind: RECEIPT_VIEW.Idle });
-      return;
-    }
-    const nextChange = remaining % MS_PER_MINUTE || MS_PER_MINUTE;
-    const timer = setTimeout(() => setNow(Date.now()), nextChange);
-    return () => clearTimeout(timer);
-  }, [view, now]);
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: a new state or copy result can grow the receipt past the bottom of the scrolling log, so each change brings it back into view
   useLayoutEffect(() => {
@@ -159,7 +154,8 @@ export function ConversationReceipt({
   async function runForget() {
     if (inFlight.current) return;
     inFlight.current = true;
-    setView({ kind: RECEIPT_VIEW.Pending });
+    const controller = lifetime.current;
+    dispatch({ type: RECEIPT_ACTION.Submit });
     announce(ui.forgetting);
     const { result } = await forgetWithConversation(requestId);
     inFlight.current = false;
@@ -167,23 +163,17 @@ export function ConversationReceipt({
       onForgotten(questions);
       return;
     }
-    if (!mountedRef.current) return;
-    if (result.outcome === FORGET_OUTCOME.RateLimited) {
-      const seconds = result.retryAfter ?? FALLBACK_WAIT_SECONDS;
-      const until = Date.now() + seconds * MS_PER_SECOND;
-      setNow(Date.now());
-      setView({ kind: RECEIPT_VIEW.Waiting, until });
+    if (controller?.signal.aborted) return;
+    const settledAt = Date.now();
+    const action = outcomeAction(result, settledAt);
+    dispatch(action);
+    if (action.type === RECEIPT_ACTION.Wait) {
       announce(
         fillShellState(ui.forgetWaitNotice, {
-          left: `${minutesLeft(until, Date.now())} ${states.minutesUnit}`,
+          left: `${minutesLeft(action.until, settledAt)} ${states.minutesUnit}`,
         }),
       );
-      return;
     }
-    if (result.outcome === FORGET_OUTCOME.Unavailable) setView({ kind: RECEIPT_VIEW.Unavailable });
-    else if (result.outcome === FORGET_OUTCOME.Offline) setView({ kind: RECEIPT_VIEW.Offline });
-    else if (result.outcome === FORGET_OUTCOME.TimedOut) setView({ kind: RECEIPT_VIEW.TimedOut });
-    else setView({ kind: RECEIPT_VIEW.Failed });
   }
 
   function selectId() {
@@ -208,8 +198,8 @@ export function ConversationReceipt({
   }
 
   function cancel() {
-    focusNext.current = FOCUS_TARGET.Secondary;
-    setView({ kind: RECEIPT_VIEW.Idle });
+    flushSync(() => dispatch({ type: RECEIPT_ACTION.Cancel }));
+    secondaryRef.current?.focus();
   }
 
   function onPrimary() {
@@ -224,9 +214,9 @@ export function ConversationReceipt({
   function onSecondary(event: MouseEvent<HTMLButtonElement>) {
     if (forgetBlocked) return;
     if (view.kind === RECEIPT_VIEW.Idle) {
-      focusNext.current = FOCUS_TARGET.Primary;
       confirmShownAt.current = Date.now();
-      setView({ kind: RECEIPT_VIEW.Confirm });
+      flushSync(() => dispatch({ type: RECEIPT_ACTION.Open }));
+      primaryRef.current?.focus();
       return;
     }
     const pointerClick = event.detail > 0;
@@ -252,7 +242,7 @@ export function ConversationReceipt({
 
   let secondaryText: string = ui.forget;
   if (confirming || pending) secondaryText = pending ? ui.forgetting : ui.forgetConfirm;
-  else if (isError(view)) secondaryText = ui.forgetRetry;
+  else if (isErrorView(view)) secondaryText = ui.forgetRetry;
   else if (view.kind === RECEIPT_VIEW.Waiting) {
     secondaryText = fillShellState(ui.forgetWait, { left: waitLeft });
   }
@@ -263,38 +253,32 @@ export function ConversationReceipt({
     </span>
   );
 
-  function renderMessage() {
+  function renderFeedback() {
     if (pending) {
       return (
         <>
-          <span
-            id={messageId}
-            className="shell-receipt-message"
-            data-tone="danger"
-            data-testid="shell-receipt-message"
-            role="status"
-          >
-            {counted(ui.forgetPendingOne, ui.forgetPendingMany)}
-          </span>
+          {renderMessage({
+            id: messageId,
+            text: counted(ui.forgetPendingOne, ui.forgetPendingMany),
+            tone: MESSAGE_TONE.Danger,
+            role: MESSAGE_ROLE.Status,
+          })}
           <span className="shell-receipt-progress" aria-hidden="true">
             <span />
           </span>
         </>
       );
     }
-    if (isError(view)) {
+    if (isErrorView(view)) {
       const [text, hint] = errorCopy(view.kind, ui);
       return (
         <>
-          <span
-            id={messageId}
-            className="shell-receipt-message"
-            data-tone="danger"
-            data-testid="shell-receipt-message"
-            role="alert"
-          >
-            {text}
-          </span>
+          {renderMessage({
+            id: messageId,
+            text,
+            tone: MESSAGE_TONE.Danger,
+            role: MESSAGE_ROLE.Alert,
+          })}
           {hint === undefined ? emailFallback : <span className="shell-receipt-hint">{hint}</span>}
         </>
       );
@@ -302,29 +286,21 @@ export function ConversationReceipt({
     if (view.kind === RECEIPT_VIEW.Waiting) {
       return (
         <>
-          <span
-            id={messageId}
-            className="shell-receipt-message"
-            data-tone="warning"
-            data-testid="shell-receipt-message"
-          >
-            {fillShellState(ui.forgetWaitNotice, { left: waitLeft })}
-          </span>
+          {renderMessage({
+            id: messageId,
+            text: fillShellState(ui.forgetWaitNotice, { left: waitLeft }),
+            tone: MESSAGE_TONE.Warning,
+          })}
           <span className="shell-receipt-hint">{ui.forgetWaitHint}</span>
         </>
       );
     }
     if (copyFailed) {
-      return (
-        <span
-          id={messageId}
-          className="shell-receipt-message"
-          data-tone="warning"
-          data-testid="shell-receipt-message"
-        >
-          {ui.copyFailedAnnouncement}
-        </span>
-      );
+      return renderMessage({
+        id: messageId,
+        text: ui.copyFailedAnnouncement,
+        tone: MESSAGE_TONE.Warning,
+      });
     }
     return null;
   }
@@ -347,9 +323,11 @@ export function ConversationReceipt({
           <strong className="shell-receipt-title" data-tone="danger">
             {ui.forgetConfirmTitle}
           </strong>
-          <span id={messageId} className="shell-receipt-body" data-testid="shell-receipt-message">
-            {counted(ui.forgetConfirmOne, ui.forgetConfirmMany)}
-          </span>
+          {renderMessage({
+            id: messageId,
+            text: counted(ui.forgetConfirmOne, ui.forgetConfirmMany),
+            className: MESSAGE_CLASS.Body,
+          })}
         </>
       ) : (
         <>
@@ -363,7 +341,7 @@ export function ConversationReceipt({
           <span className="shell-receipt-id">
             {ui.receiptIdLabel} <code ref={idRef}>{requestId}</code>
           </span>
-          {renderMessage()}
+          {renderFeedback()}
         </>
       )}
       <span className="shell-receipt-actions">
@@ -388,7 +366,7 @@ export function ConversationReceipt({
           data-testid="shell-receipt-secondary"
           aria-disabled={forgetBlocked}
           aria-busy={pending}
-          aria-describedby={confirming || isError(view) ? messageId : undefined}
+          aria-describedby={confirming || isErrorView(view) ? messageId : undefined}
           data-confirm={confirming || pending ? '' : undefined}
           onClick={onSecondary}
         >
