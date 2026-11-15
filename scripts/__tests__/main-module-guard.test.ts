@@ -8,9 +8,8 @@ const SCRIPTS_DIR = join(process.cwd(), 'scripts');
 const SCRIPT_FILE = /\.(mjs|ts)$/;
 const TS_SCRIPT_FILE = /\.ts$/;
 const ARGV_ENTRY_GUARD = /process\.argv\[1\]/;
-const SHARED_GUARD_IMPORT = /from '\.\/lib\/is-main'/;
+const SHARED_GUARD_IMPORT = /from '\.\/lib\/is-main(\.ts)?'/;
 const UNRESOLVED_MAIN_GUARD = 'pathToFileURL(process.argv[1])';
-const BARE_NODE_SCRIPTS = new Set(['high-risk-paths.ts']);
 const TSX = join(process.cwd(), 'node_modules/.bin/tsx');
 
 describe('script entry guards', () => {
@@ -29,7 +28,7 @@ describe('script entry guards', () => {
 
   it('has every .ts script import isMain instead of defining its own argv[1] guard', () => {
     const offenders = readdirSync(SCRIPTS_DIR)
-      .filter((name) => TS_SCRIPT_FILE.test(name) && !BARE_NODE_SCRIPTS.has(name))
+      .filter((name) => TS_SCRIPT_FILE.test(name))
       .filter((name) => {
         const source = readFileSync(join(SCRIPTS_DIR, name), 'utf8');
         return ARGV_ENTRY_GUARD.test(source) && !SHARED_GUARD_IMPORT.test(source);

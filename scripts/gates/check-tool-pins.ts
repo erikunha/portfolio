@@ -1,5 +1,5 @@
 import { readFileSync } from 'node:fs';
-import { isMain } from '../lib/is-main';
+import { isMain } from '../lib/is-main.ts';
 
 const SEMVER = /^v?(\d+)\.(\d+)\.(\d+)/;
 const GITHUB_HOST = 'api.github.com';

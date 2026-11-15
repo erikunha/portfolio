@@ -16,6 +16,7 @@
     "noImplicitReturns": true,
     "skipLibCheck": true,
     "allowJs": false,
+    "allowImportingTsExtensions": true,
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
     "resolveJsonModule": true,

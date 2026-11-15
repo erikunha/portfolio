@@ -17,7 +17,7 @@
     "check:fix": "biome check --write .",
     "gitleaks:staged": "node scripts/gitleaks-staged.mjs",
     "gitleaks:fixture": "node scripts/check-gitleaks-fixture.mjs",
-    "check:tool-pins": "node scripts/check-tool-pins.mjs",
+    "check:tool-pins": "tsx scripts/gates/check-tool-pins.ts",
     "typecheck": "tsgo --noEmit",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",

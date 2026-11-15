@@ -1,5 +1,5 @@
-import { readFileSync, realpathSync } from 'node:fs';
-import { pathToFileURL } from 'node:url';
+import { readFileSync } from 'node:fs';
+import { isMain } from './lib/is-main.ts';
 
 const STDIN_FD = 0;
 const LINE_BREAK = /\r?\n/;
@@ -64,7 +64,4 @@ function main(): void {
   if (matched.length > 0) process.stdout.write(`${matched.join(OUTPUT_SEPARATOR)}\n`);
 }
 
-const entry = process.argv[1];
-if (typeof entry === 'string' && import.meta.url === pathToFileURL(realpathSync(entry)).href) {
-  main();
-}
+if (isMain(import.meta.url)) main();
