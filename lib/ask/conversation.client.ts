@@ -3,6 +3,7 @@
 import { useSyncExternalStore } from 'react';
 import { type ForgetResult, forgetRequest, wasForgotten } from '@/lib/ask/forget-request.client';
 import { SESSION_REF_CAP } from '@/lib/forget-limits';
+import { createListeners } from '@/lib/listeners';
 import { isRef, removeRef } from '@/lib/request-refs.client';
 
 const STORAGE_KEY = 'ask-conversation';
@@ -10,7 +11,7 @@ const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{
 
 type Conversation = { id: string; questions: number; requestIds: readonly string[] };
 
-const listeners = new Set<() => void>();
+const listeners = createListeners();
 let loaded = false;
 let conversation: Conversation | null = null;
 let forgetsHeld = 0;
@@ -51,7 +52,7 @@ function persist(next: Conversation | null): void {
 function write(next: Conversation | null): void {
   conversation = next;
   persist(next);
-  for (const listener of listeners) listener();
+  listeners.notify();
 }
 
 const UUID_BYTES = 16;
@@ -139,13 +140,6 @@ export async function forgetWithConversation(
   }
 }
 
-function subscribe(listener: () => void): () => void {
-  listeners.add(listener);
-  return () => {
-    listeners.delete(listener);
-  };
-}
-
 export function useConversationQuestions(): number {
-  return useSyncExternalStore(subscribe, conversationQuestions, () => 0);
+  return useSyncExternalStore(listeners.subscribe, conversationQuestions, () => 0);
 }

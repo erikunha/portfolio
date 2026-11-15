@@ -8,6 +8,7 @@ export const AI_PATHS: readonly string[] = [
   'lib/redis.ts',
   'lib/forget-limits.ts',
   'lib/env.ts',
+  'lib/listeners.ts',
   'lib/log.ts',
   'lib/log-error.ts',
   'lib/with-timeout.ts',
