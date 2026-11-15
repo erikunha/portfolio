@@ -8,7 +8,7 @@ import {
   SITE_LOCALE,
   type SiteLocale,
 } from '@/content/site-locale';
-import { waitForHydration } from './_helpers/hydration';
+import { MENU_TRIGGER, waitForHydration } from './_helpers/hydration';
 import { installMockBackend, MOCK_ASK_ANSWER } from './_helpers/mock-backend';
 import { freezeMotion } from './_helpers/motion';
 import { gotoSettled } from './_helpers/streamed';
@@ -57,6 +57,7 @@ async function expectHop(
 
 async function openDrawer(page: Page, locale: SiteLocale): Promise<void> {
   const name = locale === SITE_LOCALE.pt ? 'Abrir menu' : 'Open menu';
+  await waitForHydration(page, MENU_TRIGGER);
   await page.getByRole('button', { name, exact: true }).filter({ visible: true }).first().click();
   await expect(page.locator(DRAWER)).toHaveClass(/is-open/);
 }
@@ -130,7 +131,6 @@ test('one visitor session: drawer, shell, contact, language switch, CV and links
     .getByRole('link', { name: LANGUAGE_SWITCH_NAME.pt })
     .click();
   await expectHop(page, state, { path: /\/pt(#.*)?$/, locale: SITE_LOCALE.pt });
-  await waitForHydration(page, '.menu-trigger');
 
   await openDrawer(page, SITE_LOCALE.pt);
   await page.locator(`${DRAWER} a[href="/pt/cv"]`).click();
