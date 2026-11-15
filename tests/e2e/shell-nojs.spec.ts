@@ -7,7 +7,7 @@ const PATHS: Record<SiteLocale, string> = { [SITE_LOCALE.en]: '/', [SITE_LOCALE.
 const NOTE = '[data-testid="shell-nojs"]';
 const NARROW = { width: 320, height: 640 } as const;
 
-test.describe('the interactive shell with JavaScript off', () => {
+test.describe('the interactive shell with JavaScript off', { tag: '@cross-browser' }, () => {
   test.use({ javaScriptEnabled: false });
 
   for (const locale of Object.values(SITE_LOCALE)) {
@@ -36,7 +36,7 @@ test.describe('the interactive shell with JavaScript off', () => {
   });
 });
 
-test.describe('the interactive shell with JavaScript on', () => {
+test.describe('the interactive shell with JavaScript on', { tag: '@cross-browser' }, () => {
   test('shows no JavaScript note', async ({ page }) => {
     await page.goto('/');
     await expect(page.locator('#sec-shell')).toBeAttached();

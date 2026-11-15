@@ -34,7 +34,7 @@ test.beforeEach(async ({ page }) => {
   await freezeMotion(page);
 });
 
-test.describe('a stream that fails mid answer', () => {
+test.describe('a stream that fails mid answer', { tag: '@cross-browser' }, () => {
   test('keeps the partial text, the error line and the request reference, and leaves the input usable', async ({
     page,
   }) => {
@@ -77,7 +77,7 @@ test.describe('a stream that fails mid answer', () => {
   });
 });
 
-test.describe('a request that fails before any answer', () => {
+test.describe('a request that fails before any answer', { tag: '@cross-browser' }, () => {
   test('a 500 shows the status line and the fallback hint, no receipt for a request that stored nothing, and restores the draft', async ({
     page,
   }) => {
@@ -122,7 +122,7 @@ const REFUSALS: readonly Refusal[] = [
   { state: 'budget-daily', copy: EN.budgetDaily },
 ];
 
-test.describe('a refusal from the server', () => {
+test.describe('a refusal from the server', { tag: '@cross-browser' }, () => {
   for (const refusal of REFUSALS) {
     test(`${refusal.state} shows its own copy and keeps the local commands working`, async ({
       page,

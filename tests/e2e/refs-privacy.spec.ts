@@ -52,7 +52,7 @@ const noHorizontalOverflow = (page: Page) =>
     SUBPIXEL_PX,
   );
 
-test.describe('request refs and privacy', () => {
+test.describe('request refs and privacy', { tag: '@cross-browser' }, () => {
   test('an answer ends with the conversation receipt and its forget deletes the conversation', async ({
     page,
   }) => {

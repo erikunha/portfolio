@@ -85,7 +85,7 @@ function renderedContentEdges(page: Page): Promise<Edges> {
   });
 }
 
-test.describe('every page content sits on the header safe zone', () => {
+test.describe('every page content sits on the header safe zone', { tag: '@cross-browser' }, () => {
   for (const route of ROUTES) {
     test(`${route} shares the header content edges at every width`, async ({ page }) => {
       await page.setViewportSize({ width: WIDTHS[0] ?? 320, height: VIEWPORT_HEIGHT });
@@ -140,7 +140,9 @@ function visibleBoxes(page: Page, selector: string): Promise<Box[]> {
   );
 }
 
-test.describe('reading pages start every block on the left edge and fill the zone with the aside', () => {
+test.describe('reading pages start every block on the left edge and fill the zone with the aside', {
+  tag: '@cross-browser',
+}, () => {
   for (const route of READING_ROUTES) {
     test(`${route} keeps blocks on the safe-zone left edge, the aside on the right`, async ({
       page,

@@ -7,9 +7,9 @@ const AXIS_TOLERANCE_PX = 1;
 const DOTS_TOLERANCE_PX = 2;
 
 for (const width of WIDTHS) {
-  test(`the contact window bar centres its labels on the bar axis at ${width}px`, async ({
-    page,
-  }) => {
+  test(`the contact window bar centres its labels on the bar axis at ${width}px`, {
+    tag: '@cross-browser',
+  }, async ({ page }) => {
     await page.setViewportSize({ width, height: VIEWPORT_HEIGHT });
     await gotoSettled(page, '/');
     const chrome = page.locator('.contact-chrome').first();

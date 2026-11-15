@@ -11,9 +11,9 @@ const REFERENCE = '[data-testid="shell-receipt"]';
 const SHELL_INPUT = '[aria-label="shell command"]';
 
 for (const width of PHONE_AND_TABLET_WIDTHS) {
-  test(`at ${width}px the shell section keeps its height when a short answer lands with a real request id`, async ({
-    page,
-  }) => {
+  test(`at ${width}px the shell section keeps its height when a short answer lands with a real request id`, {
+    tag: '@cross-browser',
+  }, async ({ page }) => {
     await page.setViewportSize({ width, height: VIEWPORT_HEIGHT });
     await freezeMotion(page);
     await page.route('**/api/ask', (route) =>

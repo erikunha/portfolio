@@ -27,7 +27,7 @@ const PAGE_BASELINES = [
   },
 ] as const;
 
-test.describe('visual regression', () => {
+test.describe('visual regression', { tag: '@mobile-visual' }, () => {
   test('1: hero above-the-fold matches baseline', async ({ mockedPage }, testInfo) => {
     test.skip(
       testInfo.project.name === 'chromium-mobile',
@@ -193,7 +193,7 @@ test.describe('visual regression', () => {
   });
 });
 
-test.describe('route page baselines', () => {
+test.describe('route page baselines', { tag: '@mobile-visual' }, () => {
   for (const { name, path, target } of PAGE_BASELINES) {
     test(`${name} matches baseline`, async ({ mockedPage }, testInfo) => {
       const viewport = PAGE_VIEWPORT[testInfo.project.name as keyof typeof PAGE_VIEWPORT];

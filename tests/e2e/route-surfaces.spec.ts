@@ -28,7 +28,7 @@ const ROUTES = [
   ...DS_ROUTES,
 ] as const;
 
-test.describe('route surfaces are opaque', () => {
+test.describe('route surfaces are opaque', { tag: '@cross-browser' }, () => {
   for (const { name, size } of SURFACE_VIEWPORTS) {
     test.describe(`${name} viewport`, () => {
       for (const route of ROUTES) {
@@ -48,7 +48,7 @@ test.describe('route surfaces are opaque', () => {
   }
 });
 
-test('a hovered /links playlist card stays opaque', async ({ page }) => {
+test('a hovered /links playlist card stays opaque', { tag: '@cross-browser' }, async ({ page }) => {
   await page.setViewportSize(VIEWPORTS.DESKTOP);
   await page.goto('/links');
   await scrollThroughPage(page);

@@ -12,9 +12,9 @@ const FILLER_COMMAND = 'help';
 const MAX_FILLER_COMMANDS = 24;
 
 for (const width of WIDTHS) {
-  test(`at ${width}px STOP stays in view and clickable after the feed scrolls to the top mid-stream`, async ({
-    page,
-  }) => {
+  test(`at ${width}px STOP stays in view and clickable after the feed scrolls to the top mid-stream`, {
+    tag: '@cross-browser',
+  }, async ({ page }) => {
     await page.setViewportSize({ width, height: VIEWPORT_HEIGHT });
     await freezeMotion(page);
     await page.route('**/api/ask', () => new Promise(() => undefined));

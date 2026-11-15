@@ -7,9 +7,9 @@ const LEFT_EDGE_TOLERANCE_PX = 1;
 
 for (const route of ROUTES) {
   for (const width of WIDTHS) {
-    test(`${route} at ${width}px keeps every host on one line, left under its label when stacked`, async ({
-      page,
-    }) => {
+    test(`${route} at ${width}px keeps every host on one line, left under its label when stacked`, {
+      tag: '@cross-browser',
+    }, async ({ page }) => {
       await page.setViewportSize({ width, height: 900 });
       await gotoSettled(page, route);
       const rows = await page.evaluate(() => {
@@ -45,7 +45,9 @@ for (const route of ROUTES) {
   }
 }
 
-test('a stacked row at 320px puts the host on its own line under the label', async ({ page }) => {
+test('a stacked row at 320px puts the host on its own line under the label', {
+  tag: '@cross-browser',
+}, async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 900 });
   await gotoSettled(page, '/links/en');
   const stacked = await page.evaluate(

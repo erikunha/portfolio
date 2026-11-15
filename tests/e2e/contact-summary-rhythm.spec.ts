@@ -10,9 +10,9 @@ const SUBPIXEL_PX = 1;
 
 for (const route of ROUTES) {
   for (const width of WIDTHS) {
-    test(`${route} at ${width}px: the error summary lines sit at the text rhythm`, async ({
-      page,
-    }) => {
+    test(`${route} at ${width}px: the error summary lines sit at the text rhythm`, {
+      tag: '@cross-browser',
+    }, async ({ page }) => {
       await page.setViewportSize({ width, height: 800 });
       await freezeMotion(page);
       await gotoSettled(page, route);

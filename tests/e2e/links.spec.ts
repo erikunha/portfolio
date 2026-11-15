@@ -15,7 +15,7 @@ const LANGUAGE_LINK = 'a[hreflang]';
 
 const languageSwitch = (page: Page) => page.getByRole('navigation', { name: LANGUAGE_NAV_NAME });
 
-test.describe('/links link-in-bio', () => {
+test.describe('/links link-in-bio', { tag: '@cross-browser' }, () => {
   test('the language switch is real routing, not a client-side toggle', async ({ page }) => {
     await page.goto('/links');
     await expect(page.locator('h1')).toHaveText(/links, canal e contato/);
@@ -299,9 +299,9 @@ test.describe('/links link-in-bio', () => {
   });
 });
 
-test('shows no next-video teaser or launch status once the channel has a latest video', async ({
-  page,
-}) => {
+test('shows no next-video teaser or launch status once the channel has a latest video', {
+  tag: '@cross-browser',
+}, async ({ page }) => {
   await page.goto('/links');
   await expect(page.locator('a[data-outbound="ultimo-video"]')).toHaveCount(1);
   await expect(page.locator('.links-ticker-track')).toHaveCount(0);
@@ -328,7 +328,7 @@ async function fontFacesRequested(page: Page, path: string): Promise<string[]> {
   return faces;
 }
 
-test.describe('font payload', () => {
+test.describe('font payload', { tag: '@cross-browser' }, () => {
   for (const path of ['/links', '/links/en']) {
     test(`${path} downloads only the mono faces its text uses: the display face belongs to a visible h1 and a face no rule asks for is dead weight in the Lighthouse mobile LCP model`, async ({
       page,

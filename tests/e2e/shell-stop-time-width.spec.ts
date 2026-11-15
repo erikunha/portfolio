@@ -28,7 +28,7 @@ function measure(page: Page) {
 }
 
 for (const width of WIDTHS) {
-  test.describe(`the stop pill timer at ${width}px`, () => {
+  test.describe(`the stop pill timer at ${width}px`, { tag: '@cross-browser' }, () => {
     test.use({ viewport: { width, height: VIEWPORT_HEIGHT } });
 
     test('with MOTION off reserves room for whole seconds only', async ({ page }) => {

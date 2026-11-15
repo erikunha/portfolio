@@ -27,7 +27,7 @@ async function openStrip(page: Page, width: number, height: number) {
 }
 
 for (const { width, height, visibleBars } of VIEWPORTS) {
-  test.describe(`EQ strip at ${width}px`, () => {
+  test.describe(`EQ strip at ${width}px`, { tag: '@cross-browser' }, () => {
     test('fits the viewport with every axis label inside the strip', async ({ page }) => {
       const strip = await openStrip(page, width, height);
       const stripBox = await strip.boundingBox();
@@ -90,7 +90,7 @@ for (const { width, height, visibleBars } of VIEWPORTS) {
   });
 }
 
-test.describe('EQ strip motion', () => {
+test.describe('EQ strip motion', { tag: '@cross-browser' }, () => {
   const { DESKTOP } = SHARED_VIEWPORTS;
 
   async function firstBar(page: Page) {
@@ -130,14 +130,18 @@ test.describe('EQ strip motion', () => {
   });
 });
 
-test('names the plot with the EQ bands for assistive technology', async ({ page }) => {
+test('names the plot with the EQ bands for assistive technology', {
+  tag: '@cross-browser',
+}, async ({ page }) => {
   await openStrip(page, 1280, 720);
   const plot = page.getByRole('img', { name: /Live spectrum of the lead guitar/ });
   await expect(plot).toHaveCount(1);
   await expect(plot).toHaveAttribute('aria-label', /140 Hz.*2\.8 kHz.*9 kHz/);
 });
 
-test('lays the strip out with grid and flex, never absolute positioning', async ({ page }) => {
+test('lays the strip out with grid and flex, never absolute positioning', {
+  tag: '@cross-browser',
+}, async ({ page }) => {
   await openStrip(page, 1280, 720);
   const positioned = await page
     .locator(STRIP)
@@ -149,7 +153,7 @@ test('lays the strip out with grid and flex, never absolute positioning', async 
   expect(positioned).toEqual([]);
 });
 
-test('puts each axis label on its frequency', async ({ page }) => {
+test('puts each axis label on its frequency', { tag: '@cross-browser' }, async ({ page }) => {
   await openStrip(page, 1280, 720);
   const offsets = await page.locator(`${STRIP} .eq-axis-tick`).evaluateAll((ticks) => {
     const axis = ticks[0]?.parentElement?.getBoundingClientRect();
@@ -171,7 +175,7 @@ test('puts each axis label on its frequency', async ({ page }) => {
   });
 });
 
-test.describe('EQ strip without JavaScript', () => {
+test.describe('EQ strip without JavaScript', { tag: '@cross-browser' }, () => {
   test.use({ javaScriptEnabled: false, viewport: SHARED_VIEWPORTS.DESKTOP });
 
   test('renders the strip and the signal chain from the server HTML', async ({ page }) => {

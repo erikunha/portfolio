@@ -60,9 +60,9 @@ async function openDrawer(page: Page): Promise<void> {
   await expect(page.locator(DRAWER)).toHaveClass(/is-open/);
 }
 
-test('one visitor session: drawer, shell, contact, language switch, CV and links', async ({
-  page,
-}) => {
+test('one visitor session: drawer, shell, contact, language switch, CV and links', {
+  tag: '@cross-browser',
+}, async ({ page }) => {
   const state = watch(page);
   await installMockBackend(page, { contact: 'happy', log: 'accept', forget: 'happy' });
   let answering = false;

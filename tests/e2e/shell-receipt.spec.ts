@@ -80,7 +80,9 @@ for (const { width, height, locale, motionOff } of CASES) {
   const ui = shellUi[locale];
   const states = shellStates[locale];
 
-  test.describe(`at ${width}px (${locale}${motionOff ? ', MOTION off' : ''}) the receipt`, () => {
+  test.describe(`at ${width}px (${locale}${motionOff ? ', MOTION off' : ''}) the receipt`, {
+    tag: '@cross-browser',
+  }, () => {
     test.beforeEach(async ({ page }) => {
       await page.setViewportSize({ width, height });
       if (motionOff) await freezeMotion(page);

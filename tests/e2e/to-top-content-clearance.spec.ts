@@ -61,7 +61,9 @@ function coveredByButton(page: Page, selector: string): Promise<string[]> {
   );
 }
 
-test.describe('the back-to-top button never covers shell or contact content', () => {
+test.describe('the back-to-top button never covers shell or contact content', {
+  tag: '@cross-browser',
+}, () => {
   test.use({ isMobile: true, hasTouch: true });
 
   for (const width of WIDTHS) {

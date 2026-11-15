@@ -26,7 +26,9 @@ async function openAt320(page: Page, locale: SiteLocale): Promise<void> {
 }
 
 for (const locale of Object.values(SITE_LOCALE)) {
-  test.describe(`dock and drawer at ${SMALL_PHONE.width}x${SMALL_PHONE.height}, ${locale}`, () => {
+  test.describe(`dock and drawer at ${SMALL_PHONE.width}x${SMALL_PHONE.height}, ${locale}`, {
+    tag: '@cross-browser',
+  }, () => {
     test('every dock control sits inside the viewport with its label whole', async ({ page }) => {
       await openAt320(page, locale);
 

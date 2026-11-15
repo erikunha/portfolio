@@ -4,7 +4,7 @@ import { openSectionMenu } from './_helpers/hydration';
 import { installMockBackend } from './_helpers/mock-backend';
 
 for (const state of ['queued', 'happy'] as const) {
-  test(`contact delivery: ${state}`, async ({ page }) => {
+  test(`contact delivery: ${state}`, { tag: '@cross-browser' }, async ({ page }) => {
     await installMockBackend(page, { contact: state, log: 'accept' });
     await page.goto('/');
     await openSectionMenu(page);

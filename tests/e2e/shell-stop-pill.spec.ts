@@ -87,7 +87,9 @@ async function expectOpaquePill(page: Page, locale: SiteLocale, motionOff: boole
 }
 
 for (const { width, height, locale, motionOff } of CASES) {
-  test.describe(`at ${width}px (${locale}${motionOff ? ', MOTION off' : ''}) the stop pill`, () => {
+  test.describe(`at ${width}px (${locale}${motionOff ? ', MOTION off' : ''}) the stop pill`, {
+    tag: '@cross-browser',
+  }, () => {
     test.beforeEach(async ({ page }) => {
       await page.setViewportSize({ width, height });
       if (motionOff) await freezeMotion(page);
@@ -162,7 +164,7 @@ for (const { width, height, locale, motionOff } of CASES) {
   });
 }
 
-test.describe('the esc hint inside the pill', () => {
+test.describe('the esc hint inside the pill', { tag: '@cross-browser' }, () => {
   test.use({ hasTouch: false, isMobile: false });
 
   test('shows on a fine pointer', async ({ page }) => {
@@ -175,7 +177,7 @@ test.describe('the esc hint inside the pill', () => {
   });
 });
 
-test.describe('the esc hint on a touch phone', () => {
+test.describe('the esc hint on a touch phone', { tag: '@cross-browser' }, () => {
   test.use({ hasTouch: true, isMobile: true });
 
   test('is hidden and the pill keeps its 44px target', async ({ page }) => {

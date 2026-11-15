@@ -10,7 +10,7 @@ const HERO_BUDGETS = [
   { width: 430, max: MOBILE_HERO_MAX_PX },
 ] as const;
 
-test.describe('hero desktop layout', () => {
+test.describe('hero desktop layout', { tag: '@cross-browser' }, () => {
   for (const width of [768, 1280]) {
     test(`the hero clears the topbar and keeps the section rhythm at ${width}px`, async ({
       page,
@@ -60,7 +60,7 @@ test.describe('hero desktop layout', () => {
   }
 });
 
-test.describe('hero mobile layout', () => {
+test.describe('hero mobile layout', { tag: '@cross-browser' }, () => {
   for (const { width, max } of HERO_BUDGETS) {
     test(`the mobile hero fits the ${max}px budget at ${width}`, async ({ page }) => {
       await page.setViewportSize({ width, height: MOBILE.height });

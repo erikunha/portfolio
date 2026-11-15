@@ -23,9 +23,9 @@ const SURFACES = [
 
 for (const { route, selector } of SURFACES) {
   for (const viewport of VIEWPORTS) {
-    test(`${route} ${selector} at ${viewport.width}px never ends on a lone short word`, async ({
-      page,
-    }) => {
+    test(`${route} ${selector} at ${viewport.width}px never ends on a lone short word`, {
+      tag: '@cross-browser',
+    }, async ({ page }) => {
       await page.setViewportSize(viewport);
       await freezeMotion(page);
       await gotoSettled(page, route);

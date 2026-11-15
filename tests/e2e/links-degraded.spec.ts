@@ -16,7 +16,7 @@ for (const locale of LOCALES) {
   const { copy } = linksContent;
   const path = LINKS_PATH[locale];
 
-  test.describe(`${path} with JavaScript off`, () => {
+  test.describe(`${path} with JavaScript off`, { tag: '@cross-browser' }, () => {
     test.use({ javaScriptEnabled: false, viewport: VIEWPORTS.PHONE });
 
     test('keeps the heading, the subscribe link and the profile links usable', async ({ page }) => {
@@ -47,7 +47,7 @@ for (const locale of LOCALES) {
     });
   });
 
-  test.describe(`${path} with JavaScript on and MOTION off`, () => {
+  test.describe(`${path} with JavaScript on and MOTION off`, { tag: '@cross-browser' }, () => {
     test.use({ viewport: VIEWPORTS.PHONE });
 
     test('renders whole, with a working subscribe link and copy button', async ({ page }) => {

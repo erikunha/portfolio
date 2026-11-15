@@ -64,7 +64,7 @@ async function openShell(page: Page): Promise<void> {
   await stripVolatileChrome(page);
 }
 
-test.describe('shell input states', () => {
+test.describe('shell input states', { tag: '@cross-browser' }, () => {
   test('the input keeps the same box when the keyboard moves focus into it', async ({ page }) => {
     await openShell(page);
     const input = page.locator(INPUT).first();

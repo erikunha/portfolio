@@ -8,7 +8,7 @@ const EDGE_TOLERANCE_PX = 1;
 
 for (const path of ROUTES) {
   for (const width of WIDTHS) {
-    test.describe(`${path} at ${width}`, () => {
+    test.describe(`${path} at ${width}`, { tag: '@cross-browser' }, () => {
       test.beforeEach(async ({ page }) => {
         await page.setViewportSize({ width, height: VIEWPORT_HEIGHT });
         await gotoSettled(page, path);

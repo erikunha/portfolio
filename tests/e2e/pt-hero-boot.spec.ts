@@ -17,7 +17,9 @@ const LOCALES = [
 for (const { path, locale } of LOCALES) {
   const copy = heroClientContent[locale];
 
-  test(`${path} desktop boot log is written in ${locale}`, async ({ page }) => {
+  test(`${path} desktop boot log is written in ${locale}`, { tag: '@cross-browser' }, async ({
+    page,
+  }) => {
     await freezeMotion(page);
     await page.setViewportSize(DESKTOP);
     await gotoSettled(page, path);
@@ -30,9 +32,9 @@ for (const { path, locale } of LOCALES) {
   });
 
   for (const viewport of [PHONE, NARROW]) {
-    test(`${path} mobile boot log is written in ${locale} on one line each at ${viewport.width}`, async ({
-      page,
-    }) => {
+    test(`${path} mobile boot log is written in ${locale} on one line each at ${viewport.width}`, {
+      tag: '@cross-browser',
+    }, async ({ page }) => {
       await freezeMotion(page);
       await page.setViewportSize(viewport);
       await gotoSettled(page, path);
@@ -57,7 +59,9 @@ for (const { path, locale } of LOCALES) {
   }
 }
 
-test('/pt shows the system failure plate in Portuguese', async ({ page }) => {
+test('/pt shows the system failure plate in Portuguese', { tag: '@cross-browser' }, async ({
+  page,
+}) => {
   await freezeMotion(page);
   await page.setViewportSize(DESKTOP);
   await gotoSettled(page, '/pt');

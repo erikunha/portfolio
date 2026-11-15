@@ -58,9 +58,9 @@ function splitUnits(page: Page): Promise<string[]> {
 
 for (const path of ROUTES) {
   for (const width of WIDTHS) {
-    test(`${path} career place, work mode and dates never wrap inside a unit at ${width}`, async ({
-      page,
-    }) => {
+    test(`${path} career place, work mode and dates never wrap inside a unit at ${width}`, {
+      tag: '@cross-browser',
+    }, async ({ page }) => {
       await page.setViewportSize({ width, height: VIEWPORT_HEIGHT });
       await gotoSettled(page, path);
       await expect(page.locator(LOCATION_SELECTOR).first()).toBeVisible();

@@ -32,7 +32,7 @@ async function reachEqStrip(page: Page) {
   await expect(strip).toBeVisible();
 }
 
-test.describe('the MOTION switch is the only motion control', () => {
+test.describe('the MOTION switch is the only motion control', { tag: '@cross-browser' }, () => {
   test.use({ reducedMotion: 'reduce' });
 
   test('a first visit starts with motion on even when the system asks for reduced motion', async ({

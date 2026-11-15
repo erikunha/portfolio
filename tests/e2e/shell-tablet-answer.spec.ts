@@ -10,9 +10,9 @@ const REST = ' and eval harnesses.';
 
 test.use({ viewport: VIEWPORTS.TABLET });
 
-test('at 768px the shell goes from thinking to answered without overflow or a height change', async ({
-  page,
-}) => {
+test('at 768px the shell goes from thinking to answered without overflow or a height change', {
+  tag: '@cross-browser',
+}, async ({ page }) => {
   await freezeMotion(page);
   const chunked = await installChunkedAsk(page);
   await openShell(page);

@@ -29,7 +29,7 @@ async function open(page: Page, path: string, viewport: { width: number; height:
 }
 
 for (const { path, locale } of CASES) {
-  test.describe(`${path} layout`, () => {
+  test.describe(`${path} layout`, { tag: '@cross-browser' }, () => {
     for (const viewport of STACKED_VIEWPORTS) {
       test(`${viewport.width}: the actions row sits below the name and the contact links`, async ({
         page,

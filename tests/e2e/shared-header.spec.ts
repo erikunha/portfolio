@@ -100,7 +100,7 @@ async function drawerLinks(page: Page): Promise<Array<{ name: string; href: stri
 
 for (const { locale, home, routes } of GROUPS) {
   for (const { name: viewportName, size } of VIEWPORT_CASES) {
-    test.describe(`${locale} header at ${viewportName}`, () => {
+    test.describe(`${locale} header at ${viewportName}`, { tag: '@cross-browser' }, () => {
       test.use({ viewport: size });
 
       for (const { path, status } of routes) {
@@ -147,7 +147,7 @@ for (const { locale, home, routes } of GROUPS) {
   }
 }
 
-test.describe('the error pages carry the shell', () => {
+test.describe('the error pages carry the shell', { tag: '@cross-browser' }, () => {
   for (const path of ['/this-route-does-not-exist', '/pt/rota-que-nao-existe']) {
     for (const width of OVERFLOW_WIDTHS) {
       test(`${path} has no sideways scroll at ${width}`, async ({ page }) => {
@@ -159,9 +159,9 @@ test.describe('the error pages carry the shell', () => {
   }
 });
 
-test('the header is the one banner landmark and the dock menu claims no current location', async ({
-  page,
-}) => {
+test('the header is the one banner landmark and the dock menu claims no current location', {
+  tag: '@cross-browser',
+}, async ({ page }) => {
   await page.setViewportSize(PHONE);
   await gotoSettled(page, '/');
   await expect(page.getByRole('banner')).toHaveCount(1);
@@ -171,7 +171,7 @@ test('the header is the one banner landmark and the dock menu claims no current 
   ).not.toHaveAttribute('aria-current', /.*/);
 });
 
-test.describe('the header without JavaScript', () => {
+test.describe('the header without JavaScript', { tag: '@cross-browser' }, () => {
   test.use({ javaScriptEnabled: false, viewport: DESKTOP });
 
   const LANGUAGE_HREFS: ReadonlyArray<readonly [string, [string, string]]> = [
@@ -213,7 +213,7 @@ test.describe('the header without JavaScript', () => {
   });
 });
 
-test.describe('the first content block clears the header', () => {
+test.describe('the first content block clears the header', { tag: '@cross-browser' }, () => {
   for (const { name, size } of VIEWPORT_CASES) {
     test.describe(`at ${name}`, () => {
       test.use({ viewport: size });
@@ -247,7 +247,7 @@ test.describe('the first content block clears the header', () => {
   }
 });
 
-test.describe('the 404 block is centered between the bars', () => {
+test.describe('the 404 block is centered between the bars', { tag: '@cross-browser' }, () => {
   for (const { name, size } of VIEWPORT_CASES) {
     for (const path of NOT_FOUND_ROUTES) {
       test(`${path} centers the block vertically at ${name}`, async ({ page }) => {

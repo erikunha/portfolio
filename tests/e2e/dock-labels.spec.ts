@@ -9,9 +9,9 @@ const VIEWPORT_HEIGHT = 844;
 const ENGLISH_LANG = SITE_LOCALE.en;
 
 for (const width of WIDTHS) {
-  test(`the pt dock keeps every label apart and marks the English term at ${width}`, async ({
-    page,
-  }) => {
+  test(`the pt dock keeps every label apart and marks the English term at ${width}`, {
+    tag: '@cross-browser',
+  }, async ({ page }) => {
     await page.setViewportSize({ width, height: VIEWPORT_HEIGHT });
     await gotoSettled(page, '/pt');
     const items = await page.locator('.dock > a, .dock > button').evaluateAll((nodes) =>
@@ -45,7 +45,9 @@ for (const width of WIDTHS) {
   });
 }
 
-test('the en dock marks no label as another language', async ({ page }) => {
+test('the en dock marks no label as another language', { tag: '@cross-browser' }, async ({
+  page,
+}) => {
   await page.setViewportSize({ width: 390, height: VIEWPORT_HEIGHT });
   await gotoSettled(page, '/');
   await expect(page.locator('.dock > [lang]')).toHaveCount(0);

@@ -33,7 +33,9 @@ function splitFlags(page: Page): Promise<string[]> {
 
 for (const path of ROUTES) {
   for (const width of WIDTHS) {
-    test(`${path} git log command never wraps inside a flag at ${width}`, async ({ page }) => {
+    test(`${path} git log command never wraps inside a flag at ${width}`, {
+      tag: '@cross-browser',
+    }, async ({ page }) => {
       await page.setViewportSize({ width, height: VIEWPORT_HEIGHT });
       await gotoSettled(page, path);
       expect(

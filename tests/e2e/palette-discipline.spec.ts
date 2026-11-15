@@ -55,7 +55,9 @@ const computed = (page: Page, selector: string, property: string) =>
     .evaluate((el, prop) => getComputedStyle(el).getPropertyValue(prop), property);
 
 for (const viewport of [DESKTOP, PHONE]) {
-  test.describe(`active language is not the HIRE fill at ${viewport.width}`, () => {
+  test.describe(`active language is not the HIRE fill at ${viewport.width}`, {
+    tag: '@cross-browser',
+  }, () => {
     test.use({ viewport });
 
     test('the current locale is outlined and underlined, the solid fill stays on HIRE', async ({
@@ -85,7 +87,7 @@ for (const viewport of [DESKTOP, PHONE]) {
   });
 }
 
-test.describe('MOTION toggle', () => {
+test.describe('MOTION toggle', { tag: '@cross-browser' }, () => {
   test.use({ viewport: DESKTOP });
 
   test('prints ON or OFF beside its label and flips on click', async ({ page }) => {
@@ -100,7 +102,7 @@ test.describe('MOTION toggle', () => {
   });
 });
 
-test.describe('small text keeps to body and secondary colors', () => {
+test.describe('small text keeps to body and secondary colors', { tag: '@cross-browser' }, () => {
   test.use({ viewport: DESKTOP });
 
   test('career hash, company, role, location, dates and description carry distinct tones', async ({
@@ -185,7 +187,9 @@ test.describe('small text keeps to body and secondary colors', () => {
   });
 });
 
-test.describe('no cyan or amber text, border or fill on public routes', () => {
+test.describe('no cyan or amber text, border or fill on public routes', {
+  tag: '@cross-browser',
+}, () => {
   test.use({ viewport: DESKTOP });
 
   for (const route of SCANNED_ROUTES) {

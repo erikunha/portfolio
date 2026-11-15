@@ -87,7 +87,7 @@ async function expectShellClearOfChrome(page: Page) {
   );
 }
 
-test.describe('new shell output at 320x640', () => {
+test.describe('new shell output at 320x640', { tag: '@cross-browser' }, () => {
   test.use({ viewport: NARROW, isMobile: true, hasTouch: true });
   const { ui } = shellCopy();
 
@@ -136,7 +136,7 @@ test.describe('new shell output at 320x640', () => {
   });
 });
 
-test.describe('new shell output on desktop', () => {
+test.describe('new shell output on desktop', { tag: '@cross-browser' }, () => {
   test.use({ viewport: DESKTOP });
 
   test('does not move the page when the shell is already fully in view', async ({ page }) => {

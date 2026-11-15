@@ -206,7 +206,7 @@ without the allow tag; it runs inside `pnpm verify` and CI. Kill switches and CS
 are covered by behavioral tests (`__tests__/ask/ask-killswitch-behavioral.test.ts`,
 `__tests__/proxy-csp.test.ts`); no kill switch is verified by grepping source.
 Cross-browser functional coverage is the **required** `e2e-functional` CI job
-(chromium, chromium-mobile, webkit-desktop, webkit-mobile, and their four `-components` projects). Page-section
+(chromium, chromium-mobile, webkit-desktop, webkit-mobile, and their four `-components` projects). A spec joins the webkit projects by tagging its tests `@cross-browser`; `__tests__/ci/e2e-matrix-coverage.test.ts` fails on a name-based selector or a partly tagged spec. Page-section
 visual regression is gated in CI by `e2e-visual-chromium` (**required**; Linux Chromium rendering
 is deterministic). The webkit projects do not run the visual spec and no webkit baselines are kept: webkit pixel
 rendering varies from Chromium, and a darwin-only baseline that no CI job compares drifts unseen

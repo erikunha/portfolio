@@ -20,7 +20,7 @@ async function wheelDown(page: Page): Promise<void> {
   await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(BEYOND_THRESHOLD_PX);
 }
 
-test.describe('the back-to-top tab shows only on a scroll up', () => {
+test.describe('the back-to-top tab shows only on a scroll up', { tag: '@cross-browser' }, () => {
   test.beforeEach(async ({ page }) => {
     await freezeMotion(page);
     await page.goto('/');

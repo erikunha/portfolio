@@ -3,7 +3,7 @@ import { horizontalOverflow } from './_helpers/geometry';
 
 test.use({ javaScriptEnabled: false });
 
-test.describe('home with JavaScript off', () => {
+test.describe('home with JavaScript off', { tag: '@cross-browser' }, () => {
   test('shows the notice and keeps the static content readable', async ({ page }) => {
     await page.goto('/');
     await expect(page.getByText(/This site works best with JavaScript/)).toBeVisible();
@@ -126,7 +126,9 @@ const animationName = (page: Page, selector: string) =>
     .first()
     .evaluate((node) => getComputedStyle(node).animationName);
 
-test.describe('home with JavaScript off and the system asking for reduced motion', () => {
+test.describe('home with JavaScript off and the system asking for reduced motion', {
+  tag: '@cross-browser',
+}, () => {
   test.use({ reducedMotion: 'reduce' });
 
   test('nothing animates, because no script can offer the MOTION switch', async ({ page }) => {
@@ -157,7 +159,9 @@ test.describe('home with JavaScript off and the system asking for reduced motion
   });
 });
 
-test.describe('home with JavaScript off and no system preference', () => {
+test.describe('home with JavaScript off and no system preference', {
+  tag: '@cross-browser',
+}, () => {
   test.use({ reducedMotion: 'no-preference' });
 
   test('the animation is left running', async ({ page }) => {

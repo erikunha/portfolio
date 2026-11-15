@@ -9,9 +9,9 @@ const DOTS_TOLERANCE_PX = 2;
 const CHROME = '.shell-chrome';
 
 for (const width of WIDTHS) {
-  test(`the shell window bar centres its labels on the bar axis at ${width}px`, async ({
-    page,
-  }) => {
+  test(`the shell window bar centres its labels on the bar axis at ${width}px`, {
+    tag: '@cross-browser',
+  }, async ({ page }) => {
     await page.setViewportSize({ width, height: VIEWPORT_HEIGHT });
     await openShell(page);
     await waitForHydration(page, SHELL_SELECTOR.form);

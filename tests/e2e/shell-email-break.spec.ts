@@ -56,7 +56,9 @@ async function expectNaturalBreaks(page: Page, scope: string) {
 
 for (const width of WIDTHS) {
   for (const locale of Object.values(SITE_LOCALE)) {
-    test.describe(`an email address in the shell at ${width}px (${locale})`, () => {
+    test.describe(`an email address in the shell at ${width}px (${locale})`, {
+      tag: '@cross-browser',
+    }, () => {
       test.use({ viewport: { width, height: VIEWPORT_HEIGHT }, isMobile: true, hasTouch: true });
       const { ui } = shellCopy(locale);
 
@@ -100,7 +102,9 @@ for (const width of WIDTHS) {
 
 for (const width of DESKTOP_WIDTHS) {
   for (const locale of Object.values(SITE_LOCALE)) {
-    test.describe(`the privacy notice at ${width}px on a desktop browser (${locale})`, () => {
+    test.describe(`the privacy notice at ${width}px on a desktop browser (${locale})`, {
+      tag: '@cross-browser',
+    }, () => {
       test.use({ viewport: { width, height: VIEWPORT_HEIGHT } });
 
       test('keeps the header name and the endpoint on one line each', async ({ page }) => {

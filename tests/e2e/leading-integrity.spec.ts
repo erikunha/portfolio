@@ -99,7 +99,7 @@ const inheritedLeading = (page: import('@playwright/test').Page) =>
     return offenders;
   });
 
-test.describe('line boxes are whole pixels', () => {
+test.describe('line boxes are whole pixels', { tag: '@cross-browser' }, () => {
   for (const route of ROUTES) {
     test(`${route} renders every line box on a whole pixel`, async ({ page }) => {
       test.skip(

@@ -58,7 +58,9 @@ async function expectOneLineLabels(page: Page, state: string) {
 
 for (const width of WIDTHS) {
   for (const locale of Object.values(SITE_LOCALE)) {
-    test.describe(`shell control labels at ${width}px (${locale})`, () => {
+    test.describe(`shell control labels at ${width}px (${locale})`, {
+      tag: '@cross-browser',
+    }, () => {
       const touch = width < TABLET_WIDTH;
       test.use({
         viewport: { width, height: VIEWPORT_HEIGHT },

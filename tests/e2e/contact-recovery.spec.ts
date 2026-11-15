@@ -52,7 +52,7 @@ for (const locale of Object.values(SITE_LOCALE)) {
   const { form: copy } = contactCopy[locale];
   const errors = contactCopy[locale].errors;
 
-  test.describe(`contact failure recovery, ${locale}`, () => {
+  test.describe(`contact failure recovery, ${locale}`, { tag: '@cross-browser' }, () => {
     test('a server error keeps the text, and the resubmit delivers it', async ({ page }) => {
       const state: MockState = { contact: 'server-error', log: 'accept' };
       await installMockBackend(page, state);

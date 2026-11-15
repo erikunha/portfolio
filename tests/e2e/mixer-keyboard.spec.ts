@@ -43,10 +43,9 @@ async function activeControl(page: Page) {
   }, MIXER);
 }
 
-test('Tab walks every mixer control in order, each shows a focus ring, and focus leaves', async ({
-  page,
-  browserName,
-}) => {
+test('Tab walks every mixer control in order, each shows a focus ring, and focus leaves', {
+  tag: '@cross-browser',
+}, async ({ page, browserName }) => {
   await openMixer(page);
   const buttonsSkipTab = browserName === WEBKIT && process.platform === MACOS;
   const controls = page.locator(buttonsSkipTab ? SLIDERS : CONTROLS);
@@ -80,7 +79,9 @@ test('Tab walks every mixer control in order, each shows a focus ring, and focus
   );
 });
 
-test('Shift+Tab from the first control leaves the mixer backwards', async ({ page }) => {
+test('Shift+Tab from the first control leaves the mixer backwards', {
+  tag: '@cross-browser',
+}, async ({ page }) => {
   await openMixer(page);
   await page.locator(CONTROLS).first().focus();
 
@@ -89,7 +90,9 @@ test('Shift+Tab from the first control leaves the mixer backwards', async ({ pag
   expect((await activeControl(page))?.inMixer).not.toBe(true);
 });
 
-test('arrow keys move every slider and the value text follows', async ({ page }) => {
+test('arrow keys move every slider and the value text follows', { tag: '@cross-browser' }, async ({
+  page,
+}) => {
   await openMixer(page);
   const sliders = page.locator(SLIDERS);
   const count = await sliders.count();

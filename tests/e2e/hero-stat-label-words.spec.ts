@@ -9,7 +9,9 @@ const WORD = /[^\s\-‐-―]+-?/g;
 
 for (const path of PAGES) {
   for (const width of WIDTHS) {
-    test(`${path} at ${width}px keeps every hero stat label word whole`, async ({ page }) => {
+    test(`${path} at ${width}px keeps every hero stat label word whole`, {
+      tag: '@cross-browser',
+    }, async ({ page }) => {
       await page.setViewportSize({ width, height: VIEWPORT_HEIGHT });
       await gotoSettled(page, path);
       const split = await page.evaluate(

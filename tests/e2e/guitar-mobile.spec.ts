@@ -27,7 +27,7 @@ async function edges(children: Locator) {
 }
 
 for (const viewport of [PHONE, JUST_BELOW_DESKTOP]) {
-  test.describe(`#sec-guitar at ${viewport.width}px`, () => {
+  test.describe(`#sec-guitar at ${viewport.width}px`, { tag: '@cross-browser' }, () => {
     test.use({ viewport });
 
     for (const group of STACKED_GROUPS) {
@@ -51,7 +51,7 @@ for (const viewport of [PHONE, JUST_BELOW_DESKTOP]) {
   });
 }
 
-test.describe('#sec-guitar at 1280px', () => {
+test.describe('#sec-guitar at 1280px', { tag: '@cross-browser' }, () => {
   test.use({ viewport: DESKTOP });
 
   test('signal chain nodes stay on one row', async ({ page }) => {
@@ -108,7 +108,7 @@ test.describe('#sec-guitar at 1280px', () => {
   });
 });
 
-test.describe('#sec-guitar facts keep their emphasis', () => {
+test.describe('#sec-guitar facts keep their emphasis', { tag: '@cross-browser' }, () => {
   test.use({ viewport: DESKTOP });
 
   test('values and the obsession label are bold signal green', async ({ page }) => {
@@ -139,7 +139,9 @@ test.describe('#sec-guitar facts keep their emphasis', () => {
 });
 
 for (const viewport of [PHONE, JUST_BELOW_DESKTOP]) {
-  test(`stacked signal arrows stay between the nodes at ${viewport.width}px`, async ({ page }) => {
+  test(`stacked signal arrows stay between the nodes at ${viewport.width}px`, {
+    tag: '@cross-browser',
+  }, async ({ page }) => {
     await page.setViewportSize(viewport);
     await page.goto('/');
     const chain = page.locator('#sec-guitar .guitar-chain');
@@ -162,7 +164,9 @@ for (const viewport of [PHONE, JUST_BELOW_DESKTOP]) {
 }
 
 for (const width of [834, 1024, 1280]) {
-  test(`every mixer plugin name is readable in full at ${width}px`, async ({ page, isMobile }) => {
+  test(`every mixer plugin name is readable in full at ${width}px`, {
+    tag: '@cross-browser',
+  }, async ({ page, isMobile }) => {
     test.skip(isMobile, 'a phone user agent renders the mobile mixer instead');
     await page.setViewportSize({ width, height: 900 });
     await page.goto('/');
@@ -185,10 +189,9 @@ for (const width of [834, 1024, 1280]) {
 }
 
 for (const width of [320, 375, 600]) {
-  test(`the desktop mixer stacks its channels without a sideways scroll at ${width}px`, async ({
-    page,
-    isMobile,
-  }) => {
+  test(`the desktop mixer stacks its channels without a sideways scroll at ${width}px`, {
+    tag: '@cross-browser',
+  }, async ({ page, isMobile }) => {
     test.skip(isMobile, 'a phone user agent renders the mobile mixer instead');
     await page.setViewportSize({ width, height: 900 });
     await page.goto('/');

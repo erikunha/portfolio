@@ -71,7 +71,7 @@ async function horizontalOverflow(page: Page) {
   return { pageOverflow: await pageOverflowOf(page), ...panelEdges };
 }
 
-test.describe('contact timezone panel, visitor in Berlin', () => {
+test.describe('contact timezone panel, visitor in Berlin', { tag: '@cross-browser' }, () => {
   test.use({ timezoneId: 'Europe/Berlin', locale: 'en-US' });
 
   test.beforeEach(async ({ page }) => {
@@ -252,7 +252,7 @@ test.describe('contact timezone panel, visitor in Berlin', () => {
   }
 });
 
-test.describe('contact timezone panel, visitor in São Paulo', () => {
+test.describe('contact timezone panel, visitor in São Paulo', { tag: '@cross-browser' }, () => {
   test.use({ timezoneId: 'America/Sao_Paulo', locale: 'en-US' });
 
   test.beforeEach(async ({ page }) => {
@@ -304,7 +304,7 @@ test.describe('contact timezone panel, visitor in São Paulo', () => {
   });
 });
 
-test.describe('contact section in print', () => {
+test.describe('contact section in print', { tag: '@cross-browser' }, () => {
   test('prints as one column that stays inside the page', async ({ page }) => {
     await page.setViewportSize({ width: 794, height: 1123 });
     await page.emulateMedia({ media: 'print' });
@@ -325,7 +325,7 @@ test.describe('contact section in print', () => {
   });
 });
 
-test.describe('contact timezone panel clocks', () => {
+test.describe('contact timezone panel clocks', { tag: '@cross-browser' }, () => {
   test.use({ timezoneId: 'Europe/Berlin', locale: 'en-US' });
 
   test('the clocks tick while the panel is on screen', async ({ page }) => {

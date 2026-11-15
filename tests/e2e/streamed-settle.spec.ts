@@ -8,7 +8,7 @@ const BOUNDARY_SWAP = /\$RC\(("B:[^)]*)\)/g;
 const HELD_SWAP = '(window.__heldSwaps=window.__heldSwaps||[]).push(()=>$RC($1))';
 const HELD_FRAMES = 30;
 
-test.describe('settling the streamed boundaries', () => {
+test.describe('settling the streamed boundaries', { tag: '@cross-browser' }, () => {
   test.beforeEach(async ({ context }) => {
     await context.route('**/*', async (route) => {
       if (route.request().resourceType() !== 'document') {
@@ -64,7 +64,7 @@ async function stallUntilReleased(context: BrowserContext, pattern: string): Pro
   return release;
 }
 
-test.describe('settling while a subresource never answers', () => {
+test.describe('settling while a subresource never answers', { tag: '@cross-browser' }, () => {
   let release: () => void = () => undefined;
 
   test.afterEach(async ({ context }) => {
@@ -113,7 +113,7 @@ test.describe('settling while a subresource never answers', () => {
 const SCRIPT_CHUNK_DELAY_MS = 3_000;
 const SCRIPT_CHUNK_PATH = '/_next/static/chunks/';
 
-test.describe('interacting while the script chunks arrive late', () => {
+test.describe('interacting while the script chunks arrive late', { tag: '@cross-browser' }, () => {
   let delayedChunks = 0;
 
   test.beforeEach(async ({ context }) => {

@@ -24,7 +24,7 @@ const sectionTitleSize = (width: number) => (width >= TABLET_MIN_WIDTH ? TEXT_LG
 const sectionSpace = (width: number) =>
   width >= TABLET_MIN_WIDTH ? SPACE_SECTION_TABLET : SPACE_SECTION_PHONE;
 
-test.describe('type scale', () => {
+test.describe('type scale', { tag: '@cross-browser' }, () => {
   for (const width of WIDTHS) {
     test(`card titles use the base size at ${width}`, async ({ page }) => {
       await page.setViewportSize({ width, height: 900 });

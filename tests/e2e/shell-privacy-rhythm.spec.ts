@@ -9,9 +9,9 @@ const SUBPIXEL_PX = 1;
 const SHELL_EMAIL = '.shell-privacy-notice a[href^="mailto:"]';
 
 for (const width of WIDTHS) {
-  test(`at ${width}px the shell privacy email keeps a 44px target without stretching its line`, async ({
-    page,
-  }) => {
+  test(`at ${width}px the shell privacy email keeps a 44px target without stretching its line`, {
+    tag: '@cross-browser',
+  }, async ({ page }) => {
     await page.setViewportSize({ width, height: VIEWPORT_HEIGHT });
     await gotoSettled(page, '/');
     await revealDeferredContent(page);

@@ -7,9 +7,9 @@ const VIEWPORT_HEIGHT = 900;
 const SUBPIXEL_PX = 1;
 
 for (const route of ROUTES) {
-  test(`${route}: the contact links sit one spacing step apart, stacked or side by side`, async ({
-    page,
-  }) => {
+  test(`${route}: the contact links sit one spacing step apart, stacked or side by side`, {
+    tag: '@cross-browser',
+  }, async ({ page }) => {
     const gaps: number[] = [];
     for (const width of WIDTHS) {
       await page.setViewportSize({ width, height: VIEWPORT_HEIGHT });

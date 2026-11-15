@@ -10,9 +10,9 @@ const CODE_BREAK_AFTER = '_/.@:[>';
 
 for (const route of ROUTES) {
   for (const viewport of WORD_VIEWPORTS) {
-    test(`${route} at ${viewport.width}px breaks identifiers only after an underscore`, async ({
-      page,
-    }) => {
+    test(`${route} at ${viewport.width}px breaks identifiers only after an underscore`, {
+      tag: '@cross-browser',
+    }, async ({ page }) => {
       await page.setViewportSize(viewport);
       await freezeMotion(page);
       await gotoSettled(page, route);

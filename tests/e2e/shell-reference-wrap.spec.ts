@@ -10,7 +10,9 @@ const ANSWER = 'Erik builds agent platforms.';
 const UUID_REQUEST_ID = '3f1c9a2e-7b44-4d0a-9c1e-5a8d2b6f0e71';
 
 for (const width of WIDTHS) {
-  test(`at ${width}px the request reference stays inside the feed`, async ({ page }) => {
+  test(`at ${width}px the request reference stays inside the feed`, {
+    tag: '@cross-browser',
+  }, async ({ page }) => {
     await page.setViewportSize({ width, height: VIEWPORT_HEIGHT });
     await freezeMotion(page);
     const chunked = await installChunkedAsk(page, { requestId: UUID_REQUEST_ID });

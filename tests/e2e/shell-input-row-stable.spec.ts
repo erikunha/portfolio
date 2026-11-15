@@ -20,7 +20,9 @@ function formTop(page: Page): Promise<number> {
 }
 
 for (const viewport of VIEWPORTS) {
-  test(`at ${viewport.width}px the input row stays put from send to answered`, async ({ page }) => {
+  test(`at ${viewport.width}px the input row stays put from send to answered`, {
+    tag: '@cross-browser',
+  }, async ({ page }) => {
     await page.setViewportSize(viewport);
     await freezeMotion(page);
     const chunked = await installChunkedAsk(page, { requestId: REQUEST_ID });

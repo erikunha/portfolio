@@ -17,7 +17,9 @@ const ENVIRONMENTS = [
 ] as const;
 
 for (const environment of ENVIRONMENTS) {
-  test.describe(`reading views never end a block on a lone short token on a ${environment.name}`, () => {
+  test.describe(`reading views never end a block on a lone short token on a ${environment.name}`, {
+    tag: '@cross-browser',
+  }, () => {
     test.use(environment.touch);
 
     for (const route of READING_ROUTES) {
@@ -37,7 +39,7 @@ for (const environment of ENVIRONMENTS) {
   });
 }
 
-test.describe('reading views in print', () => {
+test.describe('reading views in print', { tag: '@cross-browser' }, () => {
   for (const route of READING_ROUTES) {
     test(`${route} keeps a short last token with the word before it`, async ({ page }) => {
       await page.setViewportSize(PRINT_VIEWPORT);

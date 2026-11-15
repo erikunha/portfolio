@@ -46,7 +46,9 @@ async function failContactSend(page: Page): Promise<void> {
 }
 
 for (const environment of ENVIRONMENTS) {
-  test.describe(`no word breaks across two lines on a ${environment.name}`, () => {
+  test.describe(`no word breaks across two lines on a ${environment.name}`, {
+    tag: '@cross-browser',
+  }, () => {
     test.use(environment.touch);
 
     for (const route of ROUTES) {

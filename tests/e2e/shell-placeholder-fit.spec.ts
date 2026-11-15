@@ -38,7 +38,9 @@ async function sampleLoop(page: Page): Promise<Clip[]> {
 
 for (const width of WIDTHS) {
   for (const locale of Object.values(SITE_LOCALE)) {
-    test.describe(`the shell placeholder at ${width}px (${locale})`, () => {
+    test.describe(`the shell placeholder at ${width}px (${locale})`, {
+      tag: '@cross-browser',
+    }, () => {
       const touch = width < TABLET_WIDTH;
       test.use({
         viewport: { width, height: VIEWPORT_HEIGHT },

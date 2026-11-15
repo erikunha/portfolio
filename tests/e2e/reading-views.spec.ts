@@ -6,7 +6,7 @@ import { READING_PATHS, readingViews } from '../../content/reading-views';
 import { SITE_LOCALE } from '../../content/site-locale';
 import { installMockBackend } from './_helpers/mock-backend';
 
-test.describe('reading views', () => {
+test.describe('reading views', { tag: '@cross-browser' }, () => {
   test('/cv renders the document with a working print button', async ({ page }) => {
     await page.addInitScript(() => {
       const w = window as unknown as { printCalls: number };

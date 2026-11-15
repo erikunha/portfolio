@@ -55,7 +55,7 @@ function readDock(page: Page): Promise<DockItemLayout[]> {
 
 for (const route of ROUTES) {
   for (const width of WIDTHS) {
-    test.describe(`${route} at ${width}px`, () => {
+    test.describe(`${route} at ${width}px`, { tag: '@cross-browser' }, () => {
       test.use({
         viewport: { width, height: VIEWPORT_HEIGHT },
         isMobile: true,

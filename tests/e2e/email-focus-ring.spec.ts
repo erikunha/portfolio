@@ -48,7 +48,7 @@ function measureRing(page: Page): Promise<RingLayout> {
 }
 
 for (const width of PHONE_WIDTHS) {
-  test.describe(`the focused email link at ${width}px`, () => {
+  test.describe(`the focused email link at ${width}px`, { tag: '@cross-browser' }, () => {
     test.use({
       viewport: { width, height: VIEWPORT_HEIGHT },
       isMobile: true,

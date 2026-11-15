@@ -14,7 +14,7 @@ async function readMcpMessage(res: APIResponse): Promise<Record<string, unknown>
   return JSON.parse(dataLine.slice('data:'.length).trim());
 }
 
-test.describe('observability smoke', () => {
+test.describe('observability smoke', { tag: '@cross-browser' }, () => {
   test('/api/log accepts a structured error payload (unified envelope)', async ({
     request,
     baseURL,
