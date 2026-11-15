@@ -131,20 +131,26 @@ function ShellLineBody({
       </>
     );
   }
+  const ai = line.kind === ShellLineKind.Output && line.ai;
+  const prefix =
+    line.kind === ShellLineKind.Error || line.kind === ShellLineKind.Info ? line.prefix : undefined;
+  const retry =
+    line.kind === ShellLineKind.Error || line.kind === ShellLineKind.Info ? line.retry : undefined;
+  const welcome = line.kind === ShellLineKind.Info && line.welcome;
   return (
     <>
-      {line.ai ? <span className="shell-ai-label">{ui.aiLabel}: </span> : null}
-      {line.prefix ? <strong className="shell-stderr-command">{line.prefix}</strong> : null}
-      {line.prefix ? ' ' : null}
-      <LineText text={line.welcome && isMobile ? ui.mobileWelcome : line.text} ui={ui} />
-      {line.retry ? (
+      {ai ? <span className="shell-ai-label">{ui.aiLabel}: </span> : null}
+      {prefix ? <strong className="shell-stderr-command">{prefix}</strong> : null}
+      {prefix ? ' ' : null}
+      <LineText text={welcome && isMobile ? ui.mobileWelcome : line.text} ui={ui} />
+      {retry ? (
         <>
           {' '}
           <button
             type="button"
             className="shell-control"
             aria-label={states.retryLabel}
-            onClick={() => onRetry(line.retry ?? '')}
+            onClick={() => onRetry(retry)}
           >
             {states.retry}
           </button>
@@ -169,8 +175,10 @@ export function ShellLine(props: ShellLineProps) {
       </span>
     );
   }
+  const lang =
+    line.kind === ShellLineKind.Output || line.kind === ShellLineKind.Error ? line.lang : undefined;
   return (
-    <span className={`shell-line ${KIND_CLASS[line.kind]}`} data-kind={line.kind} lang={line.lang}>
+    <span className={`shell-line ${KIND_CLASS[line.kind]}`} data-kind={line.kind} lang={lang}>
       <ShellLineBody {...props} />
     </span>
   );

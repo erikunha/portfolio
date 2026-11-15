@@ -85,3 +85,26 @@ describe('formatRemaining', () => {
     expect(formatRemaining(90, units)).toBe('2 minutos');
   });
 });
+
+describe('Line kinds', () => {
+  it('lets each kind carry only its own fields', () => {
+    const valid: Line[] = [
+      { id: 1, kind: ShellLineKind.Output, text: 'a', ai: true, lang: 'en' },
+      { id: 2, kind: ShellLineKind.Error, text: 'b', prefix: 'stderr', retry: 'ask', lang: 'en' },
+      { id: 3, kind: ShellLineKind.Info, text: 'c', welcome: true },
+      { id: 4, kind: ShellLineKind.RateLimit, text: 'd', retryAfter: 30 },
+    ];
+    const outputWithRetryAfter: Line = {
+      id: 5,
+      kind: ShellLineKind.Output,
+      text: 'e',
+      // @ts-expect-error retryAfter belongs to a rate limit line
+      retryAfter: 3,
+    };
+    // @ts-expect-error ai belongs to an output line
+    const errorWithAi: Line = { id: 6, kind: ShellLineKind.Error, text: 'f', ai: true };
+    // @ts-expect-error a prompt line carries no prefix
+    const promptWithPrefix: Line = { id: 8, kind: ShellLineKind.Prompt, text: 'h', prefix: 'x' };
+    expect([valid.length, outputWithRetryAfter, errorWithAi, promptWithPrefix]).toHaveLength(4);
+  });
+});

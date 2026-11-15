@@ -2,17 +2,29 @@ import { SHELL_LIMITS, type ShellLineKind, type shellStates } from '@/content/sh
 import { SECONDS_PER_MINUTE } from '@/lib/time';
 
 export type LineKind = (typeof ShellLineKind)[keyof typeof ShellLineKind];
-export type Line = {
-  id: number;
-  kind: LineKind;
-  text: string;
-  ai?: boolean;
-  prefix?: string;
-  retryAfter?: number;
-  retry?: string;
-  welcome?: true;
-  lang?: string;
-};
+type LineBase = { id: number; text: string };
+type PlainKind =
+  | typeof ShellLineKind.Prompt
+  | typeof ShellLineKind.Loading
+  | typeof ShellLineKind.Reference
+  | typeof ShellLineKind.Hint;
+
+export type Line =
+  | (LineBase & { kind: PlainKind })
+  | (LineBase & { kind: typeof ShellLineKind.Output; ai?: true; lang?: string })
+  | (LineBase & {
+      kind: typeof ShellLineKind.Error;
+      prefix?: string;
+      retry?: string;
+      lang?: string;
+    })
+  | (LineBase & {
+      kind: typeof ShellLineKind.Info;
+      prefix?: string;
+      retry?: string;
+      welcome?: true;
+    })
+  | (LineBase & { kind: typeof ShellLineKind.RateLimit; retryAfter?: number });
 
 export function formatRemaining(
   seconds: number,

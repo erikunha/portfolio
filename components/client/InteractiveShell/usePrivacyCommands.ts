@@ -14,9 +14,12 @@ import { type ForgetResult, forgetMany, wasForgotten } from '@/lib/ask/forget-re
 import { listRefs } from '@/lib/request-refs.client';
 import { describeForget } from './forget-message';
 import { PRIVACY_COMMAND_KIND, type PrivacyCommand } from './privacy-command';
-import { appendLines, type Line, type LineKind } from './transcript';
+import { appendLines, type Line } from './transcript';
 
-type Entry = { kind: LineKind; text: string };
+type Entry = {
+  kind: typeof ShellLineKind.Output | typeof ShellLineKind.Error | typeof ShellLineKind.Info;
+  text: string;
+};
 
 function forgetTarget(command: PrivacyCommand, refs: readonly string[]): string | undefined {
   if (command.kind === PRIVACY_COMMAND_KIND.ForgetNumber) return refs[command.number - 1];
