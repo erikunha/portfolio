@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useRef, useState, useSyncExternalStore } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { StatusDot } from '@/components/StatusDot';
 import type { ContactContent } from '@/content/contact';
 import { contactHoursPhrase, fillCopy } from '@/content/contact-rules';
@@ -16,8 +16,8 @@ import {
   zonePlace,
 } from '@/lib/timezone/zones';
 import { useAnnouncer } from '@/lib/use-announcer.client';
-import { messageStore } from '../ContactForm/messageStore';
 import { ContactTimezoneMap } from './ContactTimezoneMap';
+import { ProposeSlot } from './ProposeSlot.client';
 import { useNow, usePanelActive } from './useClock';
 import { ZoneCombobox } from './ZoneCombobox';
 
@@ -54,7 +54,6 @@ export function ContactTimezone({ copy }: { copy: TimezoneCopy }) {
   const clockNow = useNow(active, MS_PER_MINUTE);
   const [autoZone] = useState(detectTimeZone);
   const [zone, setZone] = useState(autoZone);
-  const [proposedLine, setProposedLine] = useState<string | null>(null);
   const { announce, region: announcerRegion } = useAnnouncer({ 'data-testid': 'ctz-announce' });
 
   const minute = Math.floor(clockNow.getTime() / MS_PER_MINUTE);
@@ -85,24 +84,6 @@ export function ContactTimezone({ copy }: { copy: TimezoneCopy }) {
         erik: slot.erik,
       })
     : null;
-
-  const lineInMessage = useSyncExternalStore(
-    messageStore.subscribe,
-    () => proposedLine !== null && messageStore.getSnapshot().includes(proposedLine),
-    () => false,
-  );
-  const added = slotLine !== null && proposedLine === slotLine && lineInMessage;
-  const messageFieldId = useSyncExternalStore(
-    messageStore.subscribe,
-    messageStore.getFieldId,
-    () => null,
-  );
-
-  function propose() {
-    if (!slotLine) return;
-    messageStore.append(slotLine);
-    setProposedLine(slotLine);
-  }
 
   return (
     <div className="ctz" ref={rootRef} data-testid="contact-timezone">
@@ -151,7 +132,6 @@ export function ContactTimezone({ copy }: { copy: TimezoneCopy }) {
           now={at}
           onSelect={(picked) => {
             setZone(picked);
-            setProposedLine(null);
             announce(
               fillCopy(copy.announce, {
                 place: zonePlace(picked, at).name,
@@ -187,46 +167,7 @@ export function ContactTimezone({ copy }: { copy: TimezoneCopy }) {
         </div>
       </div>
 
-      <div className="ctz-slot" data-testid="ctz-slot">
-        <div className="ctz-slot-body">
-          <p className="ctz-slot-title">{copy.slot.title}</p>
-          {overlap.bestSlot ? (
-            <p className="ctz-slot-times">
-              <span data-testid="ctz-slot-you">{overlap.bestSlot.you}</span>{' '}
-              <span className="ctz-slot-who">{copy.slot.you}</span>
-              {copy.slot.separator}
-              <span className="ctz-slot-erik" data-testid="ctz-slot-erik">
-                {overlap.bestSlot.erik}
-              </span>{' '}
-              <span className="ctz-slot-who">{copy.slot.erik}</span>
-            </p>
-          ) : (
-            <p className="ctz-slot-none">{copy.slot.none}</p>
-          )}
-          <div className="ctz-proposed-row">
-            <p className="ctz-proposed" role="status">
-              {added ? <span data-testid="ctz-proposed">{copy.propose.added}</span> : null}
-            </p>
-            {added && messageFieldId ? (
-              <a
-                className="ctz-proposed-link"
-                href={`#${messageFieldId}`}
-                onClick={(event) => {
-                  event.preventDefault();
-                  document.getElementById(messageFieldId)?.focus();
-                }}
-              >
-                {copy.propose.focusLink}
-              </a>
-            ) : null}
-          </div>
-        </div>
-        {slotLine ? (
-          <button type="button" className="ctz-propose" onClick={propose}>
-            {copy.propose.label}
-          </button>
-        ) : null}
-      </div>
+      <ProposeSlot key={zone} copy={copy} slot={overlap.bestSlot} slotLine={slotLine} />
 
       <p className="ctz-overlap" data-testid="ctz-overlap">
         {overlap.range ? (
