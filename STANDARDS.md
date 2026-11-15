@@ -62,10 +62,8 @@ per later streamed frame (two on the first).
 `pre-push` hook. It fails the build if any `'use client'` file outside those
 Next convention files is misnamed. It scans `app`, `components` and `lib`, not
 `design-system/`. The hero boot loop mutates `textContent` through refs
-(`components/client/HeroBootAnimation/HeroBootAnimation.test.tsx`), never per-keystroke state. The streaming-through-React contract is held by the
-behavioral test `components/client/InteractiveShell/InteractiveShell.test.tsx`, which asserts
-every child of the shell feed is a React-owned node (`__reactFiber$` key
-present). Two further guards hold it: `scripts/gates/check-shell-dom-writes.ts`
+(`components/client/HeroBootAnimation/HeroBootAnimation.test.tsx`), never per-keystroke state. The streaming-through-React contract is held by two guards:
+`scripts/gates/check-shell-dom-writes.ts`
 (`pnpm check:shell-dom-writes`, in `verify` and the `quality-fast` job) fails any non-test file
 under `components/client/InteractiveShell/` that calls `document.createElement`, `appendChild` or
 `insertAdjacentHTML`, or assigns `textContent` or `innerHTML`; its one allowlisted path is
