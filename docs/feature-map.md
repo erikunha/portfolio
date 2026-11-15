@@ -9,7 +9,7 @@ The streaming question and answer API and the interactive shell that calls it.
 | Path prefix | Tracked files |
 | --- | ---: |
 | `app/api/ask/` | 1 |
-| `lib/ask/` | 47 |
+| `lib/ask/` | 49 |
 | `components/client/InteractiveShell/` | 46 |
 | `__tests__/ask/` | 45 |
 
