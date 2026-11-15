@@ -5,9 +5,9 @@ import { readingViews, summaryDocument } from '@/content/reading-views';
 import type { SiteLocale } from '@/content/site-locale';
 import { StatTile } from '@/design-system';
 import { keepTail } from '@/lib/keep-tail';
-import { ReadingActions } from './ReadingActions';
-import { ReadingSection } from './ReadingSection';
-import { ReadingShell } from './ReadingShell';
+import { ReadingActions } from '../ReadingActions';
+import { ReadingSection } from '../ReadingSection';
+import { ReadingShell } from '../ReadingShell';
 
 const sectionId = (key: string) => `summary-${key}`;
 export function SummaryPage({ locale }: { locale: SiteLocale }) {

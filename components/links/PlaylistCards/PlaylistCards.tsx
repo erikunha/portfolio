@@ -5,8 +5,8 @@ import type { LinksPlaylist } from '@/content/schemas';
 import type { SiteLocale } from '@/content/site-locale';
 import { cn } from '@/lib/cn';
 import { withUtm } from '@/lib/links/utm';
-import { NewTabHint } from './NewTabHint';
-import { SectionHeading } from './SectionHeading';
+import { NewTabHint } from '../NewTabHint';
+import { SectionHeading } from '../SectionHeading';
 
 const HEADING_ID = 'links-playlists-heading';
 const PLAYLIST_ENDPOINT = 'https://www.youtube.com/playlist?list=';

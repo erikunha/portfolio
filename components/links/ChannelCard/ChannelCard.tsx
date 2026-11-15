@@ -8,10 +8,10 @@ import type { ChannelFeed } from '@/lib/links/feed';
 import { formatCompact } from '@/lib/links/format';
 import { formatRelative } from '@/lib/links/relative-time';
 import { withUtm } from '@/lib/links/utm';
-import { SubscribeCta } from './client/SubscribeCta.client';
-import { IconYouTube } from './LinkIcons';
-import { NewTabHint } from './NewTabHint';
-import { SectionHeading } from './SectionHeading';
+import { SubscribeCta } from '../client/SubscribeCta.client';
+import { IconYouTube } from '../LinkIcons';
+import { NewTabHint } from '../NewTabHint';
+import { SectionHeading } from '../SectionHeading';
 
 const HEADING_ID = 'links-channel-heading';
 const CHANNEL_GLYPH_PX = 16;

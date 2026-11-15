@@ -90,7 +90,7 @@ describe('LatestVideoSkeleton: the two columns it stands in for', () => {
 
 describe('LinksPage: latest video loading', () => {
   it('renders the static shell and the skeleton while the feed is still pending', async () => {
-    const { LinksPage } = await import('./LinksPage');
+    const { LinksPage } = await import('../LinksPage');
     const element = LinksPage({ locale: SITE_LOCALE.en });
     expect(element).not.toBeInstanceOf(Promise);
     const doc = new DOMParser().parseFromString(renderToStaticMarkup(element), 'text/html');
@@ -104,7 +104,7 @@ describe('LinksPage: latest video loading', () => {
   });
 
   it('swaps the skeleton for the channel card, history and playlists once the feed lands', async () => {
-    const { LinksPage } = await import('./LinksPage');
+    const { LinksPage } = await import('../LinksPage');
     feedPending.resolve({
       fetchedAt: '2026-08-31T19:00:00Z',
       latest: null,

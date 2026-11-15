@@ -1,0 +1,1 @@
+export { QrPanel } from './QrPanel';

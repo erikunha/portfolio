@@ -2,7 +2,7 @@ import { linksContent } from '@/content/links';
 import { linksUi } from '@/content/links-ui';
 import type { SiteLocale } from '@/content/site-locale';
 import { qrMatrix, qrSvgPath } from '@/lib/links/qr';
-import { SectionHeading } from './SectionHeading';
+import { SectionHeading } from '../SectionHeading';
 
 const HEADING_ID = 'links-qr-heading';
 const QUIET_ZONE = 3;

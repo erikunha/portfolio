@@ -4,11 +4,11 @@ import { linksUi } from '@/content/links-ui';
 import type { SiteLocale } from '@/content/site-locale';
 import { hostLabel } from '@/lib/links/host-label';
 import { withUtm } from '@/lib/links/utm';
-import { LineContent } from './LineContent';
-import { PillGlyph } from './LinkIcons';
-import { isLinkedProfile } from './link-pills';
-import { NewTabHint } from './NewTabHint';
-import { SectionHeading } from './SectionHeading';
+import { LineContent } from '../LineContent';
+import { PillGlyph } from '../LinkIcons';
+import { isLinkedProfile } from '../link-pills';
+import { NewTabHint } from '../NewTabHint';
+import { SectionHeading } from '../SectionHeading';
 
 const HEADING_ID = 'links-profiles-heading';
 

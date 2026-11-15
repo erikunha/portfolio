@@ -5,9 +5,9 @@ import { KeepTail } from '@/components/KeepTail';
 import { cvDocument, cvJsonLd, readingViews } from '@/content/reading-views';
 import type { SiteLocale } from '@/content/site-locale';
 import { serializeJsonLd } from '@/lib/json-ld';
-import { ReadingActions } from './ReadingActions';
-import { ReadingSection } from './ReadingSection';
-import { ReadingShell } from './ReadingShell';
+import { ReadingActions } from '../ReadingActions';
+import { ReadingSection } from '../ReadingSection';
+import { ReadingShell } from '../ReadingShell';
 
 const JSON_LD_TYPE = 'application/ld+json';
 

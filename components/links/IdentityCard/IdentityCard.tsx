@@ -4,7 +4,7 @@ import { OptimizedImage } from '@/components/OptimizedImage';
 import { linksContent } from '@/content/links';
 import { profile as siteProfile } from '@/content/profile';
 import type { SiteLocale } from '@/content/site-locale';
-import { TaglineTyper } from './client/TaglineTyper.client';
+import { TaglineTyper } from '../client/TaglineTyper.client';
 
 const AVATAR_PX = 56;
 const AVATAR_SIZES = `${AVATAR_PX}px`;

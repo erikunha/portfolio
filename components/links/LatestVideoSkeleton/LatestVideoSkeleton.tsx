@@ -2,7 +2,7 @@ import { linksContent } from '@/content/links';
 import { linksUi } from '@/content/links-ui';
 import type { SiteLocale } from '@/content/site-locale';
 import { HISTORY_LENGTH } from '@/lib/links/feed';
-import { SectionHeading } from './SectionHeading';
+import { SectionHeading } from '../SectionHeading';
 
 const CHANNEL_HEADING_ID = 'links-channel-loading-heading';
 const HISTORY_HEADING_ID = 'links-history-loading-heading';

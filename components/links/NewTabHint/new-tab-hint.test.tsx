@@ -3,10 +3,10 @@ import { describe, expect, it } from 'vitest';
 import { linksContent } from '@/content/links';
 import { SITE_LOCALE } from '@/content/site-locale';
 import type { ChannelFeed } from '@/lib/links/feed';
-import { ChannelCard } from './ChannelCard';
-import { PlaylistCards } from './PlaylistCards';
-import { ProfileLines } from './ProfileLines';
-import { VideoHistory } from './VideoHistory';
+import { ChannelCard } from '../ChannelCard';
+import { PlaylistCards } from '../PlaylistCards';
+import { ProfileLines } from '../ProfileLines';
+import { VideoHistory } from '../VideoHistory';
 
 const CHANNEL_URL = 'https://www.youtube.com/@eriknagringa';
 const video = (id: string) => ({

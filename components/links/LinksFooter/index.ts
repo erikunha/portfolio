@@ -1,0 +1,1 @@
+export { LinksFooter } from './LinksFooter';

@@ -4,9 +4,9 @@ import type { SiteLocale } from '@/content/site-locale';
 import { Button } from '@/design-system';
 import { CHANNEL_URL } from '@/lib/links/feed';
 import { withUtm } from '@/lib/links/utm';
-import { IconYouTube } from './LinkIcons';
-import { NewTabHint } from './NewTabHint';
-import { SectionHeading } from './SectionHeading';
+import { IconYouTube } from '../LinkIcons';
+import { NewTabHint } from '../NewTabHint';
+import { SectionHeading } from '../SectionHeading';
 
 const HEADING_ID = 'links-channel-noscript-heading';
 const SUBSCRIBE_QUERY = '?sub_confirmation=1';

@@ -2,11 +2,11 @@ import { linksContent } from '@/content/links';
 import { linksUi } from '@/content/links-ui';
 import type { SiteLocale } from '@/content/site-locale';
 import { hostLabel } from '@/lib/links/host-label';
-import { CopyLinkButton } from './client/CopyLinkButton.client';
-import { LineContent } from './LineContent';
-import { PillGlyph } from './LinkIcons';
-import { isLinkedMail } from './link-pills';
-import { SectionHeading } from './SectionHeading';
+import { CopyLinkButton } from '../client/CopyLinkButton.client';
+import { LineContent } from '../LineContent';
+import { PillGlyph } from '../LinkIcons';
+import { isLinkedMail } from '../link-pills';
+import { SectionHeading } from '../SectionHeading';
 
 const HEADING_ID = 'links-contact-heading';
 

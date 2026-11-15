@@ -226,11 +226,11 @@ components/SiteShell.tsx             # the one AppShell builder (brand, chrome, 
 components/SiteHome.tsx              # section composition, client shell boundaries, footer
 app/(en)/summary/page.tsx            # one-screen reading view: stats, CTAs, projects | stack + contact
 app/(en)/cv/page.tsx                 # full CV reading view and print control; header, actions row, then summary, skills, experience, education, community | certifications, contact
-components/reading/ReadingShell.tsx    # SiteShell, reading-view and main wrapper shared by both reading views
-components/reading/ReadingSection.tsx  # titled section block shared by /cv and /summary
-components/reading/ReadingActions.tsx  # hire, cross-view and print action row shared by both reading views
-components/reading/CvPage.tsx          # /cv and /pt/cv body
-components/reading/SummaryPage.tsx     # /summary and /pt/summary body
+components/reading/ReadingShell/ReadingShell.tsx    # SiteShell, reading-view and main wrapper shared by both reading views
+components/reading/ReadingSection/ReadingSection.tsx  # titled section block shared by /cv and /summary
+components/reading/ReadingActions/ReadingActions.tsx  # hire, cross-view and print action row shared by both reading views
+components/reading/CvPage/CvPage.tsx          # /cv and /pt/cv body
+components/reading/SummaryPage/SummaryPage.tsx     # /summary and /pt/summary body
 app/(pt)/links/page.tsx              # pt-BR links page, in the pt-BR root layout
 app/(en)/links/en/page.tsx           # English links page, in the English root layout
 app/(en)/[...missing]/not-found.tsx  # Matrix-themed 404 for unmatched addresses, English root layout

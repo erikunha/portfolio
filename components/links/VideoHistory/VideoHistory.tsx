@@ -7,8 +7,8 @@ import type { ChannelFeed } from '@/lib/links/feed';
 import { formatCompact } from '@/lib/links/format';
 import { formatRelative } from '@/lib/links/relative-time';
 import { withUtm } from '@/lib/links/utm';
-import { NewTabHint } from './NewTabHint';
-import { SectionHeading } from './SectionHeading';
+import { NewTabHint } from '../NewTabHint';
+import { SectionHeading } from '../SectionHeading';
 
 const HEADING_ID = 'links-history-heading';
 const THUMB_WIDTH = 64;
