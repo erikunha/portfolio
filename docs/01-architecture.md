@@ -12,70 +12,21 @@ The site presents a professional profile through the terminal home page, printab
 
 ## Architectural layers
 
-The layering reads in three steps: the edge and the presentation root, the content and BFF layers the presentation calls into, and the external services those layers reach.
-
 ```mermaid
-flowchart TB
-    subgraph edge["Edge / Platform"]
-        proxy["proxy.ts<br/>per-request CSP + Reporting-Endpoints"]
-        cfg["next.config.ts<br/>static security headers, PPR, MDX"]
-    end
-    subgraph present["Presentation (RSC-first)"]
-        page["components/SiteHome.tsx<br/>composition root"]
-        sections["components/sections/**<br/>RSC sections and nested groups"]
-        islands["client islands<br/>/client/ directories and .client.ts(x) files"]
-        ds["design-system/**<br/>reusable primitives"]
-    end
-    proxy --> page
-    cfg --> page
-    page --> sections --> ds
-    page --> islands
+flowchart LR
+    edge["Edge<br/>proxy.ts · next.config.ts"] --> pres["Presentation<br/>components · design-system"]
+    pres --> content["Content<br/>content/*.ts · Zod schemas"]
+    pres -->|"/api/* fetch"| bff["BFF<br/>app/api · lib"]
+    bff --> ext[("External services")]
 ```
 
-The content layer feeds the sections, and every route handler goes through the shared BFF envelope:
-
-```mermaid
-flowchart TB
-    subgraph content["Content / Domain"]
-        cmods["content/*.ts<br/>typed modules"]
-        schemas["content/schemas.ts<br/>central Zod registry"]
-        gate["content/_validate-client-content.ts<br/>build-time parse site"]
-    end
-    subgraph bff["BFF / Server (lib + app/api)"]
-        api["app/api/**<br/>route handlers"]
-        handler["lib/server/route.ts<br/>defineHandler envelope"]
-        libcore["lib/rate-limit · lib/redis · lib/env · lib/ask/** · lib/lighthouse-scores · lib/contact/delivery · lib/contact/outbox"]
-    end
-    sections["components/sections/**<br/>RSC sections and nested groups"] --> cmods
-    cmods --> schemas
-    gate -->|imports + parses| cmods
-    gate --> schemas
-    api --> handler --> libcore
-    api -->|bespoke handlers| libcore
-```
-
-The BFF core talks to the external services, the islands fetch through the route handlers, the sections read measured data, and the links pages read their own cached feed:
-
-```mermaid
-flowchart TB
-    libcore["lib/rate-limit · lib/redis · lib/env · lib/ask/** · lib/lighthouse-scores · lib/contact/delivery · lib/contact/outbox"]
-    subgraph ext["External services"]
-        redis[("Upstash Redis")]
-        gw["Vercel AI Gateway<br/>(anthropic/claude-haiku-5.5)"]
-        resend["Resend"]
-        psi["Google PSI"]
-        lf["Langfuse (flag-gated)"]
-    end
-    links["/links · /links/en"] --> feed["lib/links/feed.ts: use cache"]
-    feed --> yt["YouTube Data API uploads paging, RSS fallback"]
-    libcore --> redis
-    libcore --> gw
-    libcore --> resend
-    libcore --> psi
-    libcore -.-> lf
-    islands["client islands<br/>/client/ directories and .client.ts(x) files"] -->|fetch /api/ask, /api/contact| api["app/api/**<br/>route handlers"]
-    sections["components/sections/**<br/>RSC sections and nested groups"] -->|Measured reads| libcore
-```
+| Layer | What lives there |
+| --- | --- |
+| Edge | `proxy.ts` sets the per-request CSP and reporting endpoints; `next.config.ts` sets the static security headers, PPR and MDX. |
+| Presentation | `components/SiteHome.tsx` is the composition root. `components/sections/**` are RSC sections; client islands live in `client/` directories and `.client.ts(x)` files; `design-system/**` holds reusable primitives. |
+| Content | `content/*.ts` typed modules, the Zod registry `content/schemas.ts`, and the build-time parse site `content/_validate-client-content.ts`. |
+| BFF | `app/api/**` route handlers, the `defineHandler` envelope in `lib/server/route.ts`, and the server core in `lib/` (rate limit, Redis, env, ask, contact, mail). Server sections also read `lib` directly for measured data. |
+| External services | Upstash Redis, Vercel AI Gateway, Resend, Google PageSpeed Insights, the YouTube Data API (through `lib/links/feed.ts`) and Langfuse when its flag is on. |
 
 **Layer ownership boundaries (who may import whom):**
 - `content/*` holds typed data, schemas and shared presentation metadata. Server sections and client islands import different modules to control browser dependencies.
@@ -86,91 +37,85 @@ flowchart TB
 
 ## Repository structure (annotated)
 
-The repository root, with `app/` and its two route groups expanded:
-
-```mermaid
-flowchart LR
-    root["portfolio/"]
-    root --> app["app/"]
-    app --> a1["(en)/ and (pt)/ route groups, each with its root layout · sitemap.ts · global-error.tsx · _lib/"]
-    app --> a2["api/** route handlers"]
-    app --> a3["css/** (theme · base · crt · animations · print · forced-colors · components-*)"]
-    app --> a4["(en)/design-system/** MDX docs"]
-```
-
-The other top-level directories, with `components/` expanded:
-
-```mermaid
-flowchart LR
-    root["portfolio/"]
-    root --> comp["components/"]
-    root --> dsx["design-system/"]
-    root --> cont["content/"]
-    root --> lib["lib/"]
-    root --> scr["scripts/ (gates and tools)"]
-    root --> tst["tests/ (e2e · a11y · visual)"]
-    root --> cl[".agents/ · .claude/ · .codex/ (AI platform)"]
-    root --> gh[".github/workflows/"]
-    root --> docs["root docs: ARCHITECTURE · STANDARDS · DECISIONS · AGENTS · REVIEW"]
-    root --> kb["docs/ knowledge base · evals/ · metrics/ · unit test directory"]
-    comp --> c1["sections/** RSC"]
-    comp --> c2["client/** islands"]
-    comp --> c3["responsive/** chrome"]
-    comp --> c4["SiteShell · AppShell · ErrorBoundary · RootShell"]
-    comp --> c5["links/** · reading/** · ErrorPages/**"]
+```text
+portfolio/
+├── app/
+│   ├── (en)/ and (pt)/      route groups, each with its root layout, sitemap.ts, global-error.tsx, _lib/
+│   ├── (en)/design-system/  MDX docs
+│   ├── api/                 route handlers
+│   └── css/                 theme, base, crt, animations, print, forced-colors, components-*
+├── components/
+│   ├── sections/            RSC sections
+│   ├── client/              client islands
+│   ├── responsive/          navigation chrome
+│   ├── links/, reading/, ErrorPages/
+│   └── SiteShell, AppShell, ErrorBoundary, RootShell
+├── design-system/           reusable primitives
+├── content/                 typed copy and Zod schemas
+├── lib/                     server and BFF core
+├── scripts/                 gates and tools
+├── tests/                   e2e, a11y, visual
+├── .agents/, .claude/, .codex/   AI platform
+├── .github/workflows/
+├── docs/, evals/, metrics/  knowledge base, eval data, metrics
+└── ARCHITECTURE, STANDARDS, DECISIONS, AGENTS, REVIEW
 ```
 
 ## Dependency graph (module-level)
 
-The rendering chain and the section modules:
+The rendering chain:
 
 ```mermaid
-flowchart TD
-    page["components/SiteHome.tsx (RSC)"] --> siteshell["SiteShell (RSC)"]
-    siteshell --> shell["AppShell.client"]
-    shell --> main["PageMain (RSC)"]
-    main --> sectionN["sections/* (RSC)"]
-    shell --> footer["Footer (RSC), after PageMain"]
-    sectionN -. most wrap .-> module["responsive/Module (RSC wrapper)"]
-    sectionN --> content["content/* (typed data)"]
-    sectionN --> dsprim["design-system/* primitives"]
-    sectionN -. hosts .-> island["client islands<br/>InteractiveShell · ContactForm · DawMixer*"]
-    content --> schemas["Zod schemas: content/schemas.ts + contact.ts"]
-    gate["build-time parse site: content/_validate-client-content.ts"] -->|imports + parses| content
-    gate --> schemas
-    shellisland["InteractiveShell island"] --> media["useBreakpoint: matchMedia subscription, no context"]
-    shell --> motion["lib/motion.ts (DOM state)"]
+flowchart LR
+    home["SiteHome (RSC)"] --> site["SiteShell (RSC)"] --> app["AppShell.client"]
+    app --> main["PageMain (RSC)"] --> sections["sections/* (RSC)"]
+    app --> footer["Footer (RSC)"]
+    sections --> content["content/*"]
+    sections --> ds["design-system/*"]
+    sections -.->|hosts| islands["client islands"]
 ```
 
-The API paths the islands call, and the services behind them:
+- Most sections render inside the `responsive/Module` RSC wrapper.
+- The client islands are `InteractiveShell`, `ContactForm` and the `DawMixer*` controls.
+- Motion state lives on the DOM; the animated islands read it through `lib/motion.ts`.
+- `InteractiveShell` and `GlobalMotion` read the breakpoint through `useBreakpoint`, a `matchMedia` subscription with no context.
+- `content/_validate-client-content.ts` imports and parses every content module against the Zod schemas in `content/schemas.ts` and `contact.ts` at build time.
+
+The API paths, one flow per diagram.
+
+Ask: the shell island and MCP agents reach the same in-process pipeline.
 
 ```mermaid
-flowchart TD
-    island["client islands<br/>InteractiveShell · ContactForm · DawMixer*"] -->|HTTP| apiask["app/api/ask"]
-    island -->|HTTP| apicontact["app/api/contact"]
-    apicontact --> defh["lib/server/route.ts defineHandler"]
-    apicontact --> submit["lib/contact/submit"]
-    apicontact --> delivery["lib/contact/delivery"]
-    apicontact --> outbox["lib/contact/outbox"]
-    retry["app/api/contact-retry (cron, twice a day)"] --> cron["lib/server/cron-auth requireCron"]
-    retry --> retrymod["lib/contact/retry"]
-    retry --> delivery
+flowchart LR
+    shell["InteractiveShell"] -->|HTTP| ask["app/api/ask"]
+    mcp["app/api/mcp"] --> tools["lib/agent/mcp-tools"] --> once["lib/ask/ask-once"]
+    ask --> start["lib/ask/stream startAsk"]
+    once --> start
+    start --> pre["lib/ask/preflight"] --> rl["lib/rate-limit"]
+    start --> gw["AI Gateway"]
+    rl --> redis[("Upstash")]
+```
+
+Contact: the route saves, sends and queues on failure; the cron retries the queue.
+
+```mermaid
+flowchart LR
+    form["ContactForm"] -->|HTTP| contact["app/api/contact"] --> submit["lib/contact/submit"]
+    cronretry["app/api/contact-retry"] --> retry["lib/contact/retry"]
+    submit --> outbox["lib/contact/outbox"] --> redis[("Upstash")]
     retry --> outbox
-    outbox --> redis
-    delivery --> mail["lib/mail sendMail"]
-    psirefresh["app/api/psi-refresh (cron)"] --> cron
-    psirefresh --> mail
-    mail --> resend["Resend"]
-    mcp["app/api/mcp"] --> mcptools["lib/agent/mcp-tools"]
-    mcptools --> askonce["lib/ask/ask-once askOnce"]
-    askonce --> askmod
-    apiask --> rl["lib/rate-limit"]
-    apiask --> askmod["lib/ask/{model,system-prompt,injection,output-guard,preflight,stream,budget,dedup}"]
-    defh --> rl
-    rl --> rds["lib/redis"]
-    askmod --> rds
-    rds --> redis[("Upstash")]
-    askmod --> gw["AI Gateway"]
+    submit --> delivery["lib/contact/delivery"]
+    retry --> delivery
+    delivery --> mail["lib/mail sendMail"] --> resend["Resend"]
+```
+
+Cron: both scheduled routes pass one auth check; the PageSpeed alert uses the same mail sender.
+
+```mermaid
+flowchart LR
+    cronretry["app/api/contact-retry"] --> auth["lib/server/cron-auth requireCron"]
+    psi["app/api/psi-refresh"] --> auth
+    psi --> mail["lib/mail sendMail"] --> resend["Resend"]
 ```
 
 The main dependency direction is `app → components → {content, design-system}` and `app/api → lib`.
