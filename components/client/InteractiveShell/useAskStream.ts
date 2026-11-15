@@ -17,20 +17,18 @@ import {
 } from '@/content/shell-ui';
 import type { SiteLocale } from '@/content/site-locale';
 import { conversationIdForAsk, recordConversationRequest } from '@/lib/ask/conversation.client';
-import { HTTP_STATUS } from '@/lib/http-status';
 import { addRef } from '@/lib/request-refs.client';
 import {
   GUARD_ABORT_PREFIX,
-  parseRetryAfter,
   parseStreamChunk,
   REFUSAL_PREFIX,
   RETRY_AFTER_HEADER,
   SITE_LOCALE_HEADER,
 } from '@/lib/stream-protocol';
 import { MS_PER_SECOND } from '@/lib/time';
-import { appendLines, formatRemaining, type Line } from './transcript';
+import { type FailureDetail, failureForResponse, settledLines } from './settled-lines';
+import { appendLines, type Line } from './transcript';
 
-type FailureDetail = { prefix?: string; hint?: boolean; retryAfter?: number; retry?: string };
 type ActiveRequest = { stop: () => void; dispose: () => void };
 
 const ASK_ENDPOINT = '/api/ask';
@@ -129,31 +127,16 @@ export function useAskStream({
         clearFrame();
         if (!mountedRef.current) return;
         activeRequest.current = null;
-        const lines: Line[] = [];
-        if (text) lines.push({ id: nextId(), kind: ShellLineKind.Output, text, ai: true });
-        if (message && detail.retryAfter) {
-          lines.push({
-            id: nextId(),
-            kind: ShellLineKind.RateLimit,
-            text: message,
-            retryAfter: detail.retryAfter,
-          });
-        } else if (message) {
-          lines.push({
-            id: nextId(),
-            kind: error ? ShellLineKind.Error : ShellLineKind.Info,
-            text: error && !detail.prefix ? `${ui.errorPrefix} ${message}` : message,
-            ...(detail.prefix ? { prefix: detail.prefix } : {}),
-            ...(detail.retry ? { retry: detail.retry } : {}),
-          });
-          if (detail.hint) lines.push({ id: nextId(), kind: ShellLineKind.Hint, text: '' });
-        }
-        if (!text && !message) {
-          lines.push({ id: nextId(), kind: ShellLineKind.Output, text: ui.empty });
-        }
-        if (requestId && logged) {
-          lines.push({ id: nextId(), kind: ShellLineKind.Reference, text: requestId });
-        }
+        const lines = settledLines({
+          text,
+          message,
+          error,
+          detail,
+          requestId,
+          logged,
+          ui,
+          nextId,
+        });
         setHistory((previous) =>
           appendLines(
             previous.filter(
@@ -203,35 +186,14 @@ export function useAskStream({
           const data = (await response.json().catch(() => null)) as {
             error?: unknown;
           } | null;
-          const detail = typeof data?.error === 'string' ? data.error : '';
-          const retryAfter =
-            response.status === HTTP_STATUS.tooManyRequests
-              ? parseRetryAfter(response.headers.get(RETRY_AFTER_HEADER))
-              : null;
-          if (retryAfter) {
-            const left = formatRemaining(retryAfter, states);
-            finish(
-              '',
-              `${fillShellState(states.slowDown, { left })}. ${states.localCommands}`,
-              true,
-              { retryAfter },
-            );
-            return;
-          }
-          const message =
-            detail ||
-            (response.status === HTTP_STATUS.payloadTooLarge ? ui.requestTooLarge : ui.serverError);
-          finish(
-            '',
-            response.status === HTTP_STATUS.tooManyRequests
-              ? `${message}. ${ui.localAvailable}`
-              : message,
-            true,
-            {
-              prefix: `${states.stderrCommand} ${response.status}`,
-              hint: response.status >= HTTP_STATUS.internalServerError,
-            },
-          );
+          const failure = failureForResponse({
+            status: response.status,
+            errorDetail: typeof data?.error === 'string' ? data.error : '',
+            retryAfterHeader: response.headers.get(RETRY_AFTER_HEADER),
+            states,
+            ui,
+          });
+          finish('', failure.message, true, failure.detail);
           return;
         }
         if (!response.body) {
