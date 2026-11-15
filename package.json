@@ -55,6 +55,7 @@
     "gates:runtime": "tsx scripts/ci/gates-runtime.ts",
     "prepare": "node scripts/install/prepare-hooks.ts",
     "postinstall": "node scripts/strip-next-polyfills.mjs",
+    "docs:feature-map": "tsx scripts/codegen/feature-map.ts",
     "changelog:sync": "tsx scripts/codegen/sync-changelog.ts",
     "check:mutation-canary": "tsx scripts/gates/check-mutation-kills.ts --canary"
   },
