@@ -81,9 +81,30 @@ const ROLE_PAIRS = [
   ['warning', 'surface', TEXT_MIN],
   ['danger', 'surface', TEXT_MIN],
 ].map(([fg, bg, min]) => [fg, bg, min, `role ${fg} on ${bg}`]);
+const ROLE_NAMES = [
+  'surface',
+  'surface-raised',
+  'border',
+  'border-strong',
+  'accent',
+  'on-accent',
+  'text-muted',
+  'focus',
+  'warning',
+  'danger',
+  'scrim',
+];
+const auditRoles = process.argv[2] === undefined || ROLE_NAMES.some((name) => name in theme);
 
 let failures = 0;
-for (const [fg, bg, minRatio, label] of [...PAIRS, ...ROLE_PAIRS]) {
+if (auditRoles) {
+  for (const name of ROLE_NAMES) {
+    if (name in theme) continue;
+    console.error(`ERROR role token --color-${name} not declared`);
+    failures++;
+  }
+}
+for (const [fg, bg, minRatio, label] of auditRoles ? [...PAIRS, ...ROLE_PAIRS] : PAIRS) {
   try {
     const ratio = contrastRatio(get(fg), get(bg));
     const pass = ratio >= minRatio;

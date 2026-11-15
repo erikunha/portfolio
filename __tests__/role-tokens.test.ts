@@ -1,14 +1,17 @@
 // @vitest-environment node
-import { execFileSync } from 'node:child_process';
-import { readFileSync } from 'node:fs';
+import { spawnSync } from 'node:child_process';
+import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import path from 'node:path';
-import { describe, expect, it } from 'vitest';
-import { parseThemeColors } from '../app/(en)/design-system/_lib/theme-tokens';
+import type { Root } from 'postcss';
+import { afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { compiledStylesheet } from './helpers/css-rules';
 
-const ROOT = path.resolve(__dirname, '..');
-const THEME_CSS = readFileSync(path.join(ROOT, 'app/css/theme.css'), 'utf8');
-const PRINT_CSS = readFileSync(path.join(ROOT, 'app/css/print.css'), 'utf8');
-const CONTRAST_SCRIPT = path.join(ROOT, 'scripts/contrast-check.mjs');
+const SUBPROCESS_TEST_TIMEOUT_MS = 60_000;
+const SCRIPT = path.join(process.cwd(), 'scripts/contrast-check.mjs');
+const PRIMITIVE_REFERENCE = /^var\(--color-((?:primary|secondary|tertiary|quinary|senary)-\w+)\)$/;
+const PRINT_REFERENCE = /^var\(--color-print-(?:ink|paper|rule)\)$/;
+const PRINT_MEDIA = /^print$/;
 
 const ROLES = [
   'surface',
@@ -25,65 +28,117 @@ const ROLES = [
   'scrim',
 ];
 
-const PRIMITIVE_REFERENCE = /^var\(--color-(?:primary|secondary|tertiary|quinary|senary)-\w+\)$/;
-const TEXT_MIN = 4.5;
-const NON_TEXT_MIN = 3;
-const CHANNEL_WEIGHTS = [0.2126, 0.7152, 0.0722];
-
-const ROLE_PAIRS: [string, string, number][] = [
-  ['text', 'surface', TEXT_MIN],
-  ['text-muted', 'surface', TEXT_MIN],
-  ['on-accent', 'accent', TEXT_MIN],
-  ['accent', 'surface', NON_TEXT_MIN],
-  ['focus', 'surface', NON_TEXT_MIN],
-  ['warning', 'surface', TEXT_MIN],
-  ['danger', 'surface', TEXT_MIN],
+const ROLE_PAIR_LABELS = [
+  'role text on surface',
+  'role text-muted on surface',
+  'role on-accent on accent',
+  'role accent on surface',
+  'role focus on surface',
+  'role warning on surface',
+  'role danger on surface',
 ];
 
-function rawDeclaration(css: string, name: string): string | undefined {
-  const matches = [...css.matchAll(new RegExp(`--color-${name}:\\s*([^;]+);`, 'g'))];
-  return matches.at(-1)?.[1]?.trim();
-}
-
-function luminance(hex: string): number {
-  const digits = hex.replace('#', '').slice(0, 6);
-  return CHANNEL_WEIGHTS.reduce((sum, weight, i) => {
-    const s = Number.parseInt(digits.slice(i * 2, i * 2 + 2), 16) / 255;
-    const lin = s <= 0.04045 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4;
-    return sum + lin * weight;
-  }, 0);
-}
-
-function ratio(a: string, b: string): number {
-  const [hi = 0, lo = 0] = [luminance(a), luminance(b)].sort((x, y) => y - x);
-  return (hi + 0.05) / (lo + 0.05);
-}
-
-describe('role tokens', () => {
-  const colors = parseThemeColors(THEME_CSS);
-
-  it.each(ROLES)('--color-%s exists and aliases a primitive token', (role) => {
-    const value = rawDeclaration(THEME_CSS, role);
-    expect(value, `--color-${role} missing from theme.css`).toBeDefined();
-    expect(value).toMatch(PRIMITIVE_REFERENCE);
-  });
-
-  it.each(ROLES)('--color-%s is remapped for print', (role) => {
-    expect(rawDeclaration(PRINT_CSS, role), `--color-${role} missing from print.css`).toBeDefined();
-  });
-
-  it.each(ROLE_PAIRS)('%s on %s meets %s:1', (fg, bg, min) => {
-    const foreground = colors[fg] ?? '';
-    const background = colors[bg] ?? '';
-    expect(foreground).toMatch(/^#/);
-    expect(background).toMatch(/^#/);
-    expect(ratio(foreground, background)).toBeGreaterThanOrEqual(min);
-  });
-
-  it('the contrast script audits every role pair', () => {
-    const out = execFileSync('node', [CONTRAST_SCRIPT], { cwd: ROOT, encoding: 'utf8' });
-    for (const [fg, bg] of ROLE_PAIRS) {
-      expect(out).toContain(`role ${fg} on ${bg}`);
+function rootDeclarations(root: Root, inPrint: boolean): Map<string, string> {
+  const found = new Map<string, string>();
+  root.walkRules((rule) => {
+    if (!rule.selectors.includes(':root')) return;
+    let printed = false;
+    for (let up = rule.parent; up && up.type !== 'root'; up = up.parent) {
+      if (up.type === 'atrule' && 'name' in up && up.name === 'media') {
+        printed = PRINT_MEDIA.test((up as { params: string }).params.trim());
+      }
     }
+    if (printed !== inPrint) return;
+    rule.walkDecls(/^--color-/, (decl) => {
+      found.set(decl.prop.replace('--color-', ''), decl.value);
+    });
+  });
+  return found;
+}
+
+describe('role tokens in the compiled stylesheet', () => {
+  let screen: Map<string, string>;
+  let print: Map<string, string>;
+
+  beforeAll(async () => {
+    const root = await compiledStylesheet('globals');
+    screen = rootDeclarations(root, false);
+    print = rootDeclarations(root, true);
+  });
+
+  it.each(ROLES)('--color-%s aliases a declared primitive', (role) => {
+    const value = screen.get(role);
+    expect(value, `--color-${role} missing from the compiled :root`).toBeDefined();
+    const primitive = value?.match(PRIMITIVE_REFERENCE)?.[1];
+    expect(primitive, `--color-${role} is ${value}, not a primitive reference`).toBeDefined();
+    expect(screen.has(primitive ?? ''), `--color-${primitive} is not declared`).toBe(true);
+  });
+
+  it.each(ROLES)('--color-%s is remapped inside @media print', (role) => {
+    expect(print.get(role)).toMatch(PRINT_REFERENCE);
   });
 });
+
+describe('role contrast audit', { timeout: SUBPROCESS_TEST_TIMEOUT_MS }, () => {
+  let dir: string;
+
+  beforeEach(() => {
+    dir = mkdtempSync(path.join(tmpdir(), 'roles-'));
+  });
+
+  afterEach(() => {
+    rmSync(dir, { recursive: true, force: true });
+  });
+
+  it('passes on the shipped theme and reports every role pair', () => {
+    const result = spawnSync('node', [SCRIPT], { encoding: 'utf8' });
+    expect(result.status).toBe(0);
+    for (const label of ROLE_PAIR_LABELS) expect(result.stdout).toContain(label);
+  });
+
+  it('fails a theme that declares some roles but omits one', () => {
+    const theme = path.join(dir, 'theme.css');
+    const declared = ROLES.filter((role) => role !== 'scrim' && role !== 'text');
+    writeFileSync(
+      theme,
+      `@theme {\n${PALETTE}\n--color-text: var(--color-tertiary-50);\n${declared
+        .map((role) => `--color-${role}: var(--color-${ROLE_TARGETS[role]});`)
+        .join('\n')}\n}\n`,
+    );
+    const result = spawnSync('node', [SCRIPT, theme], { encoding: 'utf8' });
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain('--color-scrim not declared');
+  });
+});
+
+const PALETTE = `
+  --color-secondary-950: #000000;
+  --color-secondary-900: #050505;
+  --color-tertiary-50: #e6ffe6;
+  --color-tertiary-400: #8a9d8a;
+  --color-tertiary-500: #6b7c6b;
+  --color-senary-300: #ff8a8a;
+  --color-senary-500: #ff5f57;
+  --color-quinary-500: #febc2e;
+  --color-primary-300: #5ae07b;
+  --color-primary-400: #4ade80;
+  --color-primary-500: #00ff41;
+  --color-primary-700: #1e9b32;
+  --color-primary-border: #00ff4133;
+  --color-primary-subtle: #00ff4166;
+  --color-text-secondary: #a1b3a1;
+  --color-green: var(--color-primary-500);
+`;
+
+const ROLE_TARGETS: Record<string, string> = {
+  surface: 'secondary-950',
+  'surface-raised': 'secondary-900',
+  border: 'primary-border',
+  'border-strong': 'primary-subtle',
+  accent: 'primary-500',
+  'on-accent': 'secondary-950',
+  'text-muted': 'tertiary-400',
+  focus: 'primary-500',
+  warning: 'quinary-500',
+  danger: 'senary-500',
+};
