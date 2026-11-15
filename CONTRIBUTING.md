@@ -45,7 +45,7 @@ Git hooks run automatically, but you can (and should) run the checks yourself:
 | `pnpm test`             | Vitest unit tests                                               |
 | `pnpm test:e2e`         | Playwright: a11y scan, contact/ask journeys, visual regression  |
 | `pnpm ci:local`         | The verify chain CI runs first (lint, types, content, naming, pinning, doc drift, contrast, tokens, tests with coverage) |
-| `pnpm ci:predict`       | Every CI job your commits trigger, run locally, with the jobs it could not verify listed (`--linux` for layout or font changes) |
+| `pnpm ci:full`          | Every check CI runs, natively and in sequence, ending with a table of passed, failed and not-run |
 | `pnpm bundle-check`     | Bundle-size gate (needs a build)                                |
 | `pnpm route-js-check`   | Per-route first-load JS gate (needs a build)                    |
 | `pnpm lhci`             | Lighthouse CI (`pnpm lhci:mobile` for the mobile profile)       |
@@ -58,7 +58,7 @@ Performance, accessibility (WCAG 2.2 AA), and security are treated as implicit o
 ## Opening a pull request
 
 1. Keep PRs small. Review quality drops sharply past a few hundred changed lines.
-2. Run `pnpm ci:predict` (and `pnpm gates:runtime` for anything that affects the built site). For a docs-only change `pnpm ci:local` is enough.
+2. Run `pnpm ci:full`. For a docs-only change `pnpm ci:local` is enough.
 3. Fill in **every** section of the PR template; do not write a body from scratch.
 4. **Show your work.** A PR should evidence what it claims, not just assert it: paste command output, attach before/after screenshots or a recording for UI changes, note bundle-size and Core Web Vitals deltas for performance work, and link the CI run or Vercel preview. Reviewers should be able to validate without pulling the branch.
 5. A visual change requires regenerated visual-regression baselines before the PR is opened (darwin locally, linux from the CI dispatch).

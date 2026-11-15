@@ -16,7 +16,7 @@ flowchart TD
     tdd --> commit["commit (scope blocks): type(scope): subject"]
     commit --> hooks["per-commit hooks: Biome + staged gitleaks + commitlint"]
     hooks --> push["git push (pre-push gate chain)"]
-    push --> readypr["ci:predict; non-docs gates:runtime"]
+    push --> readypr["ci:full; non-docs gates:runtime"]
     readypr --> pr["gh pr create (fill template)"]
     pr --> conv["review the pull request (answer every finding)"]
     conv --> readymerge["CI green + Argos approved + findings answered"]
@@ -60,7 +60,7 @@ Before opening the PR, read the diff. For non-deletion pushes, `.husky/pre-push`
 
 ### 8. Pre-PR -> open PR
 
-Run `pnpm ci:predict` (add `--linux` when the change touches layout, fonts or metrics): it runs every CI job the commits trigger and says which it could not verify (exit 0 only for a fully verified clean run, 3 when jobs are partial or not run or the branch has no commits ahead of its base, 2 for `--list`), including the verify chain, the bundle and route-JS gates, the new or changed e2e specs and the visual spec, and it subsumes `pnpm ci:local`, `pnpm bundle-check` and `pnpm route-js-check`. Lighthouse is host-dependent and stays with `pnpm gates:runtime` (build, server, LHCI desktop/mobile, axe, E2E). Docs-only changes skip bundle, route-JS and runtime gates under the project workflow. Then `gh pr create` fills the PR template; every section must be non-empty, which is a convention checked by the author and the reviewer, not a gate.
+Run `pnpm ci:full`: it runs every CI check one stage at a time (the verify chain, commitlint, gitleaks, audit, the build with the bundle and route-JS gates, a11y, every Playwright project, the visual specs and Lighthouse) and ends with a table of passed, failed and not-run stages (exit 0 only when every stage passed, 1 when one failed, 3 when one did not run, 2 for bad arguments). The paid evals and the GitHub-only jobs are listed not-run with their reason. `pnpm gates:runtime` stays the quick single-project run (build, server, LHCI desktop/mobile, axe, E2E). Docs-only changes skip bundle, route-JS and runtime gates under the project workflow. Then `gh pr create` fills the PR template; every section must be non-empty, which is a convention checked by the author and the reviewer, not a gate.
 
 ### 9. Review threads
 
@@ -105,7 +105,7 @@ flowchart LR
         g3["no direct main"] --> g4["branch name"] --> g7["pnpm verify"]
     end
     subgraph prepr["pre-PR (manual)"]
-        g8["ci:predict (ci.yml jobs, e2e, visual)"] --> g11["gates:runtime (LHCI)"]
+        g8["ci:full (every CI check, in sequence)"] --> g11["gates:runtime (LHCI)"]
     end
     subgraph open["post-open"]
         g13["Review the pull request"]

@@ -380,7 +380,7 @@ the commit) and a staged `gitleaks` scan, and the `commit-msg` hook runs
 commitlint. The heavier gate runs in `pre-push`: the branch-name check, a refusal
 to push the `main` ref, and `pnpm verify`. `pnpm verify` (alias `pnpm ci:local`)
 is the named, single pre-PR command that runs the full local gate;
-`pnpm ci:predict` runs every CI job the branch triggers. Biome also enforces `noImportCycles`, `noNestedTernary` (tests exempt) and
+`pnpm ci:full` runs every check CI runs, one stage at a time. Biome also enforces `noImportCycles`, `noNestedTernary` (tests exempt) and
 `noLeakedRender`, plus the 2.6 rules listed in `__tests__/scripts/biome-rules.test.ts`, which
 fails when one of them stops being an error. CI gates are never disabled to merge: a failing gate means the
 underlying issue is fixed, not the gate removed. Every dependency is installed

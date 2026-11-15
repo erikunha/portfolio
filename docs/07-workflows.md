@@ -59,80 +59,40 @@ Two `quality-fast` steps stay CI-only: the branch-name lint (the pre-push hook e
 
 `check:section-order` runs both directions: no rule in `app/css` may reorder a section with the CSS `order` property, so the visual order always equals the DOM order, and every `#sec-*` selector in `app/css` must match an id some source renders, so a deleted section cannot leave dead rules behind.
 
-## Predicting CI before a push
+## Running CI locally before a push
 
-`pnpm ci:predict` (`scripts/ci-predict.ts`) runs locally what CI runs for the commits on the current branch against their base. It reads `.github/workflows/ci.yml` instead of copying it: job conditions, step commands, the build env and the e2e and visual project matrices all come from the workflow, and `detect-changes` runs the same `scripts/detect-changes.mjs` CI runs. A pure-TypeScript evaluator handles the workflow expressions the file uses (`needs.*`, `contains`, `endsWith`, `hashFiles` with globs, `&&`, `||`). It never reads an unknown context or key as empty: an expression root it does not populate, a function it does not implement, and a workflow, job or step key it does not execute (`container`, `services`, a new step field) throw, so the step is reported as not reproducible and the drift guard fails instead of the construct being skipped.
-
-The predictor reads the diff and the workflow, then interprets the steps:
+`pnpm ci:full` (`scripts/ci-full.ts`) runs the checks CI runs, on this machine, one stage at a time. Nothing runs in parallel and no container is involved: it uses the host's Node, browsers and fonts. Each stage's output streams to the terminal, the run stops at the first failed stage, and a table of passed, failed and not-run stages with their durations ends the run.
 
 ```mermaid
 flowchart TD
-    git["git diff base...HEAD"] --> dc["detect-changes.mjs (ai, app, ui)"]
-    yml[".github/workflows/ci.yml"] --> eng["step interpreter: if, env, matrix, step outputs"]
-    dc --> eng
-    eng --> st["quality-fast, typecheck, test, gitleaks: the job's own run steps"]
-    eng --> bd["build: ci.yml build env, bundle gate, route-JS gate"]
-    eng --> sel["spec selection: new or changed specs, co-located *.e2e.ts, importers of a changed helper, every page spec and the visual spec when a rendering input changed"]
-    eng --> vis["e2e-visual-chromium and a11y: ci.yml arguments"]
-    eng --> fc["job time forecast: tests / shards x seconds per test, against timeout-minutes"]
+    A["ci-local: the verify chain (Biome, types, content, gates, unit tests with coverage)"] --> B["commitlint and gitleaks over base..HEAD"]
+    B --> C["audit, tool-pins, mutation canary"]
+    C --> D["build, bundle-check, route-js-check"]
+    D --> E["a11y"]
+    E --> F["functional e2e: one project at a time, two workers"]
+    F --> G["visual on chromium, then chromium-mobile, no Argos upload"]
+    G --> H["design-system-components on chromium"]
+    H --> I["Lighthouse desktop, then mobile, report written to disk"]
 ```
 
-The selected specs, the Linux branch and the single result table:
-
-```mermaid
-flowchart TD
-    sel["spec selection: new or changed specs, co-located *.e2e.ts, importers of a changed helper, every page spec and the visual spec when a rendering input changed"] --> e2e["e2e-functional per project: --repeat-each=3 --retries=0"]
-    pw["playwright test --list"] --> sel
-    e2e --> lx{"--linux?"}
-    vis["e2e-visual-chromium and a11y: ci.yml arguments"] --> lx
-    lx -->|no| nat["host Playwright"]
-    lx -->|yes| img["Playwright image v{version}-noble: copy tree, install, build and serve inside it"]
-    st["quality-fast, typecheck, test, gitleaks: the job's own run steps"] --> tbl["one table: pass, fail, partial, not-run, skipped, would-run (--list)"]
-    bd["build: ci.yml build env, bundle gate, route-JS gate"] --> tbl
-    fc["job time forecast: fails a job above 80% of its timeout-minutes"] --> tbl
-    nat --> tbl
-    img --> tbl
-```
+Every stage that serves the build starts a fresh `pnpm start` on a free port, waits until the process it started answers, runs, and stops that process by pid, also when the stage fails and on `SIGINT`, `SIGTERM` or `SIGHUP`. Each CI job has a fresh server too, so in-memory state never carries from one stage to the next. A stage that serves refuses a `.next` that was not built by this run's build stage from the current tree: a stamp written after the build records the commit, the tracked edits and a hash of every untracked file, so editing a file after the build, or resuming with `--from` on an older build, fails the stage instead of verifying old code.
 
 | Flag | Effect |
 | --- | --- |
-| `--base <ref>` | Base to diff against. Default: the open PR's base (`gh`), else the nearest of `origin/main` and `origin/feat/*` (fewest commits ahead, printed with the alternatives); pass `--base` when that is not the branch you will merge into. The base branch is fetched first. |
-| `--branch <name>` | Branch name CI would see. Needed on a detached HEAD. |
-| `--linux` | Runs Playwright (e2e, visual, a11y) in a container from the official Linux image whose tag is the installed `@playwright/test` version. The container copies the working tree, installs dependencies (pnpm store kept in the `ci-predict-pnpm-store` volume), builds with the ci.yml env and serves the app on `localhost:3000` inside itself, so browser, fonts and server origin all match CI. Catches font and layout metric differences that a macOS run hides. The first run pulls the image (about 2.5 GB). |
-| `--full` | Runs the whole e2e suite on every project, as CI does, instead of the selected specs. |
-| `--eval` | Runs the live `ask:eval` when ai paths changed, as `npx -y vercel@<pin> env run -- ...` from the Vercel-linked checkout, so secrets reach the process and are never printed. Without it the exact command is printed. |
-| `--skip-build` | Reuses the `.next` this command built. A stamp written after a successful build records the commit, the tracked edits (`git diff HEAD --binary`), the path and a content hash of every untracked file, and the build id, so editing an untracked file after the build invalidates it; if it does not match the current tree the build and every server started on it are reported `partial`, never `pass`. |
-| `--keep-going` | Runs jobs whose `needs` failed (CI would skip them). |
-| `--repeat <n>` | `--repeat-each` for the selected specs (default 3). |
-| `--list` | Dry run: runs change detection only and prints what would run. Every other job is `would-run`, the last line is `DRY RUN`, and the exit code is 2. |
+| `--base <ref>` | Start of the commit range for commitlint and gitleaks. Default `origin/main`; an unknown ref exits 2 before any stage runs. |
+| `--from <stage>` | Resumes at a stage. The stages before it are reported not-run. |
+| `--keep-going` | Continues after a failed stage. |
+| `--list` | Prints the stages with their commands and the declared not-run checks. Runs nothing and verifies nothing. |
 
-What each result means:
+Exit codes: 0 every stage passed; 1 a stage failed; 2 bad arguments or an unknown base; 3 nothing failed but a stage did not run (a missing `gitleaks` binary, or the stages before `--from`).
 
-- **pass**, **fail**: every reproducible step ran, with the outcome.
-- **partial**: the steps that ran passed but something did not: a step cannot run locally (Lighthouse, a `sudo` step, an expression or shell the predictor cannot evaluate, and the visual spec without `--linux`, because CI gates the Linux baselines and a macOS run compares different ones), or the e2e job ran only the changed specs while CI runs the whole suite (`--full` makes it a pass). Lighthouse scores depend on the host; `pnpm gates:runtime` still covers them.
-- **fail** also covers a job whose time forecast is over its budget (see the forecast below); it fails before any step of that job runs, in a dry run too.
-- **not-run**: the job needs GitHub (`dependency-review`), is report-only (`semgrep`), has no changed spec on that project, its needs failed, or no step of it executed. Never read it as passed.
-- **would-run**: dry run only; nothing was executed.
-- **skipped**: the job's own `if` is false for this diff, exactly as in CI.
+The stage list is the exported `STAGES` in `scripts/lib/ci-full-stages.ts`. Checks that spend model credits (`ask:eval`, `eval:agents`, the `ai-eval` job) and jobs that need GitHub (`ci-gate`, `dependency-review`, `coverage-comment`, `attest-build`) or are report-only (`semgrep`) are listed in `NOT_RUN` with a reason and appear in the table as not-run, never as passed.
 
-The last line and the exit code summarise the table.
+Playwright stages run with `CI=true` (retries, `failOnFlakyTests` and `forbidOnly` as in CI) and `--workers=2`, against `E2E_BASE_URL` set to the served port, with the webkit projects as one run each instead of two shards. The design-system components spec, which CI ignores because it has macOS baselines only, runs in its own stage without `CI`. Lighthouse runs from a copy of `lighthouserc.json` and `lighthouserc.mobile.json` whose urls point at the served port and whose upload target is the work directory, so nothing goes to public storage; the files in the repository are unchanged.
 
-- Exit 0 and `PREDICTED CI: no failure found` only when no job failed and every job passed or was skipped by paths. The GitHub-only and report-only jobs are listed beside it.
-- Exit 1 and `PREDICTED CI: FAIL` when a job failed.
-- Exit 2 and `DRY RUN` for `--list`.
-- Exit 3 when nothing ran (`NOT VERIFIED, nothing ran`), when some job is `partial` or `not-run` (`no failure found in what ran. NOT VERIFIED: <jobs>`), or when the branch has no commits ahead of its base. That last case has nothing to predict, verifies nothing and never exits 0.
+The stages and their children get an environment allowlist (`PATH`, `HOME`, `TMPDIR`, locale, terminal, `PNPM_HOME` and names starting `LC_`, `XDG_` or `PLAYWRIGHT_`; `allowedEnv` in `scripts/lib/ci-full-run.ts`) plus the stage's own env, so a secret exported in the shell cannot reach them. Every key named in a `.env*.local` file (names only, never values) is blanked for them, so the app cannot reach real Redis or Resend.
 
-On Apple Silicon the container is arm64 while CI is x64, so pixel-level results can differ from CI: layout assertions such as the LCP element reproduce, but a screenshot diff in a section you did not touch is advisory. Check whether the diff is in your change before acting on it.
-
-The e2e step narrows to new or changed specs, specs next to a changed component (`Hero.tsx` selects `Hero.e2e.ts`), specs that import a changed helper under `tests/`, and every spec when `playwright.config.ts` changes. Without `--linux` the predictor starts its own production server on a free port and passes it to Playwright as `E2E_BASE_URL`; it refuses to continue if that port already answers. A spec runs on every project Playwright lists it under (`playwright test --list`, with `CI=true` as in CI), so a Chromium-only pass cannot hide a WebKit failure. `--retries=0` with `--repeat-each` makes a test that passes only some of the time fail, which is what `failOnFlakyTests` does in CI. A change to a rendering input (anything under `app/`, `components/`, `design-system/`, `content/` or `public/fonts/`, any `.css` file, and `next.config.ts`; unit tests and specs themselves do not count) widens the selection to every page spec under `tests/e2e/` and the visual spec under `tests/visual/`, because a CSS rule or a component can move any page at any width. The row of each narrowed e2e job says `selection widened to every page spec and the visual spec by a rendering input (<first two files, then a count>)`. The visual job repeats its spec with `--repeat-each` whenever the spec is selected. A change outside those paths keeps the narrow selection, and one with no matching spec runs no e2e; use `--full` for that. The server it starts must be the process it spawned: readiness fails when that process exits, and only counts when the process listening on the port descends from the spawned process (`pnpm start` starts `next-server` in its own process group, so ancestry, not group, is checked), so a stale server on a reused port cannot satisfy it. Stopping a server kills the spawned process and every descendant.
-
-Steps run as a GitHub runner runs them: `bash -e -c` by default, `bash --noprofile --norc -eo pipefail` for `shell: bash`, `sh -e`, with `working-directory` and `defaults.run` honoured, workflow, job and step `env:` merged, and a failed `continue-on-error` step reported without failing the job. A shell other than bash or sh is not reproducible. A `sudo` step is run only as the local-binary substitution for a tool in the local list (gitleaks); any other `sudo` step is reported as not reproducible. Native runs blank every key named in the `.env*.local` files (key names only are read, values never) in the build, the server and the test processes, so the app cannot reach real Redis or Resend; `--linux` copies the tree without those files. The build, server, Playwright and `playwright --list` processes do not inherit the shell's environment: they get an allowlist (`PATH`, `HOME`, `TMPDIR`, locale, terminal, Docker and `PNPM_HOME` variables, and names starting `LC_`, `XDG_` or `PLAYWRIGHT_`; `allowedEnv` in `scripts/lib/ci-predict-process.ts`) plus the step's own `env:`, so a secret exported in the shell cannot reach them. A variable a CI step needs that is neither in its `env:` nor on the allowlist is missing locally; add its name to the allowlist. A `${{ secrets.X }}` reference reads as an empty string, and the job's row names every secret it read that way. A job's `env:` and step `env:` reach `docker exec` too, and the Linux session is rebuilt when the server env changes.
-
-Child processes are tracked: on exit, `SIGINT`, `SIGTERM` or `SIGHUP` their process groups are killed and the `ci-predict-<pid>` container (labelled with its owner pid, started with `--rm`) is removed; the next `--linux` run removes containers whose owner is gone. A Linux session whose setup fails is removed before the error is reported, and a started server that has exited is never reused for a later job. Readiness requests and the free-port probe time out, so a server that accepts a connection and never answers fails at the readiness deadline. `--linux` on a machine that is not x64 prints that the container runs the machine's architecture, not CI's.
-
-The time forecast covers `e2e-functional` and `e2e-visual-chromium`. Before a unit of those jobs runs, the predictor reads the job's `timeout-minutes` from `ci.yml`, takes the shard count of its project from the matrix `include` entries, and counts the tests the job runs from the `playwright test --list` output (only specs under the path the job passes to Playwright; the whole suite, whatever the selection). The forecast is tests divided by shards, times seconds per test for that job and project. A forecast above 80% of `timeout-minutes` fails the unit with a message naming the job, the forecast, the limit and the fix: add shards to the matrix or split the specs. Every passing unit shows its forecast in the table. The seconds per test come from `RATE_SAMPLES` in `scripts/lib/ci-predict-policy.ts`: measured CI runs, each with its run id, job id, test count and seconds from the `Running N tests` line to the result line. The rate used is the slowest sample, so a forecast never undercounts a run that was measured. A project with no sample throws instead of being skipped. When a project's CI time moves, add the new run as a sample.
-
-`scripts/__tests__/ci-predict.test.ts` fails when `ci.yml` gains a job or an action the predictor does not map, when a command in the `ci:local` chain is covered by no CI step, and when a `quality-fast` step is neither in the chain nor in the named CI-only list (`scripts/__tests__/ci-verify-parity.test.ts`). It also fails when a project of a forecast job has no timing sample.
+`scripts/__tests__/ci-full-stages.test.ts` fails when `ci.yml` gains a job that has neither a stage nor a `NOT_RUN` entry, when a `run` step of a mirrored job has no stage, no place in the `ci:local` chain and no named exception, when a Playwright project of the matrix is not run, and when a build or server env differs from the workflow's. `scripts/__tests__/ci-verify-parity.test.ts` fails when a `quality-fast` step is neither in the chain nor in the named CI-only list.
 
 ## Testing
 

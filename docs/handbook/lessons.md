@@ -14,9 +14,8 @@ The prompt for a manual or agent review that applies these rules to a diff is `d
    that is not reachable from this PR's head. Check: `git merge-base --is-ancestor <sha> HEAD`.
 2. A commit body cites only SHAs reachable from the branch it lands on. Describe off-branch facts
    in words. Check: the same `merge-base --is-ancestor` test for every SHA in the body.
-3. Predict CI before pushing: `pnpm ci:predict` runs every CI job the commits trigger. For every
-   route or component the diff touches, the matching `tests/e2e` specs also run against a production
-   build (`pnpm build`, then `pnpm start` on a free port).
+3. Run CI locally before pushing: `pnpm ci:full` runs every CI check in sequence. Every e2e
+   project runs against a production build it serves on a free port.
    Scope page-wide assertions (`locator('canvas')`, counts over `document`) to the element they
    guard, because a new global layer breaks them. Check: the specs pass on the production build.
 4. A layout, spacing, type or color change regenerates the darwin baselines of

@@ -64,7 +64,7 @@ portfolio/
 ├── lib/                  BFF/server core: env, server/ (defineHandler, body limits, cron auth), rate-limit, ask/*, eval/*, links/*, telemetry, integrations
 ├── proxy.ts              Next middleware: per-request CSP + Reporting-Endpoints
 ├── next.config.ts        cacheComponents, typedRoutes, static security headers, MDX pipeline
-├── scripts/             gate/tooling scripts (validate-content, check-*, ask-eval, agent-eval, ci-predict, ...) and scripts/metrics (weekly delivery metrics)
+├── scripts/             gate/tooling scripts (validate-content, check-*, ask-eval, agent-eval, ci-full, ...) and scripts/metrics (weekly delivery metrics)
 ├── __tests__/           Vitest suites that hold repo-wide invariants (docs counts, content parity, API behavior, meta checks)
 ├── evals/agents/        cases for the prompt-regression eval of fixed rule texts modelled on AGENTS.md
 ├── metrics/             rolling bands the weekly delivery-metrics job scores against

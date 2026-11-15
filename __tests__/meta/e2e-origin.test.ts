@@ -18,7 +18,7 @@ function specFiles(dir: string): string[] {
 }
 
 describe('end-to-end specs never name the default origin', () => {
-  it('derives the origin from the project baseURL, since ci:predict serves on a random port', () => {
+  it('derives the origin from the project baseURL, since ci:full serves on a random port', () => {
     const offenders = SCAN_ROOTS.flatMap((root) => specFiles(join(ROOT_DIR, root))).filter(
       // behavioral-test-allow: the spec sources are the inputs under test; the property is that they do not name an origin
       (file) => HARDCODED_ORIGIN.test(readFileSync(file, 'utf8')),

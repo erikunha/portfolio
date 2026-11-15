@@ -34,7 +34,7 @@ Then run `pnpm verify` once and read what each gate checks (doc 07). The checks 
 A good first PR (touches the common path, low blast radius):
 1. **Edit a section's copy** - change a line in a `content/*.ts` module, in the `en` and the `pt` entry. `pnpm validate-content` proves the schema still holds. Add a `*.test.tsx` assertion if the shape changed. If the copy appears in the ask prompt or its eval corpus, run `pnpm ask:eval` (doc 06).
 2. **Or add a design-system component variant** - follow `Foo/Foo.tsx` + `Foo/index.ts`, co-locate a test, document it (`check:component-docs`), and run `pnpm dev` to eyeball it.
-3. Commit with a conventional scope (`feat(content): ...`). Run `pnpm ci:local` and `pnpm gates:runtime`. `pnpm ci:predict` runs the CI jobs your commits would trigger before you push (doc 07). Note that pushing runs `.husky/pre-push`: main-push guard, branch-name guard, and the full `pnpm verify` chain.
+3. Commit with a conventional scope (`feat(content): ...`). Run `pnpm ci:local` and `pnpm gates:runtime`. `pnpm ci:full` runs every CI check in sequence before you push (doc 07). Note that pushing runs `.husky/pre-push`: main-push guard, branch-name guard, and the full `pnpm verify` chain.
 
 For `app/api/**`, `lib/rate-limit.ts` or `proxy.ts` changes, follow `.claude/rules/api-boundary.md`. No hook blocks a push on a review of those paths.
 

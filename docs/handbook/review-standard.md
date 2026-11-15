@@ -298,7 +298,7 @@ Ordered by how often the finding was missed.
 9. Confirm every new content field has a reader in the same change.
 10. Check every changed file against the file type rules above.
 11. Update the ADR with the PR number and the way to undo it, in the same change as the code.
-12. Run `pnpm ci:predict` (it covers `pnpm ci:local`, `pnpm bundle-check` and `pnpm route-js-check`).
+12. Run `pnpm ci:full` (it covers `pnpm ci:local`, the bundle and route-JS gates and every e2e project).
 13. Run `pnpm gates:runtime` and regenerate the visual baselines if the change touched layout or colour.
 14. Fill the whole PR template, and make every box true about the diff.
 15. Re-read `git diff origin/main...HEAD` end to end and fix what you find.

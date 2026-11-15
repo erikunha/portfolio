@@ -155,7 +155,7 @@ export const IGNORED_PATHS = [
   'scripts/check-test-integrity.ts',
   'scripts/check-tool-pins.d.mts',
   'scripts/check-tool-pins.mjs',
-  'scripts/ci-predict.ts',
+  'scripts/ci-full.ts',
   'scripts/content-basename.d.mts',
   'scripts/content-basename.mjs',
   'scripts/content-files.d.mts',
