@@ -9,8 +9,8 @@ import {
   holdForget,
   inConversation,
   latestConversationRequest,
-} from '@/lib/ask-conversation.client';
-import { type ForgetResult, forgetMany, wasForgotten } from '@/lib/forget-request.client';
+} from '@/lib/ask/conversation.client';
+import { type ForgetResult, forgetMany, wasForgotten } from '@/lib/ask/forget-request.client';
 import { listRefs } from '@/lib/request-refs.client';
 import { describeForget } from './forget-message';
 import { PRIVACY_COMMAND_KIND, type PrivacyCommand } from './privacy-command';

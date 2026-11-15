@@ -123,7 +123,7 @@ describe('a question asked while a forget is pending', () => {
     expect(receipts(container)).toHaveLength(1);
     expect(receipts(container)[0]?.querySelector('code')?.textContent).toBe(B);
     expect(receipts(container)[0]?.textContent).toContain(ui.receiptQuestionsOne);
-    const conversation = await import('@/lib/ask-conversation.client');
+    const conversation = await import('@/lib/ask/conversation.client');
     const refs = await import('@/lib/request-refs.client');
     expect(refs.listRefs()).toEqual([B]);
     expect(conversation.inConversation(B)).toBe(true);

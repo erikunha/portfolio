@@ -16,7 +16,7 @@ import {
   shellStates,
 } from '@/content/shell-ui';
 import type { SiteLocale } from '@/content/site-locale';
-import { conversationIdForAsk, recordConversationRequest } from '@/lib/ask-conversation.client';
+import { conversationIdForAsk, recordConversationRequest } from '@/lib/ask/conversation.client';
 import { HTTP_STATUS } from '@/lib/http-status';
 import { addRef } from '@/lib/request-refs.client';
 import {

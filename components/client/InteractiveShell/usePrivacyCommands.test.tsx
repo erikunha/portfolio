@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { type MountedClient, mountClient } from '@/__tests__/helpers/render';
 import { fillShellState, ShellLineKind, shellStates, shellUi } from '@/content/shell-ui';
 import { SITE_LOCALE } from '@/content/site-locale';
-import { FORGET_OUTCOME, type ForgetResult } from '@/lib/forget-request.client';
+import { FORGET_OUTCOME, type ForgetResult } from '@/lib/ask/forget-request.client';
 import { PRIVACY_COMMAND_KIND, type PrivacyCommand } from './privacy-command';
 import type { Line } from './useAskStream';
 import { usePrivacyCommands } from './usePrivacyCommands';
@@ -18,8 +18,8 @@ vi.mock('@/lib/request-refs.client', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/lib/request-refs.client')>()),
   listRefs: mocks.listRefs,
 }));
-vi.mock('@/lib/forget-request.client', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('@/lib/forget-request.client')>()),
+vi.mock('@/lib/ask/forget-request.client', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/lib/ask/forget-request.client')>()),
   forgetRequest: mocks.forgetRequest,
   forgetMany: mocks.forgetMany,
 }));

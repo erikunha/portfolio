@@ -8,8 +8,8 @@ const CONTACT = '5c2e1d0f-3b4a-4c5d-8e6f-7a8b9c0d1e2f';
 
 async function load() {
   vi.resetModules();
-  const conversation = await import('./ask-conversation.client');
-  const refs = await import('./request-refs.client');
+  const conversation = await import('./conversation.client');
+  const refs = await import('@/lib/request-refs.client');
   return { conversation, refs };
 }
 

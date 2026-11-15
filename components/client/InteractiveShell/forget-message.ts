@@ -1,6 +1,6 @@
 import type { ShellStates } from '@/content/shell-states.schema';
 import { fillShellState, type ShellUi } from '@/content/shell-ui';
-import { FORGET_OUTCOME, type ForgetResult } from '@/lib/forget-request.client';
+import { FORGET_OUTCOME, type ForgetResult } from '@/lib/ask/forget-request.client';
 import { formatRemaining } from './useAskStream';
 
 export function describeForget(result: ForgetResult, ui: ShellUi, states: ShellStates): string {

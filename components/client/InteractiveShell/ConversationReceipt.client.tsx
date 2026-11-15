@@ -11,8 +11,8 @@ import {
 } from 'react';
 import type { ShellStates } from '@/content/shell-states.schema';
 import { fillShellState, SHELL_LIMITS, type ShellUi } from '@/content/shell-ui';
-import { forgetWithConversation, useConversationQuestions } from '@/lib/ask-conversation.client';
-import { FORGET_OUTCOME, wasForgotten } from '@/lib/forget-request.client';
+import { forgetWithConversation, useConversationQuestions } from '@/lib/ask/conversation.client';
+import { FORGET_OUTCOME, wasForgotten } from '@/lib/ask/forget-request.client';
 import { MS_PER_MINUTE, MS_PER_SECOND, SECONDS_PER_MINUTE } from '@/lib/time';
 import { COPY_STATUS, useCopyFeedback } from '@/lib/use-copy-feedback.client';
 import { revealShell } from './reveal-shell';

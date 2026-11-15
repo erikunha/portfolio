@@ -287,8 +287,8 @@ components/client/InteractiveShell/usePrivacyCommands.ts  # privacy list and for
 components/client/InteractiveShell/ConversationReceipt.client.tsx  # privacy receipt after the latest answer: copy id, forget conversation with confirm, pending, outage, offline and wait states
 components/client/InteractiveShell/privacy-command.ts  # parser for the privacy shell command
 lib/request-refs.client.ts            # this tab's request ids: sessionStorage with an in-memory fallback
-lib/ask-conversation.client.ts        # this tab's ask conversation: random id, question count and its request ids, rotated after a forget
-lib/forget-request.client.ts          # /api/log/forget client: 200, 429, 503, offline and failure outcomes, sequential batches
+lib/ask/conversation.client.ts        # this tab's ask conversation: random id, question count and its request ids, rotated after a forget
+lib/ask/forget-request.client.ts          # /api/log/forget client: 200, 429, 503, offline and failure outcomes, sequential batches
 components/client/LazyIsland/         # ErrorBoundary around Suspense for every React.lazy island
 components/client/TerminalChromeBar/  # window chrome header shared by the shell and the contact form
 components/client/ContactForm/        # contact form island: composer, ContactShell, ContactResult, ContactReceipt, useContactSubmit (send state machine), contact-form-checks, and the messageStore it shares with the timezone panel

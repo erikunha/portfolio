@@ -6,7 +6,7 @@ const C = '33333333-3333-4333-8333-333333333333';
 
 async function load() {
   vi.resetModules();
-  const refs = await import('./request-refs.client');
+  const refs = await import('@/lib/request-refs.client');
   const forget = await import('./forget-request.client');
   return { refs, forget };
 }

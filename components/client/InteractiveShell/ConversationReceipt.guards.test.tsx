@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { flushMicrotasks, type MountedClient, mountClient } from '@/__tests__/helpers/render';
 import { fillShellState, SHELL_LIMITS, shellStates, shellUi } from '@/content/shell-ui';
 import { SITE_LOCALE, type SiteLocale } from '@/content/site-locale';
-import { FORGET_OUTCOME, type ForgetResult } from '@/lib/forget-request.client';
+import { FORGET_OUTCOME, type ForgetResult } from '@/lib/ask/forget-request.client';
 import { describeForget } from './forget-message';
 
 const ID = '7f3a9c2e-41b0-4d8e-9a77-3c51d0b2e8aa';
@@ -24,7 +24,7 @@ async function setup(
 }> {
   vi.resetModules();
   const locale = options.locale ?? SITE_LOCALE.en;
-  const conversation = await import('@/lib/ask-conversation.client');
+  const conversation = await import('@/lib/ask/conversation.client');
   const conversationId = conversation.conversationIdForAsk();
   conversation.recordConversationRequest(conversationId, options.recordedId ?? ID);
   const { ConversationReceipt } = await import('./ConversationReceipt.client');
@@ -134,7 +134,7 @@ describe('ConversationReceipt guards', () => {
     forgetReplies(ok);
     const ui = shellUi[SITE_LOCALE.en];
     const { container, onForgotten } = await setup({ recordedId: SECOND });
-    const conversation = await import('@/lib/ask-conversation.client');
+    const conversation = await import('@/lib/ask/conversation.client');
     await click(named(container, ui.forget));
     await click(named(container, ui.forgetConfirm));
     expect(onForgotten).toHaveBeenCalledOnce();

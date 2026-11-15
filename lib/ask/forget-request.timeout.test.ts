@@ -37,7 +37,7 @@ describe('forgetRequest when the server never answers', () => {
 
   it('keeps the id in the session list so the visitor can retry it', async () => {
     const forget = await load();
-    const refs = await import('./request-refs.client');
+    const refs = await import('@/lib/request-refs.client');
     refs.addRef(A);
     vi.stubGlobal('fetch', hangUntilAborted());
     const pending = forget.forgetRequest(A);

@@ -11,7 +11,7 @@ import {
   shellStates,
 } from '@/content/shell-ui';
 import type { SiteLocale } from '@/content/site-locale';
-import { forgetInFlight } from '@/lib/ask-conversation.client';
+import { forgetInFlight } from '@/lib/ask/conversation.client';
 import { hasModifier } from '@/lib/dom/has-modifier';
 import { SHELL_COMMAND_EVENT } from '@/lib/events';
 import { useBreakpoint } from '@/lib/use-breakpoint.client';
