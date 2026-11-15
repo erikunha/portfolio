@@ -1,3 +1,4 @@
+import { releaseIdenticalQuestion } from '@/lib/ask/dedup';
 import { askReservationCost } from '@/lib/ask/input-reservation';
 import { ASK_BUDGET_UNITS_PER_USD, askBudgetCost } from '@/lib/ask/usage';
 import { log } from '@/lib/log';
@@ -158,4 +159,44 @@ export async function settleBudget(
       }
     }
   }
+}
+
+export type AskReservation = {
+  reserved: number;
+  budgetKey: string;
+  dailyKey: string;
+  ipHash: string;
+  question: string;
+};
+
+export type ReservationUsage = {
+  billedInputTokens: number;
+  outputTokens: number;
+  cacheReadTokens?: number;
+  cacheWriteTokens?: number;
+};
+
+export async function settleReservation(
+  reservation: AskReservation,
+  usage: ReservationUsage | 'none',
+): Promise<void> {
+  const { reserved, budgetKey, dailyKey } = reservation;
+  if (usage === 'none') {
+    await settleBudget(reserved, 0, 0, budgetKey, dailyKey);
+    return;
+  }
+  const { billedInputTokens, outputTokens, cacheReadTokens, cacheWriteTokens } = usage;
+  if (cacheReadTokens === undefined || cacheWriteTokens === undefined) {
+    await settleBudget(reserved, billedInputTokens, outputTokens, budgetKey, dailyKey);
+    return;
+  }
+  await settleBudget(reserved, billedInputTokens, outputTokens, budgetKey, dailyKey, {
+    cacheReadTokens,
+    cacheWriteTokens,
+  });
+}
+
+export async function abandonReservation(reservation: AskReservation): Promise<void> {
+  if (reservation.reserved > 0) await settleReservation(reservation, 'none');
+  await releaseIdenticalQuestion(reservation.ipHash, reservation.question);
 }

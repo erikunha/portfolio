@@ -1,6 +1,5 @@
 import { askErrors } from '@/content/ask-errors';
-import { settleBudget } from '@/lib/ask/budget';
-import { releaseIdenticalQuestion } from '@/lib/ask/dedup';
+import { abandonReservation } from '@/lib/ask/budget';
 import { type AskContext, askError, preflightAsk } from '@/lib/ask/preflight';
 import { type AskStream, createAskStream } from '@/lib/ask/stream';
 import { env } from '@/lib/env';
@@ -16,8 +15,6 @@ try {
   console.error('[ask] logger unavailable on cold start');
 }
 
-const NO_TOKENS_USED = 0;
-
 async function startStream(context: AskContext): Promise<AskStream | Response> {
   try {
     return createAskStream(context);
@@ -26,14 +23,7 @@ async function startStream(context: AskContext): Promise<AskStream | Response> {
       requestId: context.requestId,
       error: describeError(startErr),
     });
-    await settleBudget(
-      context.reserved,
-      NO_TOKENS_USED,
-      NO_TOKENS_USED,
-      context.budgetKey,
-      context.dailyKey,
-    );
-    await releaseIdenticalQuestion(context.ipHash, context.question);
+    await abandonReservation(context);
     return askError(
       context.requestId,
       askErrors[context.answerLocale].interrupted,

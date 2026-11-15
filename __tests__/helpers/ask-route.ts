@@ -66,17 +66,54 @@ export function rateLimitModule(overrides: Record<string, unknown> = {}) {
   };
 }
 
+type ReservationFixture = {
+  reserved: number;
+  budgetKey: string;
+  dailyKey: string;
+  ipHash: string;
+  question: string;
+};
+
+type UsageFixture = {
+  billedInputTokens: number;
+  outputTokens: number;
+  cacheReadTokens?: number;
+  cacheWriteTokens?: number;
+};
+
 export function budgetModule(overrides: Record<string, unknown> = {}) {
-  return {
+  const settleBudget = vi.fn(async (..._args: unknown[]) => undefined);
+  const base = {
     reserveBudget: vi.fn(async (..._args: unknown[]) => ({
       allowed: true,
       reserved: TEST_RESERVED_TOKENS,
       pct: 0,
       budgetKey: TEST_BUDGET_KEY,
     })),
-    settleBudget: vi.fn(async (..._args: unknown[]) => undefined),
+    settleBudget,
     ...overrides,
   };
+  const settle = base.settleBudget as (...args: unknown[]) => Promise<unknown>;
+  const settleReservation = vi.fn(
+    async (reservation: ReservationFixture, usage: UsageFixture | 'none') => {
+      const { reserved, budgetKey, dailyKey } = reservation;
+      if (usage === 'none') return settle(reserved, 0, 0, budgetKey, dailyKey);
+      const { billedInputTokens, outputTokens, cacheReadTokens, cacheWriteTokens } = usage;
+      if (cacheReadTokens === undefined || cacheWriteTokens === undefined) {
+        return settle(reserved, billedInputTokens, outputTokens, budgetKey, dailyKey);
+      }
+      return settle(reserved, billedInputTokens, outputTokens, budgetKey, dailyKey, {
+        cacheReadTokens,
+        cacheWriteTokens,
+      });
+    },
+  );
+  const abandonReservation = vi.fn(async (reservation: ReservationFixture) => {
+    if (reservation.reserved > 0) await settleReservation(reservation, 'none');
+    const dedup = await import('@/lib/ask/dedup');
+    await dedup.releaseIdenticalQuestion(reservation.ipHash, reservation.question);
+  });
+  return { settleReservation, abandonReservation, ...base };
 }
 
 export function dedupModule(overrides: Record<string, unknown> = {}) {

@@ -1,7 +1,7 @@
 import { streamText } from 'ai';
 import { askErrors } from '@/content/ask-errors';
 import { SITE_LOCALE, type SiteLocale } from '@/content/site-locale';
-import { settleBudget } from '@/lib/ask/budget';
+import { settleReservation } from '@/lib/ask/budget';
 import { releaseIdenticalQuestion } from '@/lib/ask/dedup';
 import { ASK_FAILURE_REASON, type AskFailureReason } from '@/lib/ask/failure-reason';
 import { countAskGuardFinding } from '@/lib/ask/guard-count';
@@ -281,23 +281,23 @@ export function createAskStream(context: AskContext): AskStream {
   }
 
   async function settleBudgetFor(usage: SettledUsage): Promise<void> {
-    const { reserved, budgetKey, dailyKey } = context;
     const failedBeforeAnyOutput =
       state.upstreamFailed && state.usageRejected && state.answerText.length === 0;
     const endedBeforeFirstToken = !state.firstChunkSeen && !state.upstreamFailed;
     if (usage.resolved) {
-      await settleBudget(
-        reserved,
-        usage.billedInputTokens,
-        usage.outputTokens,
-        budgetKey,
-        dailyKey,
-        { cacheReadTokens: usage.cacheReadTokens, cacheWriteTokens: usage.cacheWriteTokens },
-      );
+      await settleReservation(context, {
+        billedInputTokens: usage.billedInputTokens,
+        outputTokens: usage.outputTokens,
+        cacheReadTokens: usage.cacheReadTokens,
+        cacheWriteTokens: usage.cacheWriteTokens,
+      });
     } else if (failedBeforeAnyOutput) {
-      await settleBudget(reserved, 0, 0, budgetKey, dailyKey);
+      await settleReservation(context, 'none');
     } else if (endedBeforeFirstToken) {
-      await settleBudget(reserved, ASK_RESERVED_INPUT_TOKENS, 0, budgetKey, dailyKey);
+      await settleReservation(context, {
+        billedInputTokens: ASK_RESERVED_INPUT_TOKENS,
+        outputTokens: 0,
+      });
     }
   }
 
