@@ -94,22 +94,18 @@ export function budgetModule(overrides: Record<string, unknown> = {}) {
     ...overrides,
   };
   const settle = base.settleBudget as (...args: unknown[]) => Promise<unknown>;
+  const actualBudget = vi.importActual<typeof import('@/lib/ask/budget')>('@/lib/ask/budget');
+  const actual = () => actualBudget;
   const settleReservation = vi.fn(
     async (reservation: ReservationFixture, usage: UsageFixture | 'none') => {
-      const { reserved, budgetKey, dailyKey } = reservation;
-      if (usage === 'none') return settle(reserved, 0, 0, budgetKey, dailyKey);
-      const { billedInputTokens, outputTokens, cacheReadTokens, cacheWriteTokens } = usage;
-      if (cacheReadTokens === undefined || cacheWriteTokens === undefined) {
-        return settle(reserved, billedInputTokens, outputTokens, budgetKey, dailyKey);
-      }
-      return settle(reserved, billedInputTokens, outputTokens, budgetKey, dailyKey, {
-        cacheReadTokens,
-        cacheWriteTokens,
-      });
+      const { settleArgs } = await actual();
+      return settle(...settleArgs(reservation, usage));
     },
   );
   const abandonReservation = vi.fn(async (reservation: ReservationFixture) => {
-    if (reservation.reserved > 0) await settleReservation(reservation, 'none');
+    const { abandonSettleArgs } = await actual();
+    const args = abandonSettleArgs(reservation);
+    if (args !== null) await settle(...args);
     const dedup = await import('@/lib/ask/dedup');
     await dedup.releaseIdenticalQuestion(reservation.ipHash, reservation.question);
   });

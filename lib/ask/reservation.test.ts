@@ -75,6 +75,43 @@ beforeEach(() => {
   events.length = 0;
 });
 
+describe('settlement argument mapping', () => {
+  const BASE_ARGS = [RESERVED, 100, 50, MONTH, DAY];
+
+  it.each([
+    ['no usage', 'none' as const, [RESERVED, 0, 0, MONTH, DAY]],
+    ['usage without cache counts', PLAIN, BASE_ARGS],
+    ['usage with only a read count', { ...PLAIN, cacheReadTokens: 7 }, BASE_ARGS],
+    ['usage with only a write count', { ...PLAIN, cacheWriteTokens: 9 }, BASE_ARGS],
+    [
+      'usage with both cache counts',
+      { ...PLAIN, cacheReadTokens: 7, cacheWriteTokens: 9 },
+      [...BASE_ARGS, { cacheReadTokens: 7, cacheWriteTokens: 9 }],
+    ],
+    [
+      'usage with zero cache counts',
+      { ...PLAIN, cacheReadTokens: 0, cacheWriteTokens: 0 },
+      [...BASE_ARGS, { cacheReadTokens: 0, cacheWriteTokens: 0 }],
+    ],
+  ])('maps %s to the settleBudget arguments', async (_name, usage, expected) => {
+    const { settleArgs } = await import('@/lib/ask/budget');
+
+    expect(settleArgs(reservation(), usage)).toEqual(expected);
+  });
+
+  it('settles an abandoned reservation as no usage', async () => {
+    const { abandonSettleArgs } = await import('@/lib/ask/budget');
+
+    expect(abandonSettleArgs(reservation())).toEqual([RESERVED, 0, 0, MONTH, DAY]);
+  });
+
+  it('settles nothing for an abandoned reservation that reserved nothing', async () => {
+    const { abandonSettleArgs } = await import('@/lib/ask/budget');
+
+    expect(abandonSettleArgs(reservation(0))).toBeNull();
+  });
+});
+
 describe('settleReservation', () => {
   it.each([
     ['plain usage', PLAIN],

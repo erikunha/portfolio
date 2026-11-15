@@ -176,27 +176,41 @@ export type ReservationUsage = {
   outputTokens: number;
 } & Partial<CacheTokenCounts>;
 
+export type SettleArgs = Parameters<typeof settleBudget>;
+
+export function settleArgs(
+  reservation: AskReservation,
+  usage: ReservationUsage | 'none',
+): SettleArgs {
+  const { reserved, budgetKey, dailyKey } = reservation;
+  if (usage === 'none') return [reserved, 0, 0, budgetKey, dailyKey];
+  const { billedInputTokens, outputTokens, cacheReadTokens, cacheWriteTokens } = usage;
+  if (cacheReadTokens === undefined || cacheWriteTokens === undefined) {
+    return [reserved, billedInputTokens, outputTokens, budgetKey, dailyKey];
+  }
+  return [
+    reserved,
+    billedInputTokens,
+    outputTokens,
+    budgetKey,
+    dailyKey,
+    { cacheReadTokens, cacheWriteTokens },
+  ];
+}
+
+export function abandonSettleArgs(reservation: AskReservation): SettleArgs | null {
+  return reservation.reserved > 0 ? settleArgs(reservation, 'none') : null;
+}
+
 export async function settleReservation(
   reservation: AskReservation,
   usage: ReservationUsage | 'none',
 ): Promise<void> {
-  const { reserved, budgetKey, dailyKey } = reservation;
-  if (usage === 'none') {
-    await settleBudget(reserved, 0, 0, budgetKey, dailyKey);
-    return;
-  }
-  const { billedInputTokens, outputTokens, cacheReadTokens, cacheWriteTokens } = usage;
-  if (cacheReadTokens === undefined || cacheWriteTokens === undefined) {
-    await settleBudget(reserved, billedInputTokens, outputTokens, budgetKey, dailyKey);
-    return;
-  }
-  await settleBudget(reserved, billedInputTokens, outputTokens, budgetKey, dailyKey, {
-    cacheReadTokens,
-    cacheWriteTokens,
-  });
+  await settleBudget(...settleArgs(reservation, usage));
 }
 
 export async function abandonReservation(reservation: AskReservation): Promise<void> {
-  if (reservation.reserved > 0) await settleReservation(reservation, 'none');
+  const args = abandonSettleArgs(reservation);
+  if (args !== null) await settleBudget(...args);
   await releaseIdenticalQuestion(reservation.ipHash, reservation.question);
 }
