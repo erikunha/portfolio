@@ -185,6 +185,19 @@ is deterministic). The webkit projects do not run the visual spec and no webkit 
 rendering varies from Chromium, and a darwin-only baseline that no CI job compares drifts unseen
 (`__tests__/playwright-visual-projects.test.ts` holds the project set).
 
+**Placement.** A unit test sits beside the module it covers, named `<module>.test.ts`. A test that
+crosses modules or exercises a route goes in `__tests__/`, and a family of them goes in
+`__tests__/<family>/`: `ask`, `contact`, `agent`. A repo invariant goes in `__tests__/meta/`. A
+workflow test goes in `__tests__/ci/`. A script test goes in `scripts/__tests__/`. A browser test goes
+in `tests/`, or in a `*.e2e.ts` file beside the component. No `__tests__` folder lives under `lib/`,
+`components/`, `content/`, `evals/`, `design-system/` or `app/`. `lib/__tests__/env.test.ts` is the one
+exception, kept until the env module changes.
+
+**How placement is held.** `__tests__/meta/test-placement.test.ts` reads `git ls-files` and fails on a
+tracked test under a `lib/**/__tests__/` folder, on an `ask-`, `contact-` or `agent-` file at the
+`__tests__/` root, and on a `__tests__/` folder under `components/`, `content/`, `evals/`,
+`design-system/` or `app/`.
+
 ---
 
 ## 5. Reproducibility & Dependencies
