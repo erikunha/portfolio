@@ -1,7 +1,7 @@
 import { EXTERNAL_LINK_PROPS } from '@/components/ExternalLink';
 import { linksContent } from '@/content/links';
-import type { LinksLocale } from '@/content/links.constants';
 import { linksUi } from '@/content/links-ui';
+import type { SiteLocale } from '@/content/site-locale';
 import { hostLabel } from '@/lib/links/host-label';
 import { withUtm } from '@/lib/links/utm';
 import { LineContent } from './LineContent';
@@ -12,7 +12,7 @@ import { SectionHeading } from './SectionHeading';
 
 const HEADING_ID = 'links-profiles-heading';
 
-export function ProfileLines({ locale }: { locale: LinksLocale }) {
+export function ProfileLines({ locale }: { locale: SiteLocale }) {
   const { pills, copy } = linksContent;
   const profiles = pills.filter(isLinkedProfile);
 

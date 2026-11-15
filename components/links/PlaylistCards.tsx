@@ -1,8 +1,8 @@
 import { ExternalLink } from '@/components/ExternalLink';
 import { linksContent } from '@/content/links';
-import type { LinksLocale } from '@/content/links.constants';
 import { linksUi } from '@/content/links-ui';
 import type { LinksPlaylist } from '@/content/schemas';
+import type { SiteLocale } from '@/content/site-locale';
 import { cn } from '@/lib/cn';
 import { withUtm } from '@/lib/links/utm';
 import { NewTabHint } from './NewTabHint';
@@ -21,7 +21,7 @@ function destination(playlist: LinksPlaylist, channelUrl: string): string {
   return `${channelUrl}/playlists`;
 }
 
-export function PlaylistCards({ locale, channelUrl }: { locale: LinksLocale; channelUrl: string }) {
+export function PlaylistCards({ locale, channelUrl }: { locale: SiteLocale; channelUrl: string }) {
   const { playlists, copy } = linksContent;
   const linkable = playlists.map((playlist) => ({
     playlist,

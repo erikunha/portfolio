@@ -1,6 +1,6 @@
 import { prerender } from 'react-dom/static';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { LINKS_LOCALE, type LinksLocale } from '@/content/links.constants';
+import { SITE_LOCALE, type SiteLocale } from '@/content/site-locale';
 import type { ChannelFeed } from '@/lib/links/feed';
 import { LinksPage } from './LinksPage';
 
@@ -39,7 +39,7 @@ const liveFeed: ChannelFeed = {
   channelUrl: CHANNEL_URL,
 };
 
-async function renderPage(locale: LinksLocale, feed: ChannelFeed): Promise<Document> {
+async function renderPage(locale: SiteLocale, feed: ChannelFeed): Promise<Document> {
   feedState.current = feed;
   const { prelude } = await prerender(<LinksPage locale={locale} />, {
     progressiveChunkSize: Number.POSITIVE_INFINITY,
@@ -62,11 +62,11 @@ describe('LinksPage groups', () => {
 
   it.each([
     [
-      LINKS_LOCALE.pt,
+      SITE_LOCALE.pt,
       ['assistir', 'últimos vídeos', 'playlists', 'perfis', 'contato', 'levar a página com você'],
     ],
     [
-      LINKS_LOCALE.en,
+      SITE_LOCALE.en,
       ['watch', 'latest videos', 'playlists', 'profiles', 'contact', 'take this page with you'],
     ],
   ])(
@@ -81,7 +81,7 @@ describe('LinksPage groups', () => {
   );
 
   it('renders the profile rows and leaves out a profile with no destination', async () => {
-    const doc = await renderPage(LINKS_LOCALE.pt, liveFeed);
+    const doc = await renderPage(SITE_LOCALE.pt, liveFeed);
     const rows = Array.from(
       doc.querySelectorAll('section[data-col="profiles"] a'),
       (link) => link.querySelector('.links-line-label')?.textContent,
@@ -91,14 +91,14 @@ describe('LinksPage groups', () => {
   });
 
   it('puts the e-mail and the copy-link control in the contact group', async () => {
-    const doc = await renderPage(LINKS_LOCALE.en, liveFeed);
+    const doc = await renderPage(SITE_LOCALE.en, liveFeed);
     const contact = doc.querySelector('section[data-col="contact"]');
     expect(contact?.querySelector('a[href^="mailto:"]')).not.toBeNull();
     expect(contact?.querySelector('button')).not.toBeNull();
   });
 
   it('puts the watch group before the profiles in the source, so reading and tab order agree on a phone', async () => {
-    const doc = await renderPage(LINKS_LOCALE.pt, liveFeed);
+    const doc = await renderPage(SITE_LOCALE.pt, liveFeed);
     const channel = doc.querySelector('[data-col="channel"]');
     const profiles = doc.querySelector('[data-col="profiles"]');
     const follows = channel?.compareDocumentPosition(profiles as Node);
@@ -106,7 +106,7 @@ describe('LinksPage groups', () => {
   });
 
   it('keeps the feed-down copy and every group when the latest video is missing', async () => {
-    const doc = await renderPage(LINKS_LOCALE.pt, downFeed);
+    const doc = await renderPage(SITE_LOCALE.pt, downFeed);
     expect(doc.querySelector('[data-col="channel"]')?.textContent).toContain(
       'O último vídeo não carregou agora',
     );
@@ -115,7 +115,7 @@ describe('LinksPage groups', () => {
   });
 
   it('hides the description block when the video has none', async () => {
-    const doc = await renderPage(LINKS_LOCALE.pt, {
+    const doc = await renderPage(SITE_LOCALE.pt, {
       ...liveFeed,
       latest: liveFeed.latest && { ...liveFeed.latest, description: '' },
     });

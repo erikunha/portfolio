@@ -1,8 +1,8 @@
 import { EXTERNAL_LINK_PROPS, ExternalLink } from '@/components/ExternalLink';
 import { OptimizedImage } from '@/components/OptimizedImage';
 import { linksContent } from '@/content/links';
-import type { LinksLocale } from '@/content/links.constants';
 import { linksUi } from '@/content/links-ui';
+import type { SiteLocale } from '@/content/site-locale';
 import { Badge, Button } from '@/design-system';
 import type { ChannelFeed } from '@/lib/links/feed';
 import { formatCompact } from '@/lib/links/format';
@@ -17,7 +17,7 @@ const HEADING_ID = 'links-channel-heading';
 const CHANNEL_GLYPH_PX = 16;
 const THUMB_SIZES = '(min-width: 1024px) 62vw, (min-width: 768px) 50vw, 100vw';
 
-export function ChannelCard({ locale, feed }: { locale: LinksLocale; feed: ChannelFeed }) {
+export function ChannelCard({ locale, feed }: { locale: SiteLocale; feed: ChannelFeed }) {
   const { channel, copy } = linksContent;
   const { latest, stats, channelUrl, fetchedAt } = feed;
 

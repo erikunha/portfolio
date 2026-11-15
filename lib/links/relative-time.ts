@@ -1,11 +1,12 @@
-import { LINKS_INTL_LOCALE, type LinksLocale } from '@/content/links.constants';
+import { LINKS_INTL_LOCALE } from '@/content/links.constants';
+import type { SiteLocale } from '@/content/site-locale';
 
 const MS_PER_DAY = 86_400_000;
 const DAYS_PER_WEEK = 7;
 const DAYS_PER_MONTH = 30;
 const DAYS_PER_YEAR = 365;
 
-export function formatRelative(date: Date, locale: LinksLocale, now: Date): string | null {
+export function formatRelative(date: Date, locale: SiteLocale, now: Date): string | null {
   const ms = date.getTime();
   if (!Number.isFinite(ms)) return null;
 

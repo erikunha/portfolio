@@ -1,6 +1,6 @@
 import { render } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import { LINKS_LOCALE } from '@/content/links.constants';
+import { SITE_LOCALE } from '@/content/site-locale';
 import type { ChannelFeed } from '@/lib/links/feed';
 import { VideoHistory } from './VideoHistory';
 
@@ -28,13 +28,13 @@ const empty = feedWith(0);
 describe('VideoHistory', () => {
   it('renders relative labels from the feed timestamp in either locale', () => {
     const feed = feedWith(1);
-    const { container, rerender } = render(<VideoHistory locale={LINKS_LOCALE.en} feed={feed} />);
+    const { container, rerender } = render(<VideoHistory locale={SITE_LOCALE.en} feed={feed} />);
     expect(container.textContent).toContain('3 days ago');
-    rerender(<VideoHistory locale={LINKS_LOCALE.pt} feed={feed} />);
+    rerender(<VideoHistory locale={SITE_LOCALE.pt} feed={feed} />);
     expect(container.textContent).toContain('há 3 dias');
     rerender(
       <VideoHistory
-        locale={LINKS_LOCALE.en}
+        locale={SITE_LOCALE.en}
         feed={{ ...feed, fetchedAt: '2026-09-01T19:00:00Z' }}
       />,
     );
@@ -42,14 +42,14 @@ describe('VideoHistory', () => {
   });
 
   it('keeps its section and heading when the feed returns no videos', () => {
-    const { container } = render(<VideoHistory locale={LINKS_LOCALE.pt} feed={empty} />);
+    const { container } = render(<VideoHistory locale={SITE_LOCALE.pt} feed={empty} />);
     expect(container.querySelector('[data-col="history"]')).not.toBeNull();
     expect(container.querySelector('h2')?.textContent).toContain('últimos vídeos');
   });
 
   it.each([
-    [LINKS_LOCALE.pt, 'a lista não carregou'],
-    [LINKS_LOCALE.en, 'the list did not load'],
+    [SITE_LOCALE.pt, 'a lista não carregou'],
+    [SITE_LOCALE.en, 'the list did not load'],
   ] as const)(
     'says the list did not load, never that the channel is empty (%s)',
     (locale, expected) => {
@@ -63,14 +63,14 @@ describe('VideoHistory', () => {
   );
 
   it('keeps the way to the channel when the list did not load', () => {
-    const { container } = render(<VideoHistory locale={LINKS_LOCALE.pt} feed={empty} />);
+    const { container } = render(<VideoHistory locale={SITE_LOCALE.pt} feed={empty} />);
     const link = container.querySelector('a[data-outbound="todos-videos"]');
     expect(link?.getAttribute('href')).toContain(`${CHANNEL_URL}/videos`);
   });
 
   it.each([
-    [LINKS_LOCALE.pt, 'o vídeo mais recente é o único até agora'],
-    [LINKS_LOCALE.en, 'the latest video is the only one so far'],
+    [SITE_LOCALE.pt, 'o vídeo mais recente é o único até agora'],
+    [SITE_LOCALE.en, 'the latest video is the only one so far'],
   ] as const)(
     'says the latest video is the only one, never that the list failed to load (%s)',
     (locale, expected) => {
@@ -87,19 +87,19 @@ describe('VideoHistory', () => {
       const { container } = render(<VideoHistory locale={locale} feed={feed} />);
       expect(container.textContent).toContain(expected);
       expect(container.textContent).not.toContain(
-        locale === LINKS_LOCALE.pt ? 'a lista não carregou' : 'the list did not load',
+        locale === SITE_LOCALE.pt ? 'a lista não carregou' : 'the list did not load',
       );
     },
   );
 
   it('renders one row per video once the feed returns some', () => {
-    const { container } = render(<VideoHistory locale={LINKS_LOCALE.pt} feed={feedWith(5)} />);
+    const { container } = render(<VideoHistory locale={SITE_LOCALE.pt} feed={feedWith(5)} />);
     expect(container.querySelectorAll('li')).toHaveLength(5);
     expect(container.textContent).not.toContain('nenhuma entrada ainda');
   });
 
   it('numbers the rows and tags each link for attribution', () => {
-    const { container } = render(<VideoHistory locale={LINKS_LOCALE.pt} feed={feedWith(3)} />);
+    const { container } = render(<VideoHistory locale={SITE_LOCALE.pt} feed={feedWith(3)} />);
     const links = [...container.querySelectorAll('li a')];
     expect(links.map((a) => a.getAttribute('data-outbound'))).toEqual([
       'video-1',
@@ -111,7 +111,7 @@ describe('VideoHistory', () => {
   });
 
   it('shows duration and views only for the entries that carry them', () => {
-    const { container } = render(<VideoHistory locale={LINKS_LOCALE.pt} feed={feedWith(2)} />);
+    const { container } = render(<VideoHistory locale={SITE_LOCALE.pt} feed={feedWith(2)} />);
     const rows = [...container.querySelectorAll('li')];
     // Intl compact notation separates "9,1" and "mil" with a non-breaking space, so the
     // whitespace here is matched loosely rather than typed literally.
@@ -123,13 +123,13 @@ describe('VideoHistory', () => {
   });
 
   it('restores the see-all link once videos exist', () => {
-    const { container } = render(<VideoHistory locale={LINKS_LOCALE.pt} feed={feedWith(5)} />);
+    const { container } = render(<VideoHistory locale={SITE_LOCALE.pt} feed={feedWith(5)} />);
     const seeAll = container.querySelector('a[data-outbound="todos-videos"]');
     expect(seeAll?.getAttribute('href')).toContain(`${CHANNEL_URL}/videos`);
   });
 
   it('localises the view count word on the English route', () => {
-    const { container } = render(<VideoHistory locale={LINKS_LOCALE.en} feed={feedWith(1)} />);
+    const { container } = render(<VideoHistory locale={SITE_LOCALE.en} feed={feedWith(1)} />);
     expect(container.textContent).toContain('9.1K views');
   });
 });

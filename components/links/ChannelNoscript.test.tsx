@@ -1,12 +1,12 @@
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
-import { LINKS_LOCALE } from '@/content/links.constants';
+import { SITE_LOCALE } from '@/content/site-locale';
 import { CHANNEL_URL } from '@/lib/links/feed';
 import { ChannelNoscript } from './ChannelNoscript';
 
 const SUBSCRIBE_QUERY = 'sub_confirmation=1';
 
-function parse(locale: (typeof LINKS_LOCALE)[keyof typeof LINKS_LOCALE]) {
+function parse(locale: (typeof SITE_LOCALE)[keyof typeof SITE_LOCALE]) {
   return new DOMParser().parseFromString(
     renderToStaticMarkup(<ChannelNoscript locale={locale} />),
     'text/html',
@@ -15,8 +15,8 @@ function parse(locale: (typeof LINKS_LOCALE)[keyof typeof LINKS_LOCALE]) {
 
 describe('ChannelNoscript', () => {
   it.each([
-    [LINKS_LOCALE.en, 'subscribe'],
-    [LINKS_LOCALE.pt, 'inscrever-se no canal'],
+    [SITE_LOCALE.en, 'subscribe'],
+    [SITE_LOCALE.pt, 'inscrever-se no canal'],
   ])(
     'keeps a subscribe link to the channel for a visitor without scripts (%s)',
     (locale, label) => {
@@ -30,7 +30,7 @@ describe('ChannelNoscript', () => {
   );
 
   it('says the feed is not shown instead of leaving a loading state', () => {
-    const doc = parse(LINKS_LOCALE.en);
+    const doc = parse(SITE_LOCALE.en);
 
     expect(doc.querySelector('.links-watch-note')?.textContent).toBeTruthy();
     expect(doc.querySelector('[aria-busy="true"]')).toBeNull();

@@ -1,6 +1,6 @@
 import { expect, type Page, test } from '@playwright/test';
 import { linksContent } from '../../content/links';
-import { LINKS_LOCALE, type LinksLocale } from '../../content/links.constants';
+import { SITE_LOCALE, type SiteLocale } from '../../content/site-locale';
 import { horizontalOverflow } from './_helpers/geometry';
 import { gotoSettled } from './_helpers/streamed';
 
@@ -22,16 +22,16 @@ const FONT_FLOOR_PX = 13;
 
 const MAIL_PROTOCOL = 'mailto:';
 
-const ROUTE_COPY: Record<string, { qrLabel: RegExp; skipLabel: string; locale: LinksLocale }> = {
+const ROUTE_COPY: Record<string, { qrLabel: RegExp; skipLabel: string; locale: SiteLocale }> = {
   '/links': {
     qrLabel: /^Código QR:/,
     skipLabel: 'Pular para o conteúdo',
-    locale: LINKS_LOCALE.pt,
+    locale: SITE_LOCALE.pt,
   },
   '/links/en': {
     qrLabel: /^QR code:/,
     skipLabel: 'Skip to main content',
-    locale: LINKS_LOCALE.en,
+    locale: SITE_LOCALE.en,
   },
 };
 

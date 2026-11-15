@@ -1,6 +1,6 @@
 import { linksContent } from '@/content/links';
-import type { LinksLocale } from '@/content/links.constants';
 import { linksUi } from '@/content/links-ui';
+import type { SiteLocale } from '@/content/site-locale';
 import { qrMatrix, qrSvgPath } from '@/lib/links/qr';
 import { SectionHeading } from './SectionHeading';
 
@@ -8,7 +8,7 @@ const HEADING_ID = 'links-qr-heading';
 const QUIET_ZONE = 3;
 const RENDER_PX = 116;
 
-export function QrPanel({ locale, url }: { locale: LinksLocale; url: string }) {
+export function QrPanel({ locale, url }: { locale: SiteLocale; url: string }) {
   const { copy, siteLabel } = linksContent;
   const matrix = qrMatrix(url);
   const span = matrix.size + QUIET_ZONE * 2;

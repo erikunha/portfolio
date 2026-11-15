@@ -1,6 +1,6 @@
 import { linksContent } from '@/content/links';
-import type { LinksLocale } from '@/content/links.constants';
 import { linksUi } from '@/content/links-ui';
+import type { SiteLocale } from '@/content/site-locale';
 import { HISTORY_LENGTH } from '@/lib/links/feed';
 import { SectionHeading } from './SectionHeading';
 
@@ -10,7 +10,7 @@ const TEXT_BAR_COUNT = 3;
 const TEXT_BARS = Array.from({ length: TEXT_BAR_COUNT }, (_, position) => ({ position }));
 const HISTORY_ROWS = Array.from({ length: HISTORY_LENGTH }, (_, position) => ({ position }));
 
-export function LatestVideoSkeleton({ locale }: { locale: LinksLocale }) {
+export function LatestVideoSkeleton({ locale }: { locale: SiteLocale }) {
   const { copy } = linksContent;
   return (
     <>

@@ -2,7 +2,8 @@ import { Suspense } from 'react';
 import { PageMain } from '@/components/PageMain';
 import { SiteShell } from '@/components/SiteShell';
 import { linksContent } from '@/content/links';
-import { LINKS_PATH, type LinksLocale } from '@/content/links.constants';
+import { LINKS_PATH } from '@/content/links.constants';
+import type { SiteLocale } from '@/content/site-locale';
 import { CHANNEL_URL, EMPTY_FEED, getChannelFeed } from '@/lib/links/feed';
 import { ChannelCard } from './ChannelCard';
 import { ChannelNoscript } from './ChannelNoscript';
@@ -18,12 +19,12 @@ import { QrPanel } from './QrPanel';
 import { Ticker } from './Ticker';
 import { VideoHistory } from './VideoHistory';
 
-async function LinksTicker({ locale }: { locale: LinksLocale }) {
+async function LinksTicker({ locale }: { locale: SiteLocale }) {
   const feed = await getChannelFeed().catch(() => EMPTY_FEED);
   return feed.latest === null ? <Ticker locale={locale} /> : null;
 }
 
-async function LinksFeedColumn({ locale }: { locale: LinksLocale }) {
+async function LinksFeedColumn({ locale }: { locale: SiteLocale }) {
   const feed = await getChannelFeed().catch(() => EMPTY_FEED);
   return (
     <>
@@ -33,7 +34,7 @@ async function LinksFeedColumn({ locale }: { locale: LinksLocale }) {
   );
 }
 
-export function LinksPage({ locale }: { locale: LinksLocale }) {
+export function LinksPage({ locale }: { locale: SiteLocale }) {
   const { copy, siteUrl } = linksContent;
   const pageUrl = `${siteUrl}${LINKS_PATH[locale]}`;
 

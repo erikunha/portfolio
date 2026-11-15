@@ -77,8 +77,9 @@ describe('every static page hands its own route to the shell', {
 
   it('LinksPage names the links route of its language', async () => {
     const { LinksPage } = await import('@/components/links/LinksPage');
-    const { LINKS_LOCALE, LINKS_PATH } = await import('@/content/links.constants');
-    for (const locale of Object.values(LINKS_LOCALE)) {
+    const { LINKS_PATH } = await import('@/content/links.constants');
+    const { SITE_LOCALE } = await import('@/content/site-locale');
+    for (const locale of Object.values(SITE_LOCALE)) {
       expect((LinksPage({ locale }).props as { route?: string }).route).toBe(LINKS_PATH[locale]);
     }
   });

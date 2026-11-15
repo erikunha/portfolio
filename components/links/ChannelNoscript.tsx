@@ -1,6 +1,6 @@
 import { EXTERNAL_LINK_PROPS } from '@/components/ExternalLink';
 import { linksContent } from '@/content/links';
-import type { LinksLocale } from '@/content/links.constants';
+import type { SiteLocale } from '@/content/site-locale';
 import { Button } from '@/design-system';
 import { CHANNEL_URL } from '@/lib/links/feed';
 import { withUtm } from '@/lib/links/utm';
@@ -13,7 +13,7 @@ const SUBSCRIBE_QUERY = '?sub_confirmation=1';
 const OUTBOUND_ID = 'inscrever';
 const GLYPH_PX = 17;
 
-export function ChannelNoscript({ locale }: { locale: LinksLocale }) {
+export function ChannelNoscript({ locale }: { locale: SiteLocale }) {
   const { copy } = linksContent;
   return (
     <noscript>

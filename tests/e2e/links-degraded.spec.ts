@@ -1,11 +1,12 @@
 import { expect, test } from '@playwright/test';
 import { linksContent } from '@/content/links';
-import { LINKS_PATH, type LinksLocale } from '@/content/links.constants';
+import { LINKS_PATH } from '@/content/links.constants';
+import type { SiteLocale } from '@/content/site-locale';
 import { horizontalOverflow, VIEWPORTS } from './_helpers/geometry';
 import { gotoHydrated } from './_helpers/hydration';
 import { freezeMotion } from './_helpers/motion';
 
-const LOCALES: readonly LinksLocale[] = ['pt', 'en'];
+const LOCALES: readonly SiteLocale[] = ['pt', 'en'];
 const COPY_LINK_BUTTON = 'button.links-line';
 const SUBSCRIBE_LINK = '[data-outbound="inscrever"]';
 const TAP_TARGET_PX = 44;

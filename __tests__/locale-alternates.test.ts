@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest';
 import { linksPageMetadata } from '@/app/_lib/links-metadata';
-import { LINKS_LOCALE } from '@/content/links.constants';
 import { readingViews } from '@/content/reading-views';
 import {
   DEFAULT_SITE_LOCALE,
@@ -42,8 +41,8 @@ describe('locale alternates', () => {
   });
 
   it('the /links pair predates the site scheme and stays as decided', () => {
-    const pt = linksPageMetadata(LINKS_LOCALE.pt);
-    const en = linksPageMetadata(LINKS_LOCALE.en);
+    const pt = linksPageMetadata(SITE_LOCALE.pt);
+    const en = linksPageMetadata(SITE_LOCALE.en);
     expect(pt.alternates?.canonical).toBe('/links');
     expect(en.alternates?.canonical).toBe('/links/en');
     expect(pt.alternates?.languages).toEqual({

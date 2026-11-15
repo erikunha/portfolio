@@ -1,7 +1,7 @@
 import { render } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { linksContent } from '@/content/links';
-import { LINKS_LOCALE } from '@/content/links.constants';
+import { SITE_LOCALE } from '@/content/site-locale';
 import type { ChannelFeed } from '@/lib/links/feed';
 import { ChannelCard } from './ChannelCard';
 import { PlaylistCards } from './PlaylistCards';
@@ -26,7 +26,7 @@ const feed: ChannelFeed = {
   channelUrl: CHANNEL_URL,
 };
 
-describe.each(Object.values(LINKS_LOCALE))('/links new-tab anchors (%s)', (locale) => {
+describe.each(Object.values(SITE_LOCALE))('/links new-tab anchors (%s)', (locale) => {
   const hint = `(${linksContent.copy.opensInNewTab[locale]})`;
 
   it.each([

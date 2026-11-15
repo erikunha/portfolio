@@ -2,14 +2,14 @@ import { CompanyMention } from '@/components/CompanyLink';
 import { KeepTail } from '@/components/KeepTail';
 import { OptimizedImage } from '@/components/OptimizedImage';
 import { linksContent } from '@/content/links';
-import type { LinksLocale } from '@/content/links.constants';
 import { profile as siteProfile } from '@/content/profile';
+import type { SiteLocale } from '@/content/site-locale';
 import { TaglineTyper } from './client/TaglineTyper.client';
 
 const AVATAR_PX = 56;
 const AVATAR_SIZES = `${AVATAR_PX}px`;
 
-export function IdentityCard({ locale }: { locale: LinksLocale }) {
+export function IdentityCard({ locale }: { locale: SiteLocale }) {
   const { profile, copy } = linksContent;
 
   const rows: { label: string; value: React.ReactNode }[] = [

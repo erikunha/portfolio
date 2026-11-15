@@ -1,10 +1,10 @@
 import type { Metadata } from 'next';
 import { linksContent } from '@/content/links';
-import { LINKS_LOCALE, LINKS_PATH, type LinksLocale } from '@/content/links.constants';
+import { LINKS_PATH } from '@/content/links.constants';
 import { OG_IMAGE_PATH, ogImage, SITE_NAME } from '@/content/seo';
-import { SITE_OG_LOCALE } from '@/content/site-locale';
+import { SITE_LOCALE, SITE_OG_LOCALE, type SiteLocale } from '@/content/site-locale';
 
-export function linksPageMetadata(locale: LinksLocale): Metadata {
+export function linksPageMetadata(locale: SiteLocale): Metadata {
   const { meta } = linksContent;
   const title = meta.title[locale];
   const description = meta.description[locale];
@@ -16,9 +16,9 @@ export function linksPageMetadata(locale: LinksLocale): Metadata {
     alternates: {
       canonical: path,
       languages: {
-        'pt-BR': LINKS_PATH[LINKS_LOCALE.pt],
-        'en-US': LINKS_PATH[LINKS_LOCALE.en],
-        'x-default': LINKS_PATH[LINKS_LOCALE.pt],
+        'pt-BR': LINKS_PATH[SITE_LOCALE.pt],
+        'en-US': LINKS_PATH[SITE_LOCALE.en],
+        'x-default': LINKS_PATH[SITE_LOCALE.pt],
       },
     },
     openGraph: {

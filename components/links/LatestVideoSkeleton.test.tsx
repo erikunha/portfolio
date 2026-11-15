@@ -4,7 +4,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
 import { readComponentsCss } from '@/__tests__/helpers/components-css';
 import { declValue, rulesWithSelector } from '@/__tests__/helpers/css-rules';
-import { LINKS_LOCALE } from '@/content/links.constants';
+import { SITE_LOCALE } from '@/content/site-locale';
 import type { ChannelFeed } from '@/lib/links/feed';
 import { LatestVideoSkeleton } from './LatestVideoSkeleton';
 
@@ -18,15 +18,15 @@ vi.mock('@/lib/links/feed', () => ({
 
 describe('LatestVideoSkeleton', () => {
   it.each([
-    [LINKS_LOCALE.en, 'Loading the latest video'],
-    [LINKS_LOCALE.pt, 'Carregando o vídeo mais recente'],
+    [SITE_LOCALE.en, 'Loading the latest video'],
+    [SITE_LOCALE.pt, 'Carregando o vídeo mais recente'],
   ])('announces itself as a labelled status (%s)', (locale, label) => {
     const { getByRole } = render(<LatestVideoSkeleton locale={locale} />);
     expect(getByRole('status').getAttribute('aria-label')).toBe(label);
   });
 
   it('draws a 16:9 thumbnail block and three text bars, all hidden from assistive tech', () => {
-    const { container } = render(<LatestVideoSkeleton locale={LINKS_LOCALE.en} />);
+    const { container } = render(<LatestVideoSkeleton locale={SITE_LOCALE.en} />);
     const thumb = container.querySelector('.links-skeleton-thumb');
     const bars = container.querySelectorAll('.links-skeleton-bar');
     expect(thumb?.closest('[aria-hidden="true"]')).not.toBeNull();
@@ -50,8 +50,8 @@ describe('LatestVideoSkeleton', () => {
 
 describe('LatestVideoSkeleton: the two columns it stands in for', () => {
   it.each([
-    [LINKS_LOCALE.en, 'WATCH', 'LATEST VIDEOS'],
-    [LINKS_LOCALE.pt, 'ASSISTIR', 'ÚLTIMOS VÍDEOS'],
+    [SITE_LOCALE.en, 'WATCH', 'LATEST VIDEOS'],
+    [SITE_LOCALE.pt, 'ASSISTIR', 'ÚLTIMOS VÍDEOS'],
   ])(
     'names both blocks with their real headings, untyped, so the swap does not retype them (%s)',
     (locale, channel, latest) => {
@@ -66,7 +66,7 @@ describe('LatestVideoSkeleton: the two columns it stands in for', () => {
   );
 
   it('marks the channel block busy and keeps the history block out of the accessibility tree', () => {
-    const { container } = render(<LatestVideoSkeleton locale={LINKS_LOCALE.en} />);
+    const { container } = render(<LatestVideoSkeleton locale={SITE_LOCALE.en} />);
     expect(container.querySelector('[data-col="channel-loading"]')?.getAttribute('aria-busy')).toBe(
       'true',
     );
@@ -77,12 +77,12 @@ describe('LatestVideoSkeleton: the two columns it stands in for', () => {
   });
 
   it('draws as many history rows as a full feed holds, so the list lands without a shift', () => {
-    const { container } = render(<LatestVideoSkeleton locale={LINKS_LOCALE.en} />);
+    const { container } = render(<LatestVideoSkeleton locale={SITE_LOCALE.en} />);
     expect(container.querySelectorAll('.links-history-item')).toHaveLength(5);
   });
 
   it('reserves the subscribe row and the see-all row the final blocks end with', () => {
-    const { container } = render(<LatestVideoSkeleton locale={LINKS_LOCALE.en} />);
+    const { container } = render(<LatestVideoSkeleton locale={SITE_LOCALE.en} />);
     expect(container.querySelector('.links-skeleton-action')).not.toBeNull();
     expect(container.querySelector('.links-skeleton-all')).not.toBeNull();
   });
@@ -91,7 +91,7 @@ describe('LatestVideoSkeleton: the two columns it stands in for', () => {
 describe('LinksPage: latest video loading', () => {
   it('renders the static shell and the skeleton while the feed is still pending', async () => {
     const { LinksPage } = await import('./LinksPage');
-    const element = LinksPage({ locale: LINKS_LOCALE.en });
+    const element = LinksPage({ locale: SITE_LOCALE.en });
     expect(element).not.toBeInstanceOf(Promise);
     const doc = new DOMParser().parseFromString(renderToStaticMarkup(element), 'text/html');
     expect(doc.querySelector('.links-grid')).not.toBeNull();
@@ -120,7 +120,7 @@ describe('LinksPage: latest video loading', () => {
       html += chunk.toString();
     });
     const ended = new Promise<void>((resolve) => stream.on('end', resolve));
-    const pipe = renderToPipeableStream(<LinksPage locale={LINKS_LOCALE.en} />, {
+    const pipe = renderToPipeableStream(<LinksPage locale={SITE_LOCALE.en} />, {
       onAllReady() {
         pipe.pipe(stream);
       },

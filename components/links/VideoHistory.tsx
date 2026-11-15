@@ -1,8 +1,8 @@
 import { ExternalLink } from '@/components/ExternalLink';
 import { OptimizedImage } from '@/components/OptimizedImage';
 import { linksContent } from '@/content/links';
-import type { LinksLocale } from '@/content/links.constants';
 import { linksUi } from '@/content/links-ui';
+import type { SiteLocale } from '@/content/site-locale';
 import type { ChannelFeed } from '@/lib/links/feed';
 import { formatCompact } from '@/lib/links/format';
 import { formatRelative } from '@/lib/links/relative-time';
@@ -17,7 +17,7 @@ const INDEX_PAD = 2;
 
 function meta(
   video: ChannelFeed['history'][number],
-  locale: LinksLocale,
+  locale: SiteLocale,
   viewsWord: string,
   fetchedAt: ChannelFeed['fetchedAt'],
 ): string {
@@ -35,7 +35,7 @@ function meta(
   return parts.filter((part): part is string => part !== undefined).join(' · ');
 }
 
-export function VideoHistory({ locale, feed }: { locale: LinksLocale; feed: ChannelFeed }) {
+export function VideoHistory({ locale, feed }: { locale: SiteLocale; feed: ChannelFeed }) {
   const { copy } = linksContent;
   const isEmpty = feed.history.length === 0;
   // An empty history with a featured video means the channel has one long

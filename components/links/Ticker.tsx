@@ -1,7 +1,7 @@
 import { linksContent } from '@/content/links';
-import type { LinksLocale } from '@/content/links.constants';
+import type { SiteLocale } from '@/content/site-locale';
 
-export function Ticker({ locale }: { locale: LinksLocale }) {
+export function Ticker({ locale }: { locale: SiteLocale }) {
   const { upcoming } = linksContent;
   const segment = `${upcoming.label[locale]} · ${upcoming.slot[locale]} · ${upcoming.topic[locale]}  ///  `;
 
