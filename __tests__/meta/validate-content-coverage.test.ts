@@ -2,7 +2,7 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { listContentFiles } from '../../scripts/content-files.mjs';
+import { listContentFiles } from '../../scripts/lib/content-files.ts';
 
 const CONTENT_DIR = join(process.cwd(), 'content');
 

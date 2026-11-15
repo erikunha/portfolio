@@ -5,9 +5,9 @@ import {
   isSchemaModule,
   isTestModule,
   isTypeScriptModule,
-} from './content-basename.mjs';
+} from './content-basename.ts';
 
-export function listContentFiles(root = CONTENT_DIR) {
+export function listContentFiles(root: string = CONTENT_DIR): string[] {
   return readdirSync(root, { recursive: true })
     .map(String)
     .filter((file) => {

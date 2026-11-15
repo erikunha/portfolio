@@ -6,7 +6,7 @@ import {
   isSchemaModule,
   isTestModule,
   isTypeScriptModule,
-} from '../../scripts/content-basename.mjs';
+} from '../../scripts/lib/content-basename.ts';
 
 export const isPublishedSurface = (file: string) => {
   const name = path.basename(file);
