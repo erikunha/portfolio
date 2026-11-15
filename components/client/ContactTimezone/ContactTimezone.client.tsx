@@ -15,6 +15,7 @@ import {
   zoneCity,
   zonePlace,
 } from '@/lib/timezone/zones';
+import { useAnnouncer } from '@/lib/use-announcer.client';
 import { messageStore } from '../ContactForm/messageStore';
 import { ContactTimezoneMap } from './ContactTimezoneMap';
 import { useNow, usePanelActive } from './useClock';
@@ -54,7 +55,7 @@ export function ContactTimezone({ copy }: { copy: TimezoneCopy }) {
   const [autoZone] = useState(detectTimeZone);
   const [zone, setZone] = useState(autoZone);
   const [proposedLine, setProposedLine] = useState<string | null>(null);
-  const [announcement, setAnnouncement] = useState({ id: 0, text: '' });
+  const { announce, region: announcerRegion } = useAnnouncer({ 'data-testid': 'ctz-announce' });
 
   const minute = Math.floor(clockNow.getTime() / MS_PER_MINUTE);
   const at = useMemo(() => new Date(minute * MS_PER_MINUTE), [minute]);
@@ -151,14 +152,13 @@ export function ContactTimezone({ copy }: { copy: TimezoneCopy }) {
           onSelect={(picked) => {
             setZone(picked);
             setProposedLine(null);
-            setAnnouncement((previous) => ({
-              id: previous.id + 1,
-              text: fillCopy(copy.announce, {
+            announce(
+              fillCopy(copy.announce, {
                 place: zonePlace(picked, at).name,
                 erik: erikTime,
                 you: formatClock(picked, at, false),
               }),
-            }));
+            );
           }}
         />
       </div>
@@ -242,9 +242,7 @@ export function ContactTimezone({ copy }: { copy: TimezoneCopy }) {
         )}
       </p>
 
-      <p className="sr-only" role="status" data-testid="ctz-announce">
-        <span key={announcement.id}>{announcement.text}</span>
-      </p>
+      {announcerRegion}
     </div>
   );
 }

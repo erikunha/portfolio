@@ -14,6 +14,7 @@ import type { SiteLocale } from '@/content/site-locale';
 import { forgetInFlight } from '@/lib/ask/conversation.client';
 import { hasModifier } from '@/lib/dom/has-modifier';
 import { SHELL_COMMAND_EVENT } from '@/lib/events';
+import { useAnnouncer } from '@/lib/use-announcer.client';
 import { useBreakpoint } from '@/lib/use-breakpoint.client';
 import { TerminalChromeBar } from '../TerminalChromeBar';
 import { AnimatedPlaceholder, StaticPlaceholder } from './AnimatedPlaceholder.client';
@@ -29,6 +30,7 @@ import { usePrivacyCommands } from './usePrivacyCommands';
 const COMMAND_FIELD = 'command';
 const COMPOSITION_KEYCODE = 229;
 const STREAM_CARET = '█';
+const ANNOUNCER_REGION_ATTRIBUTES = { 'aria-live': 'polite', 'aria-atomic': true } as const;
 
 export function InteractiveShell({
   locale,
@@ -51,7 +53,7 @@ export function InteractiveShell({
   const [history, setHistory] = useState<Line[]>(initialLines);
   const [input, setInput] = useState('');
   const [inputFocused, setInputFocused] = useState(false);
-  const [announcement, setAnnouncement] = useState({ id: 0, text: '' });
+  const { announce, region: announcerRegion } = useAnnouncer(ANNOUNCER_REGION_ATTRIBUTES);
   const stopRef = useRef<HTMLButtonElement>(null);
   const followOutputRef = useRef(true);
   const feedRef = useRef<HTMLDivElement>(null);
@@ -60,9 +62,6 @@ export function InteractiveShell({
   const promptEditedRef = useRef(false);
   const revealedHistoryRef = useRef(history);
 
-  const announce = useCallback((text: string) => {
-    setAnnouncement((previous) => ({ id: previous.id + 1, text }));
-  }, []);
   const editInput = useCallback((value: string) => {
     promptEditedRef.current = true;
     setInput(value);
@@ -350,9 +349,7 @@ export function InteractiveShell({
       <p id={accuracyId} className="shell-ai-notice">
         {ui.accuracy}
       </p>
-      <p className="sr-only" role="status" aria-live="polite" aria-atomic="true">
-        <span key={announcement.id}>{announcement.text}</span>
-      </p>
+      {announcerRegion}
       <div className="shell-privacy-notice" data-testid="shell-privacy-notice">
         <p>
           {ui.privacy}{' '}
