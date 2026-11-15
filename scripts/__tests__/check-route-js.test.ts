@@ -5,6 +5,8 @@ import { join } from 'node:path';
 import { gzipSync } from 'node:zlib';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
+const SUBPROCESS_TEST_TIMEOUT_MS = 60_000;
+
 const SCRIPT = join(process.cwd(), 'scripts/gates/check-route-js.ts');
 const TSX = join(process.cwd(), 'node_modules/.bin/tsx');
 const MANIFEST_REL = '.next/diagnostics/route-bundle-stats.json';
@@ -44,7 +46,7 @@ afterEach(() => {
   rmSync(dir, { recursive: true, force: true });
 });
 
-describe('check-route-js.ts', () => {
+describe('check-route-js.ts', { timeout: SUBPROCESS_TEST_TIMEOUT_MS }, () => {
   it('fails when the manifest is absent: a missing build must never read as a pass', () => {
     rmSync(join(dir, MANIFEST_REL), { force: true });
     const res = run();

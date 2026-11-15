@@ -4,6 +4,8 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 
+const SUBPROCESS_TEST_TIMEOUT_MS = 60_000;
+
 const SCRIPT = path.resolve('scripts/gates/check-client-naming.ts');
 const WALK_HELPER = path.resolve('scripts/lib/walk.ts');
 const roots: string[] = [];
@@ -26,7 +28,7 @@ afterEach(() => {
   for (const root of roots.splice(0)) rmSync(root, { recursive: true, force: true });
 });
 
-describe('check-client-naming scan roots', () => {
+describe('check-client-naming scan roots', { timeout: SUBPROCESS_TEST_TIMEOUT_MS }, () => {
   it('fails a use-client file under design-system without the suffix', () => {
     const result = run('design-system/components/Bad/Bad.tsx');
     expect(result.status).toBe(1);

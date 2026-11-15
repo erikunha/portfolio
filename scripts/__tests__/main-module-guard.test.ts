@@ -5,6 +5,8 @@ import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { listFiles } from '../lib/walk';
 
+const SUBPROCESS_TEST_TIMEOUT_MS = 60_000;
+
 const SCRIPTS_DIR = join(process.cwd(), 'scripts');
 const SCRIPT_FILE = /\.(mjs|ts)$/;
 const TS_SCRIPT_FILE = /\.ts$/;
@@ -19,7 +21,7 @@ const scriptsMatching = (pattern: RegExp): string[] =>
 const UNRESOLVED_MAIN_GUARD = 'pathToFileURL(process.argv[1])';
 const TSX = join(process.cwd(), 'node_modules/.bin/tsx');
 
-describe('script entry guards', () => {
+describe('script entry guards', { timeout: SUBPROCESS_TEST_TIMEOUT_MS }, () => {
   it('resolve symlinks before comparing argv[1] with import.meta.url', () => {
     const offenders = scriptsMatching(SCRIPT_FILE).filter((name) =>
       readFileSync(join(SCRIPTS_DIR, name), 'utf8').includes(UNRESOLVED_MAIN_GUARD),

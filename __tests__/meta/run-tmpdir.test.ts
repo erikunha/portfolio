@@ -5,7 +5,11 @@ import { basename, dirname, join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import setupRunTmpdir, { RUN_TMPDIR_PREFIX } from '../../tests/global-tmpdir';
 
-describe('every test run writes its temp files under one run-owned directory', () => {
+const SUBPROCESS_TEST_TIMEOUT_MS = 60_000;
+
+describe('every test run writes its temp files under one run-owned directory', {
+  timeout: SUBPROCESS_TEST_TIMEOUT_MS,
+}, () => {
   it('points os.tmpdir() at the run directory, not the shared system temp folder', () => {
     expect(basename(tmpdir())).toMatch(new RegExp(`^${RUN_TMPDIR_PREFIX}`));
     expect(existsSync(tmpdir())).toBe(true);

@@ -2,6 +2,8 @@ import { spawnSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 
+const SUBPROCESS_TEST_TIMEOUT_MS = 60_000;
+
 const ci = readFileSync(`${process.cwd()}/.github/workflows/ci.yml`, 'utf8');
 
 const jobsSection = ci.slice(ci.indexOf('\njobs:\n') + '\njobs:\n'.length);
@@ -24,7 +26,7 @@ const needs = (needsMatch?.[1] ?? '')
 
 const SELF_REPORTING_JOBS = ['ci-gate'];
 
-describe('ci.yml ci-gate fan-in invariants', () => {
+describe('ci.yml ci-gate fan-in invariants', { timeout: SUBPROCESS_TEST_TIMEOUT_MS }, () => {
   it('defines a ci-gate job', () => {
     expect(gateStart).toBeGreaterThan(-1);
   });

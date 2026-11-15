@@ -4,6 +4,8 @@ import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
+const SUBPROCESS_TEST_TIMEOUT_MS = 60_000;
+
 const SCRIPT = join(process.cwd(), 'scripts/strip-next-polyfills.mjs');
 const POLYFILL_DIR = 'node_modules/next/dist/build/polyfills';
 const MODULE_REL = `${POLYFILL_DIR}/polyfill-module.js`;
@@ -33,7 +35,9 @@ afterEach(() => {
   rmSync(dir, { recursive: true, force: true });
 });
 
-describe('strip-next-polyfills.mjs: hardened postinstall', () => {
+describe('strip-next-polyfills.mjs: hardened postinstall', {
+  timeout: SUBPROCESS_TEST_TIMEOUT_MS,
+}, () => {
   it('exits non-zero when the targets are absent (no more silent no-op)', () => {
     const res = run();
     expect(res.status).not.toBe(0);

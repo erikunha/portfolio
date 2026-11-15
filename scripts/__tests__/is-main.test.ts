@@ -4,6 +4,8 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
+const SUBPROCESS_TEST_TIMEOUT_MS = 60_000;
+
 const TSX = join(process.cwd(), 'node_modules/.bin/tsx');
 const IS_MAIN = join(process.cwd(), 'scripts/lib/is-main.ts');
 const MAIN_MARKER = 'is-main:true';
@@ -23,7 +25,7 @@ function run(entry: string, ...args: string[]): string {
   return execFileSync(TSX, [entry, ...args], { encoding: 'utf8', stdio: 'pipe' });
 }
 
-describe('isMain', () => {
+describe('isMain', { timeout: SUBPROCESS_TEST_TIMEOUT_MS }, () => {
   it('is true when the module is run directly', () => {
     expect(run(fixture().script)).toContain(MAIN_MARKER);
   });

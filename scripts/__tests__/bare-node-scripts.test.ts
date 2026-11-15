@@ -4,6 +4,8 @@ import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
+const SUBPROCESS_TEST_TIMEOUT_MS = 60_000;
+
 const WORKFLOWS_DIR = join(process.cwd(), '.github/workflows');
 const BARE_NODE_TS_RUN = /\bnode (scripts\/[\w./-]+\.ts)\b/g;
 const WORKFLOW_FILE = /\.ya?ml$/;
@@ -44,7 +46,7 @@ function importWithBareNode(script: string): { status: number | null; stderr: st
   return { status: run.status, stderr: run.stderr };
 }
 
-describe('scripts a workflow runs with bare node', () => {
+describe('scripts a workflow runs with bare node', { timeout: SUBPROCESS_TEST_TIMEOUT_MS }, () => {
   const scripts = bareNodeScripts();
 
   it('includes the high-risk label, change detection, tool pins and hook installer scripts', () => {
