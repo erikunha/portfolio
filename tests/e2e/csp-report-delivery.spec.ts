@@ -6,7 +6,7 @@ import https from 'node:https';
 import type { AddressInfo } from 'node:net';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { chromium, expect, test } from '@playwright/test';
+import { type Browser, chromium, expect, test } from '@playwright/test';
 
 const SINK_PATH = '/api/csp-report';
 const REPORTING_API_CONTENT_TYPE = 'application/reports+json';
@@ -18,6 +18,7 @@ const CERT_SUBJECT = '/CN=localhost';
 const CERT_ALT_NAME = 'subjectAltName=DNS:localhost';
 const POLL_TIMEOUT_MS = 15_000;
 const HTTP_REDIRECT_FLOOR = 300;
+const LOOPBACK_HOST = '127.0.0.1';
 
 interface SinkPost {
   contentType: string;
@@ -64,39 +65,49 @@ test.describe('csp violation reports', () => {
     baseURL,
   }) => {
     const upstream = new URL(baseURL ?? '');
-    const directory = mkdtempSync(join(tmpdir(), 'csp-report-'));
-    const { key, cert, spki } = selfSignedCertificate(directory);
     const sinkPosts: SinkPost[] = [];
-
-    const front = https.createServer({ key, cert }, (incoming, outgoing) => {
-      const forwarded = http.request(
-        {
-          host: upstream.hostname,
-          port: upstream.port,
-          method: incoming.method,
-          path: incoming.url,
-          headers: { ...incoming.headers, host: upstream.host },
-        },
-        (answer) => {
-          if (incoming.method === 'POST' && incoming.url === SINK_PATH) {
-            sinkPosts.push({
-              contentType: incoming.headers['content-type'] ?? '',
-              status: answer.statusCode ?? 0,
-            });
-          }
-          outgoing.writeHead(answer.statusCode ?? 0, answer.headers);
-          answer.pipe(outgoing);
-        },
-      );
-      incoming.pipe(forwarded);
-    });
-    await new Promise<void>((resolve) => front.listen(0, resolve));
-    const origin = `https://localhost:${(front.address() as AddressInfo).port}`;
-
-    const browser = await chromium.launch({
-      args: [`--ignore-certificate-errors-spki-list=${spki}`],
-    });
+    let directory: string | undefined;
+    let front: https.Server | undefined;
+    let browser: Browser | undefined;
     try {
+      directory = mkdtempSync(join(tmpdir(), 'csp-report-'));
+      const { key, cert, spki } = selfSignedCertificate(directory);
+      const server = https.createServer({ key, cert }, (incoming, outgoing) => {
+        const forwarded = http.request(
+          {
+            host: upstream.hostname,
+            port: upstream.port,
+            method: incoming.method,
+            path: incoming.url,
+            headers: { ...incoming.headers, host: upstream.host },
+          },
+          (answer) => {
+            if (incoming.method === 'POST' && incoming.url === SINK_PATH) {
+              sinkPosts.push({
+                contentType: incoming.headers['content-type'] ?? '',
+                status: answer.statusCode ?? 0,
+              });
+            }
+            outgoing.writeHead(answer.statusCode ?? 0, answer.headers);
+            answer.pipe(outgoing);
+          },
+        );
+        incoming.pipe(forwarded);
+      });
+      front = server;
+      let serverError: Error | undefined;
+      await new Promise<void>((resolve, reject) => {
+        server.on('error', (error) => {
+          serverError = error;
+          reject(error);
+        });
+        server.listen(0, LOOPBACK_HOST, resolve);
+      });
+      const origin = `https://localhost:${(server.address() as AddressInfo).port}`;
+
+      browser = await chromium.launch({
+        args: [`--ignore-certificate-errors-spki-list=${spki}`],
+      });
       const context = await browser.newContext();
       await context.grantPermissions([BACKGROUND_SYNC_PERMISSION], { origin });
       const page = await context.newPage();
@@ -118,15 +129,21 @@ test.describe('csp violation reports', () => {
       await expect
         .poll(() => reportStatuses, { timeout: POLL_TIMEOUT_MS })
         .toContain(`csp-endpoint:csp-violation:${DELIVERED_STATUS}`);
+      expect(serverError).toBeUndefined();
       expect(sinkPosts.length).toBeGreaterThan(0);
       for (const post of sinkPosts) {
         expect(post.contentType).toContain(REPORTING_API_CONTENT_TYPE);
         expect(post.status).toBeLessThan(HTTP_REDIRECT_FLOOR);
       }
     } finally {
-      await browser.close();
-      front.close();
-      rmSync(directory, { recursive: true, force: true });
+      await browser?.close();
+      if (front?.listening) {
+        await new Promise<void>((resolve) => {
+          front?.close(() => resolve());
+          front?.closeAllConnections();
+        });
+      }
+      if (directory) rmSync(directory, { recursive: true, force: true });
     }
   });
 });
