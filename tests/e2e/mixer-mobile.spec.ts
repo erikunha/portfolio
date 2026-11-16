@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { horizontalOverflow } from './_helpers/geometry';
+import { CORE_WIDTHS, horizontalOverflow, NARROW_PHONE_WIDTHS, WIDTH } from './_helpers/geometry';
 import { installMockBackend } from './_helpers/mock-backend';
 
 const SECTION_SELECTOR = '#sec-guitar';
@@ -35,9 +35,7 @@ test('the DAW mixer shares the guitar module and has no section of its own', {
   expect(order[order.indexOf('sec-guitar') + 1]).toBe('sec-contact');
 });
 
-const OVERFLOW_WIDTHS = [320, 390, 768, 1280];
-
-for (const width of OVERFLOW_WIDTHS) {
+for (const width of CORE_WIDTHS) {
   test(`the guitar and mixer module keeps the page inside the viewport at ${width}px`, {
     tag: '@cross-browser',
   }, async ({ page }) => {
@@ -61,7 +59,7 @@ test(
       'the mobile variant only ships to mobile user agents',
     );
     await installMockBackend(page, { log: 'accept', forget: 'happy' });
-    await page.setViewportSize({ width: 390, height: VIEWPORT_HEIGHT });
+    await page.setViewportSize({ width: WIDTH.PHONE, height: VIEWPORT_HEIGHT });
     await page.goto('/');
     const mixer = page.locator(MOBILE_SELECTOR);
     await mixer.scrollIntoViewIfNeeded();
@@ -87,7 +85,7 @@ test(
       'the mobile variant only ships to mobile user agents',
     );
     await installMockBackend(page, { log: 'accept', forget: 'happy' });
-    await page.setViewportSize({ width: 390, height: VIEWPORT_HEIGHT });
+    await page.setViewportSize({ width: WIDTH.PHONE, height: VIEWPORT_HEIGHT });
     await page.goto('/');
     const card = page.locator('#sec-guitar [data-testid="channel-mobile-CH 01"]');
     await card.scrollIntoViewIfNeeded();
@@ -110,7 +108,7 @@ test(
       'the desktop table only ships to desktop user agents',
     );
     await installMockBackend(page, { log: 'accept', forget: 'happy' });
-    await page.setViewportSize({ width: 1280, height: VIEWPORT_HEIGHT });
+    await page.setViewportSize({ width: WIDTH.DESKTOP, height: VIEWPORT_HEIGHT });
     await page.goto('/');
     const mixer = page.locator(DESKTOP_SELECTOR);
     await mixer.scrollIntoViewIfNeeded();
@@ -128,7 +126,7 @@ test(
   },
 );
 
-for (const width of [1280, 320]) {
+for (const width of [WIDTH.DESKTOP, WIDTH.PHONE_NARROW]) {
   test(
     `no two cells of a desktop channel row overlap at ${width}px`,
     { tag: '@cross-browser' },
@@ -257,7 +255,7 @@ test(
       'the desktop table only ships to desktop user agents',
     );
     await installMockBackend(page, { log: 'accept', forget: 'happy' });
-    await page.setViewportSize({ width: 375, height: VIEWPORT_HEIGHT });
+    await page.setViewportSize({ width: WIDTH.PHONE_COMPACT, height: VIEWPORT_HEIGHT });
     await page.goto('/');
     const mixer = page.locator(DESKTOP_SELECTOR);
     await mixer.scrollIntoViewIfNeeded();
@@ -294,7 +292,7 @@ test(
       'the mobile variant only ships to mobile user agents',
     );
     await installMockBackend(page, { log: 'accept', forget: 'happy' });
-    await page.setViewportSize({ width: 390, height: VIEWPORT_HEIGHT });
+    await page.setViewportSize({ width: WIDTH.PHONE, height: VIEWPORT_HEIGHT });
     await page.goto('/');
     const mixer = page.locator(MOBILE_SELECTOR);
     await mixer.scrollIntoViewIfNeeded();
@@ -317,7 +315,6 @@ test(
 
 const WCAG_MIN_TARGET_PX = 24;
 const TOUCH_TARGET_PX = 44;
-const NARROW_WIDTHS = [320, 375];
 
 async function rmsBoxes(page: import('@playwright/test').Page) {
   await page.locator(DESKTOP_SELECTOR).scrollIntoViewIfNeeded();
@@ -329,7 +326,7 @@ async function rmsBoxes(page: import('@playwright/test').Page) {
   );
 }
 
-for (const width of NARROW_WIDTHS) {
+for (const width of NARROW_PHONE_WIDTHS) {
   test(
     `record, mute and solo keep a 24px target at ${width}px`,
     { tag: '@cross-browser' },
@@ -354,7 +351,7 @@ for (const width of NARROW_WIDTHS) {
 test.describe('touch screens', { tag: '@cross-browser' }, () => {
   test.use({ hasTouch: true, isMobile: true });
 
-  for (const width of NARROW_WIDTHS) {
+  for (const width of NARROW_PHONE_WIDTHS) {
     test(`record, mute and solo reach 44px and the console stays inside ${width}px`, async ({
       page,
     }, testInfo) => {
@@ -385,7 +382,7 @@ test(
       'the desktop table only ships to desktop user agents',
     );
     await installMockBackend(page, { log: 'accept', forget: 'happy' });
-    await page.setViewportSize({ width: 375, height: VIEWPORT_HEIGHT });
+    await page.setViewportSize({ width: WIDTH.PHONE_COMPACT, height: VIEWPORT_HEIGHT });
     await page.goto('/');
     await page.locator(DESKTOP_SELECTOR).scrollIntoViewIfNeeded();
     const clipped = await page

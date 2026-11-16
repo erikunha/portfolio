@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test';
 import { errorsContent } from '../../content/errors';
 import { SITE_LOCALE } from '../../content/site-locale';
+import { WIDTH } from './_helpers/geometry';
 import { waitForHydration } from './_helpers/hydration';
 import { drainRoutes } from './_helpers/routes';
 
@@ -45,7 +46,7 @@ test.describe('404 route', { tag: '@cross-browser' }, () => {
 test('the 404 heading takes focus for the announcement without painting a ring', {
   tag: '@cross-browser',
 }, async ({ page }) => {
-  await page.setViewportSize({ width: 375, height: 812 });
+  await page.setViewportSize({ width: WIDTH.PHONE_COMPACT, height: 812 });
   await page.goto('/route-that-does-not-exist');
   const heading = page.getByRole('heading', { level: 1 });
   await expect(heading).toBeFocused();
@@ -57,10 +58,10 @@ test('the 404 heading takes focus for the announcement without painting a ring',
 
 const SCROLL_TOLERANCE_PX = 0;
 const NARROW_ERROR_VIEWPORTS = [
-  { width: 320, height: 700 },
-  { width: 390, height: 844 },
-  { width: 768, height: 1024 },
-  { width: 1280, height: 720 },
+  { width: WIDTH.PHONE_NARROW, height: 700 },
+  { width: WIDTH.PHONE, height: 844 },
+  { width: WIDTH.TABLET, height: 1024 },
+  { width: WIDTH.DESKTOP, height: 720 },
 ];
 
 for (const { width, height } of NARROW_ERROR_VIEWPORTS) {

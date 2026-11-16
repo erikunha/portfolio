@@ -1,8 +1,8 @@
 import { expect, type Page, test } from '@playwright/test';
+import { FULL_SWEEP_WIDTHS } from './_helpers/geometry';
 import { gotoSettled } from './_helpers/streamed';
 
 const ROUTES = ['/', '/pt'];
-const WIDTHS = [320, 375, 390, 768, 1024, 1280];
 const VIEWPORT_HEIGHT = 900;
 const LOCATION_SELECTOR = '.career-location';
 const PERIOD_SELECTOR = '.career-period';
@@ -57,7 +57,7 @@ function splitUnits(page: Page): Promise<string[]> {
 }
 
 for (const path of ROUTES) {
-  for (const width of WIDTHS) {
+  for (const width of FULL_SWEEP_WIDTHS) {
     test(`${path} career place, work mode and dates never wrap inside a unit at ${width}`, {
       tag: '@cross-browser',
     }, async ({ page }) => {

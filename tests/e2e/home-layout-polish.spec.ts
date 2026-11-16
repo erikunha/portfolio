@@ -1,9 +1,21 @@
 import { expect, test } from '@playwright/test';
+import { WIDTH } from './_helpers/geometry';
 import { gotoSettled } from './_helpers/streamed';
 
-const COMPACT_WIDTHS = [320, 360, 390, 399] as const;
-const CARD_WIDTHS = [390, 768, 1024, 1280, 1920] as const;
-const ABOUT_WIDTHS = [320, 390, 479] as const;
+const COMPACT_WIDTHS = [
+  WIDTH.PHONE_NARROW,
+  WIDTH.PHONE_ANDROID,
+  WIDTH.PHONE,
+  WIDTH.BELOW_PHONE_LARGE,
+] as const;
+const CARD_WIDTHS = [
+  WIDTH.PHONE,
+  WIDTH.TABLET,
+  WIDTH.LAPTOP,
+  WIDTH.DESKTOP,
+  WIDTH.DESKTOP_FULL_HD,
+] as const;
+const ABOUT_WIDTHS = [WIDTH.PHONE_NARROW, WIDTH.PHONE, WIDTH.BELOW_PHONE_WIDE] as const;
 const VIEWPORT_HEIGHT = 900;
 const MIN_TEXT_CLEARANCE_PX = 4;
 const SAME_ROW_TOLERANCE_PX = 2;
@@ -112,7 +124,7 @@ test.describe('project cards keep their stats under the description', () => {
   }
 });
 
-const ERROR_BOX_WIDTHS = [390, 1280] as const;
+const ERROR_BOX_WIDTHS = [WIDTH.PHONE, WIDTH.DESKTOP] as const;
 const FILL_TOLERANCE_PX = 1;
 
 test.describe('the eval error box fills the block it stands in', () => {

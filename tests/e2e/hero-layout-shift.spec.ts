@@ -1,15 +1,15 @@
 import { expect, type Page, test } from '@playwright/test';
-import { VIEWPORTS } from './_helpers/geometry';
+import { VIEWPORTS, WIDTH } from './_helpers/geometry';
 
 const MAX_HERO_CLS = 0.01;
 const BOOT_LINE_COUNT = 11;
 const BOOT_SETTLE_MS = 1500;
-const MOBILE_BOOT_MIN_WIDTH_PX = 390;
+const MOBILE_BOOT_MIN_WIDTH_PX = WIDTH.PHONE;
 const VIEWPORT_WIDTHS = [
   { name: 'narrow phone', ...VIEWPORTS.PHONE_NARROW },
   { name: 'phone', ...VIEWPORTS.PHONE },
   { name: 'tablet', ...VIEWPORTS.TABLET },
-  { name: 'small desktop', width: 1024, height: 768 },
+  { name: 'small desktop', width: WIDTH.LAPTOP, height: 768 },
   { name: 'desktop', ...VIEWPORTS.DESKTOP },
 ] as const;
 

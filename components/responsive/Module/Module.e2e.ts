@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test';
 import { SECTION_LABELS } from '@/content/section-labels';
 import { SITE_LOCALE } from '@/content/site-locale';
+import { CORE_WIDTHS } from '../../../tests/e2e/_helpers/geometry';
 
 const MODULE_IDS = [
   'sec-shell',
@@ -9,11 +10,10 @@ const MODULE_IDS = [
   'sec-guitar',
   'sec-contact',
 ] as const;
-const VIEWPORTS = [320, 390, 768, 1280];
 const ICON_GAP_TOLERANCE_PX = 12;
 const SAME_LINE_TOLERANCE_PX = 4;
 
-for (const width of VIEWPORTS) {
+for (const width of CORE_WIDTHS) {
   test.describe(`module headers at ${width}`, () => {
     test.use({ viewport: { width, height: 900 } });
 

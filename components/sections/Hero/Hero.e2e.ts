@@ -2,15 +2,21 @@ import { expect, type Locator, type Page, test } from '@playwright/test';
 import { heroContent } from '@/content/hero';
 import { profile } from '@/content/profile';
 import { SITE_LOCALE } from '@/content/site-locale';
+import {
+  CORE_LAPTOP_WIDTHS,
+  NARROW_PHONE_WIDTHS,
+  PHONE_PAIR_WIDTHS,
+  WIDTH,
+} from '../../../tests/e2e/_helpers/geometry';
 import { waitForHydration } from '../../../tests/e2e/_helpers/hydration';
 import { freezeMotion } from '../../../tests/e2e/_helpers/motion';
 
 const viewports = [
-  { width: 1280, height: 720 },
-  { width: 375, height: 812 },
+  { width: WIDTH.DESKTOP, height: 720 },
+  { width: WIDTH.PHONE_COMPACT, height: 812 },
 ];
 
-const WIDE_BREAKPOINT = 1024;
+const WIDE_BREAKPOINT = WIDTH.LAPTOP;
 
 for (const viewport of viewports) {
   test.describe(`r106 Hero and About at ${viewport.width}x${viewport.height}`, () => {
@@ -34,7 +40,7 @@ for (const viewport of viewports) {
         await expect(link).toHaveAttribute('href', action.href);
         await expect(link).toBeInViewport();
       }
-      if (viewport.width < 390) {
+      if (viewport.width < WIDTH.PHONE) {
         await expect(hero.locator('.hero-boot-mobile')).toBeHidden();
       }
       expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
@@ -60,8 +66,8 @@ for (const viewport of viewports) {
   });
 }
 
-const MOBILE_STACK = { width: 390, height: 844 };
-const DESKTOP_ROW = { width: 1280, height: 720 };
+const MOBILE_STACK = { width: WIDTH.PHONE, height: 844 };
+const DESKTOP_ROW = { width: WIDTH.DESKTOP, height: 720 };
 const HERO_GROUPS = ['[data-testid="hero-stats"]', '[data-testid="hero-ctas"]'];
 
 async function childBoxes(page: Page, group: string) {
@@ -133,7 +139,7 @@ test.describe('Hero groups reflow by viewport', () => {
   });
 });
 
-const TABLET_BOOT_WIDTHS = [768, 1023];
+const TABLET_BOOT_WIDTHS = [WIDTH.TABLET, WIDTH.BELOW_LAPTOP];
 const TABLET_BOOT_VIEWPORT_HEIGHT = 900;
 
 test.describe('Hero boot log between 768 and 1023px', () => {
@@ -170,13 +176,12 @@ test.describe('Hero boot log between 768 and 1023px', () => {
   }
 });
 
-const METADATA_MOBILE_WIDTHS = [320, 390];
-const METADATA_WIDE_WIDTHS = [768, 1280];
+const METADATA_WIDE_WIDTHS = [WIDTH.TABLET, WIDTH.DESKTOP];
 const METADATA_VIEWPORT_HEIGHT = 900;
 
 const WIDE_METADATA_ROWS: Record<number, string[]> = {
-  768: ['location + availability + employer', 'domain + language'],
-  1280: ['location + availability + employer', 'domain + language'],
+  [WIDTH.TABLET]: ['location + availability + employer', 'domain + language'],
+  [WIDTH.DESKTOP]: ['location + availability + employer', 'domain + language'],
 };
 
 const metadataContext = (page: Page) => page.locator('.hero-frame:visible .hero-context');
@@ -215,7 +220,7 @@ async function renderedLines(locator: Locator): Promise<string[]> {
 }
 
 test.describe('Hero metadata facts', () => {
-  for (const width of METADATA_MOBILE_WIDTHS) {
+  for (const width of PHONE_PAIR_WIDTHS) {
     test(`give every fact its own line at ${width}`, async ({ page }) => {
       await page.setViewportSize({ width, height: METADATA_VIEWPORT_HEIGHT });
       await page.goto('/');
@@ -272,11 +277,9 @@ test.describe('Hero metadata facts', () => {
   }
 });
 
-const SEPARATOR_WIDTHS = [320, 390, 768, 1024, 1280];
-
 test.describe('Hero metadata separators', () => {
   for (const path of ['/', '/pt']) {
-    for (const width of SEPARATOR_WIDTHS) {
+    for (const width of CORE_LAPTOP_WIDTHS) {
       test(`${path} shows a separator only between two pairs on one line at ${width}`, async ({
         page,
       }) => {
@@ -327,7 +330,7 @@ test.describe('Hero metadata separators', () => {
   }
 });
 
-for (const width of [320, 375]) {
+for (const width of NARROW_PHONE_WIDTHS) {
   test(`every hero CTA label fits inside its box at ${width}px`, async ({ page }) => {
     await page.setViewportSize({ width, height: 700 });
     await page.goto('/');
@@ -342,7 +345,7 @@ for (const width of [320, 375]) {
   });
 }
 
-for (const width of [375, 1280]) {
+for (const width of [WIDTH.PHONE_COMPACT, WIDTH.DESKTOP]) {
   test(`the WHOAMI gutter numbers every visual line at ${width}px`, async ({ page }) => {
     await page.setViewportSize({ width, height: 800 });
     await page.goto('/');
@@ -401,7 +404,7 @@ async function countBootMutations(page: Page, windowMs: number): Promise<number>
 }
 
 test.describe('Hero boot loop follows the motion switch and the viewport', () => {
-  test.use({ viewport: { width: 1280, height: 720 } });
+  test.use({ viewport: { width: WIDTH.DESKTOP, height: 720 } });
 
   test('the MOTION control stops the typing loop and shows the static boot', async ({ page }) => {
     await page.goto('/');

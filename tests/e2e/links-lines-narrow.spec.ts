@@ -1,12 +1,12 @@
 import { expect, test } from '@playwright/test';
+import { FULL_SWEEP_WIDTHS, WIDTH } from './_helpers/geometry';
 import { gotoSettled } from './_helpers/streamed';
 
 const ROUTES = ['/links', '/links/en'] as const;
-const WIDTHS = [320, 375, 390, 768, 1024, 1280] as const;
 const LEFT_EDGE_TOLERANCE_PX = 1;
 
 for (const route of ROUTES) {
-  for (const width of WIDTHS) {
+  for (const width of FULL_SWEEP_WIDTHS) {
     test(`${route} at ${width}px keeps every host on one line, left under its label when stacked`, {
       tag: '@cross-browser',
     }, async ({ page }) => {
@@ -48,7 +48,7 @@ for (const route of ROUTES) {
 test('a stacked row at 320px puts the host on its own line under the label', {
   tag: '@cross-browser',
 }, async ({ page }) => {
-  await page.setViewportSize({ width: 320, height: 900 });
+  await page.setViewportSize({ width: WIDTH.PHONE_NARROW, height: 900 });
   await gotoSettled(page, '/links/en');
   const stacked = await page.evaluate(
     () =>

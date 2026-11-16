@@ -1,12 +1,12 @@
 import { expect, test } from '@playwright/test';
+import { PHONE_RANGE_WIDTHS } from './_helpers/geometry';
 import { gotoSettled } from './_helpers/streamed';
 
-const WIDTHS = [320, 360, 375, 390, 430] as const;
 const VIEWPORT_HEIGHT = 812;
 const AXIS_TOLERANCE_PX = 1;
 const DOTS_TOLERANCE_PX = 2;
 
-for (const width of WIDTHS) {
+for (const width of PHONE_RANGE_WIDTHS) {
   test(`the contact window bar centres its labels on the bar axis at ${width}px`, {
     tag: '@cross-browser',
   }, async ({ page }) => {

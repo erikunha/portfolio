@@ -1,7 +1,16 @@
 import { expect, test } from '@playwright/test';
+import { WIDTH } from './_helpers/geometry';
 import { gotoSettled } from './_helpers/streamed';
 
-const WIDTHS = [320, 375, 390, 767, 768, 1024, 1280] as const;
+const WIDTHS = [
+  WIDTH.PHONE_NARROW,
+  WIDTH.PHONE_COMPACT,
+  WIDTH.PHONE,
+  WIDTH.BELOW_TABLET,
+  WIDTH.TABLET,
+  WIDTH.LAPTOP,
+  WIDTH.DESKTOP,
+] as const;
 const VIEWPORT_HEIGHT = 900;
 const EDGE_TOLERANCE_PX = 1;
 

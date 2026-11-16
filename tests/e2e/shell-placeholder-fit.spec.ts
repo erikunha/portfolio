@@ -1,11 +1,11 @@
 import { expect, type Locator, type Page, test } from '@playwright/test';
 import { SITE_LOCALE, type SiteLocale } from '../../content/site-locale';
+import { CORE_COMPACT_WIDTHS, WIDTH } from './_helpers/geometry';
 import { freezeMotion } from './_helpers/motion';
 import { openShell } from './_helpers/shell';
 
-const WIDTHS = [320, 375, 768, 1280] as const;
 const VIEWPORT_HEIGHT = 844;
-const TABLET_WIDTH = 768;
+const TABLET_WIDTH = WIDTH.TABLET;
 const PATHS: Record<SiteLocale, string> = { [SITE_LOCALE.en]: '/', [SITE_LOCALE.pt]: '/pt' };
 const PLACEHOLDER = '[data-testid="shell-placeholder"]';
 const PLACEHOLDER_TEXT = `${PLACEHOLDER} > span:first-child`;
@@ -36,7 +36,7 @@ async function sampleLoop(page: Page): Promise<Clip[]> {
   return samples;
 }
 
-for (const width of WIDTHS) {
+for (const width of CORE_COMPACT_WIDTHS) {
   for (const locale of Object.values(SITE_LOCALE)) {
     test.describe(`the shell placeholder at ${width}px (${locale})`, {
       tag: '@cross-browser',

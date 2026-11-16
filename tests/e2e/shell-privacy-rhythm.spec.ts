@@ -1,14 +1,14 @@
 import { expect, test } from '@playwright/test';
+import { CORE_COMPACT_WIDTHS } from './_helpers/geometry';
 import { revealDeferredContent } from './_helpers/snapshot';
 import { gotoSettled } from './_helpers/streamed';
 
-const WIDTHS = [320, 375, 768, 1280] as const;
 const VIEWPORT_HEIGHT = 900;
 const TARGET_PX = 44;
 const SUBPIXEL_PX = 1;
 const SHELL_EMAIL = '.shell-privacy-notice a[href^="mailto:"]';
 
-for (const width of WIDTHS) {
+for (const width of CORE_COMPACT_WIDTHS) {
   test(`at ${width}px the shell privacy email keeps a 44px target without stretching its line`, {
     tag: '@cross-browser',
   }, async ({ page }) => {

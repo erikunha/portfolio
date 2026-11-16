@@ -3,7 +3,7 @@ import { brandByLocale } from '@/content/brand';
 import { LINKS_PATH } from '@/content/links.constants';
 import { siteNavChrome } from '@/content/navigation';
 import { SITE_LOCALE, type SiteLocale } from '@/content/site-locale';
-import { horizontalOverflow, VIEWPORTS } from './_helpers/geometry';
+import { horizontalOverflow, PHONE_PAIR_WIDTHS, VIEWPORTS, WIDTH } from './_helpers/geometry';
 import { gotoHydrated, MENU_TRIGGER, openSectionMenu } from './_helpers/hydration';
 import { gotoSettled } from './_helpers/streamed';
 
@@ -23,8 +23,15 @@ const OVERFLOW_PATHS = [
   '/links/en',
 ];
 const { DESKTOP, PHONE } = VIEWPORTS;
-const WIDTHS = [320, 390, 768, 1024, 1280, 1536];
-const PHONE_MAX_WIDTH = 767;
+const WIDTHS = [
+  WIDTH.PHONE_NARROW,
+  WIDTH.PHONE,
+  WIDTH.TABLET,
+  WIDTH.LAPTOP,
+  WIDTH.DESKTOP,
+  WIDTH.DESKTOP_LARGE,
+];
+const PHONE_MAX_WIDTH = WIDTH.BELOW_TABLET;
 const DRAWER = '#section-drawer';
 const DS_DRAWER_NAV = 'Design system menu';
 
@@ -103,7 +110,7 @@ test.describe('one shell on every page', () => {
     ).toHaveCount(0);
   });
 
-  for (const width of [390, 768]) {
+  for (const width of [WIDTH.PHONE, WIDTH.TABLET]) {
     test(`the design-system side rail is not repeated at the end of a ${width}px page`, async ({
       page,
     }) => {
@@ -114,7 +121,7 @@ test.describe('one shell on every page', () => {
   }
 
   test('the design-system side rail shows from 1024px', async ({ page }) => {
-    await page.setViewportSize({ width: 1024, height: DESKTOP.height });
+    await page.setViewportSize({ width: WIDTH.LAPTOP, height: DESKTOP.height });
     await gotoSettled(page, '/design-system');
     await expect(page.locator('.ds-sidebar:visible')).toHaveCount(1);
   });
@@ -134,7 +141,7 @@ test.describe('one shell on every page', () => {
 });
 
 for (const path of ['/', '/pt']) {
-  for (const width of [320, 390]) {
+  for (const width of PHONE_PAIR_WIDTHS) {
     test(`${path} centers the EN/PT switch in the mobile title bar at ${width}px`, async ({
       page,
     }) => {

@@ -1,8 +1,18 @@
 import { expect, test } from '@playwright/test';
+import { WIDTH } from './_helpers/geometry';
 import { gotoSettled } from './_helpers/streamed';
 
 const PAGES = ['/', '/pt'] as const;
-const WIDTHS = [320, 360, 375, 390, 480, 768, 1024, 1280] as const;
+const WIDTHS = [
+  WIDTH.PHONE_NARROW,
+  WIDTH.PHONE_ANDROID,
+  WIDTH.PHONE_COMPACT,
+  WIDTH.PHONE,
+  WIDTH.PHONE_WIDE,
+  WIDTH.TABLET,
+  WIDTH.LAPTOP,
+  WIDTH.DESKTOP,
+] as const;
 const VIEWPORT_HEIGHT = 900;
 const LABEL = '[data-testid="hero-stats-item"] .stat-tile-label';
 const WORD = /[^\s\-‐-―]+-?/g;

@@ -1,6 +1,7 @@
 import { expect, type Page, test } from '@playwright/test';
 import { cvDocument } from '../../content/reading-views';
 import { SITE_LOCALE, type SiteLocale } from '../../content/site-locale';
+import { WIDTH } from './_helpers/geometry';
 import { gotoSettled } from './_helpers/streamed';
 
 const CASES: { path: string; locale: SiteLocale }[] = [
@@ -8,14 +9,14 @@ const CASES: { path: string; locale: SiteLocale }[] = [
   { path: '/pt/cv', locale: SITE_LOCALE.pt },
 ];
 const TWO_COLUMN_VIEWPORTS = [
-  { width: 1024, height: 768 },
-  { width: 1280, height: 800 },
-  { width: 1920, height: 1080 },
+  { width: WIDTH.LAPTOP, height: 768 },
+  { width: WIDTH.DESKTOP, height: 800 },
+  { width: WIDTH.DESKTOP_FULL_HD, height: 1080 },
 ];
-const ROW_VIEWPORTS = [{ width: 768, height: 1024 }, ...TWO_COLUMN_VIEWPORTS];
+const ROW_VIEWPORTS = [{ width: WIDTH.TABLET, height: 1024 }, ...TWO_COLUMN_VIEWPORTS];
 const STACKED_VIEWPORTS = [
-  { width: 390, height: 844 },
-  { width: 1280, height: 800 },
+  { width: WIDTH.PHONE, height: 844 },
+  { width: WIDTH.DESKTOP, height: 800 },
 ];
 const MAX_VALUE_LINES = 2;
 const EDGE_TOLERANCE_PX = 1;
@@ -49,7 +50,7 @@ for (const { path, locale } of CASES) {
     }
 
     test('skills read as one labeled row per category, not one paragraph', async ({ page }) => {
-      await open(page, path, TWO_COLUMN_VIEWPORTS[1] ?? { width: 1280, height: 800 });
+      await open(page, path, TWO_COLUMN_VIEWPORTS[1] ?? { width: WIDTH.DESKTOP, height: 800 });
       const { skills } = cvDocument[locale];
 
       await expect(page.locator(`${SKILLS} dt`), 'one term per skill category').toHaveText(
@@ -63,7 +64,7 @@ for (const { path, locale } of CASES) {
     });
 
     test('every achievement line shows a list marker', async ({ page }) => {
-      await open(page, path, TWO_COLUMN_VIEWPORTS[1] ?? { width: 1280, height: 800 });
+      await open(page, path, TWO_COLUMN_VIEWPORTS[1] ?? { width: WIDTH.DESKTOP, height: 800 });
       const styles = await page.locator('.reading-entry li').evaluateAll((items) =>
         items.map((item) => {
           const style = getComputedStyle(item);

@@ -1,8 +1,17 @@
 import { expect, type Page, test } from '@playwright/test';
+import { WIDTH } from './_helpers/geometry';
 import { waitForHydration } from './_helpers/hydration';
 import { gotoSettled } from './_helpers/streamed';
 
-const WIDTHS = [320, 390, 768, 1024, 1280, 1440, 1920];
+const WIDTHS = [
+  WIDTH.PHONE_NARROW,
+  WIDTH.PHONE,
+  WIDTH.TABLET,
+  WIDTH.LAPTOP,
+  WIDTH.DESKTOP,
+  WIDTH.DESKTOP_WIDE,
+  WIDTH.DESKTOP_FULL_HD,
+];
 const VIEWPORT_HEIGHT = 900;
 const EDGE_TOLERANCE_PX = 1;
 const BANNER_CONTROLS = 'a, button';
@@ -88,7 +97,10 @@ function renderedContentEdges(page: Page): Promise<Edges> {
 test.describe('every page content sits on the header safe zone', { tag: '@cross-browser' }, () => {
   for (const route of ROUTES) {
     test(`${route} shares the header content edges at every width`, async ({ page }) => {
-      await page.setViewportSize({ width: WIDTHS[0] ?? 320, height: VIEWPORT_HEIGHT });
+      await page.setViewportSize({
+        width: WIDTHS[0] ?? WIDTH.PHONE_NARROW,
+        height: VIEWPORT_HEIGHT,
+      });
       await gotoSettled(page, route);
       await waitForHydration(page, MAIN);
       const failures: string[] = [];
@@ -121,7 +133,7 @@ test.describe('every page content sits on the header safe zone', { tag: '@cross-
 });
 
 const READING_ROUTES = ['/cv', '/pt/cv', '/summary', '/pt/summary'];
-const TWO_COLUMN_FROM_PX = 1024;
+const TWO_COLUMN_FROM_PX = WIDTH.LAPTOP;
 const GOLDEN_RATIO = 1.618;
 const RATIO_TOLERANCE = 0.1;
 const FLOW_BLOCKS = '.reading-doc > *, .reading-main > *, .reading-split > :not(.reading-side)';
@@ -147,7 +159,10 @@ test.describe('reading pages start every block on the left edge and fill the zon
     test(`${route} keeps blocks on the safe-zone left edge, the aside on the right`, async ({
       page,
     }) => {
-      await page.setViewportSize({ width: WIDTHS[0] ?? 320, height: VIEWPORT_HEIGHT });
+      await page.setViewportSize({
+        width: WIDTHS[0] ?? WIDTH.PHONE_NARROW,
+        height: VIEWPORT_HEIGHT,
+      });
       await gotoSettled(page, route);
       const failures: string[] = [];
       for (const width of WIDTHS) {

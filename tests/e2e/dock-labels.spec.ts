@@ -1,14 +1,14 @@
 import { expect, test } from '@playwright/test';
 import { NAVIGATION } from '../../content/navigation';
 import { SITE_LOCALE } from '../../content/site-locale';
+import { PHONE_PAIR_WIDTHS, WIDTH } from './_helpers/geometry';
 import { gotoSettled } from './_helpers/streamed';
 
-const WIDTHS = [320, 390];
 const MIN_LABEL_GAP_PX = 8;
 const VIEWPORT_HEIGHT = 844;
 const ENGLISH_LANG = SITE_LOCALE.en;
 
-for (const width of WIDTHS) {
+for (const width of PHONE_PAIR_WIDTHS) {
   test(`the pt dock keeps every label apart and marks the English term at ${width}`, {
     tag: '@cross-browser',
   }, async ({ page }) => {
@@ -48,7 +48,7 @@ for (const width of WIDTHS) {
 test('the en dock marks no label as another language', { tag: '@cross-browser' }, async ({
   page,
 }) => {
-  await page.setViewportSize({ width: 390, height: VIEWPORT_HEIGHT });
+  await page.setViewportSize({ width: WIDTH.PHONE, height: VIEWPORT_HEIGHT });
   await gotoSettled(page, '/');
   await expect(page.locator('.dock > [lang]')).toHaveCount(0);
 });

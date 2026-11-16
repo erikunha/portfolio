@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { WIDTH } from './_helpers/geometry';
 
 test.use({ javaScriptEnabled: false });
 
@@ -19,8 +20,8 @@ const ROUTES = [
   '/this-route-does-not-exist',
 ] as const;
 const VIEWPORTS = [
-  { width: 1280, height: 720 },
-  { width: 375, height: 800 },
+  { width: WIDTH.DESKTOP, height: 720 },
+  { width: WIDTH.PHONE_COMPACT, height: 800 },
 ] as const;
 const SUBMIT = 'submit';
 

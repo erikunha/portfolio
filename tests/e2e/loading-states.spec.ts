@@ -1,10 +1,18 @@
 import { type Browser, type BrowserContext, expect, type Page, test } from '@playwright/test';
-import { expectStableFor, heightOf, settleFrames } from './_helpers/geometry';
+import { expectStableFor, heightOf, settleFrames, WIDTH } from './_helpers/geometry';
 import { freezeMotion } from './_helpers/motion';
 import { drainRoutes } from './_helpers/routes';
 
-const WIDTHS = [320, 360, 390, 600, 768, 1024, 1280] as const;
-const FEED_WIDTHS = [390, 768, 1280] as const;
+const WIDTHS = [
+  WIDTH.PHONE_NARROW,
+  WIDTH.PHONE_ANDROID,
+  WIDTH.PHONE,
+  WIDTH.TABLET_SMALL,
+  WIDTH.TABLET,
+  WIDTH.LAPTOP,
+  WIDTH.DESKTOP,
+] as const;
+const FEED_WIDTHS = [WIDTH.PHONE, WIDTH.TABLET, WIDTH.DESKTOP] as const;
 const VIEWPORT_HEIGHT = 900;
 const SUBPIXEL_PX = 1;
 const PENDING_DATA = '#sec-live-metrics [aria-busy="true"]';
@@ -195,7 +203,7 @@ test.describe('without JavaScript a loading state is not left running', () => {
   });
 
   test('the mixer boot box gives its reserved height back', async ({ page }) => {
-    await page.setViewportSize({ width: 390, height: VIEWPORT_HEIGHT });
+    await page.setViewportSize({ width: WIDTH.PHONE, height: VIEWPORT_HEIGHT });
     await page.goto('/');
     const box = await heightOf(page, '.daw-mixer-loading');
     expect(box, 'nothing replaces the box, so it takes only its own lines').toBeLessThan(

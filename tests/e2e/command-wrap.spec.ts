@@ -1,8 +1,9 @@
 import { expect, type Page, test } from '@playwright/test';
+import { WIDTH } from './_helpers/geometry';
 import { gotoSettled } from './_helpers/streamed';
 
 const ROUTES = ['/', '/pt'];
-const WIDTHS = [320, 360, 390];
+const WIDTHS = [WIDTH.PHONE_NARROW, WIDTH.PHONE_ANDROID, WIDTH.PHONE];
 const VIEWPORT_HEIGHT = 844;
 const COMMANDS = '.career-command, .career-header-command-mobile';
 

@@ -1,13 +1,13 @@
 import { expect, type Page, test } from '@playwright/test';
-import { settleFrames } from './_helpers/geometry';
+import { settleFrames, WIDTH } from './_helpers/geometry';
 import { installChunkedAsk } from './_helpers/mock-backend';
 import { freezeMotion } from './_helpers/motion';
 import { askShell, openShell, SHELL_SELECTOR } from './_helpers/shell';
 
 const VIEWPORTS = [
-  { width: 390, height: 844 },
-  { width: 768, height: 1024 },
-  { width: 1280, height: 800 },
+  { width: WIDTH.PHONE, height: 844 },
+  { width: WIDTH.TABLET, height: 1024 },
+  { width: WIDTH.DESKTOP, height: 800 },
 ] as const;
 const REQUEST_ID = '3f1c9a2e-7b44-4d0a-9c1e-5a8d2b6f0e71';
 const CHUNK = 'Erik builds agent platforms, eval harnesses and guardrails for production systems. ';

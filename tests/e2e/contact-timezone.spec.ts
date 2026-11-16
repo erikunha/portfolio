@@ -1,19 +1,19 @@
 import { expect, type Page, test } from '@playwright/test';
-import { horizontalOverflow as pageOverflowOf } from './_helpers/geometry';
+import { horizontalOverflow as pageOverflowOf, WIDTH } from './_helpers/geometry';
 
 const FIXED_NOW = new Date('2026-11-02T15:00:00Z');
 const VIEWPORTS = [
-  { name: '320', width: 320, height: 700 },
-  { name: '390', width: 390, height: 844 },
-  { name: '768', width: 768, height: 1024 },
-  { name: '1280', width: 1280, height: 720 },
+  { name: '320', width: WIDTH.PHONE_NARROW, height: 700 },
+  { name: '390', width: WIDTH.PHONE, height: 844 },
+  { name: '768', width: WIDTH.TABLET, height: 1024 },
+  { name: '1280', width: WIDTH.DESKTOP, height: 720 },
 ] as const;
 const PROPOSE_LABEL = 'PROPOSE_IN_MESSAGE ↙';
 const SEARCH_LABEL = 'Search your city or timezone';
 const MESSAGE_LABEL = '$ message:';
 const FOCUS_LINK_LABEL = 'edit message ↑';
-const PHONE = { width: 390, height: 844 };
-const DESKTOP = { width: 1280, height: 720 };
+const PHONE = { width: WIDTH.PHONE, height: 844 };
+const DESKTOP = { width: WIDTH.DESKTOP, height: 720 };
 const CLOCK_PATTERN = /^\d{2}:\d{2}:\d{2}$/;
 const TICK_TIMEOUT_MS = 5_000;
 const ERROR_STATUS_FLOOR = 400;

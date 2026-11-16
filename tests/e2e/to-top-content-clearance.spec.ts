@@ -1,9 +1,10 @@
 import { expect, type Page, test } from '@playwright/test';
+import { WIDTH } from './_helpers/geometry';
 import { freezeMotion } from './_helpers/motion';
 import { gotoSettled } from './_helpers/streamed';
 import { revealToTop, TO_TOP_NUDGE_PX } from './_helpers/to-top';
 
-const WIDTHS = [320, 360, 375] as const;
+const WIDTHS = [WIDTH.PHONE_NARROW, WIDTH.PHONE_ANDROID, WIDTH.PHONE_COMPACT] as const;
 const VIEWPORT_HEIGHT = 700;
 const SAMPLES_PER_AXIS = 5;
 const SETTLE_FRAMES = 3;

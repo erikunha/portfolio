@@ -1,10 +1,11 @@
 import { expect, test } from '@playwright/test';
+import { WIDTH } from './_helpers/geometry';
 import { waitForHydration } from './_helpers/hydration';
 import { freezeMotion } from './_helpers/motion';
 import { gotoSettled } from './_helpers/streamed';
 
 const FORM_SELECTOR = '[data-testid="contact-form"]';
-const WIDTHS = [320, 375, 390] as const;
+const WIDTHS = [WIDTH.PHONE_NARROW, WIDTH.PHONE_COMPACT, WIDTH.PHONE] as const;
 const ROUTES = ['/', '/pt'] as const;
 const SUBPIXEL_PX = 1;
 

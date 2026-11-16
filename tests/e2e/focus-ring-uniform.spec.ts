@@ -1,4 +1,5 @@
 import { expect, type Page, test } from '@playwright/test';
+import { WIDTH } from './_helpers/geometry';
 import { installMockBackend } from './_helpers/mock-backend';
 import { gotoSettled } from './_helpers/streamed';
 
@@ -10,8 +11,8 @@ const MIN_TARGETS = 8;
 const SETTLE_FRAMES = 2;
 const ROUTES = ['/', '/links', '/design-system'];
 const VIEWPORTS = [
-  { name: 'desktop', width: 1280, height: 720 },
-  { name: 'phone', width: 390, height: 844 },
+  { name: 'desktop', width: WIDTH.DESKTOP, height: 720 },
+  { name: 'phone', width: WIDTH.PHONE, height: 844 },
 ];
 const OWN_INDICATOR = new Set(['shell-input']);
 
