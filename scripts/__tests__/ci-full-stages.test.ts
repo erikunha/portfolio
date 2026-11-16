@@ -109,7 +109,7 @@ describe('every ci.yml job is run or declared not-run', () => {
 
   it('declares the aggregator and the paid eval as not-run, each with a reason', () => {
     const declared = new Map(NOT_RUN.map((entry) => [entry.id, entry]));
-    for (const id of ['ci-gate', 'ai-eval', 'ask:eval', 'eval:agents']) {
+    for (const id of ['ci-gate', 'ai-eval', 'ask:eval']) {
       expect(declared.get(id)?.reason.length ?? 0, id).toBeGreaterThan(10);
     }
     expect(declared.get('ci-gate')?.job).toBe('ci-gate');
@@ -118,11 +118,11 @@ describe('every ci.yml job is run or declared not-run', () => {
 
   it('never gives a paid eval a stage', () => {
     const commands = STAGES.map((candidate) => commandText(candidate.command(CTX)));
-    expect(commands.filter((text) => /ask:eval|eval:agents/.test(text))).toEqual([]);
+    expect(commands.filter((text) => /ask:eval/.test(text))).toEqual([]);
   });
 
   it('points every not-run package script at a script that exists', () => {
-    for (const id of ['ask:eval', 'eval:agents']) expect(pkg.scripts[id]).toBeDefined();
+    expect(pkg.scripts['ask:eval']).toBeDefined();
   });
 });
 

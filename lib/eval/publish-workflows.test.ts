@@ -10,10 +10,7 @@ type Job = { env?: Env; steps: Step[] };
 type Workflow = { env?: Env; jobs: Record<string, Job> };
 
 const WORKFLOWS_DIR = join(process.cwd(), '.github', 'workflows');
-const SCHEDULED = [
-  { file: 'ask-eval.yml', command: 'pnpm ask:eval' },
-  { file: 'agent-eval.yml', command: 'pnpm eval:agents' },
-] as const;
+const SCHEDULED = [{ file: 'ask-eval.yml', command: 'pnpm ask:eval' }] as const;
 const RESTRICTED_SECRET = {
   UPSTASH_REDIS_REST_URL: 'secrets.EVAL_PUBLISH_REDIS_REST_URL',
   UPSTASH_REDIS_REST_TOKEN: 'secrets.EVAL_PUBLISH_REDIS_REST_TOKEN',

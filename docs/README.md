@@ -63,16 +63,15 @@ portfolio/
 ├── content/              typed content modules (English and pt-BR) + central Zod schema registry + eval corpus
 ├── lib/                  BFF/server core: env, server/ (defineHandler, body limits, cron auth), rate-limit, ask/*, eval/*, links/*, telemetry, integrations
 ├── next.config.ts        cacheComponents, typedRoutes, static security headers, MDX pipeline
-├── scripts/             gate/tooling scripts (validate-content, check-*, ask-eval, agent-eval, ci-full, ...) and scripts/metrics (weekly delivery metrics)
+├── scripts/             gate/tooling scripts (validate-content, check-*, ask-eval, ci-full, ...) and scripts/metrics (weekly delivery metrics)
 ├── __tests__/           Vitest suites that hold repo-wide invariants (docs counts, content parity, API behavior, meta checks)
-├── evals/agents/        cases for the prompt-regression eval of fixed rule texts modelled on AGENTS.md
 ├── metrics/             rolling bands the weekly delivery-metrics job scores against
 ├── tests/               Playwright e2e, a11y (axe), visual regression, shared mocks
 ├── .agents/             canonical project skills (linked into .claude/skills)
 ├── .claude/             agent configuration: path-scoped rules, the read-only review agent, permissions baseline, skill links
 ├── .codex/              agent MCP configuration (mirrors .mcp.json)
 ├── .husky/              pre-commit, commit-msg and pre-push hooks
-├── .github/workflows/   ci.yml plus CodeQL, mutation, post-deploy smoke, ask-eval, agent-eval, weekly-metrics, rollback-rehearsal, tool-pins, lockfile-resolution-probe, high-risk-label, claude and claude-review
+├── .github/workflows/   ci.yml plus CodeQL, mutation, post-deploy smoke, ask-eval, weekly-metrics, rollback-rehearsal, tool-pins, lockfile-resolution-probe, high-risk-label, claude and claude-review
 └── ARCHITECTURE.md · STANDARDS.md · DECISIONS.md · AGENTS.md · REVIEW.md   (canonical root docs)
 ```
 

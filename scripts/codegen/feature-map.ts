@@ -33,8 +33,8 @@ const FEATURES: readonly Feature[] = [
   },
   {
     name: 'agent and MCP',
-    purpose: 'The agent-facing MCP route, the agent library and the agent prompt evals.',
-    prefixes: ['lib/agent/', 'app/api/mcp/', '__tests__/agent/', 'evals/agents/'],
+    purpose: 'The agent-facing MCP route and the agent library.',
+    prefixes: ['lib/agent/', 'app/api/mcp/', '__tests__/agent/'],
   },
   {
     name: 'eval',

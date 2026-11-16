@@ -47,7 +47,7 @@ afterEach(() => {
 
 describe('lib/eval/redis-publish', () => {
   it('returns { published: false } and never calls Redis when env is unset', async () => {
-    const r = await publishAggregate('agent-eval:latest', { ok: true });
+    const r = await publishAggregate('ask:eval:latest', { ok: true });
     expect(r.published).toBe(false);
     expect(mockGetRedis).not.toHaveBeenCalled();
     expect(mockSet).not.toHaveBeenCalled();
@@ -58,10 +58,10 @@ describe('lib/eval/redis-publish', () => {
     process.env.UPSTASH_REDIS_REST_TOKEN = 'tok';
     process.env[EVAL_PUBLISH_ENV] = EVAL_PUBLISH_VALUE;
     const aggregate = { a: 1 };
-    const r = await publishAggregate('agent-eval:latest', aggregate);
+    const r = await publishAggregate('ask:eval:latest', aggregate);
     expect(r).toEqual({ published: true });
     expect(mockSet).toHaveBeenCalledTimes(1);
-    expect(mockSet).toHaveBeenCalledWith('agent-eval:latest', JSON.stringify(aggregate));
+    expect(mockSet).toHaveBeenCalledWith('ask:eval:latest', JSON.stringify(aggregate));
   });
 
   it('catches a Redis throw and returns { published: false, error } (non-fatal)', async () => {
@@ -69,7 +69,7 @@ describe('lib/eval/redis-publish', () => {
     process.env.UPSTASH_REDIS_REST_TOKEN = 'tok';
     process.env[EVAL_PUBLISH_ENV] = EVAL_PUBLISH_VALUE;
     mockSet.mockRejectedValueOnce(new Error('redis down'));
-    const r = await publishAggregate('agent-eval:latest', { a: 1 });
+    const r = await publishAggregate('ask:eval:latest', { a: 1 });
     expect(r.published).toBe(false);
     expect(r.error).toContain('redis down');
   });

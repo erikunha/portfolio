@@ -65,7 +65,7 @@
 | spend budget, dedup lock   | `lib/ask/budget.ts`, `lib/ask/dedup.ts`                   |
 | the AI system prompt       | `lib/ask/system-prompt.ts` (facts in `content/ask-facts.ts`) |
 | the ask request pipeline   | `lib/ask/preflight.ts` then `lib/ask/stream.ts`           |
-| the AI evals               | `scripts/eval/ask-eval.ts`, `scripts/eval/agent-eval.ts`, `lib/eval/`, `content/ask-eval-*.ts`, `evals/agents/` |
+| the AI evals               | `scripts/eval/ask-eval.ts`, `lib/eval/`, `content/ask-eval-*.ts` |
 | MCP tools                  | `lib/agent/mcp-tools.ts` (route in `app/api/mcp/route.ts`) |
 | the section order and ids  | `content/section-registry.ts`                             |
 | locale helpers and paths   | `content/site-locale.ts`                                  |

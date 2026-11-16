@@ -352,10 +352,6 @@ export const NOT_RUN: readonly Exclusion[] = [
     reason: 'spends model gateway credits; run pnpm ask:eval by hand after editing its inputs',
   },
   {
-    id: 'eval:agents',
-    reason: 'spends model credits; run pnpm eval:agents by hand after editing AGENTS.md',
-  },
-  {
     id: 'detect-changes',
     job: 'detect-changes',
     reason: 'decides which jobs a PR runs; ci:full runs every stage whatever changed',

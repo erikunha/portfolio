@@ -27,14 +27,13 @@ The contact form, its mail route and the retry route.
 
 ## agent and MCP
 
-The agent-facing MCP route, the agent library and the agent prompt evals.
+The agent-facing MCP route and the agent library.
 
 | Path prefix |
 | --- |
 | `lib/agent/` |
 | `app/api/mcp/` |
 | `__tests__/agent/` |
-| `evals/agents/` |
 
 ## eval
 

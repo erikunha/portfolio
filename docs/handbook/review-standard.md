@@ -106,7 +106,7 @@ Almost all findings here are tests that pass for the wrong reason.
 Before writing: state the sentence the test proves. Then break the code and confirm the test fails. If it still passes, the test is worthless.
 Check: mutate the value under test and watch the test fail before you watch it pass.
 Examples:
-- PR148 `__tests__/agent/agent-eval-ab.test.ts`: the assertion matched the substring `$4`, so `$4.01` satisfied it; the fix anchored it to the cap clause.
+- PR148, an agent eval test: the assertion matched the substring `$4`, so `$4.01` satisfied it; the fix anchored it to the cap clause.
 - PR301 `tests/e2e/type-reveal.spec.ts`: the per route guard visited zero marked elements, so it passed for free; the fix asserted a marked count above zero.
 
 **Rule 13. A loop that filters items must assert that the filter produced something.**
@@ -258,7 +258,7 @@ Examples:
 Before writing: if you write "pure", "never", "always", "safe" or "prevents", prove the sentence against the implementation.
 Check: grep your new comments and your commit messages for absolute words and confirm each one.
 Examples:
-- PR147 `scripts/eval/agent-eval.ts`: the doc comment called the function a pure aggregate assembler while it read the clock; the fix passed the timestamp in.
+- PR147, an agent eval script: the doc comment called the function a pure aggregate assembler while it read the clock; the fix passed the timestamp in.
 - PR142 `DECISIONS.md`: the ADR said the linter flag stopped an in-progress import from being deleted, which the code said it does not; the fix aligned the ADR to the code.
 
 **Rule 31. The checklist box and the ADR entry are part of the change, not paperwork after it.**

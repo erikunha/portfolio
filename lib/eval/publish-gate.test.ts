@@ -74,9 +74,8 @@ describe('lib/eval/publish-gate', () => {
     expect(env.UPSTASH_REDIS_REST_TOKEN).toBeUndefined();
   });
 
-  it('is set in the two scheduled workflows and nowhere else', () => {
+  it('is set in the scheduled workflow and nowhere else', () => {
     expect(workflow('ask-eval.yml')).toMatch(FLAG_LINE);
-    expect(workflow('agent-eval.yml')).toMatch(FLAG_LINE);
     expect(workflow('ci.yml')).not.toContain(EVAL_PUBLISH_ENV);
   });
 });

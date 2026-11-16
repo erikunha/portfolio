@@ -3,7 +3,7 @@ import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { listFiles } from '@/scripts/lib/walk';
 
-const ROOTS = ['__tests__', 'scripts/__tests__', 'lib', 'components', 'evals', 'app'];
+const ROOTS = ['__tests__', 'scripts/__tests__', 'lib', 'components', 'app'];
 const SKIP_DIRS: ReadonlySet<string> = new Set(['node_modules', 'fixtures']);
 const TEST_FILE = /\.test\.(ts|tsx|mjs)$/;
 const ENV_SET_TO_UNDEFINED = /process\.env(\.[A-Za-z_][A-Za-z0-9_]*|\[[^\]]+\])\s*=\s*undefined\b/;

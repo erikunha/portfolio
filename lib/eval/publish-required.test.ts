@@ -113,30 +113,27 @@ describe('publishing was requested, so a missing or failed publish must fail the
   });
 });
 
-describe.each(['ask-eval', 'agent-eval'])(
-  '%s refuses to start a publishing run without credentials',
-  (script) => {
-    it(
-      'exits non-zero before any model call and says which secrets are missing',
-      () => {
-        const env: NodeJS.ProcessEnv = { ...process.env, ...PUBLISHING, CI: 'true' };
-        for (const name of REDIS_ENV_NAMES) delete env[name];
-        delete env.AI_GATEWAY_API_KEY;
-        delete env.VERCEL_OIDC_TOKEN;
-        const run = spawnSync(
-          `${process.cwd()}/node_modules/.bin/tsx`,
-          [`scripts/eval/${script}.ts`],
-          {
-            env: { ...env, TSX_TSCONFIG_PATH: 'scripts/eval/tsconfig.eval.json' },
-            encoding: 'utf8',
-            timeout: SCRIPT_TIMEOUT_MS,
-          },
-        );
-        expect(run.status).toBe(FAILURE_EXIT_CODE);
-        expect(run.stderr).toContain('UPSTASH_REDIS_REST_URL');
-        expect(run.stderr).not.toContain('AI_GATEWAY_API_KEY');
-      },
-      SCRIPT_TIMEOUT_MS + 5_000,
-    );
-  },
-);
+describe('ask-eval refuses to start a publishing run without credentials', () => {
+  it(
+    'exits non-zero before any model call and says which secrets are missing',
+    () => {
+      const env: NodeJS.ProcessEnv = { ...process.env, ...PUBLISHING, CI: 'true' };
+      for (const name of REDIS_ENV_NAMES) delete env[name];
+      delete env.AI_GATEWAY_API_KEY;
+      delete env.VERCEL_OIDC_TOKEN;
+      const run = spawnSync(
+        `${process.cwd()}/node_modules/.bin/tsx`,
+        ['scripts/eval/ask-eval.ts'],
+        {
+          env: { ...env, TSX_TSCONFIG_PATH: 'scripts/eval/tsconfig.eval.json' },
+          encoding: 'utf8',
+          timeout: SCRIPT_TIMEOUT_MS,
+        },
+      );
+      expect(run.status).toBe(FAILURE_EXIT_CODE);
+      expect(run.stderr).toContain('UPSTASH_REDIS_REST_URL');
+      expect(run.stderr).not.toContain('AI_GATEWAY_API_KEY');
+    },
+    SCRIPT_TIMEOUT_MS + 5_000,
+  );
+});

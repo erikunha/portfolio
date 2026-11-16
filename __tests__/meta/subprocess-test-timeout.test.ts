@@ -3,7 +3,7 @@ import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { listFiles } from '@/scripts/lib/walk';
 
-const ROOTS = ['__tests__', 'scripts/__tests__', 'lib', 'components', 'evals'];
+const ROOTS = ['__tests__', 'scripts/__tests__', 'lib', 'components'];
 const SKIP_DIRS: ReadonlySet<string> = new Set(['node_modules', 'fixtures']);
 const TEST_FILE = /\.test\.(ts|tsx|mjs)$/;
 const SPAWNS_A_RUNTIME =

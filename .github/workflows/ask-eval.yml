@@ -3,7 +3,7 @@ name: Ask Eval
 on:
   workflow_dispatch:
   schedule:
-    - cron: "0 5 * * 1" # 05:00 UTC every Monday, an hour ahead of agent-eval
+    - cron: "0 5 * * 1" # 05:00 UTC every Monday
 
 concurrency:
   group: ask-eval-${{ github.ref }}
@@ -26,7 +26,7 @@ jobs:
           UPSTASH_REDIS_REST_TOKEN: ${{ secrets.EVAL_PUBLISH_REDIS_REST_TOKEN }}
         run: |
           if [ -z "$UPSTASH_REDIS_REST_URL" ] || [ -z "$UPSTASH_REDIS_REST_TOKEN" ]; then
-            echo "::error::EVAL_PUBLISH_REDIS_REST_URL and EVAL_PUBLISH_REDIS_REST_TOKEN must be set as repository secrets (the Redis ACL user that can only SET ask:eval:latest and agent-eval:latest), or the result is never published"
+            echo "::error::EVAL_PUBLISH_REDIS_REST_URL and EVAL_PUBLISH_REDIS_REST_TOKEN must be set as repository secrets (the Redis ACL user that can only SET ask:eval:latest), or the result is never published"
             exit 1
           fi
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1

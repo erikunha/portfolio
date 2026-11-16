@@ -138,7 +138,6 @@ export const IGNORED_PATHS: readonly string[] = [
   'scripts/ci/ci-workflow.ts',
   'scripts/ci/free-port.ts',
   'scripts/metrics/',
-  'scripts/eval/agent-eval.ts',
   'scripts/gates/check-client-naming.ts',
   'scripts/gates/check-component-docs-coverage.ts',
   'scripts/gates/check-css-ownership.ts',

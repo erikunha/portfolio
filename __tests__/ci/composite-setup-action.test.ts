@@ -13,7 +13,6 @@ const RAW_SETUP_ACTIONS = ['pnpm/action-setup@'];
 
 const SHARED_WORKFLOWS = [
   'ci.yml',
-  'agent-eval.yml',
   'ask-eval.yml',
   'mutation.yml',
   'codeql.yml',

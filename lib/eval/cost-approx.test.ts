@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { SYSTEM_TEXT } from '@/lib/ask/system-prompt';
 import {
-  APPROX_AGENT_EVAL_INPUT_TOKENS,
   APPROX_FEATURE_OUTPUT_TOKENS,
   APPROX_TYPICAL_FEATURE_INPUT_TOKENS,
   PRICING_USD_PER_MTOK,
@@ -22,9 +21,5 @@ describe('the unmetered feature cost approximation tracks the real prompt', () =
         APPROX_FEATURE_OUTPUT_TOKENS * PRICING_USD_PER_MTOK.feature.output) /
       TOKENS_PER_MTOK;
     expect(summarizeFeatureCost([], 2).featureCostUsd).toBeCloseTo(2 * perAnswer, 10);
-  });
-
-  it('keeps the agent-eval projection on its own small-prompt size so the job cap is unchanged', () => {
-    expect(APPROX_AGENT_EVAL_INPUT_TOKENS).toBeLessThan(APPROX_TYPICAL_FEATURE_INPUT_TOKENS);
   });
 });

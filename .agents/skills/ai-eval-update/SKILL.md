@@ -34,8 +34,7 @@ only the `ask-eval.yml` workflow (weekly schedule and manual dispatch) does.
 
 The workflows set `EVAL_PUBLISH=1` only on `refs/heads/main` and map `UPSTASH_REDIS_REST_URL` and
 `UPSTASH_REDIS_REST_TOKEN` from the `EVAL_PUBLISH_REDIS_REST_URL` and
-`EVAL_PUBLISH_REDIS_REST_TOKEN` secrets: a Redis ACL user that can only `SET ask:eval:latest` and
-`agent-eval:latest`. A dispatch from another branch grades but never publishes, and no workflow
+`EVAL_PUBLISH_REDIS_REST_TOKEN` secrets: a Redis ACL user that can only `SET ask:eval:latest`. A dispatch from another branch grades but never publishes, and no workflow
 reads the production Upstash token.
 
 The CI `ai-eval` job runs the same `pnpm ask:eval`. It is path-filtered by the

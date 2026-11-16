@@ -73,7 +73,6 @@ pnpm ci:local                 # the verify chain CI runs first
 | `pnpm lhci` / `pnpm lhci:mobile`                             | Lighthouse CI against a running production server (desktop / mobile)                      |
 | `pnpm gates:runtime [--skip-build]`                          | Build, start a server, advisory Lighthouse, blocking axe and Chromium e2e                 |
 | `pnpm ask:eval`                                              | `/api/ask` correctness, jailbreak and cost eval; writes `ask-eval-result.json`            |
-| `pnpm eval:agents`                                           | Prompt-regression eval of fixed rule texts modelled on `AGENTS.md`; non-blocking in CI                    |
 | `pnpm test:mutation`                                         | Stryker mutation run (weekly in CI)                                                       |
 | `pnpm generate:og` / `pnpm generate:icons`                   | Regenerate `public/og.png` / the favicon and app icons                                    |
 | `pnpm changelog:sync`                                        | Regenerate the design-system changelog page from `(design-system)`-scoped commits         |
