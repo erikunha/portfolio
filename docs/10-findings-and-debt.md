@@ -22,7 +22,7 @@ Changes to request validation or rate-limit behavior need comparison across the 
 
 ## PSI health depends on a daily refresh
 
-`vercel.json` schedules `/api/psi-refresh` once daily. `/api/healthz` uses the `meta:psi-last-run` timestamp and reports degraded status when it is absent or older than 25 hours. The refresh handler writes that timestamp when at least one strategy succeeds. A partial score failure still returns 500; failure of both strategies leaves the timestamp unchanged.
+`vercel.json` schedules `/api/psi-refresh` once daily. `/api/status` uses the `meta:psi-last-run` timestamp and reports `stale: true` when it is absent or older than 25 hours. The refresh handler writes that timestamp when at least one strategy succeeds. A partial score failure still returns 500; failure of both strategies leaves the timestamp unchanged.
 
 A fresh health response describes the refresh timestamp. It does not prove both PSI strategies returned usable scores. Inspect the cached score records when diagnosing a missing metric.
 

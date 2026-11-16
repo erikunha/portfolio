@@ -152,6 +152,20 @@ const ROUTES: Record<string, { prefixes: string[]; call: RouteCall }> = {
       return GET(get('http://localhost/api/healthz', ip));
     },
   },
+  status: {
+    prefixes: ['rl:healthz'],
+    call: async (ip) => {
+      const { GET } = await import('@/app/api/status/route');
+      return GET(get('http://localhost/api/status', ip));
+    },
+  },
+  cspReport: {
+    prefixes: ['rl:csp-report'],
+    call: async (ip) => {
+      const { POST } = await import('@/app/api/csp-report/route');
+      return POST(jsonPost('http://localhost/api/csp-report', ip, {}));
+    },
+  },
   lighthouse: {
     prefixes: ['rl:lighthouse'],
     call: async (ip) => {

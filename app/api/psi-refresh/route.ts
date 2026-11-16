@@ -109,7 +109,7 @@ export async function GET(req: NextRequest): Promise<Response> {
     try {
       await getRedis().set('meta:psi-last-run', new Date().toISOString());
     } catch (redisErr) {
-      log.error('psi-refresh: failed to write meta:psi-last-run; healthz will report degraded', {
+      log.error('psi-refresh: failed to write meta:psi-last-run; /api/status will report stale', {
         err: redisErr,
       });
     }

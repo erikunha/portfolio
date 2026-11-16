@@ -221,7 +221,7 @@ Other workflows (none is in `ci-gate`):
 | `weekly-metrics.yml` | Mondays 07:00 UTC, manual | delivery metrics and band check, below |
 | `lockfile-resolution-probe.yml` | Mondays 08:00 UTC, manual | resolves every dependency range without a lockfile and keeps one open issue while `ERR_PNPM_NO_MATURE_MATCHING_VERSION` blocks it |
 | `high-risk-label.yml` | PR opened, synchronized, reopened | review-focus label, below |
-| `smoke.yml` | a successful `Production` deployment status | post-deploy checks: artifact `/api/healthz`, canonical `/api/healthz`, 7 security headers, apex to www, `/api/ask` and `/api/contact` liveness; emails an alert through Resend on a 503 |
+| `smoke.yml` | a successful `Production` deployment status | post-deploy checks: artifact `/api/healthz`, canonical `/api/healthz`, canonical `/api/status` freshness, 7 security headers, apex to www, `/api/ask` and `/api/contact` liveness; emails an alert through Resend on a healthz 503 or a stale status |
 | `claude-review.yml` | a `/claude-review` PR comment from an owner, member or collaborator | pull-request review, never a merge requirement |
 | `claude.yml` | an `@claude` comment from an owner, member or collaborator | read-only assistant |
 
@@ -316,7 +316,7 @@ Large features use an **integration branch + sub-PRs** (`feat/<feature>` ← `fe
 
 - **Platform:** Vercel (Fluid Compute, Node runtime) end-to-end. Push to `main` (via PR) deploys.
 - **Cron:** `vercel.json` runs `/api/psi-refresh` at `0 3 * * *` and `/api/contact-retry` at `0 4 * * *` and `0 16 * * *`.
-- **Post-deploy:** `smoke.yml` verifies the production deployment (healthz, headers, liveness) and emails on a 503.
+- **Post-deploy:** `smoke.yml` verifies the production deployment (healthz, status freshness, headers, liveness) and emails on a healthz 503 or a stale status.
 - **Emergency rollback:** fast = `vercel promote <previous-url>` (30s, no code); slow = `git revert HEAD && git push --no-verify` (the `--no-verify` is the documented escape hatch for the main-push guard). Verify with `curl https://erikunha.dev/api/healthz | jq .sha`.
 - **Rollback rehearsal:** `rollback-rehearsal.yml` proves the slow path still works. See "Weekly rollback rehearsal" under CI/CD.
 
@@ -324,7 +324,8 @@ Large features use an **integration branch + sub-PRs** (`feat/<feature>` ← `fe
 
 | Symptom                    | Where to look                                                                            |
 | -------------------------- | ---------------------------------------------------------------------------------------- |
-| `/api/healthz` 503         | `meta:psi-last-run` missing/stale (>25h) - the PSI cron failed; check `/api/psi-refresh` |
+| `/api/healthz` 503         | Redis did not answer the ping; check the Upstash dashboard |
+| `/api/status` `stale: true` | `meta:psi-last-run` missing or older than 25h, so the PSI cron failed; check `/api/psi-refresh` |
 | `/api/ask` returns 503     | `ASK_ENABLED` off, a spent month or day spend budget, or Redis down                      |
 | `/api/ask` stream cuts off | 15s watchdog, Layer-1 egress guard or provider failure (`STREAM_ERR_SENTINEL`)           |
 | Push blocked               | inspect the main-target guard, branch name or `pnpm verify` failure in `.husky/pre-push` |

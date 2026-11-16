@@ -89,7 +89,8 @@ What we build is small, opinionated, Vercel-deployed, and budget-enforced.
 │       ├── /api/contact-retry (cron, twice a day, Node)      │
 │       ├── /api/lighthouse (Node, reads KV)                  │
 │       ├── /api/erik.json  (profile, cached)                 │
-│       ├── /api/healthz    (liveness + dependency probe)     │
+│       ├── /api/healthz    (liveness: function, Redis)       │
+│       ├── /api/status     (freshness: PSI age, SHA)         │
 │       ├── /api/log + /api/log/forget (errors, erasure)      │
 │       ├── /api/csp-report (CSP violation sink)              │
 │       ├── /llms.txt + /.well-known/agent.json (static)      │
@@ -248,7 +249,8 @@ app/api/contact/route.ts             # Node: durable contact submission, 200 acc
 app/api/contact-retry/route.ts       # cron: retry undelivered contact messages twice a day
 app/api/lighthouse/route.ts          # Node: reads PSI cache from KV
 app/api/erik.json/route.ts           # static profile, cached
-app/api/healthz/route.ts             # liveness + dependency probe
+app/api/healthz/route.ts             # liveness: function up, Redis reachable
+app/api/status/route.ts              # freshness: PSI age and SHA
 app/api/csp-report/route.ts          # CSP violation sink
 app/api/log/route.ts                 # client error-bridge sink
 app/api/psi-refresh/route.ts         # cron: refresh PSI cache
@@ -773,7 +775,7 @@ Observability spans real-user telemetry, structured logs and client error captur
 - No Datadog / NewRelic / LaunchDarkly (overkill at this scale).
 - No Sentry: custom `/api/log` endpoint chosen instead for zero new SaaS vendor (see `DECISIONS.md`).
 - Outside the Edge runtime, `instrumentation.ts` loads the Langfuse helper (`lib/telemetry/langfuse.ts`). Only when `LANGFUSE_ENABLED` is exactly `true` does it register the Langfuse exporter through `@vercel/otel` and the AI SDK's `LegacyOpenTelemetry` integration from `@ai-sdk/otel` (`registerTelemetry`). The AI SDK emits no spans without that integration, and `@ai-sdk/otel` is pinned to the same version as `ai` so one copy of `ai` is installed. A guard on `globalThis` makes the registration run once per process, because `registerTelemetry` appends without checking for duplicates. The `/api/ask` call sets `telemetry: { functionId: 'ask', recordInputs: false, recordOutputs: false }`, so spans carry usage and timing only, never the question or the answer.
-- Alerting is minimal by design (single-author site, no oncall rotation): the `/api/ask` 80%/100% budget warnings, plus Resend email alerts from `/api/psi-refresh` after consecutive failed refreshes and from the production smoke workflow when the canonical `/api/healthz` returns 503. Both email alerts need their credentials configured.
+- Alerting is minimal by design (single-author site, no oncall rotation): the `/api/ask` 80%/100% budget warnings, plus Resend email alerts from `/api/psi-refresh` after consecutive failed refreshes and from the production smoke workflow when the canonical `/api/healthz` returns 503 (Redis unreachable) or `/api/status` reports `stale: true` (PSI data). Both email alerts need their credentials configured.
 - No client-side dashboards/UI; Upstash console + Vercel CLI are the inspection surfaces.
 
 ---
@@ -865,7 +867,7 @@ The workflow runs on PRs, pushes to `main` and manual dispatch. Jobs are not a s
 | Workflow                        | Trigger                                              | What it does                                                                                                   |
 | ------------------------------- | ---------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
 | `codeql.yml`                    | push and PR to `main`, weekly                        | CodeQL analysis                                                                                                |
-| `smoke.yml`                     | successful Production deployment                     | Probes `/api/healthz` on the deployment and on the canonical host; a 308 or any status but 200 or 503 fails    |
+| `smoke.yml`                     | successful Production deployment                     | Probes `/api/healthz` on the deployment and on the canonical host (a 308 or any status but 200 or 503 fails) and reads `/api/status` (non-200 fails, `stale: true` warns and alerts) |
 | `mutation.yml`                  | weekly                                               | Stryker run over `app/api` and `lib`; fails when no report is produced, then `check-mutation-kills.ts` fails a blind runner or a score under the `thresholds.break` floor in `stryker.config.mjs` |
 | `ask-eval.yml`                  | weekly                                               | `pnpm ask:eval` with publishing on, so `ask:eval:latest` and the Measured block cannot go stale; publishes from `main` only, through the `EVAL_PUBLISH_REDIS_REST_*` secrets (a Redis ACL user limited to `SET` on the eval keys), and fails on empty secrets or a failed write |
 | `agent-eval.yml`                | weekly                                               | `pnpm eval:agents`, the non-blocking prompt-regression eval of fixed rule texts modelled on `AGENTS.md`                        |
@@ -949,7 +951,7 @@ The principal-level discipline: **none of this is built today.** YAGNI is the de
 | `/api/ask`                                                                   | Streaming POST handler                                                                                                         |
 | `/api/contact`                                                               | Durable contact POST handler                                                                                                   |
 | `/api/contact-retry`, `/api/psi-refresh`                                     | Authenticated daily cron GET handlers                                                                                          |
-| `/api/lighthouse`, `/api/healthz`, `/api/erik.json`                          | Scores, health and structured profile GET handlers; `/api/lighthouse` and `/api/healthz` are per-IP rate limited and fail open (a prerender interrupt is rethrown, never treated as an outage) |
+| `/api/lighthouse`, `/api/healthz`, `/api/status`, `/api/erik.json`           | Scores, liveness, freshness and structured profile GET handlers; `/api/lighthouse`, `/api/healthz` and `/api/status` are per-IP rate limited and fail open (a prerender interrupt is rethrown, never treated as an outage) |
 | `/api/log`, `/api/log/forget`, `/api/csp-report`                             | Error ingestion, ASK erasure and CSP report POST handlers                                                                      |
 | `/api/mcp`                                                                   | MCP transport with `ask_erik` and `get_profile` tools                                                                          |
 | `/sitemap.xml`                                                               | `app/sitemap.ts`: homepage, reading views and links pages with their language alternates, plus every design-system page       |

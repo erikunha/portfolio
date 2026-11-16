@@ -126,7 +126,7 @@ describe('GET /api/psi-refresh', () => {
 
     expect(res.status).toBe(200);
     expect(vi.mocked(log.error)).toHaveBeenCalledWith(
-      'psi-refresh: failed to write meta:psi-last-run; healthz will report degraded',
+      'psi-refresh: failed to write meta:psi-last-run; /api/status will report stale',
       expect.objectContaining({ err: expect.any(Error) }),
     );
     expect(sendMock).not.toHaveBeenCalled();

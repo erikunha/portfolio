@@ -82,11 +82,29 @@ test.describe('observability smoke', { tag: '@cross-browser' }, () => {
   test('GET /api/healthz is reachable and returns valid JSON shape', async ({ request }) => {
     const res = await request.get('/api/healthz');
     expect([200, 503]).toContain(res.status());
-    const body = (await res.json()) as { status: string; sha: string; psiLastRun: string | null };
+    const body = (await res.json()) as { status: string; sha: string };
     expect(['ok', 'degraded']).toContain(body.status);
     expect(typeof body.sha).toBe('string');
     expect(body.sha.length).toBeGreaterThan(0);
+    expect(body).not.toHaveProperty('psiLastRun');
+  });
+
+  test('GET /api/status reports freshness with 200 whether or not the data is stale', async ({
+    request,
+  }) => {
+    const res = await request.get('/api/status');
+    expect(res.status()).toBe(200);
+    const body = (await res.json()) as {
+      sha: string;
+      stale: boolean;
+      psiLastRun: string | null;
+      psiAgeMs: number | null;
+    };
+    expect(typeof body.sha).toBe('string');
+    expect(body.sha.length).toBeGreaterThan(0);
+    expect(typeof body.stale).toBe('boolean');
     expect(body.psiLastRun === null || typeof body.psiLastRun === 'string').toBe(true);
+    expect(body.psiAgeMs === null || typeof body.psiAgeMs === 'number').toBe(true);
   });
 
   test('GET /.well-known/agent.json returns a valid capability manifest', async ({ request }) => {

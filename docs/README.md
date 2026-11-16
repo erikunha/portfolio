@@ -56,7 +56,7 @@ portfolio/
 │   │   └── design-system/   18 MDX pages (overview, tokens, components, enforcement, changelog, foundations/*, primitives/*)
 │   ├── (pt)/             pt-BR routes and their root layout (html lang pt-BR)
 │   ├── _lib/             shared page-metadata builders (canonical, alternates, Open Graph)
-│   ├── api/              11 route handlers (ask, contact, healthz, psi-refresh, mcp, ...)
+│   ├── api/              12 route handlers (ask, contact, healthz, status, psi-refresh, mcp, ...)
 │   └── css/              Tailwind v4 entry + @theme tokens + base/crt/animations/print/forced-colors + components-*.css layers
 ├── components/           sections/ (RSC sections and nested content) · client/ (islands) · responsive/ (chrome) · links/ (/links page) · reading/ (/cv and /summary) · ErrorPages/ · SiteShell · AppShell · ErrorBoundary · RootShell (fonts, JSON-LD, motion bootstrap, Vercel RUM shared by both root layouts)
 ├── design-system/        11 reusable primitives (Badge, BrandIcon, Button, CmdLine, Field, ...)
