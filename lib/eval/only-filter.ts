@@ -10,22 +10,23 @@ function noIds(): Error {
 
 export function parseOnly(argv: readonly string[]): string[] | null {
   const inline = `${ONLY_FLAG}=`;
-  let raw: string | undefined;
+  const raws: string[] = [];
   let present = false;
   for (const [index, arg] of argv.entries()) {
     if (arg === ONLY_FLAG) {
       present = true;
       const next = argv[index + 1];
-      raw = next?.startsWith('--') ? undefined : next;
+      if (next !== undefined && !next.startsWith('--')) raws.push(next);
     } else if (arg.startsWith(inline)) {
       present = true;
-      raw = arg.slice(inline.length);
+      raws.push(arg.slice(inline.length));
     }
   }
   if (!present) return null;
   const ids = [
     ...new Set(
-      (raw ?? '')
+      raws
+        .join(ID_SEPARATOR)
         .split(ID_SEPARATOR)
         .map((id) => id.trim())
         .filter((id) => id.length > 0),

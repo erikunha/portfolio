@@ -43,8 +43,9 @@ only the `ask-eval.yml` workflow (weekly schedule and manual dispatch) does.
                            # runs only the listed corpus item ids and calibration case ids (an
                            # unknown id exits 1 and names it); prints "FILTERED RUN (N ids): gates
                            # not evaluated"; no gate runs, nothing is published even with
-                           # EVAL_PUBLISH=1, `gates.passed` is false and the result file gains
-                           # `filter`; exits 1 only when a selected id errored. Use it to check a
+                           # EVAL_PUBLISH=1, `gates.passed` is false and the result is written to
+                           # `ask-eval-result.filtered.json` (never over the last full run's
+                           # `ask-eval-result.json`) with `filter` and `filtered: true`; exits 1 only when a selected id errored. Use it to check a
                            # reworded criterion before a full paid run
 
 Every run also writes a copy of the result to `ask-eval-results/<iso>.json` (gitignored). With

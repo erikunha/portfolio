@@ -41,3 +41,18 @@ describe('resolveOnly', () => {
     );
   });
 });
+
+describe('parseOnly with a repeated flag', () => {
+  it('merges every occurrence in order, whatever the spelling', () => {
+    expect(parseOnly([ONLY_FLAG, 'a', ONLY_FLAG, 'b'])).toEqual(['a', 'b']);
+    expect(parseOnly([ONLY_FLAG, 'a,b', `${ONLY_FLAG}=c`])).toEqual(['a', 'b', 'c']);
+  });
+
+  it('drops an id repeated across occurrences', () => {
+    expect(parseOnly([ONLY_FLAG, 'a,b', ONLY_FLAG, 'b,c'])).toEqual(['a', 'b', 'c']);
+  });
+
+  it('still refuses when no occurrence carries an id', () => {
+    expect(() => parseOnly([ONLY_FLAG, ONLY_FLAG])).toThrow(/needs at least one id/);
+  });
+});

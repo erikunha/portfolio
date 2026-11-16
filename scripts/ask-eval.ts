@@ -63,7 +63,9 @@ const JUDGE_MODEL = 'anthropic/claude-sonnet-4-6';
 
 const REDIS_RESULT_KEY = 'ask:eval:latest';
 
-const RESULT_FILE = path.resolve(process.cwd(), 'ask-eval-result.json');
+const FULL_RESULT_FILE = path.resolve(process.cwd(), 'ask-eval-result.json');
+
+const FILTERED_RESULT_FILE = path.resolve(process.cwd(), 'ask-eval-result.filtered.json');
 
 const RESULTS_DIR = path.resolve(process.cwd(), 'ask-eval-results');
 
@@ -105,11 +107,12 @@ type Aggregate = {
   items: EvalItem[];
   judgeStability?: JudgeStability;
   filter?: string[];
+  filtered?: true;
 };
 
 function writeResultFiles(result: Aggregate): string {
   const body = `${JSON.stringify(result, null, 2)}\n`;
-  writeFileSync(RESULT_FILE, body);
+  writeFileSync(result.filtered ? FILTERED_RESULT_FILE : FULL_RESULT_FILE, body);
   mkdirSync(RESULTS_DIR, { recursive: true });
   const copy = path.join(RESULTS_DIR, `${new Date().toISOString().replace(/[:.]/g, '-')}.json`);
   writeFileSync(copy, body);
@@ -365,7 +368,7 @@ async function main(): Promise<void> {
       );
     }
     const partialCopy = writeResultFiles(partial);
-    console.error(`\nresult file (calibration-only) ${RESULT_FILE} (copy ${partialCopy})`);
+    console.error(`\nresult file (calibration-only) ${FULL_RESULT_FILE} (copy ${partialCopy})`);
     process.exit(1);
   }
   if (!filtered) console.log('  CALIBRATION PASSED\n');
@@ -550,7 +553,7 @@ async function main(): Promise<void> {
     calibration: { ...summarizeCalibration(calibration), cases: calibration.cases },
     items: graded,
     ...(judgeStability === undefined ? {} : { judgeStability }),
-    ...(only === null ? {} : { filter: only }),
+    ...(only === null ? {} : { filter: only, filtered: true as const }),
   };
 
   const resultCopy = writeResultFiles(aggregate);
@@ -598,7 +601,9 @@ async function main(): Promise<void> {
   console.log(
     `  cost estimate       ~$${costEstimateUsd} (feature ~$${featureCostUsd}, ${measuredAnswers}/${answeredCount} answers metered · judge ~$${judgeCostUsd})`,
   );
-  console.log(`  result file         ${RESULT_FILE} (copy ${resultCopy})`);
+  console.log(
+    `  result file         ${filtered ? FILTERED_RESULT_FILE : FULL_RESULT_FILE} (copy ${resultCopy})`,
+  );
   if (judgeStability !== undefined) {
     console.log(`\n${formatJudgeStability(judgeStability, judgeCostUsd).join('\n')}`);
   }

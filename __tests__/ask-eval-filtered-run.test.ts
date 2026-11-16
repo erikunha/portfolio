@@ -13,6 +13,8 @@ const GOLD_ID = 'cal-crit-ai-direction-core-wording';
 const REPEATS = 3;
 const REASON = 'double';
 const RESULTS_DIR = 'ask-eval-results';
+const RESULT_FILE = 'ask-eval-result.json';
+const FILTERED_RESULT_FILE = 'ask-eval-result.filtered.json';
 const EXIT_FAILURE = 1;
 const SUMMARY = 'ask-eval summary';
 const NOTICE = 'FILTERED RUN (2 ids): gates not evaluated';
@@ -29,6 +31,7 @@ vi.mock('@/lib/eval/redis-publish', () => ({ publishWithCredentials: publishMock
 
 type Result = {
   filter?: string[];
+  filtered?: boolean;
   total: number;
   gates: { passed: boolean };
   calibration: { total: number; cases: Array<Record<string, unknown> & { id: string }> };
@@ -108,7 +111,8 @@ describe('pnpm ask:eval --only', () => {
     process.argv = [...originalArgv, ...args];
     await import('@/scripts/ask-eval');
     await vi.waitFor(() => expect(logs.join('\n')).toContain(done), { timeout: 20_000 });
-    return JSON.parse(readFileSync(path.join(outDir, 'ask-eval-result.json'), 'utf8'));
+    const file = args.includes('--only') ? FILTERED_RESULT_FILE : RESULT_FILE;
+    return JSON.parse(readFileSync(path.join(outDir, file), 'utf8'));
   }
 
   it('runs only the listed corpus and gold ids and says the gates were not evaluated', async () => {
@@ -149,6 +153,47 @@ describe('pnpm ask:eval --only', () => {
     expect(corpusOnly.calibration.total).toBe(0);
     expect(corpusOnly.items).toHaveLength(1);
     expect(generateTextMock).toHaveBeenCalledTimes(1);
+  }, 60_000);
+
+  it('runs a gold-only subset with an empty graded list', async () => {
+    const goldOnly = await run(['--only', GOLD_ID], SUMMARY);
+    expect(goldOnly.items).toEqual([]);
+    expect(goldOnly.calibration.cases.map((c) => c.id)).toEqual([GOLD_ID]);
+    expect(streamTextMock).not.toHaveBeenCalled();
+    expect(generateTextMock).toHaveBeenCalledTimes(1);
+    expect(logs.join('\n')).toContain('FILTERED RUN (1 ids)');
+    expect(exitMock).not.toHaveBeenCalledWith(EXIT_FAILURE);
+  }, 60_000);
+
+  it('marks a filtered result as not evaluated beside gates, and a default one not at all', async () => {
+    const filteredResult = await run(['--only', CORPUS_ID], SUMMARY);
+    expect(filteredResult.filtered).toBe(true);
+    expect(filteredResult.filter).toEqual([CORPUS_ID]);
+
+    vi.resetModules();
+    logs.length = 0;
+    const full = await run([], 'GATE PASSED');
+    expect(full).not.toHaveProperty('filtered');
+  }, 60_000);
+
+  it('keeps the last full result when a filtered run follows it', async () => {
+    const full = await run([], 'GATE PASSED');
+    const before = readFileSync(path.join(outDir, RESULT_FILE), 'utf8');
+    expect(JSON.parse(before)).toEqual(full);
+
+    vi.resetModules();
+    logs.length = 0;
+    await run(['--only', CORPUS_ID], SUMMARY);
+
+    expect(readFileSync(path.join(outDir, RESULT_FILE), 'utf8')).toBe(before);
+    expect(readdirSync(outDir)).toContain(FILTERED_RESULT_FILE);
+    expect(readdirSync(path.join(outDir, RESULTS_DIR))).toHaveLength(2);
+  }, 60_000);
+
+  it('writes a filtered run to the filtered file and never to the full one', async () => {
+    await run(['--only', CORPUS_ID], SUMMARY);
+    expect(readdirSync(outDir)).not.toContain(RESULT_FILE);
+    expect(logs.join('\n')).toContain(FILTERED_RESULT_FILE);
   }, 60_000);
 
   it('exits 1 when a selected item errored, because nothing was measured', async () => {

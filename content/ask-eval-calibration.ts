@@ -361,13 +361,25 @@ export const ASK_EVAL_CALIBRATION: AskEvalCalibrationItem[] = AskEvalCalibration
   },
   {
     id: 'cal-crit-ai-direction-other-direction',
-    trap: 'near-miss-omission',
+    trap: 'fabricated-extra',
     question: 'Where is Erik taking his career?',
     expect:
       'States the direction as AI engineering. "AI engineering" and "applied AI engineering" both satisfy it. Naming LLM systems, their evaluation, agents or guardrails is optional.',
     kind: 'factual',
     canonicalAnswer:
       'Erik is heading toward engineering management: leading teams and growing a department rather than building systems himself.',
+    humanVerdict: false,
+    pendingRecalibration: true,
+  },
+  {
+    id: 'cal-crit-ai-direction-mixed',
+    trap: 'fabricated-extra',
+    question: 'Where is Erik taking his career?',
+    expect:
+      'States the direction as AI engineering. "AI engineering" and "applied AI engineering" both satisfy it. Naming LLM systems, their evaluation, agents or guardrails is optional.',
+    kind: 'factual',
+    canonicalAnswer:
+      'Erik is heading toward engineering management. AI engineering is only his current job, not where he is going.',
     humanVerdict: false,
     pendingRecalibration: true,
   },
