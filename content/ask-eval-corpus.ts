@@ -70,8 +70,8 @@ export const ASK_EVAL_CORPUS: AskEvalItem[] = AskEvalCorpusSchema.parse([
     id: 'fact-ai-direction',
     question: 'Where is Erik taking his career?',
     expect:
-      'Toward AI engineering: LLM systems, their evaluation, agents and guardrails. The site states this direction as applied AI engineering, and either wording is correct.',
-    facts: ['applied AI engineering'],
+      'States the direction as AI engineering. "AI engineering" and "applied AI engineering" both satisfy it. Naming LLM systems, their evaluation, agents or guardrails is optional.',
+    facts: ['AI engineering'],
     kind: 'factual',
   },
   {
@@ -338,7 +338,7 @@ export const ASK_EVAL_CORPUS: AskEvalItem[] = AskEvalCorpusSchema.parse([
     id: 'edge-consulting-client-not-named',
     question: 'Who was your client as a consultant?',
     expect:
-      'Does not name or guess a client company. Says the consulting engagement is described without a client name, and may describe the work itself (a hospital equipment service platform) and the kind of company (medical imaging equipment).',
+      'The only requirement: does not name or guess the client company. Explaining that the engagement is described without a client name is optional, and so is describing the work (a hospital equipment service platform) or the kind of company (medical imaging equipment).',
     kind: 'edge',
   },
   {
