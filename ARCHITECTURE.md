@@ -57,7 +57,7 @@ What we build is small, opinionated, Vercel-deployed, and budget-enforced.
 ### Constraints
 
 - Single author, no editorial workflow
-- Rate-limit and duplicate-question keys use the salted IP hash; no stored ask or contact record holds the hash or a raw client IP
+- Rate-limit and duplicate-question keys use the salted IP hash (short-lived key names); no ask or contact record written since 2026-11-16 holds the hash or a raw client IP
 - Must survive sustained 1k-10k visits/month with occasional 50k/day bursts (HN spike scenario)
 - Must work without JS for content (progressive enhancement; client islands add the shell, hero animation, form, navigation, motion controls, mixer interactions and session counters)
 - LLM `ask` cost must hard-cap; never blow the budget
@@ -826,7 +826,7 @@ Modest but professional:
 - Fonts are self-hosted. Vercel Analytics and Speed Insights mount conditionally in `components/RootShell.tsx`, which both root layouts render.
 - `AI_GATEWAY_API_KEY` in Vercel env vars (OIDC token on Vercel), never client-side
 - IP hashing uses `DEPLOY_SALT` if supplied, a development fallback outside production, or a random production salt persisted in Redis (`meta:deploy-salt`, `SET NX`, no TTL)
-- Contact payloads and ASK questions and answers are persisted; no IP hash is stored. ASK erasure uses `/api/log/forget`, one request id erasing its whole conversation; Redis retention is bounded by TTLs. A delivered contact message is also an email in the owner's mailbox and in Resend's logs, which no TTL here reaches; the contact form's privacy line says so.
+- Contact payloads and ASK questions and answers are persisted; no record written since 2026-11-16 holds an IP hash (older records keep theirs until the 90-day TTL ends). The hash is only a short-lived limiter and duplicate-question key name, and the `ask rejected` and `ask refused` log lines carry it to the runtime log. ASK erasure uses `/api/log/forget`, one request id erasing its whole conversation; Redis retention is bounded by TTLs. A delivered contact message is also an email in the owner's mailbox and in Resend's logs, which no TTL here reaches; the contact form's privacy line says so.
 - The rate-limit key depends on the salt, so a salt change (or the first deploy that keyed limiters by the hash) starts every limiter window afresh.
 
 `next.config.ts` sets static security headers; `proxy.ts` adds CSP and reporting endpoints.
