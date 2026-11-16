@@ -290,6 +290,66 @@ describe('POST /api/csp-report', () => {
     });
   });
 
+  describe('log hygiene', () => {
+    const MAX_LOGGED = 10;
+    const MAX_FIELD_CHARS = 256;
+    const TRUNCATED_MESSAGE = 'csp violations truncated';
+    const BATCH_SIZE = 30;
+
+    const compactEntry = () => ({
+      type: 'csp-violation',
+      body: { effectiveDirective: 'img-src' },
+    });
+    const sendBatch = (entries: unknown[]) => send(JSON.stringify(entries), REPORTING_API_TYPE);
+    const sendEntry = (body: Record<string, string>) =>
+      sendBatch([reportingApiEntry({ documentURL: '', ...body })]);
+
+    it('logs at most 10 violations of one batch plus one truncation line with the dropped count', async () => {
+      const res = await sendBatch(Array.from({ length: BATCH_SIZE }, compactEntry));
+
+      expect(res.status).toBe(204);
+      expect(violations()).toHaveLength(MAX_LOGGED);
+      const truncated = vi
+        .mocked(log.warn)
+        .mock.calls.filter(([message]) => message === TRUNCATED_MESSAGE);
+      expect(truncated).toEqual([[TRUNCATED_MESSAGE, { dropped: BATCH_SIZE - MAX_LOGGED }]]);
+    });
+
+    it('logs no truncation line when the batch is exactly 10', async () => {
+      await sendBatch(Array.from({ length: MAX_LOGGED }, compactEntry));
+
+      expect(violations()).toHaveLength(MAX_LOGGED);
+      expect(
+        vi.mocked(log.warn).mock.calls.filter(([message]) => message === TRUNCATED_MESSAGE),
+      ).toEqual([]);
+    });
+
+    it.each(['mailto:victim@example.com', 'data:text/html,hello-secret', 'javascript:alert(1)'])(
+      'logs unknown for the non-http document %s',
+      async (documentURL) => {
+        await sendEntry({ documentURL });
+
+        expect(violations()[0]?.[1]).toMatchObject({ documentPath: 'unknown' });
+        expect(JSON.stringify(vi.mocked(log.warn).mock.calls)).not.toContain('victim');
+        expect(JSON.stringify(vi.mocked(log.warn).mock.calls)).not.toContain('hello-secret');
+      },
+    );
+
+    it('cuts a long document path to 256 characters', async () => {
+      await sendEntry({ documentURL: `https://www.erikunha.dev/${'a'.repeat(1000)}` });
+
+      const logged = violations()[0]?.[1] as { documentPath: string };
+      expect(logged.documentPath).toHaveLength(MAX_FIELD_CHARS);
+    });
+
+    it('cuts a long blocked host to 256 characters', async () => {
+      await sendEntry({ blockedURL: `https://${'h'.repeat(1000)}.example/x.js` });
+
+      const logged = violations()[0]?.[1] as { blockedHost: string };
+      expect(logged.blockedHost).toHaveLength(MAX_FIELD_CHARS);
+    });
+  });
+
   describe('rate limit', () => {
     it('answers 429 with Retry-After before reading the body', async () => {
       limiter.limit.mockResolvedValue({ success: false, reset: Date.now() + 30_000 });

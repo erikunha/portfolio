@@ -10,7 +10,11 @@ import { err } from '@/lib/server/route';
 const MAX_CSP_REPORT_BODY_BYTES = 4096;
 const CSP_REPORT_RATE_LIMIT_MESSAGE = 'too many reports';
 const VIOLATION_MESSAGE = 'csp violation';
+const TRUNCATED_MESSAGE = 'csp violations truncated';
 const UNKNOWN = 'unknown';
+const MAX_LOGGED_VIOLATIONS = 10;
+const MAX_LOGGED_FIELD_CHARS = 256;
+const WEB_PROTOCOLS = ['http:', 'https:'];
 
 const LEGACY_CONTENT_TYPE = 'application/csp-report';
 const REPORTING_API_CONTENT_TYPE = 'application/reports+json';
@@ -106,14 +110,19 @@ function parseUrl(value: string | undefined): URL | null {
   }
 }
 
+function capField(value: string): string {
+  return value.slice(0, MAX_LOGGED_FIELD_CHARS);
+}
+
 function blockedHost(blocked: string | undefined): string {
   const url = parseUrl(blocked);
-  if (url) return url.host || url.protocol.replace(SCHEME_SUFFIX, '');
+  if (url) return capField(url.host || url.protocol.replace(SCHEME_SUFFIX, ''));
   return blocked !== undefined && SOURCE_KEYWORD.test(blocked) ? blocked : UNKNOWN;
 }
 
 function documentPath(documentUri: string | undefined): string {
-  return parseUrl(documentUri)?.pathname ?? UNKNOWN;
+  const url = parseUrl(documentUri);
+  return url && WEB_PROTOCOLS.includes(url.protocol) ? capField(url.pathname) : UNKNOWN;
 }
 
 function directive(value: string | undefined): string {
@@ -159,15 +168,22 @@ async function handleReport(req: Request): Promise<Response> {
 
   const violations =
     type === LEGACY_CONTENT_TYPE ? legacyViolations(raw) : reportingApiViolations(raw);
-  for (const violation of violations) {
-    if (violation.effectiveDirective === undefined) continue;
-    if (isExtensionSource(violation.blocked) || isExtensionSource(violation.sourceFile)) continue;
+  const loggable = violations.filter(
+    (violation) =>
+      violation.effectiveDirective !== undefined &&
+      !isExtensionSource(violation.blocked) &&
+      !isExtensionSource(violation.sourceFile),
+  );
+  for (const violation of loggable.slice(0, MAX_LOGGED_VIOLATIONS)) {
     log.warn(VIOLATION_MESSAGE, {
       effectiveDirective: directive(violation.effectiveDirective),
       blockedHost: blockedHost(violation.blocked),
       documentPath: documentPath(violation.documentUri),
       disposition: disposition(violation.disposition),
     });
+  }
+  if (loggable.length > MAX_LOGGED_VIOLATIONS) {
+    log.warn(TRUNCATED_MESSAGE, { dropped: loggable.length - MAX_LOGGED_VIOLATIONS });
   }
   return new Response(null, { status: HTTP_STATUS.noContent });
 }
