@@ -587,7 +587,7 @@ Upstash Redis sliding window:
 
 ### Identical-question dedup
 
-The same question text (SHA-256) from the same IP hash within 60 seconds is blocked, not answered: `checkIdenticalQuestion` (`lib/ask/dedup.ts`) runs `SET ask:dedup:{ipHash}:{qHash} nx ex:60` and returns 429 ("wait 60 seconds") when the key already exists. It suppresses accidental double-submits and share-link refreshes without paying for a second model call, a dedup guard, not a response cache (no answer is stored). Fails open: a Redis error allows the request. The lock is released (`releaseIdenticalQuestion`, a `DEL` that also fails open) when the visitor got no answer for it: a budget refusal, a model call that could not start, and a stream that errored before its first chunk. A retry after those is not refused as a duplicate.
+The same question text (SHA-256) from the same IP hash within 60 seconds is blocked, not answered. A visitor whose IP hash could not be computed takes no lock, so unhashed visitors never block each other: `checkIdenticalQuestion` (`lib/ask/dedup.ts`) runs `SET ask:dedup:{ipHash}:{qHash} nx ex:60` and returns 429 ("wait 60 seconds") when the key already exists. It suppresses accidental double-submits and share-link refreshes without paying for a second model call, a dedup guard, not a response cache (no answer is stored). Fails open: a Redis error allows the request. The lock is released (`releaseIdenticalQuestion`, a `DEL` that also fails open) when the visitor got no answer for it: a budget refusal, a model call that could not start, and a stream that errored before its first chunk. A retry after those is not refused as a duplicate.
 
 ### Budget enforcement (the Principal-level move)
 

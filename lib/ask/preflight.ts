@@ -203,7 +203,7 @@ export async function preflightAsk(req: Request): Promise<PreflightResult> {
     return reject(askError(requestId, askErrors[answerLocale].injection, HTTP_STATUS.badRequest));
   }
 
-  const { allowed: notDuplicate } = await checkIdenticalQuestion(ipHash, question);
+  const { allowed: notDuplicate } = await checkIdenticalQuestion(rateLimitKey, question);
   if (!notDuplicate) {
     recordRefusal('dedup-rejected');
     return reject(
@@ -215,7 +215,7 @@ export async function preflightAsk(req: Request): Promise<PreflightResult> {
   if (!reservation.allowed) {
     const refusal = BUDGET_REFUSALS[reservation.reason];
     recordRefusal(refusal.status);
-    await releaseIdenticalQuestion(ipHash, question);
+    await releaseIdenticalQuestion(rateLimitKey, question);
     return reject(
       askError(requestId, askErrors[answerLocale][refusal.message], HTTP_STATUS.serviceUnavailable),
     );

@@ -12,7 +12,11 @@ async function identicalQuestionKey(ipHash: string, question: string): Promise<s
   return `ask:dedup:${ipHash}:${qHash}`;
 }
 
-export async function releaseIdenticalQuestion(ipHash: string, question: string): Promise<void> {
+export async function releaseIdenticalQuestion(
+  ipHash: string | null,
+  question: string,
+): Promise<void> {
+  if (ipHash === null) return;
   try {
     await getRedis().del(await identicalQuestionKey(ipHash, question));
   } catch (err) {
@@ -21,9 +25,10 @@ export async function releaseIdenticalQuestion(ipHash: string, question: string)
 }
 
 export async function checkIdenticalQuestion(
-  ipHash: string,
+  ipHash: string | null,
   question: string,
 ): Promise<{ allowed: boolean }> {
+  if (ipHash === null) return { allowed: true };
   try {
     const key = await identicalQuestionKey(ipHash, question);
     const result = await getRedis().set(key, DEDUP_LOCK_VALUE, {
