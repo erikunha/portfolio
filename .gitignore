@@ -50,6 +50,8 @@
 
 # ai-eval harness output (scripts/ask-eval.ts)
 /ask-eval-result.json
+/ask-eval-result.filtered.json
+/ask-eval-results/
 
 # personal Claude Code files
 CLAUDE.local.md

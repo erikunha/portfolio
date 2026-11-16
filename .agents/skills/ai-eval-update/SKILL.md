@@ -39,6 +39,19 @@ only the `ask-eval.yml` workflow (weekly schedule and manual dispatch) does.
                            # and `judgeStability` in the result file; costs about k times
                            # the judge share of a run (the 2026-11-16 k=5 run cost about $2.39)
 
+    pnpm ask:eval --only fact-ai-direction,cal-crit-ai-direction-core-wording --judge-repeats 10
+                           # runs only the listed corpus item ids and calibration case ids (an
+                           # unknown id exits 1 and names it); prints "FILTERED RUN (N ids): gates
+                           # not evaluated"; no gate runs, nothing is published even with
+                           # EVAL_PUBLISH=1, `gates.passed` is false and the result is written to
+                           # `ask-eval-result.filtered.json` (never over the last full run's
+                           # `ask-eval-result.json`) with `filter` and `filtered: true`; exits 1 only when a selected id errored. Use it to check a
+                           # reworded criterion before a full paid run
+
+Every run also writes a copy of the result to `ask-eval-results/<iso>.json` (gitignored). With
+`--judge-repeats k` above 1 each item and calibration case also stores every repeat's reason
+(`judgeRepeatReasons`, `repeatReasons`) beside the verdicts, so a flip can be read afterwards.
+
 The workflows set `EVAL_PUBLISH=1` only on `refs/heads/main` and map `UPSTASH_REDIS_REST_URL` and
 `UPSTASH_REDIS_REST_TOKEN` from the `EVAL_PUBLISH_REDIS_REST_URL` and
 `EVAL_PUBLISH_REDIS_REST_TOKEN` secrets: a Redis ACL user that can only `SET ask:eval:latest` and
@@ -155,7 +168,7 @@ Adding a request per item (retries, extra turns) means raising that size.
 ## Judge stability (`--judge-repeats <k>`)
 
 Temperature 0 does not make the judge repeat itself. `--judge-repeats k` has the judge grade the
-same answer `k` times on the 30 gold cases and on every answered corpus item
+same answer `k` times on the gold cases and on every answered corpus item
 (`lib/eval/judge-repeats.ts`, `lib/eval/judge-stability.ts`). Gates, `pass` and `agreed` use
 repeat 1 only, so the default meaning is unchanged; the other repeats only measure.
 
@@ -166,6 +179,12 @@ repeat 1 only, so the default meaning is unchanged; the other repeats only measu
   or more valid repeats), `erroredRepeats`, `unmeasuredItems`. Calibration adds `agreeAllRepeats`,
   the gold cases that match the human label in every repeat. Each stat is `{ value, reason }`;
   `value` is `null` with a reason when it is undefined (one class only, `k=1`, no measured item).
+- An item whose valid verdicts are not unanimous is **needs review**: a split verdict is a coin flip
+  on that item, so it counts as neither a pass nor a fail. The stability report prints
+  `needs review N: id [P P F F P], ...` first in each block and a `unanimous pass / unanimous fail /
+  needs review` breakdown; the file carries `needsReview` (`count` and `items` with id and
+  sequence) and `breakdown` beside `flipping`. A person reads those ids and decides whether the
+  criterion or the answer is at fault. Gates still read repeat 1.
 - A flip rate above zero on the gold set means a single calibration run can pass or fail on judge
   noise: read the flipping ids before re-labeling a case or lowering a gate.
 - Do not run `k=5` in CI: it costs about five times the judge share of a run.

@@ -48,12 +48,15 @@ type ResultFile = {
       items: number;
       flipRate: { value: number | null };
       flipping: Array<{ id: string; verdicts: Array<boolean | null> }>;
+      needsReview: { count: number; items: Array<{ id: string; verdicts: Array<boolean | null> }> };
+      breakdown: { unanimousPass: number; unanimousFail: number; needsReview: number };
       passRatePerRepeat: Array<number | null>;
     } | null;
     calibration: {
       items: number;
       agreeAllRepeats: number;
       flipping: Array<{ id: string; verdicts: Array<boolean | null> }>;
+      needsReview: { count: number; items: Array<{ id: string; verdicts: Array<boolean | null> }> };
     };
   };
 };
@@ -183,6 +186,29 @@ describe('pnpm ask:eval --judge-repeats', () => {
     expect(report).toContain(`${FLAKY_CORPUS_ITEM?.id} [P P F]`);
     expect(report).toContain(`${FLAKY_GOLD_CASE?.id} [P F P]`);
     expect(report).toContain(`(${REPEATS} judge calls per item)`);
+  }, 60_000);
+
+  it('routes a split verdict to needs review and counts it as neither a pass nor a fail', async () => {
+    const result = await run(['--judge-repeats', String(REPEATS)]);
+
+    const corpus = result.judgeStability?.corpus;
+    expect(corpus?.needsReview).toEqual({
+      count: 1,
+      items: [{ id: FLAKY_CORPUS_ITEM?.id, verdicts: CORPUS_SEQUENCE }],
+    });
+    expect(result.judgeStability?.calibration.needsReview).toEqual({
+      count: 1,
+      items: [{ id: FLAKY_GOLD_CASE?.id, verdicts: GOLD_SEQUENCE }],
+    });
+    expect(corpus?.breakdown.needsReview).toBe(1);
+    expect(corpus?.breakdown.unanimousPass).toBe(
+      (corpus?.items ?? 0) - 1 - (corpus?.breakdown.unanimousFail ?? 0),
+    );
+    expect(result.gates.passed, 'the gates still read repeat 1').toBe(true);
+
+    const report = logs.join('\n');
+    expect(report).toContain(`needs review 1: ${FLAKY_CORPUS_ITEM?.id} [P P F]`);
+    expect(report).toContain(`needs review 1: ${FLAKY_GOLD_CASE?.id} [P F P]`);
   }, 60_000);
 
   it('without the flag judges once, writes no judgeStability and keeps the old result shape', async () => {

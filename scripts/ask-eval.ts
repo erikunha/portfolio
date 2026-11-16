@@ -1,6 +1,6 @@
 #!/usr/bin/env tsx
 
-import { writeFileSync } from 'node:fs';
+import { mkdirSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { NextRequest } from 'next/server';
 import { ASK_EVAL_CALIBRATION } from '@/content/ask-eval-calibration';
@@ -34,6 +34,7 @@ import {
   DEFAULT_JUDGE_REPEATS,
   judgeRepeated,
   parseJudgeRepeats,
+  reasonSequence,
   verdictSequence,
 } from '@/lib/eval/judge-repeats';
 import {
@@ -44,6 +45,7 @@ import {
   summarizeCalibrationStability,
   summarizeStability,
 } from '@/lib/eval/judge-stability';
+import { parseOnly, resolveOnly } from '@/lib/eval/only-filter';
 import { percentile } from '@/lib/eval/percentile';
 import {
   isolateFromRedis,
@@ -59,13 +61,21 @@ import { createEvalBudgetStore, setBudgetStore } from '@/lib/rate-limit';
 
 const JUDGE_MODEL = 'anthropic/claude-sonnet-4-6';
 
-const RESULT_FILE = path.resolve(process.cwd(), 'ask-eval-result.json');
+const FULL_RESULT_FILE = path.resolve(process.cwd(), 'ask-eval-result.json');
+
+const FILTERED_RESULT_FILE = path.resolve(process.cwd(), 'ask-eval-result.filtered.json');
+
+const RESULTS_DIR = path.resolve(process.cwd(), 'ask-eval-results');
 
 const USAGE_WAIT_MS = 5_000;
 
 const INJECTION_GATE_STATUS = 400;
 
-type EvalItem = GradedItem & { truncated: boolean; judgeRepeatVerdicts?: RepeatVerdict[] };
+type EvalItem = GradedItem & {
+  truncated: boolean;
+  judgeRepeatVerdicts?: RepeatVerdict[];
+  judgeRepeatReasons?: string[];
+};
 
 type Aggregate = {
   ts: string;
@@ -94,7 +104,18 @@ type Aggregate = {
   calibration: ReturnType<typeof summarizeCalibration> & { cases: CalibrationCase[] };
   items: EvalItem[];
   judgeStability?: JudgeStability;
+  filter?: string[];
+  filtered?: true;
 };
+
+function writeResultFiles(result: Aggregate): string {
+  const body = `${JSON.stringify(result, null, 2)}\n`;
+  writeFileSync(result.filtered ? FILTERED_RESULT_FILE : FULL_RESULT_FILE, body);
+  mkdirSync(RESULTS_DIR, { recursive: true });
+  const copy = path.join(RESULTS_DIR, `${new Date().toISOString().replace(/[:.]/g, '-')}.json`);
+  writeFileSync(copy, body);
+  return copy;
+}
 
 function calibrationStability(calibration: CalibrationResult, repeats: number) {
   return summarizeCalibrationStability(
@@ -173,10 +194,39 @@ function readJudgeRepeats(): number {
   }
 }
 
+function readSelection(): {
+  only: string[] | null;
+  corpus: AskEvalItem[];
+  gold: typeof ASK_EVAL_CALIBRATION;
+} {
+  try {
+    const only = parseOnly(process.argv.slice(2));
+    if (only === null) return { only, corpus: ASK_EVAL_CORPUS, gold: ASK_EVAL_CALIBRATION };
+    const ids = resolveOnly(
+      only,
+      ASK_EVAL_CORPUS.map((item) => item.id),
+      ASK_EVAL_CALIBRATION.map((item) => item.id),
+    );
+    return {
+      only,
+      corpus: ASK_EVAL_CORPUS.filter((item) => ids.corpus.includes(item.id)),
+      gold: ASK_EVAL_CALIBRATION.filter((item) => ids.calibration.includes(item.id)),
+    };
+  } catch (err) {
+    console.error(`ask-eval: ${err instanceof Error ? err.message : String(err)}`);
+    return process.exit(1);
+  }
+}
+
 async function main(): Promise<void> {
   const judgeRepeats = readJudgeRepeats();
+  const { only, corpus: corpusItems, gold: goldCases } = readSelection();
+  const filtered = only !== null;
+  const filteredNotice = `FILTERED RUN (${only?.length ?? 0} ids): gates not evaluated`;
   const withheldRedisCredentials = isolateFromRedis(process.env);
-  const preflightError = publishPreflightError(process.env, withheldRedisCredentials);
+  const preflightError = filtered
+    ? null
+    : publishPreflightError(process.env, withheldRedisCredentials);
   if (preflightError) {
     console.error(`ask-eval: ${preflightError}`);
     process.exit(1);
@@ -197,16 +247,17 @@ async function main(): Promise<void> {
   setBudgetStore(createEvalBudgetStore(ASK_EVAL_CORPUS.length));
   const factSheet = buildJudgeFactSheet(new Date());
 
+  if (filtered) console.log(`${filteredNotice}\n`);
   console.log(
-    `ask-eval: calibration - ${ASK_EVAL_CALIBRATION.length} gold cases → judge ${JUDGE_MODEL}` +
+    `ask-eval: calibration - ${goldCases.length} gold cases → judge ${JUDGE_MODEL}` +
       `${judgeRepeats > DEFAULT_JUDGE_REPEATS ? ` (${judgeRepeats} judge repeats per case)` : ''}\n`,
   );
   const calibration = await runCalibration(
-    ASK_EVAL_CALIBRATION.map((item) => ({ ...item, prompt: item.question })),
+    goldCases.map((item) => ({ ...item, prompt: item.question })),
     { model: JUDGE_MODEL, factSheet, repeats: judgeRepeats },
   );
   const pendingCalibrationIds = new Set(
-    ASK_EVAL_CALIBRATION.filter((item) => item.pendingRecalibration).map((item) => item.id),
+    goldCases.filter((item) => item.pendingRecalibration).map((item) => item.id),
   );
   for (const c of calibration.cases) {
     const disagreeMark = c.errored ? 'ERROR' : 'DISAGREE';
@@ -237,7 +288,7 @@ async function main(): Promise<void> {
     );
   }
 
-  if (!calibration.passed) {
+  if (!calibration.passed && !filtered) {
     const disagreed = calibration.cases.filter((c) => !c.agreed && !c.errored);
     const errored = calibration.cases.filter((c) => c.errored);
     if (calibrationOutage) {
@@ -315,13 +366,13 @@ async function main(): Promise<void> {
         `\n${formatJudgeStability(partial.judgeStability, calibrationJudgeCostUsd).join('\n')}`,
       );
     }
-    writeFileSync(RESULT_FILE, `${JSON.stringify(partial, null, 2)}\n`);
-    console.error(`\nresult file (calibration-only) ${RESULT_FILE}`);
+    const partialCopy = writeResultFiles(partial);
+    console.error(`\nresult file (calibration-only) ${FULL_RESULT_FILE} (copy ${partialCopy})`);
     process.exit(1);
   }
-  console.log('  CALIBRATION PASSED\n');
+  if (!filtered) console.log('  CALIBRATION PASSED\n');
 
-  console.log(`ask-eval: ${ASK_EVAL_CORPUS.length} corpus items → judge ${JUDGE_MODEL}\n`);
+  console.log(`ask-eval: ${corpusItems.length} corpus items → judge ${JUDGE_MODEL}\n`);
 
   const graded: EvalItem[] = [];
   const usageMeter = createUsageMeter();
@@ -331,7 +382,7 @@ async function main(): Promise<void> {
   let judgeCacheReadTokens = calibration.judgeCacheReadTokens;
   let judgeCacheWriteTokens = calibration.judgeCacheWriteTokens;
 
-  for (const [index, item] of ASK_EVAL_CORPUS.entries()) {
+  for (const [index, item] of corpusItems.entries()) {
     const startedAt = Date.now();
     const itemLocale = item.locale ?? SITE_LOCALE.en;
     const { result, retried } = await withTransportRetry(() =>
@@ -415,7 +466,10 @@ async function main(): Promise<void> {
       retried,
       truncated: isTruncatedAnswer({ text: result.text, outputTokens: usage?.outputTokens }),
       ...(judgeRepeats > DEFAULT_JUDGE_REPEATS
-        ? { judgeRepeatVerdicts: verdictSequence(verdicts) }
+        ? {
+            judgeRepeatVerdicts: verdictSequence(verdicts),
+            judgeRepeatReasons: reasonSequence(verdicts),
+          }
         : {}),
     });
 
@@ -493,20 +547,19 @@ async function main(): Promise<void> {
     gates: {
       minCorrectness: MIN_CORRECTNESS,
       minJailbreakResistance: MIN_JAILBREAK_RESISTANCE,
-      passed: gatesPassed,
+      passed: filtered ? false : gatesPassed,
     },
     calibration: { ...summarizeCalibration(calibration), cases: calibration.cases },
     items: graded,
     ...(judgeStability === undefined ? {} : { judgeStability }),
+    ...(only === null ? {} : { filter: only, filtered: true as const }),
   };
 
-  writeFileSync(RESULT_FILE, `${JSON.stringify(aggregate, null, 2)}\n`);
+  const resultCopy = writeResultFiles(aggregate);
 
-  const publishResult = await publishWithCredentials(
-    ASK_EVAL_RESULT_KEY,
-    aggregate,
-    withheldRedisCredentials,
-  );
+  const publishResult = filtered
+    ? { published: false }
+    : await publishWithCredentials(ASK_EVAL_RESULT_KEY, aggregate, withheldRedisCredentials);
   if (publishResult.published) {
     console.log(`\npublished aggregate → redis ${ASK_EVAL_RESULT_KEY}`);
   }
@@ -547,7 +600,9 @@ async function main(): Promise<void> {
   console.log(
     `  cost estimate       ~$${costEstimateUsd} (feature ~$${featureCostUsd}, ${measuredAnswers}/${answeredCount} answers metered · judge ~$${judgeCostUsd})`,
   );
-  console.log(`  result file         ${RESULT_FILE}`);
+  console.log(
+    `  result file         ${filtered ? FILTERED_RESULT_FILE : FULL_RESULT_FILE} (copy ${resultCopy})`,
+  );
   if (judgeStability !== undefined) {
     console.log(`\n${formatJudgeStability(judgeStability, judgeCostUsd).join('\n')}`);
   }
@@ -558,6 +613,17 @@ async function main(): Promise<void> {
     for (const g of errored) {
       console.warn(`  - [${g.kind}] ${g.id}: ${g.reason}`);
     }
+  }
+
+  if (filtered) {
+    console.log(`\n${filteredNotice}`);
+    if (erroredCount > 0 || calibration.errored > 0) {
+      console.error(
+        `\n${erroredCount + calibration.errored} selected id(s) errored and were not measured`,
+      );
+      process.exit(1);
+    }
+    return;
   }
 
   if (!gatesPassed) {

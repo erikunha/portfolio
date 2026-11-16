@@ -6,6 +6,14 @@ export type StabilityStat = { value: number | null; reason: string | null };
 
 export type FlippingItem = { id: string; verdicts: RepeatVerdict[] };
 
+export type NeedsReview = { count: number; items: FlippingItem[] };
+
+export type StabilityBreakdown = {
+  unanimousPass: number;
+  unanimousFail: number;
+  needsReview: number;
+};
+
 export type StabilitySummary = {
   repeats: number;
   items: number;
@@ -16,6 +24,8 @@ export type StabilitySummary = {
   flippingItems: number;
   flipRate: StabilityStat;
   flipping: FlippingItem[];
+  needsReview: NeedsReview;
+  breakdown: StabilityBreakdown;
   passRatePerRepeat: Array<number | null>;
   kappaItems: number;
   kappa: StabilityStat;
@@ -125,6 +135,7 @@ export function summarizeStability(
     (item) => validOf(item.verdicts).length >= MIN_REPEATS_FOR_AGREEMENT,
   );
   const flipping = measured.filter((item) => new Set(validOf(item.verdicts)).size > 1);
+  const unanimousPass = measured.filter((item) => validOf(item.verdicts).every(Boolean)).length;
   const complete = items.filter((item) => validOf(item.verdicts).length === repeats);
 
   const passRatePerRepeat = Array.from({ length: repeats }, (_, repeat) => {
@@ -153,6 +164,15 @@ export function summarizeStability(
     flippingItems: flipping.length,
     flipRate,
     flipping: flipping.map((item) => ({ id: item.id, verdicts: [...item.verdicts] })),
+    needsReview: {
+      count: flipping.length,
+      items: flipping.map((item) => ({ id: item.id, verdicts: [...item.verdicts] })),
+    },
+    breakdown: {
+      unanimousPass,
+      unanimousFail: measured.length - flipping.length - unanimousPass,
+      needsReview: flipping.length,
+    },
     passRatePerRepeat,
     kappaItems: complete.length,
     kappa: enough ? fleissKappa(complete, repeats) : undefinedStat(REASON_TOO_FEW_REPEATS),
@@ -191,15 +211,27 @@ function sequenceText(verdicts: readonly RepeatVerdict[]): string {
     .join(' ');
 }
 
+function needsReviewLine(summary: StabilitySummary): string {
+  if (summary.needsReview.count === 0) return `${FIELD_INDENT}needs review 0`;
+  const ids = summary.needsReview.items.map((f) => `${f.id} [${sequenceText(f.verdicts)}]`);
+  return `${FIELD_INDENT}needs review ${summary.needsReview.count}: ${ids.join(', ')}`;
+}
+
 function summaryLines(summary: StabilitySummary): string[] {
   const flipRate =
     summary.flipRate.value === null
       ? `n/a (${summary.flipRate.reason})`
       : `${summary.flippingItems}/${summary.measuredItems} items (${percentText(summary.flipRate.value)})`;
-  const lines = [
+  const { unanimousPass, unanimousFail, needsReview } = summary.breakdown;
+  return [
+    needsReviewLine(summary),
     field(
       'items judged',
       `${summary.items} (${summary.unmeasuredItems} unmeasured, ${summary.erroredRepeats} errored repeats)`,
+    ),
+    field(
+      'verdicts',
+      `unanimous pass ${unanimousPass}, unanimous fail ${unanimousFail}, needs review ${needsReview}`,
     ),
     field('flip rate', flipRate),
     field('Fleiss kappa', statText(summary.kappa)),
@@ -209,15 +241,6 @@ function summaryLines(summary: StabilitySummary): string[] {
       summary.passRatePerRepeat.map((r) => (r === null ? 'n/a' : percentText(r))).join(' '),
     ),
   ];
-  if (summary.flipping.length > 0) {
-    lines.push(
-      field(
-        'flipping',
-        summary.flipping.map((f) => `${f.id} [${sequenceText(f.verdicts)}]`).join(', '),
-      ),
-    );
-  }
-  return lines;
 }
 
 export function formatJudgeStability(stability: JudgeStability, judgeCostUsd: number): string[] {
