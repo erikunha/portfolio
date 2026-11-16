@@ -1,5 +1,6 @@
 import createMDX from '@next/mdx';
 import type { NextConfig } from 'next';
+import { commitSha } from './lib/env-build';
 
 const withMDX = createMDX({
   options: {
@@ -41,7 +42,7 @@ function contentSecurityPolicy(): string {
 }
 
 const nextConfig: NextConfig = {
-  env: { BUILD_DATE },
+  env: { BUILD_DATE, RELEASE: commitSha() },
   poweredByHeader: false,
   pageExtensions: ['ts', 'tsx', 'mdx'],
   cacheComponents: true,

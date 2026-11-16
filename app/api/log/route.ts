@@ -13,6 +13,13 @@ const MAX_LOG_BODY_BYTES = 32_768;
 const ERR_KV_TTL_S = 7 * 24 * 60 * 60;
 const MAX_STORED_STACK_CHARS = 4096;
 const MAX_TS_LENGTH = 64;
+const MAX_RELEASE_LENGTH = 40;
+const MAX_LANG_LENGTH = 16;
+const MAX_MOTION_LENGTH = 16;
+const MAX_DIGEST_LENGTH = 64;
+const MAX_VIEWPORT_WIDTH = 100_000;
+const RELEASE_PATTERN = /^[A-Za-z0-9._-]+$/;
+const UNKNOWN_RELEASE = 'unknown';
 
 const ErrorPayload = z.object({
   level: z.enum(['error', 'warn']),
@@ -21,6 +28,11 @@ const ErrorPayload = z.object({
   url: z.string().max(2000).optional(),
   userAgent: z.string().max(500).optional(),
   ts: z.string().max(MAX_TS_LENGTH).optional(),
+  release: z.string().max(MAX_RELEASE_LENGTH).regex(RELEASE_PATTERN).optional(),
+  lang: z.string().max(MAX_LANG_LENGTH).optional(),
+  motion: z.string().max(MAX_MOTION_LENGTH).optional(),
+  vw: z.number().int().min(0).max(MAX_VIEWPORT_WIDTH).optional(),
+  digest: z.string().max(MAX_DIGEST_LENGTH).optional(),
 });
 
 const handleLog = defineHandler({
@@ -58,7 +70,7 @@ const handleLog = defineHandler({
 
     const errId = crypto.randomUUID();
     const today = utcDay(new Date());
-    const key = `err:${today}:${errId}`;
+    const key = `err:${body.release ?? UNKNOWN_RELEASE}:${today}:${errId}`;
 
     const record = {
       ...body,

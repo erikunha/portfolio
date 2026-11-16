@@ -8,5 +8,11 @@ export function reportClientError(
   fallbackStack?: string | null,
 ): void {
   if (typeof window === 'undefined') return;
-  postLog(buildLogPayload(`${prefix} ${error.message}`, error.stack ?? fallbackStack ?? undefined));
+  postLog(
+    buildLogPayload(
+      `${prefix} ${error.message}`,
+      error.stack ?? fallbackStack ?? undefined,
+      (error as { digest?: string }).digest,
+    ),
+  );
 }
