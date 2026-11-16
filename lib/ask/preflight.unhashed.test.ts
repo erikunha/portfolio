@@ -27,7 +27,9 @@ vi.mock('@/lib/server/client-ip', () => ({
 vi.mock('@/lib/rate-limit', () => ({
   getAskLimit: vi.fn(() => ({ limit: vi.fn(async () => ({ success: true })) })),
 }));
-vi.mock('@/lib/ask/budget', () => ({ reserveBudget }));
+vi.mock('@/lib/ask/budget', async () =>
+  (await import('@/__tests__/helpers/ask-route')).budgetModule({ reserveBudget }),
+);
 vi.mock('@/lib/ask/refusal-count', () => ({ countAskRefusal: vi.fn(async () => undefined) }));
 vi.mock('@/lib/ip-hash', () => ({ hashIp }));
 vi.mock('@/lib/server/after-response', () => ({
