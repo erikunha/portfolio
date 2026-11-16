@@ -745,6 +745,7 @@ Observability spans real-user telemetry, structured logs and client error captur
 ### Server-side structured logging
 
 - **`lib/log.ts`** wraps `pino` with a `{info, warn, error}` surface. Dev mode uses `pino-pretty` for human-readable output; production emits JSON lines for Vercel runtime-log parsing. Pino adds its standard timestamp and level fields plus `env`; the Edge fallback emits `{ts, level, env}`. Correlation IDs (`requestId`) are passed explicitly per call via the second `ctx` argument, without AsyncLocalStorage.
+- `instrumentation.ts` exports `onRequestError`: each server render, route or action error is logged once as `request.error` with the digest, error name, path without the query string, method, router kind, route path, route type and render source. Headers, the query string and the error message are never logged, because the message can carry user input.
 - API handlers use `log.*` for structured events; `/api/ask` also uses `console.error` in logger and stream error fallbacks. `ErrorBoundary.client.tsx` reports to DevTools and `/api/log` through `buildLogPayload`.
 
 ### Client error capture
