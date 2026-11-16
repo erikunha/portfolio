@@ -6,6 +6,7 @@ const IPV6_PREFIX_GROUPS = 4;
 const IPV6_HEX_RADIX = 16;
 const IPV4_MAPPED_PREFIX = '::ffff:';
 const IPV4_OCTET_BITS = 8;
+const CLIENT_IP_HEADERS = ['x-vercel-forwarded-for', 'x-real-ip', 'x-forwarded-for'] as const;
 const IP_KIND = { invalid: 0, v4: 4 } as const;
 
 function ipv4ToGroups(ipv4: string): string[] {
@@ -41,8 +42,14 @@ function rateLimitBucket(ip: string): string {
   return `${ipv6Groups(ip).slice(0, IPV6_PREFIX_GROUPS).join(':')}::/64`;
 }
 
+function firstEntry(value: string | null): string {
+  return value?.split(',')[0]?.trim() ?? '';
+}
+
 export function getClientIp(req: { headers: Headers }): string {
-  const raw =
-    req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? req.headers.get('x-real-ip');
-  return raw ? rateLimitBucket(raw) : UNKNOWN_CLIENT_IP;
+  for (const header of CLIENT_IP_HEADERS) {
+    const candidate = firstEntry(req.headers.get(header));
+    if (isIP(candidate) !== IP_KIND.invalid) return rateLimitBucket(candidate);
+  }
+  return UNKNOWN_CLIENT_IP;
 }

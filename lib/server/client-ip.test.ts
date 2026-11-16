@@ -17,10 +17,10 @@ describe('getClientIp', () => {
     expect(getClientIp(withHeaders({ 'x-real-ip': '198.51.100.9' }))).toBe('198.51.100.9');
   });
 
-  it('prefers x-forwarded-for over x-real-ip', () => {
+  it('prefers x-real-ip over x-forwarded-for', () => {
     expect(
       getClientIp(withHeaders({ 'x-forwarded-for': '203.0.113.7', 'x-real-ip': '198.51.100.9' })),
-    ).toBe('203.0.113.7');
+    ).toBe('198.51.100.9');
   });
 
   it('answers unknown when no client header is present', () => {
