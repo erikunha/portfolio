@@ -98,7 +98,7 @@ describe('ContactForm accessibility', () => {
     const container = await renderForm();
     const privacy = container.querySelector('.contact-privacy');
     expect(privacy?.textContent).toBe(
-      "Your message is stored 90 days so Erik can reply, then deleted. The copy emailed to him stays in his inbox and the email provider's logs, without that limit. Your IP is hashed before it becomes a key or a record, rate limiting included. Not shared with anyone else.",
+      "Your message is stored 90 days so Erik can reply, then deleted. The copy emailed to him stays in his inbox and the email provider's logs, without that limit. Your IP is hashed before it becomes a rate-limit key, and the hash is not stored with your message. Not shared with anyone else.",
     );
   });
 

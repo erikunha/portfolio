@@ -169,8 +169,8 @@ const contactCopyFor = (locale: SiteLocale): ContactContent => {
       mailtoBody: pt ? 'ref: {ref}\n\n{text}' : 'ref: {ref}\n\n{text}',
       counterSeparator: '/',
       privacy: pt
-        ? 'A mensagem fica salva por 90 dias para Erik poder responder, depois é excluída. A cópia enviada por email fica na caixa de entrada dele e nos logs do provedor de email, sem esse prazo. Seu IP é hasheado antes de virar chave ou registro, inclusive no rate limiting. Não é compartilhada com mais ninguém.'
-        : "Your message is stored 90 days so Erik can reply, then deleted. The copy emailed to him stays in his inbox and the email provider's logs, without that limit. Your IP is hashed before it becomes a key or a record, rate limiting included. Not shared with anyone else.",
+        ? 'A mensagem fica salva por 90 dias para Erik poder responder, depois é excluída. A cópia enviada por email fica na caixa de entrada dele e nos logs do provedor de email, sem esse prazo. Seu IP é hasheado antes de virar chave do rate limiting, e o hash não é salvo com a sua mensagem. Não é compartilhada com mais ninguém.'
+        : "Your message is stored 90 days so Erik can reply, then deleted. The copy emailed to him stays in his inbox and the email provider's logs, without that limit. Your IP is hashed before it becomes a rate-limit key, and the hash is not stored with your message. Not shared with anyone else.",
       fieldLabels: {
         name: pt ? 'nome' : 'name',
         email: 'email',
