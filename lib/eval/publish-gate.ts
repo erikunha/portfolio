@@ -43,6 +43,7 @@ function completePairs(credentials: RedisCredentials) {
 }
 
 function redisUrlProblem(value: string): string | null {
+  if (value !== value.trim()) return 'has surrounding whitespace';
   if (!URL_SCHEME.test(value)) {
     return /^["']|["']$/.test(value) ? 'is wrapped in quotes' : 'has no http(s) scheme';
   }

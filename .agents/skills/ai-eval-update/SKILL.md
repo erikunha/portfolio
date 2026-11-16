@@ -138,8 +138,8 @@ Adding a request per item (retries, extra turns) means raising that size.
 - Local artifact: `ask-eval-result.json` (full per-item grades + calibration cases + the
   cost breakdown: `featureCostUsd` is the production per-answer spend, metered from the route's token usage for `featureCostMeasuredAnswers` answers (the rest are filled with the metered mean, or an estimate when none resolved), `judgeCostUsd` is
   grading overhead and includes BOTH the calibration and corpus judge calls).
-- Live: Upstash Redis key `ask:eval:latest` (`ASK_EVAL_RESULT_KEY` in `lib/ask-metrics.ts`, imported by
-  `scripts/ask-eval.ts`); the metrics panel reads this one location. The aggregate carries `featureModel`,
+- Live: Upstash Redis key `ask:eval:latest` (`ASK_EVAL_RESULT_KEY` in `lib/eval/result-key.ts`, imported by
+  `lib/ask-metrics.ts` and `scripts/ask-eval.ts`); the metrics panel reads this one location. The aggregate carries `featureModel`,
   and the panel labels the result stale when it differs from `ASK_MODEL`. When the panel shows an old
   date, read the last `ask-eval.yml` run on `main` first: the publish needs `EVAL_PUBLISH_REDIS_REST_URL`
   (an http(s) address) and `EVAL_PUBLISH_REDIS_REST_TOKEN`, and the run exits 1 naming the variable when

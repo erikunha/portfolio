@@ -7,6 +7,18 @@ import {
 } from '@/lib/eval/publish-gate';
 import { getRedis, hasRedisCredentials } from '@/lib/rate-limit';
 
+const REDACTED = '[redacted]';
+const REST_CREDENTIAL_NAME = /REST.*(URL|TOKEN)$/;
+const URL_IN_TEXT = /https?:\/\/\S+/gi;
+
+function redactSecrets(message: string): string {
+  let redacted = message.replace(URL_IN_TEXT, REDACTED);
+  for (const [name, value] of Object.entries(process.env)) {
+    if (value && REST_CREDENTIAL_NAME.test(name)) redacted = redacted.split(value).join(REDACTED);
+  }
+  return redacted;
+}
+
 export type PublishResult = { published: boolean; skipped?: string; error?: string };
 
 export async function publishAggregate(key: string, aggregate: unknown): Promise<PublishResult> {
@@ -20,7 +32,10 @@ export async function publishAggregate(key: string, aggregate: unknown): Promise
     await getRedis().set(key, JSON.stringify(aggregate));
     return { published: true };
   } catch (err) {
-    return { published: false, error: err instanceof Error ? err.message : String(err) };
+    return {
+      published: false,
+      error: redactSecrets(err instanceof Error ? err.message : String(err)),
+    };
   }
 }
 

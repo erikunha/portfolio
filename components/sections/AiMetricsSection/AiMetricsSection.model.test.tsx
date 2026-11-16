@@ -21,10 +21,13 @@ const METRICS = {
   lastRun: FRESH_RUN,
 };
 
-async function render(metrics: object): Promise<string> {
+async function render(
+  metrics: object,
+  locale: (typeof SITE_LOCALE)[keyof typeof SITE_LOCALE] = SITE_LOCALE.en,
+): Promise<string> {
   getAskMetricsMock.mockResolvedValue(metrics);
   const { AiMetricsData } = await import('./AiMetricsSection');
-  return renderToStaticMarkup(await AiMetricsData({ locale: SITE_LOCALE.en }));
+  return renderToStaticMarkup(await AiMetricsData({ locale }));
 }
 
 afterEach(() => {
@@ -52,5 +55,13 @@ describe('ASK_EVAL panel: an eval of another model is labeled stale however rece
     vi.useFakeTimers();
     vi.setSystemTime(NOW);
     expect(await render(METRICS)).toContain('stale');
+  });
+
+  it('labels a fresh eval of an older model stale in pt-BR', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(NOW);
+    expect(
+      await render({ ...METRICS, featureModel: 'anthropic/claude-haiku-4-5' }, SITE_LOCALE.pt),
+    ).toContain('desatualizado');
   });
 });
