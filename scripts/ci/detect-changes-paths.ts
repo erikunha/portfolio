@@ -143,6 +143,7 @@ export const IGNORED_PATHS: readonly string[] = [
   'scripts/eval/agent-eval.ts',
   'scripts/gates/check-client-naming.ts',
   'scripts/gates/check-component-docs-coverage.ts',
+  'scripts/gates/check-css-ownership.ts',
   'scripts/gates/check-dep-pinning.ts',
   'scripts/gates/check-dependency-vetting.ts',
   'scripts/gates/check-detect-changes-paths.ts',

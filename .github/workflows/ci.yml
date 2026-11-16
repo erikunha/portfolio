@@ -60,6 +60,9 @@ jobs:
       - name: Shell DOM-writes gate
         run: pnpm check:shell-dom-writes
 
+      - name: CSS ownership gate
+        run: pnpm check:css-ownership
+
       - name: Dependency-pinning gate
         run: pnpm check:dep-pinning
 
