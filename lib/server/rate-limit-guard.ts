@@ -6,7 +6,7 @@ import { log } from '@/lib/log';
 import { describeError } from '@/lib/log-error';
 import type { ClientRateLimiter } from '@/lib/rate-limit';
 import { clientRateLimitKey } from '@/lib/server/rate-limit-key';
-import { err } from '@/lib/server/route';
+import { err, type RequestEventState, withRequestEvent } from '@/lib/server/route';
 import { RETRY_AFTER_HEADER, retryAfterSeconds } from '@/lib/stream-protocol';
 
 export function withRateLimit<TReq extends Request>(
@@ -14,25 +14,29 @@ export function withRateLimit<TReq extends Request>(
   getLimiter: () => ClientRateLimiter,
   message: string,
 ): (req: TReq) => Promise<Response> {
-  return async (req) => {
-    try {
-      const { success, reset } = await getLimiter().limit(await clientRateLimitKey(req));
-      if (!success) {
-        const retryAfter = retryAfterSeconds(reset, Date.now());
-        return err({
-          requestId: crypto.randomUUID(),
-          status: HTTP_STATUS.tooManyRequests,
-          code: 'rate_limited',
-          message,
-          ...(retryAfter === null
-            ? {}
-            : { extraHeaders: { [RETRY_AFTER_HEADER]: String(retryAfter) } }),
-        });
+  return (req) => {
+    const state: RequestEventState = { requestId: crypto.randomUUID(), rateLimited: false };
+    return withRequestEvent(req, state, async () => {
+      try {
+        const { success, reset } = await getLimiter().limit(await clientRateLimitKey(req));
+        if (!success) {
+          state.rateLimited = true;
+          const retryAfter = retryAfterSeconds(reset, Date.now());
+          return err({
+            requestId: state.requestId,
+            status: HTTP_STATUS.tooManyRequests,
+            code: 'rate_limited',
+            message,
+            ...(retryAfter === null
+              ? {}
+              : { extraHeaders: { [RETRY_AFTER_HEADER]: String(retryAfter) } }),
+          });
+        }
+      } catch (limitErr) {
+        unstable_rethrow(limitErr);
+        log.warn('rate-limit unavailable, allowing request', { error: describeError(limitErr) });
       }
-    } catch (limitErr) {
-      unstable_rethrow(limitErr);
-      log.warn('rate-limit unavailable, allowing request', { error: describeError(limitErr) });
-    }
-    return handler(req);
+      return handler(req);
+    });
   };
 }

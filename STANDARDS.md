@@ -92,7 +92,9 @@ routes and components on purpose.
 an `X-Request-Id` header on every response. The processing order is fixed:
 `rate-limit → bounded read → parse → validate → handle`. This is centralized in
 `lib/server/route.ts` (`defineHandler`); routes own only their side effects and
-business logic. Every outbound external call (Anthropic, Resend, Redis) carries
+business logic. `defineHandler` and `withRateLimit` log one `api request` event per
+request (route, status, duration, outcome, request id, whether rate limited), with
+no IP, body or query string. Every outbound external call (Anthropic, Resend, Redis) carries
 an explicit timeout, including a mid-stream watchdog on `/api/ask`, not only a
 connection-initiation timeout. Fail-open versus fail-closed is a deliberate,
 documented choice per control: rate-limiting and identical-question dedup fail

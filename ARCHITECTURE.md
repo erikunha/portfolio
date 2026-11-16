@@ -746,7 +746,8 @@ Observability spans real-user telemetry, structured logs and client error captur
 
 - **`lib/log.ts`** wraps `pino` with a `{info, warn, error}` surface. Dev mode uses `pino-pretty` for human-readable output; production emits JSON lines for Vercel runtime-log parsing. Pino adds its standard timestamp and level fields plus `env`; the Edge fallback emits `{ts, level, env}`. Correlation IDs (`requestId`) are passed explicitly per call via the second `ctx` argument, without AsyncLocalStorage.
 - `instrumentation.ts` exports `onRequestError`: each server render, route or action error is logged once as `request.error` with the digest, error name, path without the query string, method, router kind, route path, route type and render source. Headers, the query string and the error message are never logged, because the message can carry user input.
-- API handlers use `log.*` for structured events; `/api/ask` also uses `console.error` in logger and stream error fallbacks. `ErrorBoundary.client.tsx` reports to DevTools and `/api/log` through `buildLogPayload`.
+- Every request through `defineHandler` (`/api/contact`, `/api/log`, `/api/log/forget`) or `withRateLimit` (`/api/mcp`) logs exactly one `api request` line when its response is decided, from `withRequestEvent` in `lib/server/route.ts`: `route` (pathname only), `status`, `durationMs`, `outcome` (`ok`, `client_error`, `server_error` or `rate_limited`), `requestId` and `rateLimited`. Refusals, 429s and thrown handler errors each log once (a thrown error is recorded as status 500), a streamed response logs when the handler returns it, and the line carries no IP, hash, body or query string. `/api/ask` and the GET and cron routes emit no request line.
+- API handlers use `log.*` for other structured events; `/api/ask` also uses `console.error` in logger and stream error fallbacks. `ErrorBoundary.client.tsx` reports to DevTools and `/api/log` through `buildLogPayload`.
 
 ### Client error capture
 
@@ -763,7 +764,7 @@ Observability spans real-user telemetry, structured logs and client error captur
 ### Inspection surfaces
 
 - **Vercel dashboard** → Analytics + Speed Insights for real-user data.
-- **Vercel runtime logs** for the JSON-line `log.*` stream; filterable by `requestId`, `level`, or `env`.
+- **Vercel runtime logs** for the JSON-line `log.*` stream; filterable by `requestId`, `level`, or `env`; the `api request` line also filters by `route`, `outcome` and `rateLimited`.
 - **Upstash console** → Data Browser; `SCAN err:*` / `SCAN ask:log:*` for ad-hoc inspection.
 - **Source-map symbolication** for captured production errors: Vercel retains maps per deploy; operator runs `vercel inspect <deploy-url> --logs` or the dashboard's Source Maps tab. If this becomes recurring, a future spec adds an `/internal/symbolicate` route on demand.
 
