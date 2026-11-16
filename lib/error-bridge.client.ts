@@ -26,10 +26,8 @@ type Payload = {
   message: string;
   stack?: string;
   url?: string;
-  userAgent?: string;
   ts: string;
   release?: string | undefined;
-  lang?: string;
   motion?: string | undefined;
   vw?: number;
   digest?: string | undefined;
@@ -48,11 +46,9 @@ export function buildLogPayload(
     message,
     ...(stack !== undefined && { stack }),
     url: browser ? window.location.origin + window.location.pathname : '',
-    userAgent: browser ? navigator.userAgent : '',
     ts: new Date().toISOString(),
     release: process.env.RELEASE,
     ...(browser && {
-      lang: document.documentElement.lang,
       motion: document.body.dataset.motion,
       vw: window.innerWidth,
     }),

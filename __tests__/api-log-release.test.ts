@@ -5,6 +5,7 @@ const RELEASE = 'a1b2c3d4e5f6';
 const DIGEST = '2918476530';
 const OVERSIZED = 'x'.repeat(200);
 const KEY_PARTS = 4;
+const MAX_USER_AGENT_CHARS = 500;
 
 describe('/api/log release context', () => {
   const redisSetMock = vi.fn();
@@ -34,13 +35,16 @@ describe('/api/log release context', () => {
     vi.doUnmock('@/lib/log');
   });
 
-  async function post(extra: Record<string, unknown>): Promise<Response> {
+  async function post(
+    extra: Record<string, unknown>,
+    headers: Record<string, string> = {},
+  ): Promise<Response> {
     const { POST } = await import('@/app/api/log/route');
     return POST(
       new NextRequest('http://localhost/api/log', {
         method: 'POST',
         body: JSON.stringify({ level: 'error', message: 'boom', ...extra }),
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...headers },
       }),
     );
   }
@@ -53,10 +57,9 @@ describe('/api/log release context', () => {
     return JSON.parse(String(redisSetMock.mock.calls[0]?.[1])) as Record<string, unknown>;
   }
 
-  it('stores the release, language, motion, viewport and digest on the record', async () => {
+  it('stores the release, motion, viewport and digest on the record', async () => {
     const res = await post({
       release: RELEASE,
-      lang: 'pt-BR',
       motion: 'reduce',
       vw: 390,
       digest: DIGEST,
@@ -64,7 +67,6 @@ describe('/api/log release context', () => {
     expect(res.status).toBe(200);
     expect(storedRecord()).toMatchObject({
       release: RELEASE,
-      lang: 'pt-BR',
       motion: 'reduce',
       vw: 390,
       digest: DIGEST,
@@ -96,7 +98,6 @@ describe('/api/log release context', () => {
 
   it.each([
     ['release', { release: OVERSIZED }],
-    ['lang', { lang: OVERSIZED }],
     ['motion', { motion: OVERSIZED }],
     ['digest', { digest: OVERSIZED }],
   ])('refuses an oversized %s', async (_name, extra) => {
@@ -114,5 +115,50 @@ describe('/api/log release context', () => {
     const res = await post({ vw });
     expect(res.status).toBe(400);
     expect(redisSetMock).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ['https://erikunha.dev/pt/cv', 'pt-BR'],
+    ['https://erikunha.dev/pt', 'pt-BR'],
+    ['https://erikunha.dev/links/en', 'en-US'],
+    ['https://erikunha.dev/', 'en-US'],
+  ])('derives the language of %s from its path: %s', async (url, lang) => {
+    await post({ url });
+    expect(storedRecord()).toMatchObject({ lang });
+  });
+
+  it.each([
+    ['a missing url', {}],
+    ['an empty url', { url: '' }],
+    ['an unparsable url', { url: 'not a url' }],
+  ])('records no language for %s', async (_name, extra) => {
+    const res = await post(extra);
+    expect(res.status).toBe(200);
+    expect('lang' in storedRecord()).toBe(false);
+  });
+
+  it('ignores a language the client sends, since the path decides it', async () => {
+    await post({ url: 'https://erikunha.dev/pt', lang: 'xx' });
+    expect(storedRecord()).toMatchObject({ lang: 'pt-BR' });
+  });
+
+  it('takes the user agent from the request header', async () => {
+    await post({}, { 'User-Agent': 'jsdom-test-agent' });
+    expect(storedRecord()).toMatchObject({ userAgent: 'jsdom-test-agent' });
+  });
+
+  it('cuts the user agent to 500 characters', async () => {
+    await post({}, { 'User-Agent': 'u'.repeat(900) });
+    expect(String(storedRecord().userAgent)).toHaveLength(MAX_USER_AGENT_CHARS);
+  });
+
+  it('ignores a user agent the client sends in the body', async () => {
+    await post({ userAgent: 'spoofed' }, { 'User-Agent': 'real-agent' });
+    expect(storedRecord()).toMatchObject({ userAgent: 'real-agent' });
+  });
+
+  it('records no user agent when the request has none', async () => {
+    await post({ userAgent: 'spoofed' }, { 'User-Agent': '' });
+    expect('userAgent' in storedRecord()).toBe(false);
   });
 });

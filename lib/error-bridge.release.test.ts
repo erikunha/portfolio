@@ -12,22 +12,19 @@ function setViewportWidth(width: number): void {
 describe('client error context', () => {
   beforeEach(() => {
     vi.stubEnv('RELEASE', RELEASE);
-    document.documentElement.lang = 'pt-BR';
     document.body.dataset.motion = 'reduce';
     setViewportWidth(VIEWPORT_WIDTH);
   });
 
   afterEach(() => {
     vi.unstubAllEnvs();
-    document.documentElement.lang = '';
     delete document.body.dataset.motion;
   });
 
-  it('tags a payload with the release, document language, motion state and viewport width', () => {
+  it('tags a payload with the release, motion state and viewport width', () => {
     const payload = buildLogPayload('boom', undefined);
     expect(payload).toMatchObject({
       release: RELEASE,
-      lang: 'pt-BR',
       motion: 'reduce',
       vw: VIEWPORT_WIDTH,
     });

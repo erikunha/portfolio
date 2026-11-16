@@ -45,10 +45,10 @@ describe('buildLogPayload', () => {
     expect('stack' in payload).toBe(false);
   });
 
-  it('includes url and userAgent from window in jsdom context', () => {
+  it('includes the url from window and leaves the user agent to the server', () => {
     const payload = buildLogPayload('err', undefined);
     expect(typeof payload.url).toBe('string');
-    expect(typeof payload.userAgent).toBe('string');
+    expect('userAgent' in payload).toBe(false);
   });
 });
 

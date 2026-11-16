@@ -1,5 +1,6 @@
 import { z } from 'zod';
 
+import { localeOfPath, SITE_HTML_LANG } from '@/content/site-locale';
 import { HTTP_STATUS } from '@/lib/http-status';
 import { log } from '@/lib/log';
 import { getErrorLogDailyLimit, getErrorLogIpDailyLimit, getErrorLogLimit } from '@/lib/rate-limit';
@@ -14,7 +15,7 @@ const ERR_KV_TTL_S = 7 * 24 * 60 * 60;
 const MAX_STORED_STACK_CHARS = 4096;
 const MAX_TS_LENGTH = 64;
 const MAX_RELEASE_LENGTH = 40;
-const MAX_LANG_LENGTH = 16;
+const MAX_USER_AGENT_CHARS = 500;
 const MAX_MOTION_LENGTH = 16;
 const MAX_DIGEST_LENGTH = 64;
 const MAX_VIEWPORT_WIDTH = 100_000;
@@ -26,21 +27,28 @@ const ErrorPayload = z.object({
   message: z.string().min(1).max(2000),
   stack: z.string().max(16000).optional(),
   url: z.string().max(2000).optional(),
-  userAgent: z.string().max(500).optional(),
   ts: z.string().max(MAX_TS_LENGTH).optional(),
   release: z.string().max(MAX_RELEASE_LENGTH).regex(RELEASE_PATTERN).optional(),
-  lang: z.string().max(MAX_LANG_LENGTH).optional(),
   motion: z.string().max(MAX_MOTION_LENGTH).optional(),
   vw: z.number().int().min(0).max(MAX_VIEWPORT_WIDTH).optional(),
   digest: z.string().max(MAX_DIGEST_LENGTH).optional(),
 });
+
+function languageOfUrl(url: string | undefined): string | undefined {
+  if (!url) return undefined;
+  try {
+    return SITE_HTML_LANG[localeOfPath(new URL(url).pathname)];
+  } catch {
+    return undefined;
+  }
+}
 
 const handleLog = defineHandler({
   schema: ErrorPayload,
   maxBodyBytes: MAX_LOG_BODY_BYTES,
   rateLimit: getErrorLogLimit,
   rateLimitErrorMessage: 'too many error reports',
-  async handler({ body, ipHash, requestId }) {
+  async handler({ body, ipHash, req, requestId }) {
     if (body.message.toLowerCase().startsWith(SMOKE_PREFIX)) {
       return ok({ requestId });
     }
@@ -72,8 +80,13 @@ const handleLog = defineHandler({
     const today = utcDay(new Date());
     const key = `err:${body.release ?? UNKNOWN_RELEASE}:${today}:${errId}`;
 
+    const lang = languageOfUrl(body.url);
+    const userAgent = req.headers.get('user-agent')?.slice(0, MAX_USER_AGENT_CHARS);
+
     const record = {
       ...body,
+      ...(lang === undefined ? {} : { lang }),
+      ...(userAgent ? { userAgent } : {}),
       ...(body.stack === undefined ? {} : { stack: body.stack.slice(0, MAX_STORED_STACK_CHARS) }),
       errId,
       capturedAt: new Date().toISOString(),

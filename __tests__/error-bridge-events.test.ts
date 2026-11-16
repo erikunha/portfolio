@@ -101,10 +101,12 @@ describe('error bridge outside a browser window', () => {
     fetchSpy.mockClear();
   });
 
-  it('builds a payload with empty url and user agent', () => {
+  it('builds a payload with an empty url and no user agent', () => {
     vi.stubGlobal('window', undefined);
 
-    expect(buildLogPayload('server-side', undefined)).toMatchObject({ url: '', userAgent: '' });
+    const payload = buildLogPayload('server-side', undefined);
+    expect(payload).toMatchObject({ url: '' });
+    expect('userAgent' in payload).toBe(false);
   });
 
   it('does not post', () => {
