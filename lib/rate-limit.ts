@@ -30,6 +30,7 @@ const LIMITERS = {
   mcp: { algorithm: 'slidingWindow', limit: 60, window: '1 m', prefix: 'rl:mcp' },
   healthz: { algorithm: 'slidingWindow', limit: 120, window: '1 m', prefix: 'rl:healthz' },
   lighthouse: { algorithm: 'slidingWindow', limit: 30, window: '1 m', prefix: 'rl:lighthouse' },
+  cspReport: { algorithm: 'slidingWindow', limit: 60, window: '1 m', prefix: 'rl:csp-report' },
   errorLog: { algorithm: 'slidingWindow', limit: 10, window: '1 m', prefix: 'rl:errlog' },
   errorLogDaily: {
     algorithm: 'fixedWindow',
@@ -86,6 +87,10 @@ export function getHealthzLimit(): ClientRateLimiter {
 
 export function getLighthouseLimit(): ClientRateLimiter {
   return limiterFor('lighthouse');
+}
+
+export function getCspReportLimit(): ClientRateLimiter {
+  return limiterFor('cspReport');
 }
 
 export function getErrorLogLimit(): ClientRateLimiter {
