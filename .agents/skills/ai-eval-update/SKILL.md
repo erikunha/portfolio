@@ -162,6 +162,12 @@ repeat 1 only, so the default meaning is unchanged; the other repeats only measu
   or more valid repeats), `erroredRepeats`, `unmeasuredItems`. Calibration adds `agreeAllRepeats`,
   the gold cases that match the human label in every repeat. Each stat is `{ value, reason }`;
   `value` is `null` with a reason when it is undefined (one class only, `k=1`, no measured item).
+- An item whose valid verdicts are not unanimous is **needs review**: a split verdict is a coin flip
+  on that item, so it counts as neither a pass nor a fail. The stability report prints
+  `needs review N: id [P P F F P], ...` first in each block and a `unanimous pass / unanimous fail /
+  needs review` breakdown; the file carries `needsReview` (`count` and `items` with id and
+  sequence) and `breakdown` beside `flipping`. A person reads those ids and decides whether the
+  criterion or the answer is at fault. Gates still read repeat 1.
 - A flip rate above zero on the gold set means a single calibration run can pass or fail on judge
   noise: read the flipping ids before re-labeling a case or lowering a gate.
 - Do not run `k=5` in CI: it costs about five times the judge share of a run.
