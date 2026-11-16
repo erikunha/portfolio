@@ -1,5 +1,12 @@
 'use client';
 
+import {
+  blockedHost,
+  cspDirective,
+  cspDisposition,
+  documentPath,
+  isExtensionSource,
+} from '@/lib/csp-violation';
 import { RETRY_AFTER_HEADER } from '@/lib/stream-protocol';
 import { MS_PER_MINUTE, MS_PER_SECOND } from '@/lib/time';
 
@@ -8,15 +15,6 @@ export const MAX_DEDUP_SIZE = 100;
 export const MAX_REPORTS_PER_SESSION = 200;
 export const BACKOFF_BASE_MS = 5 * MS_PER_SECOND;
 export const BACKOFF_MAX_MS = 5 * MS_PER_MINUTE;
-
-const UNKNOWN = 'unknown';
-const MAX_FIELD_CHARS = 256;
-const WEB_PROTOCOLS = ['http:', 'https:'];
-const EXTENSION_SCHEME = /^(?:[a-z]+-)*extension:/i;
-const DIRECTIVE_NAME = /^[a-z][a-z0-9-]{0,63}$/;
-const SOURCE_KEYWORD = /^[a-z][a-z-]{0,31}$/;
-const SCHEME_SUFFIX = /:$/;
-const DISPOSITIONS = ['enforce', 'report'] as const;
 
 const BRIDGE_STATE_KEY = Symbol.for('erikunha.dev/error-bridge');
 
@@ -131,37 +129,10 @@ function handleRejection(state: BridgeState, event: PromiseRejectionEvent): void
   postLog(buildLogPayload(message, stack));
 }
 
-function isExtensionSource(value: string): boolean {
-  return EXTENSION_SCHEME.test(value.trim());
-}
-
-function parseUrl(value: string): URL | null {
-  try {
-    return new URL(value);
-  } catch {
-    return null;
-  }
-}
-
-function blockedHost(blocked: string): string {
-  const url = parseUrl(blocked);
-  if (url) return (url.host || url.protocol.replace(SCHEME_SUFFIX, '')).slice(0, MAX_FIELD_CHARS);
-  return SOURCE_KEYWORD.test(blocked) ? blocked : UNKNOWN;
-}
-
-function documentPath(documentUri: string): string {
-  const url = parseUrl(documentUri);
-  return url && WEB_PROTOCOLS.includes(url.protocol)
-    ? url.pathname.slice(0, MAX_FIELD_CHARS)
-    : UNKNOWN;
-}
-
 function handleViolation(state: BridgeState, event: SecurityPolicyViolationEvent): void {
   if (isExtensionSource(event.blockedURI) || isExtensionSource(event.sourceFile)) return;
-  const directive = DIRECTIVE_NAME.test(event.effectiveDirective)
-    ? event.effectiveDirective
-    : UNKNOWN;
-  const disposition = DISPOSITIONS.find((known) => known === event.disposition) ?? UNKNOWN;
+  const directive = cspDirective(event.effectiveDirective);
+  const disposition = cspDisposition(event.disposition);
   const message = `csp violation: ${disposition} ${directive} blocked ${blockedHost(event.blockedURI)} on ${documentPath(event.documentURI)}`;
   if (!shouldEmit(state, buildKey(message, undefined))) return;
   postLog({ ...buildLogPayload(message, undefined), level: 'warn' });

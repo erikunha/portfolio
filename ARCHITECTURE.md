@@ -452,6 +452,7 @@ lib/ip-hash.ts                        # salted IP hash for rate-limit and duplic
 lib/lighthouse-scores.ts              # PSI API fetcher (cached daily)
 lib/listeners.ts                      # createListeners: the subscribe and notify core of every external store
 lib/log.ts                            # pino wrapper (text dev / JSON prod)
+lib/csp-violation.ts                  # pure CSP violation rules (extension filter, host and path extraction, field cap) shared by the report sink and the client error bridge
 lib/run-gates.ts                      # createRunGates: named run gates, one answer, one callback per change (MatrixRain loop, frame governor sampling)
 lib/motion.ts                         # readMotion / applyMotion (body data-attr)
 lib/motion-change.ts                  # MOTION_CHANGE_EVENT and subscribeMotion, the one motionchange listener

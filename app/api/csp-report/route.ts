@@ -1,5 +1,12 @@
 import { z } from 'zod';
 
+import {
+  blockedHost,
+  cspDirective,
+  cspDisposition,
+  documentPath,
+  isExtensionSource,
+} from '@/lib/csp-violation';
 import { HTTP_STATUS } from '@/lib/http-status';
 import { log } from '@/lib/log';
 import { getCspReportLimit } from '@/lib/rate-limit';
@@ -11,22 +18,11 @@ const MAX_CSP_REPORT_BODY_BYTES = 4096;
 const CSP_REPORT_RATE_LIMIT_MESSAGE = 'too many reports';
 const VIOLATION_MESSAGE = 'csp violation';
 const TRUNCATED_MESSAGE = 'csp violations truncated';
-const UNKNOWN = 'unknown';
 const MAX_LOGGED_VIOLATIONS = 10;
-const MAX_LOGGED_FIELD_CHARS = 256;
-const WEB_PROTOCOLS = ['http:', 'https:'];
 
 const LEGACY_CONTENT_TYPE = 'application/csp-report';
 const REPORTING_API_CONTENT_TYPE = 'application/reports+json';
 const CSP_VIOLATION_TYPE = 'csp-violation';
-
-const EXTENSION_SCHEME = /^(?:[a-z]+-)*extension:/i;
-const DIRECTIVE_NAME = /^[a-z][a-z0-9-]{0,63}$/;
-const SOURCE_KEYWORD = /^[a-z][a-z-]{0,31}$/;
-const SCHEME_SUFFIX = /:$/;
-const DISPOSITIONS = ['enforce', 'report'] as const;
-
-type Disposition = (typeof DISPOSITIONS)[number] | typeof UNKNOWN;
 
 const OptionalText = z.string().optional().catch(undefined);
 
@@ -97,42 +93,6 @@ function reportingApiViolations(raw: unknown): Violation[] {
   });
 }
 
-function isExtensionSource(value: string | undefined): boolean {
-  return value !== undefined && EXTENSION_SCHEME.test(value.trim());
-}
-
-function parseUrl(value: string | undefined): URL | null {
-  if (value === undefined) return null;
-  try {
-    return new URL(value);
-  } catch {
-    return null;
-  }
-}
-
-function capField(value: string): string {
-  return value.slice(0, MAX_LOGGED_FIELD_CHARS);
-}
-
-function blockedHost(blocked: string | undefined): string {
-  const url = parseUrl(blocked);
-  if (url) return capField(url.host || url.protocol.replace(SCHEME_SUFFIX, ''));
-  return blocked !== undefined && SOURCE_KEYWORD.test(blocked) ? blocked : UNKNOWN;
-}
-
-function documentPath(documentUri: string | undefined): string {
-  const url = parseUrl(documentUri);
-  return url && WEB_PROTOCOLS.includes(url.protocol) ? capField(url.pathname) : UNKNOWN;
-}
-
-function directive(value: string | undefined): string {
-  return value !== undefined && DIRECTIVE_NAME.test(value) ? value : UNKNOWN;
-}
-
-function disposition(value: string | undefined): Disposition {
-  return DISPOSITIONS.find((known) => known === value) ?? UNKNOWN;
-}
-
 async function handleReport(req: Request): Promise<Response> {
   const type = mediaType(req);
   if (type !== LEGACY_CONTENT_TYPE && type !== REPORTING_API_CONTENT_TYPE) {
@@ -176,10 +136,10 @@ async function handleReport(req: Request): Promise<Response> {
   );
   for (const violation of loggable.slice(0, MAX_LOGGED_VIOLATIONS)) {
     log.warn(VIOLATION_MESSAGE, {
-      effectiveDirective: directive(violation.effectiveDirective),
+      effectiveDirective: cspDirective(violation.effectiveDirective),
       blockedHost: blockedHost(violation.blocked),
       documentPath: documentPath(violation.documentUri),
-      disposition: disposition(violation.disposition),
+      disposition: cspDisposition(violation.disposition),
     });
   }
   if (loggable.length > MAX_LOGGED_VIOLATIONS) {
