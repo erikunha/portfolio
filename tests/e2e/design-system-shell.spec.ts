@@ -22,12 +22,17 @@ for (const width of CORE_LAPTOP_WIDTHS) {
         )
         .evaluateAll(
           (nodes, min) =>
-            nodes
-              .map((node) => node.getBoundingClientRect())
-              .filter((box) => box.width < min || box.height < min).length,
+            nodes.flatMap((node) => {
+              const box = node.getBoundingClientRect();
+              if (box.width >= min && box.height >= min) return [];
+              const label = (node.textContent ?? '').trim().slice(0, 40);
+              return [
+                `${node.tagName.toLowerCase()}.${node.className} "${label}" ${box.width}x${box.height}`,
+              ];
+            }),
           MIN_TARGET_PX,
         );
-      expect(small, `${href} has targets under ${MIN_TARGET_PX}px at ${width}`).toBe(0);
+      expect(small, `${href} has targets under ${MIN_TARGET_PX}px at ${width}`).toEqual([]);
     }
   });
 }
