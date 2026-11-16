@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 const LIMITER_EXPORTS = [
   'getAskLimit',
   'getContactLimit',
+  'getCspReportLimit',
   'getErrorLogDailyLimit',
   'getErrorLogIpDailyLimit',
   'getErrorLogLimit',
