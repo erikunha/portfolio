@@ -233,7 +233,7 @@ export function formatJudgeStability(stability: JudgeStability, judgeCostUsd: nu
   lines.push(
     `${INDENT}calibration`,
     ...summaryLines(stability.calibration),
-    `${FIELD_INDENT}agree with human in all ${stability.judgeRepeats} repeats ${stability.calibration.agreeAllRepeats}/${stability.calibration.items}`,
+    `${FIELD_INDENT}agree with human in all ${stability.judgeRepeats} repeats (an errored repeat counts as disagreement) ${stability.calibration.agreeAllRepeats}/${stability.calibration.items}`,
     `${INDENT}judge cost ~$${judgeCostUsd} (${stability.judgeRepeats} judge calls per item)`,
   );
   return lines;

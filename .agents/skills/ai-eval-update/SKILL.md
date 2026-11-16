@@ -37,7 +37,7 @@ only the `ask-eval.yml` workflow (weekly schedule and manual dispatch) does.
                            # default 1); answers are generated once; every gate and `pass`
                            # still reads repeat 1; adds a "Judge stability (k=5)" report
                            # and `judgeStability` in the result file; costs about k times
-                           # the judge share of a run (k=5 is about $2.50)
+                           # the judge share of a run (the 2026-11-16 k=5 run cost about $2.39)
 
 The workflows set `EVAL_PUBLISH=1` only on `refs/heads/main` and map `UPSTASH_REDIS_REST_URL` and
 `UPSTASH_REDIS_REST_TOKEN` from the `EVAL_PUBLISH_REDIS_REST_URL` and
@@ -156,7 +156,7 @@ same answer `k` times on the 30 gold cases and on every answered corpus item
 repeat 1 only, so the default meaning is unchanged; the other repeats only measure.
 
 - `judgeStability` in `ask-eval-result.json` exists only when `k>1`, with `corpus` and
-  `calibration` blocks: `flipRate` (share of items whose valid verdicts are not unanimous),
+  `calibration` blocks (`corpus` is `null` when the run stops after calibration): `flipRate` (share of items whose valid verdicts are not unanimous),
   `flipping` (id and verdict sequence, `null` marks an errored repeat), `passRatePerRepeat`,
   `kappa` (Fleiss, items with every repeat valid), `alpha` (Krippendorff, nominal, items with two
   or more valid repeats), `erroredRepeats`, `unmeasuredItems`. Calibration adds `agreeAllRepeats`,

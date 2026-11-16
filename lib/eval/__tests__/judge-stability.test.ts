@@ -114,6 +114,32 @@ describe('summarizeStability, errored repeats', () => {
   });
 });
 
+describe('summarizeStability, errored slot that does not flip', () => {
+  const summary = summarizeStability([item('a', T, T, E)], 3);
+
+  it('counts the item as measured and not flipping', () => {
+    expect(summary.measuredItems).toBe(1);
+    expect(summary.unmeasuredItems).toBe(0);
+    expect(summary.flippingItems).toBe(0);
+    expect(summary.unanimousItems).toBe(1);
+    expect(summary.flipping).toEqual([]);
+    expect(summary.flipRate).toEqual({ value: 0, reason: null });
+  });
+});
+
+describe('summarizeStability, kappa beside errored repeats', () => {
+  const summary = summarizeStability(
+    [item('a', T, T, F), item('b', F, F, F), item('c', T, T, E), item('d', T, E, E)],
+    3,
+  );
+
+  it('uses only the items with every repeat valid: Pbar 2/3, Pe 5/9, kappa 1/4', () => {
+    expect(summary.kappaItems).toBe(2);
+    expect(summary.kappa.reason).toBeNull();
+    expect(summary.kappa.value).toBeCloseTo(0.25, 4);
+  });
+});
+
 describe('summarizeStability, degenerate input never yields NaN', () => {
   it('k=1 has no flip rate, kappa or alpha, each with a reason', () => {
     const summary = summarizeStability([item('a', T), item('b', F)], 1);
@@ -208,7 +234,9 @@ describe('formatJudgeStability', () => {
     expect(text).toContain('c [P P F]');
     expect(text).toContain('d [P F F]');
     expect(text).toContain('calibration');
-    expect(text).toContain('agree with human in all 3 repeats 1/2');
+    expect(text).toContain(
+      'agree with human in all 3 repeats (an errored repeat counts as disagreement) 1/2',
+    );
     expect(text).toContain('judge cost ~$1.2345 (3 judge calls per item)');
   });
 
