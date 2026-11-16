@@ -10,7 +10,7 @@ You are joining a spec-driven, gate-heavy platform. Work flows: spec -> plan che
 
 1. Read [development-lifecycle.md](./development-lifecycle.md) and [review-merge-release.md](./review-merge-release.md). Now you know the path from idea to production and the gates on it.
 2. Read [ai-assisted-development.md](./ai-assisted-development.md). Now you know how AI participates and how it is kept honest.
-3. Skim [agents-skills-hooks-mcp.md](./agents-skills-hooks-mcp.md) as a reference; you will return to it.
+3. Skim [agents-skills-hooks-mcp.md](./agents-skills-hooks-mcp.md) as a reference for the CI review files and git hooks; you will return to it.
 4. From the architecture side, read [`/docs/02-domain`](../02-domain.md) and [`/docs/01-architecture`](../01-architecture.md) so you know _what_ you are building.
 
 ## Day 2 - run the gates locally

@@ -55,7 +55,7 @@ portfolio/
 ├── lib/                     server and BFF core
 ├── scripts/                 gates and tools
 ├── tests/                   e2e, a11y, visual
-├── .agents/, .claude/, .codex/   AI platform
+├── .agents/, .claude/            skills, rules and the review worker the CI review reads
 ├── .github/workflows/
 ├── docs/, evals/, metrics/  knowledge base, eval data, metrics
 └── ARCHITECTURE, STANDARDS, DECISIONS, AGENTS, REVIEW

@@ -889,7 +889,7 @@ Vercel "Promote to Production" of previous deployment. <60 seconds. No manual co
 
 ### Agent configuration
 
-The repo ships a project-level permissions baseline for coding agents in `.claude/settings.json` (committed): the deny rules behind the zero-exception rules in `AGENTS.md` (broad `git add`, npm and yarn installs, local env reads), with no hooks and no `defaultMode`. Hooks, permission mode and other workflow choices are each engineer's, in user-level settings or `.claude/settings.local.json` (gitignored). `AGENTS.md` is the one instruction file for coding agents; `CLAUDE.md` imports it, skills live in `.agents/skills` and are linked into `.claude/skills`, and `.codex/config.toml` mirrors `.mcp.json`. The effective merged permissions are inspectable via:
+The repo ships a project-level permissions baseline for coding agents in `.claude/settings.json` (committed): the deny rules behind the zero-exception rules in `AGENTS.md` (broad `git add`, npm and yarn installs, local env reads), with no hooks and no `defaultMode`. Hooks, permission mode and other workflow choices are each engineer's, in user-level settings or `.claude/settings.local.json` (gitignored). `AGENTS.md` is the one instruction file for coding agents; `CLAUDE.md` imports it. The skills in `.agents/skills`, the rules in `.claude/rules` and the `review-worker` agent exist for the CI review job. The repository carries no MCP or editor-tool configuration: each developer's own tools decide how they work locally. The effective merged permissions are inspectable via:
 
 ```bash
 jq -s '(.[0].permissions.deny + (.[1].permissions.deny // [])) | unique' \

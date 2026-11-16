@@ -9,7 +9,7 @@ flowchart TB
     subgraph ctx["Project context"]
         cl["AGENTS.md (CLAUDE.md imports it)"]
         rules[".claude/rules/*.md"]
-        skills[".agents/skills/* (linked into .claude/skills)"]
+        skills[".agents/skills/* (read by the CI review)"]
         docs["STANDARDS.md · ARCHITECTURE.md · DECISIONS.md"]
     end
     subgraph checks["Repository checks"]
@@ -26,7 +26,7 @@ flowchart TB
 
 ## Context
 
-`AGENTS.md` names commands, standards and review conventions for any coding agent; `CLAUDE.md` imports it and adds the lines specific to one tool. Path-scoped rules live in `.claude/rules/` (API boundary, components and CSS, CI and gate configuration) and load only when a matching file is read. On-demand procedures live in `.agents/skills/` and are linked into `.claude/skills/`: visual baseline regeneration, AI eval maintenance, plan review, performance budgets, discovery surfaces and Semgrep. `.claude/agents/review-worker.md` is a read-only investigation worker (Read, Grep, Glob) that the PR review job hands one bounded question.
+`AGENTS.md` names commands, standards and review conventions for any coding agent; `CLAUDE.md` imports it and adds the lines specific to one tool. Path-scoped rules live in `.claude/rules/` (API boundary, components and CSS, CI and gate configuration). On-demand procedures live in `.agents/skills/`: visual baseline regeneration, AI eval maintenance, plan review, performance budgets, discovery surfaces and Semgrep. `.claude/agents/review-worker.md` is a read-only investigation worker (Read, Grep, Glob) that the PR review job hands one bounded question. These files exist for the CI review job. Each developer's own tools, skills and settings decide how they work locally, and the repository holds no editor, MCP or Codex configuration.
 
 `check:harness-size` checks `AGENTS.md` and `CLAUDE.md` against the line budgets in `scripts/gates/harness-size.json`. This is a size check, not proof that an agent follows the file.
 
@@ -47,7 +47,7 @@ Git hooks enforce separate stages:
 
 ## Evaluation tools
 
-Two harnesses share the code in `lib/eval/`. Neither replaces deterministic unit, type or browser checks.
+The eval code lives in `lib/eval/`. It does not replace deterministic unit, type or browser checks.
 
 ### `pnpm ask:eval`: the product eval
 
@@ -59,13 +59,6 @@ Two harnesses share the code in `lib/eval/`. Neither replaces deterministic unit
 
 The run writes `ask-eval-result.json` (the aggregate, per-item grades with a `truncated` flag, the `truncated` count of answers that hit the output cap or carry the truncation line, latency percentiles, token cost estimates and the prompt fingerprint). Every run removes the Redis credentials from its environment at start, so the in-process route never writes `ask:log`, `ask:guard` or refusal counters to production. Publishing the aggregate to Redis (`ask:eval:latest`, read by `lib/ask/metrics.ts`) requires `EVAL_PUBLISH=1` plus Redis credentials. Only the scheduled `ask-eval.yml` workflow sets the flag, and only when `github.ref` is `refs/heads/main`. They map `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN` from the `EVAL_PUBLISH_REDIS_REST_URL` and `EVAL_PUBLISH_REDIS_REST_TOKEN` secrets (a Redis ACL user that can only `SET ask:eval:latest`; no workflow reads the production token). With the flag, the credentials come back only around the one `publishAggregate` call. Without it they never come back, so a local run (including `vercel env run -- pnpm ask:eval`) never writes production data. With the flag set, a missing credential pair fails the run before any model call, and a failed Redis write exits 1 after the result file is written, so a stale `ask:eval:latest` cannot pass as a green run. In `ci.yml` the `ai-eval` job runs it only when a pull request carries the `ai-eval` label and touches `ai` paths, and it never publishes. Without a gateway credential the run exits 0 locally ("skipped") and exits 1 in CI.
 
-## Project MCP configuration
+## Product MCP endpoint
 
-| Entry      | Transport                            | Purpose                                           |
-| ---------- | ------------------------------------ | ------------------------------------------------- |
-| `context7` | HTTP, `https://mcp.context7.com/mcp` | Documentation lookup                              |
-| `upstash`  | `npx @upstash/mcp-server@latest`     | Redis inspection using `UPSTASH_READONLY_API_KEY` |
-
-Both entries are in `.mcp.json`. Registration does not establish a connected or working tool. Plugin and user-level server availability depends on the active runtime.
-
-The product also exposes `/api/mcp`, a separate read-only hiring-profile and question interface. See [05-api-and-integrations.md](./05-api-and-integrations.md).
+The product exposes `/api/mcp`, a read-only hiring-profile and question interface. See [05-api-and-integrations.md](./05-api-and-integrations.md).

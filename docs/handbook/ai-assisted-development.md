@@ -1,6 +1,6 @@
 # AI-Assisted Development
 
-> How AI participates across the SDLC. This doc describes the agent context, work loop and repository checks. For the per-artifact reference (every hook, skill, agent), see [agents-skills-hooks-mcp](./agents-skills-hooks-mcp.md).
+> How AI participates across the SDLC. This doc describes the agent context, work loop and repository checks. For the per-artifact reference (git hooks, the files the CI review reads), see [agents-skills-hooks-mcp](./agents-skills-hooks-mcp.md).
 
 ## Where AI shows up in the lifecycle
 
@@ -40,12 +40,11 @@ flowchart TD
     end
     subgraph ondemand["Loaded on demand"]
         rules[".claude/rules/*.md (when editing matching paths)"]
-        skills[".agents/skills/* via .claude/skills links (when triggered)"]
+        skills[".agents/skills/* (applied by the CI review when triggered)"]
         topic["STANDARDS.md chapters · /docs (when relevant)"]
     end
     subgraph runtime["Discovered at runtime"]
         mem["User-global memory (runtime-dependent)"]
-        ctx7["Context7 MCP (configured docs connection)"]
         history["DECISIONS.md (why a thing is the way it is)"]
     end
     always --> agent["Claude Code"]
@@ -53,9 +52,9 @@ flowchart TD
     runtime --> agent
 ```
 
-- **`AGENTS.md`** is the single source of project instructions for Codex and Claude Code. `CLAUDE.md` imports it with `@AGENTS.md` and adds only Claude-specific lines.
+- **`AGENTS.md`** is the single source of project instructions for any coding agent and for the CI review. `CLAUDE.md` imports it with `@AGENTS.md` and adds only Claude-specific lines.
 - **`.claude/rules/*.md`** load only when the agent reads a matching path (`paths:` frontmatter): the API boundary, components and CSS, CI and gate configuration. This keeps path-specific guidance out of always-loaded context.
-- **Skills** live in `.agents/skills/` and are linked into `.claude/skills/`; only their name and description are always loaded.
+- **Skills** live in `.agents/skills/` and the CI review applies them; only their name and description are always loaded. Each developer's own tools decide how they work locally.
 - User-global memory behavior depends on the active runtime. No project file establishes a `.remember/` handoff location; `AGENTS.md` never references one, and its reference list names the current sources.
 
 ## 2. The agent's working loop

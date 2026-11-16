@@ -1,25 +1,23 @@
-# Agents, Skills, Hooks and MCP Reference
+# Agent Files, Git Hooks and Review Reference
 
-This reference describes tracked project configuration. User-level tools and hooks require separate inspection.
+This reference describes the tracked agent files and the CI review that reads them. The skills, rules and review worker exist for the CI review job. Each developer's own tools, skills and settings decide how they work locally, and the repository holds no editor, MCP or Codex configuration. User-level tools and hooks require separate inspection.
 
 ## Layout
 
 | Path                      | Role                                                                                                   | Read by             |
 | ------------------------- | ------------------------------------------------------------------------------------------------------ | ------------------- |
-| `AGENTS.md`               | The single source of project instructions                                                              | Codex, Claude Code  |
-| `CLAUDE.md`               | `@AGENTS.md` import plus the Claude-only lines                                                         | Claude Code         |
+| `AGENTS.md`               | The single source of project instructions                                                              | CI review, any coding agent |
+| `CLAUDE.md`               | `@AGENTS.md` import plus the Claude-only lines                                                         | CI review, Claude Code |
 | `REVIEW.md`               | Review severity, always-check list, skip list, domains and proof                                                       | CI review, reviewers |
-| `.agents/skills/<name>/`  | Canonical project skills                                                                               | Codex               |
-| `.claude/skills/<name>`   | Relative symlink to `../../.agents/skills/<name>`                                                      | Claude Code         |
-| `.claude/rules/*.md`      | Path-scoped rules with `paths:` frontmatter                                                            | Claude Code         |
-| `.claude/agents/`         | One read-only agent for the CI review job                                                              | Claude Code         |
-| `.claude/settings.json`   | Team permissions (deny rules); no hooks                                                                | Claude Code         |
-| `.mcp.json`, `.codex/config.toml` | The same MCP servers, one file per tool (project layer, trusted projects only for Codex) | Claude Code, Codex  |
+| `.agents/skills/<name>/`  | Project skills, one directory each                                                                     | CI review           |
+| `.claude/rules/*.md`      | Path-scoped rules with `paths:` frontmatter                                                            | CI review           |
+| `.claude/agents/`         | One read-only agent for the CI review job                                                              | CI review           |
+| `.claude/settings.json`   | Team permissions (deny rules); no hooks                                                                | CI review, Claude Code |
 | `.github/CODEOWNERS`      | Code owner for every path above, plus `.github/`, `.husky/`, `scripts/`, the manifests, lockfile and workspace settings, `biome.json`, `vercel.json` and `next.config.ts` | GitHub              |
 
 Personal configuration stays out of the repository: `CLAUDE.local.md`, `.claude/settings.local.json`
-and the user-level homes of each tool. Workflow hooks, review habits, merge habits and model choices
-belong there too; the tracked files describe the repository only. Symlinks need `core.symlinks` on Windows checkouts.
+and the user-level homes of each tool. Workflow hooks, review habits, merge habits, model choices,
+local skill links and MCP connections belong there too; the tracked files describe the repository only.
 
 ## Project skills
 
@@ -44,7 +42,7 @@ A skill is a method: it holds the checks, the traps and the order for one surfac
 `REVIEW.md` and `AGENTS.md` and runs every repository skill whose trigger matches the diff: the
 trigger table in `AGENTS.md` (Skill dispatch) maps a surface to a skill.
 
-The developer's own skills are used when they fit the same surface, and their absence costs
+A developer may use their own skills when they fit the same surface. Their absence costs
 nothing, so the procedure runs unchanged on a machine that has none. A skill that was never looked
 at does not belong in the record; a skill that was looked at and stayed out says why.
 
@@ -57,8 +55,8 @@ the CI review job dispatches it for bounded investigations. A test pins its tool
 machine, so workflow hooks stay in each engineer's own settings.
 
 The permission deny rules turn the rules with no exceptions into enforcement for Claude Code:
-broad `git add`, npm and yarn installs, and reads of local env files. Codex has no
-equivalent here, so the same rules are also written in `AGENTS.md`.
+broad `git add`, npm and yarn installs, and reads of local env files. The same rules are written
+in `AGENTS.md` for every other tool.
 
 No project hook proves that a pre-PR review or an API review took place; those are conventions.
 
@@ -84,24 +82,9 @@ Path-scoped rules in `.claude/rules/` load when a matching file is read:
 
 `.claude/settings.json` does not set `defaultMode`.
 
-## MCP connections
+## Product MCP endpoint
 
-| Server     | Tracked configuration        | Role                                                     |
-| ---------- | ---------------------------- | -------------------------------------------------------- |
-| `context7` | HTTP endpoint in `.mcp.json` | Library documentation                                    |
-| `upstash`  | stdio command in `.mcp.json` | Redis access using the supplied read-only API credential |
-
-`.codex/config.toml` declares the same two servers for Codex; the Upstash command runs through `sh -c` because Codex does not expand variables inside `args`, and `env_vars` forwards the two credentials. A guard test keeps the server names and URLs equal across the two files. The configuration declares connections. It does not prove startup, available tools or credential permissions. GitHub, Vercel and browser tools are not declared in this project file.
-
-```mermaid
-flowchart LR
-    agent["Development agent"] --> config["Project .mcp.json"]
-    config --> ctx7["context7: documentation"]
-    config --> up["upstash: configured Redis access"]
-    repo["/api/mcp: product endpoint"] --> consumers["External MCP clients"]
-```
-
-The product endpoint `app/api/mcp/route.ts` is separate from the development connections.
+The product endpoint `app/api/mcp/route.ts` is a read-only hiring-profile and question interface for external MCP clients. The repository declares no development MCP connections.
 
 ## Review
 

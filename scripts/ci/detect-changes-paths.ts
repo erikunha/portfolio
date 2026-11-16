@@ -111,7 +111,6 @@ export const IGNORED_PATHS: readonly string[] = [
   '.env.example',
   '.gitignore',
   '.gitleaks.toml',
-  '.mcp.json',
   '.semgrepignore',
   'AGENTS.md',
   'ARCHITECTURE.md',
