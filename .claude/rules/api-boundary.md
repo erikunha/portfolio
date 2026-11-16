@@ -7,7 +7,7 @@ paths:
 - "lib/ask/budget.ts"
 - "lib/ask/dedup.ts"
 - "lib/server/**"
-- "proxy.ts"
+- "next.config.ts"
 
 ---
 
@@ -51,12 +51,13 @@ merge-blocking check on this surface is the behavioral test suite (the required
 ## Security surface
 
 - The behavioral tests are the only merge-blocking check on this surface for a finding. Semgrep (`pnpm lint:semgrep`,
-  report-only in CI) and CodeQL findings block nothing; only Semgrep's fixture self-test and false-positive baseline can fail a run. Editing `app/api/**`, `lib/rate-limit.ts`, `lib/redis.ts`, `lib/ask/budget.ts`, `lib/ask/dedup.ts` or `proxy.ts` means
+  report-only in CI) and CodeQL findings block nothing; only Semgrep's fixture self-test and false-positive baseline can fail a run. Editing `app/api/**`, `lib/rate-limit.ts`, `lib/redis.ts`, `lib/ask/budget.ts`, `lib/ask/dedup.ts` or `next.config.ts` means
   re-reading the diff for the abuse paths each of them closes.
-- CSP and `Reporting-Endpoints` headers come from **`proxy.ts`**, not
-  `next.config.ts` (which sets the static headers: COOP, X-Frame-Options, HSTS,
-  etc.). `__tests__/proxy-csp.test.ts` holds the CSP posture; the deploy smoke test
-  checks that the headers arrive on the live host.
+- Every response header, the CSP and `Reporting-Endpoints` included, comes from the
+  static `headers()` in **`next.config.ts`**; there is no `proxy.ts`, so a header never
+  depends on a per-request function. `__tests__/proxy-csp.test.ts` holds the CSP posture,
+  `tests/e2e/csp-report-delivery.spec.ts` the delivery of a violation report; the deploy
+  smoke test checks that the headers arrive on the live host.
 
 ## The `/api/ask` AI feature
 

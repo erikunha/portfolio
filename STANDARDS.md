@@ -380,8 +380,10 @@ deliberately public and crawlable; a phone number baked into the SYSTEM prompt
 is a privacy leak on a fetchable surface.
 
 **How it is held.** Mechanical: the CSP posture is held by the behavioral test
-`__tests__/proxy-csp.test.ts` (asserts the header is present and shaped
-correctly on responses); the `/api/ask` kill switch is held by
+`__tests__/proxy-csp.test.ts` (asserts the static `headers()` in
+`next.config.ts` carry the policy, shaped correctly) and
+`tests/e2e/csp-report-delivery.spec.ts` (a forced violation reaches
+`/api/csp-report` through the Reporting API); the `/api/ask` kill switch is held by
 `__tests__/ask/ask-killswitch-behavioral.test.ts` (calls the route with each
 off-keyword and asserts the dependencies that should _not_ run were not
 called); the SYSTEM prompt is held by `__tests__/system-prompt.test.ts` (asserts

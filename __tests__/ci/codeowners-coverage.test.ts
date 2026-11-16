@@ -27,7 +27,7 @@ const CONTROL_SURFACES = [
   'pnpm-workspace.yaml',
   'biome.json',
   'vercel.json',
-  'proxy.ts',
+  'next.config.ts',
 ];
 
 describe('CODEOWNERS covers the files that decide what merges and what ships', () => {

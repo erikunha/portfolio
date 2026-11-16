@@ -20,7 +20,6 @@ describe('isHighRisk', () => {
     'app/api/ask/route.ts',
     'app/api/contact/route.ts',
     'lib/rate-limit.ts',
-    'proxy.ts',
     'lib/env.ts',
     'lib/server/read-body.ts',
     'lib/ask/system-prompt.ts',
@@ -60,12 +59,12 @@ describe('isHighRisk', () => {
   });
 
   it('is true when one file among many is high-risk', () => {
-    expect(isHighRisk(['README.md', 'components/Hero/Hero.tsx', 'proxy.ts'])).toBe(true);
+    expect(isHighRisk(['README.md', 'components/Hero/Hero.tsx', 'next.config.ts'])).toBe(true);
   });
 
   it('does not match a sibling that only shares a name prefix with a listed file', () => {
     expect(isHighRisk(['lib/env.ts.bak'])).toBe(false);
-    expect(isHighRisk(['proxy.tsx'])).toBe(false);
+    expect(isHighRisk(['next.config.tsx'])).toBe(false);
     expect(isHighRisk(['package.json.md'])).toBe(false);
   });
 
@@ -76,7 +75,7 @@ describe('isHighRisk', () => {
 
   it('does not match a listed file name nested under another directory', () => {
     expect(isHighRisk(['docs/package.json'])).toBe(false);
-    expect(isHighRisk(['components/proxy.ts'])).toBe(false);
+    expect(isHighRisk(['components/next.config.ts'])).toBe(false);
   });
 });
 
@@ -90,8 +89,8 @@ describe('highRiskFiles', () => {
 
 describe('parseFileList', () => {
   it('splits lines, trims them and drops blanks', () => {
-    expect(parseFileList('proxy.ts\n\n  lib/env.ts  \r\nREADME.md\n')).toEqual([
-      'proxy.ts',
+    expect(parseFileList('next.config.ts\n\n  lib/env.ts  \r\nREADME.md\n')).toEqual([
+      'next.config.ts',
       'lib/env.ts',
       'README.md',
     ]);
@@ -118,7 +117,6 @@ describe('the path list', () => {
     expect(HIGH_RISK_FILES).toEqual(
       expect.arrayContaining([
         'lib/rate-limit.ts',
-        'proxy.ts',
         'lib/env.ts',
         'next.config.ts',
         'package.json',
@@ -133,8 +131,8 @@ describe('the command line', { timeout: SUBPROCESS_TEST_TIMEOUT_MS }, () => {
     execFileSync('node', [SCRIPT], { input: stdin, encoding: 'utf8' }).split('\n').filter(Boolean);
 
   it('prints the high-risk files from a file list on stdin', () => {
-    expect(run('README.md\nproxy.ts\ncomponents/A.tsx\napp/api/ask/route.ts\n')).toEqual([
-      'proxy.ts',
+    expect(run('README.md\nnext.config.ts\ncomponents/A.tsx\napp/api/ask/route.ts\n')).toEqual([
+      'next.config.ts',
       'app/api/ask/route.ts',
     ]);
   });

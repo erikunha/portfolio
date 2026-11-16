@@ -18,7 +18,7 @@ Changes to request validation or rate-limit behavior need comparison across the 
 
 ## The Content Security Policy allows inline scripts and styles
 
-`proxy.ts` sets `script-src 'self' 'unsafe-inline'` and `style-src 'self' 'unsafe-inline'`. A nonce would break the inline flight scripts of the statically generated pages, so the policy cannot block an injected inline script. Output escaping carries that weight: pages render text through React, the only `dangerouslySetInnerHTML` is the build-time motion bootstrap in `RootShell`, and JSON-LD values go through `serializeJsonLd`. The policy still blocks framing, plugins, foreign form targets and any script, font or connect source other than the site and the two Vercel analytics hosts.
+The `headers()` in `next.config.ts` set `script-src 'self' 'unsafe-inline'` and `style-src 'self' 'unsafe-inline'`. A nonce would break the inline flight scripts of the statically generated pages, so the policy cannot block an injected inline script. Output escaping carries that weight: pages render text through React, the only `dangerouslySetInnerHTML` is the build-time motion bootstrap in `RootShell`, and JSON-LD values go through `serializeJsonLd`. The policy still blocks framing, plugins, foreign form targets and any script, font or connect source other than the site and the two Vercel analytics hosts.
 
 ## PSI health depends on a daily refresh
 

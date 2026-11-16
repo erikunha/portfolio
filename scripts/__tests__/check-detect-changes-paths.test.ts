@@ -77,7 +77,7 @@ describe('unclassifiedFiles (fail closed for new root and scripts files)', () =>
   });
 
   it.each([
-    'proxy.ts',
+    'next.config.ts',
     'instrumentation.ts',
     'vercel.json',
     'postcss.config.mjs',

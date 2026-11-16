@@ -36,7 +36,7 @@ A good first PR (touches the common path, low blast radius):
 2. **Or add a design-system component variant** - follow `Foo/Foo.tsx` + `Foo/index.ts`, co-locate a test, document it (`check:component-docs`), and run `pnpm dev` to eyeball it.
 3. Commit with a conventional scope (`feat(content): ...`). Run `pnpm ci:local` and `pnpm gates:runtime`. `pnpm ci:full` runs every CI check in sequence before you push (doc 07). Note that pushing runs `.husky/pre-push`: main-push guard, branch-name guard, and the full `pnpm verify` chain.
 
-For `app/api/**`, `lib/rate-limit.ts`, `lib/redis.ts`, `lib/ask/budget.ts`, `lib/ask/dedup.ts` or `proxy.ts` changes, follow `.claude/rules/api-boundary.md`. No hook blocks a push on a review of those paths.
+For `app/api/**`, `lib/rate-limit.ts`, `lib/redis.ts`, `lib/ask/budget.ts`, `lib/ask/dedup.ts` or `next.config.ts` changes, follow `.claude/rules/api-boundary.md`. No hook blocks a push on a review of those paths.
 
 ## Week 1 - go deep where you'll work
 

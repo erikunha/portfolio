@@ -7,7 +7,6 @@ const DEFAULT_PATHS = [
   'lib',
   'components',
   'scripts',
-  'proxy.ts',
   'instrumentation.ts',
   'next.config.ts',
   '.github/workflows',

@@ -743,7 +743,7 @@ Observability spans real-user telemetry, structured logs and client error captur
 ### Real-user telemetry
 
 - **Vercel Web Analytics** + **Vercel Speed Insights** mounted in `components/RootShell.tsx`. Real-user pageview counts + LCP/INP/CLS land in the Vercel dashboards. They mount only when `VERCEL=1`; ad blockers and client settings can prevent collection.
-- **CSP** in `proxy.ts` allows `https://vitals.vercel-insights.com` (specific ingest origin, no wildcard) and `https://va.vercel-scripts.com`.
+- **CSP** in `next.config.ts` allows `https://vitals.vercel-insights.com` (specific ingest origin, no wildcard) and `https://va.vercel-scripts.com`.
 
 ### Server-side structured logging
 
@@ -830,7 +830,7 @@ Modest but professional:
 - Contact payloads and ASK questions and answers are persisted; no record written since 2026-11-16 holds an IP hash (older records keep theirs until the 90-day TTL ends). The hash is only a short-lived limiter and duplicate-question key name, and the `ask rejected` and `ask refused` log lines carry it to the runtime log. ASK erasure uses `/api/log/forget`, one request id erasing its whole conversation; Redis retention is bounded by TTLs. A delivered contact message is also an email in the owner's mailbox and in Resend's logs, which no TTL here reaches; the contact form's privacy line says so.
 - The rate-limit key depends on the salt, so a salt change (or the first deploy that keyed limiters by the hash) starts every limiter window afresh.
 
-`next.config.ts` sets static security headers; `proxy.ts` adds CSP and reporting endpoints.
+`next.config.ts` sets every security header as a static header: the CSP and `Reporting-Endpoints` (`csp-endpoint="/api/csp-report"`) beside COOP, X-Frame-Options, HSTS and the rest. There is no per-request function in front of the app.
 
 ---
 
@@ -879,7 +879,7 @@ The workflow runs on PRs, pushes to `main` and manual dispatch. Jobs are not a s
 | `high-risk-label.yml`           | pull request                                         | Adds or removes the `high-risk` label                                                                          |
 | `claude-review.yml`             | `/claude-review` comment from an owner, member or collaborator | Opt-in review of the pull request; never a merge gate or an approver (`REVIEW.md`)                   |
 | `claude.yml`                    | `@claude` comment from an owner, member or collaborator | Answers on issues and pull requests with read-only tools; pull-request content is mounted from `pr-head` with instruction-shaped files stripped, as in `claude-review.yml` |
-Changes under `tests/visual/` or `tests/e2e/` set both `ui` and `app`, running visual and functional e2e gates. Root build and runtime files (`proxy.ts`, `instrumentation.ts`, `vercel.json`, `postcss.config.mjs`, `tsconfig.json`, `.nvmrc`, `.npmrc`, `mdx-components.tsx`) and the scripts the build or runtime jobs run also set `app`; those that change rendered output set `ui`. The visual job's own inputs (`ci.yml`, `scripts/ci/install-playwright-browsers.ts`, `scripts/ci/wait-argos-reference.ts`) also set `ui`, and `ci.yml`, which defines the `ai-eval` job, sets `ai`. Every git-tracked root file and `scripts/` file must appear in `AI_PATHS`, `APP_PATHS`, `UI_PATHS` or `IGNORED_PATHS`; `pnpm check:detect-changes-paths` fails on a file in none of them, so a new file cannot silently skip the gated jobs. See `scripts/ci/detect-changes-paths.ts`.
+Changes under `tests/visual/` or `tests/e2e/` set both `ui` and `app`, running visual and functional e2e gates. Root build and runtime files (`instrumentation.ts`, `vercel.json`, `postcss.config.mjs`, `tsconfig.json`, `.nvmrc`, `.npmrc`, `mdx-components.tsx`) and the scripts the build or runtime jobs run also set `app`; those that change rendered output set `ui`. The visual job's own inputs (`ci.yml`, `scripts/ci/install-playwright-browsers.ts`, `scripts/ci/wait-argos-reference.ts`) also set `ui`, and `ci.yml`, which defines the `ai-eval` job, sets `ai`. Every git-tracked root file and `scripts/` file must appear in `AI_PATHS`, `APP_PATHS`, `UI_PATHS` or `IGNORED_PATHS`; `pnpm check:detect-changes-paths` fails on a file in none of them, so a new file cannot silently skip the gated jobs. See `scripts/ci/detect-changes-paths.ts`.
 
 ### Production deploy
 

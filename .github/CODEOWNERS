@@ -13,4 +13,4 @@
 /pnpm-workspace.yaml @erikunha
 /biome.json @erikunha
 /vercel.json @erikunha
-/proxy.ts @erikunha
+/next.config.ts @erikunha

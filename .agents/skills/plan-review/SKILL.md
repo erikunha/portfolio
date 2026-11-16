@@ -1,6 +1,6 @@
 ---
 name: plan-review
-description: Review a spec or implementation plan against this repository's hard limits before any code is written. Use when a plan adds a client island or dependency, touches app/api, lib/rate-limit.ts, lib/redis.ts, lib/ask/budget.ts, lib/ask/dedup.ts or proxy.ts, proposes new infrastructure, or could move a Lighthouse or route-JS budget. Returns PASS or BLOCK with the first failed gate. Do not use to review code that already exists.
+description: Review a spec or implementation plan against this repository's hard limits before any code is written. Use when a plan adds a client island or dependency, touches app/api, lib/rate-limit.ts, lib/redis.ts, lib/ask/budget.ts, lib/ask/dedup.ts or next.config.ts, proposes new infrastructure, or could move a Lighthouse or route-JS budget. Returns PASS or BLOCK with the first failed gate. Do not use to review code that already exists.
 ---
 
 # Plan review
@@ -25,13 +25,13 @@ the headroom with no app change. BLOCK when the plan gives no budget argument.
 
 ## Gate 3: server surface
 
-Does the plan touch `app/api/**`, `lib/rate-limit.ts` (the limiters), `lib/redis.ts` (the Redis client), `lib/ask/budget.ts` (the spend budget), `lib/ask/dedup.ts` (the identical-question lock) or `proxy.ts`? Then it must keep:
+Does the plan touch `app/api/**`, `lib/rate-limit.ts` (the limiters), `lib/redis.ts` (the Redis client), `lib/ask/budget.ts` (the spend budget), `lib/ask/dedup.ts` (the identical-question lock) or `next.config.ts` (the headers)? Then it must keep:
 
 - the handler order `defineHandler` enforces (rate limit before parse, validate, handle), with env read only through `lib/env.ts`;
 - the `/api/ask` spend budget failing closed while the rate limits fail open;
 - the ephemeral prompt cache (`providerOptions.anthropic.cacheControl`) on the system `instructions` and the single model constant in `lib/ask/model.ts`;
 - the `ASK_ENABLED` kill switch checked first in `lib/ask/preflight.ts`, before rate limiting and token reservation, answering 503 for its off keywords;
-- the CSP in `proxy.ts` and the static headers in `next.config.ts` where they are.
+- the CSP, `Reporting-Endpoints` and the other static security headers, which all come from `headers()` in `next.config.ts`.
 
 Grep each named symbol and compare with the plan. BLOCK on any constraint the plan does not clearly
 preserve.

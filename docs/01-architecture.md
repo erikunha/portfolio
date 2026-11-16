@@ -4,7 +4,7 @@
 
 ## Request model
 
-A request hits Vercel's edge, passes through `proxy.ts` (which stamps CSP + reporting headers), and is served by Next.js, which renders React Server Components (RSC, components that run only on the server). The page `/` is **partially prerendered** (PPR): a static shell (the chrome + above-the-fold Hero) is prerendered, while independent ASK and PSI data reads stream behind `<Suspense>`. Client islands hydrate for chrome, animation and interaction. Section content comes from **typed, build-validated `content/*.ts` modules**. A few `/api/*` handlers form a thin **BFF** (backend for frontend: one server layer that shapes calls to outside services for this site) over Upstash Redis, Resend, the Vercel AI Gateway, and Google PageSpeed Insights (PSI). Rate limiting and dedup fail open; the `/api/ask` budget reservation fails closed with 503; contact storage fails closed. Stored messages remain queued when delivery fails.
+A request hits Vercel's edge, receives the static security headers from `next.config.ts` (CSP and reporting included), and is served by Next.js, which renders React Server Components (RSC, components that run only on the server). The page `/` is **partially prerendered** (PPR): a static shell (the chrome + above-the-fold Hero) is prerendered, while independent ASK and PSI data reads stream behind `<Suspense>`. Client islands hydrate for chrome, animation and interaction. Section content comes from **typed, build-validated `content/*.ts` modules**. A few `/api/*` handlers form a thin **BFF** (backend for frontend: one server layer that shapes calls to outside services for this site) over Upstash Redis, Resend, the Vercel AI Gateway, and Google PageSpeed Insights (PSI). Rate limiting and dedup fail open; the `/api/ask` budget reservation fails closed with 503; contact storage fails closed. Stored messages remain queued when delivery fails.
 
 ## System purpose
 
@@ -14,7 +14,7 @@ The site presents a professional profile through the terminal home page, printab
 
 ```mermaid
 flowchart LR
-    edge["Edge<br/>proxy.ts · next.config.ts"] --> pres["Presentation<br/>components · design-system"]
+    edge["Edge<br/>next.config.ts"] --> pres["Presentation<br/>components · design-system"]
     pres --> content["Content<br/>content/*.ts · Zod schemas"]
     pres -->|"/api/* fetch"| bff["BFF<br/>app/api · lib"]
     bff --> ext[("External services")]
@@ -22,7 +22,7 @@ flowchart LR
 
 | Layer | What lives there |
 | --- | --- |
-| Edge | `proxy.ts` sets the per-request CSP and reporting endpoints; `next.config.ts` sets the static security headers, PPR and MDX. |
+| Edge | `next.config.ts` sets every security header (CSP, reporting endpoints, COOP, HSTS and the rest) as a static header, plus PPR and MDX. |
 | Presentation | `components/SiteHome.tsx` is the composition root. `components/sections/**` are RSC sections; client islands live in `client/` directories and `.client.ts(x)` files; `design-system/**` holds reusable primitives. |
 | Content | `content/*.ts` typed modules, the Zod registry `content/schemas.ts`, and the build-time parse site `content/_validate-client-content.ts`. |
 | BFF | `app/api/**` route handlers, the `defineHandler` envelope in `lib/server/route.ts`, and the server core in `lib/` (rate limit, Redis, env, ask, contact, mail). Server sections also read `lib` directly for measured data. |
@@ -137,7 +137,7 @@ Contact submission persists a 90-day KV audit record before calling the shared d
 | ----------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
 | `components/SiteHome.tsx`                 | The composition root; shows the RSC/PPR posture for the whole site                                                           |
 | `components/RootShell.tsx`                | Fonts, JSON-LD, the pre-paint motion bootstrap, Vercel RUM gating, shared by `app/(en)/layout.tsx` and `app/(pt)/layout.tsx` |
-| `next.config.ts` + `proxy.ts`             | The two-place header split (static vs per-request CSP), PPR, MDX                                                             |
+| `next.config.ts`                          | The static security headers (CSP and reporting included), PPR, MDX                                                           |
 | `lib/server/route.ts`                     | The `defineHandler` envelope - the API contract                                                                              |
 | `lib/rate-limit.ts`                       | The table of limiters (limit, window, prefix per name) and nine named getters; imports nothing from `lib/ask`                |
 | `lib/redis.ts`                            | `getRedis`, `hasRedisCredentials`, the credential name pairs and `RedisNotConfiguredError`                                   |

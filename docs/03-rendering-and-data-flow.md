@@ -118,10 +118,10 @@ The motion bootstrap script is load-bearing: it reads `localStorage('erik.motion
 
 ```mermaid
 flowchart LR
-    req["Request"] --> px["proxy.ts"] --> shell["Prerendered shell"] --> susp["Suspense boundaries"] --> html["Streamed HTML"] --> hydrate["Hydration"]
+    req["Request"] --> shell["Prerendered shell"] --> susp["Suspense boundaries"] --> html["Streamed HTML"] --> hydrate["Hydration"]
 ```
 
-1. `proxy.ts` adds the CSP and `Reporting-Endpoints` headers.
+1. `next.config.ts` `headers()` puts the CSP and `Reporting-Endpoints` on every response as static headers.
 2. The prerendered shell holds the `AppShell` chrome, the Hero (outside Suspense) and the above-the-fold sections.
 3. The server streams the rest. Suspense boundaries resolve per request, with the ask and PageSpeed data read independently.
 4. The browser hydrates the chrome and the client islands:
@@ -153,7 +153,7 @@ The terminal home combines prerendered output and dynamic Suspense children. Sep
 ```
 build time:  content/*.ts imported -> Zod parse (gate) -> typed data baked into RSC output
 eval run:    scripts/eval/ask-eval.ts -> Redis ask:eval:latest
-request:     proxy.ts headers -> static shell streamed -> getIsMobile() resolves per request
+request:     static headers -> static shell streamed -> getIsMobile() resolves per request
              -> section variants and independent ASK / PSI reads stream -> client hydrates islands
 ```
 
@@ -308,8 +308,7 @@ At 04:00 and 16:00 UTC (`0 4 * * *` and `0 16 * * *`), `/api/contact-retry` chec
 
 ```mermaid
 flowchart LR
-    e["Edge"] --> p["proxy.ts<br/>CSP + Reporting-Endpoints<br/>(skips _next/static, images)"]
-    p --> n["next.config.ts static headers<br/>COOP · XFO · HSTS · nosniff"]
+    e["Edge"] --> n["next.config.ts static headers<br/>CSP + Reporting-Endpoints · COOP · XFO · HSTS · nosniff"]
     n --> route{route type}
     route -->|page| ppr["PPR: static shell + streamed dynamic sections"]
     route -->|api| handler["defineHandler or bespoke streaming handler"]

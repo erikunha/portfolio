@@ -18,7 +18,6 @@ export const HIGH_RISK_PREFIXES: readonly string[] = [
 ];
 
 export const HIGH_RISK_FILES: readonly string[] = [
-  'proxy.ts',
   'next.config.ts',
   'vercel.json',
   'lib/rate-limit.ts',

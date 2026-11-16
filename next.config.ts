@@ -15,6 +15,31 @@ const withMDX = createMDX({
 const ISO_DATE_LENGTH = 10;
 const BUILD_DATE = new Date().toISOString().slice(0, ISO_DATE_LENGTH);
 
+const CSP_REPORT_PATH = '/api/csp-report';
+const CSP_REPORT_GROUP = 'csp-endpoint';
+
+function contentSecurityPolicy(): string {
+  const directives: readonly string[] = [
+    "default-src 'self'",
+    process.env.NODE_ENV === 'development'
+      ? "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://va.vercel-scripts.com"
+      : "script-src 'self' 'unsafe-inline'",
+    "style-src 'self' 'unsafe-inline'",
+    "img-src 'self' data: blob:",
+    "font-src 'self' data:",
+    "connect-src 'self' https://vitals.vercel-insights.com https://va.vercel-scripts.com",
+    "frame-ancestors 'none'",
+    "frame-src 'none'",
+    "object-src 'none'",
+    "base-uri 'self'",
+    "form-action 'self'",
+    "worker-src 'self'",
+    `report-to ${CSP_REPORT_GROUP}`,
+    `report-uri ${CSP_REPORT_PATH}`,
+  ];
+  return directives.join('; ');
+}
+
 const nextConfig: NextConfig = {
   env: { BUILD_DATE },
   poweredByHeader: false,
@@ -31,6 +56,8 @@ const nextConfig: NextConfig = {
     {
       source: '/(.*)',
       headers: [
+        { key: 'Content-Security-Policy', value: contentSecurityPolicy() },
+        { key: 'Reporting-Endpoints', value: `${CSP_REPORT_GROUP}="${CSP_REPORT_PATH}"` },
         { key: 'Cross-Origin-Opener-Policy', value: 'same-origin' },
         { key: 'X-Frame-Options', value: 'DENY' },
         { key: 'X-Content-Type-Options', value: 'nosniff' },

@@ -21,7 +21,7 @@ Semgrep is pinned to `1.185.0`. Run through the repo wrapper, never a bare globa
     pnpm lint:semgrep:fp-baseline           # measure the vendored rules' precision over the probe set
 
 The default targets are `app/`, `lib/`, `components/`, `scripts/`, the root runtime files
-(`proxy.ts`, `instrumentation.ts`, `next.config.ts`) and `.github/workflows/`.
+(`instrumentation.ts`, `next.config.ts`) and `.github/workflows/`.
 
 Local install (optional, CI is authoritative): `pip install semgrep==1.185.0`.
 If Semgrep is not installed, the wrapper exits 2 with an install hint; defer to CI.

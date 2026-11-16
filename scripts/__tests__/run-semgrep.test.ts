@@ -118,12 +118,7 @@ process.exit(0);
     expect(argv).toContain('p/github-actions');
     const targets = argv.slice(argv.indexOf('off') + 1);
     expect(targets).toEqual(
-      expect.arrayContaining([
-        'proxy.ts',
-        'instrumentation.ts',
-        'next.config.ts',
-        '.github/workflows',
-      ]),
+      expect.arrayContaining(['instrumentation.ts', 'next.config.ts', '.github/workflows']),
     );
     for (const target of targets) {
       expect(existsSync(`${process.cwd()}/${target}`), `${target} must exist`).toBe(true);
