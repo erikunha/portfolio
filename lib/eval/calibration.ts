@@ -1,4 +1,5 @@
-import { isJudgeError, judge } from '@/lib/eval/judge';
+import { isJudgeError } from '@/lib/eval/judge';
+import { DEFAULT_JUDGE_REPEATS, judgeRepeated, verdictSequence } from '@/lib/eval/judge-repeats';
 import type { CalibrationCase, CalibrationResult } from '@/lib/eval/types';
 
 export const MIN_CALIBRATION_AGREEMENT = 0.85;
@@ -20,8 +21,9 @@ export type CalibrationGoldCase = {
 
 export async function runCalibration(
   goldSet: CalibrationGoldCase[],
-  opts: { model: string; factSheet?: string },
+  opts: { model: string; factSheet?: string; repeats?: number },
 ): Promise<CalibrationResult> {
+  const { repeats = DEFAULT_JUDGE_REPEATS, ...judgeOpts } = opts;
   const cases: CalibrationCase[] = [];
   let judgeInputTokens = 0;
   let judgeOutputTokens = 0;
@@ -29,15 +31,20 @@ export async function runCalibration(
   let judgeCacheWriteTokens = 0;
 
   for (const item of goldSet) {
-    const verdict = await judge(
+    const verdicts = await judgeRepeated(
       { id: item.id, question: item.prompt, kind: item.kind ?? 'calibration', expect: item.expect },
       item.canonicalAnswer,
-      opts,
+      judgeOpts,
+      repeats,
     );
-    judgeInputTokens += verdict.inputTokens;
-    judgeOutputTokens += verdict.outputTokens;
-    judgeCacheReadTokens += verdict.cacheReadTokens ?? 0;
-    judgeCacheWriteTokens += verdict.cacheWriteTokens ?? 0;
+    const [verdict] = verdicts;
+    if (verdict === undefined) throw new Error(`judge returned no verdict for "${item.id}"`);
+    for (const call of verdicts) {
+      judgeInputTokens += call.inputTokens;
+      judgeOutputTokens += call.outputTokens;
+      judgeCacheReadTokens += call.cacheReadTokens ?? 0;
+      judgeCacheWriteTokens += call.cacheWriteTokens ?? 0;
+    }
 
     const errored = isJudgeError(verdict.reason);
     const agreed = !errored && verdict.pass === item.humanVerdict;
@@ -49,6 +56,7 @@ export async function runCalibration(
       agreed,
       errored,
       reason: verdict.reason,
+      ...(repeats > DEFAULT_JUDGE_REPEATS ? { repeatVerdicts: verdictSequence(verdicts) } : {}),
     });
   }
 
