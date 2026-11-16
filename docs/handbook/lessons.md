@@ -182,6 +182,17 @@ The prompt for a manual or agent review that applies these rules to a diff is `d
     that a workflow or a `package.json` lifecycle script runs with plain `node` imports its siblings
     with the `.ts` extension, because no loader resolves a bare specifier there. Check:
     `scripts/__tests__/bare-node-scripts.test.ts` and `scripts/__tests__/main-module-guard.test.ts`.
+46. A new tracked script is listed in `scripts/ci/detect-changes-paths.ts` in the same commit. An
+    unlisted script belongs to no change filter, so no CI job reruns when it changes. Check:
+    `pnpm check:detect-changes-paths`.
+47. A test that spawns a slow subprocess (`playwright test --list`, a build) runs it once in
+    `beforeAll` with its own timeout and caches the result. Inside a case it runs under the 5 s
+    default and times out on a loaded machine. Check: `__tests__/playwright-visual-projects.test.ts`
+    warms its cache in `beforeAll`.
+48. A test about which Playwright project runs which spec reads the selection Playwright reports
+    (`playwright test --list --reporter=json`), not a copy of `testMatch` or `grep` logic. A copy
+    passed while the tag selection it modelled had already changed. Check:
+    `__tests__/playwright-visual-projects.test.ts`.
 
 ## Pre-push judgement list
 

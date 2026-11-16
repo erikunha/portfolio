@@ -218,6 +218,16 @@ only for a property no accessible query exposes. Type with `user-event`, except 
 (`toBeInTheDocument`, `toHaveValue`), which `tests/mocks/rtl-setup.ts` registers for every test. Tests
 that read the file system are sorted in [docs/handbook/static-test-triage.md](docs/handbook/static-test-triage.md).
 
+**Mocks and browser setup.** A module mocked in more than one test file is mocked through a factory in
+`__tests__/helpers/` (`modules.ts` for resend, logging, `streamText` results and stream drains;
+`ask-route.ts` for the ask route; `shell.ts` to render and drive the shell), so one change to the
+real module's shape is one change to its mock. A browser test sets its viewport from
+`tests/e2e/_helpers/geometry.ts` (`WIDTH`, the named width sets, `VIEWPORTS`), never from a number;
+`__tests__/meta/e2e-viewport-widths.test.ts` fails on a numeric viewport width in a spec. A CSS or
+layout property jsdom cannot compute (an animation, a min-height) is asserted in a `*.e2e.ts`
+file on the computed style, and a rule about which stylesheet owns a selector is a gate
+(`pnpm check:css-ownership`), not a vitest file.
+
 **Placement.** A unit test sits beside the module it covers, named `<module>.test.ts`. A test that
 crosses modules or exercises a route goes in `__tests__/`, and a family of them goes in
 `__tests__/<family>/`: `ask`, `contact`, `agent`. A repo invariant goes in `__tests__/meta/`. A
