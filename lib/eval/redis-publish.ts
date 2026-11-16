@@ -6,6 +6,43 @@ import {
   restoreRedisCredentials,
 } from '@/lib/eval/publish-gate';
 import { getRedis, hasRedisCredentials } from '@/lib/rate-limit';
+import { REDIS_ENV_PAIRS } from '@/lib/redis-env';
+
+const REDACTED = '[redacted]';
+const MIN_REDACTED_LENGTH = 8;
+
+function hostsOf(value: string): string[] {
+  try {
+    const parsed = new URL(value);
+    return [parsed.host, parsed.hostname];
+  } catch {
+    return [];
+  }
+}
+
+function credentialValues(env: NodeJS.ProcessEnv): string[] {
+  const values = new Set<string>();
+  for (const { url, token } of REDIS_ENV_PAIRS) {
+    for (const name of [url, token]) {
+      const raw = env[name];
+      if (!raw) continue;
+      values.add(raw);
+      values.add(raw.trim());
+    }
+    for (const host of hostsOf((env[url] ?? '').trim())) values.add(host);
+  }
+  return [...values]
+    .filter((value) => value.length >= MIN_REDACTED_LENGTH)
+    .sort((a, b) => b.length - a.length);
+}
+
+function redactSecrets(message: string): string {
+  let redacted = message;
+  for (const value of credentialValues(process.env)) {
+    redacted = redacted.split(value).join(REDACTED);
+  }
+  return redacted;
+}
 
 export type PublishResult = { published: boolean; skipped?: string; error?: string };
 
@@ -20,7 +57,10 @@ export async function publishAggregate(key: string, aggregate: unknown): Promise
     await getRedis().set(key, JSON.stringify(aggregate));
     return { published: true };
   } catch (err) {
-    return { published: false, error: err instanceof Error ? err.message : String(err) };
+    return {
+      published: false,
+      error: redactSecrets(err instanceof Error ? err.message : String(err)),
+    };
   }
 }
 
