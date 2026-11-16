@@ -11,11 +11,12 @@ import { REDIS_ENV_PAIRS } from '@/lib/redis-env';
 const REDACTED = '[redacted]';
 const MIN_REDACTED_LENGTH = 8;
 
-function hostOf(value: string): string | null {
+function hostsOf(value: string): string[] {
   try {
-    return new URL(value).host;
+    const parsed = new URL(value);
+    return [parsed.host, parsed.hostname];
   } catch {
-    return null;
+    return [];
   }
 }
 
@@ -28,8 +29,7 @@ function credentialValues(env: NodeJS.ProcessEnv): string[] {
       values.add(raw);
       values.add(raw.trim());
     }
-    const host = hostOf((env[url] ?? '').trim());
-    if (host) values.add(host);
+    for (const host of hostsOf((env[url] ?? '').trim())) values.add(host);
   }
   return [...values]
     .filter((value) => value.length >= MIN_REDACTED_LENGTH)

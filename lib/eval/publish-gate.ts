@@ -61,6 +61,8 @@ function redisUrlProblem(value: string): string | null {
   }
 }
 
+const HEADER_SAFE_TOKEN = /^[\x21-\x7e]+$/;
+
 export function publishPreflightError(env: Env, credentials: RedisCredentials): string | null {
   if (!isPublishEnabled(env)) return null;
   if (hasCompletePair(credentials)) {
@@ -73,6 +75,9 @@ export function publishPreflightError(env: Env, credentials: RedisCredentials): 
     const tokenValue = credentials[tokenName] ?? '';
     if (tokenValue !== tokenValue.trim()) {
       return `${EVAL_PUBLISH_ENV}=${EVAL_PUBLISH_VALUE} needs a Redis REST token the run can send, but ${tokenName} has surrounding whitespace (the value is not printed). ${TOKEN_SECRET_HINT}`;
+    }
+    if (!HEADER_SAFE_TOKEN.test(tokenValue)) {
+      return `${EVAL_PUBLISH_ENV}=${EVAL_PUBLISH_VALUE} needs a Redis REST token the run can send, but ${tokenName} holds a character an HTTP header cannot carry (the value is not printed). ${TOKEN_SECRET_HINT}`;
     }
     return null;
   }
