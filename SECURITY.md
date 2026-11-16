@@ -8,9 +8,9 @@ This is a single, continuously deployed web application. Only the current `main`
 
 **Please do not open a public issue for security problems.**
 
-Report privately by either:
-- **GitHub Security Advisories**: open a private advisory via the repository's **Security → Report a vulnerability** tab (preferred), or
-- **Email**: erikhenriquealvescunha@gmail.com with `SECURITY` in the subject.
+Report privately by email: erikhenriquealvescunha@gmail.com with `SECURITY` in the subject. The same contact is published at `/.well-known/security.txt`.
+
+GitHub private vulnerability reporting (the repository's **Security → Report a vulnerability** tab) is off today. It becomes a second private channel once it is enabled on the repository; until then, use email.
 
 Please include a description of the issue, the affected URL or code path, reproduction steps or a proof of concept, and the impact you believe it has. If you have a suggested fix, include it.
 
