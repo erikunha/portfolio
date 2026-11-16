@@ -31,7 +31,20 @@ import {
 import { featureCostUsdFrom, judgeCostUsdFrom, summarizeFeatureCost } from '@/lib/eval/cost';
 import { buildJudgeFactSheet } from '@/lib/eval/fact-sheet';
 import { hasGatewayCredential } from '@/lib/eval/gateway-credential';
-import { judge } from '@/lib/eval/judge';
+import {
+  DEFAULT_JUDGE_REPEATS,
+  judgeRepeated,
+  parseJudgeRepeats,
+  verdictSequence,
+} from '@/lib/eval/judge-repeats';
+import {
+  formatJudgeStability,
+  GATE_REPEAT,
+  type JudgeStability,
+  type RepeatVerdict,
+  summarizeCalibrationStability,
+  summarizeStability,
+} from '@/lib/eval/judge-stability';
 import { percentile } from '@/lib/eval/percentile';
 import {
   isolateFromRedis,
@@ -40,7 +53,7 @@ import {
 } from '@/lib/eval/publish-gate';
 import { publishWithCredentials } from '@/lib/eval/redis-publish';
 import { countTruncated, isTruncatedAnswer } from '@/lib/eval/truncation';
-import type { CalibrationCase } from '@/lib/eval/types';
+import type { CalibrationCase, CalibrationResult } from '@/lib/eval/types';
 import { createUsageMeter } from '@/lib/eval/usage-meter';
 import { createEvalBudgetStore, setBudgetStore } from '@/lib/rate-limit';
 
@@ -54,7 +67,7 @@ const USAGE_WAIT_MS = 5_000;
 
 const INJECTION_GATE_STATUS = 400;
 
-type EvalItem = GradedItem & { truncated: boolean };
+type EvalItem = GradedItem & { truncated: boolean; judgeRepeatVerdicts?: RepeatVerdict[] };
 
 type Aggregate = {
   ts: string;
@@ -82,7 +95,19 @@ type Aggregate = {
   gates: { minCorrectness: number; minJailbreakResistance: number; passed: boolean };
   calibration: ReturnType<typeof summarizeCalibration> & { cases: CalibrationCase[] };
   items: EvalItem[];
+  judgeStability?: JudgeStability;
 };
+
+function calibrationStability(calibration: CalibrationResult, repeats: number) {
+  return summarizeCalibrationStability(
+    calibration.cases.map((c) => ({
+      id: c.id,
+      verdicts: c.repeatVerdicts ?? [],
+      humanVerdict: c.humanVerdict,
+    })),
+    repeats,
+  );
+}
 
 async function askFeature(
   item: Pick<AskEvalItem, 'question' | 'locale'>,
@@ -140,7 +165,17 @@ function clientIpForItem(index: number): string {
   return `10.${RUN_SEED}.${a}.${b}`;
 }
 
+function readJudgeRepeats(): number {
+  try {
+    return parseJudgeRepeats(process.argv.slice(2));
+  } catch (err) {
+    console.error(`ask-eval: ${err instanceof Error ? err.message : String(err)}`);
+    return process.exit(1);
+  }
+}
+
 async function main(): Promise<void> {
+  const judgeRepeats = readJudgeRepeats();
   const withheldRedisCredentials = isolateFromRedis(process.env);
   const preflightError = publishPreflightError(process.env, withheldRedisCredentials);
   if (preflightError) {
@@ -164,11 +199,12 @@ async function main(): Promise<void> {
   const factSheet = buildJudgeFactSheet(new Date());
 
   console.log(
-    `ask-eval: calibration - ${ASK_EVAL_CALIBRATION.length} gold cases → judge ${JUDGE_MODEL}\n`,
+    `ask-eval: calibration - ${ASK_EVAL_CALIBRATION.length} gold cases → judge ${JUDGE_MODEL}` +
+      `${judgeRepeats > DEFAULT_JUDGE_REPEATS ? ` (${judgeRepeats} judge repeats per case)` : ''}\n`,
   );
   const calibration = await runCalibration(
     ASK_EVAL_CALIBRATION.map((item) => ({ ...item, prompt: item.question })),
-    { model: JUDGE_MODEL, factSheet },
+    { model: JUDGE_MODEL, factSheet, repeats: judgeRepeats },
   );
   const pendingCalibrationIds = new Set(
     ASK_EVAL_CALIBRATION.filter((item) => item.pendingRecalibration).map((item) => item.id),
@@ -269,6 +305,17 @@ async function main(): Promise<void> {
       calibration: { ...summarizeCalibration(calibration), cases: calibration.cases },
       items: [],
     };
+    if (judgeRepeats > DEFAULT_JUDGE_REPEATS) {
+      partial.judgeStability = {
+        judgeRepeats,
+        gateRepeat: GATE_REPEAT,
+        corpus: null,
+        calibration: calibrationStability(calibration, judgeRepeats),
+      };
+      console.log(
+        `\n${formatJudgeStability(partial.judgeStability, calibrationJudgeCostUsd).join('\n')}`,
+      );
+    }
     writeFileSync(RESULT_FILE, `${JSON.stringify(partial, null, 2)}\n`);
     console.error(`\nresult file (calibration-only) ${RESULT_FILE}`);
     process.exit(1);
@@ -338,11 +385,20 @@ async function main(): Promise<void> {
     const usage = result.requestId ? await usageMeter.take(result.requestId, USAGE_WAIT_MS) : null;
     if (usage?.usageResolved) measuredAnswerCostsUsd.push(featureCostUsdFrom(usage));
 
-    const verdict = await judge(item, result.text, { model: JUDGE_MODEL, factSheet });
-    judgeInputTokens += verdict.inputTokens;
-    judgeOutputTokens += verdict.outputTokens;
-    judgeCacheReadTokens += verdict.cacheReadTokens ?? 0;
-    judgeCacheWriteTokens += verdict.cacheWriteTokens ?? 0;
+    const verdicts = await judgeRepeated(
+      item,
+      result.text,
+      { model: JUDGE_MODEL, factSheet },
+      judgeRepeats,
+    );
+    for (const call of verdicts) {
+      judgeInputTokens += call.inputTokens;
+      judgeOutputTokens += call.outputTokens;
+      judgeCacheReadTokens += call.cacheReadTokens ?? 0;
+      judgeCacheWriteTokens += call.cacheWriteTokens ?? 0;
+    }
+    const [verdict] = verdicts;
+    if (verdict === undefined) throw new Error(`judge returned no verdict for "${item.id}"`);
 
     const grade = gradeVerdict(verdict);
     graded.push({
@@ -359,6 +415,9 @@ async function main(): Promise<void> {
       gateRefused: false,
       retried,
       truncated: isTruncatedAnswer({ text: result.text, outputTokens: usage?.outputTokens }),
+      ...(judgeRepeats > DEFAULT_JUDGE_REPEATS
+        ? { judgeRepeatVerdicts: verdictSequence(verdicts) }
+        : {}),
     });
 
     const verdictMark = grade.pass ? 'PASS' : 'FAIL';
@@ -398,6 +457,23 @@ async function main(): Promise<void> {
 
   const gatesPassed = gateVerdict.passed;
 
+  const judgeStability: JudgeStability | undefined =
+    judgeRepeats > DEFAULT_JUDGE_REPEATS
+      ? {
+          judgeRepeats,
+          gateRepeat: GATE_REPEAT,
+          corpus: summarizeStability(
+            graded.flatMap((g) =>
+              g.judgeRepeatVerdicts === undefined
+                ? []
+                : [{ id: g.id, verdicts: g.judgeRepeatVerdicts }],
+            ),
+            judgeRepeats,
+          ),
+          calibration: calibrationStability(calibration, judgeRepeats),
+        }
+      : undefined;
+
   const aggregate: Aggregate = {
     ts: new Date().toISOString(),
     featureModel: ASK_MODEL,
@@ -422,6 +498,7 @@ async function main(): Promise<void> {
     },
     calibration: { ...summarizeCalibration(calibration), cases: calibration.cases },
     items: graded,
+    ...(judgeStability === undefined ? {} : { judgeStability }),
   };
 
   writeFileSync(RESULT_FILE, `${JSON.stringify(aggregate, null, 2)}\n`);
@@ -472,6 +549,9 @@ async function main(): Promise<void> {
     `  cost estimate       ~$${costEstimateUsd} (feature ~$${featureCostUsd}, ${measuredAnswers}/${answeredCount} answers metered · judge ~$${judgeCostUsd})`,
   );
   console.log(`  result file         ${RESULT_FILE}`);
+  if (judgeStability !== undefined) {
+    console.log(`\n${formatJudgeStability(judgeStability, judgeCostUsd).join('\n')}`);
+  }
 
   if (erroredCount > 0) {
     const errored = graded.filter((g) => g.errored);

@@ -32,6 +32,13 @@ only the `ask-eval.yml` workflow (weekly schedule and manual dispatch) does.
                            # model call and a failed Redis write exits 1, so a green publishing
                            # run means ask:eval:latest was refreshed
 
+    pnpm ask:eval --judge-repeats 5
+                           # same run, but the judge grades each answer 5 times (1 to 10,
+                           # default 1); answers are generated once; every gate and `pass`
+                           # still reads repeat 1; adds a "Judge stability (k=5)" report
+                           # and `judgeStability` in the result file; costs about k times
+                           # the judge share of a run (the 2026-11-16 k=5 run cost about $2.39)
+
 The workflows set `EVAL_PUBLISH=1` only on `refs/heads/main` and map `UPSTASH_REDIS_REST_URL` and
 `UPSTASH_REDIS_REST_TOKEN` from the `EVAL_PUBLISH_REDIS_REST_URL` and
 `EVAL_PUBLISH_REDIS_REST_TOKEN` secrets: a Redis ACL user that can only `SET ask:eval:latest` and
@@ -137,9 +144,27 @@ Adding a request per item (retries, extra turns) means raising that size.
 
 - Local artifact: `ask-eval-result.json` (full per-item grades + calibration cases + the
   cost breakdown: `featureCostUsd` is the production per-answer spend, metered from the route's token usage for `featureCostMeasuredAnswers` answers (the rest are filled with the metered mean, or an estimate when none resolved), `judgeCostUsd` is
-  grading overhead and includes BOTH the calibration and corpus judge calls).
+  grading overhead and includes BOTH the calibration and corpus judge calls, every repeat included).
 - Live: Upstash Redis key `ask:eval:latest` (`REDIS_RESULT_KEY` in `scripts/ask-eval.ts`,
   must match `lib/ask-metrics.ts`); the metrics panel reads this one location.
+
+## Judge stability (`--judge-repeats <k>`)
+
+Temperature 0 does not make the judge repeat itself. `--judge-repeats k` has the judge grade the
+same answer `k` times on the 30 gold cases and on every answered corpus item
+(`lib/eval/judge-repeats.ts`, `lib/eval/judge-stability.ts`). Gates, `pass` and `agreed` use
+repeat 1 only, so the default meaning is unchanged; the other repeats only measure.
+
+- `judgeStability` in `ask-eval-result.json` exists only when `k>1`, with `corpus` and
+  `calibration` blocks (`corpus` is `null` when the run stops after calibration): `flipRate` (share of items whose valid verdicts are not unanimous),
+  `flipping` (id and verdict sequence, `null` marks an errored repeat), `passRatePerRepeat`,
+  `kappa` (Fleiss, items with every repeat valid), `alpha` (Krippendorff, nominal, items with two
+  or more valid repeats), `erroredRepeats`, `unmeasuredItems`. Calibration adds `agreeAllRepeats`,
+  the gold cases that match the human label in every repeat. Each stat is `{ value, reason }`;
+  `value` is `null` with a reason when it is undefined (one class only, `k=1`, no measured item).
+- A flip rate above zero on the gold set means a single calibration run can pass or fail on judge
+  noise: read the flipping ids before re-labeling a case or lowering a gate.
+- Do not run `k=5` in CI: it costs about five times the judge share of a run.
 
 ## After corpus changes
 
