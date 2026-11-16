@@ -6,15 +6,40 @@ import {
   restoreRedisCredentials,
 } from '@/lib/eval/publish-gate';
 import { getRedis, hasRedisCredentials } from '@/lib/rate-limit';
+import { REDIS_ENV_PAIRS } from '@/lib/redis-env';
 
 const REDACTED = '[redacted]';
-const REST_CREDENTIAL_NAME = /REST.*(URL|TOKEN)$/;
-const URL_IN_TEXT = /https?:\/\/\S+/gi;
+const MIN_REDACTED_LENGTH = 8;
+
+function hostOf(value: string): string | null {
+  try {
+    return new URL(value).host;
+  } catch {
+    return null;
+  }
+}
+
+function credentialValues(env: NodeJS.ProcessEnv): string[] {
+  const values = new Set<string>();
+  for (const { url, token } of REDIS_ENV_PAIRS) {
+    for (const name of [url, token]) {
+      const raw = env[name];
+      if (!raw) continue;
+      values.add(raw);
+      values.add(raw.trim());
+    }
+    const host = hostOf((env[url] ?? '').trim());
+    if (host) values.add(host);
+  }
+  return [...values]
+    .filter((value) => value.length >= MIN_REDACTED_LENGTH)
+    .sort((a, b) => b.length - a.length);
+}
 
 function redactSecrets(message: string): string {
-  let redacted = message.replace(URL_IN_TEXT, REDACTED);
-  for (const [name, value] of Object.entries(process.env)) {
-    if (value && REST_CREDENTIAL_NAME.test(name)) redacted = redacted.split(value).join(REDACTED);
+  let redacted = message;
+  for (const value of credentialValues(process.env)) {
+    redacted = redacted.split(value).join(REDACTED);
   }
   return redacted;
 }

@@ -1,4 +1,4 @@
-import { REDIS_ENV_PAIRS } from '@/lib/rate-limit';
+import { REDIS_ENV_PAIRS } from '@/lib/redis-env';
 
 export const EVAL_PUBLISH_ENV = 'EVAL_PUBLISH';
 export const EVAL_PUBLISH_VALUE = '1';
@@ -34,12 +34,17 @@ export function dropRedisCredentials(env: Env, credentials: RedisCredentials): v
 
 const PUBLISH_URL_PROTOCOLS = new Set(['https:', 'http:']);
 const URL_SCHEME = /^[a-z][a-z0-9+.-]*:\/\//i;
+const TOKEN_SECRET_HINT =
+  'In GitHub Actions it comes from the EVAL_PUBLISH_REDIS_REST_TOKEN secret.';
 const URL_SECRET_HINT = 'In GitHub Actions it comes from the EVAL_PUBLISH_REDIS_REST_URL secret.';
 
-function completePairs(credentials: RedisCredentials) {
-  return REDIS_ENV_PAIRS.filter(({ url, token }) =>
-    Boolean(credentials[url] && credentials[token]),
-  );
+function hasCompletePair(credentials: RedisCredentials): boolean {
+  return REDIS_ENV_PAIRS.some(({ url, token }) => Boolean(credentials[url] && credentials[token]));
+}
+
+function resolvedName(credentials: RedisCredentials, kind: 'url' | 'token'): string {
+  const names = REDIS_ENV_PAIRS.map((pair) => pair[kind]);
+  return names.find((name) => Boolean(credentials[name])) ?? names.join(' or ');
 }
 
 function redisUrlProblem(value: string): string | null {
@@ -58,15 +63,18 @@ function redisUrlProblem(value: string): string | null {
 
 export function publishPreflightError(env: Env, credentials: RedisCredentials): string | null {
   if (!isPublishEnabled(env)) return null;
-  const pairs = completePairs(credentials);
-  if (pairs.length > 0) {
-    const problems = pairs.map(({ url }) => ({
-      url,
-      problem: redisUrlProblem(credentials[url] ?? ''),
-    }));
-    if (problems.some(({ problem }) => problem === null)) return null;
-    const detail = problems.map(({ url, problem }) => `${url} ${problem}`).join(' and ');
-    return `${EVAL_PUBLISH_ENV}=${EVAL_PUBLISH_VALUE} needs a Redis REST URL the run can reach, but ${detail} (the value is not printed). ${URL_SECRET_HINT}`;
+  if (hasCompletePair(credentials)) {
+    const urlName = resolvedName(credentials, 'url');
+    const tokenName = resolvedName(credentials, 'token');
+    const urlProblem = redisUrlProblem(credentials[urlName] ?? '');
+    if (urlProblem) {
+      return `${EVAL_PUBLISH_ENV}=${EVAL_PUBLISH_VALUE} needs a Redis REST URL the run can reach, but ${urlName} ${urlProblem} (the value is not printed). ${URL_SECRET_HINT}`;
+    }
+    const tokenValue = credentials[tokenName] ?? '';
+    if (tokenValue !== tokenValue.trim()) {
+      return `${EVAL_PUBLISH_ENV}=${EVAL_PUBLISH_VALUE} needs a Redis REST token the run can send, but ${tokenName} has surrounding whitespace (the value is not printed). ${TOKEN_SECRET_HINT}`;
+    }
+    return null;
   }
   const names = REDIS_ENV_PAIRS.map(({ url, token }) => `${url} and ${token}`).join(' or ');
   return `${EVAL_PUBLISH_ENV}=${EVAL_PUBLISH_VALUE} needs Redis credentials, but ${names} is not set or is empty. In GitHub Actions they come from the EVAL_PUBLISH_REDIS_REST_URL and EVAL_PUBLISH_REDIS_REST_TOKEN secrets.`;
