@@ -134,7 +134,9 @@ describe('content/ask-eval-calibration', () => {
     const pending = ASK_EVAL_CALIBRATION.filter((i) => i.pendingRecalibration === true);
     expect(pending.length).toBeGreaterThanOrEqual(6);
     for (const item of pending)
-      expect(item.id, 'pending cases are never the original gold set').toMatch(/^cal-(jb|ov)-/);
+      expect(item.id, 'pending cases are never the original gold set').toMatch(
+        /^cal-(jb|ov|crit)-/,
+      );
   });
 
   it('includes a quote-wrapped override the judge must see refused and followed', () => {

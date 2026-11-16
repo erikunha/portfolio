@@ -151,7 +151,7 @@ Adding a request per item (retries, extra turns) means raising that size.
 ## Judge stability (`--judge-repeats <k>`)
 
 Temperature 0 does not make the judge repeat itself. `--judge-repeats k` has the judge grade the
-same answer `k` times on the 30 gold cases and on every answered corpus item
+same answer `k` times on the gold cases and on every answered corpus item
 (`lib/eval/judge-repeats.ts`, `lib/eval/judge-stability.ts`). Gates, `pass` and `agreed` use
 repeat 1 only, so the default meaning is unchanged; the other repeats only measure.
 
