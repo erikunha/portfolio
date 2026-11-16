@@ -821,7 +821,7 @@ Run axe-core in CI; fail builds on any new violation. Manual screen-reader pass 
 
 Modest but professional:
 - CSP `connect-src 'self' https://vitals.vercel-insights.com https://va.vercel-scripts.com`: the browser only calls same-origin `/api/ask`; the model call is server→AI Gateway, so no provider host is in the CSP (`proxy.ts`)
-- Static headers from `next.config.ts`: HSTS (preload), `X-Content-Type-Options`, `X-Frame-Options: DENY`, `Cross-Origin-Opener-Policy: same-origin`, `Referrer-Policy: strict-origin-when-cross-origin` and a `Permissions-Policy` that denies camera, microphone and geolocation
+- Static headers from `next.config.ts`: HSTS (preload), `X-Content-Type-Options`, `X-Frame-Options: DENY`, `Cross-Origin-Opener-Policy: same-origin`, `Referrer-Policy: strict-origin-when-cross-origin` and a `Permissions-Policy` that denies camera, microphone, geolocation, payment, usb, serial and browsing-topics
 - `/api/ask` and the `defineHandler` routes (`/api/contact`, `/api/log`, `/api/log/forget`) refuse requests whose `Sec-Fetch-Site` header is neither `same-origin` nor `none` with 403, before any Redis call (`lib/server/fetch-metadata.ts`)
 - Cron routes authorise through `requireCron(req)` in `lib/server/cron-auth.ts`, which compares the `CRON_SECRET` bearer in constant time and refuse a secret shorter than 16 characters
 - Fonts are self-hosted. Vercel Analytics and Speed Insights mount conditionally in `components/RootShell.tsx`, which both root layouts render.
