@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { WIDTH } from './_helpers/geometry';
 import { installMockBackend } from './_helpers/mock-backend';
 
 const MIXER = '#sec-guitar [data-testid="daw-mixer-desktop"]';
@@ -9,7 +10,7 @@ const CONTROLS = [
 ];
 
 test.describe('the interactive mixer keeps its drags on touch screens', () => {
-  test.use({ viewport: { width: 1024, height: 800 } });
+  test.use({ viewport: { width: WIDTH.LAPTOP, height: 800 } });
 
   for (const control of CONTROLS) {
     test(`the ${control.name} declares touch-action ${control.touchAction}`, async ({ page }) => {

@@ -1,5 +1,6 @@
 import { expect, type Page, test } from '@playwright/test';
 import { SITE_HTML_LANG, SITE_LOCALE } from '@/content/site-locale';
+import { VIEWPORTS, WIDTH } from './_helpers/geometry';
 import { gotoHydrated } from './_helpers/hydration';
 import { freezeMotion, MOTION_CHOICE, MOTION_STORAGE_KEY } from './_helpers/motion';
 import { gotoSettled } from './_helpers/streamed';
@@ -53,7 +54,7 @@ test.describe('/links link-in-bio', { tag: '@cross-browser' }, () => {
   test('serves a scannable QR from the server with no client-side canvas work', async ({
     page,
   }) => {
-    await page.setViewportSize({ width: 1280, height: 720 });
+    await page.setViewportSize(VIEWPORTS.DESKTOP);
     await page.goto('/links');
     const qr = page.getByRole('img', { name: /QR code|Código QR/ });
     await expect(qr).toBeVisible();
@@ -69,13 +70,13 @@ test.describe('/links link-in-bio', { tag: '@cross-browser' }, () => {
     page,
   }) => {
     const qr = page.getByRole('img', { name: /QR code|Código QR/ });
-    await page.setViewportSize({ width: 1280, height: 800 });
+    await page.setViewportSize({ width: WIDTH.DESKTOP, height: 800 });
     await page.goto('/links');
     await expect(
       qr,
       'the QR panel shows on a desktop, so the locator is the real one',
     ).toBeVisible();
-    await page.setViewportSize({ width: 390, height: 844 });
+    await page.setViewportSize(VIEWPORTS.PHONE);
     await expect(qr).toBeHidden();
   });
 
@@ -264,7 +265,7 @@ test.describe('/links link-in-bio', { tag: '@cross-browser' }, () => {
   test('keeps every visible text element at or above the 13px mobile floor on both locales', async ({
     page,
   }) => {
-    await page.setViewportSize({ width: 390, height: 844 });
+    await page.setViewportSize(VIEWPORTS.PHONE);
 
     for (const path of ['/links', '/links/en']) {
       await page.goto(path);

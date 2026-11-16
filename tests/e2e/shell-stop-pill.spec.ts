@@ -1,16 +1,16 @@
 import { expect, type Page, test } from '@playwright/test';
 import { shellUi } from '../../content/shell-ui';
 import { SITE_LOCALE, type SiteLocale } from '../../content/site-locale';
-import { settleFrames } from './_helpers/geometry';
+import { settleFrames, WIDTH } from './_helpers/geometry';
 import { installChunkedAsk } from './_helpers/mock-backend';
 import { freezeMotion } from './_helpers/motion';
 import { askShell, openShell, SHELL_SELECTOR, stopButton } from './_helpers/shell';
 
 const CASES = [
-  { width: 320, height: 844, locale: SITE_LOCALE.en, motionOff: true },
-  { width: 375, height: 844, locale: SITE_LOCALE.pt, motionOff: false },
-  { width: 768, height: 1024, locale: SITE_LOCALE.en, motionOff: false },
-  { width: 1280, height: 800, locale: SITE_LOCALE.pt, motionOff: true },
+  { width: WIDTH.PHONE_NARROW, height: 844, locale: SITE_LOCALE.en, motionOff: true },
+  { width: WIDTH.PHONE_COMPACT, height: 844, locale: SITE_LOCALE.pt, motionOff: false },
+  { width: WIDTH.TABLET, height: 1024, locale: SITE_LOCALE.en, motionOff: false },
+  { width: WIDTH.DESKTOP, height: 800, locale: SITE_LOCALE.pt, motionOff: true },
 ] as const;
 const PATHS: Record<SiteLocale, string> = { [SITE_LOCALE.en]: '/', [SITE_LOCALE.pt]: '/pt' };
 const FILLER_COMMAND = 'help';
@@ -168,7 +168,7 @@ test.describe('the esc hint inside the pill', { tag: '@cross-browser' }, () => {
   test.use({ hasTouch: false, isMobile: false });
 
   test('shows on a fine pointer', async ({ page }) => {
-    await page.setViewportSize({ width: 1280, height: 800 });
+    await page.setViewportSize({ width: WIDTH.DESKTOP, height: 800 });
     await page.route('**/api/ask', () => new Promise(() => undefined));
     await openShell(page);
     await askShell(page, 'who is erik?');
@@ -181,7 +181,7 @@ test.describe('the esc hint on a touch phone', { tag: '@cross-browser' }, () => 
   test.use({ hasTouch: true, isMobile: true });
 
   test('is hidden and the pill keeps its 44px target', async ({ page }) => {
-    await page.setViewportSize({ width: 375, height: 844 });
+    await page.setViewportSize({ width: WIDTH.PHONE_COMPACT, height: 844 });
     await page.route('**/api/ask', () => new Promise(() => undefined));
     await openShell(page);
     await askShell(page, 'who is erik?');

@@ -1,6 +1,7 @@
 import { expect, type Page, test } from '@playwright/test';
+import { VIEWPORTS } from './_helpers/geometry';
 
-const A4_PX = { width: 794, height: 1123 };
+const A4_PX = VIEWPORTS.A4_PRINT;
 const PATHS = ['/cv', '/pt/cv'] as const;
 const SNAKE_CASE = /\b[A-Z][A-Z0-9]*(?:_[A-Z0-9]+)+\b/;
 const NEW_TAB_GLYPH = '↗';

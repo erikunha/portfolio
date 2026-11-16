@@ -26,15 +26,16 @@ import {
   DEFAULT_CONTROL_STYLES,
   DEFAULT_DECORATIVE_STYLES,
 } from './_helpers/forced-colors-default-styles';
+import { VIEWPORTS, WIDTH } from './_helpers/geometry';
 import { gotoHydrated, MENU_TRIGGER } from './_helpers/hydration';
 import { installMockBackend } from './_helpers/mock-backend';
 
 const FORCED_QUERY = '(forced-colors: active)';
 const NO_OUTLINE_STYLE = 'none';
-const NARROW_VIEWPORT = { width: 390, height: 844 };
+const NARROW_VIEWPORT = VIEWPORTS.PHONE;
 const EXPECTED_OVERLAYS = 6;
 const UNMEASURABLE_UNDER_FORCED_COLORS = 'color-contrast';
-const DESKTOP_VIEWPORT = { width: 1280, height: 800 };
+const DESKTOP_VIEWPORT = { width: WIDTH.DESKTOP, height: 800 };
 const FIXED_NOW = new Date('2026-11-02T15:00:00Z');
 const VISITOR_TIMEZONE = 'Europe/Berlin';
 const UNDERLINE = 'underline';

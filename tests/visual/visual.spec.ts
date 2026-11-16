@@ -2,6 +2,7 @@ import { shellUi } from '../../content/shell-ui';
 import { SITE_LOCALE } from '../../content/site-locale';
 import { captureForArgos } from '../e2e/_helpers/argos-capture';
 import { expect, test } from '../e2e/_helpers/fixtures';
+import { VIEWPORTS } from '../e2e/_helpers/geometry';
 import { waitForHydration } from '../e2e/_helpers/hydration';
 import { stripVolatileChrome } from '../e2e/_helpers/mask-volatile';
 import { revealDeferredContent, snapshotLocator } from '../e2e/_helpers/snapshot';
@@ -13,8 +14,8 @@ const CONTACT_VISITOR_ZONE = 'Europe/Berlin';
 const CONTACT_FIXED_NOW = new Date('2026-11-02T15:00:00Z');
 const CONTACT_SCROLL_MARGIN_PX = 100;
 const PAGE_VIEWPORT = {
-  chromium: { width: 1280, height: 720 },
-  'chromium-mobile': { width: 390, height: 844 },
+  chromium: VIEWPORTS.DESKTOP,
+  'chromium-mobile': VIEWPORTS.PHONE,
 } as const;
 const PAGE_BASELINES = [
   { name: 'cv', path: '/cv', target: 'main' },

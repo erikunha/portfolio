@@ -1,11 +1,12 @@
 import { expect, test } from '@playwright/test';
+import { WIDTH } from '../../../tests/e2e/_helpers/geometry';
 import { revealToTop } from '../../../tests/e2e/_helpers/to-top';
 
 const SCROLLED_DOWN_PX = 800;
 const AT_TOP_BELOW_PX = 10;
 const SCROLL_SETTLE_TIMEOUT_MS = 8000;
 
-test.use({ viewport: { width: 375, height: 812 } });
+test.use({ viewport: { width: WIDTH.PHONE_COMPACT, height: 812 } });
 
 test.describe('ToTopButton: scroll-to-top affordance', () => {
   test('button is hidden on initial load (page top)', async ({ page }) => {

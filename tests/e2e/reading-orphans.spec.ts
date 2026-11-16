@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { VIEWPORTS } from './_helpers/geometry';
 import { freezeMotion } from './_helpers/motion';
 import { gotoSettled } from './_helpers/streamed';
 import {
@@ -10,7 +11,7 @@ import {
 
 const READING_ROUTES = ['/cv', '/pt/cv', '/summary', '/pt/summary'] as const;
 const READING_SCOPE = 'main';
-const PRINT_VIEWPORT = { width: 794, height: 1123 } as const;
+const PRINT_VIEWPORT = VIEWPORTS.A4_PRINT;
 const ENVIRONMENTS = [
   { name: 'phone', touch: { isMobile: true, hasTouch: true } },
   { name: 'narrow desktop window', touch: { isMobile: false, hasTouch: false } },

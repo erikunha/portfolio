@@ -1,8 +1,9 @@
 import { expect, type Locator, test } from '@playwright/test';
+import { VIEWPORTS, WIDTH } from './_helpers/geometry';
 import { gotoSettled } from './_helpers/streamed';
 
-const MOBILE = { width: 390, height: 844 };
-const DESKTOP = { width: 1280, height: 720 };
+const MOBILE = VIEWPORTS.PHONE;
+const DESKTOP = VIEWPORTS.DESKTOP;
 const EDGE_TOLERANCE_PX = 1;
 
 interface Group {
@@ -89,7 +90,7 @@ for (const path of ['/', '/pt']) {
   test(`dock items keep one height and one-line labels at 320 (${path})`, {
     tag: '@cross-browser',
   }, async ({ page }) => {
-    await page.setViewportSize({ width: 320, height: 640 });
+    await page.setViewportSize(VIEWPORTS.PHONE_NARROW);
     await page.goto(path);
     const items = page.locator('.dock > a, .dock > button');
     const heights = await items.evaluateAll((nodes) =>
@@ -144,7 +145,7 @@ for (const bar of ['.shell-chrome', '.contact-chrome']) {
   test(`${bar} keeps the window dots left and centres its labels at 375`, {
     tag: '@cross-browser',
   }, async ({ page }) => {
-    await page.setViewportSize({ width: 375, height: 812 });
+    await page.setViewportSize({ width: WIDTH.PHONE_COMPACT, height: 812 });
     await gotoSettled(page, '/');
     const chrome = page.locator(bar).first();
     await chrome.scrollIntoViewIfNeeded();

@@ -1,15 +1,16 @@
 import { expect, type Page, test } from '@playwright/test';
 import { fillShellState, shellStates, shellUi } from '../../content/shell-ui';
 import { SITE_LOCALE, type SiteLocale } from '../../content/site-locale';
+import { WIDTH } from './_helpers/geometry';
 import { FORGET_RETRY_AFTER_S, type ForgetMock, fulfillForget } from './_helpers/mock-backend';
 import { freezeMotion } from './_helpers/motion';
 import { askShell, openShell, SHELL_SELECTOR, waitForConfirmArmed } from './_helpers/shell';
 
 const CASES = [
-  { width: 320, height: 844, locale: SITE_LOCALE.en, motionOff: true },
-  { width: 375, height: 844, locale: SITE_LOCALE.pt, motionOff: false },
-  { width: 768, height: 1024, locale: SITE_LOCALE.en, motionOff: false },
-  { width: 1280, height: 800, locale: SITE_LOCALE.pt, motionOff: true },
+  { width: WIDTH.PHONE_NARROW, height: 844, locale: SITE_LOCALE.en, motionOff: true },
+  { width: WIDTH.PHONE_COMPACT, height: 844, locale: SITE_LOCALE.pt, motionOff: false },
+  { width: WIDTH.TABLET, height: 1024, locale: SITE_LOCALE.en, motionOff: false },
+  { width: WIDTH.DESKTOP, height: 800, locale: SITE_LOCALE.pt, motionOff: true },
 ] as const;
 const PATHS: Record<SiteLocale, string> = { [SITE_LOCALE.en]: '/', [SITE_LOCALE.pt]: '/pt' };
 const IDS = [

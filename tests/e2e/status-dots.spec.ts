@@ -1,4 +1,5 @@
 import { expect, type Page, test } from '@playwright/test';
+import { VIEWPORTS } from './_helpers/geometry';
 import { freezeMotion } from './_helpers/motion';
 
 const dot = (page: Page) => page.locator('button[data-motion] > span[aria-hidden="true"]').first();
@@ -6,7 +7,7 @@ const animationName = (page: Page) =>
   dot(page).evaluate((node) => getComputedStyle(node).animationName);
 
 test.describe('status dots blink while motion is on', () => {
-  test.use({ viewport: { width: 1280, height: 720 } });
+  test.use({ viewport: VIEWPORTS.DESKTOP });
 
   test('the MOTION dot blinks with motion on and stops when motion is turned off', async ({
     page,

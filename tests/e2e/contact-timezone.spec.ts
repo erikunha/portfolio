@@ -306,7 +306,7 @@ test.describe('contact timezone panel, visitor in São Paulo', { tag: '@cross-br
 
 test.describe('contact section in print', { tag: '@cross-browser' }, () => {
   test('prints as one column that stays inside the page', async ({ page }) => {
-    await page.setViewportSize({ width: 794, height: 1123 });
+    await page.setViewportSize({ width: WIDTH.A4_PRINT, height: 1123 });
     await page.emulateMedia({ media: 'print' });
     await page.goto('/');
     await page.locator('.contact-timezone').scrollIntoViewIfNeeded();

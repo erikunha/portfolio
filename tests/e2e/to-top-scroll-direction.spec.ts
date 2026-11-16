@@ -1,8 +1,9 @@
 import { expect, type Page, test } from '@playwright/test';
+import { WIDTH } from './_helpers/geometry';
 import { freezeMotion } from './_helpers/motion';
 import { scrollByInput } from './_helpers/to-top';
 
-const PHONE = { width: 375, height: 812 } as const;
+const PHONE = { width: WIDTH.PHONE_COMPACT, height: 812 } as const;
 const WHEEL_DOWN_STEP_PX = 250;
 const WHEEL_DOWN_STEPS = 6;
 const WHEEL_UP_PX = 120;

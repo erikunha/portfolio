@@ -1,12 +1,13 @@
 import { expect, test } from '@playwright/test';
 import { heroClientContent } from '../../content/hero-client';
 import { SITE_LOCALE } from '../../content/site-locale';
+import { VIEWPORTS, WIDTH } from './_helpers/geometry';
 import { freezeMotion } from './_helpers/motion';
 import { gotoSettled } from './_helpers/streamed';
 
-const DESKTOP = { width: 1280, height: 800 };
-const NARROW = { width: 320, height: 720 };
-const PHONE = { width: 390, height: 844 };
+const DESKTOP = { width: WIDTH.DESKTOP, height: 800 };
+const NARROW = { width: WIDTH.PHONE_NARROW, height: 720 };
+const PHONE = VIEWPORTS.PHONE;
 const SINGLE_LINE_FACTOR = 1.6;
 
 const LOCALES = [

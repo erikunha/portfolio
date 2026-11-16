@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { VIEWPORTS, WIDTH } from './_helpers/geometry';
 import { DOCK_MENU, gotoHydrated } from './_helpers/hydration';
 
 const SECTION_COUNT = 9;
@@ -6,7 +7,7 @@ const SCRIM_CLICK_X = 350;
 const SCRIM_CLICK_Y = 400;
 
 test.describe('navigation: drawer at 390px', () => {
-  test.use({ viewport: { width: 390, height: 844 } });
+  test.use({ viewport: VIEWPORTS.PHONE });
 
   test('the drawer is closed, opens from Menu and lists the nine destinations', async ({
     page,
@@ -63,7 +64,7 @@ test.describe('navigation: drawer at 390px', () => {
 });
 
 test.describe('navigation: menu trigger at 1280px', () => {
-  test.use({ viewport: { width: 1280, height: 720 } });
+  test.use({ viewport: VIEWPORTS.DESKTOP });
 
   test('the position line follows the scroll', async ({ page }) => {
     await page.goto('/');
@@ -92,7 +93,7 @@ test.describe('navigation: menu trigger at 1280px', () => {
 });
 
 test.describe('navigation: wide desktop at 1600px', () => {
-  test.use({ viewport: { width: 1600, height: 900 } });
+  test.use({ viewport: { width: WIDTH.DESKTOP_XL, height: 900 } });
 
   test('the drawer stays closed and the main content is not offset by a rail', async ({ page }) => {
     await page.goto('/');

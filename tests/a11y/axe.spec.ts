@@ -2,10 +2,11 @@ import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
 import { DS_ROUTES } from '@/app/(en)/design-system/_components/ds-nav';
 import { SITE_HTML_LANG, SITE_LOCALE } from '@/content/site-locale';
+import { VIEWPORTS } from '../e2e/_helpers/geometry';
 import { openSectionMenu, waitForHydration } from '../e2e/_helpers/hydration';
 import { revealDeferredContent } from '../e2e/_helpers/snapshot';
 
-const NARROW_VIEWPORT = { width: 390, height: 844 };
+const NARROW_VIEWPORT = VIEWPORTS.PHONE;
 const AXE_TAGS = ['wcag2a', 'wcag2aa', 'wcag21aa', 'wcag22aa'];
 const CRT_OVERLAYS =
   '[data-testid="crt-vignette"], [data-testid="crt-overlay"], [data-testid="crt-mask"], [data-testid="crt-noise"], [data-testid="crt-flicker"], [data-testid="crt-scan-beam"]';

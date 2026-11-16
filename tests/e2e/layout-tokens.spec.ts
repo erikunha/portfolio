@@ -1,4 +1,5 @@
 import { expect, type Page, test } from '@playwright/test';
+import { VIEWPORTS, WIDTH } from './_helpers/geometry';
 import { waitForHydration } from './_helpers/hydration';
 
 const GUTTER_AT_390 = 16;
@@ -56,20 +57,20 @@ const HOME_TOP_EXPRESSION = 'calc(var(--topbar-height) + var(--space-page-top))'
 test.describe('layout tokens', () => {
   for (const { path, container, phoneTop } of PAGES) {
     test(`${path} uses the shared gutter and page-top at 390 and 768`, async ({ page }) => {
-      await page.setViewportSize({ width: 390, height: 844 });
+      await page.setViewportSize(VIEWPORTS.PHONE);
       await page.goto(path);
       await waitForHydration(page, container);
       expect(await contentLeft(page, container)).toBeCloseTo(GUTTER_AT_390, 0);
       expect(await paddingTop(page, container)).toBe(phoneTop);
 
-      await page.setViewportSize({ width: 768, height: 1024 });
+      await page.setViewportSize(VIEWPORTS.TABLET);
       const expected = await tokenPx(page, HOME_TOP_EXPRESSION);
       expect(await paddingTop(page, container)).toBe(expected);
     });
   }
 
   test('the home page clears the fixed topbar by the spacing token', async ({ page }) => {
-    await page.setViewportSize({ width: 768, height: 1024 });
+    await page.setViewportSize(VIEWPORTS.TABLET);
     await page.goto('/');
     expect(await paddingTop(page, '#main-content')).toBe(await tokenPx(page, HOME_TOP_EXPRESSION));
   });
@@ -77,14 +78,14 @@ test.describe('layout tokens', () => {
   test('design-system layout clears the fixed topbar by the spacing token at 768', async ({
     page,
   }) => {
-    await page.setViewportSize({ width: 768, height: 1024 });
+    await page.setViewportSize(VIEWPORTS.TABLET);
     await page.goto('/design-system');
     expect(await paddingTop(page, '.ds-layout')).toBe(await tokenPx(page, HOME_TOP_EXPRESSION));
   });
 
   for (const path of ['/', '/summary', '/links']) {
     test(`${path} content spans the page measure at 1280`, async ({ page }) => {
-      await page.setViewportSize({ width: 1280, height: 800 });
+      await page.setViewportSize({ width: WIDTH.DESKTOP, height: 800 });
       await page.goto(path);
       const width = await page
         .locator(path === '/links' ? '.page-container' : 'main')
@@ -124,7 +125,7 @@ test.describe('layout tokens', () => {
   test('exactly 768 gets one rule set: desktop hero, one-column About until 1024', async ({
     page,
   }) => {
-    await page.setViewportSize({ width: 768, height: 1024 });
+    await page.setViewportSize(VIEWPORTS.TABLET);
     await page.goto('/');
     await expect(page.locator('.hero-desktop').first()).toBeVisible();
     await expect(page.locator('.hero-mobile').first()).toBeHidden();
@@ -134,12 +135,12 @@ test.describe('layout tokens', () => {
         .first()
         .evaluate((el) => getComputedStyle(el).gridTemplateColumns.split(' ').length);
     expect(await columns()).toBe(1);
-    await page.setViewportSize({ width: 1024, height: 800 });
+    await page.setViewportSize({ width: WIDTH.LAPTOP, height: 800 });
     expect(await columns()).toBe(2);
   });
 
   test('module margin steps from 32px below 768 to 48px from 768', async ({ page }) => {
-    await page.setViewportSize({ width: 390, height: 844 });
+    await page.setViewportSize(VIEWPORTS.PHONE);
     await page.goto('/');
     const marginBottom = () =>
       page
@@ -147,7 +148,7 @@ test.describe('layout tokens', () => {
         .first()
         .evaluate((el) => getComputedStyle(el).marginBottom);
     expect(await marginBottom()).toBe(`${SPACE_SECTION_PHONE}px`);
-    await page.setViewportSize({ width: 768, height: 1024 });
+    await page.setViewportSize(VIEWPORTS.TABLET);
     expect(await marginBottom()).toBe(`${SPACE_SECTION_TABLET}px`);
   });
 
@@ -176,7 +177,7 @@ test.describe('layout tokens', () => {
   });
 
   test('module headings step from 16px below 768 to 18px from 768, bold caps', async ({ page }) => {
-    await page.setViewportSize({ width: 390, height: 844 });
+    await page.setViewportSize(VIEWPORTS.PHONE);
     await page.goto('/');
     const heading = page.locator('.module-heading').first();
     const read = () =>
@@ -185,7 +186,7 @@ test.describe('layout tokens', () => {
         return { size: s.fontSize, weight: s.fontWeight, transform: s.textTransform };
       });
     expect(await read()).toEqual({ size: '16px', weight: '700', transform: 'uppercase' });
-    await page.setViewportSize({ width: 768, height: 1024 });
+    await page.setViewportSize(VIEWPORTS.TABLET);
     expect((await read()).size).toBe('18px');
   });
 });

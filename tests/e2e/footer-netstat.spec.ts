@@ -1,4 +1,5 @@
 import { expect, type Page, test } from '@playwright/test';
+import { CORE_WIDTHS, WIDTH } from './_helpers/geometry';
 
 const FINE_ROW_MAX_PX = 30;
 const TOUCH_ROW_MIN_PX = 44;
@@ -19,7 +20,7 @@ function endpointHeights(page: Page) {
 }
 
 test.describe('footer netstat table', () => {
-  for (const width of [320, 390, 768, 1280]) {
+  for (const width of CORE_WIDTHS) {
     test(`keeps every endpoint on one line at ${width}`, async ({ page }) => {
       await openFooter(page, width);
       for (const height of await endpointHeights(page)) {
@@ -64,7 +65,7 @@ test.describe('footer netstat table', () => {
   }
 
   test('rows are 28px tall for a fine pointer', async ({ page }) => {
-    await openFooter(page, 1280);
+    await openFooter(page, WIDTH.DESKTOP);
     const rows = await page
       .locator('.footer-netstat tbody tr')
       .evaluateAll((nodes) => nodes.map((node) => node.getBoundingClientRect().height));
@@ -73,7 +74,7 @@ test.describe('footer netstat table', () => {
   });
 
   test('keeps table semantics when the rows stack', async ({ page }) => {
-    await openFooter(page, 320);
+    await openFooter(page, WIDTH.PHONE_NARROW);
     const table = page.getByRole('table', { name: TABLE_NAME });
     await expect(table.getByRole('row')).toHaveCount(ROWS_WITH_HEADER);
     await expect(table.getByRole('columnheader')).toHaveCount(3);
@@ -83,7 +84,7 @@ test.describe('footer netstat table', () => {
     test.use({ hasTouch: true, isMobile: true });
 
     test('endpoint targets are 44px tall', async ({ page }) => {
-      await openFooter(page, 390);
+      await openFooter(page, WIDTH.PHONE);
       for (const height of await endpointHeights(page)) {
         expect(height).toBeGreaterThanOrEqual(TOUCH_ROW_MIN_PX);
       }

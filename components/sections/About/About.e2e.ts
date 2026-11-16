@@ -1,8 +1,9 @@
 import { expect, test } from '@playwright/test';
 import { aboutContent } from '@/content/about';
 import { SITE_LOCALE } from '@/content/site-locale';
+import { WIDTH } from '../../../tests/e2e/_helpers/geometry';
 
-const DESKTOP = { width: 1280, height: 900 };
+const DESKTOP = { width: WIDTH.DESKTOP, height: 900 };
 
 test.describe('About', () => {
   test('the code panel header carries the repo link on one row and no copy control', async ({

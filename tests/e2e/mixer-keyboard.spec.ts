@@ -1,4 +1,5 @@
 import { expect, type Page, test } from '@playwright/test';
+import { WIDTH } from './_helpers/geometry';
 import { waitForHydration } from './_helpers/hydration';
 import { installMockBackend } from './_helpers/mock-backend';
 import { freezeMotion } from './_helpers/motion';
@@ -10,7 +11,7 @@ const CONTROLS = `${MIXER} [role="slider"]:visible, ${MIXER} button:visible`;
 const SLIDERS = `${MIXER} [role="slider"]:visible`;
 const MIN_RING_PX = 2;
 const NO_OUTLINE = 'none';
-const VIEWPORT = { width: 1280, height: 900 } as const;
+const VIEWPORT = { width: WIDTH.DESKTOP, height: 900 } as const;
 const ARROW_STEPS = 3;
 const WEBKIT = 'webkit';
 const MACOS = 'darwin';

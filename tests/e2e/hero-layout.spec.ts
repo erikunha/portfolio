@@ -1,17 +1,17 @@
 import { expect, test } from '@playwright/test';
+import { VIEWPORTS, WIDTH } from './_helpers/geometry';
 
-const MOBILE = { width: 390, height: 844 };
+const MOBILE = VIEWPORTS.PHONE;
 const MOBILE_HERO_MAX_PX = 600;
-const STACKED_ACTIONS_MAX_WIDTH_PX = 399;
 const STACKED_HERO_MAX_PX = 700;
 const HERO_BUDGETS = [
-  { width: 390, max: STACKED_HERO_MAX_PX },
-  { width: STACKED_ACTIONS_MAX_WIDTH_PX + 1, max: MOBILE_HERO_MAX_PX },
-  { width: 430, max: MOBILE_HERO_MAX_PX },
+  { width: WIDTH.PHONE, max: STACKED_HERO_MAX_PX },
+  { width: WIDTH.PHONE_LARGE, max: MOBILE_HERO_MAX_PX },
+  { width: WIDTH.PHONE_MAX, max: MOBILE_HERO_MAX_PX },
 ] as const;
 
 test.describe('hero desktop layout', { tag: '@cross-browser' }, () => {
-  for (const width of [768, 1280]) {
+  for (const width of [WIDTH.TABLET, WIDTH.DESKTOP]) {
     test(`the hero clears the topbar and keeps the section rhythm at ${width}px`, async ({
       page,
     }) => {
@@ -76,10 +76,10 @@ test.describe('hero mobile layout', { tag: '@cross-browser' }, () => {
   }
 
   for (const [path, width] of [
-    ['/', 320],
-    ['/pt', 320],
-    ['/', 1280],
-    ['/pt', 1280],
+    ['/', WIDTH.PHONE_NARROW],
+    ['/pt', WIDTH.PHONE_NARROW],
+    ['/', WIDTH.DESKTOP],
+    ['/pt', WIDTH.DESKTOP],
   ] as const) {
     test(`stat tile text stays inside its tile at ${width} (${path})`, async ({ page }) => {
       await page.setViewportSize({ width, height: 720 });

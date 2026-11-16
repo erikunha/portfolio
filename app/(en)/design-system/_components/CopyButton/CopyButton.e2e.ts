@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { BREAKPOINT_EDGE_WIDTHS, WIDTH } from '../../../../../tests/e2e/_helpers/geometry';
 
 test.describe('CopyButton rendering', () => {
   test('COPY button is visible on the design-system components page', async ({ page }) => {
@@ -77,7 +78,7 @@ for (const outcome of ['rejected', 'unavailable'] as const) {
   });
 }
 
-for (const width of [375, 767, 768, 1280]) {
+for (const width of BREAKPOINT_EDGE_WIDTHS) {
   test(`CopyButton target and type at ${width}px`, async ({ page }) => {
     await page.setViewportSize({ width, height: 812 });
     await page.goto('/design-system/components');
@@ -89,6 +90,6 @@ for (const width of [375, 767, 768, 1280]) {
     const fontSize = await button.evaluate((element) =>
       Number.parseFloat(getComputedStyle(element).fontSize),
     );
-    expect(fontSize).toBeGreaterThanOrEqual(width >= 768 ? 13 : 12);
+    expect(fontSize).toBeGreaterThanOrEqual(width >= WIDTH.TABLET ? 13 : 12);
   });
 }

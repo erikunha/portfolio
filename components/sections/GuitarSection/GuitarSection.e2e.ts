@@ -1,8 +1,9 @@
 import { type BrowserContext, expect, test } from '@playwright/test';
+import { VIEWPORTS, WIDTH } from '../../../tests/e2e/_helpers/geometry';
 import { freezeMotion, MOTION_CHOICE, seedMotionChoice } from '../../../tests/e2e/_helpers/motion';
 
-const DESKTOP = { width: 1280, height: 900 };
-const PHONE = { width: 390, height: 844 };
+const DESKTOP = { width: WIDTH.DESKTOP, height: 900 };
+const PHONE = VIEWPORTS.PHONE;
 const BOUNDARY_SWAP = /\$RC\("B:/g;
 const BOUNDARY_HELD = 'void("B:';
 const APP_SCRIPT = /\/_next\/static\/.*\.js/;

@@ -1,4 +1,5 @@
 import { expect, type Page, test } from '@playwright/test';
+import { VIEWPORTS } from './_helpers/geometry';
 
 const GOVERNED_CRT_ANIMATION = /^crt-/;
 const FULL_RATE_LEVEL = '0';
@@ -28,7 +29,7 @@ const reach = async (page: Page, selector: string) => {
 };
 
 test.describe('decorative animations run while motion is on', () => {
-  test.use({ viewport: { width: 1280, height: 720 }, timezoneId: 'Europe/Berlin' });
+  test.use({ viewport: VIEWPORTS.DESKTOP, timezoneId: 'Europe/Berlin' });
 
   test('the guitar signal chart, the contact map route and the CRT beam animate with motion on', async ({
     page,

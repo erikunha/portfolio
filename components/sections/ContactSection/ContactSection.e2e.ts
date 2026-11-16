@@ -1,10 +1,11 @@
 import { expect, type Page, test } from '@playwright/test';
 import { contactCopy } from '@/content/contact-copy';
 import { SITE_LOCALE } from '@/content/site-locale';
+import { VIEWPORTS, WIDTH } from '../../../tests/e2e/_helpers/geometry';
 import { waitForHydration } from '../../../tests/e2e/_helpers/hydration';
 
-const PHONE = { width: 390, height: 844 };
-const DESKTOP = { width: 1280, height: 900 };
+const PHONE = VIEWPORTS.PHONE;
+const DESKTOP = { width: WIDTH.DESKTOP, height: 900 };
 const SCROLL_MARGIN_PX = 100;
 const COMPACT_TARGET_PX = 28;
 const TOUCH_TARGET_PX = 44;
@@ -219,7 +220,7 @@ test.describe('ContactSection', () => {
     }
   });
 
-  for (const width of [1024, 1100, 1280]) {
+  for (const width of [WIDTH.LAPTOP, WIDTH.LAPTOP_MID, WIDTH.DESKTOP]) {
     test(`each fact keeps its label on the value's line at ${width}`, async ({ page }) => {
       await page.setViewportSize({ width, height: 900 });
       await page.goto('/');
@@ -250,7 +251,7 @@ test.describe('ContactSection', () => {
     });
   }
 
-  for (const width of [900, 1024, 1100]) {
+  for (const width of [WIDTH.LAPTOP_COMPACT, WIDTH.LAPTOP, WIDTH.LAPTOP_MID]) {
     test(`the two clocks stay side by side at ${width}`, async ({ page }) => {
       await page.setViewportSize({ width, height: 900 });
       await page.goto('/');

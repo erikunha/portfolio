@@ -1,5 +1,5 @@
 import { expect, type Locator, test } from '@playwright/test';
-import { VIEWPORTS } from './_helpers/geometry';
+import { VIEWPORTS, WIDTH } from './_helpers/geometry';
 
 const CHAIN = '#sec-guitar [data-testid^="signal-node-"]';
 const PAIR = '#sec-guitar .guitar-pair > *';
@@ -12,7 +12,7 @@ const STACKED_GROUPS = [
 const ROW_PARTS = ['#sec-guitar .guitar-signal-strip > *', '#sec-guitar .guitar-camera-labels > *'];
 
 const { PHONE, DESKTOP } = VIEWPORTS;
-const JUST_BELOW_DESKTOP = { width: 767, height: 900 };
+const JUST_BELOW_DESKTOP = { width: WIDTH.BELOW_TABLET, height: 900 };
 
 async function edges(children: Locator) {
   await children.first().scrollIntoViewIfNeeded();
@@ -163,7 +163,7 @@ for (const viewport of [PHONE, JUST_BELOW_DESKTOP]) {
   });
 }
 
-for (const width of [834, 1024, 1280]) {
+for (const width of [WIDTH.TABLET_PRO, WIDTH.LAPTOP, WIDTH.DESKTOP]) {
   test(`every mixer plugin name is readable in full at ${width}px`, {
     tag: '@cross-browser',
   }, async ({ page, isMobile }) => {
@@ -188,7 +188,7 @@ for (const width of [834, 1024, 1280]) {
   });
 }
 
-for (const width of [320, 375, 600]) {
+for (const width of [WIDTH.PHONE_NARROW, WIDTH.PHONE_COMPACT, WIDTH.TABLET_SMALL]) {
   test(`the desktop mixer stacks its channels without a sideways scroll at ${width}px`, {
     tag: '@cross-browser',
   }, async ({ page, isMobile }) => {

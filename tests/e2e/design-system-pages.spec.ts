@@ -1,12 +1,13 @@
 import { expect, test } from '@playwright/test';
 import { DS_NAV_GROUPS, DS_NAV_ID } from '@/app/(en)/design-system/_components/ds-nav';
 import { PREVIEW_SOURCE_ARIA_LABEL_FALLBACK } from '@/app/(en)/design-system/_components/preview.constants';
+import { VIEWPORTS, WIDTH } from './_helpers/geometry';
 
-const SIDEBAR_MIN_WIDTH = 1024;
+const SIDEBAR_MIN_WIDTH = WIDTH.LAPTOP;
 const OVERVIEW_PATH = '/design-system';
 const OVERVIEW_HEADING = 'DESIGN SYSTEM';
-const STACKED_TOC_MAX_WIDTH = 767;
-const RAIL_TOC_MIN_WIDTH = 1280;
+const STACKED_TOC_MAX_WIDTH = WIDTH.BELOW_TABLET;
+const RAIL_TOC_MIN_WIDTH = WIDTH.DESKTOP;
 const SWATCH_LIST_GAP_MIN = 8;
 
 const toRoute = (link: { href: string; label: string }) => ({
@@ -146,10 +147,7 @@ test('Preview renders the live component and its source without interaction', {
   expect(labels.every((label) => typeof label === 'string' && label.length > 0)).toBe(true);
 });
 
-for (const viewport of [
-  { width: 390, height: 844 },
-  { width: 1280, height: 800 },
-]) {
+for (const viewport of [VIEWPORTS.PHONE, { width: WIDTH.DESKTOP, height: 800 }]) {
   test(`on-this-page items carry no list markers at ${viewport.width}px`, {
     tag: '@cross-browser',
   }, async ({ page }) => {
@@ -167,8 +165,8 @@ for (const viewport of [
   });
 }
 
-const MOBILE = { width: 390, height: 844 };
-const DESKTOP = { width: 1280, height: 800 };
+const MOBILE = VIEWPORTS.PHONE;
+const DESKTOP = { width: WIDTH.DESKTOP, height: 800 };
 
 async function leftEdges(locator: import('@playwright/test').Locator) {
   return locator.evaluateAll((nodes) =>
@@ -228,8 +226,8 @@ test('desktop keeps the sidebar on the left of the page', { tag: '@cross-browser
 });
 
 const PROPS_TABLE_PATH = '/design-system/primitives/button';
-const MOBILE_VIEWPORT = { width: 390, height: 844 };
-const DESKTOP_VIEWPORT = { width: 1280, height: 720 };
+const MOBILE_VIEWPORT = VIEWPORTS.PHONE;
+const DESKTOP_VIEWPORT = VIEWPORTS.DESKTOP;
 const PROPS_COLUMNS = 4;
 
 test('props table becomes labelled rows below 768 without sideways scroll', {
@@ -273,7 +271,7 @@ test('props table keeps its columns at 1280', { tag: '@cross-browser' }, async (
   expect(new Set(boxes.map(Math.round)).size).toBe(1);
 });
 
-const TABLET_VIEWPORT = { width: 768, height: 1024 };
+const TABLET_VIEWPORT = VIEWPORTS.TABLET;
 const WIDE_TABLE_ROUTES = DS_NAV_GROUPS.flatMap((group) => group.links.map((link) => link.href));
 
 for (const path of WIDE_TABLE_ROUTES) {
@@ -380,7 +378,7 @@ for (const { path } of ALL_ROUTES) {
 test('the stat grid breakpoint the docs state is the one the layout uses', {
   tag: '@cross-browser',
 }, async ({ page }) => {
-  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.setViewportSize({ width: WIDTH.DESKTOP, height: 800 });
   await page.goto('/design-system/components');
   const claim = await page
     .getByText(/four columns from \d+px/)

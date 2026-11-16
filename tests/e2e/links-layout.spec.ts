@@ -1,7 +1,7 @@
 import { expect, type Page, test } from '@playwright/test';
 import { linksContent } from '../../content/links';
 import { SITE_LOCALE, type SiteLocale } from '../../content/site-locale';
-import { horizontalOverflow } from './_helpers/geometry';
+import { horizontalOverflow, VIEWPORTS, WIDTH } from './_helpers/geometry';
 import { gotoSettled } from './_helpers/streamed';
 
 const GOLDEN_RATIO = 1.618;
@@ -12,10 +12,10 @@ const LINE_MIN_HEIGHT_PX = 44;
 const COLUMN_FLOOR_PX = 280;
 
 const VIEWPORT = {
-  phone: { width: 390, height: 844 },
-  narrow: { width: 320, height: 720 },
-  tablet: { width: 820, height: 1000 },
-  desktop: { width: 1280, height: 800 },
+  phone: VIEWPORTS.PHONE,
+  narrow: { width: WIDTH.PHONE_NARROW, height: 720 },
+  tablet: { width: WIDTH.TABLET_LARGE, height: 1000 },
+  desktop: { width: WIDTH.DESKTOP, height: 800 },
 };
 
 const FONT_FLOOR_PX = 13;

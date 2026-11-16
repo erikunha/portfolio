@@ -1,12 +1,12 @@
 import { expect, type Page, test } from '@playwright/test';
 import { NAVIGATION } from '@/content/navigation';
 import { SITE_LOCALE, type SiteLocale } from '@/content/site-locale';
-import { horizontalOverflow } from './_helpers/geometry';
+import { horizontalOverflow, WIDTH } from './_helpers/geometry';
 import { DOCK_MENU, waitForHydration } from './_helpers/hydration';
 import { freezeMotion } from './_helpers/motion';
 import { gotoSettled } from './_helpers/streamed';
 
-const SMALL_PHONE = { width: 320, height: 568 } as const;
+const SMALL_PHONE = { width: WIDTH.PHONE_NARROW, height: 568 } as const;
 const HOME_PATHS: Record<SiteLocale, string> = { en: '/', pt: '/pt' };
 const DRAWER = '#section-drawer';
 const DOCK_CONTROLS = '.dock > a, .dock > button';

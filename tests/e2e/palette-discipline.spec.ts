@@ -1,6 +1,7 @@
 import { expect, type Page, test } from '@playwright/test';
 import { NAVIGATION } from '../../content/navigation';
 import { SITE_LOCALE } from '../../content/site-locale';
+import { VIEWPORTS, WIDTH } from './_helpers/geometry';
 import { MOTION_TOPBAR_TOGGLE, openSectionMenu } from './_helpers/hydration';
 import { gotoSettled } from './_helpers/streamed';
 
@@ -14,8 +15,8 @@ const BLACK_RGB = 'rgb(0, 0, 0)';
 const MIN_SMALL_TEXT_CONTRAST = 4.5;
 const SRGB_LINEAR_CUTOFF = 0.03928;
 const UNDERLINE = 'underline';
-const DESKTOP = { width: 1280, height: 800 };
-const PHONE = { width: 390, height: 844 };
+const DESKTOP = { width: WIDTH.DESKTOP, height: 800 };
+const PHONE = VIEWPORTS.PHONE;
 const OFF_PALETTE_HUES = [
   'rgb(236, 251, 255)',
   'rgb(208, 245, 255)',

@@ -60,7 +60,7 @@ test.describe('design system without JavaScript', () => {
 
 test.describe('design-system skip navigation link', () => {
   test('is offered only where its target is displayed', async ({ page }) => {
-    await page.setViewportSize({ width: 800, height: DESKTOP_HEIGHT });
+    await page.setViewportSize({ width: WIDTH.TABLET_MID, height: DESKTOP_HEIGHT });
     await page.goto('/design-system');
     await expect(
       page.locator('.ds-skip-nav'),

@@ -1,12 +1,13 @@
 import { expect, test } from '@playwright/test';
 import { footerContent } from '@/content/footer';
 import { SITE_LOCALE } from '@/content/site-locale';
+import { VIEWPORTS } from '../../../tests/e2e/_helpers/geometry';
 import { freezeMotion } from '../../../tests/e2e/_helpers/motion';
 import { gotoSettled } from '../../../tests/e2e/_helpers/streamed';
 
-const TOUCH_CONTEXT = { viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true };
+const TOUCH_CONTEXT = { viewport: VIEWPORTS.PHONE, hasTouch: true, isMobile: true };
 const KEYBOARD_CONTEXT = {
-  viewport: { width: 1280, height: 720 },
+  viewport: VIEWPORTS.DESKTOP,
   hasTouch: false,
   isMobile: false,
 };

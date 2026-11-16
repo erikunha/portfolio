@@ -1,10 +1,11 @@
 import { expect, type Page, test } from '@playwright/test';
 import { READING_PATHS, readingViews } from '../../content/reading-views';
 import { SITE_LOCALE } from '../../content/site-locale';
+import { VIEWPORTS, WIDTH } from './_helpers/geometry';
 import { gotoSettled } from './_helpers/streamed';
 
-const DESKTOP = { width: 1280, height: 800 };
-const PHONE = { width: 390, height: 844 };
+const DESKTOP = { width: WIDTH.DESKTOP, height: 800 };
+const PHONE = VIEWPORTS.PHONE;
 const CENTER_TOLERANCE_PX = 1;
 const CV_PRINT_REGRESSION_CEILING = 10;
 const MAX_PRINT_PAGES = {

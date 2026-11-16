@@ -1,4 +1,5 @@
 import { expect, type Page, test } from '@playwright/test';
+import { WIDTH } from './_helpers/geometry';
 import { waitForHydration } from './_helpers/hydration';
 import { stripVolatileChrome } from './_helpers/mask-volatile';
 import { freezeMotion } from './_helpers/motion';
@@ -208,7 +209,7 @@ test.describe('shell input states', { tag: '@cross-browser' }, () => {
   });
 
   test('the input stays inside the panel at 320', async ({ page }) => {
-    await page.setViewportSize({ width: 320, height: 720 });
+    await page.setViewportSize({ width: WIDTH.PHONE_NARROW, height: 720 });
     await openShell(page);
     const input = page.locator(INPUT).first();
 

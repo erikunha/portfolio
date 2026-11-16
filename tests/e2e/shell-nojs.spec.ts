@@ -1,11 +1,11 @@
 import { expect, test } from '@playwright/test';
 import { SITE_LOCALE, type SiteLocale } from '../../content/site-locale';
-import { horizontalOverflow } from './_helpers/geometry';
+import { horizontalOverflow, VIEWPORTS } from './_helpers/geometry';
 import { shellCopy } from './_helpers/shell';
 
 const PATHS: Record<SiteLocale, string> = { [SITE_LOCALE.en]: '/', [SITE_LOCALE.pt]: '/pt' };
 const NOTE = '[data-testid="shell-nojs"]';
-const NARROW = { width: 320, height: 640 } as const;
+const NARROW = VIEWPORTS.PHONE_NARROW;
 
 test.describe('the interactive shell with JavaScript off', { tag: '@cross-browser' }, () => {
   test.use({ javaScriptEnabled: false });

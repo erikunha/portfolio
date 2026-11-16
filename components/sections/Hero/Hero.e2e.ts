@@ -83,7 +83,7 @@ async function childBoxes(page: Page, group: string) {
   return boxes;
 }
 
-const WIDE_PHONE = { width: 400, height: 844 };
+const WIDE_PHONE = { width: WIDTH.PHONE_LARGE, height: 844 };
 
 test.describe('Hero groups reflow by viewport', () => {
   test('keep the impact stats two by two below 768', async ({ page }) => {

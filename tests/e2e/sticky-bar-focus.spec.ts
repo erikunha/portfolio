@@ -1,7 +1,8 @@
 import { expect, test } from '@playwright/test';
+import { VIEWPORTS } from './_helpers/geometry';
 import { gotoHydrated, MOBILE_BAR_CONTROL, STATUS_BAR } from './_helpers/hydration';
 
-const PHONE = { width: 390, height: 844 };
+const PHONE = VIEWPORTS.PHONE;
 const READING_OFFSET_PX = 3000;
 const STICKY_BAR_CONTROLS =
   '.mobile-title-bar :is(a, button):visible, .status-bar :is(a, button):visible';
