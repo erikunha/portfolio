@@ -54,3 +54,7 @@ export async function judgeRepeated(
 export function verdictSequence(verdicts: readonly JudgeVerdict[]): RepeatVerdict[] {
   return verdicts.map((v) => (isJudgeError(v.reason) ? null : v.pass));
 }
+
+export function reasonSequence(verdicts: readonly JudgeVerdict[]): string[] {
+  return verdicts.map((v) => v.reason);
+}

@@ -39,6 +39,18 @@ only the `ask-eval.yml` workflow (weekly schedule and manual dispatch) does.
                            # and `judgeStability` in the result file; costs about k times
                            # the judge share of a run (the 2026-11-16 k=5 run cost about $2.39)
 
+    pnpm ask:eval --only fact-ai-direction,cal-crit-ai-direction-core-wording --judge-repeats 10
+                           # runs only the listed corpus item ids and calibration case ids (an
+                           # unknown id exits 1 and names it); prints "FILTERED RUN (N ids): gates
+                           # not evaluated"; no gate runs, nothing is published even with
+                           # EVAL_PUBLISH=1, `gates.passed` is false and the result file gains
+                           # `filter`; exits 1 only when a selected id errored. Use it to check a
+                           # reworded criterion before a full paid run
+
+Every run also writes a copy of the result to `ask-eval-results/<iso>.json` (gitignored). With
+`--judge-repeats k` above 1 each item and calibration case also stores every repeat's reason
+(`judgeRepeatReasons`, `repeatReasons`) beside the verdicts, so a flip can be read afterwards.
+
 The workflows set `EVAL_PUBLISH=1` only on `refs/heads/main` and map `UPSTASH_REDIS_REST_URL` and
 `UPSTASH_REDIS_REST_TOKEN` from the `EVAL_PUBLISH_REDIS_REST_URL` and
 `EVAL_PUBLISH_REDIS_REST_TOKEN` secrets: a Redis ACL user that can only `SET ask:eval:latest` and

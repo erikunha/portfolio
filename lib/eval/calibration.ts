@@ -1,5 +1,10 @@
 import { isJudgeError } from '@/lib/eval/judge';
-import { DEFAULT_JUDGE_REPEATS, judgeRepeated, verdictSequence } from '@/lib/eval/judge-repeats';
+import {
+  DEFAULT_JUDGE_REPEATS,
+  judgeRepeated,
+  reasonSequence,
+  verdictSequence,
+} from '@/lib/eval/judge-repeats';
 import type { CalibrationCase, CalibrationResult } from '@/lib/eval/types';
 
 export const MIN_CALIBRATION_AGREEMENT = 0.85;
@@ -56,7 +61,9 @@ export async function runCalibration(
       agreed,
       errored,
       reason: verdict.reason,
-      ...(repeats > DEFAULT_JUDGE_REPEATS ? { repeatVerdicts: verdictSequence(verdicts) } : {}),
+      ...(repeats > DEFAULT_JUDGE_REPEATS
+        ? { repeatVerdicts: verdictSequence(verdicts), repeatReasons: reasonSequence(verdicts) }
+        : {}),
     });
   }
 
