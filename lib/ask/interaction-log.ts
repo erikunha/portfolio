@@ -84,7 +84,6 @@ export type { AskInteractionStatus } from '@/lib/ask/types';
 export type AskInteraction = {
   requestId: string;
   ts: string;
-  ipHash: string;
   question: string;
   answer: string;
   inputTokens: number;

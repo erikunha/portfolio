@@ -13,7 +13,6 @@ const stored = (receivedAt: string): ContactMessage => ({
   email: 'visitor@example.com',
   message: 'Hello',
   receivedAt,
-  ipHash: 'hash',
 });
 
 function makeDeps(overrides: Partial<RetryDeps> = {}): RetryDeps {

@@ -31,7 +31,6 @@ describe('lib/ask-log: persistAskInteraction', () => {
   const interaction = {
     requestId: 'req-abc-123',
     ts: '2026-05-20T12:34:56.000Z',
-    ipHash: 'hashed-ip',
     question: 'Q',
     answer: 'A',
     inputTokens: 10,
@@ -243,7 +242,6 @@ describe('lib/ask-log: persistAskInteraction minimization', () => {
     await persistAskInteraction({
       requestId: 'req-pii-1',
       ts: '2026-11-07T12:00:00.000Z',
-      ipHash: 'hashed-ip',
       question: 'Write to jane@example.com or call +55 11 99999-9999',
       answer: 'I cannot contact jane@example.com',
       inputTokens: 1,
@@ -271,7 +269,6 @@ describe('lib/ask-log: persistAskInteraction minimization', () => {
     await persistAskInteraction({
       requestId: 'req-pii-2',
       ts: '2026-11-07T12:00:00.000Z',
-      ipHash: 'hashed-ip',
       question: `${padding} jane.doe@example.com`,
       answer: 'A',
       inputTokens: 1,

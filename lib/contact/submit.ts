@@ -8,7 +8,6 @@ export interface SubmitInput {
   name: string;
   email: string;
   message: string;
-  ipHash: string;
 }
 
 export interface SubmitDeps {
@@ -24,13 +23,12 @@ export interface SubmitDeps {
 }
 
 export async function submitContact(input: SubmitInput, deps: SubmitDeps): Promise<SubmitOutcome> {
-  const { msgId, requestId, name, email, message, ipHash } = input;
+  const { msgId, requestId, name, email, message } = input;
   const payload: ContactMessage = {
     name,
     email,
     message,
     receivedAt: new Date(deps.now()).toISOString(),
-    ipHash,
   };
 
   try {

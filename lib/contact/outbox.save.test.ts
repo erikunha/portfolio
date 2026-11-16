@@ -9,7 +9,6 @@ const payload = {
   email: 'ada@example.com',
   message: 'hello',
   receivedAt: '2026-10-24T02:00:00.000Z',
-  ipHash: 'hash',
 };
 const NINETY_DAYS_SECONDS = 60 * 60 * 24 * 90;
 

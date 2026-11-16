@@ -25,7 +25,6 @@ export interface ContactMessage {
   email: string;
   message: string;
   receivedAt: string;
-  ipHash: string;
 }
 
 export const contactMessageKey = (msgId: string) => `contact:msg:${msgId}`;

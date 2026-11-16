@@ -105,7 +105,6 @@ describe('contact delivery outcome', () => {
     expect(JSON.parse(stored)).toMatchObject({
       ...validBody,
       receivedAt: expect.any(String),
-      ipHash: 'hashed-ip',
     });
     expect(options).toEqual({ ex: 7_776_000 });
     expect(send).toHaveBeenCalledOnce();

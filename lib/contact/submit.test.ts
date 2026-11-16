@@ -10,7 +10,6 @@ const input: SubmitInput = {
   name: 'Visitor',
   email: 'visitor@example.com',
   message: 'Hello',
-  ipHash: 'hash',
 };
 
 const savedPayload = {
@@ -18,7 +17,6 @@ const savedPayload = {
   email: 'visitor@example.com',
   message: 'Hello',
   receivedAt: RECEIVED_AT,
-  ipHash: 'hash',
 };
 
 function makeDeps(overrides: Partial<SubmitDeps> = {}): SubmitDeps {

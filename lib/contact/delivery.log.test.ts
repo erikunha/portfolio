@@ -27,7 +27,6 @@ const MESSAGE = {
   email: SENDER_EMAIL,
   message: BODY_TEXT,
   receivedAt: '2026-01-01T00:00:00.000Z',
-  ipHash: 'hash',
 };
 
 const leaky = `invalid reply_to ${SENDER_EMAIL} from ${SENDER_NAME}: ${BODY_TEXT}`;

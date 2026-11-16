@@ -23,7 +23,7 @@ const handleContact = defineHandler({
   rateLimitErrorMessage: Object.fromEntries(
     SITE_LOCALES.map((locale) => [locale, contactContent[locale].errors.rateLimited]),
   ) as Record<SiteLocale, string>,
-  async handler({ body, ipHash, requestId, req }) {
+  async handler({ body, requestId, req }) {
     const copy = contactContent[localeFromRequest(req)];
     if (isHoneypotTripped(body)) {
       log.info('contact honeypot tripped', { requestId });
@@ -37,7 +37,7 @@ const handleContact = defineHandler({
     const { name, email, message } = body;
 
     const outcome = await submitContact(
-      { msgId: requestId, requestId, name, email, message, ipHash },
+      { msgId: requestId, requestId, name, email, message },
       {
         saveMessage: saveContactMessage,
         deleteMessage: deleteContactMessage,

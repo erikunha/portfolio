@@ -329,7 +329,6 @@ export function createAskStream(context: AskContext): AskStream {
     await persistAskInteraction({
       requestId,
       ts: new Date().toISOString(),
-      ipHash,
       question: fullQuestion,
       answer: state.answerText,
       inputTokens: usage.billedInputTokens,
