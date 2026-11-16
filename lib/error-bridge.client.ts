@@ -1,12 +1,5 @@
 'use client';
 
-import {
-  blockedHost,
-  cspDirective,
-  cspDisposition,
-  documentPath,
-  isExtensionSource,
-} from '@/lib/csp-violation';
 import { RETRY_AFTER_HEADER } from '@/lib/stream-protocol';
 import { MS_PER_MINUTE, MS_PER_SECOND } from '@/lib/time';
 
@@ -48,10 +41,6 @@ export function buildLogPayload(message: string, stack: string | undefined): Log
     userAgent: typeof window !== 'undefined' ? navigator.userAgent : '',
     ts: new Date().toISOString(),
   };
-}
-
-function buildKey(message: string, stack: string | undefined): string {
-  return `${message}|${stack ?? ''}`;
 }
 
 function getBridgeState(win: Window): BridgeState {
@@ -113,38 +102,29 @@ export function postLog(payload: Payload): void {
     .catch(() => penalize(state, undefined));
 }
 
+function report(state: BridgeState, message: string, stack: string | undefined): void {
+  if (shouldEmit(state, `${message}|${stack ?? ''}`)) postLog(buildLogPayload(message, stack));
+}
+
+function errorStack(value: unknown): string | undefined {
+  return value instanceof Error ? value.stack : undefined;
+}
+
 function handleError(state: BridgeState, event: ErrorEvent): void {
-  const message = event.message ?? 'unknown error';
-  const stack = event.error instanceof Error ? event.error.stack : undefined;
-  if (!shouldEmit(state, buildKey(message, stack))) return;
-  postLog(buildLogPayload(message, stack));
+  report(state, event.message ?? 'unknown error', errorStack(event.error));
 }
 
 function handleRejection(state: BridgeState, event: PromiseRejectionEvent): void {
   const reason = event.reason;
   const reasonText = typeof reason === 'string' ? reason : 'unhandled promise rejection';
   const message = reason instanceof Error ? reason.message : reasonText;
-  const stack = reason instanceof Error ? reason.stack : undefined;
-  if (!shouldEmit(state, buildKey(message, stack))) return;
-  postLog(buildLogPayload(message, stack));
-}
-
-function handleViolation(state: BridgeState, event: SecurityPolicyViolationEvent): void {
-  if (isExtensionSource(event.blockedURI) || isExtensionSource(event.sourceFile)) return;
-  const directive = cspDirective(event.effectiveDirective);
-  const disposition = cspDisposition(event.disposition);
-  const message = `csp violation: ${disposition} ${directive} blocked ${blockedHost(event.blockedURI)} on ${documentPath(event.documentURI)}`;
-  if (!shouldEmit(state, buildKey(message, undefined))) return;
-  postLog({ ...buildLogPayload(message, undefined), level: 'warn' });
+  report(state, message, errorStack(reason));
 }
 
 function install(win: Window): void {
   const state = getBridgeState(win);
   if (state.listening) return;
   state.listening = true;
-  win.document.addEventListener('securitypolicyviolation', (event) => {
-    handleViolation(state, event);
-  });
   win.addEventListener('error', (event) => {
     handleError(state, event);
   });
