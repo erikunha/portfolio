@@ -3,7 +3,6 @@
 import { writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { NextRequest } from 'next/server';
-import { POST } from '@/app/api/ask/route';
 import { ASK_EVAL_CALIBRATION } from '@/content/ask-eval-calibration';
 import { ASK_EVAL_CORPUS, type AskEvalItem } from '@/content/ask-eval-corpus';
 import { SITE_LOCALE } from '@/content/site-locale';
@@ -52,14 +51,13 @@ import {
   publishPreflightError,
 } from '@/lib/eval/publish-gate';
 import { publishWithCredentials } from '@/lib/eval/redis-publish';
+import { ASK_EVAL_RESULT_KEY } from '@/lib/eval/result-key';
 import { countTruncated, isTruncatedAnswer } from '@/lib/eval/truncation';
 import type { CalibrationCase, CalibrationResult } from '@/lib/eval/types';
 import { createUsageMeter } from '@/lib/eval/usage-meter';
 import { createEvalBudgetStore, setBudgetStore } from '@/lib/rate-limit';
 
 const JUDGE_MODEL = 'anthropic/claude-sonnet-4-6';
-
-const REDIS_RESULT_KEY = 'ask:eval:latest';
 
 const RESULT_FILE = path.resolve(process.cwd(), 'ask-eval-result.json');
 
@@ -119,6 +117,7 @@ async function askFeature(
     body: JSON.stringify(askRequestBody(item)),
   });
 
+  const { POST } = await import('@/app/api/ask/route');
   const res = await POST(req);
 
   if (!res.ok) {
@@ -504,12 +503,12 @@ async function main(): Promise<void> {
   writeFileSync(RESULT_FILE, `${JSON.stringify(aggregate, null, 2)}\n`);
 
   const publishResult = await publishWithCredentials(
-    REDIS_RESULT_KEY,
+    ASK_EVAL_RESULT_KEY,
     aggregate,
     withheldRedisCredentials,
   );
   if (publishResult.published) {
-    console.log(`\npublished aggregate → redis ${REDIS_RESULT_KEY}`);
+    console.log(`\npublished aggregate → redis ${ASK_EVAL_RESULT_KEY}`);
   }
   const publishError = publishOutcomeError(publishResult);
   if (publishError) console.error(`\n${publishError}`);

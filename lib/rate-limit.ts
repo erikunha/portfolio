@@ -6,6 +6,7 @@ import { ASK_MAX_OUTPUT_TOKENS } from '@/lib/ask/limits';
 import { ASK_BUDGET_UNITS_PER_USD, askBudgetCost } from '@/lib/ask/usage';
 import { FORGET_WINDOW, FORGET_WINDOW_REQUESTS } from '@/lib/forget-limits';
 import { log } from '@/lib/log';
+import { REDIS_ENV_PAIRS } from '@/lib/redis-env';
 import type { RateLimitIdentifier } from '@/lib/server/rate-limit-key';
 
 const REDIS_RETRIES = 1;
@@ -25,10 +26,8 @@ let _redis: Redis | undefined;
 let _askLimit: Ratelimit | undefined;
 let _contactLimit: Ratelimit | undefined;
 
-export const REDIS_ENV_PAIRS = [
-  { url: 'UPSTASH_REDIS_REST_URL', token: 'UPSTASH_REDIS_REST_TOKEN' },
-  { url: 'KV_REST_API_URL', token: 'KV_REST_API_TOKEN' },
-] as const;
+export { REDIS_ENV_PAIRS };
+
 const REDIS_ENV_NAMES = REDIS_ENV_PAIRS.map(({ url, token }) => `${url} and ${token}`).join(' or ');
 
 export class RedisNotConfiguredError extends Error {
