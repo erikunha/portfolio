@@ -1,7 +1,7 @@
 import '@/app/globals.css';
 import { Analytics } from '@vercel/analytics/next';
 import { SpeedInsights } from '@vercel/speed-insights/next';
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import localFont from 'next/font/local';
 import { Suspense } from 'react';
 import { GlobalMotion } from '@/components/client/GlobalMotion';
@@ -12,6 +12,7 @@ import { SITE_LOCALE, SITE_OG_LOCALE, type SiteLocale } from '@/content/site-loc
 import { social } from '@/content/social';
 import { serializeJsonLd } from '@/lib/json-ld';
 import { MOTION_BOOTSTRAP_SCRIPT } from '@/lib/motion-bootstrap';
+import { COLOR_SCHEME, THEME_COLOR } from '@/lib/theme-color';
 
 const mono = localFont({
   src: [
@@ -80,6 +81,11 @@ export const rootMetadata: Metadata = {
   alternates: {
     canonical: social.site,
   },
+};
+
+export const rootViewport: Viewport = {
+  themeColor: THEME_COLOR,
+  colorScheme: COLOR_SCHEME,
 };
 
 const personJsonLd = serializeJsonLd(personSchema);
