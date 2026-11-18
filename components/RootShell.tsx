@@ -4,6 +4,7 @@ import { SpeedInsights } from '@vercel/speed-insights/next';
 import type { Metadata, Viewport } from 'next';
 import localFont from 'next/font/local';
 import { Suspense } from 'react';
+import { getThemeColors } from '@/app/(en)/design-system/_lib/theme-tokens';
 import { GlobalMotion } from '@/components/client/GlobalMotion';
 import { NoscriptBar } from '@/components/NoscriptBar';
 import { profile, profileMetaDescription, profilePageTitle } from '@/content/profile';
@@ -12,7 +13,9 @@ import { SITE_LOCALE, SITE_OG_LOCALE, type SiteLocale } from '@/content/site-loc
 import { social } from '@/content/social';
 import { serializeJsonLd } from '@/lib/json-ld';
 import { MOTION_BOOTSTRAP_SCRIPT } from '@/lib/motion-bootstrap';
-import { COLOR_SCHEME, THEME_COLOR } from '@/lib/theme-color';
+
+const SURFACE_TOKEN = 'surface';
+const COLOR_SCHEME = 'dark';
 
 const mono = localFont({
   src: [
@@ -84,7 +87,7 @@ export const rootMetadata: Metadata = {
 };
 
 export const rootViewport: Viewport = {
-  themeColor: THEME_COLOR,
+  themeColor: getThemeColors()[SURFACE_TOKEN],
   colorScheme: COLOR_SCHEME,
 };
 
