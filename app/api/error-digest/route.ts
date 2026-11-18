@@ -57,7 +57,12 @@ async function readAll(keys: readonly string[]): Promise<unknown[]> {
   return values;
 }
 
-async function scanDayKeys(day: string): Promise<string[]> {
+interface DayScan {
+  keys: string[];
+  truncated: boolean;
+}
+
+async function scanDayKeys(day: string): Promise<DayScan> {
   const redis = getRedis();
   const match = `${ERR_KEY_PREFIX}${KEY_SEPARATOR}*${KEY_SEPARATOR}${day}${KEY_SEPARATOR}*`;
   const keys: string[] = [];
@@ -68,7 +73,7 @@ async function scanDayKeys(day: string): Promise<string[]> {
     cursor = String(next);
     if (cursor === SCAN_DONE_CURSOR) break;
   }
-  return keys;
+  return { keys, truncated: cursor !== SCAN_DONE_CURSOR };
 }
 
 function messageOf(record: unknown): string {
@@ -130,7 +135,7 @@ async function totalsByFingerprint(keys: readonly string[]): Promise<Fingerprint
   return list;
 }
 
-function digestText(day: string, flagged: readonly FingerprintTotal[]): string {
+function digestText(day: string, flagged: readonly FingerprintTotal[], truncated: boolean): string {
   const sorted = [...flagged].sort((a, b) => b.count - a.count);
   const lines = sorted.slice(0, MAX_LISTED_FINGERPRINTS).map((total) => {
     const reason = total.isNew ? 'new' : `over ${OVER_THRESHOLD_COUNT}`;
@@ -139,11 +144,18 @@ function digestText(day: string, flagged: readonly FingerprintTotal[]): string {
   });
   const hidden = sorted.length - lines.length;
   const more = hidden > 0 ? [`and ${hidden} more fingerprints`] : [];
+  const partial = truncated
+    ? [
+        '',
+        `The scan stopped after ${MAX_SCAN_PAGES} pages, so this list and its counts are partial.`,
+      ]
+    : [];
   return [
     `Client error fingerprints for ${day} (UTC) that are new or reached ${OVER_THRESHOLD_COUNT} reports.`,
     '',
     ...lines,
     ...more,
+    ...partial,
   ].join('\n');
 }
 
@@ -155,8 +167,11 @@ export async function GET(req: NextRequest): Promise<Response> {
   const day = utcDay(new Date(Date.now() - MS_PER_DAY));
 
   let totals: FingerprintTotal[];
+  let truncated: boolean;
   try {
-    totals = await totalsByFingerprint(await scanDayKeys(day));
+    const scanned = await scanDayKeys(day);
+    truncated = scanned.truncated;
+    totals = await totalsByFingerprint(scanned.keys);
   } catch (scanErr) {
     log.error('error-digest could not read the error records', { requestId, err: scanErr });
     return err({
@@ -168,7 +183,20 @@ export async function GET(req: NextRequest): Promise<Response> {
   }
 
   const flagged = totals.filter((total) => total.isNew || total.count >= OVER_THRESHOLD_COUNT);
-  const summary = { day, fingerprints: totals.length, flagged: flagged.length, mailed: false };
+  const summary = {
+    day,
+    fingerprints: totals.length,
+    flagged: flagged.length,
+    mailed: false,
+    truncated,
+  };
+  if (truncated) {
+    log.warn('error-digest scan hit the page cap, skipping the seen markers', {
+      requestId,
+      day,
+      maxPages: MAX_SCAN_PAGES,
+    });
+  }
 
   if (flagged.length > 0) {
     if (!env.RESEND_API_KEY) {
@@ -180,7 +208,7 @@ export async function GET(req: NextRequest): Promise<Response> {
         from: ERROR_DIGEST_FROM,
         to: EMAIL_ADDRESS,
         subject: `[portfolio] ${flagged.length} client error fingerprints for ${day}`,
-        text: digestText(day, flagged),
+        text: digestText(day, flagged, truncated),
         idempotencyKey: `error-digest-${day}`,
         timeoutMs: MAIL_TIMEOUT_MS,
       });
@@ -197,7 +225,7 @@ export async function GET(req: NextRequest): Promise<Response> {
     }
   }
 
-  if (totals.length > 0) {
+  if (totals.length > 0 && !truncated) {
     try {
       const pipe = getRedis().pipeline();
       for (const { fingerprint } of totals) {
