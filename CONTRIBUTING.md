@@ -9,9 +9,11 @@ By participating you agree to the [Code of Conduct](./CODE_OF_CONDUCT.md).
 - **Node** `^22.22.2 || ^24.15.0 || >=26.0.0` (`.nvmrc` pins the exact version; `nvm use`)
 - **pnpm** >= 10 (this repo is pnpm-only; do not use npm or yarn)
 - **gitleaks** on your PATH for the pre-commit secret scan (`brew install gitleaks`)
+- **Biome** editor extension: `.vscode/extensions.json` recommends it, so VS Code offers it on first open
 
 ```bash
 pnpm install
+pnpm run doctor                   # read-only: names a fix for every failed check
 cp .env.example .env.local   # optional: static content renders without keys
 pnpm dev                     # http://localhost:3000
 ```

@@ -52,10 +52,13 @@ The terminal homepage is complemented by `/summary`, `/cv`, `/links` (pt-BR), `/
 
 ## Quickstart
 
+Use the Node version `.nvmrc` pins (`nvm use`); `pnpm run doctor` flags a mismatch.
+
 ```bash
 git clone git@github.com:erikunha/portfolio.git
 cd portfolio
 pnpm install
+pnpm run doctor                   # checks Node, pnpm, gitleaks, hooks, browsers
 cp .env.example .env.local   # fill in API keys
 pnpm dev                      # http://localhost:3000
 pnpm test                     # unit tests (vitest)
