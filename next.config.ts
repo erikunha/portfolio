@@ -57,7 +57,6 @@ const nextConfig: NextConfig = {
   pageExtensions: ['ts', 'tsx', 'mdx'],
   cacheComponents: true,
   partialPrefetching: false,
-  typedRoutes: true,
   experimental: { agentFeedback: false },
   trailingSlash: false,
   images: {
