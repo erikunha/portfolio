@@ -43,6 +43,11 @@ describe('quality-fast steps are reproduced by the local verify chain', () => {
     expect(stale).toEqual([]);
   });
 
+  it('gates the DECISIONS index in verify and in quality-fast', () => {
+    expect(chainLeaves(pkg.scripts, 'ci:local')).toContain('pnpm check:decisions-index');
+    expect(steps.map((s) => s.run?.trim())).toContain('pnpm check:decisions-index');
+  });
+
   it('runs the coverage threshold in verify', () => {
     expect(chainLeaves(pkg.scripts, 'ci:local')).toContain('pnpm test:coverage');
   });
