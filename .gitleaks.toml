@@ -42,3 +42,11 @@ regexes = ['''^secondary-\d{2,3}$''']
 [[allowlists]]
 description = "The p95LatencyMs metric key (content/measured.ts, lib/ask/metrics.ts), an identifier and not a secret (generic-api-key false positive)"
 regexes = ['''^p95LatencyMs$''']
+
+[[allowlists]]
+description = "HISTORY ONLY. This fake cron secret fixture (app/api/error-digest tests) is no longer in the tree. It stays in local unpushed commits, which are not rewritten without the owner, and the secret scan reads every commit (generic-api-key false positive)."
+regexes = ['''^test-cron-secret-0123456789$''']
+
+[[allowlists]]
+description = "HISTORY ONLY. This fake Stripe-shaped query token (app/api/error-digest/route.urls.test.ts) is no longer in the tree. It stays in local unpushed commits, which are not rewritten without the owner, and the secret scan reads every commit (stripe-access-token false positive)."
+regexes = ['''^sk_live_9f8e7d6c5b4a$''']

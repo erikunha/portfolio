@@ -3,7 +3,7 @@ import { join } from 'node:path';
 import { NextRequest } from 'next/server';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-const SECRET = 'test-cron-secret-0123456789';
+const SECRET = 'cron-secret-for-tests';
 const RUN_AT = '2026-11-18T05:00:00.000Z';
 const DIGEST_DAY = '2026-11-17';
 const SEEN_TTL_SECONDS = 2_592_000;
