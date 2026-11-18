@@ -12,7 +12,7 @@ const DEFAULT_PATHS = [
   '.github/workflows',
 ];
 const REGISTRY_CONFIGS = ['p/typescript', 'p/react', 'p/nextjs', 'p/github-actions'];
-const SEMGREP_INSTALL_HINT = 'pip install semgrep==1.185.0';
+const SEMGREP_INSTALL_HINT = 'pip install semgrep==1.186.0';
 const TAG = '[run-semgrep]';
 const EXIT_INFRA = 2;
 
