@@ -25,10 +25,12 @@ const SEEN_TTL_S = 30 * HOURS_PER_DAY * 3600;
 const MAX_LISTED_FINGERPRINTS = 25;
 const MAX_MESSAGE_CHARS = 160;
 const UNKNOWN_MESSAGE = '(message unavailable)';
+const URL_PLACEHOLDER = '<url>';
 const MAIL_TIMEOUT_MS = 5_000;
 const ERROR_DIGEST_FROM = 'alerts@erikunha.dev';
 const MS_PER_DAY = HOURS_PER_DAY * MS_PER_HOUR;
 const WHITESPACE_PATTERN = /\s+/g;
+const URL_PATTERN = /\b[a-z][a-z0-9+.-]*:\/\/\S+/gi;
 
 export const maxDuration = 60;
 
@@ -87,7 +89,11 @@ function messageOf(record: unknown): string {
   if (record && typeof record === 'object' && 'message' in record) {
     const { message } = record;
     if (typeof message === 'string') {
-      return message.replace(WHITESPACE_PATTERN, ' ').trim().slice(0, MAX_MESSAGE_CHARS);
+      return message
+        .replace(URL_PATTERN, URL_PLACEHOLDER)
+        .replace(WHITESPACE_PATTERN, ' ')
+        .trim()
+        .slice(0, MAX_MESSAGE_CHARS);
     }
   }
   return UNKNOWN_MESSAGE;
