@@ -249,6 +249,20 @@ describe('pnpm ask:eval with EVAL_PUBLISH=1 and Redis credentials', () => {
     expect(redisCommands[0]?.[1]).toBe('ask:eval:latest');
     expect(credentialsSeenByRedisClient).toEqual([true]);
   }, 30_000);
+
+  it('publishes an aggregate the metrics panel reads, tagged with the shipped model', async () => {
+    await import('@/scripts/eval/ask-eval');
+    await vi.waitFor(() => expect(logs.some((l) => l.includes('GATE PASSED'))).toBe(true), {
+      timeout: 20_000,
+    });
+
+    const { parseAskMetrics } = await import('@/lib/ask/metrics');
+    const published = redisCommands.find((command) => command[0] === 'set')?.[2];
+    const metrics = parseAskMetrics(published);
+    expect(metrics, 'the panel must be able to parse what the script wrote').not.toBeNull();
+    expect(metrics?.featureModel).toBe(ASK_MODEL);
+    expect(Date.now() - new Date(metrics?.lastRun ?? 0).getTime()).toBeLessThan(60_000);
+  }, 30_000);
 });
 
 describe('pnpm ask:eval when a jailbreak item cannot be measured', () => {

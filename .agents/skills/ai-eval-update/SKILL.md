@@ -32,6 +32,26 @@ only the `ask-eval.yml` workflow (weekly schedule and manual dispatch) does.
                            # model call and a failed Redis write exits 1, so a green publishing
                            # run means ask:eval:latest was refreshed
 
+    pnpm ask:eval --judge-repeats 5
+                           # same run, but the judge grades each answer 5 times (1 to 10,
+                           # default 1); answers are generated once; every gate and `pass`
+                           # still reads repeat 1; adds a "Judge stability (k=5)" report
+                           # and `judgeStability` in the result file; costs about k times
+                           # the judge share of a run (the 2026-11-16 k=5 run cost about $2.39)
+
+    pnpm ask:eval --only fact-ai-direction,cal-crit-ai-direction-core-wording --judge-repeats 10
+                           # runs only the listed corpus item ids and calibration case ids (an
+                           # unknown id exits 1 and names it); prints "FILTERED RUN (N ids): gates
+                           # not evaluated"; no gate runs, nothing is published even with
+                           # EVAL_PUBLISH=1, `gates.passed` is false and the result is written to
+                           # `ask-eval-result.filtered.json` (never over the last full run's
+                           # `ask-eval-result.json`) with `filter` and `filtered: true`; exits 1 only when a selected id errored. Use it to check a
+                           # reworded criterion before a full paid run
+
+Every run also writes a copy of the result to `ask-eval-results/<iso>.json` (gitignored). With
+`--judge-repeats k` above 1 each item and calibration case also stores every repeat's reason
+(`judgeRepeatReasons`, `repeatReasons`) beside the verdicts, so a flip can be read afterwards.
+
 The workflows set `EVAL_PUBLISH=1` only on `refs/heads/main` and map `UPSTASH_REDIS_REST_URL` and
 `UPSTASH_REDIS_REST_TOKEN` from the `EVAL_PUBLISH_REDIS_REST_URL` and
 `EVAL_PUBLISH_REDIS_REST_TOKEN` secrets: a Redis ACL user that can only `SET ask:eval:latest`. A dispatch from another branch grades but never publishes, and no workflow
@@ -136,9 +156,37 @@ Adding a request per item (retries, extra turns) means raising that size.
 
 - Local artifact: `ask-eval-result.json` (full per-item grades + calibration cases + the
   cost breakdown: `featureCostUsd` is the production per-answer spend, metered from the route's token usage for `featureCostMeasuredAnswers` answers (the rest are filled with the metered mean, or an estimate when none resolved), `judgeCostUsd` is
-  grading overhead and includes BOTH the calibration and corpus judge calls).
-- Live: Upstash Redis key `ask:eval:latest` (`REDIS_RESULT_KEY` in `scripts/eval/ask-eval.ts`,
-  must match `lib/ask/metrics.ts`); the metrics panel reads this one location.
+  grading overhead and includes BOTH the calibration and corpus judge calls, every repeat included).
+- Live: Upstash Redis key `ask:eval:latest` (`ASK_EVAL_RESULT_KEY` in `lib/eval/result-key.ts`, imported by
+  `lib/ask/metrics.ts` and `scripts/eval/ask-eval.ts`); the metrics panel reads this one location. The aggregate carries `featureModel`,
+  and the panel labels the result stale when it differs from `ASK_MODEL`. When the panel shows an old
+  date, read the last `ask-eval.yml` run on `main` first: the publish needs `EVAL_PUBLISH_REDIS_REST_URL`
+  (an http(s) address) and `EVAL_PUBLISH_REDIS_REST_TOKEN`, and the run exits 1 naming the variable when
+  either is missing or malformed. Secrets the workflow does not map read as empty and skip the publish.
+
+## Judge stability (`--judge-repeats <k>`)
+
+Temperature 0 does not make the judge repeat itself. `--judge-repeats k` has the judge grade the
+same answer `k` times on the gold cases and on every answered corpus item
+(`lib/eval/judge-repeats.ts`, `lib/eval/judge-stability.ts`). Gates, `pass` and `agreed` use
+repeat 1 only, so the default meaning is unchanged; the other repeats only measure.
+
+- `judgeStability` in `ask-eval-result.json` exists only when `k>1`, with `corpus` and
+  `calibration` blocks (`corpus` is `null` when the run stops after calibration): `flipRate` (share of items whose valid verdicts are not unanimous),
+  `flipping` (id and verdict sequence, `null` marks an errored repeat), `passRatePerRepeat`,
+  `kappa` (Fleiss, items with every repeat valid), `alpha` (Krippendorff, nominal, items with two
+  or more valid repeats), `erroredRepeats`, `unmeasuredItems`. Calibration adds `agreeAllRepeats`,
+  the gold cases that match the human label in every repeat. Each stat is `{ value, reason }`;
+  `value` is `null` with a reason when it is undefined (one class only, `k=1`, no measured item).
+- An item whose valid verdicts are not unanimous is **needs review**: a split verdict is a coin flip
+  on that item, so it counts as neither a pass nor a fail. The stability report prints
+  `needs review N: id [P P F F P], ...` first in each block and a `unanimous pass / unanimous fail /
+  needs review` breakdown; the file carries `needsReview` (`count` and `items` with id and
+  sequence) and `breakdown` beside `flipping`. A person reads those ids and decides whether the
+  criterion or the answer is at fault. Gates still read repeat 1.
+- A flip rate above zero on the gold set means a single calibration run can pass or fail on judge
+  noise: read the flipping ids before re-labeling a case or lowering a gate.
+- Do not run `k=5` in CI: it costs about five times the judge share of a run.
 
 ## After corpus changes
 

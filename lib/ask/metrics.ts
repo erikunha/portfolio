@@ -1,7 +1,6 @@
+import { ASK_EVAL_RESULT_KEY } from '@/lib/eval/result-key';
 import { getRedis } from '@/lib/redis';
 import { withTimeout } from '@/lib/with-timeout';
-
-const REDIS_RESULT_KEY = 'ask:eval:latest';
 
 export type AskMetrics = {
   evalPassRate: number;
@@ -9,10 +8,12 @@ export type AskMetrics = {
   p95LatencyMs: number;
   costPerAnswer: number;
   lastRun: string;
+  featureModel?: string;
 };
 
 type EvalAggregate = {
   ts: string;
+  featureModel?: string;
   total: number;
   answeredCount: number;
   correctness: { rate: number };
@@ -42,6 +43,7 @@ function parseAggregate(raw: unknown): EvalAggregate | null {
 
   return {
     ts: a.ts,
+    ...(typeof a.featureModel === 'string' ? { featureModel: a.featureModel } : {}),
     total: a.total,
     answeredCount: a.answeredCount,
     correctness: { rate: correctness.rate },
@@ -51,10 +53,7 @@ function parseAggregate(raw: unknown): EvalAggregate | null {
   };
 }
 
-export async function getAskMetrics(): Promise<AskMetrics | null> {
-  const raw: unknown = await withTimeout(() => getRedis().get(REDIS_RESULT_KEY));
-  if (raw == null) return null;
-
+export function parseAskMetrics(raw: unknown): AskMetrics | null {
   const payload = typeof raw === 'string' ? safeJsonParse(raw) : raw;
 
   const aggregate = parseAggregate(payload);
@@ -71,7 +70,14 @@ export async function getAskMetrics(): Promise<AskMetrics | null> {
     p95LatencyMs: aggregate.latencyMs.p95,
     costPerAnswer,
     lastRun: aggregate.ts,
+    ...(aggregate.featureModel === undefined ? {} : { featureModel: aggregate.featureModel }),
   };
+}
+
+export async function getAskMetrics(): Promise<AskMetrics | null> {
+  const raw: unknown = await withTimeout(() => getRedis().get(ASK_EVAL_RESULT_KEY));
+  if (raw == null) return null;
+  return parseAskMetrics(raw);
 }
 
 function safeJsonParse(s: string): unknown {

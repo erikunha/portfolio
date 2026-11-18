@@ -13,6 +13,7 @@ import { SECTION_LABELS } from '@/content/section-labels';
 import type { SiteLocale } from '@/content/site-locale';
 import type { AskMetrics } from '@/lib/ask/metrics';
 import { getAskMetrics } from '@/lib/ask/metrics';
+import { ASK_MODEL } from '@/lib/ask/model';
 import { MS_PER_SECOND } from '@/lib/time';
 import { ReadTimeoutError, SSR_REDIS_TIMEOUT_MS } from '@/lib/with-timeout';
 import { IconAiMetrics } from '../../Icons';
@@ -124,6 +125,7 @@ function AiMetricsBody({
   const format = content.format;
   const formatMetric = formatMetricFor(content);
   const timestamp = metricTimestamp(metrics?.lastRun, format.askStaleAfterMs, locale);
+  const stale = timestamp.stale || (metrics !== null && metrics.featureModel !== ASK_MODEL);
   return (
     <div className="measured-ask" aria-busy={loading || undefined}>
       <h3 className="measured-heading">
@@ -143,7 +145,7 @@ function AiMetricsBody({
             )}
           </>
         ) : null}
-        {timestamp.stale ? (
+        {stale ? (
           <span className="measured-status">
             {MEASURED_FIELD_SEPARATOR}
             {content.stale}

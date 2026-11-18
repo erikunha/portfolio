@@ -1,14 +1,13 @@
 import { Redis, type Requester } from '@upstash/redis';
+import { REDIS_ENV_PAIRS } from '@/lib/redis-env';
 
 const REDIS_RETRIES = 1;
 const REDIS_RETRY_BACKOFF_MS = 50;
 
 let _redis: Redis | undefined;
 
-export const REDIS_ENV_PAIRS = [
-  { url: 'UPSTASH_REDIS_REST_URL', token: 'UPSTASH_REDIS_REST_TOKEN' },
-  { url: 'KV_REST_API_URL', token: 'KV_REST_API_TOKEN' },
-] as const;
+export { REDIS_ENV_PAIRS };
+
 const REDIS_ENV_NAMES = REDIS_ENV_PAIRS.map(({ url, token }) => `${url} and ${token}`).join(' or ');
 
 export class RedisNotConfiguredError extends Error {

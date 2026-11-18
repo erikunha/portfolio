@@ -17,6 +17,8 @@ export const CalibrationCaseSchema = z.object({
   agreed: z.boolean(),
   errored: z.boolean(),
   reason: z.string(),
+  repeatVerdicts: z.array(z.boolean().nullable()).optional(),
+  repeatReasons: z.array(z.string()).optional(),
 });
 export type CalibrationCase = z.infer<typeof CalibrationCaseSchema>;
 

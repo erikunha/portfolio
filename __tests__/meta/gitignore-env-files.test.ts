@@ -71,6 +71,8 @@ const EXAMPLE_PATHS = ['.env.example'];
 // prove the rules work. This is what keeps a green run meaningful.
 const TRACKED_FILE = 'package.json';
 
+const DEFAULT_SPAWN_BUFFER_BYTES = 1024 * 1024;
+
 const git = (cwd: string, args: string[]) =>
   spawnSync('git', args, { cwd, env: hermeticEnv(), maxBuffer: GIT_MAX_BUFFER_BYTES });
 
@@ -179,6 +181,16 @@ describe('meta: no env or credential file is tracked, and none ever was', {
       tracked,
       `These tracked paths are env or credential files:\n${tracked.map((p) => `  ${p}`).join('\n')}\n\nThey are committed to a public repository. If any of them holds a real value, that value is published and rotating the credential does NOT remove it from the history -- the fix is a rewrite, and the rotation comes first.\n\nUntracking a file is the easy half; the hard half is that the value was already published.`,
     ).toEqual([]);
+  });
+
+  it('reads git output larger than the default spawn buffer, so a big history cannot fail the scan', () => {
+    const size = DEFAULT_SPAWN_BUFFER_BYTES * 2;
+    const out = gitText(REPO_ROOT, [
+      '-c',
+      `alias.big=!head -c ${size} /dev/zero | tr '\\0' a`,
+      'big',
+    ]);
+    expect(out.length).toBe(size);
   });
 
   it('no env or credential file was EVER committed, in any branch of the history', () => {

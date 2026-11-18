@@ -4,6 +4,7 @@ paths:
 - "app/api/**"
 - "lib/rate-limit.ts"
 - "lib/redis.ts"
+- "lib/redis-env.ts"
 - "lib/ask/budget.ts"
 - "lib/ask/dedup.ts"
 - "lib/server/**"
