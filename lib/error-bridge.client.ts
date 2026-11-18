@@ -49,7 +49,7 @@ export function buildLogPayload(
     ts: new Date().toISOString(),
     release: process.env.RELEASE,
     ...(browser && {
-      motion: document.body.dataset.motion,
+      motion: document.body?.dataset.motion,
       vw: window.innerWidth,
     }),
     digest,
