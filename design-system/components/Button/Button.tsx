@@ -1,5 +1,5 @@
 import type { AnchorHTMLAttributes, ButtonHTMLAttributes } from 'react';
-import { cn } from '@/lib/cn';
+import { joinClassNames } from '@/lib/join-class-names';
 
 export type ButtonVariant = 'primary' | 'secondary';
 export type ButtonSize = 'sm' | 'md' | 'lg';
@@ -41,7 +41,12 @@ export function Button({
   className,
   ...rest
 }: ButtonProps) {
-  const classes = cn(baseClasses, variantClasses[variant], sizeClasses[size], className);
+  const classes = joinClassNames(
+    baseClasses,
+    variantClasses[variant],
+    sizeClasses[size],
+    className,
+  );
   if (as === 'a') {
     const { disabled, href, onClick, tabIndex, ...anchorRest } = rest as AsAnchor;
     return (

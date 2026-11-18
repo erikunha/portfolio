@@ -10,7 +10,7 @@ import {
   type SiteLocale,
   withSectionHash,
 } from '@/content/site-locale';
-import { cn } from '@/lib/cn';
+import { joinClassNames } from '@/lib/join-class-names';
 import { HOME_SECTION_ID } from '@/lib/section-spy';
 import { useCurrentSection, useSectionNavigation } from './SectionNavigationProvider.client';
 
@@ -28,7 +28,7 @@ function LanguageSwitchView({
       current={locale}
       hrefs={paths}
       names={LANGUAGE_SWITCH_NAME}
-      className={cn('flex-none', className)}
+      className={joinClassNames('flex-none', className)}
       data-lang-switch=""
     />
   );

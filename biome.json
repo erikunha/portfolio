@@ -275,8 +275,14 @@
                 },
                 "patterns": [
                   {
-                    "group": ["@/**", "!@/lib/cn", "!@/design-system", "!@/design-system/**"],
-                    "message": "design-system imports only @/lib/cn besides its own folder."
+                    "group": [
+                      "@/**",
+                      "!@/lib/cn",
+                      "!@/lib/join-class-names",
+                      "!@/design-system",
+                      "!@/design-system/**"
+                    ],
+                    "message": "design-system imports only @/lib/cn and @/lib/join-class-names besides its own folder."
                   }
                 ]
               }

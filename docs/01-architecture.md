@@ -33,7 +33,7 @@ flowchart LR
 - `design-system/*` primitives use React and shared class utilities. Components import them through the public barrel or an internal module such as `Field`.
 - `lib/*` is the server/BFF core. `lib/*.client.tsx` and a few browser utilities are the exception (client-side), clearly suffixed.
 - `app/api/*` handlers depend on `lib`. The MCP adapter in `lib/agent/mcp-tools.ts` imports only `lib`: `ask_erik` calls `askOnce` (`lib/ask/ask-once.ts`), which drives the shared `startAsk` (`lib/ask/stream.ts`) in process.
-- Biome `noRestrictedImports` overrides enforce the direction: `lib` imports neither `app` nor `components`, `content` imports only `content` and `zod`, `design-system` imports only `@/lib/cn` and itself. Test files are excluded.
+- Biome `noRestrictedImports` overrides enforce the direction: `lib` imports neither `app` nor `components`, `content` imports only `content` and `zod`, `design-system` imports only `@/lib/cn`, `@/lib/join-class-names` and itself. Test files are excluded.
 
 ## Repository structure (annotated)
 

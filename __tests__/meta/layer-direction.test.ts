@@ -15,6 +15,9 @@ const INLINE_FILES: Record<string, string> = {
   'design-system/allowed.ts': "import '@/lib/cn';\nimport 'react';\n",
   'lib/rate-limit.ts': "import '@/lib/redis';\n",
 };
+const JOIN_CLASS_NAMES_ALLOWED: Record<string, string> = {
+  'design-system/joiner.ts': "import '@/lib/join-class-names';\n",
+};
 const RATE_LIMIT_FORBIDDEN: Record<string, string> = {
   'lib/rate-limit.ts': "import '@/lib/ask/budget';\n",
 };
@@ -68,6 +71,12 @@ describe('import direction rules in biome.json', () => {
     'design-system/forbidden-lib.ts',
   ])('reports %s', (file) => {
     expect(base.get(file)).toContain(RULE);
+  });
+
+  it('accepts design-system importing the string-only class joiner', () => {
+    expect(lintTree(JOIN_CLASS_NAMES_ALLOWED).get('design-system/joiner.ts') ?? []).not.toContain(
+      RULE,
+    );
   });
 
   it('reports lib/rate-limit.ts importing from lib/ask', () => {

@@ -1,5 +1,5 @@
 import type { AnchorHTMLAttributes, ReactNode } from 'react';
-import { cn } from '@/lib/cn';
+import { joinClassNames } from '@/lib/join-class-names';
 
 export type NavItemProps = Omit<AnchorHTMLAttributes<HTMLAnchorElement>, 'children'> & {
   href: string;
@@ -11,7 +11,7 @@ export type NavItemProps = Omit<AnchorHTMLAttributes<HTMLAnchorElement>, 'childr
 export function NavItem({ label, index, current = false, className, ...rest }: NavItemProps) {
   return (
     <a
-      className={cn('nav-item', className)}
+      className={joinClassNames('nav-item', className)}
       aria-current={current ? 'location' : undefined}
       {...rest}
     >

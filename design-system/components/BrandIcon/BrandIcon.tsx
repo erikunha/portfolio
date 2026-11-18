@@ -1,5 +1,5 @@
 import type { ComponentPropsWithoutRef } from 'react';
-import { cn } from '@/lib/cn';
+import { joinClassNames } from '@/lib/join-class-names';
 import { BRAND_ICON_CROP, BRAND_ICON_PATH, BRAND_ICON_VIEWBOX } from './brand-icon-path';
 
 export type BrandIconProps = Omit<ComponentPropsWithoutRef<'svg'>, 'children'> & {
@@ -17,7 +17,7 @@ export function BrandIcon({ size = DEFAULT_WIDTH_PX, className, ...rest }: Brand
       fill="currentColor"
       aria-hidden="true"
       focusable="false"
-      className={cn('brand-icon', className)}
+      className={joinClassNames('brand-icon', className)}
       {...rest}
     >
       <path d={BRAND_ICON_PATH} />

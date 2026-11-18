@@ -1,7 +1,7 @@
 import type { ComponentPropsWithoutRef } from 'react';
 import type { SiteLocale } from '@/content/site-locale';
 import { Button } from '@/design-system';
-import { cn } from '@/lib/cn';
+import { joinClassNames } from '@/lib/join-class-names';
 
 type LocaleSwitchProps = Omit<ComponentPropsWithoutRef<'nav'>, 'children' | 'aria-label'> & {
   label: string;
@@ -24,7 +24,7 @@ export function LocaleSwitch({
   ...navProps
 }: LocaleSwitchProps) {
   return (
-    <nav {...navProps} aria-label={label} className={cn('flex gap-2', className)}>
+    <nav {...navProps} aria-label={label} className={joinClassNames('flex gap-2', className)}>
       {(Object.keys(hrefs) as SiteLocale[]).map((candidate) => {
         const active = candidate === current;
         return (

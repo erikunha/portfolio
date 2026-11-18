@@ -6,7 +6,7 @@ import { ExternalLink } from '@/components/ExternalLink';
 import { StatusDot } from '@/components/StatusDot';
 import { LINKS_PATH } from '@/content/links.constants';
 import { MOTION_STATE_SEPARATOR, TOPBAR_MOTION_LABEL } from '@/content/nav';
-import { cn } from '@/lib/cn';
+import { joinClassNames } from '@/lib/join-class-names';
 import { longestCopy } from '@/lib/longest-copy';
 import {
   LanguageSwitch,
@@ -89,7 +89,7 @@ export function DesktopTopbar({ brand }: { brand: ReactNode }) {
               data-motion={motionOn ? 'on' : 'off'}
               aria-pressed={motionOn}
             >
-              <StatusDot blink className={cn(!motionOn && 'opacity-40')} />
+              <StatusDot blink className={joinClassNames(!motionOn && 'opacity-40')} />
               <span>
                 {TOPBAR_MOTION_LABEL}
                 <span aria-hidden="true">

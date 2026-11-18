@@ -76,7 +76,7 @@ whole route to on-demand rendering there.
 
 **Import direction.** `lib` imports neither `app` nor `components`;
 `lib/rate-limit.ts` also imports nothing from `lib/ask` or `lib/eval`; `content`
-imports only `content` and `zod`; `design-system` imports only `@/lib/cn` and
+imports only `content` and `zod`; `design-system` imports only `@/lib/cn`, `@/lib/join-class-names` and
 itself. Biome `noRestrictedImports` overrides in `biome.json` enforce it
 (`pnpm check`), and `__tests__/meta/layer-direction.test.ts` fails when an
 override stops firing. `*.test.ts(x)` files are excluded, because tests drive

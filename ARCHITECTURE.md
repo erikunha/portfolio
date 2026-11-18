@@ -473,7 +473,8 @@ lib/stream-protocol.ts                # NUL-byte error sentinel + parseStreamChu
 lib/telemetry/                        # Langfuse tracing helpers
 lib/ua.ts                             # UA-based device detection (headers())
 lib/use-breakpoint.client.tsx         # client-side breakpoint hook
-lib/cn.ts                             # className join helper
+lib/cn.ts                             # className join helper (clsx)
+lib/join-class-names.ts               # string-only className joiner for the app shell modules: keeps `clsx` out of the shell chunk
 
 app/css/theme.css                     # @theme { palette, glow stops, typography vars }, the motion custom variants, role tokens in :root
 app/css/base.css                      # @layer base { resets, focus-visible, skip-to-content, the rounded line box }

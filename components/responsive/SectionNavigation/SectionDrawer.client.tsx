@@ -5,8 +5,8 @@ import { externalLinkProps } from '@/components/ExternalLink';
 import { StatusDot } from '@/components/StatusDot';
 import { MOTION_STATE_SEPARATOR, TOPBAR_MOTION_LABEL } from '@/content/nav';
 import { NavItem } from '@/design-system';
-import { cn } from '@/lib/cn';
 import { isolate } from '@/lib/dom/isolate';
+import { joinClassNames } from '@/lib/join-class-names';
 import { DRAWER_ID } from './navigationIds';
 import {
   useCurrentSection,
@@ -75,7 +75,7 @@ export function SectionNavigation({ extra }: { extra?: ReactNode }) {
       <aside
         ref={panelRef}
         id={DRAWER_ID}
-        className={cn('section-menu', drawerOpen && 'is-open')}
+        className={joinClassNames('section-menu', drawerOpen && 'is-open')}
         aria-label={copy.drawerLabel}
         {...(drawerOpen ? { role: 'dialog', 'aria-modal': true } : {})}
       >
@@ -147,7 +147,7 @@ export function SectionNavigation({ extra }: { extra?: ReactNode }) {
         </ul>
       </aside>
       <div
-        className={cn('menu-scrim', drawerOpen && 'is-open')}
+        className={joinClassNames('menu-scrim', drawerOpen && 'is-open')}
         aria-hidden="true"
         onClick={() => closeDrawer(true)}
       />
