@@ -1,85 +1,68 @@
 import type { MetadataRoute } from 'next';
+import { absoluteLanguages, absoluteUrl, type HreflangInput } from '@/app/_lib/build-metadata';
+import { LINKS_HREFLANG } from '@/app/_lib/links-metadata';
 import { DS_ROUTES } from '@/app/(en)/design-system/_components/ds-nav';
-import { localeAlternates } from '@/content/site-locale';
 import { social } from '@/content/social';
 
-const LANGUAGE_KEY = { pt: 'pt-BR', en: 'en-US', default: 'x-default' } as const;
-
-function absoluteUrl(path: string): string {
-  return `${social.site}${path === '/' ? '' : path}`;
+function sitemapUrl(path: string): string {
+  return path === '/' ? social.site : absoluteUrl(path);
 }
 
-function languageLinks(path: string): Record<string, string> {
-  const alternates = localeAlternates(path);
-  return {
-    [LANGUAGE_KEY.pt]: absoluteUrl(alternates.pt),
-    [LANGUAGE_KEY.en]: absoluteUrl(alternates.en),
-    [LANGUAGE_KEY.default]: absoluteUrl(alternates.en),
-  };
+function languageLinks(input: HreflangInput): Record<string, string> {
+  return absoluteLanguages(input, sitemapUrl);
 }
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const base = social.site;
+  const linksLanguages = languageLinks(LINKS_HREFLANG);
   return [
     {
       url: base,
       changeFrequency: 'monthly',
       priority: 1,
-      alternates: { languages: languageLinks('/') },
+      alternates: { languages: languageLinks({ path: '/' }) },
     },
     {
       url: `${base}/pt`,
       changeFrequency: 'monthly',
       priority: 1,
-      alternates: { languages: languageLinks('/') },
+      alternates: { languages: languageLinks({ path: '/' }) },
     },
     {
       url: `${base}/cv`,
       changeFrequency: 'monthly',
       priority: 0.9,
-      alternates: { languages: languageLinks('/cv') },
+      alternates: { languages: languageLinks({ path: '/cv' }) },
     },
     {
       url: `${base}/pt/cv`,
       changeFrequency: 'monthly',
       priority: 0.9,
-      alternates: { languages: languageLinks('/cv') },
+      alternates: { languages: languageLinks({ path: '/cv' }) },
     },
     {
       url: `${base}/summary`,
       changeFrequency: 'monthly',
       priority: 0.8,
-      alternates: { languages: languageLinks('/summary') },
+      alternates: { languages: languageLinks({ path: '/summary' }) },
     },
     {
       url: `${base}/pt/summary`,
       changeFrequency: 'monthly',
       priority: 0.8,
-      alternates: { languages: languageLinks('/summary') },
+      alternates: { languages: languageLinks({ path: '/summary' }) },
     },
     {
       url: `${base}/links`,
       changeFrequency: 'weekly',
       priority: 0.8,
-      alternates: {
-        languages: {
-          [LANGUAGE_KEY.pt]: `${base}/links`,
-          [LANGUAGE_KEY.en]: `${base}/links/en`,
-          [LANGUAGE_KEY.default]: `${base}/links`,
-        },
-      },
+      alternates: { languages: linksLanguages },
     },
     {
       url: `${base}/links/en`,
       changeFrequency: 'weekly',
       priority: 0.7,
-      alternates: {
-        languages: {
-          [LANGUAGE_KEY.pt]: `${base}/links`,
-          [LANGUAGE_KEY.en]: `${base}/links/en`,
-          [LANGUAGE_KEY.default]: `${base}/links`,
-        },
-      },
+      alternates: { languages: linksLanguages },
     },
     ...DS_ROUTES.map((route) => ({
       url: `${base}${route}`,

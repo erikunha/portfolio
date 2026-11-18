@@ -30,20 +30,27 @@ export function localeOfPath(pathname: string | null): SiteLocale {
   return SITE_LOCALE.en;
 }
 
-export function localeAlternates(path: string): {
+export const HREFLANG_X_DEFAULT = 'x-default';
+
+export function localeAlternates(
+  path: string,
+  defaultLocale: SiteLocale = DEFAULT_SITE_LOCALE,
+): {
   en: string;
   pt: string;
   languages: Record<string, string>;
 } {
-  const enPath = localizedPath(SITE_LOCALE.en, path);
-  const ptPath = localizedPath(SITE_LOCALE.pt, path);
+  const pair = languageSwitchPaths(path);
+  const enPath = pair?.[SITE_LOCALE.en] ?? localizedPath(SITE_LOCALE.en, path);
+  const ptPath = pair?.[SITE_LOCALE.pt] ?? localizedPath(SITE_LOCALE.pt, path);
+  const byLocale = { [SITE_LOCALE.en]: enPath, [SITE_LOCALE.pt]: ptPath };
   return {
     en: enPath,
     pt: ptPath,
     languages: {
-      'pt-BR': ptPath,
-      'en-US': enPath,
-      'x-default': enPath,
+      [SITE_HTML_LANG[SITE_LOCALE.pt]]: ptPath,
+      [SITE_HTML_LANG[SITE_LOCALE.en]]: enPath,
+      [HREFLANG_X_DEFAULT]: byLocale[defaultLocale],
     },
   };
 }
