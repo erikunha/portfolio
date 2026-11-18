@@ -57,6 +57,8 @@
     "prepare": "node scripts/install/prepare-hooks.ts",
     "postinstall": "node scripts/strip-next-polyfills.mjs",
     "docs:feature-map": "tsx scripts/codegen/feature-map.ts",
+    "decisions:index": "tsx scripts/codegen/decisions-index.ts",
+    "check:decisions-index": "tsx scripts/codegen/decisions-index.ts --check",
     "changelog:sync": "tsx scripts/codegen/sync-changelog.ts",
     "check:mutation-canary": "tsx scripts/gates/check-mutation-kills.ts --canary"
   },
