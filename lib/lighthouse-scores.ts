@@ -95,9 +95,7 @@ async function fetchScoresOnce(
     `&strategy=${strategy}` +
     '&category=PERFORMANCE&category=ACCESSIBILITY&category=BEST_PRACTICES&category=SEO';
 
-  const fetchCache: RequestInit = forceRefresh
-    ? { cache: 'no-store' }
-    : { next: { revalidate: LIGHTHOUSE_TTL_S } };
+  const fetchCache: RequestInit = forceRefresh ? { cache: 'no-store' } : {};
 
   const res = await fetch(psiUrl, {
     ...fetchCache,

@@ -150,16 +150,16 @@ describe('getScores: cache miss', () => {
     expect(result).toEqual(LIGHTHOUSE_FALLBACK);
   });
 
-  it('calls fetch with next.revalidate (not cache: no-store) on cache miss', async () => {
+  it('calls fetch with no cache option on cache miss', async () => {
     mockGet.mockResolvedValue(null);
     process.env.PSI_API_KEY = 'test-key';
     mockFetch.mockResolvedValue(makePsiResponse(0.99));
-    const { getScores, LIGHTHOUSE_TTL_S } = await import('@/lib/lighthouse-scores');
+    const { getScores } = await import('@/lib/lighthouse-scores');
     await getScores('desktop');
-    expect(mockFetch).toHaveBeenCalledWith(
-      expect.stringContaining('pagespeedonline'),
-      expect.objectContaining({ next: { revalidate: LIGHTHOUSE_TTL_S } }),
-    );
+    const init = mockFetch.mock.calls[0]?.[1];
+    expect(mockFetch.mock.calls[0]?.[0]).toContain('pagespeedonline');
+    expect(init).not.toHaveProperty('next');
+    expect(init).not.toHaveProperty('cache');
   });
 
   it('sends the PSI key in a header, never in the request URL', async () => {
