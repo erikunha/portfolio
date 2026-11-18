@@ -18,6 +18,8 @@ cp .env.example .env.local   # optional: static content renders without keys
 pnpm dev                     # http://localhost:3000
 ```
 
+A new `git worktree` has no git hooks until `pnpm exec husky` (or `pnpm install`) runs in it: `.husky/_` is generated and untracked, so commits there skip the pre-commit secret scan. `pnpm run doctor` fails with that fix when the checkout has no executable `pre-commit`.
+
 Without service credentials `/api/ask` rejects budget reservation, `/api/contact` cannot save messages and `/api/lighthouse` returns unavailable scores. `.env.example` lists every variable; `lib/env.ts` is the only reader.
 
 ## Project shape

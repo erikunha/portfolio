@@ -1,7 +1,7 @@
 import { spawnSync } from 'node:child_process';
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { homedir } from 'node:os';
-import { join } from 'node:path';
+import { join, resolve } from 'node:path';
 import { isMain } from '../lib/is-main.ts';
 
 export type Status = 'ok' | 'warn' | 'fail';
@@ -23,6 +23,7 @@ export interface Probes {
   lockfileInSync: boolean | null;
   playwrightBrowsers: boolean;
   hooksPath: string | null;
+  hooksDirReady?: boolean;
   envLocalPresent: boolean;
 }
 
@@ -42,6 +43,7 @@ const SUCCESS = 0;
 const FAILURE = 1;
 const VERSION_PART_SEPARATOR = '.';
 const HOOKS_DIRECTORY = '.husky';
+const PRE_COMMIT_HOOK = 'pre-commit';
 const PNPM_PREFIX = 'pnpm@';
 const REQUIRED_BROWSERS = ['chromium-', 'webkit-'];
 const DARWIN = 'darwin';
@@ -128,15 +130,20 @@ function checkPlaywright({ playwrightBrowsers }: Probes): CheckResult {
   };
 }
 
-function checkHooks({ hooksPath }: Probes): CheckResult {
-  const fix = 'pnpm install (the prepare script installs the husky hooks)';
-  const installed = hooksPath?.startsWith(HOOKS_DIRECTORY) === true;
-  return {
-    name: 'hooks',
-    status: installed ? 'ok' : 'fail',
-    detail: installed ? `core.hooksPath is ${hooksPath}` : 'git hooks are not installed',
-    fix,
-  };
+function checkHooks({ hooksPath, hooksDirReady }: Probes): CheckResult {
+  const fix = 'run pnpm exec husky (or pnpm install) in this checkout';
+  if (hooksPath?.startsWith(HOOKS_DIRECTORY) !== true) {
+    return { name: 'hooks', status: 'fail', detail: 'git hooks are not installed', fix };
+  }
+  if (hooksDirReady === false) {
+    return {
+      name: 'hooks',
+      status: 'fail',
+      detail: `core.hooksPath is ${hooksPath} but this checkout has no executable ${PRE_COMMIT_HOOK} there`,
+      fix,
+    };
+  }
+  return { name: 'hooks', status: 'ok', detail: `core.hooksPath is ${hooksPath}`, fix };
 }
 
 function checkEnvLocal({ envLocalPresent }: Probes): CheckResult {
@@ -195,6 +202,13 @@ function parsePackageManager(manifest: string | null): string | null {
   }
 }
 
+function hooksDirReady(deps: DoctorDeps): boolean {
+  const directory = trimmedFirstLine(deps.run('git', ['rev-parse', '--git-path', 'hooks']));
+  if (directory === null || directory === '') return false;
+  const hook = resolve(deps.root, directory, PRE_COMMIT_HOOK);
+  return deps.run('test', ['-x', hook]) !== null;
+}
+
 export function collectProbes(deps: DoctorDeps): Probes {
   const at = (...parts: string[]) => join(deps.root, ...parts);
   const installedLock = deps.read(at('node_modules', '.pnpm', 'lock.yaml'));
@@ -212,13 +226,14 @@ export function collectProbes(deps: DoctorDeps): Probes {
       cached.some((entry) => entry.startsWith(prefix)),
     ),
     hooksPath: trimmedFirstLine(deps.run('git', ['config', 'core.hooksPath'])),
+    hooksDirReady: hooksDirReady(deps),
     envLocalPresent: deps.exists(at('.env.local')),
   };
 }
 
-function realDeps(): DoctorDeps {
+export function realDeps(root: string = process.cwd()): DoctorDeps {
   return {
-    root: process.cwd(),
+    root,
     nodeVersion: process.versions.node,
     platform: process.platform,
     home: homedir(),
@@ -239,7 +254,7 @@ function realDeps(): DoctorDeps {
       }
     },
     run: (command, args) => {
-      const result = spawnSync(command, args, { encoding: 'utf8' });
+      const result = spawnSync(command, args, { encoding: 'utf8', cwd: root });
       return result.status === SUCCESS ? result.stdout : null;
     },
   };
