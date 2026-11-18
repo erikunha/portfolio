@@ -35,7 +35,7 @@ describe('ci.yml semgrep job invariants', () => {
   });
 
   it('pins the Semgrep version exactly', () => {
-    expect(job).toMatch(/pip install[^\n]*semgrep==1\.185\.0/);
+    expect(job).toMatch(/pip install[^\n]*semgrep==1\.186\.0/);
   });
 
   it('installs semgrep with no setuptools constraint (1.169.0 dropped the pkg_resources import that needed it; the constraint only forced a pointless setuptools downgrade)', () => {
