@@ -97,13 +97,11 @@ const handleLog = defineHandler({
       capturedAt: new Date().toISOString(),
     };
 
+    let redis: ReturnType<typeof getRedis>;
+    let stored: unknown;
     try {
-      const redis = getRedis();
-      const stored = await redis.set(key, JSON.stringify(record), { ex: ERR_KV_TTL_S, nx: true });
-      if (stored === null) {
-        await redis.incr(countKey);
-        await redis.expire(countKey, ERR_KV_TTL_S);
-      }
+      redis = getRedis();
+      stored = await redis.set(key, JSON.stringify(record), { ex: ERR_KV_TTL_S, nx: true });
     } catch (kvErr) {
       log.error('error-log KV write failed', { requestId, errId, err: kvErr });
       return err({
@@ -112,6 +110,17 @@ const handleLog = defineHandler({
         code: 'storage_unavailable',
         message: 'storage unavailable',
       });
+    }
+
+    if (stored === null) {
+      try {
+        await redis.multi().incr(countKey).expire(countKey, ERR_KV_TTL_S).exec();
+      } catch (countErr) {
+        log.warn('error-log repeat counter failed, record already stored', {
+          requestId,
+          err: countErr,
+        });
+      }
     }
 
     return ok({ requestId });

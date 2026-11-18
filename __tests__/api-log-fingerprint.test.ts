@@ -7,6 +7,8 @@ const WEEK_SECONDS = 604_800;
 const KEY_PARTS = 4;
 const incr = vi.fn();
 const expire = vi.fn();
+const exec = vi.fn();
+const multi = vi.fn();
 const set = vi.fn();
 
 function post(body: Record<string, unknown>): Promise<Response> {
@@ -26,9 +28,12 @@ describe('/api/log fingerprint dedupe', () => {
     vi.resetModules();
     vi.clearAllMocks();
     set.mockResolvedValue('OK');
-    incr.mockResolvedValue(1);
-    expire.mockResolvedValue(1);
-    vi.doMock('@/lib/redis', () => ({ getRedis: () => ({ set, incr, expire }) }));
+    const tx = { incr, expire, exec };
+    incr.mockReturnValue(tx);
+    expire.mockReturnValue(tx);
+    exec.mockResolvedValue([1, 1]);
+    multi.mockReturnValue(tx);
+    vi.doMock('@/lib/redis', () => ({ getRedis: () => ({ set, multi }) }));
     vi.doMock('@/lib/server/client-ip', () => ({ getClientIp: () => '127.0.0.1' }));
     vi.doMock('@/lib/rate-limit', () => ({
       getErrorLogLimit: () => ({ limit: async () => ({ success: true }) }),
@@ -62,6 +67,7 @@ describe('/api/log fingerprint dedupe', () => {
     const [recordKey] = set.mock.calls[0] ?? [];
     expect(String(countKey)).toBe(String(recordKey).replace(/^err:/, 'errn:'));
     expect(expire).toHaveBeenCalledWith(countKey, WEEK_SECONDS);
+    expect(exec).toHaveBeenCalledOnce();
   });
 
   it('files two different messages under two keys', async () => {
@@ -72,10 +78,10 @@ describe('/api/log fingerprint dedupe', () => {
     expect(first).not.toBe(second);
   });
 
-  it('answers 503 when the counter write fails', async () => {
+  it('answers 200 when the counter write fails after the record was stored', async () => {
     set.mockResolvedValueOnce(null);
-    incr.mockRejectedValueOnce(new Error('kv down'));
+    exec.mockRejectedValueOnce(new Error('kv down'));
     const res = await post({ message: 'boom' });
-    expect(res.status).toBe(503);
+    expect(res.status).toBe(200);
   });
 });
