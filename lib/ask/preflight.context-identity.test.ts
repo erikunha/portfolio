@@ -4,7 +4,6 @@ const QUESTION = 'What does Erik build?';
 const VISITOR_HEADER = 'x-test-visitor';
 const HASH_FAILS_FOR = 'hash-fails';
 const HASH_FAILURE = 'DEPLOY_SALT auto-resolution failed';
-const RESERVED_TOKENS = 1512;
 
 const redisSet = vi.hoisted(() => vi.fn());
 const redisDel = vi.hoisted(() => vi.fn());
@@ -21,19 +20,9 @@ vi.mock('@/lib/server/client-ip', () => ({
 vi.mock('@/lib/rate-limit', () => ({
   getAskLimit: vi.fn(() => ({ limit: vi.fn(async () => ({ success: true })) })),
 }));
-vi.mock('@/lib/ask/budget', async () => {
-  const actual = await vi.importActual<typeof import('@/lib/ask/budget')>('@/lib/ask/budget');
-  return {
-    ...actual,
-    reserveBudget: vi.fn(async () => ({
-      allowed: true,
-      reserved: RESERVED_TOKENS,
-      budgetKey: 'ask:tokens:test',
-      dailyKey: 'ask:tokens:day:test',
-    })),
-    settleBudget: vi.fn(async () => undefined),
-  };
-});
+vi.mock('@/lib/ask/budget', async () =>
+  (await import('@/__tests__/helpers/ask-route')).budgetModule(),
+);
 vi.mock('@/lib/ask/refusal-count', () => ({ countAskRefusal: vi.fn(async () => undefined) }));
 vi.mock('@/lib/ip-hash', () => ({ hashIp }));
 vi.mock('@/lib/server/after-response', () => ({
