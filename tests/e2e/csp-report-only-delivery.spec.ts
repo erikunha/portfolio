@@ -10,10 +10,12 @@ import { type Browser, chromium, expect, test } from '@playwright/test';
 
 const SINK_PATH = '/api/csp-report';
 const REPORTING_API_CONTENT_TYPE = 'application/reports+json';
-const PROBE_MARKUP = '<i></i>';
+const CONNECT_SRC_DIRECTIVE = 'connect-src';
+const TRUSTED_TYPES_DIRECTIVE = 'require-trusted-types-for';
+const ENFORCED_ONLY_HOST_URL = 'https://vitals.vercel-insights.com/';
+const ROUTE_ALL_PATTERN = '**/*';
 const REPORT_ONLY_DISPOSITION = 'report';
 const CSP_VIOLATION_TYPE = 'csp-violation';
-const TRUSTED_TYPES_DIRECTIVE = 'require-trusted-types-for';
 const BACKGROUND_SYNC_PERMISSION = 'background-sync';
 const CERT_DAYS = '1';
 const CERT_SUBJECT = '/CN=localhost';
@@ -129,16 +131,17 @@ test.describe('csp report-only probe', () => {
       });
       const context = await browser.newContext();
       await context.grantPermissions([BACKGROUND_SYNC_PERMISSION], { origin });
+      await context.route(ENFORCED_ONLY_HOST_URL + ROUTE_ALL_PATTERN, (route) => route.abort());
       const page = await context.newPage();
 
       const response = await page.goto(`${origin}/`);
       const headers = response?.headers() ?? {};
-      expect(headers['content-security-policy-report-only']).toContain(TRUSTED_TYPES_DIRECTIVE);
-      expect(headers['content-security-policy']).not.toContain(TRUSTED_TYPES_DIRECTIVE);
+      expect(headers['content-security-policy-report-only']).toContain(CONNECT_SRC_DIRECTIVE);
+      expect(headers['content-security-policy-report-only']).not.toContain(TRUSTED_TYPES_DIRECTIVE);
 
-      await page.evaluate((markup) => {
-        document.body.innerHTML += markup;
-      }, PROBE_MARKUP);
+      await page.evaluate(async (target) => {
+        await fetch(target, { mode: 'no-cors' }).catch(() => undefined);
+      }, ENFORCED_ONLY_HOST_URL);
 
       await expect
         .poll(
@@ -149,7 +152,7 @@ test.describe('csp report-only probe', () => {
                 (entry) =>
                   entry.type === CSP_VIOLATION_TYPE &&
                   entry.body?.disposition === REPORT_ONLY_DISPOSITION &&
-                  entry.body.effectiveDirective === TRUSTED_TYPES_DIRECTIVE,
+                  entry.body.effectiveDirective === CONNECT_SRC_DIRECTIVE,
               ).length,
           { timeout: POLL_TIMEOUT_MS },
         )

@@ -23,12 +23,8 @@ const VERCEL_CONNECT_SOURCES: readonly string[] = [
   'https://vitals.vercel-insights.com',
   'https://va.vercel-scripts.com',
 ];
-const TRUSTED_TYPES_DIRECTIVE = "require-trusted-types-for 'script'";
 
-function contentSecurityPolicy(options: {
-  connectSources: readonly string[];
-  extraDirectives: readonly string[];
-}): string {
+function contentSecurityPolicy(options: { connectSources: readonly string[] }): string {
   const directives: readonly string[] = [
     "default-src 'self'",
     process.env.NODE_ENV === 'development'
@@ -44,7 +40,6 @@ function contentSecurityPolicy(options: {
     "base-uri 'self'",
     "form-action 'self'",
     "worker-src 'self'",
-    ...options.extraDirectives,
     `report-to ${CSP_REPORT_GROUP}`,
     `report-uri ${CSP_REPORT_PATH}`,
   ];
@@ -68,17 +63,11 @@ const nextConfig: NextConfig = {
       headers: [
         {
           key: 'Content-Security-Policy',
-          value: contentSecurityPolicy({
-            connectSources: VERCEL_CONNECT_SOURCES,
-            extraDirectives: [],
-          }),
+          value: contentSecurityPolicy({ connectSources: VERCEL_CONNECT_SOURCES }),
         },
         {
           key: 'Content-Security-Policy-Report-Only',
-          value: contentSecurityPolicy({
-            connectSources: [],
-            extraDirectives: [TRUSTED_TYPES_DIRECTIVE],
-          }),
+          value: contentSecurityPolicy({ connectSources: [] }),
         },
         { key: 'Reporting-Endpoints', value: `${CSP_REPORT_GROUP}="${CSP_REPORT_PATH}"` },
         { key: 'Cross-Origin-Opener-Policy', value: 'same-origin' },

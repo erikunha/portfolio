@@ -5,7 +5,6 @@ const PROBE_HEADER = 'content-security-policy-report-only';
 const REPORTING_HEADER = 'reporting-endpoints';
 const EVERY_PATH_SOURCE = '/(.*)';
 const CONNECT_SRC = 'connect-src';
-const TRUSTED_TYPES = "require-trusted-types-for 'script'";
 const VERCEL_HOSTS = ['vitals.vercel-insights.com', 'va.vercel-scripts.com'];
 const REPORT_DIRECTIVES = ['report-to csp-endpoint', 'report-uri /api/csp-report'];
 
@@ -35,9 +34,7 @@ function directives(policy: string): string[] {
 }
 
 function withoutProbeDifferences(policy: string): string[] {
-  return directives(policy).filter(
-    (part) => !part.startsWith(CONNECT_SRC) && part !== TRUSTED_TYPES,
-  );
+  return directives(policy).filter((part) => !part.startsWith(CONNECT_SRC));
 }
 
 async function loadPair(): Promise<{ enforced: string; probe: string }> {
@@ -66,12 +63,6 @@ describe('Content-Security-Policy-Report-Only probe', () => {
     expect(carrier?.headers.map(({ key }) => key)).toContain('Content-Security-Policy-Report-Only');
   });
 
-  it('requires trusted types for script, and the enforced policy does not', async () => {
-    const { enforced, probe } = await loadPair();
-    expect(directives(probe)).toContain(TRUSTED_TYPES);
-    expect(enforced).not.toContain('trusted-types');
-  });
-
   it('allows only self in connect-src, without the Vercel hosts the enforced policy lists', async () => {
     const { enforced, probe } = await loadPair();
     const probeConnect = directives(probe).find((part) => part.startsWith(CONNECT_SRC));
@@ -93,7 +84,7 @@ describe('Content-Security-Policy-Report-Only probe', () => {
   });
 
   it.each(['production', 'development'])(
-    'differs from the enforced policy only in connect-src and trusted types (%s)',
+    'differs from the enforced policy only in connect-src (%s)',
     async (environment) => {
       vi.stubEnv('NODE_ENV', environment);
       const { enforced, probe } = await loadPair();
