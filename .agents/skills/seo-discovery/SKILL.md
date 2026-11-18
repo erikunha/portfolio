@@ -19,7 +19,7 @@ of surfaces. A change to identity, routes or metrics must leave all of them cons
 | Agent manifest    | `public/.well-known/agent.json`            | Capability manifest for agents: endpoints, profiles and the `/api/mcp` server       |
 | Security contact  | `public/.well-known/security.txt`          | RFC 9116 contact file; renew `Expires` one year ahead when `__tests__/security-txt.test.ts` goes red |
 | JSON-LD           | `content/seo.ts` (`personSchema`)          | Person structured data rendered by the root layout                                  |
-| Metadata and OG   | `components/RootShell.tsx`, `app/_lib/locale-metadata.ts`, `app/(en)/design-system/_lib/page-metadata.ts`, `public/og.png` | Root metadata, canonical URLs, the static Open Graph image (`pnpm generate:og` rebuilds it) |
+| Metadata and OG   | `components/RootShell.tsx`, `app/_lib/build-metadata.ts`, `app/_lib/links-metadata.ts`, `app/_lib/locale-metadata.ts`, `app/(en)/design-system/_lib/page-metadata.ts`, `public/og.png` | Root metadata, canonical URLs, the static Open Graph image (`pnpm generate:og` rebuilds it) |
 
 The English home page is the canonical `/`; its pt-BR twin is `/pt`.
 

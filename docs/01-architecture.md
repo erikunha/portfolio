@@ -129,7 +129,7 @@ Contact submission persists a 90-day KV audit record before calling the shared d
 - **Bundler:** Turbopack (Next 16). MDX compiled via `@next/mdx`, with local remark wrapper paths and the `rehype-pretty-code` package configured as string-tuples.
 - **Type check:** `pnpm typecheck` runs `tsgo` (the native TypeScript compiler preview); `typescript` itself stays on 6.x for the mutation runner.
 - **Install-time scripts:** `postinstall` runs `scripts/strip-next-polyfills.mjs`, which replaces Next's legacy polyfill bundles in `node_modules` with a one-line comment. The `browserslist` floor (Chrome 93, Safari 15.4) never needs them, and left in place they count against the client-chunk gate and Lighthouse Best Practices. The script exits non-zero when Next moves those files. `prepare` installs the Husky hooks and skips CI and Vercel.
-- **Rendering:** `cacheComponents: true` enables PPR / dynamicIO. `typedRoutes: true` gives compile-time route safety. `trailingSlash: false` is explicit.
+- **Rendering:** `cacheComponents: true` enables PPR / dynamicIO. `trailingSlash: false` is explicit.
 - **Scripts (`tsx`-run):** content validation, static gates, PR checks, the AI eval harness, and the design-system changelog generator. See doc 07.
 - **CSS:** Tailwind v4 via the single `@tailwindcss/postcss` plugin; no Style Dictionary, no CSS modules. Tokens are `@theme` custom properties (doc 04).
 
