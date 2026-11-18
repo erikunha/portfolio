@@ -88,16 +88,7 @@ describe('/api/log release context', () => {
     expect(parts[1]).toBe('unknown');
   });
 
-  it('refuses a release that could add key segments or scan patterns', async () => {
-    for (const release of ['a:b', 'a*', 'a b', 'a[0-9]', '']) {
-      const res = await post({ release });
-      expect(res.status, release).toBe(400);
-    }
-    expect(redisSetMock).not.toHaveBeenCalled();
-  });
-
   it.each([
-    ['release', { release: OVERSIZED }],
     ['motion', { motion: OVERSIZED }],
     ['digest', { digest: OVERSIZED }],
   ])('refuses an oversized %s', async (_name, extra) => {

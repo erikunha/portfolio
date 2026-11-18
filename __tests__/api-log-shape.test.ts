@@ -56,7 +56,7 @@ describe('/api/log endpoint', () => {
     expect(redisSetMock).toHaveBeenCalledOnce();
     const [key, , opts] = redisSetMock.mock.calls[0] ?? [];
     expect(String(key)).toMatch(/^err:/);
-    expect(opts).toEqual({ ex: 604_800 });
+    expect(opts).toEqual({ ex: 604_800, nx: true });
   });
 
   it('stores no ipHash in the err: record (personal-data-free design)', async () => {

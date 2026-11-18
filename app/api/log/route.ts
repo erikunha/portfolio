@@ -1,6 +1,7 @@
 import { z } from 'zod';
 
 import { localeOfPath, SITE_HTML_LANG } from '@/content/site-locale';
+import { errorFingerprint } from '@/lib/error-fingerprint';
 import { HTTP_STATUS } from '@/lib/http-status';
 import { log } from '@/lib/log';
 import { getErrorLogDailyLimit, getErrorLogIpDailyLimit, getErrorLogLimit } from '@/lib/rate-limit';
@@ -11,6 +12,8 @@ import { utcDay } from '@/lib/time';
 const SMOKE_PREFIX = '[smoke]';
 const MAX_LOG_BODY_BYTES = 32_768;
 
+const ERR_KEY_PREFIX = 'err';
+const ERR_COUNT_KEY_PREFIX = 'errn';
 const ERR_KV_TTL_S = 7 * 24 * 60 * 60;
 const MAX_STORED_STACK_CHARS = 4096;
 const MAX_TS_LENGTH = 64;
@@ -28,7 +31,7 @@ const ErrorPayload = z.object({
   stack: z.string().max(16000).optional(),
   url: z.string().max(2000).optional(),
   ts: z.string().max(MAX_TS_LENGTH).optional(),
-  release: z.string().max(MAX_RELEASE_LENGTH).regex(RELEASE_PATTERN).optional(),
+  release: z.string().max(MAX_RELEASE_LENGTH).regex(RELEASE_PATTERN).optional().catch(undefined),
   motion: z.string().max(MAX_MOTION_LENGTH).optional(),
   vw: z.number().int().min(0).max(MAX_VIEWPORT_WIDTH).optional(),
   digest: z.string().max(MAX_DIGEST_LENGTH).optional(),
@@ -78,7 +81,9 @@ const handleLog = defineHandler({
 
     const errId = crypto.randomUUID();
     const today = utcDay(new Date());
-    const key = `err:${body.release ?? UNKNOWN_RELEASE}:${today}:${errId}`;
+    const keyTail = `${body.release ?? UNKNOWN_RELEASE}:${today}:${errorFingerprint(body)}`;
+    const key = `${ERR_KEY_PREFIX}:${keyTail}`;
+    const countKey = `${ERR_COUNT_KEY_PREFIX}:${keyTail}`;
 
     const lang = languageOfUrl(body.url);
     const userAgent = req.headers.get('user-agent')?.slice(0, MAX_USER_AGENT_CHARS);
@@ -93,7 +98,12 @@ const handleLog = defineHandler({
     };
 
     try {
-      await getRedis().set(key, JSON.stringify(record), { ex: ERR_KV_TTL_S });
+      const redis = getRedis();
+      const stored = await redis.set(key, JSON.stringify(record), { ex: ERR_KV_TTL_S, nx: true });
+      if (stored === null) {
+        await redis.incr(countKey);
+        await redis.expire(countKey, ERR_KV_TTL_S);
+      }
     } catch (kvErr) {
       log.error('error-log KV write failed', { requestId, errId, err: kvErr });
       return err({

@@ -329,7 +329,7 @@ Large features use an **integration branch + sub-PRs** (`feat/<feature>` ← `fe
 | `/api/ask` stream cuts off | 15s watchdog, Layer-1 egress guard or provider failure (`STREAM_ERR_SENTINEL`)           |
 | Push blocked               | inspect the main-target guard, branch name or `pnpm verify` failure in `.husky/pre-push` |
 | CLS / visual regression    | regenerate Argos baselines via the `visual-baseline-regen` skill                         |
-| Client error in prod       | it was POSTed to `/api/log` (`err:{release}:{date}:{id}`, 7-day TTL) by `error-bridge.client.ts`  |
+| Client error in prod       | it was POSTed to `/api/log` (`err:{release}:{date}:{fingerprint}`, 7-day TTL; repeats of one fingerprint only bump `errn:{release}:{date}:{fingerprint}`) by `error-bridge.client.ts`  |
 | Contact message stuck      | `contact:outbox` holds ids waiting for the `/api/contact-retry` cron (04:00 and 16:00 UTC); a 202 `queued` response put it there |
 | A gated job skipped on a PR | `detect-changes` found no path in its list; read `scripts/ci/detect-changes-paths.ts` |
 | `ask:eval` red in CI       | the gate failure code printed by the run (`lib/eval/ask-grading.ts`); the artifact `ask-eval-result` holds every graded item |
