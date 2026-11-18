@@ -383,7 +383,8 @@ is a privacy leak on a fetchable surface.
 `__tests__/proxy-csp.test.ts` (asserts the static `headers()` in
 `next.config.ts` carry the policy, shaped correctly) and
 `tests/e2e/csp-report-delivery.spec.ts` (a forced violation reaches
-`/api/csp-report` through the Reporting API); the `/api/ask` kill switch is held by
+`/api/csp-report` through the Reporting API); the report-only probe is held by
+`__tests__/csp-report-only.test.ts` and `tests/e2e/csp-report-only-delivery.spec.ts`; the `/api/ask` kill switch is held by
 `__tests__/ask/ask-killswitch-behavioral.test.ts` (calls the route with each
 off-keyword and asserts the dependencies that should _not_ run were not
 called); the SYSTEM prompt is held by `__tests__/system-prompt.test.ts` (asserts

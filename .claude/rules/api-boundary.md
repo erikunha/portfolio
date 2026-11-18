@@ -57,7 +57,9 @@ merge-blocking check on this surface is the behavioral test suite (the required
 - Every response header, the CSP and `Reporting-Endpoints` included, comes from the
   static `headers()` in **`next.config.ts`**; there is no `proxy.ts`, so a header never
   depends on a per-request function. `__tests__/proxy-csp.test.ts` holds the CSP posture,
-  `tests/e2e/csp-report-delivery.spec.ts` the delivery of a violation report; the deploy
+  `tests/e2e/csp-report-delivery.spec.ts` the delivery of a violation report;
+  `Content-Security-Policy-Report-Only` is a probe beside the enforced CSP
+  (`__tests__/csp-report-only.test.ts`), so a change to one policy keeps the other in step; the deploy
   smoke test checks that the headers arrive on the live host.
 
 ## The `/api/ask` AI feature

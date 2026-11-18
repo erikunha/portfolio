@@ -19,7 +19,16 @@ const BUILD_DATE = new Date().toISOString().slice(0, ISO_DATE_LENGTH);
 const CSP_REPORT_PATH = '/api/csp-report';
 const CSP_REPORT_GROUP = 'csp-endpoint';
 
-function contentSecurityPolicy(): string {
+const VERCEL_CONNECT_SOURCES: readonly string[] = [
+  'https://vitals.vercel-insights.com',
+  'https://va.vercel-scripts.com',
+];
+const TRUSTED_TYPES_DIRECTIVE = "require-trusted-types-for 'script'";
+
+function contentSecurityPolicy(options: {
+  connectSources: readonly string[];
+  extraDirectives: readonly string[];
+}): string {
   const directives: readonly string[] = [
     "default-src 'self'",
     process.env.NODE_ENV === 'development'
@@ -28,13 +37,14 @@ function contentSecurityPolicy(): string {
     "style-src 'self' 'unsafe-inline'",
     "img-src 'self' data: blob:",
     "font-src 'self' data:",
-    "connect-src 'self' https://vitals.vercel-insights.com https://va.vercel-scripts.com",
+    ['connect-src', "'self'", ...options.connectSources].join(' '),
     "frame-ancestors 'none'",
     "frame-src 'none'",
     "object-src 'none'",
     "base-uri 'self'",
     "form-action 'self'",
     "worker-src 'self'",
+    ...options.extraDirectives,
     `report-to ${CSP_REPORT_GROUP}`,
     `report-uri ${CSP_REPORT_PATH}`,
   ];
@@ -57,7 +67,20 @@ const nextConfig: NextConfig = {
     {
       source: '/(.*)',
       headers: [
-        { key: 'Content-Security-Policy', value: contentSecurityPolicy() },
+        {
+          key: 'Content-Security-Policy',
+          value: contentSecurityPolicy({
+            connectSources: VERCEL_CONNECT_SOURCES,
+            extraDirectives: [],
+          }),
+        },
+        {
+          key: 'Content-Security-Policy-Report-Only',
+          value: contentSecurityPolicy({
+            connectSources: [],
+            extraDirectives: [TRUSTED_TYPES_DIRECTIVE],
+          }),
+        },
         { key: 'Reporting-Endpoints', value: `${CSP_REPORT_GROUP}="${CSP_REPORT_PATH}"` },
         { key: 'Cross-Origin-Opener-Policy', value: 'same-origin' },
         { key: 'X-Frame-Options', value: 'DENY' },

@@ -821,6 +821,7 @@ Run axe-core in CI; fail builds on any new violation. Manual screen-reader pass 
 
 Modest but professional:
 - CSP `connect-src 'self' https://vitals.vercel-insights.com https://va.vercel-scripts.com`: the browser only calls same-origin `/api/ask`; the model call is server→AI Gateway, so no provider host is in the CSP (`next.config.ts`)
+- `Content-Security-Policy-Report-Only` probes a `connect-src 'self'` policy and `require-trusted-types-for 'script'` without enforcing either; its reports reach the same sink
 - Static headers from `next.config.ts`: HSTS (`max-age=63072000; includeSubDomains`, no preload token), `X-Content-Type-Options`, `X-Frame-Options: DENY`, `Cross-Origin-Opener-Policy: same-origin`, `Referrer-Policy: strict-origin-when-cross-origin` and a `Permissions-Policy` that denies camera, microphone, geolocation, payment, usb, serial and browsing-topics
 - `/api/ask` and the `defineHandler` routes (`/api/contact`, `/api/log`, `/api/log/forget`) refuse requests whose `Sec-Fetch-Site` header is neither `same-origin` nor `none` with 403, before any Redis call (`lib/server/fetch-metadata.ts`)
 - Cron routes authorise through `requireCron(req)` in `lib/server/cron-auth.ts`, which compares the `CRON_SECRET` bearer in constant time and refuse a secret shorter than 16 characters
@@ -831,6 +832,8 @@ Modest but professional:
 - The rate-limit key depends on the salt, so a salt change (or the first deploy that keyed limiters by the hash) starts every limiter window afresh.
 
 `next.config.ts` sets every security header as a static header: the CSP and `Reporting-Endpoints` (`csp-endpoint="/api/csp-report"`) beside COOP, X-Frame-Options, HSTS and the rest. There is no per-request function in front of the app.
+
+`Content-Security-Policy-Report-Only` is served beside the enforced policy as a probe. It carries the enforced directives except `connect-src`, which allows only `'self'` (no Vercel vitals or script host), and it adds `require-trusted-types-for 'script'`. It reports to the same `csp-endpoint` group and `/api/csp-report` sink, where a probe report logs with `disposition: report`. It blocks nothing; the report-only window decides whether either change is enforced.
 
 ---
 
