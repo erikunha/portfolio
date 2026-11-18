@@ -168,9 +168,9 @@ split beside it without dressing the report up as a gate.
 **How it is held.** Mechanical gates: Lighthouse CI runs in `performance`
 for both desktop (`pnpm lhci`) and mobile (`pnpm lhci:mobile`) and fails the
 build on any category dropping below threshold. `scripts/gates/check-bundle-size.ts`
-(`pnpm bundle-check`) gates the gzipped client-chunk total in CI; its header
-comment honestly describes what the number is: the framework-inclusive total,
-not an app-only figure. `scripts/gates/check-route-js.ts` (`pnpm route-js-check`)
+(`pnpm bundle-check`) gates the gzipped client-chunk total in CI: the exact
+byte sum of every chunk, duplicates included, framework-inclusive, not an
+app-only figure. `scripts/gates/check-route-js.ts` (`pnpm route-js-check`)
 gates ONE per-route budget in CI: total first-load JS < 164.2 KB. It reports the
 app-owned split (total minus the measured 131.4 KB framework floor, so 32.8 KB
 of headroom) on every run without asserting it. The

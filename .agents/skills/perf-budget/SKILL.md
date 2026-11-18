@@ -15,8 +15,14 @@ fails when a Lighthouse assertion is lowered, warned or turned off. Fix the meas
 - `pnpm route-js-check` (after `pnpm build`) reads `.next/diagnostics/route-bundle-stats.json`,
   gzips each route's first-load chunks and compares them with the per-route cap. It also prints
   the app-owned part: total minus the measured framework floor.
-- `pnpm bundle-check` sums chunks globally. It cannot see one route growing while another
-  shrinks, so a green `bundle-check` says nothing about a per-route regression.
+- `pnpm bundle-check` sums the exact gzip bytes of every client chunk against 220KB. A module
+  that two chunks both carry counts twice, and an empty chunk directory fails with exit 2. It cannot
+  see one route growing while another shrinks, so a green `bundle-check` says nothing about a
+  per-route regression.
+- When the total sits at the cap, list the modules two chunks share before cutting features: a
+  small helper that lands in one route family's chunk but not the other's splits a shared group
+  into two chunks. Give the group modules the same imports (the shell joins class names with
+  `lib/join-class-names`, not `cn`) so one copy remains.
 - If `route-js-check` reports a route lighter than the framework floor, the floor is stale. Build a
   bare hello-world app on the current Next and React, take its shared first-load JS, and move the
   floor and the cap together. Do not lower the floor to whatever passes.

@@ -23,7 +23,7 @@ The site is the artifact: a Next.js 16 application on Vercel (Fluid Compute), an
 
 ---
 
-The codebase demonstrates the engineering it claims: "performance-first" is a budget and not an adjective, Lighthouse CI gates the category scores and the timings on the 24 routes the Lighthouse config lists, the axe scan fails CI, and the client-chunk and per-route first-load JS budgets are gates in the `build` job (`check-bundle-size.mjs` and `check-route-js.mjs`). `ARCHITECTURE.md` describes the system; `DECISIONS.md` records decisions and reversibility notes.
+The codebase demonstrates the engineering it claims: "performance-first" is a budget and not an adjective, Lighthouse CI gates the category scores and the timings on the 24 routes the Lighthouse config lists, the axe scan fails CI, and the client-chunk and per-route first-load JS budgets are gates in the `build` job (`check-bundle-size.ts` and `check-route-js.ts`). `ARCHITECTURE.md` describes the system; `DECISIONS.md` records decisions and reversibility notes.
 
 The AI centerpiece is a streaming `ask` endpoint (Vercel AI Gateway + Anthropic Haiku 5.5, prompt-cached, rate-limited, budget-capped) with a correctness eval suite and a visible metrics panel, making AI quality observable to hiring reviewers. Agent-readiness surfaces include `/.well-known/agent.json` and a minimal MCP server.
 

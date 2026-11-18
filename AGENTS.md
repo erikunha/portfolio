@@ -30,7 +30,7 @@ proposing infrastructure changes, and if a request conflicts with a budget or ga
 | `pnpm validate-content`                  | Zod schema validation of `content/*.ts`                                                       |
 | `pnpm ci:local` (alias of `pnpm verify`) | The chain CI's `quality-fast` job runs: Biome, types, content, client naming, shell DOM writes, CSS ownership, dependency pinning and vetting, harness size, component docs, section order, doc drift, no dashes, change-filter paths, test integrity, contrast, CSS tokens, then tests with coverage thresholds |
 | `pnpm ci:full [--base <ref>] [--from <stage>] [--keep-going] [--list]` | Runs every check CI runs, natively and one stage at a time, before the push: `ci:local`, commitlint over base..HEAD, the gitleaks fixture self-test and a gitleaks scan of the full history, audit, tool pins, mutation canary, the Semgrep self-test and false-positive baseline (only when the installed Semgrep is the pinned version), build, bundle and route-JS gates, a11y, every Playwright project one at a time, the visual specs on chromium, Lighthouse desktop and mobile with no upload. Stops at the first failure and ends with a table of passed, failed and not-run (the paid evals and the GitHub-only jobs are listed not-run with their reason). Exit 0 every stage passed; 1 a stage failed; 2 bad arguments; 3 a stage did not run (a missing binary, a Semgrep version other than the pin) |
-| `pnpm bundle-check`                      | Global client-chunk sum gate                                                                  |
+| `pnpm bundle-check`                      | Exact gzip byte sum of every client chunk against the 220KB cap (duplicates count)            |
 | `pnpm route-js-check`                    | Per-route first-load JS gate (needs a build)                                                  |
 | `pnpm gates:runtime [--skip-build]`      | Build, server on `PORT` or a free port, advisory Lighthouse, blocking axe and Chromium e2e    |
 | `pnpm lhci` / `pnpm lhci:mobile`         | Lighthouse CI locally, desktop / mobile                                                       |
@@ -67,7 +67,7 @@ proposing infrastructure changes, and if a request conflicts with a budget or ga
 
 Lighthouse (`lighthouserc.json`, `lighthouserc.mobile.json`), `pnpm route-js-check` and axe enforce the budgets. `__tests__/lighthouse-budgets.test.ts` fails when a Lighthouse assertion is lowered, warned or turned off. The Lighthouse INP audit is off; the only INP guard is the shell input keystroke check in `tests/e2e/cross-cutting.spec.ts` (Chromium). Never disable a gate to merge.
 
-`route-js-check` caps first-load JS per route at 164.2KB gzipped and reports the app-owned part (total minus the measured 131.4KB framework floor, so 32.8KB of headroom). `bundle-check` sums chunks globally and cannot see a per-route regression. A framework bump moves the floor: re-measure it and change floor and total together (`DECISIONS.md` 2026-11-08).
+`route-js-check` caps first-load JS per route at 164.2KB gzipped and reports the app-owned part (total minus the measured 131.4KB framework floor, so 32.8KB of headroom). `bundle-check` sums the exact gzip bytes of every client chunk (copies included, no per-chunk rounding) against 220KB, exits 2 on an empty chunk directory, and cannot see a per-route regression. A framework bump moves the floor: re-measure it and change floor and total together (`DECISIONS.md` 2026-11-08).
 
 ## Rendering model
 
