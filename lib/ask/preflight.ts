@@ -38,7 +38,7 @@ const BUDGET_REFUSALS: Record<
 
 export type AskContext = {
   requestId: string;
-  ipHash: string;
+  ipHash: string | null;
   startedAt: number;
   question: string;
   fullQuestion: string;
@@ -154,11 +154,15 @@ export async function preflightAsk(req: Request): Promise<PreflightResult> {
     });
     return null;
   });
-  const ipHash = rateLimitKey ?? UNHASHED_IP_LABEL;
-  log.info('ask request received', { requestId, ipHash, promptVersion: PROMPT_VERSION });
+  const loggedIdentity = rateLimitKey ?? UNHASHED_IP_LABEL;
+  log.info('ask request received', {
+    requestId,
+    ipHash: loggedIdentity,
+    promptVersion: PROMPT_VERSION,
+  });
 
   const recordRefusal = (status: AskRefusalStatus): void => {
-    log.info('ask refused', { requestId, ipHash, status });
+    log.info('ask refused', { requestId, ipHash: loggedIdentity, status });
     afterResponse(() => countAskRefusal(status));
   };
 
@@ -189,7 +193,7 @@ export async function preflightAsk(req: Request): Promise<PreflightResult> {
 
   const parsed = parseQuestion(bounded.bytes, pageLocale);
   if (!parsed.ok) {
-    log.info(`ask rejected: ${parsed.reason}`, { requestId, ipHash });
+    log.info(`ask rejected: ${parsed.reason}`, { requestId, ipHash: loggedIdentity });
     const message =
       parsed.reason === 'question required'
         ? askErrors[pageLocale].questionRequired
@@ -199,7 +203,7 @@ export async function preflightAsk(req: Request): Promise<PreflightResult> {
   const { question, fullQuestion, answerLocale, conversationId } = parsed;
 
   if (isInjectionAttempt(question)) {
-    log.info('ask rejected: prompt-injection pattern', { requestId, ipHash });
+    log.info('ask rejected: prompt-injection pattern', { requestId, ipHash: loggedIdentity });
     return reject(askError(requestId, askErrors[answerLocale].injection, HTTP_STATUS.badRequest));
   }
 
@@ -226,7 +230,7 @@ export async function preflightAsk(req: Request): Promise<PreflightResult> {
     ok: true,
     context: {
       requestId,
-      ipHash,
+      ipHash: rateLimitKey,
       startedAt,
       question,
       fullQuestion,

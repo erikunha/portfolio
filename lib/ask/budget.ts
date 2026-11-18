@@ -167,7 +167,7 @@ export type AskReservation = {
   reserved: number;
   budgetKey: string;
   dailyKey: string;
-  ipHash: string;
+  ipHash: string | null;
   question: string;
 };
 
