@@ -40,7 +40,7 @@ export function IdentityCard({ locale }: { locale: SiteLocale }) {
               width={AVATAR_PX}
               height={AVATAR_PX}
               sizes={AVATAR_SIZES}
-              priority
+              preload
               className="h-full w-full object-cover"
             />
           </span>

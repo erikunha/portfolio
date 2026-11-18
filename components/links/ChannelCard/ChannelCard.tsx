@@ -62,7 +62,7 @@ export function ChannelCard({ locale, feed }: { locale: SiteLocale; feed: Channe
                   src={latest.thumbnailUrl}
                   alt=""
                   fill
-                  priority
+                  preload
                   fetchPriority="high"
                   sizes={THUMB_SIZES}
                   className="object-cover"
