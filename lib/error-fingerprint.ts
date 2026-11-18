@@ -12,9 +12,15 @@ const MAX_MESSAGE_CHARS = 200;
 const FIELD_SEPARATOR = '\n';
 const ID_PLACEHOLDER = '<id>';
 const NUMBER_PLACEHOLDER = '<n>';
+const HASH_PLACEHOLDER = '<hash>';
+const MIN_HASH_CHARS = 8;
 const UUID_PATTERN = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/g;
 const HEX_RUN_PATTERN = /\b[0-9a-f]{8,}\b/g;
 const DIGIT_RUN_PATTERN = /\d+/g;
+const FILE_HASH_PATTERN = new RegExp(
+  `(^|[-._])(?:[0-9a-f]{${MIN_HASH_CHARS},}|(?=[a-z0-9]*\\d)[a-z0-9]{${MIN_HASH_CHARS},})(?=[-._]|$)`,
+  'gi',
+);
 const WHITESPACE_PATTERN = /\s+/g;
 const FRAME_PATTERN = /^\s*at\s|@/;
 const URL_PATTERN = /https?:\/\/[^\s)]+/g;
@@ -32,7 +38,8 @@ function normalizeMessage(message: string): string {
 }
 
 function fileOfUrl(url: string): string {
-  return url.replace(LOCATION_SUFFIX_PATTERN, '').split('?')[0]?.split('/').pop() ?? '';
+  const file = url.replace(LOCATION_SUFFIX_PATTERN, '').split('?')[0]?.split('/').pop() ?? '';
+  return file.replace(FILE_HASH_PATTERN, `$1${HASH_PLACEHOLDER}`);
 }
 
 function normalizeFrame(frame: string): string {
