@@ -314,7 +314,7 @@ Large features use an **integration branch + sub-PRs** (`feat/<feature>` ← `fe
 ## Releases & deployment
 
 - **Platform:** Vercel (Fluid Compute, Node runtime) end-to-end. Push to `main` (via PR) deploys.
-- **Cron:** `vercel.json` runs `/api/psi-refresh` at `0 3 * * *` and `/api/contact-retry` at `0 4 * * *` and `0 16 * * *`.
+- **Cron:** `vercel.json` runs `/api/psi-refresh` at `0 3 * * *` `/api/contact-retry` at `0 4 * * *` and `0 16 * * *`, and `/api/error-digest` at `0 5 * * *`.
 - **Post-deploy:** `smoke.yml` verifies the production deployment (healthz, status freshness, headers, liveness) and emails on a healthz 503 or a stale status.
 - **Emergency rollback:** fast = `vercel promote <previous-url>` (30s, no code); slow = `git revert HEAD && git push --no-verify` (the `--no-verify` is the documented escape hatch for the main-push guard). Verify with `curl https://erikunha.dev/api/healthz | jq .sha`.
 - **Rollback rehearsal:** `rollback-rehearsal.yml` proves the slow path still works. See "Weekly rollback rehearsal" under CI/CD.

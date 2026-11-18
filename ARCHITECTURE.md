@@ -87,6 +87,7 @@ What we build is small, opinionated, Vercel-deployed, and budget-enforced.
 │       ├── /api/ask        (Fluid Compute, streaming)        │
 │       ├── /api/contact    (route handler, Node)             │
 │       ├── /api/contact-retry (cron, twice a day, Node)      │
+│       ├── /api/error-digest (cron, daily, Node)             │
 │       ├── /api/lighthouse (Node, reads KV)                  │
 │       ├── /api/erik.json  (profile, cached)                 │
 │       ├── /api/healthz    (liveness: function, Redis)       │
@@ -113,6 +114,8 @@ What we build is small, opinionated, Vercel-deployed, and budget-enforced.
 │   Daily cron: /api/psi-refresh at 03:00 UTC (vercel.json)   │
 │   refetches PSI -> KV; alerts via Resend on failure.        │
 │   Contact retry: /api/contact-retry 04:00 and 16:00 UTC.    │
+│   Error digest: /api/error-digest 05:00 UTC mails new or    │
+│   noisy client error fingerprints via Resend.               │
 │   Lazy-fill on 25h-stale read (lib/lighthouse-scores).      │
 │                                                             │
 └─────────────────────────────────────────────────────────────┘
@@ -247,6 +250,7 @@ app/(en)/design-system/_components/ds-nav.ts  # page tree: five top-level pages,
 app/api/ask/route.ts                 # Fluid Compute: LLM streaming via AI Gateway
 app/api/contact/route.ts             # Node: durable contact submission, 200 accepted or 202 queued
 app/api/contact-retry/route.ts       # cron: retry undelivered contact messages twice a day
+app/api/error-digest/route.ts        # cron: mail the new or noisy client error fingerprints of the previous UTC day
 app/api/lighthouse/route.ts          # Node: reads PSI cache from KV
 app/api/erik.json/route.ts           # static profile, cached
 app/api/healthz/route.ts             # liveness: function up, Redis reachable
@@ -764,6 +768,8 @@ Observability spans real-user telemetry, structured logs and client error captur
 - **Ask conversations.** The shell sends a random per-tab `conversationId` (a v4 UUID built from `crypto.getRandomValues`, kept in `sessionStorage`, replaced after a forget; a question waits while a forget is pending) with each `/api/ask` request. `preflightAsk` accepts a missing one and answers 400 for anything that is not a UUID. A logged answer stores the id on its `ask:log:*` record and, in the same `MULTI`, adds the record key to the set `ask:conv:{conversationId}` with the log's 90-day TTL. The conversation id is never logged or shown, and it links only the questions of one tab. Forget deletes the index 100 keys per `DEL` and writes a 10 minute `ask:forgotten:{id}` tombstone for the request id and the conversation id; a log write that finds one deletes its own row and index member, so a forget that lands before the write still wins.
 - **`app/api/log/forget/route.ts`** accepts POST `{requestId}` and idempotently DELETEs the matching record across every day-partition a live record can carry (the 90-day TTL plus the current day, 91 dates, from `askLogDatesInTtl`). It first reads those keys; when the record carries a conversation id it also deletes every `ask:log:*` key listed in `ask:conv:{id}` and the set itself, so any one request id erases its whole conversation. A record without a conversation id (written before conversations, or by the MCP `ask_erik` tool) deletes only itself. A failed read answers 503 and deletes nothing. The same call deletes the contact message stored under `contactMessageKey(requestId)` and removes the id from the contact outbox and its attempt counter (`removePendingContact`). Rate-limited (21/IP/hour: the 20 ids one tab holds plus one slot of headroom, both counts from `lib/forget-limits.ts`) via `getForgetLimit()`.
 
+- **`app/api/error-digest/route.ts`** is a cron GET (`0 5 * * *`, `requireCron`; no new environment variable: `CRON_SECRET` and `RESEND_API_KEY` already exist). It scans `err:*:{previous UTC day}:*` (up to 50 pages of 200 keys), reads each record's message and its `errn:` counter, and totals the reports per fingerprint across releases (one per record plus the counter). A fingerprint is new when `errseen:{fingerprint}` is absent; it is over the threshold at 20 reports. Only new or over-threshold fingerprints go in one mail (`sendMail`, idempotency key `error-digest-{day}`, at most 25 listed, most frequent first). After a successful mail, or when nothing needed one, every fingerprint seen gets `errseen:{fingerprint}` with a 30-day TTL, so a quiet known fingerprint stays unmailed and a mail failure leaves them new. A failed scan answers 503, a failed mail 502, and a missing `RESEND_API_KEY` logs and sends nothing.
+
 ### Inspection surfaces
 
 - **Vercel dashboard** → Analytics + Speed Insights for real-user data.
@@ -953,7 +959,7 @@ The principal-level discipline: **none of this is built today.** YAGNI is the de
 | `/design-system` and 17 pages below it                                       | MDX documentation: tokens, components, enforcement, changelog, `foundations/{colors,typography,spacing-borders}` and ten `primitives/*` pages, all listed in `ds-nav.ts` |
 | `/api/ask`                                                                   | Streaming POST handler                                                                                                         |
 | `/api/contact`                                                               | Durable contact POST handler                                                                                                   |
-| `/api/contact-retry`, `/api/psi-refresh`                                     | Authenticated daily cron GET handlers                                                                                          |
+| `/api/contact-retry`, `/api/error-digest`, `/api/psi-refresh`                | Authenticated daily cron GET handlers                                                                                          |
 | `/api/lighthouse`, `/api/healthz`, `/api/status`, `/api/erik.json`           | Scores, liveness, freshness and structured profile GET handlers; `/api/lighthouse`, `/api/healthz` and `/api/status` are per-IP rate limited and fail open (a prerender interrupt is rethrown, never treated as an outage) |
 | `/api/log`, `/api/log/forget`, `/api/csp-report`                             | Error ingestion, ASK erasure and CSP report POST handlers                                                                      |
 | `/api/mcp`                                                                   | MCP transport with `ask_erik` and `get_profile` tools                                                                          |

@@ -109,13 +109,15 @@ flowchart LR
     delivery --> mail["lib/mail sendMail"] --> resend["Resend"]
 ```
 
-Cron: both scheduled routes pass one auth check; the PageSpeed alert uses the same mail sender.
+Cron: every scheduled route passes one auth check; the PageSpeed alert and the error digest use the same mail sender.
 
 ```mermaid
 flowchart LR
     cronretry["app/api/contact-retry"] --> auth["lib/server/cron-auth requireCron"]
     psi["app/api/psi-refresh"] --> auth
+    digest["app/api/error-digest"] --> auth
     psi --> mail["lib/mail sendMail"] --> resend["Resend"]
+    digest --> mail
 ```
 
 The main dependency direction is `app → components → {content, design-system}` and `app/api → lib`.

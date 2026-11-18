@@ -92,7 +92,7 @@ against the local build.
 
 - **Trigger:** squash-merge to `main` deploys via Vercel.
 - **Verification:** `smoke.yml` (on `deployment_status == success && Production`) checks the canonical `/api/healthz` and `/api/status` freshness (the artifact probe is skipped for a protected `*.vercel.app` deployment without its bypass secret), the 7 security headers, apex->www promotion followed to its final 200 (the workflow asserts neither an intermediate 308 nor the final www host), and `/api/ask` + `/api/contact` liveness; a canonical healthz 503 attempts a Resend alert when `RESEND_API_KEY` and the `ALERT_EMAIL` repository secret are both configured, and delivery errors are warnings.
-- **Cron:** `vercel.json` runs `/api/psi-refresh` daily (`0 3 * * *`) and `/api/contact-retry` twice a day (`0 4 * * *` and `0 16 * * *`).
+- **Cron:** `vercel.json` runs `/api/psi-refresh` daily (`0 3 * * *`) `/api/contact-retry` twice a day (`0 4 * * *` and `0 16 * * *`) and `/api/error-digest` daily (`0 5 * * *`).
 
 ## Rollback
 

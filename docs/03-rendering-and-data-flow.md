@@ -68,6 +68,7 @@ flowchart TD
     api8["POST /api/log · POST /api/log/forget"]
     api9["GET · POST /api/mcp (stateless handler; POST body limit 4096 bytes)"]
     api10["GET /api/contact-retry (cron, twice a day)"]
+    api11["GET /api/error-digest (cron, daily)"]
     end
 ```
 
