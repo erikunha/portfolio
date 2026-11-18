@@ -127,15 +127,15 @@ function ErrorReference({
 
 export interface RouteErrorProps {
   error: Error & { digest?: string };
-  reset: () => void;
+  retry: () => void;
 }
 
 export function ServerErrorMain({
-  reset,
+  retry,
   content,
   stamps,
   digest,
-}: Pick<RouteErrorProps, 'reset'> & {
+}: Pick<RouteErrorProps, 'retry'> & {
   content: ErrorsContent['serverError'];
   stamps: BootStamps;
   digest?: string | undefined;
@@ -151,7 +151,7 @@ export function ServerErrorMain({
         <p className="err-text">{content.message}</p>
       </div>
       <div className="err-actions">
-        <button type="button" className="err-action err-action-primary" onClick={reset}>
+        <button type="button" className="err-action err-action-primary" onClick={retry}>
           {content.retryLabel}
         </button>
         <a className="err-action" href={content.home.href}>

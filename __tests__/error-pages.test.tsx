@@ -82,24 +82,24 @@ describe('RouteErrorPage', () => {
   });
 
   it('renders inside the shared shell', () => {
-    const { container } = render(<RouteErrorPage error={makeError()} reset={vi.fn()} />);
+    const { container } = render(<RouteErrorPage error={makeError()} retry={vi.fn()} />);
 
     expect(container.querySelector('header.desktop-topbar .menu-trigger')).not.toBeNull();
     expect(container.querySelector('header.mobile-title-bar')).not.toBeNull();
     expect(container.querySelectorAll('main#main-content')).toHaveLength(1);
   });
 
-  it('calls reset when Try again is pressed', () => {
-    const reset = vi.fn();
-    render(<RouteErrorPage error={makeError()} reset={reset} />);
+  it('calls retry when Try again is pressed', () => {
+    const retry = vi.fn();
+    render(<RouteErrorPage error={makeError()} retry={retry} />);
     fireEvent.click(
       screen.getByRole('button', { name: errorsContent[SITE_LOCALE.en].serverError.retryLabel }),
     );
-    expect(reset).toHaveBeenCalledTimes(1);
+    expect(retry).toHaveBeenCalledTimes(1);
   });
 
   it('reports through the log endpoint and never renders the stack', () => {
-    const { container } = render(<RouteErrorPage error={makeError()} reset={vi.fn()} />);
+    const { container } = render(<RouteErrorPage error={makeError()} retry={vi.fn()} />);
     expect(fetch).toHaveBeenCalledTimes(1);
     const [url, init] = vi.mocked(fetch).mock.calls[0] ?? [];
     expect(url).toBe('/api/log');
@@ -111,7 +111,7 @@ describe('RouteErrorPage', () => {
   it('shows the digest reference only when one exists and copies it', async () => {
     const writeText = vi.fn().mockResolvedValue(undefined);
     vi.stubGlobal('navigator', { ...navigator, clipboard: { writeText } });
-    const { unmount } = render(<RouteErrorPage error={makeError()} reset={vi.fn()} />);
+    const { unmount } = render(<RouteErrorPage error={makeError()} retry={vi.fn()} />);
     expect(
       screen.queryByRole('button', {
         name: errorsContent[SITE_LOCALE.en].serverError.copyAriaLabel,
@@ -119,7 +119,7 @@ describe('RouteErrorPage', () => {
     ).toBeNull();
     unmount();
 
-    render(<RouteErrorPage error={makeError('7F3A9C')} reset={vi.fn()} />);
+    render(<RouteErrorPage error={makeError('7F3A9C')} retry={vi.fn()} />);
     fireEvent.click(
       screen.getByRole('button', { name: errorsContent[SITE_LOCALE.en].serverError.copyAriaLabel }),
     );
@@ -146,14 +146,14 @@ describe('RouteErrorPage panic layout', () => {
 
   it('stamps the boot lines with the real elapsed seconds, rounded to milliseconds', () => {
     vi.spyOn(performance, 'now').mockReturnValue(ELAPSED_MS);
-    render(<RouteErrorPage error={makeError()} reset={vi.fn()} />);
+    render(<RouteErrorPage error={makeError()} retry={vi.fn()} />);
     const copy = errorsContent[SITE_LOCALE.en].serverError;
     expect(screen.getByText(`[ 12.005 ] ${copy.bootRender}`)).not.toBeNull();
     expect(screen.getByText(`[ 12.005 ] ${copy.bootReport}`)).not.toBeNull();
   });
 
   it('keeps the announced alert to the message, not the log lines', () => {
-    render(<RouteErrorPage error={makeError()} reset={vi.fn()} />);
+    render(<RouteErrorPage error={makeError()} retry={vi.fn()} />);
     const copy = errorsContent[SITE_LOCALE.en].serverError;
     const alert = screen.getByRole('alert');
     expect(alert.textContent).toContain(copy.message);
@@ -165,7 +165,7 @@ describe('RouteErrorPage panic layout', () => {
   it('ellipsizes a long reference, keeps the full id in the title and copies the full id', async () => {
     const writeText = vi.fn().mockResolvedValue(undefined);
     vi.stubGlobal('navigator', { ...navigator, clipboard: { writeText } });
-    render(<RouteErrorPage error={makeError(LONG_DIGEST)} reset={vi.fn()} />);
+    render(<RouteErrorPage error={makeError(LONG_DIGEST)} retry={vi.fn()} />);
     const code = screen.getByText('4d2c...e8aa');
     expect(code.getAttribute('title')).toBe(LONG_DIGEST);
     fireEvent.click(
@@ -175,7 +175,7 @@ describe('RouteErrorPage panic layout', () => {
   });
 
   it('shows a short reference whole', () => {
-    render(<RouteErrorPage error={makeError('7F3A9C')} reset={vi.fn()} />);
+    render(<RouteErrorPage error={makeError('7F3A9C')} retry={vi.fn()} />);
     expect(screen.getByText('7F3A9C').getAttribute('title')).toBe('7F3A9C');
   });
 });
@@ -198,7 +198,7 @@ describe('GlobalErrorPage', () => {
   });
 
   it('carries the same reference block as the route error page once its body loads', async () => {
-    render(<GlobalErrorPage error={makeError(LONG_DIGEST)} reset={vi.fn()} />, {
+    render(<GlobalErrorPage error={makeError(LONG_DIGEST)} retry={vi.fn()} />, {
       container: document,
     });
     const copy = errorsContent[SITE_LOCALE.en].serverError;
@@ -208,14 +208,14 @@ describe('GlobalErrorPage', () => {
   });
 
   it('omits the reference block when there is no digest', async () => {
-    render(<GlobalErrorPage error={makeError()} reset={vi.fn()} />, { container: document });
+    render(<GlobalErrorPage error={makeError()} retry={vi.fn()} />, { container: document });
     const copy = errorsContent[SITE_LOCALE.en].serverError;
     await screen.findByText(copy.bootRender, { exact: false });
     expect(screen.queryByRole('button', { name: copy.copyAriaLabel })).toBeNull();
   });
 
   it('renders its own html and body with a retry control and a way home before the body loads', () => {
-    const markup = renderToStaticMarkup(<GlobalErrorPage error={makeError()} reset={vi.fn()} />);
+    const markup = renderToStaticMarkup(<GlobalErrorPage error={makeError()} retry={vi.fn()} />);
     expect(markup.startsWith('<html')).toBe(true);
     expect(markup).toContain('<body');
     expect(markup).toContain(errorsContent[SITE_LOCALE.en].serverError.retryLabel);
@@ -230,7 +230,7 @@ describe.each([
 ])('%s', (_name, load) => {
   it('loads the 500 page on demand and still renders it for a route error', async () => {
     const { default: RouteError } = await load();
-    render(<RouteError error={makeError()} reset={() => undefined} />);
+    render(<RouteError error={makeError()} retry={() => undefined} />);
     expect(
       await screen.findByText(errorsContent[SITE_LOCALE.en].serverError.message),
       'the lazy route error page must resolve to the full 500 page',

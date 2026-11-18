@@ -20,7 +20,7 @@ describe('the last-resort error page after a root crash', () => {
 
   it('moves focus to its heading while the body chunk loads and after it fails', async () => {
     const copy = serverErrorContent[SITE_LOCALE.en];
-    render(<GlobalErrorPage error={new Error('boom')} reset={vi.fn()} />, {
+    render(<GlobalErrorPage error={new Error('boom')} retry={vi.fn()} />, {
       container: document,
     });
     const heading = screen.getByRole('heading', { level: 1, name: copy.code });

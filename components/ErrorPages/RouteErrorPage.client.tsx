@@ -6,7 +6,7 @@ import { errorsClientContent as errorsContent } from '@/content/errors-client';
 import { localeOfPath } from '@/content/site-locale';
 import { type RouteErrorProps, ServerErrorMain, useErrorReport } from './ErrorPages.client';
 
-export function RouteErrorPage({ error, reset }: RouteErrorProps) {
+export function RouteErrorPage({ error, retry }: RouteErrorProps) {
   const locale = localeOfPath(usePathname());
   const content = errorsContent[locale];
   const stamps = useErrorReport('[RouteError]', error);
@@ -14,7 +14,7 @@ export function RouteErrorPage({ error, reset }: RouteErrorProps) {
   return (
     <SiteShell locale={locale}>
       <ServerErrorMain
-        reset={reset}
+        retry={retry}
         content={content.serverError}
         stamps={stamps}
         digest={error.digest}
