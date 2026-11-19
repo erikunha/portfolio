@@ -16,6 +16,7 @@ const FAILURE = 1;
 const LINUX = 'linux';
 const APT_PARTIAL_DIRS = ['archives/partial', 'lists/partial'];
 const FIRST_ARGUMENT_INDEX = 2;
+export const APT_AUTOCLEAN_ARGS = ['apt-get', 'autoclean'];
 
 type Run = (
   command: string,
@@ -78,12 +79,23 @@ export function releaseAptCache({
   return result.status === SUCCESS;
 }
 
+export function pruneAptCache({
+  run = spawnSync as Run,
+  platform = process.platform as string,
+  ci = process.env.CI as string | undefined,
+  cacheDir,
+}: AptOptions = {}): boolean {
+  if (platform !== LINUX || !ci || cacheDir === undefined) return false;
+  const result = run('sudo', APT_AUTOCLEAN_ARGS, { stdio: 'inherit' });
+  return result.status === SUCCESS;
+}
+
 export function installWithRetry(
   browsers: string[],
   {
     run = spawnSync as Run,
     log = console.error,
-  }: { run?: Run; log?: (message: string) => void } = {},
+  }: { run?: Run | undefined; log?: ((message: string) => void) | undefined } = {},
 ): number {
   const args = ['playwright', 'install', '--with-deps', ...browsers];
   for (let attempt = 1; attempt <= INSTALL_ATTEMPTS; attempt++) {
@@ -96,15 +108,27 @@ export function installWithRetry(
   return FAILURE;
 }
 
+export function installBrowsers(
+  browsers: string[],
+  options: AptOptions & {
+    log?: ((message: string) => void) | undefined;
+    uid?: number | undefined;
+    gid?: number | undefined;
+  } = {},
+): number {
+  const { log, ...apt } = options;
+  configureApt(apt);
+  const status = installWithRetry(browsers, { run: apt.run, log });
+  if (status === SUCCESS) pruneAptCache(apt);
+  releaseAptCache(apt);
+  return status;
+}
+
 if (isMain(import.meta.url)) {
   const browsers = process.argv.slice(FIRST_ARGUMENT_INDEX);
   if (browsers.length === 0) {
     console.error('usage: install-playwright-browsers.ts <browser...>');
     process.exit(FAILURE);
   }
-  const cacheDir = cacheDirFromEnv();
-  configureApt({ cacheDir });
-  const status = installWithRetry(browsers);
-  releaseAptCache({ cacheDir });
-  process.exit(status);
+  process.exit(installBrowsers(browsers, { cacheDir: cacheDirFromEnv() }));
 }

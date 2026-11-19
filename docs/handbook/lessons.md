@@ -221,8 +221,11 @@ The prompt for a manual or agent review that applies these rules to a diff is `d
 53. A change to a path that only runs on the Linux CI runner is proven in the runner's image
     before the push. The apt cache redirect passed every local check and broke every browser job,
     because apt refuses a redirected `Dir::State::Lists` or `Dir::Cache::Archives` without its
-    `partial` subdirectory. `docker run ubuntu:24.04` reproduced it in one command. Check:
-    `scripts/__tests__/install-playwright-browsers-apt-partial.test.ts`.
+    `partial` subdirectory. `docker run ubuntu:24.04` reproduced it in one command. The same
+    holds for `apt-get autoclean` on that redirected cache: a cache with a superseded and a
+    dropped package lost exactly those two `.deb` files in the image. Check:
+    `scripts/__tests__/install-playwright-browsers-apt-partial.test.ts` and
+    `scripts/__tests__/install-playwright-browsers-apt-prune.test.ts`.
 54. A journey that reaches the contact form through the section menu waits for the form's own
     hydration, not the menu trigger's. The form is a `React.lazy` island: its server-rendered
     markup is visible, fillable and clickable while its chunk loads. `openSectionMenu` covers the

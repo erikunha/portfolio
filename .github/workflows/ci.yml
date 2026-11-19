@@ -402,9 +402,10 @@ jobs:
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ${{ env.APT_CACHE_DIR }}
-          key: apt-${{ runner.os }}-${{ steps.runner-image.outputs.version }}-chromium-${{ steps.playwright-version.outputs.version }}
+          key: apt-${{ runner.os }}-chromium-${{ steps.playwright-version.outputs.version }}-${{ steps.runner-image.outputs.version }}
           restore-keys: |
-            apt-${{ runner.os }}-${{ steps.runner-image.outputs.version }}-chromium-
+            apt-${{ runner.os }}-chromium-${{ steps.playwright-version.outputs.version }}-
+            apt-${{ runner.os }}-chromium-
       - name: Install Playwright Chromium (for axe-core scan)
         timeout-minutes: 12
         run: node scripts/ci/install-playwright-browsers.ts chromium
@@ -473,9 +474,10 @@ jobs:
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ${{ env.APT_CACHE_DIR }}
-          key: apt-${{ runner.os }}-${{ steps.runner-image.outputs.version }}-${{ contains(matrix.project, 'webkit') && 'webkit' || 'chromium' }}-${{ steps.playwright-version.outputs.version }}
+          key: apt-${{ runner.os }}-${{ contains(matrix.project, 'webkit') && 'webkit' || 'chromium' }}-${{ steps.playwright-version.outputs.version }}-${{ steps.runner-image.outputs.version }}
           restore-keys: |
-            apt-${{ runner.os }}-${{ steps.runner-image.outputs.version }}-${{ contains(matrix.project, 'webkit') && 'webkit' || 'chromium' }}-
+            apt-${{ runner.os }}-${{ contains(matrix.project, 'webkit') && 'webkit' || 'chromium' }}-${{ steps.playwright-version.outputs.version }}-
+            apt-${{ runner.os }}-${{ contains(matrix.project, 'webkit') && 'webkit' || 'chromium' }}-
       - name: Install Playwright browsers
         timeout-minutes: 12
         run: node scripts/ci/install-playwright-browsers.ts ${{ contains(matrix.project, 'webkit') && 'webkit' || 'chromium' }}
@@ -596,9 +598,10 @@ jobs:
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ${{ env.APT_CACHE_DIR }}
-          key: apt-${{ runner.os }}-${{ steps.runner-image.outputs.version }}-chromium-${{ steps.playwright-version.outputs.version }}
+          key: apt-${{ runner.os }}-chromium-${{ steps.playwright-version.outputs.version }}-${{ steps.runner-image.outputs.version }}
           restore-keys: |
-            apt-${{ runner.os }}-${{ steps.runner-image.outputs.version }}-chromium-
+            apt-${{ runner.os }}-chromium-${{ steps.playwright-version.outputs.version }}-
+            apt-${{ runner.os }}-chromium-
       - name: Install Playwright browsers
         timeout-minutes: 12
         run: node scripts/ci/install-playwright-browsers.ts chromium
