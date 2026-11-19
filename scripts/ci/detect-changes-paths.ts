@@ -1,55 +1,46 @@
-export const AI_PATHS: readonly string[] = [
+import { join } from 'node:path';
+import { importClosure } from '../lib/import-closure.ts';
+import { listFiles } from '../lib/walk.ts';
+
+const REPOSITORY_ROOT = join(import.meta.dirname, '../..');
+const SOURCE_FILE = /\.tsx?$/;
+const TEST_FILE = /\.(?:test|spec)\.tsx?$/;
+const TEST_DIRECTORIES: ReadonlySet<string> = new Set(['__tests__']);
+
+const AI_ENTRY_POINTS: readonly string[] = ['app/api/ask/route.ts', 'scripts/eval/ask-eval.ts'];
+
+const AI_OWNED_DIRECTORIES: readonly string[] = [
   'app/api/ask/',
   'lib/ask/',
-  'lib/http-status.ts',
-  'lib/ip-hash.ts',
-  'lib/stream-protocol.ts',
-  'lib/rate-limit.ts',
-  'lib/redis.ts',
-  'lib/redis-env.ts',
-  'lib/forget-limits.ts',
-  'lib/env.ts',
-  'lib/listeners.ts',
-  'lib/log.ts',
-  'lib/log-error.ts',
-  'lib/with-timeout.ts',
-  'lib/post-json.ts',
-  'lib/request-refs.client.ts',
   'lib/server/',
   'lib/agent/',
-  'lib/hiring-profile.ts',
   'lib/eval/',
-  'content/brand.ts',
-  'content/ask-eval-corpus.ts',
-  'content/ask-facts.ts',
-  'content/ask-eval-calibration.ts',
-  'content/perf-receipts.ts',
-  'content/projects.ts',
-  'content/unknowns.ts',
-  'content/ask-errors.ts',
-  'content/community.ts',
-  'content/company-link.ts',
-  'content/errors.constants.ts',
-  'content/fact-separator.ts',
-  'content/reading-paths.ts',
-  'content/schemas.ts',
-  'content/section-registry.ts',
-  'content/social-urls.ts',
-  'lib/time.ts',
-  'content/credentials.ts',
-  'content/education.ts',
-  'content/experience-detail.ts',
-  'content/git-log.ts',
-  'content/hottest-takes.ts',
-  'content/open-roles.ts',
-  'content/profile.ts',
-  'content/profile-title.ts',
-  'content/site-locale.ts',
-  'content/social.ts',
-  'content/work-scope.ts',
-  'scripts/eval/ask-eval.ts',
+];
+
+export const AI_MANUAL_PATHS: readonly string[] = [
+  ...AI_OWNED_DIRECTORIES,
   '__tests__/ask/',
   '.github/workflows/ci.yml',
+];
+
+function sourceFilesUnder(directory: string): string[] {
+  return listFiles(join(REPOSITORY_ROOT, directory), {
+    include: (name) => SOURCE_FILE.test(name) && !TEST_FILE.test(name),
+    skipDirs: TEST_DIRECTORIES,
+  }).map((file) => `${directory}${file}`);
+}
+
+export const AI_ROOTS: readonly string[] = [
+  ...AI_ENTRY_POINTS,
+  ...AI_OWNED_DIRECTORIES.flatMap(sourceFilesUnder),
+];
+
+const coveredByManualPath = (file: string): boolean =>
+  AI_MANUAL_PATHS.some((path) => (path.endsWith('/') ? file.startsWith(path) : file === path));
+
+export const AI_PATHS: readonly string[] = [
+  ...AI_MANUAL_PATHS,
+  ...importClosure(AI_ROOTS, REPOSITORY_ROOT).filter((file) => !coveredByManualPath(file)),
 ];
 
 export const APP_PATHS: readonly string[] = [
