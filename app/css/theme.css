@@ -69,7 +69,6 @@
   --viewport-below-xl: 1279.98px;
   --phi: 1.618;
   --phi-inv: 0.618;
-  --phi-root: 1.272;
   --phi-space-1: 0.5rem;
   --phi-space-2: calc(var(--phi-space-1) * var(--phi));
   --phi-space-3: calc(var(--phi-space-2) * var(--phi));
