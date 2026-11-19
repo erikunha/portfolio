@@ -7,16 +7,25 @@ export const IMAGE_NOT_DECODED = 'an image inside the captured region did not lo
 export async function waitForImagesDecoded(region: Locator): Promise<void> {
   await region.evaluate(
     async (root, [timeoutMs, message]) => {
-      const timeout = new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error(String(message))), Number(timeoutMs)),
-      );
+      let timer: ReturnType<typeof setTimeout> | undefined;
+      const timeout = new Promise<never>((_, reject) => {
+        timer = setTimeout(() => reject(new Error(String(message))), Number(timeoutMs));
+      });
       const decodeAll = async () => {
         for (const image of root.querySelectorAll('img')) {
           image.scrollIntoView({ block: 'center' });
-          await image.decode();
+          try {
+            await image.decode();
+          } catch (cause) {
+            throw new Error(`${String(message)}: ${image.currentSrc || image.src}`, { cause });
+          }
         }
       };
-      await Promise.race([decodeAll(), timeout]);
+      try {
+        await Promise.race([decodeAll(), timeout]);
+      } finally {
+        clearTimeout(timer);
+      }
       root.scrollIntoView({ block: 'start' });
     },
     [IMAGE_DECODE_TIMEOUT_MS, IMAGE_NOT_DECODED] as const,
