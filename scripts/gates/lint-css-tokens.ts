@@ -120,6 +120,22 @@ const NAMESPACE_UTILITIES: Record<string, string[]> = {
   shadow: ['shadow'],
   font: ['font'],
 };
+const COLOR_VARIABLE_PREFIX = '--color-';
+const ROLE_TOKENS = [
+  'surface',
+  'surface-raised',
+  'border',
+  'border-strong',
+  'accent',
+  'on-accent',
+  'text',
+  'text-muted',
+  'focus',
+  'warning',
+  'danger',
+  'scrim',
+];
+const COLOR_ALIAS = /^var\((--color-[\w-]+)\)$/;
 const BREAKPOINT_NAMESPACE = 'breakpoint';
 const TOKEN_EQUAL_NAMESPACES = ['tracking', 'radius', 'shadow', 'leading', 'text', 'spacing'];
 const SUBPROPERTY_SEPARATOR = '--';
@@ -291,6 +307,7 @@ export interface RepoScan {
   zIndex: RawColorHit[];
   focus: RawColorHit[];
   tokenEqual: RawColorHit[];
+  primitives: RawColorHit[];
 }
 
 function escapeRegExp(value: string): string {
@@ -353,6 +370,42 @@ export function findTokenEqualArbitraryValues(themeCss: string, source: string):
         const value = normalizeValue((match[2] ?? '').replace(/_/g, ' '));
         const utility = utilities.get(`${match[1]}\u0000${value}`);
         if (utility) hits.push({ line: i + 1, literal: match[0], utility });
+      }
+    });
+  return hits;
+}
+
+export function rolePrimitives(themeCss: string): Map<string, string[]> {
+  const byPrimitive = new Map<string, string[]>();
+  postcss.parse(themeCss).walkDecls((decl) => {
+    const role = ROLE_TOKENS.find((name) => decl.prop === `${COLOR_VARIABLE_PREFIX}${name}`);
+    const target = COLOR_ALIAS.exec(decl.value.trim())?.[1];
+    if (!role || !target) return;
+    const primitive = target.slice(COLOR_VARIABLE_PREFIX.length);
+    byPrimitive.set(primitive, [...(byPrimitive.get(primitive) ?? []), role]);
+  });
+  return byPrimitive;
+}
+
+export function findPrimitiveColorUses(themeCss: string, source: string): ColorHit[] {
+  const roles = rolePrimitives(themeCss);
+  if (roles.size === 0) return [];
+  const names = [...roles.keys()].map(escapeRegExp).join('|');
+  const utilities = COLOR_UTILITIES.map(escapeRegExp).join('|');
+  const pattern = new RegExp(
+    `${escapeRegExp(COLOR_VARIABLE_PREFIX)}(${names})(?![\\w-])|(?<![\\w-])(?:${utilities})-(${names})(?![\\w-])`,
+    'g',
+  );
+  const hits: ColorHit[] = [];
+  stripComments(source)
+    .split('\n')
+    .forEach((line, i) => {
+      for (const match of line.matchAll(pattern)) {
+        const primitive = match[1] ?? match[2] ?? '';
+        const use = (roles.get(primitive) ?? [])
+          .map((role) => `${COLOR_VARIABLE_PREFIX}${role}`)
+          .join(' or ');
+        hits.push({ line: i + 1, literal: `${match[0]} (use ${use})` });
       }
     });
   return hits;
@@ -421,6 +474,9 @@ export function scanRepo(root: string, cssFiles: string[]): RepoScan {
         literal: `${hit.literal} (use ${hit.utility})`,
       })),
     ),
+    primitives: findConsumerFiles(root)
+      .filter((file) => file !== themePath)
+      .flatMap((file) => tag(file, findPrimitiveColorUses(themeCss, read(file)))),
   };
 }
 
@@ -478,6 +534,12 @@ function main(): void {
       'Use the token utility named on each line instead of the arbitrary value.',
       scan.tokenEqual,
     ) || failed;
+  failed =
+    report(
+      'primitive color use(s) outside theme.css',
+      'Name the role the site means (the one shown on each line) and read it as var(--color-role) or X-(color:--color-role).',
+      scan.primitives,
+    ) || failed;
   const unused = findUnusedThemeTokens(
     readFileSync(join(root, `app/css/${THEME_SHEET}`), 'utf8'),
     findConsumerFiles(root).map((file) => readFileSync(join(root, file), 'utf8')),
@@ -497,7 +559,7 @@ function main(): void {
   }
   if (failed) process.exit(1);
   console.log(
-    '[css-tokens] no raw color literals, z-index values or focus rings outside their tokens, no arbitrary values that equal a token, and no unused @theme tokens.',
+    '[css-tokens] no raw color literals, z-index values or focus rings outside their tokens, no primitive colors where a role exists, no arbitrary values that equal a token, and no unused @theme tokens.',
   );
 }
 

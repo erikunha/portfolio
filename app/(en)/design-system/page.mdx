@@ -38,7 +38,7 @@ The design system at `/design-system` documents theme tokens, reusable component
 
 <h2 id="principles">Principles</h2>
 
-**Utilities over raw values.** Components reference Tailwind utilities backed by the `@theme` palette (`text-primary-500`, `border-primary-subtle`), never raw hex. The single `@theme` block in `theme.css` is the one place a colour changes.
+**Utilities over raw values.** Components name a colour by the role it plays: `var(--color-accent)` in a stylesheet, `text-(color:--color-accent)` or `border-(color:--color-border-strong)` in a class string. They never write raw hex, and they use a palette step only where no role fits. `theme.css` is the one place a colour changes.
 
 **Server components by default.** No design-system component has a client directive. `Field` generates ids with `useId`, which works on the server, and is imported from `@/design-system/components/Field`; it is not exported by the main barrel, and neither is `BrandIcon`, which `BrandLink` imports by path. The docs add a client `CopyButton` helper for clipboard access. Server-compatible components can still enter a client bundle when imported across a client boundary.
 
