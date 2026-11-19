@@ -1,36 +1,64 @@
 import { expect, test } from '@playwright/test';
-import { MOTION_BODY_STATE } from '@/lib/motion-change';
+import { holdChunk } from './_helpers/chunk-gate';
+import { trapFiberWrite } from './_helpers/fiber-write-trap';
 import { waitForHydration } from './_helpers/hydration';
-import { freezeMotion } from './_helpers/motion';
 import { installCommitOracle, isNodeCommitted } from './_helpers/react-commit-oracle';
+import { drainRoutes } from './_helpers/routes';
 
-const CPU_THROTTLE_RATE = 10;
-const TEST_BUDGET_MS = 180_000;
 const ISLANDS = [
-  { name: 'contact form', selector: '[data-testid="contact-form"]' },
-  { name: 'interactive shell', selector: '[data-testid="shell-form"]' },
+  {
+    name: 'contact form',
+    selector: '[data-testid="contact-form"]',
+    chunkMarker: 'contact-form',
+  },
+  {
+    name: 'interactive shell',
+    selector: '[data-testid="shell-form"]',
+    chunkMarker: 'shell-form',
+  },
 ] as const;
 
 test.describe('waitForHydration returns only once React committed the island', () => {
-  test.setTimeout(TEST_BUDGET_MS);
+  test.afterEach(({ page }) => drainRoutes(page));
 
   for (const island of ISLANDS) {
-    test(`the ${island.name} is in the committed tree when the wait returns`, async ({ page }) => {
-      await freezeMotion(page);
+    test(`the ${island.name} wait is false at every write of React's fiber key`, async ({
+      page,
+    }) => {
       await installCommitOracle(page);
-      const session = await page.context().newCDPSession(page);
-      await session.send('Emulation.setCPUThrottlingRate', { rate: CPU_THROTTLE_RATE });
-      await page.goto('/');
-      await expect(
-        page.locator('body'),
-        'the matrix rain is still animating: its frames compete with the throttled hydration and stretch the test past its budget',
-      ).toHaveAttribute('data-motion', MOTION_BODY_STATE.reduce);
-      await page.locator(island.selector).scrollIntoViewIfNeeded();
-      await waitForHydration(page, island.selector);
-      expect(
-        await isNodeCommitted(page, island.selector),
-        'React had started hydrating the node but had not committed it: its handlers are not attached',
-      ).toBe(true);
+      const gate = Promise.withResolvers<void>();
+      const heldChunks = await holdChunk(page, island.chunkMarker, () => gate.promise);
+      try {
+        await page.goto('/');
+        await page.locator(island.selector).scrollIntoViewIfNeeded();
+        expect(
+          await isNodeCommitted(page, island.selector),
+          'the island committed before its chunk was released, so the run proves nothing',
+        ).toBe(false);
+        const readSamples = await trapFiberWrite(page, island.selector);
+        gate.resolve();
+        await waitForHydration(page, island.selector);
+        const samples = await readSamples();
+        expect(heldChunks(), 'no chunk carried the island, so nothing was held').toBeGreaterThan(0);
+        expect(
+          samples.length,
+          'React never wrote its fiber key on the server node: it replaced the node, so the trap saw nothing',
+        ).toBeGreaterThan(0);
+        expect(
+          samples.filter((sample) => sample.oracle),
+          'React wrote the key on a node already committed: the trap sampled too late',
+        ).toEqual([]);
+        expect(
+          samples.filter((sample) => sample.helper),
+          'the hydration predicate said committed while React had only started rendering the node',
+        ).toEqual([]);
+        expect(
+          await isNodeCommitted(page, island.selector),
+          'the wait returned before React committed the island',
+        ).toBe(true);
+      } finally {
+        gate.resolve();
+      }
     });
   }
 });

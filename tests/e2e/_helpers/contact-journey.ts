@@ -1,5 +1,6 @@
 import { setTimeout as delay } from 'node:timers/promises';
 import { expect, type Locator, type Page } from '@playwright/test';
+import { holdChunk } from './chunk-gate';
 import { openSectionMenu, waitForHydration } from './hydration';
 
 export const CONTACT_FORM_SELECTOR = '[data-testid="contact-form"]';
@@ -44,17 +45,7 @@ export async function sendVisitorMessage(form: Locator): Promise<void> {
 }
 
 export async function holdContactFormChunk(page: Page, holdMs: number): Promise<() => number> {
-  let held = 0;
-  await page.route('**/_next/static/**/*.js', async (route) => {
-    const response = await route.fetch();
-    const body = await response.text();
-    if (body.includes(FORM_CHUNK_MARKER)) {
-      held += 1;
-      await delay(holdMs);
-    }
-    await route.fulfill({ response, body });
-  });
-  return () => held;
+  return holdChunk(page, FORM_CHUNK_MARKER, () => delay(holdMs));
 }
 
 export function trackContactPosts(page: Page): () => number {

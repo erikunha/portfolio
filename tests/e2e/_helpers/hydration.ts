@@ -1,7 +1,7 @@
 import type { ElementHandle, Page } from '@playwright/test';
 import { gotoSettled } from './streamed';
 
-const REACT_FIBER_KEY_PREFIX = '__reactFiber$';
+export const REACT_FIBER_KEY_PREFIX = '__reactFiber$';
 const FIBER_PLACEMENT_FLAG = 0b10;
 const FIBER_HYDRATING_FLAG = 0b1_0000_0000_0000;
 const FIBER_UNCOMMITTED_FLAGS = FIBER_PLACEMENT_FLAG | FIBER_HYDRATING_FLAG;
@@ -28,9 +28,15 @@ type FiberLike = {
   alternate: FiberLike | null;
 };
 
-type CommittedArgs = readonly [string | Element, string, number, number];
+export type CommittedArgs = readonly [string | Element, string, number, number];
 
-function isCommittedToReact([target, prefix, uncommittedFlags, hostRootTag]: CommittedArgs) {
+export const COMMITTED_CONSTANTS = [
+  REACT_FIBER_KEY_PREFIX,
+  FIBER_UNCOMMITTED_FLAGS,
+  FIBER_HOST_ROOT_TAG,
+] as const;
+
+export function isCommittedToReact([target, prefix, uncommittedFlags, hostRootTag]: CommittedArgs) {
   const node = typeof target === 'string' ? document.querySelector(target) : target;
   if (node === null) return false;
   const key = Object.keys(node).find((name) => name.startsWith(prefix));
@@ -51,9 +57,7 @@ function isCommittedToReact([target, prefix, uncommittedFlags, hostRootTag]: Com
 async function waitForCommit(page: Page, target: string | ElementHandle): Promise<void> {
   await page.waitForFunction(isCommittedToReact as (args: unknown) => boolean, [
     target,
-    REACT_FIBER_KEY_PREFIX,
-    FIBER_UNCOMMITTED_FLAGS,
-    FIBER_HOST_ROOT_TAG,
+    ...COMMITTED_CONSTANTS,
   ]);
 }
 
