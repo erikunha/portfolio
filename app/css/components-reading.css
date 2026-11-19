@@ -195,7 +195,7 @@
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
     border: var(--border-width) solid var(--color-primary-subtle);
-    background: var(--color-secondary-950);
+    background: var(--color-surface);
   }
 
   .reading-stats .stat-tile-label {
@@ -261,7 +261,7 @@
   .reading-chips li {
     padding: 2px var(--spacing-2);
     border: var(--border-width) solid var(--color-primary-subtle);
-    background: var(--color-secondary-950);
+    background: var(--color-surface);
     color: var(--color-text);
     font-size: var(--text-xs);
     letter-spacing: var(--tracking-xl);

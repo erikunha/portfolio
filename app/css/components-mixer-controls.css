@@ -29,7 +29,7 @@
     height: 22px;
     background: var(--color-accent);
     box-shadow: 0 0 8px var(--color-accent);
-    border: 1px solid var(--color-secondary-950);
+    border: 1px solid var(--color-surface);
     cursor: ew-resize;
   }
 
@@ -40,7 +40,7 @@
     top: 3px;
     bottom: 3px;
     width: 1px;
-    background: var(--color-secondary-950);
+    background: var(--color-surface);
     transform: translateX(-50%);
   }
 
@@ -56,7 +56,7 @@
     height: 14px;
     min-height: 24px;
     border: 1px solid var(--color-primary-quiet);
-    background: color-mix(in srgb, var(--color-secondary-950) 70%, transparent);
+    background: color-mix(in srgb, var(--color-surface) 70%, transparent);
     display: flex;
     align-items: stretch;
     gap: 1px;

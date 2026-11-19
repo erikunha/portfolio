@@ -123,7 +123,7 @@ export function KnobIsland({ initialAngle, label, channelName, degreesUnit, hint
           r="11"
           stroke="var(--color-accent)"
           strokeWidth="1"
-          fill="var(--color-secondary-950)"
+          fill="var(--color-surface)"
           fillOpacity="0.7"
         />
         <line

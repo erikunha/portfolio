@@ -9,7 +9,7 @@ export function declareRainTheme(root: HTMLElement = document.documentElement): 
   const colors = getThemeColors();
   root.style.setProperty('--color-rain-head', colors['rain-head'] ?? '');
   root.style.setProperty('--color-rain-body', colors['rain-body'] ?? '');
-  root.style.setProperty('--color-secondary-950', colors['secondary-950'] ?? '');
+  root.style.setProperty('--color-surface', colors.surface ?? '');
   root.style.setProperty('--rain-tail-alpha', RAIN_TAIL_ALPHA);
 }
 

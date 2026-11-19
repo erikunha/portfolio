@@ -109,7 +109,7 @@
   }
 
   .ds-prose :not(pre):not(td):not(th):not(.ds-cell-value) > code {
-    background: var(--color-secondary-950);
+    background: var(--color-surface);
     border: 1px solid var(--color-primary-border);
     padding: 0.1em 0.35em;
     color: var(--color-text);
@@ -198,7 +198,7 @@
   .signal-glow {
     text-shadow:
       0 0 8px var(--color-glow-45),
-      0 0 4px var(--color-secondary-950);
+      0 0 4px var(--color-surface);
   }
 
   .sysfail-plate {
@@ -334,7 +334,7 @@
   .module-body-content {
     padding: 14px;
     color: var(--color-tertiary-50);
-    background: var(--color-secondary-950);
+    background: var(--color-surface);
   }
 
   @media (min-width: theme(--viewport-md)) {
@@ -345,12 +345,12 @@
   }
 
   .module-body-content[data-variant="green"] {
-    background: var(--color-secondary-950);
+    background: var(--color-surface);
   }
 
   #sec-projects > .module-body-content,
   #sec-live-metrics > .module-body-content {
     padding: var(--spacing-4);
-    background: var(--color-secondary-950);
+    background: var(--color-surface);
   }
 }

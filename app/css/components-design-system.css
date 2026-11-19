@@ -52,7 +52,7 @@
     padding: var(--spacing-3) var(--spacing-4);
     overflow-x: auto;
     border: var(--border-width) solid var(--color-primary-border);
-    background: var(--color-secondary-950);
+    background: var(--color-surface);
   }
 
   .ds-prose :is(ul, ol):not(nav ul) {
@@ -77,7 +77,7 @@
     width: 100%;
     margin-block-end: var(--phi-space-3);
     border-collapse: collapse;
-    background: var(--color-secondary-950);
+    background: var(--color-surface);
     font-size: var(--text-xs);
   }
 
@@ -324,7 +324,7 @@
     grid-template-columns: repeat(4, minmax(0, 1fr));
     margin: 0 0 var(--phi-space-3);
     border: var(--border-width) solid var(--color-primary-subtle);
-    background: var(--color-secondary-950);
+    background: var(--color-surface);
   }
 
   .ds-stat-row > * {

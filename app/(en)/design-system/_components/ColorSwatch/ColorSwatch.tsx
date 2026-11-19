@@ -11,7 +11,7 @@ export function ColorSwatch({ token, usage }: Props) {
       <div
         className="w-8 h-8 flex-shrink-0 border border-primary-border"
         style={{
-          background: `linear-gradient(${resolved}, ${resolved}), var(--color-secondary-950)`,
+          background: `linear-gradient(${resolved}, ${resolved}), var(--color-surface)`,
         }}
         aria-hidden="true"
       />

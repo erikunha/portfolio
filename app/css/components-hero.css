@@ -37,8 +37,8 @@
     flex-direction: column;
     justify-content: flex-end;
     text-shadow:
-      0 0 4px var(--color-secondary-950),
-      0 0 8px var(--color-secondary-950);
+      0 0 4px var(--color-surface),
+      0 0 8px var(--color-surface);
   }
 
   .hero-boot-slot {
@@ -77,7 +77,7 @@
     font-weight: 700;
     text-shadow:
       0 0 6px var(--color-glow-60),
-      0 0 4px var(--color-secondary-950);
+      0 0 4px var(--color-surface);
   }
 
   .hero-boot-welcome {
@@ -102,7 +102,7 @@
     color: var(--color-accent);
     text-shadow:
       0 0 8px var(--color-glow-40),
-      0 0 4px var(--color-secondary-950);
+      0 0 4px var(--color-surface);
   }
 
   #main-content > h1:focus-visible ~ section [data-testid="hero-name"] {
@@ -143,7 +143,7 @@
   .hero-frame {
     position: relative;
     border: var(--border-width) solid var(--color-primary-subtle);
-    background: var(--color-secondary-950);
+    background: var(--color-surface);
     overflow: hidden;
     margin-bottom: var(--space-section);
   }

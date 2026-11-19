@@ -12,13 +12,13 @@
   .guitar-eq-panel {
     padding: var(--phi-space-2);
     border: var(--border-width) solid var(--color-primary-border);
-    background: var(--color-secondary-950);
+    background: var(--color-surface);
   }
 
   .guitar-signal-panel {
     padding: var(--spacing-3);
     border: var(--border-width) solid var(--color-primary-border);
-    background: var(--color-secondary-950);
+    background: var(--color-surface);
   }
 
   .guitar-signal-strip {
@@ -164,7 +164,7 @@
   .guitar-stat {
     min-width: 0;
     padding: var(--spacing-3);
-    background: var(--color-secondary-950);
+    background: var(--color-surface);
     overflow-wrap: anywhere;
   }
 

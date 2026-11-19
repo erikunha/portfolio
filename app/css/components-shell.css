@@ -233,7 +233,7 @@
     padding-inline: var(--spacing-4);
     border: var(--border-width) solid var(--color-accent);
     border-radius: var(--radius-control);
-    background: var(--color-secondary-950);
+    background: var(--color-surface);
     box-shadow: 0 0 0 var(--shell-stop-halo) var(--color-secondary-900);
     color: var(--color-accent);
     font: inherit;

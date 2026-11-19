@@ -6,7 +6,7 @@ import { RAIN_TAIL_ALPHA_PROPERTY, readRainPalette } from './rain-tokens';
 
 const HEAD_PROPERTY = '--color-rain-head';
 const BODY_PROPERTY = '--color-rain-body';
-const BLACK_PROPERTY = '--color-secondary-950';
+const BLACK_PROPERTY = '--color-surface';
 const TAIL_ALPHA = '0.1';
 
 function declare(values: Record<string, string>) {

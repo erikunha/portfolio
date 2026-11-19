@@ -32,7 +32,7 @@ function StaticMeter({
 }) {
   return (
     <div
-      className="flex gap-px h-3 p-px border border-[var(--color-primary-quiet)] bg-secondary-950/70"
+      className="flex gap-px h-3 p-px border border-[var(--color-primary-quiet)] bg-(color:--color-surface)/70"
       aria-hidden="true"
     >
       {Array.from({ length: segments }, (_, i) => {
@@ -56,7 +56,7 @@ function StaticFader({ pct }: { pct: number }) {
         className={cn(
           'absolute top-1/2 -translate-x-1/2 -translate-y-1/2',
           'w-[18px] h-[28px]',
-          'bg-(color:--color-accent) shadow-[0_0_10px_var(--color-accent)] border border-secondary-950',
+          'bg-(color:--color-accent) shadow-[0_0_10px_var(--color-accent)] border border-(color:--color-surface)',
           'motion-off:shadow-none',
           'mx-fader-thumb',
         )}
@@ -72,7 +72,7 @@ function StaticKnob({ angleDeg, label }: { angleDeg: number; label: string }) {
       <div
         className={cn(
           'w-[30px] h-[30px] border border-(color:--color-accent) rounded-full relative shrink-0',
-          'bg-[radial-gradient(circle_at_35%_30%,var(--color-glow-18),color-mix(in_srgb,var(--color-secondary-950)_70%,transparent))]',
+          'bg-[radial-gradient(circle_at_35%_30%,var(--color-glow-18),color-mix(in_srgb,var(--color-surface)_70%,transparent))]',
           'mx-dial',
         )}
         style={{ '--mx-knob-angle': `${angleDeg}deg` } as CSSProperties}
@@ -161,7 +161,7 @@ function MixLegendMobile({ mixer, copy }: { mixer: DawMixer; copy: DawMixerCopy 
   if (!lead) return null;
   return (
     <div
-      className="flex flex-col gap-[3px] px-[14px] py-2 border-b border-[var(--color-primary-quiet)] bg-secondary-950/60 text-xs tracking-4xl text-primary-400 uppercase"
+      className="flex flex-col gap-[3px] px-[14px] py-2 border-b border-[var(--color-primary-quiet)] bg-(color:--color-surface)/60 text-xs tracking-4xl text-primary-400 uppercase"
       aria-hidden="true"
     >
       <span>
@@ -180,7 +180,7 @@ function ChannelMobile({ ch, copy }: { ch: DawMixerChannel; copy: DawMixerCopy }
         'relative border-b border-[var(--color-primary-quiet)] px-[14px] pt-4 pb-[18px] flex flex-col gap-3',
         ch.focused
           ? 'bg-[color-mix(in_srgb,var(--color-accent)_7%,transparent)] channel-row-focused'
-          : 'bg-secondary-950/35',
+          : 'bg-(color:--color-surface)/35',
         isMaster && [
           'bg-[linear-gradient(180deg,color-mix(in_srgb,var(--color-accent)_6%,transparent),transparent)]',
           'border-t-2 border-t-(color:--color-accent)',
@@ -199,7 +199,7 @@ function ChannelMobile({ ch, copy }: { ch: DawMixerChannel; copy: DawMixerCopy }
             'text-xs tracking-5xl border font-bold whitespace-nowrap shrink-0 px-[7px] py-[3px]',
             ch.focused
               ? 'text-(color:--color-accent) border-(color:--color-accent) bg-[color-mix(in_srgb,var(--color-accent)_10%,transparent)]'
-              : 'text-primary-400 border-[var(--color-primary-quiet)] bg-secondary-950/55',
+              : 'text-primary-400 border-[var(--color-primary-quiet)] bg-(color:--color-surface)/55',
             isMaster &&
               'border-(color:--color-accent) px-2 py-[2px] text-xs tracking-2xl font-bold text-(color:--color-accent) bg-transparent',
           )}
@@ -255,7 +255,7 @@ function ChannelMobile({ ch, copy }: { ch: DawMixerChannel; copy: DawMixerCopy }
                         'bg-[color-mix(in_srgb,var(--color-accent)_10%,transparent)]',
                         'shadow-[0_0_5px_var(--color-glow-35)]',
                       ].join(' ')
-                    : 'border border-[var(--color-primary-quiet)] text-primary-400 bg-secondary-950/50',
+                    : 'border border-[var(--color-primary-quiet)] text-primary-400 bg-(color:--color-surface)/50',
                 )}
               >
                 {btn}

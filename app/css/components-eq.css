@@ -3,7 +3,7 @@
     display: grid;
     grid-template-columns: minmax(0, 1fr);
     border: var(--border-width) solid var(--color-primary-border);
-    background: var(--color-secondary-950);
+    background: var(--color-surface);
   }
 
   .eq-plot {

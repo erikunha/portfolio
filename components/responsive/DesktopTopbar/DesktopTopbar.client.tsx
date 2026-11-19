@@ -74,7 +74,7 @@ export function DesktopTopbar({ brand }: { brand: ReactNode }) {
   const motionState = useMotionState();
 
   return (
-    <header className="desktop-topbar fixed top-0 left-0 right-0 bg-secondary-950 border-b border-primary-subtle hidden md:block">
+    <header className="desktop-topbar fixed top-0 left-0 right-0 bg-(color:--color-surface) border-b border-primary-subtle hidden md:block">
       <div className="safe-zone flex items-center gap-3 min-h-11">
         <MenuTrigger />
         <nav className="flex gap-2 items-center flex-nowrap" aria-label={copy.siteNavLabel}>

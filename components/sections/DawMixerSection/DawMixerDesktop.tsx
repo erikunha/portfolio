@@ -29,7 +29,7 @@ function PluginChain({
                   'text-(color:--color-accent) border-(color:--color-accent)',
                   'bg-[color-mix(in_srgb,var(--color-accent)_8%,transparent)]',
                 ].join(' ')
-              : 'border-[var(--color-primary-quiet)] bg-secondary-950/55',
+              : 'border-[var(--color-primary-quiet)] bg-(color:--color-surface)/55',
           )}
           data-testid={`plugin-${channelId}-${p.name}`}
         >
@@ -182,7 +182,7 @@ function TableHeader({ copy }: { copy: DawMixerCopy }) {
         'daw-channel-row daw-mixer-labels',
         'text-xs text-primary-400 tracking-5xl uppercase',
         'border-b border-[var(--color-primary-quiet)] px-[18px] py-[7px]',
-        'bg-secondary-950/50',
+        'bg-(color:--color-surface)/50',
       )}
       aria-hidden="true"
     >
@@ -202,7 +202,7 @@ export function DawMixerDesktop({ mixer, copy }: { mixer: DawMixer; copy: DawMix
   const endId = useId();
   return (
     <div
-      className="daw-mixer-desktop relative font-mono text-sm text-tertiary-50 border border-[var(--color-primary-border)] bg-secondary-950/50 overflow-x-auto md:overflow-x-hidden"
+      className="daw-mixer-desktop relative font-mono text-sm text-tertiary-50 border border-[var(--color-primary-border)] bg-(color:--color-surface)/50 overflow-x-auto md:overflow-x-hidden"
       data-testid="daw-mixer-desktop"
     >
       <a href={`#${endId}`} className="mixer-skip-link">

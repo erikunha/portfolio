@@ -3,8 +3,7 @@
     border: var(--border-width) solid var(--color-accent);
     padding: var(--spacing-6);
     color: var(--color-text);
-    background:
-      linear-gradient(180deg, var(--color-glow-04), transparent), var(--color-secondary-950);
+    background: linear-gradient(180deg, var(--color-glow-04), transparent), var(--color-surface);
     display: flex;
     flex-direction: column;
     gap: var(--spacing-2);
@@ -20,7 +19,7 @@
 
   .contact-queued {
     border-color: var(--color-primary-subtle);
-    background: var(--color-secondary-950);
+    background: var(--color-surface);
   }
 
   .contact-state-title {
@@ -755,7 +754,7 @@
     width: var(--ctz-label-width);
     padding: var(--spacing-1) var(--spacing-2);
     border: var(--border-width) solid var(--color-text);
-    background: var(--color-secondary-950);
+    background: var(--color-surface);
   }
 
   .ctz-label[data-side="left"] {
@@ -831,7 +830,7 @@
     padding: 0 var(--spacing-3);
     border: var(--border-width) solid var(--color-primary-subtle);
     border-radius: var(--radius-control);
-    background: var(--color-secondary-950);
+    background: var(--color-surface);
     color: var(--color-text);
     font: inherit;
     text-overflow: ellipsis;
@@ -843,7 +842,7 @@
     top: calc(100% + var(--spacing-1));
     z-index: var(--z-local-above);
     border: var(--border-width) solid var(--color-accent);
-    background: var(--color-secondary-950);
+    background: var(--color-surface);
   }
 
   .ctz-popup[hidden],

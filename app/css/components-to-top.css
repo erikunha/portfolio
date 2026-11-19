@@ -14,7 +14,7 @@
       z-index: var(--z-to-top);
       width: var(--to-top-size);
       height: var(--to-top-size);
-      background: var(--color-secondary-950);
+      background: var(--color-surface);
       border: var(--border-width) solid var(--color-primary-subtle);
       border-bottom: 0;
       border-inline-end: 0;

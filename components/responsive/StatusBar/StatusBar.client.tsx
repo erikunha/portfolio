@@ -20,7 +20,7 @@ export function StatusBar() {
 
   return (
     <div
-      className="status-bar sticky top-0 z-(--z-topbar) flex items-center justify-between px-[var(--space-gutter)] py-1.5 pt-[calc(env(safe-area-inset-top,0px)+6px)] bg-secondary-950 border-b border-primary-subtle text-xs leading-ratio-tight tracking-md text-(color:--color-accent) [font-variant-numeric:tabular-nums]"
+      className="status-bar sticky top-0 z-(--z-topbar) flex items-center justify-between px-[var(--space-gutter)] py-1.5 pt-[calc(env(safe-area-inset-top,0px)+6px)] bg-(color:--color-surface) border-b border-primary-subtle text-xs leading-ratio-tight tracking-md text-(color:--color-accent) [font-variant-numeric:tabular-nums]"
       aria-hidden="true"
     >
       <div className="flex items-center gap-2">

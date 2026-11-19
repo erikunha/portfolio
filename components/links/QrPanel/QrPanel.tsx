@@ -17,7 +17,7 @@ export function QrPanel({ locale, url }: { locale: SiteLocale; url: string }) {
     <section className="links-col" data-col="qr" aria-labelledby={HEADING_ID}>
       <SectionHeading id={HEADING_ID}>{copy.qrHeading[locale]}</SectionHeading>
 
-      <div className="border border-primary-border bg-secondary-950 p-4 flex gap-4 items-center">
+      <div className="border border-primary-border bg-(color:--color-surface) p-4 flex gap-4 items-center">
         <svg
           viewBox={`0 0 ${span} ${span}`}
           width={RENDER_PX}
@@ -28,7 +28,7 @@ export function QrPanel({ locale, url }: { locale: SiteLocale; url: string }) {
           shapeRendering="crispEdges"
         >
           <rect width={span} height={span} fill="var(--color-tertiary-50)" />
-          <path d={qrSvgPath(matrix, QUIET_ZONE)} fill="var(--color-secondary-950)" />
+          <path d={qrSvgPath(matrix, QUIET_ZONE)} fill="var(--color-surface)" />
         </svg>
         <div>
           <p className="m-0 text-tertiary-400 text-xs">
