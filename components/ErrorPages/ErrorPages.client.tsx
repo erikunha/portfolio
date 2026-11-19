@@ -5,7 +5,7 @@ import { Suspense, useEffect, useState } from 'react';
 import { PageMain } from '@/components/PageMain';
 import { NOT_FOUND_PATH_TOKEN } from '@/content/errors.constants';
 import type { ErrorsContent } from '@/content/schemas';
-import { CmdLine } from '@/design-system';
+import { Button, CmdLine } from '@/design-system';
 import { reportClientError } from '@/lib/report-client-error.client';
 import { COPY_STATUS, useCopyFeedback } from '@/lib/use-copy-feedback.client';
 import { ErrorHeading } from './ErrorHeading.client';
@@ -151,12 +151,10 @@ export function ServerErrorMain({
         <p className="err-text">{content.message}</p>
       </div>
       <div className="err-actions">
-        <button type="button" className="err-action err-action-primary" onClick={retry}>
-          {content.retryLabel}
-        </button>
-        <a className="err-action" href={content.home.href}>
+        <Button onClick={retry}>{content.retryLabel}</Button>
+        <Button as="a" variant="secondary" href={content.home.href}>
           {content.home.label}
-        </a>
+        </Button>
       </div>
       {digest ? <ErrorReference digest={digest} content={content} /> : null}
     </PageMain>

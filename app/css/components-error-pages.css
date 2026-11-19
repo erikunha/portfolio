@@ -164,25 +164,6 @@
     gap: var(--spacing-2);
   }
 
-  .err-action {
-    display: inline-flex;
-    align-items: center;
-    min-height: var(--spacing-target);
-    padding: 0 var(--spacing-4);
-    border: var(--border-width) solid var(--color-accent);
-    background: transparent;
-    color: var(--color-accent);
-    font: inherit;
-    text-decoration: none;
-    cursor: pointer;
-  }
-
-  .err-action-primary {
-    background: var(--color-accent);
-    color: var(--color-on-accent);
-    font-weight: 700;
-  }
-
   .err-ref {
     margin: 0;
     display: flex;

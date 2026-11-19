@@ -22,10 +22,10 @@ function StaticServerError({
         <p className="err-text">{content.message}</p>
       </div>
       <div className="err-actions">
-        <button type="button" className="err-action err-action-primary" onClick={retry}>
+        <button type="button" className="btn" data-variant="primary" onClick={retry}>
           {content.retryLabel}
         </button>
-        <a className="err-action" href={content.home.href}>
+        <a className="btn" data-variant="secondary" href={content.home.href}>
           {content.home.label}
         </a>
       </div>
