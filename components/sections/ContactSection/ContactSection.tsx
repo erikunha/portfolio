@@ -83,7 +83,11 @@ export function ContactSection({ locale, defer }: { locale: SiteLocale; defer?: 
                     <div className="contact-channel-row">
                       <dt>{channels.linkedinLabel}</dt>
                       <dd>
-                        <ExternalLink className="contact-channel-cta" href={section.linkedinHref}>
+                        <ExternalLink
+                          className="btn contact-channel-cta"
+                          data-variant="primary"
+                          href={section.linkedinHref}
+                        >
                           {channels.linkedinCta}{' '}
                           <span aria-hidden="true">{channels.linkedinGlyph}</span>
                           <span className="sr-only"> {channels.linkedinNewTabNote}</span>

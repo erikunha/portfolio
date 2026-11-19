@@ -74,7 +74,7 @@ export function ProposeSlot({
         </div>
       </div>
       {slotLine ? (
-        <button type="button" className="ctz-propose" onClick={propose}>
+        <button type="button" className="btn ctz-propose" data-variant="primary" onClick={propose}>
           {copy.propose.label}
         </button>
       ) : null}

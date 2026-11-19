@@ -4,7 +4,7 @@ import { type Ref, useMemo } from 'react';
 import type { CopyFeedback } from '@/content/schemas';
 import { COPY_STATUS, type CopyStatus, useCopyFeedback } from '@/lib/use-copy-feedback.client';
 
-const DEFAULT_CLASS = 'copy-btn contact-copy-btn';
+const DEFAULT_CLASS = 'btn contact-copy-btn';
 
 export function ContactCopyButton({
   value,
@@ -41,7 +41,13 @@ export function ContactCopyButton({
 
   return (
     <>
-      <button ref={buttonRef} type="button" className={className} onClick={() => void copy(value)}>
+      <button
+        ref={buttonRef}
+        type="button"
+        className={className}
+        data-variant="quiet"
+        onClick={() => void copy(value)}
+      >
         {current.label}
       </button>
       <span role="status" aria-live="polite" aria-atomic="true" className="sr-only">

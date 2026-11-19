@@ -240,7 +240,8 @@ export function ContactForm({ copy, chrome }: { copy: ContactContent; chrome: Te
             type="submit"
             aria-disabled={busy}
             aria-busy={busy}
-            className="contact-send"
+            className="btn contact-send"
+            data-variant="primary"
             data-reserve={longestCopy([copy.form.submit, copy.form.submitting])}
           >
             <span>{busy ? copy.form.submitting : copy.form.submit}</span>

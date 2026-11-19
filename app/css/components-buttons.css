@@ -51,6 +51,18 @@
     border-color: var(--color-border-strong);
   }
 
+  .btn[data-variant="quiet"] {
+    background-color: transparent;
+    color: var(--color-text-secondary);
+    border-color: var(--color-border);
+    font-weight: 400;
+  }
+
+  .btn[data-variant="quiet"]:hover {
+    color: var(--color-accent);
+    box-shadow: none;
+  }
+
   .btn[data-size="sm"] {
     padding-inline: var(--btn-pad-compact);
   }

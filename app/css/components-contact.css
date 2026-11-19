@@ -304,25 +304,11 @@
   }
 
   .contact-channel-cta {
-    display: inline-flex;
-    align-items: center;
     gap: var(--spacing-1);
-    min-height: var(--spacing-target);
-    padding: 0 var(--spacing-3);
-    border: var(--border-width) solid var(--color-accent);
+    padding-inline: var(--spacing-3);
     border-radius: var(--radius-control);
-    background: var(--color-accent);
-    color: var(--color-on-accent);
-    font-family: var(--font-mono);
-    font-size: var(--text-xs);
-    font-weight: 700;
     letter-spacing: var(--tracking-lg);
-    text-decoration: none;
     white-space: nowrap;
-  }
-
-  .contact-channel-cta:hover {
-    box-shadow: var(--shadow-glow);
   }
 
   .contact-channel-link {
@@ -383,17 +369,12 @@
 
   .contact-send {
     display: inline-grid;
-    min-height: var(--spacing-target);
+    align-items: normal;
+    justify-content: normal;
     padding: var(--spacing-2) var(--spacing-4);
-    border: var(--border-width) solid var(--color-accent);
     border-radius: var(--radius-control);
-    background: var(--color-accent);
-    color: var(--color-on-accent);
-    font-family: var(--font-mono);
-    font-size: var(--text-xs);
-    font-weight: bold;
-    cursor: pointer;
-    transition: box-shadow 200ms ease;
+    line-height: inherit;
+    letter-spacing: normal;
   }
 
   .contact-send::after {
@@ -416,18 +397,13 @@
   }
 
   .contact-send[aria-disabled="true"] {
+    opacity: 1;
+    pointer-events: auto;
     cursor: wait;
   }
 
-  .contact-send:hover:not([aria-disabled="true"]) {
-    box-shadow: var(--shadow-glow);
-  }
-
-  /* biome-ignore lint/suspicious/noDuplicateSelectors: `@variant motion-off` and `@variant motion-on` resolve to a `body` ancestor selector, so this rule has a different selector than the earlier one with the same class */
-  .contact-send {
-    @variant motion-off {
-      transition: none;
-    }
+  .contact-send[aria-disabled="true"]:hover {
+    box-shadow: none;
   }
 
   .ctz {
@@ -973,19 +949,9 @@
   }
 
   .ctz-propose {
-    min-height: var(--spacing-target);
-    padding: 0 var(--spacing-3);
-    border: var(--border-width) solid var(--color-accent);
+    padding-inline: var(--spacing-3);
     border-radius: var(--radius-control);
-    background: var(--color-accent);
-    color: var(--color-on-accent);
-    font: inherit;
-    font-weight: 700;
-    cursor: pointer;
-  }
-
-  .ctz-propose:hover {
-    box-shadow: var(--shadow-glow);
+    letter-spacing: normal;
   }
 
   .ctz-overlap {
