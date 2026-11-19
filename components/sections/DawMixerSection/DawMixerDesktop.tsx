@@ -1,3 +1,4 @@
+import { useId } from 'react';
 import { FaderDbIsland } from '@/components/client/DawMixer/FaderIsland/FaderDbIsland.client';
 import { KnobIsland } from '@/components/client/DawMixer/KnobIsland/KnobIsland.client';
 import { RmsButtons } from '@/components/client/DawMixer/RmsButtons/RmsButtons.client';
@@ -197,16 +198,21 @@ function TableHeader({ copy }: { copy: DawMixerCopy }) {
 }
 
 export function DawMixerDesktop({ mixer, copy }: { mixer: DawMixer; copy: DawMixerCopy }) {
+  const endId = useId();
   return (
     <div
-      className="daw-mixer-desktop font-mono text-sm text-tertiary-50 border border-[var(--color-primary-border)] bg-secondary-950/50 overflow-x-auto md:overflow-x-hidden"
+      className="daw-mixer-desktop relative font-mono text-sm text-tertiary-50 border border-[var(--color-primary-border)] bg-secondary-950/50 overflow-x-auto md:overflow-x-hidden"
       data-testid="daw-mixer-desktop"
     >
+      <a href={`#${endId}`} className="skip-to-content mixer-skip-link">
+        {copy.skipLabel}
+      </a>
       <SessionHeaderDesktop mixer={mixer} copy={copy} />
       <TableHeader copy={copy} />
       {mixer.channels.map((ch) => (
         <ChannelDesktop key={ch.id} ch={ch} copy={copy} />
       ))}
+      <div id={endId} tabIndex={-1} />
     </div>
   );
 }

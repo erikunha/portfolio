@@ -1,4 +1,17 @@
 @layer components {
+  .mixer-skip-link {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--spacing-target);
+    border: 1px solid var(--color-primary-500);
+    background: var(--color-secondary-950);
+    color: var(--color-primary-500);
+  }
+
+  .mixer-skip-link:focus-visible {
+    outline-offset: var(--focus-ring-offset-inset);
+  }
+
   .daw-mixer-row-min {
     grid-template-columns: 1fr auto;
   }

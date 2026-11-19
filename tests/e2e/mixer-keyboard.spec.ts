@@ -9,6 +9,7 @@ const MIXER = '#sec-guitar .guitar-mixer';
 // there the walk covers the sliders, which carry tabindex. WebKit on Linux tabs to buttons.
 const CONTROLS = `${MIXER} [role="slider"]:visible, ${MIXER} button:visible`;
 const SLIDERS = `${MIXER} [role="slider"]:visible`;
+const SKIP_LINK = `${MIXER} a.mixer-skip-link`;
 const MIN_RING_PX = 2;
 const NO_OUTLINE = 'none';
 const VIEWPORT = { width: WIDTH.DESKTOP, height: 900 } as const;
@@ -82,11 +83,19 @@ test('Tab walks every mixer control in order, each shows a focus ring, and focus
 
 test('Shift+Tab from the first control leaves the mixer backwards', {
   tag: '@cross-browser',
-}, async ({ page }) => {
+}, async ({ page, browserName }) => {
   await openMixer(page);
   await page.locator(CONTROLS).first().focus();
 
+  const linksSkipTab = browserName === WEBKIT && process.platform === MACOS;
   await page.keyboard.press('Shift+Tab');
+  if (!linksSkipTab) {
+    expect(
+      (await activeControl(page))?.label,
+      'the skip link is the stop before the controls',
+    ).toBe((await page.locator(SKIP_LINK).textContent())?.trim());
+    await page.keyboard.press('Shift+Tab');
+  }
 
   expect((await activeControl(page))?.inMixer).not.toBe(true);
 });

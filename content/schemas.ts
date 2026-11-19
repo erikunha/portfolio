@@ -932,6 +932,7 @@ const DawMixerCopyTextSchema = z.string().min(1);
 export const DawMixerCopySchema = z.object({
   sessionLabel: DawMixerCopyTextSchema,
   tracksLabel: DawMixerCopyTextSchema,
+  skipLabel: DawMixerCopyTextSchema,
   separator: DawMixerCopyTextSchema,
   transportSeparator: DawMixerCopyTextSchema,
   playGlyph: DawMixerCopyTextSchema,

@@ -13,6 +13,7 @@ const dawMixerCopyFor = (locale: SiteLocale): DawMixerCopy => {
   return DawMixerCopySchema.parse({
     sessionLabel: pt ? 'SESSÃO:' : 'SESSION:',
     tracksLabel: pt ? 'FAIXAS DE GTR + MASTER' : 'GTR TRACKS + MASTER',
+    skipLabel: pt ? 'Pular os controles do mixer' : 'Skip the mixer controls',
     separator: '·',
     transportSeparator: '|',
     playGlyph: '▶',
