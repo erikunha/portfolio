@@ -549,26 +549,43 @@
     margin-block-start: var(--spacing-2);
   }
 
-  .shell-receipt-button {
+  .btn.shell-receipt-button {
+    box-sizing: border-box;
     flex: 1 1 0;
     min-inline-size: max-content;
-    padding-block: var(--spacing-1);
+    max-width: 100%;
+    padding: var(--spacing-1) var(--spacing-2);
+    border-radius: var(--radius-control);
+    font: inherit;
+    letter-spacing: normal;
+    text-transform: none;
     --leading: 1.25;
     white-space: nowrap;
     overflow-wrap: normal;
+    touch-action: manipulation;
+    user-select: none;
   }
 
-  .shell-receipt-button[data-copied] {
+  .btn.shell-receipt-button:active:not([aria-disabled="true"]) {
+    background: var(--color-signal-quiet);
+  }
+
+  .btn.shell-receipt-button[aria-disabled="true"] {
+    cursor: default;
+    opacity: 0.5;
+  }
+
+  .btn.shell-receipt-button[data-copied] {
     border-color: var(--color-accent);
     background: var(--color-signal-quiet);
   }
 
-  .shell-receipt-forget {
+  .btn.shell-receipt-button.shell-receipt-forget {
     border-color: var(--shell-receipt-danger-dim);
     color: var(--shell-receipt-danger);
   }
 
-  .shell-receipt-forget[data-confirm] {
+  .btn.shell-receipt-button.shell-receipt-forget[data-confirm] {
     border-color: var(--shell-receipt-danger);
   }
 

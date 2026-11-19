@@ -77,6 +77,12 @@
       outline-offset: calc(-1 * var(--forced-hairline));
     }
 
+    .shell-receipt-button[aria-disabled="true"] {
+      color: GrayText;
+      border-color: GrayText;
+      opacity: 1;
+    }
+
     .ctz-option:hover,
     .ctz-option[aria-selected="true"] {
       outline: var(--forced-state-width) solid Highlight;

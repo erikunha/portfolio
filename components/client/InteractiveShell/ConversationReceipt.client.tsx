@@ -348,7 +348,8 @@ export function ConversationReceipt({
         <button
           ref={primaryRef}
           type="button"
-          className="shell-control shell-receipt-button"
+          className="btn shell-receipt-button"
+          data-variant="secondary"
           data-testid="shell-receipt-primary"
           aria-disabled={pending}
           aria-describedby={confirming || pending ? messageId : undefined}
@@ -362,7 +363,8 @@ export function ConversationReceipt({
         <button
           ref={secondaryRef}
           type="button"
-          className="shell-control shell-receipt-button shell-receipt-forget"
+          className="btn shell-receipt-button shell-receipt-forget"
+          data-variant="secondary"
           data-testid="shell-receipt-secondary"
           aria-disabled={forgetBlocked}
           aria-busy={pending}
