@@ -28,6 +28,7 @@
     "validate-content": "tsx scripts/gates/validate-content.ts",
     "generate:og": "tsx scripts/codegen/generate-og-image.ts",
     "generate:icons": "tsx scripts/codegen/generate-brand-icons.ts",
+    "generate:discovery": "tsx scripts/codegen/generate-discovery-files.ts",
     "ask:eval": "TSX_TSCONFIG_PATH=scripts/eval/tsconfig.eval.json tsx scripts/eval/ask-eval.ts",
     "bundle-check": "tsx scripts/gates/check-bundle-size.ts",
     "route-js-check": "tsx scripts/gates/check-route-js.ts",
