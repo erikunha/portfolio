@@ -46,6 +46,13 @@ export {
 export { createNavigationSchema } from './navigation.schema';
 export type { LocalizedText } from './schema-primitives';
 export { CompanyUrlSchema, LocalizedTextSchema } from './schema-primitives';
+export type { ShellResponse, ShellUi, TerminalChrome } from './shell-ui.schema';
+export {
+  ShellCommandsSchema,
+  ShellResponseSchema,
+  ShellUiSchema,
+  TerminalChromeSchema,
+} from './shell-ui.schema';
 export type { WorldMap } from './world-map.schema';
 export { WorldMapSchema } from './world-map.schema';
 export { SECTION_ICONS };
@@ -504,108 +511,6 @@ export const GitCommitSchema = z
     message: 'Employment must end on or after its start month',
   });
 
-export const ShellResponseSchema = z.object({
-  commands: z.array(z.string().min(1)).min(1),
-  kind: z.enum(['output', 'error']).default('output'),
-  text: z.string().min(1),
-});
-export const ShellCommandsSchema = z.array(ShellResponseSchema).min(1);
-
-export const ShellUiSchema = z.object({
-  welcome: z.string().min(1),
-  mobileWelcome: z.string().min(1),
-  inputLabel: z.string().min(1),
-  outputLabel: z.string().min(1),
-  toolbarLabel: z.string().min(1),
-  prompt: z.string().min(1),
-  placeholder: z.string().min(1),
-  mobilePlaceholder: z.string().min(1),
-  commandHint: z.string().min(1),
-  aiLabel: z.string().min(1),
-  thinking: z.string().min(1),
-  stopPill: z.string().includes('{seconds}'),
-  escKey: z.string().min(1),
-  stopLabel: z.string().min(1),
-  stoppedBefore: z.string().min(1),
-  stoppedPartial: z.string().min(1),
-  started: z.string().min(1),
-  complete: z.string().min(1),
-  commandComplete: z.string().min(1),
-  cleared: z.string().min(1),
-  busy: z.string().min(1),
-  empty: z.string().min(1),
-  errorPrefix: z.string().min(1),
-  serverError: z.string().min(1),
-  requestTooLarge: z.string().min(1),
-  answerWithheld: z.string().min(1),
-  bodyUnavailable: z.string().min(1),
-  offline: z.string().min(1),
-  networkError: z.string().min(1),
-  localAvailable: z.string().min(1),
-  receiptTitle: z.string().min(1),
-  receiptQuestionsOne: z.string().min(1),
-  receiptQuestionsMany: z.string().includes('{count}'),
-  receiptRetention: z.string().min(1),
-  receiptIdLabel: z.string().min(1),
-  receiptLabel: z.string().min(1),
-  conversationForgotten: z.string().min(1),
-  conversationForgottenOne: z.string().min(1),
-  conversationForgottenMany: z.string().includes('{count}'),
-  forgetConfirmTitle: z.string().min(1),
-  forgetConfirmOne: z.string().min(1),
-  forgetConfirmMany: z.string().includes('{count}'),
-  forgetCancel: z.string().min(1),
-  forgetConfirm: z.string().min(1),
-  forgetPendingOne: z.string().min(1),
-  forgetPendingMany: z.string().includes('{count}'),
-  forgetUnavailable: z.string().min(1),
-  forgetEmailPrefix: z.string().min(1),
-  forgetOffline: z.string().min(1),
-  forgetOfflineHint: z.string().min(1),
-  forgetTimedOut: z.string().min(1),
-  forgetTimedOutHint: z.string().min(1),
-  forgetRetry: z.string().min(1),
-  forgetWaitNotice: z.string().includes('{left}'),
-  forgetWaitHint: z.string().min(1),
-  forgetWait: z.string().includes('{left}'),
-  forgetting: z.string().min(1),
-  forgetDeleted: z.string().min(1),
-  forgetFailed: z.string().min(1),
-  forgetRateLimited: z.string().min(1),
-  privacyEmpty: z.string().min(1),
-  privacyHeader: z.string().min(1),
-  privacyUsage: z.string().min(1),
-  privacyUnknown: z.string().min(1),
-  privacyNotAttempted: z.string().min(1),
-  privacyNoConversation: z.string().min(1),
-  copy: z.string().min(1),
-  forget: z.string().min(1),
-  copied: z.string().min(1),
-  copiedAnnouncement: z.string().min(1),
-  copyFailedAnnouncement: z.string().min(1),
-  accuracy: z.string().min(1),
-  privacy: z.string().min(1),
-  email: z.email(),
-  emailHref: z.url(),
-  technicalPrivacy: z.string().min(1),
-  requestIdHeader: z.string().min(1),
-  technicalPrivacySuffix: z.string().min(1),
-  forgetEndpoint: z.string().min(1),
-  technicalPrivacyScope: z.string().min(1),
-  noscript: z.string().min(1),
-  suggestions: z.array(z.string().min(1)).min(1),
-  mobileSuggestions: z.array(z.string().min(1)).min(1),
-  commands: z.array(z.string().min(1)).min(1),
-});
-export type ShellUi = z.infer<typeof ShellUiSchema>;
-
-export const TerminalChromeSchema = z.object({
-  promptLabel: z.string().min(1),
-  rightTag: z.string().min(1),
-  mobileLabel: z.string().min(1).optional(),
-});
-export type TerminalChrome = z.infer<typeof TerminalChromeSchema>;
-
 export const BrandSchema = z.object({
   homeHref: z.string().startsWith('/'),
   accessibleName: z.string().min(1),
@@ -680,7 +585,6 @@ export type Unknowns = z.infer<typeof UnknownsSchema>;
 export type Credential = z.infer<typeof CredentialSchema>;
 export type CommunityEvent = z.infer<typeof CommunityEventSchema>;
 export type GitCommit = z.infer<typeof GitCommitSchema>;
-export type ShellResponse = z.infer<typeof ShellResponseSchema>;
 
 export type Profile = z.infer<typeof ProfileSchema> & { technologyLine: string };
 export type Education = z.infer<typeof EducationSchema>;

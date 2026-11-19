@@ -8,6 +8,7 @@ import * as links from './links.schema';
 import * as navigation from './navigation.schema';
 import * as primitives from './schema-primitives';
 import * as barrel from './schemas';
+import * as shellUi from './shell-ui.schema';
 import * as worldMap from './world-map.schema';
 
 type Moved = readonly [string, Record<string, unknown>, readonly string[]];
@@ -53,6 +54,11 @@ const MOVED: readonly Moved[] = [
     ['CvDocumentSchema', 'CvJsonLdSchema', 'ReadingViewsSchema', 'SummaryDocumentSchema'],
   ],
   ['world-map.schema', worldMap, ['WorldMapSchema']],
+  [
+    'shell-ui.schema',
+    shellUi,
+    ['ShellCommandsSchema', 'ShellResponseSchema', 'ShellUiSchema', 'TerminalChromeSchema'],
+  ],
 ];
 
 const INTERNAL = new Set(['SectionTextSchema']);
