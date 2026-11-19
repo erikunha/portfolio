@@ -2,7 +2,7 @@ import { expect, type Page, test } from '@playwright/test';
 import { NAVIGATION } from '../../content/navigation';
 import { SITE_LOCALE } from '../../content/site-locale';
 import { VIEWPORTS, WIDTH } from './_helpers/geometry';
-import { MOTION_TOPBAR_TOGGLE, openSectionMenu } from './_helpers/hydration';
+import { gotoHydrated, MOTION_TOPBAR_TOGGLE, openSectionMenu } from './_helpers/hydration';
 import { gotoSettled } from './_helpers/streamed';
 
 const { copy } = NAVIGATION[SITE_LOCALE.en];
@@ -92,13 +92,11 @@ test.describe('MOTION toggle', { tag: '@cross-browser' }, () => {
   test.use({ viewport: DESKTOP });
 
   test('prints ON or OFF beside its label and flips on click', async ({ page }) => {
-    await gotoSettled(page, '/');
+    await gotoHydrated(page, '/', MOTION_TOPBAR_TOGGLE);
     const toggle = page.locator(MOTION_TOPBAR_TOGGLE).first();
     await expect(toggle).toContainText(copy.motionOn);
-    await expect(async () => {
-      await toggle.click();
-      await expect(toggle).toContainText(copy.motionOff);
-    }).toPass();
+    await toggle.click();
+    await expect(toggle).toContainText(copy.motionOff);
     await expect(toggle).toHaveAttribute('aria-pressed', 'false');
   });
 });

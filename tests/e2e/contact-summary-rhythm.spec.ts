@@ -19,10 +19,8 @@ for (const route of ROUTES) {
       await gotoSettled(page, route);
       await page.locator(FORM_SELECTOR).scrollIntoViewIfNeeded();
       await waitForHydration(page, FORM_SELECTOR);
-      await expect(async () => {
-        await page.locator(`${FORM_SELECTOR} button[type="submit"]`).click();
-        await expect(page.locator('.contact-alert')).toBeVisible({ timeout: 1000 });
-      }).toPass();
+      await page.locator(`${FORM_SELECTOR} button[type="submit"]`).click();
+      await expect(page.locator('.contact-alert')).toBeVisible();
       const measured = await page.evaluate(() => {
         const paragraph = document.querySelector('.contact-alert p') as HTMLElement;
         const style = getComputedStyle(paragraph);

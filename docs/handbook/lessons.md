@@ -90,11 +90,13 @@ The prompt for a manual or agent review that applies these rules to a diff is `d
 30. After `pnpm update` or `pnpm add`, run `pnpm install --frozen-lockfile`. A direct dependency
     that also has a `pnpm.overrides` entry records the override as its lockfile specifier; an
     update rewrites it to the manifest range and CI's frozen install then refuses the lockfile.
-31. `waitForHydration` proves React began hydrating a node (the fiber key exists), not that it
-    committed. On a slow runner (headless Linux WebKit paints about four frames per second here) a
-    click in that window is dropped: the submit event fires before the handler is live. A test whose
-    first action after `waitForHydration` is a state-changing click repeats the click inside
-    `expect(...).toPass()` until its effect shows.
+31. `waitForHydration` returns only once React committed the node: its fiber exists, no fiber
+    above it is still marked as hydrating or placed, and the tree reaches the root. The fiber key
+    alone appears while the render is still running, before the commit that attaches handlers; at
+    20x CPU throttle in Chromium that gap lasts about 190 ms. Wait with `waitForHydration`,
+    `gotoHydrated` or `openSectionMenu`, then act once: a retry around the first action hides a
+    missing wait. Check: `tests/e2e/hydration-commit.spec.ts` reads the committed tree through the
+    React devtools hook, independent of the helper.
 32. Playwright's WebKit refuses a screenshot over 32767px on any side, and the full homepage is
     taller at phone width on Linux. A `fullPage` screenshot that nothing asserts on is an
     attachment, so it is not taken.
