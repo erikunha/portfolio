@@ -76,10 +76,10 @@
     background: var(--color-accent);
     box-shadow: 0 0 10px var(--color-accent);
     border: var(--border-width) solid var(--color-surface);
-  }
 
-  body[data-motion="reduce"] .mx-static-fader-thumb {
-    box-shadow: none;
+    @variant motion-off {
+      box-shadow: none;
+    }
   }
 
   .mx-static-dial {
