@@ -54,7 +54,7 @@ describe('terminal theme contract', () => {
     expect(getThemeColors()).toMatchObject({
       text: '#e6ffe6',
       'text-secondary': '#a1b3a1',
-      green: '#00ff41',
+      accent: '#00ff41',
       'secondary-950': '#000000',
       'primary-500': '#00ff41',
       'tertiary-50': '#e6ffe6',

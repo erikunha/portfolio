@@ -22,7 +22,6 @@
       --color-eq-bar-bottom: var(--color-print-rule);
       --color-text: var(--color-print-ink);
       --color-text-secondary: var(--color-print-rule);
-      --color-green: var(--color-print-ink);
       --color-surface: var(--color-print-paper);
       --color-surface-raised: var(--color-print-paper);
       --color-border: var(--color-print-rule);

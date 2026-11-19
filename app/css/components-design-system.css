@@ -178,13 +178,13 @@
   .ds-nav-item[aria-current="location"] {
     border-color: var(--color-border);
     background: var(--color-primary-quiet);
-    color: var(--color-green);
+    color: var(--color-accent);
   }
 
   .ds-nav-group-title,
   .toc-title {
     margin: var(--spacing-3) 10px var(--spacing-1);
-    color: var(--color-green);
+    color: var(--color-accent);
     font-family: var(--font-mono);
     font-size: var(--text-xs);
     letter-spacing: var(--tracking-3xl);
@@ -211,7 +211,7 @@
   }
 
   .toc .ds-nav-item:hover {
-    color: var(--color-green);
+    color: var(--color-accent);
     text-decoration-color: currentColor;
   }
 

@@ -127,7 +127,6 @@ const PALETTE = `
   --color-primary-border: #00ff4133;
   --color-primary-subtle: #00ff4166;
   --color-text-secondary: #a1b3a1;
-  --color-green: var(--color-primary-500);
 `;
 
 const ROLE_TARGETS: Record<string, string> = {

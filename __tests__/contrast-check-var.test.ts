@@ -41,16 +41,14 @@ const run = (aliases: string) => {
 
 describe('contrast-check theme parsing', { timeout: SUBPROCESS_TEST_TIMEOUT_MS }, () => {
   it('resolves a color alias that points at another color token', () => {
-    const result = run(
-      '--color-text: var(--color-tertiary-50);\n--color-green: var(--color-primary-500);',
-    );
+    const result = run('--color-text: var(--color-tertiary-50);');
     expect(result.stderr).not.toContain('Cannot parse');
     expect(result.status).toBe(0);
     expect(result.stdout).toContain('Contrast check passed.');
   });
 
   it('fails an alias whose target is missing', () => {
-    const result = run('--color-text: var(--color-missing);\n--color-green: #00ff41;');
+    const result = run('--color-text: var(--color-missing);');
     expect(result.status).toBe(1);
     expect(result.stderr).toContain('Cannot parse --color-text');
   });

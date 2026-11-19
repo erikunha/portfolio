@@ -112,7 +112,7 @@
 
   .err-label {
     margin: 0;
-    color: var(--color-green);
+    color: var(--color-accent);
     font-size: var(--text-xs);
     letter-spacing: var(--tracking-3xl);
   }

@@ -85,8 +85,8 @@ describe('findRawZIndex', () => {
 describe('findRawFocusRing', () => {
   it('flags a hand-written ring on :focus-visible', () => {
     expect(
-      findRawFocusRing('.a:focus-visible {\n  outline: 1px solid var(--color-green);\n}'),
-    ).toEqual([{ line: 2, literal: 'outline: 1px solid var(--color-green)' }]);
+      findRawFocusRing('.a:focus-visible {\n  outline: 1px solid var(--color-accent);\n}'),
+    ).toEqual([{ line: 2, literal: 'outline: 1px solid var(--color-accent)' }]);
   });
 
   it('flags an offset that is not on the ring scale', () => {

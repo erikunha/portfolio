@@ -21,7 +21,7 @@
 
   .footer-shutdown-title,
   .footer-card-title {
-    color: var(--color-green);
+    color: var(--color-accent);
     font-size: var(--text-sm);
     font-weight: 700;
     letter-spacing: var(--footer-shutdown-tracking);
@@ -127,7 +127,7 @@
   }
 
   .footer-session-grid [data-sess] {
-    color: var(--color-green);
+    color: var(--color-accent);
     font-weight: 700;
   }
 
@@ -217,7 +217,7 @@
     appearance: none;
     background: var(--color-primary-quiet);
     border: var(--border-width) solid var(--color-border-strong);
-    accent-color: var(--color-green);
+    accent-color: var(--color-accent);
   }
 
   .footer-depth::-webkit-meter-bar {
@@ -227,15 +227,15 @@
   }
 
   .footer-depth::-webkit-meter-optimum-value {
-    background: var(--color-green);
+    background: var(--color-accent);
   }
 
   .footer-depth::-moz-meter-bar {
-    background: var(--color-green);
+    background: var(--color-accent);
   }
 
   .footer-established {
-    color: var(--color-green);
+    color: var(--color-accent);
     font-weight: 700;
   }
 
@@ -336,7 +336,7 @@
     column-gap: var(--spacing-3);
     min-height: var(--spacing-12);
     margin: 0;
-    color: var(--color-green);
+    color: var(--color-accent);
     font-size: var(--text-body);
     font-weight: 700;
     --leading: var(--footer-line-height);
@@ -412,7 +412,7 @@
   }
 
   .sitemap .sm-list a:hover {
-    color: var(--color-green);
+    color: var(--color-accent);
   }
 
   .footer-dmesg {
@@ -444,7 +444,7 @@
   }
 
   .footer-dmesg b {
-    color: var(--color-green);
+    color: var(--color-accent);
   }
 
   .footer-halt {
@@ -456,7 +456,7 @@
 
   .footer-halt-plate {
     padding: var(--spacing-1) var(--spacing-3);
-    background: var(--color-green);
+    background: var(--color-accent);
     color: var(--color-on-accent);
     font-weight: 700;
     letter-spacing: var(--footer-tracking);
@@ -475,7 +475,7 @@
     height: var(--spacing-target);
     flex: none;
     border: var(--border-width) solid var(--color-border-strong);
-    color: var(--color-green);
+    color: var(--color-accent);
     font: inherit;
   }
 

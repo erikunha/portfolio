@@ -46,8 +46,8 @@
   }
 
   .contact-dismiss {
-    border-color: var(--color-green);
-    color: var(--color-green);
+    border-color: var(--color-accent);
+    color: var(--color-accent);
   }
 
   .contact-dismiss:hover {
@@ -308,9 +308,9 @@
     gap: var(--spacing-1);
     min-height: var(--spacing-target);
     padding: 0 var(--spacing-3);
-    border: var(--border-width) solid var(--color-green);
+    border: var(--border-width) solid var(--color-accent);
     border-radius: var(--radius-control);
-    background: var(--color-green);
+    background: var(--color-accent);
     color: var(--color-on-accent);
     font-family: var(--font-mono);
     font-size: var(--text-xs);
@@ -384,9 +384,9 @@
     display: inline-grid;
     min-height: var(--spacing-target);
     padding: var(--spacing-2) var(--spacing-4);
-    border: var(--border-width) solid var(--color-green);
+    border: var(--border-width) solid var(--color-accent);
     border-radius: var(--radius-control);
-    background: var(--color-green);
+    background: var(--color-accent);
     color: var(--color-on-accent);
     font-family: var(--font-mono);
     font-size: var(--text-xs);
@@ -974,9 +974,9 @@
   .ctz-propose {
     min-height: var(--spacing-target);
     padding: 0 var(--spacing-3);
-    border: var(--border-width) solid var(--color-green);
+    border: var(--border-width) solid var(--color-accent);
     border-radius: var(--radius-control);
-    background: var(--color-green);
+    background: var(--color-accent);
     color: var(--color-on-accent);
     font: inherit;
     font-weight: 700;
