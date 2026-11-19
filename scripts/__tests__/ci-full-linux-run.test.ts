@@ -62,21 +62,42 @@ afterEach(() => {
 });
 
 describe('docker environment', () => {
-  it('lets the DOCKER_ names through so the client reaches its daemon and context', () => {
-    const env = allowedEnv({
-      DOCKER_HOST: 'unix:///var/run/docker.sock',
-      DOCKER_CONFIG: '/home/u/.docker',
-      DOCKER_CONTEXT: 'colima',
-      DOCKERISH: 'x',
-      MY_DOCKER_TOKEN: 'secret',
-      GITHUB_TOKEN: 'secret',
-    });
-    expect(Object.keys(env).sort()).toEqual(['DOCKER_CONFIG', 'DOCKER_CONTEXT', 'DOCKER_HOST']);
+  const SHELL = {
+    DOCKER_HOST: 'unix:///var/run/docker.sock',
+    DOCKER_CONFIG: '/home/u/.docker',
+    DOCKER_CONTEXT: 'colima',
+    DOCKER_PASSWORD: 'secret',
+    DOCKER_AUTH_CONFIG: 'secret',
+    DOCKERISH: 'x',
+    MY_DOCKER_TOKEN: 'secret',
+    GITHUB_TOKEN: 'secret',
+  };
+
+  it('lets only the three client variables through, and only to the docker command', () => {
+    expect(Object.keys(allowedEnv(SHELL, 'docker')).sort()).toEqual([
+      'DOCKER_CONFIG',
+      'DOCKER_CONTEXT',
+      'DOCKER_HOST',
+    ]);
   });
 
-  it('carries them to the child process', () => {
-    const env = childEnv({ env: {} }, { DOCKER_HOST: 'tcp://127.0.0.1:2375', OPENAI_API_KEY: 'k' });
+  it('gives a build or test command no DOCKER_ variable, a registry password included', () => {
+    for (const file of [undefined, 'pnpm', 'node', '/usr/local/bin/docker-credential-helper']) {
+      expect(allowedEnv(SHELL, file), String(file)).toEqual({});
+    }
+    const env = childEnv({ env: {}, file: 'pnpm' }, SHELL);
+    expect(Object.keys(env).filter((name) => name.startsWith('DOCKER'))).toEqual([]);
+    expect(env.DOCKER_PASSWORD).toBeUndefined();
+  });
+
+  it('carries the client variables to a docker child and nothing else secret', () => {
+    const env = childEnv(
+      { env: {}, file: 'docker' },
+      { ...SHELL, DOCKER_HOST: 'tcp://127.0.0.1:2375', OPENAI_API_KEY: 'k' },
+    );
     expect(env.DOCKER_HOST).toBe('tcp://127.0.0.1:2375');
+    expect(env.DOCKER_CONTEXT).toBe('colima');
+    expect(env.DOCKER_PASSWORD).toBeUndefined();
     expect(env.OPENAI_API_KEY).toBeUndefined();
   });
 });

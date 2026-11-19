@@ -19,6 +19,7 @@ import { delimiter, join } from 'node:path';
 import { gitText } from '../lib/git';
 import {
   DEFAULT_LINUX_SCOPE,
+  DOCKER,
   LINUX_SCOPES,
   type LinuxScope,
   removeContainer,
@@ -123,23 +124,26 @@ const ALLOWED_ENV_NAMES = [
   'COREPACK_HOME',
   'PNPM_HOME',
 ];
-const ALLOWED_ENV_PREFIXES = ['LC_', 'XDG_', 'PLAYWRIGHT_', 'DOCKER_'];
+const ALLOWED_ENV_PREFIXES = ['LC_', 'XDG_', 'PLAYWRIGHT_'];
+const DOCKER_CLIENT_ENV_NAMES = ['DOCKER_HOST', 'DOCKER_CONTEXT', 'DOCKER_CONFIG'];
 const RUNNER_ENV = { CI: 'true' };
 
 const active = new Set<ChildProcess>();
 const pendingContainers = new Set<ContainerSpec>();
 let cleanupInstalled = false;
 
-const isAllowedEnvName = (name: string): boolean =>
+const isAllowedEnvName = (name: string, file: string | undefined): boolean =>
   ALLOWED_ENV_NAMES.includes(name) ||
-  ALLOWED_ENV_PREFIXES.some((prefix) => name.startsWith(prefix));
+  ALLOWED_ENV_PREFIXES.some((prefix) => name.startsWith(prefix)) ||
+  (file === DOCKER && DOCKER_CLIENT_ENV_NAMES.includes(name));
 
 export function allowedEnv(
   source: Record<string, string | undefined> = process.env,
+  file?: string,
 ): Record<string, string> {
   const allowed: Record<string, string> = {};
   for (const [name, value] of Object.entries(source)) {
-    if (value !== undefined && isAllowedEnvName(name)) allowed[name] = value;
+    if (value !== undefined && isAllowedEnvName(name, file)) allowed[name] = value;
   }
   return allowed;
 }
@@ -269,6 +273,7 @@ function installCleanup(): void {
 
 export function childEnv(
   options: {
+    file?: string | undefined;
     env: Record<string, string>;
     workflow?: Record<string, string> | undefined;
     blank?: Record<string, string> | undefined;
@@ -277,7 +282,7 @@ export function childEnv(
   source: Record<string, string | undefined> = process.env,
 ): NodeJS.ProcessEnv {
   const inherited: Record<string, string> = {
-    ...allowedEnv(source),
+    ...allowedEnv(source, options.file),
     ...RUNNER_ENV,
     ...options.workflow,
   };
@@ -299,7 +304,7 @@ export function startTracked(
 ): ChildProcess {
   installCleanup();
   const logFd = options.stdio === 'inherit' ? undefined : openSync(options.stdio.log, 'a');
-  const env = childEnv(options);
+  const env = childEnv({ ...options, file });
   const child = spawn(file, args, {
     cwd: options.cwd,
     env,
