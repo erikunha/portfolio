@@ -14,6 +14,7 @@ const APT_CACHE_DIR_PATTERN = /^\/[\w./-]+$/;
 const SUCCESS = 0;
 const FAILURE = 1;
 const LINUX = 'linux';
+const APT_PARTIAL_DIRS = ['archives/partial', 'lists/partial'];
 const FIRST_ARGUMENT_INDEX = 2;
 
 type Run = (
@@ -51,6 +52,11 @@ export function configureApt({
   cacheDir,
 }: AptOptions = {}): boolean {
   if (platform !== LINUX || !ci) return false;
+  if (cacheDir !== undefined) {
+    const partialDirs = APT_PARTIAL_DIRS.map((dir) => `${cacheDir}/${dir}`);
+    const created = run('sudo', ['install', '-d', ...partialDirs], { stdio: 'inherit' });
+    if (created.status !== SUCCESS) return false;
+  }
   const result = run('sudo', ['tee', APT_CONFIG_PATH], {
     input: `${aptConfig(cacheDir)}\n`,
     stdio: ['pipe', 'ignore', 'inherit'],

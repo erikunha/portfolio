@@ -218,6 +218,11 @@ The prompt for a manual or agent review that applies these rules to a diff is `d
     clock or `performance.now()`, a dependency that re-attaches a ref, a counter ref behind a key,
     a `try` around an await, a render-time reset that reads `Date.now()`. Check: dropping `failureCount` from the `focusSummary`
     dependencies fails `components/client/ContactForm/ContactForm.refocus.test.tsx`.
+53. A change to a path that only runs on the Linux CI runner is proven in the runner's image
+    before the push. The apt cache redirect passed every local check and broke every browser job,
+    because apt refuses a redirected `Dir::State::Lists` or `Dir::Cache::Archives` without its
+    `partial` subdirectory. `docker run ubuntu:24.04` reproduced it in one command. Check:
+    `scripts/__tests__/install-playwright-browsers-apt-partial.test.ts`.
 
 ## Pre-push judgement list
 
