@@ -87,25 +87,9 @@
     cursor: pointer;
   }
 
-  .copy-btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-width: var(--spacing-target);
-    min-height: var(--spacing-target);
-    padding: 0 var(--spacing-3);
-    border: var(--border-width) solid var(--color-border);
-    border-radius: var(--radius-none);
-    background: transparent;
-    color: var(--color-text-secondary);
-    font-family: var(--font-mono);
-    font-size: var(--text-xs);
-    letter-spacing: var(--tracking-xl);
-    cursor: pointer;
-  }
-
-  .copy-btn:hover {
-    color: var(--color-accent);
+  .btn.copy-btn {
+    --leading: inherit;
+    padding-inline: var(--spacing-3);
   }
 
   .ds-prose :not(pre):not(td):not(th):not(.ds-cell-value) > code {

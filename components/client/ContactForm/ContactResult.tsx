@@ -19,7 +19,8 @@ export function ContactResult({
   const dismissButton = (
     <button
       type="button"
-      className="copy-btn contact-dismiss"
+      className="btn contact-dismiss"
+      data-variant="secondary"
       aria-label={copy.dismiss.aria}
       onClick={onDismiss}
     >

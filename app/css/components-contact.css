@@ -46,14 +46,12 @@
     margin-left: auto;
   }
 
-  .contact-dismiss {
+  .btn.contact-dismiss[data-variant="secondary"] {
+    --leading: inherit;
+    padding-inline: var(--spacing-3);
     border-color: var(--color-accent);
-    color: var(--color-accent);
-  }
-
-  .contact-dismiss:hover {
-    background: var(--color-signal-quiet);
-    box-shadow: var(--shadow-glow);
+    font-weight: 400;
+    text-transform: none;
   }
 
   .contact-layout {

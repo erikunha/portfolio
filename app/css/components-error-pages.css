@@ -215,13 +215,9 @@
     cursor: pointer;
   }
 
-  .err-ref .copy-btn {
-    min-height: var(--spacing-target);
-    padding: 0 var(--spacing-3);
-    border: var(--border-width) solid var(--color-border-strong);
-    background: transparent;
+  .err-ref .btn.copy-btn {
+    border-color: var(--color-border-strong);
     color: var(--color-accent);
     font: inherit;
-    cursor: pointer;
   }
 }

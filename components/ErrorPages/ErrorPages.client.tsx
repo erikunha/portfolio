@@ -112,7 +112,8 @@ function ErrorReference({
       </span>
       <button
         type="button"
-        className="copy-btn"
+        className="btn copy-btn"
+        data-variant="quiet"
         aria-label={content.copyAriaLabel}
         onClick={() => copy(digest)}
       >
