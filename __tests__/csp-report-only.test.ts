@@ -33,10 +33,6 @@ function directives(policy: string): string[] {
     .filter(Boolean);
 }
 
-function withoutProbeDifferences(policy: string): string[] {
-  return directives(policy).filter((part) => !part.startsWith(CONNECT_SRC));
-}
-
 async function loadPair(): Promise<{ enforced: string; probe: string }> {
   const headers = await loadHeaders();
   return {
@@ -84,12 +80,16 @@ describe('Content-Security-Policy-Report-Only probe', () => {
   });
 
   it.each(['production', 'development'])(
-    'differs from the enforced policy only in connect-src (%s)',
+    'restates no enforced directive besides the reporting pair (%s)',
     async (environment) => {
       vi.stubEnv('NODE_ENV', environment);
       const { enforced, probe } = await loadPair();
       expect(probe).not.toBe('');
-      expect(withoutProbeDifferences(probe)).toEqual(withoutProbeDifferences(enforced));
+      const restated = directives(probe).filter(
+        (part) => !part.startsWith(CONNECT_SRC) && !REPORT_DIRECTIVES.includes(part),
+      );
+      expect(restated).toEqual([]);
+      expect(directives(enforced).length).toBeGreaterThan(directives(probe).length);
     },
   );
 

@@ -2,7 +2,6 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const ENFORCED_HEADER = 'Content-Security-Policy';
 const PROBE_HEADER = 'Content-Security-Policy-Report-Only';
-const CONNECT_SRC = 'connect-src';
 const TRUSTED_TYPES_DIRECTIVE = 'require-trusted-types-for';
 
 interface HeaderRule {
@@ -17,17 +16,6 @@ async function loadRules(): Promise<HeaderRule[]> {
 
 function policyOf(rule: HeaderRule, key: string): string {
   return rule.headers.find((header) => header.key === key)?.value ?? '';
-}
-
-function directives(policy: string): string[] {
-  return policy
-    .split(';')
-    .map((part) => part.trim())
-    .filter(Boolean);
-}
-
-function withoutConnectSrc(policy: string): string[] {
-  return directives(policy).filter((part) => !part.startsWith(CONNECT_SRC));
 }
 
 beforeEach(() => {
@@ -45,15 +33,12 @@ describe('Content-Security-Policy-Report-Only probe scope', () => {
     }
   });
 
-  it('differs from the enforced policy only in connect-src', async () => {
+  it('differs from the enforced policy', async () => {
     const carriers = (await loadRules()).filter((rule) =>
       rule.headers.some(({ key }) => key === PROBE_HEADER),
     );
     for (const rule of carriers) {
-      const probe = policyOf(rule, PROBE_HEADER);
-      const enforced = policyOf(rule, ENFORCED_HEADER);
-      expect(withoutConnectSrc(probe)).toEqual(withoutConnectSrc(enforced));
-      expect(probe).not.toBe(enforced);
+      expect(policyOf(rule, PROBE_HEADER)).not.toBe(policyOf(rule, ENFORCED_HEADER));
     }
   });
 });

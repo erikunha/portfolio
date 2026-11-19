@@ -19,6 +19,11 @@ const BUILD_DATE = new Date().toISOString().slice(0, ISO_DATE_LENGTH);
 const CSP_REPORT_PATH = '/api/csp-report';
 const CSP_REPORT_GROUP = 'csp-endpoint';
 
+const REPORTING_DIRECTIVES: readonly string[] = [
+  `report-to ${CSP_REPORT_GROUP}`,
+  `report-uri ${CSP_REPORT_PATH}`,
+];
+
 const VERCEL_CONNECT_SOURCES: readonly string[] = [
   'https://vitals.vercel-insights.com',
   'https://va.vercel-scripts.com',
@@ -40,10 +45,13 @@ function contentSecurityPolicy(options: { connectSources: readonly string[] }): 
     "base-uri 'self'",
     "form-action 'self'",
     "worker-src 'self'",
-    `report-to ${CSP_REPORT_GROUP}`,
-    `report-uri ${CSP_REPORT_PATH}`,
+    ...REPORTING_DIRECTIVES,
   ];
   return directives.join('; ');
+}
+
+function connectSourceProbePolicy(): string {
+  return ["connect-src 'self'", ...REPORTING_DIRECTIVES].join('; ');
 }
 
 const nextConfig: NextConfig = {
@@ -67,7 +75,7 @@ const nextConfig: NextConfig = {
         },
         {
           key: 'Content-Security-Policy-Report-Only',
-          value: contentSecurityPolicy({ connectSources: [] }),
+          value: connectSourceProbePolicy(),
         },
         { key: 'Reporting-Endpoints', value: `${CSP_REPORT_GROUP}="${CSP_REPORT_PATH}"` },
         { key: 'Cross-Origin-Opener-Policy', value: 'same-origin' },
