@@ -124,6 +124,7 @@ export const IGNORED_PATHS: readonly string[] = [
   'vitest.config.ts',
   'scripts/__tests__/',
   'scripts/lib/',
+  'scripts/ci/ci-full-linux.ts',
   'scripts/ci/ci-full-run.ts',
   'scripts/ci/ci-full-stages.ts',
   'scripts/ci/ci-workflow.ts',
