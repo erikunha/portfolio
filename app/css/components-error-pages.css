@@ -164,6 +164,10 @@
     gap: var(--spacing-2);
   }
 
+  .err-actions .btn[data-variant="secondary"] {
+    border-color: var(--color-accent);
+  }
+
   .err-ref {
     margin: 0;
     display: flex;
