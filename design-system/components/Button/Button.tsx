@@ -22,7 +22,7 @@ const variantClasses: Record<ButtonVariant, string> = {
   primary:
     'bg-(color:--color-accent) text-(color:--color-on-accent) border-(color:--color-accent) hover:shadow-glow',
   secondary:
-    'bg-transparent text-(color:--color-accent) border-(color:--color-border-strong) hover:shadow-glow hover:bg-primary-quiet',
+    'bg-transparent text-(color:--color-accent) border-(color:--color-border-strong) hover:shadow-glow hover:bg-signal-quiet',
 };
 
 // The small size is the one that steps down on a fine pointer: a mouse does not

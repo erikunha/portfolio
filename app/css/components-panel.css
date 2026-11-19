@@ -3,7 +3,7 @@
     min-width: 0;
     border: var(--border-width) solid var(--color-border-strong);
     border-radius: var(--radius-control);
-    background: linear-gradient(var(--color-glow-03), transparent), var(--color-surface);
+    background: linear-gradient(var(--color-signal-glow-03), transparent), var(--color-surface);
   }
 
   .panel-head {
@@ -13,7 +13,7 @@
     gap: var(--spacing-1) var(--spacing-2);
     min-height: var(--spacing-target);
     padding: var(--spacing-2) var(--spacing-4);
-    border-bottom: var(--border-width) solid var(--color-primary-quiet);
+    border-bottom: var(--border-width) solid var(--color-signal-quiet);
   }
 
   .panel-title {

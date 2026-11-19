@@ -137,7 +137,7 @@ export function KnobIsland({ initialAngle, label, channelName, degreesUnit, hint
           strokeLinecap="round"
         />
       </svg>
-      <div className="text-xs text-primary-400 text-center tracking-xl font-mono">{label}</div>
+      <div className="text-xs text-signal-400 text-center tracking-xl font-mono">{label}</div>
     </div>
   );
 }

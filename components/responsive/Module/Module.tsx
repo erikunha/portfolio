@@ -47,7 +47,7 @@ export function Module({
       <header
         className={[
           'flex items-center gap-2 w-full',
-          'px-4 py-3 min-h-11 bg-glow-04 border-b border-primary-quiet',
+          'px-4 py-3 min-h-11 bg-signal-glow-04 border-b border-signal-quiet',
           'md:px-0 md:py-0 md:min-h-0 md:bg-transparent md:border-b-0 md:mb-2',
         ].join(' ')}
       >

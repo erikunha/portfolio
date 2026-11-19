@@ -34,7 +34,7 @@ export function Field({
   };
   return (
     <div className="field flex flex-col gap-[6px]">
-      <label htmlFor={id} className="text-xs md:text-sm text-primary-400 tracking-lg">
+      <label htmlFor={id} className="text-xs md:text-sm text-signal-400 tracking-lg">
         {label}
       </label>
       {multiline ? (

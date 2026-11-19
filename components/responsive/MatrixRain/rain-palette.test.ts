@@ -83,10 +83,10 @@ describe('the rain tokens in theme.css', () => {
   it('derive the head and body from the green ramp, so the rain never leaves the palette', () => {
     const colors = getThemeColors();
     expect(colors['rain-head'], '--color-rain-head must alias a primary ramp step').toBe(
-      colors['primary-800'],
+      colors['signal-800'],
     );
     expect(colors['rain-body'], '--color-rain-body must alias a primary ramp step').toBe(
-      colors['primary-900'],
+      colors['signal-900'],
     );
   });
 });

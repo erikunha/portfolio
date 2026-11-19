@@ -149,7 +149,7 @@ test.describe('shell input states', { tag: '@cross-browser' }, () => {
         boxShadow: computed.boxShadow,
         focusColor: (() => {
           const probe = document.createElement('span');
-          probe.style.color = 'var(--color-primary-500)';
+          probe.style.color = 'var(--color-signal-500)';
           document.body.append(probe);
           const resolved = getComputedStyle(probe).color;
           probe.remove();

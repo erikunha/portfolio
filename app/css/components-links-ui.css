@@ -88,7 +88,7 @@
   }
 
   .links-history-empty-prompt {
-    color: var(--color-primary-400);
+    color: var(--color-signal-400);
   }
 
   .links-history-list {
@@ -100,7 +100,7 @@
   }
 
   .links-history-item {
-    border-block-end: 1px solid var(--color-primary-quiet);
+    border-block-end: 1px solid var(--color-signal-quiet);
   }
 
   .links-history-item:last-child {
@@ -120,7 +120,7 @@
 
   @media (hover: hover) {
     .links-history-row:hover {
-      background: var(--color-glow-06);
+      background: var(--color-signal-glow-06);
     }
   }
 
@@ -134,7 +134,7 @@
   }
 
   .links-history-index {
-    color: var(--color-primary-400);
+    color: var(--color-signal-400);
     font-size: var(--text-xs);
   }
 
@@ -179,8 +179,7 @@
   @media (hover: hover) {
     .links-history-all:hover {
       background:
-        linear-gradient(var(--color-primary-quiet), var(--color-primary-quiet)),
-        var(--color-surface);
+        linear-gradient(var(--color-signal-quiet), var(--color-signal-quiet)), var(--color-surface);
     }
   }
 
@@ -208,7 +207,7 @@
     display: inline-flex;
     align-items: center;
     min-height: var(--spacing-target);
-    color: var(--color-primary-400);
+    color: var(--color-signal-400);
     text-decoration: none;
   }
 
@@ -231,7 +230,7 @@
     background-color: var(--color-surface);
     background-image: repeating-linear-gradient(
       180deg,
-      var(--color-primary-quiet) 0 1px,
+      var(--color-signal-quiet) 0 1px,
       transparent 1px 3px
     );
   }

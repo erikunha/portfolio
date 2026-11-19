@@ -32,7 +32,7 @@ function StaticMeter({
 }) {
   return (
     <div
-      className="flex gap-px h-3 p-px border border-[var(--color-primary-quiet)] bg-(color:--color-surface)/70"
+      className="flex gap-px h-3 p-px border border-[var(--color-signal-quiet)] bg-(color:--color-surface)/70"
       aria-hidden="true"
     >
       {Array.from({ length: segments }, (_, i) => {
@@ -72,13 +72,13 @@ function StaticKnob({ angleDeg, label }: { angleDeg: number; label: string }) {
       <div
         className={cn(
           'w-[30px] h-[30px] border border-(color:--color-accent) rounded-full relative shrink-0',
-          'bg-[radial-gradient(circle_at_35%_30%,var(--color-glow-18),color-mix(in_srgb,var(--color-surface)_70%,transparent))]',
+          'bg-[radial-gradient(circle_at_35%_30%,var(--color-signal-glow-18),color-mix(in_srgb,var(--color-surface)_70%,transparent))]',
           'mx-dial',
         )}
         style={{ '--mx-knob-angle': `${angleDeg}deg` } as CSSProperties}
         aria-hidden="true"
       />
-      <span className="text-xs tracking-xl text-primary-400 uppercase font-bold">{label}</span>
+      <span className="text-xs tracking-xl text-signal-400 uppercase font-bold">{label}</span>
     </div>
   );
 }
@@ -94,7 +94,7 @@ function PluginChainMobile({
 }) {
   return (
     <div className="mx-chain-wrap mb-[2px]" aria-hidden="true">
-      <div className="text-xs tracking-5xl text-primary-400 uppercase mb-[5px] flex items-center gap-[6px] mx-chain-title">
+      <div className="text-xs tracking-5xl text-signal-400 uppercase mb-[5px] flex items-center gap-[6px] mx-chain-title">
         {copy.signalFlow}
       </div>
       <div className="mx-chain mx-chain-mobile">
@@ -103,13 +103,13 @@ function PluginChainMobile({
             key={p.name}
             className={cn(
               'grid items-center gap-2 border px-[10px] py-2 relative',
-              'text-primary-400',
+              'text-signal-400',
               p.active
                 ? [
                     'border-(color:--color-accent) text-(color:--color-accent)',
                     'bg-[color-mix(in_srgb,var(--color-accent)_8%,transparent)]',
                   ].join(' ')
-                : 'border-[color-mix(in_srgb,var(--color-primary-quiet)_40%,transparent)]',
+                : 'border-[color-mix(in_srgb,var(--color-signal-quiet)_40%,transparent)]',
             )}
             style={{ gridTemplateColumns: '14px minmax(90px, auto) 1fr' }}
             data-testid={`plugin-mobile-${channelId}-${p.name}`}
@@ -119,7 +119,7 @@ function PluginChainMobile({
                 'w-[6px] h-[6px] justify-self-center',
                 p.active
                   ? 'meter-fill bg-(color:--color-accent) shadow-[0_0_4px_var(--color-accent)]'
-                  : 'meter-dim bg-[var(--color-primary-quiet)]',
+                  : 'meter-dim bg-[var(--color-signal-quiet)]',
               )}
               aria-hidden="true"
             />
@@ -142,7 +142,7 @@ function PluginChainMobile({
 function SessionHeaderMobile({ mixer, copy }: { mixer: DawMixer; copy: DawMixerCopy }) {
   return (
     <div
-      className="text-xs text-primary-400 leading-ratio-1-8 border-b border-[var(--color-border)] px-[14px] py-[10px] tracking-3xl bg-[color-mix(in_srgb,var(--color-accent)_5%,transparent)]"
+      className="text-xs text-signal-400 leading-ratio-1-8 border-b border-[var(--color-border)] px-[14px] py-[10px] tracking-3xl bg-[color-mix(in_srgb,var(--color-accent)_5%,transparent)]"
       data-testid="session-header-mobile"
     >
       <div>
@@ -161,7 +161,7 @@ function MixLegendMobile({ mixer, copy }: { mixer: DawMixer; copy: DawMixerCopy 
   if (!lead) return null;
   return (
     <div
-      className="flex flex-col gap-[3px] px-[14px] py-2 border-b border-[var(--color-primary-quiet)] bg-(color:--color-surface)/60 text-xs tracking-4xl text-primary-400 uppercase"
+      className="flex flex-col gap-[3px] px-[14px] py-2 border-b border-[var(--color-signal-quiet)] bg-(color:--color-surface)/60 text-xs tracking-4xl text-signal-400 uppercase"
       aria-hidden="true"
     >
       <span>
@@ -177,7 +177,7 @@ function ChannelMobile({ ch, copy }: { ch: DawMixerChannel; copy: DawMixerCopy }
   return (
     <div
       className={cn(
-        'relative border-b border-[var(--color-primary-quiet)] px-[14px] pt-4 pb-[18px] flex flex-col gap-3',
+        'relative border-b border-[var(--color-signal-quiet)] px-[14px] pt-4 pb-[18px] flex flex-col gap-3',
         ch.focused
           ? 'bg-[color-mix(in_srgb,var(--color-accent)_7%,transparent)] channel-row-focused'
           : 'bg-(color:--color-surface)/35',
@@ -199,7 +199,7 @@ function ChannelMobile({ ch, copy }: { ch: DawMixerChannel; copy: DawMixerCopy }
             'text-xs tracking-5xl border font-bold whitespace-nowrap shrink-0 px-[7px] py-[3px]',
             ch.focused
               ? 'text-(color:--color-accent) border-(color:--color-accent) bg-[color-mix(in_srgb,var(--color-accent)_10%,transparent)]'
-              : 'text-primary-400 border-[var(--color-primary-quiet)] bg-(color:--color-surface)/55',
+              : 'text-signal-400 border-[var(--color-signal-quiet)] bg-(color:--color-surface)/55',
             isMaster &&
               'border-(color:--color-accent) px-2 py-[2px] text-xs tracking-2xl font-bold text-(color:--color-accent) bg-transparent',
           )}
@@ -215,14 +215,14 @@ function ChannelMobile({ ch, copy }: { ch: DawMixerChannel; copy: DawMixerCopy }
         >
           {ch.name}
         </span>
-        <div className="text-xs text-primary-400 tabular-nums tracking-xs text-right leading-ratio-1-1 whitespace-nowrap">
+        <div className="text-xs text-signal-400 tabular-nums tracking-xs text-right leading-ratio-1-1 whitespace-nowrap">
           <span className="font-bold text-(color:--color-accent) text-xs max-md:text-sm">
             {pctToDb(ch.faderPct)}
           </span>
-          <span className="text-xs max-md:text-sm text-primary-400">{copy.decibelUnit}</span>
+          <span className="text-xs max-md:text-sm text-signal-400">{copy.decibelUnit}</span>
         </div>
       </div>
-      <div className="text-primary-400 text-xs tracking-2xs leading-ratio-1-4" data-testid="mx-ref">
+      <div className="text-signal-400 text-xs tracking-2xs leading-ratio-1-4" data-testid="mx-ref">
         <ParsedText text={ch.desc} />
       </div>
       <div className="flex flex-col gap-2">
@@ -234,7 +234,7 @@ function ChannelMobile({ ch, copy }: { ch: DawMixerChannel; copy: DawMixerCopy }
         <StaticFader pct={ch.faderPct} />
       </div>
       <PluginChainMobile plugins={ch.plugins} channelId={ch.id} copy={copy} />
-      <div className="flex flex-col gap-[14px] pt-[14px] border-t border-dashed border-[var(--color-primary-quiet)]">
+      <div className="flex flex-col gap-[14px] pt-[14px] border-t border-dashed border-[var(--color-signal-quiet)]">
         <div className="flex items-center justify-between gap-3">
           <div className="flex gap-[18px]">
             <StaticKnob angleDeg={ch.knob1.angleDeg} label={ch.knob1.label} />
@@ -253,9 +253,9 @@ function ChannelMobile({ ch, copy }: { ch: DawMixerChannel; copy: DawMixerCopy }
                     ? [
                         'border border-(color:--color-accent) text-(color:--color-accent)',
                         'bg-[color-mix(in_srgb,var(--color-accent)_10%,transparent)]',
-                        'shadow-[0_0_5px_var(--color-glow-35)]',
+                        'shadow-[0_0_5px_var(--color-signal-glow-35)]',
                       ].join(' ')
-                    : 'border border-[var(--color-primary-quiet)] text-primary-400 bg-(color:--color-surface)/50',
+                    : 'border border-[var(--color-signal-quiet)] text-signal-400 bg-(color:--color-surface)/50',
                 )}
               >
                 {btn}
@@ -266,17 +266,17 @@ function ChannelMobile({ ch, copy }: { ch: DawMixerChannel; copy: DawMixerCopy }
         <div className="flex flex-col gap-1">
           <FaderBar pct={ch.faderPct} />
           {ch.footer ? (
-            <span className="text-xs text-primary-400 block text-center tracking-lg opacity-80">
+            <span className="text-xs text-signal-400 block text-center tracking-lg opacity-80">
               {copy.loudnessLabel} {ch.footer.lufs} {copy.separator} {copy.peakLabel} {ch.footer.pk}
             </span>
           ) : null}
         </div>
       </div>
       {ch.terminalLines ? (
-        <div className="border border-[var(--color-primary-quiet)] px-[10px] py-2 mt-1">
+        <div className="border border-[var(--color-signal-quiet)] px-[10px] py-2 mt-1">
           {ch.terminalLines.map((line, i) => (
             // biome-ignore lint/suspicious/noArrayIndexKey: positional terminal lines
-            <div key={i} className="text-xs text-primary-400 leading-ratio-1-8">
+            <div key={i} className="text-xs text-signal-400 leading-ratio-1-8">
               <ParsedText text={line} />
             </div>
           ))}

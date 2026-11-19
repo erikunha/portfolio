@@ -9,7 +9,8 @@ import { compiledStylesheet } from './helpers/css-rules';
 
 const SUBPROCESS_TEST_TIMEOUT_MS = 60_000;
 const SCRIPT = path.join(process.cwd(), 'scripts/gates/contrast-check.ts');
-const PRIMITIVE_REFERENCE = /^var\(--color-((?:primary|secondary|tertiary|quinary|senary)-\w+)\)$/;
+const PRIMITIVE_REFERENCE =
+  /^var\(--color-((?:signal|primary|secondary|tertiary|quinary|senary)-\w+)\)$/;
 const PRINT_REFERENCE = /^var\(--color-print-(?:ink|paper|rule)\)$/;
 const PRINT_MEDIA = /^print$/;
 
@@ -120,24 +121,24 @@ const PALETTE = `
   --color-senary-300: #ff8a8a;
   --color-senary-500: #ff5f57;
   --color-quinary-500: #febc2e;
-  --color-primary-300: #5ae07b;
-  --color-primary-400: #4ade80;
-  --color-primary-500: #00ff41;
-  --color-primary-700: #1e9b32;
-  --color-primary-border: #00ff4133;
-  --color-primary-subtle: #00ff4166;
+  --color-signal-300: #5ae07b;
+  --color-signal-400: #4ade80;
+  --color-signal-500: #00ff41;
+  --color-signal-700: #1e9b32;
+  --color-signal-border: #00ff4133;
+  --color-signal-subtle: #00ff4166;
   --color-text-secondary: #a1b3a1;
 `;
 
 const ROLE_TARGETS: Record<string, string> = {
   surface: 'secondary-950',
   'surface-raised': 'secondary-900',
-  border: 'primary-border',
-  'border-strong': 'primary-subtle',
-  accent: 'primary-500',
+  border: 'signal-border',
+  'border-strong': 'signal-subtle',
+  accent: 'signal-500',
   'on-accent': 'secondary-950',
   'text-muted': 'tertiary-400',
-  focus: 'primary-500',
+  focus: 'signal-500',
   warning: 'quinary-500',
   danger: 'senary-500',
 };

@@ -22,14 +22,14 @@ function PluginChain({
           key={p.name}
           className={cn(
             'plugin-chip border flex flex-col items-center gap-1',
-            'pt-[5px] pb-[6px] text-primary-400 relative',
+            'pt-[5px] pb-[6px] text-signal-400 relative',
             p.active
               ? [
                   'plugin-card-on',
                   'text-(color:--color-accent) border-(color:--color-accent)',
                   'bg-[color-mix(in_srgb,var(--color-accent)_8%,transparent)]',
                 ].join(' ')
-              : 'border-[var(--color-primary-quiet)] bg-(color:--color-surface)/55',
+              : 'border-[var(--color-signal-quiet)] bg-(color:--color-surface)/55',
           )}
           data-testid={`plugin-${channelId}-${p.name}`}
         >
@@ -51,7 +51,7 @@ function ChannelDesktop({ ch, copy }: { ch: DawMixerChannel; copy: DawMixerCopy 
     <div
       className={cn(
         'daw-channel-row',
-        'border-b border-[var(--color-primary-quiet)] px-[18px] py-[14px] relative',
+        'border-b border-[var(--color-signal-quiet)] px-[18px] py-[14px] relative',
         ch.focused && [
           'channel-row-focused',
           'bg-[color-mix(in_srgb,var(--color-accent)_6%,transparent)]',
@@ -68,7 +68,7 @@ function ChannelDesktop({ ch, copy }: { ch: DawMixerChannel; copy: DawMixerCopy 
       <div className="flex flex-col gap-1">
         <span
           className={cn(
-            'border px-[5px] py-[1px] text-xs font-mono text-primary-400 tracking-xs shrink-0',
+            'border px-[5px] py-[1px] text-xs font-mono text-signal-400 tracking-xs shrink-0',
             'border-[var(--color-border)]',
             isMaster &&
               'border-(color:--color-accent) px-2 py-[2px] font-bold text-(color:--color-accent) tracking-2xl',
@@ -77,7 +77,7 @@ function ChannelDesktop({ ch, copy }: { ch: DawMixerChannel; copy: DawMixerCopy 
         >
           {ch.id}
         </span>
-        <span className="block text-xs text-primary-400">{ch.name}</span>
+        <span className="block text-xs text-signal-400">{ch.name}</span>
         <FaderBar pct={ch.faderPct} bright={ch.focused === true} />
       </div>
       <div className="flex flex-col gap-1 min-w-0">
@@ -90,7 +90,7 @@ function ChannelDesktop({ ch, copy }: { ch: DawMixerChannel; copy: DawMixerCopy 
           {ch.desktopName ?? ch.name}
         </span>
         <span
-          className="text-xs text-primary-400 leading-ratio-1-3 whitespace-nowrap overflow-hidden text-ellipsis max-md:whitespace-normal max-md:overflow-visible max-md:text-clip"
+          className="text-xs text-signal-400 leading-ratio-1-3 whitespace-nowrap overflow-hidden text-ellipsis max-md:whitespace-normal max-md:overflow-visible max-md:text-clip"
           data-testid="mixer-desc"
         >
           <ParsedText text={ch.desc} />
@@ -152,7 +152,7 @@ function SessionHeaderDesktop({ mixer, copy }: { mixer: DawMixer; copy: DawMixer
         'daw-mixer-row-min grid gap-[18px] items-center px-[18px] py-3',
         'border-b border-[var(--color-border)]',
         'bg-[color-mix(in_srgb,var(--color-accent)_5%,transparent)]',
-        'text-xs text-primary-400 tracking-3xl',
+        'text-xs text-signal-400 tracking-3xl',
       )}
       data-testid="session-header"
     >
@@ -164,11 +164,11 @@ function SessionHeaderDesktop({ mixer, copy }: { mixer: DawMixer; copy: DawMixer
         <span className="text-(color:--color-accent) font-bold text-sm tracking-md">
           {mixer.transportTime}
         </span>
-        <span className="text-[var(--color-primary-quiet)]">{copy.transportSeparator}</span>
+        <span className="text-[var(--color-signal-quiet)]">{copy.transportSeparator}</span>
         <span>
           {mixer.bpm} {copy.bpmUnit}
         </span>
-        <span className="text-[var(--color-primary-quiet)]">{copy.transportSeparator}</span>
+        <span className="text-[var(--color-signal-quiet)]">{copy.transportSeparator}</span>
         <span>{mixer.timeSignature}</span>
       </span>
     </div>
@@ -180,8 +180,8 @@ function TableHeader({ copy }: { copy: DawMixerCopy }) {
     <div
       className={cn(
         'daw-channel-row daw-mixer-labels',
-        'text-xs text-primary-400 tracking-5xl uppercase',
-        'border-b border-[var(--color-primary-quiet)] px-[18px] py-[7px]',
+        'text-xs text-signal-400 tracking-5xl uppercase',
+        'border-b border-[var(--color-signal-quiet)] px-[18px] py-[7px]',
         'bg-(color:--color-surface)/50',
       )}
       aria-hidden="true"

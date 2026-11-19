@@ -116,7 +116,7 @@ test.describe('#sec-guitar facts keep their emphasis', { tag: '@cross-browser' }
     await page.locator(STATS).first().scrollIntoViewIfNeeded();
     const styles = await page.evaluate(() => {
       const signal = document.createElement('span');
-      signal.style.color = 'var(--color-primary-500)';
+      signal.style.color = 'var(--color-signal-500)';
       document.body.append(signal);
       const expected = getComputedStyle(signal).color;
       signal.remove();

@@ -45,9 +45,9 @@
 
   .err-link:hover {
     box-shadow:
-      calc(var(--spacing-2) * -1) 0 0 0 var(--color-primary-quiet),
-      var(--spacing-2) 0 0 0 var(--color-primary-quiet);
-    background: var(--color-primary-quiet);
+      calc(var(--spacing-2) * -1) 0 0 0 var(--color-signal-quiet),
+      var(--spacing-2) 0 0 0 var(--color-signal-quiet);
+    background: var(--color-signal-quiet);
   }
 
   :root:has(.err-main) {

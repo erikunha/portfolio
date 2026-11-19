@@ -76,7 +76,7 @@
     color: var(--color-accent);
     font-weight: 700;
     text-shadow:
-      0 0 6px var(--color-glow-60),
+      0 0 6px var(--color-signal-glow-60),
       0 0 4px var(--color-surface);
   }
 
@@ -86,7 +86,7 @@
   }
 
   .hero-boot-prompt {
-    color: var(--color-primary-400);
+    color: var(--color-signal-400);
   }
 
   .hero-boot-cmd {
@@ -94,14 +94,14 @@
   }
 
   .hero-boot-matrix-prefix {
-    color: var(--color-primary-400);
+    color: var(--color-signal-400);
     margin-right: var(--spacing-1);
   }
 
   .hero-boot-matrix-out {
     color: var(--color-accent);
     text-shadow:
-      0 0 8px var(--color-glow-40),
+      0 0 8px var(--color-signal-glow-40),
       0 0 4px var(--color-surface);
   }
 
@@ -365,7 +365,7 @@
     .hero-identity {
       margin-top: var(--spacing-1);
       padding-top: var(--spacing-3);
-      border-top: var(--border-width) dashed var(--color-primary-quiet);
+      border-top: var(--border-width) dashed var(--color-signal-quiet);
       font-size: var(--text-3xl);
     }
     .hero-stats {

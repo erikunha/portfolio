@@ -29,7 +29,7 @@
 
   .eq-grid path {
     fill: none;
-    stroke: var(--color-primary-quiet);
+    stroke: var(--color-signal-quiet);
     stroke-width: var(--border-width);
     vector-effect: non-scaling-stroke;
   }
@@ -87,13 +87,13 @@
     grid-area: 2 / 1;
     display: grid;
     height: var(--eq-axis-height);
-    border-top: var(--border-width) solid var(--color-primary-quiet);
+    border-top: var(--border-width) solid var(--color-signal-quiet);
   }
 
   .eq-axis-tick {
     justify-self: end;
     translate: 50% 0;
-    color: var(--color-primary-400);
+    color: var(--color-signal-400);
     font-size: var(--text-xs);
     line-height: var(--eq-axis-height);
   }

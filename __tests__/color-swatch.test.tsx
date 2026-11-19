@@ -18,14 +18,14 @@ describe('ColorSwatch', () => {
   }
 
   it('renders the --color-<token> name in a <code> element', async () => {
-    const container = await render({ token: 'primary-500' });
+    const container = await render({ token: 'signal-500' });
     const code = container.querySelector('code');
     expect(code).not.toBeNull();
-    expect(code?.textContent).toBe('--color-primary-500');
+    expect(code?.textContent).toBe('--color-signal-500');
   });
 
   it('renders the resolved color value from theme.css', async () => {
-    const container = await render({ token: 'primary-500' });
+    const container = await render({ token: 'signal-500' });
     expect(container.textContent).toContain('#00ff41');
   });
 
@@ -35,7 +35,7 @@ describe('ColorSwatch', () => {
   });
 
   it('renders the usage label when provided', async () => {
-    const container = await render({ token: 'primary-500', usage: 'signal accent' });
+    const container = await render({ token: 'signal-500', usage: 'signal accent' });
     expect(container.textContent).toContain('signal accent');
   });
 

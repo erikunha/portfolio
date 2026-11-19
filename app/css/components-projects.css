@@ -163,7 +163,7 @@
 
   .project-receipts li:has([data-featured]) {
     border: var(--border-width) solid var(--color-accent);
-    background: var(--color-glow-04);
+    background: var(--color-signal-glow-04);
   }
 
   .receipt-metric {
@@ -264,7 +264,7 @@
     min-width: 0;
     padding: var(--spacing-2) var(--spacing-3);
     border: var(--border-width) solid var(--color-border);
-    background: var(--color-glow-03);
+    background: var(--color-signal-glow-03);
   }
 
   .measured-label {
@@ -336,7 +336,7 @@
     text-align: center;
     padding: var(--spacing-3);
     border: var(--border-width) solid var(--color-accent);
-    background: var(--color-glow-03);
+    background: var(--color-signal-glow-03);
     color: var(--color-text);
     font-size: var(--text-body);
     --leading: 1.5;

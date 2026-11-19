@@ -15,7 +15,7 @@ export function Preview({ id, source, children }: PreviewProps) {
         <div className="p-6 flex flex-wrap gap-3 items-start">{children}</div>
         {source != null && (
           <div className="border-t border-(color:--color-border)">
-            <p className="px-6 py-1.5 m-0 font-mono text-xs tracking-widest text-primary-400 uppercase">
+            <p className="px-6 py-1.5 m-0 font-mono text-xs tracking-widest text-signal-400 uppercase">
               {PREVIEW_SOURCE_LABEL}
             </p>
             {/* biome-ignore lint/a11y/useSemanticElements: fieldset is a form-control grouping element with implicit role=group; this pre is a non-form scrollable code region, not a form, so the suggested native element is semantically wrong here */}

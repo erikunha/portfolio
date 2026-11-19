@@ -23,7 +23,7 @@
        itself is rounded to whole pixels further down. */
     --leading: 1.55;
     color-scheme: dark;
-    scrollbar-color: var(--color-primary-700) var(--color-surface);
+    scrollbar-color: var(--color-signal-700) var(--color-surface);
     scrollbar-width: thin;
   }
 
@@ -215,7 +215,7 @@
     font-weight: 700;
     color: var(--color-accent);
     margin: 0 0 var(--spacing-2) 0;
-    text-shadow: 0 0 2px var(--color-glow-30);
+    text-shadow: 0 0 2px var(--color-signal-glow-30);
   }
 
   h1 {

@@ -29,8 +29,8 @@
     gap: var(--spacing-2);
     padding-bottom: var(--spacing-2);
     margin-bottom: var(--spacing-3);
-    border-bottom: var(--border-width) solid var(--color-primary-quiet);
-    color: var(--color-primary-400);
+    border-bottom: var(--border-width) solid var(--color-signal-quiet);
+    color: var(--color-signal-400);
     font-size: var(--text-xs);
     letter-spacing: var(--guitar-label-tracking);
   }
@@ -52,12 +52,12 @@
     min-width: 0;
     padding: var(--spacing-3);
     border: var(--border-width) solid var(--color-accent);
-    background: var(--color-glow-04);
+    background: var(--color-signal-glow-04);
     overflow-wrap: anywhere;
   }
 
   .guitar-label {
-    color: var(--color-primary-400);
+    color: var(--color-signal-400);
     font-size: var(--text-xs);
     letter-spacing: var(--guitar-label-tracking);
   }
@@ -111,7 +111,7 @@
     color: var(--color-text);
     font-size: var(--text-xs);
     letter-spacing: var(--guitar-label-tracking);
-    border-bottom: var(--border-width) solid var(--color-primary-quiet);
+    border-bottom: var(--border-width) solid var(--color-signal-quiet);
     text-wrap: balance;
   }
 
@@ -157,8 +157,8 @@
     grid-auto-rows: 1fr;
     flex: 1;
     gap: var(--border-width);
-    border: var(--border-width) solid var(--color-primary-quiet);
-    background: var(--color-primary-quiet);
+    border: var(--border-width) solid var(--color-signal-quiet);
+    background: var(--color-signal-quiet);
   }
 
   .guitar-stat {
@@ -171,7 +171,7 @@
   .guitar-camera-labels,
   .guitar-camera-caption {
     padding: var(--spacing-1) var(--spacing-2);
-    color: var(--color-primary-400);
+    color: var(--color-signal-400);
     font-size: var(--text-xs);
     letter-spacing: var(--guitar-camera-tracking);
     overflow-wrap: anywhere;
@@ -181,11 +181,11 @@
     display: flex;
     justify-content: space-between;
     gap: var(--spacing-2);
-    border-bottom: var(--border-width) solid var(--color-primary-quiet);
+    border-bottom: var(--border-width) solid var(--color-signal-quiet);
   }
 
   .guitar-camera-caption {
-    border-top: var(--border-width) solid var(--color-primary-quiet);
+    border-top: var(--border-width) solid var(--color-signal-quiet);
   }
 
   .guitar-photo-frame {

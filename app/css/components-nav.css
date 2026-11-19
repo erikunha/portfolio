@@ -36,12 +36,12 @@
 
   .nav-item:hover {
     color: var(--color-text);
-    background: var(--color-glow-06);
+    background: var(--color-signal-glow-06);
     text-decoration: none;
   }
 
   .nav-item:active {
-    background: var(--color-primary-quiet);
+    background: var(--color-signal-quiet);
   }
 
   .nav-item:focus-visible {
@@ -85,12 +85,12 @@
 
   .menu-trigger:hover,
   .menu-trigger[aria-expanded="true"] {
-    background: var(--color-glow-06);
+    background: var(--color-signal-glow-06);
     border-color: var(--color-accent);
   }
 
   .menu-trigger:active {
-    background: var(--color-primary-quiet);
+    background: var(--color-signal-quiet);
   }
 
   .section-menu {
@@ -195,7 +195,7 @@
   }
 
   .menu-motion:hover {
-    background: var(--color-primary-quiet);
+    background: var(--color-signal-quiet);
   }
 
   .menu-close {
@@ -209,7 +209,7 @@
   }
 
   .menu-close:hover {
-    background: var(--color-glow-06);
+    background: var(--color-signal-glow-06);
     color: var(--color-text);
   }
 
@@ -256,7 +256,7 @@
   }
 
   .section-menu .nav-item[aria-current] {
-    background: var(--color-primary-quiet);
+    background: var(--color-signal-quiet);
     border-color: transparent;
     border-left-color: var(--color-accent);
   }
@@ -314,7 +314,7 @@
     gap: 3px;
     min-height: 3rem;
     padding: 6px 4px;
-    color: var(--color-primary-400);
+    color: var(--color-signal-400);
     font-size: var(--text-xs);
     letter-spacing: var(--tracking-xl);
     text-transform: uppercase;
@@ -327,7 +327,7 @@
 
   .dock > a:active,
   .dock > button:active {
-    background: var(--color-primary-faint);
+    background: var(--color-signal-faint);
   }
 
   .dock > [aria-current],
@@ -526,7 +526,7 @@
 
   .topbar-action-toggle {
     gap: calc(var(--spacing-3) / 2);
-    color: var(--color-primary-400);
+    color: var(--color-signal-400);
     background: transparent;
     border-color: var(--color-border-strong);
     cursor: pointer;
@@ -534,7 +534,7 @@
 
   .topbar-action-toggle:hover,
   .topbar-action-outline:hover {
-    background: var(--color-primary-quiet);
+    background: var(--color-signal-quiet);
   }
 
   .topbar-action-toggle:hover {

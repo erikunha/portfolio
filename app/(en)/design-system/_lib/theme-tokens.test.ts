@@ -56,10 +56,10 @@ describe('terminal theme contract', () => {
       'text-secondary': '#a1b3a1',
       accent: '#00ff41',
       'secondary-950': '#000000',
-      'primary-500': '#00ff41',
+      'signal-500': '#00ff41',
       'tertiary-50': '#e6ffe6',
-      'primary-300': '#5ae07b',
-      'primary-400': '#4ade80',
+      'signal-300': '#5ae07b',
+      'signal-400': '#4ade80',
       'tertiary-400': '#8a9d8a',
     });
   });

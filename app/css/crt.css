@@ -6,7 +6,7 @@
     background:
       radial-gradient(
         ellipse at 50% 30%,
-        color-mix(in srgb, var(--color-primary-900) 12%, transparent) 0%,
+        color-mix(in srgb, var(--color-signal-900) 12%, transparent) 0%,
         transparent 55%
       ),
       radial-gradient(
@@ -102,7 +102,7 @@
     position: fixed;
     inset: 0;
     pointer-events: none;
-    background: var(--color-glow-02);
+    background: var(--color-signal-glow-02);
     animation: crt-flicker 4s infinite;
     will-change: opacity;
     z-index: var(--z-crt-flicker);
@@ -128,7 +128,7 @@
     right: 0;
     top: calc(var(--crt-scan-offset) * -1);
     height: 110px;
-    background: linear-gradient(180deg, transparent, var(--color-glow-06) 50%, transparent);
+    background: linear-gradient(180deg, transparent, var(--color-signal-glow-06) 50%, transparent);
     pointer-events: none;
     animation: crt-scan-beam 7s linear infinite;
     z-index: var(--z-crt-beam);

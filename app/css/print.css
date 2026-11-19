@@ -5,15 +5,15 @@
       print-color-adjust: exact;
       --color-black: var(--color-print-paper);
       --color-white: var(--color-print-ink);
-      --color-primary-200: var(--color-print-ink);
-      --color-primary-300: var(--color-print-ink);
-      --color-primary-400: var(--color-print-ink);
-      --color-primary-600: var(--color-print-ink);
-      --color-primary-700: var(--color-print-ink);
-      --color-primary-800: var(--color-print-ink);
-      --color-primary-900: var(--color-print-ink);
-      --color-primary-faint: transparent;
-      --color-primary-quiet: transparent;
+      --color-signal-200: var(--color-print-ink);
+      --color-signal-300: var(--color-print-ink);
+      --color-signal-400: var(--color-print-ink);
+      --color-signal-600: var(--color-print-ink);
+      --color-signal-700: var(--color-print-ink);
+      --color-signal-800: var(--color-print-ink);
+      --color-signal-900: var(--color-print-ink);
+      --color-signal-faint: transparent;
+      --color-signal-quiet: transparent;
       --color-tertiary-300: var(--color-print-ink);
       --color-tertiary-500: var(--color-print-rule);
       --color-tertiary-900: var(--color-print-paper);
@@ -33,19 +33,19 @@
       --color-warning: var(--color-print-ink);
       --color-danger: var(--color-print-ink);
       --color-scrim: var(--color-print-paper);
-      --color-glow-02: transparent;
-      --color-glow-03: transparent;
-      --color-glow-04: transparent;
-      --color-glow-06: transparent;
-      --color-glow-18: transparent;
-      --color-glow-25: transparent;
-      --color-glow-30: transparent;
-      --color-glow-35: transparent;
-      --color-glow-40: transparent;
-      --color-glow-45: transparent;
-      --color-glow-50: transparent;
-      --color-glow-55: transparent;
-      --color-glow-60: transparent;
+      --color-signal-glow-02: transparent;
+      --color-signal-glow-03: transparent;
+      --color-signal-glow-04: transparent;
+      --color-signal-glow-06: transparent;
+      --color-signal-glow-18: transparent;
+      --color-signal-glow-25: transparent;
+      --color-signal-glow-30: transparent;
+      --color-signal-glow-35: transparent;
+      --color-signal-glow-40: transparent;
+      --color-signal-glow-45: transparent;
+      --color-signal-glow-50: transparent;
+      --color-signal-glow-55: transparent;
+      --color-signal-glow-60: transparent;
     }
 
     html,

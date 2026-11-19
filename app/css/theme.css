@@ -186,6 +186,33 @@
   --color-senary-300: #ff8a8a;
   --color-senary-500: #ff5f57;
 
+  --color-signal-200: var(--color-primary-200);
+  --color-signal-300: var(--color-primary-300);
+  --color-signal-400: var(--color-primary-400);
+  --color-signal-500: var(--color-primary-500);
+  --color-signal-600: var(--color-primary-600);
+  --color-signal-700: var(--color-primary-700);
+  --color-signal-800: var(--color-primary-800);
+  --color-signal-900: var(--color-primary-900);
+  --color-signal-subtle: var(--color-primary-subtle);
+  --color-signal-border: var(--color-primary-border);
+  --color-signal-faint: var(--color-primary-faint);
+  --color-signal-quiet: var(--color-primary-quiet);
+
+  --color-signal-glow-02: var(--color-glow-02);
+  --color-signal-glow-03: var(--color-glow-03);
+  --color-signal-glow-04: var(--color-glow-04);
+  --color-signal-glow-06: var(--color-glow-06);
+  --color-signal-glow-18: var(--color-glow-18);
+  --color-signal-glow-25: var(--color-glow-25);
+  --color-signal-glow-30: var(--color-glow-30);
+  --color-signal-glow-35: var(--color-glow-35);
+  --color-signal-glow-40: var(--color-glow-40);
+  --color-signal-glow-45: var(--color-glow-45);
+  --color-signal-glow-50: var(--color-glow-50);
+  --color-signal-glow-55: var(--color-glow-55);
+  --color-signal-glow-60: var(--color-glow-60);
+
   --color-print-ink: #000000;
   --color-print-paper: #ffffff;
   --color-print-rule: #595959;
@@ -219,16 +246,16 @@
     --text-section-title: var(--text-base);
     --measure-page: 1200px;
     --measure-read: 72ch;
-    --color-rain-head: var(--color-primary-800);
-    --color-rain-body: var(--color-primary-900);
+    --color-rain-head: var(--color-signal-800);
+    --color-rain-body: var(--color-signal-900);
     --color-surface: var(--color-secondary-950);
     --color-surface-raised: var(--color-secondary-900);
-    --color-border: var(--color-primary-border);
-    --color-border-strong: var(--color-primary-subtle);
-    --color-accent: var(--color-primary-500);
+    --color-border: var(--color-signal-border);
+    --color-border-strong: var(--color-signal-subtle);
+    --color-accent: var(--color-signal-500);
     --color-on-accent: var(--color-secondary-950);
     --color-text-muted: var(--color-tertiary-400);
-    --color-focus: var(--color-primary-500);
+    --color-focus: var(--color-signal-500);
     --color-warning: var(--color-quinary-500);
     --color-danger: var(--color-senary-500);
     --color-scrim: var(--color-secondary-950);

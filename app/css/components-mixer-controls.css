@@ -4,7 +4,7 @@
     position: relative;
     min-height: 24px;
     background: color-mix(in srgb, var(--color-accent) 3%, transparent);
-    border: 1px solid var(--color-primary-quiet);
+    border: 1px solid var(--color-signal-quiet);
     cursor: ew-resize;
     touch-action: pan-y;
   }
@@ -16,7 +16,7 @@
     right: var(--spacing-2);
     top: 50%;
     height: 1px;
-    background: var(--color-primary-quiet);
+    background: var(--color-signal-quiet);
     transform: translateY(-0.5px);
     pointer-events: none;
   }
@@ -55,7 +55,7 @@
     position: relative;
     height: 14px;
     min-height: 24px;
-    border: 1px solid var(--color-primary-quiet);
+    border: 1px solid var(--color-signal-quiet);
     background: color-mix(in srgb, var(--color-surface) 70%, transparent);
     display: flex;
     align-items: stretch;
@@ -107,12 +107,12 @@
 
   .dbUnit {
     font-size: var(--text-min);
-    color: var(--color-primary-400);
+    color: var(--color-signal-400);
   }
 
   .lufs {
     font-size: var(--text-min);
-    color: var(--color-primary-400);
+    color: var(--color-signal-400);
     display: block;
     letter-spacing: var(--tracking-lg);
     margin-top: 2px;

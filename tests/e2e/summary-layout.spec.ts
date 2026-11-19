@@ -46,7 +46,7 @@ test.describe('/summary layout', () => {
       .evaluate((node) => getComputedStyle(node).borderTopColor);
     const lime = await page.evaluate(() => {
       const probe = document.createElement('i');
-      probe.style.color = 'var(--color-primary-500)';
+      probe.style.color = 'var(--color-signal-500)';
       document.body.append(probe);
       const color = getComputedStyle(probe).color;
       probe.remove();

@@ -1,6 +1,6 @@
 @layer components {
   .kbd-key {
-    background: var(--color-glow-06);
+    background: var(--color-signal-glow-06);
     margin: 0 var(--spacing-1);
     letter-spacing: 0;
     vertical-align: 1px;

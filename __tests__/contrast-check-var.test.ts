@@ -16,10 +16,10 @@ const PALETTE = `
   --color-tertiary-400: #e6ffe6;
   --color-tertiary-500: #e6ffe6;
   --color-senary-300: #e6ffe6;
-  --color-primary-500: #00ff41;
-  --color-primary-400: #e6ffe6;
-  --color-primary-700: #e6ffe6;
-  --color-primary-300: #e6ffe6;
+  --color-signal-500: #00ff41;
+  --color-signal-400: #e6ffe6;
+  --color-signal-700: #e6ffe6;
+  --color-signal-300: #e6ffe6;
   --color-text-secondary: #e6ffe6;
 `;
 

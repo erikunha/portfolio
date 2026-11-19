@@ -53,7 +53,7 @@
     min-height: 100%;
     overflow: hidden;
     padding-right: var(--spacing-4);
-    border-right: var(--border-width) solid var(--color-primary-quiet);
+    border-right: var(--border-width) solid var(--color-signal-quiet);
     color: var(--color-text-secondary);
     text-align: right;
     user-select: none;
@@ -195,7 +195,7 @@
     font-size: var(--text-xs);
     --leading: 1.4;
     padding: var(--spacing-2) var(--spacing-3);
-    background: var(--color-glow-03);
+    background: var(--color-signal-glow-03);
   }
 
   .ab-code .repo-link {
@@ -230,8 +230,8 @@
     .about-section-header {
       padding: var(--spacing-3) calc(var(--spacing-3) + var(--spacing-1) / 2);
       margin: 0;
-      background: var(--color-glow-04);
-      border-bottom: var(--border-width) solid var(--color-primary-quiet);
+      background: var(--color-signal-glow-04);
+      border-bottom: var(--border-width) solid var(--color-signal-quiet);
     }
     .about-grid {
       gap: var(--spacing-4);

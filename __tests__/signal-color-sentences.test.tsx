@@ -21,7 +21,7 @@ vi.mock('@/components/client/InteractiveShell', () => ({ InteractiveShellLazy: (
 
 const SIGNAL_TOKENS: ReadonlySet<string> = new Set([
   'var(--color-accent)',
-  'var(--color-primary-500)',
+  'var(--color-signal-500)',
 ]);
 const SENTENCE_WORDS = 4;
 const WORD = /[A-Za-z]{2,}/;

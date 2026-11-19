@@ -21,7 +21,7 @@
 
   .brand-icon {
     display: block;
-    filter: drop-shadow(0 0 2px var(--color-glow-30));
+    filter: drop-shadow(0 0 2px var(--color-signal-glow-30));
   }
 
   @media print {
@@ -197,7 +197,7 @@
 
   .signal-glow {
     text-shadow:
-      0 0 8px var(--color-glow-45),
+      0 0 8px var(--color-signal-glow-45),
       0 0 4px var(--color-surface);
   }
 
@@ -212,8 +212,8 @@
     --leading: 1;
     text-transform: uppercase;
     box-shadow:
-      0 0 24px var(--color-glow-55),
-      0 0 60px var(--color-glow-25);
+      0 0 24px var(--color-signal-glow-55),
+      0 0 60px var(--color-signal-glow-25);
     white-space: nowrap;
   }
 

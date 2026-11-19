@@ -14,7 +14,7 @@ describe('ColorSwatch small text', () => {
       '@/app/(en)/design-system/_components/ColorSwatch/ColorSwatch'
     );
     mounted = await mountClient(
-      createElement(ColorSwatch, { token: 'primary-500', usage: 'signal accent' }),
+      createElement(ColorSwatch, { token: 'signal-500', usage: 'signal accent' }),
     );
     const small = [...mounted.container.querySelectorAll('code, span')].filter((node) =>
       node.className.includes('text-xs'),

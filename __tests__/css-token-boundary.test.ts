@@ -28,7 +28,7 @@ describe('modern color functions', () => {
   it('leaves color-mix and relative color syntax alone', () => {
     expect(
       findRawColorFunctions(
-        'a{color:color-mix(in srgb, var(--color-primary-500) 6%, transparent)}\nb{color:oklch(from var(--color-primary-500) l c h)}',
+        'a{color:color-mix(in srgb, var(--color-signal-500) 6%, transparent)}\nb{color:oklch(from var(--color-signal-500) l c h)}',
       ),
     ).toEqual([]);
   });

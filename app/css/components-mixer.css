@@ -145,8 +145,8 @@
   .mx-fader {
     position: relative;
     height: 22px;
-    border: 1px solid var(--color-primary-quiet);
-    background: var(--color-glow-03);
+    border: 1px solid var(--color-signal-quiet);
+    background: var(--color-signal-glow-03);
   }
 
   .mx-fader::before {
@@ -159,7 +159,7 @@
     transform: translateY(-0.5px);
     background-image: repeating-linear-gradient(
       to right,
-      var(--color-primary-quiet) 0 1px,
+      var(--color-signal-quiet) 0 1px,
       transparent 1px 25%
     );
   }
@@ -181,7 +181,7 @@
     display: flex;
     flex-direction: column;
     gap: 3px;
-    border-left: 1px dashed var(--color-primary-quiet);
+    border-left: 1px dashed var(--color-signal-quiet);
     padding-left: var(--spacing-3);
     padding-bottom: 10px;
     margin-left: var(--spacing-1);
@@ -221,7 +221,7 @@
     content: "";
     flex: 1;
     height: 1px;
-    background: var(--color-primary-quiet);
+    background: var(--color-signal-quiet);
   }
 
   .mx-fader-thumb::after {

@@ -27,9 +27,9 @@ const DEFAULT_SCALE_CLASSES = [
 ];
 
 const PROJECT_CLASSES = [
-  'bg-primary-500',
+  'bg-signal-500',
   'text-text',
-  'border-primary-border',
+  'border-signal-border',
   'rounded-control',
   'rounded-none',
   'rounded-full',

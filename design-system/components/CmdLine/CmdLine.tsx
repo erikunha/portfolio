@@ -22,8 +22,8 @@ export function CmdLine({
       {...rest}
     >
       <div className="flex flex-wrap gap-x-1">
-        <span className="text-primary-400">{user}</span>
-        <span className="text-primary-400">{prompt}</span>
+        <span className="text-signal-400">{user}</span>
+        <span className="text-signal-400">{prompt}</span>
         <span className="text-(color:--color-text)">{command}</span>
       </div>
       {output != null && <div className="text-(color:--color-text) mt-1">{output}</div>}

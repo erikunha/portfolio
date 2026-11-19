@@ -30,9 +30,9 @@ for surfaces and existing consumers; code syntax uses the green and grey ramps.
 <ColorSwatch token="accent" usage="Headings, accents and interactive elements" />
 
 The page background is `secondary-950`. Body text uses `text` (the same mint
-as `tertiary-50`); signal emphasis uses `accent` (the same green as `primary-500`).
-Use `text-secondary` for new secondary text instead of `primary-300`,
-`primary-400` or `tertiary-400`. Those shades remain available for existing consumers.
+as `tertiary-50`); signal emphasis uses `accent` (the same green as `signal-500`).
+Use `text-secondary` for new secondary text instead of `signal-300`,
+`signal-400` or `tertiary-400`. Those shades remain available for existing consumers.
 
 ### Role tokens
 
@@ -65,18 +65,18 @@ are plain custom properties on `:root`, and the print sheet remaps all twelve to
 
 ### primary · green (the brand)
 
-<ColorSwatch token="primary-200" />
-<ColorSwatch token="primary-300" usage="Existing annotations; use text-secondary for new text" />
-<ColorSwatch token="primary-400" usage="Existing labels; use text-secondary for new text" />
-<ColorSwatch token="primary-500" usage="Headings, accents, interactive elements" />
-<ColorSwatch token="primary-600" />
-<ColorSwatch token="primary-700" />
-<ColorSwatch token="primary-800" />
-<ColorSwatch token="primary-900" />
-<ColorSwatch token="primary-subtle" usage="Borders, dividers (green 40%)" />
-<ColorSwatch token="primary-border" usage="Decorative divider (green 20%, 1.5:1); never a control edge" />
-<ColorSwatch token="primary-faint" usage="Very subtle background (green 12%)" />
-<ColorSwatch token="primary-quiet" usage="Hover background (green 10%)" />
+<ColorSwatch token="signal-200" />
+<ColorSwatch token="signal-300" usage="Existing annotations; use text-secondary for new text" />
+<ColorSwatch token="signal-400" usage="Existing labels; use text-secondary for new text" />
+<ColorSwatch token="signal-500" usage="Headings, accents, interactive elements" />
+<ColorSwatch token="signal-600" />
+<ColorSwatch token="signal-700" />
+<ColorSwatch token="signal-800" />
+<ColorSwatch token="signal-900" />
+<ColorSwatch token="signal-subtle" usage="Borders, dividers (green 40%)" />
+<ColorSwatch token="signal-border" usage="Decorative divider (green 20%, 1.5:1); never a control edge" />
+<ColorSwatch token="signal-faint" usage="Very subtle background (green 12%)" />
+<ColorSwatch token="signal-quiet" usage="Hover background (green 10%)" />
 
 ### secondary · black (surfaces)
 
@@ -99,7 +99,7 @@ Two off-ramp hues exist, and each carries a meaning no green can. They are the o
 <ColorSwatch token="senary-300" usage="Alerts: form errors, shell errors, mixer clip LED" />
 <ColorSwatch token="senary-500" usage="Window-chrome close dot" />
 
-Other color tokens in the same file: the `--color-glow-02` to `--color-glow-60` ramp (signal green at 2% to 60% alpha, for glows and washes), `--color-eq-bar-top` and `--color-eq-bar-bottom` (the EQ spectrum gradient), `--color-print-ink`, `--color-print-paper` and `--color-print-rule` (print sheet), and `--color-crt-phosphor-red` and `--color-crt-phosphor-blue` (the CRT sub-pixel mask). The Matrix Rain colors `--color-rain-head` and `--color-rain-body` map to `primary-800` and `primary-900`. Components reference them through utilities or `var()`; no stylesheet writes a raw color.
+Other color tokens in the same file: the `--color-signal-glow-02` to `--color-signal-glow-60` ramp (signal green at 2% to 60% alpha, for glows and washes), `--color-eq-bar-top` and `--color-eq-bar-bottom` (the EQ spectrum gradient), `--color-print-ink`, `--color-print-paper` and `--color-print-rule` (print sheet), and `--color-crt-phosphor-red` and `--color-crt-phosphor-blue` (the CRT sub-pixel mask). The Matrix Rain colors `--color-rain-head` and `--color-rain-body` map to `signal-800` and `signal-900`. Components reference them through utilities or `var()`; no stylesheet writes a raw color.
 
 <h2 id="type-scale">Type Scale</h2>
 

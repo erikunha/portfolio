@@ -76,7 +76,9 @@ describe('findRawColorFunctions', () => {
 
   it('ignores color functions inside block comments and token references', () => {
     expect(
-      findRawColorFunctions('/* rgba(0,0,0,1) */\ncolor: var(--color-glow-06);\nb{color:red}'),
+      findRawColorFunctions(
+        '/* rgba(0,0,0,1) */\ncolor: var(--color-signal-glow-06);\nb{color:red}',
+      ),
     ).toEqual([]);
   });
 

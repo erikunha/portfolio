@@ -62,7 +62,7 @@
   .links-avatar {
     background-image: repeating-linear-gradient(
       135deg,
-      var(--color-primary-quiet) 0 4px,
+      var(--color-signal-quiet) 0 4px,
       transparent 4px 8px
     );
   }
@@ -75,7 +75,7 @@
     aspect-ratio: 16 / 9;
     background-image: repeating-linear-gradient(
       135deg,
-      var(--color-primary-quiet) 0 5px,
+      var(--color-signal-quiet) 0 5px,
       transparent 5px 10px
     );
   }
@@ -134,7 +134,11 @@
 
   .links-channel-card {
     background-color: var(--color-surface);
-    background-image: linear-gradient(180deg, var(--color-primary-faint), var(--color-glow-03));
+    background-image: linear-gradient(
+      180deg,
+      var(--color-signal-faint),
+      var(--color-signal-glow-03)
+    );
   }
 
   .links-page {
@@ -159,7 +163,7 @@
 
   .links-chrome-title {
     flex: 1;
-    color: var(--color-primary-400);
+    color: var(--color-signal-400);
     font-size: var(--text-xs);
     letter-spacing: var(--tracking-3xl);
     text-transform: uppercase;

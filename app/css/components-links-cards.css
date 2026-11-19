@@ -146,7 +146,7 @@
 
   @media (hover: hover) {
     .links-line:hover {
-      background: var(--color-primary-quiet);
+      background: var(--color-signal-quiet);
     }
   }
 

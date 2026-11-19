@@ -4,7 +4,7 @@ import { findTokenEqualArbitraryValues } from '../scripts/gates/lint-css-tokens'
 const theme = [
   '@theme {',
   '  --tracking-xl: 0.2em;',
-  '  --shadow-glow: 0 0 8px var(--color-primary-500);',
+  '  --shadow-glow: 0 0 8px var(--color-signal-500);',
   '  --radius-control: 2px;',
   '  --spacing-gutter: 1.5rem;',
   '  --text-xs--line-height: 1rem;',
@@ -15,8 +15,8 @@ describe('findTokenEqualArbitraryValues', () => {
   it.each([
     ['tracking-[0.2em]', 'tracking-[0.2em]', 'tracking-xl'],
     [
-      'shadow-[0_0_8px_var(--color-primary-500)]',
-      'shadow-[0_0_8px_var(--color-primary-500)]',
+      'shadow-[0_0_8px_var(--color-signal-500)]',
+      'shadow-[0_0_8px_var(--color-signal-500)]',
       'shadow-glow',
     ],
     ['rounded-[2px]', 'rounded-[2px]', 'rounded-control'],

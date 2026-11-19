@@ -40,7 +40,7 @@ export function RmsButtons({ buttons, initialActive, channelName, buttonLabels }
                   'bg-[color-mix(in_srgb,var(--color-accent)_10%,transparent)]',
                   'shadow-[0_0_5px_color-mix(in_srgb,var(--color-accent)_35%,transparent)]',
                 ].join(' ')
-              : 'rms-inactive border border-[var(--color-primary-quiet)] bg-transparent text-primary-400',
+              : 'rms-inactive border border-[var(--color-signal-quiet)] bg-transparent text-signal-400',
           )}
         >
           {btn}

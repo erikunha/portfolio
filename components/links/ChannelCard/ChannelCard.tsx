@@ -45,7 +45,7 @@ export function ChannelCard({ locale, feed }: { locale: SiteLocale; feed: Channe
           {latest === null ? (
             <div
               aria-hidden="true"
-              className="links-thumb-placeholder w-full border border-(color:--color-border) grid place-items-center text-primary-400 text-xs tracking-lg uppercase"
+              className="links-thumb-placeholder w-full border border-(color:--color-border) grid place-items-center text-signal-400 text-xs tracking-lg uppercase"
             >
               {copy.thumbPlaceholder[locale]}
             </div>

@@ -39,7 +39,7 @@
 
   .ds-prose h3 {
     margin: var(--phi-space-3) 0 var(--phi-space-1);
-    color: var(--color-primary-400);
+    color: var(--color-signal-400);
   }
 
   .ds-prose a:not([class]) {
@@ -90,7 +90,7 @@
   }
 
   .ds-prose th {
-    background: var(--color-primary-quiet);
+    background: var(--color-signal-quiet);
     color: var(--color-accent);
     font-size: var(--text-xs);
     letter-spacing: var(--tracking-sm);
@@ -177,7 +177,7 @@
   .ds-nav-item[aria-current="page"],
   .ds-nav-item[aria-current="location"] {
     border-color: var(--color-border);
-    background: var(--color-primary-quiet);
+    background: var(--color-signal-quiet);
     color: var(--color-accent);
   }
 

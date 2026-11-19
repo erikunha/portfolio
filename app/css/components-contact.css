@@ -3,7 +3,8 @@
     border: var(--border-width) solid var(--color-accent);
     padding: var(--spacing-6);
     color: var(--color-text);
-    background: linear-gradient(180deg, var(--color-glow-04), transparent), var(--color-surface);
+    background:
+      linear-gradient(180deg, var(--color-signal-glow-04), transparent), var(--color-surface);
     display: flex;
     flex-direction: column;
     gap: var(--spacing-2);
@@ -51,7 +52,7 @@
   }
 
   .contact-dismiss:hover {
-    background: var(--color-primary-quiet);
+    background: var(--color-signal-quiet);
     box-shadow: var(--shadow-glow);
   }
 
@@ -698,11 +699,11 @@
   }
 
   .ctz-land-dim {
-    stroke: var(--color-primary-900);
+    stroke: var(--color-signal-900);
   }
 
   .ctz-land-lit {
-    stroke: var(--color-primary-700);
+    stroke: var(--color-signal-700);
   }
 
   .ctz-route {
@@ -865,7 +866,7 @@
     gap: var(--spacing-2);
     min-height: var(--spacing-target);
     padding: 0 var(--spacing-3);
-    border-bottom: var(--border-width) solid var(--color-primary-quiet);
+    border-bottom: var(--border-width) solid var(--color-signal-quiet);
     color: var(--color-text);
     cursor: pointer;
     overflow-wrap: anywhere;
@@ -873,7 +874,7 @@
 
   .ctz-option:hover,
   .ctz-option[aria-selected="true"] {
-    background: var(--color-primary-faint);
+    background: var(--color-signal-faint);
   }
 
   .ctz-option[aria-selected="true"] {
@@ -921,7 +922,7 @@
   }
 
   .ctz-cell[data-on="true"] {
-    background: var(--color-primary-700);
+    background: var(--color-signal-700);
   }
 
   .ctz-row[data-row="both"] .ctz-cell[data-on="true"] {
