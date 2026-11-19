@@ -8,7 +8,7 @@ It is a **hiring and reference artifact** for one user (Erik Cunha, a software e
 1. **For human visitors (recruiters, hiring managers, engineers):** present credentials, projects, and opinions in a terminal interface, with automated performance and accessibility checks.
 2. **For AI agents (and curious engineers):** answer questions about Erik via `/api/ask` (an LLM grounded in the site's own content) and expose a machine-readable hiring profile via `/api/erik.json` and a read-only MCP server (`/api/mcp`).
 
-The terminal page has nine navigation entries in `content/section-registry.ts`; the DAW mixer lives inside the guitar entry. `components/SiteHome.tsx` also renders the footer, which sits outside that registry. `/summary` and `/cv` reuse professional content through `content/reading-views.ts` (the summary stack rows come from `profileStack.core` and `profileStack.ai`; the CV skills are `{ label, items }` groups, one `dl` row per category); `/links` and `/links/en` share localized link content.
+The terminal page has nine navigation entries in one keyed table, `SECTIONS` in `content/section-registry.ts`, from which the ids, icons, navigation and order derive; the DAW mixer lives inside the guitar entry. `components/SiteHome.tsx` also renders the footer, which sits outside that registry. `/summary` and `/cv` reuse professional content through `content/reading-views.ts` (the summary stack rows come from `profileStack.core` and `profileStack.ai`; the CV skills are `{ label, items }` groups, one `dl` row per category); `/links` and `/links/en` share localized link content.
 
 ## Localization
 
@@ -72,6 +72,8 @@ Projects uses one set of descriptions and stats across viewport sizes. Each card
 
 Measured groups ASK and PSI presentation metadata without storing live values. The ASK adapter reads the eval aggregate; the PSI adapter supplies separate desktop and mobile scores. Each group keeps its own loading, unavailable and stale states. PSI shows the unavailable note only when neither strategy has scores; a single failed strategy shows a placeholder dash in its half of each tile.
 
+`public/llms.txt` and `public/.well-known/agent.json` are generated from the content modules this section describes. `pnpm generate:discovery` writes them from `content/*` and `scripts/codegen/discovery-copy.ts`, which holds the long editorial blocks. `--check` fails on a stale file, and a test compares the committed files to the generator output. Edit the content or the copy file, never the generated files. The schema.org `alumniOf` and `hasCredential` in `content/seo.ts` derive from `education` and `credentials` the same way: `isCompletedEducation` leaves out the MBA in progress and `isSchemaCredential` leaves out credentials without schema.org data.
+
 ContactForm and its field checks (`contact-form-checks.ts`) import the Zod-free helpers and limits in `content/contact-rules.ts`; the two-locale copy table in `content/contact-copy.ts` is read only on the server, so no client chunk carries it, and `content/contact.ts` validates that copy with Zod for server consumers. Both share the LinkedIn URL from `content/social-urls.ts`. The timezone panel receives its copy as props and reads its land grid, Erik's pin and curated zone coordinates from the Zod-free `content/world-map.ts`; `content/_validate-client-content.ts` parses both at build time.
 
 ## Contact delivery
@@ -108,7 +110,7 @@ erDiagram
 ```
 
 **Three notable invariants the schema enforces** (because they are silent-corruption risks):
-- The guitar **EQ spectrum is one Zod object** (`EqSpectrumSchema` in `content/schemas.ts`). It rejects a band or axis tick outside the frequency range, an inverted range, a non-positive BPM and an accessible-name template that lost its `{freq}` or `{gain}` token. The curve and bars are derived from the bands by `lib/eq-spectrum.ts`, so the values live in one place.
+- The guitar **EQ spectrum is one Zod object** (`EqSpectrumSchema` in `content/eq.schema.ts`, re-exported by `content/schemas.ts`). It rejects a band or axis tick outside the frequency range, an inverted range, a non-positive BPM and an accessible-name template that lost its `{freq}` or `{gain}` token. The curve and bars are derived from the bands by `lib/eq-spectrum.ts`, so the values live in one place.
 - The guitar **presentation signal chain is a three-node Zod `tuple`** (`GuitarPresentationSchema`). It fixes the rendered order to INPUT → AMP → OUT and rejects reordered, duplicate or missing roles. The source rig (`GuitarRigSchema`) carries the same three nodes, so no authored node goes unrendered.
 - The DAW mixer is `.length(3)` with `.refine(last.id === 'MASTER')` - CH 01, CH 02 and the master channel, which must be last.
 

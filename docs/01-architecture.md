@@ -79,7 +79,7 @@ flowchart LR
 - The client islands are `InteractiveShell`, `ContactForm` and the `DawMixer*` controls.
 - Motion state lives on the DOM; the animated islands read it through `lib/motion.ts`.
 - `InteractiveShell` and `GlobalMotion` read the breakpoint through `useBreakpoint`, a `matchMedia` subscription with no context.
-- `content/_validate-client-content.ts` imports and parses every content module against the Zod schemas in `content/schemas.ts` and `contact.ts` at build time.
+- `content/_validate-client-content.ts` imports and parses every content module against the Zod schemas re-exported by `content/schemas.ts` and `contact.ts` at build time.
 
 The API paths, one flow per diagram.
 
@@ -146,7 +146,7 @@ Contact submission persists a 90-day KV audit record before calling the shared d
 | `lib/ask/budget.ts`                       | The monthly and daily spend budget and the reservation record that settle or abandon it                                      |
 | `lib/ask/dedup.ts`                        | The identical-question lock: `checkIdenticalQuestion`, `releaseIdenticalQuestion`                                            |
 | `lib/ask/system-prompt.ts`                | How the AI persona imports shared content                                                                                    |
-| `content/schemas.ts`                      | The domain schema registry                                                                                                   |
+| `content/schemas.ts`                      | Barrel over the per-domain `*.schema.ts` files and `schema-primitives.ts`; consumers import from it                          |
 | `content/site-locale.ts`                  | Locale codes, `<html lang>` values, localized paths and the hreflang alternates every page and the sitemap derive from       |
-| `content/section-registry.ts`             | The nine home navigation destinations: ids, labels, icons and order                                                          |
+| `content/section-registry.ts`             | The nine home navigation destinations in one keyed table (`SECTIONS`): ids, labels, icons and order derive from it           |
 | `components/responsive/Module/Module.tsx` | RSC wrapper for terminal modules; Hero, About, Career and Footer render separately                                           |

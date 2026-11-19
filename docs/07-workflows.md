@@ -50,7 +50,7 @@ Two `quality-fast` steps stay CI-only: the branch-name lint (the pre-push hook e
 | `check:dependency-vetting` | every direct dependency has a purpose and license in `dependency-vetting.json`; the installed license matches it; an install script needs `pnpm.onlyBuiltDependencies` or `pnpm.ignoredBuiltDependencies` |
 | `check:harness-size`   | `AGENTS.md` and `CLAUDE.md` within the line budgets in `scripts/gates/harness-size.json`               |
 | `check:section-order`  | no `#sec-*` rule reorders a section with CSS `order`, and every `#sec-*` selector matches a rendered id |
-| `check:detect-changes-paths` | every git-tracked root file and `scripts/` file is listed in `AI_PATHS`, `APP_PATHS`, `UI_PATHS` or `IGNORED_PATHS`, so a new file cannot skip a gated job |
+| `check:detect-changes-paths` | every git-tracked root file and `scripts/` file is listed in `AI_PATHS`, `APP_PATHS`, `UI_PATHS` or `IGNORED_PATHS`, so a new file cannot skip a gated job; `AI_PATHS` is the import closure of the ask route and eval runner plus a short manual list |
 | `check:doc-drift`      | `ARCHITECTURE.md` directory-tree paths exist on disk                                             |
 | `check:no-dashes`      | no tracked text file holds an em or en dash, apart from the `next dev` block in `AGENTS.md` |
 | `lint:css-tokens`      | fails on: a raw color in CSS and TSX (hex, `rgb`, `hsl`, `hwb`, `lab`, `lch`, `oklab`, `oklch`, `color()`) outside `app/css/theme.css` and the named allowlist; a `bg-`, `text-` or `border-` black or white utility in TSX; a literal `z-index` or `--z-*` declaration outside the scale in `theme.css`; a focus rule that writes its own ring instead of `--focus-ring` on `:focus-visible`; an arbitrary value in TSX equal to a token in the same namespace; an `@theme` token with no consumer (a `-*: initial` reset excepted) |
@@ -337,4 +337,4 @@ Large features use an **integration branch + sub-PRs** (`feat/<feature>` ← `fe
 | A gated job skipped on a PR | `detect-changes` found no path in its list; read `scripts/ci/detect-changes-paths.ts` |
 | `ask:eval` red in CI       | the gate failure code printed by the run (`lib/eval/ask-grading.ts`); the artifact `ask-eval-result` holds every graded item |
 
-See `UI_PATHS`/`APP_PATHS` in `scripts/ci/detect-changes-paths.ts` for the current CI path filters. Every git-tracked root file and `scripts/` file must be in `AI_PATHS`, `APP_PATHS`, `UI_PATHS` or `IGNORED_PATHS`; `check:detect-changes-paths` fails otherwise, so a new file cannot skip the gated jobs.
+See `UI_PATHS`/`APP_PATHS` in `scripts/ci/detect-changes-paths.ts` for the current CI path filters. Every git-tracked root file and `scripts/` file must be in `AI_PATHS`, `APP_PATHS`, `UI_PATHS` or `IGNORED_PATHS`; `AI_PATHS` is computed from the import closure of the ask route and the eval runner, so an imported module cannot be missed; `check:detect-changes-paths` fails otherwise, so a new file cannot skip the gated jobs.

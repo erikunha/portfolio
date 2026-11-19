@@ -60,12 +60,12 @@ reads the production Upstash token.
 The CI `ai-eval` job runs the same `pnpm ask:eval`. It is path-filtered by the
 `detect-changes` job: it fires for ANY AI-relevant change, not just the eval files, and only
 when the pull request carries the `ai-eval` label. The
-filter is `AI_PATHS` in `scripts/ci/detect-changes-paths.ts`: the ask route and `lib/ask/`,
-`lib/eval/`, `lib/agent/`, the rate-limit, Redis, logging and env modules the route imports, the
-content modules the system prompt and the fact sheet compose from (`content/ask-facts.ts`,
-`content/profile.ts`, `content/projects.ts` and the other profile modules), the eval corpus
-and calibration, `scripts/eval/ask-eval.ts`, and `__tests__/ask/`. Read that file for the exact
-set. The job has a 15-minute timeout; a ~12-minute run is normal, so a single slow Gateway
+filter is `AI_PATHS` in `scripts/ci/detect-changes-paths.ts`, computed rather than listed: the
+import closure (`scripts/lib/import-closure.ts`) of the ask route, `scripts/eval/ask-eval.ts` and
+every non-test source file in `app/api/ask/`, `lib/ask/`, `lib/server/`, `lib/agent/` and
+`lib/eval/`, plus a short manual list (those directories, `__tests__/ask/` and `ci.yml`). A new
+import of the ask route or the eval runner joins the filter without an edit. Read that file for
+the exact set. The job has a 15-minute timeout; a ~12-minute run is normal, so a single slow Gateway
 run can hit the limit and report `cancelled`. Re-run just that job (it is transient, not a
 quality failure) rather than bumping the timeout on a one-off.
 
