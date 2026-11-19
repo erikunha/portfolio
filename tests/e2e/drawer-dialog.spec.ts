@@ -8,6 +8,9 @@ const OPEN_MENU_TRIGGER = `${MENU_TRIGGER}:visible`;
 const BACKDROP_X_OFFSET_PX = 40;
 const BACKDROP_Y_PX = 300;
 const EXIT_SAMPLE_MS = 600;
+const EXIT_TICK_MS = 8;
+const SLIDE_PROPERTY = 'transform';
+const SLIDE_PROGRESS = [0.1, 0.2, 0.3, 0.4, 0.5];
 const EXIT_FULL_SLIDE_PX = 300;
 const MIN_SLIDE_FRAMES = 3;
 
@@ -15,28 +18,55 @@ type ExitFrame = { x: number; open: boolean };
 type SamplerWindow = Window & { exitFrames?: ExitFrame[]; exitDone?: boolean };
 
 async function armExitSampler(page: Page): Promise<void> {
-  await page.evaluate((sampleMs) => {
-    const sampler = window as SamplerWindow;
-    const drawer = document.querySelector('#section-drawer') as HTMLDialogElement;
-    sampler.exitFrames = [];
-    sampler.exitDone = false;
-    document.addEventListener(
-      'keydown',
-      () => {
-        const start = performance.now();
-        const tick = () => {
-          sampler.exitFrames?.push({
-            x: new DOMMatrixReadOnly(getComputedStyle(drawer).transform).m41,
-            open: drawer.open,
-          });
-          if (performance.now() - start < sampleMs) requestAnimationFrame(tick);
-          else sampler.exitDone = true;
-        };
-        requestAnimationFrame(tick);
-      },
-      { capture: true, once: true },
-    );
-  }, EXIT_SAMPLE_MS);
+  await page.evaluate(
+    ({ sampleMs, tickMs, progress, property }) => {
+      const sampler = window as SamplerWindow;
+      const drawer = document.querySelector('#section-drawer') as HTMLDialogElement;
+      const readFrame = (): ExitFrame => ({
+        x: new DOMMatrixReadOnly(getComputedStyle(drawer).transform).m41,
+        open: drawer.open,
+      });
+      sampler.exitFrames = [];
+      sampler.exitDone = false;
+      document.addEventListener(
+        'keydown',
+        () => {
+          const start = performance.now();
+          let stepped = false;
+          const timer = setInterval(() => {
+            const slide = drawer
+              .getAnimations()
+              .find(
+                (animation) =>
+                  animation instanceof CSSTransition && animation.transitionProperty === property,
+              );
+            if (slide && drawer.open && !stepped) {
+              stepped = true;
+              const duration = Number(slide.effect?.getComputedTiming().duration);
+              slide.pause();
+              for (const fraction of progress) {
+                slide.currentTime = duration * fraction;
+                sampler.exitFrames?.push(readFrame());
+              }
+              slide.play();
+            }
+            sampler.exitFrames?.push(readFrame());
+            if (performance.now() - start >= sampleMs) {
+              clearInterval(timer);
+              sampler.exitDone = true;
+            }
+          }, tickMs);
+        },
+        { capture: true, once: true },
+      );
+    },
+    {
+      sampleMs: EXIT_SAMPLE_MS,
+      tickMs: EXIT_TICK_MS,
+      progress: SLIDE_PROGRESS,
+      property: SLIDE_PROPERTY,
+    },
+  );
 }
 
 async function sampleExit(page: Page): Promise<ExitFrame[]> {

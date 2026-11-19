@@ -274,6 +274,17 @@ The prompt for a manual or agent review that applies these rules to a diff is `d
     `--platform`, the image tag equals the lockfile version) and a `--linux=gate` run on a tree
     without the drawer fix, which fails both specs.
 
+58. An e2e spec that samples an animation does not assume the runner draws frames. Software
+    WebKit on Linux (the CI runner) delivered no `requestAnimationFrame` callback for 3 to 7 s
+    after this site loaded and reached 60 fps only after 10 to 20 s, and a CSS transition's clock
+    and its `transitionrun` and `transitionend` events only advance with a rendering update, so a
+    200 ms slide sampled per frame saw no intermediate position (a plain `div` transition behaved
+    the same). Sample DOM state on a timer, and read a transition's positions by pausing the
+    `CSSTransition` from `getAnimations()` and seeking `currentTime`. Check: the drawer exit specs
+    pass 10 of 10 with `--retries=0` in the Playwright Linux image, and fail there when the exit
+    duration is forced to 0 (`tests/e2e/drawer-dialog.spec.ts`,
+    `tests/e2e/drawer-exit-interactive.spec.ts`).
+
 ## Pre-push judgement list
 
 Ranked by how often review caught each class on this repository.

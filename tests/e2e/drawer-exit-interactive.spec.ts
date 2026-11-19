@@ -4,35 +4,40 @@ import { installMockBackend } from './_helpers/mock-backend';
 
 const DRAWER = '#section-drawer';
 const SAMPLE_MS = 600;
+const TICK_MS = 8;
 const TYPED = 'Test Visitor';
 
 type Frame = { open: boolean; exiting: boolean; modal: boolean };
 type SamplerWindow = Window & { exitFrames?: Frame[]; exitDone?: boolean };
 
 async function armSampler(page: Page): Promise<void> {
-  await page.evaluate((sampleMs) => {
-    const sampler = window as SamplerWindow;
-    const drawer = document.querySelector('#section-drawer') as HTMLDialogElement;
-    sampler.exitFrames = [];
-    sampler.exitDone = false;
-    drawer.addEventListener(
-      'click',
-      () => {
-        const start = performance.now();
-        const tick = () => {
-          sampler.exitFrames?.push({
-            open: drawer.open,
-            exiting: !drawer.classList.contains('is-open'),
-            modal: drawer.matches(':modal'),
-          });
-          if (performance.now() - start < sampleMs) requestAnimationFrame(tick);
-          else sampler.exitDone = true;
-        };
-        requestAnimationFrame(tick);
-      },
-      { capture: true, once: true },
-    );
-  }, SAMPLE_MS);
+  await page.evaluate(
+    ({ sampleMs, tickMs }) => {
+      const sampler = window as SamplerWindow;
+      const drawer = document.querySelector('#section-drawer') as HTMLDialogElement;
+      sampler.exitFrames = [];
+      sampler.exitDone = false;
+      drawer.addEventListener(
+        'click',
+        () => {
+          const start = performance.now();
+          const timer = setInterval(() => {
+            sampler.exitFrames?.push({
+              open: drawer.open,
+              exiting: !drawer.classList.contains('is-open'),
+              modal: drawer.matches(':modal'),
+            });
+            if (performance.now() - start >= sampleMs) {
+              clearInterval(timer);
+              sampler.exitDone = true;
+            }
+          }, tickMs);
+        },
+        { capture: true, once: true },
+      );
+    },
+    { sampleMs: SAMPLE_MS, tickMs: TICK_MS },
+  );
 }
 
 test('the page takes input while the drawer slides out after a section is chosen @cross-browser', async ({
