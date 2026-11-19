@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { logRedis } from '@/__tests__/helpers/log-redis';
 
 const RELEASE = 'a1b2c3d4e5f6';
 const DIGEST = '2918476530';
@@ -14,7 +15,7 @@ describe('/api/log release context', () => {
     vi.resetModules();
     redisSetMock.mockReset();
     redisSetMock.mockResolvedValue('OK');
-    vi.doMock('@/lib/redis', () => ({ getRedis: vi.fn(() => ({ set: redisSetMock })) }));
+    vi.doMock('@/lib/redis', () => ({ getRedis: vi.fn(() => logRedis({ set: redisSetMock })) }));
     vi.doMock('@/lib/server/client-ip', () => ({ getClientIp: vi.fn(() => '127.0.0.1') }));
     vi.doMock('@/lib/rate-limit', () => ({
       getErrorLogLimit: vi.fn(() => ({ limit: vi.fn(async () => ({ success: true })) })),

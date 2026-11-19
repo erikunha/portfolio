@@ -11,7 +11,7 @@ const OVER_THRESHOLD = 20;
 const FP_A = 'a'.repeat(16);
 const FP_B = 'b'.repeat(16);
 const store = new Map<string, unknown>();
-const scan = vi.fn();
+const sscan = vi.fn();
 const pipeSet = vi.fn();
 const pipeExec = vi.fn(async () => []);
 const send = vi.fn(
@@ -23,7 +23,7 @@ const send = vi.fn(
 
 vi.mock('@/lib/redis', () => ({
   getRedis: () => ({
-    scan,
+    sscan,
     mget: async (...keys: string[]) => keys.map((key) => store.get(key) ?? null),
     pipeline: () => ({ set: pipeSet.mockReturnThis(), exec: pipeExec }),
   }),
@@ -39,7 +39,7 @@ const countKey = (release: string, fingerprint: string) =>
 function seed(release: string, fingerprint: string, message: string, repeats = 0): string {
   store.set(errKey(release, fingerprint), { message, level: 'error' });
   if (repeats > 0) store.set(countKey(release, fingerprint), repeats);
-  return errKey(release, fingerprint);
+  return `${release}:${fingerprint}`;
 }
 
 function request(authorization: string | null): NextRequest {
@@ -66,7 +66,7 @@ describe('GET /api/error-digest', () => {
     vi.setSystemTime(new Date(RUN_AT));
     vi.stubEnv('CRON_SECRET', SECRET);
     vi.stubEnv('RESEND_API_KEY', 're_test_key');
-    scan.mockResolvedValue(['0', []]);
+    sscan.mockResolvedValue(['0', []]);
     send.mockResolvedValue({ data: { id: 'mail-id' }, error: null });
   });
 
@@ -81,31 +81,28 @@ describe('GET /api/error-digest', () => {
   ])('answers 401 with %s and touches nothing', async (_name, authorization) => {
     const res = await run(authorization);
     expect(res.status).toBe(401);
-    expect(scan).not.toHaveBeenCalled();
+    expect(sscan).not.toHaveBeenCalled();
     expect(send).not.toHaveBeenCalled();
   });
 
-  it('scans only the previous UTC day', async () => {
+  it('reads only the index of the previous UTC day', async () => {
     await run();
-    expect(scan).toHaveBeenCalledWith(
-      '0',
-      expect.objectContaining({ match: `err:*:${DIGEST_DAY}:*` }),
-    );
+    expect(sscan).toHaveBeenCalledWith(`errday:${DIGEST_DAY}`, '0', expect.any(Object));
   });
 
-  it('follows the scan cursor until it returns to 0', async () => {
+  it('follows the index cursor until it returns to 0', async () => {
     const first = seed('r1', FP_A, 'first');
     const second = seed('r1', FP_B, 'second');
-    scan.mockResolvedValueOnce(['7', [first]]).mockResolvedValueOnce(['0', [second]]);
+    sscan.mockResolvedValueOnce(['7', [first]]).mockResolvedValueOnce(['0', [second]]);
     await run();
-    expect(scan).toHaveBeenCalledTimes(2);
-    expect(scan.mock.calls[1]?.[0]).toBe('7');
+    expect(sscan).toHaveBeenCalledTimes(2);
+    expect(sscan.mock.calls[1]?.[1]).toBe('7');
     expect(mailText()).toContain(FP_A);
     expect(mailText()).toContain(FP_B);
   });
 
   it('mails a fingerprint it has not seen before, with its count and message', async () => {
-    scan.mockResolvedValueOnce(['0', [seed('r1', FP_A, 'x is undefined', 4)]]);
+    sscan.mockResolvedValueOnce(['0', [seed('r1', FP_A, 'x is undefined', 4)]]);
     const res = await run();
     expect(res.status).toBe(200);
     expect(send).toHaveBeenCalledOnce();
@@ -115,7 +112,7 @@ describe('GET /api/error-digest', () => {
   });
 
   it('sums the record and its counter, and joins releases, per fingerprint', async () => {
-    scan.mockResolvedValueOnce([
+    sscan.mockResolvedValueOnce([
       '0',
       [seed('r1', FP_A, 'same error', 2), seed('r2', FP_A, 'same error', 6)],
     ]);
@@ -127,7 +124,7 @@ describe('GET /api/error-digest', () => {
   });
 
   it('does not mail a known fingerprint under the threshold, and still refreshes its marker', async () => {
-    scan.mockResolvedValueOnce(['0', [seed('r1', FP_A, 'known', OVER_THRESHOLD - 2)]]);
+    sscan.mockResolvedValueOnce(['0', [seed('r1', FP_A, 'known', OVER_THRESHOLD - 2)]]);
     store.set(`errseen:${FP_A}`, DIGEST_DAY);
     const res = await run();
     expect(res.status).toBe(200);
@@ -136,7 +133,7 @@ describe('GET /api/error-digest', () => {
   });
 
   it('mails a known fingerprint once its count reaches the threshold', async () => {
-    scan.mockResolvedValueOnce(['0', [seed('r1', FP_A, 'noisy', OVER_THRESHOLD - 1)]]);
+    sscan.mockResolvedValueOnce(['0', [seed('r1', FP_A, 'noisy', OVER_THRESHOLD - 1)]]);
     store.set(`errseen:${FP_A}`, DIGEST_DAY);
     await run();
     expect(send).toHaveBeenCalledOnce();
@@ -144,7 +141,7 @@ describe('GET /api/error-digest', () => {
   });
 
   it('lists only the new and over-threshold fingerprints in a mixed day', async () => {
-    scan.mockResolvedValueOnce([
+    sscan.mockResolvedValueOnce([
       '0',
       [seed('r1', FP_A, 'quiet known', 1), seed('r1', FP_B, 'brand new', 0)],
     ]);
@@ -155,14 +152,14 @@ describe('GET /api/error-digest', () => {
   });
 
   it('marks every fingerprint seen for 30 days after a successful mail', async () => {
-    scan.mockResolvedValueOnce(['0', [seed('r1', FP_A, 'm')]]);
+    sscan.mockResolvedValueOnce(['0', [seed('r1', FP_A, 'm')]]);
     await run();
     expect(pipeSet).toHaveBeenCalledWith(`errseen:${FP_A}`, DIGEST_DAY, { ex: SEEN_TTL_SECONDS });
     expect(pipeExec).toHaveBeenCalledOnce();
   });
 
   it('keeps the fingerprint new for tomorrow when the mail fails', async () => {
-    scan.mockResolvedValueOnce(['0', [seed('r1', FP_A, 'm')]]);
+    sscan.mockResolvedValueOnce(['0', [seed('r1', FP_A, 'm')]]);
     send.mockResolvedValueOnce({ data: null, error: { message: 'resend down' } });
     const res = await run();
     expect(res.status).toBe(502);
@@ -175,8 +172,8 @@ describe('GET /api/error-digest', () => {
     expect(send).not.toHaveBeenCalled();
   });
 
-  it('answers 503 when the store cannot be scanned', async () => {
-    scan.mockRejectedValueOnce(new Error('kv down'));
+  it('answers 503 when the day index cannot be read', async () => {
+    sscan.mockRejectedValueOnce(new Error('kv down'));
     const res = await run();
     expect(res.status).toBe(503);
     expect(send).not.toHaveBeenCalled();

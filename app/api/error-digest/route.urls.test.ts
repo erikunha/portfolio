@@ -7,7 +7,7 @@ const DIGEST_DAY = '2026-11-17';
 const FP_A = 'a'.repeat(16);
 const TOKEN = 'query-token-must-not-leak';
 const store = new Map<string, unknown>();
-const scan = vi.fn();
+const sscan = vi.fn();
 const send = vi.fn(
   async (): Promise<{ data: { id: string } | null; error: { message: string } | null }> => ({
     data: { id: 'mail-id' },
@@ -17,7 +17,7 @@ const send = vi.fn(
 
 vi.mock('@/lib/redis', () => ({
   getRedis: () => ({
-    scan,
+    sscan,
     mget: async (...keys: string[]) => keys.map((key) => store.get(key) ?? null),
     pipeline: () => ({ set: vi.fn().mockReturnThis(), exec: vi.fn(async () => []) }),
   }),
@@ -30,7 +30,7 @@ const recordKey = `err:r1:${DIGEST_DAY}:${FP_A}`;
 async function mailTextFor(message: string, asJson = false): Promise<string> {
   const record = { message, level: 'error' };
   store.set(recordKey, asJson ? JSON.stringify(record) : record);
-  scan.mockResolvedValue(['0', [recordKey]]);
+  sscan.mockResolvedValue(['0', [`r1:${FP_A}`]]);
   const { GET } = await import('@/app/api/error-digest/route');
   await GET(
     new NextRequest('http://localhost/api/error-digest', {

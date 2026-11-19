@@ -1,8 +1,10 @@
 import { NextRequest } from 'next/server';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { logRedis } from '@/__tests__/helpers/log-redis';
 
 const RELEASE = 'abc1234';
 const WEEK_SECONDS = 604_800;
+const RECORD_AND_COUNTER_TRANSACTIONS = 2;
 const set = vi.fn();
 const incr = vi.fn();
 const expire = vi.fn();
@@ -29,14 +31,14 @@ describe('/api/log repeat counter', () => {
   beforeEach(() => {
     vi.resetModules();
     vi.clearAllMocks();
-    const tx = { incr, expire, exec };
-    incr.mockReturnValue(tx);
-    expire.mockReturnValue(tx);
     exec.mockResolvedValue([2, 1]);
-    multi.mockReturnValue(tx);
     set.mockResolvedValue(null);
     vi.doMock('@/lib/redis', () => ({
-      getRedis: () => ({ set, multi, incr: standaloneIncr, expire: standaloneExpire }),
+      getRedis: () => ({
+        ...logRedis({ set, counter: { incr, expire, exec }, multi }),
+        incr: standaloneIncr,
+        expire: standaloneExpire,
+      }),
     }));
     vi.doMock('@/lib/server/client-ip', () => ({ getClientIp: () => '127.0.0.1' }));
     vi.doMock('@/lib/rate-limit', () => ({
@@ -51,7 +53,7 @@ describe('/api/log repeat counter', () => {
   it('increments and sets the TTL in one transaction', async () => {
     const res = await post();
     expect(res.status).toBe(200);
-    expect(multi).toHaveBeenCalledOnce();
+    expect(multi).toHaveBeenCalledTimes(RECORD_AND_COUNTER_TRANSACTIONS);
     const [countKey] = incr.mock.calls[0] ?? [];
     expect(String(countKey)).toMatch(/^errn:/);
     expect(expire).toHaveBeenCalledWith(countKey, WEEK_SECONDS);
@@ -78,7 +80,7 @@ describe('/api/log repeat counter', () => {
     set.mockRejectedValueOnce(new Error('kv down'));
     const res = await post();
     expect(res.status).toBe(503);
-    expect(multi).not.toHaveBeenCalled();
+    expect(incr).not.toHaveBeenCalled();
     expect(error).toHaveBeenCalledOnce();
   });
 
@@ -86,6 +88,7 @@ describe('/api/log repeat counter', () => {
     set.mockResolvedValueOnce('OK');
     const res = await post();
     expect(res.status).toBe(200);
-    expect(multi).not.toHaveBeenCalled();
+    expect(incr).not.toHaveBeenCalled();
+    expect(multi).toHaveBeenCalledOnce();
   });
 });

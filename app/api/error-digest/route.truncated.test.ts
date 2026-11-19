@@ -8,7 +8,7 @@ const OPEN_CURSOR = '7';
 const DONE_CURSOR = '0';
 const FP_A = 'a'.repeat(16);
 const store = new Map<string, unknown>();
-const scan = vi.fn();
+const sscan = vi.fn();
 const pipeSet = vi.fn();
 const pipeExec = vi.fn(async () => []);
 const warn = vi.fn();
@@ -21,7 +21,7 @@ const send = vi.fn(
 
 vi.mock('@/lib/redis', () => ({
   getRedis: () => ({
-    scan,
+    sscan,
     mget: async (...keys: string[]) => keys.map((key) => store.get(key) ?? null),
     pipeline: () => ({ set: pipeSet.mockReturnThis(), exec: pipeExec }),
   }),
@@ -32,6 +32,7 @@ vi.mock('@/lib/log', async () => ({
 }));
 
 const recordKey = `err:r1:${DIGEST_DAY}:${FP_A}`;
+const indexMember = `r1:${FP_A}`;
 
 async function run(): Promise<Response> {
   const { GET } = await import('@/app/api/error-digest/route');
@@ -50,7 +51,7 @@ async function summaryOf(res: Response): Promise<Record<string, unknown>> {
 
 const mailText = (): string => (send.mock.calls[0] as unknown as [{ text: string }])[0].text;
 
-describe('GET /api/error-digest when the scan is cut short', () => {
+describe('GET /api/error-digest when the index read is cut short', () => {
   beforeEach(() => {
     vi.resetModules();
     vi.clearAllMocks();
@@ -69,7 +70,7 @@ describe('GET /api/error-digest when the scan is cut short', () => {
   });
 
   it('reports truncated, warns, and writes no seen markers when the cursor never returns to 0', async () => {
-    scan.mockResolvedValue([OPEN_CURSOR, [recordKey]]);
+    sscan.mockResolvedValue([OPEN_CURSOR, [indexMember]]);
     const res = await run();
     expect(res.status).toBe(200);
     expect((await summaryOf(res)).truncated).toBe(true);
@@ -79,7 +80,7 @@ describe('GET /api/error-digest when the scan is cut short', () => {
   });
 
   it('still mails what it found and says the counts are partial', async () => {
-    scan.mockResolvedValue([OPEN_CURSOR, [recordKey]]);
+    sscan.mockResolvedValue([OPEN_CURSOR, [indexMember]]);
     await run();
     expect(send).toHaveBeenCalledOnce();
     expect(mailText()).toContain(FP_A);
@@ -87,22 +88,22 @@ describe('GET /api/error-digest when the scan is cut short', () => {
   });
 
   it('is not truncated when the last allowed page returns the done cursor', async () => {
-    scan.mockResolvedValue([OPEN_CURSOR, [recordKey]]);
+    sscan.mockResolvedValue([OPEN_CURSOR, [indexMember]]);
     await run();
-    const cap = scan.mock.calls.length;
+    const cap = sscan.mock.calls.length;
     vi.clearAllMocks();
     vi.resetModules();
-    for (let page = 1; page < cap; page += 1) scan.mockResolvedValueOnce([OPEN_CURSOR, []]);
-    scan.mockResolvedValueOnce([DONE_CURSOR, [recordKey]]);
+    for (let page = 1; page < cap; page += 1) sscan.mockResolvedValueOnce([OPEN_CURSOR, []]);
+    sscan.mockResolvedValueOnce([DONE_CURSOR, [indexMember]]);
     const res = await run();
-    expect(scan).toHaveBeenCalledTimes(cap);
+    expect(sscan).toHaveBeenCalledTimes(cap);
     expect((await summaryOf(res)).truncated).toBe(false);
     expect(warn).not.toHaveBeenCalled();
     expect(pipeSet).toHaveBeenCalledWith(`errseen:${FP_A}`, DIGEST_DAY, expect.any(Object));
   });
 
-  it('reports truncated false and keeps marking fingerprints on a complete scan', async () => {
-    scan.mockResolvedValue([DONE_CURSOR, [recordKey]]);
+  it('reports truncated false and keeps marking fingerprints on a complete read', async () => {
+    sscan.mockResolvedValue([DONE_CURSOR, [indexMember]]);
     const res = await run();
     expect((await summaryOf(res)).truncated).toBe(false);
     expect(pipeSet).toHaveBeenCalledOnce();

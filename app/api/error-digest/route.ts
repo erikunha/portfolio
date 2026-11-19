@@ -12,13 +12,15 @@ import { HOURS_PER_DAY, MS_PER_HOUR, utcDay } from '@/lib/time';
 const ERR_KEY_PREFIX = 'err';
 const ERR_COUNT_KEY_PREFIX = 'errn';
 const ERR_SEEN_KEY_PREFIX = 'errseen';
+const ERR_DAY_INDEX_KEY_PREFIX = 'errday';
 const KEY_SEPARATOR = ':';
 const RELEASE_INDEX = 1;
 const FINGERPRINT_INDEX = 3;
 const KEY_PARTS = 4;
-const SCAN_PAGE_SIZE = 200;
-const MAX_SCAN_PAGES = 50;
-const SCAN_DONE_CURSOR = '0';
+const INDEX_PAGE_SIZE = 200;
+const MAX_INDEX_PAGES = 50;
+const INDEX_DONE_CURSOR = '0';
+const INDEX_MEMBER_PARTS = 2;
 const MGET_CHUNK_SIZE = 100;
 const OVER_THRESHOLD_COUNT = 20;
 const SEEN_TTL_S = 30 * HOURS_PER_DAY * 3600;
@@ -59,23 +61,34 @@ async function readAll(keys: readonly string[]): Promise<unknown[]> {
   return values;
 }
 
-interface DayScan {
+interface DayIndex {
   keys: string[];
   truncated: boolean;
 }
 
-async function scanDayKeys(day: string): Promise<DayScan> {
+function recordKeyOfMember(day: string, member: unknown): string | undefined {
+  if (typeof member !== 'string') return undefined;
+  const parts = member.split(KEY_SEPARATOR);
+  if (parts.length !== INDEX_MEMBER_PARTS || parts.some((part) => part === '')) return undefined;
+  const [release, fingerprint] = parts;
+  return [ERR_KEY_PREFIX, release, day, fingerprint].join(KEY_SEPARATOR);
+}
+
+async function readDayIndex(day: string): Promise<DayIndex> {
   const redis = getRedis();
-  const match = `${ERR_KEY_PREFIX}${KEY_SEPARATOR}*${KEY_SEPARATOR}${day}${KEY_SEPARATOR}*`;
+  const indexKey = `${ERR_DAY_INDEX_KEY_PREFIX}${KEY_SEPARATOR}${day}`;
   const keys: string[] = [];
-  let cursor = SCAN_DONE_CURSOR;
-  for (let page = 0; page < MAX_SCAN_PAGES; page += 1) {
-    const [next, batch] = await redis.scan(cursor, { match, count: SCAN_PAGE_SIZE });
-    keys.push(...batch);
+  let cursor = INDEX_DONE_CURSOR;
+  for (let page = 0; page < MAX_INDEX_PAGES; page += 1) {
+    const [next, batch] = await redis.sscan(indexKey, cursor, { count: INDEX_PAGE_SIZE });
+    for (const member of batch) {
+      const key = recordKeyOfMember(day, member);
+      if (key) keys.push(key);
+    }
     cursor = String(next);
-    if (cursor === SCAN_DONE_CURSOR) break;
+    if (cursor === INDEX_DONE_CURSOR) break;
   }
-  return { keys, truncated: cursor !== SCAN_DONE_CURSOR };
+  return { keys, truncated: cursor !== INDEX_DONE_CURSOR };
 }
 
 function messageOf(record: unknown): string {
@@ -153,7 +166,7 @@ function digestText(day: string, flagged: readonly FingerprintTotal[], truncated
   const partial = truncated
     ? [
         '',
-        `The scan stopped after ${MAX_SCAN_PAGES} pages, so this list and its counts are partial.`,
+        `The day index read stopped after ${MAX_INDEX_PAGES} pages, so this list and its counts are partial.`,
       ]
     : [];
   return [
@@ -175,11 +188,11 @@ export async function GET(req: NextRequest): Promise<Response> {
   let totals: FingerprintTotal[];
   let truncated: boolean;
   try {
-    const scanned = await scanDayKeys(day);
-    truncated = scanned.truncated;
-    totals = await totalsByFingerprint(scanned.keys);
-  } catch (scanErr) {
-    log.error('error-digest could not read the error records', { requestId, err: scanErr });
+    const indexed = await readDayIndex(day);
+    truncated = indexed.truncated;
+    totals = await totalsByFingerprint(indexed.keys);
+  } catch (readErr) {
+    log.error('error-digest could not read the error records', { requestId, err: readErr });
     return err({
       requestId,
       status: HTTP_STATUS.serviceUnavailable,
@@ -197,10 +210,10 @@ export async function GET(req: NextRequest): Promise<Response> {
     truncated,
   };
   if (truncated) {
-    log.warn('error-digest scan hit the page cap, skipping the seen markers', {
+    log.warn('error-digest day index hit the page cap, skipping the seen markers', {
       requestId,
       day,
-      maxPages: MAX_SCAN_PAGES,
+      maxPages: MAX_INDEX_PAGES,
     });
   }
 

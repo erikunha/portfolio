@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { logRedis } from '@/__tests__/helpers/log-redis';
 import { errorFingerprint } from '@/lib/error-fingerprint';
 
 const RELEASE = 'abc1234';
@@ -33,7 +34,9 @@ describe('/api/log fingerprint dedupe', () => {
     expire.mockReturnValue(tx);
     exec.mockResolvedValue([1, 1]);
     multi.mockReturnValue(tx);
-    vi.doMock('@/lib/redis', () => ({ getRedis: () => ({ set, multi }) }));
+    vi.doMock('@/lib/redis', () => ({
+      getRedis: () => logRedis({ set, counter: { incr, expire, exec }, multi }),
+    }));
     vi.doMock('@/lib/server/client-ip', () => ({ getClientIp: () => '127.0.0.1' }));
     vi.doMock('@/lib/rate-limit', () => ({
       getErrorLogLimit: () => ({ limit: async () => ({ success: true }) }),

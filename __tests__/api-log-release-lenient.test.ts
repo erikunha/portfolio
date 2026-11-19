@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { logRedis } from '@/__tests__/helpers/log-redis';
 
 const UNKNOWN_SEGMENT = 'unknown';
 const OVERSIZED_RELEASE = 'r'.repeat(41);
@@ -23,7 +24,7 @@ describe('/api/log with a release the server cannot accept', () => {
     vi.clearAllMocks();
     set.mockResolvedValue('OK');
     vi.doMock('@/lib/redis', () => ({
-      getRedis: () => ({ set, incr: vi.fn(), expire: vi.fn() }),
+      getRedis: () => logRedis({ set }),
     }));
     vi.doMock('@/lib/server/client-ip', () => ({ getClientIp: () => '127.0.0.1' }));
     vi.doMock('@/lib/rate-limit', () => ({

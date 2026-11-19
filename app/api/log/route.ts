@@ -14,6 +14,8 @@ const MAX_LOG_BODY_BYTES = 32_768;
 
 const ERR_KEY_PREFIX = 'err';
 const ERR_COUNT_KEY_PREFIX = 'errn';
+const ERR_DAY_INDEX_KEY_PREFIX = 'errday';
+const KEY_SEPARATOR = ':';
 const ERR_KV_TTL_S = 7 * 24 * 60 * 60;
 const MAX_STORED_STACK_CHARS = 4096;
 const MAX_TS_LENGTH = 64;
@@ -81,9 +83,13 @@ const handleLog = defineHandler({
 
     const errId = crypto.randomUUID();
     const today = utcDay(new Date());
-    const keyTail = `${body.release ?? UNKNOWN_RELEASE}:${today}:${errorFingerprint(body)}`;
-    const key = `${ERR_KEY_PREFIX}:${keyTail}`;
-    const countKey = `${ERR_COUNT_KEY_PREFIX}:${keyTail}`;
+    const release = body.release ?? UNKNOWN_RELEASE;
+    const fingerprint = errorFingerprint(body);
+    const keyTail = [release, today, fingerprint].join(KEY_SEPARATOR);
+    const key = `${ERR_KEY_PREFIX}${KEY_SEPARATOR}${keyTail}`;
+    const countKey = `${ERR_COUNT_KEY_PREFIX}${KEY_SEPARATOR}${keyTail}`;
+    const dayIndexKey = `${ERR_DAY_INDEX_KEY_PREFIX}${KEY_SEPARATOR}${today}`;
+    const dayIndexMember = [release, fingerprint].join(KEY_SEPARATOR);
 
     const lang = languageOfUrl(body.url);
     const userAgent = req.headers.get('user-agent')?.slice(0, MAX_USER_AGENT_CHARS);
@@ -101,7 +107,13 @@ const handleLog = defineHandler({
     let stored: unknown;
     try {
       redis = getRedis();
-      stored = await redis.set(key, JSON.stringify(record), { ex: ERR_KV_TTL_S, nx: true });
+      const [firstWrite] = await redis
+        .multi()
+        .set(key, JSON.stringify(record), { ex: ERR_KV_TTL_S, nx: true })
+        .sadd(dayIndexKey, dayIndexMember)
+        .expire(dayIndexKey, ERR_KV_TTL_S)
+        .exec();
+      stored = firstWrite;
     } catch (kvErr) {
       log.error('error-log KV write failed', { requestId, errId, err: kvErr });
       return err({
