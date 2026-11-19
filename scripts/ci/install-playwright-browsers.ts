@@ -48,7 +48,7 @@ export function configureApt({
   run = spawnSync as Run,
   platform = process.platform as string,
   ci = process.env.CI as string | undefined,
-  cacheDir = cacheDirFromEnv(),
+  cacheDir,
 }: AptOptions = {}): boolean {
   if (platform !== LINUX || !ci) return false;
   const result = run('sudo', ['tee', APT_CONFIG_PATH], {
@@ -62,7 +62,7 @@ export function releaseAptCache({
   run = spawnSync as Run,
   platform = process.platform as string,
   ci = process.env.CI as string | undefined,
-  cacheDir = cacheDirFromEnv(),
+  cacheDir,
   uid = process.getuid?.(),
   gid = process.getgid?.(),
 }: AptOptions & { uid?: number | undefined; gid?: number | undefined } = {}): boolean {
@@ -96,8 +96,9 @@ if (isMain(import.meta.url)) {
     console.error('usage: install-playwright-browsers.ts <browser...>');
     process.exit(FAILURE);
   }
-  configureApt();
+  const cacheDir = cacheDirFromEnv();
+  configureApt({ cacheDir });
   const status = installWithRetry(browsers);
-  releaseAptCache();
+  releaseAptCache({ cacheDir });
   process.exit(status);
 }
