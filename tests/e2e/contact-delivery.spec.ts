@@ -1,14 +1,21 @@
 import { expect, test } from '@playwright/test';
 import { linksContent } from '../../content/links';
-import { openContactFromMenu, sendVisitorMessage } from './_helpers/contact-journey';
+import {
+  expectOneContactPost,
+  openContactFromMenu,
+  sendVisitorMessage,
+  trackContactPosts,
+} from './_helpers/contact-journey';
 import { installMockBackend } from './_helpers/mock-backend';
 
 for (const state of ['queued', 'happy'] as const) {
   test(`contact delivery: ${state}`, { tag: '@cross-browser' }, async ({ page }) => {
     await installMockBackend(page, { contact: state, log: 'accept' });
+    const posts = trackContactPosts(page);
     await page.goto('/');
     const form = await openContactFromMenu(page);
     await sendVisitorMessage(form);
+    await expectOneContactPost(posts);
 
     if (state === 'queued') {
       const queued = page.getByTestId('contact-queued');
@@ -29,5 +36,6 @@ for (const state of ['queued', 'happy'] as const) {
       await expect(page.getByTestId('contact-queued')).toHaveCount(0);
     }
     await expect(form).toHaveCount(0);
+    expect(posts(), 'the journey sends exactly one message').toBe(1);
   });
 }

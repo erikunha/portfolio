@@ -229,8 +229,12 @@ The prompt for a manual or agent review that applies these rules to a diff is `d
     window is dropped with no error and no replay (measured with the chunk held: no request, no
     success, the typed values adopted afterwards). `openSectionMenu` covers the opener only. Use
     `openContactFromMenu` (`tests/e2e/_helpers/contact-journey.ts`), which ends with
-    `waitForHydration` on the form. Check: `tests/e2e/contact-delivery-hydration.spec.ts` holds the
-    form's chunk for 3 s and fails when the helper returns before the commit oracle sees the form.
+    `waitForHydration` on the form, inside `sendVisitorMessage`. Check:
+    `tests/e2e/contact-delivery-hydration.spec.ts` holds the form's chunk for 3 s and fails when
+    the helper sends before the commit. The natural cause of the one reported failure is
+    unconfirmed: only the held chunk reproduces it, and a stalled `/api/contact` mock or POST
+    would look the same (no success). The delivery spec counts POSTs and asserts exactly one
+    before it reads the success state, so the next natural failure says which one it was.
 
 ## Pre-push judgement list
 
