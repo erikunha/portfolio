@@ -14,6 +14,7 @@ const MAX_LOG_BODY_BYTES = 32_768;
 
 const ERR_KEY_PREFIX = 'err';
 const ERR_COUNT_KEY_PREFIX = 'errn';
+const ERR_LATEST_KEY_PREFIX = 'errlast';
 const ERR_DAY_INDEX_KEY_PREFIX = 'errday';
 const KEY_SEPARATOR = ':';
 const ERR_KV_TTL_S = 7 * 24 * 60 * 60;
@@ -88,6 +89,7 @@ const handleLog = defineHandler({
     const keyTail = [release, today, fingerprint].join(KEY_SEPARATOR);
     const key = `${ERR_KEY_PREFIX}${KEY_SEPARATOR}${keyTail}`;
     const countKey = `${ERR_COUNT_KEY_PREFIX}${KEY_SEPARATOR}${keyTail}`;
+    const latestKey = `${ERR_LATEST_KEY_PREFIX}${KEY_SEPARATOR}${keyTail}`;
     const dayIndexKey = `${ERR_DAY_INDEX_KEY_PREFIX}${KEY_SEPARATOR}${today}`;
     const dayIndexMember = [release, fingerprint].join(KEY_SEPARATOR);
 
@@ -107,9 +109,11 @@ const handleLog = defineHandler({
     let stored: unknown;
     try {
       redis = getRedis();
+      const serialized = JSON.stringify(record);
       const [firstWrite] = await redis
         .multi()
-        .set(key, JSON.stringify(record), { ex: ERR_KV_TTL_S, nx: true })
+        .set(key, serialized, { ex: ERR_KV_TTL_S, nx: true })
+        .set(latestKey, serialized, { ex: ERR_KV_TTL_S })
         .sadd(dayIndexKey, dayIndexMember)
         .expire(dayIndexKey, ERR_KV_TTL_S)
         .exec();

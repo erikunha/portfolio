@@ -11,6 +11,7 @@ import { HOURS_PER_DAY, MS_PER_HOUR, utcDay } from '@/lib/time';
 
 const ERR_KEY_PREFIX = 'err';
 const ERR_COUNT_KEY_PREFIX = 'errn';
+const ERR_LATEST_KEY_PREFIX = 'errlast';
 const ERR_SEEN_KEY_PREFIX = 'errseen';
 const ERR_DAY_INDEX_KEY_PREFIX = 'errday';
 const KEY_SEPARATOR = ':';
@@ -128,13 +129,19 @@ async function totalsByFingerprint(keys: readonly string[]): Promise<Fingerprint
     ),
   );
 
+  const latest = await readAll(
+    parsed.map(({ parts }) =>
+      [ERR_LATEST_KEY_PREFIX, ...parts.slice(RELEASE_INDEX)].join(KEY_SEPARATOR),
+    ),
+  );
+
   const totals = new Map<string, FingerprintTotal>();
   parsed.forEach(({ parts }, index) => {
     const fingerprint = parts[FINGERPRINT_INDEX] ?? '';
     const release = parts[RELEASE_INDEX] ?? '';
     const total = totals.get(fingerprint) ?? {
       fingerprint,
-      message: messageOf(records[index]),
+      message: messageOf(latest[index] ?? records[index]),
       count: 0,
       releases: new Set<string>(),
       isNew: false,

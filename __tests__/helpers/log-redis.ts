@@ -22,7 +22,7 @@ export function logRedis({ set, counter, multi }: LogRedisSpies) {
       let stored: Promise<unknown> | undefined;
       const tx = {
         set: (...args: unknown[]) => {
-          stored = Promise.resolve(set(...args));
+          if (!stored) stored = Promise.resolve(set(...args));
           return tx;
         },
         sadd: () => tx,
@@ -35,7 +35,8 @@ export function logRedis({ set, counter, multi }: LogRedisSpies) {
           return tx;
         },
         exec: async () => {
-          if (stored) return [await stored, INDEX_WRITE_RESULT, INDEX_WRITE_RESULT];
+          if (stored)
+            return [await stored, INDEX_WRITE_RESULT, INDEX_WRITE_RESULT, INDEX_WRITE_RESULT];
           return (await counter?.exec()) ?? [];
         },
       };
