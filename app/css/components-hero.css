@@ -267,7 +267,6 @@
 
   .hero-actions > a {
     white-space: nowrap;
-    padding-inline: var(--spacing-2);
   }
 
   .hero-mobile-content {
@@ -292,12 +291,6 @@
 
     .hero-actions {
       margin-top: var(--spacing-1);
-    }
-
-    .hero-actions > a:not(:first-child) {
-      font-size: var(--text-xs);
-      padding-inline: var(--spacing-1);
-      letter-spacing: 0;
     }
 
     .hero-context-fact {
