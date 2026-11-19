@@ -12,7 +12,7 @@ type WindowChromeDot = {
 
 const WINDOW_CHROME_DOTS: readonly WindowChromeDot[] = [
   { key: 'red', colorClass: 'bg-senary-500' },
-  { key: 'yellow', colorClass: 'bg-quinary-500' },
+  { key: 'yellow', colorClass: 'bg-(color:--color-warning)' },
   { key: 'green', colorClass: 'bg-primary-600' },
 ];
 

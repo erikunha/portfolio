@@ -393,7 +393,7 @@
   .shell-receipt {
     --shell-receipt-danger: var(--color-senary-300);
     --shell-receipt-danger-dim: color-mix(in srgb, var(--color-senary-300) 40%, transparent);
-    --shell-receipt-warning: var(--color-quinary-500);
+    --shell-receipt-warning: var(--color-warning);
     box-sizing: border-box;
     display: grid;
     grid-template-columns: minmax(0, 1fr);
