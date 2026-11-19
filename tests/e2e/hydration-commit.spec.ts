@@ -45,6 +45,10 @@ test.describe('waitForHydration returns only once React committed the island', (
           'React never wrote its fiber key on the server node: it replaced the node, so the trap saw nothing',
         ).toBeGreaterThan(0);
         expect(
+          samples.flatMap((sample) => (sample.error ? [sample.error] : [])),
+          'the predicate or the oracle threw inside the trap',
+        ).toEqual([]);
+        expect(
           samples.filter((sample) => sample.oracle),
           'React wrote the key on a node already committed: the trap sampled too late',
         ).toEqual([]);

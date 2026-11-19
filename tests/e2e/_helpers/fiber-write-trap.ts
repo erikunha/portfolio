@@ -4,7 +4,7 @@ import { nodeInCommittedTree, ROOTS_KEY } from './react-commit-oracle';
 
 const SAMPLES_KEY = '__fiberWriteSamples';
 
-export type FiberWriteSample = { helper: boolean; oracle: boolean };
+export type FiberWriteSample = { helper: boolean; oracle: boolean; error?: string };
 
 async function intoPage<Fn>(page: Page, fn: Fn): Promise<JSHandle<Fn>> {
   return page.evaluateHandle<Fn>(`(${String(fn)})`);
@@ -40,10 +40,14 @@ export async function trapFiberWrite(
         set: (value: unknown) => {
           stored = value;
           Object.defineProperty(island, key, { enumerable: true });
-          samples.push({
-            helper: helperFn([island, ...constants]),
-            oracle: oracleFn([island, rootsKey]),
-          });
+          try {
+            samples.push({
+              helper: helperFn([island, ...constants]),
+              oracle: oracleFn([island, rootsKey]),
+            });
+          } catch (cause) {
+            samples.push({ helper: false, oracle: false, error: String(cause) });
+          }
         },
       });
     },
