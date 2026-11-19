@@ -3,6 +3,7 @@
   --btn-pad-compact: 0.625rem;
   --btn-height-large: 52px;
   --btn-disabled-opacity: 0.4;
+  --btn-ease: cubic-bezier(0, 0, 0.2, 1);
 }
 
 @layer components {
@@ -19,14 +20,14 @@
     border-radius: var(--radius-none);
     font-family: var(--font-mono);
     font-size: var(--text-xs);
-    font-weight: var(--font-weight-bold);
+    font-weight: 700;
     letter-spacing: var(--tracking-xl);
     text-transform: uppercase;
     text-decoration-line: none;
     cursor: pointer;
     transition-property: box-shadow, background;
     transition-duration: 0.2s;
-    transition-timing-function: var(--ease-out);
+    transition-timing-function: var(--btn-ease);
 
     @variant motion-off {
       transition-property: none;

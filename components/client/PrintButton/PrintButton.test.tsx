@@ -26,9 +26,11 @@ describe('PrintButton', () => {
     expect(print).toHaveBeenCalledTimes(1);
   });
 
-  it('keeps the minimum touch target of the design-system button', () => {
+  it('is the design-system button at its medium size, which holds the touch target', () => {
     render(<PrintButton label={readingViews[SITE_LOCALE.en].shared.printLabel} />);
-    const classes = screen.getByRole('button').className;
-    expect(classes).toContain('min-h-11');
+    const button = screen.getByRole('button');
+    expect(button.classList.contains('btn')).toBe(true);
+    expect(button.getAttribute('data-variant')).toBe('secondary');
+    expect(button.getAttribute('data-size')).toBe('md');
   });
 });
