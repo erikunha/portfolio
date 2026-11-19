@@ -1,11 +1,29 @@
 import { z } from 'zod';
-import { NOT_FOUND_PATH_TOKEN } from './errors.constants';
 import { FACT_SEPARATOR } from './fact-separator';
 import { CompanyUrlSchema, LocalizedTextSchema, SectionTextSchema } from './schema-primitives';
 import { SECTION_ICONS, SECTION_REGISTRY } from './section-registry';
 
+export type { ErrorsClientContent, ErrorsContent } from './errors.schema';
+export { ErrorsClientContentSchema, ErrorsContentSchema } from './errors.schema';
 export type { CopyFeedback, CopyFeedbackState, FooterContent } from './footer.schema';
 export { CopyFeedbackSchema, FooterContentSchema } from './footer.schema';
+export type {
+  LinksChannel,
+  LinksContent,
+  LinksCopy,
+  LinksPill,
+  LinksPlaylist,
+  LinksProfile,
+} from './links.schema';
+export {
+  LinksChannelSchema,
+  LinksContentSchema,
+  LinksCopySchema,
+  LinksPillSchema,
+  LinksPlaylistSchema,
+  LinksProfileSchema,
+  LinksUpcomingSchema,
+} from './links.schema';
 export { createNavigationSchema } from './navigation.schema';
 export type { LocalizedText } from './schema-primitives';
 export { CompanyUrlSchema, LocalizedTextSchema } from './schema-primitives';
@@ -651,54 +669,6 @@ export const HeroClientContentSchema = z.object({
 });
 export type HeroClientContent = z.infer<typeof HeroClientContentSchema>;
 
-const NotFoundTemplateSchema = z
-  .string()
-  .min(1)
-  .refine((value) => value.includes(NOT_FOUND_PATH_TOKEN));
-
-const ErrorHrefSchema = z.string().regex(/^\/(?!\/)[\w/#-]*$/);
-const ErrorLinkSchema = z.object({ label: z.string().min(1), href: ErrorHrefSchema });
-
-export const ErrorsContentSchema = z.object({
-  notFound: z.object({
-    metaTitle: z.string().min(1),
-    code: z.literal('404'),
-    panelHeader: z.string().min(1),
-    prompt: z.string().min(1),
-    command: NotFoundTemplateSchema,
-    output: NotFoundTemplateSchema,
-    pathFallback: z.string().min(1),
-    suggestionsLabel: z.string().min(1),
-    suggestionsNavLabel: z.string().min(1),
-    suggestions: z.array(ErrorLinkSchema).min(1),
-    home: ErrorLinkSchema,
-  }),
-  serverError: z.object({
-    code: z.literal('500'),
-    message: z.string().min(1),
-    bootRender: z.string().min(1),
-    bootReport: z.string().min(1),
-    retryLabel: z.string().min(1),
-    home: ErrorLinkSchema,
-    refLabel: z.string().min(1),
-    copyLabel: z.string().min(1),
-    copyAriaLabel: z.string().min(1),
-    copiedAnnouncement: z.string().min(1),
-  }),
-  noscript: z.object({ text: z.string().min(1), contact: ErrorLinkSchema }),
-  componentUnavailable: z.string().min(1),
-  componentExplanation: z.string().min(1),
-  reloadLabel: z.string().min(1),
-});
-export type ErrorsContent = z.infer<typeof ErrorsContentSchema>;
-export const ErrorsClientContentSchema = ErrorsContentSchema.pick({
-  serverError: true,
-  componentUnavailable: true,
-  componentExplanation: true,
-  reloadLabel: true,
-});
-export type ErrorsClientContent = z.infer<typeof ErrorsClientContentSchema>;
-
 export const DmesgLineSchema = z.object({
   off: z.number(),
   prefix: z.string().min(1),
@@ -819,104 +789,6 @@ export const AskFactsSchema = z.object({
 
 export type AskFacts = z.infer<typeof AskFactsSchema>;
 
-export const LinksProfileSchema = z.object({
-  name: z.string().min(1),
-  avatar: z.string().min(1),
-  taglines: z.object({
-    pt: z.array(z.string().min(1)).min(1),
-    en: z.array(z.string().min(1)).min(1),
-  }),
-  host: LocalizedTextSchema,
-  stack: z.string().min(1),
-});
-
-export const LinksChannelSchema = z.object({
-  id: z
-    .string()
-    .regex(
-      /^UC[A-Za-z0-9_-]{22}$/,
-      'a YouTube channel id is "UC" plus 22 url-safe chars. The RSS feed at /feeds/videos.xml?channel_id= is keyed on this and returns a bare feed with no <entry> elements for a wrong id, which reads exactly like a channel with no videos: the page would render its empty state forever instead of failing.',
-    ),
-  handle: z.string().regex(/^@[A-Za-z0-9._-]+$/, 'a channel handle starts with @'),
-  name: z.string().min(1),
-});
-
-export const LinksPlaylistSchema = z.object({
-  id: z.string().min(1),
-  tag: z.string().min(1),
-  title: LocalizedTextSchema,
-  description: LocalizedTextSchema,
-  playlistId: z.string().min(1).optional(),
-});
-
-export const LinksPillSchema = z.object({
-  id: z.string().min(1),
-  icon: z.enum(['portfolio', 'github', 'linkedin', 'instagram', 'tiktok', 'email']),
-  label: LocalizedTextSchema,
-  href: z
-    .string()
-    .min(
-      1,
-      'an empty href is a dead pill: omit the field entirely instead. A pill with no href is filtered out of the footer by LinksFooter, which is how a destination nobody has confirmed yet stays off a public page rather than shipping as a guessed handle.',
-    )
-    .optional(),
-});
-
-export const LinksUpcomingSchema = z.object({
-  label: LocalizedTextSchema,
-  topic: LocalizedTextSchema,
-  slot: LocalizedTextSchema,
-});
-
-export const LinksCopySchema = z.object({
-  whoami: z.string().min(1),
-  hostLabel: LocalizedTextSchema,
-  stackLabel: LocalizedTextSchema,
-  watchHeading: LocalizedTextSchema,
-  profilesHeading: LocalizedTextSchema,
-  contactHeading: LocalizedTextSchema,
-  emailHint: LocalizedTextSchema,
-  videosWord: LocalizedTextSchema,
-  viewsWord: LocalizedTextSchema,
-  latestHeading: LocalizedTextSchema,
-  historyCommand: z.string().min(1),
-  historyEmpty: LocalizedTextSchema,
-  historyOnlyLatest: LocalizedTextSchema,
-  thumbPlaceholder: LocalizedTextSchema,
-  seeAllVideos: LocalizedTextSchema,
-  playlistsHeading: LocalizedTextSchema,
-  qrHeading: LocalizedTextSchema,
-  qrCommand: z.string().min(1),
-  qrBody: LocalizedTextSchema,
-  subscribe: LocalizedTextSchema,
-  subscribedCta: LocalizedTextSchema,
-  watch: LocalizedTextSchema,
-  copyLink: LocalizedTextSchema,
-  copyDone: LocalizedTextSchema,
-  copyFailed: LocalizedTextSchema,
-  copyFailedMessage: LocalizedTextSchema,
-  opensInNewTab: LocalizedTextSchema,
-  newBadge: LocalizedTextSchema,
-  feedUnavailable: LocalizedTextSchema,
-  pageHeading: LocalizedTextSchema,
-});
-
-export const LinksContentSchema = z.object({
-  shellTitle: z.string().min(1),
-  siteUrl: z.url(),
-  siteLabel: z.string().min(1),
-  profile: LinksProfileSchema,
-  channel: LinksChannelSchema,
-  upcoming: LinksUpcomingSchema,
-  playlists: z.array(LinksPlaylistSchema).min(1),
-  pills: z.array(LinksPillSchema).min(1),
-  copy: LinksCopySchema,
-  meta: z.object({
-    title: LocalizedTextSchema,
-    description: LocalizedTextSchema,
-  }),
-});
-
 export type Social = z.infer<typeof SocialSchema>;
 export type Project = z.infer<typeof ProjectSchema>;
 export type PerfReceipt = z.infer<typeof PerfReceiptSchema>;
@@ -933,12 +805,6 @@ export type DawMixer = z.infer<typeof DawMixerSchema>;
 export type DawMixerCopy = z.infer<typeof DawMixerCopySchema>;
 export type DawMixerChannel = z.infer<typeof DawMixerChannelSchema>;
 export type DawMixerPlugin = z.infer<typeof DawMixerPluginSchema>;
-export type LinksProfile = z.infer<typeof LinksProfileSchema>;
-export type LinksChannel = z.infer<typeof LinksChannelSchema>;
-export type LinksPlaylist = z.infer<typeof LinksPlaylistSchema>;
-export type LinksPill = z.infer<typeof LinksPillSchema>;
-export type LinksCopy = z.infer<typeof LinksCopySchema>;
-export type LinksContent = z.infer<typeof LinksContentSchema>;
 
 export type Profile = z.infer<typeof ProfileSchema> & { technologyLine: string };
 export type Education = z.infer<typeof EducationSchema>;

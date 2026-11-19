@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
+import * as errors from './errors.schema';
 import * as footer from './footer.schema';
+import * as links from './links.schema';
 import * as navigation from './navigation.schema';
 import * as primitives from './schema-primitives';
 import * as barrel from './schemas';
@@ -14,6 +16,20 @@ const MOVED: readonly Moved[] = [
   ],
   ['navigation.schema', navigation, ['createNavigationSchema']],
   ['footer.schema', footer, ['CopyFeedbackSchema', 'FooterContentSchema']],
+  ['errors.schema', errors, ['ErrorsClientContentSchema', 'ErrorsContentSchema']],
+  [
+    'links.schema',
+    links,
+    [
+      'LinksChannelSchema',
+      'LinksContentSchema',
+      'LinksCopySchema',
+      'LinksPillSchema',
+      'LinksPlaylistSchema',
+      'LinksProfileSchema',
+      'LinksUpcomingSchema',
+    ],
+  ],
 ];
 
 const INTERNAL = new Set(['SectionTextSchema']);
