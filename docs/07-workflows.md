@@ -65,7 +65,7 @@ Two `quality-fast` steps stay CI-only: the branch-name lint (the pre-push hook e
 
 ## Running CI locally before a push
 
-`pnpm ci:full` (`scripts/ci/ci-full.ts`) runs the checks CI runs, on this machine, one stage at a time. Nothing runs in parallel and no container is involved: it uses the host's Node, browsers and fonts. Each stage's output streams to the terminal, the run stops at the first failed stage, and a table of passed, failed and not-run stages with their durations ends the run.
+`pnpm ci:full` (`scripts/ci/ci-full.ts`) runs the checks CI runs, on this machine, one stage at a time. Nothing runs in parallel and, by default, no container is involved: it uses the host's Node, browsers and fonts. `--linux` adds the Linux e2e stages, which run in Docker (below). Each stage's output streams to the terminal, the run stops at the first failed stage, and a table of passed, failed and not-run stages with their durations ends the run.
 
 Stages, in order:
 
@@ -78,6 +78,7 @@ Stages, in order:
 7. Visual on chromium, then chromium-mobile, with no Argos upload.
 8. design-system-components on chromium.
 9. Lighthouse desktop, then mobile, with the report written to disk.
+10. With `--linux` only: the Linux e2e stages `linux-e2e-webkit-desktop`, `linux-e2e-webkit-mobile`, `linux-e2e-webkit-desktop-components`, `linux-e2e-webkit-mobile-components` and `linux-e2e-chromium`.
 
 Every stage that serves the build starts a fresh `pnpm start` on a free port, waits until the process it started answers, runs, and stops it and every process left in its group, escalating to `SIGKILL` for one that ignores `SIGTERM`, also when the stage fails and on `SIGINT`, `SIGTERM` or `SIGHUP`. Each CI job has a fresh server too, so in-memory state never carries from one stage to the next. A stage that serves refuses a `.next` that was not built from the current tree: the build stage writes a stamp after the build that records the commit, the tracked edits and a hash of every untracked file, so editing a file after the build, or resuming with `--from` on an older build, fails the stage instead of verifying old code.
 
@@ -85,7 +86,9 @@ Every stage that serves the build starts a fresh `pnpm start` on a free port, wa
 | --- | --- |
 | `--base <ref>` | Start of the commit range for commitlint. Default `origin/main`; an unknown ref exits 2 before any stage runs. |
 | `--from <stage>` | Resumes at a stage. The stages before it are reported not-run. |
+| `--only <stages>` | Runs only the named stages (comma separated); the others are reported not-run. It is how a Linux stage is reached after one `build`: `--linux=gate --only build,linux-e2e-webkit-desktop`. |
 | `--keep-going` | Continues after a failed stage. |
+| `--linux[=scope]` | Adds the Linux e2e stages. `gate` runs `LINUX_GATE_SPECS` and `LINUX_GATE_COMPONENT_SPECS`; `changed` (a bare `--linux`) adds the specs Playwright's `--only-changed` reports since the merge base, with the visual and accessibility specs dropped; `all` runs every spec of the project as CI does. Off by default; without it the table lists `linux e2e` not-run. |
 | `--list` | Prints the stages with their commands and the declared not-run checks. Runs nothing and verifies nothing. |
 
 Exit codes: 0 every stage passed; 1 a stage failed; 2 bad arguments or an unknown base; 3 nothing failed but a stage did not run (a missing `gitleaks` or `semgrep` binary, a Semgrep install whose version differs from the `ci.yml` pin, or the stages before `--from`).
@@ -93,6 +96,8 @@ Exit codes: 0 every stage passed; 1 a stage failed; 2 bad arguments or an unknow
 The stage list is the exported `STAGES` in `scripts/ci/ci-full-stages.ts`. Checks that spend model credits (`ask:eval`, the `ai-eval` job) and jobs that need GitHub (`ci-gate`, `dependency-review`, `coverage-comment`, `attest-build`) are listed in `NOT_RUN` with a reason and appear in the table as not-run, never as passed. So is the Semgrep scan itself, which is report-only in CI; `pnpm lint:semgrep` runs it on request. The Semgrep self-test and false-positive baseline block `ci-gate`, so they run as stages, but only when the installed `semgrep` is the version `ci.yml` pins: otherwise each is reported not-run with the installed and the pinned version.
 
 Playwright stages run with `CI=true` (retries, `failOnFlakyTests` and `forbidOnly` as in CI) and `--workers=2`, against `E2E_BASE_URL` set to the served port, with the webkit projects as one run each instead of two shards. The design-system components spec, which CI ignores because it has macOS baselines only, runs in its own stage without `CI`, even when the shell exports it. Lighthouse runs from a copy of `lighthouserc.json` and `lighthouserc.mobile.json` whose urls point at the served port and whose upload target is the work directory, so nothing goes to public storage; the files in the repository are unchanged.
+
+A Linux stage (`--linux`) is one `docker run` of `mcr.microsoft.com/playwright:v<version>-noble`, the version read from the `@playwright/test` entry of `pnpm-lock.yaml`, with no `--platform`: an arm64 host runs the arm64 image natively, and an amd64 image under emulation is not used. The container gets `--rm --init --ipc=host --cpus=2`, the repository mounted read-only at `/work`, a `node_modules` volume keyed by the lockfile hash (older ones are pruned), a `ci-full-pnpm-store` volume for the pnpm store and the pinned pnpm, an anonymous volume over `.next`, and `<work-dir>/linux-results/<stage>` as the Playwright output directory. Its environment is explicit: `CI=true`, the workflow `env:` and `E2E_BASE_URL=http://localhost:<port>`. A small node forwarder in the container relays `localhost:<port>` to `host.docker.internal:<port>`, because `http://localhost` is a secure context and the host alias is not. The container installs with `pnpm install --frozen-lockfile --ignore-scripts` and runs `pnpm playwright test --project=<project> --workers=2 <specs>` against the host's production server. A missing Docker binary, a stopped daemon or a failed image pull reports the stage not-run (exit 3); a red spec fails the stage (exit 1). The runner removes the container when the stage ends, times out or the run is interrupted, and sweeps containers by the `ci-full.run` label at exit. The visual specs never run in the container: their baselines are macOS and Argos.
 
 Each stage also runs with the workflow-level `env:` of `ci.yml` merged with the `env:` of the jobs the stage mirrors (the job wins), and with `CI=true`, so behaviour that reads a workflow variable (`APT_CACHE_DIR`, `GITLEAKS_VERSION`) behaves as in CI. A value that contains a `${{ ... }}` expression, every `secrets.` reference included, cannot be reproduced and is not passed; the run logs it as not-reproduced for the stage and `--list` prints it. `scripts/__tests__/ci-full-workflow-env.test.ts` holds this.
 

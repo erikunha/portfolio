@@ -50,6 +50,7 @@ Git hooks run automatically, but you can (and should) run the checks yourself:
 | `pnpm test:e2e`         | Playwright: a11y scan, contact/ask journeys, visual regression  |
 | `pnpm ci:local`         | The verify steps CI runs first, in parallel (lint, types, content, naming, pinning, doc drift, contrast, tokens, tests with coverage) |
 | `pnpm ci:full`          | Every check CI runs, natively and in sequence, ending with a table of passed, failed and not-run |
+| `pnpm ci:full --linux`  | The same, plus the WebKit and Chromium e2e stages in the CI Playwright image on Docker (`=gate`, `=changed`, `=all`) |
 | `pnpm bundle-check`     | Bundle-size gate (needs a build)                                |
 | `pnpm route-js-check`   | Per-route first-load JS gate (needs a build)                    |
 | `pnpm lhci`             | Lighthouse CI (`pnpm lhci:mobile` for the mobile profile)       |

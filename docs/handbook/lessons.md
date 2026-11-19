@@ -15,7 +15,9 @@ The prompt for a manual or agent review that applies these rules to a diff is `d
 2. A commit body cites only SHAs reachable from the branch it lands on. Describe off-branch facts
    in words. Check: the same `merge-base --is-ancestor` test for every SHA in the body.
 3. Run CI locally before pushing: `pnpm ci:full` runs every CI check in sequence. Every e2e
-   project runs against a production build it serves on a free port.
+   project runs against a production build it serves on a free port. A change to a WebKit spec
+   or to what one exercises also runs `pnpm ci:full --linux`: the macOS run uses a different
+   WebKit build (lesson 57).
    Scope page-wide assertions (`locator('canvas')`, counts over `document`) to the element they
    guard, because a new global layer breaks them. Check: the specs pass on the production build.
 4. A layout, spacing, type or color change regenerates the darwin baselines of
@@ -259,6 +261,18 @@ The prompt for a manual or agent review that applies these rules to a diff is `d
     write of the fiber key, so the window is exact. Before a spec sets a throttle, ask what the
     throttle buys and whether holding the work gives the same window. Check: a key-only mutant of the
     predicate fails the spec 20 of 20 runs.
+
+57. A green macOS WebKit run proves nothing about the Linux WebKit that CI runs. Both drawer specs
+    (`tests/e2e/drawer-dialog.spec.ts:98` and `tests/e2e/drawer-exit-interactive.spec.ts:38`)
+    passed on macOS and failed in CI. The earlier Docker predictor missed it for the opposite
+    reason: it forced `linux/amd64` on an arm64 machine, so the browser ran under emulation and
+    every failure was a timeout, which taught nobody anything. The Playwright image runs
+    natively on arm64 and reproduces the failure, so `pnpm ci:full --linux=gate` runs the specs
+    that failed on Linux before and `--linux` adds the ones the branch changed. The arm64 image
+    is not the amd64 runner: a pass there is evidence, CI stays the gate, and its pixels are
+    never used as a visual baseline. Check: `scripts/__tests__/ci-full-linux.test.ts` (no
+    `--platform`, the image tag equals the lockfile version) and a `--linux=gate` run on a tree
+    without the drawer fix, which fails both specs.
 
 ## Pre-push judgement list
 
