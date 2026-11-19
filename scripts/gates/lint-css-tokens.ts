@@ -137,6 +137,18 @@ const ROLE_TOKENS = [
   'scrim',
 ];
 const COLOR_ALIAS = /^var\((--color-[\w-]+)\)$/;
+const ORDINAL_HUES: Record<string, string> = {
+  primary: 'signal',
+  secondary: 'carbon',
+  tertiary: 'sage',
+  quinary: 'gold',
+  senary: 'coral',
+};
+const ORDINAL_STEP = '(?:\\d+|subtle|border|faint|quiet)';
+const GLOW_STOP = 'glow-(\\d+)';
+const REMOVED_GREEN_TOKEN = '--color-green';
+const GREEN_ROLE = '--color-accent';
+const SIGNAL_HUE = 'signal';
 const BREAKPOINT_NAMESPACE = 'breakpoint';
 const TOKEN_EQUAL_NAMESPACES = ['tracking', 'radius', 'shadow', 'leading', 'text', 'spacing'];
 const SUBPROPERTY_SEPARATOR = '--';
@@ -309,6 +321,7 @@ export interface RepoScan {
   focus: RawColorHit[];
   tokenEqual: RawColorHit[];
   primitives: RawColorHit[];
+  ordinals: RawColorHit[];
 }
 
 function escapeRegExp(value: string): string {
@@ -412,6 +425,39 @@ export function findPrimitiveColorUses(themeCss: string, source: string): ColorH
   return hits;
 }
 
+function ordinalPrefix(): string {
+  const utilities = COLOR_UTILITIES.map(escapeRegExp).join('|');
+  return `(?<![\\w-])((?:${utilities})-|${escapeRegExp(COLOR_VARIABLE_PREFIX)})`;
+}
+
+export function findOrdinalPaletteNames(source: string): ColorHit[] {
+  const families = Object.keys(ORDINAL_HUES).join('|');
+  const prefix = ordinalPrefix();
+  const ramp = new RegExp(`${prefix}(${families})-(${ORDINAL_STEP})(?![\\w-])`, 'g');
+  const glow = new RegExp(`${prefix}${GLOW_STOP}(?![\\w-])`, 'g');
+  const green = new RegExp(`(?<![\\w-])${escapeRegExp(REMOVED_GREEN_TOKEN)}(?![\\w-])`, 'g');
+  const hits: ColorHit[] = [];
+  stripComments(source)
+    .split('\n')
+    .forEach((line, i) => {
+      for (const match of line.matchAll(ramp)) {
+        const [whole, lead = '', family = '', step = ''] = match;
+        hits.push({
+          line: i + 1,
+          literal: `${whole} (use ${lead}${ORDINAL_HUES[family]}-${step})`,
+        });
+      }
+      for (const match of line.matchAll(glow)) {
+        const [whole, lead = '', alpha = ''] = match;
+        hits.push({ line: i + 1, literal: `${whole} (use ${lead}${SIGNAL_HUE}-glow-${alpha})` });
+      }
+      for (const match of line.matchAll(green)) {
+        hits.push({ line: i + 1, literal: `${match[0]} (use ${GREEN_ROLE})` });
+      }
+    });
+  return hits.sort((a, b) => a.line - b.line);
+}
+
 function namespaceResets(themeCss: string): Set<string> {
   const resets = new Set<string>();
   postcss.parse(themeCss).walkAtRules(THEME_AT_RULE, (rule) => {
@@ -478,6 +524,9 @@ export function scanRepo(root: string, cssFiles: string[]): RepoScan {
     primitives: findConsumerFiles(root)
       .filter((file) => file !== themePath)
       .flatMap((file) => tag(file, findPrimitiveColorUses(themeCss, read(file)))),
+    ordinals: findConsumerFiles(root).flatMap((file) =>
+      tag(file, findOrdinalPaletteNames(read(file))),
+    ),
   };
 }
 
@@ -547,6 +596,12 @@ function main(): void {
       'Name the role the site means (the one shown on each line) and read it as var(--color-role) or X-(color:--color-role).',
       scan.primitives,
     ) || failed;
+  failed =
+    report(
+      'ordinal palette name(s) that the hue names replaced',
+      'The palette is five hue ramps: signal, carbon, sage, gold and coral. Use the name shown on each line.',
+      scan.ordinals,
+    ) || failed;
   const unused = findUnusedThemeTokens(
     readThemeSheets(root),
     findConsumerFiles(root).map((file) => readFileSync(join(root, file), 'utf8')),
@@ -566,7 +621,7 @@ function main(): void {
   }
   if (failed) process.exit(1);
   console.log(
-    '[css-tokens] no raw color literals, z-index values or focus rings outside their tokens, no primitive colors where a role exists, no arbitrary values that equal a token, and no unused @theme tokens.',
+    '[css-tokens] no raw color literals, z-index values or focus rings outside their tokens, no primitive colors where a role exists, no ordinal palette names, no arbitrary values that equal a token, and no unused @theme tokens.',
   );
 }
 

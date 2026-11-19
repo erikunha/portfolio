@@ -23,7 +23,7 @@ same file.
 | Gate | Command | Checks |
 |---|---|---|
 | Contrast | `pnpm lint:contrast` | Parses `--color-*` from `theme.css`; fails if any documented pair misses WCAG AA |
-| Token boundary | `pnpm lint:css-tokens` | Fails a raw hex or color function outside `theme.css`, a literal z-index outside the `--z-*` scale, and a focus rule that writes its own ring instead of `--focus-ring` |
+| Token boundary | `pnpm lint:css-tokens` | Fails a raw hex or color function outside `theme.css`, a literal z-index outside the `--z-*` scale, a removed ordinal palette name, and a focus rule that writes its own ring instead of `--focus-ring` |
 
 Type and spacing are a maintained token layer in `app/css/theme.css`: a type scale
 from `--text-xs` to `--text-7xl` with a `--text-min` floor of
