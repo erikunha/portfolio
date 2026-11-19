@@ -1,8 +1,10 @@
 import { readFileSync } from 'node:fs';
 import { isMain } from '../lib/is-main.ts';
+import { buildHeaders as buildClientHeaders, createGithubClient } from '../metrics/github.ts';
 
 const SEMVER = /^v?(\d+)\.(\d+)\.(\d+)/;
-const GITHUB_HOST = 'api.github.com';
+const USER_AGENT = 'erikunha-portfolio-pin-check';
+const ACCEPT_JSON = 'application/json';
 const CI_YAML = '.github/workflows/ci.yml';
 const LINE_BREAKS = /[\r\n]+/g;
 
@@ -51,22 +53,12 @@ export function readPin(fileText: string, pattern: RegExp, name: string): string
 }
 
 export function buildHeaders(url: string, token: string | undefined): Record<string, string> {
-  const headers: Record<string, string> = {
-    'User-Agent': 'erikunha-portfolio-pin-check',
-    Accept: 'application/json',
-  };
-  if (token !== undefined && token !== '' && new URL(url).host === GITHUB_HOST) {
-    headers.Authorization = `Bearer ${token}`;
-  }
-  return headers;
+  return buildClientHeaders({ url, token, accept: ACCEPT_JSON, userAgent: USER_AGENT });
 }
 
-async function fetchJson(url: string): Promise<unknown> {
-  const res = await fetch(url, { headers: buildHeaders(url, process.env.GITHUB_TOKEN) });
-  if (!res.ok) {
-    throw new Error(`${url} returned HTTP ${res.status}`);
-  }
-  return res.json();
+function fetchJson(url: string): Promise<unknown> {
+  const client = createGithubClient({ token: process.env.GITHUB_TOKEN, userAgent: USER_AGENT });
+  return client.json(url, { accept: ACCEPT_JSON });
 }
 
 const latestGitleaks = async (): Promise<string> => {

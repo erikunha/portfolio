@@ -1,5 +1,6 @@
 import { setTimeout as delay } from 'node:timers/promises';
 import { isMain } from '../lib/is-main.ts';
+import { createGithubClient } from '../metrics/github.ts';
 
 export const REFERENCE_STATE = Object.freeze({
   ready: 'ready',
@@ -25,7 +26,8 @@ export const POLL_INTERVAL_MS = 20_000;
 export const WAIT_DEADLINE_MS = 20 * 60_000;
 const COMPLETED = 'completed';
 const PUSH_EVENT = 'push';
-const GITHUB_API = 'https://api.github.com';
+const USER_AGENT = 'erikunha-portfolio-argos-reference';
+const NO_RETRIES = 0;
 const JOBS_PAGE_SIZE = 100;
 const SINGLE_RESULT = 1;
 export const REQUEST_TIMEOUT_MS = 30_000;
@@ -73,18 +75,6 @@ export async function waitForReference({
   }
 }
 
-async function github<T>(path: string, token: string): Promise<T> {
-  const response = await fetch(`${GITHUB_API}${path}`, {
-    headers: {
-      Accept: 'application/vnd.github+json',
-      Authorization: `Bearer ${token}`,
-    },
-    signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
-  });
-  if (!response.ok) throw new Error(`GitHub API ${response.status} on ${path}`);
-  return (await response.json()) as T;
-}
-
 export function githubReader({
   repository,
   token,
@@ -96,21 +86,24 @@ export function githubReader({
   baseRef: string;
   headSha: string;
 }): () => Promise<ReferenceState> {
+  const client = createGithubClient({
+    token,
+    userAgent: USER_AGENT,
+    timeoutMs: REQUEST_TIMEOUT_MS,
+    retries: NO_RETRIES,
+  });
   return async () => {
-    const compare = await github<{ merge_base_commit: { sha: string } }>(
+    const compare = await client.json<{ merge_base_commit: { sha: string } }>(
       `/repos/${repository}/compare/${encodeURIComponent(baseRef)}...${headSha}?per_page=${SINGLE_RESULT}`,
-      token,
     );
     const mergeBase = compare.merge_base_commit.sha;
-    const runs = await github<{ workflow_runs: Array<RunInfo & { id: number }> }>(
+    const runs = await client.json<{ workflow_runs: Array<RunInfo & { id: number }> }>(
       `/repos/${repository}/actions/workflows/${CI_WORKFLOW_FILE}/runs?head_sha=${mergeBase}&event=${PUSH_EVENT}&per_page=${SINGLE_RESULT}`,
-      token,
     );
     const run = runs.workflow_runs[0];
     if (!run) return referenceState(undefined, []);
-    const { jobs } = await github<{ jobs: JobInfo[] }>(
+    const { jobs } = await client.json<{ jobs: JobInfo[] }>(
       `/repos/${repository}/actions/runs/${run.id}/jobs?per_page=${JOBS_PAGE_SIZE}`,
-      token,
     );
     return referenceState(run, jobs);
   };

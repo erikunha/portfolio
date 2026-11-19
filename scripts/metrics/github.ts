@@ -2,6 +2,7 @@ import { execFileSync } from 'node:child_process';
 
 const API_BASE = 'https://api.github.com';
 const API_HOST = 'api.github.com';
+const DEFAULT_TOKEN_HOSTS: readonly string[] = [API_HOST];
 const USER_AGENT = 'erikunha-portfolio-weekly-metrics';
 const API_VERSION = '2022-11-28';
 const DEFAULT_RETRIES = 2;
@@ -50,10 +51,21 @@ export interface GithubClient {
 }
 
 export interface GithubClientOptions {
-  token: string;
+  token?: string | undefined;
+  tokenHosts?: readonly string[];
+  userAgent?: string;
+  timeoutMs?: number;
   fetchImpl?: typeof fetch;
   sleep?: (ms: number) => Promise<void>;
   retries?: number;
+}
+
+export interface HeaderOptions {
+  url: string;
+  token: string | undefined;
+  accept: string;
+  userAgent?: string;
+  tokenHosts?: readonly string[];
 }
 
 type ExecFile = (file: string, args: string[]) => string;
@@ -114,21 +126,33 @@ function readRetryAfter(res: Response): number | null {
   return Number.isFinite(seconds) && seconds >= 0 ? seconds : null;
 }
 
+export function buildHeaders({
+  url,
+  token,
+  accept,
+  userAgent = USER_AGENT,
+  tokenHosts = DEFAULT_TOKEN_HOSTS,
+}: HeaderOptions): Record<string, string> {
+  const { host } = new URL(url);
+  const headers: Record<string, string> = { 'User-Agent': userAgent, Accept: accept };
+  if (host === API_HOST) headers['X-GitHub-Api-Version'] = API_VERSION;
+  if (token !== undefined && token !== '' && tokenHosts.includes(host)) {
+    headers.Authorization = `Bearer ${token}`;
+  }
+  return headers;
+}
+
 export function createGithubClient({
   token,
+  tokenHosts = DEFAULT_TOKEN_HOSTS,
+  userAgent = USER_AGENT,
+  timeoutMs,
   fetchImpl = globalThis.fetch,
   sleep = defaultSleep,
   retries = DEFAULT_RETRIES,
-}: GithubClientOptions): GithubClient {
-  const headersFor = (url: string, accept: string): Record<string, string> => {
-    const headers: Record<string, string> = {
-      'User-Agent': USER_AGENT,
-      Accept: accept,
-      'X-GitHub-Api-Version': API_VERSION,
-    };
-    if (new URL(url).host === API_HOST) headers.Authorization = `Bearer ${token}`;
-    return headers;
-  };
+}: GithubClientOptions = {}): GithubClient {
+  const headersFor = (url: string, accept: string): Record<string, string> =>
+    buildHeaders({ url, token, accept, userAgent, tokenHosts });
 
   async function send(
     url: string,
@@ -141,6 +165,7 @@ export function createGithubClient({
       try {
         res = await fetchImpl(url, {
           ...init,
+          ...(timeoutMs === undefined ? {} : { signal: AbortSignal.timeout(timeoutMs) }),
           headers: { ...headersFor(url, accept), ...init.headers },
         });
       } catch (error) {
