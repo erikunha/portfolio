@@ -13,7 +13,7 @@
     color: var(--color-accent);
   }
 
-  .reading-view a:hover {
+  .reading-view a:not(.btn):hover {
     color: var(--color-text);
   }
 
