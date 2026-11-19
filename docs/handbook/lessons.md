@@ -289,8 +289,14 @@ The prompt for a manual or agent review that applies these rules to a diff is `d
     bound from a probe of 100 runs on the larger of the wall and timeline deltas, never from
     a round share: a quarter of a 200 ms slide equalled the 50 ms fallback slack, passed a
     close at 67 ms, and hid a `transitionend` with `elapsedTime` 0 that closed the dialog
-    41 to 127 ms into the slide on Linux Chromium (the bound is now 0.75 of the duration,
-    150 ms, against a measured minimum of 233 ms). A seek proves configuration, not
+    41 to 127 ms into the slide on Linux Chromium (9 of 100 runs with the transition read
+    at the start mark, 19 of 100 with the observer only; 7 and 18 of 100 closed under 150 ms
+    before the fix; the bound is now 0.75 of the duration, 150 ms, against a measured
+    minimum of 233 ms). That event is a phase hop of a transition still waiting for its
+    start time, not an end and not a cancel, and the panel keeps sliding after it. The
+    guard for that fault is the vitest exit test (`SectionDrawer.exit.test.tsx`), which
+    fails on every run when the app closes on a zero-elapsed end; the e2e bound catches it
+    only in the share of runs that closed under 150 ms. A seek proves configuration, not
     delivery: require live positions only when `requestAnimationFrame` ticks steadily, and
     measure that steadiness at rest before the exit, in a wall-clock window, not inside the
     exit, so an app that janks the exit cannot excuse itself. Check: the drawer exit specs
