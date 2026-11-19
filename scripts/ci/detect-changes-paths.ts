@@ -167,6 +167,7 @@ export const IGNORED_PATHS: readonly string[] = [
   'scripts/gates/gitleaks-staged.ts',
   'scripts/gates/harness-size.json',
   'scripts/ci/high-risk-paths.ts',
+  'scripts/ci/verify.ts',
   'scripts/gates/lint-css-tokens.allowlist.json',
   'scripts/install/prepare-hooks.ts',
   'scripts/gates/lint-css-tokens.ts',

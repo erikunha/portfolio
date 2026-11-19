@@ -1,6 +1,7 @@
 import { spawnSync } from 'node:child_process';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { verifyLeaves } from './verify';
 
 export interface StageContext {
   root: string;
@@ -66,6 +67,7 @@ const SEMGREP_VERSION_LINE = /^(\d+\.\d+\.\d+)\s*$/m;
 const SEMGREP_PROBE_TIMEOUT_MS = 30_000;
 const COMPOUND = '&&';
 const PNPM_PREFIX = 'pnpm ';
+const VERIFY_RUNNER = 'tsx scripts/ci/verify.ts';
 
 export const SERVER: ServerSpec = {
   command: { file: 'pnpm', args: ['start'], env: { ...CI_BUILD_ENV } },
@@ -418,13 +420,15 @@ export const QUALITY_FAST_CI_ONLY_STEPS: ReadonlyMap<string, string> = new Map([
 
 export function chainLeaves(scripts: Record<string, string>, name: string): string[] {
   const body = scripts[name] ?? '';
+  if (body.trim() === VERIFY_RUNNER) return verifyLeaves();
   return body
     .split(COMPOUND)
     .map((part) => part.trim())
     .flatMap((part) => {
       const target = part.startsWith(PNPM_PREFIX) ? part.slice(PNPM_PREFIX.length) : undefined;
       const nested = target === undefined ? undefined : scripts[target];
-      return target !== undefined && nested?.includes(COMPOUND)
+      return target !== undefined &&
+        (nested?.includes(COMPOUND) || nested?.trim() === VERIFY_RUNNER)
         ? chainLeaves(scripts, target)
         : [part];
     });

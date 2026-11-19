@@ -48,7 +48,7 @@ Git hooks run automatically, but you can (and should) run the checks yourself:
 | `pnpm validate-content` | Zod content schemas                                             |
 | `pnpm test`             | Vitest unit tests                                               |
 | `pnpm test:e2e`         | Playwright: a11y scan, contact/ask journeys, visual regression  |
-| `pnpm ci:local`         | The verify chain CI runs first (lint, types, content, naming, pinning, doc drift, contrast, tokens, tests with coverage) |
+| `pnpm ci:local`         | The verify steps CI runs first, in parallel (lint, types, content, naming, pinning, doc drift, contrast, tokens, tests with coverage) |
 | `pnpm ci:full`          | Every check CI runs, natively and in sequence, ending with a table of passed, failed and not-run |
 | `pnpm bundle-check`     | Bundle-size gate (needs a build)                                |
 | `pnpm route-js-check`   | Per-route first-load JS gate (needs a build)                    |
