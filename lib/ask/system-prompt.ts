@@ -20,6 +20,7 @@ import {
   formatStory,
   formatUnknowns,
 } from '@/lib/ask/ask-fact-format';
+import { formatCredentialLine, formatEducationLine } from '@/lib/ask/education-format';
 import { formatEmployment } from '@/lib/ask/employment-format';
 import { ASK_ANSWER_WORDS, ASK_LONG_ANSWER_WORDS } from '@/lib/ask/limits';
 import { sha256Hex } from '@/lib/ask/prompt-version';
@@ -53,10 +54,10 @@ ${askFacts.currentRoleScope.map((line) => `- ${line}`).join('\n')}
 ${gitLog[SITE_LOCALE.en].map(formatEmployment).join('\n')}
 
 ## Education
-${education[SITE_LOCALE.en].map((entry) => `- ${entry.degree}, ${entry.institution}, ${entry.location}${entry.studyMode ? ` (${entry.studyMode})` : ''}, ${entry.period}${entry.focus ? `: ${entry.focus}` : ''}`).join('\n')}
+${education[SITE_LOCALE.en].map(formatEducationLine).join('\n')}
 
 ## Certifications
-${credentials.map((entry) => `- ${entry.label}: ${entry.badge}, ${entry.evidence}`).join('\n')}
+${credentials.map(formatCredentialLine).join('\n')}
 
 ## Raylu detail
 ${askFacts.currentRoleDetail.map((line) => `- ${line}`).join('\n')}

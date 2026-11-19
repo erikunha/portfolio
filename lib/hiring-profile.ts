@@ -13,6 +13,7 @@ import {
 } from '@/content/profile';
 import { SITE_LOCALE } from '@/content/site-locale';
 import { social } from '@/content/social';
+import { formatCredentialSummary, formatEducationLocation } from '@/lib/ask/education-format';
 
 const EmployerSchema = z.object({
   name: z.string(),
@@ -150,11 +151,11 @@ export const HIRING_PROFILE: HiringProfile = HiringProfileSchema.parse({
   education: education[SITE_LOCALE.en].map((entry) => ({
     institution: entry.institution,
     degree: entry.degree,
-    location: entry.studyMode ? `${entry.location} (${entry.studyMode})` : entry.location,
+    location: formatEducationLocation(entry),
     years: entry.period,
     expected_completion: entry.expectedCompletion,
   })),
-  certifications: credentials.map((entry) => `${entry.label} · ${entry.badge} · ${entry.evidence}`),
+  certifications: credentials.map(formatCredentialSummary),
   availability: profile.availability,
   notice_period_days: 0,
   open_to: ['full_time', 'contract', 'ic', 'tech_lead', ...OPEN_ROLE_TOKENS],
