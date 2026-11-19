@@ -250,7 +250,7 @@ The prompt for a manual or agent review that applies these rules to a diff is `d
     fails with that cause and not as a changed wording. Check:
     `scripts/__tests__/visual-links-feed-precondition.test.ts`.
 
-55. A test that throttles the CPU throttles every script on the page, not only the code under test.
+56. A test that throttles the CPU throttles every script on the page, not only the code under test.
     `tests/e2e/hydration-commit.spec.ts` slowed the whole home page 40x, and in 30 Linux runs the
     contact form wait took 30 s to 138 s while CI ran it past the 180 s budget with the wait itself
     correct. No run isolated which scripts took the time. A lower rate and frozen motion cut the
