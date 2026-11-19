@@ -40,7 +40,6 @@
     --shell-stop-time-chars: 4;
   }
 
-  .shell-chrome,
   .shell-form,
   .shell-toolbar {
     display: flex;
@@ -52,7 +51,6 @@
   .shell-chrome {
     border-bottom: var(--border-width) solid var(--color-border-strong);
     color: var(--color-signal-400);
-    flex-wrap: wrap;
   }
 
   .shell-chrome-tag {
