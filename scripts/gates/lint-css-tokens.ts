@@ -146,8 +146,8 @@ const ORDINAL_HUES: Record<string, string> = {
 };
 const ORDINAL_STEP = '(?:\\d+|subtle|border|faint|quiet)';
 const GLOW_STOP = 'glow-(\\d+)';
-const REMOVED_GREEN_TOKEN = '--color-green';
-const GREEN_ROLE = '--color-accent';
+const REMOVED_GREEN_TOKEN = `${COLOR_VARIABLE_PREFIX}green`;
+const GREEN_ROLE = `${COLOR_VARIABLE_PREFIX}accent`;
 const SIGNAL_HUE = 'signal';
 const BREAKPOINT_NAMESPACE = 'breakpoint';
 const TOKEN_EQUAL_NAMESPACES = ['tracking', 'radius', 'shadow', 'leading', 'text', 'spacing'];
