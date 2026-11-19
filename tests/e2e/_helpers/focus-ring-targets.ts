@@ -20,6 +20,8 @@ export const FOCUS_RING_TARGETS: RingTarget[] = [
     selector: `${MIXER_SECTION} .rms-buttons [aria-pressed="false"]`,
   },
   { name: 'brand link', route: MIXER_ROUTE, selector: '.brand-link' },
+  { name: 'topbar view cv action', route: MIXER_ROUTE, selector: '.topbar-action-outline' },
+  { name: 'topbar hire action', route: MIXER_ROUTE, selector: '.topbar-action-solid' },
   { name: 'links line', route: LINKS_ROUTE, selector: '.links-line' },
   { name: 'links footer link', route: LINKS_ROUTE, selector: '.links-footer-link' },
 ];
