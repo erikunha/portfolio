@@ -34,6 +34,52 @@ const ERROR_DIGEST_FROM = 'alerts@erikunha.dev';
 const MS_PER_DAY = HOURS_PER_DAY * MS_PER_HOUR;
 const WHITESPACE_PATTERN = /\s+/g;
 const URL_PATTERN = /\b[a-z][a-z0-9+.-]*:\/\/\S+/gi;
+const BARE_HOST_TLDS = [
+  'com',
+  'net',
+  'org',
+  'edu',
+  'gov',
+  'biz',
+  'io',
+  'dev',
+  'app',
+  'ai',
+  'xyz',
+  'tv',
+  'cc',
+  'gg',
+  'ly',
+  'cloud',
+  'tech',
+  'online',
+  'shop',
+  'example',
+  'invalid',
+  'localhost',
+  'ru',
+  'cn',
+  'tk',
+  'ml',
+  'ga',
+  'cf',
+  'gq',
+  'uk',
+  'de',
+  'fr',
+  'br',
+  'jp',
+  'kr',
+  'nl',
+  'eu',
+  'ws',
+  'su',
+  'pw',
+];
+const BARE_HOST_PATTERN = new RegExp(
+  `(?<![\\w.-])(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)+(?:${BARE_HOST_TLDS.join('|')})(?![\\w-]|\\.\\w)(?::\\d{1,5})?(?:[/?#]\\S*)?`,
+  'gi',
+);
 
 export const maxDuration = 60;
 
@@ -105,6 +151,7 @@ function messageOf(record: unknown): string {
     if (typeof message === 'string') {
       return message
         .replace(URL_PATTERN, URL_PLACEHOLDER)
+        .replace(BARE_HOST_PATTERN, URL_PLACEHOLDER)
         .replace(WHITESPACE_PATTERN, ' ')
         .trim()
         .slice(0, MAX_MESSAGE_CHARS);
