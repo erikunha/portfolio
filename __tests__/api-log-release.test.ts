@@ -4,7 +4,6 @@ import { logRedis } from '@/__tests__/helpers/log-redis';
 
 const RELEASE = 'a1b2c3d4e5f6';
 const DIGEST = '2918476530';
-const OVERSIZED = 'x'.repeat(200);
 const KEY_PARTS = 4;
 const MAX_USER_AGENT_CHARS = 500;
 
@@ -87,15 +86,6 @@ describe('/api/log release context', () => {
     const parts = storedKey().split(':');
     expect(parts).toHaveLength(KEY_PARTS);
     expect(parts[1]).toBe('unknown');
-  });
-
-  it.each([
-    ['motion', { motion: OVERSIZED }],
-    ['digest', { digest: OVERSIZED }],
-  ])('refuses an oversized %s', async (_name, extra) => {
-    const res = await post(extra);
-    expect(res.status).toBe(400);
-    expect(redisSetMock).not.toHaveBeenCalled();
   });
 
   it.each([

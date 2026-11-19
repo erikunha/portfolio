@@ -35,9 +35,9 @@ const ErrorPayload = z.object({
   url: z.string().max(2000).optional(),
   ts: z.string().max(MAX_TS_LENGTH).optional(),
   release: z.string().max(MAX_RELEASE_LENGTH).regex(RELEASE_PATTERN).optional().catch(undefined),
-  motion: z.string().max(MAX_MOTION_LENGTH).optional(),
+  motion: z.string().max(MAX_MOTION_LENGTH).optional().catch(undefined),
   vw: z.number().int().min(0).max(MAX_VIEWPORT_WIDTH).optional(),
-  digest: z.string().max(MAX_DIGEST_LENGTH).optional(),
+  digest: z.string().max(MAX_DIGEST_LENGTH).optional().catch(undefined),
 });
 
 function languageOfUrl(url: string | undefined): string | undefined {
