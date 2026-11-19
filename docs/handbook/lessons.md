@@ -223,6 +223,14 @@ The prompt for a manual or agent review that applies these rules to a diff is `d
     because apt refuses a redirected `Dir::State::Lists` or `Dir::Cache::Archives` without its
     `partial` subdirectory. `docker run ubuntu:24.04` reproduced it in one command. Check:
     `scripts/__tests__/install-playwright-browsers-apt-partial.test.ts`.
+54. A journey that reaches the contact form through the section menu waits for the form's own
+    hydration, not the menu trigger's. The form is a `React.lazy` island: its server-rendered
+    markup is visible, fillable and clickable while its chunk loads, and a send click in that
+    window is dropped with no error and no replay (measured with the chunk held: no request, no
+    success, the typed values adopted afterwards). `openSectionMenu` covers the opener only. Use
+    `openContactFromMenu` (`tests/e2e/_helpers/contact-journey.ts`), which ends with
+    `waitForHydration` on the form. Check: `tests/e2e/contact-delivery-hydration.spec.ts` holds the
+    form's chunk for 3 s and fails when the helper returns before the commit oracle sees the form.
 
 ## Pre-push judgement list
 

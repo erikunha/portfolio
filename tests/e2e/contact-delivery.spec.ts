@@ -1,24 +1,14 @@
 import { expect, test } from '@playwright/test';
 import { linksContent } from '../../content/links';
-import { openSectionMenu } from './_helpers/hydration';
+import { openContactFromMenu, sendVisitorMessage } from './_helpers/contact-journey';
 import { installMockBackend } from './_helpers/mock-backend';
 
 for (const state of ['queued', 'happy'] as const) {
   test(`contact delivery: ${state}`, { tag: '@cross-browser' }, async ({ page }) => {
     await installMockBackend(page, { contact: state, log: 'accept' });
     await page.goto('/');
-    await openSectionMenu(page);
-    await page
-      .getByRole('dialog')
-      .getByRole('link', { name: /contact/i })
-      .first()
-      .click();
-    const form = page.getByTestId('contact-form');
-    await expect(form).toBeVisible();
-    await form.getByLabel('$ name:').fill('Test Visitor');
-    await form.getByLabel('$ email:').fill('visitor@example.com');
-    await form.getByLabel('$ message:').fill('A message submitted through the real contact form.');
-    await form.getByRole('button', { name: 'EXECUTE_SEND', exact: true }).click();
+    const form = await openContactFromMenu(page);
+    await sendVisitorMessage(form);
 
     if (state === 'queued') {
       const queued = page.getByTestId('contact-queued');
