@@ -6,7 +6,7 @@
   .interactive-shell,
   .shell-loading {
     margin: calc(-1 * (var(--spacing-3) + var(--spacing-1) / 2));
-    background: var(--color-secondary-900);
+    background: var(--color-surface-raised);
   }
 
   .shell-loading {
@@ -234,7 +234,7 @@
     border: var(--border-width) solid var(--color-accent);
     border-radius: var(--radius-control);
     background: var(--color-surface);
-    box-shadow: 0 0 0 var(--shell-stop-halo) var(--color-secondary-900);
+    box-shadow: 0 0 0 var(--shell-stop-halo) var(--color-surface-raised);
     color: var(--color-accent);
     font: inherit;
     font-variant-numeric: tabular-nums;
@@ -330,7 +330,7 @@
     margin: 0;
     padding: var(--spacing-3);
     border: var(--border-width) solid var(--color-border-strong);
-    background: var(--color-secondary-900);
+    background: var(--color-surface-raised);
     color: var(--color-text);
     font-family: var(--font-mono);
     font-size: var(--text-xs);

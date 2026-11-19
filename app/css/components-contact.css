@@ -68,7 +68,7 @@
   .contact-shell {
     border: var(--border-width) solid var(--color-accent);
     border-radius: var(--radius-control);
-    background: var(--color-secondary-900);
+    background: var(--color-surface-raised);
     font-family: var(--font-mono);
   }
 
