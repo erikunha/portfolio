@@ -22,14 +22,8 @@ function PluginChain({
           key={p.name}
           className={cn(
             'plugin-chip border flex flex-col items-center gap-1',
-            'pt-[5px] pb-[6px] text-signal-400 relative',
-            p.active
-              ? [
-                  'plugin-card-on',
-                  'text-(color:--color-accent) border-(color:--color-accent)',
-                  'bg-[color-mix(in_srgb,var(--color-accent)_8%,transparent)]',
-                ].join(' ')
-              : 'border-[var(--color-signal-quiet)] bg-(color:--color-surface)/55',
+            'pt-[5px] pb-[6px] relative',
+            p.active ? 'plugin-card-on mx-plugin-chip-on' : 'mx-plugin-chip-off',
           )}
           data-testid={`plugin-${channelId}-${p.name}`}
         >
@@ -56,10 +50,7 @@ function ChannelDesktop({ ch, copy }: { ch: DawMixerChannel; copy: DawMixerCopy 
           'channel-row-focused',
           'bg-[color-mix(in_srgb,var(--color-accent)_6%,transparent)]',
         ],
-        isMaster && [
-          'bg-[linear-gradient(90deg,color-mix(in_srgb,var(--color-accent)_8%,transparent),color-mix(in_srgb,var(--color-accent)_2%,transparent))]',
-          'border-t border-t-(color:--color-accent)',
-        ],
+        isMaster && ['mx-master-gradient-desktop', 'border-t border-t-(color:--color-accent)'],
       )}
       data-focused={ch.focused || undefined}
       data-channel={isMaster ? 'master' : undefined}
@@ -151,7 +142,7 @@ function SessionHeaderDesktop({ mixer, copy }: { mixer: DawMixer; copy: DawMixer
       className={cn(
         'daw-mixer-row-min grid gap-[18px] items-center px-[18px] py-3',
         'border-b border-[var(--color-border)]',
-        'bg-[color-mix(in_srgb,var(--color-accent)_5%,transparent)]',
+        'mx-session-header-tint',
         'text-xs text-signal-400 tracking-3xl',
       )}
       data-testid="session-header"

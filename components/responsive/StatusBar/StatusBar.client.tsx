@@ -29,16 +29,10 @@ export function StatusBar() {
       </div>
       <div className="inline-flex items-center gap-1.5" aria-hidden>
         <span className="inline-flex items-end gap-0.5">
-          <i className="meter-fill block w-[3px] bg-(color:--color-accent)" style={{ height: 4 }} />
-          <i className="meter-fill block w-[3px] bg-(color:--color-accent)" style={{ height: 7 }} />
-          <i
-            className="meter-fill block w-[3px] bg-(color:--color-accent)"
-            style={{ height: 10 }}
-          />
-          <i
-            className="meter-dim block w-[3px] bg-(color:--color-accent) opacity-50"
-            style={{ height: 13 }}
-          />
+          <i className="meter-fill status-signal-bar" style={{ height: 4 }} />
+          <i className="meter-fill status-signal-bar" style={{ height: 7 }} />
+          <i className="meter-fill status-signal-bar" style={{ height: 10 }} />
+          <i className="meter-dim status-signal-bar status-signal-bar-dim" style={{ height: 13 }} />
         </span>
         <span className="text-(color:--color-accent) tracking-xl">5G</span>
         <span
@@ -46,8 +40,8 @@ export function StatusBar() {
           aria-hidden
         >
           <span>78%</span>
-          <span className="status-battery inline-block w-[22px] h-[11px] border border-(color:--color-accent) p-px relative after:content-[''] after:absolute after:right-[-3px] after:top-[2px] after:w-[2px] after:h-[5px] after:bg-(color:--color-accent)">
-            <i className="meter-fill block h-full bg-(color:--color-accent) w-[78%]" />
+          <span className="status-battery">
+            <i className="meter-fill status-battery-fill w-[78%]" />
           </span>
         </span>
       </div>

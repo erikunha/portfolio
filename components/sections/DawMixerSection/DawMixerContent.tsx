@@ -16,9 +16,9 @@ import { DawMixerDesktop } from './DawMixerDesktop';
 import { FaderBar, ParsedText, SessionSummary, StrengthDots } from './DawMixerShared';
 
 const STATIC_SEGMENT_CLASS = {
-  [MeterSegment.Red]: 'meter-alert bg-coral-300',
-  [MeterSegment.Filled]: 'meter-fill bg-(color:--color-accent)',
-  [MeterSegment.Empty]: 'meter-dim bg-(color:--color-accent) opacity-[0.22]',
+  [MeterSegment.Red]: 'meter-alert mx-static-seg-alert',
+  [MeterSegment.Filled]: 'meter-fill mx-static-seg-filled',
+  [MeterSegment.Empty]: 'meter-dim mx-static-seg-empty',
 } as const;
 
 function StaticMeter({
@@ -31,10 +31,7 @@ function StaticMeter({
   clipping: boolean;
 }) {
   return (
-    <div
-      className="flex gap-px h-3 p-px border border-[var(--color-signal-quiet)] bg-(color:--color-surface)/70"
-      aria-hidden="true"
-    >
+    <div className="mx-static-meter" aria-hidden="true">
       {Array.from({ length: segments }, (_, i) => {
         const cls = cn(
           'flex-1 h-full',
@@ -52,16 +49,7 @@ function StaticMeter({
 function StaticFader({ pct }: { pct: number }) {
   return (
     <div className="mx-fader" aria-hidden="true">
-      <div
-        className={cn(
-          'absolute top-1/2 -translate-x-1/2 -translate-y-1/2',
-          'w-[18px] h-[28px]',
-          'bg-(color:--color-accent) shadow-[0_0_10px_var(--color-accent)] border border-(color:--color-surface)',
-          'motion-off:shadow-none',
-          'mx-fader-thumb',
-        )}
-        style={{ left: `${pct}%` }}
-      />
+      <div className={cn('mx-static-fader-thumb', 'mx-fader-thumb')} style={{ left: `${pct}%` }} />
     </div>
   );
 }
@@ -72,7 +60,7 @@ function StaticKnob({ angleDeg, label }: { angleDeg: number; label: string }) {
       <div
         className={cn(
           'w-[30px] h-[30px] border border-(color:--color-accent) rounded-full relative shrink-0',
-          'bg-[radial-gradient(circle_at_35%_30%,var(--color-signal-glow-18),color-mix(in_srgb,var(--color-surface)_70%,transparent))]',
+          'mx-static-dial',
           'mx-dial',
         )}
         style={{ '--mx-knob-angle': `${angleDeg}deg` } as CSSProperties}
@@ -103,13 +91,7 @@ function PluginChainMobile({
             key={p.name}
             className={cn(
               'grid items-center gap-2 border px-[10px] py-2 relative',
-              'text-signal-400',
-              p.active
-                ? [
-                    'border-(color:--color-accent) text-(color:--color-accent)',
-                    'bg-[color-mix(in_srgb,var(--color-accent)_8%,transparent)]',
-                  ].join(' ')
-                : 'border-[color-mix(in_srgb,var(--color-signal-quiet)_40%,transparent)]',
+              p.active ? 'mx-plugin-mobile-on' : 'mx-plugin-mobile-off',
             )}
             style={{ gridTemplateColumns: '14px minmax(90px, auto) 1fr' }}
             data-testid={`plugin-mobile-${channelId}-${p.name}`}
@@ -117,9 +99,7 @@ function PluginChainMobile({
             <span
               className={cn(
                 'w-[6px] h-[6px] justify-self-center',
-                p.active
-                  ? 'meter-fill bg-(color:--color-accent) shadow-[0_0_4px_var(--color-accent)]'
-                  : 'meter-dim bg-[var(--color-signal-quiet)]',
+                p.active ? 'meter-fill mx-plugin-dot-on' : 'meter-dim mx-plugin-dot-off',
               )}
               aria-hidden="true"
             />
@@ -142,7 +122,7 @@ function PluginChainMobile({
 function SessionHeaderMobile({ mixer, copy }: { mixer: DawMixer; copy: DawMixerCopy }) {
   return (
     <div
-      className="text-xs text-signal-400 leading-ratio-1-8 border-b border-[var(--color-border)] px-[14px] py-[10px] tracking-3xl bg-[color-mix(in_srgb,var(--color-accent)_5%,transparent)]"
+      className="text-xs text-signal-400 leading-ratio-1-8 border-b border-[var(--color-border)] px-[14px] py-[10px] tracking-3xl mx-session-header-tint"
       data-testid="session-header-mobile"
     >
       <div>
@@ -165,7 +145,7 @@ function MixLegendMobile({ mixer, copy }: { mixer: DawMixer; copy: DawMixerCopy 
       aria-hidden="true"
     >
       <span>
-        <span className="meter-fill inline-block w-[5px] h-[5px] bg-(color:--color-accent) shadow-[0_0_5px_var(--color-accent)] mr-[6px] align-[1px]" />
+        <span className="meter-fill mx-legend-dot" />
         {lead.id} {copy.leadSuffix}
       </span>
     </div>
@@ -181,10 +161,7 @@ function ChannelMobile({ ch, copy }: { ch: DawMixerChannel; copy: DawMixerCopy }
         ch.focused
           ? 'bg-[color-mix(in_srgb,var(--color-accent)_7%,transparent)] channel-row-focused'
           : 'bg-(color:--color-surface)/35',
-        isMaster && [
-          'bg-[linear-gradient(180deg,color-mix(in_srgb,var(--color-accent)_6%,transparent),transparent)]',
-          'border-t-2 border-t-(color:--color-accent)',
-        ],
+        isMaster && ['mx-master-gradient-mobile', 'border-t-2 border-t-(color:--color-accent)'],
       )}
       data-focused={ch.focused || undefined}
       data-channel={isMaster ? 'master' : undefined}
@@ -249,13 +226,7 @@ function ChannelMobile({ ch, copy }: { ch: DawMixerChannel; copy: DawMixerCopy }
                 className={cn(
                   'min-w-[32px] h-7 px-[10px] flex items-center justify-center',
                   'text-xs font-bold tracking-xs',
-                  ch.activeButtons.includes(btn)
-                    ? [
-                        'border border-(color:--color-accent) text-(color:--color-accent)',
-                        'bg-[color-mix(in_srgb,var(--color-accent)_10%,transparent)]',
-                        'shadow-[0_0_5px_var(--color-signal-glow-35)]',
-                      ].join(' ')
-                    : 'border border-[var(--color-signal-quiet)] text-signal-400 bg-(color:--color-surface)/50',
+                  ch.activeButtons.includes(btn) ? 'border mx-toggle-on' : 'border mx-toggle-off',
                 )}
               >
                 {btn}
