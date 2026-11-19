@@ -159,7 +159,7 @@ The section menu is a modal drawer at every width, opened by the menu icon trigg
 | ContactTimezoneLazy → ContactTimezone             | Timezone overlap panel: clocks, map, zone search and the propose action                                                                  |
 | DAW mixer islands                                 | Fader, dB readout, knob, RMS buttons and VU meter behavior                                                                               |
 | Footer client exports                             | Session counters, halt clock, reboot control and the last-request receipt                                                                |
-| ErrorBoundary and error pages                     | Failure capture, retry and recovery controls                                                                                             |
+| ErrorBoundary and error pages                     | Failure capture; the error pages recover through `retry`, the prop Next's `ErrorBoundary` declares, never `reset`                         |
 | PrintButton                                       | Print action in `/summary` and `/cv`                                                                                                     |
 | `/links` client components                        | Tagline cycle, navigation progress, copy and subscribe actions                                                                           |
 | Design-system Sidebar, DsDrawerNav and CopyButton | Documentation page tree (side rail from 1024px, inside the site menu below it) and clipboard feedback                                    |
@@ -863,6 +863,10 @@ The `Content-Security-Policy-Report-Only` header is a narrow probe: `connect-src
 
 - Branch guard: blocks direct pushes to `main` (all changes must go through a PR) and requires a `<type>/<description>` branch name
 - `pnpm verify`: the verify steps run in parallel by `scripts/ci/verify.ts` (cap 4, `--concurrency <n>`; unit tests wait for the type check; one table prints, a failed step shows its output, any failure exits 1): Biome + TypeScript strict + content validation + client-naming + shell-dom-writes + css-ownership + dep-pinning + dependency-vetting + harness-size + component-docs + section-order + doc-drift + decisions-index + no-dashes + detect-changes-paths + test-integrity + contrast + css-tokens + unit tests with coverage thresholds
+- `pnpm ci:full [--base <ref>] [--from <stage>] [--keep-going] [--list]`: runs every check CI runs, natively and one stage at a time (`scripts/ci/ci-full.ts`), and prints a table of passed, failed and not-run stages. Exit 0 means every stage passed, 1 a stage failed, 3 no failure but a stage did not run. Checks it cannot reproduce (model-gateway evals, GitHub-only jobs) are listed as not-run, never as passed.
+- `pnpm run doctor` (`scripts/ci/doctor.ts`) checks a contributor's machine and changes nothing: Node against `.nvmrc`, pnpm, gitleaks, installed dependencies and lockfile sync, Playwright browsers, Husky hooks and `.env.local`. Each check reports ok, warn or fail with its fix; only a fail exits 1.
+- `DECISIONS.md` opens with a generated index of every dated bullet (date, area, decision, status, reversibility). `pnpm decisions:index` rewrites it and `pnpm check:decisions-index` fails when it is stale; the check runs in `verify` and in `quality-fast`.
+- End-to-end specs wait for a committed hydration, not a started one: `waitForHydration` (reached through `gotoHydrated` and `openSectionMenu`) returns once React has committed the node, its fiber exists, no fiber above it is still hydrating or placed, and the tree reaches the root. The fiber key alone appears before the commit that attaches handlers (`docs/handbook/lessons.md`, rule 31).
 
 ### CI (GitHub Actions)
 
