@@ -22,7 +22,7 @@ describe('ColorSwatch small text', () => {
     expect(small.length).toBeGreaterThan(0);
     for (const node of small) {
       expect(node.className, `${node.textContent} is 12px text in the signal ramp`).not.toMatch(
-        /text-primary-/,
+        /text-signal-/,
       );
     }
   });
