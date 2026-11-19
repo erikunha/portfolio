@@ -22,13 +22,15 @@
 
 ## The verify chain (the local CI mirror)
 
-`pnpm verify` runs the full static gate chain (also the heart of pre-push):
+`pnpm verify` runs the full static gate set (also the heart of pre-push). `scripts/ci/verify.ts` runs the steps in parallel (cap 4, `--concurrency <n>`); `test:coverage` waits for `typecheck`, and every other step is independent. One table prints, a failed step shows its output, and any failure exits 1:
 
 ```
-check (Biome, warnings fail) -> typecheck -> validate-content -> check:client-naming
-  -> check:shell-dom-writes -> check:css-ownership -> check:dep-pinning -> check:dependency-vetting -> check:harness-size -> check:component-docs
-  -> check:section-order -> check:doc-drift -> check:no-dashes -> check:detect-changes-paths -> check:test-integrity
-  -> lint:contrast -> lint:css-tokens -> test:coverage (Vitest with the coverage thresholds)
+typecheck, then test:coverage (Vitest with the coverage thresholds)
+check (Biome, warnings fail), validate-content, check:client-naming,
+check:shell-dom-writes, check:css-ownership, check:dep-pinning, check:dependency-vetting,
+check:harness-size, check:component-docs, check:section-order, check:doc-drift,
+check:decisions-index, check:no-dashes, check:detect-changes-paths, check:test-integrity,
+lint:contrast, lint:css-tokens
 ```
 
 Two `quality-fast` steps stay CI-only: the branch-name lint (the pre-push hook enforces it) and the commit-message lint (the commit-msg hook).
@@ -67,7 +69,7 @@ Two `quality-fast` steps stay CI-only: the branch-name lint (the pre-push hook e
 
 Stages, in order:
 
-1. `ci:local`: the verify chain (Biome, types, content, gates, unit tests with coverage).
+1. `ci:local`: the verify steps (Biome, types, content, gates, unit tests with coverage).
 2. commitlint over `base..HEAD`, the gitleaks fixture self-test, gitleaks over the full history.
 3. Audit, tool pins, the mutation canary, and the Semgrep self-test and false-positive baseline when the install matches the pin.
 4. Build, `bundle-check`, `route-js-check`.

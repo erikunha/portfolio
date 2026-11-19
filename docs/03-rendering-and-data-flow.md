@@ -122,7 +122,7 @@ flowchart LR
     req["Request"] --> shell["Prerendered shell"] --> susp["Suspense boundaries"] --> html["Streamed HTML"] --> hydrate["Hydration"]
 ```
 
-1. `next.config.ts` `headers()` puts the CSP, the report-only probe policy and `Reporting-Endpoints` on every response as static headers.
+1. `next.config.ts` `headers()` puts the CSP, the `connect-src` report-only probe and `Reporting-Endpoints` on every response as static headers.
 2. The prerendered shell holds the `AppShell` chrome, the Hero (outside Suspense) and the above-the-fold sections.
 3. The server streams the rest. Suspense boundaries resolve per request, with the ask and PageSpeed data read independently.
 4. The browser hydrates the chrome and the client islands:
