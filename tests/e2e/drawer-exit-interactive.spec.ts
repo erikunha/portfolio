@@ -61,3 +61,46 @@ test('the page takes input while the drawer slides out after a section is chosen
   ).toEqual([]);
   expect(frames.at(-1)?.open, 'the dialog closes once the slide is over').toBe(false);
 });
+
+type FocusWindow = Window & { drawerFocusIns?: string[]; focusSampleDone?: boolean };
+
+test('focus never enters the exiting drawer and stays in the field after it closes @cross-browser', async ({
+  page,
+}) => {
+  await installMockBackend(page, { log: 'accept', forget: 'happy' });
+  await page.goto('/');
+  await openSectionMenu(page);
+  await expect(page.locator('body')).not.toHaveAttribute('data-motion', 'reduce');
+  await page.evaluate((sampleMs) => {
+    const sampler = window as FocusWindow;
+    const drawer = document.querySelector('#section-drawer') as HTMLDialogElement;
+    sampler.drawerFocusIns = [];
+    sampler.focusSampleDone = false;
+    drawer.addEventListener(
+      'click',
+      () => {
+        document.addEventListener('focusin', (event) => {
+          if (event.target instanceof Node && drawer.contains(event.target)) {
+            sampler.drawerFocusIns?.push((event.target as Element).tagName);
+          }
+        });
+        setTimeout(() => {
+          sampler.focusSampleDone = true;
+        }, sampleMs);
+      },
+      { capture: true, once: true },
+    );
+  }, SAMPLE_MS);
+  await page
+    .locator(DRAWER)
+    .getByRole('link', { name: /contact/i })
+    .first()
+    .click();
+  const name = page.getByTestId('contact-form').getByLabel('$ name:');
+  await name.fill(TYPED);
+  await page.waitForFunction(() => (window as FocusWindow).focusSampleDone === true);
+  const entered = await page.evaluate(() => (window as FocusWindow).drawerFocusIns ?? []);
+  expect(entered, 'no focus event reaches the exiting drawer').toEqual([]);
+  await expect(page.locator(DRAWER)).not.toHaveJSProperty('open', true);
+  await expect(name, 'the field keeps focus after the final close').toBeFocused();
+});

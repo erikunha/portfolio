@@ -54,6 +54,7 @@ export function SectionNavigation({ extra }: { extra?: ReactNode }) {
       }
       panel.setAttribute(EXITING_ATTRIBUTE, '');
       panel.close();
+      panel.inert = true;
       panel.show();
       settleDrawer();
       const onTransitionEnd = (event: TransitionEvent) => {
@@ -65,6 +66,7 @@ export function SectionNavigation({ extra }: { extra?: ReactNode }) {
         panel.removeEventListener('transitionend', onTransitionEnd);
         settleExitRef.current = null;
         panel.removeAttribute(EXITING_ATTRIBUTE);
+        panel.inert = false;
         panel.close();
       };
       panel.addEventListener('transitionend', onTransitionEnd);

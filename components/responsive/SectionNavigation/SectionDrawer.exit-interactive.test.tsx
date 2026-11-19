@@ -118,4 +118,27 @@ describe('the drawer once it has been dismissed and is still sliding out', () =>
     expect(isModalDialog(panel()), 'the old slide cannot close the reopened drawer').toBe(true);
     expect(panel().open).toBe(true);
   });
+
+  it('keeps the panel inert while it slides out and clears it when the slide ends', () => {
+    openSliding();
+    fireEvent.keyDown(document, { key: 'Escape' });
+    expect(panel().inert, 'no focus or click can reach the closing panel').toBe(true);
+    expect(panel().hasAttribute('data-exiting')).toBe(true);
+    endSlide();
+    expect(panel().inert).toBe(false);
+    expect(
+      panel().hasAttribute('data-exiting'),
+      'the final close ran at the end of the slide',
+    ).toBe(false);
+    expect(panel().open).toBe(false);
+  });
+
+  it('is no longer inert when it reopens before the slide ends', () => {
+    const trigger = openSliding();
+    fireEvent.keyDown(document, { key: 'Escape' });
+    expect(panel().inert).toBe(true);
+    fireEvent.click(trigger);
+    expect(panel().inert).toBe(false);
+    expect(panel().hasAttribute('data-exiting')).toBe(false);
+  });
 });
