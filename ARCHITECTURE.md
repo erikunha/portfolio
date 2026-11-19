@@ -841,7 +841,7 @@ Modest but professional:
 
 `next.config.ts` sets every security header as a static header: the CSP and `Reporting-Endpoints` (`csp-endpoint="/api/csp-report"`) beside COOP, X-Frame-Options, HSTS and the rest. There is no per-request function in front of the app.
 
-`Content-Security-Policy-Report-Only` is served beside the enforced policy as a probe. It carries the enforced directives except `connect-src`, which allows only `'self'` (no Vercel vitals or script host). It omits `require-trusted-types-for`, because the framework's chunk loader assigns a string to `script.src` and violates it on every page load. It reports to the same `csp-endpoint` group and `/api/csp-report` sink, where a probe report logs with `disposition: report`. It blocks nothing; the report-only window decides whether the `connect-src` change is enforced.
+`Content-Security-Policy-Report-Only` is served beside the enforced policy as a probe. It carries the enforced directives except `connect-src`, which allows only `'self'` (no Vercel vitals or script host). It omits `require-trusted-types-for`, because the framework's chunk loader assigns a string to `script.src` and violates it on every page load. It reports to the same `csp-endpoint` group and `/api/csp-report` sink, where a probe report logs with `disposition: report`. It blocks nothing. It reports `connect-src` violations against `'self'` only; enforcing that `connect-src` is a separate decision recorded in `DECISIONS.md`.
 
 ---
 

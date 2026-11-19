@@ -30,7 +30,7 @@ The repository defends in depth, and most of these are enforced in CI on every c
 - **Dependency review**: a dependency-review gate runs on pull requests; dependencies use caret or tilde ranges (tilde is mandatory for the listed framework packages, and exact pins are rejected for stable versions by `scripts/gates/check-dep-pinning.ts`) and install with a frozen lockfile in CI.
 - **Content Security Policy** and every other security header are static headers from `next.config.ts`; no request-time function sits in front of the routes. The policy reports to `/api/csp-report`, which logs a bounded, sanitised line per violation. A report-only policy runs beside it as a probe for tighter rules. `Permissions-Policy` denies camera, microphone, geolocation, payment, USB, serial and topics. HSTS sets two years with subdomains and carries no preload token.
 - **API boundary**: rate limiting and input validation (Zod) run before any handler logic, and every request through the shared wrappers logs one event with no IP, body or query string.
-- **Privacy**: stored ask and contact records hold no IP hash. The hash is a short-lived rate-limit and duplicate-question key only.
+- **Privacy**: stored ask and contact records hold no IP hash. The hash is a short-lived rate-limit and duplicate-question key, and the ask preflight also writes it to the request log as `ipHash`.
 - **Client errors**: `/api/log` keeps one record per error fingerprint with a 7-day TTL and counts the repeats. A daily cron mails the new and the noisy fingerprints.
 - **Contact file**: `/.well-known/security.txt` publishes the reporting contact.
 - **No secrets in the repo.** All credentials are environment variables provided at deploy time.

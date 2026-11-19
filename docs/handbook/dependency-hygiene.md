@@ -10,7 +10,7 @@
 | 2 | Release-age gate | Is every resolved version old enough to have been noticed if it was malicious? | `minimumReleaseAge` in `pnpm-workspace.yaml` (10080 minutes, seven days) | Every resolving install, local and Dependabot |
 | 3 | Pinning gate | Does each manifest range follow the pin policy? | `pnpm check:dep-pinning` (`scripts/gates/check-dep-pinning.ts`) | `quality-fast` job and `pnpm verify` |
 | 4 | Vetting file | Does every direct dependency have a stated purpose, an allowed license and no unexplained install script? | `dependency-vetting.json`, `pnpm check:dependency-vetting` | `quality-fast` job and `pnpm verify` |
-| 5 | Audit | Does the lockfile contain a known vulnerability of moderate severity or higher? | `pnpm audit --audit-level=moderate` in `ci.yml` | `test` job, when the lockfile changed |
+| 5 | Audit | Does the lockfile contain a known vulnerability of moderate severity or higher? | `pnpm audit --audit-level=moderate` in `ci.yml` | `test` job, on every push and on pull requests that change the lockfile |
 | 6 | Dependency review | Does this pull request add a high-severity or denied-license package? | `dependency-review` job in `ci.yml` (`fail-on-severity: high`, GPL and AGPL denied) | Pull requests only |
 | 7 | Dependabot | Which dependencies and actions have a newer version, grouped into one pull request per kind? | `.github/dependabot.yml` (weekly, seven-day cooldown, `zod` and `typescript` held back) | Weekly |
 | 8 | Tool pins | Are the binaries no package manager tracks (gitleaks, semgrep) still current? | `pnpm check:tool-pins`, `.github/workflows/tool-pins.yml` | Weekly; a stale pin is a nudge and blocks no pull request |
