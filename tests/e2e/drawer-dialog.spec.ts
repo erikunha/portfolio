@@ -19,6 +19,7 @@ const MIN_EXIT_SHARE = 0.25;
 const FRAME_MS = 17;
 const STEADY_FRAME_GAP_MS = 2 * FRAME_MS;
 const STEADY_MIN_TICKS = 2 * (MIN_SLIDE_FRAMES + 1);
+const REST_SAMPLE_MS = 300;
 
 type ExitFrame = { x: number; open: boolean; seeked: boolean };
 type ExitMark = {
@@ -31,10 +32,10 @@ type ExitMark = {
 type ExitCapture = {
   frames: ExitFrame[];
   marks: ExitMark[];
-  ticks: number[];
   durationMs: number;
   panelWidth: number;
 };
+type RestFrames = { ticks: number; medianGapMs: number };
 type SamplerWindow = Window & { exitCapture?: ExitCapture; exitDone?: boolean };
 
 async function armExitSampler(page: Page, seek: boolean): Promise<void> {
@@ -46,7 +47,6 @@ async function armExitSampler(page: Page, seek: boolean): Promise<void> {
       const capture: ExitCapture = {
         frames: [],
         marks: [],
-        ticks: [],
         durationMs: 0,
         panelWidth: drawer.offsetWidth,
       };
@@ -70,11 +70,6 @@ async function armExitSampler(page: Page, seek: boolean): Promise<void> {
             attributes: true,
             attributeFilter: ['open', 'data-exiting', 'class'],
           });
-          const tick = (at: number) => {
-            capture.ticks.push(at);
-            if (!sampler.exitDone) requestAnimationFrame(tick);
-          };
-          requestAnimationFrame(tick);
           let stepped = false;
           const timer = setInterval(() => {
             const slide = drawer
@@ -127,6 +122,34 @@ async function waitForPanelAtRest(page: Page): Promise<void> {
   );
 }
 
+async function measureRestFrames(page: Page): Promise<RestFrames> {
+  await waitForPanelAtRest(page);
+  return page.evaluate(
+    (sampleMs) =>
+      new Promise<RestFrames>((resolve) => {
+        const ticks: number[] = [];
+        const tick = (at: number) => {
+          ticks.push(at);
+          if (at - (ticks[0] ?? at) < sampleMs) {
+            requestAnimationFrame(tick);
+            return;
+          }
+          const gaps = ticks.slice(1).map((time, index) => time - (ticks[index] ?? time));
+          const median =
+            [...gaps].sort((a, b) => a - b)[Math.floor(gaps.length / 2)] ??
+            Number.POSITIVE_INFINITY;
+          resolve({ ticks: ticks.length, medianGapMs: median });
+        };
+        requestAnimationFrame(tick);
+      }),
+    REST_SAMPLE_MS,
+  );
+}
+
+function framesAreSteady({ ticks, medianGapMs }: RestFrames): boolean {
+  return ticks >= STEADY_MIN_TICKS && medianGapMs <= STEADY_FRAME_GAP_MS;
+}
+
 async function sampleExit(page: Page, seek: boolean): Promise<ExitCapture> {
   await waitForPanelAtRest(page);
   await armExitSampler(page, seek);
@@ -161,17 +184,6 @@ function exitWindow({ marks }: ExitCapture): {
     closeAt: close.at,
     elapsedMs: Math.max(close.at - start.at, close.line - start.line),
   };
-}
-
-function framesAreSteady(capture: ExitCapture): boolean {
-  const { startAt, closeAt } = exitWindow(capture);
-  if (Number.isNaN(startAt) || Number.isNaN(closeAt)) return false;
-  const ticks = capture.ticks.filter((at) => at > startAt && at < closeAt);
-  const points = [startAt, ...ticks, closeAt];
-  const gaps = points.slice(1).map((at, index) => at - (points[index] ?? at));
-  const median =
-    [...gaps].sort((a, b) => a - b)[Math.floor(gaps.length / 2)] ?? Number.POSITIVE_INFINITY;
-  return ticks.length >= STEADY_MIN_TICKS && median <= STEADY_FRAME_GAP_MS;
 }
 
 for (const { name, viewport } of [
@@ -222,6 +234,7 @@ for (const { name, viewport } of [
       page,
     }) => {
       await expect(page.locator('body')).not.toHaveAttribute('data-motion', 'reduce');
+      const rest = await measureRestFrames(page);
       const capture = await sampleExit(page, false);
       const { startAt, closeAt, elapsedMs } = exitWindow(capture);
       expect(
@@ -236,16 +249,16 @@ for (const { name, viewport } of [
         elapsedMs,
         'the dialog stays open for at least a quarter of the transition duration on the clock that closed it',
       ).toBeGreaterThanOrEqual(capture.durationMs * MIN_EXIT_SHARE);
-      if (framesAreSteady(capture)) {
+      const steady = framesAreSteady(rest);
+      test.info().annotations.push({
+        type: 'frames',
+        description: `rAF at rest: ${rest.ticks} ticks, median ${rest.medianGapMs} ms, live positions ${steady ? 'asserted' : 'not asserted'}`,
+      });
+      if (steady) {
         expect(
           new Set(slideFrames(capture).map(({ x }) => Math.round(x))).size,
-          'frames are steady, so the panel is drawn at several live positions while the dialog is open',
+          'rAF was steady at rest, so the panel is drawn at several live positions while the dialog is open',
         ).toBeGreaterThan(MIN_SLIDE_FRAMES);
-      } else {
-        test.info().annotations.push({
-          type: 'frames',
-          description: 'rAF did not tick steadily during the exit, live positions not asserted',
-        });
       }
       expect(capture.frames.at(-1)?.open, 'the dialog closes once the slide is over').toBe(false);
       await expect(page.locator(OPEN_MENU_TRIGGER).first()).toBeFocused();
