@@ -211,6 +211,13 @@ The prompt for a manual or agent review that applies these rules to a diff is `d
     there. `ci:full` runs each stage with the top-level `env:` plus the `env:` of the jobs the
     stage mirrors, and lists the values it cannot reproduce. Check:
     `scripts/__tests__/ci-full-workflow-env.test.ts`.
+52. A lint finding from a rule the repository does not run is a hypothesis, not a defect. Before changing
+    code, apply the fix the rule suggests and watch the test that guards the behaviour; a red test
+    proves the pattern is deliberate, and no test means the pattern is unguarded and gets one.
+    All six `eslint-plugin-react-hooks` findings were deliberate patterns: effects that read the
+    clock or `performance.now()`, a dependency that re-attaches a ref, a counter ref behind a key,
+    a `try` around an await, a render-time reset that reads `Date.now()`. Check: dropping `failureCount` from the `focusSummary`
+    dependencies fails `components/client/ContactForm/ContactForm.refocus.test.tsx`.
 
 ## Pre-push judgement list
 
