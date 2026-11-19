@@ -21,7 +21,8 @@ export function MenuTrigger({ className }: { className?: string }) {
   return (
     <button
       type="button"
-      className={joinClassNames(MENU_TRIGGER_CLASS, className)}
+      className={joinClassNames('btn', MENU_TRIGGER_CLASS, className)}
+      data-variant="secondary"
       aria-label={copy.openMenu}
       aria-expanded={drawerOpen}
       aria-controls={DRAWER_ID}

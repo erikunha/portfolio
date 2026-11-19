@@ -63,15 +63,11 @@
     min-width: 0;
   }
 
-  .menu-trigger {
-    display: inline-flex;
+  .btn.menu-trigger {
     flex: none;
-    align-items: center;
-    justify-content: center;
-    box-sizing: border-box;
     width: var(--spacing-target);
     height: var(--spacing-target);
-    padding: 0;
+    padding-inline: 0;
     -webkit-tap-highlight-color: transparent;
   }
 
@@ -83,13 +79,14 @@
     stroke-width: 1.6;
   }
 
-  .menu-trigger:hover,
-  .menu-trigger[aria-expanded="true"] {
+  .btn.menu-trigger[data-variant="secondary"]:hover,
+  .btn.menu-trigger[data-variant="secondary"][aria-expanded="true"] {
     background: var(--color-signal-glow-06);
     border-color: var(--color-accent);
+    box-shadow: none;
   }
 
-  .menu-trigger:active {
+  .btn.menu-trigger[data-variant="secondary"]:active {
     background: var(--color-signal-quiet);
   }
 

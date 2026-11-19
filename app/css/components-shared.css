@@ -77,7 +77,6 @@
     text-decoration-thickness: calc(var(--border-width) * 2);
   }
 
-  .menu-trigger,
   .menu-motion,
   .menu-close {
     color: var(--color-accent);
