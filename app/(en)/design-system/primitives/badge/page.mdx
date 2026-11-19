@@ -31,7 +31,7 @@ Other `<span>` attributes (`id`, `aria-*`, `data-*`) pass through, and `classNam
   <Badge size="sm">SMALL</Badge>
 </Preview>
 
-Below 360px the badge wraps (`white-space: normal`, `flex-wrap: wrap`) instead of overflowing.
+When its nearest container is narrower than 20rem the badge wraps (`white-space: normal`, `flex-wrap: wrap`) instead of overflowing. Without a container ancestor it stays on one line.
 
 <h2 id="accessibility">Accessibility</h2>
 

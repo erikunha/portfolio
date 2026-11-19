@@ -26,7 +26,7 @@ export function Badge({
       {...rest}
       className={cn(
         'badge inline-flex items-center gap-[7px] border border-(color:--color-border-strong) bg-(color:--color-surface) text-(color:--color-accent) font-mono tracking-2xl whitespace-nowrap uppercase',
-        'max-[359px]:whitespace-normal max-[359px]:flex-wrap',
+        '@max-xs:whitespace-normal @max-xs:flex-wrap',
         sizeClasses[size],
         className,
       )}

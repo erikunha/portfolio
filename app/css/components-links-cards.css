@@ -95,7 +95,7 @@
     gap: var(--spacing-3);
   }
 
-  @container (min-width: 600px) {
+  @container (min-width: 37.5rem) {
     .links-watch {
       grid-template-columns: var(--phi-pair-columns-minor-first);
       column-gap: var(--spacing-6);
