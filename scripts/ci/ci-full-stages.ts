@@ -399,6 +399,11 @@ export const UNMIRRORED_CI_STEPS: ReadonlyMap<string, string> = new Map([
   ['Assert Semgrep produced a report', 'the scan that writes the report is not run'],
   ['Write the build provenance manifest', 'only the attestation on main reads it'],
   ['Runner image version', 'names the GitHub runner image for the browser cache key'],
+  ['Playwright version', 'names the Playwright release for the apt cache key'],
+  [
+    'Prepare apt cache directory',
+    'a local machine installs browser dependencies through its own package manager',
+  ],
   ['Install Playwright Chromium (for axe-core scan)', 'browsers are installed once per machine'],
   ['Install Playwright browsers', 'browsers are installed once per machine'],
   ['Start preview server', 'the runner starts a fresh server for each stage that serves'],

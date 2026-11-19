@@ -9,6 +9,8 @@ export const APT_CONFIG = [
   'Acquire::http::Timeout "30";',
   'Acquire::https::Timeout "30";',
 ].join('\n');
+export const APT_CACHE_DIR_ENV = 'APT_CACHE_DIR';
+const APT_CACHE_DIR_PATTERN = /^\/[\w./-]+$/;
 const SUCCESS = 0;
 const FAILURE = 1;
 const LINUX = 'linux';
@@ -20,20 +22,53 @@ type Run = (
   options: object,
 ) => Pick<SpawnSyncReturns<string>, 'status'>;
 
+export function aptConfig(cacheDir?: string): string {
+  if (cacheDir === undefined) return APT_CONFIG;
+  if (!APT_CACHE_DIR_PATTERN.test(cacheDir)) {
+    throw new Error(`${APT_CACHE_DIR_ENV} must be an absolute path without spaces or quotes`);
+  }
+  return [
+    APT_CONFIG,
+    `Dir::Cache::Archives "${cacheDir}/archives";`,
+    `Dir::State::Lists "${cacheDir}/lists";`,
+    'APT::Keep-Downloaded-Packages "true";',
+  ].join('\n');
+}
+
+interface AptOptions {
+  run?: Run;
+  platform?: string;
+  ci?: string | undefined;
+  cacheDir?: string | undefined;
+}
+
+const cacheDirFromEnv = (): string | undefined => process.env[APT_CACHE_DIR_ENV] || undefined;
+
 export function configureApt({
   run = spawnSync as Run,
   platform = process.platform as string,
   ci = process.env.CI as string | undefined,
-}: {
-  run?: Run;
-  platform?: string;
-  ci?: string | undefined;
-} = {}): boolean {
+  cacheDir = cacheDirFromEnv(),
+}: AptOptions = {}): boolean {
   if (platform !== LINUX || !ci) return false;
   const result = run('sudo', ['tee', APT_CONFIG_PATH], {
-    input: `${APT_CONFIG}\n`,
+    input: `${aptConfig(cacheDir)}\n`,
     stdio: ['pipe', 'ignore', 'inherit'],
   });
+  return result.status === SUCCESS;
+}
+
+export function releaseAptCache({
+  run = spawnSync as Run,
+  platform = process.platform as string,
+  ci = process.env.CI as string | undefined,
+  cacheDir = cacheDirFromEnv(),
+  uid = process.getuid?.(),
+  gid = process.getgid?.(),
+}: AptOptions & { uid?: number | undefined; gid?: number | undefined } = {}): boolean {
+  if (platform !== LINUX || !ci || cacheDir === undefined) return false;
+  if (uid === undefined || gid === undefined) return false;
+  const result = run('sudo', ['chown', '-R', `${uid}:${gid}`, cacheDir], { stdio: 'inherit' });
   return result.status === SUCCESS;
 }
 
@@ -62,5 +97,7 @@ if (isMain(import.meta.url)) {
     process.exit(FAILURE);
   }
   configureApt();
-  process.exit(installWithRetry(browsers));
+  const status = installWithRetry(browsers);
+  releaseAptCache();
+  process.exit(status);
 }
