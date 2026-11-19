@@ -16,6 +16,8 @@ const SCROLL_LOCK = 'data-scroll-locked';
 const SLIDE_MS = 200;
 const MS_PER_SECOND = 1000;
 const FALLBACK_SLACK_MS = 1000;
+const EXIT_FALLBACK_SLACK_MS = 50;
+const ONE_MS = 1;
 
 function Trigger() {
   const { openDrawer } = useSectionNavigation();
@@ -126,6 +128,24 @@ describe('the drawer exit slide', () => {
       vi.advanceTimersByTime(FALLBACK_SLACK_MS);
     });
     expect(panel().open).toBe(false);
+  });
+
+  it('closes on the fallback timer at the duration plus the slack when only a zero-elapsed end arrives', () => {
+    vi.useFakeTimers();
+    openSliding();
+    fireEvent.keyDown(document, { key: 'Escape' });
+    endSlide('transform', panel(), 0);
+    act(() => {
+      vi.advanceTimersByTime(SLIDE_MS + EXIT_FALLBACK_SLACK_MS - ONE_MS);
+    });
+    expect(panel().open, 'the zero-elapsed end did not close it and the timer is not due').toBe(
+      true,
+    );
+    act(() => {
+      vi.advanceTimersByTime(ONE_MS);
+    });
+    expect(panel().open, 'the fallback timer closes it at the duration plus the slack').toBe(false);
+    expect(panel().hasAttribute('data-exiting')).toBe(false);
   });
 
   it('closes at once when the stylesheet has no transition, as with MOTION off', () => {
