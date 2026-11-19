@@ -27,7 +27,7 @@ describe('findRawHex', () => {
   });
 
   it('does not flag var() token references', () => {
-    expect(findRawHex('color: var(--color-secondary-950);')).toEqual([]);
+    expect(findRawHex('color: var(--color-carbon-950);')).toEqual([]);
   });
 
   it('does not flag invalid hex lengths (5/7 digits)', () => {

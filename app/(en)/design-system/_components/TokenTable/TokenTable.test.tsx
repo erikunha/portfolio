@@ -71,7 +71,7 @@ describe('RoleTable', () => {
       />,
     );
     expect(dataRows(screen.getByRole('table')).map((row) => cellsOf(row))).toEqual([
-      ['surface', 'secondary-950', 'Page background'],
+      ['surface', 'carbon-950', 'Page background'],
       ['text', 'sage-50', ''],
     ]);
   });

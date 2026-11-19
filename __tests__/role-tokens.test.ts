@@ -10,7 +10,7 @@ import { compiledStylesheet } from './helpers/css-rules';
 const SUBPROCESS_TEST_TIMEOUT_MS = 60_000;
 const SCRIPT = path.join(process.cwd(), 'scripts/gates/contrast-check.ts');
 const PRIMITIVE_REFERENCE =
-  /^var\(--color-((?:signal|sage|primary|secondary|tertiary|quinary|senary)-\w+)\)$/;
+  /^var\(--color-((?:signal|sage|carbon|primary|secondary|tertiary|quinary|senary)-\w+)\)$/;
 const PRINT_REFERENCE = /^var\(--color-print-(?:ink|paper|rule)\)$/;
 const PRINT_MEDIA = /^print$/;
 
@@ -113,8 +113,8 @@ describe('role contrast audit', { timeout: SUBPROCESS_TEST_TIMEOUT_MS }, () => {
 });
 
 const PALETTE = `
-  --color-secondary-950: #000000;
-  --color-secondary-900: #050505;
+  --color-carbon-950: #000000;
+  --color-carbon-900: #050505;
   --color-sage-50: #e6ffe6;
   --color-sage-400: #8a9d8a;
   --color-sage-500: #6b7c6b;
@@ -131,12 +131,12 @@ const PALETTE = `
 `;
 
 const ROLE_TARGETS: Record<string, string> = {
-  surface: 'secondary-950',
-  'surface-raised': 'secondary-900',
+  surface: 'carbon-950',
+  'surface-raised': 'carbon-900',
   border: 'signal-border',
   'border-strong': 'signal-subtle',
   accent: 'signal-500',
-  'on-accent': 'secondary-950',
+  'on-accent': 'carbon-950',
   'text-muted': 'sage-400',
   focus: 'signal-500',
   warning: 'quinary-500',

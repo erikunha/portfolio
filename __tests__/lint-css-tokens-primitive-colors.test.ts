@@ -7,7 +7,7 @@ import { findPrimitiveColorUses, rolePrimitives, scanRepo } from '../scripts/gat
 const THEME = `@theme {
   --color-signal-400: #4ade80;
   --color-signal-500: #00ff41;
-  --color-secondary-950: #000000;
+  --color-carbon-950: #000000;
   --color-sage-50: #e6ffe6;
   --color-text: var(--color-sage-50);
 }
@@ -15,7 +15,7 @@ const THEME = `@theme {
   :root {
     --color-accent: var(--color-signal-500);
     --color-focus: var(--color-signal-500);
-    --color-surface: var(--color-secondary-950);
+    --color-surface: var(--color-carbon-950);
     --color-rain-head: var(--color-signal-400);
   }
 }`;
@@ -27,7 +27,7 @@ describe('rolePrimitives', () => {
   it('maps each primitive a role aliases to the roles that alias it', () => {
     expect(Object.fromEntries(rolePrimitives(THEME))).toEqual({
       'signal-500': ['accent', 'focus'],
-      'secondary-950': ['surface'],
+      'carbon-950': ['surface'],
       'sage-50': ['text'],
     });
   });
@@ -50,13 +50,13 @@ describe('findPrimitiveColorUses', () => {
     ],
     [
       'a property name in a string',
-      "const P = '--color-secondary-950';",
-      '--color-secondary-950 (use --color-surface)',
+      "const P = '--color-carbon-950';",
+      '--color-carbon-950 (use --color-surface)',
     ],
     [
       'a background utility',
-      '<div className="bg-secondary-950" />',
-      'bg-secondary-950 (use --color-surface)',
+      '<div className="bg-carbon-950" />',
+      'bg-carbon-950 (use --color-surface)',
     ],
     [
       'a utility behind variants and an opacity modifier',
@@ -85,7 +85,7 @@ describe('findPrimitiveColorUses', () => {
     ['a longer token name', 'a { color: var(--color-primary-500-soft); }'],
     ['a longer utility name', '<p className="bg-primary-5000" />'],
     ['a non-color utility', '<p className="w-signal-500" />'],
-    ['a line comment', '// var(--color-signal-500) and bg-secondary-950'],
+    ['a line comment', '// var(--color-signal-500) and bg-carbon-950'],
     ['a block comment', '/* var(--color-signal-500) */'],
   ])('ignores %s', (_name, source) => {
     expect(literals(source)).toEqual([]);
@@ -122,7 +122,7 @@ describe('scanRepo primitive colors', () => {
 
   it('reports a primitive in a component stylesheet, a TSX file and an MDX page', () => {
     write('app/css/components-card.css', '.card { color: var(--color-signal-500); }\n');
-    write('components/Card.tsx', 'export const C = () => <p className="bg-secondary-950" />;\n');
+    write('components/Card.tsx', 'export const C = () => <p className="bg-carbon-950" />;\n');
     write('app/page.mdx', '<div style={{ color: "var(--color-sage-50)" }} />\n');
     expect(
       scanRepo(root, ['base.css', 'components-card.css']).primitives.map(
@@ -142,7 +142,7 @@ describe('scanRepo primitive colors', () => {
       {
         file: 'components/Card.tsx',
         line: 1,
-        literal: 'bg-secondary-950 (use --color-surface)',
+        literal: 'bg-carbon-950 (use --color-surface)',
       },
     ]);
   });

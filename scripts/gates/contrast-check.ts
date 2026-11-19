@@ -31,21 +31,21 @@ const DEFAULT_THEME_PATH = resolve(
 const RGB_FUNCTION = /rgba?\((\d+),\s*(\d+),\s*(\d+)/;
 
 const PAIRS: Pair[] = [
-  ['text', 'secondary-950', 4.5, 'semantic body text on base'],
-  ['text', 'secondary-900', 4.5, 'semantic body text on shell'],
-  ['text-secondary', 'secondary-950', 4.5, 'semantic secondary text on base'],
-  ['text-secondary', 'secondary-900', 4.5, 'semantic secondary text on shell'],
-  ['signal-400', 'secondary-950', 4.5, 'muted text on base'],
-  ['signal-700', 'secondary-950', 4.5, 'site map links on base'],
-  ['signal-700', 'secondary-900', 4.5, 'site map links on card'],
-  ['signal-300', 'secondary-950', 4.5, 'faint text on base'],
-  ['sage-50', 'secondary-950', 4.5, 'sage-50 foreground title text on base'],
-  ['signal-500', 'secondary-950', 3.0, 'signal on base (large text)'],
-  ['sage-50', 'secondary-900', 4.5, 'body text on shell'],
-  ['sage-500', 'secondary-950', 4.5, 'form placeholder on base'],
-  ['signal-500', 'secondary-900', 3.0, 'signal on shell (large text)'],
-  ['sage-400', 'secondary-950', 4.5, 'sage-400 meta text on base (/links)'],
-  ['senary-300', 'secondary-950', 4.5, 'alert text on base (errors, clip LED)'],
+  ['text', 'carbon-950', 4.5, 'semantic body text on base'],
+  ['text', 'carbon-900', 4.5, 'semantic body text on shell'],
+  ['text-secondary', 'carbon-950', 4.5, 'semantic secondary text on base'],
+  ['text-secondary', 'carbon-900', 4.5, 'semantic secondary text on shell'],
+  ['signal-400', 'carbon-950', 4.5, 'muted text on base'],
+  ['signal-700', 'carbon-950', 4.5, 'site map links on base'],
+  ['signal-700', 'carbon-900', 4.5, 'site map links on card'],
+  ['signal-300', 'carbon-950', 4.5, 'faint text on base'],
+  ['sage-50', 'carbon-950', 4.5, 'sage-50 foreground title text on base'],
+  ['signal-500', 'carbon-950', 3.0, 'signal on base (large text)'],
+  ['sage-50', 'carbon-900', 4.5, 'body text on shell'],
+  ['sage-500', 'carbon-950', 4.5, 'form placeholder on base'],
+  ['signal-500', 'carbon-900', 3.0, 'signal on shell (large text)'],
+  ['sage-400', 'carbon-950', 4.5, 'sage-400 meta text on base (/links)'],
+  ['senary-300', 'carbon-950', 4.5, 'alert text on base (errors, clip LED)'],
 ];
 
 const ROLE_PAIRS: Pair[] = (

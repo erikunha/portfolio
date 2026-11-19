@@ -63,7 +63,7 @@ describe('terminal theme contract', () => {
       text: '#e6ffe6',
       'text-secondary': '#a1b3a1',
       accent: '#00ff41',
-      'secondary-950': '#000000',
+      'carbon-950': '#000000',
       'signal-500': '#00ff41',
       'sage-50': '#e6ffe6',
       'signal-300': '#5ae07b',
@@ -148,7 +148,7 @@ const FIXTURE = [
   '@layer base {',
   '  :root {',
   '    --space-section: var(--spacing-8);',
-  '    --color-surface: var(--color-secondary-950);',
+  '    --color-surface: var(--color-carbon-950);',
   '  }',
   '  @media (min-width: 768px) {',
   '    :root {',
@@ -215,7 +215,7 @@ describe('parseThemeTokens', () => {
   });
 
   it('names the primitive a role aliases', () => {
-    expect(aliasTarget({ value: 'var(--color-secondary-950)' }, '--color-')).toBe('secondary-950');
+    expect(aliasTarget({ value: 'var(--color-carbon-950)' }, '--color-')).toBe('carbon-950');
     expect(aliasTarget({ value: '#000000' }, '--color-')).toBeUndefined();
   });
 });

@@ -219,6 +219,9 @@
   --color-sage-500: var(--color-tertiary-500);
   --color-sage-900: var(--color-tertiary-900);
 
+  --color-carbon-900: var(--color-secondary-900);
+  --color-carbon-950: var(--color-secondary-950);
+
   --color-print-ink: #000000;
   --color-print-paper: #ffffff;
   --color-print-rule: #595959;
@@ -254,17 +257,17 @@
     --measure-read: 72ch;
     --color-rain-head: var(--color-signal-800);
     --color-rain-body: var(--color-signal-900);
-    --color-surface: var(--color-secondary-950);
-    --color-surface-raised: var(--color-secondary-900);
+    --color-surface: var(--color-carbon-950);
+    --color-surface-raised: var(--color-carbon-900);
     --color-border: var(--color-signal-border);
     --color-border-strong: var(--color-signal-subtle);
     --color-accent: var(--color-signal-500);
-    --color-on-accent: var(--color-secondary-950);
+    --color-on-accent: var(--color-carbon-950);
     --color-text-muted: var(--color-sage-400);
     --color-focus: var(--color-signal-500);
     --color-warning: var(--color-quinary-500);
     --color-danger: var(--color-senary-500);
-    --color-scrim: var(--color-secondary-950);
+    --color-scrim: var(--color-carbon-950);
     --rain-tail-alpha: 0.1;
     --type-reveal-char-duration: 28ms;
     --type-reveal-max-duration: 1.4s;

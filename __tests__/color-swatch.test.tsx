@@ -40,7 +40,7 @@ describe('ColorSwatch', () => {
   });
 
   it('renders a color swatch div with background style set', async () => {
-    const container = await render({ token: 'secondary-900' });
+    const container = await render({ token: 'carbon-900' });
     const swatch = container.querySelector('[aria-hidden="true"]') as HTMLElement | null;
     expect(swatch).not.toBeNull();
     expect(swatch?.style.background).toBeTruthy();
