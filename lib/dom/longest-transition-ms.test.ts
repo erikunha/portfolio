@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { longestTransitionMs } from '../longest-transition-ms';
+import { longestTransitionMs } from './longest-transition-ms';
 
 function styled(duration: string, delay?: string): HTMLElement {
   const element = document.createElement('div');
