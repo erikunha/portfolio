@@ -1,24 +1,18 @@
 @layer components {
-  .to-top-btn {
+  .btn.to-top-btn {
     display: none;
   }
 
   @media (max-width: theme(--viewport-below-md)) {
-    .to-top-btn {
+    .btn.to-top-btn {
       display: flex;
-      align-items: center;
-      justify-content: center;
       position: fixed;
       right: var(--to-top-inset);
       bottom: calc(var(--dock-height) + env(safe-area-inset-bottom, 0px));
       z-index: var(--z-to-top);
       width: var(--to-top-size);
       height: var(--to-top-size);
-      background: var(--color-surface);
-      border: var(--border-width) solid var(--color-border-strong);
-      border-bottom: 0;
-      border-inline-end: 0;
-      color: var(--color-accent);
+      padding-inline: 0;
       opacity: 0;
       transform: translateY(8px);
       transition:
@@ -27,17 +21,21 @@
       pointer-events: none;
     }
 
-    .to-top-btn.to-top-show {
+    .btn.to-top-btn[data-variant="secondary"] {
+      background: var(--color-surface);
+      border-bottom: 0;
+      border-inline-end: 0;
+    }
+
+    .btn.to-top-btn[data-variant="secondary"]:hover {
+      background: var(--color-surface);
+      box-shadow: none;
+    }
+
+    .btn.to-top-btn.to-top-show {
       opacity: 1;
       transform: translateY(0);
       pointer-events: auto;
-    }
-  }
-
-  /* biome-ignore lint/suspicious/noDuplicateSelectors: `@variant motion-off` and `@variant motion-on` resolve to a `body` ancestor selector, so this rule has a different selector than the earlier one with the same class */
-  .to-top-btn {
-    @variant motion-off {
-      transition: none;
     }
   }
 }

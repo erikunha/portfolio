@@ -21,7 +21,8 @@ export function ToTopButton() {
 
   return (
     <button
-      className={visible ? 'to-top-btn to-top-show' : 'to-top-btn'}
+      className={visible ? 'btn to-top-btn to-top-show' : 'btn to-top-btn'}
+      data-variant="secondary"
       aria-label={copy.backToTopLabel}
       inert={!visible}
       onClick={() => window.scrollTo({ top: 0, behavior: motionInEffect() ? 'smooth' : 'auto' })}
