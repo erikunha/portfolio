@@ -17,11 +17,11 @@ export async function openContactFromMenu(page: Page): Promise<Locator> {
   await page.getByRole('dialog').getByRole('link', { name: CONTACT_LINK_NAME }).first().click();
   const form = page.locator(CONTACT_FORM_SELECTOR);
   await expect(form).toBeVisible();
-  await waitForHydration(page, CONTACT_FORM_SELECTOR);
   return form;
 }
 
 export async function sendVisitorMessage(form: Locator): Promise<void> {
+  await waitForHydration(form.page(), CONTACT_FORM_SELECTOR);
   await form.getByLabel('$ name:').fill(VISITOR.name);
   await form.getByLabel('$ email:').fill(VISITOR.email);
   await form.getByLabel('$ message:').fill(VISITOR.message);

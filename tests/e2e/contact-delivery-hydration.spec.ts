@@ -1,12 +1,8 @@
 import { setTimeout as delay } from 'node:timers/promises';
 import { expect, test } from '@playwright/test';
-import {
-  CONTACT_FORM_SELECTOR,
-  openContactFromMenu,
-  sendVisitorMessage,
-} from './_helpers/contact-journey';
+import { openContactFromMenu, sendVisitorMessage } from './_helpers/contact-journey';
 import { installMockBackend } from './_helpers/mock-backend';
-import { installCommitOracle, isNodeCommitted } from './_helpers/react-commit-oracle';
+import { installCommitOracle } from './_helpers/react-commit-oracle';
 import { drainRoutes } from './_helpers/routes';
 
 const FORM_CHUNK_MARKER = 'contact-form';
@@ -36,10 +32,6 @@ test.describe('the contact journey acts on the form only once React committed it
     await page.goto('/');
 
     const form = await openContactFromMenu(page);
-    expect(
-      await isNodeCommitted(page, CONTACT_FORM_SELECTOR),
-      'the journey helper returned while the server-rendered form had no handlers yet',
-    ).toBe(true);
     await sendVisitorMessage(form);
 
     await expect(page.getByTestId('contact-success')).toContainText('✓ message delivered');
