@@ -31,14 +31,14 @@ export function QrPanel({ locale, url }: { locale: SiteLocale; url: string }) {
           <path d={qrSvgPath(matrix, QUIET_ZONE)} fill="var(--color-surface)" />
         </svg>
         <div>
-          <p className="m-0 text-tertiary-400 text-xs">
+          <p className="m-0 text-(color:--color-text-muted) text-xs">
             <span aria-hidden="true">$ </span>
             {copy.qrCommand}
           </p>
           <p className="mt-2 mb-0 text-(color:--color-text) text-xs leading-ratio-body text-pretty">
             {copy.qrBody[locale]}
           </p>
-          <p className="mt-2 mb-0 text-tertiary-400 text-xs">{siteLabel}</p>
+          <p className="mt-2 mb-0 text-(color:--color-text-muted) text-xs">{siteLabel}</p>
         </div>
       </div>
     </section>

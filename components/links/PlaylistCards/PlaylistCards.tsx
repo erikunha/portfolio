@@ -57,7 +57,7 @@ export function PlaylistCards({ locale, channelUrl }: { locale: SiteLocale; chan
                   {linksUi.arrow}
                 </span>
               </span>
-              <span className="block mt-2 text-tertiary-400 text-xs text-pretty">
+              <span className="block mt-2 text-(color:--color-text-muted) text-xs text-pretty">
                 {playlist.description[locale]}
               </span>
               <NewTabHint text={copy.opensInNewTab[locale]} />

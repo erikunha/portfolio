@@ -39,7 +39,7 @@
 
   .links-watch-handle,
   .links-watch-counts {
-    color: var(--color-tertiary-400);
+    color: var(--color-text-muted);
     font-size: var(--text-xs);
     font-weight: 400;
   }
@@ -49,7 +49,7 @@
     align-items: center;
     gap: var(--spacing-2);
     margin: 0;
-    color: var(--color-tertiary-400);
+    color: var(--color-text-muted);
     font-size: var(--text-xs);
   }
 
@@ -78,7 +78,7 @@
   .links-watch-desc,
   .links-watch-note {
     margin: 0;
-    color: var(--color-tertiary-400);
+    color: var(--color-text-muted);
     font-size: var(--text-xs);
     text-wrap: pretty;
   }
@@ -163,7 +163,7 @@
   .links-line-host {
     flex: 1;
     min-width: 0;
-    color: var(--color-tertiary-400);
+    color: var(--color-text-muted);
     font-size: var(--text-xs);
     text-align: end;
     overflow-wrap: anywhere;
