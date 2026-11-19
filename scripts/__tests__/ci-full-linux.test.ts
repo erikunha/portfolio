@@ -9,6 +9,8 @@ import {
   containerEnv,
   containerLabel,
   containerName,
+  DOCKER_PULL_TIMEOUT_MS,
+  type DockerCallOptions,
   type DockerRun,
   type DockerRunOptions,
   dockerProblem,
@@ -357,17 +359,20 @@ describe('changed specs', () => {
 
 describe('docker availability', () => {
   const IMAGE = 'mcr.microsoft.com/playwright:v0.0.0-noble';
-  const stub = (failing: string[]): { run: DockerRun; calls: string[][] } => {
+  const stub = (
+    failing: string[],
+    timedOut = false,
+  ): { run: DockerRun; calls: string[][]; options: Map<string, DockerCallOptions | undefined> } => {
     const calls: string[][] = [];
-    const run: DockerRun = (args) => {
+    const options = new Map<string, DockerCallOptions | undefined>();
+    const run: DockerRun = (args, callOptions) => {
       calls.push(args);
-      return {
-        status:
-          failing.includes(args[0] ?? '') || failing.includes(args.slice(0, 2).join(' ')) ? 1 : 0,
-        stdout: '',
-      };
+      options.set(args[0] ?? '', callOptions);
+      const failed =
+        failing.includes(args[0] ?? '') || failing.includes(args.slice(0, 2).join(' '));
+      return { status: failed ? 1 : 0, stdout: '', timedOut: failed && timedOut };
     };
-    return { run, calls };
+    return { run, calls, options };
   };
 
   beforeEach(() => forgetPulledImages());
@@ -393,6 +398,19 @@ describe('docker availability', () => {
   it('reports a failed pull as the reason the stage cannot run', () => {
     const { run } = stub(['image inspect', 'pull']);
     expect(dockerProblem(IMAGE, run)).toBe(`docker pull ${IMAGE} failed`);
+  });
+
+  it('bounds the pull by a named timeout and streams its progress, and nothing else', () => {
+    const { run, options } = stub(['image inspect']);
+    expect(dockerProblem(IMAGE, run)).toBeUndefined();
+    expect(options.get('pull')).toEqual({ timeoutMs: DOCKER_PULL_TIMEOUT_MS, stream: true });
+    expect(options.get('info')).toBeUndefined();
+    expect(options.get('image')).toBeUndefined();
+  });
+
+  it('says the pull timed out, not that it failed, when it outlives its limit', () => {
+    const { run } = stub(['image inspect', 'pull'], true);
+    expect(dockerProblem(IMAGE, run)).toBe(`docker pull ${IMAGE} timed out after 20 minutes`);
   });
 
   it('keeps the node_modules volume of the current lockfile and prunes the older ones', () => {

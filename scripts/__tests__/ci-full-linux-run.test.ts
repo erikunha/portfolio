@@ -2,6 +2,7 @@ import { chmodSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync 
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
+import { dockerRun } from '../ci/ci-full-linux';
 import {
   allowedEnv,
   childEnv,
@@ -99,6 +100,38 @@ describe('docker environment', () => {
     expect(env.DOCKER_CONTEXT).toBe('colima');
     expect(env.DOCKER_PASSWORD).toBeUndefined();
     expect(env.OPENAI_API_KEY).toBeUndefined();
+  });
+});
+
+describe('the docker client', () => {
+  const dockerScript = (body: string): string => {
+    const bin = join(scratch(), 'bin');
+    mkdirSync(bin);
+    writeFileSync(join(bin, 'docker'), `#!/bin/sh\n${body}\n`);
+    chmodSync(join(bin, 'docker'), EXECUTABLE_MODE);
+    return bin;
+  };
+
+  it('reports a call that outlives its timeout as timed out, not as a plain failure', () => {
+    process.env.PATH = `${dockerScript('sleep 30')}:${originalPath}`;
+    const started = Date.now();
+    const outcome = dockerRun(['pull', 'x'], { timeoutMs: SHORT_STAGE_TIMEOUT_MS });
+    expect(outcome.timedOut).toBe(true);
+    expect(outcome.status).toBeNull();
+    expect(Date.now() - started).toBeLessThan(REGISTER_WAIT_MS);
+  });
+
+  it('does not report a call that fails inside its timeout as timed out', () => {
+    process.env.PATH = `${dockerScript('exit 3')}:${originalPath}`;
+    expect(dockerRun(['pull', 'x'], { timeoutMs: REGISTER_WAIT_MS })).toMatchObject({
+      status: 3,
+      timedOut: false,
+    });
+  });
+
+  it('captures the output of a quiet call', () => {
+    process.env.PATH = `${dockerScript('echo volume-a')}:${originalPath}`;
+    expect(dockerRun(['volume', 'ls']).stdout).toBe('volume-a\n');
   });
 });
 

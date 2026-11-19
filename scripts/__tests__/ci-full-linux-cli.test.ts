@@ -143,6 +143,15 @@ describe('ci:full --linux command line', { timeout: CLI_TIMEOUT_MS }, () => {
     expect(result.stdout).toContain('the Docker daemon is not running');
   });
 
+  it('streams the pull progress to stderr while the pull runs', () => {
+    const script =
+      '#!/bin/sh\ncase "$1" in info) exit 0;; pull) echo "layer abc: Pulling fs layer"; exit 1;; *) exit 1;; esac\n';
+    const result = run(['--base', 'HEAD', '--linux=gate', '--only', FIRST_LINUX], pathWith(script));
+    expect(result.status).toBe(NOT_VERIFIED_EXIT);
+    expect(result.stderr).toContain('layer abc: Pulling fs layer');
+    expect(result.stdout).not.toContain('Pulling fs layer');
+  });
+
   it('exits 3 when the image cannot be pulled', () => {
     const script = '#!/bin/sh\ncase "$1" in info) exit 0;; *) exit 1;; esac\n';
     const result = run(['--base', 'HEAD', '--linux=gate', '--only', FIRST_LINUX], pathWith(script));

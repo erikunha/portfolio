@@ -38,8 +38,11 @@ export const DOCKER = 'docker';
 const DOCKER_OK = 0;
 const PLAYWRIGHT_LIST_BUFFER_BYTES = 256 * 1024 * 1024;
 const PLAYWRIGHT_LIST_TIMEOUT_MS = 120_000;
+export const DOCKER_PULL_TIMEOUT_MS = 20 * 60 * 1000;
 const ERROR_LINE = /error/i;
 const MS_PER_SECOND = 1000;
+const MS_PER_MINUTE = 60 * MS_PER_SECOND;
+const TIMEOUT_CODE = 'ETIMEDOUT';
 const BYTES_PER_MIB = 1024 * 1024;
 const LISTING_UNPARSEABLE = 'printed no parseable JSON listing';
 const NO_TESTS_FOUND = /no tests found/i;
@@ -247,7 +250,7 @@ export function listedSpecs(output: string, root: string): string[] {
 }
 
 function spawnProblem(error: Error & { code?: string }): string {
-  if (error.code === 'ETIMEDOUT') {
+  if (error.code === TIMEOUT_CODE) {
     return `timed out after ${PLAYWRIGHT_LIST_TIMEOUT_MS / MS_PER_SECOND}s`;
   }
   if (error.code === 'ENOBUFS') {
@@ -315,22 +318,45 @@ export function mergeSpecs(...groups: readonly (readonly string[])[]): string[] 
   return [...new Set(groups.flat())];
 }
 
-export type DockerRun = (args: string[]) => { status: number | null; stdout: string };
+export interface DockerCallOptions {
+  timeoutMs?: number;
+  stream?: boolean;
+}
 
-const dockerRun: DockerRun = (args) => {
-  const run = spawnSync(DOCKER, args, { encoding: 'utf8' });
-  return { status: run.status, stdout: run.stdout ?? '' };
+export type DockerRun = (
+  args: string[],
+  options?: DockerCallOptions,
+) => { status: number | null; stdout: string; timedOut?: boolean };
+
+export const dockerRun: DockerRun = (args, options = {}) => {
+  const run = spawnSync(DOCKER, args, {
+    encoding: 'utf8',
+    ...(options.timeoutMs === undefined ? {} : { timeout: options.timeoutMs }),
+    stdio:
+      options.stream === true
+        ? ['ignore', process.stderr.fd, process.stderr.fd]
+        : ['ignore', 'pipe', 'pipe'],
+  });
+  const code = (run.error as NodeJS.ErrnoException | undefined)?.code;
+  return { status: run.status, stdout: run.stdout ?? '', timedOut: code === TIMEOUT_CODE };
 };
 
 const pulled = new Map<string, string | undefined>();
 
+function pullProblem(image: string, run: DockerRun): string | undefined {
+  const pull = run(['pull', image], { timeoutMs: DOCKER_PULL_TIMEOUT_MS, stream: true });
+  if (pull.status === DOCKER_OK) return undefined;
+  if (pull.timedOut === true) {
+    return `docker pull ${image} timed out after ${DOCKER_PULL_TIMEOUT_MS / MS_PER_MINUTE} minutes`;
+  }
+  return `docker pull ${image} failed`;
+}
+
 export function dockerProblem(image: string, run: DockerRun = dockerRun): string | undefined {
   if (run(['info']).status !== DOCKER_OK) return 'the Docker daemon is not running';
   if (pulled.has(image)) return pulled.get(image);
-  let problem: string | undefined;
-  if (run(['image', 'inspect', image]).status !== DOCKER_OK) {
-    problem = run(['pull', image]).status === DOCKER_OK ? undefined : `docker pull ${image} failed`;
-  }
+  const problem =
+    run(['image', 'inspect', image]).status === DOCKER_OK ? undefined : pullProblem(image, run);
   pulled.set(image, problem);
   return problem;
 }
