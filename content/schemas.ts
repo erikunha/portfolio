@@ -1,28 +1,17 @@
 import { z } from 'zod';
 import { NOT_FOUND_PATH_TOKEN } from './errors.constants';
 import { FACT_SEPARATOR } from './fact-separator';
+import { CompanyUrlSchema, LocalizedTextSchema, SectionTextSchema } from './schema-primitives';
 import { SECTION_ICONS, SECTION_REGISTRY } from './section-registry';
 
+export type { CopyFeedback, CopyFeedbackState, FooterContent } from './footer.schema';
+export { CopyFeedbackSchema, FooterContentSchema } from './footer.schema';
+export { createNavigationSchema } from './navigation.schema';
+export type { LocalizedText } from './schema-primitives';
+export { CompanyUrlSchema, LocalizedTextSchema } from './schema-primitives';
 export { SECTION_ICONS };
 
 const FIRST_SECTION_ORDER = 1;
-const MIN_SECTION_TEXT_LENGTH = 1;
-
-export const CompanyUrlSchema = z.url({ protocol: /^https$/ });
-
-export const LocalizedTextSchema = z.object({
-  pt: z.string().min(1),
-  en: z.string().min(1),
-});
-export type LocalizedText = z.infer<typeof LocalizedTextSchema>;
-
-const SectionTextSchema = z
-  .string()
-  .min(MIN_SECTION_TEXT_LENGTH)
-  .refine((text) => text === text.trim(), {
-    message: 'Section text must not have leading or trailing whitespace',
-  });
-
 export const SectionSchema = z.object({
   id: SectionTextSchema,
   label: LocalizedTextSchema,
@@ -46,100 +35,6 @@ export const SectionRegistrySchema = z
     message: 'Section orders must match array position and be contiguous from the first order',
   })
   .readonly();
-
-const DOCK_KEYS = ['home', 'work', 'shell', 'hire', 'menu'] as const;
-const MENU_DOCK_KEY = 'menu';
-const MIN_NAV_ITEMS = 1;
-
-const NavTextSchema = SectionTextSchema;
-
-const NavGroupSchema = z.object({
-  id: NavTextSchema,
-  title: NavTextSchema,
-  dock: z.enum(DOCK_KEYS),
-  sectionIds: z.array(NavTextSchema).min(MIN_NAV_ITEMS).readonly(),
-});
-
-const DockControlSchema = z
-  .object({
-    key: z.enum(DOCK_KEYS),
-    label: NavTextSchema,
-    sectionId: NavTextSchema.optional(),
-    href: z.url().optional(),
-    accessibleName: NavTextSchema.optional(),
-    lang: NavTextSchema.optional(),
-  })
-  .refine(
-    ({ key, sectionId, href }) =>
-      key === MENU_DOCK_KEY ? !sectionId && !href : Boolean(sectionId) !== Boolean(href),
-    {
-      message:
-        'A dock control targets exactly one section or one link; the menu control targets neither',
-    },
-  );
-
-const SiteLinkSchema = z.object({
-  label: NavTextSchema,
-  index: NavTextSchema,
-  href: z.string().regex(/^(\/(?!\/)\S*|https:\/\/\S+)$/),
-  external: z.boolean(),
-  accessibleName: NavTextSchema.optional(),
-});
-
-const NavigationCopySchema = z.object({
-  drawerLabel: NavTextSchema,
-  navLabel: NavTextSchema,
-  title: NavTextSchema,
-  openMenu: NavTextSchema,
-  closeDrawer: NavTextSchema,
-  dockLabel: NavTextSchema,
-  motionOn: NavTextSchema,
-  motionOff: NavTextSchema,
-  langSwitchLabel: NavTextSchema,
-  skipLabel: NavTextSchema,
-  siteNavLabel: NavTextSchema,
-  backToTopLabel: NavTextSchema,
-});
-
-export function createNavigationSchema(sectionIds: readonly string[]) {
-  return z
-    .object({
-      copy: NavigationCopySchema,
-      groups: z.array(NavGroupSchema).min(MIN_NAV_ITEMS).readonly(),
-      dock: z.array(DockControlSchema).min(MIN_NAV_ITEMS).readonly(),
-      siteLinks: z.array(SiteLinkSchema).readonly(),
-    })
-    .superRefine(({ groups, dock }, ctx) => {
-      const grouped = groups.flatMap(({ sectionIds: members }) => members);
-      if (grouped.join('|') !== sectionIds.join('|')) {
-        ctx.addIssue({
-          code: 'custom',
-          message:
-            'Navigation groups must list every registry section exactly once, in registry order',
-        });
-      }
-      const dockKeys = dock.map(({ key }) => key);
-      if (new Set(dockKeys).size !== dockKeys.length) {
-        ctx.addIssue({ code: 'custom', message: 'Dock control keys must be unique' });
-      }
-      if (!dockKeys.includes(MENU_DOCK_KEY)) {
-        ctx.addIssue({ code: 'custom', message: 'The dock needs a menu control' });
-      }
-      for (const { dock: key } of groups) {
-        if (!dockKeys.includes(key)) {
-          ctx.addIssue({
-            code: 'custom',
-            message: `Group points at missing dock control "${key}"`,
-          });
-        }
-      }
-      for (const { sectionId } of dock) {
-        if (sectionId && !sectionIds.includes(sectionId)) {
-          ctx.addIssue({ code: 'custom', message: `Dock targets unknown section "${sectionId}"` });
-        }
-      }
-    });
-}
 
 export const SocialSchema = z.object({
   github: z.url(),
@@ -755,76 +650,6 @@ export const HeroClientContentSchema = z.object({
   bootDialogMobile: z.array(z.string().min(1)).min(1),
 });
 export type HeroClientContent = z.infer<typeof HeroClientContentSchema>;
-
-const FooterHrefSchema = z.string().regex(/^(?:#[\w-]+|\/(?!\/)[\w/-]*|https:\/\/[^\s]+)$/);
-const FooterLinkSchema = z.object({ label: z.string().min(1), href: FooterHrefSchema });
-
-export const CopyFeedbackSchema = z.object({ label: z.string().min(1), message: z.string() });
-export type CopyFeedback = z.infer<typeof CopyFeedbackSchema>;
-export type CopyFeedbackState = 'idle' | 'success' | 'failure' | 'unavailable';
-
-export const FooterContentSchema = z
-  .object({
-    shutdownTitle: z.string().min(1),
-    prompt: z.string().min(1),
-    shutdownCommand: z.string().min(1),
-    sessionTitle: z.string().min(1),
-    sessionLabels: z.object({
-      user: z.string().min(1),
-      uptime: z.string().min(1),
-      depth: z.string().min(1),
-      seen: z.string().min(1),
-      commands: z.string().min(1),
-    }),
-    user: z.string().min(1),
-    netstatTitle: z.string().min(1),
-    externalGlyph: z.string().min(1),
-    connectionLabels: z.object({
-      protocol: z.string().min(1),
-      state: z.string().min(1),
-      endpoint: z.string().min(1),
-    }),
-    connections: z
-      .array(
-        FooterLinkSchema.extend({
-          protocol: z.literal('tcp'),
-          state: z.enum(['ESTABLISHED', 'LISTEN']),
-          external: z.boolean(),
-        }),
-      )
-      .min(1),
-    treeTitle: z.string().min(1),
-    treeLabel: z.string().min(1),
-    fileCount: z.object({ one: z.string().min(1), other: z.string().min(1) }),
-    treeOpenDirectory: z.string().min(1),
-    groups: z
-      .array(
-        z.object({
-          directory: z.string().regex(/^\.\/[a-z_]+\/$/),
-          links: z.array(FooterLinkSchema).min(1),
-        }),
-      )
-      .length(6),
-    halted: z.string().min(1),
-    haltedAt: z.string().min(1),
-    reboot: z.object({
-      label: z.string().min(1),
-      before: z.string().min(1),
-      key: z.string().length(1),
-      after: z.string().min(1),
-      touch: z.string().min(1),
-      announcement: z.string().min(1),
-    }),
-    receipt: z.object({
-      label: z.string().min(1),
-    }),
-    copyright: z.string().min(1),
-  })
-  .refine((footer) => footer.groups.some((group) => group.directory === footer.treeOpenDirectory), {
-    message: 'treeOpenDirectory must name one of the site map groups',
-    path: ['treeOpenDirectory'],
-  });
-export type FooterContent = z.infer<typeof FooterContentSchema>;
 
 const NotFoundTemplateSchema = z
   .string()
