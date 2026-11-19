@@ -448,7 +448,7 @@
       var(--spacing-2);
     border-block: var(--border-width) solid var(--color-accent);
     background: var(--color-surface);
-    color: var(--color-tertiary-50);
+    color: var(--color-text);
     font-size: var(--text-xs);
   }
 

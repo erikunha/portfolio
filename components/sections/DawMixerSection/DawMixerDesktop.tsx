@@ -83,7 +83,7 @@ function ChannelDesktop({ ch, copy }: { ch: DawMixerChannel; copy: DawMixerCopy 
       <div className="flex flex-col gap-1 min-w-0">
         <span
           className={cn(
-            'font-bold text-base text-tertiary-50 tracking-xs leading-ratio-1',
+            'font-bold text-base text-(color:--color-text) tracking-xs leading-ratio-1',
             (ch.focused || isMaster) && 'text-(color:--color-accent)',
           )}
         >
@@ -202,7 +202,7 @@ export function DawMixerDesktop({ mixer, copy }: { mixer: DawMixer; copy: DawMix
   const endId = useId();
   return (
     <div
-      className="daw-mixer-desktop relative font-mono text-sm text-tertiary-50 border border-[var(--color-border)] bg-(color:--color-surface)/50 overflow-x-auto md:overflow-x-hidden"
+      className="daw-mixer-desktop relative font-mono text-sm text-(color:--color-text) border border-[var(--color-border)] bg-(color:--color-surface)/50 overflow-x-auto md:overflow-x-hidden"
       data-testid="daw-mixer-desktop"
     >
       <a href={`#${endId}`} className="mixer-skip-link">

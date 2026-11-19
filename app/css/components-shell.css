@@ -32,7 +32,7 @@
   }
 
   .interactive-shell {
-    color: var(--color-tertiary-50);
+    color: var(--color-text);
     font-family: var(--font-mono);
     font-size: var(--text-xs);
     --leading: 1.65;
@@ -82,7 +82,7 @@
   .shell-line-output,
   .shell-ai-notice,
   .shell-privacy-notice {
-    color: var(--color-tertiary-50);
+    color: var(--color-text);
   }
 
   .shell-line-error {
@@ -97,7 +97,7 @@
   .shell-line-ratelimit {
     padding: var(--spacing-3);
     border: var(--border-width) solid var(--color-accent);
-    color: var(--color-tertiary-50);
+    color: var(--color-text);
   }
 
   .shell-line-ratelimit [aria-hidden] {
@@ -174,7 +174,7 @@
     border: 0;
     border-radius: var(--radius-none);
     background: transparent;
-    color: var(--color-tertiary-50);
+    color: var(--color-text);
     caret-color: var(--color-accent);
     font: inherit;
   }
@@ -331,7 +331,7 @@
     padding: var(--spacing-3);
     border: var(--border-width) solid var(--color-border-strong);
     background: var(--color-secondary-900);
-    color: var(--color-tertiary-50);
+    color: var(--color-text);
     font-family: var(--font-mono);
     font-size: var(--text-xs);
     overflow-wrap: anywhere;
@@ -465,7 +465,7 @@
 
   .shell-receipt-body {
     grid-area: body;
-    color: var(--color-tertiary-50);
+    color: var(--color-text);
   }
 
   .shell-receipt-id {

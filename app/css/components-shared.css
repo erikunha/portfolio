@@ -333,7 +333,7 @@
 
   .module-body-content {
     padding: 14px;
-    color: var(--color-tertiary-50);
+    color: var(--color-text);
     background: var(--color-surface);
   }
 

@@ -17,10 +17,10 @@ export function DesignSystemOpinion() {
       <h2 className="font-mono text-(color:--color-accent)">
         {`Opinion ${number}: ${designSystemOpinionConfig.topic}`}
       </h2>
-      <p className="font-mono text-tertiary-50">
+      <p className="font-mono text-(color:--color-text)">
         <span className="text-(color:--color-accent)">{take.category}</span> {take.thesis}
       </p>
-      <p className="font-mono text-tertiary-50">{take.body}</p>
+      <p className="font-mono text-(color:--color-text)">{take.body}</p>
     </section>
   );
 }

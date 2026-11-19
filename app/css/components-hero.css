@@ -29,7 +29,7 @@
     top: var(--spacing-6);
     bottom: var(--spacing-6);
     z-index: var(--z-local-above);
-    color: var(--color-tertiary-50);
+    color: var(--color-text);
     font-size: var(--text-sm);
     --leading: 1.7;
     overflow: hidden;
@@ -47,7 +47,7 @@
   }
 
   .hero-boot-mobile {
-    color: var(--color-tertiary-50);
+    color: var(--color-text);
     font-size: var(--text-min);
     --leading: 1.55;
 
@@ -81,7 +81,7 @@
   }
 
   .hero-boot-welcome {
-    color: var(--color-tertiary-50);
+    color: var(--color-text);
     font-weight: 700;
   }
 
@@ -90,7 +90,7 @@
   }
 
   .hero-boot-cmd {
-    color: var(--color-tertiary-50);
+    color: var(--color-text);
   }
 
   .hero-boot-matrix-prefix {

@@ -82,7 +82,7 @@
 
   .project-desc {
     margin: 0 0 var(--spacing-4);
-    color: var(--color-tertiary-50);
+    color: var(--color-text);
     font-size: var(--text-sm);
     --leading: 1.6;
   }
@@ -127,7 +127,7 @@
     text-align: start;
     overflow-wrap: anywhere;
     margin: 0;
-    color: var(--color-tertiary-50);
+    color: var(--color-text);
   }
 
   .project-receipts {
@@ -175,7 +175,7 @@
   .receipt-value {
     font-size: var(--text-sm);
     text-align: right;
-    color: var(--color-tertiary-50);
+    color: var(--color-text);
     font-weight: 700;
     overflow-wrap: anywhere;
   }
@@ -194,7 +194,7 @@
   .receipt-context {
     grid-column: 1 / -1;
     width: 100%;
-    color: var(--color-tertiary-50);
+    color: var(--color-text);
   }
 
   .measured-source,
@@ -268,7 +268,7 @@
   }
 
   .measured-label {
-    color: var(--color-tertiary-50);
+    color: var(--color-text);
     font-weight: 700;
     overflow-wrap: anywhere;
     font-size: var(--text-xs);
@@ -337,7 +337,7 @@
     padding: var(--spacing-3);
     border: var(--border-width) solid var(--color-accent);
     background: var(--color-glow-03);
-    color: var(--color-tertiary-50);
+    color: var(--color-text);
     font-size: var(--text-body);
     --leading: 1.5;
   }

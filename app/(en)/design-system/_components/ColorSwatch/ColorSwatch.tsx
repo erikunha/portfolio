@@ -16,8 +16,10 @@ export function ColorSwatch({ token, usage }: Props) {
         aria-hidden="true"
       />
       <div className="flex flex-col gap-0.5">
-        <code className="text-xs font-mono text-tertiary-50 tracking-widest">--color-{token}</code>
-        <span className="text-xs font-mono text-tertiary-50">{resolved}</span>
+        <code className="text-xs font-mono text-(color:--color-text) tracking-widest">
+          --color-{token}
+        </code>
+        <span className="text-xs font-mono text-(color:--color-text)">{resolved}</span>
         {usage ? <span className="text-xs font-mono text-text-secondary">{usage}</span> : null}
       </div>
     </div>

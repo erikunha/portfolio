@@ -14,7 +14,7 @@ const PLAYLIST_ENDPOINT = 'https://www.youtube.com/playlist?list=';
 const CARD_HOVER =
   'hover:border-(color:--color-accent) hover:bg-linear-to-b hover:from-(color:--color-accent)/[0.07] hover:to-(color:--color-accent)/[0.07]';
 const TAG =
-  'border border-(color:--color-border-strong) text-tertiary-50 text-xs tracking-md py-0.5 px-1';
+  'border border-(color:--color-border-strong) text-(color:--color-text) text-xs tracking-md py-0.5 px-1';
 const ARROW = 'text-sm text-(color:--color-accent)';
 
 function destination(playlist: LinksPlaylist, channelUrl: string): string {
@@ -49,7 +49,9 @@ export function PlaylistCards({ locale, channelUrl }: { locale: SiteLocale; chan
               <span className="flex items-center justify-between gap-3">
                 <span className="flex items-center gap-2">
                   <span className={TAG}>{playlist.tag}</span>
-                  <span className="text-tertiary-50 text-sm">{playlist.title[locale]}</span>
+                  <span className="text-(color:--color-text) text-sm">
+                    {playlist.title[locale]}
+                  </span>
                 </span>
                 <span aria-hidden="true" className={ARROW}>
                   {linksUi.arrow}

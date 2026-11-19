@@ -120,6 +120,6 @@ describe('home opinions', () => {
     const tag = rulesWithSelector(stylesheet, '.opinions-take h3 > span');
     expect(declValue(tag[0], 'color')).toBe('var(--color-text-secondary)');
     const context = rulesWithSelector(stylesheet, '.opinions-context');
-    expect(declValue(context[0], 'color')).toBe('var(--color-tertiary-50)');
+    expect(declValue(context[0], 'color')).toBe('var(--color-text)');
   });
 });

@@ -27,7 +27,7 @@ export function QrPanel({ locale, url }: { locale: SiteLocale; url: string }) {
           className="block flex-none border border-(color:--color-border)"
           shapeRendering="crispEdges"
         >
-          <rect width={span} height={span} fill="var(--color-tertiary-50)" />
+          <rect width={span} height={span} fill="var(--color-text)" />
           <path d={qrSvgPath(matrix, QUIET_ZONE)} fill="var(--color-surface)" />
         </svg>
         <div>
@@ -35,7 +35,7 @@ export function QrPanel({ locale, url }: { locale: SiteLocale; url: string }) {
             <span aria-hidden="true">$ </span>
             {copy.qrCommand}
           </p>
-          <p className="mt-2 mb-0 text-tertiary-50 text-xs leading-ratio-body text-pretty">
+          <p className="mt-2 mb-0 text-(color:--color-text) text-xs leading-ratio-body text-pretty">
             {copy.qrBody[locale]}
           </p>
           <p className="mt-2 mb-0 text-tertiary-400 text-xs">{siteLabel}</p>

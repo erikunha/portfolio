@@ -25,7 +25,7 @@ export function StatusBar() {
     >
       <div className="flex items-center gap-2">
         <span className="text-(color:--color-accent) font-bold">{time}</span>
-        <span className="text-tertiary-50 opacity-85">DEV_OS</span>
+        <span className="text-(color:--color-text) opacity-85">DEV_OS</span>
       </div>
       <div className="inline-flex items-center gap-1.5" aria-hidden>
         <span className="inline-flex items-end gap-0.5">

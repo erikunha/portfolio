@@ -36,12 +36,12 @@
 
   .eq-curve {
     z-index: var(--z-local-above);
-    filter: drop-shadow(0 0 var(--eq-curve-glow) var(--color-tertiary-50));
+    filter: drop-shadow(0 0 var(--eq-curve-glow) var(--color-text));
   }
 
   .eq-curve path {
     fill: none;
-    stroke: var(--color-tertiary-50);
+    stroke: var(--color-text);
     stroke-width: var(--eq-curve-stroke);
     stroke-linejoin: round;
     vector-effect: non-scaling-stroke;

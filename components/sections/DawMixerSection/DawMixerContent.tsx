@@ -210,7 +210,7 @@ function ChannelMobile({ ch, copy }: { ch: DawMixerChannel; copy: DawMixerCopy }
         <span
           className={cn(
             'text-sm font-bold tracking-xs leading-ratio-1-15 min-w-0 overflow-hidden text-ellipsis whitespace-nowrap',
-            ch.focused || isMaster ? 'text-(color:--color-accent)' : 'text-tertiary-50',
+            ch.focused || isMaster ? 'text-(color:--color-accent)' : 'text-(color:--color-text)',
           )}
         >
           {ch.name}
@@ -289,7 +289,7 @@ function ChannelMobile({ ch, copy }: { ch: DawMixerChannel; copy: DawMixerCopy }
 export function DawMixerMobile({ mixer, copy }: { mixer: DawMixer; copy: DawMixerCopy }) {
   return (
     <div
-      className="font-mono text-xs text-tertiary-50 flex flex-col"
+      className="font-mono text-xs text-(color:--color-text) flex flex-col"
       data-testid="daw-mixer-mobile"
     >
       <SessionHeaderMobile mixer={mixer} copy={copy} />

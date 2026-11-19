@@ -126,7 +126,7 @@ test.describe('type scale', { tag: '@cross-browser' }, () => {
         .locator('.career-body')
         .first()
         .evaluate((el) => getComputedStyle(el).color);
-      expect(color, 'the career description is a sentence, so it carries --color-tertiary-50').toBe(
+      expect(color, 'the career description is a sentence, so it carries --color-text').toBe(
         BODY_RGB,
       );
     });

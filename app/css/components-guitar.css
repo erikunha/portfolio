@@ -6,7 +6,7 @@
     font-family: var(--font-mono);
     font-size: var(--text-sm);
     --leading: var(--guitar-line-height);
-    color: var(--color-tertiary-50);
+    color: var(--color-text);
   }
 
   .guitar-eq-panel {
@@ -108,7 +108,7 @@
   .guitar-chain-label {
     margin: 0;
     padding: var(--phi-space-1) var(--phi-space-2);
-    color: var(--color-tertiary-50);
+    color: var(--color-text);
     font-size: var(--text-xs);
     letter-spacing: var(--guitar-label-tracking);
     border-bottom: var(--border-width) solid var(--color-primary-quiet);

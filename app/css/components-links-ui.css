@@ -71,7 +71,7 @@
   .links-identity-meta dd {
     margin: 0;
     min-width: 0;
-    color: color-mix(in srgb, var(--color-tertiary-50) 85%, transparent);
+    color: color-mix(in srgb, var(--color-text) 85%, transparent);
     overflow-wrap: break-word;
     text-wrap: pretty;
   }
@@ -140,7 +140,7 @@
 
   .links-history-title {
     display: block;
-    color: var(--color-tertiary-50);
+    color: var(--color-text);
     font-size: var(--text-xs);
     --leading: 1.45;
     text-wrap: pretty;

@@ -24,7 +24,7 @@ export function Preview({ id, source, children }: PreviewProps) {
               tabIndex={0}
               role="group"
               aria-label={previewSourceAriaLabel(id)}
-              className="m-0 px-6 py-4 overflow-x-auto font-mono text-xs text-tertiary-50 border-t border-dashed border-(color:--color-border)"
+              className="m-0 px-6 py-4 overflow-x-auto font-mono text-xs text-(color:--color-text) border-t border-dashed border-(color:--color-border)"
             >
               <code>{source}</code>
             </pre>
