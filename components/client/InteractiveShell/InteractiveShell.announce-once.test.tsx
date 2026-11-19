@@ -1,5 +1,10 @@
 import { act } from 'react';
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
+import {
+  accessibleChanges,
+  accessibleText,
+  recordMutations,
+} from '@/__tests__/helpers/accessibility-tree';
 import { flushFrames, flushMicrotasks, type MountedClient } from '@/__tests__/helpers/render';
 import { renderShell, submitCommand, typeCommand } from '@/__tests__/helpers/shell';
 import { shellUi } from '@/content/shell-ui';
@@ -9,51 +14,11 @@ const MODULE_WARMUP_TIMEOUT_MS = 30_000;
 const QUESTION = 'what are your strengths?';
 const FRAMES = ['alphamark', ' bravomark', ' charliemark'];
 const ANSWER = FRAMES.join('');
-const HIDDEN = '[aria-hidden="true"]';
 const ui = shellUi[SITE_LOCALE.en];
 
 beforeAll(async () => {
   await Promise.all([import('./InteractiveShell'), import('react-dom/client')]);
 }, MODULE_WARMUP_TIMEOUT_MS);
-
-function accessibleText(node: Node): string {
-  if (node instanceof Element && node.matches(HIDDEN)) return '';
-  if (node.nodeType === Node.TEXT_NODE) return node.textContent ?? '';
-  return Array.from(node.childNodes, accessibleText).join('');
-}
-
-function exposed(node: Node): boolean {
-  const element = node instanceof Element ? node : node.parentElement;
-  return element !== null && element.closest(HIDDEN) === null;
-}
-
-const OBSERVED = { childList: true, subtree: true, characterData: true } as const;
-
-function recordMutations(target: Node): { records: MutationRecord[]; stop: () => void } {
-  const records: MutationRecord[] = [];
-  const observer = new MutationObserver((batch) => records.push(...batch));
-  observer.observe(target, OBSERVED);
-  return {
-    records,
-    stop: () => {
-      records.push(...observer.takeRecords());
-      observer.disconnect();
-    },
-  };
-}
-
-function accessibleChanges(records: MutationRecord[]): string[] {
-  const changes: string[] = [];
-  for (const record of records) {
-    if (record.type === 'characterData' && exposed(record.target)) {
-      changes.push(record.target.textContent ?? '');
-    }
-    for (const added of record.addedNodes) {
-      if (exposed(added)) changes.push(accessibleText(added));
-    }
-  }
-  return changes;
-}
 
 describe('InteractiveShell streamed answer reaches assistive tech once', () => {
   let mounted: MountedClient;
