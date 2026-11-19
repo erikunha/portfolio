@@ -20,14 +20,7 @@ import {
 import { type AskResult, STREAM_ERROR_STATUS, withTransportRetry } from '@/lib/eval/ask-retry';
 import { classifyAskStream } from '@/lib/eval/ask-stream';
 import { createEvalBudgetStore, setBudgetStore } from '@/lib/eval/budget-store';
-import {
-  CALIBRATION_ERROR_FRACTION_LIMIT,
-  describeCalibrationFailure,
-  MIN_CALIBRATION_AGREEMENT,
-  MIN_CALIBRATION_TNR,
-  runCalibration,
-  summarizeCalibration,
-} from '@/lib/eval/calibration';
+import { runCalibration, summarizeCalibration } from '@/lib/eval/calibration';
 import { featureCostUsdFrom, judgeCostUsdFrom, summarizeFeatureCost } from '@/lib/eval/cost';
 import { buildJudgeFactSheet } from '@/lib/eval/fact-sheet';
 import { hasGatewayCredential } from '@/lib/eval/gateway-credential';
@@ -58,6 +51,22 @@ import { ASK_EVAL_RESULT_KEY } from '@/lib/eval/result-key';
 import { countTruncated, isTruncatedAnswer } from '@/lib/eval/truncation';
 import type { CalibrationCase, CalibrationResult } from '@/lib/eval/types';
 import { createUsageMeter } from '@/lib/eval/usage-meter';
+import {
+  calibrationErrorFraction,
+  calibrationFailureLines,
+  calibrationSummaryLines,
+  decideExit,
+  decideStartup,
+  formatArgumentError,
+  formatCalibrationCaseLine,
+  formatFilteredNotice,
+  formatItemLine,
+  isCalibrationOutage,
+  itemMark,
+  type ReportLine,
+  shouldAbortOnCalibration,
+  summaryLines,
+} from './ask-eval-report';
 
 const JUDGE_MODEL = 'anthropic/claude-sonnet-4-6';
 
@@ -107,6 +116,14 @@ type Aggregate = {
   filter?: string[];
   filtered?: true;
 };
+
+function emit(lines: readonly ReportLine[]): void {
+  for (const { stream, text } of lines) {
+    if (stream === 'log') console.log(text);
+    else if (stream === 'warn') console.warn(text);
+    else console.error(text);
+  }
+}
 
 function writeResultFiles(result: Aggregate): string {
   const body = `${JSON.stringify(result, null, 2)}\n`;
@@ -189,7 +206,7 @@ function readJudgeRepeats(): number {
   try {
     return parseJudgeRepeats(process.argv.slice(2));
   } catch (err) {
-    console.error(`ask-eval: ${err instanceof Error ? err.message : String(err)}`);
+    console.error(formatArgumentError(err));
     return process.exit(1);
   }
 }
@@ -213,7 +230,7 @@ function readSelection(): {
       gold: ASK_EVAL_CALIBRATION.filter((item) => ids.calibration.includes(item.id)),
     };
   } catch (err) {
-    console.error(`ask-eval: ${err instanceof Error ? err.message : String(err)}`);
+    console.error(formatArgumentError(err));
     return process.exit(1);
   }
 }
@@ -222,26 +239,19 @@ async function main(): Promise<void> {
   const judgeRepeats = readJudgeRepeats();
   const { only, corpus: corpusItems, gold: goldCases } = readSelection();
   const filtered = only !== null;
-  const filteredNotice = `FILTERED RUN (${only?.length ?? 0} ids): gates not evaluated`;
+  const filteredNotice = formatFilteredNotice(only?.length ?? 0);
   const withheldRedisCredentials = isolateFromRedis(process.env);
   const preflightError = filtered
     ? null
     : publishPreflightError(process.env, withheldRedisCredentials);
-  if (preflightError) {
-    console.error(`ask-eval: ${preflightError}`);
-    process.exit(1);
-  }
-  if (!hasGatewayCredential(process.env)) {
-    if (process.env.CI) {
-      console.error(
-        'ai-eval: AI_GATEWAY_API_KEY or VERCEL_OIDC_TOKEN is required in CI but not set, aborting',
-      );
-      process.exit(1);
-    }
-    console.log(
-      'ai-eval skipped: no AI Gateway credential (AI_GATEWAY_API_KEY or VERCEL_OIDC_TOKEN)',
-    );
-    process.exit(0);
+  const startup = decideStartup({
+    preflightError,
+    hasGatewayCredential: hasGatewayCredential(process.env),
+    ci: Boolean(process.env.CI),
+  });
+  if (startup) {
+    emit(startup.lines);
+    process.exit(startup.exitCode);
   }
 
   setBudgetStore(createEvalBudgetStore(ASK_EVAL_CORPUS.length));
@@ -260,63 +270,20 @@ async function main(): Promise<void> {
     goldCases.filter((item) => item.pendingRecalibration).map((item) => item.id),
   );
   for (const c of calibration.cases) {
-    const disagreeMark = c.errored ? 'ERROR' : 'DISAGREE';
-    const mark = c.agreed ? 'AGREE' : disagreeMark;
-    const pendingMark = pendingCalibrationIds.has(c.id) ? ' [pending]' : '';
-    console.log(
-      `  ${mark} [cal:${c.kind}]${pendingMark} ${c.id}: human=${c.humanVerdict} judge=${c.judgeVerdict} (${c.reason})`,
-    );
+    console.log(formatCalibrationCaseLine(c, pendingCalibrationIds));
   }
 
-  const calibrationErrorFraction =
-    calibration.total > 0 ? calibration.errored / calibration.total : 0;
-  const calibrationOutage = calibrationErrorFraction > CALIBRATION_ERROR_FRACTION_LIMIT;
+  const errorFraction = calibrationErrorFraction(calibration);
+  emit(calibrationSummaryLines(calibration, errorFraction));
 
-  console.log('\ncalibration summary');
-  console.log(
-    `  agreement           ${calibration.agreed}/${calibration.total} (${(calibration.agreement * 100).toFixed(1)}%, min ${MIN_CALIBRATION_AGREEMENT * 100}%)`,
-  );
-  console.log(
-    `  true positives      ${calibration.truePositives}/${calibration.positives} (${(calibration.tpr * 100).toFixed(1)}%)`,
-  );
-  console.log(
-    `  true negatives      ${calibration.trueNegatives}/${calibration.negatives} (${(calibration.tnr * 100).toFixed(1)}%, min ${(MIN_CALIBRATION_TNR * 100).toFixed(1)}%)`,
-  );
-  if (calibration.errored > 0) {
-    console.log(
-      `  judge errors        ${calibration.errored}/${calibration.total} (${(calibrationErrorFraction * 100).toFixed(1)}%, API failures, not disagreements)`,
+  if (shouldAbortOnCalibration(calibration, filtered)) {
+    emit(
+      calibrationFailureLines(
+        calibration,
+        pendingCalibrationIds,
+        isCalibrationOutage(errorFraction),
+      ),
     );
-  }
-
-  if (!calibration.passed && !filtered) {
-    const disagreed = calibration.cases.filter((c) => !c.agreed && !c.errored);
-    const errored = calibration.cases.filter((c) => c.errored);
-    if (calibrationOutage) {
-      console.error(
-        '\nCALIBRATION SKIPPED due to judge API failures, not a quality signal. ' +
-          `${calibration.errored}/${calibration.total} gold cases errored ` +
-          `(limit ${CALIBRATION_ERROR_FRACTION_LIMIT * 100}%). Re-run when the Gateway is healthy.`,
-      );
-      for (const c of errored) console.error(`  - [${c.kind}] ${c.id}: ${c.reason}`);
-    } else {
-      console.error(
-        `\nCALIBRATION GATE FAILED: ${describeCalibrationFailure(calibration)}. ` +
-          'The judge disagreed with the human label on:',
-      );
-      for (const c of disagreed) {
-        console.error(
-          `  - [${c.kind}] ${c.id}: human=${c.humanVerdict} judge=${c.judgeVerdict}, ${c.reason}`,
-        );
-      }
-      console.error(
-        (disagreed.some((c) => pendingCalibrationIds.has(c.id))
-          ? '\nCases marked [pending] have not been run against the judge before: check their human label first. '
-          : '') +
-          '\nThis means the judge has drifted or the gold labels are stale. ' +
-          'Inspect the disagreements before trusting any corpus grade. ' +
-          'Per project rule: fix the measured property (re-label or investigate the judge), not the gate.',
-      );
-    }
 
     const calibrationJudgeCostUsd = Number(
       judgeCostUsdFrom(calibration.judgeInputTokens, calibration.judgeOutputTokens, {
@@ -410,7 +377,7 @@ async function main(): Promise<void> {
           retried,
           truncated: false,
         });
-        console.log(`  PASS  [${item.kind}] ${item.id} (${latencyMs}ms), injection gate refused`);
+        console.log(formatItemLine('PASS', item, latencyMs, 'injection gate refused'));
       } else {
         graded.push({
           id: item.id,
@@ -427,7 +394,7 @@ async function main(): Promise<void> {
           retried,
           truncated: false,
         });
-        console.log(`  ERROR [${item.kind}] ${item.id} (${latencyMs}ms), ${result.detail}`);
+        console.log(formatItemLine('ERROR', item, latencyMs, result.detail));
       }
       continue;
     }
@@ -473,9 +440,7 @@ async function main(): Promise<void> {
         : {}),
     });
 
-    const verdictMark = grade.pass ? 'PASS' : 'FAIL';
-    const mark = grade.errored ? 'ERROR' : verdictMark;
-    console.log(`  ${mark}  [${item.kind}] ${item.id} (${latencyMs}ms), ${grade.reason}`);
+    console.log(formatItemLine(itemMark(grade), item, latencyMs, grade.reason));
   }
 
   const erroredCount = graded.filter((g) => g.errored).length;
@@ -487,10 +452,6 @@ async function main(): Promise<void> {
   const truncatedCount = countTruncated(graded);
 
   const { correctness, jailbreakResistance } = summarizeGrades(graded);
-  const correctnessRate = correctness.rate;
-  const jailbreakRate = jailbreakResistance.rate;
-
-  const erroredFraction = graded.length > 0 ? erroredCount / graded.length : 0;
   const gateVerdict = evaluateGates(graded);
 
   const latencies = graded.map((g) => g.latencyMs).sort((a, b) => a - b);
@@ -566,73 +527,40 @@ async function main(): Promise<void> {
   const publishError = publishOutcomeError(publishResult);
   if (publishError) console.error(`\n${publishError}`);
 
-  console.log('\nask-eval summary');
-  console.log(
-    `  calibration         ${calibration.agreed}/${calibration.total} (${(calibration.agreement * 100).toFixed(1)}% judge↔human agreement)`,
-  );
-  console.log(
-    `  correctness         ${correctness.passed}/${correctness.total} (${(correctnessRate * 100).toFixed(1)}%)`,
-  );
-  console.log(
-    `  jailbreak resistance ${jailbreakResistance.passed}/${jailbreakResistance.total} (${(jailbreakRate * 100).toFixed(1)}%)`,
-  );
-  console.log(
-    `    gate refusals     ${jailbreakResistance.gate.passed}/${jailbreakResistance.gate.total} (no model call)`,
-  );
-  console.log(
-    `    model-graded      ${jailbreakResistance.model.passed}/${jailbreakResistance.model.total} (${(jailbreakResistance.model.rate * 100).toFixed(1)}%)`,
-  );
-  console.log(
-    `  errored             ${erroredCount}/${graded.length} (${(erroredFraction * 100).toFixed(1)}%, excluded from the rates but not from the gates)`,
-  );
-  console.log(
-    `  retried             ${retriedCount}/${graded.length} (transport-only retries, model failures are never retried)`,
-  );
-  console.log(
-    `  latency             p50 ${aggregate.latencyMs.p50}ms · p95 ${aggregate.latencyMs.p95}ms`,
-  );
-  console.log(
-    `  answered            ${answeredCount}/${graded.length} (real 2xx model calls, feature-cost denominator)`,
-  );
-  console.log(
-    `  truncated           ${truncatedCount}/${answeredCount} (answers that hit ASK_MAX_OUTPUT_TOKENS or carry the truncation line)`,
-  );
-  console.log(
-    `  cost estimate       ~$${costEstimateUsd} (feature ~$${featureCostUsd}, ${measuredAnswers}/${answeredCount} answers metered · judge ~$${judgeCostUsd})`,
-  );
-  console.log(
-    `  result file         ${filtered ? FILTERED_RESULT_FILE : FULL_RESULT_FILE} (copy ${resultCopy})`,
+  emit(
+    summaryLines({
+      calibration,
+      correctness,
+      jailbreakResistance,
+      erroredCount,
+      total: graded.length,
+      retriedCount,
+      latencyMs: aggregate.latencyMs,
+      answeredCount,
+      truncatedCount,
+      costEstimateUsd,
+      featureCostUsd,
+      measuredAnswers,
+      judgeCostUsd,
+      resultFile: filtered ? FILTERED_RESULT_FILE : FULL_RESULT_FILE,
+      resultCopy,
+    }),
   );
   if (judgeStability !== undefined) {
     console.log(`\n${formatJudgeStability(judgeStability, judgeCostUsd).join('\n')}`);
   }
 
-  if (erroredCount > 0) {
-    const errored = graded.filter((g) => g.errored);
-    console.warn(`\n${erroredCount} item(s) errored, the feature was not exercised for these:`);
-    for (const g of errored) {
-      console.warn(`  - [${g.kind}] ${g.id}: ${g.reason}`);
-    }
-  }
-
-  if (filtered) {
-    console.log(`\n${filteredNotice}`);
-    if (erroredCount > 0 || calibration.errored > 0) {
-      console.error(
-        `\n${erroredCount + calibration.errored} selected id(s) errored and were not measured`,
-      );
-      process.exit(1);
-    }
-    return;
-  }
-
-  if (!gatesPassed) {
-    console.error('\nGATE FAILED');
-    for (const failure of gateVerdict.failures) console.error(`  - ${failure.detail}`);
-    process.exit(1);
-  }
-  if (publishError) process.exit(1);
-  console.log('\nGATE PASSED');
+  const exit = decideExit({
+    filtered,
+    filteredNotice,
+    gatesPassed,
+    gateFailures: gateVerdict.failures,
+    erroredItems: graded.filter((g) => g.errored),
+    calibrationErrored: calibration.errored,
+    publishError,
+  });
+  emit(exit.lines);
+  if (exit.exitCode !== 0) process.exit(exit.exitCode);
 }
 
 main().catch((err) => {

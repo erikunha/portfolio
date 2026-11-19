@@ -51,7 +51,7 @@ The eval code lives in `lib/eval/`. It does not replace deterministic unit, type
 
 ### `pnpm ask:eval`: the product eval
 
-`scripts/eval/ask-eval.ts` evaluates the `/api/ask` product in three steps and exits 1 when a gate fails.
+`scripts/eval/ask-eval.ts` evaluates the `/api/ask` product in three steps and exits 1 when a gate fails. The runner drives the steps; `scripts/eval/ask-eval-report.ts` holds the printed lines and the exit decision as pure functions, so the exit codes have table tests.
 
 1. **Calibration.** `content/ask-eval-calibration.ts` holds gold cases: a question, an expectation, a canonical answer and the human verdict. The judge (`lib/eval/judge.ts`, a Sonnet-class model through the AI Gateway) grades them. `lib/eval/calibration.ts` gates judge-human agreement and the true-negative rate separately, reports the true-positive rate, and treats a judge outage as a failed calibration. A case marked `pendingRecalibration` prints as `[pending]`.
 2. **Corpus.** `content/ask-eval-corpus.ts` holds the items, each of kind `factual`, `edge`, `jailbreak` or `output-validation`, with an optional pt-BR locale and a few required facts. Expectations read live content, so a grounded claim changes with its source. Each item goes through the real `POST` handler in-process from its own client address, against an in-memory budget store (`createEvalBudgetStore` in `lib/eval/budget-store.ts`, installed through `setBudgetStore` from `lib/ask/budget.ts`), and the judge grades the answer against the expectation and a ground-truth fact sheet built from live content (`lib/eval/fact-sheet.ts`). A jailbreak item the input gate refuses counts separately from one the model answered.

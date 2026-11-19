@@ -498,6 +498,7 @@ tests/visual/                         # visual-regression snapshots
 tests/mocks/                          # shared test mocks
 
 scripts/eval/ask-eval.ts              # ask eval harness, correctness, jailbreak, cost
+scripts/eval/ask-eval-report.ts       # pure report lines and exit decisions of the ask eval
 scripts/metrics/                      # weekly delivery-metrics collection, band scoring and issue filing
 metrics/bands.json                    # rolling bands each delivery metric is scored against
 __tests__/                            # repo-wide Vitest invariants: docs counts, content parity, API behavior, meta checks
