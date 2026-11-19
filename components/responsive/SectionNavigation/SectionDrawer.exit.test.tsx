@@ -14,6 +14,7 @@ import {
 const LOCALE = SITE_LOCALE.en;
 const SCROLL_LOCK = 'data-scroll-locked';
 const SLIDE_MS = 200;
+const MS_PER_SECOND = 1000;
 const FALLBACK_SLACK_MS = 1000;
 
 function Trigger() {
@@ -45,9 +46,14 @@ function Page() {
 
 const panel = () => document.getElementById(DRAWER_ID) as HTMLDialogElement;
 
-function endSlide(property = 'transform', target: Element = panel()) {
+function endSlide(
+  property = 'transform',
+  target: Element = panel(),
+  elapsedTime = SLIDE_MS / MS_PER_SECOND,
+) {
   const event = new Event('transitionend', { bubbles: true });
   Object.defineProperty(event, 'propertyName', { value: property });
+  Object.defineProperty(event, 'elapsedTime', { value: elapsedTime });
   act(() => {
     target.dispatchEvent(event);
   });
@@ -97,6 +103,15 @@ describe('the drawer exit slide', () => {
     endSlide('opacity');
     endSlide('transform', panel().querySelector('.menu-close') as Element);
     expect(panel().open).toBe(true);
+  });
+
+  it('ignores a transform end that reports no elapsed time, which cut the slide short on Linux Chromium', () => {
+    openSliding();
+    fireEvent.keyDown(document, { key: 'Escape' });
+    endSlide('transform', panel(), 0);
+    expect(panel().open, 'a zero-elapsed end is not the end of the slide').toBe(true);
+    endSlide();
+    expect(panel().open).toBe(false);
   });
 
   it('closes after the named duration when no transition end arrives', () => {

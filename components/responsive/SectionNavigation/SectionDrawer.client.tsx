@@ -24,6 +24,7 @@ const SCROLL_LOCK_ATTRIBUTE = 'data-scroll-locked';
 const EXIT_PROPERTY = 'transform';
 const EXITING_ATTRIBUTE = 'data-exiting';
 const EXIT_FALLBACK_SLACK_MS = 50;
+const NO_ELAPSED_TIME = 0;
 
 export function SectionNavigation({ extra }: { extra?: ReactNode }) {
   const { store, closeDrawer, settleDrawer, jump, toggleMotion, copy, chrome } =
@@ -58,7 +59,8 @@ export function SectionNavigation({ extra }: { extra?: ReactNode }) {
       panel.show();
       settleDrawer();
       const onTransitionEnd = (event: TransitionEvent) => {
-        if (event.target === panel && event.propertyName === EXIT_PROPERTY) done();
+        if (event.target !== panel || event.propertyName !== EXIT_PROPERTY) return;
+        if (event.elapsedTime !== NO_ELAPSED_TIME) done();
       };
       const timer = setTimeout(() => done(), slideMs + EXIT_FALLBACK_SLACK_MS);
       const done = () => {
