@@ -34,6 +34,7 @@ export const CONTACT_STATUS = {
 export type ContactStatus = (typeof CONTACT_STATUS)[keyof typeof CONTACT_STATUS];
 
 export const CONTACT_FIELDS = Object.values(CONTACT_FIELD);
+export const CONTACT_HONEYPOT_FIELD = 'field_company';
 
 const CONTACT_ENDPOINT = '/api/contact';
 const REQUEST_TIMEOUT_MS = 20_000;
@@ -73,13 +74,29 @@ export function useContactSubmit({
     dispatch({ type: 'edited', field, error });
   }
 
-  async function submit(event: FormEvent) {
+  function submit(event: FormEvent) {
     event.preventDefault();
+    return send(values, honeypot);
+  }
+
+  function submitFromFormData(data: FormData) {
+    const field = (name: string) => {
+      const entry = data.get(name);
+      return typeof entry === 'string' ? entry : '';
+    };
+    const sent = Object.fromEntries(CONTACT_FIELDS.map((name) => [name, field(name)])) as Record<
+      ContactField,
+      string
+    >;
+    return send(sent, field(CONTACT_HONEYPOT_FIELD));
+  }
+
+  async function send(sentValues: Record<ContactField, string>, sentHoneypot: string) {
     if (pendingRef.current) return;
     const fieldErrors: ContactFieldErrors = {};
     for (const field of CONTACT_FIELDS) {
-      if (!FIELD_CHECKS[field](values[field])) {
-        fieldErrors[field] = contactFieldError(copy, field, values[field]);
+      if (!FIELD_CHECKS[field](sentValues[field])) {
+        fieldErrors[field] = contactFieldError(copy, field, sentValues[field]);
       }
     }
     dispatch({ type: 'validated', errors: fieldErrors });
@@ -89,7 +106,7 @@ export function useContactSubmit({
     try {
       const { response: res, data } = await postJson<ContactResponse>(
         CONTACT_ENDPOINT,
-        { ...values, field_company: honeypot },
+        { ...sentValues, [CONTACT_HONEYPOT_FIELD]: sentHoneypot },
         { headers: { [SITE_LOCALE_HEADER]: pageLocale }, timeoutMs: REQUEST_TIMEOUT_MS },
       );
       const apiError = data?.error;
@@ -133,6 +150,7 @@ export function useContactSubmit({
     failureCount: state.failureCount,
     noteEdit,
     submit,
+    submitFromFormData,
     dismiss,
   };
 }

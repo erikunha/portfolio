@@ -693,6 +693,8 @@ The normalized off-keyword set is defined in `lib/ask/preflight.ts`.
 [outbox saved: 202 queued + requestId; outbox unavailable or full: stored record deleted, 502 delivery_unavailable]
 ```
 
+The client has two entries into one send. The live path is `onSubmit`: it calls `preventDefault` and sends the values held in state. The `<form>` also carries a React `action` (`submitFromFormData` in `useContactSubmit.ts`) that reads the three fields and the honeypot from `FormData`. A send click before the lazy form chunk commits is queued by React's form replay and runs that action once after hydration, with the fields as typed. On the live path `preventDefault` makes React skip the action, so one submit sends once. Held by `tests/e2e/contact-early-send.spec.ts`.
+
 The route parses, validates and answers HTTP; `submitContact` (`lib/contact/submit.ts`) runs the save, delivery and outbox steps with its dependencies passed in and returns `sent`, `queued`, `storage_failed` or `outbox_failed`. `lib/contact/outbox.ts` owns the record writes (`saveContactMessage`, `deleteContactMessage`).
 
 ### Why KV before Resend

@@ -1,3 +1,4 @@
+import { setTimeout as delay } from 'node:timers/promises';
 import { expect, type Locator, type Page } from '@playwright/test';
 import { openSectionMenu, waitForHydration } from './hydration';
 
@@ -5,8 +6,10 @@ export const CONTACT_FORM_SELECTOR = '[data-testid="contact-form"]';
 
 const CONTACT_LINK_NAME = /contact/i;
 const SEND_BUTTON_NAME = 'EXECUTE_SEND';
+const FORM_CHUNK_MARKER = 'contact-form';
 const CONTACT_ENDPOINT_SUFFIX = '/api/contact';
 const POST_METHOD = 'POST';
+const POST_TIMEOUT_MS = 5_000;
 const SEND_REACHED_ENDPOINT =
   'no POST reached /api/contact: the send click was dropped before the handler (click before commit)';
 
@@ -24,12 +27,34 @@ export async function openContactFromMenu(page: Page): Promise<Locator> {
   return form;
 }
 
-export async function sendVisitorMessage(form: Locator): Promise<void> {
-  await waitForHydration(form.page(), CONTACT_FORM_SELECTOR);
+export async function fillVisitorMessage(form: Locator): Promise<void> {
   await form.getByLabel('$ name:').fill(VISITOR.name);
   await form.getByLabel('$ email:').fill(VISITOR.email);
   await form.getByLabel('$ message:').fill(VISITOR.message);
+}
+
+export async function clickSend(form: Locator): Promise<void> {
   await form.getByRole('button', { name: SEND_BUTTON_NAME, exact: true }).click();
+}
+
+export async function sendVisitorMessage(form: Locator): Promise<void> {
+  await waitForHydration(form.page(), CONTACT_FORM_SELECTOR);
+  await fillVisitorMessage(form);
+  await clickSend(form);
+}
+
+export async function holdContactFormChunk(page: Page, holdMs: number): Promise<() => number> {
+  let held = 0;
+  await page.route('**/_next/static/**/*.js', async (route) => {
+    const response = await route.fetch();
+    const body = await response.text();
+    if (body.includes(FORM_CHUNK_MARKER)) {
+      held += 1;
+      await delay(holdMs);
+    }
+    await route.fulfill({ response, body });
+  });
+  return () => held;
 }
 
 export function trackContactPosts(page: Page): () => number {
@@ -42,6 +67,9 @@ export function trackContactPosts(page: Page): () => number {
   return () => posts;
 }
 
-export async function expectOneContactPost(posts: () => number): Promise<void> {
-  await expect.poll(posts, { message: SEND_REACHED_ENDPOINT }).toBe(1);
+export async function expectOneContactPost(
+  posts: () => number,
+  timeout = POST_TIMEOUT_MS,
+): Promise<void> {
+  await expect.poll(posts, { message: SEND_REACHED_ENDPOINT, timeout }).toBe(1);
 }

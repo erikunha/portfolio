@@ -225,17 +225,17 @@ The prompt for a manual or agent review that applies these rules to a diff is `d
     `scripts/__tests__/install-playwright-browsers-apt-partial.test.ts`.
 54. A journey that reaches the contact form through the section menu waits for the form's own
     hydration, not the menu trigger's. The form is a `React.lazy` island: its server-rendered
-    markup is visible, fillable and clickable while its chunk loads, and a send click in that
-    window is dropped with no error and no replay (measured with the chunk held: no request, no
-    success, the typed values adopted afterwards). `openSectionMenu` covers the opener only. Use
-    `openContactFromMenu` (`tests/e2e/_helpers/contact-journey.ts`), which ends with
-    `waitForHydration` on the form, inside `sendVisitorMessage`. Check:
-    `tests/e2e/contact-delivery-hydration.spec.ts` holds the form's chunk for 5 s, asserts the form
-    is visible and not yet committed during the hold (so a run whose window never opened fails
-    instead of passing), and fails when the helper sends before the commit. The natural cause of the one reported failure is
-    unconfirmed: only the held chunk reproduces it, and a stalled `/api/contact` mock or POST
-    would look the same (no success). The delivery spec counts POSTs and asserts exactly one
-    before it reads the success state, so the next natural failure says which one it was.
+    markup is visible, fillable and clickable while its chunk loads. `openSectionMenu` covers the
+    opener only. `sendVisitorMessage` (`tests/e2e/_helpers/contact-journey.ts`) waits for the form
+    with `waitForHydration` before it fills and clicks, so a journey step acts once on a committed
+    form (lesson 31). The product replays a send click made in that window (the form's React
+    `action` reads `FormData`; `tests/e2e/contact-early-send.spec.ts` holds the chunk for 5 s,
+    asserts the form is visible and uncommitted, clicks once and expects one POST and the success
+    state), so the wait is for determinism, not for correctness. The natural cause of the one
+    reported delivery failure is unconfirmed: only the held chunk ever reproduced it, and a
+    stalled `/api/contact` mock or POST looks the same (no success). The delivery spec counts
+    POSTs and asserts exactly one before it reads the success state, so the next natural failure
+    says which one it was.
 
 ## Pre-push judgement list
 

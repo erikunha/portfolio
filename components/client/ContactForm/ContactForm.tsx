@@ -25,7 +25,12 @@ import { useMessageStore } from '../ContactIsland/ContactIslandProvider.client';
 import { ContactResult } from './ContactResult';
 import { ContactShell } from './ContactShell';
 import { errorMailto } from './contact-form-checks';
-import { CONTACT_FIELDS, CONTACT_STATUS, useContactSubmit } from './useContactSubmit';
+import {
+  CONTACT_FIELDS,
+  CONTACT_HONEYPOT_FIELD,
+  CONTACT_STATUS,
+  useContactSubmit,
+} from './useContactSubmit';
 
 const MESSAGE_ROWS = 5;
 type TypedField = Exclude<ContactField, typeof CONTACT_FIELD.MESSAGE>;
@@ -52,6 +57,7 @@ export function ContactForm({ copy, chrome }: { copy: ContactContent; chrome: Te
     failureCount,
     noteEdit,
     submit,
+    submitFromFormData,
     dismiss,
   } = useContactSubmit({ copy, values, honeypot });
   const formRef = useRef<HTMLFormElement | null>(null);
@@ -122,7 +128,7 @@ export function ContactForm({ copy, chrome }: { copy: ContactContent; chrome: Te
     <ContactShell chrome={chrome}>
       <form
         ref={attachForm}
-        method="dialog"
+        action={submitFromFormData}
         onSubmit={submit}
         noValidate
         className="contact-form"
@@ -171,7 +177,7 @@ export function ContactForm({ copy, chrome }: { copy: ContactContent; chrome: Te
         )}
         <input
           type="text"
-          name="field_company"
+          name={CONTACT_HONEYPOT_FIELD}
           value={honeypot}
           onChange={(event) => setHoneypot(event.target.value)}
           tabIndex={-1}
