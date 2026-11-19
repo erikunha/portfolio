@@ -24,8 +24,12 @@ const HEADING_DATE_PREFIX = /^\d{4}-\d{2}-\d{2}[:,]\s*/;
 const BOLD_LEAD = /^\*\*(.+?)\*\*/;
 const SENTENCE_END = /[.!?](?:\s|$)/;
 const TRAILING_PERIOD = /\.$/;
-const PARTLY_SUPERSEDED = /\bSuperseded in part\b/;
-const SUPERSEDED = /\bSuperseded\b/;
+const SUPERSEDED_MARKER_OPEN = /(?<![`\p{L}\p{N}])Superseded/u.source;
+const PARTLY_SUPERSEDED = new RegExp(`${SUPERSEDED_MARKER_OPEN} in part`, 'u');
+const SUPERSEDED = new RegExp(
+  `${SUPERSEDED_MARKER_OPEN}(?: \\(| \\d{4}-| by | the same day| below|:)`,
+  'u',
+);
 const REVERSIBLE_NOTE = '_Reversib';
 const NOTE_DELIMITER = /^Reversib[a-z ()]*?[:.;,]\s*/;
 const CLAUSE_END = /;|\.(?:\s|$)/;
