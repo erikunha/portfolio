@@ -45,9 +45,9 @@ describe('parseThemeColors', () => {
   it('resolves an alias of an alias whichever order the declarations come in', () => {
     expect(
       parseThemeColors(
-        '--color-text: var(--color-sage-50); --color-sage-50: var(--color-tertiary-50); --color-tertiary-50: #e6ffe6;',
+        '--color-text: var(--color-sage-50); --color-sage-50: var(--color-base-50); --color-base-50: #e6ffe6;',
       ),
-    ).toEqual({ text: '#e6ffe6', 'sage-50': '#e6ffe6', 'tertiary-50': '#e6ffe6' });
+    ).toEqual({ text: '#e6ffe6', 'sage-50': '#e6ffe6', 'base-50': '#e6ffe6' });
   });
 
   it('keeps an alias whose target is missing, so the contrast check fails loudly on it', () => {

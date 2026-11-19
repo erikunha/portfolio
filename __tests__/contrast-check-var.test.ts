@@ -11,7 +11,6 @@ const SCRIPT = join(process.cwd(), 'scripts/gates/contrast-check.ts');
 const PALETTE = `
   --color-carbon-950: #000000;
   --color-carbon-900: #000000;
-  --color-secondary-200: #e6ffe6;
   --color-sage-50: #e6ffe6;
   --color-sage-400: #e6ffe6;
   --color-sage-500: #e6ffe6;
