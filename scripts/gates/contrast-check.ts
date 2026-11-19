@@ -39,12 +39,12 @@ const PAIRS: Pair[] = [
   ['signal-700', 'secondary-950', 4.5, 'site map links on base'],
   ['signal-700', 'secondary-900', 4.5, 'site map links on card'],
   ['signal-300', 'secondary-950', 4.5, 'faint text on base'],
-  ['tertiary-50', 'secondary-950', 4.5, 'tertiary-50 foreground title text on base'],
+  ['sage-50', 'secondary-950', 4.5, 'sage-50 foreground title text on base'],
   ['signal-500', 'secondary-950', 3.0, 'signal on base (large text)'],
-  ['tertiary-50', 'secondary-900', 4.5, 'body text on shell'],
-  ['tertiary-500', 'secondary-950', 4.5, 'form placeholder on base'],
+  ['sage-50', 'secondary-900', 4.5, 'body text on shell'],
+  ['sage-500', 'secondary-950', 4.5, 'form placeholder on base'],
   ['signal-500', 'secondary-900', 3.0, 'signal on shell (large text)'],
-  ['tertiary-400', 'secondary-950', 4.5, 'tertiary-400 meta text on base (/links)'],
+  ['sage-400', 'secondary-950', 4.5, 'sage-400 meta text on base (/links)'],
   ['senary-300', 'secondary-950', 4.5, 'alert text on base (errors, clip LED)'],
 ];
 

@@ -7,7 +7,7 @@
   --radius-*: initial;
   --shadow-*: initial;
 
-  --color-text: var(--color-tertiary-50);
+  --color-text: var(--color-sage-50);
   --color-text-secondary: #a1b3a1;
 
   --text-min: 0.8125rem;
@@ -213,6 +213,12 @@
   --color-signal-glow-55: var(--color-glow-55);
   --color-signal-glow-60: var(--color-glow-60);
 
+  --color-sage-50: var(--color-tertiary-50);
+  --color-sage-300: var(--color-tertiary-300);
+  --color-sage-400: var(--color-tertiary-400);
+  --color-sage-500: var(--color-tertiary-500);
+  --color-sage-900: var(--color-tertiary-900);
+
   --color-print-ink: #000000;
   --color-print-paper: #ffffff;
   --color-print-rule: #595959;
@@ -254,7 +260,7 @@
     --color-border-strong: var(--color-signal-subtle);
     --color-accent: var(--color-signal-500);
     --color-on-accent: var(--color-secondary-950);
-    --color-text-muted: var(--color-tertiary-400);
+    --color-text-muted: var(--color-sage-400);
     --color-focus: var(--color-signal-500);
     --color-warning: var(--color-quinary-500);
     --color-danger: var(--color-senary-500);

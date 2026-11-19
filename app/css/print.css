@@ -14,9 +14,9 @@
       --color-signal-900: var(--color-print-ink);
       --color-signal-faint: transparent;
       --color-signal-quiet: transparent;
-      --color-tertiary-300: var(--color-print-ink);
-      --color-tertiary-500: var(--color-print-rule);
-      --color-tertiary-900: var(--color-print-paper);
+      --color-sage-300: var(--color-print-ink);
+      --color-sage-500: var(--color-print-rule);
+      --color-sage-900: var(--color-print-paper);
       --color-senary-300: var(--color-print-ink);
       --color-eq-bar-top: var(--color-print-ink);
       --color-eq-bar-bottom: var(--color-print-rule);

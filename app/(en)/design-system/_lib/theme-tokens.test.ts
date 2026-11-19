@@ -38,8 +38,16 @@ describe('parseThemeColors', () => {
 
   it('resolves a var(--color-x) alias to the value it points at, so swatches print the hex', () => {
     expect(
-      parseThemeColors('--color-text: var(--color-tertiary-50); --color-tertiary-50: #e6ffe6;'),
-    ).toEqual({ text: '#e6ffe6', 'tertiary-50': '#e6ffe6' });
+      parseThemeColors('--color-text: var(--color-sage-50); --color-sage-50: #e6ffe6;'),
+    ).toEqual({ text: '#e6ffe6', 'sage-50': '#e6ffe6' });
+  });
+
+  it('resolves an alias of an alias whichever order the declarations come in', () => {
+    expect(
+      parseThemeColors(
+        '--color-text: var(--color-sage-50); --color-sage-50: var(--color-tertiary-50); --color-tertiary-50: #e6ffe6;',
+      ),
+    ).toEqual({ text: '#e6ffe6', 'sage-50': '#e6ffe6', 'tertiary-50': '#e6ffe6' });
   });
 
   it('keeps an alias whose target is missing, so the contrast check fails loudly on it', () => {
@@ -57,10 +65,10 @@ describe('terminal theme contract', () => {
       accent: '#00ff41',
       'secondary-950': '#000000',
       'signal-500': '#00ff41',
-      'tertiary-50': '#e6ffe6',
+      'sage-50': '#e6ffe6',
       'signal-300': '#5ae07b',
       'signal-400': '#4ade80',
-      'tertiary-400': '#8a9d8a',
+      'sage-400': '#8a9d8a',
     });
   });
 

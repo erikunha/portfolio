@@ -25,7 +25,7 @@ describe('findRawTsxColors', () => {
   });
 
   it.each([
-    ['a token utility', '<div className="bg-signal-500 text-tertiary-50 border-signal-500" />'],
+    ['a token utility', '<div className="bg-signal-500 text-sage-50 border-signal-500" />'],
     ['a token reference', 'const s = { color: "var(--color-signal-500)" };'],
     ['a longer utility name', '<div className="bg-black-ish text-whitespace border-whiteout" />'],
     ['a non-color text utility', '<p className="text-lg text-center" />'],

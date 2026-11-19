@@ -10,7 +10,7 @@ import { compiledStylesheet } from './helpers/css-rules';
 const SUBPROCESS_TEST_TIMEOUT_MS = 60_000;
 const SCRIPT = path.join(process.cwd(), 'scripts/gates/contrast-check.ts');
 const PRIMITIVE_REFERENCE =
-  /^var\(--color-((?:signal|primary|secondary|tertiary|quinary|senary)-\w+)\)$/;
+  /^var\(--color-((?:signal|sage|primary|secondary|tertiary|quinary|senary)-\w+)\)$/;
 const PRINT_REFERENCE = /^var\(--color-print-(?:ink|paper|rule)\)$/;
 const PRINT_MEDIA = /^print$/;
 
@@ -102,7 +102,7 @@ describe('role contrast audit', { timeout: SUBPROCESS_TEST_TIMEOUT_MS }, () => {
     const declared = ROLES.filter((role) => role !== 'scrim' && role !== 'text');
     writeFileSync(
       theme,
-      `@theme {\n${PALETTE}\n--color-text: var(--color-tertiary-50);\n${declared
+      `@theme {\n${PALETTE}\n--color-text: var(--color-sage-50);\n${declared
         .map((role) => `--color-${role}: var(--color-${ROLE_TARGETS[role]});`)
         .join('\n')}\n}\n`,
     );
@@ -115,9 +115,9 @@ describe('role contrast audit', { timeout: SUBPROCESS_TEST_TIMEOUT_MS }, () => {
 const PALETTE = `
   --color-secondary-950: #000000;
   --color-secondary-900: #050505;
-  --color-tertiary-50: #e6ffe6;
-  --color-tertiary-400: #8a9d8a;
-  --color-tertiary-500: #6b7c6b;
+  --color-sage-50: #e6ffe6;
+  --color-sage-400: #8a9d8a;
+  --color-sage-500: #6b7c6b;
   --color-senary-300: #ff8a8a;
   --color-senary-500: #ff5f57;
   --color-quinary-500: #febc2e;
@@ -137,7 +137,7 @@ const ROLE_TARGETS: Record<string, string> = {
   'border-strong': 'signal-subtle',
   accent: 'signal-500',
   'on-accent': 'secondary-950',
-  'text-muted': 'tertiary-400',
+  'text-muted': 'sage-400',
   focus: 'signal-500',
   warning: 'quinary-500',
   danger: 'senary-500',

@@ -634,8 +634,8 @@
   }
 
   .ctz-status[data-online="false"] {
-    border-color: var(--color-tertiary-300);
-    color: var(--color-tertiary-300);
+    border-color: var(--color-sage-300);
+    color: var(--color-sage-300);
   }
 
   .ctz-banner {
@@ -918,7 +918,7 @@
 
   .ctz-cell {
     height: var(--spacing-4);
-    background: var(--color-tertiary-900);
+    background: var(--color-sage-900);
   }
 
   .ctz-cell[data-on="true"] {

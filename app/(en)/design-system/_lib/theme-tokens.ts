@@ -4,15 +4,22 @@ import { join } from 'node:path';
 const COLOR_DECLARATION = /--color-([\w-]+):\s*([^;]+);/g;
 const COLOR_ALIAS = /^var\(--color-([\w-]+)\)$/;
 
+const MAX_COLOR_ALIAS_DEPTH = 8;
+
+function resolveAlias(colors: Record<string, string>, value: string, depth: number): string {
+  const target = value.match(COLOR_ALIAS)?.[1];
+  const next = target === undefined ? undefined : colors[target];
+  if (next === undefined || depth >= MAX_COLOR_ALIAS_DEPTH) return value;
+  return resolveAlias(colors, next, depth + 1);
+}
+
 export function parseThemeColors(css: string): Record<string, string> {
   const colors: Record<string, string> = {};
   for (const [, name, value] of css.matchAll(COLOR_DECLARATION)) {
     if (name && value) colors[name.trim()] = value.trim();
   }
-  for (const [name, value] of Object.entries(colors)) {
-    const target = value.match(COLOR_ALIAS)?.[1];
-    const resolved = target === undefined ? undefined : colors[target];
-    if (resolved !== undefined) colors[name] = resolved;
+  for (const name of Object.keys(colors)) {
+    colors[name] = resolveAlias(colors, colors[name] ?? '', 0);
   }
   return colors;
 }

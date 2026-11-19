@@ -229,7 +229,7 @@
     font-size: var(--text-xs);
     --leading: 1.1;
     letter-spacing: var(--tracking-3xl);
-    color: var(--color-tertiary-300);
+    color: var(--color-sage-300);
   }
 
   .section-menu ul {
@@ -265,7 +265,7 @@
     flex: none;
     min-width: var(--spacing-target);
     font-size: var(--text-xs);
-    color: var(--color-tertiary-300);
+    color: var(--color-sage-300);
     text-align: center;
     font-variant-numeric: tabular-nums;
     white-space: nowrap;

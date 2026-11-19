@@ -8,8 +8,8 @@ const THEME = `@theme {
   --color-signal-400: #4ade80;
   --color-signal-500: #00ff41;
   --color-secondary-950: #000000;
-  --color-tertiary-50: #e6ffe6;
-  --color-text: var(--color-tertiary-50);
+  --color-sage-50: #e6ffe6;
+  --color-text: var(--color-sage-50);
 }
 @layer base {
   :root {
@@ -28,7 +28,7 @@ describe('rolePrimitives', () => {
     expect(Object.fromEntries(rolePrimitives(THEME))).toEqual({
       'signal-500': ['accent', 'focus'],
       'secondary-950': ['surface'],
-      'tertiary-50': ['text'],
+      'sage-50': ['text'],
     });
   });
 
@@ -60,8 +60,8 @@ describe('findPrimitiveColorUses', () => {
     ],
     [
       'a utility behind variants and an opacity modifier',
-      '<a className="md:hover:text-tertiary-50/80" />',
-      'text-tertiary-50 (use --color-text)',
+      '<a className="md:hover:text-sage-50/80" />',
+      'text-sage-50 (use --color-text)',
     ],
     [
       'a side border utility',
@@ -123,7 +123,7 @@ describe('scanRepo primitive colors', () => {
   it('reports a primitive in a component stylesheet, a TSX file and an MDX page', () => {
     write('app/css/components-card.css', '.card { color: var(--color-signal-500); }\n');
     write('components/Card.tsx', 'export const C = () => <p className="bg-secondary-950" />;\n');
-    write('app/page.mdx', '<div style={{ color: "var(--color-tertiary-50)" }} />\n');
+    write('app/page.mdx', '<div style={{ color: "var(--color-sage-50)" }} />\n');
     expect(
       scanRepo(root, ['base.css', 'components-card.css']).primitives.map(
         ({ file, line, literal }) => ({ file, line, literal }),
@@ -137,7 +137,7 @@ describe('scanRepo primitive colors', () => {
       {
         file: 'app/page.mdx',
         line: 1,
-        literal: '--color-tertiary-50 (use --color-text)',
+        literal: '--color-sage-50 (use --color-text)',
       },
       {
         file: 'components/Card.tsx',

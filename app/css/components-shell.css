@@ -476,7 +476,7 @@
   }
 
   .shell-receipt[data-state="pending"] .shell-receipt-id {
-    color: var(--color-tertiary-500);
+    color: var(--color-sage-500);
   }
 
   .shell-receipt-id code {

@@ -179,7 +179,7 @@
 
   .career-location {
     margin-right: var(--spacing-3);
-    color: var(--color-tertiary-300);
+    color: var(--color-sage-300);
   }
 
   .career-location::before {

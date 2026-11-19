@@ -348,7 +348,7 @@
   }
 
   .sitemap .sm-count {
-    color: var(--color-tertiary-300);
+    color: var(--color-sage-300);
     font-size: var(--text-xs);
     font-weight: 400;
     white-space: nowrap;
@@ -377,7 +377,7 @@
 
   .sitemap .sm-fold-head::after {
     content: "+" / "";
-    color: var(--color-tertiary-300);
+    color: var(--color-sage-300);
     font-weight: 400;
     text-align: center;
   }
