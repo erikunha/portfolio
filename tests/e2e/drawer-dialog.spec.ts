@@ -7,7 +7,7 @@ const DRAWER = '#section-drawer';
 const OPEN_MENU_TRIGGER = `${MENU_TRIGGER}:visible`;
 const BACKDROP_X_OFFSET_PX = 40;
 const BACKDROP_Y_PX = 300;
-const EXIT_SAMPLE_MS = 600;
+const EXIT_SAMPLE_CAP_MS = 8 * 600;
 const EXIT_TICK_MS = 8;
 const EXIT_POLL_MS = 50;
 const SLIDE_PROPERTY = 'transform';
@@ -15,7 +15,7 @@ const SLIDE_PROGRESS = [0.1, 0.2, 0.3, 0.4, 0.5];
 const MIN_SLIDE_FRAMES = 3;
 const MIN_SLIDE_DURATION_MS = 100;
 const MS_PER_SECOND = 1000;
-const MIN_EXIT_SHARE = 0.25;
+const MIN_EXIT_SHARE = 0.75;
 const FRAME_MS = 17;
 const STEADY_FRAME_GAP_MS = 2 * FRAME_MS;
 const STEADY_MIN_TICKS = 2 * (MIN_SLIDE_FRAMES + 1);
@@ -40,7 +40,7 @@ type SamplerWindow = Window & { exitCapture?: ExitCapture; exitDone?: boolean };
 
 async function armExitSampler(page: Page, seek: boolean): Promise<void> {
   await page.evaluate(
-    ({ sampleMs, tickMs, progress, property, msPerSecond, seek: stepSlide }) => {
+    ({ capMs, tickMs, progress, property, msPerSecond, seek: stepSlide }) => {
       const sampler = window as SamplerWindow;
       const drawer = document.querySelector('#section-drawer') as HTMLDialogElement;
       const readX = () => new DOMMatrixReadOnly(getComputedStyle(drawer).transform).m41;
@@ -91,7 +91,7 @@ async function armExitSampler(page: Page, seek: boolean): Promise<void> {
               slide.play();
             }
             capture.frames.push({ x: readX(), open: drawer.open, seeked: false });
-            if (performance.now() - start >= sampleMs) {
+            if (!drawer.open || performance.now() - start >= capMs) {
               clearInterval(timer);
               sampler.exitDone = true;
             }
@@ -101,7 +101,7 @@ async function armExitSampler(page: Page, seek: boolean): Promise<void> {
       );
     },
     {
-      sampleMs: EXIT_SAMPLE_MS,
+      capMs: EXIT_SAMPLE_CAP_MS,
       tickMs: EXIT_TICK_MS,
       progress: SLIDE_PROGRESS,
       property: SLIDE_PROPERTY,
@@ -128,19 +128,21 @@ async function measureRestFrames(page: Page): Promise<RestFrames> {
     (sampleMs) =>
       new Promise<RestFrames>((resolve) => {
         const ticks: number[] = [];
+        let sampling = true;
         const tick = (at: number) => {
+          if (!sampling) return;
           ticks.push(at);
-          if (at - (ticks[0] ?? at) < sampleMs) {
-            requestAnimationFrame(tick);
-            return;
-          }
+          requestAnimationFrame(tick);
+        };
+        requestAnimationFrame(tick);
+        setTimeout(() => {
+          sampling = false;
           const gaps = ticks.slice(1).map((time, index) => time - (ticks[index] ?? time));
           const median =
             [...gaps].sort((a, b) => a - b)[Math.floor(gaps.length / 2)] ??
             Number.POSITIVE_INFINITY;
           resolve({ ticks: ticks.length, medianGapMs: median });
-        };
-        requestAnimationFrame(tick);
+        }, sampleMs);
       }),
     REST_SAMPLE_MS,
   );
@@ -247,7 +249,7 @@ for (const { name, viewport } of [
       ).toBe(true);
       expect(
         elapsedMs,
-        'the dialog stays open for at least a quarter of the transition duration on the clock that closed it',
+        'the dialog stays open for at least three quarters of the transition duration on the clock that closed it',
       ).toBeGreaterThanOrEqual(capture.durationMs * MIN_EXIT_SHARE);
       const steady = framesAreSteady(rest);
       test.info().annotations.push({
