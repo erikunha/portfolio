@@ -102,6 +102,37 @@ describe('ci:full --linux command line', { timeout: CLI_TIMEOUT_MS }, () => {
     expect(result.stdout).toContain('--output=/results tests/e2e/');
   });
 
+  it('lists the three projects only the all scope adds, and no other scope lists them', () => {
+    const extra = ['linux-e2e-chromium-mobile', 'linux-e2e-chromium-components'];
+    const all = run(['--list', '--linux=all']).stdout;
+    for (const id of [...extra, 'linux-e2e-chromium-mobile-components']) {
+      expect(
+        all.split('\n').some((line) => line.includes(`${id}  `)),
+        id,
+      ).toBe(true);
+    }
+    for (const scope of ['--linux=gate', '--linux']) {
+      const listed = run(['--list', scope]).stdout;
+      for (const id of extra) expect(listed, `${scope} ${id}`).not.toMatch(new RegExp(`${id}  `));
+    }
+  });
+
+  it('reaches an all-only stage with --linux=all and exits 2 for it under another scope', () => {
+    const reached = run(
+      ['--base', 'HEAD', '--linux=all', '--only', 'linux-e2e-chromium-mobile'],
+      pathWith(undefined),
+    );
+    expect(reached.status).toBe(NOT_VERIFIED_EXIT);
+    expect(reached.stdout).toContain('docker is not installed');
+    for (const scope of ['--linux=gate', '--linux']) {
+      for (const flag of ['--from', '--only']) {
+        const refused = run([scope, flag, 'linux-e2e-chromium-mobile']);
+        expect(refused.status, `${scope} ${flag}`).toBe(USAGE_EXIT);
+        expect(refused.stderr).toContain('linux-e2e-chromium-mobile needs --linux=all');
+      }
+    }
+  });
+
   it('exits 2 on a scope that does not exist and names the scopes', () => {
     const result = run(['--linux=everything']);
     expect(result.status).toBe(USAGE_EXIT);

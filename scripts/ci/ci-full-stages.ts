@@ -387,6 +387,12 @@ export const LINUX_PROJECTS = [
   'chromium',
 ];
 
+export const LINUX_ALL_ONLY_PROJECTS = [
+  'chromium-mobile',
+  'chromium-components',
+  'chromium-mobile-components',
+];
+
 export const CHANGED_PLACEHOLDER = '<specs-changed-since-the-merge-base>';
 export const LINUX_STAGE_PREFIX = 'linux-e2e-';
 
@@ -434,7 +440,9 @@ function linuxStage(scope: LinuxScope, project: string, runId: number): Stage {
 }
 
 export const linuxStages = (scope: LinuxScope, runId: number = process.pid): readonly Stage[] =>
-  LINUX_PROJECTS.map((project) => linuxStage(scope, project, runId));
+  (scope === 'all' ? [...LINUX_PROJECTS, ...LINUX_ALL_ONLY_PROJECTS] : LINUX_PROJECTS).map(
+    (project) => linuxStage(scope, project, runId),
+  );
 
 export const LINUX_STAGES: readonly Stage[] = linuxStages('gate');
 

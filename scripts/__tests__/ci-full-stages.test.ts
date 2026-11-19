@@ -405,6 +405,36 @@ describe('linux stages', () => {
     expect(LINUX_PROJECTS.every((project) => matrix.includes(project))).toBe(true);
   });
 
+  it('covers every project of the ci.yml functional matrix in the all scope, and five of them otherwise', () => {
+    const projectsOf = (scope: 'gate' | 'changed' | 'all'): string[] =>
+      linuxStages(scope, 1).map((candidate) => candidate.id.replace('linux-e2e-', ''));
+    expect([...projectsOf('all')].sort()).toEqual([...matrix].sort());
+    expect(projectsOf('gate')).toEqual(LINUX_PROJECTS);
+    expect(projectsOf('changed')).toEqual(LINUX_PROJECTS);
+    expect(projectsOf('all').slice(0, LINUX_PROJECTS.length)).toEqual(LINUX_PROJECTS);
+    expect(projectsOf('all').slice(LINUX_PROJECTS.length)).toEqual([
+      'chromium-mobile',
+      'chromium-components',
+      'chromium-mobile-components',
+    ]);
+  });
+
+  it('runs the three extra projects whole as CI does, each a stage that serves and needs docker', () => {
+    const extra = linuxStages('all', 1).slice(LINUX_PROJECTS.length);
+    expect(extra).toHaveLength(3);
+    for (const candidate of extra) {
+      const project = candidate.id.replace('linux-e2e-', '');
+      const text = commandText(candidate.command(CTX));
+      expect(candidate.mirrors[0]).toContain(`--project=${project}`);
+      expect(candidate.server).toBe(true);
+      expect(candidate.requires).toBe('docker');
+      expect(text).toContain(`--project=${project} `);
+      if (project.endsWith('-components'))
+        expect(text.trimEnd().endsWith('--output=/results')).toBe(true);
+      else expect(text.endsWith('--output=/results tests/e2e/')).toBe(true);
+    }
+  });
+
   it('runs after every macOS stage, serves the build and needs docker', () => {
     const lastMac = Math.max(ids.indexOf('lhci-mobile'), ids.indexOf('lhci-desktop'));
     expect(lastMac).toBe(ids.length - 1);

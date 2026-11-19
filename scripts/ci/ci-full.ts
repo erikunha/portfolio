@@ -6,7 +6,6 @@ import {
   commandText,
   LINUX_NOT_RUN,
   LINUX_STAGE_PREFIX,
-  LINUX_STAGES,
   linuxStages,
   NOT_RUN,
   SERVER,
@@ -27,7 +26,8 @@ passed, failed and not-run stages with their durations.
   --list          print the stages and the declared not-run checks, run nothing
   --linux[=scope] add the Linux e2e stages: WebKit and Chromium in the CI Playwright image on Docker.
                   gate: the specs that failed on Linux before; changed (default for a bare --linux):
-                  the gate plus the specs changed since the merge base; all: the full CI matrix.
+                  the gate plus the specs changed since the merge base; both run five projects.
+                  all: every project of the CI e2e matrix, eight in all, each in full.
                   Needs Docker. Without --linux the Linux stages are declared not-run.
 
 Exit code: 0 every stage passed; 1 a stage failed; 2 bad arguments; 3 no failure, but a stage did not run.`;
@@ -86,20 +86,24 @@ async function main(): Promise<number> {
   try {
     args = parseArgs(
       argv,
-      [...STAGES, ...LINUX_STAGES].map((stage) => stage.id),
+      [...STAGES, ...linuxStages('all')].map((stage) => stage.id),
     );
   } catch (error) {
     err(`ci-full: ${error instanceof Error ? error.message : String(error)}`);
     return EXIT.USAGE;
   }
-  const needsLinux = [args.from, ...(args.only ?? [])].find(
-    (id) => id?.startsWith(LINUX_STAGE_PREFIX) === true,
-  );
+  const stages = args.linux === undefined ? STAGES : [...STAGES, ...linuxStages(args.linux)];
+  const named = [args.from, ...(args.only ?? [])];
+  const needsLinux = named.find((id) => id?.startsWith(LINUX_STAGE_PREFIX) === true);
   if (args.linux === undefined && needsLinux !== undefined) {
     err(`ci-full: stage ${needsLinux} needs --linux`);
     return EXIT.USAGE;
   }
-  const stages = args.linux === undefined ? STAGES : [...STAGES, ...linuxStages(args.linux)];
+  const outsideScope = named.find((id) => id !== undefined && !stages.some((s) => s.id === id));
+  if (outsideScope !== undefined) {
+    err(`ci-full: stage ${outsideScope} needs --linux=all`);
+    return EXIT.USAGE;
+  }
   const notRun = args.linux === undefined ? [...NOT_RUN, LINUX_NOT_RUN] : NOT_RUN;
   if (args.list) {
     listStages(args.base, stages, notRun);

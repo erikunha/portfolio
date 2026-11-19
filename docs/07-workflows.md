@@ -78,7 +78,7 @@ Stages, in order:
 7. Visual on chromium, then chromium-mobile, with no Argos upload.
 8. design-system-components on chromium.
 9. Lighthouse desktop, then mobile, with the report written to disk.
-10. With `--linux` only: the Linux e2e stages `linux-e2e-webkit-desktop`, `linux-e2e-webkit-mobile`, `linux-e2e-webkit-desktop-components`, `linux-e2e-webkit-mobile-components` and `linux-e2e-chromium`.
+10. With `--linux` only: the Linux e2e stages `linux-e2e-webkit-desktop`, `linux-e2e-webkit-mobile`, `linux-e2e-webkit-desktop-components`, `linux-e2e-webkit-mobile-components` and `linux-e2e-chromium`. With `--linux=all` also `linux-e2e-chromium-mobile`, `linux-e2e-chromium-components` and `linux-e2e-chromium-mobile-components`, so the stages are the eight projects of the `e2e-functional` matrix (`LINUX_PROJECTS` and `LINUX_ALL_ONLY_PROJECTS`).
 
 Every stage that serves the build starts a fresh `pnpm start` on a free port, waits until the process it started answers, runs, and stops it and every process left in its group, escalating to `SIGKILL` for one that ignores `SIGTERM`, also when the stage fails and on `SIGINT`, `SIGTERM` or `SIGHUP`. Each CI job has a fresh server too, so in-memory state never carries from one stage to the next. A stage that serves refuses a `.next` that was not built from the current tree: the build stage writes a stamp after the build that records the commit, the tracked edits and a hash of every untracked file, so editing a file after the build, or resuming with `--from` on an older build, fails the stage instead of verifying old code.
 
@@ -86,9 +86,9 @@ Every stage that serves the build starts a fresh `pnpm start` on a free port, wa
 | --- | --- |
 | `--base <ref>` | Start of the commit range for commitlint. Default `origin/main`; an unknown ref exits 2 before any stage runs. |
 | `--from <stage>` | Resumes at a stage. The stages before it are reported not-run. |
-| `--only <stages>` | Runs only the named stages (comma separated); the others are reported not-run. It is how a Linux stage is reached after one `build`: `--linux=gate --only build,linux-e2e-webkit-desktop`. |
+| `--only <stages>` | Runs only the named stages (comma separated); the others are reported not-run. `--only` and `--linux` each exit 2 when given twice. It is how a Linux stage is reached after one `build`: `--linux=gate --only build,linux-e2e-webkit-desktop`. |
 | `--keep-going` | Continues after a failed stage. |
-| `--linux[=scope]` | Adds the Linux e2e stages. `gate` runs `LINUX_GATE_SPECS` and `LINUX_GATE_COMPONENT_SPECS`; `changed` (a bare `--linux`) adds the specs Playwright's `--only-changed` reports since the merge base, with the visual and accessibility specs dropped (a listing that times out, exits non-zero, prints nothing readable or reports a Playwright error fails the stage and names the cause; an empty listing adds no spec, and the run prints how many it added); `all` runs every spec of the project as CI does. Off by default; without it the table lists `linux e2e` not-run. |
+| `--linux[=scope]` | Adds the Linux e2e stages. `gate` runs `LINUX_GATE_SPECS` and `LINUX_GATE_COMPONENT_SPECS`; `changed` (a bare `--linux`) adds the specs Playwright's `--only-changed` reports since the merge base, with the visual and accessibility specs dropped (a listing that times out, exits non-zero, prints nothing readable or reports a Playwright error fails the stage and names the cause; an empty listing adds no spec, and the run prints how many it added); `all` runs every spec of each of the eight matrix projects as CI does, three more stages than the other scopes; naming one of those three with `--from` or `--only` under another scope exits 2. Off by default; without it the table lists `linux e2e` not-run. |
 | `--list` | Prints the stages with their commands and the declared not-run checks. Runs nothing and verifies nothing. |
 
 Exit codes: 0 every stage passed; 1 a stage failed; 2 bad arguments or an unknown base; 3 nothing failed but a stage did not run (a missing `gitleaks` or `semgrep` binary, a Semgrep install whose version differs from the `ci.yml` pin, or the stages before `--from`).
