@@ -23,11 +23,11 @@ The site is the artifact: a Next.js 16 application on Vercel (Fluid Compute), an
 
 ---
 
-The codebase demonstrates the engineering it claims: "performance-first" is a budget and not an adjective, Lighthouse CI gates the category scores and the timings on the 24 routes the Lighthouse config lists, the axe scan fails CI, and the client-chunk and per-route first-load JS budgets are gates in the `build` job (`check-bundle-size.ts` and `check-route-js.ts`). `ARCHITECTURE.md` describes the system; `DECISIONS.md` records decisions and reversibility notes.
+The codebase demonstrates the engineering it claims: "performance-first" is a budget and not an adjective, Lighthouse CI gates the category scores and the timings on the 26 routes the Lighthouse config lists, the axe scan fails CI, and the client-chunk and per-route first-load JS budgets are gates in the `build` job (`check-bundle-size.ts` and `check-route-js.ts`). `ARCHITECTURE.md` describes the system; `DECISIONS.md` records decisions and reversibility notes.
 
 The AI centerpiece is a streaming `ask` endpoint (Vercel AI Gateway + Anthropic Haiku 5.5, prompt-cached, rate-limited, budget-capped) with a correctness eval suite and a visible metrics panel, making AI quality observable to hiring reviewers. Agent-readiness surfaces include `/.well-known/agent.json` and a minimal MCP server.
 
-The terminal homepage is complemented by `/summary`, `/cv`, `/links` (pt-BR), `/links/en`, the pt-BR twins `/pt`, `/pt/cv` and `/pt/summary`, and 18 `/design-system` documentation pages (overview, tokens, components, enforcement, changelog, three foundations and ten primitives). Every page, the 404 pages and the route error pages included, renders through one shell: the same topbar, site menu, dock and position line. The English and pt-BR routes live in two route groups, each with its own root layout and `<html lang>`.
+The terminal homepage is complemented by `/summary`, `/cv`, `/links` (pt-BR), `/links/en`, the pt-BR twins `/pt`, `/pt/cv` and `/pt/summary`, and 20 `/design-system` documentation pages (overview, tokens, components, enforcement, changelog, three foundations and twelve primitives). Every page, the 404 pages and the route error pages included, renders through one shell: the same topbar, site menu, dock and position line. The English and pt-BR routes live in two route groups, each with its own root layout and `<html lang>`.
 
 ---
 
@@ -44,7 +44,7 @@ The terminal homepage is complemented by `/summary`, `/cv`, `/links` (pt-BR), `/
 | Design system (`/design-system`)        | 11 components (all server-compatible), docs CopyButton helper, `@theme` tokens and live docs                                               |
 | Biome                                   | Lint + format in a single Rust binary                                                                                                                     |
 | Vitest + Playwright                     | Unit (80% lines, 70% branches) + E2E across eight Playwright projects + axe-core a11y CI suite + Argos visual diffs                                    |
-| Lighthouse CI                           | LCP, TBT, CLS and the category scores gated on the 24 routes the Lighthouse config lists (performance ≥95 desktop / ≥90 mobile, accessibility and SEO = 100, best practices ≥95); INP checked in the browser tests |
+| Lighthouse CI                           | LCP, TBT, CLS and the category scores gated on the 26 routes the Lighthouse config lists (performance ≥95 desktop / ≥90 mobile, accessibility and SEO = 100, best practices ≥95); INP checked in the browser tests |
 | Stryker                                 | Weekly mutation testing; a canary run in CI proves the runner still kills mutants                                                                         |
 | pnpm 10+ / Node `^22.22.2 \|\| ^24.15.0 \|\| >=26.0.0` | Strict dependency resolution, content-addressed store                                                                                                     |
 

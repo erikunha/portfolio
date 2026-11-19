@@ -55,7 +55,7 @@ Two `quality-fast` steps stay CI-only: the branch-name lint (the pre-push hook e
 | `check:no-dashes`      | no tracked text file holds an em or en dash, apart from the `next dev` block in `AGENTS.md` |
 | `lint:css-tokens`      | fails on: a raw color in CSS and TSX (hex, `rgb`, `hsl`, `hwb`, `lab`, `lch`, `oklab`, `oklch`, `color()`) outside `app/css/theme.css` and the named allowlist; a `bg-`, `text-` or `border-` black or white utility in TSX; a literal `z-index` or `--z-*` declaration outside the scale in `theme.css`; a focus rule that writes its own ring instead of `--focus-ring` on `:focus-visible`; an arbitrary value in TSX equal to a token in the same namespace; an `@theme` token with no consumer (a `-*: initial` reset excepted) |
 | `lint:contrast`        | documented text/surface pairs meet WCAG AA                                                       |
-| `check:component-docs` | each DS component is documented                                                                  |
+| `check:component-docs` | each DS component has a primitive page with a props table and an index link                     |
 | `bundle-check`         | exact gzip bytes of all client chunks ≤ 220KB (duplicates count, empty build fails)              |
 | `route-js-check`       | every manifest route ≤ 164.2KB total first-load JS; app-owned split reported                     |
 

@@ -246,7 +246,7 @@ app/sitemap.ts                       # SEO sitemap with language alternates (rob
 app/_lib/                            # shared page-metadata builders: canonical, hreflang alternates, Open Graph
 app/css/                             # global styles, Tailwind v4 via PostCSS
 app/(en)/design-system/            # MDX docs inside the shared shell: token gallery, on-this-page navigation, page tree in the site menu and content-backed DS opinion
-app/(en)/design-system/_components/ds-nav.ts  # page tree: five top-level pages, three foundations, ten primitives; feeds the side rail, drawer, pager and sitemap
+app/(en)/design-system/_components/ds-nav.ts  # page tree: five top-level pages, three foundations, twelve primitives; feeds the side rail, drawer, pager and sitemap
 app/api/ask/route.ts                 # Fluid Compute: LLM streaming via AI Gateway
 app/api/contact/route.ts             # Node: durable contact submission, 200 accepted or 202 queued
 app/api/contact-retry/route.ts       # cron: retry undelivered contact messages twice a day
@@ -972,7 +972,7 @@ The principal-level discipline: **none of this is built today.** YAGNI is the de
 | `/summary`, `/cv`                                                            | RSC reading views inside `SiteShell` (home header); print hides the shell                                                       |
 | `/pt`, `/pt/cv`, `/pt/summary`                                               | pt-BR twins of the home page and the reading views, in the `app/(pt)` root layout                                              |
 | `/links`, `/links/en`                                                        | Localized link pages: `/links` in the `app/(pt)` root layout, `/links/en` in `app/(en)`                                        |
-| `/design-system` and 17 pages below it                                       | MDX documentation: tokens, components, enforcement, changelog, `foundations/{colors,typography,spacing-borders}` and ten `primitives/*` pages, all listed in `ds-nav.ts` |
+| `/design-system` and 19 pages below it                                       | MDX documentation: tokens, components, enforcement, changelog, `foundations/{colors,typography,spacing-borders}` and twelve `primitives/*` pages, all listed in `ds-nav.ts` |
 | `/api/ask`                                                                   | Streaming POST handler                                                                                                         |
 | `/api/contact`                                                               | Durable contact POST handler                                                                                                   |
 | `/api/contact-retry`, `/api/error-digest`, `/api/psi-refresh`                | Authenticated daily cron GET handlers                                                                                          |

@@ -71,37 +71,73 @@ describe('check-client-naming', { timeout: SUBPROCESS_TEST_TIMEOUT_MS }, () => {
 });
 
 describe('check-component-docs-coverage', { timeout: SUBPROCESS_TEST_TIMEOUT_MS }, () => {
-  const DOCS_PAGE = 'app/(en)/design-system/components/page.mdx';
+  const INDEX_PAGE = 'app/(en)/design-system/components/page.mdx';
+  const PROPS_TABLE =
+    '| Prop | Type | Default | Required |\n|---|---|---|---|\n| `a` | `string` | none | no |\n';
+  const primitivePage = (slug: string): string =>
+    `app/(en)/design-system/primitives/${slug}/page.mdx`;
 
-  it('fails when a design-system component has no heading in the components page', () => {
+  function component(name: string): void {
+    mkdirSync(join(sandbox, 'design-system/components', name), { recursive: true });
+  }
+
+  function indexLinking(...slugs: string[]): string {
+    return slugs.map((slug) => `[x](/design-system/primitives/${slug})\n`).join('');
+  }
+
+  it('fails when a component has no primitive page', () => {
     const script = install('check-component-docs-coverage.ts');
-    mkdirSync(join(sandbox, 'design-system/components/Alpha'), { recursive: true });
-    mkdirSync(join(sandbox, 'design-system/components/Beta'), { recursive: true });
-    write(DOCS_PAGE, '## Alpha\n');
+    component('Alpha');
+    component('Beta');
+    write(primitivePage('alpha'), PROPS_TABLE);
+    write(INDEX_PAGE, indexLinking('alpha', 'beta'));
     const { code, output } = run(script);
     expect(code).toBe(FAIL);
-    expect(output).toContain('Beta');
-    expect(output).not.toContain('MISSING DOCS: Alpha');
+    expect(output).toContain('MISSING PAGE: Beta');
+    expect(output).not.toContain('Alpha');
   });
 
-  it('accepts a component documented under an explicit-id h2', () => {
+  it('fails when a primitive page has no props table', () => {
     const script = install('check-component-docs-coverage.ts');
-    mkdirSync(join(sandbox, 'design-system/components/NavItem'), { recursive: true });
-    write(DOCS_PAGE, '<h2 id="nav-item">NavItem</h2>\n');
+    component('Alpha');
+    write(primitivePage('alpha'), '# ALPHA\n');
+    write(INDEX_PAGE, indexLinking('alpha'));
+    const { code, output } = run(script);
+    expect(code).toBe(FAIL);
+    expect(output).toContain('MISSING PROPS TABLE: Alpha');
+  });
+
+  it('fails when the components index does not link a primitive page', () => {
+    const script = install('check-component-docs-coverage.ts');
+    component('Alpha');
+    write(primitivePage('alpha'), PROPS_TABLE);
+    write(INDEX_PAGE, '# COMPONENTS\n');
+    const { code, output } = run(script);
+    expect(code).toBe(FAIL);
+    expect(output).toContain('MISSING INDEX LINK: Alpha');
+  });
+
+  it('maps a PascalCase component to its kebab-case page', () => {
+    const script = install('check-component-docs-coverage.ts');
+    component('NavItem');
+    write(primitivePage('nav-item'), PROPS_TABLE);
+    write(INDEX_PAGE, indexLinking('nav-item'));
     expect(run(script).code).toBe(PASS);
   });
 
-  it('does not take a heading that only starts with the component name', () => {
+  it('does not take a link that only starts with the primitive slug', () => {
     const script = install('check-component-docs-coverage.ts');
-    mkdirSync(join(sandbox, 'design-system/components/Nav'), { recursive: true });
-    write(DOCS_PAGE, '## NavItem\n');
+    component('Nav');
+    write(primitivePage('nav'), PROPS_TABLE);
+    write(INDEX_PAGE, indexLinking('nav-item'));
     expect(run(script).code).toBe(FAIL);
   });
 
-  it('passes when every component has its heading', () => {
+  it('passes when every component has its page, table and index link', () => {
     const script = install('check-component-docs-coverage.ts');
-    mkdirSync(join(sandbox, 'design-system/components/Alpha'), { recursive: true });
-    write(DOCS_PAGE, '## Alpha\n');
+    component('Alpha');
+    write(primitivePage('alpha'), PROPS_TABLE);
+    write(INDEX_PAGE, indexLinking('alpha'));
     expect(run(script).code).toBe(PASS);
   });
 });

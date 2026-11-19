@@ -1,0 +1,29 @@
+import { dsPageMetadata } from '../../_lib/page-metadata';
+import { OnThisPage } from '../../_components/OnThisPage';
+
+export const metadata = dsPageMetadata({
+  slug: 'primitives/nav-item',
+  title: 'NavItem · Design System · erikunha.dev',
+  description: 'NavItem props and accessibility notes',
+});
+
+# NAV-ITEM
+
+<OnThisPage items={[{id:'props',label:'Props'},{id:'accessibility',label:'Accessibility'}]} />
+
+Source: `design-system/components/NavItem/NavItem.tsx`. React Server Component, zero client JavaScript.
+
+<h2 id="props">Props</h2>
+
+| Prop | Type | Default | Required |
+|---|---|---|---|
+| `href` | `string` | none | yes |
+| `label` | `ReactNode` | none | yes |
+| `index` | `string` | none | no |
+| `current` | `boolean` | `false` | no |
+
+Every other anchor attribute passes through.
+
+<h2 id="accessibility">Accessibility</h2>
+
+`current` sets `aria-current="location"`. `index` is decorative and hidden from assistive technology.

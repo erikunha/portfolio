@@ -39,6 +39,8 @@ export const DS_NAV_GROUPS: readonly NavGroup[] = [
       { href: `${DS_ROOT_PATH}/primitives/copybutton`, label: 'COPYBUTTON' },
       { href: `${DS_ROOT_PATH}/primitives/field`, label: 'FIELD' },
       { href: `${DS_ROOT_PATH}/primitives/kbd-key`, label: 'KBD-KEY' },
+      { href: `${DS_ROOT_PATH}/primitives/nav-item`, label: 'NAV-ITEM' },
+      { href: `${DS_ROOT_PATH}/primitives/panel`, label: 'PANEL' },
       { href: `${DS_ROOT_PATH}/primitives/stat-tile`, label: 'STAT-TILE' },
       { href: `${DS_ROOT_PATH}/primitives/terminal-panel`, label: 'TERMINAL-PANEL' },
       { href: `${DS_ROOT_PATH}/primitives/window-chrome`, label: 'WINDOW-CHROME' },

@@ -125,7 +125,7 @@ export const DESIGN_SYSTEM_LINES: readonly string[] = [
   '- Enforcement: boundary lint, no-magic-values lint, contrast check, all in CI',
   '- Docs: /design-system/tokens, /design-system/components, /design-system/enforcement, /design-system/changelog',
   '- Foundations: /design-system/foundations/colors, /design-system/foundations/typography, /design-system/foundations/spacing-borders',
-  '- Primitives: /design-system/primitives/badge, /design-system/primitives/brand-icon, /design-system/primitives/button, /design-system/primitives/cmd-line, /design-system/primitives/copybutton, /design-system/primitives/field, /design-system/primitives/kbd-key, /design-system/primitives/stat-tile, /design-system/primitives/terminal-panel, /design-system/primitives/window-chrome',
+  '- Primitives: /design-system/primitives/badge, /design-system/primitives/brand-icon, /design-system/primitives/button, /design-system/primitives/cmd-line, /design-system/primitives/copybutton, /design-system/primitives/field, /design-system/primitives/kbd-key, /design-system/primitives/nav-item, /design-system/primitives/panel, /design-system/primitives/stat-tile, /design-system/primitives/terminal-panel, /design-system/primitives/window-chrome',
 ];
 
 export interface LinkCopy {
