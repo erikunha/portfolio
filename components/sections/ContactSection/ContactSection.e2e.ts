@@ -3,6 +3,7 @@ import { contactCopy } from '@/content/contact-copy';
 import { SITE_LOCALE } from '@/content/site-locale';
 import { VIEWPORTS, WIDTH } from '../../../tests/e2e/_helpers/geometry';
 import { waitForHydration } from '../../../tests/e2e/_helpers/hydration';
+import { revealDeferredContent } from '../../../tests/e2e/_helpers/snapshot';
 
 const PHONE = VIEWPORTS.PHONE;
 const DESKTOP = { width: WIDTH.DESKTOP, height: 900 };
@@ -271,6 +272,7 @@ test.describe('ContactSection', () => {
   test('the error summary reads as one line and draws no focus ring', async ({ page }) => {
     await page.setViewportSize(DESKTOP);
     await page.goto('/');
+    await revealDeferredContent(page);
     await page.locator(CONTACT_FORM_SELECTOR).scrollIntoViewIfNeeded();
     await waitForHydration(page, CONTACT_FORM_SELECTOR);
     const send = page.locator('#sec-contact form').getByRole('button', { name: /EXECUTE_SEND/ });

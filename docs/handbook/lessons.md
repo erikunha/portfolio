@@ -299,6 +299,18 @@ The prompt for a manual or agent review that applies these rules to a diff is `d
     or the exit duration is forced to 0 (`tests/e2e/drawer-dialog.spec.ts`,
     `tests/e2e/drawer-exit-interactive.spec.ts`).
 
+59. A click that follows a long scroll waits for the layout above the target to stop moving. The
+    contact summary spec failed in 30 of 30 Linux WebKit runs on both component projects. The
+    click did reach the page: the pointer went down on the send label, the page then shrank the
+    `#sec-guitar` placeholder by 1312 px (its `content-visibility: auto` estimate gave way to the
+    real height, about 100 ms after the scroll, and WebKit has no scroll anchoring), the pointer
+    came up on another element, and the browser fired `click` on their common ancestor. No
+    `submit` event fired, so the hydration wait and the form were not the cause. A pre-click
+    `revealDeferredContent(page)` gives every module its real height before the scroll. Same
+    class: any click after a scroll across deferred modules (`ContactForm.e2e.ts` scrolls to
+    `#sec-contact` the same way). Check: probe `pointerdown`, `pointerup`, `click` and `submit`
+    targets with a capture listener before blaming hydration.
+
 ## Pre-push judgement list
 
 Ranked by how often review caught each class on this repository.
