@@ -102,26 +102,21 @@ export function RootShell({
   children,
 }: Readonly<{ locale: SiteLocale; children: React.ReactNode }>) {
   return (
-    <>
-      {/* biome-ignore lint/style/noHeadElement: this fragment is the shared body of every root layout, whose html element owns this head */}
-      <head>
-        <script type="application/ld+json">{personJsonLd}</script>
-      </head>
-      <body suppressHydrationWarning>
-        <NoscriptBar locale={locale} />
-        {/* biome-ignore lint/security/noDangerouslySetInnerHtml: initScript is a hardcoded build-time constant, no user input */}
-        <script dangerouslySetInnerHTML={{ __html: initScript }} />
-        <Suspense fallback={null}>
-          <GlobalMotion />
-        </Suspense>
-        {children}
-        {process.env.VERCEL === '1' && (
-          <>
-            <Analytics />
-            <SpeedInsights />
-          </>
-        )}
-      </body>
-    </>
+    <body suppressHydrationWarning>
+      <script type="application/ld+json">{personJsonLd}</script>
+      <NoscriptBar locale={locale} />
+      {/* biome-ignore lint/security/noDangerouslySetInnerHtml: initScript is a hardcoded build-time constant, no user input */}
+      <script dangerouslySetInnerHTML={{ __html: initScript }} />
+      <Suspense fallback={null}>
+        <GlobalMotion />
+      </Suspense>
+      {children}
+      {process.env.VERCEL === '1' && (
+        <>
+          <Analytics />
+          <SpeedInsights />
+        </>
+      )}
+    </body>
   );
 }
