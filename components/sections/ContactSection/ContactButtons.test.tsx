@@ -1,5 +1,5 @@
-import { render, screen } from '@testing-library/react';
 import type { AtRule, Container, Document, Root, Rule } from 'postcss';
+import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import {
@@ -7,6 +7,7 @@ import {
   declValue,
   rulesWithResolvedSelector,
 } from '@/__tests__/helpers/css-rules';
+import { mountClient } from '@/__tests__/helpers/render';
 import { ContactForm } from '@/components/client/ContactForm/ContactForm';
 import { ProposeSlot } from '@/components/client/ContactTimezone/ProposeSlot.client';
 import { contactCopy } from '@/content/contact-copy';
@@ -47,35 +48,49 @@ function authoredRules(root: Root, selector: string): Rule[] {
   });
 }
 
+function staticDocument(element: ReturnType<typeof createElement>) {
+  return new DOMParser().parseFromString(renderToStaticMarkup(element), 'text/html');
+}
+
 describe('contact buttons markup', () => {
   it('renders the LinkedIn call to action as a primary .btn', () => {
-    const host = document.createElement('div');
-    host.innerHTML = renderToStaticMarkup(<ContactSection locale={SITE_LOCALE.en} />);
-    const cta = host.querySelector('.contact-channel-cta');
+    const doc = staticDocument(createElement(ContactSection, { locale: SITE_LOCALE.en }));
+    const cta = doc.querySelector('.contact-channel-cta');
     expect(cta?.classList.contains('btn')).toBe(true);
     expect(cta?.getAttribute('data-variant')).toBe('primary');
   });
 
   it('renders the copy control as a quiet .btn without the shared copy-btn class', () => {
-    render(<ContactSection locale={SITE_LOCALE.en} />);
-    const control = screen.getByRole('button', { name: copy.section.copyEmail });
-    expect(control.classList.contains('btn')).toBe(true);
-    expect(control.classList.contains('copy-btn')).toBe(false);
-    expect(control.getAttribute('data-variant')).toBe('quiet');
+    const doc = staticDocument(createElement(ContactSection, { locale: SITE_LOCALE.en }));
+    const control = doc.querySelector('.contact-copy-btn');
+    expect(control?.textContent).toBe(copy.section.copyEmail);
+    expect(control?.classList.contains('btn')).toBe(true);
+    expect(control?.classList.contains('copy-btn')).toBe(false);
+    expect(control?.getAttribute('data-variant')).toBe('quiet');
   });
 
-  it('renders the send control as a primary .btn', () => {
-    render(<ContactForm copy={copy} chrome={contactChrome[SITE_LOCALE.en]} />);
-    const send = screen.getByRole('button', { name: copy.form.submit });
-    expect(send.classList.contains('btn')).toBe(true);
-    expect(send.getAttribute('data-variant')).toBe('primary');
+  it('renders the send control as a primary .btn', async () => {
+    const mounted = await mountClient(
+      createElement(ContactForm, { copy, chrome: contactChrome[SITE_LOCALE.en] }),
+    );
+    const send = mounted.container.querySelector('.contact-send');
+    expect(send?.classList.contains('btn')).toBe(true);
+    expect(send?.getAttribute('data-variant')).toBe('primary');
+    mounted.unmount();
   });
 
-  it('renders the timezone propose control as a primary .btn', () => {
-    render(<ProposeSlot copy={copy.timezone} slot={SLOT} slotLine="Would a call work?" />);
-    const propose = screen.getByRole('button', { name: copy.timezone.propose.label });
-    expect(propose.classList.contains('btn')).toBe(true);
-    expect(propose.getAttribute('data-variant')).toBe('primary');
+  it('renders the timezone propose control as a primary .btn', async () => {
+    const mounted = await mountClient(
+      createElement(ProposeSlot, {
+        copy: copy.timezone,
+        slot: SLOT,
+        slotLine: 'Would a call work?',
+      }),
+    );
+    const propose = mounted.container.querySelector('.ctz-propose');
+    expect(propose?.classList.contains('btn')).toBe(true);
+    expect(propose?.getAttribute('data-variant')).toBe('primary');
+    mounted.unmount();
   });
 });
 
