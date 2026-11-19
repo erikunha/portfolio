@@ -1,3 +1,9 @@
+@theme {
+  --mixer-chip-min: 5.5rem;
+  --mixer-chain-rows: 3;
+  --mixer-transport-gap: 14px;
+}
+
 @layer components {
   .mixer-skip-link {
     display: inline-flex;

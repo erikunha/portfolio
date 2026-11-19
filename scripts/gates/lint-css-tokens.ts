@@ -22,6 +22,7 @@ const FOCUS_OFFSET_VALUES = new Set(['var(--focus-ring-offset)', 'var(--focus-ri
 const NO_OUTLINE = 'none';
 const FORCED_COLORS_SHEET = 'forced-colors.css';
 const THEME_SHEET = 'theme.css';
+const CSS_DIRECTORY = 'app/css';
 const TSX_FILE = /\.tsx$/;
 const TSX_SKIPPED = /\.(?:test|e2e)\.tsx?$/;
 const TOKEN_FILE = /-tokens\.ts$/;
@@ -480,6 +481,12 @@ export function scanRepo(root: string, cssFiles: string[]): RepoScan {
   };
 }
 
+export function readThemeSheets(root: string): string {
+  const cssDir = join(root, CSS_DIRECTORY);
+  const sheets = [THEME_SHEET, ...listScannedCss(root).sort()];
+  return sheets.map((sheet) => readFileSync(join(cssDir, sheet), 'utf8')).join('\n');
+}
+
 export function listScannedCss(root: string): string[] {
   const cssDir = join(root, 'app/css');
   return existsSync(cssDir)
@@ -541,13 +548,13 @@ function main(): void {
       scan.primitives,
     ) || failed;
   const unused = findUnusedThemeTokens(
-    readFileSync(join(root, `app/css/${THEME_SHEET}`), 'utf8'),
+    readThemeSheets(root),
     findConsumerFiles(root).map((file) => readFileSync(join(root, file), 'utf8')),
   );
   if (unused.length > 0) {
     failed = true;
     console.error(`[css-tokens] ${unused.length} @theme token(s) with no consumer:`);
-    for (const token of unused) console.error(`  ✗ app/css/theme.css: ${token}`);
+    for (const token of unused) console.error(`  ✗ ${token}`);
     console.error('Delete the token, or reference it from CSS, TSX, TS or MDX.');
   }
   if (stale.length > 0) {

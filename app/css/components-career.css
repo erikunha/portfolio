@@ -1,3 +1,7 @@
+@theme {
+  --stroke-width-icon: 1.4;
+}
+
 @layer components {
   .career-section {
     margin-bottom: var(--space-section);

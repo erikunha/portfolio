@@ -13,15 +13,15 @@ export const metadata = dsPageMetadata({
 
 Colour, type, spacing and border tokens live in `app/css/theme.css`.
 Tailwind's `@theme` generates utilities from these custom properties. Swatches
-read their values directly from that file.
+read their values directly from that file. A component's own tokens sit in its stylesheet.
 
 Tailwind's default color, radius and shadow scales are reset, so `bg-red-500`, `rounded-lg`
 and `shadow-md` produce nothing. Only the tokens on this page generate those utilities.
 
 <h2 id="color">Color</h2>
 
-Use semantic roles for text and emphasis. The ordinal families remain available
-for surfaces and existing consumers; code syntax uses the green and grey ramps.
+Use semantic roles for text and emphasis. Five hue ramps hold the primitives:
+`signal` (green), `carbon` (black), `sage` (grey-green), `gold` and `coral`. Code syntax uses the green and grey ramps.
 
 ### Semantic roles
 
@@ -63,7 +63,7 @@ are plain custom properties on `:root`, and the print sheet remaps all twelve to
 `pnpm lint:contrast` audits seven pairs: `text` and `text-muted` on `surface`, `on-accent` on
 `accent`, `accent` and `focus` on `surface` at the non-text minimum, and `warning` and `danger` on `surface`.
 
-### primary · green (the brand)
+### signal · green (the brand)
 
 <ColorSwatch token="signal-200" />
 <ColorSwatch token="signal-300" usage="Existing annotations; use text-secondary for new text" />
@@ -78,12 +78,12 @@ are plain custom properties on `:root`, and the print sheet remaps all twelve to
 <ColorSwatch token="signal-faint" usage="Very subtle background (green 12%)" />
 <ColorSwatch token="signal-quiet" usage="Hover background (green 10%)" />
 
-### secondary · black (surfaces)
+### carbon · black (surfaces)
 
 <ColorSwatch token="carbon-900" usage="Shell / terminal backgrounds" />
 <ColorSwatch token="carbon-950" usage="Page background" />
 
-### tertiary · white (foreground)
+### sage · mint and grey (foreground)
 
 <ColorSwatch token="sage-50" usage="Body text (19.8:1 contrast on black)" />
 <ColorSwatch token="sage-300" />
@@ -278,7 +278,7 @@ lines) use a second mechanism. The `TypeReveal` island, mounted once by `GlobalM
 root layout, adds `type-reveal-ready` to `<html>` and a class to each element when it first enters
 the viewport. The text then reveals one character per step, and the caret blinks and disappears.
 With the MOTION switch off, or without `IntersectionObserver`, every element shows at once. The
-timing comes from tokens in the `:root` block of `app/css/theme.css`:
+timing comes from tokens in the `:root` block of `app/css/animations.css`:
 
 <TokenTable
   caption="Type reveal tokens"
@@ -340,14 +340,19 @@ The table lists layers from the lowest to the highest.
 
 <h2 id="component-tokens">Component tokens</h2>
 
-The `@theme` block also holds tokens scoped to one component. They are not a shared vocabulary, so
-a new component declares its own rather than reusing another's.
+A token scoped to one component sits in that component's stylesheet, in an `@theme` block at the top,
+beside the rules that read it. They are not a shared vocabulary, so a new component declares its own
+rather than reusing another's. `theme.css` keeps the tokens several components read. It also keeps
+`--breakpoint-guitar`, because Tailwind builds the `guitar:` variant from it for every stylesheet, and
+`--color-guitar-scanline`, because a color literal may only be written there.
 
-| Prefix | Owner | Examples |
-|---|---|---|
-| `--eq-*` | the EQ curve and spectrum ([EqSpectrumStrip](/design-system/components#eq-spectrum-strip)) | plot and axis heights, bar gaps, curve stroke, level steps |
-| `--guitar-*` | the guitar module | column template, photo filters and ratio, arrow size |
-| `--mixer-*` | the DAW mixer | chip width, chain rows, transport gap |
-| `--links-thumb-*` | the `/links` cover frame ([Cover frame](/design-system/components#cover-frame)) | contrast, brightness, tint, reveal duration |
-| `--receipt-*` | the project receipts list | metric, value and company column widths |
-| `--breakpoint-*` | the guitar module | the one component-owned layout width |
+| Prefix | Stylesheet | Owner | Examples |
+|---|---|---|---|
+| `--eq-*` | `components-eq.css` | the EQ curve and spectrum ([EqSpectrumStrip](/design-system/components#eq-spectrum-strip)) | plot and axis heights, bar gaps, curve stroke, level steps |
+| `--guitar-*` | `components-guitar.css` | the guitar module | column template, photo filters and ratio, arrow size |
+| `--mixer-*` | `components-mixer.css` | the DAW mixer | chip width, chain rows, transport gap |
+| `--links-thumb-*` | `components-links.css` | the `/links` cover frame ([Cover frame](/design-system/components#cover-frame)) | contrast, brightness, tint, reveal duration |
+| `--receipt-*` | `components-projects.css` | the project receipts list | metric, value and company column widths |
+| `--spacing-opinions-*`, `--measure-opinions-*` | `components-hottest-takes.css` | the opinions list | list marker width, body measure |
+| `--stroke-width-icon` | `components-career.css` | the career log icons | icon stroke width |
+| `--type-reveal-*` | `animations.css` | the type reveal | character duration, caret size and blinks |

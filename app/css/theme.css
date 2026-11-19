@@ -48,11 +48,6 @@
   --spacing-target: 2.75rem;
   --spacing-target-compact: 1.75rem;
   --spacing-target-pointer: 2.25rem;
-  --spacing-opinions-list-marker: 2ch;
-  --measure-opinions-body: 740px;
-  --receipt-metric-width: 10.5rem;
-  --receipt-value-width: 9rem;
-  --receipt-company-width: 9.375rem;
   --breakpoint-guitar: 700px;
   --viewport-narrow: 360px;
   --viewport-below-narrow: 359.98px;
@@ -75,54 +70,6 @@
   --phi-pair-columns: minmax(0, 1.618fr) minmax(0, 1fr);
   --phi-pair-columns-minor-first: minmax(0, 1fr) minmax(0, 1.618fr);
   --phi-pair-flex-minor: 0 0 calc((1 - var(--phi-inv)) * 100%);
-  --eq-plot-height: 8.25rem;
-  --eq-plot-height-compact: 7rem;
-  --eq-axis-height: 1.5rem;
-  --eq-bar-gap: 0.1875rem;
-  --eq-bar-gap-compact: 0.125rem;
-  --eq-bar-mid-stop: 35%;
-  --eq-curve-stroke: 2.6px;
-  --eq-curve-glow: 3px;
-  --eq-level-floor: 0.35;
-  --eq-level-high: 0.9;
-  --eq-level-mid: 0.6;
-  --eq-level-peak: 1;
-  --guitar-arrow-width: 1.625rem;
-  --guitar-photo-width: 20rem;
-  --guitar-node-gap: 0.375rem;
-  --guitar-bar-width: 0.5625rem;
-  --guitar-bar-height: 0.8125rem;
-  --guitar-bar-gap: 0.125rem;
-  --guitar-bar-opacity: 0.22;
-  --guitar-columns: minmax(0, 1fr) var(--guitar-arrow-width) minmax(0, 1fr)
-    var(--guitar-arrow-width) minmax(0, 1fr);
-  --guitar-stat-columns: repeat(2, minmax(0, 1fr));
-  --guitar-line-height: 1.6;
-  --guitar-heading-line-height: 1.2;
-  --guitar-label-tracking: var(--tracking-xs);
-  --guitar-camera-tracking: var(--tracking-2xl);
-  --guitar-prose-width: 72ch;
-  --guitar-photo-grayscale: 1;
-  --guitar-photo-contrast: 1.18;
-  --guitar-photo-brightness: 0.95;
-  --guitar-photo-tint-opacity: 0.6;
-  --guitar-photo-ratio: 16 / 9;
-  --guitar-photo-min-height: 12.5rem;
-  --guitar-arrow-rotation: 90deg;
-  --guitar-arrow-length: 4.5ch;
-  --mixer-chip-min: 5.5rem;
-  --mixer-chain-rows: 3;
-  --mixer-transport-gap: 14px;
-  --guitar-scanline: repeating-linear-gradient(
-    to bottom,
-    rgba(0, 0, 0, 0.3) 0 1px,
-    transparent 1px 3px
-  );
-  --links-thumb-contrast: 1.15;
-  --links-thumb-brightness: 0.95;
-  --links-thumb-tint: 0.9;
-  --links-thumb-tint-reveal: 0.3;
-  --links-thumb-reveal-duration: 200ms;
   --z-rain: 0;
   --z-crt-vignette: 1;
   --z-crt-scanlines: 2;
@@ -151,7 +98,6 @@
   --focus-ring-offset-inset: -2px;
   --focus-ring: var(--focus-ring-width) solid var(--color-focus);
   --shadow-glow: 0 0 12px var(--color-accent);
-  --stroke-width-icon: 1.4;
   --radius-none: 0;
   --radius-control: 2px;
 
@@ -204,6 +150,8 @@
   --color-print-paper: #ffffff;
   --color-print-rule: #595959;
 
+  --color-guitar-scanline: rgba(0, 0, 0, 0.3);
+
   --color-crt-phosphor-red: #ff0000;
   --color-crt-phosphor-blue: #0000ff;
 
@@ -233,12 +181,6 @@
     --color-danger: var(--color-coral-500);
     --color-scrim: var(--color-carbon-950);
     --rain-tail-alpha: 0.1;
-    --type-reveal-char-duration: 28ms;
-    --type-reveal-max-duration: 1.4s;
-    --type-reveal-caret-width: 0.6ch;
-    --type-reveal-caret-height: 1.05em;
-    --type-reveal-caret-blink: 1.05s;
-    --type-reveal-caret-blinks: 3;
   }
 
   @media (min-width: 768px) {

@@ -1,3 +1,11 @@
+@theme {
+  --links-thumb-contrast: 1.15;
+  --links-thumb-brightness: 0.95;
+  --links-thumb-tint: 0.9;
+  --links-thumb-tint-reveal: 0.3;
+  --links-thumb-reveal-duration: 200ms;
+}
+
 @layer components {
   @keyframes links-marquee {
     from {

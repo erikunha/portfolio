@@ -1,5 +1,8 @@
-import { describe, expect, it } from 'vitest';
-import { findUnusedThemeTokens } from '../scripts/gates/lint-css-tokens';
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { findUnusedThemeTokens, readThemeSheets } from '../scripts/gates/lint-css-tokens';
 
 const theme = (body: string): string =>
   `@theme {\n${body}\n}\n@layer base { :root { margin: 0; } }`;
@@ -67,5 +70,36 @@ describe('findUnusedThemeTokens', () => {
   it('ignores declarations outside the @theme block', () => {
     const css = '@theme {\n  --eq-gap: 1px;\n}\n:root { --other: 1; }';
     expect(findUnusedThemeTokens(css, ['var(--eq-gap)'])).toEqual([]);
+  });
+});
+
+describe('readThemeSheets', () => {
+  let root: string;
+  const write = (file: string, body: string): void => {
+    mkdirSync(join(root, 'app/css'), { recursive: true });
+    writeFileSync(join(root, 'app/css', file), body);
+  };
+
+  beforeEach(() => {
+    root = mkdtempSync(join(tmpdir(), 'css-tokens-sheets-'));
+    write('theme.css', '@theme {\n  --text-min: 1rem;\n}\n');
+    write('components-card.css', '@theme {\n  --card-gap: 1px;\n  --card-unused: 2px;\n}\n');
+  });
+
+  afterEach(() => {
+    rmSync(root, { recursive: true, force: true });
+  });
+
+  it('puts the @theme block of a component stylesheet under the unused-token check', () => {
+    const sheets = readThemeSheets(root);
+    expect(findUnusedThemeTokens(sheets, ['a { gap: var(--card-gap); }', 'text-min'])).toEqual([
+      '--card-unused',
+    ]);
+  });
+
+  it('reads theme.css before the component stylesheets', () => {
+    expect(readThemeSheets(root).indexOf('--text-min')).toBeLessThan(
+      readThemeSheets(root).indexOf('--card-gap'),
+    );
   });
 });

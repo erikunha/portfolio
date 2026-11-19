@@ -11,7 +11,7 @@ export const metadata = dsPageMetadata({
 
 <OnThisPage items={[{id:'roles',label:'Semantic roles'},{id:'signal',label:'Signal'},{id:'surfaces',label:'Surfaces and text'},{id:'status',label:'Status'},{id:'rules',label:'Rules'}]} />
 
-Color tokens live in `app/css/theme.css` inside the single `@theme` block. Swatches read their values from that file. The full ordinal scales are on the [tokens page](/design-system/tokens).
+Color tokens live in `app/css/theme.css` inside the single `@theme` block. Swatches read their values from that file. The full hue ramps are on the [tokens page](/design-system/tokens).
 
 <h2 id="roles">Semantic roles</h2>
 
@@ -41,7 +41,7 @@ Color tokens live in `app/css/theme.css` inside the single `@theme` block. Swatc
 
 <h2 id="rules">Rules</h2>
 
-- The green and grey ramps carry the whole interface. Two other hues exist, each with one meaning: red (`senary`) marks alerts and the window-chrome close dot, and amber (`gold-500`) marks the window-chrome minimize dot. There is no cyan.
+- The green and grey ramps carry the whole interface. Two other hues exist, each with one meaning: red (`coral`) marks alerts and the window-chrome close dot, and amber (`gold-500`) marks the window-chrome minimize dot. There is no cyan.
 - Reference a color by its role: `var(--color-surface)` in a stylesheet, `bg-(color:--color-surface)` in a class string. Use a palette step only where no role fits. Never write raw hex in components.
 - A control edge (input, textarea) uses the `accent` role: the translucent `border` and `border-strong` roles measure below the 3:1 non-text minimum (WCAG 1.4.11) on the black surface.
 - Do not use the signal green for paragraph text. Body copy uses `text` (`sage-50`).

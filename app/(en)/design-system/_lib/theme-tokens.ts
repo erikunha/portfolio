@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 const COLOR_DECLARATION = /--color-([\w-]+):\s*([^;]+);/g;
@@ -165,11 +165,23 @@ export function tokensWithPrefix(
   );
 }
 
+const CSS_DIR = 'app/css';
+const THEME_SHEET = 'theme.css';
+const SHEET_EXTENSION = '.css';
+
+function isComponentSheet(name: string): boolean {
+  return name.endsWith(SHEET_EXTENSION) && name !== THEME_SHEET;
+}
+
 let tokenCache: ThemeToken[] | null = null;
 
 export function getThemeTokens(): ThemeToken[] {
   if (!tokenCache) {
-    tokenCache = parseThemeTokens(readFileSync(join(process.cwd(), 'app/css/theme.css'), 'utf8'));
+    const dir = join(process.cwd(), CSS_DIR);
+    const sheets = [THEME_SHEET, ...readdirSync(dir).filter(isComponentSheet).sort()];
+    tokenCache = sheets.flatMap((sheet) =>
+      parseThemeTokens(readFileSync(join(dir, sheet), 'utf8')),
+    );
   }
   return tokenCache;
 }

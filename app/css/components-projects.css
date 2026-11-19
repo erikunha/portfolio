@@ -1,3 +1,9 @@
+@theme {
+  --receipt-metric-width: 10.5rem;
+  --receipt-value-width: 9rem;
+  --receipt-company-width: 9.375rem;
+}
+
 @layer components {
   .projects-grid {
     display: grid;
