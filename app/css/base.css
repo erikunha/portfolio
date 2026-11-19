@@ -130,12 +130,12 @@
   }
 
   ::selection {
-    background: var(--color-primary-500);
+    background: var(--color-accent);
     color: var(--color-secondary-950);
   }
 
   a {
-    color: var(--color-primary-500);
+    color: var(--color-accent);
     text-decoration: none;
   }
 
@@ -169,7 +169,7 @@
     top: 0;
     z-index: var(--z-skip-link);
     padding: var(--spacing-2) var(--spacing-4);
-    background: var(--color-primary-500);
+    background: var(--color-accent);
     color: var(--color-secondary-950);
     font-family: var(--font-mono);
     font-size: var(--text-base);
@@ -213,7 +213,7 @@
   h4 {
     font-family: var(--font-mono);
     font-weight: 700;
-    color: var(--color-primary-500);
+    color: var(--color-accent);
     margin: 0 0 var(--spacing-2) 0;
     text-shadow: 0 0 2px var(--color-glow-30);
   }

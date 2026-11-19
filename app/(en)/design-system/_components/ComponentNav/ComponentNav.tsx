@@ -28,7 +28,7 @@ export function ComponentNav() {
         <a
           key={id}
           href={`#${id}`}
-          className="component-nav-link text-xs font-mono text-primary-400 no-underline border border-primary-border px-2 py-0.5 transition-[color,border-color] duration-[80ms] motion-off:transition-none hover:text-primary-500 hover:border-primary-500 focus-visible:text-primary-500 focus-visible:border-primary-500"
+          className="component-nav-link text-xs font-mono text-primary-400 no-underline border border-primary-border px-2 py-0.5 transition-[color,border-color] duration-[80ms] motion-off:transition-none hover:text-(color:--color-accent) hover:border-(color:--color-accent) focus-visible:text-(color:--color-accent) focus-visible:border-(color:--color-accent)"
         >
           {label}
         </a>

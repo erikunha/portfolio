@@ -21,7 +21,7 @@
     position: absolute;
     width: 14px;
     height: 14px;
-    border: 1px solid var(--color-primary-500);
+    border: 1px solid var(--color-accent);
   }
 
   .cam-corners::before {

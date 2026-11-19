@@ -17,8 +17,8 @@ import { FaderBar, ParsedText, SessionSummary, StrengthDots } from './DawMixerSh
 
 const STATIC_SEGMENT_CLASS = {
   [MeterSegment.Red]: 'meter-alert bg-senary-300',
-  [MeterSegment.Filled]: 'meter-fill bg-primary-500',
-  [MeterSegment.Empty]: 'meter-dim bg-primary-500 opacity-[0.22]',
+  [MeterSegment.Filled]: 'meter-fill bg-(color:--color-accent)',
+  [MeterSegment.Empty]: 'meter-dim bg-(color:--color-accent) opacity-[0.22]',
 } as const;
 
 function StaticMeter({
@@ -56,7 +56,7 @@ function StaticFader({ pct }: { pct: number }) {
         className={cn(
           'absolute top-1/2 -translate-x-1/2 -translate-y-1/2',
           'w-[18px] h-[28px]',
-          'bg-primary-500 shadow-[0_0_10px_var(--color-primary-500)] border border-secondary-950',
+          'bg-(color:--color-accent) shadow-[0_0_10px_var(--color-accent)] border border-secondary-950',
           'motion-off:shadow-none',
           'mx-fader-thumb',
         )}
@@ -71,7 +71,7 @@ function StaticKnob({ angleDeg, label }: { angleDeg: number; label: string }) {
     <div className="flex flex-row items-center gap-2 select-none">
       <div
         className={cn(
-          'w-[30px] h-[30px] border border-primary-500 rounded-full relative shrink-0',
+          'w-[30px] h-[30px] border border-(color:--color-accent) rounded-full relative shrink-0',
           'bg-[radial-gradient(circle_at_35%_30%,var(--color-glow-18),color-mix(in_srgb,var(--color-secondary-950)_70%,transparent))]',
           'mx-dial',
         )}
@@ -106,8 +106,8 @@ function PluginChainMobile({
               'text-primary-400',
               p.active
                 ? [
-                    'border-primary-500 text-primary-500',
-                    'bg-[color-mix(in_srgb,var(--color-primary-500)_8%,transparent)]',
+                    'border-(color:--color-accent) text-(color:--color-accent)',
+                    'bg-[color-mix(in_srgb,var(--color-accent)_8%,transparent)]',
                   ].join(' ')
                 : 'border-[color-mix(in_srgb,var(--color-primary-quiet)_40%,transparent)]',
             )}
@@ -118,7 +118,7 @@ function PluginChainMobile({
               className={cn(
                 'w-[6px] h-[6px] justify-self-center',
                 p.active
-                  ? 'meter-fill bg-primary-500 shadow-[0_0_4px_var(--color-primary-500)]'
+                  ? 'meter-fill bg-(color:--color-accent) shadow-[0_0_4px_var(--color-accent)]'
                   : 'meter-dim bg-[var(--color-primary-quiet)]',
               )}
               aria-hidden="true"
@@ -142,7 +142,7 @@ function PluginChainMobile({
 function SessionHeaderMobile({ mixer, copy }: { mixer: DawMixer; copy: DawMixerCopy }) {
   return (
     <div
-      className="text-xs text-primary-400 leading-ratio-1-8 border-b border-[var(--color-primary-border)] px-[14px] py-[10px] tracking-3xl bg-[color-mix(in_srgb,var(--color-primary-500)_5%,transparent)]"
+      className="text-xs text-primary-400 leading-ratio-1-8 border-b border-[var(--color-primary-border)] px-[14px] py-[10px] tracking-3xl bg-[color-mix(in_srgb,var(--color-accent)_5%,transparent)]"
       data-testid="session-header-mobile"
     >
       <div>
@@ -165,7 +165,7 @@ function MixLegendMobile({ mixer, copy }: { mixer: DawMixer; copy: DawMixerCopy 
       aria-hidden="true"
     >
       <span>
-        <span className="meter-fill inline-block w-[5px] h-[5px] bg-primary-500 shadow-[0_0_5px_var(--color-primary-500)] mr-[6px] align-[1px]" />
+        <span className="meter-fill inline-block w-[5px] h-[5px] bg-(color:--color-accent) shadow-[0_0_5px_var(--color-accent)] mr-[6px] align-[1px]" />
         {lead.id} {copy.leadSuffix}
       </span>
     </div>
@@ -179,11 +179,11 @@ function ChannelMobile({ ch, copy }: { ch: DawMixerChannel; copy: DawMixerCopy }
       className={cn(
         'relative border-b border-[var(--color-primary-quiet)] px-[14px] pt-4 pb-[18px] flex flex-col gap-3',
         ch.focused
-          ? 'bg-[color-mix(in_srgb,var(--color-primary-500)_7%,transparent)] channel-row-focused'
+          ? 'bg-[color-mix(in_srgb,var(--color-accent)_7%,transparent)] channel-row-focused'
           : 'bg-secondary-950/35',
         isMaster && [
-          'bg-[linear-gradient(180deg,color-mix(in_srgb,var(--color-primary-500)_6%,transparent),transparent)]',
-          'border-t-2 border-t-primary-500',
+          'bg-[linear-gradient(180deg,color-mix(in_srgb,var(--color-accent)_6%,transparent),transparent)]',
+          'border-t-2 border-t-(color:--color-accent)',
         ],
       )}
       data-focused={ch.focused || undefined}
@@ -198,10 +198,10 @@ function ChannelMobile({ ch, copy }: { ch: DawMixerChannel; copy: DawMixerCopy }
           className={cn(
             'text-xs tracking-5xl border font-bold whitespace-nowrap shrink-0 px-[7px] py-[3px]',
             ch.focused
-              ? 'text-primary-500 border-primary-500 bg-[color-mix(in_srgb,var(--color-primary-500)_10%,transparent)]'
+              ? 'text-(color:--color-accent) border-(color:--color-accent) bg-[color-mix(in_srgb,var(--color-accent)_10%,transparent)]'
               : 'text-primary-400 border-[var(--color-primary-quiet)] bg-secondary-950/55',
             isMaster &&
-              'border-primary-500 px-2 py-[2px] text-xs tracking-2xl font-bold text-primary-500 bg-transparent',
+              'border-(color:--color-accent) px-2 py-[2px] text-xs tracking-2xl font-bold text-(color:--color-accent) bg-transparent',
           )}
           data-channel={isMaster ? 'master' : undefined}
         >
@@ -210,13 +210,13 @@ function ChannelMobile({ ch, copy }: { ch: DawMixerChannel; copy: DawMixerCopy }
         <span
           className={cn(
             'text-sm font-bold tracking-xs leading-ratio-1-15 min-w-0 overflow-hidden text-ellipsis whitespace-nowrap',
-            ch.focused || isMaster ? 'text-primary-500' : 'text-tertiary-50',
+            ch.focused || isMaster ? 'text-(color:--color-accent)' : 'text-tertiary-50',
           )}
         >
           {ch.name}
         </span>
         <div className="text-xs text-primary-400 tabular-nums tracking-xs text-right leading-ratio-1-1 whitespace-nowrap">
-          <span className="font-bold text-primary-500 text-xs max-md:text-sm">
+          <span className="font-bold text-(color:--color-accent) text-xs max-md:text-sm">
             {pctToDb(ch.faderPct)}
           </span>
           <span className="text-xs max-md:text-sm text-primary-400">{copy.decibelUnit}</span>
@@ -251,8 +251,8 @@ function ChannelMobile({ ch, copy }: { ch: DawMixerChannel; copy: DawMixerCopy }
                   'text-xs font-bold tracking-xs',
                   ch.activeButtons.includes(btn)
                     ? [
-                        'border border-primary-500 text-primary-500',
-                        'bg-[color-mix(in_srgb,var(--color-primary-500)_10%,transparent)]',
+                        'border border-(color:--color-accent) text-(color:--color-accent)',
+                        'bg-[color-mix(in_srgb,var(--color-accent)_10%,transparent)]',
                         'shadow-[0_0_5px_var(--color-glow-35)]',
                       ].join(' ')
                     : 'border border-[var(--color-primary-quiet)] text-primary-400 bg-secondary-950/50',

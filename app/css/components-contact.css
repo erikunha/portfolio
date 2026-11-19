@@ -1,6 +1,6 @@
 @layer components {
   .contact-success {
-    border: var(--border-width) solid var(--color-primary-500);
+    border: var(--border-width) solid var(--color-accent);
     padding: var(--spacing-6);
     color: var(--color-text);
     background:
@@ -24,7 +24,7 @@
   }
 
   .contact-state-title {
-    color: var(--color-primary-500);
+    color: var(--color-accent);
     font-size: var(--text-base);
     font-weight: bold;
   }
@@ -67,7 +67,7 @@
   }
 
   .contact-shell {
-    border: var(--border-width) solid var(--color-primary-500);
+    border: var(--border-width) solid var(--color-accent);
     border-radius: var(--radius-control);
     background: var(--color-secondary-900);
     font-family: var(--font-mono);
@@ -95,7 +95,7 @@
     align-items: center;
     gap: var(--spacing-2);
     padding: var(--spacing-2) var(--spacing-4);
-    border-bottom: var(--border-width) solid var(--color-primary-500);
+    border-bottom: var(--border-width) solid var(--color-accent);
     color: var(--color-text-secondary);
     font-size: var(--text-xs);
   }
@@ -173,7 +173,7 @@
     display: inline-flex;
     align-items: center;
     min-height: var(--spacing-target);
-    color: var(--color-primary-500);
+    color: var(--color-accent);
     text-decoration: underline;
     text-underline-offset: var(--spacing-1);
   }
@@ -196,7 +196,7 @@
   }
 
   .contact-summary-lead {
-    color: var(--color-primary-500);
+    color: var(--color-accent);
     font-weight: bold;
   }
 
@@ -283,7 +283,7 @@
 
   .contact-channels-body dt {
     flex: none;
-    color: var(--color-primary-500);
+    color: var(--color-accent);
     font-size: var(--text-xs);
     letter-spacing: var(--tracking-2xs);
   }
@@ -332,7 +332,7 @@
   }
 
   .contact-channel-glyph {
-    color: var(--color-primary-500);
+    color: var(--color-accent);
   }
 
   .contact-copy-btn {
@@ -451,12 +451,12 @@
     display: flex;
     align-items: baseline;
     gap: var(--spacing-2);
-    color: var(--color-primary-500);
+    color: var(--color-accent);
     overflow-wrap: anywhere;
   }
 
   .ctz-sync .ctz-loading {
-    color: var(--color-primary-500);
+    color: var(--color-accent);
     min-width: 0;
   }
 
@@ -629,8 +629,8 @@
     flex-direction: column;
     gap: var(--spacing-2);
     padding: var(--spacing-3);
-    border: var(--border-width) solid var(--color-primary-500);
-    color: var(--color-primary-500);
+    border: var(--border-width) solid var(--color-accent);
+    color: var(--color-accent);
   }
 
   .ctz-status[data-online="false"] {
@@ -670,7 +670,7 @@
   }
 
   .ctz-clock-time[data-tone="erik"] {
-    color: var(--color-primary-500);
+    color: var(--color-accent);
   }
 
   .ctz-clock-link {
@@ -707,7 +707,7 @@
   }
 
   .ctz-route {
-    stroke: var(--color-primary-500);
+    stroke: var(--color-accent);
     stroke-width: 1.5px;
     stroke-dasharray: 4 4;
     vector-effect: non-scaling-stroke;
@@ -730,7 +730,7 @@
   }
 
   .ctz-pin[data-tone="erik"] {
-    background: var(--color-primary-500);
+    background: var(--color-accent);
   }
 
   .ctz-pulse {
@@ -775,7 +775,7 @@
   }
 
   .ctz-label[data-tone="erik"] {
-    border-color: var(--color-primary-500);
+    border-color: var(--color-accent);
   }
 
   .ctz-label-caption {
@@ -790,7 +790,7 @@
   }
 
   .ctz-label[data-tone="erik"] .ctz-label-time {
-    color: var(--color-primary-500);
+    color: var(--color-accent);
   }
 
   .ctz-location {
@@ -805,7 +805,7 @@
   }
 
   .ctz-place {
-    color: var(--color-primary-500);
+    color: var(--color-accent);
   }
 
   .ctz-detected,
@@ -842,7 +842,7 @@
     inset-inline: 0;
     top: calc(100% + var(--spacing-1));
     z-index: var(--z-local-above);
-    border: var(--border-width) solid var(--color-primary-500);
+    border: var(--border-width) solid var(--color-accent);
     background: var(--color-secondary-950);
   }
 
@@ -878,7 +878,7 @@
   }
 
   .ctz-option[aria-selected="true"] {
-    box-shadow: inset var(--spacing-1) 0 0 var(--color-primary-500);
+    box-shadow: inset var(--spacing-1) 0 0 var(--color-accent);
   }
 
   .ctz-option-offset {
@@ -926,7 +926,7 @@
   }
 
   .ctz-row[data-row="both"] .ctz-cell[data-on="true"] {
-    background: var(--color-primary-500);
+    background: var(--color-accent);
   }
 
   .ctz-cell[data-now] {
@@ -969,7 +969,7 @@
   }
 
   .ctz-slot-erik {
-    color: var(--color-primary-500);
+    color: var(--color-accent);
   }
 
   .ctz-propose {
@@ -995,7 +995,7 @@
   }
 
   .ctz-overlap-hours {
-    color: var(--color-primary-500);
+    color: var(--color-accent);
   }
 
   .contact-facts {
@@ -1083,7 +1083,7 @@
     display: inline-flex;
     align-items: center;
     min-height: var(--spacing-target);
-    color: var(--color-primary-500);
+    color: var(--color-accent);
   }
 
   @media (max-width: theme(--viewport-below-split)) {

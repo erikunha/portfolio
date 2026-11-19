@@ -69,11 +69,11 @@
   }
 
   .hero-boot-ok {
-    color: var(--color-primary-500);
+    color: var(--color-accent);
   }
 
   .hero-boot-enc {
-    color: var(--color-primary-500);
+    color: var(--color-accent);
     font-weight: 700;
     text-shadow:
       0 0 6px var(--color-glow-60),
@@ -99,7 +99,7 @@
   }
 
   .hero-boot-matrix-out {
-    color: var(--color-primary-500);
+    color: var(--color-accent);
     text-shadow:
       0 0 8px var(--color-glow-40),
       0 0 4px var(--color-secondary-950);
@@ -169,7 +169,7 @@
 
   .hero-identity {
     margin: 0 0 var(--spacing-1);
-    color: var(--color-primary-500);
+    color: var(--color-accent);
     font-family: var(--font-display);
     font-size: var(--text-4xl);
     font-weight: 900;
@@ -218,11 +218,11 @@
   }
 
   .hero-context b {
-    color: var(--color-primary-500);
+    color: var(--color-accent);
   }
 
   .hero-context .hero-location {
-    background: var(--color-primary-500);
+    background: var(--color-accent);
     color: var(--color-secondary-950);
     padding-inline: calc(var(--spacing-1) * 1.5);
   }

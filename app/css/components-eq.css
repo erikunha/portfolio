@@ -62,7 +62,7 @@
     background: linear-gradient(
       to bottom,
       var(--color-eq-bar-top),
-      var(--color-primary-500) var(--eq-bar-mid-stop),
+      var(--color-accent) var(--eq-bar-mid-stop),
       var(--color-eq-bar-bottom)
     );
     transform-origin: 50% 100%;

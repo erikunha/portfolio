@@ -13,7 +13,7 @@
     align-items: center;
     gap: var(--spacing-2);
     margin: 0;
-    color: var(--color-primary-500);
+    color: var(--color-accent);
     font-size: var(--text-section-title);
     font-weight: 700;
     letter-spacing: var(--tracking-xl);
@@ -73,12 +73,12 @@
 
   .ab-prose h4 {
     margin: 0;
-    color: var(--color-primary-500);
+    color: var(--color-accent);
     font-weight: 700;
   }
 
   .ab-role {
-    background: var(--color-primary-500);
+    background: var(--color-accent);
     color: var(--color-secondary-950);
     padding: var(--border-width) calc(var(--spacing-1) * 1.5);
     letter-spacing: var(--tracking-xs);
@@ -162,7 +162,7 @@
 
   .ab-permissions,
   .ab-resp [data-highlight] {
-    color: var(--color-primary-500);
+    color: var(--color-accent);
     font-weight: 700;
   }
 

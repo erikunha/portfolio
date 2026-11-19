@@ -151,7 +151,7 @@
   --focus-ring-offset: 2px;
   --focus-ring-offset-inset: -2px;
   --focus-ring: var(--focus-ring-width) solid var(--color-primary-500);
-  --shadow-glow: 0 0 12px var(--color-primary-500);
+  --shadow-glow: 0 0 12px var(--color-accent);
   --stroke-width-icon: 1.4;
   --radius-none: 0;
   --radius-control: 2px;

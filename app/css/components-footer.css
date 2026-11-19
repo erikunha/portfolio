@@ -266,7 +266,7 @@
 
   .footer-link-glyph {
     flex: none;
-    color: var(--color-primary-500);
+    color: var(--color-accent);
   }
 
   .footer-link:hover,

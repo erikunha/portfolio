@@ -23,7 +23,7 @@ export function StrengthDots({
 }) {
   return Array.from({ length: PLUGIN_STRENGTH_STEPS }, (_, i) => {
     const cls = cn(
-      'block bg-primary-500',
+      'block bg-(color:--color-accent)',
       i < strength ? 'meter-fill' : 'meter-dim opacity-[0.22]',
       dotClassName,
     );
@@ -42,7 +42,7 @@ export function FaderBar({ pct, bright = false }: { pct: number; bright?: boolea
     >
       <div
         className={cn(
-          'meter-fill absolute left-0 top-0 bottom-0 bg-primary-500 opacity-85',
+          'meter-fill absolute left-0 top-0 bottom-0 bg-(color:--color-accent) opacity-85',
           bright && 'opacity-100',
         )}
         style={{ width: `${pct}%` }}
@@ -54,9 +54,10 @@ export function FaderBar({ pct, bright = false }: { pct: number; bright?: boolea
 export function SessionSummary({ mixer, copy }: { mixer: DawMixer; copy: DawMixerCopy }) {
   return (
     <>
-      {copy.sessionLabel} <strong className="text-primary-500">{mixer.sessionName}</strong>{' '}
-      {copy.separator} {mixer.channels.length - 1} {copy.tracksLabel} {copy.separator}{' '}
-      <span className="text-primary-500">{mixer.status}</span>
+      {copy.sessionLabel}{' '}
+      <strong className="text-(color:--color-accent)">{mixer.sessionName}</strong> {copy.separator}{' '}
+      {mixer.channels.length - 1} {copy.tracksLabel} {copy.separator}{' '}
+      <span className="text-(color:--color-accent)">{mixer.status}</span>
     </>
   );
 }

@@ -8,6 +8,7 @@ const CHANNEL_MAX = 255;
 const HEX_RADIX = 16;
 const HEX_PAIR = 2;
 const OPAQUE_HEX_LENGTH = 6;
+const BORDER_COLOR_CLASS = /^border-\(color:--color-([a-z0-9-]+)\)$/;
 
 function luminance(channels: number[]): number {
   const [r = 0, g = 0, b = 0] = channels.map((channel) => {
@@ -85,11 +86,11 @@ describe('Field', () => {
   it('draws the resting border at 3:1 or better against the page (WCAG 1.4.11)', () => {
     render(<Field name="email" label="Email" />);
     const borderClass = [...screen.getByRole('textbox').classList].find((name) =>
-      /^border-[a-z]+-\d+$|^border-[a-z]+-[a-z]+$/.test(name),
+      BORDER_COLOR_CLASS.test(name),
     );
     expect(borderClass).toBeDefined();
     const colors = getThemeColors();
-    const border = colors[(borderClass ?? '').replace('border-', '')];
+    const border = colors[BORDER_COLOR_CLASS.exec(borderClass ?? '')?.[1] ?? ''];
     expect(border).toBeDefined();
     expect(contrastOnBlack(border ?? '')).toBeGreaterThanOrEqual(NON_TEXT_MIN_CONTRAST);
   });

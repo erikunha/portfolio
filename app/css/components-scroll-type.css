@@ -39,7 +39,7 @@
     background: linear-gradient(
       to right,
       transparent calc(100% - var(--module-caret-width)),
-      var(--color-primary-500) 0
+      var(--color-accent) 0
     );
     opacity: 0;
   }

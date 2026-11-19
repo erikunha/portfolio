@@ -121,7 +121,7 @@ export function KnobIsland({ initialAngle, label, channelName, degreesUnit, hint
           cx={KNOB_CENTER}
           cy={KNOB_CENTER}
           r="11"
-          stroke="var(--color-primary-500)"
+          stroke="var(--color-accent)"
           strokeWidth="1"
           fill="var(--color-secondary-950)"
           fillOpacity="0.7"
@@ -132,7 +132,7 @@ export function KnobIsland({ initialAngle, label, channelName, degreesUnit, hint
           y1={KNOB_CENTER}
           x2={x2.toFixed(2)}
           y2={y2.toFixed(2)}
-          stroke="var(--color-primary-500)"
+          stroke="var(--color-accent)"
           strokeWidth="2"
           strokeLinecap="round"
         />

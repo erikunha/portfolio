@@ -38,7 +38,7 @@
     inset: 0;
     pointer-events: none;
     --crt-mask-red: color-mix(in srgb, var(--color-crt-phosphor-red) 6%, transparent);
-    --crt-mask-green: color-mix(in srgb, var(--color-primary-500) 6%, transparent);
+    --crt-mask-green: color-mix(in srgb, var(--color-accent) 6%, transparent);
     --crt-mask-blue: color-mix(in srgb, var(--color-crt-phosphor-blue) 6%, transparent);
     background-image: repeating-linear-gradient(
       to right,

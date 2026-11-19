@@ -11,7 +11,7 @@ export function SectionHeading({ id, children, trailing, reveal = true }: Sectio
   return (
     <h2
       id={id}
-      className="flex items-center gap-2 text-primary-500 text-xs font-normal tracking-3xl uppercase m-0 mb-2"
+      className="flex items-center gap-2 text-(color:--color-accent) text-xs font-normal tracking-3xl uppercase m-0 mb-2"
     >
       <span data-type-reveal={reveal || undefined} suppressHydrationWarning>
         {children}

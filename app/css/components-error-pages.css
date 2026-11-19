@@ -15,7 +15,7 @@
   }
 
   .nojs-bar a {
-    color: var(--color-primary-500);
+    color: var(--color-accent);
     text-decoration: underline;
   }
 
@@ -128,7 +128,7 @@
   }
 
   .err-suggest .err-link {
-    color: var(--color-primary-500);
+    color: var(--color-accent);
     text-decoration: underline;
     text-underline-offset: 4px;
   }
@@ -169,16 +169,16 @@
     align-items: center;
     min-height: var(--spacing-target);
     padding: 0 var(--spacing-4);
-    border: var(--border-width) solid var(--color-primary-500);
+    border: var(--border-width) solid var(--color-accent);
     background: transparent;
-    color: var(--color-primary-500);
+    color: var(--color-accent);
     font: inherit;
     text-decoration: none;
     cursor: pointer;
   }
 
   .err-action-primary {
-    background: var(--color-primary-500);
+    background: var(--color-accent);
     color: var(--color-secondary-950);
     font-weight: 700;
   }
@@ -211,7 +211,7 @@
 
   .eb-title {
     margin: 0;
-    color: var(--color-primary-500);
+    color: var(--color-accent);
     font-size: var(--text-sm);
     font-weight: 700;
   }
@@ -226,9 +226,9 @@
   .eb-reload {
     min-height: var(--spacing-target);
     padding: 0 var(--spacing-4);
-    border: var(--border-width) solid var(--color-primary-500);
+    border: var(--border-width) solid var(--color-accent);
     background: transparent;
-    color: var(--color-primary-500);
+    color: var(--color-accent);
     font: inherit;
     font-weight: 700;
     cursor: pointer;
@@ -239,7 +239,7 @@
     padding: 0 var(--spacing-3);
     border: var(--border-width) solid var(--color-primary-subtle);
     background: transparent;
-    color: var(--color-primary-500);
+    color: var(--color-accent);
     font: inherit;
     cursor: pointer;
   }

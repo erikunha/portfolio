@@ -36,9 +36,9 @@ export function RmsButtons({ buttons, initialActive, channelName, buttonLabels }
             active.has(btn)
               ? [
                   'rms-active',
-                  'border border-primary-500 text-primary-500',
-                  'bg-[color-mix(in_srgb,var(--color-primary-500)_10%,transparent)]',
-                  'shadow-[0_0_5px_color-mix(in_srgb,var(--color-primary-500)_35%,transparent)]',
+                  'border border-(color:--color-accent) text-(color:--color-accent)',
+                  'bg-[color-mix(in_srgb,var(--color-accent)_10%,transparent)]',
+                  'shadow-[0_0_5px_color-mix(in_srgb,var(--color-accent)_35%,transparent)]',
                 ].join(' ')
               : 'rms-inactive border border-[var(--color-primary-quiet)] bg-transparent text-primary-400',
           )}

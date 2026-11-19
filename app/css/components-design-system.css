@@ -91,7 +91,7 @@
 
   .ds-prose th {
     background: var(--color-primary-quiet);
-    color: var(--color-primary-500);
+    color: var(--color-accent);
     font-size: var(--text-xs);
     letter-spacing: var(--tracking-sm);
     white-space: nowrap;
@@ -373,7 +373,7 @@
   .ds-space-bar {
     display: block;
     height: var(--spacing-3);
-    background: var(--color-primary-500);
+    background: var(--color-accent);
   }
 
   .component-nav-link {

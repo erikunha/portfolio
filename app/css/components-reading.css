@@ -10,7 +10,7 @@
   }
 
   .reading-view a {
-    color: var(--color-primary-500);
+    color: var(--color-accent);
   }
 
   .reading-view a:hover {
@@ -40,7 +40,7 @@
 
   .reading-name {
     margin: 0;
-    color: var(--color-primary-500);
+    color: var(--color-accent);
   }
 
   .reading-role {
@@ -79,7 +79,7 @@
 
   .reading-heading {
     margin: 0 0 var(--spacing-3);
-    color: var(--color-primary-500);
+    color: var(--color-accent);
     font-size: var(--text-xl);
     letter-spacing: var(--tracking-3xl);
     text-transform: uppercase;
@@ -126,7 +126,7 @@
   }
 
   .reading-entry li::marker {
-    color: var(--color-primary-500);
+    color: var(--color-accent);
   }
 
   .reading-skills {
@@ -218,12 +218,12 @@
   .reading-project {
     min-width: 0;
     padding-left: var(--spacing-3);
-    border-left: calc(var(--border-width) * 2) solid var(--color-primary-500);
+    border-left: calc(var(--border-width) * 2) solid var(--color-accent);
   }
 
   .reading-project-name {
     margin: 0;
-    color: var(--color-primary-500);
+    color: var(--color-accent);
     font-size: var(--text-sm);
     font-weight: 700;
     letter-spacing: var(--tracking-md);
@@ -268,7 +268,7 @@
   }
 
   .reading-chips--ai li {
-    border-color: var(--color-primary-500);
+    border-color: var(--color-accent);
   }
 
   @media (min-width: theme(--viewport-lg)) {

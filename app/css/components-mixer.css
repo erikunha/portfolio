@@ -3,9 +3,9 @@
     display: inline-flex;
     align-items: center;
     min-height: var(--spacing-target);
-    border: 1px solid var(--color-primary-500);
+    border: 1px solid var(--color-accent);
     background: var(--color-secondary-950);
-    color: var(--color-primary-500);
+    color: var(--color-accent);
   }
 
   .mixer-skip-link:focus-visible {
@@ -136,10 +136,10 @@
   .transport-play {
     width: 0;
     height: 0;
-    border-left: 9px solid var(--color-primary-500);
+    border-left: 9px solid var(--color-accent);
     border-top: 6px solid transparent;
     border-bottom: 6px solid transparent;
-    filter: drop-shadow(0 0 4px var(--color-primary-500));
+    filter: drop-shadow(0 0 4px var(--color-accent));
   }
 
   .mx-fader {
@@ -171,8 +171,8 @@
     left: 50%;
     width: 1px;
     height: 12px;
-    background: var(--color-primary-500);
-    box-shadow: 0 0 4px var(--color-primary-500);
+    background: var(--color-accent);
+    box-shadow: 0 0 4px var(--color-accent);
     transform-origin: 50% 12px;
     transform: translateX(-50%) rotate(var(--mx-knob-angle, 0deg));
   }
@@ -195,8 +195,8 @@
     top: -2px;
     width: 5px;
     height: 5px;
-    background: var(--color-primary-500);
-    box-shadow: 0 0 4px var(--color-primary-500);
+    background: var(--color-accent);
+    box-shadow: 0 0 4px var(--color-accent);
   }
 
   .mx-chain::after {
@@ -204,9 +204,9 @@
     position: absolute;
     left: -1px;
     bottom: 0;
-    color: var(--color-primary-500);
+    color: var(--color-accent);
     font-size: var(--text-xs);
-    text-shadow: 0 0 4px var(--color-primary-500);
+    text-shadow: 0 0 4px var(--color-accent);
   }
 
   .mx-chain-mobile::after {
@@ -242,7 +242,7 @@
     right: 3px;
     width: 4px;
     height: 4px;
-    background: var(--color-primary-500);
+    background: var(--color-accent);
   }
 
   .channel-row-focused::before {
@@ -252,7 +252,7 @@
     top: 0;
     bottom: 0;
     width: 3px;
-    background: var(--color-primary-500);
-    box-shadow: 0 0 10px var(--color-primary-500);
+    background: var(--color-accent);
+    box-shadow: 0 0 10px var(--color-accent);
   }
 }

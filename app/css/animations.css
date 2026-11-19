@@ -9,7 +9,7 @@
     display: inline-block;
     width: 9px;
     height: 1.05em;
-    background: var(--color-primary-500);
+    background: var(--color-accent);
     vertical-align: -2px;
     margin-left: 2px;
     animation: boot-blink 1.05s steps(2, start) infinite;
@@ -26,7 +26,7 @@
     0%,
     100% {
       opacity: 1;
-      box-shadow: 0 0 4px var(--color-primary-500);
+      box-shadow: 0 0 4px var(--color-accent);
     }
     50% {
       opacity: 0.35;
@@ -37,7 +37,7 @@
   .badge-dot {
     width: 7px;
     height: 7px;
-    background: var(--color-primary-500);
+    background: var(--color-accent);
     flex-shrink: 0;
     animation: badge-pulse 1.6s ease-in-out infinite;
   }
@@ -71,7 +71,7 @@
     display: block;
     width: var(--status-dot-size, 6px);
     height: var(--status-dot-size, 6px);
-    background: var(--status-dot-color, var(--color-primary-500));
+    background: var(--status-dot-color, var(--color-accent));
   }
 
   .status-dot-blink {
@@ -103,7 +103,7 @@
     background: linear-gradient(
       180deg,
       transparent,
-      color-mix(in srgb, var(--color-primary-500) 32%, transparent) 50%,
+      color-mix(in srgb, var(--color-accent) 32%, transparent) 50%,
       transparent
     );
     mix-blend-mode: screen;
@@ -204,7 +204,7 @@
         background: linear-gradient(
           to right,
           transparent calc(100% - var(--type-reveal-caret-width)),
-          var(--color-primary-500) 0
+          var(--color-accent) 0
         );
         transform: translateX(calc(var(--type-reveal-caret-width) - 100%));
         pointer-events: none;

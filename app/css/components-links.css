@@ -39,8 +39,8 @@
     inset-block-start: 0;
     inset-inline: 0;
     height: 2px;
-    background: var(--color-primary-500);
-    box-shadow: 0 0 10px var(--color-primary-500);
+    background: var(--color-accent);
+    box-shadow: 0 0 10px var(--color-accent);
     transform: scaleX(0);
     transform-origin: 0 50%;
     z-index: var(--z-progress-line);
@@ -101,7 +101,7 @@
     content: "";
     position: absolute;
     inset: 0;
-    background: var(--color-primary-500);
+    background: var(--color-accent);
     mix-blend-mode: multiply;
     opacity: var(--links-thumb-tint);
     pointer-events: none;

@@ -18,7 +18,7 @@
     align-items: center;
     gap: var(--spacing-2);
     margin: 0;
-    color: var(--color-primary-500);
+    color: var(--color-accent);
     font-size: var(--text-section-title);
     font-weight: 700;
     letter-spacing: var(--tracking-3xl);
@@ -74,7 +74,7 @@
   }
 
   .career-command span:first-child {
-    color: var(--color-primary-500);
+    color: var(--color-accent);
   }
 
   .career-commits {
@@ -101,7 +101,7 @@
     width: 2ch;
     overflow: hidden;
     white-space: pre;
-    color: var(--color-primary-500);
+    color: var(--color-accent);
     user-select: none;
     pointer-events: none;
   }
@@ -164,7 +164,7 @@
 
   .career-company,
   .career-tag-key {
-    color: var(--color-primary-500);
+    color: var(--color-accent);
     font-weight: 700;
   }
 
@@ -218,7 +218,7 @@
   }
 
   .career-community-status > span {
-    color: var(--color-primary-500);
+    color: var(--color-accent);
   }
 
   .career-tag-list li > span {
@@ -253,9 +253,9 @@
     min-height: var(--spacing-target);
     margin-top: var(--spacing-6);
     padding: 0 var(--spacing-4);
-    border: var(--border-width) solid var(--color-primary-500);
+    border: var(--border-width) solid var(--color-accent);
     border-radius: var(--radius-control);
-    color: var(--color-primary-500);
+    color: var(--color-accent);
     font-size: var(--text-min);
     font-weight: 700;
     letter-spacing: var(--tracking-3xl);
@@ -263,7 +263,7 @@
   }
 
   .career-cv:hover {
-    background: var(--color-primary-500);
+    background: var(--color-accent);
     color: var(--color-secondary-950);
   }
 

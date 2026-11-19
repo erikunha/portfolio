@@ -26,8 +26,8 @@ function PluginChain({
             p.active
               ? [
                   'plugin-card-on',
-                  'text-primary-500 border-primary-500',
-                  'bg-[color-mix(in_srgb,var(--color-primary-500)_8%,transparent)]',
+                  'text-(color:--color-accent) border-(color:--color-accent)',
+                  'bg-[color-mix(in_srgb,var(--color-accent)_8%,transparent)]',
                 ].join(' ')
               : 'border-[var(--color-primary-quiet)] bg-secondary-950/55',
           )}
@@ -54,11 +54,11 @@ function ChannelDesktop({ ch, copy }: { ch: DawMixerChannel; copy: DawMixerCopy 
         'border-b border-[var(--color-primary-quiet)] px-[18px] py-[14px] relative',
         ch.focused && [
           'channel-row-focused',
-          'bg-[color-mix(in_srgb,var(--color-primary-500)_6%,transparent)]',
+          'bg-[color-mix(in_srgb,var(--color-accent)_6%,transparent)]',
         ],
         isMaster && [
-          'bg-[linear-gradient(90deg,color-mix(in_srgb,var(--color-primary-500)_8%,transparent),color-mix(in_srgb,var(--color-primary-500)_2%,transparent))]',
-          'border-t border-t-primary-500',
+          'bg-[linear-gradient(90deg,color-mix(in_srgb,var(--color-accent)_8%,transparent),color-mix(in_srgb,var(--color-accent)_2%,transparent))]',
+          'border-t border-t-(color:--color-accent)',
         ],
       )}
       data-focused={ch.focused || undefined}
@@ -70,7 +70,8 @@ function ChannelDesktop({ ch, copy }: { ch: DawMixerChannel; copy: DawMixerCopy 
           className={cn(
             'border px-[5px] py-[1px] text-xs font-mono text-primary-400 tracking-xs shrink-0',
             'border-[var(--color-primary-border)]',
-            isMaster && 'border-primary-500 px-2 py-[2px] font-bold text-primary-500 tracking-2xl',
+            isMaster &&
+              'border-(color:--color-accent) px-2 py-[2px] font-bold text-(color:--color-accent) tracking-2xl',
           )}
           data-channel={isMaster ? 'master' : undefined}
         >
@@ -83,7 +84,7 @@ function ChannelDesktop({ ch, copy }: { ch: DawMixerChannel; copy: DawMixerCopy 
         <span
           className={cn(
             'font-bold text-base text-tertiary-50 tracking-xs leading-ratio-1',
-            (ch.focused || isMaster) && 'text-primary-500',
+            (ch.focused || isMaster) && 'text-(color:--color-accent)',
           )}
         >
           {ch.desktopName ?? ch.name}
@@ -150,7 +151,7 @@ function SessionHeaderDesktop({ mixer, copy }: { mixer: DawMixer; copy: DawMixer
       className={cn(
         'daw-mixer-row-min grid gap-[18px] items-center px-[18px] py-3',
         'border-b border-[var(--color-primary-border)]',
-        'bg-[color-mix(in_srgb,var(--color-primary-500)_5%,transparent)]',
+        'bg-[color-mix(in_srgb,var(--color-accent)_5%,transparent)]',
         'text-xs text-primary-400 tracking-3xl',
       )}
       data-testid="session-header"
@@ -160,7 +161,7 @@ function SessionHeaderDesktop({ mixer, copy }: { mixer: DawMixer; copy: DawMixer
       </span>
       <span className="mixer-transport tabular-nums">
         <span className="transport-play" aria-hidden="true" />
-        <span className="text-primary-500 font-bold text-sm tracking-md">
+        <span className="text-(color:--color-accent) font-bold text-sm tracking-md">
           {mixer.transportTime}
         </span>
         <span className="text-[var(--color-primary-quiet)]">{copy.transportSeparator}</span>

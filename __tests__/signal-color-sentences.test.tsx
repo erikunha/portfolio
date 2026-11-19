@@ -19,7 +19,10 @@ vi.mock('@/lib/ua', () => ({ getIsMobile: async () => false }));
 vi.mock('@/components/client/ContactForm', () => ({ ContactFormLazy: () => null }));
 vi.mock('@/components/client/InteractiveShell', () => ({ InteractiveShellLazy: () => null }));
 
-const SIGNAL_TOKEN = 'var(--color-primary-500)';
+const SIGNAL_TOKENS: ReadonlySet<string> = new Set([
+  'var(--color-accent)',
+  'var(--color-primary-500)',
+]);
 const SENTENCE_WORDS = 4;
 const WORD = /[A-Za-z]{2,}/;
 const TERMINAL_STATUS_LINES: ReadonlySet<string> = new Set(['ctz-loading', 'mixer-boot-current']);
@@ -63,7 +66,7 @@ function subjectClasses(rule: Rule): string[] {
 }
 
 describe('sentence text never uses the signal colour', () => {
-  it('colours every class that carries a sentence with the body token, not --color-primary-500', async () => {
+  it('colours every class that carries a sentence with the body token, not --color-accent', async () => {
     const sections = [
       Hero,
       About,
@@ -85,7 +88,7 @@ describe('sentence text never uses the signal colour', () => {
 
     const offenders: string[] = [];
     parse(readComponentsCss()).walkRules((rule) => {
-      if (declValue(rule, 'color') !== SIGNAL_TOKEN) return;
+      if (!SIGNAL_TOKENS.has(declValue(rule, 'color') ?? '')) return;
       for (const name of subjectClasses(rule)) {
         if (sentences.has(name)) offenders.push(`.${name}`);
       }

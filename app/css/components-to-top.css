@@ -18,7 +18,7 @@
       border: var(--border-width) solid var(--color-primary-subtle);
       border-bottom: 0;
       border-inline-end: 0;
-      color: var(--color-primary-500);
+      color: var(--color-accent);
       opacity: 0;
       transform: translateY(8px);
       transition:

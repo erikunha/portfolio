@@ -36,7 +36,7 @@
   }
 
   .guitar-signal-strip-live {
-    color: var(--color-primary-500);
+    color: var(--color-accent);
   }
 
   .guitar-chain {
@@ -51,7 +51,7 @@
     gap: var(--spacing-1);
     min-width: 0;
     padding: var(--spacing-3);
-    border: var(--border-width) solid var(--color-primary-500);
+    border: var(--border-width) solid var(--color-accent);
     background: var(--color-glow-04);
     overflow-wrap: anywhere;
   }
@@ -67,7 +67,7 @@
     font-size: var(--text-sm);
     font-weight: bold;
     --leading: var(--guitar-heading-line-height);
-    color: var(--color-primary-500);
+    color: var(--color-accent);
   }
 
   .guitar-node-subtitle {
@@ -83,7 +83,7 @@
   .guitar-bar {
     width: var(--guitar-bar-width);
     height: var(--guitar-bar-height);
-    background: var(--color-primary-500);
+    background: var(--color-accent);
     opacity: var(--guitar-bar-opacity);
   }
 
@@ -94,7 +94,7 @@
   .guitar-arrow {
     align-self: center;
     justify-self: center;
-    color: var(--color-primary-500);
+    color: var(--color-accent);
     font-size: var(--text-xs);
   }
 
@@ -120,7 +120,7 @@
     flex-direction: column;
     min-width: 0;
     margin: 0;
-    border: var(--border-width) solid var(--color-primary-500);
+    border: var(--border-width) solid var(--color-accent);
     overflow: hidden;
   }
 
@@ -147,7 +147,7 @@
 
   .guitar-influences strong,
   .guitar-stat-value {
-    color: var(--color-primary-500);
+    color: var(--color-accent);
     font-weight: bold;
   }
 
@@ -217,7 +217,7 @@
   }
 
   .guitar-photo-tint {
-    background: var(--color-primary-500);
+    background: var(--color-accent);
     mix-blend-mode: multiply;
     opacity: var(--guitar-photo-tint-opacity);
   }
@@ -338,7 +338,7 @@
   }
 
   .mixer-boot-current {
-    color: var(--color-primary-500);
+    color: var(--color-accent);
   }
 
   .mixer-boot-queued {

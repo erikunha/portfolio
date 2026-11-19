@@ -89,14 +89,14 @@ describe('Button', () => {
   it('applies primary variant styles by default', () => {
     const { container } = render(<Button>Primary</Button>);
     const el = container.firstElementChild;
-    expect(el?.classList.contains('bg-primary-500')).toBe(true);
-    expect(el?.classList.contains('border-primary-500')).toBe(true);
+    expect(el?.classList.contains('bg-(color:--color-accent)')).toBe(true);
+    expect(el?.classList.contains('border-(color:--color-accent)')).toBe(true);
   });
   it('applies secondary variant styles', () => {
     const { container } = render(<Button variant="secondary">Secondary</Button>);
     const el = container.firstElementChild;
     expect(el?.classList.contains('bg-transparent')).toBe(true);
-    expect(el?.classList.contains('text-primary-500')).toBe(true);
+    expect(el?.classList.contains('text-(color:--color-accent)')).toBe(true);
   });
   it('keeps the 44px target and steps the small size down to 36px on a fine pointer', () => {
     const { container: smContainer } = render(<Button size="sm">Sm</Button>);
@@ -126,8 +126,8 @@ describe('Button', () => {
     );
     const [primary, secondary] = [...container.querySelectorAll('.btn')];
     expect(primary?.classList.contains('border-primary-subtle')).toBe(false);
-    expect(primary?.classList.contains('border-primary-500')).toBe(true);
+    expect(primary?.classList.contains('border-(color:--color-accent)')).toBe(true);
     expect(secondary?.classList.contains('border-primary-subtle')).toBe(true);
-    expect(secondary?.classList.contains('border-primary-500')).toBe(false);
+    expect(secondary?.classList.contains('border-(color:--color-accent)')).toBe(false);
   });
 });

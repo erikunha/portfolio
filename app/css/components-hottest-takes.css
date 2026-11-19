@@ -27,7 +27,7 @@
 
   .opinions-preamble > span:first-child,
   .opinions-footer > span {
-    color: var(--color-primary-500);
+    color: var(--color-accent);
     margin-right: calc(var(--spacing-1) * 1.5);
   }
 
@@ -146,7 +146,7 @@
   }
 
   .opinions-unknowns li > b {
-    color: var(--color-primary-500);
+    color: var(--color-accent);
     font-weight: 400;
   }
 
@@ -162,7 +162,7 @@
     max-width: 100%;
     margin-top: var(--spacing-4);
     font-size: var(--text-xs);
-    color: var(--color-primary-500);
+    color: var(--color-accent);
     text-decoration: underline;
     text-underline-offset: var(--spacing-1);
   }

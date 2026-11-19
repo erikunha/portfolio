@@ -23,11 +23,11 @@ describe('LocaleSwitch active state', () => {
       expect(active?.getAttribute('data-variant'), 'the solid fill belongs to the HIRE CTA').toBe(
         'secondary',
       );
-      expect(active?.className).not.toContain('bg-primary-500');
+      expect(active?.className).not.toContain('bg-(color:--color-accent)');
       expect(active?.className, 'the active locale needs a mark beyond the border').toContain(
         'underline',
       );
-      expect(active?.className).toContain('border-primary-500');
+      expect(active?.className).toContain('border-(color:--color-accent)');
     },
   );
 

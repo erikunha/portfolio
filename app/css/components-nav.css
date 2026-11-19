@@ -49,8 +49,8 @@
   }
 
   .nav-item[aria-current] {
-    color: var(--color-primary-500);
-    border-color: var(--color-primary-500);
+    color: var(--color-accent);
+    border-color: var(--color-accent);
   }
 
   .nav-item[aria-current]::before {
@@ -86,7 +86,7 @@
   .menu-trigger:hover,
   .menu-trigger[aria-expanded="true"] {
     background: var(--color-glow-06);
-    border-color: var(--color-primary-500);
+    border-color: var(--color-accent);
   }
 
   .menu-trigger:active {
@@ -175,7 +175,7 @@
 
   .menu-title {
     flex: 1;
-    color: var(--color-primary-500);
+    color: var(--color-accent);
     font-weight: 700;
     font-size: var(--text-sm);
     letter-spacing: var(--tracking-md);
@@ -258,7 +258,7 @@
   .section-menu .nav-item[aria-current] {
     background: var(--color-primary-quiet);
     border-color: transparent;
-    border-left-color: var(--color-primary-500);
+    border-left-color: var(--color-accent);
   }
 
   .section-menu .nav-num {
@@ -272,7 +272,7 @@
   }
 
   .section-menu .nav-item[aria-current] .nav-num {
-    color: var(--color-primary-500);
+    color: var(--color-accent);
   }
 
   .dock {
@@ -300,7 +300,7 @@
     left: 0;
     right: 0;
     height: 2px;
-    background: var(--color-primary-500);
+    background: var(--color-accent);
     transform-origin: 0 50%;
     transform: scaleX(var(--posf, 0));
   }
@@ -332,12 +332,12 @@
 
   .dock > [aria-current],
   .dock > [data-current] {
-    color: var(--color-primary-500);
-    border-top-color: var(--color-primary-500);
+    color: var(--color-accent);
+    border-top-color: var(--color-accent);
   }
 
   .dock > .dock-hire {
-    color: var(--color-primary-500);
+    color: var(--color-accent);
     font-weight: 700;
   }
 
@@ -377,7 +377,7 @@
     display: block;
     height: 100%;
     width: 100%;
-    background: var(--color-primary-500);
+    background: var(--color-accent);
     transform-origin: 0 50%;
     transform: scaleX(var(--posf, 0));
   }
@@ -446,7 +446,7 @@
     min-width: 0;
     padding: calc(env(safe-area-inset-top, 0px) + var(--spacing-2)) var(--spacing-4)
       var(--spacing-2);
-    border-block: var(--border-width) solid var(--color-primary-500);
+    border-block: var(--border-width) solid var(--color-accent);
     background: var(--color-secondary-950);
     color: var(--color-tertiary-50);
     font-size: var(--text-xs);
@@ -467,7 +467,7 @@
   }
 
   .offline-notice-badge {
-    color: var(--color-primary-500);
+    color: var(--color-accent);
     font-weight: 700;
   }
 
@@ -493,11 +493,11 @@
     line-height: 1.25rem;
     letter-spacing: var(--tracking-sm);
     white-space: nowrap;
-    color: var(--color-primary-500);
+    color: var(--color-accent);
   }
 
   .topbar-link:hover {
-    text-shadow: 0 0 8px var(--color-primary-500);
+    text-shadow: 0 0 8px var(--color-accent);
   }
 
   .topbar-link[aria-current] {
@@ -509,7 +509,7 @@
     align-items: center;
     min-height: var(--spacing-target);
     padding: calc(var(--spacing-3) / 2) var(--spacing-3);
-    border: var(--border-width) solid var(--color-primary-500);
+    border: var(--border-width) solid var(--color-accent);
     font-size: var(--text-min);
     letter-spacing: var(--tracking-sm);
     white-space: nowrap;
@@ -538,7 +538,7 @@
   }
 
   .topbar-action-toggle:hover {
-    border-color: var(--color-primary-500);
+    border-color: var(--color-accent);
   }
 
   .topbar-motion-state {
@@ -558,12 +558,12 @@
   }
 
   .topbar-action-outline {
-    color: var(--color-primary-500);
+    color: var(--color-accent);
   }
 
   .topbar-action-solid {
     color: var(--color-secondary-950);
-    background: var(--color-primary-500);
+    background: var(--color-accent);
     font-weight: 700;
   }
 

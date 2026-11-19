@@ -360,7 +360,7 @@ describe('AiMetricsSection: error box', () => {
     const stylesheet = parse(readComponentsCss());
     const box = rulesWithSelector(stylesheet, '.measured-error');
     expect(box.map((rule) => declValue(rule, 'border'))).toContain(
-      'var(--border-width) solid var(--color-primary-500)',
+      'var(--border-width) solid var(--color-accent)',
     );
     const retry = rulesWithSelector(stylesheet, '.measured-retry');
     expect(retry.map((rule) => declValue(rule, 'min-height'))).toContain('var(--spacing-target)');
