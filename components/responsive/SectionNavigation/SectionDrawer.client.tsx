@@ -22,6 +22,7 @@ const TRAPPED_CONTROLS = 'a[href], button';
 const CURRENT_ITEM = '[aria-current]';
 const SCROLL_LOCK_ATTRIBUTE = 'data-scroll-locked';
 const EXIT_PROPERTY = 'transform';
+const EXITING_ATTRIBUTE = 'data-exiting';
 const EXIT_FALLBACK_SLACK_MS = 50;
 
 export function SectionNavigation({ extra }: { extra?: ReactNode }) {
@@ -44,17 +45,17 @@ export function SectionNavigation({ extra }: { extra?: ReactNode }) {
     const current = panel.querySelector<HTMLElement>(CURRENT_ITEM);
     (current ?? closeRef.current)?.focus();
     return () => {
-      const settle = () => {
-        settleExitRef.current = null;
-        panel.close();
-        document.documentElement.removeAttribute(SCROLL_LOCK_ATTRIBUTE);
-        settleDrawer();
-      };
       const slideMs = panel.open ? longestTransitionMs(panel) : 0;
+      document.documentElement.removeAttribute(SCROLL_LOCK_ATTRIBUTE);
       if (slideMs === 0) {
-        settle();
+        panel.close();
+        settleDrawer();
         return;
       }
+      panel.setAttribute(EXITING_ATTRIBUTE, '');
+      panel.close();
+      panel.show();
+      settleDrawer();
       const onTransitionEnd = (event: TransitionEvent) => {
         if (event.target === panel && event.propertyName === EXIT_PROPERTY) done();
       };
@@ -62,7 +63,9 @@ export function SectionNavigation({ extra }: { extra?: ReactNode }) {
       const done = () => {
         clearTimeout(timer);
         panel.removeEventListener('transitionend', onTransitionEnd);
-        settle();
+        settleExitRef.current = null;
+        panel.removeAttribute(EXITING_ATTRIBUTE);
+        panel.close();
       };
       panel.addEventListener('transitionend', onTransitionEnd);
       settleExitRef.current = done;

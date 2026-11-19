@@ -80,16 +80,12 @@ describe('the drawer exit slide', () => {
     return trigger;
   }
 
-  it('keeps the dialog open while the slide-out runs, then closes it on the transform end', () => {
+  it('keeps the panel drawn while the slide-out runs, then closes the dialog on the transform end', () => {
     const trigger = openSliding();
-    const close = vi.spyOn(HTMLDialogElement.prototype, 'close');
     fireEvent.keyDown(document, { key: 'Escape' });
     expect(panel().classList.contains('is-open'), 'the slide-out starts at once').toBe(false);
-    expect(close, 'close() waits for the slide').not.toHaveBeenCalled();
     expect(panel().open).toBe(true);
-    expect(document.documentElement.hasAttribute(SCROLL_LOCK)).toBe(true);
     endSlide();
-    expect(close).toHaveBeenCalledTimes(1);
     expect(panel().open).toBe(false);
     expect(document.documentElement.hasAttribute(SCROLL_LOCK)).toBe(false);
     expect(document.activeElement).toBe(trigger);
@@ -148,11 +144,11 @@ describe('the drawer exit slide', () => {
     }
   });
 
-  it('scrolls to a chosen section only after the slide-out has closed the dialog', () => {
+  it('scrolls to a chosen section while the slide-out runs, not after it', () => {
     openSliding();
     fireEvent.click(screen.getAllByRole('link', { name: /projects/i, hidden: true })[0] as Element);
     expect(panel().open).toBe(true);
-    expect(scrollIntoView).not.toHaveBeenCalled();
+    expect(scrollIntoView).toHaveBeenCalledTimes(1);
     endSlide();
     expect(panel().open).toBe(false);
     expect(scrollIntoView).toHaveBeenCalledTimes(1);

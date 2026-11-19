@@ -122,7 +122,8 @@
     scroll-padding-top: calc(var(--menu-head-height) + var(--spacing-2));
   }
 
-  .section-menu:modal {
+  .section-menu:modal,
+  .section-menu[data-exiting] {
     display: flex;
   }
 

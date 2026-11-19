@@ -24,6 +24,10 @@ function requestClose(): void {
   if (!cancel.defaultPrevented) closeDialog(top);
 }
 
+export function isModalDialog(dialog: HTMLDialogElement): boolean {
+  return modalStack.includes(dialog);
+}
+
 export function installDialogShim(): void {
   if (typeof HTMLDialogElement === 'undefined') return;
   if (typeof HTMLDialogElement.prototype.showModal === 'function') return;
@@ -33,6 +37,12 @@ export function installDialogShim(): void {
     }
     this.setAttribute(OPEN_ATTRIBUTE, '');
     modalStack.push(this);
+  };
+  HTMLDialogElement.prototype.show = function show(this: HTMLDialogElement) {
+    if (this.hasAttribute(OPEN_ATTRIBUTE) && modalStack.includes(this)) {
+      throw new DOMException('The dialog is already open as a modal.', INVALID_STATE);
+    }
+    this.setAttribute(OPEN_ATTRIBUTE, '');
   };
   HTMLDialogElement.prototype.close = function close(this: HTMLDialogElement) {
     closeDialog(this);

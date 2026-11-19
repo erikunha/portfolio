@@ -198,6 +198,10 @@ The prompt for a manual or agent review that applies these rules to a diff is `d
 49. A class that a test or a rule uses to name one element is never reused as a styling hook on
     another. Share the rules through a selector list. Check: `a.skip-to-content` matches one
     element per page (`tests/e2e/skip-link-unique.spec.ts`).
+50. A modal `<dialog>` that waits for an exit animation keeps the page inert for the whole
+    animation, and a user or test that types in that window is dropped. End the modal state when
+    the close starts and let only the paint finish. Check: during the slide-out `matches(':modal')`
+    is false and a fill reaches the field (`tests/e2e/drawer-exit-interactive.spec.ts`).
 
 ## Pre-push judgement list
 
