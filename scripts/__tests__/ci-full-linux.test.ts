@@ -1,3 +1,4 @@
+import { spawnSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { beforeEach, describe, expect, it } from 'vitest';
@@ -136,6 +137,13 @@ describe('docker argv', () => {
       CONTAINER_SCRIPT.indexOf('pnpm install'),
     );
     expect(CONTAINER_SCRIPT.endsWith('exec pnpm playwright test "$@"')).toBe(true);
+  });
+
+  it('is a script the shell parses, with the forwarder in the background', () => {
+    const parsed = spawnSync('sh', ['-n'], { input: CONTAINER_SCRIPT, encoding: 'utf8' });
+    expect(parsed.stderr).toBe('');
+    expect(parsed.status).toBe(0);
+    expect(CONTAINER_SCRIPT.startsWith("(node -e '")).toBe(true);
   });
 
   it('hands the project, the workers and the specs to playwright as arguments, specs escaped', () => {

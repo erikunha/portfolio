@@ -50,7 +50,7 @@ const FORWARDER_SOURCE = [
 ].join(' ');
 
 export const CONTAINER_SCRIPT = [
-  `node -e '${FORWARDER_SOURCE}' &`,
+  `(node -e '${FORWARDER_SOURCE}' &)`,
   'corepack enable',
   'pnpm install --frozen-lockfile --ignore-scripts',
   'exec pnpm playwright test "$@"',
