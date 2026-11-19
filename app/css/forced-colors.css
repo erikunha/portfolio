@@ -194,6 +194,10 @@
       outline-offset: var(--forced-focus-offset);
     }
 
+    .desktop-topbar :focus-visible {
+      outline-offset: calc(-1 * var(--forced-state-width));
+    }
+
     .shell-input:focus-visible {
       outline: var(--forced-state-width) solid Highlight;
       outline-offset: calc(-1 * var(--forced-state-width));

@@ -484,8 +484,29 @@
     z-index: var(--z-topbar);
   }
 
+  .desktop-topbar :is(a, button):focus-visible {
+    outline-offset: var(--focus-ring-offset-inset);
+  }
+
+  .desktop-topbar .btn[data-variant="primary"]:focus-visible {
+    --topbar-focus-band: inset 0 0 0
+      calc(var(--focus-ring-width) + var(--focus-ring-offset) - var(--border-width))
+      var(--color-surface);
+    box-shadow: var(--topbar-focus-band);
+    transition-property: none;
+  }
+
+  @media (hover: hover) {
+    .desktop-topbar .btn[data-variant="primary"]:focus-visible:hover {
+      box-shadow: var(--topbar-focus-band), var(--shadow-glow);
+    }
+  }
+
   .topbar-link {
+    --topbar-link-reach: calc(var(--focus-ring-width) + var(--focus-ring-offset));
     padding-block: var(--spacing-3);
+    padding-inline: var(--topbar-link-reach);
+    margin-inline: calc(-1 * var(--topbar-link-reach));
     font-size: var(--text-min);
     line-height: 1.25rem;
     letter-spacing: var(--tracking-sm);

@@ -444,15 +444,15 @@ test.describe('forced colors state, hierarchy and focus', () => {
     test.use({ viewport: DESKTOP_VIEWPORT });
 
     const RING_TARGETS = [
-      { route: '/', selector: '.menu-trigger' },
-      { route: '/', selector: '.hero-actions .btn' },
-      { route: '/', selector: '.contact-send' },
-      { route: '/', selector: '.rms-buttons button' },
-      { route: '/', selector: '#sec-guitar .fader-track' },
-      { route: '/design-system', selector: '.ds-nav-item' },
+      { route: '/', selector: '.menu-trigger', offset: -STATE_BORDER_FLOOR_PX },
+      { route: '/', selector: '.hero-actions .btn', offset: FOCUS_RING_OFFSET_PX },
+      { route: '/', selector: '.contact-send', offset: FOCUS_RING_OFFSET_PX },
+      { route: '/', selector: '.rms-buttons button', offset: FOCUS_RING_OFFSET_PX },
+      { route: '/', selector: '#sec-guitar .fader-track', offset: FOCUS_RING_OFFSET_PX },
+      { route: '/design-system', selector: '.ds-nav-item', offset: FOCUS_RING_OFFSET_PX },
     ] as const;
 
-    for (const { route, selector } of RING_TARGETS) {
+    for (const { route, selector, offset } of RING_TARGETS) {
       test(`${selector} on ${route} shows the shared highlight ring`, async ({ page }) => {
         await openForced(page, route);
         const target = page.locator(`${selector}:visible`).first();
@@ -462,7 +462,7 @@ test.describe('forced colors state, hierarchy and focus', () => {
         expect(ring['outline-style']).not.toBe(NO_OUTLINE_STYLE);
         expect(ring['outline-color']).toBe(colors.Highlight);
         expect(await px(target, 'outline-width')).toBeGreaterThanOrEqual(STATE_BORDER_FLOOR_PX);
-        expect(await px(target, 'outline-offset')).toBe(FOCUS_RING_OFFSET_PX);
+        expect(await px(target, 'outline-offset')).toBe(offset);
       });
     }
   });
