@@ -262,7 +262,11 @@ export function InteractiveShell({
               />
             ))}
             {streamingText !== null && (
-              <span className="shell-line shell-line-output" data-kind={ShellLineKind.Output}>
+              <span
+                className="shell-line shell-line-output"
+                data-kind={ShellLineKind.Output}
+                aria-hidden="true"
+              >
                 <span className="shell-ai-label">{ui.aiLabel}: </span>
                 {streamingText}
                 <span className="shell-caret" aria-hidden="true">
