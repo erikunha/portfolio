@@ -586,6 +586,7 @@ See `app/api/ask/route.ts`, `lib/ask/preflight.ts`, `lib/ask/stream.ts` and `lib
 ### Stack
 
 - Vercel Fluid Compute (Node runtime)
+- Function region is the Vercel default, `iad1`, paired with the Upstash Redis primary in `us-east-1`; `vercel.json` sets no `regions`
 - **Vercel AI Gateway** via `ai` SDK v7 (`streamText`), model string `anthropic/claude-haiku-5.5`: single API key (`AI_GATEWAY_API_KEY`, OIDC-signed on Vercel), unified provider routing, zero-trust model selection
 - System prompt = identity, current role, career, education and certifications from shared content, plus formatted performance receipts, projects and unknowns. `PROMPT_VERSION` is a hash of `SYSTEM_TEXT`.
 - Streaming response back to the client via a custom `ReadableStream<Uint8Array>` over `result.textStream`, with a watchdog race and the NUL-byte error sentinel protocol from `lib/stream-protocol.ts`
