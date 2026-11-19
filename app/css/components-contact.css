@@ -367,7 +367,6 @@
 
   .contact-send {
     display: inline-grid;
-    align-items: normal;
     justify-content: normal;
     padding: var(--spacing-2) var(--spacing-4);
     border-radius: var(--radius-control);
