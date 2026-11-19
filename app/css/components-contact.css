@@ -179,9 +179,9 @@
   }
 
   .contact-alert {
-    border: var(--border-width) solid var(--color-senary-300);
+    border: var(--border-width) solid var(--color-coral-300);
     padding: var(--spacing-3);
-    color: var(--color-senary-300);
+    color: var(--color-coral-300);
     overflow-wrap: anywhere;
   }
 

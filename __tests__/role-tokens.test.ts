@@ -10,7 +10,7 @@ import { compiledStylesheet } from './helpers/css-rules';
 const SUBPROCESS_TEST_TIMEOUT_MS = 60_000;
 const SCRIPT = path.join(process.cwd(), 'scripts/gates/contrast-check.ts');
 const PRIMITIVE_REFERENCE =
-  /^var\(--color-((?:signal|sage|carbon|primary|secondary|tertiary|quinary|senary)-\w+)\)$/;
+  /^var\(--color-((?:signal|sage|carbon|gold|coral|primary|secondary|tertiary|quinary|senary)-\w+)\)$/;
 const PRINT_REFERENCE = /^var\(--color-print-(?:ink|paper|rule)\)$/;
 const PRINT_MEDIA = /^print$/;
 
@@ -118,9 +118,9 @@ const PALETTE = `
   --color-sage-50: #e6ffe6;
   --color-sage-400: #8a9d8a;
   --color-sage-500: #6b7c6b;
-  --color-senary-300: #ff8a8a;
-  --color-senary-500: #ff5f57;
-  --color-quinary-500: #febc2e;
+  --color-coral-300: #ff8a8a;
+  --color-coral-500: #ff5f57;
+  --color-gold-500: #febc2e;
   --color-signal-300: #5ae07b;
   --color-signal-400: #4ade80;
   --color-signal-500: #00ff41;
@@ -139,6 +139,6 @@ const ROLE_TARGETS: Record<string, string> = {
   'on-accent': 'carbon-950',
   'text-muted': 'sage-400',
   focus: 'signal-500',
-  warning: 'quinary-500',
-  danger: 'senary-500',
+  warning: 'gold-500',
+  danger: 'coral-500',
 };

@@ -222,6 +222,11 @@
   --color-carbon-900: var(--color-secondary-900);
   --color-carbon-950: var(--color-secondary-950);
 
+  --color-gold-500: var(--color-quinary-500);
+
+  --color-coral-300: var(--color-senary-300);
+  --color-coral-500: var(--color-senary-500);
+
   --color-print-ink: #000000;
   --color-print-paper: #ffffff;
   --color-print-rule: #595959;
@@ -265,8 +270,8 @@
     --color-on-accent: var(--color-carbon-950);
     --color-text-muted: var(--color-sage-400);
     --color-focus: var(--color-signal-500);
-    --color-warning: var(--color-quinary-500);
-    --color-danger: var(--color-senary-500);
+    --color-warning: var(--color-gold-500);
+    --color-danger: var(--color-coral-500);
     --color-scrim: var(--color-carbon-950);
     --rain-tail-alpha: 0.1;
     --type-reveal-char-duration: 28ms;

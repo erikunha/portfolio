@@ -9,7 +9,7 @@ export type MultiLineProps = FieldBase &
 export type FieldProps = SingleLineProps | MultiLineProps;
 
 const inputClasses =
-  'field-input w-full bg-transparent border border-(color:--color-accent) text-(color:--color-text) font-mono text-xs md:text-sm px-[10px] py-2 min-h-11 resize-y transition-[border-color] duration-200 ease-out motion-off:transition-none placeholder:text-sage-500 aria-[invalid=true]:border-senary-300';
+  'field-input w-full bg-transparent border border-(color:--color-accent) text-(color:--color-text) font-mono text-xs md:text-sm px-[10px] py-2 min-h-11 resize-y transition-[border-color] duration-200 ease-out motion-off:transition-none placeholder:text-sage-500 aria-[invalid=true]:border-coral-300';
 
 export function Field({
   name,
@@ -47,7 +47,7 @@ export function Field({
         <input {...(rest as InputHTMLAttributes<HTMLInputElement>)} {...inputProps} />
       )}
       {error ? (
-        <span id={errId} className="field-error text-xs text-senary-300">
+        <span id={errId} className="field-error text-xs text-coral-300">
           {error}
         </span>
       ) : null}

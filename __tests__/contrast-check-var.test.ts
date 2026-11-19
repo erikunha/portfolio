@@ -15,7 +15,7 @@ const PALETTE = `
   --color-sage-50: #e6ffe6;
   --color-sage-400: #e6ffe6;
   --color-sage-500: #e6ffe6;
-  --color-senary-300: #e6ffe6;
+  --color-coral-300: #e6ffe6;
   --color-signal-500: #00ff41;
   --color-signal-400: #e6ffe6;
   --color-signal-700: #e6ffe6;

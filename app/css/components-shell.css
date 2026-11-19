@@ -86,7 +86,7 @@
   }
 
   .shell-line-error {
-    color: var(--color-senary-300);
+    color: var(--color-coral-300);
   }
 
   .shell-stderr-command {
@@ -391,8 +391,8 @@
   }
 
   .shell-receipt {
-    --shell-receipt-danger: var(--color-senary-300);
-    --shell-receipt-danger-dim: color-mix(in srgb, var(--color-senary-300) 40%, transparent);
+    --shell-receipt-danger: var(--color-coral-300);
+    --shell-receipt-danger-dim: color-mix(in srgb, var(--color-coral-300) 40%, transparent);
     --shell-receipt-warning: var(--color-warning);
     box-sizing: border-box;
     display: grid;

@@ -45,7 +45,7 @@ const PAIRS: Pair[] = [
   ['sage-500', 'carbon-950', 4.5, 'form placeholder on base'],
   ['signal-500', 'carbon-900', 3.0, 'signal on shell (large text)'],
   ['sage-400', 'carbon-950', 4.5, 'sage-400 meta text on base (/links)'],
-  ['senary-300', 'carbon-950', 4.5, 'alert text on base (errors, clip LED)'],
+  ['coral-300', 'carbon-950', 4.5, 'alert text on base (errors, clip LED)'],
 ];
 
 const ROLE_PAIRS: Pair[] = (

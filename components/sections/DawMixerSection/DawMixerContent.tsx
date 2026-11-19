@@ -16,7 +16,7 @@ import { DawMixerDesktop } from './DawMixerDesktop';
 import { FaderBar, ParsedText, SessionSummary, StrengthDots } from './DawMixerShared';
 
 const STATIC_SEGMENT_CLASS = {
-  [MeterSegment.Red]: 'meter-alert bg-senary-300',
+  [MeterSegment.Red]: 'meter-alert bg-coral-300',
   [MeterSegment.Filled]: 'meter-fill bg-(color:--color-accent)',
   [MeterSegment.Empty]: 'meter-dim bg-(color:--color-accent) opacity-[0.22]',
 } as const;

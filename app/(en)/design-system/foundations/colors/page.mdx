@@ -35,13 +35,13 @@ Color tokens live in `app/css/theme.css` inside the single `@theme` block. Swatc
 
 <h2 id="status">Status</h2>
 
-<ColorSwatch token="senary-300" usage="Alerts: form errors, shell errors, mixer clip LED" />
-<ColorSwatch token="senary-500" usage="Window-chrome close dot" />
-<ColorSwatch token="quinary-500" usage="Window-chrome minimize dot" />
+<ColorSwatch token="coral-300" usage="Alerts: form errors, shell errors, mixer clip LED" />
+<ColorSwatch token="coral-500" usage="Window-chrome close dot" />
+<ColorSwatch token="gold-500" usage="Window-chrome minimize dot" />
 
 <h2 id="rules">Rules</h2>
 
-- The green and grey ramps carry the whole interface. Two other hues exist, each with one meaning: red (`senary`) marks alerts and the window-chrome close dot, and amber (`quinary-500`) marks the window-chrome minimize dot. There is no cyan.
+- The green and grey ramps carry the whole interface. Two other hues exist, each with one meaning: red (`senary`) marks alerts and the window-chrome close dot, and amber (`gold-500`) marks the window-chrome minimize dot. There is no cyan.
 - Reference a color by its role: `var(--color-surface)` in a stylesheet, `bg-(color:--color-surface)` in a class string. Use a palette step only where no role fits. Never write raw hex in components.
 - A control edge (input, textarea) uses the `accent` role: the translucent `border` and `border-strong` roles measure below the 3:1 non-text minimum (WCAG 1.4.11) on the black surface.
 - Do not use the signal green for paragraph text. Body copy uses `text` (`sage-50`).
