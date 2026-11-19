@@ -1,6 +1,22 @@
 import { spawnSync } from 'node:child_process';
-import { readFileSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
+import {
+  changedSpecs,
+  containerEnv,
+  dockerProblem,
+  dockerStageCommand,
+  isComponentProject,
+  LINUX_RESULTS_DIR,
+  type LinuxScope,
+  linuxImage,
+  lockfileHash,
+  mergeSpecs,
+  nodeModulesVolume,
+  playwrightVersion,
+  pruneStaleVolumes,
+  readLockfile,
+} from './ci-full-linux';
 import { verifyLeaves } from './verify';
 
 export interface StageContext {
@@ -9,6 +25,13 @@ export interface StageContext {
   port: number | null;
   origin: string | null;
   workDir: string;
+  workflowEnv?: Record<string, string>;
+  listing?: boolean;
+}
+
+export interface ContainerSpec {
+  name: string;
+  label: string;
 }
 
 export interface StageCommand {
@@ -16,6 +39,7 @@ export interface StageCommand {
   args: string[];
   env?: Record<string, string>;
   unset?: string[];
+  container?: ContainerSpec;
 }
 
 export interface Stage {
@@ -337,6 +361,87 @@ export const STAGES: readonly Stage[] = [
   lighthouse('lhci-desktop', 'Lighthouse desktop', 'lighthouserc.json', 'pnpm lhci'),
   lighthouse('lhci-mobile', 'Lighthouse mobile', 'lighthouserc.mobile.json', 'pnpm lhci:mobile'),
 ];
+
+export const LINUX_GATE_SPECS: readonly string[] = [
+  'tests/e2e/drawer-exit-interactive.spec.ts',
+  'tests/e2e/drawer-dialog.spec.ts',
+  'tests/e2e/drawer-dock-narrow.spec.ts',
+  'tests/e2e/motion-switch.spec.ts',
+  'tests/e2e/section-navigation.spec.ts',
+  'tests/e2e/streamed-settle.spec.ts',
+];
+
+export const LINUX_GATE_COMPONENT_SPECS: readonly string[] = [
+  'components/sections/Hero/Hero.e2e.ts',
+  'components/sections/Footer/Footer.e2e.ts',
+  'components/client/ContactForm/ContactForm.e2e.ts',
+  'components/sections/ContactSection/ContactSection.e2e.ts',
+];
+
+export const LINUX_PROJECTS = [
+  'webkit-desktop',
+  'webkit-mobile',
+  'webkit-desktop-components',
+  'webkit-mobile-components',
+  'chromium',
+];
+
+export const CHANGED_PLACEHOLDER = '<specs-changed-since-the-merge-base>';
+export const LINUX_STAGE_PREFIX = 'linux-e2e-';
+
+function linuxSpecs(scope: LinuxScope, project: string, ctx: StageContext): string[] {
+  if (scope === 'all') return isComponentProject(project) ? [] : [PAGE_SPECS];
+  const gate = isComponentProject(project) ? LINUX_GATE_COMPONENT_SPECS : LINUX_GATE_SPECS;
+  if (scope === 'gate') return [...gate];
+  const changed =
+    ctx.listing === true ? [CHANGED_PLACEHOLDER] : changedSpecs(ctx.root, ctx.base, project);
+  return mergeSpecs(gate, changed);
+}
+
+function linuxStage(scope: LinuxScope, project: string, runId: number): Stage {
+  const id = `${LINUX_STAGE_PREFIX}${project}`;
+  const lockfile = (ctx: StageContext): string => readLockfile(ctx.root);
+  const image = (ctx: StageContext): string => linuxImage(playwrightVersion(lockfile(ctx)));
+  const volume = (ctx: StageContext): string => nodeModulesVolume(lockfileHash(lockfile(ctx)));
+  return {
+    id,
+    title: `Linux e2e on ${project} (Docker, CI image)`,
+    jobs: ['e2e-functional'],
+    mirrors: [e2eMirror(project)],
+    steps: [],
+    server: true,
+    requires: 'docker',
+    unavailable: (ctx) => dockerProblem(image(ctx)),
+    prepare: (ctx) => {
+      mkdirSync(join(ctx.workDir, LINUX_RESULTS_DIR, id), { recursive: true });
+      pruneStaleVolumes(volume(ctx));
+    },
+    command: (ctx) =>
+      dockerStageCommand({
+        root: ctx.root,
+        workDir: ctx.workDir,
+        stageId: id,
+        project,
+        image: image(ctx),
+        volume: volume(ctx),
+        runId,
+        origin: ctx.origin ?? '',
+        env: containerEnv(ctx.workflowEnv ?? {}),
+        specs: linuxSpecs(scope, project, ctx),
+      }),
+  };
+}
+
+export const linuxStages = (scope: LinuxScope, runId: number = process.pid): readonly Stage[] =>
+  LINUX_PROJECTS.map((project) => linuxStage(scope, project, runId));
+
+export const LINUX_STAGES: readonly Stage[] = linuxStages('gate');
+
+export const LINUX_NOT_RUN: Exclusion = {
+  id: 'linux e2e',
+  reason:
+    'pass --linux[=gate|changed|all] to run the WebKit and Chromium e2e stages in the CI Linux image',
+};
 
 export const NOT_RUN: readonly Exclusion[] = [
   {

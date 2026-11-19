@@ -7,7 +7,13 @@ import {
   commandText,
   coveredByCi,
   DEFAULT_BASE,
+  LINUX_GATE_COMPONENT_SPECS,
+  LINUX_GATE_SPECS,
+  LINUX_NOT_RUN,
+  LINUX_PROJECTS,
+  LINUX_STAGES,
   lighthouseConfig,
+  linuxStages,
   NOT_RUN,
   QUALITY_FAST_CI_ONLY_STEPS,
   SERVER,
@@ -357,4 +363,103 @@ describe('lighthouseConfig', () => {
       expect(derived).toContain('localhost:4321');
     },
   );
+});
+
+describe('linux stages', () => {
+  const E2E_JOB = 'e2e-functional';
+  const PAGE_SPEC_ROOT = 'tests/e2e/';
+  const matrix = ci.jobs[E2E_JOB]?.matrixProjects ?? [];
+  const projectOf = (candidate: Stage): string =>
+    /--project=(\S+)/.exec(commandText(candidate.command(CTX)))?.[1] ?? '';
+
+  it('keeps the default run free of any linux stage', () => {
+    expect(ids.filter((id) => id.startsWith('linux-'))).toEqual([]);
+    expect(STAGES.some((candidate) => candidate.command(CTX).file === 'docker')).toBe(false);
+  });
+
+  it('declares the linux e2e stages not-run, with the flag that runs them, outside the default list', () => {
+    expect(LINUX_NOT_RUN.id).toBe('linux e2e');
+    expect(LINUX_NOT_RUN.reason).toContain('--linux');
+    expect(NOT_RUN).not.toContain(LINUX_NOT_RUN);
+  });
+
+  it('has the five stages, WebKit first and Chromium last, each with a unique id', () => {
+    expect(LINUX_STAGES.map((candidate) => candidate.id)).toEqual([
+      'linux-e2e-webkit-desktop',
+      'linux-e2e-webkit-mobile',
+      'linux-e2e-webkit-desktop-components',
+      'linux-e2e-webkit-mobile-components',
+      'linux-e2e-chromium',
+    ]);
+    expect(new Set(LINUX_STAGES.map((candidate) => candidate.id)).size).toBe(LINUX_STAGES.length);
+  });
+
+  it('mirrors one project of the ci.yml functional matrix per stage', () => {
+    for (const candidate of LINUX_STAGES) {
+      const project = candidate.id.replace('linux-e2e-', '');
+      expect(matrix, candidate.id).toContain(project);
+      expect(candidate.jobs).toEqual([E2E_JOB]);
+      expect(candidate.mirrors[0]).toContain(`--project=${project}`);
+      expect(projectOf(candidate)).toBe(project);
+    }
+    expect(LINUX_PROJECTS.every((project) => matrix.includes(project))).toBe(true);
+  });
+
+  it('runs after every macOS stage, serves the build and needs docker', () => {
+    const lastMac = Math.max(ids.indexOf('lhci-mobile'), ids.indexOf('lhci-desktop'));
+    expect(lastMac).toBe(ids.length - 1);
+    for (const candidate of LINUX_STAGES) {
+      expect(candidate.server).toBe(true);
+      expect(candidate.requires).toBe('docker');
+      expect(candidate.unavailable).toBeTypeOf('function');
+    }
+  });
+
+  it('runs each stage with the same worker count as the macOS stages, on the port it was given', () => {
+    for (const candidate of LINUX_STAGES) {
+      const text = commandText(candidate.command(CTX));
+      expect(text).toContain(`--workers=${WORKERS}`);
+      expect(text).toContain(`-e E2E_BASE_URL=${CTX.origin}`);
+    }
+  });
+
+  it('names a gate spec that exists for every page and component project', () => {
+    for (const spec of [...LINUX_GATE_SPECS, ...LINUX_GATE_COMPONENT_SPECS]) {
+      expect(existsSync(join(ROOT, spec)), spec).toBe(true);
+    }
+    expect(LINUX_GATE_SPECS.every((spec) => spec.startsWith(PAGE_SPEC_ROOT))).toBe(true);
+    expect(LINUX_GATE_SPECS).toContain('tests/e2e/drawer-dialog.spec.ts');
+    expect(LINUX_GATE_SPECS).toContain('tests/e2e/drawer-exit-interactive.spec.ts');
+  });
+
+  it('puts no visual or accessibility spec in any scope', () => {
+    for (const scope of ['gate', 'all'] as const) {
+      for (const candidate of linuxStages(scope, 1)) {
+        const text = commandText(candidate.command(CTX));
+        expect(text).not.toContain('tests/visual');
+        expect(text).not.toContain('tests/a11y');
+      }
+    }
+  });
+
+  it('runs the gate set on the page projects and the component gate on the component projects', () => {
+    const page = commandText(LINUX_STAGES[0]?.command(CTX) ?? { file: '', args: [] });
+    const component = commandText(LINUX_STAGES[2]?.command(CTX) ?? { file: '', args: [] });
+    for (const spec of LINUX_GATE_SPECS) expect(page).toContain(spec.replaceAll('.', '\\.'));
+    for (const spec of LINUX_GATE_COMPONENT_SPECS) {
+      expect(component).toContain(spec.replaceAll('.', '\\.'));
+    }
+    expect(component).not.toContain(PAGE_SPEC_ROOT);
+  });
+
+  it('runs the whole matrix project in the all scope', () => {
+    const all = linuxStages('all', 1);
+    const page = commandText(all[0]?.command(CTX) ?? { file: '', args: [] });
+    const component = commandText(all[2]?.command(CTX) ?? { file: '', args: [] });
+    expect(page.endsWith('--project=webkit-desktop --workers=2 --output=/results tests/e2e/')).toBe(
+      true,
+    );
+    for (const spec of LINUX_GATE_SPECS) expect(page).not.toContain(spec.replaceAll('.', '\\.'));
+    expect(component.trimEnd().endsWith('--output=/results')).toBe(true);
+  });
 });

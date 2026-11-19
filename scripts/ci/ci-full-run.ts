@@ -18,6 +18,14 @@ import { tmpdir } from 'node:os';
 import { delimiter, join } from 'node:path';
 import { gitText } from '../lib/git';
 import {
+  DEFAULT_LINUX_SCOPE,
+  LINUX_SCOPES,
+  type LinuxScope,
+  removeContainer,
+  sweepContainers,
+} from './ci-full-linux';
+import {
+  type ContainerSpec,
   DEFAULT_BASE,
   type Exclusion,
   type ServerSpec,
@@ -43,6 +51,7 @@ export interface RunnerOptions {
   root: string;
   base: string;
   from?: string | undefined;
+  only?: readonly string[] | undefined;
   keepGoing: boolean;
   server: ServerSpec;
   workflow?: Workflow;
@@ -54,6 +63,8 @@ export interface RunnerOptions {
 export interface Args {
   base: string;
   from: string | undefined;
+  only: string[] | undefined;
+  linux: LinuxScope | undefined;
   keepGoing: boolean;
   list: boolean;
 }
@@ -112,10 +123,11 @@ const ALLOWED_ENV_NAMES = [
   'COREPACK_HOME',
   'PNPM_HOME',
 ];
-const ALLOWED_ENV_PREFIXES = ['LC_', 'XDG_', 'PLAYWRIGHT_'];
+const ALLOWED_ENV_PREFIXES = ['LC_', 'XDG_', 'PLAYWRIGHT_', 'DOCKER_'];
 const RUNNER_ENV = { CI: 'true' };
 
 const active = new Set<ChildProcess>();
+const pendingContainers = new Set<ContainerSpec>();
 let cleanupInstalled = false;
 
 const isAllowedEnvName = (name: string): boolean =>
@@ -233,10 +245,23 @@ export function killAllChildren(): void {
   active.clear();
 }
 
+export function sweepPendingContainers(): void {
+  for (const container of pendingContainers) sweepContainers(container.label);
+  pendingContainers.clear();
+}
+
+export const pendingContainerNames = (): string[] =>
+  [...pendingContainers].map((container) => container.name);
+
+function exitCleanup(): void {
+  killAllChildren();
+  sweepPendingContainers();
+}
+
 function installCleanup(): void {
   if (cleanupInstalled) return;
   cleanupInstalled = true;
-  process.on('exit', killAllChildren);
+  process.on('exit', exitCleanup);
   for (const [signal, number] of SIGNALS) {
     process.on(signal, () => process.exit(SIGNAL_EXIT_BASE + number));
   }
@@ -550,6 +575,7 @@ async function runStage(
     note,
   });
   let server: ChildProcess | null = null;
+  let container: ContainerSpec | undefined;
   try {
     let ctx: StageContext = {
       root: options.root,
@@ -557,6 +583,7 @@ async function runStage(
       port: null,
       origin: null,
       workDir,
+      workflowEnv: workflow,
     };
     if (stage.server === true) {
       try {
@@ -590,8 +617,11 @@ async function runStage(
       }
     }
     stage.prepare?.(ctx);
+    const command = stage.command(ctx);
+    container = command.container;
+    if (container !== undefined) pendingContainers.add(container);
     const outcome = await runChild(
-      stage.command(ctx),
+      command,
       options.root,
       blank,
       workflow,
@@ -609,6 +639,10 @@ async function runStage(
     return result('failed', error instanceof Error ? error.message : String(error));
   } finally {
     await stopServer(server);
+    if (container !== undefined) {
+      removeContainer(container.name);
+      pendingContainers.delete(container);
+    }
   }
 }
 
@@ -624,6 +658,10 @@ function unavailableReason(
     origin: null,
     workDir,
   });
+}
+
+function notSelected(stage: Stage, options: RunnerOptions): boolean {
+  return options.only !== undefined && !options.only.includes(stage.id);
 }
 
 export async function runStages(options: RunnerOptions): Promise<StageResult[]> {
@@ -647,6 +685,8 @@ export async function runStages(options: RunnerOptions): Promise<StageResult[]> 
   for (const [index, stage] of stages.entries()) {
     if (index < fromIndex) {
       results.push(skipped(stage, `before --from ${options.from}`));
+    } else if (notSelected(stage, options)) {
+      results.push(skipped(stage, 'not selected by --only'));
     } else if (firstFailure !== undefined && !options.keepGoing) {
       results.push(skipped(stage, `after the failure of ${firstFailure}`));
     } else if (stage.requires !== undefined && !hasBinary(stage.requires)) {
@@ -715,8 +755,27 @@ export function exitCode(results: readonly StageResult[]): number {
   return EXIT.OK;
 }
 
+const LINUX_FLAG = '--linux';
+const LINUX_FLAG_PREFIX = `${LINUX_FLAG}=`;
+
+function linuxScope(flag: string): LinuxScope {
+  const scope = flag.slice(LINUX_FLAG_PREFIX.length);
+  const known = LINUX_SCOPES.find((candidate) => candidate === scope);
+  if (known === undefined) {
+    throw new Error(`unknown linux scope ${scope}; scopes: ${LINUX_SCOPES.join(', ')}`);
+  }
+  return known;
+}
+
 export function parseArgs(argv: readonly string[], stageIds: readonly string[]): Args {
-  const args: Args = { base: DEFAULT_BASE, from: undefined, keepGoing: false, list: false };
+  const args: Args = {
+    base: DEFAULT_BASE,
+    from: undefined,
+    only: undefined,
+    linux: undefined,
+    keepGoing: false,
+    list: false,
+  };
   const value = (index: number, flag: string): string => {
     const next = argv[index + 1];
     if (next === undefined || next.startsWith('--')) throw new Error(`${flag} needs a value`);
@@ -728,10 +787,15 @@ export function parseArgs(argv: readonly string[], stageIds: readonly string[]):
     else if (flag === '--list') args.list = true;
     else if (flag === '--base') args.base = value(index++, flag);
     else if (flag === '--from') args.from = value(index++, flag);
+    else if (flag === '--only') args.only = value(index++, flag).split(',');
+    else if (flag === LINUX_FLAG) args.linux = DEFAULT_LINUX_SCOPE;
+    else if (flag?.startsWith(LINUX_FLAG_PREFIX)) args.linux = linuxScope(flag);
     else throw new Error(`unknown argument ${flag}`);
   }
-  if (args.from !== undefined && !stageIds.includes(args.from)) {
-    throw new Error(`unknown stage ${args.from}; stages: ${stageIds.join(', ')}`);
+  for (const id of [args.from, ...(args.only ?? [])]) {
+    if (id !== undefined && !stageIds.includes(id)) {
+      throw new Error(`unknown stage ${id}; stages: ${stageIds.join(', ')}`);
+    }
   }
   return args;
 }
