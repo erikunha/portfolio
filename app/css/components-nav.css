@@ -98,18 +98,26 @@
     top: 0;
     bottom: 0;
     left: 0;
+    right: auto;
     width: min(86vw, var(--drawer-max-width));
+    height: auto;
+    max-width: none;
+    max-height: none;
+    margin: 0;
+    padding: 0;
     z-index: var(--z-drawer);
-    display: flex;
+    display: none;
     flex-direction: column;
     box-sizing: border-box;
+    color: inherit;
     background: var(--color-secondary-950);
+    border: 0;
     border-right: var(--border-width) solid var(--color-primary-border);
     transform: translateX(-100%);
-    visibility: hidden;
     transition:
       transform var(--menu-duration) ease-out,
-      visibility 0s linear var(--menu-duration);
+      display var(--menu-duration) allow-discrete,
+      overlay var(--menu-duration) allow-discrete;
     overflow-y: auto;
     overscroll-behavior: contain;
     scrollbar-color: var(--color-primary-border) transparent;
@@ -117,10 +125,22 @@
     scroll-padding-top: calc(var(--menu-head-height) + var(--spacing-2));
   }
 
+  .section-menu:modal {
+    display: flex;
+  }
+
   .section-menu.is-open {
     transform: none;
-    visibility: visible;
-    transition: transform var(--menu-duration) ease-out;
+  }
+
+  @starting-style {
+    .section-menu.is-open {
+      transform: translateX(-100%);
+    }
+  }
+
+  .section-menu::backdrop {
+    background: transparent;
   }
 
   .menu-scrim {

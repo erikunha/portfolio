@@ -53,10 +53,10 @@ The prompt for a manual or agent review that applies these rules to a diff is `d
 18. A gate chained with `&&` is never piped (`gate | tail -1 && merge`): the pipeline's exit
     status is the last command's, so a failed gate passes. Use `set -o pipefail` and read each
     gate's own exit code.
-19. `isolate(root)` (`lib/dom/isolate.ts`) inerts every sibling of root up the tree. Pass the
-    wrapper that holds both the panel and its scrim, never the panel alone, or the scrim goes inert
-    and click-outside-to-close dies. jsdom does not hit-test `inert`: prove it with a real
-    Playwright mouse click.
+19. A modal panel is a `<dialog>` opened with `showModal()`, never a div made inert by hand. A
+    click outside lands on the dialog element itself (`event.target === event.currentTarget`),
+    so a scrim beside it is only visual. jsdom has no `showModal`, hit-testing or inertness
+    (`tests/mocks/dialog-shim.ts` stands in): prove it with a real Playwright mouse click.
 20. A change to shared layout (hero, about, contact, footer, nav) runs the full functional e2e
     suite and LHCI locally before the push, not a hand-picked spec list.
 21. A child that sets `visibility: visible` overrides an ancestor's `visibility: hidden`. A

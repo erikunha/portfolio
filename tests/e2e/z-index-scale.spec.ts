@@ -82,6 +82,9 @@ test.describe('the stacking scale', () => {
     expect(probe?.overDrawer, 'the drawer paints over the offline notice').toContain(
       'section-menu',
     );
-    expect(probe?.besideDrawer, 'the scrim paints over the offline notice').toContain('menu-scrim');
+    expect(
+      probe?.besideDrawer,
+      'the modal dialog backdrop takes the point beside the drawer, so the offline notice behind it cannot be hit',
+    ).toBe('section-menu is-open');
   });
 });

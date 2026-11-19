@@ -89,15 +89,15 @@ describe('SectionNavigation drawer', () => {
     expect(scrollIntoView).toHaveBeenCalledTimes(1);
   });
 
-  it('locks page scrolling and isolates the background while open, and releases both on close', () => {
+  it('locks page scrolling while the modal dialog is open, and releases the lock and the dialog on close', () => {
     const view = render(<Page />);
     expect(root().hasAttribute(SCROLL_LOCK)).toBe(false);
     open();
     expect(root().hasAttribute(SCROLL_LOCK)).toBe(true);
-    expect(screen.getByTestId('trigger').hasAttribute('inert')).toBe(true);
+    expect((panel() as HTMLDialogElement).open).toBe(true);
     fireEvent.keyDown(document, { key: 'Escape' });
     expect(root().hasAttribute(SCROLL_LOCK)).toBe(false);
-    expect(document.querySelectorAll('[inert]')).toHaveLength(0);
+    expect((panel() as HTMLDialogElement).open).toBe(false);
     open();
     view.unmount();
     expect(root().hasAttribute(SCROLL_LOCK), 'unmounting while open releases the lock').toBe(false);

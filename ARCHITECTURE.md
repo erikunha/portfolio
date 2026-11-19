@@ -140,7 +140,7 @@ What we build is small, opinionated, Vercel-deployed, and budget-enforced.
 
 Static section bodies are Server Components. `AppShell` is a client boundary that receives server-rendered children; viewport checks use the `useBreakpoint` hook, not a context provider. `SectionNavigationProvider` wraps the shell chrome. Its context value (actions, copy, chrome, locale and a store) never changes after the first render. The current section, the drawer and the motion state live in the store and are read with `useSyncExternalStore`, so a scroll cannot force a not-yet-hydrated Suspense boundary to client-render. `ContactForm` and `InteractiveShell` adopt text typed before they hydrate from the kept server DOM. The shell form also carries a React `action`, so an Enter pressed before hydration is queued by the server-rendered replay runtime and runs once after hydration instead of navigating to `/?command=...`; the welcome line follows `useBreakpoint` at render, so a phone gets the mobile line after hydration. `ErrorBoundary` wraps each section and the footer independently. Measured data and device-selected sections stream through Suspense.
 
-The section menu is a modal drawer at every width, opened by the menu icon trigger named `Open menu` (the first item in the desktop topbar and the mobile title bar; the brand icon closes both bars at the right end) or the dock MENU. The drawer header contains the title and the close control. Closing the drawer returns focus to the control that opened it, or to the first rendered menu trigger when there is no such control or a viewport change left it unrendered.
+The section menu is a modal drawer at every width, opened by the menu icon trigger named `Open menu` (the first item in the desktop topbar and the mobile title bar; the brand icon closes both bars at the right end) or the dock MENU. The drawer is a `<dialog>` opened with `showModal()`: the platform makes the rest of the page inert, Escape and a click on the backdrop close it, and `@starting-style` with discrete `display` and `overlay` transitions slides it in and out (with MOTION off it appears at once). The drawer header contains the title and the close control. Closing the drawer returns focus to the control that opened it, or to the first rendered menu trigger when there is no such control or a viewport change left it unrendered.
 
 ### Client islands
 
@@ -470,7 +470,6 @@ lib/meter.ts                          # meterSegmentState, the VU clip rule shar
 lib/post-json.ts                      # postJson, a JSON POST with an abort deadline
 lib/dom/has-modifier.ts               # hasModifier, the one modifier-key check for keyboard handlers
 lib/dom/is-rendered.ts                # isRendered, shared by the drawer and the footer reboot
-lib/dom/isolate.ts                    # isolate, marks every sibling outside a subtree inert and returns the undo function
 lib/redis.ts                          # getRedis, hasRedisCredentials, REDIS_ENV_PAIRS and RedisNotConfiguredError: the one Upstash client
 lib/rate-limit.ts                     # limiter types and one table of limiters (limit, window, prefix per name), read through nine named getters; imports nothing from lib/ask; includes rl:lighthouse and the rl:errlog:day global cap
 lib/stream-protocol.ts                # NUL-byte error sentinel + parseStreamChunk
