@@ -15,26 +15,6 @@ export type AsAnchor = ButtonBaseProps &
   AnchorHTMLAttributes<HTMLAnchorElement> & { as: 'a'; href: string; disabled?: boolean };
 export type ButtonProps = AsButton | AsAnchor;
 
-const baseClasses =
-  'btn inline-flex items-center justify-center rounded-none font-mono border text-xs font-bold tracking-xl uppercase cursor-pointer transition-[box-shadow,background] duration-200 ease-out motion-off:transition-none no-underline aria-disabled:opacity-40 aria-disabled:pointer-events-none disabled:opacity-40 disabled:pointer-events-none';
-
-const variantClasses: Record<ButtonVariant, string> = {
-  primary:
-    'bg-(color:--color-accent) text-(color:--color-on-accent) border-(color:--color-accent) hover:shadow-glow',
-  secondary:
-    'bg-transparent text-(color:--color-accent) border-(color:--color-border-strong) hover:shadow-glow hover:bg-signal-quiet',
-};
-
-// The small size is the one that steps down on a fine pointer: a mouse does not
-// need the 44px touch floor, and the same 36px row the section menu already
-// uses keeps it. A touch device keeps the 44px target. The width stays at 44px
-// in every size, because the site promises every button at least 44px wide.
-const sizeClasses: Record<ButtonSize, string> = {
-  sm: 'min-w-11 min-h-11 px-2.5 pointer-fine:min-h-[var(--spacing-target-pointer)]',
-  md: 'min-w-11 min-h-11 px-[14px]',
-  lg: 'min-w-11 min-h-[52px] px-[14px]',
-};
-
 export function Button({
   variant = 'primary',
   size = 'md',
@@ -42,17 +22,13 @@ export function Button({
   className,
   ...rest
 }: ButtonProps) {
-  const classes = joinClassNames(
-    baseClasses,
-    variantClasses[variant],
-    sizeClasses[size],
-    className,
-  );
+  const classes = joinClassNames('btn', className);
   if (as === 'a') {
     const { disabled, href, onClick, tabIndex, ...anchorRest } = rest as AsAnchor;
     return (
       <a
         data-variant={variant}
+        data-size={size}
         {...anchorRest}
         className={classes}
         {...(disabled ? { 'aria-disabled': 'true' as const } : {})}
@@ -63,5 +39,13 @@ export function Button({
     );
   }
   const { type = 'button', ...buttonRest } = rest as AsButton;
-  return <button data-variant={variant} className={classes} type={type} {...buttonRest} />;
+  return (
+    <button
+      data-variant={variant}
+      data-size={size}
+      className={classes}
+      type={type}
+      {...buttonRest}
+    />
+  );
 }

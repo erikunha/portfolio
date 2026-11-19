@@ -116,7 +116,7 @@ Eleven primitives in `design-system/components/` (all server components); **nine
 | --------------- | ---------- | ------------------------------------------------------------------------------ |
 | `Badge`         | RSC        | `variant: default｜dot`, `size: sm｜md`                                        |
 | `BrandIcon`     | RSC        | inline SVG brand mark, `size` px wide, `currentColor` fill, `aria-hidden`      |
-| `Button`        | RSC        | polymorphic `as: button｜a`, `variant: primary｜secondary`, `size: sm｜md｜lg` |
+| `Button`        | RSC        | polymorphic `as: button｜a`, `variant: primary｜secondary`, `size: sm｜md｜lg`; renders `.btn` with `data-variant` and `data-size`, styled by `components-buttons.css` |
 | `CmdLine`       | RSC        | terminal command line (`user`, `command`, `output`, `prompt`)                  |
 | `Field`         | RSC        | input/textarea + label + error/ARIA (not exported)                             |
 | `KbdKey`        | RSC        | `size: sm｜md`                                                                 |
@@ -138,7 +138,7 @@ Import order (`app/globals.css`, every route): `tailwindcss` → `theme.css` →
 | `base.css`         | `base`       | resets, focus-visible rings, skip-link, `.sr-only`, `.mobile-only`/`.desktop-only`                  |
 | `crt.css`          | `components` | the 6 CRT classes + keyframes + MOTION-off disables + the `html[data-crt-level]` pause rule                                    |
 | `animations.css`   | -            | section keyframes (`boot-blink`, `guitar-scan-beam`, `hero-shake-*`, ...)                                          |
-| `components-*.css` | `components` | named layout and effect classes (`.module-*`, `.signal-glow`, DawMixer `.mx-fader`/`.mx-dial`, `.contact-*`, `.shell-cursor`, ...) |
+| `components-*.css` | `components` | named layout and effect classes (`.module-*`, `.signal-glow`, DawMixer `.mx-fader`/`.mx-dial`, `.contact-*`, `.shell-cursor`, the shared `.btn` base in `components-buttons.css`, ...) |
 | `components-utilities.css` | `utilities` | shared utility classes and the `leading-ratio-*` `@utility` blocks, each with a doubled selector so it beats the line height of a font-size utility |
 | `print.css`        | `overrides`  | one `@media print` block: ink-on-paper palette overrides on `:root`, hides the shell chrome, CRT layers and rain, drops glows; reading views add their page layout in `components-reading.css` |
 | `forced-colors.css` | `overrides` | one `@media (forced-colors: active)` block, imported once by `globals.css`: hides the CRT overlays and aria-hidden canvases, gives state-carrying controls system-color borders and outlines, and outranks Tailwind utilities through the layer order (focus ring, primary and current buttons, pressed toggles, meter fills) |

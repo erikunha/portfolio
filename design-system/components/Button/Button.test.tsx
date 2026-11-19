@@ -86,48 +86,4 @@ describe('Button', () => {
     expect(fireEvent.click(screen.getByText('Disabled link'))).toBe(false);
     expect(onClick).not.toHaveBeenCalled();
   });
-  it('applies primary variant styles by default', () => {
-    const { container } = render(<Button>Primary</Button>);
-    const el = container.firstElementChild;
-    expect(el?.classList.contains('bg-(color:--color-accent)')).toBe(true);
-    expect(el?.classList.contains('border-(color:--color-accent)')).toBe(true);
-  });
-  it('applies secondary variant styles', () => {
-    const { container } = render(<Button variant="secondary">Secondary</Button>);
-    const el = container.firstElementChild;
-    expect(el?.classList.contains('bg-transparent')).toBe(true);
-    expect(el?.classList.contains('text-(color:--color-accent)')).toBe(true);
-  });
-  it('keeps the 44px target and steps the small size down to 36px on a fine pointer', () => {
-    const { container: smContainer } = render(<Button size="sm">Sm</Button>);
-    const sm = smContainer.firstElementChild;
-    expect(sm?.classList.contains('min-h-11')).toBe(true);
-    expect(sm?.classList.contains('pointer-fine:min-h-[var(--spacing-target-pointer)]')).toBe(true);
-    expect(sm?.classList.contains('min-w-11')).toBe(true);
-    expect(sm?.classList.contains('pointer-fine:min-w-[var(--spacing-target-pointer)]')).toBe(
-      false,
-    );
-    const { container: mdContainer } = render(<Button size="md">Md</Button>);
-    expect(mdContainer.firstElementChild?.classList.contains('min-h-11')).toBe(true);
-    expect(
-      mdContainer.firstElementChild?.classList.contains(
-        'pointer-fine:min-h-[var(--spacing-target-pointer)]',
-      ),
-    ).toBe(false);
-    const { container: lgContainer } = render(<Button size="lg">Lg</Button>);
-    expect(lgContainer.firstElementChild?.classList.contains('min-h-[52px]')).toBe(true);
-  });
-  it('keeps the base free of a border color so each variant owns exactly one', () => {
-    const { container } = render(
-      <>
-        <Button>Primary</Button>
-        <Button variant="secondary">Secondary</Button>
-      </>,
-    );
-    const [primary, secondary] = [...container.querySelectorAll('.btn')];
-    expect(primary?.classList.contains('border-(color:--color-border-strong)')).toBe(false);
-    expect(primary?.classList.contains('border-(color:--color-accent)')).toBe(true);
-    expect(secondary?.classList.contains('border-(color:--color-border-strong)')).toBe(true);
-    expect(secondary?.classList.contains('border-(color:--color-accent)')).toBe(false);
-  });
 });
