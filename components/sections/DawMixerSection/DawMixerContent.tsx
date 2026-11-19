@@ -142,7 +142,7 @@ function PluginChainMobile({
 function SessionHeaderMobile({ mixer, copy }: { mixer: DawMixer; copy: DawMixerCopy }) {
   return (
     <div
-      className="text-xs text-primary-400 leading-ratio-1-8 border-b border-[var(--color-primary-border)] px-[14px] py-[10px] tracking-3xl bg-[color-mix(in_srgb,var(--color-accent)_5%,transparent)]"
+      className="text-xs text-primary-400 leading-ratio-1-8 border-b border-[var(--color-border)] px-[14px] py-[10px] tracking-3xl bg-[color-mix(in_srgb,var(--color-accent)_5%,transparent)]"
       data-testid="session-header-mobile"
     >
       <div>

@@ -2,7 +2,7 @@
   .eq-strip {
     display: grid;
     grid-template-columns: minmax(0, 1fr);
-    border: var(--border-width) solid var(--color-primary-border);
+    border: var(--border-width) solid var(--color-border);
     background: var(--color-surface);
   }
 

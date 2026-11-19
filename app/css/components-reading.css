@@ -74,7 +74,7 @@
   .reading-section {
     margin-top: var(--spacing-8);
     padding-top: var(--spacing-4);
-    border-top: var(--border-width) solid var(--color-primary-border);
+    border-top: var(--border-width) solid var(--color-border);
   }
 
   .reading-heading {
@@ -203,7 +203,7 @@
   }
 
   .reading-stats > * + * {
-    border-left: var(--border-width) solid var(--color-primary-border);
+    border-left: var(--border-width) solid var(--color-border);
   }
 
   .reading-projects {
@@ -302,7 +302,7 @@
     }
 
     .reading-stats > :nth-child(n + 3) {
-      border-top: var(--border-width) solid var(--color-primary-border);
+      border-top: var(--border-width) solid var(--color-border);
     }
   }
 
@@ -317,7 +317,7 @@
     .reading-view {
       --color-text-secondary: var(--color-print-ink);
       --color-border-strong: var(--color-print-ink);
-      --color-primary-border: var(--color-print-ink);
+      --color-border: var(--color-print-ink);
       min-height: 0;
       background: var(--color-print-paper);
       color: var(--color-print-ink);

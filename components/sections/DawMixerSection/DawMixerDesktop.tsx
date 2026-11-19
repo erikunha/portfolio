@@ -69,7 +69,7 @@ function ChannelDesktop({ ch, copy }: { ch: DawMixerChannel; copy: DawMixerCopy 
         <span
           className={cn(
             'border px-[5px] py-[1px] text-xs font-mono text-primary-400 tracking-xs shrink-0',
-            'border-[var(--color-primary-border)]',
+            'border-[var(--color-border)]',
             isMaster &&
               'border-(color:--color-accent) px-2 py-[2px] font-bold text-(color:--color-accent) tracking-2xl',
           )}
@@ -150,7 +150,7 @@ function SessionHeaderDesktop({ mixer, copy }: { mixer: DawMixer; copy: DawMixer
     <div
       className={cn(
         'daw-mixer-row-min grid gap-[18px] items-center px-[18px] py-3',
-        'border-b border-[var(--color-primary-border)]',
+        'border-b border-[var(--color-border)]',
         'bg-[color-mix(in_srgb,var(--color-accent)_5%,transparent)]',
         'text-xs text-primary-400 tracking-3xl',
       )}
@@ -202,7 +202,7 @@ export function DawMixerDesktop({ mixer, copy }: { mixer: DawMixer; copy: DawMix
   const endId = useId();
   return (
     <div
-      className="daw-mixer-desktop relative font-mono text-sm text-tertiary-50 border border-[var(--color-primary-border)] bg-(color:--color-surface)/50 overflow-x-auto md:overflow-x-hidden"
+      className="daw-mixer-desktop relative font-mono text-sm text-tertiary-50 border border-[var(--color-border)] bg-(color:--color-surface)/50 overflow-x-auto md:overflow-x-hidden"
       data-testid="daw-mixer-desktop"
     >
       <a href={`#${endId}`} className="mixer-skip-link">

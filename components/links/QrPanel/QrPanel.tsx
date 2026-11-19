@@ -17,14 +17,14 @@ export function QrPanel({ locale, url }: { locale: SiteLocale; url: string }) {
     <section className="links-col" data-col="qr" aria-labelledby={HEADING_ID}>
       <SectionHeading id={HEADING_ID}>{copy.qrHeading[locale]}</SectionHeading>
 
-      <div className="border border-primary-border bg-(color:--color-surface) p-4 flex gap-4 items-center">
+      <div className="border border-(color:--color-border) bg-(color:--color-surface) p-4 flex gap-4 items-center">
         <svg
           viewBox={`0 0 ${span} ${span}`}
           width={RENDER_PX}
           height={RENDER_PX}
           role="img"
           aria-label={`${linksUi.qrLabel[locale]} ${url}`}
-          className="block flex-none border border-primary-border"
+          className="block flex-none border border-(color:--color-border)"
           shapeRendering="crispEdges"
         >
           <rect width={span} height={span} fill="var(--color-tertiary-50)" />

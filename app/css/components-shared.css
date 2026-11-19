@@ -94,7 +94,7 @@
     min-width: var(--spacing-target);
     min-height: var(--spacing-target);
     padding: 0 var(--spacing-3);
-    border: var(--border-width) solid var(--color-primary-border);
+    border: var(--border-width) solid var(--color-border);
     border-radius: var(--radius-none);
     background: transparent;
     color: var(--color-text-secondary);
@@ -110,7 +110,7 @@
 
   .ds-prose :not(pre):not(td):not(th):not(.ds-cell-value) > code {
     background: var(--color-surface);
-    border: 1px solid var(--color-primary-border);
+    border: 1px solid var(--color-border);
     padding: 0.1em 0.35em;
     color: var(--color-text);
 
@@ -136,7 +136,7 @@
 
     .ds-prose table[data-labelled-table] tr {
       margin-bottom: var(--phi-space-2);
-      border: var(--border-width) solid var(--color-primary-border);
+      border: var(--border-width) solid var(--color-border);
     }
 
     .ds-prose table[data-labelled-table] td {
@@ -147,7 +147,7 @@
       width: 100%;
       padding: var(--spacing-1) var(--spacing-3);
       border: 0;
-      border-bottom: var(--border-width) solid var(--color-primary-border);
+      border-bottom: var(--border-width) solid var(--color-border);
       overflow-wrap: anywhere;
     }
 

@@ -14,7 +14,7 @@ export function Preview({ id, source, children }: PreviewProps) {
       <TerminalPanel className="my-4">
         <div className="p-6 flex flex-wrap gap-3 items-start">{children}</div>
         {source != null && (
-          <div className="border-t border-primary-border">
+          <div className="border-t border-(color:--color-border)">
             <p className="px-6 py-1.5 m-0 font-mono text-xs tracking-widest text-primary-400 uppercase">
               {PREVIEW_SOURCE_LABEL}
             </p>
@@ -24,7 +24,7 @@ export function Preview({ id, source, children }: PreviewProps) {
               tabIndex={0}
               role="group"
               aria-label={previewSourceAriaLabel(id)}
-              className="m-0 px-6 py-4 overflow-x-auto font-mono text-xs text-tertiary-50 border-t border-dashed border-primary-border"
+              className="m-0 px-6 py-4 overflow-x-auto font-mono text-xs text-tertiary-50 border-t border-dashed border-(color:--color-border)"
             >
               <code>{source}</code>
             </pre>

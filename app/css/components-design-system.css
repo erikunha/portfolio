@@ -51,7 +51,7 @@
     margin: 0 0 var(--phi-space-2);
     padding: var(--spacing-3) var(--spacing-4);
     overflow-x: auto;
-    border: var(--border-width) solid var(--color-primary-border);
+    border: var(--border-width) solid var(--color-border);
     background: var(--color-surface);
   }
 
@@ -83,7 +83,7 @@
 
   .ds-prose :is(th, td) {
     padding: var(--spacing-2) var(--spacing-3);
-    border: var(--border-width) solid var(--color-primary-border);
+    border: var(--border-width) solid var(--color-border);
     text-align: left;
     vertical-align: top;
     --leading: 1.35;
@@ -122,7 +122,7 @@
     gap: var(--spacing-1);
     min-width: 0;
     padding: var(--spacing-3);
-    border-top: var(--border-width) solid var(--color-primary-border);
+    border-top: var(--border-width) solid var(--color-border);
   }
 
   .ds-sidebar.ds-sidebar-nojs {
@@ -133,7 +133,7 @@
 
   .menu-extra {
     padding: var(--spacing-2) var(--spacing-2) var(--spacing-4);
-    border-top: var(--border-width) solid var(--color-primary-border);
+    border-top: var(--border-width) solid var(--color-border);
   }
 
   .ds-sidebar ul,
@@ -176,7 +176,7 @@
 
   .ds-nav-item[aria-current="page"],
   .ds-nav-item[aria-current="location"] {
-    border-color: var(--color-primary-border);
+    border-color: var(--color-border);
     background: var(--color-primary-quiet);
     color: var(--color-green);
   }
@@ -220,7 +220,7 @@
     gap: var(--spacing-2);
     margin: var(--spacing-12) 0 0;
     padding-top: var(--spacing-4);
-    border-top: var(--border-width) solid var(--color-primary-border);
+    border-top: var(--border-width) solid var(--color-border);
   }
 
   .pager .nav-item {
@@ -255,7 +255,7 @@
       overflow-y: auto;
       padding: var(--spacing-3) var(--spacing-3) var(--spacing-3) 0;
       border-top: 0;
-      border-right: var(--border-width) solid var(--color-primary-border);
+      border-right: var(--border-width) solid var(--color-border);
     }
 
     .ds-sidebar.ds-sidebar-nojs {

@@ -16,7 +16,7 @@ export function SectionHeading({ id, children, trailing, reveal = true }: Sectio
       <span data-type-reveal={reveal || undefined} suppressHydrationWarning>
         {children}
       </span>
-      <span aria-hidden="true" className="flex-1 h-px bg-primary-border" />
+      <span aria-hidden="true" className="flex-1 h-px bg-(color:--color-border)" />
       {trailing != null && (
         <span className="text-tertiary-400 text-xs tracking-xs normal-case">{trailing}</span>
       )}

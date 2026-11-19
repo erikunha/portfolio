@@ -21,14 +21,14 @@ const COMPONENTS = [
 export function ComponentNav() {
   return (
     <nav
-      className="component-nav flex flex-wrap gap-2 mb-6 pb-4 border-b border-primary-border"
+      className="component-nav flex flex-wrap gap-2 mb-6 pb-4 border-b border-(color:--color-border)"
       aria-label="Jump to component"
     >
       {COMPONENTS.map(({ id, label }) => (
         <a
           key={id}
           href={`#${id}`}
-          className="component-nav-link text-xs font-mono text-primary-400 no-underline border border-primary-border px-2 py-0.5 transition-[color,border-color] duration-[80ms] motion-off:transition-none hover:text-(color:--color-accent) hover:border-(color:--color-accent) focus-visible:text-(color:--color-accent) focus-visible:border-(color:--color-accent)"
+          className="component-nav-link text-xs font-mono text-primary-400 no-underline border border-(color:--color-border) px-2 py-0.5 transition-[color,border-color] duration-[80ms] motion-off:transition-none hover:text-(color:--color-accent) hover:border-(color:--color-accent) focus-visible:text-(color:--color-accent) focus-visible:border-(color:--color-accent)"
         >
           {label}
         </a>

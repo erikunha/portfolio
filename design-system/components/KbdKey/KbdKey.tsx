@@ -11,7 +11,7 @@ export function KbdKey({ size = 'md', className, children, ...rest }: KbdKeyProp
     <kbd
       {...rest}
       className={cn(
-        'kbd-key inline-flex items-center border border-primary-border text-tertiary-50 font-mono rounded-control',
+        'kbd-key inline-flex items-center border border-(color:--color-border) text-tertiary-50 font-mono rounded-control',
         size === 'sm' && 'text-xs px-1 py-0',
         size === 'md' && 'text-xs px-[6px] py-px',
         className,

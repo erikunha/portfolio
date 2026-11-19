@@ -11,13 +11,13 @@
 
   .guitar-eq-panel {
     padding: var(--phi-space-2);
-    border: var(--border-width) solid var(--color-primary-border);
+    border: var(--border-width) solid var(--color-border);
     background: var(--color-surface);
   }
 
   .guitar-signal-panel {
     padding: var(--spacing-3);
-    border: var(--border-width) solid var(--color-primary-border);
+    border: var(--border-width) solid var(--color-border);
     background: var(--color-surface);
   }
 
