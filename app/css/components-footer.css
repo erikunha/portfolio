@@ -457,7 +457,7 @@
   .footer-halt-plate {
     padding: var(--spacing-1) var(--spacing-3);
     background: var(--color-green);
-    color: var(--color-secondary-950);
+    color: var(--color-on-accent);
     font-weight: 700;
     letter-spacing: var(--footer-tracking);
   }

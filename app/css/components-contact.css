@@ -311,7 +311,7 @@
     border: var(--border-width) solid var(--color-green);
     border-radius: var(--radius-control);
     background: var(--color-green);
-    color: var(--color-secondary-950);
+    color: var(--color-on-accent);
     font-family: var(--font-mono);
     font-size: var(--text-xs);
     font-weight: 700;
@@ -387,7 +387,7 @@
     border: var(--border-width) solid var(--color-green);
     border-radius: var(--radius-control);
     background: var(--color-green);
-    color: var(--color-secondary-950);
+    color: var(--color-on-accent);
     font-family: var(--font-mono);
     font-size: var(--text-xs);
     font-weight: bold;
@@ -977,7 +977,7 @@
     border: var(--border-width) solid var(--color-green);
     border-radius: var(--radius-control);
     background: var(--color-green);
-    color: var(--color-secondary-950);
+    color: var(--color-on-accent);
     font: inherit;
     font-weight: 700;
     cursor: pointer;

@@ -223,7 +223,7 @@
 
   .hero-context .hero-location {
     background: var(--color-accent);
-    color: var(--color-secondary-950);
+    color: var(--color-on-accent);
     padding-inline: calc(var(--spacing-1) * 1.5);
   }
 

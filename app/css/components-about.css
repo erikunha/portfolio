@@ -79,7 +79,7 @@
 
   .ab-role {
     background: var(--color-accent);
-    color: var(--color-secondary-950);
+    color: var(--color-on-accent);
     padding: var(--border-width) calc(var(--spacing-1) * 1.5);
     letter-spacing: var(--tracking-xs);
   }

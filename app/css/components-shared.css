@@ -203,7 +203,7 @@
 
   .sysfail-plate {
     background: var(--color-accent);
-    color: var(--color-secondary-950);
+    color: var(--color-on-accent);
     font-family: var(--font-mono);
     font-weight: 700;
     font-size: var(--text-2xl);

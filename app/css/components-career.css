@@ -264,7 +264,7 @@
 
   .career-cv:hover {
     background: var(--color-accent);
-    color: var(--color-secondary-950);
+    color: var(--color-on-accent);
   }
 
   @media (min-width: theme(--viewport-md)) {

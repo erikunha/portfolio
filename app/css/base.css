@@ -131,7 +131,7 @@
 
   ::selection {
     background: var(--color-accent);
-    color: var(--color-secondary-950);
+    color: var(--color-on-accent);
   }
 
   a {
@@ -170,7 +170,7 @@
     z-index: var(--z-skip-link);
     padding: var(--spacing-2) var(--spacing-4);
     background: var(--color-accent);
-    color: var(--color-secondary-950);
+    color: var(--color-on-accent);
     font-family: var(--font-mono);
     font-size: var(--text-base);
     font-weight: 700;

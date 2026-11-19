@@ -20,7 +20,7 @@ const baseClasses =
 
 const variantClasses: Record<ButtonVariant, string> = {
   primary:
-    'bg-(color:--color-accent) text-secondary-950 border-(color:--color-accent) hover:shadow-glow',
+    'bg-(color:--color-accent) text-(color:--color-on-accent) border-(color:--color-accent) hover:shadow-glow',
   secondary:
     'bg-transparent text-(color:--color-accent) border-(color:--color-border-strong) hover:shadow-glow hover:bg-primary-quiet',
 };

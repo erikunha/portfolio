@@ -562,7 +562,7 @@
   }
 
   .topbar-action-solid {
-    color: var(--color-secondary-950);
+    color: var(--color-on-accent);
     background: var(--color-accent);
     font-weight: 700;
   }
