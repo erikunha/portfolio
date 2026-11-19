@@ -98,8 +98,8 @@ pass through the real Next.js image optimizer and require access to `i.ytimg.com
 The fixture is returned as written, without the Shorts filter. The fixture flag is ignored on Vercel deployments. Without it, the server loads
 the live YouTube feed.
 
-`tests/visual/links-feed-fixture.spec.ts` fails with "the build did not use
-E2E_LINKS_FEED_FIXTURE; rebuild with it set" when the build on disk lacks the flag.
+The `links-en` test in `tests/visual/visual.spec.ts` fails with "the build did not use
+E2E_LINKS_FEED_FIXTURE=tests/e2e/fixtures/links-feed.json ... rebuild with it set" when the build on disk lacks the flag.
 `pnpm gates:runtime` sets it for its build and server, so that route needs no manual export.
 
 ## Reference docs

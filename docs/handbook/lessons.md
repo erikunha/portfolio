@@ -239,6 +239,16 @@ The prompt for a manual or agent review that applies these rules to a diff is `d
     stalled `/api/contact` mock or POST looks the same (no success). The delivery spec counts
     POSTs and asserts exactly one before it reads the success state, so the next natural failure
     says which one it was.
+55. A guard for a gate's precondition lives inside the gate's own command, not beside it. The
+    `links-en` baseline holds the fixture feed, so a build without `E2E_LINKS_FEED_FIXTURE`
+    renders live YouTube data and the spec reports a moved layout (23px on chromium, 226px on
+    chromium-mobile). A guard spec existed for that, but CI, `ci:full` and every agent ran
+    `tests/visual/visual.spec.ts` alone, so the guard never ran and five agents chased a layout
+    regression that was a build flag. The check is now a step of the `links-en` test
+    (`expectLinksFeedFixture`), before the capture. The page also waits for every image in the
+    captured region to load and decode (`waitForImagesDecoded`), so a thumbnail that did not load
+    fails with that cause and not as a changed wording. Check:
+    `scripts/__tests__/visual-links-feed-precondition.test.ts`.
 
 ## Pre-push judgement list
 

@@ -4,6 +4,8 @@ import { captureForArgos } from '../e2e/_helpers/argos-capture';
 import { expect, test } from '../e2e/_helpers/fixtures';
 import { VIEWPORTS } from '../e2e/_helpers/geometry';
 import { waitForHydration } from '../e2e/_helpers/hydration';
+import { waitForImagesDecoded } from '../e2e/_helpers/images';
+import { expectLinksFeedFixture } from '../e2e/_helpers/links-feed-fixture';
 import { stripVolatileChrome } from '../e2e/_helpers/mask-volatile';
 import { revealDeferredContent, snapshotLocator } from '../e2e/_helpers/snapshot';
 import { gotoSettled } from '../e2e/_helpers/streamed';
@@ -20,7 +22,7 @@ const PAGE_VIEWPORT = {
 const PAGE_BASELINES = [
   { name: 'cv', path: '/cv', target: 'main' },
   { name: 'summary', path: '/summary', target: 'main' },
-  { name: 'links-en', path: '/links/en', target: 'main' },
+  { name: 'links-en', path: '/links/en', target: 'main', needsLinksFeedFixture: true },
   {
     name: 'pt-hero',
     path: '/pt',
@@ -195,14 +197,17 @@ test.describe('visual regression', { tag: '@mobile-visual' }, () => {
 });
 
 test.describe('route page baselines', { tag: '@mobile-visual' }, () => {
-  for (const { name, path, target } of PAGE_BASELINES) {
+  for (const baseline of PAGE_BASELINES) {
+    const { name, path, target } = baseline;
     test(`${name} matches baseline`, async ({ mockedPage }, testInfo) => {
       const viewport = PAGE_VIEWPORT[testInfo.project.name as keyof typeof PAGE_VIEWPORT];
       await mockedPage.setViewportSize(viewport);
       await gotoSettled(mockedPage, path);
       await waitForHydration(mockedPage, '.menu-trigger');
+      if ('needsLinksFeedFixture' in baseline) await expectLinksFeedFixture(mockedPage);
       const region = mockedPage.locator(target).filter({ visible: true }).first();
       await region.waitFor({ state: 'visible' });
+      await waitForImagesDecoded(region);
       await region.scrollIntoViewIfNeeded();
       await mockedPage.evaluate(() => document.fonts.ready);
       await stripVolatileChrome(mockedPage);

@@ -46,7 +46,7 @@ export interface Exclusion {
 export const DEFAULT_BASE = 'origin/main';
 export const WORKERS = 2;
 
-const CI_BUILD_ENV = {
+export const CI_BUILD_ENV = {
   DEPLOY_SALT: 'ci-build-salt',
   E2E_LINKS_FEED_FIXTURE: 'tests/e2e/fixtures/links-feed.json',
 };
