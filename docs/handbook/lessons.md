@@ -275,14 +275,24 @@ The prompt for a manual or agent review that applies these rules to a diff is `d
     without the drawer fix, which fails both specs.
 
 58. An e2e spec that samples an animation does not assume the runner draws frames. Software
-    WebKit on Linux (the CI runner) delivered no `requestAnimationFrame` callback for 3 to 7 s
-    after this site loaded and reached 60 fps only after 10 to 20 s, and a CSS transition's clock
-    and its `transitionrun` and `transitionend` events only advance with a rendering update, so a
-    200 ms slide sampled per frame saw no intermediate position (a plain `div` transition behaved
-    the same). Sample DOM state on a timer, and read a transition's positions by pausing the
-    `CSSTransition` from `getAnimations()` and seeking `currentTime`. Check: the drawer exit specs
-    pass 10 of 10 with `--retries=0` in the Playwright Linux image, and fail there when the exit
-    duration is forced to 0 (`tests/e2e/drawer-dialog.spec.ts`,
+    WebKit on Linux (the CI runner) delivered no `requestAnimationFrame` callback for 3 to 7
+    s after this site loaded and reached steady frames only after 10 to 20 s, and a CSS
+    transition's clock and its `transitionrun` and `transitionend` events only advance with
+    a rendering update, so a 200 ms slide sampled per frame saw no intermediate position (a
+    plain `div` transition behaved the same). The app's exit fallback is wall-clock
+    (duration plus 50 ms), so a late first frame shortens the slide on such a runner: the
+    accepted cost, and no steady frame rate is promised (the 2-CPU mobile shape stays near 5
+    fps). Sample DOM state on a timer. Read a transition's positions by pausing the
+    `CSSTransition` from `getAnimations()`, seeking `currentTime` and restoring it before
+    `play()`, in a test apart from the one that bounds the exit in time with a
+    `MutationObserver` on the attributes, so the bound reads the app's own timing. A 200 ms
+    slide on software Chromium closed after 62 ms of wall time in 5 of 100 runs (the
+    document timeline lags the wall clock by about 100 ms), so the bound is a quarter of the
+    duration on the larger of the two clocks. A seek proves configuration, not delivery:
+    require live positions only when `requestAnimationFrame` ticks steadily, decided at run
+    time. Check: the drawer exit specs pass 10 of 10 with `--retries=0` in the Playwright
+    Linux image, and fail there when the `[data-exiting]` display rule is removed or the
+    fallback timer is 0 (`tests/e2e/drawer-dialog.spec.ts`,
     `tests/e2e/drawer-exit-interactive.spec.ts`).
 
 ## Pre-push judgement list

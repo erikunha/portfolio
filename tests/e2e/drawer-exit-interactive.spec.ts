@@ -4,7 +4,9 @@ import { installMockBackend } from './_helpers/mock-backend';
 
 const DRAWER = '#section-drawer';
 const SAMPLE_MS = 600;
+const SAMPLE_CAP_MS = 8 * SAMPLE_MS;
 const TICK_MS = 8;
+const POLL_MS = 50;
 const TYPED = 'Test Visitor';
 
 type Frame = { open: boolean; exiting: boolean; modal: boolean };
@@ -12,7 +14,7 @@ type SamplerWindow = Window & { exitFrames?: Frame[]; exitDone?: boolean };
 
 async function armSampler(page: Page): Promise<void> {
   await page.evaluate(
-    ({ sampleMs, tickMs }) => {
+    ({ capMs, tickMs }) => {
       const sampler = window as SamplerWindow;
       const drawer = document.querySelector('#section-drawer') as HTMLDialogElement;
       sampler.exitFrames = [];
@@ -21,13 +23,16 @@ async function armSampler(page: Page): Promise<void> {
         'click',
         () => {
           const start = performance.now();
+          let sawSlide = false;
           const timer = setInterval(() => {
-            sampler.exitFrames?.push({
+            const frame = {
               open: drawer.open,
               exiting: !drawer.classList.contains('is-open'),
               modal: drawer.matches(':modal'),
-            });
-            if (performance.now() - start >= sampleMs) {
+            };
+            sampler.exitFrames?.push(frame);
+            sawSlide = sawSlide || (frame.open && frame.exiting);
+            if ((sawSlide && !frame.open) || performance.now() - start >= capMs) {
               clearInterval(timer);
               sampler.exitDone = true;
             }
@@ -36,7 +41,7 @@ async function armSampler(page: Page): Promise<void> {
         { capture: true, once: true },
       );
     },
-    { sampleMs: SAMPLE_MS, tickMs: TICK_MS },
+    { capMs: SAMPLE_CAP_MS, tickMs: TICK_MS },
   );
 }
 
@@ -56,7 +61,9 @@ test('the page takes input while the drawer slides out after a section is chosen
   const name = page.getByTestId('contact-form').getByLabel('$ name:');
   await name.fill(TYPED);
   await expect(name, 'typing during the slide-out reaches the field').toHaveValue(TYPED);
-  await page.waitForFunction(() => (window as SamplerWindow).exitDone === true);
+  await page.waitForFunction(() => (window as SamplerWindow).exitDone === true, undefined, {
+    polling: POLL_MS,
+  });
   const frames = await page.evaluate(() => (window as SamplerWindow).exitFrames ?? []);
   const sliding = frames.filter(({ open, exiting }) => open && exiting);
   expect(sliding.length, 'the sampler saw the slide-out').toBeGreaterThan(0);
@@ -103,7 +110,9 @@ test('focus never enters the exiting drawer and stays in the field after it clos
     .click();
   const name = page.getByTestId('contact-form').getByLabel('$ name:');
   await name.fill(TYPED);
-  await page.waitForFunction(() => (window as FocusWindow).focusSampleDone === true);
+  await page.waitForFunction(() => (window as FocusWindow).focusSampleDone === true, undefined, {
+    polling: POLL_MS,
+  });
   const entered = await page.evaluate(() => (window as FocusWindow).drawerFocusIns ?? []);
   expect(entered, 'no focus event reaches the exiting drawer').toEqual([]);
   await expect(page.locator(DRAWER)).not.toHaveJSProperty('open', true);
