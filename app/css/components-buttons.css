@@ -4,6 +4,8 @@
   --btn-height-large: 52px;
   --btn-disabled-opacity: 0.4;
   --btn-ease: cubic-bezier(0, 0, 0.2, 1);
+  --btn-toggle-fill: color-mix(in srgb, var(--color-accent) 10%, transparent);
+  --btn-toggle-glow: 0 0 5px color-mix(in srgb, var(--color-accent) 35%, transparent);
 }
 
 @layer components {
@@ -61,6 +63,23 @@
   .btn[data-variant="quiet"]:hover {
     color: var(--color-accent);
     box-shadow: none;
+  }
+
+  .btn[data-variant="toggle"] {
+    background-color: transparent;
+    color: var(--color-signal-400);
+    border-color: var(--color-signal-quiet);
+  }
+
+  .btn[data-variant="toggle"]:hover {
+    box-shadow: none;
+  }
+
+  .btn[data-variant="toggle"][aria-pressed="true"] {
+    background-color: var(--btn-toggle-fill);
+    color: var(--color-accent);
+    border-color: var(--color-accent);
+    box-shadow: var(--btn-toggle-glow);
   }
 
   .btn[data-size="sm"] {

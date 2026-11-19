@@ -2,6 +2,7 @@
   --mixer-chip-min: 5.5rem;
   --mixer-chain-rows: 3;
   --mixer-transport-gap: 14px;
+  --mixer-rms-pad: 6px;
 }
 
 @layer components {
@@ -31,6 +32,9 @@
   .rms-btn {
     min-width: var(--spacing-target-compact);
     min-height: var(--spacing-target-compact);
+    padding-inline: var(--mixer-rms-pad);
+    flex-shrink: 0;
+    letter-spacing: var(--tracking-2xs);
   }
 
   @media (pointer: coarse) {

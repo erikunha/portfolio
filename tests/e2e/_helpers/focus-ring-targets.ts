@@ -14,7 +14,11 @@ export const FOCUS_RING_TARGETS: RingTarget[] = [
   { name: 'fader', route: MIXER_ROUTE, selector: `${MIXER_SECTION} .fader-track` },
   { name: 'vu meter', route: MIXER_ROUTE, selector: `${MIXER_SECTION} .vu-meter` },
   { name: 'knob', route: MIXER_ROUTE, selector: `${MIXER_SECTION} .knob-container` },
-  { name: 'rms toggle', route: MIXER_ROUTE, selector: `${MIXER_SECTION} .rms-inactive` },
+  {
+    name: 'rms toggle',
+    route: MIXER_ROUTE,
+    selector: `${MIXER_SECTION} .rms-buttons [aria-pressed="false"]`,
+  },
   { name: 'brand link', route: MIXER_ROUTE, selector: '.brand-link' },
   { name: 'links line', route: LINKS_ROUTE, selector: '.links-line' },
   { name: 'links footer link', route: LINKS_ROUTE, selector: '.links-footer-link' },
