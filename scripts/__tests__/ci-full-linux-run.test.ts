@@ -104,6 +104,16 @@ describe('arguments for the linux stages', () => {
     expect(() => parseArgs(['--only'], STAGE_IDS)).toThrow('--only needs a value');
   });
 
+  it('refuses --only and --linux given twice instead of keeping the last one', () => {
+    expect(() => parseArgs(['--only', 'build', '--only', 'ci-local'], STAGE_IDS)).toThrow(
+      '--only given twice',
+    );
+    expect(() => parseArgs(['--linux', '--linux=all'], STAGE_IDS)).toThrow('--linux given twice');
+    expect(() => parseArgs(['--linux=gate', '--linux=all'], STAGE_IDS)).toThrow(
+      '--linux given twice',
+    );
+  });
+
   it('keeps every other default as before', () => {
     expect(parseArgs([], STAGE_IDS)).toMatchObject({
       base: 'origin/main',

@@ -755,6 +755,7 @@ export function exitCode(results: readonly StageResult[]): number {
   return EXIT.OK;
 }
 
+const ONLY_FLAG = '--only';
 const LINUX_FLAG = '--linux';
 const LINUX_FLAG_PREFIX = `${LINUX_FLAG}=`;
 
@@ -787,10 +788,13 @@ export function parseArgs(argv: readonly string[], stageIds: readonly string[]):
     else if (flag === '--list') args.list = true;
     else if (flag === '--base') args.base = value(index++, flag);
     else if (flag === '--from') args.from = value(index++, flag);
-    else if (flag === '--only') args.only = value(index++, flag).split(',');
-    else if (flag === LINUX_FLAG) args.linux = DEFAULT_LINUX_SCOPE;
-    else if (flag?.startsWith(LINUX_FLAG_PREFIX)) args.linux = linuxScope(flag);
-    else throw new Error(`unknown argument ${flag}`);
+    else if (flag === ONLY_FLAG) {
+      if (args.only !== undefined) throw new Error(`${ONLY_FLAG} given twice`);
+      args.only = value(index++, flag).split(',');
+    } else if (flag === LINUX_FLAG || flag?.startsWith(LINUX_FLAG_PREFIX)) {
+      if (args.linux !== undefined) throw new Error(`${LINUX_FLAG} given twice`);
+      args.linux = flag === LINUX_FLAG ? DEFAULT_LINUX_SCOPE : linuxScope(flag);
+    } else throw new Error(`unknown argument ${flag}`);
   }
   for (const id of [args.from, ...(args.only ?? [])]) {
     if (id !== undefined && !stageIds.includes(id)) {
