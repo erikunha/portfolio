@@ -10,7 +10,7 @@ This is a single, continuously deployed web application. Only the current `main`
 
 Report privately by email: erikhenriquealvescunha@gmail.com with `SECURITY` in the subject. The same contact is published at `/.well-known/security.txt`.
 
-GitHub private vulnerability reporting (the repository's **Security → Report a vulnerability** tab) is off today. It becomes a second private channel once it is enabled on the repository; until then, use email.
+GitHub private vulnerability reporting is the second private channel: the repository's **Security → Report a vulnerability** tab, also listed as a `Contact` in `/.well-known/security.txt`.
 
 Please include a description of the issue, the affected URL or code path, reproduction steps or a proof of concept, and the impact you believe it has. If you have a suggested fix, include it.
 
