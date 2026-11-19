@@ -27,14 +27,6 @@
       border-width: var(--forced-state-width);
     }
 
-    .contact-send,
-    .contact-channel-cta,
-    .ctz-propose {
-      border-style: double;
-      border-width: var(--forced-state-width);
-      font-weight: 700;
-    }
-
     .nav-item[aria-current],
     .section-menu .nav-item[aria-current],
     .ds-nav-item[aria-current] {
