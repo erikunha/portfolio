@@ -1,10 +1,10 @@
 import { z } from 'zod';
 import { NOT_FOUND_PATH_TOKEN } from './errors.constants';
 import { FACT_SEPARATOR } from './fact-separator';
-import { SECTION_ICONS } from './section-registry';
+import { SECTION_ICONS, SECTION_REGISTRY } from './section-registry';
 
 export { SECTION_ICONS };
-export const SECTION_DESTINATION_COUNT = 9;
+
 const FIRST_SECTION_ORDER = 1;
 const MIN_SECTION_TEXT_LENGTH = 1;
 
@@ -27,7 +27,7 @@ export const SectionSchema = z.object({
   id: SectionTextSchema,
   label: LocalizedTextSchema,
   srLabel: LocalizedTextSchema,
-  order: z.number().int().min(FIRST_SECTION_ORDER).max(SECTION_DESTINATION_COUNT),
+  order: z.number().int().min(FIRST_SECTION_ORDER).max(SECTION_REGISTRY.length),
   icon: z.enum(SECTION_ICONS),
 });
 
@@ -35,7 +35,7 @@ export type Section = z.infer<typeof SectionSchema>;
 
 export const SectionRegistrySchema = z
   .array(SectionSchema)
-  .length(SECTION_DESTINATION_COUNT)
+  .length(SECTION_REGISTRY.length)
   .refine((entries) => new Set(entries.map(({ id }) => id)).size === entries.length, {
     message: 'Section ids must be unique',
   })
