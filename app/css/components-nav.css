@@ -114,10 +114,7 @@
     border: 0;
     border-right: var(--border-width) solid var(--color-primary-border);
     transform: translateX(-100%);
-    transition:
-      transform var(--menu-duration) ease-out,
-      display var(--menu-duration) allow-discrete,
-      overlay var(--menu-duration) allow-discrete;
+    transition: transform var(--menu-duration) ease-out;
     overflow-y: auto;
     overscroll-behavior: contain;
     scrollbar-color: var(--color-primary-border) transparent;

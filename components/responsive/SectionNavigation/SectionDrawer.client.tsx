@@ -5,6 +5,7 @@ import { externalLinkProps } from '@/components/ExternalLink';
 import { StatusDot } from '@/components/StatusDot';
 import { MOTION_STATE_SEPARATOR, TOPBAR_MOTION_LABEL } from '@/content/nav';
 import { NavItem } from '@/design-system';
+import { longestTransitionMs } from '@/lib/dom/longest-transition-ms';
 import { joinClassNames } from '@/lib/join-class-names';
 import { DRAWER_ID } from './navigationIds';
 import {
@@ -20,6 +21,8 @@ const formatSectionNumber = (order: number) => String(order).padStart(POSITION_D
 const TRAPPED_CONTROLS = 'a[href], button';
 const CURRENT_ITEM = '[aria-current]';
 const SCROLL_LOCK_ATTRIBUTE = 'data-scroll-locked';
+const EXIT_PROPERTY = 'transform';
+const EXIT_FALLBACK_SLACK_MS = 50;
 
 export function SectionNavigation({ extra }: { extra?: ReactNode }) {
   const { store, closeDrawer, settleDrawer, jump, toggleMotion, copy, chrome } =
@@ -30,20 +33,43 @@ export function SectionNavigation({ extra }: { extra?: ReactNode }) {
   const motionState = useMotionState();
   const panelRef = useRef<HTMLDialogElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
+  const settleExitRef = useRef<(() => void) | null>(null);
 
   useEffect(() => {
     const panel = panelRef.current;
     if (!drawerOpen || !panel) return;
+    settleExitRef.current?.();
     panel.showModal();
     document.documentElement.setAttribute(SCROLL_LOCK_ATTRIBUTE, '');
     const current = panel.querySelector<HTMLElement>(CURRENT_ITEM);
     (current ?? closeRef.current)?.focus();
     return () => {
-      panel.close();
-      document.documentElement.removeAttribute(SCROLL_LOCK_ATTRIBUTE);
-      settleDrawer();
+      const settle = () => {
+        settleExitRef.current = null;
+        panel.close();
+        document.documentElement.removeAttribute(SCROLL_LOCK_ATTRIBUTE);
+        settleDrawer();
+      };
+      const slideMs = panel.open ? longestTransitionMs(panel) : 0;
+      if (slideMs === 0) {
+        settle();
+        return;
+      }
+      const onTransitionEnd = (event: TransitionEvent) => {
+        if (event.target === panel && event.propertyName === EXIT_PROPERTY) done();
+      };
+      const timer = setTimeout(() => done(), slideMs + EXIT_FALLBACK_SLACK_MS);
+      const done = () => {
+        clearTimeout(timer);
+        panel.removeEventListener('transitionend', onTransitionEnd);
+        settle();
+      };
+      panel.addEventListener('transitionend', onTransitionEnd);
+      settleExitRef.current = done;
     };
   }, [drawerOpen, settleDrawer]);
+
+  useEffect(() => () => settleExitRef.current?.(), []);
 
   useEffect(() => {
     if (!drawerOpen) return;
@@ -71,8 +97,8 @@ export function SectionNavigation({ extra }: { extra?: ReactNode }) {
     closeDrawer(true);
   };
 
-  const onClose = () => {
-    if (store.get().drawerOpen) closeDrawer(true);
+  const onClose = (event: SyntheticEvent<HTMLDialogElement>) => {
+    if (!event.currentTarget.open && store.get().drawerOpen) closeDrawer(true);
   };
 
   const onPanelClick = (event: MouseEvent<HTMLDialogElement>) => {

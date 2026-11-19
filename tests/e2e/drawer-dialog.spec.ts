@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, type Page, test } from '@playwright/test';
 import { VIEWPORTS } from './_helpers/geometry';
 import { MENU_TRIGGER, openSectionMenu } from './_helpers/hydration';
 import { gotoSettled } from './_helpers/streamed';
@@ -7,6 +7,50 @@ const DRAWER = '#section-drawer';
 const OPEN_MENU_TRIGGER = `${MENU_TRIGGER}:visible`;
 const BACKDROP_X_OFFSET_PX = 40;
 const BACKDROP_Y_PX = 300;
+const EXIT_SAMPLE_MS = 600;
+const EXIT_FULL_SLIDE_PX = 300;
+const MIN_SLIDE_FRAMES = 3;
+
+type ExitFrame = { x: number; open: boolean };
+type SamplerWindow = Window & { exitFrames?: ExitFrame[]; exitDone?: boolean };
+
+async function armExitSampler(page: Page): Promise<void> {
+  await page.evaluate((sampleMs) => {
+    const sampler = window as SamplerWindow;
+    const drawer = document.querySelector('#section-drawer') as HTMLDialogElement;
+    sampler.exitFrames = [];
+    sampler.exitDone = false;
+    document.addEventListener(
+      'keydown',
+      () => {
+        const start = performance.now();
+        const tick = () => {
+          sampler.exitFrames?.push({
+            x: new DOMMatrixReadOnly(getComputedStyle(drawer).transform).m41,
+            open: drawer.open,
+          });
+          if (performance.now() - start < sampleMs) requestAnimationFrame(tick);
+          else sampler.exitDone = true;
+        };
+        requestAnimationFrame(tick);
+      },
+      { capture: true, once: true },
+    );
+  }, EXIT_SAMPLE_MS);
+}
+
+async function sampleExit(page: Page): Promise<ExitFrame[]> {
+  await page.waitForFunction(
+    () =>
+      new DOMMatrixReadOnly(
+        getComputedStyle(document.querySelector('#section-drawer') as Element).transform,
+      ).m41 === 0,
+  );
+  await armExitSampler(page);
+  await page.keyboard.press('Escape');
+  await page.waitForFunction(() => (window as SamplerWindow).exitDone === true);
+  return page.evaluate(() => (window as SamplerWindow).exitFrames ?? []);
+}
 
 for (const { name, viewport } of [
   { name: 'desktop', viewport: VIEWPORTS.DESKTOP },
@@ -20,7 +64,7 @@ for (const { name, viewport } of [
       await expect(page.locator(DRAWER)).toHaveClass(/is-open/);
     });
 
-    test('the open drawer is a top-layer modal that takes every point outside its panel', async ({
+    test('the open drawer is a top-layer modal that takes every point outside its panel @cross-browser', async ({
       page,
     }) => {
       expect(
@@ -39,7 +83,9 @@ for (const { name, viewport } of [
       expect(behind.focusable, 'focus starts inside the drawer').toBe(true);
     });
 
-    test('a click on the backdrop closes it and returns focus to the trigger', async ({ page }) => {
+    test('a click on the backdrop closes it and returns focus to the trigger @cross-browser', async ({
+      page,
+    }) => {
       const drawerBox = await page.locator(DRAWER).boundingBox();
       expect(drawerBox).not.toBeNull();
       const x = (drawerBox?.x ?? 0) + (drawerBox?.width ?? 0) + BACKDROP_X_OFFSET_PX;
@@ -49,7 +95,28 @@ for (const { name, viewport } of [
       await expect(page.locator(OPEN_MENU_TRIGGER).first()).toBeFocused();
     });
 
-    test('Escape twice in a row leaves the drawer closed and the page unlocked', async ({
+    test('the panel slides out before the dialog closes @cross-browser', async ({ page }) => {
+      await expect(page.locator('body')).not.toHaveAttribute('data-motion', 'reduce');
+      const frames = await sampleExit(page);
+      const sliding = frames.filter(({ x, open }) => open && x < 0 && x > -EXIT_FULL_SLIDE_PX);
+      expect(
+        new Set(sliding.map(({ x }) => Math.round(x))).size,
+        'the panel moves through several positions while the dialog is still open',
+      ).toBeGreaterThan(MIN_SLIDE_FRAMES);
+      expect(frames.at(-1)?.open, 'the dialog closes once the slide is over').toBe(false);
+      await expect(page.locator(OPEN_MENU_TRIGGER).first()).toBeFocused();
+    });
+
+    test('with MOTION off the dialog closes at once @cross-browser', async ({ page }) => {
+      await page.locator('#section-drawer .menu-motion').click();
+      await expect(page.locator('body')).toHaveAttribute('data-motion', 'reduce');
+      const frames = await sampleExit(page);
+      const sliding = frames.filter(({ x, open }) => open && x < 0 && x > -EXIT_FULL_SLIDE_PX);
+      expect(sliding, 'no intermediate slide frame is drawn').toHaveLength(0);
+      expect(frames.at(-1)?.open).toBe(false);
+    });
+
+    test('Escape twice in a row leaves the drawer closed and the page unlocked @cross-browser', async ({
       page,
     }) => {
       await page.keyboard.press('Escape');
