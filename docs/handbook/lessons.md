@@ -250,6 +250,16 @@ The prompt for a manual or agent review that applies these rules to a diff is `d
     fails with that cause and not as a changed wording. Check:
     `scripts/__tests__/visual-links-feed-precondition.test.ts`.
 
+55. A test that throttles the CPU throttles every script on the page, not only the code under test.
+    `tests/e2e/hydration-commit.spec.ts` slowed the whole home page 40x, so the contact form's wait
+    hydrated the rest of the page at that rate and ran the matrix rain's frames at that rate. In 30
+    Linux runs the wait took 30 s to 138 s (median 49 s), and CI ran it past the 180 s budget while
+    the wait itself was correct. The spec now freezes motion, asserts `body[data-motion="reduce"]`
+    and throttles at 10x: 6 s to 11 s in 30 runs, the same detection rate for a key-only wait.
+    Before a throttled spec sets its budget, read the duration spread of 30 runs, freeze unrelated
+    animation, and take the lowest rate that keeps the window. Check: the spec's own motion assertion
+    fails with the freeze removed.
+
 ## Pre-push judgement list
 
 Ranked by how often review caught each class on this repository.
