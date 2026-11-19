@@ -38,6 +38,11 @@ export const DOCKER = 'docker';
 const DOCKER_OK = 0;
 const PLAYWRIGHT_LIST_BUFFER_BYTES = 256 * 1024 * 1024;
 const PLAYWRIGHT_LIST_TIMEOUT_MS = 120_000;
+const ERROR_LINE = /error/i;
+const MS_PER_SECOND = 1000;
+const BYTES_PER_MIB = 1024 * 1024;
+const LISTING_UNPARSEABLE = 'printed no parseable JSON listing';
+const NO_TESTS_FOUND = /no tests found/i;
 
 const FORWARDER_SOURCE = [
   'const net = require("net");',
@@ -176,9 +181,18 @@ export function readLockfile(root: string): string {
 export interface PlaywrightListing {
   config: { rootDir: string };
   suites: { file: string }[];
+  errors?: { message?: string }[];
 }
 
-export type ListRunner = (args: string[], cwd: string, env: Record<string, string>) => string;
+export interface ListOutcome {
+  status: number | null;
+  stdout: string;
+  stderr: string;
+  signal?: NodeJS.Signals | null;
+  error?: (Error & { code?: string }) | undefined;
+}
+
+export type ListRunner = (args: string[], cwd: string, env: Record<string, string>) => ListOutcome;
 
 const runPlaywrightList: ListRunner = (args, cwd, env) => {
   const run = spawnSync('pnpm', ['playwright', ...args], {
@@ -188,21 +202,74 @@ const runPlaywrightList: ListRunner = (args, cwd, env) => {
     maxBuffer: PLAYWRIGHT_LIST_BUFFER_BYTES,
     timeout: PLAYWRIGHT_LIST_TIMEOUT_MS,
   });
-  return run.stdout;
+  return {
+    status: run.status,
+    stdout: run.stdout ?? '',
+    stderr: run.stderr ?? '',
+    signal: run.signal,
+    error: run.error,
+  };
 };
 
-export function listedSpecs(output: string, root: string): string[] {
-  let listing: PlaywrightListing;
+function parseListing(output: string): PlaywrightListing | undefined {
+  let parsed: Partial<PlaywrightListing> | null;
   try {
-    listing = JSON.parse(output) as PlaywrightListing;
+    parsed = JSON.parse(output) as Partial<PlaywrightListing> | null;
   } catch {
-    return [];
+    return undefined;
   }
+  const { config, suites } = parsed ?? {};
+  return typeof config?.rootDir === 'string' && Array.isArray(suites)
+    ? (parsed as PlaywrightListing)
+    : undefined;
+}
+
+const firstLine = (text: string): string => text.trim().split('\n')[0] ?? '';
+
+function errorLine(text: string): string {
+  const lines = text
+    .split('\n')
+    .map((line) => line.trim())
+    .filter(Boolean);
+  return lines.find((line) => ERROR_LINE.test(line)) ?? lines[0] ?? '';
+}
+
+export function listedSpecs(output: string, root: string): string[] {
+  const listing = parseListing(output);
+  if (listing === undefined) throw new Error(LISTING_UNPARSEABLE);
+  const [problem] = listing.errors ?? [];
+  if (problem !== undefined) throw new Error(`reported ${firstLine(problem.message ?? '')}`);
   return [
     ...new Set(
       listing.suites.map((suite) => relative(root, resolve(listing.config.rootDir, suite.file))),
     ),
   ];
+}
+
+function spawnProblem(error: Error & { code?: string }): string {
+  if (error.code === 'ETIMEDOUT') {
+    return `timed out after ${PLAYWRIGHT_LIST_TIMEOUT_MS / MS_PER_SECOND}s`;
+  }
+  if (error.code === 'ENOBUFS') {
+    return `printed more output than the ${PLAYWRIGHT_LIST_BUFFER_BYTES / BYTES_PER_MIB} MiB buffer`;
+  }
+  return `could not run: ${error.message}`;
+}
+
+function listedSpecsOf(outcome: ListOutcome, root: string): string[] {
+  if (outcome.error !== undefined) throw new Error(spawnProblem(outcome.error));
+  if (outcome.status === null) throw new Error(`killed by ${outcome.signal ?? 'a signal'}`);
+  const exited = (detail: string): Error =>
+    new Error(`exited with code ${outcome.status}: ${errorLine(detail)}`);
+  if (parseListing(outcome.stdout) === undefined) {
+    const output = `${outcome.stdout}\n${outcome.stderr}`;
+    if (outcome.status !== 0) throw exited(outcome.stderr || outcome.stdout);
+    if (NO_TESTS_FOUND.test(output)) return [];
+    throw new Error(LISTING_UNPARSEABLE);
+  }
+  const specs = listedSpecs(outcome.stdout, root);
+  if (specs.length === 0 && outcome.status !== 0) throw exited(outcome.stderr);
+  return specs;
 }
 
 export function keepsSpec(project: string, spec: string): boolean {
@@ -212,22 +279,34 @@ export function keepsSpec(project: string, spec: string): boolean {
 
 const changedCache = new Map<string, string[]>();
 
+const noteChanged = (line: string): void => {
+  process.stderr.write(`[ci-full] ${line}\n`);
+};
+
 export function changedSpecs(
   root: string,
   base: string,
   project: string,
   list: ListRunner = runPlaywrightList,
+  note: (line: string) => void = noteChanged,
 ): string[] {
   const mergeBase = gitText(['merge-base', 'HEAD', base], { cwd: root });
   const key = `${root}|${mergeBase}|${project}`;
   const cached = changedCache.get(key);
   if (cached !== undefined) return cached;
-  const output = list(
+  const outcome = list(
     ['test', `--only-changed=${mergeBase}`, `--project=${project}`, '--list', '--reporter=json'],
     root,
     { CI: 'true' },
   );
-  const specs = listedSpecs(output, root).filter((spec) => keepsSpec(project, spec));
+  let specs: string[];
+  try {
+    specs = listedSpecsOf(outcome, root).filter((spec) => keepsSpec(project, spec));
+  } catch (error) {
+    const cause = error instanceof Error ? error.message : String(error);
+    throw new Error(`the changed-spec listing for ${project} ${cause}`);
+  }
+  note(`${project}: ${specs.length} changed specs added to the gate specs (since ${mergeBase})`);
   changedCache.set(key, specs);
   return specs;
 }

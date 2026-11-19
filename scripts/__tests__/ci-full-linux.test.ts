@@ -17,6 +17,7 @@ import {
   escapeSpec,
   forgetPulledImages,
   keepsSpec,
+  type ListOutcome,
   linuxImage,
   listedSpecs,
   lockfileHash,
@@ -193,6 +194,7 @@ describe('docker argv', () => {
 describe('changed specs', () => {
   const listing = (files: string[], rootDir = ROOT): string =>
     JSON.stringify({ config: { rootDir }, suites: files.map((file) => ({ file })) });
+  const cleanExit = (stdout: string): ListOutcome => ({ status: 0, stdout, stderr: '' });
 
   beforeEach(() => forgetPulledImages());
 
@@ -217,7 +219,9 @@ describe('changed specs', () => {
     const seen: { args: string[]; env: Record<string, string> }[] = [];
     const specs = changedSpecs(ROOT, 'HEAD', 'webkit-mobile', (args, _cwd, env) => {
       seen.push({ args, env });
-      return listing(['e2e/drawer-dialog.spec.ts', 'visual/visual.spec.ts'], join(ROOT, 'tests'));
+      return cleanExit(
+        listing(['e2e/drawer-dialog.spec.ts', 'visual/visual.spec.ts'], join(ROOT, 'tests')),
+      );
     });
     expect(specs).toEqual(['tests/e2e/drawer-dialog.spec.ts']);
     expect(seen[0]?.args).toEqual([
@@ -230,15 +234,120 @@ describe('changed specs', () => {
     expect(seen[0]?.env).toEqual({ CI: 'true' });
   });
 
-  it('treats unreadable playwright output as no changed spec', () => {
-    expect(listedSpecs('', ROOT)).toEqual([]);
-    expect(changedSpecs(ROOT, 'HEAD', 'chromium', () => 'Error: no tests found')).toEqual([]);
+  it('keeps a genuinely empty listing as an empty changed set and says how many it added', () => {
+    const empty = JSON.stringify({ config: { rootDir: ROOT }, suites: [], errors: [] });
+    const notes: string[] = [];
+    const note = (line: string): void => void notes.push(line);
+    expect(changedSpecs(ROOT, 'HEAD', 'empty-json', () => cleanExit(empty), note)).toEqual([]);
+    expect(
+      changedSpecs(ROOT, 'HEAD', 'empty-text', () => cleanExit('No tests found\n'), note),
+    ).toEqual([]);
+    expect(notes).toHaveLength(2);
+    expect(notes[0]).toContain('empty-json');
+    expect(notes[0]).toContain('0 changed specs');
+    const two = listing(['e2e/a.spec.ts', 'e2e/b.spec.ts'], join(ROOT, 'tests'));
+    changedSpecs(ROOT, 'HEAD', 'two-specs', () => cleanExit(two), note);
+    expect(notes[2]).toContain('two-specs');
+    expect(notes[2]).toContain('2 changed specs');
+  });
+
+  it.each<[string, Partial<ListOutcome>, RegExp]>([
+    [
+      'times out',
+      {
+        status: null,
+        error: Object.assign(new Error('spawnSync pnpm ETIMEDOUT'), { code: 'ETIMEDOUT' }),
+      },
+      /timed out after 120s/,
+    ],
+    [
+      'overflows the buffer',
+      {
+        status: null,
+        error: Object.assign(new Error('spawnSync pnpm ENOBUFS'), { code: 'ENOBUFS' }),
+      },
+      /more output than the 256 MiB buffer/,
+    ],
+    [
+      'cannot start',
+      {
+        status: null,
+        error: Object.assign(new Error('spawnSync pnpm ENOENT'), { code: 'ENOENT' }),
+      },
+      /could not run: spawnSync pnpm ENOENT/,
+    ],
+    ['is killed by a signal', { status: null, signal: 'SIGKILL' }, /killed by SIGKILL/],
+    [
+      'exits non-zero with no listing',
+      { status: 1, stderr: 'noise\nError: config failed to load\n' },
+      /exited with code 1: Error: config failed to load/,
+    ],
+    ['prints no JSON on a clean exit', { stdout: 'garbage' }, /printed no parseable JSON/],
+    ['prints JSON of another shape', { stdout: '{"suites":"x"}' }, /printed no parseable JSON/],
+    [
+      'reports an error with an empty suite list',
+      {
+        status: 1,
+        stdout: JSON.stringify({
+          config: { rootDir: ROOT },
+          suites: [],
+          errors: [
+            { message: 'Error: Cannot detect changed files for --only-changed mode:\ngit diff x' },
+          ],
+        }),
+      },
+      /reported Error: Cannot detect changed files for --only-changed mode:/,
+    ],
+    [
+      'reports an error even on a clean exit',
+      {
+        stdout: JSON.stringify({
+          config: { rootDir: ROOT },
+          suites: [],
+          errors: [{ message: 'Error: bad config' }],
+        }),
+      },
+      /reported Error: bad config/,
+    ],
+    ['prints a listing with no config', { stdout: '{"suites":[]}' }, /printed no parseable JSON/],
+    ['prints a JSON null', { stdout: 'null' }, /printed no parseable JSON/],
+    [
+      'lists no suite and no error but exits non-zero',
+      {
+        status: 2,
+        stdout: JSON.stringify({ config: { rootDir: ROOT }, suites: [], errors: [] }),
+        stderr: 'killed by the host',
+      },
+      /exited with code 2: killed by the host/,
+    ],
+    [
+      'says no tests found but exits non-zero',
+      { status: 1, stdout: 'No tests found' },
+      /exited with code 1: No tests found/,
+    ],
+  ])('fails the stage, naming the cause, when the listing %s', (name, outcome, message) => {
+    const project = `failing-${name.replaceAll(' ', '-')}`;
+    const run = () => changedSpecs(ROOT, 'HEAD', project, () => ({ ...cleanExit(''), ...outcome }));
+    expect(run).toThrow(message);
+    expect(run).toThrow(project);
+  });
+
+  it('does not cache a failed listing, so a later run lists again', () => {
+    let calls = 0;
+    const flaky = () => {
+      calls += 1;
+      return calls === 1
+        ? { ...cleanExit(''), status: 1, stderr: 'first run failed' }
+        : cleanExit(listing(['e2e/a.spec.ts'], join(ROOT, 'tests')));
+    };
+    expect(() => changedSpecs(ROOT, 'HEAD', 'flaky', flaky)).toThrow('first run failed');
+    expect(changedSpecs(ROOT, 'HEAD', 'flaky', flaky)).toEqual(['tests/e2e/a.spec.ts']);
   });
 
   it('refuses a base git does not know', () => {
-    expect(() => changedSpecs(ROOT, 'refs/heads/no-such-base', 'chromium', () => '')).toThrow(
-      'merge-base',
-    );
+    expect(() =>
+      changedSpecs(ROOT, 'refs/heads/no-such-base', 'chromium', () => cleanExit('')),
+    ).toThrow('merge-base');
   });
 
   it('merges the gate and the changed specs without a duplicate', () => {
