@@ -1,17 +1,18 @@
 import { setTimeout as delay } from 'node:timers/promises';
 import { expect, test } from '@playwright/test';
 import {
+  CONTACT_FORM_SELECTOR,
   expectOneContactPost,
   openContactFromMenu,
   sendVisitorMessage,
   trackContactPosts,
 } from './_helpers/contact-journey';
 import { installMockBackend } from './_helpers/mock-backend';
-import { installCommitOracle } from './_helpers/react-commit-oracle';
+import { installCommitOracle, isNodeCommitted } from './_helpers/react-commit-oracle';
 import { drainRoutes } from './_helpers/routes';
 
 const FORM_CHUNK_MARKER = 'contact-form';
-const FORM_CHUNK_HOLD_MS = 3_000;
+const FORM_CHUNK_HOLD_MS = 5_000;
 
 test.describe('the contact journey acts on the form only once React committed it', () => {
   test.afterEach(({ page }) => drainRoutes(page));
@@ -33,6 +34,11 @@ test.describe('the contact journey acts on the form only once React committed it
     await page.goto('/');
 
     const form = await openContactFromMenu(page);
+    await expect(form, 'the server-rendered form is on screen during the hold').toBeVisible();
+    expect(
+      await isNodeCommitted(page, CONTACT_FORM_SELECTOR),
+      'the hold ended before the window was observed: the form was already committed, so this run proves nothing',
+    ).toBe(false);
     await sendVisitorMessage(form);
     await expectOneContactPost(posts);
 

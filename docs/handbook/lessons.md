@@ -230,8 +230,9 @@ The prompt for a manual or agent review that applies these rules to a diff is `d
     success, the typed values adopted afterwards). `openSectionMenu` covers the opener only. Use
     `openContactFromMenu` (`tests/e2e/_helpers/contact-journey.ts`), which ends with
     `waitForHydration` on the form, inside `sendVisitorMessage`. Check:
-    `tests/e2e/contact-delivery-hydration.spec.ts` holds the form's chunk for 3 s and fails when
-    the helper sends before the commit. The natural cause of the one reported failure is
+    `tests/e2e/contact-delivery-hydration.spec.ts` holds the form's chunk for 5 s, asserts the form
+    is visible and not yet committed during the hold (so a run whose window never opened fails
+    instead of passing), and fails when the helper sends before the commit. The natural cause of the one reported failure is
     unconfirmed: only the held chunk reproduces it, and a stalled `/api/contact` mock or POST
     would look the same (no success). The delivery spec counts POSTs and asserts exactly one
     before it reads the success state, so the next natural failure says which one it was.
