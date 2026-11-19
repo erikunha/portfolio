@@ -5,7 +5,7 @@ import { LanguageSwitch, MenuTrigger } from '../SectionNavigation';
 
 export function MobileTitleBar({ brand }: { brand: ReactNode }) {
   return (
-    <header className="mobile-title-bar sticky top-7 z-(--z-title-bar) grid grid-cols-[1fr_auto_1fr] items-center gap-2.5 px-[var(--space-gutter)] py-2.5 bg-(color:--color-surface) border-b border-primary-subtle">
+    <header className="mobile-title-bar sticky top-7 z-(--z-title-bar) grid grid-cols-[1fr_auto_1fr] items-center gap-2.5 px-[var(--space-gutter)] py-2.5 bg-(color:--color-surface) border-b border-(color:--color-border-strong)">
       <div className="justify-self-start">
         <MenuTrigger />
       </div>

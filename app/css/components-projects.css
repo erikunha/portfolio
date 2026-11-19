@@ -13,7 +13,7 @@
     flex-direction: column;
     min-width: 0;
     padding: calc(var(--spacing-4) + var(--spacing-1));
-    border: var(--border-width) solid var(--color-primary-subtle);
+    border: var(--border-width) solid var(--color-border-strong);
     background: transparent;
   }
 
@@ -145,7 +145,7 @@
     margin: 0;
     padding: 0;
     list-style: none;
-    border: var(--border-width) solid var(--color-primary-subtle);
+    border: var(--border-width) solid var(--color-border-strong);
   }
 
   .project-receipts li {
@@ -466,7 +466,7 @@
     #sec-projects > .module-body-content,
     #sec-live-metrics > .module-body-content {
       padding: var(--spacing-4);
-      border: var(--border-width) solid var(--color-primary-subtle);
+      border: var(--border-width) solid var(--color-border-strong);
     }
 
     .projects-grid {

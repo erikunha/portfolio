@@ -15,7 +15,7 @@
       width: var(--to-top-size);
       height: var(--to-top-size);
       background: var(--color-surface);
-      border: var(--border-width) solid var(--color-primary-subtle);
+      border: var(--border-width) solid var(--color-border-strong);
       border-bottom: 0;
       border-inline-end: 0;
       color: var(--color-accent);

@@ -129,7 +129,7 @@
   }
 
   .ab-stack li {
-    border: var(--border-width) solid var(--color-primary-subtle);
+    border: var(--border-width) solid var(--color-border-strong);
     border-radius: var(--radius-control);
     padding: var(--spacing-1) var(--spacing-2);
     font-size: var(--text-xs);
@@ -224,7 +224,7 @@
 
   @media (max-width: theme(--viewport-below-md)) {
     .about-section {
-      border: var(--border-width) solid var(--color-primary-subtle);
+      border: var(--border-width) solid var(--color-border-strong);
       background: var(--color-surface);
     }
     .about-section-header {

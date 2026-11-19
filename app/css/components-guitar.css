@@ -292,7 +292,7 @@
     align-content: start;
     min-height: var(--daw-mixer-loading-height);
     padding: var(--spacing-4);
-    border: var(--border-width) dashed var(--color-primary-subtle);
+    border: var(--border-width) dashed var(--color-border-strong);
     font-size: var(--text-sm);
     --leading: 1.7;
   }

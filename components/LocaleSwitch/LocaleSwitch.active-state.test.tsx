@@ -34,7 +34,7 @@ describe('LocaleSwitch active state', () => {
   it('the inactive link keeps the quiet border and no underline mark', () => {
     const inactive = links('en')[1];
     expect(inactive?.hasAttribute('aria-current')).toBe(false);
-    expect(inactive?.className).toContain('border-primary-subtle');
+    expect(inactive?.className).toContain('border-(color:--color-border-strong)');
     expect(inactive?.className).not.toMatch(/(^|\s)underline(\s|$)/);
   });
 });

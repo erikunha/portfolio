@@ -125,9 +125,9 @@ describe('Button', () => {
       </>,
     );
     const [primary, secondary] = [...container.querySelectorAll('.btn')];
-    expect(primary?.classList.contains('border-primary-subtle')).toBe(false);
+    expect(primary?.classList.contains('border-(color:--color-border-strong)')).toBe(false);
     expect(primary?.classList.contains('border-(color:--color-accent)')).toBe(true);
-    expect(secondary?.classList.contains('border-primary-subtle')).toBe(true);
+    expect(secondary?.classList.contains('border-(color:--color-border-strong)')).toBe(true);
     expect(secondary?.classList.contains('border-(color:--color-accent)')).toBe(false);
   });
 });

@@ -194,7 +194,7 @@
   .reading-stats {
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
-    border: var(--border-width) solid var(--color-primary-subtle);
+    border: var(--border-width) solid var(--color-border-strong);
     background: var(--color-surface);
   }
 
@@ -260,7 +260,7 @@
 
   .reading-chips li {
     padding: 2px var(--spacing-2);
-    border: var(--border-width) solid var(--color-primary-subtle);
+    border: var(--border-width) solid var(--color-border-strong);
     background: var(--color-surface);
     color: var(--color-text);
     font-size: var(--text-xs);
@@ -316,7 +316,7 @@
   @media print {
     .reading-view {
       --color-text-secondary: var(--color-print-ink);
-      --color-primary-subtle: var(--color-print-ink);
+      --color-border-strong: var(--color-print-ink);
       --color-primary-border: var(--color-print-ink);
       min-height: 0;
       background: var(--color-print-paper);

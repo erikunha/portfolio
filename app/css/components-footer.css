@@ -51,7 +51,7 @@
   .footer-command {
     margin: var(--spacing-2) 0 var(--spacing-6);
     padding-bottom: var(--spacing-4);
-    border-bottom: var(--border-width) dashed var(--color-primary-subtle);
+    border-bottom: var(--border-width) dashed var(--color-border-strong);
   }
 
   .footer-command > span,
@@ -89,7 +89,7 @@
   .footer-card {
     min-width: 0;
     padding: var(--spacing-4);
-    border: var(--border-width) solid var(--color-primary-subtle);
+    border: var(--border-width) solid var(--color-border-strong);
     background: linear-gradient(var(--color-glow-03), transparent), var(--color-surface);
   }
 
@@ -216,7 +216,7 @@
     height: var(--spacing-2);
     appearance: none;
     background: var(--color-primary-quiet);
-    border: var(--border-width) solid var(--color-primary-subtle);
+    border: var(--border-width) solid var(--color-border-strong);
     accent-color: var(--color-green);
   }
 
@@ -260,7 +260,7 @@
     white-space: nowrap;
     gap: var(--spacing-1);
     text-decoration: underline;
-    text-decoration-color: var(--color-primary-subtle);
+    text-decoration-color: var(--color-border-strong);
     text-underline-offset: var(--border-width);
   }
 
@@ -404,7 +404,7 @@
   .sitemap .sm-list a {
     min-height: var(--spacing-target);
     padding-left: var(--footer-tree-link-inset);
-    border-left: var(--border-width) solid var(--color-primary-subtle);
+    border-left: var(--border-width) solid var(--color-border-strong);
     font-size: var(--text-body);
     --leading: var(--footer-line-height);
     overflow-wrap: normal;
@@ -474,7 +474,7 @@
     width: var(--spacing-target);
     height: var(--spacing-target);
     flex: none;
-    border: var(--border-width) solid var(--color-primary-subtle);
+    border: var(--border-width) solid var(--color-border-strong);
     color: var(--color-green);
     font: inherit;
   }
@@ -494,7 +494,7 @@
 
     .footer-reboot {
       text-decoration: underline;
-      text-decoration-color: var(--color-primary-subtle);
+      text-decoration-color: var(--color-border-strong);
       text-underline-offset: var(--border-width);
     }
 

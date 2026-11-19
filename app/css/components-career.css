@@ -1,7 +1,7 @@
 @layer components {
   .career-section {
     margin-bottom: var(--space-section);
-    border: var(--border-width) solid var(--color-primary-subtle);
+    border: var(--border-width) solid var(--color-border-strong);
     background: var(--color-surface);
     font-family: var(--font-mono);
   }

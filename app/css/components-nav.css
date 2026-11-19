@@ -290,7 +290,7 @@
       calc(var(--spacing-2) + env(safe-area-inset-bottom, 0px));
     background: color-mix(in srgb, var(--color-surface) 92%, transparent);
     backdrop-filter: blur(12px);
-    border-top: var(--border-width) solid var(--color-primary-subtle);
+    border-top: var(--border-width) solid var(--color-border-strong);
   }
 
   .dock::before {
@@ -528,7 +528,7 @@
     gap: calc(var(--spacing-3) / 2);
     color: var(--color-primary-400);
     background: transparent;
-    border-color: var(--color-primary-subtle);
+    border-color: var(--color-border-strong);
     cursor: pointer;
   }
 

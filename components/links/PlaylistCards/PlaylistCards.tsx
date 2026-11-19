@@ -13,7 +13,8 @@ const PLAYLIST_ENDPOINT = 'https://www.youtube.com/playlist?list=';
 
 const CARD_HOVER =
   'hover:border-(color:--color-accent) hover:bg-linear-to-b hover:from-(color:--color-accent)/[0.07] hover:to-(color:--color-accent)/[0.07]';
-const TAG = 'border border-primary-subtle text-tertiary-50 text-xs tracking-md py-0.5 px-1';
+const TAG =
+  'border border-(color:--color-border-strong) text-tertiary-50 text-xs tracking-md py-0.5 px-1';
 const ARROW = 'text-sm text-(color:--color-accent)';
 
 function destination(playlist: LinksPlaylist, channelUrl: string): string {

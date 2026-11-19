@@ -18,7 +18,7 @@
   }
 
   .contact-queued {
-    border-color: var(--color-primary-subtle);
+    border-color: var(--color-border-strong);
     background: var(--color-surface);
   }
 
@@ -161,7 +161,7 @@
   .contact-nojs {
     margin: 0;
     padding: var(--spacing-3);
-    border: var(--border-width) solid var(--color-primary-subtle);
+    border: var(--border-width) solid var(--color-border-strong);
     color: var(--color-text);
     font-family: var(--font-mono);
     font-size: var(--text-xs);
@@ -214,7 +214,7 @@
     gap: var(--spacing-2);
     margin-top: var(--spacing-2);
     padding-top: var(--spacing-2);
-    border-top: var(--border-width) dashed var(--color-primary-subtle);
+    border-top: var(--border-width) dashed var(--color-border-strong);
     min-width: 0;
   }
 
@@ -828,7 +828,7 @@
     width: 100%;
     min-height: var(--spacing-target);
     padding: 0 var(--spacing-3);
-    border: var(--border-width) solid var(--color-primary-subtle);
+    border: var(--border-width) solid var(--color-border-strong);
     border-radius: var(--radius-control);
     background: var(--color-surface);
     color: var(--color-text);
@@ -895,7 +895,7 @@
     flex-direction: column;
     gap: var(--spacing-1);
     padding-left: var(--spacing-3);
-    border-left: calc(var(--border-width) * 2) solid var(--color-primary-subtle);
+    border-left: calc(var(--border-width) * 2) solid var(--color-border-strong);
   }
 
   .ctz-row {
@@ -947,7 +947,7 @@
     justify-content: space-between;
     gap: var(--spacing-2) var(--spacing-3);
     padding: var(--spacing-3);
-    border: var(--border-width) solid var(--color-primary-subtle);
+    border: var(--border-width) solid var(--color-border-strong);
   }
 
   .ctz-slot-title,
@@ -989,7 +989,7 @@
 
   .ctz-overlap {
     padding-top: var(--spacing-3);
-    border-top: var(--border-width) dashed var(--color-primary-subtle);
+    border-top: var(--border-width) dashed var(--color-border-strong);
     color: var(--color-text);
   }
 

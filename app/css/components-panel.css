@@ -1,7 +1,7 @@
 @layer components {
   .panel {
     min-width: 0;
-    border: var(--border-width) solid var(--color-primary-subtle);
+    border: var(--border-width) solid var(--color-border-strong);
     border-radius: var(--radius-control);
     background: linear-gradient(var(--color-glow-03), transparent), var(--color-surface);
   }

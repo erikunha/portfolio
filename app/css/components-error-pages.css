@@ -3,7 +3,7 @@
     position: relative;
     z-index: var(--z-content);
     padding: var(--spacing-2) var(--spacing-4);
-    border-top: var(--border-width) solid var(--color-primary-subtle);
+    border-top: var(--border-width) solid var(--color-border-strong);
     background: var(--color-surface);
     color: var(--color-tertiary-50);
     font-family: var(--font-mono);
@@ -139,7 +139,7 @@
     gap: var(--spacing-1);
     min-width: 0;
     padding: var(--spacing-3);
-    border: var(--border-width) solid var(--color-primary-subtle);
+    border: var(--border-width) solid var(--color-border-strong);
     font-size: var(--text-xs);
     --leading: 1.6;
   }
@@ -204,7 +204,7 @@
     min-width: 0;
     min-height: var(--eb-min-height, var(--spacing-target));
     padding: var(--spacing-4);
-    border: var(--border-width) dashed var(--color-primary-subtle);
+    border: var(--border-width) dashed var(--color-border-strong);
     color: var(--color-text);
     font-family: var(--font-mono);
   }
@@ -237,7 +237,7 @@
   .err-ref .copy-btn {
     min-height: var(--spacing-target);
     padding: 0 var(--spacing-3);
-    border: var(--border-width) solid var(--color-primary-subtle);
+    border: var(--border-width) solid var(--color-border-strong);
     background: transparent;
     color: var(--color-accent);
     font: inherit;
