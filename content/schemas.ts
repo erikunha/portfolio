@@ -4,6 +4,13 @@ import { FACT_SEPARATOR } from './fact-separator';
 import { CompanyUrlSchema, LocalizedTextSchema, SectionTextSchema } from './schema-primitives';
 import { SECTION_ICONS, SECTION_REGISTRY } from './section-registry';
 
+export type { ReadingViews } from './cv.schema';
+export {
+  CvDocumentSchema,
+  CvJsonLdSchema,
+  ReadingViewsSchema,
+  SummaryDocumentSchema,
+} from './cv.schema';
 export type { DawMixer, DawMixerChannel, DawMixerCopy, DawMixerPlugin } from './daw-mixer.schema';
 export { DawMixerCopySchema, DawMixerSchema } from './daw-mixer.schema';
 export type { EqBand, EqSpectrum } from './eq.schema';
@@ -39,6 +46,8 @@ export {
 export { createNavigationSchema } from './navigation.schema';
 export type { LocalizedText } from './schema-primitives';
 export { CompanyUrlSchema, LocalizedTextSchema } from './schema-primitives';
+export type { WorldMap } from './world-map.schema';
+export { WorldMapSchema } from './world-map.schema';
 export { SECTION_ICONS };
 
 const FIRST_SECTION_ORDER = 1;
@@ -675,200 +684,3 @@ export type ShellResponse = z.infer<typeof ShellResponseSchema>;
 
 export type Profile = z.infer<typeof ProfileSchema> & { technologyLine: string };
 export type Education = z.infer<typeof EducationSchema>;
-
-const ReadingTextSchema = z.string().min(1);
-
-export const ReadingViewsSchema = z.object({
-  shared: z.object({
-    hire: z.object({
-      label: ReadingTextSchema,
-      ariaLabel: ReadingTextSchema,
-      href: z.url(),
-    }),
-    printLabel: ReadingTextSchema,
-    newTabHint: ReadingTextSchema,
-    ogImage: z.object({ path: z.string().startsWith('/'), width: z.number(), height: z.number() }),
-  }),
-  cv: z.object({
-    path: z.string().startsWith('/'),
-    title: ReadingTextSchema,
-    description: ReadingTextSchema,
-    summaryLinkLabel: ReadingTextSchema,
-    pdf: z.object({
-      href: z.string().startsWith('/'),
-      label: ReadingTextSchema,
-    }),
-    headings: z.object({
-      summary: ReadingTextSchema,
-      experience: ReadingTextSchema,
-      skills: ReadingTextSchema,
-      certifications: ReadingTextSchema,
-      community: ReadingTextSchema,
-      education: ReadingTextSchema,
-      contact: ReadingTextSchema,
-    }),
-    credentialLabels: z.record(z.string(), ReadingTextSchema),
-    credentialBadges: z.record(z.string(), ReadingTextSchema),
-  }),
-  summary: z.object({
-    path: z.string().startsWith('/'),
-    title: ReadingTextSchema,
-    description: ReadingTextSchema,
-    cvLinkLabel: ReadingTextSchema,
-    statsLabel: ReadingTextSchema,
-    experienceLabel: ReadingTextSchema,
-    projectNames: z.array(ReadingTextSchema).min(1),
-    stack: z.object({
-      core: z.array(ReadingTextSchema).min(1),
-      ai: z.array(ReadingTextSchema).min(1),
-    }),
-    stackLabels: z.object({ core: ReadingTextSchema, ai: ReadingTextSchema }),
-    headings: z.object({
-      projects: ReadingTextSchema,
-      stack: ReadingTextSchema,
-      contact: ReadingTextSchema,
-    }),
-  }),
-});
-
-export type ReadingViews = z.infer<typeof ReadingViewsSchema>;
-
-const ReadingRowSchema = z.object({
-  key: ReadingTextSchema,
-  label: ReadingTextSchema,
-  value: ReadingTextSchema,
-});
-
-const CvSkillGroupSchema = z.object({
-  label: ReadingTextSchema,
-  items: z.array(ReadingTextSchema).min(1),
-});
-
-export const CvDocumentSchema = z.object({
-  name: ReadingTextSchema,
-  role: ReadingTextSchema,
-  location: ReadingTextSchema,
-  links: z
-    .array(z.object({ label: ReadingTextSchema, href: ReadingTextSchema, external: z.boolean() }))
-    .min(1),
-  summary: ReadingTextSchema,
-  experience: z
-    .array(
-      z.object({
-        key: ReadingTextSchema,
-        company: ReadingTextSchema,
-        companyUrl: CompanyUrlSchema.optional(),
-        meta: ReadingTextSchema,
-        context: ReadingTextSchema.optional(),
-        bullets: z.array(ReadingTextSchema).min(1),
-      }),
-    )
-    .min(1),
-  skills: z.array(CvSkillGroupSchema).min(1),
-  certifications: z.array(ReadingRowSchema),
-  community: z.object({
-    heading: ReadingTextSchema,
-    href: z.url().optional(),
-    bullets: z.array(ReadingTextSchema),
-    status: ReadingTextSchema,
-  }),
-  education: z.array(ReadingRowSchema),
-  languages: ReadingTextSchema,
-  email: ReadingTextSchema,
-});
-
-export const SummaryDocumentSchema = z.object({
-  name: ReadingTextSchema,
-  tagline: ReadingTextSchema,
-  technologyLine: ReadingTextSchema,
-  context: ReadingTextSchema,
-  employer: z.object({ name: ReadingTextSchema, url: CompanyUrlSchema }),
-  stats: z.array(z.object({ value: ReadingTextSchema, label: ReadingTextSchema })).min(1),
-  projects: z
-    .array(
-      z.object({
-        name: ReadingTextSchema,
-        label: ReadingTextSchema,
-        value: ReadingTextSchema,
-        description: ReadingTextSchema,
-      }),
-    )
-    .min(1),
-  languages: ReadingTextSchema,
-  email: ReadingTextSchema,
-});
-
-export const CvJsonLdSchema = z.object({
-  '@context': z.literal('https://schema.org'),
-  '@type': z.literal('ProfilePage'),
-  url: z.url(),
-  name: ReadingTextSchema,
-  mainEntity: z.object({
-    '@type': z.literal('Person'),
-    name: ReadingTextSchema,
-    jobTitle: ReadingTextSchema,
-    url: z.url(),
-    sameAs: z.array(z.url()).min(1),
-    worksFor: z.object({
-      '@type': z.literal('Organization'),
-      name: ReadingTextSchema,
-      url: CompanyUrlSchema,
-    }),
-  }),
-});
-
-const LATITUDE_LIMIT = 90;
-const LONGITUDE_LIMIT = 180;
-const FULL_CIRCLE_DEGREES = 360;
-const LAND_ROW_PATTERN = /^[01]+$/;
-
-const LatitudeSchema = z.number().min(-LATITUDE_LIMIT).max(LATITUDE_LIMIT);
-const LongitudeSchema = z.number().min(-LONGITUDE_LIMIT).max(LONGITUDE_LIMIT);
-
-export const WorldMapSchema = z
-  .object({
-    grid: z.object({
-      columns: z.number().int().positive(),
-      rows: z.number().int().positive(),
-      cellPx: z.number().positive(),
-      degreesPerColumn: z.number().positive(),
-      topLatitude: LatitudeSchema,
-      bottomLatitude: LatitudeSchema,
-    }),
-    land: z.array(z.string().regex(LAND_ROW_PATTERN)),
-    erikPin: z.object({
-      place: z.string().min(1),
-      code: z.string().min(1),
-      lat: LatitudeSchema,
-      lon: LongitudeSchema,
-    }),
-    knownZones: z.record(
-      z.string().min(1),
-      z.object({
-        country: z.string().min(1),
-        code: z.string().min(1),
-        lat: LatitudeSchema,
-        lon: LongitudeSchema,
-      }),
-    ),
-  })
-  .refine(({ grid, land }) => land.length === grid.rows, {
-    message: 'land must have exactly grid.rows rows',
-    path: ['land'],
-  })
-  .refine(({ grid, land }) => land.every((row) => row.length === grid.columns), {
-    message: 'every land row must be grid.columns cells wide',
-    path: ['land'],
-  })
-  .refine(({ grid }) => grid.columns * grid.degreesPerColumn === FULL_CIRCLE_DEGREES, {
-    message: 'grid.columns times grid.degreesPerColumn must cover 360 degrees',
-    path: ['grid', 'degreesPerColumn'],
-  })
-  .refine(
-    ({ grid }) => grid.topLatitude - grid.bottomLatitude === grid.rows * grid.degreesPerColumn,
-    {
-      message: 'the latitude span must equal grid.rows times grid.degreesPerColumn',
-      path: ['grid', 'bottomLatitude'],
-    },
-  );
-export type WorldMap = z.infer<typeof WorldMapSchema>;

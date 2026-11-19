@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import * as cv from './cv.schema';
 import * as dawMixer from './daw-mixer.schema';
 import * as eq from './eq.schema';
 import * as errors from './errors.schema';
@@ -7,6 +8,7 @@ import * as links from './links.schema';
 import * as navigation from './navigation.schema';
 import * as primitives from './schema-primitives';
 import * as barrel from './schemas';
+import * as worldMap from './world-map.schema';
 
 type Moved = readonly [string, Record<string, unknown>, readonly string[]];
 
@@ -45,6 +47,12 @@ const MOVED: readonly Moved[] = [
     ],
   ],
   ['daw-mixer.schema', dawMixer, ['DawMixerCopySchema', 'DawMixerSchema']],
+  [
+    'cv.schema',
+    cv,
+    ['CvDocumentSchema', 'CvJsonLdSchema', 'ReadingViewsSchema', 'SummaryDocumentSchema'],
+  ],
+  ['world-map.schema', worldMap, ['WorldMapSchema']],
 ];
 
 const INTERNAL = new Set(['SectionTextSchema']);
