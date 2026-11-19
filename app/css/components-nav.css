@@ -505,39 +505,25 @@
     text-underline-offset: 0.5rem;
   }
 
-  .topbar-action {
-    align-items: center;
-    min-height: var(--spacing-target);
+  .btn.topbar-action {
+    --leading: inherit;
     padding: calc(var(--spacing-3) / 2) var(--spacing-3);
-    border: var(--border-width) solid var(--color-accent);
-    font-size: var(--text-min);
     letter-spacing: var(--tracking-sm);
+    text-transform: none;
     white-space: nowrap;
-    transition:
-      box-shadow 200ms ease-out,
-      background 200ms ease-out,
-      border-color 200ms ease-out;
+    transition-property: box-shadow, background, border-color;
   }
 
-  .topbar-action:hover {
-    box-shadow: var(--shadow-glow);
-    text-decoration: none;
+  .btn.topbar-action[data-variant="secondary"] {
+    font-weight: normal;
   }
 
-  .topbar-action-toggle {
+  .btn.topbar-action.topbar-action-toggle {
     gap: calc(var(--spacing-3) / 2);
     color: var(--color-signal-400);
-    background: transparent;
-    border-color: var(--color-border-strong);
-    cursor: pointer;
   }
 
-  .topbar-action-toggle:hover,
-  .topbar-action-outline:hover {
-    background: var(--color-signal-quiet);
-  }
-
-  .topbar-action-toggle:hover {
+  .btn.topbar-action.topbar-action-toggle:hover {
     border-color: var(--color-accent);
   }
 
@@ -557,20 +543,7 @@
     grid-area: 1 / 1;
   }
 
-  .topbar-action-outline {
-    color: var(--color-accent);
-  }
-
-  .topbar-action-solid {
-    color: var(--color-on-accent);
-    background: var(--color-accent);
-    font-weight: 700;
-  }
-
-  /* biome-ignore lint/suspicious/noDuplicateSelectors: `@variant motion-off` and `@variant motion-on` resolve to a `body` ancestor selector, so this rule has a different selector than the earlier one with the same class */
-  .topbar-action {
-    @variant motion-off {
-      transition: none;
-    }
+  .btn.topbar-action.topbar-action-outline {
+    border-color: var(--color-accent);
   }
 }
