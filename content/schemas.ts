@@ -1,8 +1,20 @@
 import { z } from 'zod';
+import { EqSpectrumSchema } from './eq.schema';
 import { FACT_SEPARATOR } from './fact-separator';
 import { CompanyUrlSchema, LocalizedTextSchema, SectionTextSchema } from './schema-primitives';
 import { SECTION_ICONS, SECTION_REGISTRY } from './section-registry';
 
+export type { DawMixer, DawMixerChannel, DawMixerCopy, DawMixerPlugin } from './daw-mixer.schema';
+export { DawMixerCopySchema, DawMixerSchema } from './daw-mixer.schema';
+export type { EqBand, EqSpectrum } from './eq.schema';
+export {
+  EQ_DEFAULT_PEAK_Q,
+  EQ_MAX_BAR_COUNT,
+  EQ_MIN_BAR_COUNT,
+  EQ_TEMPLATE_TOKENS,
+  EqBandSchema,
+  EqSpectrumSchema,
+} from './eq.schema';
 export type { ErrorsClientContent, ErrorsContent } from './errors.schema';
 export { ErrorsClientContentSchema, ErrorsContentSchema } from './errors.schema';
 export type { CopyFeedback, CopyFeedbackState, FooterContent } from './footer.schema';
@@ -273,66 +285,6 @@ export const SignalChainNodeSchema = z.discriminatedUnion('role', [
   _dotsNode('AMP'),
   _dotsNode('OUT'),
 ]);
-
-export const EQ_TEMPLATE_TOKENS = { freq: '{freq}', gain: '{gain}' } as const;
-export const EQ_DEFAULT_PEAK_Q = 0.8;
-export const EQ_MIN_BAR_COUNT = 8;
-export const EQ_MAX_BAR_COUNT = 144;
-
-const eqFreqSchema = z.number().positive();
-
-export const EqBandSchema = z.discriminatedUnion('kind', [
-  z.object({ kind: z.literal('highpass'), freqHz: eqFreqSchema }),
-  z.object({ kind: z.literal('lowpass'), freqHz: eqFreqSchema }),
-  z.object({
-    kind: z.literal('peak'),
-    freqHz: eqFreqSchema,
-    gainDb: z.number(),
-    q: z.number().positive().default(EQ_DEFAULT_PEAK_Q),
-  }),
-]);
-export type EqBand = z.infer<typeof EqBandSchema>;
-
-const eqTemplate = (...tokens: string[]) =>
-  tokens.reduce((schema, token) => schema.includes(token), z.string().trim().nonempty());
-
-export const EqSpectrumSchema = z
-  .object({
-    label: z.string().trim().nonempty(),
-    ariaLabel: z.object({
-      prefix: z.string().trim().nonempty(),
-      highpass: eqTemplate(EQ_TEMPLATE_TOKENS.freq),
-      lowpass: eqTemplate(EQ_TEMPLATE_TOKENS.freq),
-      boost: eqTemplate(EQ_TEMPLATE_TOKENS.freq, EQ_TEMPLATE_TOKENS.gain),
-      cut: eqTemplate(EQ_TEMPLATE_TOKENS.freq, EQ_TEMPLATE_TOKENS.gain),
-    }),
-    bpm: z.number().positive(),
-    barCount: z.number().int().min(EQ_MIN_BAR_COUNT).max(EQ_MAX_BAR_COUNT),
-    freqRange: z.object({ minHz: eqFreqSchema, maxHz: eqFreqSchema }),
-    bands: z.array(EqBandSchema).min(1),
-    axis: z.array(z.object({ freqHz: eqFreqSchema, label: z.string().trim().nonempty() })).min(2),
-  })
-  .superRefine(({ freqRange, bands, axis }, ctx) => {
-    const { minHz, maxHz } = freqRange;
-    const inRange = (freqHz: number) => freqHz >= minHz && freqHz <= maxHz;
-    if (minHz >= maxHz) {
-      ctx.addIssue({ code: 'custom', path: ['freqRange'], message: 'minHz must be below maxHz' });
-    }
-    for (const [index, band] of bands.entries()) {
-      if (!inRange(band.freqHz)) {
-        ctx.addIssue({ code: 'custom', path: ['bands', index], message: 'band outside range' });
-      }
-    }
-    for (const [index, tick] of axis.entries()) {
-      if (!inRange(tick.freqHz)) {
-        ctx.addIssue({ code: 'custom', path: ['axis', index], message: 'tick outside range' });
-      }
-      if (index > 0 && tick.freqHz <= (axis[index - 1]?.freqHz ?? 0)) {
-        ctx.addIssue({ code: 'custom', path: ['axis', index], message: 'ticks must ascend' });
-      }
-    }
-  });
-export type EqSpectrum = z.infer<typeof EqSpectrumSchema>;
 
 export const InfluenceSchema = z.object({
   name: z.string().min(1),
@@ -678,87 +630,6 @@ export const DmesgLineSchema = z.object({
 });
 export type DmesgLine = z.infer<typeof DmesgLineSchema>;
 
-const DawMixerPluginSchema = z.object({
-  name: z.string().min(1),
-  active: z.boolean(),
-  strength: z.number().int().min(0).max(5),
-});
-
-const DawMixerKnobSchema = z.object({
-  label: z.string().min(1),
-  angleDeg: z.number().min(-150).max(150),
-});
-
-const DawMixerChannelSchema = z.object({
-  id: z.string().min(1),
-  name: z.string().min(1),
-  desktopName: z.string().optional(),
-  desc: z.string().min(1),
-  focused: z.boolean().optional(),
-  plugins: z.array(DawMixerPluginSchema).min(1).max(5),
-  faderPct: z.number().min(0).max(100),
-  meterPct: z.number().min(0).max(100),
-  meterClipping: z.boolean().optional(),
-  knob1: DawMixerKnobSchema,
-  knob2: DawMixerKnobSchema,
-  buttons: z.array(z.string().min(1)),
-  activeButtons: z.array(z.string().min(1)),
-  footer: z.object({ lufs: z.string(), pk: z.string() }).optional(),
-  terminalLines: z.array(z.string().min(1)).optional(),
-});
-
-export const DawMixerSchema = z.object({
-  sessionName: z.string().min(1),
-  loadingLabel: z.string().min(1),
-  bpm: z.number().int(),
-  timeSignature: z.string().min(1),
-  status: z.string().min(1),
-  transportTime: z.string().min(1),
-  channels: z
-    .array(DawMixerChannelSchema)
-    .length(3)
-    .refine((chs) => chs[chs.length - 1]?.id === 'MASTER', {
-      message: 'Last channel must be MASTER',
-    }),
-});
-
-const DawMixerCopyTextSchema = z.string().min(1);
-
-export const DawMixerCopySchema = z.object({
-  sessionLabel: DawMixerCopyTextSchema,
-  tracksLabel: DawMixerCopyTextSchema,
-  skipLabel: DawMixerCopyTextSchema,
-  separator: DawMixerCopyTextSchema,
-  transportSeparator: DawMixerCopyTextSchema,
-  playGlyph: DawMixerCopyTextSchema,
-  bpmUnit: DawMixerCopyTextSchema,
-  signalFlow: DawMixerCopyTextSchema,
-  leadSuffix: DawMixerCopyTextSchema,
-  loudnessLabel: DawMixerCopyTextSchema,
-  peakLabel: DawMixerCopyTextSchema,
-  decibelUnit: DawMixerCopyTextSchema,
-  columns: z.object({
-    id: DawMixerCopyTextSchema,
-    track: DawMixerCopyTextSchema,
-    io: DawMixerCopyTextSchema,
-    toggles: DawMixerCopyTextSchema,
-    pluginChain: DawMixerCopyTextSchema,
-    meter: DawMixerCopyTextSchema,
-    fader: DawMixerCopyTextSchema,
-  }),
-  controls: z.object({
-    vuMeter: DawMixerCopyTextSchema,
-    fader: DawMixerCopyTextSchema,
-    degrees: DawMixerCopyTextSchema,
-    knobHint: DawMixerCopyTextSchema,
-    buttons: z.object({
-      R: DawMixerCopyTextSchema,
-      M: DawMixerCopyTextSchema,
-      S: DawMixerCopyTextSchema,
-    }),
-  }),
-});
-
 const AskFactLinesSchema = z.array(z.string().min(1)).min(1);
 
 export const AskDecisionSchema = z.object({
@@ -801,10 +672,6 @@ export type Credential = z.infer<typeof CredentialSchema>;
 export type CommunityEvent = z.infer<typeof CommunityEventSchema>;
 export type GitCommit = z.infer<typeof GitCommitSchema>;
 export type ShellResponse = z.infer<typeof ShellResponseSchema>;
-export type DawMixer = z.infer<typeof DawMixerSchema>;
-export type DawMixerCopy = z.infer<typeof DawMixerCopySchema>;
-export type DawMixerChannel = z.infer<typeof DawMixerChannelSchema>;
-export type DawMixerPlugin = z.infer<typeof DawMixerPluginSchema>;
 
 export type Profile = z.infer<typeof ProfileSchema> & { technologyLine: string };
 export type Education = z.infer<typeof EducationSchema>;

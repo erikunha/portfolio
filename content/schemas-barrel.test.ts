@@ -1,4 +1,6 @@
 import { describe, expect, it } from 'vitest';
+import * as dawMixer from './daw-mixer.schema';
+import * as eq from './eq.schema';
 import * as errors from './errors.schema';
 import * as footer from './footer.schema';
 import * as links from './links.schema';
@@ -30,6 +32,19 @@ const MOVED: readonly Moved[] = [
       'LinksUpcomingSchema',
     ],
   ],
+  [
+    'eq.schema',
+    eq,
+    [
+      'EQ_DEFAULT_PEAK_Q',
+      'EQ_MAX_BAR_COUNT',
+      'EQ_MIN_BAR_COUNT',
+      'EQ_TEMPLATE_TOKENS',
+      'EqBandSchema',
+      'EqSpectrumSchema',
+    ],
+  ],
+  ['daw-mixer.schema', dawMixer, ['DawMixerCopySchema', 'DawMixerSchema']],
 ];
 
 const INTERNAL = new Set(['SectionTextSchema']);
