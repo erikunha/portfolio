@@ -1,5 +1,6 @@
 @layer components {
   .panel {
+    container-type: inline-size;
     min-width: 0;
     border: var(--border-width) solid var(--color-border-strong);
     border-radius: var(--radius-control);

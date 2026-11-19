@@ -12,11 +12,13 @@ export function NotFoundPage({ locale }: { locale: SiteLocale }) {
     <SiteShell locale={locale}>
       <PageMain className={ERROR_MAIN_CLASS}>
         <ErrorHeading>{notFound.code}</ErrorHeading>
-        <TerminalPanel header={notFound.panelHeader}>
-          <div className="p-[14px]">
-            <RequestedPathCmdLine content={notFound} />
-          </div>
-        </TerminalPanel>
+        <div className="@container">
+          <TerminalPanel header={notFound.panelHeader}>
+            <div className="p-[14px]">
+              <RequestedPathCmdLine content={notFound} />
+            </div>
+          </TerminalPanel>
+        </div>
         <nav aria-label={notFound.suggestionsNavLabel}>
           <p className="err-label">{notFound.suggestionsLabel}</p>
           <ul className="err-suggest">

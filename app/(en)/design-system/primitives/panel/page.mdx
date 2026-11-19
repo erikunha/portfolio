@@ -33,7 +33,7 @@ Other `div` attributes pass through to the root.
   <Panel className="w-full" as="aside" marker="[~]" title="status" titleId="panel-demo-title" action={<a href="#panel">link</a>}><p className="m-0 p-4">Landmark panel with an action.</p></Panel>
 </Preview>
 
-A bordered frame on a `carbon-950` surface with a faint top glow and a 2px corner radius. The header holds a decorative `marker` (`aria-hidden`), the `title` as an `h3` and an optional `action` node after it. `as` picks the root element; `titleId` becomes the heading `id` and the root's `aria-labelledby`, which names a `section` or `aside` landmark by its title.
+A bordered frame on a `carbon-950` surface with a faint top glow and a 2px corner radius. The header holds a decorative `marker` (`aria-hidden`), the `title` as an `h3` and an optional `action` node after it. `as` picks the root element; `titleId` becomes the heading `id` and the root's `aria-labelledby`, which names a `section` or `aside` landmark by its title. The panel is its own `inline-size` container, so it must be a block-level, full-width element in its parent. Below 24rem the header tightens its padding and letter spacing.
 
 <h2 id="reveal">Reveal coupling</h2>
 

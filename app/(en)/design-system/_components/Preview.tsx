@@ -12,7 +12,7 @@ export function Preview({ id, source, children }: PreviewProps) {
   return (
     <div id={id} className="ds-preview" data-testid="ds-preview">
       <TerminalPanel className="my-4">
-        <div className="p-6 flex flex-wrap gap-3 items-start">{children}</div>
+        <div className="@container p-6 flex flex-wrap gap-3 items-start">{children}</div>
         {source != null && (
           <div className="border-t border-(color:--color-border)">
             <p className="px-6 py-1.5 m-0 font-mono text-xs tracking-widest text-signal-400 uppercase">
