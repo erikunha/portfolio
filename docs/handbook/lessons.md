@@ -195,6 +195,9 @@ The prompt for a manual or agent review that applies these rules to a diff is `d
     (`playwright test --list --reporter=json`), not a copy of `testMatch` or `grep` logic. A copy
     passed while the tag selection it modelled had already changed. Check:
     `__tests__/playwright-visual-projects.test.ts`.
+49. A class that a test or a rule uses to name one element is never reused as a styling hook on
+    another. Share the rules through a selector list. Check: `a.skip-to-content` matches one
+    element per page (`tests/e2e/skip-link-unique.spec.ts`).
 
 ## Pre-push judgement list
 

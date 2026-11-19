@@ -162,7 +162,8 @@
     outline: none;
   }
 
-  .skip-to-content {
+  .skip-to-content,
+  .mixer-skip-link {
     position: absolute;
     left: 0;
     top: 0;
@@ -178,13 +179,15 @@
     overflow: hidden;
     transition: clip-path 0.1s;
   }
-  .skip-to-content:focus {
+  .skip-to-content:focus,
+  .mixer-skip-link:focus {
     clip-path: inset(0);
     overflow: visible;
   }
 
   /* biome-ignore lint/suspicious/noDuplicateSelectors: `@variant motion-off` and `@variant motion-on` resolve to a `body` ancestor selector, so this rule has a different selector than the earlier one with the same class */
-  .skip-to-content {
+  .skip-to-content,
+  .mixer-skip-link {
     @variant motion-off {
       transition: none;
     }

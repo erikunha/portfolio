@@ -204,7 +204,7 @@ export function DawMixerDesktop({ mixer, copy }: { mixer: DawMixer; copy: DawMix
       className="daw-mixer-desktop relative font-mono text-sm text-tertiary-50 border border-[var(--color-primary-border)] bg-secondary-950/50 overflow-x-auto md:overflow-x-hidden"
       data-testid="daw-mixer-desktop"
     >
-      <a href={`#${endId}`} className="skip-to-content mixer-skip-link">
+      <a href={`#${endId}`} className="mixer-skip-link">
         {copy.skipLabel}
       </a>
       <SessionHeaderDesktop mixer={mixer} copy={copy} />
