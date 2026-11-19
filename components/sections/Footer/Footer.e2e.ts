@@ -4,8 +4,6 @@ import { VIEWPORTS, WIDTH } from '../../../tests/e2e/_helpers/geometry';
 import { waitForHydration } from '../../../tests/e2e/_helpers/hydration';
 import { freezeMotion } from '../../../tests/e2e/_helpers/motion';
 
-const COMMAND_RETRY_WINDOW_MS = 2_000;
-const NO_COMMANDS = '0';
 const ONE_COMMAND = '1';
 const DOCUMENT_SENTINEL = '__footerRebootSentinel';
 const SECTIONS_SEEN_TIMEOUT_MS = 90_000;
@@ -72,13 +70,9 @@ test.describe('Footer', () => {
     await waitForHydration(page, '[data-testid="shell-form"]');
     const input = page.getByRole('textbox', { name: 'shell command', exact: true });
     const commands = page.locator('[data-sess="commands"]');
-    await expect(async () => {
-      if ((await commands.textContent()) === NO_COMMANDS) {
-        await input.fill('help');
-        await input.press('Enter');
-      }
-      await expect(commands).toHaveText(ONE_COMMAND, { timeout: COMMAND_RETRY_WINDOW_MS });
-    }).toPass();
+    await input.fill('help');
+    await input.press('Enter');
+    await expect(commands).toHaveText(ONE_COMMAND);
     await page.locator('footer').scrollIntoViewIfNeeded();
     await page.evaluate((key) => {
       (window as unknown as Record<string, boolean>)[key] = true;
