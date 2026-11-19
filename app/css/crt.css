@@ -12,7 +12,7 @@
       radial-gradient(
         ellipse at center,
         transparent 70%,
-        color-mix(in srgb, var(--color-secondary-950) 38%, transparent) 100%
+        color-mix(in srgb, var(--color-scrim) 38%, transparent) 100%
       );
     z-index: var(--z-crt-vignette);
   }
@@ -21,7 +21,7 @@
     position: fixed;
     inset: 0;
     pointer-events: none;
-    --crt-scanline: color-mix(in srgb, var(--color-secondary-950) 45%, transparent);
+    --crt-scanline: color-mix(in srgb, var(--color-scrim) 45%, transparent);
     background-image: repeating-linear-gradient(
       to bottom,
       var(--crt-scanline) 0px,

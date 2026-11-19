@@ -145,7 +145,7 @@
     position: fixed;
     inset: 0;
     z-index: var(--z-scrim);
-    background: color-mix(in srgb, var(--color-secondary-950) 72%, transparent);
+    background: color-mix(in srgb, var(--color-scrim) 72%, transparent);
     opacity: 0;
     visibility: hidden;
     pointer-events: none;
