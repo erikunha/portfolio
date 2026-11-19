@@ -16,6 +16,7 @@ import {
   playwrightVersion,
   pruneStaleVolumes,
   readLockfile,
+  readPnpmVersion,
 } from './ci-full-linux';
 import { verifyLeaves } from './verify';
 
@@ -426,7 +427,7 @@ function linuxStage(scope: LinuxScope, project: string, runId: number): Stage {
         volume: volume(ctx),
         runId,
         origin: ctx.origin ?? '',
-        env: containerEnv(ctx.workflowEnv ?? {}),
+        env: containerEnv(ctx.workflowEnv ?? {}, readPnpmVersion(ctx.root)),
         specs: linuxSpecs(scope, project, ctx),
       }),
   };

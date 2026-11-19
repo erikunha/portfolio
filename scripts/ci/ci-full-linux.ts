@@ -24,6 +24,9 @@ export const CONTAINER_WORKERS = 2;
 
 export const LINUX_RESULTS_DIR = 'linux-results';
 const LOCKFILE = 'pnpm-lock.yaml';
+const PACKAGE_FILE = 'package.json';
+const PNPM_VERSION_ENV = 'PNPM_VERSION';
+const PACKAGE_MANAGER = /"packageManager":\s*"pnpm@(\d+\.\d+\.\d+)/;
 const LOCKFILE_HASH_LENGTH = 12;
 const HASH = 'sha256';
 const PLAYWRIGHT_LOCK_ENTRY = /^ {2}'@playwright\/test@(\d+\.\d+\.\d+)':/m;
@@ -49,9 +52,12 @@ const FORWARDER_SOURCE = [
   '}).listen(port);',
 ].join(' ');
 
+const PNPM_PREFIX = `${CONTAINER_PNPM_HOME}/pnpm-$${PNPM_VERSION_ENV}`;
+
 export const CONTAINER_SCRIPT = [
   `(node -e '${FORWARDER_SOURCE}' &)`,
-  'corepack enable',
+  `export PATH="${PNPM_PREFIX}/bin:$PATH"`,
+  `{ [ -x "${PNPM_PREFIX}/bin/pnpm" ] || npm install --global --prefix "${PNPM_PREFIX}" "pnpm@$${PNPM_VERSION_ENV}"; }`,
   'pnpm install --frozen-lockfile --ignore-scripts',
   'exec pnpm playwright test "$@"',
 ].join(' && ');
@@ -144,11 +150,22 @@ export function dockerStageCommand(options: DockerRunOptions): StageCommand {
   };
 }
 
-export const containerEnv = (workflowEnv: Record<string, string>): Record<string, string> => ({
+export function pnpmVersion(packageJson: string): string {
+  const version = PACKAGE_MANAGER.exec(packageJson)?.[1];
+  if (version === undefined) throw new Error(`${PACKAGE_FILE} does not pin pnpm in packageManager`);
+  return version;
+}
+
+export const readPnpmVersion = (root: string): string =>
+  pnpmVersion(readFileSync(join(root, PACKAGE_FILE), 'utf8'));
+
+export const containerEnv = (
+  workflowEnv: Record<string, string>,
+  pnpm: string,
+): Record<string, string> => ({
   CI: 'true',
   ...workflowEnv,
-  COREPACK_HOME: `${CONTAINER_PNPM_HOME}/corepack`,
-  COREPACK_ENABLE_DOWNLOAD_PROMPT: '0',
+  [PNPM_VERSION_ENV]: pnpm,
   npm_config_store_dir: `${CONTAINER_PNPM_HOME}/store`,
 });
 

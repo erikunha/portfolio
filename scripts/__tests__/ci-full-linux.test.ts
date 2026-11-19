@@ -23,7 +23,9 @@ import {
   mergeSpecs,
   nodeModulesVolume,
   playwrightVersion,
+  pnpmVersion,
   pruneStaleVolumes,
+  readPnpmVersion,
   removeContainer,
   staleVolumes,
   sweepContainers,
@@ -47,7 +49,7 @@ const OPTIONS: DockerRunOptions = {
   volume: nodeModulesVolume(lockfileHash(LOCKFILE)),
   runId: RUN_ID,
   origin: ORIGIN,
-  env: containerEnv({ APT_CACHE_DIR: '/var/cache/ci-apt' }),
+  env: containerEnv({ APT_CACHE_DIR: '/var/cache/ci-apt' }, '10.1.2'),
   specs: ['tests/e2e/drawer-dialog.spec.ts', 'app/(en)/x/Y.e2e.ts'],
 };
 
@@ -70,6 +72,14 @@ describe('docker argv', () => {
       '9.8.7',
     );
     expect(() => playwrightVersion('lockfileVersion: 9\n')).toThrow('@playwright/test');
+  });
+
+  it('installs the pnpm the repository pins, because the image ships no corepack', () => {
+    expect(pnpmVersion('{ "packageManager": "pnpm@9.8.7" }')).toBe('9.8.7');
+    expect(() => pnpmVersion('{}')).toThrow('packageManager');
+    expect(valueAfter(argv(), '-e')).toContain('PNPM_VERSION=10.1.2');
+    expect(readPnpmVersion(ROOT)).toMatch(/^\d+\.\d+\.\d+$/);
+    expect(CONTAINER_SCRIPT).not.toContain('corepack');
   });
 
   it('limits the container to two cpus, shares the host ipc and starts an init', () => {
@@ -131,9 +141,9 @@ describe('docker argv', () => {
 
   it('forwards localhost to the host, installs from the lockfile without scripts, then runs playwright', () => {
     expect(CONTAINER_SCRIPT).toContain('host.docker.internal');
-    expect(CONTAINER_SCRIPT).toContain('corepack enable');
+    expect(CONTAINER_SCRIPT).toContain('npm install --global');
     expect(CONTAINER_SCRIPT).toContain('pnpm install --frozen-lockfile --ignore-scripts');
-    expect(CONTAINER_SCRIPT.indexOf('corepack enable')).toBeLessThan(
+    expect(CONTAINER_SCRIPT.indexOf('npm install --global')).toBeLessThan(
       CONTAINER_SCRIPT.indexOf('pnpm install'),
     );
     expect(CONTAINER_SCRIPT.endsWith('exec pnpm playwright test "$@"')).toBe(true);
