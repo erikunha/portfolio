@@ -40,6 +40,32 @@ export interface Workflow {
 
 export class UnsupportedWorkflowError extends Error {}
 
+export interface StageWorkflowEnv {
+  env: Record<string, string>;
+  notReproduced: string[];
+}
+
+const WORKFLOW_SCOPE = 'workflow';
+const EXPRESSION_OPEN = '${{';
+
+const reproducible = (value: string): boolean => !value.includes(EXPRESSION_OPEN);
+
+export function workflowEnvFor(workflow: Workflow, jobIds: readonly string[]): StageWorkflowEnv {
+  const env: Record<string, string> = {};
+  const notReproduced: string[] = [];
+  const scopes: [string, Record<string, string>][] = [
+    [WORKFLOW_SCOPE, workflow.env],
+    ...jobIds.map((id): [string, Record<string, string>] => [id, workflow.jobs[id]?.env ?? {}]),
+  ];
+  for (const [scope, record] of scopes) {
+    for (const [key, value] of Object.entries(record)) {
+      if (reproducible(value)) env[key] = value;
+      else notReproduced.push(`${scope}.${key}`);
+    }
+  }
+  return { env, notReproduced };
+}
+
 const MATRIX_AXIS = 'project';
 const MATRIX_INCLUDE = 'include';
 const MATRIX_SHARD = 'shard';

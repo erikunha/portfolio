@@ -25,6 +25,7 @@ import {
   type StageCommand,
   type StageContext,
 } from './ci-full-stages';
+import { type Workflow, workflowEnvFor } from './ci-workflow';
 import { ephemeralPort } from './free-port';
 
 export type Verdict = 'passed' | 'failed' | 'not-run';
@@ -44,6 +45,7 @@ export interface RunnerOptions {
   from?: string | undefined;
   keepGoing: boolean;
   server: ServerSpec;
+  workflow?: Workflow;
   stageTimeoutMs?: number;
   readyTimeoutMs?: number;
   log: (line: string) => void;
@@ -111,6 +113,7 @@ const ALLOWED_ENV_NAMES = [
   'PNPM_HOME',
 ];
 const ALLOWED_ENV_PREFIXES = ['LC_', 'XDG_', 'PLAYWRIGHT_'];
+const RUNNER_ENV = { CI: 'true' };
 
 const active = new Set<ChildProcess>();
 let cleanupInstalled = false;
@@ -242,12 +245,17 @@ function installCleanup(): void {
 export function childEnv(
   options: {
     env: Record<string, string>;
+    workflow?: Record<string, string> | undefined;
     blank?: Record<string, string> | undefined;
     unset?: readonly string[] | undefined;
   },
   source: Record<string, string | undefined> = process.env,
 ): NodeJS.ProcessEnv {
-  const inherited = allowedEnv(source);
+  const inherited: Record<string, string> = {
+    ...allowedEnv(source),
+    ...RUNNER_ENV,
+    ...options.workflow,
+  };
   for (const name of options.unset ?? []) delete inherited[name];
   return { ...inherited, ...options.blank, ...options.env } as NodeJS.ProcessEnv;
 }
@@ -258,6 +266,7 @@ export function startTracked(
   options: {
     cwd: string;
     env: Record<string, string>;
+    workflow?: Record<string, string> | undefined;
     blank?: Record<string, string>;
     unset?: readonly string[] | undefined;
     stdio: Stdio;
@@ -492,12 +501,14 @@ function runChild(
   command: StageCommand,
   root: string,
   blank: Record<string, string>,
+  workflow: Record<string, string>,
   timeoutMs: number,
 ): Promise<ChildOutcome> {
   return new Promise((resolveOutcome) => {
     const child = startTracked(command.file, command.args, {
       cwd: root,
       env: command.env ?? {},
+      workflow,
       blank,
       unset: command.unset,
       stdio: 'inherit',
@@ -528,6 +539,7 @@ async function runStage(
   options: RunnerOptions,
   workDir: string,
   blank: Record<string, string>,
+  workflow: Record<string, string>,
 ): Promise<StageResult> {
   const started = Date.now();
   const result = (verdict: Verdict, note: string): StageResult => ({
@@ -559,6 +571,7 @@ async function runStage(
       server = startTracked(command.file, command.args, {
         cwd: options.root,
         env: { ...command.env, [portEnv]: String(port) },
+        workflow,
         blank,
         stdio: { log: logPath },
       });
@@ -581,6 +594,7 @@ async function runStage(
       stage.command(ctx),
       options.root,
       blank,
+      workflow,
       options.stageTimeoutMs ?? STAGE_TIMEOUT_MS,
     );
     if (outcome.timedOut) return result('failed', 'timed out and was killed');
@@ -643,7 +657,14 @@ export async function runStages(options: RunnerOptions): Promise<StageResult[]> 
         results.push(skipped(stage, unavailable));
       } else {
         options.log(`stage ${index + 1}/${stages.length}: ${stage.id}`);
-        const result = await runStage(stage, options, workDir, blank);
+        const { env, notReproduced } =
+          options.workflow === undefined
+            ? { env: {}, notReproduced: [] }
+            : workflowEnvFor(options.workflow, stage.jobs);
+        if (notReproduced.length > 0) {
+          options.log(`not-reproduced workflow env for ${stage.id}: ${notReproduced.join(', ')}`);
+        }
+        const result = await runStage(stage, options, workDir, blank, env);
         results.push(result);
         if (result.verdict === 'failed') firstFailure ??= stage.id;
       }

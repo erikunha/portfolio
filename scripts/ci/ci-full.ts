@@ -1,6 +1,9 @@
 import { spawnSync } from 'node:child_process';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { EXIT, exitCode, parseArgs, renderTable, runStages } from './ci-full-run';
 import { commandText, NOT_RUN, SERVER, STAGES } from './ci-full-stages';
+import { parseWorkflow, workflowEnvFor } from './ci-workflow';
 
 const HELP = `pnpm ci:full [--base <ref>] [--from <stage>] [--keep-going] [--list]
 
@@ -21,13 +24,23 @@ const out = (line: string): void => {
   process.stdout.write(`${line}\n`);
 };
 
+const CI_WORKFLOW_FILE = '.github/workflows/ci.yml';
+
+const loadWorkflow = (root: string) =>
+  parseWorkflow(readFileSync(join(root, CI_WORKFLOW_FILE), 'utf8'));
+
 function listStages(base: string): void {
+  const workflow = loadWorkflow(process.cwd());
   const context = { root: process.cwd(), base, port: null, origin: null, workDir: '<work-dir>' };
   out(`ci:full stages (base ${base}):`);
   for (const [index, stage] of STAGES.entries()) {
     const serves = stage.server === true ? ' [serves the build]' : '';
     out(`${String(index + 1).padStart(2)}. ${stage.id}  ${stage.title}${serves}`);
     out(`      ${commandText(stage.command(context))}`);
+    const { env, notReproduced } = workflowEnvFor(workflow, stage.jobs);
+    const names = Object.keys(env);
+    if (names.length > 0) out(`      workflow env: ${names.join(', ')}`);
+    if (notReproduced.length > 0) out(`      not-reproduced: ${notReproduced.join(', ')}`);
   }
   out('');
   out('declared not-run:');
@@ -71,6 +84,7 @@ async function main(): Promise<number> {
     from: args.from,
     keepGoing: args.keepGoing,
     server: SERVER,
+    workflow: loadWorkflow(process.cwd()),
     log: (line) => err(`[ci-full] ${line}`),
   });
   out(`\n${renderTable(results, NOT_RUN)}`);

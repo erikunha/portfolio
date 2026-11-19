@@ -205,6 +205,12 @@ The prompt for a manual or agent review that applies these rules to a diff is `d
     final `close()` pulls focus back. Check: during the slide-out `matches(':modal')` is false,
     no `focusin` reaches the panel and a fill reaches the field
     (`tests/e2e/drawer-exit-interactive.spec.ts`).
+51. A local mirror of CI reproduces the workflow's environment, not only its commands. A
+    workflow-level `env:` that the local run lacks hides every behaviour that reads it: three
+    unit tests passed on the machine and failed in the `test` job because `APT_CACHE_DIR` was set
+    there. `ci:full` runs each stage with the top-level `env:` plus the `env:` of the jobs the
+    stage mirrors, and lists the values it cannot reproduce. Check:
+    `scripts/__tests__/ci-full-workflow-env.test.ts`.
 
 ## Pre-push judgement list
 
