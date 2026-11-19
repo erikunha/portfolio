@@ -110,7 +110,6 @@ export function useAskStream({
         settled = true;
         clearTimeout(timer);
         clearFrame();
-        if (request.aborted) return;
         activeRequest.current = null;
         const lines = settledLines({
           text,
