@@ -5,6 +5,7 @@ import { WIDTH } from './_helpers/geometry';
 import { waitForHydration } from './_helpers/hydration';
 import { installMockBackend } from './_helpers/mock-backend';
 import { freezeMotion } from './_helpers/motion';
+import { revealDeferredContent } from './_helpers/snapshot';
 
 const PHONE = { width: WIDTH.PHONE, height: 844 };
 const NARROW = { width: WIDTH.PHONE_NARROW, height: 700 };
@@ -23,6 +24,7 @@ const FIELD_SELECTORS = {
 
 async function openForm(page: Page, locale: SiteLocale) {
   await page.goto(PATHS[locale]);
+  await revealDeferredContent(page);
   await page.evaluate(
     (margin) =>
       window.scrollTo(
