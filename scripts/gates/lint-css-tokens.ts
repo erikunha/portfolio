@@ -24,6 +24,7 @@ const FORCED_COLORS_SHEET = 'forced-colors.css';
 const THEME_SHEET = 'theme.css';
 const CSS_DIRECTORY = 'app/css';
 const TSX_FILE = /\.tsx$/;
+const SOURCE_FILE = /\.tsx?$/;
 const TSX_SKIPPED = /\.(?:test|e2e)\.tsx?$/;
 const TOKEN_FILE = /-tokens\.ts$/;
 const TEST_FILE = /\.test\.tsx?$/;
@@ -155,6 +156,19 @@ const SUBPROPERTY_SEPARATOR = '--';
 const ARBITRARY_CLASS = /(?<![\w-])([a-z][a-z-]*)-\[([^\]\s'"`]+)\]/g;
 const WHITESPACE = /\s+/g;
 
+const TEXT_SIZE_SHORTHAND = '(?:xs|sm|base|lg|\\d*xl)';
+const ALPHA_UTILITY = new RegExp(
+  `(?<![\\w-])(?:[^\\s'"\`:]+:)*(?:${[...COLOR_UTILITIES]
+    .sort((a, b) => b.length - a.length)
+    .map(escapeRegExp)
+    .join(
+      '|',
+    )})-(?!${TEXT_SIZE_SHORTHAND}/)(?:\\([^)\\s]*\\)|\\[(?![\\d.])[^\\]\\s]*\\]|[a-z][\\w-]*)/(?:\\d+|\\[[\\d.]+\\])(?![\\w/-])`,
+  'g',
+);
+const COLOR_MIX_OPEN = 'color-mix(';
+const COLOR_MIX_CALL = /(?<![\w-])color-mix\(/g;
+
 export interface HexHit {
   line: number;
   hex: string;
@@ -196,6 +210,23 @@ function scan(source: string, pattern: RegExp): ColorHit[] {
       }
     });
   return out;
+}
+
+export function findAlphaUtilities(source: string): ColorHit[] {
+  return scan(source, ALPHA_UTILITY);
+}
+
+export function findInlineColorMix(source: string): ColorHit[] {
+  return scan(source, COLOR_MIX_CALL);
+}
+
+export function findNonPropertyColorMix(css: string): ColorHit[] {
+  const hits: ColorHit[] = [];
+  postcss.parse(css).walkDecls((decl) => {
+    if (decl.prop.startsWith(CUSTOM_PROPERTY) || !decl.value.includes(COLOR_MIX_OPEN)) return;
+    hits.push({ line: decl.source?.start?.line ?? 0, literal: `${decl.prop}: ${decl.value}` });
+  });
+  return hits.sort((a, b) => a.line - b.line);
 }
 
 export function findRawHex(css: string): HexHit[] {
@@ -315,6 +346,10 @@ export function findTsxFiles(root: string): string[] {
   return listUnderTokenRoots(root, (name) => TSX_FILE.test(name) && !TSX_SKIPPED.test(name));
 }
 
+export function findSourceFiles(root: string): string[] {
+  return listUnderTokenRoots(root, (name) => SOURCE_FILE.test(name) && !TSX_SKIPPED.test(name));
+}
+
 export interface RepoScan {
   colors: RawColorHit[];
   zIndex: RawColorHit[];
@@ -322,6 +357,7 @@ export interface RepoScan {
   tokenEqual: RawColorHit[];
   primitives: RawColorHit[];
   ordinals: RawColorHit[];
+  tints: RawColorHit[];
 }
 
 function escapeRegExp(value: string): string {
@@ -527,6 +563,15 @@ export function scanRepo(root: string, cssFiles: string[]): RepoScan {
     ordinals: findConsumerFiles(root).flatMap((file) =>
       tag(file, findOrdinalPaletteNames(read(file))),
     ),
+    tints: [
+      ...[...cssTargets, ...(themeCss ? [themePath] : [])].flatMap((file) =>
+        tag(file, findNonPropertyColorMix(read(file))),
+      ),
+      ...findSourceFiles(root).flatMap((file) => [
+        ...tag(file, findAlphaUtilities(read(file))),
+        ...tag(file, findInlineColorMix(read(file))),
+      ]),
+    ],
   };
 }
 
@@ -602,6 +647,12 @@ function main(): void {
       'The palette is five hue ramps: signal, carbon, sage, gold and coral. Use the name shown on each line.',
       scan.ordinals,
     ) || failed;
+  failed =
+    report(
+      'tint(s) not held in a named custom property',
+      'A tint is one color-mix(..., transparent) in a custom property (a role tint in theme.css, or a property in the rule or @theme). Read it as bg-(color:--name) or var(--name); no /NN alpha utility, no color-mix in a class string or a non-custom property.',
+      scan.tints,
+    ) || failed;
   const unused = findUnusedThemeTokens(
     readThemeSheets(root),
     findConsumerFiles(root).map((file) => readFileSync(join(root, file), 'utf8')),
@@ -621,7 +672,7 @@ function main(): void {
   }
   if (failed) process.exit(1);
   console.log(
-    '[css-tokens] no raw color literals, z-index values or focus rings outside their tokens, no primitive colors where a role exists, no ordinal palette names, no arbitrary values that equal a token, and no unused @theme tokens.',
+    '[css-tokens] no raw color literals, z-index values or focus rings outside their tokens, no primitive colors where a role exists, no ordinal palette names, every tint held in a named custom property, no arbitrary values that equal a token, and no unused @theme tokens.',
   );
 }
 
