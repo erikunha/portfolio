@@ -1,9 +1,9 @@
 @media (forced-colors: active) {
   @layer overrides {
     :root {
-      --forced-state-width: 3px;
+      --forced-state-width: var(--spacing-tight);
       --forced-hairline: 1px;
-      --forced-focus-offset: 2px;
+      --forced-focus-offset: var(--focus-ring-offset);
       --forced-grid-dash: 1 4;
     }
 

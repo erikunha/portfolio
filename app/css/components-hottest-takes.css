@@ -1,6 +1,6 @@
 @theme {
   --spacing-opinions-list-marker: 2ch;
-  --measure-opinions-body: 740px;
+  --measure-opinions-body: 46.25rem;
 }
 
 @layer components {

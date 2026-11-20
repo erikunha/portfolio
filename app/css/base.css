@@ -1,11 +1,11 @@
 @layer base {
   :root {
     --separator-glyph: "·";
-    --topbar-height: 45px;
-    --position-line-thickness: 2px;
+    --topbar-height: calc(var(--spacing-target) + var(--border-width));
+    --position-line-thickness: var(--spacing-hair);
     --icon-menu: calc(var(--spacing-target) / var(--phi) / var(--phi));
-    --mobile-bars-height: 94px;
-    --drawer-max-width: 320px;
+    --mobile-bars-height: 5.875rem;
+    --drawer-max-width: 20rem;
     --dock-height: 4.5rem;
     --dock-clearance: var(--dock-height);
     --to-top-size: var(--spacing-target);
@@ -197,7 +197,7 @@
     font-family: inherit;
     color: inherit;
     background: transparent;
-    border: 1px solid var(--color-border);
+    border: var(--border-width) solid var(--color-border);
     cursor: pointer;
   }
 
@@ -215,7 +215,7 @@
     font-weight: 700;
     color: var(--color-accent);
     margin: 0 0 var(--spacing-2) 0;
-    text-shadow: 0 0 2px var(--color-signal-glow-30);
+    text-shadow: 0 0 var(--spacing-hair) var(--color-signal-glow-30);
   }
 
   h1,

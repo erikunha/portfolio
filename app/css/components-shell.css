@@ -36,7 +36,7 @@
     font-family: var(--font-mono);
     font-size: var(--text-xs);
     --leading: 1.65;
-    --shell-focus-width: 2px;
+    --shell-focus-width: var(--focus-ring-width);
     --shell-stop-time-chars: 4;
   }
 
@@ -509,7 +509,7 @@
     grid-area: progress;
     margin-block-start: var(--spacing-1);
     position: relative;
-    block-size: 2px;
+    block-size: var(--spacing-hair);
     overflow: hidden;
     background: var(--shell-receipt-danger-dim);
   }
@@ -670,10 +670,10 @@
   .shell-cursor {
     display: inline-block;
     flex: none;
-    width: 7px;
+    width: var(--spacing-chip);
     height: 1.05em;
     background: var(--color-accent);
-    vertical-align: -2px;
+    vertical-align: calc(var(--spacing-hair) * -1);
     margin-left: 1px;
     opacity: 1;
     animation: shell-blink 1.05s steps(2, start) infinite;
@@ -694,7 +694,7 @@
 
   .shell-cmd-hint:hover:not([aria-disabled="true"]) {
     color: var(--color-accent);
-    text-shadow: 0 0 6px var(--color-signal-glow-50);
+    text-shadow: 0 0 var(--spacing-pip) var(--color-signal-glow-50);
   }
 
   /* biome-ignore lint/suspicious/noDuplicateSelectors: `@variant motion-off` and `@variant motion-on` resolve to a `body` ancestor selector, so this rule has a different selector than the earlier one with the same class */

@@ -14,7 +14,7 @@
       height: var(--to-top-size);
       padding-inline: 0;
       opacity: 0;
-      transform: translateY(8px);
+      transform: translateY(var(--spacing-2));
       transition:
         opacity 200ms ease,
         transform 200ms ease;

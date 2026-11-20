@@ -676,7 +676,7 @@
 
   .ctz-route {
     stroke: var(--color-accent);
-    stroke-width: 1.5px;
+    stroke-width: calc(var(--border-width) * 1.5);
     stroke-dasharray: 4 4;
     vector-effect: non-scaling-stroke;
     animation: ctz-march 1.2s linear infinite;

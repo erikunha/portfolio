@@ -19,9 +19,9 @@
   .cam-corners > i::after {
     content: "";
     position: absolute;
-    width: 14px;
-    height: 14px;
-    border: 1px solid var(--color-accent);
+    width: var(--spacing-panel);
+    height: var(--spacing-panel);
+    border: var(--border-width) solid var(--color-accent);
   }
 
   .cam-corners::before {

@@ -5,8 +5,8 @@
   --eq-bar-gap: 0.1875rem;
   --eq-bar-gap-compact: 0.125rem;
   --eq-bar-mid-stop: 35%;
-  --eq-curve-stroke: 2.6px;
-  --eq-curve-glow: 3px;
+  --eq-curve-stroke: 0.1625rem;
+  --eq-curve-glow: var(--spacing-tight);
   --eq-level-floor: 0.35;
   --eq-level-high: 0.9;
   --eq-level-mid: 0.6;

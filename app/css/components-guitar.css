@@ -25,7 +25,7 @@
   --guitar-scanline: repeating-linear-gradient(
     to bottom,
     var(--color-guitar-scanline) 0 1px,
-    transparent 1px 3px
+    transparent 1px var(--spacing-tight)
   );
 }
 

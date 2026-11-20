@@ -1,11 +1,11 @@
 @layer components {
   .fader-track {
-    --fader-thumb-w: 14px;
+    --fader-thumb-w: var(--spacing-panel);
     --fader-track-fill: color-mix(in srgb, var(--color-accent) 3%, transparent);
     position: relative;
-    min-height: 24px;
+    min-height: var(--spacing-6);
     background: var(--fader-track-fill);
-    border: 1px solid var(--color-signal-quiet);
+    border: var(--border-width) solid var(--color-signal-quiet);
     cursor: ew-resize;
     touch-action: pan-y;
   }
@@ -18,19 +18,19 @@
     top: 50%;
     height: 1px;
     background: var(--color-signal-quiet);
-    transform: translateY(-0.5px);
+    transform: translateY(calc(var(--border-width) / -2));
     pointer-events: none;
   }
 
   .faderThumb {
     position: absolute;
-    top: -2px;
+    top: calc(var(--spacing-hair) * -1);
     left: 0;
     width: var(--fader-thumb-w);
-    height: 22px;
+    height: var(--spacing-lane);
     background: var(--color-accent);
-    box-shadow: 0 0 8px var(--color-accent);
-    border: 1px solid var(--color-surface);
+    box-shadow: 0 0 var(--spacing-2) var(--color-accent);
+    border: var(--border-width) solid var(--color-surface);
     cursor: ew-resize;
   }
 
@@ -38,8 +38,8 @@
     content: "";
     position: absolute;
     left: 50%;
-    top: 3px;
-    bottom: 3px;
+    top: var(--spacing-tight);
+    bottom: var(--spacing-tight);
     width: 1px;
     background: var(--color-surface);
     transform: translateX(-50%);
@@ -54,9 +54,9 @@
 
   .vu-meter {
     position: relative;
-    height: 14px;
-    min-height: 24px;
-    border: 1px solid var(--color-signal-quiet);
+    height: var(--spacing-panel);
+    min-height: var(--spacing-6);
+    border: var(--border-width) solid var(--color-signal-quiet);
     background: var(--color-surface-tint-heavy);
     display: flex;
     align-items: stretch;
@@ -89,7 +89,7 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 3px;
+    gap: var(--spacing-tight);
     user-select: none;
     touch-action: none;
   }
@@ -116,7 +116,7 @@
     color: var(--color-signal-400);
     display: block;
     letter-spacing: var(--tracking-lg);
-    margin-top: 2px;
+    margin-top: var(--spacing-hair);
     opacity: 0.8;
   }
 }

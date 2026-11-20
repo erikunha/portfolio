@@ -37,8 +37,8 @@
     flex-direction: column;
     justify-content: flex-end;
     text-shadow:
-      0 0 4px var(--color-surface),
-      0 0 8px var(--color-surface);
+      0 0 var(--spacing-1) var(--color-surface),
+      0 0 var(--spacing-2) var(--color-surface);
   }
 
   .hero-boot-slot {
@@ -57,11 +57,11 @@
   }
 
   .hero-shake {
-    transform: translate(2px, -2px);
+    transform: translate(var(--spacing-hair), calc(var(--spacing-hair) * -1));
   }
 
   .hero-shake2 {
-    transform: translate(-2px, 1px);
+    transform: translate(calc(var(--spacing-hair) * -1), 1px);
   }
 
   .hero-boot-line {
@@ -76,8 +76,8 @@
     color: var(--color-accent);
     font-weight: 700;
     text-shadow:
-      0 0 6px var(--color-signal-glow-60),
-      0 0 4px var(--color-surface);
+      0 0 var(--spacing-pip) var(--color-signal-glow-60),
+      0 0 var(--spacing-1) var(--color-surface);
   }
 
   .hero-boot-welcome {
@@ -101,8 +101,8 @@
   .hero-boot-matrix-out {
     color: var(--color-accent);
     text-shadow:
-      0 0 8px var(--color-signal-glow-40),
-      0 0 4px var(--color-surface);
+      0 0 var(--spacing-2) var(--color-signal-glow-40),
+      0 0 var(--spacing-1) var(--color-surface);
   }
 
   #main-content > h1:focus-visible ~ section [data-testid="hero-name"] {
