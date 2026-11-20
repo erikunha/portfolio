@@ -724,7 +724,10 @@ describe('fixed real-time waits', () => {
     ['a function expression', 'await new Promise(function (r) { setTimeout(r, 5); });'],
     ['a window.setTimeout call', 'await new Promise((r) => window.setTimeout(r, 10));'],
     ['a numeric separator', 'await new Promise((r) => setTimeout(r, 1_000));'],
-    ['an await inside act', 'await act(async () => { await new Promise((r) => setTimeout(r, 0)); });'],
+    [
+      'an await inside act',
+      'await act(async () => { await new Promise((r) => setTimeout(r, 0)); });',
+    ],
   ])('flags %s', (_name, source) => {
     expect(fixedWaits(`\n${source}`)).toEqual(['fixed-wait@2']);
   });

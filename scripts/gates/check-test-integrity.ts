@@ -152,7 +152,10 @@ function isNumericTimerCall(call: ts.CallExpression): boolean {
   const [first] = chain;
   const isTimer =
     (chain.length === 1 && first === TIMER_NAME) ||
-    (chain.length === 2 && first !== undefined && TIMER_HOSTS.has(first) && chain[1] === TIMER_NAME);
+    (chain.length === 2 &&
+      first !== undefined &&
+      TIMER_HOSTS.has(first) &&
+      chain[1] === TIMER_NAME);
   const delay = call.arguments[TIMER_DELAY_INDEX];
   return isTimer && delay !== undefined && ts.isNumericLiteral(delay);
 }
@@ -160,7 +163,8 @@ function isNumericTimerCall(call: ts.CallExpression): boolean {
 function isFixedWait(node: ts.AwaitExpression): boolean {
   const awaited = node.expression;
   if (!ts.isNewExpression(awaited)) return false;
-  if (!ts.isIdentifier(awaited.expression) || awaited.expression.text !== PROMISE_NAME) return false;
+  if (!ts.isIdentifier(awaited.expression) || awaited.expression.text !== PROMISE_NAME)
+    return false;
   return collectCalls(awaited).some(isNumericTimerCall);
 }
 
