@@ -49,9 +49,8 @@ function request(): NextRequest {
   return askRequest({ question: 'Who is Erik?' });
 }
 
-async function flush(): Promise<void> {
-  for (let i = 0; i < 20; i++) await Promise.resolve();
-  await new Promise((resolve) => setTimeout(resolve, 20));
+async function waitForAfterRegistration(): Promise<void> {
+  await vi.waitFor(() => expect(afterMock).toHaveBeenCalled());
 }
 
 describe('/api/ask budget settlement and log write', () => {
@@ -76,7 +75,7 @@ describe('/api/ask budget settlement and log write', () => {
     const { POST } = await import('@/app/api/ask/route');
     const res = await POST(request());
     await res.text();
-    await flush();
+    await waitForAfterRegistration();
 
     expect(afterMock).toHaveBeenCalledOnce();
     expect(
@@ -109,7 +108,7 @@ describe('/api/ask budget settlement and log write', () => {
     const { POST } = await import('@/app/api/ask/route');
     const res = await POST(request());
     await res.text();
-    await flush();
+    await waitForAfterRegistration();
     await registeredTask();
 
     expect(settleBudgetMock).toHaveBeenCalledWith(
@@ -142,7 +141,7 @@ describe('/api/ask budget settlement and log write', () => {
     const { POST } = await import('@/app/api/ask/route');
     const res = await POST(request());
     await res.text();
-    await flush();
+    await waitForAfterRegistration();
     await registeredTask();
 
     expect(guardCountMock).toHaveBeenCalledWith('leak');

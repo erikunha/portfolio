@@ -61,11 +61,6 @@ function makeGatedResult() {
   return { result, release };
 }
 
-async function flush(): Promise<void> {
-  for (let i = 0; i < 20; i++) await Promise.resolve();
-  await new Promise((resolve) => setTimeout(resolve, 20));
-}
-
 describe('/api/ask client disconnect', () => {
   beforeEach(() => {
     process.env.ASK_ENABLED = 'true';
@@ -90,7 +85,7 @@ describe('/api/ask client disconnect', () => {
     expect(new TextDecoder().decode(first?.value)).toContain('first chunk');
     await reader?.cancel();
     release();
-    await flush();
+    await vi.waitFor(() => expect(persistMock).toHaveBeenCalledTimes(1));
 
     expect(settleBudgetMock).toHaveBeenCalledTimes(1);
     expect(persistMock).toHaveBeenCalledTimes(1);
@@ -118,7 +113,7 @@ describe('/api/ask client disconnect', () => {
     const res = await POST(makeRequest());
     await res.body?.cancel();
     release();
-    await flush();
+    await vi.waitFor(() => expect(settleBudgetMock).toHaveBeenCalled());
 
     expect(
       settleBudgetMock,
@@ -142,10 +137,9 @@ describe('/api/ask client disconnect', () => {
     await reader?.read();
     await reader?.cancel();
     release();
-    await flush();
 
     const callArgs = mockStreamText.mock.calls[0]?.[0] as { abortSignal: AbortSignal };
-    expect(callArgs.abortSignal.aborted).toBe(true);
+    await vi.waitFor(() => expect(callArgs.abortSignal.aborted).toBe(true));
   });
 });
 
