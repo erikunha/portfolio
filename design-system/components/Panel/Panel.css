@@ -30,4 +30,14 @@
     color: var(--color-accent);
     font-weight: 700;
   }
+
+  @container (width < 24rem) {
+    .panel-head {
+      min-height: 0;
+      padding: calc(var(--spacing-1) * 1.5) var(--spacing-3);
+    }
+    .panel-title {
+      letter-spacing: var(--tracking-xs);
+    }
+  }
 }

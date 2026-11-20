@@ -485,7 +485,7 @@ lib/join-class-names.ts               # string-only className joiner for the app
 app/css/theme.css                     # @theme { palette, glow stops, typography vars }, the motion custom variants, role tokens in :root
 app/css/base.css                      # @layer base { resets, focus-visible, skip-to-content, the rounded line box }
 app/css/print.css                     # @layer overrides, @media print: ink-on-paper palette, hidden chrome, CRT layers and rain
-app/css/components-panel.css          # the .panel frame rules (panel-head, panel-title, panel-marker), imported before the section partials that scope onto them
+design-system/components/Panel/Panel.css   # the .panel frame rules (panel-head, panel-title, panel-marker) and the narrow-container head rules, imported by app/globals.css before the section partials that scope onto them
 app/css/components-hero.css           # one of the @layer components partials (components-<section>.css), imported in cascade order
 app/css/components-modules.css        # the deferred module rules: .module-deferred, the module body, and the per-section, per-breakpoint --module-estimate ladders (one block per section, mobile-first nested @media)
 app/css/components-docs.css           # the design-system prose rules: inline code and the labelled tables below 768px

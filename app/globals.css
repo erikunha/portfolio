@@ -18,8 +18,7 @@
 @import "./css/components-design-system.css";
 @import "./css/components-error-pages.css";
 @import "./css/components-scroll-type.css";
-@import "./css/components-panel.css";
-@import "./css/components-panel-head.css";
+@import "../design-system/components/Panel/Panel.css";
 @import "./css/components-utilities.css";
 @import "./css/components-nav.css";
 @import "./css/components-chrome-drawings.css";

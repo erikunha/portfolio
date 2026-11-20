@@ -11,11 +11,12 @@ const CLASS_TOKEN = /\.[\w-]+/g;
 const KEYFRAMES = /keyframes$/;
 
 const PRIMITIVES = [
-  { name: 'Button', className: '.btn' },
-  { name: 'KbdKey', className: '.kbd-key' },
-  { name: 'Badge', className: '.badge-dot' },
-  { name: 'NavItem', className: '.nav-item' },
-  { name: 'BrandIcon', className: '.brand-icon' },
+  { name: 'Button', classNames: ['.btn'] },
+  { name: 'KbdKey', classNames: ['.kbd-key'] },
+  { name: 'Badge', classNames: ['.badge-dot'] },
+  { name: 'NavItem', classNames: ['.nav-item'] },
+  { name: 'BrandIcon', classNames: ['.brand-icon'] },
+  { name: 'Panel', classNames: ['.panel', '.panel-head', '.panel-title', '.panel-marker'] },
 ];
 
 function selectorsOf(file: string): string[] {
@@ -34,33 +35,33 @@ function classesOf(selector: string): string[] {
   return selector.match(CLASS_TOKEN) ?? [];
 }
 
-function onlyStylesPrimitive(selector: string, className: string): boolean {
+function onlyStylesPrimitive(selector: string, classNames: string[]): boolean {
   const classes = classesOf(selector);
-  return classes.length > 0 && classes.every((token) => token === className);
+  return classes.length > 0 && classes.every((token) => classNames.includes(token));
 }
 
 const partials = readdirSync(PARTIAL_DIR)
   .filter((file) => file.endsWith('.css') && !OVERRIDE_LAYER_SHEETS.has(file))
   .sort();
 
-describe.each(PRIMITIVES)('$name stylesheet colocation', ({ name, className }) => {
+describe.each(PRIMITIVES)('$name stylesheet colocation', ({ name, classNames }) => {
   const ownFile = path.join(COMPONENT_DIR, name, `${name}.css`);
 
   it('holds the base rules in its own stylesheet', () => {
     const own = selectorsOf(ownFile);
-    expect(own.some((selector) => onlyStylesPrimitive(selector, className))).toBe(true);
+    expect(own.some((selector) => onlyStylesPrimitive(selector, classNames))).toBe(true);
   });
 
   it('holds no selector that names another component', () => {
     const foreign = selectorsOf(ownFile).filter(
-      (selector) => !classesOf(selector).includes(className),
+      (selector) => !classesOf(selector).some((token) => classNames.includes(token)),
     );
     expect(foreign).toEqual([]);
   });
 
   it.each(partials)('leaves no rule in app/css/%s that styles only the primitive', (partial) => {
     const stray = selectorsOf(path.join(PARTIAL_DIR, partial)).filter((selector) =>
-      onlyStylesPrimitive(selector, className),
+      onlyStylesPrimitive(selector, classNames),
     );
     expect(stray).toEqual([]);
   });
