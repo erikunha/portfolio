@@ -126,9 +126,9 @@ process.exit(0);
   });
 
   it.runIf(semgrepInstalled)(
-    'flags the vulnerable fixture and writes well-formed SARIF',
+    'flags only the vulnerable fixture and writes well-formed SARIF',
     () => {
-      const dir = fixtureTempDir('vulnerable.ts');
+      const dir = fixtureTempDir('vulnerable.ts', 'clean.ts');
       const sarif = join(dir, 'out.sarif');
       const r = run(['--error', '--sarif', sarif, dir]);
       expect(r.status).toBe(1);
@@ -138,16 +138,12 @@ process.exit(0);
       expect(Array.isArray(doc.runs)).toBe(true);
       const results = doc.runs.flatMap((x: { results?: unknown[] }) => x.results ?? []);
       expect(results.length).toBeGreaterThan(0);
-    },
-    REAL_SCAN_TIMEOUT_MS,
-  );
-
-  it.runIf(semgrepInstalled)(
-    'produces zero findings on the clean fixture',
-    () => {
-      const dir = fixtureTempDir('clean.ts');
-      const r = run(['--error', join(dir, 'clean.ts')]);
-      expect(r.status).toBe(0);
+      const flagged = results.flatMap(
+        (x: { locations?: { physicalLocation?: { artifactLocation?: { uri?: string } } }[] }) =>
+          (x.locations ?? []).map((l) => l.physicalLocation?.artifactLocation?.uri ?? ''),
+      );
+      expect(flagged.some((uri: string) => uri.endsWith('vulnerable.ts'))).toBe(true);
+      expect(flagged.some((uri: string) => uri.endsWith('clean.ts'))).toBe(false);
     },
     REAL_SCAN_TIMEOUT_MS,
   );

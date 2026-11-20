@@ -219,6 +219,16 @@ export interface AllowEntry {
   reason: string;
 }
 
+const parsedSheets = new Map<string, postcss.Root>();
+
+function parseCss(css: string): postcss.Root {
+  const cached = parsedSheets.get(css);
+  if (cached) return cached;
+  const root = postcss.parse(css);
+  parsedSheets.set(css, root);
+  return root;
+}
+
 function stripComments(source: string): string {
   return source
     .replace(/\/\*[\s\S]*?\*\//g, (m) => m.replace(/[^\n]/g, ' '))
@@ -251,7 +261,7 @@ export function findInlineColorMix(source: string): ColorHit[] {
 
 export function findNonPropertyColorMix(css: string): ColorHit[] {
   const hits: ColorHit[] = [];
-  postcss.parse(css).walkDecls((decl) => {
+  parseCss(css).walkDecls((decl) => {
     if (decl.prop.startsWith(CUSTOM_PROPERTY) || !decl.value.includes(COLOR_MIX_OPEN)) return;
     hits.push({ line: decl.source?.start?.line ?? 0, literal: `${decl.prop}: ${decl.value}` });
   });
@@ -271,7 +281,7 @@ function rawPxLengths(value: string, property: string): boolean {
 
 export function findRawCssPx(css: string): ColorHit[] {
   const hits: ColorHit[] = [];
-  const root = postcss.parse(css);
+  const root = parseCss(css);
   root.walkDecls((decl) => {
     if (rawPxLengths(decl.value, decl.prop)) {
       hits.push({ line: decl.source?.start?.line ?? 0, literal: `${decl.prop}: ${decl.value}` });
@@ -333,7 +343,7 @@ export function findRawZIndex(source: string, language: 'css' | 'tsx'): ColorHit
 
 export function findRawFocusRing(css: string): ColorHit[] {
   const hits: ColorHit[] = [];
-  postcss.parse(css).walkRules((rule) => {
+  parseCss(css).walkRules((rule) => {
     if (!FOCUS_SELECTOR.test(rule.selector)) return;
     const visibleOnly = FOCUS_VISIBLE_SELECTOR.test(rule.selector);
     rule.each((node) => {
@@ -482,7 +492,7 @@ export function findUtilityClassCollisions(
   const utilities = generatedUtilityNames(themeCss);
   const hits: CollisionHit[] = [];
   for (const { file, css } of sheets) {
-    postcss.parse(css).walkRules((rule) => {
+    parseCss(css).walkRules((rule) => {
       if (setsOnlyCustomProperties(rule)) return;
       for (const match of rule.selector.matchAll(CLASS_IN_SELECTOR)) {
         const name = match[1] ?? '';
@@ -499,7 +509,22 @@ function normalizeValue(value: string): string {
   return value.replace(WHITESPACE, '').toLowerCase();
 }
 
-function tokenUtilities(themeCss: string): Map<string, string> {
+function memoizeByTheme<T>(compute: (themeCss: string) => T): (themeCss: string) => T {
+  let lastTheme: string | undefined;
+  let lastValue: T | undefined;
+  return (themeCss) => {
+    if (lastTheme !== themeCss || lastValue === undefined) {
+      lastValue = compute(themeCss);
+      lastTheme = themeCss;
+    }
+    return lastValue;
+  };
+}
+
+const tokenUtilities = memoizeByTheme(computeTokenUtilities);
+const rolePrimitivesOf = memoizeByTheme(computeRolePrimitives);
+
+function computeTokenUtilities(themeCss: string): Map<string, string> {
   const byPrefixAndValue = new Map<string, string>();
   postcss.parse(themeCss).walkAtRules(THEME_AT_RULE, (rule) => {
     rule.each((node) => {
@@ -535,6 +560,10 @@ export function findTokenEqualArbitraryValues(themeCss: string, source: string):
 }
 
 export function rolePrimitives(themeCss: string): Map<string, string[]> {
+  return new Map(rolePrimitivesOf(themeCss));
+}
+
+function computeRolePrimitives(themeCss: string): Map<string, string[]> {
   const byPrimitive = new Map<string, string[]>();
   postcss.parse(themeCss).walkDecls((decl) => {
     const role = ROLE_TOKENS.find((name) => decl.prop === `${COLOR_VARIABLE_PREFIX}${name}`);
@@ -546,15 +575,21 @@ export function rolePrimitives(themeCss: string): Map<string, string[]> {
   return byPrimitive;
 }
 
-export function findPrimitiveColorUses(themeCss: string, source: string): ColorHit[] {
-  const roles = rolePrimitives(themeCss);
-  if (roles.size === 0) return [];
+const primitivePattern = memoizeByTheme((themeCss: string): RegExp | undefined => {
+  const roles = rolePrimitivesOf(themeCss);
+  if (roles.size === 0) return undefined;
   const names = [...roles.keys()].map(escapeRegExp).join('|');
   const utilities = COLOR_UTILITIES.map(escapeRegExp).join('|');
-  const pattern = new RegExp(
+  return new RegExp(
     `${escapeRegExp(COLOR_VARIABLE_PREFIX)}(${names})(?![\\w-])|(?<![\\w-])(?:${utilities})-(${names})(?![\\w-])`,
     'g',
   );
+});
+
+export function findPrimitiveColorUses(themeCss: string, source: string): ColorHit[] {
+  const roles = rolePrimitivesOf(themeCss);
+  const pattern = primitivePattern(themeCss);
+  if (!pattern) return [];
   const hits: ColorHit[] = [];
   stripComments(source)
     .split('\n')
@@ -575,12 +610,25 @@ function ordinalPrefix(): string {
   return `(?<![\\w-])((?:${utilities})-|${escapeRegExp(COLOR_VARIABLE_PREFIX)})`;
 }
 
+const ordinalPatterns = memoizeOrdinalPatterns();
+
+function memoizeOrdinalPatterns(): () => { ramp: RegExp; glow: RegExp; green: RegExp } {
+  let cached: { ramp: RegExp; glow: RegExp; green: RegExp } | undefined;
+  return () => {
+    if (cached) return cached;
+    const families = Object.keys(ORDINAL_HUES).join('|');
+    const prefix = ordinalPrefix();
+    cached = {
+      ramp: new RegExp(`${prefix}(${families})-(${ORDINAL_STEP})(?![\\w-])`, 'g'),
+      glow: new RegExp(`${prefix}${GLOW_STOP}(?![\\w-])`, 'g'),
+      green: new RegExp(`(?<![\\w-])${escapeRegExp(REMOVED_GREEN_TOKEN)}(?![\\w-])`, 'g'),
+    };
+    return cached;
+  };
+}
+
 export function findOrdinalPaletteNames(source: string): ColorHit[] {
-  const families = Object.keys(ORDINAL_HUES).join('|');
-  const prefix = ordinalPrefix();
-  const ramp = new RegExp(`${prefix}(${families})-(${ORDINAL_STEP})(?![\\w-])`, 'g');
-  const glow = new RegExp(`${prefix}${GLOW_STOP}(?![\\w-])`, 'g');
-  const green = new RegExp(`(?<![\\w-])${escapeRegExp(REMOVED_GREEN_TOKEN)}(?![\\w-])`, 'g');
+  const { ramp, glow, green } = ordinalPatterns();
   const hits: ColorHit[] = [];
   stripComments(source)
     .split('\n')
@@ -649,7 +697,17 @@ export function findComponentCss(root: string): string[] {
 }
 
 export function scanRepo(root: string, cssFiles: string[]): RepoScan {
-  const read = (file: string) => readFileSync(join(root, file), 'utf8');
+  const cache = new Map<string, string>();
+  const read = (file: string): string => {
+    const cached = cache.get(file);
+    if (cached !== undefined) return cached;
+    const text = readFileSync(join(root, file), 'utf8');
+    cache.set(file, text);
+    return text;
+  };
+  const tsxFiles = findTsxFiles(root);
+  const sourceFiles = findSourceFiles(root);
+  const consumerFiles = findConsumerFiles(root);
   const tag = (file: string, hits: ColorHit[]): RawColorHit[] =>
     hits.map((hit) => ({ ...hit, file }));
   const cssTargets = [...cssFiles.map((f) => `app/css/${f}`), ...findComponentCss(root)];
@@ -665,34 +723,32 @@ export function scanRepo(root: string, cssFiles: string[]): RepoScan {
     cssPx: cssTargets.flatMap((file) => tag(file, findRawCssPx(read(file)))),
     colors: [
       ...colorTargets.flatMap((file) => tag(file, findRawColors(read(file)))),
-      ...findTsxFiles(root).flatMap((file) => tag(file, findRawTsxColors(read(file)))),
+      ...tsxFiles.flatMap((file) => tag(file, findRawTsxColors(read(file)))),
     ],
     zIndex: [
       ...cssTargets.flatMap((file) => tag(file, findRawZIndex(read(file), 'css'))),
-      ...findTsxFiles(root).flatMap((file) => tag(file, findRawZIndex(read(file), 'tsx'))),
+      ...tsxFiles.flatMap((file) => tag(file, findRawZIndex(read(file), 'tsx'))),
     ],
     focus: cssTargets
       .filter((file) => !file.endsWith(FORCED_COLORS_SHEET))
       .flatMap((file) => tag(file, findRawFocusRing(read(file)))),
-    tokenEqual: findTsxFiles(root).flatMap((file) =>
+    tokenEqual: tsxFiles.flatMap((file) =>
       findTokenEqualArbitraryValues(themeCss, read(file)).map((hit) => ({
         file,
         line: hit.line,
         literal: `${hit.literal} (use ${hit.utility})`,
       })),
     ),
-    pxSizes: findSourceFiles(root).flatMap((file) => tag(file, findArbitraryPxSizes(read(file)))),
-    primitives: findConsumerFiles(root)
+    pxSizes: sourceFiles.flatMap((file) => tag(file, findArbitraryPxSizes(read(file)))),
+    primitives: consumerFiles
       .filter((file) => file !== themePath)
       .flatMap((file) => tag(file, findPrimitiveColorUses(themeCss, read(file)))),
-    ordinals: findConsumerFiles(root).flatMap((file) =>
-      tag(file, findOrdinalPaletteNames(read(file))),
-    ),
+    ordinals: consumerFiles.flatMap((file) => tag(file, findOrdinalPaletteNames(read(file)))),
     tints: [
       ...[...cssTargets, ...(themeCss ? [themePath] : [])].flatMap((file) =>
         tag(file, findNonPropertyColorMix(read(file))),
       ),
-      ...findSourceFiles(root).flatMap((file) => [
+      ...sourceFiles.flatMap((file) => [
         ...tag(file, findAlphaUtilities(read(file))),
         ...tag(file, findInlineColorMix(read(file))),
       ]),
