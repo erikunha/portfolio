@@ -425,7 +425,11 @@ const rateLimitMock = vi.fn(async () => ({ success: true }));
 
 vi.mock('@/lib/redis', () => ({ getRedis: vi.fn(() => ({ set: redisSetMock })) }));
 vi.mock('@/lib/server/client-ip', () => ({ getClientIp: vi.fn(() => '127.0.0.1') }));
-vi.mock('@/lib/rate-limit', () => ({ getContactLimit: vi.fn(() => ({ limit: rateLimitMock })) }));
+vi.mock('@/lib/rate-limit', async () =>
+  (await import('@/__tests__/helpers/ask-route')).rateLimitModule({
+    getContactLimit: vi.fn(() => ({ limit: rateLimitMock })),
+  }),
+);
 
 vi.mock('@/lib/ip-hash', () => ({
   hashIp: vi.fn(async () => 'hashed-ip-test'),

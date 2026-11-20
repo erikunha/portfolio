@@ -11,7 +11,11 @@ vi.mock('next/server', async (importOriginal) => ({
 }));
 vi.mock('@/lib/redis', () => ({ getRedis: vi.fn(() => ({ get: redisMockGet })) }));
 vi.mock('@/lib/server/client-ip', () => ({ getClientIp: vi.fn(() => '1.2.3.4') }));
-vi.mock('@/lib/rate-limit', () => ({ getHealthzLimit: vi.fn(() => ({ limit: limitMock })) }));
+vi.mock('@/lib/rate-limit', async () =>
+  (await import('@/__tests__/helpers/ask-route')).rateLimitModule({
+    getHealthzLimit: vi.fn(() => ({ limit: limitMock })),
+  }),
+);
 
 const HOUR_MS = 60 * 60 * 1000;
 const FRESH_TIMESTAMP = new Date(Date.now() - HOUR_MS).toISOString();

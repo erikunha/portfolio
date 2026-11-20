@@ -29,7 +29,11 @@ vi.mock('@/lib/redis', () => ({
   })),
 }));
 vi.mock('@/lib/server/client-ip', () => ({ getClientIp: vi.fn(() => '203.0.113.7') }));
-vi.mock('@/lib/rate-limit', () => ({ getLighthouseLimit: vi.fn(() => ({ limit: limitMock })) }));
+vi.mock('@/lib/rate-limit', async () =>
+  (await import('@/__tests__/helpers/ask-route')).rateLimitModule({
+    getLighthouseLimit: vi.fn(() => ({ limit: limitMock })),
+  }),
+);
 
 vi.mock('@/lib/log', async () => (await import('./helpers/modules')).logModule());
 

@@ -8,9 +8,9 @@ const mockStreamText = vi.fn();
 vi.mock('ai', () => ({ streamText: mockStreamText }));
 
 vi.mock('@/lib/server/client-ip', () => ({ getClientIp: vi.fn(() => '127.0.0.1') }));
-vi.mock('@/lib/rate-limit', () => ({
-  getAskLimit: vi.fn(() => ({ limit: vi.fn(async () => ({ success: true })) })),
-}));
+vi.mock('@/lib/rate-limit', async () =>
+  (await import('@/__tests__/helpers/ask-route')).rateLimitModule(),
+);
 vi.mock('@/lib/ask/budget', async () =>
   (await import('@/__tests__/helpers/ask-route')).budgetModule({
     reserveBudget: vi.fn(async () => ({

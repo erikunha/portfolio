@@ -17,9 +17,9 @@ vi.mock('@/lib/redis', () => ({
 vi.mock('@/lib/server/client-ip', () => ({
   getClientIp: vi.fn((req: { headers: Headers }) => req.headers.get(VISITOR_HEADER) ?? ''),
 }));
-vi.mock('@/lib/rate-limit', () => ({
-  getAskLimit: vi.fn(() => ({ limit: vi.fn(async () => ({ success: true })) })),
-}));
+vi.mock('@/lib/rate-limit', async () =>
+  (await import('@/__tests__/helpers/ask-route')).rateLimitModule(),
+);
 vi.mock('@/lib/ask/budget', async () =>
   (await import('@/__tests__/helpers/ask-route')).budgetModule(),
 );

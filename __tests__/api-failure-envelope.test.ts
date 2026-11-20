@@ -11,10 +11,12 @@ vi.mock('next/server', async (importOriginal) => ({
 vi.mock('@/lib/log', async () => (await import('./helpers/modules')).logModule());
 vi.mock('@/lib/redis', () => ({ getRedis: vi.fn(() => ({})) }));
 vi.mock('@/lib/server/client-ip', () => ({ getClientIp: vi.fn(() => '203.0.113.7') }));
-vi.mock('@/lib/rate-limit', () => ({
-  getHealthzLimit: vi.fn(() => ({ limit })),
-  getLighthouseLimit: vi.fn(() => ({ limit })),
-}));
+vi.mock('@/lib/rate-limit', async () =>
+  (await import('@/__tests__/helpers/ask-route')).rateLimitModule({
+    getHealthzLimit: vi.fn(() => ({ limit })),
+    getLighthouseLimit: vi.fn(() => ({ limit })),
+  }),
+);
 vi.mock('@/lib/lighthouse-scores', () => ({
   getScores: vi.fn(),
   refreshScores: vi.fn(),

@@ -7,7 +7,11 @@ const limit = vi.hoisted(() => vi.fn());
 vi.mock('@/lib/server/client-ip', () => ({
   getClientIp: vi.fn((req: Request) => req.headers.get('x-forwarded-for') ?? 'unknown'),
 }));
-vi.mock('@/lib/rate-limit', () => ({ getMcpLimit: vi.fn(() => ({ limit })) }));
+vi.mock('@/lib/rate-limit', async () =>
+  (await import('@/__tests__/helpers/ask-route')).rateLimitModule({
+    getMcpLimit: vi.fn(() => ({ limit })),
+  }),
+);
 vi.mock('@/app/api/ask/route', () => ({
   POST: vi.fn(async () => new Response('answer')),
 }));

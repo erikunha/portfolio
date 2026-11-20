@@ -13,7 +13,11 @@ vi.mock('next/server', async (importOriginal) => ({
 
 vi.mock('@/lib/redis', () => ({ getRedis: vi.fn(() => ({ ping: redisMockPing })) }));
 vi.mock('@/lib/server/client-ip', () => ({ getClientIp: getClientIpMock }));
-vi.mock('@/lib/rate-limit', () => ({ getHealthzLimit: vi.fn(() => ({ limit: limitMock })) }));
+vi.mock('@/lib/rate-limit', async () =>
+  (await import('@/__tests__/helpers/ask-route')).rateLimitModule({
+    getHealthzLimit: vi.fn(() => ({ limit: limitMock })),
+  }),
+);
 
 function makeMockRequest(): NextRequest {
   return new Request('http://localhost/api/healthz') as unknown as NextRequest;

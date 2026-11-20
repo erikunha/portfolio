@@ -9,9 +9,9 @@ const countAskRefusal = vi.hoisted(() => vi.fn(async () => undefined));
 vi.mock('@/lib/env', () => ({ env: { ASK_ENABLED: undefined } }));
 vi.mock('@/lib/redis', () => ({ hasRedisCredentials: vi.fn(() => true) }));
 vi.mock('@/lib/server/client-ip', () => ({ getClientIp: vi.fn(() => '127.0.0.1') }));
-vi.mock('@/lib/rate-limit', () => ({
-  getAskLimit: vi.fn(() => ({ limit: vi.fn(async () => ({ success: true })) })),
-}));
+vi.mock('@/lib/rate-limit', async () =>
+  (await import('@/__tests__/helpers/ask-route')).rateLimitModule(),
+);
 vi.mock('@/lib/ask/budget', () => ({ reserveBudget }));
 vi.mock('@/lib/ask/dedup', () => ({ checkIdenticalQuestion, releaseIdenticalQuestion }));
 vi.mock('@/lib/ask/refusal-count', () => ({ countAskRefusal }));

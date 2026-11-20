@@ -15,10 +15,12 @@ const getScoresMock = vi.fn();
 const logWarnMock = vi.fn();
 
 vi.mock('@/lib/server/client-ip', () => ({ getClientIp: getClientIpMock }));
-vi.mock('@/lib/rate-limit', () => ({
-  getLighthouseLimit: vi.fn(() => ({ limit: limitMock })),
-  getMcpLimit: vi.fn(() => ({ limit: limitMock })),
-}));
+vi.mock('@/lib/rate-limit', async () =>
+  (await import('@/__tests__/helpers/ask-route')).rateLimitModule({
+    getLighthouseLimit: vi.fn(() => ({ limit: limitMock })),
+    getMcpLimit: vi.fn(() => ({ limit: limitMock })),
+  }),
+);
 
 vi.mock('@/lib/lighthouse-scores', () => ({
   getScores: getScoresMock,

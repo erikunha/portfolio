@@ -12,7 +12,11 @@ const logger = { info: vi.fn(), error: vi.fn(), warn: vi.fn() };
 
 vi.mock('@/lib/redis', () => ({ getRedis: () => ({ set: redisSet }) }));
 vi.mock('@/lib/server/client-ip', () => ({ getClientIp: () => '127.0.0.1' }));
-vi.mock('@/lib/rate-limit', () => ({ getContactLimit: () => ({ limit }) }));
+vi.mock('@/lib/rate-limit', async () =>
+  (await import('@/__tests__/helpers/ask-route')).rateLimitModule({
+    getContactLimit: vi.fn(() => ({ limit })),
+  }),
+);
 vi.mock('@/lib/ip-hash', () => ({ hashIp: async () => 'hashed-ip' }));
 vi.mock('@/lib/log', async () =>
   (await import('@/__tests__/helpers/modules')).logModule({
