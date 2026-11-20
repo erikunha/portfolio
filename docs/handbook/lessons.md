@@ -330,6 +330,8 @@ The prompt for a manual or agent review that applies these rules to a diff is `d
 
 62. A new `@theme` token is also a new utility class, and a component class with the same name loses to it. `--spacing-fader` made Tailwind v4 emit `mx-fader`, a `margin-inline` utility, and the existing component class `.mx-fader` (`mx-` is a utility prefix) lost its width: the mobile fader went from 300px to 256px, with every unit test green. Only a computed-style crawl saw it. Before naming a token, grep `app/css` for `<utility>-<name>`. Check: `lint:css-tokens` fails any class in `app/css/*.css` that equals a generated utility name, and `scripts/__tests__/lint-css-tokens-class-collision.test.ts` covers it. A rule that only sets custom properties (the `.text-xs { --leading }` extensions) is not a collision.
 
+63. A test that sleeps a fixed number of milliseconds and then asserts on async work passes on a quiet machine and fails under load, because the work has no promise to be done by then. Two ask tests failed in loaded `ci:local` runs this way. Wait for the asserted condition with `vi.waitFor` (or `waitFor` when React must stay inside `act`). Wait for a node to be replaced, or for a mock that runs after the code under test, when the test asserts an absence. Use fake timers with `advanceTimersByTimeAsync` for time-based behaviour. Check: `check:test-integrity` fails an awaited `new Promise` holding `setTimeout` with a numeric literal delay, and `scripts/__tests__/check-test-integrity.test.ts` covers it. A real wait needs `behavioral-test-allow: <reason>`.
+
 ## Pre-push judgement list
 
 Ranked by how often review caught each class on this repository.
