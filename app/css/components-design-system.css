@@ -277,7 +277,7 @@
     }
   }
 
-  @media (min-width: theme(--viewport-md)) and (width < theme(--viewport-xl)) {
+  @media (min-width: theme(--viewport-md)) {
     .toc ul {
       flex-direction: row;
       flex-wrap: wrap;
@@ -285,6 +285,17 @@
 
     .toc .ds-nav-item {
       width: auto;
+    }
+  }
+
+  @media (min-width: theme(--viewport-xl)) {
+    .toc ul {
+      flex-direction: column;
+      flex-wrap: nowrap;
+    }
+
+    .toc .ds-nav-item {
+      width: 100%;
     }
   }
 

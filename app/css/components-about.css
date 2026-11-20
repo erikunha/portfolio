@@ -212,13 +212,13 @@
 
   @media (min-width: theme(--viewport-lg)) {
     .about-grid {
-      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      grid-template-columns: var(--phi-pair-columns);
     }
   }
 
-  @media (min-width: theme(--viewport-lg)) and (width < theme(--viewport-xl)) {
+  @media (min-width: theme(--viewport-xl)) {
     .about-grid {
-      grid-template-columns: var(--phi-pair-columns);
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
     }
   }
 

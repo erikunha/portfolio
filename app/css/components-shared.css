@@ -224,6 +224,12 @@
     --module-estimate: 3190px;
   }
 
+  @media (pointer: coarse) {
+    #sec-guitar {
+      --module-estimate: 3680px;
+    }
+  }
+
   #sec-contact {
     --module-estimate: 2730px;
   }
@@ -373,12 +379,6 @@
   @media (min-width: theme(--viewport-xl)) {
     #sec-guitar {
       --module-estimate: 1180px;
-    }
-  }
-
-  @media (pointer: coarse) and (width < theme(--viewport-md)) {
-    #sec-guitar {
-      --module-estimate: 3680px;
     }
   }
 

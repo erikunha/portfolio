@@ -298,7 +298,7 @@
     }
   }
 
-  @media (min-width: theme(--viewport-md)) and (width < theme(--viewport-lg)) {
+  @media (min-width: theme(--viewport-md)) {
     .hero-desktop {
       flex-direction: column;
     }
@@ -323,6 +323,27 @@
   }
 
   @media (min-width: theme(--viewport-lg)) {
+    .hero-desktop {
+      flex-direction: row;
+    }
+
+    .hero-terminal {
+      flex: var(--phi-pair-flex-minor);
+      width: auto;
+    }
+
+    .hero-terminal .hero-boot-desktop {
+      position: absolute;
+      min-height: auto;
+      padding: 0;
+    }
+
+    .hero-bio {
+      flex: 1;
+      border-right: var(--border-width) dashed var(--color-border-strong);
+      border-bottom: 0;
+    }
+
     .hero-actions {
       grid-template-columns: repeat(2, minmax(0, 1fr));
     }
