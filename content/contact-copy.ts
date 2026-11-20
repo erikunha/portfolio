@@ -74,7 +74,7 @@ const contactCopyFor = (locale: SiteLocale): ContactContent => {
           ? 'FORA DO HORÁRIO · volta em ~{hours}h, envie mesmo assim'
           : 'OFF HOURS · back in ~{hours}h, message anyway',
       },
-      clocks: { erik: 'erik', you: pt ? 'você' : 'you', link: '⇄' },
+      clocks: { erik: 'erik', you: pt ? 'você' : 'you', link: '↔' },
       map: {
         erikPlace: ERIK_PLACE,
         erikLabel: 'erik · {code}',

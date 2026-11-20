@@ -10,7 +10,7 @@ export const linksUi: {
   latestVideoLoading: LocalizedLabel;
 } = {
   arrow: '→',
-  copyGlyph: '⧉',
+  copyGlyph: '◫',
   prompt: '$ ',
   latestVideoLoading: {
     [SITE_LOCALE.pt]: 'Carregando o vídeo mais recente',
