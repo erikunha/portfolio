@@ -11,7 +11,7 @@ export const metadata = dsPageMetadata({
 
 <OnThisPage items={[{id:'props',label:'Props'},{id:'variants',label:'Variants'},{id:'sizes',label:'Sizes'},{id:'disabled',label:'Disabled'},{id:'accessibility',label:'Accessibility'}]} />
 
-Source: `design-system/components/Button/Button.tsx`, styled by `app/css/components-buttons.css`. React Server Component, zero client JavaScript.
+Source: `design-system/components/Button/Button.tsx`, styled by `design-system/components/Button/Button.css`. React Server Component, zero client JavaScript.
 
 The component renders the `btn` class, `data-variant` and `data-size`, plus any `className` the caller passes. The stylesheet reads the two attributes: the border, the 44px target, the focus ring, the hover glow, the disabled state and the MOTION switch are written once on `.btn`, and each variant and size overrides only what differs. A caller's utilities in `className` win over all of it.
 

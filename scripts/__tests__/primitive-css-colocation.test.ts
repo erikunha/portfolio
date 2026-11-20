@@ -13,6 +13,7 @@ const KEYFRAMES = /keyframes$/;
 const PRIMITIVES = [
   { name: 'Button', className: '.btn' },
   { name: 'KbdKey', className: '.kbd-key' },
+  { name: 'Badge', className: '.badge-dot' },
 ];
 
 function selectorsOf(file: string): string[] {
