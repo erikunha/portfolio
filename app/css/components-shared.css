@@ -213,104 +213,172 @@
   }
 
   #sec-git-log {
-    --module-estimate: 3340px;
+    --module-estimate: 3290px;
   }
 
   #sec-hottest-takes {
-    --module-estimate: 3180px;
+    --module-estimate: 3440px;
   }
 
   #sec-guitar {
-    --module-estimate: 3320px;
+    --module-estimate: 3190px;
   }
 
-  @media (min-width: 340px) {
-    #sec-guitar {
-      --module-estimate: 3250px;
-    }
+  #sec-contact {
+    --module-estimate: 2730px;
   }
 
-  @media (min-width: theme(--viewport-narrow)) {
-    #sec-guitar {
-      --module-estimate: 3220px;
-    }
-  }
-
-  @media (min-width: 412px) {
-    #sec-guitar {
-      --module-estimate: 3200px;
-    }
-  }
-
-  @media (min-width: 600px) {
-    #sec-guitar {
+  @media (min-width: 330px) {
+    #sec-hottest-takes {
       --module-estimate: 3360px;
     }
   }
 
-  #sec-contact {
-    --module-estimate: 2640px;
+  @media (min-width: 340px) {
+    #sec-git-log {
+      --module-estimate: 3170px;
+    }
+
+    #sec-hottest-takes {
+      --module-estimate: 3240px;
+    }
   }
 
-  @media (min-width: 340px) {
-    #sec-contact {
-      --module-estimate: 2580px;
+  @media (min-width: 350px) {
+    #sec-git-log {
+      --module-estimate: 3130px;
     }
   }
 
   @media (min-width: theme(--viewport-narrow)) {
+    #sec-git-log {
+      --module-estimate: 2950px;
+    }
+
     #sec-contact {
-      --module-estimate: 2510px;
+      --module-estimate: 2580px;
+    }
+
+    #sec-hottest-takes {
+      --module-estimate: 2930px;
     }
   }
 
-  @media (min-width: 412px) {
-    #sec-contact {
-      --module-estimate: 2450px;
+  @media (min-width: 380px) {
+    #sec-git-log {
+      --module-estimate: 2750px;
+    }
+  }
+
+  @media (min-width: 390px) {
+    #sec-hottest-takes {
+      --module-estimate: 2670px;
+    }
+  }
+
+  @media (min-width: 420px) {
+    #sec-git-log {
+      --module-estimate: 2500px;
+    }
+  }
+
+  @media (min-width: 430px) {
+    #sec-hottest-takes {
+      --module-estimate: 2520px;
+    }
+  }
+
+  @media (min-width: 460px) {
+    #sec-hottest-takes {
+      --module-estimate: 2340px;
     }
   }
 
   @media (min-width: theme(--viewport-phone)) {
     #sec-contact {
-      --module-estimate: 2350px;
+      --module-estimate: 2420px;
+    }
+  }
+
+  @media (min-width: 490px) {
+    #sec-git-log {
+      --module-estimate: 2220px;
+    }
+  }
+
+  @media (min-width: 520px) {
+    #sec-hottest-takes {
+      --module-estimate: 2070px;
     }
   }
 
   @media (min-width: 600px) {
-    #sec-contact {
-      --module-estimate: 2280px;
+    #sec-git-log {
+      --module-estimate: 2060px;
+    }
+  }
+
+  @media (min-width: 610px) {
+    #sec-hottest-takes {
+      --module-estimate: 1910px;
+    }
+  }
+
+  @media (min-width: 660px) {
+    #sec-hottest-takes {
+      --module-estimate: 1740px;
+    }
+  }
+
+  @media (min-width: 730px) {
+    #sec-git-log {
+      --module-estimate: 1750px;
+    }
+  }
+
+  @media (min-width: 740px) {
+    #sec-hottest-takes {
+      --module-estimate: 1700px;
     }
   }
 
   @media (min-width: theme(--viewport-md)) {
-    #sec-git-log {
-      --module-estimate: 1730px;
-    }
-
-    #sec-hottest-takes {
-      --module-estimate: 1600px;
-    }
-
     #sec-guitar {
-      --module-estimate: 2520px;
+      --module-estimate: 1470px;
     }
 
     #sec-contact {
-      --module-estimate: 1990px;
+      --module-estimate: 1980px;
+    }
+  }
+
+  @media (min-width: 860px) {
+    #sec-hottest-takes {
+      --module-estimate: 1500px;
+    }
+  }
+
+  @media (min-width: 1000px) {
+    #sec-hottest-takes {
+      --module-estimate: 1320px;
     }
   }
 
   @media (min-width: theme(--viewport-lg)) {
-    #sec-hottest-takes {
-      --module-estimate: 1250px;
-    }
-
-    #sec-guitar {
-      --module-estimate: 2480px;
-    }
-
     #sec-contact {
       --module-estimate: 1070px;
+    }
+  }
+
+  @media (min-width: theme(--viewport-xl)) {
+    #sec-guitar {
+      --module-estimate: 1180px;
+    }
+  }
+
+  @media (pointer: coarse) and (max-width: theme(--viewport-below-md)) {
+    #sec-guitar {
+      --module-estimate: 3680px;
     }
   }
 
