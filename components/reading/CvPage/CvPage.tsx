@@ -8,6 +8,7 @@ import { serializeJsonLd } from '@/lib/json-ld';
 import { ReadingActions } from '../ReadingActions';
 import { ReadingSection } from '../ReadingSection';
 import { ReadingShell } from '../ReadingShell';
+import { SeparatorText } from '../SeparatorText/SeparatorText';
 
 const JSON_LD_TYPE = 'application/ld+json';
 
@@ -122,11 +123,11 @@ export function CvPage({ locale }: { locale: SiteLocale }) {
               <h3>
                 {document_.community.href ? (
                   <ExternalLink href={document_.community.href}>
-                    {document_.community.heading}
+                    <SeparatorText>{document_.community.heading}</SeparatorText>
                     <span className="sr-only"> {shared.newTabHint}</span>
                   </ExternalLink>
                 ) : (
-                  document_.community.heading
+                  <SeparatorText>{document_.community.heading}</SeparatorText>
                 )}
               </h3>
               <ul>
