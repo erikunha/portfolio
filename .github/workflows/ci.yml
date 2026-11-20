@@ -385,18 +385,15 @@ jobs:
       - name: Runner image version
         id: runner-image
         run: echo "version=${ImageVersion:-unknown}" >> "$GITHUB_OUTPUT"
-      - name: Cache Playwright browsers
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        with:
-          path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ steps.runner-image.outputs.version }}-chromium-${{ hashFiles('pnpm-lock.yaml') }}
-          restore-keys: |
-            playwright-${{ runner.os }}-${{ steps.runner-image.outputs.version }}-chromium-
-
       - name: Playwright version
         id: playwright-version
         run: |
           echo "version=$(node -p "require('@playwright/test/package.json').version")" >> "$GITHUB_OUTPUT"
+      - name: Cache Playwright browsers
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ steps.playwright-version.outputs.version }}-chromium
       - name: Prepare apt cache directory
         run: sudo install -d -o "$(id -u)" -g "$(id -g)" "$APT_CACHE_DIR"
       - name: Cache apt packages
@@ -458,17 +455,15 @@ jobs:
       - name: Runner image version
         id: runner-image
         run: echo "version=${ImageVersion:-unknown}" >> "$GITHUB_OUTPUT"
-      - name: Cache Playwright browsers
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        with:
-          path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ steps.runner-image.outputs.version }}-${{ contains(matrix.project, 'webkit') && 'webkit' || 'chromium' }}-${{ hashFiles('pnpm-lock.yaml') }}
-          restore-keys: |
-            playwright-${{ runner.os }}-${{ steps.runner-image.outputs.version }}-${{ contains(matrix.project, 'webkit') && 'webkit' || 'chromium' }}-
       - name: Playwright version
         id: playwright-version
         run: |
           echo "version=$(node -p "require('@playwright/test/package.json').version")" >> "$GITHUB_OUTPUT"
+      - name: Cache Playwright browsers
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ steps.playwright-version.outputs.version }}-${{ contains(matrix.project, 'webkit') && 'webkit' || 'chromium' }}
       - name: Prepare apt cache directory
         run: sudo install -d -o "$(id -u)" -g "$(id -g)" "$APT_CACHE_DIR"
       - name: Cache apt packages
@@ -582,17 +577,15 @@ jobs:
       - name: Runner image version
         id: runner-image
         run: echo "version=${ImageVersion:-unknown}" >> "$GITHUB_OUTPUT"
-      - name: Cache Playwright browsers
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        with:
-          path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ steps.runner-image.outputs.version }}-chromium-${{ hashFiles('pnpm-lock.yaml') }}
-          restore-keys: |
-            playwright-${{ runner.os }}-${{ steps.runner-image.outputs.version }}-chromium-
       - name: Playwright version
         id: playwright-version
         run: |
           echo "version=$(node -p "require('@playwright/test/package.json').version")" >> "$GITHUB_OUTPUT"
+      - name: Cache Playwright browsers
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ steps.playwright-version.outputs.version }}-chromium
       - name: Prepare apt cache directory
         run: sudo install -d -o "$(id -u)" -g "$(id -g)" "$APT_CACHE_DIR"
       - name: Cache apt packages
