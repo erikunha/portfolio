@@ -84,10 +84,10 @@ describe('the repository against the px size rule', () => {
   });
 
   it('keeps the allowlist empty', () => {
+    const allowlistPath = join(process.cwd(), 'scripts/gates/lint-css-tokens.allowlist.json');
     // behavioral-test-allow: the allowlist is a shipped file and the rule is that it stays empty
-    const allowlist = JSON.parse(
-      readFileSync(join(process.cwd(), 'scripts/gates/lint-css-tokens.allowlist.json'), 'utf8'),
-    ) as AllowEntry[];
+    const allowlistText = readFileSync(allowlistPath, 'utf8');
+    const allowlist = JSON.parse(allowlistText) as AllowEntry[];
     expect(allowlist).toEqual([]);
   });
 });
