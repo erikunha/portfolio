@@ -519,7 +519,6 @@ export const UNMIRRORED_CI_STEPS: ReadonlyMap<string, string> = new Map([
     'a local machine installs browser dependencies through its own package manager',
   ],
   ['Install Playwright Chromium (for axe-core scan)', 'browsers are installed once per machine'],
-  ['Install Playwright browsers', 'browsers are installed once per machine'],
   ['Start preview server', 'the runner starts a fresh server for each stage that serves'],
   ['Wait for server', 'the runner waits for the server it started before each stage'],
   ['Wait for the Argos reference of the merge base', 'needs a pull request and the Argos token'],

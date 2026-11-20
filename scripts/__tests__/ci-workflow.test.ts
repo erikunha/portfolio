@@ -64,12 +64,38 @@ describe('parseWorkflow keys', () => {
   });
 
   it('refuses a job key it does not execute, so a new construct fails the drift guard', () => {
-    expect(() => parseWorkflow(job('    container: node:22\n    steps: []\n'))).toThrow(
-      /container/,
-    );
     expect(() => parseWorkflow(job('    services:\n      db: {}\n    steps: []\n'))).toThrow(
       /services/,
     );
+  });
+
+  it('reads a job container as the image and options it runs in, from either form', () => {
+    const object = parseWorkflow(
+      job('    container:\n      image: node:22\n      options: --init\n    steps: []\n'),
+    );
+    const string = parseWorkflow(job('    container: node:22\n    steps: []\n'));
+    const none = parseWorkflow(job('    steps: []\n'));
+    expect(object.jobs.a?.container).toEqual({ image: 'node:22', options: '--init' });
+    expect(string.jobs.a?.container).toEqual({ image: 'node:22' });
+    expect(none.jobs.a?.container).toBeUndefined();
+  });
+
+  it('refuses a container key it does not execute and a container with no image', () => {
+    expect(() =>
+      parseWorkflow(
+        job('    container:\n      image: node:22\n      credentials: {}\n    steps: []\n'),
+      ),
+    ).toThrow(/credentials/);
+    expect(() =>
+      parseWorkflow(job('    container:\n      options: --init\n    steps: []\n')),
+    ).toThrow(/image/);
+  });
+
+  it('reads the real ci.yml container jobs with the image the Linux stages use', () => {
+    expect(ci.jobs['e2e-functional']?.container?.image).toMatch(
+      /^mcr\.microsoft\.com\/playwright:v\d+\.\d+\.\d+-noble$/,
+    );
+    expect(ci.jobs.performance?.container).toBeUndefined();
   });
 
   it('refuses a step key it does not execute', () => {

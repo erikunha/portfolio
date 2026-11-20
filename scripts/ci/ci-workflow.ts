@@ -19,8 +19,14 @@ export interface WorkflowStep {
   env: Record<string, string>;
 }
 
+export interface JobContainer {
+  image: string;
+  options?: string;
+}
+
 export interface WorkflowJob {
   id: string;
+  container?: JobContainer;
   needs: string[];
   if?: string;
   matrixProjects: string[];
@@ -96,6 +102,7 @@ interface RawDefaults {
 }
 
 interface RawJob {
+  container?: string | { image?: unknown; options?: unknown };
   needs?: string | string[];
   if?: string | boolean;
   strategy?: { matrix?: Record<string, unknown> };
@@ -119,7 +126,9 @@ const JOB_KEYS = [
   'strategy',
   'outputs',
   'defaults',
+  'container',
 ];
+const CONTAINER_KEYS = ['image', 'options'];
 const STRATEGY_KEYS = ['matrix', 'fail-fast'];
 const STEP_KEYS = [
   'id',
@@ -157,6 +166,19 @@ function runDefaults(scope: string, raw: RawDefaults | undefined): RunDefaults {
     ...(raw?.run?.['working-directory'] === undefined
       ? {}
       : { workingDirectory: raw.run['working-directory'] }),
+  };
+}
+
+function jobContainer(id: string, raw: RawJob['container']): JobContainer | undefined {
+  if (raw === undefined) return undefined;
+  if (typeof raw === 'string') return { image: raw };
+  allowKeys(`job ${id} container`, raw, CONTAINER_KEYS);
+  if (typeof raw.image !== 'string' || raw.image.length === 0) {
+    throw new UnsupportedWorkflowError(`job ${id} container: "image" must be a string`);
+  }
+  return {
+    image: raw.image,
+    ...(raw.options === undefined ? {} : { options: String(raw.options) }),
   };
 }
 
@@ -288,8 +310,10 @@ export function parseWorkflow(text: string, loadAction: ActionLoader = readLocal
     allowKeys(`job ${id}`, raw, JOB_KEYS);
     allowKeys(`job ${id} strategy`, raw.strategy, STRATEGY_KEYS);
     const matrix = matrixShape(id, raw.strategy?.matrix);
+    const container = jobContainer(id, raw.container);
     jobs[id] = {
       id,
+      ...(container === undefined ? {} : { container }),
       needs: raw.needs === undefined ? [] : [raw.needs].flat(),
       ...(raw.if === undefined ? {} : { if: String(raw.if) }),
       matrixProjects: matrix.projects,

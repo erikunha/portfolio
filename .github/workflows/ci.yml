@@ -433,6 +433,9 @@ jobs:
 
   e2e-functional:
     runs-on: ubuntu-24.04
+    container:
+      image: mcr.microsoft.com/playwright:v1.65.0-noble
+      options: --ipc=host --init
     timeout-minutes: 25
     if: github.event_name != 'pull_request' || needs.detect-changes.outputs.app == 'true'
     needs: [build, detect-changes]
@@ -452,31 +455,6 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: ./.github/actions/setup
-      - name: Runner image version
-        id: runner-image
-        run: echo "version=${ImageVersion:-unknown}" >> "$GITHUB_OUTPUT"
-      - name: Playwright version
-        id: playwright-version
-        run: |
-          echo "version=$(node -p "require('@playwright/test/package.json').version")" >> "$GITHUB_OUTPUT"
-      - name: Cache Playwright browsers
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        with:
-          path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ steps.playwright-version.outputs.version }}-${{ contains(matrix.project, 'webkit') && 'webkit' || 'chromium' }}
-      - name: Prepare apt cache directory
-        run: sudo install -d -o "$(id -u)" -g "$(id -g)" "$APT_CACHE_DIR"
-      - name: Cache apt packages
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        with:
-          path: ${{ env.APT_CACHE_DIR }}
-          key: apt-${{ runner.os }}-${{ contains(matrix.project, 'webkit') && 'webkit' || 'chromium' }}-${{ steps.playwright-version.outputs.version }}-${{ steps.runner-image.outputs.version }}
-          restore-keys: |
-            apt-${{ runner.os }}-${{ contains(matrix.project, 'webkit') && 'webkit' || 'chromium' }}-${{ steps.playwright-version.outputs.version }}-
-            apt-${{ runner.os }}-${{ contains(matrix.project, 'webkit') && 'webkit' || 'chromium' }}-
-      - name: Install Playwright browsers
-        timeout-minutes: 12
-        run: node scripts/ci/install-playwright-browsers.ts ${{ contains(matrix.project, 'webkit') && 'webkit' || 'chromium' }}
       - name: Download build artifact
         uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
@@ -561,6 +539,9 @@ jobs:
 
   e2e-visual-chromium:
     runs-on: ubuntu-24.04
+    container:
+      image: mcr.microsoft.com/playwright:v1.65.0-noble
+      options: --ipc=host --init
     timeout-minutes: 35
     permissions:
       contents: read
@@ -574,31 +555,6 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: ./.github/actions/setup
-      - name: Runner image version
-        id: runner-image
-        run: echo "version=${ImageVersion:-unknown}" >> "$GITHUB_OUTPUT"
-      - name: Playwright version
-        id: playwright-version
-        run: |
-          echo "version=$(node -p "require('@playwright/test/package.json').version")" >> "$GITHUB_OUTPUT"
-      - name: Cache Playwright browsers
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        with:
-          path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ steps.playwright-version.outputs.version }}-chromium
-      - name: Prepare apt cache directory
-        run: sudo install -d -o "$(id -u)" -g "$(id -g)" "$APT_CACHE_DIR"
-      - name: Cache apt packages
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        with:
-          path: ${{ env.APT_CACHE_DIR }}
-          key: apt-${{ runner.os }}-chromium-${{ steps.playwright-version.outputs.version }}-${{ steps.runner-image.outputs.version }}
-          restore-keys: |
-            apt-${{ runner.os }}-chromium-${{ steps.playwright-version.outputs.version }}-
-            apt-${{ runner.os }}-chromium-
-      - name: Install Playwright browsers
-        timeout-minutes: 12
-        run: node scripts/ci/install-playwright-browsers.ts chromium
       - name: Download build artifact
         uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:

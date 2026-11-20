@@ -86,15 +86,11 @@ const installingJobs = Object.entries(workflow.jobs).filter(([, job]) =>
 );
 
 const clone = (job: Job): Job => structuredClone(job);
-const e2e = workflow.jobs['e2e-functional'] as Job;
+const e2e = workflow.jobs.performance as Job;
 
 describe('ci.yml restores the apt cache across runner images', () => {
   it('finds every job that installs browsers', () => {
-    expect(installingJobs.map(([id]) => id).sort()).toEqual([
-      'e2e-functional',
-      'e2e-visual-chromium',
-      'performance',
-    ]);
+    expect(installingJobs.map(([id]) => id).sort()).toEqual(['performance']);
   });
 
   it.each(installingJobs)(

@@ -72,15 +72,11 @@ const installingJobs = Object.entries(workflow.jobs).filter(([, job]) =>
 );
 
 const clone = (job: Job): Job => structuredClone(job);
-const e2e = workflow.jobs['e2e-functional'] as Job;
+const e2e = workflow.jobs.performance as Job;
 
 describe('ci.yml keeps a throttled apt mirror out of the Playwright install', () => {
   it('finds every job that installs browsers', () => {
-    expect(installingJobs.map(([id]) => id).sort()).toEqual([
-      'e2e-functional',
-      'e2e-visual-chromium',
-      'performance',
-    ]);
+    expect(installingJobs.map(([id]) => id).sort()).toEqual(['performance']);
   });
 
   it('names the apt cache directory once, as an absolute path, at workflow level', () => {

@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { parse } from 'yaml';
+import { linuxImage, playwrightVersion } from '../../scripts/ci/ci-full-linux.ts';
 
 interface Step {
   id?: string;
@@ -11,6 +12,7 @@ interface Step {
 }
 
 interface Job {
+  container?: { image?: string; options?: string };
   steps?: Step[];
 }
 
@@ -18,6 +20,9 @@ interface Job {
 const workflow = parse(
   readFileSync(join(process.cwd(), '.github', 'workflows', 'ci.yml'), 'utf8'),
 ) as { jobs: Record<string, Job> };
+
+// behavioral-test-allow: the lockfile is the Playwright pin the job image must match; it has no runtime surface in this repository.
+const lockfile = readFileSync(join(process.cwd(), 'pnpm-lock.yaml'), 'utf8');
 
 const INSTALL_SCRIPT = 'install-playwright-browsers.ts';
 const INSTALL_ARGUMENT = /install-playwright-browsers\.ts\s+(.+?)\s*$/;
@@ -76,17 +81,13 @@ const installingJobs = Object.entries(workflow.jobs).filter(([, job]) =>
 );
 
 const clone = (job: Job): Job => structuredClone(job);
-const e2e = workflow.jobs['e2e-functional'] as Job;
+const e2e = workflow.jobs.performance as Job;
 const cacheOf = (job: Job): Step => (job.steps ?? []).find(isBrowserCache) as Step;
 const installOf = (job: Job): Step => (job.steps ?? []).find(isInstall) as Step;
 
 describe('ci.yml keeps the browser cache small and per browser', () => {
   it('finds every job that installs browsers', () => {
-    expect(installingJobs.map(([id]) => id).sort()).toEqual([
-      'e2e-functional',
-      'e2e-visual-chromium',
-      'performance',
-    ]);
+    expect(installingJobs.map(([id]) => id).sort()).toEqual(['performance']);
   });
 
   it.each(installingJobs)(
@@ -157,6 +158,95 @@ describe('ci.yml keeps the browser cache small and per browser', () => {
       expect(browserCacheViolations(job)).toContain(
         'the browser cache key does not name the browser the install step installs',
       );
+    });
+  });
+});
+
+const RUNS_PLAYWRIGHT = 'playwright test';
+const SUDO = 'sudo ';
+const APT_DIR_ENV = 'APT_CACHE_DIR';
+const CONTAINER_JOBS = ['e2e-functional', 'e2e-visual-chromium'];
+
+const runsPlaywright = (job: Job): boolean =>
+  (job.steps ?? []).some((step) => step.run?.includes(RUNS_PLAYWRIGHT) === true);
+
+function containerViolations(job: Job, expectedImage: string): string[] {
+  const violations: string[] = [];
+  if (job.container?.image !== expectedImage) {
+    violations.push(`the job image is ${job.container?.image}, not ${expectedImage}`);
+  }
+  for (const step of job.steps ?? []) {
+    const text = `${step.run ?? ''} ${step.with?.path ?? ''}`;
+    if (isInstall(step)) violations.push('the job installs browsers the image already holds');
+    if (isBrowserCache(step) || text.includes(APT_DIR_ENV)) {
+      violations.push('the job caches browsers or apt packages the image already holds');
+    }
+    if (text.includes(SUDO)) violations.push('a step calls sudo, which the image has no use for');
+  }
+  return violations;
+}
+
+describe('ci.yml runs the browser jobs in the Playwright image', () => {
+  const expectedImage = linuxImage(playwrightVersion(lockfile));
+  const containerJobs = Object.entries(workflow.jobs).filter(
+    ([, job]) => job.container !== undefined,
+  );
+
+  it('puts the e2e and visual jobs in the image and no other job', () => {
+    expect(containerJobs.map(([id]) => id).sort()).toEqual(CONTAINER_JOBS);
+  });
+
+  it.each(containerJobs)(
+    '%s runs in the image of the pinned @playwright/test and carries no browser install',
+    (_id, job) => {
+      expect(containerViolations(job, expectedImage)).toEqual([]);
+    },
+  );
+
+  it('leaves no job that runs Playwright with neither an image nor an install', () => {
+    const bare = Object.entries(workflow.jobs)
+      .filter(([, job]) => runsPlaywright(job))
+      .filter(([, job]) => job.container === undefined && !(job.steps ?? []).some(isInstall))
+      .map(([id]) => id);
+    expect(bare).toEqual([]);
+  });
+
+  describe('negative controls', () => {
+    const good = (): Job => ({
+      container: { image: expectedImage },
+      steps: [{ run: 'pnpm playwright test' }],
+    });
+
+    it('accepts the image of the pinned version', () => {
+      expect(containerViolations(good(), expectedImage)).toEqual([]);
+    });
+
+    it('flags an image tag of another Playwright version', () => {
+      const job = good();
+      job.container = { image: linuxImage('0.0.1') };
+      expect(containerViolations(job, expectedImage)).toHaveLength(1);
+    });
+
+    it('flags a job with no container', () => {
+      const job = good();
+      delete job.container;
+      expect(containerViolations(job, expectedImage)).toHaveLength(1);
+    });
+
+    it('flags a browser install, a browser cache and an apt cache left in the job', () => {
+      const job = good();
+      job.steps = [
+        { run: `node scripts/ci/${INSTALL_SCRIPT} chromium` },
+        { uses: `${CACHE_ACTION}x`, with: { path: `~/.cache/${BROWSER_DIR}` } },
+        { uses: `${CACHE_ACTION}x`, with: { path: `\${{ env.${APT_DIR_ENV} }}` } },
+      ];
+      expect(containerViolations(job, expectedImage)).toHaveLength(3);
+    });
+
+    it('flags a sudo step', () => {
+      const job = good();
+      job.steps = [{ run: `${SUDO}install -d /x` }];
+      expect(containerViolations(job, expectedImage)).toHaveLength(1);
     });
   });
 });
