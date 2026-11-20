@@ -23,6 +23,8 @@ const NO_OUTLINE = 'none';
 const FORCED_COLORS_SHEET = 'forced-colors.css';
 const THEME_SHEET = 'theme.css';
 const CSS_DIRECTORY = 'app/css';
+const COMPONENT_CSS_DIRECTORY = 'design-system/components';
+const CSS_FILE = /\.css$/;
 const TSX_FILE = /\.tsx$/;
 const SOURCE_FILE = /\.tsx?$/;
 const TSX_SKIPPED = /\.(?:test|e2e)\.tsx?$/;
@@ -637,11 +639,20 @@ export function findConsumerFiles(root: string): string[] {
   );
 }
 
+export function findComponentCss(root: string): string[] {
+  const directory = join(root, COMPONENT_CSS_DIRECTORY);
+  return existsSync(directory)
+    ? listFiles(directory, { include: CSS_FILE, skipDirs: SKIPPED_DIRS })
+        .map((rel) => join(COMPONENT_CSS_DIRECTORY, rel))
+        .sort()
+    : [];
+}
+
 export function scanRepo(root: string, cssFiles: string[]): RepoScan {
   const read = (file: string) => readFileSync(join(root, file), 'utf8');
   const tag = (file: string, hits: ColorHit[]): RawColorHit[] =>
     hits.map((hit) => ({ ...hit, file }));
-  const cssTargets = cssFiles.map((f) => `app/css/${f}`);
+  const cssTargets = [...cssFiles.map((f) => `app/css/${f}`), ...findComponentCss(root)];
   const colorTargets = [...cssTargets, ...findTokenFiles(root)];
   const themePath = `app/css/${THEME_SHEET}`;
   const themeCss = existsSync(join(root, themePath)) ? read(themePath) : '';
