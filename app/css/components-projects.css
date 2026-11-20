@@ -75,7 +75,6 @@
     font-weight: 700;
     --leading: 1.5;
     overflow-wrap: anywhere;
-    text-wrap: balance;
   }
 
   .project-name a {
