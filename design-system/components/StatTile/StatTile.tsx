@@ -18,7 +18,7 @@ export function StatTile({ value, label, variant = 'default', className, ...rest
     <dl
       {...rest}
       className={cn(
-        'stat-tile flex flex-col py-[7px] px-[var(--stat-tile-pad-x,10px)] m-0',
+        'stat-tile flex flex-col py-chip px-[var(--stat-tile-pad-x,10px)] m-0',
         className,
       )}
     >

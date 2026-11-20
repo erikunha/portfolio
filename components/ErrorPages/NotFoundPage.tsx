@@ -14,7 +14,7 @@ export function NotFoundPage({ locale }: { locale: SiteLocale }) {
         <ErrorHeading>{notFound.code}</ErrorHeading>
         <div className="@container">
           <TerminalPanel header={notFound.panelHeader}>
-            <div className="p-[14px]">
+            <div className="p-panel">
               <RequestedPathCmdLine content={notFound} />
             </div>
           </TerminalPanel>

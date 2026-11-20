@@ -59,7 +59,7 @@ export function Module({
           {!name && srLabel ? <span className="sr-only">{srLabel}</span> : null}
           {icon ? (
             <span
-              className="inline-flex w-5 h-5 items-center justify-center text-(color:--color-accent) [&_svg]:w-[18px] [&_svg]:h-[18px] [&_svg]:stroke-current [&_svg]:fill-none [&_svg]:[stroke-width:1.4]"
+              className="inline-flex w-5 h-5 items-center justify-center text-(color:--color-accent) [&_svg]:w-icon [&_svg]:h-icon [&_svg]:stroke-current [&_svg]:fill-none [&_svg]:[stroke-width:1.4]"
               aria-hidden
             >
               {icon}

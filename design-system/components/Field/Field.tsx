@@ -9,7 +9,7 @@ export type MultiLineProps = FieldBase &
 export type FieldProps = SingleLineProps | MultiLineProps;
 
 const inputClasses =
-  'field-input w-full bg-transparent border border-(color:--color-accent) text-(color:--color-text) font-mono text-xs md:text-sm px-[10px] py-2 min-h-11 resize-y transition-[border-color] duration-200 ease-out motion-off:transition-none placeholder:text-sage-500 aria-[invalid=true]:border-coral-300';
+  'field-input w-full bg-transparent border border-(color:--color-accent) text-(color:--color-text) font-mono text-xs md:text-sm px-inset py-2 min-h-11 resize-y transition-[border-color] duration-200 ease-out motion-off:transition-none placeholder:text-sage-500 aria-[invalid=true]:border-coral-300';
 
 export function Field({
   name,
@@ -33,7 +33,7 @@ export function Field({
     'aria-describedby': describedBy,
   };
   return (
-    <div className="field flex flex-col gap-[6px]">
+    <div className="field flex flex-col gap-pip">
       <label htmlFor={id} className="text-xs md:text-sm text-signal-400 tracking-lg">
         {label}
       </label>

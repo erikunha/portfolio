@@ -73,7 +73,7 @@ export function SubscribeCta(props: SubscribeCtaProps) {
       {...EXTERNAL_LINK_PROPS}
       size="lg"
       variant="primary"
-      className="gap-[9px]"
+      className="gap-label"
       data-outbound={outboundId}
       onClick={remember}
     >

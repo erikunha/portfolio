@@ -22,7 +22,7 @@ function PluginChain({
           key={p.name}
           className={cn(
             'plugin-chip border flex flex-col items-center gap-1',
-            'pt-[5px] pb-[6px] relative',
+            'pt-snug pb-pip relative',
             p.active ? 'plugin-card-on mx-plugin-chip-on' : 'mx-plugin-chip-off',
           )}
           data-testid={`plugin-${channelId}-${p.name}`}
@@ -31,7 +31,7 @@ function PluginChain({
             {p.name}
           </span>
           <span className="flex gap-px items-end" aria-hidden="true">
-            <StrengthDots strength={p.strength} dotClassName="w-[3px] h-1" />
+            <StrengthDots strength={p.strength} dotClassName="w-tight h-1" />
           </span>
         </div>
       ))}
@@ -45,7 +45,7 @@ function ChannelDesktop({ ch, copy }: { ch: DawMixerChannel; copy: DawMixerCopy 
     <div
       className={cn(
         'daw-channel-row',
-        'border-b border-[var(--color-signal-quiet)] px-[18px] py-[14px] relative',
+        'border-b border-[var(--color-signal-quiet)] px-panel-wide py-panel relative',
         ch.focused && ['channel-row-focused', 'bg-(color:--color-accent-tint-faint)'],
         isMaster && ['mx-master-gradient-desktop', 'border-t border-t-(color:--color-accent)'],
       )}
@@ -56,10 +56,11 @@ function ChannelDesktop({ ch, copy }: { ch: DawMixerChannel; copy: DawMixerCopy 
       <div className="flex flex-col gap-1">
         <span
           className={cn(
-            'border px-[5px] py-[1px] text-xs font-mono text-signal-400 tracking-xs shrink-0',
+            'border px-snug text-xs font-mono text-signal-400 tracking-xs shrink-0',
             'border-[var(--color-border)]',
-            isMaster &&
-              'border-(color:--color-accent) px-2 py-[2px] font-bold text-(color:--color-accent) tracking-2xl',
+            isMaster
+              ? 'border-(color:--color-accent) py-hair font-bold text-(color:--color-accent) tracking-2xl'
+              : 'py-px',
           )}
           data-channel={isMaster ? 'master' : undefined}
         >
@@ -84,7 +85,7 @@ function ChannelDesktop({ ch, copy }: { ch: DawMixerChannel; copy: DawMixerCopy 
           <ParsedText text={ch.desc} />
         </span>
       </div>
-      <div className="flex gap-[10px] items-center justify-center">
+      <div className="flex gap-inset items-center justify-center">
         <KnobIsland
           initialAngle={ch.knob1.angleDeg}
           label={ch.knob1.label}
@@ -137,7 +138,7 @@ function SessionHeaderDesktop({ mixer, copy }: { mixer: DawMixer; copy: DawMixer
   return (
     <div
       className={cn(
-        'daw-mixer-row-min grid gap-[18px] items-center px-[18px] py-3',
+        'daw-mixer-row-min grid gap-panel-wide items-center px-panel-wide py-3',
         'border-b border-[var(--color-border)]',
         'mx-session-header-tint',
         'text-xs text-signal-400 tracking-3xl',
@@ -169,7 +170,7 @@ function TableHeader({ copy }: { copy: DawMixerCopy }) {
       className={cn(
         'daw-channel-row daw-mixer-labels',
         'text-xs text-signal-400 tracking-5xl uppercase',
-        'border-b border-[var(--color-signal-quiet)] px-[18px] py-[7px]',
+        'border-b border-[var(--color-signal-quiet)] px-panel-wide py-chip',
         'bg-(color:--color-surface-tint-medium)',
       )}
       aria-hidden="true"

@@ -59,7 +59,7 @@ function StaticKnob({ angleDeg, label }: { angleDeg: number; label: string }) {
     <div className="flex flex-row items-center gap-2 select-none">
       <div
         className={cn(
-          'w-[30px] h-[30px] border border-(color:--color-accent) rounded-full relative shrink-0',
+          'w-node h-node border border-(color:--color-accent) rounded-full relative shrink-0',
           'mx-static-dial',
           'mx-dial',
         )}
@@ -81,8 +81,8 @@ function PluginChainMobile({
   copy: DawMixerCopy;
 }) {
   return (
-    <div className="mx-chain-wrap mb-[2px]" aria-hidden="true">
-      <div className="text-xs tracking-5xl text-signal-400 uppercase mb-[5px] flex items-center gap-[6px] mx-chain-title">
+    <div className="mx-chain-wrap mb-hair" aria-hidden="true">
+      <div className="text-xs tracking-5xl text-signal-400 uppercase mb-snug flex items-center gap-pip mx-chain-title">
         {copy.signalFlow}
       </div>
       <div className="mx-chain mx-chain-mobile">
@@ -90,7 +90,7 @@ function PluginChainMobile({
           <div
             key={p.name}
             className={cn(
-              'grid items-center gap-2 border px-[10px] py-2 relative',
+              'grid items-center gap-2 border px-inset py-2 relative',
               p.active ? 'mx-plugin-mobile-on' : 'mx-plugin-mobile-off',
             )}
             style={{ gridTemplateColumns: '14px minmax(90px, auto) 1fr' }}
@@ -98,7 +98,7 @@ function PluginChainMobile({
           >
             <span
               className={cn(
-                'w-[6px] h-[6px] justify-self-center',
+                'w-pip h-pip justify-self-center',
                 p.active ? 'meter-fill mx-plugin-dot-on' : 'meter-dim mx-plugin-dot-off',
               )}
               aria-hidden="true"
@@ -107,10 +107,10 @@ function PluginChainMobile({
               {p.name}
             </span>
             <span
-              className={cn('flex gap-[2px] items-end h-[7px]', !p.active && 'opacity-40')}
+              className={cn('flex gap-hair items-end h-chip', !p.active && 'opacity-40')}
               aria-hidden="true"
             >
-              <StrengthDots strength={p.strength} dotClassName="w-1 h-[6px]" />
+              <StrengthDots strength={p.strength} dotClassName="w-1 h-pip" />
             </span>
           </div>
         ))}
@@ -122,7 +122,7 @@ function PluginChainMobile({
 function SessionHeaderMobile({ mixer, copy }: { mixer: DawMixer; copy: DawMixerCopy }) {
   return (
     <div
-      className="text-xs text-signal-400 leading-ratio-1-8 border-b border-[var(--color-border)] px-[14px] py-[10px] tracking-3xl mx-session-header-tint"
+      className="text-xs text-signal-400 leading-ratio-1-8 border-b border-[var(--color-border)] px-panel py-inset tracking-3xl mx-session-header-tint"
       data-testid="session-header-mobile"
     >
       <div>
@@ -141,7 +141,7 @@ function MixLegendMobile({ mixer, copy }: { mixer: DawMixer; copy: DawMixerCopy 
   if (!lead) return null;
   return (
     <div
-      className="flex flex-col gap-[3px] px-[14px] py-2 border-b border-[var(--color-signal-quiet)] bg-(color:--color-mixer-lead-tint) text-xs tracking-4xl text-signal-400 uppercase"
+      className="flex flex-col gap-tight px-panel py-2 border-b border-[var(--color-signal-quiet)] bg-(color:--color-mixer-lead-tint) text-xs tracking-4xl text-signal-400 uppercase"
       aria-hidden="true"
     >
       <span>
@@ -157,7 +157,7 @@ function ChannelMobile({ ch, copy }: { ch: DawMixerChannel; copy: DawMixerCopy }
   return (
     <div
       className={cn(
-        'relative border-b border-[var(--color-signal-quiet)] px-[14px] pt-4 pb-[18px] flex flex-col gap-3',
+        'relative border-b border-[var(--color-signal-quiet)] px-panel pt-4 pb-panel-wide flex flex-col gap-3',
         ch.focused
           ? 'bg-(color:--color-accent-tint-light) channel-row-focused'
           : 'bg-(color:--color-mixer-row-tint)',
@@ -168,17 +168,17 @@ function ChannelMobile({ ch, copy }: { ch: DawMixerChannel; copy: DawMixerCopy }
       data-testid={`channel-mobile-${ch.id}`}
     >
       <div
-        className="grid items-center gap-[10px]"
+        className="grid items-center gap-inset"
         style={{ gridTemplateColumns: 'auto minmax(0,1fr) auto' }}
       >
         <span
           className={cn(
-            'text-xs tracking-5xl border font-bold whitespace-nowrap shrink-0 px-[7px] py-[3px]',
+            'text-xs tracking-5xl border font-bold whitespace-nowrap shrink-0 px-chip py-tight',
             ch.focused
               ? 'text-(color:--color-accent) border-(color:--color-accent) bg-(color:--color-accent-tint-strong)'
               : 'text-signal-400 border-[var(--color-signal-quiet)] bg-(color:--color-surface-tint-firm)',
             isMaster &&
-              'border-(color:--color-accent) px-2 py-[2px] text-xs tracking-2xl font-bold text-(color:--color-accent) bg-transparent',
+              'border-(color:--color-accent) text-xs tracking-2xl font-bold text-(color:--color-accent) bg-transparent',
           )}
           data-channel={isMaster ? 'master' : undefined}
         >
@@ -211,20 +211,20 @@ function ChannelMobile({ ch, copy }: { ch: DawMixerChannel; copy: DawMixerCopy }
         <StaticFader pct={ch.faderPct} />
       </div>
       <PluginChainMobile plugins={ch.plugins} channelId={ch.id} copy={copy} />
-      <div className="flex flex-col gap-[14px] pt-[14px] border-t border-dashed border-[var(--color-signal-quiet)]">
+      <div className="flex flex-col gap-panel pt-panel border-t border-dashed border-[var(--color-signal-quiet)]">
         <div className="flex items-center justify-between gap-3">
-          <div className="flex gap-[18px]">
+          <div className="flex gap-panel-wide">
             <StaticKnob angleDeg={ch.knob1.angleDeg} label={ch.knob1.label} />
             <StaticKnob angleDeg={ch.knob2.angleDeg} label={ch.knob2.label} />
           </div>
         </div>
         <div className="flex items-center justify-between gap-3">
-          <div className="flex gap-[6px]">
+          <div className="flex gap-pip">
             {ch.buttons.map((btn) => (
               <div
                 key={btn}
                 className={cn(
-                  'min-w-[32px] h-7 px-[10px] flex items-center justify-center',
+                  'min-w-8 h-7 px-inset flex items-center justify-center',
                   'text-xs font-bold tracking-xs',
                   ch.activeButtons.includes(btn) ? 'border mx-toggle-on' : 'border mx-toggle-off',
                 )}
@@ -244,7 +244,7 @@ function ChannelMobile({ ch, copy }: { ch: DawMixerChannel; copy: DawMixerCopy }
         </div>
       </div>
       {ch.terminalLines ? (
-        <div className="border border-[var(--color-signal-quiet)] px-[10px] py-2 mt-1">
+        <div className="border border-[var(--color-signal-quiet)] px-inset py-2 mt-1">
           {ch.terminalLines.map((line, i) => (
             // biome-ignore lint/suspicious/noArrayIndexKey: positional terminal lines
             <div key={i} className="text-xs text-signal-400 leading-ratio-1-8">

@@ -30,7 +30,7 @@ export function ChannelNoscript({ locale }: { locale: SiteLocale }) {
               {...EXTERNAL_LINK_PROPS}
               size="lg"
               variant="primary"
-              className="gap-[9px]"
+              className="gap-label"
               data-outbound={OUTBOUND_ID}
             >
               <IconYouTube size={GLYPH_PX} />

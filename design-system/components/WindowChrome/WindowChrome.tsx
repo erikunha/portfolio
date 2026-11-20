@@ -23,7 +23,7 @@ const DOT_STYLE = { width: 'var(--wc-dot-size)', height: 'var(--wc-dot-size)' };
 export function WindowChrome({ size = 10, className, style, ...rest }: WindowChromeProps) {
   return (
     <div
-      className={joinClassNames('window-chrome flex gap-[6px] items-center', className)}
+      className={joinClassNames('window-chrome flex gap-pip items-center', className)}
       style={{ '--wc-dot-size': `${size}px`, ...style } as React.CSSProperties}
       {...rest}
     >

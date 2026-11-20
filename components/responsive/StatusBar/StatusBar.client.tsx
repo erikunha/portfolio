@@ -36,7 +36,7 @@ export function StatusBar() {
         </span>
         <span className="text-(color:--color-accent) tracking-xl">5G</span>
         <span
-          className="inline-flex items-center gap-[3px] text-(color:--color-accent) font-bold"
+          className="inline-flex items-center gap-tight text-(color:--color-accent) font-bold"
           aria-hidden
         >
           <span>78%</span>

@@ -141,8 +141,23 @@ The base `h1` is 32px, rising to 36px at 1280px. `h2` is 20px, rising to
     'spacing-target': 'General control target',
     'spacing-target-compact': 'Compact control target',
     'spacing-target-pointer': 'Row height of the section menu from 1024px with a fine pointer',
+    'spacing-hair': 'Offset between stacked rows, thin vertical padding',
+    'spacing-tight': 'Tight gap between adjacent glyphs, narrow indicator width',
+    'spacing-snug': 'Padding of a small tag',
+    'spacing-pip': 'Indicator dot and bar size, small gap',
+    'spacing-chip': 'Padding and gap of a chip, height of a meter row',
+    'spacing-label': 'Gap between a label and its glyph',
+    'spacing-inset': 'Inset of a field or a chip, gap of a control row',
+    'spacing-panel': 'Padding of a panel and of a mixer section',
+    'spacing-panel-wide': 'Padding of a wide panel',
+    'spacing-icon': 'Size of an inline icon',
+    'spacing-node': 'Diameter of a signal-chain node',
   }}
 />
+
+The named steps from `spacing-hair` to `spacing-node` are the micro-scale. They replace arbitrary pixel
+sizes in class strings, which `pnpm lint:css-tokens` rejects. They use rem so they follow the reader's
+default font size; at a 16px root each step equals the pixel size it replaced.
 
 Page-level spacing reads the `:root` tokens. The page top and the section gap step up at the wider width.
 

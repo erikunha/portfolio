@@ -48,6 +48,17 @@
   --spacing-target: 2.75rem;
   --spacing-target-compact: 1.75rem;
   --spacing-target-pointer: 2.25rem;
+  --spacing-hair: 0.125rem;
+  --spacing-tight: 0.1875rem;
+  --spacing-snug: 0.3125rem;
+  --spacing-pip: 0.375rem;
+  --spacing-chip: 0.4375rem;
+  --spacing-label: 0.5625rem;
+  --spacing-inset: 0.625rem;
+  --spacing-panel: 0.875rem;
+  --spacing-panel-wide: 1.125rem;
+  --spacing-icon: 1.125rem;
+  --spacing-node: 1.875rem;
   --breakpoint-guitar: 700px;
   --viewport-narrow: 22.5rem;
   --viewport-hero-compact: 24.375rem;

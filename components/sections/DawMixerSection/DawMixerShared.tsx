@@ -37,7 +37,7 @@ export function StrengthDots({
 export function FaderBar({ pct, bright = false }: { pct: number; bright?: boolean }) {
   return (
     <div
-      className="h-[6px] bg-[var(--color-signal-quiet)] border border-[var(--color-signal-quiet)] relative overflow-hidden"
+      className="h-pip bg-[var(--color-signal-quiet)] border border-[var(--color-signal-quiet)] relative overflow-hidden"
       aria-hidden="true"
     >
       <div
