@@ -105,7 +105,7 @@
     display: none;
   }
 
-  @media (max-width: theme(--viewport-below-md)) {
+  @media (width < theme(--viewport-md)) {
     .ds-prose table[data-labelled-table] thead {
       display: none;
     }
@@ -147,7 +147,7 @@
     }
   }
 
-  @media (max-width: theme(--viewport-below-narrow)) {
+  @media (width < theme(--viewport-narrow)) {
     .ds-prose table[data-labelled-table] td {
       grid-template-columns: minmax(0, 1fr);
     }
@@ -200,7 +200,7 @@
     white-space: nowrap;
   }
 
-  @media (max-width: theme(--viewport-below-lg)) {
+  @media (width < theme(--viewport-lg)) {
     .sysfail-plate {
       padding: 5px 14px 6px;
     }
@@ -376,7 +376,7 @@
     }
   }
 
-  @media (pointer: coarse) and (max-width: theme(--viewport-below-md)) {
+  @media (pointer: coarse) and (width < theme(--viewport-md)) {
     #sec-guitar {
       --module-estimate: 3680px;
     }

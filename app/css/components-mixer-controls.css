@@ -99,7 +99,7 @@
     font-size: var(--text-min);
   }
 
-  @media (max-width: theme(--viewport-below-md)) {
+  @media (width < theme(--viewport-md)) {
     .dbValue {
       font-size: var(--text-sm);
     }

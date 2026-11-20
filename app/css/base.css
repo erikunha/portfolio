@@ -118,7 +118,7 @@
     overflow-x: clip;
   }
 
-  @media (max-width: theme(--viewport-below-md)) {
+  @media (width < theme(--viewport-md)) {
     html {
       scroll-padding-top: calc(var(--mobile-bars-height) + var(--spacing-3));
     }
@@ -265,7 +265,7 @@
   .mobile-only {
     display: none;
   }
-  @media (max-width: theme(--viewport-below-md)) {
+  @media (width < theme(--viewport-md)) {
     .desktop-only {
       display: none;
     }
@@ -274,13 +274,13 @@
     }
   }
 
-  @media (max-width: theme(--viewport-below-md)) {
+  @media (width < theme(--viewport-md)) {
     :root {
       --dock-chrome: calc(var(--dock-clearance) + var(--to-top-size));
     }
   }
 
-  @media (max-width: theme(--viewport-below-lg)) {
+  @media (width < theme(--viewport-lg)) {
     html {
       scroll-padding-bottom: var(--dock-chrome);
     }

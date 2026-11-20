@@ -59,8 +59,10 @@ export function readBaseCss(): string {
 }
 
 const THEME_CSS = path.join(CSS_DIR, 'theme.css');
-const VIEWPORT_DECLARATION = /(--viewport-[\w-]+):\s*([\d.]+px);/g;
+const VIEWPORT_DECLARATION = /(--viewport-[\w-]+):\s*([\d.]+(?:px|rem));/g;
 const VIEWPORT_REFERENCE = /theme\((--viewport-[\w-]+)\)/g;
+const REM_PX = 16;
+const REM_LENGTH = /^([\d.]+)rem$/;
 
 export function readViewportTokens(): Record<string, string> {
   // behavioral-test-allow: reads the shipped token file; jsdom cannot evaluate media-query resolution
@@ -75,6 +77,7 @@ export function resolveViewportTokens(css: string): string {
   return css.replace(VIEWPORT_REFERENCE, (reference, name: string) => {
     const value = tokens[name];
     if (value === undefined) throw new Error(`${reference} names a viewport token theme.css lacks`);
-    return value;
+    const rem = value.match(REM_LENGTH)?.[1];
+    return rem === undefined ? value : `${Number.parseFloat(rem) * REM_PX}px`;
   });
 }

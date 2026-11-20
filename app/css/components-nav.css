@@ -338,7 +338,7 @@
     font-weight: 700;
   }
 
-  @media (max-width: theme(--viewport-below-narrow)) {
+  @media (width < theme(--viewport-narrow)) {
     .dock {
       gap: 0;
       padding-inline: 0;
@@ -385,7 +385,7 @@
     }
   }
 
-  @media (max-width: theme(--viewport-below-lg)) {
+  @media (width < theme(--viewport-lg)) {
     .pos-line {
       top: 0;
       bottom: 0;
@@ -449,7 +449,7 @@
     font-size: var(--text-xs);
   }
 
-  @media (max-width: theme(--viewport-below-md)) {
+  @media (width < theme(--viewport-md)) {
     .offline-notice {
       inset-block-start: var(--mobile-bars-height);
       padding-block-start: var(--spacing-2);

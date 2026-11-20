@@ -63,7 +63,7 @@
     align-items: center;
   }
 
-  @media (max-width: theme(--viewport-below-xl)) {
+  @media (width < theme(--viewport-xl)) {
     .daw-channel-row {
       grid-template-columns: 64px 1.2fr 86px 80px 1fr 0.9fr 64px;
     }
@@ -78,7 +78,7 @@
     }
   }
 
-  @media (max-width: theme(--viewport-below-md)) {
+  @media (width < theme(--viewport-md)) {
     .daw-mixer-row-min {
       grid-template-columns: minmax(0, 1fr);
       justify-items: center;

@@ -18,13 +18,12 @@ const RESOLVES_HEADER = 'Resolves to';
 const USE_HEADER = 'Use';
 const STEP_HEADER = 'Step';
 const MIN_WIDTH_HEADER = 'Min width';
-const MAX_WIDTH_HEADER = 'Max width (below)';
+const PIXEL_WIDTH_HEADER = 'At a 16px root';
 const BELOW_HEADER_PREFIX = 'Below ';
 const FROM_HEADER_PREFIX = 'From ';
 const STEP_PLACEHOLDER = '{step}';
 const COLOR_PREFIX = '--color-';
 const VIEWPORT_PREFIX = 'viewport-';
-const VIEWPORT_BELOW_PREFIX = 'viewport-below-';
 const NO_VALUE = 'n/a';
 const CUSTOM_PROPERTY_LEAD = /^--/;
 const COLOR_ROLE_LEAD = /^color-/;
@@ -178,18 +177,15 @@ export function ResponsiveTokenTable({
 
 export function ViewportTable({ caption, usage }: { caption: string; usage: Usage }) {
   const tokens = getThemeTokens();
-  const steps = tokensWithPrefix(tokens, VIEWPORT_PREFIX).filter(
-    (token) => !token.name.startsWith(`--${VIEWPORT_BELOW_PREFIX}`),
-  );
+  const steps = tokensWithPrefix(tokens, VIEWPORT_PREFIX);
   const rows = steps.map((token) => {
     const step = token.name.replace(`--${VIEWPORT_PREFIX}`, '');
-    const below = tokens.find((t) => t.name === `--${VIEWPORT_BELOW_PREFIX}${step}`);
-    return [token.name, token.value, below?.value ?? NO_VALUE, usage[step] ?? ''];
+    return [token.name, token.value, displayTokenValue(token, tokens), usage[step] ?? ''];
   });
   return (
     <Table
       caption={caption}
-      headers={[STEP_HEADER, MIN_WIDTH_HEADER, MAX_WIDTH_HEADER, USAGE_HEADER]}
+      headers={[STEP_HEADER, MIN_WIDTH_HEADER, PIXEL_WIDTH_HEADER, USAGE_HEADER]}
       rows={rows}
     />
   );

@@ -5,8 +5,8 @@ import { declValue } from '@/__tests__/helpers/css-rules';
 
 const stylesheet = parse(readComponentsCss());
 const CELL = '.ds-prose table[data-labelled-table] td';
-const PHONE = /max-width:\s*767\.98px/;
-const BELOW_NARROW = /max-width:\s*359\.98px/;
+const PHONE = /width < 768px/;
+const BELOW_NARROW = /width < 360px/;
 
 function cellRule(media: RegExp): Rule | undefined {
   let found: Rule | undefined;

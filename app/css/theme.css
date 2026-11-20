@@ -49,18 +49,12 @@
   --spacing-target-compact: 1.75rem;
   --spacing-target-pointer: 2.25rem;
   --breakpoint-guitar: 700px;
-  --viewport-narrow: 360px;
-  --viewport-below-narrow: 359.98px;
-  --viewport-phone: 480px;
-  --viewport-below-phone: 479.98px;
-  --viewport-md: 768px;
-  --viewport-below-md: 767.98px;
-  --viewport-split: 900px;
-  --viewport-below-split: 899.98px;
-  --viewport-lg: 1024px;
-  --viewport-below-lg: 1023.98px;
-  --viewport-xl: 1280px;
-  --viewport-below-xl: 1279.98px;
+  --viewport-narrow: 22.5rem;
+  --viewport-phone: 30rem;
+  --viewport-md: 48rem;
+  --viewport-split: 56.25rem;
+  --viewport-lg: 64rem;
+  --viewport-xl: 80rem;
   --phi: 1.618;
   --phi-inv: 0.618;
   --phi-space-1: 0.5rem;
@@ -183,7 +177,7 @@
     --rain-tail-alpha: 0.1;
   }
 
-  @media (min-width: 768px) {
+  @media (min-width: 48rem) {
     :root {
       --space-page-top: var(--spacing-12);
       --space-section: var(--spacing-12);

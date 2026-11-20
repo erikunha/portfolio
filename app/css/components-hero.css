@@ -7,7 +7,7 @@
     display: block;
   }
 
-  @media (max-width: theme(--viewport-below-md)) {
+  @media (width < theme(--viewport-md)) {
     .hero-desktop {
       display: none;
     }
@@ -246,7 +246,7 @@
     overflow-wrap: normal;
   }
 
-  @media (max-width: theme(--viewport-below-narrow)) {
+  @media (width < theme(--viewport-narrow)) {
     .hero-stats {
       --stat-tile-pad-x: var(--spacing-1);
       --stat-tile-tracking: var(--tracking-xs);
@@ -274,7 +274,7 @@
     padding: var(--spacing-4) var(--spacing-4) calc(var(--spacing-4) + var(--spacing-1) / 2);
   }
 
-  @media (max-width: theme(--viewport-below-md)) {
+  @media (width < theme(--viewport-md)) {
     .hero-stack {
       --leading: var(--hero-stack-leading-compact);
     }
@@ -298,7 +298,7 @@
     }
   }
 
-  @media (min-width: theme(--viewport-md)) and (max-width: theme(--viewport-below-lg)) {
+  @media (min-width: theme(--viewport-md)) and (width < theme(--viewport-lg)) {
     .hero-desktop {
       flex-direction: column;
     }
@@ -354,7 +354,7 @@
     }
   }
 
-  @media (max-width: theme(--viewport-below-md)) {
+  @media (width < theme(--viewport-md)) {
     .hero-identity {
       margin-top: var(--spacing-1);
       padding-top: var(--spacing-3);

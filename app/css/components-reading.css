@@ -283,7 +283,7 @@
     }
   }
 
-  @media screen and (max-width: theme(--viewport-below-md)) {
+  @media screen and (width < theme(--viewport-md)) {
     .reading-actions {
       flex-direction: column;
       align-items: stretch;
@@ -306,7 +306,7 @@
     }
   }
 
-  @media (max-width: theme(--viewport-below-narrow)) {
+  @media (width < theme(--viewport-narrow)) {
     .reading-stats {
       --stat-tile-pad-x: var(--spacing-1);
       --stat-tile-tracking: var(--tracking-2xs);

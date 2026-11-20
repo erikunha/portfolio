@@ -3,7 +3,7 @@
     display: none;
   }
 
-  @media (max-width: theme(--viewport-below-md)) {
+  @media (width < theme(--viewport-md)) {
     .btn.to-top-btn {
       display: flex;
       position: fixed;

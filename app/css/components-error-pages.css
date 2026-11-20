@@ -69,13 +69,13 @@
     font-family: var(--font-mono);
   }
 
-  @media (max-width: theme(--viewport-below-lg)) {
+  @media (width < theme(--viewport-lg)) {
     .err-main {
       padding-block-end: var(--spacing-4);
     }
   }
 
-  @media (max-width: theme(--viewport-below-md)) {
+  @media (width < theme(--viewport-md)) {
     .err-main {
       gap: var(--spacing-4);
       padding-block-start: var(--spacing-4);

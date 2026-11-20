@@ -113,7 +113,7 @@
     line-height: var(--eq-axis-height);
   }
 
-  @media (max-width: theme(--viewport-below-md)) {
+  @media (width < theme(--viewport-md)) {
     .eq-plot {
       grid-row: 2;
       height: var(--eq-plot-height-compact);

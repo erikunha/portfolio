@@ -141,7 +141,7 @@ const FIXTURE = [
   '  --phi-pair-columns: minmax(0, 1.618fr)',
   '    minmax(0, 1fr);',
   '  --tracking-xl: 0.1em;',
-  '  --viewport-md: 768px;',
+  '  --viewport-md: 48rem;',
   '  --z-drawer: 130;',
   '  --radius-none: 0;',
   '}',
@@ -150,7 +150,7 @@ const FIXTURE = [
   '    --space-section: var(--spacing-8);',
   '    --color-surface: var(--color-carbon-950);',
   '  }',
-  '  @media (min-width: 768px) {',
+  '  @media (min-width: 48rem) {',
   '    :root {',
   '      --space-section: var(--spacing-12);',
   '    }',
@@ -175,9 +175,9 @@ describe('parseThemeTokens', () => {
     expect(find('--color-*')?.value).toBe('initial');
   });
 
-  it('reads :root roles in the base layer and keeps the 768px override apart from the default', () => {
+  it('reads :root roles in the base layer and keeps the 48rem override apart from the default', () => {
     expect(find('--space-section')).toMatchObject({ value: 'var(--spacing-8)', scope: 'root' });
-    expect(find('--space-section', '768px')).toMatchObject({
+    expect(find('--space-section', '48rem')).toMatchObject({
       value: 'var(--spacing-12)',
       scope: 'root',
     });

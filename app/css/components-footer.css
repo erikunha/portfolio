@@ -507,7 +507,7 @@
     margin: var(--spacing-6) 0 0;
   }
 
-  @media (max-width: theme(--viewport-below-md)) {
+  @media (width < theme(--viewport-md)) {
     .footer-inner {
       --footer-reach-inset: calc(var(--to-top-reach) - var(--space-gutter));
     }
@@ -586,7 +586,7 @@
     }
   }
 
-  @media (max-width: theme(--viewport-below-narrow)) {
+  @media (width < theme(--viewport-narrow)) {
     .site-footer {
       --footer-shutdown-tracking: var(--tracking-2xs);
     }

@@ -79,7 +79,7 @@ describe('RoleTable', () => {
 
 describe('ResponsiveTokenTable', () => {
   it('prints the value below and from the breakpoint', () => {
-    render(<ResponsiveTokenTable caption="Page" names={['space-section']} breakpoint="768px" />);
+    render(<ResponsiveTokenTable caption="Page" names={['space-section']} breakpoint="48rem" />);
     expect(cellsOf(dataRows(screen.getByRole('table'))[0] as HTMLElement)).toEqual([
       '--space-section',
       '32px',
@@ -89,12 +89,12 @@ describe('ResponsiveTokenTable', () => {
 });
 
 describe('ViewportTable', () => {
-  it('pairs every step with its below twin', () => {
+  it('shows every step in rem beside its pixels at a 16px root', () => {
     render(<ViewportTable caption="Viewports" usage={{}} />);
     expect(cellsOf(dataRows(screen.getByRole('table'))[0] as HTMLElement)).toEqual([
       '--viewport-narrow',
+      '22.5rem',
       '360px',
-      '359.98px',
       '',
     ]);
   });

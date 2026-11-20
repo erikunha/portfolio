@@ -147,7 +147,7 @@ Page-level spacing reads the `:root` tokens. The page top and the section gap st
 <ResponsiveTokenTable
   caption="Page spacing tokens"
   names={['space-page-top','space-section','text-section-title']}
-  breakpoint="768px"
+  breakpoint="48rem"
   usage={{
     'space-page-top': 'Space above the page content',
     'space-section': 'Gap between sections',
@@ -206,8 +206,9 @@ Stylesheets write `letter-spacing: var(--tracking-xl)`; markup writes `tracking-
 <h2 id="viewports">Viewports</h2>
 
 A media query cannot read a custom property, so stylesheets write `theme(--viewport-md)` and Tailwind
-substitutes the width at build time. Each step has a `below` twin 0.02px lower, so `max-width` ends
-where the next `min-width` starts and no width matches both or neither.
+substitutes the width at build time. Steps are in `rem`, so a query follows the browser's root font
+size. A range query `(width < theme(--viewport-md))` ends exactly where `(min-width: theme(--viewport-md))`
+starts, so no width matches both or neither.
 
 <ViewportTable
   caption="Viewport tokens"

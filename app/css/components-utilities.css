@@ -72,7 +72,7 @@
     }
   }
 
-  @media (max-width: theme(--viewport-below-md)) {
+  @media (width < theme(--viewport-md)) {
     .max-md\:text-sm {
       --leading: calc(1.25 / 0.875);
     }

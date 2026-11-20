@@ -8,36 +8,41 @@ import {
   resolveViewportTokens,
 } from './helpers/components-css';
 
-const MAX_WIDTH_STEP_PX = 0.02;
+const REM_PX = 16;
+const REM_VALUE = /^[\d.]+rem$/;
 const BELOW_PREFIX = '--viewport-below-';
-const MIN_PREFIX = '--viewport-';
-const FLOAT_DIGITS = 2;
+const LENGTH = /^([\d.]+)(px|rem)$/;
 
 const tokens = readViewportTokens();
-const px = (value: string) => Number.parseFloat(value);
-const steps = Object.entries(tokens).filter(([name]) => !name.startsWith(BELOW_PREFIX));
+const toPx = (value: string) => {
+  const parts = value.match(LENGTH);
+  const amount = Number.parseFloat(parts?.[1] ?? '');
+  return parts?.[2] === 'rem' ? amount * REM_PX : amount;
+};
 
 // behavioral-test-allow: reads the shipped stylesheet partials; jsdom cannot evaluate media-query resolution
 const sheets = `${readBaseCssRaw()}\n${readComponentsCssRaw()}`;
 const widthLiterals = Array.from(
-  sheets.matchAll(/@media[^{]*?\((?:min|max)-width:\s*(\d+(?:\.\d+)?)px\)/g),
-  (match) => Number(match[1]),
+  sheets.matchAll(/@media[^{]*?\((?:min|max)-width:\s*(\d+(?:\.\d+)?(?:px|rem))\)/g),
+  (match) => toPx(match[1] ?? ''),
 );
-const scaleValues = new Set(Object.values(tokens).map(px));
+const scaleValues = new Set(Object.values(tokens).map(toPx));
 
 describe('the viewport scale in theme.css', () => {
-  it('names a below value 0.02px under every step, so no width matches both sides of it', () => {
-    expect(steps.length, 'the sweep found no --viewport-* steps').toBeGreaterThan(4);
-    for (const [name, value] of steps) {
-      const below = tokens[name.replace(MIN_PREFIX, BELOW_PREFIX)];
-      expect(below, `${name} has no ${BELOW_PREFIX} twin`).toBeDefined();
-      expect(px(below ?? '')).toBeCloseTo(px(value) - MAX_WIDTH_STEP_PX, FLOAT_DIGITS);
+  it('declares every step in rem, so the breakpoints follow the root font size', () => {
+    expect(Object.keys(tokens).length, 'the sweep found no --viewport-* steps').toBeGreaterThan(4);
+    for (const [name, value] of Object.entries(tokens)) {
+      expect(value, `${name} must be in rem`).toMatch(REM_VALUE);
     }
+  });
+
+  it('declares no below twin, because a range query excludes the step itself', () => {
+    expect(Object.keys(tokens).filter((name) => name.startsWith(BELOW_PREFIX))).toEqual([]);
   });
 
   it('puts the phone/tablet step where the JavaScript viewport query puts it', () => {
     expect(
-      px(tokens['--viewport-md'] ?? ''),
+      toPx(tokens['--viewport-md'] ?? ''),
       'lib/breakpoint.ts MOBILE_BREAKPOINT_PX and --viewport-md in theme.css must change together',
     ).toBe(MOBILE_BREAKPOINT_PX);
   });
@@ -60,6 +65,13 @@ describe('media queries against the scale', () => {
     expect(
       literal,
       'a (min|max)-width literal that equals a --viewport-* step drifts when the step moves; write theme(--viewport-<name>)',
+    ).toEqual([]);
+  });
+
+  it('close a range below a step with a width range, never a max-width on the token', () => {
+    expect(
+      sheets.match(/max-width:\s*theme\(--viewport-[\w-]+\)/g) ?? [],
+      'write (width < theme(--viewport-<name>)) so the range stops exactly where min-width starts',
     ).toEqual([]);
   });
 

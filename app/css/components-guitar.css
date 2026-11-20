@@ -129,7 +129,7 @@
     font-size: var(--text-xs);
   }
 
-  @media (max-width: theme(--viewport-below-md)) {
+  @media (width < theme(--viewport-md)) {
     .guitar-arrow {
       line-height: var(--guitar-arrow-length);
       height: var(--guitar-arrow-length);
@@ -294,7 +294,7 @@
   }
   /* biome-ignore-end lint/suspicious/noDuplicateSelectors: end of the @variant max-guitar block */
 
-  @media (max-width: theme(--viewport-below-md)) {
+  @media (width < theme(--viewport-md)) {
     .guitar-signal-strip {
       flex-direction: column;
       align-items: center;
@@ -395,7 +395,7 @@
      the md breakpoint, and above it the arrow inherits its height from the
      row it sits in. A browser without `round()` keeps the fraction, which is
      what it has today. */
-  @media (max-width: theme(--viewport-below-md)) {
+  @media (width < theme(--viewport-md)) {
     @supports (line-height: round(nearest, 1px, 1px)) {
       .guitar-arrow {
         line-height: round(nearest, var(--guitar-arrow-length), 1px);
