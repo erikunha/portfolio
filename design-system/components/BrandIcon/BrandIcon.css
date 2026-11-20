@@ -1,0 +1,12 @@
+@layer components {
+  .brand-icon {
+    display: block;
+    filter: drop-shadow(0 0 var(--spacing-hair) var(--color-signal-glow-30));
+  }
+
+  @media print {
+    .brand-icon {
+      filter: none;
+    }
+  }
+}

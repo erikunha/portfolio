@@ -1,3 +1,5 @@
+@import "../../design-system/components/BrandIcon/BrandIcon.css";
+
 @layer components {
   .keep-together {
     white-space: nowrap;
@@ -17,17 +19,6 @@
     min-height: var(--spacing-target);
     color: var(--color-accent);
     text-decoration: none;
-  }
-
-  .brand-icon {
-    display: block;
-    filter: drop-shadow(0 0 var(--spacing-hair) var(--color-signal-glow-30));
-  }
-
-  @media print {
-    .brand-icon {
-      filter: none;
-    }
   }
 
   .safe-zone,

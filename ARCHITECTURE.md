@@ -491,7 +491,9 @@ app/css/components-modules.css        # the deferred module rules: .module-defer
 app/css/components-docs.css           # the design-system prose rules: inline code and the labelled tables below 768px
 design-system/components/Button/Button.css   # the .btn base rules (border, target size, focus ring, hover, disabled, variants, sizes), pulled in by `@import` from components-buttons.css, which keeps the --btn-* tokens in @theme; a CSS file a component imports gets its own stylesheet request after home.css, so the partial imports it and the cascade stays put
 design-system/components/Badge/Badge.css   # the .badge-dot rules and the badge-pulse keyframes, pulled in by `@import` from animations.css right after the boot-cursor rules, so the compiled cascade order is unchanged; the import sits between two @layer blocks, which Tailwind inlines at build
+design-system/components/BrandIcon/BrandIcon.css   # the .brand-icon glow and its print reset, pulled in by `@import` from components-shared.css, where the rules sat after .brand-link
 design-system/components/KbdKey/KbdKey.css   # the .kbd-key rules, pulled in by `@import` from components-inline-ui.css; scripts/__tests__/primitive-css-colocation.test.ts holds each primitive's own selectors to its file, and lint:css-tokens and css-referenced-classes scan design-system/components/**/*.css
+design-system/components/NavItem/NavItem.css   # the .nav-item base, hover, active, focus and current rules, pulled in by `@import` from components-nav.css; the .section-menu and .pager overrides stay in their partials
 app/globals.css                       # entry: layer order (theme, base, components, utilities, overrides), then @import "tailwindcss" + theme/base/components; the @import order is the cascade order within a layer
 app/css/home.css                      # home-only entry imported by SiteHome: the home section partials; loads after globals.css
 

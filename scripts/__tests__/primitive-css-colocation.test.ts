@@ -14,6 +14,8 @@ const PRIMITIVES = [
   { name: 'Button', className: '.btn' },
   { name: 'KbdKey', className: '.kbd-key' },
   { name: 'Badge', className: '.badge-dot' },
+  { name: 'NavItem', className: '.nav-item' },
+  { name: 'BrandIcon', className: '.brand-icon' },
 ];
 
 function selectorsOf(file: string): string[] {
