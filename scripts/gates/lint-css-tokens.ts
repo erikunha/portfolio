@@ -155,6 +155,7 @@ const TOKEN_EQUAL_NAMESPACES = ['tracking', 'radius', 'shadow', 'leading', 'text
 const SUBPROPERTY_SEPARATOR = '--';
 const ARBITRARY_CLASS = /(?<![\w-])([a-z][a-z-]*)-\[([^\]\s'"`]+)\]/g;
 const WHITESPACE = /\s+/g;
+const ARBITRARY_PX_SIZE = /(?<![^\s'"`])[^\s'"`]*\[-?\d*\.?\d+px\]/g;
 
 const TEXT_SIZE_SHORTHAND = '(?:xs|sm|base|lg|\\d*xl)';
 const ALPHA_UTILITY = new RegExp(
@@ -214,6 +215,10 @@ function scan(source: string, pattern: RegExp): ColorHit[] {
 
 export function findAlphaUtilities(source: string): ColorHit[] {
   return scan(source, ALPHA_UTILITY);
+}
+
+export function findArbitraryPxSizes(source: string): ColorHit[] {
+  return scan(source, ARBITRARY_PX_SIZE);
 }
 
 export function findInlineColorMix(source: string): ColorHit[] {
@@ -355,6 +360,7 @@ export interface RepoScan {
   zIndex: RawColorHit[];
   focus: RawColorHit[];
   tokenEqual: RawColorHit[];
+  pxSizes: RawColorHit[];
   primitives: RawColorHit[];
   ordinals: RawColorHit[];
   tints: RawColorHit[];
@@ -557,6 +563,7 @@ export function scanRepo(root: string, cssFiles: string[]): RepoScan {
         literal: `${hit.literal} (use ${hit.utility})`,
       })),
     ),
+    pxSizes: findSourceFiles(root).flatMap((file) => tag(file, findArbitraryPxSizes(read(file)))),
     primitives: findConsumerFiles(root)
       .filter((file) => file !== themePath)
       .flatMap((file) => tag(file, findPrimitiveColorUses(themeCss, read(file)))),
@@ -610,7 +617,13 @@ function main(): void {
   }
 
   const scan = scanRepo(root, files);
-  const { violations, stale } = applyAllowlist(scan.colors, loadAllowlist(root));
+  const { violations: allowed, stale } = applyAllowlist(
+    [...scan.colors, ...scan.pxSizes],
+    loadAllowlist(root),
+  );
+  const pxSizes = new Set(scan.pxSizes);
+  const violations = allowed.filter((hit) => !pxSizes.has(hit));
+  const pxViolations = allowed.filter((hit) => pxSizes.has(hit));
 
   let failed = report(
     `raw color literal(s) outside theme.css and ${ALLOWLIST_PATH}`,
@@ -634,6 +647,12 @@ function main(): void {
       'arbitrary value(s) that equal an @theme token',
       'Use the token utility named on each line instead of the arbitrary value.',
       scan.tokenEqual,
+    ) || failed;
+  failed =
+    report(
+      'arbitrary px size(s) in a class string',
+      'Name the size in the spacing micro-scale in app/css/theme.css (--spacing-*) and use its utility; do not write [Npx].',
+      pxViolations,
     ) || failed;
   failed =
     report(
@@ -672,7 +691,7 @@ function main(): void {
   }
   if (failed) process.exit(1);
   console.log(
-    '[css-tokens] no raw color literals, z-index values or focus rings outside their tokens, no primitive colors where a role exists, no ordinal palette names, every tint held in a named custom property, no arbitrary values that equal a token, and no unused @theme tokens.',
+    '[css-tokens] no raw color literals, z-index values or focus rings outside their tokens, no primitive colors where a role exists, no ordinal palette names, every tint held in a named custom property, no arbitrary values that equal a token, no arbitrary px sizes in class strings, and no unused @theme tokens.',
   );
 }
 
