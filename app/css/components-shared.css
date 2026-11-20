@@ -234,13 +234,13 @@
     --module-estimate: 2730px;
   }
 
-  @media (min-width: 330px) {
+  @media (min-width: 20.625rem) {
     #sec-hottest-takes {
       --module-estimate: 3360px;
     }
   }
 
-  @media (min-width: 340px) {
+  @media (min-width: 21.25rem) {
     #sec-git-log {
       --module-estimate: 3170px;
     }
@@ -250,7 +250,7 @@
     }
   }
 
-  @media (min-width: 350px) {
+  @media (min-width: 21.875rem) {
     #sec-git-log {
       --module-estimate: 3130px;
     }
@@ -270,31 +270,31 @@
     }
   }
 
-  @media (min-width: 380px) {
+  @media (min-width: 23.75rem) {
     #sec-git-log {
       --module-estimate: 2750px;
     }
   }
 
-  @media (min-width: 390px) {
+  @media (min-width: theme(--viewport-hero-compact)) {
     #sec-hottest-takes {
       --module-estimate: 2670px;
     }
   }
 
-  @media (min-width: 420px) {
+  @media (min-width: 26.25rem) {
     #sec-git-log {
       --module-estimate: 2500px;
     }
   }
 
-  @media (min-width: 430px) {
+  @media (min-width: 26.875rem) {
     #sec-hottest-takes {
       --module-estimate: 2520px;
     }
   }
 
-  @media (min-width: 460px) {
+  @media (min-width: 28.75rem) {
     #sec-hottest-takes {
       --module-estimate: 2340px;
     }
@@ -306,43 +306,43 @@
     }
   }
 
-  @media (min-width: 490px) {
+  @media (min-width: 30.625rem) {
     #sec-git-log {
       --module-estimate: 2220px;
     }
   }
 
-  @media (min-width: 520px) {
+  @media (min-width: 32.5rem) {
     #sec-hottest-takes {
       --module-estimate: 2070px;
     }
   }
 
-  @media (min-width: 600px) {
+  @media (min-width: theme(--viewport-links-qr)) {
     #sec-git-log {
       --module-estimate: 2060px;
     }
   }
 
-  @media (min-width: 610px) {
+  @media (min-width: 38.125rem) {
     #sec-hottest-takes {
       --module-estimate: 1910px;
     }
   }
 
-  @media (min-width: 660px) {
+  @media (min-width: 41.25rem) {
     #sec-hottest-takes {
       --module-estimate: 1740px;
     }
   }
 
-  @media (min-width: 730px) {
+  @media (min-width: 45.625rem) {
     #sec-git-log {
       --module-estimate: 1750px;
     }
   }
 
-  @media (min-width: 740px) {
+  @media (min-width: 46.25rem) {
     #sec-hottest-takes {
       --module-estimate: 1700px;
     }
@@ -358,13 +358,13 @@
     }
   }
 
-  @media (min-width: 860px) {
+  @media (min-width: 53.75rem) {
     #sec-hottest-takes {
       --module-estimate: 1500px;
     }
   }
 
-  @media (min-width: 1000px) {
+  @media (min-width: 62.5rem) {
     #sec-hottest-takes {
       --module-estimate: 1320px;
     }

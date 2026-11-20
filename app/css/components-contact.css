@@ -532,7 +532,7 @@
     }
   }
 
-  @media (min-width: 512px) {
+  @media (min-width: 32rem) {
     .contact-timezone[data-locale="en"] {
       --ctz-host-min: 50.8rem;
     }
@@ -542,7 +542,7 @@
     }
   }
 
-  @media (min-width: 640px) {
+  @media (min-width: 40rem) {
     .contact-timezone[data-locale="en"] {
       --ctz-host-min: 53.8rem;
     }

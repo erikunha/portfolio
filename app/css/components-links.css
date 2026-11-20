@@ -191,7 +191,7 @@
     max-width: var(--measure-read);
   }
 
-  @media (max-width: 599.98px) {
+  @media (width < theme(--viewport-links-qr)) {
     .links-col[data-col="qr"] {
       display: none;
     }

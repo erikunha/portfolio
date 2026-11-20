@@ -349,7 +349,7 @@
     }
   }
 
-  @media (max-width: 399.98px) {
+  @media (width < theme(--viewport-hero-actions)) {
     .hero-actions {
       grid-template-columns: minmax(0, 1fr);
     }
@@ -363,7 +363,7 @@
     }
   }
 
-  @media (max-width: 1199.98px) {
+  @media (width < theme(--viewport-hero-stats)) {
     .hero-bio .hero-stats {
       grid-template-columns: repeat(2, minmax(0, 1fr));
     }
@@ -393,7 +393,7 @@
     }
   }
 
-  @media (max-width: 389.98px) {
+  @media (width < theme(--viewport-hero-compact)) {
     .hero-mobile .hero-boot-mobile {
       display: none;
       min-height: 0;

@@ -50,10 +50,14 @@
   --spacing-target-pointer: 2.25rem;
   --breakpoint-guitar: 700px;
   --viewport-narrow: 22.5rem;
+  --viewport-hero-compact: 24.375rem;
+  --viewport-hero-actions: 25rem;
   --viewport-phone: 30rem;
+  --viewport-links-qr: 37.5rem;
   --viewport-md: 48rem;
   --viewport-split: 56.25rem;
   --viewport-lg: 64rem;
+  --viewport-hero-stats: 75rem;
   --viewport-xl: 80rem;
   --phi: 1.618;
   --phi-inv: 0.618;
