@@ -341,6 +341,8 @@ describe('summary reading view', () => {
   });
 });
 
+const NO_BREAK_SPACE = '\u00A0';
+
 describe('reading view content', () => {
   it('renders the community heading as plain text when it has no link', () => {
     const { href: _omit, ...community } = cvDocumentEn.community;
@@ -353,7 +355,7 @@ describe('reading view content', () => {
       Object.assign(cvDocumentEn, { community: original });
     }
     const heading = Array.from(host.querySelectorAll('h3')).find(
-      (node) => node.textContent === community.heading,
+      (node) => node.textContent?.replaceAll(NO_BREAK_SPACE, ' ') === community.heading,
     );
     expect(heading).toBeDefined();
     expect(heading?.querySelector('a')).toBeNull();
