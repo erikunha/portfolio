@@ -13,6 +13,7 @@ import {
 
 const LOCALE = SITE_LOCALE.en;
 const SLIDE_MS = 200;
+const LONG_SLIDE_MS = 1500;
 const MS_PER_SECOND = 1000;
 const EXIT_FALLBACK_SLACK_MS = 50;
 const EXIT_START_CAP_MS = 1000;
@@ -120,13 +121,15 @@ describe('the drawer exit fallback is anchored to the start of the slide', () =>
     vi.unstubAllGlobals();
   });
 
-  function exitWith(...slides: Slide[]) {
+  function exitWithDuration(durationMs: number, ...slides: Slide[]) {
     render(<Page />);
-    panel().style.transitionDuration = `${SLIDE_MS}ms`;
+    panel().style.transitionDuration = `${durationMs}ms`;
     panel().getAnimations = vi.fn(() => slides.map(({ stub }) => stub)) as never;
     fireEvent.click(screen.getByTestId('trigger'));
     fireEvent.keyDown(document, { key: 'Escape' });
   }
+
+  const exitWith = (...slides: Slide[]) => exitWithDuration(SLIDE_MS, ...slides);
 
   it('keeps the dialog open past the duration plus the slack while the slide has not started', () => {
     exitWith(pendingSlide());
@@ -170,12 +173,16 @@ describe('the drawer exit fallback is anchored to the start of the slide', () =>
     expect(panel().open).toBe(false);
   });
 
-  it('still waits for a slide that is not pending but has no start time', () => {
+  it('arms the duration plus the slack once ready resolves for a slide that is not pending', async () => {
     const slide = pendingSlide();
     slide.stub.pending = false;
+    slide.stub.currentTime = 0;
     exitWith(slide);
-    advance(SLIDE_MS + EXIT_FALLBACK_SLACK_MS + LATE_START_MS);
+    await slide.start();
+    advance(SLIDE_MS + EXIT_FALLBACK_SLACK_MS - ONE_MS);
     expect(panel().open).toBe(true);
+    advance(ONE_MS);
+    expect(panel().open).toBe(false);
   });
 
   it('still waits for a slide that has a start time but is pending', () => {
@@ -192,6 +199,17 @@ describe('the drawer exit fallback is anchored to the start of the slide', () =>
     expect(panel().open).toBe(true);
     advance(ONE_MS);
     expect(panel().open, 'a transition that never starts still closes the dialog').toBe(false);
+  });
+
+  it('scales the outer cap to a transition longer than the fixed cap', () => {
+    exitWithDuration(LONG_SLIDE_MS, pendingSlide());
+    const closeAtMs = LONG_SLIDE_MS + EXIT_FALLBACK_SLACK_MS;
+    advance(EXIT_START_CAP_MS + ONE_MS);
+    expect(panel().open, 'a slower --menu-duration is not cut at the fixed cap').toBe(true);
+    advance(closeAtMs - EXIT_START_CAP_MS - ONE_MS - ONE_MS);
+    expect(panel().open).toBe(true);
+    advance(ONE_MS);
+    expect(panel().open).toBe(false);
   });
 
   it('closes at the outer cap when the slide starts and then never ends', async () => {

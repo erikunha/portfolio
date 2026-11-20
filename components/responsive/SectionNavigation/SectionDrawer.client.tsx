@@ -76,9 +76,10 @@ export function SectionNavigation({ extra }: { extra?: ReactNode }) {
       const slide = findExitSlide(panel);
       let settled = false;
       let startTimer: ReturnType<typeof setTimeout> | undefined;
+      const fallbackMs = slideMs + EXIT_FALLBACK_SLACK_MS;
       const capTimer = setTimeout(
         () => done(),
-        slide ? EXIT_START_CAP_MS : slideMs + EXIT_FALLBACK_SLACK_MS,
+        slide ? Math.max(EXIT_START_CAP_MS, fallbackMs) : fallbackMs,
       );
       const armFromStart = (started: CSSTransition) => {
         if (settled) return;
