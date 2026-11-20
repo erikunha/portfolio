@@ -122,6 +122,15 @@ const NAMESPACE_UTILITIES: Record<string, string[]> = {
   shadow: ['shadow'],
   font: ['font'],
 };
+const CLASS_IN_SELECTOR = /\.(-?[_a-zA-Z][\w-]*)/g;
+const GENERATED_UTILITIES: Record<string, string[]> = {
+  ...NAMESPACE_UTILITIES,
+  container: ['w', 'min-w', 'max-w', 'basis'],
+  animate: ['animate'],
+  ease: ['ease'],
+  blur: ['blur', 'backdrop-blur'],
+  aspect: ['aspect'],
+};
 const COLOR_VARIABLE_PREFIX = '--color-';
 const ROLE_TOKENS = [
   'surface',
@@ -193,6 +202,12 @@ export interface RawColorHit extends ColorHit {
 
 export interface TokenEqualHit extends ColorHit {
   utility: string;
+}
+
+export interface CollisionHit {
+  file: string;
+  line: number;
+  literal: string;
 }
 
 export interface AllowEntry {
@@ -402,6 +417,7 @@ export interface RepoScan {
   primitives: RawColorHit[];
   ordinals: RawColorHit[];
   tints: RawColorHit[];
+  collisions: CollisionHit[];
 }
 
 function escapeRegExp(value: string): string {
@@ -428,6 +444,53 @@ function utilityPattern(token: string): RegExp | undefined {
   const prefixes = NAMESPACE_UTILITIES[namespace];
   if (!prefixes) return undefined;
   return new RegExp(`(?<![\\w-])-?(?:${prefixes.map(escapeRegExp).join('|')})-${name}(?![\\w-])`);
+}
+
+function generatedUtilityNames(themeCss: string): Set<string> {
+  const names = new Set<string>();
+  for (const token of themeTokenNames(themeCss)) {
+    const body = token.slice(CUSTOM_PROPERTY.length);
+    const dash = body.indexOf('-');
+    if (dash < 0 || body.includes(SUBPROPERTY_SEPARATOR) || body.endsWith(NAMESPACE_WILDCARD)) {
+      continue;
+    }
+    const suffix = body.slice(dash + 1);
+    for (const prefix of GENERATED_UTILITIES[body.slice(0, dash)] ?? []) {
+      names.add(`${prefix}-${suffix}`);
+    }
+  }
+  return names;
+}
+
+function setsOnlyCustomProperties(rule: postcss.Rule): boolean {
+  let declarations = 0;
+  let properties = 0;
+  rule.each((node) => {
+    if (node.type !== 'decl') return;
+    declarations += 1;
+    if (node.prop.startsWith(CUSTOM_PROPERTY)) properties += 1;
+  });
+  return declarations > 0 && declarations === properties;
+}
+
+export function findUtilityClassCollisions(
+  themeCss: string,
+  sheets: { file: string; css: string }[],
+): CollisionHit[] {
+  const utilities = generatedUtilityNames(themeCss);
+  const hits: CollisionHit[] = [];
+  for (const { file, css } of sheets) {
+    postcss.parse(css).walkRules((rule) => {
+      if (setsOnlyCustomProperties(rule)) return;
+      for (const match of rule.selector.matchAll(CLASS_IN_SELECTOR)) {
+        const name = match[1] ?? '';
+        if (utilities.has(name)) {
+          hits.push({ file, line: rule.source?.start?.line ?? 0, literal: name });
+        }
+      }
+    });
+  }
+  return hits;
 }
 
 function normalizeValue(value: string): string {
@@ -582,7 +645,12 @@ export function scanRepo(root: string, cssFiles: string[]): RepoScan {
   const colorTargets = [...cssTargets, ...findTokenFiles(root)];
   const themePath = `app/css/${THEME_SHEET}`;
   const themeCss = existsSync(join(root, themePath)) ? read(themePath) : '';
+  const sheets = cssTargets.map((file) => ({ file, css: read(file) }));
   return {
+    collisions: findUtilityClassCollisions(
+      [themeCss, ...sheets.map((sheet) => sheet.css)].join('\n'),
+      sheets,
+    ),
     cssPx: cssTargets.flatMap((file) => tag(file, findRawCssPx(read(file)))),
     colors: [
       ...colorTargets.flatMap((file) => tag(file, findRawColors(read(file)))),
@@ -717,6 +785,12 @@ function main(): void {
       'A tint is one color-mix(..., transparent) in a custom property (a role tint in theme.css, or a property in the rule or @theme). Read it as bg-(color:--name) or var(--name); no /NN alpha utility, no color-mix in a class string or a non-custom property.',
       scan.tints,
     ) || failed;
+  failed =
+    report(
+      'component class(es) that equal a Tailwind utility generated from an @theme token',
+      'Tailwind emits a utility for every token, and it overrides the component class. Rename the class, or the token, so no <utility>-<token name> is a class in app/css.',
+      scan.collisions.map((hit) => ({ ...hit, literal: `.${hit.literal}` })),
+    ) || failed;
   const unused = findUnusedThemeTokens(
     readThemeSheets(root),
     findConsumerFiles(root).map((file) => readFileSync(join(root, file), 'utf8')),
@@ -736,7 +810,7 @@ function main(): void {
   }
   if (failed) process.exit(1);
   console.log(
-    '[css-tokens] no raw color literals, z-index values or focus rings outside their tokens, no primitive colors where a role exists, no ordinal palette names, every tint held in a named custom property, no arbitrary values that equal a token, no arbitrary px sizes in class strings, no raw px lengths in a stylesheet, and no unused @theme tokens.',
+    '[css-tokens] no raw color literals, z-index values or focus rings outside their tokens, no primitive colors where a role exists, no ordinal palette names, every tint held in a named custom property, no arbitrary values that equal a token, no arbitrary px sizes in class strings, no raw px lengths in a stylesheet, no component class that equals a token utility, and no unused @theme tokens.',
   );
 }
 
