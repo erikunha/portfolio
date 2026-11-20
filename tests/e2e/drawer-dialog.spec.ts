@@ -14,7 +14,8 @@ const EXIT_TICK_MS = 8;
 const EXIT_POLL_MS = 50;
 const SLIDE_PROPERTY = 'transform';
 const SLIDE_PROGRESS = [0.1, 0.2, 0.3, 0.4, 0.5];
-const MIN_LIVE_POSITIONS = 2;
+const MIN_LIVE_POSITIONS = 4;
+const MIN_EXIT_TRAVEL = 0.75;
 const MIN_SLIDE_DURATION_MS = 100;
 const MS_PER_SECOND = 1000;
 const MIN_EXIT_SHARE = 0.75;
@@ -172,6 +173,13 @@ function slideFrames({ frames, panelWidth }: ExitCapture, seeked = false): ExitF
   );
 }
 
+function deepestOpenTravel({ frames, panelWidth }: ExitCapture): number {
+  const travels = frames
+    .filter(({ open, seeked }) => open && !seeked)
+    .map(({ x }) => -x / panelWidth);
+  return travels.length > 0 ? Math.max(...travels) : Number.NaN;
+}
+
 function exitWindow({ marks }: ExitCapture): {
   startAt: number;
   closeAt: number;
@@ -254,12 +262,17 @@ for (const { name, viewport } of [
         'the dialog stays open for at least three quarters of the transition duration on the clock that closed it',
       ).toBeGreaterThanOrEqual(capture.durationMs * MIN_EXIT_SHARE);
       const steady = framesAreSteady(rest);
+      const travel = deepestOpenTravel(capture);
       const positions = new Set(slideFrames(capture).map(({ x }) => Math.round(x))).size;
       test.info().annotations.push({
         type: 'frames',
-        description: `rAF at rest: ${rest.ticks} ticks, median ${rest.medianGapMs} ms, live positions ${positions}, ${steady ? 'asserted' : 'not asserted'}`,
+        description: `rAF at rest: ${rest.ticks} ticks, median ${rest.medianGapMs} ms, live positions ${positions}, travel ${travel}, ${steady ? 'asserted' : 'not asserted'}`,
       });
       if (steady) {
+        expect(
+          travel,
+          'rAF was steady at rest, so the panel covers most of its travel while the dialog is still open',
+        ).toBeGreaterThanOrEqual(MIN_EXIT_TRAVEL);
         expect(
           positions,
           'rAF was steady at rest, so the panel is drawn at more than one live position while the dialog is open',

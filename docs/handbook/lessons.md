@@ -285,7 +285,11 @@ The prompt for a manual or agent review that applies these rules to a diff is `d
     start of the `transform` transition read from `getAnimations()` and `ready`, with a
     1000 ms cap, and 100 of 100 reach 95%. No steady frame rate is promised (the 2-CPU
     mobile shape stays near 5 fps), and the exit draws about 40 ms per frame whatever the
-    idle rate, so the real-time spec requires 2 live positions, not 4. Sample DOM state on a timer. Read a transition's positions by pausing the
+    idle rate, so the real-time spec requires 4 live positions, which 200 of 200 unloaded Linux Chromium
+    runs met (minimum 4), and 75% of the panel's travel while the dialog is open, which a close
+    cut by a late start fails (7 of 60 under load on the old timer, 0 of 60 now; read the
+    deepest open sample, because WebKit reads the closed panel at x 0 for one sample after the
+    slide ends). The 1000 ms cap grows with a longer `--menu-duration`. Sample DOM state on a timer. Read a transition's positions by pausing the
     `CSSTransition` from `getAnimations()`, seeking `currentTime` and restoring it before
     `play()`, in a test apart from the one that bounds the exit in time with a
     `MutationObserver` on the attributes, so the bound reads the app's own timing. Take the
