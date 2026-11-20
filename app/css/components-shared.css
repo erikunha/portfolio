@@ -21,7 +21,7 @@
 
   .brand-icon {
     display: block;
-    filter: drop-shadow(0 0 2px var(--color-signal-glow-30));
+    filter: drop-shadow(0 0 var(--spacing-hair) var(--color-signal-glow-30));
   }
 
   @media print {
@@ -93,7 +93,7 @@
 
   .ds-prose :not(pre):not(td):not(th):not(.ds-cell-value) > code {
     background: var(--color-surface);
-    border: 1px solid var(--color-border);
+    border: var(--border-width) solid var(--color-border);
     padding: 0.1em 0.35em;
     color: var(--color-text);
 
@@ -180,8 +180,8 @@
 
   .signal-glow {
     text-shadow:
-      0 0 8px var(--color-signal-glow-45),
-      0 0 4px var(--color-surface);
+      0 0 var(--spacing-2) var(--color-signal-glow-45),
+      0 0 var(--spacing-1) var(--color-surface);
   }
 
   .sysfail-plate {
@@ -191,207 +191,207 @@
     font-weight: 700;
     font-size: var(--text-2xl);
     letter-spacing: var(--tracking-lg);
-    padding: 6px 18px 8px;
+    padding: var(--spacing-pip) var(--spacing-panel-wide) var(--spacing-2);
     --leading: 1;
     text-transform: uppercase;
     box-shadow:
-      0 0 24px var(--color-signal-glow-55),
-      0 0 60px var(--color-signal-glow-25);
+      0 0 var(--spacing-6) var(--color-signal-glow-55),
+      0 0 3.75rem var(--color-signal-glow-25);
     white-space: nowrap;
   }
 
   @media (width < theme(--viewport-lg)) {
     .sysfail-plate {
-      padding: 5px 14px 6px;
+      padding: var(--spacing-snug) var(--spacing-panel) var(--spacing-pip);
     }
   }
 
   .module-deferred {
-    --module-estimate: 520px;
+    --module-estimate: 32.5rem;
     content-visibility: auto;
     contain-intrinsic-size: auto var(--module-estimate);
   }
 
   #sec-git-log {
-    --module-estimate: 3290px;
+    --module-estimate: 205.625rem;
   }
 
   #sec-hottest-takes {
-    --module-estimate: 3440px;
+    --module-estimate: 215rem;
   }
 
   #sec-guitar {
-    --module-estimate: 3190px;
+    --module-estimate: 199.375rem;
   }
 
   @media (pointer: coarse) {
     #sec-guitar {
-      --module-estimate: 3680px;
+      --module-estimate: 230rem;
     }
   }
 
   #sec-contact {
-    --module-estimate: 2730px;
+    --module-estimate: 170.625rem;
   }
 
   @media (min-width: 20.625rem) {
     #sec-hottest-takes {
-      --module-estimate: 3360px;
+      --module-estimate: 210rem;
     }
   }
 
   @media (min-width: 21.25rem) {
     #sec-git-log {
-      --module-estimate: 3170px;
+      --module-estimate: 198.125rem;
     }
 
     #sec-hottest-takes {
-      --module-estimate: 3240px;
+      --module-estimate: 202.5rem;
     }
   }
 
   @media (min-width: 21.875rem) {
     #sec-git-log {
-      --module-estimate: 3130px;
+      --module-estimate: 195.625rem;
     }
   }
 
   @media (min-width: theme(--viewport-narrow)) {
     #sec-git-log {
-      --module-estimate: 2950px;
+      --module-estimate: 184.375rem;
     }
 
     #sec-contact {
-      --module-estimate: 2580px;
+      --module-estimate: 161.25rem;
     }
 
     #sec-hottest-takes {
-      --module-estimate: 2930px;
+      --module-estimate: 183.125rem;
     }
   }
 
   @media (min-width: 23.75rem) {
     #sec-git-log {
-      --module-estimate: 2750px;
+      --module-estimate: 171.875rem;
     }
   }
 
   @media (min-width: theme(--viewport-hero-compact)) {
     #sec-hottest-takes {
-      --module-estimate: 2670px;
+      --module-estimate: 166.875rem;
     }
   }
 
   @media (min-width: 26.25rem) {
     #sec-git-log {
-      --module-estimate: 2500px;
+      --module-estimate: 156.25rem;
     }
   }
 
   @media (min-width: 26.875rem) {
     #sec-hottest-takes {
-      --module-estimate: 2520px;
+      --module-estimate: 157.5rem;
     }
   }
 
   @media (min-width: 28.75rem) {
     #sec-hottest-takes {
-      --module-estimate: 2340px;
+      --module-estimate: 146.25rem;
     }
   }
 
   @media (min-width: theme(--viewport-phone)) {
     #sec-contact {
-      --module-estimate: 2420px;
+      --module-estimate: 151.25rem;
     }
   }
 
   @media (min-width: 30.625rem) {
     #sec-git-log {
-      --module-estimate: 2220px;
+      --module-estimate: 138.75rem;
     }
   }
 
   @media (min-width: 32.5rem) {
     #sec-hottest-takes {
-      --module-estimate: 2070px;
+      --module-estimate: 129.375rem;
     }
   }
 
   @media (min-width: theme(--viewport-links-qr)) {
     #sec-git-log {
-      --module-estimate: 2060px;
+      --module-estimate: 128.75rem;
     }
   }
 
   @media (min-width: 38.125rem) {
     #sec-hottest-takes {
-      --module-estimate: 1910px;
+      --module-estimate: 119.375rem;
     }
   }
 
   @media (min-width: 41.25rem) {
     #sec-hottest-takes {
-      --module-estimate: 1740px;
+      --module-estimate: 108.75rem;
     }
   }
 
   @media (min-width: 45.625rem) {
     #sec-git-log {
-      --module-estimate: 1750px;
+      --module-estimate: 109.375rem;
     }
   }
 
   @media (min-width: 46.25rem) {
     #sec-hottest-takes {
-      --module-estimate: 1700px;
+      --module-estimate: 106.25rem;
     }
   }
 
   @media (min-width: theme(--viewport-md)) {
     #sec-guitar {
-      --module-estimate: 1470px;
+      --module-estimate: 91.875rem;
     }
 
     #sec-contact {
-      --module-estimate: 1980px;
+      --module-estimate: 123.75rem;
     }
   }
 
   @media (min-width: 53.75rem) {
     #sec-hottest-takes {
-      --module-estimate: 1500px;
+      --module-estimate: 93.75rem;
     }
   }
 
   @media (min-width: 62.5rem) {
     #sec-hottest-takes {
-      --module-estimate: 1320px;
+      --module-estimate: 82.5rem;
     }
   }
 
   @media (min-width: theme(--viewport-lg)) {
     #sec-contact {
-      --module-estimate: 1070px;
+      --module-estimate: 66.875rem;
     }
   }
 
   @media (min-width: theme(--viewport-xl)) {
     #sec-guitar {
-      --module-estimate: 1180px;
+      --module-estimate: 73.75rem;
     }
   }
 
   .module-body-content {
-    padding: 14px;
+    padding: var(--spacing-panel);
     color: var(--color-text);
     background: var(--color-surface);
   }
 
   @media (min-width: theme(--viewport-md)) {
     .module-body-content {
-      padding: 18px;
-      border: 1px solid var(--color-border-strong);
+      padding: var(--spacing-panel-wide);
+      border: var(--border-width) solid var(--color-border-strong);
     }
   }
 

@@ -46,9 +46,9 @@
     position: fixed;
     inset-block-start: 0;
     inset-inline: 0;
-    height: 2px;
+    height: var(--spacing-hair);
     background: var(--color-accent);
-    box-shadow: 0 0 10px var(--color-accent);
+    box-shadow: 0 0 var(--spacing-inset) var(--color-accent);
     transform: scaleX(0);
     transform-origin: 0 50%;
     z-index: var(--z-progress-line);
@@ -70,8 +70,8 @@
   .links-avatar {
     background-image: repeating-linear-gradient(
       135deg,
-      var(--color-signal-quiet) 0 4px,
-      transparent 4px 8px
+      var(--color-signal-quiet) 0 var(--spacing-1),
+      transparent var(--spacing-1) var(--spacing-2)
     );
   }
 
@@ -83,8 +83,8 @@
     aspect-ratio: 16 / 9;
     background-image: repeating-linear-gradient(
       135deg,
-      var(--color-signal-quiet) 0 5px,
-      transparent 5px 10px
+      var(--color-signal-quiet) 0 var(--spacing-snug),
+      transparent var(--spacing-snug) var(--spacing-inset)
     );
   }
 
@@ -95,7 +95,7 @@
     overflow: hidden;
     isolation: isolate;
     background: var(--color-surface);
-    outline: 1px solid var(--color-border);
+    outline: var(--border-width) solid var(--color-border);
     outline-offset: -1px;
   }
 

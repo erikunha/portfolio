@@ -140,7 +140,7 @@
   .toc ul {
     display: flex;
     flex-direction: column;
-    gap: 2px;
+    gap: var(--spacing-hair);
     margin: 0;
     padding: 0;
     list-style: none;
@@ -159,7 +159,7 @@
     align-items: center;
     box-sizing: border-box;
     min-height: var(--spacing-target);
-    padding: 0 10px;
+    padding: 0 var(--spacing-inset);
     border: var(--border-width) solid transparent;
     border-radius: var(--radius-none);
     color: var(--color-text-secondary);
@@ -183,7 +183,7 @@
 
   .ds-nav-group-title,
   .toc-title {
-    margin: var(--spacing-3) 10px var(--spacing-1);
+    margin: var(--spacing-3) var(--spacing-inset) var(--spacing-1);
     color: var(--color-accent);
     font-family: var(--font-mono);
     font-size: var(--text-xs);

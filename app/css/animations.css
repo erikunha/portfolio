@@ -18,11 +18,11 @@
 
   .boot-cursor {
     display: inline-block;
-    width: 9px;
+    width: var(--spacing-label);
     height: 1.05em;
     background: var(--color-accent);
-    vertical-align: -2px;
-    margin-left: 2px;
+    vertical-align: calc(var(--spacing-hair) * -1);
+    margin-left: var(--spacing-hair);
     animation: boot-blink 1.05s steps(2, start) infinite;
   }
 
@@ -37,7 +37,7 @@
     0%,
     100% {
       opacity: 1;
-      box-shadow: 0 0 4px var(--color-accent);
+      box-shadow: 0 0 var(--spacing-1) var(--color-accent);
     }
     50% {
       opacity: 0.35;
@@ -46,8 +46,8 @@
   }
 
   .badge-dot {
-    width: 7px;
-    height: 7px;
+    width: var(--spacing-chip);
+    height: var(--spacing-chip);
     background: var(--color-accent);
     flex-shrink: 0;
     animation: badge-pulse 1.6s ease-in-out infinite;
@@ -62,12 +62,12 @@
 
   @keyframes hero-shake-1 {
     to {
-      transform: translate(2px, -2px);
+      transform: translate(var(--spacing-hair), calc(var(--spacing-hair) * -1));
     }
   }
   @keyframes hero-shake-2 {
     to {
-      transform: translate(-2px, 1px);
+      transform: translate(calc(var(--spacing-hair) * -1), 1px);
     }
   }
 
@@ -80,8 +80,8 @@
   .status-dot {
     flex: none;
     display: block;
-    width: var(--status-dot-size, 6px);
-    height: var(--status-dot-size, 6px);
+    width: var(--status-dot-size, var(--spacing-pip));
+    height: var(--status-dot-size, var(--spacing-pip));
     background: var(--status-dot-color, var(--color-accent));
   }
 
@@ -101,7 +101,7 @@
       transform: translateY(0);
     }
     to {
-      transform: translateY(calc(100cqh + 60px));
+      transform: translateY(calc(100cqh + var(--spacing-node) * 2));
     }
   }
 
@@ -110,8 +110,8 @@
     position: absolute;
     left: 0;
     right: 0;
-    top: -30px;
-    height: 28px;
+    top: calc(var(--spacing-node) * -1);
+    height: var(--spacing-target-compact);
     background: linear-gradient(180deg, transparent, var(--guitar-scan-beam-core) 50%, transparent);
     mix-blend-mode: screen;
     pointer-events: none;

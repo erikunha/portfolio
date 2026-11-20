@@ -6,7 +6,7 @@
 @layer components {
   .status-signal-bar {
     display: block;
-    width: 3px;
+    width: var(--spacing-tight);
     background: var(--color-accent);
   }
 
@@ -17,8 +17,8 @@
   .status-battery {
     display: inline-block;
     position: relative;
-    width: 22px;
-    height: 11px;
+    width: 1.375rem;
+    height: 0.6875rem;
     padding: 1px;
     border: var(--border-width) solid var(--color-accent);
   }
@@ -26,10 +26,10 @@
   .status-battery::after {
     content: "";
     position: absolute;
-    right: -3px;
-    top: 2px;
-    width: 2px;
-    height: 5px;
+    right: calc(var(--spacing-tight) * -1);
+    top: var(--spacing-hair);
+    width: var(--spacing-hair);
+    height: var(--spacing-snug);
     background: var(--color-accent);
   }
 
@@ -77,10 +77,10 @@
     position: absolute;
     top: 50%;
     translate: -50% -50%;
-    width: 18px;
-    height: 28px;
+    width: var(--spacing-icon);
+    height: var(--spacing-target-compact);
     background: var(--color-accent);
-    box-shadow: 0 0 10px var(--color-accent);
+    box-shadow: 0 0 var(--spacing-inset) var(--color-accent);
     border: var(--border-width) solid var(--color-surface);
 
     @variant motion-off {
@@ -110,7 +110,7 @@
 
   .mx-plugin-dot-on {
     background: var(--color-accent);
-    box-shadow: 0 0 4px var(--color-accent);
+    box-shadow: 0 0 var(--spacing-1) var(--color-accent);
   }
 
   .mx-plugin-dot-off {
@@ -119,12 +119,12 @@
 
   .mx-legend-dot {
     display: inline-block;
-    width: 5px;
-    height: 5px;
-    margin-right: 6px;
+    width: var(--spacing-snug);
+    height: var(--spacing-snug);
+    margin-right: var(--spacing-pip);
     vertical-align: 1px;
     background: var(--color-accent);
-    box-shadow: 0 0 5px var(--color-accent);
+    box-shadow: 0 0 var(--spacing-snug) var(--color-accent);
   }
 
   .mx-session-header-tint {
@@ -149,7 +149,7 @@
     color: var(--color-accent);
     border-color: var(--color-accent);
     background: var(--color-accent-tint-strong);
-    box-shadow: 0 0 5px var(--color-signal-glow-35);
+    box-shadow: 0 0 var(--spacing-snug) var(--color-signal-glow-35);
   }
 
   .mx-toggle-off {

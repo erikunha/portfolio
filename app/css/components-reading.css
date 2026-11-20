@@ -163,7 +163,7 @@
   .reading-rows li {
     display: grid;
     grid-template-columns: minmax(0, 1fr);
-    padding: 2px 0;
+    padding: var(--spacing-hair) 0;
   }
 
   .reading-row-key {
@@ -259,7 +259,7 @@
   }
 
   .reading-chips li {
-    padding: 2px var(--spacing-2);
+    padding: var(--spacing-hair) var(--spacing-2);
     border: var(--border-width) solid var(--color-border-strong);
     background: var(--color-surface);
     color: var(--color-text);
