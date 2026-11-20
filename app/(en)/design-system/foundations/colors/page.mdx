@@ -39,6 +39,10 @@ Color tokens live in `app/css/theme.css` inside the single `@theme` block. Swatc
 <ColorSwatch token="coral-500" usage="Window-chrome close dot" />
 <ColorSwatch token="gold-500" usage="Window-chrome minimize dot" />
 
+<h2 id="tints">Tints</h2>
+
+A translucent wash of a role is a tint, and a tint is one `color-mix(in srgb, var(--color-<role>) N%, transparent)` held in a named custom property. A tint two sites read is a role tint in `theme.css`: `--color-accent-tint-faint`, `--color-accent-tint-light`, `--color-accent-tint-soft` and `--color-accent-tint-strong` (accent at 6%, 7%, 8% and 10%), and `--color-surface-tint-medium`, `--color-surface-tint-firm` and `--color-surface-tint-heavy` (surface at 50%, 55% and 70%). Because each reads the role, the print sheet remaps it with the role. A tint only one rule reads is a custom property in that rule or in the `@theme` block of the partial that reads it. Tailwind `/NN` alpha utilities and `color-mix` inside a class string are not used. Where a site mixed in `oklab` and a measured print channel moved when it was mixed in `srgb` (a white surface), the tint keeps `oklab`: `--color-surface-tint-medium` and `--color-surface-tint-firm` do.
+
 <h2 id="rules">Rules</h2>
 
 - The green and grey ramps carry the whole interface. Two other hues exist, each with one meaning: red (`coral`) marks alerts and the window-chrome close dot, and amber (`gold-500`) marks the window-chrome minimize dot. There is no cyan.
