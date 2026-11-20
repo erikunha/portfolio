@@ -324,6 +324,8 @@ The prompt for a manual or agent review that applies these rules to a diff is `d
     `#sec-contact` the same way). Check: probe `pointerdown`, `pointerup`, `click` and `submit`
     targets with a capture listener before blaming hydration.
 
+60. A timeout that cancels a job is a measurement to read before it is a number to raise. Run 44723089045 hit the 8 minute job limit with every test still passing: the log of the cancelled run and of a green one, compared per file, showed one runner 1.45 times slower across the whole suite, so the fix was the fixed cost each file paid (a jsdom start for files that use no DOM), not the limit. A job with under 25% headroom over its normal time fails on the next slow runner. Check: `__tests__/meta/unit-suite-duration.test.ts` (the node environment for a file with no DOM, the per-file budget, the step limit below the job's), and the `Duration` line of the unit step in the run log.
+
 ## Pre-push judgement list
 
 Ranked by how often review caught each class on this repository.

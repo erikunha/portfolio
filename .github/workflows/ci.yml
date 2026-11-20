@@ -176,6 +176,7 @@ jobs:
         run: pnpm exec tsx scripts/gates/check-mutation-kills.ts --canary
 
       - name: Unit tests
+        timeout-minutes: 6
         run: pnpm test:coverage
 
       - name: Upload coverage reports
