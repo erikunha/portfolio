@@ -1,13 +1,19 @@
 import { act } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { flushMicrotasks, type MountedClient } from '@/__tests__/helpers/render';
-import { askQuestion, renderShell as mountShell } from '@/__tests__/helpers/shell';
+import {
+  askQuestion,
+  renderShell as mountShell,
+  submitCommand,
+  typeCommand,
+} from '@/__tests__/helpers/shell';
 import { shellUi } from '@/content/shell-ui';
 import { SITE_LOCALE, type SiteLocale } from '@/content/site-locale';
 
 vi.mock('@/lib/use-breakpoint.client', () => ({ useBreakpoint: () => ({ isMobile: false }) }));
 vi.mock('@/lib/motion', () => ({ readMotion: () => false }));
 
+const ELAPSED_ADVANCE_MS = 250;
 const PILL_TEXT = /^■ (stop|parar) · \d+\.\ds$/;
 
 function pending(): { finish: () => void } {
@@ -60,7 +66,10 @@ describe('the stop pill', () => {
   it('shows a stop pill with a live elapsed time and an esc hint, outside the log', async () => {
     pending();
     const container = await renderShell();
-    await ask(container);
+    vi.useFakeTimers();
+    await typeCommand(container, 'who is erik?');
+    await submitCommand(container);
+    await act(async () => vi.advanceTimersByTimeAsync(0));
     const button = pill(container);
     expect(button).toBeDefined();
     expect(button?.classList.contains('shell-stop-pill')).toBe(true);
@@ -70,7 +79,7 @@ describe('the stop pill', () => {
     expect(button?.querySelector('kbd')?.textContent).toBe(shellUi[SITE_LOCALE.en].escKey);
     const before = elapsed?.textContent;
     await act(async () => {
-      await new Promise((resolve) => setTimeout(resolve, 250));
+      await vi.advanceTimersByTimeAsync(ELAPSED_ADVANCE_MS);
     });
     expect(button?.querySelector('.shell-stop-elapsed')?.textContent).not.toBe(before);
     expect(container.querySelector('.shell-stop-row')).toBeNull();
