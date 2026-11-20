@@ -6,11 +6,14 @@ import {
   bandAnnotations,
   evaluateHistory,
   evaluateSeries,
+  evaluateSlo,
   mean,
+  renderSloTable,
   rollingScores,
   sampleStd,
   tierAtLeast,
   validateBandsConfig,
+  validateSloConfig,
 } from '../metrics/bands.ts';
 
 const TIERS = { log: 1, diagnose: 2, propose: 3 };
@@ -306,5 +309,115 @@ describe('bandAnnotations', () => {
 
   it('says nothing about a metric that was evaluated', () => {
     expect(bandAnnotations(report({ ciMainFailureRate: { status: 'evaluated' } }))).toEqual([]);
+  });
+});
+
+const SLO_NAMES = [
+  'availabilityHome',
+  'askTtftP95',
+  'lcpP75Desktop',
+  'lcpP75Mobile',
+  'inpP75',
+] as const;
+const LCP_DESKTOP_BUDGET_MS = 1800;
+const LCP_MOBILE_BUDGET_MS = 3500;
+const slo = bandsConfig.slo as unknown as Record<
+  string,
+  {
+    target?: number;
+    bound: string;
+    unit: string;
+    source: string;
+    provisional: boolean;
+    reason?: string;
+  }
+>;
+
+describe('slo bands in metrics/bands.json', () => {
+  it('defines every required SLO and passes validation', () => {
+    expect(Object.keys(slo).sort()).toEqual([...SLO_NAMES].sort());
+    expect(() => validateSloConfig(bandsConfig.slo)).not.toThrow();
+  });
+
+  it('names a source for every band', () => {
+    for (const name of SLO_NAMES) {
+      expect(slo[name]?.source.trim().length, name).toBeGreaterThan(0);
+    }
+  });
+
+  it('marks a band without a target provisional and says why', () => {
+    for (const name of SLO_NAMES) {
+      const band = slo[name];
+      if (band?.target === undefined) {
+        expect(band?.provisional, name).toBe(true);
+        expect(band?.reason?.trim().length, name).toBeGreaterThan(0);
+      }
+    }
+  });
+
+  it('takes the LCP targets from the Lighthouse budgets and keeps them provisional', () => {
+    expect(slo.lcpP75Desktop?.target).toBe(LCP_DESKTOP_BUDGET_MS);
+    expect(slo.lcpP75Mobile?.target).toBe(LCP_MOBILE_BUDGET_MS);
+    expect(slo.lcpP75Desktop?.provisional).toBe(true);
+    expect(slo.lcpP75Mobile?.provisional).toBe(true);
+  });
+
+  it('does not invent a number for INP, TTFT or availability', () => {
+    expect(slo.inpP75?.target).toBeUndefined();
+    expect(slo.askTtftP95?.target).toBeUndefined();
+    expect(slo.availabilityHome?.target).toBeUndefined();
+  });
+
+  it('rejects a band with no source', () => {
+    const bad = { a: { bound: 'max', unit: 'ms', provisional: false, target: 1 } };
+    expect(() => validateSloConfig(bad)).toThrow(/source/);
+  });
+
+  it('rejects a band with no target that is not provisional', () => {
+    const bad = { a: { bound: 'max', unit: 'ms', provisional: false, source: 's' } };
+    expect(() => validateSloConfig(bad)).toThrow(/provisional/);
+  });
+
+  it('rejects a provisional band with no reason when it has no target', () => {
+    const bad = { a: { bound: 'max', unit: 'ms', provisional: true, source: 's' } };
+    expect(() => validateSloConfig(bad)).toThrow(/reason/);
+  });
+
+  it('rejects an unknown bound', () => {
+    const bad = { a: { bound: 'near', unit: 'ms', provisional: true, source: 's', target: 1 } };
+    expect(() => validateSloConfig(bad)).toThrow(/bound/);
+  });
+});
+
+describe('weekly job reads each slo band', () => {
+  it('reports every band as not collected when the week carries no value', () => {
+    const rows = evaluateSlo(
+      [{ weekStart: '2026-11-16', metrics: {} }],
+      bandsConfig as BandsConfig,
+    );
+    expect(rows.map((r) => r.name).sort()).toEqual([...SLO_NAMES].sort());
+    expect(rows.every((r) => r.status === 'not-collected')).toBe(true);
+  });
+
+  it('judges a collected value against a max target', () => {
+    const weeks = [
+      { weekStart: '2026-11-16', metrics: { lcpP75Desktop: 2000, lcpP75Mobile: 3000 } },
+    ];
+    const rows = evaluateSlo(weeks, bandsConfig as BandsConfig);
+    expect(rows.find((r) => r.name === 'lcpP75Desktop')?.status).toBe('breach');
+    expect(rows.find((r) => r.name === 'lcpP75Mobile')?.status).toBe('met');
+  });
+
+  it('reports a collected value with no target as no-target', () => {
+    const weeks = [{ weekStart: '2026-11-16', metrics: { inpP75: 150 } }];
+    const row = evaluateSlo(weeks, bandsConfig as BandsConfig).find((r) => r.name === 'inpP75');
+    expect(row?.status).toBe('no-target');
+    expect(row?.value).toBe(150);
+  });
+
+  it('lists every band in the rendered table with its value or not collected', () => {
+    const table = renderSloTable(evaluateSlo([], bandsConfig as BandsConfig));
+    for (const name of SLO_NAMES) expect(table).toContain(name);
+    expect(table).toContain('not collected');
   });
 });

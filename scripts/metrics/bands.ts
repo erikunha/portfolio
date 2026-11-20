@@ -42,6 +42,7 @@ export interface BandsConfig {
   version: number;
   issueFromTier: Exclude<Tier, 'none'>;
   defaults: { window: number; minHistory: number; tiers: Tiers };
+  slo?: Record<string, SloBand>;
   metrics: Record<
     string,
     {
@@ -53,6 +54,36 @@ export interface BandsConfig {
       tiers?: Partial<Tiers>;
     }
   >;
+}
+
+export const SLO_BOUND = Object.freeze({ MAX: 'max', MIN: 'min' } as const);
+
+export const SLO_STATUS = Object.freeze({
+  MET: 'met',
+  BREACH: 'breach',
+  NO_TARGET: 'no-target',
+  NOT_COLLECTED: 'not-collected',
+} as const);
+
+export type SloBound = (typeof SLO_BOUND)[keyof typeof SLO_BOUND];
+export type SloStatus = (typeof SLO_STATUS)[keyof typeof SLO_STATUS];
+
+export interface SloBand {
+  target?: number;
+  bound: SloBound;
+  unit: string;
+  source: string;
+  provisional: boolean;
+  reason?: string;
+}
+
+export interface SloRow {
+  name: string;
+  value: number | null;
+  target: number | null;
+  bound: SloBound;
+  provisional: boolean;
+  status: SloStatus;
 }
 
 export interface FiredRule {
@@ -104,6 +135,7 @@ interface LooseTiersHolder {
 }
 
 interface LooseConfig {
+  slo?: unknown;
   issueFromTier?: unknown;
   defaults?: LooseTiersHolder & { window?: unknown; minHistory?: unknown };
   metrics?: Record<string, LooseTiersHolder & { direction?: unknown; minStd?: unknown }>;
@@ -329,8 +361,34 @@ function validateTiers(tiers: unknown, where: string): void {
   if (!ascending) fail(`${where} tiers must be positive and widen log < diagnose < propose`);
 }
 
+function isFilledString(value: unknown): boolean {
+  return typeof value === 'string' && value.trim().length > 0;
+}
+
+export function validateSloConfig(slo: unknown): void {
+  const entries = Object.entries((slo ?? {}) as Record<string, Partial<SloBand>>);
+  if (entries.length === 0) fail('slo must name at least one band');
+  const bounds: readonly unknown[] = Object.values(SLO_BOUND);
+  for (const [name, band] of entries) {
+    if (!bounds.includes(band.bound)) fail(`slo.${name}.bound must be one of ${bounds.join(', ')}`);
+    if (!isFilledString(band.unit)) fail(`slo.${name}.unit must be a non-empty string`);
+    if (!isFilledString(band.source))
+      fail(`slo.${name}.source must name where the band comes from`);
+    if (typeof band.provisional !== 'boolean') fail(`slo.${name}.provisional must be a boolean`);
+    const hasTarget = typeof band.target === 'number' && Number.isFinite(band.target);
+    if (band.target !== undefined && !hasTarget) fail(`slo.${name}.target must be a number`);
+    if (!hasTarget && band.provisional !== true) {
+      fail(`slo.${name} has no target so it must be provisional`);
+    }
+    if (!hasTarget && !isFilledString(band.reason)) {
+      fail(`slo.${name} has no target so it needs a reason`);
+    }
+  }
+}
+
 export function validateBandsConfig(config: unknown): void {
   const loose = config as LooseConfig | null | undefined;
+  if (loose?.slo !== undefined) validateSloConfig(loose.slo);
   const issueFromTier = loose?.issueFromTier;
   if (typeof issueFromTier !== 'string' || !ISSUE_TIERS.includes(issueFromTier)) {
     fail(`issueFromTier must be one of ${ISSUE_TIERS.join(', ')}`);
@@ -372,6 +430,42 @@ export function evaluateHistory(weeks: WeekRecord[], config: BandsConfig): Bands
     )
     .map(([name]) => name);
   return { weekStart: ordered.at(-1)?.weekStart ?? null, evaluations, breaches };
+}
+
+function sloStatus(value: number | null, band: SloBand): SloStatus {
+  if (value === null) return SLO_STATUS.NOT_COLLECTED;
+  if (band.target === undefined) return SLO_STATUS.NO_TARGET;
+  const within = band.bound === SLO_BOUND.MAX ? value <= band.target : value >= band.target;
+  return within ? SLO_STATUS.MET : SLO_STATUS.BREACH;
+}
+
+export function evaluateSlo(weeks: WeekRecord[], config: BandsConfig): SloRow[] {
+  const latest = [...weeks].sort((a, b) => a.weekStart.localeCompare(b.weekStart)).at(-1);
+  return Object.entries(config.slo ?? {}).map(([name, band]) => {
+    const raw = latest?.metrics?.[name];
+    const value = typeof raw === 'number' && Number.isFinite(raw) ? raw : null;
+    return {
+      name,
+      value,
+      target: band.target ?? null,
+      bound: band.bound,
+      provisional: band.provisional,
+      status: sloStatus(value, band),
+    };
+  });
+}
+
+export function renderSloTable(rows: SloRow[]): string {
+  const lines = [
+    '| slo | value | target | provisional | status |',
+    '| --- | --- | --- | --- | --- |',
+  ];
+  for (const row of rows) {
+    const value = row.value === null ? 'not collected' : String(row.value);
+    const target = row.target === null ? '-' : `${row.bound} ${row.target}`;
+    lines.push(`| ${row.name} | ${value} | ${target} | ${row.provisional} | ${row.status} |`);
+  }
+  return lines.join('\n');
 }
 
 function formatNumber(value: number | undefined): string {
@@ -435,7 +529,8 @@ function main(): void {
   const report = evaluateHistory(history.weeks, config);
   mkdirSync(dirname(args.out), { recursive: true });
   writeFileSync(args.out, `${JSON.stringify(report, null, 2)}\n`);
-  const table = renderTable(report);
+  const sloTable = renderSloTable(evaluateSlo(history.weeks, config));
+  const table = `${renderTable(report)}\n\n${sloTable}`;
   console.log(`[bands] week ${report.weekStart ?? 'none'}\n${table}`);
   console.log(
     `[bands] breaches: ${report.breaches.length === 0 ? 'none' : report.breaches.join(', ')}`,
