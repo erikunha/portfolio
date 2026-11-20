@@ -8,6 +8,8 @@ const FAILED_EXIT_CODE = 1;
 
 export const UNIT_FILE_BUDGET_MS = 45 * SECOND_MS;
 const IN_FLIGHT_POLL_MS = 15 * SECOND_MS;
+export const SUITE_WARN_MS = 220 * SECOND_MS;
+export const SLOWEST_RUNNER_RATIO = 1.64;
 
 // The thresholds the README states, exported so the documentation and the gate
 // cannot drift apart: a threshold lowered here has to be restated there.
@@ -18,9 +20,15 @@ export const COVERAGE_THRESHOLDS = {
   statements: 80,
 } as const;
 
+function seconds(ms: number): string {
+  return (ms / SECOND_MS).toFixed(1);
+}
+
 interface FileBudgetOptions {
   budgetMs: number;
   pollMs: number;
+  suiteWarnMs: number;
+  annotate: boolean;
 }
 
 export class FileBudgetReporter implements Reporter {
@@ -28,15 +36,21 @@ export class FileBudgetReporter implements Reporter {
   private readonly named = new Set<string>();
   private readonly late: string[] = [];
   private timer: NodeJS.Timeout | undefined;
+  private startedAt = 0;
 
   constructor(private readonly options: FileBudgetOptions) {}
 
   onTestRunStart(): void {
+    clearInterval(this.timer);
+    this.running.clear();
+    this.named.clear();
+    this.late.length = 0;
+    this.startedAt = Date.now();
     this.timer = setInterval(() => this.nameStalled(), this.options.pollMs);
     this.timer.unref();
   }
 
-  onTestModuleStart(module: TestModule): void {
+  onTestModuleQueued(module: TestModule): void {
     this.running.set(module.moduleId, { name: module.relativeModuleId, since: Date.now() });
   }
 
@@ -54,9 +68,18 @@ export class FileBudgetReporter implements Reporter {
 
   onTestRunEnd(): void {
     clearInterval(this.timer);
+    this.reportWallTime(Date.now() - this.startedAt);
     if (this.late.length === 0) return;
     process.stderr.write(`unit file budget exceeded:\n${this.late.join('\n')}\n`);
     process.exitCode = FAILED_EXIT_CODE;
+  }
+
+  private reportWallTime(wallMs: number): void {
+    process.stdout.write(`unit suite wall time ${seconds(wallMs)}s\n`);
+    if (!this.options.annotate || wallMs <= this.options.suiteWarnMs) return;
+    process.stdout.write(
+      `::warning::unit suite wall time ${seconds(wallMs)}s is over ${seconds(this.options.suiteWarnMs)}s, so a runner ${SLOWEST_RUNNER_RATIO} times slower would pass the unit step limit\n`,
+    );
   }
 
   private nameStalled(): void {
@@ -71,7 +94,7 @@ export class FileBudgetReporter implements Reporter {
   }
 }
 
-const DOM_TS_TESTS = [
+export const DOM_TS_TESTS = [
   '__tests__/api-log-shape.test.ts',
   '__tests__/ask/ask-log-persistence.test.ts',
   '__tests__/boot-animation-advanced.test.ts',
@@ -125,7 +148,12 @@ export default defineConfig({
     reporters: [
       ...(process.env.GITHUB_ACTIONS ? ['github-actions' as const] : []),
       'verbose',
-      new FileBudgetReporter({ budgetMs: UNIT_FILE_BUDGET_MS, pollMs: IN_FLIGHT_POLL_MS }),
+      new FileBudgetReporter({
+        budgetMs: UNIT_FILE_BUDGET_MS,
+        pollMs: IN_FLIGHT_POLL_MS,
+        suiteWarnMs: SUITE_WARN_MS,
+        annotate: Boolean(process.env.GITHUB_ACTIONS),
+      }),
     ],
     globals: false,
     globalSetup: ['./tests/global-tmpdir.ts'],

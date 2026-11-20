@@ -217,7 +217,7 @@ rendering varies from Chromium, and a darwin-only baseline that no CI job compar
 **Queries and input.** Find elements by role, label or text first. Reach for a class or data selector
 only for a property no accessible query exposes. Type with `user-event`, except IME composition, where
 `fireEvent` stays because `user-event` has no composition API. Assert with the `jest-dom` matchers
-(`toBeInTheDocument`, `toHaveValue`), which `tests/mocks/rtl-setup.ts` registers for every test. Tests
+(`toBeInTheDocument`, `toHaveValue`), which `tests/mocks/rtl-setup.ts` registers for every test in the `dom` project (jsdom: every `*.test.tsx` and the `.ts` files in `DOM_TS_TESTS`); every other test runs in the `node` project with no DOM. Tests
 that read the file system are sorted in [docs/handbook/static-test-triage.md](docs/handbook/static-test-triage.md).
 
 **Mocks and browser setup.** A module mocked in more than one test file is mocked through a factory in

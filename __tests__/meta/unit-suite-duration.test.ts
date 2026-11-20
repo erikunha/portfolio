@@ -2,19 +2,28 @@ import { type ChildProcess, spawn } from 'node:child_process';
 import { mkdtempSync, readFileSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import type { TestModule } from 'vitest/node';
 import { parse as parseYaml } from 'yaml';
+import { FileBudgetReporter, SLOWEST_RUNNER_RATIO, SUITE_WARN_MS } from '../../vitest.config';
 
 const SUBPROCESS_TEST_TIMEOUT_MS = 120_000;
 const SECOND_MS = 1000;
-const BUDGET_MS = 2 * SECOND_MS;
-const SLOW_MS = 3 * SECOND_MS;
+const BUDGET_MS = 5 * SECOND_MS;
+const SLOW_MS = 6 * SECOND_MS;
 const HUNG_BUDGET_MS = SECOND_MS;
 const POLL_MS = 200;
 const REPEAT_POLLS = 5;
 const NEVER_MS = 600 * SECOND_MS;
 const WAIT_FOR_OUTPUT_MS = 90 * SECOND_MS;
 const FAILED_EXIT_CODE = 1;
+const MINUTE_MS = 60 * SECOND_MS;
+const WALL_TIME_LINE = /unit suite wall time (\d+\.\d)s/;
+const ANY_WARN_MS = 1;
+const UNREACHABLE_WARN_MS = 3600 * SECOND_MS;
+const FAKE_BUDGET_MS = 1000;
+const FAKE_POLL_MS = 100;
+const FAKE_ADVANCE_MS = 1500;
 
 const repoRoot = process.cwd();
 const vitestBin = join(repoRoot, 'node_modules/vitest/vitest.mjs');
@@ -27,10 +36,17 @@ const workflow = parseYaml(readFileSync(join(repoRoot, '.github/workflows/ci.yml
   >;
 };
 
+interface FixtureReporter {
+  budgetMs: number;
+  suiteWarnMs?: number;
+  annotate?: boolean;
+}
+
 function writeFixture(
   files: Record<string, string>,
-  budgetMs: number,
+  reporter: FixtureReporter | number,
 ): { dir: string; config: string } {
+  const options = typeof reporter === 'number' ? { budgetMs: reporter } : reporter;
   const dir = mkdtempSync(join(tmpdir(), 'unit-suite-duration-'));
   symlinkSync(join(repoRoot, 'node_modules'), join(dir, 'node_modules'));
   for (const [name, body] of Object.entries(files)) writeFileSync(join(dir, name), body);
@@ -44,7 +60,12 @@ export default defineConfig({
     include: ['*.fixture.test.ts'],
     environment: 'node',
     testTimeout: ${NEVER_MS},
-    reporters: [new FileBudgetReporter({ budgetMs: ${budgetMs}, pollMs: ${POLL_MS} })],
+    reporters: [new FileBudgetReporter({
+      budgetMs: ${options.budgetMs},
+      pollMs: ${POLL_MS},
+      suiteWarnMs: ${options.suiteWarnMs ?? UNREACHABLE_WARN_MS},
+      annotate: ${options.annotate ?? false},
+    })],
   },
 });
 `,
@@ -103,6 +124,10 @@ it('is slow', async () => {
 const SLOW_IMPORT_TEST = `import { it } from 'vitest';
 await new Promise((resolve) => setTimeout(resolve, ${SLOW_MS}));
 it('imports slowly', () => {});
+`;
+const HUNG_IMPORT_TEST = `import { it } from 'vitest';
+await new Promise(() => {});
+it('never gets here', () => {});
 `;
 const HUNG_TEST = `import { it } from 'vitest';
 it('never ends', async () => {
@@ -167,6 +192,75 @@ describe('the unit suite stays inside its CI budget', {
     expect(Number(notices[0]?.match(/after (\d+)ms/)?.[1])).toBeGreaterThanOrEqual(HUNG_BUDGET_MS);
   });
 
+  it('names a file whose import never settles, which no test has started', async () => {
+    const { dir, config } = writeFixture(
+      { 'hung-import.fixture.test.ts': HUNG_IMPORT_TEST },
+      HUNG_BUDGET_MS,
+    );
+    const child = startVitest(dir, config);
+    const output = collect(child);
+    try {
+      await waitForOutput(child, output.text, 'hung-import.fixture.test.ts still running');
+    } finally {
+      child.kill('SIGKILL');
+      await exitCodeOf(child);
+    }
+
+    expect(output.text()).toMatch(/hung-import\.fixture\.test\.ts still running after \d+ms/);
+  });
+
+  it('prints the suite wall time when the run ends', async () => {
+    const { dir, config } = writeFixture({ 'quick.fixture.test.ts': PASSING_TEST }, BUDGET_MS);
+    const child = startVitest(dir, config);
+    const output = collect(child);
+
+    const code = await exitCodeOf(child);
+
+    expect(output.text()).toMatch(WALL_TIME_LINE);
+    expect(code).toBe(0);
+  });
+
+  it('annotates a slow suite in CI without failing the run', async () => {
+    const { dir, config } = writeFixture(
+      { 'quick.fixture.test.ts': PASSING_TEST },
+      { budgetMs: BUDGET_MS, suiteWarnMs: ANY_WARN_MS, annotate: true },
+    );
+    const child = startVitest(dir, config);
+    const output = collect(child);
+
+    const code = await exitCodeOf(child);
+
+    expect(output.text()).toContain('::warning::');
+    expect(code).toBe(0);
+  });
+
+  it('stays silent about wall time outside CI and under the threshold', async () => {
+    const outsideCi = writeFixture(
+      { 'quick.fixture.test.ts': PASSING_TEST },
+      { budgetMs: BUDGET_MS, suiteWarnMs: ANY_WARN_MS, annotate: false },
+    );
+    const underThreshold = writeFixture(
+      { 'quick.fixture.test.ts': PASSING_TEST },
+      { budgetMs: BUDGET_MS, suiteWarnMs: UNREACHABLE_WARN_MS, annotate: true },
+    );
+    const first = startVitest(outsideCi.dir, outsideCi.config);
+    const firstOutput = collect(first);
+    const second = startVitest(underThreshold.dir, underThreshold.config);
+    const secondOutput = collect(second);
+
+    await Promise.all([exitCodeOf(first), exitCodeOf(second)]);
+
+    expect(firstOutput.text()).not.toContain('::warning::');
+    expect(secondOutput.text()).not.toContain('::warning::');
+  });
+
+  it('sets the warning threshold at the unit step limit divided by the slowest runner ratio seen', () => {
+    const step = workflow.jobs.test?.steps.find((candidate) => candidate.name === 'Unit tests');
+    const limitMs = (step?.['timeout-minutes'] ?? 0) * MINUTE_MS;
+
+    expect(Math.abs(SUITE_WARN_MS - limitMs / SLOWEST_RUNNER_RATIO)).toBeLessThan(SECOND_MS);
+  });
+
   it('gives the unit test step its own timeout, below the job, so a stall fails the step and the coverage upload still runs', () => {
     const job = workflow.jobs.test;
     const step = job?.steps.find((candidate) => candidate.name === 'Unit tests');
@@ -175,5 +269,75 @@ describe('the unit suite stays inside its CI budget', {
     expect(step?.['timeout-minutes'] ?? Number.POSITIVE_INFINITY).toBeLessThan(
       job?.['timeout-minutes'] ?? 0,
     );
+  });
+});
+
+describe('a reporter that sees a second run in one process', () => {
+  const originalExitCode = process.exitCode;
+
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.restoreAllMocks();
+    process.exitCode = originalExitCode;
+  });
+
+  function fakeModule(id: string, totalMs: number): TestModule {
+    return {
+      moduleId: id,
+      relativeModuleId: id,
+      diagnostic: () => ({
+        environmentSetupDuration: 0,
+        prepareDuration: 0,
+        collectDuration: 0,
+        setupDuration: 0,
+        duration: totalMs,
+      }),
+    } as unknown as TestModule;
+  }
+
+  function newReporter(): FileBudgetReporter {
+    return new FileBudgetReporter({
+      budgetMs: FAKE_BUDGET_MS,
+      pollMs: FAKE_POLL_MS,
+      suiteWarnMs: UNREACHABLE_WARN_MS,
+      annotate: false,
+    });
+  }
+
+  it('forgets the files a previous run found over budget, so the second run does not fail', () => {
+    const written = vi.spyOn(process.stderr, 'write').mockImplementation(() => true);
+    const reporter = newReporter();
+    reporter.onTestRunStart();
+    reporter.onTestModuleEnd(fakeModule('slow.test.ts', FAKE_BUDGET_MS * 2));
+    reporter.onTestRunEnd();
+    process.exitCode = undefined;
+    written.mockClear();
+
+    reporter.onTestRunStart();
+    reporter.onTestRunEnd();
+
+    expect(written).not.toHaveBeenCalled();
+    expect(process.exitCode).toBeUndefined();
+  });
+
+  it('names a stalled file again in the second run and forgets a file that never ended', () => {
+    vi.useFakeTimers();
+    const written = vi.spyOn(process.stderr, 'write').mockImplementation(() => true);
+    const reporter = newReporter();
+    reporter.onTestRunStart();
+    reporter.onTestModuleQueued(fakeModule('again.test.ts', 0));
+    reporter.onTestModuleQueued(fakeModule('abandoned.test.ts', 0));
+    vi.advanceTimersByTime(FAKE_ADVANCE_MS);
+    reporter.onTestRunEnd();
+    written.mockClear();
+
+    reporter.onTestRunStart();
+    reporter.onTestModuleQueued(fakeModule('again.test.ts', 0));
+    vi.advanceTimersByTime(FAKE_ADVANCE_MS);
+    reporter.onTestRunEnd();
+
+    const lines = written.mock.calls.map(([chunk]) => String(chunk));
+    expect(lines).toHaveLength(1);
+    expect(lines[0]).toContain('again.test.ts still running');
   });
 });
