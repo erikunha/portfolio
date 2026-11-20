@@ -83,7 +83,7 @@ describe('unclassifiedFiles (fail closed for new root and scripts files)', () =>
     'postcss.config.mjs',
     'tsconfig.json',
     '.nvmrc',
-    'scripts/strip-next-polyfills.mjs',
+    'patches/',
   ])('arms the app filter for %s', (file) => {
     expect(APP_PATHS).toContain(file);
   });
