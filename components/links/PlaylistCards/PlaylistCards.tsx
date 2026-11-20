@@ -12,7 +12,7 @@ const HEADING_ID = 'links-playlists-heading';
 const PLAYLIST_ENDPOINT = 'https://www.youtube.com/playlist?list=';
 
 const CARD_HOVER =
-  'hover:border-(color:--color-accent) hover:bg-linear-to-b hover:from-(color:--color-accent)/[0.07] hover:to-(color:--color-accent)/[0.07]';
+  'hover:border-(color:--color-accent) hover:bg-linear-to-b hover:from-(color:--color-accent-tint-light) hover:to-(color:--color-accent-tint-light)';
 const TAG =
   'border border-(color:--color-border-strong) text-(color:--color-text) text-xs tracking-md py-0.5 px-1';
 const ARROW = 'text-sm text-(color:--color-accent)';

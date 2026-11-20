@@ -141,7 +141,7 @@ function MixLegendMobile({ mixer, copy }: { mixer: DawMixer; copy: DawMixerCopy 
   if (!lead) return null;
   return (
     <div
-      className="flex flex-col gap-[3px] px-[14px] py-2 border-b border-[var(--color-signal-quiet)] bg-(color:--color-surface)/60 text-xs tracking-4xl text-signal-400 uppercase"
+      className="flex flex-col gap-[3px] px-[14px] py-2 border-b border-[var(--color-signal-quiet)] bg-(color:--color-mixer-lead-tint) text-xs tracking-4xl text-signal-400 uppercase"
       aria-hidden="true"
     >
       <span>
@@ -159,8 +159,8 @@ function ChannelMobile({ ch, copy }: { ch: DawMixerChannel; copy: DawMixerCopy }
       className={cn(
         'relative border-b border-[var(--color-signal-quiet)] px-[14px] pt-4 pb-[18px] flex flex-col gap-3',
         ch.focused
-          ? 'bg-[color-mix(in_srgb,var(--color-accent)_7%,transparent)] channel-row-focused'
-          : 'bg-(color:--color-surface)/35',
+          ? 'bg-(color:--color-accent-tint-light) channel-row-focused'
+          : 'bg-(color:--color-mixer-row-tint)',
         isMaster && ['mx-master-gradient-mobile', 'border-t-2 border-t-(color:--color-accent)'],
       )}
       data-focused={ch.focused || undefined}
@@ -175,8 +175,8 @@ function ChannelMobile({ ch, copy }: { ch: DawMixerChannel; copy: DawMixerCopy }
           className={cn(
             'text-xs tracking-5xl border font-bold whitespace-nowrap shrink-0 px-[7px] py-[3px]',
             ch.focused
-              ? 'text-(color:--color-accent) border-(color:--color-accent) bg-[color-mix(in_srgb,var(--color-accent)_10%,transparent)]'
-              : 'text-signal-400 border-[var(--color-signal-quiet)] bg-(color:--color-surface)/55',
+              ? 'text-(color:--color-accent) border-(color:--color-accent) bg-(color:--color-accent-tint-strong)'
+              : 'text-signal-400 border-[var(--color-signal-quiet)] bg-(color:--color-surface-tint-firm)',
             isMaster &&
               'border-(color:--color-accent) px-2 py-[2px] text-xs tracking-2xl font-bold text-(color:--color-accent) bg-transparent',
           )}

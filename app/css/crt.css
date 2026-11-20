@@ -3,17 +3,11 @@
     position: fixed;
     inset: 0;
     pointer-events: none;
+    --crt-vignette-glow: color-mix(in srgb, var(--color-signal-900) 12%, transparent);
+    --crt-vignette-edge: color-mix(in srgb, var(--color-scrim) 38%, transparent);
     background:
-      radial-gradient(
-        ellipse at 50% 30%,
-        color-mix(in srgb, var(--color-signal-900) 12%, transparent) 0%,
-        transparent 55%
-      ),
-      radial-gradient(
-        ellipse at center,
-        transparent 70%,
-        color-mix(in srgb, var(--color-scrim) 38%, transparent) 100%
-      );
+      radial-gradient(ellipse at 50% 30%, var(--crt-vignette-glow) 0%, transparent 55%),
+      radial-gradient(ellipse at center, transparent 70%, var(--crt-vignette-edge) 100%);
     z-index: var(--z-crt-vignette);
   }
 
@@ -38,7 +32,7 @@
     inset: 0;
     pointer-events: none;
     --crt-mask-red: color-mix(in srgb, var(--color-crt-phosphor-red) 6%, transparent);
-    --crt-mask-green: color-mix(in srgb, var(--color-accent) 6%, transparent);
+    --crt-mask-green: var(--color-accent-tint-faint);
     --crt-mask-blue: color-mix(in srgb, var(--color-crt-phosphor-blue) 6%, transparent);
     background-image: repeating-linear-gradient(
       to right,

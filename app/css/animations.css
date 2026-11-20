@@ -106,17 +106,13 @@
   }
 
   .guitar-scan-beam {
+    --guitar-scan-beam-core: color-mix(in srgb, var(--color-accent) 32%, transparent);
     position: absolute;
     left: 0;
     right: 0;
     top: -30px;
     height: 28px;
-    background: linear-gradient(
-      180deg,
-      transparent,
-      color-mix(in srgb, var(--color-accent) 32%, transparent) 50%,
-      transparent
-    );
+    background: linear-gradient(180deg, transparent, var(--guitar-scan-beam-core) 50%, transparent);
     mix-blend-mode: screen;
     pointer-events: none;
     animation: guitar-scan-beam 7s linear infinite;

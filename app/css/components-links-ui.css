@@ -71,7 +71,8 @@
   .links-identity-meta dd {
     margin: 0;
     min-width: 0;
-    color: color-mix(in srgb, var(--color-text) 85%, transparent);
+    --links-identity-meta-ink: color-mix(in srgb, var(--color-text) 85%, transparent);
+    color: var(--links-identity-meta-ink);
     overflow-wrap: break-word;
     text-wrap: pretty;
   }

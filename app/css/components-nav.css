@@ -142,7 +142,8 @@
     position: fixed;
     inset: 0;
     z-index: var(--z-scrim);
-    background: color-mix(in srgb, var(--color-scrim) 72%, transparent);
+    --menu-scrim-fill: color-mix(in srgb, var(--color-scrim) 72%, transparent);
+    background: var(--menu-scrim-fill);
     opacity: 0;
     visibility: hidden;
     pointer-events: none;
@@ -285,7 +286,8 @@
     height: calc(var(--dock-height) + env(safe-area-inset-bottom, 0px));
     padding: var(--spacing-2) var(--spacing-2)
       calc(var(--spacing-2) + env(safe-area-inset-bottom, 0px));
-    background: color-mix(in srgb, var(--color-surface) 92%, transparent);
+    --dock-fill: color-mix(in srgb, var(--color-surface) 92%, transparent);
+    background: var(--dock-fill);
     backdrop-filter: blur(12px);
     border-top: var(--border-width) solid var(--color-border-strong);
   }

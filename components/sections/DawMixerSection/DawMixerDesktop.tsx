@@ -46,10 +46,7 @@ function ChannelDesktop({ ch, copy }: { ch: DawMixerChannel; copy: DawMixerCopy 
       className={cn(
         'daw-channel-row',
         'border-b border-[var(--color-signal-quiet)] px-[18px] py-[14px] relative',
-        ch.focused && [
-          'channel-row-focused',
-          'bg-[color-mix(in_srgb,var(--color-accent)_6%,transparent)]',
-        ],
+        ch.focused && ['channel-row-focused', 'bg-(color:--color-accent-tint-faint)'],
         isMaster && ['mx-master-gradient-desktop', 'border-t border-t-(color:--color-accent)'],
       )}
       data-focused={ch.focused || undefined}
@@ -173,7 +170,7 @@ function TableHeader({ copy }: { copy: DawMixerCopy }) {
         'daw-channel-row daw-mixer-labels',
         'text-xs text-signal-400 tracking-5xl uppercase',
         'border-b border-[var(--color-signal-quiet)] px-[18px] py-[7px]',
-        'bg-(color:--color-surface)/50',
+        'bg-(color:--color-surface-tint-medium)',
       )}
       aria-hidden="true"
     >
@@ -193,7 +190,7 @@ export function DawMixerDesktop({ mixer, copy }: { mixer: DawMixer; copy: DawMix
   const endId = useId();
   return (
     <div
-      className="daw-mixer-desktop relative font-mono text-sm text-(color:--color-text) border border-[var(--color-border)] bg-(color:--color-surface)/50 overflow-x-auto md:overflow-x-hidden"
+      className="daw-mixer-desktop relative font-mono text-sm text-(color:--color-text) border border-[var(--color-border)] bg-(color:--color-surface-tint-medium) overflow-x-auto md:overflow-x-hidden"
       data-testid="daw-mixer-desktop"
     >
       <a href={`#${endId}`} className="mixer-skip-link">

@@ -109,6 +109,14 @@
   --color-signal-faint: #00ff411f;
   --color-signal-quiet: #00ff411a;
 
+  --color-accent-tint-faint: color-mix(in srgb, var(--color-accent) 6%, transparent);
+  --color-accent-tint-light: color-mix(in srgb, var(--color-accent) 7%, transparent);
+  --color-accent-tint-soft: color-mix(in srgb, var(--color-accent) 8%, transparent);
+  --color-accent-tint-strong: color-mix(in srgb, var(--color-accent) 10%, transparent);
+  --color-surface-tint-medium: color-mix(in oklab, var(--color-surface) 50%, transparent);
+  --color-surface-tint-firm: color-mix(in oklab, var(--color-surface) 55%, transparent);
+  --color-surface-tint-heavy: color-mix(in srgb, var(--color-surface) 70%, transparent);
+
   --color-signal-glow-02: rgba(0, 255, 65, 0.02);
   --color-signal-glow-03: rgba(0, 255, 65, 0.03);
   --color-signal-glow-04: rgba(0, 255, 65, 0.04);

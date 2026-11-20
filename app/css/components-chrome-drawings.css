@@ -1,3 +1,8 @@
+@theme {
+  --color-mixer-lead-tint: color-mix(in oklab, var(--color-surface) 60%, transparent);
+  --color-mixer-row-tint: color-mix(in oklab, var(--color-surface) 35%, transparent);
+}
+
 @layer components {
   .status-signal-bar {
     display: block;
@@ -50,8 +55,9 @@
     gap: 1px;
     height: var(--spacing-3);
     padding: 1px;
+    --mx-static-meter-fill: color-mix(in oklab, var(--color-surface) 70%, transparent);
     border: var(--border-width) solid var(--color-signal-quiet);
-    background: color-mix(in oklab, var(--color-surface) 70%, transparent);
+    background: var(--mx-static-meter-fill);
   }
 
   .mx-static-seg-alert {
@@ -86,19 +92,20 @@
     background: radial-gradient(
       circle at 35% 30%,
       var(--color-signal-glow-18),
-      color-mix(in srgb, var(--color-surface) 70%, transparent)
+      var(--color-surface-tint-heavy)
     );
   }
 
   .mx-plugin-mobile-on {
     color: var(--color-signal-400);
     border-color: var(--color-accent);
-    background: color-mix(in srgb, var(--color-accent) 8%, transparent);
+    background: var(--color-accent-tint-soft);
   }
 
   .mx-plugin-mobile-off {
+    --mx-plugin-off-border: color-mix(in srgb, var(--color-signal-quiet) 40%, transparent);
     color: var(--color-signal-400);
-    border-color: color-mix(in srgb, var(--color-signal-quiet) 40%, transparent);
+    border-color: var(--mx-plugin-off-border);
   }
 
   .mx-plugin-dot-on {
@@ -121,47 +128,45 @@
   }
 
   .mx-session-header-tint {
-    background: color-mix(in srgb, var(--color-accent) 5%, transparent);
+    --mx-session-header-fill: color-mix(in srgb, var(--color-accent) 5%, transparent);
+    background: var(--mx-session-header-fill);
   }
 
   .mx-master-gradient-mobile {
-    background-image: linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--color-accent) 6%, transparent),
-      transparent
-    );
+    background-image: linear-gradient(180deg, var(--color-accent-tint-faint), transparent);
   }
 
   .mx-master-gradient-desktop {
+    --mx-master-fade-end: color-mix(in srgb, var(--color-accent) 2%, transparent);
     background-image: linear-gradient(
       90deg,
-      color-mix(in srgb, var(--color-accent) 8%, transparent),
-      color-mix(in srgb, var(--color-accent) 2%, transparent)
+      var(--color-accent-tint-soft),
+      var(--mx-master-fade-end)
     );
   }
 
   .mx-toggle-on {
     color: var(--color-accent);
     border-color: var(--color-accent);
-    background: color-mix(in srgb, var(--color-accent) 10%, transparent);
+    background: var(--color-accent-tint-strong);
     box-shadow: 0 0 5px var(--color-signal-glow-35);
   }
 
   .mx-toggle-off {
     color: var(--color-signal-400);
     border-color: var(--color-signal-quiet);
-    background: color-mix(in oklab, var(--color-surface) 50%, transparent);
+    background: var(--color-surface-tint-medium);
   }
 
   .mx-plugin-chip-on {
     color: var(--color-signal-400);
     border-color: var(--color-accent);
-    background: color-mix(in srgb, var(--color-accent) 8%, transparent);
+    background: var(--color-accent-tint-soft);
   }
 
   .mx-plugin-chip-off {
     color: var(--color-signal-400);
     border-color: var(--color-signal-quiet);
-    background: color-mix(in oklab, var(--color-surface) 55%, transparent);
+    background: var(--color-surface-tint-firm);
   }
 }
