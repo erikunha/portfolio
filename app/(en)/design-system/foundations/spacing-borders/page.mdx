@@ -19,7 +19,7 @@ Spacing and border tokens live in `app/css/theme.css`.
   caption="Spacing scale tokens"
   prefix="spacing-"
   scope="theme"
-  exclude={['spacing-target','spacing-target-compact','spacing-target-pointer','spacing-opinions-list-marker']}
+  exclude={['spacing-target','spacing-target-compact','spacing-target-pointer','spacing-opinions-list-marker','spacing-hair','spacing-tight','spacing-snug','spacing-pip','spacing-chip','spacing-label','spacing-inset','spacing-panel','spacing-panel-wide','spacing-icon','spacing-node']}
   utility="{step}"
   valueHeader="Size"
 />
@@ -75,6 +75,32 @@ Page rhythm steps through one set of tokens, each the previous times `--phi`. Ga
 </Preview>
 
 Whole-page type does not use phi: a phi step from the small-text floor jumps twice in a row, too coarse for dense monospace text. Pairs split major to minor from 1024px and stack below it; on a phone every level is one centered column.
+
+<h2 id="micro">Micro-scale</h2>
+
+The micro-scale names the small sizes components used to write as arbitrary pixel values, which
+`pnpm lint:css-tokens` rejects. Each step is rem, so it follows the reader's default font size.
+
+<TokenTable
+  caption="Micro-scale tokens"
+  prefix="spacing-"
+  names={['spacing-hair','spacing-tight','spacing-snug','spacing-pip','spacing-chip','spacing-label','spacing-inset','spacing-panel','spacing-panel-wide','spacing-icon','spacing-node']}
+  utility="{step}"
+  valueHeader="Size"
+  usage={{
+    'spacing-hair': 'Offset between stacked rows, thin vertical padding',
+    'spacing-tight': 'Tight gap between adjacent glyphs, narrow indicator width',
+    'spacing-snug': 'Padding of a small tag',
+    'spacing-pip': 'Indicator dot and bar size, small gap',
+    'spacing-chip': 'Padding and gap of a chip, height of a meter row',
+    'spacing-label': 'Gap between a label and its glyph',
+    'spacing-inset': 'Inset of a field or a chip, gap of a control row',
+    'spacing-panel': 'Padding of a panel and of a mixer section',
+    'spacing-panel-wide': 'Padding of a wide panel',
+    'spacing-icon': 'Size of an inline icon',
+    'spacing-node': 'Diameter of a signal-chain node',
+  }}
+/>
 
 <h2 id="target">Touch target</h2>
 
