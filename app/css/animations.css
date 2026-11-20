@@ -1,3 +1,5 @@
+@import "../../design-system/components/Badge/Badge.css";
+
 @layer base {
   :root {
     --type-reveal-char-duration: 28ms;
@@ -33,8 +35,6 @@
     }
   }
 }
-
-@import "../../design-system/components/Badge/Badge.css";
 
 @layer components {
   @keyframes hero-shake-1 {
