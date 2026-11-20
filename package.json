@@ -57,7 +57,6 @@
     "doctor": "tsx scripts/ci/doctor.ts",
     "gates:runtime": "tsx scripts/ci/gates-runtime.ts",
     "prepare": "node scripts/install/prepare-hooks.ts",
-    "postinstall": "node scripts/strip-next-polyfills.mjs",
     "docs:feature-map": "tsx scripts/codegen/feature-map.ts",
     "decisions:index": "tsx scripts/codegen/decisions-index.ts",
     "check:decisions-index": "tsx scripts/codegen/decisions-index.ts --check",
@@ -98,6 +97,9 @@
       "uuid": "^14.0.3",
       "vite": "^8.3.6",
       "proxy-agent": "^8.0.1"
+    },
+    "patchedDependencies": {
+      "next@16.4.5": "patches/next@16.4.5.patch"
     }
   },
   "dependencies": {
