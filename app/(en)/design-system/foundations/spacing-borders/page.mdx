@@ -81,6 +81,10 @@ Whole-page type does not use phi: a phi step from the small-text floor jumps twi
 The micro-scale names the small sizes components used to write as arbitrary pixel values, which
 `pnpm lint:css-tokens` rejects. Each step is rem, so it follows the reader's default font size.
 
+The same rule covers stylesheets. A glow radius, an indicator size or a small gap takes the step that
+equals it, a border or outline width takes `--border-width`, and a size drawn once in a glyph is
+written in rem. Only `0px` and a 1px hairline offset stay in px.
+
 <TokenTable
   caption="Micro-scale tokens"
   prefix="spacing-"

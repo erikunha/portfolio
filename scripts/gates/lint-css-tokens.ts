@@ -155,6 +155,13 @@ const TOKEN_EQUAL_NAMESPACES = ['tracking', 'radius', 'shadow', 'leading', 'text
 const SUBPROPERTY_SEPARATOR = '--';
 const ARBITRARY_CLASS = /(?<![\w-])([a-z][a-z-]*)-\[([^\]\s'"`]+)\]/g;
 const WHITESPACE = /\s+/g;
+const CSS_PX_LENGTH = /(?<![\w.-])-?(?:\d+\.?\d*|\.\d+)px(?![\w-])/g;
+const CSS_STRING = /"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'/g;
+const BORDER_WIDTH_PROPERTY =
+  /^(?:border(?:-(?:top|right|bottom|left|block|inline)(?:-(?:start|end))?)?(?:-width)?|outline(?:-width)?)$/;
+const WIDTH_QUERY_AT_RULES = new Set(['media', 'container']);
+const ZERO_PX = '0px';
+const HAIRLINE_PX = new Set(['1px', '-1px']);
 const ARBITRARY_PX_SIZE = /(?<![^\s'"`])[^\s'"`]*\[-?\d*\.?\d+px\]/g;
 
 const TEXT_SIZE_SHORTHAND = '(?:xs|sm|base|lg|\\d*xl)';
@@ -230,6 +237,36 @@ export function findNonPropertyColorMix(css: string): ColorHit[] {
   postcss.parse(css).walkDecls((decl) => {
     if (decl.prop.startsWith(CUSTOM_PROPERTY) || !decl.value.includes(COLOR_MIX_OPEN)) return;
     hits.push({ line: decl.source?.start?.line ?? 0, literal: `${decl.prop}: ${decl.value}` });
+  });
+  return hits.sort((a, b) => a.line - b.line);
+}
+
+function isAllowedCssPx(length: string, property: string): boolean {
+  if (length === ZERO_PX) return true;
+  return HAIRLINE_PX.has(length) && !BORDER_WIDTH_PROPERTY.test(property);
+}
+
+function rawPxLengths(value: string, property: string): boolean {
+  return [...value.replace(CSS_STRING, '""').matchAll(CSS_PX_LENGTH)].some(
+    (match) => !isAllowedCssPx(match[0], property),
+  );
+}
+
+export function findRawCssPx(css: string): ColorHit[] {
+  const hits: ColorHit[] = [];
+  const root = postcss.parse(css);
+  root.walkDecls((decl) => {
+    if (rawPxLengths(decl.value, decl.prop)) {
+      hits.push({ line: decl.source?.start?.line ?? 0, literal: `${decl.prop}: ${decl.value}` });
+    }
+  });
+  root.walkAtRules((rule) => {
+    if (WIDTH_QUERY_AT_RULES.has(rule.name) && rawPxLengths(rule.params, '')) {
+      hits.push({
+        line: rule.source?.start?.line ?? 0,
+        literal: `@${rule.name} ${rule.params}`,
+      });
+    }
   });
   return hits.sort((a, b) => a.line - b.line);
 }
@@ -355,7 +392,30 @@ export function findSourceFiles(root: string): string[] {
   return listUnderTokenRoots(root, (name) => SOURCE_FILE.test(name) && !TSX_SKIPPED.test(name));
 }
 
+export const PX_PENDING_SHEETS: readonly string[] = [
+  'base.css',
+  'components-buttons.css',
+  'components-contact.css',
+  'components-eq.css',
+  'components-error-pages.css',
+  'components-guitar.css',
+  'components-hero.css',
+  'components-hottest-takes.css',
+  'components-inline-ui.css',
+  'components-links-cards.css',
+  'components-links-ui.css',
+  'components-mixer-controls.css',
+  'components-mixer.css',
+  'components-nav.css',
+  'components-shell.css',
+  'components-to-top.css',
+  'crt.css',
+  'forced-colors.css',
+];
+
 export interface RepoScan {
+  cssPx: RawColorHit[];
+  pxPendingStale: string[];
   colors: RawColorHit[];
   zIndex: RawColorHit[];
   focus: RawColorHit[];
@@ -536,7 +596,11 @@ export function findConsumerFiles(root: string): string[] {
   );
 }
 
-export function scanRepo(root: string, cssFiles: string[]): RepoScan {
+export function scanRepo(
+  root: string,
+  cssFiles: string[],
+  pxPending: readonly string[] = PX_PENDING_SHEETS,
+): RepoScan {
   const read = (file: string) => readFileSync(join(root, file), 'utf8');
   const tag = (file: string, hits: ColorHit[]): RawColorHit[] =>
     hits.map((hit) => ({ ...hit, file }));
@@ -544,7 +608,14 @@ export function scanRepo(root: string, cssFiles: string[]): RepoScan {
   const colorTargets = [...cssTargets, ...findTokenFiles(root)];
   const themePath = `app/css/${THEME_SHEET}`;
   const themeCss = existsSync(join(root, themePath)) ? read(themePath) : '';
+  const pxHits = new Map(
+    cssFiles.map((file) => [file, tag(`app/css/${file}`, findRawCssPx(read(`app/css/${file}`)))]),
+  );
   return {
+    cssPx: cssFiles
+      .filter((file) => !pxPending.includes(file))
+      .flatMap((file) => pxHits.get(file) ?? []),
+    pxPendingStale: pxPending.filter((file) => (pxHits.get(file) ?? []).length === 0),
     colors: [
       ...colorTargets.flatMap((file) => tag(file, findRawColors(read(file)))),
       ...findTsxFiles(root).flatMap((file) => tag(file, findRawTsxColors(read(file)))),
@@ -656,6 +727,18 @@ function main(): void {
     ) || failed;
   failed =
     report(
+      'raw px length(s) in a stylesheet',
+      'Use a token or a rem step: var(--border-width) for a border or outline width, the --spacing-* micro-scale for a small size, rem for drawn geometry. Only 0px and a 1px hairline offset stay px.',
+      scan.cssPx,
+    ) || failed;
+  if (scan.pxPendingStale.length > 0) {
+    failed = true;
+    console.error(`[css-tokens] ${scan.pxPendingStale.length} stale pending px sheet(s):`);
+    for (const file of scan.pxPendingStale) console.error(`  ✗ ${file}`);
+    console.error('Remove the sheet from PX_PENDING_SHEETS in scripts/gates/lint-css-tokens.ts.');
+  }
+  failed =
+    report(
       'primitive color use(s) outside theme.css',
       'Name the role the site means (the one shown on each line) and read it as var(--color-role) or X-(color:--color-role).',
       scan.primitives,
@@ -691,7 +774,7 @@ function main(): void {
   }
   if (failed) process.exit(1);
   console.log(
-    '[css-tokens] no raw color literals, z-index values or focus rings outside their tokens, no primitive colors where a role exists, no ordinal palette names, every tint held in a named custom property, no arbitrary values that equal a token, no arbitrary px sizes in class strings, and no unused @theme tokens.',
+    '[css-tokens] no raw color literals, z-index values or focus rings outside their tokens, no primitive colors where a role exists, no ordinal palette names, every tint held in a named custom property, no arbitrary values that equal a token, no arbitrary px sizes in class strings, no raw px lengths in a stylesheet, and no unused @theme tokens.',
   );
 }
 

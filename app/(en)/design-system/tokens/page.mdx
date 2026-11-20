@@ -159,6 +159,10 @@ The named steps from `spacing-hair` to `spacing-node` are the micro-scale. They 
 sizes in class strings, which `pnpm lint:css-tokens` rejects. They use rem so they follow the reader's
 default font size; at a 16px root each step equals the pixel size it replaced.
 
+The rule reaches stylesheets too. A border or outline width reads `border-width`, a glow radius or a
+small gap reads the nearest micro-scale step, and a size drawn once in a glyph is written in rem. Only
+`0px` and a 1px hairline offset, such as an outline offset or a one pixel gap in a meter, stay in px.
+
 Page-level spacing reads the `:root` tokens. The page top and the section gap step up at the wider width.
 
 <ResponsiveTokenTable
