@@ -2,6 +2,7 @@ import { setTimeout as delay } from 'node:timers/promises';
 import { expect, type Locator, type Page } from '@playwright/test';
 import { holdChunk } from './chunk-gate';
 import { openSectionMenu, waitForHydration } from './hydration';
+import { revealDeferredContent } from './snapshot';
 
 export const CONTACT_FORM_SELECTOR = '[data-testid="contact-form"]';
 
@@ -21,6 +22,7 @@ export const VISITOR = {
 } as const;
 
 export async function openContactFromMenu(page: Page): Promise<Locator> {
+  await revealDeferredContent(page);
   await openSectionMenu(page);
   await page.getByRole('dialog').getByRole('link', { name: CONTACT_LINK_NAME }).first().click();
   const form = page.locator(CONTACT_FORM_SELECTOR);

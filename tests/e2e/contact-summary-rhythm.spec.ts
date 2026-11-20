@@ -2,6 +2,7 @@ import { expect, test } from '@playwright/test';
 import { WIDTH } from './_helpers/geometry';
 import { waitForHydration } from './_helpers/hydration';
 import { freezeMotion } from './_helpers/motion';
+import { revealDeferredContent } from './_helpers/snapshot';
 import { gotoSettled } from './_helpers/streamed';
 
 const FORM_SELECTOR = '[data-testid="contact-form"]';
@@ -17,6 +18,7 @@ for (const route of ROUTES) {
       await page.setViewportSize({ width, height: 800 });
       await freezeMotion(page);
       await gotoSettled(page, route);
+      await revealDeferredContent(page);
       await page.locator(FORM_SELECTOR).scrollIntoViewIfNeeded();
       await waitForHydration(page, FORM_SELECTOR);
       await page.locator(`${FORM_SELECTOR} button[type="submit"]`).click();
