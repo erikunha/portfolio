@@ -224,9 +224,10 @@ starts, so no width matches both or neither.
   }}
 />
 
-A few queries stay literal because they mark one component's measured ladder, not a layout step: the
-`content-visibility` size estimates (340, 412 and 600px), the contact grid steps (512 and 640px) and
-three one-off folds (389.98, 599.98 and 1199.98px).
+Four content folds are named viewport tokens beside the steps: `hero-compact`, `hero-actions`,
+`links-qr` and `hero-stats`, each where one component's content folds. The `content-visibility` size
+estimates and the contact reserved-height steps are measured data bands in rem, not layout steps, and
+stay literal in their own stylesheets.
 
 <h2 id="borders">Borders</h2>
 
