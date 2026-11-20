@@ -39,7 +39,7 @@ test.describe('deferred modules', () => {
       for (const { id, box, extent } of modules) {
         expect(
           extent,
-          `#${id} lays rows ${extent - box}px past its ${box}px placeholder before it paints, over the next section. Raise its estimate in app/css/components-shared.css to at least ${extent}px for this width.`,
+          `#${id} lays rows ${extent - box}px past its ${box}px placeholder before it paints, over the next section. Raise its estimate in app/css/components-modules.css to at least ${extent}px for this width.`,
         ).toBeLessThanOrEqual(box + SUBPIXEL_TOLERANCE_PX);
       }
     });
