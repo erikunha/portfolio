@@ -24,7 +24,18 @@ const SCROLL_LOCK_ATTRIBUTE = 'data-scroll-locked';
 const EXIT_PROPERTY = 'transform';
 const EXITING_ATTRIBUTE = 'data-exiting';
 const EXIT_FALLBACK_SLACK_MS = 50;
+const EXIT_START_CAP_MS = 1000;
 const NO_ELAPSED_TIME = 0;
+
+const isExitSlide = (animation: Animation): animation is CSSTransition =>
+  'transitionProperty' in animation && animation.transitionProperty === EXIT_PROPERTY;
+
+const findExitSlide = (panel: HTMLDialogElement): CSSTransition | undefined =>
+  typeof panel.getAnimations === 'function' ? panel.getAnimations().find(isExitSlide) : undefined;
+
+const ignoreCancelledStart = () => undefined;
+
+const hasStarted = (slide: CSSTransition): boolean => !slide.pending && slide.startTime !== null;
 
 export function SectionNavigation({ extra }: { extra?: ReactNode }) {
   const { store, closeDrawer, settleDrawer, jump, toggleMotion, copy, chrome } =
@@ -62,15 +73,30 @@ export function SectionNavigation({ extra }: { extra?: ReactNode }) {
         if (event.target !== panel || event.propertyName !== EXIT_PROPERTY) return;
         if (event.elapsedTime !== NO_ELAPSED_TIME) done();
       };
-      const timer = setTimeout(() => done(), slideMs + EXIT_FALLBACK_SLACK_MS);
+      const slide = findExitSlide(panel);
+      let settled = false;
+      let startTimer: ReturnType<typeof setTimeout> | undefined;
+      const capTimer = setTimeout(
+        () => done(),
+        slide ? EXIT_START_CAP_MS : slideMs + EXIT_FALLBACK_SLACK_MS,
+      );
+      const armFromStart = (started: CSSTransition) => {
+        if (settled) return;
+        const leftMs = slideMs - Number(started.currentTime);
+        startTimer = setTimeout(() => done(), leftMs + EXIT_FALLBACK_SLACK_MS);
+      };
       const done = () => {
-        clearTimeout(timer);
+        settled = true;
+        clearTimeout(capTimer);
+        clearTimeout(startTimer);
         panel.removeEventListener('transitionend', onTransitionEnd);
         settleExitRef.current = null;
         panel.removeAttribute(EXITING_ATTRIBUTE);
         panel.inert = false;
         panel.close();
       };
+      if (slide && hasStarted(slide)) armFromStart(slide);
+      else if (slide) slide.ready.then(() => armFromStart(slide), ignoreCancelledStart);
       panel.addEventListener('transitionend', onTransitionEnd);
       settleExitRef.current = done;
     };
