@@ -710,3 +710,80 @@ describe('scanRoot source-grep scope', () => {
     expect(scan({ '__tests__/helpers/h.ts': "it('a', () => {});\n" })).toEqual([]);
   });
 });
+
+describe('fixed real-time waits', () => {
+  const fixedWaits = (source: string) =>
+    findViolations(source, 'sample.test.ts')
+      .filter((v) => v.kind === 'fixed-wait')
+      .map((v) => `${v.kind}@${v.line}`);
+
+  it.each([
+    ['a zero delay', 'await new Promise((resolve) => setTimeout(resolve, 0));'],
+    ['a positive delay', 'await new Promise((r) => setTimeout(r, 50));'],
+    ['a block body', 'await new Promise((resolve) => { setTimeout(resolve, 20); });'],
+    ['a function expression', 'await new Promise(function (r) { setTimeout(r, 5); });'],
+    ['a window.setTimeout call', 'await new Promise((r) => window.setTimeout(r, 10));'],
+    ['a numeric separator', 'await new Promise((r) => setTimeout(r, 1_000));'],
+    ['an await inside act', 'await act(async () => { await new Promise((r) => setTimeout(r, 0)); });'],
+  ])('flags %s', (_name, source) => {
+    expect(fixedWaits(`\n${source}`)).toEqual(['fixed-wait@2']);
+  });
+
+  it('flags the wait from within a test body, reported on the await line', () => {
+    const source = [
+      "it('a', async () => {",
+      '  await run();',
+      '  await new Promise((r) => setTimeout(r, 0));',
+      '  expect(1).toBe(1);',
+      '});',
+    ].join('\n');
+    expect(fixedWaits(source)).toEqual(['fixed-wait@3']);
+  });
+
+  it.each([
+    ['a named delay constant', 'await new Promise((r) => setTimeout(r, DELAY_MS));'],
+    ['a promise that is not awaited', 'const p = new Promise((r) => setTimeout(r, 50));'],
+    ['a fake timer advance', 'await vi.advanceTimersByTimeAsync(50);'],
+    ['a condition wait', 'await vi.waitFor(() => expect(spy).toHaveBeenCalled());'],
+    ['a timeout call outside a promise', 'await Promise.race([work, other]); setTimeout(f, 5);'],
+    ['a promise with no timer', 'await new Promise((r) => queueMicrotask(r));'],
+    ['an unrelated timer-named member', 'await new Promise((r) => clock.setTimeout(r, 5));'],
+    ['the words in a string', "const s = 'await new Promise((r) => setTimeout(r, 5))';"],
+  ])('does not flag %s', (_name, source) => {
+    expect(fixedWaits(source)).toEqual([]);
+  });
+
+  it.each([
+    [
+      'a same-line allow tag',
+      'await new Promise((r) => setTimeout(r, 50)); // behavioral-test-allow: real clock needed',
+    ],
+    [
+      'an allow tag in the comment block above',
+      '// behavioral-test-allow: real clock needed\n// more context\nawait new Promise((r) => setTimeout(r, 50));',
+    ],
+  ])('accepts %s', (_name, source) => {
+    expect(fixedWaits(source)).toEqual([]);
+  });
+
+  it('flags a wait whose allow tag sits above an unrelated code line', () => {
+    const source =
+      '// behavioral-test-allow: x\nconst a = 1;\nawait new Promise((r) => setTimeout(r, 50));';
+    expect(fixedWaits(source)).toEqual(['fixed-wait@3']);
+  });
+
+  it('counts the wait in a scanned tree', () => {
+    const root = mkdtempSync(join(tmpdir(), 'test-integrity-wait-'));
+    try {
+      writeFileSync(
+        join(root, 'a.test.ts'),
+        "it('a', async () => {\n  await new Promise((r) => setTimeout(r, 5));\n  expect(1).toBe(1);\n});",
+      );
+      expect(scanRoot(root).violations).toEqual([
+        { file: 'a.test.ts', line: 2, kind: 'fixed-wait' },
+      ]);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+});

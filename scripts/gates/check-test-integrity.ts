@@ -5,7 +5,12 @@ import ts from 'typescript';
 import { isMain } from '../lib/is-main';
 import { listFiles } from '../lib/walk';
 
-export type ViolationKind = 'focused' | 'no-assertion' | 'skip-without-reason' | 'source-grep';
+export type ViolationKind =
+  | 'fixed-wait'
+  | 'focused'
+  | 'no-assertion'
+  | 'skip-without-reason'
+  | 'source-grep';
 export type Violation = { file: string; line: number; kind: ViolationKind };
 export type ScanResult = { files: number; violations: Violation[] };
 
@@ -83,6 +88,10 @@ const RELATIVE_PREFIX = '.';
 const REASON_ARGUMENT_INDEX = 1;
 const MIN_TITLE_AND_BODY_ARGUMENTS = 2;
 const DEFAULT_EXPORT = 'default';
+const TIMER_NAME = 'setTimeout';
+const TIMER_HOSTS = new Set(['window', 'globalThis', 'self']);
+const PROMISE_NAME = 'Promise';
+const TIMER_DELAY_INDEX = 1;
 const NODE_KEY_SEPARATOR = '\0';
 
 type FunctionLike = ts.ArrowFunction | ts.FunctionExpression | ts.FunctionDeclaration;
@@ -136,6 +145,23 @@ function isAssertionCall(chain: string[]): boolean {
     (root !== undefined && ASSERTION_ROOTS.has(root)) ||
     (last !== undefined && SNAPSHOT_MATCHERS.has(last))
   );
+}
+
+function isNumericTimerCall(call: ts.CallExpression): boolean {
+  const chain = memberChain(call.expression);
+  const [first] = chain;
+  const isTimer =
+    (chain.length === 1 && first === TIMER_NAME) ||
+    (chain.length === 2 && first !== undefined && TIMER_HOSTS.has(first) && chain[1] === TIMER_NAME);
+  const delay = call.arguments[TIMER_DELAY_INDEX];
+  return isTimer && delay !== undefined && ts.isNumericLiteral(delay);
+}
+
+function isFixedWait(node: ts.AwaitExpression): boolean {
+  const awaited = node.expression;
+  if (!ts.isNewExpression(awaited)) return false;
+  if (!ts.isIdentifier(awaited.expression) || awaited.expression.text !== PROMISE_NAME) return false;
+  return collectCalls(awaited).some(isNumericTimerCall);
 }
 
 function collectCalls(node: ts.Node): ts.CallExpression[] {
@@ -286,8 +312,13 @@ function inspectSourceFile(
     }
   };
 
+  const lines = sourceFile.text.split('\n');
   const visit = (node: ts.Node) => {
     if (ts.isCallExpression(node)) inspect(node);
+    if (ts.isAwaitExpression(node) && isFixedWait(node)) {
+      const { line } = sourceFile.getLineAndCharacterOfPosition(node.getStart(sourceFile));
+      if (!isAllowTagged(lines, line)) report(node, 'fixed-wait');
+    }
     ts.forEachChild(node, visit);
   };
   visit(sourceFile);
@@ -585,6 +616,8 @@ export function scanRoot(root: string): ScanResult {
 }
 
 const ADVICE: Record<ViolationKind, string> = {
+  'fixed-wait':
+    'a fixed real-time wait is flaky under load; wait for the condition with vi.waitFor, use fake timers, or tag the wait with behavioral-test-allow: and a reason',
   'source-grep':
     'a test that reads application source asserts text, not behavior; exercise the code, or tag the read with behavioral-test-allow: and a reason',
   focused: 'a focused test silently skips every other test in the run; remove the .only',
