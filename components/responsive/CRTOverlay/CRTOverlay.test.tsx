@@ -25,6 +25,7 @@ describe('CRTOverlay owns the frame governor', () => {
     mounted?.unmount();
     mounted = undefined;
     localStorage.clear();
+    vi.useRealTimers();
     vi.unstubAllGlobals();
   });
 
@@ -78,7 +79,8 @@ describe('CRTOverlay owns the frame governor', () => {
 
     openGate();
     await loaded;
-    await new Promise((resolve) => setTimeout(resolve, 0));
+    vi.useFakeTimers({ toFake: ['setTimeout'] });
+    await vi.advanceTimersByTimeAsync(0);
 
     expect(scheduled, 'a late module load must not start a governor nobody holds').toBe(0);
     expect(document.documentElement.hasAttribute('data-crt-level')).toBe(false);

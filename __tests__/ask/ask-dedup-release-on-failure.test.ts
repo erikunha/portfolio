@@ -3,6 +3,7 @@ import { askRequest, readBody } from '../helpers/ask-route';
 
 const QUESTION = 'Who is Erik?';
 const releaseMock = vi.hoisted(() => vi.fn(async (..._args: unknown[]) => undefined));
+const settleMock = vi.hoisted(() => vi.fn(async (..._args: unknown[]) => undefined));
 const model = vi.hoisted(() => ({
   mode: 'fail-before-text' as 'fail-before-text' | 'ok' | 'throws',
 }));
@@ -51,6 +52,7 @@ vi.mock('@/lib/server/client-ip', async () =>
 vi.mock('@/lib/rate-limit', async () => (await import('../helpers/ask-route')).rateLimitModule());
 vi.mock('@/lib/ask/budget', async () =>
   (await import('../helpers/ask-route')).budgetModule({
+    settleBudget: settleMock,
     reserveBudget: vi.fn(async () => ({
       allowed: true,
       reserved: 1512,
@@ -74,6 +76,7 @@ describe('/api/ask identical-question lock when the answer never starts', () => 
     process.env.ASK_ENABLED = 'true';
     vi.spyOn(console, 'error').mockImplementation(() => undefined);
     releaseMock.mockClear();
+    settleMock.mockClear();
   });
 
   it('releases the lock when the model fails before the first chunk', async () => {
@@ -104,7 +107,7 @@ describe('/api/ask identical-question lock when the answer never starts', () => 
     const body = await readBody(await POST(askRequest({ question: QUESTION })));
 
     expect(body).toContain('Erik builds things.');
-    await new Promise((resolve) => setTimeout(resolve, 50));
+    await vi.waitFor(() => expect(settleMock).toHaveBeenCalled());
     expect(releaseMock).not.toHaveBeenCalled();
   });
 });

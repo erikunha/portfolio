@@ -111,11 +111,12 @@ describe('getScores: cache miss', () => {
     mockFetch.mockResolvedValue(makePsiResponse(0.95));
     const { getScores, LIGHTHOUSE_TTL_S } = await import('@/lib/lighthouse-scores');
     await getScores('desktop');
-    await new Promise((r) => setTimeout(r, 0));
-    expect(mockSet).toHaveBeenCalledWith(
-      'lh:scores:desktop',
-      expect.objectContaining({ performance: 95 }),
-      { ex: LIGHTHOUSE_TTL_S },
+    await vi.waitFor(() =>
+      expect(mockSet).toHaveBeenCalledWith(
+        'lh:scores:desktop',
+        expect.objectContaining({ performance: 95 }),
+        { ex: LIGHTHOUSE_TTL_S },
+      ),
     );
   });
 
@@ -446,10 +447,11 @@ describe('last-good copy: written on every successful fetch', () => {
     mockFetch.mockResolvedValue(makePsiResponse(0.96));
     const { getScores } = await import('@/lib/lighthouse-scores');
     await getScores('desktop');
-    await new Promise((r) => setTimeout(r, 0));
-    expect(mockSet).toHaveBeenCalledWith(
-      LAST_GOOD_KEY_DESKTOP,
-      expect.objectContaining({ performance: 96, fetchedAt: expect.any(String) }),
+    await vi.waitFor(() =>
+      expect(mockSet).toHaveBeenCalledWith(
+        LAST_GOOD_KEY_DESKTOP,
+        expect.objectContaining({ performance: 96, fetchedAt: expect.any(String) }),
+      ),
     );
   });
 

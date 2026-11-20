@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { GlobalErrorPage } from '@/components/ErrorPages/GlobalErrorPage.client';
 import { RouteErrorPage } from '@/components/ErrorPages/RouteErrorPage.client';
@@ -9,12 +9,6 @@ const retryLabel = serverErrorContent[SITE_LOCALE.en].retryLabel;
 
 function props() {
   return { error: new Error('boom'), retry: vi.fn(), reset: vi.fn() };
-}
-
-function flush() {
-  return act(async () => {
-    await new Promise((resolve) => setTimeout(resolve, 0));
-  });
 }
 
 describe('error pages recover through retry', () => {
@@ -28,9 +22,10 @@ describe('error pages recover through retry', () => {
   it('global error page calls retry and never reset, before and after its body loads', async () => {
     const handlers = props();
     render(<GlobalErrorPage {...handlers} />, { container: document });
-    fireEvent.click(screen.getByRole('button', { name: retryLabel }));
+    const fallbackRetry = screen.getByRole('button', { name: retryLabel });
+    fireEvent.click(fallbackRetry);
     expect(handlers.retry, 'the static fallback').toHaveBeenCalledTimes(1);
-    await flush();
+    await waitFor(() => expect(fallbackRetry.isConnected).toBe(false));
     fireEvent.click(screen.getByRole('button', { name: retryLabel }));
     expect(handlers.retry, 'the loaded body').toHaveBeenCalledTimes(2);
     expect(handlers.reset).not.toHaveBeenCalled();

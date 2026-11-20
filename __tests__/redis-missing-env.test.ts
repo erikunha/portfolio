@@ -100,6 +100,8 @@ describe('hasRedisCredentials', () => {
   });
 });
 
+const UNHANDLED_REJECTION_WINDOW_MS = 20;
+
 describe('the unconfigured client under @upstash/ratelimit', () => {
   afterEach(() => {
     vi.unstubAllEnvs();
@@ -120,9 +122,11 @@ describe('the unconfigured client under @upstash/ratelimit', () => {
       await expect(limit.limit('0123456789abcdef' as RateLimitIdentifier)).rejects.toThrow(
         /not configured/,
       );
-      await new Promise((resolve) => setTimeout(resolve, 20));
+      vi.useFakeTimers({ toFake: ['setTimeout'] });
+      await vi.advanceTimersByTimeAsync(UNHANDLED_REJECTION_WINDOW_MS);
       expect(unhandled).toEqual([]);
     } finally {
+      vi.useRealTimers();
       process.off('unhandledRejection', onUnhandled);
     }
   });

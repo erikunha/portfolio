@@ -1,4 +1,4 @@
-import { act, render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { GlobalErrorPage } from '@/components/ErrorPages/GlobalErrorPage.client';
 import { serverErrorContent } from '@/content/server-error-detail';
@@ -31,9 +31,7 @@ describe('the last-resort error page after a root crash', () => {
     ).toBe(heading);
     expect(heading.getAttribute('tabindex')).toBe(NOT_TABBABLE);
 
-    await act(async () => {
-      await new Promise((resolve) => setTimeout(resolve, 0));
-    });
+    await waitFor(() => expect(heading.isConnected).toBe(false));
     expect(document.activeElement).toBe(screen.getByRole('heading', { level: 1, name: copy.code }));
   });
 });

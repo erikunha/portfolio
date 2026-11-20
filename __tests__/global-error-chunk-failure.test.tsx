@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { GlobalErrorPage } from '@/components/ErrorPages/GlobalErrorPage.client';
 import { serverErrorContent } from '@/content/server-error-detail';
@@ -20,9 +20,8 @@ describe('GlobalErrorPage when its body chunk cannot load', () => {
     const retry = vi.fn();
     const copy = serverErrorContent[SITE_LOCALE.en];
     render(<GlobalErrorPage error={new Error('boom')} retry={retry} />, { container: document });
-    await act(async () => {
-      await new Promise((resolve) => setTimeout(resolve, 0));
-    });
+    const fallbackRetry = screen.getByRole('button', { name: copy.retryLabel });
+    await waitFor(() => expect(fallbackRetry.isConnected).toBe(false));
 
     expect(
       screen.getByText(copy.message),
