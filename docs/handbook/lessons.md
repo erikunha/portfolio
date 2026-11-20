@@ -279,10 +279,13 @@ The prompt for a manual or agent review that applies these rules to a diff is `d
     s after this site loaded and reached steady frames only after 10 to 20 s, and a CSS
     transition's clock and its `transitionrun` and `transitionend` events only advance with
     a rendering update, so a 200 ms slide sampled per frame saw no intermediate position (a
-    plain `div` transition behaved the same). The app's exit fallback is wall-clock
-    (duration plus 50 ms), so a late first frame shortens the slide on such a runner: the
-    accepted cost, and no steady frame rate is promised (the 2-CPU mobile shape stays near 5
-    fps). Sample DOM state on a timer. Read a transition's positions by pausing the
+    plain `div` transition behaved the same). The app's exit fallback counted wall-clock
+    from `show()`, so a late first frame cut the slide (on Linux Chromium the panel sat at
+    77% of its travel at the close, 25 of 100 closes reached 95%); it now counts from the
+    start of the `transform` transition read from `getAnimations()` and `ready`, with a
+    1000 ms cap, and 100 of 100 reach 95%. No steady frame rate is promised (the 2-CPU
+    mobile shape stays near 5 fps), and the exit draws about 40 ms per frame whatever the
+    idle rate, so the real-time spec requires 2 live positions, not 4. Sample DOM state on a timer. Read a transition's positions by pausing the
     `CSSTransition` from `getAnimations()`, seeking `currentTime` and restoring it before
     `play()`, in a test apart from the one that bounds the exit in time with a
     `MutationObserver` on the attributes, so the bound reads the app's own timing. Take the
