@@ -230,7 +230,9 @@ Stylesheets write `letter-spacing: var(--tracking-xl)`; markup writes `tracking-
 A media query cannot read a custom property, so stylesheets write `theme(--viewport-md)` and Tailwind
 substitutes the width at build time. Steps are in `rem`, so a query follows the browser's root font
 size. A range query `(width < theme(--viewport-md))` ends exactly where `(min-width: theme(--viewport-md))`
-starts, so no width matches both or neither.
+starts, so no width matches both or neither. Queries are mobile-first: a rule that needs another
+condition on top applies at `min-width` and undoes at the next step, because a `not` nested inside
+parentheses is dropped by older Safari.
 
 <ViewportTable
   caption="Viewport tokens"
