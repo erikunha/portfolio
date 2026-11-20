@@ -239,7 +239,13 @@ describe('lib/ask/budget', () => {
 
     it('skips a settlement with no positive reservation', async () => {
       const { settleBudget, calls } = await settleSetup();
-      await settleBudget(0, 10, 10, MONTH, DAY);
+      await settleBudget({
+        reserved: 0,
+        billedInputTokens: 10,
+        outputTokens: 10,
+        budgetKey: MONTH,
+        dailyKey: DAY,
+      });
       expect(calls).toEqual([]);
       expect(logWarn).toHaveBeenCalledWith(
         'budget settlement skipped: no positive reservation',
@@ -255,7 +261,13 @@ describe('lib/ask/budget', () => {
         cacheReadTokens: 0,
         cacheWriteTokens: 0,
       });
-      await settleBudget(actual, 100, 50, MONTH, DAY);
+      await settleBudget({
+        reserved: actual,
+        billedInputTokens: 100,
+        outputTokens: 50,
+        budgetKey: MONTH,
+        dailyKey: DAY,
+      });
       expect(calls).toEqual([]);
     });
 
@@ -267,7 +279,13 @@ describe('lib/ask/budget', () => {
         cacheReadTokens: 0,
         cacheWriteTokens: 0,
       });
-      await settleBudget(actual + 40, 100, 50, MONTH, DAY);
+      await settleBudget({
+        reserved: actual + 40,
+        billedInputTokens: 100,
+        outputTokens: 50,
+        budgetKey: MONTH,
+        dailyKey: DAY,
+      });
       expect(calls).toEqual([
         { op: 'release', key: MONTH, tokens: 40 },
         { op: 'release', key: DAY, tokens: 40 },
@@ -282,7 +300,12 @@ describe('lib/ask/budget', () => {
         cacheReadTokens: 0,
         cacheWriteTokens: 0,
       });
-      await settleBudget(actual + 40, 100, 50, MONTH);
+      await settleBudget({
+        reserved: actual + 40,
+        billedInputTokens: 100,
+        outputTokens: 50,
+        budgetKey: MONTH,
+      });
       expect(calls).toEqual([{ op: 'release', key: MONTH, tokens: 40 }]);
     });
 
@@ -294,7 +317,13 @@ describe('lib/ask/budget', () => {
         cacheReadTokens: 0,
         cacheWriteTokens: 0,
       });
-      await settleBudget(actual - 25, 100, 50, MONTH, DAY);
+      await settleBudget({
+        reserved: actual - 25,
+        billedInputTokens: 100,
+        outputTokens: 50,
+        budgetKey: MONTH,
+        dailyKey: DAY,
+      });
       expect(calls).toEqual([
         { op: 'chargeOverage', key: MONTH, tokens: 25 },
         { op: 'chargeOverage', key: DAY, tokens: 25 },
@@ -315,7 +344,11 @@ describe('lib/ask/budget', () => {
         cacheReadTokens: 400,
         cacheWriteTokens: 300,
       });
-      await settleBudget(plain, 100, 50, MONTH, undefined, {
+      await settleBudget({
+        reserved: plain,
+        billedInputTokens: 100,
+        outputTokens: 50,
+        budgetKey: MONTH,
         cacheReadTokens: 400,
         cacheWriteTokens: 300,
       });
@@ -340,8 +373,24 @@ describe('lib/ask/budget', () => {
       }).store;
       setBudgetStore(failing);
 
-      await expect(settleBudget(actual - 5, 100, 50, MONTH, DAY)).resolves.toBeUndefined();
-      await expect(settleBudget(actual + 5, 100, 50, MONTH, DAY)).resolves.toBeUndefined();
+      await expect(
+        settleBudget({
+          reserved: actual - 5,
+          billedInputTokens: 100,
+          outputTokens: 50,
+          budgetKey: MONTH,
+          dailyKey: DAY,
+        }),
+      ).resolves.toBeUndefined();
+      await expect(
+        settleBudget({
+          reserved: actual + 5,
+          billedInputTokens: 100,
+          outputTokens: 50,
+          budgetKey: MONTH,
+          dailyKey: DAY,
+        }),
+      ).resolves.toBeUndefined();
       expect(logError).toHaveBeenCalledWith(
         'budget settlement overage charge failed',
         expect.objectContaining({ key: MONTH }),
@@ -382,10 +431,21 @@ describe('lib/ask/budget', () => {
 
     it('refunds with decrby and charges overage with incrby', async () => {
       const { settleBudget } = await import('@/lib/ask/budget');
-      await settleBudget(1_000_000, 1, 1, MONTH, DAY);
+      await settleBudget({
+        reserved: 1_000_000,
+        billedInputTokens: 1,
+        outputTokens: 1,
+        budgetKey: MONTH,
+        dailyKey: DAY,
+      });
       expect(decrby).toHaveBeenCalledTimes(2);
       expect(decrby).toHaveBeenCalledWith(MONTH, expect.any(Number));
-      await settleBudget(1, 1_000_000, 1_000_000, MONTH);
+      await settleBudget({
+        reserved: 1,
+        billedInputTokens: 1_000_000,
+        outputTokens: 1_000_000,
+        budgetKey: MONTH,
+      });
       expect(incrby).toHaveBeenCalledWith(MONTH, expect.any(Number));
     });
   });

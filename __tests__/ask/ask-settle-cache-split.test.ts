@@ -66,13 +66,14 @@ describe('/api/ask settles the budget with the cache split of the metered usage'
     await readBody(res);
 
     await vi.waitFor(() => expect(settleBudgetMock).toHaveBeenCalledOnce());
-    expect(settleBudgetMock).toHaveBeenCalledWith(
-      2712,
-      NO_CACHE_TOKENS + CACHE_READ_TOKENS + CACHE_WRITE_TOKENS,
-      OUTPUT_TOKENS,
-      'ask:tokens:test',
-      'ask:tokens:day:test',
-      { cacheReadTokens: CACHE_READ_TOKENS, cacheWriteTokens: CACHE_WRITE_TOKENS },
-    );
+    expect(settleBudgetMock).toHaveBeenCalledWith({
+      reserved: 2712,
+      billedInputTokens: NO_CACHE_TOKENS + CACHE_READ_TOKENS + CACHE_WRITE_TOKENS,
+      outputTokens: OUTPUT_TOKENS,
+      budgetKey: 'ask:tokens:test',
+      dailyKey: 'ask:tokens:day:test',
+      cacheReadTokens: CACHE_READ_TOKENS,
+      cacheWriteTokens: CACHE_WRITE_TOKENS,
+    });
   });
 });

@@ -1,5 +1,6 @@
 import type { NextRequest } from 'next/server';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import type { SettleParams } from '@/lib/ask/budget';
 import { askRequest, readBody } from '../helpers/ask-route';
 import { streamTextResult } from '../helpers/modules';
 
@@ -9,10 +10,7 @@ vi.mock('ai', () => ({
   streamText: mockStreamText,
 }));
 
-const settleBudgetMock = vi.fn(
-  async (_reserved: number, _actualIn: number, _actualOut: number, _key: string): Promise<void> =>
-    undefined,
-);
+const settleBudgetMock = vi.fn(async (_params: SettleParams): Promise<void> => undefined);
 const reserveBudgetMock = vi.fn(async () => ({
   allowed: true,
   reserved: 2712,
@@ -105,13 +103,11 @@ describe('/api/ask: cache-hit accounting (STANDARDS.md Ch.7)', () => {
 
     await vi.waitFor(() => expect(settleBudgetMock).toHaveBeenCalledOnce());
 
-    const firstCall = settleBudgetMock.mock.calls[0];
+    const firstCall = settleBudgetMock.mock.calls[0]?.[0];
     expect(firstCall).toBeDefined();
-    const billedInput = firstCall?.[1];
-    const outTokens = firstCall?.[2];
-    expect(billedInput).toBe(200 + 1500 + 0);
-    expect(outTokens).toBe(80);
-    expect(firstCall?.[3]).toBe('ask:tokens:test');
+    expect(firstCall?.billedInputTokens).toBe(200 + 1500 + 0);
+    expect(firstCall?.outputTokens).toBe(80);
+    expect(firstCall?.budgetKey).toBe('ask:tokens:test');
 
     expect(persistMock).toHaveBeenCalled();
     const persisted = persistMock.mock.calls.at(-1)?.[0];
@@ -159,7 +155,7 @@ describe('/api/ask: cache-hit accounting (STANDARDS.md Ch.7)', () => {
     await readBody(res);
 
     await vi.waitFor(() => expect(settleBudgetMock).toHaveBeenCalledOnce());
-    const billedInput = settleBudgetMock.mock.calls[0]?.[1];
+    const billedInput = settleBudgetMock.mock.calls[0]?.[0]?.billedInputTokens;
     expect(billedInput).toBe(200 + 0 + 1500);
 
     const completed = logInfoMock.mock.calls.find((c) => c[0] === 'ask completed');
@@ -182,7 +178,7 @@ describe('/api/ask: cache-hit accounting (STANDARDS.md Ch.7)', () => {
     await readBody(res);
 
     await vi.waitFor(() => expect(settleBudgetMock).toHaveBeenCalledOnce());
-    const billedInput = settleBudgetMock.mock.calls[0]?.[1];
+    const billedInput = settleBudgetMock.mock.calls[0]?.[0]?.billedInputTokens;
     expect(billedInput).toBe(1700);
     const completed = logInfoMock.mock.calls.find((c) => c[0] === 'ask completed');
     const meta = completed?.[1] as { cacheHitRate: number };
@@ -231,9 +227,9 @@ describe('/api/ask: cache-hit accounting (STANDARDS.md Ch.7)', () => {
     await readBody(res);
 
     await vi.waitFor(() => expect(settleBudgetMock).toHaveBeenCalledOnce());
-    const firstCall = settleBudgetMock.mock.calls[0];
-    expect(firstCall?.[1]).toBe(300);
-    expect(firstCall?.[2]).toBe(40);
+    const firstCall = settleBudgetMock.mock.calls[0]?.[0];
+    expect(firstCall?.billedInputTokens).toBe(300);
+    expect(firstCall?.outputTokens).toBe(40);
 
     const completed = logInfoMock.mock.calls.find((c) => c[0] === 'ask completed');
     const meta = completed?.[1] as {

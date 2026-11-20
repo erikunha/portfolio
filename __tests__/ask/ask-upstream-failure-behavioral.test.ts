@@ -87,6 +87,12 @@ describe('/api/ask when the model provider fails', () => {
     expect(
       settleMock,
       'no usage was reported, so settlement was skipped and every failed call kept its 1512-token reservation against the monthly cap',
-    ).toHaveBeenCalledWith(1512, 0, 0, 'ask:tokens:test', 'ask:tokens:day:test');
+    ).toHaveBeenCalledWith({
+      reserved: 1512,
+      billedInputTokens: 0,
+      outputTokens: 0,
+      budgetKey: 'ask:tokens:test',
+      dailyKey: 'ask:tokens:day:test',
+    });
   });
 });

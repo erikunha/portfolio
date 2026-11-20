@@ -103,12 +103,12 @@ describe('/api/ask settlement when the upstream fails and usage is lost', () => 
     await settleRequest();
 
     expect(settleBudgetMock).toHaveBeenCalledOnce();
-    expect(settleBudgetMock).toHaveBeenCalledWith(
-      2712,
-      0,
-      0,
-      'ask:tokens:test',
-      'ask:tokens:day:test',
-    );
+    expect(settleBudgetMock).toHaveBeenCalledWith({
+      reserved: 2712,
+      billedInputTokens: 0,
+      outputTokens: 0,
+      budgetKey: 'ask:tokens:test',
+      dailyKey: 'ask:tokens:day:test',
+    });
   });
 });

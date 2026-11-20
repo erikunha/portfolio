@@ -84,8 +84,20 @@ describe('budget store seam', () => {
     const second = await reserveBudget(512);
     expect((await reserveBudget(512)).allowed).toBe(false);
 
-    await settleBudget(first.reserved, 100, 50, first.budgetKey, first.dailyKey);
-    await settleBudget(second.reserved, 100, 50, second.budgetKey, second.dailyKey);
+    await settleBudget({
+      reserved: first.reserved,
+      billedInputTokens: 100,
+      outputTokens: 50,
+      budgetKey: first.budgetKey,
+      dailyKey: first.dailyKey,
+    });
+    await settleBudget({
+      reserved: second.reserved,
+      billedInputTokens: 100,
+      outputTokens: 50,
+      budgetKey: second.budgetKey,
+      dailyKey: second.dailyKey,
+    });
 
     expect((await reserveBudget(512)).allowed).toBe(true);
     expect(decrbyMock).not.toHaveBeenCalled();
@@ -163,7 +175,7 @@ describe('budget store seam', () => {
     });
 
     const { reserved, budgetKey, dailyKey } = await reserveBudget(512);
-    await settleBudget(reserved, 100, 50, budgetKey, dailyKey);
+    await settleBudget({ reserved, billedInputTokens: 100, outputTokens: 50, budgetKey, dailyKey });
 
     expect(used.get(budgetKey)).toBe(SETTLED_COST);
     expect(used.get(dailyKey)).toBe(SETTLED_COST);

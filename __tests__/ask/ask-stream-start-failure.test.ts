@@ -62,7 +62,13 @@ describe('/api/ask when the model call cannot start', () => {
     expect(
       settleBudgetMock,
       'reserveBudget already charged the month; a synchronous throw before any stream exists registers no settlement',
-    ).toHaveBeenCalledWith(2712, 0, 0, 'ask:tokens:test', 'ask:tokens:day:test');
+    ).toHaveBeenCalledWith({
+      reserved: 2712,
+      billedInputTokens: 0,
+      outputTokens: 0,
+      budgetKey: 'ask:tokens:test',
+      dailyKey: 'ask:tokens:day:test',
+    });
     expect(res.status).toBe(500);
     expect(await res.json()).toEqual({ error: askErrors.pt.interrupted });
     expect(logError).toHaveBeenCalledWith(

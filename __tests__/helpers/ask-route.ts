@@ -98,14 +98,14 @@ export function budgetModule(overrides: Record<string, unknown> = {}) {
   const actual = () => actualBudget;
   const settleReservation = vi.fn(
     async (reservation: ReservationFixture, usage: UsageFixture | 'none') => {
-      const { settleArgs } = await actual();
-      return settle(...settleArgs(reservation, usage));
+      const { settleParams } = await actual();
+      return settle(settleParams(reservation, usage));
     },
   );
   const abandonReservation = vi.fn(async (reservation: ReservationFixture) => {
-    const { abandonSettleArgs } = await actual();
-    const args = abandonSettleArgs(reservation);
-    if (args !== null) await settle(...args);
+    const { abandonSettleParams } = await actual();
+    const params = abandonSettleParams(reservation);
+    if (params !== null) await settle(params);
     const dedup = await import('@/lib/ask/dedup');
     await dedup.releaseIdenticalQuestion(reservation.ipHash, reservation.question);
   });

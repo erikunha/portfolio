@@ -137,17 +137,15 @@ describe('the ask budget measures cost, not raw token count', () => {
         refusal = reservation.reason;
         break;
       }
-      await settleBudget(
-        reservation.reserved,
-        CACHE_HIT_USAGE.billedInputTokens,
-        CACHE_HIT_USAGE.outputTokens,
-        reservation.budgetKey,
-        reservation.dailyKey,
-        {
-          cacheReadTokens: CACHE_HIT_USAGE.cacheReadTokens,
-          cacheWriteTokens: CACHE_HIT_USAGE.cacheWriteTokens,
-        },
-      );
+      await settleBudget({
+        reserved: reservation.reserved,
+        billedInputTokens: CACHE_HIT_USAGE.billedInputTokens,
+        outputTokens: CACHE_HIT_USAGE.outputTokens,
+        budgetKey: reservation.budgetKey,
+        dailyKey: reservation.dailyKey,
+        cacheReadTokens: CACHE_HIT_USAGE.cacheReadTokens,
+        cacheWriteTokens: CACHE_HIT_USAGE.cacheWriteTokens,
+      });
       admitted += 1;
     }
     expect(refusal).toBe('day');
@@ -163,17 +161,15 @@ describe('the ask budget measures cost, not raw token count', () => {
     for (let ask = 0; ask < SAFETY_ASK_LIMIT; ask += 1) {
       const reservation = await reserveBudget(ASK_MAX_OUTPUT_TOKENS);
       if (!reservation.allowed) break;
-      await settleBudget(
-        reservation.reserved,
-        CACHE_MISS_USAGE.billedInputTokens,
-        CACHE_MISS_USAGE.outputTokens,
-        reservation.budgetKey,
-        reservation.dailyKey,
-        {
-          cacheReadTokens: CACHE_MISS_USAGE.cacheReadTokens,
-          cacheWriteTokens: CACHE_MISS_USAGE.cacheWriteTokens,
-        },
-      );
+      await settleBudget({
+        reserved: reservation.reserved,
+        billedInputTokens: CACHE_MISS_USAGE.billedInputTokens,
+        outputTokens: CACHE_MISS_USAGE.outputTokens,
+        budgetKey: reservation.budgetKey,
+        dailyKey: reservation.dailyKey,
+        cacheReadTokens: CACHE_MISS_USAGE.cacheReadTokens,
+        cacheWriteTokens: CACHE_MISS_USAGE.cacheWriteTokens,
+      });
       spent += missCost;
     }
     expect(spent / NANO_USD_PER_USD).toBeLessThanOrEqual(MONTHLY_BUDGET_USD);
@@ -185,17 +181,15 @@ describe('the ask budget measures cost, not raw token count', () => {
     const { askBudgetCost } = await import('@/lib/ask/usage');
     const { reserved, budgetKey, dailyKey } = await reserveBudget(ASK_MAX_OUTPUT_TOKENS);
     expect(counters.get(budgetKey)).toBe(reserved);
-    await settleBudget(
+    await settleBudget({
       reserved,
-      CACHE_HIT_USAGE.billedInputTokens,
-      CACHE_HIT_USAGE.outputTokens,
+      billedInputTokens: CACHE_HIT_USAGE.billedInputTokens,
+      outputTokens: CACHE_HIT_USAGE.outputTokens,
       budgetKey,
       dailyKey,
-      {
-        cacheReadTokens: CACHE_HIT_USAGE.cacheReadTokens,
-        cacheWriteTokens: CACHE_HIT_USAGE.cacheWriteTokens,
-      },
-    );
+      cacheReadTokens: CACHE_HIT_USAGE.cacheReadTokens,
+      cacheWriteTokens: CACHE_HIT_USAGE.cacheWriteTokens,
+    });
     expect(counters.get(budgetKey)).toBe(askBudgetCost(CACHE_HIT_USAGE));
     expect(counters.get(dailyKey)).toBe(askBudgetCost(CACHE_HIT_USAGE));
   });
@@ -210,7 +204,12 @@ describe('the ask budget measures cost, not raw token count', () => {
       cacheWriteTokens: ASK_RESERVED_INPUT_TOKENS * 2,
       outputTokens: ASK_MAX_OUTPUT_TOKENS,
     };
-    await settleBudget(reserved, huge.billedInputTokens, huge.outputTokens, budgetKey, dailyKey, {
+    await settleBudget({
+      reserved,
+      billedInputTokens: huge.billedInputTokens,
+      outputTokens: huge.outputTokens,
+      budgetKey,
+      dailyKey,
       cacheReadTokens: 0,
       cacheWriteTokens: huge.cacheWriteTokens,
     });
@@ -220,7 +219,7 @@ describe('the ask budget measures cost, not raw token count', () => {
   it('prices input at the full rate when the caller has no cache split', async () => {
     const { reserveBudget, settleBudget } = await import('@/lib/ask/budget');
     const { reserved, budgetKey, dailyKey } = await reserveBudget(ASK_MAX_OUTPUT_TOKENS);
-    await settleBudget(reserved, 1000, 0, budgetKey, dailyKey);
+    await settleBudget({ reserved, billedInputTokens: 1000, outputTokens: 0, budgetKey, dailyKey });
     expect(counters.get(budgetKey)).toBe(100_000);
   });
 });

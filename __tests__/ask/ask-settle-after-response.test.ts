@@ -85,14 +85,15 @@ describe('/api/ask budget settlement and log write', () => {
 
     await registeredTask();
 
-    expect(settleBudgetMock).toHaveBeenCalledWith(
-      2712,
-      2000,
-      40,
-      'ask:tokens:test',
-      'ask:tokens:day:test',
-      { cacheReadTokens: 0, cacheWriteTokens: 0 },
-    );
+    expect(settleBudgetMock).toHaveBeenCalledWith({
+      reserved: 2712,
+      billedInputTokens: 2000,
+      outputTokens: 40,
+      budgetKey: 'ask:tokens:test',
+      dailyKey: 'ask:tokens:day:test',
+      cacheReadTokens: 0,
+      cacheWriteTokens: 0,
+    });
     expect(persistMock).toHaveBeenCalledOnce();
     expect(persistMock.mock.calls[0]?.[0].status).toBe('completed');
   });
@@ -111,13 +112,13 @@ describe('/api/ask budget settlement and log write', () => {
     await waitForAfterRegistration();
     await registeredTask();
 
-    expect(settleBudgetMock).toHaveBeenCalledWith(
-      2712,
-      ASK_RESERVED_INPUT_TOKENS,
-      0,
-      'ask:tokens:test',
-      'ask:tokens:day:test',
-    );
+    expect(settleBudgetMock).toHaveBeenCalledWith({
+      reserved: 2712,
+      billedInputTokens: ASK_RESERVED_INPUT_TOKENS,
+      outputTokens: 0,
+      budgetKey: 'ask:tokens:test',
+      dailyKey: 'ask:tokens:day:test',
+    });
   });
 
   it('refunds the budget and writes the log before it counts guard findings', async () => {

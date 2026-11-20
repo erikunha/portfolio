@@ -123,25 +123,32 @@ export async function reserveBudget(maxOutputTokens: number): Promise<BudgetRese
 
 export type CacheTokenCounts = { cacheReadTokens: number; cacheWriteTokens: number };
 
-export async function settleBudget(
-  reserved: number,
-  actualInputTokens: number,
-  actualOutputTokens: number,
-  budgetKey: string,
-  dailyKey?: string,
-  cache: CacheTokenCounts = {
-    cacheReadTokens: 0,
-    cacheWriteTokens: 0,
-  },
-): Promise<void> {
+export type SettleParams = {
+  reserved: number;
+  billedInputTokens: number;
+  outputTokens: number;
+  budgetKey: string;
+  dailyKey?: string | undefined;
+} & Partial<CacheTokenCounts>;
+
+export async function settleBudget({
+  reserved,
+  billedInputTokens,
+  outputTokens,
+  budgetKey,
+  dailyKey,
+  cacheReadTokens = 0,
+  cacheWriteTokens = 0,
+}: SettleParams): Promise<void> {
   if (reserved <= 0) {
     log.warn('budget settlement skipped: no positive reservation', { budgetKey });
     return;
   }
   const actual = askBudgetCost({
-    billedInputTokens: actualInputTokens,
-    outputTokens: actualOutputTokens,
-    ...cache,
+    billedInputTokens,
+    outputTokens,
+    cacheReadTokens,
+    cacheWriteTokens,
   });
   const refund = reserved - actual;
   if (refund === 0) return;
@@ -176,41 +183,33 @@ export type ReservationUsage = {
   outputTokens: number;
 } & Partial<CacheTokenCounts>;
 
-export type SettleArgs = Parameters<typeof settleBudget>;
-
-export function settleArgs(
+export function settleParams(
   reservation: AskReservation,
   usage: ReservationUsage | 'none',
-): SettleArgs {
+): SettleParams {
   const { reserved, budgetKey, dailyKey } = reservation;
-  if (usage === 'none') return [reserved, 0, 0, budgetKey, dailyKey];
-  const { billedInputTokens, outputTokens, cacheReadTokens, cacheWriteTokens } = usage;
-  if (cacheReadTokens === undefined || cacheWriteTokens === undefined) {
-    return [reserved, billedInputTokens, outputTokens, budgetKey, dailyKey];
+  if (usage === 'none') {
+    return { reserved, billedInputTokens: 0, outputTokens: 0, budgetKey, dailyKey };
   }
-  return [
-    reserved,
-    billedInputTokens,
-    outputTokens,
-    budgetKey,
-    dailyKey,
-    { cacheReadTokens, cacheWriteTokens },
-  ];
+  const { billedInputTokens, outputTokens, cacheReadTokens, cacheWriteTokens } = usage;
+  const base = { reserved, billedInputTokens, outputTokens, budgetKey, dailyKey };
+  if (cacheReadTokens === undefined || cacheWriteTokens === undefined) return base;
+  return { ...base, cacheReadTokens, cacheWriteTokens };
 }
 
-export function abandonSettleArgs(reservation: AskReservation): SettleArgs | null {
-  return reservation.reserved > 0 ? settleArgs(reservation, 'none') : null;
+export function abandonSettleParams(reservation: AskReservation): SettleParams | null {
+  return reservation.reserved > 0 ? settleParams(reservation, 'none') : null;
 }
 
 export async function settleReservation(
   reservation: AskReservation,
   usage: ReservationUsage | 'none',
 ): Promise<void> {
-  await settleBudget(...settleArgs(reservation, usage));
+  await settleBudget(settleParams(reservation, usage));
 }
 
 export async function abandonReservation(reservation: AskReservation): Promise<void> {
-  const args = abandonSettleArgs(reservation);
-  if (args !== null) await settleBudget(...args);
+  const params = abandonSettleParams(reservation);
+  if (params !== null) await settleBudget(params);
   await releaseIdenticalQuestion(reservation.ipHash, reservation.question);
 }

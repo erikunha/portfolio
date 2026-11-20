@@ -76,39 +76,49 @@ beforeEach(() => {
 });
 
 describe('settlement argument mapping', () => {
-  const BASE_ARGS = [RESERVED, 100, 50, MONTH, DAY];
+  const BASE_PARAMS = {
+    reserved: RESERVED,
+    billedInputTokens: 100,
+    outputTokens: 50,
+    budgetKey: MONTH,
+    dailyKey: DAY,
+  };
 
   it.each([
-    ['no usage', 'none' as const, [RESERVED, 0, 0, MONTH, DAY]],
-    ['usage without cache counts', PLAIN, BASE_ARGS],
-    ['usage with only a read count', { ...PLAIN, cacheReadTokens: 7 }, BASE_ARGS],
-    ['usage with only a write count', { ...PLAIN, cacheWriteTokens: 9 }, BASE_ARGS],
+    ['no usage', 'none' as const, { ...BASE_PARAMS, billedInputTokens: 0, outputTokens: 0 }],
+    ['usage without cache counts', PLAIN, BASE_PARAMS],
+    ['usage with only a read count', { ...PLAIN, cacheReadTokens: 7 }, BASE_PARAMS],
+    ['usage with only a write count', { ...PLAIN, cacheWriteTokens: 9 }, BASE_PARAMS],
     [
       'usage with both cache counts',
       { ...PLAIN, cacheReadTokens: 7, cacheWriteTokens: 9 },
-      [...BASE_ARGS, { cacheReadTokens: 7, cacheWriteTokens: 9 }],
+      { ...BASE_PARAMS, cacheReadTokens: 7, cacheWriteTokens: 9 },
     ],
     [
       'usage with zero cache counts',
       { ...PLAIN, cacheReadTokens: 0, cacheWriteTokens: 0 },
-      [...BASE_ARGS, { cacheReadTokens: 0, cacheWriteTokens: 0 }],
+      { ...BASE_PARAMS, cacheReadTokens: 0, cacheWriteTokens: 0 },
     ],
-  ])('maps %s to the settleBudget arguments', async (_name, usage, expected) => {
-    const { settleArgs } = await import('@/lib/ask/budget');
+  ])('maps %s to the settleBudget parameters', async (_name, usage, expected) => {
+    const { settleParams } = await import('@/lib/ask/budget');
 
-    expect(settleArgs(reservation(), usage)).toEqual(expected);
+    expect(settleParams(reservation(), usage)).toEqual(expected);
   });
 
   it('settles an abandoned reservation as no usage', async () => {
-    const { abandonSettleArgs } = await import('@/lib/ask/budget');
+    const { abandonSettleParams } = await import('@/lib/ask/budget');
 
-    expect(abandonSettleArgs(reservation())).toEqual([RESERVED, 0, 0, MONTH, DAY]);
+    expect(abandonSettleParams(reservation())).toEqual({
+      ...BASE_PARAMS,
+      billedInputTokens: 0,
+      outputTokens: 0,
+    });
   });
 
   it('settles nothing for an abandoned reservation that reserved nothing', async () => {
-    const { abandonSettleArgs } = await import('@/lib/ask/budget');
+    const { abandonSettleParams } = await import('@/lib/ask/budget');
 
-    expect(abandonSettleArgs(reservation(0))).toBeNull();
+    expect(abandonSettleParams(reservation(0))).toBeNull();
   });
 });
 

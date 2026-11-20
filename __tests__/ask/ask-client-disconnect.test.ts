@@ -118,13 +118,13 @@ describe('/api/ask client disconnect', () => {
     expect(
       settleBudgetMock,
       'an abort before any token left the full worst-case reservation on the budget until the key expired',
-    ).toHaveBeenCalledWith(
-      2712,
-      ASK_RESERVED_INPUT_TOKENS,
-      0,
-      'ask:tokens:test',
-      'ask:tokens:day:test',
-    );
+    ).toHaveBeenCalledWith({
+      reserved: 2712,
+      billedInputTokens: ASK_RESERVED_INPUT_TOKENS,
+      outputTokens: 0,
+      budgetKey: 'ask:tokens:test',
+      dailyKey: 'ask:tokens:day:test',
+    });
   });
 
   it('aborts the upstream model call when the reader cancels', async () => {
