@@ -392,30 +392,8 @@ export function findSourceFiles(root: string): string[] {
   return listUnderTokenRoots(root, (name) => SOURCE_FILE.test(name) && !TSX_SKIPPED.test(name));
 }
 
-export const PX_PENDING_SHEETS: readonly string[] = [
-  'base.css',
-  'components-buttons.css',
-  'components-contact.css',
-  'components-eq.css',
-  'components-error-pages.css',
-  'components-guitar.css',
-  'components-hero.css',
-  'components-hottest-takes.css',
-  'components-inline-ui.css',
-  'components-links-cards.css',
-  'components-links-ui.css',
-  'components-mixer-controls.css',
-  'components-mixer.css',
-  'components-nav.css',
-  'components-shell.css',
-  'components-to-top.css',
-  'crt.css',
-  'forced-colors.css',
-];
-
 export interface RepoScan {
   cssPx: RawColorHit[];
-  pxPendingStale: string[];
   colors: RawColorHit[];
   zIndex: RawColorHit[];
   focus: RawColorHit[];
@@ -596,11 +574,7 @@ export function findConsumerFiles(root: string): string[] {
   );
 }
 
-export function scanRepo(
-  root: string,
-  cssFiles: string[],
-  pxPending: readonly string[] = PX_PENDING_SHEETS,
-): RepoScan {
+export function scanRepo(root: string, cssFiles: string[]): RepoScan {
   const read = (file: string) => readFileSync(join(root, file), 'utf8');
   const tag = (file: string, hits: ColorHit[]): RawColorHit[] =>
     hits.map((hit) => ({ ...hit, file }));
@@ -608,14 +582,8 @@ export function scanRepo(
   const colorTargets = [...cssTargets, ...findTokenFiles(root)];
   const themePath = `app/css/${THEME_SHEET}`;
   const themeCss = existsSync(join(root, themePath)) ? read(themePath) : '';
-  const pxHits = new Map(
-    cssFiles.map((file) => [file, tag(`app/css/${file}`, findRawCssPx(read(`app/css/${file}`)))]),
-  );
   return {
-    cssPx: cssFiles
-      .filter((file) => !pxPending.includes(file))
-      .flatMap((file) => pxHits.get(file) ?? []),
-    pxPendingStale: pxPending.filter((file) => (pxHits.get(file) ?? []).length === 0),
+    cssPx: cssTargets.flatMap((file) => tag(file, findRawCssPx(read(file)))),
     colors: [
       ...colorTargets.flatMap((file) => tag(file, findRawColors(read(file)))),
       ...findTsxFiles(root).flatMap((file) => tag(file, findRawTsxColors(read(file)))),
@@ -731,12 +699,6 @@ function main(): void {
       'Use a token or a rem step: var(--border-width) for a border or outline width, the --spacing-* micro-scale for a small size, rem for drawn geometry. Only 0px and a 1px hairline offset stay px.',
       scan.cssPx,
     ) || failed;
-  if (scan.pxPendingStale.length > 0) {
-    failed = true;
-    console.error(`[css-tokens] ${scan.pxPendingStale.length} stale pending px sheet(s):`);
-    for (const file of scan.pxPendingStale) console.error(`  ✗ ${file}`);
-    console.error('Remove the sheet from PX_PENDING_SHEETS in scripts/gates/lint-css-tokens.ts.');
-  }
   failed =
     report(
       'primitive color use(s) outside theme.css',

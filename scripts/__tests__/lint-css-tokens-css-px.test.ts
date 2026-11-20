@@ -2,12 +2,7 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import {
-  findRawCssPx,
-  listScannedCss,
-  PX_PENDING_SHEETS,
-  scanRepo,
-} from '../gates/lint-css-tokens';
+import { findRawCssPx, listScannedCss, scanRepo } from '../gates/lint-css-tokens';
 
 const literals = (css: string): string[] => findRawCssPx(css).map((hit) => hit.literal);
 
@@ -93,36 +88,13 @@ describe('scanRepo css px lengths', () => {
     const scan = scanRepo(root, ['card.css', 'clean.css']);
     expect(scan.cssPx.map((hit) => `${hit.file}:${hit.line}`)).toEqual(['app/css/card.css:1']);
   });
-
-  it('skips a pending sheet and reports one that no longer has a px length', () => {
-    write('app/css/old.css', '.a { gap: 9px; }');
-    write('app/css/done.css', '.a { gap: var(--spacing-label); }');
-    const scan = scanRepo(root, ['old.css', 'done.css'], ['old.css', 'done.css']);
-    expect(scan.cssPx).toEqual([]);
-    expect(scan.pxPendingStale).toEqual(['done.css']);
-  });
-
-  it('reports a pending sheet that does not exist', () => {
-    write('app/css/card.css', '.a { gap: var(--spacing-label); }');
-    expect(scanRepo(root, ['card.css'], ['gone.css']).pxPendingStale).toEqual(['gone.css']);
-  });
 });
 
 describe('the repository against the css px rule', () => {
-  it('has no px length in a sheet that is not pending', () => {
+  it('has no px length in any stylesheet but a 1px hairline or 0px', () => {
     const hits = scanRepo(process.cwd(), listScannedCss(process.cwd())).cssPx.map(
       (hit) => `${hit.file}:${hit.line} ${hit.literal}`,
     );
     expect(hits).toEqual([]);
-  });
-
-  it('lists no pending sheet that is already clean', () => {
-    const scan = scanRepo(process.cwd(), listScannedCss(process.cwd()));
-    expect(scan.pxPendingStale).toEqual([]);
-  });
-
-  it('keeps the pending list sorted and free of theme.css', () => {
-    expect([...PX_PENDING_SHEETS]).toEqual([...PX_PENDING_SHEETS].sort());
-    expect(PX_PENDING_SHEETS).not.toContain('theme.css');
   });
 });
