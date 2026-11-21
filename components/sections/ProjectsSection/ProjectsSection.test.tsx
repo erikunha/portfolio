@@ -46,7 +46,7 @@ describe('Projects', () => {
     expect(links.map((link) => link.getAttribute('href'))).toEqual([
       'https://github.com/JustFly1984/react-google-maps-api/pull/3266',
       'https://github.com/erikunha/portfolio',
-      'https://github.com/erikunha/LAIbemage',
+      'https://github.com/erikunha/VisionLens',
       'https://github.com/erikunha/ledgerlens',
       'https://github.com/erikunha/vault-of-loci',
     ]);

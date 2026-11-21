@@ -314,7 +314,7 @@ const educationFixtures = [
     endYear: 2027,
     expectedCompletion: '2027-12',
     period: 'expected Dec 2027',
-    focus: 'Coursework: PyTorch, LLM applications and RAG, LangChain and LangGraph',
+    focus: 'Coursework: LangChain agents (completed), LangGraph (in progress), RAG, PyTorch',
   },
   {
     id: 'CO_OP_DIPLOMA',

@@ -140,7 +140,7 @@ describe('lib/ask/system-prompt', () => {
       );
       expect(narrative).toContain('Testing: Playwright, Jest, Vitest, MSW, WireMock, Stryker');
       expect(narrative).toContain(
-        'AI-native: Vercel AI SDK + AI Gateway, Anthropic API, OpenAI, Google GenAI/Vertex, MCP servers, Zod structured output, eval harnesses with LLM judge calibrated on human labels, per-job cost caps, prompt-injection defense, agent and sub-agent orchestration, Claude Code/Codex skills, spec-driven development, model routing with cost ceilings',
+        'AI-native: Vercel AI SDK + AI Gateway, Anthropic API, OpenAI, Google GenAI/Vertex, MCP servers, Zod structured output, eval harnesses with LLM judge calibrated on human labels, spend budgets reserved before each model call, model migration gated on evals, prompt-injection defense, agent and sub-agent orchestration, Claude Code/Codex skills, spec-driven development',
       );
       expect(narrative).toContain('Karma and Jasmine');
     });

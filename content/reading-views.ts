@@ -5,11 +5,18 @@ import { gitLog, workModeLabel } from './git-log';
 import { heroContent } from './hero';
 import { HIRE_ACCESSIBLE_NAME, NAV_VOCABULARY } from './nav';
 import {
+  ASSETS_UNDER_MANAGEMENT_BILLIONS,
+  FUNDS_PHRASE,
+  FUNDS_SERVED,
   formatLanguages,
+  PROFILE_FACT,
   profile,
   profilePresentation,
   profileStack,
-  RAYLU_BUILT_CLAIM,
+  RAYLU_SCREENS_CLAIM,
+  RAYLU_SCREENS_CLAIM_PT,
+  YEARS_OF_EXPERIENCE,
+  YEARS_OF_EXPERIENCE_LABEL,
 } from './profile';
 import { projects } from './projects';
 import { READING_PATHS } from './reading-paths';
@@ -132,9 +139,8 @@ const badgeOf = (locale: SiteLocale, key: string): string => {
 };
 
 const RESUME_SUMMARY: Record<SiteLocale, string> = {
-  [SITE_LOCALE.en]: `8+ years of production software, focused on GenAI and AI-native products: LLM systems, agents and evals, on TypeScript, Python, React, Next.js, Angular and Node.js, with PostgreSQL, Docker and AWS. Payments, business insurance and hospital equipment service taught me audit trails, idempotent recovery and failure isolation, the same problems agent systems meet as guardrails. I build LLM systems and the evaluation that decides whether they are safe to ship: on my own site a live LLM endpoint runs behind a continuous integration (CI) harness, with an LLM judge calibrated against my own labels at a 0.85 agreement floor and jailbreak resistance gated at 1.0. I work daily in Claude Code and Codex, authoring the skills, guard policies and lifecycle hooks they run under. At Raylu I ${RAYLU_BUILT_CLAIM}, and changes are measured as production builds against their parent commit, route by route. At Betsson I built a 12-agent AI-assisted engineering system a platform team adopted, on a PCI-DSS payment platform processing 40M+ transactions a year.`,
-  [SITE_LOCALE.pt]:
-    'Mais de 8 anos de software em produção, focado em GenAI e produtos AI-native: sistemas com LLMs, agentes e avaliações, com TypeScript, Python, React, Next.js, Angular e Node.js, além de PostgreSQL, Docker e AWS. Pagamentos, seguro empresarial e serviço de equipamentos hospitalares me ensinaram trilhas de auditoria, recuperação idempotente e isolamento de falhas, os mesmos problemas que sistemas de agentes encontram como guardrails. Construo sistemas com LLMs e a avaliação que decide se é seguro colocá-los em produção: no meu próprio site, um endpoint de LLM no ar roda atrás de um harness de integração contínua (CI), com um juiz LLM calibrado contra os meus próprios rótulos em um piso de concordância de 0,85 e resistência a jailbreak travada em 1,0. Trabalho diariamente com Claude Code e Codex, escrevendo as skills, políticas de guarda e lifecycle hooks sob os quais eles rodam. Na Raylu, construí, com outro engenheiro, a plataforma frontend por trás das páginas densas em dados de um produto de mercados privados, e as mudanças são medidas como builds de produção contra o commit pai, rota por rota. Na Betsson, construí um sistema de engenharia assistido por IA com 12 agentes que um time de plataforma adotou, sobre uma plataforma de pagamentos PCI-DSS que processa mais de 40M de transações por ano.',
+  [SITE_LOCALE.en]: `Senior software engineer with ${YEARS_OF_EXPERIENCE_LABEL} of production software in payments, retail, banking and healthcare, now building LLM systems and the evals that decide whether they ship. At Raylu, an AI deal origination platform used by ${FUNDS_PHRASE}, I ${RAYLU_SCREENS_CLAIM}; one filter fix took an owner's matches from 14 to the correct 75. At Betsson I built the cashier platform behind ${PROFILE_FACT.txPerYear} transactions a year across 15+ regulated jurisdictions, with recovery paths for failed steps. On my own site, a live LLM endpoint moved to a newer model only after its CI eval passed: 59 of 59 answers correct, 13 of 13 jailbreaks refused, and cost per answer down from about $0.002 to $0.0003.`,
+  [SITE_LOCALE.pt]: `Engenheiro de software sênior com mais de ${YEARS_OF_EXPERIENCE} anos de software em produção em pagamentos, varejo, bancos e saúde, hoje construindo sistemas com LLMs e as avaliações que decidem se eles vão para produção. Na Raylu, plataforma de originação de negócios com IA usada por mais de ${FUNDS_SERVED} fundos com US$ ${ASSETS_UNDER_MANAGEMENT_BILLIONS}B+ em ativos, ${RAYLU_SCREENS_CLAIM_PT}; uma correção de filtro levou as correspondências de um proprietário de 14 para os 75 corretos. Na Betsson, construí a plataforma de cashier por onde passam ${PROFILE_FACT.txPerYear} transações por ano em mais de 15 jurisdições reguladas, com caminhos de recuperação para etapas que falham. No meu próprio site, um endpoint de LLM no ar só migrou para um modelo mais novo depois que a avaliação no CI passou: 59 de 59 respostas corretas, 13 de 13 jailbreaks recusados e custo por resposta de cerca de US$ 0,002 para US$ 0,0003.`,
 };
 
 type CvSkillGroup = { label: string; items: string[] };
@@ -147,11 +153,9 @@ const CV_SKILLS: Record<SiteLocale, CvSkillGroup[]> = {
         'eval harness design',
         'corpora graded on end state',
         'LLM-as-judge calibrated against human labels with an agreement floor',
-        'pass@k and all-runs-pass',
-        'control-treatment A/B',
         'failure taxonomies',
-        'per-job cost caps',
-        'model routing by task tier',
+        'spend budgets reserved before each model call',
+        'model migration gated on evals',
         'tracing (Langfuse, OpenTelemetry)',
         'Anthropic, OpenAI and Google APIs',
         'Vercel AI SDK',
@@ -235,11 +239,9 @@ const CV_SKILLS: Record<SiteLocale, CvSkillGroup[]> = {
         'desenho de harness de avaliação',
         'corpora avaliados pelo estado final',
         'LLM-as-judge calibrado contra rótulos humanos com piso de concordância',
-        'pass@k e all-runs-pass',
-        'A/B controle-tratamento',
         'taxonomias de falha',
-        'limites de custo por job',
-        'roteamento de modelos por nível de tarefa',
+        'orçamentos de gasto reservados antes de cada chamada ao modelo',
+        'migração de modelo condicionada a avaliações',
         'tracing (Langfuse, OpenTelemetry)',
         'APIs da Anthropic, OpenAI e Google',
         'Vercel AI SDK',

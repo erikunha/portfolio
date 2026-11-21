@@ -68,8 +68,8 @@ const projectsFor = (locale: SiteLocale): Project[] => {
         company: 'Forward Deployed Engineer',
         kind: 'professional',
         description: pt
-          ? 'Plataforma de serviço de equipamentos hospitalares: ordens de serviço, agendamento de especialistas com checagem de deslocamento, visitas de campo, perfis de segurança com 29 permissões, atualizações ao vivo.'
-          : 'Hospital equipment service platform: service orders, specialist scheduling with travel-time checks, field visits, a 29-permission security-profile model, live updates.',
+          ? 'Plataforma de serviço de equipamentos hospitalares: ordens de serviço, agendamento de especialistas com checagem de deslocamento, visitas de campo, controle de acesso baseado em papéis (RBAC) com 29 permissões, atualizações ao vivo.'
+          : 'Hospital equipment service platform: service orders, specialist scheduling with travel-time checks, field visits, a 29-permission role-based access control (RBAC) model, live updates.',
         stats: [
           { label: pt ? 'BUNDLE JS' : 'JS BUNDLE', value: '-33%' },
           { label: 'TTI', value: '-52%' },
@@ -108,12 +108,15 @@ const projectsFor = (locale: SiteLocale): Project[] => {
         company: 'MB Labs',
         kind: 'professional',
         description: pt
-          ? 'App EdTech multiplataforma: uma base de código, cinco sistemas operacionais (Android / iOS / Win / macOS / Linux).'
-          : 'Cross-platform EdTech app: one codebase, five OSes (Android / iOS / Win / macOS / Linux).',
+          ? 'App EdTech offline-first de livros didáticos: shells React Native e Electron sobre um único núcleo TypeScript, cinco sistemas operacionais (Android / iOS / Win / macOS / Linux).'
+          : 'Offline-first EdTech textbook app: React Native and Electron shells over one TypeScript core, five OSes (Android / iOS / Win / macOS / Linux).',
         stats: [
-          { label: pt ? 'COMPARTILHADO' : 'SHARED', value: pt ? '~80% DO CÓDIGO' : '~80% CODE' },
-          { label: pt ? 'BUILD DESKTOP' : 'DESKTOP BUILD', value: '-40%' },
-          { label: 'STACK', value: 'IONIC / ANGULAR / ELECTRON' },
+          { label: pt ? 'PLATAFORMAS' : 'PLATFORMS', value: pt ? '5 SOS' : '5 OSES' },
+          {
+            label: pt ? 'INSTALAÇÃO' : 'INSTALL',
+            value: pt ? 'RETOMÁVEL + SHA-256' : 'RESUMABLE + SHA-256',
+          },
+          { label: 'STACK', value: 'REACT NATIVE / ELECTRON / TS' },
         ],
       },
       {
@@ -122,8 +125,8 @@ const projectsFor = (locale: SiteLocale): Project[] => {
         kind: 'oss',
         url: 'https://github.com/JustFly1984/react-google-maps-api/pull/3266',
         description: pt
-          ? 'Corrigi um loop infinito de re-renderização no exemplo da Directions API. O loop custava ao site de docs mais de 61 mil chamadas indesejadas à API do Google Maps. Correção com callback estável, mergeada pelo mantenedor.'
-          : 'Fixed an infinite React re-render loop in the Directions API example. The loop cost the docs site 61K+ unwanted Google Maps API calls. Stable-callback fix, merged by the maintainer.',
+          ? 'Diagnostiquei um loop infinito de re-renderização no exemplo da Directions API. O loop custava ao site de docs mais de 61 mil chamadas indesejadas à API do Google Maps. Rastreei até uma prop de callback com nova identidade a cada render, reproduzi em um StackBlitz mínimo e entreguei a correção com callback estável, revisada e mergeada pelo mantenedor.'
+          : 'Diagnosed an infinite React re-render loop in the Directions API example. The loop cost the docs site 61K+ unwanted Google Maps API calls. Traced it to a callback prop with a new identity on every render, reproduced it on a minimal StackBlitz and shipped the stable-callback fix, reviewed and merged by the maintainer.',
         stats: [
           {
             label: pt ? 'BIBLIOTECA' : 'LIBRARY',
@@ -144,25 +147,25 @@ const projectsFor = (locale: SiteLocale): Project[] => {
         kind: 'oss',
         url: 'https://github.com/erikunha/portfolio',
         description: pt
-          ? 'Este portfólio, um endpoint Anthropic governado em streaming sobre o Vercel AI SDK e seu harness de avaliação. Um gate de prompt injection rejeita antes da inferência, um detector de vazamento em streaming sobrevive a limites de chunk, o versionamento de prompt por hash de conteúdo e a detecção de model drift guardam o prompt, e há um kill switch. O CI avalia o endpoint contra o modelo vivo num corpus de casos factuais, de limite, de jailbreak e de validação de saída, com um juiz LLM calibrado em rótulos humanos (piso de concordância de 0,85), correção travada em 0,9, resistência a jailbreak em 1,0 e teto de US$ 2 de custo por job. Um servidor MCP expõe o endpoint como ferramenta.'
-          : 'This portfolio, a governed streaming Anthropic endpoint on the Vercel AI SDK and its eval harness. A prompt-injection gate rejects before inference, a streaming leak detector survives chunk boundaries, content-hashed prompt versioning and model-drift detection guard the prompt, and a kill switch is in place. CI grades the endpoint against the live model over a corpus of factual, edge, jailbreak and output-validation cases, with an LLM judge calibrated on human labels (0.85 agreement floor), correctness gated at 0.9 and jailbreak resistance at 1.0 and a $2 per-job cost cap. An MCP server exposes the endpoint as a tool.',
+          ? 'Este portfólio: um endpoint Anthropic em produção, em streaming, sobre o Haiku 5.5 e o Vercel AI SDK, e o harness que decide se ele vai para produção. O CI avalia o endpoint contra o modelo vivo num corpus de casos factuais, de limite, de jailbreak e de validação de saída, com correção travada em 0,9 e resistência a jailbreak em 1,0. Um juiz LLM calibrado em rótulos humanos é travado em casos de referência construídos em torno de armadilhas (uma omissão por pouco, um extra inventado, um número errado): abaixo de 0,85 de concordância ou de uma taxa de verdadeiros negativos de 11 em 12, a execução para, e cada resposta chega dentro de uma cerca aleatória por chamada, para que não possa instruir o próprio avaliador. Guardrails: um gate de prompt injection na borda da requisição, um detector de vazamento em streaming que sobrevive a limites de chunk, versionamento de prompt por hash de conteúdo e detecção de model drift, um orçamento de gasto reservado no Redis antes de cada chamada ao modelo, que falha fechado quando o Redis cai, e um kill switch. Um servidor MCP expõe o endpoint como ferramenta.'
+          : 'This portfolio: a production streaming Anthropic endpoint on Haiku 5.5 and the Vercel AI SDK, and the harness that decides whether it ships. CI grades the endpoint against the live model over a corpus of factual, edge, jailbreak and output-validation cases, with correctness gated at 0.9 and jailbreak resistance at 1.0. An LLM judge calibrated on human labels is gated on gold cases built around traps (a near-miss omission, a fabricated extra, a wrong number): below 0.85 agreement or an 11 of 12 true-negative rate the run stops, and each answer arrives inside a random per-call fence so it cannot instruct its own grader. Guardrails: a prompt-injection gate at the request boundary, a streaming leak detector that survives chunk boundaries, content-hashed prompt versioning and model-drift detection, a spend budget reserved in Redis before every model call that fails closed when the store is down, and a kill switch. An MCP server exposes the endpoint as a tool.',
         stats: [
           {
             label: pt ? 'JUIZ LLM' : 'LLM JUDGE',
             value: pt ? 'CONCORDÂNCIA >= 0,85' : 'AGREEMENT >= 0.85',
           },
           { label: pt ? 'GATE JAILBREAK' : 'JAILBREAK GATE', value: pt ? '1,0' : '1.0' },
-          { label: pt ? 'TETO POR JOB' : 'PER-JOB CAP', value: pt ? 'US$ 2' : '$2' },
+          { label: pt ? 'TNR DO JUIZ' : 'JUDGE TNR', value: '>= 11/12' },
         ],
       },
       {
-        name: 'LAIBEMAGE',
+        name: 'VISIONLENS',
         company: 'Erikunha',
         kind: 'oss',
-        url: 'https://github.com/erikunha/LAIbemage',
+        url: 'https://github.com/erikunha/VisionLens',
         description: pt
-          ? 'CLI open-source em TypeScript (MIT) que classifica imagens entre sete provedores de visão LLM: confiança auto-obtida, escalada local-para-nuvem abaixo de 0,70, consenso de dois provedores, fila de aprendizado ativo.'
-          : 'Open-source TypeScript CLI (MIT) classifying images across seven LLM vision providers: self-elicited confidence, local-to-cloud escalation below 0.70, two-provider consensus, active-learning queue.',
+          ? 'CLI open-source em TypeScript (MIT) que classifica imagens entre sete provedores de visão LLM, um estudo de como tornar auditável um pipeline probabilístico: confiança auto-obtida, escalada local-para-nuvem abaixo de 0,70 ou diante de um rótulo desconhecido, consenso de dois provedores resolvido pela confiança, fila de aprendizado ativo.'
+          : 'Open-source TypeScript CLI (MIT) classifying images across seven LLM vision providers, a study in making a probabilistic pipeline auditable: self-elicited confidence, local-to-cloud escalation below 0.70 or on an unknown label, two-provider consensus resolved by confidence, active-learning queue.',
         stats: [
           { label: pt ? 'PROVEDORES' : 'PROVIDERS', value: '7' },
           { label: 'CI', value: '8 WORKFLOWS' },

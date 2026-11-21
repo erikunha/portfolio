@@ -24,7 +24,7 @@ const gitLogFor = (locale: SiteLocale): GitCommit[] => {
       type: 'career',
       company: profile.currentEmployer.name,
       companyUrl: profile.currentEmployer.url,
-      role: pt ? 'Engenheiro de Software Sênior' : 'Senior Software Engineer',
+      role: pt ? 'Engenheiro de Produto de IA' : 'AI Product Engineer',
       startMonth: '2026-06',
       endMonth: null,
       location: pt ? 'Nova York, EUA' : 'New York, US',
@@ -143,7 +143,7 @@ const gitLogFor = (locale: SiteLocale): GitCommit[] => {
       type: 'career',
       company: 'Venturus',
       companyUrl: 'https://www.venturus.org.br',
-      role: pt ? 'Engenheiro Full Stack' : 'Full Stack Engineer',
+      role: pt ? 'Engenheiro Full Stack' : 'Full-Stack Engineer',
       startMonth: '2019-02',
       endMonth: '2020-04',
       location: pt ? 'Campinas, Brasil' : 'Campinas, Brazil',
@@ -163,7 +163,7 @@ const gitLogFor = (locale: SiteLocale): GitCommit[] => {
       type: 'career',
       company: 'MB Labs',
       companyUrl: 'https://mblabs.com.br',
-      role: pt ? 'Engenheiro Full Stack' : 'Full Stack Engineer',
+      role: pt ? 'Engenheiro Full Stack' : 'Full-Stack Engineer',
       startMonth: '2018-07',
       endMonth: '2019-02',
       location: pt ? 'Campinas, Brasil' : 'Campinas, Brazil',
@@ -171,8 +171,8 @@ const gitLogFor = (locale: SiteLocale): GitCommit[] => {
       domain: pt ? 'educação e treinamento de varejo' : 'education and retail training',
       body: [
         pt
-          ? 'entregou app multiplataforma em 5 SOs a partir de uma base Ionic + Angular + Electron (~80% de código compartilhado).'
-          : 'shipped 5-OS cross-platform from one Ionic + Angular + Electron codebase (~80% shared code).',
+          ? 'entregou app offline-first em 5 SOs: shells React Native e Electron sobre um núcleo TypeScript.'
+          : 'shipped an offline-first textbook app to 5 OSes as React Native and Electron shells over one TypeScript core.',
       ],
       isRoot: true,
     },

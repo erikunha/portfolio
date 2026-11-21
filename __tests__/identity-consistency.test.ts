@@ -78,12 +78,17 @@ describe('identity is consistent across every gated surface', () => {
     expect(profile.actions[0]?.href).toBe(social.github);
   });
 
-  it('states the cross-platform code reuse the resume gives, on both surfaces', () => {
+  it('states the cross-platform stack the resume gives, on both surfaces', () => {
     const edtech = projects[SITE_LOCALE.en].find((project) => project.name === 'EDTECH_OMNI');
     expect(edtech).toBeDefined();
-    expect(edtech?.stats?.find((stat) => stat.label === 'SHARED')?.value).toContain('80%');
-    expect(JSON.stringify(gitLog[SITE_LOCALE.en])).toContain('80% shared code');
-    expect(JSON.stringify(gitLog[SITE_LOCALE.en])).not.toContain('90%');
+    expect(edtech?.stats?.find((stat) => stat.label === 'STACK')?.value).toContain('REACT NATIVE');
+    expect(JSON.stringify(gitLog[SITE_LOCALE.en])).toContain('React Native and Electron shells');
+    for (const text of [JSON.stringify(projects), JSON.stringify(gitLog), SYSTEM_TEXT, llmsTxt]) {
+      expect(
+        text,
+        'the resume no longer states an Ionic codebase or its code-share figure',
+      ).not.toMatch(/ionic|80% shared|desktop build/i);
+    }
   });
 
   it('hands the ask prompt and the hiring profile the canonical contact links', () => {
@@ -249,7 +254,7 @@ describe('identity is consistent across every gated surface', () => {
     const stale = surfaces.filter(([, text]) => /\bTorc\b/.test(text)).map(([s]) => s);
     expect(
       stale,
-      'the resume lists Raylu as a Senior Software Engineer role with no contract intermediary',
+      'the resume lists Raylu as an AI Product Engineer role with no contract intermediary',
     ).toEqual([]);
   });
 
@@ -367,7 +372,7 @@ describe('terminal redesign canonical facts', () => {
         entry.workMode,
       ]),
     ).toEqual([
-      ['Raylu', 'Senior Software Engineer', '2026-06', null, 'New York, US', 'remote'],
+      ['Raylu', 'AI Product Engineer', '2026-06', null, 'New York, US', 'remote'],
       ['Betsson Group', 'Senior Software Engineer', '2025-03', '2026-05', 'Malta', 'hybrid'],
       [
         'Forward Deployed Engineer',
@@ -401,8 +406,8 @@ describe('terminal redesign canonical facts', () => {
         'Campinas, Brazil',
         null,
       ],
-      ['Venturus', 'Full Stack Engineer', '2019-02', '2020-04', 'Campinas, Brazil', null],
-      ['MB Labs', 'Full Stack Engineer', '2018-07', '2019-02', 'Campinas, Brazil', null],
+      ['Venturus', 'Full-Stack Engineer', '2019-02', '2020-04', 'Campinas, Brazil', null],
+      ['MB Labs', 'Full-Stack Engineer', '2018-07', '2019-02', 'Campinas, Brazil', null],
     ]);
     expect(gitLog[SITE_LOCALE.en].every((entry) => entry.type === 'career')).toBe(true);
     expect(
