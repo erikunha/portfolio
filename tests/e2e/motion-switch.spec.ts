@@ -1,6 +1,7 @@
 import { expect, type Page, test } from '@playwright/test';
 import { NAVIGATION } from '../../content/navigation';
 import { SITE_LOCALE } from '../../content/site-locale';
+import { openSectionMenu } from './_helpers/hydration';
 import { MOTION_CHOICE, MOTION_STORAGE_KEY } from './_helpers/motion';
 
 const { copy } = NAVIGATION[SITE_LOCALE.en];
@@ -21,10 +22,7 @@ const storedChoice = (page: Page) =>
   page.evaluate((key) => localStorage.getItem(key), MOTION_STORAGE_KEY);
 
 async function openDrawer(page: Page) {
-  await page
-    .getByRole('button', { name: 'Open menu', exact: true })
-    .locator('visible=true')
-    .click();
+  await openSectionMenu(page);
   await expect(page.locator('#section-drawer')).toBeVisible();
 }
 
@@ -34,7 +32,7 @@ async function reachEqStrip(page: Page) {
   await expect(strip).toBeVisible();
 }
 
-test.describe('the MOTION switch is the only motion control', () => {
+test.describe('the MOTION switch is the only motion control', { tag: '@cross-browser' }, () => {
   test.use({ reducedMotion: 'reduce' });
 
   test('a first visit starts with motion on even when the system asks for reduced motion', async ({

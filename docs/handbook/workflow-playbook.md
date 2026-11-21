@@ -17,7 +17,7 @@ Every runbook lists: **entry point** (what starts it), **steps**, **AI participa
   3. Decompose into tasks with a failure-mode checklist (shard into sub-PRs if large).
   4. Branch `feat/<description>`. Implement test-first.
   5. Read the diff and push.
-  6. `pnpm ci:predict` and `pnpm gates:runtime`, open the PR, then review it and answer every finding.
+  6. `pnpm ci:full` and `pnpm gates:runtime`, open the PR, then review it and answer every finding.
   7. Record the ADR in `DECISIONS.md` in the same commit as the decision (a dated bullet with a reversibility note).
 - **AI:** optional at every step; the `plan-review` skill encodes the limits check.
 - **Output:** a squash-merged PR `(#NNN)` + an ADR.
@@ -80,14 +80,14 @@ Every runbook lists: **entry point** (what starts it), **steps**, **AI participa
 - **Steps:**
   1. Look at desktop (1280x720) and mobile (375x812) in a real browser before touching tests.
   2. If baselines are affected, regenerate them in the same PR; the `visual-baseline-regen` skill holds the procedure (darwin regen, linux artifact path, inspect before commit).
-  3. No raw hex or color function (`rgb()`, `hsl()`, `oklch()`, `color()` and kin), no literal z-index and no hand-written focus ring in the `app/css` stylesheets or `*-tokens.ts` files outside `theme.css` (held by `pnpm lint:css-tokens` in `verify` and CI against `scripts/lint-css-tokens.allowlist.json`, whose entries each name a file, a literal, a count and a reason; the style rule is repo-wide, the gate scans only those files).
+  3. No raw hex or color function (`rgb()`, `hsl()`, `oklch()`, `color()` and kin), no literal z-index and no hand-written focus ring in the `app/css` stylesheets or `*-tokens.ts` files outside `theme.css` (held by `pnpm lint:css-tokens` in `verify` and CI against `scripts/gates/lint-css-tokens.allowlist.json`, whose entries each name a file, a literal, a count and a reason; the style rule is repo-wide, the gate scans only those files).
 - **Output:** a PR with regenerated Playwright baselines if needed.
 
 ## Touching the `/api/ask` feature
 
 - **Entry:** a change to the ask route, prompt, guards, or eval.
 - **Steps:**
-  1. Editing `app/api/**`/`rate-limit.ts`/`proxy.ts` means re-reading the diff for the abuse paths each closes. No project hook checks this.
+  1. Editing `app/api/**`/`lib/rate-limit.ts`/`lib/redis.ts`/`lib/ask/budget.ts`/`lib/ask/dedup.ts`/`next.config.ts` means re-reading the diff for the abuse paths each closes. No project hook checks this.
   2. If the prompt/corpus changed, run `pnpm ask:eval` (the `ai-eval-update` skill) - calibration then corpus must clear their thresholds.
   3. Read `.claude/rules/api-boundary.md` for the matching API/server paths. It is guidance; `AGENTS.md` holds the rules.
 - **Output:** a PR with green API behavioural tests and a green eval.
@@ -112,7 +112,7 @@ Every runbook lists: **entry point** (what starts it), **steps**, **AI participa
 
 - **Entry:** a ready branch.
 - **Steps:**
-  1. `pnpm ci:predict` (it subsumes `pnpm ci:local`, `pnpm bundle-check` and `pnpm route-js-check`) and `pnpm gates:runtime`; `gh pr create` filling the template (every section non-empty).
+  1. `pnpm ci:full` (it runs `pnpm ci:local`, the bundle and route-JS gates and every e2e project) and `pnpm gates:runtime`; `gh pr create` filling the template (every section non-empty).
   2. Reply in each review thread before resolving it. claude-review runs only when an owner, member or collaborator comments `/claude-review`.
   3. CI is green, the Argos visual check is approved and the review's blocking findings are answered; a human (the owner) approves Argos and squash-merges into `main` in the browser. An agent only prepares the PR, and may merge only into a non-`main` integration branch.
 - **Output:** a merged PR. See [review-merge-release](./review-merge-release.md).

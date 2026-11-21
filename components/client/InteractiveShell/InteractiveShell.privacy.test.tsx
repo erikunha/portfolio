@@ -1,10 +1,9 @@
-import { act, createElement } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { fire, flushMicrotasks, type MountedClient, mountClient } from '@/__tests__/helpers/render';
+import type { MountedClient } from '@/__tests__/helpers/render';
+import { askQuestion, renderShell } from '@/__tests__/helpers/shell';
 import SHELL_RESPONSES from '@/content/shell-commands';
 import { fillShellState, shellStates, shellUi } from '@/content/shell-ui';
-import { SITE_LOCALE, type SiteLocale } from '@/content/site-locale';
-import { shellChrome } from '@/content/terminal-chrome';
+import { SITE_LOCALE } from '@/content/site-locale';
 
 vi.mock('@/lib/use-breakpoint.client', () => ({ useBreakpoint: () => ({ isMobile: false }) }));
 vi.mock('@/lib/motion', () => ({ readMotion: () => false }));
@@ -41,20 +40,6 @@ function stubBackend(options: { asks?: (string | null)[]; forget?: Reply[] }) {
   return { fetchMock, forgetBodies };
 }
 
-async function submit(container: HTMLElement, command: string) {
-  const input = container.querySelector<HTMLInputElement>('input[name="command"]');
-  const form = container.querySelector<HTMLFormElement>('form');
-  const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set;
-  await act(async () => {
-    if (input && setter) setter.call(input, command);
-    fire(input, new Event('input', { bubbles: true }));
-  });
-  await act(async () => {
-    fire(form, new Event('submit', { bubbles: true, cancelable: true }));
-  });
-  await flushMicrotasks();
-}
-
 function feedLines(container: HTMLElement): string[] {
   return [...container.querySelectorAll('.shell-feed .shell-line')].map(
     (line) => line.textContent ?? '',
@@ -69,18 +54,6 @@ function button(container: HTMLElement, text: string): HTMLButtonElement {
 
 describe('shell trailer and privacy command', () => {
   let mounted: MountedClient | undefined;
-
-  async function renderShell(locale: SiteLocale = SITE_LOCALE.en) {
-    const { InteractiveShell } = await import('./InteractiveShell');
-    mounted = await mountClient(
-      createElement(InteractiveShell, {
-        locale,
-        ui: shellUi[locale],
-        chrome: shellChrome[locale],
-      }),
-    );
-    return mounted.container;
-  }
 
   beforeEach(() => {
     vi.resetModules();
@@ -110,20 +83,22 @@ describe('shell trailer and privacy command', () => {
     it('lists the id of a failed ask that carries the header, because the server may have stored a row for it', async () => {
       const fetchMock = vi.fn(async () => askReply(A, 429));
       vi.stubGlobal('fetch', fetchMock);
-      const container = await renderShell();
-      await submit(container, 'q');
+      mounted = await renderShell();
+      const container = mounted.container;
+      await askQuestion(container, 'q');
       expect(container.querySelector('[data-testid="shell-receipt"]')).toBeNull();
-      await submit(container, 'privacy');
+      await askQuestion(container, 'privacy');
       expect(feedLines(container).at(-1)).toBe(`1. ${A}`);
     });
 
     it('lists nothing for a failed ask that carries no header', async () => {
       const fetchMock = vi.fn(async () => askReply(null, 503));
       vi.stubGlobal('fetch', fetchMock);
-      const container = await renderShell();
-      await submit(container, 'q');
+      mounted = await renderShell();
+      const container = mounted.container;
+      await askQuestion(container, 'q');
       expect(container.querySelector('[data-testid="shell-receipt"]')).toBeNull();
-      await submit(container, 'privacy');
+      await askQuestion(container, 'privacy');
       expect(feedLines(container).at(-1)).toBe(ui.privacyEmpty);
     });
   });
@@ -135,23 +110,26 @@ describe('shell trailer and privacy command', () => {
       expect(shellUi[SITE_LOCALE.en].commands).toContain('privacy');
       expect(shellUi[SITE_LOCALE.pt].commands).toContain('privacy');
       stubBackend({});
-      const container = await renderShell();
+      mounted = await renderShell();
+      const container = mounted.container;
       expect(button(container, 'privacy')).toBeDefined();
     });
 
     it('says so when the session has logged nothing', async () => {
       stubBackend({});
-      const container = await renderShell();
-      await submit(container, 'privacy');
+      mounted = await renderShell();
+      const container = mounted.container;
+      await askQuestion(container, 'privacy');
       expect(feedLines(container).at(-1)).toBe(ui.privacyEmpty);
     });
 
     it('lists this session request ids in order, numbered, after asks', async () => {
       stubBackend({ asks: [A, B] });
-      const container = await renderShell();
-      await submit(container, 'first');
-      await submit(container, 'second');
-      await submit(container, 'privacy');
+      mounted = await renderShell();
+      const container = mounted.container;
+      await askQuestion(container, 'first');
+      await askQuestion(container, 'second');
+      await askQuestion(container, 'privacy');
       const lines = feedLines(container);
       expect(lines.some((line) => line.includes('2'))).toBe(true);
       expect(lines.at(-2)).toBe(`1. ${A}`);
@@ -161,17 +139,19 @@ describe('shell trailer and privacy command', () => {
     it('lists ids kept earlier in this tab from sessionStorage', async () => {
       window.sessionStorage.setItem('request-refs', JSON.stringify([C]));
       stubBackend({});
-      const container = await renderShell();
-      await submit(container, 'privacy');
+      mounted = await renderShell();
+      const container = mounted.container;
+      await askQuestion(container, 'privacy');
       expect(feedLines(container).at(-1)).toBe(`1. ${C}`);
     });
 
     it('forgets by list number and prints one result line', async () => {
       const { forgetBodies } = stubBackend({ asks: [A, B] });
-      const container = await renderShell();
-      await submit(container, 'first');
-      await submit(container, 'second');
-      await submit(container, 'privacy forget 2');
+      mounted = await renderShell();
+      const container = mounted.container;
+      await askQuestion(container, 'first');
+      await askQuestion(container, 'second');
+      await askQuestion(container, 'privacy forget 2');
       expect(forgetBodies).toEqual([JSON.stringify({ requestId: B })]);
       expect(feedLines(container)).toContain(`${B} ${ui.forgetDeleted}`);
       expect(feedLines(container)).toContain(ui.conversationForgotten);
@@ -179,8 +159,9 @@ describe('shell trailer and privacy command', () => {
 
     it('forgets by full id even when it is not in this session list', async () => {
       const { forgetBodies } = stubBackend({});
-      const container = await renderShell();
-      await submit(container, `privacy forget ${C}`);
+      mounted = await renderShell();
+      const container = mounted.container;
+      await askQuestion(container, `privacy forget ${C}`);
       expect(forgetBodies).toEqual([JSON.stringify({ requestId: C })]);
       expect(feedLines(container).at(-1)).toBe(`${C} ${ui.forgetDeleted}`);
     });
@@ -191,10 +172,11 @@ describe('shell trailer and privacy command', () => {
         asks: [A, B],
         forget: [{ status: 200 }, { status: 500 }],
       });
-      const container = await renderShell();
-      await submit(container, 'first');
-      await submit(container, 'second');
-      await submit(container, 'privacy forget --all');
+      mounted = await renderShell();
+      const container = mounted.container;
+      await askQuestion(container, 'first');
+      await askQuestion(container, 'second');
+      await askQuestion(container, 'privacy forget --all');
       expect(forgetBodies).toEqual([
         JSON.stringify({ requestId: B }),
         JSON.stringify({ requestId: C }),
@@ -202,7 +184,7 @@ describe('shell trailer and privacy command', () => {
       const lines = feedLines(container);
       expect(lines).toContain(`${B} ${ui.forgetDeleted}`);
       expect(lines).toContain(`${C} ${ui.forgetFailed}`);
-      await submit(container, 'privacy');
+      await askQuestion(container, 'privacy');
       expect(feedLines(container).at(-1)).toBe(`1. ${C}`);
     });
 
@@ -212,9 +194,10 @@ describe('shell trailer and privacy command', () => {
         asks: [A],
         forget: [{ status: 200 }, { status: 429, headers: { 'Retry-After': '90' } }],
       });
-      const container = await renderShell();
-      await submit(container, '1');
-      await submit(container, 'privacy forget --all');
+      mounted = await renderShell();
+      const container = mounted.container;
+      await askQuestion(container, '1');
+      await askQuestion(container, 'privacy forget --all');
       expect(forgetBodies).toHaveLength(2);
       const text = feedLines(container).join('\n');
       expect(text).toContain(`${A} ${ui.forgetDeleted}`);
@@ -224,18 +207,20 @@ describe('shell trailer and privacy command', () => {
 
     it('makes no request for an out-of-range number and says which one it could not find', async () => {
       const { fetchMock } = stubBackend({ asks: [A] });
-      const container = await renderShell();
-      await submit(container, 'first');
+      mounted = await renderShell();
+      const container = mounted.container;
+      await askQuestion(container, 'first');
       fetchMock.mockClear();
-      await submit(container, 'privacy forget 5');
+      await askQuestion(container, 'privacy forget 5');
       expect(fetchMock).not.toHaveBeenCalled();
       expect(feedLines(container).at(-1)).toContain('5');
     });
 
     it('prints usage for a malformed command and makes no request', async () => {
       const { fetchMock } = stubBackend({});
-      const container = await renderShell();
-      await submit(container, 'privacy forget abc');
+      mounted = await renderShell();
+      const container = mounted.container;
+      await askQuestion(container, 'privacy forget abc');
       expect(fetchMock).not.toHaveBeenCalled();
       expect(feedLines(container).at(-1)).toBe(ui.privacyUsage);
     });
@@ -243,8 +228,9 @@ describe('shell trailer and privacy command', () => {
     it('answers in Portuguese on the pt shell', async () => {
       const pt = shellUi[SITE_LOCALE.pt];
       stubBackend({});
-      const container = await renderShell(SITE_LOCALE.pt);
-      await submit(container, 'privacy');
+      mounted = await renderShell(SITE_LOCALE.pt);
+      const container = mounted.container;
+      await askQuestion(container, 'privacy');
       expect(feedLines(container).at(-1)).toBe(pt.privacyEmpty);
       expect(pt.privacyEmpty).not.toBe(ui.privacyEmpty);
     });
@@ -254,9 +240,10 @@ describe('shell trailer and privacy command', () => {
         throw new DOMException('blocked', 'SecurityError');
       });
       stubBackend({ asks: [A] });
-      const container = await renderShell();
-      await submit(container, 'q');
-      await submit(container, 'privacy');
+      mounted = await renderShell();
+      const container = mounted.container;
+      await askQuestion(container, 'q');
+      await askQuestion(container, 'privacy');
       expect(feedLines(container).at(-1)).toBe(`1. ${A}`);
     });
   });

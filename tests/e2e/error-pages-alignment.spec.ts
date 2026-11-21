@@ -1,8 +1,8 @@
 import { expect, type Page, test } from '@playwright/test';
+import { CORE_WIDTHS } from './_helpers/geometry';
 import { gotoSettled } from './_helpers/streamed';
 
 const ROUTES = ['/this-route-does-not-exist', '/pt/rota-que-nao-existe'];
-const WIDTHS = [320, 390, 768, 1280];
 const VIEWPORT_HEIGHT = 900;
 const EDGE_TOLERANCE_PX = 1;
 const TARGET_PROBE = 'var(--spacing-target)';
@@ -32,8 +32,8 @@ function readLefts(page: Page): Promise<Lefts> {
 }
 
 for (const path of ROUTES) {
-  for (const width of WIDTHS) {
-    test.describe(`${path} at ${width}`, () => {
+  for (const width of CORE_WIDTHS) {
+    test.describe(`${path} at ${width}`, { tag: '@cross-browser' }, () => {
       test.beforeEach(async ({ page }) => {
         await page.setViewportSize({ width, height: VIEWPORT_HEIGHT });
         await gotoSettled(page, path);

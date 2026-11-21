@@ -1,6 +1,7 @@
-import { readdirSync, readFileSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
+import { listFiles } from '@/scripts/lib/walk';
 import { readComponentsCss } from './helpers/components-css';
 
 // behavioral-test-allow: reads the shipped stylesheet build asset; jsdom cannot evaluate CSS cascade/media-query resolution
@@ -79,13 +80,10 @@ const DISCLOSURE_ALLOWED_FILES = new Set([
 ]);
 
 function collectDisclosureScanFiles(dir: string): string[] {
-  return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
-    if (DISCLOSURE_SCAN_SKIP_DIRS.has(entry.name)) return [];
-    const fullPath = path.join(dir, entry.name);
-    if (entry.isDirectory()) return collectDisclosureScanFiles(fullPath);
-    if (TEST_FILE.test(entry.name)) return [];
-    return DISCLOSURE_SCAN_EXTENSIONS.has(path.extname(entry.name)) ? [fullPath] : [];
-  });
+  return listFiles(dir, {
+    include: (name) => !TEST_FILE.test(name) && DISCLOSURE_SCAN_EXTENSIONS.has(path.extname(name)),
+    skipDirs: DISCLOSURE_SCAN_SKIP_DIRS,
+  }).map((rel) => path.join(dir, rel));
 }
 
 const CSS_EXTENSION = '.css';

@@ -5,7 +5,7 @@ export const RAIN_MOBILE_PROFILE = { fontSize: 14, speed: 0.6, opacity: 0.22 } a
 
 export const RAIN_HEAD_PROPERTY = '--color-rain-head';
 export const RAIN_BODY_PROPERTY = '--color-rain-body';
-export const RAIN_CANVAS_PROPERTY = '--color-secondary-950';
+export const RAIN_CANVAS_PROPERTY = '--color-surface';
 export const RAIN_TAIL_ALPHA_PROPERTY = '--rain-tail-alpha';
 
 const HEX_CHANNELS = /^#([\da-f]{2})([\da-f]{2})([\da-f]{2})$/i;

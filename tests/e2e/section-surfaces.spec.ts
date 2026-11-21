@@ -25,7 +25,7 @@ async function loadEverySection(page: Page): Promise<void> {
   await scrollThroughPage(page);
 }
 
-test.describe('home section surfaces are opaque', () => {
+test.describe('home section surfaces are opaque', { tag: '@cross-browser' }, () => {
   for (const { name, size } of SURFACE_VIEWPORTS) {
     test.describe(`${name} viewport`, () => {
       for (const sectionId of SECTION_IDS) {

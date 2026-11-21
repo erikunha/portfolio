@@ -34,19 +34,19 @@ Then run `pnpm verify` once and read what each gate checks (doc 07). The checks 
 A good first PR (touches the common path, low blast radius):
 1. **Edit a section's copy** - change a line in a `content/*.ts` module, in the `en` and the `pt` entry. `pnpm validate-content` proves the schema still holds. Add a `*.test.tsx` assertion if the shape changed. If the copy appears in the ask prompt or its eval corpus, run `pnpm ask:eval` (doc 06).
 2. **Or add a design-system component variant** - follow `Foo/Foo.tsx` + `Foo/index.ts`, co-locate a test, document it (`check:component-docs`), and run `pnpm dev` to eyeball it.
-3. Commit with a conventional scope (`feat(content): ...`). Run `pnpm ci:local` and `pnpm gates:runtime`. `pnpm ci:predict` runs the CI jobs your commits would trigger before you push (doc 07). Note that pushing runs `.husky/pre-push`: main-push guard, branch-name guard, and the full `pnpm verify` chain.
+3. Commit with a conventional scope (`feat(content): ...`). Run `pnpm ci:local` and `pnpm gates:runtime`. `pnpm ci:full` runs every CI check in sequence before you push (doc 07). Note that pushing runs `.husky/pre-push`: main-push guard, branch-name guard, and the full `pnpm verify` chain.
 
-For `app/api/**`, `lib/rate-limit.ts` or `proxy.ts` changes, follow `.claude/rules/api-boundary.md`. No hook blocks a push on a review of those paths.
+For `app/api/**`, `lib/rate-limit.ts`, `lib/redis.ts`, `lib/ask/budget.ts`, `lib/ask/dedup.ts` or `next.config.ts` changes, follow `.claude/rules/api-boundary.md`. No hook blocks a push on a review of those paths.
 
 ## Week 1 - go deep where you'll work
 
 | If you'll work on...  | Read                                                                                 | Then read the code                                          |
 | --------------------- | ------------------------------------------------------------------------------------ | ----------------------------------------------------------- |
 | Sections / UI         | [04-components-and-state.md](./04-components-and-state.md)                           | `components/sections/**`, `design-system/**`                |
-| The AI feature        | [05-api-and-integrations.md](./05-api-and-integrations.md) §AI subsystem, [06-ai-development.md](./06-ai-development.md) §Evaluation tools | `app/api/ask/route.ts`, `lib/ask/**`, `lib/eval/**`, `scripts/ask-eval.ts` |
+| The AI feature        | [05-api-and-integrations.md](./05-api-and-integrations.md) §AI subsystem, [06-ai-development.md](./06-ai-development.md) §Evaluation tools | `app/api/ask/route.ts`, `lib/ask/**`, `lib/eval/**`, `scripts/eval/ask-eval.ts` |
 | Performance           | [08-performance-and-accessibility.md](./08-performance-and-accessibility.md)         | `components/SiteHome.tsx` (PPR), `Module.tsx`, the islands  |
 | Reading views and links | [04-components-and-state.md](./04-components-and-state.md) §Page frames             | `components/reading/**`, `components/links/**`, `lib/links/feed.ts` |
-| The dev platform / CI | [06-ai-development.md](./06-ai-development.md), [07-workflows.md](./07-workflows.md) | `.claude/**`, `.agents/**`, `scripts/check-*`, `.github/workflows/ci.yml`, `playwright.config.ts` |
+| The dev platform / CI | [06-ai-development.md](./06-ai-development.md), [07-workflows.md](./07-workflows.md) | `.claude/**`, `.agents/**`, `scripts/gates/check-*`, `.github/workflows/ci.yml`, `playwright.config.ts` |
 | Anything risky        | [10-findings-and-debt.md](./10-findings-and-debt.md)                                 | the relevant `DECISIONS.md` entry                           |
 
 ## The mental models to internalize
@@ -66,7 +66,7 @@ Single-author repo, so "ownership" is by subsystem boundary, not by person:
 | Content/domain   | `content/**`                                         | `content/schemas.ts`               |
 | Design system    | `design-system/**`                                   | `design-system/index.ts`           |
 | BFF / API        | `app/api/**` + `lib/**`                              | `lib/server/route.ts`              |
-| AI feature       | `app/api/ask` + `lib/ask/**` + `lib/eval/**` + `scripts/ask-eval.ts` | `lib/ask/model.ts`                 |
-| Reading views and links | `components/reading/**` + `components/links/**` + `lib/links/**` | `components/reading/ReadingShell.tsx` |
+| AI feature       | `app/api/ask` + `lib/ask/**` + `lib/eval/**` + `scripts/eval/ask-eval.ts` | `lib/ask/model.ts`                 |
+| Reading views and links | `components/reading/**` + `components/links/**` + `lib/links/**` | `components/reading/ReadingShell/ReadingShell.tsx` |
 | Tests and gates  | `__tests__/**` + `tests/**` + `scripts/**`           | `playwright.config.ts`, `scripts/` |
 | Dev platform     | `.claude/**` + `.agents/**` + `scripts/**` + `.github/**` | `AGENTS.md`                   |

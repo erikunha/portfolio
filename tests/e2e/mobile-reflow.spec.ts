@@ -1,8 +1,9 @@
 import { expect, type Locator, test } from '@playwright/test';
+import { VIEWPORTS, WIDTH } from './_helpers/geometry';
 import { gotoSettled } from './_helpers/streamed';
 
-const MOBILE = { width: 390, height: 844 };
-const DESKTOP = { width: 1280, height: 720 };
+const MOBILE = VIEWPORTS.PHONE;
+const DESKTOP = VIEWPORTS.DESKTOP;
 const EDGE_TOLERANCE_PX = 1;
 
 interface Group {
@@ -48,7 +49,9 @@ async function measure(container: Locator): Promise<{ inner: number; children: B
   });
 }
 
-test.describe('mobile reflow: side-by-side groups stack below the tablet breakpoint', () => {
+test.describe('mobile reflow: side-by-side groups stack below the tablet breakpoint', {
+  tag: '@cross-browser',
+}, () => {
   for (const group of GROUPS) {
     test(`${group.name} is one full-width column at 390`, async ({ page }) => {
       await page.setViewportSize(MOBILE);
@@ -84,8 +87,10 @@ test.describe('mobile reflow: side-by-side groups stack below the tablet breakpo
 });
 
 for (const path of ['/', '/pt']) {
-  test(`dock items keep one height and one-line labels at 320 (${path})`, async ({ page }) => {
-    await page.setViewportSize({ width: 320, height: 640 });
+  test(`dock items keep one height and one-line labels at 320 (${path})`, {
+    tag: '@cross-browser',
+  }, async ({ page }) => {
+    await page.setViewportSize(VIEWPORTS.PHONE_NARROW);
     await page.goto(path);
     const items = page.locator('.dock > a, .dock > button');
     const heights = await items.evaluateAll((nodes) =>
@@ -117,9 +122,9 @@ for (const path of ['/', '/pt']) {
   });
 }
 
-test('the contact submit button spans its row below 768 and keeps its size at 1280', async ({
-  page,
-}) => {
+test('the contact submit button spans its row below 768 and keeps its size at 1280', {
+  tag: '@cross-browser',
+}, async ({ page }) => {
   const rowGap = async () =>
     page.locator('.contact-send').evaluate((button) => {
       const row = button.closest('.contact-submit-row')?.getBoundingClientRect();
@@ -137,8 +142,10 @@ test('the contact submit button spans its row below 768 and keeps its size at 12
 });
 
 for (const bar of ['.shell-chrome', '.contact-chrome']) {
-  test(`${bar} keeps the window dots left and centres its labels at 375`, async ({ page }) => {
-    await page.setViewportSize({ width: 375, height: 812 });
+  test(`${bar} keeps the window dots left and centres its labels at 375`, {
+    tag: '@cross-browser',
+  }, async ({ page }) => {
+    await page.setViewportSize({ width: WIDTH.PHONE_COMPACT, height: 812 });
     await gotoSettled(page, '/');
     const chrome = page.locator(bar).first();
     await chrome.scrollIntoViewIfNeeded();

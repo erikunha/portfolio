@@ -1,9 +1,9 @@
 import { expect, type Page, test } from '@playwright/test';
-import { horizontalOverflow } from './_helpers/geometry';
+import { horizontalOverflow, VIEWPORTS, WIDTH } from './_helpers/geometry';
 
 test.use({ javaScriptEnabled: false });
 
-test.describe('home with JavaScript off', () => {
+test.describe('home with JavaScript off', { tag: '@cross-browser' }, () => {
   test('shows the notice and keeps the static content readable', async ({ page }) => {
     await page.goto('/');
     await expect(page.getByText(/This site works best with JavaScript/)).toBeVisible();
@@ -39,7 +39,7 @@ test.describe('home with JavaScript off', () => {
   });
 
   test('the notice clears the fixed desktop chrome instead of covering it', async ({ page }) => {
-    await page.setViewportSize({ width: 1280, height: 720 });
+    await page.setViewportSize(VIEWPORTS.DESKTOP);
     await page.goto('/');
     const topbar = await page.locator('.desktop-topbar').boundingBox();
     const bar = await page.locator('.nojs-bar').boundingBox();
@@ -56,7 +56,7 @@ test.describe('home with JavaScript off', () => {
   });
 
   test('the notice sits flush with the topbar on the horizontal axis', async ({ page }) => {
-    await page.setViewportSize({ width: 1280, height: 720 });
+    await page.setViewportSize(VIEWPORTS.DESKTOP);
     await page.goto('/');
     const topbar = await page.locator('.desktop-topbar').boundingBox();
     const bar = await page.locator('.nojs-bar').boundingBox();
@@ -69,7 +69,7 @@ test.describe('home with JavaScript off', () => {
   });
 
   test('no section rail is pinned open at wide desktop without JS', async ({ page }) => {
-    await page.setViewportSize({ width: 1600, height: 900 });
+    await page.setViewportSize({ width: WIDTH.DESKTOP_XL, height: 900 });
     await page.goto('/');
     await expect(
       page.locator('.section-menu'),
@@ -80,7 +80,7 @@ test.describe('home with JavaScript off', () => {
   test('the contact section keeps its channels, facts and static map in order', async ({
     page,
   }) => {
-    await page.setViewportSize({ width: 390, height: 844 });
+    await page.setViewportSize(VIEWPORTS.PHONE);
     await page.goto('/');
     const section = page.locator('#sec-contact');
 
@@ -107,7 +107,7 @@ test.describe('home with JavaScript off', () => {
   });
 
   test('the server-rendered menu trigger is the icon alone, named Open menu', async ({ page }) => {
-    await page.setViewportSize({ width: 1280, height: 720 });
+    await page.setViewportSize(VIEWPORTS.DESKTOP);
     await page.goto('/');
     const trigger = page.locator('.desktop-topbar .menu-trigger');
     await expect(trigger).toHaveAttribute('aria-label', 'Open menu');
@@ -126,7 +126,9 @@ const animationName = (page: Page, selector: string) =>
     .first()
     .evaluate((node) => getComputedStyle(node).animationName);
 
-test.describe('home with JavaScript off and the system asking for reduced motion', () => {
+test.describe('home with JavaScript off and the system asking for reduced motion', {
+  tag: '@cross-browser',
+}, () => {
   test.use({ reducedMotion: 'reduce' });
 
   test('nothing animates, because no script can offer the MOTION switch', async ({ page }) => {
@@ -157,7 +159,9 @@ test.describe('home with JavaScript off and the system asking for reduced motion
   });
 });
 
-test.describe('home with JavaScript off and no system preference', () => {
+test.describe('home with JavaScript off and no system preference', {
+  tag: '@cross-browser',
+}, () => {
   test.use({ reducedMotion: 'no-preference' });
 
   test('the animation is left running', async ({ page }) => {

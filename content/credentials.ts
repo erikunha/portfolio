@@ -21,6 +21,21 @@ export const credentials: Credential[] = z.array(CredentialSchema).parse([
   },
 ]);
 
+export const SCHEMA_CREDENTIAL_CATEGORY = 'certification';
+
+export const credentialSchemaOrg: Record<string, { name: string; issuer: string }> = {
+  ANGULAR_DEVELOPER: { name: 'Angular Developer Certification', issuer: 'certificates.dev' },
+  INTL_DEGREE: {
+    name: 'Verified International Academic Qualifications',
+    issuer: 'World Education Services (WES)',
+  },
+};
+
+export const institutionAddress: Record<string, { locality: string; country: string }> = {
+  CO_OP_DIPLOMA: { locality: 'Vancouver', country: 'CA' },
+  BS_INFO_SYSTEMS: { locality: 'Campinas', country: 'BR' },
+};
+
 const careerCredentialsFor = (locale: SiteLocale) => {
   const pt = locale === SITE_LOCALE.pt;
   const event = communityEvent[locale];

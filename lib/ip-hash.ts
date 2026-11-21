@@ -1,7 +1,7 @@
 import 'server-only';
 
 import { env } from '@/lib/env';
-import { getRedis } from '@/lib/rate-limit';
+import { getRedis } from '@/lib/redis';
 
 const SALT_KEY = 'meta:deploy-salt';
 const SALT_BYTES = 32;

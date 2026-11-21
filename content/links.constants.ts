@@ -1,13 +1,9 @@
 import { SITE_HTML_LANG, SITE_LOCALE, type SiteLocale } from './site-locale';
 
-export const LINKS_LOCALE = SITE_LOCALE;
-
-export type LinksLocale = SiteLocale;
-
 export const LINKS_PATH = {
-  [LINKS_LOCALE.pt]: '/links',
-  [LINKS_LOCALE.en]: '/links/en',
-} as const satisfies Record<LinksLocale, string>;
+  [SITE_LOCALE.pt]: '/links',
+  [SITE_LOCALE.en]: '/links/en',
+} as const satisfies Record<SiteLocale, string>;
 
 export const LINKS_INTL_LOCALE = SITE_HTML_LANG;
 

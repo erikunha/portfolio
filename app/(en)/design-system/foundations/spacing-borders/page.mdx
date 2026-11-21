@@ -15,16 +15,14 @@ Spacing and border tokens live in `app/css/theme.css`.
 
 <h2 id="spacing">Spacing</h2>
 
-| Token | Utility step | Size |
-|---|---|---|
-| `--spacing-1` | `1` | 4px |
-| `--spacing-2` | `2` | 8px |
-| `--spacing-3` | `3` | 12px |
-| `--spacing-4` | `4` | 16px |
-| `--spacing-6` | `6` | 24px |
-| `--spacing-8` | `8` | 32px |
-| `--spacing-12` | `12` | 48px |
-| `--spacing-16` | `16` | 64px |
+<TokenTable
+  caption="Spacing scale tokens"
+  prefix="spacing-"
+  scope="theme"
+  exclude={['spacing-target','spacing-target-compact','spacing-target-pointer','spacing-opinions-list-marker','spacing-hair','spacing-tight','spacing-snug','spacing-pip','spacing-chip','spacing-label','spacing-inset','spacing-panel','spacing-panel-wide','spacing-icon','spacing-lane','spacing-node']}
+  utility="{step}"
+  valueHeader="Size"
+/>
 
 <Preview id="spacing-scale">
   <div style={{display:'grid',gap:'8px',width:'100%'}}>
@@ -41,19 +39,24 @@ Spacing and border tokens live in `app/css/theme.css`.
 
 <h2 id="phi">Golden-ratio spacing</h2>
 
-Page rhythm steps through one set of tokens, each the previous times `--phi` (1.618). Gaps, padding, heading margins and the two-column splits on the guitar module, `/links` and the design system all read them.
+Page rhythm steps through one set of tokens, each the previous times `--phi`. Gaps, padding, heading margins and the two-column splits on the guitar module, `/links` and the design system all read them.
 
-| Token | Value | Size |
-|---|---|---|
-| `--phi-space-1` | 0.5rem | 8px |
-| `--phi-space-2` | `--phi-space-1` × `--phi` | 13px |
-| `--phi-space-3` | `--phi-space-2` × `--phi` | 21px |
-| `--phi-space-4` | `--phi-space-3` × `--phi` | 34px |
-| `--phi-text-1` | `--text-xs` × `--phi-root` (1.272) | about 15px below 768px, 16.5px from 768px |
-| `--phi-inv` | 1 ÷ `--phi` | 0.618 |
-| `--phi-pair-columns` | `minmax(0, 1.618fr) minmax(0, 1fr)` | 1.618 : 1, major column first |
-| `--phi-pair-columns-minor-first` | `minmax(0, 1fr) minmax(0, 1.618fr)` | 1 : 1.618, minor column first |
-| `--phi-pair-flex-minor` | `0 0 calc((1 - var(--phi-inv)) * 100%)` | the minor share of a flex row |
+<TokenTable
+  caption="Golden ratio tokens"
+  prefix="phi"
+  source
+  usage={{
+    'phi': 'The golden ratio',
+    'phi-inv': 'One divided by phi',
+    'phi-space-1': 'The base step',
+    'phi-space-2': 'The base times phi',
+    'phi-space-3': 'The previous step times phi',
+    'phi-space-4': 'The previous step times phi',
+    'phi-pair-columns': 'Major column first',
+    'phi-pair-columns-minor-first': 'Minor column first',
+    'phi-pair-flex-minor': 'The minor share of a flex row',
+  }}
+/>
 
 <Preview id="phi-space">
   <div style={{display:'grid',gap:'8px',width:'100%'}}>
@@ -71,25 +74,72 @@ Page rhythm steps through one set of tokens, each the previous times `--phi` (1.
   </div>
 </Preview>
 
-Whole-page type does not use phi: a 1.618 step from a 13px base jumps to 21px and then 34px, too coarse for dense monospace text. Only `--phi-text-1` takes the half step, for stat values. Pairs split 1.618 : 1 from 1024px and stack below it; on a phone every level is one centered column.
+Whole-page type does not use phi: a phi step from the small-text floor jumps twice in a row, too coarse for dense monospace text. Pairs split major to minor from 1024px and stack below it; on a phone every level is one centered column.
+
+<h2 id="micro">Micro-scale</h2>
+
+The micro-scale names the small sizes components used to write as arbitrary pixel values, which
+`pnpm lint:css-tokens` rejects. Each step is rem, so it follows the reader's default font size.
+
+The same rule covers stylesheets. A glow radius, an indicator size or a small gap takes the step that
+equals it, a border or outline width takes `--border-width`, and a size drawn once in a glyph is
+written in rem. Only `0px` and a 1px hairline offset stay in px.
+
+<TokenTable
+  caption="Micro-scale tokens"
+  prefix="spacing-"
+  names={['spacing-hair','spacing-tight','spacing-snug','spacing-pip','spacing-chip','spacing-label','spacing-inset','spacing-panel','spacing-panel-wide','spacing-icon','spacing-lane','spacing-node']}
+  utility="{step}"
+  valueHeader="Size"
+  usage={{
+    'spacing-hair': 'Offset between stacked rows, thin vertical padding',
+    'spacing-tight': 'Tight gap between adjacent glyphs, narrow indicator width',
+    'spacing-snug': 'Padding of a small tag',
+    'spacing-pip': 'Indicator dot and bar size, small gap',
+    'spacing-chip': 'Padding and gap of a chip, height of a meter row',
+    'spacing-label': 'Gap between a label and its glyph',
+    'spacing-inset': 'Inset of a field or a chip, gap of a control row',
+    'spacing-panel': 'Padding of a panel and of a mixer section',
+    'spacing-panel-wide': 'Padding of a wide panel',
+    'spacing-icon': 'Size of an inline icon',
+    'spacing-lane': 'Height of a mixer fader lane and its thumb',
+    'spacing-node': 'Diameter of a signal-chain node',
+  }}
+/>
 
 <h2 id="target">Touch target</h2>
 
-`--spacing-target` is 44px, the minimum width and height of every control. `--spacing-target-compact` is 28px for dense, non-primary controls. `--spacing-target-pointer` is 36px, the row height of the section menu from 1024px with a fine pointer and the height of the small button on a fine pointer.
+The `--spacing-target` tokens set control sizes.
+
+<TokenTable
+  caption="Touch target tokens"
+  names={['spacing-target','spacing-target-compact','spacing-target-pointer']}
+  valueHeader="Size"
+  usage={{
+    'spacing-target': 'The minimum width and height of every control',
+    'spacing-target-compact': 'Dense, non-primary controls',
+    'spacing-target-pointer': 'Row height of the section menu from 1024px with a fine pointer, and the height of the small button on a fine pointer',
+  }}
+/>
 
 <h2 id="layout">Layout tokens</h2>
 
 Responsive tokens live in the `:root` block of `app/css/theme.css`; every page container reads them. The header, every page body and the footer share one safe zone: `--measure-page` wide, centered, with `--space-gutter` on each side, so their content starts and ends on the same vertical lines at every width.
 
-| Token | Below 768px | From 768px |
-|---|---|---|
-| `--space-gutter` | `clamp(16px, 4vw, 24px)` | `clamp(16px, 4vw, 24px)` |
-| `--space-page-top` | 32px | 48px |
-| `--space-section` | 32px | 48px |
-| `--measure-page` | 1200px (the safe zone: header, every page, footer) | 1200px |
-| `--measure-read` | 72ch (line length of text blocks, never a container width) | 72ch |
+<ResponsiveTokenTable
+  caption="Layout tokens by width"
+  names={['space-gutter','space-page-top','space-section','measure-page','measure-read']}
+  breakpoint="48rem"
+  usage={{
+    'space-gutter': 'Page gutter on each side of the safe zone',
+    'space-page-top': 'Space above the page content',
+    'space-section': 'Gap between sections',
+    'measure-page': 'The safe zone: header, every page, footer',
+    'measure-read': 'Line length of text blocks, never a container width',
+  }}
+/>
 
-Line heights: `--leading-page-tight` 1.1, `--leading-page-snug` 1.35, `--leading-body` 1.6. The page-scoped names keep Tailwind's built-in tight and snug scale intact.
+<TokenTable prefix="leading-" caption="Line height token" />
 
 `--leading` is the ratio in effect for an element and its subtree, and the line box it produces is rounded to whole pixels: `round(nearest, 1em * var(--leading), 1px)`. A component asks for a ratio by setting `--leading`, not `line-height`: a `line-height` written in the components or the utilities layer outranks the base layer, and the box it produces would stay fractional.
 
@@ -101,14 +151,18 @@ A browser without CSS `round()` keeps the ratio, which is the render it has toda
 
 <h2 id="borders">Borders</h2>
 
-| Token | Value | Use |
-|---|---|---|
-| `--border-width` | 1px | Borders and dividers |
-| `--radius-none` | 0 | Sharp controls |
-| `--radius-control` | 2px | Maximum control radius |
+<TokenTable
+  caption="Border and radius tokens"
+  names={['border-width','radius-none','radius-control']}
+  usage={{
+    'border-width': 'Borders and dividers',
+    'radius-none': 'Sharp controls',
+    'radius-control': 'Maximum control radius',
+  }}
+/>
 
-The 2px ceiling is the control-radius token, not a claim that nothing round exists: the DAW mixer's 30px knobs are circular (`rounded-full`), and the traffic-light dots in `WindowChrome` are round dots rather than a radius token.
+The ceiling is the control-radius token, not a claim that nothing round exists: the DAW mixer's knobs are circular (`rounded-full`), and the traffic-light dots in `WindowChrome` are round dots rather than a radius token.
 
 <h2 id="focus">Focus</h2>
 
-Keyboard focus uses `:focus-visible` with a 2px signal outline and a 2px offset. Never remove the outline without a replacement of equal contrast.
+Keyboard focus uses `:focus-visible` with the signal outline `--focus-ring` and `--focus-ring-offset`. Never remove the outline without a replacement of equal contrast.

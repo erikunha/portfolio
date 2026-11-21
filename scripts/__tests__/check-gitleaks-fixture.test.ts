@@ -9,7 +9,7 @@ import {
   interpretGitleaksRun,
   LEAKY_FIXTURE,
   mayNameTheComment,
-} from '../check-gitleaks-fixture.mjs';
+} from '../gates/check-gitleaks-fixture.ts';
 
 const REAL_CONFIG = readFileSync(path.resolve(__dirname, '..', '..', '.gitleaks.toml'), 'utf-8');
 const NO_IGNORE_FILE = false;
@@ -293,7 +293,7 @@ describe('assertExpectedFindings (the bait must fire, the clean fixture must not
 });
 
 describe('mayNameTheComment (only the machinery may spell the banned phrase, exactly)', () => {
-  it.each(['scripts/check-gitleaks-fixture.mjs', 'scripts/gitleaks-staged.mjs'])(
+  it.each(['scripts/gates/check-gitleaks-fixture.ts', 'scripts/gates/gitleaks-staged.ts'])(
     '%s is allowed to name the phrase',
     (file) => {
       expect(mayNameTheComment(file)).toBe(true);
@@ -301,9 +301,9 @@ describe('mayNameTheComment (only the machinery may spell the banned phrase, exa
   );
 
   it.each([
-    'scripts/gitleaks-staged.mjs.bak',
-    'scripts/gitleaks-staged.mjs~',
-    'scripts/check-gitleaks-fixture.mjs.orig',
+    'scripts/gates/gitleaks-staged.ts.bak',
+    'scripts/gates/gitleaks-staged.ts~',
+    'scripts/gates/check-gitleaks-fixture.ts.orig',
     'lib/somewhere.ts',
   ])('%s is NOT allowed -- a prefix must not re-exempt a suffixed or unrelated file', (file) => {
     expect(

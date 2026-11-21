@@ -142,8 +142,8 @@ function panel() {
 
 function navLink(name: string) {
   return within(
-    screen.getByRole('navigation', { name: NAVIGATION[LOCALE].copy.navLabel }),
-  ).getByRole('link', { name });
+    screen.getByRole('navigation', { name: NAVIGATION[LOCALE].copy.navLabel, hidden: true }),
+  ).getByRole('link', { name, hidden: true });
 }
 
 describe('SectionNavigation', () => {
@@ -176,9 +176,9 @@ describe('SectionNavigation', () => {
 
   it('lists the nine registry destinations in order, each linking to its section', () => {
     render(<Page />);
-    const links = within(screen.getByRole('navigation', { name: 'Page sections' })).getAllByRole(
-      'link',
-    );
+    const links = within(
+      screen.getByRole('navigation', { name: 'Page sections', hidden: true }),
+    ).getAllByRole('link', { hidden: true });
     expect(links.map((link) => link.getAttribute('href'))).toEqual(
       SECTION_REGISTRY.map(({ id }) => `/#${id}`),
     );
@@ -190,8 +190,10 @@ describe('SectionNavigation', () => {
   it('groups the destinations under labelled headings', () => {
     render(<Page />);
     for (const group of NAVIGATION[LOCALE].groups) {
-      const region = screen.getByRole('list', { name: group.title });
-      expect(within(region).getAllByRole('link')).toHaveLength(group.sectionIds.length);
+      const region = screen.getByRole('list', { name: group.title, hidden: true });
+      expect(within(region).getAllByRole('link', { hidden: true })).toHaveLength(
+        group.sectionIds.length,
+      );
     }
   });
 
@@ -446,9 +448,12 @@ describe('SectionNavigation', () => {
   it('links to the design system and to LinkedIn in a new tab', () => {
     render(<Page />);
     const foot = document.querySelector('.menu-foot') as HTMLElement;
-    const ds = within(foot).getByRole('link', { name: 'DESIGN_SYSTEM' });
+    const ds = within(foot).getByRole('link', { name: 'DESIGN_SYSTEM', hidden: true });
     expect(ds.getAttribute('href')).toBe('/design-system');
-    const linkedin = within(foot).getByRole('link', { name: HIRE_ACCESSIBLE_NAME[LOCALE] });
+    const linkedin = within(foot).getByRole('link', {
+      name: HIRE_ACCESSIBLE_NAME[LOCALE],
+      hidden: true,
+    });
     expect(linkedin.getAttribute('target')).toBe('_blank');
     expect(linkedin.getAttribute('rel')).toContain('noopener');
     expect(linkedin.getAttribute('aria-label')).toBe(HIRE_ACCESSIBLE_NAME[LOCALE]);
@@ -650,13 +655,15 @@ describe('SectionNavigation', () => {
     const toggle = document.querySelector('.menu-motion') as HTMLButtonElement;
 
     expect(
-      screen.getByRole('button', { name: 'MOTION', pressed: true }),
+      screen.getByRole('button', { name: 'MOTION', pressed: true, hidden: true }),
       'a name that spells the state ("MOTION: ON") on top of aria-pressed is announced twice and contradicts itself after a toggle',
     ).toBe(toggle);
 
     fireEvent.click(toggle);
 
-    expect(screen.getByRole('button', { name: 'MOTION', pressed: false })).toBe(toggle);
+    expect(screen.getByRole('button', { name: 'MOTION', pressed: false, hidden: true })).toBe(
+      toggle,
+    );
     expect(toggleState(toggle), 'the visible text still spells the state').toBe(
       NAVIGATION[LOCALE].copy.motionOff,
     );
@@ -679,7 +686,7 @@ describe('SectionNavigation', () => {
       'WCAG 2.5.3: an aria-label that differs from the visible text breaks voice control; the name comes from the visible label',
     ).toBe(false);
     expect(
-      screen.getByRole('button', { name: visibleLabel }),
+      screen.getByRole('button', { name: visibleLabel, hidden: true }),
       'the state word is aria-hidden, so the name is the label alone and aria-pressed carries the state',
     ).toBe(toggle);
   });
@@ -692,23 +699,19 @@ describe('SectionNavigation', () => {
       return trigger;
     }
 
-    it('is a closed complementary landmark until opened', () => {
+    it('is a closed dialog, out of the accessibility tree, until opened', () => {
       render(<Page />);
-      expect(screen.getByRole('complementary', { name: 'Section menu' })).toBe(panel());
-      expect(panel().hasAttribute('aria-modal')).toBe(false);
+      expect(screen.queryByRole('dialog', { name: 'Section menu' })).toBeNull();
+      expect(panel().tagName).toBe('DIALOG');
+      expect((panel() as HTMLDialogElement).open).toBe(false);
       expect(panel().classList.contains('is-open')).toBe(false);
     });
 
-    it('opens as a modal dialog, isolates the background and focuses the current destination', () => {
+    it('opens as a modal dialog and focuses the current destination', () => {
       render(<Page />);
       open();
-      expect(panel().getAttribute('role')).toBe('dialog');
-      expect(panel().getAttribute('aria-modal')).toBe('true');
-      expect(panel().getAttribute('aria-label')).toBe('Section menu');
-      expect(screen.getByTestId('trigger').hasAttribute('inert')).toBe(true);
-      expect(document.getElementById('main-content')?.hasAttribute('inert')).toBe(true);
-      expect(panel().closest('[inert]')).toBeNull();
-      expect(document.querySelector('.menu-scrim')?.closest('[inert]')).toBeNull();
+      expect(screen.getByRole('dialog', { name: 'Section menu' })).toBe(panel());
+      expect((panel() as HTMLDialogElement).open).toBe(true);
       expect(
         document.activeElement,
         'focus lands on the destination marked current, so the drawer announces where it opened',
@@ -719,8 +722,8 @@ describe('SectionNavigation', () => {
       render(<Page />);
       const trigger = open();
       fireEvent.keyDown(document, { key: 'Escape' });
-      expect(screen.getByRole('complementary', { name: 'Section menu' })).toBe(panel());
-      expect(document.querySelectorAll('[inert]')).toHaveLength(0);
+      expect(screen.queryByRole('dialog', { name: 'Section menu' })).toBeNull();
+      expect((panel() as HTMLDialogElement).open).toBe(false);
       expect(document.activeElement).toBe(trigger);
     });
 
@@ -739,14 +742,14 @@ describe('SectionNavigation', () => {
       ).toBe(screen.getByRole('button', { name: NAVIGATION[LOCALE].copy.openMenu }));
     });
 
-    it('closes from the close control and from the scrim', () => {
+    it('closes from the close control and from a click on the backdrop', () => {
       render(<Page />);
       const trigger = open();
       fireEvent.click(screen.getByRole('button', { name: '[ X ] CLOSE' }));
       expect(panel().classList.contains('is-open')).toBe(false);
       expect(document.activeElement).toBe(trigger);
       open();
-      fireEvent.click(document.querySelector('.menu-scrim') as HTMLElement);
+      fireEvent.click(panel());
       expect(panel().classList.contains('is-open')).toBe(false);
       expect(document.activeElement).toBe(trigger);
     });
@@ -865,7 +868,7 @@ describe('SectionNavigation', () => {
       const button = menuButton();
       fireEvent.click(button);
       expect(button.getAttribute('aria-expanded')).toBe('true');
-      expect(panel().getAttribute('aria-modal')).toBe('true');
+      expect((panel() as HTMLDialogElement).open).toBe(true);
       expect(
         document.activeElement?.getAttribute('aria-current'),
         'focus lands on current item',

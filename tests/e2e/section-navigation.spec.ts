@@ -2,17 +2,18 @@ import { expect, test } from '@playwright/test';
 import { brandByLocale } from '@/content/brand';
 import { HIRE_ACCESSIBLE_NAME } from '@/content/nav';
 import { SITE_LOCALE } from '../../content/site-locale';
-import { DOCK_MENU, gotoHydrated, MENU_TRIGGER } from './_helpers/hydration';
+import { WIDTH } from './_helpers/geometry';
+import { DOCK_MENU, gotoHydrated, MENU_TRIGGER, openSectionMenu } from './_helpers/hydration';
 import { gotoSettled } from './_helpers/streamed';
 
 const SCROLL_PROBE_PX = 400;
-const TOPBAR_WIDTHS = [768, 1024, 1280, 1440];
-const SECTION_SHORTCUT_WIDTH = 1280;
-const ACTION_TIER_WIDTH = 1024;
-const MOTION_TIER_WIDTH = 1280;
+const TOPBAR_WIDTHS = [WIDTH.TABLET, WIDTH.LAPTOP, WIDTH.DESKTOP, WIDTH.DESKTOP_WIDE];
+const SECTION_SHORTCUT_WIDTH = WIDTH.DESKTOP;
+const ACTION_TIER_WIDTH = WIDTH.LAPTOP;
+const MOTION_TIER_WIDTH = WIDTH.DESKTOP;
 const FOOT_GAP_LIMIT_PX = 32;
 
-for (const width of [390, 768, 1024, 1280, 1536]) {
+for (const width of [WIDTH.PHONE, WIDTH.TABLET, WIDTH.LAPTOP, WIDTH.DESKTOP, WIDTH.DESKTOP_LARGE]) {
   test.describe(`section navigation: menu trigger at ${width}px`, () => {
     test.use({ viewport: { width, height: 844 } });
 
@@ -28,7 +29,7 @@ for (const width of [390, 768, 1024, 1280, 1536]) {
         .getByRole('button', { name: 'Open menu', exact: true })
         .locator('visible=true');
       await expect(trigger).toHaveAttribute('aria-expanded', 'false');
-      await trigger.click();
+      await openSectionMenu(page);
       await expect(menu).toBeVisible();
       await expect(trigger).toHaveAttribute('aria-expanded', 'true');
       const leftOpen = await main.evaluate((element) => element.getBoundingClientRect().left);
@@ -203,7 +204,7 @@ for (const width of TOPBAR_WIDTHS) {
 }
 
 test.describe('desktop topbar: one hire action per viewport', () => {
-  for (const width of [768, 1023, 1024, 1280]) {
+  for (const width of [WIDTH.TABLET, WIDTH.BELOW_LAPTOP, WIDTH.LAPTOP, WIDTH.DESKTOP]) {
     test.describe(`at ${width}px`, () => {
       test.use({ viewport: { width, height: 720 } });
 
@@ -247,7 +248,7 @@ test.describe('desktop topbar: one hire action per viewport', () => {
 });
 
 test.describe('section navigation: motion control tiers', () => {
-  for (const width of [768, 1024, 1280, 1440]) {
+  for (const width of [WIDTH.TABLET, WIDTH.LAPTOP, WIDTH.DESKTOP, WIDTH.DESKTOP_WIDE]) {
     test.describe(`at ${width}px`, () => {
       test.use({ viewport: { width, height: 720 } });
 
@@ -275,10 +276,7 @@ test.describe('section navigation: motion control tiers', () => {
           ).toBeHidden();
         }
 
-        await page
-          .getByRole('button', { name: 'Open menu', exact: true })
-          .locator('visible=true')
-          .click();
+        await openSectionMenu(page);
         const drawer = page.getByRole('dialog', { name: 'Section menu' });
         await expect(
           drawer.locator('.menu-motion'),
@@ -291,7 +289,7 @@ test.describe('section navigation: motion control tiers', () => {
 });
 
 test.describe('section navigation: drawer rows', () => {
-  test.use({ viewport: { width: 390, height: 844 } });
+  test.use({ viewport: { width: WIDTH.PHONE, height: 844 } });
 
   test('the drawer lists the reading views and the motion toggle, with no search row', async ({
     page,
@@ -350,7 +348,7 @@ test.describe('section navigation: drawer rows', () => {
 });
 
 test.describe('section navigation: drawer at 390px', () => {
-  test.use({ viewport: { width: 390, height: 844 } });
+  test.use({ viewport: { width: WIDTH.PHONE, height: 844 } });
 
   test('the dock has one grid column per control', async ({ page }) => {
     await gotoSettled(page, '/');
@@ -390,7 +388,7 @@ test.describe('section navigation: drawer at 390px', () => {
 });
 
 test.describe('section navigation: drawer across a viewport change', () => {
-  test.use({ viewport: { width: 390, height: 844 } });
+  test.use({ viewport: { width: WIDTH.PHONE, height: 844 } });
 
   test('the open drawer survives the change to a desktop width', async ({ page }) => {
     await gotoHydrated(page, '/', DOCK_MENU);
@@ -401,7 +399,7 @@ test.describe('section navigation: drawer across a viewport change', () => {
     const drawer = page.getByRole('dialog', { name: 'Section menu' });
     await expect(drawer).toBeVisible();
 
-    await page.setViewportSize({ width: 1280, height: 720 });
+    await page.setViewportSize({ width: WIDTH.DESKTOP, height: 720 });
 
     await expect(
       drawer,
@@ -428,7 +426,7 @@ test.describe('section navigation: drawer across a viewport change', () => {
     const drawer = page.getByRole('dialog', { name: 'Section menu' });
     await expect(drawer).toBeVisible();
 
-    await page.setViewportSize({ width: 1280, height: 720 });
+    await page.setViewportSize({ width: WIDTH.DESKTOP, height: 720 });
 
     await page.keyboard.press('Escape');
     await expect(drawer).toBeHidden();
@@ -441,7 +439,7 @@ test.describe('section navigation: drawer across a viewport change', () => {
 });
 
 test.describe('section navigation: position line at 1280px', () => {
-  test.use({ viewport: { width: 1280, height: 720 } });
+  test.use({ viewport: { width: WIDTH.DESKTOP, height: 720 } });
 
   test('the line never intercepts pointer events', async ({ page }) => {
     await gotoSettled(page, '/');
@@ -453,8 +451,8 @@ test.describe('section navigation: position line at 1280px', () => {
 const SIDE_LINE_MAX_THICKNESS_PX = 4;
 
 for (const { width, height } of [
-  { width: 390, height: 844 },
-  { width: 768, height: 1024 },
+  { width: WIDTH.PHONE, height: 844 },
+  { width: WIDTH.TABLET, height: 1024 },
 ]) {
   test.describe(`section navigation: side position line at ${width}px`, () => {
     test.use({ viewport: { width, height } });
@@ -489,13 +487,13 @@ for (const { width, height } of [
 }
 
 test.describe('section navigation: top position line at 1280px', () => {
-  test.use({ viewport: { width: 1280, height: 720 } });
+  test.use({ viewport: { width: WIDTH.DESKTOP, height: 720 } });
 
   test('the desktop line stays a thin horizontal line across the top', async ({ page }) => {
     await gotoSettled(page, '/');
     const box = await page.locator('.pos-line').boundingBox();
     expect(box?.height ?? Number.POSITIVE_INFINITY).toBeLessThanOrEqual(SIDE_LINE_MAX_THICKNESS_PX);
-    expect(box?.width ?? 0).toBeGreaterThanOrEqual(1280 * 0.9);
+    expect(box?.width ?? 0).toBeGreaterThanOrEqual(WIDTH.DESKTOP * 0.9);
     expect(box?.y ?? Number.POSITIVE_INFINITY).toBeLessThanOrEqual(1);
   });
 });
@@ -503,9 +501,9 @@ test.describe('section navigation: top position line at 1280px', () => {
 test('a section reached from the menu takes focus without the browser outline', async ({
   page,
 }) => {
-  await page.setViewportSize({ width: 1280, height: 720 });
+  await page.setViewportSize({ width: WIDTH.DESKTOP, height: 720 });
   await gotoHydrated(page, '/', MENU_TRIGGER);
-  await page.locator('.desktop-topbar .menu-trigger').click();
+  await openSectionMenu(page);
   await page
     .locator('#section-drawer')
     .getByRole('link', { name: /Career/ })
@@ -522,8 +520,8 @@ const LANGUAGE_LABEL = { en: 'Language', pt: 'Idioma' } as const;
 const FINE_POINTER_TARGET_PX = 36;
 const COARSE_POINTER_TARGET_PX = 44;
 const HEADER_VIEWPORTS = [
-  { name: 'desktop topbar', selector: '.desktop-topbar', width: 1280, height: 720 },
-  { name: 'mobile title bar', selector: '.mobile-title-bar', width: 390, height: 844 },
+  { name: 'desktop topbar', selector: '.desktop-topbar', width: WIDTH.DESKTOP, height: 720 },
+  { name: 'mobile title bar', selector: '.mobile-title-bar', width: WIDTH.PHONE, height: 844 },
 ] as const;
 
 for (const { name, selector, width, height } of HEADER_VIEWPORTS) {
@@ -619,7 +617,7 @@ for (const { name, selector, width, height } of HEADER_VIEWPORTS) {
 }
 
 test.describe('language switch order in the desktop topbar', () => {
-  test.use({ viewport: { width: 1280, height: 720 } });
+  test.use({ viewport: { width: WIDTH.DESKTOP, height: 720 } });
 
   test('follows HIRE and precedes the brand icon in tab order', async ({ page }) => {
     await gotoSettled(page, '/');

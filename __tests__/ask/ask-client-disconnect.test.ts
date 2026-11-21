@@ -1,0 +1,164 @@
+import type { NextRequest } from 'next/server';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { ASK_RESERVED_INPUT_TOKENS } from '@/lib/ask/input-reservation';
+import { askRequest } from '../helpers/ask-route';
+
+const mockStreamText = vi.fn();
+vi.mock('ai', () => ({ streamText: mockStreamText }));
+
+const settleBudgetMock = vi.fn(async (..._args: unknown[]): Promise<void> => undefined);
+vi.mock('@/lib/redis', () => ({ hasRedisCredentials: vi.fn(() => true) }));
+vi.mock('@/lib/server/client-ip', async () =>
+  (await import('../helpers/ask-route')).clientIpModule(),
+);
+vi.mock('@/lib/rate-limit', async () => (await import('../helpers/ask-route')).rateLimitModule());
+vi.mock('@/lib/ask/budget', async () =>
+  (await import('../helpers/ask-route')).budgetModule({
+    reserveBudget: vi.fn(async () => ({
+      allowed: true,
+      reserved: 2712,
+      pct: 0,
+      budgetKey: 'ask:tokens:test',
+      dailyKey: 'ask:tokens:day:test',
+    })),
+    settleBudget: settleBudgetMock,
+  }),
+);
+vi.mock('@/lib/ask/dedup', async () => (await import('../helpers/ask-route')).dedupModule());
+
+const persistMock = vi.fn(async (_interaction: { status: string; answer: string }) => undefined);
+vi.mock('@/lib/ask/interaction-log', async () =>
+  (await import('../helpers/ask-route')).askLogModule(persistMock),
+);
+
+const hashIpMock = vi.fn(async (_ip: string) => 'hashed-ip-test');
+vi.mock('@/lib/ip-hash', async () =>
+  (await import('../helpers/ask-route')).ipHashModule(hashIpMock),
+);
+
+vi.mock('@/lib/log', async () => (await import('../helpers/ask-route')).logModule());
+
+function makeRequest(question = 'Who is Erik?'): NextRequest {
+  return askRequest({ question });
+}
+
+function makeGatedResult() {
+  let release: () => void = () => undefined;
+  const gate = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  const result = {
+    textStream: {
+      async *[Symbol.asyncIterator]() {
+        yield 'first chunk. ';
+        await gate;
+        yield 'second chunk.';
+      },
+    },
+    usage: Promise.resolve({ inputTokens: 2000, outputTokens: 40, inputTokenDetails: {} }),
+    finishReason: Promise.resolve('stop'),
+  };
+  return { result, release };
+}
+
+describe('/api/ask client disconnect', () => {
+  beforeEach(() => {
+    process.env.ASK_ENABLED = 'true';
+    vi.resetModules();
+    mockStreamText.mockReset();
+    settleBudgetMock.mockClear();
+    persistMock.mockClear();
+    hashIpMock.mockClear();
+    hashIpMock.mockImplementation(async () => 'hashed-ip-test');
+  });
+
+  it('settles the budget reservation and persists the log when the reader cancels mid-answer', async () => {
+    const { result, release } = makeGatedResult();
+    mockStreamText.mockReturnValueOnce(result);
+
+    const { POST } = await import('@/app/api/ask/route');
+    const res = await POST(makeRequest());
+    const reader = res.body?.getReader();
+    expect(reader).toBeDefined();
+
+    const first = await reader?.read();
+    expect(new TextDecoder().decode(first?.value)).toContain('first chunk');
+    await reader?.cancel();
+    release();
+    await vi.waitFor(() => expect(persistMock).toHaveBeenCalledTimes(1));
+
+    expect(settleBudgetMock).toHaveBeenCalledTimes(1);
+    expect(persistMock).toHaveBeenCalledTimes(1);
+    expect(persistMock.mock.calls[0]?.[0].status).toBe('aborted');
+    expect(persistMock.mock.calls[0]?.[0].answer).toContain('first chunk');
+  });
+
+  it('keeps the input tokens and refunds the output reservation when the reader cancels before the first token', async () => {
+    let release: () => void = () => undefined;
+    const gate = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    mockStreamText.mockReturnValueOnce({
+      textStream: {
+        async *[Symbol.asyncIterator]() {
+          await gate;
+          yield 'never delivered';
+        },
+      },
+      usage: Promise.reject(new Error('aborted')),
+      finishReason: Promise.resolve('stop'),
+    });
+
+    const { POST } = await import('@/app/api/ask/route');
+    const res = await POST(makeRequest());
+    await res.body?.cancel();
+    release();
+    await vi.waitFor(() => expect(settleBudgetMock).toHaveBeenCalled());
+
+    expect(
+      settleBudgetMock,
+      'an abort before any token left the full worst-case reservation on the budget until the key expired',
+    ).toHaveBeenCalledWith({
+      reserved: 2712,
+      billedInputTokens: ASK_RESERVED_INPUT_TOKENS,
+      outputTokens: 0,
+      budgetKey: 'ask:tokens:test',
+      dailyKey: 'ask:tokens:day:test',
+    });
+  });
+
+  it('aborts the upstream model call when the reader cancels', async () => {
+    const { result, release } = makeGatedResult();
+    mockStreamText.mockReturnValueOnce(result);
+
+    const { POST } = await import('@/app/api/ask/route');
+    const res = await POST(makeRequest());
+    const reader = res.body?.getReader();
+    await reader?.read();
+    await reader?.cancel();
+    release();
+
+    const callArgs = mockStreamText.mock.calls[0]?.[0] as { abortSignal: AbortSignal };
+    await vi.waitFor(() => expect(callArgs.abortSignal.aborted).toBe(true));
+  });
+});
+
+describe('/api/ask pseudonymisation outage', () => {
+  beforeEach(() => {
+    process.env.ASK_ENABLED = 'true';
+    vi.resetModules();
+    mockStreamText.mockReset();
+  });
+
+  it('keeps answering when the IP hash cannot be derived instead of throwing a 500', async () => {
+    hashIpMock.mockRejectedValueOnce(new Error('DEPLOY_SALT auto-resolution failed'));
+    const { result } = makeGatedResult();
+    mockStreamText.mockReturnValueOnce(result);
+
+    const { POST } = await import('@/app/api/ask/route');
+    const res = await POST(makeRequest());
+
+    expect(res.status).toBe(200);
+    await res.body?.cancel();
+  });
+});

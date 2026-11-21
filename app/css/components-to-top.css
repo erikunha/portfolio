@@ -1,40 +1,41 @@
 @layer components {
-  .to-top-btn {
+  .btn.to-top-btn {
     display: none;
   }
 
-  @media (max-width: theme(--viewport-below-md)) {
-    .to-top-btn {
+  @media (width < theme(--viewport-md)) {
+    .btn.to-top-btn {
       display: flex;
-      align-items: center;
-      justify-content: center;
       position: fixed;
       right: var(--to-top-inset);
       bottom: calc(var(--dock-height) + env(safe-area-inset-bottom, 0px));
       z-index: var(--z-to-top);
       width: var(--to-top-size);
       height: var(--to-top-size);
-      background: var(--color-secondary-950);
-      border: var(--border-width) solid var(--color-primary-subtle);
-      border-bottom: 0;
-      border-inline-end: 0;
-      color: var(--color-primary-500);
+      padding-inline: 0;
       opacity: 0;
-      transform: translateY(8px);
+      transform: translateY(var(--spacing-2));
       transition:
         opacity 200ms ease,
         transform 200ms ease;
       pointer-events: none;
     }
 
-    .to-top-btn.to-top-show {
+    .btn.to-top-btn[data-variant="secondary"] {
+      background: var(--color-surface);
+      border-bottom: 0;
+      border-inline-end: 0;
+    }
+
+    .btn.to-top-btn[data-variant="secondary"]:hover {
+      background: var(--color-surface);
+      box-shadow: none;
+    }
+
+    .btn.to-top-btn.to-top-show {
       opacity: 1;
       transform: translateY(0);
       pointer-events: auto;
     }
-  }
-
-  body[data-motion="reduce"] .to-top-btn {
-    transition: none;
   }
 }

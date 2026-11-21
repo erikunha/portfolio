@@ -19,6 +19,7 @@ import {
   runBoot,
   type SysfailBeat,
 } from '@/lib/boot-animation';
+import type { BootTiming } from '@/lib/boot-timing';
 import { isMobileViewport, watchMobileViewport } from '@/lib/media-queries';
 import { readMotion } from '@/lib/motion';
 import { subscribeMotion } from '@/lib/motion-change';
@@ -63,7 +64,7 @@ function BootSlot({ spec }: { spec: BootSlotSpec }) {
   );
 }
 
-const timingDesktop = {
+const timingDesktop: BootTiming & { lineMs: number; lineJitter: number; startMs: number } = {
   lineMs: 150,
   lineJitter: 60,
   cmdMs: 70,
@@ -75,7 +76,7 @@ const timingDesktop = {
   startMs: 250,
 };
 
-const timingMobile = {
+const timingMobile: BootTiming = {
   cmdMs: 60,
   cmdJitter: 30,
   typeMs: 75,

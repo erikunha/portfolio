@@ -1,10 +1,9 @@
 import { expect, test } from '@playwright/test';
 import { footerSectionIds } from '@/content/footer';
+import { VIEWPORTS, WIDTH } from '../../../tests/e2e/_helpers/geometry';
 import { waitForHydration } from '../../../tests/e2e/_helpers/hydration';
 import { freezeMotion } from '../../../tests/e2e/_helpers/motion';
 
-const COMMAND_RETRY_WINDOW_MS = 2_000;
-const NO_COMMANDS = '0';
 const ONE_COMMAND = '1';
 const DOCUMENT_SENTINEL = '__footerRebootSentinel';
 const SECTIONS_SEEN_TIMEOUT_MS = 90_000;
@@ -31,7 +30,7 @@ test.describe('Footer', () => {
     const context = await browser.newContext({
       javaScriptEnabled: false,
       baseURL,
-      viewport: { width: 1280, height: 720 },
+      viewport: VIEWPORTS.DESKTOP,
       isMobile: false,
       hasTouch: false,
     });
@@ -54,7 +53,7 @@ test.describe('Footer', () => {
       'href',
       '#sec-contact',
     );
-    await page.setViewportSize({ width: 390, height: 812 });
+    await page.setViewportSize({ width: WIDTH.PHONE, height: 812 });
     await expect(tree.getByRole('link', { name: 'Home', exact: true })).toBeHidden();
     await tree.locator('summary', { hasText: './whoami/' }).click();
     await tree.getByRole('link', { name: 'Home', exact: true }).click();
@@ -71,13 +70,9 @@ test.describe('Footer', () => {
     await waitForHydration(page, '[data-testid="shell-form"]');
     const input = page.getByRole('textbox', { name: 'shell command', exact: true });
     const commands = page.locator('[data-sess="commands"]');
-    await expect(async () => {
-      if ((await commands.textContent()) === NO_COMMANDS) {
-        await input.fill('help');
-        await input.press('Enter');
-      }
-      await expect(commands).toHaveText(ONE_COMMAND, { timeout: COMMAND_RETRY_WINDOW_MS });
-    }).toPass();
+    await input.fill('help');
+    await input.press('Enter');
+    await expect(commands).toHaveText(ONE_COMMAND);
     await page.locator('footer').scrollIntoViewIfNeeded();
     await page.evaluate((key) => {
       (window as unknown as Record<string, boolean>)[key] = true;
@@ -153,8 +148,8 @@ test.describe('Footer', () => {
   test('mobile footer keeps its measured height with the folded site map and netstat on one line', async ({
     browser,
   }) => {
-    for (const width of [390, 1280]) {
-      const isPhone = width === 390;
+    for (const width of [WIDTH.PHONE, WIDTH.DESKTOP]) {
+      const isPhone = width === WIDTH.PHONE;
       const context = await browser.newContext({
         viewport: { width, height: isPhone ? 844 : 720 },
         hasTouch: isPhone,
@@ -163,7 +158,7 @@ test.describe('Footer', () => {
       const page = await context.newPage();
       await loadFooter(page);
       await page.evaluate(() => document.fonts.ready);
-      if (width === 390) {
+      if (width === WIDTH.PHONE) {
         const footer = await page.locator('footer').boundingBox();
         expect(footer?.height).toBeGreaterThanOrEqual(1680);
         expect(footer?.height).toBeLessThanOrEqual(1770);
@@ -206,7 +201,7 @@ test.describe('Footer', () => {
   });
 
   test('netstat endpoints wrap instead of clipping at 320px', async ({ page }) => {
-    await page.setViewportSize({ width: 320, height: 800 });
+    await page.setViewportSize({ width: WIDTH.PHONE_NARROW, height: 800 });
     await loadFooter(page);
     for (const cell of await page.locator('.footer-netstat td:last-child').all()) {
       const fit = await cell.evaluate((element) => element.scrollWidth <= element.clientWidth);
@@ -217,8 +212,8 @@ test.describe('Footer', () => {
   test('site map follows the type scale: six columns at desktop, three at tablet, folder rows on phones', async ({
     page,
   }) => {
-    const expectedColumns: Record<number, number> = { 1280: 6, 768: 3 };
-    for (const width of [1280, 768, 390, 320]) {
+    const expectedColumns: Record<number, number> = { [WIDTH.DESKTOP]: 6, [WIDTH.TABLET]: 3 };
+    for (const width of [WIDTH.DESKTOP, WIDTH.TABLET, WIDTH.PHONE, WIDTH.PHONE_NARROW]) {
       await page.setViewportSize({ width, height: 812 });
       await loadFooter(page);
       const tree = page.getByRole('navigation', { name: 'Site map' });
@@ -298,7 +293,7 @@ test.describe('Footer', () => {
       });
       expect(edges.tree).toBeCloseTo(edges.session, 0);
       expect(edges.content, 'the tree starts at the card title edge').toBeCloseTo(edges.tree, 0);
-      if (width < 900) expect(edges.tree).toBeCloseTo(edges.netstat, 0);
+      if (width < WIDTH.LAPTOP_COMPACT) expect(edges.tree).toBeCloseTo(edges.netstat, 0);
       expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
         width,
       );
@@ -306,7 +301,7 @@ test.describe('Footer', () => {
   });
 
   test('the phone site map is an exclusive accordion that opens on ./work/', async ({ page }) => {
-    await page.setViewportSize({ width: 390, height: 812 });
+    await page.setViewportSize({ width: WIDTH.PHONE, height: 812 });
     await loadFooter(page);
     const tree = page.getByRole('navigation', { name: 'Site map' });
     const heads = tree.locator('.sm-fold-head');
@@ -339,8 +334,8 @@ test.describe('Footer', () => {
   }) => {
     test.setTimeout(SECTIONS_SEEN_TIMEOUT_MS);
     for (const [width, height, isMobile] of [
-      [390, 844, true],
-      [1280, 800, false],
+      [WIDTH.PHONE, 844, true],
+      [WIDTH.DESKTOP, 800, false],
     ] as const) {
       const context = await browser.newContext({
         viewport: { width, height },
@@ -401,7 +396,7 @@ test.describe('Footer', () => {
 
   test('tree links keep 44px touch targets under a coarse pointer', async ({ browser }) => {
     const context = await browser.newContext({
-      viewport: { width: 390, height: 844 },
+      viewport: VIEWPORTS.PHONE,
       hasTouch: true,
       isMobile: true,
     });

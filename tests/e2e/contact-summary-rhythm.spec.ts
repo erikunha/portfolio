@@ -1,27 +1,28 @@
 import { expect, test } from '@playwright/test';
+import { WIDTH } from './_helpers/geometry';
 import { waitForHydration } from './_helpers/hydration';
 import { freezeMotion } from './_helpers/motion';
+import { revealDeferredContent } from './_helpers/snapshot';
 import { gotoSettled } from './_helpers/streamed';
 
 const FORM_SELECTOR = '[data-testid="contact-form"]';
-const WIDTHS = [320, 375, 390] as const;
+const WIDTHS = [WIDTH.PHONE_NARROW, WIDTH.PHONE_COMPACT, WIDTH.PHONE] as const;
 const ROUTES = ['/', '/pt'] as const;
 const SUBPIXEL_PX = 1;
 
 for (const route of ROUTES) {
   for (const width of WIDTHS) {
-    test(`${route} at ${width}px: the error summary lines sit at the text rhythm`, async ({
-      page,
-    }) => {
+    test(`${route} at ${width}px: the error summary lines sit at the text rhythm`, {
+      tag: '@cross-browser',
+    }, async ({ page }) => {
       await page.setViewportSize({ width, height: 800 });
       await freezeMotion(page);
       await gotoSettled(page, route);
+      await revealDeferredContent(page);
       await page.locator(FORM_SELECTOR).scrollIntoViewIfNeeded();
       await waitForHydration(page, FORM_SELECTOR);
-      await expect(async () => {
-        await page.locator(`${FORM_SELECTOR} button[type="submit"]`).click();
-        await expect(page.locator('.contact-alert')).toBeVisible({ timeout: 1000 });
-      }).toPass();
+      await page.locator(`${FORM_SELECTOR} button[type="submit"]`).click();
+      await expect(page.locator('.contact-alert')).toBeVisible();
       const measured = await page.evaluate(() => {
         const paragraph = document.querySelector('.contact-alert p') as HTMLElement;
         const style = getComputedStyle(paragraph);

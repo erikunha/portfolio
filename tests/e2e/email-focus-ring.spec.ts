@@ -1,8 +1,8 @@
 import { expect, type Page, test } from '@playwright/test';
+import { PHONE_TO_TABLET_WIDTHS } from './_helpers/geometry';
 import { revealDeferredContent } from './_helpers/snapshot';
 import { gotoSettled } from './_helpers/streamed';
 
-const PHONE_WIDTHS = [320, 375, 768] as const;
 const VIEWPORT_HEIGHT = 812;
 const ROUTES = ['/', '/pt'] as const;
 const CONTACT_EMAIL = '.contact-channels-body a[href^="mailto:"]';
@@ -47,8 +47,8 @@ function measureRing(page: Page): Promise<RingLayout> {
   });
 }
 
-for (const width of PHONE_WIDTHS) {
-  test.describe(`the focused email link at ${width}px`, () => {
+for (const width of PHONE_TO_TABLET_WIDTHS) {
+  test.describe(`the focused email link at ${width}px`, { tag: '@cross-browser' }, () => {
     test.use({
       viewport: { width, height: VIEWPORT_HEIGHT },
       isMobile: true,

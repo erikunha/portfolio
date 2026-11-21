@@ -1,32 +1,25 @@
 import { type AskErrors, askErrors } from '@/content/ask-errors';
 import { SITE_LOCALE, type SiteLocale } from '@/content/site-locale';
+import { type BudgetRefusalReason, reserveBudget } from '@/lib/ask/budget';
 import { parseConversationId } from '@/lib/ask/conversation-id';
+import { checkIdenticalQuestion, releaseIdenticalQuestion } from '@/lib/ask/dedup';
 import { isInjectionAttempt } from '@/lib/ask/injection';
 import { ASK_MAX_OUTPUT_TOKENS, ASK_MAX_QUESTION_CHARS } from '@/lib/ask/limits';
 import { type AskRefusalStatus, countAskRefusal } from '@/lib/ask/refusal-count';
 import { PROMPT_VERSION } from '@/lib/ask/system-prompt';
 import { env } from '@/lib/env';
+import { HTTP_STATUS } from '@/lib/http-status';
 import { log } from '@/lib/log';
 import { describeError } from '@/lib/log-error';
-import {
-  type BudgetRefusalReason,
-  checkIdenticalQuestion,
-  getAskLimit,
-  hasRedisCredentials,
-  releaseIdenticalQuestion,
-  reserveBudget,
-} from '@/lib/rate-limit';
+import { getAskLimit } from '@/lib/rate-limit';
+import { hasRedisCredentials } from '@/lib/redis';
 import { afterResponse } from '@/lib/server/after-response';
 import { isCrossSiteRequest } from '@/lib/server/fetch-metadata';
 import { clientRateLimitKey, type RateLimitIdentifier } from '@/lib/server/rate-limit-key';
 import { readBoundedBody } from '@/lib/server/read-body';
+import { localeFromRequest } from '@/lib/server/request-locale';
 import { err } from '@/lib/server/route';
-import {
-  ASK_LOCALE_HEADER,
-  REQUEST_ID_HEADER,
-  RETRY_AFTER_HEADER,
-  retryAfterSeconds,
-} from '@/lib/stream-protocol';
+import { REQUEST_ID_HEADER, RETRY_AFTER_HEADER, retryAfterSeconds } from '@/lib/stream-protocol';
 
 const OFF_KEYWORDS = new Set(['false', '0', 'off', 'no', 'disabled']);
 
@@ -45,7 +38,7 @@ const BUDGET_REFUSALS: Record<
 
 export type AskContext = {
   requestId: string;
-  ipHash: string;
+  ipHash: string | null;
   startedAt: number;
   question: string;
   fullQuestion: string;
@@ -139,14 +132,18 @@ function parseQuestion(
 }
 
 export async function preflightAsk(req: Request): Promise<PreflightResult> {
-  const pageLocale = siteLocaleOf(req.headers.get(ASK_LOCALE_HEADER)) ?? SITE_LOCALE.en;
+  const pageLocale = localeFromRequest(req);
   const requestId = crypto.randomUUID();
   const askFlag = (env.ASK_ENABLED ?? '').trim().toLowerCase();
   if (OFF_KEYWORDS.has(askFlag)) {
-    return reject(askError(requestId, askErrors[pageLocale].unavailable, 503));
+    return reject(
+      askError(requestId, askErrors[pageLocale].unavailable, HTTP_STATUS.serviceUnavailable),
+    );
   }
   if (isCrossSiteRequest(req)) {
-    return reject(askError(requestId, askErrors[pageLocale].forbiddenOrigin, 403));
+    return reject(
+      askError(requestId, askErrors[pageLocale].forbiddenOrigin, HTTP_STATUS.forbidden),
+    );
   }
 
   const startedAt = Date.now();
@@ -157,11 +154,15 @@ export async function preflightAsk(req: Request): Promise<PreflightResult> {
     });
     return null;
   });
-  const ipHash = rateLimitKey ?? UNHASHED_IP_LABEL;
-  log.info('ask request received', { requestId, ipHash, promptVersion: PROMPT_VERSION });
+  const loggedIdentity = rateLimitKey ?? UNHASHED_IP_LABEL;
+  log.info('ask request received', {
+    requestId,
+    ipHash: loggedIdentity,
+    promptVersion: PROMPT_VERSION,
+  });
 
   const recordRefusal = (status: AskRefusalStatus): void => {
-    log.info('ask refused', { requestId, ipHash, status });
+    log.info('ask refused', { requestId, ipHash: loggedIdentity, status });
     afterResponse(() => countAskRefusal(status));
   };
 
@@ -172,7 +173,7 @@ export async function preflightAsk(req: Request): Promise<PreflightResult> {
       askError(
         requestId,
         askErrors[pageLocale].rateLimited,
-        429,
+        HTTP_STATUS.tooManyRequests,
         retryAfter === null ? {} : { [RETRY_AFTER_HEADER]: String(retryAfter) },
       ),
     );
@@ -192,32 +193,36 @@ export async function preflightAsk(req: Request): Promise<PreflightResult> {
 
   const parsed = parseQuestion(bounded.bytes, pageLocale);
   if (!parsed.ok) {
-    log.info(`ask rejected: ${parsed.reason}`, { requestId, ipHash });
+    log.info(`ask rejected: ${parsed.reason}`, { requestId, ipHash: loggedIdentity });
     const message =
       parsed.reason === 'question required'
         ? askErrors[pageLocale].questionRequired
         : askErrors[pageLocale].invalidBody;
-    return reject(askError(requestId, message, 400));
+    return reject(askError(requestId, message, HTTP_STATUS.badRequest));
   }
   const { question, fullQuestion, answerLocale, conversationId } = parsed;
 
   if (isInjectionAttempt(question)) {
-    log.info('ask rejected: prompt-injection pattern', { requestId, ipHash });
-    return reject(askError(requestId, askErrors[answerLocale].injection, 400));
+    log.info('ask rejected: prompt-injection pattern', { requestId, ipHash: loggedIdentity });
+    return reject(askError(requestId, askErrors[answerLocale].injection, HTTP_STATUS.badRequest));
   }
 
-  const { allowed: notDuplicate } = await checkIdenticalQuestion(ipHash, question);
+  const { allowed: notDuplicate } = await checkIdenticalQuestion(rateLimitKey, question);
   if (!notDuplicate) {
     recordRefusal('dedup-rejected');
-    return reject(askError(requestId, askErrors[answerLocale].duplicate, 429));
+    return reject(
+      askError(requestId, askErrors[answerLocale].duplicate, HTTP_STATUS.tooManyRequests),
+    );
   }
 
   const reservation = await reserveBudget(ASK_MAX_OUTPUT_TOKENS);
   if (!reservation.allowed) {
     const refusal = BUDGET_REFUSALS[reservation.reason];
     recordRefusal(refusal.status);
-    await releaseIdenticalQuestion(ipHash, question);
-    return reject(askError(requestId, askErrors[answerLocale][refusal.message], 503));
+    await releaseIdenticalQuestion(rateLimitKey, question);
+    return reject(
+      askError(requestId, askErrors[answerLocale][refusal.message], HTTP_STATUS.serviceUnavailable),
+    );
   }
   const { reserved, budgetKey, dailyKey } = reservation;
 
@@ -225,7 +230,7 @@ export async function preflightAsk(req: Request): Promise<PreflightResult> {
     ok: true,
     context: {
       requestId,
-      ipHash,
+      ipHash: rateLimitKey,
       startedAt,
       question,
       fullQuestion,

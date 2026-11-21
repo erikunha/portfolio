@@ -1,11 +1,13 @@
 import 'server-only';
 import { z } from 'zod';
 
+import { HTTP_STATUS } from '@/lib/http-status';
+
 const CONTENT_LENGTH_HEADER = 'content-length';
 
 export const BODY_REJECTION = {
-  payloadTooLarge: { status: 413, code: 'payload_too_large' },
-  unreadable: { status: 400, code: 'invalid_body' },
+  payloadTooLarge: { status: HTTP_STATUS.payloadTooLarge, code: 'payload_too_large' },
+  unreadable: { status: HTTP_STATUS.badRequest, code: 'invalid_body' },
 } as const;
 
 const ContentLengthSchema = z

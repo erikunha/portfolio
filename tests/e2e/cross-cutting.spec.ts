@@ -91,7 +91,7 @@ async function expectKeystrokeStaysResponsive(page: Page) {
   expect(offenders, `Long tasks >100ms during keystroke: ${JSON.stringify(offenders)}`).toEqual([]);
 }
 
-test.describe('cross-cutting', () => {
+test.describe('cross-cutting', { tag: '@cross-browser' }, () => {
   test('0: below-fold sections actually resolve to content-visibility: auto', async ({ page }) => {
     await installMockBackend(page, { log: 'accept', forget: 'happy' });
     await page.goto('/');
@@ -384,10 +384,9 @@ test.describe('cross-cutting', () => {
   });
 });
 
-test('footer is server-rendered and boot output is decorative under reduced motion', async ({
-  page,
-  browser,
-}) => {
+test('footer is server-rendered and boot output is decorative under reduced motion', {
+  tag: '@cross-browser',
+}, async ({ page, browser }) => {
   const noScript = await browser.newContext({ javaScriptEnabled: false });
   const staticPage = await noScript.newPage();
   await staticPage.goto('/');

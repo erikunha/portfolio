@@ -10,10 +10,10 @@
   }
 
   .reading-view a {
-    color: var(--color-primary-500);
+    color: var(--color-accent);
   }
 
-  .reading-view a:hover {
+  .reading-view a:not(.btn):hover {
     color: var(--color-text);
   }
 
@@ -40,7 +40,7 @@
 
   .reading-name {
     margin: 0;
-    color: var(--color-primary-500);
+    color: var(--color-accent);
   }
 
   .reading-role {
@@ -74,12 +74,12 @@
   .reading-section {
     margin-top: var(--spacing-8);
     padding-top: var(--spacing-4);
-    border-top: var(--border-width) solid var(--color-primary-border);
+    border-top: var(--border-width) solid var(--color-border);
   }
 
   .reading-heading {
     margin: 0 0 var(--spacing-3);
-    color: var(--color-primary-500);
+    color: var(--color-accent);
     font-size: var(--text-xl);
     letter-spacing: var(--tracking-3xl);
     text-transform: uppercase;
@@ -126,7 +126,7 @@
   }
 
   .reading-entry li::marker {
-    color: var(--color-primary-500);
+    color: var(--color-accent);
   }
 
   .reading-skills {
@@ -163,7 +163,7 @@
   .reading-rows li {
     display: grid;
     grid-template-columns: minmax(0, 1fr);
-    padding: 2px 0;
+    padding: var(--spacing-hair) 0;
   }
 
   .reading-row-key {
@@ -194,8 +194,8 @@
   .reading-stats {
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
-    border: var(--border-width) solid var(--color-primary-subtle);
-    background: var(--color-secondary-950);
+    border: var(--border-width) solid var(--color-border-strong);
+    background: var(--color-surface);
   }
 
   .reading-stats .stat-tile-label {
@@ -203,7 +203,7 @@
   }
 
   .reading-stats > * + * {
-    border-left: var(--border-width) solid var(--color-primary-border);
+    border-left: var(--border-width) solid var(--color-border);
   }
 
   .reading-projects {
@@ -218,12 +218,12 @@
   .reading-project {
     min-width: 0;
     padding-left: var(--spacing-3);
-    border-left: calc(var(--border-width) * 2) solid var(--color-primary-500);
+    border-left: calc(var(--border-width) * 2) solid var(--color-accent);
   }
 
   .reading-project-name {
     margin: 0;
-    color: var(--color-primary-500);
+    color: var(--color-accent);
     font-size: var(--text-sm);
     font-weight: 700;
     letter-spacing: var(--tracking-md);
@@ -259,16 +259,16 @@
   }
 
   .reading-chips li {
-    padding: 2px var(--spacing-2);
-    border: var(--border-width) solid var(--color-primary-subtle);
-    background: var(--color-secondary-950);
+    padding: var(--spacing-hair) var(--spacing-2);
+    border: var(--border-width) solid var(--color-border-strong);
+    background: var(--color-surface);
     color: var(--color-text);
     font-size: var(--text-xs);
     letter-spacing: var(--tracking-xl);
   }
 
   .reading-chips--ai li {
-    border-color: var(--color-primary-500);
+    border-color: var(--color-accent);
   }
 
   @media (min-width: theme(--viewport-lg)) {
@@ -283,7 +283,7 @@
     }
   }
 
-  @media screen and (max-width: theme(--viewport-below-md)) {
+  @media screen {
     .reading-actions {
       flex-direction: column;
       align-items: stretch;
@@ -302,11 +302,34 @@
     }
 
     .reading-stats > :nth-child(n + 3) {
-      border-top: var(--border-width) solid var(--color-primary-border);
+      border-top: var(--border-width) solid var(--color-border);
     }
   }
 
-  @media (max-width: theme(--viewport-below-narrow)) {
+  @media screen and (min-width: theme(--viewport-md)) {
+    .reading-actions {
+      flex-direction: row;
+      align-items: center;
+    }
+
+    .reading-actions > * {
+      width: auto;
+    }
+
+    .reading-stats {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .reading-stats > :nth-child(n + 2) {
+      border-left: var(--border-width) solid var(--color-border);
+    }
+
+    .reading-stats > :nth-child(n + 3) {
+      border-top: 0;
+    }
+  }
+
+  @media (width < theme(--viewport-narrow)) {
     .reading-stats {
       --stat-tile-pad-x: var(--spacing-1);
       --stat-tile-tracking: var(--tracking-2xs);
@@ -316,8 +339,8 @@
   @media print {
     .reading-view {
       --color-text-secondary: var(--color-print-ink);
-      --color-primary-subtle: var(--color-print-ink);
-      --color-primary-border: var(--color-print-ink);
+      --color-border-strong: var(--color-print-ink);
+      --color-border: var(--color-print-ink);
       min-height: 0;
       background: var(--color-print-paper);
       color: var(--color-print-ink);

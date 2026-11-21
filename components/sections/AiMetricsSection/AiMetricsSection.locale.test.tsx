@@ -19,7 +19,7 @@ vi.mock('@/lib/lighthouse-scores', () => ({
     fetchedAt: '-',
   },
 }));
-vi.mock('@/lib/ask-metrics', () => ({ getAskMetrics: getAskMetricsMock }));
+vi.mock('@/lib/ask/metrics', () => ({ getAskMetrics: getAskMetricsMock }));
 
 afterEach(() => {
   vi.resetModules();

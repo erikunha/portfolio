@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest';
 import { linksPageMetadata } from '@/app/_lib/links-metadata';
-import { LINKS_LOCALE } from '@/content/links.constants';
 import { readingViews } from '@/content/reading-views';
 import {
   DEFAULT_SITE_LOCALE,
@@ -11,6 +10,7 @@ import {
   SITE_LOCALE,
   withSectionHash,
 } from '@/content/site-locale';
+import { social } from '@/content/social';
 
 // The hreflang contract the whole site ships (DECISIONS 2026-08-30): each
 // language names itself canonical; alternates join the pair plus x-default.
@@ -42,14 +42,14 @@ describe('locale alternates', () => {
   });
 
   it('the /links pair predates the site scheme and stays as decided', () => {
-    const pt = linksPageMetadata(LINKS_LOCALE.pt);
-    const en = linksPageMetadata(LINKS_LOCALE.en);
-    expect(pt.alternates?.canonical).toBe('/links');
-    expect(en.alternates?.canonical).toBe('/links/en');
+    const pt = linksPageMetadata(SITE_LOCALE.pt);
+    const en = linksPageMetadata(SITE_LOCALE.en);
+    expect(pt.alternates?.canonical).toBe(`${social.site}/links`);
+    expect(en.alternates?.canonical).toBe(`${social.site}/links/en`);
     expect(pt.alternates?.languages).toEqual({
-      'pt-BR': '/links',
-      'en-US': '/links/en',
-      'x-default': '/links',
+      'pt-BR': `${social.site}/links`,
+      'en-US': `${social.site}/links/en`,
+      'x-default': `${social.site}/links`,
     });
   });
 

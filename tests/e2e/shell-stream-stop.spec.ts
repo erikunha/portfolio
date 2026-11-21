@@ -47,7 +47,7 @@ async function openStreamingShell(page: Page) {
   return chunked;
 }
 
-test.describe('stopping a real chunked answer', () => {
+test.describe('stopping a real chunked answer', { tag: '@cross-browser' }, () => {
   test('keeps the partial text, frees the input and lets a second question stream and settle', async ({
     page,
   }) => {

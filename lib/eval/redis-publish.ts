@@ -5,7 +5,7 @@ import {
   type RedisCredentials,
   restoreRedisCredentials,
 } from '@/lib/eval/publish-gate';
-import { getRedis, hasRedisCredentials } from '@/lib/rate-limit';
+import { getRedis, hasRedisCredentials } from '@/lib/redis';
 import { REDIS_ENV_PAIRS } from '@/lib/redis-env';
 
 const REDACTED = '[redacted]';

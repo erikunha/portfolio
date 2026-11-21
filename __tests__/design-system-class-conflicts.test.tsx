@@ -10,8 +10,8 @@ import { StatTile } from '@/design-system/components/StatTile/StatTile';
 const PROPERTY_GROUPS: Array<[string, RegExp]> = [
   ['padding-x', /^px-/],
   ['padding-y', /^py-/],
-  ['border-color', /^border-(?:primary|secondary|tertiary|senary|quaternary|quinary)-/],
-  ['text-color', /^text-(?:primary|secondary|tertiary|senary|quaternary|quinary|text)-?/],
+  ['border-color', /^border-(?:signal|sage|carbon|coral|gold)-/],
+  ['text-color', /^text-(?:signal|sage|carbon|coral|gold|text)-?/],
   ['background-color', /^bg-/],
 ];
 

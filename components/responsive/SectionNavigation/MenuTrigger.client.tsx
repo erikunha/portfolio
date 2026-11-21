@@ -1,6 +1,6 @@
 'use client';
 
-import { cn } from '@/lib/cn';
+import { joinClassNames } from '@/lib/join-class-names';
 import { DRAWER_ID, MENU_TRIGGER_CLASS } from './navigationIds';
 import { useDrawerOpen, useSectionNavigation } from './SectionNavigationProvider.client';
 
@@ -21,7 +21,8 @@ export function MenuTrigger({ className }: { className?: string }) {
   return (
     <button
       type="button"
-      className={cn(MENU_TRIGGER_CLASS, className)}
+      className={joinClassNames('btn', MENU_TRIGGER_CLASS, className)}
+      data-variant="secondary"
       aria-label={copy.openMenu}
       aria-expanded={drawerOpen}
       aria-controls={DRAWER_ID}

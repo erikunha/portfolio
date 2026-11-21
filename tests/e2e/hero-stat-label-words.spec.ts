@@ -1,15 +1,27 @@
 import { expect, test } from '@playwright/test';
+import { WIDTH } from './_helpers/geometry';
 import { gotoSettled } from './_helpers/streamed';
 
 const PAGES = ['/', '/pt'] as const;
-const WIDTHS = [320, 360, 375, 390, 480, 768, 1024, 1280] as const;
+const WIDTHS = [
+  WIDTH.PHONE_NARROW,
+  WIDTH.PHONE_ANDROID,
+  WIDTH.PHONE_COMPACT,
+  WIDTH.PHONE,
+  WIDTH.PHONE_WIDE,
+  WIDTH.TABLET,
+  WIDTH.LAPTOP,
+  WIDTH.DESKTOP,
+] as const;
 const VIEWPORT_HEIGHT = 900;
 const LABEL = '[data-testid="hero-stats-item"] .stat-tile-label';
 const WORD = /[^\s\-‐-―]+-?/g;
 
 for (const path of PAGES) {
   for (const width of WIDTHS) {
-    test(`${path} at ${width}px keeps every hero stat label word whole`, async ({ page }) => {
+    test(`${path} at ${width}px keeps every hero stat label word whole`, {
+      tag: '@cross-browser',
+    }, async ({ page }) => {
       await page.setViewportSize({ width, height: VIEWPORT_HEIGHT });
       await gotoSettled(page, path);
       const split = await page.evaluate(

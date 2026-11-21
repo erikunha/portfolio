@@ -1,10 +1,12 @@
 import { expect, type Page, test } from '@playwright/test';
 import { contactCopy } from '@/content/contact-copy';
 import { SITE_LOCALE } from '@/content/site-locale';
+import { VIEWPORTS, WIDTH } from '../../../tests/e2e/_helpers/geometry';
 import { waitForHydration } from '../../../tests/e2e/_helpers/hydration';
+import { revealDeferredContent } from '../../../tests/e2e/_helpers/snapshot';
 
-const PHONE = { width: 390, height: 844 };
-const DESKTOP = { width: 1280, height: 900 };
+const PHONE = VIEWPORTS.PHONE;
+const DESKTOP = { width: WIDTH.DESKTOP, height: 900 };
 const SCROLL_MARGIN_PX = 100;
 const COMPACT_TARGET_PX = 28;
 const TOUCH_TARGET_PX = 44;
@@ -14,8 +16,6 @@ const GOLDEN_RATIO = 1.618;
 const GOLDEN_PRECISION = 1;
 const MAX_HEIGHT_RATIO = 1.3;
 const ISLAND_LOAD_TIMEOUT_MS = 20_000;
-const SUBMIT_RETRY_VISIBLE_MS = 1_000;
-const HYDRATION_COMMIT_TIMEOUT_MS = 20_000;
 const CONTACT_FORM_SELECTOR = '[data-testid="contact-form"]';
 
 async function scrollToSelector(page: Page, selector: string): Promise<void> {
@@ -219,7 +219,7 @@ test.describe('ContactSection', () => {
     }
   });
 
-  for (const width of [1024, 1100, 1280]) {
+  for (const width of [WIDTH.LAPTOP, WIDTH.LAPTOP_MID, WIDTH.DESKTOP]) {
     test(`each fact keeps its label on the value's line at ${width}`, async ({ page }) => {
       await page.setViewportSize({ width, height: 900 });
       await page.goto('/');
@@ -250,7 +250,7 @@ test.describe('ContactSection', () => {
     });
   }
 
-  for (const width of [900, 1024, 1100]) {
+  for (const width of [WIDTH.LAPTOP_COMPACT, WIDTH.LAPTOP, WIDTH.LAPTOP_MID]) {
     test(`the two clocks stay side by side at ${width}`, async ({ page }) => {
       await page.setViewportSize({ width, height: 900 });
       await page.goto('/');
@@ -272,18 +272,13 @@ test.describe('ContactSection', () => {
   test('the error summary reads as one line and draws no focus ring', async ({ page }) => {
     await page.setViewportSize(DESKTOP);
     await page.goto('/');
+    await revealDeferredContent(page);
     await page.locator(CONTACT_FORM_SELECTOR).scrollIntoViewIfNeeded();
     await waitForHydration(page, CONTACT_FORM_SELECTOR);
     const send = page.locator('#sec-contact form').getByRole('button', { name: /EXECUTE_SEND/ });
     const summary = page.locator('.contact-alert');
-    await expect(async () => {
-      await send.click();
-      await expect(summary).toBeVisible({ timeout: SUBMIT_RETRY_VISIBLE_MS });
-    }, 'a submit that lands before React commits the hydrated form is dropped, so the click repeats until the handler is live').toPass(
-      {
-        timeout: HYDRATION_COMMIT_TIMEOUT_MS,
-      },
-    );
+    await send.click();
+    await expect(summary).toBeVisible();
     await expect(summary).toContainText('! 3 fields need fixing:');
     await expect(summary.locator('ul')).toHaveCount(0);
     await expect(summary.locator('a')).toHaveCount(3);

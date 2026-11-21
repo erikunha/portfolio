@@ -1,17 +1,17 @@
 import { expect, test } from '@playwright/test';
+import { PHONE_RANGE_WIDTHS } from './_helpers/geometry';
 import { waitForHydration } from './_helpers/hydration';
 import { openShell, SHELL_SELECTOR } from './_helpers/shell';
 
-const WIDTHS = [320, 360, 375, 390, 430] as const;
 const VIEWPORT_HEIGHT = 812;
 const AXIS_TOLERANCE_PX = 1;
 const DOTS_TOLERANCE_PX = 2;
 const CHROME = '.shell-chrome';
 
-for (const width of WIDTHS) {
-  test(`the shell window bar centres its labels on the bar axis at ${width}px`, async ({
-    page,
-  }) => {
+for (const width of PHONE_RANGE_WIDTHS) {
+  test(`the shell window bar centres its labels on the bar axis at ${width}px`, {
+    tag: '@cross-browser',
+  }, async ({ page }) => {
     await page.setViewportSize({ width, height: VIEWPORT_HEIGHT });
     await openShell(page);
     await waitForHydration(page, SHELL_SELECTOR.form);

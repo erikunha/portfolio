@@ -1,33 +1,68 @@
 import { z } from 'zod';
-import { NOT_FOUND_PATH_TOKEN } from './errors.constants';
+import { EqSpectrumSchema } from './eq.schema';
 import { FACT_SEPARATOR } from './fact-separator';
-import { SECTION_ICONS } from './section-registry';
+import { CompanyUrlSchema, LocalizedTextSchema, SectionTextSchema } from './schema-primitives';
+import { SECTION_ICONS, SECTION_REGISTRY } from './section-registry';
 
+export type { ReadingViews } from './cv.schema';
+export {
+  CvDocumentSchema,
+  CvJsonLdSchema,
+  ReadingViewsSchema,
+  SummaryDocumentSchema,
+} from './cv.schema';
+export type { DawMixer, DawMixerChannel, DawMixerCopy, DawMixerPlugin } from './daw-mixer.schema';
+export { DawMixerCopySchema, DawMixerSchema } from './daw-mixer.schema';
+export type { EqBand, EqSpectrum } from './eq.schema';
+export {
+  EQ_DEFAULT_PEAK_Q,
+  EQ_MAX_BAR_COUNT,
+  EQ_MIN_BAR_COUNT,
+  EQ_TEMPLATE_TOKENS,
+  EqBandSchema,
+  EqSpectrumSchema,
+} from './eq.schema';
+export type { ErrorsClientContent, ErrorsContent } from './errors.schema';
+export { ErrorsClientContentSchema, ErrorsContentSchema } from './errors.schema';
+export type { CopyFeedback, CopyFeedbackState, FooterContent } from './footer.schema';
+export { CopyFeedbackSchema, FooterContentSchema } from './footer.schema';
+export type {
+  LinksChannel,
+  LinksContent,
+  LinksCopy,
+  LinksPill,
+  LinksPlaylist,
+  LinksProfile,
+} from './links.schema';
+export {
+  LinksChannelSchema,
+  LinksContentSchema,
+  LinksCopySchema,
+  LinksPillSchema,
+  LinksPlaylistSchema,
+  LinksProfileSchema,
+  LinksUpcomingSchema,
+} from './links.schema';
+export { createNavigationSchema } from './navigation.schema';
+export type { LocalizedText } from './schema-primitives';
+export { CompanyUrlSchema, LocalizedTextSchema } from './schema-primitives';
+export type { ShellResponse, ShellUi, TerminalChrome } from './shell-ui.schema';
+export {
+  ShellCommandsSchema,
+  ShellResponseSchema,
+  ShellUiSchema,
+  TerminalChromeSchema,
+} from './shell-ui.schema';
+export type { WorldMap } from './world-map.schema';
+export { WorldMapSchema } from './world-map.schema';
 export { SECTION_ICONS };
-export const SECTION_DESTINATION_COUNT = 9;
+
 const FIRST_SECTION_ORDER = 1;
-const MIN_SECTION_TEXT_LENGTH = 1;
-
-export const CompanyUrlSchema = z.url({ protocol: /^https$/ });
-
-export const LocalizedTextSchema = z.object({
-  pt: z.string().min(1),
-  en: z.string().min(1),
-});
-export type LocalizedText = z.infer<typeof LocalizedTextSchema>;
-
-const SectionTextSchema = z
-  .string()
-  .min(MIN_SECTION_TEXT_LENGTH)
-  .refine((text) => text === text.trim(), {
-    message: 'Section text must not have leading or trailing whitespace',
-  });
-
 export const SectionSchema = z.object({
   id: SectionTextSchema,
   label: LocalizedTextSchema,
   srLabel: LocalizedTextSchema,
-  order: z.number().int().min(FIRST_SECTION_ORDER).max(SECTION_DESTINATION_COUNT),
+  order: z.number().int().min(FIRST_SECTION_ORDER).max(SECTION_REGISTRY.length),
   icon: z.enum(SECTION_ICONS),
 });
 
@@ -35,7 +70,7 @@ export type Section = z.infer<typeof SectionSchema>;
 
 export const SectionRegistrySchema = z
   .array(SectionSchema)
-  .length(SECTION_DESTINATION_COUNT)
+  .length(SECTION_REGISTRY.length)
   .refine((entries) => new Set(entries.map(({ id }) => id)).size === entries.length, {
     message: 'Section ids must be unique',
   })
@@ -46,100 +81,6 @@ export const SectionRegistrySchema = z
     message: 'Section orders must match array position and be contiguous from the first order',
   })
   .readonly();
-
-const DOCK_KEYS = ['home', 'work', 'shell', 'hire', 'menu'] as const;
-const MENU_DOCK_KEY = 'menu';
-const MIN_NAV_ITEMS = 1;
-
-const NavTextSchema = SectionTextSchema;
-
-const NavGroupSchema = z.object({
-  id: NavTextSchema,
-  title: NavTextSchema,
-  dock: z.enum(DOCK_KEYS),
-  sectionIds: z.array(NavTextSchema).min(MIN_NAV_ITEMS).readonly(),
-});
-
-const DockControlSchema = z
-  .object({
-    key: z.enum(DOCK_KEYS),
-    label: NavTextSchema,
-    sectionId: NavTextSchema.optional(),
-    href: z.url().optional(),
-    accessibleName: NavTextSchema.optional(),
-    lang: NavTextSchema.optional(),
-  })
-  .refine(
-    ({ key, sectionId, href }) =>
-      key === MENU_DOCK_KEY ? !sectionId && !href : Boolean(sectionId) !== Boolean(href),
-    {
-      message:
-        'A dock control targets exactly one section or one link; the menu control targets neither',
-    },
-  );
-
-const SiteLinkSchema = z.object({
-  label: NavTextSchema,
-  index: NavTextSchema,
-  href: z.string().regex(/^(\/(?!\/)\S*|https:\/\/\S+)$/),
-  external: z.boolean(),
-  accessibleName: NavTextSchema.optional(),
-});
-
-const NavigationCopySchema = z.object({
-  drawerLabel: NavTextSchema,
-  navLabel: NavTextSchema,
-  title: NavTextSchema,
-  openMenu: NavTextSchema,
-  closeDrawer: NavTextSchema,
-  dockLabel: NavTextSchema,
-  motionOn: NavTextSchema,
-  motionOff: NavTextSchema,
-  langSwitchLabel: NavTextSchema,
-  skipLabel: NavTextSchema,
-  siteNavLabel: NavTextSchema,
-  backToTopLabel: NavTextSchema,
-});
-
-export function createNavigationSchema(sectionIds: readonly string[]) {
-  return z
-    .object({
-      copy: NavigationCopySchema,
-      groups: z.array(NavGroupSchema).min(MIN_NAV_ITEMS).readonly(),
-      dock: z.array(DockControlSchema).min(MIN_NAV_ITEMS).readonly(),
-      siteLinks: z.array(SiteLinkSchema).readonly(),
-    })
-    .superRefine(({ groups, dock }, ctx) => {
-      const grouped = groups.flatMap(({ sectionIds: members }) => members);
-      if (grouped.join('|') !== sectionIds.join('|')) {
-        ctx.addIssue({
-          code: 'custom',
-          message:
-            'Navigation groups must list every registry section exactly once, in registry order',
-        });
-      }
-      const dockKeys = dock.map(({ key }) => key);
-      if (new Set(dockKeys).size !== dockKeys.length) {
-        ctx.addIssue({ code: 'custom', message: 'Dock control keys must be unique' });
-      }
-      if (!dockKeys.includes(MENU_DOCK_KEY)) {
-        ctx.addIssue({ code: 'custom', message: 'The dock needs a menu control' });
-      }
-      for (const { dock: key } of groups) {
-        if (!dockKeys.includes(key)) {
-          ctx.addIssue({
-            code: 'custom',
-            message: `Group points at missing dock control "${key}"`,
-          });
-        }
-      }
-      for (const { sectionId } of dock) {
-        if (sectionId && !sectionIds.includes(sectionId)) {
-          ctx.addIssue({ code: 'custom', message: `Dock targets unknown section "${sectionId}"` });
-        }
-      }
-    });
-}
 
 export const SocialSchema = z.object({
   github: z.url(),
@@ -361,66 +302,6 @@ export const SignalChainNodeSchema = z.discriminatedUnion('role', [
   _dotsNode('OUT'),
 ]);
 
-export const EQ_TEMPLATE_TOKENS = { freq: '{freq}', gain: '{gain}' } as const;
-export const EQ_DEFAULT_PEAK_Q = 0.8;
-export const EQ_MIN_BAR_COUNT = 8;
-export const EQ_MAX_BAR_COUNT = 144;
-
-const eqFreqSchema = z.number().positive();
-
-export const EqBandSchema = z.discriminatedUnion('kind', [
-  z.object({ kind: z.literal('highpass'), freqHz: eqFreqSchema }),
-  z.object({ kind: z.literal('lowpass'), freqHz: eqFreqSchema }),
-  z.object({
-    kind: z.literal('peak'),
-    freqHz: eqFreqSchema,
-    gainDb: z.number(),
-    q: z.number().positive().default(EQ_DEFAULT_PEAK_Q),
-  }),
-]);
-export type EqBand = z.infer<typeof EqBandSchema>;
-
-const eqTemplate = (...tokens: string[]) =>
-  tokens.reduce((schema, token) => schema.includes(token), z.string().trim().nonempty());
-
-export const EqSpectrumSchema = z
-  .object({
-    label: z.string().trim().nonempty(),
-    ariaLabel: z.object({
-      prefix: z.string().trim().nonempty(),
-      highpass: eqTemplate(EQ_TEMPLATE_TOKENS.freq),
-      lowpass: eqTemplate(EQ_TEMPLATE_TOKENS.freq),
-      boost: eqTemplate(EQ_TEMPLATE_TOKENS.freq, EQ_TEMPLATE_TOKENS.gain),
-      cut: eqTemplate(EQ_TEMPLATE_TOKENS.freq, EQ_TEMPLATE_TOKENS.gain),
-    }),
-    bpm: z.number().positive(),
-    barCount: z.number().int().min(EQ_MIN_BAR_COUNT).max(EQ_MAX_BAR_COUNT),
-    freqRange: z.object({ minHz: eqFreqSchema, maxHz: eqFreqSchema }),
-    bands: z.array(EqBandSchema).min(1),
-    axis: z.array(z.object({ freqHz: eqFreqSchema, label: z.string().trim().nonempty() })).min(2),
-  })
-  .superRefine(({ freqRange, bands, axis }, ctx) => {
-    const { minHz, maxHz } = freqRange;
-    const inRange = (freqHz: number) => freqHz >= minHz && freqHz <= maxHz;
-    if (minHz >= maxHz) {
-      ctx.addIssue({ code: 'custom', path: ['freqRange'], message: 'minHz must be below maxHz' });
-    }
-    for (const [index, band] of bands.entries()) {
-      if (!inRange(band.freqHz)) {
-        ctx.addIssue({ code: 'custom', path: ['bands', index], message: 'band outside range' });
-      }
-    }
-    for (const [index, tick] of axis.entries()) {
-      if (!inRange(tick.freqHz)) {
-        ctx.addIssue({ code: 'custom', path: ['axis', index], message: 'tick outside range' });
-      }
-      if (index > 0 && tick.freqHz <= (axis[index - 1]?.freqHz ?? 0)) {
-        ctx.addIssue({ code: 'custom', path: ['axis', index], message: 'ticks must ascend' });
-      }
-    }
-  });
-export type EqSpectrum = z.infer<typeof EqSpectrumSchema>;
-
 export const InfluenceSchema = z.object({
   name: z.string().min(1),
 });
@@ -630,108 +511,6 @@ export const GitCommitSchema = z
     message: 'Employment must end on or after its start month',
   });
 
-export const ShellResponseSchema = z.object({
-  commands: z.array(z.string().min(1)).min(1),
-  kind: z.enum(['output', 'error']).default('output'),
-  text: z.string().min(1),
-});
-export const ShellCommandsSchema = z.array(ShellResponseSchema).min(1);
-
-export const ShellUiSchema = z.object({
-  welcome: z.string().min(1),
-  mobileWelcome: z.string().min(1),
-  inputLabel: z.string().min(1),
-  outputLabel: z.string().min(1),
-  toolbarLabel: z.string().min(1),
-  prompt: z.string().min(1),
-  placeholder: z.string().min(1),
-  mobilePlaceholder: z.string().min(1),
-  commandHint: z.string().min(1),
-  aiLabel: z.string().min(1),
-  thinking: z.string().min(1),
-  stopPill: z.string().includes('{seconds}'),
-  escKey: z.string().min(1),
-  stopLabel: z.string().min(1),
-  stoppedBefore: z.string().min(1),
-  stoppedPartial: z.string().min(1),
-  started: z.string().min(1),
-  complete: z.string().min(1),
-  commandComplete: z.string().min(1),
-  cleared: z.string().min(1),
-  busy: z.string().min(1),
-  empty: z.string().min(1),
-  errorPrefix: z.string().min(1),
-  serverError: z.string().min(1),
-  requestTooLarge: z.string().min(1),
-  answerWithheld: z.string().min(1),
-  bodyUnavailable: z.string().min(1),
-  offline: z.string().min(1),
-  networkError: z.string().min(1),
-  localAvailable: z.string().min(1),
-  receiptTitle: z.string().min(1),
-  receiptQuestionsOne: z.string().min(1),
-  receiptQuestionsMany: z.string().includes('{count}'),
-  receiptRetention: z.string().min(1),
-  receiptIdLabel: z.string().min(1),
-  receiptLabel: z.string().min(1),
-  conversationForgotten: z.string().min(1),
-  conversationForgottenOne: z.string().min(1),
-  conversationForgottenMany: z.string().includes('{count}'),
-  forgetConfirmTitle: z.string().min(1),
-  forgetConfirmOne: z.string().min(1),
-  forgetConfirmMany: z.string().includes('{count}'),
-  forgetCancel: z.string().min(1),
-  forgetConfirm: z.string().min(1),
-  forgetPendingOne: z.string().min(1),
-  forgetPendingMany: z.string().includes('{count}'),
-  forgetUnavailable: z.string().min(1),
-  forgetEmailPrefix: z.string().min(1),
-  forgetOffline: z.string().min(1),
-  forgetOfflineHint: z.string().min(1),
-  forgetTimedOut: z.string().min(1),
-  forgetTimedOutHint: z.string().min(1),
-  forgetRetry: z.string().min(1),
-  forgetWaitNotice: z.string().includes('{left}'),
-  forgetWaitHint: z.string().min(1),
-  forgetWait: z.string().includes('{left}'),
-  forgetting: z.string().min(1),
-  forgetDeleted: z.string().min(1),
-  forgetFailed: z.string().min(1),
-  forgetRateLimited: z.string().min(1),
-  privacyEmpty: z.string().min(1),
-  privacyHeader: z.string().min(1),
-  privacyUsage: z.string().min(1),
-  privacyUnknown: z.string().min(1),
-  privacyNotAttempted: z.string().min(1),
-  privacyNoConversation: z.string().min(1),
-  copy: z.string().min(1),
-  forget: z.string().min(1),
-  copied: z.string().min(1),
-  copiedAnnouncement: z.string().min(1),
-  copyFailedAnnouncement: z.string().min(1),
-  accuracy: z.string().min(1),
-  privacy: z.string().min(1),
-  email: z.email(),
-  emailHref: z.url(),
-  technicalPrivacy: z.string().min(1),
-  requestIdHeader: z.string().min(1),
-  technicalPrivacySuffix: z.string().min(1),
-  forgetEndpoint: z.string().min(1),
-  technicalPrivacyScope: z.string().min(1),
-  noscript: z.string().min(1),
-  suggestions: z.array(z.string().min(1)).min(1),
-  mobileSuggestions: z.array(z.string().min(1)).min(1),
-  commands: z.array(z.string().min(1)).min(1),
-});
-export type ShellUi = z.infer<typeof ShellUiSchema>;
-
-export const TerminalChromeSchema = z.object({
-  promptLabel: z.string().min(1),
-  rightTag: z.string().min(1),
-  mobileLabel: z.string().min(1).optional(),
-});
-export type TerminalChrome = z.infer<typeof TerminalChromeSchema>;
-
 export const BrandSchema = z.object({
   homeHref: z.string().startsWith('/'),
   accessibleName: z.string().min(1),
@@ -756,124 +535,6 @@ export const HeroClientContentSchema = z.object({
 });
 export type HeroClientContent = z.infer<typeof HeroClientContentSchema>;
 
-const FooterHrefSchema = z.string().regex(/^(?:#[\w-]+|\/(?!\/)[\w/-]*|https:\/\/[^\s]+)$/);
-const FooterLinkSchema = z.object({ label: z.string().min(1), href: FooterHrefSchema });
-
-export const CopyFeedbackSchema = z.object({ label: z.string().min(1), message: z.string() });
-export type CopyFeedback = z.infer<typeof CopyFeedbackSchema>;
-export type CopyFeedbackState = 'idle' | 'success' | 'failure' | 'unavailable';
-
-export const FooterContentSchema = z
-  .object({
-    shutdownTitle: z.string().min(1),
-    prompt: z.string().min(1),
-    shutdownCommand: z.string().min(1),
-    sessionTitle: z.string().min(1),
-    sessionLabels: z.object({
-      user: z.string().min(1),
-      uptime: z.string().min(1),
-      depth: z.string().min(1),
-      seen: z.string().min(1),
-      commands: z.string().min(1),
-    }),
-    user: z.string().min(1),
-    netstatTitle: z.string().min(1),
-    externalGlyph: z.string().min(1),
-    connectionLabels: z.object({
-      protocol: z.string().min(1),
-      state: z.string().min(1),
-      endpoint: z.string().min(1),
-    }),
-    connections: z
-      .array(
-        FooterLinkSchema.extend({
-          protocol: z.literal('tcp'),
-          state: z.enum(['ESTABLISHED', 'LISTEN']),
-          external: z.boolean(),
-        }),
-      )
-      .min(1),
-    treeTitle: z.string().min(1),
-    treeLabel: z.string().min(1),
-    fileCount: z.object({ one: z.string().min(1), other: z.string().min(1) }),
-    treeOpenDirectory: z.string().min(1),
-    groups: z
-      .array(
-        z.object({
-          directory: z.string().regex(/^\.\/[a-z_]+\/$/),
-          links: z.array(FooterLinkSchema).min(1),
-        }),
-      )
-      .length(6),
-    halted: z.string().min(1),
-    haltedAt: z.string().min(1),
-    reboot: z.object({
-      label: z.string().min(1),
-      before: z.string().min(1),
-      key: z.string().length(1),
-      after: z.string().min(1),
-      touch: z.string().min(1),
-      announcement: z.string().min(1),
-    }),
-    receipt: z.object({
-      label: z.string().min(1),
-    }),
-    copyright: z.string().min(1),
-  })
-  .refine((footer) => footer.groups.some((group) => group.directory === footer.treeOpenDirectory), {
-    message: 'treeOpenDirectory must name one of the site map groups',
-    path: ['treeOpenDirectory'],
-  });
-export type FooterContent = z.infer<typeof FooterContentSchema>;
-
-const NotFoundTemplateSchema = z
-  .string()
-  .min(1)
-  .refine((value) => value.includes(NOT_FOUND_PATH_TOKEN));
-
-const ErrorHrefSchema = z.string().regex(/^\/(?!\/)[\w/#-]*$/);
-const ErrorLinkSchema = z.object({ label: z.string().min(1), href: ErrorHrefSchema });
-
-export const ErrorsContentSchema = z.object({
-  notFound: z.object({
-    metaTitle: z.string().min(1),
-    code: z.literal('404'),
-    panelHeader: z.string().min(1),
-    prompt: z.string().min(1),
-    command: NotFoundTemplateSchema,
-    output: NotFoundTemplateSchema,
-    pathFallback: z.string().min(1),
-    suggestionsLabel: z.string().min(1),
-    suggestionsNavLabel: z.string().min(1),
-    suggestions: z.array(ErrorLinkSchema).min(1),
-    home: ErrorLinkSchema,
-  }),
-  serverError: z.object({
-    code: z.literal('500'),
-    message: z.string().min(1),
-    bootRender: z.string().min(1),
-    bootReport: z.string().min(1),
-    retryLabel: z.string().min(1),
-    home: ErrorLinkSchema,
-    refLabel: z.string().min(1),
-    copyLabel: z.string().min(1),
-    copyAriaLabel: z.string().min(1),
-    copiedAnnouncement: z.string().min(1),
-  }),
-  noscript: z.object({ text: z.string().min(1), contact: ErrorLinkSchema }),
-  componentUnavailable: z.string().min(1),
-  componentExplanation: z.string().min(1),
-  reloadLabel: z.string().min(1),
-});
-export type ErrorsContent = z.infer<typeof ErrorsContentSchema>;
-export const ErrorsClientContentSchema = ErrorsContentSchema.pick({
-  serverError: true,
-  componentUnavailable: true,
-  componentExplanation: true,
-  reloadLabel: true,
-});
-export type ErrorsClientContent = z.infer<typeof ErrorsClientContentSchema>;
-
 export const DmesgLineSchema = z.object({
   off: z.number(),
   prefix: z.string().min(1),
@@ -882,86 +543,6 @@ export const DmesgLineSchema = z.object({
   ok: z.boolean(),
 });
 export type DmesgLine = z.infer<typeof DmesgLineSchema>;
-
-const DawMixerPluginSchema = z.object({
-  name: z.string().min(1),
-  active: z.boolean(),
-  strength: z.number().int().min(0).max(5),
-});
-
-const DawMixerKnobSchema = z.object({
-  label: z.string().min(1),
-  angleDeg: z.number().min(-150).max(150),
-});
-
-const DawMixerChannelSchema = z.object({
-  id: z.string().min(1),
-  name: z.string().min(1),
-  desktopName: z.string().optional(),
-  desc: z.string().min(1),
-  focused: z.boolean().optional(),
-  plugins: z.array(DawMixerPluginSchema).min(1).max(5),
-  faderPct: z.number().min(0).max(100),
-  meterPct: z.number().min(0).max(100),
-  meterClipping: z.boolean().optional(),
-  knob1: DawMixerKnobSchema,
-  knob2: DawMixerKnobSchema,
-  buttons: z.array(z.string().min(1)),
-  activeButtons: z.array(z.string().min(1)),
-  footer: z.object({ lufs: z.string(), pk: z.string() }).optional(),
-  terminalLines: z.array(z.string().min(1)).optional(),
-});
-
-export const DawMixerSchema = z.object({
-  sessionName: z.string().min(1),
-  loadingLabel: z.string().min(1),
-  bpm: z.number().int(),
-  timeSignature: z.string().min(1),
-  status: z.string().min(1),
-  transportTime: z.string().min(1),
-  channels: z
-    .array(DawMixerChannelSchema)
-    .length(3)
-    .refine((chs) => chs[chs.length - 1]?.id === 'MASTER', {
-      message: 'Last channel must be MASTER',
-    }),
-});
-
-const DawMixerCopyTextSchema = z.string().min(1);
-
-export const DawMixerCopySchema = z.object({
-  sessionLabel: DawMixerCopyTextSchema,
-  tracksLabel: DawMixerCopyTextSchema,
-  separator: DawMixerCopyTextSchema,
-  transportSeparator: DawMixerCopyTextSchema,
-  playGlyph: DawMixerCopyTextSchema,
-  bpmUnit: DawMixerCopyTextSchema,
-  signalFlow: DawMixerCopyTextSchema,
-  leadSuffix: DawMixerCopyTextSchema,
-  loudnessLabel: DawMixerCopyTextSchema,
-  peakLabel: DawMixerCopyTextSchema,
-  decibelUnit: DawMixerCopyTextSchema,
-  columns: z.object({
-    id: DawMixerCopyTextSchema,
-    track: DawMixerCopyTextSchema,
-    io: DawMixerCopyTextSchema,
-    toggles: DawMixerCopyTextSchema,
-    pluginChain: DawMixerCopyTextSchema,
-    meter: DawMixerCopyTextSchema,
-    fader: DawMixerCopyTextSchema,
-  }),
-  controls: z.object({
-    vuMeter: DawMixerCopyTextSchema,
-    fader: DawMixerCopyTextSchema,
-    degrees: DawMixerCopyTextSchema,
-    knobHint: DawMixerCopyTextSchema,
-    buttons: z.object({
-      R: DawMixerCopyTextSchema,
-      M: DawMixerCopyTextSchema,
-      S: DawMixerCopyTextSchema,
-    }),
-  }),
-});
 
 const AskFactLinesSchema = z.array(z.string().min(1)).min(1);
 
@@ -993,104 +574,6 @@ export const AskFactsSchema = z.object({
 
 export type AskFacts = z.infer<typeof AskFactsSchema>;
 
-export const LinksProfileSchema = z.object({
-  name: z.string().min(1),
-  avatar: z.string().min(1),
-  taglines: z.object({
-    pt: z.array(z.string().min(1)).min(1),
-    en: z.array(z.string().min(1)).min(1),
-  }),
-  host: LocalizedTextSchema,
-  stack: z.string().min(1),
-});
-
-export const LinksChannelSchema = z.object({
-  id: z
-    .string()
-    .regex(
-      /^UC[A-Za-z0-9_-]{22}$/,
-      'a YouTube channel id is "UC" plus 22 url-safe chars. The RSS feed at /feeds/videos.xml?channel_id= is keyed on this and returns a bare feed with no <entry> elements for a wrong id, which reads exactly like a channel with no videos: the page would render its empty state forever instead of failing.',
-    ),
-  handle: z.string().regex(/^@[A-Za-z0-9._-]+$/, 'a channel handle starts with @'),
-  name: z.string().min(1),
-});
-
-export const LinksPlaylistSchema = z.object({
-  id: z.string().min(1),
-  tag: z.string().min(1),
-  title: LocalizedTextSchema,
-  description: LocalizedTextSchema,
-  playlistId: z.string().min(1).optional(),
-});
-
-export const LinksPillSchema = z.object({
-  id: z.string().min(1),
-  icon: z.enum(['portfolio', 'github', 'linkedin', 'instagram', 'tiktok', 'email']),
-  label: LocalizedTextSchema,
-  href: z
-    .string()
-    .min(
-      1,
-      'an empty href is a dead pill: omit the field entirely instead. A pill with no href is filtered out of the footer by LinksFooter, which is how a destination nobody has confirmed yet stays off a public page rather than shipping as a guessed handle.',
-    )
-    .optional(),
-});
-
-export const LinksUpcomingSchema = z.object({
-  label: LocalizedTextSchema,
-  topic: LocalizedTextSchema,
-  slot: LocalizedTextSchema,
-});
-
-export const LinksCopySchema = z.object({
-  whoami: z.string().min(1),
-  hostLabel: LocalizedTextSchema,
-  stackLabel: LocalizedTextSchema,
-  watchHeading: LocalizedTextSchema,
-  profilesHeading: LocalizedTextSchema,
-  contactHeading: LocalizedTextSchema,
-  emailHint: LocalizedTextSchema,
-  videosWord: LocalizedTextSchema,
-  viewsWord: LocalizedTextSchema,
-  latestHeading: LocalizedTextSchema,
-  historyCommand: z.string().min(1),
-  historyEmpty: LocalizedTextSchema,
-  historyOnlyLatest: LocalizedTextSchema,
-  thumbPlaceholder: LocalizedTextSchema,
-  seeAllVideos: LocalizedTextSchema,
-  playlistsHeading: LocalizedTextSchema,
-  qrHeading: LocalizedTextSchema,
-  qrCommand: z.string().min(1),
-  qrBody: LocalizedTextSchema,
-  subscribe: LocalizedTextSchema,
-  subscribedCta: LocalizedTextSchema,
-  watch: LocalizedTextSchema,
-  copyLink: LocalizedTextSchema,
-  copyDone: LocalizedTextSchema,
-  copyFailed: LocalizedTextSchema,
-  copyFailedMessage: LocalizedTextSchema,
-  opensInNewTab: LocalizedTextSchema,
-  newBadge: LocalizedTextSchema,
-  feedUnavailable: LocalizedTextSchema,
-  pageHeading: LocalizedTextSchema,
-});
-
-export const LinksContentSchema = z.object({
-  shellTitle: z.string().min(1),
-  siteUrl: z.url(),
-  siteLabel: z.string().min(1),
-  profile: LinksProfileSchema,
-  channel: LinksChannelSchema,
-  upcoming: LinksUpcomingSchema,
-  playlists: z.array(LinksPlaylistSchema).min(1),
-  pills: z.array(LinksPillSchema).min(1),
-  copy: LinksCopySchema,
-  meta: z.object({
-    title: LocalizedTextSchema,
-    description: LocalizedTextSchema,
-  }),
-});
-
 export type Social = z.infer<typeof SocialSchema>;
 export type Project = z.infer<typeof ProjectSchema>;
 export type PerfReceipt = z.infer<typeof PerfReceiptSchema>;
@@ -1102,214 +585,6 @@ export type Unknowns = z.infer<typeof UnknownsSchema>;
 export type Credential = z.infer<typeof CredentialSchema>;
 export type CommunityEvent = z.infer<typeof CommunityEventSchema>;
 export type GitCommit = z.infer<typeof GitCommitSchema>;
-export type ShellResponse = z.infer<typeof ShellResponseSchema>;
-export type DawMixer = z.infer<typeof DawMixerSchema>;
-export type DawMixerCopy = z.infer<typeof DawMixerCopySchema>;
-export type DawMixerChannel = z.infer<typeof DawMixerChannelSchema>;
-export type DawMixerPlugin = z.infer<typeof DawMixerPluginSchema>;
-export type LinksProfile = z.infer<typeof LinksProfileSchema>;
-export type LinksChannel = z.infer<typeof LinksChannelSchema>;
-export type LinksPlaylist = z.infer<typeof LinksPlaylistSchema>;
-export type LinksPill = z.infer<typeof LinksPillSchema>;
-export type LinksCopy = z.infer<typeof LinksCopySchema>;
-export type LinksContent = z.infer<typeof LinksContentSchema>;
 
 export type Profile = z.infer<typeof ProfileSchema> & { technologyLine: string };
 export type Education = z.infer<typeof EducationSchema>;
-
-const ReadingTextSchema = z.string().min(1);
-
-export const ReadingViewsSchema = z.object({
-  shared: z.object({
-    hire: z.object({
-      label: ReadingTextSchema,
-      ariaLabel: ReadingTextSchema,
-      href: z.url(),
-    }),
-    printLabel: ReadingTextSchema,
-    newTabHint: ReadingTextSchema,
-    ogImage: z.object({ path: z.string().startsWith('/'), width: z.number(), height: z.number() }),
-  }),
-  cv: z.object({
-    path: z.string().startsWith('/'),
-    title: ReadingTextSchema,
-    description: ReadingTextSchema,
-    summaryLinkLabel: ReadingTextSchema,
-    pdf: z.object({
-      href: z.string().startsWith('/'),
-      label: ReadingTextSchema,
-    }),
-    headings: z.object({
-      summary: ReadingTextSchema,
-      experience: ReadingTextSchema,
-      skills: ReadingTextSchema,
-      certifications: ReadingTextSchema,
-      community: ReadingTextSchema,
-      education: ReadingTextSchema,
-      contact: ReadingTextSchema,
-    }),
-    credentialLabels: z.record(z.string(), ReadingTextSchema),
-    credentialBadges: z.record(z.string(), ReadingTextSchema),
-  }),
-  summary: z.object({
-    path: z.string().startsWith('/'),
-    title: ReadingTextSchema,
-    description: ReadingTextSchema,
-    cvLinkLabel: ReadingTextSchema,
-    statsLabel: ReadingTextSchema,
-    experienceLabel: ReadingTextSchema,
-    projectNames: z.array(ReadingTextSchema).min(1),
-    stack: z.object({
-      core: z.array(ReadingTextSchema).min(1),
-      ai: z.array(ReadingTextSchema).min(1),
-    }),
-    stackLabels: z.object({ core: ReadingTextSchema, ai: ReadingTextSchema }),
-    headings: z.object({
-      projects: ReadingTextSchema,
-      stack: ReadingTextSchema,
-      contact: ReadingTextSchema,
-    }),
-  }),
-});
-
-export type ReadingViews = z.infer<typeof ReadingViewsSchema>;
-
-const ReadingRowSchema = z.object({
-  key: ReadingTextSchema,
-  label: ReadingTextSchema,
-  value: ReadingTextSchema,
-});
-
-const CvSkillGroupSchema = z.object({
-  label: ReadingTextSchema,
-  items: z.array(ReadingTextSchema).min(1),
-});
-
-export const CvDocumentSchema = z.object({
-  name: ReadingTextSchema,
-  role: ReadingTextSchema,
-  location: ReadingTextSchema,
-  links: z
-    .array(z.object({ label: ReadingTextSchema, href: ReadingTextSchema, external: z.boolean() }))
-    .min(1),
-  summary: ReadingTextSchema,
-  experience: z
-    .array(
-      z.object({
-        key: ReadingTextSchema,
-        company: ReadingTextSchema,
-        companyUrl: CompanyUrlSchema.optional(),
-        meta: ReadingTextSchema,
-        context: ReadingTextSchema.optional(),
-        bullets: z.array(ReadingTextSchema).min(1),
-      }),
-    )
-    .min(1),
-  skills: z.array(CvSkillGroupSchema).min(1),
-  certifications: z.array(ReadingRowSchema),
-  community: z.object({
-    heading: ReadingTextSchema,
-    href: z.url().optional(),
-    bullets: z.array(ReadingTextSchema),
-    status: ReadingTextSchema,
-  }),
-  education: z.array(ReadingRowSchema),
-  languages: ReadingTextSchema,
-  email: ReadingTextSchema,
-});
-
-export const SummaryDocumentSchema = z.object({
-  name: ReadingTextSchema,
-  tagline: ReadingTextSchema,
-  technologyLine: ReadingTextSchema,
-  context: ReadingTextSchema,
-  employer: z.object({ name: ReadingTextSchema, url: CompanyUrlSchema }),
-  stats: z.array(z.object({ value: ReadingTextSchema, label: ReadingTextSchema })).min(1),
-  projects: z
-    .array(
-      z.object({
-        name: ReadingTextSchema,
-        label: ReadingTextSchema,
-        value: ReadingTextSchema,
-        description: ReadingTextSchema,
-      }),
-    )
-    .min(1),
-  languages: ReadingTextSchema,
-  email: ReadingTextSchema,
-});
-
-export const CvJsonLdSchema = z.object({
-  '@context': z.literal('https://schema.org'),
-  '@type': z.literal('ProfilePage'),
-  url: z.url(),
-  name: ReadingTextSchema,
-  mainEntity: z.object({
-    '@type': z.literal('Person'),
-    name: ReadingTextSchema,
-    jobTitle: ReadingTextSchema,
-    url: z.url(),
-    sameAs: z.array(z.url()).min(1),
-    worksFor: z.object({
-      '@type': z.literal('Organization'),
-      name: ReadingTextSchema,
-      url: CompanyUrlSchema,
-    }),
-  }),
-});
-
-const LATITUDE_LIMIT = 90;
-const LONGITUDE_LIMIT = 180;
-const FULL_CIRCLE_DEGREES = 360;
-const LAND_ROW_PATTERN = /^[01]+$/;
-
-const LatitudeSchema = z.number().min(-LATITUDE_LIMIT).max(LATITUDE_LIMIT);
-const LongitudeSchema = z.number().min(-LONGITUDE_LIMIT).max(LONGITUDE_LIMIT);
-
-export const WorldMapSchema = z
-  .object({
-    grid: z.object({
-      columns: z.number().int().positive(),
-      rows: z.number().int().positive(),
-      cellPx: z.number().positive(),
-      degreesPerColumn: z.number().positive(),
-      topLatitude: LatitudeSchema,
-      bottomLatitude: LatitudeSchema,
-    }),
-    land: z.array(z.string().regex(LAND_ROW_PATTERN)),
-    erikPin: z.object({
-      place: z.string().min(1),
-      code: z.string().min(1),
-      lat: LatitudeSchema,
-      lon: LongitudeSchema,
-    }),
-    knownZones: z.record(
-      z.string().min(1),
-      z.object({
-        country: z.string().min(1),
-        code: z.string().min(1),
-        lat: LatitudeSchema,
-        lon: LongitudeSchema,
-      }),
-    ),
-  })
-  .refine(({ grid, land }) => land.length === grid.rows, {
-    message: 'land must have exactly grid.rows rows',
-    path: ['land'],
-  })
-  .refine(({ grid, land }) => land.every((row) => row.length === grid.columns), {
-    message: 'every land row must be grid.columns cells wide',
-    path: ['land'],
-  })
-  .refine(({ grid }) => grid.columns * grid.degreesPerColumn === FULL_CIRCLE_DEGREES, {
-    message: 'grid.columns times grid.degreesPerColumn must cover 360 degrees',
-    path: ['grid', 'degreesPerColumn'],
-  })
-  .refine(
-    ({ grid }) => grid.topLatitude - grid.bottomLatitude === grid.rows * grid.degreesPerColumn,
-    {
-      message: 'the latitude span must equal grid.rows times grid.degreesPerColumn',
-      path: ['grid', 'bottomLatitude'],
-    },
-  );
-export type WorldMap = z.infer<typeof WorldMapSchema>;

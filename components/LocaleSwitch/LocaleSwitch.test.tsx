@@ -36,16 +36,17 @@ describe('LocaleSwitch', () => {
     expect(screen.getByRole('link', { name: /PT\s*Portugu/ })).toBeTruthy();
   });
 
-  it('renders design-system secondary buttons on the small size, which keeps the 44px target and steps down on a fine pointer; the active one is marked by its border and underline', () => {
+  it('renders design-system secondary buttons on the small size; the active one is marked by its border and underline', () => {
     const links = renderSwitch('pt');
-    expect(links[0]?.className).toContain('bg-transparent');
-    expect(links[1]?.className).toContain('bg-transparent');
     for (const link of links) {
-      expect(link.className).toContain('min-w-11');
-      expect(link.className).toContain('min-h-11');
-      expect(link.className).toContain('pointer-fine:min-h-[var(--spacing-target-pointer)]');
-      expect(link.className).not.toContain('pointer-fine:min-w-');
+      expect(link.classList.contains('btn')).toBe(true);
+      expect(link.getAttribute('data-variant')).toBe('secondary');
+      expect(link.getAttribute('data-size')).toBe('sm');
     }
+    const [inactive, active] = links;
+    expect(active?.className).toContain('aria-[current=page]:border-(color:--color-accent)');
+    expect(active?.className).toContain('aria-[current=page]:underline');
+    expect(inactive?.hasAttribute('aria-current')).toBe(false);
   });
 
   it('has no text separator and forwards nav attributes and className', () => {

@@ -1,8 +1,16 @@
 'use client';
 
-import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useId,
+  useLayoutEffect,
+  useReducer,
+  useRef,
+  useState,
+} from 'react';
 import type { TerminalChrome } from '@/content/schemas';
-import SHELL_RESPONSES, { SHELL_RESPONSE_LANG } from '@/content/shell-commands';
+import { SHELL_RESPONSE_LANG } from '@/content/shell-commands';
 import {
   fillShellState,
   ShellCommand,
@@ -11,24 +19,26 @@ import {
   shellStates,
 } from '@/content/shell-ui';
 import type { SiteLocale } from '@/content/site-locale';
-import { forgetInFlight } from '@/lib/ask-conversation.client';
+import { forgetInFlight } from '@/lib/ask/conversation.client';
+import { hasModifier } from '@/lib/dom/has-modifier';
 import { SHELL_COMMAND_EVENT } from '@/lib/events';
+import { useAnnouncer } from '@/lib/use-announcer.client';
 import { useBreakpoint } from '@/lib/use-breakpoint.client';
 import { TerminalChromeBar } from '../TerminalChromeBar';
 import { AnimatedPlaceholder, StaticPlaceholder } from './AnimatedPlaceholder.client';
-import { parsePrivacyCommand } from './privacy-command';
 import { revealShell, SHELL_LIVE_PROPS } from './reveal-shell';
 import { ShellLine, StopElapsed } from './ShellLines.client';
 import { ShellToolbar } from './ShellToolbar.client';
+import { historyStepFor, isCompositionEnter, parseShellInput, ShellInputKind } from './shell-input';
 import { ShellKey } from './shell-keys';
-import { bounded, type Line, useAskStream } from './useAskStream';
-import { HISTORY_STEP, useCommandHistory } from './useCommandHistory';
+import { type Line, TranscriptAction, transcriptReducer } from './transcript';
+import { useAskStream } from './useAskStream';
+import { useCommandHistory } from './useCommandHistory';
 import { usePrivacyCommands } from './usePrivacyCommands';
 
 const COMMAND_FIELD = 'command';
-const COMPOSITION_KEYCODE = 229;
-const WINDOW_DOT_SIZE = 10;
 const STREAM_CARET = '█';
+const ANNOUNCER_REGION_ATTRIBUTES = { 'aria-live': 'polite', 'aria-atomic': true } as const;
 
 export function InteractiveShell({
   locale,
@@ -48,10 +58,10 @@ export function InteractiveShell({
     (): Line[] => [{ id: nextId(), kind: ShellLineKind.Info, text: ui.welcome, welcome: true }],
     [nextId, ui],
   );
-  const [history, setHistory] = useState<Line[]>(initialLines);
+  const [history, dispatch] = useReducer(transcriptReducer, undefined, initialLines);
   const [input, setInput] = useState('');
   const [inputFocused, setInputFocused] = useState(false);
-  const [announcement, setAnnouncement] = useState({ id: 0, text: '' });
+  const { announce, region: announcerRegion } = useAnnouncer(ANNOUNCER_REGION_ATTRIBUTES);
   const stopRef = useRef<HTMLButtonElement>(null);
   const followOutputRef = useRef(true);
   const feedRef = useRef<HTMLDivElement>(null);
@@ -60,9 +70,6 @@ export function InteractiveShell({
   const promptEditedRef = useRef(false);
   const revealedHistoryRef = useRef(history);
 
-  const announce = useCallback((text: string) => {
-    setAnnouncement((previous) => ({ id: previous.id + 1, text }));
-  }, []);
   const editInput = useCallback((value: string) => {
     promptEditedRef.current = true;
     setInput(value);
@@ -85,7 +92,7 @@ export function InteractiveShell({
     ui,
     nextId,
     announce,
-    setHistory,
+    dispatch,
     restoreInput,
     onSettled: refocusAfterStream,
   });
@@ -95,9 +102,9 @@ export function InteractiveShell({
   }, [stopStream, focusInput]);
   const onConversationForgotten = useCallback(
     (questions: number) => {
-      setHistory((lines) =>
-        bounded([
-          ...lines.filter((line) => line.kind !== ShellLineKind.Reference),
+      dispatch({
+        type: TranscriptAction.ForgetConversation,
+        lines: [
           { id: nextId(), kind: ShellLineKind.Output, text: ui.conversationForgotten },
           {
             id: nextId(),
@@ -107,8 +114,8 @@ export function InteractiveShell({
                 ? ui.conversationForgottenOne
                 : fillShellState(ui.conversationForgottenMany, { count: String(questions) }),
           },
-        ]),
-      );
+        ],
+      });
       focusInput();
     },
     [focusInput, nextId, ui],
@@ -117,7 +124,7 @@ export function InteractiveShell({
     ui,
     states,
     nextId,
-    setHistory,
+    dispatch,
     announce,
     focusInput,
     onConversationForgotten,
@@ -147,52 +154,45 @@ export function InteractiveShell({
         announce(ui.busy);
         return;
       }
-      const command = raw.trim().replace(/\s+/g, ' ');
-      if (!command) return;
-      const key = command.toLowerCase();
-      const privacy = parsePrivacyCommand(key);
-      const explicitQuestion = key.startsWith(ShellCommand.AskPrefix)
-        ? command.slice(ShellCommand.AskPrefix.length).trim()
-        : null;
-      const local =
-        !explicitQuestion && SHELL_RESPONSES.find((entry) => entry.commands.includes(key));
-      if (key !== ShellCommand.Clear && !privacy && !local && forgetInFlight()) {
+      const parsed = parseShellInput(raw);
+      if (parsed.kind === ShellInputKind.Empty) return;
+      const { command } = parsed;
+      if (parsed.kind === ShellInputKind.Question && forgetInFlight()) {
         announce(ui.forgetting);
         return;
       }
       followOutputRef.current = true;
       commandHistory.record(command);
       window.dispatchEvent(new CustomEvent(SHELL_COMMAND_EVENT));
-      setHistory((lines) =>
-        bounded([
-          ...lines,
-          { id: nextId(), kind: ShellLineKind.Prompt, text: `${ui.prompt} ${command}` },
-        ]),
-      );
+      dispatch({
+        type: TranscriptAction.Append,
+        lines: [{ id: nextId(), kind: ShellLineKind.Prompt, text: `${ui.prompt} ${command}` }],
+      });
       promptEditedRef.current = false;
       setInput('');
-      if (key === ShellCommand.Clear) {
-        setHistory(initialLines());
+      if (parsed.kind === ShellInputKind.Clear) {
+        dispatch({ type: TranscriptAction.Clear, lines: initialLines() });
         announce(ui.cleared);
         focusInput();
         return;
       }
-      if (privacy) {
-        void runPrivacy(privacy);
+      if (parsed.kind === ShellInputKind.Privacy) {
+        void runPrivacy(parsed.privacy);
         return;
       }
-      if (local) {
-        setHistory((lines) =>
-          bounded([
-            ...lines,
-            { id: nextId(), kind: local.kind, text: local.text, lang: SHELL_RESPONSE_LANG },
-          ]),
-        );
+      if (parsed.kind === ShellInputKind.Local) {
+        const { response } = parsed;
+        dispatch({
+          type: TranscriptAction.Append,
+          lines: [
+            { id: nextId(), kind: response.kind, text: response.text, lang: SHELL_RESPONSE_LANG },
+          ],
+        });
         announce(ui.commandComplete);
         focusInput();
         return;
       }
-      void streamQuestion(explicitQuestion ?? command, command);
+      void streamQuestion(parsed.question, command);
     },
     [
       announce,
@@ -229,12 +229,7 @@ export function InteractiveShell({
         stopStream();
       }}
     >
-      <TerminalChromeBar
-        chrome={chrome}
-        className="shell-chrome"
-        tagClassName="shell-chrome-tag"
-        dotSize={WINDOW_DOT_SIZE}
-      />
+      <TerminalChromeBar chrome={chrome} className="shell-chrome" tagClassName="shell-chrome-tag" />
       <div {...SHELL_LIVE_PROPS}>
         <div className="shell-feed-wrap">
           <div
@@ -267,7 +262,11 @@ export function InteractiveShell({
               />
             ))}
             {streamingText !== null && (
-              <span className="shell-line shell-line-output" data-kind={ShellLineKind.Output}>
+              <span
+                className="shell-line shell-line-output"
+                data-kind={ShellLineKind.Output}
+                aria-hidden="true"
+              >
                 <span className="shell-ai-label">{ui.aiLabel}: </span>
                 {streamingText}
                 <span className="shell-caret" aria-hidden="true">
@@ -318,25 +317,17 @@ export function InteractiveShell({
               onFocus={() => setInputFocused(true)}
               onBlur={() => setInputFocused(false)}
               onKeyDown={(event) => {
-                if (
-                  event.key === ShellKey.Enter &&
-                  (event.nativeEvent.isComposing || event.keyCode === COMPOSITION_KEYCODE)
-                ) {
+                const composing = event.nativeEvent.isComposing;
+                if (isCompositionEnter(event.key, composing, event.keyCode)) {
                   event.preventDefault();
                   return;
                 }
-                if (
-                  event.nativeEvent.isComposing ||
-                  event.altKey ||
-                  event.ctrlKey ||
-                  event.metaKey ||
-                  event.shiftKey ||
-                  (event.key !== ShellKey.Up && event.key !== ShellKey.Down)
-                ) {
-                  return;
-                }
+                const step = historyStepFor(event.key, {
+                  composing,
+                  modified: hasModifier(event),
+                });
+                if (step === null) return;
                 event.preventDefault();
-                const step = event.key === ShellKey.Up ? HISTORY_STEP.Older : HISTORY_STEP.Newer;
                 editInput(commandHistory.recall(step, input));
               }}
               autoComplete="off"
@@ -358,9 +349,7 @@ export function InteractiveShell({
       <p id={accuracyId} className="shell-ai-notice">
         {ui.accuracy}
       </p>
-      <p className="sr-only" role="status" aria-live="polite" aria-atomic="true">
-        <span key={announcement.id}>{announcement.text}</span>
-      </p>
+      {announcerRegion}
       <div className="shell-privacy-notice" data-testid="shell-privacy-notice">
         <p>
           {ui.privacy}{' '}

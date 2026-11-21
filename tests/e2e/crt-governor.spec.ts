@@ -1,4 +1,5 @@
 import { expect, type Page, test } from '@playwright/test';
+import { VIEWPORTS } from './_helpers/geometry';
 import { waitForHydration } from './_helpers/hydration';
 import { freezeMotion } from './_helpers/motion';
 
@@ -21,7 +22,7 @@ const effectStylesAtLevel = (page: Page, level: number) =>
   );
 
 test.describe('CRT frame governor', () => {
-  test.use({ viewport: { width: 1280, height: 720 }, timezoneId: 'Europe/Berlin' });
+  test.use({ viewport: VIEWPORTS.DESKTOP, timezoneId: 'Europe/Berlin' });
 
   test('publishes its level on the document element once the page hydrates', async ({ page }) => {
     await page.goto('/');
@@ -81,7 +82,7 @@ test.describe('CRT frame governor', () => {
 });
 
 test.describe('CRT frame governor on a phone', () => {
-  test.use({ viewport: { width: 390, height: 844 }, timezoneId: 'Europe/Berlin' });
+  test.use({ viewport: VIEWPORTS.PHONE, timezoneId: 'Europe/Berlin' });
 
   test('publishes its level on the document element once the page hydrates', async ({ page }) => {
     await page.goto('/');

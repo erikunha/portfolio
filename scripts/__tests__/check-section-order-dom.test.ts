@@ -4,7 +4,8 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
-const SCRIPT = join(process.cwd(), 'scripts', 'check-section-order.mjs');
+const SCRIPT = join(process.cwd(), 'scripts/gates/check-section-order.ts');
+const TSX = join(process.cwd(), 'node_modules/.bin/tsx');
 const SUBPROCESS_TEST_TIMEOUT_MS = 60_000;
 
 function runAgainst(css: string) {
@@ -17,7 +18,7 @@ function runAgainst(css: string) {
       '<section id="sec-alpha" /><section id="sec-beta" />',
     );
     writeFileSync(join(root, 'app', 'css', 'base.css'), css);
-    return spawnSync(process.execPath, [SCRIPT], { cwd: root, encoding: 'utf8' });
+    return spawnSync(TSX, [SCRIPT], { cwd: root, encoding: 'utf8' });
   } finally {
     rmSync(root, { recursive: true, force: true });
   }

@@ -1,3 +1,5 @@
+import { createListeners } from '@/lib/listeners';
+
 export type NavigationSnapshot = {
   currentId: string;
   drawerOpen: boolean;
@@ -13,7 +15,7 @@ export type NavigationStore = {
 
 export function createNavigationStore(initial: NavigationSnapshot): NavigationStore {
   let state = initial;
-  const listeners = new Set<() => void>();
+  const listeners = createListeners();
   return {
     initial,
     get: () => state,
@@ -23,13 +25,8 @@ export function createNavigationStore(initial: NavigationSnapshot): NavigationSt
       );
       if (!changed) return;
       state = { ...state, ...patch };
-      for (const listener of listeners) listener();
+      listeners.notify();
     },
-    subscribe: (listener) => {
-      listeners.add(listener);
-      return () => {
-        listeners.delete(listener);
-      };
-    },
+    subscribe: listeners.subscribe,
   };
 }

@@ -1,5 +1,5 @@
 import type { ComponentPropsWithoutRef, ReactNode } from 'react';
-import { cn } from '@/lib/cn';
+import { joinClassNames } from '@/lib/join-class-names';
 
 export type CmdLineProps = Omit<ComponentPropsWithoutRef<'div'>, 'children'> & {
   user: string;
@@ -17,13 +17,16 @@ export function CmdLine({
   ...rest
 }: CmdLineProps) {
   return (
-    <div className={cn('cmd-line font-mono text-sm leading-ratio-1-55', className)} {...rest}>
+    <div
+      className={joinClassNames('cmd-line font-mono text-sm leading-ratio-1-55', className)}
+      {...rest}
+    >
       <div className="flex flex-wrap gap-x-1">
-        <span className="text-primary-400">{user}</span>
-        <span className="text-primary-400">{prompt}</span>
-        <span className="text-tertiary-50">{command}</span>
+        <span className="text-signal-400">{user}</span>
+        <span className="text-signal-400">{prompt}</span>
+        <span className="text-(color:--color-text)">{command}</span>
       </div>
-      {output != null && <div className="text-tertiary-50 mt-1">{output}</div>}
+      {output != null && <div className="text-(color:--color-text) mt-1">{output}</div>}
     </div>
   );
 }

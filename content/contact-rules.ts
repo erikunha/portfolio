@@ -1,4 +1,4 @@
-import type { ContactContent } from './contact';
+import type { ContactContent } from './contact-types';
 
 export const CONTACT_LIMITS = {
   nameMin: 1,

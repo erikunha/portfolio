@@ -1,8 +1,7 @@
 import { defineConfig, devices, type Project } from 'playwright/test';
 
-const CROSS_BROWSER_SPECS =
-  /tests\/e2e\/(shared-header|cross-cutting|motion-switch|observability-smoke|design-system-pages|links|contact-delivery|contact-timezone|contact-chrome-axis|guitar-mobile|guitar-eq|mixer-mobile|reading-views|cv-layout|error-states|error-pages-fit|shell-stop-visible|shell-stop-pill|shell-receipt|hero-stat-label-words|shell-answer-height|no-js|mobile-reflow|hero-layout|section-surfaces|route-surfaces|type-scale|streamed-settle|shell-input-states|shell-hydration|refs-privacy|safe-zone|section-visual-order|error-pages-alignment|links-chrome-alignment|command-wrap|career-wrap|dock-labels|dock-text-spacing|email-focus-ring|pt-hero-boot|palette-discipline|leading-integrity|server-error-recovery|contact-recovery|drawer-dock-narrow|links-degraded|mixer-keyboard|visitor-journey|reading-orphans|word-integrity|to-top-content-clearance|to-top-scroll-direction|reading-inline-gap|shell-input-row-stable|shell-privacy-rhythm|shell-chrome-axis|shell-stream-stop|shell-ask-failures|shell-pt-states|shell-reference-wrap|shell-tablet-answer|shell-motion-off-answer|no-js-controls|identity-orphans|links-lines-narrow|design-system-words|contact-summary-rhythm|shell-placeholder-fit|shell-email-break|shell-reveal|shell-label-wrap|shell-stop-time-width|shell-nojs)\.spec\.ts$/;
-const VISUAL_SPEC = /tests\/visual\/visual\.spec\.ts$/;
+const CROSS_BROWSER_GREP = /@cross-browser(?![\w-])/;
+const CROSS_BROWSER_AND_VISUAL_GREP = /@cross-browser(?![\w-])|@mobile-visual(?![\w-])/;
 
 const DEFAULT_BASE_URL = 'http://localhost:3000';
 const REGEX_SPECIAL_CHARACTERS = /[.*+?^${}()|[\]\\]/g;
@@ -15,56 +14,44 @@ export function nestedWorktreeIgnore(rootDir: string): RegExp {
 
 const NESTED_WORKTREES = nestedWorktreeIgnore(import.meta.dirname);
 
-// Typed as Project[] so the literal types of the per-project settings survive
-// the extraction: inside the config object they were contextually narrowed
-// ('chromium' as a BrowserName), and a plain const array widens them back to
-// string, which the typecheck rejects.
-const PROJECT_DEFINITIONS: Project[] = [
+const BROWSER_PROFILES: Array<Required<Pick<Project, 'name' | 'use'>>> = [
   {
     name: 'chromium',
     use: { ...devices['Desktop Chrome'], viewport: { width: 1280, height: 720 } },
-    testIgnore: process.env.CI ? /design-system-components\.spec\.ts/ : [],
   },
   {
     name: 'chromium-mobile',
     use: { ...devices['iPhone SE'], defaultBrowserType: 'chromium' },
-    testMatch: [CROSS_BROWSER_SPECS, VISUAL_SPEC],
   },
   {
     name: 'webkit-desktop',
     use: { ...devices['Desktop Safari'], viewport: { width: 1280, height: 720 } },
-    testMatch: CROSS_BROWSER_SPECS,
   },
   {
     name: 'webkit-mobile',
     use: { ...devices['iPhone 14'] },
-    testMatch: CROSS_BROWSER_SPECS,
   },
+];
 
-  {
-    name: 'chromium-components',
-    use: { ...devices['Desktop Chrome'], viewport: { width: 1280, height: 720 } },
-    testDir: '.',
-    testMatch: /\/(components|design-system\/components|app)\/.*\.e2e\.ts$/,
-  },
-  {
-    name: 'chromium-mobile-components',
-    use: { ...devices['iPhone SE'], defaultBrowserType: 'chromium' },
-    testDir: '.',
-    testMatch: /\/(components|design-system\/components|app)\/.*\.e2e\.ts$/,
-  },
-  {
-    name: 'webkit-desktop-components',
-    use: { ...devices['Desktop Safari'], viewport: { width: 1280, height: 720 } },
-    testDir: '.',
-    testMatch: /\/(components|design-system\/components|app)\/.*\.e2e\.ts$/,
-  },
-  {
-    name: 'webkit-mobile-components',
-    use: { ...devices['iPhone 14'] },
-    testDir: '.',
-    testMatch: /\/(components|design-system\/components|app)\/.*\.e2e\.ts$/,
-  },
+const PAGE_PROJECT_OPTIONS: Record<string, Partial<Project>> = {
+  chromium: { testIgnore: process.env.CI ? /design-system-components\.spec\.ts/ : [] },
+  'chromium-mobile': { grep: CROSS_BROWSER_AND_VISUAL_GREP },
+  'webkit-desktop': { grep: CROSS_BROWSER_GREP },
+  'webkit-mobile': { grep: CROSS_BROWSER_GREP },
+};
+
+const COMPONENT_PROJECT_OPTIONS: Partial<Project> = {
+  testDir: '.',
+  testMatch: /\/(components|design-system\/components|app)\/.*\.e2e\.ts$/,
+};
+
+const PROJECT_DEFINITIONS: Project[] = [
+  ...BROWSER_PROFILES.map((profile) => ({ ...profile, ...PAGE_PROJECT_OPTIONS[profile.name] })),
+  ...BROWSER_PROFILES.map((profile) => ({
+    ...profile,
+    name: `${profile.name}-components`,
+    ...COMPONENT_PROJECT_OPTIONS,
+  })),
 ];
 
 function ignoreList(ignore: Project['testIgnore']): Array<string | RegExp> {

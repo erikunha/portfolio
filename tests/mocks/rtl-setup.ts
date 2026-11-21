@@ -1,11 +1,14 @@
 import { format } from 'node:util';
+import '@testing-library/jest-dom/vitest';
 import { cleanup } from '@testing-library/react';
 import { afterEach, beforeEach } from 'vitest';
+import { installDialogShim } from './dialog-shim';
 
 const ACT_WARNING_FRAGMENT = 'not wrapped in act';
 const ACT_ENVIRONMENT_FLAG = 'IS_REACT_ACT_ENVIRONMENT';
 
 Reflect.set(globalThis, ACT_ENVIRONMENT_FLAG, true);
+installDialogShim();
 
 const actWarnings: string[] = [];
 const originalConsoleError = console.error;

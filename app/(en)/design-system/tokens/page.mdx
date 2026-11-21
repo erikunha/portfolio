@@ -13,77 +13,95 @@ export const metadata = dsPageMetadata({
 
 Colour, type, spacing and border tokens live in `app/css/theme.css`.
 Tailwind's `@theme` generates utilities from these custom properties. Swatches
-read their values directly from that file.
+read their values directly from that file. A component's own tokens sit in its stylesheet.
+
+Tailwind's default color, radius and shadow scales are reset, so `bg-red-500`, `rounded-lg`
+and `shadow-md` produce nothing. Only the tokens on this page generate those utilities.
 
 <h2 id="color">Color</h2>
 
-Use semantic roles for text and emphasis. The ordinal families remain available
-for surfaces and existing consumers; code syntax uses the green and grey ramps.
+Use semantic roles for text and emphasis. Five hue ramps hold the primitives:
+`signal` (green), `carbon` (black), `sage` (grey-green), `gold` and `coral`. Code syntax uses the green and grey ramps.
 
 ### Semantic roles
 
 <ColorSwatch token="text" usage="Body text on the page and terminal surfaces" />
 <ColorSwatch token="text-secondary" usage="Labels, captions and secondary text at full opacity" />
-<ColorSwatch token="green" usage="Headings, accents and interactive elements" />
+<ColorSwatch token="accent" usage="Headings, accents and interactive elements" />
 
-The page background is `secondary-950`. Body text uses `text` (the same mint
-as `tertiary-50`); signal emphasis uses `green` (the same green as `primary-500`).
-Use `text-secondary` for new secondary text instead of `primary-300`,
-`primary-400` or `tertiary-400`. Those shades remain available for existing consumers.
+The page background is `carbon-950`. Body text uses `text` (the same mint
+as `sage-50`); signal emphasis uses `accent` (the same green as `signal-500`).
+Use `text-secondary` for new secondary text instead of `signal-300`,
+`signal-400` or `sage-400`. Those shades remain available for existing consumers.
 
-### primary · green (the brand)
+### Role tokens
 
-<ColorSwatch token="primary-50" />
-<ColorSwatch token="primary-100" />
-<ColorSwatch token="primary-200" />
-<ColorSwatch token="primary-300" usage="Existing annotations; use text-secondary for new text" />
-<ColorSwatch token="primary-400" usage="Existing labels; use text-secondary for new text" />
-<ColorSwatch token="primary-500" usage="Headings, accents, interactive elements" />
-<ColorSwatch token="primary-600" />
-<ColorSwatch token="primary-700" />
-<ColorSwatch token="primary-800" />
-<ColorSwatch token="primary-900" />
-<ColorSwatch token="primary-subtle" usage="Borders, dividers (green 40%)" />
-<ColorSwatch token="primary-border" usage="Decorative divider (green 20%, 1.5:1); never a control edge" />
-<ColorSwatch token="primary-faint" usage="Very subtle background (green 12%)" />
-<ColorSwatch token="primary-quiet" usage="Hover background (green 10%)" />
+A role names what a color does. Each one is an alias of a primitive below, so a
+stylesheet reads `var(--color-surface)` and the role keeps one meaning if the primitive moves.
+Prefer a role to a primitive step in new code. Only `text` generates a utility; the other eleven
+are plain custom properties on `:root`, and the print sheet remaps all twelve to ink on paper.
 
-### secondary · black (surfaces)
+<RoleTable
+  caption="Role tokens"
+  names={['surface','surface-raised','border','border-strong','accent','on-accent','text','text-muted','focus','warning','danger','scrim']}
+  usage={{
+    'surface': 'Page and terminal background',
+    'surface-raised': 'Panels and shells above the page',
+    'border': 'Decorative dividers, never a control edge',
+    'border-strong': 'Control edges and visible borders',
+    'accent': 'Headings, signal and interactive emphasis',
+    'on-accent': 'Text or icons drawn on an accent fill',
+    'text': 'Body text',
+    'text-muted': 'Meta text and captions',
+    'focus': 'The focus ring',
+    'warning': 'Warning marks',
+    'danger': 'Error and close marks',
+    'scrim': 'Backdrop behind a drawer or overlay',
+  }}
+/>
 
-<ColorSwatch token="secondary-50" />
-<ColorSwatch token="secondary-100" />
-<ColorSwatch token="secondary-200" />
-<ColorSwatch token="secondary-300" />
-<ColorSwatch token="secondary-400" />
-<ColorSwatch token="secondary-500" />
-<ColorSwatch token="secondary-600" />
-<ColorSwatch token="secondary-700" />
-<ColorSwatch token="secondary-800" />
-<ColorSwatch token="secondary-900" usage="Shell / terminal backgrounds" />
-<ColorSwatch token="secondary-950" usage="Page background" />
+`pnpm lint:contrast` audits seven pairs: `text` and `text-muted` on `surface`, `on-accent` on
+`accent`, `accent` and `focus` on `surface` at the non-text minimum, and `warning` and `danger` on `surface`.
 
-### tertiary · white (foreground)
+### signal · green (the brand)
 
-<ColorSwatch token="tertiary-50" usage="Body text (19.8:1 contrast on black)" />
-<ColorSwatch token="tertiary-100" />
-<ColorSwatch token="tertiary-200" />
-<ColorSwatch token="tertiary-300" />
-<ColorSwatch token="tertiary-400" />
-<ColorSwatch token="tertiary-500" />
-<ColorSwatch token="tertiary-600" />
-<ColorSwatch token="tertiary-700" />
-<ColorSwatch token="tertiary-800" />
-<ColorSwatch token="tertiary-900" />
+<ColorSwatch token="signal-200" />
+<ColorSwatch token="signal-300" usage="Existing annotations; use text-secondary for new text" />
+<ColorSwatch token="signal-400" usage="Existing labels; use text-secondary for new text" />
+<ColorSwatch token="signal-500" usage="Headings, accents, interactive elements" />
+<ColorSwatch token="signal-600" />
+<ColorSwatch token="signal-700" />
+<ColorSwatch token="signal-800" />
+<ColorSwatch token="signal-900" />
+<ColorSwatch token="signal-subtle" usage="Borders, dividers (green 40%)" />
+<ColorSwatch token="signal-border" usage="Decorative divider (green 20%, 1.5:1); never a control edge" />
+<ColorSwatch token="signal-faint" usage="Very subtle background (green 12%)" />
+<ColorSwatch token="signal-quiet" usage="Hover background (green 10%)" />
+
+### carbon · black (surfaces)
+
+<ColorSwatch token="carbon-900" usage="Shell / terminal backgrounds" />
+<ColorSwatch token="carbon-950" usage="Page background" />
+
+### sage · mint and grey (foreground)
+
+<ColorSwatch token="sage-50" usage="Body text (19.8:1 contrast on black)" />
+<ColorSwatch token="sage-300" />
+<ColorSwatch token="sage-400" />
+<ColorSwatch token="sage-500" />
+<ColorSwatch token="sage-900" />
 
 ### status · window chrome and alerts
 
 Two off-ramp hues exist, and each carries a meaning no green can. They are the only colors outside the green and grey ramps.
 
-<ColorSwatch token="quinary-500" usage="Window-chrome minimize dot" />
-<ColorSwatch token="senary-300" usage="Alerts: form errors, shell errors, mixer clip LED" />
-<ColorSwatch token="senary-500" usage="Window-chrome close dot" />
+<ColorSwatch token="gold-500" usage="Window-chrome minimize dot" />
+<ColorSwatch token="coral-300" usage="Alerts: form errors, shell errors, mixer clip LED" />
+<ColorSwatch token="coral-500" usage="Window-chrome close dot" />
 
-Other color tokens in the same file: the `--color-glow-02` to `--color-glow-60` ramp (signal green at 2% to 60% alpha, for glows and washes), `--color-eq-bar-top` and `--color-eq-bar-bottom` (the EQ spectrum gradient), `--color-print-ink`, `--color-print-paper` and `--color-print-rule` (print sheet), and `--color-crt-phosphor-red` and `--color-crt-phosphor-blue` (the CRT sub-pixel mask). The Matrix Rain colors `--color-rain-head` and `--color-rain-body` map to `primary-800` and `primary-900`. Components reference them through utilities or `var()`; no stylesheet writes a raw color.
+Other color tokens in the same file: the `--color-signal-glow-02` to `--color-signal-glow-60` ramp (signal green at 2% to 60% alpha, for glows and washes), `--color-eq-bar-top` and `--color-eq-bar-bottom` (the EQ spectrum gradient), `--color-print-ink`, `--color-print-paper` and `--color-print-rule` (print sheet), and `--color-crt-phosphor-red` and `--color-crt-phosphor-blue` (the CRT sub-pixel mask). The Matrix Rain colors `--color-rain-head` and `--color-rain-body` map to `signal-800` and `signal-900`. Components reference them through utilities or `var()`; no stylesheet writes a raw color.
+
+A translucent wash of a role is a tint, and a tint is one `color-mix(in srgb, var(--color-<role>) N%, transparent)` held in a named custom property. A tint two sites read is a role tint in `theme.css`: `--color-accent-tint-faint`, `--color-accent-tint-light`, `--color-accent-tint-soft` and `--color-accent-tint-strong` (accent at 6%, 7%, 8% and 10%), and `--color-surface-tint-medium`, `--color-surface-tint-firm` and `--color-surface-tint-heavy` (surface at 50%, 55% and 70%). Because each reads the role, the print sheet remaps it with the role. A tint only one rule reads is a custom property in that rule or in the `@theme` block of the partial that reads it. Tailwind `/NN` alpha utilities and `color-mix` inside a class string are not used. Where a site mixed in `oklab` and a measured print channel moved when it was mixed in `srgb` (a white surface), the tint keeps `oklab`: `--color-surface-tint-medium` and `--color-surface-tint-firm` do.
 
 <h2 id="type-scale">Type Scale</h2>
 
@@ -91,21 +109,20 @@ The base `h1` rule uses `--font-display`, Inter at weight 900. Body text, contro
 and other base headings use `--font-mono`, JetBrains Mono. Consumers can override these rules. Both stacks reference
 the existing `next/font/local` variables.
 
-| Token | Utility | Size |
-|---|---|---|
-| `--text-xs` | `text-xs` | 13px at every width |
-| `--text-sm` | `text-sm` | 14px |
-| `--text-body` | `text-body` | 14px, reading text (git log, card copy); 13px stays for labels |
-| `--text-base` | `text-base` | 16px |
-| `--text-lg` | `text-lg` | 18px |
-| `--text-xl` | `text-xl` | 20px |
-| `--text-2xl` | `text-2xl` | 24px |
-| `--text-3xl` | `text-3xl` | 32px |
-| `--text-4xl` | `text-4xl` | 36px |
-| `--text-5xl` | `text-5xl` | 48px |
-| `--text-7xl` | `text-7xl` | 64px |
+<TokenTable
+  caption="Type scale tokens"
+  prefix="text-"
+  scope="theme"
+  exclude={['text-min']}
+  utility="text-{step}"
+  valueHeader="Size"
+  usage={{
+    'text-xs': 'The floor for small text at every width',
+    'text-body': 'Reading text (git log, card copy); text-xs stays for labels',
+  }}
+/>
 
-`--text-min` is 13px at every width, phones included. `--text-xs` uses that floor.
+`--text-min` is the floor for small text at every width, phones included. `--text-xs` uses it.
 Use these tokens for small text; fixed pixel utilities do not inherit the floor.
 Sizes use rem units so they follow the reader's default font size.
 
@@ -114,36 +131,82 @@ The base `h1` is 32px, rising to 36px at 1280px. `h2` is 20px, rising to
 
 <h2 id="spacing">Spacing</h2>
 
-| Token | Utility step | Size |
-|---|---|---|
-| `--spacing-1` | `1` | 4px |
-| `--spacing-2` | `2` | 8px |
-| `--spacing-3` | `3` | 12px |
-| `--spacing-4` | `4` | 16px |
-| `--spacing-6` | `6` | 24px |
-| `--spacing-8` | `8` | 32px |
-| `--spacing-12` | `12` | 48px |
-| `--spacing-16` | `16` | 64px |
-| `--spacing-target` | `target` | 44px general control target |
-| `--spacing-target-compact` | `target-compact` | 28px compact control target |
-| `--spacing-target-pointer` | `target-pointer` | 36px row height of the section menu from 1024px with a fine pointer |
-| `--space-gutter` | `px-[var(--space-gutter)]` | `clamp(16px, 4vw, 24px)` page gutter |
-| `--space-page-top` | n/a | 32px below 768, 48px from 768 |
-| `--space-section` | `mb-[var(--space-section)]` | 32px below 768, 48px from 768 |
-| `--phi` | n/a | 1.618, the golden ratio behind the phi spacing scale and the contact and guitar column splits |
-| `--phi-space-1` | n/a | 8px, the base step of the phi scale |
-| `--phi-space-2` | n/a | about 13px, one phi step above the base |
-| `--phi-space-3` | n/a | about 21px, two phi steps above the base |
-| `--phi-space-4` | n/a | about 34px, three phi steps above the base |
-| `--phi-inv` | n/a | 0.618, one divided by phi |
-| `--phi-root` | n/a | 1.272, the square root of phi |
-| `--phi-text-1` | n/a | `--text-xs` times `--phi-root`: about 15px below 768px, 16.5px from 768px |
-| `--phi-pair-columns` | `grid-template-columns` | `minmax(0, 1.618fr) minmax(0, 1fr)`, major column first |
-| `--phi-pair-columns-minor-first` | `grid-template-columns` | the same split with the minor column first |
-| `--phi-pair-flex-minor` | `flex` | `0 0 calc((1 - var(--phi-inv)) * 100%)`, the minor share of a flex row |
-| `--text-section-title` | `text-[length:var(--text-section-title)]` | section h2: 16px below 768, 18px from 768 |
-| `--measure-page` | `safe-zone` | 1200px, the safe zone shared by the header, every page and the footer |
-| `--measure-read` | n/a | 72ch, the line length of text blocks |
+<TokenTable
+  caption="Spacing tokens"
+  prefix="spacing-"
+  scope="theme"
+  utility="{step}"
+  valueHeader="Size"
+  usage={{
+    'spacing-target': 'General control target',
+    'spacing-target-compact': 'Compact control target',
+    'spacing-target-pointer': 'Row height of the section menu from 1024px with a fine pointer',
+    'spacing-hair': 'Offset between stacked rows, thin vertical padding',
+    'spacing-tight': 'Tight gap between adjacent glyphs, narrow indicator width',
+    'spacing-snug': 'Padding of a small tag',
+    'spacing-pip': 'Indicator dot and bar size, small gap',
+    'spacing-chip': 'Padding and gap of a chip, height of a meter row',
+    'spacing-label': 'Gap between a label and its glyph',
+    'spacing-inset': 'Inset of a field or a chip, gap of a control row',
+    'spacing-panel': 'Padding of a panel and of a mixer section',
+    'spacing-panel-wide': 'Padding of a wide panel',
+    'spacing-icon': 'Size of an inline icon',
+    'spacing-lane': 'Height of a mixer fader lane and its thumb',
+    'spacing-node': 'Diameter of a signal-chain node',
+  }}
+/>
+
+The named steps from `spacing-hair` to `spacing-node` are the micro-scale. They replace arbitrary pixel
+sizes in class strings, which `pnpm lint:css-tokens` rejects. They use rem so they follow the reader's
+default font size; at a 16px root each step equals the pixel size it replaced.
+
+The rule reaches stylesheets too. A border or outline width reads `border-width`, a glow radius or a
+small gap reads the nearest micro-scale step, and a size drawn once in a glyph is written in rem. Only
+`0px` and a 1px hairline offset, such as an outline offset or a one pixel gap in a meter, stay in px.
+
+Page-level spacing reads the `:root` tokens. The page top and the section gap step up at the wider width.
+
+<ResponsiveTokenTable
+  caption="Page spacing tokens"
+  names={['space-page-top','space-section','text-section-title']}
+  breakpoint="48rem"
+  usage={{
+    'space-page-top': 'Space above the page content',
+    'space-section': 'Gap between sections',
+    'text-section-title': 'Section h2 size',
+  }}
+/>
+
+<TokenTable
+  caption="Page layout tokens"
+  names={['space-gutter','measure-page','measure-read']}
+  usage={{
+    'space-gutter': 'Page gutter on each side of the safe zone',
+    'measure-page': 'The safe zone shared by the header, every page and the footer',
+    'measure-read': 'The line length of text blocks',
+  }}
+/>
+
+Page rhythm steps through the golden-ratio tokens, each the previous times `--phi`. Pairs split
+major column first, and the minor share of a flex row comes from `--phi-inv`.
+
+<TokenTable
+  caption="Golden ratio tokens"
+  prefix="phi"
+  source
+  valueHeader="Value"
+  usage={{
+    'phi': 'The golden ratio behind the phi spacing scale and the contact and guitar column splits',
+    'phi-inv': 'One divided by phi',
+    'phi-space-1': 'The base step of the phi scale',
+    'phi-space-2': 'One phi step above the base',
+    'phi-space-3': 'Two phi steps above the base',
+    'phi-space-4': 'Three phi steps above the base',
+    'phi-pair-columns': 'Grid template, major column first',
+    'phi-pair-columns-minor-first': 'The same split with the minor column first',
+    'phi-pair-flex-minor': 'The minor share of a flex row',
+  }}
+/>
 
 Small and medium Buttons have a 44px minimum height. Small Buttons use 10px
 horizontal padding; medium and large Buttons use 14px. Large Buttons have a
@@ -151,52 +214,74 @@ horizontal padding; medium and large Buttons use 14px. Large Buttons have a
 
 <h2 id="tracking">Letter Spacing</h2>
 
-| Token | Utility | Value |
-|---|---|---|
-| `--tracking-tight` | `tracking-tight` | -0.03em, the dock labels below 360px |
-| `--tracking-2xs` | `tracking-2xs` | 0.02em |
-| `--tracking-xs` | `tracking-xs` | 0.04em |
-| `--tracking-sm` | `tracking-sm` | 0.05em |
-| `--tracking-md` | `tracking-md` | 0.06em |
-| `--tracking-lg` | `tracking-lg` | 0.08em |
-| `--tracking-xl` | `tracking-xl` | 0.1em |
-| `--tracking-2xl` | `tracking-2xl` | 0.12em |
-| `--tracking-3xl` | `tracking-3xl` | 0.14em |
-| `--tracking-4xl` | `tracking-4xl` | 0.16em |
-| `--tracking-5xl` | `tracking-5xl` | 0.18em |
+<TokenTable
+  caption="Letter spacing tokens"
+  prefix="tracking-"
+  utility="tracking-{step}"
+  usage={{
+    'tracking-tight': 'The dock labels below 360px',
+  }}
+/>
 
 Stylesheets write `letter-spacing: var(--tracking-xl)`; markup writes `tracking-xl`.
 
 <h2 id="viewports">Viewports</h2>
 
 A media query cannot read a custom property, so stylesheets write `theme(--viewport-md)` and Tailwind
-substitutes the width at build time. Each step has a `below` twin 0.02px lower, so `max-width` ends
-where the next `min-width` starts and no width matches both or neither.
+substitutes the width at build time. Steps are in `rem`, so a query follows the browser's root font
+size. A range query `(width < theme(--viewport-md))` ends exactly where `(min-width: theme(--viewport-md))`
+starts, so no width matches both or neither. Queries are mobile-first: a rule that needs another
+condition on top applies at `min-width` and undoes at the next step, because a `not` nested inside
+parentheses is dropped by older Safari.
 
-| Step | Min width | Max width (below) | Usage |
-|---|---|---|---|
-| `--viewport-narrow` | 360px | 359.98px | narrowest phones |
-| `--viewport-phone` | 480px | 479.98px | wide phones |
-| `--viewport-md` | 768px | 767.98px | phone to tablet; matches `MOBILE_BREAKPOINT_PX` |
-| `--viewport-split` | 900px | 899.98px | two-column splits |
-| `--viewport-lg` | 1024px | 1023.98px | tablet to desktop; the dock hides |
-| `--viewport-xl` | 1280px | 1279.98px | wide desktop |
+<ViewportTable
+  caption="Viewport tokens"
+  usage={{
+    'narrow': 'Narrowest phones',
+    'hero-compact': 'Hero hides the mobile boot log and tightens spacing below it',
+    'hero-actions': 'Hero action buttons stack in one column below it',
+    'links-qr': 'Links page drops the QR column below it',
+    'phone': 'Wide phones',
+    'md': 'Phone to tablet; matches MOBILE_BREAKPOINT_PX',
+    'split': 'Two-column splits',
+    'lg': 'Tablet to desktop; the dock hides',
+    'hero-stats': 'Hero stats fold to two by two below it',
+    'xl': 'Wide desktop',
+  }}
+/>
 
-A few queries stay literal because they mark one component's measured ladder, not a layout step: the
-`content-visibility` size estimates (340, 412 and 600px), the contact grid steps (512 and 640px) and
-three one-off folds (389.98, 599.98 and 1199.98px).
+Four content folds are named viewport tokens beside the steps: `hero-compact`, `hero-actions`,
+`links-qr` and `hero-stats`, each where one component's content folds. The `content-visibility` size
+estimates and the contact reserved-height steps are measured data bands in rem, not layout steps, and
+stay literal in their own stylesheets.
 
 <h2 id="borders">Borders</h2>
 
-| Token | Value | Usage |
-|---|---|---|
-| `--border-width` | 1px | Borders and dividers |
-| `--radius-none` | 0 | Sharp controls |
-| `--radius-control` | 2px | Maximum control radius |
+<TokenTable
+  caption="Border and radius tokens"
+  names={['border-width','radius-none','radius-control']}
+  usage={{
+    'border-width': 'Borders and dividers',
+    'radius-none': 'Sharp controls',
+    'radius-control': 'Maximum control radius',
+  }}
+/>
 
-Keyboard focus uses `:focus-visible` and one ring: `--focus-ring` (a 2px solid signal outline) with
-`--focus-ring-offset` (2px), or `--focus-ring-offset-inset` (-2px) for a control that sits flush against its
-neighbours. `app/css/base.css` applies it to links, buttons, inputs, selects, summaries and tabbable
+Keyboard focus uses `:focus-visible` and one ring: `--focus-ring`, with `--focus-ring-offset`, or
+`--focus-ring-offset-inset` for a control that sits flush against its neighbours.
+
+<TokenTable
+  caption="Focus ring tokens"
+  prefix="focus-ring"
+  usage={{
+    'focus-ring': 'The outline every focus rule uses',
+    'focus-ring-width': 'Outline thickness',
+    'focus-ring-offset': 'Gap between control and outline',
+    'focus-ring-offset-inset': 'Negative offset for a control flush against its neighbours',
+  }}
+/>
+
+`app/css/base.css` applies it to links, buttons, inputs, selects, summaries and tabbable
 elements, so a component does not restate it. `pnpm lint:css-tokens` fails a focus rule that writes its
 own width, color or offset, or that paints the ring on plain `:focus`.
 
@@ -209,6 +294,10 @@ when the operating system asks for reduced motion. Switching it off sets
 `app/css/animations.css`, `crt.css`, `components-*.css` and component logic. Check
 the affected animation rather than assuming one global rule disables all motion.
 
+Three custom variants in `app/css/theme.css` spell the selector, and nothing else may:
+`motion-off` (switch off), `motion-on` (switch on) and `reveal-motion-on` (switch on and the
+type reveal ready). A utility reads `motion-off:animate-none`; a stylesheet writes `@variant motion-off { ... }`.
+
 Module headers (`components/responsive/Module`) reveal text in character steps as they enter
 the viewport, driven by scroll position (`animation-timeline: view()` in
 `components-scroll-type.css`). Their caret blinks four times and then stays solid. The MOTION
@@ -219,16 +308,21 @@ lines) use a second mechanism. The `TypeReveal` island, mounted once by `GlobalM
 root layout, adds `type-reveal-ready` to `<html>` and a class to each element when it first enters
 the viewport. The text then reveals one character per step, and the caret blinks and disappears.
 With the MOTION switch off, or without `IntersectionObserver`, every element shows at once. The
-timing comes from tokens in the `:root` block of `app/css/theme.css`:
+timing comes from tokens in the `:root` block of `app/css/animations.css`:
 
-| Token | Value | Usage |
-|---|---|---|
-| `--type-reveal-char-duration` | 28ms | time per revealed character |
-| `--type-reveal-max-duration` | 1.4s | cap on one element's reveal |
-| `--type-reveal-caret-width` | 0.6ch | caret width |
-| `--type-reveal-caret-height` | 1.05em | caret height |
-| `--type-reveal-caret-blink` | 1.05s | one blink cycle |
-| `--type-reveal-caret-blinks` | 3 | blink cycles after the reveal |
+<TokenTable
+  caption="Type reveal tokens"
+  prefix="type-reveal-"
+  scope="root"
+  usage={{
+    'type-reveal-char-duration': 'Time per revealed character',
+    'type-reveal-max-duration': 'Cap on one element reveal',
+    'type-reveal-caret-width': 'Caret width',
+    'type-reveal-caret-height': 'Caret height',
+    'type-reveal-caret-blink': 'One blink cycle',
+    'type-reveal-caret-blinks': 'Blink cycles after the reveal',
+  }}
+/>
 
 | Utility | Value | Usage |
 |---|---|---|
@@ -241,36 +335,54 @@ timing comes from tokens in the `:root` block of `app/css/theme.css`:
 
 Every z-index is a step of the `--z-*` scale in `app/css/theme.css`; a stylesheet writes
 `z-index: var(--z-drawer)` and markup writes `z-(--z-topbar)`. `pnpm lint:css-tokens` fails a literal.
-Layers stack in this order:
+The table lists layers from the lowest to the highest.
 
-| Layer | z-index | Usage |
-|---|---|---|
-| rain | `--z-rain` (0) | the Matrix rain canvas |
-| CRT layers | `--z-crt-vignette` (1) to `--z-crt-beam` (5) | vignette, scanlines, mask, noise, flicker, scan beam |
-| local | `--z-local` (1), `--z-local-above` (2) | stacking inside one component |
-| content | `--z-content` (10), `--z-content-raised` (11) | `.page-main`, page content above the CRT overlay |
-| title bar | `--z-title-bar` (109) | the phone title bar |
-| header chrome | `--z-topbar` (110) | the desktop topbar and the phone status bar |
-| to top | `--z-to-top` (115) | the scroll-to-top button |
-| offline notice | `--z-offline` (118) | the no-signal bar; the drawer and its scrim cover it |
-| dock | `--z-dock` (120) | bottom navigation dock |
-| scrim | `--z-scrim` (125) | the drawer scrim behind the open menu |
-| position line | `--z-position-line` (126) | the side scroll-progress line below 1024px |
-| progress line | `--z-progress-line` (127) | the page-load bar on `/links` |
-| drawer | `--z-drawer` (130) | the section menu drawer |
-| system failure | `--z-sysfail` (9998) | the SYSTEM FAILURE plate |
-| skip link | `--z-skip-link` (9999) | skip-to-content link, always on top |
+<TokenTable
+  caption="Layer tokens"
+  prefix="z-"
+  sortByValue
+  valueHeader="z-index"
+  usage={{
+    'z-rain': 'The Matrix rain canvas',
+    'z-crt-vignette': 'CRT vignette',
+    'z-crt-scanlines': 'CRT scanlines',
+    'z-crt-mask': 'CRT sub-pixel mask',
+    'z-crt-noise': 'CRT noise',
+    'z-crt-flicker': 'CRT flicker',
+    'z-crt-beam': 'CRT scan beam',
+    'z-local': 'Stacking inside one component',
+    'z-local-above': 'Stacking above z-local inside one component',
+    'z-content': '.page-main, page content above the CRT overlay',
+    'z-content-raised': 'Content raised within the page',
+    'z-title-bar': 'The phone title bar',
+    'z-topbar': 'The desktop topbar and the phone status bar',
+    'z-to-top': 'The scroll-to-top button',
+    'z-offline': 'The no-signal bar; the drawer and its scrim cover it',
+    'z-dock': 'Bottom navigation dock',
+    'z-scrim': 'The drawer scrim behind the open menu',
+    'z-position-line': 'The side scroll-progress line below 1024px',
+    'z-progress-line': 'The page-load bar on /links',
+    'z-drawer': 'The section menu drawer, a modal dialog that paints in the top layer',
+    'z-sysfail': 'The SYSTEM FAILURE plate',
+    'z-skip-link': 'Skip-to-content link, always on top',
+  }}
+/>
 
 <h2 id="component-tokens">Component tokens</h2>
 
-The `@theme` block also holds tokens scoped to one component. They are not a shared vocabulary, so
-a new component declares its own rather than reusing another's.
+A token scoped to one component sits in that component's stylesheet, in an `@theme` block at the top,
+beside the rules that read it. They are not a shared vocabulary, so a new component declares its own
+rather than reusing another's. `theme.css` keeps the tokens several components read. It also keeps
+`--breakpoint-guitar`, because Tailwind builds the `guitar:` variant from it for every stylesheet, and
+`--color-guitar-scanline`, because a color literal may only be written there.
 
-| Prefix | Owner | Examples |
-|---|---|---|
-| `--eq-*` | the EQ curve and spectrum ([EqSpectrumStrip](/design-system/components#eq-spectrum-strip)) | plot and axis heights, bar gaps, curve stroke, level steps |
-| `--guitar-*` | the guitar module | column template, photo filters and ratio, arrow size |
-| `--mixer-*` | the DAW mixer | chip width, chain rows, transport gap |
-| `--links-thumb-*` | the `/links` cover frame ([Cover frame](/design-system/components#cover-frame)) | contrast, brightness, tint, reveal duration |
-| `--receipt-*` | the project receipts list | metric, value and company column widths |
-| `--breakpoint-guitar` | the guitar module | the one component-owned layout width (700px) |
+| Prefix | Stylesheet | Owner | Examples |
+|---|---|---|---|
+| `--eq-*` | `components-eq.css` | the EQ curve and spectrum ([EqSpectrumStrip](/design-system/components#eq-spectrum-strip)) | plot and axis heights, bar gaps, curve stroke, level steps |
+| `--guitar-*` | `components-guitar.css` | the guitar module | column template, photo filters and ratio, arrow size |
+| `--mixer-*` | `components-mixer.css` | the DAW mixer | chip width, chain rows, transport gap |
+| `--links-thumb-*` | `components-links.css` | the `/links` cover frame ([Cover frame](/design-system/components#cover-frame)) | contrast, brightness, tint, reveal duration |
+| `--receipt-*` | `components-projects.css` | the project receipts list | metric, value and company column widths |
+| `--spacing-opinions-*`, `--measure-opinions-*` | `components-hottest-takes.css` | the opinions list | list marker width, body measure |
+| `--stroke-width-*` | `components-career.css` | the career log icons | icon stroke width |
+| `--type-reveal-*` | `animations.css` | the type reveal | character duration, caret size and blinks |

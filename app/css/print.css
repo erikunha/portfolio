@@ -1,68 +1,51 @@
-@layer components {
+@layer overrides {
   @media print {
     :root {
       color-scheme: light;
       print-color-adjust: exact;
       --color-black: var(--color-print-paper);
       --color-white: var(--color-print-ink);
-      --color-primary-50: var(--color-print-ink);
-      --color-primary-100: var(--color-print-ink);
-      --color-primary-200: var(--color-print-ink);
-      --color-primary-300: var(--color-print-ink);
-      --color-primary-400: var(--color-print-ink);
-      --color-primary-500: var(--color-print-ink);
-      --color-primary-600: var(--color-print-ink);
-      --color-primary-700: var(--color-print-ink);
-      --color-primary-800: var(--color-print-ink);
-      --color-primary-900: var(--color-print-ink);
-      --color-primary-subtle: var(--color-print-rule);
-      --color-primary-border: var(--color-print-rule);
-      --color-primary-faint: transparent;
-      --color-primary-quiet: transparent;
-      --color-secondary-950: var(--color-print-paper);
-      --color-secondary-900: var(--color-print-paper);
-      --color-secondary-800: var(--color-print-paper);
-      --color-secondary-700: var(--color-print-paper);
-      --color-secondary-600: var(--color-print-rule);
-      --color-secondary-500: var(--color-print-rule);
-      --color-secondary-400: var(--color-print-rule);
-      --color-secondary-300: var(--color-print-rule);
-      --color-secondary-200: var(--color-print-rule);
-      --color-secondary-100: var(--color-print-rule);
-      --color-secondary-50: var(--color-print-rule);
-      --color-tertiary-50: var(--color-print-ink);
-      --color-tertiary-100: var(--color-print-ink);
-      --color-tertiary-200: var(--color-print-ink);
-      --color-tertiary-300: var(--color-print-ink);
-      --color-tertiary-400: var(--color-print-rule);
-      --color-tertiary-500: var(--color-print-rule);
-      --color-tertiary-600: var(--color-print-rule);
-      --color-tertiary-700: var(--color-print-paper);
-      --color-tertiary-800: var(--color-print-paper);
-      --color-tertiary-900: var(--color-print-paper);
-      --color-quinary-500: var(--color-print-ink);
-      --color-senary-300: var(--color-print-ink);
-      --color-senary-500: var(--color-print-ink);
+      --color-signal-200: var(--color-print-ink);
+      --color-signal-300: var(--color-print-ink);
+      --color-signal-400: var(--color-print-ink);
+      --color-signal-600: var(--color-print-ink);
+      --color-signal-700: var(--color-print-ink);
+      --color-signal-800: var(--color-print-ink);
+      --color-signal-900: var(--color-print-ink);
+      --color-signal-faint: transparent;
+      --color-signal-quiet: transparent;
+      --color-sage-300: var(--color-print-ink);
+      --color-sage-500: var(--color-print-rule);
+      --color-sage-900: var(--color-print-paper);
+      --color-coral-300: var(--color-print-ink);
       --color-eq-bar-top: var(--color-print-ink);
       --color-eq-bar-bottom: var(--color-print-rule);
       --color-text: var(--color-print-ink);
       --color-text-secondary: var(--color-print-rule);
-      --color-green: var(--color-print-ink);
-      --color-glow-02: transparent;
-      --color-glow-03: transparent;
-      --color-glow-04: transparent;
-      --color-glow-05: transparent;
-      --color-glow-06: transparent;
-      --color-glow-15: transparent;
-      --color-glow-18: transparent;
-      --color-glow-25: transparent;
-      --color-glow-30: transparent;
-      --color-glow-35: transparent;
-      --color-glow-40: transparent;
-      --color-glow-45: transparent;
-      --color-glow-50: transparent;
-      --color-glow-55: transparent;
-      --color-glow-60: transparent;
+      --color-surface: var(--color-print-paper);
+      --color-surface-raised: var(--color-print-paper);
+      --color-border: var(--color-print-rule);
+      --color-border-strong: var(--color-print-rule);
+      --color-accent: var(--color-print-ink);
+      --color-on-accent: var(--color-print-paper);
+      --color-text-muted: var(--color-print-rule);
+      --color-focus: var(--color-print-ink);
+      --color-warning: var(--color-print-ink);
+      --color-danger: var(--color-print-ink);
+      --color-scrim: var(--color-print-paper);
+      --color-signal-glow-02: transparent;
+      --color-signal-glow-03: transparent;
+      --color-signal-glow-04: transparent;
+      --color-signal-glow-06: transparent;
+      --color-signal-glow-18: transparent;
+      --color-signal-glow-25: transparent;
+      --color-signal-glow-30: transparent;
+      --color-signal-glow-35: transparent;
+      --color-signal-glow-40: transparent;
+      --color-signal-glow-45: transparent;
+      --color-signal-glow-50: transparent;
+      --color-signal-glow-55: transparent;
+      --color-signal-glow-60: transparent;
     }
 
     html,
@@ -79,8 +62,12 @@
       padding-block-start: var(--space-page-top);
     }
 
-    /* biome-ignore-start lint/complexity/noImportantStyles: Tailwind utilities sit in a later layer than components, so only important declarations keep a glow off the printed page */
+    .reading-view .page-container.page-main {
+      padding-block-start: 0;
+    }
+
     .skip-to-content,
+    .mixer-skip-link,
     .desktop-topbar,
     .mobile-title-bar,
     .status-bar,
@@ -96,18 +83,21 @@
     .crt-mask,
     .crt-noise,
     .crt-flicker,
-    .crt-scan-beam,
+    .crt-scan-beam {
+      display: none;
+    }
+
     body > canvas {
+      /* biome-ignore lint/complexity/noImportantStyles: the rain canvas sets display inline, which outranks every layered declaration that is not important */
       display: none !important;
     }
 
     *,
     *::before,
     *::after {
-      text-shadow: none !important;
-      box-shadow: none !important;
-      transition: none !important;
+      text-shadow: none;
+      box-shadow: none;
+      transition: none;
     }
-    /* biome-ignore-end lint/complexity/noImportantStyles: end of the block that must outrank utilities */
   }
 }

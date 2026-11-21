@@ -13,7 +13,7 @@
     align-items: center;
     gap: var(--spacing-2);
     margin: 0;
-    color: var(--color-primary-500);
+    color: var(--color-accent);
     font-size: var(--text-section-title);
     font-weight: 700;
     letter-spacing: var(--tracking-xl);
@@ -53,7 +53,7 @@
     min-height: 100%;
     overflow: hidden;
     padding-right: var(--spacing-4);
-    border-right: var(--border-width) solid var(--color-primary-quiet);
+    border-right: var(--border-width) solid var(--color-signal-quiet);
     color: var(--color-text-secondary);
     text-align: right;
     user-select: none;
@@ -73,13 +73,13 @@
 
   .ab-prose h4 {
     margin: 0;
-    color: var(--color-primary-500);
+    color: var(--color-accent);
     font-weight: 700;
   }
 
   .ab-role {
-    background: var(--color-primary-500);
-    color: var(--color-secondary-950);
+    background: var(--color-accent);
+    color: var(--color-on-accent);
     padding: var(--border-width) calc(var(--spacing-1) * 1.5);
     letter-spacing: var(--tracking-xs);
   }
@@ -129,7 +129,7 @@
   }
 
   .ab-stack li {
-    border: var(--border-width) solid var(--color-primary-subtle);
+    border: var(--border-width) solid var(--color-border-strong);
     border-radius: var(--radius-control);
     padding: var(--spacing-1) var(--spacing-2);
     font-size: var(--text-xs);
@@ -162,7 +162,7 @@
 
   .ab-permissions,
   .ab-resp [data-highlight] {
-    color: var(--color-primary-500);
+    color: var(--color-accent);
     font-weight: 700;
   }
 
@@ -195,7 +195,7 @@
     font-size: var(--text-xs);
     --leading: 1.4;
     padding: var(--spacing-2) var(--spacing-3);
-    background: var(--color-glow-03);
+    background: var(--color-signal-glow-03);
   }
 
   .ab-code .repo-link {
@@ -212,26 +212,26 @@
 
   @media (min-width: theme(--viewport-lg)) {
     .about-grid {
-      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    }
-  }
-
-  @media (min-width: theme(--viewport-lg)) and (max-width: theme(--viewport-below-xl)) {
-    .about-grid {
       grid-template-columns: var(--phi-pair-columns);
     }
   }
 
-  @media (max-width: theme(--viewport-below-md)) {
+  @media (min-width: theme(--viewport-xl)) {
+    .about-grid {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    }
+  }
+
+  @media (width < theme(--viewport-md)) {
     .about-section {
-      border: var(--border-width) solid var(--color-primary-subtle);
-      background: var(--color-secondary-950);
+      border: var(--border-width) solid var(--color-border-strong);
+      background: var(--color-surface);
     }
     .about-section-header {
       padding: var(--spacing-3) calc(var(--spacing-3) + var(--spacing-1) / 2);
       margin: 0;
-      background: var(--color-glow-04);
-      border-bottom: var(--border-width) solid var(--color-primary-quiet);
+      background: var(--color-signal-glow-04);
+      border-bottom: var(--border-width) solid var(--color-signal-quiet);
     }
     .about-grid {
       gap: var(--spacing-4);
@@ -277,7 +277,7 @@
     }
   }
 
-  @media (max-width: theme(--viewport-below-phone)) {
+  @media (width < theme(--viewport-phone)) {
     .panel-head:has(.repo-link) {
       column-gap: var(--spacing-1);
       justify-content: center;
@@ -295,7 +295,7 @@
     }
   }
 
-  @media (max-width: theme(--viewport-below-narrow)) {
+  @media (width < theme(--viewport-narrow)) {
     .ab-code .panel-title {
       letter-spacing: var(--tracking-tight);
     }

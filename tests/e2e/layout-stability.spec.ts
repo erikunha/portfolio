@@ -5,7 +5,7 @@ import {
   type Page,
   test,
 } from '@playwright/test';
-import { heightOf, settleFrames, VIEWPORTS } from './_helpers/geometry';
+import { heightOf, settleFrames, VIEWPORTS, WIDTH } from './_helpers/geometry';
 import { waitForHydration } from './_helpers/hydration';
 import { freezeMotion } from './_helpers/motion';
 
@@ -25,7 +25,7 @@ const TIMEZONE_PANEL_VIEWPORTS = [
   VIEWPORTS.PHONE_NARROW,
   PHONE,
   TABLET,
-  { width: 1120, height: DESKTOP.height },
+  { width: WIDTH.LAPTOP_WIDE, height: DESKTOP.height },
   DESKTOP,
 ] as const;
 

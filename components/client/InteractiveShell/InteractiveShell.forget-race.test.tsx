@@ -1,10 +1,10 @@
 import { within } from '@testing-library/react';
-import { act, createElement } from 'react';
+import { act } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { fire, flushMicrotasks, type MountedClient, mountClient } from '@/__tests__/helpers/render';
+import { flushMicrotasks, type MountedClient } from '@/__tests__/helpers/render';
+import { askQuestion, renderShell } from '@/__tests__/helpers/shell';
 import { shellUi } from '@/content/shell-ui';
 import { SITE_LOCALE } from '@/content/site-locale';
-import { shellChrome } from '@/content/terminal-chrome';
 
 vi.mock('@/lib/use-breakpoint.client', () => ({ useBreakpoint: () => ({ isMobile: false }) }));
 vi.mock('@/lib/motion', () => ({ readMotion: () => false }));
@@ -43,20 +43,6 @@ function stubBackend(askIds: string[]) {
   };
 }
 
-async function submit(container: HTMLElement, command: string) {
-  const input = container.querySelector<HTMLInputElement>('input[name="command"]');
-  const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set;
-  await act(async () => {
-    if (input && setter) setter.call(input, command);
-    fire(input, new Event('input', { bubbles: true }));
-  });
-  await act(async () => {
-    fire(container.querySelector('form'), new Event('submit', { bubbles: true, cancelable: true }));
-  });
-  await flushMicrotasks();
-  await flushMicrotasks();
-}
-
 function named(container: HTMLElement, name: string): HTMLButtonElement {
   const receipt = container.querySelector<HTMLElement>('[data-testid="shell-receipt"]');
   if (!receipt) throw new Error('no receipt');
@@ -79,18 +65,6 @@ const status = (container: HTMLElement) => container.querySelector('p[role="stat
 describe('a question asked while a forget is pending', () => {
   let mounted: MountedClient | undefined;
 
-  async function renderShell() {
-    const { InteractiveShell } = await import('./InteractiveShell');
-    mounted = await mountClient(
-      createElement(InteractiveShell, {
-        locale: SITE_LOCALE.en,
-        ui,
-        chrome: shellChrome[SITE_LOCALE.en],
-      }),
-    );
-    return mounted.container;
-  }
-
   beforeEach(() => {
     vi.resetModules();
     window.sessionStorage.clear();
@@ -104,12 +78,13 @@ describe('a question asked while a forget is pending', () => {
 
   it('waits, keeps the draft, and the next question starts a new conversation with its own receipt and ref', async () => {
     const { askBodies, releaseForget } = stubBackend([A, B]);
-    const container = await renderShell();
-    await submit(container, 'first question');
+    mounted = await renderShell();
+    const container = mounted.container;
+    await askQuestion(container, 'first question', 2);
     await click(named(container, ui.forget));
     await click(named(container, ui.forgetConfirm));
 
-    await submit(container, 'second question');
+    await askQuestion(container, 'second question', 2);
     expect(askBodies).toHaveLength(1);
     expect(inputValue(container)).toBe('second question');
     expect(status(container)).toBe(ui.forgetting);
@@ -117,13 +92,13 @@ describe('a question asked while a forget is pending', () => {
     await releaseForget();
     expect(receipts(container)).toHaveLength(0);
 
-    await submit(container, 'second question');
+    await askQuestion(container, 'second question', 2);
     expect(askBodies).toHaveLength(2);
     expect(askBodies[1]?.conversationId).not.toBe(askBodies[0]?.conversationId);
     expect(receipts(container)).toHaveLength(1);
     expect(receipts(container)[0]?.querySelector('code')?.textContent).toBe(B);
     expect(receipts(container)[0]?.textContent).toContain(ui.receiptQuestionsOne);
-    const conversation = await import('@/lib/ask-conversation.client');
+    const conversation = await import('@/lib/ask/conversation.client');
     const refs = await import('@/lib/request-refs.client');
     expect(refs.listRefs()).toEqual([B]);
     expect(conversation.inConversation(B)).toBe(true);
@@ -131,24 +106,26 @@ describe('a question asked while a forget is pending', () => {
 
   it('applies to a forget started from the privacy command as well', async () => {
     const { askBodies, releaseForget } = stubBackend([A, B]);
-    const container = await renderShell();
-    await submit(container, 'first question');
-    await submit(container, 'privacy forget');
-    await submit(container, 'second question');
+    mounted = await renderShell();
+    const container = mounted.container;
+    await askQuestion(container, 'first question', 2);
+    await askQuestion(container, 'privacy forget', 2);
+    await askQuestion(container, 'second question', 2);
     expect(askBodies).toHaveLength(1);
     await releaseForget();
-    await submit(container, 'second question');
+    await askQuestion(container, 'second question', 2);
     expect(askBodies).toHaveLength(2);
     expect(receipts(container)[0]?.textContent).toContain(ui.receiptQuestionsOne);
   });
 
   it('still runs local commands while the forget is pending', async () => {
     const { askBodies, releaseForget } = stubBackend([A]);
-    const container = await renderShell();
-    await submit(container, 'first question');
+    mounted = await renderShell();
+    const container = mounted.container;
+    await askQuestion(container, 'first question', 2);
     await click(named(container, ui.forget));
     await click(named(container, ui.forgetConfirm));
-    await submit(container, 'help');
+    await askQuestion(container, 'help', 2);
     expect(container.querySelector('[role="log"]')?.textContent).toContain('help');
     expect(askBodies).toHaveLength(1);
     await releaseForget();

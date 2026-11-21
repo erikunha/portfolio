@@ -4,28 +4,40 @@ How a change flows from requirement to production. Git hooks and CI enforce chec
 
 ## The lifecycle at a glance
 
+Planning, up to the first line of code:
+
 ```mermaid
-flowchart TD
-    idea["Idea / requirement"] --> brainstorm["Brainstorm"]
-    brainstorm --> spec["Spec (local, untracked)<br/>requirements + acceptance criteria"]
-    spec --> agate{"plan-review convention<br/>GATE_RESULT: PASS?"}
+flowchart LR
+    idea["Idea"] --> brainstorm["Brainstorm"] --> spec["Spec (local)"]
+    spec --> agate{"plan-review PASS?"}
     agate -->|no| spec
-    agate -->|yes| plan["Plan: local feature directory<br/>independently verifiable tasks"]
-    plan --> branch["feature branch: feat|fix|... /description"]
-    branch --> tdd["TDD implementation (tests first)"]
-    tdd --> commit["commit (scope blocks): type(scope): subject"]
-    commit --> hooks["per-commit hooks: Biome + staged gitleaks + commitlint"]
-    hooks --> push["git push (pre-push gate chain)"]
-    push --> readypr["ci:predict; non-docs gates:runtime"]
-    readypr --> pr["gh pr create (fill template)"]
-    pr --> conv["review the pull request (answer every finding)"]
-    conv --> readymerge["CI green + Argos approved + findings answered"]
-    readymerge --> merge["squash-merge (#NNN) by the owner"]
-    merge --> deploy["Vercel deploy"]
-    deploy --> smoke["post-deploy smoke test"]
-    smoke --> adr["deployment verified; ADR recorded"]
-    adr --> idea
+    agate -->|yes| plan["Plan"] --> branch["Feature branch"] --> tdd["TDD"]
 ```
+
+From the first commit to an open pull request:
+
+```mermaid
+flowchart LR
+    commit["commit"] --> hooks["pre-commit, commit-msg"] --> push["git push"]
+    push --> verify["pre-push: verify"] --> full["ci:full"] --> pr["gh pr create"]
+```
+
+From review to a recorded decision:
+
+```mermaid
+flowchart LR
+    review["Review, answer findings"] --> ready["CI green, Argos approved"]
+    ready --> merge["Squash-merge by owner"] --> deploy["Vercel deploy"]
+    deploy --> smoke["Smoke test"] --> adr["ADR recorded"]
+```
+
+- The recorded decision feeds the next idea.
+- The spec and plan live in a local, untracked feature directory.
+- `plan-review` must return `GATE_RESULT: PASS`; this is a convention, not a hook.
+- The branch is `feat|fix|...` plus `/description`, one logical unit per commit: `type(scope): subject`.
+- The per-commit hooks are Biome on staged files, staged gitleaks and commitlint.
+- `ci:full` runs before the PR; `gates:runtime` also runs for a change that is not docs-only.
+- The PR template is filled in full. Merge needs CI green, Argos approved and every finding answered.
 
 ## Phase by phase
 
@@ -56,11 +68,11 @@ A feature branch is created (`<type>/<description>`, enforced by `.husky/pre-pus
 
 ### 7. Pre-PR diff read, and the pre-push gate chain
 
-Before opening the PR, read the diff. For non-deletion pushes, `.husky/pre-push` checks the main target, branch name and `pnpm verify`. The verify chain includes `pnpm check:test-integrity` (`scripts/check-test-integrity.ts`, also a `quality-fast` step in CI): it fails a focused test, a test body with no assertion (a call to a helper that asserts counts, whether it is local, imported by name or default, or reached through a re-export) and a skip without a reason string. Deletion-only pushes skip branch naming and verify after the main-target guard. Adding or upgrading a direct dependency also means updating its entry in `dependency-vetting.json` (purpose, license), because `pnpm verify` runs `check:dependency-vetting`.
+Before opening the PR, read the diff. For non-deletion pushes, `.husky/pre-push` checks the main target, branch name and `pnpm verify`. The verify chain includes `pnpm check:test-integrity` (`scripts/gates/check-test-integrity.ts`, also a `quality-fast` step in CI): it fails a focused test, a test body with no assertion (a call to a helper that asserts counts, whether it is local, imported by name or default, or reached through a re-export) and a skip without a reason string. Deletion-only pushes skip branch naming and verify after the main-target guard. Adding or upgrading a direct dependency also means updating its entry in `dependency-vetting.json` (purpose, license), because `pnpm verify` runs `check:dependency-vetting`.
 
 ### 8. Pre-PR -> open PR
 
-Run `pnpm ci:predict` (add `--linux` when the change touches layout, fonts or metrics): it runs every CI job the commits trigger and says which it could not verify (exit 0 only for a fully verified clean run, 3 when jobs are partial or not run or the branch has no commits ahead of its base, 2 for `--list`), including the verify chain, the bundle and route-JS gates, the new or changed e2e specs and the visual spec, and it subsumes `pnpm ci:local`, `pnpm bundle-check` and `pnpm route-js-check`. Lighthouse is host-dependent and stays with `pnpm gates:runtime` (build, server, LHCI desktop/mobile, axe, E2E). Docs-only changes skip bundle, route-JS and runtime gates under the project workflow. Then `gh pr create` fills the PR template; every section must be non-empty, which is a convention checked by the author and the reviewer, not a gate.
+Run `pnpm ci:full`: it runs every CI check one stage at a time (the verify chain, commitlint, gitleaks, audit, the build with the bundle and route-JS gates, a11y, every Playwright project, the visual specs and Lighthouse) and ends with a table of passed, failed and not-run stages (exit 0 only when every stage passed, 1 when one failed, 3 when one did not run, 2 for bad arguments). The paid evals and the GitHub-only jobs are listed not-run with their reason. Add `--linux` when the change touches an e2e spec or WebKit behaviour: it runs the WebKit and Chromium e2e stages in the CI Playwright image on Docker (`gate` the specs that failed on Linux before, `changed` also the specs changed since the merge base, `all` the full matrix), and exits 3 when Docker is not there. `pnpm gates:runtime` stays the quick single-project run (build, server, LHCI desktop/mobile, axe, E2E). Docs-only changes skip bundle, route-JS and runtime gates under the project workflow. Then `gh pr create` fills the PR template; every section must be non-empty, which is a convention checked by the author and the reviewer, not a gate.
 
 ### 9. Review threads
 
@@ -72,7 +84,7 @@ The gates are `pnpm ci:local` and CI, with CI green, the Argos visual check appr
 
 ### 11. Deploy -> smoke -> record
 
-Vercel deploys on merge to `main`. `attest-build` in `ci.yml` attests the build artifact on `main` only. The `smoke.yml` workflow verifies the production deployment (healthz, 7 security headers, apex->www promotion followed to its final 200, `/api/ask` + `/api/contact` liveness): the artifact probe is skipped for a protected `*.vercel.app` deployment without its bypass secret, and a canonical healthz 503 attempts a Resend alert only when `RESEND_API_KEY` and the `ALERT_EMAIL` repository secret are both configured, with delivery errors logged as warnings. The decision is recorded as an ADR in `DECISIONS.md` (with a reversibility note); no project file establishes a session-handoff location.
+Vercel deploys on merge to `main`. `attest-build` in `ci.yml` attests the build artifact on `main` only. The `smoke.yml` workflow verifies the production deployment (healthz, `/api/status` freshness, 7 security headers, apex->www promotion followed to its final 200, `/api/ask` + `/api/contact` liveness): the artifact probe is skipped for a protected `*.vercel.app` deployment without its bypass secret, and a canonical healthz 503 attempts a Resend alert only when `RESEND_API_KEY` and the `ALERT_EMAIL` repository secret are both configured, with delivery errors logged as warnings. The decision is recorded as an ADR in `DECISIONS.md` (with a reversibility note); no project file establishes a session-handoff location.
 
 ## The responsive critique pass
 
@@ -105,7 +117,7 @@ flowchart LR
         g3["no direct main"] --> g4["branch name"] --> g7["pnpm verify"]
     end
     subgraph prepr["pre-PR (manual)"]
-        g8["ci:predict (ci.yml jobs, e2e, visual)"] --> g11["gates:runtime (LHCI)"]
+        g8["ci:full (every CI check, in sequence)"] --> g11["gates:runtime (LHCI)"]
     end
     subgraph open["post-open"]
         g13["Review the pull request"]

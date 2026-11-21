@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server';
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { logRedis } from '@/__tests__/helpers/log-redis';
 
 describe('/api/log endpoint', () => {
   const redisSetMock = vi.fn();
@@ -13,12 +14,12 @@ describe('/api/log endpoint', () => {
     dailyLimitMock.mockResolvedValue({ success: true });
     ipDailyLimitMock.mockReset();
     ipDailyLimitMock.mockResolvedValue({ success: true });
+    vi.doMock('@/lib/redis', () => ({ getRedis: vi.fn(() => logRedis({ set: redisSetMock })) }));
+    vi.doMock('@/lib/server/client-ip', () => ({ getClientIp: vi.fn(() => '127.0.0.1') }));
     vi.doMock('@/lib/rate-limit', () => ({
-      getClientIp: vi.fn(() => '127.0.0.1'),
       getErrorLogLimit: vi.fn(() => ({ limit: vi.fn(async () => ({ success: true })) })),
       getErrorLogDailyLimit: vi.fn(() => ({ limit: dailyLimitMock })),
       getErrorLogIpDailyLimit: vi.fn(() => ({ limit: ipDailyLimitMock })),
-      getRedis: vi.fn(() => ({ set: redisSetMock })),
     }));
     vi.doMock('@/lib/ip-hash', () => ({ hashIp: vi.fn(async () => 'hashed-ip-test') }));
     vi.doMock('@/lib/log', () => ({
@@ -28,6 +29,8 @@ describe('/api/log endpoint', () => {
 
   afterEach(() => {
     vi.doUnmock('@/lib/rate-limit');
+    vi.doUnmock('@/lib/server/client-ip');
+    vi.doUnmock('@/lib/redis');
     vi.doUnmock('@/lib/ip-hash');
     vi.doUnmock('@/lib/log');
   });
@@ -54,7 +57,7 @@ describe('/api/log endpoint', () => {
     expect(redisSetMock).toHaveBeenCalledOnce();
     const [key, , opts] = redisSetMock.mock.calls[0] ?? [];
     expect(String(key)).toMatch(/^err:/);
-    expect(opts).toEqual({ ex: 604_800 });
+    expect(opts).toEqual({ ex: 604_800, nx: true });
   });
 
   it('stores no ipHash in the err: record (personal-data-free design)', async () => {

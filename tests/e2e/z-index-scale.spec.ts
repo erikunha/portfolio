@@ -1,9 +1,10 @@
 import { expect, type Page, test } from '@playwright/test';
+import { VIEWPORTS } from './_helpers/geometry';
 import { gotoHydrated } from './_helpers/hydration';
 import { freezeMotion } from './_helpers/motion';
 import { gotoSettled } from './_helpers/streamed';
 
-const PHONE = { width: 390, height: 844 };
+const PHONE = VIEWPORTS.PHONE;
 const OFFLINE_BADGE = '○ NO SIGNAL';
 const SCALE_ORDER = [
   '.crt-vignette',
@@ -81,6 +82,9 @@ test.describe('the stacking scale', () => {
     expect(probe?.overDrawer, 'the drawer paints over the offline notice').toContain(
       'section-menu',
     );
-    expect(probe?.besideDrawer, 'the scrim paints over the offline notice').toContain('menu-scrim');
+    expect(
+      probe?.besideDrawer,
+      'the modal dialog backdrop takes the point beside the drawer, so the offline notice behind it cannot be hit',
+    ).toBe('section-menu is-open');
   });
 });

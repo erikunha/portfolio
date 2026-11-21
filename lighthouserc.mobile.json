@@ -23,6 +23,8 @@
         "http://localhost:3000/design-system/primitives/copybutton",
         "http://localhost:3000/design-system/primitives/field",
         "http://localhost:3000/design-system/primitives/kbd-key",
+        "http://localhost:3000/design-system/primitives/nav-item",
+        "http://localhost:3000/design-system/primitives/panel",
         "http://localhost:3000/design-system/primitives/stat-tile",
         "http://localhost:3000/design-system/primitives/terminal-panel",
         "http://localhost:3000/design-system/primitives/window-chrome"

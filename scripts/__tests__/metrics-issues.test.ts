@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
-import type { BandsConfig, BandsReport } from '../metrics/bands.mjs';
-import type { GithubClient } from '../metrics/github.mjs';
-import type { IssueAction } from '../metrics/issues.mjs';
+import type { BandsConfig, BandsReport } from '../metrics/bands.ts';
+import type { GithubClient } from '../metrics/github.ts';
+import type { IssueAction } from '../metrics/issues.ts';
 import {
   applyPlan,
   buildIssueBody,
@@ -9,7 +9,7 @@ import {
   ISSUE_LABEL,
   issueMarker,
   planIssueActions,
-} from '../metrics/issues.mjs';
+} from '../metrics/issues.ts';
 
 const RUN_URL = 'https://github.com/o/r/actions/runs/1';
 const CONFIG: BandsConfig = {

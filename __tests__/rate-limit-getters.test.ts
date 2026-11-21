@@ -34,9 +34,7 @@ vi.mock('@upstash/ratelimit', () => {
   return { Ratelimit };
 });
 
-vi.mock('@/lib/log', () => ({
-  log: { info: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn() },
-}));
+vi.mock('@/lib/log', async () => (await import('./helpers/modules')).logModule());
 
 describe('getClientIp: header precedence', () => {
   beforeEach(() => {
@@ -44,7 +42,7 @@ describe('getClientIp: header precedence', () => {
   });
 
   it('returns the first entry of x-forwarded-for when present', async () => {
-    const { getClientIp } = await import('@/lib/rate-limit');
+    const { getClientIp } = await import('@/lib/server/client-ip');
     const req = new NextRequest('http://localhost/api/ask', {
       headers: { 'x-forwarded-for': '1.2.3.4, 5.6.7.8' },
     });
@@ -52,7 +50,7 @@ describe('getClientIp: header precedence', () => {
   });
 
   it('trims whitespace from x-forwarded-for entries', async () => {
-    const { getClientIp } = await import('@/lib/rate-limit');
+    const { getClientIp } = await import('@/lib/server/client-ip');
     const req = new NextRequest('http://localhost/api/ask', {
       headers: { 'x-forwarded-for': '  10.0.0.1 , 10.0.0.2' },
     });
@@ -60,7 +58,7 @@ describe('getClientIp: header precedence', () => {
   });
 
   it('falls back to x-real-ip when x-forwarded-for is absent', async () => {
-    const { getClientIp } = await import('@/lib/rate-limit');
+    const { getClientIp } = await import('@/lib/server/client-ip');
     const req = new NextRequest('http://localhost/api/ask', {
       headers: { 'x-real-ip': '9.10.11.12' },
     });
@@ -68,7 +66,7 @@ describe('getClientIp: header precedence', () => {
   });
 
   it('returns "unknown" when neither header is present', async () => {
-    const { getClientIp } = await import('@/lib/rate-limit');
+    const { getClientIp } = await import('@/lib/server/client-ip');
     const req = new NextRequest('http://localhost/api/ask');
     expect(getClientIp(req)).toBe('unknown');
   });
@@ -80,7 +78,7 @@ describe('getRedis: singleton', () => {
   });
 
   it('returns the same Redis instance on repeated calls within a module lifecycle', async () => {
-    const { getRedis } = await import('@/lib/rate-limit');
+    const { getRedis } = await import('@/lib/redis');
     const a = getRedis();
     const b = getRedis();
     expect(a).toBe(b);

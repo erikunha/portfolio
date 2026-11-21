@@ -1,13 +1,6 @@
 'use client';
 
-import {
-  type Dispatch,
-  type SetStateAction,
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-} from 'react';
+import { type Dispatch, useCallback, useEffect, useRef, useState } from 'react';
 import {
   fillShellState,
   SHELL_LIMITS,
@@ -16,46 +9,20 @@ import {
   shellStates,
 } from '@/content/shell-ui';
 import type { SiteLocale } from '@/content/site-locale';
-import { conversationIdForAsk, recordConversationRequest } from '@/lib/ask-conversation.client';
+import { conversationIdForAsk, recordConversationRequest } from '@/lib/ask/conversation.client';
 import { addRef } from '@/lib/request-refs.client';
 import {
-  ASK_LOCALE_HEADER,
   GUARD_ABORT_PREFIX,
-  parseRetryAfter,
   parseStreamChunk,
   REFUSAL_PREFIX,
   RETRY_AFTER_HEADER,
 } from '@/lib/stream-protocol';
-import { MS_PER_SECOND, SECONDS_PER_MINUTE } from '@/lib/time';
+import { MS_PER_SECOND } from '@/lib/time';
+import { createAskRequest } from './ask-request';
+import { type FailureDetail, failureForResponse, settledLines } from './settled-lines';
+import { TranscriptAction } from './transcript';
 
-export type LineKind = (typeof ShellLineKind)[keyof typeof ShellLineKind];
-export type Line = {
-  id: number;
-  kind: LineKind;
-  text: string;
-  ai?: boolean;
-  prefix?: string;
-  retryAfter?: number;
-  retry?: string;
-  welcome?: true;
-  lang?: string;
-};
-type FailureDetail = { prefix?: string; hint?: boolean; retryAfter?: number; retry?: string };
 type ActiveRequest = { stop: () => void; dispose: () => void };
-
-const ASK_ENDPOINT = '/api/ask';
-const RATE_LIMIT_STATUS = 429;
-const SERVER_ERROR_STATUS = 500;
-const PAYLOAD_TOO_LARGE_STATUS = 413;
-
-export function formatRemaining(
-  seconds: number,
-  states: Pick<(typeof shellStates)['en'], 'minutesUnit' | 'secondsUnit'>,
-): string {
-  return seconds >= SECONDS_PER_MINUTE
-    ? `${Math.ceil(seconds / SECONDS_PER_MINUTE)} ${states.minutesUnit}`
-    : `${seconds} ${states.secondsUnit}`;
-}
 
 function streamFailureMessage(errorMessage: string, ui: ShellUi): string {
   if (errorMessage.startsWith(GUARD_ABORT_PREFIX)) return ui.answerWithheld;
@@ -64,16 +31,12 @@ function streamFailureMessage(errorMessage: string, ui: ShellUi): string {
     : errorMessage;
 }
 
-export function bounded(lines: Line[]): Line[] {
-  return lines.slice(-SHELL_LIMITS.logEntries);
-}
-
 type AskStreamOptions = {
   locale: SiteLocale;
   ui: ShellUi;
   nextId: () => number;
   announce: (text: string) => void;
-  setHistory: Dispatch<SetStateAction<Line[]>>;
+  dispatch: Dispatch<TranscriptAction>;
   restoreInput: (command: string) => void;
   onSettled: () => void;
 };
@@ -83,7 +46,7 @@ export function useAskStream({
   ui,
   nextId,
   announce,
-  setHistory,
+  dispatch,
   restoreInput,
   onSettled,
 }: AskStreamOptions) {
@@ -91,7 +54,6 @@ export function useAskStream({
   const [busy, setBusy] = useState(false);
   const [streamingText, setStreamingText] = useState<string | null>(null);
   const activeRequest = useRef<ActiveRequest | null>(null);
-  const mountedRef = useRef(true);
   const rafRef = useRef<number | null>(null);
 
   const clearFrame = useCallback(() => {
@@ -102,9 +64,7 @@ export function useAskStream({
   }, []);
 
   useEffect(() => {
-    mountedRef.current = true;
     return () => {
-      mountedRef.current = false;
       activeRequest.current?.dispose();
       activeRequest.current = null;
       clearFrame();
@@ -113,21 +73,22 @@ export function useAskStream({
 
   const start = useCallback(
     async (question: string, command: string) => {
-      const controller = new AbortController();
+      const conversationId = conversationIdForAsk();
+      const request = createAskRequest({ question, locale, conversationId });
       const loadingId = nextId();
       let reader: ReadableStreamDefaultReader<Uint8Array> | undefined;
       let requestId: string | null = null;
       let logged = false;
-      const conversationId = conversationIdForAsk();
       let accumulated = '';
       let displayText = '';
       let receivedText = false;
       let settled = false;
       let timer: ReturnType<typeof setTimeout> | undefined;
       setBusy(true);
-      setHistory((lines) =>
-        bounded([...lines, { id: loadingId, kind: ShellLineKind.Loading, text: '' }]),
-      );
+      dispatch({
+        type: TranscriptAction.Append,
+        lines: [{ id: loadingId, kind: ShellLineKind.Loading, text: '' }],
+      });
       announce(ui.thinking);
 
       function armIdleTimer() {
@@ -144,50 +105,23 @@ export function useAskStream({
           SHELL_LIMITS.requestTimeoutMs,
         );
       }
-      function releaseTransport() {
-        controller.abort();
-        void reader?.cancel().catch(() => undefined);
-      }
       function finish(text: string, message?: string, error = false, detail: FailureDetail = {}) {
         if (settled) return;
         settled = true;
         clearTimeout(timer);
         clearFrame();
-        if (!mountedRef.current) return;
         activeRequest.current = null;
-        const lines: Line[] = [];
-        if (text) lines.push({ id: nextId(), kind: ShellLineKind.Output, text, ai: true });
-        if (message && detail.retryAfter) {
-          lines.push({
-            id: nextId(),
-            kind: ShellLineKind.RateLimit,
-            text: message,
-            retryAfter: detail.retryAfter,
-          });
-        } else if (message) {
-          lines.push({
-            id: nextId(),
-            kind: error ? ShellLineKind.Error : ShellLineKind.Info,
-            text: error && !detail.prefix ? `${ui.errorPrefix} ${message}` : message,
-            ...(detail.prefix ? { prefix: detail.prefix } : {}),
-            ...(detail.retry ? { retry: detail.retry } : {}),
-          });
-          if (detail.hint) lines.push({ id: nextId(), kind: ShellLineKind.Hint, text: '' });
-        }
-        if (!text && !message) {
-          lines.push({ id: nextId(), kind: ShellLineKind.Output, text: ui.empty });
-        }
-        if (requestId && logged) {
-          lines.push({ id: nextId(), kind: ShellLineKind.Reference, text: requestId });
-        }
-        setHistory((previous) =>
-          bounded([
-            ...previous.filter(
-              (line) => line.id !== loadingId && !(logged && line.kind === ShellLineKind.Reference),
-            ),
-            ...lines,
-          ]),
-        );
+        const lines = settledLines({
+          text,
+          message,
+          error,
+          detail,
+          requestId,
+          logged,
+          ui,
+          nextId,
+        });
+        dispatch({ type: TranscriptAction.Settle, loadingId, dropReferences: logged, lines });
         setStreamingText(null);
         setBusy(false);
         if (message) restoreInput(command);
@@ -196,26 +130,21 @@ export function useAskStream({
       }
       function interrupt(message: string, error = false, detail?: FailureDetail) {
         finish(displayText, message, error, detail);
-        releaseTransport();
+        request.abort();
       }
       activeRequest.current = {
         stop: () => interrupt(displayText ? ui.stoppedPartial : ui.stoppedBefore),
         dispose: () => {
           settled = true;
           clearTimeout(timer);
-          releaseTransport();
+          request.abort();
         },
       };
       armIdleTimer();
 
       try {
-        const response = await fetch(ASK_ENDPOINT, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', [ASK_LOCALE_HEADER]: locale },
-          body: JSON.stringify({ question, locale, conversationId }),
-          signal: controller.signal,
-        });
-        if (settled) {
+        const response = await request.send();
+        if (settled || request.aborted) {
           void response.body?.cancel().catch(() => undefined);
           return;
         }
@@ -229,44 +158,25 @@ export function useAskStream({
           const data = (await response.json().catch(() => null)) as {
             error?: unknown;
           } | null;
-          const detail = typeof data?.error === 'string' ? data.error : '';
-          const retryAfter =
-            response.status === RATE_LIMIT_STATUS
-              ? parseRetryAfter(response.headers.get(RETRY_AFTER_HEADER))
-              : null;
-          if (retryAfter) {
-            const left = formatRemaining(retryAfter, states);
-            finish(
-              '',
-              `${fillShellState(states.slowDown, { left })}. ${states.localCommands}`,
-              true,
-              { retryAfter },
-            );
-            return;
-          }
-          const message =
-            detail ||
-            (response.status === PAYLOAD_TOO_LARGE_STATUS ? ui.requestTooLarge : ui.serverError);
-          finish(
-            '',
-            response.status === RATE_LIMIT_STATUS ? `${message}. ${ui.localAvailable}` : message,
-            true,
-            {
-              prefix: `${states.stderrCommand} ${response.status}`,
-              hint: response.status >= SERVER_ERROR_STATUS,
-            },
-          );
+          const failure = failureForResponse({
+            status: response.status,
+            errorDetail: typeof data?.error === 'string' ? data.error : '',
+            retryAfterHeader: response.headers.get(RETRY_AFTER_HEADER),
+            states,
+            ui,
+          });
+          finish('', failure.message, true, failure.detail);
           return;
         }
-        if (!response.body) {
+        reader = request.openReader(response);
+        if (!reader) {
           finish('', ui.bodyUnavailable, true);
           return;
         }
-        reader = response.body.getReader();
         const decoder = new TextDecoder();
         const flushFrame = () => {
           rafRef.current = null;
-          if (!settled && mountedRef.current) {
+          if (!settled && !request.aborted) {
             setStreamingText(displayText);
           }
         };
@@ -288,7 +198,7 @@ export function useAskStream({
           if (parsed.displayText) {
             if (!receivedText) {
               receivedText = true;
-              setHistory((lines) => lines.filter((line) => line.id !== loadingId));
+              dispatch({ type: TranscriptAction.Remove, id: loadingId });
               announce(ui.started);
             }
             if (rafRef.current === null) {
@@ -304,7 +214,7 @@ export function useAskStream({
         reader?.releaseLock();
       }
     },
-    [announce, clearFrame, nextId, onSettled, setHistory, restoreInput, states, ui, locale],
+    [announce, clearFrame, nextId, onSettled, dispatch, restoreInput, states, ui, locale],
   );
 
   const stop = useCallback(() => activeRequest.current?.stop(), []);

@@ -20,9 +20,7 @@ vi.mock('@upstash/redis', () => ({
   },
 }));
 vi.mock('@upstash/ratelimit', () => ({ Ratelimit: { slidingWindow: () => ({}) } }));
-vi.mock('@/lib/log', () => ({
-  log: { info: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn() },
-}));
+vi.mock('@/lib/log', async () => (await import('@/__tests__/helpers/modules')).logModule());
 
 const RESERVATION = askReservationCost(512);
 const SETTLED_COST = askBudgetCost({
@@ -46,16 +44,15 @@ describe('budget store seam', () => {
   });
 
   it('keeps the Redis-backed store fail-closed when no store is installed', async () => {
-    const { reserveBudget } = await import('@/lib/rate-limit');
+    const { reserveBudget } = await import('@/lib/ask/budget');
     const result = await reserveBudget(512);
     expect(result).toMatchObject({ allowed: false, reserved: 0 });
     expect(pipelineExec).toHaveBeenCalledOnce();
   });
 
   it('allows exactly the harness run size without touching Redis, then rejects', async () => {
-    const { createEvalBudgetStore, reserveBudget, setBudgetStore } = await import(
-      '@/lib/rate-limit'
-    );
+    const { createEvalBudgetStore } = await import('@/lib/eval/budget-store');
+    const { reserveBudget, setBudgetStore } = await import('@/lib/ask/budget');
     setBudgetStore(createEvalBudgetStore(RUN_REQUESTS));
 
     for (let i = 0; i < RUN_REQUESTS; i += 1) {
@@ -69,9 +66,8 @@ describe('budget store seam', () => {
   });
 
   it('returns the rejected reservation to the harness store', async () => {
-    const { createEvalBudgetStore, reserveBudget, setBudgetStore } = await import(
-      '@/lib/rate-limit'
-    );
+    const { createEvalBudgetStore } = await import('@/lib/eval/budget-store');
+    const { reserveBudget, setBudgetStore } = await import('@/lib/ask/budget');
     setBudgetStore(createEvalBudgetStore(1));
     await reserveBudget(512);
     const firstRejected = await reserveBudget(512);
@@ -81,16 +77,27 @@ describe('budget store seam', () => {
   });
 
   it('settleBudget frees harness capacity for later reservations', async () => {
-    const { createEvalBudgetStore, reserveBudget, setBudgetStore, settleBudget } = await import(
-      '@/lib/rate-limit'
-    );
+    const { createEvalBudgetStore } = await import('@/lib/eval/budget-store');
+    const { reserveBudget, setBudgetStore, settleBudget } = await import('@/lib/ask/budget');
     setBudgetStore(createEvalBudgetStore(2));
     const first = await reserveBudget(512);
     const second = await reserveBudget(512);
     expect((await reserveBudget(512)).allowed).toBe(false);
 
-    await settleBudget(first.reserved, 100, 50, first.budgetKey, first.dailyKey);
-    await settleBudget(second.reserved, 100, 50, second.budgetKey, second.dailyKey);
+    await settleBudget({
+      reserved: first.reserved,
+      billedInputTokens: 100,
+      outputTokens: 50,
+      budgetKey: first.budgetKey,
+      dailyKey: first.dailyKey,
+    });
+    await settleBudget({
+      reserved: second.reserved,
+      billedInputTokens: 100,
+      outputTokens: 50,
+      budgetKey: second.budgetKey,
+      dailyKey: second.dailyKey,
+    });
 
     expect((await reserveBudget(512)).allowed).toBe(true);
     expect(decrbyMock).not.toHaveBeenCalled();
@@ -98,7 +105,7 @@ describe('budget store seam', () => {
 
   it('denies on the daily slice while the month has room, and returns both reservations', async () => {
     const { reserveBudget, setBudgetStore, getBudgetKey, getDailyBudgetKey } = await import(
-      '@/lib/rate-limit'
+      '@/lib/ask/budget'
     );
     const used = new Map<string, number>();
     setBudgetStore({
@@ -127,7 +134,7 @@ describe('budget store seam', () => {
   });
 
   it('returns the monthly reservation when the daily reservation cannot be made', async () => {
-    const { reserveBudget, setBudgetStore, getBudgetKey } = await import('@/lib/rate-limit');
+    const { reserveBudget, setBudgetStore, getBudgetKey } = await import('@/lib/ask/budget');
     const used = new Map<string, number>();
     setBudgetStore({
       capacity: RESERVATION * 100,
@@ -150,7 +157,7 @@ describe('budget store seam', () => {
   });
 
   it('settles both the monthly and the daily reservation', async () => {
-    const { reserveBudget, setBudgetStore, settleBudget } = await import('@/lib/rate-limit');
+    const { reserveBudget, setBudgetStore, settleBudget } = await import('@/lib/ask/budget');
     const used = new Map<string, number>();
     setBudgetStore({
       capacity: RESERVATION * 100,
@@ -168,7 +175,7 @@ describe('budget store seam', () => {
     });
 
     const { reserved, budgetKey, dailyKey } = await reserveBudget(512);
-    await settleBudget(reserved, 100, 50, budgetKey, dailyKey);
+    await settleBudget({ reserved, billedInputTokens: 100, outputTokens: 50, budgetKey, dailyKey });
 
     expect(used.get(budgetKey)).toBe(SETTLED_COST);
     expect(used.get(dailyKey)).toBe(SETTLED_COST);

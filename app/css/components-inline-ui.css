@@ -1,11 +1,6 @@
-@layer components {
-  .kbd-key {
-    background: var(--color-glow-06);
-    margin: 0 var(--spacing-1);
-    letter-spacing: 0;
-    vertical-align: 1px;
-  }
+@import "../../design-system/components/KbdKey/KbdKey.css";
 
+@layer components {
   .cam-corners {
     position: absolute;
     inset: var(--spacing-2);
@@ -19,9 +14,9 @@
   .cam-corners > i::after {
     content: "";
     position: absolute;
-    width: 14px;
-    height: 14px;
-    border: 1px solid var(--color-primary-500);
+    width: var(--spacing-panel);
+    height: var(--spacing-panel);
+    border: var(--border-width) solid var(--color-accent);
   }
 
   .cam-corners::before {

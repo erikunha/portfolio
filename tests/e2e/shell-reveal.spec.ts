@@ -1,5 +1,5 @@
 import { expect, type Page, test } from '@playwright/test';
-import { settleFrames } from './_helpers/geometry';
+import { settleFrames, VIEWPORTS, WIDTH } from './_helpers/geometry';
 import { installMockBackend } from './_helpers/mock-backend';
 import { freezeMotion } from './_helpers/motion';
 import {
@@ -10,8 +10,8 @@ import {
   waitForConfirmArmed,
 } from './_helpers/shell';
 
-const NARROW = { width: 320, height: 640 } as const;
-const DESKTOP = { width: 1280, height: 900 } as const;
+const NARROW = VIEWPORTS.PHONE_NARROW;
+const DESKTOP = { width: WIDTH.DESKTOP, height: 900 } as const;
 const SCROLL_LOG_KEY = '__shellScrollIntoView';
 const HIDDEN_UNDER_BARS_PX = 60;
 const DESKTOP_CLEARANCE_PX = 80;
@@ -87,7 +87,7 @@ async function expectShellClearOfChrome(page: Page) {
   );
 }
 
-test.describe('new shell output at 320x640', () => {
+test.describe('new shell output at 320x640', { tag: '@cross-browser' }, () => {
   test.use({ viewport: NARROW, isMobile: true, hasTouch: true });
   const { ui } = shellCopy();
 
@@ -136,7 +136,7 @@ test.describe('new shell output at 320x640', () => {
   });
 });
 
-test.describe('new shell output on desktop', () => {
+test.describe('new shell output on desktop', { tag: '@cross-browser' }, () => {
   test.use({ viewport: DESKTOP });
 
   test('does not move the page when the shell is already fully in view', async ({ page }) => {

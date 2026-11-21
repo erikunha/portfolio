@@ -20,7 +20,7 @@ async function setup(
 }> {
   vi.resetModules();
   const locale = options.locale ?? SITE_LOCALE.en;
-  const conversation = await import('@/lib/ask-conversation.client');
+  const conversation = await import('@/lib/ask/conversation.client');
   const id = conversation.conversationIdForAsk() ?? '';
   const answered = [SECOND, ID].slice(-(options.questions ?? 1));
   for (const requestId of answered) conversation.recordConversationRequest(id, requestId);
@@ -170,7 +170,7 @@ describe('ConversationReceipt', () => {
   it('on success reports the conversation as forgotten and starts a new conversation', async () => {
     forgetReplies(ok);
     const { container, onForgotten } = await setup();
-    const conversation = await import('@/lib/ask-conversation.client');
+    const conversation = await import('@/lib/ask/conversation.client');
     await confirmForget(container);
     expect(onForgotten).toHaveBeenCalledWith(1);
     expect(conversation.conversationQuestions()).toBe(0);

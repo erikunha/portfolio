@@ -8,7 +8,7 @@ This audit separates repository checks from workflow conventions. See [engineeri
 | ----------------- | -------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
 | Commit safety     | `.husky/pre-commit` runs Biome and staged gitleaks; `commit-msg` runs commitlint                         | Hooks can be bypassed; CI supplies independent checks                   |
 | Push safety       | `.husky/pre-push` checks the remote main ref, branch name and `pnpm verify`                              | Runtime browser gates are a manual pre-PR step                          |
-| Documentation     | `check:doc-drift` checks the `ARCHITECTURE.md` tree; component-docs checks headings                      | Neither validates every prose claim                                     |
+| Documentation     | `check:doc-drift` checks the `ARCHITECTURE.md` tree; component-docs checks pages                        | Neither validates every prose claim                                     |
 | Review            | `REVIEW.md` defines what a review reports; `claude-review` applies it on request                      | Nothing forces the review to run; the merge decision stays with the owner |
 | Product AI        | `ask:eval` runs calibration and corpus checks                                                            | CI runs it only for a pull request with the `ai-eval` label, an AI change and credentials |
 | Security analysis | gitleaks blocks on secrets; Semgrep uploads findings                                                     | The Semgrep scan is report-only; its report and fixture checks can fail |
@@ -25,11 +25,11 @@ There is no project hook requiring a plan-review PASS or a completed local revie
 
 ### A3: Client naming has explicit exceptions
 
-`scripts/check-client-naming.mjs` scans `app`, `components` and `lib`. It accepts `*.client.tsx`, `*.client.ts`, files under a `client` directory and Next error boundaries. It does not scan `design-system`, where `Field.tsx` has a client directive.
+`scripts/gates/check-client-naming.ts` scans `app`, `components` and `lib`. It accepts `*.client.tsx`, `*.client.ts`, files under a `client` directory and Next error boundaries. It does not scan `design-system`, where `Field.tsx` has a client directive.
 
 ### A4: Browser checks depend on path classification
 
-CI uses `scripts/detect-changes.mjs` to decide whether app, UI and AI jobs run. New source locations must be included in the appropriate filters. `check:detect-changes-paths` checks filter paths, but cannot infer every semantic dependency.
+CI uses `scripts/ci/detect-changes.ts` to decide whether app, UI and AI jobs run. New source locations must be included in the appropriate filters. `check:detect-changes-paths` checks filter paths, but cannot infer every semantic dependency.
 
 ## Improvement map
 

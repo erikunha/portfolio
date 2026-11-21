@@ -1,11 +1,12 @@
 import { expect, test } from '@playwright/test';
 import { linksContent } from '@/content/links';
-import { LINKS_PATH, type LinksLocale } from '@/content/links.constants';
+import { LINKS_PATH } from '@/content/links.constants';
+import type { SiteLocale } from '@/content/site-locale';
 import { horizontalOverflow, VIEWPORTS } from './_helpers/geometry';
 import { gotoHydrated } from './_helpers/hydration';
 import { freezeMotion } from './_helpers/motion';
 
-const LOCALES: readonly LinksLocale[] = ['pt', 'en'];
+const LOCALES: readonly SiteLocale[] = ['pt', 'en'];
 const COPY_LINK_BUTTON = 'button.links-line';
 const SUBSCRIBE_LINK = '[data-outbound="inscrever"]';
 const TAP_TARGET_PX = 44;
@@ -15,7 +16,7 @@ for (const locale of LOCALES) {
   const { copy } = linksContent;
   const path = LINKS_PATH[locale];
 
-  test.describe(`${path} with JavaScript off`, () => {
+  test.describe(`${path} with JavaScript off`, { tag: '@cross-browser' }, () => {
     test.use({ javaScriptEnabled: false, viewport: VIEWPORTS.PHONE });
 
     test('keeps the heading, the subscribe link and the profile links usable', async ({ page }) => {
@@ -46,7 +47,7 @@ for (const locale of LOCALES) {
     });
   });
 
-  test.describe(`${path} with JavaScript on and MOTION off`, () => {
+  test.describe(`${path} with JavaScript on and MOTION off`, { tag: '@cross-browser' }, () => {
     test.use({ viewport: VIEWPORTS.PHONE });
 
     test('renders whole, with a working subscribe link and copy button', async ({ page }) => {

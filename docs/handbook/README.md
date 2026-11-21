@@ -18,7 +18,7 @@ The handbook routes to the other two rather than duplicating them.
 | ---------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | [development-lifecycle.md](./development-lifecycle.md)     | The SDLC end to end: idea -> spec -> plan -> implement -> review -> merge -> release, with diagrams, plus the responsive critique pass                      |
 | [ai-assisted-development.md](./ai-assisted-development.md) | How AI participates in the SDLC: context engineering, enforcement boundaries, sequence diagrams                                                             |
-| [agents-skills-hooks-mcp.md](./agents-skills-hooks-mcp.md) | Reference for tracked project skills, hooks, rules and MCP configuration, with the development/product MCP relationship diagram                             |
+| [agents-skills-hooks-mcp.md](./agents-skills-hooks-mcp.md) | Reference for the agent files the CI review reads, the git hooks and the review workflows                                                                  |
 | [workflow-playbook.md](./workflow-playbook.md)             | Step-by-step runbooks: feature, bug fix, refactor, perf, a11y, ADR, PR, review                                                                              |
 | [review-merge-release.md](./review-merge-release.md)       | The gate chain from commit to production, opt-in review, release and rollback                                                                               |
 | [lessons.md](./lessons.md)                                 | Numbered rules learned from review findings and CI reds, each with the check that proves it                                                                 |
@@ -27,38 +27,24 @@ The handbook routes to the other two rather than duplicating them.
 | [engineering-standards.md](./engineering-standards.md)     | The explicit standards index and the gate that enforces each                                                                                                |
 | [engineering-audit.md](./engineering-audit.md)             | An evaluation of the platform's maturity, with a technical-debt register                                                                                    |
 | [onboarding.md](./onboarding.md)                           | Process onboarding: how to do the work, not just read the code                                                                                              |
+| [static-test-triage.md](./static-test-triage.md)           | Every test that reads the file system, sorted by what it checks and where the check belongs long term                                                     |
+| [dependency-hygiene.md](./dependency-hygiene.md)           | The eight dependency surfaces (lockfile, release age, pinning, vetting, audit, review, Dependabot, tool pins) and the question each answers                 |
 | [roadmap.md](./roadmap.md)                                 | Future-state engineering platform, ranked by ROI                                                                                                            |
 
 ## The platform in one picture
 
 ```mermaid
-flowchart TB
-    subgraph people["Human + AI"]
-        dev["Developer (single, owner)"]
-        claude["Claude Code agents"]
-    end
-    subgraph context["Context layer"]
-        cl["AGENTS.md + .claude/rules/* + skills + memory"]
-        docs["STANDARDS.md · DECISIONS.md · /docs"]
-    end
-    subgraph enforce["Enforcement layer"]
-        husky[".husky/* git hooks"]
-        gates["scripts/check-* + the verify chain"]
-        ci["GitHub Actions: ci, review, scheduled scans and evals, smoke"]
-    end
-    subgraph knowledge["Knowledge layer"]
-        specs["specs/NNN-feature/ (local-only)"]
-        adr["DECISIONS.md (architectural decisions)"]
-        mem["auto memory (user-global, runtime-dependent)"]
-    end
-    dev --> claude
-    claude --> context
-    context --> enforce
-    claude --> enforce
-    review["PR review workflows"] --> enforce
-    enforce --> knowledge
+flowchart LR
+    people["Developer and agents"] --> context["Context"] --> enforce["Enforcement"] --> knowledge["Knowledge"]
     knowledge --> context
 ```
+
+| Layer | What it holds |
+| --- | --- |
+| Developer and agents | The single owner and Claude Code agents. Agents also run checks directly; PR review workflows feed enforcement too. |
+| Context | `AGENTS.md`, `.claude/rules/*`, skills and memory; `STANDARDS.md`, `DECISIONS.md` and `/docs`. |
+| Enforcement | `.husky/*` git hooks, the `scripts/check-*` gates and the verify chain, and GitHub Actions (CI, review, scheduled scans and evals, smoke). |
+| Knowledge | Local-only `specs/NNN-feature/`, `DECISIONS.md` and the user-global auto memory. What it records feeds the context for the next change. |
 
 ## Enforcement boundaries
 

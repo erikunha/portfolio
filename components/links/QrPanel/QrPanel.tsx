@@ -1,0 +1,46 @@
+import { linksContent } from '@/content/links';
+import { linksUi } from '@/content/links-ui';
+import type { SiteLocale } from '@/content/site-locale';
+import { qrMatrix, qrSvgPath } from '@/lib/links/qr';
+import { SectionHeading } from '../SectionHeading';
+
+const HEADING_ID = 'links-qr-heading';
+const QUIET_ZONE = 3;
+const RENDER_PX = 116;
+
+export function QrPanel({ locale, url }: { locale: SiteLocale; url: string }) {
+  const { copy, siteLabel } = linksContent;
+  const matrix = qrMatrix(url);
+  const span = matrix.size + QUIET_ZONE * 2;
+
+  return (
+    <section className="links-col" data-col="qr" aria-labelledby={HEADING_ID}>
+      <SectionHeading id={HEADING_ID}>{copy.qrHeading[locale]}</SectionHeading>
+
+      <div className="border border-(color:--color-border) bg-(color:--color-surface) p-4 flex gap-4 items-center">
+        <svg
+          viewBox={`0 0 ${span} ${span}`}
+          width={RENDER_PX}
+          height={RENDER_PX}
+          role="img"
+          aria-label={`${linksUi.qrLabel[locale]} ${url}`}
+          className="block flex-none border border-(color:--color-border)"
+          shapeRendering="crispEdges"
+        >
+          <rect width={span} height={span} fill="var(--color-text)" />
+          <path d={qrSvgPath(matrix, QUIET_ZONE)} fill="var(--color-surface)" />
+        </svg>
+        <div>
+          <p className="m-0 text-(color:--color-text-muted) text-xs">
+            <span aria-hidden="true">$ </span>
+            {copy.qrCommand}
+          </p>
+          <p className="mt-2 mb-0 text-(color:--color-text) text-xs leading-ratio-body text-pretty">
+            {copy.qrBody[locale]}
+          </p>
+          <p className="mt-2 mb-0 text-(color:--color-text-muted) text-xs">{siteLabel}</p>
+        </div>
+      </div>
+    </section>
+  );
+}

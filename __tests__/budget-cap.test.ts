@@ -16,7 +16,9 @@ const streamTextMock = vi.fn(() => ({
 vi.mock('ai', () => ({ streamText: streamTextMock }));
 vi.mock('@/lib/env', () => ({ env: { ASK_ENABLED: 'true' } }));
 vi.mock('@/lib/ip-hash', () => ({ hashIp: vi.fn(async () => 'test-ip-hash') }));
-vi.mock('@/lib/ask-log', () => ({ persistAskInteraction: vi.fn(async () => undefined) }));
+vi.mock('@/lib/ask/interaction-log', () => ({
+  persistAskInteraction: vi.fn(async () => undefined),
+}));
 
 const counter: { value: number } = { value: 0 };
 const dailyCounter: { value: number } = { value: 0 };
@@ -59,9 +61,7 @@ vi.mock('@upstash/ratelimit', () => {
   return { Ratelimit };
 });
 
-vi.mock('@/lib/log', () => ({
-  log: { info: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn() },
-}));
+vi.mock('@/lib/log', async () => (await import('./helpers/modules')).logModule());
 
 describe('budget reservation pattern', () => {
   beforeEach(() => {
@@ -99,7 +99,7 @@ describe('budget reservation pattern', () => {
 
   it('rejects the reservation when Redis throws', async () => {
     pipelineExec.mockRejectedValueOnce(new Error('Redis unavailable'));
-    const { reserveBudget } = await import('@/lib/rate-limit');
+    const { reserveBudget } = await import('@/lib/ask/budget');
     const result = await reserveBudget(512);
     expect(result).toMatchObject({ allowed: false, reserved: 0, reason: 'store' });
   });
@@ -140,7 +140,7 @@ describe('budget reservation pattern', () => {
   });
 
   it('reserves the worst-case cost of the input reservation and maxOutputTokens upfront and allows within cap', async () => {
-    const { reserveBudget } = await import('@/lib/rate-limit');
+    const { reserveBudget } = await import('@/lib/ask/budget');
     const result = await reserveBudget(512);
     expect(result.allowed).toBe(true);
     expect(result.reserved).toBe(RESERVATION);
@@ -149,7 +149,7 @@ describe('budget reservation pattern', () => {
 
   it('rejects and refunds the reservation when it would cross the monthly dollar cap', async () => {
     counter.value = MONTHLY_CAPACITY - RESERVATION + 1;
-    const { reserveBudget } = await import('@/lib/rate-limit');
+    const { reserveBudget } = await import('@/lib/ask/budget');
     const result = await reserveBudget(512);
     expect(result.allowed).toBe(false);
     expect(result.reserved).toBe(0);
@@ -157,11 +157,11 @@ describe('budget reservation pattern', () => {
   });
 
   it('settleBudget refunds (reserved - actual) when actual is less than reserved', async () => {
-    const { reserveBudget, settleBudget } = await import('@/lib/rate-limit');
+    const { reserveBudget, settleBudget } = await import('@/lib/ask/budget');
     const result = await reserveBudget(512);
     const { reserved, budgetKey } = result;
     decrbyMock.mockClear();
-    await settleBudget(reserved, 120, 80, budgetKey);
+    await settleBudget({ reserved, billedInputTokens: 120, outputTokens: 80, budgetKey });
     expect(decrbyMock).toHaveBeenCalledWith(
       expect.stringMatching(/ask:spend:/),
       reserved - costOf(120, 80),
@@ -169,36 +169,51 @@ describe('budget reservation pattern', () => {
   });
 
   it('settleBudget charges the overage when actual usage exceeds the reservation', async () => {
-    const { settleBudget } = await import('@/lib/rate-limit');
+    const { settleBudget } = await import('@/lib/ask/budget');
     decrbyMock.mockClear();
     const reserved = RESERVATION;
     counter.value = reserved;
-    await settleBudget(reserved, INPUT_RESERVATION * 2, 600, 'ask:tokens:test');
+    await settleBudget({
+      reserved,
+      billedInputTokens: INPUT_RESERVATION * 2,
+      outputTokens: 600,
+      budgetKey: 'ask:tokens:test',
+    });
     expect(decrbyMock).not.toHaveBeenCalled();
     expect(counter.value).toBe(costOf(INPUT_RESERVATION * 2, 600));
   });
 
   it('settleBudget leaves the counter alone when actual equals the reservation', async () => {
-    const { settleBudget } = await import('@/lib/rate-limit');
+    const { settleBudget } = await import('@/lib/ask/budget');
     decrbyMock.mockClear();
     const exact = costOf(600, 400);
     counter.value = exact;
-    await settleBudget(exact, 600, 400, 'ask:tokens:test');
+    await settleBudget({
+      reserved: exact,
+      billedInputTokens: 600,
+      outputTokens: 400,
+      budgetKey: 'ask:tokens:test',
+    });
     expect(decrbyMock).not.toHaveBeenCalled();
     expect(counter.value).toBe(exact);
   });
 
   it('settleBudget skips when there is no positive reservation', async () => {
-    const { settleBudget } = await import('@/lib/rate-limit');
+    const { settleBudget } = await import('@/lib/ask/budget');
     decrbyMock.mockClear();
-    await settleBudget(0, 100, 200, 'ask:tokens:test');
+    await settleBudget({
+      reserved: 0,
+      billedInputTokens: 100,
+      outputTokens: 200,
+      budgetKey: 'ask:tokens:test',
+    });
     expect(decrbyMock).not.toHaveBeenCalled();
   });
 
   it('rejects and refunds both reservations when the daily slice would be crossed', async () => {
     const nearlySpentDay = DAILY_CAPACITY - RESERVATION + 1;
     dailyCounter.value = nearlySpentDay;
-    const { reserveBudget } = await import('@/lib/rate-limit');
+    const { reserveBudget } = await import('@/lib/ask/budget');
     const result = await reserveBudget(512);
     expect(result.allowed).toBe(false);
     expect(result.reserved).toBe(0);
@@ -208,9 +223,9 @@ describe('budget reservation pattern', () => {
   });
 
   it('settleBudget refunds the daily key as well as the monthly one', async () => {
-    const { reserveBudget, settleBudget } = await import('@/lib/rate-limit');
+    const { reserveBudget, settleBudget } = await import('@/lib/ask/budget');
     const { reserved, budgetKey, dailyKey } = await reserveBudget(512);
-    await settleBudget(reserved, 120, 80, budgetKey, dailyKey);
+    await settleBudget({ reserved, billedInputTokens: 120, outputTokens: 80, budgetKey, dailyKey });
     expect(counter.value).toBe(costOf(120, 80));
     expect(dailyCounter.value).toBe(costOf(120, 80));
   });

@@ -6,7 +6,7 @@ import { RAIN_TAIL_ALPHA_PROPERTY, readRainPalette } from './rain-tokens';
 
 const HEAD_PROPERTY = '--color-rain-head';
 const BODY_PROPERTY = '--color-rain-body';
-const BLACK_PROPERTY = '--color-secondary-950';
+const BLACK_PROPERTY = '--color-surface';
 const TAIL_ALPHA = '0.1';
 
 function declare(values: Record<string, string>) {
@@ -82,11 +82,11 @@ describe('readRainPalette', () => {
 describe('the rain tokens in theme.css', () => {
   it('derive the head and body from the green ramp, so the rain never leaves the palette', () => {
     const colors = getThemeColors();
-    expect(colors['rain-head'], '--color-rain-head must alias a primary ramp step').toBe(
-      colors['primary-800'],
+    expect(colors['rain-head'], '--color-rain-head must alias a signal ramp step').toBe(
+      colors['signal-800'],
     );
-    expect(colors['rain-body'], '--color-rain-body must alias a primary ramp step').toBe(
-      colors['primary-900'],
+    expect(colors['rain-body'], '--color-rain-body must alias a signal ramp step').toBe(
+      colors['signal-900'],
     );
   });
 });

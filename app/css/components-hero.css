@@ -7,7 +7,7 @@
     display: block;
   }
 
-  @media (max-width: theme(--viewport-below-md)) {
+  @media (width < theme(--viewport-md)) {
     .hero-desktop {
       display: none;
     }
@@ -29,7 +29,7 @@
     top: var(--spacing-6);
     bottom: var(--spacing-6);
     z-index: var(--z-local-above);
-    color: var(--color-tertiary-50);
+    color: var(--color-text);
     font-size: var(--text-sm);
     --leading: 1.7;
     overflow: hidden;
@@ -37,8 +37,8 @@
     flex-direction: column;
     justify-content: flex-end;
     text-shadow:
-      0 0 4px var(--color-secondary-950),
-      0 0 8px var(--color-secondary-950);
+      0 0 var(--spacing-1) var(--color-surface),
+      0 0 var(--spacing-2) var(--color-surface);
   }
 
   .hero-boot-slot {
@@ -47,7 +47,7 @@
   }
 
   .hero-boot-mobile {
-    color: var(--color-tertiary-50);
+    color: var(--color-text);
     font-size: var(--text-min);
     --leading: 1.55;
 
@@ -57,11 +57,11 @@
   }
 
   .hero-shake {
-    transform: translate(2px, -2px);
+    transform: translate(var(--spacing-hair), calc(var(--spacing-hair) * -1));
   }
 
   .hero-shake2 {
-    transform: translate(-2px, 1px);
+    transform: translate(calc(var(--spacing-hair) * -1), 1px);
   }
 
   .hero-boot-line {
@@ -69,40 +69,40 @@
   }
 
   .hero-boot-ok {
-    color: var(--color-primary-500);
+    color: var(--color-accent);
   }
 
   .hero-boot-enc {
-    color: var(--color-primary-500);
+    color: var(--color-accent);
     font-weight: 700;
     text-shadow:
-      0 0 6px var(--color-glow-60),
-      0 0 4px var(--color-secondary-950);
+      0 0 var(--spacing-pip) var(--color-signal-glow-60),
+      0 0 var(--spacing-1) var(--color-surface);
   }
 
   .hero-boot-welcome {
-    color: var(--color-tertiary-50);
+    color: var(--color-text);
     font-weight: 700;
   }
 
   .hero-boot-prompt {
-    color: var(--color-primary-400);
+    color: var(--color-signal-400);
   }
 
   .hero-boot-cmd {
-    color: var(--color-tertiary-50);
+    color: var(--color-text);
   }
 
   .hero-boot-matrix-prefix {
-    color: var(--color-primary-400);
+    color: var(--color-signal-400);
     margin-right: var(--spacing-1);
   }
 
   .hero-boot-matrix-out {
-    color: var(--color-primary-500);
+    color: var(--color-accent);
     text-shadow:
-      0 0 8px var(--color-glow-40),
-      0 0 4px var(--color-secondary-950);
+      0 0 var(--spacing-2) var(--color-signal-glow-40),
+      0 0 var(--spacing-1) var(--color-surface);
   }
 
   #main-content > h1:focus-visible ~ section [data-testid="hero-name"] {
@@ -133,14 +133,17 @@
     transition: opacity 200ms ease-in;
   }
 
-  body[data-motion="reduce"] .hero-sysfail {
-    transition: none;
+  /* biome-ignore lint/suspicious/noDuplicateSelectors: `@variant motion-off` and `@variant motion-on` resolve to a `body` ancestor selector, so this rule has a different selector than the earlier one with the same class */
+  .hero-sysfail {
+    @variant motion-off {
+      transition: none;
+    }
   }
 
   .hero-frame {
     position: relative;
-    border: var(--border-width) solid var(--color-primary-subtle);
-    background: var(--color-secondary-950);
+    border: var(--border-width) solid var(--color-border-strong);
+    background: var(--color-surface);
     overflow: hidden;
     margin-bottom: var(--space-section);
   }
@@ -161,12 +164,12 @@
     justify-content: flex-end;
     gap: calc(var(--spacing-2) + var(--spacing-1) / 2);
     padding: var(--spacing-8) var(--spacing-6);
-    border-right: var(--border-width) dashed var(--color-primary-subtle);
+    border-right: var(--border-width) dashed var(--color-border-strong);
   }
 
   .hero-identity {
     margin: 0 0 var(--spacing-1);
-    color: var(--color-primary-500);
+    color: var(--color-accent);
     font-family: var(--font-display);
     font-size: var(--text-4xl);
     font-weight: 900;
@@ -215,24 +218,24 @@
   }
 
   .hero-context b {
-    color: var(--color-primary-500);
+    color: var(--color-accent);
   }
 
   .hero-context .hero-location {
-    background: var(--color-primary-500);
-    color: var(--color-secondary-950);
+    background: var(--color-accent);
+    color: var(--color-on-accent);
     padding-inline: calc(var(--spacing-1) * 1.5);
   }
 
   .hero-stats {
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
-    border: var(--border-width) solid var(--color-primary-subtle);
+    border: var(--border-width) solid var(--color-border-strong);
     margin-top: var(--spacing-3);
   }
 
   .hero-stats > div:not(:last-child) {
-    border-right: var(--border-width) solid var(--color-primary-subtle);
+    border-right: var(--border-width) solid var(--color-border-strong);
   }
 
   .hero-stats .stat-tile-value {
@@ -243,7 +246,7 @@
     overflow-wrap: normal;
   }
 
-  @media (max-width: theme(--viewport-below-narrow)) {
+  @media (width < theme(--viewport-narrow)) {
     .hero-stats {
       --stat-tile-pad-x: var(--spacing-1);
       --stat-tile-tracking: var(--tracking-xs);
@@ -264,7 +267,6 @@
 
   .hero-actions > a {
     white-space: nowrap;
-    padding-inline: var(--spacing-2);
   }
 
   .hero-mobile-content {
@@ -272,7 +274,7 @@
     padding: var(--spacing-4) var(--spacing-4) calc(var(--spacing-4) + var(--spacing-1) / 2);
   }
 
-  @media (max-width: theme(--viewport-below-md)) {
+  @media (width < theme(--viewport-md)) {
     .hero-stack {
       --leading: var(--hero-stack-leading-compact);
     }
@@ -291,18 +293,12 @@
       margin-top: var(--spacing-1);
     }
 
-    .hero-actions > a:not(:first-child) {
-      font-size: var(--text-xs);
-      padding-inline: var(--spacing-1);
-      letter-spacing: 0;
-    }
-
     .hero-context-fact {
       flex-wrap: wrap;
     }
   }
 
-  @media (min-width: theme(--viewport-md)) and (max-width: theme(--viewport-below-lg)) {
+  @media (min-width: theme(--viewport-md)) {
     .hero-desktop {
       flex-direction: column;
     }
@@ -322,17 +318,38 @@
     .hero-bio {
       flex: 0 0 auto;
       border-right: 0;
-      border-bottom: var(--border-width) dashed var(--color-primary-subtle);
+      border-bottom: var(--border-width) dashed var(--color-border-strong);
     }
   }
 
   @media (min-width: theme(--viewport-lg)) {
+    .hero-desktop {
+      flex-direction: row;
+    }
+
+    .hero-terminal {
+      flex: var(--phi-pair-flex-minor);
+      width: auto;
+    }
+
+    .hero-terminal .hero-boot-desktop {
+      position: absolute;
+      min-height: auto;
+      padding: 0;
+    }
+
+    .hero-bio {
+      flex: 1;
+      border-right: var(--border-width) dashed var(--color-border-strong);
+      border-bottom: 0;
+    }
+
     .hero-actions {
       grid-template-columns: repeat(2, minmax(0, 1fr));
     }
   }
 
-  @media (max-width: 399.98px) {
+  @media (width < theme(--viewport-hero-actions)) {
     .hero-actions {
       grid-template-columns: minmax(0, 1fr);
     }
@@ -346,7 +363,7 @@
     }
   }
 
-  @media (max-width: 1199.98px) {
+  @media (width < theme(--viewport-hero-stats)) {
     .hero-bio .hero-stats {
       grid-template-columns: repeat(2, minmax(0, 1fr));
     }
@@ -354,15 +371,15 @@
       border-right: 0;
     }
     .hero-bio .hero-stats > div:nth-child(-n + 2) {
-      border-bottom: var(--border-width) solid var(--color-primary-subtle);
+      border-bottom: var(--border-width) solid var(--color-border-strong);
     }
   }
 
-  @media (max-width: theme(--viewport-below-md)) {
+  @media (width < theme(--viewport-md)) {
     .hero-identity {
       margin-top: var(--spacing-1);
       padding-top: var(--spacing-3);
-      border-top: var(--border-width) dashed var(--color-primary-quiet);
+      border-top: var(--border-width) dashed var(--color-signal-quiet);
       font-size: var(--text-3xl);
     }
     .hero-stats {
@@ -372,11 +389,11 @@
       border-right: 0;
     }
     .hero-stats > div:nth-child(-n + 2) {
-      border-bottom: var(--border-width) solid var(--color-primary-subtle);
+      border-bottom: var(--border-width) solid var(--color-border-strong);
     }
   }
 
-  @media (max-width: 389.98px) {
+  @media (width < theme(--viewport-hero-compact)) {
     .hero-mobile .hero-boot-mobile {
       display: none;
       min-height: 0;

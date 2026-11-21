@@ -4,26 +4,41 @@
 
 ## The full gate chain (commit -> production)
 
+Commit and push, the local hooks:
+
 ```mermaid
-flowchart TD
-    write["code written"] --> c1["pre-commit: Biome + staged gitleaks"]
-    c1 --> c2["commit-msg: commitlint (scope mandatory)"]
-    c2 --> p1["pre-push: no direct main"]
-    p1 --> p2["pre-push: branch name #lt;type#gt;/#lt;desc#gt;"]
-    p2 --> p5["pre-push: pnpm verify"]
-    p5 --> r1["pre-PR: ci:predict (docs-only: ci:local)"]
-    r1 --> r2["pre-PR: bundle + route-JS gates, changed e2e and visual specs (inside ci:predict)"]
-    r2 --> r4["pre-PR: gates:runtime (LHCI+axe+E2E, non-docs)"]
-    r4 --> o1["open PR: fill every template section"]
-    o1 --> o1b["CI green on the PR head, Argos visual check approved"]
-    o1 --> o2["review the PR against REVIEW.md (matching skills, render read)"]
-    o1b --> m1["pre-merge: ci:local"]
-    o2 --> m1
-    m1 --> m4["pre-merge: every blocking finding answered"]
-    m4 --> merge["squash-merge (#NNN) by the owner, in the browser"]
-    merge --> deploy["Vercel deploy"]
-    deploy --> smoke["smoke.yml: healthz + headers + liveness"]
+flowchart LR
+    c1["pre-commit"] --> c2["commit-msg"] --> p1["pre-push: main guard"]
+    p1 --> p2["pre-push: branch name"] --> p3["pre-push: verify"]
 ```
+
+- `pre-commit` runs Biome and staged gitleaks. `commit-msg` runs commitlint, and the scope is mandatory.
+- The branch name must match `<type>/<description>`.
+
+Before the pull request opens:
+
+```mermaid
+flowchart LR
+    full["ci:full"] --> rt["gates:runtime"] --> open["Open PR"]
+```
+
+- `ci:full` includes the bundle and route-JS gates, every e2e project and the visual specs. A docs-only change runs `ci:local` instead.
+- `gates:runtime` (LHCI, axe, E2E) runs for a change that is not docs-only.
+- Opening the PR means filling every template section.
+
+From the open PR to production:
+
+```mermaid
+flowchart LR
+    pr["Open PR"] --> ci["CI green, Argos approved"]
+    pr --> rev["Review against REVIEW.md"]
+    ci --> local["ci:local"]
+    rev --> local
+    local --> found["Findings answered"] --> merge["Squash-merge"] --> deploy["Vercel deploy"]
+```
+
+- The review uses every matching skill and reads the rendered result.
+- The owner squash-merges in the browser. `smoke.yml` then checks healthz, status freshness, headers and liveness.
 
 ## Code review
 
@@ -31,7 +46,7 @@ flowchart TD
 
 `claude-review` is requested, not automatic. It is a model-judged sensor: it reports findings, it does not approve, and no merge waits on it. Only correctness, security, accessibility, performance budget, test validity and spec or plan compliance block (`REVIEW.md`); style and naming never do, and nits are capped at five. No automatic follow-up round runs. Deterministic validation (tests, typecheck, lint, build, bundle and route-JS gates, CI) is the quality bar.
 
-The `high-risk` label marks a pull request that changes a high-risk surface: the API and server code, the ask and agent code, rate limiting, env and IP-hash handling, contact delivery, `proxy.ts`, `next.config.ts` and `vercel.json`, the workflows, hooks and scanner configuration, CODEOWNERS and Dependabot settings, `.env.example`, and the dependency manifests, lockfile and workspace settings. `high-risk-label.yml` adds and removes it on every push from the list in `scripts/high-risk-paths.ts`, read from the PR's base commit. Read a labelled PR for the abuse paths each of those surfaces closes (`.claude/rules/api-boundary.md`) before anything else. The label limits no PR size, blocks no merge, and is not applied to fork or Dependabot PRs, whose token is read-only.
+The `high-risk` label marks a pull request that changes a high-risk surface: the API and server code, the ask and agent code, rate limiting, env and IP-hash handling, contact delivery, `next.config.ts` and `vercel.json`, the workflows, hooks and scanner configuration, CODEOWNERS and Dependabot settings, `.env.example`, and the dependency manifests, lockfile and workspace settings. `high-risk-label.yml` adds and removes it on every push from the list in `scripts/ci/high-risk-paths.ts`, read from the PR's base commit. Read a labelled PR for the abuse paths each of those surfaces closes (`.claude/rules/api-boundary.md`) before anything else. The label limits no PR size, blocks no merge, and is not applied to fork or Dependabot PRs, whose token is read-only.
 
 Answering findings: reply in the thread before resolving it, and put every comment in a review THREAD rather than an unanchored timeline comment, which `reviewThreads` cannot see.
 
@@ -76,8 +91,8 @@ against the local build.
 ## Release
 
 - **Trigger:** squash-merge to `main` deploys via Vercel.
-- **Verification:** `smoke.yml` (on `deployment_status == success && Production`) checks the canonical `/api/healthz` (the artifact probe is skipped for a protected `*.vercel.app` deployment without its bypass secret), the 7 security headers, apex->www promotion followed to its final 200 (the workflow asserts neither an intermediate 308 nor the final www host), and `/api/ask` + `/api/contact` liveness; a canonical healthz 503 attempts a Resend alert when `RESEND_API_KEY` and the `ALERT_EMAIL` repository secret are both configured, and delivery errors are warnings.
-- **Cron:** `vercel.json` runs `/api/psi-refresh` daily (`0 3 * * *`) and `/api/contact-retry` twice a day (`0 4 * * *` and `0 16 * * *`).
+- **Verification:** `smoke.yml` (on `deployment_status == success && Production`) checks the canonical `/api/healthz` and `/api/status` freshness (the artifact probe is skipped for a protected `*.vercel.app` deployment without its bypass secret), the 7 security headers, apex->www promotion followed to its final 200 (the workflow asserts neither an intermediate 308 nor the final www host), and `/api/ask` + `/api/contact` liveness; a canonical healthz 503 attempts a Resend alert when `RESEND_API_KEY` and the `ALERT_EMAIL` repository secret are both configured, and delivery errors are warnings.
+- **Cron:** `vercel.json` runs `/api/psi-refresh` daily (`0 3 * * *`), `/api/contact-retry` twice a day (`0 4 * * *` and `0 16 * * *`) and `/api/error-digest` daily (`0 5 * * *`).
 
 ## Rollback
 
@@ -100,7 +115,6 @@ None of these gates a PR (`ci-gate` waits only on the jobs in `ci.yml`). Job-lev
 | Workflow                         | Trigger                                         | What it does                                                                                       |
 | -------------------------------- | ----------------------------------------------- | -------------------------------------------------------------------------------------------------- |
 | `ask-eval.yml`                   | Monday 05:00 UTC, manual                        | Runs `pnpm ask:eval`; on `main` it republishes the stored result the site's AI metrics read |
-| `agent-eval.yml`                 | Monday 06:00 UTC, manual                        | Runs `pnpm eval:agents`, the prompt-regression eval of fixed rule texts modelled on `AGENTS.md`                     |
 | `codeql.yml`                     | Push and PR to `main`, Monday 03:00 UTC, manual | CodeQL analysis of the JavaScript and TypeScript sources, reported to code scanning                 |
 | `mutation.yml`                   | Sunday 04:00 UTC, manual                        | Stryker mutation run; fails on no report, a blind runner, or a score under the `thresholds.break` floor |
 | `tool-pins.yml`                  | Monday 05:00 UTC, manual                        | `pnpm check:tool-pins`: fails when the pinned gitleaks or Semgrep version is behind the latest     |
@@ -112,4 +126,4 @@ None of these gates a PR (`ci-gate` waits only on the jobs in `ci.yml`). Job-lev
 
 ## Docs-only changes
 
-Run `pnpm ci:local`. The project workflow skips bundle, route-JS and runtime gates for docs-only changes. CI still builds; its runtime and AI jobs use `scripts/detect-changes.mjs` and `scripts/detect-changes-paths.mjs` for classification. MDX under `app/` is part of that app surface.
+Run `pnpm ci:local`. The project workflow skips bundle, route-JS and runtime gates for docs-only changes. CI still builds; its runtime and AI jobs use `scripts/ci/detect-changes.ts` and `scripts/ci/detect-changes-paths.ts` for classification. MDX under `app/` is part of that app surface.

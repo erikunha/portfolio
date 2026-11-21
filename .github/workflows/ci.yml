@@ -20,6 +20,9 @@ concurrency:
 permissions:
   contents: read
 
+env:
+  APT_CACHE_DIR: /var/cache/ci-apt
+
 jobs:
   quality-fast:
     runs-on: ubuntu-24.04
@@ -35,15 +38,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
-
-      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
-        with:
-          node-version-file: ".nvmrc"
-          cache: pnpm
-
-      - name: Install
-        run: pnpm install --frozen-lockfile
+      - uses: ./.github/actions/setup
 
       - name: Lint branch name
         env:
@@ -65,6 +60,12 @@ jobs:
       - name: Client-naming gate
         run: pnpm check:client-naming
 
+      - name: Shell DOM-writes gate
+        run: pnpm check:shell-dom-writes
+
+      - name: CSS ownership gate
+        run: pnpm check:css-ownership
+
       - name: Dependency-pinning gate
         run: pnpm check:dep-pinning
 
@@ -72,13 +73,16 @@ jobs:
         run: pnpm check:dependency-vetting
 
       - name: Harness size gate
-        run: node scripts/check-harness-size.mjs
+        run: pnpm check:harness-size
 
       - name: Component docs coverage
         run: pnpm check:component-docs
 
       - name: Doc-drift gate (ARCHITECTURE.md tree vs disk)
         run: pnpm check:doc-drift
+
+      - name: DECISIONS index gate (index vs entries)
+        run: pnpm check:decisions-index
 
       - name: No-dashes gate (no em or en dash in tracked text)
         run: pnpm check:no-dashes
@@ -109,15 +113,7 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
-
-      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
-        with:
-          node-version-file: ".nvmrc"
-          cache: pnpm
-
-      - name: Install
-        run: pnpm install --frozen-lockfile
+      - uses: ./.github/actions/setup
 
       - name: Cache TypeScript build info
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
@@ -143,15 +139,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
-
-      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
-        with:
-          node-version-file: ".nvmrc"
-          cache: pnpm
-
-      - name: Install
-        run: pnpm install --frozen-lockfile
+      - uses: ./.github/actions/setup
 
       - name: Check if pnpm-lock.yaml changed
         id: lockfile-diff
@@ -178,16 +166,17 @@ jobs:
           HEAD: ${{ github.event.pull_request.head.sha }}
         run: |
           changed=true
-          if git diff --quiet "$BASE...$HEAD" -- pnpm-lock.yaml stryker.config.mjs vitest.config.ts tests/mocks scripts/check-mutation-kills.mjs scripts/stryker-canary.config.mjs 2>/dev/null; then
+          if git diff --quiet "$BASE...$HEAD" -- pnpm-lock.yaml stryker.config.mjs vitest.config.ts tests/mocks scripts/gates/check-mutation-kills.ts scripts/gates/stryker-canary.config.mjs 2>/dev/null; then
             changed=false
           fi
           echo "changed=${changed}" >> "$GITHUB_OUTPUT"
 
       - name: Mutation runner canary (Stryker must kill mutants in a known file)
         if: github.event_name != 'pull_request' || steps.mutation-surface-diff.outputs.changed == 'true'
-        run: node scripts/check-mutation-kills.mjs --canary
+        run: pnpm exec tsx scripts/gates/check-mutation-kills.ts --canary
 
       - name: Unit tests
+        timeout-minutes: 6
         run: pnpm test:coverage
 
       - name: Upload coverage reports
@@ -303,15 +292,7 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
-
-      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
-        with:
-          node-version-file: ".nvmrc"
-          cache: pnpm
-
-      - name: Install
-        run: pnpm install --frozen-lockfile
+      - uses: ./.github/actions/setup
 
       - name: Cache Next.js build
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
@@ -333,10 +314,10 @@ jobs:
           E2E_LINKS_FEED_FIXTURE: tests/e2e/fixtures/links-feed.json
 
       - name: Bundle size gate
-        run: node scripts/check-bundle-size.mjs --max-client-kb=220
+        run: pnpm exec tsx scripts/gates/check-bundle-size.ts --max-client-kb=220
 
       - name: Per-route JS budget gate
-        run: node scripts/check-route-js.mjs
+        run: pnpm exec tsx scripts/gates/check-route-js.ts
 
       - name: Write the build provenance manifest
         run: |
@@ -393,15 +374,7 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
-
-      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
-        with:
-          node-version-file: ".nvmrc"
-          cache: pnpm
-
-      - name: Install
-        run: pnpm install --frozen-lockfile
+      - uses: ./.github/actions/setup
 
       - name: Download build artifact
         uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
@@ -412,16 +385,28 @@ jobs:
       - name: Runner image version
         id: runner-image
         run: echo "version=${ImageVersion:-unknown}" >> "$GITHUB_OUTPUT"
+      - name: Playwright version
+        id: playwright-version
+        run: |
+          echo "version=$(node -p "require('@playwright/test/package.json').version")" >> "$GITHUB_OUTPUT"
       - name: Cache Playwright browsers
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ steps.runner-image.outputs.version }}-chromium-${{ hashFiles('pnpm-lock.yaml') }}
+          key: playwright-${{ runner.os }}-${{ steps.playwright-version.outputs.version }}-chromium
+      - name: Prepare apt cache directory
+        run: sudo install -d -o "$(id -u)" -g "$(id -g)" "$APT_CACHE_DIR"
+      - name: Cache apt packages
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ env.APT_CACHE_DIR }}
+          key: apt-${{ runner.os }}-chromium-${{ steps.playwright-version.outputs.version }}-${{ steps.runner-image.outputs.version }}
           restore-keys: |
-            playwright-${{ runner.os }}-${{ steps.runner-image.outputs.version }}-chromium-
-
+            apt-${{ runner.os }}-chromium-${{ steps.playwright-version.outputs.version }}-
+            apt-${{ runner.os }}-chromium-
       - name: Install Playwright Chromium (for axe-core scan)
-        run: node scripts/install-playwright-browsers.mjs chromium
+        timeout-minutes: 12
+        run: node scripts/ci/install-playwright-browsers.ts chromium
 
       - name: Start preview server
         run: pnpm start > /tmp/server-perf.log 2>&1 &
@@ -448,6 +433,9 @@ jobs:
 
   e2e-functional:
     runs-on: ubuntu-24.04
+    container:
+      image: mcr.microsoft.com/playwright:v1.65.0-noble
+      options: --ipc=host --init
     timeout-minutes: 25
     if: github.event_name != 'pull_request' || needs.detect-changes.outputs.app == 'true'
     needs: [build, detect-changes]
@@ -466,24 +454,7 @@ jobs:
             shard: 2/2
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
-      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
-        with:
-          node-version-file: ".nvmrc"
-          cache: pnpm
-      - run: pnpm install --frozen-lockfile
-      - name: Runner image version
-        id: runner-image
-        run: echo "version=${ImageVersion:-unknown}" >> "$GITHUB_OUTPUT"
-      - name: Cache Playwright browsers
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        with:
-          path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ steps.runner-image.outputs.version }}-${{ contains(matrix.project, 'webkit') && 'webkit' || 'chromium' }}-${{ hashFiles('pnpm-lock.yaml') }}
-          restore-keys: |
-            playwright-${{ runner.os }}-${{ steps.runner-image.outputs.version }}-${{ contains(matrix.project, 'webkit') && 'webkit' || 'chromium' }}-
-      - name: Install Playwright browsers
-        run: node scripts/install-playwright-browsers.mjs ${{ contains(matrix.project, 'webkit') && 'webkit' || 'chromium' }}
+      - uses: ./.github/actions/setup
       - name: Download build artifact
         uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
@@ -512,6 +483,12 @@ jobs:
         with:
           name: playwright-report-${{ matrix.project }}-${{ strategy.job-index }}
           path: test-results/
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: failure()
+        with:
+          name: server-log-${{ matrix.project }}-${{ strategy.job-index }}
+          path: /tmp/server-${{ matrix.project }}.log
+          if-no-files-found: warn
 
   detect-changes:
     runs-on: ubuntu-24.04
@@ -524,13 +501,16 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: ".nvmrc"
       - name: Detect changed file categories
         id: check
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
           EVENT_NAME: ${{ github.event_name }}
-        run: node scripts/detect-changes.mjs
+        run: node scripts/ci/detect-changes.ts
 
   ai-eval:
     runs-on: ubuntu-24.04
@@ -552,13 +532,7 @@ jobs:
     needs: [detect-changes, quality-fast, typecheck, test]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
-      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
-        with:
-          node-version-file: ".nvmrc"
-          cache: pnpm
-      - name: Install
-        run: pnpm install --frozen-lockfile
+      - uses: ./.github/actions/setup
       - name: AI eval suite
         run: pnpm ask:eval
         env:
@@ -571,6 +545,9 @@ jobs:
 
   e2e-visual-chromium:
     runs-on: ubuntu-24.04
+    container:
+      image: mcr.microsoft.com/playwright:v1.65.0-noble
+      options: --ipc=host --init
     timeout-minutes: 35
     permissions:
       contents: read
@@ -583,24 +560,7 @@ jobs:
         project: [chromium, chromium-mobile]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
-      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
-        with:
-          node-version-file: ".nvmrc"
-          cache: pnpm
-      - run: pnpm install --frozen-lockfile
-      - name: Runner image version
-        id: runner-image
-        run: echo "version=${ImageVersion:-unknown}" >> "$GITHUB_OUTPUT"
-      - name: Cache Playwright browsers
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        with:
-          path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ steps.runner-image.outputs.version }}-chromium-${{ hashFiles('pnpm-lock.yaml') }}
-          restore-keys: |
-            playwright-${{ runner.os }}-${{ steps.runner-image.outputs.version }}-chromium-
-      - name: Install Playwright browsers
-        run: node scripts/install-playwright-browsers.mjs chromium
+      - uses: ./.github/actions/setup
       - name: Download build artifact
         uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
@@ -620,7 +580,7 @@ jobs:
           }
       - if: github.event_name == 'pull_request'
         name: Wait for the Argos reference of the merge base
-        run: node scripts/wait-argos-reference.mjs
+        run: node scripts/ci/wait-argos-reference.ts
         env:
           GITHUB_TOKEN: ${{ github.token }}
           ARGOS_BASE_REF: ${{ github.event.pull_request.base.ref }}
@@ -713,23 +673,27 @@ jobs:
         with:
           python-version: "3.12"
 
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: ".nvmrc"
+
       - name: Install Semgrep (exact-pinned) and resolve its path
         run: |
-          pip install semgrep==1.169.0
+          pip install semgrep==1.186.0
           SEMGREP_BIN=$(python -c "import os,sysconfig,site,shutil; c=[os.path.join(sysconfig.get_path('scripts'),'semgrep'),os.path.join(site.getuserbase(),'bin','semgrep')]; w=shutil.which('semgrep'); c=c+[w] if w else c; print(next((p for p in c if os.path.exists(p)),''))")
           test -n "$SEMGREP_BIN" || { echo '::error::semgrep console script not found after install'; exit 1; }
           echo "SEMGREP_BIN=$SEMGREP_BIN" >> "$GITHUB_ENV"
           "$SEMGREP_BIN" --version
 
       - name: Self-test - vendored rules fire on the fixture
-        run: node scripts/check-semgrep-fixture.mjs
+        run: node scripts/gates/check-semgrep-fixture.ts
 
       - name: FP baseline - the vendored rules' precision is what the decision recorded
-        run: node scripts/measure-semgrep-fp.mjs
+        run: node scripts/gates/measure-semgrep-fp.ts
 
       - name: Run Semgrep (SARIF, report-only)
         continue-on-error: true
-        run: node scripts/run-semgrep.mjs --sarif semgrep.sarif
+        run: node scripts/gates/run-semgrep.ts --sarif semgrep.sarif
 
       - name: Assert Semgrep produced a report
         run: |
@@ -763,15 +727,10 @@ jobs:
         with:
           fetch-depth: 0 # gitleaks scans history, not just the tip
 
-      # The self-test below (check-gitleaks-fixture.mjs) imports smol-toml to parse .gitleaks.toml,
+      # The self-test below (check-gitleaks-fixture.ts) imports smol-toml to parse .gitleaks.toml,
       # so this job needs node_modules. Scoped to the self-test's dependency, not the scan: gitleaks
       # scans git history, which node_modules (gitignored, untracked) does not touch.
-      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
-      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
-        with:
-          node-version-file: ".nvmrc"
-          cache: pnpm
-      - run: pnpm install --frozen-lockfile
+      - uses: ./.github/actions/setup
 
       # The release host answers 504 in bursts, and one 504 fails a required job with nothing
       # scanned. The tarball is cached (key pinned to the version and platform, so a bump
@@ -822,7 +781,7 @@ jobs:
       # from a scanner that is silently broken, so this plants a real secret and fails
       # the job unless gitleaks detects it (and stays silent on the clean fixture).
       - name: Self-test - gitleaks fires on the fixture
-        run: node scripts/check-gitleaks-fixture.mjs
+        run: pnpm exec tsx scripts/gates/check-gitleaks-fixture.ts
 
       - name: Scan the history reachable from the checked-out commit
         run: |

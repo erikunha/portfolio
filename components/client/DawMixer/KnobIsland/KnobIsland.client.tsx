@@ -121,9 +121,10 @@ export function KnobIsland({ initialAngle, label, channelName, degreesUnit, hint
           cx={KNOB_CENTER}
           cy={KNOB_CENTER}
           r="11"
-          stroke="var(--color-primary-500)"
+          stroke="var(--color-accent)"
           strokeWidth="1"
-          fill="rgba(0,0,0,0.7)"
+          fill="var(--color-surface)"
+          fillOpacity="0.7"
         />
         <line
           ref={needleRef}
@@ -131,12 +132,12 @@ export function KnobIsland({ initialAngle, label, channelName, degreesUnit, hint
           y1={KNOB_CENTER}
           x2={x2.toFixed(2)}
           y2={y2.toFixed(2)}
-          stroke="var(--color-primary-500)"
+          stroke="var(--color-accent)"
           strokeWidth="2"
           strokeLinecap="round"
         />
       </svg>
-      <div className="text-xs text-primary-400 text-center tracking-xl font-mono">{label}</div>
+      <div className="text-xs text-signal-400 text-center tracking-xl font-mono">{label}</div>
     </div>
   );
 }

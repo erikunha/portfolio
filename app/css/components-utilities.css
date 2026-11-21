@@ -72,7 +72,7 @@
     }
   }
 
-  @media (max-width: theme(--viewport-below-md)) {
+  @media (width < theme(--viewport-md)) {
     .max-md\:text-sm {
       --leading: calc(1.25 / 0.875);
     }
@@ -86,84 +86,110 @@
     }
   }
 
-  /* The leading a component asks for, as a token rather than as a
-     `line-height`. Tailwind's own leading utilities set `line-height`
-     directly, and the utilities layer outranks the base layer, so that
-     utility would hand back the fractional box the base layer exists to
-     remove. These set `--leading`, which the base layer reads. */
-  .leading-ratio-1 {
-    --leading: 1;
-  }
-
-  .leading-ratio-1-1 {
-    --leading: 1.1;
-  }
-
-  .leading-ratio-1-15 {
-    --leading: 1.15;
-  }
-
-  .leading-ratio-1-3 {
-    --leading: 1.3;
-  }
-
-  .leading-ratio-1-4 {
-    --leading: 1.4;
-  }
-
-  .leading-ratio-1-55 {
-    --leading: 1.55;
-  }
-
-  .leading-ratio-1-8 {
-    --leading: 1.8;
-  }
-
-  .leading-ratio-tight {
-    --leading: 1.25;
-  }
-
-  .leading-ratio-body {
-    --leading: var(--leading-body);
-  }
-
-  /* The class asks for a leading; the element has to wear it. A Tailwind
-     font-size utility writes `line-height` in this same layer, and it comes
-     first, so a `text-xs` on the same element would hand the element the
-     size's ratio and the asked-for ratio would only reach the descendants.
-     These rules set the element's own `line-height`, and they come after the
-     size rules for the same reason: the asked-for leading wins over the
-     size's, the way Tailwind's `leading-*` utility won over the size's
-     `line-height` before. */
-  .leading-ratio-1,
-  .leading-ratio-1-1,
-  .leading-ratio-1-15,
-  .leading-ratio-1-3,
-  .leading-ratio-1-4,
-  .leading-ratio-1-55,
-  .leading-ratio-1-8,
-  .leading-ratio-tight,
-  .leading-ratio-body {
-    line-height: var(--leading);
-  }
-
-  @supports (line-height: round(nearest, 1px, 1px)) {
-    .leading-ratio-1,
-    .leading-ratio-1-1,
-    .leading-ratio-1-15,
-    .leading-ratio-1-3,
-    .leading-ratio-1-4,
-    .leading-ratio-1-55,
-    .leading-ratio-1-8,
-    .leading-ratio-tight,
-    .leading-ratio-body {
-      line-height: round(nearest, 1em * var(--leading), 1px);
-    }
-  }
-
   @media (scripting: none) {
     button:not([type="submit"], [type="reset"], [popovertarget], [commandfor]) {
       display: none;
     }
   }
 }
+
+/* biome-ignore-start lint/suspicious/noDuplicateSelectors: each `&&` sits in its own @utility, which Tailwind emits under that utility's own class; they are not siblings */
+@utility leading-ratio-1 {
+  && {
+    --leading: 1;
+    line-height: var(--leading);
+
+    @supports (line-height: round(nearest, 1px, 1px)) {
+      line-height: round(nearest, 1em * var(--leading), 1px);
+    }
+  }
+}
+
+@utility leading-ratio-1-1 {
+  && {
+    --leading: 1.1;
+    line-height: var(--leading);
+
+    @supports (line-height: round(nearest, 1px, 1px)) {
+      line-height: round(nearest, 1em * var(--leading), 1px);
+    }
+  }
+}
+
+@utility leading-ratio-1-15 {
+  && {
+    --leading: 1.15;
+    line-height: var(--leading);
+
+    @supports (line-height: round(nearest, 1px, 1px)) {
+      line-height: round(nearest, 1em * var(--leading), 1px);
+    }
+  }
+}
+
+@utility leading-ratio-1-3 {
+  && {
+    --leading: 1.3;
+    line-height: var(--leading);
+
+    @supports (line-height: round(nearest, 1px, 1px)) {
+      line-height: round(nearest, 1em * var(--leading), 1px);
+    }
+  }
+}
+
+@utility leading-ratio-1-4 {
+  && {
+    --leading: 1.4;
+    line-height: var(--leading);
+
+    @supports (line-height: round(nearest, 1px, 1px)) {
+      line-height: round(nearest, 1em * var(--leading), 1px);
+    }
+  }
+}
+
+@utility leading-ratio-1-55 {
+  && {
+    --leading: 1.55;
+    line-height: var(--leading);
+
+    @supports (line-height: round(nearest, 1px, 1px)) {
+      line-height: round(nearest, 1em * var(--leading), 1px);
+    }
+  }
+}
+
+@utility leading-ratio-1-8 {
+  && {
+    --leading: 1.8;
+    line-height: var(--leading);
+
+    @supports (line-height: round(nearest, 1px, 1px)) {
+      line-height: round(nearest, 1em * var(--leading), 1px);
+    }
+  }
+}
+
+@utility leading-ratio-tight {
+  && {
+    --leading: 1.25;
+    line-height: var(--leading);
+
+    @supports (line-height: round(nearest, 1px, 1px)) {
+      line-height: round(nearest, 1em * var(--leading), 1px);
+    }
+  }
+}
+
+@utility leading-ratio-body {
+  && {
+    --leading: var(--leading-body);
+    line-height: var(--leading);
+
+    @supports (line-height: round(nearest, 1px, 1px)) {
+      line-height: round(nearest, 1em * var(--leading), 1px);
+    }
+  }
+}
+/* biome-ignore-end lint/suspicious/noDuplicateSelectors: end of the @utility blocks */

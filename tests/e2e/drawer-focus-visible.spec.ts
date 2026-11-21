@@ -1,11 +1,12 @@
 import { expect, test } from '@playwright/test';
+import { WIDTH } from './_helpers/geometry';
+import { openSectionMenu } from './_helpers/hydration';
 
 const DRAWER = '.section-menu';
 const HEAD = '.menu-head';
-const TRIGGER = '.mobile-title-bar .menu-trigger, .desktop-topbar .menu-trigger';
 const DRAWER_VIEWPORTS = [
-  { width: 390, height: 640 },
-  { width: 1280, height: 520 },
+  { width: WIDTH.PHONE, height: 640 },
+  { width: WIDTH.DESKTOP, height: 520 },
 ];
 const FOCUS_SETTLE_MS = 100;
 
@@ -15,7 +16,7 @@ for (const viewport of DRAWER_VIEWPORTS) {
   }) => {
     await page.setViewportSize(viewport);
     await page.goto('/design-system');
-    await page.locator(TRIGGER).locator('visible=true').first().click();
+    await openSectionMenu(page);
     const drawer = page.locator(DRAWER);
     await expect(drawer).toHaveClass(/is-open/);
     const overflows = await drawer.evaluate((el) => el.scrollHeight > el.clientHeight);

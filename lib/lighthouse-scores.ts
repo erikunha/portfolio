@@ -1,11 +1,14 @@
 import { social } from '@/content/social';
 import { env } from '@/lib/env';
 import { GOOGLE_API_KEY_HEADER } from '@/lib/google-api';
+import { HTTP_STATUS } from '@/lib/http-status';
 import { log } from '@/lib/log';
+import { getRedis } from '@/lib/redis';
 import { afterResponse } from '@/lib/server/after-response';
 import { MS_PER_MINUTE } from '@/lib/time';
 import { ReadTimeoutError, SSR_REDIS_TIMEOUT_MS, withTimeout } from '@/lib/with-timeout';
-import { getRedis } from './rate-limit';
+
+const SERVER_ERROR_STATUS_CEILING = 599;
 
 class PsiHttpError extends Error {
   constructor(
@@ -62,7 +65,9 @@ export function __setNowForTest(fn: (() => number) | null): void {
 
 function isRetryablePsiError(err: unknown): err is PsiHttpError {
   return (
-    err instanceof PsiHttpError && (err.status === 429 || (err.status >= 500 && err.status <= 599))
+    err instanceof PsiHttpError &&
+    (err.status === HTTP_STATUS.tooManyRequests ||
+      (err.status >= HTTP_STATUS.internalServerError && err.status <= SERVER_ERROR_STATUS_CEILING))
   );
 }
 
@@ -90,9 +95,7 @@ async function fetchScoresOnce(
     `&strategy=${strategy}` +
     '&category=PERFORMANCE&category=ACCESSIBILITY&category=BEST_PRACTICES&category=SEO';
 
-  const fetchCache: RequestInit = forceRefresh
-    ? { cache: 'no-store' }
-    : { next: { revalidate: LIGHTHOUSE_TTL_S } };
+  const fetchCache: RequestInit = forceRefresh ? { cache: 'no-store' } : {};
 
   const res = await fetch(psiUrl, {
     ...fetchCache,

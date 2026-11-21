@@ -12,7 +12,7 @@ concurrency:
   # same issue or pull request. The group admits exactly what the job admits;
   # everything else gets a per-run group it shares with nothing. This predicate
   # MUST stay identical to the job's `if:` below;
-  # `__tests__/scripts/claude-workflow-hardening.test.ts` keeps the copies equal.
+  # `__tests__/ci/claude-workflow-hardening.test.ts` keeps the copies equal.
   group: >-
     ${{ (contains(github.event.comment.body, '@claude') &&
     contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.comment.author_association)) &&

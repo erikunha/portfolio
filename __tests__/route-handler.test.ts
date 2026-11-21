@@ -8,7 +8,7 @@ const TEST_BODY_LIMIT = 4096;
 const rateLimitMock = vi.fn(async () => ({ success: true }));
 const hashIpMock = vi.fn(async () => 'hashed-ip-test');
 
-vi.mock('@/lib/rate-limit', () => ({
+vi.mock('@/lib/server/client-ip', () => ({
   getClientIp: vi.fn(() => '127.0.0.1'),
 }));
 
@@ -16,9 +16,7 @@ vi.mock('@/lib/ip-hash', () => ({
   hashIp: hashIpMock,
 }));
 
-vi.mock('@/lib/log', () => ({
-  log: { info: vi.fn(), error: vi.fn(), warn: vi.fn(), debug: vi.fn() },
-}));
+vi.mock('@/lib/log', async () => (await import('./helpers/modules')).logModule());
 
 function makeRequest(body: unknown): NextRequest {
   return new NextRequest('http://localhost/api/test', {

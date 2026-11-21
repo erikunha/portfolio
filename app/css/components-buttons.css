@@ -1,0 +1,12 @@
+@import "../../design-system/components/Button/Button.css";
+
+@theme {
+  --btn-pad: var(--spacing-panel);
+  --btn-pad-compact: 0.625rem;
+  --btn-height-large: 3.25rem;
+  --btn-disabled-opacity: 0.4;
+  --btn-ease: cubic-bezier(0, 0, 0.2, 1);
+  --btn-toggle-fill: var(--color-accent-tint-strong);
+  --btn-toggle-glow: 0 0 var(--spacing-snug)
+    color-mix(in srgb, var(--color-accent) 35%, transparent);
+}

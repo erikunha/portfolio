@@ -24,7 +24,7 @@ for (const surface of SURFACES) {
   for (const locale of Object.values(SITE_LOCALE)) {
     const core = serverErrorCore[locale];
 
-    test.describe(`${surface} error boundary, ${locale}`, () => {
+    test.describe(`${surface} error boundary, ${locale}`, { tag: '@cross-browser' }, () => {
       test('names the failure, focuses the heading and offers both exits', async ({ page }) => {
         await openCrashed(page, surface, HOME_PATHS[locale]);
 

@@ -1,0 +1,390 @@
+import { spawnSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
+import { readFileSync } from 'node:fs';
+import { join, relative, resolve } from 'node:path';
+import { gitText } from '../lib/git';
+import type { StageCommand } from './ci-full-stages';
+
+export const LINUX_SCOPES = ['gate', 'changed', 'all'] as const;
+export type LinuxScope = (typeof LINUX_SCOPES)[number];
+export const DEFAULT_LINUX_SCOPE: LinuxScope = 'changed';
+
+export const PLAYWRIGHT_IMAGE = 'mcr.microsoft.com/playwright';
+export const PLAYWRIGHT_IMAGE_SUFFIX = 'noble';
+export const NODE_MODULES_VOLUME_PREFIX = 'ci-full-nm-';
+export const PNPM_VOLUME = 'ci-full-pnpm-store';
+export const CONTAINER_LABEL_KEY = 'ci-full.run';
+export const CONTAINER_NAME_PREFIX = 'ci-full-';
+export const HOST_ALIAS = 'host.docker.internal';
+export const CONTAINER_WORKDIR = '/work';
+export const CONTAINER_PNPM_HOME = '/pnpm';
+export const CONTAINER_RESULTS = '/results';
+export const CONTAINER_CPUS = 2;
+export const CONTAINER_WORKERS = 2;
+
+export const LINUX_RESULTS_DIR = 'linux-results';
+const LOCKFILE = 'pnpm-lock.yaml';
+const PACKAGE_FILE = 'package.json';
+const PNPM_VERSION_ENV = 'PNPM_VERSION';
+const PACKAGE_MANAGER = /"packageManager":\s*"pnpm@(\d+\.\d+\.\d+)/;
+const LOCKFILE_HASH_LENGTH = 12;
+const HASH = 'sha256';
+const PLAYWRIGHT_LOCK_ENTRY = /^ {2}'@playwright\/test@(\d+\.\d+\.\d+)':/m;
+const REGEX_SPECIALS = /[.*+?^${}()|[\]\\]/g;
+const SPEC_ROOT_PAGES = 'tests/e2e/';
+const SPEC_EXCLUDED_ROOTS = ['tests/visual/', 'tests/a11y/'];
+const COMPONENTS_SUFFIX = '-components';
+export const DOCKER = 'docker';
+const DOCKER_OK = 0;
+const PLAYWRIGHT_LIST_BUFFER_BYTES = 256 * 1024 * 1024;
+const PLAYWRIGHT_LIST_TIMEOUT_MS = 120_000;
+export const DOCKER_PULL_TIMEOUT_MS = 20 * 60 * 1000;
+const ERROR_LINE = /error/i;
+const MS_PER_SECOND = 1000;
+const MS_PER_MINUTE = 60 * MS_PER_SECOND;
+const TIMEOUT_CODE = 'ETIMEDOUT';
+const BYTES_PER_MIB = 1024 * 1024;
+const LISTING_UNPARSEABLE = 'printed no parseable JSON listing';
+const NO_TESTS_FOUND = /no tests found/i;
+
+const FORWARDER_SOURCE = [
+  'const net = require("net");',
+  'const origin = new URL(process.env.E2E_BASE_URL);',
+  'const port = Number(origin.port);',
+  'net.createServer((client) => {',
+  `const upstream = net.connect(port, "${HOST_ALIAS}");`,
+  'client.pipe(upstream);',
+  'upstream.pipe(client);',
+  'client.on("error", () => upstream.destroy());',
+  'upstream.on("error", () => client.destroy());',
+  '}).listen(port);',
+].join(' ');
+
+const PNPM_PREFIX = `${CONTAINER_PNPM_HOME}/pnpm-$${PNPM_VERSION_ENV}`;
+
+export const CONTAINER_SCRIPT = [
+  `(node -e '${FORWARDER_SOURCE}' &)`,
+  `export PATH="${PNPM_PREFIX}/bin:$PATH"`,
+  `{ [ -x "${PNPM_PREFIX}/bin/pnpm" ] || npm install --global --prefix "${PNPM_PREFIX}" "pnpm@$${PNPM_VERSION_ENV}"; }`,
+  'pnpm install --frozen-lockfile --ignore-scripts',
+  'exec pnpm playwright test "$@"',
+].join(' && ');
+
+export interface DockerRunOptions {
+  root: string;
+  workDir: string;
+  stageId: string;
+  project: string;
+  image: string;
+  volume: string;
+  runId: number;
+  origin: string;
+  env: Record<string, string>;
+  specs: readonly string[];
+}
+
+export function playwrightVersion(lockfile: string): string {
+  const version = PLAYWRIGHT_LOCK_ENTRY.exec(lockfile)?.[1];
+  if (version === undefined) {
+    throw new Error(`${LOCKFILE} has no resolved @playwright/test entry to pick the image from`);
+  }
+  return version;
+}
+
+export const lockfileHash = (lockfile: string): string =>
+  createHash(HASH).update(lockfile).digest('hex').slice(0, LOCKFILE_HASH_LENGTH);
+
+export const linuxImage = (version: string): string =>
+  `${PLAYWRIGHT_IMAGE}:v${version}-${PLAYWRIGHT_IMAGE_SUFFIX}`;
+
+export const nodeModulesVolume = (hash: string): string => `${NODE_MODULES_VOLUME_PREFIX}${hash}`;
+
+export const containerName = (runId: number, stageId: string): string =>
+  `${CONTAINER_NAME_PREFIX}${runId}-${stageId}`;
+
+export const containerLabel = (runId: number): string => `${CONTAINER_LABEL_KEY}=${runId}`;
+
+export const escapeSpec = (spec: string): string => spec.replace(REGEX_SPECIALS, '\\$&');
+
+export const isComponentProject = (project: string): boolean => project.endsWith(COMPONENTS_SUFFIX);
+
+export function dockerRunArgs(options: DockerRunOptions): string[] {
+  const name = containerName(options.runId, options.stageId);
+  const env = Object.entries({ ...options.env, E2E_BASE_URL: options.origin }).flatMap(
+    ([key, value]) => ['-e', `${key}=${value}`],
+  );
+  return [
+    'run',
+    '--rm',
+    '--init',
+    '--ipc=host',
+    `--cpus=${CONTAINER_CPUS}`,
+    `--name=${name}`,
+    `--label=${containerLabel(options.runId)}`,
+    `--add-host=${HOST_ALIAS}:host-gateway`,
+    ...env,
+    '-v',
+    `${options.root}:${CONTAINER_WORKDIR}:ro`,
+    '-v',
+    `${options.volume}:${CONTAINER_WORKDIR}/node_modules`,
+    '-v',
+    `${PNPM_VOLUME}:${CONTAINER_PNPM_HOME}`,
+    '-v',
+    `${CONTAINER_WORKDIR}/.next`,
+    '-v',
+    `${join(options.workDir, LINUX_RESULTS_DIR, options.stageId)}:${CONTAINER_RESULTS}`,
+    '-w',
+    CONTAINER_WORKDIR,
+    options.image,
+    'sh',
+    '-c',
+    CONTAINER_SCRIPT,
+    'sh',
+    `--project=${options.project}`,
+    `--workers=${CONTAINER_WORKERS}`,
+    `--output=${CONTAINER_RESULTS}`,
+    ...options.specs.map(escapeSpec),
+  ];
+}
+
+export function dockerStageCommand(options: DockerRunOptions): StageCommand {
+  return {
+    file: DOCKER,
+    args: dockerRunArgs(options),
+    container: {
+      name: containerName(options.runId, options.stageId),
+      label: containerLabel(options.runId),
+    },
+  };
+}
+
+export function pnpmVersion(packageJson: string): string {
+  const version = PACKAGE_MANAGER.exec(packageJson)?.[1];
+  if (version === undefined) throw new Error(`${PACKAGE_FILE} does not pin pnpm in packageManager`);
+  return version;
+}
+
+export const readPnpmVersion = (root: string): string =>
+  pnpmVersion(readFileSync(join(root, PACKAGE_FILE), 'utf8'));
+
+export const containerEnv = (
+  workflowEnv: Record<string, string>,
+  pnpm: string,
+): Record<string, string> => ({
+  CI: 'true',
+  ...workflowEnv,
+  [PNPM_VERSION_ENV]: pnpm,
+  npm_config_store_dir: `${CONTAINER_PNPM_HOME}/store`,
+});
+
+export function readLockfile(root: string): string {
+  return readFileSync(join(root, LOCKFILE), 'utf8');
+}
+
+export interface PlaywrightListing {
+  config: { rootDir: string };
+  suites: { file: string }[];
+  errors?: { message?: string }[];
+}
+
+export interface ListOutcome {
+  status: number | null;
+  stdout: string;
+  stderr: string;
+  signal?: NodeJS.Signals | null;
+  error?: (Error & { code?: string }) | undefined;
+}
+
+export type ListRunner = (args: string[], cwd: string, env: Record<string, string>) => ListOutcome;
+
+const runPlaywrightList: ListRunner = (args, cwd, env) => {
+  const run = spawnSync('pnpm', ['playwright', ...args], {
+    cwd,
+    encoding: 'utf8',
+    env: { ...process.env, ...env },
+    maxBuffer: PLAYWRIGHT_LIST_BUFFER_BYTES,
+    timeout: PLAYWRIGHT_LIST_TIMEOUT_MS,
+  });
+  return {
+    status: run.status,
+    stdout: run.stdout ?? '',
+    stderr: run.stderr ?? '',
+    signal: run.signal,
+    error: run.error,
+  };
+};
+
+function parseListing(output: string): PlaywrightListing | undefined {
+  let parsed: Partial<PlaywrightListing> | null;
+  try {
+    parsed = JSON.parse(output) as Partial<PlaywrightListing> | null;
+  } catch {
+    return undefined;
+  }
+  const { config, suites } = parsed ?? {};
+  return typeof config?.rootDir === 'string' && Array.isArray(suites)
+    ? (parsed as PlaywrightListing)
+    : undefined;
+}
+
+const firstLine = (text: string): string => text.trim().split('\n')[0] ?? '';
+
+function errorLine(text: string): string {
+  const lines = text
+    .split('\n')
+    .map((line) => line.trim())
+    .filter(Boolean);
+  return lines.find((line) => ERROR_LINE.test(line)) ?? lines[0] ?? '';
+}
+
+export function listedSpecs(output: string, root: string): string[] {
+  const listing = parseListing(output);
+  if (listing === undefined) throw new Error(LISTING_UNPARSEABLE);
+  const [problem] = listing.errors ?? [];
+  if (problem !== undefined) throw new Error(`reported ${firstLine(problem.message ?? '')}`);
+  return [
+    ...new Set(
+      listing.suites.map((suite) => relative(root, resolve(listing.config.rootDir, suite.file))),
+    ),
+  ];
+}
+
+function spawnProblem(error: Error & { code?: string }): string {
+  if (error.code === TIMEOUT_CODE) {
+    return `timed out after ${PLAYWRIGHT_LIST_TIMEOUT_MS / MS_PER_SECOND}s`;
+  }
+  if (error.code === 'ENOBUFS') {
+    return `printed more output than the ${PLAYWRIGHT_LIST_BUFFER_BYTES / BYTES_PER_MIB} MiB buffer`;
+  }
+  return `could not run: ${error.message}`;
+}
+
+function listedSpecsOf(outcome: ListOutcome, root: string): string[] {
+  if (outcome.error !== undefined) throw new Error(spawnProblem(outcome.error));
+  if (outcome.status === null) throw new Error(`killed by ${outcome.signal ?? 'a signal'}`);
+  const exited = (detail: string): Error =>
+    new Error(`exited with code ${outcome.status}: ${errorLine(detail)}`);
+  if (parseListing(outcome.stdout) === undefined) {
+    const output = `${outcome.stdout}\n${outcome.stderr}`;
+    if (outcome.status !== 0) throw exited(outcome.stderr || outcome.stdout);
+    if (NO_TESTS_FOUND.test(output)) return [];
+    throw new Error(LISTING_UNPARSEABLE);
+  }
+  const specs = listedSpecs(outcome.stdout, root);
+  if (specs.length === 0 && outcome.status !== 0) throw exited(outcome.stderr);
+  return specs;
+}
+
+export function keepsSpec(project: string, spec: string): boolean {
+  if (SPEC_EXCLUDED_ROOTS.some((excluded) => spec.startsWith(excluded))) return false;
+  return isComponentProject(project) || spec.startsWith(SPEC_ROOT_PAGES);
+}
+
+const changedCache = new Map<string, string[]>();
+
+const noteChanged = (line: string): void => {
+  process.stderr.write(`[ci-full] ${line}\n`);
+};
+
+export function changedSpecs(
+  root: string,
+  base: string,
+  project: string,
+  list: ListRunner = runPlaywrightList,
+  note: (line: string) => void = noteChanged,
+): string[] {
+  const mergeBase = gitText(['merge-base', 'HEAD', base], { cwd: root });
+  const key = `${root}|${mergeBase}|${project}`;
+  const cached = changedCache.get(key);
+  if (cached !== undefined) return cached;
+  const outcome = list(
+    ['test', `--only-changed=${mergeBase}`, `--project=${project}`, '--list', '--reporter=json'],
+    root,
+    { CI: 'true' },
+  );
+  let specs: string[];
+  try {
+    specs = listedSpecsOf(outcome, root).filter((spec) => keepsSpec(project, spec));
+  } catch (error) {
+    const cause = error instanceof Error ? error.message : String(error);
+    throw new Error(`the changed-spec listing for ${project} ${cause}`);
+  }
+  note(`${project}: ${specs.length} changed specs added to the gate specs (since ${mergeBase})`);
+  changedCache.set(key, specs);
+  return specs;
+}
+
+export function mergeSpecs(...groups: readonly (readonly string[])[]): string[] {
+  return [...new Set(groups.flat())];
+}
+
+export interface DockerCallOptions {
+  timeoutMs?: number;
+  stream?: boolean;
+}
+
+export type DockerRun = (
+  args: string[],
+  options?: DockerCallOptions,
+) => { status: number | null; stdout: string; timedOut?: boolean };
+
+export const dockerRun: DockerRun = (args, options = {}) => {
+  const run = spawnSync(DOCKER, args, {
+    encoding: 'utf8',
+    ...(options.timeoutMs === undefined ? {} : { timeout: options.timeoutMs }),
+    stdio:
+      options.stream === true
+        ? ['ignore', process.stderr.fd, process.stderr.fd]
+        : ['ignore', 'pipe', 'pipe'],
+  });
+  const code = (run.error as NodeJS.ErrnoException | undefined)?.code;
+  return { status: run.status, stdout: run.stdout ?? '', timedOut: code === TIMEOUT_CODE };
+};
+
+const pulled = new Map<string, string | undefined>();
+
+function pullProblem(image: string, run: DockerRun): string | undefined {
+  const pull = run(['pull', image], { timeoutMs: DOCKER_PULL_TIMEOUT_MS, stream: true });
+  if (pull.status === DOCKER_OK) return undefined;
+  if (pull.timedOut === true) {
+    return `docker pull ${image} timed out after ${DOCKER_PULL_TIMEOUT_MS / MS_PER_MINUTE} minutes`;
+  }
+  return `docker pull ${image} failed`;
+}
+
+export function dockerProblem(image: string, run: DockerRun = dockerRun): string | undefined {
+  if (run(['info']).status !== DOCKER_OK) return 'the Docker daemon is not running';
+  if (pulled.has(image)) return pulled.get(image);
+  const problem =
+    run(['image', 'inspect', image]).status === DOCKER_OK ? undefined : pullProblem(image, run);
+  pulled.set(image, problem);
+  return problem;
+}
+
+export function forgetPulledImages(): void {
+  pulled.clear();
+}
+
+export function staleVolumes(listed: string, current: string): string[] {
+  return listed
+    .split('\n')
+    .map((line) => line.trim())
+    .filter((name) => name.startsWith(NODE_MODULES_VOLUME_PREFIX) && name !== current);
+}
+
+export function pruneStaleVolumes(current: string, run: DockerRun = dockerRun): string[] {
+  const listed = run(['volume', 'ls', '--quiet', '--filter', `name=${NODE_MODULES_VOLUME_PREFIX}`]);
+  const stale = staleVolumes(listed.stdout, current);
+  for (const name of stale) run(['volume', 'rm', name]);
+  return stale;
+}
+
+export function removeContainer(name: string, run: DockerRun = dockerRun): void {
+  run(['rm', '--force', '--volumes', name]);
+}
+
+export function sweepContainers(label: string, run: DockerRun = dockerRun): void {
+  const listed = run(['ps', '--all', '--quiet', '--filter', `label=${label}`]);
+  const ids = listed.stdout.split('\n').filter(Boolean);
+  if (ids.length > 0) run(['rm', '--force', '--volumes', ...ids]);
+}

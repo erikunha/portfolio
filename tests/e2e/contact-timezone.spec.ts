@@ -1,19 +1,19 @@
 import { expect, type Page, test } from '@playwright/test';
-import { horizontalOverflow as pageOverflowOf } from './_helpers/geometry';
+import { horizontalOverflow as pageOverflowOf, WIDTH } from './_helpers/geometry';
 
 const FIXED_NOW = new Date('2026-11-02T15:00:00Z');
 const VIEWPORTS = [
-  { name: '320', width: 320, height: 700 },
-  { name: '390', width: 390, height: 844 },
-  { name: '768', width: 768, height: 1024 },
-  { name: '1280', width: 1280, height: 720 },
+  { name: '320', width: WIDTH.PHONE_NARROW, height: 700 },
+  { name: '390', width: WIDTH.PHONE, height: 844 },
+  { name: '768', width: WIDTH.TABLET, height: 1024 },
+  { name: '1280', width: WIDTH.DESKTOP, height: 720 },
 ] as const;
 const PROPOSE_LABEL = 'PROPOSE_IN_MESSAGE ↙';
 const SEARCH_LABEL = 'Search your city or timezone';
 const MESSAGE_LABEL = '$ message:';
 const FOCUS_LINK_LABEL = 'edit message ↑';
-const PHONE = { width: 390, height: 844 };
-const DESKTOP = { width: 1280, height: 720 };
+const PHONE = { width: WIDTH.PHONE, height: 844 };
+const DESKTOP = { width: WIDTH.DESKTOP, height: 720 };
 const CLOCK_PATTERN = /^\d{2}:\d{2}:\d{2}$/;
 const TICK_TIMEOUT_MS = 5_000;
 const ERROR_STATUS_FLOOR = 400;
@@ -71,7 +71,7 @@ async function horizontalOverflow(page: Page) {
   return { pageOverflow: await pageOverflowOf(page), ...panelEdges };
 }
 
-test.describe('contact timezone panel, visitor in Berlin', () => {
+test.describe('contact timezone panel, visitor in Berlin', { tag: '@cross-browser' }, () => {
   test.use({ timezoneId: 'Europe/Berlin', locale: 'en-US' });
 
   test.beforeEach(async ({ page }) => {
@@ -252,7 +252,7 @@ test.describe('contact timezone panel, visitor in Berlin', () => {
   }
 });
 
-test.describe('contact timezone panel, visitor in São Paulo', () => {
+test.describe('contact timezone panel, visitor in São Paulo', { tag: '@cross-browser' }, () => {
   test.use({ timezoneId: 'America/Sao_Paulo', locale: 'en-US' });
 
   test.beforeEach(async ({ page }) => {
@@ -304,9 +304,9 @@ test.describe('contact timezone panel, visitor in São Paulo', () => {
   });
 });
 
-test.describe('contact section in print', () => {
+test.describe('contact section in print', { tag: '@cross-browser' }, () => {
   test('prints as one column that stays inside the page', async ({ page }) => {
-    await page.setViewportSize({ width: 794, height: 1123 });
+    await page.setViewportSize({ width: WIDTH.A4_PRINT, height: 1123 });
     await page.emulateMedia({ media: 'print' });
     await page.goto('/');
     await page.locator('.contact-timezone').scrollIntoViewIfNeeded();
@@ -325,7 +325,7 @@ test.describe('contact section in print', () => {
   });
 });
 
-test.describe('contact timezone panel clocks', () => {
+test.describe('contact timezone panel clocks', { tag: '@cross-browser' }, () => {
   test.use({ timezoneId: 'Europe/Berlin', locale: 'en-US' });
 
   test('the clocks tick while the panel is on screen', async ({ page }) => {

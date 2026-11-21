@@ -6,8 +6,8 @@ import { SITE_LOCALE } from '@/content/site-locale';
 
 const stylesheet = parse(readComponentsCss());
 const TOUCH_TARGET = 'var(--spacing-target)';
-const PHONE = /max-width: 767\.98px/;
-const BELOW_CLOCKS_ROW = /max-width: 899\.98px/;
+const PHONE = /width < 768px/;
+const BELOW_CLOCKS_ROW = /width < 900px/;
 const TWO_COLUMNS = /min-width: 1024px/;
 const CLOCKS_ONE_ROW = /min-width: 900px/;
 const GOLDEN_RATIO = 1.618;

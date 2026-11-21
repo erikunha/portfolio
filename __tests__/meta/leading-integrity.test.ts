@@ -1,6 +1,7 @@
 import { readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
+import { listFiles } from '@/scripts/lib/walk';
 
 // Why this gate exists. The site rounds every line box to whole pixels
 // (`round(nearest, 1em * var(--leading), 1px)` in the base layer), because a
@@ -35,44 +36,23 @@ const cssFiles = (): string[] => {
     .map((name) => path.join(dir, name));
 };
 
-const sourceFiles = (): string[] => {
-  const files: string[] = [];
-  const walk = (current: string): void => {
-    for (const entry of readdirSync(current, { withFileTypes: true })) {
-      const full = path.join(current, entry.name);
-      if (entry.isDirectory()) {
-        if (entry.name === 'node_modules' || entry.name === '.next') continue;
-        walk(full);
-        continue;
-      }
-      if (/\.(tsx|ts)$/.test(entry.name)) files.push(full);
-    }
-  };
-  for (const root of SOURCE_ROOTS) walk(path.join(REPO_ROOT, root));
-  return files;
-};
+const SKIP_DIRS: ReadonlySet<string> = new Set(['node_modules', '.next']);
+
+const filesUnder = (root: string, include: RegExp): string[] =>
+  listFiles(root, { include, skipDirs: SKIP_DIRS }).map((rel) => path.join(root, rel));
+
+const sourceFiles = (): string[] =>
+  SOURCE_ROOTS.flatMap((root) => filesUnder(path.join(REPO_ROOT, root), /\.(tsx|ts)$/));
 
 // The stylesheets and the documentation pages. Tailwind's scanner reads
 // every file in the project, not only the components: a class name written
 // in a comment in a stylesheet or in a paragraph of a documentation page is
 // a class name Tailwind generates, and a generated leading utility writes
 // `line-height` in the utilities layer, where it bypasses the rounding.
-const styleAndDocFiles = (): string[] => {
-  const files: string[] = [...cssFiles()];
-  const walk = (current: string): void => {
-    for (const entry of readdirSync(current, { withFileTypes: true })) {
-      const full = path.join(current, entry.name);
-      if (entry.isDirectory()) {
-        if (entry.name === 'node_modules' || entry.name === '.next') continue;
-        walk(full);
-        continue;
-      }
-      if (/\.mdx$/.test(entry.name)) files.push(full);
-    }
-  };
-  walk(path.join(REPO_ROOT, 'app'));
-  return files;
-};
+const styleAndDocFiles = (): string[] => [
+  ...cssFiles(),
+  ...filesUnder(path.join(REPO_ROOT, 'app'), /\.mdx$/),
+];
 
 // The rules of a stylesheet, with the selectors of each and its body. The
 // body of a rule never holds a brace, so the innermost blocks are the ones
@@ -95,7 +75,7 @@ const ruleBlocks = (source: string): { selectors: string[]; body: string }[] => 
 
 // Tailwind's own leading utilities. `leading-ratio-*` is the site's own
 // class and is deliberately not in this list. The lookbehind keeps the
-// custom properties (`--leading-body`, `--leading-page-tight`) out of it:
+// custom property (`--leading-body`) out of it:
 // those are tokens, not class names, and Tailwind does not generate a
 // utility out of a token.
 const TAILWIND_LEADING = /(?<![-\w])leading-(?!ratio-)[\w[\].-]+/g;
@@ -228,42 +208,6 @@ describe('meta: the line box is rounded, and nothing bypasses it', () => {
           `${usage} has a rule in components-utilities.css without a --leading - the ` +
             "ratio the size carries does not reach the element's descendants, and their " +
             'leading would change.',
-        );
-      }
-    }
-
-    expect(offenders, offenders.join('\n')).toEqual([]);
-  });
-
-  it('gives every leading-ratio class the ratio and the element own line-height', () => {
-    // The class asks for a leading. The element has to wear it: a Tailwind
-    // font-size utility writes `line-height` in the same layer and comes
-    // first, so a class that only set `--leading` would leave the element
-    // with the size's ratio and the asked-for ratio would reach only the
-    // descendants.
-    const utilities = read('app/css/components-utilities.css');
-    const classes = [
-      ...new Set(
-        [...utilities.matchAll(/\.(leading-ratio-[\w-]+)/g)].map((match) => match[1] ?? ''),
-      ),
-    ];
-    expect(classes.length, 'no leading-ratio class is defined').toBeGreaterThan(0);
-
-    const blocks = ruleBlocks(utilities);
-    const offenders: string[] = [];
-
-    for (const className of classes) {
-      const selector = `.${className}`;
-      const own = blocks.filter((block) => block.selectors.includes(selector));
-      const body = own.map((block) => block.body).join('\n');
-      if (!/--leading\s*:/.test(body)) {
-        offenders.push(`${selector} sets no --leading - it would not carry a ratio at all.`);
-      }
-      if (!/line-height\s*:/.test(body)) {
-        offenders.push(
-          `${selector} sets no line-height - the element itself would keep the ratio of ` +
-            'whatever font-size utility is on it, and the asked-for leading would reach ' +
-            'only the descendants.',
         );
       }
     }

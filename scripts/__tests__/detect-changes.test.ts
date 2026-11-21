@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { inheritedEnvWithIsolatedGit } from '../../__tests__/helpers/hermetic-git';
-import { canonicalJSON } from '../detect-changes.mjs';
+import { canonicalJSON } from '../ci/detect-changes.ts';
 
 describe('canonicalJSON', () => {
   it('sorts object keys recursively (key order does not matter)', () => {
@@ -29,7 +29,7 @@ describe('canonicalJSON', () => {
   });
 });
 
-import { aiMajor, computeCategories } from '../detect-changes.mjs';
+import { aiMajor, computeCategories } from '../ci/detect-changes.ts';
 
 describe('computeCategories', () => {
   const signals = (
@@ -144,7 +144,7 @@ import { join, resolve } from 'node:path';
 const SUBPROCESS_TEST_TIMEOUT_MS = 60_000;
 
 describe('runner main() via subprocess', { timeout: SUBPROCESS_TEST_TIMEOUT_MS }, () => {
-  const runner = resolve(process.cwd(), 'scripts/detect-changes.mjs');
+  const runner = resolve(process.cwd(), 'scripts/ci/detect-changes.ts');
 
   it('non-PR event writes ai=true app=true ui=true and exits 0', () => {
     const dir = mkdtempSync(join(tmpdir(), 'dc-nonpr-'));

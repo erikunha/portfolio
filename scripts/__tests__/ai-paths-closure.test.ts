@@ -1,6 +1,6 @@
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { AI_PATHS } from '../detect-changes-paths.mjs';
+import { AI_PATHS } from '../ci/detect-changes-paths.ts';
 
 const ROOTS = [
   'app/api/ask/route.ts',

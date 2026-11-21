@@ -1,8 +1,9 @@
 import { expect, test } from '@playwright/test';
+import { VIEWPORTS } from './_helpers/geometry';
 import { gotoSettled } from './_helpers/streamed';
 
 const LONG_PATH_CHARS = 200;
-const NARROW_PHONE = { width: 320, height: 640 } as const;
+const NARROW_PHONE = VIEWPORTS.PHONE_NARROW;
 const ROUTES = [`/${'a'.repeat(LONG_PATH_CHARS)}`, `/pt/${'b'.repeat(LONG_PATH_CHARS)}`];
 
 test.describe(`the 404 command line at ${NARROW_PHONE.width}px`, () => {

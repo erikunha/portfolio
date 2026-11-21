@@ -1,4 +1,5 @@
 import { expect, type Page, test } from '@playwright/test';
+import { VIEWPORTS } from '../../../tests/e2e/_helpers/geometry';
 import { waitForHydration } from '../../../tests/e2e/_helpers/hydration';
 import { freezeMotion } from '../../../tests/e2e/_helpers/motion';
 
@@ -25,7 +26,7 @@ async function waitForRainSized(page: Page): Promise<void> {
 }
 
 test.describe('Matrix rain follows the MOTION control', () => {
-  test.use({ viewport: { width: 1280, height: 720 } });
+  test.use({ viewport: VIEWPORTS.DESKTOP });
 
   test('starts when MOTION is switched on after loading with reduced motion', async ({ page }) => {
     await freezeMotion(page);

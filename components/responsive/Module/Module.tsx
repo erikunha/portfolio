@@ -41,25 +41,25 @@ export function Module({
       aria-labelledby={moduleHeaderId(id)}
       {...deferProps(
         defer,
-        'mb-[var(--space-section)] border border-primary-subtle bg-secondary-950 md:bg-transparent overflow-hidden md:overflow-visible md:border-0',
+        'mb-[var(--space-section)] border border-(color:--color-border-strong) bg-(color:--color-surface) md:bg-transparent overflow-hidden md:overflow-visible md:border-0',
       )}
     >
       <header
         className={[
           'flex items-center gap-2 w-full',
-          'px-4 py-3 min-h-11 bg-glow-04 border-b border-primary-quiet',
+          'px-4 py-3 min-h-11 bg-signal-glow-04 border-b border-signal-quiet',
           'md:px-0 md:py-0 md:min-h-0 md:bg-transparent md:border-b-0 md:mb-2',
         ].join(' ')}
       >
         <h2
           id={moduleHeaderId(id)}
-          className="module-heading flex-1 flex items-center gap-2 text-primary-500 font-mono text-base md:text-lg font-bold tracking-md md:tracking-xl uppercase m-0"
+          className="module-heading flex-1 flex items-center gap-2 text-(color:--color-accent) font-mono text-base md:text-lg font-bold tracking-md md:tracking-xl uppercase m-0"
         >
           {name ? <span className="module-name">{name}</span> : null}
           {!name && srLabel ? <span className="sr-only">{srLabel}</span> : null}
           {icon ? (
             <span
-              className="inline-flex w-5 h-5 items-center justify-center text-primary-500 [&_svg]:w-[18px] [&_svg]:h-[18px] [&_svg]:stroke-current [&_svg]:fill-none [&_svg]:[stroke-width:1.4]"
+              className="inline-flex w-5 h-5 items-center justify-center text-(color:--color-accent) [&_svg]:w-icon [&_svg]:h-icon [&_svg]:stroke-current [&_svg]:fill-none [&_svg]:[stroke-width:1.4]"
               aria-hidden
             >
               {icon}

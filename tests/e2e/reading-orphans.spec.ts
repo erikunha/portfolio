@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { VIEWPORTS } from './_helpers/geometry';
 import { freezeMotion } from './_helpers/motion';
 import { gotoSettled } from './_helpers/streamed';
 import {
@@ -10,14 +11,16 @@ import {
 
 const READING_ROUTES = ['/cv', '/pt/cv', '/summary', '/pt/summary'] as const;
 const READING_SCOPE = 'main';
-const PRINT_VIEWPORT = { width: 794, height: 1123 } as const;
+const PRINT_VIEWPORT = VIEWPORTS.A4_PRINT;
 const ENVIRONMENTS = [
   { name: 'phone', touch: { isMobile: true, hasTouch: true } },
   { name: 'narrow desktop window', touch: { isMobile: false, hasTouch: false } },
 ] as const;
 
 for (const environment of ENVIRONMENTS) {
-  test.describe(`reading views never end a block on a lone short token on a ${environment.name}`, () => {
+  test.describe(`reading views never end a block on a lone short token on a ${environment.name}`, {
+    tag: '@cross-browser',
+  }, () => {
     test.use(environment.touch);
 
     for (const route of READING_ROUTES) {
@@ -37,7 +40,7 @@ for (const environment of ENVIRONMENTS) {
   });
 }
 
-test.describe('reading views in print', () => {
+test.describe('reading views in print', { tag: '@cross-browser' }, () => {
   for (const route of READING_ROUTES) {
     test(`${route} keeps a short last token with the word before it`, async ({ page }) => {
       await page.setViewportSize(PRINT_VIEWPORT);

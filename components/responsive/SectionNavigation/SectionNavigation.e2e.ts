@@ -1,10 +1,11 @@
 import { expect, test } from '@playwright/test';
 import { NAVIGATION } from '@/content/navigation';
 import { SITE_LOCALE } from '@/content/site-locale';
+import { VIEWPORTS } from '../../../tests/e2e/_helpers/geometry';
 import { freezeMotion } from '../../../tests/e2e/_helpers/motion';
 
-const PHONE = { width: 390, height: 844 };
-const DESKTOP = { width: 1280, height: 720 };
+const PHONE = VIEWPORTS.PHONE;
+const DESKTOP = VIEWPORTS.DESKTOP;
 const BAR_SELECTOR = '.status-bar, .mobile-title-bar, .desktop-topbar';
 const SCROLL_SETTLE_TIMEOUT_MS = 8000;
 

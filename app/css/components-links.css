@@ -1,3 +1,11 @@
+@theme {
+  --links-thumb-contrast: 1.15;
+  --links-thumb-brightness: 0.95;
+  --links-thumb-tint: 0.9;
+  --links-thumb-tint-reveal: 0.3;
+  --links-thumb-reveal-duration: 200ms;
+}
+
 @layer components {
   @keyframes links-marquee {
     from {
@@ -16,10 +24,13 @@
     will-change: transform;
   }
 
-  body[data-motion="reduce"] .links-ticker-track {
-    animation: none;
-    width: 100%;
-    white-space: normal;
+  /* biome-ignore lint/suspicious/noDuplicateSelectors: `@variant motion-off` and `@variant motion-on` resolve to a `body` ancestor selector, so this rule has a different selector than the earlier one with the same class */
+  .links-ticker-track {
+    @variant motion-off {
+      animation: none;
+      width: 100%;
+      white-space: normal;
+    }
   }
 
   @keyframes links-progress-fill {
@@ -35,9 +46,9 @@
     position: fixed;
     inset-block-start: 0;
     inset-inline: 0;
-    height: 2px;
-    background: var(--color-primary-500);
-    box-shadow: 0 0 10px var(--color-primary-500);
+    height: var(--spacing-hair);
+    background: var(--color-accent);
+    box-shadow: 0 0 var(--spacing-inset) var(--color-accent);
     transform: scaleX(0);
     transform-origin: 0 50%;
     z-index: var(--z-progress-line);
@@ -48,16 +59,19 @@
     animation: links-progress-fill 300ms linear forwards;
   }
 
-  body[data-motion="reduce"] .links-progress[data-running="true"] {
-    animation: none;
-    transform: scaleX(1);
+  /* biome-ignore lint/suspicious/noDuplicateSelectors: `@variant motion-off` and `@variant motion-on` resolve to a `body` ancestor selector, so this rule has a different selector than the earlier one with the same class */
+  .links-progress[data-running="true"] {
+    @variant motion-off {
+      animation: none;
+      transform: scaleX(1);
+    }
   }
 
   .links-avatar {
     background-image: repeating-linear-gradient(
       135deg,
-      var(--color-primary-quiet) 0 4px,
-      transparent 4px 8px
+      var(--color-signal-quiet) 0 var(--spacing-1),
+      transparent var(--spacing-1) var(--spacing-2)
     );
   }
 
@@ -69,8 +83,8 @@
     aspect-ratio: 16 / 9;
     background-image: repeating-linear-gradient(
       135deg,
-      var(--color-primary-quiet) 0 5px,
-      transparent 5px 10px
+      var(--color-signal-quiet) 0 var(--spacing-snug),
+      transparent var(--spacing-snug) var(--spacing-inset)
     );
   }
 
@@ -80,8 +94,8 @@
     aspect-ratio: 16 / 9;
     overflow: hidden;
     isolation: isolate;
-    background: var(--color-secondary-950);
-    outline: 1px solid var(--color-primary-border);
+    background: var(--color-surface);
+    outline: var(--border-width) solid var(--color-border);
     outline-offset: -1px;
   }
 
@@ -95,7 +109,7 @@
     content: "";
     position: absolute;
     inset: 0;
-    background: var(--color-primary-500);
+    background: var(--color-accent);
     mix-blend-mode: multiply;
     opacity: var(--links-thumb-tint);
     pointer-events: none;
@@ -110,14 +124,29 @@
     opacity: var(--links-thumb-tint-reveal);
   }
 
-  body[data-motion="reduce"] .links-thumb img,
-  body[data-motion="reduce"] .links-thumb::after {
-    transition: none;
+  /* biome-ignore lint/style/noDescendingSpecificity: `@variant motion-off` resolves to a `body` ancestor selector, so this rule matches under the MOTION switch only and the order is intended */
+  /* biome-ignore lint/suspicious/noDuplicateSelectors: `@variant motion-off` and `@variant motion-on` resolve to a `body` ancestor selector, so this rule has a different selector than the earlier one with the same class */
+  .links-thumb img {
+    @variant motion-off {
+      transition: none;
+    }
+  }
+
+  /* biome-ignore lint/style/noDescendingSpecificity: `@variant motion-off` resolves to a `body` ancestor selector, so this rule matches under the MOTION switch only and the order is intended */
+  /* biome-ignore lint/suspicious/noDuplicateSelectors: `@variant motion-off` and `@variant motion-on` resolve to a `body` ancestor selector, so this rule has a different selector than the earlier one with the same class */
+  .links-thumb::after {
+    @variant motion-off {
+      transition: none;
+    }
   }
 
   .links-channel-card {
-    background-color: var(--color-secondary-950);
-    background-image: linear-gradient(180deg, var(--color-primary-faint), var(--color-glow-03));
+    background-color: var(--color-surface);
+    background-image: linear-gradient(
+      180deg,
+      var(--color-signal-faint),
+      var(--color-signal-glow-03)
+    );
   }
 
   .links-page {
@@ -142,7 +171,7 @@
 
   .links-chrome-title {
     flex: 1;
-    color: var(--color-primary-400);
+    color: var(--color-signal-400);
     font-size: var(--text-xs);
     letter-spacing: var(--tracking-3xl);
     text-transform: uppercase;
@@ -162,7 +191,7 @@
     max-width: var(--measure-read);
   }
 
-  @media (max-width: 599.98px) {
+  @media (width < theme(--viewport-links-qr)) {
     .links-col[data-col="qr"] {
       display: none;
     }

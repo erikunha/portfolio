@@ -10,8 +10,8 @@ export type BadgeProps = Omit<ComponentPropsWithoutRef<'span'>, 'children'> & {
 };
 
 const sizeClasses: Record<BadgeSize, string> = {
-  sm: 'text-xs py-[3px] px-2',
-  md: 'text-xs py-1 px-[10px]',
+  sm: 'text-xs py-tight px-2',
+  md: 'text-xs py-1 px-inset',
 };
 
 export function Badge({
@@ -25,8 +25,8 @@ export function Badge({
     <span
       {...rest}
       className={cn(
-        'badge inline-flex items-center gap-[7px] border border-primary-subtle bg-secondary-950 text-primary-500 font-mono tracking-[0.12em] whitespace-nowrap uppercase',
-        'max-[359px]:whitespace-normal max-[359px]:flex-wrap',
+        'badge inline-flex items-center gap-chip border border-(color:--color-border-strong) bg-(color:--color-surface) text-(color:--color-accent) font-mono tracking-2xl whitespace-nowrap uppercase',
+        '@max-xs:whitespace-normal @max-xs:flex-wrap',
         sizeClasses[size],
         className,
       )}

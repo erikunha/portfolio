@@ -1,8 +1,9 @@
 import { expect, type Page, test } from '@playwright/test';
+import { WIDTH } from './_helpers/geometry';
 import { freezeMotion } from './_helpers/motion';
 import { askShell, openShell, SHELL_SELECTOR } from './_helpers/shell';
 
-const WIDTHS = [320, 1280] as const;
+const WIDTHS = [WIDTH.PHONE_NARROW, WIDTH.DESKTOP] as const;
 const VIEWPORT_HEIGHT = 844;
 const TENTHS_CHARS = 4;
 const WHOLE_SECONDS_CHARS = 2;
@@ -28,7 +29,7 @@ function measure(page: Page) {
 }
 
 for (const width of WIDTHS) {
-  test.describe(`the stop pill timer at ${width}px`, () => {
+  test.describe(`the stop pill timer at ${width}px`, { tag: '@cross-browser' }, () => {
     test.use({ viewport: { width, height: VIEWPORT_HEIGHT } });
 
     test('with MOTION off reserves room for whole seconds only', async ({ page }) => {

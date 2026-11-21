@@ -145,7 +145,9 @@ describe('Dock', () => {
     menu.focus();
     fireEvent.click(menu);
     expect(menu.getAttribute('aria-expanded')).toBe('true');
-    expect(document.getElementById(DRAWER_ID)?.getAttribute('role')).toBe('dialog');
+    expect(screen.getByRole('dialog', { name: NAVIGATION[SITE_LOCALE.en].copy.drawerLabel })).toBe(
+      document.getElementById(DRAWER_ID),
+    );
     fireEvent.keyDown(document, { key: 'Escape' });
     expect(menu.getAttribute('aria-expanded')).toBe('false');
     expect(document.activeElement).toBe(menu);

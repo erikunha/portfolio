@@ -1,0 +1,48 @@
+import { dsPageMetadata } from '../../_lib/page-metadata';
+import { OnThisPage } from '../../_components/OnThisPage';
+
+export const metadata = dsPageMetadata({
+  slug: 'primitives/panel',
+  title: 'Panel · Design System · erikunha.dev',
+  description: 'Panel props, reveal coupling, styling and accessibility notes',
+});
+
+# PANEL
+
+<OnThisPage items={[{id:'props',label:'Props'},{id:'examples',label:'Examples'},{id:'reveal',label:'Reveal coupling'},{id:'styling',label:'Styling'},{id:'accessibility',label:'Accessibility'}]} />
+
+Source: `design-system/components/Panel/Panel.tsx`, styled by `design-system/components/Panel/Panel.css`. React Server Component, zero client JavaScript.
+
+<h2 id="props">Props</h2>
+
+| Prop | Type | Default | Required |
+|---|---|---|---|
+| `title` | `string` | none | yes |
+| `marker` | `string` | none | yes |
+| `as` | `'div' \| 'section' \| 'aside'` | `'div'` | no |
+| `titleId` | `string` | none | no |
+| `reveal` | `boolean` | `false` | no |
+| `action` | `ReactNode` | none | no |
+
+Other `div` attributes pass through to the root.
+
+<h2 id="examples">Examples</h2>
+
+<Preview id="panel">
+  <Panel className="w-full" marker="[+]" title="whoami"><p className="m-0 p-4">Body content.</p></Panel>
+  <Panel className="w-full" as="aside" marker="[~]" title="status" titleId="panel-demo-title" action={<a href="#panel">link</a>}><p className="m-0 p-4">Landmark panel with an action.</p></Panel>
+</Preview>
+
+A bordered frame on a `carbon-950` surface with a faint top glow and a 2px corner radius. The header holds a decorative `marker` (`aria-hidden`), the `title` as an `h3` and an optional `action` node after it. `as` picks the root element; `titleId` becomes the heading `id` and the root's `aria-labelledby`, which names a `section` or `aside` landmark by its title. The panel is its own `inline-size` container, so it must be a block-level, full-width element in its parent. Below 24rem the header tightens its padding and letter spacing.
+
+<h2 id="reveal">Reveal coupling</h2>
+
+`reveal` only sets `data-type-reveal` on the heading and `suppressHydrationWarning`, because the heading text is rewritten after hydration. The scroll typing itself comes from the app-wide `TypeReveal` island mounted by `GlobalMotion` in the root layout, which observes every `[data-type-reveal]` element. Without that island the attribute has no effect.
+
+<h2 id="styling">Styling</h2>
+
+The frame rules live in `design-system/components/Panel/Panel.css`. A section that needs a different title size or header layout scopes the change under its own class in its own stylesheet and selects `.panel-head` and `.panel-title`.
+
+<h2 id="accessibility">Accessibility</h2>
+
+The title is the heading, so give each landmark panel its own `titleId`.

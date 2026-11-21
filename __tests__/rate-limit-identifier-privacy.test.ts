@@ -65,9 +65,7 @@ vi.mock('next/server', async (importOriginal) => ({
   connection: vi.fn(async () => undefined),
 }));
 vi.mock('ai', () => ({ streamText: vi.fn() }));
-vi.mock('@/lib/log', () => ({
-  log: { info: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn() },
-}));
+vi.mock('@/lib/log', async () => (await import('./helpers/modules')).logModule());
 
 const RAW_IPV4 = '203.0.113.7';
 const OTHER_IPV4 = '198.51.100.24';
@@ -152,6 +150,20 @@ const ROUTES: Record<string, { prefixes: string[]; call: RouteCall }> = {
     call: async (ip) => {
       const { GET } = await import('@/app/api/healthz/route');
       return GET(get('http://localhost/api/healthz', ip));
+    },
+  },
+  status: {
+    prefixes: ['rl:healthz'],
+    call: async (ip) => {
+      const { GET } = await import('@/app/api/status/route');
+      return GET(get('http://localhost/api/status', ip));
+    },
+  },
+  cspReport: {
+    prefixes: ['rl:csp-report'],
+    call: async (ip) => {
+      const { POST } = await import('@/app/api/csp-report/route');
+      return POST(jsonPost('http://localhost/api/csp-report', ip, {}));
     },
   },
   lighthouse: {

@@ -1,4 +1,5 @@
 import { expect, type Page, test } from '@playwright/test';
+import { WIDTH } from './_helpers/geometry';
 import { waitForHydration } from './_helpers/hydration';
 import { installMockBackend } from './_helpers/mock-backend';
 import { freezeMotion } from './_helpers/motion';
@@ -8,9 +9,10 @@ const MIXER = '#sec-guitar .guitar-mixer';
 // there the walk covers the sliders, which carry tabindex. WebKit on Linux tabs to buttons.
 const CONTROLS = `${MIXER} [role="slider"]:visible, ${MIXER} button:visible`;
 const SLIDERS = `${MIXER} [role="slider"]:visible`;
+const SKIP_LINK = `${MIXER} a.mixer-skip-link`;
 const MIN_RING_PX = 2;
 const NO_OUTLINE = 'none';
-const VIEWPORT = { width: 1280, height: 900 } as const;
+const VIEWPORT = { width: WIDTH.DESKTOP, height: 900 } as const;
 const ARROW_STEPS = 3;
 const WEBKIT = 'webkit';
 const MACOS = 'darwin';
@@ -43,10 +45,9 @@ async function activeControl(page: Page) {
   }, MIXER);
 }
 
-test('Tab walks every mixer control in order, each shows a focus ring, and focus leaves', async ({
-  page,
-  browserName,
-}) => {
+test('Tab walks every mixer control in order, each shows a focus ring, and focus leaves', {
+  tag: '@cross-browser',
+}, async ({ page, browserName }) => {
   await openMixer(page);
   const buttonsSkipTab = browserName === WEBKIT && process.platform === MACOS;
   const controls = page.locator(buttonsSkipTab ? SLIDERS : CONTROLS);
@@ -80,16 +81,28 @@ test('Tab walks every mixer control in order, each shows a focus ring, and focus
   );
 });
 
-test('Shift+Tab from the first control leaves the mixer backwards', async ({ page }) => {
+test('Shift+Tab from the first control leaves the mixer backwards', {
+  tag: '@cross-browser',
+}, async ({ page, browserName }) => {
   await openMixer(page);
   await page.locator(CONTROLS).first().focus();
 
+  const linksSkipTab = browserName === WEBKIT && process.platform === MACOS;
   await page.keyboard.press('Shift+Tab');
+  if (!linksSkipTab) {
+    expect(
+      (await activeControl(page))?.label,
+      'the skip link is the stop before the controls',
+    ).toBe((await page.locator(SKIP_LINK).textContent())?.trim());
+    await page.keyboard.press('Shift+Tab');
+  }
 
   expect((await activeControl(page))?.inMixer).not.toBe(true);
 });
 
-test('arrow keys move every slider and the value text follows', async ({ page }) => {
+test('arrow keys move every slider and the value text follows', { tag: '@cross-browser' }, async ({
+  page,
+}) => {
   await openMixer(page);
   const sliders = page.locator(SLIDERS);
   const count = await sliders.count();

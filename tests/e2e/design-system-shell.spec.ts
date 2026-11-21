@@ -1,17 +1,16 @@
 import { expect, test } from '@playwright/test';
 import { DS_PAGER } from '@/app/(en)/design-system/_components/ds-nav';
-import { horizontalOverflow } from './_helpers/geometry';
+import { CORE_LAPTOP_WIDTHS, horizontalOverflow, WIDTH } from './_helpers/geometry';
 
 const MIN_TARGET_PX = 24;
-const WIDTHS = [320, 390, 768, 1024, 1280];
 const MOBILE_HEIGHT = 812;
 const DESKTOP_HEIGHT = 720;
 
-for (const width of WIDTHS) {
+for (const width of CORE_LAPTOP_WIDTHS) {
   test(`design-system shell reflows without sideways scroll at ${width}`, async ({ page }) => {
     await page.setViewportSize({
       width,
-      height: width < 768 ? MOBILE_HEIGHT : DESKTOP_HEIGHT,
+      height: width < WIDTH.TABLET ? MOBILE_HEIGHT : DESKTOP_HEIGHT,
     });
     for (const { href } of DS_PAGER) {
       await page.goto(href);
@@ -23,12 +22,17 @@ for (const width of WIDTHS) {
         )
         .evaluateAll(
           (nodes, min) =>
-            nodes
-              .map((node) => node.getBoundingClientRect())
-              .filter((box) => box.width < min || box.height < min).length,
+            nodes.flatMap((node) => {
+              const box = node.getBoundingClientRect();
+              if (box.width >= min && box.height >= min) return [];
+              const label = (node.textContent ?? '').trim().slice(0, 40);
+              return [
+                `${node.tagName.toLowerCase()}.${node.className} "${label}" ${box.width}x${box.height}`,
+              ];
+            }),
           MIN_TARGET_PX,
         );
-      expect(small, `${href} has targets under ${MIN_TARGET_PX}px at ${width}`).toBe(0);
+      expect(small, `${href} has targets under ${MIN_TARGET_PX}px at ${width}`).toEqual([]);
     }
   });
 }
@@ -47,7 +51,7 @@ test('pager links carry previous and next accessible names', async ({ page }) =>
 });
 
 test.describe('design system without JavaScript', () => {
-  test.use({ javaScriptEnabled: false, viewport: { width: 390, height: MOBILE_HEIGHT } });
+  test.use({ javaScriptEnabled: false, viewport: { width: WIDTH.PHONE, height: MOBILE_HEIGHT } });
 
   test('a phone still reaches every design-system page from the page itself', async ({ page }) => {
     await page.goto('/design-system');
@@ -61,13 +65,13 @@ test.describe('design system without JavaScript', () => {
 
 test.describe('design-system skip navigation link', () => {
   test('is offered only where its target is displayed', async ({ page }) => {
-    await page.setViewportSize({ width: 800, height: DESKTOP_HEIGHT });
+    await page.setViewportSize({ width: WIDTH.TABLET_MID, height: DESKTOP_HEIGHT });
     await page.goto('/design-system');
     await expect(
       page.locator('.ds-skip-nav'),
       'below 1024px the sidebar target is display:none, so the link must not exist for keyboards',
     ).toBeHidden();
-    await page.setViewportSize({ width: 1280, height: DESKTOP_HEIGHT });
+    await page.setViewportSize({ width: WIDTH.DESKTOP, height: DESKTOP_HEIGHT });
     await expect(page.locator('.ds-skip-nav')).toBeAttached();
     await expect(page.locator('#ds-nav')).toBeVisible();
   });
@@ -75,7 +79,7 @@ test.describe('design-system skip navigation link', () => {
   test('puts the sidebar before main in the DOM and on the left at wide desktop', async ({
     page,
   }) => {
-    await page.setViewportSize({ width: 1280, height: DESKTOP_HEIGHT });
+    await page.setViewportSize({ width: WIDTH.DESKTOP, height: DESKTOP_HEIGHT });
     await page.goto('/design-system');
     const sidebar = await page.locator('#ds-nav').boundingBox();
     const main = await page.locator('#main-content').boundingBox();

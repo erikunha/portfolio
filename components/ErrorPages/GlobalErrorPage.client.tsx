@@ -13,8 +13,8 @@ const FALLBACK_MONO_FONT = 'ui-monospace, SFMono-Regular, Menlo, Consolas, monos
 
 function StaticServerError({
   content,
-  reset,
-}: Pick<RouteErrorProps, 'reset'> & { content: ServerErrorCore }) {
+  retry,
+}: Pick<RouteErrorProps, 'retry'> & { content: ServerErrorCore }) {
   return (
     <PageMain className={ERROR_MAIN_CLASS}>
       <ErrorHeading>{content.code}</ErrorHeading>
@@ -22,10 +22,10 @@ function StaticServerError({
         <p className="err-text">{content.message}</p>
       </div>
       <div className="err-actions">
-        <button type="button" className="err-action err-action-primary" onClick={reset}>
+        <button type="button" className="btn" data-variant="primary" onClick={retry}>
           {content.retryLabel}
         </button>
-        <a className="err-action" href={content.home.href}>
+        <a className="btn" data-variant="secondary" href={content.home.href}>
           {content.home.label}
         </a>
       </div>
@@ -33,9 +33,9 @@ function StaticServerError({
   );
 }
 
-function StaticServerErrorBody({ reset }: RouteErrorProps) {
+function StaticServerErrorBody({ retry }: RouteErrorProps) {
   const locale = localeOfPath(usePathname());
-  return <StaticServerError content={serverErrorCore[locale]} reset={reset} />;
+  return <StaticServerError content={serverErrorCore[locale]} retry={retry} />;
 }
 
 const GlobalErrorBody = lazy(() =>
@@ -44,14 +44,14 @@ const GlobalErrorBody = lazy(() =>
     .catch(() => ({ default: StaticServerErrorBody })),
 );
 
-export function GlobalErrorPage({ error, reset }: RouteErrorProps) {
+export function GlobalErrorPage({ error, retry }: RouteErrorProps) {
   const locale = localeOfPath(usePathname());
 
   return (
     <html lang={SITE_HTML_LANG[locale]}>
       <body style={{ fontFamily: FALLBACK_MONO_FONT }}>
-        <Suspense fallback={<StaticServerError content={serverErrorCore[locale]} reset={reset} />}>
-          <GlobalErrorBody error={error} reset={reset} />
+        <Suspense fallback={<StaticServerError content={serverErrorCore[locale]} retry={retry} />}>
+          <GlobalErrorBody error={error} retry={retry} />
         </Suspense>
       </body>
     </html>

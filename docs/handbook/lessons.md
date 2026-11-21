@@ -14,9 +14,10 @@ The prompt for a manual or agent review that applies these rules to a diff is `d
    that is not reachable from this PR's head. Check: `git merge-base --is-ancestor <sha> HEAD`.
 2. A commit body cites only SHAs reachable from the branch it lands on. Describe off-branch facts
    in words. Check: the same `merge-base --is-ancestor` test for every SHA in the body.
-3. Predict CI before pushing: `pnpm ci:predict` runs every CI job the commits trigger. For every
-   route or component the diff touches, the matching `tests/e2e` specs also run against a production
-   build (`pnpm build`, then `pnpm start` on a free port).
+3. Run CI locally before pushing: `pnpm ci:full` runs every CI check in sequence. Every e2e
+   project runs against a production build it serves on a free port. A change to a WebKit spec
+   or to what one exercises also runs `pnpm ci:full --linux`: the macOS run uses a different
+   WebKit build (lesson 57).
    Scope page-wide assertions (`locator('canvas')`, counts over `document`) to the element they
    guard, because a new global layer breaks them. Check: the specs pass on the production build.
 4. A layout, spacing, type or color change regenerates the darwin baselines of
@@ -54,10 +55,10 @@ The prompt for a manual or agent review that applies these rules to a diff is `d
 18. A gate chained with `&&` is never piped (`gate | tail -1 && merge`): the pipeline's exit
     status is the last command's, so a failed gate passes. Use `set -o pipefail` and read each
     gate's own exit code.
-19. `isolate(root)` (`lib/dom/isolate.ts`) inerts every sibling of root up the tree. Pass the
-    wrapper that holds both the panel and its scrim, never the panel alone, or the scrim goes inert
-    and click-outside-to-close dies. jsdom does not hit-test `inert`: prove it with a real
-    Playwright mouse click.
+19. A modal panel is a `<dialog>` opened with `showModal()`, never a div made inert by hand. A
+    click outside lands on the dialog element itself (`event.target === event.currentTarget`),
+    so a scrim beside it is only visual. jsdom has no `showModal`, hit-testing or inertness
+    (`tests/mocks/dialog-shim.ts` stands in): prove it with a real Playwright mouse click.
 20. A change to shared layout (hero, about, contact, footer, nav) runs the full functional e2e
     suite and LHCI locally before the push, not a hand-picked spec list.
 21. A child that sets `visibility: visible` overrides an ancestor's `visibility: hidden`. A
@@ -91,11 +92,13 @@ The prompt for a manual or agent review that applies these rules to a diff is `d
 30. After `pnpm update` or `pnpm add`, run `pnpm install --frozen-lockfile`. A direct dependency
     that also has a `pnpm.overrides` entry records the override as its lockfile specifier; an
     update rewrites it to the manifest range and CI's frozen install then refuses the lockfile.
-31. `waitForHydration` proves React began hydrating a node (the fiber key exists), not that it
-    committed. On a slow runner (headless Linux WebKit paints about four frames per second here) a
-    click in that window is dropped: the submit event fires before the handler is live. A test whose
-    first action after `waitForHydration` is a state-changing click repeats the click inside
-    `expect(...).toPass()` until its effect shows.
+31. `waitForHydration` returns only once React committed the node: its fiber exists, no fiber
+    above it is still marked as hydrating or placed, and the tree reaches the root. The fiber key
+    alone appears while the render is still running, before the commit that attaches handlers; at
+    20x CPU throttle in Chromium that gap lasts about 190 ms. Wait with `waitForHydration`,
+    `gotoHydrated` or `openSectionMenu`, then act once: a retry around the first action hides a
+    missing wait. Check: `tests/e2e/hydration-commit.spec.ts` reads the committed tree through the
+    React devtools hook, independent of the helper.
 32. Playwright's WebKit refuses a screenshot over 32767px on any side, and the full homepage is
     taller at phone width on Linux. A `fullPage` screenshot that nothing asserts on is an
     attachment, so it is not taken.
@@ -169,6 +172,165 @@ The prompt for a manual or agent review that applies these rules to a diff is `d
     descendant inherits the ratio or the length its parent declares. Check: that spec, and
     `__tests__/meta/leading-integrity.test.ts`, which fails a font-size utility that does not carry
     its ratio.
+43. Never nest a variant inside a selector list that holds a pseudo-element. Tailwind compiles
+    `.a::before, .a::after { @variant motion-on { ... } }` to `:is(.a::before, .a::after)`, a
+    pseudo-element inside `:is()` is invalid, and the browser drops the whole rule with no error.
+    Split the list into one rule per selector first. Check: `__tests__/compiled-is-pseudo-element.test.ts`
+    compiles both entry stylesheets and fails on a pseudo-element inside `:is()` or `:where()`.
+44. Parallel writers reset only the files they own. A worker that runs `git checkout`, `restore`,
+    `reset` or `clean` on a shared tree discards another writer's edits, so a conflict or a stray
+    change is fixed by editing the owned file, or by asking `main` for the other writer's file.
+    Check: `git status` before and after a write lists only the paths the contract owns.
+45. A new script is a `.ts` file in a purpose folder under `scripts/` (`ci`, `gates`, `codegen`,
+    `eval`, `install`, `metrics`, `lib`) and imports `isMain` from `scripts/lib/is-main`. A script
+    that a workflow or a `package.json` lifecycle script runs with plain `node` imports its siblings
+    with the `.ts` extension, because no loader resolves a bare specifier there. Check:
+    `scripts/__tests__/bare-node-scripts.test.ts` and `scripts/__tests__/main-module-guard.test.ts`.
+46. A new tracked script is listed in `scripts/ci/detect-changes-paths.ts` in the same commit. An
+    unlisted script belongs to no change filter, so no CI job reruns when it changes. Check:
+    `pnpm check:detect-changes-paths`.
+47. A test that spawns a slow subprocess (`playwright test --list`, a build) runs it once in
+    `beforeAll` with its own timeout and caches the result. Inside a case it runs under the 5 s
+    default and times out on a loaded machine. Check: `__tests__/playwright-visual-projects.test.ts`
+    warms its cache in `beforeAll`.
+48. A test about which Playwright project runs which spec reads the selection Playwright reports
+    (`playwright test --list --reporter=json`), not a copy of `testMatch` or `grep` logic. A copy
+    passed while the tag selection it modelled had already changed. Check:
+    `__tests__/playwright-visual-projects.test.ts`.
+49. A class that a test or a rule uses to name one element is never reused as a styling hook on
+    another. Share the rules through a selector list. Check: `a.skip-to-content` matches one
+    element per page (`tests/e2e/skip-link-unique.spec.ts`).
+50. A modal `<dialog>` that waits for an exit animation keeps the page inert for the whole
+    animation, and a user or test that types in that window is dropped. End the modal state when
+    the close starts and let only the paint finish, with the leaving panel `inert`: `show()` runs
+    the focusing steps, so an exiting panel left live takes focus, Tab stops and clicks, and its
+    final `close()` pulls focus back. Check: during the slide-out `matches(':modal')` is false,
+    no `focusin` reaches the panel and a fill reaches the field
+    (`tests/e2e/drawer-exit-interactive.spec.ts`).
+51. A local mirror of CI reproduces the workflow's environment, not only its commands. A
+    workflow-level `env:` that the local run lacks hides every behaviour that reads it: three
+    unit tests passed on the machine and failed in the `test` job because `APT_CACHE_DIR` was set
+    there. `ci:full` runs each stage with the top-level `env:` plus the `env:` of the jobs the
+    stage mirrors, and lists the values it cannot reproduce. Check:
+    `scripts/__tests__/ci-full-workflow-env.test.ts`.
+52. A lint finding from a rule the repository does not run is a hypothesis, not a defect. Before changing
+    code, apply the fix the rule suggests and watch the test that guards the behaviour; a red test
+    proves the pattern is deliberate, and no test means the pattern is unguarded and gets one.
+    All six `eslint-plugin-react-hooks` findings were deliberate patterns: effects that read the
+    clock or `performance.now()`, a dependency that re-attaches a ref, a counter ref behind a key,
+    a `try` around an await, a render-time reset that reads `Date.now()`. Check: dropping `failureCount` from the `focusSummary`
+    dependencies fails `components/client/ContactForm/ContactForm.refocus.test.tsx`.
+53. A change to a path that only runs on the Linux CI runner is proven in the runner's image
+    before the push. The apt cache redirect passed every local check and broke every browser job,
+    because apt refuses a redirected `Dir::State::Lists` or `Dir::Cache::Archives` without its
+    `partial` subdirectory. `docker run ubuntu:24.04` reproduced it in one command. The same
+    holds for `apt-get autoclean` on that redirected cache: a cache with a superseded and a
+    dropped package lost exactly those two `.deb` files in the image. Check:
+    `scripts/__tests__/install-playwright-browsers-apt-partial.test.ts` and
+    `scripts/__tests__/install-playwright-browsers-apt-prune.test.ts`.
+54. A journey that reaches the contact form through the section menu waits for the form's own
+    hydration, not the menu trigger's. The form is a `React.lazy` island: its server-rendered
+    markup is visible, fillable and clickable while its chunk loads. `openSectionMenu` covers the
+    opener only. `sendVisitorMessage` (`tests/e2e/_helpers/contact-journey.ts`) waits for the form
+    with `waitForHydration` before it fills and clicks, so a journey step acts once on a committed
+    form (lesson 31). The product replays a send click made in that window (the form's React
+    `action` reads `FormData`; `tests/e2e/contact-early-send.spec.ts` holds the chunk for 5 s,
+    asserts the form is visible and uncommitted, clicks once and expects one POST and the success
+    state), so the wait is for determinism, not for correctness. The natural cause of the one
+    reported delivery failure is unconfirmed: only the held chunk ever reproduced it, and a
+    stalled `/api/contact` mock or POST looks the same (no success). The delivery spec counts
+    POSTs and asserts exactly one before it reads the success state, so the next natural failure
+    says which one it was.
+55. A guard for a gate's precondition lives inside the gate's own command, not beside it. The
+    `links-en` baseline holds the fixture feed, so a build without `E2E_LINKS_FEED_FIXTURE`
+    renders live YouTube data and the spec reports a moved layout (23px on chromium, 226px on
+    chromium-mobile). A guard spec existed for that, but CI, `ci:full` and every agent ran
+    `tests/visual/visual.spec.ts` alone, so the guard never ran and five agents chased a layout
+    regression that was a build flag. The check is now a step of the `links-en` test
+    (`expectLinksFeedFixture`), before the capture. The page also waits for every image in the
+    captured region to load and decode (`waitForImagesDecoded`), so a thumbnail that did not load
+    fails with that cause and not as a changed wording. Check:
+    `scripts/__tests__/visual-links-feed-precondition.test.ts`.
+
+56. A test that throttles the CPU throttles every script on the page, not only the code under test.
+    `tests/e2e/hydration-commit.spec.ts` slowed the whole home page 40x, and in 30 Linux runs the
+    contact form wait took 30 s to 138 s while CI ran it past the 180 s budget with the wait itself
+    correct. No run isolated which scripts took the time. A lower rate and frozen motion cut the
+    spread but left a weak guard: a key-only wait still passed 95% of the runs. A window made by
+    slowing everything is a probability. The spec now holds the island chunk and samples React's own
+    write of the fiber key, so the window is exact. Before a spec sets a throttle, ask what the
+    throttle buys and whether holding the work gives the same window. Check: a key-only mutant of the
+    predicate fails the spec 20 of 20 runs.
+
+57. A green macOS WebKit run proves nothing about the Linux WebKit that CI runs. Both drawer specs
+    (`tests/e2e/drawer-dialog.spec.ts:98` and `tests/e2e/drawer-exit-interactive.spec.ts:38`)
+    passed on macOS and failed in CI. The earlier Docker predictor missed it for the opposite
+    reason: it forced `linux/amd64` on an arm64 machine, so the browser ran under emulation and
+    every failure was a timeout, which taught nobody anything. The Playwright image runs
+    natively on arm64 and reproduces the failure, so `pnpm ci:full --linux=gate` runs the specs
+    that failed on Linux before and `--linux` adds the ones the branch changed. The arm64 image
+    is not the amd64 runner: a pass there is evidence, CI stays the gate, and its pixels are
+    never used as a visual baseline. Check: `scripts/__tests__/ci-full-linux.test.ts` (no
+    `--platform`, the image tag equals the lockfile version) and a `--linux=gate` run on a tree
+    without the drawer fix, which fails both specs.
+
+58. An e2e spec that samples an animation does not assume the runner draws frames. Software
+    WebKit on Linux (the CI runner) delivered no `requestAnimationFrame` callback for 3 to 7
+    s after this site loaded and reached steady frames only after 10 to 20 s, and a CSS
+    transition's clock and its `transitionrun` and `transitionend` events only advance with
+    a rendering update, so a 200 ms slide sampled per frame saw no intermediate position (a
+    plain `div` transition behaved the same). The app's exit fallback counted wall-clock
+    from `show()`, so a late first frame cut the slide (on Linux Chromium the panel sat at
+    77% of its travel at the close, 25 of 100 closes reached 95%); it now counts from the
+    start of the `transform` transition read from `getAnimations()` and `ready`, with a
+    1000 ms cap, and 100 of 100 reach 95%. No steady frame rate is promised (the 2-CPU
+    mobile shape stays near 5 fps), and the exit draws about 40 ms per frame whatever the
+    idle rate, so the real-time spec requires 4 live positions, which 200 of 200 unloaded Linux Chromium
+    runs met (minimum 4), and 75% of the panel's travel while the dialog is open, which a close
+    cut by a late start fails (7 of 60 under load on the old timer, 0 of 60 now; read the
+    deepest open sample, because WebKit reads the closed panel at x 0 for one sample after the
+    slide ends). The 1000 ms cap grows with a longer `--menu-duration`. Sample DOM state on a timer. Read a transition's positions by pausing the
+    `CSSTransition` from `getAnimations()`, seeking `currentTime` and restoring it before
+    `play()`, in a test apart from the one that bounds the exit in time with a
+    `MutationObserver` on the attributes, so the bound reads the app's own timing. Take the
+    bound from a probe of 100 runs on the larger of the wall and timeline deltas, never from
+    a round share: a quarter of a 200 ms slide equalled the 50 ms fallback slack, passed a
+    close at 67 ms, and hid a `transitionend` with `elapsedTime` 0 that closed the dialog
+    41 to 127 ms into the slide on Linux Chromium (9 of 100 runs with the transition read
+    at the start mark, 19 of 100 with the observer only; 7 and 18 of 100 closed under 150 ms
+    before the fix; the bound is now 0.75 of the duration, 150 ms, against a measured
+    minimum of 233 ms). That event is a phase hop of a transition still waiting for its
+    start time, not an end and not a cancel, and the panel keeps sliding after it. The
+    guard for that fault is the vitest exit test (`SectionDrawer.exit.test.tsx`), which
+    fails on every run when the app closes on a zero-elapsed end; the e2e bound catches it
+    only in the share of runs that closed under 150 ms. A seek proves configuration, not
+    delivery: require live positions only when `requestAnimationFrame` ticks steadily, and
+    measure that steadiness at rest before the exit, in a wall-clock window, not inside the
+    exit, so an app that janks the exit cannot excuse itself. Check: the drawer exit specs
+    pass 10 of 10 with `--retries=0` in the Playwright Linux image, and fail when the
+    `[data-exiting]` display rule is removed, the fallback timer is 0 or the slack alone,
+    or the exit duration is forced to 0 (`tests/e2e/drawer-dialog.spec.ts`,
+    `tests/e2e/drawer-exit-interactive.spec.ts`).
+
+59. A click that follows a long scroll waits for the layout above the target to stop moving. The
+    contact summary spec failed in 30 of 30 Linux WebKit runs on both component projects. The
+    click did reach the page: the pointer went down on the send label, the page then shrank the
+    `#sec-guitar` placeholder by 1312 px (its `content-visibility: auto` estimate gave way to the
+    real height, about 100 ms after the scroll, and WebKit has no scroll anchoring), the pointer
+    came up on another element, and the browser fired `click` on their common ancestor. No
+    `submit` event fired, so the hydration wait and the form were not the cause. A pre-click
+    `revealDeferredContent(page)` gives every module its real height before the scroll. Same
+    class: any click after a scroll across deferred modules (`ContactForm.e2e.ts` scrolls to
+    `#sec-contact` the same way). Check: probe `pointerdown`, `pointerup`, `click` and `submit`
+    targets with a capture listener before blaming hydration.
+
+60. A timeout that cancels a job is a measurement to read before it is a number to raise. Run 44723089045 hit the 8 minute job limit with every test still passing: the log of the cancelled run and of a green one, compared per file, showed one runner 1.45 times slower across the whole suite, so the fix was the fixed cost each file paid (a jsdom start for files that use no DOM), not the limit. A job with under 25% headroom over its normal time fails on the next slow runner. Check: `__tests__/meta/unit-suite-duration.test.ts` (the node environment for a file with no DOM, the per-file budget, the step limit below the job's), and the `Duration` line of the unit step in the run log.
+
+61. A step that times out in a package install is a cold start until the log says otherwise. Read the cache step's `Cache not found` line and the bytes per second before touching a timeout or a retry. Actions caches belong to a ref: a dispatch on a branch cannot read entries saved under `refs/pull/N/merge`, and `main` seeds nothing it has not run since the cache existed. Run 44723101461 had the same step at 35 s and 12 minutes in one run, 11.9 MB/s against about 70 kB/s from the same mirror, so the timeout was the symptom and the empty cache the condition. Compare the same step across green runs, then `gh cache list` for the key and the repository total. The fix that removes the cause takes apt out of the job: the e2e and visual jobs run in the Playwright image of the pinned `@playwright/test`, and a job that needs a tool the image lacks (Lighthouse's system Chrome) stays on the runner. A workflow key the parser refuses is a decision, not an obstacle: `ci-workflow.ts` learned `container` so `ci:full` kept parsing `ci.yml`. Check: `__tests__/meta/ci-browser-install.test.ts` (image tag equals the lockfile's Playwright version, no install or cache in a container job) and `scripts/__tests__/ci-workflow.test.ts`.
+
+62. A new `@theme` token is also a new utility class, and a component class with the same name loses to it. `--spacing-fader` made Tailwind v4 emit `mx-fader`, a `margin-inline` utility, and the existing component class `.mx-fader` (`mx-` is a utility prefix) lost its width: the mobile fader went from 300px to 256px, with every unit test green. Only a computed-style crawl saw it. Before naming a token, grep `app/css` for `<utility>-<name>`. Check: `lint:css-tokens` fails any class in `app/css/*.css` that equals a generated utility name, and `scripts/__tests__/lint-css-tokens-class-collision.test.ts` covers it. A rule that only sets custom properties (the `.text-xs { --leading }` extensions) is not a collision.
+
+63. A test that sleeps a fixed number of milliseconds and then asserts on async work passes on a quiet machine and fails under load, because the work has no promise to be done by then. Two ask tests failed in loaded `ci:local` runs this way. Wait for the asserted condition with `vi.waitFor` (or `waitFor` when React must stay inside `act`). Wait for a node to be replaced, or for a mock that runs after the code under test, when the test asserts an absence. Use fake timers with `advanceTimersByTimeAsync` for time-based behaviour. Check: `check:test-integrity` fails an awaited `new Promise` holding `setTimeout` with a numeric literal delay, and `scripts/__tests__/check-test-integrity.test.ts` covers it. A real wait needs `behavioral-test-allow: <reason>`.
 
 ## Pre-push judgement list
 

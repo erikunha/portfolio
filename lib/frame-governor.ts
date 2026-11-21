@@ -2,6 +2,7 @@ import { CRT_BASE_TICK_MS, createEffectStepper } from '@/lib/crt-effect-stepper'
 import { SYSFAIL_END, SYSFAIL_START } from '@/lib/events';
 import { readMotion } from '@/lib/motion';
 import { subscribeMotion } from '@/lib/motion-change';
+import { createRunGates } from '@/lib/run-gates';
 
 export type FrameGovernorConfig = {
   maxLevel: number;
@@ -39,6 +40,8 @@ export const FRAME_GOVERNOR_RATE_DIVISORS: readonly number[] = [1, 2, 4, 8, 16, 
 const NO_LEVEL = 0;
 const HOLD_GROWTH = 2;
 const LEVEL_DATASET_KEY = 'crtLevel';
+
+type FrameGate = 'motion' | 'visible' | 'calm';
 
 type Sample = { ts: number; delta: number };
 
@@ -169,8 +172,6 @@ function start() {
   });
   document.documentElement.dataset[LEVEL_DATASET_KEY] = String(NO_LEVEL);
 
-  const gates = { motion: readMotion(), visible: !document.hidden, calm: true };
-
   function tick(ts: number) {
     if (!sampling) return;
     machine.sample(ts);
@@ -183,28 +184,25 @@ function start() {
     }
     raf = requestAnimationFrame(tick);
   }
-  function sync() {
-    const next = Object.values(gates).every(Boolean);
-    if (next === sampling) return;
-    sampling = next;
-    machine.pause();
-    stepper.hold();
-    if (next) raf = requestAnimationFrame(tick);
-    else cancelAnimationFrame(raf);
-  }
-  function setGate(gate: keyof typeof gates, open: boolean) {
-    gates[gate] = open;
-    sync();
-  }
+  const gates = createRunGates<FrameGate>(
+    { motion: readMotion(), visible: !document.hidden, calm: true },
+    (open) => {
+      sampling = open;
+      machine.pause();
+      stepper.hold();
+      if (open) raf = requestAnimationFrame(tick);
+      else cancelAnimationFrame(raf);
+    },
+  );
 
-  const unsubscribeMotion = subscribeMotion((on) => setGate('motion', on));
-  const onVisibility = () => setGate('visible', !document.hidden);
-  const onSysfailStart = () => setGate('calm', false);
-  const onSysfailEnd = () => setGate('calm', true);
+  const unsubscribeMotion = subscribeMotion((on) => gates.set('motion', on));
+  const onVisibility = () => gates.set('visible', !document.hidden);
+  const onSysfailStart = () => gates.set('calm', false);
+  const onSysfailEnd = () => gates.set('calm', true);
   document.addEventListener('visibilitychange', onVisibility);
   window.addEventListener(SYSFAIL_START, onSysfailStart);
   window.addEventListener(SYSFAIL_END, onSysfailEnd);
-  sync();
+  gates.sync();
 
   detach = () => {
     sampling = false;

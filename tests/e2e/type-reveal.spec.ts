@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { NARROW_PHONE_WIDTHS, WIDTH } from './_helpers/geometry';
 import { gotoHydrated, MOTION_TOPBAR_TOGGLE } from './_helpers/hydration';
 import { freezeMotion } from './_helpers/motion';
 import { gotoSettled } from './_helpers/streamed';
@@ -56,7 +57,7 @@ test.describe('type reveal', () => {
   });
 
   test('turning motion off and on again never replays the typing animation', async ({ page }) => {
-    await page.setViewportSize({ width: 1280, height: 720 });
+    await page.setViewportSize({ width: WIDTH.DESKTOP, height: 720 });
     await gotoHydrated(page, '/', MOTION_TOPBAR_TOGGLE);
     await page.waitForFunction(() =>
       document.documentElement.classList.contains('type-reveal-ready'),
@@ -100,9 +101,10 @@ test.describe('type reveal', () => {
     expect(clips.every((clip) => clip === 'none')).toBe(true);
   });
 
-  const NARROW_WIDTHS = [320, 375];
   const ROUTES = ['/', '/cv', '/summary', '/links'];
-  const routeWidths = ROUTES.flatMap((route) => NARROW_WIDTHS.map((width) => ({ route, width })));
+  const routeWidths = ROUTES.flatMap((route) =>
+    NARROW_PHONE_WIDTHS.map((width) => ({ route, width })),
+  );
   for (const { route, width } of routeWidths) {
     test(`marked elements on ${route} at ${width}px hold only typed text and stay on one line`, async ({
       page,
@@ -159,8 +161,8 @@ const BOTTOM_ZONE_RATIO = 0.94;
 const BOTTOM_ZONE_FLOOR = 0.88;
 const MIN_HEADING_TOP_PX = 300;
 const REVEAL_VIEWPORTS = [
-  { width: 390, height: 844 },
-  { width: 1280, height: 720 },
+  { width: WIDTH.PHONE, height: 844 },
+  { width: WIDTH.DESKTOP, height: 720 },
 ] as const;
 
 test.describe('type reveal at first paint', () => {

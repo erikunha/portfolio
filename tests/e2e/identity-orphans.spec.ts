@@ -1,13 +1,14 @@
 import { expect, test } from '@playwright/test';
+import { WIDTH } from './_helpers/geometry';
 import { lastLineOrphansIn } from './_helpers/line-words';
 import { freezeMotion } from './_helpers/motion';
 import { gotoSettled } from './_helpers/streamed';
 
 const KEEP_TAIL_MAX_CHARS = 8;
 const VIEWPORTS = [
-  { width: 320, height: 800 },
-  { width: 375, height: 800 },
-  { width: 768, height: 1024 },
+  { width: WIDTH.PHONE_NARROW, height: 800 },
+  { width: WIDTH.PHONE_COMPACT, height: 800 },
+  { width: WIDTH.TABLET, height: 1024 },
 ] as const;
 
 const SURFACES = [
@@ -23,9 +24,9 @@ const SURFACES = [
 
 for (const { route, selector } of SURFACES) {
   for (const viewport of VIEWPORTS) {
-    test(`${route} ${selector} at ${viewport.width}px never ends on a lone short word`, async ({
-      page,
-    }) => {
+    test(`${route} ${selector} at ${viewport.width}px never ends on a lone short word`, {
+      tag: '@cross-browser',
+    }, async ({ page }) => {
       await page.setViewportSize(viewport);
       await freezeMotion(page);
       await gotoSettled(page, route);

@@ -1,10 +1,10 @@
 import { expect, type Page, test } from '@playwright/test';
 import { readingViews } from '../../content/reading-views';
 import { SITE_LOCALE } from '../../content/site-locale';
-import { horizontalOverflow, VIEWPORTS } from './_helpers/geometry';
+import { horizontalOverflow, VIEWPORTS, WIDTH } from './_helpers/geometry';
 
 const SUMMARY_PATHS = ['/summary', '/pt/summary'];
-const OVERFLOW_WIDTHS = [320, 390, 820, 1280];
+const OVERFLOW_WIDTHS = [WIDTH.PHONE_NARROW, WIDTH.PHONE, WIDTH.TABLET_LARGE, WIDTH.DESKTOP];
 const { DESKTOP, PHONE } = VIEWPORTS;
 const GOLDEN_RATIO = 1.618;
 const RATIO_TOLERANCE = 0.1;
@@ -46,7 +46,7 @@ test.describe('/summary layout', () => {
       .evaluate((node) => getComputedStyle(node).borderTopColor);
     const lime = await page.evaluate(() => {
       const probe = document.createElement('i');
-      probe.style.color = 'var(--color-primary-500)';
+      probe.style.color = 'var(--color-signal-500)';
       document.body.append(probe);
       const color = getComputedStyle(probe).color;
       probe.remove();
@@ -107,7 +107,7 @@ test.describe('/summary layout', () => {
   test('between 768 and 1023 the columns stack because the narrow one would drop under 260px', async ({
     page,
   }) => {
-    for (const width of [768, 820, 1023]) {
+    for (const width of [WIDTH.TABLET, WIDTH.TABLET_LARGE, WIDTH.BELOW_LAPTOP]) {
       await page.setViewportSize({ width, height: 900 });
       await page.goto('/summary');
       const projects = await top(page, '.reading-split > section');
@@ -117,7 +117,7 @@ test.describe('/summary layout', () => {
   });
 
   test('at 1024 the grid is on and the narrow column holds at least 260px', async ({ page }) => {
-    await page.setViewportSize({ width: 1024, height: 900 });
+    await page.setViewportSize({ width: WIDTH.LAPTOP, height: 900 });
     await page.goto('/summary');
     const projects = await top(page, '.reading-split > section');
     const side = await top(page, '.reading-side');

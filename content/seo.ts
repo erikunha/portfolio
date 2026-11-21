@@ -1,9 +1,21 @@
 import { z } from 'zod';
 import { communityEvent, communityTalksSentence } from './community';
+import {
+  credentialSchemaOrg,
+  credentials,
+  institutionAddress,
+  SCHEMA_CREDENTIAL_CATEGORY,
+} from './credentials';
+import { education } from './education';
 import { profile, profileSummary, receiptDelta, YEARS_OF_EXPERIENCE_LABEL } from './profile';
+import type { Credential, Education } from './schemas';
 import { SITE_LOCALE } from './site-locale';
 import { social } from './social';
 import { PHONE_NUMBER } from './social-urls';
+
+export const isCompletedEducation = (entry: Education) => entry.expectedCompletion === null;
+
+export const isSchemaCredential = (entry: Credential) => entry.label in credentialSchemaOrg;
 
 export const personSchema = {
   '@context': 'https://schema.org',
@@ -111,35 +123,21 @@ export const personSchema = {
       'TypeScript, Python, React, Next.js, Angular, Node.js, LLM Systems and Evaluation, Agents and Guardrails, PCI-DSS, AWS, Docker, Performance Engineering',
     experienceRequirements: YEARS_OF_EXPERIENCE_LABEL,
   },
-  alumniOf: [
-    {
-      '@type': 'CollegeOrUniversity',
-      name: 'Cornerstone International Community College of Canada (CICCC)',
-      address: { '@type': 'PostalAddress', addressLocality: 'Vancouver', addressCountry: 'CA' },
+  alumniOf: education[SITE_LOCALE.en].filter(isCompletedEducation).map((entry) => ({
+    '@type': 'CollegeOrUniversity',
+    name: entry.institution,
+    address: {
+      '@type': 'PostalAddress',
+      addressLocality: institutionAddress[entry.id]?.locality,
+      addressCountry: institutionAddress[entry.id]?.country,
     },
-    {
-      '@type': 'CollegeOrUniversity',
-      name: 'Centro Universitário Salesiano de São Paulo (UNISAL)',
-      address: { '@type': 'PostalAddress', addressLocality: 'Campinas', addressCountry: 'BR' },
-    },
-  ],
-  hasCredential: [
-    {
-      '@type': 'EducationalOccupationalCredential',
-      name: 'Angular Developer Certification',
-      credentialCategory: 'certification',
-      recognizedBy: {
-        '@type': 'Organization',
-        name: 'certificates.dev',
-      },
-    },
-    {
-      '@type': 'EducationalOccupationalCredential',
-      name: 'Verified International Academic Qualifications',
-      credentialCategory: 'certification',
-      recognizedBy: { '@type': 'Organization', name: 'World Education Services (WES)' },
-    },
-  ],
+  })),
+  hasCredential: credentials.filter(isSchemaCredential).map((entry) => ({
+    '@type': 'EducationalOccupationalCredential',
+    name: credentialSchemaOrg[entry.label]?.name,
+    credentialCategory: SCHEMA_CREDENTIAL_CATEGORY,
+    recognizedBy: { '@type': 'Organization', name: credentialSchemaOrg[entry.label]?.issuer },
+  })),
   memberOf: {
     '@type': 'Organization',
     name: 'DevOpsDays Campinas',

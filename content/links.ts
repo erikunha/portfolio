@@ -149,7 +149,7 @@ export const linksContent: LinksContent = LinksContentSchema.parse({
     },
     description: {
       pt: 'Engenheiro de Software Sênior, Engenheiro de IA, no Brasil e remoto. Um vídeo novo toda semana no canal Erik na Gringa.',
-      en: 'Senior Software Engineer, AI Engineer, Brazil-based and remote. A new video every week on the Erik na Gringa channel.',
+      en: `${profile.title}, Brazil-based and remote. A new video every week on the Erik na Gringa channel.`,
     },
   },
 });

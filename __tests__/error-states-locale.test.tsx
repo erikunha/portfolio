@@ -37,7 +37,7 @@ describe('error states follow the page language', () => {
 
   it('shows the route error page in Portuguese under /pt', async () => {
     const { RouteErrorPage } = await import('@/components/ErrorPages/RouteErrorPage.client');
-    render(<RouteErrorPage error={new Error('boom')} reset={vi.fn()} />);
+    render(<RouteErrorPage error={new Error('boom')} retry={vi.fn()} />);
     const pt = errorsContent[SITE_LOCALE.pt].serverError;
     expect(screen.getByText(pt.message)).not.toBeNull();
     expect(screen.getByRole('button', { name: pt.retryLabel })).not.toBeNull();
@@ -48,7 +48,7 @@ describe('error states follow the page language', () => {
   it('shows the global error page in Portuguese under /pt', async () => {
     const { GlobalErrorPage } = await import('@/components/ErrorPages/GlobalErrorPage.client');
     const markup = renderToStaticMarkup(
-      <GlobalErrorPage error={new Error('boom')} reset={vi.fn()} />,
+      <GlobalErrorPage error={new Error('boom')} retry={vi.fn()} />,
     );
     expect(markup).toContain(errorsContent[SITE_LOCALE.pt].serverError.retryLabel);
     expect(markup).toContain('lang="pt-BR"');

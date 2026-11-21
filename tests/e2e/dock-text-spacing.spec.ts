@@ -1,7 +1,7 @@
 import { expect, type Page, test } from '@playwright/test';
+import { PHONE_TO_TABLET_WIDTHS } from './_helpers/geometry';
 import { gotoSettled } from './_helpers/streamed';
 
-const WIDTHS = [320, 375, 768] as const;
 const ROUTES = ['/', '/pt'] as const;
 const VIEWPORT_HEIGHT = 812;
 const DOCK_ITEMS = '.dock > a, .dock > button';
@@ -54,8 +54,8 @@ function readDock(page: Page): Promise<DockItemLayout[]> {
 }
 
 for (const route of ROUTES) {
-  for (const width of WIDTHS) {
-    test.describe(`${route} at ${width}px`, () => {
+  for (const width of PHONE_TO_TABLET_WIDTHS) {
+    test.describe(`${route} at ${width}px`, { tag: '@cross-browser' }, () => {
       test.use({
         viewport: { width, height: VIEWPORT_HEIGHT },
         isMobile: true,

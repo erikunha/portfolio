@@ -1,3 +1,9 @@
+@theme {
+  --receipt-metric-width: 10.5rem;
+  --receipt-value-width: 9rem;
+  --receipt-company-width: 9.375rem;
+}
+
 @layer components {
   .projects-grid {
     display: grid;
@@ -13,11 +19,11 @@
     flex-direction: column;
     min-width: 0;
     padding: calc(var(--spacing-4) + var(--spacing-1));
-    border: var(--border-width) solid var(--color-primary-subtle);
+    border: var(--border-width) solid var(--color-border-strong);
     background: transparent;
   }
 
-  @media (max-width: theme(--viewport-below-narrow)) {
+  @media (width < theme(--viewport-narrow)) {
     .project-card {
       padding: var(--spacing-3);
     }
@@ -35,8 +41,8 @@
     width: calc(var(--spacing-8) + var(--spacing-2));
     height: var(--spacing-8);
     flex: none;
-    fill: var(--color-primary-500);
-    stroke: var(--color-primary-500);
+    fill: var(--color-accent);
+    stroke: var(--color-accent);
     stroke-width: 0.6;
   }
 
@@ -52,7 +58,7 @@
   }
 
   .project-co {
-    color: var(--color-primary-500);
+    color: var(--color-accent);
     text-transform: uppercase;
     overflow-wrap: anywhere;
   }
@@ -64,12 +70,11 @@
 
   .project-name {
     margin: 0 0 var(--spacing-3);
-    color: var(--color-primary-500);
+    color: var(--color-accent);
     font-size: var(--text-base);
     font-weight: 700;
     --leading: 1.5;
     overflow-wrap: anywhere;
-    text-wrap: balance;
   }
 
   .project-name a {
@@ -82,7 +87,7 @@
 
   .project-desc {
     margin: 0 0 var(--spacing-4);
-    color: var(--color-tertiary-50);
+    color: var(--color-text);
     font-size: var(--text-sm);
     --leading: 1.6;
   }
@@ -91,7 +96,7 @@
     display: grid;
     gap: var(--spacing-1);
     margin: 0;
-    color: var(--color-primary-500);
+    color: var(--color-accent);
     font-size: var(--text-xs);
     --leading: 1.5;
   }
@@ -127,7 +132,7 @@
     text-align: start;
     overflow-wrap: anywhere;
     margin: 0;
-    color: var(--color-tertiary-50);
+    color: var(--color-text);
   }
 
   .project-receipts {
@@ -136,7 +141,7 @@
 
   .project-receipts h3 {
     margin: 0 0 var(--spacing-3);
-    color: var(--color-primary-500);
+    color: var(--color-accent);
     font-size: var(--text-xs);
     font-weight: 700;
   }
@@ -145,7 +150,7 @@
     margin: 0;
     padding: 0;
     list-style: none;
-    border: var(--border-width) solid var(--color-primary-subtle);
+    border: var(--border-width) solid var(--color-border-strong);
   }
 
   .project-receipts li {
@@ -158,16 +163,16 @@
   }
 
   .project-receipts li + li {
-    border-top: var(--border-width) dashed var(--color-primary-border);
+    border-top: var(--border-width) dashed var(--color-border);
   }
 
   .project-receipts li:has([data-featured]) {
-    border: var(--border-width) solid var(--color-primary-500);
-    background: var(--color-glow-04);
+    border: var(--border-width) solid var(--color-accent);
+    background: var(--color-signal-glow-04);
   }
 
   .receipt-metric {
-    color: var(--color-primary-500);
+    color: var(--color-accent);
     padding: 0;
     overflow-wrap: anywhere;
   }
@@ -175,26 +180,26 @@
   .receipt-value {
     font-size: var(--text-sm);
     text-align: right;
-    color: var(--color-tertiary-50);
+    color: var(--color-text);
     font-weight: 700;
     overflow-wrap: anywhere;
   }
 
   .receipt-value[data-featured] {
-    color: var(--color-primary-500);
+    color: var(--color-accent);
     font-size: var(--text-xl);
   }
 
   .receipt-company {
     grid-column: 1 / -1;
-    color: var(--color-primary-500);
+    color: var(--color-accent);
     text-transform: uppercase;
   }
 
   .receipt-context {
     grid-column: 1 / -1;
     width: 100%;
-    color: var(--color-tertiary-50);
+    color: var(--color-text);
   }
 
   .measured-source,
@@ -211,14 +216,14 @@
 
   .measured-source a,
   .measured-status a {
-    color: var(--color-primary-500);
+    color: var(--color-accent);
     text-decoration: underline;
     text-underline-offset: var(--spacing-1);
   }
 
   .measured-heading a {
     display: inline-block;
-    color: var(--color-primary-500);
+    color: var(--color-accent);
     text-decoration: none;
     text-underline-offset: var(--spacing-1);
   }
@@ -242,7 +247,7 @@
 
   .measured-heading {
     margin: 0 0 var(--spacing-3);
-    color: var(--color-primary-500);
+    color: var(--color-accent);
     font-size: var(--text-base);
     font-weight: 700;
     --leading: 1.6;
@@ -263,12 +268,12 @@
     --measured-value-line: calc(var(--text-xl) * 1.1);
     min-width: 0;
     padding: var(--spacing-2) var(--spacing-3);
-    border: var(--border-width) solid var(--color-primary-border);
-    background: var(--color-glow-03);
+    border: var(--border-width) solid var(--color-border);
+    background: var(--color-signal-glow-03);
   }
 
   .measured-label {
-    color: var(--color-tertiary-50);
+    color: var(--color-text);
     font-weight: 700;
     overflow-wrap: anywhere;
     font-size: var(--text-xs);
@@ -277,7 +282,7 @@
 
   .measured-value {
     margin: var(--spacing-1) 0;
-    color: var(--color-primary-500);
+    color: var(--color-accent);
     font-size: var(--text-xl);
     font-weight: 700;
     --leading: 1.1;
@@ -335,9 +340,9 @@
     justify-items: center;
     text-align: center;
     padding: var(--spacing-3);
-    border: var(--border-width) solid var(--color-primary-500);
-    background: var(--color-glow-03);
-    color: var(--color-tertiary-50);
+    border: var(--border-width) solid var(--color-accent);
+    background: var(--color-signal-glow-03);
+    color: var(--color-text);
     font-size: var(--text-body);
     --leading: 1.5;
   }
@@ -348,7 +353,7 @@
   }
 
   .measured-error strong {
-    color: var(--color-primary-500);
+    color: var(--color-accent);
     font-weight: 700;
   }
 
@@ -356,7 +361,7 @@
     display: inline-flex;
     align-items: center;
     min-height: var(--spacing-target);
-    color: var(--color-primary-500);
+    color: var(--color-accent);
     font-weight: 700;
     text-decoration: underline;
     text-underline-offset: var(--spacing-1);
@@ -375,7 +380,7 @@
     border-style: dashed;
   }
 
-  @media (max-width: theme(--viewport-below-narrow)) {
+  @media (width < theme(--viewport-narrow)) {
     .measured-tile {
       padding-inline: var(--spacing-1);
     }
@@ -415,7 +420,7 @@
     position: relative;
     display: inline-block;
     white-space: pre;
-    color: var(--color-primary-500);
+    color: var(--color-accent);
   }
 
   @keyframes measured-load-fill {
@@ -428,26 +433,32 @@
     }
   }
 
-  body:not([data-motion="reduce"]) .measured-load-bar {
-    color: transparent;
+  /* biome-ignore lint/suspicious/noDuplicateSelectors: `@variant motion-off` and `@variant motion-on` resolve to a `body` ancestor selector, so this rule has a different selector than the earlier one with the same class */
+  .measured-load-bar {
+    @variant motion-on {
+      color: transparent;
+    }
   }
 
-  body:not([data-motion="reduce"]) .measured-load-bar::before,
-  body:not([data-motion="reduce"]) .measured-load-bar::after {
-    position: absolute;
-    inset: 0 auto 0 0;
-    overflow: hidden;
+  .measured-load-bar::before {
+    @variant motion-on {
+      position: absolute;
+      inset: 0 auto 0 0;
+      overflow: hidden;
+      content: attr(data-track);
+      color: var(--color-text-secondary);
+    }
   }
 
-  body:not([data-motion="reduce"]) .measured-load-bar::before {
-    content: attr(data-track);
-    color: var(--color-text-secondary);
-  }
-
-  body:not([data-motion="reduce"]) .measured-load-bar::after {
-    content: attr(data-fill);
-    color: var(--color-primary-500);
-    animation: measured-load-fill 1.8s steps(12, jump-none) infinite;
+  .measured-load-bar::after {
+    @variant motion-on {
+      position: absolute;
+      inset: 0 auto 0 0;
+      overflow: hidden;
+      content: attr(data-fill);
+      color: var(--color-accent);
+      animation: measured-load-fill 1.8s steps(12, jump-none) infinite;
+    }
   }
 
   @container (min-width: 40rem) {
@@ -460,7 +471,7 @@
     #sec-projects > .module-body-content,
     #sec-live-metrics > .module-body-content {
       padding: var(--spacing-4);
-      border: var(--border-width) solid var(--color-primary-subtle);
+      border: var(--border-width) solid var(--color-border-strong);
     }
 
     .projects-grid {

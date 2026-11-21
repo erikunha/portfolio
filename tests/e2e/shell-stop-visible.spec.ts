@@ -1,9 +1,8 @@
 import { expect, test } from '@playwright/test';
-import { settleFrames } from './_helpers/geometry';
+import { NARROW_PHONE_WIDTHS, settleFrames } from './_helpers/geometry';
 import { waitForHydration } from './_helpers/hydration';
 import { freezeMotion } from './_helpers/motion';
 
-const WIDTHS = [320, 375] as const;
 const VIEWPORT_HEIGHT = 844;
 const SHELL_INPUT = '[aria-label="shell command"]';
 const FEED = '[role="log"]';
@@ -11,10 +10,10 @@ const STOP_NAME = 'Stop answer';
 const FILLER_COMMAND = 'help';
 const MAX_FILLER_COMMANDS = 24;
 
-for (const width of WIDTHS) {
-  test(`at ${width}px STOP stays in view and clickable after the feed scrolls to the top mid-stream`, async ({
-    page,
-  }) => {
+for (const width of NARROW_PHONE_WIDTHS) {
+  test(`at ${width}px STOP stays in view and clickable after the feed scrolls to the top mid-stream`, {
+    tag: '@cross-browser',
+  }, async ({ page }) => {
     await page.setViewportSize({ width, height: VIEWPORT_HEIGHT });
     await freezeMotion(page);
     await page.route('**/api/ask', () => new Promise(() => undefined));

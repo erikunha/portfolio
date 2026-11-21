@@ -1,19 +1,27 @@
 import { expect, test } from '@playwright/test';
-import { settleFrames } from './_helpers/geometry';
+import { settleFrames, WIDTH } from './_helpers/geometry';
 import { waitForHydration } from './_helpers/hydration';
 import { freezeMotion } from './_helpers/motion';
 
 const REQUEST_ID = '3f1c9a2e-7b44-4d0a-9c1e-5a8d2b6f0e71';
 const ANSWER = 'Short answer.';
 const VIEWPORT_HEIGHT = 844;
-const PHONE_AND_TABLET_WIDTHS = [320, 375, 390, 480, 540, 600, 767] as const;
+const PHONE_AND_TABLET_WIDTHS = [
+  WIDTH.PHONE_NARROW,
+  WIDTH.PHONE_COMPACT,
+  WIDTH.PHONE,
+  WIDTH.PHONE_WIDE,
+  WIDTH.PHONE_LANDSCAPE,
+  WIDTH.TABLET_SMALL,
+  WIDTH.BELOW_TABLET,
+] as const;
 const REFERENCE = '[data-testid="shell-receipt"]';
 const SHELL_INPUT = '[aria-label="shell command"]';
 
 for (const width of PHONE_AND_TABLET_WIDTHS) {
-  test(`at ${width}px the shell section keeps its height when a short answer lands with a real request id`, async ({
-    page,
-  }) => {
+  test(`at ${width}px the shell section keeps its height when a short answer lands with a real request id`, {
+    tag: '@cross-browser',
+  }, async ({ page }) => {
     await page.setViewportSize({ width, height: VIEWPORT_HEIGHT });
     await freezeMotion(page);
     await page.route('**/api/ask', (route) =>

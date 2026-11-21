@@ -1,36 +1,60 @@
 import { z } from 'zod';
 
+import { localeOfPath, SITE_HTML_LANG } from '@/content/site-locale';
+import { errorFingerprint } from '@/lib/error-fingerprint';
+import { HTTP_STATUS } from '@/lib/http-status';
 import { log } from '@/lib/log';
-import {
-  getErrorLogDailyLimit,
-  getErrorLogIpDailyLimit,
-  getErrorLogLimit,
-  getRedis,
-} from '@/lib/rate-limit';
+import { getErrorLogDailyLimit, getErrorLogIpDailyLimit, getErrorLogLimit } from '@/lib/rate-limit';
+import { getRedis } from '@/lib/redis';
 import { defineHandler, err, ok } from '@/lib/server/route';
+import { utcDay } from '@/lib/time';
 
 const SMOKE_PREFIX = '[smoke]';
 const MAX_LOG_BODY_BYTES = 32_768;
 
+const ERR_KEY_PREFIX = 'err';
+const ERR_COUNT_KEY_PREFIX = 'errn';
+const ERR_LATEST_KEY_PREFIX = 'errlast';
+const ERR_DAY_INDEX_KEY_PREFIX = 'errday';
+const KEY_SEPARATOR = ':';
 const ERR_KV_TTL_S = 7 * 24 * 60 * 60;
 const MAX_STORED_STACK_CHARS = 4096;
 const MAX_TS_LENGTH = 64;
+const MAX_RELEASE_LENGTH = 40;
+const MAX_USER_AGENT_CHARS = 500;
+const MAX_MOTION_LENGTH = 16;
+const MAX_DIGEST_LENGTH = 64;
+const MAX_VIEWPORT_WIDTH = 100_000;
+const RELEASE_PATTERN = /^[A-Za-z0-9._-]+$/;
+const UNKNOWN_RELEASE = 'unknown';
 
 const ErrorPayload = z.object({
   level: z.enum(['error', 'warn']),
   message: z.string().min(1).max(2000),
   stack: z.string().max(16000).optional(),
   url: z.string().max(2000).optional(),
-  userAgent: z.string().max(500).optional(),
   ts: z.string().max(MAX_TS_LENGTH).optional(),
+  release: z.string().max(MAX_RELEASE_LENGTH).regex(RELEASE_PATTERN).optional().catch(undefined),
+  motion: z.string().max(MAX_MOTION_LENGTH).optional().catch(undefined),
+  vw: z.number().int().min(0).max(MAX_VIEWPORT_WIDTH).optional(),
+  digest: z.string().max(MAX_DIGEST_LENGTH).optional().catch(undefined),
 });
+
+function languageOfUrl(url: string | undefined): string | undefined {
+  if (!url) return undefined;
+  try {
+    return SITE_HTML_LANG[localeOfPath(new URL(url).pathname)];
+  } catch {
+    return undefined;
+  }
+}
 
 const handleLog = defineHandler({
   schema: ErrorPayload,
   maxBodyBytes: MAX_LOG_BODY_BYTES,
   rateLimit: getErrorLogLimit,
   rateLimitErrorMessage: 'too many error reports',
-  async handler({ body, ipHash, requestId }) {
+  async handler({ body, ipHash, req, requestId }) {
     if (body.message.toLowerCase().startsWith(SMOKE_PREFIX)) {
       return ok({ requestId });
     }
@@ -59,26 +83,60 @@ const handleLog = defineHandler({
     }
 
     const errId = crypto.randomUUID();
-    const today = new Date().toISOString().slice(0, 10);
-    const key = `err:${today}:${errId}`;
+    const today = utcDay(new Date());
+    const release = body.release ?? UNKNOWN_RELEASE;
+    const fingerprint = errorFingerprint(body);
+    const keyTail = [release, today, fingerprint].join(KEY_SEPARATOR);
+    const key = `${ERR_KEY_PREFIX}${KEY_SEPARATOR}${keyTail}`;
+    const countKey = `${ERR_COUNT_KEY_PREFIX}${KEY_SEPARATOR}${keyTail}`;
+    const latestKey = `${ERR_LATEST_KEY_PREFIX}${KEY_SEPARATOR}${keyTail}`;
+    const dayIndexKey = `${ERR_DAY_INDEX_KEY_PREFIX}${KEY_SEPARATOR}${today}`;
+    const dayIndexMember = [release, fingerprint].join(KEY_SEPARATOR);
+
+    const lang = languageOfUrl(body.url);
+    const userAgent = req.headers.get('user-agent')?.slice(0, MAX_USER_AGENT_CHARS);
 
     const record = {
       ...body,
+      ...(lang === undefined ? {} : { lang }),
+      ...(userAgent ? { userAgent } : {}),
       ...(body.stack === undefined ? {} : { stack: body.stack.slice(0, MAX_STORED_STACK_CHARS) }),
       errId,
       capturedAt: new Date().toISOString(),
     };
 
+    let redis: ReturnType<typeof getRedis>;
+    let stored: unknown;
     try {
-      await getRedis().set(key, JSON.stringify(record), { ex: ERR_KV_TTL_S });
+      redis = getRedis();
+      const serialized = JSON.stringify(record);
+      const [firstWrite] = await redis
+        .multi()
+        .set(key, serialized, { ex: ERR_KV_TTL_S, nx: true })
+        .set(latestKey, serialized, { ex: ERR_KV_TTL_S })
+        .sadd(dayIndexKey, dayIndexMember)
+        .expire(dayIndexKey, ERR_KV_TTL_S)
+        .exec();
+      stored = firstWrite;
     } catch (kvErr) {
       log.error('error-log KV write failed', { requestId, errId, err: kvErr });
       return err({
         requestId,
-        status: 503,
+        status: HTTP_STATUS.serviceUnavailable,
         code: 'storage_unavailable',
         message: 'storage unavailable',
       });
+    }
+
+    if (stored === null) {
+      try {
+        await redis.multi().incr(countKey).expire(countKey, ERR_KV_TTL_S).exec();
+      } catch (countErr) {
+        log.warn('error-log repeat counter failed, record already stored', {
+          requestId,
+          err: countErr,
+        });
+      }
     }
 
     return ok({ requestId });

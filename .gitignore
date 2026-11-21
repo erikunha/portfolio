@@ -48,7 +48,7 @@
 # local gates-runtime LHCI filesystem output
 /.lhci-local/
 
-# ai-eval harness output (scripts/ask-eval.ts)
+# ai-eval harness output (scripts/eval/ask-eval.ts)
 /ask-eval-result.json
 /ask-eval-result.filtered.json
 /ask-eval-results/

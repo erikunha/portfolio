@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { GlobalErrorPage } from '@/components/ErrorPages/GlobalErrorPage.client';
 import { serverErrorContent } from '@/content/server-error-detail';
@@ -17,12 +17,11 @@ describe('GlobalErrorPage when its body chunk cannot load', () => {
   });
 
   it('keeps a readable page with a working retry and a way home', async () => {
-    const reset = vi.fn();
+    const retry = vi.fn();
     const copy = serverErrorContent[SITE_LOCALE.en];
-    render(<GlobalErrorPage error={new Error('boom')} reset={reset} />, { container: document });
-    await act(async () => {
-      await new Promise((resolve) => setTimeout(resolve, 0));
-    });
+    render(<GlobalErrorPage error={new Error('boom')} retry={retry} />, { container: document });
+    const fallbackRetry = screen.getByRole('button', { name: copy.retryLabel });
+    await waitFor(() => expect(fallbackRetry.isConnected).toBe(false));
 
     expect(
       screen.getByText(copy.message),
@@ -30,7 +29,7 @@ describe('GlobalErrorPage when its body chunk cannot load', () => {
     ).not.toBeNull();
     expect(screen.queryByText(copy.bootRender, { exact: false })).toBeNull();
     fireEvent.click(screen.getByRole('button', { name: copy.retryLabel }));
-    expect(reset, 'retry must reach the router reset without the body chunk').toHaveBeenCalledTimes(
+    expect(retry, 'retry must reach the router retry without the body chunk').toHaveBeenCalledTimes(
       1,
     );
     expect(screen.getByRole('link', { name: copy.home.label }).getAttribute('href')).toBe(

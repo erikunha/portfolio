@@ -1,29 +1,20 @@
 import { contactContent } from '@/content/contact';
 import { CONTACT_DELIVERY_CODE, CONTACT_ERROR_CODE } from '@/content/contact-rules';
-import { DEFAULT_SITE_LOCALE, SITE_LOCALES, type SiteLocale } from '@/content/site-locale';
-import { sendContactMessage } from '@/lib/contact-delivery';
-import {
-  CONTACT_MESSAGE_TTL_SECONDS,
-  contactMessageKey,
-  enqueueContact,
-} from '@/lib/contact-outbox';
-import { ContactSchema, isHoneypotTripped } from '@/lib/contact-validation';
+import { SITE_LOCALES, type SiteLocale } from '@/content/site-locale';
+import { sendContactMessage } from '@/lib/contact/delivery';
+import { deleteContactMessage, enqueueContact, saveContactMessage } from '@/lib/contact/outbox';
+import { submitContact } from '@/lib/contact/submit';
+import { ContactSchema, isHoneypotTripped } from '@/lib/contact/validation';
+import { HTTP_STATUS } from '@/lib/http-status';
 import { log } from '@/lib/log';
-import { getContactLimit, getRedis } from '@/lib/rate-limit';
+import { getContactLimit } from '@/lib/rate-limit';
+import { localeFromRequest } from '@/lib/server/request-locale';
 import { defineHandler, err, ok } from '@/lib/server/route';
-import { ASK_LOCALE_HEADER } from '@/lib/stream-protocol';
 
 const HONEYPOT_JITTER_MIN_MS = 50;
 const HONEYPOT_JITTER_MAX_MS = 150;
 
-const STORAGE_UNAVAILABLE_STATUS = 502;
-const QUEUED_STATUS = 202;
 const MAX_CONTACT_BODY_BYTES = 16_384;
-
-function requestLocale(req: Request): SiteLocale {
-  const header = req.headers.get(ASK_LOCALE_HEADER);
-  return SITE_LOCALES.find((locale) => locale === header) ?? DEFAULT_SITE_LOCALE;
-}
 
 const handleContact = defineHandler({
   schema: ContactSchema,
@@ -32,8 +23,8 @@ const handleContact = defineHandler({
   rateLimitErrorMessage: Object.fromEntries(
     SITE_LOCALES.map((locale) => [locale, contactContent[locale].errors.rateLimited]),
   ) as Record<SiteLocale, string>,
-  async handler({ body, ipHash, requestId, req }) {
-    const copy = contactContent[requestLocale(req)];
+  async handler({ body, requestId, req }) {
+    const copy = contactContent[localeFromRequest(req)];
     if (isHoneypotTripped(body)) {
       log.info('contact honeypot tripped', { requestId });
       const jitterMs =
@@ -45,52 +36,43 @@ const handleContact = defineHandler({
 
     const { name, email, message } = body;
 
-    const msgId = requestId;
-    const payload = { name, email, message, receivedAt: new Date().toISOString(), ipHash };
+    const outcome = await submitContact(
+      { msgId: requestId, requestId, name, email, message },
+      {
+        saveMessage: saveContactMessage,
+        deleteMessage: deleteContactMessage,
+        enqueue: enqueueContact,
+        deliver: sendContactMessage,
+        now: Date.now,
+        log,
+      },
+    );
 
-    try {
-      await getRedis().set(contactMessageKey(msgId), JSON.stringify(payload), {
-        ex: CONTACT_MESSAGE_TTL_SECONDS,
-      });
-    } catch {
-      log.error('KV write failed', { requestId, msgId });
-      return err({
-        requestId,
-        status: STORAGE_UNAVAILABLE_STATUS,
-        code: CONTACT_ERROR_CODE.STORAGE_UNAVAILABLE,
-        message: copy.errors.storageUnavailable,
-      });
+    switch (outcome) {
+      case 'sent':
+        return ok({ requestId });
+      case 'storage_failed':
+        return err({
+          requestId,
+          status: HTTP_STATUS.badGateway,
+          code: CONTACT_ERROR_CODE.STORAGE_UNAVAILABLE,
+          message: copy.errors.storageUnavailable,
+        });
+      case 'outbox_failed':
+        return err({
+          requestId,
+          status: HTTP_STATUS.badGateway,
+          code: CONTACT_ERROR_CODE.DELIVERY_UNAVAILABLE,
+          message: copy.errors.retryUnavailable,
+        });
+      case 'queued':
+        return err({
+          requestId,
+          status: HTTP_STATUS.accepted,
+          code: CONTACT_DELIVERY_CODE.QUEUED,
+          message: copy.queued.message,
+        });
     }
-
-    if (await sendContactMessage(msgId, payload, requestId)) return ok({ requestId });
-
-    let queued = false;
-    try {
-      queued = await enqueueContact(msgId, payload.receivedAt);
-      if (!queued) log.warn('contact outbox full', { requestId, msgId });
-    } catch {
-      log.error('contact outbox write failed', { requestId, msgId });
-    }
-    if (!queued) {
-      try {
-        await getRedis().del(contactMessageKey(msgId));
-      } catch {
-        log.error('contact message cleanup failed', { requestId, msgId });
-      }
-      return err({
-        requestId,
-        status: STORAGE_UNAVAILABLE_STATUS,
-        code: CONTACT_ERROR_CODE.DELIVERY_UNAVAILABLE,
-        message: copy.errors.retryUnavailable,
-      });
-    }
-
-    return err({
-      requestId,
-      status: QUEUED_STATUS,
-      code: CONTACT_DELIVERY_CODE.QUEUED,
-      message: copy.queued.message,
-    });
   },
 });
 

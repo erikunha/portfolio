@@ -1,5 +1,5 @@
 import { expect, type Locator, test } from '@playwright/test';
-import { VIEWPORTS } from './_helpers/geometry';
+import { VIEWPORTS, WIDTH } from './_helpers/geometry';
 
 const CHAIN = '#sec-guitar [data-testid^="signal-node-"]';
 const PAIR = '#sec-guitar .guitar-pair > *';
@@ -12,7 +12,7 @@ const STACKED_GROUPS = [
 const ROW_PARTS = ['#sec-guitar .guitar-signal-strip > *', '#sec-guitar .guitar-camera-labels > *'];
 
 const { PHONE, DESKTOP } = VIEWPORTS;
-const JUST_BELOW_DESKTOP = { width: 767, height: 900 };
+const JUST_BELOW_DESKTOP = { width: WIDTH.BELOW_TABLET, height: 900 };
 
 async function edges(children: Locator) {
   await children.first().scrollIntoViewIfNeeded();
@@ -27,7 +27,7 @@ async function edges(children: Locator) {
 }
 
 for (const viewport of [PHONE, JUST_BELOW_DESKTOP]) {
-  test.describe(`#sec-guitar at ${viewport.width}px`, () => {
+  test.describe(`#sec-guitar at ${viewport.width}px`, { tag: '@cross-browser' }, () => {
     test.use({ viewport });
 
     for (const group of STACKED_GROUPS) {
@@ -51,7 +51,7 @@ for (const viewport of [PHONE, JUST_BELOW_DESKTOP]) {
   });
 }
 
-test.describe('#sec-guitar at 1280px', () => {
+test.describe('#sec-guitar at 1280px', { tag: '@cross-browser' }, () => {
   test.use({ viewport: DESKTOP });
 
   test('signal chain nodes stay on one row', async ({ page }) => {
@@ -108,7 +108,7 @@ test.describe('#sec-guitar at 1280px', () => {
   });
 });
 
-test.describe('#sec-guitar facts keep their emphasis', () => {
+test.describe('#sec-guitar facts keep their emphasis', { tag: '@cross-browser' }, () => {
   test.use({ viewport: DESKTOP });
 
   test('values and the obsession label are bold signal green', async ({ page }) => {
@@ -116,7 +116,7 @@ test.describe('#sec-guitar facts keep their emphasis', () => {
     await page.locator(STATS).first().scrollIntoViewIfNeeded();
     const styles = await page.evaluate(() => {
       const signal = document.createElement('span');
-      signal.style.color = 'var(--color-primary-500)';
+      signal.style.color = 'var(--color-signal-500)';
       document.body.append(signal);
       const expected = getComputedStyle(signal).color;
       signal.remove();
@@ -139,7 +139,9 @@ test.describe('#sec-guitar facts keep their emphasis', () => {
 });
 
 for (const viewport of [PHONE, JUST_BELOW_DESKTOP]) {
-  test(`stacked signal arrows stay between the nodes at ${viewport.width}px`, async ({ page }) => {
+  test(`stacked signal arrows stay between the nodes at ${viewport.width}px`, {
+    tag: '@cross-browser',
+  }, async ({ page }) => {
     await page.setViewportSize(viewport);
     await page.goto('/');
     const chain = page.locator('#sec-guitar .guitar-chain');
@@ -161,8 +163,10 @@ for (const viewport of [PHONE, JUST_BELOW_DESKTOP]) {
   });
 }
 
-for (const width of [834, 1024, 1280]) {
-  test(`every mixer plugin name is readable in full at ${width}px`, async ({ page, isMobile }) => {
+for (const width of [WIDTH.TABLET_PRO, WIDTH.LAPTOP, WIDTH.DESKTOP]) {
+  test(`every mixer plugin name is readable in full at ${width}px`, {
+    tag: '@cross-browser',
+  }, async ({ page, isMobile }) => {
     test.skip(isMobile, 'a phone user agent renders the mobile mixer instead');
     await page.setViewportSize({ width, height: 900 });
     await page.goto('/');
@@ -184,11 +188,10 @@ for (const width of [834, 1024, 1280]) {
   });
 }
 
-for (const width of [320, 375, 600]) {
-  test(`the desktop mixer stacks its channels without a sideways scroll at ${width}px`, async ({
-    page,
-    isMobile,
-  }) => {
+for (const width of [WIDTH.PHONE_NARROW, WIDTH.PHONE_COMPACT, WIDTH.TABLET_SMALL]) {
+  test(`the desktop mixer stacks its channels without a sideways scroll at ${width}px`, {
+    tag: '@cross-browser',
+  }, async ({ page, isMobile }) => {
     test.skip(isMobile, 'a phone user agent renders the mobile mixer instead');
     await page.setViewportSize({ width, height: 900 });
     await page.goto('/');

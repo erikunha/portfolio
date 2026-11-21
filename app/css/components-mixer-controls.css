@@ -1,10 +1,11 @@
 @layer components {
   .fader-track {
-    --fader-thumb-w: 14px;
+    --fader-thumb-w: var(--spacing-panel);
+    --fader-track-fill: color-mix(in srgb, var(--color-accent) 3%, transparent);
     position: relative;
-    min-height: 24px;
-    background: color-mix(in srgb, var(--color-primary-500) 3%, transparent);
-    border: 1px solid var(--color-primary-quiet);
+    min-height: var(--spacing-6);
+    background: var(--fader-track-fill);
+    border: var(--border-width) solid var(--color-signal-quiet);
     cursor: ew-resize;
     touch-action: pan-y;
   }
@@ -16,20 +17,20 @@
     right: var(--spacing-2);
     top: 50%;
     height: 1px;
-    background: var(--color-primary-quiet);
-    transform: translateY(-0.5px);
+    background: var(--color-signal-quiet);
+    transform: translateY(calc(var(--border-width) / -2));
     pointer-events: none;
   }
 
   .faderThumb {
     position: absolute;
-    top: -2px;
+    top: calc(var(--spacing-hair) * -1);
     left: 0;
     width: var(--fader-thumb-w);
-    height: 22px;
-    background: var(--color-primary-500);
-    box-shadow: 0 0 8px var(--color-primary-500);
-    border: 1px solid var(--color-secondary-950);
+    height: var(--spacing-lane);
+    background: var(--color-accent);
+    box-shadow: 0 0 var(--spacing-2) var(--color-accent);
+    border: var(--border-width) solid var(--color-surface);
     cursor: ew-resize;
   }
 
@@ -37,23 +38,26 @@
     content: "";
     position: absolute;
     left: 50%;
-    top: 3px;
-    bottom: 3px;
+    top: var(--spacing-tight);
+    bottom: var(--spacing-tight);
     width: 1px;
-    background: var(--color-secondary-950);
+    background: var(--color-surface);
     transform: translateX(-50%);
   }
 
-  body[data-motion="reduce"] .faderThumb {
-    box-shadow: none;
+  /* biome-ignore lint/suspicious/noDuplicateSelectors: `@variant motion-off` and `@variant motion-on` resolve to a `body` ancestor selector, so this rule has a different selector than the earlier one with the same class */
+  .faderThumb {
+    @variant motion-off {
+      box-shadow: none;
+    }
   }
 
   .vu-meter {
     position: relative;
-    height: 14px;
-    min-height: 24px;
-    border: 1px solid var(--color-primary-quiet);
-    background: color-mix(in srgb, var(--color-secondary-950) 70%, transparent);
+    height: var(--spacing-panel);
+    min-height: var(--spacing-6);
+    border: var(--border-width) solid var(--color-signal-quiet);
+    background: var(--color-surface-tint-heavy);
     display: flex;
     align-items: stretch;
     gap: 1px;
@@ -64,20 +68,20 @@
 
   .vuSegFilled {
     flex: 1;
-    background: var(--color-primary-500);
+    background: var(--color-accent);
     height: 100%;
   }
 
   .vuSegEmpty {
     flex: 1;
-    background: var(--color-primary-500);
+    background: var(--color-accent);
     height: 100%;
     opacity: 0.55;
   }
 
   .vuSegRed {
     flex: 1;
-    background: var(--color-senary-300);
+    background: var(--color-coral-300);
     height: 100%;
   }
 
@@ -85,18 +89,18 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 3px;
+    gap: var(--spacing-tight);
     user-select: none;
     touch-action: none;
   }
 
   .dbValue {
     font-weight: 700;
-    color: var(--color-primary-500);
+    color: var(--color-accent);
     font-size: var(--text-min);
   }
 
-  @media (max-width: theme(--viewport-below-md)) {
+  @media (width < theme(--viewport-md)) {
     .dbValue {
       font-size: var(--text-sm);
     }
@@ -104,15 +108,15 @@
 
   .dbUnit {
     font-size: var(--text-min);
-    color: var(--color-primary-400);
+    color: var(--color-signal-400);
   }
 
   .lufs {
     font-size: var(--text-min);
-    color: var(--color-primary-400);
+    color: var(--color-signal-400);
     display: block;
     letter-spacing: var(--tracking-lg);
-    margin-top: 2px;
+    margin-top: var(--spacing-hair);
     opacity: 0.8;
   }
 }

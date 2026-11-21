@@ -1,7 +1,7 @@
 import 'server-only';
 
 import { hashIp } from '@/lib/ip-hash';
-import { getClientIp } from '@/lib/rate-limit';
+import { getClientIp } from '@/lib/server/client-ip';
 
 declare const rateLimitIdentifierBrand: unique symbol;
 

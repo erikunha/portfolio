@@ -1,5 +1,12 @@
 import type { Metadata } from 'next';
 import { ogImage, SITE_NAME } from '@/content/seo';
+import { localeAlternates, type SiteLocale } from '@/content/site-locale';
+import { social } from '@/content/social';
+
+export type HreflangInput = {
+  path: string;
+  defaultLocale?: SiteLocale;
+};
 
 export type PageMetadataInput = {
   title: string;
@@ -7,8 +14,24 @@ export type PageMetadataInput = {
   canonical: string;
   ogLocale: string;
   ogType?: 'website' | 'profile';
-  languages?: Record<string, string>;
+  hreflang?: HreflangInput;
 };
+
+export function absoluteUrl(path: string): string {
+  return `${social.site}${path}`;
+}
+
+export function absoluteLanguages(
+  { path, defaultLocale }: HreflangInput,
+  toUrl: (languagePath: string) => string = absoluteUrl,
+): Record<string, string> {
+  return Object.fromEntries(
+    Object.entries(localeAlternates(path, defaultLocale).languages).map(([lang, langPath]) => [
+      lang,
+      toUrl(langPath),
+    ]),
+  );
+}
 
 export function buildPageMetadata({
   title,
@@ -16,12 +39,12 @@ export function buildPageMetadata({
   canonical,
   ogLocale,
   ogType = 'website',
-  languages,
+  hreflang,
 }: PageMetadataInput): Metadata {
   return {
     title,
     description,
-    alternates: languages ? { canonical, languages } : { canonical },
+    alternates: hreflang ? { canonical, languages: absoluteLanguages(hreflang) } : { canonical },
     openGraph: {
       type: ogType,
       locale: ogLocale,

@@ -94,7 +94,10 @@ run is green. Do not push the code first and let CI fail.
   the section you intended to touch.
 - A local Docker generator that produces linux pixels in one push is desirable, but only
   if its output is first validated to match the CI runner. Do not commit an unvalidated
-  one; it churns review.
+  one; it churns review. `pnpm ci:full --linux` runs the functional e2e specs in the CI
+  Playwright image, native on the host architecture, and excludes the visual specs: its
+  pass or fail is proven for behaviour, not for pixels, so Docker visual output stays out
+  until it is validated against the CI runner.
 
 ## Related
 

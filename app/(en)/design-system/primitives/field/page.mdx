@@ -1,6 +1,6 @@
 import { dsPageMetadata } from '../../_lib/page-metadata';
 import { OnThisPage } from '../../_components/OnThisPage';
-import { Field } from '../../../../../design-system/components/Field';
+import { Field } from '@/design-system/components/Field';
 
 export const metadata = dsPageMetadata({
   slug: 'primitives/field',
@@ -12,7 +12,7 @@ export const metadata = dsPageMetadata({
 
 <OnThisPage items={[{id:'props',label:'Props'},{id:'states',label:'States'},{id:'accessibility',label:'Accessibility'}]} />
 
-Source: `design-system/components/Field/Field.tsx`. Client component (`'use client'`) because it generates ids with `useId`. It is not exported by the `@/design-system` barrel; import it from `@/design-system/components/Field`.
+Source: `design-system/components/Field/Field.tsx`. Server component; it generates ids with `useId`. It is not exported by the `@/design-system` barrel; import it from `@/design-system/components/Field`.
 
 <h2 id="props">Props</h2>
 

@@ -8,9 +8,9 @@ This is a single, continuously deployed web application. Only the current `main`
 
 **Please do not open a public issue for security problems.**
 
-Report privately by either:
-- **GitHub Security Advisories**: open a private advisory via the repository's **Security → Report a vulnerability** tab (preferred), or
-- **Email**: erikhenriquealvescunha@gmail.com with `SECURITY` in the subject.
+Report privately by email: erikhenriquealvescunha@gmail.com with `SECURITY` in the subject. The same contact is published at `/.well-known/security.txt`.
+
+GitHub private vulnerability reporting is the second private channel: the repository's **Security → Report a vulnerability** tab, also listed as a `Contact` in `/.well-known/security.txt`.
 
 Please include a description of the issue, the affected URL or code path, reproduction steps or a proof of concept, and the impact you believe it has. If you have a suggested fix, include it.
 
@@ -27,8 +27,12 @@ Out of scope: findings that require a compromised maintainer machine or account,
 The repository defends in depth, and most of these are enforced in CI on every change:
 - **Secret scanning**: a checksum-pinned `gitleaks` runs as a pre-commit hook and in CI; a fixture test proves the scanner actually fires.
 - **Static analysis**: Semgrep and GitHub CodeQL run in CI.
-- **Dependency review**: a dependency-review gate runs on pull requests; dependencies use caret or tilde ranges (tilde is mandatory for the listed framework packages, and exact pins are rejected for stable versions by `scripts/check-dep-pinning.mjs`) and install with a frozen lockfile in CI.
-- **Content Security Policy** and security headers are set at the edge; the API boundary enforces rate limiting and input validation (Zod) before any handler logic runs.
+- **Dependency review**: a dependency-review gate runs on pull requests; dependencies use caret or tilde ranges (tilde is mandatory for the listed framework packages, and exact pins are rejected for stable versions by `scripts/gates/check-dep-pinning.ts`) and install with a frozen lockfile in CI.
+- **Content Security Policy** and every other security header are static headers from `next.config.ts`; no request-time function sits in front of the routes. The policy reports to `/api/csp-report`, which logs a bounded, sanitised line per violation. `Content-Security-Policy-Report-Only` holds only `connect-src 'self'` and the reporting directives; it measures whether the analytics hosts can leave the `connect-src` allowlist without duplicating reports. `Permissions-Policy` denies camera, microphone, geolocation, payment, USB, serial and topics. HSTS sets two years with subdomains and carries no preload token.
+- **API boundary**: rate limiting and input validation (Zod) run before any handler logic, and every request through the shared wrappers logs one event with no IP, body or query string.
+- **Privacy**: stored ask and contact records hold no IP hash. The hash is a short-lived rate-limit and duplicate-question key, and the ask preflight also writes it to the request log as `ipHash`.
+- **Client errors**: `/api/log` keeps one record per error fingerprint with a 7-day TTL and counts the repeats. A daily cron mails the new and the noisy fingerprints.
+- **Contact file**: `/.well-known/security.txt` publishes the reporting contact.
 - **No secrets in the repo.** All credentials are environment variables provided at deploy time.
 
 - **Forget endpoint**: anyone who holds one request id can delete the whole conversation it belongs to. Request ids are random v4 UUIDs, responses never reveal whether an id exists, and the route is rate limited per IP. The conversation index is keyed by a client-chosen id that the server accepts only as a lower-case v4 UUID and writes itself; a client cannot write to it directly.

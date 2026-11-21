@@ -75,14 +75,14 @@ Examples:
 Before writing: every branch that means "something is wrong" ends in a non-zero exit, and the process is allowed to unwind so `finally` runs.
 Check: `bash script.sh; echo $?` on the success path and on a deliberately broken path.
 Examples:
-- PR193 `scripts/check-gitleaks-fixture.mjs`: the exit code path ignored the real result; the fix made the code match the outcome.
+- PR193 `scripts/gates/check-gitleaks-fixture.ts`: the exit code path ignored the real result; the fix made the code match the outcome.
 
 **Rule 9. A gate that scans files must scan the same set of files the other gate scans.**
 Path filters, allowlists and directories are duplicated in more than one place and they drift apart.
 Before writing: when you add a path or an allowlist entry, search for every other list of the same kind in the repo and update them in the same change.
 Check: compare the new path against every pathspec, allowlist and directory list in `.github/` and `scripts/`.
 Examples:
-- PR193 `scripts/check-gitleaks-fixture.mjs`: the allowlist of files permitted to name the secret phrase did not include the test file that names it; the fix widened the list.
+- PR193 `scripts/gates/check-gitleaks-fixture.ts`: the allowlist of files permitted to name the secret phrase did not include the test file that names it; the fix widened the list.
 
 **Rule 10. Shell and Git invocations must not interpolate untrusted or path-derived values into a pattern.**
 Before writing: quote every expansion, and pass values as arguments rather than pasting them into a `sed` or `grep` pattern.
@@ -106,7 +106,7 @@ Almost all findings here are tests that pass for the wrong reason.
 Before writing: state the sentence the test proves. Then break the code and confirm the test fails. If it still passes, the test is worthless.
 Check: mutate the value under test and watch the test fail before you watch it pass.
 Examples:
-- PR148 `__tests__/agent-eval-ab.test.ts`: the assertion matched the substring `$4`, so `$4.01` satisfied it; the fix anchored it to the cap clause.
+- PR148, an agent eval test: the assertion matched the substring `$4`, so `$4.01` satisfied it; the fix anchored it to the cap clause.
 - PR301 `tests/e2e/type-reveal.spec.ts`: the per route guard visited zero marked elements, so it passed for free; the fix asserted a marked count above zero.
 
 **Rule 13. A loop that filters items must assert that the filter produced something.**
@@ -130,7 +130,7 @@ Before writing: for each gate, write the test that proves the gate blocks the ba
 Check: run the gate against a deliberately bad input and confirm the test fails.
 Examples:
 - PR227, a role-resolution test: the scan roots did not include every surface the gate covers, so a stale role in one place went unseen; the fix widened the roots.
-- PR305 `scripts/check-section-order.mjs`: the gate only checked live ids, so a section with no mobile order entry passed; the fix checks both directions.
+- PR305 `scripts/gates/check-section-order.ts`: the gate only checked live ids, so a section with no mobile order entry passed; the fix checks both directions.
 
 ---
 
@@ -258,7 +258,7 @@ Examples:
 Before writing: if you write "pure", "never", "always", "safe" or "prevents", prove the sentence against the implementation.
 Check: grep your new comments and your commit messages for absolute words and confirm each one.
 Examples:
-- PR147 `scripts/agent-eval.ts`: the doc comment called the function a pure aggregate assembler while it read the clock; the fix passed the timestamp in.
+- PR147, an agent eval script: the doc comment called the function a pure aggregate assembler while it read the clock; the fix passed the timestamp in.
 - PR142 `DECISIONS.md`: the ADR said the linter flag stopped an in-progress import from being deleted, which the code said it does not; the fix aligned the ADR to the code.
 
 **Rule 31. The checklist box and the ADR entry are part of the change, not paperwork after it.**
@@ -298,7 +298,7 @@ Ordered by how often the finding was missed.
 9. Confirm every new content field has a reader in the same change.
 10. Check every changed file against the file type rules above.
 11. Update the ADR with the PR number and the way to undo it, in the same change as the code.
-12. Run `pnpm ci:predict` (it covers `pnpm ci:local`, `pnpm bundle-check` and `pnpm route-js-check`).
+12. Run `pnpm ci:full` (it covers `pnpm ci:local`, the bundle and route-JS gates and every e2e project).
 13. Run `pnpm gates:runtime` and regenerate the visual baselines if the change touched layout or colour.
 14. Fill the whole PR template, and make every box true about the diff.
 15. Re-read `git diff origin/main...HEAD` end to end and fix what you find.

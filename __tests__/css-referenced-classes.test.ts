@@ -1,9 +1,12 @@
-import { readdirSync, readFileSync, statSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
+import { listFiles } from '@/scripts/lib/walk';
 
 const ROOT = path.resolve(__dirname, '..');
 const CSS_DIR = path.join(ROOT, 'app', 'css');
+const COMPONENT_CSS_DIR = path.join(ROOT, 'design-system', 'components');
+const CSS_FILE = /\.css$/;
 const SOURCE_ROOTS = ['components', 'app', 'design-system', 'content', 'lib'];
 const SOURCE_EXTENSIONS = new Set(['.ts', '.tsx', '.mdx', '.js', '.mjs']);
 const TEST_FILE = /\.(test|spec|e2e)\.[tj]sx?$/;
@@ -63,14 +66,13 @@ function selectorClasses(css: string): Set<string> {
   return found;
 }
 
+const SKIP_DIRS: ReadonlySet<string> = new Set(['node_modules', '.next']);
+
 function listSourceFiles(dir: string): string[] {
-  return readdirSync(dir).flatMap((name) => {
-    if (name === 'node_modules' || name === '.next') return [];
-    const full = path.join(dir, name);
-    if (statSync(full).isDirectory()) return listSourceFiles(full);
-    const ext = path.extname(name);
-    return SOURCE_EXTENSIONS.has(ext) && !TEST_FILE.test(name) ? [full] : [];
-  });
+  return listFiles(dir, {
+    include: (name) => SOURCE_EXTENSIONS.has(path.extname(name)) && !TEST_FILE.test(name),
+    skipDirs: SKIP_DIRS,
+  }).map((rel) => path.join(dir, rel));
 }
 
 function unreferencedClasses(declared: Set<string>, corpus: string): string[] {
@@ -89,20 +91,28 @@ describe('stylesheet class selectors', () => {
     expect(unreferencedClasses(new Set(['halt-plate']), "cn('halt-plate', x)")).toEqual([]);
   });
 
-  it('references every class selector in app/css from shipped source', () => {
+  it('references every class selector in app/css and design-system/components from shipped source', () => {
     // behavioral-test-allow: reads shipped stylesheets and source; no runtime can enumerate unused CSS selectors
     const corpus = SOURCE_ROOTS.flatMap((root) => listSourceFiles(path.join(ROOT, root)))
       .map((file) => readFileSync(file, 'utf8'))
       .join('\n');
     const declared = new Set<string>();
-    for (const file of readdirSync(CSS_DIR).filter((name) => name.endsWith('.css'))) {
-      const css = stripComments(readFileSync(path.join(CSS_DIR, file), 'utf8'));
+    const stylesheets = [
+      ...readdirSync(CSS_DIR)
+        .filter((name) => name.endsWith('.css'))
+        .map((name) => path.join(CSS_DIR, name)),
+      ...listFiles(COMPONENT_CSS_DIR, { include: CSS_FILE, skipDirs: SKIP_DIRS }).map((rel) =>
+        path.join(COMPONENT_CSS_DIR, rel),
+      ),
+    ];
+    for (const file of stylesheets) {
+      const css = stripComments(readFileSync(file, 'utf8'));
       for (const name of selectorClasses(css)) declared.add(name);
     }
     const unreferenced = unreferencedClasses(declared, corpus);
     expect(
       unreferenced,
-      'A class selector in app/css has no reference in components, app, design-system, content or lib. ' +
+      'A class selector in app/css or design-system/components has no reference in components, app, design-system, content or lib. ' +
         'Delete the rule, or add the class to SCRIPT_SET_CLASSES with the reason it is set outside source.',
     ).toEqual([]);
   });

@@ -1,0 +1,172 @@
+@theme {
+  --color-mixer-lead-tint: color-mix(in oklab, var(--color-surface) 60%, transparent);
+  --color-mixer-row-tint: color-mix(in oklab, var(--color-surface) 35%, transparent);
+}
+
+@layer components {
+  .status-signal-bar {
+    display: block;
+    width: var(--spacing-tight);
+    background: var(--color-accent);
+  }
+
+  .status-signal-bar-dim {
+    opacity: 0.5;
+  }
+
+  .status-battery {
+    display: inline-block;
+    position: relative;
+    width: 1.375rem;
+    height: 0.6875rem;
+    padding: 1px;
+    border: var(--border-width) solid var(--color-accent);
+  }
+
+  .status-battery::after {
+    content: "";
+    position: absolute;
+    right: calc(var(--spacing-tight) * -1);
+    top: var(--spacing-hair);
+    width: var(--spacing-hair);
+    height: var(--spacing-snug);
+    background: var(--color-accent);
+  }
+
+  .status-battery-fill {
+    display: block;
+    height: 100%;
+    background: var(--color-accent);
+  }
+
+  .component-nav-link {
+    color: var(--color-signal-400);
+    border: var(--border-width) solid var(--color-border);
+  }
+
+  .component-nav-link:hover,
+  .component-nav-link:focus-visible {
+    color: var(--color-accent);
+    border-color: var(--color-accent);
+  }
+
+  .mx-static-meter {
+    display: flex;
+    gap: 1px;
+    height: var(--spacing-3);
+    padding: 1px;
+    --mx-static-meter-fill: color-mix(in oklab, var(--color-surface) 70%, transparent);
+    border: var(--border-width) solid var(--color-signal-quiet);
+    background: var(--mx-static-meter-fill);
+  }
+
+  .mx-static-seg-alert {
+    background: var(--color-coral-300);
+  }
+
+  .mx-static-seg-filled {
+    background: var(--color-accent);
+  }
+
+  .mx-static-seg-empty {
+    background: var(--color-accent);
+    opacity: 0.22;
+  }
+
+  .mx-static-fader-thumb {
+    position: absolute;
+    top: 50%;
+    translate: -50% -50%;
+    width: var(--spacing-icon);
+    height: var(--spacing-target-compact);
+    background: var(--color-accent);
+    box-shadow: 0 0 var(--spacing-inset) var(--color-accent);
+    border: var(--border-width) solid var(--color-surface);
+
+    @variant motion-off {
+      box-shadow: none;
+    }
+  }
+
+  .mx-static-dial {
+    background: radial-gradient(
+      circle at 35% 30%,
+      var(--color-signal-glow-18),
+      var(--color-surface-tint-heavy)
+    );
+  }
+
+  .mx-plugin-mobile-on {
+    color: var(--color-signal-400);
+    border-color: var(--color-accent);
+    background: var(--color-accent-tint-soft);
+  }
+
+  .mx-plugin-mobile-off {
+    --mx-plugin-off-border: color-mix(in srgb, var(--color-signal-quiet) 40%, transparent);
+    color: var(--color-signal-400);
+    border-color: var(--mx-plugin-off-border);
+  }
+
+  .mx-plugin-dot-on {
+    background: var(--color-accent);
+    box-shadow: 0 0 var(--spacing-1) var(--color-accent);
+  }
+
+  .mx-plugin-dot-off {
+    background: var(--color-signal-quiet);
+  }
+
+  .mx-legend-dot {
+    display: inline-block;
+    width: var(--spacing-snug);
+    height: var(--spacing-snug);
+    margin-right: var(--spacing-pip);
+    vertical-align: 1px;
+    background: var(--color-accent);
+    box-shadow: 0 0 var(--spacing-snug) var(--color-accent);
+  }
+
+  .mx-session-header-tint {
+    --mx-session-header-fill: color-mix(in srgb, var(--color-accent) 5%, transparent);
+    background: var(--mx-session-header-fill);
+  }
+
+  .mx-master-gradient-mobile {
+    background-image: linear-gradient(180deg, var(--color-accent-tint-faint), transparent);
+  }
+
+  .mx-master-gradient-desktop {
+    --mx-master-fade-end: color-mix(in srgb, var(--color-accent) 2%, transparent);
+    background-image: linear-gradient(
+      90deg,
+      var(--color-accent-tint-soft),
+      var(--mx-master-fade-end)
+    );
+  }
+
+  .mx-toggle-on {
+    color: var(--color-accent);
+    border-color: var(--color-accent);
+    background: var(--color-accent-tint-strong);
+    box-shadow: 0 0 var(--spacing-snug) var(--color-signal-glow-35);
+  }
+
+  .mx-toggle-off {
+    color: var(--color-signal-400);
+    border-color: var(--color-signal-quiet);
+    background: var(--color-surface-tint-medium);
+  }
+
+  .mx-plugin-chip-on {
+    color: var(--color-signal-400);
+    border-color: var(--color-accent);
+    background: var(--color-accent-tint-soft);
+  }
+
+  .mx-plugin-chip-off {
+    color: var(--color-signal-400);
+    border-color: var(--color-signal-quiet);
+    background: var(--color-surface-tint-firm);
+  }
+}

@@ -17,9 +17,10 @@ import {
   formatStory,
   formatUnknowns,
 } from '@/lib/ask/ask-fact-format';
+import { formatCredentialLine, formatEducationLine } from '@/lib/ask/education-format';
 import { formatEmploymentContext, formatEmploymentHighlights } from '@/lib/ask/employment-format';
+import { utcDay } from '@/lib/time';
 
-const ISO_DATE_LENGTH = 10;
 const CURRENT_ROLE_MARKER = 'current role';
 
 export function buildJudgeFactSheet(today: Date): string {
@@ -27,17 +28,13 @@ export function buildJudgeFactSheet(today: Date): string {
     const current = entry.endMonth === null ? ` (${CURRENT_ROLE_MARKER})` : '';
     return `- ${entry.company}: ${entry.role}, ${entry.date}, employer location ${entry.location}${entry.workMode ? `, ${entry.workMode}` : ''}${current}. ${entry.body.join(' ')}${formatEmploymentContext(entry)}${formatEmploymentHighlights(entry)}`;
   });
-  const schooling = education[SITE_LOCALE.en].map(
-    (entry) => `- ${entry.degree}, ${entry.institution}, ${entry.period}`,
-  );
-  const certifications = credentials.map(
-    (entry) => `- ${entry.label}: ${entry.badge}, ${entry.evidence}`,
-  );
+  const schooling = education[SITE_LOCALE.en].map(formatEducationLine);
+  const certifications = credentials.map(formatCredentialLine);
   const receipts = perfReceipts[SITE_LOCALE.en].map(
     (receipt) => `- ${receipt.metric} ${receipt.delta} ${receipt.company}: ${receipt.note}`,
   );
   return [
-    `Today's date: ${today.toISOString().slice(0, ISO_DATE_LENGTH)}`,
+    `Today's date: ${utcDay(today)}`,
     `Erik lives in: ${profile.city}, ${profile.country} (${profile.timezone})`,
     `Work scope: ${askFacts.openTo}`,
     ...askFacts.targeting,

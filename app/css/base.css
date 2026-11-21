@@ -1,11 +1,11 @@
 @layer base {
   :root {
     --separator-glyph: "·";
-    --topbar-height: 45px;
-    --position-line-thickness: 2px;
+    --topbar-height: calc(var(--spacing-target) + var(--border-width));
+    --position-line-thickness: var(--spacing-hair);
     --icon-menu: calc(var(--spacing-target) / var(--phi) / var(--phi));
-    --mobile-bars-height: 94px;
-    --drawer-max-width: 320px;
+    --mobile-bars-height: 5.875rem;
+    --drawer-max-width: 20rem;
     --dock-height: 4.5rem;
     --dock-clearance: var(--dock-height);
     --to-top-size: var(--spacing-target);
@@ -23,7 +23,7 @@
        itself is rounded to whole pixels further down. */
     --leading: 1.55;
     color-scheme: dark;
-    scrollbar-color: var(--color-primary-700) var(--color-secondary-950);
+    scrollbar-color: var(--color-signal-700) var(--color-surface);
     scrollbar-width: thin;
   }
 
@@ -110,7 +110,7 @@
   body {
     margin: 0;
     padding: 0;
-    background: var(--color-secondary-950);
+    background: var(--color-surface);
     color: var(--color-text);
     font-family: var(--font-mono);
     font-size: var(--text-base);
@@ -118,7 +118,7 @@
     overflow-x: clip;
   }
 
-  @media (max-width: theme(--viewport-below-md)) {
+  @media (width < theme(--viewport-md)) {
     html {
       scroll-padding-top: calc(var(--mobile-bars-height) + var(--spacing-3));
     }
@@ -130,12 +130,12 @@
   }
 
   ::selection {
-    background: var(--color-primary-500);
-    color: var(--color-secondary-950);
+    background: var(--color-accent);
+    color: var(--color-on-accent);
   }
 
   a {
-    color: var(--color-primary-500);
+    color: var(--color-accent);
     text-decoration: none;
   }
 
@@ -162,14 +162,15 @@
     outline: none;
   }
 
-  .skip-to-content {
+  .skip-to-content,
+  .mixer-skip-link {
     position: absolute;
     left: 0;
     top: 0;
     z-index: var(--z-skip-link);
     padding: var(--spacing-2) var(--spacing-4);
-    background: var(--color-primary-500);
-    color: var(--color-secondary-950);
+    background: var(--color-accent);
+    color: var(--color-on-accent);
     font-family: var(--font-mono);
     font-size: var(--text-base);
     font-weight: 700;
@@ -178,20 +179,25 @@
     overflow: hidden;
     transition: clip-path 0.1s;
   }
-  .skip-to-content:focus {
+  .skip-to-content:focus,
+  .mixer-skip-link:focus {
     clip-path: inset(0);
     overflow: visible;
   }
 
-  body[data-motion="reduce"] .skip-to-content {
-    transition: none;
+  /* biome-ignore lint/suspicious/noDuplicateSelectors: `@variant motion-off` and `@variant motion-on` resolve to a `body` ancestor selector, so this rule has a different selector than the earlier one with the same class */
+  .skip-to-content,
+  .mixer-skip-link {
+    @variant motion-off {
+      transition: none;
+    }
   }
 
   button {
     font-family: inherit;
     color: inherit;
     background: transparent;
-    border: 1px solid var(--color-primary-border);
+    border: var(--border-width) solid var(--color-border);
     cursor: pointer;
   }
 
@@ -207,9 +213,19 @@
   h4 {
     font-family: var(--font-mono);
     font-weight: 700;
-    color: var(--color-primary-500);
+    color: var(--color-accent);
     margin: 0 0 var(--spacing-2) 0;
-    text-shadow: 0 0 2px var(--color-glow-30);
+    text-shadow: 0 0 var(--spacing-hair) var(--color-signal-glow-30);
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6,
+  [role="heading"] {
+    text-wrap: balance;
   }
 
   h1 {
@@ -259,7 +275,7 @@
   .mobile-only {
     display: none;
   }
-  @media (max-width: theme(--viewport-below-md)) {
+  @media (width < theme(--viewport-md)) {
     .desktop-only {
       display: none;
     }
@@ -268,13 +284,13 @@
     }
   }
 
-  @media (max-width: theme(--viewport-below-md)) {
+  @media (width < theme(--viewport-md)) {
     :root {
       --dock-chrome: calc(var(--dock-clearance) + var(--to-top-size));
     }
   }
 
-  @media (max-width: theme(--viewport-below-lg)) {
+  @media (width < theme(--viewport-lg)) {
     html {
       scroll-padding-bottom: var(--dock-chrome);
     }

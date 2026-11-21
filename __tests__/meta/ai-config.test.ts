@@ -1,18 +1,10 @@
 import { execFileSync } from 'node:child_process';
-import {
-  existsSync,
-  lstatSync,
-  readdirSync,
-  readFileSync,
-  readlinkSync,
-  realpathSync,
-} from 'node:fs';
+import { existsSync, lstatSync, readdirSync, readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { basename, join } from 'node:path';
-import { parse as parseToml } from 'smol-toml';
 import { describe, expect, it } from 'vitest';
 import { parse as parseYaml } from 'yaml';
-import limits from '../../scripts/harness-size.json';
+import limits from '../../scripts/gates/harness-size.json';
 
 const SUBPROCESS_TEST_TIMEOUT_MS = 60_000;
 
@@ -20,7 +12,6 @@ const ROOT = process.cwd();
 const SELF = '__tests__/meta/ai-config.test.ts';
 const HISTORY_FILES = new Set(['DECISIONS.md', 'pnpm-lock.yaml']);
 const SKILLS_CANONICAL = '.agents/skills';
-const SKILLS_CLAUDE = '.claude/skills';
 const AGENTS_DIR = '.claude/agents';
 const COMMANDS_DIR = '.claude/commands';
 const RULES_DIR = '.claude/rules';
@@ -28,7 +19,6 @@ const LOCAL_SKILL_PREFIX = 'speckit-';
 const SKILL_NAME = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const SKILL_NAME_MAX = 64;
 const SKILL_DESCRIPTION_MAX = 1024;
-const SYMLINK_MODE = '120000';
 const AGENTS_MD_MAX_BYTES = 32 * 1024;
 const SPEC_FRONTMATTER_KEYS = new Set([
   'name',
@@ -45,14 +35,7 @@ const REQUIRED_DENY_RULES = [
   'Bash(git add --all:*)',
   'Read(./.env)',
 ];
-const OWNED_AI_PATHS = [
-  '/AGENTS.md',
-  '/CLAUDE.md',
-  '/REVIEW.md',
-  '/.claude/',
-  '/.agents/',
-  '/.codex/',
-];
+const OWNED_AI_PATHS = ['/AGENTS.md', '/CLAUDE.md', '/REVIEW.md', '/.claude/', '/.agents/'];
 
 const HARNESS_TERMS =
   /claude-skills|cross-runtime|model-delegate|routing-(?:reviewer|validator|challenger|implementer|tdd|architect)|ROUTING-CONTRACT|hindsight|ai-dev-runtime|\/Users\/|~\/Desktop|MiMo/i;
@@ -104,14 +87,7 @@ const canonicalSkills = (): string[] =>
     existsSync(join(ROOT, SKILLS_CANONICAL, name, 'SKILL.md')),
   );
 
-const legacySkills = (): string[] =>
-  listDir(SKILLS_CLAUDE).filter(
-    (name) =>
-      !name.startsWith(LOCAL_SKILL_PREFIX) &&
-      existsSync(join(ROOT, SKILLS_CLAUDE, name, 'SKILL.md')),
-  );
-
-const skillNames = (): string[] => [...new Set([...canonicalSkills(), ...legacySkills()])];
+const skillNames = (): string[] => canonicalSkills();
 
 const agentNames = (): string[] =>
   listDir(AGENTS_DIR)
@@ -129,7 +105,7 @@ const namesToken = (name: string): RegExp =>
   new RegExp(`(?<![\\w:./-])${escapeRegExp(name)}(?![\\w/-]|\\.\\w)`);
 
 const ownerOf = (file: string): string | null => {
-  const skill = file.match(/^\.(?:agents|claude)\/skills\/([^/]+)\//);
+  const skill = file.match(/^\.agents\/skills\/([^/]+)\//);
   if (skill) return skill[1] ?? null;
   const agent = file.match(/^\.claude\/agents\/([^/]+)\.md$/);
   if (agent) return agent[1] ?? null;
@@ -244,38 +220,6 @@ describe('AI configuration guard', { timeout: SUBPROCESS_TEST_TIMEOUT_MS }, () =
     expect(problems).toEqual([]);
   });
 
-  it('links every .claude skill to its canonical .agents skill', () => {
-    const canonical = canonicalSkills();
-    expect(canonical.length, 'no canonical skills found under .agents/skills').toBeGreaterThan(0);
-    const staged = execFileSync('git', ['ls-files', '-s', '-z', SKILLS_CLAUDE], {
-      cwd: ROOT,
-      encoding: 'utf8',
-    })
-      .split('\0')
-      .filter((row) => row !== '');
-    const nonLinks = staged
-      .filter((row) => !row.startsWith(SYMLINK_MODE) && !row.includes(`/${LOCAL_SKILL_PREFIX}`))
-      .map((row) => row.split('\t')[1]);
-    expect(nonLinks, 'tracked entries under .claude/skills must be symlinks').toEqual([]);
-
-    const problems = canonical.flatMap((skill) => {
-      const link = join(ROOT, SKILLS_CLAUDE, skill);
-      if (!existsSync(link) && !lstatOrNull(link)) return [`${skill}: no .claude/skills link`];
-      if (!lstatSync(link).isSymbolicLink()) return [`${skill}: not a symlink`];
-      const target = readlinkSync(link);
-      const expected = `../../${SKILLS_CANONICAL}/${skill}`;
-      const found: string[] = target === expected ? [] : [`${skill}: points to ${target}`];
-      const resolved = realpathSync(join(link, 'SKILL.md'));
-      if (resolved !== realpathSync(join(ROOT, SKILLS_CANONICAL, skill, 'SKILL.md')))
-        found.push(`${skill}: does not resolve to the canonical SKILL.md`);
-      return found;
-    });
-    expect(problems).toEqual([]);
-
-    const dangling = legacySkills().filter((skill) => !canonical.includes(skill));
-    expect(dangling, 'a .claude skill without a canonical .agents skill').toEqual([]);
-  });
-
   it('keeps the managed Next.js agent rules current so next dev leaves AGENTS.md untouched', () => {
     const requireNext = createRequire(join(ROOT, 'package.json'));
     const { hasCurrentAgentRules, hasCurrentAgentFeedback, AGENT_FEEDBACK_START_MARKER } =
@@ -364,29 +308,4 @@ describe('AI configuration guard', { timeout: SUBPROCESS_TEST_TIMEOUT_MS }, () =
     );
     expect(missing).toEqual([]);
   });
-
-  it('mirrors the .mcp.json servers in .codex/config.toml', () => {
-    const mcp = JSON.parse(readFileSync(join(ROOT, '.mcp.json'), 'utf8')) as {
-      mcpServers: Record<string, { url?: string }>;
-    };
-    expect(existsSync(join(ROOT, '.codex/config.toml')), '.codex/config.toml is missing').toBe(
-      true,
-    );
-    const codex = parseToml(readFileSync(join(ROOT, '.codex/config.toml'), 'utf8')) as {
-      mcp_servers?: Record<string, { url?: string }>;
-    };
-    const mirrored = codex.mcp_servers ?? {};
-    expect(Object.keys(mirrored).sort()).toEqual(Object.keys(mcp.mcpServers).sort());
-    for (const [name, server] of Object.entries(mcp.mcpServers)) {
-      expect(mirrored[name]?.url, `${name} url`).toBe(server.url);
-    }
-  });
 });
-
-function lstatOrNull(path: string) {
-  try {
-    return lstatSync(path);
-  } catch {
-    return null;
-  }
-}

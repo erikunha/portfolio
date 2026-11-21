@@ -3,9 +3,12 @@
 paths:
 - "app/api/**"
 - "lib/rate-limit.ts"
+- "lib/redis.ts"
 - "lib/redis-env.ts"
+- "lib/ask/budget.ts"
+- "lib/ask/dedup.ts"
 - "lib/server/**"
-- "proxy.ts"
+- "next.config.ts"
 
 ---
 
@@ -28,19 +31,36 @@ merge-blocking check on this surface is the behavioral test suite (the required
 - Read env only through the Zod accessors `lib/env.ts` and `lib/env-build.ts`
   (deploy metadata such as the commit SHA). Never read `process.env.*` directly
   in a handler: Biome's `noProcessEnv` fails `app/api/**` and `lib/server/**`.
-- Rate limiting is Upstash sliding-window via `lib/rate-limit.ts` and is
+- Rate limiting is Upstash sliding-window via `lib/rate-limit.ts` (the table of
+  limiters and their getters; it imports nothing from `lib/ask`) and is
   **fail-open** (Redis down must not 500 the user). Keep that property. The
   `/api/ask` budget reservation is the exception: it fails closed with 503.
+- `lib/redis.ts` holds the one Redis client and its credential check;
+  `lib/ask/budget.ts` holds the monthly and daily spend budget and the
+  reservation record (`settleReservation` or `abandonReservation` ends it);
+  `lib/ask/dedup.ts` holds the identical-question lock.
+- Cron routes authorise through `requireCron(req)` in `lib/server/cron-auth.ts`
+  and return its 401 response when it is non-null.
+- Mail goes through `sendMail` in `lib/mail.ts` (cached Resend client, timeout,
+  optional `replyTo` and `idempotencyKey`); a route never builds a Resend client.
+- A route keeps only HTTP concerns. Contact persistence and flow live in
+  `lib/contact/` (`submitContact`, `retryPendingContacts`) with injected deps.
+- The MCP `ask_erik` tool answers in process through `askOnce`
+  (`lib/ask/ask-once.ts`) on `startAsk` (`lib/ask/stream.ts`); it never imports
+  `app/api/ask/route`. Every preflight gate applies to it.
 
 ## Security surface
 
 - The behavioral tests are the only merge-blocking check on this surface for a finding. Semgrep (`pnpm lint:semgrep`,
-  report-only in CI) and CodeQL findings block nothing; only Semgrep's fixture self-test and false-positive baseline can fail a run. Editing `app/api/**`, `lib/rate-limit.ts`, or `proxy.ts` means
+  report-only in CI) and CodeQL findings block nothing; only Semgrep's fixture self-test and false-positive baseline can fail a run. Editing `app/api/**`, `lib/rate-limit.ts`, `lib/redis.ts`, `lib/ask/budget.ts`, `lib/ask/dedup.ts` or `next.config.ts` means
   re-reading the diff for the abuse paths each of them closes.
-- CSP and `Reporting-Endpoints` headers come from **`proxy.ts`**, not
-  `next.config.ts` (which sets the static headers: COOP, X-Frame-Options, HSTS,
-  etc.). `__tests__/proxy-csp.test.ts` holds the CSP posture; the deploy smoke test
-  checks that the headers arrive on the live host.
+- Every response header, the CSP and `Reporting-Endpoints` included, comes from the
+  static `headers()` in **`next.config.ts`**; there is no `proxy.ts`, so a header never
+  depends on a per-request function. `__tests__/proxy-csp.test.ts` holds the CSP posture,
+  `tests/e2e/csp-report-delivery.spec.ts` the delivery of a violation report;
+  `Content-Security-Policy-Report-Only` is a probe beside the enforced CSP
+  (`__tests__/csp-report-only.test.ts`), so a change to one policy keeps the other in step; the deploy
+  smoke test checks that the headers arrive on the live host.
 
 ## The `/api/ask` AI feature
 
@@ -55,4 +75,4 @@ merge-blocking check on this surface is the behavioral test suite (the required
 - Changes to the ask corpus, calibration, system prompt or the facts it renders
   (`content/ask-facts.ts`) require `pnpm ask:eval`.
 - Eval publishing reads only the `EVAL_PUBLISH_REDIS_REST_*` secrets (an ACL user limited to
-  `SET` on the two eval keys) and only on `main`; no workflow reads the production Upstash token.
+  `SET` on the `ask:eval:latest` key) and only on `main`; no workflow reads the production Upstash token.

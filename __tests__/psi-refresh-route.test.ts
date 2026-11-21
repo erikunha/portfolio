@@ -9,7 +9,9 @@ vi.mock('@/lib/lighthouse-scores', () => ({
 
 const mockLogInfo = vi.fn();
 const mockLogError = vi.fn();
-vi.mock('@/lib/log', () => ({ log: { info: mockLogInfo, error: mockLogError } }));
+vi.mock('@/lib/log', async () =>
+  (await import('./helpers/modules')).logModule({ info: mockLogInfo, error: mockLogError }),
+);
 
 const mockRedisSet = vi.fn(async () => 'OK');
 const mockRedisDel = vi.fn(async () => 1);
@@ -19,17 +21,12 @@ const mockRedisPipeline = vi.fn(() => ({
   expire: vi.fn().mockReturnThis(),
   exec: mockPipeExec,
 }));
-vi.mock('@/lib/rate-limit', () => ({
+vi.mock('@/lib/redis', () => ({
   getRedis: vi.fn(() => ({ set: mockRedisSet, del: mockRedisDel, pipeline: mockRedisPipeline })),
 }));
 
 const mockSendEmail = vi.fn(async () => ({ data: { id: 'x' }, error: null }));
-vi.mock('resend', () => ({
-  // biome-ignore lint/complexity/useArrowFunction: `function` required, arrow fns cannot be used with `new` in jsdom/vitest; the route calls `new Resend(key)`.
-  Resend: vi.fn(function () {
-    return { emails: { send: mockSendEmail } };
-  }),
-}));
+vi.mock('resend', async () => (await import('./helpers/modules')).resendModule(mockSendEmail));
 
 afterEach(() => {
   vi.resetModules();

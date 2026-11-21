@@ -63,7 +63,10 @@ const contentSurfaces: Array<[string, string]> = readContentSurfaces();
 
 // behavioral-test-allow: the OG card's numbers are baked into an HTML template string inside the
 // generator script, so they are reachable only as source text, there is nothing to import
-const ogImageScript = readFileSync(path.join(REPO_ROOT, 'scripts/generate-og-image.ts'), 'utf-8');
+const ogImageScript = readFileSync(
+  path.join(REPO_ROOT, 'scripts/codegen/generate-og-image.ts'),
+  'utf-8',
+);
 
 let layoutMetadataText = '';
 
@@ -73,7 +76,7 @@ const METRIC_SURFACES = (): Array<[string, string]> => [
   ['lib/ask/system-prompt.ts (what the AI answers with)', SYSTEM_TEXT],
   ['public/llms.txt', read('public/llms.txt')],
   ['public/.well-known/agent.json', read('public/.well-known/agent.json')],
-  ['scripts/generate-og-image.ts (social preview card)', ogImageScript],
+  ['scripts/codegen/generate-og-image.ts (social preview card)', ogImageScript],
   ['app/(en)/layout.tsx (metadata)', layoutMetadataText],
 ];
 
@@ -142,7 +145,7 @@ describe('performance metrics agree with the authoritative receipts', () => {
 
     expect(
       misjudged,
-      'isInfraModule must be tested against the BASENAME, never the path readdirSync returns. Matched against the full relative path, `_.+` greedily eats the directory separator: "_drafts/projects.ts", real published content under an underscore-prefixed DIRECTORY, is then silently EXCLUDED from the sweep (a fail-open, the exact class this file exists to close), while genuine nested infra like "sub/_helper.ts" is swept. It is wrong in both directions at once. The bare "_drafts" and "README.md" rows are the directory entry and the non-TS file that readdirSync also returns; dropping the extension check admits them and the sweep then tries to read a directory. Both gates go through ONE reader (readContentSurfaces in __tests__/helpers/content-surfaces.ts), which applies isPublishedSurface, built from the shared basename primitives in scripts/content-basename.mjs (isTypeScriptModule, isTestModule, isSchemaModule, isInfraModule), when it was duplicated per file, adding an exclusion to one copy diverged the two sweeps with both tables still green.',
+      'isInfraModule must be tested against the BASENAME, never the path readdirSync returns. Matched against the full relative path, `_.+` greedily eats the directory separator: "_drafts/projects.ts", real published content under an underscore-prefixed DIRECTORY, is then silently EXCLUDED from the sweep (a fail-open, the exact class this file exists to close), while genuine nested infra like "sub/_helper.ts" is swept. It is wrong in both directions at once. The bare "_drafts" and "README.md" rows are the directory entry and the non-TS file that readdirSync also returns; dropping the extension check admits them and the sweep then tries to read a directory. Both gates go through ONE reader (readContentSurfaces in __tests__/helpers/content-surfaces.ts), which applies isPublishedSurface, built from the shared basename primitives in scripts/lib/content-basename.ts (isTypeScriptModule, isTestModule, isSchemaModule, isInfraModule), when it was duplicated per file, adding an exclusion to one copy diverged the two sweeps with both tables still green.',
     ).toEqual([]);
   });
 

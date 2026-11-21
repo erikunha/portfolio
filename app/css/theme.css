@@ -1,7 +1,14 @@
+@custom-variant motion-off (body[data-motion="reduce"] &);
+@custom-variant motion-on (body:not([data-motion="reduce"]) &);
+@custom-variant reveal-motion-on (html.type-reveal-ready body:not([data-motion="reduce"]) &);
+
 @theme {
-  --color-text: var(--color-tertiary-50);
+  --color-*: initial;
+  --radius-*: initial;
+  --shadow-*: initial;
+
+  --color-text: var(--color-sage-50);
   --color-text-secondary: #a1b3a1;
-  --color-green: var(--color-primary-500);
 
   --text-min: 0.8125rem;
   --text-xs: var(--text-min);
@@ -41,83 +48,38 @@
   --spacing-target: 2.75rem;
   --spacing-target-compact: 1.75rem;
   --spacing-target-pointer: 2.25rem;
-  --spacing-opinions-list-marker: 2ch;
-  --measure-opinions-body: 740px;
-  --receipt-metric-width: 10.5rem;
-  --receipt-value-width: 9rem;
-  --receipt-company-width: 9.375rem;
+  --spacing-hair: 0.125rem;
+  --spacing-tight: 0.1875rem;
+  --spacing-snug: 0.3125rem;
+  --spacing-pip: 0.375rem;
+  --spacing-chip: 0.4375rem;
+  --spacing-label: 0.5625rem;
+  --spacing-inset: 0.625rem;
+  --spacing-panel: 0.875rem;
+  --spacing-panel-wide: 1.125rem;
+  --spacing-icon: 1.125rem;
+  --spacing-lane: 1.375rem;
+  --spacing-node: 1.875rem;
   --breakpoint-guitar: 700px;
-  --viewport-narrow: 360px;
-  --viewport-below-narrow: 359.98px;
-  --viewport-phone: 480px;
-  --viewport-below-phone: 479.98px;
-  --viewport-md: 768px;
-  --viewport-below-md: 767.98px;
-  --viewport-split: 900px;
-  --viewport-below-split: 899.98px;
-  --viewport-lg: 1024px;
-  --viewport-below-lg: 1023.98px;
-  --viewport-xl: 1280px;
-  --viewport-below-xl: 1279.98px;
+  --viewport-narrow: 22.5rem;
+  --viewport-hero-compact: 24.375rem;
+  --viewport-hero-actions: 25rem;
+  --viewport-phone: 30rem;
+  --viewport-links-qr: 37.5rem;
+  --viewport-md: 48rem;
+  --viewport-split: 56.25rem;
+  --viewport-lg: 64rem;
+  --viewport-hero-stats: 75rem;
+  --viewport-xl: 80rem;
   --phi: 1.618;
   --phi-inv: 0.618;
-  --phi-root: 1.272;
   --phi-space-1: 0.5rem;
   --phi-space-2: calc(var(--phi-space-1) * var(--phi));
   --phi-space-3: calc(var(--phi-space-2) * var(--phi));
   --phi-space-4: calc(var(--phi-space-3) * var(--phi));
-  --phi-text-1: calc(var(--text-xs) * var(--phi-root));
   --phi-pair-columns: minmax(0, 1.618fr) minmax(0, 1fr);
   --phi-pair-columns-minor-first: minmax(0, 1fr) minmax(0, 1.618fr);
   --phi-pair-flex-minor: 0 0 calc((1 - var(--phi-inv)) * 100%);
-  --eq-plot-height: 8.25rem;
-  --eq-plot-height-compact: 7rem;
-  --eq-axis-height: 1.5rem;
-  --eq-bar-gap: 0.1875rem;
-  --eq-bar-gap-compact: 0.125rem;
-  --eq-bar-mid-stop: 35%;
-  --eq-curve-stroke: 2.6px;
-  --eq-curve-glow: 3px;
-  --eq-level-floor: 0.35;
-  --eq-level-high: 0.9;
-  --eq-level-mid: 0.6;
-  --eq-level-peak: 1;
-  --guitar-arrow-width: 1.625rem;
-  --guitar-photo-width: 20rem;
-  --guitar-node-gap: 0.375rem;
-  --guitar-bar-width: 0.5625rem;
-  --guitar-bar-height: 0.8125rem;
-  --guitar-bar-gap: 0.125rem;
-  --guitar-bar-opacity: 0.22;
-  --guitar-columns: minmax(0, 1fr) var(--guitar-arrow-width) minmax(0, 1fr)
-    var(--guitar-arrow-width) minmax(0, 1fr);
-  --guitar-stat-columns: repeat(2, minmax(0, 1fr));
-  --guitar-line-height: 1.6;
-  --guitar-heading-line-height: 1.2;
-  --guitar-label-tracking: var(--tracking-xs);
-  --guitar-camera-tracking: var(--tracking-2xl);
-  --guitar-prose-width: 72ch;
-  --guitar-photo-grayscale: 1;
-  --guitar-photo-contrast: 1.18;
-  --guitar-photo-brightness: 0.95;
-  --guitar-photo-tint-opacity: 0.6;
-  --guitar-photo-ratio: 16 / 9;
-  --guitar-photo-min-height: 12.5rem;
-  --guitar-arrow-rotation: 90deg;
-  --guitar-arrow-length: 4.5ch;
-  --mixer-chip-min: 5.5rem;
-  --mixer-chain-rows: 3;
-  --mixer-transport-gap: 14px;
-  --guitar-scanline: repeating-linear-gradient(
-    to bottom,
-    rgba(0, 0, 0, 0.3) 0 1px,
-    transparent 1px 3px
-  );
-  --links-thumb-contrast: 1.15;
-  --links-thumb-brightness: 0.95;
-  --links-thumb-tint: 0.9;
-  --links-thumb-tint-reveal: 0.3;
-  --links-thumb-reveal-duration: 200ms;
   --z-rain: 0;
   --z-crt-vignette: 1;
   --z-crt-scanlines: 2;
@@ -144,81 +106,72 @@
   --focus-ring-width: 2px;
   --focus-ring-offset: 2px;
   --focus-ring-offset-inset: -2px;
-  --focus-ring: var(--focus-ring-width) solid var(--color-primary-500);
-  --shadow-glow: 0 0 12px var(--color-primary-500);
-  --stroke-width-icon: 1.4;
+  --focus-ring: var(--focus-ring-width) solid var(--color-focus);
+  --shadow-glow: 0 0 12px var(--color-accent);
   --radius-none: 0;
   --radius-control: 2px;
 
-  --color-primary-50: #eafff0;
-  --color-primary-100: #c4ffd8;
-  --color-primary-200: #8ff2b2;
-  --color-primary-300: #5ae07b;
-  --color-primary-400: #4ade80;
-  --color-primary-500: #00ff41;
-  --color-primary-600: #28c840;
-  --color-primary-700: #1e9b32;
-  --color-primary-800: #166f24;
-  --color-primary-900: #0c4015;
+  --color-signal-200: #8ff2b2;
+  --color-signal-300: #5ae07b;
+  --color-signal-400: #4ade80;
+  --color-signal-500: #00ff41;
+  --color-signal-600: #28c840;
+  --color-signal-700: #1e9b32;
+  --color-signal-800: #166f24;
+  --color-signal-900: #0c4015;
+
+  --color-signal-subtle: #00ff4166;
+  --color-signal-border: #00ff4133;
+  --color-signal-faint: #00ff411f;
+  --color-signal-quiet: #00ff411a;
+
+  --color-accent-tint-faint: color-mix(in srgb, var(--color-accent) 6%, transparent);
+  --color-accent-tint-light: color-mix(in srgb, var(--color-accent) 7%, transparent);
+  --color-accent-tint-soft: color-mix(in srgb, var(--color-accent) 8%, transparent);
+  --color-accent-tint-strong: color-mix(in srgb, var(--color-accent) 10%, transparent);
+  --color-surface-tint-medium: color-mix(in oklab, var(--color-surface) 50%, transparent);
+  --color-surface-tint-firm: color-mix(in oklab, var(--color-surface) 55%, transparent);
+  --color-surface-tint-heavy: color-mix(in srgb, var(--color-surface) 70%, transparent);
+
+  --color-signal-glow-02: rgba(0, 255, 65, 0.02);
+  --color-signal-glow-03: rgba(0, 255, 65, 0.03);
+  --color-signal-glow-04: rgba(0, 255, 65, 0.04);
+  --color-signal-glow-06: rgba(0, 255, 65, 0.06);
+  --color-signal-glow-18: rgba(0, 255, 65, 0.18);
+  --color-signal-glow-25: rgba(0, 255, 65, 0.25);
+  --color-signal-glow-30: rgba(0, 255, 65, 0.3);
+  --color-signal-glow-35: rgba(0, 255, 65, 0.35);
+  --color-signal-glow-40: rgba(0, 255, 65, 0.4);
+  --color-signal-glow-45: rgba(0, 255, 65, 0.45);
+  --color-signal-glow-50: rgba(0, 255, 65, 0.5);
+  --color-signal-glow-55: rgba(0, 255, 65, 0.55);
+  --color-signal-glow-60: rgba(0, 255, 65, 0.6);
 
   --color-eq-bar-top: #7cff9e;
   --color-eq-bar-bottom: #00b830;
 
-  --color-primary-subtle: #00ff4166;
-  --color-primary-border: #00ff4133;
-  --color-primary-faint: #00ff411f;
-  --color-primary-quiet: #00ff411a;
+  --color-carbon-900: #050505;
+  --color-carbon-950: #000000;
 
-  --color-secondary-50: #e8e8e8;
-  --color-secondary-100: #cfcfcf;
-  --color-secondary-200: #a8a8a8;
-  --color-secondary-300: #808080;
-  --color-secondary-400: #5c5c5c;
-  --color-secondary-500: #3d3d3d;
-  --color-secondary-600: #262626;
-  --color-secondary-700: #141414;
-  --color-secondary-800: #0a0a0a;
-  --color-secondary-900: #050505;
-  --color-secondary-950: #000000;
+  --color-sage-50: #e6ffe6;
+  --color-sage-300: #a9bda9;
+  --color-sage-400: #8a9d8a;
+  --color-sage-500: #6b7c6b;
+  --color-sage-900: #161b16;
 
-  --color-tertiary-50: #e6ffe6;
-  --color-tertiary-100: #dbf2db;
-  --color-tertiary-200: #c4d9c4;
-  --color-tertiary-300: #a9bda9;
-  --color-tertiary-400: #8a9d8a;
-  --color-tertiary-500: #6b7c6b;
-  --color-tertiary-600: #515f51;
-  --color-tertiary-700: #3a463a;
-  --color-tertiary-800: #262f26;
-  --color-tertiary-900: #161b16;
+  --color-gold-500: #febc2e;
 
-  --color-quinary-500: #febc2e;
-
-  --color-senary-300: #ff8a8a;
-  --color-senary-500: #ff5f57;
+  --color-coral-300: #ff8a8a;
+  --color-coral-500: #ff5f57;
 
   --color-print-ink: #000000;
   --color-print-paper: #ffffff;
   --color-print-rule: #595959;
 
+  --color-guitar-scanline: rgba(0, 0, 0, 0.3);
+
   --color-crt-phosphor-red: #ff0000;
   --color-crt-phosphor-blue: #0000ff;
-
-  --color-glow-02: rgba(0, 255, 65, 0.02);
-  --color-glow-03: rgba(0, 255, 65, 0.03);
-  --color-glow-04: rgba(0, 255, 65, 0.04);
-  --color-glow-05: rgba(0, 255, 65, 0.05);
-  --color-glow-06: rgba(0, 255, 65, 0.06);
-  --color-glow-15: rgba(0, 255, 65, 0.15);
-  --color-glow-18: rgba(0, 255, 65, 0.18);
-  --color-glow-25: rgba(0, 255, 65, 0.25);
-  --color-glow-30: rgba(0, 255, 65, 0.3);
-  --color-glow-35: rgba(0, 255, 65, 0.35);
-  --color-glow-40: rgba(0, 255, 65, 0.4);
-  --color-glow-45: rgba(0, 255, 65, 0.45);
-  --color-glow-50: rgba(0, 255, 65, 0.5);
-  --color-glow-55: rgba(0, 255, 65, 0.55);
-  --color-glow-60: rgba(0, 255, 65, 0.6);
 
   --font-mono: var(--font-mono-src), monospace;
   --font-display: var(--font-display-src), sans-serif;
@@ -232,20 +185,23 @@
     --text-section-title: var(--text-base);
     --measure-page: 1200px;
     --measure-read: 72ch;
-    --color-rain-head: var(--color-primary-800);
-    --color-rain-body: var(--color-primary-900);
+    --color-rain-head: var(--color-signal-800);
+    --color-rain-body: var(--color-signal-900);
+    --color-surface: var(--color-carbon-950);
+    --color-surface-raised: var(--color-carbon-900);
+    --color-border: var(--color-signal-border);
+    --color-border-strong: var(--color-signal-subtle);
+    --color-accent: var(--color-signal-500);
+    --color-on-accent: var(--color-carbon-950);
+    --color-text-muted: var(--color-sage-400);
+    --color-focus: var(--color-signal-500);
+    --color-warning: var(--color-gold-500);
+    --color-danger: var(--color-coral-500);
+    --color-scrim: var(--color-carbon-950);
     --rain-tail-alpha: 0.1;
-    --leading-page-tight: 1.1;
-    --leading-page-snug: 1.35;
-    --type-reveal-char-duration: 28ms;
-    --type-reveal-max-duration: 1.4s;
-    --type-reveal-caret-width: 0.6ch;
-    --type-reveal-caret-height: 1.05em;
-    --type-reveal-caret-blink: 1.05s;
-    --type-reveal-caret-blinks: 3;
   }
 
-  @media (min-width: 768px) {
+  @media (min-width: 48rem) {
     :root {
       --space-page-top: var(--spacing-12);
       --space-section: var(--spacing-12);

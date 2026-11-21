@@ -22,14 +22,14 @@ export function TerminalPanel({
   return (
     <Element
       className={cn(
-        'terminal-panel border border-primary-subtle bg-secondary-950',
+        'terminal-panel border border-(color:--color-border-strong) bg-(color:--color-surface)',
         borderStyle === 'dashed' && 'border-dashed',
         className,
       )}
       {...rest}
     >
       {header != null && (
-        <div className="border-b border-primary-subtle py-[6px] px-[14px] md:px-[18px] lg:px-6 text-xs tracking-[0.12em] text-primary-500 font-mono">
+        <div className="border-b border-(color:--color-border-strong) py-pip px-panel @md:px-panel-wide @4xl:px-6 text-xs tracking-2xl text-(color:--color-accent) font-mono">
           {header}
         </div>
       )}

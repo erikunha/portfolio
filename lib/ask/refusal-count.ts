@@ -1,11 +1,10 @@
 import 'server-only';
 
+import { dailyCounterKey, incrementDailyCounter } from '@/lib/ask/daily-counter';
 import { log } from '@/lib/log';
 import { describeError } from '@/lib/log-error';
-import { getRedis } from '@/lib/rate-limit';
 
-const ISO_DATE_LENGTH = 10;
-const REFUSAL_COUNTER_TTL_S = 32 * 24 * 60 * 60;
+const REFUSAL_COUNTER_PREFIX = 'ask:refused';
 
 export type AskRefusalStatus =
   | 'rate-limited'
@@ -14,16 +13,12 @@ export type AskRefusalStatus =
   | 'budget-store-unavailable';
 
 export function askRefusalKey(date: string, status: AskRefusalStatus): string {
-  return `ask:refused:${date}:${status}`;
+  return dailyCounterKey(REFUSAL_COUNTER_PREFIX, date, status);
 }
 
 export async function countAskRefusal(status: AskRefusalStatus, now = new Date()): Promise<void> {
-  const key = askRefusalKey(now.toISOString().slice(0, ISO_DATE_LENGTH), status);
   try {
-    const pipe = getRedis().pipeline();
-    pipe.incr(key);
-    pipe.expire(key, REFUSAL_COUNTER_TTL_S, 'NX');
-    await pipe.exec();
+    await incrementDailyCounter(REFUSAL_COUNTER_PREFIX, status, now);
   } catch (err) {
     log.error('ask refusal counter write failed', { status, error: describeError(err) });
   }

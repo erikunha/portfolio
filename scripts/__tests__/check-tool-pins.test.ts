@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildHeaders, isBehind, parseVersion, readPin } from '../check-tool-pins.mjs';
+import { buildHeaders, isBehind, parseVersion, readPin } from '../gates/check-tool-pins';
 
 describe('parseVersion', () => {
   it('parses a bare semver', () => {

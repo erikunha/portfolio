@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { decideStagedExit, LEAKS_FOUND, NO_LEAKS } from '../gitleaks-staged.mjs';
+import { decideStagedExit, LEAKS_FOUND, NO_LEAKS } from '../gates/gitleaks-staged.ts';
 
 const FATAL = 2;
 

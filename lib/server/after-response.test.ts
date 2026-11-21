@@ -9,7 +9,9 @@ const registeredTask = (): Promise<void> => {
 };
 
 vi.mock('next/server', () => ({ after: afterMock }));
-vi.mock('@/lib/log', () => ({ log: { error: logError, info: vi.fn(), warn: vi.fn() } }));
+vi.mock('@/lib/log', async () =>
+  (await import('@/__tests__/helpers/modules')).logModule({ error: logError }),
+);
 
 describe('afterResponse', () => {
   beforeEach(() => {

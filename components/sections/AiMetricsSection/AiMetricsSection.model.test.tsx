@@ -9,7 +9,7 @@ vi.mock('next/server', async (importOriginal) => ({
   connection: vi.fn(async () => undefined),
 }));
 vi.mock('next/headers', () => ({ headers: vi.fn() }));
-vi.mock('@/lib/ask-metrics', () => ({ getAskMetrics: getAskMetricsMock }));
+vi.mock('@/lib/ask/metrics', () => ({ getAskMetrics: getAskMetricsMock }));
 
 const NOW = new Date('2026-11-16T12:00:00Z');
 const FRESH_RUN = '2026-11-15T05:00:00Z';

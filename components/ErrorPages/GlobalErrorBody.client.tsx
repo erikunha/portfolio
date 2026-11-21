@@ -5,12 +5,12 @@ import { serverErrorContent } from '@/content/server-error-detail';
 import { localeOfPath } from '@/content/site-locale';
 import { type RouteErrorProps, ServerErrorMain, useErrorReport } from './ErrorPages.client';
 
-export function GlobalErrorBody({ error, reset }: RouteErrorProps) {
+export function GlobalErrorBody({ error, retry }: RouteErrorProps) {
   const locale = localeOfPath(usePathname());
   const stamps = useErrorReport('[GlobalError]', error);
   return (
     <ServerErrorMain
-      reset={reset}
+      retry={retry}
       content={serverErrorContent[locale]}
       stamps={stamps}
       digest={error.digest}

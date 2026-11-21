@@ -3,9 +3,9 @@ import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { chainLeaves, coveredByCi, QUALITY_FAST_CI_ONLY_STEPS } from '../lib/ci-predict-policy';
-import { parseWorkflow } from '../lib/ci-workflow';
-import { prepareHooks } from '../prepare-hooks.mjs';
+import { chainLeaves, coveredByCi, QUALITY_FAST_CI_ONLY_STEPS } from '../ci/ci-full-stages';
+import { parseWorkflow } from '../ci/ci-workflow';
+import { prepareHooks } from '../install/prepare-hooks';
 
 const ROOT = process.cwd();
 const pkg = JSON.parse(readFileSync(join(ROOT, 'package.json'), 'utf8')) as {
@@ -41,6 +41,11 @@ describe('quality-fast steps are reproduced by the local verify chain', () => {
     const names = new Set(steps.map((s) => s.name));
     const stale = [...QUALITY_FAST_CI_ONLY_STEPS.keys()].filter((name) => !names.has(name));
     expect(stale).toEqual([]);
+  });
+
+  it('gates the DECISIONS index in verify and in quality-fast', () => {
+    expect(chainLeaves(pkg.scripts, 'ci:local')).toContain('pnpm check:decisions-index');
+    expect(steps.map((s) => s.run?.trim())).toContain('pnpm check:decisions-index');
   });
 
   it('runs the coverage threshold in verify', () => {

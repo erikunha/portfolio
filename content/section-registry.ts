@@ -1,88 +1,107 @@
 import { localizedPath, type SiteLocale } from './site-locale';
 
-export const SECTION_ICONS = {
-  home: 'home',
-  about: 'readme',
-  projects: 'projects',
-  career: 'git-log',
-  shell: 'shell',
-  measured: 'live-perf',
-  opinions: 'hottest-takes',
-  guitar: 'guitar',
-  contact: 'contact',
-} as const;
-
-export const SECTION_ID = {
-  home: 'bio',
-  about: 'sec-readme',
-  projects: 'sec-projects',
-  career: 'sec-git-log',
-  shell: 'sec-shell',
-  measured: 'sec-live-metrics',
-  opinions: 'sec-hottest-takes',
-  guitar: 'sec-guitar',
-  contact: 'sec-contact',
-} as const;
-
-export const SECTION_NAV = [
-  { id: SECTION_ID.home, label: { en: 'Home', pt: 'Início' }, order: 1 },
-  { id: SECTION_ID.about, label: { en: 'About', pt: 'Sobre' }, order: 2 },
-  { id: SECTION_ID.projects, label: { en: 'Projects', pt: 'Projetos' }, order: 3 },
-  { id: SECTION_ID.career, label: { en: 'Career', pt: 'Carreira' }, order: 4 },
-  { id: SECTION_ID.shell, label: { en: 'Interactive shell', pt: 'Shell interativo' }, order: 5 },
-  { id: SECTION_ID.measured, label: { en: 'Measured', pt: 'Medições' }, order: 6 },
-  { id: SECTION_ID.opinions, label: { en: 'Opinions', pt: 'Opiniões' }, order: 7 },
-  { id: SECTION_ID.guitar, label: { en: 'Guitar and mixer', pt: 'Guitarra e mixer' }, order: 8 },
-  { id: SECTION_ID.contact, label: { en: 'Contact', pt: 'Contato' }, order: 9 },
-] as const;
-
-export const SECTION_REGISTRY = [
-  {
-    ...SECTION_NAV[0],
+export const SECTIONS = {
+  home: {
+    id: 'bio',
+    label: { en: 'Home', pt: 'Início' },
     srLabel: { en: 'Home', pt: 'Início' },
-    icon: SECTION_ICONS.home,
+    icon: 'home',
   },
-  {
-    ...SECTION_NAV[1],
+  about: {
+    id: 'sec-readme',
+    label: { en: 'About', pt: 'Sobre' },
     srLabel: { en: 'About', pt: 'Sobre' },
-    icon: SECTION_ICONS.about,
+    icon: 'readme',
   },
-  {
-    ...SECTION_NAV[2],
+  projects: {
+    id: 'sec-projects',
+    label: { en: 'Projects', pt: 'Projetos' },
     srLabel: { en: 'Projects', pt: 'Projetos' },
-    icon: SECTION_ICONS.projects,
+    icon: 'projects',
   },
-  {
-    ...SECTION_NAV[3],
+  career: {
+    id: 'sec-git-log',
+    label: { en: 'Career', pt: 'Carreira' },
     srLabel: { en: 'Career history', pt: 'Histórico profissional' },
-    icon: SECTION_ICONS.career,
+    icon: 'git-log',
   },
-  {
-    ...SECTION_NAV[4],
+  shell: {
+    id: 'sec-shell',
+    label: { en: 'Interactive shell', pt: 'Shell interativo' },
     srLabel: { en: 'Interactive shell', pt: 'Shell interativo' },
-    icon: SECTION_ICONS.shell,
+    icon: 'shell',
   },
-  {
-    ...SECTION_NAV[5],
+  measured: {
+    id: 'sec-live-metrics',
+    label: { en: 'Measured', pt: 'Medições' },
     srLabel: { en: 'Measured', pt: 'Medições' },
-    icon: SECTION_ICONS.measured,
+    icon: 'live-perf',
   },
-  {
-    ...SECTION_NAV[6],
+  opinions: {
+    id: 'sec-hottest-takes',
+    label: { en: 'Opinions', pt: 'Opiniões' },
     srLabel: { en: 'Opinions', pt: 'Opiniões' },
-    icon: SECTION_ICONS.opinions,
+    icon: 'hottest-takes',
   },
-  {
-    ...SECTION_NAV[7],
+  guitar: {
+    id: 'sec-guitar',
+    label: { en: 'Guitar and mixer', pt: 'Guitarra e mixer' },
     srLabel: { en: 'Guitar and mixer', pt: 'Guitarra e mixer' },
-    icon: SECTION_ICONS.guitar,
+    icon: 'guitar',
   },
-  {
-    ...SECTION_NAV[8],
+  contact: {
+    id: 'sec-contact',
+    label: { en: 'Contact', pt: 'Contato' },
     srLabel: { en: 'Contact', pt: 'Contato' },
-    icon: SECTION_ICONS.contact,
+    icon: 'contact',
   },
-] as const;
+} as const satisfies Record<
+  string,
+  {
+    id: string;
+    label: Record<SiteLocale, string>;
+    srLabel: Record<SiteLocale, string>;
+    icon: string;
+  }
+>;
+
+type SectionKey = keyof typeof SECTIONS;
+type SectionDefinition = (typeof SECTIONS)[SectionKey];
+
+const FIRST_SECTION_ORDER = 1;
+const SECTION_KEYS = Object.keys(SECTIONS) as SectionKey[];
+
+const pickByKey = <T>(select: (section: SectionDefinition) => T): Record<SectionKey, T> =>
+  Object.fromEntries(SECTION_KEYS.map((key) => [key, select(SECTIONS[key])])) as Record<
+    SectionKey,
+    T
+  >;
+
+export const SECTION_ICONS = pickByKey(({ icon }) => icon) as {
+  [K in SectionKey]: (typeof SECTIONS)[K]['icon'];
+};
+
+export const SECTION_ID = pickByKey(({ id }) => id) as {
+  [K in SectionKey]: (typeof SECTIONS)[K]['id'];
+};
+
+type OrderedSection = SectionDefinition & { readonly order: number };
+
+const ORDERED_SECTIONS = SECTION_KEYS.map((key, index) => ({
+  ...SECTIONS[key],
+  order: FIRST_SECTION_ORDER + index,
+})) as unknown as readonly [OrderedSection, ...OrderedSection[]];
+
+export const SECTION_NAV = ORDERED_SECTIONS.map(({ id, label, order }) => ({
+  id,
+  label,
+  order,
+})) as unknown as readonly [
+  Pick<OrderedSection, 'id' | 'label' | 'order'>,
+  ...Pick<OrderedSection, 'id' | 'label' | 'order'>[],
+];
+
+export const SECTION_REGISTRY = ORDERED_SECTIONS;
 
 export type SectionRegistryEntry = (typeof SECTION_REGISTRY)[number];
 export type SectionId = SectionRegistryEntry['id'];

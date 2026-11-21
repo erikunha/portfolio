@@ -1,7 +1,8 @@
 import { expect, type Page, test } from '@playwright/test';
 import { NAVIGATION } from '../../content/navigation';
 import { SITE_LOCALE } from '../../content/site-locale';
-import { MENU_TRIGGER, MOTION_TOPBAR_TOGGLE } from './_helpers/hydration';
+import { VIEWPORTS, WIDTH } from './_helpers/geometry';
+import { gotoHydrated, MOTION_TOPBAR_TOGGLE, openSectionMenu } from './_helpers/hydration';
 import { gotoSettled } from './_helpers/streamed';
 
 const { copy } = NAVIGATION[SITE_LOCALE.en];
@@ -14,8 +15,8 @@ const BLACK_RGB = 'rgb(0, 0, 0)';
 const MIN_SMALL_TEXT_CONTRAST = 4.5;
 const SRGB_LINEAR_CUTOFF = 0.03928;
 const UNDERLINE = 'underline';
-const DESKTOP = { width: 1280, height: 800 };
-const PHONE = { width: 390, height: 844 };
+const DESKTOP = { width: WIDTH.DESKTOP, height: 800 };
+const PHONE = VIEWPORTS.PHONE;
 const OFF_PALETTE_HUES = [
   'rgb(236, 251, 255)',
   'rgb(208, 245, 255)',
@@ -55,7 +56,9 @@ const computed = (page: Page, selector: string, property: string) =>
     .evaluate((el, prop) => getComputedStyle(el).getPropertyValue(prop), property);
 
 for (const viewport of [DESKTOP, PHONE]) {
-  test.describe(`active language is not the HIRE fill at ${viewport.width}`, () => {
+  test.describe(`active language is not the HIRE fill at ${viewport.width}`, {
+    tag: '@cross-browser',
+  }, () => {
     test.use({ viewport });
 
     test('the current locale is outlined and underlined, the solid fill stays on HIRE', async ({
@@ -63,7 +66,7 @@ for (const viewport of [DESKTOP, PHONE]) {
     }) => {
       await gotoSettled(page, '/');
       if (viewport.width < DESKTOP.width) {
-        await page.locator(`${MENU_TRIGGER}:visible`).first().click();
+        await openSectionMenu(page);
       }
       const current = page.locator('[data-lang-switch] [aria-current]:visible').first();
       await expect(current).toBeVisible();
@@ -85,22 +88,20 @@ for (const viewport of [DESKTOP, PHONE]) {
   });
 }
 
-test.describe('MOTION toggle', () => {
+test.describe('MOTION toggle', { tag: '@cross-browser' }, () => {
   test.use({ viewport: DESKTOP });
 
   test('prints ON or OFF beside its label and flips on click', async ({ page }) => {
-    await gotoSettled(page, '/');
+    await gotoHydrated(page, '/', MOTION_TOPBAR_TOGGLE);
     const toggle = page.locator(MOTION_TOPBAR_TOGGLE).first();
     await expect(toggle).toContainText(copy.motionOn);
-    await expect(async () => {
-      await toggle.click();
-      await expect(toggle).toContainText(copy.motionOff);
-    }).toPass();
+    await toggle.click();
+    await expect(toggle).toContainText(copy.motionOff);
     await expect(toggle).toHaveAttribute('aria-pressed', 'false');
   });
 });
 
-test.describe('small text keeps to body and secondary colors', () => {
+test.describe('small text keeps to body and secondary colors', { tag: '@cross-browser' }, () => {
   test.use({ viewport: DESKTOP });
 
   test('career hash, company, role, location, dates and description carry distinct tones', async ({
@@ -185,7 +186,9 @@ test.describe('small text keeps to body and secondary colors', () => {
   });
 });
 
-test.describe('no cyan or amber text, border or fill on public routes', () => {
+test.describe('no cyan or amber text, border or fill on public routes', {
+  tag: '@cross-browser',
+}, () => {
   test.use({ viewport: DESKTOP });
 
   for (const route of SCANNED_ROUTES) {

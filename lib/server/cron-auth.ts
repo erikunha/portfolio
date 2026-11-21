@@ -1,6 +1,9 @@
 import 'server-only';
 import { createHash, timingSafeEqual } from 'node:crypto';
+import { env } from '@/lib/env';
+import { HTTP_STATUS } from '@/lib/http-status';
 import { log } from '@/lib/log';
+import { err } from '@/lib/server/route';
 
 const AUTHORIZATION_HEADER = 'authorization';
 const BEARER_PREFIX = 'Bearer ';
@@ -19,4 +22,14 @@ export function isCronAuthorized(req: Request, secret: string | undefined): bool
   }
   const presented = req.headers.get(AUTHORIZATION_HEADER) ?? '';
   return timingSafeEqual(digest(presented), digest(`${BEARER_PREFIX}${secret}`));
+}
+
+export function requireCron(req: Request): Response | null {
+  if (isCronAuthorized(req, env.CRON_SECRET)) return null;
+  return err({
+    requestId: crypto.randomUUID(),
+    status: HTTP_STATUS.unauthorized,
+    code: 'unauthorized',
+    message: 'unauthorized',
+  });
 }

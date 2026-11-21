@@ -1,8 +1,12 @@
 @layer components {
+  :root {
+    --island-min-height: calc(5 * var(--spacing-target));
+  }
+
   .interactive-shell,
   .shell-loading {
     margin: calc(-1 * (var(--spacing-3) + var(--spacing-1) / 2));
-    background: var(--color-secondary-900);
+    background: var(--color-surface-raised);
   }
 
   .shell-loading {
@@ -28,15 +32,14 @@
   }
 
   .interactive-shell {
-    color: var(--color-tertiary-50);
+    color: var(--color-text);
     font-family: var(--font-mono);
     font-size: var(--text-xs);
     --leading: 1.65;
-    --shell-focus-width: 2px;
+    --shell-focus-width: var(--focus-ring-width);
     --shell-stop-time-chars: 4;
   }
 
-  .shell-chrome,
   .shell-form,
   .shell-toolbar {
     display: flex;
@@ -46,9 +49,8 @@
   }
 
   .shell-chrome {
-    border-bottom: var(--border-width) solid var(--color-primary-subtle);
-    color: var(--color-primary-400);
-    flex-wrap: wrap;
+    border-bottom: var(--border-width) solid var(--color-border-strong);
+    color: var(--color-signal-400);
   }
 
   .shell-chrome-tag {
@@ -72,28 +74,28 @@
   .shell-line-prompt,
   .shell-line-reference,
   .shell-prompt {
-    color: var(--color-primary-500);
+    color: var(--color-accent);
   }
 
   .shell-line-output,
   .shell-ai-notice,
   .shell-privacy-notice {
-    color: var(--color-tertiary-50);
+    color: var(--color-text);
   }
 
   .shell-line-error {
-    color: var(--color-senary-300);
+    color: var(--color-coral-300);
   }
 
   .shell-stderr-command {
-    color: var(--color-primary-500);
+    color: var(--color-accent);
     font-weight: 700;
   }
 
   .shell-line-ratelimit {
     padding: var(--spacing-3);
-    border: var(--border-width) solid var(--color-primary-500);
-    color: var(--color-tertiary-50);
+    border: var(--border-width) solid var(--color-accent);
+    color: var(--color-text);
   }
 
   .shell-line-ratelimit [aria-hidden] {
@@ -106,7 +108,7 @@
 
   .shell-ratelimit-headline,
   .shell-ratelimit-bar {
-    color: var(--color-primary-500);
+    color: var(--color-accent);
   }
 
   .shell-ratelimit-bar {
@@ -115,11 +117,11 @@
   }
 
   .shell-line-hint {
-    color: var(--color-primary-400);
+    color: var(--color-signal-400);
   }
 
   .shell-line-hint code {
-    color: var(--color-primary-500);
+    color: var(--color-accent);
     font: inherit;
   }
 
@@ -129,26 +131,26 @@
   }
 
   .shell-ai-label {
-    color: var(--color-primary-500);
+    color: var(--color-accent);
   }
 
   .shell-line-info,
   .shell-line-loading,
   .shell-command-hint {
-    color: var(--color-primary-400);
+    color: var(--color-signal-400);
   }
 
   .shell-stream-meta {
     display: block;
-    color: var(--color-primary-400);
+    color: var(--color-signal-400);
   }
 
   .shell-caret {
-    color: var(--color-primary-500);
+    color: var(--color-accent);
   }
 
   .shell-form {
-    border-top: var(--border-width) solid var(--color-primary-quiet);
+    border-top: var(--border-width) solid var(--color-signal-quiet);
     flex-wrap: wrap;
   }
 
@@ -170,14 +172,14 @@
     border: 0;
     border-radius: var(--radius-none);
     background: transparent;
-    color: var(--color-tertiary-50);
-    caret-color: var(--color-primary-500);
+    color: var(--color-text);
+    caret-color: var(--color-accent);
     font: inherit;
   }
 
   @media (hover: hover) and (pointer: fine) {
     .shell-input:hover {
-      box-shadow: inset 0 calc(-1 * var(--border-width)) 0 0 var(--color-primary-subtle);
+      box-shadow: inset 0 calc(-1 * var(--border-width)) 0 0 var(--color-border-strong);
     }
   }
 
@@ -189,7 +191,7 @@
     overflow: hidden;
     white-space: nowrap;
     pointer-events: none;
-    color: var(--color-primary-400);
+    color: var(--color-signal-400);
   }
 
   .shell-placeholder-text {
@@ -227,11 +229,11 @@
     align-items: center;
     gap: var(--spacing-2);
     padding-inline: var(--spacing-4);
-    border: var(--border-width) solid var(--color-primary-500);
+    border: var(--border-width) solid var(--color-accent);
     border-radius: var(--radius-control);
-    background: var(--color-secondary-950);
-    box-shadow: 0 0 0 var(--shell-stop-halo) var(--color-secondary-900);
-    color: var(--color-primary-500);
+    background: var(--color-surface);
+    box-shadow: 0 0 0 var(--shell-stop-halo) var(--color-surface-raised);
+    color: var(--color-accent);
     font: inherit;
     font-variant-numeric: tabular-nums;
     white-space: nowrap;
@@ -240,17 +242,20 @@
   }
 
   .shell-stop-pill:active {
-    background: var(--color-primary-quiet);
+    background: var(--color-signal-quiet);
   }
 
   @media (hover: hover) and (pointer: fine) {
     .shell-stop-pill:hover {
-      background: var(--color-primary-quiet);
+      background: var(--color-signal-quiet);
     }
   }
 
-  body[data-motion="reduce"] .interactive-shell {
-    --shell-stop-time-chars: 2;
+  /* biome-ignore lint/suspicious/noDuplicateSelectors: `@variant motion-off` and `@variant motion-on` resolve to a `body` ancestor selector, so this rule has a different selector than the earlier one with the same class */
+  .interactive-shell {
+    @variant motion-off {
+      --shell-stop-time-chars: 2;
+    }
   }
 
   .shell-stop-time {
@@ -261,9 +266,9 @@
 
   .shell-stop-key {
     padding-inline: var(--spacing-1);
-    border: var(--border-width) solid var(--color-primary-subtle);
+    border: var(--border-width) solid var(--color-border-strong);
     border-radius: var(--radius-control);
-    color: var(--color-tertiary-400);
+    color: var(--color-text-muted);
     font: inherit;
   }
 
@@ -281,11 +286,11 @@
   }
 
   .shell-privacy-notice {
-    border-top: var(--border-width) solid var(--color-primary-quiet);
+    border-top: var(--border-width) solid var(--color-signal-quiet);
     overflow-wrap: anywhere;
   }
 
-  @media (max-width: theme(--viewport-below-narrow)) {
+  @media (width < theme(--viewport-narrow)) {
     .shell-ai-notice,
     .shell-privacy-notice {
       padding-inline: var(--spacing-3);
@@ -322,9 +327,9 @@
   .shell-nojs {
     margin: 0;
     padding: var(--spacing-3);
-    border: var(--border-width) solid var(--color-primary-subtle);
-    background: var(--color-secondary-900);
-    color: var(--color-tertiary-50);
+    border: var(--border-width) solid var(--color-border-strong);
+    background: var(--color-surface-raised);
+    color: var(--color-text);
     font-family: var(--font-mono);
     font-size: var(--text-xs);
     overflow-wrap: anywhere;
@@ -338,7 +343,7 @@
     white-space: nowrap;
   }
 
-  @media (max-width: theme(--viewport-below-narrow)) {
+  @media (width < theme(--viewport-narrow)) {
     .shell-privacy-email > a {
       letter-spacing: var(--tracking-tight);
     }
@@ -353,9 +358,9 @@
     min-height: var(--spacing-target);
     max-width: 100%;
     padding: 0 var(--spacing-2);
-    border: var(--border-width) solid var(--color-primary-subtle);
+    border: var(--border-width) solid var(--color-border-strong);
     border-radius: var(--radius-control);
-    color: var(--color-primary-500);
+    color: var(--color-accent);
     background: transparent;
     font: inherit;
     cursor: pointer;
@@ -364,12 +369,12 @@
   }
 
   .shell-control:active:not([aria-disabled="true"]) {
-    background: var(--color-primary-quiet);
+    background: var(--color-signal-quiet);
   }
 
   @media (hover: hover) and (pointer: fine) {
     .shell-control:hover:not([aria-disabled="true"]) {
-      background: var(--color-primary-quiet);
+      background: var(--color-signal-quiet);
     }
   }
 
@@ -380,13 +385,13 @@
 
   .shell-input:focus-visible {
     outline: none;
-    box-shadow: inset 0 calc(-1 * var(--shell-focus-width)) 0 0 var(--color-primary-500);
+    box-shadow: inset 0 calc(-1 * var(--shell-focus-width)) 0 0 var(--color-focus);
   }
 
   .shell-receipt {
-    --shell-receipt-danger: var(--color-senary-300);
-    --shell-receipt-danger-dim: color-mix(in srgb, var(--color-senary-300) 40%, transparent);
-    --shell-receipt-warning: var(--color-quinary-500);
+    --shell-receipt-danger: var(--color-coral-300);
+    --shell-receipt-danger-dim: color-mix(in srgb, var(--color-coral-300) 40%, transparent);
+    --shell-receipt-warning: var(--color-warning);
     box-sizing: border-box;
     display: grid;
     grid-template-columns: minmax(0, 1fr);
@@ -401,7 +406,7 @@
     max-inline-size: 64rem;
     margin-block-start: var(--spacing-2);
     padding: var(--spacing-2) var(--spacing-3);
-    border: var(--border-width) dashed var(--color-primary-subtle);
+    border: var(--border-width) dashed var(--color-border-strong);
     color: var(--color-text-secondary);
     white-space: normal;
   }
@@ -458,18 +463,18 @@
 
   .shell-receipt-body {
     grid-area: body;
-    color: var(--color-tertiary-50);
+    color: var(--color-text);
   }
 
   .shell-receipt-id {
     grid-area: id;
     min-width: 0;
-    color: var(--color-primary-200);
+    color: var(--color-signal-200);
     overflow-wrap: anywhere;
   }
 
   .shell-receipt[data-state="pending"] .shell-receipt-id {
-    color: var(--color-tertiary-500);
+    color: var(--color-sage-500);
   }
 
   .shell-receipt-id code {
@@ -495,7 +500,7 @@
   }
 
   .shell-receipt-hint a {
-    color: var(--color-primary-200);
+    color: var(--color-signal-200);
     text-decoration: underline;
     text-underline-offset: var(--spacing-1);
   }
@@ -504,7 +509,7 @@
     grid-area: progress;
     margin-block-start: var(--spacing-1);
     position: relative;
-    block-size: 2px;
+    block-size: var(--spacing-hair);
     overflow: hidden;
     background: var(--shell-receipt-danger-dim);
   }
@@ -527,8 +532,11 @@
     }
   }
 
-  body[data-motion="reduce"] .shell-receipt-progress > span {
-    animation: none;
+  /* biome-ignore lint/suspicious/noDuplicateSelectors: `@variant motion-off` and `@variant motion-on` resolve to a `body` ancestor selector, so this rule has a different selector than the earlier one with the same class */
+  .shell-receipt-progress > span {
+    @variant motion-off {
+      animation: none;
+    }
   }
 
   .shell-receipt-actions {
@@ -539,26 +547,43 @@
     margin-block-start: var(--spacing-2);
   }
 
-  .shell-receipt-button {
+  .btn.shell-receipt-button {
+    box-sizing: border-box;
     flex: 1 1 0;
     min-inline-size: max-content;
-    padding-block: var(--spacing-1);
+    max-width: 100%;
+    padding: var(--spacing-1) var(--spacing-2);
+    border-radius: var(--radius-control);
+    font: inherit;
+    letter-spacing: normal;
+    text-transform: none;
     --leading: 1.25;
     white-space: nowrap;
     overflow-wrap: normal;
+    touch-action: manipulation;
+    user-select: none;
   }
 
-  .shell-receipt-button[data-copied] {
-    border-color: var(--color-primary-500);
-    background: var(--color-primary-quiet);
+  .btn.shell-receipt-button:active:not([aria-disabled="true"]) {
+    background: var(--color-signal-quiet);
   }
 
-  .shell-receipt-forget {
+  .btn.shell-receipt-button[aria-disabled="true"] {
+    cursor: default;
+    opacity: 0.5;
+  }
+
+  .btn.shell-receipt-button[data-copied] {
+    border-color: var(--color-accent);
+    background: var(--color-signal-quiet);
+  }
+
+  .btn.shell-receipt-button.shell-receipt-forget {
     border-color: var(--shell-receipt-danger-dim);
     color: var(--shell-receipt-danger);
   }
 
-  .shell-receipt-forget[data-confirm] {
+  .btn.shell-receipt-button.shell-receipt-forget[data-confirm] {
     border-color: var(--shell-receipt-danger);
   }
 
@@ -608,16 +633,16 @@
 
   .shell-toolbar {
     flex-wrap: wrap;
-    border-top: var(--border-width) dashed var(--color-primary-quiet);
+    border-top: var(--border-width) dashed var(--color-signal-quiet);
   }
 
-  @media (max-width: theme(--viewport-below-md)) {
+  @media (width < theme(--viewport-md)) {
     .shell-feed {
       block-size: calc(18 * var(--spacing-4));
     }
   }
 
-  @media (max-width: theme(--viewport-below-phone)) {
+  @media (width < theme(--viewport-phone)) {
     .shell-input-wrap {
       flex-basis: 100%;
     }
@@ -645,17 +670,20 @@
   .shell-cursor {
     display: inline-block;
     flex: none;
-    width: 7px;
+    width: var(--spacing-chip);
     height: 1.05em;
-    background: var(--color-primary-500);
-    vertical-align: -2px;
+    background: var(--color-accent);
+    vertical-align: calc(var(--spacing-hair) * -1);
     margin-left: 1px;
     opacity: 1;
     animation: shell-blink 1.05s steps(2, start) infinite;
   }
 
-  body[data-motion="reduce"] .shell-cursor {
-    animation: none;
+  /* biome-ignore lint/suspicious/noDuplicateSelectors: `@variant motion-off` and `@variant motion-on` resolve to a `body` ancestor selector, so this rule has a different selector than the earlier one with the same class */
+  .shell-cursor {
+    @variant motion-off {
+      animation: none;
+    }
   }
 
   .shell-cmd-hint {
@@ -665,15 +693,18 @@
   }
 
   .shell-cmd-hint:hover:not([aria-disabled="true"]) {
-    color: var(--color-primary-500);
-    text-shadow: 0 0 6px var(--color-glow-50);
+    color: var(--color-accent);
+    text-shadow: 0 0 var(--spacing-pip) var(--color-signal-glow-50);
   }
 
-  body[data-motion="reduce"] .shell-cmd-hint {
-    transition: none;
+  /* biome-ignore lint/suspicious/noDuplicateSelectors: `@variant motion-off` and `@variant motion-on` resolve to a `body` ancestor selector, so this rule has a different selector than the earlier one with the same class */
+  .shell-cmd-hint {
+    @variant motion-off {
+      transition: none;
+    }
   }
 
-  @media (max-width: theme(--viewport-below-phone)) {
+  @media (width < theme(--viewport-phone)) {
     .shell-chrome {
       display: grid;
       grid-template-columns: 1fr auto 1fr;

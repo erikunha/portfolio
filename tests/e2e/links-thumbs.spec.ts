@@ -1,11 +1,10 @@
 import { expect, type Page, test } from '@playwright/test';
-import { horizontalOverflow, VIEWPORTS } from './_helpers/geometry';
+import { CORE_WIDTHS, horizontalOverflow, VIEWPORTS } from './_helpers/geometry';
 import { freezeMotion } from './_helpers/motion';
 import { gotoSettled } from './_helpers/streamed';
 
 const SIGNAL_GREEN = 'rgb(0, 255, 65)';
 const FIRST_THUMB = '.links-thumb';
-const WIDTHS = [320, 390, 768, 1280];
 const THUMB_FIXTURE = 'tests/e2e/fixtures/thumb.jpg';
 const OPTIMIZER_ROUTE = '**/_next/image**';
 const VIDEO_RATIO = 16 / 9;
@@ -85,7 +84,7 @@ test.describe('/links thumbnail theme overlay', () => {
     expect(durations).toBe('0s');
   });
 
-  for (const width of WIDTHS) {
+  for (const width of CORE_WIDTHS) {
     test(`no sideways scroll and a framed cover at ${width}`, async ({ page }) => {
       await page.setViewportSize({ width, height: VIEWPORTS.DESKTOP.height });
       await gotoSettled(page, '/links');
@@ -95,7 +94,7 @@ test.describe('/links thumbnail theme overlay', () => {
     });
   }
 
-  for (const width of WIDTHS) {
+  for (const width of CORE_WIDTHS) {
     test(`every cover frame is 16:9 and the image fills it at ${width}`, async ({ page }) => {
       await page.setViewportSize({ width, height: VIEWPORTS.DESKTOP.height });
       await gotoSettled(page, '/links');

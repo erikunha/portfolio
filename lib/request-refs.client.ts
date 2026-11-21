@@ -2,6 +2,7 @@
 
 import { useSyncExternalStore } from 'react';
 import { SESSION_REF_CAP } from '@/lib/forget-limits';
+import { createListeners } from '@/lib/listeners';
 
 const STORAGE_KEY = 'request-refs';
 const MAX_REF_LENGTH = 128;
@@ -9,7 +10,7 @@ const MAX_REF_LENGTH = 128;
 export const REQUEST_REF_LIMITS = { maxRefs: SESSION_REF_CAP } as const;
 
 const EMPTY: readonly string[] = [];
-const listeners = new Set<() => void>();
+const listeners = createListeners();
 let refs: readonly string[] | null = null;
 
 export function isRef(value: unknown): value is string {
@@ -43,7 +44,7 @@ function persist(next: readonly string[]): void {
 function write(next: readonly string[]): void {
   refs = next;
   persist(next);
-  for (const listener of listeners) listener();
+  listeners.notify();
 }
 
 export function listRefs(): readonly string[] {
@@ -71,10 +72,7 @@ export function clearRefs(): void {
 }
 
 export function subscribeRefs(listener: () => void): () => void {
-  listeners.add(listener);
-  return () => {
-    listeners.delete(listener);
-  };
+  return listeners.subscribe(listener);
 }
 
 export function useLastRef(): string | null {

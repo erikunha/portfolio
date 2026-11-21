@@ -8,28 +8,35 @@ const admit = vi.hoisted(() => async () => {
   return { success: limiterAdmits.value };
 });
 
-vi.mock('@/lib/rate-limit', () => ({
-  getClientIp: vi.fn(() => '127.0.0.1'),
-  getAskLimit: vi.fn(() => ({ limit: admit })),
-  getContactLimit: vi.fn(() => ({ limit: admit })),
-  getErrorLogLimit: vi.fn(() => ({ limit: admit })),
-  getErrorLogDailyLimit: vi.fn(() => ({ limit: admit })),
-  getErrorLogIpDailyLimit: vi.fn(() => ({ limit: admit })),
-  getRedis: vi.fn(() => null),
-  reserveBudget: vi.fn(async () => ({
-    allowed: false,
-    reserved: 0,
-    pct: 100,
-    budgetKey: 'k',
-    dailyKey: 'd',
-  })),
-  settleBudget: vi.fn(async () => undefined),
+vi.mock('@/lib/redis', () => ({ getRedis: vi.fn(() => null) }));
+vi.mock('@/lib/server/client-ip', () => ({ getClientIp: vi.fn(() => '127.0.0.1') }));
+vi.mock('@/lib/rate-limit', async () =>
+  (await import('@/__tests__/helpers/ask-route')).rateLimitModule({
+    getAskLimit: vi.fn(() => ({ limit: admit })),
+    getContactLimit: vi.fn(() => ({ limit: admit })),
+    getErrorLogLimit: vi.fn(() => ({ limit: admit })),
+    getErrorLogDailyLimit: vi.fn(() => ({ limit: admit })),
+    getErrorLogIpDailyLimit: vi.fn(() => ({ limit: admit })),
+  }),
+);
+vi.mock('@/lib/ask/budget', async () =>
+  (await import('./helpers/ask-route')).budgetModule({
+    reserveBudget: vi.fn(async () => ({
+      allowed: false,
+      reserved: 0,
+      pct: 100,
+      budgetKey: 'k',
+      dailyKey: 'd',
+    })),
+  }),
+);
+vi.mock('@/lib/ask/dedup', () => ({
   checkIdenticalQuestion: vi.fn(async () => ({ allowed: true })),
 }));
-vi.mock('@/lib/log', () => ({
-  log: { info: vi.fn(), error: vi.fn(), warn: vi.fn(), debug: vi.fn() },
+vi.mock('@/lib/log', async () => (await import('@/__tests__/helpers/modules')).logModule());
+vi.mock('@/lib/ask/interaction-log', () => ({
+  persistAskInteraction: vi.fn(async () => undefined),
 }));
-vi.mock('@/lib/ask-log', () => ({ persistAskInteraction: vi.fn(async () => undefined) }));
 vi.mock('@/lib/ask/refusal-count', () => ({ countAskRefusal: vi.fn(async () => undefined) }));
 vi.mock('@/lib/ip-hash', () => ({ hashIp: vi.fn(async () => 'hashed') }));
 

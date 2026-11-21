@@ -1,7 +1,7 @@
 import type { ComponentPropsWithoutRef } from 'react';
 import type { SiteLocale } from '@/content/site-locale';
 import { Button } from '@/design-system';
-import { cn } from '@/lib/cn';
+import { joinClassNames } from '@/lib/join-class-names';
 
 type LocaleSwitchProps = Omit<ComponentPropsWithoutRef<'nav'>, 'children' | 'aria-label'> & {
   label: string;
@@ -13,7 +13,7 @@ type LocaleSwitchProps = Omit<ComponentPropsWithoutRef<'nav'>, 'children' | 'ari
 // The size owns the box: the small button is 36px on a fine pointer and keeps
 // the 44px target on touch. Only the current-locale marks live here.
 const LINK_CLASSES =
-  'aria-[current=page]:border-primary-500 aria-[current=page]:underline aria-[current=page]:underline-offset-4 aria-[current=page]:decoration-2';
+  'aria-[current=page]:border-(color:--color-accent) aria-[current=page]:underline aria-[current=page]:underline-offset-4 aria-[current=page]:decoration-2';
 
 export function LocaleSwitch({
   label,
@@ -24,7 +24,7 @@ export function LocaleSwitch({
   ...navProps
 }: LocaleSwitchProps) {
   return (
-    <nav {...navProps} aria-label={label} className={cn('flex gap-2', className)}>
+    <nav {...navProps} aria-label={label} className={joinClassNames('flex gap-2', className)}>
       {(Object.keys(hrefs) as SiteLocale[]).map((candidate) => {
         const active = candidate === current;
         return (

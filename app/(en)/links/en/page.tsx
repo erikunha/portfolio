@@ -1,11 +1,11 @@
 import { linksPageMetadata } from '@/app/_lib/links-metadata';
 import { LinksPage } from '@/components/links/LinksPage';
-import { LINKS_LOCALE } from '@/content/links.constants';
+import { SITE_LOCALE } from '@/content/site-locale';
 
-export const metadata = linksPageMetadata(LINKS_LOCALE.en);
+export const metadata = linksPageMetadata(SITE_LOCALE.en);
 
 export const ensureStatic = 'navigation';
 
 export default function LinksEnPage() {
-  return <LinksPage locale={LINKS_LOCALE.en} />;
+  return <LinksPage locale={SITE_LOCALE.en} />;
 }

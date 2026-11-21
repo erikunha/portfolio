@@ -1,5 +1,6 @@
 import { expect, type Locator, type Page, test } from '@playwright/test';
 import { SITE_LOCALE, type SiteLocale } from '../../content/site-locale';
+import { WIDTH } from './_helpers/geometry';
 import { installMockBackend } from './_helpers/mock-backend';
 import { freezeMotion } from './_helpers/motion';
 import {
@@ -12,8 +13,16 @@ import {
 
 const CLASSIC_SCROLLBAR_PX = 15;
 const DESKTOP_SCROLLBAR_PX = 11;
-const WIDTHS = [320 - CLASSIC_SCROLLBAR_PX, 320, 375] as const;
-const DESKTOP_WIDTHS = [320, 375 - DESKTOP_SCROLLBAR_PX, 375] as const;
+const WIDTHS = [
+  WIDTH.PHONE_NARROW - CLASSIC_SCROLLBAR_PX,
+  WIDTH.PHONE_NARROW,
+  WIDTH.PHONE_COMPACT,
+] as const;
+const DESKTOP_WIDTHS = [
+  WIDTH.PHONE_NARROW,
+  WIDTH.PHONE_COMPACT - DESKTOP_SCROLLBAR_PX,
+  WIDTH.PHONE_COMPACT,
+] as const;
 const VIEWPORT_HEIGHT = 844;
 const PATHS: Record<SiteLocale, string> = { [SITE_LOCALE.en]: '/', [SITE_LOCALE.pt]: '/pt' };
 const MAIL_LINK = 'a[href^="mailto:"]';
@@ -56,7 +65,9 @@ async function expectNaturalBreaks(page: Page, scope: string) {
 
 for (const width of WIDTHS) {
   for (const locale of Object.values(SITE_LOCALE)) {
-    test.describe(`an email address in the shell at ${width}px (${locale})`, () => {
+    test.describe(`an email address in the shell at ${width}px (${locale})`, {
+      tag: '@cross-browser',
+    }, () => {
       test.use({ viewport: { width, height: VIEWPORT_HEIGHT }, isMobile: true, hasTouch: true });
       const { ui } = shellCopy(locale);
 
@@ -100,7 +111,9 @@ for (const width of WIDTHS) {
 
 for (const width of DESKTOP_WIDTHS) {
   for (const locale of Object.values(SITE_LOCALE)) {
-    test.describe(`the privacy notice at ${width}px on a desktop browser (${locale})`, () => {
+    test.describe(`the privacy notice at ${width}px on a desktop browser (${locale})`, {
+      tag: '@cross-browser',
+    }, () => {
       test.use({ viewport: { width, height: VIEWPORT_HEIGHT } });
 
       test('keeps the header name and the endpoint on one line each', async ({ page }) => {

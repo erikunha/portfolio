@@ -1,16 +1,18 @@
 import { expect, test } from '@playwright/test';
+import { CORE_COMPACT_WIDTHS } from './_helpers/geometry';
 import { installChunkedAsk } from './_helpers/mock-backend';
 import { freezeMotion } from './_helpers/motion';
 import { askShell, openShell, SHELL_SELECTOR } from './_helpers/shell';
 
-const WIDTHS = [320, 375, 768, 1280] as const;
 const VIEWPORT_HEIGHT = 844;
 const QUESTION = 'who is erik?';
 const ANSWER = 'Erik builds agent platforms.';
 const UUID_REQUEST_ID = '3f1c9a2e-7b44-4d0a-9c1e-5a8d2b6f0e71';
 
-for (const width of WIDTHS) {
-  test(`at ${width}px the request reference stays inside the feed`, async ({ page }) => {
+for (const width of CORE_COMPACT_WIDTHS) {
+  test(`at ${width}px the request reference stays inside the feed`, {
+    tag: '@cross-browser',
+  }, async ({ page }) => {
     await page.setViewportSize({ width, height: VIEWPORT_HEIGHT });
     await freezeMotion(page);
     const chunked = await installChunkedAsk(page, { requestId: UUID_REQUEST_ID });

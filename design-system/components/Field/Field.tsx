@@ -1,5 +1,3 @@
-'use client';
-
 import { type InputHTMLAttributes, type TextareaHTMLAttributes, useId } from 'react';
 import { cn } from '@/lib/cn';
 
@@ -11,7 +9,7 @@ export type MultiLineProps = FieldBase &
 export type FieldProps = SingleLineProps | MultiLineProps;
 
 const inputClasses =
-  'field-input w-full bg-transparent border border-primary-500 text-tertiary-50 font-mono text-xs md:text-sm px-[10px] py-2 min-h-11 resize-y transition-[border-color] duration-200 ease-out [body[data-motion=reduce]_&]:transition-none placeholder:text-tertiary-500 aria-[invalid=true]:border-senary-300';
+  'field-input w-full bg-transparent border border-(color:--color-accent) text-(color:--color-text) font-mono text-xs md:text-sm px-inset py-2 min-h-11 resize-y transition-[border-color] duration-200 ease-out motion-off:transition-none placeholder:text-sage-500 aria-[invalid=true]:border-coral-300';
 
 export function Field({
   name,
@@ -35,8 +33,8 @@ export function Field({
     'aria-describedby': describedBy,
   };
   return (
-    <div className="field flex flex-col gap-[6px]">
-      <label htmlFor={id} className="text-xs md:text-sm text-primary-400 tracking-[0.08em]">
+    <div className="field flex flex-col gap-pip">
+      <label htmlFor={id} className="text-xs md:text-sm text-signal-400 tracking-lg">
         {label}
       </label>
       {multiline ? (
@@ -49,7 +47,7 @@ export function Field({
         <input {...(rest as InputHTMLAttributes<HTMLInputElement>)} {...inputProps} />
       )}
       {error ? (
-        <span id={errId} className="field-error text-xs text-senary-300">
+        <span id={errId} className="field-error text-xs text-coral-300">
           {error}
         </span>
       ) : null}

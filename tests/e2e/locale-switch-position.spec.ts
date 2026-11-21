@@ -1,11 +1,11 @@
 import { expect, type Page, test } from '@playwright/test';
-import { waitForStableHref, waitForStablePosition } from './_helpers/geometry';
+import { WIDTH, waitForStableHref, waitForStablePosition } from './_helpers/geometry';
 import { gotoSettled } from './_helpers/streamed';
 
 const SECTION = 'sec-projects';
 const VIEWPORTS = [
-  { name: 'phone', width: 390, height: 844 },
-  { name: 'desktop', width: 1280, height: 720 },
+  { name: 'phone', width: WIDTH.PHONE, height: 844 },
+  { name: 'desktop', width: WIDTH.DESKTOP, height: 720 },
 ] as const;
 const TOP_BAND_PX = 260;
 const LOAD_SCROLL_TIMEOUT_MS = 20_000;
@@ -79,7 +79,7 @@ for (const viewport of VIEWPORTS) {
 }
 
 test.describe('language switch without JavaScript', () => {
-  test.use({ javaScriptEnabled: false, viewport: { width: 1280, height: 720 } });
+  test.use({ javaScriptEnabled: false, viewport: { width: WIDTH.DESKTOP, height: 720 } });
 
   test('stays a working link to the other home page', async ({ page }) => {
     await page.goto(`/#${SECTION}`);

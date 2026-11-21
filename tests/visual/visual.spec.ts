@@ -2,7 +2,10 @@ import { shellUi } from '../../content/shell-ui';
 import { SITE_LOCALE } from '../../content/site-locale';
 import { captureForArgos } from '../e2e/_helpers/argos-capture';
 import { expect, test } from '../e2e/_helpers/fixtures';
+import { VIEWPORTS } from '../e2e/_helpers/geometry';
 import { waitForHydration } from '../e2e/_helpers/hydration';
+import { waitForImagesDecoded } from '../e2e/_helpers/images';
+import { expectLinksFeedFixture } from '../e2e/_helpers/links-feed-fixture';
 import { stripVolatileChrome } from '../e2e/_helpers/mask-volatile';
 import { revealDeferredContent, snapshotLocator } from '../e2e/_helpers/snapshot';
 import { gotoSettled } from '../e2e/_helpers/streamed';
@@ -13,13 +16,13 @@ const CONTACT_VISITOR_ZONE = 'Europe/Berlin';
 const CONTACT_FIXED_NOW = new Date('2026-11-02T15:00:00Z');
 const CONTACT_SCROLL_MARGIN_PX = 100;
 const PAGE_VIEWPORT = {
-  chromium: { width: 1280, height: 720 },
-  'chromium-mobile': { width: 390, height: 844 },
+  chromium: VIEWPORTS.DESKTOP,
+  'chromium-mobile': VIEWPORTS.PHONE,
 } as const;
 const PAGE_BASELINES = [
   { name: 'cv', path: '/cv', target: 'main' },
   { name: 'summary', path: '/summary', target: 'main' },
-  { name: 'links-en', path: '/links/en', target: 'main' },
+  { name: 'links-en', path: '/links/en', target: 'main', needsLinksFeedFixture: true },
   {
     name: 'pt-hero',
     path: '/pt',
@@ -27,7 +30,7 @@ const PAGE_BASELINES = [
   },
 ] as const;
 
-test.describe('visual regression', () => {
+test.describe('visual regression', { tag: '@mobile-visual' }, () => {
   test('1: hero above-the-fold matches baseline', async ({ mockedPage }, testInfo) => {
     test.skip(
       testInfo.project.name === 'chromium-mobile',
@@ -193,15 +196,18 @@ test.describe('visual regression', () => {
   });
 });
 
-test.describe('route page baselines', () => {
-  for (const { name, path, target } of PAGE_BASELINES) {
+test.describe('route page baselines', { tag: '@mobile-visual' }, () => {
+  for (const baseline of PAGE_BASELINES) {
+    const { name, path, target } = baseline;
     test(`${name} matches baseline`, async ({ mockedPage }, testInfo) => {
       const viewport = PAGE_VIEWPORT[testInfo.project.name as keyof typeof PAGE_VIEWPORT];
       await mockedPage.setViewportSize(viewport);
       await gotoSettled(mockedPage, path);
       await waitForHydration(mockedPage, '.menu-trigger');
+      if ('needsLinksFeedFixture' in baseline) await expectLinksFeedFixture(mockedPage);
       const region = mockedPage.locator(target).filter({ visible: true }).first();
       await region.waitFor({ state: 'visible' });
+      await waitForImagesDecoded(region);
       await region.scrollIntoViewIfNeeded();
       await mockedPage.evaluate(() => document.fonts.ready);
       await stripVolatileChrome(mockedPage);

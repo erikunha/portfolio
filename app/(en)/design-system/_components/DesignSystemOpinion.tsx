@@ -12,15 +12,15 @@ export function DesignSystemOpinion() {
   return (
     <section
       id={`opinion-${number}`}
-      className="my-6 border border-primary-border bg-secondary-950 p-4"
+      className="my-6 border border-(color:--color-border) bg-(color:--color-surface) p-4"
     >
-      <h2 className="font-mono text-primary-500">
+      <h2 className="font-mono text-(color:--color-accent)">
         {`Opinion ${number}: ${designSystemOpinionConfig.topic}`}
       </h2>
-      <p className="font-mono text-tertiary-50">
-        <span className="text-primary-500">{take.category}</span> {take.thesis}
+      <p className="font-mono text-(color:--color-text)">
+        <span className="text-(color:--color-accent)">{take.category}</span> {take.thesis}
       </p>
-      <p className="font-mono text-tertiary-50">{take.body}</p>
+      <p className="font-mono text-(color:--color-text)">{take.body}</p>
     </section>
   );
 }

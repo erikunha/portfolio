@@ -23,18 +23,18 @@ describe('LocaleSwitch active state', () => {
       expect(active?.getAttribute('data-variant'), 'the solid fill belongs to the HIRE CTA').toBe(
         'secondary',
       );
-      expect(active?.className).not.toContain('bg-primary-500');
+      expect(active?.className).not.toContain('bg-(color:--color-accent)');
       expect(active?.className, 'the active locale needs a mark beyond the border').toContain(
         'underline',
       );
-      expect(active?.className).toContain('border-primary-500');
+      expect(active?.className).toContain('border-(color:--color-accent)');
     },
   );
 
-  it('the inactive link keeps the quiet border and no underline mark', () => {
+  it('the inactive link keeps the quiet secondary border and no underline mark', () => {
     const inactive = links('en')[1];
     expect(inactive?.hasAttribute('aria-current')).toBe(false);
-    expect(inactive?.className).toContain('border-primary-subtle');
+    expect(inactive?.getAttribute('data-variant')).toBe('secondary');
     expect(inactive?.className).not.toMatch(/(^|\s)underline(\s|$)/);
   });
 });

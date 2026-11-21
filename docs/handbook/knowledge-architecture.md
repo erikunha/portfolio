@@ -90,7 +90,7 @@ No project file establishes a session-handoff location: `AGENTS.md` never refere
 The documentation workflow uses these checks and conventions:
 1. **Reverse-engineer from code; route, do not duplicate.** New docs cite the code and link to canonical docs rather than copying them. Where a doc and the code disagree, the code wins and the doc is a bug.
 2. **Diagram-first.** Mermaid for any flow, hierarchy, or sequence (committable directly).
-3. **`AGENTS.md` and `CLAUDE.md` are capped** by the line budgets in `scripts/harness-size.json` (`check:harness-size`). Procedures move to skills or path-scoped rules; the slot-routing rule (gate > skill > rule > memory > prose) decides where any new instruction goes.
+3. **`AGENTS.md` and `CLAUDE.md` are capped** by the line budgets in `scripts/gates/harness-size.json` (`check:harness-size`). Procedures move to skills or path-scoped rules; the slot-routing rule (gate > skill > rule > memory > prose) decides where any new instruction goes.
 4. **`ARCHITECTURE.md` tree must match disk** (`check:doc-drift` checks that tree). It does not validate all documentation claims.
 5. **Design-system changelog is generated**, not hand-written (`pnpm changelog:sync` from git history).
 6. **ADRs are mandatory for architectural change** (the PR template asks the author to confirm it; this is not an automated ADR check).

@@ -4,8 +4,8 @@ import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { inheritedEnvWithIsolatedGit } from '../../__tests__/helpers/hermetic-git';
-import { computeCategories } from '../detect-changes.mjs';
-import { AI_PATHS, APP_PATHS, UI_PATHS } from '../detect-changes-paths.mjs';
+import { computeCategories } from '../ci/detect-changes.ts';
+import { AI_PATHS, APP_PATHS, UI_PATHS } from '../ci/detect-changes-paths.ts';
 
 const SUBPROCESS_TEST_TIMEOUT_MS = 60_000;
 
@@ -18,7 +18,7 @@ describe('detect-changes manifest', () => {
 
   it('keeps the load-bearing anchor pathspecs (guards against a truncated copy)', () => {
     expect(AI_PATHS).toContain('lib/eval/');
-    expect(AI_PATHS).toContain('__tests__/ask-*');
+    expect(AI_PATHS).toContain('__tests__/ask/');
     expect(APP_PATHS).toContain('.github/workflows/');
     expect(APP_PATHS).toContain('package.json');
     expect(UI_PATHS).toContain(':(exclude)lib/eval/**');
@@ -57,8 +57,8 @@ describe('detect-changes manifest', () => {
 
   it.each([
     '.github/workflows/ci.yml',
-    'scripts/install-playwright-browsers.mjs',
-    'scripts/wait-argos-reference.mjs',
+    'scripts/ci/install-playwright-browsers.ts',
+    'scripts/ci/wait-argos-reference.ts',
   ])('arms ui for %s, which the visual job runs', (path) => {
     expect(UI_PATHS).toContain(path);
   });

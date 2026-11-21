@@ -1,33 +1,36 @@
 # AI-Assisted Development
 
-> How AI participates across the SDLC. This doc describes the agent context, work loop and repository checks. For the per-artifact reference (every hook, skill, agent), see [agents-skills-hooks-mcp](./agents-skills-hooks-mcp.md).
+> How AI participates across the SDLC. This doc describes the agent context, work loop and repository checks. For the per-artifact reference (git hooks, the files the CI review reads), see [agents-skills-hooks-mcp](./agents-skills-hooks-mcp.md).
 
 ## Where AI shows up in the lifecycle
 
-```mermaid
-sequenceDiagram
-    participant H as Engineer
-    participant C as Coding agent (any tool)
-    participant G as Git hooks and scripts
-    participant CI as CI
+Planning, from intent to a first test:
 
-    H->>C: intent ("build X" / "fix Y")
-    C->>C: spec (intent + approach)
-    C->>C: plan-review skill (PASS or BLOCK against scope, JS budget, API limits)
-    C->>C: plan with a failure-mode checklist (each failure mode -> a task)
-    C->>C: TDD implement (tests first)
-    C->>G: commit runs Biome, staged gitleaks and commitlint
-    C->>G: git push (pre-push: main guard, branch name, pnpm verify)
-    C->>CI: open eligible PR - CI runs checks and filtered runtime jobs
-    H->>CI: optional: owner, member or collaborator comments /claude-review
-    CI->>C: claude-review posts inline findings + Verdict
-    CI-->>C: review threads
-    C->>C: review the pull request, answer every finding
+```mermaid
+flowchart LR
+    intent["Intent from engineer"] --> spec["Spec"] --> pr1["plan-review"]
+    pr1 --> plan["Plan with failure modes"] --> tdd["TDD, tests first"]
 ```
+
+- `plan-review` returns PASS or BLOCK against scope, JS budget and API limits.
+- Each failure mode in the plan becomes a task.
+
+Shipping, from commit to answered findings:
+
+```mermaid
+flowchart LR
+    commit["commit"] --> push["git push"] --> pr["Open PR"]
+    pr --> rev["/claude-review (optional)"] --> ans["Answer every finding"]
+```
+
+- The commit runs Biome, staged gitleaks and commitlint.
+- The pre-push hook runs the main guard, the branch name check and `pnpm verify`.
+- CI runs its checks and the filtered runtime jobs on an eligible PR.
+- An owner, member or collaborator comments `/claude-review`. The bot posts inline findings and a `Verdict:` line.
 
 ## 1. Context engineering (what the agent knows)
 
-Project instructions divide context between always-loaded guidance and task-specific references. The guiding principle: pick the cheapest slot that still fires when needed. **gate > skill > path-scoped rule > memory > prose in AGENTS.md.** Prose in `AGENTS.md` is the most expensive slot (it taxes every session), so it keeps only what no gate can show and stays under the line budget in `scripts/harness-size.json`, checked by `check:harness-size`. A rule with no exceptions moves out of prose into a permission deny rule, a git hook or a CI gate.
+Project instructions divide context between always-loaded guidance and task-specific references. The guiding principle: pick the cheapest slot that still fires when needed. **gate > skill > path-scoped rule > memory > prose in AGENTS.md.** Prose in `AGENTS.md` is the most expensive slot (it taxes every session), so it keeps only what no gate can show and stays under the line budget in `scripts/gates/harness-size.json`, checked by `check:harness-size`. A rule with no exceptions moves out of prose into a permission deny rule, a git hook or a CI gate.
 
 ```mermaid
 flowchart TD
@@ -37,12 +40,11 @@ flowchart TD
     end
     subgraph ondemand["Loaded on demand"]
         rules[".claude/rules/*.md (when editing matching paths)"]
-        skills[".agents/skills/* via .claude/skills links (when triggered)"]
+        skills[".agents/skills/* (applied by the CI review when triggered)"]
         topic["STANDARDS.md chapters · /docs (when relevant)"]
     end
     subgraph runtime["Discovered at runtime"]
         mem["User-global memory (runtime-dependent)"]
-        ctx7["Context7 MCP (configured docs connection)"]
         history["DECISIONS.md (why a thing is the way it is)"]
     end
     always --> agent["Claude Code"]
@@ -50,9 +52,9 @@ flowchart TD
     runtime --> agent
 ```
 
-- **`AGENTS.md`** is the single source of project instructions for Codex and Claude Code. `CLAUDE.md` imports it with `@AGENTS.md` and adds only Claude-specific lines.
+- **`AGENTS.md`** is the single source of project instructions for any coding agent and for the CI review. `CLAUDE.md` imports it with `@AGENTS.md` and adds only Claude-specific lines.
 - **`.claude/rules/*.md`** load only when the agent reads a matching path (`paths:` frontmatter): the API boundary, components and CSS, CI and gate configuration. This keeps path-specific guidance out of always-loaded context.
-- **Skills** live in `.agents/skills/` and are linked into `.claude/skills/`; only their name and description are always loaded.
+- **Skills** live in `.agents/skills/` and the CI review applies them; only their name and description are always loaded. Each developer's own tools decide how they work locally.
 - User-global memory behavior depends on the active runtime. No project file establishes a `.remember/` handoff location; `AGENTS.md` never references one, and its reference list names the current sources.
 
 ## 2. The agent's working loop

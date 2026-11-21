@@ -1,5 +1,6 @@
 import { expect, type Page, test } from '@playwright/test';
 import { SITE_HTML_LANG, SITE_LOCALE } from '@/content/site-locale';
+import { VIEWPORTS, WIDTH } from './_helpers/geometry';
 import { gotoHydrated } from './_helpers/hydration';
 import { freezeMotion, MOTION_CHOICE, MOTION_STORAGE_KEY } from './_helpers/motion';
 import { gotoSettled } from './_helpers/streamed';
@@ -15,7 +16,7 @@ const LANGUAGE_LINK = 'a[hreflang]';
 
 const languageSwitch = (page: Page) => page.getByRole('navigation', { name: LANGUAGE_NAV_NAME });
 
-test.describe('/links link-in-bio', () => {
+test.describe('/links link-in-bio', { tag: '@cross-browser' }, () => {
   test('the language switch is real routing, not a client-side toggle', async ({ page }) => {
     await page.goto('/links');
     await expect(page.locator('h1')).toHaveText(/links, canal e contato/);
@@ -53,7 +54,7 @@ test.describe('/links link-in-bio', () => {
   test('serves a scannable QR from the server with no client-side canvas work', async ({
     page,
   }) => {
-    await page.setViewportSize({ width: 1280, height: 720 });
+    await page.setViewportSize(VIEWPORTS.DESKTOP);
     await page.goto('/links');
     const qr = page.getByRole('img', { name: /QR code|Código QR/ });
     await expect(qr).toBeVisible();
@@ -69,13 +70,13 @@ test.describe('/links link-in-bio', () => {
     page,
   }) => {
     const qr = page.getByRole('img', { name: /QR code|Código QR/ });
-    await page.setViewportSize({ width: 1280, height: 800 });
+    await page.setViewportSize({ width: WIDTH.DESKTOP, height: 800 });
     await page.goto('/links');
     await expect(
       qr,
       'the QR panel shows on a desktop, so the locator is the real one',
     ).toBeVisible();
-    await page.setViewportSize({ width: 390, height: 844 });
+    await page.setViewportSize(VIEWPORTS.PHONE);
     await expect(qr).toBeHidden();
   });
 
@@ -264,7 +265,7 @@ test.describe('/links link-in-bio', () => {
   test('keeps every visible text element at or above the 13px mobile floor on both locales', async ({
     page,
   }) => {
-    await page.setViewportSize({ width: 390, height: 844 });
+    await page.setViewportSize(VIEWPORTS.PHONE);
 
     for (const path of ['/links', '/links/en']) {
       await page.goto(path);
@@ -299,9 +300,9 @@ test.describe('/links link-in-bio', () => {
   });
 });
 
-test('shows no next-video teaser or launch status once the channel has a latest video', async ({
-  page,
-}) => {
+test('shows no next-video teaser or launch status once the channel has a latest video', {
+  tag: '@cross-browser',
+}, async ({ page }) => {
   await page.goto('/links');
   await expect(page.locator('a[data-outbound="ultimo-video"]')).toHaveCount(1);
   await expect(page.locator('.links-ticker-track')).toHaveCount(0);
@@ -328,7 +329,7 @@ async function fontFacesRequested(page: Page, path: string): Promise<string[]> {
   return faces;
 }
 
-test.describe('font payload', () => {
+test.describe('font payload', { tag: '@cross-browser' }, () => {
   for (const path of ['/links', '/links/en']) {
     test(`${path} downloads only the mono faces its text uses: the display face belongs to a visible h1 and a face no rule asks for is dead weight in the Lighthouse mobile LCP model`, async ({
       page,

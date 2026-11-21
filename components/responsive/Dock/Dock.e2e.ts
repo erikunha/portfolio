@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test';
+import { VIEWPORTS, WIDTH } from '../../../tests/e2e/_helpers/geometry';
 
-test.use({ viewport: { width: 375, height: 812 } });
+test.use({ viewport: { width: WIDTH.PHONE_COMPACT, height: 812 } });
 
 test.describe('Dock: mobile navigation', () => {
   test('shows the five controls', async ({ page }) => {
@@ -48,7 +49,7 @@ test.describe('Dock: mobile navigation', () => {
   });
 });
 
-const NARROW_VIEWPORT = { width: 320, height: 640 };
+const NARROW_VIEWPORT = VIEWPORTS.PHONE_NARROW;
 const MIN_LABEL_GAP_PX = 8;
 const MIN_TAP_TARGET_PX = 24;
 

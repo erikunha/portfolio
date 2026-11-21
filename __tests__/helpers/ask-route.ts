@@ -52,19 +52,82 @@ export function ipHashModule(hashIp: AnyMock = vi.fn(async () => TEST_IP_HASH)) 
   return { hashIp };
 }
 
-export function rateLimitModule(overrides: Record<string, unknown> = {}) {
+export function clientIpModule(overrides: Record<string, unknown> = {}) {
   return {
     getClientIp: vi.fn(() => TEST_CLIENT_IP),
+    ...overrides,
+  };
+}
+
+export function rateLimitModule(overrides: Record<string, unknown> = {}) {
+  return {
     getAskLimit: vi.fn(() => ({ limit: vi.fn(async () => ({ success: true })) })),
+    ...overrides,
+  };
+}
+
+type ReservationFixture = {
+  reserved: number;
+  budgetKey: string;
+  dailyKey: string;
+  ipHash: string;
+  question: string;
+};
+
+type UsageFixture = {
+  billedInputTokens: number;
+  outputTokens: number;
+  cacheReadTokens?: number;
+  cacheWriteTokens?: number;
+};
+
+export function budgetModule(overrides: Record<string, unknown> = {}) {
+  const settleBudget = vi.fn(async (..._args: unknown[]) => undefined);
+  const base = {
     reserveBudget: vi.fn(async (..._args: unknown[]) => ({
       allowed: true,
       reserved: TEST_RESERVED_TOKENS,
       pct: 0,
       budgetKey: TEST_BUDGET_KEY,
     })),
-    settleBudget: vi.fn(async (..._args: unknown[]) => undefined),
+    settleBudget,
+    ...overrides,
+  };
+  const settle = base.settleBudget as (...args: unknown[]) => Promise<unknown>;
+  const actualBudget = vi.importActual<typeof import('@/lib/ask/budget')>('@/lib/ask/budget');
+  const actual = () => actualBudget;
+  const settleReservation = vi.fn(
+    async (reservation: ReservationFixture, usage: UsageFixture | 'none') => {
+      const { settleParams } = await actual();
+      return settle(settleParams(reservation, usage));
+    },
+  );
+  const abandonReservation = vi.fn(async (reservation: ReservationFixture) => {
+    const { abandonSettleParams } = await actual();
+    const params = abandonSettleParams(reservation);
+    if (params !== null) await settle(params);
+    const dedup = await import('@/lib/ask/dedup');
+    await dedup.releaseIdenticalQuestion(reservation.ipHash, reservation.question);
+  });
+  return { settleReservation, abandonReservation, ...base };
+}
+
+export function dedupModule(overrides: Record<string, unknown> = {}) {
+  return {
     checkIdenticalQuestion: vi.fn(async (..._args: unknown[]) => ({ allowed: true })),
     releaseIdenticalQuestion: vi.fn(async (..._args: unknown[]) => undefined),
     ...overrides,
+  };
+}
+
+export async function streamModuleFromRoute() {
+  const { POST } = await import('@/app/api/ask/route');
+  return {
+    startAsk: async (req: Request) => {
+      const response = await POST(req);
+      return response.ok
+        ? { ok: true, requestId: response.headers.get('X-Request-Id'), readable: response.body }
+        : { ok: false, response };
+    },
   };
 }

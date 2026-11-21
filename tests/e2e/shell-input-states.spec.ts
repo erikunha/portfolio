@@ -1,4 +1,5 @@
 import { expect, type Page, test } from '@playwright/test';
+import { WIDTH } from './_helpers/geometry';
 import { waitForHydration } from './_helpers/hydration';
 import { stripVolatileChrome } from './_helpers/mask-volatile';
 import { freezeMotion } from './_helpers/motion';
@@ -64,7 +65,7 @@ async function openShell(page: Page): Promise<void> {
   await stripVolatileChrome(page);
 }
 
-test.describe('shell input states', () => {
+test.describe('shell input states', { tag: '@cross-browser' }, () => {
   test('the input keeps the same box when the keyboard moves focus into it', async ({ page }) => {
     await openShell(page);
     const input = page.locator(INPUT).first();
@@ -148,7 +149,7 @@ test.describe('shell input states', () => {
         boxShadow: computed.boxShadow,
         focusColor: (() => {
           const probe = document.createElement('span');
-          probe.style.color = 'var(--color-primary-500)';
+          probe.style.color = 'var(--color-signal-500)';
           document.body.append(probe);
           const resolved = getComputedStyle(probe).color;
           probe.remove();
@@ -208,7 +209,7 @@ test.describe('shell input states', () => {
   });
 
   test('the input stays inside the panel at 320', async ({ page }) => {
-    await page.setViewportSize({ width: 320, height: 720 });
+    await page.setViewportSize({ width: WIDTH.PHONE_NARROW, height: 720 });
     await openShell(page);
     const input = page.locator(INPUT).first();
 

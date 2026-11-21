@@ -3,6 +3,7 @@ import { copyFileSync, mkdirSync, mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { GIT_MAX_BUFFER_BYTES } from '@/scripts/lib/git';
 import { hermeticEnv } from '../helpers/hermetic-git';
 
 // Why this gate exists: the .gitignore is the only thing standing between a
@@ -70,7 +71,6 @@ const EXAMPLE_PATHS = ['.env.example'];
 // prove the rules work. This is what keeps a green run meaningful.
 const TRACKED_FILE = 'package.json';
 
-const GIT_MAX_BUFFER_BYTES = 256 * 1024 * 1024;
 const DEFAULT_SPAWN_BUFFER_BYTES = 1024 * 1024;
 
 const git = (cwd: string, args: string[]) =>

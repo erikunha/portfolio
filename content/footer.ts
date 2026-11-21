@@ -1,3 +1,4 @@
+import { SHELL_PROMPT, SHELL_USER } from './brand';
 import { MAIN_CONTENT_ID } from './landmarks';
 import { LINKS_PATH } from './links.constants';
 import { FooterContentSchema } from './schemas';
@@ -19,7 +20,7 @@ const footerContentFor = (locale: SiteLocale) => {
   const pt = locale === SITE_LOCALE.pt;
   return FooterContentSchema.parse({
     shutdownTitle: pt ? '[DESLIGAMENTO DO SISTEMA INICIADO]' : '[SYSTEM SHUTDOWN INITIATED]',
-    prompt: 'erik@portfolio:~$',
+    prompt: SHELL_PROMPT,
     shutdownCommand: 'shutdown -h now',
     sessionTitle: pt ? 'RELATÓRIO_DE_SESSÃO' : 'SESSION_REPORT',
     sessionLabels: {
@@ -29,7 +30,7 @@ const footerContentFor = (locale: SiteLocale) => {
       seen: pt ? 'seções vistas' : 'sections seen',
       commands: pt ? 'comandos executados' : 'commands run',
     },
-    user: 'erik@portfolio',
+    user: SHELL_USER,
     netstatTitle: 'NETSTAT -AN',
     externalGlyph: EXTERNAL_LINK_GLYPH,
     connectionLabels: {

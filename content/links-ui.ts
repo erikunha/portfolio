@@ -1,6 +1,6 @@
-import { LINKS_LOCALE, type LinksLocale } from './links.constants';
+import { SITE_LOCALE, type SiteLocale } from './site-locale';
 
-type LocalizedLabel = Readonly<Record<LinksLocale, string>>;
+type LocalizedLabel = Readonly<Record<SiteLocale, string>>;
 
 export const linksUi: {
   arrow: string;
@@ -10,14 +10,14 @@ export const linksUi: {
   latestVideoLoading: LocalizedLabel;
 } = {
   arrow: '→',
-  copyGlyph: '⧉',
+  copyGlyph: '◫',
   prompt: '$ ',
   latestVideoLoading: {
-    [LINKS_LOCALE.pt]: 'Carregando o vídeo mais recente',
-    [LINKS_LOCALE.en]: 'Loading the latest video',
+    [SITE_LOCALE.pt]: 'Carregando o vídeo mais recente',
+    [SITE_LOCALE.en]: 'Loading the latest video',
   },
   qrLabel: {
-    [LINKS_LOCALE.pt]: 'Código QR:',
-    [LINKS_LOCALE.en]: 'QR code:',
+    [SITE_LOCALE.pt]: 'Código QR:',
+    [SITE_LOCALE.en]: 'QR code:',
   },
 };

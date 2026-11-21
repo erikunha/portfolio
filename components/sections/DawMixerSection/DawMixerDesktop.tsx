@@ -1,3 +1,4 @@
+import { useId } from 'react';
 import { FaderDbIsland } from '@/components/client/DawMixer/FaderIsland/FaderDbIsland.client';
 import { KnobIsland } from '@/components/client/DawMixer/KnobIsland/KnobIsland.client';
 import { RmsButtons } from '@/components/client/DawMixer/RmsButtons/RmsButtons.client';
@@ -21,14 +22,8 @@ function PluginChain({
           key={p.name}
           className={cn(
             'plugin-chip border flex flex-col items-center gap-1',
-            'pt-[5px] pb-[6px] text-primary-400 relative',
-            p.active
-              ? [
-                  'plugin-card-on',
-                  'text-primary-500 border-primary-500',
-                  'bg-[color-mix(in_srgb,var(--color-primary-500)_8%,transparent)]',
-                ].join(' ')
-              : 'border-[var(--color-primary-quiet)] bg-black/55',
+            'pt-snug pb-pip relative',
+            p.active ? 'plugin-card-on mx-plugin-chip-on' : 'mx-plugin-chip-off',
           )}
           data-testid={`plugin-${channelId}-${p.name}`}
         >
@@ -36,7 +31,7 @@ function PluginChain({
             {p.name}
           </span>
           <span className="flex gap-px items-end" aria-hidden="true">
-            <StrengthDots strength={p.strength} dotClassName="w-[3px] h-1" />
+            <StrengthDots strength={p.strength} dotClassName="w-tight h-1" />
           </span>
         </div>
       ))}
@@ -50,15 +45,9 @@ function ChannelDesktop({ ch, copy }: { ch: DawMixerChannel; copy: DawMixerCopy 
     <div
       className={cn(
         'daw-channel-row',
-        'border-b border-[var(--color-primary-quiet)] px-[18px] py-[14px] relative',
-        ch.focused && [
-          'channel-row-focused',
-          'bg-[color-mix(in_srgb,var(--color-primary-500)_6%,transparent)]',
-        ],
-        isMaster && [
-          'bg-[linear-gradient(90deg,color-mix(in_srgb,var(--color-primary-500)_8%,transparent),color-mix(in_srgb,var(--color-primary-500)_2%,transparent))]',
-          'border-t border-t-primary-500',
-        ],
+        'border-b border-[var(--color-signal-quiet)] px-panel-wide py-panel relative',
+        ch.focused && ['channel-row-focused', 'bg-(color:--color-accent-tint-faint)'],
+        isMaster && ['mx-master-gradient-desktop', 'border-t border-t-(color:--color-accent)'],
       )}
       data-focused={ch.focused || undefined}
       data-channel={isMaster ? 'master' : undefined}
@@ -67,34 +56,36 @@ function ChannelDesktop({ ch, copy }: { ch: DawMixerChannel; copy: DawMixerCopy 
       <div className="flex flex-col gap-1">
         <span
           className={cn(
-            'border px-[5px] py-[1px] text-xs font-mono text-primary-400 tracking-xs shrink-0',
-            'border-[var(--color-primary-border)]',
-            isMaster && 'border-primary-500 px-2 py-[2px] font-bold text-primary-500 tracking-2xl',
+            'border px-snug text-xs font-mono text-signal-400 tracking-xs shrink-0',
+            'border-[var(--color-border)]',
+            isMaster
+              ? 'border-(color:--color-accent) py-hair font-bold text-(color:--color-accent) tracking-2xl'
+              : 'py-px',
           )}
           data-channel={isMaster ? 'master' : undefined}
         >
           {ch.id}
         </span>
-        <span className="block text-xs text-primary-400">{ch.name}</span>
+        <span className="block text-xs text-signal-400">{ch.name}</span>
         <FaderBar pct={ch.faderPct} bright={ch.focused === true} />
       </div>
       <div className="flex flex-col gap-1 min-w-0">
         <span
           className={cn(
-            'font-bold text-base text-tertiary-50 tracking-xs leading-ratio-1',
-            (ch.focused || isMaster) && 'text-primary-500',
+            'font-bold text-base text-(color:--color-text) tracking-xs leading-ratio-1',
+            (ch.focused || isMaster) && 'text-(color:--color-accent)',
           )}
         >
           {ch.desktopName ?? ch.name}
         </span>
         <span
-          className="text-xs text-primary-400 leading-ratio-1-3 whitespace-nowrap overflow-hidden text-ellipsis max-md:whitespace-normal max-md:overflow-visible max-md:text-clip"
+          className="text-xs text-signal-400 leading-ratio-1-3 whitespace-nowrap overflow-hidden text-ellipsis max-md:whitespace-normal max-md:overflow-visible max-md:text-clip"
           data-testid="mixer-desc"
         >
           <ParsedText text={ch.desc} />
         </span>
       </div>
-      <div className="flex gap-[10px] items-center justify-center">
+      <div className="flex gap-inset items-center justify-center">
         <KnobIsland
           initialAngle={ch.knob1.angleDeg}
           label={ch.knob1.label}
@@ -147,10 +138,10 @@ function SessionHeaderDesktop({ mixer, copy }: { mixer: DawMixer; copy: DawMixer
   return (
     <div
       className={cn(
-        'daw-mixer-row-min grid gap-[18px] items-center px-[18px] py-3',
-        'border-b border-[var(--color-primary-border)]',
-        'bg-[color-mix(in_srgb,var(--color-primary-500)_5%,transparent)]',
-        'text-xs text-primary-400 tracking-3xl',
+        'daw-mixer-row-min grid gap-panel-wide items-center px-panel-wide py-3',
+        'border-b border-[var(--color-border)]',
+        'mx-session-header-tint',
+        'text-xs text-signal-400 tracking-3xl',
       )}
       data-testid="session-header"
     >
@@ -159,14 +150,14 @@ function SessionHeaderDesktop({ mixer, copy }: { mixer: DawMixer; copy: DawMixer
       </span>
       <span className="mixer-transport tabular-nums">
         <span className="transport-play" aria-hidden="true" />
-        <span className="text-primary-500 font-bold text-sm tracking-md">
+        <span className="text-(color:--color-accent) font-bold text-sm tracking-md">
           {mixer.transportTime}
         </span>
-        <span className="text-[var(--color-primary-quiet)]">{copy.transportSeparator}</span>
+        <span className="text-[var(--color-signal-quiet)]">{copy.transportSeparator}</span>
         <span>
           {mixer.bpm} {copy.bpmUnit}
         </span>
-        <span className="text-[var(--color-primary-quiet)]">{copy.transportSeparator}</span>
+        <span className="text-[var(--color-signal-quiet)]">{copy.transportSeparator}</span>
         <span>{mixer.timeSignature}</span>
       </span>
     </div>
@@ -178,9 +169,9 @@ function TableHeader({ copy }: { copy: DawMixerCopy }) {
     <div
       className={cn(
         'daw-channel-row daw-mixer-labels',
-        'text-xs text-primary-400 tracking-5xl uppercase',
-        'border-b border-[var(--color-primary-quiet)] px-[18px] py-[7px]',
-        'bg-black/50',
+        'text-xs text-signal-400 tracking-5xl uppercase',
+        'border-b border-[var(--color-signal-quiet)] px-panel-wide py-chip',
+        'bg-(color:--color-surface-tint-medium)',
       )}
       aria-hidden="true"
     >
@@ -197,16 +188,21 @@ function TableHeader({ copy }: { copy: DawMixerCopy }) {
 }
 
 export function DawMixerDesktop({ mixer, copy }: { mixer: DawMixer; copy: DawMixerCopy }) {
+  const endId = useId();
   return (
     <div
-      className="daw-mixer-desktop font-mono text-sm text-tertiary-50 border border-[var(--color-primary-border)] bg-black/50 overflow-x-auto md:overflow-x-hidden"
+      className="daw-mixer-desktop relative font-mono text-sm text-(color:--color-text) border border-[var(--color-border)] bg-(color:--color-surface-tint-medium) overflow-x-auto md:overflow-x-hidden"
       data-testid="daw-mixer-desktop"
     >
+      <a href={`#${endId}`} className="mixer-skip-link">
+        {copy.skipLabel}
+      </a>
       <SessionHeaderDesktop mixer={mixer} copy={copy} />
       <TableHeader copy={copy} />
       {mixer.channels.map((ch) => (
         <ChannelDesktop key={ch.id} ch={ch} copy={copy} />
       ))}
+      <div id={endId} tabIndex={-1} />
     </div>
   );
 }

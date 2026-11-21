@@ -30,9 +30,10 @@ export function CopyButton({
   return (
     <>
       <button
+        data-variant="quiet"
         {...rest}
         type={type}
-        className={cn('copy-btn', className)}
+        className={cn('btn copy-btn', className)}
         onClick={(event) => {
           onClick?.(event);
           if (!event.defaultPrevented) void copy(text);

@@ -1,6 +1,6 @@
 import { expect, type Page, test } from '@playwright/test';
 import { SITE_LOCALE, type SiteLocale } from '../../content/site-locale';
-import { horizontalOverflow, VIEWPORTS } from './_helpers/geometry';
+import { CORE_WIDTHS, horizontalOverflow, VIEWPORTS, WIDTH } from './_helpers/geometry';
 import { gotoHydrated } from './_helpers/hydration';
 import { gotoSettled } from './_helpers/streamed';
 
@@ -12,7 +12,6 @@ const MAIN = 'main#main-content';
 const DRAWER_NAV = '#section-nav a';
 const OPEN_DRAWER_TIMEOUT_MS = 5000;
 const STREAM_SETTLE_TIMEOUT_MS = 10_000;
-const OVERFLOW_WIDTHS = [320, 390, 768, 1280];
 const MIN_GAP_BELOW_HEADER = { desktop: 48, phone: 32 } as const;
 const VERTICAL_CENTER_TOLERANCE_PX = 24;
 const CONTENT_ROUTES = [
@@ -100,7 +99,7 @@ async function drawerLinks(page: Page): Promise<Array<{ name: string; href: stri
 
 for (const { locale, home, routes } of GROUPS) {
   for (const { name: viewportName, size } of VIEWPORT_CASES) {
-    test.describe(`${locale} header at ${viewportName}`, () => {
+    test.describe(`${locale} header at ${viewportName}`, { tag: '@cross-browser' }, () => {
       test.use({ viewport: size });
 
       for (const { path, status } of routes) {
@@ -147,11 +146,14 @@ for (const { locale, home, routes } of GROUPS) {
   }
 }
 
-test.describe('the error pages carry the shell', () => {
+test.describe('the error pages carry the shell', { tag: '@cross-browser' }, () => {
   for (const path of ['/this-route-does-not-exist', '/pt/rota-que-nao-existe']) {
-    for (const width of OVERFLOW_WIDTHS) {
+    for (const width of CORE_WIDTHS) {
       test(`${path} has no sideways scroll at ${width}`, async ({ page }) => {
-        await page.setViewportSize({ width, height: width < 768 ? PHONE.height : DESKTOP.height });
+        await page.setViewportSize({
+          width,
+          height: width < WIDTH.TABLET ? PHONE.height : DESKTOP.height,
+        });
         await gotoSettled(page, path);
         expect(await horizontalOverflow(page)).toBeLessThanOrEqual(0);
       });
@@ -159,9 +161,9 @@ test.describe('the error pages carry the shell', () => {
   }
 });
 
-test('the header is the one banner landmark and the dock menu claims no current location', async ({
-  page,
-}) => {
+test('the header is the one banner landmark and the dock menu claims no current location', {
+  tag: '@cross-browser',
+}, async ({ page }) => {
   await page.setViewportSize(PHONE);
   await gotoSettled(page, '/');
   await expect(page.getByRole('banner')).toHaveCount(1);
@@ -171,7 +173,7 @@ test('the header is the one banner landmark and the dock menu claims no current 
   ).not.toHaveAttribute('aria-current', /.*/);
 });
 
-test.describe('the header without JavaScript', () => {
+test.describe('the header without JavaScript', { tag: '@cross-browser' }, () => {
   test.use({ javaScriptEnabled: false, viewport: DESKTOP });
 
   const LANGUAGE_HREFS: ReadonlyArray<readonly [string, [string, string]]> = [
@@ -213,7 +215,7 @@ test.describe('the header without JavaScript', () => {
   });
 });
 
-test.describe('the first content block clears the header', () => {
+test.describe('the first content block clears the header', { tag: '@cross-browser' }, () => {
   for (const { name, size } of VIEWPORT_CASES) {
     test.describe(`at ${name}`, () => {
       test.use({ viewport: size });
@@ -247,7 +249,7 @@ test.describe('the first content block clears the header', () => {
   }
 });
 
-test.describe('the 404 block is centered between the bars', () => {
+test.describe('the 404 block is centered between the bars', { tag: '@cross-browser' }, () => {
   for (const { name, size } of VIEWPORT_CASES) {
     for (const path of NOT_FOUND_ROUTES) {
       test(`${path} centers the block vertically at ${name}`, async ({ page }) => {

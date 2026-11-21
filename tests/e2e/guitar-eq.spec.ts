@@ -1,7 +1,7 @@
 import { expect, type Page, test } from '@playwright/test';
 import { guitarRig } from '../../content/guitar-rig';
 import { SITE_LOCALE } from '../../content/site-locale';
-import { horizontalOverflow, VIEWPORTS as SHARED_VIEWPORTS } from './_helpers/geometry';
+import { horizontalOverflow, VIEWPORTS as SHARED_VIEWPORTS, WIDTH } from './_helpers/geometry';
 import { freezeMotion } from './_helpers/motion';
 
 const STRIP = '[data-testid="eq-spectrum"]';
@@ -9,10 +9,10 @@ const BAR = `${STRIP} .eq-bar`;
 const AXIS_TICK = `${STRIP} .eq-axis-tick`;
 const LABEL = '#sec-guitar .guitar-chain-label';
 const VIEWPORTS = [
-  { width: 320, height: 700, visibleBars: 36 },
-  { width: 390, height: 844, visibleBars: 36 },
-  { width: 768, height: 900, visibleBars: 72 },
-  { width: 1280, height: 720, visibleBars: 72 },
+  { width: WIDTH.PHONE_NARROW, height: 700, visibleBars: 36 },
+  { width: WIDTH.PHONE, height: 844, visibleBars: 36 },
+  { width: WIDTH.TABLET, height: 900, visibleBars: 72 },
+  { width: WIDTH.DESKTOP, height: 720, visibleBars: 72 },
 ];
 const SUBPIXEL_TOLERANCE = 1;
 const NO_ANIMATION = 'none';
@@ -27,7 +27,7 @@ async function openStrip(page: Page, width: number, height: number) {
 }
 
 for (const { width, height, visibleBars } of VIEWPORTS) {
-  test.describe(`EQ strip at ${width}px`, () => {
+  test.describe(`EQ strip at ${width}px`, { tag: '@cross-browser' }, () => {
     test('fits the viewport with every axis label inside the strip', async ({ page }) => {
       const strip = await openStrip(page, width, height);
       const stripBox = await strip.boundingBox();
@@ -90,7 +90,7 @@ for (const { width, height, visibleBars } of VIEWPORTS) {
   });
 }
 
-test.describe('EQ strip motion', () => {
+test.describe('EQ strip motion', { tag: '@cross-browser' }, () => {
   const { DESKTOP } = SHARED_VIEWPORTS;
 
   async function firstBar(page: Page) {
@@ -130,15 +130,19 @@ test.describe('EQ strip motion', () => {
   });
 });
 
-test('names the plot with the EQ bands for assistive technology', async ({ page }) => {
-  await openStrip(page, 1280, 720);
+test('names the plot with the EQ bands for assistive technology', {
+  tag: '@cross-browser',
+}, async ({ page }) => {
+  await openStrip(page, WIDTH.DESKTOP, 720);
   const plot = page.getByRole('img', { name: /Live spectrum of the lead guitar/ });
   await expect(plot).toHaveCount(1);
   await expect(plot).toHaveAttribute('aria-label', /140 Hz.*2\.8 kHz.*9 kHz/);
 });
 
-test('lays the strip out with grid and flex, never absolute positioning', async ({ page }) => {
-  await openStrip(page, 1280, 720);
+test('lays the strip out with grid and flex, never absolute positioning', {
+  tag: '@cross-browser',
+}, async ({ page }) => {
+  await openStrip(page, WIDTH.DESKTOP, 720);
   const positioned = await page
     .locator(STRIP)
     .evaluate((strip) =>
@@ -149,8 +153,8 @@ test('lays the strip out with grid and flex, never absolute positioning', async 
   expect(positioned).toEqual([]);
 });
 
-test('puts each axis label on its frequency', async ({ page }) => {
-  await openStrip(page, 1280, 720);
+test('puts each axis label on its frequency', { tag: '@cross-browser' }, async ({ page }) => {
+  await openStrip(page, WIDTH.DESKTOP, 720);
   const offsets = await page.locator(`${STRIP} .eq-axis-tick`).evaluateAll((ticks) => {
     const axis = ticks[0]?.parentElement?.getBoundingClientRect();
     return ticks.map((tick) => {
@@ -171,7 +175,7 @@ test('puts each axis label on its frequency', async ({ page }) => {
   });
 });
 
-test.describe('EQ strip without JavaScript', () => {
+test.describe('EQ strip without JavaScript', { tag: '@cross-browser' }, () => {
   test.use({ javaScriptEnabled: false, viewport: SHARED_VIEWPORTS.DESKTOP });
 
   test('renders the strip and the signal chain from the server HTML', async ({ page }) => {

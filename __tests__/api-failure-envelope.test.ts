@@ -8,22 +8,22 @@ vi.mock('next/server', async (importOriginal) => ({
   ...(await importOriginal<typeof import('next/server')>()),
   connection,
 }));
-vi.mock('@/lib/log', () => ({
-  log: { info: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn() },
-}));
-vi.mock('@/lib/rate-limit', () => ({
-  getClientIp: vi.fn(() => '203.0.113.7'),
-  getHealthzLimit: vi.fn(() => ({ limit })),
-  getLighthouseLimit: vi.fn(() => ({ limit })),
-  getRedis: vi.fn(() => ({})),
-}));
+vi.mock('@/lib/log', async () => (await import('./helpers/modules')).logModule());
+vi.mock('@/lib/redis', () => ({ getRedis: vi.fn(() => ({})) }));
+vi.mock('@/lib/server/client-ip', () => ({ getClientIp: vi.fn(() => '203.0.113.7') }));
+vi.mock('@/lib/rate-limit', async () =>
+  (await import('@/__tests__/helpers/ask-route')).rateLimitModule({
+    getHealthzLimit: vi.fn(() => ({ limit })),
+    getLighthouseLimit: vi.fn(() => ({ limit })),
+  }),
+);
 vi.mock('@/lib/lighthouse-scores', () => ({
   getScores: vi.fn(),
   refreshScores: vi.fn(),
   LIGHTHOUSE_FALLBACK: { fetchedAt: '-' },
   LIGHTHOUSE_TTL_S: 86400,
 }));
-vi.mock('resend', () => ({ Resend: class {} }));
+vi.mock('resend', async () => (await import('./helpers/modules')).resendModule(vi.fn()));
 
 interface Failure {
   ok: false;

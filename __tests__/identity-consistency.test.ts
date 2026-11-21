@@ -47,7 +47,10 @@ const read = (relativePath: string) => readFileSync(path.join(REPO_ROOT, relativ
 const llmsTxt = read('public/llms.txt');
 // behavioral-test-allow: the OG-image title is baked into an HTML template string inside the
 // generator script, so it is reachable only as source text, there is nothing to import
-const ogImageScript = readFileSync(path.join(REPO_ROOT, 'scripts/generate-og-image.ts'), 'utf-8');
+const ogImageScript = readFileSync(
+  path.join(REPO_ROOT, 'scripts/codegen/generate-og-image.ts'),
+  'utf-8',
+);
 
 const contentSurfaces: Array<[string, string]> = readContentSurfaces();
 
@@ -196,7 +199,7 @@ describe('identity is consistent across every gated surface', () => {
       ['lib/hiring-profile.ts', JSON.stringify(HIRING_PROFILE)],
       ['lib/ask/system-prompt.ts', SYSTEM_TEXT],
       ['public/.well-known/agent.json', read('public/.well-known/agent.json')],
-      ['scripts/generate-og-image.ts (social preview card)', ogImageScript],
+      ['scripts/codegen/generate-og-image.ts (social preview card)', ogImageScript],
     ];
     const drifted = surfaces.filter(([, text]) => !text.includes(CANONICAL_TITLE)).map(([s]) => s);
 
@@ -214,7 +217,7 @@ describe('identity is consistent across every gated surface', () => {
       ['lib/ask/system-prompt.ts', SYSTEM_TEXT],
       ['public/llms.txt', llmsTxt],
       ['public/.well-known/agent.json', read('public/.well-known/agent.json')],
-      ['scripts/generate-og-image.ts (social preview card)', ogImageScript],
+      ['scripts/codegen/generate-og-image.ts (social preview card)', ogImageScript],
     ];
     const stale = surfaces
       .filter(([, text]) =>

@@ -1,15 +1,15 @@
 import { expect, type Page, test } from '@playwright/test';
+import { CORE_WIDTHS, WIDTH } from './_helpers/geometry';
 import { gotoSettled } from './_helpers/streamed';
 
-const WIDTHS = [320, 390, 768, 1280];
 const BODY_RGB = 'rgb(230, 255, 230)';
 const TEXT_BASE_PX = 16;
 const TEXT_LG_PX = 18;
 const TEXT_BODY_PX = 14;
 const TEXT_XS_PX = 13;
-const CODE_TITLE_FULL_SIZE_MIN_WIDTH = 390;
-const RESPONSIBILITIES_TITLE_FULL_SIZE_MIN_WIDTH = 375;
-const TABLET_MIN_WIDTH = 768;
+const CODE_TITLE_FULL_SIZE_MIN_WIDTH = WIDTH.PHONE;
+const RESPONSIBILITIES_TITLE_FULL_SIZE_MIN_WIDTH = WIDTH.PHONE_COMPACT;
+const TABLET_MIN_WIDTH = WIDTH.TABLET;
 const SPACE_SECTION_PHONE = 32;
 const SPACE_SECTION_TABLET = 48;
 
@@ -24,8 +24,8 @@ const sectionTitleSize = (width: number) => (width >= TABLET_MIN_WIDTH ? TEXT_LG
 const sectionSpace = (width: number) =>
   width >= TABLET_MIN_WIDTH ? SPACE_SECTION_TABLET : SPACE_SECTION_PHONE;
 
-test.describe('type scale', () => {
-  for (const width of WIDTHS) {
+test.describe('type scale', { tag: '@cross-browser' }, () => {
+  for (const width of CORE_WIDTHS) {
     test(`card titles use the base size at ${width}`, async ({ page }) => {
       await page.setViewportSize({ width, height: 900 });
       await gotoSettled(page, '/');
@@ -116,7 +116,7 @@ test.describe('type scale', () => {
       expect(
         await px(page, '.hero-context', 'font-size'),
         '.hero-context stays on the type scale at every width',
-      ).toBe(width < 390 ? TEXT_XS_PX : TEXT_BODY_PX);
+      ).toBe(width < WIDTH.PHONE ? TEXT_XS_PX : TEXT_BODY_PX);
     });
 
     test(`career descriptions render in the body color at ${width}`, async ({ page }) => {
@@ -126,7 +126,7 @@ test.describe('type scale', () => {
         .locator('.career-body')
         .first()
         .evaluate((el) => getComputedStyle(el).color);
-      expect(color, 'the career description is a sentence, so it carries --color-tertiary-50').toBe(
+      expect(color, 'the career description is a sentence, so it carries --color-text').toBe(
         BODY_RGB,
       );
     });

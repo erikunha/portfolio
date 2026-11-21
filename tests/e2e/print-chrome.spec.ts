@@ -1,9 +1,10 @@
 import { expect, test } from '@playwright/test';
+import { VIEWPORTS } from './_helpers/geometry';
 import { installMockBackend } from './_helpers/mock-backend';
 import { gotoSettled } from './_helpers/streamed';
 
 const ROUTES = ['/', '/links', '/design-system'];
-const DESKTOP = { width: 1280, height: 720 };
+const DESKTOP = VIEWPORTS.DESKTOP;
 const PAPER_RGB = 'rgb(255, 255, 255)';
 const MIN_TEXT_CONTRAST = 4.5;
 const MIN_OPAQUE_ALPHA = 0.5;

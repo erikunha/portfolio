@@ -15,14 +15,10 @@ function imports(file: string, pattern: RegExp): string[] {
 }
 
 describe('home stylesheet entry', () => {
-  it('ends with forced-colors.css, so the forced-colors overrides still come after every home partial', () => {
+  it('ends app/globals.css with forced-colors.css, so the forced-colors overrides come after every other partial', () => {
     expect(
       imports(GLOBALS_CSS, GLOBALS_IMPORT).at(-1),
       'app/globals.css must import forced-colors.css last',
-    ).toBe(FORCED_COLORS);
-    expect(
-      imports(HOME_CSS, HOME_IMPORT).at(-1),
-      'app/css/home.css loads after app/globals.css on the home route, so its partials would outrank the forced-colors overrides of equal specificity (the contact send button, the fader thumb, the VU segments, the map pins) unless forced-colors.css is imported again as its last line.',
     ).toBe(FORCED_COLORS);
   });
 

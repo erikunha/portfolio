@@ -4,8 +4,7 @@
 
 - Path-scoped rules in `.claude/rules/` load when a matching file is read: API and server
   boundary, components and CSS, CI and gate configuration.
-- Project skills live in `.agents/skills/` (shared with Codex) and are linked into
-  `.claude/skills/`. Run `visual-baseline-regen` before a push that may move a screenshot
+- Project skills live in `.agents/skills/`. Run `visual-baseline-regen` before a push that may move a screenshot
   baseline, `ai-eval-update` after editing the ask eval inputs, and `semgrep` only when asked.
 - The `review-worker` agent is read-only (Read, Grep, Glob) and exists for the CI review job.
 - Personal settings belong in `CLAUDE.local.md` and `.claude/settings.local.json` (both gitignored).

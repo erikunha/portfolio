@@ -9,9 +9,11 @@ import {
   collectOrderedIds,
   collectRenderedSectionIds,
   findOrphanedCssIds,
-} from '../check-section-order.mjs';
+} from '../gates/check-section-order';
 
 const SUBPROCESS_TEST_TIMEOUT_MS = 60_000;
+const SCRIPT = join(process.cwd(), 'scripts/gates/check-section-order.ts');
+const TSX = join(process.cwd(), 'node_modules/.bin/tsx');
 
 describe('collectRenderedSectionIds', () => {
   it('reads ids from JSX id attributes only, so a prop or a string literal is not a section', () => {
@@ -73,10 +75,10 @@ describe('running the script through a symlinked path', {
 }, () => {
   it('still runs main and reports, instead of exiting silently', () => {
     const dir = mkdtempSync(join(tmpdir(), 'section-order-link-'));
-    const link = join(dir, 'check-section-order.mjs');
-    symlinkSync(join(process.cwd(), 'scripts', 'check-section-order.mjs'), link);
+    const link = join(dir, 'check-section-order.ts');
+    symlinkSync(SCRIPT, link);
     try {
-      const out = execFileSync(process.execPath, [link], { cwd: process.cwd(), encoding: 'utf8' });
+      const out = execFileSync(TSX, [link], { cwd: process.cwd(), encoding: 'utf8' });
       expect(out).toMatch(/\[check-section-order\] OK/);
     } finally {
       rmSync(dir, { recursive: true, force: true });

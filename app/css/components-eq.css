@@ -1,9 +1,24 @@
+@theme {
+  --eq-plot-height: 8.25rem;
+  --eq-plot-height-compact: 7rem;
+  --eq-axis-height: 1.5rem;
+  --eq-bar-gap: 0.1875rem;
+  --eq-bar-gap-compact: 0.125rem;
+  --eq-bar-mid-stop: 35%;
+  --eq-curve-stroke: 0.1625rem;
+  --eq-curve-glow: var(--spacing-tight);
+  --eq-level-floor: 0.35;
+  --eq-level-high: 0.9;
+  --eq-level-mid: 0.6;
+  --eq-level-peak: 1;
+}
+
 @layer components {
   .eq-strip {
     display: grid;
     grid-template-columns: minmax(0, 1fr);
-    border: var(--border-width) solid var(--color-primary-border);
-    background: var(--color-secondary-950);
+    border: var(--border-width) solid var(--color-border);
+    background: var(--color-surface);
   }
 
   .eq-plot {
@@ -29,19 +44,19 @@
 
   .eq-grid path {
     fill: none;
-    stroke: var(--color-primary-quiet);
+    stroke: var(--color-signal-quiet);
     stroke-width: var(--border-width);
     vector-effect: non-scaling-stroke;
   }
 
   .eq-curve {
     z-index: var(--z-local-above);
-    filter: drop-shadow(0 0 var(--eq-curve-glow) var(--color-tertiary-50));
+    filter: drop-shadow(0 0 var(--eq-curve-glow) var(--color-text));
   }
 
   .eq-curve path {
     fill: none;
-    stroke: var(--color-tertiary-50);
+    stroke: var(--color-text);
     stroke-width: var(--eq-curve-stroke);
     stroke-linejoin: round;
     vector-effect: non-scaling-stroke;
@@ -62,7 +77,7 @@
     background: linear-gradient(
       to bottom,
       var(--color-eq-bar-top),
-      var(--color-primary-500) var(--eq-bar-mid-stop),
+      var(--color-accent) var(--eq-bar-mid-stop),
       var(--color-eq-bar-bottom)
     );
     transform-origin: 50% 100%;
@@ -76,26 +91,29 @@
     }
   }
 
-  body[data-motion="reduce"] .eq-bar {
-    animation: none;
+  /* biome-ignore lint/suspicious/noDuplicateSelectors: `@variant motion-off` and `@variant motion-on` resolve to a `body` ancestor selector, so this rule has a different selector than the earlier one with the same class */
+  .eq-bar {
+    @variant motion-off {
+      animation: none;
+    }
   }
 
   .eq-axis {
     grid-area: 2 / 1;
     display: grid;
     height: var(--eq-axis-height);
-    border-top: var(--border-width) solid var(--color-primary-quiet);
+    border-top: var(--border-width) solid var(--color-signal-quiet);
   }
 
   .eq-axis-tick {
     justify-self: end;
     translate: 50% 0;
-    color: var(--color-primary-400);
+    color: var(--color-signal-400);
     font-size: var(--text-xs);
     line-height: var(--eq-axis-height);
   }
 
-  @media (max-width: theme(--viewport-below-md)) {
+  @media (width < theme(--viewport-md)) {
     .eq-plot {
       grid-row: 2;
       height: var(--eq-plot-height-compact);

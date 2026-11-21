@@ -1,3 +1,16 @@
+@import "../../design-system/components/Badge/Badge.css";
+
+@layer base {
+  :root {
+    --type-reveal-char-duration: 28ms;
+    --type-reveal-max-duration: 1.4s;
+    --type-reveal-caret-width: 0.6ch;
+    --type-reveal-caret-height: 1.05em;
+    --type-reveal-caret-blink: 1.05s;
+    --type-reveal-caret-blinks: 3;
+  }
+}
+
 @layer components {
   @keyframes boot-blink {
     to {
@@ -7,50 +20,31 @@
 
   .boot-cursor {
     display: inline-block;
-    width: 9px;
+    width: var(--spacing-label);
     height: 1.05em;
-    background: var(--color-primary-500);
-    vertical-align: -2px;
-    margin-left: 2px;
+    background: var(--color-accent);
+    vertical-align: calc(var(--spacing-hair) * -1);
+    margin-left: var(--spacing-hair);
     animation: boot-blink 1.05s steps(2, start) infinite;
   }
 
-  body[data-motion="reduce"] .boot-cursor {
-    animation: none;
-  }
-
-  @keyframes badge-pulse {
-    0%,
-    100% {
-      opacity: 1;
-      box-shadow: 0 0 4px var(--color-primary-500);
-    }
-    50% {
-      opacity: 0.35;
-      box-shadow: none;
+  /* biome-ignore lint/suspicious/noDuplicateSelectors: `@variant motion-off` and `@variant motion-on` resolve to a `body` ancestor selector, so this rule has a different selector than the earlier one with the same class */
+  .boot-cursor {
+    @variant motion-off {
+      animation: none;
     }
   }
+}
 
-  .badge-dot {
-    width: 7px;
-    height: 7px;
-    background: var(--color-primary-500);
-    flex-shrink: 0;
-    animation: badge-pulse 1.6s ease-in-out infinite;
-  }
-
-  body[data-motion="reduce"] .badge-dot {
-    animation: none;
-  }
-
+@layer components {
   @keyframes hero-shake-1 {
     to {
-      transform: translate(2px, -2px);
+      transform: translate(var(--spacing-hair), calc(var(--spacing-hair) * -1));
     }
   }
   @keyframes hero-shake-2 {
     to {
-      transform: translate(-2px, 1px);
+      transform: translate(calc(var(--spacing-hair) * -1), 1px);
     }
   }
 
@@ -63,17 +57,20 @@
   .status-dot {
     flex: none;
     display: block;
-    width: var(--status-dot-size, 6px);
-    height: var(--status-dot-size, 6px);
-    background: var(--status-dot-color, var(--color-primary-500));
+    width: var(--status-dot-size, var(--spacing-pip));
+    height: var(--status-dot-size, var(--spacing-pip));
+    background: var(--status-dot-color, var(--color-accent));
   }
 
   .status-dot-blink {
     animation: live-blink 1.6s steps(2, start) infinite;
   }
 
-  body[data-motion="reduce"] .status-dot-blink {
-    animation: none;
+  /* biome-ignore lint/suspicious/noDuplicateSelectors: `@variant motion-off` and `@variant motion-on` resolve to a `body` ancestor selector, so this rule has a different selector than the earlier one with the same class */
+  .status-dot-blink {
+    @variant motion-off {
+      animation: none;
+    }
   }
 
   @keyframes guitar-scan-beam {
@@ -81,31 +78,30 @@
       transform: translateY(0);
     }
     to {
-      transform: translateY(calc(100cqh + 60px));
+      transform: translateY(calc(100cqh + var(--spacing-node) * 2));
     }
   }
 
   .guitar-scan-beam {
+    --guitar-scan-beam-core: color-mix(in srgb, var(--color-accent) 32%, transparent);
     position: absolute;
     left: 0;
     right: 0;
-    top: -30px;
-    height: 28px;
-    background: linear-gradient(
-      180deg,
-      transparent,
-      color-mix(in srgb, var(--color-primary-500) 32%, transparent) 50%,
-      transparent
-    );
+    top: calc(var(--spacing-node) * -1);
+    height: var(--spacing-target-compact);
+    background: linear-gradient(180deg, transparent, var(--guitar-scan-beam-core) 50%, transparent);
     mix-blend-mode: screen;
     pointer-events: none;
     animation: guitar-scan-beam 7s linear infinite;
     will-change: transform;
   }
 
-  body[data-motion="reduce"] .guitar-scan-beam {
-    animation: none;
-    display: none;
+  /* biome-ignore lint/suspicious/noDuplicateSelectors: `@variant motion-off` and `@variant motion-on` resolve to a `body` ancestor selector, so this rule has a different selector than the earlier one with the same class */
+  .guitar-scan-beam {
+    @variant motion-off {
+      animation: none;
+      display: none;
+    }
   }
 
   @keyframes eq-bounce {
@@ -162,68 +158,78 @@
   }
 
   @media screen {
-    html.type-reveal-ready body:not([data-motion="reduce"]) [data-type-reveal] {
-      clip-path: inset(0 calc(100% - var(--type-reveal-caret-width)) 0 0);
+    /* biome-ignore-start lint/suspicious/noDuplicateSelectors: @variant reveal-motion-on prefixes the selector with ancestors, so these are not duplicates of the base rules */
+    [data-type-reveal] {
+      @variant reveal-motion-on {
+        clip-path: inset(0 calc(100% - var(--type-reveal-caret-width)) 0 0);
+      }
     }
 
-    html.type-reveal-ready
-      body:not([data-motion="reduce"])
-      [data-type-reveal].is-typed:not(.is-static) {
-      animation: type-reveal-clip
-        min(
-          calc(var(--type-chars, 1) * var(--type-reveal-char-duration)),
-          var(--type-reveal-max-duration)
-        )
-        steps(var(--type-chars, 1), end) both;
+    [data-type-reveal].is-typed:not(.is-static) {
+      @variant reveal-motion-on {
+        animation: type-reveal-clip
+          min(
+            calc(var(--type-chars, 1) * var(--type-reveal-char-duration)),
+            var(--type-reveal-max-duration)
+          )
+          steps(var(--type-chars, 1), end) both;
+      }
     }
 
-    html.type-reveal-ready body:not([data-motion="reduce"]) [data-type-reveal]::after {
-      content: "";
-      position: absolute;
-      inset-block-start: 50%;
-      inset-inline-start: 0;
-      translate: 0 -50%;
-      inline-size: 100%;
-      block-size: var(--type-reveal-caret-height);
-      background: linear-gradient(
-        to right,
-        transparent calc(100% - var(--type-reveal-caret-width)),
-        var(--color-primary-500) 0
-      );
-      transform: translateX(calc(var(--type-reveal-caret-width) - 100%));
-      pointer-events: none;
-      opacity: 0;
+    [data-type-reveal]::after {
+      @variant reveal-motion-on {
+        content: "";
+        position: absolute;
+        inset-block-start: 50%;
+        inset-inline-start: 0;
+        translate: 0 -50%;
+        inline-size: 100%;
+        block-size: var(--type-reveal-caret-height);
+        background: linear-gradient(
+          to right,
+          transparent calc(100% - var(--type-reveal-caret-width)),
+          var(--color-accent) 0
+        );
+        transform: translateX(calc(var(--type-reveal-caret-width) - 100%));
+        pointer-events: none;
+        opacity: 0;
+      }
     }
 
-    html.type-reveal-ready
-      body:not([data-motion="reduce"])
-      [data-type-reveal]:not(.is-typed, .is-static)::after {
-      opacity: 1;
+    [data-type-reveal]:not(.is-typed, .is-static)::after {
+      @variant reveal-motion-on {
+        opacity: 1;
+      }
     }
 
-    html.type-reveal-ready
-      body:not([data-motion="reduce"])
-      [data-type-reveal].is-typed:not(.is-static)::after {
-      animation:
-        type-reveal-travel
-        min(
-          calc(var(--type-chars, 1) * var(--type-reveal-char-duration)),
-          var(--type-reveal-max-duration)
-        )
-        steps(var(--type-chars, 1), end) both,
-        type-reveal-caret var(--type-reveal-caret-blink) step-end var(--type-reveal-caret-blinks)
-        both;
+    [data-type-reveal].is-typed:not(.is-static)::after {
+      @variant reveal-motion-on {
+        animation:
+          type-reveal-travel
+          min(
+            calc(var(--type-chars, 1) * var(--type-reveal-char-duration)),
+            var(--type-reveal-max-duration)
+          )
+          steps(var(--type-chars, 1), end) both,
+          type-reveal-caret var(--type-reveal-caret-blink) step-end var(--type-reveal-caret-blinks)
+          both;
+      }
     }
 
-    html.type-reveal-ready body:not([data-motion="reduce"]) [data-type-reveal].is-static {
-      clip-path: none;
-      animation: none;
+    [data-type-reveal].is-static {
+      @variant reveal-motion-on {
+        clip-path: none;
+        animation: none;
+      }
     }
 
-    html.type-reveal-ready body:not([data-motion="reduce"]) [data-type-reveal].is-static::after {
-      animation: none;
-      opacity: 0;
+    [data-type-reveal].is-static::after {
+      @variant reveal-motion-on {
+        animation: none;
+        opacity: 0;
+      }
     }
+    /* biome-ignore-end lint/suspicious/noDuplicateSelectors: end of the @variant reveal-motion-on rules */
   }
 }
 

@@ -12,7 +12,9 @@ const ANSWER =
 const PLACEHOLDER = '[data-testid="shell-placeholder"]';
 const NO_ANIMATION = 'none';
 
-test('with MOTION off the answer lands whole and the carets stay still', async ({ page }) => {
+test('with MOTION off the answer lands whole and the carets stay still', {
+  tag: '@cross-browser',
+}, async ({ page }) => {
   await freezeMotion(page);
   const chunked = await installChunkedAsk(page);
   await openShell(page);

@@ -1,14 +1,14 @@
 @layer components {
   .links-identity-prompt {
     margin: 0 0 var(--spacing-2);
-    color: var(--color-tertiary-400);
+    color: var(--color-text-muted);
     font-size: var(--text-xs);
   }
 
   .links-identity-box {
     padding: var(--spacing-4);
-    border: 1px solid var(--color-primary-border);
-    background: var(--color-secondary-950);
+    border: var(--border-width) solid var(--color-border);
+    background: var(--color-surface);
   }
 
   .links-identity-head {
@@ -22,7 +22,7 @@
     flex: 0 0 var(--links-avatar-size);
     width: var(--links-avatar-size);
     height: var(--links-avatar-size);
-    border: 1px solid var(--color-primary-subtle);
+    border: var(--border-width) solid var(--color-border-strong);
     overflow: hidden;
   }
 
@@ -32,7 +32,7 @@
 
   .links-identity-name {
     margin: 0;
-    color: var(--color-primary-500);
+    color: var(--color-accent);
     font-size: var(--text-xl);
     font-weight: 700;
     letter-spacing: var(--tracking-2xs);
@@ -41,7 +41,7 @@
   .links-identity-tagline {
     display: grid;
     margin: 0;
-    color: var(--color-tertiary-400);
+    color: var(--color-text-muted);
     font-size: var(--text-xs);
   }
 
@@ -59,8 +59,8 @@
     gap: var(--spacing-1) var(--spacing-3);
     margin-block-start: var(--spacing-3);
     padding-block-start: var(--spacing-3);
-    border-block-start: 1px dashed var(--color-primary-border);
-    color: var(--color-tertiary-400);
+    border-block-start: var(--border-width) dashed var(--color-border);
+    color: var(--color-text-muted);
     font-size: var(--text-xs);
   }
 
@@ -71,7 +71,8 @@
   .links-identity-meta dd {
     margin: 0;
     min-width: 0;
-    color: color-mix(in srgb, var(--color-tertiary-50) 85%, transparent);
+    --links-identity-meta-ink: color-mix(in srgb, var(--color-text) 85%, transparent);
+    color: var(--links-identity-meta-ink);
     overflow-wrap: break-word;
     text-wrap: pretty;
   }
@@ -80,27 +81,27 @@
     max-width: none;
     margin: 0;
     padding: var(--spacing-3);
-    border: 1px solid var(--color-primary-border);
-    background: var(--color-secondary-950);
-    color: var(--color-tertiary-400);
+    border: var(--border-width) solid var(--color-border);
+    background: var(--color-surface);
+    color: var(--color-text-muted);
     font-size: var(--text-xs);
     --leading: var(--leading-body);
   }
 
   .links-history-empty-prompt {
-    color: var(--color-primary-400);
+    color: var(--color-signal-400);
   }
 
   .links-history-list {
     margin: 0;
     padding: 0;
     list-style: none;
-    border: 1px solid var(--color-primary-border);
-    background: var(--color-secondary-950);
+    border: var(--border-width) solid var(--color-border);
+    background: var(--color-surface);
   }
 
   .links-history-item {
-    border-block-end: 1px solid var(--color-primary-quiet);
+    border-block-end: var(--border-width) solid var(--color-signal-quiet);
   }
 
   .links-history-item:last-child {
@@ -120,7 +121,7 @@
 
   @media (hover: hover) {
     .links-history-row:hover {
-      background: var(--color-glow-06);
+      background: var(--color-signal-glow-06);
     }
   }
 
@@ -134,13 +135,13 @@
   }
 
   .links-history-index {
-    color: var(--color-primary-400);
+    color: var(--color-signal-400);
     font-size: var(--text-xs);
   }
 
   .links-history-title {
     display: block;
-    color: var(--color-tertiary-50);
+    color: var(--color-text);
     font-size: var(--text-xs);
     --leading: 1.45;
     text-wrap: pretty;
@@ -149,12 +150,12 @@
   .links-history-meta {
     display: block;
     margin-block-start: 0.125rem;
-    color: var(--color-tertiary-400);
+    color: var(--color-text-muted);
     font-size: var(--text-xs);
   }
 
   .links-history-arrow {
-    color: var(--color-primary-subtle);
+    color: var(--color-border-strong);
     font-size: var(--text-xs);
   }
 
@@ -164,10 +165,10 @@
     justify-content: center;
     gap: var(--spacing-2);
     padding: var(--spacing-3);
-    border: 1px solid var(--color-primary-border);
+    border: var(--border-width) solid var(--color-border);
     border-block-start: 0;
-    background: var(--color-secondary-950);
-    color: var(--color-primary-500);
+    background: var(--color-surface);
+    color: var(--color-accent);
     font-size: var(--text-xs);
     font-weight: 700;
     letter-spacing: var(--tracking-xl);
@@ -179,8 +180,7 @@
   @media (hover: hover) {
     .links-history-all:hover {
       background:
-        linear-gradient(var(--color-primary-quiet), var(--color-primary-quiet)),
-        var(--color-secondary-950);
+        linear-gradient(var(--color-signal-quiet), var(--color-signal-quiet)), var(--color-surface);
     }
   }
 
@@ -191,7 +191,7 @@
 
   .links-footer {
     padding-block-start: var(--spacing-4);
-    border-block-start: 1px solid var(--color-primary-border);
+    border-block-start: var(--border-width) solid var(--color-border);
   }
 
   .links-main .links-footer-line {
@@ -200,7 +200,7 @@
     align-items: center;
     justify-content: space-between;
     margin: 0;
-    color: var(--color-tertiary-400);
+    color: var(--color-text-muted);
     font-size: var(--text-xs);
   }
 
@@ -208,13 +208,13 @@
     display: inline-flex;
     align-items: center;
     min-height: var(--spacing-target);
-    color: var(--color-primary-400);
+    color: var(--color-signal-400);
     text-decoration: none;
   }
 
   @media (hover: hover) {
     .links-footer-link:hover {
-      color: var(--color-primary-500);
+      color: var(--color-accent);
     }
   }
 
@@ -226,13 +226,13 @@
 
   .links-skeleton-block {
     display: block;
-    outline: var(--border-width) solid var(--color-primary-border);
+    outline: var(--border-width) solid var(--color-border);
     outline-offset: calc(var(--border-width) * -1);
-    background-color: var(--color-secondary-950);
+    background-color: var(--color-surface);
     background-image: repeating-linear-gradient(
       180deg,
-      var(--color-primary-quiet) 0 1px,
-      transparent 1px 3px
+      var(--color-signal-quiet) 0 1px,
+      transparent 1px var(--spacing-tight)
     );
   }
 

@@ -1,3 +1,34 @@
+@theme {
+  --guitar-arrow-width: 1.625rem;
+  --guitar-photo-width: 20rem;
+  --guitar-node-gap: 0.375rem;
+  --guitar-bar-width: 0.5625rem;
+  --guitar-bar-height: 0.8125rem;
+  --guitar-bar-gap: 0.125rem;
+  --guitar-bar-opacity: 0.22;
+  --guitar-columns: minmax(0, 1fr) var(--guitar-arrow-width) minmax(0, 1fr)
+    var(--guitar-arrow-width) minmax(0, 1fr);
+  --guitar-stat-columns: repeat(2, minmax(0, 1fr));
+  --guitar-line-height: 1.6;
+  --guitar-heading-line-height: 1.2;
+  --guitar-label-tracking: var(--tracking-xs);
+  --guitar-camera-tracking: var(--tracking-2xl);
+  --guitar-prose-width: 72ch;
+  --guitar-photo-grayscale: 1;
+  --guitar-photo-contrast: 1.18;
+  --guitar-photo-brightness: 0.95;
+  --guitar-photo-tint-opacity: 0.6;
+  --guitar-photo-ratio: 16 / 9;
+  --guitar-photo-min-height: 12.5rem;
+  --guitar-arrow-rotation: 90deg;
+  --guitar-arrow-length: 4.5ch;
+  --guitar-scanline: repeating-linear-gradient(
+    to bottom,
+    var(--color-guitar-scanline) 0 1px,
+    transparent 1px var(--spacing-tight)
+  );
+}
+
 @layer components {
   .guitar-presentation {
     display: flex;
@@ -6,19 +37,19 @@
     font-family: var(--font-mono);
     font-size: var(--text-sm);
     --leading: var(--guitar-line-height);
-    color: var(--color-tertiary-50);
+    color: var(--color-text);
   }
 
   .guitar-eq-panel {
     padding: var(--phi-space-2);
-    border: var(--border-width) solid var(--color-primary-border);
-    background: var(--color-secondary-950);
+    border: var(--border-width) solid var(--color-border);
+    background: var(--color-surface);
   }
 
   .guitar-signal-panel {
     padding: var(--spacing-3);
-    border: var(--border-width) solid var(--color-primary-border);
-    background: var(--color-secondary-950);
+    border: var(--border-width) solid var(--color-border);
+    background: var(--color-surface);
   }
 
   .guitar-signal-strip {
@@ -29,14 +60,14 @@
     gap: var(--spacing-2);
     padding-bottom: var(--spacing-2);
     margin-bottom: var(--spacing-3);
-    border-bottom: var(--border-width) solid var(--color-primary-quiet);
-    color: var(--color-primary-400);
+    border-bottom: var(--border-width) solid var(--color-signal-quiet);
+    color: var(--color-signal-400);
     font-size: var(--text-xs);
     letter-spacing: var(--guitar-label-tracking);
   }
 
   .guitar-signal-strip-live {
-    color: var(--color-primary-500);
+    color: var(--color-accent);
   }
 
   .guitar-chain {
@@ -51,13 +82,13 @@
     gap: var(--spacing-1);
     min-width: 0;
     padding: var(--spacing-3);
-    border: var(--border-width) solid var(--color-primary-500);
-    background: var(--color-glow-04);
+    border: var(--border-width) solid var(--color-accent);
+    background: var(--color-signal-glow-04);
     overflow-wrap: anywhere;
   }
 
   .guitar-label {
-    color: var(--color-primary-400);
+    color: var(--color-signal-400);
     font-size: var(--text-xs);
     letter-spacing: var(--guitar-label-tracking);
   }
@@ -67,7 +98,7 @@
     font-size: var(--text-sm);
     font-weight: bold;
     --leading: var(--guitar-heading-line-height);
-    color: var(--color-primary-500);
+    color: var(--color-accent);
   }
 
   .guitar-node-subtitle {
@@ -83,7 +114,7 @@
   .guitar-bar {
     width: var(--guitar-bar-width);
     height: var(--guitar-bar-height);
-    background: var(--color-primary-500);
+    background: var(--color-accent);
     opacity: var(--guitar-bar-opacity);
   }
 
@@ -94,11 +125,11 @@
   .guitar-arrow {
     align-self: center;
     justify-self: center;
-    color: var(--color-primary-500);
+    color: var(--color-accent);
     font-size: var(--text-xs);
   }
 
-  @media (max-width: theme(--viewport-below-md)) {
+  @media (width < theme(--viewport-md)) {
     .guitar-arrow {
       line-height: var(--guitar-arrow-length);
       height: var(--guitar-arrow-length);
@@ -108,10 +139,10 @@
   .guitar-chain-label {
     margin: 0;
     padding: var(--phi-space-1) var(--phi-space-2);
-    color: var(--color-tertiary-50);
+    color: var(--color-text);
     font-size: var(--text-xs);
     letter-spacing: var(--guitar-label-tracking);
-    border-bottom: var(--border-width) solid var(--color-primary-quiet);
+    border-bottom: var(--border-width) solid var(--color-signal-quiet);
     text-wrap: balance;
   }
 
@@ -120,7 +151,7 @@
     flex-direction: column;
     min-width: 0;
     margin: 0;
-    border: var(--border-width) solid var(--color-primary-500);
+    border: var(--border-width) solid var(--color-accent);
     overflow: hidden;
   }
 
@@ -147,7 +178,7 @@
 
   .guitar-influences strong,
   .guitar-stat-value {
-    color: var(--color-primary-500);
+    color: var(--color-accent);
     font-weight: bold;
   }
 
@@ -157,21 +188,21 @@
     grid-auto-rows: 1fr;
     flex: 1;
     gap: var(--border-width);
-    border: var(--border-width) solid var(--color-primary-quiet);
-    background: var(--color-primary-quiet);
+    border: var(--border-width) solid var(--color-signal-quiet);
+    background: var(--color-signal-quiet);
   }
 
   .guitar-stat {
     min-width: 0;
     padding: var(--spacing-3);
-    background: var(--color-secondary-950);
+    background: var(--color-surface);
     overflow-wrap: anywhere;
   }
 
   .guitar-camera-labels,
   .guitar-camera-caption {
     padding: var(--spacing-1) var(--spacing-2);
-    color: var(--color-primary-400);
+    color: var(--color-signal-400);
     font-size: var(--text-xs);
     letter-spacing: var(--guitar-camera-tracking);
     overflow-wrap: anywhere;
@@ -181,11 +212,11 @@
     display: flex;
     justify-content: space-between;
     gap: var(--spacing-2);
-    border-bottom: var(--border-width) solid var(--color-primary-quiet);
+    border-bottom: var(--border-width) solid var(--color-signal-quiet);
   }
 
   .guitar-camera-caption {
-    border-top: var(--border-width) solid var(--color-primary-quiet);
+    border-top: var(--border-width) solid var(--color-signal-quiet);
   }
 
   .guitar-photo-frame {
@@ -217,7 +248,7 @@
   }
 
   .guitar-photo-tint {
-    background: var(--color-primary-500);
+    background: var(--color-accent);
     mix-blend-mode: multiply;
     opacity: var(--guitar-photo-tint-opacity);
   }
@@ -263,7 +294,7 @@
   }
   /* biome-ignore-end lint/suspicious/noDuplicateSelectors: end of the @variant max-guitar block */
 
-  @media (max-width: theme(--viewport-below-md)) {
+  @media (width < theme(--viewport-md)) {
     .guitar-signal-strip {
       flex-direction: column;
       align-items: center;
@@ -292,7 +323,7 @@
     align-content: start;
     min-height: var(--daw-mixer-loading-height);
     padding: var(--spacing-4);
-    border: var(--border-width) dashed var(--color-primary-subtle);
+    border: var(--border-width) dashed var(--color-border-strong);
     font-size: var(--text-sm);
     --leading: 1.7;
   }
@@ -338,7 +369,7 @@
   }
 
   .mixer-boot-current {
-    color: var(--color-primary-500);
+    color: var(--color-accent);
   }
 
   .mixer-boot-queued {
@@ -351,8 +382,10 @@
     }
   }
 
-  body:not([data-motion="reduce"]) .mixer-boot-cursor {
-    animation: mixer-boot-blink 1.05s steps(2, start) infinite;
+  .mixer-boot-cursor {
+    @variant motion-on {
+      animation: mixer-boot-blink 1.05s steps(2, start) infinite;
+    }
   }
 
   /* The arrow is a square sized in `ch`, so its box is a fraction of a pixel
@@ -362,7 +395,7 @@
      the md breakpoint, and above it the arrow inherits its height from the
      row it sits in. A browser without `round()` keeps the fraction, which is
      what it has today. */
-  @media (max-width: theme(--viewport-below-md)) {
+  @media (width < theme(--viewport-md)) {
     @supports (line-height: round(nearest, 1px, 1px)) {
       .guitar-arrow {
         line-height: round(nearest, var(--guitar-arrow-length), 1px);

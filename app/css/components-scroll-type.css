@@ -39,25 +39,29 @@
     background: linear-gradient(
       to right,
       transparent calc(100% - var(--module-caret-width)),
-      var(--color-primary-500) 0
+      var(--color-accent) 0
     );
     opacity: 0;
   }
 
   @supports (animation-timeline: view()) {
-    body:not([data-motion="reduce"]) .module-scroll-type-text {
-      animation: module-scroll-type-reveal linear both;
-      animation-timeline: view();
-      animation-range: entry 0% entry 80%;
-      animation-timing-function: steps(var(--module-type-chars), end);
+    .module-scroll-type-text {
+      @variant motion-on {
+        animation: module-scroll-type-reveal linear both;
+        animation-timeline: view();
+        animation-range: entry 0% entry 80%;
+        animation-timing-function: steps(var(--module-type-chars), end);
+      }
     }
 
-    body:not([data-motion="reduce"]) .module-scroll-type::after {
-      opacity: 1;
-      animation: module-scroll-type-caret linear both;
-      animation-timeline: view();
-      animation-range: entry 0% entry 80%;
-      animation-timing-function: steps(var(--module-type-chars), end);
+    .module-scroll-type::after {
+      @variant motion-on {
+        opacity: 1;
+        animation: module-scroll-type-caret linear both;
+        animation-timeline: view();
+        animation-range: entry 0% entry 80%;
+        animation-timing-function: steps(var(--module-type-chars), end);
+      }
     }
   }
 }

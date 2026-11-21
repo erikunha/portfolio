@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 const mockGet = vi.fn();
 const mockSet = vi.fn();
-vi.mock('@/lib/rate-limit', () => ({
+vi.mock('@/lib/redis', () => ({
   getRedis: () => ({ get: mockGet, set: mockSet }),
 }));
 
@@ -10,7 +10,9 @@ const mockFetch = vi.fn();
 vi.stubGlobal('fetch', mockFetch);
 
 const mockLogError = vi.fn();
-vi.mock('@/lib/log', () => ({ log: { error: mockLogError, info: vi.fn() } }));
+vi.mock('@/lib/log', async () =>
+  (await import('./helpers/modules')).logModule({ error: mockLogError }),
+);
 
 afterEach(() => {
   vi.useRealTimers();
@@ -109,11 +111,12 @@ describe('getScores: cache miss', () => {
     mockFetch.mockResolvedValue(makePsiResponse(0.95));
     const { getScores, LIGHTHOUSE_TTL_S } = await import('@/lib/lighthouse-scores');
     await getScores('desktop');
-    await new Promise((r) => setTimeout(r, 0));
-    expect(mockSet).toHaveBeenCalledWith(
-      'lh:scores:desktop',
-      expect.objectContaining({ performance: 95 }),
-      { ex: LIGHTHOUSE_TTL_S },
+    await vi.waitFor(() =>
+      expect(mockSet).toHaveBeenCalledWith(
+        'lh:scores:desktop',
+        expect.objectContaining({ performance: 95 }),
+        { ex: LIGHTHOUSE_TTL_S },
+      ),
     );
   });
 
@@ -148,16 +151,16 @@ describe('getScores: cache miss', () => {
     expect(result).toEqual(LIGHTHOUSE_FALLBACK);
   });
 
-  it('calls fetch with next.revalidate (not cache: no-store) on cache miss', async () => {
+  it('calls fetch with no cache option on cache miss', async () => {
     mockGet.mockResolvedValue(null);
     process.env.PSI_API_KEY = 'test-key';
     mockFetch.mockResolvedValue(makePsiResponse(0.99));
-    const { getScores, LIGHTHOUSE_TTL_S } = await import('@/lib/lighthouse-scores');
+    const { getScores } = await import('@/lib/lighthouse-scores');
     await getScores('desktop');
-    expect(mockFetch).toHaveBeenCalledWith(
-      expect.stringContaining('pagespeedonline'),
-      expect.objectContaining({ next: { revalidate: LIGHTHOUSE_TTL_S } }),
-    );
+    const init = mockFetch.mock.calls[0]?.[1];
+    expect(mockFetch.mock.calls[0]?.[0]).toContain('pagespeedonline');
+    expect(init).not.toHaveProperty('next');
+    expect(init).not.toHaveProperty('cache');
   });
 
   it('sends the PSI key in a header, never in the request URL', async () => {
@@ -444,10 +447,11 @@ describe('last-good copy: written on every successful fetch', () => {
     mockFetch.mockResolvedValue(makePsiResponse(0.96));
     const { getScores } = await import('@/lib/lighthouse-scores');
     await getScores('desktop');
-    await new Promise((r) => setTimeout(r, 0));
-    expect(mockSet).toHaveBeenCalledWith(
-      LAST_GOOD_KEY_DESKTOP,
-      expect.objectContaining({ performance: 96, fetchedAt: expect.any(String) }),
+    await vi.waitFor(() =>
+      expect(mockSet).toHaveBeenCalledWith(
+        LAST_GOOD_KEY_DESKTOP,
+        expect.objectContaining({ performance: 96, fetchedAt: expect.any(String) }),
+      ),
     );
   });
 

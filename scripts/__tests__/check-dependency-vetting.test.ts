@@ -8,11 +8,11 @@ import {
   type InstalledPackage,
   normalizeLicense,
   type VettingInput,
-} from '../check-dependency-vetting';
+} from '../gates/check-dependency-vetting';
 
 const SUBPROCESS_TEST_TIMEOUT_MS = 60_000;
 
-const SCRIPT = join(process.cwd(), 'scripts/check-dependency-vetting.ts');
+const SCRIPT = join(process.cwd(), 'scripts/gates/check-dependency-vetting.ts');
 const TSX = join(process.cwd(), 'node_modules/.bin/tsx');
 const CLEAN_INSTALL: InstalledPackage = { license: 'MIT', installScripts: [] };
 

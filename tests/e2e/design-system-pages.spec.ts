@@ -1,12 +1,13 @@
 import { expect, test } from '@playwright/test';
 import { DS_NAV_GROUPS, DS_NAV_ID } from '@/app/(en)/design-system/_components/ds-nav';
 import { PREVIEW_SOURCE_ARIA_LABEL_FALLBACK } from '@/app/(en)/design-system/_components/preview.constants';
+import { VIEWPORTS, WIDTH } from './_helpers/geometry';
 
-const SIDEBAR_MIN_WIDTH = 1024;
+const SIDEBAR_MIN_WIDTH = WIDTH.LAPTOP;
 const OVERVIEW_PATH = '/design-system';
 const OVERVIEW_HEADING = 'DESIGN SYSTEM';
-const STACKED_TOC_MAX_WIDTH = 767;
-const RAIL_TOC_MIN_WIDTH = 1280;
+const STACKED_TOC_MAX_WIDTH = WIDTH.BELOW_TABLET;
+const RAIL_TOC_MIN_WIDTH = WIDTH.DESKTOP;
 const SWATCH_LIST_GAP_MIN = 8;
 
 const toRoute = (link: { href: string; label: string }) => ({
@@ -17,7 +18,9 @@ const toRoute = (link: { href: string; label: string }) => ({
 const ALL_ROUTES = DS_NAV_GROUPS.flatMap((group) => group.links.map(toRoute));
 
 for (const { path, heading } of ALL_ROUTES) {
-  test(`${path}: renders heading and the page tree`, async ({ page }) => {
+  test(`${path}: renders heading and the page tree`, { tag: '@cross-browser' }, async ({
+    page,
+  }) => {
     await page.goto(path);
     await expect(page.getByRole('heading', { name: heading, exact: true, level: 1 })).toBeVisible();
     const sidebar = page.locator(`#${DS_NAV_ID}`);
@@ -29,7 +32,9 @@ for (const { path, heading } of ALL_ROUTES) {
 }
 
 for (const { path } of ALL_ROUTES) {
-  test(`${path}: marks itself current and offers on-this-page links`, async ({ page }) => {
+  test(`${path}: marks itself current and offers on-this-page links`, {
+    tag: '@cross-browser',
+  }, async ({ page }) => {
     await page.goto(path);
     const sidebar = page.locator(`#${DS_NAV_ID}`);
     await expect(sidebar.locator('a[aria-current="page"]')).toHaveAttribute('href', path);
@@ -38,7 +43,9 @@ for (const { path } of ALL_ROUTES) {
     expect(await toc.getByRole('link').count()).toBeGreaterThan(0);
   });
 
-  test(`${path}: every on-this-page link points at a heading on the page`, async ({ page }) => {
+  test(`${path}: every on-this-page link points at a heading on the page`, {
+    tag: '@cross-browser',
+  }, async ({ page }) => {
     await page.goto(path);
     const toc = page.getByRole('navigation', { name: 'On this page' });
     const hrefs = await toc
@@ -51,9 +58,9 @@ for (const { path } of ALL_ROUTES) {
     }
   });
 
-  test(`${path}: on-this-page sits after the intro on a phone and beside it on a wide screen`, async ({
-    page,
-  }) => {
+  test(`${path}: on-this-page sits after the intro on a phone and beside it on a wide screen`, {
+    tag: '@cross-browser',
+  }, async ({ page }) => {
     await page.goto(path);
     const width = page.viewportSize()?.width ?? 0;
     const toc = page.getByRole('navigation', { name: 'On this page' });
@@ -76,9 +83,9 @@ for (const { path } of ALL_ROUTES) {
   });
 }
 
-test('the line under the last colour swatch is followed by a gap before the next paragraph', async ({
-  page,
-}) => {
+test('the line under the last colour swatch is followed by a gap before the next paragraph', {
+  tag: '@cross-browser',
+}, async ({ page }) => {
   await page.goto('/design-system/tokens');
   const gaps = await page.locator('.ds-swatch').evaluateAll((nodes) =>
     nodes.flatMap((node) => {
@@ -91,7 +98,7 @@ test('the line under the last colour swatch is followed by a gap before the next
   for (const gap of gaps) expect(gap).toBeGreaterThanOrEqual(SWATCH_LIST_GAP_MIN);
 });
 
-test('sidebar links every design-system page', async ({ page }) => {
+test('sidebar links every design-system page', { tag: '@cross-browser' }, async ({ page }) => {
   await page.goto('/design-system');
   const sidebar = page.locator(`#${DS_NAV_ID}`);
   const hrefs = await sidebar
@@ -102,7 +109,9 @@ test('sidebar links every design-system page', async ({ page }) => {
   }
 });
 
-test('every component nav link points at an element on the page', async ({ page }) => {
+test('every component nav link points at an element on the page', {
+  tag: '@cross-browser',
+}, async ({ page }) => {
   await page.goto('/design-system/components');
   const nav = page.locator('nav[aria-label="Jump to component"]');
   await expect(nav).toHaveCount(1);
@@ -116,7 +125,9 @@ test('every component nav link points at an element on the page', async ({ page 
   }
 });
 
-test('Preview renders the live component and its source without interaction', async ({ page }) => {
+test('Preview renders the live component and its source without interaction', {
+  tag: '@cross-browser',
+}, async ({ page }) => {
   await page.goto('/design-system/components');
   const preview = page.getByTestId('ds-preview').first();
   await expect(preview).toBeVisible();
@@ -136,11 +147,10 @@ test('Preview renders the live component and its source without interaction', as
   expect(labels.every((label) => typeof label === 'string' && label.length > 0)).toBe(true);
 });
 
-for (const viewport of [
-  { width: 390, height: 844 },
-  { width: 1280, height: 800 },
-]) {
-  test(`on-this-page items carry no list markers at ${viewport.width}px`, async ({ page }) => {
+for (const viewport of [VIEWPORTS.PHONE, { width: WIDTH.DESKTOP, height: 800 }]) {
+  test(`on-this-page items carry no list markers at ${viewport.width}px`, {
+    tag: '@cross-browser',
+  }, async ({ page }) => {
     await page.setViewportSize(viewport);
     await page.goto('/design-system');
     const items = page.getByRole('navigation', { name: 'On this page', exact: true }).locator('li');
@@ -155,8 +165,8 @@ for (const viewport of [
   });
 }
 
-const MOBILE = { width: 390, height: 844 };
-const DESKTOP = { width: 1280, height: 800 };
+const MOBILE = VIEWPORTS.PHONE;
+const DESKTOP = { width: WIDTH.DESKTOP, height: 800 };
 
 async function leftEdges(locator: import('@playwright/test').Locator) {
   return locator.evaluateAll((nodes) =>
@@ -164,7 +174,7 @@ async function leftEdges(locator: import('@playwright/test').Locator) {
   );
 }
 
-test('desktop sidebar is visible and vertical', async ({ page }) => {
+test('desktop sidebar is visible and vertical', { tag: '@cross-browser' }, async ({ page }) => {
   await page.setViewportSize(DESKTOP);
   await page.goto('/design-system/primitives/button');
   const items = page.locator('.ds-sidebar a.ds-nav-item');
@@ -177,7 +187,9 @@ test('desktop sidebar is visible and vertical', async ({ page }) => {
   expect(new Set(tops).size).toBe(tops.length);
 });
 
-test('mobile on-this-page items stack in one column', async ({ page }) => {
+test('mobile on-this-page items stack in one column', { tag: '@cross-browser' }, async ({
+  page,
+}) => {
   await page.setViewportSize(MOBILE);
   await page.goto('/design-system');
   const items = page.getByRole('navigation', { name: 'On this page', exact: true }).locator('a');
@@ -185,7 +197,9 @@ test('mobile on-this-page items stack in one column', async ({ page }) => {
   expect(new Set(await leftEdges(items)).size).toBe(1);
 });
 
-test('mobile overview stat tiles sit at most two per row', async ({ page }) => {
+test('mobile overview stat tiles sit at most two per row', { tag: '@cross-browser' }, async ({
+  page,
+}) => {
   await page.setViewportSize(MOBILE);
   await page.goto('/design-system');
   const tops = await page
@@ -196,7 +210,9 @@ test('mobile overview stat tiles sit at most two per row', async ({ page }) => {
   expect(perRow).toBeLessThanOrEqual(2);
 });
 
-test('desktop keeps the sidebar on the left of the page', async ({ page }) => {
+test('desktop keeps the sidebar on the left of the page', { tag: '@cross-browser' }, async ({
+  page,
+}) => {
   const nav = page.locator(`#${DS_NAV_ID}`);
   const main = page.locator('main.ds-main');
 
@@ -210,11 +226,13 @@ test('desktop keeps the sidebar on the left of the page', async ({ page }) => {
 });
 
 const PROPS_TABLE_PATH = '/design-system/primitives/button';
-const MOBILE_VIEWPORT = { width: 390, height: 844 };
-const DESKTOP_VIEWPORT = { width: 1280, height: 720 };
+const MOBILE_VIEWPORT = VIEWPORTS.PHONE;
+const DESKTOP_VIEWPORT = VIEWPORTS.DESKTOP;
 const PROPS_COLUMNS = 4;
 
-test('props table becomes labelled rows below 768 without sideways scroll', async ({ page }) => {
+test('props table becomes labelled rows below 768 without sideways scroll', {
+  tag: '@cross-browser',
+}, async ({ page }) => {
   await page.setViewportSize(MOBILE_VIEWPORT);
   await page.goto(PROPS_TABLE_PATH);
   const table = page.locator('main table').first();
@@ -240,7 +258,7 @@ test('props table becomes labelled rows below 768 without sideways scroll', asyn
   }
 });
 
-test('props table keeps its columns at 1280', async ({ page }) => {
+test('props table keeps its columns at 1280', { tag: '@cross-browser' }, async ({ page }) => {
   await page.setViewportSize(DESKTOP_VIEWPORT);
   await page.goto(PROPS_TABLE_PATH);
   const table = page.locator('main table').first();
@@ -253,11 +271,13 @@ test('props table keeps its columns at 1280', async ({ page }) => {
   expect(new Set(boxes.map(Math.round)).size).toBe(1);
 });
 
-const TABLET_VIEWPORT = { width: 768, height: 1024 };
+const TABLET_VIEWPORT = VIEWPORTS.TABLET;
 const WIDE_TABLE_ROUTES = DS_NAV_GROUPS.flatMap((group) => group.links.map((link) => link.href));
 
 for (const path of WIDE_TABLE_ROUTES) {
-  test(`${path}: nothing overflows the page horizontally at 768`, async ({ page }) => {
+  test(`${path}: nothing overflows the page horizontally at 768`, {
+    tag: '@cross-browser',
+  }, async ({ page }) => {
     await page.setViewportSize(TABLET_VIEWPORT);
     await page.goto(path);
     const overflow = await page.evaluate(() => {
@@ -272,9 +292,9 @@ for (const path of WIDE_TABLE_ROUTES) {
   });
 }
 
-test('every labelled table region is keyboard focusable and uniquely named per page', async ({
-  page,
-}) => {
+test('every labelled table region is keyboard focusable and uniquely named per page', {
+  tag: '@cross-browser',
+}, async ({ page }) => {
   let pagesWithTables = 0;
   for (const { path } of ALL_ROUTES) {
     await page.goto(path);
@@ -307,7 +327,9 @@ test('every labelled table region is keyboard focusable and uniquely named per p
   expect(pagesWithTables, 'the reference pages carry labelled tables').toBeGreaterThan(0);
 });
 
-test('the design system paints the matrix rain behind its content', async ({ page }) => {
+test('the design system paints the matrix rain behind its content', {
+  tag: '@cross-browser',
+}, async ({ page }) => {
   await page.goto(OVERVIEW_PATH);
   await expect(page.locator('canvas'), 'the design system carries the global rain').toHaveCount(1);
   const probe = await page.evaluate(() => {
@@ -328,9 +350,9 @@ test('the design system paints the matrix rain behind its content', async ({ pag
 });
 
 for (const { path } of ALL_ROUTES) {
-  test(`${path}: every id is unique, so each in-page jump link has one target`, async ({
-    page,
-  }) => {
+  test(`${path}: every id is unique, so each in-page jump link has one target`, {
+    tag: '@cross-browser',
+  }, async ({ page }) => {
     await page.goto(path);
     const duplicates = await page.evaluate(() => {
       const seen = new Map<string, number>();
@@ -344,7 +366,7 @@ for (const { path } of ALL_ROUTES) {
 }
 
 for (const { path } of ALL_ROUTES) {
-  test(`${path}: hydrates without a React error`, async ({ page }) => {
+  test(`${path}: hydrates without a React error`, { tag: '@cross-browser' }, async ({ page }) => {
     const errors: string[] = [];
     page.on('pageerror', (error) => errors.push(error.message));
     await page.goto(path);
@@ -353,8 +375,10 @@ for (const { path } of ALL_ROUTES) {
   });
 }
 
-test('the stat grid breakpoint the docs state is the one the layout uses', async ({ page }) => {
-  await page.setViewportSize({ width: 1280, height: 800 });
+test('the stat grid breakpoint the docs state is the one the layout uses', {
+  tag: '@cross-browser',
+}, async ({ page }) => {
+  await page.setViewportSize({ width: WIDTH.DESKTOP, height: 800 });
   await page.goto('/design-system/components');
   const claim = await page
     .getByText(/four columns from \d+px/)

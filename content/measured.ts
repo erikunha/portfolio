@@ -30,8 +30,8 @@ const measuredFor = (locale: SiteLocale): Measured => {
     unknownTimestamp: pt ? 'timestamp indisponível' : 'timestamp unavailable',
     ask: {
       title: 'ASK_EVAL.JSON',
-      source: 'scripts/ask-eval.ts',
-      url: 'https://github.com/erikunha/portfolio/blob/main/scripts/ask-eval.ts',
+      source: 'scripts/eval/ask-eval.ts',
+      url: 'https://github.com/erikunha/portfolio/blob/main/scripts/eval/ask-eval.ts',
       cacheKey: 'ask:eval:latest',
       timestampLabel: 'eval',
       percentUnit: '%',

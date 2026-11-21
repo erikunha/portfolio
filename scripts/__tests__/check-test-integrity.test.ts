@@ -3,11 +3,11 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
-import { findViolations, scanRoot } from '../check-test-integrity';
+import { findViolations, readerAliasesIn, scanRoot } from '../gates/check-test-integrity';
 
 const SUBPROCESS_TEST_TIMEOUT_MS = 60_000;
 
-const SCRIPT = join(process.cwd(), 'scripts', 'check-test-integrity.ts');
+const SCRIPT = join(process.cwd(), 'scripts', 'gates', 'check-test-integrity.ts');
 
 function summarize(source: string, file = 'sample.test.ts') {
   return findViolations(source, file).map((v) => `${v.kind}@${v.line}`);
@@ -561,5 +561,232 @@ describe('command line', { timeout: SUBPROCESS_TEST_TIMEOUT_MS }, () => {
     const result = run("it('a', () => { expect(1).toBe(1); });\n");
     expect(result.status).toBe(0);
     expect(result.stdout).toContain('OK');
+  });
+});
+
+const unmask = (source: string) => source.replace(/(['"`/])@/g, '$1');
+
+describe('source-grep reads', () => {
+  const sourceGrep = (source: string, file = 'sample.test.ts') =>
+    findViolations(unmask(source), file)
+      .filter((v) => v.kind === 'source-grep')
+      .map((v) => `${v.kind}@${v.line}`);
+
+  it.each([
+    ['a direct read of app source', "const s = readFileSync('@app/page.tsx', 'utf8');"],
+    ['a joined path to components', "readFileSync(join(ROOT, '@components/x.tsx'), 'utf8');"],
+    ['a read of lib source', 'const s = readFile(`@lib/env.ts`);'],
+    ['a read of scripts source', "readFileSync('./@scripts/gates/a.ts');"],
+    ['a call split across lines', "readFileSync(\n  join(ROOT, '@app/x.ts'),\n  'utf8',\n);"],
+    [
+      'an aliased reader',
+      "const read = (p: string) => readFileSync(join(R, p), 'utf-8');\nread('@app/page.tsx');",
+    ],
+  ])('flags %s', (_name, source) => {
+    expect(sourceGrep(source)).toHaveLength(1);
+  });
+
+  it('reports the line of the read', () => {
+    expect(sourceGrep("\n\nreadFileSync('@app/a.ts');")).toEqual(['source-grep@3']);
+  });
+
+  it.each([
+    ['a read outside application source', "readFileSync('package.json', 'utf8');"],
+    ['an import line', "import { readFileSync } from 'node:fs'; // app/"],
+    [
+      'a same-line allow tag',
+      "readFileSync('@app/a.ts'); // behavioral-test-allow: needs raw text",
+    ],
+    [
+      'an allow tag in the comment block above',
+      "// behavioral-test-allow: raw text\n// more context\nreadFileSync('@app/a.ts');",
+    ],
+    ['a path segment that only resembles app', "readFileSync('apple/a.ts');"],
+  ])('does not flag %s', (_name, source) => {
+    expect(sourceGrep(source)).toEqual([]);
+  });
+
+  it('flags a read whose allow tag sits above an unrelated code line', () => {
+    const source = "// behavioral-test-allow: x\nconst a = 1;\nreadFileSync('@app/a.ts');";
+    expect(sourceGrep(source)).toEqual(['source-grep@3']);
+  });
+
+  const READER_SHAPES: Array<[string, string, string | null]> = [
+    ['single-line arrow', "const read = (p: string) => readFileSync(join(R, p), 'utf-8');", 'read'],
+    [
+      'arrow wrapped by the formatter',
+      "const read = (relativePathToFile: string) =>\n  readFileSync(join(R, relativePathToFile), 'utf-8');",
+      'read',
+    ],
+    ['block-body arrow', 'const read = (p: string) => {\n  return readFileSync(p);\n};', 'read'],
+    ['function declaration', 'function read(p: string) {\n  return readFileSync(p);\n}', 'read'],
+    ['dollar-prefixed name', "const $read = (p: string) => readFileSync(p, 'utf-8');", '$read'],
+    ['async arrow', 'const read = async (p: string) => readFile(p);', 'read'],
+    ['bare rebind', 'const read = readFileSync;', 'read'],
+    ['namespaced rebind', 'const read = fs.readFileSync;', 'read'],
+    [
+      'anonymous function expression',
+      'const read = function (p) {\n  return readFileSync(p);\n};',
+      'read',
+    ],
+    ['promisified', 'const read = promisify(fs.readFile);', 'read'],
+    ['non-fs namespace', 'const read = fsp.readFile;', 'read'],
+    ['nested namespace', 'const read = fs.promises.readFile;', 'read'],
+    ['type-annotated binding', 'const read: Reader = readFileSync;', 'read'],
+    ['type-annotated arrow', 'const read: Reader = (p: string) => readFileSync(p);', 'read'],
+    ['function-type annotation', 'const read: (p: string) => string = readFileSync;', 'read'],
+    [
+      'annotated declaration above a reader (must not shadow it)',
+      'let cached: string | undefined;\nconst read = fs.readFileSync;',
+      'read',
+    ],
+    [
+      'a preceding helper must not swallow the reader below it',
+      "const norm = (s: string) => s.trim();\nconst read = (p: string) => readFileSync(join(R, p), 'utf-8');",
+      'read',
+    ],
+    [
+      'result binding, not a reader',
+      "const pkg = JSON.parse(readFileSync('package.json', 'utf8'));",
+      null,
+    ],
+    ['call result, not a reader', "const raw = readFileSync('package.json', 'utf8');", null],
+  ];
+
+  it.each(READER_SHAPES)('reader shape %s -> alias: %j', (_shape, source, expected) => {
+    const aliases = readerAliasesIn(source);
+    const detected = expected === null ? aliases.length === 0 : aliases.includes(expected);
+    expect(
+      detected,
+      'a missed alias leaves the gate green, so the alias detector is gated by shape: formatter-wrapped arrows, dollar-prefixed names and bare rebinds must register, and results of a read must not',
+    ).toBe(true);
+  });
+});
+
+describe('scanRoot source-grep scope', () => {
+  const roots: string[] = [];
+
+  afterEach(() => {
+    for (const root of roots.splice(0)) rmSync(root, { recursive: true, force: true });
+  });
+
+  function scan(files: Record<string, string>) {
+    const root = mkdtempSync(join(tmpdir(), 'test-integrity-grep-'));
+    roots.push(root);
+    for (const [name, content] of Object.entries(files)) {
+      mkdirSync(join(root, name, '..'), { recursive: true });
+      writeFileSync(join(root, name), content);
+    }
+    return scanRoot(root).violations.map((v) => `${v.file}:${v.line}:${v.kind}`);
+  }
+
+  const GREP = unmask("readFileSync('@app/page.tsx', 'utf8');\n");
+
+  it('scans a helper file inside a test directory', () => {
+    expect(scan({ '__tests__/helpers/read.ts': GREP })).toEqual([
+      '__tests__/helpers/read.ts:1:source-grep',
+    ]);
+    expect(scan({ 'tests/e2e/util.js': GREP })).toEqual(['tests/e2e/util.js:1:source-grep']);
+  });
+
+  it('scans a test file outside a test directory', () => {
+    expect(scan({ 'lib/a.test.ts': GREP })).toEqual(['lib/a.test.ts:1:source-grep']);
+  });
+
+  it('skips a plain source file outside test directories', () => {
+    expect(scan({ 'scripts/tool.ts': GREP })).toEqual([]);
+  });
+
+  it('skips declaration files inside a test directory', () => {
+    expect(scan({ '__tests__/types.d.ts': GREP })).toEqual([]);
+  });
+
+  it('skips a root out or build directory but not a nested one', () => {
+    expect(scan({ 'out/a.test.ts': GREP, 'build/a.test.ts': GREP })).toEqual([]);
+    expect(scan({ 'lib/out/a.test.ts': GREP })).toEqual(['lib/out/a.test.ts:1:source-grep']);
+  });
+
+  it('does not run the no-assertion rule on a helper file', () => {
+    expect(scan({ '__tests__/helpers/h.ts': "it('a', () => {});\n" })).toEqual([]);
+  });
+});
+
+describe('fixed real-time waits', () => {
+  const fixedWaits = (source: string) =>
+    findViolations(source, 'sample.test.ts')
+      .filter((v) => v.kind === 'fixed-wait')
+      .map((v) => `${v.kind}@${v.line}`);
+
+  it.each([
+    ['a zero delay', 'await new Promise((resolve) => setTimeout(resolve, 0));'],
+    ['a positive delay', 'await new Promise((r) => setTimeout(r, 50));'],
+    ['a block body', 'await new Promise((resolve) => { setTimeout(resolve, 20); });'],
+    ['a function expression', 'await new Promise(function (r) { setTimeout(r, 5); });'],
+    ['a window.setTimeout call', 'await new Promise((r) => window.setTimeout(r, 10));'],
+    ['a numeric separator', 'await new Promise((r) => setTimeout(r, 1_000));'],
+    [
+      'an await inside act',
+      'await act(async () => { await new Promise((r) => setTimeout(r, 0)); });',
+    ],
+  ])('flags %s', (_name, source) => {
+    expect(fixedWaits(`\n${source}`)).toEqual(['fixed-wait@2']);
+  });
+
+  it('flags the wait from within a test body, reported on the await line', () => {
+    const source = [
+      "it('a', async () => {",
+      '  await run();',
+      '  await new Promise((r) => setTimeout(r, 0));',
+      '  expect(1).toBe(1);',
+      '});',
+    ].join('\n');
+    expect(fixedWaits(source)).toEqual(['fixed-wait@3']);
+  });
+
+  it.each([
+    ['a named delay constant', 'await new Promise((r) => setTimeout(r, DELAY_MS));'],
+    ['a promise that is not awaited', 'const p = new Promise((r) => setTimeout(r, 50));'],
+    ['a fake timer advance', 'await vi.advanceTimersByTimeAsync(50);'],
+    ['a condition wait', 'await vi.waitFor(() => expect(spy).toHaveBeenCalled());'],
+    ['a timeout call outside a promise', 'await Promise.race([work, other]); setTimeout(f, 5);'],
+    ['a promise with no timer', 'await new Promise((r) => queueMicrotask(r));'],
+    ['an unrelated timer-named member', 'await new Promise((r) => clock.setTimeout(r, 5));'],
+    ['the words in a string', "const s = 'await new Promise((r) => setTimeout(r, 5))';"],
+  ])('does not flag %s', (_name, source) => {
+    expect(fixedWaits(source)).toEqual([]);
+  });
+
+  it.each([
+    [
+      'a same-line allow tag',
+      'await new Promise((r) => setTimeout(r, 50)); // behavioral-test-allow: real clock needed',
+    ],
+    [
+      'an allow tag in the comment block above',
+      '// behavioral-test-allow: real clock needed\n// more context\nawait new Promise((r) => setTimeout(r, 50));',
+    ],
+  ])('accepts %s', (_name, source) => {
+    expect(fixedWaits(source)).toEqual([]);
+  });
+
+  it('flags a wait whose allow tag sits above an unrelated code line', () => {
+    const source =
+      '// behavioral-test-allow: x\nconst a = 1;\nawait new Promise((r) => setTimeout(r, 50));';
+    expect(fixedWaits(source)).toEqual(['fixed-wait@3']);
+  });
+
+  it('counts the wait in a scanned tree', () => {
+    const root = mkdtempSync(join(tmpdir(), 'test-integrity-wait-'));
+    try {
+      writeFileSync(
+        join(root, 'a.test.ts'),
+        "it('a', async () => {\n  await new Promise((r) => setTimeout(r, 5));\n  expect(1).toBe(1);\n});",
+      );
+      expect(scanRoot(root).violations).toEqual([
+        { file: 'a.test.ts', line: 2, kind: 'fixed-wait' },
+      ]);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
   });
 });

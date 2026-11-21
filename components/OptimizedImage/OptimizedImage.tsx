@@ -3,7 +3,7 @@ import { preload } from 'react-dom';
 
 export function OptimizedImage(props: ImageProps) {
   const { props: img } = getImageProps(props);
-  if (props.priority) {
+  if (props.preload ?? props.priority) {
     preload(img.src, {
       as: 'image',
       imageSrcSet: img.srcSet,

@@ -42,18 +42,45 @@ render, and a screen reader on the `aria-live` region observes mutations React
 never announced. Streaming through React state, coalesced one update per
 animation frame, keeps the DOM React-owned and INP frame-bounded.
 
-**How it is held.** Mechanical gate: `scripts/check-client-naming.mjs`
+**Shell structure.** The shell island keeps its rules in pure modules under
+`components/client/InteractiveShell/`: `transcript.ts` (`Line`, a union on `kind`;
+the bounded `appendLines`; `formatRemaining`; `transcriptReducer` with the actions
+append, remove, settle, forget-conversation and clear), `shell-input.ts`
+(`parseShellInput`, `historyStepFor`, `isCompositionEnter`), `settled-lines.ts`
+(`settledLines`, `failureForResponse`), `ask-request.ts` (`createAskRequest`: one
+`AbortController`, aborted by stop and by unmount) and `receipt-view.ts` (the receipt
+view reducer and `outcomeAction`). `InteractiveShell` owns
+`useReducer(transcriptReducer)`; `useAskStream` and `usePrivacyCommands` dispatch
+its actions. `useAnnouncer` (`lib/use-announcer.client.tsx`) serves the shell and
+`ContactTimezone`; `useCountdown` (`lib/use-countdown.client.ts`) serves the receipt
+wait; `useVisibleInterval` (`lib/use-visible-interval.client.ts`) runs the `StatusBar` clock
+only while the tab is visible. `InteractiveShell.render-count.test.tsx` holds one render per keystroke and
+per later streamed frame (two on the first).
+
+**How it is held.** Mechanical gate: `scripts/gates/check-client-naming.ts`
 (`pnpm check:client-naming`) runs in the `quality-fast` CI job and in the
 `pre-push` hook. It fails the build if any `'use client'` file outside those
 Next convention files is misnamed. It scans `app`, `components` and `lib`, not
 `design-system/`. The hero boot loop mutates `textContent` through refs
-(`components/client/HeroBootAnimation/HeroBootAnimation.test.tsx`), never per-keystroke state. The streaming-through-React contract is held by the
-behavioral test `components/client/InteractiveShell/InteractiveShell.test.tsx`, which asserts
-every child of the shell feed is a React-owned node (`__reactFiber$` key
-present). The root route's rendering mode is held by the build output itself: it
+(`components/client/HeroBootAnimation/HeroBootAnimation.test.tsx`), never per-keystroke state. The streaming-through-React contract is held by two guards:
+`scripts/gates/check-shell-dom-writes.ts`
+(`pnpm check:shell-dom-writes`, in `verify` and the `quality-fast` job) fails any non-test file
+under `components/client/InteractiveShell/` that calls `document.createElement`, `appendChild` or
+`insertAdjacentHTML`, or assigns `textContent` or `innerHTML`; its one allowlisted path is
+`AnimatedPlaceholder.client.tsx`, the placeholder typewriter that writes through a ref and never
+renders the answer. `InteractiveShell.stream-once.test.tsx` asserts each streamed frame appears
+exactly once while the stream grows and after it settles. The root route's rendering mode is held by the build output itself: it
 reports `/` as Partial Prerender, and a section that started reading request
 data at the top level rather than inside a streaming boundary would move the
 whole route to on-demand rendering there.
+
+**Import direction.** `lib` imports neither `app` nor `components`;
+`lib/rate-limit.ts` also imports nothing from `lib/ask` or `lib/eval`; `content`
+imports only `content` and `zod`; `design-system` imports only `@/lib/cn`, `@/lib/join-class-names` and
+itself. Biome `noRestrictedImports` overrides in `biome.json` enforce it
+(`pnpm check`), and `__tests__/meta/layer-direction.test.ts` fails when an
+override stops firing. `*.test.ts(x)` files are excluded, because tests drive
+routes and components on purpose.
 
 ---
 
@@ -65,7 +92,9 @@ whole route to on-demand rendering there.
 an `X-Request-Id` header on every response. The processing order is fixed:
 `rate-limit → bounded read → parse → validate → handle`. This is centralized in
 `lib/server/route.ts` (`defineHandler`); routes own only their side effects and
-business logic. Every outbound external call (Anthropic, Resend, Redis) carries
+business logic. `defineHandler` and `withRateLimit` log one `api request` event per
+request (route, status, duration, outcome, request id, whether rate limited), with
+no IP, body or query string. Every outbound external call (Anthropic, Resend, Redis) carries
 an explicit timeout, including a mid-stream watchdog on `/api/ask`, not only a
 connection-initiation timeout. Fail-open versus fail-closed is a deliberate,
 documented choice per control: rate-limiting and identical-question dedup fail
@@ -138,10 +167,10 @@ split beside it without dressing the report up as a gate.
 
 **How it is held.** Mechanical gates: Lighthouse CI runs in `performance`
 for both desktop (`pnpm lhci`) and mobile (`pnpm lhci:mobile`) and fails the
-build on any category dropping below threshold. `scripts/check-bundle-size.mjs`
-(`pnpm bundle-check`) gates the gzipped client-chunk total in CI; its header
-comment honestly describes what the number is: the framework-inclusive total,
-not an app-only figure. `scripts/check-route-js.mjs` (`pnpm route-js-check`)
+build on any category dropping below threshold. `scripts/gates/check-bundle-size.ts`
+(`pnpm bundle-check`) gates the gzipped client-chunk total in CI: the exact
+byte sum of every chunk, duplicates included, framework-inclusive, not an
+app-only figure. `scripts/gates/check-route-js.ts` (`pnpm route-js-check`)
 gates ONE per-route budget in CI: total first-load JS < 164.2 KB. It reports the
 app-owned split (total minus the measured 131.4 KB framework floor, so 32.8 KB
 of headroom) on every run without asserting it. The
@@ -172,18 +201,47 @@ innocuous rename even when behavior is unchanged. It tests the _shape of the
 text_, not the _correctness of the program_. Behavioral tests fail when, and
 only when, the guarantee actually regresses.
 
-**How it is held.** Mechanical gate: the meta-check
-`__tests__/meta/no-source-grep.test.ts` walks every `*.test.ts` file and fails
-if one reads application source via `readFileSync` without the allow tag; it
-runs as part of `pnpm test` inside `pnpm verify` and CI. Kill switches and CSP
-are covered by behavioral tests (`__tests__/ask-killswitch-behavioral.test.ts`,
+**How it is held.** Mechanical gate: `pnpm check:test-integrity`
+(`scripts/gates/check-test-integrity.ts`) scans every test file and every script under
+`__tests__/` or `tests/`, and fails if one reads application source via `readFileSync`
+without the allow tag; it runs inside `pnpm verify` and CI. Kill switches and CSP
+are covered by behavioral tests (`__tests__/ask/ask-killswitch-behavioral.test.ts`,
 `__tests__/proxy-csp.test.ts`); no kill switch is verified by grepping source.
 Cross-browser functional coverage is the **required** `e2e-functional` CI job
-(chromium, chromium-mobile, webkit-desktop, webkit-mobile, and their four `-components` projects). Page-section
+(chromium, chromium-mobile, webkit-desktop, webkit-mobile, and their four `-components` projects). A spec joins the webkit projects by tagging its tests `@cross-browser`; `__tests__/ci/e2e-matrix-coverage.test.ts` fails on a name-based selector or a partly tagged spec. Page-section
 visual regression is gated in CI by `e2e-visual-chromium` (**required**; Linux Chromium rendering
 is deterministic). The webkit projects do not run the visual spec and no webkit baselines are kept: webkit pixel
 rendering varies from Chromium, and a darwin-only baseline that no CI job compares drifts unseen
 (`__tests__/playwright-visual-projects.test.ts` holds the project set).
+
+**Queries and input.** Find elements by role, label or text first. Reach for a class or data selector
+only for a property no accessible query exposes. Type with `user-event`, except IME composition, where
+`fireEvent` stays because `user-event` has no composition API. Assert with the `jest-dom` matchers
+(`toBeInTheDocument`, `toHaveValue`), which `tests/mocks/rtl-setup.ts` registers for every test in the `dom` project (jsdom: every `*.test.tsx` and the `.ts` files in `DOM_TS_TESTS`); every other test runs in the `node` project with no DOM. Tests
+that read the file system are sorted in [docs/handbook/static-test-triage.md](docs/handbook/static-test-triage.md).
+
+**Mocks and browser setup.** A module mocked in more than one test file is mocked through a factory in
+`__tests__/helpers/` (`modules.ts` for resend, logging, `streamText` results and stream drains;
+`ask-route.ts` for the ask route; `shell.ts` to render and drive the shell), so one change to the
+real module's shape is one change to its mock. A browser test sets its viewport from
+`tests/e2e/_helpers/geometry.ts` (`WIDTH`, the named width sets, `VIEWPORTS`), never from a number;
+`__tests__/meta/e2e-viewport-widths.test.ts` fails on a numeric viewport width in a spec. A CSS or
+layout property jsdom cannot compute (an animation, a min-height) is asserted in a `*.e2e.ts`
+file on the computed style, and a rule about which stylesheet owns a selector is a gate
+(`pnpm check:css-ownership`), not a vitest file.
+
+**Placement.** A unit test sits beside the module it covers, named `<module>.test.ts`. A test that
+crosses modules or exercises a route goes in `__tests__/`, and a family of them goes in
+`__tests__/<family>/`: `ask`, `contact`, `agent`. A repo invariant goes in `__tests__/meta/`. A
+workflow test goes in `__tests__/ci/`. A script test goes in `scripts/__tests__/`. A browser test goes
+in `tests/`, or in a `*.e2e.ts` file beside the component. No `__tests__` folder lives under `lib/`,
+`components/`, `content/`, `evals/`, `design-system/` or `app/`. `lib/__tests__/env.test.ts` is the one
+exception, kept until the env module changes.
+
+**How placement is held.** `__tests__/meta/test-placement.test.ts` reads `git ls-files` and fails on a
+tracked test under a `lib/**/__tests__/` folder, on an `ask-`, `contact-` or `agent-` file at the
+`__tests__/` root, and on a `__tests__/` folder under `components/`, `content/`, `evals/`,
+`design-system/` or `app/`.
 
 ---
 
@@ -193,8 +251,7 @@ rendering varies from Chromium, and a darwin-only baseline that no CI job compar
 `devDependencies` alike) is pinned to a major-locked range (`^x.y.z`, or `~x.y.z`
 where a minor bump would break a build-time invariant). Never `latest`, never
 `*`, never a bare dist-tag. `next` is pinned tightly enough (a tilde range) that
-a fresh install cannot resolve a new minor and break the `postinstall`
-polyfill-strip shape check. The lockfile (`pnpm-lock.yaml`) is the source of truth;
+a fresh install cannot resolve a new minor under the polyfill patch. The lockfile (`pnpm-lock.yaml`) is the source of truth;
 CI installs with `--frozen-lockfile`. `zod` is `~`-pinned (patch updates only): its minor bumps
 break type inference. `typescript` is held on the 6.x line (Dependabot ignores its
 major): Stryker consumes the TypeScript JS API that TS7 removed.
@@ -204,11 +261,11 @@ a major version and silently change behavior; `--frozen-lockfile` only masks the
 drift until the lockfile is regenerated. Major-locking every dependency makes
 the build reproducible across machines and across time, a property a Staff-bar
 artifact must demonstrate, not merely claim. The tilde on `next` exists because
-`scripts/strip-next-polyfills.mjs` checks that a Next-internal file is at least
-1024 bytes and still contains `Object.defineProperty`, and fails _loud_ otherwise; a caret range could float `next` onto a new minor
-and trip that guard on an otherwise-clean install.
+`patches/next@16.4.5.patch` is keyed to one exact Next version and rewrites two
+Next-internal files (`scripts/__tests__/next-polyfill-patch.test.ts` fails when the key no longer matches the installed version), and a caret range could float `next` onto a new minor
+whose polyfill layout the patch was never checked against.
 
-**How it is held.** Mechanical gate: `scripts/check-dep-pinning.mjs`
+**How it is held.** Mechanical gate: `scripts/gates/check-dep-pinning.ts`
 (`pnpm check:dep-pinning`) rejects any `latest`, `*`, wildcard, or otherwise
 unbounded spec, in dependencies and in `pnpm.overrides` alike (an override must be a `^` or `~` range). It runs inside `pnpm verify`, in the `pre-push` hook, and as the
 `Dependency-pinning gate` step in the `quality-fast` CI job. Reproducibility
@@ -218,7 +275,7 @@ release younger than seven days, and the weekly `lockfile-resolution-probe.yml`
 workflow opens an issue while a range cannot resolve inside that window.
 The `test` CI job runs `pnpm audit --audit-level=moderate` on pushes and on
 pull requests that change the lockfile.
-`scripts/check-dependency-vetting.ts` (`pnpm check:dependency-vetting`) requires an
+`scripts/gates/check-dependency-vetting.ts` (`pnpm check:dependency-vetting`) requires an
 entry in `dependency-vetting.json`, with a purpose and the recorded license, for every
 direct dependency, fails when an installed license differs from the recorded one, and
 rejects an install script on a package listed in neither `pnpm.onlyBuiltDependencies`
@@ -245,7 +302,7 @@ failure. Keeping copy out of JSX keeps the content layer the single source of
 truth and keeps components purely presentational.
 
 **How it is held.** Mechanical gate: `pnpm validate-content`
-(`scripts/validate-content.ts`) runs every content module through its Zod schema
+(`scripts/gates/validate-content.ts`) runs every content module through its Zod schema
 and exits non-zero on any violation. A module a client component imports stays
 Zod-free, so its schema is parsed in `content/_validate-client-content.ts`, the
 single build-time parse site for client-consumed content. It runs inside
@@ -257,13 +314,23 @@ against this chapter.
 
 ## 7. CSS & Visual System
 
-**Rule.** All brand colors and font definitions live in `app/css/theme.css` under a single `@theme {}` block; these become Tailwind utility classes (`text-primary-500`, `bg-primary-500`, `border-primary-subtle`, etc.). Standard Tailwind utilities handle all spacing, typography, layout, and responsive breakpoints. Complex CSS that cannot be expressed as utilities, CRT scanlines, phosphor glow, `@keyframes`, pseudo-element overlays, lives in `app/css/components-*.css` under `@layer components` as named classes (`.crt-scanlines`, `.signal-glow`, `.boot-cursor`). No CSS module files exist anywhere in the project. The palette is two semantic roles: `--color-primary-500` (#00FF41) for headings/accents/large text only; `--color-tertiary-50` (#E6FFE6, 19.81:1 contrast on black) for body. `--color-primary-500` is never used for paragraph text: the design rule reserves the signal for headings, accents and large text, and `#00FF41` on black measures 15.38:1, so contrast is not the reason. `__tests__/signal-color-sentences.test.tsx` renders the sections and reading pages and fails when a stylesheet rule colours a class that carries a sentence with it. 1px borders, sharp corners.
+**Rule.** All brand colors and font definitions live in `app/css/theme.css` under a single `@theme {}` block, in five hue ramps named `signal`, `carbon`, `sage`, `gold` and `coral`. A token that only one component reads sits in that component's partial, in its own `@theme {}` block at the top, beside the rules that read it. Twelve role tokens (`--color-surface`, `--color-accent`, `--color-border` and the rest) alias its steps, and a site names the role it plays: `var(--color-accent)` in a stylesheet, `text-(color:--color-accent)` in a class string. A translucent wash of a role is a tint written one way, `color-mix(in srgb, var(--color-<role>) N%, transparent)` held in a named custom property: a tint two sites read is a role tint in `theme.css` (`--color-accent-tint-soft`, `--color-surface-tint-heavy`), and a tint one rule reads is a custom property in that rule or in its partial's `@theme` block. No Tailwind `/NN` alpha utility and no `color-mix` in a class string. A site mixed in `oklab` keeps `oklab` where `srgb` moves a measured channel. Standard Tailwind utilities handle all spacing, typography, layout, and responsive breakpoints. Complex CSS that cannot be expressed as utilities, CRT scanlines, phosphor glow, `@keyframes`, pseudo-element overlays, lives in `app/css/components-*.css` under `@layer components` as named classes (`.crt-scanlines`, `.signal-glow`, `.boot-cursor`). No CSS module files exist anywhere in the project. The palette is two semantic roles: `accent` (`--color-signal-500`, #00FF41) for headings/accents/large text only; `text` (`--color-sage-50`, #E6FFE6, 19.81:1 contrast on black) for body. The signal is never used for paragraph text: the design rule reserves it for headings, accents and large text, and `#00FF41` on black measures 15.38:1, so contrast is not the reason. `__tests__/signal-color-sentences.test.tsx` renders the sections and reading pages and fails when a stylesheet rule colours a class that carries a sentence with it. 1px borders, sharp corners.
 
 **Rationale.** Tailwind v4 eliminates the authoring friction of typing raw `@media (max-width: 768px)` literals at every responsive override site. `md:` and `lg:` prefixes encode the breakpoint contract directly in the markup, colocated with the layout intent. `@theme` keeps every token in one file, readable by any senior frontend reviewer, with no build pipeline. PostCSS runs only as the `@tailwindcss/postcss` plugin; no other PostCSS transformations are applied.
 
-**How it is held.** `scripts/contrast-check.mjs` reads the color tokens from `app/css/theme.css` and audits the text/surface pairs listed in the script against WCAG AA ratios (add a pair when a new combination ships). Patterns that utilities cannot express become named classes in `@layer components` (`app/css/components-*.css`); CSS modules are rejected (see the exclusion list in `AGENTS.md`). Visual regression (`tests/visual/visual.spec.ts`) catches any layout shift from CSS changes. A CSS or layout change is verified by looking at the running page at desktop and mobile widths in a real browser before tests are written; that is convention held by `AGENTS.md`. ADR entries for CSS system changes live in `DECISIONS.md`.
+**How it is held.** `scripts/gates/contrast-check.ts` reads the color tokens from `app/css/theme.css` and audits the text/surface pairs listed in the script against WCAG AA ratios (add a pair when a new combination ships). Layers run `theme, base, components, utilities, overrides`; print and forced colors live in `overrides`, so they need no `!important`. `pnpm lint:css-tokens` also fails a raw color in TSX, a primitive color outside `theme.css` that a role aliases, a removed ordinal palette name, an arbitrary value equal to a token, a tint written as a Tailwind `/NN` alpha utility or as a `color-mix(` outside a custom property declaration and an `@theme` token nothing consumes (in `theme.css` or a component partial); `scripts/gates/contrast-check.ts` audits the role pairs. Patterns that utilities cannot express become named classes in `@layer components` (`app/css/components-*.css`); CSS modules are rejected (see the exclusion list in `AGENTS.md`). Visual regression (`tests/visual/visual.spec.ts`) catches any layout shift from CSS changes. A CSS or layout change is verified by looking at the running page at desktop and mobile widths in a real browser before tests are written; that is convention held by `AGENTS.md`. ADR entries for CSS system changes live in `DECISIONS.md`.
 
-**Co-authoring rule, where new CSS goes:** Tailwind utilities in JSX `className` handle all spacing, color, layout, typography, and responsive breakpoints. A named class in `@layer components` is required (not optional) when a pattern needs any of the following: `@keyframes` or `animation:`, pseudo-element overlays (`::before`/`::after`), `mix-blend-mode`, simultaneous coordination of 5+ CSS declarations on one element, or a CSS custom property local variable (`--var: value`). Everything else is a Tailwind utility. When in doubt: if it can be expressed as 1-4 utility classes, it stays in JSX. Files: `base.css` for element defaults, `crt.css` for CRT overlay effects, `animations.css` for `@keyframes`-heavy section animations, `print.css` for the print view, `forced-colors.css` for forced-colors mode, `components-*.css` partials for everything else (one partial per surface, imported from `app/globals.css`; the `@import` order is the cascade order).
+**Co-authoring rule, where new CSS goes:** Tailwind utilities in JSX `className` handle all spacing, color, layout, typography, and responsive breakpoints. A named class in `@layer components` is required (not optional) when a pattern needs any of the following: `@keyframes` or `animation:`, pseudo-element overlays (`::before`/`::after`), `mix-blend-mode`, simultaneous coordination of 5+ CSS declarations on one element, or a CSS custom property local variable (`--var: value`). Everything else is a Tailwind utility. When in doubt: if it can be expressed as 1-4 utility classes, it stays in JSX. Files: `base.css` for element defaults, `crt.css` for CRT overlay effects, `animations.css` for `@keyframes`-heavy section animations, `print.css` for the print view, `forced-colors.css` for forced-colors mode, `components-*.css` partials for everything else (one partial per surface, imported from `app/globals.css`; the `@import` order is the cascade order within a layer). New CSS nests only when its file is rewritten, and a new primitive sizes itself with container queries. A family of controls shares one base class and reads its variants from `data-*` attributes: `.btn` in `design-system/components/Button/Button.css` (pulled in by `components-buttons.css`) holds the border, target size, focus ring, hover, disabled state and motion once, `data-variant` and `data-size` override only what differs, and `Button` renders the class and the attributes with no class map, no `tailwind-merge` and no `cva`. A primitive's own rules sit in `design-system/components/<Name>/<Name>.css`, which the partial that owns the surface pulls in with `@import`, so the `@import` order stays the cascade order. `CmdLine`, `Field`, `StatTile`, `TerminalPanel` and `WindowChrome` have no CSS file: they are utilities in the component.
+
+**Breakpoints and sizes.** Viewport tokens (`--viewport-*` in `theme.css`) are in rem, and a stylesheet writes `theme(--viewport-md)` in a media query. Queries are mobile-first: a layout query closes below a step with a range, `(width < theme(--viewport-md))`, and a rule that needs another condition on top applies at `min-width` and undoes at the next step, because a `not` nested inside parentheses is dropped by older Safari. A content fold that belongs to one component is a named viewport token, not a literal. A size is a micro-scale step (`--spacing-hair` to `--spacing-node`) or written in rem: a class string carries no arbitrary `[Npx]`, and a stylesheet keeps px only for `0px` and a 1px hairline.
+
+**Writing new CSS:**
+
+- Reach for a role token first (`--color-surface`, `--color-border`, `--color-accent`, `--color-text-muted`, `--color-focus` and the rest of the twelve in `app/css/theme.css`). In a class string write the role as `text-(color:--color-accent)`; the `color:` hint is required in the `text-` and `border-` namespaces and used everywhere for one shape. Use a primitive step only where no role fits: the lint fails a primitive that a role aliases.
+- Tailwind's default palette, radius and shadow scales are reset, so `bg-red-500`, `rounded-lg` and `shadow-md` emit nothing. Use the project's tokens (`rounded-control`, `shadow-glow`, the color ramps).
+- Spell the MOTION switch only through `motion-off`, `motion-on` and `reveal-motion-on`, in a utility (`motion-off:animate-none`) or as `@variant` in a stylesheet.
+- Split a comma list into one rule per selector before nesting a variant in it. Tailwind groups the list in `:is()`, and a pseudo-element inside `:is()` is invalid, so the browser drops the rule.
+- A test of a motion or variant rule reads the compiled stylesheet (`compiledStylesheet` in `__tests__/helpers/css-rules.ts`), not the source.
 
 ---
 
@@ -314,15 +381,18 @@ deliberately public and crawlable; a phone number baked into the SYSTEM prompt
 is a privacy leak on a fetchable surface.
 
 **How it is held.** Mechanical: the CSP posture is held by the behavioral test
-`__tests__/proxy-csp.test.ts` (asserts the header is present and shaped
-correctly on responses); the `/api/ask` kill switch is held by
-`__tests__/ask-killswitch-behavioral.test.ts` (calls the route with each
+`__tests__/proxy-csp.test.ts` (asserts the static `headers()` in
+`next.config.ts` carry the policy, shaped correctly) and
+`tests/e2e/csp-report-delivery.spec.ts` (a forced violation reaches
+`/api/csp-report` through the Reporting API); the report-only probe is held by
+`__tests__/csp-report-only.test.ts` and `tests/e2e/csp-report-only-delivery.spec.ts`; the `/api/ask` kill switch is held by
+`__tests__/ask/ask-killswitch-behavioral.test.ts` (calls the route with each
 off-keyword and asserts the dependencies that should _not_ run were not
 called); the SYSTEM prompt is held by `__tests__/system-prompt.test.ts` (asserts
 no phone-number pattern, asserts the prompt still clears the 512-token Haiku 5.5 cache minimum).
 The "no dead CSP directive" and "PII minimization" rules are also enforced by
 PR review of any `app/api/` change; no gate blocks a push on that review. A PR that
-touches this surface (the list in `scripts/high-risk-paths.ts`) is labelled
+touches this surface (the list in `scripts/ci/high-risk-paths.ts`) is labelled
 `high-risk` by `.github/workflows/high-risk-label.yml`, so the review starts there.
 
 ---
@@ -380,8 +450,8 @@ the commit) and a staged `gitleaks` scan, and the `commit-msg` hook runs
 commitlint. The heavier gate runs in `pre-push`: the branch-name check, a refusal
 to push the `main` ref, and `pnpm verify`. `pnpm verify` (alias `pnpm ci:local`)
 is the named, single pre-PR command that runs the full local gate;
-`pnpm ci:predict` runs every CI job the branch triggers. Biome also enforces `noImportCycles`, `noNestedTernary` (tests exempt) and
-`noLeakedRender`, plus the 2.6 rules listed in `__tests__/scripts/biome-rules.test.ts`, which
+`pnpm ci:full` runs every check CI runs, one stage at a time; `pnpm ci:full --linux` adds the Linux WebKit and Chromium e2e stages in the CI Playwright image. Biome also enforces `noImportCycles`, `noNestedTernary` (tests exempt) and
+`noLeakedRender`, plus the 2.6 rules listed in `__tests__/ci/biome-rules.test.ts`, which
 fails when one of them stops being an error. CI gates are never disabled to merge: a failing gate means the
 underlying issue is fixed, not the gate removed. Every dependency is installed
 at the pinned range and `pnpm` is the only package manager.
@@ -411,9 +481,9 @@ merge, with every matching skill applied and every blocking finding answered.
 
 ## 12. Design System
 
-**Rule.** Brand design tokens (colors, glow stops, font families) are authored in `app/css/theme.css` under `@theme {}`, the single source of truth consumed by Tailwind's utility-class generator at build time. Standard Tailwind scale handles spacing (`p-4`, `gap-5`), typography (`text-sm`, `text-base`), duration (`duration-200`). Z-index values, keyboard focus rings, letter spacing and the viewport widths of media queries are named tokens in `theme.css` (`--z-*`, `--focus-ring`, `--tracking-*`, `--viewport-*`); `pnpm lint:css-tokens` rejects a literal z-index and a hand-written focus ring. The token reference page is `app/(en)/design-system/tokens/page.mdx`. Every primitive component lives under `design-system/components/<Name>/` with `.tsx`, `.test.tsx`, `index.ts`, and a `## <Name>` section in `app/(en)/design-system/components/page.mdx`; most also have their own page under `app/(en)/design-system/primitives/`. Components use Tailwind utilities directly; no `.module.css` files exist. Complex per-component visual patterns that cannot be expressed as utilities (pseudo-elements, `@keyframes`, complex box-shadow stacks) are added to `app/css/components-*.css` under `@layer components` as named classes and referenced by plain className strings. The text/surface pairs listed in `scripts/contrast-check.mjs` are audited for WCAG AA contrast in CI.
+**Rule.** Brand design tokens (colors, signal glow stops, font families) are authored in `app/css/theme.css` under `@theme {}`, the single source of truth consumed by Tailwind's utility-class generator at build time. Tokens one component owns sit in that component's `components-*.css` partial. Standard Tailwind scale handles spacing (`p-4`, `gap-5`), typography (`text-sm`, `text-base`), duration (`duration-200`). Z-index values, keyboard focus rings, letter spacing and the viewport widths of media queries are named tokens in `theme.css` (`--z-*`, `--focus-ring`, `--tracking-*`, `--viewport-*`); `pnpm lint:css-tokens` rejects a literal z-index and a hand-written focus ring. The token reference page is `app/(en)/design-system/tokens/page.mdx`; its tables, and the ones on `foundations/spacing-borders`, render from `theme.css` through `TokenTable`, so a page never copies a value. Every primitive component lives under `design-system/components/<Name>/` with `.tsx`, `.test.tsx`, `index.ts`, and a `## <Name>` section in `app/(en)/design-system/components/page.mdx`; most also have their own page under `app/(en)/design-system/primitives/`. Components use Tailwind utilities directly; no `.module.css` files exist. Complex per-component visual patterns that cannot be expressed as utilities (pseudo-elements, `@keyframes`, complex box-shadow stacks) are added to `app/css/components-*.css` under `@layer components` as named classes and referenced by plain className strings. The text/surface pairs listed in `scripts/gates/contrast-check.ts` are audited for WCAG AA contrast in CI.
 
 **Rationale.** Tailwind `@theme` is the design token source with zero build pipeline overhead: one source of truth, immediately recognisable to any senior reviewer, and live-verified by TypeScript autocomplete on every utility class.
 
-**How it is held.** CI gates: (1) `scripts/contrast-check.mjs` audits semantic pairs against WCAG AA, (2) `pnpm lint:css-tokens` rejects raw color functions, literal z-index and hand-written focus rings outside `theme.css`, (3) `pnpm check:component-docs` fails if a primitive component lacks a `## ComponentName` heading in `app/(en)/design-system/components/page.mdx`. No CSS modules exist. Primitive visual baselines live in `tests/e2e/design-system-components.spec.ts`; CI ignores that spec on Ubuntu, so those baselines are darwin-only. An architecture review of any spec touching the design system is a convention that runs before the plan is written; no gate enforces it. ADR entries for design-system changes live in `DECISIONS.md`.
+**How it is held.** CI gates: (1) `scripts/gates/contrast-check.ts` audits semantic pairs against WCAG AA, (2) `pnpm lint:css-tokens` rejects raw color functions, literal z-index and hand-written focus rings outside `theme.css`, (3) `pnpm check:component-docs` fails if a primitive component lacks a `## ComponentName` heading in `app/(en)/design-system/components/page.mdx`. No CSS modules exist. Primitive visual baselines live in `tests/e2e/design-system-components.spec.ts`; CI ignores that spec on Ubuntu, so those baselines are darwin-only. An architecture review of any spec touching the design system is a convention that runs before the plan is written; no gate enforces it. ADR entries for design-system changes live in `DECISIONS.md`.
 

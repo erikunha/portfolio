@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { WIDTH } from './_helpers/geometry';
 
 test.use({ javaScriptEnabled: false });
 
@@ -19,16 +20,16 @@ const ROUTES = [
   '/this-route-does-not-exist',
 ] as const;
 const VIEWPORTS = [
-  { width: 1280, height: 720 },
-  { width: 375, height: 800 },
+  { width: WIDTH.DESKTOP, height: 720 },
+  { width: WIDTH.PHONE_COMPACT, height: 800 },
 ] as const;
 const SUBMIT = 'submit';
 
 for (const route of ROUTES) {
   for (const viewport of VIEWPORTS) {
-    test(`${route} at ${viewport.width}px offers no button that needs JavaScript`, async ({
-      page,
-    }) => {
+    test(`${route} at ${viewport.width}px offers no button that needs JavaScript`, {
+      tag: '@cross-browser',
+    }, async ({ page }) => {
       await page.setViewportSize(viewport);
       await page.goto(route);
       const dead = await page.evaluate((submit) => {

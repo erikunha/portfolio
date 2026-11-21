@@ -1,11 +1,12 @@
 import { expect, test } from '@playwright/test';
-import { VIEWPORTS } from './_helpers/geometry';
+import { VIEWPORTS, WIDTH } from './_helpers/geometry';
+import { DOCK_MENU, gotoHydrated } from './_helpers/hydration';
 import { freezeMotion } from './_helpers/motion';
 import { revealDeferredContent } from './_helpers/snapshot';
 import { gotoSettled } from './_helpers/streamed';
 import { revealToTop } from './_helpers/to-top';
 
-const PHONE = { width: 375, height: 812 } as const;
+const PHONE = { width: WIDTH.PHONE_COMPACT, height: 812 } as const;
 const PHONES = [VIEWPORTS.PHONE_NARROW, PHONE, VIEWPORTS.PHONE] as const;
 const READABLE_FLOOR_PX = 13;
 const BODY_COPY_PX = 14;
@@ -112,7 +113,7 @@ test.describe('the drawer leads with the MOTION switch', () => {
     page,
   }) => {
     await page.setViewportSize(PHONE);
-    await gotoSettled(page, '/');
+    await gotoHydrated(page, '/', DOCK_MENU);
     await page
       .getByRole('navigation', { name: 'primary' })
       .getByRole('button', { name: /^MENU/ })

@@ -4,7 +4,7 @@ import { type MountedClient, mountClient } from '@/__tests__/helpers/render';
 import { ShellLineKind, shellStates, shellUi } from '@/content/shell-ui';
 import { SITE_LOCALE } from '@/content/site-locale';
 import { LineText, RateLimitCountdown, ShellLine, ThinkingLine } from './ShellLines.client';
-import type { Line } from './useAskStream';
+import type { Line } from './transcript';
 
 const ui = shellUi[SITE_LOCALE.en];
 const states = shellStates[SITE_LOCALE.en];

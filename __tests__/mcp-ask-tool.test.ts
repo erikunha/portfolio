@@ -14,9 +14,10 @@ const CALLER_IP = '203.0.113.7';
 const askPost = vi.hoisted(() => vi.fn());
 
 vi.mock('@/app/api/ask/route', () => ({ POST: askPost }));
-vi.mock('@/lib/log', () => ({
-  log: { info: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn() },
-}));
+vi.mock('@/lib/ask/stream', async () =>
+  (await import('./helpers/ask-route')).streamModuleFromRoute(),
+);
+vi.mock('@/lib/log', async () => (await import('./helpers/modules')).logModule());
 
 function answer(body: string, init: ResponseInit = {}): Response {
   return new Response(body, {

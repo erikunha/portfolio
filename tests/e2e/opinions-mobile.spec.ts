@@ -1,7 +1,8 @@
 import { expect, test } from '@playwright/test';
+import { VIEWPORTS } from './_helpers/geometry';
 
-const MOBILE = { width: 390, height: 844 };
-const DESKTOP = { width: 1280, height: 720 };
+const MOBILE = VIEWPORTS.PHONE;
+const DESKTOP = VIEWPORTS.DESKTOP;
 const ROW_TOLERANCE_PX = 1;
 
 async function takeGeometry(page: import('@playwright/test').Page) {

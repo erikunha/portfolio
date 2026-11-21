@@ -6,6 +6,9 @@ import { POST } from '@/app/api/mcp/route';
 vi.mock('@/app/api/ask/route', () => ({
   POST: vi.fn(async () => new Response('answer')),
 }));
+vi.mock('@/lib/ask/stream', async () =>
+  (await import('./helpers/ask-route')).streamModuleFromRoute(),
+);
 
 const MAX_MCP_BODY_BYTES = 4096;
 const MCP_URL = 'https://www.erikunha.dev/api/mcp';

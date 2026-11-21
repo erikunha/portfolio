@@ -1,9 +1,10 @@
 import type { Page } from '@playwright/test';
+import { WIDTH } from './geometry';
 
 export const WORD_VIEWPORTS = [
-  { width: 320, height: 800 },
-  { width: 375, height: 800 },
-  { width: 768, height: 1024 },
+  { width: WIDTH.PHONE_NARROW, height: 800 },
+  { width: WIDTH.PHONE_COMPACT, height: 800 },
+  { width: WIDTH.TABLET, height: 1024 },
 ] as const;
 
 export const ORPHAN_MAX_CHARS = 5;

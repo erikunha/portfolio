@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import type { CollectedWeek, WeekWindow } from '../metrics/collect.mjs';
+import type { CollectedWeek, WeekWindow } from '../metrics/collect.ts';
 import {
   collectionWarnings,
   collectRange,
@@ -19,8 +19,8 @@ import {
   upsertWeeks,
   weeksToCollect,
   weekWindows,
-} from '../metrics/collect.mjs';
-import type { GithubClient } from '../metrics/github.mjs';
+} from '../metrics/collect.ts';
+import type { GithubClient } from '../metrics/github.ts';
 
 const FIXTURES = join(process.cwd(), 'scripts', '__tests__', 'fixtures', 'metrics');
 // behavioral-test-allow: recorded GitHub API responses are the inputs under test; the collector has no other way to be fed real payloads offline.

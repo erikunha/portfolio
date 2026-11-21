@@ -26,7 +26,7 @@ vi.mock('@/lib/lighthouse-scores', () => ({
     fetchedAt: '-',
   },
 }));
-vi.mock('@/lib/ask-metrics', () => ({
+vi.mock('@/lib/ask/metrics', () => ({
   getAskMetrics: getAskMetricsMock,
 }));
 
@@ -84,7 +84,7 @@ describe('AiMetricsSection: on-page AI eval/cost metrics (RSC)', () => {
     const doc = new DOMParser().parseFromString(await renderData(), 'text/html');
     expect(doc.body.textContent).toContain('95% of answers finish within 2,840ms');
     expect(doc.querySelector('a')?.getAttribute('href')).toBe(
-      'https://github.com/erikunha/portfolio/blob/main/scripts/ask-eval.ts',
+      'https://github.com/erikunha/portfolio/blob/main/scripts/eval/ask-eval.ts',
     );
   });
 
@@ -215,7 +215,7 @@ describe('AiMetricsSection: on-page AI eval/cost metrics (RSC)', () => {
     ],
   ] as const)('explains the %s %s cause in the error box', async (locale, cause, explanation) => {
     const { ReadTimeoutError } = await import('@/lib/with-timeout');
-    const { RedisNotConfiguredError } = await import('@/lib/rate-limit');
+    const { RedisNotConfiguredError } = await import('@/lib/redis');
     const error =
       cause === 'timeout'
         ? new ReadTimeoutError()
@@ -360,7 +360,7 @@ describe('AiMetricsSection: error box', () => {
     const stylesheet = parse(readComponentsCss());
     const box = rulesWithSelector(stylesheet, '.measured-error');
     expect(box.map((rule) => declValue(rule, 'border'))).toContain(
-      'var(--border-width) solid var(--color-primary-500)',
+      'var(--border-width) solid var(--color-accent)',
     );
     const retry = rulesWithSelector(stylesheet, '.measured-retry');
     expect(retry.map((rule) => declValue(rule, 'min-height'))).toContain('var(--spacing-target)');

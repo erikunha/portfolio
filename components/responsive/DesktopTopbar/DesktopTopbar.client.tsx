@@ -6,7 +6,7 @@ import { ExternalLink } from '@/components/ExternalLink';
 import { StatusDot } from '@/components/StatusDot';
 import { LINKS_PATH } from '@/content/links.constants';
 import { MOTION_STATE_SEPARATOR, TOPBAR_MOTION_LABEL } from '@/content/nav';
-import { cn } from '@/lib/cn';
+import { joinClassNames } from '@/lib/join-class-names';
 import { longestCopy } from '@/lib/longest-copy';
 import {
   LanguageSwitch,
@@ -74,7 +74,7 @@ export function DesktopTopbar({ brand }: { brand: ReactNode }) {
   const motionState = useMotionState();
 
   return (
-    <header className="desktop-topbar fixed top-0 left-0 right-0 bg-secondary-950 border-b border-primary-subtle hidden md:block">
+    <header className="desktop-topbar fixed top-0 left-0 right-0 bg-(color:--color-surface) border-b border-(color:--color-border-strong) hidden md:block">
       <div className="safe-zone flex items-center gap-3 min-h-11">
         <MenuTrigger />
         <nav className="flex gap-2 items-center flex-nowrap" aria-label={copy.siteNavLabel}>
@@ -84,12 +84,13 @@ export function DesktopTopbar({ brand }: { brand: ReactNode }) {
           <div className="flex gap-2 items-center flex-nowrap xl:ml-2">
             <button
               type="button"
-              className="topbar-action topbar-action-toggle hidden xl:inline-flex"
+              className="btn topbar-action topbar-action-toggle hidden xl:inline-flex"
+              data-variant="secondary"
               onClick={toggleMotion}
               data-motion={motionOn ? 'on' : 'off'}
               aria-pressed={motionOn}
             >
-              <StatusDot blink className={cn(!motionOn && 'opacity-40')} />
+              <StatusDot blink className={joinClassNames(!motionOn && 'opacity-40')} />
               <span>
                 {TOPBAR_MOTION_LABEL}
                 <span aria-hidden="true">
@@ -104,13 +105,15 @@ export function DesktopTopbar({ brand }: { brand: ReactNode }) {
               </span>
             </button>
             <a
-              className="topbar-action topbar-action-outline hidden lg:inline-flex"
+              className="btn topbar-action topbar-action-outline hidden lg:inline-flex"
+              data-variant="secondary"
               href={chrome.topbarReading.href}
             >
               {chrome.topbarReading.label}
             </a>
             <ExternalLink
-              className="topbar-action topbar-action-solid hidden lg:inline-flex"
+              className="btn topbar-action topbar-action-solid hidden lg:inline-flex"
+              data-variant="primary"
               href={chrome.topbarHire.href}
               aria-label={chrome.topbarHire.accessibleName}
             >

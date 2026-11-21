@@ -9,12 +9,16 @@ By participating you agree to the [Code of Conduct](./CODE_OF_CONDUCT.md).
 - **Node** `^22.22.2 || ^24.15.0 || >=26.0.0` (`.nvmrc` pins the exact version; `nvm use`)
 - **pnpm** >= 10 (this repo is pnpm-only; do not use npm or yarn)
 - **gitleaks** on your PATH for the pre-commit secret scan (`brew install gitleaks`)
+- **Biome** editor extension: `.vscode/extensions.json` recommends it, so VS Code offers it on first open
 
 ```bash
 pnpm install
+pnpm run doctor                   # read-only: names a fix for every failed check
 cp .env.example .env.local   # optional: static content renders without keys
 pnpm dev                     # http://localhost:3000
 ```
+
+A new `git worktree` has no git hooks until `pnpm exec husky` (or `pnpm install`) runs in it: `.husky/_` is generated and untracked, so commits there skip the pre-commit secret scan. `pnpm run doctor` fails with that fix when the checkout has no executable `pre-commit`.
 
 Without service credentials `/api/ask` rejects budget reservation, `/api/contact` cannot save messages and `/api/lighthouse` returns unavailable scores. `.env.example` lists every variable; `lib/env.ts` is the only reader.
 
@@ -44,8 +48,9 @@ Git hooks run automatically, but you can (and should) run the checks yourself:
 | `pnpm validate-content` | Zod content schemas                                             |
 | `pnpm test`             | Vitest unit tests                                               |
 | `pnpm test:e2e`         | Playwright: a11y scan, contact/ask journeys, visual regression  |
-| `pnpm ci:local`         | The verify chain CI runs first (lint, types, content, naming, pinning, doc drift, contrast, tokens, tests with coverage) |
-| `pnpm ci:predict`       | Every CI job your commits trigger, run locally, with the jobs it could not verify listed (`--linux` for layout or font changes) |
+| `pnpm ci:local`         | The verify steps CI runs first, in parallel (lint, types, content, naming, pinning, doc drift, contrast, tokens, tests with coverage) |
+| `pnpm ci:full`          | Every check CI runs, natively and in sequence, ending with a table of passed, failed and not-run |
+| `pnpm ci:full --linux`  | The same, plus the WebKit and Chromium e2e stages in the CI Playwright image on Docker (`=gate`, `=changed`, `=all`; `all` covers all eight e2e projects, the others five) |
 | `pnpm bundle-check`     | Bundle-size gate (needs a build)                                |
 | `pnpm route-js-check`   | Per-route first-load JS gate (needs a build)                    |
 | `pnpm lhci`             | Lighthouse CI (`pnpm lhci:mobile` for the mobile profile)       |
@@ -58,7 +63,7 @@ Performance, accessibility (WCAG 2.2 AA), and security are treated as implicit o
 ## Opening a pull request
 
 1. Keep PRs small. Review quality drops sharply past a few hundred changed lines.
-2. Run `pnpm ci:predict` (and `pnpm gates:runtime` for anything that affects the built site). For a docs-only change `pnpm ci:local` is enough.
+2. Run `pnpm ci:full`. For a docs-only change `pnpm ci:local` is enough.
 3. Fill in **every** section of the PR template; do not write a body from scratch.
 4. **Show your work.** A PR should evidence what it claims, not just assert it: paste command output, attach before/after screenshots or a recording for UI changes, note bundle-size and Core Web Vitals deltas for performance work, and link the CI run or Vercel preview. Reviewers should be able to validate without pulling the branch.
 5. A visual change requires regenerated visual-regression baselines before the PR is opened (darwin locally, linux from the CI dispatch).

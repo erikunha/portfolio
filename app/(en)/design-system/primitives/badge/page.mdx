@@ -11,7 +11,7 @@ export const metadata = dsPageMetadata({
 
 <OnThisPage items={[{id:'props',label:'Props'},{id:'variants',label:'Variants'},{id:'accessibility',label:'Accessibility'}]} />
 
-Source: `design-system/components/Badge/Badge.tsx`. React Server Component, zero client JavaScript.
+Source: `design-system/components/Badge/Badge.tsx`, styled by `design-system/components/Badge/Badge.css`. React Server Component, zero client JavaScript.
 
 <h2 id="props">Props</h2>
 
@@ -31,7 +31,7 @@ Other `<span>` attributes (`id`, `aria-*`, `data-*`) pass through, and `classNam
   <Badge size="sm">SMALL</Badge>
 </Preview>
 
-Below 360px the badge wraps (`white-space: normal`, `flex-wrap: wrap`) instead of overflowing.
+When its nearest container is narrower than 20rem the badge wraps (`white-space: normal`, `flex-wrap: wrap`) instead of overflowing. Without a container ancestor it stays on one line.
 
 <h2 id="accessibility">Accessibility</h2>
 

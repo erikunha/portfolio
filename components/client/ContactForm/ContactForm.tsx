@@ -2,6 +2,7 @@
 
 import {
   Fragment,
+  useCallback,
   useEffect,
   useId,
   useLayoutEffect,
@@ -20,19 +21,23 @@ import {
 import type { TerminalChrome } from '@/content/schemas';
 import { Field } from '@/design-system/components/Field';
 import { longestCopy } from '@/lib/longest-copy';
+import { useMessageStore } from '../ContactIsland/ContactIslandProvider.client';
 import { ContactResult } from './ContactResult';
 import { ContactShell } from './ContactShell';
 import { errorMailto } from './contact-form-checks';
-import { messageStore } from './messageStore';
-import { CONTACT_FIELDS, CONTACT_STATUS, useContactSubmit } from './useContactSubmit';
+import {
+  CONTACT_FIELDS,
+  CONTACT_HONEYPOT_FIELD,
+  CONTACT_STATUS,
+  useContactSubmit,
+} from './useContactSubmit';
 
 const MESSAGE_ROWS = 5;
-const INITIAL_FAILURE_COUNT = 0;
-const INITIAL_DISMISS_COUNT = 0;
 type TypedField = Exclude<ContactField, typeof CONTACT_FIELD.MESSAGE>;
 const INITIAL_TYPED: Record<TypedField, string> = { name: '', email: '' };
 
 export function ContactForm({ copy, chrome }: { copy: ContactContent; chrome: TerminalChrome }) {
+  const messageStore = useMessageStore();
   const [typed, setTyped] = useState(INITIAL_TYPED);
   const message = useSyncExternalStore(
     messageStore.subscribe,
@@ -41,7 +46,7 @@ export function ContactForm({ copy, chrome }: { copy: ContactContent; chrome: Te
   );
   const values: Record<ContactField, string> = { ...typed, message };
   const [honeypot, setHoneypot] = useState('');
-  const [dismissCount, setDismissCount] = useState(INITIAL_DISMISS_COUNT);
+  const [reopened, setReopened] = useState(false);
   const {
     status,
     busy,
@@ -52,10 +57,26 @@ export function ContactForm({ copy, chrome }: { copy: ContactContent; chrome: Te
     failureCount,
     noteEdit,
     submit,
+    submitFromFormData,
     dismiss,
   } = useContactSubmit({ copy, values, honeypot });
-  const formRef = useRef<HTMLFormElement>(null);
-  const summaryRef = useRef<HTMLDivElement>(null);
+  const formRef = useRef<HTMLFormElement | null>(null);
+  const attachForm = useCallback(
+    (node: HTMLFormElement | null) => {
+      formRef.current = node;
+      if (!node || !reopened) return;
+      const message = node.elements.namedItem(CONTACT_FIELD.MESSAGE);
+      if (message instanceof HTMLElement) message.focus();
+    },
+    [reopened],
+  );
+  // biome-ignore lint/correctness/useExhaustiveDependencies: a new ref identity per failure re-attaches the summary, so each failure moves focus to it again
+  const focusSummary = useCallback(
+    (node: HTMLDivElement | null) => {
+      node?.focus();
+    },
+    [failureCount],
+  );
   const formId = useId();
   const counterId = `${formId}-count`;
   const summaryId = `${formId}-summary`;
@@ -70,7 +91,7 @@ export function ContactForm({ copy, chrome }: { copy: ContactContent; chrome: Te
   const fieldShown = status !== CONTACT_STATUS.SUCCESS && status !== CONTACT_STATUS.QUEUED;
   useEffect(
     () => (fieldShown ? messageStore.bindField(messageFieldId) : undefined),
-    [fieldShown, messageFieldId],
+    [fieldShown, messageFieldId, messageStore],
   );
 
   useLayoutEffect(() => {
@@ -82,20 +103,11 @@ export function ContactForm({ copy, chrome }: { copy: ContactContent; chrome: Te
       email: typedInDom(CONTACT_FIELD.EMAIL) || current.email,
     }));
     messageStore.seed(typedInDom(CONTACT_FIELD.MESSAGE));
-  }, []);
-
-  useEffect(() => {
-    if (failureCount > INITIAL_FAILURE_COUNT) summaryRef.current?.focus();
-  }, [failureCount]);
-
-  useEffect(() => {
-    if (dismissCount === INITIAL_DISMISS_COUNT) return;
-    document.getElementById(messageFieldId)?.focus();
-  }, [dismissCount, messageFieldId]);
+  }, [messageStore]);
 
   function dismissResult() {
     dismiss();
-    setDismissCount((count) => count + 1);
+    setReopened(true);
   }
 
   function change(field: ContactField, value: string) {
@@ -115,8 +127,8 @@ export function ContactForm({ copy, chrome }: { copy: ContactContent; chrome: Te
   return (
     <ContactShell chrome={chrome}>
       <form
-        ref={formRef}
-        method="dialog"
+        ref={attachForm}
+        action={submitFromFormData}
         onSubmit={submit}
         noValidate
         className="contact-form"
@@ -125,7 +137,7 @@ export function ContactForm({ copy, chrome }: { copy: ContactContent; chrome: Te
       >
         {(invalidFields.length > 0 || errorMsg) && (
           <div
-            ref={summaryRef}
+            ref={focusSummary}
             role="alert"
             tabIndex={-1}
             className="contact-alert"
@@ -165,7 +177,7 @@ export function ContactForm({ copy, chrome }: { copy: ContactContent; chrome: Te
         )}
         <input
           type="text"
-          name="field_company"
+          name={CONTACT_HONEYPOT_FIELD}
           value={honeypot}
           onChange={(event) => setHoneypot(event.target.value)}
           tabIndex={-1}
@@ -228,7 +240,8 @@ export function ContactForm({ copy, chrome }: { copy: ContactContent; chrome: Te
             type="submit"
             aria-disabled={busy}
             aria-busy={busy}
-            className="contact-send"
+            className="btn contact-send"
+            data-variant="primary"
             data-reserve={longestCopy([copy.form.submit, copy.form.submitting])}
           >
             <span>{busy ? copy.form.submitting : copy.form.submit}</span>

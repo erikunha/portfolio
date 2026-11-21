@@ -1,12 +1,12 @@
 import { expect, test } from '@playwright/test';
+import { PHONE_TO_TABLET_WIDTHS } from './_helpers/geometry';
 import { DOCK_MENU, gotoHydrated } from './_helpers/hydration';
 import { gotoSettled } from './_helpers/streamed';
 
-const SIDE_WIDTHS = [320, 375, 768] as const;
 const VIEWPORT_HEIGHT = 812;
 const LINE_PROBE_X = 1;
 
-for (const width of SIDE_WIDTHS) {
+for (const width of PHONE_TO_TABLET_WIDTHS) {
   test.describe(`the phone and tablet position line at ${width}px`, () => {
     test.use({ viewport: { width, height: VIEWPORT_HEIGHT } });
 

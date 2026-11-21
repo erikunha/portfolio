@@ -16,7 +16,7 @@ test.beforeEach(async ({ page }) => {
   await freezeMotion(page);
 });
 
-test.describe('the shell on the Portuguese page', () => {
+test.describe('the shell on the Portuguese page', { tag: '@cross-browser' }, () => {
   test('declares pt-BR and renders its chrome in Portuguese', async ({ page }) => {
     await installMockBackend(page, { ask: 'rate-limit', locale: PT });
     await openShell(page, PT_PATH);

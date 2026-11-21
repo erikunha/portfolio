@@ -26,23 +26,25 @@ flowchart TD
     globalError["global-error.tsx -> replaces the root layout on root failure"]
 ```
 
-The design-system layout hangs its five top-level pages and their children off the English group:
+The design-system layout hangs off the English group. Its routes:
+
+```text
+/design-system                          layout.tsx
+├── /design-system                      page.mdx
+├── tokens
+├── components
+├── enforcement
+├── changelog                           git-generated
+├── foundations/{colors,typography,spacing-borders}
+└── primitives/*                        ten component pages
+```
+
+`_components/ds-nav.ts` holds the page tree, the pager and the sitemap entries. The index page composes two parts:
 
 ```mermaid
-flowchart TD
-    layout["app/(en)/layout.tsx · html lang en-US"]
-    layout --> ds["/design-system -> app/(en)/design-system/layout.tsx"]
-    ds --> ds1["/design-system (page.mdx)"]
-    ds1 --> toc["OnThisPage: sections and principles links"]
-    ds1 --> opinion["DesignSystemOpinion: docs-placement DS take"]
-    opinion --> takes["content/hottest-takes.ts"]
-    ds --> ds2["/design-system/tokens"]
-    ds --> ds3["/design-system/components"]
-    ds --> ds4["/design-system/enforcement"]
-    ds --> ds5["/design-system/changelog (git-generated)"]
-    ds --> ds6["/design-system/foundations/{colors,typography,spacing-borders}"]
-    ds --> ds7["/design-system/primitives/* (ten component pages)"]
-    dsnav["_components/ds-nav.ts: page tree, pager and sitemap entries"] -.-> ds
+flowchart LR
+    page["design-system page.mdx"] --> toc["OnThisPage"]
+    page --> opinion["DesignSystemOpinion"] --> takes["content/hottest-takes.ts"]
 ```
 
 The pt-BR group mirrors the English one, and the shell serves the API cluster:
@@ -66,14 +68,15 @@ flowchart TD
     api8["POST /api/log · POST /api/log/forget"]
     api9["GET · POST /api/mcp (stateless handler; POST body limit 4096 bytes)"]
     api10["GET /api/contact-retry (cron, twice a day)"]
+    api11["GET /api/error-digest (cron, daily)"]
     end
 ```
 
-The user-facing routes are `/`, `/summary`, `/cv`, `/links`, `/links/en` and the pt-BR twins `/pt`, `/pt/cv` and `/pt/summary`, alongside the 18 design-system pages (the five top-level pages, three foundations and ten primitives listed in `ds-nav.ts`), metadata routes and API cluster. `app/sitemap.ts` lists every page with its language alternates; `robots.txt`, `llms.txt`, `.well-known/agent.json` and `og.png` are static files in `public/`. Home sections use the client `ErrorBoundary` component; its default fallback is a bordered box that keeps the island's `minHeight` (`--eb-min-height`), and decorative islands (CRT overlay, Matrix rain) pass `fallback={null}` and render nothing. The English and pt-BR routes live in two route groups, `app/(en)` and `app/(pt)`, each with its own root layout that sets `<html lang>` and renders `components/RootShell.tsx`. A navigation between the groups, such as the language switch, is a full document load. App Router failures also have `app/(en)/error.tsx`, `app/(pt)/error.tsx` and `app/global-error.tsx`; there is no `loading.tsx`/`template.tsx`. Each group's `[...missing]/page.tsx` renders `components/ErrorPages/MissingRoute.tsx`, which calls `notFound()` inside a `Suspense` boundary whose fallback is the 404 page, so the first bytes carry the page, the group's `<html lang>` and status 404; a `notFound()` outside a boundary prerenders Next's empty error shell instead.
+The user-facing routes are `/`, `/summary`, `/cv`, `/links`, `/links/en` and the pt-BR twins `/pt`, `/pt/cv` and `/pt/summary`, alongside the 20 design-system pages (the five top-level pages, three foundations and twelve primitives listed in `ds-nav.ts`), metadata routes and API cluster. `app/sitemap.ts` lists every page with its language alternates; `robots.txt`, `llms.txt`, `.well-known/agent.json`, `.well-known/security.txt` and `og.png` are static files in `public/`. Home sections use the client `ErrorBoundary` component; its default fallback is a bordered box that keeps the island's `minHeight` (`--eb-min-height`), and decorative islands (CRT overlay, Matrix rain) pass `fallback={null}` and render nothing. The English and pt-BR routes live in two route groups, `app/(en)` and `app/(pt)`, each with its own root layout that sets `<html lang>` and renders `components/RootShell.tsx`. A navigation between the groups, such as the language switch, is a full document load. App Router failures also have `app/(en)/error.tsx`, `app/(pt)/error.tsx` and `app/global-error.tsx`; there is no `loading.tsx`/`template.tsx`. Each group's `[...missing]/page.tsx` renders `components/ErrorPages/MissingRoute.tsx`, which calls `notFound()` inside a `Suspense` boundary whose fallback is the 404 page, so the first bytes carry the page, the group's `<html lang>` and status 404; a `notFound()` outside a boundary prerenders Next's empty error shell instead.
 
 ## Terminal sections and navigation
 
-`content/section-registry.ts` defines nine navigation destinations: Home (`bio`), About, Projects, Career, Interactive shell, Measured, Opinions, Guitar and mixer, and Contact. It supplies icons, screen reader labels and navigation order. `content/section-labels.ts` exposes those labels and adds the scroll region labels; each module header shows its section label as a visible name beside the icon.
+`content/section-registry.ts` defines nine navigation destinations: Home (`bio`), About, Projects, Career, Interactive shell, Measured, Opinions, Guitar and mixer, and Contact. It holds the nine in one keyed table and derives the ids, icons, screen reader labels and navigation order from it; a section's order is its position in the table. `content/section-labels.ts` exposes those labels and adds the scroll region labels; each module header shows its section label as a visible name beside the icon.
 
 The JSX order in `components/SiteHome.tsx` is Hero, About, Shell, Measured, Projects, GitLog, HottestTakes (with Unknowns nested inside), Guitar (the guitar rig with the DAW mixer below it) and Contact. Footer follows `PageMain` as its sibling. No CSS `order` reorders a top-level section, so the page reads in this order at every width; the navigation order in the registry is independent of it.
 
@@ -96,15 +99,17 @@ flowchart TD
 Inside the route children, the page frame wraps the chrome, the main content and the footer:
 
 ```mermaid
-flowchart TD
-    children["{route children}"] --> siteshell["SiteShell (RSC): the one AppShell builder, in every page frame, 404 and route error page"]
-    siteshell --> appshell["AppShell (client chrome)"]
-    appshell --> chrome["skip-link · OfflineNotice · SectionNavigation drawer · CRTOverlay (6 layers) · DesktopTopbar · StatusBar+MobileTitleBar · Dock · PositionMeter · ToTopButton"]
-    appshell --> main["PageMain (RSC): main#main-content"]
-    main --> secs["ErrorBoundary-wrapped sections:<br/>Hero + About + Career + Modules (RSC)"]
-    appshell --> footer["ErrorBoundary-wrapped Footer (RSC), after PageMain"]
-    footer --> footerIslands["Footer.client: session counters + halt/reboot"]
+flowchart LR
+    children["route children"] --> siteshell["SiteShell (RSC)"] --> appshell["AppShell (client)"]
+    appshell --> chrome["chrome"]
+    appshell --> main["PageMain (RSC)"] --> secs["sections (RSC)"]
+    appshell --> footer["Footer (RSC)"] --> fclient["Footer.client"]
 ```
+
+- `SiteShell` is the one `AppShell` builder, used by every page frame, the 404 and the route error page.
+- The chrome is the skip link, `OfflineNotice`, the `SectionNavigation` drawer, `CRTOverlay` (6 layers), `DesktopTopbar`, `StatusBar` with `MobileTitleBar`, `Dock`, `PositionMeter` and `ToTopButton`.
+- `PageMain` renders `main#main-content`. Hero, About, Career and the modules each sit inside an `ErrorBoundary`.
+- The footer is also wrapped in an `ErrorBoundary` and renders after `PageMain`; `Footer.client` holds the session counters and halt/reboot.
 
 The motion bootstrap script is load-bearing: it reads `localStorage('erik.motion')` (anything but `off` means on, whatever the operating system asks) and sets `body[data-motion]` **before first paint**, off the hydration path, so the stored motion choice does not wait for hydration. The script lives in `lib/motion-bootstrap.ts`.
 
@@ -114,15 +119,17 @@ The motion bootstrap script is load-bearing: it reads `localStorage('erik.motion
 
 ```mermaid
 flowchart LR
-    req["Request"] --> px["proxy.ts: add CSP + Reporting-Endpoints"]
-    px --> shell["Prerendered shell:<br/>AppShell chrome + Hero (outside Suspense) + above-fold sections"]
-    shell --> stream["Server streams"]
-    stream --> susp["Suspense boundaries resolve per-request"]
-    susp --> dyn["Independent ASK / PSI data reads"]
-    dyn --> html2["Streamed HTML"]
-    html2 --> hydrate["Browser hydrates chrome and client islands"]
-    hydrate --> lazy["Contact form / Shell: React.lazy inside LazyIsland, server-rendered<br/>Timezone panel: React.lazy near the viewport<br/>Matrix Rain: next/dynamic, ssr:false<br/>Footer islands mount directly"]
+    req["Request"] --> shell["Prerendered shell"] --> susp["Suspense boundaries"] --> html["Streamed HTML"] --> hydrate["Hydration"]
 ```
+
+1. `next.config.ts` `headers()` puts the CSP, the `connect-src` report-only probe and `Reporting-Endpoints` on every response as static headers.
+2. The prerendered shell holds the `AppShell` chrome, the Hero (outside Suspense) and the above-the-fold sections.
+3. The server streams the rest. Suspense boundaries resolve per request, with the ask and PageSpeed data read independently.
+4. The browser hydrates the chrome and the client islands:
+   - the contact form and the shell load through `React.lazy` inside `LazyIsland`, already server-rendered;
+   - the timezone panel loads through `React.lazy` near the viewport;
+   - Matrix Rain loads through `next/dynamic` with `ssr: false`;
+   - the footer islands mount directly.
 
 **Routes that must stay static.** `/cv`, `/summary`, `/links`, `/links/en`, `/pt/cv`, `/pt/summary` and the `/design-system` layout export `ensureStatic = 'navigation'`. Next then fails the build if the route reads `connection()`, `cookies()`, `headers()` or uncached data, so request-time rendering cannot return unseen. `__tests__/meta/ensure-static-routes.test.ts` lists the guarded files.
 
@@ -146,12 +153,12 @@ The terminal home combines prerendered output and dynamic Suspense children. Sep
 
 ```
 build time:  content/*.ts imported -> Zod parse (gate) -> typed data baked into RSC output
-eval run:    scripts/ask-eval.ts -> Redis ask:eval:latest
-request:     proxy.ts headers -> static shell streamed -> getIsMobile() resolves per request
+eval run:    scripts/eval/ask-eval.ts -> Redis ask:eval:latest
+request:     static headers -> static shell streamed -> getIsMobile() resolves per request
              -> section variants and independent ASK / PSI reads stream -> client hydrates islands
 ```
 
-The content layer is build-time: static copy is already in the prerendered output. Measured reads live data through `lib/ask-metrics.ts` and `lib/lighthouse-scores.ts`. PSI uses its Redis cache and may fetch PageSpeed Insights when the cache is missing. Projects does not read the user agent or wait on live data.
+The content layer is build-time: static copy is already in the prerendered output. Measured reads live data through `lib/ask/metrics.ts` and `lib/lighthouse-scores.ts`. PSI uses its Redis cache and may fetch PageSpeed Insights when the cache is missing. Projects does not read the user agent or wait on live data.
 
 ## End-to-end data flow #2 - `/api/ask` (the streaming AI feature)
 
@@ -183,10 +190,11 @@ Then the dedup check, the budget reservation and the sentinel:
 sequenceDiagram
     participant U as InteractiveShell (client island)
     participant R as app/api/ask/route.ts (lib/ask/preflight.ts, lib/ask/stream.ts)
-    participant RL as lib/rate-limit
+    participant D as lib/ask/dedup
+    participant B as lib/ask/budget
 
-    R->>RL: checkIdenticalQuestion (60s dedup, 429)
-    R->>RL: reserveBudget(512)  (monthly and daily dollar caps - 503 if either is exhausted or the store is down, and the dedup lock is released)
+    R->>D: checkIdenticalQuestion (60s dedup, 429)
+    R->>B: reserveBudget(512)  (monthly and daily dollar caps - 503 if either is exhausted or the store is down, and the dedup lock is released)
     R->>R: mint 128-bit sentinel, wrap question as data-only
 ```
 
@@ -224,7 +232,7 @@ sequenceDiagram
     participant KV as Upstash Redis
 
     U->>U: parseStreamChunk once per chunk -> rAF-coalesced setStreamingText (React state owned by InteractiveShell)
-    R->>KV: after(): settleBudget(refund) + Layer-2 audit + ask-log (redact, then cut - fail-quiet) + request key added to ask:conv:{id} (same MULTI as the log write) + guard counters
+    R->>KV: after(): settleReservation(reservation, usage) refunds the unused part + Layer-2 audit + ask-log (redact, then cut - fail-quiet) + request key added to ask:conv:{id} (same MULTI as the log write) + guard counters
     U->>U: finalize() -> commit answer (or error line) into history
 ```
 
@@ -301,8 +309,7 @@ At 04:00 and 16:00 UTC (`0 4 * * *` and `0 16 * * *`), `/api/contact-retry` chec
 
 ```mermaid
 flowchart LR
-    e["Edge"] --> p["proxy.ts<br/>CSP + Reporting-Endpoints<br/>(skips _next/static, images)"]
-    p --> n["next.config.ts static headers<br/>COOP · XFO · HSTS · nosniff"]
+    e["Edge"] --> n["next.config.ts static headers<br/>CSP + Reporting-Endpoints · COOP · XFO · HSTS · nosniff"]
     n --> route{route type}
     route -->|page| ppr["PPR: static shell + streamed dynamic sections"]
     route -->|api| handler["defineHandler or bespoke streaming handler"]

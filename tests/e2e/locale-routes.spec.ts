@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { SITE_HTML_LANG, SITE_LOCALE } from '@/content/site-locale';
+import { WIDTH } from './_helpers/geometry';
 
 // Address-based locales (DECISIONS 2026-08-30/2026-11-04): the bare address
 // serves English and never redirects; pt-BR lives under /pt. Each language
@@ -12,8 +13,8 @@ const PAIRS = [
 ];
 
 const WIDTHS = [
-  { width: 320, height: 720 },
-  { width: 1280, height: 800 },
+  { width: WIDTH.PHONE_NARROW, height: 720 },
+  { width: WIDTH.DESKTOP, height: 800 },
 ];
 
 // Next normalizes the root canonical to the origin with no trailing slash.

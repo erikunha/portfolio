@@ -3,9 +3,9 @@
     position: relative;
     z-index: var(--z-content);
     padding: var(--spacing-2) var(--spacing-4);
-    border-top: var(--border-width) solid var(--color-primary-subtle);
-    background: var(--color-secondary-950);
-    color: var(--color-tertiary-50);
+    border-top: var(--border-width) solid var(--color-border-strong);
+    background: var(--color-surface);
+    color: var(--color-text);
     font-family: var(--font-mono);
     font-size: var(--text-xs);
   }
@@ -15,7 +15,7 @@
   }
 
   .nojs-bar a {
-    color: var(--color-primary-500);
+    color: var(--color-accent);
     text-decoration: underline;
   }
 
@@ -45,9 +45,9 @@
 
   .err-link:hover {
     box-shadow:
-      calc(var(--spacing-2) * -1) 0 0 0 var(--color-primary-quiet),
-      var(--spacing-2) 0 0 0 var(--color-primary-quiet);
-    background: var(--color-primary-quiet);
+      calc(var(--spacing-2) * -1) 0 0 0 var(--color-signal-quiet),
+      var(--spacing-2) 0 0 0 var(--color-signal-quiet);
+    background: var(--color-signal-quiet);
   }
 
   :root:has(.err-main) {
@@ -69,13 +69,13 @@
     font-family: var(--font-mono);
   }
 
-  @media (max-width: theme(--viewport-below-lg)) {
+  @media (width < theme(--viewport-lg)) {
     .err-main {
       padding-block-end: var(--spacing-4);
     }
   }
 
-  @media (max-width: theme(--viewport-below-md)) {
+  @media (width < theme(--viewport-md)) {
     .err-main {
       gap: var(--spacing-4);
       padding-block-start: var(--spacing-4);
@@ -112,7 +112,7 @@
 
   .err-label {
     margin: 0;
-    color: var(--color-green);
+    color: var(--color-accent);
     font-size: var(--text-xs);
     letter-spacing: var(--tracking-3xl);
   }
@@ -120,7 +120,7 @@
   .err-suggest {
     display: flex;
     flex-direction: column;
-    gap: 2px;
+    gap: var(--spacing-hair);
     align-items: flex-start;
     margin: 0;
     padding: 0;
@@ -128,9 +128,9 @@
   }
 
   .err-suggest .err-link {
-    color: var(--color-primary-500);
+    color: var(--color-accent);
     text-decoration: underline;
-    text-underline-offset: 4px;
+    text-underline-offset: var(--spacing-1);
   }
 
   .err-log {
@@ -139,7 +139,7 @@
     gap: var(--spacing-1);
     min-width: 0;
     padding: var(--spacing-3);
-    border: var(--border-width) solid var(--color-primary-subtle);
+    border: var(--border-width) solid var(--color-border-strong);
     font-size: var(--text-xs);
     --leading: 1.6;
   }
@@ -164,23 +164,8 @@
     gap: var(--spacing-2);
   }
 
-  .err-action {
-    display: inline-flex;
-    align-items: center;
-    min-height: var(--spacing-target);
-    padding: 0 var(--spacing-4);
-    border: var(--border-width) solid var(--color-primary-500);
-    background: transparent;
-    color: var(--color-primary-500);
-    font: inherit;
-    text-decoration: none;
-    cursor: pointer;
-  }
-
-  .err-action-primary {
-    background: var(--color-primary-500);
-    color: var(--color-secondary-950);
-    font-weight: 700;
+  .err-actions .btn[data-variant="secondary"] {
+    border-color: var(--color-accent);
   }
 
   .err-ref {
@@ -204,14 +189,14 @@
     min-width: 0;
     min-height: var(--eb-min-height, var(--spacing-target));
     padding: var(--spacing-4);
-    border: var(--border-width) dashed var(--color-primary-subtle);
+    border: var(--border-width) dashed var(--color-border-strong);
     color: var(--color-text);
     font-family: var(--font-mono);
   }
 
   .eb-title {
     margin: 0;
-    color: var(--color-primary-500);
+    color: var(--color-accent);
     font-size: var(--text-sm);
     font-weight: 700;
   }
@@ -226,21 +211,17 @@
   .eb-reload {
     min-height: var(--spacing-target);
     padding: 0 var(--spacing-4);
-    border: var(--border-width) solid var(--color-primary-500);
+    border: var(--border-width) solid var(--color-accent);
     background: transparent;
-    color: var(--color-primary-500);
+    color: var(--color-accent);
     font: inherit;
     font-weight: 700;
     cursor: pointer;
   }
 
-  .err-ref .copy-btn {
-    min-height: var(--spacing-target);
-    padding: 0 var(--spacing-3);
-    border: var(--border-width) solid var(--color-primary-subtle);
-    background: transparent;
-    color: var(--color-primary-500);
+  .err-ref .btn.copy-btn {
+    border-color: var(--color-border-strong);
+    color: var(--color-accent);
     font: inherit;
-    cursor: pointer;
   }
 }

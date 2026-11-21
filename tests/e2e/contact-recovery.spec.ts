@@ -5,6 +5,7 @@ import { VIEWPORTS } from './_helpers/geometry';
 import { waitForHydration } from './_helpers/hydration';
 import { installMockBackend, type MockState } from './_helpers/mock-backend';
 import { freezeMotion } from './_helpers/motion';
+import { revealDeferredContent } from './_helpers/snapshot';
 
 const HOME_PATHS: Record<SiteLocale, string> = { en: '/', pt: '/pt' };
 const FORM_SELECTOR = '[data-testid="contact-form"]';
@@ -21,6 +22,7 @@ async function openForm(page: Page, locale: SiteLocale) {
   await page.setViewportSize(VIEWPORTS.PHONE);
   await freezeMotion(page);
   await page.goto(HOME_PATHS[locale]);
+  await revealDeferredContent(page);
   const form = page.getByTestId('contact-form');
   await form.scrollIntoViewIfNeeded();
   await expect(form).toBeVisible();
@@ -52,7 +54,7 @@ for (const locale of Object.values(SITE_LOCALE)) {
   const { form: copy } = contactCopy[locale];
   const errors = contactCopy[locale].errors;
 
-  test.describe(`contact failure recovery, ${locale}`, () => {
+  test.describe(`contact failure recovery, ${locale}`, { tag: '@cross-browser' }, () => {
     test('a server error keeps the text, and the resubmit delivers it', async ({ page }) => {
       const state: MockState = { contact: 'server-error', log: 'accept' };
       await installMockBackend(page, state);

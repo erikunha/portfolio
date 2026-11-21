@@ -1,0 +1,884 @@
+#!/usr/bin/env tsx
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
+import { join } from 'node:path';
+import postcss from 'postcss';
+import { isMain } from '../lib/is-main';
+import { listFiles } from '../lib/walk';
+
+const HEX = /#(?:[0-9a-fA-F]{8}|[0-9a-fA-F]{6}|[0-9a-fA-F]{4}|[0-9a-fA-F]{3})\b/g;
+const COLOR_FUNCTION =
+  /\b(?:rgba?|hsla?|hwb|lab|lch|oklab|oklch)\(\s*[\d.][^)]*\)|\bcolor\(\s*[a-z][\w-]*\s+[\d.][^)]*\)/gi;
+const TAILWIND_BLACK_WHITE =
+  /(?<![\w-])(?:[^\s'"`:]+:)*(?:bg|text|border)-(?:black|white)(?:\/\d+)?(?![\w-])/g;
+const Z_INDEX_DECLARATION = /z-index:\s*([^;}\n]+)/g;
+const Z_TOKEN_DECLARATION = /--z-[\w-]+\s*:\s*[^;}\n]+/g;
+const Z_TOKEN_REFERENCE = /^var\(--z-[\w-]+\)$/;
+const Z_UTILITY = /(?<![\w-])-?z-(?:\[(?!var\(--z-)[^\]]*\]|\d+|auto)(?![\w-])/g;
+const Z_INLINE_STYLE = /\bzIndex:[ \t]*(?![ \t])(?!['"`]var\(--z-[\w-]+\)['"`])[^,}\n]+/g;
+const FOCUS_SELECTOR = /:focus(?:-visible|-within)?\b/;
+const FOCUS_VISIBLE_SELECTOR = /:focus-visible\b/;
+const FOCUS_RING_VALUE = 'var(--focus-ring)';
+const FOCUS_OFFSET_VALUES = new Set(['var(--focus-ring-offset)', 'var(--focus-ring-offset-inset)']);
+const NO_OUTLINE = 'none';
+const FORCED_COLORS_SHEET = 'forced-colors.css';
+const THEME_SHEET = 'theme.css';
+const CSS_DIRECTORY = 'app/css';
+const COMPONENT_CSS_DIRECTORY = 'design-system/components';
+const CSS_FILE = /\.css$/;
+const TSX_FILE = /\.tsx$/;
+const SOURCE_FILE = /\.tsx?$/;
+const TSX_SKIPPED = /\.(?:test|e2e)\.tsx?$/;
+const TOKEN_FILE = /-tokens\.ts$/;
+const TEST_FILE = /\.test\.tsx?$/;
+const TOKEN_ROOTS = ['app', 'components', 'content', 'design-system', 'lib'];
+const SKIPPED_DIRS = new Set(['node_modules', '.next']);
+const ALLOWLIST_PATH = 'scripts/gates/lint-css-tokens.allowlist.json';
+const CONSUMER_FILE = /\.(?:css|tsx?|mdx)$/;
+const CONSUMER_SKIPPED = /\.(?:test|e2e|spec)\.tsx?$/;
+const THEME_AT_RULE = 'theme';
+const CUSTOM_PROPERTY = '--';
+const NAMESPACE_WILDCARD = '-*';
+const NAMESPACE_RESET_VALUE = 'initial';
+const COLOR_UTILITIES = [
+  'bg',
+  'text',
+  'border',
+  'border-x',
+  'border-y',
+  'border-t',
+  'border-r',
+  'border-b',
+  'border-l',
+  'ring',
+  'ring-offset',
+  'fill',
+  'stroke',
+  'outline',
+  'decoration',
+  'accent',
+  'caret',
+  'shadow',
+  'inset-shadow',
+  'drop-shadow',
+  'from',
+  'via',
+  'to',
+  'divide',
+  'placeholder',
+  'selection',
+];
+const SPACING_UTILITIES = [
+  'p',
+  'px',
+  'py',
+  'pt',
+  'pr',
+  'pb',
+  'pl',
+  'ps',
+  'pe',
+  'm',
+  'mx',
+  'my',
+  'mt',
+  'mr',
+  'mb',
+  'ml',
+  'ms',
+  'me',
+  'gap',
+  'gap-x',
+  'gap-y',
+  'space-x',
+  'space-y',
+  'w',
+  'h',
+  'size',
+  'min-w',
+  'min-h',
+  'max-w',
+  'max-h',
+  'inset',
+  'inset-x',
+  'inset-y',
+  'top',
+  'right',
+  'bottom',
+  'left',
+  'start',
+  'end',
+  'translate-x',
+  'translate-y',
+  'basis',
+  'indent',
+  'scroll-m',
+  'scroll-p',
+];
+const NAMESPACE_UTILITIES: Record<string, string[]> = {
+  color: COLOR_UTILITIES,
+  text: ['text'],
+  leading: ['leading'],
+  tracking: ['tracking'],
+  spacing: SPACING_UTILITIES,
+  radius: ['rounded', 'rounded-t', 'rounded-r', 'rounded-b', 'rounded-l', 'rounded-s', 'rounded-e'],
+  shadow: ['shadow'],
+  font: ['font'],
+};
+const CLASS_IN_SELECTOR = /\.(-?[_a-zA-Z][\w-]*)/g;
+const GENERATED_UTILITIES: Record<string, string[]> = {
+  ...NAMESPACE_UTILITIES,
+  container: ['w', 'min-w', 'max-w', 'basis'],
+  animate: ['animate'],
+  ease: ['ease'],
+  blur: ['blur', 'backdrop-blur'],
+  aspect: ['aspect'],
+};
+const COLOR_VARIABLE_PREFIX = '--color-';
+const ROLE_TOKENS = [
+  'surface',
+  'surface-raised',
+  'border',
+  'border-strong',
+  'accent',
+  'on-accent',
+  'text',
+  'text-muted',
+  'focus',
+  'warning',
+  'danger',
+  'scrim',
+];
+const COLOR_ALIAS = /^var\((--color-[\w-]+)\)$/;
+const ORDINAL_HUES: Record<string, string> = {
+  primary: 'signal',
+  secondary: 'carbon',
+  tertiary: 'sage',
+  quinary: 'gold',
+  senary: 'coral',
+};
+const ORDINAL_STEP = '(?:\\d+|subtle|border|faint|quiet)';
+const GLOW_STOP = 'glow-(\\d+)';
+const REMOVED_GREEN_TOKEN = `${COLOR_VARIABLE_PREFIX}green`;
+const GREEN_ROLE = `${COLOR_VARIABLE_PREFIX}accent`;
+const SIGNAL_HUE = 'signal';
+const BREAKPOINT_NAMESPACE = 'breakpoint';
+const TOKEN_EQUAL_NAMESPACES = ['tracking', 'radius', 'shadow', 'leading', 'text', 'spacing'];
+const SUBPROPERTY_SEPARATOR = '--';
+const ARBITRARY_CLASS = /(?<![\w-])([a-z][a-z-]*)-\[([^\]\s'"`]+)\]/g;
+const WHITESPACE = /\s+/g;
+const CSS_PX_LENGTH = /(?<![\w.-])-?(?:\d+\.?\d*|\.\d+)px(?![\w-])/g;
+const CSS_STRING = /"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'/g;
+const BORDER_WIDTH_PROPERTY =
+  /^(?:border(?:-(?:top|right|bottom|left|block|inline)(?:-(?:start|end))?)?(?:-width)?|outline(?:-width)?)$/;
+const WIDTH_QUERY_AT_RULES = new Set(['media', 'container']);
+const ZERO_PX = '0px';
+const HAIRLINE_PX = new Set(['1px', '-1px']);
+const ARBITRARY_PX_SIZE = /(?<![^\s'"`])[^\s'"`]*\[-?\d*\.?\d+px\]/g;
+
+const TEXT_SIZE_SHORTHAND = '(?:xs|sm|base|lg|\\d*xl)';
+const ALPHA_UTILITY = new RegExp(
+  `(?<![\\w-])(?:[^\\s'"\`:]+:)*(?:${[...COLOR_UTILITIES]
+    .sort((a, b) => b.length - a.length)
+    .map(escapeRegExp)
+    .join(
+      '|',
+    )})-(?!${TEXT_SIZE_SHORTHAND}/)(?:\\([^)\\s]*\\)|\\[(?![\\d.])[^\\]\\s]*\\]|[a-z][\\w-]*)/(?:\\d+|\\[[\\d.]+\\])(?![\\w/-])`,
+  'g',
+);
+const COLOR_MIX_OPEN = 'color-mix(';
+const COLOR_MIX_CALL = /(?<![\w-])color-mix\(/g;
+
+export interface HexHit {
+  line: number;
+  hex: string;
+}
+
+export interface ColorHit {
+  line: number;
+  literal: string;
+}
+
+export interface RawColorHit extends ColorHit {
+  file: string;
+}
+
+export interface TokenEqualHit extends ColorHit {
+  utility: string;
+}
+
+export interface CollisionHit {
+  file: string;
+  line: number;
+  literal: string;
+}
+
+export interface AllowEntry {
+  file: string;
+  literal: string;
+  count: number;
+  reason: string;
+}
+
+const parsedSheets = new Map<string, postcss.Root>();
+
+function parseCss(css: string): postcss.Root {
+  const cached = parsedSheets.get(css);
+  if (cached) return cached;
+  const root = postcss.parse(css);
+  parsedSheets.set(css, root);
+  return root;
+}
+
+function stripComments(source: string): string {
+  return source
+    .replace(/\/\*[\s\S]*?\*\//g, (m) => m.replace(/[^\n]/g, ' '))
+    .replace(/^\s*\/\/.*$/gm, (m) => ' '.repeat(m.length));
+}
+
+function scan(source: string, pattern: RegExp): ColorHit[] {
+  const out: ColorHit[] = [];
+  stripComments(source)
+    .split('\n')
+    .forEach((line, i) => {
+      for (const match of line.matchAll(pattern)) {
+        out.push({ line: i + 1, literal: match[0] });
+      }
+    });
+  return out;
+}
+
+export function findAlphaUtilities(source: string): ColorHit[] {
+  return scan(source, ALPHA_UTILITY);
+}
+
+export function findArbitraryPxSizes(source: string): ColorHit[] {
+  return scan(source, ARBITRARY_PX_SIZE);
+}
+
+export function findInlineColorMix(source: string): ColorHit[] {
+  return scan(source, COLOR_MIX_CALL);
+}
+
+export function findNonPropertyColorMix(css: string): ColorHit[] {
+  const hits: ColorHit[] = [];
+  parseCss(css).walkDecls((decl) => {
+    if (decl.prop.startsWith(CUSTOM_PROPERTY) || !decl.value.includes(COLOR_MIX_OPEN)) return;
+    hits.push({ line: decl.source?.start?.line ?? 0, literal: `${decl.prop}: ${decl.value}` });
+  });
+  return hits.sort((a, b) => a.line - b.line);
+}
+
+function isAllowedCssPx(length: string, property: string): boolean {
+  if (length === ZERO_PX) return true;
+  return HAIRLINE_PX.has(length) && !BORDER_WIDTH_PROPERTY.test(property);
+}
+
+function rawPxLengths(value: string, property: string): boolean {
+  return [...value.replace(CSS_STRING, '""').matchAll(CSS_PX_LENGTH)].some(
+    (match) => !isAllowedCssPx(match[0], property),
+  );
+}
+
+export function findRawCssPx(css: string): ColorHit[] {
+  const hits: ColorHit[] = [];
+  const root = parseCss(css);
+  root.walkDecls((decl) => {
+    if (rawPxLengths(decl.value, decl.prop)) {
+      hits.push({ line: decl.source?.start?.line ?? 0, literal: `${decl.prop}: ${decl.value}` });
+    }
+  });
+  root.walkAtRules((rule) => {
+    if (WIDTH_QUERY_AT_RULES.has(rule.name) && rawPxLengths(rule.params, '')) {
+      hits.push({
+        line: rule.source?.start?.line ?? 0,
+        literal: `@${rule.name} ${rule.params}`,
+      });
+    }
+  });
+  return hits.sort((a, b) => a.line - b.line);
+}
+
+export function findRawHex(css: string): HexHit[] {
+  return scan(css, HEX).map(({ line, literal }) => ({ line, hex: literal }));
+}
+
+export function findRawColorFunctions(css: string): ColorHit[] {
+  return scan(css, COLOR_FUNCTION);
+}
+
+export function findRawColors(source: string): ColorHit[] {
+  return [...scan(source, HEX), ...scan(source, COLOR_FUNCTION)].sort((a, b) => a.line - b.line);
+}
+
+export function findRawTsxColors(source: string): ColorHit[] {
+  return [...findRawColors(source), ...scan(source, TAILWIND_BLACK_WHITE)].sort(
+    (a, b) => a.line - b.line,
+  );
+}
+
+export function findRawZIndex(source: string, language: 'css' | 'tsx'): ColorHit[] {
+  const code = stripComments(source);
+  const hits: ColorHit[] = [];
+  const lines = code.split('\n');
+  lines.forEach((line, i) => {
+    if (language === 'css') {
+      for (const match of line.matchAll(Z_INDEX_DECLARATION)) {
+        const value = (match[1] ?? '').trim();
+        if (!Z_TOKEN_REFERENCE.test(value) && value !== 'auto') {
+          hits.push({ line: i + 1, literal: match[0].trim() });
+        }
+      }
+      for (const match of line.matchAll(Z_TOKEN_DECLARATION)) {
+        hits.push({ line: i + 1, literal: match[0].trim() });
+      }
+    } else {
+      for (const match of line.matchAll(Z_UTILITY)) hits.push({ line: i + 1, literal: match[0] });
+      for (const match of line.matchAll(Z_INLINE_STYLE)) {
+        hits.push({ line: i + 1, literal: match[0].trim() });
+      }
+    }
+  });
+  return hits.sort((a, b) => a.line - b.line);
+}
+
+export function findRawFocusRing(css: string): ColorHit[] {
+  const hits: ColorHit[] = [];
+  parseCss(css).walkRules((rule) => {
+    if (!FOCUS_SELECTOR.test(rule.selector)) return;
+    const visibleOnly = FOCUS_VISIBLE_SELECTOR.test(rule.selector);
+    rule.each((node) => {
+      if (node.type !== 'decl' || !node.prop.startsWith('outline')) return;
+      const value = node.value.trim();
+      const allowed =
+        node.prop === 'outline'
+          ? value === NO_OUTLINE || (visibleOnly && value === FOCUS_RING_VALUE)
+          : node.prop === 'outline-offset' && visibleOnly && FOCUS_OFFSET_VALUES.has(value);
+      if (!allowed) {
+        hits.push({ line: node.source?.start?.line ?? 0, literal: `${node.prop}: ${value}` });
+      }
+    });
+  });
+  return hits.sort((a, b) => a.line - b.line);
+}
+
+export function applyAllowlist(
+  hits: RawColorHit[],
+  entries: AllowEntry[],
+): { violations: RawColorHit[]; stale: AllowEntry[] } {
+  const remaining = new Map(entries.map((entry) => [`${entry.file}\u0000${entry.literal}`, entry]));
+  const used = new Map<string, number>();
+  const violations: RawColorHit[] = [];
+  for (const hit of hits) {
+    const key = `${hit.file}\u0000${hit.literal}`;
+    const entry = remaining.get(key);
+    const seen = used.get(key) ?? 0;
+    if (entry && seen < entry.count) {
+      used.set(key, seen + 1);
+    } else {
+      violations.push(hit);
+    }
+  }
+  const stale = entries.filter(
+    (entry) => (used.get(`${entry.file}\u0000${entry.literal}`) ?? 0) < entry.count,
+  );
+  return { violations, stale };
+}
+
+function listUnderTokenRoots(root: string, include: (name: string) => boolean): string[] {
+  return TOKEN_ROOTS.filter((top) => existsSync(join(root, top)))
+    .flatMap((top) =>
+      listFiles(join(root, top), { include, skipDirs: SKIPPED_DIRS }).map((rel) => join(top, rel)),
+    )
+    .sort();
+}
+
+export function findTokenFiles(root: string): string[] {
+  return listUnderTokenRoots(root, (name) => TOKEN_FILE.test(name) && !TEST_FILE.test(name));
+}
+
+export function assertScannable(
+  dirExists: boolean,
+  files: string[],
+): { ok: true } | { ok: false; reason: string } {
+  if (!dirExists) return { ok: false, reason: 'app/css/ does not exist' };
+  if (files.length === 0) {
+    return { ok: false, reason: 'app/css/ has no .css files (besides theme.css) to scan' };
+  }
+  return { ok: true };
+}
+
+function loadAllowlist(root: string): AllowEntry[] {
+  return JSON.parse(readFileSync(join(root, ALLOWLIST_PATH), 'utf8')) as AllowEntry[];
+}
+
+export function findTsxFiles(root: string): string[] {
+  return listUnderTokenRoots(root, (name) => TSX_FILE.test(name) && !TSX_SKIPPED.test(name));
+}
+
+export function findSourceFiles(root: string): string[] {
+  return listUnderTokenRoots(root, (name) => SOURCE_FILE.test(name) && !TSX_SKIPPED.test(name));
+}
+
+export interface RepoScan {
+  cssPx: RawColorHit[];
+  colors: RawColorHit[];
+  zIndex: RawColorHit[];
+  focus: RawColorHit[];
+  tokenEqual: RawColorHit[];
+  pxSizes: RawColorHit[];
+  primitives: RawColorHit[];
+  ordinals: RawColorHit[];
+  tints: RawColorHit[];
+  collisions: CollisionHit[];
+}
+
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function themeTokenNames(themeCss: string): string[] {
+  const names: string[] = [];
+  postcss.parse(themeCss).walkAtRules(THEME_AT_RULE, (rule) => {
+    rule.each((node) => {
+      if (node.type === 'decl' && node.prop.startsWith(CUSTOM_PROPERTY)) names.push(node.prop);
+    });
+  });
+  return names;
+}
+
+function utilityPattern(token: string): RegExp | undefined {
+  const body = token.slice(CUSTOM_PROPERTY.length);
+  const dash = body.indexOf('-');
+  if (dash < 0) return undefined;
+  const namespace = body.slice(0, dash);
+  const name = escapeRegExp(body.slice(dash + 1));
+  if (namespace === BREAKPOINT_NAMESPACE) return new RegExp(`(?<![\\w-])(?:max-|min-)?${name}:`);
+  const prefixes = NAMESPACE_UTILITIES[namespace];
+  if (!prefixes) return undefined;
+  return new RegExp(`(?<![\\w-])-?(?:${prefixes.map(escapeRegExp).join('|')})-${name}(?![\\w-])`);
+}
+
+function generatedUtilityNames(themeCss: string): Set<string> {
+  const names = new Set<string>();
+  for (const token of themeTokenNames(themeCss)) {
+    const body = token.slice(CUSTOM_PROPERTY.length);
+    const dash = body.indexOf('-');
+    if (dash < 0 || body.includes(SUBPROPERTY_SEPARATOR) || body.endsWith(NAMESPACE_WILDCARD)) {
+      continue;
+    }
+    const suffix = body.slice(dash + 1);
+    for (const prefix of GENERATED_UTILITIES[body.slice(0, dash)] ?? []) {
+      names.add(`${prefix}-${suffix}`);
+    }
+  }
+  return names;
+}
+
+function setsOnlyCustomProperties(rule: postcss.Rule): boolean {
+  let declarations = 0;
+  let properties = 0;
+  rule.each((node) => {
+    if (node.type !== 'decl') return;
+    declarations += 1;
+    if (node.prop.startsWith(CUSTOM_PROPERTY)) properties += 1;
+  });
+  return declarations > 0 && declarations === properties;
+}
+
+export function findUtilityClassCollisions(
+  themeCss: string,
+  sheets: { file: string; css: string }[],
+): CollisionHit[] {
+  const utilities = generatedUtilityNames(themeCss);
+  const hits: CollisionHit[] = [];
+  for (const { file, css } of sheets) {
+    parseCss(css).walkRules((rule) => {
+      if (setsOnlyCustomProperties(rule)) return;
+      for (const match of rule.selector.matchAll(CLASS_IN_SELECTOR)) {
+        const name = match[1] ?? '';
+        if (utilities.has(name)) {
+          hits.push({ file, line: rule.source?.start?.line ?? 0, literal: name });
+        }
+      }
+    });
+  }
+  return hits;
+}
+
+function normalizeValue(value: string): string {
+  return value.replace(WHITESPACE, '').toLowerCase();
+}
+
+function memoizeByTheme<T>(compute: (themeCss: string) => T): (themeCss: string) => T {
+  let lastTheme: string | undefined;
+  let lastValue: T | undefined;
+  return (themeCss) => {
+    if (lastTheme !== themeCss || lastValue === undefined) {
+      lastValue = compute(themeCss);
+      lastTheme = themeCss;
+    }
+    return lastValue;
+  };
+}
+
+const tokenUtilities = memoizeByTheme(computeTokenUtilities);
+const rolePrimitivesOf = memoizeByTheme(computeRolePrimitives);
+
+function computeTokenUtilities(themeCss: string): Map<string, string> {
+  const byPrefixAndValue = new Map<string, string>();
+  postcss.parse(themeCss).walkAtRules(THEME_AT_RULE, (rule) => {
+    rule.each((node) => {
+      if (node.type !== 'decl' || !node.prop.startsWith(CUSTOM_PROPERTY)) return;
+      const body = node.prop.slice(CUSTOM_PROPERTY.length);
+      const dash = body.indexOf('-');
+      if (dash < 0 || body.includes(SUBPROPERTY_SEPARATOR)) return;
+      const namespace = body.slice(0, dash);
+      if (!TOKEN_EQUAL_NAMESPACES.includes(namespace)) return;
+      const name = body.slice(dash + 1);
+      for (const prefix of NAMESPACE_UTILITIES[namespace] ?? []) {
+        const key = `${prefix}\u0000${normalizeValue(node.value)}`;
+        if (!byPrefixAndValue.has(key)) byPrefixAndValue.set(key, `${prefix}-${name}`);
+      }
+    });
+  });
+  return byPrefixAndValue;
+}
+
+export function findTokenEqualArbitraryValues(themeCss: string, source: string): TokenEqualHit[] {
+  const utilities = tokenUtilities(themeCss);
+  const hits: TokenEqualHit[] = [];
+  stripComments(source)
+    .split('\n')
+    .forEach((line, i) => {
+      for (const match of line.matchAll(ARBITRARY_CLASS)) {
+        const value = normalizeValue((match[2] ?? '').replace(/_/g, ' '));
+        const utility = utilities.get(`${match[1]}\u0000${value}`);
+        if (utility) hits.push({ line: i + 1, literal: match[0], utility });
+      }
+    });
+  return hits;
+}
+
+export function rolePrimitives(themeCss: string): Map<string, string[]> {
+  return new Map(rolePrimitivesOf(themeCss));
+}
+
+function computeRolePrimitives(themeCss: string): Map<string, string[]> {
+  const byPrimitive = new Map<string, string[]>();
+  postcss.parse(themeCss).walkDecls((decl) => {
+    const role = ROLE_TOKENS.find((name) => decl.prop === `${COLOR_VARIABLE_PREFIX}${name}`);
+    const target = COLOR_ALIAS.exec(decl.value.trim())?.[1];
+    if (!role || !target) return;
+    const primitive = target.slice(COLOR_VARIABLE_PREFIX.length);
+    byPrimitive.set(primitive, [...(byPrimitive.get(primitive) ?? []), role]);
+  });
+  return byPrimitive;
+}
+
+const primitivePattern = memoizeByTheme((themeCss: string): RegExp | undefined => {
+  const roles = rolePrimitivesOf(themeCss);
+  if (roles.size === 0) return undefined;
+  const names = [...roles.keys()].map(escapeRegExp).join('|');
+  const utilities = COLOR_UTILITIES.map(escapeRegExp).join('|');
+  return new RegExp(
+    `${escapeRegExp(COLOR_VARIABLE_PREFIX)}(${names})(?![\\w-])|(?<![\\w-])(?:${utilities})-(${names})(?![\\w-])`,
+    'g',
+  );
+});
+
+export function findPrimitiveColorUses(themeCss: string, source: string): ColorHit[] {
+  const roles = rolePrimitivesOf(themeCss);
+  const pattern = primitivePattern(themeCss);
+  if (!pattern) return [];
+  const hits: ColorHit[] = [];
+  stripComments(source)
+    .split('\n')
+    .forEach((line, i) => {
+      for (const match of line.matchAll(pattern)) {
+        const primitive = match[1] ?? match[2] ?? '';
+        const use = (roles.get(primitive) ?? [])
+          .map((role) => `${COLOR_VARIABLE_PREFIX}${role}`)
+          .join(' or ');
+        hits.push({ line: i + 1, literal: `${match[0]} (use ${use})` });
+      }
+    });
+  return hits;
+}
+
+function ordinalPrefix(): string {
+  const utilities = COLOR_UTILITIES.map(escapeRegExp).join('|');
+  return `(?<![\\w-])((?:${utilities})-|${escapeRegExp(COLOR_VARIABLE_PREFIX)})`;
+}
+
+const ordinalPatterns = memoizeOrdinalPatterns();
+
+function memoizeOrdinalPatterns(): () => { ramp: RegExp; glow: RegExp; green: RegExp } {
+  let cached: { ramp: RegExp; glow: RegExp; green: RegExp } | undefined;
+  return () => {
+    if (cached) return cached;
+    const families = Object.keys(ORDINAL_HUES).join('|');
+    const prefix = ordinalPrefix();
+    cached = {
+      ramp: new RegExp(`${prefix}(${families})-(${ORDINAL_STEP})(?![\\w-])`, 'g'),
+      glow: new RegExp(`${prefix}${GLOW_STOP}(?![\\w-])`, 'g'),
+      green: new RegExp(`(?<![\\w-])${escapeRegExp(REMOVED_GREEN_TOKEN)}(?![\\w-])`, 'g'),
+    };
+    return cached;
+  };
+}
+
+export function findOrdinalPaletteNames(source: string): ColorHit[] {
+  const { ramp, glow, green } = ordinalPatterns();
+  const hits: ColorHit[] = [];
+  stripComments(source)
+    .split('\n')
+    .forEach((line, i) => {
+      for (const match of line.matchAll(ramp)) {
+        const [whole, lead = '', family = '', step = ''] = match;
+        hits.push({
+          line: i + 1,
+          literal: `${whole} (use ${lead}${ORDINAL_HUES[family]}-${step})`,
+        });
+      }
+      for (const match of line.matchAll(glow)) {
+        const [whole, lead = '', alpha = ''] = match;
+        hits.push({ line: i + 1, literal: `${whole} (use ${lead}${SIGNAL_HUE}-glow-${alpha})` });
+      }
+      for (const match of line.matchAll(green)) {
+        hits.push({ line: i + 1, literal: `${match[0]} (use ${GREEN_ROLE})` });
+      }
+    });
+  return hits.sort((a, b) => a.line - b.line);
+}
+
+function namespaceResets(themeCss: string): Set<string> {
+  const resets = new Set<string>();
+  postcss.parse(themeCss).walkAtRules(THEME_AT_RULE, (rule) => {
+    rule.each((node) => {
+      if (
+        node.type === 'decl' &&
+        node.prop.startsWith(CUSTOM_PROPERTY) &&
+        node.prop.endsWith(NAMESPACE_WILDCARD) &&
+        node.value.trim() === NAMESPACE_RESET_VALUE
+      ) {
+        resets.add(node.prop);
+      }
+    });
+  });
+  return resets;
+}
+
+export function findUnusedThemeTokens(themeCss: string, sources: string[]): string[] {
+  const haystacks = [themeCss, ...sources].map(stripComments);
+  const resets = namespaceResets(themeCss);
+  return themeTokenNames(themeCss).filter((token) => {
+    if (resets.has(token)) return false;
+    const reference = new RegExp(`${escapeRegExp(token)}(?![\\w-])(?!\\s*:)`);
+    if (haystacks.some((text) => reference.test(text))) return false;
+    const utility = utilityPattern(token);
+    return !(utility && haystacks.some((text) => utility.test(text)));
+  });
+}
+
+export function findConsumerFiles(root: string): string[] {
+  return listUnderTokenRoots(
+    root,
+    (name) => CONSUMER_FILE.test(name) && !CONSUMER_SKIPPED.test(name),
+  );
+}
+
+export function findComponentCss(root: string): string[] {
+  const directory = join(root, COMPONENT_CSS_DIRECTORY);
+  return existsSync(directory)
+    ? listFiles(directory, { include: CSS_FILE, skipDirs: SKIPPED_DIRS })
+        .map((rel) => join(COMPONENT_CSS_DIRECTORY, rel))
+        .sort()
+    : [];
+}
+
+export function scanRepo(root: string, cssFiles: string[]): RepoScan {
+  const cache = new Map<string, string>();
+  const read = (file: string): string => {
+    const cached = cache.get(file);
+    if (cached !== undefined) return cached;
+    const text = readFileSync(join(root, file), 'utf8');
+    cache.set(file, text);
+    return text;
+  };
+  const tsxFiles = findTsxFiles(root);
+  const sourceFiles = findSourceFiles(root);
+  const consumerFiles = findConsumerFiles(root);
+  const tag = (file: string, hits: ColorHit[]): RawColorHit[] =>
+    hits.map((hit) => ({ ...hit, file }));
+  const cssTargets = [...cssFiles.map((f) => `app/css/${f}`), ...findComponentCss(root)];
+  const colorTargets = [...cssTargets, ...findTokenFiles(root)];
+  const themePath = `app/css/${THEME_SHEET}`;
+  const themeCss = existsSync(join(root, themePath)) ? read(themePath) : '';
+  const sheets = cssTargets.map((file) => ({ file, css: read(file) }));
+  return {
+    collisions: findUtilityClassCollisions(
+      [themeCss, ...sheets.map((sheet) => sheet.css)].join('\n'),
+      sheets,
+    ),
+    cssPx: cssTargets.flatMap((file) => tag(file, findRawCssPx(read(file)))),
+    colors: [
+      ...colorTargets.flatMap((file) => tag(file, findRawColors(read(file)))),
+      ...tsxFiles.flatMap((file) => tag(file, findRawTsxColors(read(file)))),
+    ],
+    zIndex: [
+      ...cssTargets.flatMap((file) => tag(file, findRawZIndex(read(file), 'css'))),
+      ...tsxFiles.flatMap((file) => tag(file, findRawZIndex(read(file), 'tsx'))),
+    ],
+    focus: cssTargets
+      .filter((file) => !file.endsWith(FORCED_COLORS_SHEET))
+      .flatMap((file) => tag(file, findRawFocusRing(read(file)))),
+    tokenEqual: tsxFiles.flatMap((file) =>
+      findTokenEqualArbitraryValues(themeCss, read(file)).map((hit) => ({
+        file,
+        line: hit.line,
+        literal: `${hit.literal} (use ${hit.utility})`,
+      })),
+    ),
+    pxSizes: sourceFiles.flatMap((file) => tag(file, findArbitraryPxSizes(read(file)))),
+    primitives: consumerFiles
+      .filter((file) => file !== themePath)
+      .flatMap((file) => tag(file, findPrimitiveColorUses(themeCss, read(file)))),
+    ordinals: consumerFiles.flatMap((file) => tag(file, findOrdinalPaletteNames(read(file)))),
+    tints: [
+      ...[...cssTargets, ...(themeCss ? [themePath] : [])].flatMap((file) =>
+        tag(file, findNonPropertyColorMix(read(file))),
+      ),
+      ...sourceFiles.flatMap((file) => [
+        ...tag(file, findAlphaUtilities(read(file))),
+        ...tag(file, findInlineColorMix(read(file))),
+      ]),
+    ],
+  };
+}
+
+export function readThemeSheets(root: string): string {
+  const cssDir = join(root, CSS_DIRECTORY);
+  const sheets = [THEME_SHEET, ...listScannedCss(root).sort()];
+  return sheets.map((sheet) => readFileSync(join(cssDir, sheet), 'utf8')).join('\n');
+}
+
+export function listScannedCss(root: string): string[] {
+  const cssDir = join(root, 'app/css');
+  return existsSync(cssDir)
+    ? readdirSync(cssDir).filter((f) => f.endsWith('.css') && f !== THEME_SHEET)
+    : [];
+}
+
+function report(label: string, hint: string, hits: RawColorHit[]): boolean {
+  if (hits.length === 0) return false;
+  console.error(`[css-tokens] ${hits.length} ${label}:`);
+  for (const v of hits) console.error(`  ✗ ${v.file}:${v.line}: ${v.literal}`);
+  console.error(hint);
+  return true;
+}
+
+function main(): void {
+  const root = process.cwd();
+  const dirExists = existsSync(join(root, 'app/css'));
+  const files = listScannedCss(root);
+
+  const scannable = assertScannable(dirExists, files);
+  if (!scannable.ok) {
+    console.error(
+      `[css-tokens] GATE ERROR: ${scannable.reason}; the token-boundary gate cannot run. Refusing to pass vacuously.`,
+    );
+    process.exit(2);
+  }
+
+  const scan = scanRepo(root, files);
+  const { violations: allowed, stale } = applyAllowlist(
+    [...scan.colors, ...scan.pxSizes],
+    loadAllowlist(root),
+  );
+  const pxSizes = new Set(scan.pxSizes);
+  const violations = allowed.filter((hit) => !pxSizes.has(hit));
+  const pxViolations = allowed.filter((hit) => pxSizes.has(hit));
+
+  let failed = report(
+    `raw color literal(s) outside theme.css and ${ALLOWLIST_PATH}`,
+    'Brand colors live in app/css/theme.css; reference them via var(--color-...).',
+    violations,
+  );
+  failed =
+    report(
+      'z-index value(s) outside the --z-* scale',
+      'The stacking scale lives in app/css/theme.css (--z-*); reference it via var(--z-...) or z-(--z-...).',
+      scan.zIndex,
+    ) || failed;
+  failed =
+    report(
+      'focus ring declaration(s) that bypass the shared ring',
+      'A focus rule uses outline: var(--focus-ring) with outline-offset: var(--focus-ring-offset) (or -inset), on :focus-visible only.',
+      scan.focus,
+    ) || failed;
+  failed =
+    report(
+      'arbitrary value(s) that equal an @theme token',
+      'Use the token utility named on each line instead of the arbitrary value.',
+      scan.tokenEqual,
+    ) || failed;
+  failed =
+    report(
+      'arbitrary px size(s) in a class string',
+      'Name the size in the spacing micro-scale in app/css/theme.css (--spacing-*) and use its utility; do not write [Npx].',
+      pxViolations,
+    ) || failed;
+  failed =
+    report(
+      'raw px length(s) in a stylesheet',
+      'Use a token or a rem step: var(--border-width) for a border or outline width, the --spacing-* micro-scale for a small size, rem for drawn geometry. Only 0px and a 1px hairline offset stay px.',
+      scan.cssPx,
+    ) || failed;
+  failed =
+    report(
+      'primitive color use(s) outside theme.css',
+      'Name the role the site means (the one shown on each line) and read it as var(--color-role) or X-(color:--color-role).',
+      scan.primitives,
+    ) || failed;
+  failed =
+    report(
+      'ordinal palette name(s) that the hue names replaced',
+      'The palette is five hue ramps: signal, carbon, sage, gold and coral. Use the name shown on each line.',
+      scan.ordinals,
+    ) || failed;
+  failed =
+    report(
+      'tint(s) not held in a named custom property',
+      'A tint is one color-mix(..., transparent) in a custom property (a role tint in theme.css, or a property in the rule or @theme). Read it as bg-(color:--name) or var(--name); no /NN alpha utility, no color-mix in a class string or a non-custom property.',
+      scan.tints,
+    ) || failed;
+  failed =
+    report(
+      'component class(es) that equal a Tailwind utility generated from an @theme token',
+      'Tailwind emits a utility for every token, and it overrides the component class. Rename the class, or the token, so no <utility>-<token name> is a class in app/css.',
+      scan.collisions.map((hit) => ({ ...hit, literal: `.${hit.literal}` })),
+    ) || failed;
+  const unused = findUnusedThemeTokens(
+    readThemeSheets(root),
+    findConsumerFiles(root).map((file) => readFileSync(join(root, file), 'utf8')),
+  );
+  if (unused.length > 0) {
+    failed = true;
+    console.error(`[css-tokens] ${unused.length} @theme token(s) with no consumer:`);
+    for (const token of unused) console.error(`  ✗ ${token}`);
+    console.error('Delete the token, or reference it from CSS, TSX, TS or MDX.');
+  }
+  if (stale.length > 0) {
+    failed = true;
+    console.error(`[css-tokens] ${stale.length} stale allowlist entr(ies) in ${ALLOWLIST_PATH}:`);
+    for (const e of stale)
+      console.error(`  ✗ ${e.file}: ${e.literal} (x${e.count}) no longer matches`);
+    console.error('Delete the entry; the exception it recorded is gone.');
+  }
+  if (failed) process.exit(1);
+  console.log(
+    '[css-tokens] no raw color literals, z-index values or focus rings outside their tokens, no primitive colors where a role exists, no ordinal palette names, every tint held in a named custom property, no arbitrary values that equal a token, no arbitrary px sizes in class strings, no raw px lengths in a stylesheet, no component class that equals a token utility, and no unused @theme tokens.',
+  );
+}
+
+if (isMain(import.meta.url)) main();

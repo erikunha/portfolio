@@ -1,6 +1,7 @@
-import { readdirSync, readFileSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
+import { listFiles } from '@/scripts/lib/walk';
 
 // behavioral-test-allow: the property under test is that no shipped stylesheet or source reads the operating system preference; jsdom cannot cascade CSS
 const ROOT = path.resolve(__dirname, '..');
@@ -15,12 +16,13 @@ const OS_PREFERENCE_READERS = [
   /useReducedMotion/,
 ];
 
+const SKIP_DIRS: ReadonlySet<string> = new Set(['node_modules']);
+
 function walk(dir: string): string[] {
-  return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
-    const full = path.join(dir, entry.name);
-    if (entry.isDirectory()) return entry.name === 'node_modules' ? [] : walk(full);
-    return SOURCE_FILE.test(entry.name) && !TEST_FILE.test(entry.name) ? [full] : [];
-  });
+  return listFiles(dir, {
+    include: (name) => SOURCE_FILE.test(name) && !TEST_FILE.test(name),
+    skipDirs: SKIP_DIRS,
+  }).map((rel) => path.join(dir, rel));
 }
 
 describe('the MOTION switch is the only motion control', () => {

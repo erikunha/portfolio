@@ -29,7 +29,7 @@ vi.mock('next/server', async (importOriginal) => ({
   },
 }));
 
-vi.mock('@/lib/rate-limit', () => ({
+vi.mock('@/lib/redis', () => ({
   getRedis: () => ({
     get: vi.fn(async (key: string) => {
       commands.push({ op: 'get', key });
@@ -44,7 +44,7 @@ vi.mock('@/lib/rate-limit', () => ({
   }),
 }));
 
-vi.mock('@/lib/log', () => ({ log: { error: vi.fn(), info: vi.fn(), warn: vi.fn() } }));
+vi.mock('@/lib/log', async () => (await import('./helpers/modules')).logModule());
 
 const mockFetch = vi.fn();
 vi.stubGlobal('fetch', mockFetch);

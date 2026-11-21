@@ -1,9 +1,9 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { dirname, join, normalize } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { AI_PATHS } from '../detect-changes-paths.mjs';
+import { AI_PATHS } from '../ci/detect-changes-paths.ts';
 
-const ROOTS = ['app/api/ask/route.ts', 'scripts/ask-eval.ts'];
+const ROOTS = ['app/api/ask/route.ts', 'scripts/eval/ask-eval.ts'];
 
 const EXTENSIONS = ['.ts', '.tsx', '/index.ts', '/index.tsx'];
 
@@ -44,6 +44,10 @@ const covered = (file: string) =>
         : file === p,
   );
 
+function pasteLines(missing: readonly string[]): string {
+  return missing.map((file) => `  '${file}',`).join('\n');
+}
+
 describe('AI_PATHS covers the import closure of the ask route and the eval runner', () => {
   it('walks both roots and finds the modules they import', () => {
     const closure = importClosure(ROOTS);
@@ -55,7 +59,11 @@ describe('AI_PATHS covers the import closure of the ask route and the eval runne
     const missing = importClosure(ROOTS).filter((file) => !covered(file));
     expect(
       missing,
-      'a module the ask route or the eval runner imports is outside AI_PATHS: a change to it skips the eval and calibration gate',
+      `a module the ask route or the eval runner imports is outside AI_PATHS: a change to it skips the eval and calibration gate. Add these lines to AI_PATHS in scripts/ci/detect-changes-paths.ts:\n${pasteLines(missing)}`,
     ).toEqual([]);
+  });
+
+  it('prints one paste line per missing module, quoted and comma terminated', () => {
+    expect(pasteLines(['lib/a.ts', 'lib/b/c.ts'])).toBe("  'lib/a.ts',\n  'lib/b/c.ts',");
   });
 });

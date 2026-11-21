@@ -9,10 +9,10 @@ import {
   findRawZIndex,
   listScannedCss,
   scanRepo,
-} from '../scripts/lint-css-tokens';
+} from '../scripts/gates/lint-css-tokens';
 
 const ROOT = process.cwd();
-const ALLOWLIST_PATH = 'scripts/lint-css-tokens.allowlist.json';
+const ALLOWLIST_PATH = 'scripts/gates/lint-css-tokens.allowlist.json';
 
 const read = (file: string) => readFileSync(join(ROOT, file), 'utf8');
 
@@ -28,7 +28,7 @@ describe('modern color functions', () => {
   it('leaves color-mix and relative color syntax alone', () => {
     expect(
       findRawColorFunctions(
-        'a{color:color-mix(in srgb, var(--color-primary-500) 6%, transparent)}\nb{color:oklch(from var(--color-primary-500) l c h)}',
+        'a{color:color-mix(in srgb, var(--color-signal-500) 6%, transparent)}\nb{color:oklch(from var(--color-signal-500) l c h)}',
       ),
     ).toEqual([]);
   });
@@ -85,8 +85,8 @@ describe('findRawZIndex', () => {
 describe('findRawFocusRing', () => {
   it('flags a hand-written ring on :focus-visible', () => {
     expect(
-      findRawFocusRing('.a:focus-visible {\n  outline: 1px solid var(--color-green);\n}'),
-    ).toEqual([{ line: 2, literal: 'outline: 1px solid var(--color-green)' }]);
+      findRawFocusRing('.a:focus-visible {\n  outline: 1px solid var(--color-accent);\n}'),
+    ).toEqual([{ line: 2, literal: 'outline: 1px solid var(--color-accent)' }]);
   });
 
   it('flags an offset that is not on the ring scale', () => {

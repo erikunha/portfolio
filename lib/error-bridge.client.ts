@@ -26,25 +26,34 @@ type Payload = {
   message: string;
   stack?: string;
   url?: string;
-  userAgent?: string;
   ts: string;
+  release?: string | undefined;
+  motion?: string | undefined;
+  vw?: number;
+  digest?: string | undefined;
 };
 
 export type LogPayload = Payload;
 
-export function buildLogPayload(message: string, stack: string | undefined): LogPayload {
+export function buildLogPayload(
+  message: string,
+  stack: string | undefined,
+  digest?: string,
+): LogPayload {
+  const browser = typeof window !== 'undefined';
   return {
     level: 'error',
     message,
     ...(stack !== undefined && { stack }),
-    url: typeof window !== 'undefined' ? window.location.origin + window.location.pathname : '',
-    userAgent: typeof window !== 'undefined' ? navigator.userAgent : '',
+    url: browser ? window.location.origin + window.location.pathname : '',
     ts: new Date().toISOString(),
+    release: process.env.RELEASE,
+    ...(browser && {
+      motion: document.body?.dataset.motion,
+      vw: window.innerWidth,
+    }),
+    digest,
   };
-}
-
-function buildKey(message: string, stack: string | undefined): string {
-  return `${message}|${stack ?? ''}`;
 }
 
 function getBridgeState(win: Window): BridgeState {
@@ -106,20 +115,23 @@ export function postLog(payload: Payload): void {
     .catch(() => penalize(state, undefined));
 }
 
+function report(state: BridgeState, message: string, stack: string | undefined): void {
+  if (shouldEmit(state, `${message}|${stack ?? ''}`)) postLog(buildLogPayload(message, stack));
+}
+
+function errorStack(value: unknown): string | undefined {
+  return value instanceof Error ? value.stack : undefined;
+}
+
 function handleError(state: BridgeState, event: ErrorEvent): void {
-  const message = event.message ?? 'unknown error';
-  const stack = event.error instanceof Error ? event.error.stack : undefined;
-  if (!shouldEmit(state, buildKey(message, stack))) return;
-  postLog(buildLogPayload(message, stack));
+  report(state, event.message ?? 'unknown error', errorStack(event.error));
 }
 
 function handleRejection(state: BridgeState, event: PromiseRejectionEvent): void {
   const reason = event.reason;
   const reasonText = typeof reason === 'string' ? reason : 'unhandled promise rejection';
   const message = reason instanceof Error ? reason.message : reasonText;
-  const stack = reason instanceof Error ? reason.stack : undefined;
-  if (!shouldEmit(state, buildKey(message, stack))) return;
-  postLog(buildLogPayload(message, stack));
+  report(state, message, errorStack(reason));
 }
 
 function install(win: Window): void {

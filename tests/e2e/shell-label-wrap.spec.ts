@@ -1,12 +1,19 @@
 import { expect, type Page, test } from '@playwright/test';
 import { SITE_LOCALE, type SiteLocale } from '../../content/site-locale';
+import { WIDTH } from './_helpers/geometry';
 import { installMockBackend } from './_helpers/mock-backend';
 import { freezeMotion } from './_helpers/motion';
 import { askShell, openShell, SHELL_SELECTOR, waitForConfirmArmed } from './_helpers/shell';
 
-const WIDTHS = [320, 375, 390, 768, 1280] as const;
+const WIDTHS = [
+  WIDTH.PHONE_NARROW,
+  WIDTH.PHONE_COMPACT,
+  WIDTH.PHONE,
+  WIDTH.TABLET,
+  WIDTH.DESKTOP,
+] as const;
 const VIEWPORT_HEIGHT = 844;
-const TABLET_WIDTH = 768;
+const TABLET_WIDTH = WIDTH.TABLET;
 const PATHS: Record<SiteLocale, string> = { [SITE_LOCALE.en]: '/', [SITE_LOCALE.pt]: '/pt' };
 const QUESTION = 'are you there?';
 const SUBPIXEL_PX = 1;
@@ -58,7 +65,9 @@ async function expectOneLineLabels(page: Page, state: string) {
 
 for (const width of WIDTHS) {
   for (const locale of Object.values(SITE_LOCALE)) {
-    test.describe(`shell control labels at ${width}px (${locale})`, () => {
+    test.describe(`shell control labels at ${width}px (${locale})`, {
+      tag: '@cross-browser',
+    }, () => {
       const touch = width < TABLET_WIDTH;
       test.use({
         viewport: { width, height: VIEWPORT_HEIGHT },

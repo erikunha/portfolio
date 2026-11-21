@@ -40,8 +40,8 @@ describe('Badge', () => {
   it('gives each size its own padding without a competing base padding', () => {
     const { container: small } = render(<Badge size="sm">Small</Badge>);
     const { container: medium } = render(<Badge size="md">Medium</Badge>);
-    expect(small.firstElementChild?.classList.contains('px-[10px]')).toBe(false);
-    expect(medium.firstElementChild?.classList.contains('px-[10px]')).toBe(true);
+    expect(small.firstElementChild?.classList.contains('px-inset')).toBe(false);
+    expect(medium.firstElementChild?.classList.contains('px-inset')).toBe(true);
     expect(medium.firstElementChild?.classList.contains('px-2')).toBe(false);
   });
 });

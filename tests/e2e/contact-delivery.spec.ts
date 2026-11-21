@@ -1,27 +1,21 @@
 import { expect, test } from '@playwright/test';
 import { linksContent } from '../../content/links';
+import {
+  expectOneContactPost,
+  openContactFromMenu,
+  sendVisitorMessage,
+  trackContactPosts,
+} from './_helpers/contact-journey';
 import { installMockBackend } from './_helpers/mock-backend';
 
 for (const state of ['queued', 'happy'] as const) {
-  test(`contact delivery: ${state}`, async ({ page }) => {
+  test(`contact delivery: ${state}`, { tag: '@cross-browser' }, async ({ page }) => {
     await installMockBackend(page, { contact: state, log: 'accept' });
+    const posts = trackContactPosts(page);
     await page.goto('/');
-    await page
-      .getByRole('button', { name: 'Open menu', exact: true })
-      .filter({ visible: true })
-      .first()
-      .click();
-    await page
-      .getByRole('dialog')
-      .getByRole('link', { name: /contact/i })
-      .first()
-      .click();
-    const form = page.getByTestId('contact-form');
-    await expect(form).toBeVisible();
-    await form.getByLabel('$ name:').fill('Test Visitor');
-    await form.getByLabel('$ email:').fill('visitor@example.com');
-    await form.getByLabel('$ message:').fill('A message submitted through the real contact form.');
-    await form.getByRole('button', { name: 'EXECUTE_SEND', exact: true }).click();
+    const form = await openContactFromMenu(page);
+    await sendVisitorMessage(form);
+    await expectOneContactPost(posts);
 
     if (state === 'queued') {
       const queued = page.getByTestId('contact-queued');
@@ -42,5 +36,6 @@ for (const state of ['queued', 'happy'] as const) {
       await expect(page.getByTestId('contact-queued')).toHaveCount(0);
     }
     await expect(form).toHaveCount(0);
+    expect(posts(), 'the journey sends exactly one message').toBe(1);
   });
 }

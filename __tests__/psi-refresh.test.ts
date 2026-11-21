@@ -23,20 +23,13 @@ vi.mock('@/lib/lighthouse-scores', () => ({
   refreshScores: vi.fn(),
 }));
 
-vi.mock('@/lib/rate-limit', () => ({
+vi.mock('@/lib/redis', () => ({
   getRedis: vi.fn(() => ({ set: redisMockSet, del: redisMockDel, pipeline: redisMockPipeline })),
 }));
 
-vi.mock('resend', () => ({
-  // biome-ignore lint/complexity/useArrowFunction: `function` required, arrow fns cannot be used with `new` in jsdom/vitest; the route calls `new Resend(key)`.
-  Resend: vi.fn(function () {
-    return { emails: { send: sendMock } };
-  }),
-}));
+vi.mock('resend', async () => (await import('./helpers/modules')).resendModule(sendMock));
 
-vi.mock('@/lib/log', () => ({
-  log: { info: vi.fn(), error: vi.fn(), warn: vi.fn(), debug: vi.fn() },
-}));
+vi.mock('@/lib/log', async () => (await import('@/__tests__/helpers/modules')).logModule());
 
 function makeRequest(): NextRequest {
   return new NextRequest('http://localhost/api/psi-refresh', {
@@ -133,7 +126,7 @@ describe('GET /api/psi-refresh', () => {
 
     expect(res.status).toBe(200);
     expect(vi.mocked(log.error)).toHaveBeenCalledWith(
-      'psi-refresh: failed to write meta:psi-last-run; healthz will report degraded',
+      'psi-refresh: failed to write meta:psi-last-run; /api/status will report stale',
       expect.objectContaining({ err: expect.any(Error) }),
     );
     expect(sendMock).not.toHaveBeenCalled();

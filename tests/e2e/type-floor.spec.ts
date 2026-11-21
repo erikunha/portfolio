@@ -1,10 +1,11 @@
 import { expect, test } from '@playwright/test';
+import { WIDTH } from './_helpers/geometry';
 import { gotoSettled } from './_helpers/streamed';
 
 const ROUTES = ['/', '/links', '/design-system'];
 const VIEWPORTS = [
-  { width: 390, height: 844 },
-  { width: 1280, height: 720 },
+  { width: WIDTH.PHONE, height: 844 },
+  { width: WIDTH.DESKTOP, height: 720 },
 ];
 const ROOT_FONT_PX = 16;
 const REM = 'rem';

@@ -14,9 +14,7 @@ vi.mock('@upstash/redis', () => ({
   Redis: { fromEnv: () => ({ set: setMock, del: delMock }) },
 }));
 vi.mock('@upstash/ratelimit', () => ({ Ratelimit: { slidingWindow: () => ({}) } }));
-vi.mock('@/lib/log', () => ({
-  log: { info: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn() },
-}));
+vi.mock('@/lib/log', async () => (await import('@/__tests__/helpers/modules')).logModule());
 
 const IP = 'hashed-ip';
 const QUESTION = 'What does Erik build?';
@@ -32,7 +30,7 @@ describe('identical-question lock', () => {
   });
 
   it('refuses the same question twice until the lock is released', async () => {
-    const { checkIdenticalQuestion, releaseIdenticalQuestion } = await import('@/lib/rate-limit');
+    const { checkIdenticalQuestion, releaseIdenticalQuestion } = await import('@/lib/ask/dedup');
     expect(await checkIdenticalQuestion(IP, QUESTION)).toEqual({ allowed: true });
     expect(await checkIdenticalQuestion(IP, QUESTION)).toEqual({ allowed: false });
 
@@ -45,7 +43,7 @@ describe('identical-question lock', () => {
   });
 
   it('releases only the lock of that client and that question', async () => {
-    const { checkIdenticalQuestion, releaseIdenticalQuestion } = await import('@/lib/rate-limit');
+    const { checkIdenticalQuestion, releaseIdenticalQuestion } = await import('@/lib/ask/dedup');
     await checkIdenticalQuestion(IP, QUESTION);
     await checkIdenticalQuestion(IP, 'another question');
     await checkIdenticalQuestion('other-ip', QUESTION);
@@ -57,7 +55,7 @@ describe('identical-question lock', () => {
 
   it('carries on when Redis cannot delete the lock', async () => {
     delMock.mockRejectedValueOnce(new Error('Redis unavailable'));
-    const { releaseIdenticalQuestion } = await import('@/lib/rate-limit');
+    const { releaseIdenticalQuestion } = await import('@/lib/ask/dedup');
     await expect(releaseIdenticalQuestion(IP, QUESTION)).resolves.toBeUndefined();
   });
 });

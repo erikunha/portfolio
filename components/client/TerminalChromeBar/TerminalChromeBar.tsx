@@ -8,17 +8,15 @@ export function TerminalChromeBar({
   chrome,
   className,
   tagClassName,
-  dotSize,
 }: {
   chrome: TerminalChrome;
   className: string;
   tagClassName: string;
-  dotSize?: number;
 }) {
   const hideFull = chrome.mobileLabel ? HIDE_ON_PHONE : undefined;
   return (
     <div className={className}>
-      <WindowChrome {...(dotSize === undefined ? {} : { size: dotSize })} />
+      <WindowChrome />
       <span className={hideFull}>{chrome.promptLabel}</span>
       <span className={hideFull ? `${tagClassName} ${hideFull}` : tagClassName}>
         {chrome.rightTag}

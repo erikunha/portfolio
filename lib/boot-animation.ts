@@ -1,6 +1,8 @@
+import { SHELL_PROMPT } from '@/content/brand';
 import type { HeroClientContent } from '@/content/schemas';
 import { HERO_SYSFAIL_HIDE, HERO_SYSFAIL_SHOW, SYSFAIL_END, SYSFAIL_START } from '@/lib/events';
-import { createPauseControl, type PhraseLoop, runPhraseLoop, typeOut } from './typewriter';
+import { type BootTiming, type TypeThenLoop, typeThenLoop } from './boot-timing';
+import { createPauseControl } from './typewriter';
 
 export type BootClassKey =
   | 'bootOk'
@@ -36,7 +38,9 @@ export function desktopBootLines(copy: HeroClientContent): LinePart[][] {
   ];
 }
 
-const BOOT_PROMPT = 'erik@portfolio:~$';
+const BOOT_PROMPT = SHELL_PROMPT;
+const BOOT_MATRIX_PREFIX = '>';
+const BOOT_PHASE_GAP_MS = 350;
 const BOOT_COMMAND = 'run bio.exe --verbose';
 const BOOT_CURSOR: Span = { cls: 'bootCursor', text: '' };
 export const BOOT_SLOT_ATTR = 'data-boot-slot';
@@ -57,7 +61,11 @@ export function bootSlotSpecs(copy: HeroClientContent): BootSlotSpec[] {
       BOOT_CURSOR,
     ],
     [BLANK_BOOT_LINE],
-    [{ cls: 'bootMatrixPrefix', text: '>' }, longest(copy.bootDialogDesktop), BOOT_CURSOR],
+    [
+      { cls: 'bootMatrixPrefix', text: BOOT_MATRIX_PREFIX },
+      longest(copy.bootDialogDesktop),
+      BOOT_CURSOR,
+    ],
   ];
   return parts.map((line, position) => ({ id: `slot-${position}`, parts: line }));
 }
@@ -118,7 +126,7 @@ export function buildStaticCmdLine(cls: BootClasses): HTMLElement {
 export function buildStaticDialogLine(text: string, cls: BootClasses): HTMLElement {
   return buildLine(
     [
-      { cls: 'bootMatrixPrefix', text: '>' },
+      { cls: 'bootMatrixPrefix', text: BOOT_MATRIX_PREFIX },
       { cls: 'bootMatrixOut', text: text },
     ],
     cls,
@@ -136,26 +144,19 @@ export function runBoot(
   specs: LinePart[][],
   dialog: string[],
   cls: BootClasses,
-  opts: {
+  opts: BootTiming & {
     lineMs: number;
     lineJitter: number;
-    cmdMs: number;
-    cmdJitter: number;
-    typeMs: number;
-    holdMs: number;
-    backMs: number;
-    interMs: number;
     startMs: number;
     onFirstLoop?: () => void;
   },
 ): BootCtrl {
   let cancelled = false;
-  let dialogLoop: PhraseLoop | undefined;
+  let typing: TypeThenLoop | undefined;
   const dialogPause = createPauseControl((paused) => {
-    if (paused) dialogLoop?.pause();
-    else dialogLoop?.resume();
+    if (paused) typing?.pause();
+    else typing?.resume();
   });
-  let cancelTyping: (() => void) | undefined;
   const timers: ReturnType<typeof setTimeout>[] = [];
 
   function later(fn: () => void, ms: number) {
@@ -166,7 +167,7 @@ export function runBoot(
   function revealLines(idx: number) {
     if (cancelled) return;
     if (idx >= specs.length) {
-      later(typeCmd, 350);
+      later(typeCmd, BOOT_PHASE_GAP_MS);
       return;
     }
     const spec = specs[idx];
@@ -179,73 +180,50 @@ export function runBoot(
     if (cancelled) return;
     const cmdText = BOOT_COMMAND;
 
-    const line = document.createElement('span');
-    line.className = cls.bootLine;
-    line.dataset.testid = 'boot-line';
-    const prompt = document.createElement('span');
-    prompt.className = cls.bootPrompt;
-    prompt.textContent = BOOT_PROMPT;
     const cmdEl = document.createElement('span');
     cmdEl.className = cls.bootCmd;
     const cursor = document.createElement('span');
     cursor.className = cls.bootCursor;
     cursor.dataset.testid = 'boot-cursor';
-    line.appendChild(prompt);
-    line.appendChild(document.createTextNode(' '));
+    const line = buildLine([{ cls: 'bootPrompt', text: BOOT_PROMPT }, ' '], cls);
     line.appendChild(cmdEl);
     line.appendChild(cursor);
     placeBootLine(container, line);
 
-    cancelTyping = typeOut(cmdText, {
-      stepMs: () => opts.cmdMs + Math.random() * opts.cmdJitter,
-      onText: (text) => {
+    let out: HTMLSpanElement | undefined;
+    let firedOnce = false;
+    typing = typeThenLoop({
+      command: cmdText,
+      dialog,
+      timing: opts,
+      handoffMs: BOOT_PHASE_GAP_MS,
+      onCommandText: (text) => {
         cmdEl.textContent = text;
       },
-      onDone: () => {
+      onCommandDone: () => {
         cursor.remove();
         placeBootLine(container, buildLine([BLANK_BOOT_LINE], cls));
-        later(startDialog, 350);
       },
-    });
-  }
-
-  function startDialog() {
-    if (cancelled) return;
-
-    const line = document.createElement('span');
-    line.className = cls.bootLine;
-    line.dataset.testid = 'boot-line';
-    const prefix = document.createElement('span');
-    prefix.className = cls.bootMatrixPrefix;
-    prefix.textContent = '>';
-    const out = document.createElement('span');
-    out.className = cls.bootMatrixOut;
-    const cur = document.createElement('span');
-    cur.className = cls.bootCursor;
-    cur.dataset.testid = 'boot-cursor';
-    line.appendChild(prefix);
-    line.appendChild(out);
-    line.appendChild(cur);
-    placeBootLine(container, line);
-
-    let firedOnce = false;
-    dialogLoop = runPhraseLoop({
-      phrases: dialog,
-      timing: {
-        typeMs: opts.typeMs,
-        holdMs: opts.holdMs,
-        backMs: opts.backMs,
-        pauseMs: opts.interMs,
+      onDialogStart: () => {
+        out = document.createElement('span');
+        out.className = cls.bootMatrixOut;
+        const cur = document.createElement('span');
+        cur.className = cls.bootCursor;
+        cur.dataset.testid = 'boot-cursor';
+        const dialogLine = buildLine([{ cls: 'bootMatrixPrefix', text: BOOT_MATRIX_PREFIX }], cls);
+        dialogLine.appendChild(out);
+        dialogLine.appendChild(cur);
+        placeBootLine(container, dialogLine);
       },
-      onText: (text) => {
-        out.textContent = text;
+      onDialogText: (text) => {
+        if (out) out.textContent = text;
       },
-      startPaused: dialogPause.isPaused(),
       onWrap: () => {
         if (firedOnce) return;
         firedOnce = true;
         opts.onFirstLoop?.();
       },
+      startPaused: dialogPause.isPaused,
     });
   }
 
@@ -255,8 +233,7 @@ export function runBoot(
     cancel: () => {
       cancelled = true;
       timers.forEach(clearTimeout);
-      cancelTyping?.();
-      dialogLoop?.cancel();
+      typing?.cancel();
     },
     pauseDialog: dialogPause.pause,
     resumeDialog: dialogPause.resume,

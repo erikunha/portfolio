@@ -1,0 +1,1 @@
+export { NewTabHint } from './NewTabHint';

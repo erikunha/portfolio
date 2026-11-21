@@ -2,6 +2,7 @@ import { expect, type Page, test } from '@playwright/test';
 import { contactCopy } from '@/content/contact-copy';
 import { shellStates, shellUi } from '@/content/shell-ui';
 import { SITE_LOCALE } from '@/content/site-locale';
+import { WIDTH } from './_helpers/geometry';
 import { waitForHydration } from './_helpers/hydration';
 import { installMockBackend } from './_helpers/mock-backend';
 import { waitForConfirmArmed } from './_helpers/shell';
@@ -12,7 +13,7 @@ const CONTACT_REF = 'contact-test-request-id';
 const MAILTO_SHORT_REF_LENGTH = 8;
 const SHELL_INPUT = '[aria-label="shell command"]';
 const SHELL_FORM = '[data-testid="shell-form"]';
-const NARROW = { width: 320, height: 700 };
+const NARROW = { width: WIDTH.PHONE_NARROW, height: 700 };
 const SUBPIXEL_PX = 1;
 const ui = shellUi[SITE_LOCALE.en];
 const states = shellStates[SITE_LOCALE.en];
@@ -52,7 +53,7 @@ const noHorizontalOverflow = (page: Page) =>
     SUBPIXEL_PX,
   );
 
-test.describe('request refs and privacy', () => {
+test.describe('request refs and privacy', { tag: '@cross-browser' }, () => {
   test('an answer ends with the conversation receipt and its forget deletes the conversation', async ({
     page,
   }) => {

@@ -1,3 +1,4 @@
+import { SHELL_PROMPT } from './brand';
 import type { ShellUi } from './schemas';
 
 export type { ShellUi };
@@ -108,7 +109,7 @@ export const shellUi: Record<SiteLocale, ShellUi> = {
     inputLabel: 'shell command',
     outputLabel: 'shell output',
     toolbarLabel: 'Shell shortcuts',
-    prompt: 'erik@portfolio:~$',
+    prompt: SHELL_PROMPT,
     placeholder: 'type a command or ask about Erik…',
     mobilePlaceholder: 'ask about Erik…',
     suggestions: [
@@ -184,7 +185,7 @@ export const shellUi: Record<SiteLocale, ShellUi> = {
     forgetTimedOut: '✕ no answer in time. The conversation may already be deleted.',
     forgetTimedOutHint: 'retry to be sure it is gone',
     forgetRetry: 'retry forget',
-    forgetWaitNotice: '⧗ too many forget requests. Try again in {left}.',
+    forgetWaitNotice: '◔ too many forget requests. Try again in {left}.',
     forgetWaitHint: 'nothing was deleted yet · copy the id to forget it later',
     forgetWait: 'forget · {left}',
     forgetting: 'forgetting',
@@ -223,7 +224,7 @@ export const shellUi: Record<SiteLocale, ShellUi> = {
     inputLabel: 'comando do shell',
     outputLabel: 'saída do shell',
     toolbarLabel: 'Atalhos do shell',
-    prompt: 'erik@portfolio:~$',
+    prompt: SHELL_PROMPT,
     placeholder: 'digite um comando ou pergunte sobre o Erik…',
     mobilePlaceholder: 'pergunte sobre o Erik…',
     suggestions: [
@@ -303,7 +304,7 @@ export const shellUi: Record<SiteLocale, ShellUi> = {
     forgetTimedOut: '✕ sem resposta a tempo. A conversa pode já ter sido apagada.',
     forgetTimedOutHint: 'tente de novo para ter certeza de que sumiu',
     forgetRetry: 'tentar excluir de novo',
-    forgetWaitNotice: '⧗ pedidos de exclusão demais. Tente de novo em {left}.',
+    forgetWaitNotice: '◔ pedidos de exclusão demais. Tente de novo em {left}.',
     forgetWaitHint: 'nada foi apagado ainda · copie o id para excluir depois',
     forgetWait: 'excluir · {left}',
     forgetting: 'excluindo',

@@ -7,7 +7,7 @@ import { inheritedEnvWithIsolatedGit } from '../../__tests__/helpers/hermetic-gi
 
 const SUBPROCESS_TEST_TIMEOUT_MS = 60_000;
 
-const runner = resolve(process.cwd(), 'scripts/detect-changes.mjs');
+const runner = resolve(process.cwd(), 'scripts/ci/detect-changes.ts');
 
 let repo: string;
 const git = (args: string[]) =>

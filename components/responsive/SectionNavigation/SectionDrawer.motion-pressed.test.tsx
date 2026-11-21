@@ -57,12 +57,16 @@ describe.each(Object.values(SITE_LOCALE))('the drawer MOTION toggle (%s)', (loca
     expect(toggle.getAttribute('aria-pressed')).toBe('false');
     expect(state.textContent).toBe(copy.motionOff);
     expect(document.body.dataset.motion).toBe(MOTION_REDUCED);
-    expect(screen.getByRole('button', { name: TOPBAR_MOTION_LABEL, pressed: false })).toBe(toggle);
+    expect(
+      screen.getByRole('button', { name: TOPBAR_MOTION_LABEL, pressed: false, hidden: true }),
+    ).toBe(toggle);
 
     fireEvent.click(toggle);
     expect(toggle.getAttribute('aria-pressed')).toBe('true');
     expect(state.textContent).toBe(copy.motionOn);
     expect(document.body.dataset.motion).not.toBe(MOTION_REDUCED);
-    expect(screen.getByRole('button', { name: TOPBAR_MOTION_LABEL, pressed: true })).toBe(toggle);
+    expect(
+      screen.getByRole('button', { name: TOPBAR_MOTION_LABEL, pressed: true, hidden: true }),
+    ).toBe(toggle);
   });
 });

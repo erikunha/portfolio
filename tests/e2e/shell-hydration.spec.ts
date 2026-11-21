@@ -13,7 +13,7 @@ declare global {
   }
 }
 
-test.describe('the server-rendered shell survives hydration', () => {
+test.describe('the server-rendered shell survives hydration', { tag: '@cross-browser' }, () => {
   test.beforeEach(async ({ page }) => {
     await page.addInitScript(
       ([chrome]) => {

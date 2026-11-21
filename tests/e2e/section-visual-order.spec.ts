@@ -1,12 +1,14 @@
 import { expect, test } from '@playwright/test';
+import { CORE_WIDTHS } from './_helpers/geometry';
 import { gotoSettled } from './_helpers/streamed';
 
 const VIEWPORT_HEIGHT = 844;
-const WIDTHS = [320, 390, 768, 1280];
 const SECTION_SELECTOR = 'main > section[id^="sec-"]';
 
-for (const width of WIDTHS) {
-  test(`sections read top to bottom in DOM order at ${width}px`, async ({ page }) => {
+for (const width of CORE_WIDTHS) {
+  test(`sections read top to bottom in DOM order at ${width}px`, { tag: '@cross-browser' }, async ({
+    page,
+  }) => {
     await page.setViewportSize({ width, height: VIEWPORT_HEIGHT });
     await gotoSettled(page, '/');
     const { dom, visual } = await page.evaluate((selector) => {

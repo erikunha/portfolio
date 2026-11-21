@@ -13,17 +13,17 @@ the code-scanning tab; this skill is the local/agent interface.
 
 ## Invocation: pinned only
 
-Semgrep is pinned to `1.169.0`. Run through the repo wrapper, never a bare global call:
+Semgrep is pinned to `1.186.0`. Run through the repo wrapper, never a bare global call:
 
     pnpm lint:semgrep                       # scan the default targets, write semgrep.sarif
-    node scripts/run-semgrep.mjs <paths>    # scan specific paths
-    node scripts/run-semgrep.mjs --error --sarif out.sarif <paths>
+    pnpm exec tsx scripts/gates/run-semgrep.ts <paths>    # scan specific paths
+    pnpm exec tsx scripts/gates/run-semgrep.ts --error --sarif out.sarif <paths>
     pnpm lint:semgrep:fp-baseline           # measure the vendored rules' precision over the probe set
 
 The default targets are `app/`, `lib/`, `components/`, `scripts/`, the root runtime files
-(`proxy.ts`, `instrumentation.ts`, `next.config.ts`) and `.github/workflows/`.
+(`instrumentation.ts`, `next.config.ts`) and `.github/workflows/`.
 
-Local install (optional, CI is authoritative): `pip install semgrep==1.169.0`.
+Local install (optional, CI is authoritative): `pip install semgrep==1.186.0`.
 If Semgrep is not installed, the wrapper exits 2 with an install hint; defer to CI.
 
 ## Rulesets

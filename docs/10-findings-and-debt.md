@@ -10,19 +10,19 @@ Changes to request validation or rate-limit behavior need comparison across the 
 
 ## The kill switch is an off-list
 
-`/api/ask` answers 503 only when `ASK_ENABLED`, trimmed and lower-cased, is `false`, `0`, `off`, `no` or `disabled`. Unset or any other value leaves the route on, so a misspelled value does not stop spending. `__tests__/ask-killswitch-behavioral.test.ts` holds the accepted keywords and that an unset value leaves the route on; nothing in the code or the tests rejects or warns on an unknown value.
+`/api/ask` answers 503 only when `ASK_ENABLED`, trimmed and lower-cased, is `false`, `0`, `off`, `no` or `disabled`. Unset or any other value leaves the route on, so a misspelled value does not stop spending. `__tests__/ask/ask-killswitch-behavioral.test.ts` holds the accepted keywords and that an unset value leaves the route on; nothing in the code or the tests rejects or warns on an unknown value.
 
 ## Clients without an address share one rate-limit bucket
 
-`getClientIp` reads the first `x-forwarded-for` entry, then `x-real-ip`, and falls back to `unknown`. Every request with neither header shares that one bucket, and so does a value that is not an IP address. On Vercel the header is always set. The cases that reach the fallback are local development and an MCP request delivered by an in-memory transport, where `ask_erik` then shares the `rl:ask` allowance of eight requests per hour and the same spend budget.
+`getClientIp` (`lib/server/client-ip.ts`) reads `x-vercel-forwarded-for`, then `x-real-ip`, then the first `x-forwarded-for` entry, skips a value that is not an IP address, and falls back to `unknown`. Every request with no valid header shares that one bucket. On Vercel the platform headers are always set. The cases that reach the fallback are local development and an MCP request delivered by an in-memory transport, where `ask_erik` then shares the `rl:ask` allowance of eight requests per hour and the same spend budget.
 
 ## The Content Security Policy allows inline scripts and styles
 
-`proxy.ts` sets `script-src 'self' 'unsafe-inline'` and `style-src 'self' 'unsafe-inline'`. A nonce would break the inline flight scripts of the statically generated pages, so the policy cannot block an injected inline script. Output escaping carries that weight: pages render text through React, the only `dangerouslySetInnerHTML` is the build-time motion bootstrap in `RootShell`, and JSON-LD values go through `serializeJsonLd`. The policy still blocks framing, plugins, foreign form targets and any script, font or connect source other than the site and the two Vercel analytics hosts.
+The `headers()` in `next.config.ts` set `script-src 'self' 'unsafe-inline'` and `style-src 'self' 'unsafe-inline'`. A nonce would break the inline flight scripts of the statically generated pages, so the policy cannot block an injected inline script. Output escaping carries that weight: pages render text through React, the only `dangerouslySetInnerHTML` is the build-time motion bootstrap in `RootShell`, and JSON-LD values go through `serializeJsonLd`. The policy still blocks framing, plugins, foreign form targets and any script, font or connect source other than the site and the two Vercel analytics hosts.
 
 ## PSI health depends on a daily refresh
 
-`vercel.json` schedules `/api/psi-refresh` once daily. `/api/healthz` uses the `meta:psi-last-run` timestamp and reports degraded status when it is absent or older than 25 hours. The refresh handler writes that timestamp when at least one strategy succeeds. A partial score failure still returns 500; failure of both strategies leaves the timestamp unchanged.
+`vercel.json` schedules `/api/psi-refresh` once daily. `/api/status` uses the `meta:psi-last-run` timestamp and reports `stale: true` when it is absent or older than 25 hours. The refresh handler writes that timestamp when at least one strategy succeeds. A partial score failure still returns 500; failure of both strategies leaves the timestamp unchanged.
 
 A fresh health response describes the refresh timestamp. It does not prove both PSI strategies returned usable scores. Inspect the cached score records when diagnosing a missing metric.
 

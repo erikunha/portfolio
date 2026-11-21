@@ -1,4 +1,5 @@
 import { expect, type Page, test } from '@playwright/test';
+import { BREAKPOINT_EDGE_WIDTHS, WIDTH } from '../../../tests/e2e/_helpers/geometry';
 
 const TABBABLE_SELECTOR =
   'a[href], button:not([disabled]), input:not([disabled]), select, textarea, summary, [tabindex]:not([tabindex="-1"])';
@@ -84,7 +85,7 @@ test.describe('Button behavioral E2E', () => {
   });
 });
 
-for (const width of [375, 767, 768, 1280]) {
+for (const width of BREAKPOINT_EDGE_WIDTHS) {
   test(`Button targets and type at ${width}px`, async ({ page }) => {
     await page.setViewportSize({ width, height: 812 });
     await page.goto('/design-system/components');
@@ -101,7 +102,7 @@ for (const width of [375, 767, 768, 1280]) {
       const fontSize = await button.evaluate((element) =>
         Number.parseFloat(getComputedStyle(element).fontSize),
       );
-      expect(fontSize).toBeGreaterThanOrEqual(width >= 768 ? 13 : 12);
+      expect(fontSize).toBeGreaterThanOrEqual(width >= WIDTH.TABLET ? 13 : 12);
     }
   });
 }

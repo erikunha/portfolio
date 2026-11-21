@@ -87,12 +87,12 @@ describe('forget then persist for the same request', () => {
     strings.clear();
     sets.clear();
     vi.doMock('server-only', () => ({}));
+    vi.doMock('@/lib/redis', () => ({ getRedis: vi.fn(() => store) }));
+    vi.doMock('@/lib/server/client-ip', () => ({ getClientIp: vi.fn(() => '127.0.0.1') }));
     vi.doMock('@/lib/rate-limit', () => ({
-      getClientIp: vi.fn(() => '127.0.0.1'),
       getForgetLimit: vi.fn(() => ({ limit: vi.fn(async () => ({ success: true })) })),
-      getRedis: vi.fn(() => store),
     }));
-    vi.doMock('@/lib/contact-outbox', () => ({
+    vi.doMock('@/lib/contact/outbox', () => ({
       contactMessageKey: (id: string) => `contact:msg:${id}`,
       removePendingContact: vi.fn(async () => undefined),
     }));
@@ -104,7 +104,7 @@ describe('forget then persist for the same request', () => {
 
   it('leaves no row and no index member when the forget lands before the write', async () => {
     const { POST } = await import('@/app/api/log/forget/route');
-    const { persistAskInteraction } = await import('@/lib/ask-log');
+    const { persistAskInteraction } = await import('@/lib/ask/interaction-log');
 
     const res = await POST(
       askRequest({ requestId: TARGET }, { url: 'http://localhost/api/log/forget' }),
@@ -117,7 +117,7 @@ describe('forget then persist for the same request', () => {
   });
 
   it('still persists a request nobody forgot', async () => {
-    const { persistAskInteraction } = await import('@/lib/ask-log');
+    const { persistAskInteraction } = await import('@/lib/ask/interaction-log');
     await persistAskInteraction(interaction(CONVERSATION));
     expect(leftovers().length).toBeGreaterThan(0);
   });

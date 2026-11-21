@@ -10,7 +10,7 @@ import { contactCopy } from '@/content/contact-copy';
 import { linksContent } from '@/content/links';
 import { SITE_LOCALE, type SiteLocale } from '@/content/site-locale';
 import { contactChrome } from '@/content/terminal-chrome';
-import { ASK_LOCALE_HEADER } from '@/lib/stream-protocol';
+import { SITE_LOCALE_HEADER } from '@/lib/stream-protocol';
 import { ContactForm } from './ContactForm';
 import { messageStore } from './messageStore';
 
@@ -98,7 +98,7 @@ describe('ContactForm accessibility', () => {
     const container = await renderForm();
     const privacy = container.querySelector('.contact-privacy');
     expect(privacy?.textContent).toBe(
-      "Your message is stored 90 days so Erik can reply, then deleted. The copy emailed to him stays in his inbox and the email provider's logs, without that limit. Your IP is hashed before it becomes a key or a record, rate limiting included. Not shared with anyone else.",
+      "Your message is stored 90 days so Erik can reply, then deleted. The copy emailed to him stays in his inbox and the email provider's logs, without that limit. Your IP is hashed before it becomes a rate-limit key, and the hash is not stored with your message. Not shared with anyone else.",
     );
   });
 
@@ -423,25 +423,23 @@ const redisSetMock = vi.fn();
 const resendSendMock = vi.fn();
 const rateLimitMock = vi.fn(async () => ({ success: true }));
 
-vi.mock('@/lib/rate-limit', () => ({
-  getClientIp: vi.fn(() => '127.0.0.1'),
-  getContactLimit: vi.fn(() => ({ limit: rateLimitMock })),
-  getRedis: vi.fn(() => ({ set: redisSetMock })),
-}));
+vi.mock('@/lib/redis', () => ({ getRedis: vi.fn(() => ({ set: redisSetMock })) }));
+vi.mock('@/lib/server/client-ip', () => ({ getClientIp: vi.fn(() => '127.0.0.1') }));
+vi.mock('@/lib/rate-limit', async () =>
+  (await import('@/__tests__/helpers/ask-route')).rateLimitModule({
+    getContactLimit: vi.fn(() => ({ limit: rateLimitMock })),
+  }),
+);
 
 vi.mock('@/lib/ip-hash', () => ({
   hashIp: vi.fn(async () => 'hashed-ip-test'),
 }));
 
-vi.mock('@/lib/log', () => ({
-  log: { info: vi.fn(), error: vi.fn(), warn: vi.fn(), debug: vi.fn() },
-}));
+vi.mock('@/lib/log', async () => (await import('@/__tests__/helpers/modules')).logModule());
 
-vi.mock('resend', () => ({
-  Resend: class {
-    emails = { send: resendSendMock };
-  },
-}));
+vi.mock('resend', async () =>
+  (await import('../../../__tests__/helpers/modules')).resendModule(resendSendMock),
+);
 
 function makeRequest(body: Record<string, unknown>): NextRequest {
   return new NextRequest('http://localhost/api/contact', {
@@ -515,7 +513,7 @@ describe('/api/contact honeypot', () => {
   });
 
   it('also trips when field_company is whitespace-only (defensive)', async () => {
-    const { isHoneypotTripped } = await import('@/lib/contact-validation');
+    const { isHoneypotTripped } = await import('@/lib/contact/validation');
     expect(isHoneypotTripped({ field_company: '   ' })).toBe(false);
     expect(isHoneypotTripped({ field_company: '\t\n' })).toBe(false);
     expect(isHoneypotTripped({ field_company: 'x' })).toBe(true);
@@ -560,7 +558,7 @@ describe('contact email rule', () => {
   ] as const;
 
   it.each(ADDRESSES)('client and server agree on %s', async (address, valid) => {
-    const { ContactSchema } = await import('@/lib/contact-validation');
+    const { ContactSchema } = await import('@/lib/contact/validation');
     const { CONTACT_EMAIL_PATTERN } = await import('@/content/contact-rules');
     expect(CONTACT_EMAIL_PATTERN.test(address)).toBe(valid);
     const parsed = ContactSchema.safeParse({
@@ -1264,7 +1262,7 @@ describe('contact form locale header and server message', () => {
   ])('sends the page locale for %s as %s', async (pathname, expected) => {
     const { fetchMock } = await submitAt(pathname, Response.json({ ok: true }, { status: 200 }));
     const init = (fetchMock.mock.calls[0] as unknown as [string, RequestInit])[1];
-    expect((init.headers as Record<string, string>)[ASK_LOCALE_HEADER]).toBe(expected);
+    expect((init.headers as Record<string, string>)[SITE_LOCALE_HEADER]).toBe(expected);
   });
 
   it('words a storage failure from its own copy, not the server message', async () => {

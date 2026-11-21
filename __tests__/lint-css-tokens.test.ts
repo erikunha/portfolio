@@ -8,7 +8,7 @@ import {
   findRawHex,
   findTokenFiles,
   type RawColorHit,
-} from '../scripts/lint-css-tokens';
+} from '../scripts/gates/lint-css-tokens';
 
 describe('findRawHex', () => {
   it('flags a 3-digit hex literal with its line number', () => {
@@ -27,7 +27,7 @@ describe('findRawHex', () => {
   });
 
   it('does not flag var() token references', () => {
-    expect(findRawHex('color: var(--color-secondary-950);')).toEqual([]);
+    expect(findRawHex('color: var(--color-carbon-950);')).toEqual([]);
   });
 
   it('does not flag invalid hex lengths (5/7 digits)', () => {
@@ -76,7 +76,9 @@ describe('findRawColorFunctions', () => {
 
   it('ignores color functions inside block comments and token references', () => {
     expect(
-      findRawColorFunctions('/* rgba(0,0,0,1) */\ncolor: var(--color-glow-06);\nb{color:red}'),
+      findRawColorFunctions(
+        '/* rgba(0,0,0,1) */\ncolor: var(--color-signal-glow-06);\nb{color:red}',
+      ),
     ).toEqual([]);
   });
 

@@ -1,17 +1,17 @@
 import { expect, test } from '@playwright/test';
+import { CORE_COMPACT_WIDTHS } from './_helpers/geometry';
 import { gotoSettled } from './_helpers/streamed';
 
 const ROUTES = ['/cv', '/pt/cv'] as const;
-const WIDTHS = [320, 375, 768, 1280] as const;
 const VIEWPORT_HEIGHT = 900;
 const SUBPIXEL_PX = 1;
 
 for (const route of ROUTES) {
-  test(`${route}: the contact links sit one spacing step apart, stacked or side by side`, async ({
-    page,
-  }) => {
+  test(`${route}: the contact links sit one spacing step apart, stacked or side by side`, {
+    tag: '@cross-browser',
+  }, async ({ page }) => {
     const gaps: number[] = [];
-    for (const width of WIDTHS) {
+    for (const width of CORE_COMPACT_WIDTHS) {
       await page.setViewportSize({ width, height: VIEWPORT_HEIGHT });
       await gotoSettled(page, route);
       gaps.push(
@@ -30,7 +30,7 @@ for (const route of ROUTES) {
     for (const gap of gaps) {
       expect(
         Math.abs(gap - spacing),
-        `gaps ${gaps.join(', ')} at ${WIDTHS.join(', ')}px must match`,
+        `gaps ${gaps.join(', ')} at ${CORE_COMPACT_WIDTHS.join(', ')}px must match`,
       ).toBeLessThan(SUBPIXEL_PX);
     }
   });

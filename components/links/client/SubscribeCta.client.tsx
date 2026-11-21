@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState, useSyncExternalStore } from 'react';
 import { EXTERNAL_LINK_PROPS } from '@/components/ExternalLink';
 import { Button } from '@/design-system';
 import { longestCopy } from '@/lib/longest-copy';
@@ -22,6 +22,13 @@ const SUB_VIEW = {
   { hrefProp: keyof SubscribeCtaProps; labelProp: keyof SubscribeCtaProps }
 >;
 
+const STORAGE_EVENT = 'storage';
+
+function subscribeToStorage(onChange: () => void): () => void {
+  window.addEventListener(STORAGE_EVENT, onChange);
+  return () => window.removeEventListener(STORAGE_EVENT, onChange);
+}
+
 function readSubscribed(): SubscribeState {
   try {
     return localStorage.getItem(SUBSCRIBED_KEY) === SUBSCRIBED_VALUE
@@ -30,6 +37,10 @@ function readSubscribed(): SubscribeState {
   } catch {
     return SUBSCRIBE_STATE.Idle;
   }
+}
+
+function readServerSubscribed(): SubscribeState {
+  return SUBSCRIBE_STATE.Idle;
 }
 
 export type SubscribeCtaProps = {
@@ -43,19 +54,16 @@ export type SubscribeCtaProps = {
 
 export function SubscribeCta(props: SubscribeCtaProps) {
   const { outboundId, newTabHint } = props;
-  const [state, setState] = useState<SubscribeState>(SUBSCRIBE_STATE.Idle);
-  const view = SUB_VIEW[state];
-
-  useEffect(() => {
-    setState(readSubscribed());
-  }, []);
+  const stored = useSyncExternalStore(subscribeToStorage, readSubscribed, readServerSubscribed);
+  const [clicked, setClicked] = useState(false);
+  const view = SUB_VIEW[clicked ? SUBSCRIBE_STATE.Subscribed : stored];
 
   function remember() {
     try {
       localStorage.setItem(SUBSCRIBED_KEY, SUBSCRIBED_VALUE);
       // biome-ignore lint/suspicious/noEmptyBlockStatements: a blocked storage write must not stop the navigation this click exists for
     } catch {}
-    setState(SUBSCRIBE_STATE.Subscribed);
+    setClicked(true);
   }
 
   return (
@@ -65,7 +73,7 @@ export function SubscribeCta(props: SubscribeCtaProps) {
       {...EXTERNAL_LINK_PROPS}
       size="lg"
       variant="primary"
-      className="gap-[9px]"
+      className="gap-label"
       data-outbound={outboundId}
       onClick={remember}
     >

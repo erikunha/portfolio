@@ -1,115 +1,8 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { conditionHolds, evaluate, interpolate, parseWorkflow } from '../lib/ci-workflow';
+import { parseWorkflow } from '../ci/ci-workflow';
 
 const ci = parseWorkflow(readFileSync(`${process.cwd()}/.github/workflows/ci.yml`, 'utf8'));
-
-const pr = {
-  github: {
-    event_name: 'pull_request',
-    repository: 'o/r',
-    event: { pull_request: { head: { repo: { full_name: 'o/r' } } } },
-  },
-  needs: {
-    'detect-changes': { result: 'success', outputs: { ai: 'true', app: 'false', ui: 'false' } },
-    test: { result: 'success', outputs: {} },
-  },
-};
-
-describe('evaluate', () => {
-  it('resolves the matrix ternary the install step uses', () => {
-    const expr = "contains(matrix.project, 'webkit') && 'webkit' || 'chromium'";
-    expect(evaluate(expr, { matrix: { project: 'webkit-mobile' } })).toBe('webkit');
-    expect(evaluate(expr, { matrix: { project: 'chromium-mobile' } })).toBe('chromium');
-  });
-
-  it('negates endsWith and compares hyphenated needs keys', () => {
-    expect(
-      evaluate("!endsWith(matrix.project, '-components')", { matrix: { project: 'chromium' } }),
-    ).toBe(true);
-    expect(evaluate("needs.detect-changes.outputs.ai == 'true'", pr)).toBe(true);
-    expect(evaluate("needs.detect-changes.outputs.app == 'true'", pr)).toBe(false);
-  });
-
-  it('evaluates the ai-eval gate with the wildcard needs result filter', () => {
-    const expr =
-      "always() && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && needs.detect-changes.outputs.ai == 'true' && !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled')";
-    expect(evaluate(expr, pr)).toBe(true);
-    const failed = { ...pr, needs: { ...pr.needs, test: { result: 'failure', outputs: {} } } };
-    expect(evaluate(expr, failed)).toBe(false);
-  });
-
-  it('projects the wildcard over an array, the way the label gate reads it', () => {
-    const expr = "contains(github.event.pull_request.labels.*.name, 'ai-eval')";
-    const labelled = {
-      github: {
-        event: { pull_request: { labels: [{ name: 'bug' }, { name: 'ai-eval' }] } },
-      },
-    };
-    expect(evaluate(expr, labelled)).toBe(true);
-    expect(
-      evaluate(expr, {
-        github: { event: { pull_request: { labels: [{ name: 'bug' }] } } },
-      }),
-    ).toBe(false);
-    expect(evaluate(expr, { github: { event: { pull_request: {} } } })).toBe(false);
-  });
-
-  it('treats a missing step output and any secret as an empty string', () => {
-    expect(evaluate('steps.nope.outputs.value', { steps: {} })).toBeUndefined();
-    expect(evaluate('secrets.ANY_KEY', {})).toBe('');
-  });
-
-  it('reports each secret it read as empty, in expressions, interpolation and conditions', () => {
-    const seen: string[] = [];
-    const onSecret = (name: string) => seen.push(name);
-    evaluate('secrets.FIRST', {}, {}, onSecret);
-    interpolate(['$', '{{ secrets.SECOND }}'].join(''), {}, onSecret);
-    conditionHolds("secrets.THIRD != ''", {}, {}, onSecret);
-    expect(seen).toEqual(['FIRST', 'SECOND', 'THIRD']);
-  });
-
-  it('refuses a context root the caller did not populate instead of reading it as empty', () => {
-    expect(() => evaluate('runner.os', {})).toThrow(/runner/);
-    expect(() => evaluate("vars.FLAG == 'x'", { github: {} })).toThrow(/vars/);
-    expect(() => interpolate(['$', '{{ strategy.job-total }}'].join(''), {})).toThrow(/strategy/);
-  });
-
-  it('reads a populated root whose key is missing as empty', () => {
-    expect(evaluate('env.MISSING', { env: {} })).toBeUndefined();
-    expect(evaluate("env.MISSING == ''", { env: {} })).toBe(true);
-  });
-
-  it('evaluates a function the caller supplies, such as a file existence check', () => {
-    const present = { hashFiles: () => 'abc' };
-    expect(evaluate("hashFiles('x') != ''", {}, present)).toBe(true);
-    expect(evaluate("hashFiles('x') != ''", {}, { hashFiles: () => '' })).toBe(false);
-  });
-
-  it('refuses a function it cannot evaluate rather than guessing', () => {
-    expect(() => evaluate("hashFiles('pnpm-lock.yaml')", {})).toThrow(/unsupported/i);
-  });
-});
-
-describe('interpolate', () => {
-  it('replaces workflow expressions and leaves shell parameter expansion alone', () => {
-    // biome-ignore lint/suspicious/noTemplateCurlyInString: the shell parameter expansion is the input under test
-    const text = 'v=${ImageVersion:-unknown} p=${{ matrix.project }} s=${{ secrets.X }}';
-    expect(interpolate(text, { matrix: { project: 'chromium' } })).toBe(
-      // biome-ignore lint/suspicious/noTemplateCurlyInString: the shell parameter expansion is the expected output
-      'v=${ImageVersion:-unknown} p=chromium s=',
-    );
-  });
-});
-
-describe('conditionHolds', () => {
-  it('accepts a bare expression and a wrapped one, and treats no condition as true', () => {
-    expect(conditionHolds(undefined, {})).toBe(true);
-    expect(conditionHolds("github.event_name == 'pull_request'", pr)).toBe(true);
-    // biome-ignore lint/suspicious/noTemplateCurlyInString: a wrapped workflow condition is the input under test
-    expect(conditionHolds("${{ github.event_name == 'push' }}", pr)).toBe(false);
-  });
-});
 
 describe('parseWorkflow on the real ci.yml', () => {
   it('reads jobs, needs, matrix projects, job outputs and step ids', () => {
@@ -171,12 +64,38 @@ describe('parseWorkflow keys', () => {
   });
 
   it('refuses a job key it does not execute, so a new construct fails the drift guard', () => {
-    expect(() => parseWorkflow(job('    container: node:22\n    steps: []\n'))).toThrow(
-      /container/,
-    );
     expect(() => parseWorkflow(job('    services:\n      db: {}\n    steps: []\n'))).toThrow(
       /services/,
     );
+  });
+
+  it('reads a job container as the image and options it runs in, from either form', () => {
+    const object = parseWorkflow(
+      job('    container:\n      image: node:22\n      options: --init\n    steps: []\n'),
+    );
+    const string = parseWorkflow(job('    container: node:22\n    steps: []\n'));
+    const none = parseWorkflow(job('    steps: []\n'));
+    expect(object.jobs.a?.container).toEqual({ image: 'node:22', options: '--init' });
+    expect(string.jobs.a?.container).toEqual({ image: 'node:22' });
+    expect(none.jobs.a?.container).toBeUndefined();
+  });
+
+  it('refuses a container key it does not execute and a container with no image', () => {
+    expect(() =>
+      parseWorkflow(
+        job('    container:\n      image: node:22\n      credentials: {}\n    steps: []\n'),
+      ),
+    ).toThrow(/credentials/);
+    expect(() =>
+      parseWorkflow(job('    container:\n      options: --init\n    steps: []\n')),
+    ).toThrow(/image/);
+  });
+
+  it('reads the real ci.yml container jobs with the image the Linux stages use', () => {
+    expect(ci.jobs['e2e-functional']?.container?.image).toMatch(
+      /^mcr\.microsoft\.com\/playwright:v\d+\.\d+\.\d+-noble$/,
+    );
+    expect(ci.jobs.performance?.container).toBeUndefined();
   });
 
   it('refuses a step key it does not execute', () => {
@@ -195,5 +114,66 @@ describe('parseWorkflow keys', () => {
     expect(() =>
       parseWorkflow(job(`    steps:\n      - run: x\n        continue-on-error: ${expression}\n`)),
     ).toThrow(/continue-on-error/);
+  });
+});
+
+describe('parseWorkflow local composite actions', () => {
+  const ACTION = [
+    'inputs:',
+    '  install:',
+    '    default: "true"',
+    'runs:',
+    '  using: composite',
+    '  steps:',
+    '    - uses: pnpm/action-setup@abc',
+    '    - name: Install',
+    "      if: inputs.install == 'true'",
+    '      shell: bash',
+    '      run: pnpm install --frozen-lockfile',
+  ].join('\n');
+  const loadAction = (path: string) => {
+    if (path !== '.github/actions/setup') throw new Error(`unexpected action path ${path}`);
+    return ACTION;
+  };
+  const caller = (withBlock = '') =>
+    `jobs:\n  a:\n    runs-on: x\n    steps:\n      - uses: ./.github/actions/setup\n${withBlock}      - run: pnpm test\n`;
+  const labels = (steps: { uses?: string; run?: string }[]) =>
+    steps.map((step) => step.uses ?? step.run);
+
+  it('reads the real ci.yml install as the steps of the shared setup action', () => {
+    const steps = ci.jobs.test?.steps ?? [];
+    const install = steps.filter((step) => step.run === 'pnpm install --frozen-lockfile');
+    expect(install).toHaveLength(1);
+    expect(install[0]?.name).toBe('Install');
+    expect(install[0]?.if).toBeUndefined();
+    expect(steps.some((step) => step.uses === './.github/actions/setup')).toBe(false);
+  });
+
+  it('replaces the call with the action steps, in order, before the steps that follow', () => {
+    const steps = parseWorkflow(caller(), loadAction).jobs.a?.steps ?? [];
+    expect(labels(steps)).toEqual([
+      'pnpm/action-setup@abc',
+      'pnpm install --frozen-lockfile',
+      'pnpm test',
+    ]);
+    expect(steps[1]?.shell).toBe('bash');
+  });
+
+  it('drops a step whose input condition is false for the call', () => {
+    const text = caller('        with:\n          install: "false"\n');
+    const steps = parseWorkflow(text, loadAction).jobs.a?.steps ?? [];
+    expect(labels(steps)).toEqual(['pnpm/action-setup@abc', 'pnpm test']);
+  });
+
+  it('refuses a condition it cannot evaluate', () => {
+    const unevaluable = ACTION.replace("inputs.install == 'true'", 'always()');
+    expect(() => parseWorkflow(caller(), () => unevaluable)).toThrow(/condition/);
+  });
+
+  it('refuses a call that carries a key it would drop, and an action that is not composite', () => {
+    const withIf =
+      'jobs:\n  a:\n    steps:\n      - uses: ./.github/actions/setup\n        if: always()\n';
+    expect(() => parseWorkflow(withIf, loadAction)).toThrow(/"if"/);
+    expect(() => parseWorkflow(caller(), () => 'runs:\n  using: node24\n')).toThrow(/composite/);
   });
 });

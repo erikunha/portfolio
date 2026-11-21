@@ -3,17 +3,11 @@
     position: fixed;
     inset: 0;
     pointer-events: none;
+    --crt-vignette-glow: color-mix(in srgb, var(--color-signal-900) 12%, transparent);
+    --crt-vignette-edge: color-mix(in srgb, var(--color-scrim) 38%, transparent);
     background:
-      radial-gradient(
-        ellipse at 50% 30%,
-        color-mix(in srgb, var(--color-primary-900) 12%, transparent) 0%,
-        transparent 55%
-      ),
-      radial-gradient(
-        ellipse at center,
-        transparent 70%,
-        color-mix(in srgb, var(--color-secondary-950) 38%, transparent) 100%
-      );
+      radial-gradient(ellipse at 50% 30%, var(--crt-vignette-glow) 0%, transparent 55%),
+      radial-gradient(ellipse at center, transparent 70%, var(--crt-vignette-edge) 100%);
     z-index: var(--z-crt-vignette);
   }
 
@@ -21,13 +15,13 @@
     position: fixed;
     inset: 0;
     pointer-events: none;
-    --crt-scanline: color-mix(in srgb, var(--color-secondary-950) 45%, transparent);
+    --crt-scanline: color-mix(in srgb, var(--color-scrim) 45%, transparent);
     background-image: repeating-linear-gradient(
       to bottom,
       var(--crt-scanline) 0px,
       var(--crt-scanline) 1px,
       transparent 1px,
-      transparent 4px
+      transparent var(--spacing-1)
     );
     opacity: 0.3;
     z-index: var(--z-crt-scanlines);
@@ -38,16 +32,16 @@
     inset: 0;
     pointer-events: none;
     --crt-mask-red: color-mix(in srgb, var(--color-crt-phosphor-red) 6%, transparent);
-    --crt-mask-green: color-mix(in srgb, var(--color-primary-500) 6%, transparent);
+    --crt-mask-green: var(--color-accent-tint-faint);
     --crt-mask-blue: color-mix(in srgb, var(--color-crt-phosphor-blue) 6%, transparent);
     background-image: repeating-linear-gradient(
       to right,
       var(--crt-mask-red) 0px,
       var(--crt-mask-red) 1px,
       var(--crt-mask-green) 1px,
-      var(--crt-mask-green) 2px,
-      var(--crt-mask-blue) 2px,
-      var(--crt-mask-blue) 3px
+      var(--crt-mask-green) var(--spacing-hair),
+      var(--crt-mask-blue) var(--spacing-hair),
+      var(--crt-mask-blue) var(--spacing-tight)
     );
     mix-blend-mode: screen;
     opacity: 0.18;
@@ -80,7 +74,7 @@
     inset: -50%;
     pointer-events: none;
     background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0  0 0 0 0 1  0 0 0 0 0.25  0 0 0 0.5 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
-    background-size: 180px 180px;
+    background-size: 11.25rem 11.25rem;
     opacity: 0.07;
     mix-blend-mode: screen;
     animation: crt-noise-shift 0.6s steps(6) infinite;
@@ -102,7 +96,7 @@
     position: fixed;
     inset: 0;
     pointer-events: none;
-    background: var(--color-glow-02);
+    background: var(--color-signal-glow-02);
     animation: crt-flicker 4s infinite;
     will-change: opacity;
     z-index: var(--z-crt-flicker);
@@ -122,25 +116,44 @@
   }
 
   .crt-scan-beam {
-    --crt-scan-offset: 120px;
+    --crt-scan-offset: 7.5rem;
     position: fixed;
     left: 0;
     right: 0;
     top: calc(var(--crt-scan-offset) * -1);
-    height: 110px;
-    background: linear-gradient(180deg, transparent, var(--color-glow-06) 50%, transparent);
+    height: 6.875rem;
+    background: linear-gradient(180deg, transparent, var(--color-signal-glow-06) 50%, transparent);
     pointer-events: none;
     animation: crt-scan-beam 7s linear infinite;
     z-index: var(--z-crt-beam);
     will-change: transform;
   }
 
-  body[data-motion="reduce"] .crt-flicker,
-  body[data-motion="reduce"] .crt-scan-beam,
-  body[data-motion="reduce"] .crt-noise {
-    animation: none;
-    opacity: 0;
-    will-change: auto;
+  /* biome-ignore lint/suspicious/noDuplicateSelectors: `@variant motion-off` and `@variant motion-on` resolve to a `body` ancestor selector, so this rule has a different selector than the earlier one with the same class */
+  .crt-flicker {
+    @variant motion-off {
+      animation: none;
+      opacity: 0;
+      will-change: auto;
+    }
+  }
+
+  /* biome-ignore lint/suspicious/noDuplicateSelectors: `@variant motion-off` and `@variant motion-on` resolve to a `body` ancestor selector, so this rule has a different selector than the earlier one with the same class */
+  .crt-scan-beam {
+    @variant motion-off {
+      animation: none;
+      opacity: 0;
+      will-change: auto;
+    }
+  }
+
+  /* biome-ignore lint/suspicious/noDuplicateSelectors: `@variant motion-off` and `@variant motion-on` resolve to a `body` ancestor selector, so this rule has a different selector than the earlier one with the same class */
+  .crt-noise {
+    @variant motion-off {
+      animation: none;
+      opacity: 0;
+      will-change: auto;
+    }
   }
 
   html.sysfail-on .crt-scan-beam,

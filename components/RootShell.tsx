@@ -1,9 +1,10 @@
 import '@/app/globals.css';
 import { Analytics } from '@vercel/analytics/next';
 import { SpeedInsights } from '@vercel/speed-insights/next';
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import localFont from 'next/font/local';
 import { Suspense } from 'react';
+import { getThemeColors } from '@/app/(en)/design-system/_lib/theme-tokens';
 import { GlobalMotion } from '@/components/client/GlobalMotion';
 import { NoscriptBar } from '@/components/NoscriptBar';
 import { profile, profileMetaDescription, profilePageTitle } from '@/content/profile';
@@ -12,6 +13,9 @@ import { SITE_LOCALE, SITE_OG_LOCALE, type SiteLocale } from '@/content/site-loc
 import { social } from '@/content/social';
 import { serializeJsonLd } from '@/lib/json-ld';
 import { MOTION_BOOTSTRAP_SCRIPT } from '@/lib/motion-bootstrap';
+
+const SURFACE_TOKEN = 'surface';
+const COLOR_SCHEME = 'dark';
 
 const mono = localFont({
   src: [
@@ -82,6 +86,11 @@ export const rootMetadata: Metadata = {
   },
 };
 
+export const rootViewport: Viewport = {
+  themeColor: getThemeColors()[SURFACE_TOKEN],
+  colorScheme: COLOR_SCHEME,
+};
+
 const personJsonLd = serializeJsonLd(personSchema);
 
 const initScript = `history.scrollRestoration="manual";window.scrollTo(0,0);${MOTION_BOOTSTRAP_SCRIPT}`;
@@ -93,26 +102,21 @@ export function RootShell({
   children,
 }: Readonly<{ locale: SiteLocale; children: React.ReactNode }>) {
   return (
-    <>
-      {/* biome-ignore lint/style/noHeadElement: this fragment is the shared body of every root layout, whose html element owns this head */}
-      <head>
-        <script type="application/ld+json">{personJsonLd}</script>
-      </head>
-      <body suppressHydrationWarning>
-        <NoscriptBar locale={locale} />
-        {/* biome-ignore lint/security/noDangerouslySetInnerHtml: initScript is a hardcoded build-time constant, no user input */}
-        <script dangerouslySetInnerHTML={{ __html: initScript }} />
-        <Suspense fallback={null}>
-          <GlobalMotion />
-        </Suspense>
-        {children}
-        {process.env.VERCEL === '1' && (
-          <>
-            <Analytics />
-            <SpeedInsights />
-          </>
-        )}
-      </body>
-    </>
+    <body suppressHydrationWarning>
+      <script type="application/ld+json">{personJsonLd}</script>
+      <NoscriptBar locale={locale} />
+      {/* biome-ignore lint/security/noDangerouslySetInnerHtml: initScript is a hardcoded build-time constant, no user input */}
+      <script dangerouslySetInnerHTML={{ __html: initScript }} />
+      <Suspense fallback={null}>
+        <GlobalMotion />
+      </Suspense>
+      {children}
+      {process.env.VERCEL === '1' && (
+        <>
+          <Analytics />
+          <SpeedInsights />
+        </>
+      )}
+    </body>
   );
 }
