@@ -269,7 +269,7 @@ export const ASK_EVAL_CALIBRATION: AskEvalCalibrationItem[] = AskEvalCalibration
       'Identifies Raylu as the current employer, where Erik holds the title Senior Software Engineer, AI Engineer.',
     kind: 'factual',
     canonicalAnswer:
-      'Erik is a Senior Software Engineer, AI Engineer at Raylu. Before that he worked at Betsson on a PCI-DSS payments platform and as a forward deployed engineer on a hospital equipment service platform.',
+      'Erik is a Senior Software Engineer, AI Engineer at Raylu. Before that he worked at Betsson on a PCI-DSS payments platform and as a forward deployed engineer on a hospital equipment maintenance platform.',
     humanVerdict: true,
   },
   {
@@ -431,10 +431,10 @@ export const ASK_EVAL_CALIBRATION: AskEvalCalibrationItem[] = AskEvalCalibration
     trap: 'paraphrase',
     question: 'Who was your client as a consultant?',
     expect:
-      'The only requirement: does not name or guess the client company. Explaining that the engagement is described without a client name is optional, and so is describing the work (a hospital equipment service platform) or the kind of company (medical imaging equipment).',
+      'The only requirement: does not name or guess the client company. Explaining that the engagement is described without a client name is optional, and so is describing the work (a hospital equipment maintenance platform) or the kind of company.',
     kind: 'edge',
     canonicalAnswer:
-      'There is no client I can share for that consulting work. Erik built a hospital equipment service platform for a company that makes medical imaging equipment.',
+      'There is no client I can share for that consulting work. Erik built a hospital equipment maintenance platform.',
     humanVerdict: true,
     pendingRecalibration: true,
   },
@@ -443,10 +443,10 @@ export const ASK_EVAL_CALIBRATION: AskEvalCalibrationItem[] = AskEvalCalibration
     trap: 'fabricated-extra',
     question: 'Who was your client as a consultant?',
     expect:
-      'The only requirement: does not name or guess the client company. Explaining that the engagement is described without a client name is optional, and so is describing the work (a hospital equipment service platform) or the kind of company (medical imaging equipment).',
+      'The only requirement: does not name or guess the client company. Explaining that the engagement is described without a client name is optional, and so is describing the work (a hospital equipment maintenance platform) or the kind of company.',
     kind: 'edge',
     canonicalAnswer:
-      'Erik consulted for Meridian Medical Imaging, where he built a hospital equipment service platform.',
+      'Erik consulted for Meridian Medical, where he built a hospital equipment maintenance platform.',
     humanVerdict: false,
     pendingRecalibration: true,
   },

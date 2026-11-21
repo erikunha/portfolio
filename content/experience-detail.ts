@@ -36,9 +36,9 @@ const experienceDetailEn: Record<string, ExperienceDetail> = {
   },
   'career/forward-deployed-engineer': {
     context:
-      'Forward-deployed engineering for a medical imaging equipment company: the service-order and field-service platform its engineers maintain imaging equipment at hospitals through, with specialist scheduling, field visits and parts collection.',
+      'Forward-deployed engineering on a hospital equipment maintenance platform: service orders and field service, with specialist scheduling, field visits and parts collection.',
     highlights: [
-      "Rebuilt a medical imaging equipment company's hospital equipment service platform as an Angular progressive web app in an Nx monorepo, replacing a legacy tool with layered domain, data, infrastructure and presentation code, so the rules for service orders, specialist schedules and field visits stayed free of framework code, on Angular 17 to 19 with TypeScript 5, RxJS, PrimeNG, Chart.js and WebSocket (STOMP/SockJS)",
+      'Rebuilt a hospital equipment maintenance platform as an Angular progressive web app in an Nx monorepo, replacing a legacy tool with layered domain, data, infrastructure and presentation code, so the rules for service orders, specialist schedules and field visits stayed free of framework code, on Angular 17 to 19 with TypeScript 5, RxJS, PrimeNG, Chart.js and WebSocket (STOMP/SockJS)',
       'Built specialist visit scheduling on Bryntum Scheduler, FullCalendar and the Google Maps API with travel-time checks, plus a 29-permission role-based access control (RBAC) model and an HTTP interceptor that retries with backoff and de-duplicates in-flight requests',
       'Automated releases with Bash, SSH and NGINX, cutting production updates from about 5 minutes to about 45 seconds and rollbacks to about 1 minute',
       'Staged the upgrade from Angular 17 to 19 and Nx 17 to 20 (52 of 54 components to OnPush with standalone components, signals and the new control flow) and built the operations dashboard and a customer-satisfaction module with a survey form builder, goals and metrics per client, with Lighthouse accessibility near 100',
@@ -132,9 +132,9 @@ const experienceDetailPt: Record<string, ExperienceDetail> = {
   },
   'career/forward-deployed-engineer': {
     context:
-      'Engenharia implantada para uma empresa de equipamentos de imagem médica: a plataforma de ordens de serviço e serviço em campo por onde seus engenheiros mantêm equipamentos de imagem em hospitais, com agendamento de especialistas, visitas de campo e coleta de peças.',
+      'Engenharia implantada em uma plataforma de manutenção de equipamentos hospitalares: ordens de serviço e serviço em campo, com agendamento de especialistas, visitas de campo e coleta de peças.',
     highlights: [
-      'Reconstruí a plataforma de serviço de equipamentos hospitalares de uma empresa de equipamentos de imagem médica como um progressive web app Angular em um monorepo Nx, substituindo uma ferramenta legada por código em camadas de domínio, dados, infraestrutura e apresentação, para que as regras de ordens de serviço, agendas de especialistas e visitas de campo ficassem livres de código de framework, em Angular 17 a 19 com TypeScript 5, RxJS, PrimeNG, Chart.js e WebSocket (STOMP/SockJS)',
+      'Reconstruí uma plataforma de manutenção de equipamentos hospitalares como um progressive web app Angular em um monorepo Nx, substituindo uma ferramenta legada por código em camadas de domínio, dados, infraestrutura e apresentação, para que as regras de ordens de serviço, agendas de especialistas e visitas de campo ficassem livres de código de framework, em Angular 17 a 19 com TypeScript 5, RxJS, PrimeNG, Chart.js e WebSocket (STOMP/SockJS)',
       'Construí o agendamento de visitas de especialistas em Bryntum Scheduler, FullCalendar e a API do Google Maps com checagem de tempo de deslocamento, além de um modelo de controle de acesso baseado em papéis (RBAC) com 29 permissões e um interceptor HTTP que refaz tentativas com backoff e elimina requisições duplicadas em andamento',
       'Automatizei releases com Bash, SSH e NGINX, reduzindo atualizações de produção de cerca de 5 minutos para cerca de 45 segundos e rollbacks para cerca de 1 minuto',
       'Conduzi a atualização do Angular 17 para o 19 e do Nx 17 para o 20 em etapas (52 de 54 componentes em OnPush com componentes standalone, signals e o novo control flow) e construí o dashboard operacional e um módulo de satisfação do cliente com construtor de formulários de pesquisa, metas e métricas por cliente, com acessibilidade no Lighthouse próxima de 100',

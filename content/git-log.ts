@@ -68,11 +68,11 @@ const gitLogFor = (locale: SiteLocale): GitCommit[] => {
       endMonth: '2025-03',
       location: pt ? 'Canadá (Remoto)' : 'Canada (Remote)',
       workMode: null,
-      domain: pt ? 'equipamentos de imagem médica' : 'medical imaging equipment',
+      domain: pt ? 'manutenção de equipamentos hospitalares' : 'hospital equipment maintenance',
       body: [
         pt
-          ? 'reconstruiu uma plataforma de serviço de equipamentos hospitalares para uma empresa de equipamentos de imagem médica: ordens de serviço, agendamento de especialistas, visitas de campo; Angular 17 para 19.'
-          : 'rebuilt a hospital equipment service platform for a medical imaging equipment company: service orders, specialist scheduling, field visits; Angular 17 to 19.',
+          ? 'reconstruiu uma plataforma de manutenção de equipamentos hospitalares: ordens de serviço, agendamento de especialistas, visitas de campo; Angular 17 para 19.'
+          : 'rebuilt a hospital equipment maintenance platform: service orders, specialist scheduling, field visits; Angular 17 to 19.',
       ],
     },
     {

@@ -136,3 +136,34 @@ describe('the healthcare guard catches the client wording it enumerates', () => 
     expect(pattern?.test(phrase), phrase).toBe(false);
   });
 });
+
+describe('the client kind guard catches the wording it enumerates', () => {
+  const guard = RETIRED_CLAIMS.find((item) => item.name === 'client kind hint');
+  const pattern = guard?.pattern;
+  const en = ['medical', 'imag' + 'ing'].join(' ');
+  const pt = ['imagem', 'médica'].join(' ');
+
+  it('has the claim it claims to hold', () => {
+    expect(pattern, 'the retired claims list must carry the client kind hint').toBeDefined();
+  });
+
+  it.each([
+    `a ${en} equipment company`,
+    `${en.toUpperCase()}`,
+    ['medical', 'imag' + 'ing'].join('-'),
+    `empresa de equipamentos de ${pt}`,
+    `equipamentos de ${pt.replace('é', 'e')}`,
+    ['imagens', 'médicas'].join(' '),
+  ])('catches %s', (phrase) => {
+    expect(pattern?.test(phrase), phrase).toBe(true);
+  });
+
+  it.each([
+    'a hospital equipment maintenance platform',
+    'uma plataforma de manutenção de equipamentos hospitalares',
+    'medical device compliance',
+    'image optimisation with next/image',
+  ])('leaves %s alone', (phrase) => {
+    expect(pattern?.test(phrase), phrase).toBe(false);
+  });
+});

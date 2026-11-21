@@ -68,8 +68,8 @@ const projectsFor = (locale: SiteLocale): Project[] => {
         company: 'Confidential',
         kind: 'professional',
         description: pt
-          ? 'Plataforma de serviço de equipamentos hospitalares: ordens de serviço, agendamento de especialistas com checagem de deslocamento, visitas de campo, controle de acesso baseado em papéis (RBAC) com 29 permissões, atualizações ao vivo.'
-          : 'Hospital equipment service platform: service orders, specialist scheduling with travel-time checks, field visits, a 29-permission role-based access control (RBAC) model, live updates.',
+          ? 'Plataforma de manutenção de equipamentos hospitalares: ordens de serviço, agendamento de especialistas com checagem de deslocamento, visitas de campo, controle de acesso baseado em papéis (RBAC) com 29 permissões, atualizações ao vivo.'
+          : 'Hospital equipment maintenance platform: service orders, specialist scheduling with travel-time checks, field visits, a 29-permission role-based access control (RBAC) model, live updates.',
         stats: [
           { label: pt ? 'BUNDLE JS' : 'JS BUNDLE', value: '-33%' },
           { label: 'TTI', value: '-52%' },

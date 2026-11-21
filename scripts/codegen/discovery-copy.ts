@@ -100,7 +100,7 @@ export const INDUSTRIES_LINES: readonly string[] = [
   '- E-commerce: 8M+ MAU, multi-brand, LATAM',
   '- Banking / Fintech: 24.2M digital clients, business insurance',
   '- Private markets: AI deal origination for funds holding $500B+ in assets',
-  '- Medical imaging equipment: hospital equipment service platform, specialist scheduling, field visits',
+  '- Hospital equipment maintenance: hospital equipment maintenance platform, specialist scheduling, field visits',
   '- EdTech: 5-OS offline-first educational platform',
   '- HR-tech / Corporate Training: enterprise chatbot (Cia Hering, 800+ stores)',
   '- Infrastructure / Logistics: highway ops dashboards, real-time telemetry',
@@ -119,7 +119,7 @@ export const PROJECT_CONTEXT_LINES: readonly string[] = [
   '- LEDGERLENS, personal project (open source, MIT): Python agent that investigates payment complaints and verifies every claim in its answer against the evidence it cited (github.com/erikunha/ledgerlens).',
   '- VAULT_OF_LOCI, personal project (open source, MIT): Obsidian vault template where AI agents quiz instead of answering, driven by one AGENTS.md across five agent tools, with a 17-scenario tutor test graded by a model of another family (github.com/erikunha/vault-of-loci).',
   '- REACT_GOOGLE_MAPS_API, open-source contribution (PR #3266): diagnosed and fixed an infinite re-render loop in the Directions API example of a library with about 1.8M weekly npm downloads; reviewed and merged by the maintainer.',
-  '- SERVICE_OPS_CONSOLE, Confidential (forward deployed engineering): hospital equipment service platform for service orders, specialist schedules and field visits.',
+  '- SERVICE_OPS_CONSOLE, Confidential (forward deployed engineering): hospital equipment maintenance platform for service orders, specialist schedules and field visits.',
 ];
 
 export const DESIGN_SYSTEM_LINES: readonly string[] = [
