@@ -11,7 +11,7 @@ export const AI_ENGINEERING_LINES: readonly string[] = [
   '  around traps, each answer fenced per call so it cannot instruct its grader, correctness gated',
   '  at 0.9 and jailbreak resistance gated at 1.0',
   '- Model migration gated on evals: the endpoint moved to a newer model only after its CI eval',
-  '  passed, with cost per answer down from about $0.002 to $0.0003',
+  '  passed, with cost per answer down from about $0.003 to about $0.0004',
   '- Daily work in Claude Code and Codex, authoring the skills, guard policies and lifecycle hooks',
   '  they run under',
   '- Multi-agent orchestration: 12-agent AI-assisted engineering system on GitHub Copilot, adopted',
