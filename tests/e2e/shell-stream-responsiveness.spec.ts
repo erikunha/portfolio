@@ -20,6 +20,7 @@ const CPU_RATES = [1, 4] as const;
 const CHUNK_INTERVAL_MS = 25;
 const CHUNK_COUNT = 300;
 const TYPE_AFTER_CHUNKS = 150;
+const STREAM_STALL_MS = 2_000;
 const CHUNK_CHARS = 24;
 const TYPED = 'and what about evaluation harnesses';
 const KEY_DELAY_MS = 40;
@@ -80,6 +81,30 @@ async function installPacedAsk(page: Page): Promise<void> {
     },
     { interval: CHUNK_INTERVAL_MS, count: CHUNK_COUNT, chars: CHUNK_CHARS },
   );
+}
+
+// The producer is a timer on the throttled main thread, so the chunks per
+// second it manages falls with the CPU: a runner a few times slower than a
+// laptop delivers 150 chunks in 6 s or more, not the 3.75 s the interval says.
+// The wait therefore names the progress it needs, the next chunk, and fails only
+// when the stream stops delivering for STREAM_STALL_MS, never on a wall clock
+// that assumes the speed of the machine it was written on.
+async function waitForStreamedChunks(page: Page, target: number): Promise<void> {
+  let sent = 0;
+  while (sent < target) {
+    try {
+      await page.waitForFunction(
+        (previous) => (window as unknown as ProbeWindow).__stream.sent > previous,
+        sent,
+        { timeout: STREAM_STALL_MS },
+      );
+    } catch {
+      throw new Error(
+        `the stream made no progress for ${STREAM_STALL_MS}ms at ${sent} of ${target} chunks`,
+      );
+    }
+    sent = await page.evaluate(() => (window as unknown as ProbeWindow).__stream.sent);
+  }
 }
 
 async function startProbe(page: Page): Promise<void> {
@@ -144,9 +169,7 @@ for (const rate of CPU_RATES) {
     await expect(page.locator(SHELL_SELECTOR.caret)).toBeVisible();
     // Typing starts once half the answer is on screen: the render cost grows
     // with the text, so the late keys are the ones that can miss the bound.
-    await expect
-      .poll(() => page.evaluate(() => (window as unknown as ProbeWindow).__stream.sent))
-      .toBeGreaterThanOrEqual(TYPE_AFTER_CHUNKS);
+    await waitForStreamedChunks(page, TYPE_AFTER_CHUNKS);
     await startProbe(page);
 
     await page.keyboard.type(TYPED, { delay: KEY_DELAY_MS });
