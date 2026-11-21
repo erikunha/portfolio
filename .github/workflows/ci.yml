@@ -434,7 +434,7 @@ jobs:
   e2e-functional:
     runs-on: ubuntu-24.04
     container:
-      image: mcr.microsoft.com/playwright:v1.65.0-noble
+      image: mcr.microsoft.com/playwright:v1.65.1-noble
       options: --ipc=host --init
     timeout-minutes: 25
     if: github.event_name != 'pull_request' || needs.detect-changes.outputs.app == 'true'
@@ -546,7 +546,7 @@ jobs:
   e2e-visual-chromium:
     runs-on: ubuntu-24.04
     container:
-      image: mcr.microsoft.com/playwright:v1.65.0-noble
+      image: mcr.microsoft.com/playwright:v1.65.1-noble
       options: --ipc=host --init
     timeout-minutes: 35
     permissions:
