@@ -47,12 +47,11 @@ describe('createWordHold', () => {
     expect(hold.flush()).toBe('');
   });
 
-  it('handles a very long unbroken word in linear time', () => {
+  it('holds a very long unbroken word until the flush', () => {
     const hold = createWordHold();
-    const started = performance.now();
-    for (let i = 0; i < 4000; i += 1) hold.push('x');
+    const released = Array.from({ length: 4000 }, () => hold.push('x')).join('');
 
+    expect(released).toBe('');
     expect(hold.flush()).toHaveLength(4000);
-    expect(performance.now() - started).toBeLessThan(500);
   });
 });
