@@ -260,7 +260,7 @@ a major version and silently change behavior; `--frozen-lockfile` only masks the
 drift until the lockfile is regenerated. Major-locking every dependency makes
 the build reproducible across machines and across time, a property a Staff-bar
 artifact must demonstrate, not merely claim. The tilde on `next` exists because
-`patches/next@16.4.5.patch` is keyed to one exact Next version and rewrites two
+`patches/next@16.4.6.patch` is keyed to one exact Next version and rewrites two
 Next-internal files (`scripts/__tests__/next-polyfill-patch.test.ts` fails when the key no longer matches the installed version), and a caret range could float `next` onto a new minor
 whose polyfill layout the patch was never checked against.
 

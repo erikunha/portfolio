@@ -99,7 +99,7 @@
       "proxy-agent": "^8.0.1"
     },
     "patchedDependencies": {
-      "next@16.4.5": "patches/next@16.4.5.patch"
+      "next@16.4.6": "patches/next@16.4.6.patch"
     }
   },
   "dependencies": {
@@ -107,7 +107,7 @@
     "@mdx-js/loader": "^3.1.1",
     "@mdx-js/react": "^3.1.1",
     "@modelcontextprotocol/server": "^2.4.0",
-    "@next/mdx": "~16.4.5",
+    "@next/mdx": "~16.4.6",
     "@upstash/ratelimit": "^2.2.0",
     "@upstash/redis": "^1.41.0",
     "@vercel/analytics": "^2.0.1",
@@ -117,7 +117,7 @@
     "clsx": "^2.1.1",
     "langfuse-vercel": "^3.39.2",
     "mcp-handler": "^2.3.1",
-    "next": "~16.4.5",
+    "next": "~16.4.6",
     "pino": "^10.4.0",
     "react": "~19.3.1",
     "react-dom": "~19.3.1",
