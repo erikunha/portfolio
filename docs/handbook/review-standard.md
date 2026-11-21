@@ -26,7 +26,7 @@ Examples:
 Before writing: list every doc, ADR, diagram and skill file that mentions the symbol you are changing, and treat each one as part of the diff.
 Check: after the diff, grep the repo for the old symbol name and the old path and fix every hit. A renamed path left in one doc fails the review every time.
 Examples:
-- PR144 `lib/env.test.ts`: the comment above the test still listed the old consumer script; the fix updated the list.
+- PR144 `lib/__tests__/env.test.ts` (now `lib/env.test.ts`): the comment above the test still listed the old consumer script; the fix updated the list.
 - A skill copy for one tool asserted a control that the other tool's copy did not have; the fix corrected the claim.
 - PR284 `app/(en)/design-system/primitives/button/page.mdx`: a wrong statement about the native button default misled every reader; the fix corrected it.
 
