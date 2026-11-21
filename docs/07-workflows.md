@@ -143,7 +143,7 @@ flowchart LR
 `detect-changes` (`scripts/ci/detect-changes.ts`, with the path lists in `scripts/ci/detect-changes-paths.ts`) emits three booleans. On any event other than a pull request all three are true. On a pull request each is true when the diff touches its path list, and:
 
 - `ai` is also true when the `ai` package major or any AI dependency version in `pnpm-lock.yaml` changed.
-- `ui` is also true when the `browserslist` or `pnpm` section of `package.json` changed, and it excludes `lib/eval/**` and `lib/__tests__/**`.
+- `ui` is also true when the `browserslist` or `pnpm` section of `package.json` changed, and it excludes `lib/eval/**` and `lib/env.test.ts`.
 - Changes under `tests/visual/` or `tests/e2e/` set both `app` and `ui`, so baseline-only and e2e-only PRs run the functional and visual jobs.
 
 `.github/workflows/ci.yml` (the authoritative gate). A `detect-changes` job emits `app`, `ai` and `ui` booleans so heavy jobs skip on docs-only PRs (GitHub treats skipped required checks as satisfied). Matrix jobs skipped at job level report ONE unsuffixed check, so matrix-named required contexts (`e2e-functional (chromium)` etc.) hang forever on path-skipped PRs; required checks therefore point at always-reporting contexts and the conditional jobs are enforced through the `ci-gate` fan-in below.

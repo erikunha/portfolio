@@ -96,7 +96,7 @@ export const UI_PATHS: readonly string[] = [
   'tests/e2e/',
   'pnpm-lock.yaml',
   ':(exclude)lib/eval/**',
-  ':(exclude)lib/__tests__/**',
+  ':(exclude)lib/env.test.ts',
 ];
 
 export const IGNORED_PATHS: readonly string[] = [
