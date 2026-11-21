@@ -115,6 +115,7 @@ const PALETTE = `
   --color-carbon-950: #000000;
   --color-carbon-900: #050505;
   --color-sage-50: #e6ffe6;
+  --color-sage-300: #a9bda9;
   --color-sage-400: #8a9d8a;
   --color-sage-500: #6b7c6b;
   --color-coral-300: #ff8a8a;

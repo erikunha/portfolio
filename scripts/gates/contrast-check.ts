@@ -48,17 +48,24 @@ const PAIRS: Pair[] = [
   ['coral-300', 'carbon-950', 4.5, 'alert text on base (errors, clip LED)'],
 ];
 
-const ROLE_PAIRS: Pair[] = (
-  [
-    ['text', 'surface', TEXT_MIN],
-    ['text-muted', 'surface', TEXT_MIN],
-    ['on-accent', 'accent', TEXT_MIN],
-    ['accent', 'surface', NON_TEXT_MIN],
-    ['focus', 'surface', NON_TEXT_MIN],
-    ['warning', 'surface', TEXT_MIN],
-    ['danger', 'surface', TEXT_MIN],
-  ] as [string, string, number][]
-).map(([fg, bg, min]) => [fg, bg, min, `role ${fg} on ${bg}`]);
+const BORDER_PAIRS: Pair[] = [
+  ['sage-300', 'surface-raised', NON_TEXT_MIN, 'border sage-300 on surface-raised (non-text)'],
+];
+
+const ROLE_PAIRS: Pair[] = [
+  ...(
+    [
+      ['text', 'surface', TEXT_MIN],
+      ['text-muted', 'surface', TEXT_MIN],
+      ['on-accent', 'accent', TEXT_MIN],
+      ['accent', 'surface', NON_TEXT_MIN],
+      ['focus', 'surface', NON_TEXT_MIN],
+      ['warning', 'surface', TEXT_MIN],
+      ['danger', 'surface', TEXT_MIN],
+    ] as [string, string, number][]
+  ).map(([fg, bg, min]): Pair => [fg, bg, min, `role ${fg} on ${bg}`]),
+  ...BORDER_PAIRS,
+];
 
 const ROLE_NAMES = [
   'surface',
