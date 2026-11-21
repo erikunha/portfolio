@@ -169,7 +169,7 @@ Strong preference: AI-native products and agent systems that ship with evals and
 
 ## What Erik does not claim
 - No production RAG or vector search: RAG, embeddings and FAISS are MBA coursework and personal projects (LedgerLens included). His shipped AI work is the eval harness and the governed endpoint, grounded on facts placed in the prompt, not a vector index.
-- No production Python service: employer backends were Node.js, and his Python is in personal projects and MBA coursework.
+- No production Python service: employer backends were Node.js on Express or Fastify, never NestJS, and his Python is in personal projects and MBA coursework.
 - AWS: delivery pipelines to S3 and CloudFront and a hand-configured EC2, RDS and NGINX app. Not a multi-account fleet at scale.
 - NestJS and XState v5: no stated production use. His state-machine experience is RxJS and NgRx.
 - The personal endpoint is public but low traffic: never imply paying users.
