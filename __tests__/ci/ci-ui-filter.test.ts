@@ -16,7 +16,7 @@ describe('detect-changes-paths manifest: `ui` filter (visual / Argos gate)', () 
     expect(APP_PATHS).toContain('package.json');
   });
 
-  it('excludes lib/eval and lib tests from the ui filter (harness/tests never render)', () => {
+  it('excludes lib/eval and the env test file from the ui filter (harness/tests never render)', () => {
     expect(UI_PATHS).toContain(':(exclude)lib/eval/**');
     expect(UI_PATHS).toContain(':(exclude)lib/env.test.ts');
     expect(UI_PATHS).toContain('lib/');

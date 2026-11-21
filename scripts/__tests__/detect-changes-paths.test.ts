@@ -22,7 +22,6 @@ describe('detect-changes manifest', () => {
     expect(APP_PATHS).toContain('.github/workflows/');
     expect(APP_PATHS).toContain('package.json');
     expect(UI_PATHS).toContain(':(exclude)lib/eval/**');
-    expect(UI_PATHS).toContain(':(exclude)lib/env.test.ts');
   });
 
   it('arms the browser jobs when only a Playwright spec or baseline changes', () => {
@@ -103,4 +102,33 @@ describe('test-only diffs', { timeout: SUBPROCESS_TEST_TIMEOUT_MS }, () => {
       }
     },
   );
+
+  it('keeps a diff of only the env test out of the UI gate', () => {
+    const path = ['lib', 'env.test.ts'].join('/');
+    const dir = mkdtempSync(join(tmpdir(), 'dc-test-path-'));
+    const git = (...args: string[]) =>
+      execFileSync('git', args, {
+        cwd: dir,
+        env: inheritedEnvWithIsolatedGit(),
+        encoding: 'utf8',
+      }).trim();
+    try {
+      git('init', '--quiet');
+      mkdirSync(dirname(join(dir, path)), { recursive: true });
+      writeFileSync(join(dir, path), 'fixture');
+      git('add', '--', path);
+      const changed = (paths: readonly string[]) =>
+        Boolean(git('diff', '--cached', '--name-only', '--', ...paths));
+      expect(
+        computeCategories({
+          aiChanged: changed(AI_PATHS),
+          appChanged: changed(APP_PATHS),
+          uiChanged: changed(UI_PATHS),
+          pkgRenderChanged: false,
+        }),
+      ).toEqual({ ai: false, app: true, ui: false });
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
 });
