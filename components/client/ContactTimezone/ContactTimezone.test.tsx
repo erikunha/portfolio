@@ -181,7 +181,7 @@ describe('ContactTimezone location and overlap', () => {
     renderAt(ONLINE_INSTANT);
 
     expect(testId('ctz-overlap').textContent).toBe(
-      `${fillCopy(copy.overlap.summary, { hours: contactHoursPhrase(copy.hours, 4) })}${copy.overlap.separator}${fillCopy(copy.overlap.range, { range: '14:00 to 18:00' })}`,
+      `${fillCopy(copy.overlap.summary, { hours: contactHoursPhrase(copy.hours, 4) })}${copy.overlap.separator}${fillCopy(copy.overlap.range, { start: '14:00', end: '18:00' })}`,
     );
   });
 

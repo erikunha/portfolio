@@ -13,7 +13,6 @@ const VISITOR_WORK_START_MINUTE = VISITOR_WORK_START_HOUR * MINUTES_PER_HOUR;
 const VISITOR_WORK_END_MINUTE = VISITOR_WORK_END_HOUR * MINUTES_PER_HOUR;
 const HALF_HOUR_MINUTES = MINUTES_PER_HOUR / 2;
 const DAY_SHIFTS = [-MINUTES_PER_DAY, 0, MINUTES_PER_DAY] as const;
-const RANGE_JOINER = ' to ';
 const CLOCK_SEPARATOR = ':';
 
 const FULL_CIRCLE_DEGREES = 360;
@@ -38,12 +37,13 @@ const ERIK_LABEL_OFFSET = { x: 10, y: 8 } as const;
 const VISITOR_LABEL_OFFSET = { x: 10, y: -44 } as const;
 const NEAR_VISITOR_LABEL_OFFSET = { x: -118, y: -46 } as const;
 
+export type OverlapWindow = { start: string; end: string };
 export type OverlapRows = { erik: boolean[]; you: boolean[]; both: boolean[] };
 export type BestSlot = { you: string; erik: string };
 export type Overlap = {
   minutes: number;
   hours: number;
-  range: string | null;
+  window: OverlapWindow | null;
   cells: OverlapRows;
   currentHour: number;
   bestSlot: BestSlot | null;
@@ -103,9 +103,9 @@ export function computeOverlap(visitorZone: string, at: Date): Overlap {
   return {
     minutes,
     hours: minutes / MINUTES_PER_HOUR,
-    range:
+    window:
       minutes > 0
-        ? `${formatMinutesOfDay(start)}${RANGE_JOINER}${formatMinutesOfDay(start + minutes)}`
+        ? { start: formatMinutesOfDay(start), end: formatMinutesOfDay(start + minutes) }
         : null,
     cells,
     currentHour: Math.floor(
