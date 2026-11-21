@@ -39,7 +39,7 @@ export const askFacts: AskFacts = AskFactsSchema.parse({
   currentRoleScope: [
     `Erik ${RAYLU_BUILT_CLAIM}, and ${RAYLU_SCREENS_CLAIM}. Do NOT widen this to whole-platform ownership: the scope is that frontend platform plus the backend changes listed under Raylu in the employment history below, not the whole product, its models or the company.`,
     'He built the table engine from zero: the subsystem did not exist before June 2026, he built it alone through June, and one other engineer co-developed it from the second month. He never claims sole ownership of it.',
-    'The table is a real table element, not an ARIA grid: it does not implement role="grid", aria-rowcount or aria-colcount, and sort announcements were never tested · do not claim those. The accessibility work on it was specified in design documents, not all verified in the product.',
+    'The table is a real table element, not an ARIA grid: it does not implement role="grid", aria-rowcount or aria-colcount, and the sort and range announcements are covered by jsdom unit tests and were never verified with a screen reader in the product · do not claim those. The accessibility work on it was specified in design documents, not all verified in the product.',
   ],
   currentRoleDetail: [
     'Architecture: the table engine has a headless core (state, codecs, view-model logic) kept apart from the React components. The dependency points one way only: core code never imports the component layer or react-dom, which one grep can check.',
@@ -198,7 +198,7 @@ export const askFacts: AskFacts = AskFactsSchema.parse({
     'No production RAG or vector search: RAG, embeddings and FAISS are MBA coursework and personal projects (LedgerLens included). His shipped AI work is the eval harness and the governed endpoint, grounded on facts placed in the prompt, not a vector index.',
     'No production Python service: employer backends were Node.js on Express or Fastify, never NestJS, and his Python is in personal projects and MBA coursework.',
     'AWS: delivery pipelines to S3 and CloudFront and a hand-configured EC2, RDS and NGINX app. Not a multi-account fleet at scale.',
-    'NestJS and XState v5: no stated production use. His state-machine experience is RxJS and NgRx.',
+    'NestJS: never used. XState v5: no stated production use. His state-machine experience is RxJS and NgRx.',
     'The personal endpoint is public but low traffic: never imply paying users.',
     'No formal people management: only mentoring four junior engineers at Grupo SBF.',
     'Employer revenue, assets, customers and platform volume are business context, not personal ownership.',
