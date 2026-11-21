@@ -65,7 +65,7 @@ const projectsFor = (locale: SiteLocale): Project[] => {
       },
       {
         name: 'SERVICE_OPS_CONSOLE',
-        company: 'Forward Deployed Engineer',
+        company: 'Confidential',
         kind: 'professional',
         description: pt
           ? 'Plataforma de serviço de equipamentos hospitalares: ordens de serviço, agendamento de especialistas com checagem de deslocamento, visitas de campo, controle de acesso baseado em papéis (RBAC) com 29 permissões, atualizações ao vivo.'

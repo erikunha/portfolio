@@ -450,8 +450,8 @@ describe('canonical profile and education', () => {
     }
     expect(
       gitLog[EN].filter((entry) => !entry.companyUrl).map((entry) => entry.company),
-      'only the forward deployed engineering entry has no company site: it names no client, so there is nothing to link',
-    ).toEqual(['Forward Deployed Engineer']);
+      'only the confidential engagement has no company site: it names no client, so there is nothing to link',
+    ).toEqual(['Confidential']);
   });
 
   it('rejects a non-https company URL at every schema that carries one', async () => {

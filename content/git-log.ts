@@ -62,11 +62,11 @@ const gitLogFor = (locale: SiteLocale): GitCommit[] => {
       date: pt ? 'mar/2023 - mar/2025' : 'Mar 2023 - Mar 2025',
       branch: 'career/forward-deployed-engineer',
       type: 'career',
-      company: 'Forward Deployed Engineer',
+      company: 'Confidential',
       role: pt ? 'Engenheiro de Software Sênior' : 'Senior Software Engineer',
       startMonth: '2023-03',
       endMonth: '2025-03',
-      location: pt ? 'Remoto' : 'Remote',
+      location: pt ? 'Canadá (Remoto)' : 'Canada (Remote)',
       workMode: null,
       domain: pt ? 'equipamentos de imagem médica' : 'medical imaging equipment',
       body: [

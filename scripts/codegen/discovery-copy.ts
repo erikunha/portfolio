@@ -119,7 +119,7 @@ export const PROJECT_CONTEXT_LINES: readonly string[] = [
   '- LEDGERLENS, personal project (open source, MIT): Python agent that investigates payment complaints and verifies every claim in its answer against the evidence it cited (github.com/erikunha/ledgerlens).',
   '- VAULT_OF_LOCI, personal project (open source, MIT): Obsidian vault template where AI agents quiz instead of answering, driven by one AGENTS.md across five agent tools, with a 17-scenario tutor test graded by a model of another family (github.com/erikunha/vault-of-loci).',
   '- REACT_GOOGLE_MAPS_API, open-source contribution (PR #3266): diagnosed and fixed an infinite re-render loop in the Directions API example of a library with about 1.8M weekly npm downloads; reviewed and merged by the maintainer.',
-  '- SERVICE_OPS_CONSOLE, Forward Deployed Engineer: hospital equipment service platform for service orders, specialist schedules and field visits.',
+  '- SERVICE_OPS_CONSOLE, Confidential (forward deployed engineering): hospital equipment service platform for service orders, specialist schedules and field visits.',
 ];
 
 export const DESIGN_SYSTEM_LINES: readonly string[] = [

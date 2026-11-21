@@ -322,7 +322,7 @@ describe('terminal redesign canonical facts', () => {
       '24.2M digital clients',
       '8 talks',
       'WCAG 2.2 AA',
-      'Forward Deployed Engineer',
+      'Confidential',
       'Zup Innovation',
     ]) {
       expect(llmsTxt, `public/llms.txt must publish "${current}"`).toContain(current);
@@ -374,14 +374,7 @@ describe('terminal redesign canonical facts', () => {
     ).toEqual([
       ['Raylu', 'AI Product Engineer', '2026-06', null, 'New York, US', 'remote'],
       ['Betsson Group', 'Senior Software Engineer', '2025-03', '2026-05', 'Malta', 'hybrid'],
-      [
-        'Forward Deployed Engineer',
-        'Senior Software Engineer',
-        '2023-03',
-        '2025-03',
-        'Remote',
-        null,
-      ],
+      ['Confidential', 'Senior Software Engineer', '2023-03', '2025-03', 'Canada (Remote)', null],
       [
         'Grupo SBF (Nike / Centauro)',
         'Software Engineer',
@@ -433,7 +426,7 @@ describe('terminal redesign canonical facts', () => {
     const service = projects[SITE_LOCALE.en].find(
       (project) => project.name === 'SERVICE_OPS_CONSOLE',
     );
-    expect(service?.company).toBe('Forward Deployed Engineer');
+    expect(service?.company).toBe('Confidential');
     expect(service?.description).toContain('service orders');
     expect(service?.description).toContain('specialist scheduling');
     expect(service?.description).toContain('field visits');
