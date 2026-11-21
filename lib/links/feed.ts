@@ -219,6 +219,7 @@ async function fetchDeepUploads(
 export const FEED_FIXTURE_ENV = 'E2E_LINKS_FEED_FIXTURE';
 
 export async function loadFixtureFeed(
+  // biome-ignore lint/style/noProcessEnv: the default is the live process env on purpose: the fixture switch and VERCEL are per-call test-time variables, and the parameter lets a test pass its own map
   vars: Record<string, string | undefined> = process.env,
 ): Promise<ChannelFeed | null> {
   const path = vars[FEED_FIXTURE_ENV];

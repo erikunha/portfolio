@@ -22,7 +22,7 @@ describe('detect-changes manifest', () => {
     expect(APP_PATHS).toContain('.github/workflows/');
     expect(APP_PATHS).toContain('package.json');
     expect(UI_PATHS).toContain(':(exclude)lib/eval/**');
-    expect(UI_PATHS).toContain(':(exclude)lib/__tests__/**');
+    expect(UI_PATHS).toContain(':(exclude)lib/env.test.ts');
   });
 
   it('arms the browser jobs when only a Playwright spec or baseline changes', () => {

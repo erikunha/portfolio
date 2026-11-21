@@ -13,6 +13,7 @@ async function resolveSalt(): Promise<string> {
   const envSalt = env.DEPLOY_SALT;
   if (envSalt) return envSalt;
 
+  // biome-ignore lint/style/noProcessEnv: NODE_ENV is the Next runtime mode, inlined at build so the literal form lets the dev salt branch drop out of production; it is not configuration the env schema owns
   if (process.env.NODE_ENV !== 'production') {
     return 'portfolio';
   }

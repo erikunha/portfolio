@@ -47,6 +47,7 @@ export function buildLogPayload(
     ...(stack !== undefined && { stack }),
     url: browser ? window.location.origin + window.location.pathname : '',
     ts: new Date().toISOString(),
+    // biome-ignore lint/style/noProcessEnv: next.config.ts inlines RELEASE into the client bundle at build, which needs the literal process.env.RELEASE, and the client closure must not import the zod env schema
     release: process.env.RELEASE,
     ...(browser && {
       motion: document.body?.dataset.motion,

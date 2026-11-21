@@ -1,7 +1,7 @@
 import { spawnSync } from 'node:child_process';
-import { copyFileSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { copyFileSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 const ROOT = process.cwd();
@@ -83,6 +83,11 @@ const FIXTURES: Fixture[] = [
     source: 'export function f() {\n  console.log(1);\n  var x = 1;\n  return x;\n}\n',
   },
   {
+    rule: 'style/noProcessEnv',
+    file: 'lib/process-env.ts',
+    source: 'export const mode = process.env.NODE_ENV;\n',
+  },
+  {
     rule: 'nursery/noTailwindRawColors',
     file: 'raw-color.tsx',
     source: 'export const C = () => <div className="text-red-500" />;\n',
@@ -111,7 +116,10 @@ describe('biome.json lint rules', () => {
     config.files = { ignoreUnknown: true, includes: ['**'] };
     writeFileSync(join(scratch, 'biome.json'), JSON.stringify(config));
     copyFileSync(join(ROOT, 'package.json'), join(scratch, 'package.json'));
-    for (const { file, source } of FIXTURES) writeFileSync(join(scratch, file), source);
+    for (const { file, source } of FIXTURES) {
+      mkdirSync(dirname(join(scratch, file)), { recursive: true });
+      writeFileSync(join(scratch, file), source);
+    }
     const run = spawnSync(BIOME_BIN, ['lint', '--reporter=json', '.'], {
       cwd: scratch,
       encoding: 'utf8',

@@ -235,8 +235,7 @@ crosses modules or exercises a route goes in `__tests__/`, and a family of them 
 `__tests__/<family>/`: `ask`, `contact`, `agent`. A repo invariant goes in `__tests__/meta/`. A
 workflow test goes in `__tests__/ci/`. A script test goes in `scripts/__tests__/`. A browser test goes
 in `tests/`, or in a `*.e2e.ts` file beside the component. No `__tests__` folder lives under `lib/`,
-`components/`, `content/`, `evals/`, `design-system/` or `app/`. `lib/__tests__/env.test.ts` is the one
-exception, kept until the env module changes.
+`components/`, `content/`, `evals/`, `design-system/` or `app/`.
 
 **How placement is held.** `__tests__/meta/test-placement.test.ts` reads `git ls-files` and fails on a
 tracked test under a `lib/**/__tests__/` folder, on an `ask-`, `contact-` or `agent-` file at the

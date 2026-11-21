@@ -157,7 +157,15 @@
       }
     },
     {
-      "includes": ["app/api/**/*.ts", "lib/server/**/*.ts"],
+      "includes": [
+        "app/api/**/*.ts",
+        "lib/**/*.ts",
+        "lib/**/*.tsx",
+        "!lib/env.ts",
+        "!lib/env-build.ts",
+        "!lib/**/*.test.ts",
+        "!lib/**/*.test.tsx"
+      ],
       "linter": {
         "rules": {
           "style": {

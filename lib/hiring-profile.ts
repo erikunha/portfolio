@@ -69,6 +69,7 @@ export const HiringProfileSchema = z.object({
 export type HiringProfile = z.infer<typeof HiringProfileSchema>;
 
 const BUILD_DATE_MESSAGE = 'BUILD_DATE must be a YYYY-MM-DD date baked in by next.config.ts';
+// biome-ignore lint/style/noProcessEnv: next.config.ts bakes BUILD_DATE in at build, and only the literal process.env.BUILD_DATE form is replaced by the inliner
 const BUILD_DATE = z.iso.date(BUILD_DATE_MESSAGE).parse(process.env.BUILD_DATE);
 
 export const HIRING_PROFILE: HiringProfile = HiringProfileSchema.parse({
