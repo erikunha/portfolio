@@ -15,8 +15,8 @@ const educationFor = (locale: SiteLocale): Education[] => {
       expectedCompletion: '2027-12',
       period: pt ? 'previsto para dez/2027' : 'expected Dec 2027',
       focus: pt
-        ? 'Disciplinas: PyTorch, aplicações de LLM e RAG, LangChain e LangGraph'
-        : 'Coursework: PyTorch, LLM applications and RAG, LangChain and LangGraph',
+        ? 'Disciplinas: agentes LangChain (concluída), LangGraph (em curso), RAG, PyTorch'
+        : 'Coursework: LangChain agents (completed), LangGraph (in progress), RAG, PyTorch',
     },
     {
       id: 'CO_OP_DIPLOMA',

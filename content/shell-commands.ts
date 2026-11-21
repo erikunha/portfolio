@@ -25,7 +25,7 @@ const SHELL_RESPONSES: ShellResponse[] = [
   {
     commands: [ShellCommand.Stack],
     kind: ShellLineKind.Output,
-    text: 'llm systems, eval harnesses, agent orchestration, guardrails, mcp servers, model routing, prompt versioning, typescript, python, node.js, react, next.js, angular, fastify, postgresql, redis, docker, aws',
+    text: 'llm systems, eval harnesses, agent orchestration, guardrails, mcp servers, eval-gated model migration, prompt versioning, typescript, python, node.js, react, next.js, angular, fastify, postgresql, redis, docker, aws',
   },
   {
     commands: [ShellCommand.Now],

@@ -30,6 +30,10 @@ export const FUNDS_PHRASE = `${FUNDS_SERVED}+ funds holding $${ASSETS_UNDER_MANA
 export const RAYLU_FRONTEND_SCOPE =
   "the frontend platform behind a private-markets product's data-dense pages";
 export const RAYLU_BUILT_CLAIM = `built, with one other engineer, ${RAYLU_FRONTEND_SCOPE}`;
+export const RAYLU_SCREENS_CLAIM =
+  'rebuilt the four main list screens investors work in, with the Fastify, TypeORM and PostgreSQL changes behind them';
+export const RAYLU_SCREENS_CLAIM_PT =
+  'reconstruí as quatro principais telas de listagem em que os investidores trabalham, com as mudanças em Fastify, TypeORM e PostgreSQL por trás delas';
 
 const profileFields = ProfileSchema.parse({
   fullName: 'Erik Henrique Alves Cunha',

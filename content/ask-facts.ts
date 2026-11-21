@@ -2,7 +2,7 @@ import { communityEvent } from './community';
 import { education } from './education';
 import { designSystemTake, homeTakes } from './hottest-takes';
 import { OPEN_ROLES_SENTENCE } from './open-roles';
-import { FUNDS_PHRASE, RAYLU_BUILT_CLAIM } from './profile';
+import { FUNDS_PHRASE, RAYLU_BUILT_CLAIM, RAYLU_SCREENS_CLAIM } from './profile';
 import { type AskFacts, AskFactsSchema } from './schemas';
 import { SITE_LOCALE } from './site-locale';
 import { WORK_SCOPE_SENTENCE } from './work-scope';
@@ -29,7 +29,7 @@ export const askFacts: AskFacts = AskFactsSchema.parse({
   openTo: `Open to ${WORK_SCOPE_SENTENCE}. Not limited to remote work. Anything else about where or how Erik can be hired is answered by the contact email, never guessed.`,
   coreStack: [
     `AI: 12-agent GitHub Copilot engineering system at Betsson (codegen, review, debugging, testing, architecture validation), the investor workflow screens of Raylu's AI deal origination platform (${FUNDS_PHRASE}), a governed Claude endpoint with a CI eval harness (this portfolio shell), a LangChain payment-complaint agent with a claim verifier (LedgerLens, personal project), daily work in Claude Code and Codex authoring skills, guard policies and lifecycle hooks`,
-    'AI-native: Vercel AI SDK + AI Gateway, Anthropic API, OpenAI, Google GenAI/Vertex, MCP servers, Zod structured output, eval harnesses with LLM judge calibrated on human labels, per-job cost caps, prompt-injection defense, agent and sub-agent orchestration, Claude Code/Codex skills, spec-driven development, model routing with cost ceilings',
+    'AI-native: Vercel AI SDK + AI Gateway, Anthropic API, OpenAI, Google GenAI/Vertex, MCP servers, Zod structured output, eval harnesses with LLM judge calibrated on human labels, spend budgets reserved before each model call, model migration gated on evals, prompt-injection defense, agent and sub-agent orchestration, Claude Code/Codex skills, spec-driven development',
     'Frontend: React, Next.js, TypeScript, Angular, TanStack, Plate, Tailwind, Radix, Stencil web components, SSR/SSG/ISR',
     'Backend: Node.js, Express.js, REST APIs, PostgreSQL, MongoDB, SQLite, Microsoft SQL Server',
     'Languages: TypeScript, JavaScript (ES6+), SQL, Python (in personal projects and coursework, not in a production service)',
@@ -37,7 +37,7 @@ export const askFacts: AskFacts = AskFactsSchema.parse({
     'Cloud: AWS (CodePipeline, CodeBuild, S3, CloudFront, EC2), Docker, NGINX, Jenkins, GitHub Actions',
   ],
   currentRoleScope: [
-    `Erik ${RAYLU_BUILT_CLAIM}. Do NOT widen this to whole-platform ownership: the scope is that frontend platform plus the backend changes listed under Raylu in the employment history below, not the whole product, its models or the company.`,
+    `Erik ${RAYLU_BUILT_CLAIM}, and ${RAYLU_SCREENS_CLAIM}. Do NOT widen this to whole-platform ownership: the scope is that frontend platform plus the backend changes listed under Raylu in the employment history below, not the whole product, its models or the company.`,
     'He built the table engine from zero: the subsystem did not exist before June 2026, he built it alone through June, and one other engineer co-developed it from the second month. He never claims sole ownership of it.',
     'The table is a real table element, not an ARIA grid: it does not implement role="grid", aria-rowcount or aria-colcount, and sort announcements were never tested · do not claim those. The accessibility work on it was specified in design documents, not all verified in the product.',
   ],
@@ -196,7 +196,7 @@ export const askFacts: AskFacts = AskFactsSchema.parse({
   ],
   calibration: [
     'No production RAG or vector search: RAG, embeddings and FAISS are MBA coursework and personal projects (LedgerLens included). His shipped AI work is the eval harness and the governed endpoint, grounded on facts placed in the prompt, not a vector index.',
-    'No production Python service: employer backends were Node.js, and his Python is in personal projects and MBA coursework.',
+    'No production Python service: employer backends were Node.js on Express or Fastify, never NestJS, and his Python is in personal projects and MBA coursework.',
     'AWS: delivery pipelines to S3 and CloudFront and a hand-configured EC2, RDS and NGINX app. Not a multi-account fleet at scale.',
     'NestJS and XState v5: no stated production use. His state-machine experience is RxJS and NgRx.',
     'The personal endpoint is public but low traffic: never imply paying users.',

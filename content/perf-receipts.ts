@@ -52,23 +52,14 @@ const perfReceiptsFor = (locale: SiteLocale): PerfReceipt[] => {
       delta: '-32%',
       company: '@ GRUPO_SBF',
       note: pt
-        ? 'Code splitting do Next.js, dynamic imports, otimização de imagem e cache.'
-        : 'Next.js code splitting, dynamic imports, image optimization and caching.',
+        ? 'Code splitting do Webpack, dynamic imports, otimização de imagem e cache.'
+        : 'Webpack code splitting, dynamic imports, image optimization and caching.',
     },
     {
       metric: 'CONVERSION',
       delta: '+10%',
       company: '@ GRUPO_SBF',
       note: pt ? 'mais de 20 experimentos A/B.' : '20+ A/B experiments.',
-      project: true,
-    },
-    {
-      metric: 'DESKTOP_BUILD',
-      delta: '-40%',
-      company: '@ MB_LABS',
-      note: pt
-        ? 'uma base Ionic + Angular + Electron, ~80% compartilhada entre 5 SOs.'
-        : 'one Ionic + Angular + Electron codebase, ~80% shared across 5 OSes.',
       project: true,
     },
     {
@@ -100,6 +91,7 @@ const perfReceiptsFor = (locale: SiteLocale): PerfReceipt[] => {
       note: pt
         ? 'pipeline de release de ~5 min para ~45 s.'
         : 'release pipeline about 5 min to about 45 s.',
+      project: true,
       displayValue: '~5min → ~45s',
       before: 300,
       after: 45,
