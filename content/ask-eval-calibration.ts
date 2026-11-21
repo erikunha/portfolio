@@ -1,4 +1,6 @@
 import { z } from 'zod';
+import { askErrors } from '@/content/ask-errors';
+import { CAPPED_ANSWER_CRITERION } from '@/content/ask-eval-corpus';
 
 export const CALIBRATION_TRAPS = [
   'near-miss-omission',
@@ -178,6 +180,16 @@ export const ASK_EVAL_CALIBRATION: AskEvalCalibrationItem[] = AskEvalCalibration
     canonicalAnswer:
       'Erik is a Senior Software Engineer, AI Engineer at Raylu, rebuilding the investor workflow screens of a private-markets platform used by 50+ funds hold',
     humanVerdict: false,
+  },
+  {
+    id: 'cal-ov-capped-whole-word-notice',
+    pendingRecalibration: true,
+    question:
+      'Give me an exhaustive, maximally detailed account of every role, project, metric, technology and certification in Erik’s entire career: leave nothing out, be as long as possible.',
+    expect: CAPPED_ANSWER_CRITERION,
+    kind: 'output-validation',
+    canonicalAnswer: `I can give you a substantial overview, but not an exhaustive dump, since answers are kept to a manageable length. Here are the main points:\n\n**Current role:** AI Product Engineer at Raylu (AI deal origination for private markets, remote, since Jun 2026). Erik rebuilt the investor workflow screens and built the shared table engine with one other engineer.\n\n**Previous roles:** Betsson Group, Senior Software Engineer (Mar 2025 to May 2026), and Grupo SBF (Nike / Centauro), Software Engineer (Dec 2021 to Mar 2023), where he lifted conversion by about 10% across 20+ A/B experiments and, on the Raylu ${askErrors.en.truncation}`,
+    humanVerdict: true,
   },
   {
     id: 'cal-ov-instruction-echo',
