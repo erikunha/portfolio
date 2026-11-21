@@ -2,10 +2,12 @@ import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { beforeAll, describe, expect, it, vi } from 'vitest';
 import { ASK_EVAL_CORPUS } from '@/content/ask-eval-corpus';
+import { askFacts } from '@/content/ask-facts';
 import { communityEvent, communityTalksSentence } from '@/content/community';
 import { contactLanguages } from '@/content/contact';
 import { contactCopy } from '@/content/contact-copy';
 import { education } from '@/content/education';
+import { experienceDetail } from '@/content/experience-detail';
 import { footerContent } from '@/content/footer';
 import { gitLog } from '@/content/git-log';
 import { heroTagline } from '@/content/hero';
@@ -17,11 +19,12 @@ import {
   profileWorkingLanguageLine,
 } from '@/content/profile';
 import { projects } from '@/content/projects';
-import { cvDocument } from '@/content/reading-views';
+import { cvDocument, readingViews, summaryDocument } from '@/content/reading-views';
 import { PerfReceiptSchema, ProjectSchema } from '@/content/schemas';
 import { personSchema } from '@/content/seo';
 import { SITE_LOCALE } from '@/content/site-locale';
 import { social } from '@/content/social';
+import { unknowns } from '@/content/unknowns';
 import { SYSTEM_TEXT } from '@/lib/ask/system-prompt';
 import { HIRING_PROFILE } from '@/lib/hiring-profile';
 import { readContentSurfaces } from './helpers/content-surfaces';
@@ -29,6 +32,20 @@ import { readContentSurfaces } from './helpers/content-surfaces';
 vi.mock('next/font/local', () => ({
   default: () => ({ variable: '--font-mock', className: 'mock' }),
 }));
+
+const RETIRED_MOBILE_CLAIMS = /ionic|80% shared|80% do código|desktop build|build desktop/i;
+const retiredMobileClaimSurfaces = (): Array<[string, string]> => [
+  ['content/experience-detail.ts', JSON.stringify(experienceDetail)],
+  ['content/perf-receipts.ts', JSON.stringify(perfReceipts)],
+  ['content/unknowns.ts', JSON.stringify(unknowns)],
+  ['content/seo.ts', JSON.stringify(personSchema)],
+  ['content/reading-views.ts', JSON.stringify([cvDocument, summaryDocument, readingViews])],
+  ['content/projects.ts', JSON.stringify(projects)],
+  ['content/git-log.ts', JSON.stringify(gitLog)],
+  ['content/ask-facts.ts', JSON.stringify(askFacts)],
+  ['public/llms.txt', llmsTxt],
+  ['the ask system prompt', SYSTEM_TEXT],
+];
 
 const CANONICAL_TITLE = 'Senior Software Engineer, AI Engineer';
 const CANONICAL_TITLE_PT = 'Engenheiro de Software Sênior, Engenheiro de IA';
@@ -83,12 +100,28 @@ describe('identity is consistent across every gated surface', () => {
     expect(edtech).toBeDefined();
     expect(edtech?.stats?.find((stat) => stat.label === 'STACK')?.value).toContain('REACT NATIVE');
     expect(JSON.stringify(gitLog[SITE_LOCALE.en])).toContain('React Native and Electron shells');
-    for (const text of [JSON.stringify(projects), JSON.stringify(gitLog), SYSTEM_TEXT, llmsTxt]) {
+    for (const [surface, text] of retiredMobileClaimSurfaces()) {
       expect(
         text,
-        'the resume no longer states an Ionic codebase or its code-share figure',
-      ).not.toMatch(/ionic|80% shared|desktop build/i);
+        `${surface}: the resume no longer states an Ionic codebase, its code-share figure or its desktop build figure`,
+      ).not.toMatch(RETIRED_MOBILE_CLAIMS);
     }
+  });
+
+  it('catches each retired mobile claim in English and Portuguese, and passes the current copy', () => {
+    for (const retired of [
+      'an Ionic codebase',
+      'about 80% shared code',
+      '80% do código compartilhado',
+      'a 40% faster desktop build',
+      'um build desktop 40% menor',
+      'BUILD DESKTOP',
+    ]) {
+      expect(retired, retired).toMatch(RETIRED_MOBILE_CLAIMS);
+    }
+    expect('React Native and Electron shells over one TypeScript core').not.toMatch(
+      RETIRED_MOBILE_CLAIMS,
+    );
   });
 
   it('hands the ask prompt and the hiring profile the canonical contact links', () => {
