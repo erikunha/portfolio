@@ -65,7 +65,7 @@ describe('/api/ask behavioral: finishReason length handling', () => {
     mockStreamText.mockReset();
   });
 
-  it('appends an explicit truncation notice when the model hits the output-token cap mid-word', async () => {
+  it('drops the cut word and appends an explicit truncation notice when the model hits the output-token cap', async () => {
     mockStreamText.mockReturnValueOnce(makeCappedResult('The last receipt is ONBO'));
 
     const { POST } = await import('@/app/api/ask/route');
@@ -73,7 +73,8 @@ describe('/api/ask behavioral: finishReason length handling', () => {
     expect(res.status).toBe(200);
 
     const body = await readBody(res);
-    expect(body).toContain('The last receipt is ONBO');
+    expect(body).toContain('The last receipt is');
+    expect(body).not.toContain('ONBO');
     expect(body).toMatch(/\[answer truncated/i);
     expect(
       body.endsWith('.') || /\]\s*$/.test(body),

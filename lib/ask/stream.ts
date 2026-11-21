@@ -26,6 +26,7 @@ import { type AskContext, askError, preflightAsk } from '@/lib/ask/preflight';
 import { PROMPT_VERSION, SYSTEM_TEXT } from '@/lib/ask/system-prompt';
 import type { PostHocVerdict } from '@/lib/ask/types';
 import { countAskTokens, emitAskUsage } from '@/lib/ask/usage';
+import { createWordHold } from '@/lib/ask/word-hold';
 import { HTTP_STATUS } from '@/lib/http-status';
 import { log } from '@/lib/log';
 import { describeError } from '@/lib/log-error';
@@ -149,6 +150,7 @@ export function createAskStream(context: AskContext): AskStream {
 
   const enc = new TextEncoder();
   const guard = createStreamGuard();
+  const wordHold = createWordHold();
 
   let finishStream: () => void = () => undefined;
   const streamEnded = new Promise<void>((resolve) => {
@@ -173,17 +175,24 @@ export function createAskStream(context: AskContext): AskStream {
       const sendError = (message: string): void => {
         send(enc.encode(`${STREAM_ERR_SENTINEL}${message}`));
       };
+      const sendHeldWord = (): void => {
+        const word = wordHold.flush();
+        if (word.length > 0) send(enc.encode(word));
+      };
       const sendEnding = (ending: ClientEnding): void => {
         switch (ending.kind) {
           case 'none':
+            sendHeldWord();
             return;
           case 'truncation':
             send(enc.encode(askErrors[answerLocale].truncation));
             return;
           case 'refusal':
+            sendHeldWord();
             sendError(`${REFUSAL_PREFIX}${askErrors[answerLocale].refused}`);
             return;
           case 'interrupted':
+            sendHeldWord();
             sendError(askErrors[answerLocale].interrupted);
             return;
           case 'guard-abort':
@@ -243,7 +252,8 @@ export function createAskStream(context: AskContext): AskStream {
             finishWith(classifyFinish({ source: 'guard-abort', reason: verdict.reason }));
             break;
           }
-          send(enc.encode(text));
+          const releasable = wordHold.push(text);
+          if (releasable.length > 0) send(enc.encode(releasable));
           state.answerText += text;
         }
       } catch (streamErr) {
