@@ -1,8 +1,10 @@
 const NO_BREAK_SPACE = ' ';
 const SPACE = ' ';
 const SHORT_TAIL_MAX_CHARS = 8;
+const YEAR_RANGE = /((?:\S+ )?(?:[^\p{L}\p{N}\s] )?\d{4}-\d{4})/u;
 const SEPARATOR_ONLY = /^[^\p{L}\p{N}]+$/u;
 
+export type TextSpan = { text: string; period: boolean };
 export type TextTail = { head: string; tail: string };
 
 export function splitTail(text: string): TextTail {
@@ -26,4 +28,11 @@ export function keepTail(text: string): string {
   if (tail === '') return text;
   const glued = tail.replaceAll(SPACE, NO_BREAK_SPACE);
   return head === '' ? glued : `${head}${SPACE}${glued}`;
+}
+
+export function splitPeriods(text: string): TextSpan[] {
+  return text
+    .split(YEAR_RANGE)
+    .map((part, index) => ({ text: part, period: index % 2 === 1 }))
+    .filter((span) => span.text !== '');
 }
