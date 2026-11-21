@@ -483,6 +483,12 @@ jobs:
         with:
           name: playwright-report-${{ matrix.project }}-${{ strategy.job-index }}
           path: test-results/
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: failure()
+        with:
+          name: server-log-${{ matrix.project }}-${{ strategy.job-index }}
+          path: /tmp/server-${{ matrix.project }}.log
+          if-no-files-found: warn
 
   detect-changes:
     runs-on: ubuntu-24.04
