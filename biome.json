@@ -161,10 +161,16 @@
         "app/api/**/*.ts",
         "lib/**/*.ts",
         "lib/**/*.tsx",
+        "lib/**/*.mjs",
+        "lib/**/*.mts",
+        "lib/**/*.cts",
         "!lib/env.ts",
         "!lib/env-build.ts",
         "!lib/**/*.test.ts",
-        "!lib/**/*.test.tsx"
+        "!lib/**/*.test.tsx",
+        "!lib/**/*.test.mjs",
+        "!lib/**/*.test.mts",
+        "!lib/**/*.test.cts"
       ],
       "linter": {
         "rules": {

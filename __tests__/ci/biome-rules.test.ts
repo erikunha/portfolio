@@ -88,10 +88,54 @@ const FIXTURES: Fixture[] = [
     source: 'export const mode = process.env.NODE_ENV;\n',
   },
   {
+    rule: 'style/noProcessEnv',
+    file: 'lib/nested/process-env.ts',
+    source: 'export const mode = process.env.NODE_ENV;\n',
+  },
+  {
+    rule: 'style/noProcessEnv',
+    file: 'lib/nested/process-env.tsx',
+    source: 'export const mode = process.env.NODE_ENV;\n',
+  },
+  {
+    rule: 'style/noProcessEnv',
+    file: 'lib/nested/process-env.mjs',
+    source: 'export const mode = process.env.NODE_ENV;\n',
+  },
+  {
+    rule: 'style/noProcessEnv',
+    file: 'lib/nested/process-env.mts',
+    source: 'export const mode = process.env.NODE_ENV;\n',
+  },
+  {
+    rule: 'style/noProcessEnv',
+    file: 'lib/nested/process-env.cts',
+    source: 'export const mode = process.env.NODE_ENV;\n',
+  },
+  {
+    rule: 'style/noProcessEnv',
+    file: 'app/api/x/route.ts',
+    source: 'export const mode = process.env.NODE_ENV;\n',
+  },
+  {
     rule: 'nursery/noTailwindRawColors',
     file: 'raw-color.tsx',
     source: 'export const C = () => <div className="text-red-500" />;\n',
   },
+];
+
+const ENV_READ = 'export const mode = process.env.NODE_ENV;\n';
+const ENV_MODULE = ['lib', 'env'].join('/');
+const CLEAN_ENV_READ_FILES = [
+  `${ENV_MODULE}.ts`,
+  `${ENV_MODULE}${'.test.ts'}`,
+  'lib/env-build.ts',
+  'lib/foo.test.ts',
+  'lib/foo.test.tsx',
+  'lib/foo.test.mjs',
+  'lib/foo.test.mts',
+  'lib/foo.test.cts',
+  'components/x.ts',
 ];
 
 type Diagnostic = {
@@ -116,7 +160,8 @@ describe('biome.json lint rules', () => {
     config.files = { ignoreUnknown: true, includes: ['**'] };
     writeFileSync(join(scratch, 'biome.json'), JSON.stringify(config));
     copyFileSync(join(ROOT, 'package.json'), join(scratch, 'package.json'));
-    for (const { file, source } of FIXTURES) {
+    const cleanFixtures = CLEAN_ENV_READ_FILES.map((file) => ({ file, source: ENV_READ }));
+    for (const { file, source } of [...FIXTURES, ...cleanFixtures]) {
       mkdirSync(dirname(join(scratch, file)), { recursive: true });
       writeFileSync(join(scratch, file), source);
     }
@@ -141,5 +186,12 @@ describe('biome.json lint rules', () => {
       hits.every((d) => d.severity === ERROR_SEVERITY),
       `${rule} must be an error in biome.json: a warning does not fail \`pnpm check\``,
     ).toBe(true);
+  });
+
+  it.each(CLEAN_ENV_READ_FILES)('style/noProcessEnv leaves %s alone', (file) => {
+    const hits = diagnostics.filter(
+      (d) => d.category === 'lint/style/noProcessEnv' && fileOf(d) === file,
+    );
+    expect(hits).toHaveLength(0);
   });
 });
