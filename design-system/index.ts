@@ -1,6 +1,6 @@
 export type { BadgeProps } from './components/Badge/Badge';
 export { Badge } from './components/Badge/Badge';
-export type { ButtonProps } from './components/Button/Button';
+export type { ButtonProps, ButtonSize } from './components/Button/Button';
 export { Button } from './components/Button/Button';
 export type { CmdLineProps } from './components/CmdLine/CmdLine';
 export { CmdLine } from './components/CmdLine/CmdLine';

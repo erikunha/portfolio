@@ -10,15 +10,21 @@ import {
   type SiteLocale,
   withSectionHash,
 } from '@/content/site-locale';
+import type { ButtonSize } from '@/design-system';
 import { joinClassNames } from '@/lib/join-class-names';
 import { HOME_SECTION_ID } from '@/lib/section-spy';
 import { useCurrentSection, useSectionNavigation } from './SectionNavigationProvider.client';
 
+type LanguageSwitchStyle = {
+  className?: string | undefined;
+  size?: ButtonSize | undefined;
+  buttonClassName?: string | undefined;
+};
+
 function LanguageSwitchView({
-  className,
   paths,
-}: {
-  className: string | undefined;
+  ...style
+}: LanguageSwitchStyle & {
   paths: Record<SiteLocale, string>;
 }) {
   const { locale, copy } = useSectionNavigation();
@@ -28,31 +34,33 @@ function LanguageSwitchView({
       current={locale}
       hrefs={paths}
       names={LANGUAGE_SWITCH_NAME}
-      className={joinClassNames('flex-none', className)}
+      {...(style.size ? { size: style.size } : {})}
+      buttonClassName={style.buttonClassName}
+      className={joinClassNames('flex-none', style.className)}
       data-lang-switch=""
     />
   );
 }
 
-function CurrentLanguageSwitch({ className }: { className: string | undefined }) {
+function CurrentLanguageSwitch(style: LanguageSwitchStyle) {
   const currentId = useCurrentSection();
   const pathname = usePathname();
   if (!pathname) return null;
   const sectionId = currentId && currentId !== HOME_SECTION_ID ? currentId : null;
   return (
     <LanguageSwitchView
-      className={className}
+      {...style}
       paths={withSectionHash(pathname, headerLanguageSwitchPaths(pathname), sectionId)}
     />
   );
 }
 
-export function LanguageSwitch({ className }: { className?: string }) {
+export function LanguageSwitch(style: LanguageSwitchStyle) {
   const { route } = useSectionNavigation();
   const fallbackPaths = route === null ? LOCALE_HOME_PATH : headerLanguageSwitchPaths(route);
   return (
-    <Suspense fallback={<LanguageSwitchView className={className} paths={fallbackPaths} />}>
-      <CurrentLanguageSwitch className={className} />
+    <Suspense fallback={<LanguageSwitchView {...style} paths={fallbackPaths} />}>
+      <CurrentLanguageSwitch {...style} />
     </Suspense>
   );
 }
