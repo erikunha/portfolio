@@ -2,10 +2,12 @@ import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { beforeAll, describe, expect, it, vi } from 'vitest';
 import { ASK_EVAL_CORPUS } from '@/content/ask-eval-corpus';
+import { askFacts } from '@/content/ask-facts';
 import { communityEvent, communityTalksSentence } from '@/content/community';
 import { contactLanguages } from '@/content/contact';
 import { contactCopy } from '@/content/contact-copy';
 import { education } from '@/content/education';
+import { experienceDetail } from '@/content/experience-detail';
 import { footerContent } from '@/content/footer';
 import { gitLog } from '@/content/git-log';
 import { heroTagline } from '@/content/hero';
@@ -17,11 +19,12 @@ import {
   profileWorkingLanguageLine,
 } from '@/content/profile';
 import { projects } from '@/content/projects';
-import { cvDocument } from '@/content/reading-views';
+import { cvDocument, readingViews, summaryDocument } from '@/content/reading-views';
 import { PerfReceiptSchema, ProjectSchema } from '@/content/schemas';
 import { personSchema } from '@/content/seo';
 import { SITE_LOCALE } from '@/content/site-locale';
 import { social } from '@/content/social';
+import { unknowns } from '@/content/unknowns';
 import { SYSTEM_TEXT } from '@/lib/ask/system-prompt';
 import { HIRING_PROFILE } from '@/lib/hiring-profile';
 import { readContentSurfaces } from './helpers/content-surfaces';
@@ -29,6 +32,20 @@ import { readContentSurfaces } from './helpers/content-surfaces';
 vi.mock('next/font/local', () => ({
   default: () => ({ variable: '--font-mock', className: 'mock' }),
 }));
+
+const RETIRED_MOBILE_CLAIMS = /ionic|80% shared|80% do código|desktop build|build desktop/i;
+const retiredMobileClaimSurfaces = (): Array<[string, string]> => [
+  ['content/experience-detail.ts', JSON.stringify(experienceDetail)],
+  ['content/perf-receipts.ts', JSON.stringify(perfReceipts)],
+  ['content/unknowns.ts', JSON.stringify(unknowns)],
+  ['content/seo.ts', JSON.stringify(personSchema)],
+  ['content/reading-views.ts', JSON.stringify([cvDocument, summaryDocument, readingViews])],
+  ['content/projects.ts', JSON.stringify(projects)],
+  ['content/git-log.ts', JSON.stringify(gitLog)],
+  ['content/ask-facts.ts', JSON.stringify(askFacts)],
+  ['public/llms.txt', llmsTxt],
+  ['the ask system prompt', SYSTEM_TEXT],
+];
 
 const CANONICAL_TITLE = 'Senior Software Engineer, AI Engineer';
 const CANONICAL_TITLE_PT = 'Engenheiro de Software Sênior, Engenheiro de IA';
@@ -78,12 +95,30 @@ describe('identity is consistent across every gated surface', () => {
     expect(profile.actions[0]?.href).toBe(social.github);
   });
 
-  it('states the cross-platform code reuse the resume gives, on both surfaces', () => {
-    const edtech = projects[SITE_LOCALE.en].find((project) => project.name === 'EDTECH_OMNI');
-    expect(edtech).toBeDefined();
-    expect(edtech?.stats?.find((stat) => stat.label === 'SHARED')?.value).toContain('80%');
-    expect(JSON.stringify(gitLog[SITE_LOCALE.en])).toContain('80% shared code');
-    expect(JSON.stringify(gitLog[SITE_LOCALE.en])).not.toContain('90%');
+  it('states the cross-platform stack the resume gives, on both surfaces', () => {
+    expect(JSON.stringify(gitLog[SITE_LOCALE.en])).toContain('React Native and Electron shells');
+    for (const [surface, text] of retiredMobileClaimSurfaces()) {
+      expect(
+        text,
+        `${surface}: the resume no longer states an Ionic codebase, its code-share figure or its desktop build figure`,
+      ).not.toMatch(RETIRED_MOBILE_CLAIMS);
+    }
+  });
+
+  it('catches each retired mobile claim in English and Portuguese, and passes the current copy', () => {
+    for (const retired of [
+      'an Ionic codebase',
+      'about 80% shared code',
+      '80% do código compartilhado',
+      'a 40% faster desktop build',
+      'um build desktop 40% menor',
+      'BUILD DESKTOP',
+    ]) {
+      expect(retired, retired).toMatch(RETIRED_MOBILE_CLAIMS);
+    }
+    expect('React Native and Electron shells over one TypeScript core').not.toMatch(
+      RETIRED_MOBILE_CLAIMS,
+    );
   });
 
   it('hands the ask prompt and the hiring profile the canonical contact links', () => {
@@ -249,7 +284,7 @@ describe('identity is consistent across every gated surface', () => {
     const stale = surfaces.filter(([, text]) => /\bTorc\b/.test(text)).map(([s]) => s);
     expect(
       stale,
-      'the resume lists Raylu as a Senior Software Engineer role with no contract intermediary',
+      'the resume lists Raylu as an AI Product Engineer role with no contract intermediary',
     ).toEqual([]);
   });
 
@@ -317,7 +352,7 @@ describe('terminal redesign canonical facts', () => {
       '24.2M digital clients',
       '8 talks',
       'WCAG 2.2 AA',
-      'Forward Deployed Engineer',
+      'Confidential',
       'Zup Innovation',
     ]) {
       expect(llmsTxt, `public/llms.txt must publish "${current}"`).toContain(current);
@@ -367,16 +402,9 @@ describe('terminal redesign canonical facts', () => {
         entry.workMode,
       ]),
     ).toEqual([
-      ['Raylu', 'Senior Software Engineer', '2026-06', null, 'New York, US', 'remote'],
+      ['Raylu', 'AI Product Engineer', '2026-06', null, 'New York, US', 'remote'],
       ['Betsson Group', 'Senior Software Engineer', '2025-03', '2026-05', 'Malta', 'hybrid'],
-      [
-        'Forward Deployed Engineer',
-        'Senior Software Engineer',
-        '2023-03',
-        '2025-03',
-        'Remote',
-        null,
-      ],
+      ['Confidential', 'Senior Software Engineer', '2023-03', '2025-03', 'Canada (Remote)', null],
       [
         'Grupo SBF (Nike / Centauro)',
         'Software Engineer',
@@ -401,8 +429,8 @@ describe('terminal redesign canonical facts', () => {
         'Campinas, Brazil',
         null,
       ],
-      ['Venturus', 'Full Stack Engineer', '2019-02', '2020-04', 'Campinas, Brazil', null],
-      ['MB Labs', 'Full Stack Engineer', '2018-07', '2019-02', 'Campinas, Brazil', null],
+      ['Venturus', 'Full-Stack Engineer', '2019-02', '2020-04', 'Campinas, Brazil', null],
+      ['MB Labs', 'Full-Stack Engineer', '2018-07', '2019-02', 'Campinas, Brazil', null],
     ]);
     expect(gitLog[SITE_LOCALE.en].every((entry) => entry.type === 'career')).toBe(true);
     expect(
@@ -419,37 +447,36 @@ describe('terminal redesign canonical facts', () => {
     }
   });
 
-  it('publishes the service project and the resume-backed Raylu stack on desktop and mobile', () => {
-    expect(projects[SITE_LOCALE.en].every((project) => project.company.length > 0)).toBe(true);
-    const raylu = projects[SITE_LOCALE.en].find((project) => project.company === 'Raylu');
-    expect(JSON.stringify(raylu)).toContain('NEXT 14');
-    expect(JSON.stringify(raylu)).toContain('TS 5');
-    expect(JSON.stringify(raylu)).not.toMatch(/Next(?:\.js)? 15|React 19/i);
-    const service = projects[SITE_LOCALE.en].find(
-      (project) => project.name === 'SERVICE_OPS_CONSOLE',
-    );
-    expect(service?.company).toBe('Forward Deployed Engineer');
-    expect(service?.description).toContain('service orders');
-    expect(service?.description).toContain('specialist scheduling');
-    expect(service?.description).toContain('field visits');
+  it('lists only personal and open-source projects, never an employer project', () => {
+    for (const locale of [SITE_LOCALE.en, SITE_LOCALE.pt]) {
+      expect(projects[locale].every((project) => project.kind === 'oss')).toBe(true);
+    }
     for (const text of [
       JSON.stringify(projects),
       SYSTEM_TEXT,
       llmsTxt,
       JSON.stringify(HIRING_PROFILE),
     ]) {
-      expect(text).not.toContain('CARE_OPS_CONSOLE');
+      for (const name of [
+        'ORIGINATION_PLATFORM_UI',
+        'PAYMENT_ORCHESTRA',
+        'SERVICE_OPS_CONSOLE',
+        'COMMERCE_EDGE',
+        'AI_AGENT_MESH',
+        'EDTECH_OMNI',
+        'CARE_OPS_CONSOLE',
+      ]) {
+        expect(text).not.toContain(name);
+      }
     }
   });
 
   it('keeps the canonical project name when parsing retired mobile overrides', () => {
-    const service = projects[SITE_LOCALE.en].find(
-      (project) => project.name === 'SERVICE_OPS_CONSOLE',
-    );
-    expect(service).toBeDefined();
-    const parsed = ProjectSchema.parse({ ...service, mobileName: 'service_ops/' });
-    expect(parsed).toEqual(service);
-    expect(parsed.name).toBe('SERVICE_OPS_CONSOLE');
+    const project = projects[SITE_LOCALE.en][0];
+    expect(project).toBeDefined();
+    const parsed = ProjectSchema.parse({ ...project, mobileName: 'service_ops/' });
+    expect(parsed).toEqual(project);
+    expect(parsed.name).toBe(project?.name);
     expect(parsed).not.toHaveProperty('mobileName');
   });
 

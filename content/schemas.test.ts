@@ -314,7 +314,7 @@ const educationFixtures = [
     endYear: 2027,
     expectedCompletion: '2027-12',
     period: 'expected Dec 2027',
-    focus: 'Coursework: PyTorch, LLM applications and RAG, LangChain and LangGraph',
+    focus: 'Coursework: LangChain agents (completed), LangGraph (in progress), RAG, PyTorch',
   },
   {
     id: 'CO_OP_DIPLOMA',
@@ -450,8 +450,8 @@ describe('canonical profile and education', () => {
     }
     expect(
       gitLog[EN].filter((entry) => !entry.companyUrl).map((entry) => entry.company),
-      'only the forward deployed engineering entry has no company site: it names no client, so there is nothing to link',
-    ).toEqual(['Forward Deployed Engineer']);
+      'only the confidential engagement has no company site: it names no client, so there is nothing to link',
+    ).toEqual(['Confidential']);
   });
 
   it('rejects a non-https company URL at every schema that carries one', async () => {

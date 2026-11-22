@@ -37,7 +37,6 @@ const METRIC_KEYWORDS: Record<string, RegExp> = {
   PAGE_LOAD: /page[\s-]*load|load[\s-]*time|carregamento/i,
   INITIAL_LOAD: /initial[\s-]*(page[\s-]*)?load|carregamento\s+inicial/i,
   CONVERSION: /conversion|convers[ãa]o/i,
-  DESKTOP_BUILD: /desktop[\s-]*build|build[\s-]*time|build\s+desktop/i,
   CLS: /\bCLS\b|layout.shift/i,
   LIGHTHOUSE: /lighthouse/i,
   RELEASE_TIME: /release/i,
@@ -99,15 +98,7 @@ const HIRING_PROFILE_BUSINESS_RECEIPTS = new Set([
   'copilot_subagents',
 ]);
 
-const PROJECT_STAT_METRICS: Record<string, string> = {
-  TTI: 'TTI',
-  'JS BUNDLE': 'BUNDLE_JS',
-  'BUNDLE JS': 'BUNDLE_JS',
-  'LOAD TIME': 'PAGE_LOAD',
-  'TEMPO DE CARREGAMENTO': 'PAGE_LOAD',
-  'DESKTOP BUILD': 'DESKTOP_BUILD',
-  'BUILD DESKTOP': 'DESKTOP_BUILD',
-};
+const PROJECT_STAT_METRICS: Record<string, string> = {};
 
 beforeAll(async () => {
   const { metadata } = await import('@/app/(en)/layout');
@@ -178,7 +169,7 @@ describe('performance metrics agree with the authoritative receipts', () => {
   it('keeps canonical deltas separate from the displayed before/after receipts', () => {
     expect(receiptFor('API_LATENCY')).toBe('-97.5%');
     expect(receiptFor('BUNDLE_CSS')).toBe('-98%');
-    expect(receiptFor('DESKTOP_BUILD')).toBe('-40%');
+    expect(receiptFor('RELEASE_TIME')).toBe('-85%');
     const lcp = perfReceipts[EN].find((receipt) => receipt.metric === 'LCP');
     expect(lcp).toMatchObject({
       before: 2544,

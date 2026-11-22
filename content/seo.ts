@@ -76,7 +76,7 @@ export const personSchema = {
     'StencilJS',
     'Web Components',
     'Vue.js',
-    'Ionic',
+    'React Native',
     'SSR/SSG',
     'Micro-Frontend Architecture',
     'Node.js',

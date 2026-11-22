@@ -107,8 +107,11 @@ describe('content/ask-eval-corpus', () => {
       expect(byId(id)?.kind, id).toBe('edge');
     }
     expect(byId('edge-consulting-client-not-named')?.expect).toMatch(/does not name/i);
-    expect(SYSTEM_TEXT, 'the prompt names no client for the consulting role').toContain(
-      'Forward Deployed Engineer',
+    expect(SYSTEM_TEXT, 'the prompt labels the consulting role Confidential').toContain(
+      'Confidential',
+    );
+    expect(SYSTEM_TEXT, 'the prompt keeps the forward deployed engineering role').toMatch(
+      /forward deployed engineer/i,
     );
   });
 

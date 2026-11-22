@@ -75,7 +75,7 @@ describe('timezone panel copy', () => {
       fillCopy(timezone.overlap.summary, {
         hours: contactHoursPhrase(contactCopy[SITE_LOCALE.en].timezone.hours, 9),
       }),
-      fillCopy(timezone.overlap.range, { range: '09:00 to 18:00' }),
+      fillCopy(timezone.overlap.range, { start: '09:00', end: '18:00' }),
     ].join(timezone.overlap.separator);
 
     expect(line).toBe('9 hours overlap · 09:00 to 18:00 your time');

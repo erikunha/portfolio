@@ -120,7 +120,7 @@ const contactCopyFor = (locale: SiteLocale): ContactContent => {
       },
       overlap: {
         summary: pt ? '{hours} de sobreposição' : '{hours} overlap',
-        range: pt ? '{range} seu horário' : '{range} your time',
+        range: pt ? '{start} às {end} seu horário' : '{start} to {end} your time',
         none: pt
           ? `assíncrono funciona, resposta ${REPLY_WINDOW.pt}`
           : `async works, reply ${REPLY_WINDOW.en}`,

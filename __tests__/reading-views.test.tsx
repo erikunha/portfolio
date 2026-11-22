@@ -130,9 +130,13 @@ describe('CV reading view', () => {
   });
 
   it('states the resume SUMMARY as the CV summary', () => {
-    expect(cvDocumentEn.summary).toContain('8+ years of production software, focused on GenAI');
-    expect(cvDocumentEn.summary).toContain('0.85 agreement floor');
-    expect(cvDocumentEn.summary).toContain('12-agent AI-assisted engineering system');
+    expect(cvDocumentEn.summary).toContain(
+      'Senior software engineer with 8+ years of production software in payments, retail, banking and healthcare',
+    );
+    expect(cvDocumentEn.summary).toContain('59 of 59 answers correct, 13 of 13 jailbreaks refused');
+    expect(cvDocumentEn.summary).toContain(
+      '40M+ transactions a year across 15+ regulated jurisdictions',
+    );
     expect(cvDocumentEn.summary).not.toContain('micro-frontend topologies');
   });
 
