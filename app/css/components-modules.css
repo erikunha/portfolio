@@ -81,7 +81,15 @@
     }
 
     @media (min-width: 46.25rem) {
+      --module-estimate: 97.5rem;
+    }
+
+    @media (min-width: theme(--viewport-md)) {
       --module-estimate: 111.25rem;
+    }
+
+    @media (min-width: 51.25rem) {
+      --module-estimate: 101.875rem;
     }
 
     @media (min-width: 53.75rem) {
