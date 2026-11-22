@@ -5,7 +5,7 @@
 ## Prerequisites
 
 - Use `.nvmrc` for the local Node version. `package.json` accepts `^22.22.2 || ^24.15.0 || >=26.0.0`, requires pnpm 10+, and pins the package manager to `pnpm@10.34.9`.
-- Install: `pnpm install` (CI uses `--frozen-lockfile`). One lifecycle script runs with it: `prepare` installs the Husky hooks through `scripts/install/prepare-hooks.ts` (skipped when `CI`, `VERCEL` or `NODE_ENV=production` is set). pnpm also applies `patches/next@16.4.5.patch`, which empties Next's two legacy polyfill bundles (the site targets modern browsers; left in place they push `bundle-check` past its cap and trip the Lighthouse Performance legacy JavaScript insight). A Next bump needs the patch regenerated with `pnpm patch next@<version>` and `pnpm patch-commit`; `scripts/__tests__/next-polyfill-patch.test.ts` fails until it is.
+- Install: `pnpm install` (CI uses `--frozen-lockfile`). One lifecycle script runs with it: `prepare` installs the Husky hooks through `scripts/install/prepare-hooks.ts` (skipped when `CI`, `VERCEL` or `NODE_ENV=production` is set). pnpm also applies `patches/next@16.4.6.patch`, which empties Next's two legacy polyfill bundles (the site targets modern browsers; left in place they push `bundle-check` past its cap and trip the Lighthouse Performance legacy JavaScript insight). A Next bump needs the patch regenerated with `pnpm patch next@<version>` and `pnpm patch-commit`; `scripts/__tests__/next-polyfill-patch.test.ts` fails until it is.
 - For full local runs you'll want the env vars in `.env.example` (Upstash, AI Gateway, Resend, PSI). The public pages have fallbacks for missing services. API behavior differs: ask budget reservation requires Redis and fails closed; contact storage also fails closed. See doc 05 for individual failure modes.
 
 ## Local development
@@ -143,7 +143,7 @@ flowchart LR
 `detect-changes` (`scripts/ci/detect-changes.ts`, with the path lists in `scripts/ci/detect-changes-paths.ts`) emits three booleans. On any event other than a pull request all three are true. On a pull request each is true when the diff touches its path list, and:
 
 - `ai` is also true when the `ai` package major or any AI dependency version in `pnpm-lock.yaml` changed.
-- `ui` is also true when the `browserslist` or `pnpm` section of `package.json` changed, and it excludes `lib/eval/**` and `lib/__tests__/**`.
+- `ui` is also true when the `browserslist` or `pnpm` section of `package.json` changed, and it excludes `lib/eval/**` and `lib/env.test.ts`.
 - Changes under `tests/visual/` or `tests/e2e/` set both `app` and `ui`, so baseline-only and e2e-only PRs run the functional and visual jobs.
 
 `.github/workflows/ci.yml` (the authoritative gate). A `detect-changes` job emits `app`, `ai` and `ui` booleans so heavy jobs skip on docs-only PRs (GitHub treats skipped required checks as satisfied). Matrix jobs skipped at job level report ONE unsuffixed check, so matrix-named required contexts (`e2e-functional (chromium)` etc.) hang forever on path-skipped PRs; required checks therefore point at always-reporting contexts and the conditional jobs are enforced through the `ci-gate` fan-in below.

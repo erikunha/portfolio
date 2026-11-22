@@ -11,6 +11,7 @@ import {
 } from './visual-compare';
 
 const SNAPSHOT_TIMEOUT_MS = 30_000;
+const SUBPIXEL_PX = 1;
 
 export async function revealDeferredContent(page: Page): Promise<void> {
   await page.evaluate(() => {
@@ -115,6 +116,40 @@ export async function snapshot(page: Page, name: string): Promise<void> {
   await revealDeferredContent(page);
   const options = await captureOptions(page);
   await compare(page, () => page.screenshot(options), name);
+}
+
+/**
+ * Grows the viewport until the element fits inside it, so a capture never has
+ * to reach past the viewport. Chromium renders an element taller than the
+ * viewport through a different path, and between releases that path stopped
+ * agreeing on the emulated pointer: Chromium 158 drew the keyboard wording of
+ * a touch device, Chromium 159 draws the tap wording a phone shows. A fitted
+ * viewport takes the ordinary path, which every release draws the same way.
+ */
+export async function fitViewportToLocator(page: Page, locator: Locator): Promise<void> {
+  const viewport = page.viewportSize();
+  if (viewport === null) throw new Error('the page has no viewport to fit the capture into');
+  // Deferred sections change height when they render, which moves the element
+  // after the viewport is sized. Render them first so the fit measures the
+  // settled page.
+  await revealDeferredContent(page);
+  const fitted = async (): Promise<boolean> => {
+    const box = await locator.boundingBox();
+    if (box === null) throw new Error('the element to capture has no box');
+    const height = Math.max(viewport.height, Math.ceil(box.height));
+    await page.setViewportSize({ width: viewport.width, height });
+    return locator.evaluate((node, slack) => {
+      // The page keeps a scroll padding for its sticky bar, so scroll by the
+      // coordinate instead of asking for the start edge.
+      window.scrollTo({
+        top: node.getBoundingClientRect().top + window.scrollY,
+        behavior: 'instant',
+      });
+      const { top, bottom } = node.getBoundingClientRect();
+      return top >= -slack && bottom <= window.innerHeight + slack;
+    }, SUBPIXEL_PX);
+  };
+  await expect.poll(fitted, { message: 'the element never fit inside the viewport' }).toBe(true);
 }
 
 export async function snapshotLocator(

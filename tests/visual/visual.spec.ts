@@ -7,7 +7,11 @@ import { waitForHydration } from '../e2e/_helpers/hydration';
 import { waitForImagesDecoded } from '../e2e/_helpers/images';
 import { expectLinksFeedFixture } from '../e2e/_helpers/links-feed-fixture';
 import { stripVolatileChrome } from '../e2e/_helpers/mask-volatile';
-import { revealDeferredContent, snapshotLocator } from '../e2e/_helpers/snapshot';
+import {
+  fitViewportToLocator,
+  revealDeferredContent,
+  snapshotLocator,
+} from '../e2e/_helpers/snapshot';
 import { gotoSettled } from '../e2e/_helpers/streamed';
 
 test.describe.configure({ timeout: 60_000 });
@@ -186,6 +190,11 @@ test.describe('visual regression', { tag: '@mobile-visual' }, () => {
   test('footer matches baseline', async ({ mockedPage }) => {
     const footer = mockedPage.locator('footer');
     await footer.scrollIntoViewIfNeeded();
+    // The reboot control swaps its wording for a touch screen, and an element
+    // taller than the viewport is captured on a path Chromium releases
+    // disagree on. Hydrate it, then fit the viewport to the footer.
+    await waitForHydration(mockedPage, 'footer .footer-reboot');
+    await fitViewportToLocator(mockedPage, footer);
     await mockedPage.evaluate(() => document.fonts.ready);
     await stripVolatileChrome(mockedPage);
     if (process.env.ARGOS_TOKEN) {
