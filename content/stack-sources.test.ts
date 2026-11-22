@@ -26,7 +26,7 @@ describe('stack and featured projects have one source', () => {
     (locale) => {
       const names = summaryDocument[locale].projects.map((project) => project.name);
       expect(names).toEqual(projects[locale].slice(0, names.length).map((project) => project.name));
-      expect(names[0]).toBe('ORIGINATION_PLATFORM_UI');
+      expect(names[0]).toBe('REACT_GOOGLE_MAPS_API');
     },
   );
 });

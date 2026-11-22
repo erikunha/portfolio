@@ -55,11 +55,11 @@ const unknownsFor = (locale: SiteLocale): Unknowns => {
     notSpecializing: [
       {
         claim: pt
-          ? 'mobile nativo (ios/android além de ionic)'
-          : 'mobile native (ios/android beyond ionic)',
+          ? 'mobile nativo (ios/android além de react native)'
+          : 'mobile native (ios/android beyond react native)',
         context: pt
-          ? 'entreguei ionic para 5 SOs uma vez. já foi suficiente.'
-          : 'shipped ionic for 5 OSes once. that was enough.',
+          ? 'entreguei react native + electron em 5 SOs. bastou.'
+          : 'shipped react native + electron to 5 OSes once. that was enough.',
       },
       {
         claim: pt ? 'treinamento / pesquisa de modelos de ML' : 'ML model training / research',

@@ -24,7 +24,7 @@ const gitLogFor = (locale: SiteLocale): GitCommit[] => {
       type: 'career',
       company: profile.currentEmployer.name,
       companyUrl: profile.currentEmployer.url,
-      role: pt ? 'Engenheiro de Software Sênior' : 'Senior Software Engineer',
+      role: pt ? 'Engenheiro de Produto de IA' : 'AI Product Engineer',
       startMonth: '2026-06',
       endMonth: null,
       location: pt ? 'Nova York, EUA' : 'New York, US',
@@ -62,17 +62,17 @@ const gitLogFor = (locale: SiteLocale): GitCommit[] => {
       date: pt ? 'mar/2023 - mar/2025' : 'Mar 2023 - Mar 2025',
       branch: 'career/forward-deployed-engineer',
       type: 'career',
-      company: 'Forward Deployed Engineer',
+      company: 'Confidential',
       role: pt ? 'Engenheiro de Software Sênior' : 'Senior Software Engineer',
       startMonth: '2023-03',
       endMonth: '2025-03',
-      location: pt ? 'Remoto' : 'Remote',
+      location: pt ? 'Canadá (Remoto)' : 'Canada (Remote)',
       workMode: null,
-      domain: pt ? 'equipamentos de imagem médica' : 'medical imaging equipment',
+      domain: pt ? 'manutenção de equipamentos' : 'equipment maintenance',
       body: [
         pt
-          ? 'reconstruiu uma plataforma de serviço de equipamentos hospitalares para uma empresa de equipamentos de imagem médica: ordens de serviço, agendamento de especialistas, visitas de campo; Angular 17 para 19.'
-          : 'rebuilt a hospital equipment service platform for a medical imaging equipment company: service orders, specialist scheduling, field visits; Angular 17 to 19.',
+          ? 'reconstruiu uma plataforma de manutenção de equipamentos: ordens de serviço, agendamento de especialistas, visitas de campo; Angular 17 para 19.'
+          : 'rebuilt an equipment maintenance platform: service orders, specialist scheduling, field visits; Angular 17 to 19.',
       ],
     },
     {
@@ -143,7 +143,7 @@ const gitLogFor = (locale: SiteLocale): GitCommit[] => {
       type: 'career',
       company: 'Venturus',
       companyUrl: 'https://www.venturus.org.br',
-      role: pt ? 'Engenheiro Full Stack' : 'Full Stack Engineer',
+      role: pt ? 'Engenheiro Full Stack' : 'Full-Stack Engineer',
       startMonth: '2019-02',
       endMonth: '2020-04',
       location: pt ? 'Campinas, Brasil' : 'Campinas, Brazil',
@@ -163,7 +163,7 @@ const gitLogFor = (locale: SiteLocale): GitCommit[] => {
       type: 'career',
       company: 'MB Labs',
       companyUrl: 'https://mblabs.com.br',
-      role: pt ? 'Engenheiro Full Stack' : 'Full Stack Engineer',
+      role: pt ? 'Engenheiro Full Stack' : 'Full-Stack Engineer',
       startMonth: '2018-07',
       endMonth: '2019-02',
       location: pt ? 'Campinas, Brasil' : 'Campinas, Brazil',
@@ -171,8 +171,8 @@ const gitLogFor = (locale: SiteLocale): GitCommit[] => {
       domain: pt ? 'educação e treinamento de varejo' : 'education and retail training',
       body: [
         pt
-          ? 'entregou app multiplataforma em 5 SOs a partir de uma base Ionic + Angular + Electron (~80% de código compartilhado).'
-          : 'shipped 5-OS cross-platform from one Ionic + Angular + Electron codebase (~80% shared code).',
+          ? 'entregou app offline-first em 5 SOs: shells React Native e Electron sobre um núcleo TypeScript.'
+          : 'shipped an offline-first textbook app to 5 OSes as React Native and Electron shells over one TypeScript core.',
       ],
       isRoot: true,
     },

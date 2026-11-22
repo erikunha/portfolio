@@ -8,6 +8,15 @@ export type RetiredClaim = { name: string; pattern: RegExp; reason: string };
 const HEALTHCARE_CLIENT_CLAIM =
   /health[\s-]?(?:care|tech)[^.\n<>]{0,25}?\b(?:compan(?:y|ies)|clients?|sectors?|verticals?|engagements?|providers?|business(?:es)?|organi[sz]ations?|firms?)\b|(?:empresa|empresas|clientes?|setor|provedora|organiza(?:ção|ção)|negócio|fornecedor|companhia)\s+(?:de|da|do)\s+(?:sa[uú]de|health[\s-]?(?:care|tech))/i;
 
+const CLIENT_KIND_HINT = new RegExp(
+  [
+    'medical[\\s-]+imag(?:ing|es?)',
+    'imag(?:ing|em|ens)\\s+m[ée]dic[ao]s?',
+    `\\b${['hos', 'pita'].join('')}(?:l|ls|is|lar|lares)\\b`,
+  ].join('|'),
+  'i',
+);
+
 export const RETIRED_CLAIMS: RetiredClaim[] = [
   {
     name: 'client name',
@@ -32,6 +41,13 @@ export const RETIRED_CLAIMS: RetiredClaim[] = [
     pattern: HEALTHCARE_CLIENT_CLAIM,
     reason:
       'owner decision of 2026-11-12: healthcare, health tech and EdTech are published domains, so the site does target those sectors and the word is no longer a retired claim; what stays retired is naming a healthcare client. The forward deployed engineering engagement names no client and is described by its platform, so no surface may call it a healthcare company, client, sector, vertical, engagement, provider, business, organization or firm. The guard reads the phrase that names the client rather than the word alone, in English and in Portuguese, and it folds the accent, so the domain can be published in both locales and the unaccented Portuguese is still caught',
+  },
+  {
+    name: 'client kind hint',
+    // Written without the literal words so the repository grep for the retired wording stays empty.
+    pattern: CLIENT_KIND_HINT,
+    reason:
+      'owner decision of 2026-11-21, extended 2026-11-22: the 2023-2025 engagement is described by its work (an equipment maintenance platform) and never by the kind of company the client is, so no surface may name the equipment line of the client or call the platform by the setting it ran in, in English or in Portuguese',
   },
   {
     name: 'removed employer',
