@@ -114,12 +114,10 @@ describe('the ask eval corpus grades only what the prompt can answer', () => {
   it('describes the consulting work, Nike and the Canadian diploma as content/ does', () => {
     const expectOf = (id: string) => ASK_EVAL_CORPUS.find((item) => item.id === id)?.expect ?? '';
     const coOp = education[SITE_LOCALE.en].find((entry) => entry.id === 'CO_OP_DIPLOMA');
-    expect(expectOf('fact-forward-deployed-engineer')).toContain(
-      'hospital equipment maintenance platform',
-    );
-    expect(SYSTEM_TEXT).toContain('hospital equipment maintenance platform');
-    expect(expectOf('fact-nike-centauro')).toContain('BFF gateway');
-    expect(SYSTEM_TEXT).toContain('BFF gateway');
+    expect(expectOf('fact-forward-deployed-engineer')).toContain('equipment maintenance platform');
+    expect(SYSTEM_TEXT).toContain('equipment maintenance platform');
+    expect(expectOf('fact-nike-centauro')).toContain('backend-for-frontend');
+    expect(SYSTEM_TEXT).toContain('backend-for-frontend');
     expect(expectOf('fact-canada-status')).toContain(coOp?.degree ?? 'missing degree');
   });
 });
@@ -141,11 +139,10 @@ describe('public text surfaces publish no eval corpus size', () => {
 });
 
 describe('llms.txt describes the consulting work as content/ does', () => {
-  it('names the hospital equipment maintenance platform, not hospital operations', () => {
+  it('names the equipment maintenance platform and no kind of client', () => {
     const llms = readFileSync(path.join(ROOT, 'public/llms.txt'), 'utf8');
     const line =
-      llms.split('\n').find((entry) => entry.startsWith('- Hospital equipment maintenance:')) ?? '';
-    expect(line).toContain('hospital equipment maintenance platform');
-    expect(llms).not.toMatch(/hospital operations/i);
+      llms.split('\n').find((entry) => entry.startsWith('- Equipment maintenance:')) ?? '';
+    expect(line).toContain('equipment maintenance platform');
   });
 });

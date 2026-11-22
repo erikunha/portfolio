@@ -8,6 +8,15 @@ export type RetiredClaim = { name: string; pattern: RegExp; reason: string };
 const HEALTHCARE_CLIENT_CLAIM =
   /health[\s-]?(?:care|tech)[^.\n<>]{0,25}?\b(?:compan(?:y|ies)|clients?|sectors?|verticals?|engagements?|providers?|business(?:es)?|organi[sz]ations?|firms?)\b|(?:empresa|empresas|clientes?|setor|provedora|organiza(?:ção|ção)|negócio|fornecedor|companhia)\s+(?:de|da|do)\s+(?:sa[uú]de|health[\s-]?(?:care|tech))/i;
 
+const CLIENT_KIND_HINT = new RegExp(
+  [
+    'medical[\\s-]+imag(?:ing|es?)',
+    'imag(?:ing|em|ens)\\s+m[ée]dic[ao]s?',
+    `\\b${['hos', 'pita'].join('')}(?:l|ls|is|lar|lares)\\b`,
+  ].join('|'),
+  'i',
+);
+
 export const RETIRED_CLAIMS: RetiredClaim[] = [
   {
     name: 'client name',
@@ -36,9 +45,9 @@ export const RETIRED_CLAIMS: RetiredClaim[] = [
   {
     name: 'client kind hint',
     // Written without the literal words so the repository grep for the retired wording stays empty.
-    pattern: /medical[\s-]+imag(?:ing|es?)|imag(?:ing|em|ens)\s+m[ée]dic[ao]s?/i,
+    pattern: CLIENT_KIND_HINT,
     reason:
-      'owner decision of 2026-11-21: the 2023-2025 engagement is described by its work (a hospital equipment maintenance platform) and never by the kind of company the client is, so no surface may name the equipment line of the client, in English or in Portuguese',
+      'owner decision of 2026-11-21, extended 2026-11-22: the 2023-2025 engagement is described by its work (an equipment maintenance platform) and never by the kind of company the client is, so no surface may name the equipment line of the client or call the platform by the setting it ran in, in English or in Portuguese',
   },
   {
     name: 'removed employer',

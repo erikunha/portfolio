@@ -108,9 +108,10 @@ describe('Projects', () => {
     );
     expect(doc.querySelectorAll('.projects-grid')).toHaveLength(1);
     for (const project of projects[SITE_LOCALE.en]) {
+      expect(doc.body.textContent).toContain(project.name);
       expect(doc.body.textContent).toContain(project.description);
     }
-    expect(doc.body.textContent).toContain('SERVICE_OPS_CONSOLE');
+    expect(doc.body.textContent).not.toContain('SERVICE_OPS_CONSOLE');
     expect(doc.body.textContent).not.toContain('CARE_OPS');
   });
 

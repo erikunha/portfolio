@@ -98,13 +98,7 @@ const HIRING_PROFILE_BUSINESS_RECEIPTS = new Set([
   'copilot_subagents',
 ]);
 
-const PROJECT_STAT_METRICS: Record<string, string> = {
-  TTI: 'TTI',
-  'JS BUNDLE': 'BUNDLE_JS',
-  'BUNDLE JS': 'BUNDLE_JS',
-  'LOAD TIME': 'PAGE_LOAD',
-  'TEMPO DE CARREGAMENTO': 'PAGE_LOAD',
-};
+const PROJECT_STAT_METRICS: Record<string, string> = {};
 
 beforeAll(async () => {
   const { metadata } = await import('@/app/(en)/layout');

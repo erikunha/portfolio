@@ -1,6 +1,5 @@
 import { z } from 'zod';
 import { companyLinkCopy } from './company-link';
-import { localizeDecimals, PROFILE_FACT } from './profile';
 import { type Project, ProjectSchema } from './schemas';
 import { SITE_LOCALE, type SiteLocale } from './site-locale';
 
@@ -26,99 +25,8 @@ const projectsFor = (locale: SiteLocale): Project[] => {
   const pt = locale === SITE_LOCALE.pt;
   return z
     .array(ProjectSchema)
-    .length(11)
+    .length(5)
     .parse([
-      {
-        name: 'ORIGINATION_PLATFORM_UI',
-        company: 'Raylu',
-        kind: 'professional',
-        description: pt
-          ? 'Telas de fluxo de trabalho do investidor na plataforma de originação de negócios com IA da Raylu para mercados privados: empresa, pipeline, comparação, prospecção. Motor de tabelas compartilhado e estado de visualização na URL para fundos com mais de US$ 500B em ativos.'
-          : "Investor workflow screens on Raylu's AI deal origination platform for private markets: company, pipeline, comparison, outreach. Shared table engine and URL-backed view state for funds holding $500B+ in assets.",
-        stats: [
-          {
-            label: pt ? 'SUPERFÍCIES' : 'SURFACES',
-            value: pt ? 'EMPRESA / PIPELINE / PROSPECÇÃO' : 'COMPANY / PIPELINE / OUTREACH',
-          },
-          {
-            label: pt ? 'ESTADO' : 'STATE',
-            value: pt ? 'VERSIONADO + NA URL' : 'VERSIONED + URL-BACKED',
-          },
-          { label: 'STACK', value: 'REACT / NEXT 14 / TS 5' },
-        ],
-      },
-      {
-        name: 'PAYMENT_ORCHESTRA',
-        company: 'Betsson Group',
-        kind: 'professional',
-        description: pt
-          ? 'Plataforma de cashier PCI-DSS: orquestração de depósitos e saques multi-marca em mais de 15 jurisdições reguladas.'
-          : 'PCI-DSS cashier platform: multi-brand deposit/withdraw orchestration across 15+ regulated jurisdictions.',
-        stats: [
-          { label: 'VOLUME', value: `${PROFILE_FACT.txPerYear} ${pt ? 'TX / ANO' : 'TX / YR'}` },
-          {
-            label: pt ? 'RECEITA' : 'REVENUE',
-            value: `${localizeDecimals(PROFILE_FACT.groupRevenue, locale)} (${pt ? 'GRUPO' : 'GROUP'})`,
-          },
-          { label: 'STACK', value: 'ANGULAR / STENCIL / NGRX / NX' },
-        ],
-      },
-      {
-        name: 'SERVICE_OPS_CONSOLE',
-        company: 'Confidential',
-        kind: 'professional',
-        description: pt
-          ? 'Plataforma de manutenção de equipamentos hospitalares: ordens de serviço, agendamento de especialistas com checagem de deslocamento, visitas de campo, controle de acesso baseado em papéis (RBAC) com 29 permissões, atualizações ao vivo.'
-          : 'Hospital equipment maintenance platform: service orders, specialist scheduling with travel-time checks, field visits, a 29-permission role-based access control (RBAC) model, live updates.',
-        stats: [
-          { label: pt ? 'BUNDLE JS' : 'JS BUNDLE', value: '-33%' },
-          { label: 'TTI', value: '-52%' },
-          { label: 'STACK', value: 'ANGULAR / NX / RXJS' },
-        ],
-      },
-      {
-        name: 'COMMERCE_EDGE',
-        company: 'Grupo SBF',
-        kind: 'professional',
-        description: pt
-          ? 'Storefronts da Nike Brasil e Centauro: SSR/SSG/ISR, gateway BFF, monorepo Nx compartilhado, mais de 20 experimentos A/B.'
-          : 'Nike Brazil & Centauro storefronts: SSR/SSG/ISR, BFF gateway, shared Nx monorepo, 20+ A/B experiments.',
-        stats: [
-          { label: pt ? 'ALCANCE' : 'REACH', value: `${PROFILE_FACT.peakMau} MAU` },
-          { label: pt ? 'TEMPO DE CARREGAMENTO' : 'LOAD TIME', value: '-32%' },
-          { label: 'STACK', value: 'NEXT.JS / REACT / TS' },
-        ],
-      },
-      {
-        name: 'AI_AGENT_MESH',
-        company: 'Betsson Group',
-        kind: 'professional',
-        perm: '-rwx------',
-        description: pt
-          ? 'Sistema de engenharia com 12 agentes no GitHub Copilot, cobrindo geração, revisão, depuração, testes e validação de arquitetura. Toda ação automatizada é revisável. Adotado por todo o time na Betsson.'
-          : '12-agent GitHub Copilot engineering system across generation, review, debugging, testing and architecture validation. Every automated action reviewable. Adopted team-wide at Betsson.',
-        stats: [
-          { label: pt ? 'REVISÃO' : 'REVIEW', value: pt ? 'TODA AÇÃO' : 'EVERY ACTION' },
-          { label: pt ? 'ESCOPO' : 'SCOPE', value: pt ? 'TODO O TIME' : 'TEAM-WIDE' },
-          { label: 'STACK', value: 'GITHUB COPILOT' },
-        ],
-      },
-      {
-        name: 'EDTECH_OMNI',
-        company: 'MB Labs',
-        kind: 'professional',
-        description: pt
-          ? 'App EdTech offline-first de livros didáticos: shells React Native e Electron sobre um único núcleo TypeScript, cinco sistemas operacionais (Android / iOS / Win / macOS / Linux).'
-          : 'Offline-first EdTech textbook app: React Native and Electron shells over one TypeScript core, five OSes (Android / iOS / Win / macOS / Linux).',
-        stats: [
-          { label: pt ? 'PLATAFORMAS' : 'PLATFORMS', value: pt ? '5 SOS' : '5 OSES' },
-          {
-            label: pt ? 'INSTALAÇÃO' : 'INSTALL',
-            value: pt ? 'RETOMÁVEL + SHA-256' : 'RESUMABLE + SHA-256',
-          },
-          { label: 'STACK', value: 'REACT NATIVE / ELECTRON / TS' },
-        ],
-      },
       {
         name: 'REACT_GOOGLE_MAPS_API',
         company: 'React Google Maps API',

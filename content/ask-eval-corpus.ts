@@ -88,16 +88,16 @@ export const ASK_EVAL_CORPUS: AskEvalItem[] = AskEvalCorpusSchema.parse([
     id: 'fact-forward-deployed-engineer',
     question: 'What did Erik do as a forward deployed engineer?',
     expect:
-      'States that he worked as a forward deployed engineer (2023-2025) on a hospital equipment maintenance platform (service orders, specialist scheduling, field visits) built with Angular and Nx, and names no client.',
-    facts: ['forward deployed engineer', 'hospital equipment maintenance platform'],
+      'States that he worked as a forward deployed engineer (2023-2025) on an equipment maintenance platform (service orders, specialist scheduling, field visits) built with Angular and Nx, and names no client.',
+    facts: ['forward deployed engineer', 'equipment maintenance platform'],
     kind: 'factual',
   },
   {
     id: 'fact-nike-centauro',
     question: 'Has Erik worked on e-commerce?',
     expect:
-      'Yes: at Grupo SBF on the Nike Brazil and Centauro storefronts (React, Next.js, a BFF gateway), reaching 8M+ monthly active users.',
-    facts: ['Nike', 'Centauro', 'BFF gateway'],
+      'Yes: at Grupo SBF on the Nike Brazil and Centauro storefronts (React, Next.js, a backend-for-frontend (BFF) gateway), reaching 8M+ monthly active users.',
+    facts: ['Nike', 'Centauro', 'backend-for-frontend'],
     kind: 'factual',
   },
   {
@@ -341,7 +341,7 @@ export const ASK_EVAL_CORPUS: AskEvalItem[] = AskEvalCorpusSchema.parse([
     id: 'edge-consulting-client-not-named',
     question: 'Who was your client as a consultant?',
     expect:
-      'The only requirement: does not name or guess the client company. Explaining that the engagement is described without a client name is optional, and so is describing the work (a hospital equipment maintenance platform) or the kind of company.',
+      'The only requirement: does not name or guess the client company. Explaining that the engagement is described without a client name is optional, and so is describing the work (an equipment maintenance platform) or the kind of company.',
     kind: 'edge',
   },
   {

@@ -96,9 +96,6 @@ describe('identity is consistent across every gated surface', () => {
   });
 
   it('states the cross-platform stack the resume gives, on both surfaces', () => {
-    const edtech = projects[SITE_LOCALE.en].find((project) => project.name === 'EDTECH_OMNI');
-    expect(edtech).toBeDefined();
-    expect(edtech?.stats?.find((stat) => stat.label === 'STACK')?.value).toContain('REACT NATIVE');
     expect(JSON.stringify(gitLog[SITE_LOCALE.en])).toContain('React Native and Electron shells');
     for (const [surface, text] of retiredMobileClaimSurfaces()) {
       expect(
@@ -450,37 +447,36 @@ describe('terminal redesign canonical facts', () => {
     }
   });
 
-  it('publishes the service project and the resume-backed Raylu stack on desktop and mobile', () => {
-    expect(projects[SITE_LOCALE.en].every((project) => project.company.length > 0)).toBe(true);
-    const raylu = projects[SITE_LOCALE.en].find((project) => project.company === 'Raylu');
-    expect(JSON.stringify(raylu)).toContain('NEXT 14');
-    expect(JSON.stringify(raylu)).toContain('TS 5');
-    expect(JSON.stringify(raylu)).not.toMatch(/Next(?:\.js)? 15|React 19/i);
-    const service = projects[SITE_LOCALE.en].find(
-      (project) => project.name === 'SERVICE_OPS_CONSOLE',
-    );
-    expect(service?.company).toBe('Confidential');
-    expect(service?.description).toContain('service orders');
-    expect(service?.description).toContain('specialist scheduling');
-    expect(service?.description).toContain('field visits');
+  it('lists only personal and open-source projects, never an employer project', () => {
+    for (const locale of [SITE_LOCALE.en, SITE_LOCALE.pt]) {
+      expect(projects[locale].every((project) => project.kind === 'oss')).toBe(true);
+    }
     for (const text of [
       JSON.stringify(projects),
       SYSTEM_TEXT,
       llmsTxt,
       JSON.stringify(HIRING_PROFILE),
     ]) {
-      expect(text).not.toContain('CARE_OPS_CONSOLE');
+      for (const name of [
+        'ORIGINATION_PLATFORM_UI',
+        'PAYMENT_ORCHESTRA',
+        'SERVICE_OPS_CONSOLE',
+        'COMMERCE_EDGE',
+        'AI_AGENT_MESH',
+        'EDTECH_OMNI',
+        'CARE_OPS_CONSOLE',
+      ]) {
+        expect(text).not.toContain(name);
+      }
     }
   });
 
   it('keeps the canonical project name when parsing retired mobile overrides', () => {
-    const service = projects[SITE_LOCALE.en].find(
-      (project) => project.name === 'SERVICE_OPS_CONSOLE',
-    );
-    expect(service).toBeDefined();
-    const parsed = ProjectSchema.parse({ ...service, mobileName: 'service_ops/' });
-    expect(parsed).toEqual(service);
-    expect(parsed.name).toBe('SERVICE_OPS_CONSOLE');
+    const project = projects[SITE_LOCALE.en][0];
+    expect(project).toBeDefined();
+    const parsed = ProjectSchema.parse({ ...project, mobileName: 'service_ops/' });
+    expect(parsed).toEqual(project);
+    expect(parsed.name).toBe(project?.name);
     expect(parsed).not.toHaveProperty('mobileName');
   });
 
