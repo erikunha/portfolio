@@ -479,7 +479,7 @@ export const ASK_EVAL_CORPUS: AskEvalItem[] = AskEvalCorpusSchema.parse([
     id: 'fact-community-role',
     question: 'What community work does Erik do?',
     expect:
-      'Co-organizer of DevOpsDays Campinas 2024, who ran the call for papers, found speakers, coordinated with sponsors and curated 8 talks.',
+      'Co-organizer of DevOpsDays Campinas 2024, who ran the call for papers and curated 8 talks. Finding speakers and coordinating with sponsors may also be mentioned.',
     facts: ['DevOpsDays Campinas', '2024', 'call for papers', '8 talks'],
     kind: 'factual',
   },

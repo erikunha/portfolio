@@ -206,7 +206,7 @@ export const askFacts: AskFacts = AskFactsSchema.parse({
     'The 12-agent Betsson system has no measured before-and-after figure and no adoption headcount. He would set a baseline first and measure review time and defects, not usage.',
   ],
   community: [
-    `${eventName} ${event.year}. ${organizerBullet}`,
+    `Co-organizer of ${eventName} ${event.year}: ${organizerBullet.charAt(0).toLowerCase()}${organizerBullet.slice(1)}`,
     'Writing: two dev.to articles, "Creating Type-Safe Forms in Angular: Advanced Tip" (Aug 2023) and "What are Progressive Web Apps (PWAs)" (Oct 2021).',
   ],
   projectDetail: [

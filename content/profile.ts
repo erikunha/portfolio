@@ -99,6 +99,9 @@ export const profile: Profile = {
   technologyLine: [profileFields.stackLine, profileFields.aiLine].join(FACT_SEPARATOR),
 };
 
+export const META_DESCRIPTION_MAX_LENGTH = 160;
+const META_STACK_ITEMS_MAX = 4;
+
 const WORKING_LANGUAGE_LEVELS: readonly string[] = ['native', 'C2', 'C1'];
 
 export type ProfilePresentation = {
@@ -141,6 +144,15 @@ const presentation = (locale: SiteLocale): ProfilePresentation => {
   const location = `${country} · ${profile.timezone} · ${availability}`;
   const tagline = `${title} · ${profile.technologyLine}`;
   const summary = `${title}. ${location}. ${profile.currentEmployer.name}: ${employerContext}.`;
+  const metaDescriptionFor = (stackCount: number): string =>
+    `${title}. ${profile.aiLine}. ${location}. ${stackItems.slice(0, stackCount).join(STACK_ITEM_SEPARATOR)}.`;
+  let metaStackCount = META_STACK_ITEMS_MAX;
+  while (
+    metaStackCount > 1 &&
+    metaDescriptionFor(metaStackCount).length > META_DESCRIPTION_MAX_LENGTH
+  ) {
+    metaStackCount -= 1;
+  }
   return {
     title,
     country,
@@ -154,7 +166,7 @@ const presentation = (locale: SiteLocale): ProfilePresentation => {
     tagline,
     summary,
     pageTitle: `${profile.displayName} · ${title}`,
-    metaDescription: `${title}. ${location}. ${profile.stackLine}.`,
+    metaDescription: metaDescriptionFor(metaStackCount),
   };
 };
 

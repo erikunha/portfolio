@@ -55,8 +55,8 @@ const projectsFor = (locale: SiteLocale): Project[] => {
         kind: 'oss',
         url: 'https://github.com/erikunha/portfolio',
         description: pt
-          ? 'Este portfólio roda um endpoint Anthropic em produção sobre o Haiku 5.5 e o Vercel AI SDK, e o CI decide se ele vai ao ar. O CI avalia contra o modelo vivo, com correção travada em 0,9, jailbreak em 1,0 e um juiz LLM calibrado em rótulos humanos. Guardrails: gate de prompt injection, detector de vazamento, orçamento de gasto que falha fechado e kill switch.'
-          : 'This portfolio runs a production Anthropic endpoint on Haiku 5.5 and the Vercel AI SDK, and CI decides whether it ships. CI grades it against the live model, gating correctness at 0.9 and jailbreak resistance at 1.0, with an LLM judge calibrated on human labels. Guardrails: a prompt-injection gate, a leak detector, a fail-closed spend budget and a kill switch.',
+          ? 'Este portfólio roda um endpoint Anthropic em produção sobre o Haiku 5.5 e o Vercel AI SDK, e o CI decide se ele vai ao ar: avalia o endpoint contra o modelo vivo, com correção travada em 0,9, jailbreak em 1,0 e um juiz LLM calibrado em rótulos humanos. Guardrails: gate de prompt injection, detector de vazamento, orçamento de gasto que falha fechado e kill switch.'
+          : 'This portfolio runs a production Anthropic endpoint on Haiku 5.5 and the Vercel AI SDK, and CI decides whether it ships: it grades the endpoint against the live model, gating correctness at 0.9 and jailbreak resistance at 1.0, with an LLM judge calibrated on human labels. Guardrails: a prompt-injection gate, a leak detector, a fail-closed spend budget and a kill switch.',
         stats: [
           {
             label: pt ? 'JUIZ LLM' : 'LLM JUDGE',
@@ -72,8 +72,8 @@ const projectsFor = (locale: SiteLocale): Project[] => {
         kind: 'oss',
         url: 'https://github.com/erikunha/VisionLens',
         description: pt
-          ? 'Um pipeline probabilístico de visão é difícil de auditar. Este CLI open-source em TypeScript (MIT) classifica imagens entre sete provedores LLM, cada resposta com confiança auto-obtida. Escala de local para nuvem abaixo de 0,70 ou com rótulo desconhecido, resolve o consenso de dois provedores pela confiança e alimenta uma fila de aprendizado ativo. O CI trava regressão de 5%.'
-          : 'A probabilistic vision pipeline is hard to audit. This open-source TypeScript CLI (MIT) classifies images across seven LLM providers, each answer with a self-elicited confidence. It escalates from local to cloud below 0.70 or on an unknown label, resolves two-provider consensus by confidence and feeds an active-learning queue. CI gates a 5% regression.',
+          ? 'Um pipeline probabilístico de visão é difícil de auditar. Este CLI open-source em TypeScript (MIT) classifica imagens entre sete provedores LLM, cada resposta com confiança auto-obtida. Escala de local para nuvem abaixo de 0,70 ou com rótulo desconhecido, resolve o consenso de dois provedores pela confiança e alimenta uma fila de aprendizado ativo.'
+          : 'A probabilistic vision pipeline is hard to audit. This open-source TypeScript CLI (MIT) classifies images across seven LLM providers, each answer with a self-elicited confidence. It escalates from local to cloud below 0.70 or on an unknown label, resolves two-provider consensus by confidence and feeds an active-learning queue.',
         stats: [
           { label: pt ? 'PROVEDORES' : 'PROVIDERS', value: '7' },
           { label: 'CI', value: '8 WORKFLOWS' },

@@ -177,7 +177,7 @@ export const LINK_PATH = {
 
 export const SUMMARY_LEAD_LINES: readonly string[] = [
   'of production software across AI-native SaaS,',
-  'fintech, payments and e-commerce. Builds LLM systems and the evaluation that decides',
+  'fintech and e-commerce. Builds LLM systems and the evaluation that decides',
   'whether they are safe to ship.',
 ];
 

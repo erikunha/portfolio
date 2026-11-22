@@ -7,11 +7,11 @@ const communityEventFor = (locale: SiteLocale): CommunityEvent => {
   return CommunityEventSchema.parse({
     name: 'DEVOPSDAYS_CAMPINAS',
     year: 2024,
-    role: pt ? 'ORGANIZADOR' : 'ORGANIZER',
+    role: pt ? 'COORGANIZADOR' : 'CO-ORGANIZER',
     bullets: [
       pt
-        ? 'Coorganizador: conduziu o call for papers, encontrou palestrantes e coordenou com patrocinadores, selecionando 8 palestras sobre DevOps, nuvem, engenharia de plataforma e arquitetura.'
-        : 'Co-organizer: ran the call for papers, found speakers and coordinated with sponsors, curating 8 talks across DevOps, cloud, platform engineering and architecture.',
+        ? 'Conduziu o call for papers, encontrou palestrantes e coordenou com patrocinadores, selecionando 8 palestras sobre DevOps, nuvem, engenharia de plataforma e arquitetura.'
+        : 'Ran the call for papers, found speakers and coordinated with sponsors, curating 8 talks across DevOps, cloud, platform engineering and architecture.',
     ],
     link: {
       label: 'devopsdays.org',
@@ -29,4 +29,4 @@ export const communityEvent: Record<SiteLocale, CommunityEvent> = {
   [SITE_LOCALE.pt]: communityEventFor(SITE_LOCALE.pt),
 };
 
-export const communityTalksSentence = communityEvent[SITE_LOCALE.en].bullets[0] ?? '';
+export const communityRoleSentence = communityEvent[SITE_LOCALE.en].bullets[0] ?? '';
