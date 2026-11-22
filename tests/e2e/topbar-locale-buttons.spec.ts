@@ -19,7 +19,6 @@ const BOX_PROPERTIES = [
   'textTransform',
   'borderTopWidth',
   'borderTopStyle',
-  'borderTopColor',
   'borderRadius',
 ] as const;
 const LANGUAGES = [
@@ -55,6 +54,27 @@ test.describe('desktop topbar language buttons', () => {
       const button = language.locator(`a[hreflang="${hreflang}"]`);
       expect(await boxStyle(button), `${code} against VIEW_CV`).toEqual(reference);
     }
+  });
+
+  test('the current language has the signal border and the other the quiet border', async ({
+    page,
+  }) => {
+    await gotoSettled(page, '/');
+    const language = page.locator(TOPBAR).getByRole('navigation', { name: 'Language' });
+    const border = (hreflang: string) =>
+      language
+        .locator(`a[hreflang="${hreflang}"]`)
+        .evaluate((node) => getComputedStyle(node).borderTopColor);
+    const active = await border('en');
+    const inactive = await border('pt');
+    expect(active, 'the active locale keeps the signal border').toBe(
+      await page
+        .locator(TOPBAR)
+        .getByRole('link', { name: 'VIEW_CV' })
+        .evaluate((node) => getComputedStyle(node).borderTopColor),
+    );
+    expect(inactive, 'the inactive locale uses the quiet border').not.toBe(active);
+    await expect(language.locator('a[hreflang="en"]')).toHaveAttribute('aria-current', 'page');
   });
 
   test('the visible label is the short code and the full name stays in the accessible name', async ({

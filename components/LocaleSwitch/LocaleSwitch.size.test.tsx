@@ -4,7 +4,7 @@ import { LocaleSwitch } from './LocaleSwitch';
 
 const HREFS = { en: '/cv', pt: '/pt/cv' } as const;
 const NAMES = { en: 'English', pt: 'Português' } as const;
-const EXTRA_CLASSES = 'topbar-action topbar-action-outline';
+const EXTRA_CLASSES = 'topbar-action';
 
 function links(props: { size?: 'sm' | 'md' | 'lg'; buttonClassName?: string }) {
   render(<LocaleSwitch label="Language" current="en" hrefs={HREFS} names={NAMES} {...props} />);
@@ -23,7 +23,6 @@ describe('LocaleSwitch button styling hooks', () => {
     for (const link of links({ size: 'md', buttonClassName: EXTRA_CLASSES })) {
       expect(link.getAttribute('data-size')).toBe('md');
       expect(link.classList.contains('topbar-action')).toBe(true);
-      expect(link.classList.contains('topbar-action-outline')).toBe(true);
       expect(link.getAttribute('data-variant')).toBe('secondary');
     }
   });

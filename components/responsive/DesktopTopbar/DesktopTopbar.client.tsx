@@ -19,7 +19,7 @@ import {
 
 const SECTION_PATH_SEPARATOR = '/';
 
-const LOCALE_BUTTON_CLASSES = 'topbar-action topbar-action-outline';
+const LOCALE_BUTTON_CLASSES = 'topbar-action';
 
 const HASH_MARK = '#';
 
