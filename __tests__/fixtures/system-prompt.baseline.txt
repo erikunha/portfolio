@@ -164,7 +164,7 @@ Strong preference: AI-native products and agent systems that ship with evals and
 - Self-reported model confidence is a model signal, not a calibrated one.
 
 ## Community and writing
-- Organizer of DevOpsDays Campinas 2024. One of nine organizers: curated 8 talks across DevOps, cloud, platform engineering and architecture, ran the speaker cycle from CFP to wrap-up, and published speakers, schedule and sponsors to the open-source site in 4 merged PRs.
+- DevOpsDays Campinas 2024. Co-organizer: ran the call for papers, found speakers and coordinated with sponsors, curating 8 talks across DevOps, cloud, platform engineering and architecture.
 - Writing: two dev.to articles, "Creating Type-Safe Forms in Angular: Advanced Tip" (Aug 2023) and "What are Progressive Web Apps (PWAs)" (Oct 2021).
 
 ## What Erik does not claim
