@@ -30,6 +30,11 @@ export function LatestVideoSkeleton({ locale }: { locale: SiteLocale }) {
               <div className="links-skeleton-block links-skeleton-thumb" />
             </div>
             <div className="links-watch-body">
+              <span className="links-skeleton-channel">
+                <span className="links-skeleton-block links-skeleton-text" />
+                <span className="links-skeleton-block links-skeleton-text links-skeleton-small" />
+              </span>
+              <span className="links-skeleton-block links-skeleton-text" />
               <span className="links-skeleton-block links-skeleton-title" />
               <div className="links-skeleton-bars">
                 {TEXT_BARS.map(({ position }) => (
@@ -38,6 +43,7 @@ export function LatestVideoSkeleton({ locale }: { locale: SiteLocale }) {
               </div>
             </div>
             <div className="links-watch-actions">
+              <span className="links-skeleton-block links-skeleton-action" />
               <span className="links-skeleton-block links-skeleton-action" />
             </div>
           </div>
