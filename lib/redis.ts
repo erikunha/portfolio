@@ -26,6 +26,7 @@ function rejectedClient(): Redis {
 }
 
 export function hasRedisCredentials(): boolean {
+  // biome-ignore lint/style/noProcessEnv: REDIS_ENV_PAIRS names the variables, so the read is by dynamic name, and Redis.fromEnv reads the same live process env
   return REDIS_ENV_PAIRS.some(({ url, token }) => Boolean(process.env[url] && process.env[token]));
 }
 

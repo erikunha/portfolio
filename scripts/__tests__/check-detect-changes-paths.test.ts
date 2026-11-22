@@ -17,9 +17,9 @@ describe('classifyPathspec', () => {
       kind: 'exclude',
       base: 'lib/eval',
     });
-    expect(classifyPathspec(':(exclude)lib/__tests__/**')).toEqual({
+    expect(classifyPathspec(':(exclude)lib/env.test.ts')).toEqual({
       kind: 'exclude',
-      base: 'lib/__tests__',
+      base: 'lib/env.test.ts',
     });
   });
 });

@@ -1,5 +1,5 @@
 {
-  "$schema": "https://biomejs.dev/schemas/2.6.6/schema.json",
+  "$schema": "https://biomejs.dev/schemas/2.6.7/schema.json",
   "vcs": {
     "enabled": true,
     "clientKind": "git",
@@ -157,7 +157,21 @@
       }
     },
     {
-      "includes": ["app/api/**/*.ts", "lib/server/**/*.ts"],
+      "includes": [
+        "app/api/**/*.ts",
+        "lib/**/*.ts",
+        "lib/**/*.tsx",
+        "lib/**/*.mjs",
+        "lib/**/*.mts",
+        "lib/**/*.cts",
+        "!lib/env.ts",
+        "!lib/env-build.ts",
+        "!lib/**/*.test.ts",
+        "!lib/**/*.test.tsx",
+        "!lib/**/*.test.mjs",
+        "!lib/**/*.test.mts",
+        "!lib/**/*.test.cts"
+      ],
       "linter": {
         "rules": {
           "style": {

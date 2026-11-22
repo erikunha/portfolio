@@ -30,7 +30,8 @@ merge-blocking check on this surface is the behavioral test suite (the required
   that runs after the stream closes. Held by behavioral tests + e2e, not source-grep.
 - Read env only through the Zod accessors `lib/env.ts` and `lib/env-build.ts`
   (deploy metadata such as the commit SHA). Never read `process.env.*` directly
-  in a handler: Biome's `noProcessEnv` fails `app/api/**` and `lib/server/**`.
+  in a handler: Biome's `noProcessEnv` fails `app/api/**` and every non-test file under
+  `lib/` except the two env modules; a read that must stay carries a `biome-ignore` reason.
 - Rate limiting is Upstash sliding-window via `lib/rate-limit.ts` (the table of
   limiters and their getters; it imports nothing from `lib/ask`) and is
   **fail-open** (Redis down must not 500 the user). Keep that property. The

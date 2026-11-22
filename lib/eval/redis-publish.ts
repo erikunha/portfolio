@@ -38,6 +38,7 @@ function credentialValues(env: NodeJS.ProcessEnv): string[] {
 
 function redactSecrets(message: string): string {
   let redacted = message;
+  // biome-ignore lint/style/noProcessEnv: the live process env is the subject here: this module restores and drops Redis credentials on it by design, and the validated env module is a snapshot taken at import
   for (const value of credentialValues(process.env)) {
     redacted = redacted.split(value).join(REDACTED);
   }
@@ -47,6 +48,7 @@ function redactSecrets(message: string): string {
 export type PublishResult = { published: boolean; skipped?: string; error?: string };
 
 export async function publishAggregate(key: string, aggregate: unknown): Promise<PublishResult> {
+  // biome-ignore lint/style/noProcessEnv: the live process env is the subject here: this module restores and drops Redis credentials on it by design, and the validated env module is a snapshot taken at import
   if (!isPublishEnabled(process.env)) {
     return { published: false, skipped: `${EVAL_PUBLISH_ENV} is not set` };
   }
@@ -69,10 +71,12 @@ export async function publishWithCredentials(
   aggregate: unknown,
   credentials: RedisCredentials,
 ): Promise<PublishResult> {
+  // biome-ignore lint/style/noProcessEnv: the live process env is the subject here: this module restores and drops Redis credentials on it by design, and the validated env module is a snapshot taken at import
   restoreRedisCredentials(process.env, credentials);
   try {
     return await publishAggregate(key, aggregate);
   } finally {
+    // biome-ignore lint/style/noProcessEnv: the live process env is the subject here: this module restores and drops Redis credentials on it by design, and the validated env module is a snapshot taken at import
     dropRedisCredentials(process.env, credentials);
   }
 }
