@@ -142,7 +142,7 @@ export const personSchema = {
     '@type': 'Organization',
     name: 'DevOpsDays Campinas',
     url: communityEvent[SITE_LOCALE.en].link.href,
-    description: `Conference organizer, ${communityEvent[SITE_LOCALE.en].year}: ${communityTalksSentence}`,
+    description: `Conference organizer, ${communityEvent[SITE_LOCALE.en].year}. ${communityTalksSentence}`,
   },
   seeks: {
     '@type': 'Demand',

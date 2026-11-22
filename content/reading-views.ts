@@ -392,7 +392,7 @@ const summaryDocumentFor = (locale: SiteLocale) => {
       name,
       label: stat.label,
       value: stat.value,
-      description: project.summary ?? project.description,
+      description: project.description,
     };
   });
   return SummaryDocumentSchema.parse({

@@ -31,7 +31,7 @@ describe('career tag groups', () => {
     render(<CredentialsSection locale={SITE_LOCALE.en} />);
     const community = within(screen.getByRole('group', { name: 'Community' }));
     expect(community.getByText('community/DEVOPSDAYS_CAMPINAS · 2024 · ORGANIZER')).toBeTruthy();
-    expect(community.getAllByRole('listitem')).toHaveLength(3);
+    expect(community.getAllByRole('listitem')).toHaveLength(1);
     for (const bullet of communityEvent[SITE_LOCALE.en].bullets) {
       expect(community.getByText(bullet)).toBeTruthy();
     }
