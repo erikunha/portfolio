@@ -388,7 +388,12 @@ const summaryDocumentFor = (locale: SiteLocale) => {
     const project = projects[locale].find((entry) => entry.name === name);
     const stat = project?.stats[0];
     if (!project || !stat) throw new Error(`reading views: project "${name}" has no stat to show`);
-    return { name, label: stat.label, value: stat.value, description: project.description };
+    return {
+      name,
+      label: stat.label,
+      value: stat.value,
+      description: project.summary ?? project.description,
+    };
   });
   return SummaryDocumentSchema.parse({
     name: profile.displayName,

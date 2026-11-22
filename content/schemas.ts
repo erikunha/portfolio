@@ -176,6 +176,7 @@ export const ProjectSchema = z
     company: z.string().min(1),
     name: z.string().min(1),
     description: z.string().min(1),
+    summary: z.string().min(1).optional(),
     stats: z.array(StatSchema).min(1),
     perm: z.string().min(1).optional(),
     kind: ProjectKind,

@@ -55,7 +55,10 @@ export function SummaryPage({ locale }: { locale: SiteLocale }) {
               <li key={project.name} className="reading-project">
                 <h3 className="reading-project-name">{project.name}</h3>
                 <p className="reading-project-metric">
-                  <span>{project.label}</span> <b>{project.value}</b>
+                  <span>{project.label}</span>{' '}
+                  <b>
+                    <KeepTail>{project.value}</KeepTail>
+                  </b>
                 </p>
                 <p className="reading-project-text">
                   <KeepTail>{project.description}</KeepTail>
