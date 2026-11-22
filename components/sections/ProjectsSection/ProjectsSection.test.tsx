@@ -46,7 +46,7 @@ describe('Projects', () => {
     expect(links.map((link) => link.getAttribute('href'))).toEqual([
       'https://github.com/JustFly1984/react-google-maps-api/pull/3266',
       'https://github.com/erikunha/portfolio',
-      'https://github.com/erikunha/LAIbemage',
+      'https://github.com/erikunha/VisionLens',
       'https://github.com/erikunha/ledgerlens',
       'https://github.com/erikunha/vault-of-loci',
     ]);
@@ -108,9 +108,10 @@ describe('Projects', () => {
     );
     expect(doc.querySelectorAll('.projects-grid')).toHaveLength(1);
     for (const project of projects[SITE_LOCALE.en]) {
+      expect(doc.body.textContent).toContain(project.name);
       expect(doc.body.textContent).toContain(project.description);
     }
-    expect(doc.body.textContent).toContain('SERVICE_OPS_CONSOLE');
+    expect(doc.body.textContent).not.toContain('SERVICE_OPS_CONSOLE');
     expect(doc.body.textContent).not.toContain('CARE_OPS');
   });
 

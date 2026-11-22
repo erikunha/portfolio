@@ -16,8 +16,8 @@ const communityEventFor = (locale: SiteLocale): CommunityEvent => {
         ? 'conduziu o ciclo completo de palestrantes: abertura do CFP → revisão → seleção → desenho do programa → dia do evento → encerramento.'
         : 'ran the full speaker cycle: CFP launch → review → selection → program design → day-of → wrap.',
       pt
-        ? 'coordenou palestrantes, patrocinadores e co-organizadores de ponta a ponta, e publicou palestrantes, programação e patrocinadores no site open source em 4 pull requests mergeados.'
-        : 'coordinated with speakers, sponsors, and co-organizers end-to-end, and published speakers, schedule and sponsors to the open-source site in 4 merged pull requests.',
+        ? 'como um dos nove organizadores, coordenou palestrantes, patrocinadores e co-organizadores de ponta a ponta, e publicou palestrantes, programação e patrocinadores no site open source em 4 pull requests mergeados.'
+        : 'as one of nine organizers, coordinated with speakers, sponsors, and co-organizers end-to-end, and published speakers, schedule and sponsors to the open-source site in 4 merged pull requests.',
     ],
     link: {
       label: 'devopsdays.org',

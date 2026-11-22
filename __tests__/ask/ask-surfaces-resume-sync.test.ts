@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 import { ASK_EVAL_CALIBRATION } from '@/content/ask-eval-calibration';
 import { ASK_EVAL_CORPUS } from '@/content/ask-eval-corpus';
 import { education } from '@/content/education';
-import { RAYLU_BUILT_CLAIM, RAYLU_FRONTEND_SCOPE } from '@/content/profile';
+import { RAYLU_FRONTEND_SCOPE, RAYLU_SCREENS_CLAIM } from '@/content/profile';
 import { cvDocument } from '@/content/reading-views';
 import { SITE_LOCALE } from '@/content/site-locale';
 import { SYSTEM_TEXT } from '@/lib/ask/system-prompt';
@@ -63,11 +63,15 @@ const publishedTextSurfaces = (): Array<[string, string]> => {
 };
 
 describe('the ask prompt states the Raylu scope the CV states', () => {
-  it('claims the frontend-platform build the CV summary claims, and nothing wider', () => {
+  it('claims the Raylu work the CV summary claims, and nothing wider', () => {
     expect(
       cvDocument[SITE_LOCALE.en].summary,
-      'the CV summary no longer states the build claim: update RAYLU_BUILT_CLAIM and the prompt together',
-    ).toContain(RAYLU_BUILT_CLAIM);
+      'the CV summary no longer states the Raylu claim: update RAYLU_SCREENS_CLAIM and the prompt together',
+    ).toContain(RAYLU_SCREENS_CLAIM);
+    expect(
+      currentRole,
+      'the Current role section must state the claim the CV summary makes, or the ask answer contradicts /cv',
+    ).toContain(RAYLU_SCREENS_CLAIM);
     expect(
       currentRole,
       'the Current role section must state the scope the CV states, or the ask answer contradicts the page it sits on',
@@ -110,12 +114,10 @@ describe('the ask eval corpus grades only what the prompt can answer', () => {
   it('describes the consulting work, Nike and the Canadian diploma as content/ does', () => {
     const expectOf = (id: string) => ASK_EVAL_CORPUS.find((item) => item.id === id)?.expect ?? '';
     const coOp = education[SITE_LOCALE.en].find((entry) => entry.id === 'CO_OP_DIPLOMA');
-    expect(expectOf('fact-forward-deployed-engineer')).toContain(
-      'hospital equipment service platform',
-    );
-    expect(SYSTEM_TEXT).toContain('hospital equipment service platform');
-    expect(expectOf('fact-nike-centauro')).toContain('BFF gateway');
-    expect(SYSTEM_TEXT).toContain('BFF gateway');
+    expect(expectOf('fact-forward-deployed-engineer')).toContain('equipment maintenance platform');
+    expect(SYSTEM_TEXT).toContain('equipment maintenance platform');
+    expect(expectOf('fact-nike-centauro')).toContain('backend-for-frontend');
+    expect(SYSTEM_TEXT).toContain('backend-for-frontend');
     expect(expectOf('fact-canada-status')).toContain(coOp?.degree ?? 'missing degree');
   });
 });
@@ -137,11 +139,10 @@ describe('public text surfaces publish no eval corpus size', () => {
 });
 
 describe('llms.txt describes the consulting work as content/ does', () => {
-  it('names the hospital equipment service platform, not hospital operations', () => {
+  it('names the equipment maintenance platform and no kind of client', () => {
     const llms = readFileSync(path.join(ROOT, 'public/llms.txt'), 'utf8');
-    const imaging =
-      llms.split('\n').find((line) => line.startsWith('- Medical imaging equipment:')) ?? '';
-    expect(imaging).toContain('hospital equipment service');
-    expect(llms).not.toMatch(/hospital operations/i);
+    const line =
+      llms.split('\n').find((entry) => entry.startsWith('- Equipment maintenance:')) ?? '';
+    expect(line).toContain('equipment maintenance platform');
   });
 });

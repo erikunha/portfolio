@@ -170,13 +170,13 @@ export function ContactTimezone({ copy }: { copy: TimezoneCopy }) {
       <ProposeSlot key={zone} copy={copy} slot={overlap.bestSlot} slotLine={slotLine} />
 
       <p className="ctz-overlap" data-testid="ctz-overlap">
-        {overlap.range ? (
+        {overlap.window ? (
           <>
             <strong className="ctz-overlap-hours">
               {fillCopy(copy.overlap.summary, { hours: overlapPhrase })}
             </strong>
             {copy.overlap.separator}
-            {fillCopy(copy.overlap.range, { range: overlap.range })}
+            {fillCopy(copy.overlap.range, overlap.window)}
           </>
         ) : (
           copy.overlap.none

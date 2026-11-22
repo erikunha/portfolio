@@ -65,7 +65,7 @@
   }
 
   .contact-shell {
-    border: var(--border-width) solid var(--color-accent);
+    border: var(--border-width) solid var(--color-sage-300);
     border-radius: var(--radius-control);
     background: var(--color-surface-raised);
     font-family: var(--font-mono);
@@ -88,7 +88,7 @@
   }
 
   .contact-chrome {
-    border-bottom: var(--border-width) solid var(--color-accent);
+    border-bottom: var(--border-width) solid var(--color-sage-300);
     color: var(--color-text-secondary);
     font-size: var(--text-xs);
   }

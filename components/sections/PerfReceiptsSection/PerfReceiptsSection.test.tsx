@@ -22,7 +22,7 @@ describe('PerfReceiptsSection hero data-featured variant', () => {
       'BUNDLE_CSS',
       'INITIAL_LOAD',
       'CONVERSION',
-      'DESKTOP_BUILD',
+      'RELEASE_TIME',
       'LCP',
     ]);
     expect(doc.body.textContent).toContain('40s → <1s');

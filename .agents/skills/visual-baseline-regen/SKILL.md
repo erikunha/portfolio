@@ -35,7 +35,7 @@ open the PR. If the decision is not locked, hold the PR. Do not open a half-gate
 
 Regenerate against a production server locally, then update snapshots:
 
-    pnpm build
+    E2E_LINKS_FEED_FIXTURE=tests/e2e/fixtures/links-feed.json pnpm build
     DEPLOY_SALT=test pnpm start &
     # wait for server at localhost:3000, then run ONLY the spec being regenerated:
 
@@ -45,6 +45,8 @@ Regenerate against a production server locally, then update snapshots:
     # for design-system-components.spec.ts baselines, run the only project that runs it:
     pnpm test:e2e --project=chromium tests/e2e/design-system-components.spec.ts --update-snapshots
 
+`E2E_LINKS_FEED_FIXTURE` makes `/links/en` render the fixture feed instead of live YouTube
+data, as CI does; without it the links baselines fail with the fixture message.
 `DEPLOY_SALT=test` prevents prod-mode salt resolution from hitting Upstash Redis
 (see `lib/ip-hash.ts`). Use `pnpm start`, not `pnpm dev`: baselines must match
 the production build. Scope the command to the specific spec to avoid regenerating
