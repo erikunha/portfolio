@@ -22,7 +22,8 @@ const MISSING_PATH = '/missing';
 const HUNG_AFTER_HEADERS_PATH = '/hung-after-headers';
 const SILENT_PATH = '/silent';
 const PAGE_ERROR_PATH = '/page-error';
-const PARTIAL_DOCUMENT = '<!doctype html><title>partial</title><p>the body never finishes';
+const PARTIAL_DOCUMENT_BODY_BYTES = 8_192;
+const PARTIAL_DOCUMENT = `<!doctype html><title>partial</title><p>${'x'.repeat(PARTIAL_DOCUMENT_BODY_BYTES)}`;
 const PAGE_ERROR_DOCUMENT = `<!doctype html><title>page error</title><script>throw new Error(${JSON.stringify(PAGE_ERROR_MESSAGE)});</script>`;
 
 interface ControlServer {
