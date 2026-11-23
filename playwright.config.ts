@@ -77,7 +77,9 @@ export default defineConfig({
   workers: process.env.CI ? 2 : 1,
   reporter: [
     ...(process.env.GITHUB_ACTIONS ? ([['github'], ['list']] as const) : ([['list']] as const)),
-    ...(process.env.ARGOS_TOKEN ? [['@argos-ci/playwright/reporter'] as [string]] : []),
+    ...(process.env.ARGOS_TOKEN
+      ? [['@argos-ci/playwright/reporter', { ignoreUploadFailures: true }] as [string, object]]
+      : []),
   ],
   use: {
     baseURL: process.env.E2E_BASE_URL ?? DEFAULT_BASE_URL,
