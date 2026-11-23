@@ -107,8 +107,8 @@ The prompt for a manual or agent review that applies these rules to a diff is `d
     Bring each target into the observer's band, wait for frames, and check the band geometrically.
 34. `page.goto` resolves at `load`, before React swaps a streamed Suspense boundary in. A spec that
     measures or counts anything under `#sec-live-metrics`, `#sec-live-perf`, the `/links` feed or the
-    locale switch in the topbar navigates with `gotoSettled` (`tests/e2e/_helpers/streamed.ts`). A read in the gap sees the
-    fallback, and the swap then detaches it: `getComputedStyle` returns `''` and `NaN` follows, and
+    locale switch in the topbar navigates with `gotoSettled` (`tests/e2e/_helpers/streamed.ts`).
+    A read in the gap sees the fallback, and the swap then detaches it: `getComputedStyle` returns `''` and `NaN` follows, and
     `boundingBox()` returns `null`. Read a box with `boxOf` (`tests/e2e/_helpers/geometry.ts`), which
     re-resolves the locator and fails naming the element, never with `?.x ?? 0`.
     The helper navigates to `domcontentloaded`, not `load`: WebKit holds `load` for as long as any
