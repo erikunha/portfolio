@@ -13,6 +13,8 @@ const GUARD_SPECIFIER = /(^|\/)_helpers\/test$/;
 const PLAYWRIGHT_MODULES = new Set(['@playwright/test', 'playwright/test', 'playwright']);
 const TEST_BINDINGS = new Set(['test', 'default']);
 const BROWSER_TYPES = new Set(['chromium', 'firefox', 'webkit']);
+const BROWSER_TYPE_FIXTURE = 'browserType';
+const CONTEXT_GUARD_MIN_ARGUMENTS = 2;
 const GUARDED_LAUNCHERS = new Set(['launch', 'connect', 'connectOverCDP']);
 const PERSISTENT_LAUNCHER = 'launchPersistentContext';
 const GUARD_CALL = 'guardBrowser';
@@ -102,7 +104,9 @@ function isBrowserType(
   node: ts.Expression,
   bindings: { names: Set<string>; namespaces: Set<string> },
 ): boolean {
-  if (ts.isIdentifier(node)) return bindings.names.has(node.text);
+  if (ts.isIdentifier(node)) {
+    return bindings.names.has(node.text) || node.text === BROWSER_TYPE_FIXTURE;
+  }
   return ts.isPropertyAccessExpression(node) && BROWSER_TYPES.has(node.name.text);
 }
 
@@ -123,7 +127,8 @@ function launchVerdict(
   const guarded =
     ts.isCallExpression(holder) &&
     ts.isIdentifier(holder.expression) &&
-    holder.expression.text === (persistent ? CONTEXT_GUARD_CALL : GUARD_CALL);
+    holder.expression.text === (persistent ? CONTEXT_GUARD_CALL : GUARD_CALL) &&
+    (!persistent || holder.arguments.length >= CONTEXT_GUARD_MIN_ARGUMENTS);
   return guarded ? 'guarded' : 'violation';
 }
 
@@ -235,7 +240,15 @@ describe('meta: every Playwright navigation goes through the WebKit stall guard'
   it('takes a persistent context only through guardContext, which is told the browser type', () => {
     expect(hits('const c = await firefox.launchPersistentContext(dir);')).toBe(1);
     expect(hits('guardBrowser(await webkit.launchPersistentContext(dir));')).toBe(1);
+    expect(hits('guardContext(await webkit.launchPersistentContext(dir));')).toBe(1);
     expect(hits('guardContext(await webkit.launchPersistentContext(dir), webkit);')).toBe(0);
+  });
+
+  it('sees a browser launched from the browserType fixture outside the guard', () => {
+    expect(hits('async ({ browserType }) => { await browserType.launch(); }')).toBe(1);
+    expect(hits('async ({ browserType }) => { guardBrowser(await browserType.launch()); }')).toBe(
+      0,
+    );
   });
 
   it('accepts a launched browser handed to guardBrowser', () => {
@@ -273,7 +286,7 @@ describe('meta: every Playwright navigation goes through the WebKit stall guard'
     ).version;
     expect(
       installed,
-      `the WebKit COOP stall containment was validated on Playwright ${VALIDATED_PLAYWRIGHT_VERSION}. After a bump, run scripts/e2e/webkit-stall-probe.sh on the new version: 12,000 clean unguarded navigations mean the upstream fix landed and the containment goes (DECISIONS.md 2026-11-23); a stall means VALIDATED_PLAYWRIGHT_VERSION moves to the new version.`,
+      `the WebKit COOP stall containment was validated on Playwright ${VALIDATED_PLAYWRIGHT_VERSION}. After a bump, run scripts/e2e/webkit-stall-probe.sh on the new version, inside the mcr.microsoft.com/playwright:v<version>-noble image: 12,000 clean unguarded navigations mean the upstream fix landed and the containment goes (DECISIONS.md 2026-11-23); a stall means VALIDATED_PLAYWRIGHT_VERSION moves to the new version.`,
     ).toBe(VALIDATED_PLAYWRIGHT_VERSION);
   });
 });

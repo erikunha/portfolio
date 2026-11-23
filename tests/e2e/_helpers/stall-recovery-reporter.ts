@@ -1,5 +1,5 @@
 import type { FullResult, Reporter, TestCase, TestResult } from '@playwright/test/reporter';
-import { STALL_CONTROL_ANNOTATION, WEBKIT_COOP_STALL_ANNOTATION } from './navigation-stall';
+import { WEBKIT_COOP_STALL_ANNOTATION } from './navigation-stall';
 
 export const MAX_STALL_RECOVERIES_PER_RUN = 1;
 const FAILED_STATUS = 'failed';
@@ -10,7 +10,6 @@ export interface StallRecoveryRecord {
   readonly project: string;
   readonly description: string;
   readonly status: string;
-  readonly control: boolean;
 }
 
 export interface StallRecoverySummary {
@@ -24,9 +23,9 @@ export function summarizeStallRecoveries(
 ): StallRecoverySummary {
   const lines = records.map(
     (record) =>
-      `webkit-coop-navigation-stall [${record.project}] ${record.title}: ${record.description} (test ${record.status}${record.control ? ', deliberate control' : ''})`,
+      `webkit-coop-navigation-stall [${record.project}] ${record.title}: ${record.description} (test ${record.status})`,
   );
-  const counted = new Set(records.filter((record) => !record.control).map((r) => r.testId)).size;
+  const counted = new Set(records.map((r) => r.testId)).size;
   const failRun = counted > MAX_STALL_RECOVERIES_PER_RUN;
   if (failRun) {
     lines.push(
@@ -40,7 +39,6 @@ export default class StallRecoveryReporter implements Reporter {
   private readonly records: StallRecoveryRecord[] = [];
 
   onTestEnd(test: TestCase, result: TestResult): void {
-    const control = test.annotations.some((a) => a.type === STALL_CONTROL_ANNOTATION);
     for (const annotation of result.annotations) {
       if (annotation.type !== WEBKIT_COOP_STALL_ANNOTATION) continue;
       this.records.push({
@@ -49,7 +47,6 @@ export default class StallRecoveryReporter implements Reporter {
         project: test.parent.project()?.name ?? '',
         description: annotation.description ?? '',
         status: result.status,
-        control,
       });
     }
   }

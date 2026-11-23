@@ -28,6 +28,8 @@ interface ProbeModule {
   DEFAULT_ITERATIONS: number;
   DEFAULT_PATH: string;
   EXIT_BAD_ARGUMENTS: number;
+  REQUIRED_PLATFORM: string;
+  platformError: (platform: string, version: string) => string | undefined;
   parseArguments: (argv: string[]) => { options?: Options; error?: string };
   runProbe: (options: Options, launch: () => Promise<unknown>) => Promise<Summary>;
   summarize: (navigations: number, stalls: unknown[]) => Summary;
@@ -40,6 +42,8 @@ const {
   DEFAULT_ITERATIONS,
   DEFAULT_PATH,
   EXIT_BAD_ARGUMENTS,
+  REQUIRED_PLATFORM,
+  platformError,
   parseArguments,
   runProbe,
   summarize,
@@ -115,6 +119,15 @@ describe('webkit stall probe output', () => {
 
   it('summarizes with no stalls as clean', () => {
     expect(summarize(10, []).verdict).toBe('clean');
+  });
+});
+
+describe('webkit stall probe platform', () => {
+  it('refuses a platform other than linux and names the image', () => {
+    expect(platformError('darwin', '1.65.1')).toMatch(
+      /mcr\.microsoft\.com\/playwright:v1\.65\.1-noble/,
+    );
+    expect(platformError(REQUIRED_PLATFORM, '1.65.1')).toBeUndefined();
   });
 });
 

@@ -1,4 +1,5 @@
 import { realpathSync } from 'node:fs';
+import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
 
 export const DEFAULT_ITERATIONS = 12_000;
@@ -8,6 +9,7 @@ export const DEFAULT_GOTO_TIMEOUT_MS = 12_000;
 export const EXIT_CLEAN = 0;
 export const EXIT_STALLED = 1;
 export const EXIT_BAD_ARGUMENTS = 2;
+export const REQUIRED_PLATFORM = 'linux';
 const WAIT_UNTIL = 'domcontentloaded';
 const PROGRESS_EVERY = 500;
 const FLAG_PREFIX = '--';
@@ -20,6 +22,11 @@ const TEXT_FLAGS = {
   '--base-url': 'baseUrl',
   '--path': 'path',
 };
+
+export function platformError(platform, version) {
+  if (platform === REQUIRED_PLATFORM) return undefined;
+  return `the probe measures the Linux WebKit build and refuses to run on ${platform}; run it in the mcr.microsoft.com/playwright:v${version}-noble image`;
+}
 
 export function parseArguments(argv) {
   const options = {
@@ -97,6 +104,12 @@ async function main() {
   const parsed = parseArguments(process.argv.slice(2));
   if (parsed.error) {
     process.stderr.write(`${parsed.error}\n`);
+    process.exit(EXIT_BAD_ARGUMENTS);
+  }
+  const { version } = createRequire(import.meta.url)('@playwright/test/package.json');
+  const unsupported = platformError(process.platform, version);
+  if (unsupported) {
+    process.stderr.write(`${unsupported}\n`);
     process.exit(EXIT_BAD_ARGUMENTS);
   }
   const { webkit } = await import('@playwright/test');

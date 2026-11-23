@@ -5,7 +5,6 @@ export const STALL_PRONE_BROWSER = 'webkit';
 export const HEALTHY_COOP_SWAP_GAP_MAX_MS = 4_976;
 export const NAVIGATION_STALL_WINDOW_MS = 5_000;
 export const VALIDATED_PLAYWRIGHT_VERSION = '1.65.1';
-export const STALL_CONTROL_ANNOTATION = 'webkit-coop-stall-control';
 const BLANK_PAGE_URL = 'about:blank';
 const STALL_WINDOW_ELAPSED = Symbol('stall window elapsed');
 
@@ -50,7 +49,7 @@ export interface StallGuardDependencies {
 export class SlowFirstByteError extends Error {
   constructor(url: string, firstByteMs: number, windowMs: number) {
     super(
-      `slow first byte: after one WebKit COOP stall recovery, the document for ${url} answered ${firstByteMs} ms after the second navigation started, over the ${windowMs} ms stall window. A server this slow is a server problem, not the WebKit COOP stall.`,
+      `slow first byte: after one WebKit COOP stall recovery, the document for ${url} answered ${firstByteMs} ms after the second navigation started, over the ${windowMs} ms stall window. A server or process swap this slow is not the WebKit COOP stall.`,
     );
     this.name = 'SlowFirstByteError';
   }

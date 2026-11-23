@@ -12,7 +12,6 @@ function record(testId: string, change: Partial<StallRecoveryRecord> = {}): Stal
     project: 'webkit-desktop',
     description: '/links/en; first attempt stalled 5000 ms; recovered: status 200',
     status: 'passed',
-    control: false,
     ...change,
   };
 }
@@ -37,16 +36,5 @@ describe('summarizeStallRecoveries', () => {
   it('counts a test once across its retries', () => {
     const summary = summarizeStallRecoveries([record('a'), record('a', { status: 'failed' })]);
     expect(summary.failRun).toBe(false);
-  });
-
-  it('prints the deliberate control recoveries without counting them', () => {
-    const summary = summarizeStallRecoveries([
-      record('a'),
-      record('c1', { control: true, status: 'passed' }),
-      record('c2', { control: true }),
-    ]);
-    expect(summary.failRun).toBe(false);
-    expect(summary.lines).toHaveLength(3);
-    expect(summary.lines[1]).toMatch(/deliberate control\)$/);
   });
 });
