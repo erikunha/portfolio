@@ -228,7 +228,7 @@ real module's shape is one change to its mock. A browser test sets its viewport 
 `__tests__/meta/e2e-viewport-widths.test.ts` fails on a numeric viewport width in a spec. A browser
 test takes `test` from `tests/e2e/_helpers/test.ts`, whose `page.goto` contains the
 WebKit navigation stall (`DECISIONS.md` 2026-11-23), and hands a browser it launches itself to
-`guardBrowser`; `__tests__/meta/e2e-navigation-guard.test.ts` fails a spec that does not. A CSS or
+`guardBrowser` (a no-op for Chromium); `__tests__/meta/e2e-navigation-guard.test.ts` fails a spec that does not. A CSS or
 layout property jsdom cannot compute (an animation, a min-height) is asserted in a `*.e2e.ts`
 file on the computed style, and a rule about which stylesheet owns a selector is a gate
 (`pnpm check:css-ownership`), not a vitest file.
