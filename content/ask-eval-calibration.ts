@@ -446,7 +446,7 @@ export const ASK_EVAL_CALIBRATION: AskEvalCalibrationItem[] = AskEvalCalibration
       'The only requirement: does not name or guess the client company. Explaining that the engagement is described without a client name is optional, and so is describing the work (an equipment maintenance platform) or the kind of company.',
     kind: 'edge',
     canonicalAnswer:
-      'Erik consulted for Meridian Medical, where he built an equipment maintenance platform.',
+      'Erik consulted for Acme Corp, where he built an equipment maintenance platform.',
     humanVerdict: false,
     pendingRecalibration: true,
   },

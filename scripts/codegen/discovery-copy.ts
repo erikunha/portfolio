@@ -113,7 +113,7 @@ export const CERTIFICATIONS_LINES: readonly string[] = [
 ];
 
 export const PROJECT_CONTEXT_LINES: readonly string[] = [
-  '- ERIKUNHA.DEV, personal project: governed streaming Anthropic endpoint on Haiku 5.5 and the Vercel AI SDK with a prompt-injection gate, streaming leak detector, content-hashed prompt versioning, model-drift detection, a spend budget reserved in Redis before every model call, kill switch and a CI eval harness over a corpus of factual, edge, jailbreak and output-validation cases (LLM judge calibrated on human labels, 0.85 agreement floor, 11 of 12 true-negative rate).',
+  '- ERIKUNHA.DEV, personal project: production Anthropic endpoint on Haiku 5.5 and the Vercel AI SDK; CI gates correctness at 0.9 and jailbreak resistance at 1.0 with an LLM judge calibrated on human labels (0.85 agreement floor); guardrails: prompt-injection gate, streaming leak detector, fail-closed spend budget and kill switch.',
   '- VISIONLENS, personal project (open source, MIT): TypeScript CLI classifying images across seven LLM vision providers (github.com/erikunha/VisionLens).',
   '- LEDGERLENS, personal project (open source, MIT): Python agent that investigates payment complaints and verifies every claim in its answer against the evidence it cited (github.com/erikunha/ledgerlens).',
   '- VAULT_OF_LOCI, personal project (open source, MIT): Obsidian vault template where AI agents quiz instead of answering, driven by one AGENTS.md across five agent tools, with a 17-scenario tutor test graded by a model of another family (github.com/erikunha/vault-of-loci).',
@@ -177,7 +177,7 @@ export const LINK_PATH = {
 
 export const SUMMARY_LEAD_LINES: readonly string[] = [
   'of production software across AI-native SaaS,',
-  'fintech, payments and e-commerce. Builds LLM systems and the evaluation that decides',
+  'fintech and e-commerce. Builds LLM systems and the evaluation that decides',
   'whether they are safe to ship.',
 ];
 

@@ -6,34 +6,34 @@
   }
 
   #sec-git-log {
-    --module-estimate: 205.625rem;
+    --module-estimate: 195.625rem;
 
     @media (min-width: 21.25rem) {
-      --module-estimate: 198.125rem;
+      --module-estimate: 193.125rem;
     }
 
     @media (min-width: 21.875rem) {
-      --module-estimate: 195.625rem;
+      --module-estimate: 181.875rem;
     }
 
     @media (min-width: theme(--viewport-narrow)) {
-      --module-estimate: 185rem;
+      --module-estimate: 175rem;
     }
 
     @media (min-width: 23.75rem) {
-      --module-estimate: 171.875rem;
+      --module-estimate: 164.375rem;
     }
 
     @media (min-width: 26.25rem) {
-      --module-estimate: 156.25rem;
+      --module-estimate: 148.125rem;
     }
 
     @media (min-width: 30.625rem) {
-      --module-estimate: 139.375rem;
+      --module-estimate: 131.875rem;
     }
 
     @media (min-width: theme(--viewport-links-qr)) {
-      --module-estimate: 128.75rem;
+      --module-estimate: 121.25rem;
     }
 
     @media (min-width: 45.625rem) {

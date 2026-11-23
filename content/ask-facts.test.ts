@@ -19,11 +19,12 @@ describe('ask facts', () => {
   });
 
   it('states the community role from the community module with the talk count it publishes', () => {
-    const [talks] = communityEvent[SITE_LOCALE.en].bullets;
+    const [talks = ''] = communityEvent[SITE_LOCALE.en].bullets;
     const line = askFacts.community.join(' ');
     expect(line, 'the ask facts must carry the talks the community module publishes').toContain(
-      (talks ?? '').replace(/\.$/, ''),
+      `${talks.charAt(0).toLowerCase()}${talks.slice(1)}`.replace(/\.$/, ''),
     );
+    expect(line).toContain('Co-organizer of DevOpsDays Campinas 2024: ran the call for papers');
     expect(line).toContain('8 talks');
   });
 

@@ -3,7 +3,7 @@ import path from 'node:path';
 import { beforeAll, describe, expect, it, vi } from 'vitest';
 import { ASK_EVAL_CORPUS } from '@/content/ask-eval-corpus';
 import { askFacts } from '@/content/ask-facts';
-import { communityEvent, communityTalksSentence } from '@/content/community';
+import { communityEvent, communityRoleSentence } from '@/content/community';
 import { contactLanguages } from '@/content/contact';
 import { contactCopy } from '@/content/contact-copy';
 import { education } from '@/content/education';
@@ -141,7 +141,7 @@ describe('identity is consistent across every gated surface', () => {
   });
 
   it('points JSON-LD and llms.txt at the same community event and facts', () => {
-    const talksSentence = communityTalksSentence;
+    const talksSentence = communityRoleSentence;
     const capitalizedTalks = `${talksSentence.charAt(0).toUpperCase()}${talksSentence.slice(1)}`;
     expect(communityEvent[SITE_LOCALE.en].bullets).toContain(talksSentence);
     expect(personSchema.memberOf.url).toBe(communityEvent[SITE_LOCALE.en].link.href);
