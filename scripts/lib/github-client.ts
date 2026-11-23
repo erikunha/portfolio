@@ -3,7 +3,7 @@ import { execFileSync } from 'node:child_process';
 const API_BASE = 'https://api.github.com';
 const API_HOST = 'api.github.com';
 const DEFAULT_TOKEN_HOSTS: readonly string[] = [API_HOST];
-const USER_AGENT = 'erikunha-portfolio-weekly-metrics';
+const USER_AGENT = 'erikunha-portfolio-github-client';
 const API_VERSION = '2022-11-28';
 const DEFAULT_RETRIES = 2;
 const RETRY_BASE_MS = 1000;

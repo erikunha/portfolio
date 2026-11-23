@@ -184,7 +184,7 @@ The prompt for a manual or agent review that applies these rules to a diff is `d
     change is fixed by editing the owned file, or by asking `main` for the other writer's file.
     Check: `git status` before and after a write lists only the paths the contract owns.
 45. A new script is a `.ts` file in a purpose folder under `scripts/` (`ci`, `gates`, `codegen`,
-    `eval`, `install`, `metrics`, `lib`) and imports `isMain` from `scripts/lib/is-main`. A script
+    `eval`, `install`, `lib`) and imports `isMain` from `scripts/lib/is-main`. A script
     that a workflow or a `package.json` lifecycle script runs with plain `node` imports its siblings
     with the `.ts` extension, because no loader resolves a bare specifier there. Check:
     `scripts/__tests__/bare-node-scripts.test.ts` and `scripts/__tests__/main-module-guard.test.ts`.

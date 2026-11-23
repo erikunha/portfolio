@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
+import { buildHeaders as buildClientHeaders, createGithubClient } from '../lib/github-client.ts';
 import { isMain } from '../lib/is-main.ts';
-import { buildHeaders as buildClientHeaders, createGithubClient } from '../metrics/github.ts';
 
 const SEMVER = /^v?(\d+)\.(\d+)\.(\d+)/;
 const USER_AGENT = 'erikunha-portfolio-pin-check';

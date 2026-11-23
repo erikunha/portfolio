@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { githubReader } from '../ci/wait-argos-reference.ts';
 import { PINS } from '../gates/check-tool-pins.ts';
-import { createGithubClient } from '../metrics/github.ts';
+import { createGithubClient } from '../lib/github-client.ts';
 
 const TOKEN = 'ghs_scoped_fixture_token';
 const GITHUB_URL = 'https://api.github.com/repos/o/r';
