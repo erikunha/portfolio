@@ -514,8 +514,7 @@ scripts/lib/import-closure.ts         # import walk that computes AI_PATHS
 scripts/eval/ask-eval.ts              # ask eval harness, correctness, jailbreak, cost
 scripts/eval/ask-eval-report.ts       # pure report lines and exit decisions of the ask eval
 scripts/fonts/subset-jetbrains-mono.py  # writes the two JetBrains Mono faces from the upstream variable font: the Latin base plus every glyph the copy and the CSS content values write
-scripts/metrics/                      # weekly delivery-metrics collection, band scoring and issue filing; github.ts holds the shared GitHub client
-metrics/bands.json                    # rolling bands each delivery metric is scored against
+scripts/lib/github-client.ts          # createGithubClient, the shared GitHub client the Argos wait and the tool-pin check use
 __tests__/                            # repo-wide Vitest invariants: docs counts, content parity, API behavior, meta checks
 __tests__/ask/                        # route-level /api/ask tests: budget, eval, injection, log, settle, stream, timeout
 __tests__/contact/                    # route-level contact and contact-retry tests
@@ -752,9 +751,9 @@ Any failure blocks merge. No overrides except by branch protection bypass, and u
 
 Vercel Speed Insights collects real-user Core Web Vitals when `VERCEL=1`. The repository contains no weekly p75 alert job.
 
-### Delivery metrics
+### GitHub client
 
-`.github/workflows/weekly-metrics.yml` records deployment frequency, deployment failure rate, lead time, PR cycle time, main CI failure rate and flaky tests per e2e job once a week, scores each against its own rolling band (`metrics/bands.json`, `scripts/metrics/`), and opens one `metrics-breach` issue per metric that leaves its band. It calls no model, blocks no merge and keeps its history as a workflow artifact. See `docs/07-workflows.md`. The collectors, `scripts/ci/wait-argos-reference.ts` and `scripts/gates/check-tool-pins.ts` share one GitHub client, `createGithubClient` in `scripts/metrics/github.ts`. It takes `token`, `tokenHosts`, `userAgent`, `timeoutMs` and `retries`, sends the token only to a host in `tokenHosts` (default `api.github.com`) and the API version header only to `api.github.com`.
+`scripts/ci/wait-argos-reference.ts` and `scripts/gates/check-tool-pins.ts` share one GitHub client, `createGithubClient` in `scripts/lib/github-client.ts`. It takes `token`, `tokenHosts`, `userAgent`, `timeoutMs` and `retries`, sends the token only to a host in `tokenHosts` (default `api.github.com`) and the API version header only to `api.github.com`.
 
 ---
 
@@ -906,7 +905,6 @@ The workflow runs on PRs, pushes to `main` and manual dispatch. Jobs are not a s
 | `smoke.yml`                     | successful Production deployment                     | Probes `/api/healthz` on the deployment and on the canonical host (a 308 or any status but 200 or 503 fails) and reads `/api/status` (non-200 fails, `stale: true` warns and alerts) |
 | `mutation.yml`                  | weekly                                               | Stryker run over `app/api` and `lib`; fails when no report is produced, then `check-mutation-kills.ts` fails a blind runner or a score under the `thresholds.break` floor in `stryker.config.mjs` |
 | `ask-eval.yml`                  | weekly                                               | `pnpm ask:eval` with publishing on, so `ask:eval:latest` and the Measured block cannot go stale; publishes from `main` only, through the `EVAL_PUBLISH_REDIS_REST_*` secrets (a Redis ACL user limited to `SET` on the eval keys), and fails on empty secrets, a URL that is not http(s), or a failed write; the Measured panel also labels a result stale when its `featureModel` differs from `ASK_MODEL` |
-| `weekly-metrics.yml`            | weekly                                               | Delivery metrics scored against `metrics/bands.json` (see above)                                               |
 | `rollback-rehearsal.yml`        | weekly                                               | Rehearses the slow rollback path locally (see Rollback)                                                        |
 | `tool-pins.yml`                 | weekly                                               | Fails when the gitleaks or semgrep pin trails upstream; a nudge, not a merge stop                              |
 | `lockfile-resolution-probe.yml` | weekly                                               | Resolves every dependency range without the lockfile and keeps one issue open while the release-age window blocks resolution |

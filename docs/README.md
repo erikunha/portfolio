@@ -63,14 +63,13 @@ portfolio/
 ├── content/              typed content modules (English and pt-BR) + central Zod schema registry + eval corpus
 ├── lib/                  BFF/server core: env, server/ (defineHandler, body limits, cron auth), rate-limit, ask/*, eval/*, links/*, telemetry, integrations
 ├── next.config.ts        cacheComponents, static security headers, MDX pipeline
-├── scripts/             gate/tooling scripts (validate-content, check-*, ask-eval, ci-full, ...) and scripts/metrics (weekly delivery metrics)
+├── scripts/             gate/tooling scripts (validate-content, check-*, ask-eval, ci-full, ...)
 ├── __tests__/           Vitest suites that hold repo-wide invariants (docs counts, content parity, API behavior, meta checks)
-├── metrics/             rolling bands the weekly delivery-metrics job scores against
 ├── tests/               Playwright e2e, a11y (axe), visual regression, shared mocks
 ├── .agents/             project skills the CI review applies
 ├── .claude/             agent configuration the CI review reads: path-scoped rules, the read-only review agent, permissions baseline
 ├── .husky/              pre-commit, commit-msg and pre-push hooks
-├── .github/workflows/   ci.yml plus CodeQL, mutation, post-deploy smoke, ask-eval, weekly-metrics, rollback-rehearsal, tool-pins, lockfile-resolution-probe, high-risk-label, claude and claude-review
+├── .github/workflows/   ci.yml plus CodeQL, mutation, post-deploy smoke, ask-eval, rollback-rehearsal, tool-pins, lockfile-resolution-probe, high-risk-label, claude and claude-review
 └── ARCHITECTURE.md · STANDARDS.md · DECISIONS.md · AGENTS.md · REVIEW.md   (canonical root docs)
 ```
 

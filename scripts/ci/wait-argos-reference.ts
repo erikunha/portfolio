@@ -1,6 +1,6 @@
 import { setTimeout as delay } from 'node:timers/promises';
+import { createGithubClient } from '../lib/github-client.ts';
 import { isMain } from '../lib/is-main.ts';
-import { createGithubClient } from '../metrics/github.ts';
 
 export const REFERENCE_STATE = Object.freeze({
   ready: 'ready',

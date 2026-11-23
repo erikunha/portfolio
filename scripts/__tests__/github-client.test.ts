@@ -5,7 +5,7 @@ import {
   parseRemoteUrl,
   resolveRepo,
   resolveToken,
-} from '../metrics/github.ts';
+} from '../lib/github-client.ts';
 
 const TOKEN = 'ghs_fixture_token';
 const NO_SLEEP = async () => undefined;
