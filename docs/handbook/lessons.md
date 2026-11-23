@@ -285,34 +285,32 @@ The prompt for a manual or agent review that applies these rules to a diff is `d
     from `show()`, so a late first frame cut the slide (on Linux Chromium the panel sat at
     77% of its travel at the close, 25 of 100 closes reached 95%); it now counts from the
     start of the `transform` transition read from `getAnimations()` and `ready`, with a
-    1000 ms cap, and 100 of 100 reach 95%. No steady frame rate is promised (the 2-CPU
-    mobile shape stays near 5 fps), and the exit draws about 40 ms per frame whatever the
-    idle rate, so the real-time spec requires 4 live positions, which 200 of 200 unloaded Linux Chromium
-    runs met (minimum 4), and 75% of the panel's travel while the dialog is open, which a close
-    cut by a late start fails (7 of 60 under load on the old timer, 0 of 60 now; read the
-    deepest open sample, because WebKit reads the closed panel at x 0 for one sample after the
-    slide ends). The 1000 ms cap grows with a longer `--menu-duration`. Sample DOM state on a timer. Read a transition's positions by pausing the
-    `CSSTransition` from `getAnimations()`, seeking `currentTime` and restoring it before
-    `play()`, in a test apart from the one that bounds the exit in time with a
-    `MutationObserver` on the attributes, so the bound reads the app's own timing. Take the
-    bound from a probe of 100 runs on the larger of the wall and timeline deltas, never from
-    a round share: a quarter of a 200 ms slide equalled the 50 ms fallback slack, passed a
-    close at 67 ms, and hid a `transitionend` with `elapsedTime` 0 that closed the dialog
-    41 to 127 ms into the slide on Linux Chromium (9 of 100 runs with the transition read
-    at the start mark, 19 of 100 with the observer only; 7 and 18 of 100 closed under 150 ms
-    before the fix; the bound is now 0.75 of the duration, 150 ms, against a measured
-    minimum of 233 ms). That event is a phase hop of a transition still waiting for its
-    start time, not an end and not a cancel, and the panel keeps sliding after it. The
-    guard for that fault is the vitest exit test (`SectionDrawer.exit.test.tsx`), which
-    fails on every run when the app closes on a zero-elapsed end; the e2e bound catches it
-    only in the share of runs that closed under 150 ms. A seek proves configuration, not
-    delivery: require live positions only when `requestAnimationFrame` ticks steadily, and
-    measure that steadiness at rest before the exit, in a wall-clock window, not inside the
-    exit, so an app that janks the exit cannot excuse itself. Check: the drawer exit specs
-    pass 10 of 10 with `--retries=0` in the Playwright Linux image, and fail when the
-    `[data-exiting]` display rule is removed, the fallback timer is 0 or the slack alone,
-    or the exit duration is forced to 0 (`tests/e2e/drawer-dialog.spec.ts`,
-    `tests/e2e/drawer-exit-interactive.spec.ts`).
+    1000 ms cap, and 100 of 100 reach 95%. No steady frame rate is promised: the 2-CPU
+    mobile shape stays near 5 fps, and Linux WebKit on CI hosts showed gaps of 173 to 1808 ms
+    between frames. So no count of live frames can gate the slide: a rest-steady gate was
+    flaky, a gate inside the slide skipped without a word, and retries did not hold (WebKit
+    failed 0 of 40 only by skipping). The slide is judged on a seeked transition instead.
+    Pause the `CSSTransition` from `getAnimations()`, seek `currentTime` to 0.1 through 0.9
+    of the effect's own duration, read the computed position at each step, restore
+    `currentTime` and `play()`. The spec asserts the effect duration is at least 100 ms, the
+    positions move toward the closed position, the travel at the last step is at least 0.75
+    of the panel width, and the end position is the closed position (compared with
+    `toBeCloseTo` against `getBoundingClientRect().width`). The real-time test proves only the
+    clock: the dialog stays open for at least 0.75 of the duration on the larger of the wall
+    and timeline deltas, then closes, and focus returns to the trigger. Sample DOM state on a
+    timer, not on frames. Take the bound from a probe of 100 runs, never from a round share:
+    a quarter of a 200 ms slide equalled the 50 ms fallback slack, passed a close at 67 ms,
+    and hid a `transitionend` with `elapsedTime` 0 that closed the dialog 41 to 127 ms into
+    the slide on Linux Chromium. That event is a phase hop of a transition still waiting for
+    its start time, not an end and not a cancel. The bound is 0.75 of the duration, 150 ms,
+    against a measured minimum of 233 ms. Residual risk: under `requestAnimationFrame`
+    starvation the clock check can miss an early close. The exit-start-anchor and exit unit
+    tests (`SectionDrawer.exit-start-anchor.test.tsx`, `SectionDrawer.exit.test.tsx`) guard
+    that without load, and fail on every run when the app closes on a zero-elapsed end.
+    Check: the drawer specs (`tests/e2e/drawer-dialog.spec.ts`,
+    `tests/e2e/drawer-exit-interactive.spec.ts`) pass with `--retries=0`, and the seek test
+    fails when the `[data-exiting]` display rule is removed or the exit duration is forced to
+    0.
 
 59. A click that follows a long scroll waits for the layout above the target to stop moving. The
     contact summary spec failed in 30 of 30 Linux WebKit runs on both component projects. The
