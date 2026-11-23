@@ -1,6 +1,6 @@
-import { expect, test } from '@playwright/test';
 import { freezeMotion } from './_helpers/motion';
 import { gotoSettled } from './_helpers/streamed';
+import { expect, test } from './_helpers/test';
 import { renderEverything, splitWords } from './_helpers/words';
 
 const ROUTE = '/design-system/components';

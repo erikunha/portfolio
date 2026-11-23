@@ -1,9 +1,9 @@
-import { expect, type Page, type TestInfo, test } from '@playwright/test';
 import { DEFERRED_SECTION_COUNT } from '../../components/responsive/Module/module.constants';
 import { waitForHydration } from './_helpers/hydration';
 import { installMockBackend } from './_helpers/mock-backend';
 import { freezeMotion } from './_helpers/motion';
 import { gotoSettled } from './_helpers/streamed';
+import { expect, type Page, type TestInfo, test } from './_helpers/test';
 
 const SHELL_INPUT = '[aria-label="shell command"]';
 const KEYSTROKE_COMMIT_BUDGET_MS = 50;

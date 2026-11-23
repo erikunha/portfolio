@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test } from '../../../tests/e2e/_helpers/test';
 
 test.describe('KbdKey behavioral E2E', () => {
   test('a key cap is not interactive: no pointer cursor and no hover glow', async ({ page }) => {

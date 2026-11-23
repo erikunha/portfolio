@@ -1,7 +1,7 @@
-import { expect, type Page, test } from '@playwright/test';
 import { CORE_WIDTHS, horizontalOverflow, VIEWPORTS } from './_helpers/geometry';
 import { freezeMotion } from './_helpers/motion';
 import { gotoSettled } from './_helpers/streamed';
+import { expect, type Page, test } from './_helpers/test';
 
 const SIGNAL_GREEN = 'rgb(0, 255, 65)';
 const FIRST_THUMB = '.links-thumb';

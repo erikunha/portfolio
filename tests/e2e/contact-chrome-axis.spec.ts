@@ -1,6 +1,6 @@
-import { expect, test } from '@playwright/test';
 import { PHONE_RANGE_WIDTHS } from './_helpers/geometry';
 import { gotoSettled } from './_helpers/streamed';
+import { expect, test } from './_helpers/test';
 
 const VIEWPORT_HEIGHT = 812;
 const AXIS_TOLERANCE_PX = 1;

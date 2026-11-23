@@ -1,9 +1,9 @@
-import { expect, test } from '@playwright/test';
 import { errorsContent } from '../../content/errors';
 import { SITE_LOCALE } from '../../content/site-locale';
 import { WIDTH } from './_helpers/geometry';
 import { waitForHydration } from './_helpers/hydration';
 import { drainRoutes } from './_helpers/routes';
+import { expect, test } from './_helpers/test';
 
 const MISSING_ROUTE = '/this-route-does-not-exist';
 const NOT_FOUND_STATUS = 404;

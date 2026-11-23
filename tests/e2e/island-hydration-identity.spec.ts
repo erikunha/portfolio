@@ -1,6 +1,6 @@
-import { expect, type Page, test } from '@playwright/test';
 import { waitForHydration } from './_helpers/hydration';
 import { drainRoutes } from './_helpers/routes';
+import { expect, type Page, test } from './_helpers/test';
 
 const ISLAND_DELAY_MS = 2500;
 const ISLAND_CHUNK_MARKERS = ['contact-count', 'shell-form'];

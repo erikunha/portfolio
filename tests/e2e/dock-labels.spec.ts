@@ -1,8 +1,8 @@
-import { expect, test } from '@playwright/test';
 import { NAVIGATION } from '../../content/navigation';
 import { SITE_LOCALE } from '../../content/site-locale';
 import { PHONE_PAIR_WIDTHS, WIDTH } from './_helpers/geometry';
 import { gotoSettled } from './_helpers/streamed';
+import { expect, test } from './_helpers/test';
 
 const MIN_LABEL_GAP_PX = 8;
 const VIEWPORT_HEIGHT = 844;

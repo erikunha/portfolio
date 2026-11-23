@@ -1,7 +1,7 @@
 import AxeBuilder from '@axe-core/playwright';
-import { expect, test } from '@playwright/test';
 import { VIEWPORTS } from '../e2e/_helpers/geometry';
 import { revealDeferredContent } from '../e2e/_helpers/snapshot';
+import { expect, test } from '../e2e/_helpers/test';
 
 const LANDMARK_RULES = ['landmark-complementary-is-top-level', 'region'];
 const ROUTES = ['/', '/pt', '/design-system'];

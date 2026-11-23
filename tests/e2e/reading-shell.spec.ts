@@ -1,8 +1,8 @@
-import { expect, type Page, test } from '@playwright/test';
 import { READING_PATHS, readingViews } from '../../content/reading-views';
 import { SITE_LOCALE } from '../../content/site-locale';
 import { VIEWPORTS, WIDTH } from './_helpers/geometry';
 import { gotoSettled } from './_helpers/streamed';
+import { expect, type Page, test } from './_helpers/test';
 
 const DESKTOP = { width: WIDTH.DESKTOP, height: 800 };
 const PHONE = VIEWPORTS.PHONE;

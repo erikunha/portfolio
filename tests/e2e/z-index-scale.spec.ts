@@ -1,8 +1,8 @@
-import { expect, type Page, test } from '@playwright/test';
 import { VIEWPORTS } from './_helpers/geometry';
 import { gotoHydrated } from './_helpers/hydration';
 import { freezeMotion } from './_helpers/motion';
 import { gotoSettled } from './_helpers/streamed';
+import { expect, type Page, test } from './_helpers/test';
 
 const PHONE = VIEWPORTS.PHONE;
 const OFFLINE_BADGE = '○ NO SIGNAL';

@@ -1,6 +1,6 @@
-import { expect, test } from '@playwright/test';
 import { VIEWPORTS } from './_helpers/geometry';
 import { gotoSettled } from './_helpers/streamed';
+import { expect, test } from './_helpers/test';
 
 const WCAG_MINIMUM_TARGET_PX = 24;
 const STANDALONE_LINKS: Record<string, string> = {

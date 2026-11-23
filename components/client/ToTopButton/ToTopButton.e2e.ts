@@ -1,5 +1,5 @@
-import { expect, test } from '@playwright/test';
 import { WIDTH } from '../../../tests/e2e/_helpers/geometry';
+import { expect, test } from '../../../tests/e2e/_helpers/test';
 import { revealToTop } from '../../../tests/e2e/_helpers/to-top';
 
 const SCROLLED_DOWN_PX = 800;

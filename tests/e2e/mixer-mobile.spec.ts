@@ -1,6 +1,6 @@
-import { expect, test } from '@playwright/test';
 import { CORE_WIDTHS, horizontalOverflow, NARROW_PHONE_WIDTHS, WIDTH } from './_helpers/geometry';
 import { installMockBackend } from './_helpers/mock-backend';
+import { expect, test } from './_helpers/test';
 
 const SECTION_SELECTOR = '#sec-guitar';
 const DESKTOP_SELECTOR = '#sec-guitar [data-testid="daw-mixer-desktop"]';

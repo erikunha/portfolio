@@ -1,9 +1,9 @@
-import { expect, test } from '@playwright/test';
 import { holdChunk } from './_helpers/chunk-gate';
 import { trapFiberWrite } from './_helpers/fiber-write-trap';
 import { waitForHydration } from './_helpers/hydration';
 import { installCommitOracle, isNodeCommitted } from './_helpers/react-commit-oracle';
 import { drainRoutes } from './_helpers/routes';
+import { expect, test } from './_helpers/test';
 
 const ISLANDS = [
   {

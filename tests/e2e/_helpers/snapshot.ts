@@ -1,8 +1,8 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
-import { expect, type Locator, type Page, test } from '@playwright/test';
 import { CAPTURE_SCALE, HIDE_DECORATIVE_CANVAS_PATH } from './capture-options';
 import { volatileMasks } from './mask-volatile';
+import { expect, type Locator, type Page, test } from './test';
 import {
   compareVisual,
   VISUAL_INK_BAND_FLOOR,

@@ -1,8 +1,8 @@
-import { expect, test } from '@playwright/test';
 import { NAVIGATION } from '@/content/navigation';
 import { SITE_LOCALE } from '@/content/site-locale';
 import { VIEWPORTS } from '../../../tests/e2e/_helpers/geometry';
 import { freezeMotion } from '../../../tests/e2e/_helpers/motion';
+import { expect, test } from '../../../tests/e2e/_helpers/test';
 
 const PHONE = VIEWPORTS.PHONE;
 const DESKTOP = VIEWPORTS.DESKTOP;

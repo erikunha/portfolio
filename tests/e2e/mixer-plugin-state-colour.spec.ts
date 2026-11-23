@@ -1,8 +1,8 @@
-import { expect, type Locator, type Page, test } from '@playwright/test';
 import { WIDTH } from './_helpers/geometry';
 import { gotoHydrated } from './_helpers/hydration';
 import { installMockBackend } from './_helpers/mock-backend';
 import { freezeMotion } from './_helpers/motion';
+import { expect, type Locator, type Page, test } from './_helpers/test';
 
 const SECTION = '#sec-guitar';
 const VIEWPORT_HEIGHT = 800;

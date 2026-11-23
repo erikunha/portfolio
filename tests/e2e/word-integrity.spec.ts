@@ -1,10 +1,10 @@
-import { expect, type Page, test } from '@playwright/test';
 import { contactCopy } from '@/content/contact-copy';
 import { SITE_LOCALE } from '@/content/site-locale';
 import { waitForHydration } from './_helpers/hydration';
 import { installMockBackend } from './_helpers/mock-backend';
 import { freezeMotion } from './_helpers/motion';
 import { gotoSettled } from './_helpers/streamed';
+import { expect, type Page, test } from './_helpers/test';
 import { renderEverything, splitWords, WORD_VIEWPORTS } from './_helpers/words';
 
 const ROUTES = [

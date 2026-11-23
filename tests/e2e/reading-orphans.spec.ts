@@ -1,7 +1,7 @@
-import { expect, test } from '@playwright/test';
 import { VIEWPORTS } from './_helpers/geometry';
 import { freezeMotion } from './_helpers/motion';
 import { gotoSettled } from './_helpers/streamed';
+import { expect, test } from './_helpers/test';
 import {
   lastLineOrphans,
   ORPHAN_MAX_CHARS,

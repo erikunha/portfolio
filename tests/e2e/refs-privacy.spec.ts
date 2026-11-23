@@ -1,4 +1,3 @@
-import { expect, type Page, test } from '@playwright/test';
 import { contactCopy } from '@/content/contact-copy';
 import { shellStates, shellUi } from '@/content/shell-ui';
 import { SITE_LOCALE } from '@/content/site-locale';
@@ -6,6 +5,7 @@ import { WIDTH } from './_helpers/geometry';
 import { waitForHydration } from './_helpers/hydration';
 import { installMockBackend } from './_helpers/mock-backend';
 import { waitForConfirmArmed } from './_helpers/shell';
+import { expect, type Page, test } from './_helpers/test';
 
 const REF_A = '7f3a9c2e-41b0-4d8e-9a77-3c51d0b2e8aa';
 const REF_B = '0b9d11e4-7c2a-4f6e-8e0d-2a6b9f3c1d55';

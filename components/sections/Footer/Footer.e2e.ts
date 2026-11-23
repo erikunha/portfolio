@@ -1,8 +1,8 @@
-import { expect, test } from '@playwright/test';
 import { footerSectionIds } from '@/content/footer';
 import { VIEWPORTS, WIDTH } from '../../../tests/e2e/_helpers/geometry';
 import { waitForHydration } from '../../../tests/e2e/_helpers/hydration';
 import { freezeMotion } from '../../../tests/e2e/_helpers/motion';
+import { expect, test } from '../../../tests/e2e/_helpers/test';
 
 const ONE_COMMAND = '1';
 const DOCUMENT_SENTINEL = '__footerRebootSentinel';

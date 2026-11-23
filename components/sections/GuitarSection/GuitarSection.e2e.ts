@@ -1,6 +1,6 @@
-import { type BrowserContext, expect, test } from '@playwright/test';
 import { VIEWPORTS, WIDTH } from '../../../tests/e2e/_helpers/geometry';
 import { freezeMotion, MOTION_CHOICE, seedMotionChoice } from '../../../tests/e2e/_helpers/motion';
+import { type BrowserContext, expect, test } from '../../../tests/e2e/_helpers/test';
 
 const DESKTOP = { width: WIDTH.DESKTOP, height: 900 };
 const PHONE = VIEWPORTS.PHONE;

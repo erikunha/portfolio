@@ -1,5 +1,5 @@
-import { expect, test } from '@playwright/test';
 import { RENDERED_ROUTES, RETIRED_CLAIMS } from '../../__tests__/helpers/retired-claims';
+import { expect, test } from './_helpers/test';
 
 test.describe('retired claims stay out of every rendered route', () => {
   for (const route of RENDERED_ROUTES) {

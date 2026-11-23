@@ -1,6 +1,6 @@
-import { expect, test } from '@playwright/test';
 import { VIEWPORTS } from './_helpers/geometry';
 import { freezeMotion } from './_helpers/motion';
+import { expect, test } from './_helpers/test';
 
 const PHONES = [VIEWPORTS.PHONE_NARROW, VIEWPORTS.PHONE] as const;
 const PATHS = ['/', '/pt'] as const;

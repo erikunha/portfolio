@@ -1,5 +1,5 @@
-import { expect, test } from '@playwright/test';
 import { installMockBackend } from './_helpers/mock-backend';
+import { expect, test } from './_helpers/test';
 
 const PAGE_SKIP_LINK = 'a.skip-to-content';
 const PAGES = ['/', '/pt'] as const;

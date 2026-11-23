@@ -1,8 +1,8 @@
-import { expect, test } from '@playwright/test';
 import { NARROW_PHONE_WIDTHS, WIDTH } from './_helpers/geometry';
 import { gotoHydrated, MOTION_TOPBAR_TOGGLE } from './_helpers/hydration';
 import { freezeMotion } from './_helpers/motion';
 import { gotoSettled } from './_helpers/streamed';
+import { expect, test } from './_helpers/test';
 
 const MARKED = '[data-type-reveal]';
 const TYPING_TIMEOUT_MS = 20_000;

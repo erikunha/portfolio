@@ -1,6 +1,6 @@
-import { expect, type Page, test } from '@playwright/test';
 import { WIDTH } from './_helpers/geometry';
 import { gotoSettled } from './_helpers/streamed';
+import { expect, type Page, test } from './_helpers/test';
 
 const ROUTES = ['/', '/pt'];
 const WIDTHS = [WIDTH.PHONE_NARROW, WIDTH.PHONE_ANDROID, WIDTH.PHONE];

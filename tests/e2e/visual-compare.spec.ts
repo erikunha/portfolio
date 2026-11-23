@@ -1,4 +1,4 @@
-import { expect, type Page, test } from '@playwright/test';
+import { expect, type Page, test } from './_helpers/test';
 import {
   compareVisual,
   VISUAL_INK_BAND_FLOOR,

@@ -1,4 +1,3 @@
-import { expect, type Locator, type Page, test } from '@playwright/test';
 import { heroContent } from '@/content/hero';
 import { profile } from '@/content/profile';
 import { SITE_LOCALE } from '@/content/site-locale';
@@ -10,6 +9,7 @@ import {
 } from '../../../tests/e2e/_helpers/geometry';
 import { waitForHydration } from '../../../tests/e2e/_helpers/hydration';
 import { freezeMotion } from '../../../tests/e2e/_helpers/motion';
+import { expect, type Locator, type Page, test } from '../../../tests/e2e/_helpers/test';
 
 const viewports = [
   { width: WIDTH.DESKTOP, height: 720 },

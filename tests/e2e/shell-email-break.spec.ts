@@ -1,4 +1,3 @@
-import { expect, type Locator, type Page, test } from '@playwright/test';
 import { SITE_LOCALE, type SiteLocale } from '../../content/site-locale';
 import { WIDTH } from './_helpers/geometry';
 import { installMockBackend } from './_helpers/mock-backend';
@@ -10,6 +9,7 @@ import {
   shellCopy,
   waitForConfirmArmed,
 } from './_helpers/shell';
+import { expect, type Locator, type Page, test } from './_helpers/test';
 
 const CLASSIC_SCROLLBAR_PX = 15;
 const DESKTOP_SCROLLBAR_PX = 11;

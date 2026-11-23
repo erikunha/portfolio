@@ -1,7 +1,7 @@
-import { expect, test } from '@playwright/test';
 import { VIEWPORTS } from './_helpers/geometry';
 import { installMockBackend } from './_helpers/mock-backend';
 import { gotoSettled } from './_helpers/streamed';
+import { expect, test } from './_helpers/test';
 
 const ROUTES = ['/', '/links', '/design-system'];
 const DESKTOP = VIEWPORTS.DESKTOP;

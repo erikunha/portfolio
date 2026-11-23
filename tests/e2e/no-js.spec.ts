@@ -1,5 +1,5 @@
-import { expect, type Page, test } from '@playwright/test';
 import { horizontalOverflow, VIEWPORTS, WIDTH } from './_helpers/geometry';
+import { expect, type Page, test } from './_helpers/test';
 
 test.use({ javaScriptEnabled: false });
 

@@ -1,5 +1,5 @@
-import { expect, type Page, test } from '@playwright/test';
 import { BREAKPOINT_EDGE_WIDTHS, WIDTH } from '../../../tests/e2e/_helpers/geometry';
+import { expect, type Page, test } from '../../../tests/e2e/_helpers/test';
 
 const TABBABLE_SELECTOR =
   'a[href], button:not([disabled]), input:not([disabled]), select, textarea, summary, [tabindex]:not([tabindex="-1"])';

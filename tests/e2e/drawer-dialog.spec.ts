@@ -1,7 +1,7 @@
-import { expect, type Page, test } from '@playwright/test';
 import { VIEWPORTS } from './_helpers/geometry';
 import { MENU_TRIGGER, openSectionMenu } from './_helpers/hydration';
 import { gotoSettled } from './_helpers/streamed';
+import { expect, type Page, test } from './_helpers/test';
 
 const DRAWER = '#section-drawer';
 const OPEN_MENU_TRIGGER = `${MENU_TRIGGER}:visible`;

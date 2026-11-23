@@ -1,7 +1,7 @@
-import { expect, type Page, test } from '@playwright/test';
 import { VIEWPORTS } from './_helpers/geometry';
 import { waitForHydration } from './_helpers/hydration';
 import { freezeMotion } from './_helpers/motion';
+import { expect, type Page, test } from './_helpers/test';
 
 const GOVERNED_LEVEL = 2;
 const FULL_RATE_LEVEL = 0;

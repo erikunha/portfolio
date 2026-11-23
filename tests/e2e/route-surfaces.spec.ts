@@ -1,7 +1,7 @@
-import { expect, test } from '@playwright/test';
 import { DS_ROUTES } from '@/app/(en)/design-system/_components/ds-nav';
 import { VIEWPORTS } from './_helpers/geometry';
 import { scrollThroughPage, translucentSurfaces } from './_helpers/surfaces';
+import { expect, test } from './_helpers/test';
 
 const MAIN_SELECTOR = '#main-content';
 

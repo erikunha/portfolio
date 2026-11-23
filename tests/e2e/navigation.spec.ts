@@ -1,6 +1,6 @@
-import { expect, test } from '@playwright/test';
 import { VIEWPORTS, WIDTH } from './_helpers/geometry';
 import { DOCK_MENU, gotoHydrated } from './_helpers/hydration';
+import { expect, test } from './_helpers/test';
 
 const SECTION_COUNT = 9;
 const SCRIM_CLICK_X = 350;

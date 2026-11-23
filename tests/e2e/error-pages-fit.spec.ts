@@ -1,6 +1,6 @@
-import { expect, test } from '@playwright/test';
 import { WIDTH } from './_helpers/geometry';
 import { gotoSettled } from './_helpers/streamed';
+import { expect, test } from './_helpers/test';
 
 const SMALL_PHONE = { width: WIDTH.PHONE_NARROW, height: 700 } as const;
 const ROUTES = ['/this-route-does-not-exist', '/pt/rota-que-nao-existe'];

@@ -1,7 +1,7 @@
-import { expect, type Page, test } from '@playwright/test';
 import { readingViews } from '../../content/reading-views';
 import { SITE_LOCALE } from '../../content/site-locale';
 import { horizontalOverflow, VIEWPORTS, WIDTH } from './_helpers/geometry';
+import { expect, type Page, test } from './_helpers/test';
 
 const SUMMARY_PATHS = ['/summary', '/pt/summary'];
 const OVERFLOW_WIDTHS = [WIDTH.PHONE_NARROW, WIDTH.PHONE, WIDTH.TABLET_LARGE, WIDTH.DESKTOP];

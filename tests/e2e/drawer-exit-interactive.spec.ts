@@ -1,6 +1,6 @@
-import { expect, type Page, test } from '@playwright/test';
 import { openSectionMenu } from './_helpers/hydration';
 import { installMockBackend } from './_helpers/mock-backend';
+import { expect, type Page, test } from './_helpers/test';
 
 const DRAWER = '#section-drawer';
 const SAMPLE_MS = 600;

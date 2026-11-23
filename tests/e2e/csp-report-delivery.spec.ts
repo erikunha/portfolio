@@ -6,7 +6,7 @@ import https from 'node:https';
 import type { AddressInfo } from 'node:net';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { type Browser, chromium, expect, test } from '@playwright/test';
+import { type Browser, chromium, expect, guardBrowser, test } from './_helpers/test';
 
 const SINK_PATH = '/api/csp-report';
 const REPORTING_API_CONTENT_TYPE = 'application/reports+json';
@@ -105,9 +105,11 @@ test.describe('csp violation reports', () => {
       });
       const origin = `https://localhost:${(server.address() as AddressInfo).port}`;
 
-      browser = await chromium.launch({
-        args: [`--ignore-certificate-errors-spki-list=${spki}`],
-      });
+      browser = guardBrowser(
+        await chromium.launch({
+          args: [`--ignore-certificate-errors-spki-list=${spki}`],
+        }),
+      );
       const context = await browser.newContext();
       await context.grantPermissions([BACKGROUND_SYNC_PERMISSION], { origin });
       const page = await context.newPage();

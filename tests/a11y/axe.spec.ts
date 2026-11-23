@@ -1,10 +1,10 @@
 import AxeBuilder from '@axe-core/playwright';
-import { expect, test } from '@playwright/test';
 import { DS_ROUTES } from '@/app/(en)/design-system/_components/ds-nav';
 import { SITE_HTML_LANG, SITE_LOCALE } from '@/content/site-locale';
 import { VIEWPORTS } from '../e2e/_helpers/geometry';
 import { openSectionMenu, waitForHydration } from '../e2e/_helpers/hydration';
 import { revealDeferredContent } from '../e2e/_helpers/snapshot';
+import { expect, test } from '../e2e/_helpers/test';
 
 const NARROW_VIEWPORT = VIEWPORTS.PHONE;
 const AXE_TAGS = ['wcag2a', 'wcag2aa', 'wcag21aa', 'wcag22aa'];

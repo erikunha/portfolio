@@ -1,5 +1,5 @@
-import { expect, test } from '@playwright/test';
 import { BREAKPOINT_EDGE_WIDTHS, WIDTH } from '../../../../../tests/e2e/_helpers/geometry';
+import { expect, test } from '../../../../../tests/e2e/_helpers/test';
 
 test.describe('CopyButton rendering', () => {
   test('COPY button is visible on the design-system components page', async ({ page }) => {

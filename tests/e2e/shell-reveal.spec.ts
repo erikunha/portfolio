@@ -1,4 +1,3 @@
-import { expect, type Page, test } from '@playwright/test';
 import { settleFrames, VIEWPORTS, WIDTH } from './_helpers/geometry';
 import { installMockBackend } from './_helpers/mock-backend';
 import { freezeMotion } from './_helpers/motion';
@@ -9,6 +8,7 @@ import {
   shellCopy,
   waitForConfirmArmed,
 } from './_helpers/shell';
+import { expect, type Page, test } from './_helpers/test';
 
 const NARROW = VIEWPORTS.PHONE_NARROW;
 const DESKTOP = { width: WIDTH.DESKTOP, height: 900 } as const;

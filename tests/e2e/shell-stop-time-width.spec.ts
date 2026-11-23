@@ -1,7 +1,7 @@
-import { expect, type Page, test } from '@playwright/test';
 import { WIDTH } from './_helpers/geometry';
 import { freezeMotion } from './_helpers/motion';
 import { askShell, openShell, SHELL_SELECTOR } from './_helpers/shell';
+import { expect, type Page, test } from './_helpers/test';
 
 const WIDTHS = [WIDTH.PHONE_NARROW, WIDTH.DESKTOP] as const;
 const VIEWPORT_HEIGHT = 844;

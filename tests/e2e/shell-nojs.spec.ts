@@ -1,7 +1,7 @@
-import { expect, test } from '@playwright/test';
 import { SITE_LOCALE, type SiteLocale } from '../../content/site-locale';
 import { horizontalOverflow, VIEWPORTS } from './_helpers/geometry';
 import { shellCopy } from './_helpers/shell';
+import { expect, test } from './_helpers/test';
 
 const PATHS: Record<SiteLocale, string> = { [SITE_LOCALE.en]: '/', [SITE_LOCALE.pt]: '/pt' };
 const NOTE = '[data-testid="shell-nojs"]';

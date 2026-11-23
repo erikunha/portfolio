@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test } from './_helpers/test';
 
 /**
  * The policy has to hold two things at once: the font the platform inlines as

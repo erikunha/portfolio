@@ -1,7 +1,7 @@
-import { expect, test } from '@playwright/test';
 import { DS_NAV_GROUPS, DS_NAV_ID } from '@/app/(en)/design-system/_components/ds-nav';
 import { PREVIEW_SOURCE_ARIA_LABEL_FALLBACK } from '@/app/(en)/design-system/_components/preview.constants';
 import { VIEWPORTS, WIDTH } from './_helpers/geometry';
+import { expect, test } from './_helpers/test';
 
 const SIDEBAR_MIN_WIDTH = WIDTH.LAPTOP;
 const OVERVIEW_PATH = '/design-system';

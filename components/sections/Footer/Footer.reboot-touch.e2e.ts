@@ -1,9 +1,9 @@
-import { expect, test } from '@playwright/test';
 import { footerContent } from '@/content/footer';
 import { SITE_LOCALE } from '@/content/site-locale';
 import { VIEWPORTS } from '../../../tests/e2e/_helpers/geometry';
 import { freezeMotion } from '../../../tests/e2e/_helpers/motion';
 import { gotoSettled } from '../../../tests/e2e/_helpers/streamed';
+import { expect, test } from '../../../tests/e2e/_helpers/test';
 
 const TOUCH_CONTEXT = { viewport: VIEWPORTS.PHONE, hasTouch: true, isMobile: true };
 const KEYBOARD_CONTEXT = {
