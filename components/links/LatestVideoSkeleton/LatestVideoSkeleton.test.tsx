@@ -48,6 +48,37 @@ describe('LatestVideoSkeleton', () => {
   });
 });
 
+describe('LatestVideoSkeleton: heights come from the tokens the final blocks use', () => {
+  // behavioral-test-allow: block heights live in the shipped stylesheet; jsdom has no layout
+  const stylesheet = parse(readComponentsCss());
+  const heightOf = (selector: string) =>
+    rulesWithSelector(stylesheet, selector)
+      .map((rule) => declValue(rule, 'height'))
+      .find((value) => value !== undefined);
+
+  it('sizes the buttons and the title link from the same tokens as the final card', () => {
+    expect(heightOf('.links-skeleton-action')).toBe('var(--btn-height-large)');
+    expect(heightOf('.links-skeleton-title')).toBe('var(--spacing-target)');
+  });
+
+  it('sizes every text row as one line of its own type, so a wrapped row cannot drift from a token', () => {
+    for (const selector of [
+      '.links-skeleton-text',
+      '.links-skeleton-line',
+      '.links-skeleton-bar',
+    ]) {
+      expect(heightOf(selector), selector).toBe('1lh');
+    }
+  });
+
+  it('reserves both buttons the final card ends with, so the actions row is as tall', () => {
+    const { container } = render(<LatestVideoSkeleton locale={SITE_LOCALE.en} />);
+    expect(container.querySelectorAll('.links-watch-actions .links-skeleton-action')).toHaveLength(
+      2,
+    );
+  });
+});
+
 describe('LatestVideoSkeleton: the two columns it stands in for', () => {
   it.each([
     [SITE_LOCALE.en, 'WATCH', 'LATEST VIDEOS'],

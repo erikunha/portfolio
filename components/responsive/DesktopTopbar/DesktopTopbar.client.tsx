@@ -19,6 +19,8 @@ import {
 
 const SECTION_PATH_SEPARATOR = '/';
 
+const LOCALE_BUTTON_CLASSES = 'topbar-action';
+
 const HASH_MARK = '#';
 
 const LINKS_PAGE_PATHS: readonly string[] = Object.values(LINKS_PATH);
@@ -121,7 +123,7 @@ export function DesktopTopbar({ brand }: { brand: ReactNode }) {
             </ExternalLink>
           </div>
         </nav>
-        <LanguageSwitch />
+        <LanguageSwitch size="md" buttonClassName={LOCALE_BUTTON_CLASSES} />
         <div className="flex items-center ml-auto pl-6">{brand}</div>
       </div>
     </header>

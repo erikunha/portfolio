@@ -1,6 +1,6 @@
 import type { ComponentPropsWithoutRef } from 'react';
 import type { SiteLocale } from '@/content/site-locale';
-import { Button } from '@/design-system';
+import { Button, type ButtonSize } from '@/design-system';
 import { joinClassNames } from '@/lib/join-class-names';
 
 type LocaleSwitchProps = Omit<ComponentPropsWithoutRef<'nav'>, 'children' | 'aria-label'> & {
@@ -8,6 +8,8 @@ type LocaleSwitchProps = Omit<ComponentPropsWithoutRef<'nav'>, 'children' | 'ari
   current: SiteLocale;
   hrefs: Record<SiteLocale, string>;
   names: Record<SiteLocale, string>;
+  size?: ButtonSize;
+  buttonClassName?: string | undefined;
 };
 
 // The size owns the box: the small button is 36px on a fine pointer and keeps
@@ -20,6 +22,8 @@ export function LocaleSwitch({
   current,
   hrefs,
   names,
+  size = 'sm',
+  buttonClassName,
   className,
   ...navProps
 }: LocaleSwitchProps) {
@@ -33,9 +37,9 @@ export function LocaleSwitch({
             as="a"
             href={hrefs[candidate]}
             hrefLang={candidate}
-            size="sm"
+            size={size}
             variant="secondary"
-            className={LINK_CLASSES}
+            className={joinClassNames(LINK_CLASSES, buttonClassName)}
             {...(active ? { 'aria-current': 'page' as const } : {})}
           >
             {candidate.toUpperCase()}

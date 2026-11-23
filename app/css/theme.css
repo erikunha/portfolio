@@ -203,6 +203,7 @@
 
   @media (min-width: 48rem) {
     :root {
+      --space-gutter: var(--spacing-8);
       --space-page-top: var(--spacing-12);
       --space-section: var(--spacing-12);
       --text-section-title: var(--text-lg);
