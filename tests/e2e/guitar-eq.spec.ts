@@ -1,6 +1,11 @@
 import { guitarRig } from '../../content/guitar-rig';
 import { SITE_LOCALE } from '../../content/site-locale';
-import { horizontalOverflow, VIEWPORTS as SHARED_VIEWPORTS, WIDTH } from './_helpers/geometry';
+import {
+  boxOf,
+  horizontalOverflow,
+  VIEWPORTS as SHARED_VIEWPORTS,
+  WIDTH,
+} from './_helpers/geometry';
 import { freezeMotion } from './_helpers/motion';
 import { expect, type Page, test } from './_helpers/test';
 
@@ -30,8 +35,7 @@ for (const { width, height, visibleBars } of VIEWPORTS) {
   test.describe(`EQ strip at ${width}px`, { tag: '@cross-browser' }, () => {
     test('fits the viewport with every axis label inside the strip', async ({ page }) => {
       const strip = await openStrip(page, width, height);
-      const stripBox = await strip.boundingBox();
-      expect(stripBox).not.toBeNull();
+      const stripBox = await boxOf(strip, 'the EQ strip');
       const ticks = await page.locator(AXIS_TICK).evaluateAll((nodes) =>
         nodes.map((node) => {
           const { left, right } = node.getBoundingClientRect();
@@ -40,10 +44,8 @@ for (const { width, height, visibleBars } of VIEWPORTS) {
       );
       expect(ticks.length).toBeGreaterThan(2);
       for (const tick of ticks) {
-        expect(tick.left).toBeGreaterThanOrEqual((stripBox?.x ?? 0) - SUBPIXEL_TOLERANCE);
-        expect(tick.right).toBeLessThanOrEqual(
-          (stripBox?.x ?? 0) + (stripBox?.width ?? 0) + SUBPIXEL_TOLERANCE,
-        );
+        expect(tick.left).toBeGreaterThanOrEqual(stripBox.x - SUBPIXEL_TOLERANCE);
+        expect(tick.right).toBeLessThanOrEqual(stripBox.x + stripBox.width + SUBPIXEL_TOLERANCE);
       }
       expect(await horizontalOverflow(page)).toBeLessThanOrEqual(SUBPIXEL_TOLERANCE);
     });
@@ -73,9 +75,9 @@ for (const { width, height, visibleBars } of VIEWPORTS) {
     test('sits above the signal chain cards at the top of the module', async ({ page }) => {
       const strip = await openStrip(page, width, height);
       const chain = page.locator('#sec-guitar .guitar-chain');
-      const stripBox = await strip.boundingBox();
-      const chainBox = await chain.boundingBox();
-      expect(stripBox?.y ?? Number.POSITIVE_INFINITY).toBeLessThan(chainBox?.y ?? 0);
+      const stripBox = await boxOf(strip, 'the EQ strip');
+      const chainBox = await boxOf(chain, 'the signal chain');
+      expect(stripBox.y).toBeLessThan(chainBox.y);
     });
 
     test('shows the bars the viewport has room for', async ({ page }) => {

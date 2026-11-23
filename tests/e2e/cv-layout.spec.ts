@@ -1,6 +1,6 @@
 import { cvDocument } from '../../content/reading-views';
 import { SITE_LOCALE, type SiteLocale } from '../../content/site-locale';
-import { WIDTH } from './_helpers/geometry';
+import { boxOf, WIDTH } from './_helpers/geometry';
 import { gotoSettled } from './_helpers/streamed';
 import { expect, type Page, test } from './_helpers/test';
 
@@ -86,7 +86,7 @@ for (const { path, locale } of CASES) {
         page,
       }) => {
         await open(page, path, viewport);
-        const topbar = (await page.getByRole('banner').first().boundingBox())?.height ?? 0;
+        const topbar = (await boxOf(page.getByRole('banner').first(), 'the topbar')).height;
         const target = await page.locator(EXPERIENCE).evaluate((heading) => {
           const column = heading.closest('.reading-main') ?? heading;
           const box = column.getBoundingClientRect();
