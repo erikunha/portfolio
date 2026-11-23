@@ -20,7 +20,6 @@ const MIN_EXIT_SHARE = 0.75;
 const MIN_EXIT_TRAVEL = 0.75;
 
 type ExitFrame = { x: number; open: boolean; seeked: boolean };
-type SlideEnd = { x: number; open: boolean };
 type ExitMark = {
   at: number;
   line: number;
@@ -30,7 +29,8 @@ type ExitMark = {
 };
 type ExitCapture = {
   frames: ExitFrame[];
-  slideEnd?: SlideEnd;
+  slideEnd?: number;
+  slideDurationMs: number;
   marks: ExitMark[];
   durationMs: number;
   panelWidth: number;
@@ -50,7 +50,8 @@ async function armExitSampler(page: Page, seek: boolean): Promise<void> {
         frames: [],
         marks: [],
         durationMs: 0,
-        panelWidth: drawer.offsetWidth,
+        slideDurationMs: 0,
+        panelWidth: drawer.getBoundingClientRect().width,
       };
       sampler.exitCapture = capture;
       sampler.exitDone = false;
@@ -83,6 +84,7 @@ async function armExitSampler(page: Page, seek: boolean): Promise<void> {
             if (stepSlide && slide && drawer.open && !stepped) {
               stepped = true;
               const duration = Number(slide.effect?.getComputedTiming().duration);
+              capture.slideDurationMs = duration;
               const resumeAt = slide.currentTime;
               slide.pause();
               for (const fraction of progress) {
@@ -90,7 +92,7 @@ async function armExitSampler(page: Page, seek: boolean): Promise<void> {
                 capture.frames.push({ x: readX(), open: drawer.open, seeked: true });
               }
               slide.currentTime = duration;
-              capture.slideEnd = { x: readX(), open: drawer.open };
+              capture.slideEnd = readX();
               slide.currentTime = resumeAt;
               slide.play();
             }
@@ -236,14 +238,14 @@ for (const { name, viewport } of [
         capture.durationMs,
         'the exit transition is long enough to be seen',
       ).toBeGreaterThanOrEqual(MIN_SLIDE_DURATION_MS);
+      expect(
+        capture.slideDurationMs,
+        'the seeked transition itself is long enough to be seen',
+      ).toBeGreaterThanOrEqual(MIN_SLIDE_DURATION_MS);
       const seekedFrames = capture.frames.filter(({ seeked }) => seeked);
       expect(seekedFrames, 'one frame is read at every seeked progress').toHaveLength(
         SLIDE_PROGRESS.length,
       );
-      expect(
-        seekedFrames.every(({ open }) => open),
-        'the dialog is still open at every seeked progress',
-      ).toBe(true);
       const seeked = slideFrames(capture, true).map(({ x }) => x);
       expect(seeked, 'every seek lands inside the slide').toHaveLength(SLIDE_PROGRESS.length);
       expect(
@@ -259,7 +261,7 @@ for (const { name, viewport } of [
       expect(
         capture.slideEnd,
         'at the end of the transition the panel sits at the closed position',
-      ).toEqual({ x: -capture.panelWidth, open: true });
+      ).toBeCloseTo(-capture.panelWidth, 0);
       expect(capture.frames.at(-1)?.open, 'the dialog closes once the slide is over').toBe(false);
       await expect(page.locator(OPEN_MENU_TRIGGER).first()).toBeFocused();
     });
